@@ -16,6 +16,7 @@ public:
   void store_timing_in_RooTrace(const std::string &name);
 
   static std::vector<RooJsonListFile> timing_outfiles;
+  static std::vector<double> timings;
 
 private:
   double _timing_s;

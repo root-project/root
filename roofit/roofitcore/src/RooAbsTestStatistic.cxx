@@ -297,9 +297,8 @@ Double_t RooAbsTestStatistic::evaluate() const
     if (RooTrace::timing_flag == 2) {
       timer.start();
     }
-    std::vector<double> timings;
     if (RooTrace::timing_flag == 3) {
-      timings.reserve(_nCPU);
+      RooTimer::timings.reserve(_nCPU);
     }
 
     // Start calculations in parallel
@@ -319,13 +318,13 @@ Double_t RooAbsTestStatistic::evaluate() const
       sum = t;
       if (RooTrace::timing_flag == 3) {
         timer.stop();
-        timings[i] = timer.timing_s();
+        RooTimer::timings[i] = timer.timing_s();
       }
     }
 
     if (RooTrace::timing_flag == 3) {
       for (Int_t i = 0; i < _nCPU; ++i) {
-        RooTimer::timing_outfiles[0] << timings[i] << i << getpid();
+        RooTimer::timing_outfiles[0] << RooTimer::timings[i] << i << getpid();
       }
     }
 

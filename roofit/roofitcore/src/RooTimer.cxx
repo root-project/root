@@ -15,6 +15,7 @@ void RooTimer::store_timing_in_RooTrace(const std::string &name) {
 }
 
 std::vector<RooJsonListFile> RooTimer::timing_outfiles;
+std::vector<double> RooTimer::timings;
 
 
 RooWallTimer::RooWallTimer() {
