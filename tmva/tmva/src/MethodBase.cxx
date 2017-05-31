@@ -2688,15 +2688,17 @@ TMatrixD TMVA::MethodBase::GetMulticlassConfusionMatrix(Double_t effB, Types::ET
 {
    if (GetAnalysisType() != Types::kMulticlass) {
       Log() << kFATAL << "Cannot get confusion matrix for non-multiclass analysis." << std::endl;
+      return TMatrixD(0, 0);
    }
 
    Data()->SetCurrentType(type);
    ResultsMulticlass *resMulticlass =
       dynamic_cast<ResultsMulticlass *>(Data()->GetResults(GetMethodName(), type, Types::kMulticlass));
 
-   if (!resMulticlass) {
+   if (resMulticlass == nullptr) {
       Log() << kFATAL << Form("Dataset[%s] : ", DataInfo().GetName())
             << "unable to create pointer in GetMulticlassEfficiency, exiting." << Endl;
+      return TMatrixD(0, 0);
    }
 
    return resMulticlass->GetConfusionMatrix(effB);
