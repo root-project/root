@@ -889,6 +889,7 @@ Bool_t PyROOT::T##name##Converter::ToMemory( PyObject* value, void* address ) \
 
 PYROOT_IMPLEMENT_STRING_AS_PRIMITIVE_CONVERTER( TString,   TString,     Data, Length )
 PYROOT_IMPLEMENT_STRING_AS_PRIMITIVE_CONVERTER( STLString, std::string, c_str, size )
+PYROOT_IMPLEMENT_STRING_AS_PRIMITIVE_CONVERTER( STLStringView, std::string_view, data, size )
 
 ////////////////////////////////////////////////////////////////////////////////
 /// convert <pyobject> to C++ instance*, set arg for call
@@ -1534,6 +1535,7 @@ namespace {
    PYROOT_BASIC_CONVERTER_FACTORY( LongLongArray )
    PYROOT_BASIC_CONVERTER_FACTORY( TString )
    PYROOT_BASIC_CONVERTER_FACTORY( STLString )
+   PYROOT_BASIC_CONVERTER_FACTORY( STLStringView )
    PYROOT_BASIC_CONVERTER_FACTORY( VoidPtrRef )
    PYROOT_BASIC_CONVERTER_FACTORY( VoidPtrPtr )
    PYROOT_BASIC_CONVERTER_FACTORY( PyObject )
@@ -1618,6 +1620,9 @@ namespace {
       NFp_t( "string",                    &CreateSTLStringConverter          ),
       NFp_t( "const std::string&",        &CreateSTLStringConverter          ),
       NFp_t( "const string&",             &CreateSTLStringConverter          ),
+      NFp_t( "std::string_view",          &CreateSTLStringViewConverter      ),
+      NFp_t( "string_view",               &CreateSTLStringViewConverter      ),
+      NFp_t( "experimental::basic_string_view<char,char_traits<char> >",&CreateSTLStringViewConverter),
       NFp_t( "void*&",                    &CreateVoidPtrRefConverter         ),
       NFp_t( "void**",                    &CreateVoidPtrPtrConverter         ),
       NFp_t( "PyObject*",                 &CreatePyObjectConverter           ),
