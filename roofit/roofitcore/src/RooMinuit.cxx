@@ -1137,7 +1137,7 @@ void RooMinuit::profileStop()
 void RooMinuit::backProp()
 {
   Double_t val,err,vlo,vhi, eplus, eminus, eparab, globcc;
-  char buffer[10240];
+  char buffer[64000];
   Int_t index ;
   for(index= 0; index < _nPar; index++) {
     _theFitter->GetParameter(index, buffer, val, err, vlo, vhi);
