@@ -251,15 +251,14 @@ public:
    /// \param[in] treename The name of the output TTree
    /// \param[in] filename The name of the output TFile
    /// \param[in] bnames The list of names of the branches to be written
-   /// \param[in] filecacheMB The cache size of each memory file in MB (default = 16)
    ///
    /// This function returns a `TDataFrame` built with the output tree as a source.
    template <typename... BranchTypes>
    TInterface<TLoopManager> Snapshot(const std::string &treename, const std::string &filename,
-                                     const ColumnNames_t &bnames, Long_t filecacheMB = 16)
+                                     const ColumnNames_t &bnames)
    {
       using TypeInd_t = typename TDFInternal::TGenStaticSeq<sizeof...(BranchTypes)>::Type_t;
-      return SnapshotImpl<BranchTypes...>(treename, filename, bnames, filecacheMB, TypeInd_t());
+      return SnapshotImpl<BranchTypes...>(treename, filename, bnames, TypeInd_t());
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -1047,7 +1046,6 @@ protected:
    /// \param[in] treename The name of the TTree
    /// \param[in] filename The name of the TFile
    /// \param[in] bnames The list of names of the branches to be written
-   /// \param[in] filecacheMB The cache size of each memory file in MB (default = 16)
    /// The implementation exploits Foreach. The association of the addresses to
    /// the branches takes place at the first event. This is possible because
    /// since there are no copies, the address of the value passed by reference
@@ -1055,8 +1053,7 @@ protected:
    /// the TTreeReaderValue/TemporaryBranch
    template <typename... Args, int... S>
    TInterface<TLoopManager> SnapshotImpl(const std::string &treename, const std::string &filename,
-                                         const ColumnNames_t &bnames, Long_t filecacheMB,
-                                         TDFInternal::TStaticSeq<S...> /*dummy*/)
+                                         const ColumnNames_t &bnames, TDFInternal::TStaticSeq<S...> /*dummy*/)
    {
       const auto templateParamsN = sizeof...(S);
       const auto bNamesN = bnames.size();
@@ -1089,7 +1086,6 @@ protected:
       } else {
          auto df = GetDataFrameChecked();
          unsigned int nSlots = df->GetNSlots();
-         auto cachesize = filecacheMB * 1024L * 1024L;
          TBufferMerger merger(filename.c_str(), "RECREATE");
          std::vector<std::shared_ptr<TBufferMergerFile>> files(nSlots);
          std::vector<TTree *> trees(nSlots);
@@ -1104,7 +1100,9 @@ protected:
                (void)expander; // avoid unused variable warnings for older compilers such as gcc 4.9
             }
             trees[slot]->Fill();
-            if (files[slot]->GetBytesWritten() >= cachesize) files[slot]->Write();
+            auto entries = trees[slot]->GetEntries();
+            auto autoflush = trees[slot]->GetAutoFlush();
+            if ((autoflush > 0) && (entries % autoflush == 0)) files[slot]->Write();
          };
 
          ForeachSlot(fillTree, {bnames[S]...});
