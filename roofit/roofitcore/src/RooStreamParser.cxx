@@ -132,7 +132,7 @@ TString RooStreamParser::readToken()
 {
   // Smart tokenizer. Absorb white space and token must be either punctuation or alphanum
   Bool_t first(kTRUE), quotedString(kFALSE), lineCont(kFALSE) ;
-  char buffer[10240], c(0), cnext='\0', cprev=' ' ;
+  char buffer[64000], c(0), cnext='\0', cprev=' ' ;
   Bool_t haveINF(kFALSE) ;
   Int_t bufptr(0) ;
 
@@ -155,7 +155,7 @@ TString RooStreamParser::readToken()
 
   while(1) {
     // Buffer overflow protection
-    if (bufptr>=10239) {
+    if (bufptr>=63999) {
       oocoutW((TObject*)0,InputArguments) << "RooStreamParser::readToken: token length exceeds buffer capacity, terminating token early" << endl ;
       break ;
     }
@@ -309,9 +309,9 @@ TString RooStreamParser::readToken()
 
 TString RooStreamParser::readLine()
 {
-  char c,buffer[10240] ;
-  Int_t nfree(10239) ;
-
+  char c,buffer[64000] ;
+  Int_t nfree(63999) ; 
+  
   if (_is->peek()=='\n') _is->get(c) ;
 
   // Read till end of line
@@ -361,8 +361,8 @@ void RooStreamParser::zapToEnd(Bool_t inclContLines)
   // Skip over everything until the end of the current line
   if (_is->peek()!='\n') {
 
-    char buffer[10240] ;
-    Int_t nfree(10239) ;
+    char buffer[64000] ;
+    Int_t nfree(63999) ; 
 
     // Read till end of line
     _is->getline(buffer,nfree,'\n') ;
@@ -497,12 +497,12 @@ Bool_t RooStreamParser::readString(TString& value, Bool_t /*zapOnError*/)
 
 Bool_t RooStreamParser::convertToString(const TString& token, TString& string)
 {
-  // Transport to buffer
-  char buffer[10240],*ptr ;
-  strncpy(buffer,token.Data(),10239) ;
-  if (token.Length()>=10239) {
-    oocoutW((TObject*)0,InputArguments) << "RooStreamParser::convertToString: token length exceeds 1023, truncated" << endl ;
-    buffer[10239]=0 ;
+  // Transport to buffer 
+  char buffer[64000],*ptr ;
+  strncpy(buffer,token.Data(),63999) ;
+  if (token.Length()>=63999) {
+    oocoutW((TObject*)0,InputArguments) << "RooStreamParser::convertToString: token length exceeds 63999, truncated" << endl ;
+    buffer[63999]=0 ;
   }
   int len = strlen(buffer) ;
 
