@@ -41,7 +41,7 @@ TActionBase::TActionBase(TLoopManager *implPtr, const ColumnNames_t &tmpBranches
 } // end NS Internal
 } // end NS ROOT
 
-TCustomColumnBase::TCustomColumnBase(TLoopManager *implPtr, const ColumnNames_t &tmpBranches, const std::string &name)
+TCustomColumnBase::TCustomColumnBase(TLoopManager *implPtr, const ColumnNames_t &tmpBranches, std::string_view name)
    : fImplPtr(implPtr), fTmpBranches(tmpBranches), fName(name){};
 
 ColumnNames_t TCustomColumnBase::GetTmpBranches() const
@@ -59,7 +59,7 @@ TLoopManager *TCustomColumnBase::GetImplPtr() const
    return fImplPtr;
 }
 
-TFilterBase::TFilterBase(TLoopManager *implPtr, const ColumnNames_t &tmpBranches, const std::string &name)
+TFilterBase::TFilterBase(TLoopManager *implPtr, const ColumnNames_t &tmpBranches, std::string_view name)
    : fImplPtr(implPtr), fTmpBranches(tmpBranches), fName(name){};
 
 TLoopManager *TFilterBase::GetImplPtr() const
