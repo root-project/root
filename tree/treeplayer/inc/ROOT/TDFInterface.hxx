@@ -296,21 +296,28 @@ public:
    /// \brief Create a snapshot of the dataset on disk in the form of a TTree
    /// \param[in] treename The name of the output TTree
    /// \param[in] filename The name of the output TFile
-   /// \param[in] columnNameRegexp The regular expression to match the column names to be selected. Empty means all.
+   /// \param[in] columnNameRegexp The regular expression to match the column names to be selected. The presence of a '^' and a '$' at the end of the string is implicitly assumed if they are not specified. See the documentation of TRegexp for more details. An empty string signals the selection of all columns.
    ///
    /// This function returns a `TDataFrame` built with the output tree as a source.
    /// The types of the branches are automatically inferred and do not need to be specified.
    TInterface<TLoopManager> Snapshot(const std::string &treename, const std::string &filename,
                                      const std::string &columnNameRegexp = "")
    {
+      const auto theRegexSize = columnNameRegexp.size();
+      std::string theRegex = columnNameRegexp;
+
+      const auto isEmptyRegex = 0 == theRegexSize;
+      // This is to avoid cases where branches called b1, b2, b3 are all matched by expression "b"
+      if (theRegexSize > 0 && theRegex[0] != '^') theRegex = "^" + theRegex;
+      if (theRegexSize > 0 && theRegex[theRegexSize-1] != '$') theRegex = theRegex + "$";
+
       ColumnNames_t selectedColumns;
       selectedColumns.reserve(32);
-      const auto isEmptyRegex = "" == columnNameRegexp;
 
       const auto tmpBranches = fProxiedPtr->GetTmpBranches();
       // Since we support gcc48 and it does not provide in its stl std::regex,
       // we need to use TRegexp
-      TRegexp regexp(columnNameRegexp);
+      TRegexp regexp(theRegex);
       int dummy;
       for (auto &&branchName : tmpBranches) {
          if (isEmptyRegex || -1 != regexp.Index(branchName.c_str(), &dummy)) {
