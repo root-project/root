@@ -270,6 +270,7 @@ namespace PyROOT {
 
    PYROOT_DECLARE_STRING_CONVERTER( TString,   TString );
    PYROOT_DECLARE_STRING_CONVERTER( STLString, std::string );
+   PYROOT_DECLARE_STRING_CONVERTER( STLStringView, std::string_view );
 
    class TNotImplementedConverter : public TConverter {
    public:
