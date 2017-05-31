@@ -16,6 +16,19 @@
 
 #include "RConfig.h"
 
+// TODO: Copied from TBranch.cxx
+#if (__GNUC__ >= 3) || defined(__INTEL_COMPILER)
+#if !defined(R__unlikely)
+#define R__unlikely(expr) __builtin_expect(!!(expr), 0)
+#endif
+#if !defined(R__likely)
+#define R__likely(expr) __builtin_expect(!!(expr), 1)
+#endif
+#else
+#define R__unlikely(expr) expr
+#define R__likely(expr) expr
+#endif
+
 static const int kHeaderSize = 9;
 
 void R__zipLZ4(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep)
