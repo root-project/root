@@ -367,14 +367,14 @@ namespace FitUtil {
 
             const T * x = nullptr;
             if(data.NDim() > 1) {
-                std::vector<T> xc;
-                xc.resize(data.NDim());
-                xc[0] = x1;
-                for (unsigned int j = 1; j < data.NDim(); ++j)
-                    vecCore::Load<T>(xc[j], data.GetCoordComponent(i * vecSize, j));
-                    x = xc.data();
+               std::vector<T> xc;
+               xc.resize(data.NDim());
+               xc[0] = x1;
+               for (unsigned int j = 1; j < data.NDim(); ++j)
+                  vecCore::Load<T>(xc[j], data.GetCoordComponent(i * vecSize, j));
+               x = xc.data();
             } else {
-                    x = &x1;
+               x = &x1;
             }
 
             T fval{};
@@ -484,14 +484,14 @@ namespace FitUtil {
 
             const T * x = nullptr;
             if(data.NDim() > 1) {
-                std::vector<T> xc;
-                xc.resize(data.NDim());
-                xc[0] = x1;
-                for (unsigned int j = 1; j < data.NDim(); ++j)
-                    vecCore::Load<T>(xc[j], data.GetCoordComponent(i * vecSize, j));
-                    x = xc.data();
+               std::vector<T> xc;
+               xc.resize(data.NDim());
+               xc[0] = x1;
+               for (unsigned int j = 1; j < data.NDim(); ++j)
+                  vecCore::Load<T>(xc[j], data.GetCoordComponent(i * vecSize, j));
+               x = xc.data();
             } else {
-                    x = &x1;
+               x = &x1;
             }
 
 #ifdef USE_PARAMCACHE
