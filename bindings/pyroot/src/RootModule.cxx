@@ -905,6 +905,12 @@ extern "C" void initlibPyROOT()
    if ( ! Utility::InitProxy( gRootModule, &TCustomInt_Type, "Long" ) )
       PYROOT_INIT_ERROR;
 
+   if ( ! Utility::InitProxy( gRootModule, &TCustomFloat_Type, "double" ) )
+      PYROOT_INIT_ERROR;
+
+   if ( ! Utility::InitProxy( gRootModule, &TCustomInt_Type, "long" ) )
+      PYROOT_INIT_ERROR;
+
    if ( ! Utility::InitProxy( gRootModule, &TCustomInstanceMethod_Type, "InstanceMethod" ) )
       PYROOT_INIT_ERROR;
 
