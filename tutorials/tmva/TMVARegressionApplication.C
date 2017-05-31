@@ -54,7 +54,10 @@ void TMVARegressionApplication( TString myMethodList = "" )
    Use["FDA_GAMT"]        = 0;
    // 
    // --- Neural Network
-   Use["MLP"]             = 1; 
+   Use["MLP"]             = 1;
+   //
+   // --- Deep Neural Networks
+   Use["DNN_CPU"] = 1;
    // 
    // --- Support Vector Machine 
    Use["SVM"]             = 0;
