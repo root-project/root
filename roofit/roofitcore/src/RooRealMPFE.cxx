@@ -259,14 +259,13 @@ void RooRealMPFE::initialize()
 /// Open the timing file and initialize its field names
 void RooRealMPFE::_initTiming() {
   std::stringstream proc_id_ss;
-  Int_t id;
+
   if (_setNum < 0 || _setNum >= _numSets) {
     // _setNum not a valid number, setting subprocess output file ID to PID
     proc_id_ss << getpid();
   } else {
     // otherwise use the ppid combined with the setnum
     proc_id_ss << getppid() << "_sub" << _setNum;
-    id = _setNum;
   }
 
   std::string proc_id = proc_id_ss.str();
@@ -292,7 +291,7 @@ void RooRealMPFE::_initTiming() {
     }
   } else {
     // on client (master process)
-    while (RooTimer::timing_outfiles.size() < _numSets) {
+    while (static_cast<Int_t>(RooTimer::timing_outfiles.size()) < _numSets) {
       RooTimer::timing_outfiles.emplace_back();
     }
 
