@@ -1,4 +1,4 @@
-/// \file ROOT/TCanvas.h
+/// \file ROOT/TCanvas.hxx
 /// \ingroup Gpad ROOT7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2015-07-08
