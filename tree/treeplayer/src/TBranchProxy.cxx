@@ -25,8 +25,8 @@ ClassImp(ROOT::Detail::TBranchProxy);
 using namespace ROOT::Internal;
 
 ROOT::Detail::TBranchProxy::TBranchProxy() :
-   fDirector(0), fInitialized(false), fBranchName(""), fParent(0),
-   fDataMember(""), fIsMember(false), fIsClone(false), fIsaPointer(0),
+   fDirector(0), fInitialized(false), fIsMember(false), fIsClone(false), fIsaPointer(false),
+   fBranchName(""), fParent(0), fDataMember(""),
    fClassName(""), fClass(0), fElement(0), fMemberOffset(0), fOffset(0),
    fBranch(0), fBranchCount(0),
    fLastTree(0), fRead(-1), fWhere(0),fCollection(0), fCurrentTreeNumber(-1)
@@ -36,8 +36,8 @@ ROOT::Detail::TBranchProxy::TBranchProxy() :
 
 ROOT::Detail::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, const char* top,
                                  const char* name) :
-   fDirector(boss), fInitialized(false), fBranchName(top), fParent(0),
-   fDataMember(""), fIsMember(false), fIsClone(false), fIsaPointer(false),
+   fDirector(boss), fInitialized(false), fIsMember(false), fIsClone(false), fIsaPointer(false),
+   fBranchName(top), fParent(0), fDataMember(""),
    fClassName(""), fClass(0), fElement(0), fMemberOffset(0), fOffset(0),
    fBranch(0), fBranchCount(0),
    fLastTree(0), fRead(-1),  fWhere(0),fCollection(0), fCurrentTreeNumber(-1)
@@ -52,8 +52,8 @@ ROOT::Detail::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, const char*
 }
 
 ROOT::Detail::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, const char *top, const char *name, const char *membername) :
-   fDirector(boss), fInitialized(false),  fBranchName(top), fParent(0),
-   fDataMember(membername), fIsMember(true), fIsClone(false), fIsaPointer(false),
+   fDirector(boss), fInitialized(false), fIsMember(true), fIsClone(false), fIsaPointer(false),
+   fBranchName(top), fParent(0), fDataMember(membername),
    fClassName(""), fClass(0), fElement(0), fMemberOffset(0), fOffset(0),
    fBranch(0), fBranchCount(0),
    fLastTree(0), fRead(-1), fWhere(0),fCollection(0), fCurrentTreeNumber(-1)
@@ -71,8 +71,8 @@ ROOT::Detail::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, const char 
 
 ROOT::Detail::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, Detail::TBranchProxy *parent, const char* membername, const char* top,
                                  const char* name) :
-   fDirector(boss), fInitialized(false),  fBranchName(top), fParent(parent),
-   fDataMember(membername), fIsMember(true), fIsClone(false), fIsaPointer(false),
+   fDirector(boss), fInitialized(false), fIsMember(true), fIsClone(false), fIsaPointer(false),
+   fBranchName(top), fParent(parent), fDataMember(membername),
    fClassName(""), fClass(0), fElement(0), fMemberOffset(0), fOffset(0),
    fBranch(0), fBranchCount(0),
    fLastTree(0), fRead(-1), fWhere(0),fCollection(0), fCurrentTreeNumber(-1)
@@ -89,8 +89,8 @@ ROOT::Detail::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, Detail::TBr
 }
 
 ROOT::Detail::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, TBranch* branch, const char* membername) :
-   fDirector(boss), fInitialized(false),  fBranchName(branch->GetName()), fParent(0),
-   fDataMember(membername), fIsMember(membername != 0 && membername[0]), fIsClone(false), fIsaPointer(false),
+   fDirector(boss), fInitialized(false), fIsMember(membername != 0 && membername[0]), fIsClone(false), fIsaPointer(false),
+   fBranchName(branch->GetName()), fParent(0), fDataMember(membername),
    fClassName(""), fClass(0), fElement(0), fMemberOffset(0), fOffset(0),
    fBranch(0), fBranchCount(0),
    fLastTree(0), fRead(-1), fWhere(0),fCollection(0), fCurrentTreeNumber(-1)
