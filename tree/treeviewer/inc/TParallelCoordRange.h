@@ -53,9 +53,7 @@ public:
    virtual void BringOnTop() ;// *MENU*
    virtual void Delete(const Option_t* options=""); // *MENU*
    virtual Int_t DistancetoPrimitive(Int_t px, Int_t py);
-private:
    virtual void Draw(Option_t *options="");
-public:
    virtual void ExecuteEvent(Int_t entry, Int_t px, Int_t py);
    virtual Double_t GetMin() {return fMin;}
    virtual Double_t GetMax() {return fMax;}

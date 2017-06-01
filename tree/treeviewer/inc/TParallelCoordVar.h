@@ -66,9 +66,7 @@ public:
    void           AddRange() {AddRange(NULL);} // *MENU*
    void           DeleteVariable(); // *MENU*
    virtual Int_t  DistancetoPrimitive(Int_t px, Int_t py);
-private:
    virtual void   Draw(Option_t *option="");
-public:
    Bool_t         Eval(Long64_t evtidx, TParallelCoordSelect *select); // Check an entry is within its ranges owned by a given TParallelSelect.
    virtual void   ExecuteEvent(Int_t entry, Int_t px, Int_t py);
    Bool_t         GetBarHisto() {return TestBit(kShowBarHisto);}

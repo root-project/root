@@ -107,14 +107,14 @@ void TParallelCoordVar::AddRange(TParallelCoordRange* range)
          range = new TParallelCoordRange(this,0,0,select);
          fRanges->Add(range);
          range->GetSelection()->Add(range);
-         //range->Draw();
+         range->Draw();
       } else {
          Error("AddRange","You must create a selection before adding ranges.");
       }
    } else {
       fRanges->Add(range);
       range->GetSelection()->Add(range);
-      //range->Draw();
+      range->Draw();
    }
 }
 
@@ -150,14 +150,14 @@ Int_t TParallelCoordVar::DistancetoPrimitive(Int_t px, Int_t py)
 
 
 //______________________________________________________________________________
-void TParallelCoordVar::Draw(Option_t * /* option */)
+void TParallelCoordVar::Draw(Option_t *option)
 {
    // Draw the axis.
 
-//   TIter next(fRanges);
-//   TParallelCoordRange* range;
-//   while ((range = (TParallelCoordRange*)next())) range->Draw();
-   // AppendPad(option);
+   TIter next(fRanges);
+   TParallelCoordRange* range;
+   while ((range = (TParallelCoordRange*)next())) range->Draw();
+   AppendPad(option);
 }
 
 
@@ -563,13 +563,9 @@ void TParallelCoordVar::Init()
 
 
 //______________________________________________________________________________
-void TParallelCoordVar::Paint(Option_t*option)
+void TParallelCoordVar::Paint(Option_t* /*option*/)
 {
    // Paint the axis.
-
-   TIter next(fRanges);
-   TParallelCoordRange* range;
-   while ((range = (TParallelCoordRange*)next())) range->Paint(option);
 
    PaintHistogram();
    if (TestBit(kShowBox)) PaintBoxPlot();

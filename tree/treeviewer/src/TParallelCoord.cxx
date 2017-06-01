@@ -215,8 +215,8 @@ void TParallelCoord::AddVariable(const char* varexp)
    }
 
    AddVariable(fTree->GetV1(),varexp);
-   //TParallelCoordVar* var = (TParallelCoordVar*)fVarList->Last();
-   //var->Draw();
+   TParallelCoordVar* var = (TParallelCoordVar*)fVarList->Last();
+   var->Draw();
 }
 
 
@@ -398,7 +398,7 @@ void TParallelCoord::Draw(Option_t* option)
          var->SetHistogramHeight(0.5);
          var->SetHistogramLineWidth(0);
       }
-      //var->Draw();
+      var->Draw();
    }
 
    if (optcandle) {
@@ -629,12 +629,6 @@ void TParallelCoord::Paint(Option_t* /*option*/)
       }
    }
    gPad->RangeAxis(0,0,1,1);
-
-   TIter nextVar(fVarList);
-   TParallelCoordVar* var=0;
-   while((var = (TParallelCoordVar*)nextVar())) {
-      var->Paint();
-   }
 }
 
 
