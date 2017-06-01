@@ -126,6 +126,10 @@ endif()
 
 
 #---Check for LZ4--------------------------------------------------------------------
+if(WIN32)
+  message(STATUS "Switching off builtin_lz4 (not yet supported on Windows)")
+  set(builtin_lz4 OFF CACHE BOOL "" FORCE)
+else()
 if(NOT builtin_lz4)
   message(STATUS "Looking for LZ4")
   find_package(LZ4)
@@ -147,7 +151,7 @@ if(builtin_lz4)
   set(LZ4_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}lz4${CMAKE_STATIC_LIBRARY_SUFFIX})
   ExternalProject_Add(
     LZ4
-    URL ${lcgpackages}/lz4-${lz4_version}.tar.gz
+    URL http://lcgpackages.web.cern.ch/lcgpackages/tarFiles/sources/lz4-${lz4_version}.tar.gz
     URL_MD5 c9610c5ce97eb431dddddf0073d919b9
     INSTALL_DIR ${CMAKE_BINARY_DIR}
     CONFIGURE_COMMAND  /bin/sh -c "PREFIX=<INSTALL_DIR> make cmake"
@@ -156,6 +160,7 @@ if(builtin_lz4)
     LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1
     BUILD_BYPRODUCTS ${LZ4_LIBRARIES})
   set(LZ4_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
+endif()
 endif()
 
 

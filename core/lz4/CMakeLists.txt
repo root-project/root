@@ -7,16 +7,13 @@
 #   in cmake/modules/SearchInstalledSoftare.cmake
 
 #---Declare ZipLZ4 sources as part of libCore-------------------------------
-set(headers ${CMAKE_CURRENT_SOURCE_DIR}/inc/ZipLZ4.h)
-set(sources ${CMAKE_CURRENT_SOURCE_DIR}/src/ZipLZ4.c)
+set(LZ4_headers ${CMAKE_CURRENT_SOURCE_DIR}/inc/ZipLZ4.h)
+set(LZ4_sources ${CMAKE_CURRENT_SOURCE_DIR}/src/ZipLZ4.c)
 
+list(APPEND LibCore_SRCS ${LZ4_sources})
+list(APPEND LibCore_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/inc)
 
-include_directories(${LZ4_INCLUDE_DIR})
-ROOT_OBJECT_LIBRARY(Lz4 ${sources})
+set(LibCore_SRCS ${LibCore_SRCS} PARENT_SCOPE)
+set(LibCore_INCLUDE_DIRS ${LibCore_INCLUDE} PARENT_SCOPE)
 
-if(builtin_lz4)
-  add_dependencies(Lz4 LZ4)
-endif()
-
-ROOT_INSTALL_HEADERS()
-install(FILES ${LZ4_headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(FILES ${LZ4_headers} COMPONENT headers DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})

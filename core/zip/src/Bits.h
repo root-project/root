@@ -15,7 +15,12 @@
 #include "zlib.h"
 #include "RConfigure.h"
 #include "ZipLZMA.h"
+#ifndef WIN32
 #include "ZipLZ4.h"
+#else
+#define R__zipLZ4(cxlevel, srcsize, src, tgtsize, tgt, irep) \
+    fprintf(stderr,"R__zipLZ4: LZ4 algorithm not yet supported on Windows\n");
+#endif
 
 #include <stdio.h>
 #include <assert.h>

@@ -20,7 +20,12 @@ static const int qflag = 0;
 #include "zlib.h"
 #include "RConfigure.h"
 #include "ZipLZMA.h"
+#ifndef WIN32
 #include "ZipLZ4.h"
+#else
+#define R__unzipLZ4(srcsize, src, tgtsize, tgt, irep) \
+    fprintf(stderr,"R__unzipLZ4: LZ4 algorithm not yet supported on Windows\n");
+#endif
 
 /* inflate.c -- put in the public domain by Mark Adler
    version c14o, 23 August 1994 */
