@@ -209,7 +209,7 @@ namespace Detail {
          }
       }
 
-      virtual void *GetClaStart(UInt_t i=0) {
+      void *GetClaStart(UInt_t i=0) {
          // return the address of the start of the object being proxied. Assumes
          // that Setup() has been called.  Assumes the object containing this data
          // member is held in TClonesArray.
@@ -255,7 +255,7 @@ namespace Detail {
 
       }
 
-      virtual void *GetStlStart(UInt_t i=0) {
+      void *GetStlStart(UInt_t i=0) {
          // return the address of the start of the object being proxied. Assumes
          // that Setup() has been called.  Assumes the object containing this data
          // member is held in STL Collection.
@@ -309,7 +309,7 @@ namespace Internal {
    // Concrete Implementation of the branch proxy around the data members which are array of char
    class TArrayCharProxy : public Detail::TBranchProxy {
    public:
-      void Print() {
+      void Print() override {
          TBranchProxy::Print();
          std::cout << "fWhere " << fWhere << std::endl;
          if (fWhere) std::cout << "value? " << *(unsigned char*)GetStart() << std::endl;
@@ -323,7 +323,7 @@ namespace Internal {
          TBranchProxy(director,top,name,data) {};
       TArrayCharProxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name, const char* top = 0, const char* mid = 0) :
          TBranchProxy(director,parent, name, top, mid) {};
-      ~TArrayCharProxy() {};
+      ~TArrayCharProxy() override {};
 
       unsigned char At(UInt_t i) {
          static unsigned char default_val;
@@ -367,7 +367,7 @@ namespace Internal {
    // Base class for the proxy around object in TClonesArray.
    class TClaProxy : public Detail::TBranchProxy {
    public:
-      void Print() {
+      void Print() override {
          TBranchProxy::Print();
          std::cout << "fWhere " << fWhere << std::endl;
          if (fWhere) {
@@ -387,7 +387,7 @@ namespace Internal {
          TBranchProxy(director,top,name,data) {};
       TClaProxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name, const char* top = 0, const char* mid = 0) :
          TBranchProxy(director,parent, name, top, mid) {};
-      ~TClaProxy() {};
+      ~TClaProxy() override {};
 
       const TClonesArray* GetPtr() {
          if (!Read()) return 0;
@@ -409,7 +409,7 @@ namespace Internal {
    // Base class for the proxy around STL containers.
    class TStlProxy : public Detail::TBranchProxy {
    public:
-      void Print() {
+      void Print() override {
          TBranchProxy::Print();
          std::cout << "fWhere " << fWhere << std::endl;
          if (fWhere) {
@@ -429,7 +429,7 @@ namespace Internal {
          TBranchProxy(director,top,name,data) {};
       TStlProxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name, const char* top = 0, const char* mid = 0) :
          TBranchProxy(director,parent, name, top, mid) {};
-      ~TStlProxy() {};
+      ~TStlProxy() override {};
 
       const TVirtualCollectionProxy* GetPtr() {
          if (!Read()) return 0;
@@ -450,7 +450,7 @@ namespace Internal {
    template <class T>
    class TImpProxy : public Detail::TBranchProxy {
    public:
-      void Print() {
+      void Print() override {
          TBranchProxy::Print();
          std::cout << "fWhere " << fWhere << std::endl;
          if (fWhere) std::cout << "value? " << *(T*)GetStart() << std::endl;
@@ -464,7 +464,7 @@ namespace Internal {
          TBranchProxy(director,top,name,data) {};
       TImpProxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name, const char* top = 0, const char* mid = 0) :
          TBranchProxy(director,parent, name, top, mid) {};
-      ~TImpProxy() {};
+      ~TImpProxy() override {};
 
       operator T() {
          if (!Read()) return 0;
@@ -510,12 +510,12 @@ namespace Internal {
          TBranchProxy(director,top,name,data) {};
       TArrayProxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name, const char* top = 0, const char* mid = 0) :
          TBranchProxy(director,parent, name, top, mid) {};
-      ~TArrayProxy() {};
+      ~TArrayProxy() override {};
 
       typedef typename T::array_t array_t;
       typedef typename T::type_t type_t;
 
-      void Print() {
+      void Print() override {
          TBranchProxy::Print();
          std::cout << "fWhere " << GetWhere() << std::endl;
          if (GetWhere()) std::cout << "value? " << *(type_t*)GetWhere() << std::endl;
@@ -541,7 +541,7 @@ namespace Internal {
    class TClaImpProxy : public Detail::TBranchProxy {
    public:
 
-      void Print() {
+      void Print() override {
          TBranchProxy::Print();
          std::cout << "fWhere " << fWhere << std::endl;
          if (fWhere) std::cout << "value? " << *(T*)GetStart() << std::endl;
@@ -555,7 +555,7 @@ namespace Internal {
          TBranchProxy(director,top,name,data) {};
       TClaImpProxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name, const char* top = 0, const char* mid = 0) :
          TBranchProxy(director,parent, name, top, mid) {};
-      ~TClaImpProxy() {};
+      ~TClaImpProxy() override {};
 
       const T& At(UInt_t i) {
          static T default_val;
@@ -584,7 +584,7 @@ namespace Internal {
    class TStlImpProxy : public Detail::TBranchProxy {
    public:
 
-      void Print() {
+      void Print() override {
          TBranchProxy::Print();
          std::cout << "fWhere " << fWhere << std::endl;
          if (fWhere) std::cout << "value? " << *(T*)GetStart() << std::endl;
@@ -598,7 +598,7 @@ namespace Internal {
          TBranchProxy(director,top,name,data) {};
       TStlImpProxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name, const char* top = 0, const char* mid = 0) :
          TBranchProxy(director,parent, name, top, mid) {};
-      ~TStlImpProxy() {};
+      ~TStlImpProxy() override {};
 
       const T& At(UInt_t i) {
          static T default_val;
@@ -628,7 +628,7 @@ namespace Internal {
       typedef typename T::array_t array_t;
       typedef typename T::type_t type_t;
 
-      void Print() {
+      void Print() override {
          TBranchProxy::Print();
          std::cout << "fWhere " << fWhere << std::endl;
          if (fWhere) std::cout << "value? " << *(type_t*)GetStart() << std::endl;
@@ -642,7 +642,7 @@ namespace Internal {
          TBranchProxy(director,top,name,data) {};
       TClaArrayProxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name, const char* top = 0, const char* mid = 0) :
          TBranchProxy(director,parent, name, top, mid) {};
-      ~TClaArrayProxy() {};
+      ~TClaArrayProxy() override {};
 
       /* const */  array_t *At(UInt_t i) {
          static array_t default_val;
@@ -665,7 +665,7 @@ namespace Internal {
       typedef typename T::array_t array_t;
       typedef typename T::type_t type_t;
 
-      void Print() {
+      void Print() override {
          TBranchProxy::Print();
          std::cout << "fWhere " << fWhere << std::endl;
          if (fWhere) std::cout << "value? " << *(type_t*)GetStart() << std::endl;
@@ -679,7 +679,7 @@ namespace Internal {
          TBranchProxy(director,top,name,data) {};
       TStlArrayProxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name, const char* top = 0, const char* mid = 0) :
          TBranchProxy(director,parent, name, top, mid) {};
-      ~TStlArrayProxy() {};
+      ~TStlArrayProxy() override {};
 
       /* const */  array_t *At(UInt_t i) {
          static array_t default_val;
