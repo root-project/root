@@ -606,7 +606,9 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   }
 
   // activate timing on numerical integrals
-  activateTimingNumInts();
+  if (RooTrace::time_numInts()) {
+    activateTimingNumInts();
+  }
 
   TRACE_CREATE
 }
