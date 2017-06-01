@@ -245,7 +245,7 @@ Bool_t TTreeCacheUnzip::FillBuffer()
 
       TTree *tree = ((TBranch*)fBranches->UncheckedAt(0))->GetTree();
       Long64_t entry = tree->GetReadEntry();
-
+//      printf("entry = %lld\n", entry);//##
       // If the entry is in the range we previously prefetched, there is
       // no point in retrying.   Note that this will also return false
       // during the training phase (fEntryNext is then set intentional to
@@ -281,6 +281,7 @@ Bool_t TTreeCacheUnzip::FillBuffer()
 
       //store baskets
       for (Int_t i=0;i<fNbranches;i++) {
+//         printf("i = %d\n", i);//##
          TBranch *b = (TBranch*)fBranches->UncheckedAt(i);
          if (b->GetDirectory()==0) continue;
          if (b->GetDirectory()->GetFile() != fFile) continue;
@@ -292,25 +293,33 @@ Bool_t TTreeCacheUnzip::FillBuffer()
          //from the requested offset to the basket below fEntrymax
          Int_t blistsize = b->GetListOfBaskets()->GetSize();
          for (Int_t j=0;j<nb;j++) {
+//            printf("j = %d\n", j);//##
             // This basket has already been read, skip it
             if (j<blistsize && b->GetListOfBaskets()->UncheckedAt(j)) continue;
-
+//            printf("blistsize = %d\n", blistsize);//##
             Long64_t pos = b->GetBasketSeek(j);
             Int_t len = lbaskets[j];
-            if (pos <= 0 || len <= 0) continue;
+//            printf("pos = %lld, len = %d\n", pos, len);//##
+           if (pos <= 0 || len <= 0) continue;
+//            printf("pos = %lld, len = %d\n", pos, len);//##
             //important: do not try to read fEntryNext, otherwise you jump to the next autoflush
             if (entries[j] >= fEntryNext) continue;
+//            printf("entries[%d]=%lld,fEntryNext=%lld\n", j, entries[j], fEntryNext);//##
             if (entries[j] < entry && (j<nb-1 && entries[j+1] <= entry)) continue;
+//            printf("entries[%d]=%lld,entry=%lld, nb = %d, entries[%d]=%lld\n", j, entries[j], entry, nb, j+1, entries[j+1]);//##
             if (elist) {
+//               printf("in elist\n");//##
                Long64_t emax = fEntryMax;
                if (j<nb-1) emax = entries[j+1]-1;
                if (!elist->ContainsRange(entries[j]+chainOffset,emax+chainOffset)) continue;
+//               printf("end elist\n");//##
             }
             fNReadPref++;
-
+//            printf("prefetch pos = %lld, len = %d\n", pos, len);//##
             TFileCacheRead::Prefetch(pos,len);
          }
          if (gDebug > 0) printf("Entry: %lld, registering baskets branch %s, fEntryNext=%lld, fNseek=%d, fNtot=%d\n",entry,((TBranch*)fBranches->UncheckedAt(i))->GetName(),fEntryNext,fNseek,fNtot);
+//         printf("Entry: %lld, registering baskets branch %s, fEntryNext=%lld, fNseek=%d, fNtot=%d\n",entry,((TBranch*)fBranches->UncheckedAt(i))->GetName(),fEntryNext,fNseek,fNtot);//##
       }
 
       // Now fix the size of the status arrays
@@ -593,6 +602,7 @@ void* TTreeCacheUnzip::UnzipLoop(void *arg)
          if ((res == 1) || (!unzipMng->fIsTransferred)) {
             unzipMng->WaitUnzipStartSignal();
             startindex = unzipMng->fLastReadPos+3+thrnum;
+//            printf("startindex = %d, fLastReadPos = %d\n", startindex, unzipMng->fLastReadPos);//##
          }
       }
 
@@ -716,7 +726,8 @@ void TTreeCacheUnzip::ResetCache()
 
 Int_t TTreeCacheUnzip::UnzipCacheTBB()
 {
-   std::atomic<Int_t> startindex(0);
+//   printf("in UnzipCacheTBB\n");//##
+   std::atomic<Int_t> startindex(fLastReadPos);
    std::atomic<Long64_t> totalunzipbytes(fTotalUnzipBytes);
    std::atomic<Int_t> blockstogo(fBlocksToGo);
    tbb::task_group g;
@@ -735,7 +746,7 @@ Int_t TTreeCacheUnzip::UnzipCacheTBB()
 
          // To synchronize with the 'paging'
          myCycle = fCycle;
-         if (totalunzipbytes < fUnzipBufferSize) {
+//         if (totalunzipbytes < fUnzipBufferSize) {
             if (blockstogo > 0) {
 
                Int_t reqi = startindex.fetch_add(1);
@@ -746,6 +757,7 @@ Int_t TTreeCacheUnzip::UnzipCacheTBB()
                   fUnzipStatus[reqi] = 1; // Set it as pending
                   rdoffs = fSeek[reqi];
                   rdlen = fSeekLen[reqi];
+//                  printf("tbb:reqi = %d, rdoffs = %lld, rdlen = %d\n", reqi, rdoffs, rdlen);//##
 
                   Int_t locbuffsz = 16384;
                   char *locbuff = new char[16384];
@@ -833,7 +845,7 @@ Int_t TTreeCacheUnzip::UnzipCacheTBB()
                   }
                }
             }
-         }
+//         }
          return 0;
       });
    }
@@ -857,6 +869,8 @@ Int_t TTreeCacheUnzip::GetUnzipBuffer(char **buf, Long64_t pos, Int_t len, Bool_
 {
    Int_t res = 0;
    Int_t loc = -1;
+
+//   printf("fSeek[0]=%lld\n", fSeek[0]);//##
 
 #ifdef R__USE_IMT
 
@@ -905,6 +919,12 @@ Int_t TTreeCacheUnzip::GetUnzipBuffer(char **buf, Long64_t pos, Int_t len, Bool_
 	   }
 
 	   loc = (Int_t)TMath::BinarySearch(fNseek,fSeekSort,pos);
+//           printf("pos = %lld\n", pos);//##
+//           for(int i = 0; i < fNseek; ++i) printf("fSeekSort[%d]=%lld, ", i, fSeekSort[i]);//##
+//           printf("\n");//##
+//           for(int i = 0; i < fNseek; ++i) printf("fSeekIndex[%d]=%d, ", i, fSeekIndex[i]);//##
+//           printf("\n");//##
+//           printf("loc = %d\n", loc);//##
 	   if ( (fCycle == myCycleTBB) && (loc >= 0) && (loc < fNseek) && (pos == fSeekSort[loc]) ) {
 
 		   // The buffer is, at minimum, in the file cache. We must know its index in the requests list
@@ -979,8 +999,8 @@ Int_t TTreeCacheUnzip::GetUnzipBuffer(char **buf, Long64_t pos, Int_t len, Bool_
 				   fUnzipStatus[seekidx] = 2;
 				   fUnzipChunks[seekidx] = 0;
 
-				   if ((fTotalUnzipBytes < fUnzipBufferSize) && fBlocksToGo)
-					   SendUnzipStartSignal(kFALSE);
+//				   if ((fTotalUnzipBytes < fUnzipBufferSize) && fBlocksToGo)
+//					   SendUnzipStartSignal(kFALSE);
 
 				   //if (gDebug > 0)
 				   //   Info("GetUnzipBuffer", "++++++++++++++++++++ CacheMISS Block wanted: %d  len:%d fNseek:%d", seekidx, len, fNseek);
@@ -1517,6 +1537,7 @@ Int_t TTreeCacheUnzip::UnzipCache(Int_t &startindex, Int_t &locbuffsz, char *&lo
 
                   rdoffs = fSeek[idxtounzip];
                   rdlen = fSeekLen[idxtounzip];
+//                  printf("idxtounzip = %d, rdoffs = %lld, rdlen = %d\n", idxtounzip, rdoffs, rdlen);//##
                   break;
                }
             }
