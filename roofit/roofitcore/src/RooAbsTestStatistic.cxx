@@ -636,7 +636,7 @@ void RooAbsTestStatistic::_setNumIntTimingInPdfs(Bool_t flag) {
 
     // TODO: move everything below to RooAbsPdf::setNumIntTiming(RooArgSet& obsSet, Bool_t flag) and only call that here? Or do we not want to pass around the observables?
     // set attribute on or off
-    pdfNode->setAttribute("num_int_timing_on", flag);
+    pdfNode->set_num_int_timing_flag(flag);
 
     // Retrieve normalization integral object for branch nodes that are pdfs
     RooRealIntegral *normint = const_cast<RooRealIntegral *>(dynamic_cast<const RooRealIntegral *>(pdfNode->getNormIntegral(*(_data->get()))));

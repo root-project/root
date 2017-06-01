@@ -617,7 +617,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
 void RooRealIntegral::activateTimingNumInts() {
   // activate timing on numerical integrals
   const RooAbsArg& pdfNode = _function.arg();
-  Bool_t timing_flag = pdfNode.getAttribute("num_int_timing_on");
+  Bool_t timing_flag = pdfNode.num_int_timing_flag();
 
   RooFIter ni_iter = _intList.fwdIterator();
   while (RooAbsArg *normint = ni_iter.next()) {

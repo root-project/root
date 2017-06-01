@@ -337,7 +337,13 @@ protected:
   RooNumGenConfig* _specGeneratorConfig ; //! MC generator configuration specific for this object
   
   TString _normRange ; // Normalization range
-  static TString _normRangeOverride ; 
+  static TString _normRangeOverride ;
+
+public:
+  Bool_t num_int_timing_flag();
+  void set_num_int_timing_flag(Bool_t flag);
+private:
+  Bool_t _num_int_timing_flag;
   
   ClassDef(RooAbsPdf,4) // Abstract PDF with normalization support
 };
