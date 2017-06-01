@@ -21,14 +21,10 @@
 #include <vector>
 
 #include "ROOT/TDrawable.hxx"
+#include "ROOT/TVirtualCanvasPainter.hxx"
 
 namespace ROOT {
 namespace Experimental {
-
-namespace Internal {
-class TCanvasSharedPtrMaker;
-class TV5CanvasAdaptor;
-}
 
 /** \class ROOT::Experimental::TCanvas
   Graphic container for `TDrawable`-s.
@@ -46,8 +42,10 @@ private:
   /// Title of the canvas.
   std::string fTitle;
 
-  /// Adaptor for painting an old canvas.
-  std::unique_ptr<Internal::TV5CanvasAdaptor> fAdaptor;
+  /// The painter of this canvas, bootstrapping the graphics connection.
+  /// Unmapped canvases (those that never had `Draw()` invoked) might not have
+  /// a painter.
+  std::unique_ptr<Internal::TVirtualCanvasPainter> fPainter;
 
   /// Disable copy construction for now.
   TCanvas(const TCanvas&) = delete;
@@ -59,12 +57,10 @@ public:
   static std::shared_ptr<TCanvas> Create(const std::string& title);
 
   /// Create a temporary TCanvas; for long-lived ones please use Create().
-  TCanvas();
+  TCanvas() = default;
 
   /// Default destructor.
-  ///
-  /// Outline the implementation in sources.
-  ~TCanvas();
+  ~TCanvas() = default;
 
   // TODO: Draw() should return the Drawable&.
   /// Add something to be painted.
@@ -114,8 +110,10 @@ public:
   /// Remove an object from the list of primitives.
   //TODO: void Wipe();
 
-  /// Paint the canvas elements ("primitives").
-  void Paint();
+  /// Actually display the canvas.
+  void Show() {
+    fPainter = Internal::TVirtualCanvasPainter::Create(*this);
+  }
 
   /// Get the canvas's title.
   const std::string& GetTitle() const { return fTitle; }
@@ -124,7 +122,7 @@ public:
   void SetTitle(const std::string& title) { fTitle = title; }
 
   /// Get the elements contained in the canvas.
-  const Primitives_t& GetPrimitives() { return fPrimitives; }
+  const Primitives_t& GetPrimitives() const { return fPrimitives; }
 
 
   static const std::vector<std::shared_ptr<TCanvas>> &GetCanvases();
