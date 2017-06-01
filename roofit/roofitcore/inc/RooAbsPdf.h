@@ -340,7 +340,7 @@ protected:
   static TString _normRangeOverride ;
 
 public:
-  Bool_t num_int_timing_flag();
+  Bool_t num_int_timing_flag() const;
   void set_num_int_timing_flag(Bool_t flag);
 private:
   Bool_t _num_int_timing_flag;

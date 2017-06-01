@@ -3309,7 +3309,7 @@ void RooAbsPdf::setNormRangeOverride(const char* rangeName)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Bool_t RooAbsPdf::num_int_timing_flag() {
+Bool_t RooAbsPdf::num_int_timing_flag() const {
   return _num_int_timing_flag;
 }
 

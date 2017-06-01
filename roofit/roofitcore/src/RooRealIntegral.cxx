@@ -616,7 +616,9 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
 
 void RooRealIntegral::activateTimingNumInts() {
   // activate timing on numerical integrals
-  const RooAbsArg& pdfNode = _function.arg();
+//  const RooAbsArg& pdfNode = _function.arg();
+  const RooAbsPdf& pdfNode = dynamic_cast<const RooAbsPdf&>(_function.arg());
+  // TODO: check whether indeed only RooAbsPdf _functions have integral components
   Bool_t timing_flag = pdfNode.num_int_timing_flag();
 
   RooFIter ni_iter = _intList.fwdIterator();
