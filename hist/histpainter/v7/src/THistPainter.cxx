@@ -27,7 +27,7 @@ namespace {
 class THistPainter1D: public THistPainterBase<1> {
 public:
   void Paint(TDrawable& hist, THistDrawOptions<1> /*opts*/,
-             TCanvas& /*canv*/) final {
+             TVirtualCanvasPainter& /*canv*/) final {
     // TODO: paint!
     std::cout << "Painting histogram @" << &hist << '\n';
   }
@@ -37,7 +37,7 @@ public:
 class THistPainter2D: public THistPainterBase<2> {
 public:
   void Paint(TDrawable& drw, THistDrawOptions<2> /*opts*/,
-             TCanvas& /* canv */) final {
+             TVirtualCanvasPainter& /* canv */) final {
     std::cout << "Painting histogram @" << &drw << '\n';
     assert(dynamic_cast<THistDrawable<2>*>(&drw) && "Wrong drawable type");
     THistDrawable<2>& hd = static_cast<THistDrawable<2>&>(drw);
@@ -49,7 +49,7 @@ public:
 class THistPainter3D: public THistPainterBase<3> {
 public:
   void Paint(TDrawable& hist, THistDrawOptions<3> /*opts*/,
-             TCanvas& /*canv*/) final {
+             TVirtualCanvasPainter& /*canv*/) final {
     // TODO: paint!
     std::cout << "Painting histogram @" << &hist << '\n';
   }
