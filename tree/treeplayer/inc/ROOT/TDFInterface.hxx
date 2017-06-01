@@ -73,7 +73,7 @@ class TDataFrame;
 } // namespace ROOT
 
 namespace cling {
-std::string printValue(ROOT::Experimental::TDF::TDataFrame *tdf); // For a nice printing at the promp
+std::string printValue(ROOT::Experimental::TDataFrame *tdf); // For a nice printing at the promp
 }
 
 namespace ROOT {
