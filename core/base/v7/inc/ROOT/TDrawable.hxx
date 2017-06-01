@@ -19,9 +19,9 @@
 
 namespace ROOT {
 namespace Experimental {
-class TCanvas;
-
 namespace Internal {
+
+class TVirtualCanvasPainter;
 
 /** \class TDrawable
   Base class for drawable entities: objects that can be painted on a `TPad`.
@@ -32,7 +32,7 @@ public:
   virtual ~TDrawable();
 
   /// Paint the object
-  virtual void Paint(TCanvas& onCanv) = 0;
+  virtual void Paint(TVirtualCanvasPainter& onCanv) = 0;
 };
 
 /// \class TAnyPtr
