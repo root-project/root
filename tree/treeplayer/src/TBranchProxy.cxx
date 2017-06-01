@@ -247,7 +247,7 @@ Bool_t ROOT::Detail::TBranchProxy::Setup()
 
       if (!fWhere) {
          fBranch->SetAddress(0);
-         fWhere =  (double*)fBranch->GetAddress();
+         fWhere = (double*)fBranch->GetAddress();
       }
 
 
