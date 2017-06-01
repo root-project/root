@@ -66,16 +66,16 @@ namespace Detail {
    protected:
       Internal::TBranchProxyDirector *fDirector; // contain pointer to TTree and entry to be read
 
-      Bool_t   fInitialized;
+      Bool_t        fInitialized : 1;
+      const Bool_t  fIsMember : 1;    // true if we proxy an unsplit data member
+      Bool_t        fIsClone : 1;     // true if we proxy the inside of a TClonesArray
+      Bool_t        fIsaPointer : 1;  // true if we proxy a data member of pointer type
 
       const TString fBranchName;  // name of the branch to read
       TBranchProxy *fParent;      // Proxy to a parent object
 
       const TString fDataMember;  // name of the (eventual) data member being proxied
 
-      const Bool_t  fIsMember;    // true if we proxy an unsplit data member
-      Bool_t        fIsClone;     // true if we proxy the inside of a TClonesArray
-      Bool_t        fIsaPointer;  // true if we proxy a data member of pointer type
 
 
       TString           fClassName;     // class name of the object pointed to by the branch
