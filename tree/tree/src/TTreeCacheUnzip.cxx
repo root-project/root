@@ -689,7 +689,7 @@ void TTreeCacheUnzip::ResetCache()
 
    }
 
-   while (fActiveBlks.size()) fActiveBlks.pop();
+//   while (fActiveBlks.size()) fActiveBlks.pop();
 
    if(fNseekMax < fNseek){
       if (gDebug > 0)
@@ -759,9 +759,6 @@ Int_t TTreeCacheUnzip::UnzipCacheTBB()
                   rdlen = fSeekLen[reqi];
 //                  printf("tbb:reqi = %d, rdoffs = %lld, rdlen = %d\n", reqi, rdoffs, rdlen);//##
 
-                  Int_t locbuffsz = 16384;
-                  char *locbuff = new char[16384];
-
                   if (reqi < 0) {
                      return 1;
                   }
@@ -769,19 +766,25 @@ Int_t TTreeCacheUnzip::UnzipCacheTBB()
                   if (!fNseek || fIsLearning ) {
                      return 1;
                   }
+
+                  Int_t locbuffsz = 16384;
+                  char *locbuff = new char[16384];
+                  memset(locbuff, 0, locbuffsz);
+
                   // Prepare a static tmp buf of adequate size
                   if(locbuffsz < rdlen) {
                      if (locbuff) delete [] locbuff;
                      locbuffsz = rdlen;
                      locbuff = new char[locbuffsz];
-                     //memset(locbuff, 0, locbuffsz);
+                     memset(locbuff, 0, locbuffsz);
                   } else if(locbuffsz > rdlen*3) {
                      if (locbuff) delete [] locbuff;
                      locbuffsz = rdlen*2;
                      locbuff = new char[locbuffsz];
-                     //memset(locbuff, 0, locbuffsz);
+                     memset(locbuff, 0, locbuffsz);
                   }
                   readbuf = ReadBufferExt(locbuff, rdoffs, rdlen, loc);
+                  if(!locbuff) printf("locbuff is null\n");//##
                   if ( (myCycle != fCycle) || !fIsTransferred )  {
                      fUnzipStatus[reqi] = 2; // Set it as not done
                      fUnzipChunks[reqi] = 0;
@@ -792,6 +795,7 @@ Int_t TTreeCacheUnzip::UnzipCacheTBB()
                   }
 
                   if (readbuf <= 0) {
+                     printf("readbuf less than 0\n");//##
                      fUnzipStatus[reqi] = 2; // Set it as not done
                      fUnzipChunks[reqi] = 0;
                      fUnzipLen[reqi] = 0;
@@ -817,6 +821,7 @@ Int_t TTreeCacheUnzip::UnzipCacheTBB()
                   loclen = UnzipBufferTBB(&ptr, locbuff);
 
                   if ((loclen > 0) && (loclen == objlen+keylen)) {
+                     if(!ptr) printf("ptr is null\n");//##
                      if ( (myCycle != fCycle)  || !fIsTransferred) {
                         if(ptr) delete [] ptr; // Previously it deletes ptr without verifying ptr. It causes double free memory. Need more examination.
                         fUnzipStatus[reqi] = 2; // Set it as not done
@@ -833,7 +838,7 @@ Int_t TTreeCacheUnzip::UnzipCacheTBB()
                      fUnzipLen[reqi] = loclen;
                      totalunzipbytes.fetch_add(loclen);
 
-                     fActiveBlks.push(reqi);
+//                     fActiveBlks.push(reqi);
 
                      fNUnzip++;
                   }
@@ -1661,7 +1666,7 @@ Int_t TTreeCacheUnzip::UnzipCache(Int_t &startindex, Int_t &locbuffsz, char *&lo
       fUnzipLen[idxtounzip] = loclen;
       fTotalUnzipBytes += loclen;
 
-      fActiveBlks.push(idxtounzip);
+//      fActiveBlks.push(idxtounzip);
 
       if (gDebug > 0)
          Info("UnzipCache", "reqi:%d, rdoffs:%lld, rdlen: %d, loclen:%d",
