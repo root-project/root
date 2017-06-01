@@ -67,8 +67,6 @@ public:
   enum Message { SendReal=0, SendCat, Calculate, Retrieve, ReturnValue, Terminate, 
     ConstOpt, Verbose, LogEvalError, ApplyNLLW2, EnableOffset, CalculateNoOffset,
     SetCpuAffinity,
-    EnableTimingRATS, DisableTimingRATS,
-    EnableTimingNamedAbsArg, DisableTimingNamedAbsArg,
     EnableTimingNumInts, DisableTimingNumInts,
     MeasureCommunicationTime,
     RetrieveTimings,

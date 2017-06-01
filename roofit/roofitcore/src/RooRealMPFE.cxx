@@ -622,46 +622,6 @@ void RooRealMPFE::serverLoop() {
       }
 
 
-      case EnableTimingRATS: {
-        setAttribute("timing_on");
-
-        break;
-      }
-
-
-      case DisableTimingRATS: {
-        setAttribute("timing_on", kFALSE);
-
-        break;
-      }
-
-
-      case EnableTimingNamedAbsArg: {
-        std::string name;
-        *_pipe >> name;
-
-        RooAbsArg * absArg = _findComponent(name);
-        if (absArg) {
-          absArg->setAttribute("timing_on");
-        } else {
-          std::cout << "_findComponent for component " << name << " returned null pointer in process " << getpid() << "!" << std::endl;
-          msg = Terminate;
-        }
-
-        break;
-      }
-
-
-      case DisableTimingNamedAbsArg: {
-        std::string name;
-        *_pipe >> name;
-
-        _findComponent(name)->setAttribute("timing_on", kFALSE);
-
-        break;
-      }
-
-
       case EnableTimingNumInts: {
         // This must be done server-side, otherwise you have to copy all timing flags to server manually anyway
         // FIXME: make this more general than just RooAbsTestStatistic (when needed)
@@ -1264,10 +1224,6 @@ std::ostream& operator<<(std::ostream& out, const RooRealMPFE::Message value){
     PROCESS_VAL(RooRealMPFE::EnableOffset);
     PROCESS_VAL(RooRealMPFE::CalculateNoOffset);
     PROCESS_VAL(RooRealMPFE::SetCpuAffinity);
-    PROCESS_VAL(RooRealMPFE::EnableTimingRATS);
-    PROCESS_VAL(RooRealMPFE::DisableTimingRATS);
-    PROCESS_VAL(RooRealMPFE::EnableTimingNamedAbsArg);
-    PROCESS_VAL(RooRealMPFE::DisableTimingNamedAbsArg);
     PROCESS_VAL(RooRealMPFE::MeasureCommunicationTime);
     PROCESS_VAL(RooRealMPFE::RetrieveTimings);
     PROCESS_VAL(RooRealMPFE::EnableTimingNumInts);
