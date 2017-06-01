@@ -236,13 +236,17 @@ Bool_t ROOT::Detail::TBranchProxy::Setup()
 
       }
       if (fBranch->IsA()==TBranch::Class()) {
-         TLeaf *leaf2;
+         TLeaf *leaf2 = nullptr;
          if (fDataMember.Length()) {
             leaf2 = fBranch->GetLeaf(fDataMember);
             if (leaf2) fWhere = leaf2->GetValuePointer();
          } else if (!fWhere) {
             leaf2 = (TLeaf*)fBranch->GetListOfLeaves()->At(0); // fBranch->GetLeaf(fLeafname);
             fWhere = leaf2->GetValuePointer();
+         }
+         if (leaf2 && leaf2->GetLeafCount()) {
+           fLeafCount = leaf2->GetLeafCount();
+           fHasLeafCount = true;
          }
       }
 
