@@ -227,7 +227,7 @@ int main()
       Error("testLogLExecPolicy", "Fit failed!");
       return -1;
    }
-#ifdef R__USE_IMT || R__HAS_VECCORE
+#if defined(R__USE_IMT) || defined(R__HAS_VECCORE)
    auto seq = test.GetFitter().Result().MinFcnValue();
 #endif
 
