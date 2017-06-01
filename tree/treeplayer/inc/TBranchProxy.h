@@ -15,6 +15,7 @@
 #include "TBranchProxyDirector.h"
 #include "TTree.h"
 #include "TBranch.h"
+#include "TLeaf.h"
 #include "TClonesArray.h"
 #include "TString.h"
 #include "Riostream.h"
@@ -70,12 +71,12 @@ namespace Detail {
       const Bool_t  fIsMember : 1;    // true if we proxy an unsplit data member
       Bool_t        fIsClone : 1;     // true if we proxy the inside of a TClonesArray
       Bool_t        fIsaPointer : 1;  // true if we proxy a data member of pointer type
+      Bool_t        fHasLeafCount : 1;// true if we proxy a variable size leaf of a leaflist
 
       const TString fBranchName;  // name of the branch to read
       TBranchProxy *fParent;      // Proxy to a parent object
 
       const TString fDataMember;  // name of the (eventual) data member being proxied
-
 
 
       TString           fClassName;     // class name of the object pointed to by the branch
@@ -85,7 +86,10 @@ namespace Detail {
       Int_t             fOffset;        // Offset inside the object
 
       TBranch *fBranch;       // branch to read
-      TBranch *fBranchCount;  // eventual auxiliary branch (for example holding the size)
+      union {
+         TBranch *fBranchCount;  // eventual auxiliary branch (for example holding the size)
+         TLeaf   *fLeafCount;    // eventual auxiliary leaf (for example holding the size)
+      };
 
       TTree   *fLastTree; // TTree containing the last entry read
       Long64_t fRead;     // Last entry read
@@ -175,6 +179,15 @@ namespace Detail {
             // fRead = fDirector->GetReadEntry();
          }
          return IsInitialized();
+      }
+
+      virtual Int_t GetEntries() {
+         if (!ReadEntries()) return 0;
+         if (!fHasLeafCount) {
+            return *(Int_t*)fLeafCount->GetValuePointer();
+         } else {
+            return 1;
+         }
       }
 
       TClass *GetClass() {
@@ -394,7 +407,7 @@ namespace Internal {
          return (TClonesArray*)GetStart();
       }
 
-      Int_t GetEntries() {
+      Int_t GetEntries() override {
          if (!ReadEntries()) return 0;
          TClonesArray *arr = (TClonesArray*)GetStart();
          if (arr) return arr->GetEntries();
@@ -436,7 +449,7 @@ namespace Internal {
          return GetCollection();
       }
 
-      Int_t GetEntries() {
+      Int_t GetEntries() override {
          if (!ReadEntries()) return 0;
          return GetPtr()->Size();
       }
