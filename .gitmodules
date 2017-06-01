@@ -1,0 +1,4 @@
+[submodule "roottest"]
+	path = roottest
+	url = https://github.com/root-project/roottest.git
+	branch = master
