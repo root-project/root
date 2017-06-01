@@ -65,9 +65,6 @@ For general multiprocessing in ROOT, please refer to the TProcessExecutor class.
 #include "RooConstVar.h"
 #include "RooRealIntegral.h"
 
-// for _initNumIntSet
-#include "RooAbsData.h"
-
 #include "TSystem.h"
 
 // for cpu affinity
@@ -76,7 +73,6 @@ For general multiprocessing in ROOT, please refer to the TProcessExecutor class.
 #endif
 
 #include <chrono>
-#include <fstream>
 
 RooMPSentinel RooRealMPFE::_sentinel ;
 
