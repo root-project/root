@@ -11,6 +11,7 @@
 #include "Math/RootFinder.h"
 
 #include <iomanip>
+#include <functional>
 
 #define INF std::numeric_limits<double>::infinity()
 
