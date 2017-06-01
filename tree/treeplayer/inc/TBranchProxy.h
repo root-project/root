@@ -471,18 +471,9 @@ namespace Internal {
          return *(T*)GetStart();
       }
 
-      // Make sure that the copy methods are really private
-#ifdef private
-#undef private
-#define private_was_replaced
-#endif
       // For now explicitly disable copying into the value (i.e. the proxy is read-only).
-   private:
-      TImpProxy(T);
-      TImpProxy &operator=(T);
-#ifdef private_was_replaced
-#define private public
-#endif
+      TImpProxy(T) = delete;
+      TImpProxy &operator=(T) = delete;
 
    };
 
@@ -581,18 +572,9 @@ namespace Internal {
       const T& operator [](Int_t i) { return At(i); }
       const T& operator [](UInt_t i) { return At(i); }
 
-      // Make sure that the copy methods are really private
-#ifdef private
-#undef private
-#define private_was_replaced
-#endif
       // For now explicitly disable copying into the value (i.e. the proxy is read-only).
-   private:
-      TClaImpProxy(T);
-      TClaImpProxy &operator=(T);
-#ifdef private_was_replaced
-#define private public
-#endif
+      TClaImpProxy(T) = delete;
+      TClaImpProxy &operator=(T) = delete;
 
    };
 
@@ -632,18 +614,9 @@ namespace Internal {
       const T& operator [](Int_t i) { return At(i); }
       const T& operator [](UInt_t i) { return At(i); }
 
-      // Make sure that the copy methods are really private
-#ifdef private
-#undef private
-#define private_was_replaced
-#endif
       // For now explicitly disable copying into the value (i.e. the proxy is read-only).
-   private:
-      TStlImpProxy(T);
-      TStlImpProxy &operator=(T);
-#ifdef private_was_replaced
-#define private public
-#endif
+      TStlImpProxy(T) = delete;
+      TStlImpProxy &operator=(T) = delete;
 
    };
 
