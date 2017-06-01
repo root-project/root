@@ -786,6 +786,8 @@ Bool_t TXNetFile::ReadBuffers(char *buf,  Long64_t *pos, Int_t *len, Int_t nbuf)
       for (Int_t i = 0; i < nbuf; i++)
          pos[i] += fArchiveOffset;
    }
+   Long64_t expected_nr = 0;
+   for (Int_t i = 0; i < nbuf; i++) {expected_nr += len[i];}
 
    Long64_t expected_nr = 0;
    for (Int_t i = 0; i < nbuf; i++) {
