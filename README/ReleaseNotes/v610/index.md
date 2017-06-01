@@ -305,6 +305,10 @@ See [the online documentation](https://root.cern.ch/doc/master/classROOT_1_1Expe
 
 ## Language Bindings
 
+- Add in PyROOT the converter for std::string_view
+- Fix ROOT-8811: pickling of ROOT.Long now works
+- Fix ROOT-8809: push_back on a vector of pointers
+- Fix ROOT-8805: itemsize was not set on buffers returned by PyROOT functions
 
 ## JavaScript ROOT
 
