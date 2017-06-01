@@ -26,11 +26,13 @@
 
 */
 #include "TMVA/Tools.h"
+#include "TMVA/TSpline1.h"
 #include "TMVA/ROCCurve.h"
 #include "TMVA/Config.h"
 #include "TMVA/Version.h"
 #include "TMVA/MsgLogger.h"
 #include "TGraph.h"
+#include "TMath.h"
 
 #include <vector>
 #include <cassert>
@@ -182,6 +184,38 @@ std::vector<Double_t> TMVA::ROCCurve::ComputeSensitivity(const UInt_t num_points
 
    sensitivity_vector.push_back(0.0);
    return sensitivity_vector;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate the signal efficiency (sensitivity) for a given background
+/// efficiency (sensitivity).
+///
+/// @param effB         Background efficiency for which to calculate signal
+///                     efficiency.
+/// @param num_points   Number of points used for the underlying histogram.
+///                     The number of bins will be num_points - 1.
+///
+
+Double_t TMVA::ROCCurve::GetEffSForEffB(Double_t effB, const UInt_t num_points)
+{
+   assert(0.0 <= effB and effB <= 1.0);
+
+   auto effS_vec = ComputeSensitivity(num_points);
+   auto effB_vec = ComputeSpecificity(num_points);
+
+   // Specificity is actually rejB, so we need to transform it.
+   auto complement = [](Double_t x) { return 1 - x; };
+   std::transform(effB_vec.begin(), effB_vec.end(), effB_vec.begin(), complement);
+
+   // Since TSpline1 uses binary search (and assumes ascending sorting) we must ensure this.
+   std::reverse(effS_vec.begin(), effS_vec.end());
+   std::reverse(effB_vec.begin(), effB_vec.end());
+
+   TGraph *graph = new TGraph(effS_vec.size(), &effB_vec[0], &effS_vec[0]);
+
+   // TSpline1 does linear interpolation of ROC curve
+   TSpline1 rocSpline = TSpline1("", graph);
+   return rocSpline.Eval(effB);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

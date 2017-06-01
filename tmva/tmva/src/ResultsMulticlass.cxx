@@ -46,6 +46,7 @@ Class which takes the results of a multiclass classification
 
 #include "TGraph.h"
 #include "TH1F.h"
+#include "TMatrixD.h"
 
 #include <limits>
 #include <vector>
@@ -79,6 +80,55 @@ void TMVA::ResultsMulticlass::SetValue( std::vector<Float_t>& value, Int_t ievt 
 {
    if (ievt >= (Int_t)fMultiClassValues.size()) fMultiClassValues.resize( ievt+1 );
    fMultiClassValues[ievt] = value;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns a confusion matrix where each class is pitted against each other.
+///   Results are
+
+TMatrixD TMVA::ResultsMulticlass::GetConfusionMatrix(Double_t effB)
+{
+   const DataSet *ds = GetDataSet();
+   const DataSetInfo *dsi = GetDataSetInfo();
+   ds->SetCurrentType(GetTreeType());
+
+   UInt_t numClasses = dsi->GetNClasses();
+   TMatrixD mat(numClasses, numClasses);
+
+   // class == iRow is considered signal class
+   for (UInt_t iRow = 0; iRow < numClasses; ++iRow) {
+      for (UInt_t iCol = 0; iCol < numClasses; ++iCol) {
+
+         // Number is meaningless with only one class
+         if (iRow == iCol) {
+            mat(iRow, iCol) = std::numeric_limits<double>::quiet_NaN();
+         }
+
+         std::vector<Float_t> valueVector;
+         std::vector<Bool_t> classVector;
+         std::vector<Float_t> weightVector;
+
+         for (UInt_t iEvt = 0; iEvt < ds->GetNEvents(); ++iEvt) {
+            const Event *ev = ds->GetEvent(iEvt);
+            const UInt_t cls = ev->GetClass();
+            const Float_t weight = ev->GetWeight();
+            const Float_t mvaValue = fMultiClassValues[iEvt][iRow];
+
+            if (cls != iRow and cls != iCol) {
+               continue;
+            }
+
+            classVector.push_back(cls == iRow);
+            weightVector.push_back(weight);
+            valueVector.push_back(mvaValue);
+         }
+
+         ROCCurve roc(valueVector, classVector, weightVector);
+         mat(iRow, iCol) = roc.GetEffSForEffB(effB);
+      }
+   }
+
+   return mat;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
