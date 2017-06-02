@@ -71,7 +71,7 @@ public:
    TLoopManager(const TLoopManager &) = delete;
    ~TLoopManager(){};
    void Run();
-   void BuildAllReaderValues(TTreeReader *r, unsigned int slot);
+   void InitAllNodes(TTreeReader *r, unsigned int slot);
    void CreateSlots(unsigned int nSlots);
    TLoopManager *GetImplPtr();
    std::shared_ptr<TLoopManager> GetSharedPtr() { return shared_from_this(); }
@@ -207,7 +207,7 @@ public:
    TActionBase(TLoopManager *implPtr, const ColumnNames_t &tmpBranches);
    virtual ~TActionBase() {}
    virtual void Run(unsigned int slot, Long64_t entry) = 0;
-   virtual void BuildReaderValues(TTreeReader *r, unsigned int slot) = 0;
+   virtual void Init(TTreeReader *r, unsigned int slot) = 0;
    virtual void CreateSlots(unsigned int nSlots) = 0;
 };
 
@@ -230,9 +230,10 @@ public:
 
    void CreateSlots(unsigned int nSlots) final { fValues.resize(nSlots); }
 
-   void BuildReaderValues(TTreeReader *r, unsigned int slot) final
+   void Init(TTreeReader *r, unsigned int slot) final
    {
       InitTDFValues(slot, fValues[slot], r, fBranches, fTmpBranches, fImplPtr->GetBookedBranches(), TypeInd_t());
+      fHelper.Init(r, slot);
    }
 
    void Run(unsigned int slot, Long64_t entry) final
@@ -269,7 +270,7 @@ protected:
 public:
    TCustomColumnBase(TLoopManager *df, const ColumnNames_t &tmpBranches, std::string_view name);
    virtual ~TCustomColumnBase() {}
-   virtual void BuildReaderValues(TTreeReader *r, unsigned int slot) = 0;
+   virtual void Init(TTreeReader *r, unsigned int slot) = 0;
    virtual void CreateSlots(unsigned int nSlots) = 0;
    virtual void *GetValuePtr(unsigned int slot) = 0;
    virtual const std::type_info &GetTypeId() const = 0;
@@ -308,7 +309,7 @@ public:
 
    TCustomColumn(const TCustomColumn &) = delete;
 
-   void BuildReaderValues(TTreeReader *r, unsigned int slot) final
+   void Init(TTreeReader *r, unsigned int slot) final
    {
       TDFInternal::InitTDFValues(slot, fValues[slot], r, fBranches, fTmpBranches, fImplPtr->GetBookedBranches(),
                                  TypeInd_t());
@@ -377,7 +378,7 @@ protected:
 public:
    TFilterBase(TLoopManager *df, const ColumnNames_t &tmpBranches, std::string_view name);
    virtual ~TFilterBase() {}
-   virtual void BuildReaderValues(TTreeReader *r, unsigned int slot) = 0;
+   virtual void Init(TTreeReader *r, unsigned int slot) = 0;
    virtual bool CheckFilters(unsigned int slot, Long64_t entry) = 0;
    virtual void Report() const = 0;
    virtual void PartialReport() const = 0;
@@ -444,7 +445,7 @@ public:
       return fFilter(std::get<S>(fValues[slot]).Get(entry)...);
    }
 
-   void BuildReaderValues(TTreeReader *r, unsigned int slot) final
+   void Init(TTreeReader *r, unsigned int slot) final
    {
       TDFInternal::InitTDFValues(slot, fValues[slot], r, fBranches, fTmpBranches, fImplPtr->GetBookedBranches(),
                                  TypeInd_t());
