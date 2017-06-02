@@ -84,6 +84,7 @@ namespace Detail {
       TStreamerElement *fElement;
       Int_t             fMemberOffset;
       Int_t             fOffset;        // Offset inside the object
+      Int_t             fArrayLength;   // Number of element if the data is an array
 
       TBranch *fBranch;       // branch to read
       union {
@@ -188,6 +189,10 @@ namespace Detail {
          } else {
             return 1;
          }
+      }
+
+      virtual Int_t GetArrayLength() {
+         return fArrayLength;
       }
 
       TClass *GetClass() {
