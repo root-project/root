@@ -63,10 +63,9 @@ TDataFrame::TDataFrame(std::string_view treeName, const FILENAMESCOLL &filenames
                        const ColumnNames_t &defaultBranches)
    : TDF::TInterface<TDFDetail::TLoopManager>(std::make_shared<TDFDetail::TLoopManager>(nullptr, defaultBranches))
 {
-   const std::string treeNameInt(treeName);
-   auto chain = new TChain(treeNameInt.c_str());
+   auto chain = std::make_shared<TChain>(treeName.c_str());
    for (auto &fileName : filenamescoll) chain->Add(TDFInternal::ToConstCharPtr(fileName));
-   fProxiedPtr->SetTree(std::make_shared<TTree>(static_cast<TTree *>(chain)));
+   fProxiedPtr->SetTree(std::static_pointer_cast<TTree>(chain));
 }
 
 } // end NS Experimental
