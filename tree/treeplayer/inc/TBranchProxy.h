@@ -496,18 +496,21 @@ namespace Internal {
    template <class T, int d = 0> struct TArrayType {
       typedef T type_t;
       typedef T array_t[d];
+      static constexpr int gSize = d;
    };
    //____________________________________________
    // Helper class for proxy around multi dimension array
    template <class T> struct TArrayType<T,0> {
       typedef T type_t;
       typedef T array_t;
+      static constexpr int gSize = 0;
    };
    //____________________________________________
    // Helper class for proxy around multi dimension array
    template <class T, int d> struct TMultiArrayType {
       typedef typename T::type_t type_t;
       typedef typename T::array_t array_t[d];
+      static constexpr int gSize = d;
    };
 
    //____________________________________________
@@ -534,6 +537,10 @@ namespace Internal {
          if (GetWhere()) std::cout << "value? " << *(type_t*)GetWhere() << std::endl;
       }
 
+      Int_t GetEntries() override {
+         return T::gSize;
+      }
+
       const array_t &At(UInt_t i) {
          static array_t default_val;
          if (!Read()) return default_val;
@@ -551,23 +558,21 @@ namespace Internal {
    //_____________________________________________________________________________________
    // Template of the Concrete Implementation of the branch proxy around TClonesArray of T
    template <class T>
-   class TClaImpProxy : public Detail::TBranchProxy {
+   class TClaImpProxy : public TClaProxy {
    public:
 
-      void Print() override {
-         TBranchProxy::Print();
-         std::cout << "fWhere " << fWhere << std::endl;
-         if (fWhere) std::cout << "value? " << *(T*)GetStart() << std::endl;
-      }
+      // void Print() override {
+      //    TClaProxy::Print();
+      // }
 
-      TClaImpProxy() : TBranchProxy() {};
-      TClaImpProxy(TBranchProxyDirector *director, const char *name) : TBranchProxy(director,name) {};
+      TClaImpProxy() : TClaProxy() {};
+      TClaImpProxy(TBranchProxyDirector *director, const char *name) : TClaProxy(director,name) {};
       TClaImpProxy(TBranchProxyDirector *director,  const char *top, const char *name) :
-         TBranchProxy(director,top,name) {};
+         TClaProxy(director,top,name) {};
       TClaImpProxy(TBranchProxyDirector *director,  const char *top, const char *name, const char *data) :
-         TBranchProxy(director,top,name,data) {};
+         TClaProxy(director,top,name,data) {};
       TClaImpProxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name, const char* top = 0, const char* mid = 0) :
-         TBranchProxy(director,parent, name, top, mid) {};
+         TClaProxy(director,parent, name, top, mid) {};
       ~TClaImpProxy() override {};
 
       const T& At(UInt_t i) {
@@ -594,23 +599,21 @@ namespace Internal {
    //_________________________________________________________________________________________
    // Template of the Concrete Implementation of the branch proxy around an stl container of T
    template <class T>
-   class TStlImpProxy : public Detail::TBranchProxy {
+   class TStlImpProxy : public TStlProxy {
    public:
 
-      void Print() override {
-         TBranchProxy::Print();
-         std::cout << "fWhere " << fWhere << std::endl;
-         if (fWhere) std::cout << "value? " << *(T*)GetStart() << std::endl;
-      }
+      // void Print() override {
+      //    TBranchProxy::Print();
+      // }
 
-      TStlImpProxy() : TBranchProxy() {};
-      TStlImpProxy(TBranchProxyDirector *director, const char *name) : TBranchProxy(director,name) {};
+      TStlImpProxy() : TStlProxy() {};
+      TStlImpProxy(TBranchProxyDirector *director, const char *name) : TStlProxy(director,name) {};
       TStlImpProxy(TBranchProxyDirector *director,  const char *top, const char *name) :
-         TBranchProxy(director,top,name) {};
+         TStlProxy(director,top,name) {};
       TStlImpProxy(TBranchProxyDirector *director,  const char *top, const char *name, const char *data) :
-         TBranchProxy(director,top,name,data) {};
-      TStlImpProxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name, const char* top = 0, const char* mid = 0) :
-         TBranchProxy(director,parent, name, top, mid) {};
+         TStlProxy(director,top,name,data) {};
+      TStlImpProxy(TBranchProxyDirector *director, Detail::TBranchProxy *parent, const char *name, const char* top = 0, const char* mid = 0) :
+         TStlProxy(director,parent, name, top, mid) {};
       ~TStlImpProxy() override {};
 
       const T& At(UInt_t i) {
@@ -636,25 +639,23 @@ namespace Internal {
    //_________________________________________________________________________________________________
    // Template of the Concrete Implementation of the branch proxy around an TClonesArray of array of T
    template <class T>
-   class TClaArrayProxy : public Detail::TBranchProxy {
+   class TClaArrayProxy : public TClaProxy {
    public:
       typedef typename T::array_t array_t;
       typedef typename T::type_t type_t;
 
-      void Print() override {
-         TBranchProxy::Print();
-         std::cout << "fWhere " << fWhere << std::endl;
-         if (fWhere) std::cout << "value? " << *(type_t*)GetStart() << std::endl;
-      }
+      // void Print() override {
+      //    TClaProxy::Print();
+      // }
 
-      TClaArrayProxy() : TBranchProxy() {}
-      TClaArrayProxy(TBranchProxyDirector *director, const char *name) : TBranchProxy(director,name) {};
+      TClaArrayProxy() : TClaProxy() {}
+      TClaArrayProxy(TBranchProxyDirector *director, const char *name) : TClaProxy(director,name) {};
       TClaArrayProxy(TBranchProxyDirector *director, const char *top, const char *name) :
-         TBranchProxy(director,top,name) {};
+         TClaProxy(director,top,name) {};
       TClaArrayProxy(TBranchProxyDirector *director, const char *top, const char *name, const char *data) :
-         TBranchProxy(director,top,name,data) {};
-      TClaArrayProxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name, const char* top = 0, const char* mid = 0) :
-         TBranchProxy(director,parent, name, top, mid) {};
+         TClaProxy(director,top,name,data) {};
+      TClaArrayProxy(TBranchProxyDirector *director, Detail::TBranchProxy *parent, const char *name, const char* top = 0, const char* mid = 0) :
+         TClaProxy(director,parent, name, top, mid) {};
       ~TClaArrayProxy() override {};
 
       /* const */  array_t *At(UInt_t i) {
@@ -673,25 +674,23 @@ namespace Internal {
    //__________________________________________________________________________________________________
    // Template of the Concrete Implementation of the branch proxy around an stl container of array of T
    template <class T>
-   class TStlArrayProxy : public Detail::TBranchProxy {
+   class TStlArrayProxy : public TStlProxy {
    public:
       typedef typename T::array_t array_t;
       typedef typename T::type_t type_t;
 
-      void Print() override {
-         TBranchProxy::Print();
-         std::cout << "fWhere " << fWhere << std::endl;
-         if (fWhere) std::cout << "value? " << *(type_t*)GetStart() << std::endl;
-      }
+      // void Print() override {
+      //    TBranchProxy::Print();
+      // }
 
-      TStlArrayProxy() : TBranchProxy() {}
-      TStlArrayProxy(TBranchProxyDirector *director, const char *name) : TBranchProxy(director,name) {};
+      TStlArrayProxy() : TStlProxy() {}
+      TStlArrayProxy(TBranchProxyDirector *director, const char *name) : TStlProxy(director,name) {};
       TStlArrayProxy(TBranchProxyDirector *director, const char *top, const char *name) :
-         TBranchProxy(director,top,name) {};
+         TStlProxy(director,top,name) {};
       TStlArrayProxy(TBranchProxyDirector *director, const char *top, const char *name, const char *data) :
-         TBranchProxy(director,top,name,data) {};
-      TStlArrayProxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name, const char* top = 0, const char* mid = 0) :
-         TBranchProxy(director,parent, name, top, mid) {};
+         TStlProxy(director,top,name,data) {};
+      TStlArrayProxy(TBranchProxyDirector *director, Detail::TBranchProxy *parent, const char *name, const char* top = 0, const char* mid = 0) :
+         TStlProxy(director,parent, name, top, mid) {};
       ~TStlArrayProxy() override {};
 
       /* const */  array_t *At(UInt_t i) {
