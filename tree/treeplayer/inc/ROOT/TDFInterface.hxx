@@ -281,7 +281,7 @@ public:
       std::stringstream snapCall;
       // build a string equivalent to
       // "reinterpret_cast</nodetype/*>(this)->Snapshot<Ts...>(treename,filename,*reinterpret_cast<ColumnNames_t*>(&bnames))"
-      snapCall << "((" << GetNodeTypeName() << "*)" << this << ")->Snapshot<";
+      snapCall << "if (gROOTMutex) gROOTMutex->UnLock(); ((" << GetNodeTypeName() << "*)" << this << ")->Snapshot<";
       bool first = true;
       for (auto &b : bnames) {
          if (!first) snapCall << ", ";
@@ -1084,16 +1084,23 @@ protected:
          throw std::runtime_error(err_msg.c_str());
       }
 
+      auto df = GetDataFrameChecked();
+      auto inputTree = df->GetTree();
+
       if (!ROOT::IsImplicitMTEnabled()) {
          std::unique_ptr<TFile> ofile(TFile::Open(filenameInt.c_str(), "RECREATE"));
          TTree t(treenameInt.c_str(), treenameInt.c_str());
 
          bool FirstEvent = true;
-         auto fillTree = [&t, &bnames, &FirstEvent](Args &... args) {
+         auto fillTree = [&t, &bnames, &FirstEvent, &inputTree](Args &... args) {
             if (FirstEvent) {
                // hack to call TTree::Branch on all variadic template arguments
                std::initializer_list<int> expander = {(t.Branch(bnames[S].c_str(), &args), 0)..., 0};
                (void)expander; // avoid unused variable warnings for older compilers such as gcc 4.9
+               // We need this in case we have multiple input file to rotate the pointers
+               // associated to the branches. This is in ROOT since forever to allow cloning of
+               // TChains and here, de facto, we are doing a clone.
+               inputTree->AddClone(&t);
                FirstEvent = false;
             }
             t.Fill();
@@ -1102,16 +1109,17 @@ protected:
          Foreach(fillTree, {bnames[S]...});
          t.Write();
       } else {
-         auto df = GetDataFrameChecked();
          unsigned int nSlots = df->GetNSlots();
-         TBufferMerger merger(filenameInt.c_str(), "RECREATE");
+         TBufferMerger merger (filenameInt.c_str(), "RECREATE");
          std::vector<std::shared_ptr<TBufferMergerFile>> files(nSlots);
          std::vector<TTree *> trees(nSlots);
 
          auto fillTree = [&](unsigned int slot, Args &... args) {
+            R__LOCKGUARD(gROOTMutex);
             if (!trees[slot]) {
                files[slot] = merger.GetFile();
                trees[slot] = new TTree(treenameInt.c_str(), treenameInt.c_str());
+               // FIXME Here the tree needs to be added to the list of clones of the right chain
                trees[slot]->ResetBit(kMustCleanup);
                // hack to call TTree::Branch on all variadic template arguments
                std::initializer_list<int> expander = {(trees[slot]->Branch(bnames[S].c_str(), &args), 0)..., 0};
