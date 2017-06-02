@@ -26,6 +26,7 @@
 #include "TProfile2D.h" // For Histo actions
 #include "TRegexp.h"
 #include "TROOT.h" // IsImplicitMTEnabled
+#include "TTreeReader.h"
 
 #include <initializer_list>
 #include <memory>
@@ -1090,6 +1091,7 @@ protected:
          TTree t(treenameInt.c_str(), treenameInt.c_str());
 
          bool FirstEvent = true;
+         // TODO move fillTree and initLambda to SnapshotHelper's body
          auto fillTree = [&t, &bnames, &FirstEvent](unsigned int /* unused */, Args &... args) {
             if (FirstEvent) {
                // hack to call TTree::Branch on all variadic template arguments
@@ -1100,9 +1102,17 @@ protected:
             t.Fill();
          };
 
-         using Op_t = TDFInternal::SnapshotHelper<decltype(fillTree)>;
+         auto initLambda = [&t] (TTreeReader *r, unsigned int slot) {
+            if(r) {
+               // not an empty-source TDF
+               auto tree = r->GetTree();
+               tree->AddClone(&t);
+            }
+         };
+
+         using Op_t = TDFInternal::SnapshotHelper<decltype(initLambda), decltype(fillTree)>;
          using DFA_t = TDFInternal::TAction<Op_t, Proxied>;
-         df->Book(std::make_shared<DFA_t>(Op_t(std::move(fillTree)), bnames, *fProxiedPtr));
+         df->Book(std::make_shared<DFA_t>(Op_t(std::move(initLambda), std::move(fillTree)), bnames, *fProxiedPtr));
          fProxiedPtr->IncrChildrenCount();
          df->Run();
          t.Write();
@@ -1110,16 +1120,15 @@ protected:
          unsigned int nSlots = df->GetNSlots();
          TBufferMerger merger(filenameInt.c_str(), "RECREATE");
          std::vector<std::shared_ptr<TBufferMergerFile>> files(nSlots);
-         std::vector<TTree *> trees(nSlots);
+         std::vector<TTree *> trees(nSlots); // ROOT owns/manages these TTrees
+         std::vector<int> isFirstEvent(nSlots, 1); // vector<bool> is evil
 
          auto fillTree = [&](unsigned int slot, Args &... args) {
-            if (!trees[slot]) {
-               files[slot] = merger.GetFile();
-               trees[slot] = new TTree(treenameInt.c_str(), treenameInt.c_str());
-               trees[slot]->ResetBit(kMustCleanup);
+            if (isFirstEvent[slot]) {
                // hack to call TTree::Branch on all variadic template arguments
                std::initializer_list<int> expander = {(trees[slot]->Branch(bnames[S].c_str(), &args), 0)..., 0};
                (void)expander; // avoid unused variable warnings for older compilers such as gcc 4.9
+               isFirstEvent[slot] = 0;
             }
             trees[slot]->Fill();
             auto entries = trees[slot]->GetEntries();
@@ -1127,9 +1136,27 @@ protected:
             if ((autoflush > 0) && (entries % autoflush == 0)) files[slot]->Write();
          };
 
-         using Op_t = TDFInternal::SnapshotHelper<decltype(fillTree)>;
+         // called at the beginning of each task
+         auto initLambda = [&trees, &merger, &files, &treenameInt, &isFirstEvent] (TTreeReader *r, unsigned int slot) {
+            if(!trees[slot]) {
+               // first time this thread executes something, let's create a TBufferMerger output directory
+               files[slot] = merger.GetFile();
+            } else {
+               files[slot]->Write();
+            }
+            trees[slot] = new TTree(treenameInt.c_str(), treenameInt.c_str());
+            trees[slot]->ResetBit(kMustCleanup);
+            if(r) {
+               // not an empty-source TDF
+               auto tree = r->GetTree();
+               tree->AddClone(trees[slot]);
+            }
+            isFirstEvent[slot] = 1;
+         };
+
+         using Op_t = TDFInternal::SnapshotHelper<decltype(initLambda), decltype(fillTree)>;
          using DFA_t = TDFInternal::TAction<Op_t, Proxied>;
-         df->Book(std::make_shared<DFA_t>(Op_t(std::move(fillTree)), bnames, *fProxiedPtr));
+         df->Book(std::make_shared<DFA_t>(Op_t(std::move(initLambda), std::move(fillTree)), bnames, *fProxiedPtr));
          fProxiedPtr->IncrChildrenCount();
          df->Run();
          for (auto &&file : files) file->Write();
