@@ -133,10 +133,10 @@ struct TIsContainer {
       using It_t = typename A::iterator;
       using CIt_t = typename A::const_iterator;
       using V_t = typename A::value_type;
-      return (!std::is_same<Test_t, std::string>::value) && (std::is_same<Test_t, std::vector<bool>>::value ||
+      return std::is_same<Test_t, std::vector<bool>>::value ||
              (std::is_same<decltype(pt->begin()), It_t>::value && std::is_same<decltype(pt->end()), It_t>::value &&
               std::is_same<decltype(cpt->begin()), CIt_t>::value && std::is_same<decltype(cpt->end()), CIt_t>::value &&
-              std::is_same<decltype(**pi), V_t &>::value && std::is_same<decltype(**pci), V_t const &>::value));
+              std::is_same<decltype(**pi), V_t &>::value && std::is_same<decltype(**pci), V_t const &>::value);
    }
 
    template <typename A>
