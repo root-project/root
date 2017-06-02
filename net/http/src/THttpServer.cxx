@@ -752,41 +752,10 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
    } else if (filename == "root.websocket") {
       // handling of web socket
 
-      TCanvas *canv = dynamic_cast<TCanvas *>(fSniffer->FindTObjectInHierarchy(arg->fPathName.Data()));
+      THttpWSHandler *handler = dynamic_cast<THttpWSHandler *>(fSniffer->FindTObjectInHierarchy(arg->fPathName.Data()));
 
-      if (canv == 0) {
-         // for the moment only TCanvas is used for web sockets
-         arg->Set404();
-      } else if (strcmp(arg->GetMethod(), "WS_CONNECT") == 0) {
-         if (canv->GetPrimitive("websocket")) {
-            // websocket already exists, ignore all other requests
-            arg->Set404();
-         }
-      } else if (strcmp(arg->GetMethod(), "WS_READY") == 0) {
-         THttpWSEngine *wshandle = dynamic_cast<THttpWSEngine *>(arg->TakeWSHandle());
-
-         if (gDebug > 0) Info("ProcessRequest", "Set WebSocket handle %p", wshandle);
-
-         if (wshandle) wshandle->AssignCanvas(canv);
-
-         // connection is established
-      } else if (strcmp(arg->GetMethod(), "WS_DATA") == 0) {
-         // process received data
-
-         THttpWSEngine *wshandle = dynamic_cast<THttpWSEngine *>(canv->GetPrimitive("websocket"));
-         if (wshandle) wshandle->ProcessData(arg);
-
-      } else if (strcmp(arg->GetMethod(), "WS_CLOSE") == 0) {
-         // connection is closed, one can remove handle
-
-         THttpWSEngine *wshandle = dynamic_cast<THttpWSEngine *>(canv->GetPrimitive("websocket"));
-
-         if (wshandle) {
-            if (gDebug > 0) Info("ProcessRequest", "Clear WebSocket handle");
-            wshandle->ClearHandle();
-            wshandle->AssignCanvas(0);
-            delete wshandle;
-         }
+      if (handler) {
+         handler->ProcessWS(arg);
       } else {
          arg->Set404();
       }
@@ -794,9 +763,9 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
       return;
    } else if (filename == "root.longpoll") {
       // ROOT emulation of websocket with polling requests
-      TCanvas *canv = dynamic_cast<TCanvas *>(fSniffer->FindTObjectInHierarchy(arg->fPathName.Data()));
+      THttpWSHandler *handler = dynamic_cast<THttpWSHandler *>(fSniffer->FindTObjectInHierarchy(arg->fPathName.Data()));
 
-      if (!canv || !canv->GetCanvasImp()) {
+      if (!handler) {
          // for the moment only TCanvas is used for web sockets
          arg->Set404();
       } else if (arg->fQuery == "connect") {
@@ -804,7 +773,7 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
          // if accepted, reply with connection id, which must be used in the following communications
          arg->SetMethod("WS_CONNECT");
 
-         if (true /*canv->GetCanvasImp()->ProcessWSRequest(arg)*/) {
+         if (handler && handler->ProcessWS(arg)) {
             arg->SetMethod("WS_READY");
 
             TLongPollEngine *handle = new TLongPollEngine("longpoll", arg->fPathName.Data());
@@ -812,7 +781,7 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
             arg->SetWSId(handle->GetId());
             arg->SetWSHandle(handle);
 
-            if (true /*canv->GetCanvasImp()->ProcessWSRequest(arg)*/) {
+            if (handler->ProcessWS(arg)) {
                arg->SetContent(TString::Format("%u", arg->GetWSId()));
                arg->SetContentType("text/plain");
             }
@@ -842,7 +811,7 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
                arg->SetPostData(buf, len / 2);
             }
          }
-         if (false /*!canv->GetCanvasImp()->ProcessWSRequest(arg)*/) arg->Set404();
+         if (handler && !handler->ProcessWS(arg)) arg->Set404();
       }
       return;
 
