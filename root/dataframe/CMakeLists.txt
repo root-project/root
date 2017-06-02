@@ -7,6 +7,9 @@ endif()
 
 set(DFLIBRARIES Core TreePlayer Hist Tree RIO MathCore)
 
+ROOTTEST_ADD_TEST(test_listFilesCtor
+                  MACRO test_listFilesCtor.C)
+
 ROOTTEST_GENERATE_EXECUTABLE(emptysource test_emptysource.cxx LIBRARIES ${DFLIBRARIES})
 ROOTTEST_ADD_TEST(emptysource
                   EXEC emptysource
