@@ -166,7 +166,7 @@ void TLoopManager::Run()
          // Each task will generate a subrange of entries
          auto genFunction = [this, &slotStack](const std::pair<Long64_t, Long64_t> &range) {
             auto slot = slotStack.Pop();
-            BuildAllReaderValues(nullptr, slot);
+            InitAllNodes(nullptr, slot);
             for (auto currEntry = range.first; currEntry < range.second; ++currEntry) {
                RunAndCheckFilters(slot, currEntry);
             }
@@ -182,7 +182,7 @@ void TLoopManager::Run()
 
          tp->Process([this, &slotStack](TTreeReader &r) -> void {
             auto slot = slotStack.Pop();
-            BuildAllReaderValues(&r, slot);
+            InitAllNodes(&r, slot);
             // recursive call to check filters and conditionally execute actions
             while (r.Next()) {
                RunAndCheckFilters(slot, r.GetCurrentEntry());
@@ -194,13 +194,13 @@ void TLoopManager::Run()
 #endif // R__USE_IMT
       CreateSlots(1);
       if (fNEmptyEntries > 0) {
-         BuildAllReaderValues(nullptr, 0);
+         InitAllNodes(nullptr, 0);
          for (Long64_t currEntry = 0; currEntry < fNEmptyEntries && fNStopsReceived < fNChildren; ++currEntry) {
             RunAndCheckFilters(0, currEntry);
          }
       } else {
          TTreeReader r(fTree.get());
-         BuildAllReaderValues(&r, 0);
+         InitAllNodes(&r, 0);
 
          // recursive call to check filters and conditionally execute actions
          // in the non-MT case processing can be stopped early by ranges, hence the check on fNStopsReceived
@@ -229,13 +229,13 @@ void TLoopManager::Run()
 /// calls their `BuildReaderValues` methods. It is called once per node per slot, before
 /// running the event loop. It also informs each node of the TTreeReader that
 /// a particular slot will be using.
-void TLoopManager::BuildAllReaderValues(TTreeReader *r, unsigned int slot)
+void TLoopManager::InitAllNodes(TTreeReader *r, unsigned int slot)
 {
    // booked branches must be initialized first
    // because actions and filters might need to point to the values encapsulate
-   for (auto &bookedBranch : fBookedBranches) bookedBranch.second->BuildReaderValues(r, slot);
-   for (auto &ptr : fBookedActions) ptr->BuildReaderValues(r, slot);
-   for (auto &ptr : fBookedFilters) ptr->BuildReaderValues(r, slot);
+   for (auto &bookedBranch : fBookedBranches) bookedBranch.second->Init(r, slot);
+   for (auto &ptr : fBookedActions) ptr->Init(r, slot);
+   for (auto &ptr : fBookedFilters) ptr->Init(r, slot);
 }
 
 /// Initialize all nodes of the functional graph before running the event loop
