@@ -60,6 +60,7 @@ where bufferSize must be passed in bytes.
 #ifdef R__USE_IMT
 #include "tbb/task.h"
 #include "tbb/task_group.h"
+#include "tbb/concurrent_vector.h"
 //#include "tbb/tbbmalloc_proxy.h"
 #include <thread>
 #include <string>
@@ -89,9 +90,11 @@ TTreeCacheUnzip::TTreeCacheUnzip() : TTreeCache(),
    fCycle(0),
    fLastReadPos(0),
    fBlocksToGo(0),
+#ifndef R__USE_IMT
    fUnzipLen(0),
    fUnzipChunks(0),
    fUnzipStatus(0),
+#endif
    fTotalUnzipBytes(0),
    fNseekMax(0),
    fUnzipBufferSize(0),
@@ -115,9 +118,11 @@ TTreeCacheUnzip::TTreeCacheUnzip(TTree *tree, Int_t buffersize) : TTreeCache(tre
    fCycle(0),
    fLastReadPos(0),
    fBlocksToGo(0),
+#ifndef R__USE_IMT
    fUnzipLen(0),
    fUnzipChunks(0),
    fUnzipStatus(0),
+#endif
    fTotalUnzipBytes(0),
    fNseekMax(0),
    fUnzipBufferSize(0),
@@ -165,9 +170,11 @@ void TTreeCacheUnzip::Init()
 
       StartThreadUnzip(THREADCNT);
 #else
+      fUnzipLen.clear();
+      fUnzipChunks.clear();
+      fUnzipStatus.clear();
 
       UnzipCacheTBB();//##
-
 #endif
 
    }
@@ -192,17 +199,24 @@ TTreeCacheUnzip::~TTreeCacheUnzip()
 
    if (IsActiveThread())
       StopThreadUnzip();
-
+#ifdef R__USE_IMT
+   fUnzipLen.clear();
+#else
    delete [] fUnzipLen;
+#endif
 
    delete fUnzipStartCondition;
    delete fUnzipDoneCondition;
 
    delete fMutexList;
    delete fIOMutex;
-
+#ifdef R__USE_IMT
+   fUnzipStatus.clear();
+   fUnzipChunks.clear();
+#else
    delete [] fUnzipStatus;
    delete [] fUnzipChunks;
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -680,13 +694,21 @@ void TTreeCacheUnzip::ResetCache()
    // Reset all the lists and wipe all the chunks
    fCycle++;
    for (Int_t i = 0; i < fNseekMax; i++) {
+#ifdef R__USE_IMT
+      if (!fUnzipLen.empty()) fUnzipLen[i] = 0;
+      if (!fUnzipChunks.empty()) {
+         if (fUnzipChunks[i]) delete [] fUnzipChunks[i];
+         fUnzipChunks[i] = 0;
+      }
+      if (!fUnzipStatus.empty()) fUnzipStatus[i] = 0;
+#else
       if (fUnzipLen) fUnzipLen[i] = 0;
       if (fUnzipChunks) {
          if (fUnzipChunks[i]) delete [] fUnzipChunks[i];
          fUnzipChunks[i] = 0;
       }
       if (fUnzipStatus) fUnzipStatus[i] = 0;
-
+#endif
    }
 
 //   while (fActiveBlks.size()) fActiveBlks.pop();
@@ -694,7 +716,14 @@ void TTreeCacheUnzip::ResetCache()
    if(fNseekMax < fNseek){
       if (gDebug > 0)
          Info("ResetCache", "Changing fNseekMax from:%d to:%d", fNseekMax, fNseek);
-
+#ifdef R__USE_IMT
+      tbb::concurrent_vector<Byte_t> aUnzipStatus(fNseek, (unsigned char)0);
+      tbb::concurrent_vector<Int_t>  aUnzipLen(fNseek, 0);
+      tbb::concurrent_vector<char*>  aUnzipChunks(fNseek, (char*)0);
+      fUnzipStatus = aUnzipStatus;
+      fUnzipLen = aUnzipLen;
+      fUnzipChunks = aUnzipChunks;
+#else
       Byte_t *aUnzipStatus = new Byte_t[fNseek];
       memset(aUnzipStatus, 0, fNseek*sizeof(Byte_t));
 
@@ -711,7 +740,7 @@ void TTreeCacheUnzip::ResetCache()
       fUnzipStatus  = aUnzipStatus;
       fUnzipLen  = aUnzipLen;
       fUnzipChunks = aUnzipChunks;
-
+#endif
       fNseekMax  = fNseek;
    }
 
@@ -896,7 +925,48 @@ Int_t TTreeCacheUnzip::GetUnzipBuffer(char **buf, Long64_t pos, Int_t len, Bool_
 	   if(fNseekMax < fNseek){
 		   if (gDebug > 0)
 			   Info("GetUnzipBuffer", "Changing fNseekMax from:%d to:%d", fNseekMax, fNseek);
+/*
+#ifdef R__USE_IMT
+      tbb::concurrent_vector<Byte_t> aUnzipStatus(fNseek, 0);
+      tbb::concurrent_vector<Int_t>  aUnzipLen(fNseek, 0);
+      tbb::concurrent_vector<char*>  aUnzipChunks(fNseek, 0);
+      fUnzipStatus = aUnzipStatus;
+      fUnzipLen = aUnzipLen;
+      fUnzipChunks = aUnzipChunks;
+#else
+      Byte_t *aUnzipStatus = new Byte_t[fNseek];
+      memset(aUnzipStatus, 0, fNseek*sizeof(Byte_t));
 
+      Int_t *aUnzipLen = new Int_t[fNseek];
+      memset(aUnzipLen, 0, fNseek*sizeof(Int_t));
+
+      char **aUnzipChunks = new char *[fNseek];
+      memset(aUnzipChunks, 0, fNseek*sizeof(char *));
+
+      if (fUnzipStatus) delete [] fUnzipStatus;
+      if (fUnzipLen) delete [] fUnzipLen;
+      if (fUnzipChunks) delete [] fUnzipChunks;
+
+      fUnzipStatus  = aUnzipStatus;
+      fUnzipLen  = aUnzipLen;
+      fUnzipChunks = aUnzipChunks;
+#endif
+*/
+#ifdef R__USE_IMT
+                   tbb::concurrent_vector<Byte_t> aUnzipStatus(fNseek, (unsigned char)0);
+                   tbb::concurrent_vector<Int_t>  aUnzipLen(fNseek, 0);
+                   tbb::concurrent_vector<char*>  aUnzipChunks(fNseek, (char*)0);
+ 
+		   for (Int_t i = 0; i < fNseekMax; i++) {
+			   aUnzipStatus[i] = fUnzipStatus[i];
+			   aUnzipLen[i] = fUnzipLen[i];
+			   aUnzipChunks[i] = fUnzipChunks[i];
+		   }
+                 
+                   fUnzipStatus = aUnzipStatus;
+                   fUnzipLen = aUnzipLen;
+                   fUnzipChunks = aUnzipChunks;
+#else
 		   Byte_t *aUnzipStatus = new Byte_t[fNseek];
 		   memset(aUnzipStatus, 0, fNseek*sizeof(Byte_t));
 
@@ -919,7 +989,7 @@ Int_t TTreeCacheUnzip::GetUnzipBuffer(char **buf, Long64_t pos, Int_t len, Bool_
 		   fUnzipStatus  = aUnzipStatus;
 		   fUnzipLen  = aUnzipLen;
 		   fUnzipChunks = aUnzipChunks;
-
+#endif
 		   fNseekMax  = fNseek;
 	   }
 
@@ -1082,6 +1152,21 @@ Int_t TTreeCacheUnzip::GetUnzipBuffer(char **buf, Long64_t pos, Int_t len, Bool_
             if (gDebug > 0)
                Info("GetUnzipBuffer", "Changing fNseekMax from:%d to:%d", fNseekMax, fNseek);
 
+#ifdef R__USE_IMT
+            tbb::concurrent_vector<Byte_t> aUnzipStatus(fNseek, 0);
+            tbb::concurrent_vector<Int_t>  aUnzipLen(fNseek, 0);
+            tbb::concurrent_vector<char*>  aUnzipChunks(fNseek, 0);
+ 
+            for (Int_t i = 0; i < fNseekMax; i++) {
+               aUnzipStatus[i] = fUnzipStatus[i];
+               aUnzipLen[i] = fUnzipLen[i];
+               aUnzipChunks[i] = fUnzipChunks[i];
+            }
+     
+            fUnzipStatus = aUnzipStatus;
+            fUnzipLen = aUnzipLen;
+            fUnzipChunks = aUnzipChunks;
+#else
             Byte_t *aUnzipStatus = new Byte_t[fNseek];
             memset(aUnzipStatus, 0, fNseek*sizeof(Byte_t));
 
@@ -1104,7 +1189,7 @@ Int_t TTreeCacheUnzip::GetUnzipBuffer(char **buf, Long64_t pos, Int_t len, Bool_
             fUnzipStatus  = aUnzipStatus;
             fUnzipLen  = aUnzipLen;
             fUnzipChunks = aUnzipChunks;
-
+#endif
             fNseekMax  = fNseek;
          }
 

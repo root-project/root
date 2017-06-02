@@ -29,6 +29,10 @@
 
 #include <queue>
 
+#ifdef R__USE_IMT
+#include "tbb/concurrent_vector.h"
+#endif
+
 class TTree;
 class TBranch;
 class TThread;
@@ -61,9 +65,17 @@ protected:
    Int_t       fBlocksToGo;
 
    // Unzipping related members
+
+#ifdef R__USE_IMT
+   tbb::concurrent_vector<Int_t>  fUnzipLen;
+   tbb::concurrent_vector<char*>  fUnzipChunks;
+   tbb::concurrent_vector<Byte_t> fUnzipStatus;
+#else
    Int_t      *fUnzipLen;         ///<! [fNseek] Length of the unzipped buffers
    char      **fUnzipChunks;      ///<! [fNseek] Individual unzipped chunks. Their summed size is kept under control.
    Byte_t     *fUnzipStatus;      ///<! [fNSeek] For each blk, tells us if it's unzipped or pending
+#endif
+
    Long64_t    fTotalUnzipBytes;  ///<! The total sum of the currently unzipped blks
 
    Int_t       fNseekMax;         ///<!  fNseek can change so we need to know its max size
