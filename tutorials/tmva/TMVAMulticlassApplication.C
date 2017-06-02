@@ -41,12 +41,13 @@ void TMVAMulticlassApplication( TString myMethodList = "" )
    std::map<std::string,int> Use;
    Use["MLP"]             = 1;
    Use["BDTG"]            = 1;
+   Use["DNN_CPU"] = 0;
    Use["FDA_GA"]          = 0;
    Use["PDEFoam"]         = 0;
    //---------------------------------------------------------------
 
    std::cout << std::endl;
-   std::cout << "==> Start TMVAMulticlassApplication" << std::endl;
+   std::cout << "==> Start TMVAMulticlassApp" << std::endl;
    if (myMethodList != "") {
       for (std::map<std::string,int>::iterator it = Use.begin(); it != Use.end(); it++) it->second = 0;
 
@@ -91,11 +92,12 @@ void TMVAMulticlassApplication( TString myMethodList = "" )
 
    // book output histograms
    UInt_t nbin = 100;
-   TH1F *histMLP_signal(0), *histBDTG_signal(0), *histFDAGA_signal(0), *histPDEFoam_signal(0);
+   TH1F *histMLP_signal(0), *histBDTG_signal(0), *histFDAGA_signal(0), *histPDEFoam_signal(0), *histDNNCPU_signal(0);
    if (Use["MLP"])
       histMLP_signal    = new TH1F( "MVA_MLP_signal",    "MVA_MLP_signal",    nbin, 0., 1.1 );
    if (Use["BDTG"])
       histBDTG_signal  = new TH1F( "MVA_BDTG_signal",   "MVA_BDTG_signal",   nbin, 0., 1.1 );
+   if (Use["DNN_CPU"]) histDNNCPU_signal = new TH1F("MVA_DNNCPU_signal", "MVA_DNNCPU_signal", nbin, 0., 1.1);
    if (Use["FDA_GA"])
       histFDAGA_signal = new TH1F( "MVA_FDA_GA_signal", "MVA_FDA_GA_signal", nbin, 0., 1.1 );
    if (Use["PDEFoam"])
@@ -139,6 +141,7 @@ void TMVAMulticlassApplication( TString myMethodList = "" )
          histMLP_signal->Fill((reader->EvaluateMulticlass( "MLP method" ))[0]);
       if (Use["BDTG"])
          histBDTG_signal->Fill((reader->EvaluateMulticlass( "BDTG method" ))[0]);
+      if (Use["DNN_CPU"]) histDNNCPU_signal->Fill((reader->EvaluateMulticlass("DNN_CPU method"))[0]);
       if (Use["FDA_GA"])
          histFDAGA_signal->Fill((reader->EvaluateMulticlass( "FDA_GA method" ))[0]);
       if (Use["PDEFoam"])
@@ -155,6 +158,7 @@ void TMVAMulticlassApplication( TString myMethodList = "" )
       histMLP_signal->Write();
    if (Use["BDTG"])
       histBDTG_signal->Write();
+   if (Use["DNN_CPU"]) histDNNCPU_signal->Write();
    if (Use["FDA_GA"])
       histFDAGA_signal->Write();
    if (Use["PDEFoam"])
@@ -165,7 +169,7 @@ void TMVAMulticlassApplication( TString myMethodList = "" )
 
    delete reader;
 
-   std::cout << "==> TMVAClassificationApplication is done!" << std::endl << std::endl;
+   std::cout << "==> TMVAMulticlassApp is done!" << std::endl << std::endl;
 }
 
 int main( int argc, char** argv )

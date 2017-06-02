@@ -152,9 +152,7 @@ void TMVA::MethodDNN::DeclareOptions()
    AddPreDefVal(TString("XAVIER"));
    AddPreDefVal(TString("XAVIERUNIFORM"));
 
-   DeclareOptionRef(fArchitectureString="STANDARD",
-                    "Architecture",
-                    "Which architecture to perform the training on.");
+   DeclareOptionRef(fArchitectureString = "CPU", "Architecture", "Which architecture to perform the training on.");
    AddPreDefVal(TString("STANDARD"));
    AddPreDefVal(TString("CPU"));
    AddPreDefVal(TString("GPU"));
