@@ -1102,7 +1102,7 @@ protected:
             t.Fill();
          };
 
-         auto initLambda = [&t] (TTreeReader *r, unsigned int slot) {
+         auto initLambda = [&t] (TTreeReader *r, unsigned int /* unused */) {
             if(r) {
                // not an empty-source TDF
                auto tree = r->GetTree();
