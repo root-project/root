@@ -7,6 +7,9 @@ endif()
 
 set(DFLIBRARIES Core TreePlayer Hist Tree RIO MathCore)
 
+ROOTTEST_ADD_TEST(test_snapshotNFiles
+                  MACRO test_snapshotNFiles.C)
+
 ROOTTEST_ADD_TEST(test_listFilesCtor
                   MACRO test_listFilesCtor.C)
 
