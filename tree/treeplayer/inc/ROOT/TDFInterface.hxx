@@ -1092,7 +1092,7 @@ protected:
 
          bool FirstEvent = true;
          // TODO move fillTree and initLambda to SnapshotHelper's body
-         auto fillTree = [&t, &bnames, &FirstEvent](unsigned int /* unused */, Args &... args) {
+         auto fillTree = [&t, &bnames, &FirstEvent](unsigned int /* slot */, Args &... args) {
             if (FirstEvent) {
                // hack to call TTree::Branch on all variadic template arguments
                std::initializer_list<int> expander = {(t.Branch(bnames[S].c_str(), &args), 0)..., 0};
@@ -1102,7 +1102,7 @@ protected:
             t.Fill();
          };
 
-         auto initLambda = [&t] (TTreeReader *r, unsigned int /* unused */) {
+         auto initLambda = [&t] (TTreeReader *r, unsigned int /* slot */) {
             if(r) {
                // not an empty-source TDF
                auto tree = r->GetTree();
