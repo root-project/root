@@ -416,6 +416,27 @@ extern template void MeanHelper::Exec(unsigned int, const std::vector<char> &);
 extern template void MeanHelper::Exec(unsigned int, const std::vector<int> &);
 extern template void MeanHelper::Exec(unsigned int, const std::vector<unsigned int> &);
 
+template <typename F>
+class SnapshotHelper {
+   F fCallable;
+
+public:
+   using BranchTypes_t = typename TRemoveFirst<typename TFunctionTraits<F>::Args_t>::Types_t;
+   SnapshotHelper(F &&f) : fCallable(f) {}
+
+   void Init(TTreeReader*) { /* TODO */ }
+
+   template <typename... Args>
+   void Exec(unsigned int slot, Args &&... args)
+   {
+      // check that the decayed types of Args are the same as the branch types
+      static_assert(std::is_same<TTypeList<typename std::decay<Args>::type...>, BranchTypes_t>::value, "");
+      fCallable(slot, std::forward<Args>(args)...);
+   }
+
+   void Finalize() { /* noop */}
+};
+
 } // end of NS TDF
 } // end of NS Internal
 } // end of NS ROOT
