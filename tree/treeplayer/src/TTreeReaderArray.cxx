@@ -355,7 +355,7 @@ void ROOT::Internal::TTreeReaderArrayBase::CreateProxy()
       const char* brDataType = "{UNDETERMINED}";
       if (br) {
          TDictionary* dictUnused = 0;
-         brDataType = GetBranchDataType(br, dictUnused);
+         brDataType = GetBranchDataType(br, dictUnused, fDict);
       }
       Error("TTreeReaderArrayBase::CreateProxy()", "The template argument type T of %s accessing branch %s (which contains data of type %s) is not known to ROOT. You will need to create a dictionary for it.",
             GetDerivedTypeName(), fBranchName.Data(), brDataType);

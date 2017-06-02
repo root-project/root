@@ -12,6 +12,15 @@
 #ifndef ROOT_TTreeReaderValue
 #define ROOT_TTreeReaderValue
 
+////////////////////////////////////////////////////////////////////////////
+//                                                                        //
+// TTreeReaderValue                                                       //
+//                                                                        //
+// A simple interface for reading data from trees or chains.              //
+//                                                                        //
+//                                                                        //
+////////////////////////////////////////////////////////////////////////////
+
 #include "TString.h"
 #include "TDictionary.h"
 #include "TBranchProxy.h"
@@ -90,8 +99,9 @@ Base class of TTreeReaderValue.
 
       TBranch* SearchBranchWithCompositeName(TLeaf *&myleaf, TDictionary *&branchActualType, std::string &err);
       virtual void CreateProxy();
-      const char* GetBranchDataType(TBranch* branch,
-                                    TDictionary* &dict) const;
+      static const char* GetBranchDataType(TBranch* branch,
+                                           TDictionary* &dict,
+                                           TDictionary const *curDict);
 
       virtual const char* GetDerivedTypeName() const = 0;
 
