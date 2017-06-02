@@ -18,6 +18,7 @@ The following people have contributed to this new version:
  Philippe Canal, FNAL,\
  Olivier Couet, CERN/SFT,\
  Kyle Cranmer, NYU, RooStats,\
+ George Troska, Dortmund Univ.,\
  Gerri Ganis, CERN/SFT,\
  Andrei Gheata, CERN/SFT,\
  Christopher Jones, Fermilab, CMS,\
@@ -64,6 +65,10 @@ The following interfaces have been removed, after deprecation in v6.10.
     bottom and vice versa. This was [suggested by Karl Smith](https://root-forum.cern.ch/t/inverted-color-palettes/24826/2).
   - New method `TColor::SetColorThreshold(Float_t t)` to specify the color
     threshold used by GetColor to retrieve a color.
+  - Improvements in candle plots:
+    -  LogZ for violins
+    -  scaling of candles and violins with respect to each other
+    -  static functions for WhiskerRange and BoxRange
 
 ## 3D Graphics Libraries
 
