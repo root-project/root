@@ -51,7 +51,7 @@ void TMVAMulticlass( TString myMethodList = "" )
    std::map<std::string,int> Use;
    Use["MLP"]             = 1;
    Use["BDTG"]            = 1;
-   Use["DNN"]             = 0;
+   Use["DNN_CPU"] = 0;
    Use["FDA_GA"]          = 0;
    Use["PDEFoam"]         = 0;
    //---------------------------------------------------------------
@@ -131,19 +131,21 @@ void TMVAMulticlass( TString myMethodList = "" )
    if (Use["PDEFoam"]) // PDE-Foam approach
       factory->BookMethod( dataloader,  TMVA::Types::kPDEFoam, "PDEFoam", "!H:!V:TailCut=0.001:VolFrac=0.0666:nActiveCells=500:nSampl=2000:nBin=5:Nmin=100:Kernel=None:Compress=T" );
 
-   if (Use["DNN"]) {
-       TString layoutString ("Layout=TANH|100,TANH|50,TANH|10,LINEAR");
-       TString training0 ("LearningRate=1e-1, Momentum=0.5, Repetitions=1, ConvergenceSteps=10,"
-                          " BatchSize=256, TestRepetitions=10, Multithreading=True");
-       TString training1 ("LearningRate=1e-2, Momentum=0.0, Repetitions=1, ConvergenceSteps=10,"
-                          " BatchSize=256, TestRepetitions=7, Multithreading=True");
-       TString trainingStrategyString ("TrainingStrategy=");
-       trainingStrategyString += training0 + "|" + training1;
-       TString nnOptions ("!H:V:ErrorStrategy=CROSSENTROPY:VarTransform=N:"
-                          "WeightInitialization=XAVIERUNIFORM:Architecture=STANDARD");
-       nnOptions.Append (":"); nnOptions.Append (layoutString);
-       nnOptions.Append (":"); nnOptions.Append (trainingStrategyString);
-       factory->BookMethod(dataloader, TMVA::Types::kDNN, "DNN", nnOptions );
+   if (Use["DNN_CPU"]) {
+      TString layoutString("Layout=TANH|100,TANH|50,TANH|10,LINEAR");
+      TString training0("LearningRate=1e-1, Momentum=0.5, Repetitions=1, ConvergenceSteps=10,"
+                        " BatchSize=256, TestRepetitions=10, Multithreading=True");
+      TString training1("LearningRate=1e-2, Momentum=0.0, Repetitions=1, ConvergenceSteps=10,"
+                        " BatchSize=256, TestRepetitions=7, Multithreading=True");
+      TString trainingStrategyString("TrainingStrategy=");
+      trainingStrategyString += training0 + "|" + training1;
+      TString nnOptions("!H:V:ErrorStrategy=CROSSENTROPY:VarTransform=N:"
+                        "WeightInitialization=XAVIERUNIFORM:Architecture=CPU");
+      nnOptions.Append(":");
+      nnOptions.Append(layoutString);
+      nnOptions.Append(":");
+      nnOptions.Append(trainingStrategyString);
+      factory->BookMethod(dataloader, TMVA::Types::kDNN, "DNN_CPU", nnOptions);
    }
 
    // Train MVAs using the set of training events
@@ -161,7 +163,7 @@ void TMVAMulticlass( TString myMethodList = "" )
    outputFile->Close();
 
    std::cout << "==> Wrote root file: " << outputFile->GetName() << std::endl;
-   std::cout << "==> TMVAClassification is done!" << std::endl;
+   std::cout << "==> TMVAMulticlass is done!" << std::endl;
 
    delete factory;
    delete dataloader;

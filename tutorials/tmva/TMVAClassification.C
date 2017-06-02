@@ -119,7 +119,6 @@ int TMVAClassification( TString myMethodList = "" )
    Use["MLPBNN"]          = 1; // Recommended ANN with BFGS training method and bayesian regulator
    Use["CFMlpANN"]        = 0; // Depreciated ANN from ALEPH
    Use["TMlpANN"]         = 0; // ROOT's own ANN
-   Use["DNN"]             = 0;     // Deep Neural Network
    Use["DNN_GPU"]         = 0; // CUDA-accelerated DNN training.
    Use["DNN_CPU"]         = 0; // Multi-core accelerated DNN.
    //
@@ -437,8 +436,7 @@ int TMVAClassification( TString myMethodList = "" )
 
 
    // Multi-architecture DNN implementation.
-   if (Use["DNN"])
-   {
+   if (Use["DNN_CPU"] or Use["DNN_GPU"]) {
       // General layout.
       TString layoutString ("Layout=TANH|128,TANH|128,TANH|128,LINEAR");
 
@@ -464,19 +462,15 @@ int TMVAClassification( TString myMethodList = "" )
       dnnOptions.Append (":"); dnnOptions.Append (layoutString);
       dnnOptions.Append (":"); dnnOptions.Append (trainingStrategyString);
 
-      // Standard implementation, no dependencies.
-      TString stdOptions = dnnOptions + ":Architecture=STANDARD";
-      factory->BookMethod(dataloader, TMVA::Types::kDNN, "DNN", stdOptions);
-
       // Cuda implementation.
       if (Use["DNN_GPU"]) {
          TString gpuOptions = dnnOptions + ":Architecture=GPU";
-         factory->BookMethod(dataloader, TMVA::Types::kDNN, "DNN GPU", gpuOptions);
+         factory->BookMethod(dataloader, TMVA::Types::kDNN, "DNN_GPU", gpuOptions);
       }
       // Multi-core CPU implementation.
       if (Use["DNN_CPU"]) {
          TString cpuOptions = dnnOptions + ":Architecture=CPU";
-         factory->BookMethod(dataloader, TMVA::Types::kDNN, "DNN CPU", cpuOptions);
+         factory->BookMethod(dataloader, TMVA::Types::kDNN, "DNN_CPU", cpuOptions);
       }
    }
 
