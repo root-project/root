@@ -23,7 +23,7 @@ R__LOAD_LIBRARY(libGpad);
 
 // Show how to display v6 objects in a v7 TCanvas.
 
-void drawOld() {
+void draw_v6() {
   using namespace ROOT;
 
   static constexpr int npoints = 4;
