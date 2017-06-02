@@ -38,10 +38,5 @@ void pass_mine_rp(MyShareable);
 void pass_mine_rp_ref(const MyShareable&);
 void pass_mine_rp_ptr(const MyShareable*);
 
-#ifdef __GCCXML__
-// GCCXML explicit template instantiation block
-template class shared_ptr<MyShareable>;
-#endif
-
 #endif
 
