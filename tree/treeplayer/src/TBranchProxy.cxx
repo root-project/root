@@ -27,7 +27,7 @@ using namespace ROOT::Internal;
 ROOT::Detail::TBranchProxy::TBranchProxy() :
    fDirector(0), fInitialized(false), fIsMember(false), fIsClone(false), fIsaPointer(false),
    fHasLeafCount(false), fBranchName(""), fParent(0), fDataMember(""),
-   fClassName(""), fClass(0), fElement(0), fMemberOffset(0), fOffset(0),
+   fClassName(""), fClass(0), fElement(0), fMemberOffset(0), fOffset(0), fArrayLength(1),
    fBranch(0), fBranchCount(0),
    fLastTree(0), fRead(-1), fWhere(0),fCollection(0), fCurrentTreeNumber(-1)
 {
@@ -38,7 +38,7 @@ ROOT::Detail::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, const char*
                                  const char* name) :
    fDirector(boss), fInitialized(false), fIsMember(false), fIsClone(false), fIsaPointer(false),
    fHasLeafCount(false), fBranchName(top), fParent(0), fDataMember(""),
-   fClassName(""), fClass(0), fElement(0), fMemberOffset(0), fOffset(0),
+   fClassName(""), fClass(0), fElement(0), fMemberOffset(0), fOffset(0), fArrayLength(1),
    fBranch(0), fBranchCount(0),
    fLastTree(0), fRead(-1),  fWhere(0),fCollection(0), fCurrentTreeNumber(-1)
 {
@@ -54,7 +54,7 @@ ROOT::Detail::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, const char*
 ROOT::Detail::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, const char *top, const char *name, const char *membername) :
    fDirector(boss), fInitialized(false), fIsMember(true), fIsClone(false), fIsaPointer(false),
    fHasLeafCount(false), fBranchName(top), fParent(0), fDataMember(membername),
-   fClassName(""), fClass(0), fElement(0), fMemberOffset(0), fOffset(0),
+   fClassName(""), fClass(0), fElement(0), fMemberOffset(0), fOffset(0), fArrayLength(1),
    fBranch(0), fBranchCount(0),
    fLastTree(0), fRead(-1), fWhere(0),fCollection(0), fCurrentTreeNumber(-1)
 {
@@ -73,7 +73,7 @@ ROOT::Detail::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, Detail::TBr
                                  const char* name) :
    fDirector(boss), fInitialized(false), fIsMember(true), fIsClone(false), fIsaPointer(false),
    fHasLeafCount(false), fBranchName(top), fParent(parent), fDataMember(membername),
-   fClassName(""), fClass(0), fElement(0), fMemberOffset(0), fOffset(0),
+   fClassName(""), fClass(0), fElement(0), fMemberOffset(0), fOffset(0), fArrayLength(1),
    fBranch(0), fBranchCount(0),
    fLastTree(0), fRead(-1), fWhere(0),fCollection(0), fCurrentTreeNumber(-1)
 {
@@ -91,7 +91,7 @@ ROOT::Detail::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, Detail::TBr
 ROOT::Detail::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, TBranch* branch, const char* membername) :
    fDirector(boss), fInitialized(false), fIsMember(membername != 0 && membername[0]), fIsClone(false), fIsaPointer(false),
    fHasLeafCount(false), fBranchName(branch->GetName()), fParent(0), fDataMember(membername),
-   fClassName(""), fClass(0), fElement(0), fMemberOffset(0), fOffset(0),
+   fClassName(""), fClass(0), fElement(0), fMemberOffset(0), fOffset(0), fArrayLength(1),
    fBranch(0), fBranchCount(0),
    fLastTree(0), fRead(-1), fWhere(0),fCollection(0), fCurrentTreeNumber(-1)
 {
@@ -116,6 +116,8 @@ void ROOT::Detail::TBranchProxy::Reset()
    fClass = 0;
    fElement = 0;
    fMemberOffset = 0;
+   fOffset = 0;
+   fArrayLength = 1;
    fIsClone = false;
    fInitialized = false;
    fHasLeafCount = false;
@@ -193,6 +195,8 @@ Bool_t ROOT::Detail::TBranchProxy::Setup()
 
       fOffset = fMemberOffset = fElement->GetOffset();
 
+      fArrayLength = fElement->GetArrayLength();
+
       fWhere = fParent->fWhere; // not really used ... it is reset by GetStart and GetClStart
 
       if (fParent->IsaPointer()) {
@@ -239,14 +243,17 @@ Bool_t ROOT::Detail::TBranchProxy::Setup()
          TLeaf *leaf2 = nullptr;
          if (fDataMember.Length()) {
             leaf2 = fBranch->GetLeaf(fDataMember);
-            if (leaf2) fWhere = leaf2->GetValuePointer();
          } else if (!fWhere) {
             leaf2 = (TLeaf*)fBranch->GetListOfLeaves()->At(0); // fBranch->GetLeaf(fLeafname);
             fWhere = leaf2->GetValuePointer();
          }
-         if (leaf2 && leaf2->GetLeafCount()) {
-           fLeafCount = leaf2->GetLeafCount();
-           fHasLeafCount = true;
+         if (leaf2) {
+            fWhere = leaf2->GetValuePointer();
+            fArrayLength = leaf2->GetLen();
+            if (leaf2->GetLeafCount()) {
+               fLeafCount = leaf2->GetLeafCount();
+               fHasLeafCount = true;
+            }
          }
       }
 
