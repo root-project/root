@@ -49,7 +49,7 @@ public:
    /// booking of actions or transformations.
    /// See TInterface for the documentation of the
    /// methods available.
-   template <typename FILENAMESCOLL,
+   template <typename FILENAMESCOLL = std::vector<std::string>,
              typename std::enable_if<TDFInternal::TIsContainer<FILENAMESCOLL>::fgValue, int>::type = 0>
    TDataFrame(std::string_view treeName, const FILENAMESCOLL &filenamescoll,
               const ColumnNames_t &defaultBranches = {});
