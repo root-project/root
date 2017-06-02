@@ -19,6 +19,9 @@
 
 namespace ROOT {
 namespace Experimental {
+
+class TCanvas;
+
 namespace Internal {
 
 class TVirtualCanvasPainter;
@@ -31,7 +34,6 @@ class TDrawable {
 public:
   virtual ~TDrawable();
 
-  /// Paint the object
   virtual void Paint(TVirtualCanvasPainter& onCanv) = 0;
 };
 

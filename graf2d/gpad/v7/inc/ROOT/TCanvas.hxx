@@ -26,6 +26,10 @@
 namespace ROOT {
 namespace Experimental {
 
+namespace Internal {
+class TCanvasSharedPtrMaker;
+}
+
 /** \class ROOT::Experimental::TCanvas
   Graphic container for `TDrawable`-s.
   Access is through TCanvasPtr.
@@ -35,12 +39,15 @@ class TCanvas {
 public:
   using Primitives_t = std::vector<std::unique_ptr<Internal::TDrawable>>;
 
-private:
+ private:
   /// Content of the pad.
   Primitives_t fPrimitives;
 
   /// Title of the canvas.
   std::string fTitle;
+
+  /// If canvas modified.
+  bool fModified;
 
   /// The painter of this canvas, bootstrapping the graphics connection.
   /// Unmapped canvases (those that never had `Draw()` invoked) might not have
@@ -110,12 +117,17 @@ public:
   /// Remove an object from the list of primitives.
   //TODO: void Wipe();
 
+   void Modified() { fModified = true; }
+
   /// Actually display the canvas.
   void Show() {
     fPainter = Internal::TVirtualCanvasPainter::Create(*this);
   }
 
-  /// Get the canvas's title.
+  /// update drawing
+  void Update();
+
+   /// Get the canvas's title.
   const std::string& GetTitle() const { return fTitle; }
 
   /// Set the canvas's title.

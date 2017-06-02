@@ -15,7 +15,13 @@
 
 #include "ROOT/TCanvas.hxx"
 
+#include "ROOT/TDrawable.hxx"
+#include "ROOT/TLogger.hxx"
+
 #include <memory>
+#include <stdio.h>
+#include <string.h>
+
 
 namespace {
 static
@@ -25,11 +31,28 @@ std::vector<std::shared_ptr<ROOT::Experimental::TCanvas>>& GetHeldCanvases() {
 }
 }
 
-
 const std::vector<std::shared_ptr<ROOT::Experimental::TCanvas>> &
 ROOT::Experimental::TCanvas::GetCanvases() {
   return GetHeldCanvases();
 }
+
+
+//void ROOT::Experimental::TCanvas::Paint() {
+//  for (auto&& drw: fPrimitives) {
+//    drw->Paint(*this);
+//  }
+// }
+
+
+void ROOT::Experimental::TCanvas::Update() {
+  // SnapshotList_t lst;
+  // for (auto&& drw: fPrimitives) {
+  //   TSnapshot *snap = drw->CreateSnapshot(*this);
+  //   lst.push_back(std::unique_ptr<TSnapshot>(snap));
+  // }
+}
+
+
 
 std::shared_ptr<ROOT::Experimental::TCanvas>
 ROOT::Experimental::TCanvas::Create(const std::string& title) {

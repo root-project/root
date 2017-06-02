@@ -17,6 +17,8 @@
 
 #include <memory>
 
+#include "ROOT/TDisplayItem.hxx"
+
 namespace ROOT {
 namespace Experimental {
 class TCanvas;
@@ -42,6 +44,8 @@ protected:
 public:
   /// Default destructor.
   virtual ~TVirtualCanvasPainter();
+  
+  virtual void AddDisplayItem(TDisplayItem *item) = 0;
 
   /// Loads the plugin that implements this class.
   static std::unique_ptr<TVirtualCanvasPainter> Create(const TCanvas& canv);
