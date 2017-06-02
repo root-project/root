@@ -29,7 +29,7 @@ namespace {
 
 class TCanvasPainter: public ROOT::Experimental::Internal::TVirtualCanvasPainter /*, THttpSocketListener*/ {
 private:
-  /// The canvas we are painting. It might go out of existance while painting.
+  /// The canvas we are painting. It might go out of existence while painting.
   const ROOT::Experimental::TCanvas& fCanvas;
   /// Disable copy construction.
   TCanvasPainter(const TCanvasPainter&) = delete;
