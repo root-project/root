@@ -43,8 +43,9 @@ public:
       kHistoRight         = 2000000,
       kHistoViolin        = 3000000,
       kHistoZeroIndicator = 10000000,
-      kHorizontal         = 1000000000 ///< If this bit is not set it is vertical
+      kHorizontal         = 100000000     ///< If this bit is not set it is vertical
    };
+
 
 protected:
 
@@ -55,6 +56,7 @@ protected:
 
    Double_t fPosCandleAxis;               ///< x-pos for a vertical candle
    Double_t fCandleWidth;                 ///< The candle width
+   Double_t fHistoWidth;                  ///< The histo width (the height of the max bin)
 
    Double_t fMean;                        ///< Position of the mean
    Double_t fMedian;                      ///< Position of the median
@@ -76,22 +78,31 @@ protected:
    int  fNHistoPoints;
 
    CandleOption fOption;                  ///< Setting the style of the candle
+   char fOptionStr[128];                  ///< String to draw the candle
    int fLogX;                             ///< make the candle appear logx-like
    int fLogY;                             ///< make the candle appear logy-like
+   int fLogZ;                             ///< make the candle appear logz-like
 
    Double_t fAxisMin;                     ///< The Minimum which is visible by the axis (used by zero indicator)
    Double_t fAxisMax;                     ///< The Maximum which is visible by the axis (used by zero indicator)
 
+   static Double_t fWhiskerRange;         ///< The fraction which is covered by the whiskers (0 < x < 1), default 1
+   static Double_t fBoxRange;             ///< The fraction which is covered by the box (0 < x < 1), default 0.5
+
+   static Bool_t fScaledCandle;           ///< shall the box-width be scaled to each other by the integral of a box?
+   static Bool_t fScaledViolin;           ///< shall the violin or histos be scaled to each other by the maximum height?
+
    void Calculate();
 
-   int  GetCandleOption(const int pos) {return (fOption/(int)TMath::Power(10,pos))%10;}
-   bool IsOption(CandleOption opt);
+   int  GetCandleOption(const int pos) {return (fOption/(long)TMath::Power(10,pos))%10;}
+
    void PaintBox(Int_t nPoints, Double_t *x, Double_t *y, Bool_t swapXY);
    void PaintLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Bool_t swapXY);
 
 public:
 
    TCandle();
+   TCandle(const char *opt);
    TCandle(const Double_t candlePos, const Double_t candleWidth, Long64_t n, Double_t * points);
    TCandle(const Double_t candlePos, const Double_t candleWidth, TH1D *proj);
    TCandle(const TCandle &candle);
@@ -104,12 +115,15 @@ public:
    Double_t       GetQ3() const {return fBoxDown;}
    Bool_t         IsHorizontal() {return (IsOption(kHorizontal)); }
    Bool_t         IsVertical() {return (!IsOption(kHorizontal)); }
+   Bool_t         IsCandleScaled() {return fScaledCandle; }
+   Bool_t         IsViolinScaled() {return fScaledViolin; }
 
    void           SetOption(CandleOption opt) { fOption = opt; }
-   void           SetLog(int x, int y) { fLogX = x; fLogY = y; }
+   void           SetLog(int x, int y, int z) { fLogX = x; fLogY = y; fLogZ = z;}
    void           SetAxisPosition(const Double_t candlePos) { fPosCandleAxis = candlePos; }
 
-   void           SetWidth(const Double_t width) { fCandleWidth = width; }
+   void           SetCandleWidth(const Double_t width) { fCandleWidth = width; }
+   void           SetHistoWidth(const Double_t width) { fHistoWidth = width; }
    void           SetHistogram(TH1D *proj) { fProj = proj; fIsCalculated = false;}
 
    virtual void   Paint(Option_t *option="");
@@ -122,7 +136,14 @@ public:
    virtual void   SetQ3(Double_t q3) { fBoxDown = q3; }
 
    int            ParseOption(char *optin);
+   const char *   GetDrawOption() { return fOptionStr; }
+   long           GetOption() { return fOption; }
+   bool           IsOption(CandleOption opt);
+   static void    SetWhiskerRange(const Double_t wRange);
+   static void    SetBoxRange(const Double_t bRange);
+   static void    SetScaledCandle(const Bool_t cScale = true);
+   static void    SetScaledViolin(const Bool_t vScale = true);
 
-   ClassDef(TCandle,1)  //A Candle
+   ClassDef(TCandle,2)  //A Candle
 };
 #endif
