@@ -281,7 +281,7 @@ public:
       std::stringstream snapCall;
       // build a string equivalent to
       // "reinterpret_cast</nodetype/*>(this)->Snapshot<Ts...>(treename,filename,*reinterpret_cast<ColumnNames_t*>(&bnames))"
-      snapCall << "((" << GetNodeTypeName() << "*)" << this << ")->Snapshot<";
+      snapCall << "if (gROOTMutex) gROOTMutex->UnLock(); ((" << GetNodeTypeName() << "*)" << this << ")->Snapshot<";
       bool first = true;
       for (auto &b : bnames) {
          if (!first) snapCall << ", ";
