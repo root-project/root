@@ -151,7 +151,6 @@ private:
    void             SortBranchesByTime();
 
 protected:
-   void             AddClone(TTree*);
    virtual void     KeepCircular();
    virtual TBranch *BranchImp(const char* branchname, const char* classname, TClass* ptrClass, void* addobj, Int_t bufsize, Int_t splitlevel);
    virtual TBranch *BranchImp(const char* branchname, TClass* ptrClass, void* addobj, Int_t bufsize, Int_t splitlevel);
@@ -287,6 +286,7 @@ public:
    virtual Int_t           AddBranchToCache(TBranch *branch,   Bool_t subbranches = kFALSE);
    virtual Int_t           DropBranchFromCache(const char *bname, Bool_t subbranches = kFALSE);
    virtual Int_t           DropBranchFromCache(TBranch *branch,   Bool_t subbranches = kFALSE);
+   void                    AddClone(TTree*);
    virtual TFriendElement *AddFriend(const char* treename, const char* filename = "");
    virtual TFriendElement *AddFriend(const char* treename, TFile* file);
    virtual TFriendElement *AddFriend(TTree* tree, const char* alias = "", Bool_t warn = kFALSE);
