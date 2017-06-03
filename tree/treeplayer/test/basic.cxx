@@ -13,8 +13,8 @@ TTree* MakeTree() {
    double x[3]{};
    float z = 0.;
    struct {
-      unsigned int ny;
-      int* y = nullptr;
+      unsigned int ny = 100;
+      int y[100];
    } yData;
    std::string str;
    Double32_t Double32 = 12.;
@@ -31,7 +31,6 @@ TTree* MakeTree() {
 
    x[1] = 42.;
    yData.ny = 42;
-   yData.y = new int[42]{};
    yData.y[0] = 17;
    str = "first";
    tree->Fill();
@@ -47,8 +46,6 @@ TTree* MakeTree() {
       str = std::string(entry, '*');
       tree->Fill();
    }
-
-   delete [] yData.y;
 
    tree->ResetBranchAddresses();
 
