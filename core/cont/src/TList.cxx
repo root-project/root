@@ -366,20 +366,20 @@ void TList::Clear(Option_t *option)
    // thing done will be the remove the container (the pad) for the
    // list (of Primitives of the canvas) that was connecting it
    // (indirectly) to the list of cleanups.
-   // So let's temporarily add the current list and remove it later.
-   bool needRegister = fFirst && TROOT::Initialized();
-   if(needRegister) {
-      R__LOCKGUARD(gROOTMutex);
-      needRegister = needRegister && !gROOT->GetListOfCleanups()->FindObject(this);
-   }
-   if (needRegister) {
-      R__LOCKGUARD(gROOTMutex);
-      gROOT->GetListOfCleanups()->Add(this);
-   }
+
+   // To preserve this connection (without introducing one when there was none),
+   // we re-use fCache to inform RecursiveRemove of the node currently
+   // being cleared/deleted.
    while (fFirst) {
       TObjLink *tlk = fFirst;
       fFirst = fFirst->Next();
       fSize--;
+
+
+      // Make node available to RecursiveRemove
+      tlk->fNext = tlk->fPrev = 0;
+      fCache = tlk;
+
       // delete only heap objects marked OK to clear
       if (!nodel && tlk->GetObject() && tlk->GetObject()->IsOnHeap()) {
          if (tlk->GetObject()->TestBit(kCanDelete)) {
@@ -389,10 +389,6 @@ void TList::Clear(Option_t *option)
          }
       }
       delete tlk;
-   }
-   if (needRegister) {
-      R__LOCKGUARD(gROOTMutex);
-      ROOT::GetROOT()->GetListOfCleanups()->Remove(this);
    }
    fFirst = fLast = fCache = 0;
    fSize  = 0;
@@ -421,20 +417,19 @@ void TList::Delete(Option_t *option)
       // thing done will be the remove the container (the pad) for the
       // list (of Primitives of the canvas) that was connecting it
       // (indirectly) to the list of cleanups.
-      // So let's temporarily add the current list and remove it later.
-      bool needRegister = fFirst && TROOT::Initialized();
-      if(needRegister) {
-         R__LOCKGUARD(gROOTMutex);
-         needRegister = needRegister && !gROOT->GetListOfCleanups()->FindObject(this);
-      }
-      if (needRegister) {
-         R__LOCKGUARD(gROOTMutex);
-         gROOT->GetListOfCleanups()->Add(this);
-      }
+
+      // To preserve this connection (without introducing one when there was none),
+      // we re-use fCache to inform RecursiveRemove of the node currently
+      // being cleared/deleted.
       while (fFirst) {
          TObjLink *tlk = fFirst;
          fFirst = fFirst->Next();
          fSize--;
+
+         // Make node available to RecursiveRemove
+         tlk->fNext = tlk->fPrev = 0;
+         fCache = tlk;
+
          // delete only heap objects
          if (tlk->GetObject() && tlk->GetObject()->IsOnHeap())
             TCollection::GarbageCollect(tlk->GetObject());
@@ -442,11 +437,6 @@ void TList::Delete(Option_t *option)
             removeDirectory.Add(tlk->GetObject());
 
          delete tlk;
-      }
-
-      if (needRegister) {
-         R__LOCKGUARD(gROOTMutex);
-         ROOT::GetROOT()->GetListOfCleanups()->Remove(this);
       }
 
       fFirst = fLast = fCache = 0;
@@ -639,6 +629,15 @@ TObjLink *TList::NewOptLink(TObject *obj, Option_t *opt, TObjLink *prev)
 void TList::RecursiveRemove(TObject *obj)
 {
    if (!obj) return;
+
+   // When fCache is set and has no previous and next node, it represents
+   // the node being cleared and/or deleted.
+   if (fCache && fCache->fNext == 0 && fCache->fPrev == 0) {
+      TObject *ob = fCache->GetObject();
+      if (ob && ob->TestBit(kNotDeleted)) {
+         ob->RecursiveRemove(obj);
+      }
+   }
 
    TObjLink *lnk  = fFirst;
    TObjLink *next = 0;

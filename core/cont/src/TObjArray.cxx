@@ -326,7 +326,7 @@ void TObjArray::Compress()
 ////////////////////////////////////////////////////////////////////////////////
 /// Remove all objects from the array AND delete all heap based objects.
 
-void TObjArray::Delete(Option_t *opt)
+void TObjArray::Delete(Option_t * /* opt */)
 {
    // In some case, for example TParallelCoord, a list (the pad's list of
    // primitives) will contain both the container and the containees
@@ -335,30 +335,14 @@ void TObjArray::Delete(Option_t *opt)
    // thing done will be the remove the container (the pad) from the
    // list (of Primitives of the canvas) that was connecting it
    // (indirectly) to the list of cleanups.
-   // So let's temporarily add the current list and remove it later.
-   //
-   // If opt is "noregistration", then this protect is skipped.
-   // (To avoid performance penalties, the option must be spelt exactly (no
-   // uppercase, no spaces)
-   const char *noreg = "noregistration";
-   bool needRegister = fSize && TROOT::Initialized() && strcmp(opt,noreg) == 0;
-   if(needRegister) {
-      R__LOCKGUARD(gROOTMutex);
-      needRegister = needRegister && !gROOT->GetListOfCleanups()->FindObject(this);
-   }
-   if (needRegister) {
-      R__LOCKGUARD(gROOTMutex);
-      gROOT->GetListOfCleanups()->Add(this);
-   }
+
+   // Since we set fCont[i] only after the deletion is completed, we do not
+   // lose the connection and thus do not need to take any special action.
    for (Int_t i = 0; i < fSize; i++) {
       if (fCont[i] && fCont[i]->IsOnHeap()) {
          TCollection::GarbageCollect(fCont[i]);
          fCont[i] = 0;
       }
-   }
-   if (needRegister) {
-      R__LOCKGUARD(gROOTMutex);
-      ROOT::GetROOT()->GetListOfCleanups()->Remove(this);
    }
 
    Init(fSize, fLowerBound);
