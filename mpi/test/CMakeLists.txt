@@ -16,12 +16,12 @@ else()
 endif()
 
 function(ROOT_ADD_TEST_MPI name nprocs)
-  set(test_parameters -np ${nprocs} "${CMAKE_CURRENT_SOURCE_DIR}/${name}.C")
+  set(test_parameters -np ${nprocs} -b "${CMAKE_CURRENT_SOURCE_DIR}/${name}.C")
   ROOT_ADD_TEST("test-rootmpi-${name}" COMMAND ${ROOTMPIEXEC} ${test_parameters})
 endfunction(ROOT_ADD_TEST_MPI)
 
 function(ROOT_ADD_TEST_MPI_ARG name nprocs arg)
-  set(test_parameters -np ${nprocs} "${CMAKE_CURRENT_SOURCE_DIR}/${name}.C(${arg})")
+  set(test_parameters -np ${nprocs} -b "${CMAKE_CURRENT_SOURCE_DIR}/${name}.C(${arg})")
   ROOT_ADD_TEST("test-rootmpi-${name}" COMMAND ${ROOTMPIEXEC} ${test_parameters})
 endfunction(ROOT_ADD_TEST_MPI_ARG)
 

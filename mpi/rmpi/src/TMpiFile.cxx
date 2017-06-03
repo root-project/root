@@ -118,35 +118,35 @@ TMpiFile *TMpiFile::Open(const TIntraCommunicator &comm, const Char_t *name, Opt
 
 //______________________________________________________________________________
 /*! Method to copy the content one file to other.
-  \param source Source file.
+  \param src Source file.
   \param file   Destination file.
 */
 
-void TMpiFile::CopyFrom(TDirectory *source, TMpiFile *file)
+void TMpiFile::CopyFrom(TDirectory *src, TMpiFile *file)
 {
    TMpiFile *savdir = file;
    TDirectory *adir = savdir;
    adir->cd();
    //loop on all entries of this directory
    TKey *key;
-   TIter nextkey(source->GetListOfKeys());
+   TIter nextkey(src->GetListOfKeys());
    while ((key = (TKey *)nextkey())) {
       const Char_t *classname = key->GetClassName();
       TClass *cl = gROOT->GetClass(classname);
       if (!cl) continue;
       if (cl->InheritsFrom(TDirectory::Class())) {
-         source->cd(key->GetName());
+         src->cd(key->GetName());
          TDirectory *subdir = file;
          adir->cd();
          CopyFrom(subdir, file);
          adir->cd();
       } else if (cl->InheritsFrom(TTree::Class())) {
-         TTree *T = (TTree *)source->Get(key->GetName());
+         TTree *T = (TTree *)src->Get(key->GetName());
          adir->cd();
          TTree *newT = T->CloneTree(-1, "fast");
          newT->Write();
       } else {
-         source->cd();
+         src->cd();
          TObject *obj = key->ReadObj();
          adir->cd();
          obj->Write();

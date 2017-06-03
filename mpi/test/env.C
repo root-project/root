@@ -30,8 +30,8 @@ void env(Int_t level = THREAD_SINGLE)
 
    env.SyncOutput();
    //testing with FILE pointer 
-   fprintf(stdout,Form("StdoutRank%d",COMM_WORLD.GetRank()));
-   fprintf(stderr,Form("StderrRank%d",COMM_WORLD.GetRank()));
+   fprintf(stdout,"%s",Form("StdoutRank%d",COMM_WORLD.GetRank()));
+   fprintf(stderr,"%s",Form("StderrRank%d",COMM_WORLD.GetRank()));
 
    env.SyncOutput(kFALSE);
    
