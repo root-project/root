@@ -1609,8 +1609,13 @@ TBranch* TBranch::GetSubBranch(const TBranch* child) const
 
 Long64_t TBranch::GetTotalSize(Option_t * /*option*/) const
 {
-   TBufferFile b(TBuffer::kWrite,10000);
-   TBranch::Class()->WriteBuffer(b,(TBranch*)this);
+   TBufferFile b(TBuffer::kWrite, 10000);
+   // This intentionally only store the TBranch part and thus slightly
+   // under-estimate the space used.
+   // Since the TBranchElement part contains pointers to other branches (branch count),
+   // doing regular Streaming would end up including those and thus greatly over-estimate
+   // the size used.
+   const_cast<TBranch *>(this)->TBranch::Streamer(b);
 
    Long64_t totbytes = 0;
    if (fZipBytes > 0) totbytes = fTotBytes;
