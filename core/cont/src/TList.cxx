@@ -361,11 +361,15 @@ void TList::Clear(Option_t *option)
 
    // In some case, for example TParallelCoord, a list (the pad's list of
    // primitives) will contain both the container and the containees
-   // (the TParallelCoorVar) but if the Clear is being called from
+   // (the TParallelCoordVar) but if the Clear is being called from
    // the destructor of the container of this list, one of the first
    // thing done will be the remove the container (the pad) for the
    // list (of Primitives of the canvas) that was connecting it
    // (indirectly) to the list of cleanups.
+   // Note: The Code in TParallelCoordVar was changed (circa June 2017),
+   // to no longer have this behavior and thus rely on this code (by moving
+   // from using Draw to Paint) but the structure might still exist elsewhere
+   // so we keep this comment here.
 
    // To preserve this connection (without introducing one when there was none),
    // we re-use fCache to inform RecursiveRemove of the node currently
