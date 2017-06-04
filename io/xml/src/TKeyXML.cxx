@@ -288,7 +288,7 @@ TObject* TKeyXML::ReadObj()
 /// read object derived from TObject class, from key
 /// if it is not TObject or in case of error, return 0
 
-TObject* TKeyXML::ReadObjWithBuffer(char * /*bufferRead*/)
+TObject* TKeyXML::ReadObjWithBuffer(char * /*bufferRead*/, Bool_t /*default*/, Bool_t /*whether buffer is big endian*/)
 {
    TObject* tobj = (TObject*) XmlReadAny(0, TObject::Class());
 

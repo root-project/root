@@ -681,7 +681,7 @@ void TFile::Init(Bool_t create)
          frombuf(buffer, &fNbytesFree);
          frombuf(buffer, &nfree);
          frombuf(buffer, &fNbytesName);
-         frombuf(buffer, &fUnits );
+         frombuf(buffer, &fUnits);
          frombuf(buffer, &fCompress);
          frombuf(buffer, &sinfo);        fSeekInfo = (Long64_t)sinfo;
          frombuf(buffer, &fNbytesInfo);
@@ -691,7 +691,7 @@ void TFile::Init(Bool_t create)
          frombuf(buffer, &fNbytesFree);
          frombuf(buffer, &nfree);
          frombuf(buffer, &fNbytesName);
-         frombuf(buffer, &fUnits );
+         frombuf(buffer, &fUnits);
          frombuf(buffer, &fCompress);
          frombuf(buffer, &fSeekInfo);
          frombuf(buffer, &fNbytesInfo);
@@ -1343,7 +1343,7 @@ TList *TFile::GetStreamerInfoList()
          return 0;
       }
       key->ReadKeyBuffer(buf);
-      list = dynamic_cast<TList*>(key->ReadObjWithBuffer(buffer));
+      list = dynamic_cast<TList*>(key->ReadObjWithBuffer(buffer, kFALSE, kTRUE));
       if (list) list->SetOwner();
       delete [] buffer;
       delete key;
@@ -3676,7 +3676,7 @@ void TFile::WriteStreamerInfo()
    //free previous StreamerInfo record
    if (fSeekInfo) MakeFree(fSeekInfo,fSeekInfo+fNbytesInfo-1);
    //Create new key
-   TKey key(&list,"StreamerInfo",GetBestBuffer(), this);
+   TKey key(&list,"StreamerInfo",GetBestBuffer(), this, kFALSE, kTRUE);
    fKeys->Remove(&key);
    fSeekInfo   = key.GetSeekKey();
    fNbytesInfo = key.GetNbytes();

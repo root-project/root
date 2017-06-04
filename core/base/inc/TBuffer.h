@@ -42,6 +42,7 @@ class TBuffer : public TObject {
 protected:
    typedef std::vector<TVirtualArray*> CacheList_t;
 
+   Bool_t           fBufBigEndian;  //Big endian
    Bool_t           fMode;          //Read or write mode
    Int_t            fVersion;       //Buffer format version
    Int_t            fBufSize;       //Size of buffer
@@ -53,7 +54,7 @@ protected:
    CacheList_t      fCacheStack;    //Stack of pointers to the cache where to temporarily store the value of 'missing' data members
 
    // Default ctor
-   TBuffer() : TObject(), fMode(0), fVersion(0), fBufSize(0), fBuffer(0),
+   TBuffer() : TObject(), fBufBigEndian(1), fMode(0), fVersion(0), fBufSize(0), fBuffer(0),
      fBufCur(0), fBufMax(0), fParent(0), fReAllocFunc(0), fCacheStack(0,(TVirtualArray*)0) {}
 
    // TBuffer objects cannot be copied or assigned
@@ -72,9 +73,9 @@ public:
    enum { kCannotHandleMemberWiseStreaming = BIT(17)}; //if set TClonesArray should not use member wise streaming
    enum { kInitialSize = 1024, kMinimalSize = 128 };
 
-   TBuffer(EMode mode);
-   TBuffer(EMode mode, Int_t bufsiz);
-   TBuffer(EMode mode, Int_t bufsiz, void *buf, Bool_t adopt = kTRUE, ReAllocCharFun_t reallocfunc = 0);
+   TBuffer(EMode mode, Bool_t def = kTRUE, Bool_t buffBigEndian = kTRUE);
+   TBuffer(EMode mode, Int_t bufsiz, Bool_t def = kTRUE, Bool_t buffBigEndian = kTRUE);
+   TBuffer(EMode mode, Int_t bufsiz, void *buf, Bool_t adopt = kTRUE, ReAllocCharFun_t reallocfunc = 0, Bool_t def = kTRUE, Bool_t buffBigEndian = kTRUE);
    virtual ~TBuffer();
 
    Int_t    GetBufferVersion() const { return fVersion; }
@@ -82,6 +83,9 @@ public:
    Bool_t   IsWriting() const { return (fMode & kWrite) != 0; }
    void     SetReadMode();
    void     SetWriteMode();
+   Bool_t   IsBufBigEndian() const { return fBufBigEndian; }
+   void     SetBufBigEndian() { fBufBigEndian = 1; }
+   void     SetBufLittleEndian() { fBufBigEndian = 0; }
    void     SetBuffer(void *buf, UInt_t bufsiz = 0, Bool_t adopt = kTRUE, ReAllocCharFun_t reallocfunc = 0);
    ReAllocCharFun_t GetReAllocFunc() const;
    void     SetReAllocFunc(ReAllocCharFun_t reallocfunc = 0);

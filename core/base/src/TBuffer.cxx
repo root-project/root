@@ -18,6 +18,7 @@ Buffer base class used for serializing objects.
 #include "TBuffer.h"
 #include "TClass.h"
 #include "TProcessID.h"
+#include "TROOT.h"
 
 const Int_t  kExtraSpace        = 8;   // extra space at end of buffer (used for free block count)
 
@@ -36,13 +37,32 @@ static char *R__NoReAllocChar(char *, size_t, size_t)
 /// Create an I/O buffer object. Mode should be either TBuffer::kRead or
 /// TBuffer::kWrite. By default the I/O buffer has a size of
 /// TBuffer::kInitialSize (1024) bytes.
+///
+/// \param[in] mode Read mode or write mode of this TBuffer
+/// \param[in] def  Determining whether this TKey is created with endianness defined by global gROOT or defined by buffBigEndian
+/// \param[in] buffBigEndian Determining the endianness of this TKey's buffer only if def is kFALSE
+///
+/// TBuffer might store StreamerInfo which is always stored as big endian on TFile. Therefore, we should get rid of the effect
+/// of gROOT->IsBufBigEndian() and always define its buffer as big endian. For more explanation, take a look at the function:
+///
+///     TKey::TKey(TDirectory* motherDir, const TKey &orig, UShort_t pidOffset, Bool_t def, Bool_t buffBigEndian);
+///
+/// It provides details of why we need 'def' and 'buffBigEndian' and how to define them.
 
-TBuffer::TBuffer(EMode mode)
+TBuffer::TBuffer(EMode mode, Bool_t def, Bool_t buffBigEndian)
 {
    fBufSize      = kInitialSize;
    fMode         = mode;
    fVersion      = 0;
    fParent       = 0;
+   if (def) {
+      fBufBigEndian = gROOT->IsBufBigEndian();
+   } else {
+      if (buffBigEndian)
+         fBufBigEndian = kTRUE;
+      else
+         fBufBigEndian = kFALSE;
+   }
 
    SetBit(kIsOwner);
 
@@ -58,13 +78,21 @@ TBuffer::TBuffer(EMode mode)
 /// Create an I/O buffer object. Mode should be either TBuffer::kRead or
 /// TBuffer::kWrite.
 
-TBuffer::TBuffer(EMode mode, Int_t bufsiz)
+TBuffer::TBuffer(EMode mode, Int_t bufsiz, Bool_t def, Bool_t buffBigEndian)
 {
    if (bufsiz < kMinimalSize) bufsiz = kMinimalSize;
-   fBufSize  = bufsiz;
-   fMode     = mode;
-   fVersion  = 0;
-   fParent   = 0;
+   fBufSize      = bufsiz;
+   fMode         = mode;
+   fVersion      = 0;
+   fParent       = 0;
+   if (def) {
+      fBufBigEndian = gROOT->IsBufBigEndian();
+   } else {
+      if (buffBigEndian) 
+         fBufBigEndian = kTRUE;
+      else
+         fBufBigEndian = kFALSE;
+   }
 
    SetBit(kIsOwner);
 
@@ -87,12 +115,20 @@ TBuffer::TBuffer(EMode mode, Int_t bufsiz)
 /// is provided, a Fatal error will be issued if the Buffer attempts to
 /// expand.
 
-TBuffer::TBuffer(EMode mode, Int_t bufsiz, void *buf, Bool_t adopt, ReAllocCharFun_t reallocfunc)
+TBuffer::TBuffer(EMode mode, Int_t bufsiz, void *buf, Bool_t adopt, ReAllocCharFun_t reallocfunc, Bool_t def, Bool_t buffBigEndian)
 {
-   fBufSize  = bufsiz;
-   fMode     = mode;
-   fVersion  = 0;
-   fParent   = 0;
+   fBufSize      = bufsiz;
+   fMode         = mode;
+   fVersion      = 0;
+   fParent       = 0;
+   if (def) {
+      fBufBigEndian = gROOT->IsBufBigEndian();
+   } else {
+      if (buffBigEndian) 
+         fBufBigEndian = kTRUE;
+      else
+         fBufBigEndian = kFALSE;
+   }
 
    SetBit(kIsOwner);
 

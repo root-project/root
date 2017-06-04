@@ -104,7 +104,7 @@ TFree::~TFree()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Encode fre structure into output buffer.
+/// Encode free structure into output buffer.
 
 void TFree::FillBuffer(char *&buffer)
 {

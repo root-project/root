@@ -56,11 +56,11 @@ protected:
  public:
    TKey();
    TKey(TDirectory* motherDir);
-   TKey(TDirectory* motherDir, const TKey &orig, UShort_t pidOffset);
+   TKey(TDirectory* motherDir, const TKey &orig, UShort_t pidOffset, Bool_t def = kTRUE, Bool_t buffBigEndian = kTRUE);
    TKey(const char *name, const char *title, const TClass *cl, Int_t nbytes, TDirectory* motherDir);
    TKey(const TString &name, const TString &title, const TClass *cl, Int_t nbytes, TDirectory* motherDir);
-   TKey(const TObject *obj, const char *name, Int_t bufsize, TDirectory* motherDir);
-   TKey(const void *obj, const TClass *cl, const char *name, Int_t bufsize, TDirectory* motherDir);
+   TKey(const TObject *obj, const char *name, Int_t bufsize, TDirectory* motherDir, Bool_t def = kTRUE, Bool_t buffBigEndian = kTRUE);
+   TKey(const void *obj, const TClass *cl, const char *name, Int_t bufsize, TDirectory* motherDir, Bool_t def = kTRUE, Bool_t buffBigEndian = kTRUE);
    TKey(Long64_t pointer, Int_t nbytes, TDirectory* motherDir = 0);
    virtual ~TKey();
 
@@ -92,7 +92,7 @@ protected:
    virtual void        Print(Option_t *option="") const;
    virtual Int_t       Read(TObject *obj);
    virtual TObject    *ReadObj();
-   virtual TObject    *ReadObjWithBuffer(char *bufferRead);
+   virtual TObject    *ReadObjWithBuffer(char *bufferRead, Bool_t def = kTRUE, Bool_t buffBigEndian = kTRUE);
    virtual void       *ReadObjectAny(const TClass *expectedClass);
    virtual void        ReadBuffer(char *&buffer);
            void        ReadKeyBuffer(char *&buffer);

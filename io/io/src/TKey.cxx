@@ -112,8 +112,32 @@ TKey::TKey(TDirectory* motherDir) : TNamed(), fDatime((UInt_t)0)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy a TKey from its original directory to the new 'motherDir'
+///
+/// \param[in] motherDir     Original directory
+/// \param[in] orig          Original TKey to be copied
+/// \param[in] pidOffset     The offset from original fPidOffset
+/// \param[in] def           Determining whether this TKey is created with endianness defined by global gROOT or defined by buffBigEndian
+/// \param[in] buffBigEndian Determining the endianness of this TKey's buffer only if def is kFALSE
+///
+/// Since there is an object of TBufferFile created within this TKey constructor, we need to parse 'def' and 'buffBigEndian' to it.
+/// These two input arguments are designed to be compatible with TBufferFile constructor, so TKey's constructor functions do not include
+/// these input arguments if there is no TBufferFile created. If def == 1, the endianness of TBufferFile will be defined as global 
+/// parameter gROOT->IsBufBigEndian(); if def == 0, the endianness of TBufferFile is defined by the next argument buffBigEndian.
+/// If buffBigEndian = 1, the TBufferFile of this TKey is big endian; otherwise it is small endian.
+/// The reason to add 'def' and 'buffBigEndian' is because we only change the endianness of data but never change the meta data.
+/// For instance, StreamerInfo is considered as meta data and stored in a particular location in TFile. We always keep it as big endian.
+/// We create it in the following way:
+///
+///     TKey key(&list,"StreamerInfo",GetBestBuffer(), this, kFALSE, kTRUE);
+///
+/// Similarly, when we want to read the object from TFile, we need to tell what endianness of the object to be read. For example, if we
+/// want to read StreamerInfo from file, we have to tell read function it was stored as big endian:
+///
+///     list = dynamic_cast<TList*>(key->ReadObjWithBuffer(buffer,kFALSE,kTRUE));
+///
+/// If TKey is created for raw data, TKey and TBufferFile will be created as gROOT->IsBufBigEndian() defined.
 
-TKey::TKey(TDirectory* motherDir, const TKey &orig, UShort_t pidOffset) : TNamed(), fDatime((UInt_t)0)
+TKey::TKey(TDirectory* motherDir, const TKey &orig, UShort_t pidOffset, Bool_t def, Bool_t buffBigEndian) : TNamed(), fDatime((UInt_t)0)
 {
    fMotherDir  = motherDir;
 
@@ -147,7 +171,7 @@ TKey::TKey(TDirectory* motherDir, const TKey &orig, UShort_t pidOffset) : TNamed
       fNbytes += bufferIncOffset;
    }
 
-   fBufferRef  = new TBufferFile(TBuffer::kWrite, alloc);
+   fBufferRef  = new TBufferFile(TBuffer::kWrite, alloc, def, buffBigEndian);
    fBuffer     = fBufferRef->Buffer();
 
    // Steal the data from the old key.
@@ -225,7 +249,7 @@ TKey::TKey(const TString &name, const TString &title, const TClass *cl, Int_t nb
 ///  WARNING: in name avoid special characters like '^','$','.' that are used
 ///  by the regular expression parser (see TRegexp).
 
-TKey::TKey(const TObject *obj, const char *name, Int_t bufsize, TDirectory* motherDir)
+TKey::TKey(const TObject *obj, const char *name, Int_t bufsize, TDirectory* motherDir, Bool_t def, Bool_t buffBigEndian)
      : TNamed(name, obj->GetTitle())
 {
    R__ASSERT(obj);
@@ -241,7 +265,7 @@ TKey::TKey(const TObject *obj, const char *name, Int_t bufsize, TDirectory* moth
    Build(motherDir, obj->ClassName(), -1);
 
    Int_t lbuf, nout, noutot, bufmax, nzip;
-   fBufferRef = new TBufferFile(TBuffer::kWrite, bufsize);
+   fBufferRef = new TBufferFile(TBuffer::kWrite, bufsize, def, buffBigEndian);
    fBufferRef->SetParent(GetFile());
    fCycle     = fMotherDir->AppendKey(this);
 
@@ -298,7 +322,7 @@ TKey::TKey(const TObject *obj, const char *name, Int_t bufsize, TDirectory* moth
 ///  WARNING: in name avoid special characters like '^','$','.' that are used
 ///  by the regular expression parser (see TRegexp).
 
-TKey::TKey(const void *obj, const TClass *cl, const char *name, Int_t bufsize, TDirectory* motherDir)
+TKey::TKey(const void *obj, const TClass *cl, const char *name, Int_t bufsize, TDirectory* motherDir, Bool_t def, Bool_t buffBigEndian)
      : TNamed(name, "object title")
 {
    R__ASSERT(obj && cl);
@@ -329,7 +353,7 @@ TKey::TKey(const void *obj, const TClass *cl, const char *name, Int_t bufsize, T
 
    Build(motherDir, clActual->GetName(), -1);
 
-   fBufferRef = new TBufferFile(TBuffer::kWrite, bufsize);
+   fBufferRef = new TBufferFile(TBuffer::kWrite, bufsize, def, buffBigEndian);
    fBufferRef->SetParent(GetFile());
    fCycle     = fMotherDir->AppendKey(this);
 
@@ -869,7 +893,7 @@ CLEAR:
 /// If used, you must make sure that the bufferRead is large enough to
 /// accomodate the object being read.
 
-TObject *TKey::ReadObjWithBuffer(char *bufferRead)
+TObject *TKey::ReadObjWithBuffer(char *bufferRead, Bool_t def, Bool_t buffBigEndian)
 {
 
    TClass *cl = TClass::GetClass(fClassName.Data());
@@ -882,7 +906,7 @@ TObject *TKey::ReadObjWithBuffer(char *bufferRead)
       return (TObject*)ReadObjectAny(0);
    }
 
-   fBufferRef = new TBufferFile(TBuffer::kRead, fObjlen+fKeylen);
+   fBufferRef = new TBufferFile(TBuffer::kRead, fObjlen+fKeylen, def, buffBigEndian);
    if (!fBufferRef) {
       Error("ReadObjWithBuffer", "Cannot allocate buffer: fObjlen = %d", fObjlen);
       return 0;
@@ -902,7 +926,6 @@ TObject *TKey::ReadObjWithBuffer(char *bufferRead)
    // get version of key
    fBufferRef->SetBufferOffset(sizeof(fNbytes));
    Version_t kvers = fBufferRef->ReadVersion();
-
    fBufferRef->SetBufferOffset(fKeylen);
    TObject *tobj = 0;
    // Create an instance of this class
@@ -953,7 +976,6 @@ TObject *TKey::ReadObjWithBuffer(char *bufferRead)
    } else {
       tobj->Streamer(*fBufferRef);
    }
-
    if (gROOT->GetForceStyle()) tobj->UseCurrentStyle();
 
    if (cl->InheritsFrom(TDirectoryFile::Class())) {

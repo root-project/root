@@ -44,7 +44,7 @@ ClassImp(TMessage)
 /// (only if message is > 256 bytes).
 
 TMessage::TMessage(UInt_t what, Int_t bufsiz) :
-   TBufferFile(TBuffer::kWrite, bufsiz + 2*sizeof(UInt_t))
+   TBufferFile(TBuffer::kWrite, Int_t(bufsiz + 2*sizeof(UInt_t)))
 {
    // space at the beginning of the message reserved for the message length
    UInt_t   reserved = 0;

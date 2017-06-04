@@ -242,7 +242,7 @@ static TBuffer* R__CreateBuffer()
    if (creator == 0) {
       R__LOCKGUARD(gROOTMutex);
       TClass *c = TClass::GetClass("TBufferFile");
-      TMethod *m = c->GetMethodWithPrototype("TBufferFile","TBuffer::EMode,Int_t",kFALSE,ROOT::kExactMatch);
+      TMethod *m = c->GetMethodWithPrototype("TBufferFile","TBuffer::EMode,Int_t,Bool_t,Bool_t",kFALSE,ROOT::kExactMatch);
       creator = (tcling_callfunc_Wrapper_t)( m->InterfaceMethod() );
    }
    TBuffer::EMode mode = TBuffer::kWrite;

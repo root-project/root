@@ -131,6 +131,7 @@ protected:
    std::atomic<TApplication*> fApplication;  //Pointer to current application
    TInterpreter    *fInterpreter;         //Command interpreter
    Bool_t          fBatch;                //True if session without graphics
+   Bool_t          fBufBigEndian;            //True if user define the data format as Big Endian
    Bool_t          fEditHistograms;       //True if histograms can be edited with the mouse
    Bool_t          fFromPopUp;            //True if command executed from a popup menu
    Bool_t          fMustClean;            //True if object destructor scans canvases
@@ -281,6 +282,8 @@ public:
    void              Idle(UInt_t idleTimeInSec, const char *command = 0);
    Int_t             IgnoreInclude(const char *fname, const char *expandedfname);
    Bool_t            IsBatch() const { return fBatch; }
+   Bool_t            IsBufBigEndian() const { return fBufBigEndian; }
+   Bool_t            IsBufLittleEndian() const { return !fBufBigEndian; }
    Bool_t            IsExecutingMacro() const { return fExecutingMacro; }
    Bool_t            IsFolder() const { return kTRUE; }
    Bool_t            IsInterrupted() const { return fInterrupt; }
@@ -315,6 +318,8 @@ public:
    void              SaveContext();
    void              SetApplication(TApplication *app) { fApplication = app; }
    void              SetBatch(Bool_t batch = kTRUE) { fBatch = batch; }
+   void              SetBufBigEndian() { fBufBigEndian = kTRUE; }
+   void              SetBufLittleEndian() { fBufBigEndian = kFALSE; }
    void              SetCutClassName(const char *name = "TCutG");
    void              SetDefCanvasName(const char *name = "c1") { fDefCanvasName = name; }
    void              SetEditHistograms(Bool_t flag = kTRUE) { fEditHistograms = flag; }
