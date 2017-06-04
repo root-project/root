@@ -65,6 +65,14 @@ In extremely rare cases, this change breaks a valid use where the temporary `TSt
 object before the destruction of the temporary: `TString str = objStr->GetString().ReplaceAll("a", "b");`. In these rare cases,
 please use the new function `CopyString()` which clearly indicates that it involves a temporary.
 
+## I/O Libraries
+
+- Introduce TKey::ReadObject<typeName>.  This is a user friendly wrapper around ReadObjectAny.  For example
+```{.cpp}
+auto h1 = key->ReadObject<TH1>
+```
+after which h1 will either be null if the key contains something that is not a TH1 (or derived class)
+or will be set to the address of the histogram read from the file.
 
 ## Histogram Libraries
 
@@ -92,9 +100,6 @@ please use the new function `CopyString()` which clearly indicates that it invol
 
 
 ## Geometry Libraries
-
-
-## I/O Libraries
 
 
 ## Database Libraries
