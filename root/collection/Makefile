@@ -15,7 +15,7 @@ endif
 
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 
-tbits_test : tbits
+tbits_test : tbits DeleteWarning
 
 tbits : tbits.log
 ifeq ($(ClingWorkAroundJITandInline),)
@@ -41,3 +41,6 @@ CATTreeClear.log : CALLROOTEXE += -e "gSystem->Load(\"libTree\");"
 endif
 
 execHistArray.success: EXTRA_DIFFOPTS += -w
+
+DeleteWarning: DeleteWarning.neutral.log DeleteWarning.ref
+	$(TestDiff)
