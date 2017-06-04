@@ -77,69 +77,68 @@ template <typename Architecture>
 auto testBackpropagationWeightsLinear(typename Architecture::Scalar_t dx)
 -> typename Architecture::Scalar_t
 {
-    using Scalar_t = typename Architecture::Scalar_t;
-    using Matrix_t = typename Architecture::Matrix_t;
-    using Net_t    = TNet<Architecture>;
+   using Scalar_t = typename Architecture::Scalar_t;
+   using Matrix_t = typename Architecture::Matrix_t;
+   using Net_t    = TNet<Architecture>;
 
 
-    Net_t net(50, 50, ELossFunction::kMeanSquaredError);
+   Net_t net(50, 50, ELossFunction::kMeanSquaredError);
 
-    // Random net.
-    constructRandomLinearNet(net);
-    net.Initialize(EInitialization::kGauss);
+   // Random net.
+   constructRandomLinearNet(net);
+   net.Initialize(EInitialization::kGauss);
 
-    // Random training data.
-    Matrix_t X(50, 50);
-    randomBatch(X);
+   // Random training data.
+   Matrix_t X(50, 50), Y(50, net.GetOutputWidth()), W(50,1);
+   randomBatch(X);
+   randomMatrix(Y);
+   fillMatrix(W,1.0);
 
-    Matrix_t Y(50, net.GetOutputWidth());
-    randomMatrix(Y);
+   net.Forward(X);
+   net.Backward(X,Y,W);
 
-    net.Forward(X);
-    net.Backward(X,Y);
+   Scalar_t maximum_error = 0.0;
 
-    Scalar_t maximum_error = 0.0;
+   // Compute derivatives for all weights using finite differences and
+   // compare to result obtained from backpropagation.
+   for (size_t l = 0; l < net.GetDepth(); l++)
+   {
+      std::cout << "\rTesting weight gradients:      layer: "
+                << l << " / " << net.GetDepth();
+      std::cout << std::flush;
+      auto & layer = net.GetLayer(l);
+      auto & W     = layer.GetWeightGradients();
 
-    // Compute derivatives for all weights using finite differences and
-    // compare to result obtained from backpropagation.
-    for (size_t l = 0; l < net.GetDepth(); l++)
-    {
-        std::cout << "\rTesting weight gradients:      layer: "
-                  << l << " / " << net.GetDepth();
-        std::cout << std::flush;
-        auto & layer = net.GetLayer(l);
-        auto & W     = layer.GetWeightGradients();
-
-        for (size_t i = 0; i < layer.GetWidth(); i++)
-        {
-            for (size_t j = 0; j < layer.GetInputWidth(); j++)
+      for (size_t i = 0; i < layer.GetWidth(); i++)
+      {
+         for (size_t j = 0; j < layer.GetInputWidth(); j++)
+         {
+            auto f = [& net, & X, &Y, l, i, j](Scalar_t x)
             {
-                auto f = [& net, & X, &Y, l, i, j](Scalar_t x)
-                    {
-                        return evaluate_net_weight(net, X, Y, l, i, j, x);
-                    };
-                Scalar_t dy     = finiteDifference(f, dx) / (2.0 * dx);
-                Scalar_t dy_ref = W(i,j);
+               return evaluate_net_weight(net, X, Y, l, i, j, x);
+            };
+            Scalar_t dy     = finiteDifference(f, dx) / (2.0 * dx);
+            Scalar_t dy_ref = W(i,j);
 
-                // Compute the relative error if dy != 0.
-                Scalar_t error;
-                if (std::fabs(dy_ref) > 1e-15)
-                {
-                    error = std::fabs((dy - dy_ref) / dy_ref);
-                }
-                else
-                {
-                    error = std::fabs(dy - dy_ref);
-                }
-
-                maximum_error = std::max(error, maximum_error);
+            // Compute the relative error if dy != 0.
+            Scalar_t error;
+            if (std::fabs(dy_ref) > 1e-15)
+            {
+               error = std::fabs((dy - dy_ref) / dy_ref);
             }
-        }
-    }
+            else
+            {
+               error = std::fabs(dy - dy_ref);
+            }
 
-    std::cout << "\rTesting weight gradients:      ";
-    std::cout << "maximum relative error: " << print_error(maximum_error) << std::endl;
-    return maximum_error;
+            maximum_error = std::max(error, maximum_error);
+         }
+      }
+   }
+
+   std::cout << "\rTesting weight gradients:      ";
+   std::cout << "maximum relative error: " << print_error(maximum_error) << std::endl;
+   return maximum_error;
 }
 
 /*! Generate a random, linear net, perform forward and backward propagation with
@@ -162,15 +161,14 @@ auto testBackpropagationL1Regularization(typename Architecture::Scalar_t dx)
    net.Initialize(EInitialization::kGauss);
 
    // Random training data.
-   Matrix_t X(50, 50);
+   Matrix_t X(50, 50), Y(50, net.GetOutputWidth()), W(50,1);
    randomBatch(X);
-
-   Matrix_t Y(50, net.GetOutputWidth());
    randomMatrix(Y);
+   fillMatrix(W,1.0);
 
    net.Forward(X);
-   net.Backward(X,Y);
-
+   net.Backward(X,Y,W);
+ 
    Scalar_t maximum_error = 0.0;
 
    // Compute derivatives for all weights using finite differences and
@@ -237,14 +235,13 @@ auto testBackpropagationL2Regularization(typename Architecture::Scalar_t dx)
    net.Initialize(EInitialization::kGauss);
 
    // Random training data.
-   Matrix_t X(50, 50);
+   Matrix_t X(50, 50), Y(50, net.GetOutputWidth()), W(50,1);
    randomBatch(X);
-
-   Matrix_t Y(50, net.GetOutputWidth());
    randomMatrix(Y);
+   fillMatrix(W,1.0);
 
    net.Forward(X);
-   net.Backward(X,Y);
+   net.Backward(X,Y,W);
 
    Scalar_t maximum_error = 0.0;
 
@@ -310,14 +307,13 @@ auto testBackpropagationBiasesLinear(typename Architecture::Scalar_t dx)
    net.Initialize(EInitialization::kGauss);
 
    // Random training data.
-   Matrix_t X(50, 50);
+   Matrix_t X(50, 50), Y(50, net.GetOutputWidth()), W(50,1);
    randomBatch(X);
-
-   Matrix_t Y(50, net.GetOutputWidth());
    randomMatrix(Y);
+   fillMatrix(W,1.0);
 
    net.Forward(X);
-   net.Backward(X,Y);
+   net.Backward(X,Y,W);
 
    Scalar_t maximum_error = 0.0;
 

@@ -54,6 +54,23 @@ void identityMatrix(AMatrix &X)
     }
 }
 
+/*! Fill matrix with given value.*/
+//______________________________________________________________________________
+template <typename AMatrix, typename AReal>
+void fillMatrix(AMatrix &X, AReal x)
+{
+   size_t m, n;
+   m = X.GetNrows();
+   n = X.GetNcols();
+
+
+   for (size_t i = 0; i < m; i++) {
+      for (size_t j = 0; j < n; j++) {
+         X(i,j) = x;
+      }
+   }
+}
+
 /*! Fill matrix with random, Gaussian-distributed values. */
 //______________________________________________________________________________
 template <typename AMatrix>

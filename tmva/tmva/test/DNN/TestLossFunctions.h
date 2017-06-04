@@ -42,18 +42,21 @@ auto testMeanSquaredError(size_t ntests)
       size_t m = rand() % 100 + 1;
       size_t n = rand() % 100 + 1;
 
+      TMatrixT<Double_t> W(m, n);
       TMatrixT<Double_t> X(m, n);
       TMatrixT<Double_t> Y(m, n);
       TMatrixT<Double_t> Z(m, n);
 
+      W = 1.0;
       randomMatrix(X);
       randomMatrix(Y);
 
+      Matrix_t WArch(W);
       Matrix_t XArch(X);
       Matrix_t YArch(Y);
 
       Scalar_t mse = evaluate<Architecture>(ELossFunction::kMeanSquaredError,
-                                            YArch, XArch);
+                                            YArch, XArch, WArch);
       zipWithMatrix(Z, [](Scalar_t x, Scalar_t y){return x - y;}, X, Y);
       auto squaredSum = [](Scalar_t x, Scalar_t y){return x + y * y;};
       Scalar_t mseReference = reduceMean(squaredSum, 0.0, Z);
@@ -81,19 +84,22 @@ auto testMeanSquaredErrorGradients(size_t ntests)
       size_t m = rand() % 100 + 1;
       size_t n = rand() % 100 + 1;
 
+      TMatrixT<Double_t> W(m, n);
       TMatrixT<Double_t> X(m, n);
       TMatrixT<Double_t> Y(m, n);
       TMatrixT<Double_t> ZRef(m, n);
 
+      W = 1.0;
       randomMatrix(X);
       randomMatrix(Y);
 
+      Matrix_t WArch(W);
       Matrix_t XArch(X);
       Matrix_t YArch(Y);
       Matrix_t ZArch(Y);
 
       evaluateGradients<Architecture>(ZArch, ELossFunction::kMeanSquaredError,
-                                     XArch, YArch);
+                                      XArch, YArch, WArch);
       auto normedDifference = [m, n](Scalar_t x, Scalar_t y) {
          return 2.0 * (y - x) / (m * n);
       };
@@ -122,18 +128,21 @@ auto testCrossEntropy(size_t ntests)
       size_t m = rand() % 100 + 1;
       size_t n = rand() % 100 + 1;
 
+      TMatrixT<Double_t> W(m, n);
       TMatrixT<Double_t> X(m, n);
       TMatrixT<Double_t> Y(m, n);
       TMatrixT<Double_t> Z(m, n);
 
+      W = 1.0;
       randomMatrix(X);
       randomMatrix(Y);
 
+      Matrix_t WArch(W);
       Matrix_t XArch(X);
       Matrix_t YArch(Y);
 
       Scalar_t ce = evaluate<Architecture>(ELossFunction::kCrossEntropy,
-                                           YArch, XArch);
+                                           YArch, XArch, WArch);
 
       auto crossCorrelation = [](Scalar_t x, Scalar_t y) {
          Scalar_t sig = 1.0 / (1.0 + std::exp(-x));
@@ -166,19 +175,22 @@ auto testCrossEntropyGradients(size_t ntests)
       size_t m = 8; //rand() % 100 + 1;
       size_t n = 8; //rand() % 100 + 1;
 
+      TMatrixT<Double_t> W(m, n);
       TMatrixT<Double_t> X(m, n);
       TMatrixT<Double_t> Y(m, n);
       TMatrixT<Double_t> ZRef(m, n);
 
+      W = 1.0;
       randomMatrix(X);
       randomMatrix(Y);
 
+      Matrix_t WArch(W);
       Matrix_t XArch(X);
       Matrix_t YArch(Y);
       Matrix_t ZArch(Y);
 
       evaluateGradients<Architecture>(ZArch, ELossFunction::kCrossEntropy,
-                                     YArch, XArch);
+                                      YArch, XArch, WArch);
       auto crossCorrelationGradient = [m, n](Scalar_t x, Scalar_t y) {
          Scalar_t sig  = 1.0 / (1.0 + std::exp(-x));
          Scalar_t norm = 1.0 / ((Scalar_t) m * n);
@@ -208,19 +220,22 @@ auto testSoftmaxCrossEntropy(size_t ntests)
    for (size_t i = 0; i < ntests; i++) {
       size_t m = rand() % 100 + 1;
       size_t n = rand() % 100 + 1;
-
+      
+      TMatrixT<Double_t> W(m, n);
       TMatrixT<Double_t> X(m, n);
       TMatrixT<Double_t> Y(m, n);
       TMatrixT<Double_t> Z(m, n);
 
+      W = 1.0;
       randomMatrix(X);
       randomMatrix(Y);
 
+      Matrix_t WArch(W);
       Matrix_t XArch(X);
       Matrix_t YArch(Y);
 
       Scalar_t ce = evaluate<Architecture>(ELossFunction::kSoftmaxCrossEntropy,
-                                           YArch, XArch);
+                                           YArch, XArch, WArch);
 
       Scalar_t ceReference = 0.0;
       for (size_t j = 0; j < m; j++) {
@@ -257,19 +272,22 @@ auto testSoftmaxCrossEntropyGradients(size_t ntests)
       size_t m = 8; //rand() % 100 + 1;
       size_t n = 8; //rand() % 100 + 1;
 
+      TMatrixT<Double_t> W(m, n);
       TMatrixT<Double_t> X(m, n);
       TMatrixT<Double_t> Y(m, n);
       TMatrixT<Double_t> ZRef(m, n);
 
+      fillMatrix(W, 1.0);
       randomMatrix(X);
       randomMatrix(Y);
 
+      Matrix_t WArch(W);
       Matrix_t XArch(X);
       Matrix_t YArch(Y);
       Matrix_t ZArch(Y);
 
       evaluateGradients<Architecture>(ZArch, ELossFunction::kSoftmaxCrossEntropy,
-                                     YArch, XArch);
+                                      YArch, XArch, WArch);
 
       for (size_t j = 0; j < m; j++) {
          Scalar_t sum  = 0.0;

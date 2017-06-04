@@ -99,7 +99,7 @@ auto testActivationFunctionDerivatives()
 
    for (auto & af : EActivationFunctions)
    {
-      auto f  = [& af](Matrix_t &X){ evaluate<Architecture>(X, af);};
+      auto f  = [& af](Matrix_t &X){evaluate<Architecture>(X, af);};
       auto df = [& af](Matrix_t &X, const Matrix_t &Y)
       {
          evaluateDerivative<Architecture>(X, af, Y);
@@ -136,17 +136,18 @@ template<typename Architecture, typename F, typename dF>
 
     for (size_t i = 0; i < 100; i++)
     {
-        Matrix_t X(10,10), Y(10,10), Z(10,10);
+        Matrix_t X(10,10), Y(10,10), Z(10,10), W(10,10);
         randomMatrix(X);
         randomMatrix(Y);
+        randomMatrix(W);
 
-        df(Z, Y, X);
+        df(Z,Y,X,W);
         Scalar_t dy = Z(0,0);
 
         X(0,0) += dx;
-        Scalar_t y1 = f(Y,X);
+        Scalar_t y1 = f(Y,X,W);
         X(0,0) -= 2.0 * dx;
-        Scalar_t y0 = f(Y,X);
+        Scalar_t y0 = f(Y,X,W);
         Scalar_t dy_num = (y1 - y0) / (2.0 * dx);
 
         Scalar_t error = 0.0;
@@ -184,15 +185,13 @@ auto testLossFunctionGradients()
 
     for (auto & lf : LossFunctions)
     {
-        auto f  = [lf](const Matrix_t &Y, const Matrix_t &Z)
+        auto f  = [lf](const Matrix_t &Y, const Matrix_t &Z, const Matrix_t &W)
             {
-                return evaluate<Architecture>(lf, Y, Z);
+                return evaluate<Architecture>(lf, Y, Z, W);
             };
-        auto df = [& lf](Matrix_t &X,
-                         const Matrix_t &Y,
-                         const Matrix_t &Z)
+        auto df = [& lf](Matrix_t &X, const Matrix_t &Y, const Matrix_t &Z, const Matrix_t &W)
             {
-                evaluateGradients<Architecture>(X, lf, Y, Z);
+                evaluateGradients<Architecture>(X, lf, Y, Z, W);
             };
 
         error = testGradients<Architecture>(f, df, 5e-6);
@@ -230,13 +229,11 @@ auto testRegularizationGradients()
 
     for (auto & r : Regularizations)
     {
-        auto f  = [r](const Matrix_t & , const Matrix_t & Y)
+        auto f  = [r](const Matrix_t & , const Matrix_t & Y, const Matrix_t & /*W*/)
             {
                 return regularization<Architecture>(Y, r);
             };
-        auto df = [& r](Matrix_t &X,
-                         const Matrix_t & ,
-                         const Matrix_t & Y)
+        auto df = [& r](Matrix_t &X, const Matrix_t & , const Matrix_t & Y, const Matrix_t & /*W*/)
             {
                 applyMatrix(X, [](double){return 0.0;});
                 addRegularizationGradients<Architecture>(X, Y, (Scalar_t) 1.0, r);

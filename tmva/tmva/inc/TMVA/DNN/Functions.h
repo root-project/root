@@ -163,18 +163,19 @@ inline void evaluate(typename Architecture_t::Matrix_t &A,
 *  of the ouput layer and the truth Y. */
 template<typename Architecture_t>
 inline auto evaluate(ELossFunction f,
-                    const typename Architecture_t::Matrix_t & Y,
-                    const typename Architecture_t::Matrix_t & output)
--> decltype(Architecture_t::CrossEntropy(Y,output))
+                     const typename Architecture_t::Matrix_t & Y,
+                     const typename Architecture_t::Matrix_t & output,
+                     const typename Architecture_t::Matrix_t & weights)
+    -> decltype(Architecture_t::CrossEntropy(Y, output, weights))
 {
     switch(f)
     {
     case ELossFunction::kCrossEntropy :
-        return Architecture_t::CrossEntropy(Y, output);
+        return Architecture_t::CrossEntropy(Y, output, weights);
     case ELossFunction::kMeanSquaredError :
-        return Architecture_t::MeanSquaredError(Y, output);
+        return Architecture_t::MeanSquaredError(Y, output, weights);
     case ELossFunction::kSoftmaxCrossEntropy :
-        return Architecture_t::SoftmaxCrossEntropy(Y, output);
+        return Architecture_t::SoftmaxCrossEntropy(Y, output, weights);
     }
     return 0.0;
 }
@@ -186,18 +187,19 @@ template<typename Architecture_t>
 inline void evaluateGradients(typename Architecture_t::Matrix_t & dY,
                               ELossFunction f,
                               const typename Architecture_t::Matrix_t &Y,
-                              const typename Architecture_t::Matrix_t &output)
+                              const typename Architecture_t::Matrix_t &output,
+                              const typename Architecture_t::Matrix_t &weights)
 {
     switch(f)
     {
     case ELossFunction::kCrossEntropy :
-        Architecture_t::CrossEntropyGradients(dY, Y, output);
+        Architecture_t::CrossEntropyGradients(dY, Y, output, weights);
         break;
     case ELossFunction::kMeanSquaredError :
-        Architecture_t::MeanSquaredErrorGradients(dY, Y, output);
+        Architecture_t::MeanSquaredErrorGradients(dY, Y, output, weights);
         break;
     case ELossFunction::kSoftmaxCrossEntropy :
-        Architecture_t::SoftmaxCrossEntropyGradients(dY, Y, output);
+        Architecture_t::SoftmaxCrossEntropyGradients(dY, Y, output, weights);
         break;
     }
 }

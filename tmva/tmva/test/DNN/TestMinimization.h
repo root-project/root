@@ -28,7 +28,7 @@ using namespace TMVA::DNN;
 /** Train a linear neural network on a randomly generated linear mapping
  *  from a 20-dimensional input space to a 1-dimensional output space.
  *  Returns the error of the response of the network to the input containing
- *  only ones to the 1x20 matrix generating the mapping.
+ *  only ones to the 1x20 matrix used to generate the training data.
  */
 template <typename Architecture>
    auto testMinimization()
@@ -41,14 +41,18 @@ template <typename Architecture>
    size_t nFeatures = 20;
    size_t batchSize = 256;
 
-   TMatrixT<Double_t> XTrain(nSamples, nFeatures), YTrain(nSamples, 1),
-   XTest(batchSize, nFeatures), YTest(batchSize, 1), W(nFeatures, 1);
+   TMatrixT<Double_t> XTrain(nSamples, nFeatures), YTrain(nSamples, 1), WTrain(nSamples, 1),
+       XTest(batchSize, nFeatures), YTest(batchSize, 1), WTest(nSamples, 1), K(nFeatures, 1);
 
-   randomMatrix(W);
+   // Use random K to generate linear mapping.
+   randomMatrix(K);
    randomMatrix(XTrain);
    randomMatrix(XTest);
-   YTrain.Mult(XTrain, W);
-   YTest.Mult(XTest, W);
+   YTrain.Mult(XTrain, K);
+   YTest.Mult(XTest, K);
+
+   fillMatrix(WTrain,1.0);
+   fillMatrix(WTest,1.0);
 
    Net_t net(batchSize, nFeatures, ELossFunction::kMeanSquaredError);
    net.AddLayer(64, EActivationFunction::kIdentity);
@@ -58,8 +62,8 @@ template <typename Architecture>
    net.Initialize(EInitialization::kGauss);
 
    TGradientDescent<Architecture> minimizer(0.0001, 5, 1);
-   MatrixInput_t trainingData(XTrain, YTrain);
-   MatrixInput_t testData(XTest, YTest);
+   MatrixInput_t trainingData(XTrain, YTrain, WTrain);
+   MatrixInput_t testData(XTest, YTest, WTrain);
    minimizer.TrainMomentum(trainingData, nSamples, testData, batchSize, net, 0.8, 1);
 
    TMatrixT<Double_t> I(nFeatures, nFeatures);
@@ -71,7 +75,7 @@ template <typename Architecture>
    clone.Forward(Id);
    TMatrixT<Double_t> Y(clone.GetOutput());
 
-   return maximumRelativeError(Y, W);
+   return maximumRelativeError(Y, K);
 }
 
 /** Similar to testMinimization() as the function above except that
@@ -81,20 +85,33 @@ template <typename Architecture>
    -> typename Architecture::Scalar_t
 {
    using Matrix_t = typename Architecture::Matrix_t;
+   using Scalar_t = typename Architecture::Scalar_t;
    using Net_t    = TNet<Architecture>;
 
    size_t nSamples  = 10000;
    size_t nFeatures = 20;
    size_t batchSize = 256;
 
-   TMatrixT<Double_t> XTrain(nSamples, nFeatures), YTrain(nSamples, 1),
-   XTest(batchSize, nFeatures), YTest(batchSize, 1), W(nFeatures, 1);
+   TMatrixT<Double_t> XTrain(nSamples, nFeatures), YTrain(nSamples, 1), WTrain(nSamples, 1),
+   XTest(batchSize, nFeatures), YTest(batchSize, 1), WTest(nSamples, 1), W(nFeatures, 1);
 
    randomMatrix(W);
    randomMatrix(XTrain);
    randomMatrix(XTest);
    YTrain.Mult(XTrain, W);
    YTest.Mult(XTest, W);
+
+   fillMatrix(WTrain,1.0);
+   fillMatrix(WTest,1.0);
+
+   auto ur =  [](Scalar_t /*x*/)
+   {
+      TRandom rand(clock());
+      return rand.Uniform();
+   };
+
+   applyMatrix(WTrain, ur);
+   applyMatrix(WTest,  ur);
 
    Net_t net(batchSize, nFeatures, ELossFunction::kMeanSquaredError);
    net.AddLayer(64, EActivationFunction::kIdentity);
@@ -104,8 +121,8 @@ template <typename Architecture>
    net.Initialize(EInitialization::kGauss);
 
    TGradientDescent<Architecture> minimizer(0.0001, 5, 5);
-   MatrixInput_t trainingData(XTrain, YTrain);
-   MatrixInput_t testData(XTest, YTest);
+   MatrixInput_t trainingData(XTrain, YTrain, WTrain);
+   MatrixInput_t testData(XTest, YTest, WTest);
    minimizer.TrainMomentum(trainingData, nSamples, testData, batchSize, net, 0.9, 1);
 
    TMatrixT<Double_t> I(nFeatures, nFeatures);
