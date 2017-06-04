@@ -385,17 +385,23 @@ void TList::Clear(Option_t *option)
       fCache = tlk;
 
       // delete only heap objects marked OK to clear
-      if (!nodel && tlk->GetObject() && tlk->GetObject()->IsOnHeap()) {
-         if (tlk->GetObject()->TestBit(kCanDelete)) {
-            if(tlk->GetObject()->TestBit(kNotDeleted)) {
-               TCollection::GarbageCollect(tlk->GetObject());
+      auto obj = tlk->GetObject();
+      if (!nodel && obj) {
+         if (!obj->TestBit(kNotDeleted)) {
+            Error("Clear", "A list is accessing an object (%p) already deleted (list name = %s)",
+                  obj, GetName());
+         } else if (obj->IsOnHeap()) {
+            if (obj->TestBit(kCanDelete)) {
+               if (obj->TestBit(kNotDeleted)) {
+                  TCollection::GarbageCollect(obj);
+               }
             }
          }
+         delete tlk;
       }
-      delete tlk;
    }
    fFirst = fLast = fCache = 0;
-   fSize  = 0;
+   fSize = 0;
    Changed();
 }
 
@@ -435,10 +441,14 @@ void TList::Delete(Option_t *option)
          fCache = tlk;
 
          // delete only heap objects
-         if (tlk->GetObject() && tlk->GetObject()->IsOnHeap())
-            TCollection::GarbageCollect(tlk->GetObject());
-         else if (tlk->GetObject() && tlk->GetObject()->IsA()->GetDirectoryAutoAdd())
-            removeDirectory.Add(tlk->GetObject());
+         auto obj = tlk->GetObject();
+         if (obj && !obj->TestBit(kNotDeleted))
+            Error("Delete", "A list is accessing an object (%p) already deleted (list name = %s)",
+                  obj, GetName());
+         else if (obj && obj->IsOnHeap())
+            TCollection::GarbageCollect(obj);
+         else if (obj && obj->IsA()->GetDirectoryAutoAdd())
+            removeDirectory.Add(obj);
 
          delete tlk;
       }
@@ -455,10 +465,14 @@ void TList::Delete(Option_t *option)
          TObjLink *tlk = first;
          first = first->Next();
          // delete only heap objects
-         if (tlk->GetObject() && tlk->GetObject()->IsOnHeap())
-            TCollection::GarbageCollect(tlk->GetObject());
-         else if (tlk->GetObject() && tlk->GetObject()->IsA()->GetDirectoryAutoAdd())
-            removeDirectory.Add(tlk->GetObject());
+         auto obj = tlk->GetObject();
+         if (obj && !obj->TestBit(kNotDeleted))
+            Error("Delete", "A list is accessing an object (%p) already deleted (list name = %s)",
+                  obj, GetName());
+         else if (obj && obj->IsOnHeap())
+            TCollection::GarbageCollect(obj);
+         else if (obj && obj->IsA()->GetDirectoryAutoAdd())
+            removeDirectory.Add(obj);
 
          delete tlk;
       }
