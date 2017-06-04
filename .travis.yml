@@ -144,7 +144,7 @@ script:
       RESULT_OUTPUT="$(git diff -U0 origin/master | clang-tidy-diff-3.9.py -p1 -clang-tidy-binary $(which clang-tidy-3.9) \
                        -checks=$CLANG_TIDY_CHECKS)"
       if [[ $? -eq 0 ]]; then
-        echo "clang-tidy passed."
+        echo "$TOOL passed."
         exit 0
       else
         echo "To reproduce it locally please run"
