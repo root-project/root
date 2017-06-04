@@ -55,9 +55,7 @@ void TMVARegressionApplication( TString myMethodList = "" )
    // 
    // --- Neural Network
    Use["MLP"] = 1;
-   //
-   // --- Deep Neural Networks
-   Use["DNN_CPU"] = 1;
+   Use["DNN_CPU"] = 0;
    // 
    // --- Support Vector Machine 
    Use["SVM"]             = 0;
