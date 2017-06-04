@@ -776,10 +776,10 @@ endif
 	$(CMDECHO) $(CALLROOTEXE) -q -l -b run$*.C+ > $*.log 2>$@ || handleError.sh --cmd='Execution of run$*.C+' --result=$$? --log=$@ --test=$*
 
 %.neutral.clog: %.clog
-	$(CMDECHO) cat $*.clog | sed -e 's:0x.*:0xRemoved:' > $@
+	$(CMDECHO) cat $*.clog | sed -e 's:0x[0-9a-fA-F]*:0xRemoved:g' > $@
 
 %.neutral.log: %.log
-	$(CMDECHO) cat $*.clog | sed -e 's:0x.*:0xRemoved:' > $@
+	$(CMDECHO) cat $*.log | sed -e 's:0x[0-9a-fA-F]*:0xRemoved:g' > $@
 
 exec%.ref:  | exec%.clog
 	$(CMDECHO) if [ ! -e $@ ] ; then echo > $@ ; echo "Processing exec$*.cxx+..." >> $@ ; fi
