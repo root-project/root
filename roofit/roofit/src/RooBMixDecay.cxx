@@ -33,7 +33,7 @@ This function can be analytically convolved with any RooResolutionModel implemen
 
 using namespace std;
 
-ClassImp(RooBMixDecay)
+ClassImp(RooBMixDecay);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor

@@ -178,7 +178,7 @@ divided. Visualization of such volumes is currently not implemented.
 #include "TBuffer3DTypes.h"
 
 #include "TGeoCompositeShape.h"
-ClassImp(TGeoCompositeShape)
+ClassImp(TGeoCompositeShape);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Needed just for cleanup.

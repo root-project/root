@@ -47,7 +47,7 @@ or objects in the packets.
 #include "fcntl.h"
 #endif
 
-ClassImp(TEventIter)
+ClassImp(TEventIter);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
@@ -249,7 +249,7 @@ Long64_t TEventIter::GetEntryNumber(Long64_t next)
 //------------------------------------------------------------------------
 
 
-ClassImp(TEventIterUnit)
+ClassImp(TEventIterUnit);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
@@ -404,7 +404,7 @@ Long64_t TEventIterUnit::GetNextEvent()
 //------------------------------------------------------------------------
 
 
-ClassImp(TEventIterObj)
+ClassImp(TEventIterObj);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default ctor.
@@ -683,7 +683,7 @@ TEventIterTree::TFileTree::~TFileTree()
    SafeDelete(fFile);
 }
 
-ClassImp(TEventIterTree)
+ClassImp(TEventIterTree);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default ctor.

@@ -40,7 +40,7 @@ Allows to read PS/EPS/PDF files via GhostScript
 #   include <import.h>
 
 
-ClassImp(TASPluginGS)
+ClassImp(TASPluginGS);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// ctor

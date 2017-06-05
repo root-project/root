@@ -221,7 +221,7 @@ TGWin32GLManager::TGWin32GLImpl::~TGWin32GLImpl()
    }
 }
 
-ClassImp(TGWin32GLManager)
+ClassImp(TGWin32GLManager);
 
 ////////////////////////////////////////////////////////////////////////////////
 

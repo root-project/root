@@ -125,7 +125,7 @@ void TWebSocket::ReOpen()
 }
 
 
-ClassImp(TWebFile)
+ClassImp(TWebFile);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a Web file object. A web file is the same as a read-only

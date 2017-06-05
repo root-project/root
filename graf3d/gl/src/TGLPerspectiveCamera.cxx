@@ -21,7 +21,7 @@
 Perspective projection camera - with characteristic foreshortening.
 */
 
-ClassImp(TGLPerspectiveCamera)
+ClassImp(TGLPerspectiveCamera);
 
 Double_t TGLPerspectiveCamera::fgFOVMin = 0.01;
 Double_t TGLPerspectiveCamera::fgFOVDefault = 30;

@@ -16,7 +16,7 @@
 #include "TVirtualPad.h"
 #include "TLine.h"
 
-ClassImp(TGraphQQ)
+ClassImp(TGraphQQ);
 
 /** \class TGraphQQ
 \ingroup BasicGraphics

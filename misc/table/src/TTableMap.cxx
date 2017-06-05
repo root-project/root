@@ -51,7 +51,7 @@
 //   }
 //___________________________________________________________________
 
-ClassImp(TTableMap)
+ClassImp(TTableMap);
 
 TTableMap::TTableMap(const TTable *table)
           : fTable(table)

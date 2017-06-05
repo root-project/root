@@ -30,7 +30,7 @@ Class RooThreshEntry is a utility class for RooThresholdCategory
 
 using namespace std;
 
-ClassImp(RooThreshEntry)
+ClassImp(RooThreshEntry);
 ;
 
 

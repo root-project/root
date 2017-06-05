@@ -46,7 +46,7 @@
 
 using namespace std;
 
-ClassImp(RooXYChi2Var)
+ClassImp(RooXYChi2Var);
 ;
 
 

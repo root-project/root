@@ -162,7 +162,7 @@ bool analyze(TFile* file) {
 ~~~
 */
 
-ClassImp(TTreeReader)
+ClassImp(TTreeReader);
 
 using namespace ROOT::Internal;
 

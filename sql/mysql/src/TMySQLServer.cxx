@@ -55,7 +55,7 @@
 #include <my_global.h>
 
 
-ClassImp(TMySQLServer)
+ClassImp(TMySQLServer);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Open a connection to a MySQL DB server. The db arguments should be

@@ -50,7 +50,7 @@ the TEventList object created in the above commands:
 #include "TFile.h"
 #include "TMath.h"
 
-ClassImp(TEventList)
+ClassImp(TEventList);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor for a EventList.

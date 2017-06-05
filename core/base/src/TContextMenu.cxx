@@ -50,7 +50,7 @@ The picture below shows a canvas with a pop-up menu and a dialog box.
 #include "TClass.h"
 #include "TObjectSpy.h"
 
-ClassImp(TContextMenu)
+ClassImp(TContextMenu);
 
 
 ////////////////////////////////////////////////////////////////////////////////

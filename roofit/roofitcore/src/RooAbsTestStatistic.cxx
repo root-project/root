@@ -56,7 +56,7 @@ combined in the main thread.
 
 using namespace std;
 
-ClassImp(RooAbsTestStatistic)
+ClassImp(RooAbsTestStatistic);
 ;
 
 

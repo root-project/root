@@ -51,7 +51,7 @@
 
 using namespace std;
 
-ClassImp(RooFormulaVar)
+ClassImp(RooFormulaVar);
 
 
 

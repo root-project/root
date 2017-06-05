@@ -50,7 +50,7 @@ using namespace TMVA;
 
 REGISTER_METHOD(PyAdaBoost)
 
-ClassImp(MethodPyAdaBoost)
+ClassImp(MethodPyAdaBoost);
 
 //_______________________________________________________________________
 MethodPyAdaBoost::MethodPyAdaBoost(const TString &jobName,

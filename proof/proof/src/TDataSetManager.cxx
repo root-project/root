@@ -50,7 +50,7 @@
 TString TDataSetManager::fgCommonDataSetTag = "COMMON";
 TList   *TDataSetManager::fgDataSetSrvMaps = 0;
 
-ClassImp(TDataSetManager)
+ClassImp(TDataSetManager);
 
 ////////////////////////////////////////////////////////////////////////////////
 ///

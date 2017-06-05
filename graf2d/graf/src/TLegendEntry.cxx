@@ -16,7 +16,7 @@
 #include "TROOT.h"
 #include "Riostream.h"
 
-ClassImp(TLegendEntry)
+ClassImp(TLegendEntry);
 
 /** \class TLegendEntry
 \ingroup BasicGraphics

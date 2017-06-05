@@ -40,7 +40,7 @@ efficient later.
 
 static const Int_t  UNINITIALIZED = -1;
 
-ClassImp(TMVA::TActivationSigmoid)
+ClassImp(TMVA::TActivationSigmoid);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor for sigmoid normalized in [0,1]

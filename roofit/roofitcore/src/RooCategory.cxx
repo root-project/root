@@ -41,7 +41,7 @@ has a public interface to define the possible value states.
 
 using namespace std;
 
-ClassImp(RooCategory) 
+ClassImp(RooCategory); 
 ;
 
 RooSharedPropertiesList RooCategory::_sharedPropList ;

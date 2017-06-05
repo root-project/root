@@ -25,7 +25,7 @@ See the individual documentations in TTree.
 TClass              *TVirtualTreePlayer::fgPlayer  = 0;
 TVirtualTreePlayer  *TVirtualTreePlayer::fgCurrent = 0;
 
-ClassImp(TVirtualTreePlayer)
+ClassImp(TVirtualTreePlayer);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Static function returning a pointer to a Tree player.

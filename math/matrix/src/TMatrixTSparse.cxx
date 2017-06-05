@@ -82,7 +82,7 @@
 #include "TMatrixT.h"
 #include "TMath.h"
 
-templateClassImp(TMatrixTSparse)
+templateClassImp(TMatrixTSparse);
 
 
 ////////////////////////////////////////////////////////////////////////////////

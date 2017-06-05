@@ -41,7 +41,7 @@ Some contributions to this class have been written by Matthias Wolf (error estim
 
 #include <algorithm>
 
-ClassImp(RooStats::HypoTestInverterResult)
+ClassImp(RooStats::HypoTestInverterResult);
 
 using namespace RooStats;
 using namespace RooFit;

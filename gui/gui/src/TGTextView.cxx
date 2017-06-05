@@ -62,7 +62,7 @@ Bool_t TViewTimer::Notify()
    return kFALSE;
 }
 
-ClassImp(TGTextView)
+ClassImp(TGTextView);
 
 
 ////////////////////////////////////////////////////////////////////////////////

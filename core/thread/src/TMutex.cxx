@@ -25,7 +25,7 @@
 #include <errno.h>
 
 
-ClassImp(TMutex)
+ClassImp(TMutex);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a mutex lock. The actual mutex implementation will be

@@ -45,7 +45,7 @@ TVolume *gNode;
 //R__EXTERN  Size3D gSize3D;
 static TRotMatrix *gIdentity = 0;
 
-ClassImp(TVolume)
+ClassImp(TVolume);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TVolume  description

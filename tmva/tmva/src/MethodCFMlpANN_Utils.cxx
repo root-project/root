@@ -74,7 +74,7 @@ Reference for the original FORTRAN version "mlpl3.F":
 using std::cout;
 using std::endl;
 
-ClassImp(TMVA::MethodCFMlpANN_Utils)
+ClassImp(TMVA::MethodCFMlpANN_Utils);
 
 const Int_t       TMVA::MethodCFMlpANN_Utils::fg_max_nVar_   = max_nVar_;
 const Int_t       TMVA::MethodCFMlpANN_Utils::fg_max_nNodes_ = max_nNodes_;

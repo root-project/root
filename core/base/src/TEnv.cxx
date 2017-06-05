@@ -375,7 +375,7 @@ TString TEnvRec::ExpandValue(const char *value)
    return val;
 }
 
-ClassImp(TEnv)
+ClassImp(TEnv);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a resource table and read the (possibly) three resource files, i.e

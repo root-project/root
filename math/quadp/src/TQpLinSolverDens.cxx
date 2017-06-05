@@ -52,7 +52,7 @@
 #include "Riostream.h"
 #include "TQpLinSolverDens.h"
 
-ClassImp(TQpLinSolverDens)
+ClassImp(TQpLinSolverDens);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor

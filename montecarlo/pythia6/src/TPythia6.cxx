@@ -172,7 +172,7 @@ extern "C" {
    void   type_of_call tpythia6_close_fortran_file(int* lun);
 }
 
-ClassImp(TPythia6)
+ClassImp(TPythia6);
 
 /** \class TPythia6::TPythia6Cleaner
     \ingroup pythia6

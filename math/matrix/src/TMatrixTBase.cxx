@@ -228,7 +228,7 @@
 
 Int_t gMatrixCheck = 1;
 
-templateClassImp(TMatrixTBase)
+templateClassImp(TMatrixTBase);
 
 
 ////////////////////////////////////////////////////////////////////////////////

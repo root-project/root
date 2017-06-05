@@ -24,10 +24,10 @@
 #include "Riostream.h"
 
 
-ClassImp(TGSplitter)
-ClassImp(TGVSplitter)
-ClassImp(TGHSplitter)
-ClassImp(TGVFileSplitter)
+ClassImp(TGSplitter);
+ClassImp(TGVSplitter);
+ClassImp(TGHSplitter);
+ClassImp(TGVFileSplitter);
 
 
 ////////////////////////////////////////////////////////////////////////////////

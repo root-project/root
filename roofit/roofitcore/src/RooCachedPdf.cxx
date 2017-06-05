@@ -29,7 +29,7 @@ any external RooAbsPdf input function provided in the constructor.
 
 using namespace std;
 
-ClassImp(RooCachedPdf) 
+ClassImp(RooCachedPdf); 
   ;
 
 

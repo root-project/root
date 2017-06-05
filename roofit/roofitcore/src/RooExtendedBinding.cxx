@@ -14,7 +14,7 @@
 #include <math.h> 
 #include "TMath.h" 
 
-ClassImp(RooExtendedBinding) 
+ClassImp(RooExtendedBinding); 
 
  RooExtendedBinding::RooExtendedBinding(const char *name, const char *title, RooAbsPdf& _pdf) :
    RooAbsReal(name,title), 

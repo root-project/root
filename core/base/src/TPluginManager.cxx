@@ -113,7 +113,7 @@ static bool &TPH__IsReadingDirs() {
    return readingDirs;
 }
 
-ClassImp(TPluginHandler)
+ClassImp(TPluginHandler);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a plugin handler. Called by TPluginManager.
@@ -333,7 +333,7 @@ void TPluginHandler::Print(Option_t *opt) const
 }
 
 
-ClassImp(TPluginManager)
+ClassImp(TPluginManager);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Clean up the plugin manager.

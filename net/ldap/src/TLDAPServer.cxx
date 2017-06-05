@@ -15,7 +15,7 @@
 #include "TError.h"
 
 
-ClassImp(TLDAPServer)
+ClassImp(TLDAPServer);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// During construction TLDAPServer object tries to connect to the

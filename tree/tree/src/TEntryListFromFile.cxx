@@ -39,7 +39,7 @@ list.
 #include "TError.h"
 #include "TTree.h"
 
-ClassImp(TEntryListFromFile)
+ClassImp(TEntryListFromFile);
 
 TEntryListFromFile::TEntryListFromFile(): TEntryList(),
    fListFileName(""), fListName(""), fNFiles(0), fListOffset(0), fFile(0), fFileNames(0)

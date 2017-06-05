@@ -12,7 +12,7 @@
 #include "TDecompSparse.h"
 #include "TMath.h"
 
-ClassImp(TDecompSparse)
+ClassImp(TDecompSparse);
 
 /** \class TDecompSparse
     \ingroup Matrix

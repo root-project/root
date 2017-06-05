@@ -20,7 +20,7 @@
 TEveUtil representation of TGLSceneInfo.
 */
 
-ClassImp(TEveSceneInfo)
+ClassImp(TEveSceneInfo);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

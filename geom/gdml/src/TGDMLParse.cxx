@@ -117,7 +117,7 @@ When most solids or volumes are added to the geometry they
 #include <stdlib.h>
 #include <string>
 
-ClassImp(TGDMLParse)
+ClassImp(TGDMLParse);
 
 ////////////////////////////////////////////////////////////////////////////////
 ///creates the new instance of the XMLEngine called 'gdml', using the filename >>
@@ -3853,7 +3853,7 @@ XMLNodePointer_t TGDMLParse::Reflection(TXMLEngine* gdml, XMLNodePointer_t node,
 
 //===================================================================
 
-ClassImp(TGDMLRefl)
+ClassImp(TGDMLRefl);
 
 /******************************************************************
 ____________________________________________________________

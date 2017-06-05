@@ -17,7 +17,7 @@
 // TResponseTable is an example of the custom version of the TGenericTable class
 //______________________________________________________________________________
 
-ClassImp(TResponseTable)
+ClassImp(TResponseTable);
 TableClassStreamerImp(TResponseTable)
 
 ////////////////////////////////////////////////////////////////////////////////

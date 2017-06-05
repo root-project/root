@@ -62,7 +62,7 @@ using std::min;
 
 REGISTER_METHOD(RuleFit)
 
-ClassImp(TMVA::MethodRuleFit)
+ClassImp(TMVA::MethodRuleFit);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// standard constructor

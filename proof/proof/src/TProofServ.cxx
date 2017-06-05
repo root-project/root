@@ -547,7 +547,7 @@ Bool_t TIdleTOTimer::Notify()
    return kTRUE;
 }
 
-ClassImp(TProofServ)
+ClassImp(TProofServ);
 
 // Hook to the constructor. This is needed to avoid using the plugin manager
 // which may create problems in multi-threaded environments.

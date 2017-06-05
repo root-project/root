@@ -30,7 +30,7 @@ value.
 
 using namespace std;
 
-ClassImp(RooInt)
+ClassImp(RooInt);
 ;
 
 

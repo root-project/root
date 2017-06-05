@@ -100,7 +100,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-   ClassImp(TGenericTable)
+   ClassImp(TGenericTable);
    TableClassStreamerImp(TGenericTable)
 
 // Create TGenericTable by TTableDescriptor pointer

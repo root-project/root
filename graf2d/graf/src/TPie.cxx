@@ -24,7 +24,7 @@
 #include <TH1.h>
 #include <TColor.h>
 
-ClassImp(TPie)
+ClassImp(TPie);
 
 /** \class TPie
 \ingroup BasicGraphics

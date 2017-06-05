@@ -87,7 +87,7 @@ the following script:
 TTask *TTask::fgBeginTask  = 0;
 TTask *TTask::fgBreakPoint = 0;
 
-ClassImp(TTask)
+ClassImp(TTask);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor invoked when reading a TTask object from a file.

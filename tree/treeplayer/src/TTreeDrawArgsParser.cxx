@@ -22,7 +22,7 @@ Int_t TTreeDrawArgsParser::fgMaxDimension = 4;
 Int_t TTreeDrawArgsParser::fgMaxParameters = 9;
 
 
-ClassImp(TTreeDrawArgsParser)
+ClassImp(TTreeDrawArgsParser);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor - cleans all the class variables.

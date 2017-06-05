@@ -50,7 +50,7 @@
 #include "TQpVar.h"
 #include "TMatrixD.h"
 
-ClassImp(TQpVar)
+ClassImp(TQpVar);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor

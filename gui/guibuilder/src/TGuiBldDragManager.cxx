@@ -60,7 +60,7 @@
 // Drag and drop manager used by the ROOT GUI Builder.
 //_____________________________________________________________________________
 
-ClassImp(TGuiBldDragManager)
+ClassImp(TGuiBldDragManager);
 
 static UInt_t gGridStep = 8;
 static TGuiBldDragManager *gGuiBldDragManager = 0;

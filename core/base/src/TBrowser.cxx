@@ -73,7 +73,7 @@ private:
 };
 
 
-ClassImp(TBrowser)
+ClassImp(TBrowser);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a new browser with a name, title. Width and height are by

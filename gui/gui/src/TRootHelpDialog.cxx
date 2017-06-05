@@ -23,7 +23,7 @@
 #include "TGTextView.h"
 
 
-ClassImp(TRootHelpDialog)
+ClassImp(TRootHelpDialog);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a help text dialog.

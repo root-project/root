@@ -20,7 +20,7 @@
 #include "TQCanvasImp.h"
 #include "TQRootCanvas.h"
 
-ClassImp(TQCanvasImp)
+ClassImp(TQCanvasImp);
 
 ////////////////////////////////////////////////////////////////////////////////
 ///  TQCanvasImp ctor

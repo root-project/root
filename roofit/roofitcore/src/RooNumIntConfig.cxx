@@ -39,7 +39,7 @@ use this class in the (normalization) integral configuration interface
 
 using namespace std;
 
-ClassImp(RooNumIntConfig)
+ClassImp(RooNumIntConfig);
 ;
 
 RooNumIntConfig* RooNumIntConfig::_default = 0 ;

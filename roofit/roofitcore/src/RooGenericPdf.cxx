@@ -48,7 +48,7 @@ doesn't hardcode any of the variable names it expects
 
 using namespace std;
 
-ClassImp(RooGenericPdf)
+ClassImp(RooGenericPdf);
 
 
 

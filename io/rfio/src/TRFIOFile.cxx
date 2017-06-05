@@ -65,8 +65,8 @@ For the ultimate description of supported urls see: https://twiki.cern.ch/twiki/
 #include <serrno.h>
 
 
-ClassImp(TRFIOFile)
-ClassImp(TRFIOSystem)
+ClassImp(TRFIOFile);
+ClassImp(TRFIOSystem);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a RFIO file object.

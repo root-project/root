@@ -1,4 +1,4 @@
 #include "NdbResParam.h"
 
-ClassImp(NdbResParam)
+ClassImp(NdbResParam);
 

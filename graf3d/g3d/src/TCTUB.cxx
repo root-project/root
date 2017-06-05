@@ -14,7 +14,7 @@
 #include "TClass.h"
 #include "TMath.h"
 
-ClassImp(TCTUB)
+ClassImp(TCTUB);
 
 /** \class TCTUB
 \ingroup g3d

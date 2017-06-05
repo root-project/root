@@ -69,7 +69,7 @@ Usage example:
 
 using namespace std;
 
-ClassImp(Roo2DMomentMorphFunction)
+ClassImp(Roo2DMomentMorphFunction);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

@@ -28,7 +28,7 @@ or TAR archive.
 #include <stdlib.h>
 
 
-ClassImp(TArchiveFile)
+ClassImp(TArchiveFile);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Specify the archive name and member name.
@@ -203,7 +203,7 @@ Bool_t TArchiveFile::ParseUrl(const char *url, TString &archive, TString &member
 }
 
 
-ClassImp(TArchiveMember)
+ClassImp(TArchiveMember);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default ctor.

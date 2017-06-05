@@ -19,7 +19,7 @@
 #include "TGeometry.h"
 #include "TClass.h"
 
-ClassImp(TPCON)
+ClassImp(TPCON);
 
 /** \class TPCON
 \ingroup g3d

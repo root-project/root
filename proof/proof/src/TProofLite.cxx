@@ -53,7 +53,7 @@ different number can be forced on construction.
 #include "TSelector.h"
 #include "TPackMgr.h"
 
-ClassImp(TProofLite)
+ClassImp(TProofLite);
 
 Int_t TProofLite::fgWrksMax = -2; // Unitialized max number of workers
 

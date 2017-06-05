@@ -62,7 +62,7 @@ const Int_t  kMapOffset         = 2;   // first 2 map entries are taken by null 
 Int_t TBufferFile::fgMapSize   = kMapSize;
 
 
-ClassImp(TBufferFile)
+ClassImp(TBufferFile);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return hash value for this object.

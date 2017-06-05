@@ -42,7 +42,7 @@ function returns the cell value, given an event 'txvec'.
 
 #include <vector>
 
-ClassImp(TMVA::PDEFoamKernelTrivial)
+ClassImp(TMVA::PDEFoamKernelTrivial);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor for streamer

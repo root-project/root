@@ -32,7 +32,7 @@
 #include "TFilePrefetch.h"
 #include "TMath.h"
 
-ClassImp(TFileCacheRead)
+ClassImp(TFileCacheRead);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default Constructor.

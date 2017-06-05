@@ -120,7 +120,7 @@ End_Macro
 #include "TBuffer3DTypes.h"
 #include "TMath.h"
 
-ClassImp(TGeoTube)
+ClassImp(TGeoTube);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
@@ -1220,7 +1220,7 @@ void TGeoTube::Safety_v(const Double_t *points, const Bool_t *inside, Double_t *
    for (Int_t i=0; i<vecsize; i++) safe[i] = Safety(&points[3*i], inside[i]);
 }
 
-ClassImp(TGeoTubeSeg)
+ClassImp(TGeoTubeSeg);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
@@ -2458,7 +2458,7 @@ void TGeoTubeSeg::Safety_v(const Double_t *points, const Bool_t *inside, Double_
    for (Int_t i=0; i<vecsize; i++) safe[i] = Safety(&points[3*i], inside[i]);
 }
 
-ClassImp(TGeoCtub)
+ClassImp(TGeoCtub);
 
 TGeoCtub::TGeoCtub()
 {

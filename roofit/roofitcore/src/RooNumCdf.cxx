@@ -36,7 +36,7 @@ orders.
 
 using namespace std;
 
-ClassImp(RooNumCdf) 
+ClassImp(RooNumCdf); 
   ;
 
 

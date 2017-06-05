@@ -40,7 +40,7 @@
 const TGFont *TGLabel::fgDefaultFont = 0;
 const TGGC   *TGLabel::fgDefaultGC = 0;
 
-ClassImp(TGLabel)
+ClassImp(TGLabel);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a label GUI object. TGLabel will become the owner of the

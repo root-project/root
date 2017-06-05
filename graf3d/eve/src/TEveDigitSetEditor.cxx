@@ -34,7 +34,7 @@
 Editor for TEveDigitSet class.
 */
 
-ClassImp(TEveDigitSetEditor)
+ClassImp(TEveDigitSetEditor);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

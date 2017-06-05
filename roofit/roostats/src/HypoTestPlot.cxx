@@ -22,7 +22,7 @@ HypoTestCalculatorGeneric (e.g. HybridCalculator or FrequentistCalculator)  clas
 
 #include "TStyle.h"
 
-ClassImp(RooStats::HypoTestPlot)
+ClassImp(RooStats::HypoTestPlot);
 
 using namespace RooStats;
 using namespace std;

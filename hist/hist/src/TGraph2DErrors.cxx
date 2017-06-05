@@ -20,7 +20,7 @@
 #include "THLimitsFinder.h"
 #include "TStyle.h"
 
-ClassImp(TGraph2DErrors)
+ClassImp(TGraph2DErrors);
 
 /** \class TGraph2DErrors
     \ingroup Hist 

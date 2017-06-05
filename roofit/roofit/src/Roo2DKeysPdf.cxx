@@ -37,7 +37,7 @@ Two-dimensional kernel estimation PDF.
 
 using namespace std;
 
-ClassImp(Roo2DKeysPdf)
+ClassImp(Roo2DKeysPdf);
 
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -113,7 +113,7 @@ where -pi <= u <= pi, -pi <= v <= pi.
 
 */
 
-ClassImp(TGLParametricEquation)
+ClassImp(TGLParametricEquation);
 
 ////////////////////////////////////////////////////////////////////////////////
 ///Surface is defined by three strings.
@@ -290,7 +290,7 @@ void TGLParametricEquation::Paint(Option_t * /*option*/)
 \ingroup opengl
 */
 
-ClassImp(TGLParametricPlot)
+ClassImp(TGLParametricPlot);
 
 ////////////////////////////////////////////////////////////////////////////////
 ///Constructor.

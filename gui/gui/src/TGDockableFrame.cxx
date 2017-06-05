@@ -43,10 +43,10 @@
 #include "Riostream.h"
 
 
-ClassImp(TGDockButton)
-ClassImp(TGDockHideButton)
-ClassImp(TGUndockedFrame)
-ClassImp(TGDockableFrame)
+ClassImp(TGDockButton);
+ClassImp(TGDockHideButton);
+ClassImp(TGUndockedFrame);
+ClassImp(TGDockableFrame);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a dock button (i.e. button with two vertical bars).

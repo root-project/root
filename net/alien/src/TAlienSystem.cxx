@@ -27,7 +27,7 @@
 #include "gapi_file_operations.h"
 #include "gapi_stat.h"
 
-ClassImp(TAlienSystem)
+ClassImp(TAlienSystem);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a new OS interface.

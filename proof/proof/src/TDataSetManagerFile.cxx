@@ -56,7 +56,7 @@ struct LsTreeEntry_t {
    ~LsTreeEntry_t() { SafeDelete(fGrp); SafeDelete(fUsr); SafeDelete(fMd5); SafeDelete(fLss);}
 };
 
-ClassImp(TDataSetManagerFile)
+ClassImp(TDataSetManagerFile);
 
 ////////////////////////////////////////////////////////////////////////////////
 ///

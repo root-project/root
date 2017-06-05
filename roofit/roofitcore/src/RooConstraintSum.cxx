@@ -44,7 +44,7 @@ arguments
 
 using namespace std;
 
-ClassImp(RooConstraintSum)
+ClassImp(RooConstraintSum);
 ;
 
 

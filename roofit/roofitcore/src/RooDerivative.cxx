@@ -46,7 +46,7 @@ derivator class.
 
 using namespace std;
 
-ClassImp(RooDerivative)
+ClassImp(RooDerivative);
 ;
 
 

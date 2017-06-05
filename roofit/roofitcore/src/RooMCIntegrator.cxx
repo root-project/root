@@ -46,7 +46,7 @@ based on a C version from the 0.9 beta release of the GNU scientific library.
 
 using namespace std;
 
-ClassImp(RooMCIntegrator)
+ClassImp(RooMCIntegrator);
 ;
 
 // Register this class with RooNumIntFactory

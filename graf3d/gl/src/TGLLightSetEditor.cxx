@@ -26,7 +26,7 @@
 Sub-editor for TGLLightSet.
 */
 
-ClassImp(TGLLightSetSubEditor)
+ClassImp(TGLLightSetSubEditor);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -119,7 +119,7 @@ void TGLLightSetSubEditor::DoButton()
 //
 // Editor for TGLLightSet.
 
-ClassImp(TGLLightSetEditor)
+ClassImp(TGLLightSetEditor);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

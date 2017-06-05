@@ -32,7 +32,7 @@
 #include "TGLabel.h"
 #include "TGListView.h"
 
-ClassImp(TGeoMaterialEditor)
+ClassImp(TGeoMaterialEditor);
 
 enum ETGeoMaterialWid {
    kMATERIAL_NAME, kMATERIAL_A, kMATERIAL_Z, kMATERIAL_RHO,
@@ -384,7 +384,7 @@ void TGeoMaterialEditor::DoModified()
    fApply->SetEnabled();
 }
 
-ClassImp(TGeoMixtureEditor)
+ClassImp(TGeoMixtureEditor);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor for mixture editor.

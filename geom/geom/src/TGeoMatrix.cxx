@@ -223,7 +223,7 @@ const Int_t kN9 = 9*sizeof(Double_t);
 
 // statics and globals
 
-ClassImp(TGeoMatrix)
+ClassImp(TGeoMatrix);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// dummy constructor
@@ -620,7 +620,7 @@ basically an array of 3 doubles matching the positions 12, 13
 and 14 in the homogenous matrix description.
 */
 
-ClassImp(TGeoTranslation)
+ClassImp(TGeoTranslation);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
@@ -849,7 +849,7 @@ Class describing rotations. A rotation is a 3*3 array
 Column vectors has to be orthogonal unit vectors.
 */
 
-ClassImp(TGeoRotation)
+ClassImp(TGeoRotation);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
@@ -1364,7 +1364,7 @@ array of 3 doubles (sx, sy, sz) multiplying elements 0, 5 and 10
 of the homogenous matrix. A scale is normalized : sx*sy*sz = 1
 */
 
-ClassImp(TGeoScale)
+ClassImp(TGeoScale);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// default constructor
@@ -1538,7 +1538,7 @@ Class describing rotation + translation. Most frequently used in the description
 of TGeoNode 's
 */
 
-ClassImp(TGeoCombiTrans)
+ClassImp(TGeoCombiTrans);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// dummy ctor
@@ -2020,7 +2020,7 @@ const Double_t *TGeoCombiTrans::GetRotationMatrix() const
 Most general transformation, holding a translation, a rotation and a scale
 */
 
-ClassImp(TGeoGenTrans)
+ClassImp(TGeoGenTrans);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// dummy ctor
@@ -2132,7 +2132,7 @@ and returns pointers to static null translation and identity
 transformations for rotation and scale
 */
 
-ClassImp(TGeoIdentity)
+ClassImp(TGeoIdentity);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// dummy ctor
@@ -2170,7 +2170,7 @@ is generally used to pile-up local transformations starting from
 the top level physical node, down to the current node.
 */
 
-ClassImp(TGeoHMatrix)
+ClassImp(TGeoHMatrix);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// dummy ctor

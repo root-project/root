@@ -217,7 +217,7 @@ Bool_t TStopTimer::Notify()
 
 //------------------------------------------------------------------------------
 
-ClassImp(TProofPlayer)
+ClassImp(TProofPlayer);
 
 THashList *TProofPlayer::fgDrawInputPars = 0;
 
@@ -1841,7 +1841,7 @@ void TProofPlayerRemote::SetMerging(Bool_t on)
 
 //------------------------------------------------------------------------------
 
-ClassImp(TProofPlayerLocal)
+ClassImp(TProofPlayerLocal);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Process the specified TSelector object 'nentries' times.
@@ -1892,7 +1892,7 @@ Long64_t TProofPlayerLocal::Process(const char *selector,
 
 //------------------------------------------------------------------------------
 
-ClassImp(TProofPlayerRemote)
+ClassImp(TProofPlayerRemote);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor.
@@ -4313,7 +4313,7 @@ void TProofPlayerRemote::SetInitTime()
 //------------------------------------------------------------------------------
 
 
-ClassImp(TProofPlayerSlave)
+ClassImp(TProofPlayerSlave);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Setup feedback.
@@ -4472,7 +4472,7 @@ void TProofPlayerSlave::HandleGetTreeHeader(TMessage *mess)
 
 //------------------------------------------------------------------------------
 
-ClassImp(TProofPlayerSuperMaster)
+ClassImp(TProofPlayerSuperMaster);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Process specified TDSet on PROOF. Runs on super master.

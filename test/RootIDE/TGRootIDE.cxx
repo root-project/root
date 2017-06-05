@@ -296,7 +296,7 @@ ToolBarData_t fTbData[] = {
 static char *gEPrinter      = 0;
 static char *gEPrintCommand = 0;
 
-ClassImp(TGRootIDE)
+ClassImp(TGRootIDE);
 
 
 ////////////////////////////////////////////////////////////////////////////////

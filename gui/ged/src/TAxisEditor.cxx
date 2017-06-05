@@ -48,7 +48,7 @@
 #include "TVirtualPad.h"
 #include "TStyle.h"
 
-ClassImp(TAxisEditor)
+ClassImp(TAxisEditor);
 
 enum EAxisWid {
    kCOL_AXIS,

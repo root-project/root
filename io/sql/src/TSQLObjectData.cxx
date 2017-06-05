@@ -38,7 +38,7 @@ will be kept in single TSQLObjectData instance.
 Info (classname, version) about object in database
 */
 
-ClassImp(TSQLObjectInfo)
+ClassImp(TSQLObjectInfo);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -72,7 +72,7 @@ TSQLObjectInfo::~TSQLObjectInfo()
 Keeps the data requested from the SQL server for an object.
 */
 
-ClassImp(TSQLObjectData)
+ClassImp(TSQLObjectData);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// default contrsuctor

@@ -52,7 +52,7 @@
 #include "TQpLinSolverBase.h"
 #include "TMatrixD.h"
 
-ClassImp(TQpLinSolverBase)
+ClassImp(TQpLinSolverBase);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor

@@ -29,4 +29,4 @@ Interface for TNeuron activation function classes
 
 #include "Rtypes.h"
 
-ClassImp(TMVA::TActivation)
+ClassImp(TMVA::TActivation);

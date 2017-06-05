@@ -12,7 +12,7 @@
 #include "Strlen.h"
 #include "TAttCanvas.h"
 
-ClassImp(TAttCanvas)
+ClassImp(TAttCanvas);
 
 /** \class TAttCanvas
 \ingroup gpad

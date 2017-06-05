@@ -23,7 +23,7 @@
 #include "TVirtualTableInterface.h"
 #include "TColor.h"
 
-ClassImp(TGTableCell)
+ClassImp(TGTableCell);
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //

@@ -36,7 +36,7 @@ Rectified Linear Unit activation function for TNeuron
 
 #include <iostream>
 
-ClassImp(TMVA::TActivationReLU)
+ClassImp(TMVA::TActivationReLU);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor for ReLU

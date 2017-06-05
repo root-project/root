@@ -33,7 +33,7 @@ collection of TFile names.
 #include "TError.h"
 
 
-ClassImp(TFileCollection)
+ClassImp(TFileCollection);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TFileCollection constructor. Specify a name and title describing

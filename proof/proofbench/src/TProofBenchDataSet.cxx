@@ -28,7 +28,7 @@ Handle operations on datasets used by ProofBench
 #include "TROOT.h"
 
 
-ClassImp(TProofBenchDataSet)
+ClassImp(TProofBenchDataSet);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor

@@ -26,7 +26,7 @@ Iteration can only be done via the TIterator interfaces.
 #include "TFunction.h"
 #include "THashList.h"
 
-// ClassImp(TViewPubFunctions)
+// ClassImp(TViewPubFunctions);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// loop over all base classes and add them to the container.
@@ -356,7 +356,7 @@ TObject   *TViewPubFunctions::Remove(TObjLink * /* lnk */)
 Iterator of over the view's content
 */
 
-// ClassImp(TViewPubFunctionsIter)
+// ClassImp(TViewPubFunctionsIter);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a new list iterator. By default the iteration direction

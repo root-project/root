@@ -98,7 +98,7 @@ public:
 // This class is the real core of the ROOT browser.
 //_____________________________________________________________________________
 
-ClassImp(TGFileBrowser)
+ClassImp(TGFileBrowser);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TGFileBrowser constructor.

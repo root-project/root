@@ -25,7 +25,7 @@
 //
 // Virtual drag and drop manager used for the GUI builder.
 
-ClassImp(TVirtualDragManager)
+ClassImp(TVirtualDragManager);
 
 
 TVirtualDragManager *gDragManager = 0;

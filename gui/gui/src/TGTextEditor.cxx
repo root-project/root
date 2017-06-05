@@ -232,7 +232,7 @@ ToolBarData_t fTbData[] = {
 static char *gEPrinter      = 0;
 static char *gEPrintCommand = 0;
 
-ClassImp(TGTextEditor)
+ClassImp(TGTextEditor);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TGTextEditor constructor with file name as first argument.

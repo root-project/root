@@ -26,8 +26,8 @@
 #include "TArrayS.h"
 
 
-ClassImp(TGRegion)
-ClassImp(TGRegionWithId)
+ClassImp(TGRegion);
+ClassImp(TGRegionWithId);
 ClassImpQ(TGImageMap)
 
 

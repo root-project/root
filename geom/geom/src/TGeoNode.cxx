@@ -87,7 +87,7 @@ painting a node on a pad will take the corresponding volume attributes.
 
 // statics and globals
 
-ClassImp(TGeoNode)
+ClassImp(TGeoNode);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
@@ -705,7 +705,7 @@ void TGeoNode::VisibleDaughters(Bool_t vis)
 A node containing local transformation.
 */
 
-ClassImp(TGeoNodeMatrix)
+ClassImp(TGeoNodeMatrix);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
@@ -824,7 +824,7 @@ void TGeoNodeMatrix::SetMatrix(const TGeoMatrix *matrix)
 Node containing an offset.
 */
 
-ClassImp(TGeoNodeOffset)
+ClassImp(TGeoNodeOffset);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
@@ -994,8 +994,8 @@ We want to find out a volume named "MyVol" in the hierarchy of TOP volume.
 \ingroup Geometry_classes
 */
 
-ClassImp(TGeoIteratorPlugin)
-ClassImp(TGeoIterator)
+ClassImp(TGeoIteratorPlugin);
+ClassImp(TGeoIterator);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Geometry iterator for a branch starting with a TOP node.

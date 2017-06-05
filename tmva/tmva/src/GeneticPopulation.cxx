@@ -42,7 +42,7 @@ Population definition for genetic algorithm.
 #include "TMVA/GeneticGenes.h"
 #include "TMVA/MsgLogger.h"
 
-ClassImp(TMVA::GeneticPopulation)
+ClassImp(TMVA::GeneticPopulation);
 
 using namespace std;
 

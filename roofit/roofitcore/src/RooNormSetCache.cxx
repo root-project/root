@@ -36,7 +36,7 @@ during their lifetime.
 #include "RooNormSetCache.h"
 #include "RooArgSet.h"
 
-ClassImp(RooNormSetCache)
+ClassImp(RooNormSetCache);
 ;
 
 

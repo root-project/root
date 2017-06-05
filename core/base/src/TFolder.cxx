@@ -97,7 +97,7 @@ static char  gFolderPath[512];
 
 enum { kOwnFolderList = BIT(15) };
 
-ClassImp(TFolder)
+ClassImp(TFolder);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor used by the Input functions.

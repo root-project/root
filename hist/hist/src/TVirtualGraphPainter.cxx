@@ -16,7 +16,7 @@
 
 TVirtualGraphPainter *TVirtualGraphPainter::fgPainter = 0;
 
-ClassImp(TVirtualGraphPainter)
+ClassImp(TVirtualGraphPainter);
 
 /** \class TVirtualGraphPainter
  \ingroup Hist

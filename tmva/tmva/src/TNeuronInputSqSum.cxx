@@ -31,4 +31,4 @@ TNeuron input calculator -- calculates the squared weighted sum of inputs.
 
 #include "Rtypes.h"
 
-ClassImp(TMVA::TNeuronInputSqSum)
+ClassImp(TMVA::TNeuronInputSqSum);

@@ -45,8 +45,8 @@ use a TTree as internal storage mechanism
 #include <memory>
 using namespace std ;
 
-ClassImp(RooVectorDataStore)
-ClassImp(RooVectorDataStore::RealVector)
+ClassImp(RooVectorDataStore);
+ClassImp(RooVectorDataStore::RealVector);
 ;
 
 

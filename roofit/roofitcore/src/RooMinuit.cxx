@@ -73,7 +73,7 @@ char* operator+( streampos&, char* );
 
 using namespace std;
 
-ClassImp(RooMinuit)
+ClassImp(RooMinuit);
 ;
 
 TVirtualFitter *RooMinuit::_theFitter = 0 ;

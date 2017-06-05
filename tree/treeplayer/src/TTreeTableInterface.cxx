@@ -22,7 +22,7 @@
 #include "TTreeFormulaManager.h"
 #include "TTreeFormula.h"
 
-ClassImp(TTreeTableInterface)
+ClassImp(TTreeTableInterface);
 
 /** \class TTreeTableInterface
 

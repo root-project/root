@@ -19,7 +19,7 @@
 #include "TClass.h"
 #include "TMath.h"
 
-ClassImp(TSPHE)
+ClassImp(TSPHE);
 
 /** \class TSPHE
 \ingroup g3d

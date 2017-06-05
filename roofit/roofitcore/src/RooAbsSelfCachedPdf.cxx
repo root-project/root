@@ -38,7 +38,7 @@ input.
 
 using namespace std ;
 
-ClassImp(RooAbsSelfCachedPdf) 
+ClassImp(RooAbsSelfCachedPdf); 
 
 
 

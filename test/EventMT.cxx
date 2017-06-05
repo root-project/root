@@ -83,10 +83,10 @@
 #include "Event.h"
 
 
-ClassImp(EventHeader)
-ClassImp(Event)
-ClassImp(Track)
-ClassImp(HistogramManager)
+ClassImp(EventHeader);
+ClassImp(Event);
+ClassImp(Track);
+ClassImp(HistogramManager);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create an Event object.

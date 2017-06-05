@@ -8,7 +8,7 @@
 #include<TRFunctionExport.h>
 
 using namespace ROOT::R;
-ClassImp(TRFunctionExport)
+ClassImp(TRFunctionExport);
 
 
 //______________________________________________________________________________

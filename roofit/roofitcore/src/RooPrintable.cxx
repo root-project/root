@@ -43,7 +43,7 @@ given a Print() option string.
 
 using namespace std;
 
-ClassImp(RooPrintable)
+ClassImp(RooPrintable);
 ;
 
 Int_t  RooPrintable::_nameLength(0) ;

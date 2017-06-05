@@ -32,7 +32,7 @@ Full description with examples and pictures
 #include "TGeoManager.h"
 #include "TGeoStateInfo.h"
 
-ClassImp(TGeoVoxelFinder)
+ClassImp(TGeoVoxelFinder);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor

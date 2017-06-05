@@ -39,7 +39,7 @@ store the interval.
 
 using namespace std;
 
-ClassImp(RooStats::PointSetInterval) ;
+ClassImp(RooStats::PointSetInterval); ;
 
 using namespace RooStats;
 

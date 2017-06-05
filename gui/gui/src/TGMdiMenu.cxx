@@ -44,7 +44,7 @@
 #include "Riostream.h"
 
 
-ClassImp(TGMdiMenuBar)
+ClassImp(TGMdiMenuBar);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TGMdiMenuBar constructor.

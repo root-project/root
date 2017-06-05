@@ -39,7 +39,7 @@ the selectFastAlgorithm() method.
 
 using namespace std;
 
-ClassImp(RooVoigtian)
+ClassImp(RooVoigtian);
 
 ////////////////////////////////////////////////////////////////////////////////
 

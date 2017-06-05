@@ -27,7 +27,7 @@
 #include "TEventList.h"
 #include "TEntryList.h"
 
-ClassImp(TProofChain)
+ClassImp(TProofChain);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Crates a new PROOF chain proxy.

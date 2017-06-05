@@ -45,7 +45,7 @@ repeated applications of generate-and-fit operations on a workspace
 
 using namespace std ;
 
-ClassImp(RooStudyManager)
+ClassImp(RooStudyManager);
   ;
 
 

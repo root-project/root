@@ -32,9 +32,9 @@ const TGFont *TGProgressBar::fgDefaultFont = 0;
 TGGC         *TGProgressBar::fgDefaultGC = 0;
 
 
-ClassImp(TGProgressBar)
-ClassImp(TGHProgressBar)
-ClassImp(TGVProgressBar)
+ClassImp(TGProgressBar);
+ClassImp(TGHProgressBar);
+ClassImp(TGVProgressBar);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create progress bar.

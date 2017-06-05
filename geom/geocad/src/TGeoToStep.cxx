@@ -45,7 +45,7 @@
 #include "TString.h"
 #include "TClass.h"
 
-ClassImp(TGeoToStep)
+ClassImp(TGeoToStep);
 
 TGeoToStep::TGeoToStep():TObject(), fGeometry(0)
 {

@@ -21,7 +21,7 @@ This class has been separated from VirtualMC and it is used
 internally in TVirtualMC implementations.
 */
 
-ClassImp(TVirtualMCGeometry)
+ClassImp(TVirtualMCGeometry);
 
 ////////////////////////////////////////////////////////////////////////////////
 ///

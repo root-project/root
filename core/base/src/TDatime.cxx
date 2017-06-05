@@ -41,7 +41,7 @@ required, use TTimeStamp.
 #include "TString.h"
 
 
-ClassImp(TDatime)
+ClassImp(TDatime);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a TDatime and set it to the current time.

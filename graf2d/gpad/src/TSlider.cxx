@@ -16,7 +16,7 @@
 
 #include <string.h>
 
-ClassImp(TSlider)
+ClassImp(TSlider);
 
 /** \class TSlider
 \ingroup gpad

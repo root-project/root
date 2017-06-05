@@ -36,7 +36,7 @@ Implement TTree for a SQL backend
 #include "TTreeSQL.h"
 #include "TBasketSQL.h"
 
-ClassImp(TTreeSQL)
+ClassImp(TTreeSQL);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor with an explicit TSQLServer

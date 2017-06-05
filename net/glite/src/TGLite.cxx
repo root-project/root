@@ -160,7 +160,7 @@ Be advised that the call of <em>TGrid::Connect("glite")</em> should be the very 
 END_HTML */
 ////////////////////////////////////////////////////////////////////////////////
 
-ClassImp(TGLite)
+ClassImp(TGLite);
 
 using namespace std;
 using namespace glite_api_wrapper;

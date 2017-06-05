@@ -25,7 +25,7 @@
 // Remove when TView3Der3DPad fix in ExecuteRotateView() is removed
 #include "TVirtualViewer3D.h"
 
-ClassImp(TView3D)
+ClassImp(TView3D);
 
 //const Int_t kPerspective = BIT(14);
 

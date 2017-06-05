@@ -151,7 +151,7 @@ static char *strtok_r(char *s1, const char *s2, char **lasts)
 
 using namespace std;
 
-ClassImp(RooCustomizer) 
+ClassImp(RooCustomizer); 
 ;
 
 

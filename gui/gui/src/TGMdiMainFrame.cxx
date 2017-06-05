@@ -49,10 +49,10 @@
 #include "Riostream.h"
 #include "TList.h"
 
-ClassImp(TGMdiMainFrame)
-ClassImp(TGMdiContainer)
-ClassImp(TGMdiGeometry)
-ClassImp(TGMdiFrameList)
+ClassImp(TGMdiMainFrame);
+ClassImp(TGMdiContainer);
+ClassImp(TGMdiGeometry);
+ClassImp(TGMdiFrameList);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a MDI main frame.

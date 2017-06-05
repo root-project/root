@@ -244,7 +244,7 @@ be used by the Transform() member function, the *= or
 #include "TString.h"
 #include "TLorentzRotation.h"
 
-ClassImp(TLorentzVector)
+ClassImp(TLorentzVector);
 
 
 void TLorentzVector::Boost(Double_t bx, Double_t by, Double_t bz)

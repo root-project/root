@@ -22,7 +22,7 @@ Double_t TCandle::fBoxRange      = 0.5;
 Bool_t TCandle::fScaledCandle = false;
 Bool_t TCandle::fScaledViolin = true;
 
-ClassImp(TCandle)
+ClassImp(TCandle);
 
 /** \class TCandle
 \ingroup BasicGraphics

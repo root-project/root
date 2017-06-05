@@ -205,7 +205,7 @@ static void ArrayLayout(UInt_t *layout,const UInt_t *size, Int_t dim)
    }
 }
 
-ClassImp(TTable)
+ClassImp(TTable);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// protected: create a new TTableDescriptor descriptor for this table

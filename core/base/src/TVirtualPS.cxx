@@ -23,7 +23,7 @@ TVirtualPS *gVirtualPS = 0;
 
 const Int_t  kMaxBuffer = 250;
 
-ClassImp(TVirtualPS)
+ClassImp(TVirtualPS);
 
 
 ////////////////////////////////////////////////////////////////////////////////

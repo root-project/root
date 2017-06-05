@@ -83,7 +83,7 @@ const Bool_t EnforceNormalization__=kTRUE;
 
 REGISTER_METHOD(TMlpANN)
 
-ClassImp(TMVA::MethodTMlpANN)
+ClassImp(TMVA::MethodTMlpANN);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// standard constructor

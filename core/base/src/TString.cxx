@@ -63,7 +63,7 @@ as a TString, construct a TString from it, eg:
 namespace std { using ::list; }
 #endif
 
-ClassImp(TString)
+ClassImp(TString);
 
 // Amount to shift hash values to avoid clustering
 const UInt_t kHashShift = 5;

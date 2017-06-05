@@ -53,7 +53,7 @@ it will be mess - at any moment I do not know, where to take line attribute - fr
 gVirtualX or from my own member. So! All attributed, _ALL_ go to/from gVirtualX.
 */
 
-ClassImp(TGLPadPainter)
+ClassImp(TGLPadPainter);
 
 ////////////////////////////////////////////////////////////////////////////////
 

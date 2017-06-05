@@ -401,7 +401,7 @@ volumes (or volume assemblies) as content.
 #include "TGeoVoxelFinder.h"
 #include "TGeoExtension.h"
 
-ClassImp(TGeoVolume)
+ClassImp(TGeoVolume);
 
 TGeoMedium *TGeoVolume::fgDummyMedium = 0;
 
@@ -2417,7 +2417,7 @@ Double_t TGeoVolume::WeightA() const
    return weight;
 }
 
-ClassImp(TGeoVolumeMulti)
+ClassImp(TGeoVolumeMulti);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2766,7 +2766,7 @@ void TGeoVolumeMulti::SetVisibility(Bool_t vis)
    }
 }
 
-ClassImp(TGeoVolumeAssembly)
+ClassImp(TGeoVolumeAssembly);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

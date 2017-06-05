@@ -61,7 +61,7 @@ interpreted as a parameter.
 
 using namespace std;
 
-ClassImp(RooAbsRealLValue)
+ClassImp(RooAbsRealLValue);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor

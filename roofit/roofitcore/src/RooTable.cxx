@@ -33,7 +33,7 @@ Table objects are the category equivalent of RooPlot objects
 
 using namespace std;
 
-ClassImp(RooTable)
+ClassImp(RooTable);
 
 
 

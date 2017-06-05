@@ -22,7 +22,7 @@ values.
 #include "TParameter.h"
 
 
-ClassImp(TDictAttributeMap)
+ClassImp(TDictAttributeMap);
 
 ////////////////////////////////////////////////////////////////////////////////
 ///Default constructor.

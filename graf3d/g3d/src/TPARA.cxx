@@ -13,7 +13,7 @@
 #include "TNode.h"
 #include "TMath.h"
 
-ClassImp(TPARA)
+ClassImp(TPARA);
 
 /** \class TPARA
 \ingroup g3d

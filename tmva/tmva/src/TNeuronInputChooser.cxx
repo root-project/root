@@ -30,4 +30,4 @@ Class for easily choosing neuron input functions.
 
 #include "Rtypes.h"
 
-ClassImp(TMVA::TNeuronInputChooser)
+ClassImp(TMVA::TNeuronInputChooser);

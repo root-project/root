@@ -24,7 +24,7 @@
 #include "TNeuron.h"
 #include "Riostream.h"
 
-ClassImp(TSynapse)
+ClassImp(TSynapse);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor

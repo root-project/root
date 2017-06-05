@@ -37,7 +37,7 @@
 #include "TMath.h"
 #include "TMVA/RegressionVariance.h"
 
-ClassImp(TMVA::RegressionVariance)
+ClassImp(TMVA::RegressionVariance);
 
 /*! \class TMVA::RegressionVariance
 \ingroup TMVA

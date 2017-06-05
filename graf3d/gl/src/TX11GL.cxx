@@ -142,7 +142,7 @@ private:
    TX11GLImpl &operator = (const TX11GLImpl &);
 };
 
-ClassImp(TX11GLManager)
+ClassImp(TX11GLManager);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

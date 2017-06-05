@@ -110,7 +110,7 @@ char TProofMergePrg::fgCr[4] = {'-', '\\', '|', '/'};
 TList   *TProof::fgProofEnvList = 0;          // List of env vars for proofserv
 TPluginHandler *TProof::fgLogViewer = 0;      // Log viewer handler
 
-ClassImp(TProof)
+ClassImp(TProof);
 
 //----- PROOF Interrupt signal handler -----------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
@@ -172,7 +172,7 @@ Bool_t TProofInputHandler::Notify()
 
 //------------------------------------------------------------------------------
 
-ClassImp(TSlaveInfo)
+ClassImp(TSlaveInfo);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Used to sort slaveinfos by ordinal.
@@ -274,7 +274,7 @@ void TSlaveInfo::SetSysInfo(SysInfo_t si)
    fSysInfo.fPhysRam  = si.fPhysRam;     // Physical RAM
 }
 
-ClassImp(TProof)
+ClassImp(TProof);
 
 //------------------------------------------------------------------------------
 

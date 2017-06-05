@@ -53,7 +53,7 @@ static unsigned char gray_bits[] = {
 };
 
 
-ClassImp(TGResourcePool)
+ClassImp(TGResourcePool);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create the global GUI resource pool manager.

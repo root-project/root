@@ -36,7 +36,7 @@
 #include "TGL5DPainter.h"
 #include "TGLUtil.h"
 
-ClassImp(TGLHistPainter)
+ClassImp(TGLHistPainter);
 
 /** \class TGLHistPainter
 \ingroup opengl

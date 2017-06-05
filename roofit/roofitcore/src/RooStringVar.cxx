@@ -39,7 +39,7 @@ RooStringVar implements a string values RooAbsArg
 
 using namespace std;
 
-ClassImp(RooStringVar)
+ClassImp(RooStringVar);
 
 
               

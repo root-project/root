@@ -25,7 +25,7 @@
 
 #include <stdlib.h>
 
-ClassImp(TSQLiteStatement)
+ClassImp(TSQLiteStatement);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Normal constructor.

@@ -32,7 +32,7 @@
 
 using namespace std;
 
-ClassImp(PiecewiseInterpolation)
+ClassImp(PiecewiseInterpolation);
 ;
 
 

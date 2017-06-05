@@ -38,7 +38,7 @@ that create and fill these generic containers
 
 using namespace std;
 
-ClassImp(RooCmdArg)
+ClassImp(RooCmdArg);
   ;
 
 const RooCmdArg RooCmdArg::_none ;

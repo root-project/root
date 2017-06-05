@@ -26,7 +26,7 @@
 #include "TROOT.h"
 #include "TVirtualMutex.h"
 
-ClassImp(TPServerSocket)
+ClassImp(TPServerSocket);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a parallel server socket object on a specified port. Set reuse

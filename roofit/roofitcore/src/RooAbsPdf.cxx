@@ -161,9 +161,9 @@ the proxy holds a function, and will trigger an assert
 
 using namespace std;
 
-ClassImp(RooAbsPdf) 
+ClassImp(RooAbsPdf); 
 ;
-ClassImp(RooAbsPdf::GenSpec)
+ClassImp(RooAbsPdf::GenSpec);
 ;
 
 Int_t RooAbsPdf::_verboseEval = 0;

@@ -30,6 +30,6 @@ Function binding representing the output of a RooAbsIntegrator
 
 using namespace std;
 
-ClassImp(RooIntegratorBinding)
+ClassImp(RooIntegratorBinding);
 ;
 

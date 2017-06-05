@@ -23,7 +23,7 @@ This class is a special version of TSelector for user interpreted classes.
 #undef ROOT_TSelectorCint_SRC_FILE
 #include "TError.h"
 
-ClassImp(TSelectorCint)
+ClassImp(TSelectorCint);
 
 ////////////////////////////////////////////////////////////////////////////////
 

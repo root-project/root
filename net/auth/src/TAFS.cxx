@@ -39,7 +39,7 @@
 Bool_t          TAFS::fgUsePwdDialog = kTRUE;
 TPluginHandler *TAFS::fgPasswdDialog = (TPluginHandler *)(-1);
 
-ClassImp(TAFS)
+ClassImp(TAFS);
 
 // Hook to the constructor. This is needed to avoid using the plugin manager
 // which may create problems in multi-threaded environments.

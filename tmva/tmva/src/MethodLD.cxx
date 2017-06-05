@@ -63,7 +63,7 @@ using std::vector;
 
 REGISTER_METHOD(LD)
 
-ClassImp(TMVA::MethodLD)
+ClassImp(TMVA::MethodLD);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// standard constructor for the LD

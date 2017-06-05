@@ -15,7 +15,7 @@
 #include "TApplication.h"
 #include "TSystem.h"
 
-ClassImp(TImage)
+ClassImp(TImage);
 
 /** \class TImage
 \ingroup BasicGraphics

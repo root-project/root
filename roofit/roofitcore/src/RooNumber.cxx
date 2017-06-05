@@ -27,7 +27,7 @@ Class RooNumber implements numeric constants used by RooFit
 
 using namespace std;
 
-ClassImp(RooNumber)
+ClassImp(RooNumber);
 ;
 
 #ifdef HAS_NUMERIC_LIMITS

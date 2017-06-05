@@ -52,10 +52,10 @@
 Pixmap_t TGScrollBar::fgBckgndPixmap = 0;
 Int_t    TGScrollBar::fgScrollBarWidth = kDefaultScrollBarWidth;
 
-ClassImp(TGScrollBarElement)
-ClassImp(TGScrollBar)
-ClassImp(TGHScrollBar)
-ClassImp(TGVScrollBar)
+ClassImp(TGScrollBarElement);
+ClassImp(TGScrollBar);
+ClassImp(TGHScrollBar);
+ClassImp(TGVScrollBar);
 
 
 ////////////////////////////////////////////////////////////////////////////////

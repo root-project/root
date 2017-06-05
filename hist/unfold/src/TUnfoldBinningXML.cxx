@@ -135,7 +135,7 @@ scheme consists of two two-dimensional distributions, signal and background.
 
 using namespace std;
 
-ClassImp(TUnfoldBinningXML)
+ClassImp(TUnfoldBinningXML);
 
 /********************* XML **********************/
 

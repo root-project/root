@@ -52,7 +52,7 @@ or RooStringVar objects, thus data can be binned in real and/or discrete dimensi
 
 using namespace std ;
 
-ClassImp(RooDataHist) 
+ClassImp(RooDataHist); 
 ;
 
 

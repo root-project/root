@@ -83,7 +83,7 @@ see also the following interesting references:
 
 using namespace std;
 
-ClassImp(RooStats::HybridCalculatorOriginal)
+ClassImp(RooStats::HybridCalculatorOriginal);
 
 using namespace RooStats;
 

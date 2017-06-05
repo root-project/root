@@ -23,7 +23,7 @@
 #include "TDatime.h"
 #include <stdlib.h>
 
-ClassImp(TMySQLStatement)
+ClassImp(TMySQLStatement);
 
 ULong64_t TMySQLStatement::fgAllocSizeLimit = 0x8000000; // 128 Mb
 

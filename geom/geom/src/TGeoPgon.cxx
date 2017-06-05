@@ -60,7 +60,7 @@ End_Macro
 #include "TBuffer3DTypes.h"
 #include "TMath.h"
 
-ClassImp(TGeoPgon)
+ClassImp(TGeoPgon);
 
    ////////////////////////////////////////////////////////////////////////////////
    /// Constructor.

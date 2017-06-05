@@ -38,7 +38,7 @@ D*-D0 mass difference distributions
 
 using namespace std;
 
-ClassImp(RooDstD0BG)
+ClassImp(RooDstD0BG);
 
 ////////////////////////////////////////////////////////////////////////////////
 

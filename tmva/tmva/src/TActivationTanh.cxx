@@ -38,7 +38,7 @@ efficient later.
 
 #include <iostream>
 
-ClassImp(TMVA::TActivationTanh)
+ClassImp(TMVA::TActivationTanh);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor for tanh sigmoid (normalized in [-1,1])

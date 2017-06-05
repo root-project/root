@@ -47,7 +47,7 @@ category modifies its list of states
 
 using namespace std;
 
-ClassImp(RooSuperCategory)
+ClassImp(RooSuperCategory);
 ;
 
 

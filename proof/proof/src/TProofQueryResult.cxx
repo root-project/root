@@ -23,7 +23,7 @@ TQueryResult version adapted to PROOF neeeds
 #include "TSystem.h"
 
 
-ClassImp(TProofQueryResult)
+ClassImp(TProofQueryResult);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Main constructor.

@@ -30,7 +30,7 @@ typedef Q3HBox QHBox;
 
 using namespace Qt;
 
-ClassImp(TQRootDialog)
+ClassImp(TQRootDialog);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// ctor

@@ -36,7 +36,7 @@ a specified area of a Poisson or Binomail error distribution.
 
 using namespace std;
 
-ClassImp(RooHistError)
+ClassImp(RooHistError);
   ;
 
 

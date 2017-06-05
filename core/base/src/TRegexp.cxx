@@ -40,7 +40,7 @@ only [a-zA-Z], [^ntf] and so on.
 const unsigned TRegexp::fgMaxpat = 2048;
 
 
-ClassImp(TRegexp)
+ClassImp(TRegexp);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a regular expression from the input string. If wildcard is

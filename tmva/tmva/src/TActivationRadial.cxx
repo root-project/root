@@ -40,7 +40,7 @@ efficient later.
 
 static const Int_t  UNINITIALIZED = -1;
 
-ClassImp(TMVA::TActivationRadial)
+ClassImp(TMVA::TActivationRadial);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor for gaussian with center 0, width 1

@@ -12,7 +12,7 @@
 #include "TDecompLU.h"
 #include "TMath.h"
 
-ClassImp(TDecompLU)
+ClassImp(TDecompLU);
 
 /** \class TDecompLU
     \ingroup Matrix

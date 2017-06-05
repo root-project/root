@@ -20,7 +20,7 @@
 #include <cassert>
 #include <cmath>
 
-ClassImp(TUnuranContDist)
+ClassImp(TUnuranContDist);
 
 TUnuranContDist::TUnuranContDist (const ROOT::Math::IGenFunction & pdf, const ROOT::Math::IGenFunction * deriv, bool isLogPdf, bool copyFunc  ) :
    fPdf(&pdf),

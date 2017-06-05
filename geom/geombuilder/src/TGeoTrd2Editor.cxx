@@ -39,7 +39,7 @@
 #include "TGNumberEntry.h"
 #include "TGLabel.h"
 
-ClassImp(TGeoTrd2Editor)
+ClassImp(TGeoTrd2Editor);
 
 enum ETGeoTrd2Wid {
    kTRD2_NAME, kTRD2_X1, kTRD2_X2,  kTRD2_Y1, kTRD2_Y2, kTRD2_Z,

@@ -42,7 +42,7 @@
 #include "TROOT.h"
 #include "Riostream.h"
 
-ClassImp(TSQLColumnInfo)
+ClassImp(TSQLColumnInfo);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// default contructor

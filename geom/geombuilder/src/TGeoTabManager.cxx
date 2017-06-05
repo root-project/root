@@ -47,7 +47,7 @@
 
 TMap TGeoTabManager::fgEditorToMgrMap;
 
-ClassImp(TGeoTabManager)
+ClassImp(TGeoTabManager);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Ctor.
@@ -271,7 +271,7 @@ void TGeoTabManager::SetTab()
    fTab->SetTab(GetTabIndex());
 }
 
-ClassImp(TGeoTreeDialog)
+ClassImp(TGeoTreeDialog);
 
 TObject *TGeoTreeDialog::fgSelectedObj = 0;
 
@@ -347,7 +347,7 @@ void TGeoTreeDialog::DoSelect(TGListTreeItem *item)
    }
 }
 
-ClassImp(TGeoVolumeDialog)
+ClassImp(TGeoVolumeDialog);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Ctor.
@@ -460,7 +460,7 @@ void TGeoVolumeDialog::ConnectSignalsToSlots()
                 "DoItemClick(TGListTreeItem *, Int_t)");
 }
 
-ClassImp(TGeoShapeDialog)
+ClassImp(TGeoShapeDialog);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Ctor.
@@ -538,7 +538,7 @@ void TGeoShapeDialog::ConnectSignalsToSlots()
                 "DoItemClick(TGListTreeItem *, Int_t)");
 }
 
-ClassImp(TGeoMediumDialog)
+ClassImp(TGeoMediumDialog);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Ctor.
@@ -601,7 +601,7 @@ void TGeoMediumDialog::ConnectSignalsToSlots()
                 "DoItemClick(TGListTreeItem *, Int_t)");
 }
 
-ClassImp(TGeoMaterialDialog)
+ClassImp(TGeoMaterialDialog);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Ctor.
@@ -664,7 +664,7 @@ void TGeoMaterialDialog::ConnectSignalsToSlots()
                 "DoItemClick(TGListTreeItem *, Int_t)");
 }
 
-ClassImp(TGeoMatrixDialog)
+ClassImp(TGeoMatrixDialog);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Ctor.
@@ -755,7 +755,7 @@ void TGeoMatrixDialog::ConnectSignalsToSlots()
                 "DoItemClick(TGListTreeItem *, Int_t)");
 }
 
-ClassImp(TGeoTransientPanel)
+ClassImp(TGeoTransientPanel);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Transient panel ctor.

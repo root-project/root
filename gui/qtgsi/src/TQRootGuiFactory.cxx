@@ -23,7 +23,7 @@
 #include "TRootCanvas.h"
 #include "TQCanvasImp.h"
 
-ClassImp(TQRootGuiFactory)
+ClassImp(TQRootGuiFactory);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TQRootGuiFactory ctor.

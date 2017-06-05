@@ -36,7 +36,7 @@ Implementation of TProof controlling PROOF federated clusters.
 #include "TProofNodeInfo.h"
 #include "TROOT.h"
 
-ClassImp(TProofSuperMaster)
+ClassImp(TProofSuperMaster);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Start super master PROOF session.

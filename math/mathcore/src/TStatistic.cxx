@@ -26,7 +26,7 @@ Named, streamable, storable and mergeable.
 #include "TStatistic.h"
 
 
-templateClassImp(TStatistic)
+templateClassImp(TStatistic);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor from a vector of values

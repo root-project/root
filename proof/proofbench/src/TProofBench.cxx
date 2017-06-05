@@ -57,7 +57,7 @@
 #include <io.h>
 #endif
 
-ClassImp(TProofBench)
+ClassImp(TProofBench);
 
 // Functions for fitting
 

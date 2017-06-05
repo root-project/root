@@ -21,7 +21,7 @@
 #include "TRealData.h"
 #include "TLatex.h"
 
-ClassImp(TInspectCanvas)
+ClassImp(TInspectCanvas);
 
 
 /** \class TInspectorObject

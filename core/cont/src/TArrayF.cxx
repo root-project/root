@@ -18,7 +18,7 @@ Array of floats (32 bits per element).
 #include "TBuffer.h"
 
 
-ClassImp(TArrayF)
+ClassImp(TArrayF);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default TArrayF ctor.

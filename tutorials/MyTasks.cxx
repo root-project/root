@@ -151,7 +151,7 @@ public:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ClassImp(MyRun)
+ClassImp(MyRun);
 
 MyRun::MyRun(const char *name, const char *title)
       :TTask(name,title)
@@ -165,7 +165,7 @@ void MyRun::Exec(Option_t * /*option*/)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ClassImp(MyEvent)
+ClassImp(MyEvent);
 
 MyEvent::MyEvent(const char *name, const char *title)
       :TTask(name,title)
@@ -179,7 +179,7 @@ void MyEvent::Exec(Option_t * /*option*/)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ClassImp(MyGeomInit)
+ClassImp(MyGeomInit);
 
 MyGeomInit::MyGeomInit(const char *name, const char *title)
       :TTask(name,title)
@@ -193,7 +193,7 @@ void MyGeomInit::Exec(Option_t * /*option*/)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ClassImp(MyMaterialInit)
+ClassImp(MyMaterialInit);
 
 MyMaterialInit::MyMaterialInit(const char *name, const char *title)
       :TTask(name,title)
@@ -207,7 +207,7 @@ void MyMaterialInit::Exec(Option_t * /*option*/)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ClassImp(MyTracker)
+ClassImp(MyTracker);
 
 MyTracker::MyTracker(const char *name, const char *title)
       :TTask(name,title)
@@ -221,7 +221,7 @@ void MyTracker::Exec(Option_t * /*option*/)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ClassImp(MyRecTPC)
+ClassImp(MyRecTPC);
 
 MyRecTPC::MyRecTPC(const char *name, const char *title)
       :TTask(name,title)
@@ -235,7 +235,7 @@ void MyRecTPC::Exec(Option_t * /*option*/)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ClassImp(MyRecITS)
+ClassImp(MyRecITS);
 
 MyRecITS::MyRecITS(const char *name, const char *title)
       :TTask(name,title)
@@ -249,7 +249,7 @@ void MyRecITS::Exec(Option_t * /*option*/)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ClassImp(MyRecMUON)
+ClassImp(MyRecMUON);
 
 MyRecMUON::MyRecMUON(const char *name, const char *title)
       :TTask(name,title)
@@ -263,7 +263,7 @@ void MyRecMUON::Exec(Option_t * /*option*/)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ClassImp(MyRecPHOS)
+ClassImp(MyRecPHOS);
 
 MyRecPHOS::MyRecPHOS(const char *name, const char *title)
       :TTask(name,title)
@@ -277,7 +277,7 @@ void MyRecPHOS::Exec(Option_t * /*option*/)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ClassImp(MyRecRICH)
+ClassImp(MyRecRICH);
 
 MyRecRICH::MyRecRICH(const char *name, const char *title)
       :TTask(name,title)
@@ -291,7 +291,7 @@ void MyRecRICH::Exec(Option_t * /*option*/)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ClassImp(MyRecTRD)
+ClassImp(MyRecTRD);
 
 MyRecTRD::MyRecTRD(const char *name, const char *title)
       :TTask(name,title)
@@ -305,7 +305,7 @@ void MyRecTRD::Exec(Option_t * /*option*/)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ClassImp(MyRecGlobal)
+ClassImp(MyRecGlobal);
 
 MyRecGlobal::MyRecGlobal(const char *name, const char *title)
       :TTask(name,title)

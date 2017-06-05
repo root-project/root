@@ -33,7 +33,7 @@ sliceSet.
 
 using namespace std;
 
-ClassImp(RooDataHistSliceIter)
+ClassImp(RooDataHistSliceIter);
 ;
 
 

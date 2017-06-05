@@ -42,7 +42,7 @@ weighting with cell values of the nearest neighbor cells.
 
 #include <vector>
 
-ClassImp(TMVA::PDEFoamKernelLinN)
+ClassImp(TMVA::PDEFoamKernelLinN);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor for streamer

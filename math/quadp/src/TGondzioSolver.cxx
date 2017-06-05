@@ -55,7 +55,7 @@
 #include "TGondzioSolver.h"
 #include "TQpLinSolverDens.h"
 
-ClassImp(TGondzioSolver)
+ClassImp(TGondzioSolver);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor

@@ -60,7 +60,7 @@
 #include "TArrayD.h"
 #include "TError.h"
 
-ClassImp(TCL)
+ClassImp(TCL);
 
 #define TCL_MXMAD(n_,a,b,c,i,j,k)                       \
     /* Local variables */                                \

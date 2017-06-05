@@ -73,7 +73,7 @@
 #include "RooAbsData.h"
 */
 
-ClassImp(RooStats::LikelihoodInterval) ;
+ClassImp(RooStats::LikelihoodInterval); ;
 
 using namespace RooStats;
 using namespace std;

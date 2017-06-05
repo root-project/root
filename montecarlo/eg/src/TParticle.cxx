@@ -55,7 +55,7 @@ are described by TParticlePDG.
 #include "TClass.h"
 #include "X3DBuffer.h"
 
-ClassImp(TParticle)
+ClassImp(TParticle);
 
 ////////////////////////////////////////////////////////////////////////////////
 ///default constructor

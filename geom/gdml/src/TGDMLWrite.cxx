@@ -147,7 +147,7 @@
 #include <map>
 #include <ctime>
 
-ClassImp(TGDMLWrite)
+ClassImp(TGDMLWrite);
 
 TGDMLWrite *TGDMLWrite::fgGDMLWrite = 0;
 

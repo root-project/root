@@ -17,7 +17,7 @@
 #include "TGShapedFrame.h"
 #include "Riostream.h"
 
-ClassImp(TGShapedFrame)
+ClassImp(TGShapedFrame);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Shaped window default constructor

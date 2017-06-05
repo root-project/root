@@ -19,7 +19,7 @@ Feb 16 2001 P.Murat
 
 #include "TDecayChannel.h"
 
-ClassImp(TDecayChannel)
+ClassImp(TDecayChannel);
 
 ////////////////////////////////////////////////////////////////////////////////
 ///default constructor

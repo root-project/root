@@ -89,7 +89,7 @@ Different options are explained in the function comments
 TVirtualFFT *TVirtualFFT::fgFFT    = 0;
 TString      TVirtualFFT::fgDefault   = "";
 
-ClassImp(TVirtualFFT)
+ClassImp(TVirtualFFT);
 
 ////////////////////////////////////////////////////////////////////////////////
 ///destructor

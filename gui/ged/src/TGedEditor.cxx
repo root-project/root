@@ -75,7 +75,7 @@ public:
 };
 
 
-ClassImp(TGedEditor)
+ClassImp(TGedEditor);
 
 TGedEditor* TGedEditor::fgFrameCreator = 0;
 

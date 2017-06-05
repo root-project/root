@@ -45,8 +45,8 @@
 #include "TGMsgBox.h"
 #include "TRegexp.h"
 
-ClassImp(TNewChainDlg)
-ClassImp(TNewQueryDlg)
+ClassImp(TNewChainDlg);
+ClassImp(TNewQueryDlg);
 
 /* not yet used
 static const char *gParTypes[] = {

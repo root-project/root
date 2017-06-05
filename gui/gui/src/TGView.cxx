@@ -51,7 +51,7 @@
 
 
 
-ClassImp(TGViewFrame)
+ClassImp(TGViewFrame);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a editor frame.
@@ -82,7 +82,7 @@ TGViewFrame::TGViewFrame(TGView *v, UInt_t w, UInt_t h, UInt_t options,
 }
 
 
-ClassImp(TGView)
+ClassImp(TGView);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create an editor view, containing an TGEditorFrame and (optionally)

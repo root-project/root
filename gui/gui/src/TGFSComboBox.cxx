@@ -54,8 +54,8 @@ struct Lbc_t {
 
 static struct Lbc_t gLbc[32];
 
-ClassImp(TGTreeLBEntry)
-ClassImp(TGFSComboBox)
+ClassImp(TGTreeLBEntry);
+ClassImp(TGFSComboBox);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a tree (i.e. entry can be indented) listbox entry.

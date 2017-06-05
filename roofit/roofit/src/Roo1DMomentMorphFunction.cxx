@@ -32,7 +32,7 @@ Morphing can be set to be linear, non-linear or a mixture of the two.
 
 using namespace std;
 
-ClassImp(Roo1DMomentMorphFunction)
+ClassImp(Roo1DMomentMorphFunction);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.

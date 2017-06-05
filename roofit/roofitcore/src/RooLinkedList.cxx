@@ -42,7 +42,7 @@ Use RooAbsCollection derived objects for public use
 
 using namespace std;
 
-ClassImp(RooLinkedList)
+ClassImp(RooLinkedList);
 ;
 namespace RooLinkedListImplDetails {
   /// a chunk of memory in a pool for quick allocation of RooLinkedListElems

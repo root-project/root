@@ -24,7 +24,7 @@
 #include "TCanvas.h"
 #include "TString.h"
 
-ClassImp(TParallelCoordRange)
+ClassImp(TParallelCoordRange);
 
 /** \class TParallelCoordRange
 A TParallelCoordRange is a range used for parallel coordinates plots.
@@ -450,7 +450,7 @@ void  TParallelCoordRange::SetLineWidth(Width_t wid)
 }
 
 
-ClassImp(TParallelCoordSelect)
+ClassImp(TParallelCoordSelect);
 
 /** \class TParallelCoordSelect
 A TParallelCoordSelect is a specialised TList to hold TParallelCoordRanges used

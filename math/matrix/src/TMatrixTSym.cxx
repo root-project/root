@@ -31,7 +31,7 @@
 #include "TClass.h"
 #include "TMath.h"
 
-templateClassImp(TMatrixTSym)
+templateClassImp(TMatrixTSym);
 
 
 ////////////////////////////////////////////////////////////////////////////////

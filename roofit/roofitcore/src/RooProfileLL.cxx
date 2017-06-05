@@ -35,7 +35,7 @@ as a MIGRAD minimization step is executed for each function evaluation
 
 using namespace std ;
 
-ClassImp(RooProfileLL) 
+ClassImp(RooProfileLL); 
 
 
 ////////////////////////////////////////////////////////////////////////////////

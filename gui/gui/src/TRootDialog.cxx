@@ -32,7 +32,7 @@
 
 extern TGTextEntry *gBlinkingEntry;
 
-ClassImp(TRootDialog)
+ClassImp(TRootDialog);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a method argument prompt dialog.

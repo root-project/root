@@ -24,7 +24,7 @@ method (linear probing).
 #include <string.h>
 
 
-ClassImp(TExMap)
+ClassImp(TExMap);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a TExMap.
@@ -384,7 +384,7 @@ void TExMap::Streamer(TBuffer &b)
 }
 
 
-ClassImp(TExMapIter)
+ClassImp(TExMapIter);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create TExMap iterator.

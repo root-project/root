@@ -35,7 +35,7 @@ the getMinLimit() and getMaxLimit() methods.
 
 using namespace std;
 
-ClassImp(RooAbsFunc)
+ClassImp(RooAbsFunc);
 ;
 
 

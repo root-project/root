@@ -44,7 +44,7 @@ to other RooAbsArgs must be invertible
 
 using namespace std;
 
-ClassImp(RooAbsCategoryLValue) 
+ClassImp(RooAbsCategoryLValue); 
 ;
 
 

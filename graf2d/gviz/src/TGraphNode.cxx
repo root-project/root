@@ -15,7 +15,7 @@
 
 #include <gvc.h>
 
-ClassImp(TGraphNode)
+ClassImp(TGraphNode);
 
 /** \class TGraphNode
 \ingroup gviz

@@ -43,7 +43,7 @@ numerical integration algorithm.
 
 using namespace std;
 
-ClassImp(RooIntegrator1D)
+ClassImp(RooIntegrator1D);
 ;
 
 // Register this class with RooNumIntConfig

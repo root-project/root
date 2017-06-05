@@ -42,8 +42,8 @@
 #include "TImage.h"
 #include <time.h>
 
-ClassImp(TGFileItem)
-ClassImp(TGFileContainer)
+ClassImp(TGFileItem);
+ClassImp(TGFileContainer);
 
 class TViewUpdateTimer : public TTimer {
 

@@ -42,7 +42,7 @@ of a given set of other RooAbsReal objects
 
 using namespace std ;
 
-ClassImp(RooProduct)
+ClassImp(RooProduct);
 ;
 
 class RooProduct::ProdMap : public  std::vector<std::pair<RooArgSet*,RooArgList*> > {} ;

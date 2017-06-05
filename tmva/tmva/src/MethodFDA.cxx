@@ -78,7 +78,7 @@ using std::stringstream;
 
 REGISTER_METHOD(FDA)
 
-ClassImp(TMVA::MethodFDA)
+ClassImp(TMVA::MethodFDA);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// standard constructor

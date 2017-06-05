@@ -21,7 +21,7 @@ A TChainElement describes a component of a TChain.
 #include "Riostream.h"
 #include "TROOT.h"
 
-ClassImp(TChainElement)
+ClassImp(TChainElement);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor for a chain element.

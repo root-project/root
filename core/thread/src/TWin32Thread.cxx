@@ -21,7 +21,7 @@
 #include <process.h>
 #include <errno.h>
 
-ClassImp(TWin32Thread)
+ClassImp(TWin32Thread);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Win32 threads -- spawn new thread (like pthread_create).

@@ -80,7 +80,7 @@ LastLink() and lnk->Prev() or by using the Before() member.
 #include <string>
 namespace std {} using namespace std;
 
-ClassImp(TList)
+ClassImp(TList);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Delete the list. Objects are not deleted unless the TList is the
@@ -892,7 +892,7 @@ TObjLink::TObjLink(TObject *obj, TObjLink *prev)
 Iterator of linked list.
 */
 
-ClassImp(TListIter)
+ClassImp(TListIter);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a new list iterator. By default the iteration direction

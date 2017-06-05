@@ -46,7 +46,7 @@ Implementation of the functionality provided by TProofMgr in the case of a xproo
 
 #include "XrdProofConn.h"
 
-ClassImp(TXProofMgr)
+ClassImp(TXProofMgr);
 
 //
 //----- ProofMgr Interrupt signal handler

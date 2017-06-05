@@ -56,7 +56,7 @@ integrals, using the orthogonality properties of \f$Y_l^m\f$...
 
 using namespace std;
 
-ClassImp(RooSpHarmonic)
+ClassImp(RooSpHarmonic);
 
 ////////////////////////////////////////////////////////////////////////////////
 

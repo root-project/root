@@ -36,7 +36,7 @@
 #include "TRegexp.h"
 
 
-ClassImp(TGMimeTypes)
+ClassImp(TGMimeTypes);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a mime type cache. Read the mime types file "filename" and

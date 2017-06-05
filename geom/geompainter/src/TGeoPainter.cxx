@@ -53,7 +53,7 @@
 #include "TBuffer3DTypes.h"
 #include "TVirtualViewer3D.h"
 
-ClassImp(TGeoPainter)
+ClassImp(TGeoPainter);
 
 ////////////////////////////////////////////////////////////////////////////////
 ///*-*-*-*-*-*-*-*-*-*-*Geometry painter default constructor*-*-*-*-*-*-*-*-*

@@ -19,7 +19,7 @@
 \ingroup opengl
 */
 
-ClassImp(TGLTH3Composition)
+ClassImp(TGLTH3Composition);
 
 ////////////////////////////////////////////////////////////////////////////////
 ///I have to define it, since explicit copy ctor was declared.
@@ -107,7 +107,7 @@ void TGLTH3Composition::Paint(Option_t * /*option*/)
 \ingroup opengl
 */
 
-ClassImp(TGLTH3CompositionPainter)
+ClassImp(TGLTH3CompositionPainter);
 
 ////////////////////////////////////////////////////////////////////////////////
 ///Ctor.

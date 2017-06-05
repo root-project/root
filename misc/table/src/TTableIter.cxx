@@ -18,7 +18,7 @@
 #include "TTableIter.h"
 #include "TTableSorter.h"
 
-ClassImp(TTableIter)
+ClassImp(TTableIter);
 
 ////////////////////////////////////////////////////////////////////////////////
 ///to be documented

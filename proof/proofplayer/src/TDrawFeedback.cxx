@@ -32,7 +32,7 @@ own version following this example. See also TStatsFeedback.
 #include "TVirtualPad.h"
 #include "TProofDebug.h"
 
-ClassImp(TDrawFeedback)
+ClassImp(TDrawFeedback);
 
 
 ////////////////////////////////////////////////////////////////////////////////

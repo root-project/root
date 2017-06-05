@@ -73,14 +73,14 @@ TSessionViewer *gSessionViewer = 0;
 
 const char *kConfigFile = ".proofgui.conf";
 
-ClassImp(TQueryDescription)
-ClassImp(TSessionDescription)
-ClassImp(TSessionServerFrame)
-ClassImp(TSessionFrame)
-ClassImp(TSessionQueryFrame)
-ClassImp(TSessionOutputFrame)
-ClassImp(TSessionInputFrame)
-ClassImp(TSessionViewer)
+ClassImp(TQueryDescription);
+ClassImp(TSessionDescription);
+ClassImp(TSessionServerFrame);
+ClassImp(TSessionFrame);
+ClassImp(TSessionQueryFrame);
+ClassImp(TSessionOutputFrame);
+ClassImp(TSessionInputFrame);
+ClassImp(TSessionViewer);
 
 const char *xpm_names[] = {
     "monitor01.xpm",

@@ -26,7 +26,7 @@
 #include "TMapFile.h"
 #include "TBrowser.h"
 
-ClassImp(TKeyMapFile)
+ClassImp(TKeyMapFile);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.

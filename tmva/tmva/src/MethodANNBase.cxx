@@ -74,7 +74,7 @@ Base class for all TMVA methods using artificial neural networks.
 
 using std::vector;
 
-ClassImp(TMVA::MethodANNBase)
+ClassImp(TMVA::MethodANNBase);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// standard constructor

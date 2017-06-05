@@ -57,7 +57,7 @@ proof->SetParameter("PROOF_Packetizer", "TPacketizer");
 #include "TNtupleD.h"
 #include "TPerfStats.h"
 
-ClassImp(TVirtualPacketizer)
+ClassImp(TVirtualPacketizer);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

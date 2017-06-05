@@ -63,7 +63,7 @@
 
 using namespace std;
 
-ClassImp(RooAddModel)
+ClassImp(RooAddModel);
 ;
 
 

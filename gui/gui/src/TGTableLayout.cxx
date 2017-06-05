@@ -78,8 +78,8 @@
 #include "Riostream.h"
 
 
-ClassImp(TGTableLayout)
-ClassImp(TGTableLayoutHints)
+ClassImp(TGTableLayout);
+ClassImp(TGTableLayoutHints);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TGTableLayout constructor.

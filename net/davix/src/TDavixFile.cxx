@@ -61,7 +61,7 @@ static const std::string gUserAgent = "ROOT/" + std::string(gROOT->GetVersion())
 // The prefix that is used to find the variables in the gEnv
 #define ENVPFX "Davix."
 
-ClassImp(TDavixFile)
+ClassImp(TDavixFile);
 
 using namespace Davix;
 

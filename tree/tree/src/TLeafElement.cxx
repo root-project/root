@@ -21,7 +21,7 @@ a TStreamerInfo (i.e. using TBranchElement).
 
 #include "TVirtualStreamerInfo.h"
 
-ClassImp(TLeafElement)
+ClassImp(TLeafElement);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor for LeafObject.

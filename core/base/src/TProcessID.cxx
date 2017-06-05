@@ -55,7 +55,7 @@ TObjArray  *TProcessID::fgPIDs   = 0; //pointer to the list of TProcessID
 TProcessID *TProcessID::fgPID    = 0; //pointer to the TProcessID of the current session
 UInt_t      TProcessID::fgNumber = 0; //Current referenced object instance count
 TExMap     *TProcessID::fgObjPIDs= 0; //Table (pointer,pids)
-ClassImp(TProcessID)
+ClassImp(TProcessID);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return hash value for this object.

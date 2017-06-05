@@ -40,7 +40,7 @@ is store in the summary dataset
 
 using namespace std;
 
-ClassImp(RooChi2MCSModule)
+ClassImp(RooChi2MCSModule);
 
 ////////////////////////////////////////////////////////////////////////////////
 

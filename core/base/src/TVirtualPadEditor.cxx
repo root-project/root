@@ -23,7 +23,7 @@ Abstract base class used by ROOT graphics editor
 TVirtualPadEditor *TVirtualPadEditor::fgPadEditor  = 0;
 TString            TVirtualPadEditor::fgEditorName = "";
 
-ClassImp(TVirtualPadEditor)
+ClassImp(TVirtualPadEditor);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Virtual editor ctor.

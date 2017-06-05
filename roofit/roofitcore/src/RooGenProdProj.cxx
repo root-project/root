@@ -46,7 +46,7 @@ analytically. Remaining non-factorizing observables are integrated numerically.
 
 using namespace std;
 
-ClassImp(RooGenProdProj)
+ClassImp(RooGenProdProj);
 ;
 
 

@@ -28,7 +28,7 @@
 
 using namespace Memstat;
 
-ClassImp(TMemStatMng)
+ClassImp(TMemStatMng);
 
 TMemStatMng* TMemStatMng::fgInstance = NULL;
 

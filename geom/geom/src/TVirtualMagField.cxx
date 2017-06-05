@@ -34,7 +34,7 @@ field can be deleted by calling [1] with a different argument (which can be
 NULL). Otherwise the global field is deleted together with the field manager.
 */
 
-ClassImp(TVirtualMagField)
+ClassImp(TVirtualMagField);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor. Unregisters the field.
@@ -55,7 +55,7 @@ TVirtualMagField::~TVirtualMagField()
 Implementation for uniform magnetic field.
 */
 
-ClassImp(TGeoUniformMagField)
+ClassImp(TGeoUniformMagField);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor;

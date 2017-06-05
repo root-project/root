@@ -66,7 +66,7 @@
 #include "TEnv.h"
 
 
-ClassImp(TS3WebFile)
+ClassImp(TS3WebFile);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct a TS3WebFile object. The path argument is a URL of one of the

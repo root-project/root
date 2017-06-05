@@ -21,7 +21,7 @@
 // Dialog used to display session logs from the session viewer
 //_____________________________________________________________________________
 
-ClassImp(TSessionLogView)
+ClassImp(TSessionLogView);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create an editor in a dialog.

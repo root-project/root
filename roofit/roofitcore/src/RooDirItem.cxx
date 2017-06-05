@@ -36,7 +36,7 @@ methods that can be used to safely attach and detach one self from a TDirectory
 
 using namespace std;
 
-ClassImp(RooDirItem) ;
+ClassImp(RooDirItem); ;
 
 
 ////////////////////////////////////////////////////////////////////////////////

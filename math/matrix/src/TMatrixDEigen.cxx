@@ -49,7 +49,7 @@
 #include "TMatrixDEigen.h"
 #include "TMath.h"
 
-ClassImp(TMatrixDEigen)
+ClassImp(TMatrixDEigen);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor for eigen-problem of matrix A .

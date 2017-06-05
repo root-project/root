@@ -31,8 +31,8 @@ pointer first using RooCFunction1Binding<T1,T2>::register().
 
 using namespace std ;
 
-ClassImp(RooFunctor1DBinding)
-ClassImp(RooFunctor1DPdfBinding)
+ClassImp(RooFunctor1DBinding);
+ClassImp(RooFunctor1DPdfBinding);
 
 ////////////////////////////////////////////////////////////////////////////////
 

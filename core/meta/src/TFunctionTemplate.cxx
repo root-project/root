@@ -19,7 +19,7 @@ This class describes one single function template.
 #include "TClass.h"
 #include "TROOT.h"
 
-ClassImp(TFunctionTemplate)
+ClassImp(TFunctionTemplate);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default TFunctionTemplate ctor.

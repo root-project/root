@@ -47,7 +47,7 @@ It is referenced by the dynamic particle class TParticle.
 #include "TParticlePDG.h"
 #include "TDatabasePDG.h"
 
-ClassImp(TParticlePDG)
+ClassImp(TParticlePDG);
 
 ////////////////////////////////////////////////////////////////////////////////
 ///default constructor

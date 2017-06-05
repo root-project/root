@@ -15,7 +15,7 @@
 #include "TClass.h"
 #include "TLink.h"
 
-ClassImp(TLink)
+ClassImp(TLink);
 
 /** \class TLink
 \ingroup BasicGraphics

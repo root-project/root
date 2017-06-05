@@ -18,7 +18,7 @@
 #include "TGEventHandler.h"
 #include "TGWindow.h"
 
-ClassImp(TGEventHandler)
+ClassImp(TGEventHandler);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Handle the event. Returns true if the event has been handled,

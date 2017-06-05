@@ -65,7 +65,7 @@ Remark: in batch mode, the progress bar is quite ugly; you may
 const TString TMVA::Timer::fgClassName = "Timer";
 const Int_t   TMVA::Timer::fgNbins     = 16;
 
-ClassImp(TMVA::Timer)
+ClassImp(TMVA::Timer);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor

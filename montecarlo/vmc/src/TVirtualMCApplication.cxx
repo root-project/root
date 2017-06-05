@@ -20,7 +20,7 @@ Interface to a user Monte Carlo application.
 
 */
 
-ClassImp(TVirtualMCApplication)
+ClassImp(TVirtualMCApplication);
 
 TMCThreadLocal TVirtualMCApplication* TVirtualMCApplication::fgInstance = 0;
 

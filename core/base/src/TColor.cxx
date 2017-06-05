@@ -23,7 +23,7 @@
 #include <algorithm>
 #include <cmath>
 
-ClassImp(TColor)
+ClassImp(TColor);
 
 namespace {
    static Bool_t& TColor__GrayScaleMode() {

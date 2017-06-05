@@ -29,7 +29,7 @@
 Editor for TEveGeoNode class.
 */
 
-ClassImp(TEveGeoNodeEditor)
+ClassImp(TEveGeoNodeEditor);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -131,7 +131,7 @@ void TEveGeoNodeEditor::DoVizVolumeDaughters()
 Editor for TEveGeoTopNode class.
 */
 
-ClassImp(TEveGeoTopNodeEditor)
+ClassImp(TEveGeoTopNodeEditor);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

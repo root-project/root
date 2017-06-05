@@ -17,7 +17,7 @@ extern "C"
 #include<TRint.h>
 
 using namespace ROOT::R;
-ClassImp(TRInterface)
+ClassImp(TRInterface);
 
 static ROOT::R::TRInterface *gR = nullptr;
 static Bool_t statusEventLoop;

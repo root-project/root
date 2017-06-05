@@ -253,7 +253,7 @@ static Bool_t MustEmbed[32];
 
 Int_t TPostScript::fgLineJoin = 0;
 
-ClassImp(TPostScript)
+ClassImp(TPostScript);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default PostScript constructor

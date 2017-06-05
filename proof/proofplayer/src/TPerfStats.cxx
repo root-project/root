@@ -41,8 +41,8 @@ and event tracing.
 #include "TTimeStamp.h"
 #include "TProofMonSender.h"
 
-ClassImp(TPerfEvent)
-ClassImp(TPerfStats)
+ClassImp(TPerfEvent);
+ClassImp(TPerfStats);
 
 
 //------------------------------------------------------------------------------

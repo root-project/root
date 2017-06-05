@@ -28,7 +28,7 @@ Base class describing materials.
 
 // statics and globals
 
-ClassImp(TGeoMaterial)
+ClassImp(TGeoMaterial);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
@@ -572,7 +572,7 @@ void TGeoMaterial::FillMaterialEvolution(TObjArray *population, Double_t precisi
  * TGeoMixture - mixtures of elements
  *
  *************************************************************************/
-ClassImp(TGeoMixture)
+ClassImp(TGeoMixture);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor

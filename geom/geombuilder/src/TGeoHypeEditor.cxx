@@ -40,7 +40,7 @@
 #include "TGNumberEntry.h"
 #include "TGLabel.h"
 
-ClassImp(TGeoHypeEditor)
+ClassImp(TGeoHypeEditor);
 
 enum ETGeoHypeWid {
    kHYPE_NAME, kHYPE_RIN, kHYPE_ROUT,  kHYPE_DZ, kHYPE_STIN,

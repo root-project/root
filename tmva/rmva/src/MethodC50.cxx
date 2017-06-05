@@ -41,7 +41,7 @@ using namespace TMVA;
 
 REGISTER_METHOD(C50)
 
-ClassImp(MethodC50)
+ClassImp(MethodC50);
 
 //creating an Instance
 Bool_t MethodC50::IsModuleLoaded = ROOT::R::TRInterface::Instance().Require("C50");

@@ -71,7 +71,7 @@ p-value using an Asimov data set.
 
 using namespace std;
 
-ClassImp(RooStats::ProfileLikelihoodCalculator) ;
+ClassImp(RooStats::ProfileLikelihoodCalculator); ;
 
 using namespace RooFit;
 using namespace RooStats;

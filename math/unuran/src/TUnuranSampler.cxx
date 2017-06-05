@@ -27,7 +27,7 @@
 #include <cassert>
 #include <cmath>
 
-ClassImp(TUnuranSampler)
+ClassImp(TUnuranSampler);
 
 TUnuranSampler::TUnuranSampler() : ROOT::Math::DistSampler(),
    fOneDim(false),

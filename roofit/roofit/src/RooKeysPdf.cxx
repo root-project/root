@@ -49,7 +49,7 @@ Cranmer KS, Kernel Estimation in High-Energy Physics.
 
 using namespace std;
 
-ClassImp(RooKeysPdf)
+ClassImp(RooKeysPdf);
 
 const Double_t RooKeysPdf::_nSigma = std::sqrt(-2. *
     std::log(std::numeric_limits<Double_t>::epsilon()));

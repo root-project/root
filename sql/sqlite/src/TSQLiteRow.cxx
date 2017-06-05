@@ -14,7 +14,7 @@
 #include <sqlite3.h>
 
 
-ClassImp(TSQLiteRow)
+ClassImp(TSQLiteRow);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Single row of query result.

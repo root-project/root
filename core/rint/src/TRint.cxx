@@ -132,7 +132,7 @@ Bool_t TTermInputHandler::Notify()
 }
 
 
-ClassImp(TRint)
+ClassImp(TRint);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create an application environment. The TRint environment provides an

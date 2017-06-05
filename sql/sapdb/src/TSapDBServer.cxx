@@ -16,7 +16,7 @@
 #include <ctype.h>
 
 
-ClassImp(TSapDBServer)
+ClassImp(TSapDBServer);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Open a connection to a SapDB DB server. The db arguments should be

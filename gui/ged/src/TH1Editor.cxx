@@ -147,7 +147,7 @@
 #include "TGTab.h"
 #include "TROOT.h"
 
-ClassImp(TH1Editor)
+ClassImp(TH1Editor);
 
 enum ETH1Wid{
    kTH1_TITLE,

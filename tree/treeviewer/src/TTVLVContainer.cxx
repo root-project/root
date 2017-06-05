@@ -19,7 +19,7 @@
 #include "TList.h"
 
 
-ClassImp(TGItemContext)
+ClassImp(TGItemContext);
 
 /** \class TGItemContext
 empty object used as context menu support for TGLVTreeEntries.
@@ -82,7 +82,7 @@ void TGItemContext::SetExpression(const char *name, const char *alias, Bool_t cu
    fItem->SetExpression(name, alias, cut);
 }
 
-ClassImp(TTVLVEntry)
+ClassImp(TTVLVEntry);
 
 /** \class TTVLVEntry
 This class represent entries that goes into the TreeViewer
@@ -298,7 +298,7 @@ void TTVLVEntry::SetSmallPic(const TGPicture *spic)
    fClient->FreePicture(cspic);
 }
 
-ClassImp(TTVLVContainer)
+ClassImp(TTVLVContainer);
 
 /** \class TTVLVContainer
 This class represent the list view container for the.
@@ -644,7 +644,7 @@ void TTVLVContainer::SelectItem(const char* name)
    }
 }
 
-ClassImp(TGSelectBox)
+ClassImp(TGSelectBox);
 
 /** \class TGSelectBox
 This class represent a specialized expression editor for

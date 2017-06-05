@@ -28,7 +28,7 @@ typedef Q3TextDrag QTextDrag;
 #include "TCanvas.h"
 #include "TQCanvasMenu.h"
 
-ClassImp(TQRootCanvas)
+ClassImp(TQRootCanvas);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// set defaults

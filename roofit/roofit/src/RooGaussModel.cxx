@@ -35,7 +35,7 @@ for analytical convolutions with classes inheriting from RooAbsAnaConvPdf
 
 using namespace std;
 
-ClassImp(RooGaussModel)
+ClassImp(RooGaussModel);
 
 ////////////////////////////////////////////////////////////////////////////////
 

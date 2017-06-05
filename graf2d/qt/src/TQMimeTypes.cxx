@@ -34,7 +34,7 @@
 #include <QPixmap>
 #include <qfileinfo.h>
 
-ClassImp(TQMimeTypes)
+ClassImp(TQMimeTypes);
 QFileIconProvider  *TQMimeTypes::fgDefaultProvider = 0; // Default provider of the system icons;
 ////////////////////////////////////////////////////////////////////////////////
 

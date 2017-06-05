@@ -41,7 +41,7 @@ subsequently explicitly smeared with the resolution model distribution.
 
 using namespace std;
 
-ClassImp(RooConvGenContext)
+ClassImp(RooConvGenContext);
 ;
   
 

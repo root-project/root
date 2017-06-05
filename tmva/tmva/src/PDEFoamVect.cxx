@@ -42,7 +42,7 @@ using namespace std;
 
 //#define SW2 std::setw(12)
 
-ClassImp(TMVA::PDEFoamVect)
+ClassImp(TMVA::PDEFoamVect);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor for streamer

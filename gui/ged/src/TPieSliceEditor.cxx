@@ -4,7 +4,7 @@
 #include "TGNumberEntry.h"
 #include "TGLabel.h"
 
-ClassImp(TPieSliceEditor)
+ClassImp(TPieSliceEditor);
 
 
 enum EPieSliceID{

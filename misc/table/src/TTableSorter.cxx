@@ -79,7 +79,7 @@ extern "C" {
 /////////////////////////////////////////////////////////////////////////////////////////
 
 
-ClassImp(TTableSorter)
+ClassImp(TTableSorter);
 
 //_____________________________________________________________________________
 //TTableSorter::TTableSorter() : fsimpleArray(0),fParentTable(*((const TTable *)0))

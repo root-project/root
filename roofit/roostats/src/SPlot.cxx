@@ -60,7 +60,7 @@
 #include "TMatrixD.h"
 
 
-ClassImp(RooStats::SPlot) ;
+ClassImp(RooStats::SPlot); ;
 
 using namespace RooStats;
 using namespace std;

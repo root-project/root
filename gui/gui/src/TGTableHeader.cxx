@@ -22,7 +22,7 @@
 #include "TGTable.h"
 #include "TRandom3.h"
 
-ClassImp(TGTableHeader)
+ClassImp(TGTableHeader);
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //

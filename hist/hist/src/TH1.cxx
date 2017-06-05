@@ -540,7 +540,7 @@ class DifferentAxisLimits: public std::exception {};
 class DifferentBinLimits: public std::exception {};
 class DifferentLabels: public std::exception {};
 
-ClassImp(TH1)
+ClassImp(TH1);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Histogram default constructor.
@@ -8567,7 +8567,7 @@ std::string cling::printValue(TH1 *val) {
 // TH1C : histograms with one byte per channel.   Maximum bin content = 127
 //______________________________________________________________________________
 
-ClassImp(TH1C)
+ClassImp(TH1C);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -8748,7 +8748,7 @@ TH1C operator/(const TH1C &h1, const TH1C &h2)
 // TH1S : histograms with one short per channel.  Maximum bin content = 32767
 //______________________________________________________________________________
 
-ClassImp(TH1S)
+ClassImp(TH1S);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -8929,7 +8929,7 @@ TH1S operator/(const TH1S &h1, const TH1S &h2)
 // TH1I : histograms with one int per channel.    Maximum bin content = 2147483647
 //______________________________________________________________________________
 
-ClassImp(TH1I)
+ClassImp(TH1I);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -9111,7 +9111,7 @@ TH1I operator/(const TH1I &h1, const TH1I &h2)
 // TH1F : histograms with one float per channel.  Maximum precision 7 digits
 //______________________________________________________________________________
 
-ClassImp(TH1F)
+ClassImp(TH1F);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -9290,7 +9290,7 @@ TH1F operator/(const TH1F &h1, const TH1F &h2)
 // TH1D : histograms with one double per channel. Maximum precision 14 digits
 //______________________________________________________________________________
 
-ClassImp(TH1D)
+ClassImp(TH1D);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

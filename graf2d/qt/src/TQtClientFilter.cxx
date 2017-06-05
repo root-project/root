@@ -47,7 +47,7 @@
 //   (see: http://doc.trolltech.com/4.3/qobject.html#installEventFilter )
 //______________________________________________________________________________
 
-ClassImp(TQtClientFilter)
+ClassImp(TQtClientFilter);
 
 TQtClientWidget *TQtClientFilter::fgPointerGrabber=0;
 TQtClientWidget *TQtClientFilter::fgButtonGrabber =0;

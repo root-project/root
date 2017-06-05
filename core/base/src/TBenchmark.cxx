@@ -14,7 +14,7 @@
 
 TBenchmark *gBenchmark = 0;
 
-ClassImp(TBenchmark)
+ClassImp(TBenchmark);
 
 /** \class TBenchmark
 \ingroup Base

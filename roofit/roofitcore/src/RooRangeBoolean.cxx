@@ -38,7 +38,7 @@ RooRangeBoolean
 
 using namespace std;
 
-ClassImp(RooRangeBoolean)
+ClassImp(RooRangeBoolean);
 ;
 
 

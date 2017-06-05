@@ -41,7 +41,7 @@ the serverRedirect changes.
 
 using namespace std;
 
-ClassImp(RooSetProxy)
+ClassImp(RooSetProxy);
 ;
 
 

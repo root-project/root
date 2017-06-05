@@ -18,4 +18,4 @@ and a drawing area).
 
 #include "TCanvasImp.h"
 
-ClassImp(TCanvasImp)
+ClassImp(TCanvasImp);

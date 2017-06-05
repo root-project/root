@@ -18,7 +18,7 @@ use the classes using OpenGL.
 #include "TGlobal.h"
 
 
-ClassImp(TGLManager)
+ClassImp(TGLManager);
 
 TGLManager * (*gPtr2GLManager)() = 0;
 
@@ -53,9 +53,9 @@ TGLManager *&TGLManager::Instance()
    return instance;
 }
 
-ClassImp(TVirtualGLPainter)
+ClassImp(TVirtualGLPainter);
 
 
-ClassImp(TVirtualGLManip)
+ClassImp(TVirtualGLManip);
 
-ClassImp(TGLPaintDevice)
+ClassImp(TGLPaintDevice);

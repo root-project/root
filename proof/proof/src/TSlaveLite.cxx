@@ -43,7 +43,7 @@ See TSlave for details.
 #include "TSysEvtHandler.h"
 #include "TVirtualMutex.h"
 
-ClassImp(TSlaveLite)
+ClassImp(TSlaveLite);
 
 //______________________________________________________________________________
 //---- error handling ----------------------------------------------------------

@@ -13,7 +13,7 @@
 #include "TSapDBRow.h"
 
 
-ClassImp(TSapDBRow)
+ClassImp(TSapDBRow);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Single row of query result.

@@ -26,7 +26,7 @@ singleton.
 #include "TLorentzVector.h"
 #include "TClonesArray.h"
 
-ClassImp(TPythia6Decayer)
+ClassImp(TPythia6Decayer);
 
 TPythia6Decayer* TPythia6Decayer::fgInstance = 0;
 

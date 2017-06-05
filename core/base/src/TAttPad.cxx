@@ -15,7 +15,7 @@
 #include "TStyle.h"
 #include "TClass.h"
 
-ClassImp(TAttPad)
+ClassImp(TAttPad);
 
 /** \class TAttPad
 \ingroup Base

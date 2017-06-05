@@ -33,7 +33,7 @@ RooRealIntegral integration mechanism
 
 using namespace std;
 
-ClassImp(RooConvCoefVar)
+ClassImp(RooConvCoefVar);
 ;
 
 

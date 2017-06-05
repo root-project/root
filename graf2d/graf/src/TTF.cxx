@@ -49,7 +49,7 @@ FT_Face        TTF::fgFace[kTTMaxFonts];
 FT_CharMap     TTF::fgCharMap[kTTMaxFonts];
 TTF::TTGlyph   TTF::fgGlyphs[kMaxGlyphs];
 
-ClassImp(TTF)
+ClassImp(TTF);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Cleanup TTF environment.

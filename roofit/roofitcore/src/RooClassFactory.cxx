@@ -44,7 +44,7 @@ instantiate objects.
 
 using namespace std ;
 
-ClassImp(RooClassFactory)
+ClassImp(RooClassFactory);
 ;
 
 static Int_t init();
@@ -586,7 +586,7 @@ Bool_t RooClassFactory::makeClass(const char* baseName, const char* className, c
      << "#include \"TMath.h\" " << endl
      << endl
 
-     << "ClassImp(" << className << ") " << endl
+     << "ClassImp(" << className << "); " << endl
      << endl
 
      << " " << className << "::" << className << "(const char *name, const char *title, " << endl ;

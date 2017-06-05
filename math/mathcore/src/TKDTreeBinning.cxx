@@ -21,7 +21,7 @@
 #include "TRandom.h"
 #include "TBuffer.h"
 
-ClassImp(TKDTreeBinning)
+ClassImp(TKDTreeBinning);
 
 /**
 \class TKDTreeBinning

@@ -25,7 +25,7 @@ Also tests for overlap testing of planes and other bounding boxes,
 with fast sphere approximation.
 */
 
-ClassImp(TGLBoundingBox)
+ClassImp(TGLBoundingBox);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct an empty bounding box

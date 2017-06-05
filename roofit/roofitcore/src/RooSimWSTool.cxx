@@ -107,12 +107,12 @@
 #include "RooFracRemainder.h"
 #include "RooFactoryWSTool.h"
 
-ClassImp(RooSimWSTool) 
-ClassImp(RooSimWSTool::BuildConfig) 
-ClassImp(RooSimWSTool::MultiBuildConfig) 
-ClassImp(RooSimWSTool::SplitRule) 
-ClassImp(RooSimWSTool::ObjBuildConfig) 
-ClassImp(RooSimWSTool::ObjSplitRule) 
+ClassImp(RooSimWSTool); 
+ClassImp(RooSimWSTool::BuildConfig); 
+ClassImp(RooSimWSTool::MultiBuildConfig); 
+ClassImp(RooSimWSTool::SplitRule); 
+ClassImp(RooSimWSTool::ObjBuildConfig); 
+ClassImp(RooSimWSTool::ObjSplitRule); 
 ;
 
 using namespace std ;

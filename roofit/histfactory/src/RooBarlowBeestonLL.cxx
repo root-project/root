@@ -47,7 +47,7 @@
 
 using namespace std ;
 
-ClassImp(RooStats::HistFactory::RooBarlowBeestonLL) 
+ClassImp(RooStats::HistFactory::RooBarlowBeestonLL); 
 
 
 ////////////////////////////////////////////////////////////////////////////////

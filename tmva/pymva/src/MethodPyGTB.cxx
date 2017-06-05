@@ -52,7 +52,7 @@ using namespace TMVA;
 
 REGISTER_METHOD(PyGTB)
 
-ClassImp(MethodPyGTB)
+ClassImp(MethodPyGTB);
 
 //_______________________________________________________________________
 MethodPyGTB::MethodPyGTB(const TString &jobName,

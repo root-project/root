@@ -22,7 +22,7 @@
 
 
 //- data ---------------------------------------------------------------------
-ClassImp(TPyDispatcher)
+ClassImp(TPyDispatcher);
 
 
 //- constructors/destructor --------------------------------------------------

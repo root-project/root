@@ -325,7 +325,7 @@ namespace {
 Extracts array data from a TTree.
 */
 
-ClassImp(TTreeReaderArrayBase)
+ClassImp(TTreeReaderArrayBase);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create the proxy object for our branch.

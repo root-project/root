@@ -17,7 +17,7 @@ A Tree Index with majorname and minorname.
 #include "TTree.h"
 #include "TMath.h"
 
-ClassImp(TTreeIndex)
+ClassImp(TTreeIndex);
 
 
 struct IndexSortComparator {

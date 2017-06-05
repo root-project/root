@@ -94,7 +94,7 @@ namespace TMVA {
 
 REGISTER_METHOD(PDERS)
 
-ClassImp(TMVA::MethodPDERS)
+ClassImp(TMVA::MethodPDERS);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// standard constructor for the PDERS method

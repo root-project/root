@@ -39,7 +39,7 @@
 
 #include "TFitter.h"
 
-ClassImp(TMVA::MinuitFitter)
+ClassImp(TMVA::MinuitFitter);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor

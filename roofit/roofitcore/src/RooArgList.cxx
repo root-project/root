@@ -54,7 +54,7 @@
 
 using namespace std;
 
-ClassImp(RooArgList)
+ClassImp(RooArgList);
   ;
 
 

@@ -66,7 +66,7 @@ within x3d produces incorrect end-faces
 #include "TGeoVolume.h"
 #include "TGeoPolygon.h"
 
-ClassImp(TGeoXtru)
+ClassImp(TGeoXtru);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

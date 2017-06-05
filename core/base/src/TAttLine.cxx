@@ -18,7 +18,7 @@
 #include "TColor.h"
 #include <cmath>
 
-ClassImp(TAttLine)
+ClassImp(TAttLine);
 using std::sqrt;
 
 /** \class TAttLine

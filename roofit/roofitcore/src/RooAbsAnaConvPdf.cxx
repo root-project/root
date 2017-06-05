@@ -72,7 +72,7 @@
 
 using namespace std;
 
-ClassImp(RooAbsAnaConvPdf) 
+ClassImp(RooAbsAnaConvPdf); 
 ;
 
 

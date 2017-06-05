@@ -56,7 +56,7 @@ during the foam build-up.
 
 #include <climits>
 
-ClassImp(TMVA::PDEFoamDiscriminant)
+ClassImp(TMVA::PDEFoamDiscriminant);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor for streamer, user should not use it.

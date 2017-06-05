@@ -43,7 +43,7 @@
 #include "TMath.h"
 #include "Riostream.h"
 
-ClassImp(TNeuron)
+ClassImp(TNeuron);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Usual constructor

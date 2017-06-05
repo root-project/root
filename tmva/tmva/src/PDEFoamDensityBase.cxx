@@ -78,7 +78,7 @@ or:
 #include <numeric>
 #include <vector>
 
-ClassImp(TMVA::PDEFoamDensityBase)
+ClassImp(TMVA::PDEFoamDensityBase);
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -37,7 +37,7 @@ Implementation of the CrossEntropy as separation criterion
 #include "TMath.h"
 #include "TMVA/CrossEntropy.h"
 
-ClassImp(TMVA::CrossEntropy)
+ClassImp(TMVA::CrossEntropy);
 
 ////////////////////////////////////////////////////////////////////////////////
 ///  Cross Entropy defined as:

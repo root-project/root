@@ -54,7 +54,7 @@ Examples:
 #include "TSystem.h"
 #include <sstream>
 
-ClassImp(TMacro)
+ClassImp(TMacro);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create an empty macro, use AddLine() or ReadFile() to fill this macro.

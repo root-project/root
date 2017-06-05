@@ -33,7 +33,7 @@ It also defines the pure virtual manipulation interface methods the
 concrete ortho and perspective classes must implement.
 */
 
-ClassImp(TGLCamera)
+ClassImp(TGLCamera);
 
 const Double_t TGLCamera::fgInterestBoxExpansion = 1.3;
 UInt_t         TGLCamera::fgDollyDeltaSens       = 500;

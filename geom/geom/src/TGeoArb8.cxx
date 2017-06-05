@@ -18,7 +18,7 @@
 #include "TGeoMatrix.h"
 #include "TMath.h"
 
-ClassImp(TGeoArb8)
+ClassImp(TGeoArb8);
 
 /** \class TGeoArb8
 \ingroup Geometry_classes
@@ -1325,7 +1325,7 @@ void TGeoArb8::Safety_v(const Double_t *points, const Bool_t *inside, Double_t *
    for (Int_t i=0; i<vecsize; i++) safe[i] = Safety(&points[3*i], inside[i]);
 }
 
-ClassImp(TGeoTrap)
+ClassImp(TGeoTrap);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default ctor
@@ -1849,7 +1849,7 @@ void TGeoTrap::Safety_v(const Double_t *points, const Bool_t *inside, Double_t *
    for (Int_t i=0; i<vecsize; i++) safe[i] = Safety(&points[3*i], inside[i]);
 }
 
-ClassImp(TGeoGtra)
+ClassImp(TGeoGtra);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default ctor

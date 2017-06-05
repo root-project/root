@@ -179,7 +179,7 @@ Bool_t TProofServLiteInputHandler::Notify()
    return kTRUE;
 }
 
-ClassImp(TProofServLite)
+ClassImp(TProofServLite);
 
 // Hook to the constructor. This is needed to avoid using the plugin manager
 // which may create problems in multi-threaded environments.

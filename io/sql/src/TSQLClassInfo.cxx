@@ -25,7 +25,7 @@ List of this objects are kept by TSQLFile class.
 #include "TObjArray.h"
 
 
-ClassImp(TSQLClassColumnInfo)
+ClassImp(TSQLClassColumnInfo);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// default constructor
@@ -59,7 +59,7 @@ TSQLClassColumnInfo::~TSQLClassColumnInfo()
 }
 
 
-ClassImp(TSQLClassInfo)
+ClassImp(TSQLClassInfo);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// default constructor

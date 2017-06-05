@@ -48,7 +48,7 @@ KDE Kernel for "smoothing" the PDFs.
 #include "TMVA/MsgLogger.h"
 #include "TMVA/Types.h"
 
-ClassImp(TMVA::KDEKernel)
+ClassImp(TMVA::KDEKernel);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor

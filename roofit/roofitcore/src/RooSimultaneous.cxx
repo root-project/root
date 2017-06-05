@@ -59,7 +59,7 @@ is that of the component p.d.f. selected by the index category
 
 using namespace std ;
 
-ClassImp(RooSimultaneous)
+ClassImp(RooSimultaneous);
 ;
 
 

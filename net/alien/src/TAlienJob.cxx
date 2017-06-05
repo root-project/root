@@ -25,7 +25,7 @@
 #include "TObjString.h"
 #include "gapi_job_operations.h"
 
-ClassImp(TAlienJob)
+ClassImp(TAlienJob);
 
 
 ////////////////////////////////////////////////////////////////////////////////

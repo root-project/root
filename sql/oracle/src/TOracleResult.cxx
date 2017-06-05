@@ -16,7 +16,7 @@
 using namespace std;
 using namespace oracle::occi;
 
-ClassImp(TOracleResult)
+ClassImp(TOracleResult);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Oracle query result.

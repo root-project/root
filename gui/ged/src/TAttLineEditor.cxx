@@ -35,7 +35,7 @@
 #include "TCanvas.h"
 #include "TROOT.h"
 
-ClassImp(TAttLineEditor)
+ClassImp(TAttLineEditor);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor of line attributes GUI.

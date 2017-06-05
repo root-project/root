@@ -245,7 +245,7 @@ extern "C" void  type_of_call hldir(DEFCHAR,DEFCHAR);
 Bool_t THbookFile::fgPawInit = kFALSE;
 Int_t  *THbookFile::fgLuns   = 0;
 
-ClassImp(THbookFile)
+ClassImp(THbookFile);
 
 ////////////////////////////////////////////////////////////////////////////////
 ///the constructor

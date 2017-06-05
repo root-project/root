@@ -40,8 +40,8 @@ using namespace std ;
 
 #include "RooExpensiveObjectCache.h"
 
-ClassImp(RooExpensiveObjectCache)
-ClassImp(RooExpensiveObjectCache::ExpensiveObject)
+ClassImp(RooExpensiveObjectCache);
+ClassImp(RooExpensiveObjectCache::ExpensiveObject);
   ;
 
 RooExpensiveObjectCache* RooExpensiveObjectCache::_instance = 0 ;

@@ -43,7 +43,7 @@ using namespace RooFit ;
 
 using namespace std;
 
-ClassImp(RooSimGenContext)
+ClassImp(RooSimGenContext);
 ;
   
 

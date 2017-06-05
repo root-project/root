@@ -27,7 +27,7 @@
 #include <TStyle.h>
 #include <TROOT.h>
 
-ClassImp(TStylePreview)
+ClassImp(TStylePreview);
 
 ////////////////////////////////////////////////////////////////////////////////
 ///  Constructor. Create a new window and draw a clone of

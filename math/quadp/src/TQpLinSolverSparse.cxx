@@ -52,7 +52,7 @@
 #include "Riostream.h"
 #include "TQpLinSolverSparse.h"
 
-ClassImp(TQpLinSolverSparse)
+ClassImp(TQpLinSolverSparse);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor

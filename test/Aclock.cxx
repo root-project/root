@@ -22,7 +22,7 @@
 #include "Aclock.h"
 
 
-ClassImp(Aclock)
+ClassImp(Aclock);
 
 
 Float_t MinuteHand::fgMinuteHandX[] = { -0.05, 0, 0.05 };

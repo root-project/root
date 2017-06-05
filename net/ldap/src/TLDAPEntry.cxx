@@ -11,7 +11,7 @@
 #include "Riostream.h"
 
 
-ClassImp(TLDAPEntry)
+ClassImp(TLDAPEntry);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Creates the new TLDAPEntry object with the specified DN (distinguished

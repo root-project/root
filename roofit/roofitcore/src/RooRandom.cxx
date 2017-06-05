@@ -34,7 +34,7 @@ By default a private copy of TRandom3 is used to generate all random numbers.
 
 using namespace std;
 
-ClassImp(RooRandom)
+ClassImp(RooRandom);
   ;
 
 

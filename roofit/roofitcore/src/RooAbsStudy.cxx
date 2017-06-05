@@ -36,7 +36,7 @@ RooAbsStudy is an abstract base class for RooStudyManager modules
 
 using namespace std ;
 
-ClassImp(RooAbsStudy)
+ClassImp(RooAbsStudy);
   ;
 
 

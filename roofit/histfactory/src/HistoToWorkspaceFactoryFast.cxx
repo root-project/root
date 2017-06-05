@@ -92,7 +92,7 @@ using namespace RooFit ;
 using namespace RooStats ;
 using namespace std ;
 
-ClassImp(RooStats::HistFactory::HistoToWorkspaceFactoryFast)
+ClassImp(RooStats::HistFactory::HistoToWorkspaceFactoryFast);
 
 namespace RooStats{
 namespace HistFactory{

@@ -24,7 +24,7 @@
 #include "TMath.h"
 #include "TObjString.h"
 
-ClassImp(TH3)
+ClassImp(TH3);
 
 /** \addtogroup Hist
 @{
@@ -3262,7 +3262,7 @@ void TH3::Streamer(TBuffer &R__b)
 //  TH3C a 3-D histogram with one byte per cell (char)
 //______________________________________________________________________________
 
-ClassImp(TH3C)
+ClassImp(TH3C);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3523,7 +3523,7 @@ TH3C operator/(TH3C &h1, TH3C &h2)
 //  TH3S a 3-D histogram with two bytes per cell (short integer)
 //______________________________________________________________________________
 
-ClassImp(TH3S)
+ClassImp(TH3S);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3755,7 +3755,7 @@ TH3S operator/(TH3S &h1, TH3S &h2)
 //  TH3I a 3-D histogram with four bytes per cell (32 bits integer)
 //______________________________________________________________________________
 
-ClassImp(TH3I)
+ClassImp(TH3I);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3954,7 +3954,7 @@ TH3I operator/(TH3I &h1, TH3I &h2)
 //  TH3F a 3-D histogram with four bytes per cell (float)
 //______________________________________________________________________________
 
-ClassImp(TH3F)
+ClassImp(TH3F);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4165,7 +4165,7 @@ TH3F operator/(TH3F &h1, TH3F &h2)
 //  TH3D a 3-D histogram with eight bytes per cell (double)
 //______________________________________________________________________________
 
-ClassImp(TH3D)
+ClassImp(TH3D);
 
 
 ////////////////////////////////////////////////////////////////////////////////

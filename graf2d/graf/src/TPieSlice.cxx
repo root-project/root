@@ -19,7 +19,7 @@
 #include <TPaveText.h>
 #include <TH1.h>
 
-ClassImp(TPieSlice)
+ClassImp(TPieSlice);
 
 /** \class TPieSlice
 \ingroup BasicGraphics

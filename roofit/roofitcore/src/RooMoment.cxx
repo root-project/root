@@ -49,7 +49,7 @@ derivator class.
 using namespace std ;
 
 
-ClassImp(RooMoment)
+ClassImp(RooMoment);
 ;
 
 

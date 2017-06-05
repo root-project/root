@@ -13,7 +13,7 @@
 #include "TMath.h"
 #include "TError.h"
 
-ClassImp(TDecompBK)
+ClassImp(TDecompBK);
 
 /** \class TDecompBK
     \ingroup Matrix

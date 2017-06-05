@@ -38,7 +38,7 @@ side of that asymmetric error will be used
 
 using namespace std;
 
-ClassImp(RooPullVar)
+ClassImp(RooPullVar);
 ;
 
 

@@ -34,7 +34,7 @@ when the main ROOT process is exiting.
 
 using namespace std;
 
-ClassImp(RooMPSentinel)
+ClassImp(RooMPSentinel);
   ;
 
 

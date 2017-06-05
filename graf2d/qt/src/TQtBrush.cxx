@@ -137,7 +137,7 @@ static uchar *patter_bits[]= { p1_bits, p2_bits,   p3_bits,  p4_bits,  p5_bits,
                               p16_bits, p17_bits, p18_bits, p19_bits, p20_bits,
                               p21_bits, p22_bits, p23_bits, p24_bits, p25_bits};
 
-ClassImp(TQtBrush)
+ClassImp(TQtBrush);
 ////////////////////////////////////////////////////////////////////////////////
 
 TQtBrush::TQtBrush(): QBrush(),fStyle(0),fFasi(0),fAlpha(255)

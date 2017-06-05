@@ -940,7 +940,7 @@ namespace {
 
 
 ///////////////////////////////////////////////////////////////////////////////
-ClassImp(TWinNTSystem)
+ClassImp(TWinNTSystem);
 
 ULong_t gConsoleWindow = 0;
 

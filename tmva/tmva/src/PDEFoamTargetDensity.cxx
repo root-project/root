@@ -51,7 +51,7 @@ phase-space point using range-searching.
 #include <cmath>
 #include <vector>
 
-ClassImp(TMVA::PDEFoamTargetDensity)
+ClassImp(TMVA::PDEFoamTargetDensity);
 
 ////////////////////////////////////////////////////////////////////////////////
 

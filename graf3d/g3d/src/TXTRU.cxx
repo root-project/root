@@ -19,7 +19,7 @@
 
 #include "Riostream.h"
 
-ClassImp(TXTRU)
+ClassImp(TXTRU);
 
 /** \class TXTRU
 \ingroup g3d

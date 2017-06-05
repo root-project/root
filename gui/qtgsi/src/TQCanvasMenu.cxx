@@ -35,7 +35,7 @@
 #include "TDataType.h"
 #include "TQRootDialog.h"
 
-ClassImp(TQCanvasMenu)
+ClassImp(TQCanvasMenu);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// ctor, create the popup menu

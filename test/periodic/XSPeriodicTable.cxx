@@ -13,7 +13,7 @@
 #include "XSElementList.h"
 #include "XSPeriodicTable.h"
 
-//ClassImp(XSTblElement)
+//ClassImp(XSTblElement);
 
 /* =========== XSTblElement ============== */
 XSTblElement::XSTblElement(const TGWindow *p, Int_t z, UInt_t color)
@@ -92,7 +92,7 @@ XSTblElement::ChangeBackground( ULong_t color )
 
 /////////////////////////////////////////////////////////////////////
 
-//ClassImp(XSPeriodicTable)
+//ClassImp(XSPeriodicTable);
 
 static   Int_t   colwidth[XSPTBL_COLS] =
       { 8, 5, 5, 2, 5,

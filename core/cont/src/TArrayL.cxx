@@ -18,7 +18,7 @@ Array of longs (32 or 64 bits per element).
 #include "TBuffer.h"
 
 
-ClassImp(TArrayL)
+ClassImp(TArrayL);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default TArrayL ctor.

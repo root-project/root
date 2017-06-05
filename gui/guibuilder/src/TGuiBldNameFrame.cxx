@@ -34,7 +34,7 @@
 #include "TGMsgBox.h"
 #include "TGSplitter.h"
 
-ClassImp(TGuiBldNameFrame)
+ClassImp(TGuiBldNameFrame);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

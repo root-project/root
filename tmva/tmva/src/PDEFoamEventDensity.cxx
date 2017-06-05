@@ -53,7 +53,7 @@ using range-searching.
 #include <cmath>
 #include <vector>
 
-ClassImp(TMVA::PDEFoamEventDensity)
+ClassImp(TMVA::PDEFoamEventDensity);
 
 ////////////////////////////////////////////////////////////////////////////////
 

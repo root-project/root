@@ -32,7 +32,7 @@ Class to steer the merging of files produced on the workers
 #include <TSystem.h>
 #include <TUUID.h>
 
-ClassImp(TProofOutputFile)
+ClassImp(TProofOutputFile);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Main constructor

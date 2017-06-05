@@ -22,7 +22,7 @@
 #include "TGTextViewStream.h"
 #include "TSystem.h"
 
-ClassImp(TGTextViewStreamBuf)
+ClassImp(TGTextViewStreamBuf);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TGTextViewStreamBuf constructor.

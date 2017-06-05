@@ -28,7 +28,7 @@
 #include "TGScrollBar.h"
 
 
-ClassImp(TGedFrame)
+ClassImp(TGedFrame);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor of the base GUI attribute frame.

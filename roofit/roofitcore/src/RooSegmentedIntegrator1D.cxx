@@ -41,7 +41,7 @@ numerical integration algorithm.
 
 using namespace std;
 
-ClassImp(RooSegmentedIntegrator1D)
+ClassImp(RooSegmentedIntegrator1D);
 ;
 
 // Register this class with RooNumIntConfig

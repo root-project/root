@@ -135,7 +135,7 @@ TX3DContainer::TX3DContainer(TViewerX3D *c, Window_t id, const TGWindow *p)
 }
 
 
-ClassImp(TViewerX3D)
+ClassImp(TViewerX3D);
 
 
 ////////////////////////////////////////////////////////////////////////////////

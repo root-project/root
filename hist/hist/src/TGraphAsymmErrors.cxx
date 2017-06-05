@@ -29,7 +29,7 @@
 #include "TSystem.h"
 #include "Math/QuantFuncMathCore.h"
 
-ClassImp(TGraphAsymmErrors)
+ClassImp(TGraphAsymmErrors);
 
 /** \class TGraphAsymmErrors
     \ingroup Hist

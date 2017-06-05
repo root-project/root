@@ -43,7 +43,7 @@ prototype data etc..
 
 using namespace std;
 
-ClassImp(RooAbsGenContext)
+ClassImp(RooAbsGenContext);
 ;
 
 

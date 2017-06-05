@@ -51,7 +51,7 @@ Linear interpolation class
 #include <iomanip>
 #include <cfloat>
 
-ClassImp(TMVA::VariableNormalizeTransform)
+ClassImp(TMVA::VariableNormalizeTransform);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor

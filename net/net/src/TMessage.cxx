@@ -30,7 +30,7 @@
 Bool_t TMessage::fgEvolution = kFALSE;
 
 
-ClassImp(TMessage)
+ClassImp(TMessage);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a TMessage object for storing objects. The "what" integer

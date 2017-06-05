@@ -21,7 +21,7 @@ widgets with box heads. User can mouse over (turns yellow) and L
 click/drag to scale along this axis.
 */
 
-ClassImp(TGLScaleManip)
+ClassImp(TGLScaleManip);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct scale manipulator not bound to any physical shape.

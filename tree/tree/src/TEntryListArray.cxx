@@ -75,7 +75,7 @@ TEntryListArray's:
 #include "TSystem.h"
 #include <iostream>
 
-ClassImp(TEntryListArray)
+ClassImp(TEntryListArray);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize data members, called by Reset

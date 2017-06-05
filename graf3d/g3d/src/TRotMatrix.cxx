@@ -15,7 +15,7 @@
 #include "TGeometry.h"
 #include "TMath.h"
 
-ClassImp(TRotMatrix)
+ClassImp(TRotMatrix);
 
 /** \class TRotMatrix
 \ingroup g3d

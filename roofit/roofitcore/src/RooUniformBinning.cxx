@@ -36,7 +36,7 @@ e.g. the binning of class RooBinning.
 
 using namespace std;
 
-ClassImp(RooUniformBinning)
+ClassImp(RooUniformBinning);
 ;
 
 

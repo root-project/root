@@ -10,7 +10,7 @@
 
 #include "XSElements.h"
 
-//ClassImp(XSElement)
+//ClassImp(XSElement);
 
 /* =================== XSElement ===================== */
 XSElement::XSElement()
@@ -120,7 +120,7 @@ XSElement::Read(FILE *f)
 } // Read
 
 /* =================== XSElements ===================== */
-//ClassImp(XSElements)
+//ClassImp(XSElements);
 
 XSElements::XSElements(const char *filename)
 {

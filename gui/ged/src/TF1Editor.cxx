@@ -32,7 +32,7 @@
 #include "TCanvas.h"
 
 
-ClassImp(TF1Editor)
+ClassImp(TF1Editor);
 
 enum ETF1Wid {
    kTF1_TIT,  kTF1_NPX,

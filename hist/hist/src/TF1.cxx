@@ -54,7 +54,7 @@ Bool_t TF1::fgRejectPoint = kFALSE;
 std::atomic<Bool_t> TF1::fgAddToGlobList(kTRUE);
 static Double_t gErrorTF1 = 0;
 
-ClassImp(TF1)
+ClassImp(TF1);
 
 // class wrapping evaluation of TF1(x) - y0
 class GFunc {

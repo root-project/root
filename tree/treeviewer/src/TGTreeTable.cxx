@@ -22,7 +22,7 @@
 #include "TTreeTableInterface.h"
 #include "TGTreeTable.h"
 
-ClassImp(TGTreeTable)
+ClassImp(TGTreeTable);
 
 /** \class TGTreeTable
 

@@ -52,7 +52,7 @@ use a RooAcceptReject sampling technique.
 
 using namespace std;
 
-ClassImp(RooGenContext)
+ClassImp(RooGenContext);
   ;
 
 

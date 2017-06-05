@@ -20,7 +20,7 @@ Classes needing this should inherit from this and overload the relevant methods.
 #include "TError.h"
 #include "TXHandler.h"
 
-ClassImp(TXHandler)
+ClassImp(TXHandler);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Handler of asynchronous input events

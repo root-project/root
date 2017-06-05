@@ -27,7 +27,7 @@ TSQLServer* ROOT_Plugin_TPgSQLServer(const char* db, const char* uid, const char
 }
 
 
-ClassImp(TPgSQLServer)
+ClassImp(TPgSQLServer);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Open a connection to a PgSQL DB server. The db arguments should be

@@ -28,7 +28,7 @@
 
 //R__EXTERN  Size3D gSize3D;
 
-ClassImp(TVolumePosition)
+ClassImp(TVolumePosition);
 
 //______________________________________________________________________________
 //*-*-*-*-*-*-*-*-* S T N O D E P O S I T I O N   description *-*-*-*-*-*-*-*-*-

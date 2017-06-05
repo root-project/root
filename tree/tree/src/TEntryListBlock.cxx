@@ -46,7 +46,7 @@ End_Macro
 #include "TEntryListBlock.h"
 #include "TString.h"
 
-ClassImp(TEntryListBlock)
+ClassImp(TEntryListBlock);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default c-tor

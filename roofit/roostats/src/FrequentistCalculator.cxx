@@ -28,7 +28,7 @@ The use of ToyMCSampler as the TestStatSampler is assumed.
 
 */
 
-ClassImp(RooStats::FrequentistCalculator)
+ClassImp(RooStats::FrequentistCalculator);
 
 using namespace RooStats;
 using namespace std;

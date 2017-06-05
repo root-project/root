@@ -22,7 +22,7 @@ Data member is public for historical reasons.
 #include "TBuffer.h"
 
 
-ClassImp(TArray)
+ClassImp(TArray);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Generate an out-of-bounds error. Always returns false.

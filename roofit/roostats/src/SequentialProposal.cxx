@@ -25,7 +25,7 @@ by moving only in one coordinate (chosen randomly) at each step
 
 using namespace std;
 
-ClassImp(RooStats::SequentialProposal)
+ClassImp(RooStats::SequentialProposal);
 
 namespace RooStats {
 

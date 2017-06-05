@@ -25,7 +25,7 @@
 // Class used to redirect command line input/output.
 //_____________________________________________________________________________
 
-ClassImp(TGCommandPlugin)
+ClassImp(TGCommandPlugin);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TGCommandPlugin Constructor.

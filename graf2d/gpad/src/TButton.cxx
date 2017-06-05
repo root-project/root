@@ -17,7 +17,7 @@
 
 #include <string.h>
 
-ClassImp(TButton)
+ClassImp(TButton);
 
 
 /** \class TButton

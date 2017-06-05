@@ -40,7 +40,7 @@ error, such as calculating the pull value.
 
 using namespace std;
 
-ClassImp(RooErrorVar)
+ClassImp(RooErrorVar);
 ;
 
 

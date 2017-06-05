@@ -48,7 +48,7 @@ A Branch for the case of an object.
 #include "TStreamerInfoActions.h"
 #include "TSchemaRuleSet.h"
 
-ClassImp(TBranchElement)
+ClassImp(TBranchElement);
 
 ////////////////////////////////////////////////////////////////////////////////
 

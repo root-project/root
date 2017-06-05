@@ -46,7 +46,7 @@ is provided to modify the contents, nor a public interface to define states.
 
 using namespace std;
 
-ClassImp(RooAbsCategory) 
+ClassImp(RooAbsCategory); 
 ;
 
 

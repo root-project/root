@@ -102,8 +102,8 @@
 #include "Riostream.h"
 
 
-ClassImp(TGXYLayout)
-ClassImp(TGXYLayoutHints)
+ClassImp(TGXYLayout);
+ClassImp(TGXYLayoutHints);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor. The x, y, w and h define the position of the widget in

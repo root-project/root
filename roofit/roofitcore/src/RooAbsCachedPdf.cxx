@@ -43,7 +43,7 @@ using namespace std ;
 #include "RooChangeTracker.h"
 #include "RooExpensiveObjectCache.h"
 
-ClassImp(RooAbsCachedPdf) 
+ClassImp(RooAbsCachedPdf); 
 
 
 

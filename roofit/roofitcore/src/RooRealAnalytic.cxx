@@ -34,7 +34,7 @@ RooAbsReal object (specified by a code) to a set of dependent variables.
 
 using namespace std;
 
-ClassImp(RooRealAnalytic)
+ClassImp(RooRealAnalytic);
 ;
 
 

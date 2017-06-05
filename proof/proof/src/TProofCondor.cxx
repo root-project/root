@@ -35,7 +35,7 @@
 #include "TString.h"
 #include "TTimer.h"
 
-ClassImp(TProofCondor)
+ClassImp(TProofCondor);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Start proof using condor

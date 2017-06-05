@@ -133,7 +133,7 @@ When investigating misuse of TClonesArray, please make sure of the following:
 
 #include <stdlib.h>
 
-ClassImp(TClonesArray)
+ClassImp(TClonesArray);
 
 /// Internal Utility routine to correctly release the memory for an object
 static inline void R__ReleaseMemory(TClass *cl, TObject *obj)

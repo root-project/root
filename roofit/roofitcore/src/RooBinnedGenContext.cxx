@@ -39,7 +39,7 @@ generator context specific for binned pdfs
 
 using namespace std;
 
-ClassImp(RooBinnedGenContext)
+ClassImp(RooBinnedGenContext);
 ;
   
 

@@ -40,7 +40,7 @@
 #include "TGLabel.h"
 #include "TGDoubleSlider.h"
 
-ClassImp(TGeoConeEditor)
+ClassImp(TGeoConeEditor);
 
 enum ETGeoConeWid {
    kCONE_NAME, kCONE_RMIN1, kCONE_RMIN2, kCONE_RMAX1, kCONE_RMAX2, kCONE_Z,
@@ -383,7 +383,7 @@ void TGeoConeEditor::DoDz()
 */
 //End_Html
 
-ClassImp(TGeoConeSegEditor)
+ClassImp(TGeoConeSegEditor);
 
 enum ETGeoConeSegWid {
    kCONESEG_PHI1, kCONESEG_PHI2, kCONESEG_PHI

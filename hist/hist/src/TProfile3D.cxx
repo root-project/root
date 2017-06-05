@@ -23,7 +23,7 @@
 
 Bool_t TProfile3D::fgApproximate = kFALSE;
 
-ClassImp(TProfile3D)
+ClassImp(TProfile3D);
 
 /** \class TProfile3D
     \ingroup Hist

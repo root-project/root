@@ -27,7 +27,7 @@
 
 THLimitsFinder *THLimitsFinder::fgLimitsFinder = 0;
 
-ClassImp(THLimitsFinder)
+ClassImp(THLimitsFinder);
 
 /** \class THLimitsFinder
     \ingroup Hist

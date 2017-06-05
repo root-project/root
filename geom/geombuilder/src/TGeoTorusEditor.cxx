@@ -39,7 +39,7 @@
 #include "TGNumberEntry.h"
 #include "TGLabel.h"
 
-ClassImp(TGeoTorusEditor)
+ClassImp(TGeoTorusEditor);
 
 enum ETGeoTorusWid {
    kTORUS_NAME, kTORUS_R, kTORUS_RMIN,  kTORUS_RMAX, kTORUS_PHI1,

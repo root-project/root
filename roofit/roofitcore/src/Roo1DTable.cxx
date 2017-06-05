@@ -35,7 +35,7 @@ equivalent of a plot. To create a table use the RooDataSet::table method.
 
 using namespace std ;
 
-ClassImp(Roo1DTable)
+ClassImp(Roo1DTable);
 
 
 ////////////////////////////////////////////////////////////////////////////////

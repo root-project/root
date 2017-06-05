@@ -19,7 +19,7 @@
 Base class for event management and navigation.
 */
 
-ClassImp(TEveEventManager)
+ClassImp(TEveEventManager);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

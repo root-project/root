@@ -28,7 +28,7 @@
 #include "TROOT.h"
 #include "Riostream.h"
 
-ClassImp(TSQLTableInfo)
+ClassImp(TSQLTableInfo);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// default constructor

@@ -21,4 +21,4 @@ andreas.morsch@cern.ch
 
 #include "TVirtualMCDecayer.h"
 
-ClassImp(TVirtualMCDecayer)
+ClassImp(TVirtualMCDecayer);

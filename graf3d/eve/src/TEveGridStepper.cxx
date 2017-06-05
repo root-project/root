@@ -18,7 +18,7 @@ Provide discrete position coordinates for placement of objects on
 regular grids.
 */
 
-ClassImp(TEveGridStepper)
+ClassImp(TEveGridStepper);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

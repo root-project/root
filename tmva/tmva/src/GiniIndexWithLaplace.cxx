@@ -75,7 +75,7 @@ GiniLaplace(Sample) = \frac{2(sb+s+b+1)}{(s+b+2)^2}
 
 #include "Rtypes.h"
 
-ClassImp(TMVA::GiniIndexWithLaplace)
+ClassImp(TMVA::GiniIndexWithLaplace);
 
 ////////////////////////////////////////////////////////////////////////////////
 

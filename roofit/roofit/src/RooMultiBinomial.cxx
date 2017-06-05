@@ -39,7 +39,7 @@ The combination only 'reject' can be chosen to be visible or not visible
 
 using namespace std ;
 
-ClassImp(RooMultiBinomial)
+ClassImp(RooMultiBinomial);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct the efficiency functions from a list of efficiency functions

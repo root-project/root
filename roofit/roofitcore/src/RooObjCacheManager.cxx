@@ -36,7 +36,7 @@ have a sensible default implementation.
 
 using namespace std ;
 
-ClassImp(RooObjCacheManager)
+ClassImp(RooObjCacheManager);
    ;
 
 

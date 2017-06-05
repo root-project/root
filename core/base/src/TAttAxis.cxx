@@ -19,7 +19,7 @@
 #include "TMathBase.h"
 #include <stdlib.h>
 
-ClassImp(TAttAxis)
+ClassImp(TAttAxis);
 
 /** \class TAttAxis
 \ingroup Base

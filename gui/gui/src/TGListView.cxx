@@ -56,9 +56,9 @@ const TGFont *TGListView::fgDefaultFont = 0;
 TGGC         *TGListView::fgDefaultGC = 0;
 
 
-ClassImp(TGLVEntry)
-ClassImp(TGLVContainer)
-ClassImp(TGListView)
+ClassImp(TGLVEntry);
+ClassImp(TGLVContainer);
+ClassImp(TGListView);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a list view item.

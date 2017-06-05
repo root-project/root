@@ -1,3 +1,3 @@
 #include "NdbDCEnergyDist.h"
 
-ClassImp(NdbDCEnergyDist)
+ClassImp(NdbDCEnergyDist);

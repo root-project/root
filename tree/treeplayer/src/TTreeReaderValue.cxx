@@ -32,7 +32,7 @@
 Extracts data from a TTree.
 */
 
-ClassImp(ROOT::Internal::TTreeReaderValueBase)
+ClassImp(ROOT::Internal::TTreeReaderValueBase);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct a tree value reader and register it with the reader object.

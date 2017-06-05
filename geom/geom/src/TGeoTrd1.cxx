@@ -44,7 +44,7 @@ End_Macro
 #include "TGeoTrd1.h"
 #include "TMath.h"
 
-ClassImp(TGeoTrd1)
+ClassImp(TGeoTrd1);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// dummy ctor

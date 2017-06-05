@@ -166,8 +166,8 @@ typedef struct {
 }\
 
 
-ClassImp(TASImage)
-ClassImp(TASImagePlugin)
+ClassImp(TASImage);
+ClassImp(TASImagePlugin);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Destroy image.

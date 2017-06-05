@@ -1,3 +1,3 @@
 #include "NdbDCResParam.h"
 
-ClassImp(NdbDCResParam)
+ClassImp(NdbDCResParam);

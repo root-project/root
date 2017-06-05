@@ -65,7 +65,7 @@ static Int_t  gLibraryVersionIdx = 0;   // Set in TVersionCheck, used in Load()
 static Int_t  gLibraryVersionMax = 256;
 
 
-ClassImp(TProcessEventTimer)
+ClassImp(TProcessEventTimer);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create async event processor timer. Delay is in milliseconds.
@@ -97,7 +97,7 @@ Bool_t TProcessEventTimer::ProcessEvents()
 
 
 
-ClassImp(TSystem)
+ClassImp(TSystem);
 
 TVirtualMutex* gSystemMutex = 0;
 

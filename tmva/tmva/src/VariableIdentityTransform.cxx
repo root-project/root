@@ -46,7 +46,7 @@ namespace TMVA {
    class DataSetInfo;
 }
 
-ClassImp(TMVA::VariableIdentityTransform)
+ClassImp(TMVA::VariableIdentityTransform);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor

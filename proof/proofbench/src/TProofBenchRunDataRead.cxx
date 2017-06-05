@@ -51,7 +51,7 @@ for query are plotted.
 #include "TLegend.h"
 #include "TROOT.h"
 
-ClassImp(TProofBenchRunDataRead)
+ClassImp(TProofBenchRunDataRead);
 
 ////////////////////////////////////////////////////////////////////////////////
 

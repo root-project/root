@@ -22,7 +22,7 @@ Related classes are TTreeResult.
 #include "TBuffer.h"
 #include "TObjArray.h"
 
-ClassImp(TTreeRow)
+ClassImp(TTreeRow);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Single row of a query result.

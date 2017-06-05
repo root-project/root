@@ -87,7 +87,7 @@ on the test sample.
 
 REGISTER_METHOD(Boost)
 
-ClassImp(TMVA::MethodBoost)
+ClassImp(TMVA::MethodBoost);
 
 ////////////////////////////////////////////////////////////////////////////////
 

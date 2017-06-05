@@ -33,7 +33,7 @@ RooAbsRootFinder is the abstract interface for finding roots of real-valued
 
 using namespace std;
 
-ClassImp(RooAbsRootFinder)
+ClassImp(RooAbsRootFinder);
 ;
 
 

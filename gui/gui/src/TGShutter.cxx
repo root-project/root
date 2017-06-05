@@ -27,8 +27,8 @@
 #include "Riostream.h"
 
 
-ClassImp(TGShutterItem)
-ClassImp(TGShutter)
+ClassImp(TGShutterItem);
+ClassImp(TGShutter);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create shutter frame.

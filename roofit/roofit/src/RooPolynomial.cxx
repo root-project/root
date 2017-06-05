@@ -36,7 +36,7 @@ less than polynomial functions due to the normalization condition
 
 using namespace std;
 
-ClassImp(RooPolynomial)
+ClassImp(RooPolynomial);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// coverity[UNINIT_CTOR]

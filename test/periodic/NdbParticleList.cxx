@@ -2,7 +2,7 @@
 #include <Riostream.h>
 #include "NdbParticleList.h"
 
-ClassImp(NdbParticleList)
+ClassImp(NdbParticleList);
 
 /* -------- TotalCharge -------- */
 Int_t

@@ -33,7 +33,7 @@ that are associated with each node. This is a utility class for RooPlot
 
 using namespace std;
 
-ClassImp(RooList)
+ClassImp(RooList);
 
 
 

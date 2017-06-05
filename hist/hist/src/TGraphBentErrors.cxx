@@ -23,7 +23,7 @@
 #include "TF1.h"
 #include "TClass.h"
 
-ClassImp(TGraphBentErrors)
+ClassImp(TGraphBentErrors);
 
 
 ////////////////////////////////////////////////////////////////////////////////

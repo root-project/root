@@ -46,7 +46,7 @@
 #include "TError.h"
 #include <cstdlib>
 
-ClassImp(TAlienFile)
+ClassImp(TAlienFile);
 
 #define MAX_FILE_IMAGES 16
 

@@ -44,7 +44,7 @@
 #include "TGMdiDecorFrame.h"
 #include "Riostream.h"
 
-ClassImp(TGMdiFrame)
+ClassImp(TGMdiFrame);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TGMdiFrame constructor.

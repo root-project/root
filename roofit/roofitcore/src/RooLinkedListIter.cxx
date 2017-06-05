@@ -29,6 +29,6 @@ RooLinkedListIter is the TIterator implementation for RooLinkedList
 
 using namespace std;
 
-ClassImp(RooLinkedListIter)
+ClassImp(RooLinkedListIter);
 
 ;

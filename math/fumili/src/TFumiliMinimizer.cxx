@@ -136,7 +136,7 @@ ROOT::Math::FitMethodGradFunction * TFumiliMinimizer::fgGradFunc = 0;
 TFumili * TFumiliMinimizer::fgFumili = 0;
 
 
-ClassImp(TFumiliMinimizer)
+ClassImp(TFumiliMinimizer);
 
 
 TFumiliMinimizer::TFumiliMinimizer(int  ) :

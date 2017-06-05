@@ -16,7 +16,7 @@
 #include <string.h>
 #include <limits>
 
-templateClassImp(TKDTree)
+templateClassImp(TKDTree);
 
 
 /**

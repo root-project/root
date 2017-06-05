@@ -38,7 +38,7 @@
 Implements painting of TH2 with "SURF" option.
 */
 
-ClassImp(TGLSurfacePainter)
+ClassImp(TGLSurfacePainter);
 
 TRandom *TGLSurfacePainter::fgRandom = new TRandom(0);
 

@@ -31,7 +31,7 @@ Defined levels:
 - 3  detailed info for each step
 */
 
-ClassImp(TMCVerbose)
+ClassImp(TMCVerbose);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Standard constructor

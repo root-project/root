@@ -54,7 +54,7 @@
 #include "TMath.h"
 #include "TQpSolverBase.h"
 
-ClassImp(TQpSolverBase)
+ClassImp(TQpSolverBase);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor

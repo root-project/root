@@ -35,7 +35,7 @@ the proxy to functions a Int_t/'const char*' on the right hand side of expressio
 
 using namespace std;
 
-ClassImp(RooCategoryProxy)
+ClassImp(RooCategoryProxy);
 ;
 
 

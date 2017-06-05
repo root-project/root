@@ -29,7 +29,7 @@
 #include "TLine.h"
 #include "TVirtualPad.h"
 
-ClassImp(TLineEditor)
+ClassImp(TLineEditor);
 
 enum ELineWid {
    kLine_STAX,

@@ -34,8 +34,8 @@
 #include "TGLabel.h"
 #include "TColor.h"
 
-ClassImp(TGTable)
-ClassImp(TTableRange)
+ClassImp(TGTable);
+ClassImp(TTableRange);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create an array to hold a bunch of numbers

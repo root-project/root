@@ -80,7 +80,7 @@ std::atomic<Int_t> TStreamerInfo::fgCount{0};
 
 const Int_t kMaxLen = 1024;
 
-ClassImp(TStreamerInfo)
+ClassImp(TStreamerInfo);
 
 static void R__TObjArray_InsertAt(TObjArray *arr, TObject *obj, Int_t at)
 {

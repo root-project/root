@@ -22,7 +22,7 @@
 #include "TClass.h"
 #include "Math/IntegratorOptions.h"
 
-ClassImp(TF2)
+ClassImp(TF2);
 
 /** \class TF2
     \ingroup Hist 

@@ -34,7 +34,7 @@ This class defines the interface to retrieve bin boundaries, ranges etc.
 
 using namespace std;
 
-ClassImp(RooAbsBinning)
+ClassImp(RooAbsBinning);
 ;
 
 

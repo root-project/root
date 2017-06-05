@@ -28,7 +28,7 @@ in context of GEANT (3 but also 4) or FLUKA interfaces.
 #include "TGeoMedium.h"
 #include "TList.h"
 
-ClassImp(TGeoMedium)
+ClassImp(TGeoMedium);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor

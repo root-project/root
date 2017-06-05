@@ -30,7 +30,7 @@ See TTree::AddFriend for more information.
 #include "TFile.h"
 #include "TROOT.h"
 
-ClassImp(TFriendElement)
+ClassImp(TFriendElement);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor for a friend element.

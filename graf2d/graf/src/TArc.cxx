@@ -14,7 +14,7 @@
 #include "TArc.h"
 #include "TVirtualPad.h"
 
-ClassImp(TArc)
+ClassImp(TArc);
 
 /** \class TArc
 \ingroup BasicGraphics

@@ -36,7 +36,7 @@ index value which define the state
 
 using namespace std;
 
-ClassImp(RooCatType)
+ClassImp(RooCatType);
 ;
 
 

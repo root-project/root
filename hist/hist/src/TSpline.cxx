@@ -24,12 +24,12 @@
 #include "TClass.h"
 #include "TMath.h"
 
-ClassImp(TSplinePoly)
-ClassImp(TSplinePoly3)
-ClassImp(TSplinePoly5)
-ClassImp(TSpline3)
-ClassImp(TSpline5)
-ClassImp(TSpline)
+ClassImp(TSplinePoly);
+ClassImp(TSplinePoly3);
+ClassImp(TSplinePoly5);
+ClassImp(TSpline3);
+ClassImp(TSpline5);
+ClassImp(TSpline);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor.

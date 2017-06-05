@@ -14,7 +14,7 @@
 #include "Minuit2/MnUserParameterState.h"
 #include "Minuit2/MinimumState.h"
 
-ClassImp(TMinuit2TraceObject)
+ClassImp(TMinuit2TraceObject);
 
 TMinuit2TraceObject::TMinuit2TraceObject(int parNumber) : ROOT::Minuit2::MnTraceObject(parNumber),
    TNamed("Minuit2TraceObject","ROOT Trace Object for Minuit2"),

@@ -22,7 +22,7 @@
 
 #include "NdbMTDir.h"
 
-//ClassImp(XSReactionDlg)
+//ClassImp(XSReactionDlg);
 
 // Options for filling containers
 enum   DirOptions {

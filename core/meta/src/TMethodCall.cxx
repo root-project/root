@@ -28,7 +28,7 @@ TInterpreter::Execute().
 #include "TVirtualMutex.h"
 #include "TError.h"
 
-ClassImp(TMethodCall)
+ClassImp(TMethodCall);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default TMethodCall ctor. Use Init() to initialize the method call

@@ -47,7 +47,7 @@ constructed from all the categories in the dataset
 
 using namespace std;
 
-ClassImp(RooDataProjBinding)
+ClassImp(RooDataProjBinding);
 ;
 
 

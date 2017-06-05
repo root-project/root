@@ -17,7 +17,7 @@
 #include "TList.h"
 #include "TMath.h"
 
-ClassImp(TH2Poly)
+ClassImp(TH2Poly);
 
 /** \class TH2Poly
     \ingroup Hist

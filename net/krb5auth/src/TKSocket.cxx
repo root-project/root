@@ -149,7 +149,7 @@ int krb5_net_write(krb5_context /*context*/, int fd, register const char *buf, i
 }
 #endif
 
-ClassImp(TKSocket)
+ClassImp(TKSocket);
 
 
 krb5_context TKSocket::fgContext = 0;

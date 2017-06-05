@@ -95,7 +95,7 @@ const Int_t kNumberOfFonts = 15;
 
 Int_t TPDF::fgLineJoin = 0;
 
-ClassImp(TPDF)
+ClassImp(TPDF);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default PDF constructor

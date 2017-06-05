@@ -63,9 +63,9 @@
 #include "TROOT.h"
 #include "TMath.h"
 
-ClassImp(TGColorPalette)
-ClassImp(TGColorPick)
-ClassImp(TGColorDialog)
+ClassImp(TGColorPalette);
+ClassImp(TGColorPick);
+ClassImp(TGColorDialog);
 
 
 // TODO:

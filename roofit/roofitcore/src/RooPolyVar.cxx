@@ -37,7 +37,7 @@ it can define.
 
 using namespace std;
 
-ClassImp(RooPolyVar)
+ClassImp(RooPolyVar);
 ;
 
 

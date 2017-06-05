@@ -18,7 +18,7 @@ Array of doubles (64 bits per element).
 #include "TBuffer.h"
 
 
-ClassImp(TArrayD)
+ClassImp(TArrayD);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default TArrayD ctor.

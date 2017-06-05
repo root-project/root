@@ -62,7 +62,7 @@ using namespace std ;
 char* operator+( streampos&, char* );
 #endif
 
-ClassImp(RooArgSet)
+ClassImp(RooArgSet);
   ;
 
 char* RooArgSet::_poolBegin = 0 ;

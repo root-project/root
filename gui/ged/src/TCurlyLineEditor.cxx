@@ -31,7 +31,7 @@
 #include "TCurlyLine.h"
 #include <iostream>
 
-ClassImp(TCurlyLineEditor)
+ClassImp(TCurlyLineEditor);
 
 enum ECurlyLineWid {
    kCRLL_AMPL,

@@ -161,7 +161,7 @@ Long64_t sqlio::atol64(const char* value)
 \ingroup IO
 */
 
-ClassImp(TSQLColumnData)
+ClassImp(TSQLColumnData);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// default constructor

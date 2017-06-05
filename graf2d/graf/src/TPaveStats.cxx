@@ -22,7 +22,7 @@
 #include "TClass.h"
 #include "TLatex.h"
 
-ClassImp(TPaveStats)
+ClassImp(TPaveStats);
 
 /** \class TPaveStats
 \ingroup BasicGraphics

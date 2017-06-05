@@ -20,7 +20,7 @@
 #include "TMath.h"
 #include "TPoint.h"
 
-ClassImp(TLine)
+ClassImp(TLine);
 
 /** \class TLine
 \ingroup BasicGraphics

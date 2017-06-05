@@ -24,7 +24,7 @@ Used for the internal connection between coordinator and TXProofServ.
 #include "TSystem.h"
 #include "XrdProofPhyConn.h"
 
-ClassImp(TXUnixSocket)
+ClassImp(TXUnixSocket);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor

@@ -52,7 +52,7 @@ Bool_t       TClassTable::fgSorted;
 UInt_t       TClassTable::fgCursor;
 TClassTable::IdMap_t *TClassTable::fgIdMap;
 
-ClassImp(TClassTable)
+ClassImp(TClassTable);
 
 ////////////////////////////////////////////////////////////////////////////////
 

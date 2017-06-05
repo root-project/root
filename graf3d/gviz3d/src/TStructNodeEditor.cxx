@@ -21,7 +21,7 @@
 #include <TGTextEntry.h>
 #include <TClass.h>
 
-ClassImp(TStructNodeEditor)
+ClassImp(TStructNodeEditor);
 
 //________________________________________________________________________
 //////////////////////////////////////////////////////////////////////////

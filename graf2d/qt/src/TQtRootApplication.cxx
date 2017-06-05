@@ -25,7 +25,7 @@
 #include "TString.h"
 
 
-// ClassImp(TQtRootApplication)
+// ClassImp(TQtRootApplication);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// An implementation of the TApplicationImp for Qt-based GUI.

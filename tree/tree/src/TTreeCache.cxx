@@ -244,7 +244,7 @@ of effective system reads for a given file with a code like
 
 Int_t TTreeCache::fgLearnEntries = 100;
 
-ClassImp(TTreeCache)
+ClassImp(TTreeCache);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default Constructor.

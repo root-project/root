@@ -29,7 +29,7 @@ RooSetPair is a utility class that stores a pair of RooArgSets
 
 using namespace std;
 
-ClassImp(RooSetPair) 
+ClassImp(RooSetPair); 
 ;
 
 

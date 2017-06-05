@@ -64,7 +64,7 @@ A simple Binary search tree including a volume search method.
 #include "TMVA/Types.h"
 #include "TMVA/Node.h"
 
-ClassImp(TMVA::BinarySearchTree)
+ClassImp(TMVA::BinarySearchTree);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// default constructor

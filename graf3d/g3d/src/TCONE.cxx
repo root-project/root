@@ -12,7 +12,7 @@
 #include "TCONE.h"
 #include "TNode.h"
 
-ClassImp(TCONE)
+ClassImp(TCONE);
 
 /** \class TCONE
 \ingroup g3d

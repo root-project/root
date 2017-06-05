@@ -1,3 +1,3 @@
 #include "NdbFormFactors.h"
 
-ClassImp(NdbFormFactors)
+ClassImp(NdbFormFactors);

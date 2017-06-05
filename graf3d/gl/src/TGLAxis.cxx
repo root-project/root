@@ -27,7 +27,7 @@ GL Axis.
 To draw a 3D axis in a GL window. The labels are drawn using FTGL.
 */
 
-ClassImp(TGLAxis)
+ClassImp(TGLAxis);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

@@ -27,7 +27,7 @@ The use of the of ToyMCSampler as the TestStatSampler is assumed.
 #include "RooStats/ToyMCSampler.h"
 
 
-ClassImp(RooStats::HybridCalculator)
+ClassImp(RooStats::HybridCalculator);
 
 using namespace RooStats;
 using namespace std;

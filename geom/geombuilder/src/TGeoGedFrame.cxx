@@ -15,7 +15,7 @@
 #include "TGTab.h"
 #include "TVirtualPad.h"
 
-ClassImp(TGeoGedFrame)
+ClassImp(TGeoGedFrame);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

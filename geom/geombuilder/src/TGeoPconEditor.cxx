@@ -39,7 +39,7 @@
 #include "TGNumberEntry.h"
 #include "TGLabel.h"
 
-ClassImp(TGeoPconEditor)
+ClassImp(TGeoPconEditor);
 
 enum ETGeoPconWid {
    kPCON_NAME, kPCON_NZ, kPCON_PHI1, kPCON_DPHI, kPCON_APPLY, kPCON_UNDO
@@ -466,7 +466,7 @@ void TGeoPconEditor::DoUndo()
    fApply->SetEnabled(kFALSE);
 }
 
-ClassImp(TGeoPconSection)
+ClassImp(TGeoPconSection);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

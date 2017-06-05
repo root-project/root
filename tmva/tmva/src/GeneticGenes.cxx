@@ -35,7 +35,7 @@ Cut optimisation interface class for genetic algorithm.
 
 */
 
-ClassImp(TMVA::GeneticGenes)
+ClassImp(TMVA::GeneticGenes);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor:

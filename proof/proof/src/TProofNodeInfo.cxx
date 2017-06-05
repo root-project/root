@@ -21,7 +21,7 @@ for masters, submasters and workers.
 #include "TObjString.h"
 #include "TProofNodeInfo.h"
 
-ClassImp(TProofNodeInfo)
+ClassImp(TProofNodeInfo);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.

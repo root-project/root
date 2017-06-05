@@ -37,7 +37,7 @@ when any of the parameters of the input p.d.f. has changed.
 
 using namespace std;
 
-ClassImp(RooNumRunningInt)
+ClassImp(RooNumRunningInt);
   ;
 
 

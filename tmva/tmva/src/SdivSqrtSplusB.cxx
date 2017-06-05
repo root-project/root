@@ -36,7 +36,7 @@ Implementation of the SdivSqrtSplusB as separation criterion.
 #include "TMath.h"
 #include "TMVA/SdivSqrtSplusB.h"
 
-ClassImp(TMVA::SdivSqrtSplusB)
+ClassImp(TMVA::SdivSqrtSplusB);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Index = S/sqrt(S+B)  (statistical significance)

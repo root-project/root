@@ -25,7 +25,7 @@
 #include "TThreadFactory.h"
 
 
-ClassImp(TCondition)
+ClassImp(TCondition);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a condition variable. The actual condition implementation

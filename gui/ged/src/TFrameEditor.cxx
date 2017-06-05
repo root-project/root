@@ -34,7 +34,7 @@
 #include "TFrame.h"
 #include "TVirtualPad.h"
 
-ClassImp(TFrameEditor)
+ClassImp(TFrameEditor);
 
 enum EFrameWid {
    kFR_BSIZE,

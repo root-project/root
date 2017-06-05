@@ -44,7 +44,7 @@
 
 using namespace std;
 
-ClassImp(RooChi2Var)
+ClassImp(RooChi2Var);
 ;
 
 RooArgSet RooChi2Var::_emptySet ;

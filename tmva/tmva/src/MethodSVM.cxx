@@ -82,7 +82,7 @@ using std::stringstream;
 //const Int_t basketsize__ = 1280000;
 REGISTER_METHOD(SVM)
 
-ClassImp(TMVA::MethodSVM)
+ClassImp(TMVA::MethodSVM);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// standard constructor

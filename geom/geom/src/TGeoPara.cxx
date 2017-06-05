@@ -49,7 +49,7 @@ End_Macro
 #include "TGeoPara.h"
 #include "TMath.h"
 
-ClassImp(TGeoPara)
+ClassImp(TGeoPara);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor

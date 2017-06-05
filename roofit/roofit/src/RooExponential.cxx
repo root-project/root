@@ -31,7 +31,7 @@ Exponential p.d.f
 
 using namespace std;
 
-ClassImp(RooExponential)
+ClassImp(RooExponential);
 
 ////////////////////////////////////////////////////////////////////////////////
 

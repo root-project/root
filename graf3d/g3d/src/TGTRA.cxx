@@ -13,7 +13,7 @@
 #include "TNode.h"
 #include "TMath.h"
 
-ClassImp(TGTRA)
+ClassImp(TGTRA);
 
 /** \class TGTRA
 \ingroup g3d

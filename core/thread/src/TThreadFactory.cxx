@@ -22,7 +22,7 @@
 
 TThreadFactory *gThreadFactory = 0;
 
-ClassImp(TThreadFactory)
+ClassImp(TThreadFactory);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TThreadFactory ctor only called by derived classes.

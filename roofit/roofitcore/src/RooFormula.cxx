@@ -45,7 +45,7 @@ the 'Kaon' state of the RooAbsCategory object named tagCat.
 
 using namespace std;
 
-ClassImp(RooFormula)
+ClassImp(RooFormula);
 
 
 ////////////////////////////////////////////////////////////////////////////////

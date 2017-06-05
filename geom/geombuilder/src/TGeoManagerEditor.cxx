@@ -86,7 +86,7 @@
 #include "TGeoManagerEditor.h"
 #include "TGedEditor.h"
 
-ClassImp(TGeoManagerEditor)
+ClassImp(TGeoManagerEditor);
 
 enum ETGeoVolumeWid {
    kMANAGER_NAME, kMANAGER_TITLE,

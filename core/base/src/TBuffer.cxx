@@ -21,7 +21,7 @@ Buffer base class used for serializing objects.
 
 const Int_t  kExtraSpace        = 8;   // extra space at end of buffer (used for free block count)
 
-ClassImp(TBuffer)
+ClassImp(TBuffer);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// The user has provided memory than we don't own, thus we can not extent it

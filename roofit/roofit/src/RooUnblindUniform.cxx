@@ -38,7 +38,7 @@ of the unblind parameter
 
 using namespace std;
 
-ClassImp(RooUnblindUniform)
+ClassImp(RooUnblindUniform);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor

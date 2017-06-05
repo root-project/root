@@ -33,7 +33,7 @@
 #define kSqlBinary    123784
 
 
-ClassImp(TODBCStatement)
+ClassImp(TODBCStatement);
 
 ////////////////////////////////////////////////////////////////////////////////
 ///constructor

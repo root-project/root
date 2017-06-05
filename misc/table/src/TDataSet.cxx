@@ -142,7 +142,7 @@
 TDataSet mainSet("DSMAIN");
 TDataSet *TDataSet::fgMainSet = &mainSet;
 
-ClassImp(TDataSet)
+ClassImp(TDataSet);
 
 ////////////////////////////////////////////////////////////////////////////////
 ///  std::cout << "ctor for " << GetName() << " - " << GetTitle() << std::endl;

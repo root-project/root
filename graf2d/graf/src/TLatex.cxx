@@ -20,7 +20,7 @@
 
 const Double_t kPI = TMath::Pi();
 
-ClassImp(TLatex)
+ClassImp(TLatex);
 
 /** \class TLatex
 \ingroup BasicGraphics

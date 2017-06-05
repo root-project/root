@@ -39,7 +39,7 @@ use a TTree as internal storage mechanism
 #include <iomanip>
 using namespace std ;
 
-ClassImp(RooCompositeDataStore)
+ClassImp(RooCompositeDataStore);
 ;
 
 

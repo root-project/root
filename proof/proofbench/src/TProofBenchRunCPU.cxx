@@ -47,7 +47,7 @@ No I/O activity is involved.
 #include "TGraphErrors.h"
 #include "TLegend.h"
 
-ClassImp(TProofBenchRunCPU)
+ClassImp(TProofBenchRunCPU);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor

@@ -42,9 +42,9 @@
 
 TGGC *TGSelectedPicture::fgSelectedGC = 0;
 
-ClassImp(TGPicture)
-ClassImp(TGSelectedPicture)
-ClassImp(TGPicturePool)
+ClassImp(TGPicture);
+ClassImp(TGSelectedPicture);
+ClassImp(TGPicturePool);
 
 
 ////////////////////////////////////////////////////////////////////////////////

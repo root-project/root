@@ -38,7 +38,7 @@ functions used in D mixing have been hand coded for increased execution speed.
 #include <algorithm>
 using namespace std ;
 
-ClassImp(RooTruthModel) 
+ClassImp(RooTruthModel); 
 ;
 
 

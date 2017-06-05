@@ -32,7 +32,7 @@
 #include "TFileMerger.h"
 #include "TBrowser.h"
 
-ClassImp(TAlienMasterJob)
+ClassImp(TAlienMasterJob);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Browser interface.

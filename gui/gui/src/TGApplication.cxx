@@ -33,7 +33,7 @@
 #include "TInterpreter.h"
 #include "TColor.h"
 
-ClassImp(TGApplication)
+ClassImp(TGApplication);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a GUI application environment. Use this class if you only

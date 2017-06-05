@@ -32,7 +32,7 @@ http://www-ekp.physik.uni-karlsruhe.de/~schott/roostats/hybridplot_example.png
 /// To build the THtml documentation
 using namespace std;
 
-ClassImp(RooStats::HybridPlot)
+ClassImp(RooStats::HybridPlot);
 
 using namespace RooStats;
 

@@ -45,7 +45,7 @@ J Friedman's RuleFit method
 
 #include <algorithm>
 
-ClassImp(TMVA::RuleFitAPI)
+ClassImp(TMVA::RuleFitAPI);
 
 TMVA::RuleFitAPI::RuleFitAPI( const MethodRuleFit *rfbase,
                               RuleFit *rulefit,

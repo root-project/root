@@ -50,7 +50,7 @@
 #include "TMath.h"
 #define PEAK_WINDOW 1024
 
-ClassImp(TSpectrum3)
+ClassImp(TSpectrum3);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

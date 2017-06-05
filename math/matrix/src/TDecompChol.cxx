@@ -27,7 +27,7 @@
 #include "TDecompChol.h"
 #include "TMath.h"
 
-ClassImp(TDecompChol)
+ClassImp(TDecompChol);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor for (nrows x nrows) matrix

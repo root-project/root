@@ -65,7 +65,7 @@ These study modules should derive from classs RooAbsMCStudyModel
 
 using namespace std ;
 
-ClassImp(RooMCStudy)
+ClassImp(RooMCStudy);
   ;
 
 

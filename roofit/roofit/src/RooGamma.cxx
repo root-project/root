@@ -66,7 +66,7 @@ RooPoison(N,mu) and treating the function as a PDF in mu.
 
 using namespace std;
 
-ClassImp(RooGamma)
+ClassImp(RooGamma);
 
 ////////////////////////////////////////////////////////////////////////////////
 

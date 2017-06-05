@@ -29,7 +29,7 @@ Here we also implement the analytic integral.
 
 using namespace std;
 
-ClassImp(RooChiSquarePdf)
+ClassImp(RooChiSquarePdf);
 
 ////////////////////////////////////////////////////////////////////////////////
 

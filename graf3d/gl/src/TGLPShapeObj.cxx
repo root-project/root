@@ -16,4 +16,4 @@
 Wrap TGLPysicalShape into TObject so that it can be edited using GED.
 */
 
-ClassImp(TGLPShapeObj)
+ClassImp(TGLPShapeObj);

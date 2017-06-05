@@ -1,3 +1,3 @@
 #include "NdbMaterial.h"
 
-ClassImp(NdbMaterial)
+ClassImp(NdbMaterial);

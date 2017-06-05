@@ -35,7 +35,7 @@ using std::endl ;
 
 using namespace std;
 
-ClassImp(RooSharedPropertiesList)
+ClassImp(RooSharedPropertiesList);
 ;
 
 

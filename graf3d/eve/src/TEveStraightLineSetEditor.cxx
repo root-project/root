@@ -26,7 +26,7 @@
 Editor for TEveStraightLineSet class.
 */
 
-ClassImp(TEveStraightLineSetEditor)
+ClassImp(TEveStraightLineSetEditor);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

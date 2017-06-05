@@ -40,7 +40,7 @@ convergence of a Monte Carlo integration.
 
 using namespace std;
 
-ClassImp(RooQuasiRandomGenerator)
+ClassImp(RooQuasiRandomGenerator);
   ;
 
 

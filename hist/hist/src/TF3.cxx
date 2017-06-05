@@ -23,7 +23,7 @@
 #include "TClass.h"
 #include <cassert>
 
-ClassImp(TF3)
+ClassImp(TF3);
 
 /** \class TF3
     \ingroup Hist 

@@ -53,7 +53,7 @@ TGuiFactory* ROOT_Plugin_TQtRootGuiFactory() {
 
 
 TGClient *TQtRootGuiFactory::gfQtClient = 0;
-ClassImp(TQtRootGuiFactory)
+ClassImp(TQtRootGuiFactory);
 ////////////////////////////////////////////////////////////////////////////////
 /// TQtRootGuiFactory ctor.
 /// Restore the right TVirtualX pointer

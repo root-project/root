@@ -21,7 +21,7 @@ merged value to be returned to the user.
 #include "TSelectorScalar.h"
 #include "TCollection.h"
 
-ClassImp(TSelectorScalar)
+ClassImp(TSelectorScalar);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Increment scalar value by n.

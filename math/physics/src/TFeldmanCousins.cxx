@@ -49,7 +49,7 @@ Copyright Liverpool University 2001       bevan@slac.stanford.edu
 #include "TMath.h"
 #include "TFeldmanCousins.h"
 
-ClassImp(TFeldmanCousins)
+ClassImp(TFeldmanCousins);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

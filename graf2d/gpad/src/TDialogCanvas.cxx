@@ -15,7 +15,7 @@
 #include "TText.h"
 #include "TStyle.h"
 
-ClassImp(TDialogCanvas)
+ClassImp(TDialogCanvas);
 
 /** \class TDialogCanvas
 \ingroup gpad

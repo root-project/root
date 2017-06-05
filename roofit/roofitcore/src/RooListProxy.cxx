@@ -37,7 +37,7 @@ are clone and client-server links need to be redirected.
 
 using namespace std;
 
-ClassImp(RooListProxy)
+ClassImp(RooListProxy);
 ;
 
 

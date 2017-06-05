@@ -115,7 +115,7 @@ INCLUDED in the methods provided by the base class TUnfold.
 
 #include "TUnfoldSys.h"
 
-ClassImp(TUnfoldSys)
+ClassImp(TUnfoldSys);
 
 TUnfoldSys::~TUnfoldSys(void)
 {

@@ -15,7 +15,7 @@
 #include "Bytes.h"
 #include "Riostream.h"
 
-ClassImp(TFree)
+ClassImp(TFree);
 
 /**
 \class TFree

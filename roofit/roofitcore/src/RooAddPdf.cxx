@@ -82,7 +82,7 @@ of each coefficient_i.
 
 using namespace std;
 
-ClassImp(RooAddPdf)
+ClassImp(RooAddPdf);
 ;
 
 

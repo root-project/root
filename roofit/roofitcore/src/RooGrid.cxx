@@ -41,7 +41,7 @@ integration, following the VEGAS algorithm.
 
 using namespace std;
 
-ClassImp(RooGrid)
+ClassImp(RooGrid);
 ;
 
 

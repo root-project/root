@@ -102,7 +102,7 @@ Fatal in <TProcessID::AddProcessID>: Maximum number of TProcessID (65535) has be
 #include "TSystem.h"
 #include "TROOT.h"
 
-ClassImp(TRefArray)
+ClassImp(TRefArray);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// default constructor
@@ -840,7 +840,7 @@ Int_t TRefArray::BinarySearch(TObject *, Int_t)
 Iterator of object array.
 */
 
-ClassImp(TRefArrayIter)
+ClassImp(TRefArrayIter);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create array iterator. By default the iteration direction

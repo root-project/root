@@ -15,7 +15,7 @@
 #include "TGNumberEntry.h"
 #include "TArrow.h"
 
-ClassImp(TArrowEditor)
+ClassImp(TArrowEditor);
 
 enum EArrowWid {
    kARROW_ANG,

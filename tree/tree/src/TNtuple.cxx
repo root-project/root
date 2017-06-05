@@ -21,7 +21,7 @@
 
 #include <string>
 
-ClassImp(TNtuple)
+ClassImp(TNtuple);
 
 /** \class TNtuple
 \ingroup tree

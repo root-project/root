@@ -46,7 +46,7 @@ Description of bayesian classifiers.
 
 REGISTER_METHOD(BayesClassifier)
 
-ClassImp(TMVA::MethodBayesClassifier)
+ClassImp(TMVA::MethodBayesClassifier);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// standard constructor

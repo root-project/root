@@ -76,7 +76,7 @@ using namespace std ;
 char* operator+( streampos&, char* );
 #endif
 
-ClassImp(RooAbsArg)
+ClassImp(RooAbsArg);
 ;
 
 Bool_t RooAbsArg::_verboseDirty(kFALSE) ;

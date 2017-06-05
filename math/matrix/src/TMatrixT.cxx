@@ -30,7 +30,7 @@
 #include "TClass.h"
 #include "TMath.h"
 
-templateClassImp(TMatrixT)
+templateClassImp(TMatrixT);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor for (nrows x ncols) matrix

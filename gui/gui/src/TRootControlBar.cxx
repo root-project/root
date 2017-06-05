@@ -25,7 +25,7 @@
 #include "TGButton.h"
 
 
-ClassImp(TRootControlBar)
+ClassImp(TRootControlBar);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a ROOT native GUI controlbar.

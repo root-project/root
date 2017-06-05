@@ -19,7 +19,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-ClassImp(TRootSnifferStore)
+ClassImp(TRootSnifferStore);
 
    ////////////////////////////////////////////////////////////////////////////////
    /// normal constructor
@@ -58,7 +58,7 @@ void TRootSnifferStore::SetResult(void *_res, TClass *_rescl, TDataMember *_resm
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-ClassImp(TRootSnifferStoreXml)
+ClassImp(TRootSnifferStoreXml);
 
    ////////////////////////////////////////////////////////////////////////////////
    /// starts new xml node, will be closed by CloseNode
@@ -124,7 +124,7 @@ void TRootSnifferStoreXml::CloseNode(Int_t lvl, Int_t numchilds)
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-ClassImp(TRootSnifferStoreJson)
+ClassImp(TRootSnifferStoreJson);
 
    ////////////////////////////////////////////////////////////////////////////////
    /// starts new json object, will be closed by CloseNode

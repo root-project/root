@@ -12,7 +12,7 @@
 #include "TVirtualPad.h"
 #include "TNodeDiv.h"
 
-ClassImp(TNodeDiv)
+ClassImp(TNodeDiv);
 
 /** \class TNodeDiv
 \ingroup g3d
