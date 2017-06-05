@@ -90,7 +90,7 @@ R__EXTERN Foption_t Foption;
 
 TVirtualFitter *tFitter=0;
 
-ClassImp(TTreePlayer)
+ClassImp(TTreePlayer);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default Tree constructor.

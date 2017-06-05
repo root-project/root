@@ -47,7 +47,7 @@ number of expected events of an extended p.d.f
 
 using namespace std ;
 
-ClassImp(RooRandomizeParamMCSModule)
+ClassImp(RooRandomizeParamMCSModule);
   ;
 
 

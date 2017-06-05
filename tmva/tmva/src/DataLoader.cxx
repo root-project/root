@@ -78,7 +78,7 @@
 #include "TMVA/ResultsMulticlass.h"
 #include "TMVA/Types.h"
 
-ClassImp(TMVA::DataLoader)
+ClassImp(TMVA::DataLoader);
 
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -52,7 +52,7 @@ derivator class.
 using namespace std ;
 
 
-ClassImp(RooSecondMoment)
+ClassImp(RooSecondMoment);
 ;
 
 

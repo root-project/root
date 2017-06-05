@@ -12,7 +12,7 @@
 #include "TObjectSet.h"
 #include "TBrowser.h"
 
-ClassImp(TObjectSet)
+ClassImp(TObjectSet);
 
 //////////////////////////////////////////////////////////////////////////////////////
 //                                                                                  //

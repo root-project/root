@@ -26,7 +26,7 @@
 // (don't explicitly create a TWin32ThreadFactory).
 static TWin32ThreadFactory gWin32ThreadFactoryCreator;
 
-ClassImp(TWin32ThreadFactory)
+ClassImp(TWin32ThreadFactory);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create Win32 thread factory. Also sets global gThreadFactory to this.

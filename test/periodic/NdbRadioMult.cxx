@@ -1,3 +1,3 @@
 #include "NdbRadioMult.h"
 
-ClassImp(NdbRadioMult)
+ClassImp(NdbRadioMult);

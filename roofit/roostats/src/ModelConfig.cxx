@@ -28,7 +28,7 @@ ModelConfig requires a workspace to be set.
 #include <sstream>
 
 
-ClassImp(RooStats::ModelConfig)
+ClassImp(RooStats::ModelConfig);
 
 using namespace std;
 

@@ -91,8 +91,8 @@
 #include "TROOT.h"
 #include "TApplication.h"
 
-ClassImp(TGuiBuilder)
-ClassImp(TGuiBldAction)
+ClassImp(TGuiBuilder);
+ClassImp(TGuiBldAction);
 
 TGuiBuilder *gGuiBuilder = 0;
 static TPluginHandler *gHandler = 0;

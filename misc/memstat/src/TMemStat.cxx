@@ -93,7 +93,7 @@
 #endif
 #endif
 
-ClassImp(TMemStat)
+ClassImp(TMemStat);
 
 using namespace std;
 using namespace Memstat;

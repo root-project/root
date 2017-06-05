@@ -84,7 +84,7 @@ TString &gTDirectoryString() {
 }
 std::atomic<UInt_t> keyAbsNumber{0};
 
-ClassImp(TKey)
+ClassImp(TKey);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TKey default constructor.

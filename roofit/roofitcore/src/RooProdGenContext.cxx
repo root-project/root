@@ -40,7 +40,7 @@ for each component PDF sequentially.
 
 using namespace std;
 
-ClassImp(RooProdGenContext)
+ClassImp(RooProdGenContext);
 ;
   
 

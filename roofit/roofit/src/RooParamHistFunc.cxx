@@ -19,7 +19,7 @@
 
 using namespace std ;
 
-ClassImp(RooParamHistFunc)
+ClassImp(RooParamHistFunc);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Populate x with observables

@@ -72,7 +72,7 @@ static UShort_t gBlueRainbow[12] = {
 };
 
 
-ClassImp(TASPaletteEditor)
+ClassImp(TASPaletteEditor);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Palette editor constructor.

@@ -32,7 +32,7 @@ with name GetXXX, IsXXX or HasXXX for given object.
 #include "TDataMember.h"
 
 
-ClassImp(TToggle)
+ClassImp(TToggle);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TToggle default constructor. You have to initialize it before using

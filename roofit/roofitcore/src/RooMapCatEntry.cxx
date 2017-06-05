@@ -28,7 +28,7 @@
 
 using namespace std;
 
-ClassImp(RooMapCatEntry)
+ClassImp(RooMapCatEntry);
 ;
 
 RooMapCatEntry::RooMapCatEntry(const char* exp, const RooCatType* cat) : 

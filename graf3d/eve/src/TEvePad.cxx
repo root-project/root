@@ -19,7 +19,7 @@ groups of pads. Uses THashList instead of TList for faster removal
 of objects from the pad.
 */
 
-ClassImp(TEvePad)
+ClassImp(TEvePad);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.

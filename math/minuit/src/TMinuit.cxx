@@ -347,7 +347,7 @@ TMinuit *gMinuit;
 
 static const char charal[29] = " .ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-ClassImp(TMinuit)
+ClassImp(TMinuit);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Minuit normal constructor

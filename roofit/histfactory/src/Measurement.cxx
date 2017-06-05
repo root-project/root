@@ -35,7 +35,7 @@ END_HTML
 
 using namespace std;
 
-ClassImp(RooStats::HistFactory::Measurement) ;
+ClassImp(RooStats::HistFactory::Measurement); ;
 
 
 RooStats::HistFactory::Measurement::Measurement() :

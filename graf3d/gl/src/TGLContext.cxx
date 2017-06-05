@@ -461,7 +461,7 @@ Objects shared among GL-contexts include:
 display-list definitions, texture objects and shader programs.
 */
 
-ClassImp(TGLContextIdentity)
+ClassImp(TGLContextIdentity);
 
 TGLContextIdentity* TGLContextIdentity::fgDefaultIdentity = new TGLContextIdentity;
 

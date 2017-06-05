@@ -41,7 +41,7 @@ using namespace TMVA;
 
 REGISTER_METHOD(RSVM)
 
-ClassImp(MethodRSVM)
+ClassImp(MethodRSVM);
 //creating an Instance
 Bool_t MethodRSVM::IsModuleLoaded = ROOT::R::TRInterface::Instance().Require("e1071");
 

@@ -40,7 +40,7 @@
 #include "Riostream.h"
 #include <stdlib.h>
 
-ClassImp(TMLPAnalyzer)
+ClassImp(TMLPAnalyzer);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor

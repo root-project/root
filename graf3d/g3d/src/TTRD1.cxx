@@ -12,7 +12,7 @@
 #include "TTRD1.h"
 #include "TNode.h"
 
-ClassImp(TTRD1)
+ClassImp(TTRD1);
 
 /** \class TTRD1
 \ingroup g3d

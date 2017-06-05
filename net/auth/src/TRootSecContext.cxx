@@ -28,7 +28,7 @@
 #include "TUrl.h"
 #include "TVirtualMutex.h"
 
-ClassImp(TRootSecContext)
+ClassImp(TRootSecContext);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Ctor for SecContext object.

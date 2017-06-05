@@ -394,7 +394,7 @@ Bool_t TRootSnifferScanRec::GoInside(TRootSnifferScanRec &super, TObject *obj, c
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-ClassImp(TRootSniffer)
+ClassImp(TRootSniffer);
 
    ////////////////////////////////////////////////////////////////////////////////
    /// constructor

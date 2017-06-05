@@ -22,7 +22,7 @@
 #include "TClass.h"
 #include "TPoint.h"
 
-ClassImp(TMarker)
+ClassImp(TMarker);
 
 
 /** \class TMarker

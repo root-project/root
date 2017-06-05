@@ -48,7 +48,7 @@ The TRef uniqueID is directly the UUIDNumber=slot number.
 #include "TObjString.h"
 #include "TUUID.h"
 
-ClassImp(TProcessUUID)
+ClassImp(TProcessUUID);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.

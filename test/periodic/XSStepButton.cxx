@@ -5,7 +5,7 @@
 
 #include "XSStepButton.h"
 
-//ClassImp(XSStepButton)
+//ClassImp(XSStepButton);
 
 /* ----- XSStepButton ----- */
 XSStepButton::XSStepButton( const TGWindow *p, Int_t id )

@@ -22,7 +22,7 @@ PROOF worker node information
 #include "TMap.h"
 #include "TObjString.h"
 
-ClassImp(TProofNodes)
+ClassImp(TProofNodes);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor

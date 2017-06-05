@@ -18,7 +18,7 @@
 #include "TClass.h"
 #include "TreeUtils.h"
 
-ClassImp(TNtupleD)
+ClassImp(TNtupleD);
 
 /** \class TNtupleD
 \ingroup tree

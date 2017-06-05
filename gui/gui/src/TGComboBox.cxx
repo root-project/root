@@ -50,12 +50,12 @@
 #include "RConfigure.h"
 
 
-ClassImp(TGComboBoxPopup)
-ClassImp(TGComboBox)
+ClassImp(TGComboBoxPopup);
+ClassImp(TGComboBox);
 
-ClassImp(TGLineStyleComboBox)
-ClassImp(TGLineWidthComboBox)
-ClassImp(TGFontTypeComboBox)
+ClassImp(TGLineStyleComboBox);
+ClassImp(TGLineWidthComboBox);
+ClassImp(TGFontTypeComboBox);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a combo box popup frame.

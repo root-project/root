@@ -128,7 +128,7 @@ system clock catches up.
 #endif
 #include <chrono>
 
-ClassImp(TUUID)
+ClassImp(TUUID);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a UUID.

@@ -26,7 +26,7 @@ Note that Momentum, Energy units are Gev/C, GeV
 
 const Int_t kMAXP = 18;
 
-ClassImp(TGenPhaseSpace)
+ClassImp(TGenPhaseSpace);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// The PDK function.

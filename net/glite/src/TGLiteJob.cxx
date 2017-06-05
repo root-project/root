@@ -37,7 +37,7 @@ gLite implementation of TGridJob*//*
 //
 //////////////////////////////////////////////////////////////////////////
 
-ClassImp(TGLiteJob)
+ClassImp(TGLiteJob);
 
 using namespace std;
 using namespace glite_api_wrapper;

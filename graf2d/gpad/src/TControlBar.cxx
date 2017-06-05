@@ -83,7 +83,7 @@ will return the name of the last clicked button.
 #include "TStyle.h"
 
 
-ClassImp(TControlBar)
+ClassImp(TControlBar);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.

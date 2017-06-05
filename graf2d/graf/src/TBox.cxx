@@ -20,7 +20,7 @@
 #include "TMath.h"
 #include "TPoint.h"
 
-ClassImp(TBox)
+ClassImp(TBox);
 
 /** \class TBox
 \ingroup BasicGraphics

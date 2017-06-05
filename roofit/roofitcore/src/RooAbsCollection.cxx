@@ -58,7 +58,7 @@ using namespace std ;
 char* operator+( streampos&, char* );
 #endif
 
-ClassImp(RooAbsCollection)
+ClassImp(RooAbsCollection);
   ;
 
 ////////////////////////////////////////////////////////////////////////////////

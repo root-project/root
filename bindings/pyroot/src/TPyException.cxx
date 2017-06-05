@@ -20,7 +20,7 @@
 
 
 //- data ---------------------------------------------------------------------
-ClassImp(PyROOT::TPyException)
+ClassImp(PyROOT::TPyException);
 
 
 //- constructors/destructor --------------------------------------------------

@@ -23,7 +23,7 @@ points "outside" the half-space
 #include "TGeoHalfSpace.h"
 #include "TMath.h"
 
-ClassImp(TGeoHalfSpace)
+ClassImp(TGeoHalfSpace);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Dummy constructor

@@ -38,7 +38,7 @@ and it has a protected version of getVal()
 
 using namespace std;
 
-ClassImp(RooAbsHiddenReal)
+ClassImp(RooAbsHiddenReal);
 ;
 
 RooCategory* RooAbsHiddenReal::_dummyBlindState = 0;

@@ -38,7 +38,7 @@ Event class for Support Vector Machine
 
 #include <iostream>
 
-ClassImp(TMVA::SVEvent)
+ClassImp(TMVA::SVEvent);
 
 TMVA::SVEvent::SVEvent()
 : fDataVector(0),

@@ -31,7 +31,7 @@ Suitably stolen and modified from RooBCPEffDecay
 
 using namespace std;
 
-ClassImp(RooBCPGenDecay)
+ClassImp(RooBCPGenDecay);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor

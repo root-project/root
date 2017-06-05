@@ -29,7 +29,7 @@
 #include "TObjArray.h"
 #include "TClass.h"
 
-ClassImp(TTeXDump)
+ClassImp(TTeXDump);
 
 /** \class TTeXDump
 \ingroup PS

@@ -160,7 +160,7 @@ struct RXPoint:XPoint{};
 struct RXVisualInfo:XVisualInfo{};
 struct RVisual:Visual{};
 
-ClassImp(TGX11)
+ClassImp(TGX11);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.

@@ -26,7 +26,7 @@
 #include "TColor.h"
 #include "TClass.h"
 
-ClassImp(TPaveText)
+ClassImp(TPaveText);
 
 
 /** \class TPaveText

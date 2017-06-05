@@ -35,7 +35,7 @@ Linear interpolation of TGraph
 #include "TGraph.h"
 #include "TMath.h"
 
-ClassImp(TMVA::TSpline1)
+ClassImp(TMVA::TSpline1);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor from TGraph

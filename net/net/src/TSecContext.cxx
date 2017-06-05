@@ -29,8 +29,8 @@
 #include "TError.h"
 #include "TVirtualMutex.h"
 
-ClassImp(TSecContext)
-ClassImp(TSecContextCleanup)
+ClassImp(TSecContext);
+ClassImp(TSecContextCleanup);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Ctor for SecContext object.

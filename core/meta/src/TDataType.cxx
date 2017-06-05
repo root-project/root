@@ -25,7 +25,7 @@ defined types (accessible via TROOT::GetListOfTypes()).
 #include <typeinfo>
 #endif
 
-ClassImp(TDataType)
+ClassImp(TDataType);
 
 TDataType* TDataType::fgBuiltins[kNumDataTypes] = {0};
 

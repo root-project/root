@@ -55,7 +55,7 @@ the trees in the chain.
 #include "TFilePrefetch.h"
 #include "TVirtualMutex.h"
 
-ClassImp(TChain)
+ClassImp(TChain);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.

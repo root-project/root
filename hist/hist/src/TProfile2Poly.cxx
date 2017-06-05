@@ -10,7 +10,7 @@
 #include <cassert>
 #include <cmath>
 
-ClassImp(TProfile2Poly)
+ClassImp(TProfile2Poly);
 
 // -------------- TProfile2PolyBin  --------------
 

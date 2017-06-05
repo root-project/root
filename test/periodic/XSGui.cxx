@@ -23,7 +23,7 @@
 #include "XSElementDlg.h"
 #include "XSReactionDlg.h"
 
-//ClassImp(XSGui)
+//ClassImp(XSGui);
 
 const char *filetypes[] = { "All files", "*",
    "Data file", "*.dat",

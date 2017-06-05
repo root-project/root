@@ -28,7 +28,7 @@
 #include "TCanvas.h"
 #include "TMarker.h"
 
-ClassImp(TParallelCoordVar)
+ClassImp(TParallelCoordVar);
 
 /** \class TParallelCoordVar
 

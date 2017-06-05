@@ -29,7 +29,7 @@
 #include "TObjArray.h"
 #include "TClass.h"
 
-ClassImp(TSVG)
+ClassImp(TSVG);
 
 /** \class TSVG
 \ingroup PS

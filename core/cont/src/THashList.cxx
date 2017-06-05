@@ -23,7 +23,7 @@ can override Hash() as it sees fit.
 #include "THashTable.h"
 
 
-ClassImp(THashList)
+ClassImp(THashList);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a THashList object. Capacity is the initial hashtable capacity

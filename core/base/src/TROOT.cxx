@@ -588,7 +588,7 @@ TROOT *ROOT::Internal::gROOTLocal = ROOT::GetROOT();
 Int_t gDebug;
 
 
-ClassImp(TROOT)
+ClassImp(TROOT);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default ctor.

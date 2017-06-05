@@ -28,7 +28,7 @@ RooJeffreysPrior
 
 using namespace std;
 
-ClassImp(RooJeffreysPrior)
+ClassImp(RooJeffreysPrior);
 
 using namespace RooFit;
 

@@ -28,7 +28,7 @@ A container class for query results.
 #include "TSystem.h"
 #include "TTimeStamp.h"
 
-ClassImp(TQueryResult)
+ClassImp(TQueryResult);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Main constructor.

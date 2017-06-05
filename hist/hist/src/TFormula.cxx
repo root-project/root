@@ -43,7 +43,7 @@ using namespace std;
 #endif
 #include "v5/TFormula.h"
 
-ClassImp(TFormula)
+ClassImp(TFormula);
 
 /** \class TFormula  TFormula.h "inc/TFormula.h"
     \ingroup Hist

@@ -11,7 +11,7 @@
 #include "TLDAPAttribute.h"
 
 
-ClassImp(TLDAPResult)
+ClassImp(TLDAPResult);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TLDAPResult object is just a wrapper of the LDAPMessage structure.

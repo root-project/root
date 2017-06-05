@@ -39,7 +39,7 @@ each object.
 
 using namespace std;
 
-ClassImp(RooTrace)
+ClassImp(RooTrace);
 ;
 
 RooTrace* RooTrace::_instance=0 ;

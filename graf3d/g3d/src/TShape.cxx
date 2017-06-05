@@ -24,7 +24,7 @@
 
 #include <assert.h>
 
-ClassImp(TShape)
+ClassImp(TShape);
 
 /** \class TShape
 \ingroup g3d

@@ -32,7 +32,7 @@ unloaded data member.
 
 const unsigned int idsSize=19;
 
-ClassImp(TListOfDataMembers)
+ClassImp(TListOfDataMembers);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

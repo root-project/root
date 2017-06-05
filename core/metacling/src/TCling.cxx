@@ -1144,7 +1144,7 @@ TCling::TCling(const char *name, const char *title)
                             + gClassDefInterpMacro + "\n"
                             + gInterpreterClassDef + "\n"
                             + "#undef ClassImp\n"
-                            "#define ClassImp(X)\n"
+                            "#define ClassImp(X);\n"
                             "#include <string>\n"
                             "using namespace std;");
    }

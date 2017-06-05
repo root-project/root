@@ -22,7 +22,7 @@
 #include "TGLabel.h"
 #include "TGTextEntry.h"
 
-ClassImp(TGInputDialog)
+ClassImp(TGInputDialog);
 
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -72,7 +72,7 @@ then all keys with names = "uv*" in a second pass, etc.
 #include "TRegexp.h"
 #include "TSystem.h"
 
-ClassImp(TFileDrawMap)
+ClassImp(TFileDrawMap);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default TreeFileMap constructor.

@@ -114,7 +114,7 @@ static const char *gFontList2[] = {
 // in the system.
 //_____________________________________________________________________________
 
-ClassImp(TGFontDialog)
+ClassImp(TGFontDialog);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create font dialog. When closed via OK button fontProp is set to

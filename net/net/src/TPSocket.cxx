@@ -32,7 +32,7 @@
 #include "TError.h"
 #include "TVirtualMutex.h"
 
-ClassImp(TPSocket)
+ClassImp(TPSocket);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a parallel socket. Connect to the named service at address addr.

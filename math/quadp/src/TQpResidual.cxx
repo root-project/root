@@ -57,7 +57,7 @@
 #include "TQpResidual.h"
 #include "TMatrixD.h"
 
-ClassImp(TQpResidual)
+ClassImp(TQpResidual);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor

@@ -49,7 +49,7 @@ a optionally series of alternate named ranges.
 
 using namespace std;
 
-ClassImp(RooRealVar)
+ClassImp(RooRealVar);
 ;
 
 Bool_t RooRealVar::_printScientific(kFALSE) ;

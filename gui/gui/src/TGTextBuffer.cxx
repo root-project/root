@@ -34,4 +34,4 @@
 #include "TGTextBuffer.h"
 
 
-ClassImp(TGTextBuffer)
+ClassImp(TGTextBuffer);

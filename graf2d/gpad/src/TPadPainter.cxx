@@ -58,7 +58,7 @@ void DrawPolyMarkerAux(TVirtualPad *pad, unsigned nPoints, const T *xs, const T 
 
 }
 
-ClassImp(TPadPainter)
+ClassImp(TPadPainter);
 
 /** \class TPadPainter
 \ingroup gpad

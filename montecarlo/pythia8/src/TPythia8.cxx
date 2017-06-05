@@ -81,7 +81,7 @@ Author: Andreas Morsch   27/10/2007
 #include "TDatabasePDG.h"
 #include "TLorentzVector.h"
 
-ClassImp(TPythia8)
+ClassImp(TPythia8);
 
 TPythia8*  TPythia8::fgInstance = 0;
 

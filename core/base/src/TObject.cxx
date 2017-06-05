@@ -52,7 +52,7 @@ class hierarchies (watch out for overlaps).
 Long_t TObject::fgDtorOnly = 0;
 Bool_t TObject::fgObjectStat = kTRUE;
 
-ClassImp(TObject)
+ClassImp(TObject);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy this to obj.

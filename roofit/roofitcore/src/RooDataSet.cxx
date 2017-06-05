@@ -60,7 +60,7 @@ char* operator+( streampos&, char* );
 
 using namespace std;
 
-ClassImp(RooDataSet)
+ClassImp(RooDataSet);
 ;
 
 

@@ -29,7 +29,7 @@ Bool_t  TVirtualStreamerInfo::fgCanDelete        = kTRUE;
 Bool_t  TVirtualStreamerInfo::fgOptimize         = kTRUE;
 Bool_t  TVirtualStreamerInfo::fgStreamMemberWise = kTRUE;
 
-ClassImp(TVirtualStreamerInfo)
+ClassImp(TVirtualStreamerInfo);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.

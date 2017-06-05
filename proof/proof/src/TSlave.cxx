@@ -35,7 +35,7 @@ Objects of this class can only be created via TProof member functions.
 #include "TSocket.h"
 #include "TObjString.h"
 
-ClassImp(TSlave)
+ClassImp(TSlave);
 
 // Hook for the TXSlave constructor
 TSlave_t TSlave::fgTXSlaveHook = 0;

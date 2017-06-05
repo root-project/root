@@ -76,17 +76,17 @@ using namespace std ;
 #include <string.h>
 #include <assert.h>
 
-ClassImp(RooWorkspace)
+ClassImp(RooWorkspace);
 ;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ClassImp(RooWorkspace::CodeRepo)
+ClassImp(RooWorkspace::CodeRepo);
 ;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ClassImp(RooWorkspace::WSDir)
+ClassImp(RooWorkspace::WSDir);
 ;
 
 list<string> RooWorkspace::_classDeclDirList ;

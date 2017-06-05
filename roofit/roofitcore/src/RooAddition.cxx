@@ -45,7 +45,7 @@ using namespace std ;
 #include "RooChi2Var.h"
 #include "RooMsgService.h"
 
-ClassImp(RooAddition)
+ClassImp(RooAddition);
 ;
 
 

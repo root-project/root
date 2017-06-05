@@ -56,7 +56,7 @@ conditional MLE (eg. profiled values).
 
 */
 
-ClassImp(RooStats::FeldmanCousins) ;
+ClassImp(RooStats::FeldmanCousins); ;
 
 using namespace RooFit;
 using namespace RooStats;

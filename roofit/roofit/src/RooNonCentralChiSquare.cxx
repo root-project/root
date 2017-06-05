@@ -55,7 +55,7 @@ http://wesnoth.repositoryhosting.com/trac/wesnoth_wesnoth/browser/trunk/include/
 
 using namespace std;
 
-ClassImp(RooNonCentralChiSquare)
+ClassImp(RooNonCentralChiSquare);
 
 ////////////////////////////////////////////////////////////////////////////////
 

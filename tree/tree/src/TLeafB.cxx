@@ -21,7 +21,7 @@ A TLeaf for an 8 bit Integer data type.
 #include "TClonesArray.h"
 #include "Riostream.h"
 
-ClassImp(TLeafB)
+ClassImp(TLeafB);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.

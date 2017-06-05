@@ -26,7 +26,7 @@
 #include "TVirtualHistPainter.h"
 
 
-ClassImp(TH2)
+ClassImp(TH2);
 
 /** \addtogroup Hist
 @{
@@ -2689,7 +2689,7 @@ void TH2::Streamer(TBuffer &R__b)
 //  TH2C a 2-D histogram with one byte per cell (char)
 //______________________________________________________________________________
 
-ClassImp(TH2C)
+ClassImp(TH2C);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2943,7 +2943,7 @@ TH2C operator/(TH2C &h1, TH2C &h2)
 //  TH2S a 2-D histogram with two bytes per cell (short integer)
 //______________________________________________________________________________
 
-ClassImp(TH2S)
+ClassImp(TH2S);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3197,7 +3197,7 @@ TH2S operator/(TH2S &h1, TH2S &h2)
 //  TH2I a 2-D histogram with four bytes per cell (32 bits integer)
 //______________________________________________________________________________
 
-ClassImp(TH2I)
+ClassImp(TH2I);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3416,7 +3416,7 @@ TH2I operator/(TH2I &h1, TH2I &h2)
 //  TH2F a 2-D histogram with four bytes per cell (float)
 //______________________________________________________________________________
 
-ClassImp(TH2F)
+ClassImp(TH2F);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3680,7 +3680,7 @@ TH2F operator/(TH2F &h1, TH2F &h2)
 //  TH2D a 2-D histogram with eight bytes per cell (double)
 //______________________________________________________________________________
 
-ClassImp(TH2D)
+ClassImp(TH2D);
 
 
 ////////////////////////////////////////////////////////////////////////////////

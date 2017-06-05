@@ -151,7 +151,7 @@ This is especially useful for example with TVirtualMC or similar.
 #include "Riostream.h"
 
 
-ClassImp(TGenerator)
+ClassImp(TGenerator);
 
 ////////////////////////////////////////////////////////////////////////////////
 ///  Event generator default constructor

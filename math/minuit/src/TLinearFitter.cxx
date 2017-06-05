@@ -23,7 +23,7 @@
 #include "TClass.h"
 #include "TROOT.h"
 
-ClassImp(TLinearFitter)
+ClassImp(TLinearFitter);
 
 
 std::map<TString,TFormula*> TLinearFitter::fgFormulaMap;

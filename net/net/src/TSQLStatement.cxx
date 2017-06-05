@@ -224,7 +224,7 @@
 
 #include "TSQLStatement.h"
 
-ClassImp(TSQLStatement)
+ClassImp(TSQLStatement);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// returns error code of last operation

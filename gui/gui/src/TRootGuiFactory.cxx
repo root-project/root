@@ -29,7 +29,7 @@
 #include "TPluginManager.h"
 #include "TEnv.h"
 
-ClassImp(TRootGuiFactory)
+ClassImp(TRootGuiFactory);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TRootGuiFactory ctor.

@@ -65,7 +65,7 @@ points for its contents and provides an iterator over its elements
 
 using namespace std;
 
-ClassImp(RooAbsData)
+ClassImp(RooAbsData);
 ;
 
 static std::map<RooAbsData*,int> _dcc ;

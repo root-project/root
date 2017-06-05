@@ -53,7 +53,7 @@ namespace {
 // Double_t        TVirtualFitter::fgErrorDef  = 1;
 //TString         TVirtualFitter::fgDefault   = "";
 
-ClassImp(TVirtualFitter)
+ClassImp(TVirtualFitter);
 
 #ifdef R__COMPLETE_MEM_TERMINATION
 namespace {

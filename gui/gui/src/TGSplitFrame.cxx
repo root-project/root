@@ -24,8 +24,8 @@
 #include "TList.h"
 #include "Riostream.h"
 
-ClassImp(TGSplitTool)
-ClassImp(TGSplitFrame)
+ClassImp(TGSplitTool);
+ClassImp(TGSplitFrame);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a split frame tool tip. P is the tool tips parent window (normally

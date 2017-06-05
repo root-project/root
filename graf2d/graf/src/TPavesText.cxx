@@ -16,7 +16,7 @@
 #include "TBufferFile.h"
 #include "TError.h"
 
-ClassImp(TPavesText)
+ClassImp(TPavesText);
 
 
 /** \class TPavesText

@@ -62,9 +62,9 @@
 #include "TSystem.h"
 
 
-ClassImp(TGDoubleSlider)
-ClassImp(TGDoubleVSlider)
-ClassImp(TGDoubleHSlider)
+ClassImp(TGDoubleSlider);
+ClassImp(TGDoubleVSlider);
+ClassImp(TGDoubleHSlider);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Slider constructor.

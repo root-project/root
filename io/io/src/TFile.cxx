@@ -153,7 +153,7 @@ ROOT::TRWSpinLock TFile::fgRwLock;
 
 const Int_t kBEGIN = 100;
 
-ClassImp(TFile)
+ClassImp(TFile);
 
 //*-*x17 macros/layout_file
 // Needed to add the "fake" global gFile to the list of globals.

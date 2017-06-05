@@ -37,7 +37,7 @@ of the owning class
 
 using namespace std;
 
-ClassImp(RooAbsProxy)
+ClassImp(RooAbsProxy);
 ;
 
 

@@ -57,7 +57,7 @@ the sub-file starts. The members can be accessed in any order.
 #include "TObjArray.h"
 
 
-ClassImp(TZIPFile)
+ClassImp(TZIPFile);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default ctor.
@@ -561,7 +561,7 @@ void TZIPFile::Print(Option_t *) const
 }
 
 
-ClassImp(TZIPMember)
+ClassImp(TZIPMember);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default ctor.

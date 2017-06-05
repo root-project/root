@@ -30,7 +30,7 @@ In this method :
 This class has been implemented by Victor Perevoztchikov <perev@bnl.gov>
 */
 
-ClassImp(TH1K)
+ClassImp(TH1K);
 
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -85,8 +85,8 @@ const TGGC   *TGMenuTitle::fgDefaultSelectedGC = 0;
 const TGFont *TGMenuTitle::fgDefaultFont = 0;
 
 
-ClassImp(TGMenuBar)
-ClassImp(TGMenuTitle)
+ClassImp(TGMenuBar);
+ClassImp(TGMenuTitle);
 ClassImpQ(TGPopupMenu)
 
 

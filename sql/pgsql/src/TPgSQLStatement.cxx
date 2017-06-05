@@ -24,7 +24,7 @@
 
 #include <stdlib.h>
 
-ClassImp(TPgSQLStatement)
+ClassImp(TPgSQLStatement);
 
 #ifdef PG_VERSION_NUM
 

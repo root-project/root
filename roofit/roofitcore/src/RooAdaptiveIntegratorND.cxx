@@ -44,7 +44,7 @@ numerical integration algorithm.
 
 using namespace std;
 
-ClassImp(RooAdaptiveIntegratorND)
+ClassImp(RooAdaptiveIntegratorND);
 ;
 
 // Register this class with RooNumIntConfig

@@ -20,7 +20,7 @@ Float_t TArrow::fgDefaultAngle      = 60;
 Float_t TArrow::fgDefaultArrowSize  = 0.05;
 TString TArrow::fgDefaultOption     = ">";
 
-ClassImp(TArrow)
+ClassImp(TArrow);
 
 /** \class TArrow
 \ingroup BasicGraphics

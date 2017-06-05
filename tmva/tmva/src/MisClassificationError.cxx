@@ -35,7 +35,7 @@ Implementation of the MisClassificationError as separation criterion
 
 #include "Rtypes.h"
 
-ClassImp(TMVA::MisClassificationError)
+ClassImp(TMVA::MisClassificationError);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Misclassification error   criterion: 1-max(p, 1-p)  (p: purity= s/(s+b))

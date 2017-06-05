@@ -29,7 +29,7 @@
 TTableDescriptor *TTableDescriptor::fgColDescriptors = 0;
 // TString TTableDescriptor::fgCommentsName = TTableDescriptor::SetCommentsSetName();
 TString TTableDescriptor::fgCommentsName = ".comments";
-TableClassImp(TTableDescriptor,tableDescriptor_st)
+TableClassImp(TTableDescriptor,tableDescriptor_st);
 
 ////////////////////////////////////////////////////////////////////////////////
 ///return column descriptor

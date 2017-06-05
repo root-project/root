@@ -1,4 +1,4 @@
 #include "NdbGeneralInfo.h"
 
-ClassImp(NdbGeneralInfo)
+ClassImp(NdbGeneralInfo);
 

@@ -15,7 +15,7 @@
 #include "TROOT.h"
 #include "TAxisModLab.h"
 
-ClassImp(TAxisModLab)
+ClassImp(TAxisModLab);
 
 /** \class TAxisModLab
 \ingroup BasicGraphics

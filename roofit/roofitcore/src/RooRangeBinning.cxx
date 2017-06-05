@@ -36,7 +36,7 @@ the RooRealVar::setRange() method
 
 using namespace std;
 
-ClassImp(RooRangeBinning) 
+ClassImp(RooRangeBinning); 
 ;
 
 

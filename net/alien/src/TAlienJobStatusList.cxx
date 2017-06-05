@@ -21,7 +21,7 @@
 #include "TAlienJobStatus.h"
 #include "TROOT.h"
 
-ClassImp(TAlienJobStatusList)
+ClassImp(TAlienJobStatusList);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Print information about jobs.

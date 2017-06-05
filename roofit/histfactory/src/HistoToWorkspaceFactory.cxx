@@ -85,7 +85,7 @@ using namespace RooStats ;
 using namespace std ;
 //using namespace RooMsgService ;
 
-ClassImp(RooStats::HistFactory::HistoToWorkspaceFactory)
+ClassImp(RooStats::HistFactory::HistoToWorkspaceFactory);
 
 namespace RooStats{
 namespace HistFactory{

@@ -38,7 +38,7 @@ only from memory.
 #define TRACE(x);
 #endif
 
-ClassImp(TMemFile)
+ClassImp(TMemFile);
 
 Long64_t TMemFile::fgDefaultBlockSize = 2*1024*1024;
 

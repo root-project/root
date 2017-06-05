@@ -16,7 +16,7 @@
 #include "TStreamerElement.h"
 #include "TClassEdit.h"
 
-ClassImp(TSchemaRule)
+ClassImp(TSchemaRule);
 
 using namespace ROOT;
 using namespace ROOT::Detail;

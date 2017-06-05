@@ -35,7 +35,7 @@ packetizer is used.
 #include "TProof.h"
 #include "TProofDebug.h"
 
-ClassImp(TPacketizerMulti)
+ClassImp(TPacketizerMulti);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor

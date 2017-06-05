@@ -36,7 +36,7 @@ standalone usage.
 #include "TROOT.h"
 #include "TSystem.h"
 
-ClassImp(TPackMgr)
+ClassImp(TPackMgr);
 
 
 static void DefaultLogger(const char *msg) { Printf("%s", msg); }

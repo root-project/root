@@ -14,7 +14,7 @@
 #include "TBuffer.h"
 #include "TH1.h"
 
-ClassImp(ROOT::v5::TF1Data)
+ClassImp(ROOT::v5::TF1Data);
 
 namespace ROOT {
 

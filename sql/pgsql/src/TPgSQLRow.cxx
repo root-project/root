@@ -12,7 +12,7 @@
 #include "TPgSQLRow.h"
 
 
-ClassImp(TPgSQLRow)
+ClassImp(TPgSQLRow);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Single row of query result.

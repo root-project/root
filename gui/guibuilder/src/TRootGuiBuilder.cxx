@@ -223,7 +223,7 @@ static ToolBarData_t gToolBarData[] = {
 };
 
 
-ClassImp(TRootGuiBuilder)
+ClassImp(TRootGuiBuilder);
 
 
 TGGC *TRootGuiBuilder::fgBgnd = 0;

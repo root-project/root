@@ -213,7 +213,7 @@ internally. You are free to destroy this object, or recycle it for the next
 object if suitable.
 */
 
-ClassImp(TBuffer3D)
+ClassImp(TBuffer3D);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor.

@@ -53,7 +53,7 @@
 //                 TPoints3D pl1(150, xArray, yArray, zArray);
 //
 
-ClassImp(TPoints3D)
+ClassImp(TPoints3D);
 
 ////////////////////////////////////////////////////////////////////////////////
 ///*-*-*-*-*-*-*-*-*-*-*-*-*3-D PolyLine default constructor*-*-*-*-*-*-*-*-*-*-*

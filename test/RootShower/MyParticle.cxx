@@ -23,7 +23,7 @@
 // MyParticle class implementation
 //______________________________________________________________________________
 
-ClassImp(MyParticle)
+ClassImp(MyParticle);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// MyParticle constructor.

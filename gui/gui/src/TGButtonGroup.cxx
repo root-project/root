@@ -88,9 +88,9 @@
 #include "Riostream.h"
 
 
-ClassImp(TGButtonGroup)
-ClassImp(TGHButtonGroup)
-ClassImp(TGVButtonGroup)
+ClassImp(TGButtonGroup);
+ClassImp(TGHButtonGroup);
+ClassImp(TGVButtonGroup);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor. Layout 1 row or 1 column.

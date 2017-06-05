@@ -67,7 +67,7 @@ Contributions to this class have been written by Giovanni Petrucciani and Annapa
 
 #include "RooStats/ProofConfig.h"
 
-ClassImp(RooStats::HypoTestInverter)
+ClassImp(RooStats::HypoTestInverter);
 
 using namespace RooStats;
 using namespace std;

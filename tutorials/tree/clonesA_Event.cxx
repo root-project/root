@@ -2,11 +2,11 @@
 #include "TClonesArray.h"
 #include "clonesA_Event.h"
 
-ClassImp(TUsrHit)
-    ClassImp(TUsrHitBuffer)
-    ClassImp(TUsrSevtData1)
-    ClassImp(TUsrSevtData2)
-    ClassImp(TMrbSubevent_Caen)
+ClassImp(TUsrHit);
+    ClassImp(TUsrHitBuffer);
+    ClassImp(TUsrSevtData1);
+    ClassImp(TUsrSevtData2);
+    ClassImp(TMrbSubevent_Caen);
 
 ////////////////////////////////////////////////////////////////////////////////
 

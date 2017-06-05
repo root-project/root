@@ -17,8 +17,8 @@
 
 
 //- data ---------------------------------------------------------------------
-ClassImp(TPyMultiGenFunction)
-ClassImp(TPyMultiGradFunction)
+ClassImp(TPyMultiGenFunction);
+ClassImp(TPyMultiGradFunction);
 
 
 //- helper functions ---------------------------------------------------------

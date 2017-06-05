@@ -37,7 +37,7 @@
 #include "TFileInfo.h"
 #include <cstdlib>
 
-ClassImp(TAlienCollection)
+ClassImp(TAlienCollection);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create Alien event collection by reading collection from the specified XML file.

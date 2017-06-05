@@ -40,7 +40,7 @@ which should be much faster the reading in large files.
 #include "TSystem.h"
 #include "TROOT.h"
 
-ClassImp(TSelEvent)
+ClassImp(TSelEvent);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor

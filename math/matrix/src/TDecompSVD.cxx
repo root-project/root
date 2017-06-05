@@ -44,7 +44,7 @@
 #include "TMath.h"
 #include "TArrayD.h"
 
-ClassImp(TDecompSVD)
+ClassImp(TDecompSVD);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor for (nrows x ncols) matrix

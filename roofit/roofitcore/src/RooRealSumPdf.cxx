@@ -55,7 +55,7 @@ In the present version \f$coef_i\f$ may not depend on x, but this limitation may
 
 using namespace std;
 
-ClassImp(RooRealSumPdf)
+ClassImp(RooRealSumPdf);
 ;
 
 Bool_t RooRealSumPdf::_doFloorGlobal = kFALSE ; 

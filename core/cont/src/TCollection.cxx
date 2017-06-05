@@ -49,8 +49,8 @@ TObjectTable  *TCollection::fgGarbageCollection = 0;
 Bool_t         TCollection::fgEmptyingGarbage   = kFALSE;
 Int_t          TCollection::fgGarbageStack      = 0;
 
-ClassImp(TCollection)
-ClassImp(TIter)
+ClassImp(TCollection);
+ClassImp(TIter);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Add all objects from collection col to this collection.

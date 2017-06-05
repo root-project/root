@@ -39,7 +39,7 @@ Rearrangement of input variables
 #include <iomanip>
 #include <stdexcept>
 
-ClassImp(TMVA::VariableRearrangeTransform)
+ClassImp(TMVA::VariableRearrangeTransform);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor

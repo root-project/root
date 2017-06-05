@@ -34,7 +34,7 @@
 #include <TVirtualMutex.h>
 #include <stdlib.h>
 
-ClassImp(TStyleDialog)
+ClassImp(TStyleDialog);
 
 enum EStyleDialogWid {
    kName,

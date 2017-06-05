@@ -29,7 +29,7 @@
 #include "TGLabel.h"
 #include "TGeoTabManager.h"
 
-ClassImp(TGeoNodeEditor)
+ClassImp(TGeoNodeEditor);
 
 enum ETGeoNodeWid {
    kNODE_NAME, kNODE_ID, kNODE_VOLSEL, kNODE_MVOLSEL,

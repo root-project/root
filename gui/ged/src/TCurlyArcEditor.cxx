@@ -29,7 +29,7 @@
 #include "TCurlyArc.h"
 #include <iostream>
 
-ClassImp(TCurlyArcEditor)
+ClassImp(TCurlyArcEditor);
 
 enum ECurlyArcWid {
    kCRLA_RAD,

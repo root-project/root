@@ -23,7 +23,7 @@ Implementation of the PROOF session log handler.
 #include "TObjString.h"
 #include "TUrl.h"
 
-ClassImp(TProofLog)
+ClassImp(TProofLog);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

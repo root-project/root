@@ -1,4 +1,4 @@
 #include "NdbPhotonAngleDist.h"
 
-ClassImp(NdbPhotonAngleDist)
+ClassImp(NdbPhotonAngleDist);
 

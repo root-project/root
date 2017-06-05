@@ -40,7 +40,7 @@ New contributions to this class have been written by Matthias Wolf (advanced Aut
 #include "RooRealVar.h"
 #include "TMath.h"
 
-ClassImp(RooStats::HypoTestInverterOriginal)
+ClassImp(RooStats::HypoTestInverterOriginal);
 
 using namespace RooStats;
 using namespace std;

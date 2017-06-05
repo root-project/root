@@ -39,7 +39,7 @@ The parameters a and b are automatically computed from:
 #include "TBuffer3DTypes.h"
 #include "TMath.h"
 
-ClassImp(TGeoParaboloid)
+ClassImp(TGeoParaboloid);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Dummy constructor

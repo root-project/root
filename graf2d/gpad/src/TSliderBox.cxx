@@ -16,7 +16,7 @@
 
 #include <string.h>
 
-ClassImp(TSliderBox)
+ClassImp(TSliderBox);
 
 
 /** \class TSliderBox

@@ -46,7 +46,7 @@ End_Macro
 #include "TBuffer3DTypes.h"
 #include "TMath.h"
 
-ClassImp(TGeoEltu)
+ClassImp(TGeoEltu);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Dummy constructor

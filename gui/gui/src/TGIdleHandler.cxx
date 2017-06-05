@@ -22,7 +22,7 @@
 #include "TGWindow.h"
 
 
-ClassImp(TGIdleHandler)
+ClassImp(TGIdleHandler);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create idle handler.

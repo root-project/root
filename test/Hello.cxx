@@ -27,7 +27,7 @@
 #include "Hello.h"
 #include "TList.h"
 
-ClassImp(Hello)
+ClassImp(Hello);
 
 
 TChar::TChar(char ch, Coord_t x, Coord_t y) : TText(x, y, "")

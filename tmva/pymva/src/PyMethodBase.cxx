@@ -30,7 +30,7 @@
 
 using namespace TMVA;
 
-ClassImp(PyMethodBase)
+ClassImp(PyMethodBase);
 
 // NOTE: Introduce here nothing that breaks if multiple instances
 // of the same method share these objects, e.g., the local namespace.

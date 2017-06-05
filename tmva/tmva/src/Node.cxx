@@ -44,7 +44,7 @@ including the respective cut value.
 #include "TMVA/Node.h"
 #include "TMVA/Tools.h"
 
-ClassImp(TMVA::Node)
+ClassImp(TMVA::Node);
 
 Int_t TMVA::Node::fgCount = 0;
 

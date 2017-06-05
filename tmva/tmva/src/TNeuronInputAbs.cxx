@@ -32,4 +32,4 @@ values of the weighted inputs
 
 #include "Rtypes.h"
 
-ClassImp(TMVA::TNeuronInputAbs)
+ClassImp(TMVA::TNeuronInputAbs);

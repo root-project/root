@@ -82,7 +82,7 @@ The TMVA::Interval Class.
 #include "TMVA/MsgLogger.h"
 #include "TMVA/Types.h"
 
-ClassImp(TMVA::LogInterval)
+ClassImp(TMVA::LogInterval);
 
 ////////////////////////////////////////////////////////////////////////////////
 

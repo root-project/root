@@ -24,7 +24,7 @@ Class to find axis limits and synchronize them between workers
 #include "TProofDebug.h"
 #include "TError.h"
 
-ClassImp(TProofLimitsFinder)
+ClassImp(TProofLimitsFinder);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get bining information. Send current min and max and receive common

@@ -31,6 +31,6 @@ factor to another RooAbsFunc.
 
 using namespace std;
 
-ClassImp(RooScaledFunc)
+ClassImp(RooScaledFunc);
 ;
 

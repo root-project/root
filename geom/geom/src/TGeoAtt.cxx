@@ -23,7 +23,7 @@ activity. By default the attributes are set to visible/active
 #include "TGeoManager.h"
 #include "Rtypes.h"
 
-ClassImp(TGeoAtt)
+ClassImp(TGeoAtt);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor

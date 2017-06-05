@@ -39,7 +39,7 @@ const Double_t kDefConfLevel = 0.682689492137; // 1 sigma
 const TEfficiency::EStatOption kDefStatOpt = TEfficiency::kFCP;
 const Double_t kDefWeight = 1;
 
-ClassImp(TEfficiency)
+ClassImp(TEfficiency);
 
 ////////////////////////////////////////////////////////////////////////////////
 /** \class TEfficiency

@@ -48,7 +48,7 @@ derivator class.
 using namespace std ;
 
 
-ClassImp(RooAbsMoment)
+ClassImp(RooAbsMoment);
 ;
 
 

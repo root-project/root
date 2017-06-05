@@ -74,7 +74,7 @@ Interval definition, continuous and discrete
 #include "TMVA/MsgLogger.h"
 #include "TMVA/Types.h"
 
-ClassImp(TMVA::Interval)
+ClassImp(TMVA::Interval);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// defines minimum and maximum of an interval

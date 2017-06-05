@@ -3006,7 +3006,7 @@ static TString gStringKurtosisX;
 static TString gStringKurtosisY;
 static TString gStringKurtosisZ;
 
-ClassImp(THistPainter)
+ClassImp(THistPainter);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.

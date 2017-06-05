@@ -36,7 +36,7 @@ See TSlave and TXSocket for details.
 
 #include <mutex>
 
-ClassImp(TXSlave)
+ClassImp(TXSlave);
 
 //______________________________________________________________________________
 

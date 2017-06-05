@@ -37,8 +37,8 @@
 #include "TString.h"
 #include "RooAbsCache.h"
 
-ClassImp(RooMappedCategory)
-ClassImp(RooMappedCategory::Entry)
+ClassImp(RooMappedCategory);
+ClassImp(RooMappedCategory::Entry);
 
 class RooMappedCategoryCache : public RooAbsCache {
     public:

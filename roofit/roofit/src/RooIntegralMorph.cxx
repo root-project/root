@@ -91,7 +91,7 @@ in calculation speed.
 
 using namespace std;
 
-ClassImp(RooIntegralMorph)
+ClassImp(RooIntegralMorph);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor with observables x, pdf shapes pdf1 and pdf2 which represent

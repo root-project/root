@@ -58,7 +58,7 @@ a function y(x) is actually evaluated to approximate a smooth curve, use:
 
 using namespace std ;
 
-ClassImp(RooCurve)
+ClassImp(RooCurve);
 
 
 ////////////////////////////////////////////////////////////////////////////////

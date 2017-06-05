@@ -35,8 +35,8 @@
 #include "ctype.h"
 
 
-ClassImp(TGString)
-ClassImp(TGHotString)
+ClassImp(TGString);
+ClassImp(TGHotString);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// cconstructor

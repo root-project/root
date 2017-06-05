@@ -51,7 +51,7 @@ End_Macro
 const UInt_t kIsBigFile = BIT(16);
 const Int_t  kMaxLen = 2048;
 
-ClassImp(TDirectoryFile)
+ClassImp(TDirectoryFile);
 
 
 ////////////////////////////////////////////////////////////////////////////////

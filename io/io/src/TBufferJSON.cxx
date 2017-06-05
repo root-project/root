@@ -74,7 +74,7 @@
 #define FULong64   "%llu"
 #endif
 
-ClassImp(TBufferJSON)
+ClassImp(TBufferJSON);
 
 
 const char *TBufferJSON::fgFloatFmt = "%e";

@@ -32,7 +32,7 @@ method.
 #include "TGeoPhysicalNode.h"
 #include "TGeoNavigator.h"
 
-ClassImp(TGeoParallelWorld)
+ClassImp(TGeoParallelWorld);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor

@@ -47,7 +47,7 @@ static Double_t gTolerance = TGeoShape::Tolerance();
 const char *kGeoOutsidePath = " ";
 const Int_t kN3 = 3*sizeof(Double_t);
 
-ClassImp(TGeoNavigator)
+ClassImp(TGeoNavigator);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor
@@ -2654,7 +2654,7 @@ void TGeoNavigator::ResetAll()
    }
 }
 
-ClassImp(TGeoNavigatorArray)
+ClassImp(TGeoNavigatorArray);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Add a new navigator to the array.

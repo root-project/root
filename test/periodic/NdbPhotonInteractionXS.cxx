@@ -1,4 +1,4 @@
 #include "NdbPhotonInteractionXS.h"
 
-ClassImp(NdbPhotonInteractionXS)
+ClassImp(NdbPhotonInteractionXS);
 

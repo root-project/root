@@ -4,7 +4,7 @@
 
 #include "NdbMTReacDesc.h"
 
-ClassImp(NdbMTReacDesc)
+ClassImp(NdbMTReacDesc);
 
 /* ================ NdbMTReacDesc ================== */
 NdbMTReacDesc::NdbMTReacDesc(const char *filename)

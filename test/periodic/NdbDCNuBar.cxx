@@ -1,3 +1,3 @@
 #include "NdbDCNuBar.h"
 
-ClassImp(NdbDCNuBar)
+ClassImp(NdbDCNuBar);

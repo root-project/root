@@ -93,7 +93,7 @@ The following method are available from the TFormLeafInfo interface:
  -  Update() : react to the possible loading of a shared library.
 */
 
-ClassImp(TTreeFormula)
+ClassImp(TTreeFormula);
 
 ////////////////////////////////////////////////////////////////////////////////
 

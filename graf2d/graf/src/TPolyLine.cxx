@@ -16,7 +16,7 @@
 #include "TPolyLine.h"
 #include "TClass.h"
 
-ClassImp(TPolyLine)
+ClassImp(TPolyLine);
 
 /** \class TPolyLine
 \ingroup BasicGraphics

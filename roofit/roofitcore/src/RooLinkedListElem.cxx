@@ -31,7 +31,7 @@ RooLinkedListElem is an link element for the RooLinkedList class
 
 using namespace std;
 
-ClassImp(RooLinkedListElem) 
+ClassImp(RooLinkedListElem); 
 ;
 
 

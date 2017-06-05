@@ -35,7 +35,7 @@ END_HTML
 
 using namespace std;
 
-ClassImp(RooStats::HistFactory::LinInterpVar)
+ClassImp(RooStats::HistFactory::LinInterpVar);
 
 using namespace RooStats;
 using namespace HistFactory;

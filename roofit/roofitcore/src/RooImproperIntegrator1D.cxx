@@ -44,7 +44,7 @@ and the outer two pieces, if required are calculated using a 1/x transform
 
 using namespace std;
 
-ClassImp(RooImproperIntegrator1D)
+ClassImp(RooImproperIntegrator1D);
 ;
 
 // Register this class with RooNumIntConfig

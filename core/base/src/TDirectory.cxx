@@ -36,7 +36,7 @@ const Int_t  kMaxLen = 2048;
 Describe directory structure in memory.
 */
 
-ClassImp(TDirectory)
+ClassImp(TDirectory);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Directory default constructor.

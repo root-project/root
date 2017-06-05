@@ -58,7 +58,7 @@
 
 using namespace std;
 
-ClassImp(RooFitResult) 
+ClassImp(RooFitResult); 
 ;
 
 
