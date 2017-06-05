@@ -133,6 +133,7 @@ void* RooDataSet::operator new (size_t bytes)
      }
 
      void *mem = malloc(POOLSIZE);
+     memset(mem, TStorage::kObjectAllocMemValue, POOLSIZE);
 
      _poolBegin = (char *)mem;
      // Reserve space for pool counter at head of pool
