@@ -603,7 +603,7 @@ void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
   }
   coutI(Fitting) << "RooAbsTestStatistic::initSimMode: created " << n << " slave calculators." << endl;
   
-  dsetList.Delete(); // delete the content.
+  dsetList->Delete(); // delete the content.
   delete dsetList;
   delete catIter;
 }
