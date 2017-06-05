@@ -282,7 +282,7 @@ Int_t stressRooStats(const char* refFile, Bool_t writeRef, Int_t verbose, Bool_t
    delete gBenchmark ;
    gBenchmark = 0 ;
 
-   memDir->GetList()->Clear("nodelete"); // Forget RooFit objects (return to the behavior when ROOT though they were all on the stack)
+   memDir->GetList()->Clear("nodelete"); // Forget RooFit objects (return to the behavior when ROOT thought they were all on the stack)
 
    return nFailed;
 }
