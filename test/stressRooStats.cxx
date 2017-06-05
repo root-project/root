@@ -70,6 +70,7 @@ Int_t stressRooStats(const char* refFile, Bool_t writeRef, Int_t verbose, Bool_t
    const Int_t lineWidth = 120;
 
    // Save memory directory location
+   auto memDir = gDirectory;
    RooUnitTest::setMemDir(gDirectory) ;
 
    if (doTreeStore) {
@@ -280,6 +281,8 @@ Int_t stressRooStats(const char* refFile, Bool_t writeRef, Int_t verbose, Bool_t
 
    delete gBenchmark ;
    gBenchmark = 0 ;
+
+   memDir->GetList()->Clear("nodelete"); // Forget RooFit objects (return to the behavior when ROOT though they were all on the stack)
 
    return nFailed;
 }
