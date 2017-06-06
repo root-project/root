@@ -88,7 +88,7 @@ TYPED_TEST_P(GenVectorTest, TestGenVectors)
 
 #if defined(R__LINUX) && !defined(R__B64)
    // problem of precision on linux 32
-   if (Dim == 4) scale = 1000000000;
+   if (this->fDim == 4) scale = 1000000000;
 #endif
    // for problem with PtEtaPhiE
    if (this->fDim == 4 && this->V2Name() == "PtEtaPhiEVector") scale = 0.01 / (std::numeric_limits<double>::epsilon());
