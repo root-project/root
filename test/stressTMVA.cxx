@@ -3036,14 +3036,9 @@ void addClassificationTests( UnitTestSuite& TMVA_test, bool full=true)
       "Regularization=None,TestRepetitions=5, Multithreading=True"
       "|LearningRate=0.001,Momentum=0.0,ConvergenceSteps=20,BatchSize=256,"
       "Regularization=None,TestRepetitions=5, Multithreading=True";
-   TString configStandard = "Architecture=STANDARD:" + config;
    TString configCpu      = "Architecture=CPU:" + config;
    TString configGpu      = "Architecture=GPU:" + config;
 
-
-    TMVA_test.addTest(new MethodUnitTestWithROCLimits(
-                          TMVA::Types::kDNN, "DNN Standard",
-                          configStandard, 0.85, 0.98));
 #ifdef DNNCPU
    TMVA_test.addTest(new MethodUnitTestWithROCLimits(
                          TMVA::Types::kDNN, "DNN CPU", configCpu, 0.85, 0.98)
