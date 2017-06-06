@@ -27,24 +27,9 @@ ClassImp(TGeoStateInfo);
 /// Constructor
 
 TGeoStateInfo::TGeoStateInfo(Int_t maxdaughters)
-              :fNode(0),
-               fAsmCurrent(0),
-               fAsmNext(0),
-               fDivCurrent(0),
-               fDivNext(0),
-               fDivTrans(),
-               fDivRot(),
-               fDivCombi(),
-               fVoxNcandidates(0),
-               fVoxCurrent(0),
-               fVoxCheckList(0),
-               fVoxBits1(0),
-               fBoolSelected(0),
-               fXtruSeg(0),
-               fXtruIz(0),
-               fXtruXc(0),
-               fXtruYc(0),
-               fXtruPoly(0)
+   : fNode(nullptr), fAsmCurrent(0), fAsmNext(0), fDivCurrent(0), fDivNext(0), fDivTrans(), fDivRot(), fDivCombi(),
+     fVoxNcandidates(0), fVoxCurrent(0), fVoxCheckList(nullptr), fVoxBits1(nullptr), fBoolSelected(0), fXtruSeg(0),
+     fXtruIz(0), fXtruXc(nullptr), fXtruYc(nullptr), fXtruPoly(nullptr)
 {
    Int_t maxDaughters = (maxdaughters>0) ? maxdaughters : TGeoManager::GetMaxDaughters();
    Int_t maxXtruVert  = TGeoManager::GetMaxXtruVert();
@@ -73,24 +58,11 @@ TGeoStateInfo::~TGeoStateInfo()
 /// Copy constructor.
 
 TGeoStateInfo::TGeoStateInfo(const TGeoStateInfo &other)
-              :fNode(other.fNode),
-               fAsmCurrent(other.fAsmCurrent),
-               fAsmNext(other.fAsmNext),
-               fDivCurrent(other.fDivCurrent),
-               fDivNext(other.fDivNext),
-               fDivTrans(other.fDivTrans),
-               fDivRot(other.fDivRot),
-               fDivCombi(other.fDivCombi),
-               fVoxNcandidates(other.fVoxNcandidates),
-               fVoxCurrent(other.fVoxCurrent),
-               fVoxCheckList(0),
-               fVoxBits1(0),
-               fBoolSelected(other.fBoolSelected),
-               fXtruSeg(other.fXtruSeg),
-               fXtruIz(other.fXtruIz),
-               fXtruXc(0),
-               fXtruYc(0),
-               fXtruPoly(other.fXtruPoly)
+   : fNode(other.fNode), fAsmCurrent(other.fAsmCurrent), fAsmNext(other.fAsmNext), fDivCurrent(other.fDivCurrent),
+     fDivNext(other.fDivNext), fDivTrans(other.fDivTrans), fDivRot(other.fDivRot), fDivCombi(other.fDivCombi),
+     fVoxNcandidates(other.fVoxNcandidates), fVoxCurrent(other.fVoxCurrent), fVoxCheckList(nullptr), fVoxBits1(nullptr),
+     fBoolSelected(other.fBoolSelected), fXtruSeg(other.fXtruSeg), fXtruIz(other.fXtruIz), fXtruXc(nullptr),
+     fXtruYc(nullptr), fXtruPoly(other.fXtruPoly)
 {
    Int_t maxDaughters = TGeoManager::GetMaxDaughters();
    Int_t maxXtruVert  = TGeoManager::GetMaxXtruVert();

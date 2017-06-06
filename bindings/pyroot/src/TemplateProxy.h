@@ -62,9 +62,9 @@ namespace PyROOT {
    inline TemplateProxy* TemplateProxy_New( const std::string& name, PyObject* pyclass )
    {
    // Create and initialize a new template method proxy for the class.
-      TemplateProxy* pytmpl = (TemplateProxy*)TemplateProxy_Type.tp_new( &TemplateProxy_Type, 0, 0 );
-      pytmpl->Set( name, pyclass );
-      return pytmpl;
+   TemplateProxy *pytmpl = (TemplateProxy *)TemplateProxy_Type.tp_new(&TemplateProxy_Type, nullptr, nullptr);
+   pytmpl->Set(name, pyclass);
+   return pytmpl;
    }
 
 } // namespace PyROOT

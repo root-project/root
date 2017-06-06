@@ -20,7 +20,7 @@ namespace Quartz {
 CGStateGuard::CGStateGuard(MacOSX::Util::CFScopeGuard<CGContextRef> &ctx)
                : fCtx(ctx.Get())
 {
-   assert(fCtx != 0 && "CGStateGuard, ctx parameter is null");
+   assert(fCtx != nullptr && "CGStateGuard, ctx parameter is null");
    CGContextSaveGState(fCtx);
 }
 
@@ -28,7 +28,7 @@ CGStateGuard::CGStateGuard(MacOSX::Util::CFScopeGuard<CGContextRef> &ctx)
 CGStateGuard::CGStateGuard(CGContextRef ctx)
                : fCtx(ctx)
 {
-   assert(ctx != 0 && "CGStateGuard, ctx parameter is null");
+   assert(ctx != nullptr && "CGStateGuard, ctx parameter is null");
    CGContextSaveGState(ctx);
 }
 
@@ -46,7 +46,7 @@ CGAAStateGuard::CGAAStateGuard(CGContextRef ctx, bool enable)
                : fCtx(ctx),
                  fEnable(enable)
 {
-   assert(ctx != 0 && "CGAAStateGuard, ctx parameter is null");
+   assert(ctx != nullptr && "CGAAStateGuard, ctx parameter is null");
 
    if (!enable)
       CGContextSetAllowsAntialiasing(ctx, false);

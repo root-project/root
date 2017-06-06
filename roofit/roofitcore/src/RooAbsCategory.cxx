@@ -126,8 +126,8 @@ const char* RooAbsCategory::getLabel() const
 
   const char* ret = _value.GetName() ;
   // If label is not set, do it now on the fly
-  if (ret==0) {
-    _value.SetName(lookupType(_value.getVal())->GetName()) ;    
+  if (ret == nullptr) {
+     _value.SetName(lookupType(_value.getVal())->GetName());    
   }
   return _value.GetName() ;
 }
@@ -269,13 +269,13 @@ const RooCatType* RooAbsCategory::defineType(const char* label, Int_t index)
   if (isValidIndex(index)) {
     coutE(InputArguments) << "RooAbsCategory::defineType(" << GetName() << "): index " 
 			  << index << " already assigned" << endl ;
-    return 0 ;
+    return nullptr;
   }
 
   if (isValidLabel(label)) {
     coutE(InputArguments) << "RooAbsCategory::defineType(" << GetName() << "): label " 
 			  << label << " already assigned or not allowed" << endl ;
-    return 0 ;
+    return nullptr;
   }
 
   return defineTypeUnchecked(label,index) ;
@@ -312,7 +312,7 @@ const RooCatType* RooAbsCategory::lookupType(const RooCatType &other, Bool_t pri
       other.printStream(ccoutE(InputArguments),kName|kValue,kSingleLine);
     }
   }
-  return 0 ;
+  return nullptr;
 }
 
 
@@ -331,7 +331,7 @@ const RooCatType* RooAbsCategory::lookupType(Int_t index, Bool_t printError) con
     coutE(InputArguments) << ClassName() << "::" << GetName() << ":lookupType: no match for index "
 			  << index << endl;
   }
-  return 0 ;
+  return nullptr;
 }
 
 
@@ -361,7 +361,7 @@ const RooCatType* RooAbsCategory::lookupType(const char* label, Bool_t printErro
     coutE(InputArguments) << ClassName() << "::" << GetName() << ":lookupType: no match for label "
 			  << label << endl;
   }
-  return 0 ;
+  return nullptr;
 }
 
 

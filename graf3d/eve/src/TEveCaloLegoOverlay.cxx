@@ -43,35 +43,25 @@ ClassImp(TEveCaloLegoOverlay);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TEveCaloLegoOverlay::TEveCaloLegoOverlay() :
-   TGLCameraOverlay(),
+TEveCaloLegoOverlay::TEveCaloLegoOverlay()
+   : TGLCameraOverlay(),
 
-   fCalo(0),
+     fCalo(nullptr),
 
-   fShowScales(kTRUE),
-   fScaleColor(-1), fScaleTransparency(0),
-   fScaleCoordX(0.85), fScaleCoordY(0.65),
-   fScaleW(0), fScaleH(0),
-   fCellX(-1), fCellY(-1),
+     fShowScales(kTRUE), fScaleColor(-1), fScaleTransparency(0), fScaleCoordX(0.85), fScaleCoordY(0.65), fScaleW(0),
+     fScaleH(0), fCellX(-1), fCellY(-1),
 
-   fFrameColor(-1), fFrameLineTransp(70), fFrameBgTransp(90),
+     fFrameColor(-1), fFrameLineTransp(70), fFrameBgTransp(90),
 
-   fMouseX(0),  fMouseY(0),
-   fInDrag(kFALSE),
+     fMouseX(0), fMouseY(0), fInDrag(kFALSE),
 
-   fHeaderSelected(kFALSE),
+     fHeaderSelected(kFALSE),
 
-   fPlaneAxis(0), fAxisPlaneColor(kGray),
-   fShowPlane(kFALSE),
+     fPlaneAxis(nullptr), fAxisPlaneColor(kGray), fShowPlane(kFALSE),
 
-   fMenuW(0.08),
-   fButtonW(0.5),
-   fShowSlider(kFALSE),
-   fSliderH(0.6),
-   fSliderPosY(0.15),
-   fSliderVal(0),
+     fMenuW(0.08), fButtonW(0.5), fShowSlider(kFALSE), fSliderH(0.6), fSliderPosY(0.15), fSliderVal(0),
 
-   fActiveID(-1), fActiveCol(kRed-4)
+     fActiveID(-1), fActiveCol(kRed - 4)
 {
    fPlaneAxis = new TAxis();
 }
@@ -270,7 +260,7 @@ void TEveCaloLegoOverlay::RenderHeader(TGLRnrCtx& rnrCtx)
    {
       TGLUtil::Color(fHeaderSelected ? fActiveCol : fCalo->GetFontColor());
       glRasterPos2i(0, 0);
-      glBitmap(0, 0, 0, 0, x, y, 0);
+      glBitmap(0, 0, 0, 0, x, y, nullptr);
       font.Render(fHeaderTxt.Data());
    }
    font.PostRender();
@@ -599,7 +589,7 @@ void TEveCaloLegoOverlay::Render(TGLRnrCtx& rnrCtx)
 {
    // Draw calorimeter scale info and plane interface.
 
-   if ( fCalo == 0 || fCalo->GetData()->Empty()) return;
+   if (fCalo == nullptr || fCalo->GetData()->Empty()) return;
 
    Float_t old_depth_range[2];
    glGetFloatv(GL_DEPTH_RANGE, old_depth_range);

@@ -50,10 +50,7 @@ ClassImp(TGLFont);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TGLFont::TGLFont():
-   fFont(0), fManager(0), fDepth(0),
-   fSize(0), fFile(0), fMode(kUndef),
-   fTrashCount(0)
+TGLFont::TGLFont() : fFont(nullptr), fManager(nullptr), fDepth(0), fSize(0), fFile(0), fMode(kUndef), fTrashCount(0)
 {
 }
 
@@ -70,8 +67,7 @@ TGLFont::TGLFont(Int_t size, Int_t font, EMode mode, FTFont* f, TGLFontManager* 
 ////////////////////////////////////////////////////////////////////////////////
 /// Assignment operator.
 
-TGLFont::TGLFont(const TGLFont &o):
-   fFont(0), fManager(0), fDepth(0), fTrashCount(0)
+TGLFont::TGLFont(const TGLFont &o) : fFont(nullptr), fManager(nullptr), fDepth(0), fTrashCount(0)
 {
    fFont = (FTFont*)o.GetFont();
 
@@ -350,7 +346,7 @@ void  TGLFont:: Render(const TString &txt, Float_t x, Float_t y, Float_t z,
    if (fMode == TGLFont::kPixmap || fMode ==  TGLFont::kBitmap)
    {
       glRasterPos2i(0, 0);
-      glBitmap(0, 0, 0, 0, x, y, 0);
+      glBitmap(0, 0, 0, 0, x, y, nullptr);
    }
    else
    {
@@ -462,7 +458,7 @@ void TGLFontManager::RegisterFont(Int_t sizeIn, Int_t fileID, TGLFont::EMode mod
          delete [] fp;
       }
 
-      FTFont* ftfont = 0;
+      FTFont *ftfont = nullptr;
       switch (mode)
       {
          case TGLFont::kBitmap:
@@ -490,7 +486,7 @@ void TGLFontManager::RegisterFont(Int_t sizeIn, Int_t fileID, TGLFont::EMode mod
             break;
       }
       ftfont->FaceSize(size);
-      const TGLFont &mf = fFontMap.insert(std::make_pair(TGLFont(size, fileID, mode, ftfont, 0), 1)).first->first;
+      const TGLFont &mf = fFontMap.insert(std::make_pair(TGLFont(size, fileID, mode, ftfont, nullptr), 1)).first->first;
       out.CopyAttributes(mf);
    }
    else
@@ -514,8 +510,7 @@ void TGLFontManager::RegisterFont(Int_t size, const char* name, TGLFont::EMode m
    TIter next(farr);
    TObjString* os;
    Int_t cnt = 0;
-   while ((os = (TObjString*) next()) != 0)
-   {
+   while ((os = (TObjString *)next()) != nullptr) {
       if (os->String() == name)
          break;
       cnt++;

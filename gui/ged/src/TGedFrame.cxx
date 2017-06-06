@@ -33,15 +33,9 @@ ClassImp(TGedFrame);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor of the base GUI attribute frame.
 
-TGedFrame::TGedFrame(const TGWindow *p, Int_t width,
-                     Int_t height, UInt_t options, Pixel_t back)
-      : TGCompositeFrame(p, width, height, options, back),
-        fInit(kTRUE),
-        fGedEditor(0),
-        fModelClass(0),
-        fAvoidSignal(kFALSE),
-        fExtraTabs(0),
-        fPriority(50)
+TGedFrame::TGedFrame(const TGWindow *p, Int_t width, Int_t height, UInt_t options, Pixel_t back)
+   : TGCompositeFrame(p, width, height, options, back), fInit(kTRUE), fGedEditor(nullptr), fModelClass(nullptr),
+     fAvoidSignal(kFALSE), fExtraTabs(nullptr), fPriority(50)
 {
    fName = "";
    fGedEditor = TGedEditor::GetFrameCreator();
@@ -56,7 +50,7 @@ TGedFrame::~TGedFrame()
    if (fExtraTabs) {
       TGedSubFrame* sf;
       TIter next(fExtraTabs);
-      while ((sf = (TGedSubFrame*) next()) != 0) {
+      while ((sf = (TGedSubFrame *)next()) != nullptr) {
          delete sf->fFrame;
          fExtraTabs->Remove(sf);
          delete sf;
@@ -111,7 +105,7 @@ void TGedFrame::MakeTitle(const char *title)
 
 void TGedFrame::AddExtraTab(TGedSubFrame* sf)
 {
-   if (fExtraTabs == 0) fExtraTabs = new TList();
+   if (fExtraTabs == nullptr) fExtraTabs = new TList();
    fExtraTabs->Add(sf);
    sf->fFrame->SetCleanup(kDeepCleanup);
 }
@@ -245,7 +239,7 @@ void TGedNameFrame::SetModel(TObject* obj)
 {
    TString string;
 
-   if (obj == 0) {
+   if (obj == nullptr) {
       fLabel->SetText(new TGString("Object not selected"));
       return;
    }

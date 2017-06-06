@@ -76,26 +76,15 @@ void RestoreGlobalPrintLevel(int value) {
    void RestoreGlobalPrintLevel(int ) {}
 #endif
 
-
-
-
-Minuit2Minimizer::Minuit2Minimizer(ROOT::Minuit2::EMinimizerType type ) :
-   Minimizer(),
-   fDim(0),
-   fMinimizer(0),
-   fMinuitFCN(0),
-   fMinimum(0)
+Minuit2Minimizer::Minuit2Minimizer(ROOT::Minuit2::EMinimizerType type)
+   : Minimizer(), fDim(0), fMinimizer(nullptr), fMinuitFCN(nullptr), fMinimum(nullptr)
 {
    // Default constructor implementation depending on minimizer type
    SetMinimizerType(type);
 }
 
-Minuit2Minimizer::Minuit2Minimizer(const char *  type ) :
-   Minimizer(),
-   fDim(0),
-   fMinimizer(0),
-   fMinuitFCN(0),
-   fMinimum(0)
+Minuit2Minimizer::Minuit2Minimizer(const char *type)
+   : Minimizer(), fDim(0), fMinimizer(nullptr), fMinuitFCN(nullptr), fMinimum(nullptr)
 {
    // constructor from a string
 
@@ -169,7 +158,7 @@ void Minuit2Minimizer::Clear() {
    fState = MnUserParameterState();
    // clear also the function minimum
    if (fMinimum) delete fMinimum;
-   fMinimum = 0;
+   fMinimum = nullptr;
 }
 
 
@@ -391,29 +380,27 @@ bool Minuit2Minimizer::Minimize() {
       return false;
   }
 
-   assert(GetMinimizer() != 0 );
+  assert(GetMinimizer() != nullptr);
 
-   // delete result of previous minimization
-   if (fMinimum) delete fMinimum;
-   fMinimum = 0;
+  // delete result of previous minimization
+  if (fMinimum) delete fMinimum;
+  fMinimum = nullptr;
 
+  int maxfcn = MaxFunctionCalls();
+  double tol = Tolerance();
+  int strategyLevel = Strategy();
+  fMinuitFCN->SetErrorDef(ErrorDef());
 
-   int maxfcn = MaxFunctionCalls();
-   double tol = Tolerance();
-   int strategyLevel = Strategy();
-   fMinuitFCN->SetErrorDef(ErrorDef() );
-
-   int printLevel = PrintLevel();
-   if (printLevel >=1) {
-      // print the real number of maxfcn used (defined in ModularFuncitonMinimizer)
-      int maxfcn_used = maxfcn;
-      if (maxfcn_used == 0) {
-         int nvar = fState.VariableParameters();
-         maxfcn_used = 200 + 100*nvar + 5*nvar*nvar;
-      }
-      std::cout << "Minuit2Minimizer: Minimize with max-calls " << maxfcn_used
-                << " convergence for edm < " << tol << " strategy "
-                << strategyLevel << std::endl;
+  int printLevel = PrintLevel();
+  if (printLevel >= 1) {
+     // print the real number of maxfcn used (defined in ModularFuncitonMinimizer)
+     int maxfcn_used = maxfcn;
+     if (maxfcn_used == 0) {
+        int nvar = fState.VariableParameters();
+        maxfcn_used = 200 + 100 * nvar + 5 * nvar * nvar;
+     }
+     std::cout << "Minuit2Minimizer: Minimize with max-calls " << maxfcn_used << " convergence for edm < " << tol
+               << " strategy " << strategyLevel << std::endl;
    }
 
    // internal minuit messages
@@ -472,7 +459,7 @@ bool Minuit2Minimizer::Minimize() {
 
    // set a minimizer tracer object (default for printlevel=10, from gROOT for printLevel=11)
    // use some special print levels
-   MnTraceObject * traceObj = 0;
+   MnTraceObject *traceObj = nullptr;
 #ifdef USE_ROOT_ERROR
    if (printLevel == 10 && gROOT) {
       TObject * obj = gROOT->FindObject("Minuit2TraceObject");
@@ -500,7 +487,7 @@ bool Minuit2Minimizer::Minimize() {
    }
 
    const ROOT::Minuit2::FCNGradientBase * gradFCN = dynamic_cast<const ROOT::Minuit2::FCNGradientBase *>( fMinuitFCN );
-   if ( gradFCN != 0) {
+   if (gradFCN != nullptr) {
       // use gradient
       //SetPrintLevel(3);
       ROOT::Minuit2::FunctionMinimum min =  GetMinimizer()->Minimize(*gradFCN, fState, strategy, maxfcn, tol);
@@ -631,7 +618,7 @@ void Minuit2Minimizer::PrintResults() {
 const double * Minuit2Minimizer::X() const {
    // return values at minimum
    const std::vector<MinuitParameter> & paramsObj = fState.MinuitParameters();
-   if (paramsObj.size() == 0) return 0;
+   if (paramsObj.size() == 0) return nullptr;
    assert(fDim == paramsObj.size());
    // be careful for multiple calls of this function. I will redo an allocation here
    // only when size of vectors has changed (e.g. after a new minimization)
@@ -647,7 +634,7 @@ const double * Minuit2Minimizer::X() const {
 const double * Minuit2Minimizer::Errors() const {
    // return error at minimum (set to zero for fixed and constant params)
    const std::vector<MinuitParameter> & paramsObj = fState.MinuitParameters();
-   if (paramsObj.size() == 0) return 0;
+   if (paramsObj.size() == 0) return nullptr;
    assert(fDim == paramsObj.size());
    // be careful for multiple calls of this function. I will redo an allocation here
    // only when size of vectors has changed (e.g. after a new minimization)
@@ -784,7 +771,7 @@ bool Minuit2Minimizer::GetMinosError(unsigned int i, double & errLow, double & e
 //    ROOT::Minuit2::FunctionMinimum min =
 //       GetMinimizer()->Minimize(*GetFCN(),fState, ROOT::Minuit2::MnStrategy(strategy), MaxFunctionCalls(), Tolerance());
 //    fState = min.UserState();
-   if (fMinimum == 0) {
+   if (fMinimum == nullptr) {
       MN_ERROR_MSG("Minuit2Minimizer::GetMinosErrors:  failed - no function minimum existing");
       return false;
    }
@@ -967,7 +954,7 @@ bool Minuit2Minimizer::Scan(unsigned int ipar, unsigned int & nstep, double * x,
 bool Minuit2Minimizer::Contour(unsigned int ipar, unsigned int jpar, unsigned int & npoints, double * x, double * y) {
    // contour plot for parameter i and j
    // need a valid FunctionMinimum otherwise exits
-   if (fMinimum == 0) {
+   if (fMinimum == nullptr) {
       MN_ERROR_MSG2("Minuit2Minimizer::Contour"," no function minimum existing. Must minimize function before");
       return false;
    }

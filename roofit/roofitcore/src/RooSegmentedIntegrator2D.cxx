@@ -59,8 +59,7 @@ void RooSegmentedIntegrator2D::registerIntegrator(RooNumIntFactory& fact)
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
-RooSegmentedIntegrator2D::RooSegmentedIntegrator2D() :
-  _xIntegrator(0), _xint(0)
+RooSegmentedIntegrator2D::RooSegmentedIntegrator2D() : _xIntegrator(nullptr), _xint(nullptr)
 {
 }
 
@@ -115,14 +114,14 @@ RooSegmentedIntegrator2D::~RooSegmentedIntegrator2D()
 Bool_t RooSegmentedIntegrator2D::checkLimits() const 
 {
   if(_useIntegrandLimits) {
-    assert(0 != integrand() && integrand()->isValid());
-    _xmin= integrand()->getMinLimit(0);
-    _xmax= integrand()->getMaxLimit(0);
+     assert(nullptr != integrand() && integrand()->isValid());
+     _xmin = integrand()->getMinLimit(0);
+     _xmax = integrand()->getMaxLimit(0);
   }
   _range= _xmax - _xmin;
   if(_range <= 0) {
-    oocoutE((TObject*)0,InputArguments) << "RooIntegrator1D::checkLimits: bad range with min >= max" << endl;
-    return kFALSE;
+     oocoutE((TObject *)nullptr, InputArguments) << "RooIntegrator1D::checkLimits: bad range with min >= max" << endl;
+     return kFALSE;
   }
   Bool_t ret =  (RooNumber::isInfinite(_xmin) || RooNumber::isInfinite(_xmax)) ? kFALSE : kTRUE;
 

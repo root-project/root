@@ -266,47 +266,19 @@ The nodes are arranged in the order described in section 3a.
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor. Nothing is built
 
-template <typename  Index, typename Value>
-TKDTree<Index, Value>::TKDTree() :
-   TObject()
-   ,fDataOwner(kFALSE)
-   ,fNNodes(0)
-   ,fTotalNodes(0)
-   ,fNDim(0)
-   ,fNDimm(0)
-   ,fNPoints(0)
-   ,fBucketSize(0)
-   ,fAxis(0x0)
-   ,fValue(0x0)
-   ,fRange(0x0)
-   ,fData(0x0)
-   ,fBoundaries(0x0)
-   ,fIndPoints(0x0)
-   ,fRowT0(0)
-   ,fCrossNode(0)
-   ,fOffset(0)
+template <typename Index, typename Value>
+TKDTree<Index, Value>::TKDTree()
+   : TObject(), fDataOwner(kFALSE), fNNodes(0), fTotalNodes(0), fNDim(0), fNDimm(0), fNPoints(0), fBucketSize(0),
+     fAxis(nullptr), fValue(nullptr), fRange(nullptr), fData(nullptr), fBoundaries(nullptr), fIndPoints(nullptr),
+     fRowT0(0), fCrossNode(0), fOffset(0)
 {
 }
 
-template <typename  Index, typename Value>
-TKDTree<Index, Value>::TKDTree(Index npoints, Index ndim, UInt_t bsize) :
-   TObject()
-   ,fDataOwner(0)
-   ,fNNodes(0)
-   ,fTotalNodes(0)
-   ,fNDim(ndim)
-   ,fNDimm(2*ndim)
-   ,fNPoints(npoints)
-   ,fBucketSize(bsize)
-   ,fAxis(0x0)
-   ,fValue(0x0)
-   ,fRange(0x0)
-   ,fData(0x0)
-   ,fBoundaries(0x0)
-   ,fIndPoints(0x0)
-   ,fRowT0(0)
-   ,fCrossNode(0)
-   ,fOffset(0)
+template <typename Index, typename Value>
+TKDTree<Index, Value>::TKDTree(Index npoints, Index ndim, UInt_t bsize)
+   : TObject(), fDataOwner(0), fNNodes(0), fTotalNodes(0), fNDim(ndim), fNDimm(2 * ndim), fNPoints(npoints),
+     fBucketSize(bsize), fAxis(nullptr), fValue(nullptr), fRange(nullptr), fData(nullptr), fBoundaries(nullptr),
+     fIndPoints(nullptr), fRowT0(0), fCrossNode(0), fOffset(0)
 {
 // Create the kd-tree of npoints from ndim-dimensional space. Parameter bsize stands for the
 // maximal number of points in the terminal nodes (buckets).
@@ -340,25 +312,12 @@ TKDTree<Index, Value>::TKDTree(Index npoints, Index ndim, UInt_t bsize) :
 /// kdtree->SetOwner(kTRUE).
 ///
 
-template <typename  Index, typename Value>
-TKDTree<Index, Value>::TKDTree(Index npoints, Index ndim, UInt_t bsize, Value **data) :
-   TObject()
-   ,fDataOwner(0)
-   ,fNNodes(0)
-   ,fTotalNodes(0)
-   ,fNDim(ndim)
-   ,fNDimm(2*ndim)
-   ,fNPoints(npoints)
-   ,fBucketSize(bsize)
-   ,fAxis(0x0)
-   ,fValue(0x0)
-   ,fRange(0x0)
-   ,fData(data) //Columnwise!!!!!
-   ,fBoundaries(0x0)
-   ,fIndPoints(0x0)
-   ,fRowT0(0)
-   ,fCrossNode(0)
-   ,fOffset(0)
+template <typename Index, typename Value>
+TKDTree<Index, Value>::TKDTree(Index npoints, Index ndim, UInt_t bsize, Value **data)
+   : TObject(), fDataOwner(0), fNNodes(0), fTotalNodes(0), fNDim(ndim), fNDimm(2 * ndim), fNPoints(npoints),
+     fBucketSize(bsize), fAxis(nullptr), fValue(nullptr), fRange(nullptr), fData(data) // Columnwise!!!!!
+     ,
+     fBoundaries(nullptr), fIndPoints(nullptr), fRowT0(0), fCrossNode(0), fOffset(0)
 {
 
    //Build();
@@ -818,7 +777,7 @@ Index*  TKDTree<Index, Value>::GetPointsIndexes(Int_t node) const
 {
    if (!IsTerminal(node)){
       printf("GetPointsIndexes() only for terminal nodes, use GetNodePointsIndexes() instead\n");
-      return 0;
+      return nullptr;
    }
    Int_t offset = (node >= fCrossNode) ? (node-fCrossNode)*fBucketSize : fOffset+(node-fNNodes)*fBucketSize;
    return &fIndPoints[offset];
@@ -1047,7 +1006,7 @@ void TKDTree<Index, Value>::MakeBoundaries(Value *range)
 
 
    // loop
-   Value *tbounds = 0x0, *cbounds = 0x0;
+   Value *tbounds = nullptr, *cbounds = nullptr;
    Int_t cn;
    for(int inode=fNNodes-1; inode>=0; inode--){
       tbounds = &fBoundaries[inode*fNDimm];

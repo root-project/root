@@ -47,8 +47,8 @@ using namespace RooStats;
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
-PointSetInterval::PointSetInterval(const char* name) :
-   ConfInterval(name), fConfidenceLevel(0.95), fParameterPointsInInterval(0)
+PointSetInterval::PointSetInterval(const char *name)
+   : ConfInterval(name), fConfidenceLevel(0.95), fParameterPointsInInterval(nullptr)
 {
 }
 
@@ -90,22 +90,20 @@ Bool_t PointSetInterval::IsInInterval(const RooArgSet &parameterPoint) const
       return false;
   }
   else if( tree ){
-    const RooArgSet* thisPoint = 0;
-    // need to check if the parameter point is the same as any point in tree.
-    for(Int_t i = 0; i<tree->numEntries(); ++i){
-      // This method is not complete
-      thisPoint = tree->get(i);
-      bool samePoint = true;
-      TIter it = parameterPoint.createIterator();
-      RooRealVar *myarg;
-      while ( samePoint && (myarg = (RooRealVar *)it.Next())) {
-   if(myarg->getVal() != thisPoint->getRealValue(myarg->GetName()))
-     samePoint = false;
-      }
-      if(samePoint)
-   return true;
+     const RooArgSet *thisPoint = nullptr;
+     // need to check if the parameter point is the same as any point in tree.
+     for (Int_t i = 0; i < tree->numEntries(); ++i) {
+        // This method is not complete
+        thisPoint = tree->get(i);
+        bool samePoint = true;
+        TIter it = parameterPoint.createIterator();
+        RooRealVar *myarg;
+        while (samePoint && (myarg = (RooRealVar *)it.Next())) {
+           if (myarg->getVal() != thisPoint->getRealValue(myarg->GetName())) samePoint = false;
+        }
+        if (samePoint) return true;
 
-      //      delete thisPoint;
+        //      delete thisPoint;
     }
     return false; // didn't find a good point
   }

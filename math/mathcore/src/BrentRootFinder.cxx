@@ -22,10 +22,8 @@ namespace Math {
 static int gDefaultNpx = 100; // default nunmber of points used in the grid to bracked the root
 static int gDefaultNSearch = 10;  // nnumber of time the iteration (bracketing -Brent ) is repeted
 
-   BrentRootFinder::BrentRootFinder() : fFunction(0),
-                                        fLogScan(false), fNIter(0),
-                                        fNpx(0), fStatus(-1),
-                                        fXMin(0), fXMax(0), fRoot(0)
+BrentRootFinder::BrentRootFinder()
+   : fFunction(nullptr), fLogScan(false), fNIter(0), fNpx(0), fStatus(-1), fXMin(0), fXMax(0), fRoot(0)
 {
    // default constructor (number of points used to bracket value is set to 100)
    fNpx = gDefaultNpx;

@@ -47,20 +47,20 @@ TGraph2DPainter paints a TGraphDelaunay using triangles or clouds of points.
 
 TGraph2DPainter::TGraph2DPainter()
 {
-   fX        = 0;
-   fY        = 0;
-   fZ        = 0;
-   fEX       = 0;
-   fEY       = 0;
-   fEZ       = 0;
-   fXN       = 0;
-   fYN       = 0;
-   fPTried   = 0;
-   fNTried   = 0;
-   fMTried   = 0;
-   fGraph2D  = 0;
-   fDelaunay = 0;
-   fDelaunay2D = 0;
+   fX = nullptr;
+   fY = nullptr;
+   fZ = nullptr;
+   fEX = nullptr;
+   fEY = nullptr;
+   fEZ = nullptr;
+   fXN = nullptr;
+   fYN = nullptr;
+   fPTried = nullptr;
+   fNTried = nullptr;
+   fMTried = nullptr;
+   fGraph2D = nullptr;
+   fDelaunay = nullptr;
+   fDelaunay2D = nullptr;
    fXmin     = 0.;
    fXmax     = 0.;
    fYmin     = 0.;
@@ -82,7 +82,7 @@ TGraph2DPainter::TGraph2DPainter()
 TGraph2DPainter::TGraph2DPainter(TGraphDelaunay *gd)
 {
    fDelaunay = gd;
-   fDelaunay2D = 0;
+   fDelaunay2D = nullptr;
    fGraph2D  = fDelaunay->GetGraph2D();
    fNpoints  = fGraph2D->GetN();
    fX        = fGraph2D->GetX();
@@ -92,15 +92,15 @@ TGraph2DPainter::TGraph2DPainter(TGraphDelaunay *gd)
    fEY       = fGraph2D->GetEY();
    fEZ       = fGraph2D->GetEZ();
    fNdt      = 0;
-   fXN       = 0;
-   fYN       = 0;
+   fXN = nullptr;
+   fYN = nullptr;
    fXNmin    = 0;
    fXNmax    = 0;
    fYNmin    = 0;
    fYNmax    = 0;
-   fPTried   = 0;
-   fNTried   = 0;
-   fMTried   = 0;
+   fPTried = nullptr;
+   fNTried = nullptr;
+   fMTried = nullptr;
    fXmin     = 0.;
    fXmax     = 0.;
    fYmin     = 0.;
@@ -114,7 +114,7 @@ TGraph2DPainter::TGraph2DPainter(TGraphDelaunay *gd)
 
 TGraph2DPainter::TGraph2DPainter(TGraphDelaunay2D *gd)
 {
-   fDelaunay = 0;
+   fDelaunay = nullptr;
    fDelaunay2D = gd;
    fGraph2D  = fDelaunay2D->GetGraph2D();
    fNpoints  = fGraph2D->GetN();
@@ -125,15 +125,15 @@ TGraph2DPainter::TGraph2DPainter(TGraphDelaunay2D *gd)
    fEY       = fGraph2D->GetEY();
    fEZ       = fGraph2D->GetEZ();
    fNdt      = 0;
-   fXN       = 0;
-   fYN       = 0;
+   fXN = nullptr;
+   fYN = nullptr;
    fXNmin    = 0;
    fXNmax    = 0;
    fYNmin    = 0;
    fYNmax    = 0;
-   fPTried   = 0;
-   fNTried   = 0;
-   fMTried   = 0;
+   fPTried = nullptr;
+   fNTried = nullptr;
+   fMTried = nullptr;
    fXmin     = 0.;
    fXmax     = 0.;
    fYmin     = 0.;
@@ -196,18 +196,18 @@ TList *TGraph2DPainter::GetContourList(Double_t contour)
          zmin = TMath::Log10(zmin);
          zmax = TMath::Log10(zmax);
       } else {
-         return 0;
+         return nullptr;
       }
    }
    if(contour<zmin || contour>zmax) {
       Error("GetContourList", "Contour level (%g) outside the Z scope [%g,%g]",
       contour,zmin,zmax);
-      return 0;
+      return nullptr;
    }
 
    if (!fNdt) FindTriangles();
 
-   TGraph *graph = 0;           // current graph
+   TGraph *graph = nullptr;     // current graph
    Int_t npg     = 0;           // number of points in the current graph
    TList *list   = new TList(); // list holding all the graphs
 
@@ -264,7 +264,7 @@ TList *TGraph2DPainter::GetContourList(Double_t contour)
             delete [] ys0;
             delete [] xs1;
             delete [] ys1;
-            return 0;
+            return nullptr;
          } else {
             i1 = 3-i2-i0;
          }
@@ -326,7 +326,7 @@ TList *TGraph2DPainter::GetContourList(Double_t contour)
             delete [] ys0;
             delete [] xs1;
             delete [] ys1;
-            return 0;
+            return nullptr;
          } else {
             i1 = 3-i2-i0;
          }
@@ -1052,8 +1052,8 @@ void TGraph2DPainter::PaintTriangles_old(Option_t *option)
 {
    Double_t x[4], y[4], temp1[3],temp2[3];
    Int_t it,t[3];
-   Int_t *order = 0;
-   Double_t *dist = 0;
+   Int_t *order = nullptr;
+   Double_t *dist = nullptr;
 
    TView *view = gPad->GetView();
    if (!view) {
@@ -1072,7 +1072,7 @@ void TGraph2DPainter::PaintTriangles_old(Option_t *option)
    // Define the grid levels drawn on the triangles.
    // The grid levels are aligned on the Z axis' main tick marks.
    Int_t nblev=0;
-   Double_t *glev=0;
+   Double_t *glev = nullptr;
    if (!tri1 && !tri2 && !wire) {
       Int_t ndivz = gCurrentHist->GetZaxis()->GetNdivisions()%100;
       Int_t nbins;
@@ -1226,7 +1226,7 @@ void TGraph2DPainter::PaintTriangles_new(Option_t *option)
    // Define the grid levels drawn on the triangles.
    // The grid levels are aligned on the Z axis' main tick marks.
    Int_t nblev=0;
-   Double_t *glev=0;
+   Double_t *glev = nullptr;
    if (!tri1 && !tri2 && !wire) {
       Int_t ndivz = gCurrentHist->GetZaxis()->GetNdivisions()%100;
       Int_t nbins;

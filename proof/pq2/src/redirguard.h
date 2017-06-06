@@ -30,6 +30,8 @@ public:
    redirguard(const char *fn, const char *mode = "a", Int_t doit = 0)
        { fDoIt = (doit == 0) ? kTRUE : kFALSE;
          if (fDoIt) gSystem->RedirectOutput(fn, mode, &fRH); }
-   ~redirguard() { if (fDoIt) gSystem->RedirectOutput(0, 0, &fRH); }
+   ~redirguard() {
+      if (fDoIt) gSystem->RedirectOutput(nullptr, nullptr, &fRH);
+   }
 };
 #endif

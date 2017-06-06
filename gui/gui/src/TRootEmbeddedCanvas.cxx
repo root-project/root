@@ -106,7 +106,7 @@ TRootEmbeddedCanvas::TRootEmbeddedCanvas(const char *name, const TGWindow *p,
             UInt_t w, UInt_t h, UInt_t options, ULong_t back)
    : TGCanvas(p, w, h, options, back)
 {
-   fCanvas  = 0;
+   fCanvas = nullptr;
    fButton  = 0;
    fAutoFit = kTRUE;
    fEditDisabled = kEditDisableLayout;
@@ -183,7 +183,7 @@ TRootEmbeddedCanvas::~TRootEmbeddedCanvas()
 
 void TRootEmbeddedCanvas::AdoptCanvas(TCanvas *c)
 {
-   if(c == 0) return;
+   if (c == nullptr) return;
    c->EmbedInto(fCWinId, fWidth, fHeight);
    fCanvas = c;
 }
@@ -494,7 +494,7 @@ Atom_t TRootEmbeddedCanvas::HandleDNDPosition(Int_t /*x*/, Int_t /*y*/, Atom_t a
                                    gVirtualX->GetWindowID(fCanvas->GetCanvasID()),
                                    xroot, yroot, px, py, wtarget);
 
-   TPad *pad = fCanvas->Pick(px, py, 0);
+   TPad *pad = fCanvas->Pick(px, py, nullptr);
    if (pad) {
       pad->cd();
       gROOT->SetSelectedPad(pad);

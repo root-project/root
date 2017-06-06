@@ -126,27 +126,15 @@ ClassImp(TMVA::MethodDT);
 ////////////////////////////////////////////////////////////////////////////////
 /// the standard constructor for just an ordinar "decision trees"
 
-   TMVA::MethodDT::MethodDT( const TString& jobName,
-                             const TString& methodTitle,
-                             DataSetInfo& theData,
-                             const TString& theOption) :
-   TMVA::MethodBase( jobName, Types::kDT, methodTitle, theData, theOption)
-   , fTree(0)
-   , fSepType(0)
-   , fMinNodeEvents(0)
-   , fMinNodeSize(0)
-   , fNCuts(0)
-   , fUseYesNoLeaf(kFALSE)
-   , fNodePurityLimit(0)
-   , fMaxDepth(0)
-   , fErrorFraction(0)
-   , fPruneStrength(0)
-   , fPruneMethod(DecisionTree::kNoPruning)
-   , fAutomatic(kFALSE)
-   , fRandomisedTrees(kFALSE)
-   , fUseNvars(0)
-   , fUsePoissonNvars(0)  // don't use this initialisation, only here to make  Coverity happy. Is set in Init()
-   , fDeltaPruneStrength(0)
+TMVA::MethodDT::MethodDT(const TString &jobName, const TString &methodTitle, DataSetInfo &theData,
+                         const TString &theOption)
+   : TMVA::MethodBase(jobName, Types::kDT, methodTitle, theData, theOption), fTree(nullptr), fSepType(nullptr),
+     fMinNodeEvents(0), fMinNodeSize(0), fNCuts(0), fUseYesNoLeaf(kFALSE), fNodePurityLimit(0), fMaxDepth(0),
+     fErrorFraction(0), fPruneStrength(0), fPruneMethod(DecisionTree::kNoPruning), fAutomatic(kFALSE),
+     fRandomisedTrees(kFALSE), fUseNvars(0),
+     fUsePoissonNvars(0) // don't use this initialisation, only here to make  Coverity happy. Is set in Init()
+     ,
+     fDeltaPruneStrength(0)
 {
       fPruneBeforeBoost = kFALSE;
 }
@@ -154,24 +142,11 @@ ClassImp(TMVA::MethodDT);
 ////////////////////////////////////////////////////////////////////////////////
 ///constructor from Reader
 
-TMVA::MethodDT::MethodDT( DataSetInfo& dsi,
-                          const TString& theWeightFile) :
-   TMVA::MethodBase( Types::kDT, dsi, theWeightFile)
-   , fTree(0)
-   , fSepType(0)
-   , fMinNodeEvents(0)
-   , fMinNodeSize(0)
-   , fNCuts(0)
-   , fUseYesNoLeaf(kFALSE)
-   , fNodePurityLimit(0)
-   , fMaxDepth(0)
-   , fErrorFraction(0)
-   , fPruneStrength(0)
-   , fPruneMethod(DecisionTree::kNoPruning)
-   , fAutomatic(kFALSE)
-   , fRandomisedTrees(kFALSE)
-   , fUseNvars(0)
-   , fDeltaPruneStrength(0)
+TMVA::MethodDT::MethodDT(DataSetInfo &dsi, const TString &theWeightFile)
+   : TMVA::MethodBase(Types::kDT, dsi, theWeightFile), fTree(nullptr), fSepType(nullptr), fMinNodeEvents(0),
+     fMinNodeSize(0), fNCuts(0), fUseYesNoLeaf(kFALSE), fNodePurityLimit(0), fMaxDepth(0), fErrorFraction(0),
+     fPruneStrength(0), fPruneMethod(DecisionTree::kNoPruning), fAutomatic(kFALSE), fRandomisedTrees(kFALSE),
+     fUseNvars(0), fDeltaPruneStrength(0)
 {
       fPruneBeforeBoost = kFALSE;
 }
@@ -567,5 +542,5 @@ void TMVA::MethodDT::GetHelpMessage() const
 
 const TMVA::Ranking* TMVA::MethodDT::CreateRanking()
 {
-   return 0;
+   return nullptr;
 }

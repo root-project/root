@@ -121,7 +121,7 @@ Bool_t TGSplitTool::HandleButton(Event_t *event)
    Int_t px = 0, py = 0;
    Window_t wtarget;
    TGRectMap *rect;
-   TGSplitFrame *frm = 0;
+   TGSplitFrame *frm = nullptr;
    TMapIter next(&fMap);
    while ((rect = (TGRectMap*)next())) {
       if (rect->Contains(event->fX, event->fY)) {
@@ -146,7 +146,7 @@ Bool_t TGSplitTool::HandleButton(Event_t *event)
 
 Bool_t TGSplitTool::HandleMotion(Event_t *event)
 {
-   static TGRectMap *rect = 0, *oldrect = 0;
+   static TGRectMap *rect = nullptr, *oldrect = nullptr;
    TMapIter next(&fMap);
    while ((rect = (TGRectMap*)next())) {
       if (rect->Contains(event->fX, event->fY)) {
@@ -238,13 +238,12 @@ void TGSplitTool::Show(Int_t x, Int_t y)
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
 
-TGSplitFrame::TGSplitFrame(const TGWindow *p, UInt_t w, UInt_t h,
-        UInt_t options) : TGCompositeFrame(p, w, h, options),
-        fFrame(0), fSplitter(0), fFirst(0), fSecond(0)
+TGSplitFrame::TGSplitFrame(const TGWindow *p, UInt_t w, UInt_t h, UInt_t options)
+   : TGCompositeFrame(p, w, h, options), fFrame(nullptr), fSplitter(nullptr), fFirst(nullptr), fSecond(nullptr)
 {
    fSplitTool = new TGSplitTool(gClient->GetDefaultRoot(), this);
    fHRatio = fWRatio = 0.0;
-   fUndocked = 0;
+   fUndocked = nullptr;
    AddInput(kStructureNotifyMask);
    SetCleanup(kLocalCleanup);
 }
@@ -273,8 +272,7 @@ void TGSplitFrame::AddFrame(TGFrame *f, TGLayoutHints *l)
 void TGSplitFrame::RemoveFrame(TGFrame *f)
 {
    TGCompositeFrame::RemoveFrame(f);
-   if (f == fFrame)
-      fFrame = 0;
+   if (f == fFrame) fFrame = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -283,10 +281,10 @@ void TGSplitFrame::RemoveFrame(TGFrame *f)
 void TGSplitFrame::Cleanup()
 {
    TGCompositeFrame::Cleanup();
-   fFirst = 0;
-   fSecond = 0;
-   fSplitter = 0;
-   fUndocked = 0;
+   fFirst = nullptr;
+   fSecond = nullptr;
+   fSplitter = nullptr;
+   fUndocked = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -315,7 +313,7 @@ void TGSplitFrame::Close()
       fFrame->UnmapWindow();
       RemoveFrame(fFrame);
    }
-   fFrame = 0;
+   fFrame = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -408,8 +406,7 @@ Bool_t TGSplitFrame::HandleConfigureNotify(Event_t *)
 void TGSplitFrame::HSplit(UInt_t h)
 {
    // return if already split
-   if ((fSplitter != 0) || (fFirst != 0) || (fSecond != 0) || (fFrame != 0))
-      return;
+   if ((fSplitter != nullptr) || (fFirst != nullptr) || (fSecond != nullptr) || (fFrame != nullptr)) return;
    UInt_t height = (h > 0) ? h : fHeight/2;
    // set correct option (vertical frame)
    ChangeOptions((GetOptions() & ~kHorizontalFrame) | kVerticalFrame);
@@ -437,8 +434,7 @@ void TGSplitFrame::HSplit(UInt_t h)
 void TGSplitFrame::VSplit(UInt_t w)
 {
    // return if already split
-   if ((fSplitter != 0) || (fFirst != 0) || (fSecond != 0) || (fFrame != 0))
-      return;
+   if ((fSplitter != nullptr) || (fFirst != nullptr) || (fSecond != nullptr) || (fFrame != nullptr)) return;
    UInt_t width = (w > 0) ? w : fWidth/2;
    // set correct option (horizontal frame)
    ChangeOptions((GetOptions() & ~kVerticalFrame) | kHorizontalFrame);
@@ -630,7 +626,7 @@ void TGSplitFrame::SwallowBack()
       MapSubwindows();
       Layout();
       fUndocked->CloseWindow();
-      fUndocked = 0;
+      fUndocked = nullptr;
       Docked(frame);
    }
 }
@@ -704,8 +700,8 @@ void TGSplitFrame::Undocked(TGFrame* frame)
 
 void TGSplitFrame::UnSplit(const char *which)
 {
-   TGCompositeFrame *keepframe = 0;
-   TGSplitFrame *kframe = 0, *dframe = 0;
+   TGCompositeFrame *keepframe = nullptr;
+   TGSplitFrame *kframe = nullptr, *dframe = nullptr;
    if (!strcmp(which, "first")) {
       dframe = GetFirst();
       kframe = GetSecond();

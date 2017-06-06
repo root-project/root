@@ -65,8 +65,7 @@ ClassImp(TGeoPgon);
    ////////////////////////////////////////////////////////////////////////////////
    /// Constructor.
 
-   TGeoPgon::ThreadData_t::ThreadData_t()
-   : fIntBuffer(0), fDblBuffer(0)
+TGeoPgon::ThreadData_t::ThreadData_t() : fIntBuffer(nullptr), fDblBuffer(nullptr)
 {
 }
 
@@ -111,7 +110,7 @@ void TGeoPgon::CreateThreadData(Int_t nthreads)
    fThreadData.resize(nthreads);
    fThreadSize = nthreads;
    for (Int_t tid = 0; tid < nthreads; tid++) {
-      if (fThreadData[tid] == 0) {
+      if (fThreadData[tid] == nullptr) {
          fThreadData[tid] = new ThreadData_t;
          fThreadData[tid]->fIntBuffer = new Int_t[fNedges + 10];
          fThreadData[tid]->fDblBuffer = new Double_t[fNedges + 10];
@@ -1314,11 +1313,11 @@ TGeoVolume *TGeoPgon::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
    switch (iaxis) {
    case 1: //---                R division
       Error("Divide", "makes no sense dividing a pgon on radius");
-      return 0;
+      return nullptr;
    case 2: //---                Phi division
       if (fNedges % ndiv) {
          Error("Divide", "ndiv should divide number of pgon edges");
-         return 0;
+         return nullptr;
       }
       nedges = fNedges / ndiv;
       finder = new TGeoPatternCylPhi(voldiv, ndiv, start, start + ndiv * step);
@@ -1350,7 +1349,7 @@ TGeoVolume *TGeoPgon::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
       }
       if (isect < 0) {
          Error("Divide", "cannot divide pcon on Z if divided region is not between 2 consecutive planes");
-         return 0;
+         return nullptr;
       }
       finder = new TGeoPatternZ(voldiv, ndiv, start, start + ndiv * step);
       vmulti = gGeoManager->MakeVolumeMulti(divname, voldiv->GetMedium());
@@ -1373,7 +1372,7 @@ TGeoVolume *TGeoPgon::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
          ((TGeoNodeOffset *)voldiv->GetNodes()->At(voldiv->GetNdaughters() - 1))->SetFinder(finder);
       }
       return vmulti;
-   default: Error("Divide", "Wrong axis type for division"); return 0;
+   default: Error("Divide", "Wrong axis type for division"); return nullptr;
    }
 }
 
@@ -1420,9 +1419,9 @@ TBuffer3D *TGeoPgon::MakeBuffer3D() const
 {
    const Int_t n = GetNsegments() + 1;
    Int_t nz = GetNz();
-   if (nz < 2) return 0;
+   if (nz < 2) return nullptr;
    Int_t nbPnts = nz * 2 * n;
-   if (nbPnts <= 0) return 0;
+   if (nbPnts <= 0) return nullptr;
    Double_t dphi = GetDphi();
    Bool_t specialCase = kFALSE;
    if (TGeoShape::IsSameWithinTolerance(dphi, 360)) specialCase = kTRUE;

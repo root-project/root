@@ -60,8 +60,8 @@ ClassImp(TVolumePosition);
 ///*-*    This new node is added into the list of sons of the current node
 ///*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-TVolumePosition::TVolumePosition(TVolume *node,Double_t x, Double_t y, Double_t z, const char *matrixname)
-: fMatrix(0),fNode(node),fId(0)
+TVolumePosition::TVolumePosition(TVolume *node, Double_t x, Double_t y, Double_t z, const char *matrixname)
+   : fMatrix(nullptr), fNode(node), fId(0)
 {
    SetMatrixOwner(kFALSE);
    fX[0] = x; fX[1] =y; fX[2] = z;
@@ -100,17 +100,17 @@ TVolumePosition::TVolumePosition(TVolume *node,Double_t x, Double_t y, Double_t 
 /// Pick the "old" position by pieces
 
 TVolumePosition::TVolumePosition(const TVolumePosition* oldPosition, const TVolumePosition* curPosition){
-   fMatrix = 0;
+   fMatrix = nullptr;
    SetMatrixOwner(kFALSE);
-   TVolume *curNode = 0;
+   TVolume *curNode = nullptr;
    UInt_t curPositionId    = 0;
-   TRotMatrix *curMatrix = 0;
+   TRotMatrix *curMatrix = nullptr;
    if (curPosition) {
       curNode       = curPosition->GetNode();
       curPositionId = curPosition->GetId();
       curMatrix     = (TRotMatrix *) curPosition->GetMatrix();
    }
-   TRotMatrix *oldMatrix = 0;
+   TRotMatrix *oldMatrix = nullptr;
    fX[0] = 0; fX[1] = 0; fX[2] = 0;
    Double_t oldTranslation[] = { 0, 0, 0 };
    if (oldPosition) {
@@ -237,8 +237,8 @@ const Char_t *TVolumePosition::GetName() const
 
 char *TVolumePosition::GetObjectInfo(Int_t, Int_t) const
 {
-   if (!gPad) return 0;
-   if (!GetNode()) return 0;
+   if (!gPad) return nullptr;
+   if (!GetNode()) return nullptr;
    static char info[64];
    snprintf(info,64,"%s/%s, shape=%s/%s",GetNode()->GetName(),GetNode()->GetTitle(),GetNode()->GetShape()->GetName(),GetNode()->GetShape()->ClassName());
    return info;
@@ -271,9 +271,9 @@ Float_t *TVolumePosition::Errmx2Master(const Float_t *localError, Float_t *maste
 
 Double_t *TVolumePosition::Cormx2Master(const Double_t *localCorr, Double_t *masterCorr)const
 {
-   Double_t *res = 0;
+   Double_t *res = nullptr;
    const TRotMatrix *rm = GetMatrix();
-   double *m = 0;
+   double *m = nullptr;
    if (rm && ( m = ((TRotMatrix *)rm)->GetMatrix()) )
       res = TCL::trasat(m,(Double_t *)localCorr,masterCorr,3,3);
    else
@@ -286,9 +286,9 @@ Double_t *TVolumePosition::Cormx2Master(const Double_t *localCorr, Double_t *mas
 
 Float_t *TVolumePosition::Cormx2Master(const Float_t *localCorr, Float_t *masterCorr) const
 {
-   Float_t *res = 0;
+   Float_t *res = nullptr;
    const TRotMatrix *rm = GetMatrix();
-   Double_t *m = 0;
+   Double_t *m = nullptr;
    if (rm && (m = ((TRotMatrix *)rm)->GetMatrix()) ) {
       double corLocal[6], corGlobal[6];
       TCL::ucopy(localCorr,corLocal,6);
@@ -323,9 +323,9 @@ Float_t *TVolumePosition::Errmx2Local(const Float_t *masterError, Float_t *local
 
 Double_t *TVolumePosition::Cormx2Local(const Double_t *localCorr, Double_t *masterCorr) const
 {
-   Double_t *res = 0;
+   Double_t *res = nullptr;
    TRotMatrix *rm = (TRotMatrix *) GetMatrix();
-   double *m = 0;
+   double *m = nullptr;
    if (rm && ( m = rm->GetMatrix()) )
       res = TCL::tratsa(m,(Double_t *)localCorr,masterCorr,3,3);
    else
@@ -338,9 +338,9 @@ Double_t *TVolumePosition::Cormx2Local(const Double_t *localCorr, Double_t *mast
 
 Float_t *TVolumePosition::Cormx2Local(const Float_t *localCorr, Float_t *masterCorr) const
 {
-   Float_t *res = 0;
+   Float_t *res = nullptr;
    TRotMatrix *rm = (TRotMatrix *) GetMatrix();
-   Double_t *m = 0;
+   Double_t *m = nullptr;
    if (rm && (m = rm->GetMatrix()) ) {
       double corLocal[6], corGlobal[6];
       TCL::ucopy(localCorr,corLocal,6);
@@ -363,8 +363,8 @@ Float_t *TVolumePosition::Cormx2Local(const Float_t *localCorr, Float_t *masterC
 
 Double_t *TVolumePosition::Local2Master(const Double_t *local, Double_t *master, Int_t nPoints) const
 {
-   Double_t *matrix = 0;
-   Double_t *trans = 0;
+   Double_t *matrix = nullptr;
+   Double_t *trans = nullptr;
    if (!fMatrix ||  fMatrix == TVolume::GetIdentity() || !(matrix = ((TRotMatrix *)fMatrix)->GetMatrix()) )  {
       trans = master;
       for (int i =0; i < nPoints; i++,local += 3, master += 3) TCL::vadd(local,fX,master,3);
@@ -390,8 +390,8 @@ Double_t *TVolumePosition::Local2Master(const Double_t *local, Double_t *master,
 
 Float_t *TVolumePosition::Local2Master(const Float_t *local, Float_t *master, Int_t nPoints) const
 {
-   Double_t *matrix = 0;
-   Float_t *trans = 0;
+   Double_t *matrix = nullptr;
+   Float_t *trans = nullptr;
    if (!fMatrix ||  fMatrix == TVolume::GetIdentity() || !(matrix = ((TRotMatrix *)fMatrix)->GetMatrix()) )
    {
       trans = master;
@@ -419,8 +419,8 @@ Float_t *TVolumePosition::Local2Master(const Float_t *local, Float_t *master, In
 
 Double_t *TVolumePosition::Master2Local(const Double_t *master, Double_t *local, Int_t nPoints) const
 {
-   Double_t *matrix = 0;
-   Double_t *trans = 0;
+   Double_t *matrix = nullptr;
+   Double_t *trans = nullptr;
    if (!fMatrix ||  fMatrix == TVolume::GetIdentity() || !(matrix = ((TRotMatrix *)fMatrix)->GetMatrix()) ){
       trans = local;
       for (int i =0; i < nPoints; i++,master += 3, local += 3) TCL::vsub(master,fX,local,3);
@@ -447,8 +447,8 @@ Double_t *TVolumePosition::Master2Local(const Double_t *master, Double_t *local,
 
 Float_t *TVolumePosition::Master2Local(const Float_t *master, Float_t *local, Int_t nPoints) const
 {
-   Double_t *matrix = 0;
-   Float_t *trans = 0;
+   Double_t *matrix = nullptr;
+   Float_t *trans = nullptr;
    if (!fMatrix ||  fMatrix == TVolume::GetIdentity() || !(matrix = ((TRotMatrix *)fMatrix)->GetMatrix()) ){
       trans = local;
       for (int i =0; i < nPoints; i++,master += 3, local += 3) TCL::vsub(master,fX,local,3);
@@ -574,11 +574,11 @@ TVolumePosition &TVolumePosition::Mult(const TVolumePosition &curPosition) {
 
 
    // Pick the "old" position by pieces
-   TVolume *curNode = 0;
- //  UInt_t curPositionId    = 0;
+   TVolume *curNode = nullptr;
+   //  UInt_t curPositionId    = 0;
    curNode       = curPosition.GetNode();
  //     curPositionId = curPosition.GetId();
-   const TRotMatrix *oldMatrix = 0;
+   const TRotMatrix *oldMatrix = nullptr;
    Double_t oldTranslation[] = { 0, 0, 0 };
    oldMatrix         = GetMatrix();
    oldTranslation[0] = GetX();
@@ -630,11 +630,11 @@ void TVolumePosition::Streamer(TBuffer &R__b)
 {
    TRotMatrix     *save = fMatrix;
    if (R__b.IsReading()) {
-      fMatrix = 0;
+      fMatrix = nullptr;
       R__b.ReadClassBuffer(TVolumePosition::Class(), this);
       if (!fMatrix) fMatrix = save;
    } else {
-      if (save == TVolume::GetIdentity() ) fMatrix = 0;
+      if (save == TVolume::GetIdentity()) fMatrix = nullptr;
       R__b.WriteClassBuffer(TVolumePosition::Class(), this);
       fMatrix = save;
    }

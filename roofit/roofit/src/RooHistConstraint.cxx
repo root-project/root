@@ -208,17 +208,17 @@ Double_t RooHistConstraint::getLogVal(const RooArgSet* /*set*/) const
 
 Double_t RooHistConstraint::logSum(Int_t i) const
 {
-  static Double_t* _lut = 0 ;
-  if (!_lut) {
-    _lut = new Double_t[5000] ;
-    for (Int_t ii=0 ; ii<5000 ; ii++) _lut[ii] = 0 ;
+   static Double_t *_lut = nullptr;
+   if (!_lut) {
+      _lut = new Double_t[5000];
+      for (Int_t ii = 0; ii < 5000; ii++) _lut[ii] = 0;
 
-    for (Int_t j=1 ; j<=5000 ; j++) {
-      Double_t logj = log((Double_t)j) ;
-      for (Int_t ii=j ; ii<=5000 ; ii++) {
-   _lut[ii-1] += logj ;
+      for (Int_t j = 1; j <= 5000; j++) {
+         Double_t logj = log((Double_t)j);
+         for (Int_t ii = j; ii <= 5000; ii++) {
+            _lut[ii - 1] += logj;
+         }
       }
-    }
   }
 
   if (i<5000) {

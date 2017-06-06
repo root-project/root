@@ -55,15 +55,14 @@ void GetTextColorForIndex(Color_t colorIndex, Float_t &r, Float_t &g, Float_t &b
 //_________________________________________________________________
 CGRect BBoxForCTRun(CTFontRef font, CTRunRef run)
 {
-   assert(font != 0 && "BBoxForCTRun, parameter 'font' is null");
-   assert(run != 0 && "BBoxForCTRun, parameter 'run' is null");
+   assert(font != nullptr && "BBoxForCTRun, parameter 'font' is null");
+   assert(run != nullptr && "BBoxForCTRun, parameter 'run' is null");
 
    CGRect bbox = {};
    if (const CFIndex nGlyphs = CTRunGetGlyphCount(run)) {
       std::vector<CGGlyph> glyphs(nGlyphs);
       CTRunGetGlyphs(run, CFRangeMake(0, 0), &glyphs[0]);
-      bbox = CTFontGetBoundingRectsForGlyphs(font, defaultFontOrientation,
-                                             &glyphs[0], 0, nGlyphs);
+      bbox = CTFontGetBoundingRectsForGlyphs(font, defaultFontOrientation, &glyphs[0], nullptr, nGlyphs);
    }
 
    return bbox;
@@ -72,9 +71,7 @@ CGRect BBoxForCTRun(CTFontRef font, CTRunRef run)
 }
 
 //_________________________________________________________________
-TextLine::TextLine(const char *textLine, CTFontRef font)
-             : fCTLine(0),
-               fCTFont(font)
+TextLine::TextLine(const char *textLine, CTFontRef font) : fCTLine(nullptr), fCTFont(font)
 {
    //Create attributed string with one attribue: the font.
    CFStringRef keys[] = {kCTFontAttributeName};
@@ -84,9 +81,7 @@ TextLine::TextLine(const char *textLine, CTFontRef font)
 }
 
 //_________________________________________________________________
-TextLine::TextLine(const std::vector<UniChar> &unichars, CTFontRef font)
-             : fCTLine(0),
-               fCTFont(font)
+TextLine::TextLine(const std::vector<UniChar> &unichars, CTFontRef font) : fCTLine(nullptr), fCTFont(font)
 
 {
    //Create attributed string with one attribue: the font.
@@ -97,9 +92,7 @@ TextLine::TextLine(const std::vector<UniChar> &unichars, CTFontRef font)
 }
 
 //_________________________________________________________________
-TextLine::TextLine(const char *textLine, CTFontRef font, Color_t color)
-            : fCTLine(0),
-              fCTFont(font)
+TextLine::TextLine(const char *textLine, CTFontRef font, Color_t color) : fCTLine(nullptr), fCTFont(font)
 {
    //Create attributed string with font and color.
    using MacOSX::Util::CFScopeGuard;
@@ -122,9 +115,7 @@ TextLine::TextLine(const char *textLine, CTFontRef font, Color_t color)
 }
 
 //_________________________________________________________________
-TextLine::TextLine(const char *textLine, CTFontRef font, const CGFloat *rgb)
-            : fCTLine(0),
-              fCTFont(font)
+TextLine::TextLine(const char *textLine, CTFontRef font, const CGFloat *rgb) : fCTLine(nullptr), fCTFont(font)
 {
    //Create attributed string with font and color.
    using ROOT::MacOSX::Util::CFScopeGuard;
@@ -144,8 +135,7 @@ TextLine::TextLine(const char *textLine, CTFontRef font, const CGFloat *rgb)
 
 //_________________________________________________________________
 TextLine::TextLine(const std::vector<UniChar> &unichars, CTFontRef font, Color_t color)
-            : fCTLine(0),
-              fCTFont(font)
+   : fCTLine(nullptr), fCTFont(font)
 {
    //Create attributed string with font and color.
    using MacOSX::Util::CFScopeGuard;
@@ -266,7 +256,7 @@ void TextLine::Init(const std::vector<UniChar> &unichars, UInt_t nAttribs, CFStr
 //_________________________________________________________________
 void TextLine::DrawLine(CGContextRef ctx)const
 {
-   assert(ctx != 0 && "DrawLine, ctx parameter is null");
+   assert(ctx != nullptr && "DrawLine, ctx parameter is null");
    CTLineDraw(fCTLine, ctx);
 }
 
@@ -274,7 +264,7 @@ void TextLine::DrawLine(CGContextRef ctx)const
 //______________________________________________________________________________
 void TextLine::DrawLine(CGContextRef ctx, Double_t x, Double_t y)const
 {
-   assert(ctx != 0 && "DrawLine, ctx parameter is null");
+   assert(ctx != nullptr && "DrawLine, ctx parameter is null");
 
    CGContextSetAllowsAntialiasing(ctx, 1);
    UInt_t w = 0, h = 0;
@@ -323,8 +313,8 @@ void DrawTextLineNoKerning(CGContextRef ctx, CTFontRef font, const std::vector<U
    if (!text.size())//This can happen with ROOT's GUI.
       return;
 
-   assert(ctx != 0 && "DrawTextLineNoKerning, ctx parameter is null");
-   assert(font != 0 && "DrawTextLineNoKerning, font parameter is null");
+   assert(ctx != nullptr && "DrawTextLineNoKerning, ctx parameter is null");
+   assert(font != nullptr && "DrawTextLineNoKerning, font parameter is null");
    assert(text.size() && "DrawTextLineNoKerning, text parameter is an empty vector");
 
    std::vector<CGGlyph> glyphs(text.size());

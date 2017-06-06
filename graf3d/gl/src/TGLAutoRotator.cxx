@@ -42,18 +42,10 @@ ClassImp(TGLAutoRotator);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TGLAutoRotator::TGLAutoRotator(TGLViewer* v) :
-   fViewer(v), fCamera(0),
-   fTimer(new TTimer), fWatch(new TStopwatch),
-   fRotateScene(kFALSE),
-   fDeltaPhi(0.005),
-   fDt    (0.01),
-   fWPhi  (0.40),
-   fWTheta(0.15), fATheta(0.5),
-   fWDolly(0.30), fADolly(0.4),
-   fTimerRunning(kFALSE),
-   fImageCount(0), fImageAutoSave(kFALSE),
-   fImageGUIBaseName("animation"), fImageGUIOutMode(1)
+TGLAutoRotator::TGLAutoRotator(TGLViewer *v)
+   : fViewer(v), fCamera(nullptr), fTimer(new TTimer), fWatch(new TStopwatch), fRotateScene(kFALSE), fDeltaPhi(0.005),
+     fDt(0.01), fWPhi(0.40), fWTheta(0.15), fATheta(0.5), fWDolly(0.30), fADolly(0.4), fTimerRunning(kFALSE),
+     fImageCount(0), fImageAutoSave(kFALSE), fImageGUIBaseName("animation"), fImageGUIOutMode(1)
 {
    fTimer->Connect("Timeout()", "TGLAutoRotator", this, "Timeout()");
 }
@@ -291,7 +283,7 @@ void TGLAutoRotator::RotateScene()
    for (; sceneIter != scenes.end(); ++sceneIter) {
      TGLScene::TSceneInfo *sceneInfo = dynamic_cast<TGLScene::TSceneInfo *>(*sceneIter);
       if (sceneInfo) {
-         TGLPhysicalShape *axisShape = 0;
+         TGLPhysicalShape *axisShape = nullptr;
          TGLScene::ShapeVec_i shapeIter = sceneInfo->fShapesOfInterest.begin();
          for (; shapeIter != sceneInfo->fShapesOfInterest.end(); ++shapeIter) {
             TGLPhysicalShape * const testShape = const_cast<TGLPhysicalShape *>(*shapeIter);

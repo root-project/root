@@ -177,7 +177,7 @@ TStyle::TStyle(const char *name, const char *title)
    }
    if (strcmp(style_name,"Bold") == 0) {
       // Authors: Art Poskanzer and Jim Thomas, LBNL, Oct. 2000
-      SetPalette(1,0);
+      SetPalette(1, nullptr);
       SetCanvasColor(10);
       SetCanvasBorderMode(0);
       SetFrameLineWidth(3);
@@ -204,7 +204,7 @@ TStyle::TStyle(const char *name, const char *title)
    }
    if (strcmp(style_name,"Video") == 0) {
       // Author: Art Poskanzer, LBNL, Oct. 1999
-      SetPalette(1,0);
+      SetPalette(1, nullptr);
       SetCanvasColor(10);
       SetCanvasBorderMode(0);
       SetFrameLineWidth(3);
@@ -231,7 +231,7 @@ TStyle::TStyle(const char *name, const char *title)
       // Authors: Art Poskanzer and Jim Thomas, LBNL, Oct. 2000
       SetOptTitle(0);
       SetOptStat(0);
-      SetPalette(8,0);
+      SetPalette(8, nullptr);
       SetCanvasColor(10);
       SetCanvasBorderMode(0);
       SetFrameLineWidth(3);
@@ -627,7 +627,7 @@ void TStyle::Reset(Option_t *opt)
       return;
    }
    if (strcmp(style_name,"Bold") == 0) {
-      SetPalette(1,0);
+      SetPalette(1, nullptr);
       SetCanvasColor(10);
       SetCanvasBorderMode(0);
       SetFrameLineWidth(3);
@@ -653,7 +653,7 @@ void TStyle::Reset(Option_t *opt)
       return;
    }
    if (strcmp(style_name,"Video") == 0) {
-      SetPalette(1,0);
+      SetPalette(1, nullptr);
       SetCanvasColor(10);
       SetCanvasBorderMode(0);
       SetFrameLineWidth(3);
@@ -679,7 +679,7 @@ void TStyle::Reset(Option_t *opt)
    if (strcmp(style_name,"Pub") == 0) {
       SetOptTitle(0);
       SetOptStat(0);
-      SetPalette(8,0);
+      SetPalette(8, nullptr);
       SetCanvasColor(10);
       SetCanvasBorderMode(0);
       SetFrameLineWidth(3);

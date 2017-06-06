@@ -30,10 +30,9 @@ ClassImp(TTreeRow);
 TTreeRow::TTreeRow()
 {
    fColumnCount = 0;
-   fFields      = 0;
-   fOriginal    = 0;
-   fRow         = 0;
-
+   fFields = nullptr;
+   fOriginal = nullptr;
+   fRow = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -42,10 +41,9 @@ TTreeRow::TTreeRow()
 TTreeRow::TTreeRow(Int_t nfields)
 {
    fColumnCount = nfields;
-   fFields      = 0;
-   fOriginal    = 0;
-   fRow         = 0;
-
+   fFields = nullptr;
+   fOriginal = nullptr;
+   fRow = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -54,9 +52,9 @@ TTreeRow::TTreeRow(Int_t nfields)
 TTreeRow::TTreeRow(Int_t nfields, const Int_t *fields, const char *row)
 {
    fColumnCount = nfields;
-   fFields      = 0;
-   fOriginal    = 0;
-   fRow         = 0;
+   fFields = nullptr;
+   fOriginal = nullptr;
+   fRow = nullptr;
    SetRow(fields,row);
 }
 
@@ -66,10 +64,10 @@ TTreeRow::TTreeRow(Int_t nfields, const Int_t *fields, const char *row)
 
 TTreeRow::TTreeRow(TSQLRow *original)
 {
-   fFields      = 0;
-   fOriginal    = 0;
+   fFields = nullptr;
+   fOriginal = nullptr;
    fColumnCount = 0;
-   fRow         = 0;
+   fRow = nullptr;
 
    if (!original) {
       Error("TTreeRow", "original may not be 0");
@@ -101,7 +99,7 @@ void TTreeRow::Close(Option_t *)
    if (fRow)    delete [] fRow;
    if (fFields) delete [] fFields;
    fColumnCount = 0;
-   fOriginal = 0;
+   fOriginal = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -140,8 +138,7 @@ ULong_t TTreeRow::GetFieldLength(Int_t field)
 
 const char *TTreeRow::GetField(Int_t field)
 {
-   if (!IsValid(field))
-      return 0;
+   if (!IsValid(field)) return nullptr;
 
    if (fOriginal)
       return fOriginal->GetField(field);
@@ -159,7 +156,7 @@ void TTreeRow::SetRow(const Int_t *fields, const char *row)
    if (fFields) delete [] fFields;
    Int_t nch    = fields[fColumnCount-1];
    fFields      = new Int_t[fColumnCount];
-   fOriginal    = 0;
+   fOriginal = nullptr;
    fRow         = new char[nch];
    for (Int_t i=0;i<fColumnCount;i++) fFields[i] = fields[i];
    memcpy(fRow,row,nch);

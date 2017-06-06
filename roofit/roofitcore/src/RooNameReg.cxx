@@ -36,8 +36,7 @@ using namespace std ;
 ClassImp(RooNameReg);
 ;
 
-RooNameReg* RooNameReg::_instance = 0 ;
-
+RooNameReg *RooNameReg::_instance = nullptr;
 
 RooNameReg::RooNameReg(Int_t hashSize) : TNamed("RooNameReg","RooFit Name Registry"), _htable(hashSize) {} 
 
@@ -63,9 +62,9 @@ RooNameReg::RooNameReg(const RooNameReg& other) : TNamed(other)
 
 RooNameReg& RooNameReg::instance()
 {
-  if (_instance==0) {
-    _instance = new RooNameReg(100000) ;  // there's only one of these, so we can afford to make it large
-    RooSentinel::activate() ;
+   if (_instance == nullptr) {
+      _instance = new RooNameReg(100000); // there's only one of these, so we can afford to make it large
+      RooSentinel::activate();
   }
   return *_instance ;
 }
@@ -79,7 +78,7 @@ void RooNameReg::cleanup()
 {
   if(_instance) {
     delete _instance ;
-    _instance = 0 ;
+    _instance = nullptr;
   }
 }
 
@@ -91,9 +90,9 @@ void RooNameReg::cleanup()
 const TNamed* RooNameReg::constPtr(const char* inStr) 
 {
   // Handle null pointer case explicitly
-  if (inStr==0) return 0 ;
+  if (inStr == nullptr) return nullptr;
 
-//   cout << "RooNameReg::constPtr(inStr=" << inStr << ") _htable entries = " << _htable.entries() << endl ;
+  //   cout << "RooNameReg::constPtr(inStr=" << inStr << ") _htable entries = " << _htable.entries() << endl ;
 
   // See if name is already registered ;
   TNamed* t = (TNamed*) _htable.find(inStr) ;
@@ -115,7 +114,7 @@ const TNamed* RooNameReg::constPtr(const char* inStr)
 const char* RooNameReg::constStr(const TNamed* namePtr) 
 {
   if (namePtr) return namePtr->GetName() ;
-  return 0 ;  
+  return nullptr;
 }
 
 
@@ -123,9 +122,9 @@ const char* RooNameReg::constStr(const TNamed* namePtr)
 /// Return a unique TNamed pointer for given C++ string
 
 const TNamed* RooNameReg::ptr(const char* stringPtr) 
-{ 
-  if (stringPtr==0) return 0 ;
-  return instance().constPtr(stringPtr) ; 
+{
+   if (stringPtr == nullptr) return nullptr;
+   return instance().constPtr(stringPtr); 
 }
 
 
@@ -133,9 +132,9 @@ const TNamed* RooNameReg::ptr(const char* stringPtr)
 /// Return C++ string corresponding to given TNamed pointer
 
 const char* RooNameReg::str(const TNamed* ptr) 
-{ 
-  if (ptr==0) return 0 ;
-  return instance().constStr(ptr) ; 
+{
+   if (ptr == nullptr) return nullptr;
+   return instance().constStr(ptr); 
 }
 
 
@@ -145,7 +144,7 @@ const char* RooNameReg::str(const TNamed* ptr)
 const TNamed* RooNameReg::known(const char* inStr)
 {
   // Handle null pointer case explicitly
-  if (inStr==0) return 0 ;
-  if (_instance==0) return 0;
+  if (inStr == nullptr) return nullptr;
+  if (_instance == nullptr) return nullptr;
   return (const TNamed*) _instance->_htable.find(inStr) ;
 }

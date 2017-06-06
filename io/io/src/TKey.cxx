@@ -91,7 +91,7 @@ ClassImp(TKey);
 
 TKey::TKey() : TNamed(), fDatime((UInt_t)0)
 {
-   Build(0, "", 0);
+   Build(nullptr, "", 0);
 
    fKeylen     = Sizeof();
 
@@ -282,7 +282,8 @@ TKey::TKey(const TObject *obj, const char *name, Int_t bufsize, TDirectory* moth
       fBufferRef->SetBufferOffset(0);
       Streamer(*fBufferRef);         //write key itself again
       memcpy(fBuffer,fBufferRef->Buffer(),fKeylen);
-      delete fBufferRef; fBufferRef = 0;
+      delete fBufferRef;
+      fBufferRef = nullptr;
    } else {
       fBuffer = fBufferRef->Buffer();
       Create(fObjlen);
@@ -373,7 +374,8 @@ TKey::TKey(const void *obj, const TClass *cl, const char *name, Int_t bufsize, T
       fBufferRef->SetBufferOffset(0);
       Streamer(*fBufferRef);         //write key itself again
       memcpy(fBuffer,fBufferRef->Buffer(),fKeylen);
-      delete fBufferRef; fBufferRef = 0;
+      delete fBufferRef;
+      fBufferRef = nullptr;
    } else {
       fBuffer = fBufferRef->Buffer();
       Create(fObjlen);
@@ -394,10 +396,10 @@ void TKey::Build(TDirectory* motherDir, const char* classname, Long64_t filepos)
 
    fPidOffset  = 0;
    fNbytes     = 0;
-   fBuffer     = 0;
+   fBuffer = nullptr;
    fKeylen     = 0;
    fObjlen     = 0;
-   fBufferRef  = 0;
+   fBufferRef = nullptr;
    fCycle      = 0;
    fSeekPdir   = 0;
    fSeekKey    = 0;
@@ -425,7 +427,7 @@ void TKey::Build(TDirectory* motherDir, const char* classname, Long64_t filepos)
 
 void TKey::Browse(TBrowser *b)
 {
-   if (fMotherDir==0) return;
+   if (fMotherDir == nullptr) return;
 
    TClass *objcl = TClass::GetClass(GetClassName());
 
@@ -436,7 +438,7 @@ void TKey::Browse(TBrowser *b)
          if (tobj->InheritsFrom(TCollection::Class()))
             tobj->Delete();   // delete also collection elements
          delete tobj;
-         obj = 0;
+         obj = nullptr;
       }
    }
 
@@ -472,7 +474,7 @@ void TKey::Create(Int_t nbytes, TFile* externFile)
 //*-*-------------------find free segment
 //*-*                    =================
    TFree *bestfree  = f1->GetBestFree(lfree,nsize);
-   if (bestfree == 0) {
+   if (bestfree == nullptr) {
       Error("Create","Cannot allocate %d bytes for ID = %s Title = %s",
             nsize,GetName(),GetTitle());
       return;
@@ -547,7 +549,7 @@ void TKey::DeleteBuffer()
 {
    if (fBufferRef) {
       delete fBufferRef;
-      fBufferRef = 0;
+      fBufferRef = nullptr;
    } else {
       // We only need to delete fBuffer if fBufferRef is zero because
       // if fBufferRef exists, we delegate ownership of fBuffer to fBufferRef.
@@ -555,7 +557,7 @@ void TKey::DeleteBuffer()
          delete [] fBuffer;
       }
    }
-   fBuffer = 0;
+   fBuffer = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -571,7 +573,7 @@ Short_t TKey::GetCycle() const
 
 TFile *TKey::GetFile() const
 {
-   return fMotherDir!=0 ? fMotherDir->GetFile() : gFile;
+   return fMotherDir != nullptr ? fMotherDir->GetFile() : gFile;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -732,19 +734,19 @@ TObject *TKey::ReadObj()
    TClass *cl = TClass::GetClass(fClassName.Data());
    if (!cl) {
       Error("ReadObj", "Unknown class %s", fClassName.Data());
-      return 0;
+      return nullptr;
    }
    if (!cl->IsTObject()) {
       // in principle user should call TKey::ReadObjectAny!
-      return (TObject*)ReadObjectAny(0);
+      return (TObject *)ReadObjectAny(nullptr);
    }
 
    fBufferRef = new TBufferFile(TBuffer::kRead, fObjlen+fKeylen);
    if (!fBufferRef) {
       Error("ReadObj", "Cannot allocate buffer: fObjlen = %d", fObjlen);
-      return 0;
+      return nullptr;
    }
-   if (GetFile()==0) return 0;
+   if (GetFile() == nullptr) return nullptr;
    fBufferRef->SetParent(GetFile());
    fBufferRef->SetPidOffset(fPidOffset);
 
@@ -754,18 +756,18 @@ TObject *TKey::ReadObj()
       {
         delete fBufferRef;
         delete [] fBuffer;
-        fBufferRef = 0;
-        fBuffer = 0;
-        return 0;
+        fBufferRef = nullptr;
+        fBuffer = nullptr;
+        return nullptr;
       }
       memcpy(fBufferRef->Buffer(),fBuffer,fKeylen);
    } else {
       fBuffer = fBufferRef->Buffer();
       if( !ReadFile() ) {                   //Read object structure from file
          delete fBufferRef;
-         fBufferRef = 0;
-         fBuffer = 0;
-         return 0;
+         fBufferRef = nullptr;
+         fBuffer = nullptr;
+         return nullptr;
       }
    }
 
@@ -774,13 +776,13 @@ TObject *TKey::ReadObj()
    Version_t kvers = fBufferRef->ReadVersion();
 
    fBufferRef->SetBufferOffset(fKeylen);
-   TObject *tobj = 0;
+   TObject *tobj = nullptr;
    // Create an instance of this class
 
    char *pobj = (char*)cl->New();
    if (!pobj) {
       Error("ReadObj", "Cannot create new object of class %s", fClassName.Data());
-      return 0;
+      return nullptr;
    }
    Int_t baseOffset = cl->GetBaseClassOffset(TObject::Class());
    if (baseOffset==-1) {
@@ -817,8 +819,8 @@ TObject *TKey::ReadObj()
          // Even-though we have a TObject, if the class is emulated the virtual
          // table may not be 'right', so let's go via the TClass.
          cl->Destructor(pobj);
-         pobj = 0;
-         tobj = 0;
+         pobj = nullptr;
+         tobj = nullptr;
          goto CLEAR;
       }
    } else {
@@ -845,8 +847,8 @@ TObject *TKey::ReadObj()
 
 CLEAR:
    delete fBufferRef;
-   fBufferRef = 0;
-   fBuffer    = 0;
+   fBufferRef = nullptr;
+   fBuffer = nullptr;
 
    return tobj;
 }
@@ -875,19 +877,19 @@ TObject *TKey::ReadObjWithBuffer(char *bufferRead)
    TClass *cl = TClass::GetClass(fClassName.Data());
    if (!cl) {
       Error("ReadObjWithBuffer", "Unknown class %s", fClassName.Data());
-      return 0;
+      return nullptr;
    }
    if (!cl->IsTObject()) {
       // in principle user should call TKey::ReadObjectAny!
-      return (TObject*)ReadObjectAny(0);
+      return (TObject *)ReadObjectAny(nullptr);
    }
 
    fBufferRef = new TBufferFile(TBuffer::kRead, fObjlen+fKeylen);
    if (!fBufferRef) {
       Error("ReadObjWithBuffer", "Cannot allocate buffer: fObjlen = %d", fObjlen);
-      return 0;
+      return nullptr;
    }
-   if (GetFile()==0) return 0;
+   if (GetFile() == nullptr) return nullptr;
    fBufferRef->SetParent(GetFile());
    fBufferRef->SetPidOffset(fPidOffset);
 
@@ -904,13 +906,13 @@ TObject *TKey::ReadObjWithBuffer(char *bufferRead)
    Version_t kvers = fBufferRef->ReadVersion();
 
    fBufferRef->SetBufferOffset(fKeylen);
-   TObject *tobj = 0;
+   TObject *tobj = nullptr;
    // Create an instance of this class
 
    char *pobj = (char*)cl->New();
    if (!pobj) {
       Error("ReadObjWithBuffer", "Cannot create new object of class %s", fClassName.Data());
-      return 0;
+      return nullptr;
    }
    Int_t baseOffset = cl->GetBaseClassOffset(TObject::Class());
    if (baseOffset==-1) {
@@ -946,8 +948,8 @@ TObject *TKey::ReadObjWithBuffer(char *bufferRead)
          // Even-though we have a TObject, if the class is emulated the virtual
          // table may not be 'right', so let's go via the TClass.
          cl->Destructor(pobj);
-         pobj = 0;
-         tobj = 0;
+         pobj = nullptr;
+         tobj = nullptr;
          goto CLEAR;
       }
    } else {
@@ -974,8 +976,8 @@ TObject *TKey::ReadObjWithBuffer(char *bufferRead)
 
 CLEAR:
    delete fBufferRef;
-   fBufferRef = 0;
-   fBuffer    = 0;
+   fBufferRef = nullptr;
+   fBuffer = nullptr;
 
    return tobj;
 }
@@ -1010,9 +1012,9 @@ void *TKey::ReadObjectAny(const TClass* expectedClass)
    fBufferRef = new TBufferFile(TBuffer::kRead, fObjlen+fKeylen);
    if (!fBufferRef) {
       Error("ReadObj", "Cannot allocate buffer: fObjlen = %d", fObjlen);
-      return 0;
+      return nullptr;
    }
-   if (GetFile()==0) return 0;
+   if (GetFile() == nullptr) return nullptr;
    fBufferRef->SetParent(GetFile());
    fBufferRef->SetPidOffset(fPidOffset);
 
@@ -1031,10 +1033,10 @@ void *TKey::ReadObjectAny(const TClass* expectedClass)
 
    fBufferRef->SetBufferOffset(fKeylen);
    TClass *cl = TClass::GetClass(fClassName.Data());
-   TClass *clOnfile = 0;
+   TClass *clOnfile = nullptr;
    if (!cl) {
       Error("ReadObjectAny", "Unknown class %s", fClassName.Data());
-      return 0;
+      return nullptr;
    }
    Int_t baseOffset = 0;
    if (expectedClass) {
@@ -1047,7 +1049,7 @@ void *TKey::ReadObjectAny(const TClass* expectedClass)
              !expectedClass->GetSchemaRules()->HasRuleWithSourceClass(cl->GetName()))
          {
             // There is no converter
-            return 0;
+            return nullptr;
          }
          baseOffset = 0; // For now we do not support requesting from a class that is the base of one of the class for which there is transformation to ....
          clOnfile = cl;
@@ -1066,7 +1068,7 @@ void *TKey::ReadObjectAny(const TClass* expectedClass)
    void *pobj = cl->New();
    if (!pobj) {
       Error("ReadObjectAny", "Cannot create new object of class %s", fClassName.Data());
-      return 0;
+      return nullptr;
    }
 
    if (kvers > 1)
@@ -1093,7 +1095,7 @@ void *TKey::ReadObjectAny(const TClass* expectedClass)
       } else {
          delete [] fBuffer;
          cl->Destructor(pobj);
-         pobj = 0;
+         pobj = nullptr;
          goto CLEAR;
       }
    } else {
@@ -1130,8 +1132,8 @@ void *TKey::ReadObjectAny(const TClass* expectedClass)
 
    CLEAR:
    delete fBufferRef;
-   fBufferRef = 0;
-   fBuffer    = 0;
+   fBufferRef = nullptr;
+   fBuffer = nullptr;
 
    return ( ((char*)pobj) + baseOffset );
 }
@@ -1145,7 +1147,7 @@ void *TKey::ReadObjectAny(const TClass* expectedClass)
 
 Int_t TKey::Read(TObject *obj)
 {
-   if (!obj || (GetFile()==0)) return 0;
+   if (!obj || (GetFile() == nullptr)) return 0;
 
    fBufferRef = new TBufferFile(TBuffer::kRead, fObjlen+fKeylen);
    fBufferRef->SetParent(GetFile());
@@ -1193,8 +1195,8 @@ Int_t TKey::Read(TObject *obj)
    }
 
    delete fBufferRef;
-   fBufferRef = 0;
-   fBuffer    = 0;
+   fBufferRef = nullptr;
+   fBuffer = nullptr;
    return fNbytes;
 }
 
@@ -1261,7 +1263,7 @@ void TKey::ReadKeyBuffer(char *&buffer)
 Bool_t TKey::ReadFile()
 {
    TFile* f = GetFile();
-   if (f==0) return kFALSE;
+   if (f == nullptr) return kFALSE;
 
    Int_t nsize = fNbytes;
    f->Seek(fSeekKey);
@@ -1299,7 +1301,7 @@ void TKey::Reset()
 {
    fPidOffset  = 0;
    fNbytes     = 0;
-   fBuffer     = 0;
+   fBuffer = nullptr;
    fObjlen     = 0;
    fCycle      = 0;
    fSeekPdir   = 0;
@@ -1516,7 +1518,7 @@ Int_t TKey::WriteFileKeepBuffer(TFile *f)
 
 const char *TKey::GetIconName() const
 {
-   return (!fTitle.IsNull() && fTitle.BeginsWith("/* ") ?  fTitle.Data() : 0);
+   return (!fTitle.IsNull() && fTitle.BeginsWith("/* ") ? fTitle.Data() : nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

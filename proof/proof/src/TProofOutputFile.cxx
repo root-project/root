@@ -43,8 +43,8 @@ TProofOutputFile::TProofOutputFile(const char *path,
 {
    fIsLocal = kFALSE;
    fMerged = kFALSE;
-   fMerger = 0;
-   fDataSet = 0;
+   fMerger = nullptr;
+   fDataSet = nullptr;
    ResetBit(TProofOutputFile::kRetrieve);
    ResetBit(TProofOutputFile::kSwapFile);
 
@@ -71,8 +71,8 @@ TProofOutputFile::TProofOutputFile(const char *path,
 {
    fIsLocal = kFALSE;
    fMerged = kFALSE;
-   fMerger = 0;
-   fDataSet = 0;
+   fMerger = nullptr;
+   fDataSet = nullptr;
    fMergeHistosOneGo = kFALSE;
 
    // Fill the run type and option type
@@ -109,7 +109,7 @@ void TProofOutputFile::Init(const char *path, const char *dsname)
 
    TString xpath(path);
    // Resolve the relevant placeholders in fFileName (e.g. root://a.ser.ver//data/dir/<group>/<user>/file)
-   TProofServ::ResolveKeywords(xpath, 0);
+   TProofServ::ResolveKeywords(xpath, nullptr);
    TUrl u(xpath, kTRUE);
    // File name
    fFileName = u.GetFile();
@@ -185,7 +185,7 @@ void TProofOutputFile::Init(const char *path, const char *dsname)
                dirPath += "<qnum>";
             }
             // Resolve the relevant placeholders
-            TProofServ::ResolveKeywords(dirPath, 0);
+            TProofServ::ResolveKeywords(dirPath, nullptr);
          }
       }
       // Save the raw directory
@@ -223,7 +223,7 @@ void TProofOutputFile::Init(const char *path, const char *dsname)
    Info("Init", "output file url: %s", fOutputFileName.Data());
    // Fill ordinal
    fWorkerOrdinal = "<ord>";
-   TProofServ::ResolveKeywords(fWorkerOrdinal, 0);
+   TProofServ::ResolveKeywords(fWorkerOrdinal, nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -255,7 +255,7 @@ void TProofOutputFile::SetOutputFileName(const char *name)
 
 TFile* TProofOutputFile::OpenFile(const char* opt)
 {
-   if (fFileName.IsNull()) return 0;
+   if (fFileName.IsNull()) return nullptr;
 
    // Create the path
    TString fileLoc;
@@ -338,7 +338,7 @@ Long64_t TProofOutputFile::Merge(TCollection* list)
       }
 
       TIter next(list);
-      TObject *o = 0;
+      TObject *o = nullptr;
       while((o = next())) {
          TProofOutputFile *pFile = dynamic_cast<TProofOutputFile *>(o);
          if (pFile) {
@@ -357,7 +357,7 @@ Long64_t TProofOutputFile::Merge(TCollection* list)
       }
       fMerged = kTRUE;
       TString path;
-      TFileInfo *fi = 0;
+      TFileInfo *fi = nullptr;
       // If new, add ourseelves
       dataset->Update();
       PDB(kOutput,2) Info("Merge","dataset: %s (nfiles: %lld)", dataset->GetName(), dataset->GetNFiles());
@@ -384,7 +384,7 @@ Long64_t TProofOutputFile::Merge(TCollection* list)
       }
 
       TIter next(list);
-      TObject *o = 0;
+      TObject *o = nullptr;
       while((o = next())) {
          TProofOutputFile *pFile = dynamic_cast<TProofOutputFile *>(o);
          if (pFile) {
@@ -525,7 +525,7 @@ Int_t TProofOutputFile::AssertDir(const char *dirpath)
    if (gSystem->GetPathInfo(existsPath, st) == 0) {
       TString xpath = existsPath;
       TIter nxp(&subPaths);
-      TObjString *os = 0;
+      TObjString *os = nullptr;
       while ((os = (TObjString *) nxp())) {
          xpath += TString::Format("/%s", os->GetName());
          if (gSystem->mkdir(xpath, kTRUE) == 0) {

@@ -61,17 +61,16 @@ const char* TSQLServer::fgFloatFmt = "%e";
 TSQLServer *TSQLServer::Connect(const char *db, const char *uid, const char *pw)
 {
    TPluginHandler *h;
-   TSQLServer *serv = 0;
+   TSQLServer *serv = nullptr;
 
    if ((h = gROOT->GetPluginManager()->FindHandler("TSQLServer", db))) {
-      if (h->LoadPlugin() == -1)
-         return 0;
+      if (h->LoadPlugin() == -1) return nullptr;
       serv = (TSQLServer *) h->ExecPlugin(3, db, uid, pw);
    }
 
    if (serv && serv->IsZombie()) {
       delete serv;
-      serv = 0;
+      serv = nullptr;
    }
 
    return serv;
@@ -85,7 +84,7 @@ TSQLServer *TSQLServer::Connect(const char *db, const char *uid, const char *pw)
 Bool_t TSQLServer::Exec(const char* sql)
 {
    TSQLResult* res = Query(sql);
-   if (res==0) return kFALSE;
+   if (res == nullptr) return kFALSE;
 
    delete res;
 
@@ -110,7 +109,7 @@ Int_t TSQLServer::GetErrorCode() const
 
 const char* TSQLServer::GetErrorMsg() const
 {
-   return GetErrorCode()==0 ? 0 : fErrorMsg.Data();
+   return GetErrorCode() == 0 ? nullptr : fErrorMsg.Data();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -130,8 +129,7 @@ void TSQLServer::SetError(Int_t code, const char* msg, const char* method)
 {
    fErrorCode = code;
    fErrorMsg = msg;
-   if ((method!=0) && fErrorOut)
-      Error(method,"Code: %d  Msg: %s", code, (msg ? msg : "No message"));
+   if ((method != nullptr) && fErrorOut) Error(method, "Code: %d  Msg: %s", code, (msg ? msg : "No message"));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -182,13 +180,13 @@ Bool_t TSQLServer::Rollback()
 TList* TSQLServer::GetTablesList(const char* wild)
 {
    TSQLResult* res = GetTables(fDB.Data(), wild);
-   if (res==0) return 0;
+   if (res == nullptr) return nullptr;
 
-   TList* lst = 0;
-   TSQLRow* row = 0;
-   while ((row = res->Next())!=0) {
+   TList *lst = nullptr;
+   TSQLRow *row = nullptr;
+   while ((row = res->Next()) != nullptr) {
       const char* tablename = row->GetField(0);
-      if (lst==0) {
+      if (lst == nullptr) {
          lst = new TList;
          lst->SetOwner(kTRUE);
       }
@@ -207,21 +205,21 @@ TList* TSQLServer::GetTablesList(const char* wild)
 
 Bool_t TSQLServer::HasTable(const char* tablename)
 {
-   if ((tablename==0) || (strlen(tablename)==0)) return kFALSE;
+   if ((tablename == nullptr) || (strlen(tablename) == 0)) return kFALSE;
 
    TList* lst = GetTablesList(tablename);
-   if (lst==0) return kFALSE;
+   if (lst == nullptr) return kFALSE;
 
    Bool_t res = kFALSE;
 
-   TObject* obj = 0;
+   TObject *obj = nullptr;
    TIter iter(lst);
 
    // Can be, that tablename contains "_" or "%" symbols, which are wildcards in SQL,
    // therefore more than one table can be returned as result.
    // One should check that exactly same name is appears
 
-   while ((obj = iter()) != 0)
+   while ((obj = iter()) != nullptr)
       if (strcmp(tablename, obj->GetName())==0) res = kTRUE;
 
    delete lst;
@@ -235,16 +233,16 @@ Bool_t TSQLServer::HasTable(const char* tablename)
 
 TSQLTableInfo* TSQLServer::GetTableInfo(const char* tablename)
 {
-   if ((tablename==0) || (*tablename==0)) return 0;
+   if ((tablename == nullptr) || (*tablename == 0)) return nullptr;
 
    TSQLResult* res = GetColumns(fDB.Data(), tablename);
-   if (res==0) return 0;
+   if (res == nullptr) return nullptr;
 
-   TList* lst = 0;
-   TSQLRow* row = 0;
-   while ((row = res->Next())!=0) {
+   TList *lst = nullptr;
+   TSQLRow *row = nullptr;
+   while ((row = res->Next()) != nullptr) {
       const char* columnname = row->GetField(0);
-      if (lst==0) lst = new TList;
+      if (lst == nullptr) lst = new TList;
       lst->Add(new TSQLColumnInfo(columnname));
       delete row;
    }
@@ -259,7 +257,7 @@ TSQLTableInfo* TSQLServer::GetTableInfo(const char* tablename)
 
 void TSQLServer::SetFloatFormat(const char* fmt)
 {
-   if (fmt==0) fmt = "%e";
+   if (fmt == nullptr) fmt = "%e";
    fgFloatFmt = fmt;
 }
 

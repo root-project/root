@@ -154,10 +154,8 @@ private:
    bool WantDiags() const { return fPDebug && *fPDebug > 5; }
 
 public:
-   TClingLookupHelper(cling::Interpreter &interpreter, TNormalizedCtxt &normCtxt,
-                      ExistingTypeCheck_t existingTypeCheck,
-                      AutoParse_t autoParse,
-                      const int *pgDebug = 0);
+   TClingLookupHelper(cling::Interpreter &interpreter, TNormalizedCtxt &normCtxt, ExistingTypeCheck_t existingTypeCheck,
+                      AutoParse_t autoParse, const int *pgDebug = nullptr);
    virtual ~TClingLookupHelper() { /* we're not owner */ }
 
    virtual bool ExistingTypeCheck(const std::string &tname, std::string &result);
@@ -330,7 +328,8 @@ clang::QualType AddDefaultParameters(clang::QualType instanceType,
                                      const TNormalizedCtxt &normCtxt);
 
 //______________________________________________________________________________
-llvm::StringRef DataMemberInfo__ValidArrayIndex(const clang::DeclaratorDecl &m, int *errnum = 0, llvm::StringRef  *errstr = 0);
+llvm::StringRef DataMemberInfo__ValidArrayIndex(const clang::DeclaratorDecl &m, int *errnum = nullptr,
+                                                llvm::StringRef *errstr = nullptr);
 
 enum class EIOCtorCategory : short {kAbsent, kDefault, kIOPtrType, kIORefType};
 
@@ -344,13 +343,8 @@ const clang::FunctionDecl* ClassInfo__HasMethod(const clang::DeclContext *cl, ch
 void CreateNameTypeMap(clang::CXXRecordDecl const&, std::map<std::string, ROOT::Internal::TSchemaType>&);
 
 //______________________________________________________________________________
-int ElementStreamer(std::ostream& finalString,
-                    const clang::NamedDecl &forcontext,
-                    const clang::QualType &qti,
-                    const char *t,
-                    int rwmode,
-                    const cling::Interpreter &interp,
-                    const char *tcl=0);
+int ElementStreamer(std::ostream &finalString, const clang::NamedDecl &forcontext, const clang::QualType &qti,
+                    const char *t, int rwmode, const cling::Interpreter &interp, const char *tcl = nullptr);
 
 //______________________________________________________________________________
 bool IsBase(const clang::CXXRecordDecl *cl, const clang::CXXRecordDecl *base, const clang::CXXRecordDecl *context,const cling::Interpreter &interp);
@@ -591,7 +585,7 @@ std::pair<std::string,clang::QualType> GetNameTypeForIO(const clang::QualType& t
 
 //______________________________________________________________________________
 // Returns comment in a meaningful way
-llvm::StringRef GetComment(const clang::Decl &decl, clang::SourceLocation *loc = 0);
+llvm::StringRef GetComment(const clang::Decl &decl, clang::SourceLocation *loc = nullptr);
 
 //______________________________________________________________________________
 // Returns the comment of the ClassDef macro
@@ -608,8 +602,7 @@ const clang::Type *GetUnderlyingType(clang::QualType type);
 //
 template<typename T>
 const T* GetAnnotatedRedeclarable(const T* Redecl) {
-   if (!Redecl)
-      return 0;
+   if (!Redecl) return nullptr;
 
    Redecl = Redecl->getMostRecentDecl();
    while (Redecl && !Redecl->hasAttrs())
@@ -711,7 +704,7 @@ inline void LevelPrint(bool prefix, int level, const char *location, const char 
    if (level < GetErrorIgnoreLevel())
       return;
 
-   const char *type = 0;
+   const char *type = nullptr;
 
    if (level >= ROOT::TMetaUtils::kInfo)
       type = "Info";

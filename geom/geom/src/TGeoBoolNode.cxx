@@ -110,7 +110,7 @@ void TGeoBoolNode::CreateThreadData(Int_t nthreads)
    fThreadData.resize(nthreads);
    fThreadSize = nthreads;
    for (Int_t tid=0; tid<nthreads; tid++) {
-      if (fThreadData[tid] == 0) {
+      if (fThreadData[tid] == nullptr) {
          fThreadData[tid] = new ThreadData_t;
       }
    }
@@ -132,12 +132,12 @@ void TGeoBoolNode::SetSelected(Int_t sel)
 
 TGeoBoolNode::TGeoBoolNode()
 {
-   fLeft     = 0;
-   fRight    = 0;
-   fLeftMat  = 0;
-   fRightMat = 0;
+   fLeft = nullptr;
+   fRight = nullptr;
+   fLeftMat = nullptr;
+   fRightMat = nullptr;
    fNpoints  = 0;
-   fPoints   = 0;
+   fPoints = nullptr;
    fThreadSize = 0;
    CreateThreadData(1);
 }
@@ -147,12 +147,12 @@ TGeoBoolNode::TGeoBoolNode()
 
 TGeoBoolNode::TGeoBoolNode(const char *expr1, const char *expr2)
 {
-   fLeft     = 0;
-   fRight    = 0;
-   fLeftMat  = 0;
-   fRightMat = 0;
+   fLeft = nullptr;
+   fRight = nullptr;
+   fLeftMat = nullptr;
+   fRightMat = nullptr;
    fNpoints  = 0;
-   fPoints   = 0;
+   fPoints = nullptr;
    fThreadSize = 0;
    CreateThreadData(1);
    if (!MakeBranch(expr1, kTRUE)) {
@@ -172,7 +172,7 @@ TGeoBoolNode::TGeoBoolNode(TGeoShape *left, TGeoShape *right, TGeoMatrix *lmat, 
    fRight = right;
    fLeftMat = lmat;
    fNpoints  = 0;
-   fPoints   = 0;
+   fPoints = nullptr;
    fThreadSize = 0;
    CreateThreadData(1);
    if (!fLeftMat) fLeftMat = gGeoIdentity;
@@ -212,7 +212,7 @@ Bool_t TGeoBoolNode::MakeBranch(const char *expr, Bool_t left)
       Error("MakeBranch", "invalid expression");
       return kFALSE;
    }
-   TGeoShape *shape = 0;
+   TGeoShape *shape = nullptr;
    TGeoMatrix *mat;
    TString newshape;
 

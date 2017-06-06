@@ -67,99 +67,32 @@ ClassImp(TMVA::MethodRuleFit);
 ////////////////////////////////////////////////////////////////////////////////
 /// standard constructor
 
-   TMVA::MethodRuleFit::MethodRuleFit( const TString& jobName,
-                                       const TString& methodTitle,
-                                       DataSetInfo& theData,
-                                       const TString& theOption) :
-   MethodBase( jobName, Types::kRuleFit, methodTitle, theData, theOption)
-   , fSignalFraction(0)
-   , fNTImportance(0)
-   , fNTCoefficient(0)
-   , fNTSupport(0)
-   , fNTNcuts(0)
-   , fNTNvars(0)
-   , fNTPtag(0)
-   , fNTPss(0)
-   , fNTPsb(0)
-   , fNTPbs(0)
-   , fNTPbb(0)
-   , fNTSSB(0)
-   , fNTType(0)
-   , fUseRuleFitJF(kFALSE)
-   , fRFNrules(0)
-   , fRFNendnodes(0)
-   , fNTrees(0)
-   , fTreeEveFrac(0)
-   , fSepType(0)
-   , fMinFracNEve(0)
-   , fMaxFracNEve(0)
-   , fNCuts(0)
-   , fPruneMethod(TMVA::DecisionTree::kCostComplexityPruning)
-   , fPruneStrength(0)
-   , fUseBoost(kFALSE)
-   , fGDPathEveFrac(0)
-   , fGDValidEveFrac(0)
-   , fGDTau(0)
-   , fGDTauPrec(0)
-   , fGDTauMin(0)
-   , fGDTauMax(0)
-   , fGDTauScan(0)
-   , fGDPathStep(0)
-   , fGDNPathSteps(0)
-   , fGDErrScale(0)
-   , fMinimp(0)
-   , fRuleMinDist(0)
-   , fLinQuantile(0)
+TMVA::MethodRuleFit::MethodRuleFit(const TString &jobName, const TString &methodTitle, DataSetInfo &theData,
+                                   const TString &theOption)
+   : MethodBase(jobName, Types::kRuleFit, methodTitle, theData, theOption), fSignalFraction(0), fNTImportance(0),
+     fNTCoefficient(0), fNTSupport(0), fNTNcuts(0), fNTNvars(0), fNTPtag(0), fNTPss(0), fNTPsb(0), fNTPbs(0), fNTPbb(0),
+     fNTSSB(0), fNTType(0), fUseRuleFitJF(kFALSE), fRFNrules(0), fRFNendnodes(0), fNTrees(0), fTreeEveFrac(0),
+     fSepType(nullptr), fMinFracNEve(0), fMaxFracNEve(0), fNCuts(0),
+     fPruneMethod(TMVA::DecisionTree::kCostComplexityPruning), fPruneStrength(0), fUseBoost(kFALSE), fGDPathEveFrac(0),
+     fGDValidEveFrac(0), fGDTau(0), fGDTauPrec(0), fGDTauMin(0), fGDTauMax(0), fGDTauScan(0), fGDPathStep(0),
+     fGDNPathSteps(0), fGDErrScale(0), fMinimp(0), fRuleMinDist(0), fLinQuantile(0)
 {
-      fMonitorNtuple = NULL;
+   fMonitorNtuple = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor from weight file
 
-TMVA::MethodRuleFit::MethodRuleFit( DataSetInfo& theData,
-                                    const TString& theWeightFile) :
-   MethodBase( Types::kRuleFit, theData, theWeightFile)
-   , fSignalFraction(0)
-   , fNTImportance(0)
-   , fNTCoefficient(0)
-   , fNTSupport(0)
-   , fNTNcuts(0)
-   , fNTNvars(0)
-   , fNTPtag(0)
-   , fNTPss(0)
-   , fNTPsb(0)
-   , fNTPbs(0)
-   , fNTPbb(0)
-   , fNTSSB(0)
-   , fNTType(0)
-   , fUseRuleFitJF(kFALSE)
-   , fRFNrules(0)
-   , fRFNendnodes(0)
-   , fNTrees(0)
-   , fTreeEveFrac(0)
-   , fSepType(0)
-   , fMinFracNEve(0)
-   , fMaxFracNEve(0)
-   , fNCuts(0)
-   , fPruneMethod(TMVA::DecisionTree::kCostComplexityPruning)
-   , fPruneStrength(0)
-   , fUseBoost(kFALSE)
-   , fGDPathEveFrac(0)
-   , fGDValidEveFrac(0)
-   , fGDTau(0)
-   , fGDTauPrec(0)
-   , fGDTauMin(0)
-   , fGDTauMax(0)
-   , fGDTauScan(0)
-   , fGDPathStep(0)
-   , fGDNPathSteps(0)
-   , fGDErrScale(0)
-   , fMinimp(0)
-   , fRuleMinDist(0)
-   , fLinQuantile(0)
+TMVA::MethodRuleFit::MethodRuleFit(DataSetInfo &theData, const TString &theWeightFile)
+   : MethodBase(Types::kRuleFit, theData, theWeightFile), fSignalFraction(0), fNTImportance(0), fNTCoefficient(0),
+     fNTSupport(0), fNTNcuts(0), fNTNvars(0), fNTPtag(0), fNTPss(0), fNTPsb(0), fNTPbs(0), fNTPbb(0), fNTSSB(0),
+     fNTType(0), fUseRuleFitJF(kFALSE), fRFNrules(0), fRFNendnodes(0), fNTrees(0), fTreeEveFrac(0), fSepType(nullptr),
+     fMinFracNEve(0), fMaxFracNEve(0), fNCuts(0), fPruneMethod(TMVA::DecisionTree::kCostComplexityPruning),
+     fPruneStrength(0), fUseBoost(kFALSE), fGDPathEveFrac(0), fGDValidEveFrac(0), fGDTau(0), fGDTauPrec(0),
+     fGDTauMin(0), fGDTauMax(0), fGDTauScan(0), fGDPathStep(0), fGDNPathSteps(0), fGDErrScale(0), fMinimp(0),
+     fRuleMinDist(0), fLinQuantile(0)
 {
-      fMonitorNtuple = NULL;
+   fMonitorNtuple = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

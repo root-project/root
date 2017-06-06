@@ -236,7 +236,7 @@ void RooAbsString::syncCache(const RooArgSet*)
 void RooAbsString::copyCache(const RooAbsArg* source, Bool_t /*valueOnly*/, Bool_t setValDirty) 
 {
   RooAbsString* other = dynamic_cast<RooAbsString*>(const_cast<RooAbsArg*>(source)) ;
-  assert(other!=0) ;
+  assert(other != nullptr);
 
   strlcpy(_value,other->_value,_len) ;
   if (setValDirty) {

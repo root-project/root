@@ -77,7 +77,7 @@ void TGString::DrawWrapped(Drawable_t id, GContext_t gc,
 
    while(1) {
       p = strchr(p, ' ');
-      if (p == 0) {
+      if (p == nullptr) {
          if (chunk) gVirtualX->DrawString(id, gc, x, y, chunk, strlen(chunk));
          break;
       }
@@ -113,7 +113,7 @@ Int_t TGString::GetLines(FontStruct_t font, UInt_t w)
 
    while(1) {
       p = strchr(p, ' ');
-      if (p == 0) break;
+      if (p == nullptr) break;
       tw = gVirtualX->TextWidth(font, chunk, p-chunk);
       if (tw > (int)w) {
          if (prev == chunk)
@@ -200,7 +200,7 @@ void TGHotString::DrawWrapped(Drawable_t id, GContext_t gc,
    int pcnt = 0;
    while(1) {
       p = strchr(p, ' ');
-      if (p == 0) {
+      if (p == nullptr) {
          if (chunk) {
             gVirtualX->DrawString(id, gc, x, y, chunk, strlen(chunk));
             if (fHotPos > pcnt && fHotPos <= pcnt+(int)strlen(chunk))

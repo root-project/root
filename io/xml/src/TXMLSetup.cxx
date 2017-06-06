@@ -177,7 +177,7 @@ TString TXMLSetup::GetSetupAsString()
 
 Bool_t TXMLSetup::IsValidXmlSetup(const char* setupstr)
 {
-   if ((setupstr==0) || (strlen(setupstr)!=4)) return kFALSE;
+   if ((setupstr == nullptr) || (strlen(setupstr) != 4)) return kFALSE;
    TString str = setupstr;
    str.ToLower();
    if ((str[0]<48) || (str[0]>53)) return kFALSE;
@@ -191,7 +191,7 @@ Bool_t TXMLSetup::IsValidXmlSetup(const char* setupstr)
 
 Bool_t TXMLSetup::ReadSetupFromStr(const char* setupstr)
 {
-   if ((setupstr==0) || (strlen(setupstr)<4)) return kFALSE;
+   if ((setupstr == nullptr) || (strlen(setupstr) < 4)) return kFALSE;
    Int_t lay          = EXMLLayout(setupstr[0] - 48);
    if (lay==kGeneralized) fXmlLayout = kGeneralized;
                      else fXmlLayout = kSpecialized;
@@ -246,7 +246,7 @@ const char* TXMLSetup::XmlClassNameSpaceRef(const TClass* cl)
 
 const char* TXMLSetup::XmlGetElementName(const TStreamerElement* el)
 {
-   if (el==0) return 0;
+   if (el == nullptr) return nullptr;
    if (!el->InheritsFrom(TStreamerSTL::Class())) return el->GetName();
    if (strcmp(el->GetName(), el->GetClassPointer()->GetName())!=0) return el->GetName();
    return XmlConvertClassName(el->GetName());
@@ -257,7 +257,7 @@ const char* TXMLSetup::XmlGetElementName(const TStreamerElement* el)
 
 const char* TXMLSetup::GetElItemName(TStreamerElement* el)
 {
-   if (el==0) return 0;
+   if (el == nullptr) return nullptr;
    fStrBuf = el->GetName();
    fStrBuf+="_item";
    return fStrBuf.Data();
@@ -269,15 +269,15 @@ const char* TXMLSetup::GetElItemName(TStreamerElement* el)
 
 TClass* TXMLSetup::XmlDefineClass(const char* xmlClassName)
 {
-   if (strchr(xmlClassName,'_')==0) return TClass::GetClass(xmlClassName);
+   if (strchr(xmlClassName, '_') == nullptr) return TClass::GetClass(xmlClassName);
 
    TIter iter(gROOT->GetListOfClasses());
-   TClass* cl = 0;
-   while ((cl = (TClass*) iter()) != 0) {
+   TClass *cl = nullptr;
+   while ((cl = (TClass *)iter()) != nullptr) {
       const char* name = XmlConvertClassName(cl->GetName());
       if (strcmp(xmlClassName,name)==0) return cl;
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

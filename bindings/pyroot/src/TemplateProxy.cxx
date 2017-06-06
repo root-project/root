@@ -25,7 +25,7 @@ void TemplateProxy::Set( const std::string& name, PyObject* pyclass )
    fPyName       = PyROOT_PyUnicode_FromString( const_cast< char* >( name.c_str() ) );
    Py_XINCREF( pyclass );
    fPyClass      = pyclass;
-   fSelf         = NULL;
+   fSelf = nullptr;
    std::vector< PyCallable* > dummy;
    fNonTemplated = MethodProxy_New( name, dummy );
    fTemplated    = MethodProxy_New( name, dummy );
@@ -57,11 +57,11 @@ namespace {
    {
    // Create a new empty template method proxy.
       TemplateProxy* pytmpl = PyObject_GC_New( TemplateProxy, &TemplateProxy_Type );
-      pytmpl->fPyName       = NULL;
-      pytmpl->fPyClass      = NULL;
-      pytmpl->fSelf         = NULL;
-      pytmpl->fNonTemplated = NULL;
-      pytmpl->fTemplated    = NULL;
+      pytmpl->fPyName = nullptr;
+      pytmpl->fPyClass = nullptr;
+      pytmpl->fSelf = nullptr;
+      pytmpl->fNonTemplated = nullptr;
+      pytmpl->fTemplated = nullptr;
 
       PyObject_GC_Track( pytmpl );
       return pytmpl;
@@ -174,14 +174,16 @@ namespace {
       if ( MethodProxy_Check( pymeth ) ) {
       // now call the method with the arguments
          PyObject* result = MethodProxy_Type.tp_call( pymeth, args, kwds );
-         Py_DECREF( pymeth ); pymeth = 0;
+         Py_DECREF( pymeth );
+         pymeth = nullptr;
          if ( result )
             return result;
       // TODO: collect error here, as the failure may be either an overload
       // failure after which we should continue; or a real failure, which should
       // be reported.
       }
-      Py_XDECREF( pymeth ); pymeth = 0;
+      Py_XDECREF( pymeth );
+      pymeth = nullptr;
       PyErr_Clear();
 
    // error check on method() which can not be derived if non-templated case fails
@@ -189,7 +191,7 @@ namespace {
       if ( nArgs == 0 ) {
          PyErr_Format( PyExc_TypeError, "template method \'%s\' with no arguments must be explicit",
             PyROOT_PyUnicode_AsString( pytmpl->fPyName ) );
-         return 0;
+         return nullptr;
       }
 
    // case 2: non-instantiating obj->method< t0, t1, ... >( a0, a1, ... )
@@ -212,7 +214,8 @@ namespace {
       if ( MethodProxy_Check( pymeth ) ) {
       // now call the method with the arguments
          PyObject* result = MethodProxy_Type.tp_call( pymeth, args, kwds );
-         Py_DECREF( pymeth ); pymeth = 0;
+         Py_DECREF( pymeth );
+         pymeth = nullptr;
          if ( result ) {
             Py_XDECREF( pyname_v1 );
             return result;
@@ -221,7 +224,8 @@ namespace {
       // failure after which we should continue; or a real failure, which should
       // be reported.
       }
-      Py_XDECREF( pymeth ); pymeth = 0;
+      Py_XDECREF( pymeth );
+      pymeth = nullptr;
       PyErr_Clear();
 
    // still here? try instantiating methods
@@ -248,7 +252,7 @@ namespace {
          } else {
          // array, build up a pointer type
             char tc = ((char*)PyROOT_PyUnicode_AsString( pytc ))[0];
-            const char* ptrname = 0;
+            const char *ptrname = nullptr;
             switch ( tc ) {
                case 'b': ptrname = "char*";           break;
                case 'h': ptrname = "short*";          break;
@@ -282,13 +286,13 @@ namespace {
 
     // case 4a: instantiating obj->method< T0, T1, ... >( type(a0), type(a1), ... )( a0, a1, ... )
       if ( ! isType && ! ( nStrings == nArgs ) ) {    // no types among args and not all strings
-         PyObject* pyname_v2 = Utility::BuildTemplateName( NULL, tpArgs, 0 );
+         PyObject *pyname_v2 = Utility::BuildTemplateName(nullptr, tpArgs, 0);
          if ( pyname_v2 ) {
             std::string mname = PyROOT_PyUnicode_AsString( pyname_v2 );
             Py_DECREF( pyname_v2 );
             std::string proto = mname.substr( 1, mname.size() - 2 );
          // the following causes instantiation as necessary
-            TMethod* cppmeth = klass ? klass->GetMethodWithPrototype( tmplname.c_str(), proto.c_str() ) : 0;
+            TMethod *cppmeth = klass ? klass->GetMethodWithPrototype(tmplname.c_str(), proto.c_str()) : nullptr;
             if ( cppmeth ) {    // overload stops here
                Py_XDECREF( pyname_v1 );
                Cppyy::TCppScope_t scope = Cppyy::GetScope( klass->GetName() );
@@ -316,7 +320,7 @@ namespace {
       if ( pyname_v1 ) {
          std::string mname = PyROOT_PyUnicode_AsString( pyname_v1 );
        // the following causes instantiation as necessary
-         TMethod* cppmeth = klass ? klass->GetMethodAny( mname.c_str() ) : 0;
+         TMethod *cppmeth = klass ? klass->GetMethodAny(mname.c_str()) : nullptr;
          if ( cppmeth ) {    // overload stops here
             pymeth = (PyObject*)MethodProxy_New(
                mname, new TMethodHolder( Cppyy::GetScope( klass->GetName() ), (Cppyy::TCppMethod_t)cppmeth ) );
@@ -334,7 +338,7 @@ namespace {
    // moderately generic error message, but should be clear enough
       PyErr_Format( PyExc_TypeError, "can not resolve method template call for \'%s\'",
          PyROOT_PyUnicode_AsString( pytmpl->fPyName ) );
-      return 0;
+      return nullptr;
    }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -368,69 +372,69 @@ namespace {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-   PyGetSetDef tpp_getset[] = {
-      { (char*)"__doc__",    (getter)tpp_doc,    NULL, NULL, NULL },
-      { (char*)NULL, NULL, NULL, NULL, NULL }
-   };
+   PyGetSetDef tpp_getset[] = {{(char *)"__doc__", (getter)tpp_doc, nullptr, nullptr, nullptr},
+                               {(char *)nullptr, nullptr, nullptr, nullptr, nullptr}};
 
 } // unnamed namespace
 
 
 //= PyROOT template proxy type ===============================================
 PyTypeObject TemplateProxy_Type = {
-   PyVarObject_HEAD_INIT( &PyType_Type, 0 )
-   (char*)"ROOT.TemplateProxy", // tp_name
-   sizeof(TemplateProxy),     // tp_basicsize
-   0,                         // tp_itemsize
-   (destructor)tpp_dealloc,   // tp_dealloc
-   0,                         // tp_print
-   0,                         // tp_getattr
-   0,                         // tp_setattr
-   0,                         // tp_compare
-   0,                         // tp_repr
-   0,                         // tp_as_number
-   0,                         // tp_as_sequence
-   0,                         // tp_as_mapping
-   0,                         // tp_hash
-   (ternaryfunc)tpp_call,     // tp_call
-   0,                         // tp_str
-   0,                         // tp_getattro
-   0,                         // tp_setattro
-   0,                         // tp_as_buffer
-   Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC,      // tp_flags
-   (char*)"PyROOT template proxy (internal)",    // tp_doc
-   (traverseproc)tpp_traverse,// tp_traverse
-   (inquiry)tpp_clear,        // tp_clear
-   0,                         // tp_richcompare
-   0,                         // tp_weaklistoffset
-   0,                         // tp_iter
-   0,                         // tp_iternext
-   0,                         // tp_methods
-   0,                         // tp_members
-   tpp_getset,                // tp_getset
-   0,                         // tp_base
-   0,                         // tp_dict
-   (descrgetfunc)tpp_descrget,// tp_descr_get
-   0,                         // tp_descr_set
-   0,                         // tp_dictoffset
-   0,                         // tp_init
-   0,                         // tp_alloc
-   (newfunc)tpp_new,          // tp_new
-   0,                         // tp_free
-   0,                         // tp_is_gc
-   0,                         // tp_bases
-   0,                         // tp_mro
-   0,                         // tp_cache
-   0,                         // tp_subclasses
-   0                          // tp_weaklist
+   PyVarObject_HEAD_INIT(&PyType_Type, 0)(char *) "ROOT.TemplateProxy", // tp_name
+   sizeof(TemplateProxy),                                               // tp_basicsize
+   0,                                                                   // tp_itemsize
+   (destructor)tpp_dealloc,                                             // tp_dealloc
+   nullptr,                                                             // tp_print
+   nullptr,                                                             // tp_getattr
+   nullptr,                                                             // tp_setattr
+   nullptr,                                                             // tp_compare
+   nullptr,                                                             // tp_repr
+   nullptr,                                                             // tp_as_number
+   nullptr,                                                             // tp_as_sequence
+   nullptr,                                                             // tp_as_mapping
+   nullptr,                                                             // tp_hash
+   (ternaryfunc)tpp_call,                                               // tp_call
+   nullptr,                                                             // tp_str
+   nullptr,                                                             // tp_getattro
+   nullptr,                                                             // tp_setattro
+   nullptr,                                                             // tp_as_buffer
+   Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC,                             // tp_flags
+   (char *)"PyROOT template proxy (internal)",                          // tp_doc
+   (traverseproc)tpp_traverse,                                          // tp_traverse
+   (inquiry)tpp_clear,                                                  // tp_clear
+   nullptr,                                                             // tp_richcompare
+   0,                                                                   // tp_weaklistoffset
+   nullptr,                                                             // tp_iter
+   nullptr,                                                             // tp_iternext
+   nullptr,                                                             // tp_methods
+   nullptr,                                                             // tp_members
+   tpp_getset,                                                          // tp_getset
+   nullptr,                                                             // tp_base
+   nullptr,                                                             // tp_dict
+   (descrgetfunc)tpp_descrget,                                          // tp_descr_get
+   nullptr,                                                             // tp_descr_set
+   0,                                                                   // tp_dictoffset
+   nullptr,                                                             // tp_init
+   nullptr,                                                             // tp_alloc
+   (newfunc)tpp_new,                                                    // tp_new
+   nullptr,                                                             // tp_free
+   nullptr,                                                             // tp_is_gc
+   nullptr,                                                             // tp_bases
+   nullptr,                                                             // tp_mro
+   nullptr,                                                             // tp_cache
+   nullptr,                                                             // tp_subclasses
+   nullptr                                                              // tp_weaklist
 #if PY_VERSION_HEX >= 0x02030000
-   , 0                        // tp_del
+   ,
+   nullptr // tp_del
 #endif
 #if PY_VERSION_HEX >= 0x02060000
-   , 0                        // tp_version_tag
+   ,
+   0 // tp_version_tag
 #endif
 #if PY_VERSION_HEX >= 0x03040000
-   , 0                        // tp_finalize
+   ,
+   0 // tp_finalize
 #endif
 };
 

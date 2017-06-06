@@ -30,40 +30,21 @@ using namespace Memstat;
 
 ClassImp(TMemStatMng);
 
-TMemStatMng* TMemStatMng::fgInstance = NULL;
+TMemStatMng *TMemStatMng::fgInstance = nullptr;
 
 //****************************************************************************//
 //
 //****************************************************************************//
 
-TMemStatMng::TMemStatMng():
-   TObject(),
+TMemStatMng::TMemStatMng()
+   : TObject(),
 #if !defined(__APPLE__)
-   fPreviousMallocHook(TMemStatHook::GetMallocHook()),
-   fPreviousFreeHook(TMemStatHook::GetFreeHook()),
+     fPreviousMallocHook(TMemStatHook::GetMallocHook()), fPreviousFreeHook(TMemStatHook::GetFreeHook()),
 #endif
-   fDumpFile(NULL),
-   fDumpTree(NULL),
-   fUseGNUBuiltinBacktrace(kFALSE),
-   fBeginTime(0),
-   fPos(0),
-   fTimems(0),
-   fNBytes(0),
-   fBtID(0),
-   fMaxCalls(5000000),
-   fBufferSize(10000),
-   fBufN(0),
-   fBufPos(0),
-   fBufTimems(0),
-   fBufNBytes(0),
-   fBufBtID(0),
-   fIndex(0),
-   fMustWrite(0),
-   fFAddrsList(0),
-   fHbtids(0),
-   fBTCount(0),
-   fBTIDCount(0),
-   fSysInfo(0)
+     fDumpFile(nullptr), fDumpTree(nullptr), fUseGNUBuiltinBacktrace(kFALSE), fBeginTime(0), fPos(0), fTimems(0),
+     fNBytes(0), fBtID(0), fMaxCalls(5000000), fBufferSize(10000), fBufN(0), fBufPos(nullptr), fBufTimems(nullptr),
+     fBufNBytes(nullptr), fBufBtID(nullptr), fIndex(nullptr), fMustWrite(nullptr), fFAddrsList(nullptr),
+     fHbtids(nullptr), fBTCount(0), fBTIDCount(0), fSysInfo(nullptr)
 {
    // Default constructor
 }
@@ -94,7 +75,7 @@ void TMemStatMng::Init()
    fFAddrsList->SetName("FAddrsList");
 
    fHbtids  = new TH1I("btids", "table of btids", 10000, 0, 1);   //where fHbtids is a member of the manager class
-   fHbtids->SetDirectory(0);
+   fHbtids->SetDirectory(nullptr);
    // save the histogram and the TObjArray to the tree header
    fDumpTree->GetUserInfo()->Add(fHbtids);
    fDumpTree->GetUserInfo()->Add(fFAddrsList);
@@ -183,7 +164,7 @@ void TMemStatMng::Close()
    //delete fgInstance->fSysInfo;
 
    delete fgInstance;
-   fgInstance = NULL;
+   fgInstance = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

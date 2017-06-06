@@ -39,7 +39,7 @@ for building TGeo geometry.
 
 ClassImp(TGeoMCGeometry);
 
-TGeoMCGeometry* TGeoMCGeometry::fgInstance=0;
+TGeoMCGeometry *TGeoMCGeometry::fgInstance = nullptr;
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -71,7 +71,7 @@ TGeoMCGeometry::TGeoMCGeometry()
 
 TGeoMCGeometry::~TGeoMCGeometry()
 {
-   fgInstance=0;
+   fgInstance = nullptr;
 }
 
 //
@@ -511,7 +511,7 @@ void  TGeoMCGeometry::Gspos(const char *name, Int_t nr, const char *mother, Doub
    char vmother[80];
    Vname(mother,vmother);
 
-   Double_t *upar=0;
+   Double_t *upar = nullptr;
    GetTGeoManager()->Node(vname, nr, vmother, x, y, z, irot, isOnly, upar);
 }
 

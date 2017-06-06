@@ -139,7 +139,7 @@ void TF1Editor::ConnectSignals2Slots()
 
 void TF1Editor::SetModel(TObject* obj)
 {
-   if (obj == 0 || !obj->InheritsFrom(TF1::Class())) {
+   if (obj == nullptr || !obj->InheritsFrom(TF1::Class())) {
       return;
    }
 
@@ -210,7 +210,7 @@ void TF1Editor::DoSliderXMoved()
 {
    if (fAvoidSignal) return;
 
-   TVirtualPad *save = 0;
+   TVirtualPad *save = nullptr;
    save = gPad;
    gPad = fGedEditor->GetPad();
    fGedEditor->GetPad()->cd();
@@ -253,7 +253,7 @@ void TF1Editor::DoSliderXPressed()
 {
    if (fAvoidSignal || (fDrawMode->GetState() == kButtonDown)) return;
 
-   TVirtualPad *save = 0;
+   TVirtualPad *save = nullptr;
    save = gPad;
    gPad = fGedEditor->GetPad();
    fGedEditor->GetPad()->cd();
@@ -286,7 +286,7 @@ void TF1Editor::DoSliderXReleased()
 {
    if (fAvoidSignal || (fDrawMode->GetState() == kButtonDown)) return;
 
-   TVirtualPad *save = 0;
+   TVirtualPad *save = nullptr;
    save = gPad;
    gPad = fGedEditor->GetPad();
    fGedEditor->GetPad()->cd();

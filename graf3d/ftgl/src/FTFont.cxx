@@ -3,12 +3,8 @@
 #include    "FTGlyphContainer.h"
 #include    "FTBBox.h"
 
-
-FTFont::FTFont( const char* fontFilePath)
-:   face( fontFilePath),
-    useDisplayLists(true),
-    preRenderCalled(false),
-    glyphList(0)
+FTFont::FTFont(const char *fontFilePath)
+   : face(fontFilePath), useDisplayLists(true), preRenderCalled(false), glyphList(nullptr)
 {
     err = face.Error();
     if( err == 0)
@@ -17,10 +13,8 @@ FTFont::FTFont( const char* fontFilePath)
     }
 }
 
-
-FTFont::FTFont( const unsigned char *pBufferBytes, size_t bufferSizeInBytes)
-:   face( pBufferBytes, bufferSizeInBytes),
-    glyphList(0)
+FTFont::FTFont(const unsigned char *pBufferBytes, size_t bufferSizeInBytes)
+   : face(pBufferBytes, bufferSizeInBytes), glyphList(nullptr)
 {
     err = face.Error();
     if( err == 0)
@@ -76,9 +70,8 @@ bool FTFont::FaceSize( const unsigned int size, const unsigned int res )
         return false;
     }
 
-    if( glyphList != NULL)
-    {
-        delete glyphList;
+    if (glyphList != nullptr) {
+       delete glyphList;
     }
 
     glyphList = new FTGlyphContainer( &face);
@@ -138,27 +131,23 @@ void FTFont::BBox( const char* string,
 {
     FTBBox totalBBox;
 
-    if((NULL != string) && ('\0' != *string))
-    {
-        const unsigned char* c = (unsigned char*)string;
-        float advance = 0;
+    if ((nullptr != string) && ('\0' != *string)) {
+       const unsigned char *c = (unsigned char *)string;
+       float advance = 0;
 
-        if(CheckGlyph( *c))
-        {
-            totalBBox = glyphList->BBox( *c);
-            advance = glyphList->Advance( *c, *(c + 1));
-        }
+       if (CheckGlyph(*c)) {
+          totalBBox = glyphList->BBox(*c);
+          advance = glyphList->Advance(*c, *(c + 1));
+       }
 
-        while( *++c)
-        {
-            if(CheckGlyph( *c))
-            {
-                FTBBox tempBBox = glyphList->BBox( *c);
-                tempBBox.Move( FTPoint( advance, 0.0f, 0.0f));
-                totalBBox += tempBBox;
-                advance += glyphList->Advance( *c, *(c + 1));
-            }
-        }
+       while (*++c) {
+          if (CheckGlyph(*c)) {
+             FTBBox tempBBox = glyphList->BBox(*c);
+             tempBBox.Move(FTPoint(advance, 0.0f, 0.0f));
+             totalBBox += tempBBox;
+             advance += glyphList->Advance(*c, *(c + 1));
+          }
+       }
     }
 
     llx = totalBBox.lowerX;
@@ -175,27 +164,23 @@ void FTFont::BBox( const wchar_t* string,
 {
     FTBBox totalBBox;
 
-    if((NULL != string) && ('\0' != *string))
-    {
-        const wchar_t* c = string;
-        float advance = 0;
+    if ((nullptr != string) && ('\0' != *string)) {
+       const wchar_t *c = string;
+       float advance = 0;
 
-        if(CheckGlyph( *c))
-        {
-            totalBBox = glyphList->BBox( *c);
-            advance = glyphList->Advance( *c, *(c + 1));
-        }
+       if (CheckGlyph(*c)) {
+          totalBBox = glyphList->BBox(*c);
+          advance = glyphList->Advance(*c, *(c + 1));
+       }
 
-        while( *++c)
-        {
-            if(CheckGlyph( *c))
-            {
-                FTBBox tempBBox = glyphList->BBox( *c);
-                tempBBox.Move( FTPoint( advance, 0.0f, 0.0f));
-                totalBBox += tempBBox;
-                advance += glyphList->Advance( *c, *(c + 1));
-            }
-        }
+       while (*++c) {
+          if (CheckGlyph(*c)) {
+             FTBBox tempBBox = glyphList->BBox(*c);
+             tempBBox.Move(FTPoint(advance, 0.0f, 0.0f));
+             totalBBox += tempBBox;
+             advance += glyphList->Advance(*c, *(c + 1));
+          }
+       }
     }
 
     llx = totalBBox.lowerX;
@@ -321,20 +306,17 @@ void FTFont::Render( const wchar_t* string )
 
 bool FTFont::CheckGlyph( const unsigned int characterCode)
 {
-    if( NULL == glyphList->Glyph( characterCode))
-    {
-        unsigned int glyphIndex = glyphList->FontIndex( characterCode);
-        FTGlyph* tempGlyph = MakeGlyph( glyphIndex);
-        if( NULL == tempGlyph)
-        {
-            if( 0 == err)
-            {
-                err = 0x13;
-            }
+   if (nullptr == glyphList->Glyph(characterCode)) {
+      unsigned int glyphIndex = glyphList->FontIndex(characterCode);
+      FTGlyph *tempGlyph = MakeGlyph(glyphIndex);
+      if (nullptr == tempGlyph) {
+         if (0 == err) {
+            err = 0x13;
+         }
 
-            return false;
-        }
-        glyphList->Add( tempGlyph, characterCode);
+         return false;
+      }
+      glyphList->Add(tempGlyph, characterCode);
     }
 
     return true;

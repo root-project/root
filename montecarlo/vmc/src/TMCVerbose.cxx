@@ -282,7 +282,7 @@ void TMCVerbose::Stepping()
 
       // Volume
       //
-      if (gMC->CurrentVolName() != 0)
+      if (gMC->CurrentVolName() != nullptr)
          std::cout << std::setw(4) << gMC->CurrentVolName() << "  ";
       else
          std::cout << std::setw(4) << "None"  << "  ";

@@ -122,14 +122,10 @@ ClassImp(TGLParametricEquation);
 ///external user know about errors.
 
 TGLParametricEquation::TGLParametricEquation(const TString &name, const TString &xFun, const TString &yFun,
-                             const TString &zFun, Double_t uMin, Double_t uMax,
-                             Double_t vMin, Double_t vMax)
-                  : TNamed(name, name),
-                    fEquation(0),
-                    fURange(uMin, uMax),
-                    fVRange(vMin, vMax),
-                    fConstrained(kFALSE),
-                    fModified(kFALSE)
+                                             const TString &zFun, Double_t uMin, Double_t uMax, Double_t vMin,
+                                             Double_t vMax)
+   : TNamed(name, name), fEquation(nullptr), fURange(uMin, uMax), fVRange(vMin, vMax), fConstrained(kFALSE),
+     fModified(kFALSE)
 {
    if (!xFun.Length() || !yFun.Length() || !zFun.Length()) {
       Error("TGLParametricEquation", "One of string expressions is empty");
@@ -364,7 +360,7 @@ Bool_t TGLParametricPlot::InitGeometry()
       }
 
       TH3F hist("tmp", "tmp", 2, -1., 1., 2, -1., 1., 2, -1., 1.);
-      hist.SetDirectory(0);
+      hist.SetDirectory(nullptr);
       //TAxis has a lot of attributes, defaults, set by ctor,
       //are not enough to be correctly painted by TGaxis object.
       //To simplify their initialization - I use temporary histogram.

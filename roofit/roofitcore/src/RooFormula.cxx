@@ -52,7 +52,7 @@ ClassImp(RooFormula);
 /// Default constructor
 /// coverity[UNINIT_CTOR]
 
-RooFormula::RooFormula() : ROOT::v5::TFormula(), _nset(0)
+RooFormula::RooFormula() : ROOT::v5::TFormula(), _nset(nullptr)
 {
 }
 
@@ -247,7 +247,7 @@ Double_t RooFormula::eval(const RooArgSet* nset)
   // Pass current dataset pointer to DefinedValue
   _nset = (RooArgSet*) nset ;
 
-  return EvalPar(0,0) ; 
+  return EvalPar(nullptr, nullptr);
 }
 
 
@@ -326,8 +326,8 @@ Int_t RooFormula::DefinedVariable(TString &name)
     labelName+= 2 ;
   }
 
-  // Defined internal reference code for given named variable 
-  RooAbsArg *arg = 0;
+  // Defined internal reference code for given named variable
+  RooAbsArg *arg = nullptr;
   if (argName[0] == '@') {
     // Access by ordinal number
     Int_t index = atoi(argName+1) ;
@@ -425,7 +425,7 @@ void RooFormula::printMultiline(ostream& os, Int_t /*contents*/, Bool_t /*verbos
 
 void RooFormula::printValue(ostream& os) const 
 {
-  os << const_cast<RooFormula*>(this)->eval(0) ;
+   os << const_cast<RooFormula *>(this)->eval(nullptr);
 }
 
 

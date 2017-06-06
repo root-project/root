@@ -45,7 +45,7 @@ FunctionMinimum MnApplication::operator()(unsigned int maxfcn, double toler) {
    if (fUseGrad) {
       // case of Gradient FCN implemented via the FCNGradientBase interface
       const FCNGradientBase * gfcn = dynamic_cast<const FCNGradientBase *>(fcn);
-      assert (gfcn != 0);
+      assert(gfcn != nullptr);
       // case of gradient
       FunctionMinimum min = Minimizer().Minimize( *gfcn, fState, fStrategy, maxfcn, toler);
       fNumCall += min.NFcn();

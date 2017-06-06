@@ -110,8 +110,7 @@ Double_t RooPoisson::getLogVal(const RooArgSet* s) const
 //   }
 
   //return log(prob);
-  return -extra-analyticalIntegral(1,0) ; //log(prob);
-
+  return -extra - analyticalIntegral(1, nullptr); // log(prob);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

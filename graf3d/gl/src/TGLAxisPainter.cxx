@@ -34,22 +34,15 @@ ClassImp(TGLAxisPainter);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-TGLAxisPainter::TGLAxisPainter():
-   fExp(0),
-   fMaxDigits(5),
-   fDecimals(0),
+TGLAxisPainter::TGLAxisPainter()
+   : fExp(0), fMaxDigits(5), fDecimals(0),
 
-   fAttAxis(0), fUseAxisColors(kTRUE),
+     fAttAxis(nullptr), fUseAxisColors(kTRUE),
 
-   fFontMode(TGLFont::kTexture),
-   fDir(1, 0, 0),
-   fTMNDim(1),
-   fLabelPixelFontSize(14), fLabel3DFontSize(1.0),
-   fTitlePixelFontSize(14), fTitle3DFontSize(1.0),
+     fFontMode(TGLFont::kTexture), fDir(1, 0, 0), fTMNDim(1), fLabelPixelFontSize(14), fLabel3DFontSize(1.0),
+     fTitlePixelFontSize(14), fTitle3DFontSize(1.0),
 
-   fLabelAlignH(TGLFont::kCenterH),
-   fLabelAlignV(TGLFont::kCenterV),
-   fAllZeroesRE(0)
+     fLabelAlignH(TGLFont::kCenterH), fLabelAlignV(TGLFont::kCenterV), fAllZeroesRE(nullptr)
 {
    // Constructor.
 
@@ -452,7 +445,7 @@ ClassImp(TGLAxisPainterBox);
 TGLAxisPainterBox::TGLAxisPainterBox() :
    TGLAxisPainter()
 {
-   fAxis[0] = fAxis[1] = fAxis[2] = 0;
+   fAxis[0] = fAxis[1] = fAxis[2] = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

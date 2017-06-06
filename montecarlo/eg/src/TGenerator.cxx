@@ -179,7 +179,7 @@ TGenerator::~TGenerator()
    if (fParticles) {
       fParticles->Delete();
       delete fParticles;
-      fParticles = 0;
+      fParticles = nullptr;
    }
 }
 
@@ -269,7 +269,7 @@ TObjArray* TGenerator::ImportParticles(Option_t *option)
 
 Int_t TGenerator::ImportParticles(TClonesArray *particles, Option_t *option)
 {
-   if (particles == 0) return 0;
+   if (particles == nullptr) return 0;
    TClonesArray &clonesParticles = *particles;
    clonesParticles.Clear();
    Int_t numpart = HEPEVT.nhep;
@@ -370,7 +370,7 @@ void TGenerator::Draw(Option_t *option)
       view->GetRange(rmin,rmax);
       rbox = rmax[2];
    } else {
-      view = TView::CreateView(1,0,0);
+      view = TView::CreateView(1, nullptr, nullptr);
       if (view) view->SetRange(-rbox,-rbox,-rbox, rbox,rbox,rbox );
    }
    const Int_t kColorProton    = 4;
@@ -514,9 +514,9 @@ Int_t TGenerator::GetNumberOfParticles() const
 
 TParticle *TGenerator::GetParticle(Int_t i) const
 {
-   if (!fParticles) return 0;
+   if (!fParticles) return nullptr;
    Int_t n = fParticles->GetLast();
-   if (i < 0 || i > n) return 0;
+   if (i < 0 || i > n) return nullptr;
    return (TParticle*)fParticles->UncheckedAt(i);
 }
 

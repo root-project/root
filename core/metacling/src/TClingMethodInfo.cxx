@@ -99,11 +99,8 @@ TClingMethodInfo::TClingMethodInfo(const TClingMethodInfo &rhs) :
    }
 }
 
-
-TClingMethodInfo::TClingMethodInfo(cling::Interpreter *interp,
-                                   TClingClassInfo *ci)
-   : fInterp(interp), fFirstTime(true), fContextIdx(0U), fTitle(""),
-     fTemplateSpecIter(0), fSingleDecl(0)
+TClingMethodInfo::TClingMethodInfo(cling::Interpreter *interp, TClingClassInfo *ci)
+   : fInterp(interp), fFirstTime(true), fContextIdx(0U), fTitle(""), fTemplateSpecIter(nullptr), fSingleDecl(nullptr)
 {
    R__LOCKGUARD(gInterpreterMutex);
 
@@ -129,10 +126,8 @@ TClingMethodInfo::TClingMethodInfo(cling::Interpreter *interp,
    fFirstTime = true;
 }
 
-TClingMethodInfo::TClingMethodInfo(cling::Interpreter *interp,
-                                   const clang::FunctionDecl *FD)
-   : fInterp(interp), fFirstTime(true), fContextIdx(0U), fTitle(""),
-     fTemplateSpecIter(0), fSingleDecl(FD)
+TClingMethodInfo::TClingMethodInfo(cling::Interpreter *interp, const clang::FunctionDecl *FD)
+   : fInterp(interp), fFirstTime(true), fContextIdx(0U), fTitle(""), fTemplateSpecIter(nullptr), fSingleDecl(FD)
 {
 
 }
@@ -153,7 +148,7 @@ TDictionary::DeclId_t TClingMethodInfo::GetDeclId() const
 const clang::FunctionDecl *TClingMethodInfo::GetMethodDecl() const
 {
    if (!IsValid()) {
-      return 0;
+      return nullptr;
    }
 
    if (fSingleDecl)
@@ -202,14 +197,14 @@ void TClingMethodInfo::Init(const clang::FunctionDecl *decl)
    fContextIdx = 0U;
    fIter = clang::DeclContext::decl_iterator();
    delete fTemplateSpecIter;
-   fTemplateSpecIter = 0;
+   fTemplateSpecIter = nullptr;
    fSingleDecl = decl;
 }
 
 void *TClingMethodInfo::InterfaceMethod(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const
 {
    if (!IsValid()) {
-      return 0;
+      return nullptr;
    }
    R__LOCKGUARD(gInterpreterMutex);
    TClingCallFunc cf(fInterp,normCtxt);
@@ -392,7 +387,7 @@ int TClingMethodInfo::InternalNext()
             if ( !(*fTemplateSpecIter) ) {
                // We reached the end of the template specialization.
                delete fTemplateSpecIter;
-               fTemplateSpecIter = 0;
+               fTemplateSpecIter = nullptr;
                ++fIter;
             } else {
                return 1;
@@ -621,7 +616,7 @@ std::string TClingMethodInfo::GetMangledName() const
 const char *TClingMethodInfo::GetPrototype(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const
 {
    if (!IsValid()) {
-      return 0;
+      return nullptr;
    }
    TTHREAD_TLS_DECL( std::string, buf );
    buf.clear();
@@ -674,7 +669,7 @@ const char *TClingMethodInfo::GetPrototype(const ROOT::TMetaUtils::TNormalizedCt
 const char *TClingMethodInfo::Name(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const
 {
    if (!IsValid()) {
-      return 0;
+      return nullptr;
    }
    TTHREAD_TLS_DECL( std::string, buf );
    ((TCling*)gCling)->GetFunctionName(GetMethodDecl(),buf);
@@ -685,7 +680,7 @@ const char *TClingMethodInfo::TypeName() const
 {
    if (!IsValid()) {
       // FIXME: Cint does not check!
-      return 0;
+      return nullptr;
    }
    return Type()->Name();
 }
@@ -693,7 +688,7 @@ const char *TClingMethodInfo::TypeName() const
 const char *TClingMethodInfo::Title()
 {
    if (!IsValid()) {
-      return 0;
+      return nullptr;
    }
 
    //NOTE: We can't use it as a cache due to the "thoughtful" self iterator

@@ -47,10 +47,7 @@ void CALLBACK ftglEnd( FTMesh* mesh)
     mesh->End();
 }
 
-
-FTMesh::FTMesh()
-: currentTesselation(0),
-    err(0)
+FTMesh::FTMesh() : currentTesselation(nullptr), err(0)
 {
     tesselationList.reserve( 16);
 }
@@ -94,22 +91,18 @@ void FTMesh::End()
 
 const FTTesselation* FTMesh::Tesselation( unsigned int index) const
 {
-    return ( index < tesselationList.size()) ? tesselationList[index] : NULL;
+   return (index < tesselationList.size()) ? tesselationList[index] : nullptr;
 }
 
-
-FTVectoriser::FTVectoriser( const FT_GlyphSlot glyph)
-:   contourList(0),
-    mesh(0),
-    ftContourCount(0),
-    contourFlag(0)
+FTVectoriser::FTVectoriser(const FT_GlyphSlot glyph)
+   : contourList(nullptr), mesh(nullptr), ftContourCount(0), contourFlag(0)
 {
     if( glyph)
     {
         outline = glyph->outline;
 
         ftContourCount = outline.n_contours;
-        contourList = 0;
+        contourList = nullptr;
         contourFlag = outline.flags;
 
         ProcessContours();
@@ -168,7 +161,7 @@ size_t FTVectoriser::PointCount()
 
 const FTContour* FTVectoriser::Contour( unsigned int index) const
 {
-    return ( index < ContourCount()) ? contourList[index] : NULL;
+   return (index < ContourCount()) ? contourList[index] : nullptr;
 }
 
 

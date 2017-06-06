@@ -37,26 +37,23 @@ PyObject* PyROOT::TFunctionHolder::PreProcessArgs(
 PyObject* PyROOT::TFunctionHolder::Call(
       ObjectProxy*& self, PyObject* args, PyObject* kwds, TCallContext* ctxt )
 {
-   if ( kwds != 0 && PyDict_Size( kwds ) ) {
+   if (kwds != nullptr && PyDict_Size(kwds)) {
       PyErr_SetString( PyExc_TypeError, "keyword arguments are not yet supported" );
-      return 0;
+      return nullptr;
    }
 
 // setup as necessary
-   if ( ! this->Initialize( ctxt ) )
-      return 0;                              // important: 0, not Py_None
+   if (!this->Initialize(ctxt)) return nullptr; // important: 0, not Py_None
 
-// reorder self into args, if necessary
-   if ( ! ( args = this->PreProcessArgs( self, args, kwds ) ) )
-      return 0;
+   // reorder self into args, if necessary
+   if (!(args = this->PreProcessArgs(self, args, kwds))) return nullptr;
 
-// translate the arguments
+   // translate the arguments
    Bool_t bConvertOk = this->ConvertAndSetArgs( args, ctxt );
    Py_DECREF( args );
 
-   if ( bConvertOk == kFALSE )
-      return 0;                              // important: 0, not Py_None
+   if (bConvertOk == kFALSE) return nullptr; // important: 0, not Py_None
 
-// execute function
-   return this->Execute( 0, 0, ctxt );
+   // execute function
+   return this->Execute(nullptr, 0, ctxt);
 }

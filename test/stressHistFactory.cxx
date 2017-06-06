@@ -57,7 +57,7 @@ Int_t stressHistFactory(const char* refFile, Bool_t writeRef, Int_t verbose, Boo
    RooUnitTest::setMemDir(gDirectory) ;
 
    std::cout << "using reference file " << refFile << std::endl;
-   TFile* fref = 0 ;
+   TFile *fref = nullptr;
    if (!dryRun) {
       if (TString(refFile).Contains("http:")) {
          if (writeRef) {
@@ -175,7 +175,7 @@ Int_t stressHistFactory(const char* refFile, Bool_t writeRef, Int_t verbose, Boo
    }
 
    delete gBenchmark ;
-   gBenchmark = 0 ;
+   gBenchmark = nullptr;
 
    return nFailed;
 }

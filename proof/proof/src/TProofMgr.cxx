@@ -38,7 +38,7 @@ ClassImp(TProofMgr);
 
 // Sub-list of TROOT::fProofs with managers
 TList TProofMgr::fgListOfManagers;
-TProofMgr_t TProofMgr::fgTXProofMgrHook = 0;
+TProofMgr_t TProofMgr::fgTXProofMgrHook = nullptr;
 
 // Auxilliary structures for pinging
 // The client request
@@ -60,8 +60,7 @@ typedef struct {
 /// Create a PROOF manager for the standard (old) environment.
 
 TProofMgr::TProofMgr(const char *url, Int_t, const char *alias)
-          : TNamed("",""), fRemoteProtocol(-1), fServType(kXProofd),
-            fSessions(0), fIntHandler(0)
+   : TNamed("", ""), fRemoteProtocol(-1), fServType(kXProofd), fSessions(nullptr), fIntHandler(nullptr)
 {
    fServType = kProofd;
 
@@ -127,7 +126,7 @@ TProof *TProofMgr::AttachSession(Int_t id, Bool_t gui)
       return AttachSession(d, gui);
 
    Info("AttachSession","invalid proofserv id (%d)", id);
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -139,7 +138,7 @@ TProof *TProofMgr::AttachSession(TProofDesc *d, Bool_t)
 {
    if (!d) {
       Warning("AttachSession","invalid description object - do nothing");
-      return 0;
+      return nullptr;
    }
 
    if (d->GetProof())
@@ -147,7 +146,7 @@ TProof *TProofMgr::AttachSession(TProofDesc *d, Bool_t)
       return d->GetProof();
 
    Warning("AttachSession","session not available - do nothing");
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -181,7 +180,7 @@ void TProofMgr::DetachSession(Int_t id, Option_t *opt)
       if (fSessions) {
          // Delete PROOF sessions
          TIter nxd(fSessions);
-         TProofDesc *d = 0;
+         TProofDesc *d = nullptr;
          while ((d = (TProofDesc *)nxd())) {
             if (d->GetProof())
                d->GetProof()->Detach(opt);
@@ -241,8 +240,8 @@ TList *TProofMgr::QuerySessions(Option_t *opt)
    if (gROOT->GetListOfProofs()) {
       // Loop over
       TIter nxp(gROOT->GetListOfProofs());
-      TObject *o = 0;
-      TProof *p = 0;
+      TObject *o = nullptr;
+      TProof *p = nullptr;
       Int_t ns = 0;
       while ((o = nxp())) {
          if (o->InheritsFrom(TProof::Class())) {
@@ -265,7 +264,7 @@ TList *TProofMgr::QuerySessions(Option_t *opt)
    // Drop entries not existing any longer
    if (fSessions->GetSize() > 0) {
       TIter nxd(fSessions);
-      TProofDesc *d = 0;
+      TProofDesc *d = nullptr;
       while ((d = (TProofDesc *)nxd())) {
          if (d->GetProof()) {
             if (!(gROOT->GetListOfProofs()->FindObject(d->GetProof()))) {
@@ -323,7 +322,7 @@ void TProofMgr::ShowWorkers()
 
 TProofDesc *TProofMgr::GetProofDesc(Int_t id)
 {
-   TProofDesc *d = 0;
+   TProofDesc *d = nullptr;
    if (id > 0) {
       // Retrieve an updated list
       QuerySessions("");
@@ -344,7 +343,7 @@ TProofDesc *TProofMgr::GetProofDesc(Int_t id)
 
 TProofDesc *TProofMgr::GetProofDesc(TProof *p)
 {
-   TProofDesc *d = 0;
+   TProofDesc *d = nullptr;
    if (p) {
       // Retrieve an updated list
       QuerySessions("");
@@ -366,7 +365,7 @@ TProofDesc *TProofMgr::GetProofDesc(TProof *p)
 void TProofMgr::DiscardSession(TProof *p)
 {
    if (p) {
-      TProofDesc *d = 0;
+      TProofDesc *d = nullptr;
       if (fSessions) {
          TIter nxd(fSessions);
          while ((d = (TProofDesc *)nxd())) {
@@ -391,7 +390,7 @@ TProof *TProofMgr::CreateSession(const char *cfg,
       fUrl.SetOptions("std");
 
    // Create the instance
-   TProof *p = new TProof(fUrl.GetUrl(), cfg, cfgdir, loglevel, 0, this);
+   TProof *p = new TProof(fUrl.GetUrl(), cfg, cfgdir, loglevel, nullptr, this);
 
    if (p && p->IsValid()) {
 
@@ -461,7 +460,7 @@ TList *TProofMgr::GetListOfManagers()
    // Update the list with new entries
    if (gROOT->GetListOfProofs()) {
       TIter nxp(gROOT->GetListOfProofs());
-      TObject *o = 0;
+      TObject *o = nullptr;
       while ((o = nxp())) {
          if (o->InheritsFrom(TProofMgr::Class()) && !fgListOfManagers.FindObject(o))
             fgListOfManagers.Add(o);
@@ -471,7 +470,7 @@ TList *TProofMgr::GetListOfManagers()
    // Get rid of invalid entries and notify
    if (fgListOfManagers.GetSize() > 0) {
       TIter nxp(&fgListOfManagers);
-      TObject *o = 0;
+      TObject *o = nullptr;
       Int_t nm = 0;
       while ((o = nxp())) {
          if (!(gROOT->GetListOfProofs()->FindObject(o))) {
@@ -498,7 +497,7 @@ TList *TProofMgr::GetListOfManagers()
 TProofMgr *TProofMgr::Create(const char *uin, Int_t loglevel,
                              const char *alias, Bool_t xpd)
 {
-   TProofMgr *m= 0;
+   TProofMgr *m = nullptr;
 
    Bool_t isLite = kFALSE;
 
@@ -554,7 +553,7 @@ TProofMgr *TProofMgr::Create(const char *uin, Int_t loglevel,
       return new TProofMgrLite(url, loglevel, alias);
    }
 
-   m = 0;
+   m = nullptr;
    Bool_t trystd = kTRUE;
 
    // If required, we assume first that the remote server is based on XrdProofd
@@ -597,7 +596,7 @@ TProofMgr_t TProofMgr::GetXProofMgrHook()
    if (!fgTXProofMgrHook) {
       // Load the appropriate library ...
       TString prooflib = "libProofx";
-      char *p = 0;
+      char *p = nullptr;
       if ((p = gSystem->DynamicPathName(prooflib, kTRUE))) {
          delete[] p;
          if (gSystem->Load(prooflib) == -1)
@@ -757,7 +756,7 @@ void TProofMgr::ReplaceSubdirs(const char *fn, TString &fdst, TList &dirph)
    dirs.SetOwner(kTRUE);
 
    TIter nxph(&dirph);
-   TParameter<Int_t> *pi = 0;
+   TParameter<Int_t> *pi = nullptr;
    while ((pi = (TParameter<Int_t> *) nxph())) {
       if (pi->GetVal() < dirs.GetSize()) {
          TObjString *os = (TObjString *) dirs.At(pi->GetVal());
@@ -801,7 +800,7 @@ void TProofMgr::ReplaceSubdirs(const char *fn, TString &fdst, TList &dirph)
 TFileCollection *TProofMgr::UploadFiles(TList *src,
                                         const char *mss, const char *dest)
 {
-   TFileCollection *ds = 0;
+   TFileCollection *ds = nullptr;
 
    // The inputs must be make sense
    if (!src || (src && src->GetSize() <= 0)) {
@@ -842,12 +841,12 @@ TFileCollection *TProofMgr::UploadFiles(TList *src,
    // Now we will actually copy files and create the TList object
    ds = new TFileCollection();
    TIter nxf(src);
-   TObject *o = 0;
-   TObjString *os = 0;
-   TFileInfo *fi = 0;
+   TObject *o = nullptr;
+   TObjString *os = nullptr;
+   TFileInfo *fi = nullptr;
    Int_t kn = 0;
    while ((o = nxf())) {
-      TUrl *furl = 0;
+      TUrl *furl = nullptr;
       if (!strcmp(o->ClassName(), "TFileInfo")) {
          if (!(fi = dynamic_cast<TFileInfo *>(o))) {
             ::Warning("TProofMgr::UploadFiles",
@@ -986,7 +985,7 @@ TFileCollection *TProofMgr::UploadFiles(TList *src,
 TFileCollection *TProofMgr::UploadFiles(const char *srcfiles,
                                         const char *mss, const char *dest)
 {
-   TFileCollection *ds = 0;
+   TFileCollection *ds = nullptr;
 
    // The inputs must be make sense
    if (!srcfiles || (srcfiles && strlen(srcfiles) <= 0)) {
@@ -1034,7 +1033,7 @@ TFileCollection *TProofMgr::UploadFiles(const char *srcfiles,
       // Directory
       void *dirp = gSystem->OpenDirectory(inpath.Data());
       if (dirp) {
-         const char *ent = 0;
+         const char *ent = nullptr;
          while ((ent = gSystem->GetDirEntry(dirp))) {
             if (!strcmp(ent, ".") || !strcmp(ent, "..")) continue;
             line.Form("%s/%s", inpath.Data(), ent);

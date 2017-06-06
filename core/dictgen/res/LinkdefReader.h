@@ -99,11 +99,8 @@ private:
    struct Options;
 
    bool AddInclude(const std::string& include);
-   bool AddRule(const std::string& ruletype,
-                const std::string& identifier,
-                bool linkOn,
-                bool requestOnlyTClass,
-                Options *option = 0);
+   bool AddRule(const std::string &ruletype, const std::string &identifier, bool linkOn, bool requestOnlyTClass,
+                Options *option = nullptr);
 
    bool ProcessFunctionPrototype(std::string &proto, bool &name); // transforms the function prototypes to a more unified form
    bool ProcessOperators(std::string &pattern); // transforms the operators statement to the suitable function pattern

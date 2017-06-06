@@ -13,21 +13,16 @@
 
 
 //- static data --------------------------------------------------------------
-PyROOT::TMemoryRegulator::ObjectMap_t*  PyROOT::TMemoryRegulator::fgObjectTable  = 0;
-PyROOT::TMemoryRegulator::WeakRefMap_t* PyROOT::TMemoryRegulator::fgWeakRefTable = 0;
-
+PyROOT::TMemoryRegulator::ObjectMap_t *PyROOT::TMemoryRegulator::fgObjectTable = nullptr;
+PyROOT::TMemoryRegulator::WeakRefMap_t *PyROOT::TMemoryRegulator::fgWeakRefTable = nullptr;
 
 namespace {
 
 // memory regulater callback for deletion of registered objects
-   PyMethodDef methoddef_ = {
-      const_cast< char* >( "TMemoryRegulator_internal_ObjectEraseCallback" ),
-      (PyCFunction) PyROOT::TMemoryRegulator::ObjectEraseCallback,
-      METH_O,
-      NULL
-   };
+PyMethodDef methoddef_ = {const_cast<char *>("TMemoryRegulator_internal_ObjectEraseCallback"),
+                          (PyCFunction)PyROOT::TMemoryRegulator::ObjectEraseCallback, METH_O, nullptr};
 
-   PyObject* gObjectEraseCallback = PyCFunction_New( &methoddef_, NULL );
+PyObject *gObjectEraseCallback = PyCFunction_New(&methoddef_, NULL);
 
 
 // pseudo-None type for masking out objects on the python side
@@ -42,13 +37,9 @@ namespace {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-   PyMappingMethods PyROOT_NoneType_mapping = {
-        AlwaysNullLength,
-        (binaryfunc)             0,
-        (objobjargproc)          0
-   };
+   PyMappingMethods PyROOT_NoneType_mapping = {AlwaysNullLength, (binaryfunc) nullptr, (objobjargproc) nullptr};
 
-// silence warning about some cast operations
+   // silence warning about some cast operations
 #if defined(__GNUC__) && (__GNUC__ >= 5 || (__GNUC__ >= 4 && ((__GNUC_MINOR__ == 2 && __GNUC_PATCHLEVEL__ >= 1) || (__GNUC_MINOR__ >= 3)))) && !__INTEL_COMPILER
 #pragma GCC diagnostic ignored "-Wstrict-aliasing"
 #endif
@@ -68,8 +59,8 @@ namespace {
          PyROOT_NoneType.tp_name        = const_cast< char* >( "PyROOT_NoneType" );
          PyROOT_NoneType.tp_flags       = Py_TPFLAGS_HAVE_RICHCOMPARE | Py_TPFLAGS_HAVE_GC;
 
-         PyROOT_NoneType.tp_traverse    = (traverseproc) 0;
-         PyROOT_NoneType.tp_clear       = (inquiry) 0;
+         PyROOT_NoneType.tp_traverse = (traverseproc) nullptr;
+         PyROOT_NoneType.tp_clear = (inquiry) nullptr;
          PyROOT_NoneType.tp_dealloc     = (destructor)  &InitPyROOT_NoneType_t::DeAlloc;
          PyROOT_NoneType.tp_repr        = Py_TYPE(Py_None)->tp_repr;
          PyROOT_NoneType.tp_richcompare = (richcmpfunc) &InitPyROOT_NoneType_t::RichCompare;
@@ -112,10 +103,10 @@ PyROOT::TMemoryRegulator::TMemoryRegulator()
 // setup NoneType for referencing and create weakref cache
    static InitPyROOT_NoneType_t initPyROOT_NoneType;
 
-   assert( fgObjectTable == 0 );
+   assert(fgObjectTable == nullptr);
    fgObjectTable = new ObjectMap_t;
 
-   assert( fgWeakRefTable == 0 );
+   assert(fgWeakRefTable == nullptr);
    fgWeakRefTable = new WeakRefMap_t;
 }
 
@@ -125,10 +116,10 @@ PyROOT::TMemoryRegulator::TMemoryRegulator()
 PyROOT::TMemoryRegulator::~TMemoryRegulator()
 {
    delete fgWeakRefTable;
-   fgWeakRefTable = 0;
+   fgWeakRefTable = nullptr;
 
    delete fgObjectTable;
-   fgObjectTable = 0;
+   fgObjectTable = nullptr;
 }
 
 
@@ -235,8 +226,7 @@ Bool_t PyROOT::TMemoryRegulator::UnregisterObject( TObject* object )
 
 PyObject* PyROOT::TMemoryRegulator::RetrieveObject( TObject* object, Cppyy::TCppType_t klass )
 {
-   if ( ! object )
-      return 0;
+   if (!object) return nullptr;
 
    ObjectMap_t::iterator ppo = fgObjectTable->find( object );
    if ( ppo != fgObjectTable->end() ) {
@@ -244,12 +234,12 @@ PyObject* PyROOT::TMemoryRegulator::RetrieveObject( TObject* object, Cppyy::TCpp
       Py_XINCREF( pyobj );
       if ( pyobj && ((ObjectProxy*)pyobj)->ObjectIsA() != klass ) {
           Py_DECREF( pyobj );
-          return 0;
+          return nullptr;
       }
       return pyobj;
    }
 
-   return 0;
+   return nullptr;
 }
 
 
@@ -259,8 +249,8 @@ PyObject* PyROOT::TMemoryRegulator::ObjectEraseCallback( PyObject*, PyObject* py
 // called when one of the python objects we've registered is going away
    ObjectProxy* pyobj = (ObjectProxy*)PyWeakref_GetObject( pyref );
 
-   if ( ObjectProxy_Check( pyobj ) && pyobj->GetObject() != 0 ) {
-   // get TObject pointer to the object
+   if (ObjectProxy_Check(pyobj) && pyobj->GetObject() != nullptr) {
+      // get TObject pointer to the object
       static Cppyy::TCppScope_t sTObjectScope = Cppyy::GetScope( "TObject" );
       Cppyy::TCppType_t klass = pyobj->ObjectIsA();
       if ( Cppyy::IsSubtype( klass, sTObjectScope) ) {

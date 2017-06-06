@@ -78,16 +78,9 @@ namespace Internal {
       if (fSubBranchPrefix.Length() && fSubBranchPrefix[fSubBranchPrefix.Length()-1]=='.') fSubBranchPrefix.Remove(fSubBranchPrefix.Length()-1);
    }
 
-   TBranchProxyClassDescriptor::TBranchProxyClassDescriptor(const char *branchname) :
-      TNamed(branchname,branchname),
-      fIsClones(kOut),
-      fContainerName(),
-      fIsLeafList(true),
-      fSplitLevel(0),
-      fBranchName(branchname),
-      fSubBranchPrefix(branchname),
-      fInfo(0),
-      fMaxDatamemberType(3)
+   TBranchProxyClassDescriptor::TBranchProxyClassDescriptor(const char *branchname)
+      : TNamed(branchname, branchname), fIsClones(kOut), fContainerName(), fIsLeafList(true), fSplitLevel(0),
+        fBranchName(branchname), fSubBranchPrefix(branchname), fInfo(nullptr), fMaxDatamemberType(3)
    {
       // Constructor for a branch constructed from a leaf list.
 

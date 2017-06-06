@@ -20,15 +20,15 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-void do_cache(bool clear = 1, const char *ds = 0);
+void do_cache(bool clear = 1, const char *ds = nullptr);
 void do_ls(const char *ds, const char *opt = "");
 void do_ls_files_server(const char *ds, const char *server);
 void do_info_server(const char *server);
 void do_put(const char *ds, const char *opt);
 void do_rm(const char *ds);
-int  do_verify(const char *ds, const char *opt = 0, const char *redir = 0);
-void do_anadist(const char *ds, const char *newsrvs = 0, const char *ignsrvs = 0,
-                const char *excsrvs = 0, const char *metrics = "F", const char *fout = 0,
-                const char *plot = 0, const char *outfile = 0, const char *infile = 0);
+int do_verify(const char *ds, const char *opt = nullptr, const char *redir = nullptr);
+void do_anadist(const char *ds, const char *newsrvs = nullptr, const char *ignsrvs = nullptr,
+                const char *excsrvs = nullptr, const char *metrics = "F", const char *fout = nullptr,
+                const char *plot = nullptr, const char *outfile = nullptr, const char *infile = nullptr);
 
 #endif

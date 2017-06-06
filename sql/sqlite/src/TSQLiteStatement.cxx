@@ -66,8 +66,8 @@ void TSQLiteStatement::Close(Option_t *)
       sqlite3_finalize(fStmt->fRes);
    }
 
-   fStmt->fRes = 0;
-   fStmt->fConn = 0;
+   fStmt->fRes = nullptr;
+   fStmt->fConn = nullptr;
    delete fStmt;
 }
 
@@ -211,7 +211,7 @@ Int_t TSQLiteStatement::GetNumFields()
 const char* TSQLiteStatement::GetFieldName(Int_t nfield)
 {
    if (!IsResultSetMode() || (nfield < 0) || (nfield >= sqlite3_column_count(fStmt->fRes))) {
-      return 0;
+      return nullptr;
    }
 
    return sqlite3_column_name(fStmt->fRes, nfield);
@@ -224,7 +224,7 @@ Bool_t TSQLiteStatement::NextResultRow()
 {
    ClearError();
 
-   if ((fStmt == 0) || !IsResultSetMode()) return kFALSE;
+   if ((fStmt == nullptr) || !IsResultSetMode()) return kFALSE;
 
    if (fIterationCount == 0) {
       // The interface says user should call NextResultRow() before getting any data,

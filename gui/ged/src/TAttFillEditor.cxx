@@ -52,7 +52,7 @@ TAttFillEditor::TAttFillEditor(const TGWindow *p, Int_t width,
 {
    fPriority = 2;
 
-   fAttFill = 0;
+   fAttFill = nullptr;
 
    MakeTitle("Fill");
 

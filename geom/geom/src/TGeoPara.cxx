@@ -379,9 +379,7 @@ TGeoVolume *TGeoPara::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
          finder = new TGeoPatternParaZ(voldiv, ndiv, start, end);
          opt = "Z";
          break;
-      default:
-         Error("Divide", "Wrong axis type for division");
-         return 0;
+      default: Error("Divide", "Wrong axis type for division"); return nullptr;
    }
    vol = new TGeoVolume(divname, shape, voldiv->GetMedium());
    vmulti = gGeoManager->MakeVolumeMulti(divname, voldiv->GetMedium());
@@ -512,10 +510,10 @@ Int_t TGeoPara::GetFittingBox(const TGeoBBox *parambox, TGeoMatrix *mat, Double_
 
 TGeoShape *TGeoPara::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/) const
 {
-   if (!TestShapeBit(kGeoRunTimeShape)) return 0;
+   if (!TestShapeBit(kGeoRunTimeShape)) return nullptr;
    if (!mother->TestShapeBit(kGeoPara)) {
       Error("GetMakeRuntimeShape", "invalid mother");
-      return 0;
+      return nullptr;
    }
    Double_t dx, dy, dz;
    if (fX<0) dx=((TGeoPara*)mother)->GetX();

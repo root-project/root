@@ -99,33 +99,19 @@ ClassImp(RooIntegralMorph);
 /// If doCacheAlpha is true, a two-dimensional cache is constructed in
 /// both alpha and x
 
-RooIntegralMorph::RooIntegralMorph(const char *name, const char *title,
-                RooAbsReal& _pdf1,
-                RooAbsReal& _pdf2,
-                RooAbsReal& _x,
-                RooAbsReal& _alpha,
-                Bool_t doCacheAlpha) :
-  RooAbsCachedPdf(name,title,2),
-  pdf1("pdf1","pdf1",this,_pdf1),
-  pdf2("pdf2","pdf2",this,_pdf2),
-  x("x","x",this,_x),
-  alpha("alpha","alpha",this,_alpha),
-  _cacheAlpha(doCacheAlpha),
-  _cache(0)
+RooIntegralMorph::RooIntegralMorph(const char *name, const char *title, RooAbsReal &_pdf1, RooAbsReal &_pdf2,
+                                   RooAbsReal &_x, RooAbsReal &_alpha, Bool_t doCacheAlpha)
+   : RooAbsCachedPdf(name, title, 2), pdf1("pdf1", "pdf1", this, _pdf1), pdf2("pdf2", "pdf2", this, _pdf2),
+     x("x", "x", this, _x), alpha("alpha", "alpha", this, _alpha), _cacheAlpha(doCacheAlpha), _cache(nullptr)
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-RooIntegralMorph::RooIntegralMorph(const RooIntegralMorph& other, const char* name) :
-  RooAbsCachedPdf(other,name),
-  pdf1("pdf1",this,other.pdf1),
-  pdf2("pdf2",this,other.pdf2),
-  x("x",this,other.x),
-  alpha("alpha",this,other.alpha),
-  _cacheAlpha(other._cacheAlpha),
-  _cache(0)
+RooIntegralMorph::RooIntegralMorph(const RooIntegralMorph &other, const char *name)
+   : RooAbsCachedPdf(other, name), pdf1("pdf1", this, other.pdf1), pdf2("pdf2", this, other.pdf2),
+     x("x", this, other.x), alpha("alpha", this, other.alpha), _cacheAlpha(other._cacheAlpha), _cache(nullptr)
 {
 }
 

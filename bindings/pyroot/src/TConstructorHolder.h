@@ -19,11 +19,10 @@ namespace PyROOT {
       virtual PyCallable* Clone() { return new TConstructorHolder( *this ); }
 
    public:
-      virtual PyObject* Call(
-         ObjectProxy*& self, PyObject* args, PyObject* kwds, TCallContext* ctxt = 0 );
+      virtual PyObject *Call(ObjectProxy *&self, PyObject *args, PyObject *kwds, TCallContext *ctxt = nullptr);
 
    protected:
-      virtual Bool_t InitExecutor_( TExecutor*&, TCallContext* ctxt = 0 );
+      virtual Bool_t InitExecutor_(TExecutor *&, TCallContext *ctxt = nullptr);
    };
 
 } // namespace PyROOT

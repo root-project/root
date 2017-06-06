@@ -42,7 +42,7 @@ ClassImp(RooDirItem); ;
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
-RooDirItem::RooDirItem() : _dir(0) 
+RooDirItem::RooDirItem() : _dir(nullptr)
 {
 }
 
@@ -50,7 +50,7 @@ RooDirItem::RooDirItem() : _dir(0)
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-RooDirItem::RooDirItem(const RooDirItem& /*other*/) : _dir(0) 
+RooDirItem::RooDirItem(const RooDirItem & /*other*/) : _dir(nullptr)
 {
 }
 

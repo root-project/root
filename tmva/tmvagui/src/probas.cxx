@@ -52,7 +52,7 @@ void TMVA::probas(TString dataset, TString fin , Bool_t useTMVAStyle  )
    const Int_t width = 600;   // size of canvas
 
    // this defines how many canvases we need
-   TCanvas *c = 0;
+   TCanvas *c = nullptr;
 
    // counter variables
    Int_t countCanvas = 0;
@@ -72,9 +72,8 @@ void TMVA::probas(TString dataset, TString fin , Bool_t useTMVAStyle  )
    TIter next(&methods);
    TKey *key, *hkey;
    char fname[200];
-   TH1* sig(0);
-   TH1* bgd(0);
-   
+   TH1 *sig(nullptr);
+   TH1 *bgd(nullptr);
 
    while ( (key = (TKey*)next()) ) {
       TDirectory * mDir = (TDirectory*)key->ReadObj();
@@ -113,14 +112,14 @@ void TMVA::probas(TString dataset, TString fin , Bool_t useTMVAStyle  )
                sig = (TH1*)instDir->Get( hnameS );
                bgd = (TH1*)instDir->Get( hnameB );
 
-               if (sig == 0 || bgd == 0) {
+               if (sig == nullptr || bgd == nullptr) {
                   cout << "*** probas.C: big troubles in probas.... histogram: " << hname << " not found" << endl;
                   return;
                }
 
-               TH1* sigF(0);
-               TH1* bkgF(0);
-               
+               TH1 *sigF(nullptr);
+               TH1 *bkgF(nullptr);
+
                for (int i=0; i<= 5; i++) {
                   TString hspline = hnameS + Form("_smoothed_hist_from_spline%i",i);
                   sigF = (TH1*)instDir->Get( hspline );
@@ -138,8 +137,8 @@ void TMVA::probas(TString dataset, TString fin , Bool_t useTMVAStyle  )
                      bkgF = (TH1*)instDir->Get( hspline.ReplaceAll("_tr_S","_tr_B") );
                   }
                }
-              
-               if ((sigF == NULL || bkgF == NULL) &&!hname.Contains("hist") ) {
+
+               if ((sigF == nullptr || bkgF == nullptr) && !hname.Contains("hist")) {
                   cout << "*** probas.C: big troubles - did not find probability histograms" << endl;
                   return;
                }
@@ -147,8 +146,8 @@ void TMVA::probas(TString dataset, TString fin , Bool_t useTMVAStyle  )
                   // remove the signal suffix
 
                   // check that exist
-                  if (NULL != sigF && NULL != bkgF && NULL!=sig && NULL!=bgd) {
-          
+                  if (nullptr != sigF && nullptr != bkgF && nullptr != sig && nullptr != bgd) {
+
                      found = kTRUE;
                      // chop off useless stuff
                      sig->SetTitle( TString("TMVA output for classifier: ") + methodTitle );

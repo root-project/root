@@ -37,7 +37,7 @@ Int_t TBufferMergerFile::Write(const char *name, Int_t opt, Int_t bufsize)
       CopyTo(*fBuffer);
 
       fMerger.Push(fBuffer);
-      ResetAfterMerge(0);
+      ResetAfterMerge(nullptr);
    }
    return nbytes;
 }

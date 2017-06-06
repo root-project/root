@@ -22,16 +22,10 @@ ClassImp(TEveFrameBox);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-TEveFrameBox::TEveFrameBox() :
-   fFrameType   (kFT_None),
-   fFrameSize   (0),
-   fFramePoints (0),
+TEveFrameBox::TEveFrameBox()
+   : fFrameType(kFT_None), fFrameSize(0), fFramePoints(nullptr),
 
-   fFrameWidth  (1),
-   fFrameColor  (1),
-   fBackColor   (0),
-   fFrameFill   (kFALSE),
-   fDrawBack    (kFALSE)
+     fFrameWidth(1), fFrameColor(1), fBackColor(0), fFrameFill(kFALSE), fDrawBack(kFALSE)
 {
    // Default constructor.
 

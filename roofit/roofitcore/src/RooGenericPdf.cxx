@@ -55,15 +55,13 @@ ClassImp(RooGenericPdf);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor with formula expression and list of input variables
 
-RooGenericPdf::RooGenericPdf(const char *name, const char *title, const RooArgList& dependents) : 
-  RooAbsPdf(name,title), 
-  _actualVars("actualVars","Variables used by PDF expression",this),
-  _formula(0),
-  _formExpr(title)
+RooGenericPdf::RooGenericPdf(const char *name, const char *title, const RooArgList &dependents)
+   : RooAbsPdf(name, title), _actualVars("actualVars", "Variables used by PDF expression", this), _formula(nullptr),
+     _formExpr(title)
 {  
-  _actualVars.add(dependents) ; 
+  _actualVars.add(dependents) ;
 
-  if (_actualVars.getSize()==0) _value = traceEval(0) ;
+  if (_actualVars.getSize() == 0) _value = traceEval(nullptr);
 }
 
 
@@ -71,16 +69,13 @@ RooGenericPdf::RooGenericPdf(const char *name, const char *title, const RooArgLi
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor with a name, title, formula expression and a list of variables
 
-RooGenericPdf::RooGenericPdf(const char *name, const char *title, 
-			     const char* inFormula, const RooArgList& dependents) : 
-  RooAbsPdf(name,title), 
-  _actualVars("actualVars","Variables used by PDF expression",this),
-  _formula(0),
-  _formExpr(inFormula)
+RooGenericPdf::RooGenericPdf(const char *name, const char *title, const char *inFormula, const RooArgList &dependents)
+   : RooAbsPdf(name, title), _actualVars("actualVars", "Variables used by PDF expression", this), _formula(nullptr),
+     _formExpr(inFormula)
 {  
-  _actualVars.add(dependents) ; 
+  _actualVars.add(dependents) ;
 
-  if (_actualVars.getSize()==0) _value = traceEval(0) ;
+  if (_actualVars.getSize() == 0) _value = traceEval(nullptr);
 }
 
 
@@ -88,11 +83,9 @@ RooGenericPdf::RooGenericPdf(const char *name, const char *title,
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-RooGenericPdf::RooGenericPdf(const RooGenericPdf& other, const char* name) : 
-  RooAbsPdf(other, name), 
-  _actualVars("actualVars",this,other._actualVars),
-  _formula(0),
-  _formExpr(other._formExpr)
+RooGenericPdf::RooGenericPdf(const RooGenericPdf &other, const char *name)
+   : RooAbsPdf(other, name), _actualVars("actualVars", this, other._actualVars), _formula(nullptr),
+     _formExpr(other._formExpr)
 {
 }
 

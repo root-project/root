@@ -143,7 +143,7 @@ TMVA::PDEFoamDensityBase::PDEFoamDensityBase(const PDEFoamDensityBase &distr)
 
 void TMVA::PDEFoamDensityBase::FillBinarySearchTree(const Event* ev)
 {
-   if (fBst == NULL)
+   if (fBst == nullptr)
       Log() << kFATAL << "<PDEFoamDensityBase::FillBinarySearchTree> "
             << "Binary tree is not set!" << Endl;
 

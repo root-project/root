@@ -48,9 +48,8 @@
 #include "TMath.h"
 #include <stdlib.h>
 
-
-const TGFont *TGTextLBEntry::fgDefaultFont = 0;
-TGGC         *TGTextLBEntry::fgDefaultGC = 0;
+const TGFont *TGTextLBEntry::fgDefaultFont = nullptr;
+TGGC *TGTextLBEntry::fgDefaultGC = nullptr;
 
 ClassImp(TGLBEntry);
 ClassImp(TGTextLBEntry);
@@ -483,11 +482,11 @@ TGLBContainer::TGLBContainer(const TGWindow *p, UInt_t w, UInt_t h,
                              UInt_t options, ULong_t back) :
    TGContainer(p, w, h, options, back)
 {
-   fLastActive = 0;
+   fLastActive = nullptr;
    fMsgWindow  = p;
    fMultiSelect = kFALSE;
    fChangeStatus = kFALSE;
-   fListBox = 0;
+   fListBox = nullptr;
 
    SetWindowName();
    fEditDisabled = kEditDisableGrab | kEditDisableBtnEnable | kEditDisableKeyEnable;
@@ -618,7 +617,7 @@ void TGLBContainer::RemoveEntry(Int_t id)
       e = (TGLBEntry *) el->fFrame;
       l = el->fLayout;
       if (e->EntryId() == id) {
-         if (fLastActive == e) fLastActive = 0;
+         if (fLastActive == e) fLastActive = nullptr;
          e->DestroyWindow();
          fList->Remove(el);  // avoid calling RemoveFrame(e)
          delete el;          // item
@@ -646,7 +645,7 @@ void TGLBContainer::RemoveEntries(Int_t from_ID, Int_t to_ID)
       e = (TGLBEntry *) el->fFrame;
       l = el->fLayout;
       if ((e->EntryId() >= from_ID) && (e->EntryId() <= to_ID)) {
-         if (fLastActive == e) fLastActive = 0;
+         if (fLastActive == e) fLastActive = nullptr;
          e->DestroyWindow();
          fList->Remove(el);  // avoid calling RemoveFrame(e)
          delete el;          // idem
@@ -671,7 +670,7 @@ void TGLBContainer::RemoveAll()
    while ((el = (TGFrameElement *) next())) {
       e = (TGLBEntry *) el->fFrame;
       l = el->fLayout;
-      if (fLastActive == e) fLastActive = 0;
+      if (fLastActive == e) fLastActive = nullptr;
       e->DestroyWindow();
       fList->Remove(el);  // avoid calling RemoveFrame(e)
       delete el;          // item
@@ -701,7 +700,7 @@ TGLBEntry *TGLBContainer::Select(Int_t id, Bool_t sel)
 
    if (!fMultiSelect && fLastActive) {
       fLastActive->Activate(kFALSE);
-      fLastActive = 0;
+      fLastActive = nullptr;
    }
 
    TIter next(fList);
@@ -718,7 +717,7 @@ TGLBEntry *TGLBContainer::Select(Int_t id, Bool_t sel)
       }
    }
 
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -727,7 +726,7 @@ TGLBEntry *TGLBContainer::Select(Int_t id, Bool_t sel)
 
 Int_t TGLBContainer::GetSelected() const
 {
-   if (fLastActive == 0) return -1;
+   if (fLastActive == nullptr) return -1;
    return fLastActive->EntryId();
 }
 
@@ -782,8 +781,8 @@ void TGLBContainer::SetMultipleSelections(Bool_t multi)
          ((TGLBEntry *)(el->fFrame))->Activate(kFALSE);
       }
    }
-   fLastActive = 0;
-   fLastActiveEl = 0;
+   fLastActive = nullptr;
+   fLastActiveEl = nullptr;
    ClearViewPort();
 }
 
@@ -792,7 +791,7 @@ void TGLBContainer::SetMultipleSelections(Bool_t multi)
 
 TGVScrollBar *TGLBContainer::GetVScrollbar() const
 {
-   return fListBox ? fListBox->GetVScrollbar() : 0;
+   return fListBox ? fListBox->GetVScrollbar() : nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -878,7 +877,7 @@ Bool_t TGLBContainer::HandleButton(Event_t *event)
       if (event->fType == kButtonPress) {
          if (fLastActive) {
             fLastActive->Activate(kFALSE);
-            fLastActive = 0;
+            fLastActive = nullptr;
          }
          TIter next(fList);
          while ((el = (TGFrameElement *) next())) {
@@ -1023,8 +1022,8 @@ Bool_t TGLBContainer::HandleMotion(Event_t *event)
 
 void TGLBContainer::OnAutoScroll()
 {
-   TGFrameElement* el = 0;
-   TGLBEntry *f = 0;
+   TGFrameElement *el = nullptr;
+   TGLBEntry *f = nullptr;
    Int_t yf0, yff;
    Bool_t changed = kFALSE;
 
@@ -1158,8 +1157,8 @@ void TGListBox::InitListBox()
    fLbc->SetListBox(this);
    SetContainer(fLbc);
 
-   AddFrame(fVport, 0);
-   AddFrame(fVScrollbar, 0);
+   AddFrame(fVport, nullptr);
+   AddFrame(fVScrollbar, nullptr);
 
    fVScrollbar->Associate(this);
 
@@ -1175,7 +1174,7 @@ void TGListBox::InitListBox()
 
    // layout manager is not used
    delete fLayoutManager;
-   fLayoutManager = 0;
+   fLayoutManager = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1386,7 +1385,7 @@ TGLBEntry *TGListBox::GetEntry(Int_t id) const
       TGLBEntry *lbe = (TGLBEntry *)el->fFrame;
       if (lbe->EntryId() == id) return lbe;
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1649,7 +1648,7 @@ TGLBEntry *TGListBox::FindEntry(const char *name) const
          return (TGLBEntry *)el->fFrame;
       el = (TGFrameElement *)list->After(el);
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

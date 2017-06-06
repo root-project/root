@@ -99,8 +99,9 @@ ClassImp(TFastCgi);
    ////////////////////////////////////////////////////////////////////////////////
    /// normal constructor
 
-   TFastCgi::TFastCgi()
-   : THttpEngine("fastcgi", "fastcgi interface to webserver"), fSocket(0), fDebugMode(kFALSE), fTopName(), fThrd(0)
+TFastCgi::TFastCgi()
+   : THttpEngine("fastcgi", "fastcgi interface to webserver"), fSocket(0), fDebugMode(kFALSE), fTopName(),
+     fThrd(nullptr)
 {
 }
 
@@ -113,7 +114,7 @@ TFastCgi::~TFastCgi()
       // running thread will be killed
       fThrd->Kill();
       delete fThrd;
-      fThrd = 0;
+      fThrd = nullptr;
    }
 
    if (fSocket > 0) {

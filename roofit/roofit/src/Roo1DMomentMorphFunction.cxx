@@ -37,7 +37,7 @@ ClassImp(Roo1DMomentMorphFunction);
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
 
-  Roo1DMomentMorphFunction::Roo1DMomentMorphFunction() : _mref(0), _frac(0), _M(0), _setting(Linear)
+Roo1DMomentMorphFunction::Roo1DMomentMorphFunction() : _mref(nullptr), _frac(nullptr), _M(nullptr), _setting(Linear)
 {
   _varItr    = _varList.createIterator() ;
 }
@@ -74,7 +74,7 @@ Roo1DMomentMorphFunction::Roo1DMomentMorphFunction(const char *name, const char 
   delete varItr ;
 
   _mref      = new TVectorD(mrefpoints);
-  _frac      = 0 ;
+  _frac = nullptr;
   _varItr    = _varList.createIterator() ;
 
   // initialization
@@ -93,7 +93,7 @@ Roo1DMomentMorphFunction::Roo1DMomentMorphFunction(const Roo1DMomentMorphFunctio
   _setting(other._setting)
 {
   _mref = new TVectorD(*other._mref) ;
-  _frac = 0 ;
+  _frac = nullptr;
   _varItr    = _varList.createIterator() ;
 
   // initialization
@@ -154,7 +154,7 @@ Double_t Roo1DMomentMorphFunction::evaluate() const
   _varItr->Reset() ;
 
   Double_t ret(0);
-  RooAbsReal* var(0) ;
+  RooAbsReal *var(nullptr);
   for (Int_t i=0; (var = (RooAbsReal*)_varItr->Next()); ++i) {
     ret += (*_frac)(i) * var->getVal();
   }

@@ -45,11 +45,8 @@ using namespace std;
 ClassImp(RooRealConstant);
 ;
 
-
-RooArgList* RooRealConstant::_constDB = 0;
-TIterator* RooRealConstant::_constDBIter = 0;
-
-
+RooArgList *RooRealConstant::_constDB = nullptr;
+TIterator *RooRealConstant::_constDBIter = nullptr;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Cleanup function register with RooSentinel for cleanup in atexit()
@@ -59,7 +56,7 @@ void RooRealConstant::cleanup()
   if (_constDB) {
     delete _constDB ;
     delete _constDBIter ;
-    _constDB = 0 ;
+    _constDB = nullptr;
   }
 }
 

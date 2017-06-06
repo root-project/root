@@ -81,16 +81,15 @@ ClassImp(TBrowser);
 /// (depending on Rint.Canvas.UseScreenFactor to be true or false, default
 /// is true).
 
-TBrowser::TBrowser(const char *name, const char *title, TBrowserImp *extimp,
-                   Option_t *opt)
-   : TNamed(name, title), fLastSelectedObject(0), fImp(extimp), fTimer(0),
-     fContextMenu(0), fNeedRefresh(kFALSE)
+TBrowser::TBrowser(const char *name, const char *title, TBrowserImp *extimp, Option_t *opt)
+   : TNamed(name, title), fLastSelectedObject(nullptr), fImp(extimp), fTimer(nullptr), fContextMenu(nullptr),
+     fNeedRefresh(kFALSE)
 {
    // make sure that the Gpad and GUI libs are loaded
    TApplication::NeedGraphicsLibs();
    gApplication->InitializeGraphics();
    if (TClass::IsCallingNew() != TClass::kRealNew) {
-      fImp = 0;
+      fImp = nullptr;
    } else {
       Float_t cx = gStyle->GetScreenFactor();
       UInt_t w = UInt_t(cx*800);
@@ -103,9 +102,8 @@ TBrowser::TBrowser(const char *name, const char *title, TBrowserImp *extimp,
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a new browser with a name, title, width and height.
 
-TBrowser::TBrowser(const char *name, const char *title, UInt_t width,
-                   UInt_t height, TBrowserImp *extimp, Option_t *opt)
-   : TNamed(name, title), fLastSelectedObject(0), fImp(extimp), fTimer(0), fContextMenu(0),
+TBrowser::TBrowser(const char *name, const char *title, UInt_t width, UInt_t height, TBrowserImp *extimp, Option_t *opt)
+   : TNamed(name, title), fLastSelectedObject(nullptr), fImp(extimp), fTimer(nullptr), fContextMenu(nullptr),
      fNeedRefresh(kFALSE)
 {
    // make sure that the Gpad and GUI libs are loaded
@@ -118,9 +116,9 @@ TBrowser::TBrowser(const char *name, const char *title, UInt_t width,
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a new browser with a name, title, position, width and height.
 
-TBrowser::TBrowser(const char *name, const char *title, Int_t x, Int_t y,
-                   UInt_t width, UInt_t height, TBrowserImp *extimp, Option_t *opt)
-   : TNamed(name, title), fLastSelectedObject(0), fImp(extimp), fTimer(0), fContextMenu(0),
+TBrowser::TBrowser(const char *name, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height,
+                   TBrowserImp *extimp, Option_t *opt)
+   : TNamed(name, title), fLastSelectedObject(nullptr), fImp(extimp), fTimer(nullptr), fContextMenu(nullptr),
      fNeedRefresh(kFALSE)
 {
    // make sure that the Gpad and GUI libs are loaded
@@ -134,7 +132,7 @@ TBrowser::TBrowser(const char *name, const char *title, Int_t x, Int_t y,
 /// Create a new browser with a name, title, width and height for TObject *obj.
 
 TBrowser::TBrowser(const char *name, TObject *obj, const char *title, Option_t *opt)
-   : TNamed(name, title), fLastSelectedObject(0), fImp(0), fTimer(0), fContextMenu(0),
+   : TNamed(name, title), fLastSelectedObject(nullptr), fImp(nullptr), fTimer(nullptr), fContextMenu(nullptr),
      fNeedRefresh(kFALSE)
 {
    // make sure that the Gpad and GUI libs are loaded
@@ -151,10 +149,8 @@ TBrowser::TBrowser(const char *name, TObject *obj, const char *title, Option_t *
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a new browser with a name, title, width and height for TObject *obj.
 
-TBrowser::TBrowser(const char *name, TObject *obj, const char *title,
-                   UInt_t width, UInt_t height, Option_t *opt)
-   : TNamed(name, title), fLastSelectedObject(0), fTimer(0), fContextMenu(0),
-     fNeedRefresh(kFALSE)
+TBrowser::TBrowser(const char *name, TObject *obj, const char *title, UInt_t width, UInt_t height, Option_t *opt)
+   : TNamed(name, title), fLastSelectedObject(nullptr), fTimer(nullptr), fContextMenu(nullptr), fNeedRefresh(kFALSE)
 {
    // make sure that the Gpad and GUI libs are loaded
    TApplication::NeedGraphicsLibs();
@@ -166,11 +162,9 @@ TBrowser::TBrowser(const char *name, TObject *obj, const char *title,
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a new browser with a name, title, width and height for TObject *obj.
 
-TBrowser::TBrowser(const char *name, TObject *obj, const char *title,
-                   Int_t x, Int_t y,
-                   UInt_t width, UInt_t height, Option_t *opt)
-   : TNamed(name, title), fLastSelectedObject(0), fTimer(0), fContextMenu(0),
-     fNeedRefresh(kFALSE)
+TBrowser::TBrowser(const char *name, TObject *obj, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height,
+                   Option_t *opt)
+   : TNamed(name, title), fLastSelectedObject(nullptr), fTimer(nullptr), fContextMenu(nullptr), fNeedRefresh(kFALSE)
 {
    // make sure that the Gpad and GUI libs are loaded
    TApplication::NeedGraphicsLibs();
@@ -182,10 +176,8 @@ TBrowser::TBrowser(const char *name, TObject *obj, const char *title,
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a new browser with a name, title, width and height for TObject *obj.
 
-TBrowser::TBrowser(const char *name, void *obj, TClass *cl,
-                   const char *objname, const char *title, Option_t *opt)
-   : TNamed(name, title), fLastSelectedObject(0), fTimer(0), fContextMenu(0),
-     fNeedRefresh(kFALSE)
+TBrowser::TBrowser(const char *name, void *obj, TClass *cl, const char *objname, const char *title, Option_t *opt)
+   : TNamed(name, title), fLastSelectedObject(nullptr), fTimer(nullptr), fContextMenu(nullptr), fNeedRefresh(kFALSE)
 {
    // make sure that the Gpad and GUI libs are loaded
    TApplication::NeedGraphicsLibs();
@@ -202,11 +194,9 @@ TBrowser::TBrowser(const char *name, void *obj, TClass *cl,
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a new browser with a name, title, width and height for TObject *obj.
 
-TBrowser::TBrowser(const char *name, void *obj, TClass *cl,
-                   const char *objname, const char *title,
-                   UInt_t width, UInt_t height, Option_t *opt)
-   : TNamed(name, title), fLastSelectedObject(0), fTimer(0), fContextMenu(0),
-     fNeedRefresh(kFALSE)
+TBrowser::TBrowser(const char *name, void *obj, TClass *cl, const char *objname, const char *title, UInt_t width,
+                   UInt_t height, Option_t *opt)
+   : TNamed(name, title), fLastSelectedObject(nullptr), fTimer(nullptr), fContextMenu(nullptr), fNeedRefresh(kFALSE)
 {
    // make sure that the Gpad and GUI libs are loaded
    TApplication::NeedGraphicsLibs();
@@ -218,12 +208,9 @@ TBrowser::TBrowser(const char *name, void *obj, TClass *cl,
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a new browser with a name, title, width and height for TObject *obj.
 
-TBrowser::TBrowser(const char *name,void *obj,  TClass *cl,
-                   const char *objname, const char *title,
-                   Int_t x, Int_t y,
+TBrowser::TBrowser(const char *name, void *obj, TClass *cl, const char *objname, const char *title, Int_t x, Int_t y,
                    UInt_t width, UInt_t height, Option_t *opt)
-   : TNamed(name, title), fLastSelectedObject(0), fTimer(0), fContextMenu(0),
-     fNeedRefresh(kFALSE)
+   : TNamed(name, title), fLastSelectedObject(nullptr), fTimer(nullptr), fContextMenu(nullptr), fNeedRefresh(kFALSE)
 {
    // make sure that the Gpad and GUI libs are loaded
    TApplication::NeedGraphicsLibs();
@@ -420,7 +407,7 @@ around an object of a non-TObject class
 TBrowserObject::TBrowserObject(void *obj, TClass *cl, const char *brname)
    : TNamed(brname, cl ? cl->GetName() : ""), fObj(obj), fClass(cl)
 {
-   if (cl==0) Fatal("Constructor","Class parameter should not be null");
+   if (cl == nullptr) Fatal("Constructor", "Class parameter should not be null");
    SetBit(kCanDelete);
 }
 

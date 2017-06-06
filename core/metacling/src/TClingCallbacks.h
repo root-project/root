@@ -101,8 +101,8 @@ public:
    virtual void PrintStackTrace();
 
 private:
-   bool tryAutoParseInternal(llvm::StringRef Name, clang::LookupResult &R,
-                            clang::Scope *S, const clang::FileEntry* FE = 0);
+   bool tryAutoParseInternal(llvm::StringRef Name, clang::LookupResult &R, clang::Scope *S,
+                             const clang::FileEntry *FE = nullptr);
    bool tryFindROOTSpecialInternal(clang::LookupResult &R, clang::Scope *S);
    bool tryResolveAtRuntimeInternal(clang::LookupResult &R, clang::Scope *S);
    bool shouldResolveAtRuntime(clang::LookupResult &R, clang::Scope *S);

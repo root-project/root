@@ -76,7 +76,7 @@ using the file extension `.svgz`.
 
 TSVG::TSVG() : TVirtualPS()
 {
-   fStream      = 0;
+   fStream = nullptr;
    fType        = 0;
    gVirtualPS   = this;
    fBoundingBox = kFALSE;
@@ -98,7 +98,7 @@ TSVG::TSVG() : TVirtualPS()
 
 TSVG::TSVG(const char *fname, Int_t wtype) : TVirtualPS(fname, wtype)
 {
-   fStream = 0;
+   fStream = nullptr;
    SetTitle("SVG");
    Open(fname, wtype);
 }
@@ -132,9 +132,9 @@ void TSVG::Open(const char *fname, Int_t wtype)
 
    // Open OS file
    fStream   = new std::ofstream(fname,std::ios::out);
-   if (fStream == 0 || !fStream->good()) {
+   if (fStream == nullptr || !fStream->good()) {
       printf("ERROR in TSVG::Open: Cannot open file:%s\n",fname);
-      if (fStream == 0) return;
+      if (fStream == nullptr) return;
    }
 
    gVirtualPS = this;
@@ -170,9 +170,11 @@ void TSVG::Close(Option_t *)
    PrintStr("</svg>@");
 
    // Close file stream
-   if (fStream) { fStream->close(); delete fStream; fStream = 0;}
+   if (fStream) { fStream->close(); delete fStream;
+      fStream = nullptr;
+   }
 
-   gVirtualPS = 0;
+   gVirtualPS = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -196,7 +198,7 @@ void TSVG::On()
 
 void TSVG::Off()
 {
-   gVirtualPS = 0;
+   gVirtualPS = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

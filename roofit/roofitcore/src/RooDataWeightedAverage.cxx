@@ -54,10 +54,11 @@ ClassImp(RooDataWeightedAverage);
 /// is shown. If interleave is true, the dataset split over multiple processes is done with an interleave pattern
 /// rather than a bulk-split pattern.
 
-RooDataWeightedAverage::RooDataWeightedAverage(const char *name, const char *title, RooAbsReal& pdf, RooAbsData& indata, 
-					       const RooArgSet& projdeps, Int_t nCPU, RooFit::MPSplit interleave, Bool_t showProgress, Bool_t verbose) : 
-  RooAbsOptTestStatistic(name,title,pdf,indata,projdeps,0,0,nCPU,interleave,verbose,kFALSE),
-  _showProgress(showProgress)
+RooDataWeightedAverage::RooDataWeightedAverage(const char *name, const char *title, RooAbsReal &pdf, RooAbsData &indata,
+                                               const RooArgSet &projdeps, Int_t nCPU, RooFit::MPSplit interleave,
+                                               Bool_t showProgress, Bool_t verbose)
+   : RooAbsOptTestStatistic(name, title, pdf, indata, projdeps, nullptr, nullptr, nCPU, interleave, verbose, kFALSE),
+     _showProgress(showProgress)
 {
   if (_showProgress) {
     coutI(Plotting) << "RooDataWeightedAverage::ctor(" << GetName() << ") constructing data weighted average of function " << pdf.GetName() 

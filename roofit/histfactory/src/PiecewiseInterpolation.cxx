@@ -411,7 +411,7 @@ Int_t PiecewiseInterpolation::getAnalyticalIntegralWN(RooArgSet& allVars, RooArg
   }
 
   // Store cache element
-  Int_t code = _normIntMgr.setObj(normSet,&analVars,(RooAbsCacheElement*)cache,0) ;
+  Int_t code = _normIntMgr.setObj(normSet, &analVars, (RooAbsCacheElement *)cache, nullptr);
 
   return code+1 ; 
 }
@@ -496,16 +496,16 @@ Double_t PiecewiseInterpolation::analyticalIntegralWN(Int_t code, const RooArgSe
 
   // old integral, only works for linear and not positive definite
   CacheElem* cache = (CacheElem*) _normIntMgr.getObjByIndex(code-1) ;
-  if( cache==NULL ) {
-    std::cout << "Error: Cache Element is NULL" << std::endl;
-    throw std::exception();
+  if (cache == nullptr) {
+     std::cout << "Error: Cache Element is NULL" << std::endl;
+     throw std::exception();
   }
 
   // old integral, only works for linear and not positive definite
   RooFIter funcIntIter = cache->_funcIntList.fwdIterator() ;
   RooFIter lowIntIter = cache->_lowIntList.fwdIterator() ;
   RooFIter highIntIter = cache->_highIntList.fwdIterator() ;
-  RooAbsReal *funcInt(0), *low(0), *high(0), *param(0) ;
+  RooAbsReal *funcInt(nullptr), *low(nullptr), *high(nullptr), *param(nullptr);
   Double_t value(0) ;
   Double_t nominal(0);
 

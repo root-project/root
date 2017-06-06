@@ -130,8 +130,7 @@ void TDsKey::SetKey(const char *key)
    assert(n>0 && n<100);
    fName.Replace(0,999,key,n);
    Int_t i = 0;
-   for (cc=key+n;*cc=='.'; cc+=11,i++)
-      fUrr.AddAt(strtoul(cc+1,0,10),i);
+   for (cc = key + n; *cc == '.'; cc += 11, i++) fUrr.AddAt(strtoul(cc + 1, nullptr, 10), i);
 }
 ////////////////////////////////////////////////////////////////////////////////
 ///to be documented

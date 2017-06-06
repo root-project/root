@@ -69,11 +69,9 @@ ClassImp(RooAddModel);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooAddModel::RooAddModel() :
-  _refCoefNorm("!refCoefNorm","Reference coefficient normalization set",this,kFALSE,kFALSE),
-  _refCoefRangeName(0),
-  _codeReg(10),
-  _snormList(0)
+RooAddModel::RooAddModel()
+   : _refCoefNorm("!refCoefNorm", "Reference coefficient normalization set", this, kFALSE, kFALSE),
+     _refCoefRangeName(nullptr), _codeReg(10), _snormList(nullptr)
 {
   _pdfIter   = _pdfList.createIterator() ;
   _coefIter  = _coefList.createIterator() ;
@@ -92,18 +90,13 @@ RooAddModel::RooAddModel() :
 ///
 /// All PDFs must inherit from RooAbsPdf. All coefficients must inherit from RooAbsReal
 
-RooAddModel::RooAddModel(const char *name, const char *title, const RooArgList& inPdfList, const RooArgList& inCoefList, Bool_t ownPdfList) :
-  RooResolutionModel(name,title,((RooResolutionModel*)inPdfList.at(0))->convVar()),
-  _refCoefNorm("!refCoefNorm","Reference coefficient normalization set",this,kFALSE,kFALSE),
-  _refCoefRangeName(0),
-  _projectCoefs(kFALSE),
-  _projCacheMgr(this,10),
-  _intCacheMgr(this,10),
-  _codeReg(10),
-  _pdfList("!pdfs","List of PDFs",this),
-  _coefList("!coefficients","List of coefficients",this),
-  _haveLastCoef(kFALSE),
-  _allExtendable(kFALSE)
+RooAddModel::RooAddModel(const char *name, const char *title, const RooArgList &inPdfList, const RooArgList &inCoefList,
+                         Bool_t ownPdfList)
+   : RooResolutionModel(name, title, ((RooResolutionModel *)inPdfList.at(0))->convVar()),
+     _refCoefNorm("!refCoefNorm", "Reference coefficient normalization set", this, kFALSE, kFALSE),
+     _refCoefRangeName(nullptr), _projectCoefs(kFALSE), _projCacheMgr(this, 10), _intCacheMgr(this, 10), _codeReg(10),
+     _pdfList("!pdfs", "List of PDFs", this), _coefList("!coefficients", "List of coefficients", this),
+     _haveLastCoef(kFALSE), _allExtendable(kFALSE)
 { 
   if (inPdfList.getSize()>inCoefList.getSize()+1) {
     coutE(InputArguments) << "RooAddModel::RooAddModel(" << GetName() 
@@ -262,7 +255,7 @@ RooResolutionModel* RooAddModel::convolution(RooFormulaVar* inBasis, RooAbsArg* 
     ccoutE(InputArguments) << "basis->findServer(0) = " << inBasis->findServer(0) << " " << inBasis->findServer(0)->GetName() << endl ;
     ccoutE(InputArguments) << "x.absArg()           = " << x.absArg() << " " << x.absArg()->GetName() << endl ;
     inBasis->Print("v") ;
-    return 0 ;
+    return nullptr;
   }
 
   TString newName(GetName()) ;
@@ -343,8 +336,8 @@ Int_t RooAddModel::basisCode(const char* name) const
 
 RooAddModel::CacheElem* RooAddModel::getProjCache(const RooArgSet* nset, const RooArgSet* iset, const char* rangeName) const
 {
-  // Check if cache already exists 
-  CacheElem* cache = (CacheElem*) _projCacheMgr.getObj(nset,iset,0,RooNameReg::ptr(rangeName)) ;
+  // Check if cache already exists
+  CacheElem *cache = (CacheElem *)_projCacheMgr.getObj(nset, iset, nullptr, RooNameReg::ptr(rangeName));
   if (cache) {
     return cache ;
   }
@@ -379,7 +372,7 @@ RooAddModel::CacheElem* RooAddModel::getProjCache(const RooArgSet* nset, const R
     }
 
     // Remove coef dependents
-    RooArgSet* coefDeps = coef ? coef->getObservables(nset) : 0 ;
+    RooArgSet *coefDeps = coef ? coef->getObservables(nset) : nullptr;
     if (coefDeps) {
       supNSet.remove(*coefDeps,kTRUE,kTRUE) ;
       delete coefDeps ;
@@ -411,94 +404,96 @@ RooAddModel::CacheElem* RooAddModel::getProjCache(const RooArgSet* nset, const R
   // *** PART 2 : Create projection coefficients ***
 
   // If no projections required stop here
-  if (!_projectCoefs || _basis!=0 ) {
-    _projCacheMgr.setObj(nset,iset,cache,RooNameReg::ptr(rangeName)) ;
-    return cache ;
+  if (!_projectCoefs || _basis != nullptr) {
+     _projCacheMgr.setObj(nset, iset, cache, RooNameReg::ptr(rangeName));
+     return cache;
   }
 
 
   // Reduce iset/nset to actual dependents of this PDF
   RooArgSet* nset2 = nset ? getObservables(nset) : new RooArgSet() ;
 
-  // Check if requested transformation is not identity 
-  if (!nset2->equals(_refCoefNorm) || _refCoefRangeName !=0 || rangeName !=0 ) {
-    
-    coutI(Caching)  << "RooAddModel::syncCoefProjList(" << GetName() << ") creating coefficient projection integrals" << endl ;
-    ccoutI(Caching) << "  from current normalization: "  ; nset2->Print("1") ;
-    ccoutI(Caching) << "          with current range: " << (rangeName?rangeName:"<none>") << endl ;
-    ccoutI(Caching) << "  to reference normalization: "  ; _refCoefNorm.Print("1") ; 
-    ccoutI(Caching) << "        with reference range: " << (_refCoefRangeName?RooNameReg::str(_refCoefRangeName):"<none>") << endl ;
-    
-    // Recalculate projection integrals of PDFs 
-    _pdfIter->Reset() ;
-    RooAbsPdf* thePdf ;
+  // Check if requested transformation is not identity
+  if (!nset2->equals(_refCoefNorm) || _refCoefRangeName != nullptr || rangeName != nullptr) {
 
-    while((thePdf=(RooAbsPdf*)_pdfIter->Next())) {
+     coutI(Caching) << "RooAddModel::syncCoefProjList(" << GetName() << ") creating coefficient projection integrals"
+                    << endl;
+     ccoutI(Caching) << "  from current normalization: ";
+     nset2->Print("1");
+     ccoutI(Caching) << "          with current range: " << (rangeName ? rangeName : "<none>") << endl;
+     ccoutI(Caching) << "  to reference normalization: ";
+     _refCoefNorm.Print("1");
+     ccoutI(Caching) << "        with reference range: "
+                     << (_refCoefRangeName ? RooNameReg::str(_refCoefRangeName) : "<none>") << endl;
 
-      // Calculate projection integral
-      RooAbsReal* pdfProj ;
-      if (!nset2->equals(_refCoefNorm)) {
-	pdfProj = thePdf->createIntegral(*nset2,_refCoefNorm) ;
-	pdfProj->setOperMode(operMode()) ;
-      } else {
-	TString name(GetName()) ;
-	name.Append("_") ;
-	name.Append(thePdf->GetName()) ;
-	name.Append("_ProjectNorm") ;
-	pdfProj = new RooRealVar(name,"Unit Projection normalization integral",1.0) ;
-      }
+     // Recalculate projection integrals of PDFs
+     _pdfIter->Reset();
+     RooAbsPdf *thePdf;
 
-      cache->_projList.addOwned(*pdfProj) ;
+     while ((thePdf = (RooAbsPdf *)_pdfIter->Next())) {
 
-      // Calculation optional supplemental normalization term
-      RooArgSet supNormSet(_refCoefNorm) ;
-      RooArgSet* deps = thePdf->getParameters(RooArgSet()) ;
-      supNormSet.remove(*deps,kTRUE,kTRUE) ;
-      delete deps ;
+        // Calculate projection integral
+        RooAbsReal *pdfProj;
+        if (!nset2->equals(_refCoefNorm)) {
+           pdfProj = thePdf->createIntegral(*nset2, _refCoefNorm);
+           pdfProj->setOperMode(operMode());
+        } else {
+           TString name(GetName());
+           name.Append("_");
+           name.Append(thePdf->GetName());
+           name.Append("_ProjectNorm");
+           pdfProj = new RooRealVar(name, "Unit Projection normalization integral", 1.0);
+        }
 
-      RooAbsReal* snorm ;
-      TString name(GetName()) ;
-      name.Append("_") ;
-      name.Append(thePdf->GetName()) ;
-      name.Append("_ProjSupNorm") ;
-      if (supNormSet.getSize()>0) {
-	snorm = new RooRealIntegral(name,"Projection Supplemental normalization integral",
-				    RooRealConstant::value(1.0),supNormSet) ;
-      } else {
-	snorm = new RooRealVar(name,"Unit Projection Supplemental normalization integral",1.0) ;
-      }
-      cache->_suppProjList.addOwned(*snorm) ;
+        cache->_projList.addOwned(*pdfProj);
 
-      // Calculate reference range adjusted projection integral
-      RooAbsReal* rangeProj1 ;
-      if (_refCoefRangeName && _refCoefNorm.getSize()>0) {
-	rangeProj1 = thePdf->createIntegral(_refCoefNorm,_refCoefNorm,RooNameReg::str(_refCoefRangeName)) ;
-	rangeProj1->setOperMode(operMode()) ;
-      } else {
-	TString theName(GetName()) ;
-	theName.Append("_") ;
-	theName.Append(thePdf->GetName()) ;
-	theName.Append("_RangeNorm1") ;
-	rangeProj1 = new RooRealVar(theName,"Unit range normalization integral",1.0) ;
-      }
-      cache->_refRangeProjList.addOwned(*rangeProj1) ;
-      
+        // Calculation optional supplemental normalization term
+        RooArgSet supNormSet(_refCoefNorm);
+        RooArgSet *deps = thePdf->getParameters(RooArgSet());
+        supNormSet.remove(*deps, kTRUE, kTRUE);
+        delete deps;
 
-      // Calculate range adjusted projection integral
-      RooAbsReal* rangeProj2 ;
-      if (rangeName && _refCoefNorm.getSize()>0) {
-	rangeProj2 = thePdf->createIntegral(_refCoefNorm,_refCoefNorm,rangeName) ;
-	rangeProj2->setOperMode(operMode()) ;
-      } else {
-	TString theName(GetName()) ;
-	theName.Append("_") ;
-	theName.Append(thePdf->GetName()) ;
-	theName.Append("_RangeNorm2") ;
-	rangeProj2 = new RooRealVar(theName,"Unit range normalization integral",1.0) ;
-      }
-      cache->_rangeProjList.addOwned(*rangeProj2) ;
+        RooAbsReal *snorm;
+        TString name(GetName());
+        name.Append("_");
+        name.Append(thePdf->GetName());
+        name.Append("_ProjSupNorm");
+        if (supNormSet.getSize() > 0) {
+           snorm = new RooRealIntegral(name, "Projection Supplemental normalization integral",
+                                       RooRealConstant::value(1.0), supNormSet);
+        } else {
+           snorm = new RooRealVar(name, "Unit Projection Supplemental normalization integral", 1.0);
+        }
+        cache->_suppProjList.addOwned(*snorm);
 
-    }               
+        // Calculate reference range adjusted projection integral
+        RooAbsReal *rangeProj1;
+        if (_refCoefRangeName && _refCoefNorm.getSize() > 0) {
+           rangeProj1 = thePdf->createIntegral(_refCoefNorm, _refCoefNorm, RooNameReg::str(_refCoefRangeName));
+           rangeProj1->setOperMode(operMode());
+        } else {
+           TString theName(GetName());
+           theName.Append("_");
+           theName.Append(thePdf->GetName());
+           theName.Append("_RangeNorm1");
+           rangeProj1 = new RooRealVar(theName, "Unit range normalization integral", 1.0);
+        }
+        cache->_refRangeProjList.addOwned(*rangeProj1);
+
+        // Calculate range adjusted projection integral
+        RooAbsReal *rangeProj2;
+        if (rangeName && _refCoefNorm.getSize() > 0) {
+           rangeProj2 = thePdf->createIntegral(_refCoefNorm, _refCoefNorm, rangeName);
+           rangeProj2->setOperMode(operMode());
+        } else {
+           TString theName(GetName());
+           theName.Append("_");
+           theName.Append(thePdf->GetName());
+           theName.Append("_RangeNorm2");
+           rangeProj2 = new RooRealVar(theName, "Unit range normalization integral", 1.0);
+        }
+        cache->_rangeProjList.addOwned(*rangeProj2);
+     }               
 
   }
 
@@ -742,8 +737,8 @@ void RooAddModel::getCompIntList(const RooArgSet* nset, const RooArgSet* iset, p
   _pdfIter->Reset() ;
   RooResolutionModel* model ;
   while ((model=(RooResolutionModel*)_pdfIter->Next())) {
-    RooAbsReal* intPdf = model->createIntegral(*iset,nset,0,isetRangeName) ;
-    cache->_intList.addOwned(*intPdf) ;
+     RooAbsReal *intPdf = model->createIntegral(*iset, nset, nullptr, isetRangeName);
+     cache->_intList.addOwned(*intPdf);
   }
 
   // Store the partial integral list and return the assigned code ;
@@ -771,17 +766,17 @@ Double_t RooAddModel::analyticalIntegralWN(Int_t code, const RooArgSet* normSet,
   RooArgList* compIntList ;
 
   // If cache has been sterilized, revive this slot
-  if (cache==0) {
-    RooArgSet* vars = getParameters(RooArgSet()) ;
-    RooArgSet* nset = _intCacheMgr.nameSet1ByIndex(code-1)->select(*vars) ;
-    RooArgSet* iset = _intCacheMgr.nameSet2ByIndex(code-1)->select(*vars) ;
+  if (cache == nullptr) {
+     RooArgSet *vars = getParameters(RooArgSet());
+     RooArgSet *nset = _intCacheMgr.nameSet1ByIndex(code - 1)->select(*vars);
+     RooArgSet *iset = _intCacheMgr.nameSet2ByIndex(code - 1)->select(*vars);
 
-    Int_t code2(-1) ;
-    getCompIntList(nset,iset,compIntList,code2,rangeName) ;
+     Int_t code2(-1);
+     getCompIntList(nset, iset, compIntList, code2, rangeName);
 
-    delete vars ;
-    delete nset ;
-    delete iset ;
+     delete vars;
+     delete nset;
+     delete iset;
   } else {
 
     compIntList = &cache->_intList ;

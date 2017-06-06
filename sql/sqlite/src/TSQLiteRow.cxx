@@ -38,7 +38,7 @@ TSQLiteRow::~TSQLiteRow()
 
 void TSQLiteRow::Close(Option_t *)
 {
-   fResult = 0;
+   fResult = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -80,8 +80,7 @@ ULong_t TSQLiteRow::GetFieldLength(Int_t field)
 
 const char *TSQLiteRow::GetField(Int_t field)
 {
-   if (!IsValid(field))
-      return 0;
+   if (!IsValid(field)) return nullptr;
 
    return reinterpret_cast<const char*>(sqlite3_column_text(fResult, field));
 }

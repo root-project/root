@@ -40,18 +40,12 @@ ClassImp(RooProfileLL);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor 
-/// Should only be used by proof. 
+/// Should only be used by proof.
 
- RooProfileLL::RooProfileLL() : 
-   RooAbsReal("RooProfileLL","RooProfileLL"), 
-   _nll(), 
-   _obs("paramOfInterest","Parameters of interest",this), 
-   _par("nuisanceParam","Nuisance parameters",this,kFALSE,kFALSE), 
-   _startFromMin(kTRUE), 
-   _minimizer(0), 
-   _absMinValid(kFALSE), 
-   _absMin(0),
-   _neval(0)
+RooProfileLL::RooProfileLL()
+   : RooAbsReal("RooProfileLL", "RooProfileLL"), _nll(), _obs("paramOfInterest", "Parameters of interest", this),
+     _par("nuisanceParam", "Nuisance parameters", this, kFALSE, kFALSE), _startFromMin(kTRUE), _minimizer(nullptr),
+     _absMinValid(kFALSE), _absMin(0), _neval(0)
 { 
   _piter = _par.createIterator() ; 
   _oiter = _obs.createIterator() ; 
@@ -64,17 +58,11 @@ ClassImp(RooProfileLL);
 /// to all other variables of the likelihood at each evaluation and the
 /// value of the global log likelihood minimum is always subtracted.
 
-RooProfileLL::RooProfileLL(const char *name, const char *title, 
-			   RooAbsReal& nllIn, const RooArgSet& observables) :
-  RooAbsReal(name,title), 
-  _nll("input","-log(L) function",this,nllIn),
-  _obs("paramOfInterest","Parameters of interest",this),
-  _par("nuisanceParam","Nuisance parameters",this,kFALSE,kFALSE),
-  _startFromMin(kTRUE),
-  _minimizer(0),
-  _absMinValid(kFALSE),
-  _absMin(0),
-  _neval(0)
+RooProfileLL::RooProfileLL(const char *name, const char *title, RooAbsReal &nllIn, const RooArgSet &observables)
+   : RooAbsReal(name, title), _nll("input", "-log(L) function", this, nllIn),
+     _obs("paramOfInterest", "Parameters of interest", this),
+     _par("nuisanceParam", "Nuisance parameters", this, kFALSE, kFALSE), _startFromMin(kTRUE), _minimizer(nullptr),
+     _absMinValid(kFALSE), _absMin(0), _neval(0)
 { 
   // Determine actual parameters and observables
   RooArgSet* actualObs = nllIn.getObservables(observables) ;
@@ -95,17 +83,10 @@ RooProfileLL::RooProfileLL(const char *name, const char *title,
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-RooProfileLL::RooProfileLL(const RooProfileLL& other, const char* name) :  
-  RooAbsReal(other,name), 
-  _nll("nll",this,other._nll),
-  _obs("obs",this,other._obs),
-  _par("par",this,other._par),
-  _startFromMin(other._startFromMin),
-  _minimizer(0),
-  _absMinValid(kFALSE),
-  _absMin(0),
-  _paramFixed(other._paramFixed),
-  _neval(0)
+RooProfileLL::RooProfileLL(const RooProfileLL &other, const char *name)
+   : RooAbsReal(other, name), _nll("nll", this, other._nll), _obs("obs", this, other._obs),
+     _par("par", this, other._par), _startFromMin(other._startFromMin), _minimizer(nullptr), _absMinValid(kFALSE),
+     _absMin(0), _paramFixed(other._paramFixed), _neval(0)
 { 
   _piter = _par.createIterator() ;
   _oiter = _obs.createIterator() ;
@@ -341,7 +322,7 @@ Bool_t RooProfileLL::redirectServersHook(const RooAbsCollection& /*newServerList
 { 
   if (_minimizer) {
     delete _minimizer ;
-    _minimizer = 0 ;
+    _minimizer = nullptr;
   }
   return kFALSE ;
 } 

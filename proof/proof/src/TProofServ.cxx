@@ -112,7 +112,7 @@ using namespace std;
 #include "TPackMgr.h"
 
 // global proofserv handle
-TProofServ *gProofServ = 0;
+TProofServ *gProofServ = nullptr;
 
 // debug hook
 static volatile Int_t gProofServDebug = 1;
@@ -123,12 +123,12 @@ TString TProofServ::fgSysLogService("proof");
 TString TProofServ::fgSysLogEntity("undef:default");
 
 // File where to log: default stderr
-FILE *TProofServ::fgErrorHandlerFile = 0;
+FILE *TProofServ::fgErrorHandlerFile = nullptr;
 
 // Integrate with crash reporter.
 #ifdef __APPLE__
 extern "C" {
-static const char *__crashreporter_info__ = 0;
+static const char *__crashreporter_info__ = nullptr;
 asm(".desc ___crashreporter_info__, 0x10");
 }
 #endif
@@ -248,7 +248,7 @@ TProofServLogHandler::TProofServLogHandler(const char *cmd,
 {
    ResetBit(kFileIsPipe);
    fgCmdRtn = 0;
-   fFile = 0;
+   fFile = nullptr;
    if (s && cmd) {
       fFile = gSystem->OpenPipe(cmd, "r");
       if (fFile) {
@@ -258,7 +258,7 @@ TProofServLogHandler::TProofServLogHandler(const char *cmd,
          // Used in the destructor
          SetBit(kFileIsPipe);
       } else {
-         fSocket = 0;
+         fSocket = nullptr;
          Error("TProofServLogHandler", "executing command in pipe");
          fgCmdRtn = -1;
       }
@@ -275,7 +275,7 @@ TProofServLogHandler::TProofServLogHandler(FILE *f, TSocket *s, const char *pfx)
 {
    ResetBit(kFileIsPipe);
    fgCmdRtn = 0;
-   fFile = 0;
+   fFile = nullptr;
    if (s && f) {
       fFile = f;
       SetFd(fileno(fFile));
@@ -298,8 +298,8 @@ TProofServLogHandler::~TProofServLogHandler()
       fgCmdRtn = WIFEXITED(rc) ? WEXITSTATUS(rc) : -1;
 #endif
    }
-   fFile = 0;
-   fSocket = 0;
+   fFile = nullptr;
+   fSocket = nullptr;
    ResetBit(kFileIsPipe);
 }
 ////////////////////////////////////////////////////////////////////////////////
@@ -311,7 +311,7 @@ Bool_t TProofServLogHandler::Notify()
       TMessage m(kPROOF_MESSAGE);
       // Read buffer
       char line[4096];
-      char *plf = 0;
+      char *plf = nullptr;
       while (fgets(line, sizeof(line), fFile)) {
          if ((plf = strchr(line, '\n')))
             *plf = 0;
@@ -357,7 +357,7 @@ Int_t TProofServLogHandler::GetCmdRtn()
 TProofServLogHandlerGuard::TProofServLogHandlerGuard(const char *cmd, TSocket *s,
                                                      const char *pfx, Bool_t on)
 {
-   fExecHandler = 0;
+   fExecHandler = nullptr;
    if (cmd && on) {
       fExecHandler = new TProofServLogHandler(cmd, s, pfx);
       if (fExecHandler->IsValid()) {
@@ -377,7 +377,7 @@ TProofServLogHandlerGuard::TProofServLogHandlerGuard(const char *cmd, TSocket *s
 TProofServLogHandlerGuard::TProofServLogHandlerGuard(FILE *f, TSocket *s,
                                                      const char *pfx, Bool_t on)
 {
-   fExecHandler = 0;
+   fExecHandler = nullptr;
    if (f && on) {
       fExecHandler = new TProofServLogHandler(f, s, pfx);
       if (fExecHandler->IsValid()) {
@@ -424,7 +424,7 @@ Bool_t TShutdownTimer::Notify()
       printf("TShutdownTimer::Notify: checking activity on the input socket\n");
 
    // Check activity on the socket
-   TSocket *xs = 0;
+   TSocket *xs = nullptr;
    if (fProofServ && (xs = fProofServ->GetSocket())) {
       TTimeStamp now;
       TTimeStamp ts = xs->GetLastUsage();
@@ -456,7 +456,7 @@ TReaperTimer::~TReaperTimer()
    if (fChildren) {
       fChildren->SetOwner(kTRUE);
       delete fChildren;
-      fChildren = 0;
+      fChildren = nullptr;
    }
 }
 
@@ -483,7 +483,7 @@ Bool_t TReaperTimer::Notify()
 {
    if (fChildren) {
       TIter nxp(fChildren);
-      TParameter<Int_t> *p = 0;
+      TParameter<Int_t> *p = nullptr;
       while ((p = (TParameter<Int_t> *)nxp())) {
          int status;
 #ifndef WIN32
@@ -562,8 +562,7 @@ extern "C" {
 /// Actual server creation work is done in CreateServer() to allow
 /// overloading.
 
-TProofServ::TProofServ(Int_t *argc, char **argv, FILE *flog)
-       : TApplication("proofserv", argc, argv, 0, -1)
+TProofServ::TProofServ(Int_t *argc, char **argv, FILE *flog) : TApplication("proofserv", argc, argv, nullptr, -1)
 {
    // If test and tty, we are done
    Bool_t xtest = (argc && *argc == 1) ? kTRUE : kFALSE;
@@ -581,20 +580,20 @@ TProofServ::TProofServ(Int_t *argc, char **argv, FILE *flog)
    // Upper limit on Virtual Memory (in kB)
    fgVirtMemMax = gEnv->GetValue("Proof.VirtMemMax",-1);
    if (fgVirtMemMax < 0 && gSystem->Getenv("PROOF_VIRTMEMMAX")) {
-      Long_t mmx = strtol(gSystem->Getenv("PROOF_VIRTMEMMAX"), 0, 10);
+      Long_t mmx = strtol(gSystem->Getenv("PROOF_VIRTMEMMAX"), nullptr, 10);
       if (mmx < kMaxLong && mmx > 0)
          fgVirtMemMax = mmx * 1024;
    }
    // Old variable for backward compatibility
    if (fgVirtMemMax < 0 && gSystem->Getenv("ROOTPROOFASHARD")) {
-      Long_t mmx = strtol(gSystem->Getenv("ROOTPROOFASHARD"), 0, 10);
+      Long_t mmx = strtol(gSystem->Getenv("ROOTPROOFASHARD"), nullptr, 10);
       if (mmx < kMaxLong && mmx > 0)
          fgVirtMemMax = mmx * 1024;
    }
    // Upper limit on Resident Memory (in kB)
    fgResMemMax = gEnv->GetValue("Proof.ResMemMax",-1);
    if (fgResMemMax < 0 && gSystem->Getenv("PROOF_RESMEMMAX")) {
-      Long_t mmx = strtol(gSystem->Getenv("PROOF_RESMEMMAX"), 0, 10);
+      Long_t mmx = strtol(gSystem->Getenv("PROOF_RESMEMMAX"), nullptr, 10);
       if (mmx < kMaxLong && mmx > 0)
          fgResMemMax = mmx * 1024;
    }
@@ -653,24 +652,24 @@ TProofServ::TProofServ(Int_t *argc, char **argv, FILE *flog)
    fGroupSize       = 0;
    fRealTime        = 0.0;
    fCpuTime         = 0.0;
-   fProof           = 0;
-   fPlayer          = 0;
-   fSocket          = 0;
+   fProof = nullptr;
+   fPlayer = nullptr;
+   fSocket = nullptr;
 
    fTotSessions     = -1;
    fActSessions     = -1;
    fEffSessions     = -1.;
-   fPackMgr         = 0;
+   fPackMgr = nullptr;
 
    fLogFile         = flog;
    fLogFileDes      = -1;
 
    fArchivePath     = "";
    // Init lockers
-   fCacheLock       = 0;
-   fQueryLock       = 0;
+   fCacheLock = nullptr;
+   fQueryLock = nullptr;
 
-   fQMgr            = 0;
+   fQMgr = nullptr;
    fWaitingQueries  = new TList;
    fIdle            = kTRUE;
    fQuerySeqNum     = -1;
@@ -679,14 +678,14 @@ TProofServ::TProofServ(Int_t *argc, char **argv, FILE *flog)
 
    fRealTimeLog     = kFALSE;
 
-   fShutdownTimer   = 0;
-   fReaperTimer     = 0;
-   fIdleTOTimer     = 0;
+   fShutdownTimer = nullptr;
+   fReaperTimer = nullptr;
+   fIdleTOTimer = nullptr;
 
-   fDataSetManager  = 0; // Initialized in Setup()
-   fDataSetStgRepo  = 0; // Initialized in Setup()
+   fDataSetManager = nullptr; // Initialized in Setup()
+   fDataSetStgRepo = nullptr; // Initialized in Setup()
 
-   fInputHandler    = 0;
+   fInputHandler = nullptr;
 
    // Quotas disabled by default
    fMaxQueries      = -1;
@@ -694,8 +693,8 @@ TProofServ::TProofServ(Int_t *argc, char **argv, FILE *flog)
    fHWMBoxSize      = -1;
 
    // Submerger quantities
-   fMergingSocket   = 0;
-   fMergingMonitor  = 0;
+   fMergingSocket = nullptr;
+   fMergingMonitor = nullptr;
    fMergedWorkers   = 0;
 
    // Bit to flg high-memory footprint
@@ -882,7 +881,7 @@ Int_t TProofServ::CreateServer()
 
    // Load user functions
    const char *logon;
-   logon = gEnv->GetValue("Proof.Load", (char *)0);
+   logon = gEnv->GetValue("Proof.Load", (char *)nullptr);
    if (logon) {
       char *mac = gSystem->Which(TROOT::GetMacroPath(), logon, kReadPermission);
       if (mac)
@@ -891,7 +890,7 @@ Int_t TProofServ::CreateServer()
    }
 
    // Execute logon macro
-   logon = gEnv->GetValue("Proof.Logon", (char *)0);
+   logon = gEnv->GetValue("Proof.Logon", (char *)nullptr);
    if (logon && !NoLogOpt()) {
       char *mac = gSystem->Which(TROOT::GetMacroPath(), logon, kReadPermission);
       if (mac)
@@ -1056,8 +1055,7 @@ Int_t TProofServ::CatMotd()
       lasttime = 0;
 
    // show motd at least once per day
-   if (time(0) - lasttime > (time_t)86400)
-      show = kTRUE;
+   if (time(nullptr) - lasttime > (time_t)86400) show = kTRUE;
 
    // The env variable PROOFMOTD allows to put the file in an alternative
    // location not overwritten by a new installation
@@ -1098,16 +1096,15 @@ TObject *TProofServ::Get(const char *namecycle)
 {
    if (fSocket->Send(namecycle, kPROOF_GETOBJECT) < 0) {
       Error("Get", "problems sending request");
-      return (TObject *)0;
+      return (TObject *)nullptr;
    }
 
-   TObject *idcur = 0;
+   TObject *idcur = nullptr;
 
    Bool_t notdone = kTRUE;
    while (notdone) {
-      TMessage *mess = 0;
-      if (fSocket->Recv(mess) < 0)
-         return 0;
+      TMessage *mess = nullptr;
+      if (fSocket->Recv(mess) < 0) return nullptr;
       Int_t what = mess->What();
       if (what == kMESS_OBJECT) {
          idcur = mess->ReadObject(mess->GetClass());
@@ -1159,13 +1156,13 @@ TDSetElement *TProofServ::GetNextPacket(Long64_t totalEntries)
 
    if (fProtocol > 18) {
       req << fLatency.RealTime();
-      TProofProgressStatus *status = 0;
+      TProofProgressStatus *status = nullptr;
       if (fPlayer) {
          fPlayer->UpdateProgressInfo();
          status = fPlayer->GetProgressStatus();
       } else {
          Error("GetNextPacket", "no progress status object");
-         return 0;
+         return nullptr;
       }
       // the CPU and wallclock proc times are kept in the TProofServ and here
       // added to the status object in the fPlayer.
@@ -1198,7 +1195,7 @@ TDSetElement *TProofServ::GetNextPacket(Long64_t totalEntries)
       // Reset the status bits
       status->ResetBit(TProofProgressStatus::kFileNotOpen);
       status->ResetBit(TProofProgressStatus::kFileCorrupted);
-      status = 0; // status is owned by the player.
+      status = nullptr; // status is owned by the player.
    } else {
       req << fLatency.RealTime() << realtime << cputime
           << bytesRead << totalEntries;
@@ -1210,7 +1207,7 @@ TDSetElement *TProofServ::GetNextPacket(Long64_t totalEntries)
    Int_t rc = fSocket->Send(req);
    if (rc <= 0) {
       Error("GetNextPacket","Send() failed, returned %d", rc);
-      return 0;
+      return nullptr;
    }
 
    // Save the current output
@@ -1221,7 +1218,7 @@ TDSetElement *TProofServ::GetNextPacket(Long64_t totalEntries)
       fSaveOutput.Stop();
    }
 
-   TDSetElement  *e = 0;
+   TDSetElement *e = nullptr;
    Bool_t notdone = kTRUE;
    while (notdone) {
 
@@ -1229,7 +1226,7 @@ TDSetElement *TProofServ::GetNextPacket(Long64_t totalEntries)
       if ((rc = fSocket->Recv(mess)) <= 0) {
          fLatency.Stop();
          Error("GetNextPacket","Recv() failed, returned %d", rc);
-         return 0;
+         return nullptr;
       }
 
       Int_t xrc = 0;
@@ -1242,7 +1239,7 @@ TDSetElement *TProofServ::GetNextPacket(Long64_t totalEntries)
 
             fLatency.Stop();
             (*mess) >> e;
-            if (e != 0) {
+            if (e != nullptr) {
                fCompute.Start();
                PDB(kLoop, 2) Info("GetNextPacket", "'%s' '%s' '%s' %lld %lld",
                                  e->GetFileName(), e->GetDirectory(),
@@ -1378,7 +1375,7 @@ void TProofServ::HandleSocketInput()
             PDB(kGlobal, 1)
                Info("HandleSocketInput", "message of type %d enqueued; sz: %d",
                                           what, fQueuedMsg->GetSize());
-            mess = 0;
+               mess = nullptr;
          }
 
          // Still something to do?
@@ -1487,7 +1484,7 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
 
    Int_t rc = 0, lirc = 0;
    TString slb;
-   TString *pslb = (fgLogToSysLog > 0) ? &slb : (TString *)0;
+   TString *pslb = (fgLogToSysLog > 0) ? &slb : (TString *)nullptr;
 
    switch (what) {
 
@@ -1916,7 +1913,7 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
                   answ << info;
                   fSocket->Send(answ);
                   // stop the workers
-                  if (IsMaster() && fProof->UseDynamicStartup()) fProof->RemoveWorkers(0);
+                  if (IsMaster() && fProof->UseDynamicStartup()) fProof->RemoveWorkers(nullptr);
                }
             } else {
                TMessage answ(kPROOF_GETSLAVEINFO);
@@ -1935,7 +1932,7 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
             PDB(kGlobal, 1) Info("HandleSocketInput:kPROOF_GETSLAVEINFO", "Done");
          } else {
             TMessage answ(kPROOF_GETSLAVEINFO);
-            answ << (TList *)0;
+            answ << (TList *)nullptr;
             fSocket->Send(answ);
             rc = -1;
          }
@@ -1945,7 +1942,7 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
          if (all) {
             PDB(kGlobal, 1) Info("HandleSocketInput:kPROOF_GETTREEHEADER", "Enter");
 
-            TVirtualProofPlayer *p = TVirtualProofPlayer::Create("slave", 0, fSocket);
+            TVirtualProofPlayer *p = TVirtualProofPlayer::Create("slave", nullptr, fSocket);
             if (p) {
                p->HandleGetTreeHeader(mess);
                delete p;
@@ -1956,7 +1953,7 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
             PDB(kGlobal, 1) Info("HandleSocketInput:kPROOF_GETTREEHEADER", "Done");
          } else {
             TMessage answ(kPROOF_GETTREEHEADER);
-            answ << TString("Failed") << (TObject *)0;
+            answ << TString("Failed") << (TObject *)nullptr;
             fSocket->Send(answ);
             rc = -1;
          }
@@ -1964,11 +1961,10 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
 
       case kPROOF_GETOUTPUTLIST:
          {  PDB(kGlobal, 1) Info("HandleSocketInput:kPROOF_GETOUTPUTLIST", "Enter");
-            TList* outputList = 0;
-            if (IsMaster()) {
-               outputList = fProof->GetOutputList();
-               if (!outputList)
-                  outputList = new TList();
+         TList *outputList = nullptr;
+         if (IsMaster()) {
+            outputList = fProof->GetOutputList();
+            if (!outputList) outputList = new TList();
             } else {
                outputList = new TList();
                if (fProof->GetPlayer()) {
@@ -1994,17 +1990,19 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
             PDB(kGlobal, 1)
                Info("HandleSocketInput:kPROOF_VALIDATE_DSET", "Enter");
 
-            TDSet* dset = 0;
-            (*mess) >> dset;
+               TDSet *dset = nullptr;
+               (*mess) >> dset;
 
-            if (IsMaster()) fProof->ValidateDSet(dset);
-            else dset->Validate();
+               if (IsMaster())
+                  fProof->ValidateDSet(dset);
+               else
+                  dset->Validate();
 
-            TMessage answ(kPROOF_VALIDATE_DSET);
-            answ << dset;
-            fSocket->Send(answ);
-            delete dset;
-            PDB(kGlobal, 1)
+               TMessage answ(kPROOF_VALIDATE_DSET);
+               answ << dset;
+               fSocket->Send(answ);
+               delete dset;
+               PDB(kGlobal, 1)
                Info("HandleSocketInput:kPROOF_VALIDATE_DSET", "Done");
          } else {
             rc = -1;
@@ -2098,7 +2096,7 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
 
             // Similar to handle process
             // get the list of workers and start them
-            TList *workerList = (fProof->UseDynamicStartup()) ? new TList : (TList *)0;
+            TList *workerList = (fProof->UseDynamicStartup()) ? new TList : (TList *)nullptr;
             Int_t pc = 0;
             EQueryAction retVal = GetWorkers(workerList, pc, kTRUE);
 
@@ -2154,7 +2152,7 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
             // and each worker. Elsewhere, the output of TObject::Print() is
             // sent. Received object is disposed after usage.
 
-            TObject *obj = mess->ReadObject(0x0);  // class type ignored
+            TObject *obj = mess->ReadObject(nullptr); // class type ignored
 
             if (IsMaster()) {
                // We are on master
@@ -2191,7 +2189,7 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
                }
                //cout << obj->ClassName() << endl;
                obj->Print();
-               gSystem->RedirectOutput(0x0);  // restore
+               gSystem->RedirectOutput(nullptr); // restore
                fclose(tf);
 
                // Read file back and send it via message
@@ -2530,14 +2528,13 @@ void TProofServ::RedirectOutput(const char *dir, const char *mode)
       snprintf(logfile, 512, "%s/worker-%s.log", sdir.Data(), fOrdinal.Data());
    }
 
-   if ((freopen(logfile, mode, stdout)) == 0)
+   if ((freopen(logfile, mode, stdout)) == nullptr)
       SysError("RedirectOutput", "could not freopen stdout (%s)", logfile);
 
    if ((dup2(fileno(stdout), fileno(stderr))) < 0)
       SysError("RedirectOutput", "could not redirect stderr");
 
-   if ((fLogFile = fopen(logfile, "r")) == 0)
-      SysError("RedirectOutput", "could not open logfile '%s'", logfile);
+   if ((fLogFile = fopen(logfile, "r")) == nullptr) SysError("RedirectOutput", "could not open logfile '%s'", logfile);
 
    // from this point on stdout and stderr are properly redirected
    if (fProtocol < 4 && fWorkDir != TString::Format("~/%s", kPROOF_WorkDir)) {
@@ -3169,8 +3166,7 @@ Int_t TProofServ::SetupCommon()
                        TString(fQueryDir).ReplaceAll("/","%").Data()));
       fQueryLock->Lock();
       // Create the query manager
-      fQMgr = new TQueryResultManager(fQueryDir, fSessionTag, fSessionDir,
-                                      fQueryLock, 0);
+      fQMgr = new TQueryResultManager(fQueryDir, fSessionTag, fSessionDir, fQueryLock, nullptr);
    }
 
    // Server image
@@ -3185,7 +3181,7 @@ Int_t TProofServ::SetupCommon()
       // Group priority
       fGroupPriority = GetPriority();
       // Dataset manager instance via plug-in
-      TPluginHandler *h = 0;
+      TPluginHandler *h = nullptr;
       TString dsms = gEnv->GetValue("Proof.DataSetManager", "");
       if (!dsms.IsNull()) {
          TString dsm;
@@ -3228,7 +3224,7 @@ Int_t TProofServ::SetupCommon()
          // Find the appropriate handler
          if (!h) {
             h = gROOT->GetPluginManager()->FindHandler("TDataSetManager", "file");
-            if (h && h->LoadPlugin() == -1) h = 0;
+            if (h && h->LoadPlugin() == -1) h = nullptr;
          }
          if (h) {
             // make instance of the dataset manager
@@ -3424,7 +3420,7 @@ void TProofServ::Terminate(Int_t status)
    // Remove input handler to avoid spurious signals in socket
    // selection for closing activities executed upon exit()
    TIter next(gSystem->GetListOfFileHandlers());
-   TObject *fh = 0;
+   TObject *fh = nullptr;
    while ((fh = next())) {
       TProofServInputHandler *ih = dynamic_cast<TProofServInputHandler *>(fh);
       if (ih)
@@ -3449,7 +3445,7 @@ Bool_t TProofServ::UnlinkDataDir(const char *path)
    void *dirp = gSystem->OpenDirectory(path);
    if (dirp) {
       TString fpath;
-      const char *ent = 0;
+      const char *ent = nullptr;
       while (dorm && (ent = gSystem->GetDirEntry(dirp))) {
          if (!strcmp(ent, ".") || !strcmp(ent, "..")) continue;
          fpath.Form("%s/%s", path, ent);
@@ -3498,12 +3494,12 @@ TProofServ *TProofServ::This()
 
 Int_t TProofServ::OldAuthSetup(TString &conf)
 {
-   OldProofServAuthSetup_t oldAuthSetupHook = 0;
+   OldProofServAuthSetup_t oldAuthSetupHook = nullptr;
 
    if (!oldAuthSetupHook) {
       // Load libraries needed for (server) authentication ...
       TString authlib = "libRootAuth";
-      char *p = 0;
+      char *p = nullptr;
       // The generic one
       if ((p = gSystem->DynamicPathName(authlib, kTRUE))) {
          delete[] p;
@@ -3622,7 +3618,7 @@ void TProofServ::HandleArchive(TMessage *mess, TString *slb)
 
    Int_t qry = -1;
    TString qdir;
-   TProofQueryResult *pqr = fQMgr ? fQMgr->LocateQuery(queryref, qry, qdir) : 0;
+   TProofQueryResult *pqr = fQMgr ? fQMgr->LocateQuery(queryref, qry, qdir) : nullptr;
    TProofQueryResult *pqm = pqr;
 
    if (path.Length() <= 0) {
@@ -3648,11 +3644,11 @@ void TProofServ::HandleArchive(TMessage *mess, TString *slb)
       fout += "/query-result.root";
 
       TFile *f = TFile::Open(fout,"READ");
-      pqr = 0;
+      pqr = nullptr;
       if (f) {
          f->ReadKeys();
          TIter nxk(f->GetListOfKeys());
-         TKey *k =  0;
+         TKey *k = nullptr;
          while ((k = (TKey *)nxk())) {
             if (!strcmp(k->GetClassName(), "TProofQueryResult")) {
                pqr = (TProofQueryResult *) f->Get(k->GetName());
@@ -3674,7 +3670,7 @@ void TProofServ::HandleArchive(TMessage *mess, TString *slb)
       PDB(kGlobal, 1) Info("HandleArchive",
                            "archive path for query #%d: %s",
                            qry, path.Data());
-      TFile *farc = 0;
+      TFile *farc = nullptr;
       if (gSystem->AccessPathName(path))
          farc = TFile::Open(path,"NEW");
       else
@@ -3715,7 +3711,7 @@ void TProofServ::HandleArchive(TMessage *mess, TString *slb)
 
 TMap *TProofServ::GetDataSetNodeMap(TFileCollection *fc, TString &emsg)
 {
-   TMap *fcmap = 0;
+   TMap *fcmap = nullptr;
    emsg = "";
 
    // Sanity checks
@@ -3728,7 +3724,7 @@ TMap *TProofServ::GetDataSetNodeMap(TFileCollection *fc, TString &emsg)
    fcmap = new TMap();
 
    TIter nxf(fc->GetList());
-   TFileInfo *fiind = 0;
+   TFileInfo *fiind = nullptr;
    TString key;
    while ((fiind = (TFileInfo *)nxf())) {
       TUrl *xurl = fiind->GetCurrentUrl();
@@ -3737,8 +3733,8 @@ TMap *TProofServ::GetDataSetNodeMap(TFileCollection *fc, TString &emsg)
       if (xurl->GetPort() > 0)
          key += TString::Format(":%d", xurl->GetPort());
          // Get the map entry for this key
-      TPair *ent = 0;
-      THashList* l = 0;
+      TPair *ent = nullptr;
+      THashList *l = nullptr;
       if ((ent = (TPair *) fcmap->FindObject(key.Data()))) {
          // Attach to the list
          l = (THashList *) ent->Value();
@@ -3773,8 +3769,8 @@ void TProofServ::HandleProcess(TMessage *mess, TString *slb)
    TString filename, opt;
    TList *input;
    Long64_t nentries, first;
-   TEventList *evl = 0;
-   TEntryList *enl = 0;
+   TEventList *evl = nullptr;
+   TEntryList *enl = nullptr;
    Bool_t sync;
 
    (*mess) >> dset >> filename >> input >> opt >> nentries >> first >> evl >> sync;
@@ -3816,7 +3812,7 @@ void TProofServ::HandleProcess(TMessage *mess, TString *slb)
                if (!fDataSetManager) {
                   emsg.Form("dataset manager not initialized!");
                } else {
-                  TFileCollection *fc = 0;
+                  TFileCollection *fc = nullptr;
                   // Get the dataset
                   if (!(fc = fDataSetManager->GetDataSet(dsn))) {
                      emsg.Form("requested dataset '%s' does not exists", dsn.Data());
@@ -3843,11 +3839,11 @@ void TProofServ::HandleProcess(TMessage *mess, TString *slb)
          }
       }
 
-      TProofQueryResult *pq = 0;
+      TProofQueryResult *pq = nullptr;
 
       // Create instance of query results; we set ownership of the input list
       // to the TQueryResult object, to avoid too many instantiations
-      pq = MakeQueryResult(nentries, opt, 0, first, 0, filename, 0);
+      pq = MakeQueryResult(nentries, opt, nullptr, first, nullptr, filename, nullptr);
 
       // Prepare the input list and transfer it into the TQueryResult object
       if (dset) input->Add(dset);
@@ -3902,7 +3898,7 @@ void TProofServ::HandleProcess(TMessage *mess, TString *slb)
             return;
          }
       } else {
-         EQueryAction retVal = GetWorkers(0, pc);
+         EQueryAction retVal = GetWorkers(nullptr, pc);
          if (retVal == TProofServ::kQueryStop) {
             Error("HandleProcess", "error getting list of worker nodes");
             // To terminate collection
@@ -4006,22 +4002,22 @@ void TProofServ::HandleProcess(TMessage *mess, TString *slb)
          Warning("HandleProcess", "could not get query sequential number!");
 
       // Make the ordinal number available in the selector
-      TObject *nord = 0;
+      TObject *nord = nullptr;
       while ((nord = input->FindObject("PROOF_Ordinal")))
          input->Remove(nord);
       input->Add(new TNamed("PROOF_Ordinal", GetOrdinal()));
 
       // Set input
       TIter next(input);
-      TObject *o = 0;
+      TObject *o = nullptr;
       while ((o = next())) {
          PDB(kGlobal, 2) Info("HandleProcess", "adding: %s", o->GetName());
          fPlayer->AddInput(o);
       }
 
       // Check if a TSelector object is passed via input list
-      TObject *obj = 0;
-      TSelector *selector_obj = 0;
+      TObject *obj = nullptr;
+      TSelector *selector_obj = nullptr;
       TIter nxt(input);
       while ((obj = nxt())){
          if (obj->InheritsFrom("TSelector")) {
@@ -4272,7 +4268,7 @@ Int_t TProofServ::SendResults(TSocket *sock, TList *outlist, TQueryResult *pq)
       // Objects in the output list
       Int_t ns = 0, np = 0;
       TIter nxo(outlist);
-      TObject *o = 0;
+      TObject *o = nullptr;
       Int_t totsz = 0, objsz = 0;
       mbuf.Reset();
       while ((o = nxo())) {
@@ -4353,7 +4349,7 @@ Int_t TProofServ::SendResults(TSocket *sock, TList *outlist, TQueryResult *pq)
       Int_t ns = 0;
       Int_t totsz = 0, objsz = 0;
       TIter nxo(fPlayer->GetOutputList());
-      TObject *o = 0;
+      TObject *o = nullptr;
       while ((o = nxo())) {
          ns++;
          mbuf.Reset();
@@ -4419,16 +4415,16 @@ Int_t TProofServ::SendResults(TSocket *sock, TList *outlist, TQueryResult *pq)
 
 void TProofServ::ProcessNext(TString *slb)
 {
-   TDSet *dset = 0;
+   TDSet *dset = nullptr;
    TString filename, opt;
-   TList *input = 0;
+   TList *input = nullptr;
    Long64_t nentries = -1, first = 0;
 
    // TObject *elist = 0;
-   TProofQueryResult *pq = 0;
+   TProofQueryResult *pq = nullptr;
 
-   TObject* obj = 0;
-   TSelector* selector_obj = 0;
+   TObject *obj = nullptr;
+   TSelector *selector_obj = nullptr;
 
    // Process
 
@@ -4454,7 +4450,7 @@ void TProofServ::ProcessNext(TString *slb)
          opt.Remove(id);
       }
       // Attach to data set and entry- (or event-) list (if any)
-      TObject *o = 0;
+      TObject *o = nullptr;
       if ((o = pq->GetInputObject("TDSet"))) {
          dset = (TDSet *) o;
       } else {
@@ -4547,7 +4543,7 @@ void TProofServ::ProcessNext(TString *slb)
             Int_t mbh = gEnv->GetValue("Proof.MergersByHost", 0);
             if (mbh != 0) {
                // Administrator settings have the priority
-               TObject *o = 0;
+               TObject *o = nullptr;
                if ((o = input->FindObject("PROOF_MergersByHost"))) { input->Remove(o); delete o; }
                input->Add(new TParameter<Int_t>("PROOF_MergersByHost", mbh));
                PDB(kSubmerger, 2) Info("ProcessNext", "submergers setup by host/node");
@@ -4558,7 +4554,7 @@ void TProofServ::ProcessNext(TString *slb)
 
    // Set input
    TIter next(input);
-   TObject *o = 0;
+   TObject *o = nullptr;
    while ((o = next())) {
       PDB(kGlobal, 2) Info("ProcessNext", "adding: %s", o->GetName());
       fPlayer->AddInput(o);
@@ -4590,7 +4586,7 @@ void TProofServ::ProcessNext(TString *slb)
       if (fProtocol > 18) {
          TProofProgressStatus* status = fPlayer->GetProgressStatus();
          m << status << abort;
-         status = 0; // the status belongs to the player.
+         status = nullptr; // the status belongs to the player.
       } else if (fProtocol > 8) {
          m << fPlayer->GetEventsProcessed() << abort;
       } else {
@@ -4625,7 +4621,7 @@ void TProofServ::ProcessNext(TString *slb)
    if (IsTopMaster() && fPlayer->GetOutputList()) {
       Bool_t save = kTRUE;
       TIter nxo(fPlayer->GetOutputList());
-      TObject *xo = 0;
+      TObject *xo = nullptr;
       while ((xo = nxo())) {
          if (xo->InheritsFrom("TProofOutputFile") && xo->TestBit(TProofOutputFile::kSwapFile)) {
             save = kFALSE;
@@ -4692,7 +4688,7 @@ void TProofServ::ProcessNext(TString *slb)
    DeletePlayer();
    if (IsMaster() && fProof->UseDynamicStartup())
       // stop the workers
-      fProof->RemoveWorkers(0);
+      fProof->RemoveWorkers(nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4713,7 +4709,7 @@ Int_t TProofServ::RegisterDataSets(TList *in, TList *out,
    THashList tags;
    TList torm;
    TIter nxo(out);
-   TObject *o = 0;
+   TObject *o = nullptr;
    while ((o = nxo())) {
       // Only file collections TFileCollection
       TFileCollection *ds = dynamic_cast<TFileCollection*> (o);
@@ -4721,7 +4717,7 @@ Int_t TProofServ::RegisterDataSets(TList *in, TList *out,
          // Origin of this dataset
          ds->SetTitle(gSystem->HostName());
          // The tag and register option
-         TNamed *fcn = 0;
+         TNamed *fcn = nullptr;
          TString tag = TString::Format("DATASET_%s", ds->GetName());
          if (!(fcn = (TNamed *) out->FindObject(tag))) continue;
          // If this tag is in the list of processed tags, flag it for removal
@@ -4783,7 +4779,7 @@ Int_t TProofServ::RegisterDataSets(TList *in, TList *out,
    // Remove tags
    TIter nxtg(&tags);
    while((o = nxtg())) {
-      TObject *oo = 0;
+      TObject *oo = nullptr;
       while ((oo = out->FindObject(o->GetName()))) { out->Remove(oo); }
    }
    tags.SetOwner(kTRUE);
@@ -4817,7 +4813,7 @@ void TProofServ::HandleQueryList(TMessage *mess)
          // Send also information about previous queries, if any
          if (fQMgr->PreviousQueries()) {
             TIter nxq(fQMgr->PreviousQueries());
-            TProofQueryResult *pqr = 0;
+            TProofQueryResult *pqr = nullptr;
             while ((pqr = (TProofQueryResult *)nxq())) {
                ntot++;
                pqr->fSeqNum = ntot;
@@ -4830,8 +4826,8 @@ void TProofServ::HandleQueryList(TMessage *mess)
       if (fQMgr->Queries()) {
          // Add info about queries in this session
          TIter nxq(fQMgr->Queries());
-         TProofQueryResult *pqr = 0;
-         TQueryResult *pqm = 0;
+         TProofQueryResult *pqr = nullptr;
+         TQueryResult *pqm = nullptr;
          while ((pqr = (TProofQueryResult *)nxq())) {
             ntot++;
             if ((pqm = pqr->CloneInfo())) {
@@ -4891,7 +4887,7 @@ void TProofServ::HandleRemove(TMessage *mess, TString *slb)
 
 
    if (fQMgr) {
-      TProofLockPath *lck = 0;
+      TProofLockPath *lck = nullptr;
       if (fQMgr->LockSession(queryref, &lck) == 0) {
 
          // Remove query
@@ -4942,18 +4938,18 @@ void TProofServ::HandleRetrieve(TMessage *mess, TString *slb)
    fout += "/query-result.root";
 
    TFile *f = TFile::Open(fout,"READ");
-   TProofQueryResult *pqr = 0;
+   TProofQueryResult *pqr = nullptr;
    if (f) {
       f->ReadKeys();
       TIter nxk(f->GetListOfKeys());
-      TKey *k =  0;
+      TKey *k = nullptr;
       while ((k = (TKey *)nxk())) {
          if (!strcmp(k->GetClassName(), "TProofQueryResult")) {
             pqr = (TProofQueryResult *) f->Get(k->GetName());
             // For backward compatibility
             if (pqr && fProtocol < 13) {
-               TDSet *d = 0;
-               TObject *o = 0;
+               TDSet *d = nullptr;
+               TObject *o = nullptr;
                TIter nxi(pqr->GetInputList());
                while ((o = nxi()))
                   if ((d = dynamic_cast<TDSet *>(o)))
@@ -4978,7 +4974,7 @@ void TProofServ::HandleRetrieve(TMessage *mess, TString *slb)
                Info("HandleRetrieve",
                     "query not found in file %s",fout.Data());
                // Notify not found
-               fSocket->SendObject(0, kPROOF_RETRIEVE);
+               fSocket->SendObject(nullptr, kPROOF_RETRIEVE);
             }
             break;
          }
@@ -4989,7 +4985,7 @@ void TProofServ::HandleRetrieve(TMessage *mess, TString *slb)
       Info("HandleRetrieve",
            "file cannot be open (%s)",fout.Data());
       // Notify not found
-      fSocket->SendObject(0, kPROOF_RETRIEVE);
+      fSocket->SendObject(nullptr, kPROOF_RETRIEVE);
       return;
    }
 
@@ -5019,7 +5015,7 @@ Int_t TProofServ::HandleLibIncPath(TMessage *mess)
    path.ReplaceAll(","," ");
 
    // Decompose lists
-   TObjArray *op = 0;
+   TObjArray *op = nullptr;
    if (path.Length() > 0 && path != "-") {
       if (!(op = path.Tokenize(" "))) {
          Error("HandleLibIncPath","decomposing path %s", path.Data());
@@ -5033,7 +5029,7 @@ Int_t TProofServ::HandleLibIncPath(TMessage *mess)
 
          // Add libs
          TIter nxl(op, kIterBackward);
-         TObjString *lib = 0;
+         TObjString *lib = nullptr;
          while ((lib = (TObjString *) nxl())) {
             // Expand path
             TString xlib = lib->GetName();
@@ -5063,7 +5059,7 @@ Int_t TProofServ::HandleLibIncPath(TMessage *mess)
 
          // Add incs
          TIter nxi(op);
-         TObjString *inc = 0;
+         TObjString *inc = nullptr;
          while ((inc = (TObjString *) nxi())) {
             // Expand path
             TString xinc = inc->GetName();
@@ -5090,7 +5086,7 @@ Int_t TProofServ::HandleLibIncPath(TMessage *mess)
 
          // Remove libs
          TIter nxl(op);
-         TObjString *lib = 0;
+         TObjString *lib = nullptr;
          while ((lib = (TObjString *) nxl())) {
             // Expand path
             TString xlib = lib->GetName();
@@ -5109,7 +5105,7 @@ Int_t TProofServ::HandleLibIncPath(TMessage *mess)
 
          // Remove incs
          TIter nxi(op);
-         TObjString *inc = 0;
+         TObjString *inc = nullptr;
          while ((inc = (TObjString *) nxi())) {
             TString newincpath = gSystem->GetIncludePath();
             newincpath.ReplaceAll(TString::Format("-I%s", inc->GetName()),"");
@@ -5292,14 +5288,14 @@ Int_t TProofServ::HandleCache(TMessage *mess, TString *slb)
    TMessage msg;
    Bool_t fromglobal = kFALSE;
    Int_t chkveropt = TPackMgr::kCheckROOT;  // Default: check ROOT version
-   TPackMgr *packmgr = 0;
+   TPackMgr *packmgr = nullptr;
 
    // Notification message
    TString noth;
    const char *k = (IsMaster()) ? "Mst" : "Wrk";
    noth.Form("%s-%s", k, fOrdinal.Data());
 
-   TList *optls = 0;
+   TList *optls = nullptr;
    TString packagedir, package, pdir, ocwd, file;
    (*mess) >> type;
    switch (type) {
@@ -5341,7 +5337,7 @@ Int_t TProofServ::HandleCache(TMessage *mess, TString *slb)
          if (slb) slb->Form("%d %d", type, all);
          break;
       case TProof::kClearPackages:
-         if ((status = fPackMgr->Unload(0)) == 0) {
+         if ((status = fPackMgr->Unload(nullptr)) == 0) {
             fPackMgr->Remove();
             if (IsMaster())
                status = fProof->ClearPackages();
@@ -5511,7 +5507,7 @@ Int_t TProofServ::HandleCache(TMessage *mess, TString *slb)
          if (slb) slb->Form("%d %s", type, package.Data());
          break;
       case TProof::kUnloadPackages:
-         status = fPackMgr->Unload(0);
+         status = fPackMgr->Unload(nullptr);
          if (IsMaster() && status == 0)
             status = fProof->UnloadPackages();
          if (slb) slb->Form("%d %s %d", type, package.Data(), status);
@@ -5722,17 +5718,15 @@ TProofServ::EQueryAction TProofServ::GetWorkers(TList *workers,
       if (resources->GetSubmasters() && resources->GetSubmasters()->GetSize() > 0) {
          PDB(kAll,1)
             resources->GetSubmasters()->Print();
-         TProofNodeInfo *ni = 0;
-         TIter nw(resources->GetSubmasters());
-         while ((ni = (TProofNodeInfo *) nw()))
-            workers->Add(new TProofNodeInfo(*ni));
+            TProofNodeInfo *ni = nullptr;
+            TIter nw(resources->GetSubmasters());
+            while ((ni = (TProofNodeInfo *)nw())) workers->Add(new TProofNodeInfo(*ni));
       } else if (resources->GetWorkers() && resources->GetWorkers()->GetSize() > 0) {
          PDB(kAll,1)
             resources->GetWorkers()->Print();
-         TProofNodeInfo *ni = 0;
-         TIter nw(resources->GetWorkers());
-         while ((ni = (TProofNodeInfo *) nw()))
-            workers->Add(new TProofNodeInfo(*ni));
+            TProofNodeInfo *ni = nullptr;
+            TIter nw(resources->GetWorkers());
+            while ((ni = (TProofNodeInfo *)nw())) workers->Add(new TProofNodeInfo(*ni));
       }
    }
 
@@ -5789,7 +5783,7 @@ void TProofServ::ErrorHandler(Int_t level, Bool_t abort, const char *location,
 
    Bool_t tosyslog = (fgLogToSysLog > 2) ? kTRUE : kFALSE;
 
-   const char *type   = 0;
+   const char *type = nullptr;
    ELogLevel loglevel = kLogInfo;
 
    Int_t ipos = (location) ? strlen(location) : 0;
@@ -5800,7 +5794,7 @@ void TProofServ::ErrorHandler(Int_t level, Bool_t abort, const char *location,
    }
    if (level >= kInfo) {
       loglevel = kLogInfo;
-      char *ps = location ? (char *) strrchr(location, '|') : (char *)0;
+      char *ps = location ? (char *)strrchr(location, '|') : (char *)nullptr;
       if (ps) {
          ipos = (int)(ps - (char *)location);
          type = "SvcMsg";
@@ -5868,7 +5862,7 @@ void TProofServ::ErrorHandler(Int_t level, Bool_t abort, const char *location,
 
       static Bool_t recursive = kFALSE;
 
-      if (gProofServ != 0 && !recursive) {
+      if (gProofServ != nullptr && !recursive) {
          recursive = kTRUE;
          if (gProofServ->GetSocket()) gProofServ->GetSocket()->Send(kPROOF_FATAL);
          recursive = kFALSE;
@@ -5886,7 +5880,7 @@ void TProofServ::ErrorHandler(Int_t level, Bool_t abort, const char *location,
 
 void TProofServ::MakePlayer()
 {
-   TVirtualProofPlayer *p = 0;
+   TVirtualProofPlayer *p = nullptr;
 
    // Cleanup first
    DeletePlayer();
@@ -5896,7 +5890,7 @@ void TProofServ::MakePlayer()
       p = fProof->MakePlayer();
    } else {
       // slave or sequential mode
-      p = TVirtualProofPlayer::Create("slave", 0, fSocket);
+      p = TVirtualProofPlayer::Create("slave", nullptr, fSocket);
       if (IsMaster())
          fProof->SetPlayer(p);
    }
@@ -5916,11 +5910,11 @@ void TProofServ::DeletePlayer()
          Printf(" +++ Latest processing times: %f s (CPU: %f s)",
                 fCompute.RealTime(), fCompute.CpuTime());
       }
-      if (fProof) fProof->SetPlayer(0);
+      if (fProof) fProof->SetPlayer(nullptr);
    } else {
       SafeDelete(fPlayer);
    }
-   fPlayer = 0;
+   fPlayer = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -6283,8 +6277,8 @@ Int_t TProofServ::HandleDataSets(TMessage *mess, TString *slb)
             if (returnMap && !opt.IsNull()) {
                // The return map will be in the form   </group/user/datasetname> --> <dataset>
                TMap *rmap = new TMap;
-               TObject *k = 0;
-               TFileCollection *fc = 0, *xfc = 0;
+               TObject *k = nullptr;
+               TFileCollection *fc = nullptr, *xfc = nullptr;
                TIter nxd(returnMap);
                while ((k = nxd()) && (fc = (TFileCollection *) returnMap->GetValue(k))) {
                   // Get subset on specified server, if any
@@ -6298,7 +6292,7 @@ Int_t TProofServ::HandleDataSets(TMessage *mess, TString *slb)
                } else {
                   Info("HandleDataSets", "no dataset found on server '%s'", opt.Data());
                   delete rmap;
-                  returnMap = 0;
+                  returnMap = nullptr;
                }
             }
             if (returnMap) {
@@ -6465,35 +6459,35 @@ void TProofServ::HandleSubmerger(TMessage *mess)
                PDB(kSubmerger, 1)
                   Info("HandleSubmerger","worker %s redirected to merger #%d %s:%d", fOrdinal.Data(), merger_id, name.Data(), port);
 
-               TSocket *t = 0;
-               if (name.Length() > 0 && port > 0 && (t = new TSocket(name, port)) && t->IsValid()) {
+                  TSocket *t = nullptr;
+                  if (name.Length() > 0 && port > 0 && (t = new TSocket(name, port)) && t->IsValid()) {
 
-                  PDB(kSubmerger, 2) Info("HandleSubmerger",
-                                          "kSendOutput: worker asked for sending output to merger #%d %s:%d",
-                                          merger_id, name.Data(), port);
+                     PDB(kSubmerger, 2)
+                     Info("HandleSubmerger", "kSendOutput: worker asked for sending output to merger #%d %s:%d",
+                          merger_id, name.Data(), port);
 
-                  if (SendResults(t, fPlayer->GetOutputList()) != 0) {
-                     msg.Form("worker %s cannot send results to merger #%d at %s:%d", GetPrefix(), merger_id, name.Data(), port);
-                     PDB(kSubmerger, 2) Info("HandleSubmerger",
-                                             "kSendOutput: %s - inform the master", msg.Data());
-                     SendAsynMessage(msg);
-                     // Results not send
-                     TMessage answ(kPROOF_SUBMERGER);
-                     answ << Int_t(TProof::kMergerDown);
-                     answ << merger_id;
-                     fSocket->Send(answ);
-                  } else {
-                     // Worker informs master that it had sent its output to the merger
-                     TMessage answ(kPROOF_SUBMERGER);
-                     answ << Int_t(TProof::kOutputSent);
-                     answ << merger_id;
-                     fSocket->Send(answ);
+                     if (SendResults(t, fPlayer->GetOutputList()) != 0) {
+                        msg.Form("worker %s cannot send results to merger #%d at %s:%d", GetPrefix(), merger_id,
+                                 name.Data(), port);
+                        PDB(kSubmerger, 2) Info("HandleSubmerger", "kSendOutput: %s - inform the master", msg.Data());
+                        SendAsynMessage(msg);
+                        // Results not send
+                        TMessage answ(kPROOF_SUBMERGER);
+                        answ << Int_t(TProof::kMergerDown);
+                        answ << merger_id;
+                        fSocket->Send(answ);
+                     } else {
+                        // Worker informs master that it had sent its output to the merger
+                        TMessage answ(kPROOF_SUBMERGER);
+                        answ << Int_t(TProof::kOutputSent);
+                        answ << merger_id;
+                        fSocket->Send(answ);
 
-                     PDB(kSubmerger, 2) Info("HandleSubmerger", "kSendOutput: worker sent its output");
-                     fSocket->Send(kPROOF_SETIDLE);
-                     SetIdle(kTRUE);
-                     SendLogFile();
-                  }
+                        PDB(kSubmerger, 2) Info("HandleSubmerger", "kSendOutput: worker sent its output");
+                        fSocket->Send(kPROOF_SETIDLE);
+                        SetIdle(kTRUE);
+                        SendLogFile();
+                     }
                } else {
 
                   if (name == "master") {
@@ -6548,18 +6542,17 @@ void TProofServ::HandleSubmerger(TMessage *mess)
                        "kBeMerger: worker asked for being merger #%d for %d connections",
                        merger_id, connections);
 
-               TVirtualProofPlayer *mergerPlayer =  TVirtualProofPlayer::Create("remote",fProof,0);
+                  TVirtualProofPlayer *mergerPlayer = TVirtualProofPlayer::Create("remote", fProof, nullptr);
 
-               if (mergerPlayer) {
-                  PDB(kSubmerger, 2) Info("HandleSubmerger",
-                                          "kBeMerger: mergerPlayer created (%p) ", mergerPlayer);
+                  if (mergerPlayer) {
+                     PDB(kSubmerger, 2) Info("HandleSubmerger", "kBeMerger: mergerPlayer created (%p) ", mergerPlayer);
 
-                  // This may be used internally
-                  mergerPlayer->SetBit(TVirtualProofPlayer::kIsSubmerger);
+                     // This may be used internally
+                     mergerPlayer->SetBit(TVirtualProofPlayer::kIsSubmerger);
 
-                  // Accept results from assigned workers
-                  if (AcceptResults(connections, mergerPlayer)) {
-                     PDB(kSubmerger, 2)
+                     // Accept results from assigned workers
+                     if (AcceptResults(connections, mergerPlayer)) {
+                        PDB(kSubmerger, 2)
                         Info("HandleSubmerger", "kBeMerger: all outputs from workers accepted");
 
                      PDB(kSubmerger, 2)
@@ -6571,7 +6564,7 @@ void TProofServ::HandleSubmerger(TMessage *mess)
                      // On workers the player does not own the output list, which is owned
                      // by the selector and deleted in there
                      TIter nxo(fPlayer->GetOutputList());
-                     TObject * o = 0;
+                     TObject *o = nullptr;
                      while ((o = nxo())) {
                         if ((mergerPlayer->AddOutputObject(o) != 1)) {
                            // Remove the object if it has not been merged: it is owned
@@ -6887,7 +6880,7 @@ Int_t TProofServ::CleanupWaitingQueries(Bool_t del, TList *qls)
    Int_t ncq = 0;
    if (qls) {
       TIter nxq(qls);
-      TObject *o = 0;
+      TObject *o = nullptr;
       while ((o = nxq())) {
          if (fWaitingQueries->FindObject(o)) ncq++;
          fWaitingQueries->Remove(o);

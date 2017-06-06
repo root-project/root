@@ -22,7 +22,7 @@ Interface to a user Monte Carlo application.
 
 ClassImp(TVirtualMCApplication);
 
-TMCThreadLocal TVirtualMCApplication* TVirtualMCApplication::fgInstance = 0;
+TMCThreadLocal TVirtualMCApplication *TVirtualMCApplication::fgInstance = nullptr;
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -59,7 +59,7 @@ TVirtualMCApplication::TVirtualMCApplication()
 
 TVirtualMCApplication::~TVirtualMCApplication()
 {
-   fgInstance = 0;
+   fgInstance = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

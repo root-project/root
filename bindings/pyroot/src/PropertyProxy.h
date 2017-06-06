@@ -63,20 +63,18 @@ namespace PyROOT {
       Cppyy::TCppScope_t scope, Cppyy::TCppIndex_t idata )
    {
    // Create an initialize a new property descriptor, given the C++ datum.
-      PropertyProxy* pyprop =
-         (PropertyProxy*)PropertyProxy_Type.tp_new( &PropertyProxy_Type, 0, 0 );
-      pyprop->Set( scope, idata );
-      return pyprop;
+   PropertyProxy *pyprop = (PropertyProxy *)PropertyProxy_Type.tp_new(&PropertyProxy_Type, nullptr, nullptr);
+   pyprop->Set(scope, idata);
+   return pyprop;
    }
 
    inline PropertyProxy* PropertyProxy_NewConstant(
       Cppyy::TCppScope_t scope, const std::string& name, void* address )
    {
    // Create an initialize a new property descriptor, given the C++ datum.
-      PropertyProxy* pyprop =
-         (PropertyProxy*)PropertyProxy_Type.tp_new( &PropertyProxy_Type, 0, 0 );
-      pyprop->Set( scope, name, address );
-      return pyprop;
+   PropertyProxy *pyprop = (PropertyProxy *)PropertyProxy_Type.tp_new(&PropertyProxy_Type, nullptr, nullptr);
+   pyprop->Set(scope, name, address);
+   return pyprop;
    }
 
 } // namespace PyROOT

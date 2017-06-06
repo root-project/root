@@ -48,8 +48,9 @@ ClassImp(RooGrid);
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
-RooGrid::RooGrid() :
-  _valid(kFALSE), _dim(0), _bins(0), _boxes(0), _vol(0), _xl(0),  _xu(0),  _delx(0),  _d(0),  _xi(0),  _xin(0),  _weight(0)
+RooGrid::RooGrid()
+   : _valid(kFALSE), _dim(0), _bins(0), _boxes(0), _vol(0), _xl(nullptr), _xu(nullptr), _delx(nullptr), _d(nullptr),
+     _xi(nullptr), _xin(nullptr), _weight(nullptr)
 {
 }
 
@@ -57,13 +58,13 @@ RooGrid::RooGrid() :
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor with given function binding
 
-RooGrid::RooGrid(const RooAbsFunc &function)
-  : _valid(kTRUE), _xl(0),_xu(0),_delx(0),_xi(0)
+RooGrid::RooGrid(const RooAbsFunc &function) : _valid(kTRUE), _xl(nullptr), _xu(nullptr), _delx(nullptr), _xi(nullptr)
 {
   // check that the input function is valid
   if(!(_valid= function.isValid())) {
-    oocoutE((TObject*)0,InputArguments) << ClassName() << ": cannot initialize using an invalid function" << endl;
-    return;
+     oocoutE((TObject *)nullptr, InputArguments)
+        << ClassName() << ": cannot initialize using an invalid function" << endl;
+     return;
   }
 
   // allocate workspace memory
@@ -76,9 +77,9 @@ RooGrid::RooGrid(const RooAbsFunc &function)
   _xin= new Double_t[maxBins+1];
   _weight= new Double_t[maxBins];
   if(!_xl || !_xu || !_delx || !_d || !_xi || !_xin || !_weight) {
-    oocoutE((TObject*)0,Integration) << ClassName() << ": memory allocation failed" << endl;
-    _valid= kFALSE;
-    return;
+     oocoutE((TObject *)nullptr, Integration) << ClassName() << ": memory allocation failed" << endl;
+     _valid = kFALSE;
+     return;
   }
 
   // initialize the grid
@@ -113,19 +114,21 @@ Bool_t RooGrid::initialize(const RooAbsFunc &function)
   for(UInt_t index= 0; index < _dim; index++) {
     _xl[index]= function.getMinLimit(index);
     if(RooNumber::isInfinite(_xl[index])) {
-      oocoutE((TObject*)0,Integration) << ClassName() << ": lower limit of dimension " << index << " is infinite" << endl;
-      return kFALSE;
+       oocoutE((TObject *)nullptr, Integration)
+          << ClassName() << ": lower limit of dimension " << index << " is infinite" << endl;
+       return kFALSE;
     }
     _xu[index]= function.getMaxLimit(index);
     if(RooNumber::isInfinite(_xl[index])) {
-      oocoutE((TObject*)0,Integration) << ClassName() << ": upper limit of dimension " << index << " is infinite" << endl;
-      return kFALSE;
+       oocoutE((TObject *)nullptr, Integration)
+          << ClassName() << ": upper limit of dimension " << index << " is infinite" << endl;
+       return kFALSE;
     }
     Double_t dx= _xu[index] - _xl[index];
     if(dx <= 0) {
-      oocoutE((TObject*)0,Integration) << ClassName() << ": bad range for dimension " << index << ": [" << _xl[index]
-				       << "," << _xu[index] << "]" << endl;
-      return kFALSE;
+       oocoutE((TObject *)nullptr, Integration) << ClassName() << ": bad range for dimension " << index << ": ["
+                                                << _xl[index] << "," << _xu[index] << "]" << endl;
+       return kFALSE;
     }
     _delx[index]= dx;
     _vol*= dx;

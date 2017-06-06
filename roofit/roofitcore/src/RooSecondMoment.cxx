@@ -75,8 +75,8 @@ RooSecondMoment::RooSecondMoment(const char* name, const char* title, RooAbsReal
   _xfOffset(0)
 {
   setExpensiveObjectCache(func.expensiveObjectCache()) ;
-  
-  RooAbsReal* XF(0) ;
+
+  RooAbsReal *XF(nullptr);
   if (centr) {
 
     string m1name=Form("%s_moment1",GetName()) ;
@@ -124,7 +124,7 @@ RooSecondMoment::RooSecondMoment(const char* name, const char* title, RooAbsReal
 
   _nset.add(nset) ;
 
-  RooAbsReal* XF(0) ;
+  RooAbsReal *XF(nullptr);
   if (centr) {
 
     string m1name=Form("%s_moment1",GetName()) ;

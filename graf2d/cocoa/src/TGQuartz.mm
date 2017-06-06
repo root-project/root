@@ -59,8 +59,8 @@ void ConvertPointsROOTToCocoa(Int_t nPoints, const TPoint *xy, std::vector<TPoin
                               NSObject<X11Drawable> *drawable)
 {
    assert(nPoints != 0 && "ConvertPointsROOTToCocoa, nPoints parameter is 0");
-   assert(xy != 0 && "ConvertPointsROOTToCocoa, xy parameter is null");
-   assert(drawable != 0 && "ConvertPointsROOTToCocoa, drawable parameter is null");
+   assert(xy != nullptr && "ConvertPointsROOTToCocoa, xy parameter is null");
+   assert(drawable != nullptr && "ConvertPointsROOTToCocoa, drawable parameter is null");
 
    dst.resize(nPoints);
    for (Int_t i = 0; i < nPoints; ++i) {
@@ -845,7 +845,8 @@ void TGQuartz::RenderTTFString(Int_t x, Int_t y, ETextMode mode)
    // paint the glyphs in the pixmap.
    TTF::TTGlyph *glyph = TTF::GetGlyphs();
    for (int n = 0; n < TTF::GetNumGlyphs(); ++n, ++glyph) {
-      if (FT_Glyph_To_Bitmap(&glyph->fImage, TTF::GetSmoothing() ? ft_render_mode_normal : ft_render_mode_mono, 0, 1 ))
+      if (FT_Glyph_To_Bitmap(&glyph->fImage, TTF::GetSmoothing() ? ft_render_mode_normal : ft_render_mode_mono, nullptr,
+                             1))
          continue;
 
       FT_BitmapGlyph bitmap = (FT_BitmapGlyph)glyph->fImage;
@@ -873,7 +874,7 @@ void TGQuartz::DrawFTGlyphIntoPixmap(void *pHack, FT_Bitmap *source, ULong_t for
 
    QuartzPixmap *pixmap = (QuartzPixmap *)pHack;
    assert(pixmap != nil && "DrawFTGlyphIntoPixmap, pixmap parameter is nil");
-   assert(source != 0 && "DrawFTGlyphIntoPixmap, source parameter is null");
+   assert(source != nullptr && "DrawFTGlyphIntoPixmap, source parameter is null");
 
    if (TTF::GetSmoothing()) {
       static ColorStruct_t col[5];
@@ -1013,7 +1014,7 @@ void TGQuartz::SetAA()
 //______________________________________________________________________________
 void *TGQuartz::GetSelectedDrawableChecked(const char *calledFrom) const
 {
-   assert(calledFrom != 0 && "GetSelectedDrawableChecked, calledFrom parameter is null");
+   assert(calledFrom != nullptr && "GetSelectedDrawableChecked, calledFrom parameter is null");
    assert(fSelectedDrawable > fPimpl->GetRootWindowID() && "GetSelectedDrawableChecked, bad drawable is selected");
 
    NSObject<X11Drawable> *drawable = fPimpl->GetDrawable(fSelectedDrawable);
@@ -1023,19 +1024,19 @@ void *TGQuartz::GetSelectedDrawableChecked(const char *calledFrom) const
          QuartzView *view = (QuartzView *)drawable;
          if (!view.fBackBuffer) {
             Error(calledFrom, "Selected window is not double buffered");
-            return 0;
+            return nullptr;
          }
 
          drawable = view.fBackBuffer;
       } else {
          Error(calledFrom, "Selected drawable is neither a pixmap, nor a double buffered window");
-         return 0;
+         return nullptr;
       }
    }
 
    if (!drawable.fContext) {
       Error(calledFrom, "Context is null");
-      return 0;
+      return nullptr;
    }
 
    return drawable;

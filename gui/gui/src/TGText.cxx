@@ -45,8 +45,8 @@ ClassImp(TGTextLine);
 TGTextLine::TGTextLine()
 {
    fLength = 0;
-   fString = 0;
-   fPrev = fNext = 0;
+   fString = nullptr;
+   fPrev = fNext = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -55,10 +55,10 @@ TGTextLine::TGTextLine()
 TGTextLine::TGTextLine(TGTextLine *line)
 {
    fLength = line->GetLineLength();
-   fString = 0;
+   fString = nullptr;
    if (fLength > 0)
       fString = line->GetText(0, line->GetLineLength());
-   fPrev = fNext = 0;
+   fPrev = fNext = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -73,9 +73,9 @@ TGTextLine::TGTextLine(const char *string)
       fString[fLength] = 0;
    } else {
       fLength = 0;
-      fString = 0;
+      fString = nullptr;
    }
-   fPrev = fNext = 0;
+   fPrev = fNext = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -84,7 +84,7 @@ TGTextLine::TGTextLine(const char *string)
 TGTextLine::TGTextLine(const TGTextLine& tl) : fLength(tl.fLength),
    fPrev(tl.fPrev), fNext(tl.fNext)
 {
-   fString = 0;
+   fString = nullptr;
    if (tl.fString) {
       fString = new char[fLength+1];
       strncpy(fString, tl.fString, fLength);
@@ -125,7 +125,7 @@ void TGTextLine::Clear()
 {
    if (fString)
       delete [] fString;
-   fString = 0;
+   fString = nullptr;
    fLength = 0;
 }
 
@@ -142,7 +142,7 @@ void TGTextLine::DelText(ULong_t pos, ULong_t length)
    if (fLength - length <= 0) {
       delete [] fString;
       fLength = 0;
-      fString = 0;
+      fString = nullptr;
       return;
    }
    char *newstring = new char[fLength - length+1];
@@ -163,11 +163,10 @@ void TGTextLine::InsText(ULong_t pos, const char *text)
       return;
 
    char *newstring = new char[strlen(text)+fLength+1];
-   if (fString != 0)
-      strncpy(newstring, fString, (UInt_t)pos);
+   if (fString != nullptr) strncpy(newstring, fString, (UInt_t)pos);
    // coverity[secure_coding]
    strcpy(newstring+pos, text);
-   if (fString != 0 && fLength - pos  > 0)
+   if (fString != nullptr && fLength - pos > 0)
       strncpy(newstring+pos+strlen(text), fString+pos, UInt_t(fLength-pos));
    fLength = fLength + strlen(text);
    delete [] fString;
@@ -183,7 +182,7 @@ void TGTextLine::InsText(ULong_t pos, const char *text)
 char *TGTextLine::GetText(ULong_t pos, ULong_t length)
 {
    if (pos >= fLength) {
-      return 0;
+      return nullptr;
    }
 
    if (pos + length > (ULong_t)fString) {
@@ -203,7 +202,7 @@ char *TGTextLine::GetText(ULong_t pos, ULong_t length)
 char *TGTextLine::GetWord(ULong_t pos)
 {
    if (pos >= fLength) {
-      return 0;
+      return nullptr;
    }
 
    Int_t start = (Int_t)pos;
@@ -406,13 +405,13 @@ void TGText::Clear()
 {
    TGTextLine *travel = fFirst->fNext;
    TGTextLine *toDelete;
-   while (travel != 0) {
+   while (travel != nullptr) {
       toDelete = travel;
       travel = travel->fNext;
       delete toDelete;
    }
    fFirst->Clear();
-   fFirst->fNext = 0;
+   fFirst->fNext = nullptr;
    fCurrent      = fFirst;
    fCurrentRow   = 0;
    fColCount     = 0;
@@ -475,7 +474,7 @@ Bool_t TGText::Load(const char *fn, Long_t startpos, Long_t length)
       strlcpy(buffer, buf2, bufferSize);
       temp->fLength = strlen(buf2);
       temp->fString = buffer;
-      temp->fNext = temp->fPrev = 0;
+      temp->fNext = temp->fPrev = nullptr;
       if (isFirst) {
          delete fFirst;
          fFirst   = temp;
@@ -567,7 +566,7 @@ next:
    strlcpy(buffer, buf2, bufferSize);
    temp->fLength = strlen(buf2);
    temp->fString = buffer;
-   temp->fNext = temp->fPrev = 0;
+   temp->fNext = temp->fPrev = nullptr;
    if (isFirst) {
       delete fFirst;
       fFirst   = temp;
@@ -969,7 +968,7 @@ Bool_t TGText::DelLine(ULong_t pos)
    TGTextLine *travel = fCurrent;
    if (travel == fFirst) {
       fFirst = fFirst->fNext;
-      fFirst->fPrev = 0;
+      fFirst->fPrev = nullptr;
    } else {
       travel->fPrev->fNext = travel->fNext;
       if (travel->fNext) {
@@ -998,7 +997,7 @@ char *TGText::GetLine(TGLongPosition pos, ULong_t length)
    if (SetCurrentRow(pos.fY)) {
       return fCurrent->GetText(pos.fX, length);
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

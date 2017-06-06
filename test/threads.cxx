@@ -80,7 +80,7 @@ void *mhs(void *)
 
    c1->Modified();
    c1->Update();
-   return 0;
+   return nullptr;
 }
 
 // thread function (filling total0)
@@ -121,7 +121,7 @@ void *mhs1(void *)
    total0->Draw("e1p");
    c1->Modified();
    c1->Update();
-   return 0;
+   return nullptr;
 }
 
 // thread function: plays with its own histograms, draw on canvas in pad2
@@ -179,7 +179,7 @@ void *mhs2(void *)
    TThread::Printf("End of mhs2\n");
    c1->Modified();
    c1->Update();
-   return 0;
+   return nullptr;
 }
 
 // thread to run Ps(): perform every 5 seconds a TThread::Ps()
@@ -192,7 +192,7 @@ void *top(void *)
       TThread::Sleep(5);
    }
    TThread::Printf("End of top");
-   return 0;
+   return nullptr;
 }
 
 int main(int argc, char **argv)

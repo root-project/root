@@ -42,22 +42,13 @@ ClassImp(TEveCaloLegoGL);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TEveCaloLegoGL::TEveCaloLegoGL() :
-   TGLObject(),
+TEveCaloLegoGL::TEveCaloLegoGL()
+   : TGLObject(),
 
-   fGridColor(-1),
-   fFontColor(-1),
+     fGridColor(-1), fFontColor(-1),
 
-   fEtaAxis(0),
-   fPhiAxis(0),
-   fZAxis(0),
-   fM(0),
-   fDLCacheOK(kFALSE),
-   fMaxVal(0),
-   fValToPixel(0),
-   fCurrentPixelsPerBin(0),
-   fCells3D(kTRUE),
-   fBinStep(-1)
+     fEtaAxis(nullptr), fPhiAxis(nullptr), fZAxis(nullptr), fM(nullptr), fDLCacheOK(kFALSE), fMaxVal(0), fValToPixel(0),
+     fCurrentPixelsPerBin(0), fCells3D(kTRUE), fBinStep(-1)
 {
    fDLCache = kFALSE;
 

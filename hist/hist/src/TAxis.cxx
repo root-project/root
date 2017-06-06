@@ -51,9 +51,9 @@ TAxis::TAxis(): TNamed(), TAttAxis()
    fXmax    = 1;
    fFirst   = 0;
    fLast    = 0;
-   fParent  = 0;
-   fLabels  = 0;
-   fModLabs = 0;
+   fParent = nullptr;
+   fLabels = nullptr;
+   fModLabs = nullptr;
    fBits2   = 0;
    fTimeDisplay = 0;
 }
@@ -63,9 +63,9 @@ TAxis::TAxis(): TNamed(), TAttAxis()
 
 TAxis::TAxis(Int_t nbins,Double_t xlow,Double_t xup): TNamed(), TAttAxis()
 {
-   fParent  = 0;
-   fLabels  = 0;
-   fModLabs = 0;
+   fParent = nullptr;
+   fLabels = nullptr;
+   fModLabs = nullptr;
    Set(nbins,xlow,xup);
 }
 
@@ -74,9 +74,9 @@ TAxis::TAxis(Int_t nbins,Double_t xlow,Double_t xup): TNamed(), TAttAxis()
 
 TAxis::TAxis(Int_t nbins,const Double_t *xbins): TNamed(), TAttAxis()
 {
-   fParent  = 0;
-   fLabels  = 0;
-   fModLabs = 0;
+   fParent = nullptr;
+   fLabels = nullptr;
+   fModLabs = nullptr;
    Set(nbins,xbins);
 }
 
@@ -88,19 +88,19 @@ TAxis::~TAxis()
    if (fLabels) {
       fLabels->Delete();
       delete fLabels;
-      fLabels = 0;
+      fLabels = nullptr;
    }
    if (fModLabs) {
       fModLabs->Delete();
       delete fModLabs;
-      fModLabs = 0;
+      fModLabs = nullptr;
    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor.
 
-TAxis::TAxis(const TAxis &axis) : TNamed(axis), TAttAxis(axis), fLabels(0), fModLabs(0)
+TAxis::TAxis(const TAxis &axis) : TNamed(axis), TAttAxis(axis), fLabels(nullptr), fModLabs(nullptr)
 {
    axis.Copy(*this);
 }
@@ -223,7 +223,7 @@ void TAxis::Copy(TObject &obj) const
    if (axis.fLabels) {
       axis.fLabels->Delete();
       delete axis.fLabels;
-      axis.fLabels = 0;
+      axis.fLabels = nullptr;
    }
    if (fLabels) {
       //Properly handle case where not all bins have labels
@@ -241,7 +241,7 @@ void TAxis::Copy(TObject &obj) const
    if (axis.fModLabs) {
       axis.fModLabs->Delete();
       delete axis.fModLabs;
-      axis.fModLabs = 0;
+      axis.fModLabs = nullptr;
    }
 }
 
@@ -285,13 +285,13 @@ Int_t TAxis::FindBin(Double_t x)
    if (IsAlphanumeric() && gDebug) Info("FindBin","Numeric query on alphanumeric axis - Sorting the bins or extending the axes / rebinning can alter the correspondence between the label and the bin interval.");
    if (x < fXmin) {              //*-* underflow
       bin = 0;
-      if (fParent == 0) return bin;
+      if (fParent == nullptr) return bin;
       if (!CanExtend() || IsAlphanumeric() ) return bin;
       ((TH1*)fParent)->ExtendAxis(x,this);
       return FindFixBin(x);
    } else  if ( !(x < fXmax)) {     //*-* overflow  (note the way to catch NaN)
       bin = fNbins+1;
-      if (fParent == 0) return bin;
+      if (fParent == nullptr) return bin;
       if (!CanExtend() || IsAlphanumeric() ) return bin;
       ((TH1*)fParent)->ExtendAxis(x,this);
       return FindFixBin(x);
@@ -865,7 +865,7 @@ void TAxis::ChangeLabel(Int_t labNum, Double_t labAngle, Double_t labSize,
    // Reset the list of modified labels.
    if (labNum == 0) {
       delete fModLabs;
-      fModLabs  = 0;
+      fModLabs = nullptr;
       return;
    }
 
@@ -1074,7 +1074,7 @@ void TAxis::Streamer(TBuffer &R__b)
          Float_t xmin,xmax;
          R__b >> xmin; fXmin = xmin;
          R__b >> xmax; fXmax = xmax;
-         Float_t *xbins = 0;
+         Float_t *xbins = nullptr;
          Int_t n = R__b.ReadArray(xbins);
          fXbins.Set(n);
          for (Int_t i=0;i<n;i++) fXbins.fArray[i] = xbins[i];

@@ -17,25 +17,16 @@
 namespace ROOT {
 
    namespace Fit {
-      FitData::FitData(unsigned int maxpoints, unsigned int dim) :
-         fWrapped(false),
-         fMaxPoints(maxpoints),
-         fNPoints(0),
-         fDim(dim),
-         fpTmpCoordVector(NULL)
-      {
-         assert(fDim >= 1);
-         InitCoordsVector();
+   FitData::FitData(unsigned int maxpoints, unsigned int dim)
+      : fWrapped(false), fMaxPoints(maxpoints), fNPoints(0), fDim(dim), fpTmpCoordVector(nullptr)
+   {
+      assert(fDim >= 1);
+      InitCoordsVector();
       }
 
       /// construct passing options and default data range
-      FitData::FitData(const DataOptions &opt, unsigned int maxpoints, unsigned int dim) :
-         fWrapped(false),
-         fOptions(opt),
-         fMaxPoints(maxpoints),
-         fNPoints(0),
-         fDim(dim),
-         fpTmpCoordVector(NULL)
+      FitData::FitData(const DataOptions &opt, unsigned int maxpoints, unsigned int dim)
+         : fWrapped(false), fOptions(opt), fMaxPoints(maxpoints), fNPoints(0), fDim(dim), fpTmpCoordVector(nullptr)
       {
          assert(fDim >= 1);
          InitCoordsVector();
@@ -43,63 +34,40 @@ namespace ROOT {
 
 
       /// construct passing range and default options
-      FitData::FitData(const DataRange &range, unsigned int maxpoints, unsigned int dim) :
-         fWrapped(false),
-         fRange(range),
-         fMaxPoints(maxpoints),
-         fNPoints(0),
-         fDim(dim),
-         fpTmpCoordVector(NULL)
+      FitData::FitData(const DataRange &range, unsigned int maxpoints, unsigned int dim)
+         : fWrapped(false), fRange(range), fMaxPoints(maxpoints), fNPoints(0), fDim(dim), fpTmpCoordVector(nullptr)
       {
          assert(fDim >= 1);
          InitCoordsVector();
       }
 
       /// construct passing options and data range
-      FitData::FitData(const DataOptions &opt, const DataRange &range,
-                       unsigned int maxpoints, unsigned int dim) :
-         fWrapped(false),
-         fOptions(opt),
-         fRange(range),
-         fMaxPoints(maxpoints),
-         fNPoints(0),
-         fDim(dim),
-         fCoords(fDim),
-         fCoordsPtr(fDim),
-         fpTmpCoordVector(NULL)
+      FitData::FitData(const DataOptions &opt, const DataRange &range, unsigned int maxpoints, unsigned int dim)
+         : fWrapped(false), fOptions(opt), fRange(range), fMaxPoints(maxpoints), fNPoints(0), fDim(dim), fCoords(fDim),
+           fCoordsPtr(fDim), fpTmpCoordVector(nullptr)
       {
          assert(fDim >= 1);
          InitCoordsVector();
       }
 
       /// constructor from external data for 1D data
-      FitData::FitData(unsigned int n, const double *dataX) :
-         fWrapped(true),
-         fMaxPoints(n),
-         fNPoints(n),
-         fDim(1),
-         fCoordsPtr(fDim),
-         fpTmpCoordVector(NULL)
+      FitData::FitData(unsigned int n, const double *dataX)
+         : fWrapped(true), fMaxPoints(n), fNPoints(n), fDim(1), fCoordsPtr(fDim), fpTmpCoordVector(nullptr)
       {
          assert(dataX);
          fCoordsPtr[0] = dataX;
 
          if (fpTmpCoordVector) {
             delete[] fpTmpCoordVector;
-            fpTmpCoordVector = NULL;
+            fpTmpCoordVector = nullptr;
          }
 
          fpTmpCoordVector = new double [fDim];
       }
 
       /// constructor from external data for 2D data
-      FitData::FitData(unsigned int n, const double *dataX, const double *dataY) :
-         fWrapped(true),
-         fMaxPoints(n),
-         fNPoints(n),
-         fDim(2),
-         fCoordsPtr(fDim),
-         fpTmpCoordVector(NULL)
+      FitData::FitData(unsigned int n, const double *dataX, const double *dataY)
+         : fWrapped(true), fMaxPoints(n), fNPoints(n), fDim(2), fCoordsPtr(fDim), fpTmpCoordVector(nullptr)
       {
          assert(dataX && dataY);
          fCoordsPtr[0] = dataX;
@@ -107,21 +75,15 @@ namespace ROOT {
 
          if (fpTmpCoordVector) {
             delete[] fpTmpCoordVector;
-            fpTmpCoordVector = NULL;
+            fpTmpCoordVector = nullptr;
          }
 
          fpTmpCoordVector = new double [fDim];
       }
 
       /// constructor from external data for 3D data
-      FitData::FitData(unsigned int n, const double *dataX, const double *dataY,
-                       const double *dataZ) :
-         fWrapped(true),
-         fMaxPoints(n),
-         fNPoints(fMaxPoints),
-         fDim(3),
-         fCoordsPtr(fDim),
-         fpTmpCoordVector(NULL)
+      FitData::FitData(unsigned int n, const double *dataX, const double *dataY, const double *dataZ)
+         : fWrapped(true), fMaxPoints(n), fNPoints(fMaxPoints), fDim(3), fCoordsPtr(fDim), fpTmpCoordVector(nullptr)
       {
          assert(dataX && dataY && dataZ);
          fCoordsPtr[0] = dataX;
@@ -130,7 +92,7 @@ namespace ROOT {
 
          if (fpTmpCoordVector) {
             delete[] fpTmpCoordVector;
-            fpTmpCoordVector = NULL;
+            fpTmpCoordVector = nullptr;
          }
 
          fpTmpCoordVector = new double [fDim];
@@ -141,13 +103,8 @@ namespace ROOT {
         Uses as argument an iterator of a list (or vector) containing the const double * of the data
         An example could be the std::vector<const double *>::begin
       */
-      FitData::FitData(const DataRange &range, unsigned int maxpoints, const double *dataX) :
-         fWrapped(false),
-         fRange(range),
-         fMaxPoints(maxpoints),
-         fNPoints(0),
-         fDim(1),
-         fpTmpCoordVector(NULL)
+      FitData::FitData(const DataRange &range, unsigned int maxpoints, const double *dataX)
+         : fWrapped(false), fRange(range), fMaxPoints(maxpoints), fNPoints(0), fDim(1), fpTmpCoordVector(nullptr)
       {
          InitCoordsVector();
 
@@ -161,13 +118,8 @@ namespace ROOT {
         Uses as argument an iterator of a list (or vector) containing the const double * of the data
         An example could be the std::vector<const double *>::begin
       */
-      FitData::FitData(const DataRange &range, unsigned int maxpoints, const double *dataX, const double *dataY) :
-         fWrapped(false),
-         fRange(range),
-         fMaxPoints(maxpoints),
-         fNPoints(0),
-         fDim(2),
-         fpTmpCoordVector(NULL)
+      FitData::FitData(const DataRange &range, unsigned int maxpoints, const double *dataX, const double *dataY)
+         : fWrapped(false), fRange(range), fMaxPoints(maxpoints), fNPoints(0), fDim(2), fpTmpCoordVector(nullptr)
       {
          InitCoordsVector();
 
@@ -182,13 +134,8 @@ namespace ROOT {
         An example could be the std::vector<const double *>::begin
       */
       FitData::FitData(const DataRange &range, unsigned int maxpoints, const double *dataX, const double *dataY,
-                       const double *dataZ) :
-         fWrapped(false),
-         fRange(range),
-         fMaxPoints(maxpoints),
-         fNPoints(0),
-         fDim(3),
-         fpTmpCoordVector(NULL)
+                       const double *dataZ)
+         : fWrapped(false), fRange(range), fMaxPoints(maxpoints), fNPoints(0), fDim(3), fpTmpCoordVector(nullptr)
       {
          InitCoordsVector();
 
@@ -237,7 +184,7 @@ namespace ROOT {
 
          if (fpTmpCoordVector) {
             delete[] fpTmpCoordVector;
-            fpTmpCoordVector = NULL;
+            fpTmpCoordVector = nullptr;
          }
 
          fpTmpCoordVector = new double [fDim];

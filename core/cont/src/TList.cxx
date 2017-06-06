@@ -326,7 +326,7 @@ TObject *TList::After(const TObject *obj) const
    if (t && t->Next())
       return t->Next()->GetObject();
    else
-      return 0;
+      return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -338,7 +338,7 @@ TObject *TList::At(Int_t idx) const
 
    TObjLink *lnk = LinkAt(idx);
    if (lnk) return lnk->GetObject();
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -363,7 +363,7 @@ TObject *TList::Before(const TObject *obj) const
    if (t && t->Prev())
       return t->Prev()->GetObject();
    else
-      return 0;
+      return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -407,7 +407,7 @@ void TList::Clear(Option_t *option)
 
 
       // Make node available to RecursiveRemove
-      tlk->fNext = tlk->fPrev = 0;
+      tlk->fNext = tlk->fPrev = nullptr;
       fCache = tlk;
 
       // delete only heap objects marked OK to clear
@@ -426,7 +426,7 @@ void TList::Clear(Option_t *option)
          delete tlk;
       }
    }
-   fFirst = fLast = fCache = 0;
+   fFirst = fLast = fCache = nullptr;
    fSize = 0;
    Changed();
 }
@@ -465,7 +465,7 @@ void TList::Delete(Option_t *option)
          fSize--;
 
          // Make node available to RecursiveRemove
-         tlk->fNext = tlk->fPrev = 0;
+         tlk->fNext = tlk->fPrev = nullptr;
          fCache = tlk;
 
          // delete only heap objects
@@ -481,13 +481,13 @@ void TList::Delete(Option_t *option)
          delete tlk;
       }
 
-      fFirst = fLast = fCache = 0;
+      fFirst = fLast = fCache = nullptr;
       fSize  = 0;
 
    } else {
 
       TObjLink *first = fFirst;    //pointer to first entry in linked list
-      fFirst = fLast = fCache = 0;
+      fFirst = fLast = fCache = nullptr;
       fSize  = 0;
       while (first) {
          TObjLink *tlk = first;
@@ -511,9 +511,9 @@ void TList::Delete(Option_t *option)
    // not, they are supposed to be deleted, so we can as well unregister
    // them from their directory, even if they are stack-based:
    TIter iRemDir(&removeDirectory);
-   TObject* dirRem = 0;
+   TObject *dirRem = nullptr;
    while ((dirRem = iRemDir())) {
-      (*dirRem->IsA()->GetDirectoryAutoAdd())(dirRem, 0);
+      (*dirRem->IsA()->GetDirectoryAutoAdd())(dirRem, nullptr);
    }
    Changed();
 }
@@ -525,8 +525,8 @@ void TList::DeleteLink(TObjLink *lnk)
 {
    R__COLLECTION_WRITE_GUARD();
 
-   lnk->fNext = lnk->fPrev = 0;
-   lnk->fObject = 0;
+   lnk->fNext = lnk->fPrev = nullptr;
+   lnk->fObject = nullptr;
    delete lnk;
 }
 
@@ -540,7 +540,7 @@ TObject *TList::FindObject(const char *name) const
 {
    R__COLLECTION_READ_GUARD();
 
-   if (!name) return 0;
+   if (!name) return nullptr;
    TObjLink *lnk = FirstLink();
    while (lnk) {
       TObject *obj = lnk->GetObject();
@@ -548,7 +548,7 @@ TObject *TList::FindObject(const char *name) const
       if (objname && !strcmp(name, objname)) return obj;
       lnk = lnk->Next();
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -569,7 +569,7 @@ TObject *TList::FindObject(const TObject *obj) const
       if (ob->IsEqual(obj)) return ob;
       lnk = lnk->Next();
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -580,7 +580,7 @@ TObjLink *TList::FindLink(const TObject *obj, Int_t &idx) const
 {
    R__COLLECTION_READ_GUARD();
 
-   if (!fFirst) return 0;
+   if (!fFirst) return nullptr;
 
    TObject *object;
    TObjLink *lnk = fFirst;
@@ -596,7 +596,7 @@ TObjLink *TList::FindLink(const TObject *obj, Int_t &idx) const
       lnk = lnk->Next();
       idx++;
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -607,7 +607,7 @@ TObject *TList::First() const
    R__COLLECTION_READ_GUARD();
 
    if (fFirst) return fFirst->GetObject();
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -624,7 +624,7 @@ TObject **TList::GetObjectRef(const TObject *obj) const
       if (ob->IsEqual(obj)) return lnk->GetObjectRef();
       lnk = lnk->Next();
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -635,7 +635,7 @@ TObject *TList::Last() const
    R__COLLECTION_READ_GUARD();
 
    if (fLast) return fLast->GetObject();
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -702,7 +702,7 @@ void TList::RecursiveRemove(TObject *obj)
 
    // When fCache is set and has no previous and next node, it represents
    // the node being cleared and/or deleted.
-   if (fCache && fCache->fNext == 0 && fCache->fPrev == 0) {
+   if (fCache && fCache->fNext == nullptr && fCache->fPrev == nullptr) {
       TObject *ob = fCache->GetObject();
       if (ob && ob->TestBit(kNotDeleted)) {
          ob->RecursiveRemove(obj);
@@ -710,7 +710,7 @@ void TList::RecursiveRemove(TObject *obj)
    }
 
    TObjLink *lnk  = fFirst;
-   TObjLink *next = 0;
+   TObjLink *next = nullptr;
    while (lnk) {
       next = lnk->Next();
       TObject *ob = lnk->GetObject();
@@ -721,11 +721,11 @@ void TList::RecursiveRemove(TObject *obj)
                if (lnk == fLast)
                   fLast = fFirst;
                else
-                  fFirst->fPrev = 0;
+                  fFirst->fPrev = nullptr;
                DeleteLink(lnk);
             } else if (lnk == fLast) {
                fLast = lnk->Prev();
-               fLast->fNext = 0;
+               fLast->fNext = nullptr;
                DeleteLink(lnk);
             } else {
                lnk->Prev()->fNext = next;
@@ -733,7 +733,7 @@ void TList::RecursiveRemove(TObject *obj)
                DeleteLink(lnk);
             }
             fSize--;
-            fCache = 0;
+            fCache = nullptr;
             Changed();
          } else
             ob->RecursiveRemove(obj);
@@ -749,12 +749,12 @@ TObject *TList::Remove(TObject *obj)
 {
    R__COLLECTION_WRITE_GUARD();
 
-   if (!obj) return 0;
+   if (!obj) return nullptr;
 
    Int_t    idx;
    TObjLink *lnk = FindLink(obj, idx);
 
-   if (!lnk) return 0;
+   if (!lnk) return nullptr;
 
    // return object found, which may be (pointer wise) different than the
    // input object (depending on what IsEqual() is doing)
@@ -765,11 +765,11 @@ TObject *TList::Remove(TObject *obj)
       if (lnk == fLast)
          fLast = fFirst;
       else
-         fFirst->fPrev = 0;
+         fFirst->fPrev = nullptr;
       DeleteLink(lnk);
    } else if (lnk == fLast) {
       fLast = lnk->Prev();
-      fLast->fNext = 0;
+      fLast->fNext = nullptr;
       DeleteLink(lnk);
    } else {
       lnk->Prev()->fNext = lnk->Next();
@@ -777,7 +777,7 @@ TObject *TList::Remove(TObject *obj)
       DeleteLink(lnk);
    }
    fSize--;
-   fCache = 0;
+   fCache = nullptr;
    Changed();
 
    return ob;
@@ -791,7 +791,7 @@ TObject *TList::Remove(TObjLink *lnk)
 {
    R__COLLECTION_WRITE_GUARD();
 
-   if (!lnk) return 0;
+   if (!lnk) return nullptr;
 
    TObject *obj = lnk->GetObject();
 
@@ -800,11 +800,11 @@ TObject *TList::Remove(TObjLink *lnk)
       if (lnk == fLast)
          fLast = fFirst;
       else
-         fFirst->fPrev = 0;
+         fFirst->fPrev = nullptr;
       DeleteLink(lnk);
    } else if (lnk == fLast) {
       fLast = lnk->Prev();
-      fLast->fNext = 0;
+      fLast->fNext = nullptr;
       DeleteLink(lnk);
    } else {
       lnk->Prev()->fNext = lnk->Next();
@@ -812,7 +812,7 @@ TObject *TList::Remove(TObjLink *lnk)
       DeleteLink(lnk);
    }
    fSize--;
-   fCache = 0;
+   fCache = nullptr;
    Changed();
 
    return obj;
@@ -829,16 +829,16 @@ void TList::RemoveLast()
    if (!lnk) return;
 
    if (lnk == fFirst) {
-      fFirst = 0;
-      fLast = 0;
+      fFirst = nullptr;
+      fLast = nullptr;
    } else {
       fLast = lnk->Prev();
-      fLast->fNext = 0;
+      fLast->fNext = nullptr;
    }
    DeleteLink(lnk);
 
    fSize--;
-   fCache = 0;
+   fCache = nullptr;
    Changed();
 }
 
@@ -865,7 +865,7 @@ void TList::Sort(Bool_t order)
    // correct back links
    TObjLink *ol, *lnk = fFirst;
 
-   if (lnk) lnk->fPrev = 0;
+   if (lnk) lnk->fPrev = nullptr;
    while ((ol = lnk)) {
       lnk = lnk->fNext;
       if (lnk)
@@ -963,7 +963,7 @@ ClassImp(TListIter);
 /// is kIterForward. To go backward use kIterBackward.
 
 TListIter::TListIter(const TList *l, Bool_t dir)
-        : fList(l), fCurCursor(0), fCursor(0), fDirection(dir), fStarted(kFALSE)
+   : fList(l), fCurCursor(nullptr), fCursor(nullptr), fDirection(dir), fStarted(kFALSE)
 {
    R__COLLECTION_ITER_GUARD(fList);
 }
@@ -1023,7 +1023,7 @@ TListIter &TListIter::operator=(const TListIter &rhs)
 
 TObject *TListIter::Next()
 {
-   if (!fList) return 0;
+   if (!fList) return nullptr;
 
    R__COLLECTION_ITER_GUARD(fList);
 
@@ -1044,7 +1044,7 @@ TObject *TListIter::Next()
    }
 
    if (fCurCursor) return fCurCursor->GetObject();
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

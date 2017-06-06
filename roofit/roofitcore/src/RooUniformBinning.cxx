@@ -47,18 +47,16 @@ ClassImp(RooUniformBinning);
 
 RooUniformBinning::RooUniformBinning(const char* name) : 
   RooAbsBinning(name)
-{  
-  _array = 0 ;
+{
+   _array = nullptr;
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct range [xlo,xhi] with 'nBins' bins
 
-RooUniformBinning::RooUniformBinning(Double_t xlo, Double_t xhi, Int_t nBins, const char* name) :
-  RooAbsBinning(name),
-  _array(0), 
-  _nbins(nBins)
+RooUniformBinning::RooUniformBinning(Double_t xlo, Double_t xhi, Int_t nBins, const char *name)
+   : RooAbsBinning(name), _array(nullptr), _nbins(nBins)
 {
   setRange(xlo,xhi) ;
 }
@@ -81,11 +79,11 @@ RooUniformBinning::~RooUniformBinning()
 RooUniformBinning::RooUniformBinning(const RooUniformBinning& other, const char* name) :
   RooAbsBinning(name)
 {
-  _array = 0 ;
-  _xlo   = other._xlo ;
-  _xhi   = other._xhi ;
-  _nbins = other._nbins ;
-  _binw  = other._binw ;  
+   _array = nullptr;
+   _xlo = other._xlo;
+   _xhi = other._xhi;
+   _nbins = other._nbins;
+   _binw = other._binw;  
 }
 
 
@@ -108,7 +106,7 @@ void RooUniformBinning::setRange(Double_t xlo, Double_t xhi)
   // Delete any out-of-date boundary arrays at this point
   if (_array) {
     delete[] _array ;
-    _array = 0 ;
+    _array = nullptr;
   }
 }
 

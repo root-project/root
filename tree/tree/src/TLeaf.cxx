@@ -30,15 +30,8 @@ ClassImp(TLeaf);
 ////////////////////////////////////////////////////////////////////////////////
 
 TLeaf::TLeaf()
-   : TNamed()
-   , fNdata(0)
-   , fLen(0)
-   , fLenType(0)
-   , fOffset(0)
-   , fIsRange(kFALSE)
-   , fIsUnsigned(kFALSE)
-   , fLeafCount(0)
-   , fBranch(0)
+   : TNamed(), fNdata(0), fLen(0), fLenType(0), fOffset(0), fIsRange(kFALSE), fIsUnsigned(kFALSE), fLeafCount(nullptr),
+     fBranch(nullptr)
 {
 }
 
@@ -47,16 +40,9 @@ TLeaf::TLeaf()
 ///
 /// See the TTree and TBranch constructors for explanation of parameters.
 
-TLeaf::TLeaf(TBranch *parent, const char* name, const char *)
-   : TNamed(name, name)
-   , fNdata(0)
-   , fLen(0)
-   , fLenType(4)
-   , fOffset(0)
-   , fIsRange(kFALSE)
-   , fIsUnsigned(kFALSE)
-   , fLeafCount(0)
-   , fBranch(parent)
+TLeaf::TLeaf(TBranch *parent, const char *name, const char *)
+   : TNamed(name, name), fNdata(0), fLen(0), fLenType(4), fOffset(0), fIsRange(kFALSE), fIsUnsigned(kFALSE),
+     fLeafCount(nullptr), fBranch(parent)
 {
    fLeafCount = GetLeafCounter(fLen);
 
@@ -111,13 +97,13 @@ TLeaf::~TLeaf()
 {
    if (fBranch) {
       TTree* tree = fBranch->GetTree();
-      fBranch = 0;
+      fBranch = nullptr;
       if (tree) {
          TObjArray *lst = tree->GetListOfLeaves();
          if (lst->GetLast()!=-1) lst->Remove(this);
       }
    }
-   fLeafCount = 0;
+   fLeafCount = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -171,7 +157,7 @@ TLeaf* TLeaf::GetLeafCounter(Int_t& countval) const
    const char* name = GetTitle();
    char* bleft = (char*) strchr(name, '[');
    if (!bleft) {
-      return 0;
+      return nullptr;
    }
    bleft++;
    Int_t nch = strlen(bleft);
@@ -180,27 +166,27 @@ TLeaf* TLeaf::GetLeafCounter(Int_t& countval) const
    char* bright = (char*) strchr(countname, ']');
    if (!bright) {
       delete[] countname;
-      countname = 0;
+      countname = nullptr;
       countval = -1;
-      return 0;
+      return nullptr;
    }
    char *bleft2 = (char*) strchr(countname, '[');
    *bright = 0;
    nch = strlen(countname);
 
    // Now search a branch name with a leaf name = countname
-   if (fBranch == 0) {
+   if (fBranch == nullptr) {
       Error("GetLeafCounter","TLeaf %s is not setup properly, fBranch is null.",GetName());
-      return 0;
+      return nullptr;
    }
-   if (fBranch->GetTree() == 0) {
+   if (fBranch->GetTree() == nullptr) {
       Error("GetLeafCounter","For Leaf %s, the TBranch %s is not setup properly, fTree is null.",GetName(),fBranch->GetName());
-      return 0;
+      return nullptr;
    }
    TTree* pTree = fBranch->GetTree();
 
    TLeaf* leaf = (TLeaf*) GetBranch()->GetListOfLeaves()->FindObject(countname);
-   if (leaf == 0) {
+   if (leaf == nullptr) {
       // Try outside the branch:
       leaf = (TLeaf*) pTree->GetListOfLeaves()->FindObject(countname);
    }
@@ -212,7 +198,7 @@ TLeaf* TLeaf::GetLeafCounter(Int_t& countval) const
       strcpy(lastdot, countname);
       leaf = (TLeaf*) pTree->GetListOfLeaves()->FindObject(countname);
       delete[] withdot;
-      withdot = 0;
+      withdot = nullptr;
    }
    if (!leaf && strchr(countname,'.')) {
       // Not yet found and the countname has a dot in it, let's try
@@ -239,16 +225,16 @@ TLeaf* TLeaf::GetLeafCounter(Int_t& countval) const
          bleft2 = bleft;
       }
       delete[] countname;
-      countname = 0;
+      countname = nullptr;
       return leaf;
    }
    // not found in a branch/leaf. Is it a numerical value?
    for (i = 0; i < nch; i++) {
       if (!isdigit(countname[i])) {
          delete[] countname;
-         countname = 0;
+         countname = nullptr;
          countval = -1;
-         return 0;
+         return nullptr;
       }
    }
    sscanf(countname, "%d", &countval);
@@ -269,8 +255,8 @@ TLeaf* TLeaf::GetLeafCounter(Int_t& countval) const
    }
 
    delete[] countname;
-   countname = 0;
-   return 0;
+   countname = nullptr;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

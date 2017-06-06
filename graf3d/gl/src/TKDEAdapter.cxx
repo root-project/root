@@ -24,13 +24,8 @@ namespace Fgt {
 ///Constructor. "Half-baked" object.
 
 TKDEAdapter::TKDEAdapter()
-               : fW(0), fH(0), fD(0),
-                 fSliceSize(0),
-                 fXMin(0.), fXStep(0.),
-                 fYMin(0.), fYStep(0.),
-                 fZMin(0.), fZStep(0.),
-                 fDE(0),
-                 fE(10.)
+   : fW(0), fH(0), fD(0), fSliceSize(0), fXMin(0.), fXStep(0.), fYMin(0.), fYStep(0.), fZMin(0.), fZStep(0.),
+     fDE(nullptr), fE(10.)
 {
 }
 

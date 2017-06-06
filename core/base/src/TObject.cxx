@@ -154,7 +154,7 @@ TObject *TObject::Clone(const char *) const
      return gDirectory->CloneObject(this);
    } else {
      Fatal("Clone","No gDirectory set");
-     return 0;
+     return nullptr;
    }
 }
 
@@ -230,7 +230,7 @@ TObject *TObject::DrawClone(Option_t *option) const
    if (pad) pad->cd();
 
    TObject *newobj = Clone();
-   if (!newobj) return 0;
+   if (!newobj) return nullptr;
    if (pad) {
       if (strlen(option)) pad->GetListOfPrimitives()->Add(newobj,option);
       else                pad->GetListOfPrimitives()->Add(newobj,GetDrawOption());
@@ -327,7 +327,7 @@ void TObject::ExecuteEvent(Int_t, Int_t, Int_t)
 
 TObject *TObject::FindObject(const char *) const
 {
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -337,7 +337,7 @@ TObject *TObject::FindObject(const char *) const
 
 TObject *TObject::FindObject(const TObject *) const
 {
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -373,7 +373,7 @@ const char *TObject::GetName() const
 
 const char *TObject::GetIconName() const
 {
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -487,7 +487,7 @@ void TObject::ls(Option_t *option) const
    TROOT::IndentLevel();
    std::cout <<"OBJ: " << IsA()->GetName() << "\t" << GetName() << "\t" << GetTitle() << " : ";
    std::cout << Int_t(TestBit(kCanDelete));
-   if (option && strstr(option,"noaddr")==0) {
+   if (option && strstr(option, "noaddr") == nullptr) {
       std::cout <<" at: "<< this ;
    }
    std::cout << std::endl;
@@ -611,7 +611,7 @@ void TObject::SaveAs(const char *filename, Option_t *option) const
 
    //==============Save object as a C, ROOT independant, file===================
    if (filename && strstr(filename,".cc")) {
-      char *fname = 0;
+      char *fname = nullptr;
       if (filename && strlen(filename) > 0) {
          fname = (char*)filename;
       } else {
@@ -630,7 +630,7 @@ void TObject::SaveAs(const char *filename, Option_t *option) const
    }
 
    //==============Save as a C++ CINT file======================================
-   char *fname = 0;
+   char *fname = nullptr;
    if (filename && strlen(filename) > 0) {
       fname = (char*)filename;
    } else {

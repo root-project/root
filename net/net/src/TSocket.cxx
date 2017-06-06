@@ -60,7 +60,7 @@ ULong64_t TSocket::fgBytesRecv = 0;
 //
 Int_t TSocket::fgClientProtocol = 17;  // increase when client protocol changes
 
-TVirtualMutex *gSocketAuthMutex = 0;
+TVirtualMutex *gSocketAuthMutex = nullptr;
 
 ClassImp(TSocket);
 
@@ -81,7 +81,7 @@ TSocket::TSocket(TInetAddress addr, const char *service, Int_t tcpwindowsize)
    R__ASSERT(gSystem);
 
    fService = service;
-   fSecContext = 0;
+   fSecContext = nullptr;
    fRemoteProtocol= -1;
    fServType = kSOCKD;
    if (fService.Contains("root"))
@@ -94,8 +94,8 @@ TSocket::TSocket(TInetAddress addr, const char *service, Int_t tcpwindowsize)
    fBytesRecv = 0;
    fCompress = 0;
    fTcpWindowSize = tcpwindowsize;
-   fUUIDs = 0;
-   fLastUsageMtx = 0;
+   fUUIDs = nullptr;
+   fLastUsageMtx = nullptr;
    ResetBit(TSocket::kBrokenConn);
 
    if (fAddress.GetPort() != -1) {
@@ -128,7 +128,7 @@ TSocket::TSocket(TInetAddress addr, Int_t port, Int_t tcpwindowsize)
    R__ASSERT(gSystem);
 
    fService = gSystem->GetServiceByPort(port);
-   fSecContext = 0;
+   fSecContext = nullptr;
    fRemoteProtocol= -1;
    fServType = kSOCKD;
    if (fService.Contains("root"))
@@ -142,8 +142,8 @@ TSocket::TSocket(TInetAddress addr, Int_t port, Int_t tcpwindowsize)
    fBytesRecv = 0;
    fCompress = 0;
    fTcpWindowSize = tcpwindowsize;
-   fUUIDs = 0;
-   fLastUsageMtx = 0;
+   fUUIDs = nullptr;
+   fLastUsageMtx = nullptr;
    ResetBit(TSocket::kBrokenConn);
 
    fSocket = gSystem->OpenConnection(addr.GetHostName(), fAddress.GetPort(),
@@ -173,7 +173,7 @@ TSocket::TSocket(const char *host, const char *service, Int_t tcpwindowsize)
    R__ASSERT(gSystem);
 
    fService = service;
-   fSecContext = 0;
+   fSecContext = nullptr;
    fRemoteProtocol= -1;
    fServType = kSOCKD;
    if (fService.Contains("root"))
@@ -187,8 +187,8 @@ TSocket::TSocket(const char *host, const char *service, Int_t tcpwindowsize)
    fBytesRecv = 0;
    fCompress = 0;
    fTcpWindowSize = tcpwindowsize;
-   fUUIDs = 0;
-   fLastUsageMtx = 0;
+   fUUIDs = nullptr;
+   fLastUsageMtx = nullptr;
    ResetBit(TSocket::kBrokenConn);
 
    if (fAddress.GetPort() != -1) {
@@ -223,7 +223,7 @@ TSocket::TSocket(const char *url, Int_t port, Int_t tcpwindowsize)
    TString host(TUrl(fUrl).GetHost());
 
    fService = gSystem->GetServiceByPort(port);
-   fSecContext = 0;
+   fSecContext = nullptr;
    fRemoteProtocol= -1;
    fServType = kSOCKD;
    if (fUrl.Contains("root"))
@@ -238,8 +238,8 @@ TSocket::TSocket(const char *url, Int_t port, Int_t tcpwindowsize)
    fBytesRecv = 0;
    fCompress = 0;
    fTcpWindowSize = tcpwindowsize;
-   fUUIDs = 0;
-   fLastUsageMtx = 0;
+   fUUIDs = nullptr;
+   fLastUsageMtx = nullptr;
    ResetBit(TSocket::kBrokenConn);
 
    fSocket = gSystem->OpenConnection(host, fAddress.GetPort(), tcpwindowsize);
@@ -266,7 +266,7 @@ TSocket::TSocket(const char *sockpath) : TNamed(sockpath, "")
    fUrl = sockpath;
 
    fService = "unix";
-   fSecContext = 0;
+   fSecContext = nullptr;
    fRemoteProtocol= -1;
    fServType = kSOCKD;
    fAddress.fPort = -1;
@@ -276,8 +276,8 @@ TSocket::TSocket(const char *sockpath) : TNamed(sockpath, "")
    fBytesRecv = 0;
    fCompress  = 0;
    fTcpWindowSize = -1;
-   fUUIDs = 0;
-   fLastUsageMtx  = 0;
+   fUUIDs = nullptr;
+   fLastUsageMtx = nullptr;
    ResetBit(TSocket::kBrokenConn);
 
    fSocket = gSystem->OpenConnection(sockpath, -1, -1);
@@ -296,7 +296,7 @@ TSocket::TSocket(Int_t desc) : TNamed("", "")
    R__ASSERT(gROOT);
    R__ASSERT(gSystem);
 
-   fSecContext     = 0;
+   fSecContext = nullptr;
    fRemoteProtocol = 0;
    fService        = (char *)kSOCKD;
    fServType       = kSOCKD;
@@ -304,8 +304,8 @@ TSocket::TSocket(Int_t desc) : TNamed("", "")
    fBytesRecv      = 0;
    fCompress       = 0;
    fTcpWindowSize = -1;
-   fUUIDs          = 0;
-   fLastUsageMtx   = 0;
+   fUUIDs = nullptr;
+   fLastUsageMtx = nullptr;
    ResetBit(TSocket::kBrokenConn);
 
    if (desc >= 0) {
@@ -330,7 +330,7 @@ TSocket::TSocket(Int_t desc, const char *sockpath) : TNamed(sockpath, "")
    fUrl = sockpath;
 
    fService = "unix";
-   fSecContext = 0;
+   fSecContext = nullptr;
    fRemoteProtocol= -1;
    fServType = kSOCKD;
    fAddress.fPort = -1;
@@ -340,8 +340,8 @@ TSocket::TSocket(Int_t desc, const char *sockpath) : TNamed(sockpath, "")
    fBytesRecv = 0;
    fCompress  = 0;
    fTcpWindowSize = -1;
-   fUUIDs = 0;
-   fLastUsageMtx  = 0;
+   fUUIDs = nullptr;
+   fLastUsageMtx = nullptr;
    ResetBit(TSocket::kBrokenConn);
 
    if (desc >= 0) {
@@ -369,8 +369,8 @@ TSocket::TSocket(const TSocket &s) : TNamed(s)
    fRemoteProtocol = s.fRemoteProtocol;
    fServType       = s.fServType;
    fTcpWindowSize  = s.fTcpWindowSize;
-   fUUIDs          = 0;
-   fLastUsageMtx   = 0;
+   fUUIDs = nullptr;
+   fLastUsageMtx = nullptr;
    ResetBit(TSocket::kBrokenConn);
 
    if (fSocket != -1) {
@@ -652,7 +652,7 @@ void TSocket::SendStreamerInfos(const TMessage &mess)
    if (mess.fInfos && mess.fInfos->GetEntries()) {
       TIter next(mess.fInfos);
       TStreamerInfo *info;
-      TList *minilist = 0;
+      TList *minilist = nullptr;
       while ((info = (TStreamerInfo*)next())) {
          Int_t uid = info->GetNumber();
          if (fBitsInfo.TestBitNumber(uid))
@@ -688,7 +688,7 @@ void TSocket::SendProcessIDs(const TMessage &mess)
       TObjArray *pids = TProcessID::GetPIDs();
       Int_t npids = pids->GetEntries();
       TProcessID *pid;
-      TList *minilist = 0;
+      TList *minilist = nullptr;
       for (Int_t ipid = 0; ipid < npids; ipid++) {
          pid = (TProcessID*)pids->At(ipid);
          if (!pid || !mess.TestBitNumber(pid->GetUniqueID()+1))
@@ -820,7 +820,7 @@ Int_t TSocket::Recv(TMessage *&mess)
    TSystem::ResetErrno();
 
    if (fSocket == -1) {
-      mess = 0;
+      mess = nullptr;
       return -1;
    }
 
@@ -834,7 +834,7 @@ oncemore:
          SetBit(TSocket::kBrokenConn);
          Close();
       }
-      mess = 0;
+      mess = nullptr;
       return n;
    }
    len = net2host(len);  //from network to host byte order
@@ -848,7 +848,7 @@ oncemore:
          Close();
       }
       delete [] buf;
-      mess = 0;
+      mess = nullptr;
       return n;
    }
 
@@ -876,7 +876,7 @@ oncemore:
             Close();
          }
          delete mess;
-         mess = 0;
+         mess = nullptr;
          return n2;
       }
       mess->SetWhat(mess->What() & ~kMESS_ACK);
@@ -990,7 +990,7 @@ Bool_t TSocket::RecvProcessIDs(TMessage *mess)
          while ((p = (TProcessID*)nextpid())) {
             if (!strcmp(p->GetTitle(), pid->GetTitle())) {
                delete pid;
-               pid = 0;
+               pid = nullptr;
                break;
             }
          }
@@ -1229,7 +1229,7 @@ Bool_t TSocket::Authenticate(const char *user)
 
             // Authentication was not required: create inactive
             // security context for consistency
-            fSecContext = new TSecContext(user, host, 0, -4, 0, 0);
+            fSecContext = new TSecContext(user, host, 0, -4, nullptr, nullptr);
             if (gDebug > 3)
                Info("Authenticate", "no authentication required remotely");
 
@@ -1350,7 +1350,7 @@ TSocket *TSocket::CreateAuthSocket(const char *url, Int_t size, Int_t tcpwindows
 
    // Create the socket now
 
-   TSocket *sock = 0;
+   TSocket *sock = nullptr;
    if (!parallel) {
 
       // Simple socket
@@ -1369,7 +1369,7 @@ TSocket *TSocket::CreateAuthSocket(const char *url, Int_t size, Int_t tcpwindows
             }
             sock->Close();
             delete sock;
-            sock = 0;
+            sock = nullptr;
          }
       }
 
@@ -1400,7 +1400,7 @@ TSocket *TSocket::CreateAuthSocket(const char *url, Int_t size, Int_t tcpwindows
             // happens when talking to a old server, because the
             // the parallel socket system is open before authentication
             delete sock;
-         sock = 0;
+         sock = nullptr;
       }
    }
 

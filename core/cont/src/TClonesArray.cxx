@@ -158,8 +158,8 @@ static inline void R__ReleaseMemory(TClass *cl, TObject *obj)
 
 TClonesArray::TClonesArray() : TObjArray()
 {
-   fClass      = 0;
-   fKeep       = 0;
+   fClass = nullptr;
+   fKeep = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -174,7 +174,7 @@ TClonesArray::TClonesArray() : TObjArray()
 
 TClonesArray::TClonesArray(const char *classname, Int_t s, Bool_t) : TObjArray(s)
 {
-   fKeep = 0;
+   fKeep = nullptr;
    SetClass(classname,s);
 }
 
@@ -190,7 +190,7 @@ TClonesArray::TClonesArray(const char *classname, Int_t s, Bool_t) : TObjArray(s
 
 TClonesArray::TClonesArray(const TClass *cl, Int_t s, Bool_t) : TObjArray(s)
 {
-   fKeep = 0;
+   fKeep = nullptr;
    SetClass(cl,s);
 }
 
@@ -321,7 +321,7 @@ void TClonesArray::Compress()
 
    Int_t jf = 0;
    for ( ; j < fSize; j++) {
-      fCont[j] = 0;
+      fCont[j] = nullptr;
       fKeep->fCont[j] = tmp[jf];
       jf++;
    }
@@ -351,7 +351,7 @@ TObject *TClonesArray::ConstructedAt(Int_t idx)
    if ( obj && obj->TestBit(TObject::kNotDeleted) ) {
       return obj;
    }
-   return (fClass) ? static_cast<TObject*>(fClass->New(obj)) : 0;
+   return (fClass) ? static_cast<TObject *>(fClass->New(obj)) : nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -374,7 +374,7 @@ TObject *TClonesArray::ConstructedAt(Int_t idx, Option_t *clear_options)
       obj->Clear(clear_options);
       return obj;
    }
-   return (fClass) ? static_cast<TObject*>(fClass->New(obj)) : 0;
+   return (fClass) ? static_cast<TObject *>(fClass->New(obj)) : nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -545,7 +545,7 @@ void TClonesArray::ExpandCreateFast(Int_t n)
 
 TObject *TClonesArray::RemoveAt(Int_t idx)
 {
-   if (!BoundsOk("RemoveAt", idx)) return 0;
+   if (!BoundsOk("RemoveAt", idx)) return nullptr;
 
    int i = idx-fLowerBound;
 
@@ -554,14 +554,15 @@ TObject *TClonesArray::RemoveAt(Int_t idx)
    }
 
    if (fCont[i]) {
-      fCont[i] = 0;
+      fCont[i] = nullptr;
       // recalculate array size
       if (i == fLast)
-         do { fLast--; } while (fLast >= 0 && fCont[fLast] == 0);
+         do { fLast--;
+         } while (fLast >= 0 && fCont[fLast] == nullptr);
       Changed();
    }
 
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -569,20 +570,21 @@ TObject *TClonesArray::RemoveAt(Int_t idx)
 
 TObject *TClonesArray::Remove(TObject *obj)
 {
-   if (!obj) return 0;
+   if (!obj) return nullptr;
 
    Int_t i = IndexOf(obj) - fLowerBound;
 
-   if (i == -1) return 0;
+   if (i == -1) return nullptr;
 
    if (fCont[i] && fCont[i]->TestBit(kNotDeleted)) {
       fCont[i]->~TObject();
    }
 
-   fCont[i] = 0;
+   fCont[i] = nullptr;
    // recalculate array size
    if (i == fLast)
-      do { fLast--; } while (fLast >= 0 && fCont[fLast] == 0);
+      do { fLast--;
+      } while (fLast >= 0 && fCont[fLast] == nullptr);
    Changed();
    return obj;
 }
@@ -604,14 +606,15 @@ void TClonesArray::RemoveRange(Int_t idx1, Int_t idx2)
       if ((*obj)->TestBit(kNotDeleted)) {
          (*obj)->~TObject();
       }
-      *obj = 0;
+      *obj = nullptr;
       change = kTRUE;
    }
 
    // recalculate array size
    if (change) Changed();
    if (idx1 < fLast || fLast > idx2) return;
-   do { fLast--; } while (fLast >= 0 && fCont[fLast] == 0);
+   do { fLast--;
+   } while (fLast >= 0 && fCont[fLast] == nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -744,7 +747,7 @@ void TClonesArray::Streamer(TBuffer &b)
       if (nobjects < 0)
          nobjects = -nobjects;  // still there for backward compatibility
       b >> fLowerBound;
-      if (fClass == 0 && fKeep == 0) {
+      if (fClass == nullptr && fKeep == nullptr) {
          fClass = cl;
          fKeep  = new TObjArray(fSize);
          Expand(nobjects);
@@ -797,7 +800,7 @@ void TClonesArray::Streamer(TBuffer &b)
             }
          }
       }
-      for (Int_t i = TMath::Max(nobjects,0); i < oldLast+1; ++i) fCont[i] = 0;
+      for (Int_t i = TMath::Max(nobjects, 0); i < oldLast + 1; ++i) fCont[i] = nullptr;
       Changed();
       b.CheckByteCount(R__s, R__c,TClonesArray::IsA());
    } else {
@@ -894,7 +897,7 @@ TObject *TClonesArray::operator[](Int_t idx) const
 {
    if (idx < 0 || idx >= fSize) {
       Error("operator[]", "out of bounds at %d in %lx", idx, (Long_t)this);
-      return 0;
+      return nullptr;
    }
 
    return fCont[idx];
@@ -908,11 +911,11 @@ TObject *TClonesArray::New(Int_t idx)
 {
    if (idx < 0) {
       Error("New", "out of bounds at %d in %lx", idx, (Long_t)this);
-      return 0;
+      return nullptr;
    }
    if (!fClass) {
       Error("New", "invalid class specified in TClonesArray ctor");
-      return 0;
+      return nullptr;
    }
 
    return (TObject *)fClass->New(operator[](idx));
@@ -931,7 +934,7 @@ TObject *TClonesArray::New(Int_t idx)
 void TClonesArray::AbsorbObjects(TClonesArray *tc)
 {
    // tests
-   if (tc == 0 || tc == this || tc->GetEntriesFast() == 0) return;
+   if (tc == nullptr || tc == this || tc->GetEntriesFast() == 0) return;
    AbsorbObjects(tc, 0, tc->GetEntriesFast() - 1);
 }
 
@@ -944,7 +947,7 @@ void TClonesArray::AbsorbObjects(TClonesArray *tc)
 void TClonesArray::AbsorbObjects(TClonesArray *tc, Int_t idx1, Int_t idx2)
 {
    // tests
-   if (tc == 0 || tc == this || tc->GetEntriesFast() == 0) return;
+   if (tc == nullptr || tc == this || tc->GetEntriesFast() == 0) return;
    if (fClass != tc->fClass) {
       Error("AbsorbObjects", "cannot absorb objects when classes are different");
       return;
@@ -960,8 +963,7 @@ void TClonesArray::AbsorbObjects(TClonesArray *tc, Int_t idx1, Int_t idx2)
    }
 
    // cache the sorted status
-   Bool_t wasSorted = IsSorted() && tc->IsSorted() &&
-                      (Last() == 0 || Last()->Compare(tc->First()) == -1);
+   Bool_t wasSorted = IsSorted() && tc->IsSorted() && (Last() == nullptr || Last()->Compare(tc->First()) == -1);
 
    // expand this
    Int_t oldSize = GetEntriesFast();
@@ -975,16 +977,16 @@ void TClonesArray::AbsorbObjects(TClonesArray *tc, Int_t idx1, Int_t idx2)
       fCont[newindex] = tc->fCont[i];
       R__ReleaseMemory(fClass,fKeep->fCont[newindex]);
       (*fKeep)[newindex] = (*(tc->fKeep))[i];
-      tc->fCont[i] = 0;
-      (*(tc->fKeep))[i] = 0;
+      tc->fCont[i] = nullptr;
+      (*(tc->fKeep))[i] = nullptr;
    }
 
    // cleanup
    for (Int_t i = idx2+1; i < tc->GetEntriesFast(); i++) {
       tc->fCont[i-(idx2-idx1+1)] = tc->fCont[i];
       (*(tc->fKeep))[i-(idx2-idx1+1)] = (*(tc->fKeep))[i];
-      tc->fCont[i] = 0;
-      (*(tc->fKeep))[i] = 0;
+      tc->fCont[i] = nullptr;
+      (*(tc->fKeep))[i] = nullptr;
    }
    tc->fLast = tc->GetEntriesFast() - 2 - (idx2 - idx1);
    fLast = newSize-1;

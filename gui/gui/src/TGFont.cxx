@@ -125,13 +125,12 @@ struct XLFDAttributes_t {
    Int_t fCharset;       // The character set encoding (the glyph family).
    Int_t fEncoding;      // Variations within a charset for the glyphs above character 127.
 
-   XLFDAttributes_t() :  // default constructor
-      fFA(),
-      fFoundry(0),
-      fSlant(0),
-      fSetwidth(0),
-      fCharset(0),
-      fEncoding(0) { }
+   XLFDAttributes_t()
+      : // default constructor
+        fFA(),
+        fFoundry(nullptr), fSlant(0), fSetwidth(0), fCharset(0), fEncoding(0)
+   {
+   }
 };
 
 
@@ -184,63 +183,39 @@ enum ECharType { kCharNormal, kCharReplace, kCharSkip };
 struct FontStateMap_t { Int_t fNumKey; const char *fStrKey; };
 
 static const FontStateMap_t gWeightMap[] = {
-   { kFontWeightNormal,  "normal" },
-   { kFontWeightBold,    "bold"   },
-   { kFontWeightUnknown, 0        }
-};
+   {kFontWeightNormal, "normal"}, {kFontWeightBold, "bold"}, {kFontWeightUnknown, nullptr}};
 
 static const FontStateMap_t gSlantMap[] = {
-   { kFontSlantRoman,   "roman"  },
-   { kFontSlantItalic,  "italic" },
-   { kFontSlantUnknown, 0        }
-};
+   {kFontSlantRoman, "roman"}, {kFontSlantItalic, "italic"}, {kFontSlantUnknown, nullptr}};
 
-static const FontStateMap_t gUnderlineMap[] = {
-   { 1, "underline" },
-   { 0, 0           }
-};
+static const FontStateMap_t gUnderlineMap[] = {{1, "underline"}, {0, nullptr}};
 
-static const FontStateMap_t gOverstrikeMap[] = {
-   { 1, "overstrike" },
-   { 0, 0            }
-};
+static const FontStateMap_t gOverstrikeMap[] = {{1, "overstrike"}, {0, nullptr}};
 
 // The following structures are used when parsing XLFD's into a set of
 // FontAttributes_t.
 
 static const FontStateMap_t gXlfdgWeightMap[] = {
-   { kFontWeightNormal, "normal"   },
-   { kFontWeightNormal, "medium"   },
-   { kFontWeightNormal, "book"     },
-   { kFontWeightNormal, "light"    },
-   { kFontWeightBold,   "bold"     },
-   { kFontWeightBold,   "demi"     },
-   { kFontWeightBold,   "demibold" },
-   { kFontWeightNormal,  0         }  // Assume anything else is "normal".
+   {kFontWeightNormal, "normal"}, {kFontWeightNormal, "medium"}, {kFontWeightNormal, "book"},
+   {kFontWeightNormal, "light"},  {kFontWeightBold, "bold"},     {kFontWeightBold, "demi"},
+   {kFontWeightBold, "demibold"}, {kFontWeightNormal, nullptr} // Assume anything else is "normal".
 };
 
 static const FontStateMap_t gXlfdSlantMap[] = {
-   { kFontSlantRoman,   "r"  },
-   { kFontSlantItalic,  "i"  },
-   { kFontSlantOblique, "o"  },
-   { kFontSlantRoman,   0    }  // Assume anything else is "roman".
+   {kFontSlantRoman, "r"},
+   {kFontSlantItalic, "i"},
+   {kFontSlantOblique, "o"},
+   {kFontSlantRoman, nullptr} // Assume anything else is "roman".
 };
 
-static const FontStateMap_t gXlfdSetwidthMap[] = {
-   { kFontSWNormal,   "normal"        },
-   { kFontSWCondence, "narrow"        },
-   { kFontSWCondence, "semicondensed" },
-   { kFontSWCondence, "condensed"     },
-   { kFontSWUnknown,  0               }
-};
+static const FontStateMap_t gXlfdSetwidthMap[] = {{kFontSWNormal, "normal"},
+                                                  {kFontSWCondence, "narrow"},
+                                                  {kFontSWCondence, "semicondensed"},
+                                                  {kFontSWCondence, "condensed"},
+                                                  {kFontSWUnknown, nullptr}};
 
 static const FontStateMap_t gXlfdCharsetMap[] = {
-   { kFontCSNormal, "iso8859" },
-   { kFontCSSymbol, "adobe"   },
-   { kFontCSSymbol, "sun"     },
-   { kFontCSOther,  0         }
-};
-
+   {kFontCSNormal, "iso8859"}, {kFontCSSymbol, "adobe"}, {kFontCSSymbol, "sun"}, {kFontCSOther, nullptr}};
 
 // Characters used when displaying control sequences.
 
@@ -675,7 +650,7 @@ TGTextLayout *TGFont::ComputeTextLayout(const char *string, Int_t numChars,
    layout->fFont = this;
    layout->fString = string;
    layout->fNumChunks = 0;
-   layout->fChunks = 0;
+   layout->fChunks = nullptr;
 
    baseline = fFM.fAscent;
    maxWidth = 0;
@@ -712,7 +687,7 @@ TGTextLayout *TGFont::ComputeTextLayout(const char *string, Int_t numChars,
       // Special points at the next special character (or the end of the
       // string). Process characters between start and special.
 
-      chunk = 0;
+      chunk = nullptr;
       if (start < special) {
          charsThisChunk = MeasureChars(start, special - start,
                                        wrapLength - curX, flags, &newX);
@@ -728,9 +703,9 @@ TGTextLayout *TGFont::ComputeTextLayout(const char *string, Int_t numChars,
       }
       if ((start == special) && (special < end)) {
          // Handle the special character.
-         LayoutChunk_t *newchunk = 0;
+         LayoutChunk_t *newchunk = nullptr;
 
-         chunk = 0;
+         chunk = nullptr;
          if (*special == '\t') {
             newX = curX + fTabWidth;
             newX -= newX % fTabWidth;
@@ -1544,7 +1519,7 @@ TGFont *TGFontPool::GetFont(const char *font, Bool_t fixedDefault)
 {
    if (!font || !*font) {
       Error("GetFont", "argument may not be 0 or empty");
-      return 0;
+      return nullptr;
    }
 
    TGFont *f = (TGFont*)fList->FindObject(font);
@@ -1559,7 +1534,7 @@ TGFont *TGFontPool::GetFont(const char *font, Bool_t fixedDefault)
    if (nf) {
       // Construct a font based on a named font.
       nf->AddReference();
-      f = GetFontFromAttributes(&nf->fFA, 0);
+      f = GetFontFromAttributes(&nf->fFA, nullptr);
 
    } else {
 
@@ -1576,15 +1551,15 @@ TGFont *TGFontPool::GetFont(const char *font, Bool_t fixedDefault)
          if (!ParseFontName(font, &fa)) {
             //fontCache.DeleteHashEntry(cacheHash);
 
-            return 0;
+            return nullptr;
          }
 
          // String contained the attributes inline.
-         f = GetFontFromAttributes(&fa, 0);
+         f = GetFontFromAttributes(&fa, nullptr);
       }
    }
 
-   if (!f) return 0;
+   if (!f) return nullptr;
 
    fList->Add(f);
 
@@ -1646,7 +1621,7 @@ TGFont *TGFontPool::GetFont(const TGFont *font)
       return f;
    }
 
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1662,7 +1637,7 @@ TGFont *TGFontPool::GetFont(FontStruct_t fs)
    }
 
    static int i = 0;
-   f = MakeFont(0, fs, TString::Format("unknown-%d", i));
+   f = MakeFont(nullptr, fs, TString::Format("unknown-%d", i));
    fList->Add(f);
    i++;
 
@@ -1729,7 +1704,7 @@ void TGFontPool::FreeFont(const TGFont *font)
 TGFont *TGFontPool::FindFont(FontStruct_t font) const
 {
    TIter next(fList);
-   TGFont *f = 0;
+   TGFont *f = nullptr;
 
    while ((f = (TGFont*) next())) {
       if (f->fFontStruct == font) {
@@ -1737,7 +1712,7 @@ TGFont *TGFontPool::FindFont(FontStruct_t font) const
       }
    }
 
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1746,7 +1721,7 @@ TGFont *TGFontPool::FindFont(FontStruct_t font) const
 TGFont *TGFontPool::FindFontByHandle(FontH_t font) const
 {
    TIter next(fList);
-   TGFont *f = 0;
+   TGFont *f = nullptr;
 
    while ((f = (TGFont*) next())) {
       if (f->fFontH == font) {
@@ -1754,7 +1729,7 @@ TGFont *TGFontPool::FindFontByHandle(FontH_t font) const
       }
    }
 
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1769,7 +1744,7 @@ TGFont *TGFontPool::FindFontByHandle(FontH_t font) const
 
 const char *TGFontPool::GetUid(const char *string)
 {
-   TObjString *obj = 0;
+   TObjString *obj = nullptr;
    obj = (TObjString*)fUidTable->FindObject(string);
 
    if (!obj) {
@@ -1790,12 +1765,12 @@ const char *TGFontPool::GetUid(const char *string)
 char **TGFontPool::GetAttributeInfo(const FontAttributes_t *fa)
 {
    Int_t i, num;
-   const char *str = 0;
+   const char *str = nullptr;
 
    char **result = new char*[FONT_NUMFIELDS];
 
    for (i = 0; i < FONT_NUMFIELDS; ++i) {
-      str = 0;
+      str = nullptr;
       num = 0;
 
       switch (i) {
@@ -1884,16 +1859,16 @@ void TGFont::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 
 static char *GetToken(char *str)
 {
-   static char *p = 0;
+   static char *p = nullptr;
    char *retp;
 
    if (str) p = str;
 
    if (!p) {
-      return 0;
+      return nullptr;
    }
    if (!*p) {
-      return 0;
+      return nullptr;
    }
 
    while (*p && ((*p == ' ') || (*p == '\t'))) {   // skip spaces
@@ -1901,14 +1876,14 @@ static char *GetToken(char *str)
    }
 
    if (!*p) {
-      return 0;
+      return nullptr;
    }
 
    if (*p == '"') {  // quoted string
       retp = ++p;
 
       if (!*p) {
-         return 0;
+         return nullptr;
       }
 
       while (*p && (*p != '"')) {
@@ -1978,7 +1953,7 @@ Bool_t TGFontPool::ParseFontName(const char *string, FontAttributes_t *fa)
    }
    fa->fFamily = GetUid(s);
 
-   s = GetToken(0);
+   s = GetToken(nullptr);
 
    if (s) {
       char *end;
@@ -1989,7 +1964,7 @@ Bool_t TGFontPool::ParseFontName(const char *string, FontAttributes_t *fa)
       }
    }
 
-   while ((s = GetToken(0))) {
+   while ((s = GetToken(nullptr))) {
       n = FindStateNum(gWeightMap, s);
       if ((EFontWeight)n != kFontWeightUnknown) {
          fa->fWeight = n;
@@ -2078,7 +2053,7 @@ Bool_t TGFontPool::ParseXLFD(const char *string, XLFDAttributes_t *xa)
          for (j = XLFD_NUMFIELDS - 1; j >= XLFD_ADD_STYLE; j--) {
             field[j + 1] = field[j];
          }
-         field[XLFD_ADD_STYLE] = 0;
+         field[XLFD_ADD_STYLE] = nullptr;
          i++;
       }
    }
@@ -2194,7 +2169,7 @@ Int_t TGFontPool::FindStateNum(const FontStateMap_t *map, const char *strKey)
       return 0;
    }
 
-   for (m = map; m->fStrKey != 0; m++) {
+   for (m = map; m->fStrKey != nullptr; m++) {
       if (strcasecmp(strKey, m->fStrKey) == 0) {
          return m->fNumKey;
       }
@@ -2211,10 +2186,10 @@ Int_t TGFontPool::FindStateNum(const FontStateMap_t *map, const char *strKey)
 
 const char *TGFontPool::FindStateString(const FontStateMap_t *map, Int_t numKey)
 {
-   for ( ; map->fStrKey != 0; map++) {
+   for (; map->fStrKey != nullptr; map++) {
       if (numKey == map->fNumKey) return map->fStrKey;
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2305,7 +2280,7 @@ char **TGFontPool::GetFontFamilies()
       dst[i] = StrDup(obj->GetName());
       i++;
    }
-   dst[i] = 0;
+   dst[i] = nullptr;
 
    gVirtualX->FreeFontNames(nameList);
    return dst;
@@ -2320,7 +2295,7 @@ void TGFontPool::FreeFontFamilies(char **f)
 
    if (!f) return;
 
-   for (i = 0; f[i] != 0; ++i) {
+   for (i = 0; f[i] != nullptr; ++i) {
       delete[] f[i];
    }
    delete[] f;
@@ -2389,7 +2364,7 @@ getsystem:
          if (!fontStruct) {
             fontStruct = gVirtualX->LoadQueryFont("*");
             if (!fontStruct) {
-               return 0;
+               return nullptr;
             }
          }
          goto end;
@@ -2555,10 +2530,10 @@ TGFont *TGFontPool::GetNativeFont(const char *name, Bool_t fixedDefault)
    fontStruct = fClient->GetFontByName(name, fixedDefault);
 
    if (!fontStruct) {
-      return 0;
+      return nullptr;
    }
 
-   return MakeFont(0, fontStruct, name);
+   return MakeFont(nullptr, fontStruct, name);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

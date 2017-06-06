@@ -67,8 +67,8 @@ void Info(const char *va_(fmt), ...)
 
 int main(int argc, char **argv)
 {
-   char *pipeId = 0;
-   char *tmpDir = 0;
+   char *pipeId = nullptr;
+   char *tmpDir = nullptr;
 
    if (argc < 3) {
       Info("ssh2rpd: argc=%d"

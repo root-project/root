@@ -29,8 +29,8 @@ batch mode directly using an instance of this base class.
 #include "TInspectorImp.h"
 #include "TROOT.h"
 
-TGuiFactory *gGuiFactory = 0;
-TGuiFactory *gBatchGuiFactory = 0;
+TGuiFactory *gGuiFactory = nullptr;
+TGuiFactory *gBatchGuiFactory = nullptr;
 
 ClassImp(TGuiFactory);
 
@@ -116,5 +116,5 @@ TInspectorImp *TGuiFactory::CreateInspectorImp(const TObject *obj, UInt_t width,
    }
 
    gROOT->ProcessLine(Form("TInspectCanvas::Inspector((TObject*)0x%lx);", (ULong_t)obj));
-   return 0;
+   return nullptr;
 }

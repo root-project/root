@@ -132,7 +132,7 @@ public:
     }
 
     // cancel redirection
-    gSystem->RedirectOutput(0);
+    gSystem->RedirectOutput(nullptr);
 
     // change working directory to original one
     gSystem->ChangeDirectory(fOldDirectory);
@@ -285,7 +285,7 @@ private:
       return kFALSE;
 
     RooLinkedListIter it = set1->iterator();
-    RooAbsArg* arg = 0;
+    RooAbsArg *arg = nullptr;
     while((arg = (RooAbsArg*)it.Next()))
     {
       RooRealVar * par = dynamic_cast<RooRealVar*>(arg);
@@ -315,9 +315,9 @@ private:
     }
 
     RooLinkedListIter it = rPars1.iterator();
-    RooRealVar* arg1 = 0;
-    RooRealVar* arg2 = 0;
-    TObject* obj = 0;
+    RooRealVar *arg1 = nullptr;
+    RooRealVar *arg2 = nullptr;
+    TObject *obj = nullptr;
     while((obj = it.Next()))
     {
       // checks only for RooRealVars implemented
@@ -452,7 +452,9 @@ private:
     RooFitResult* r1 = rPDF1.fitTo(rTestData,Save(), RooFit::Minimizer(minimizerType.c_str()));
     //L.M:  for minuit we need ot rest otherwise fit could fail
     if (minimizerType == "Minuit") {
-       if (gMinuit) { delete gMinuit; gMinuit=0; }
+       if (gMinuit) { delete gMinuit;
+          gMinuit = nullptr;
+       }
     }
     RooFitResult* r2 = rPDF2.fitTo(rTestData,Save(), RooFit::Minimizer(minimizerType.c_str()));
 

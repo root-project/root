@@ -86,8 +86,10 @@ public:
    krb5_ap_rep_enc_part *fRepRet;
    char                 *fData;
 
-   TKrb5CleanUp() : fSignal(false), fContext(0), fCcdef(0), fClient(0),
-      fServer(0), fAuthContext(0), fRepRet(0), fData(0) {
+   TKrb5CleanUp()
+      : fSignal(false), fContext(nullptr), fCcdef(nullptr), fClient(nullptr), fServer(nullptr), fAuthContext(nullptr),
+        fRepRet(nullptr), fData(nullptr)
+   {
    }
 
    ~TKrb5CleanUp() {
@@ -463,7 +465,7 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det,
    }
 
    // authenticate
-   krb5_auth_context auth_context = 0;
+   krb5_auth_context auth_context = nullptr;
    int sockd = sock->GetDescriptor();
    char proto_version[100] = "krootd_v_1";
    krb5_data cksum_data;
@@ -488,12 +490,10 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det,
           "Sending kerberos authentication to %s",
           serv_host.Data());
 
-   retval = krb5_sendauth(context, &auth_context, (krb5_pointer)&sockd,
-                          proto_version, client, server,
-                          AP_OPTS_MUTUAL_REQUIRED,
-                          &cksum_data,
-                          0, // not rolling our own creds, using ccache
-                          ccdef, &err_ret, &rep_ret, 0); // ugh!
+   retval = krb5_sendauth(context, &auth_context, (krb5_pointer)&sockd, proto_version, client, server,
+                          AP_OPTS_MUTUAL_REQUIRED, &cksum_data,
+                          nullptr,                             // not rolling our own creds, using ccache
+                          ccdef, &err_ret, &rep_ret, nullptr); // ugh!
 
    // handle the reply (this is a verbatim copy from the kerberos
    // sample client source)
@@ -531,7 +531,7 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det,
       if (sock->GetServType() == TSocket::kPROOFD || version < 4) {
 
          krb5_data outdata;
-         outdata.data = 0;
+         outdata.data = nullptr;
 
          retval = krb5_auth_con_genaddrs(context, auth_context,
                        sockd, KRB5_AUTH_CONTEXT_GENERATE_LOCAL_FULL_ADDR);
@@ -541,9 +541,7 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det,
                   error_message(retval));
          }
 
-         retval = krb5_fwd_tgt_creds(context, auth_context, 0 /*host*/,
-                                     client, server, ccdef, true,
-                                     &outdata);
+         retval = krb5_fwd_tgt_creds(context, auth_context, nullptr /*host*/, client, server, ccdef, true, &outdata);
          if (retval) {
             Error("Krb5Authenticate","fwd_tgt_creds failed: %s\n",
                   error_message(retval));
@@ -653,7 +651,7 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det,
       user = lUser;
 
       // Receive token
-      char *token = 0;
+      char *token = nullptr;
       if (reuse == 1 && offset > -1) {
          if (TAuthenticate::SecureRecv(sock, 1, rsaKey, &token) == -1) {
             Warning("Krb5Auth",
@@ -667,9 +665,8 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det,
 
       // Create SecContext object
       TRootSecContext *ctx =
-         auth->GetHostAuth()->CreateSecContext((const char *)lUser,
-             auth->GetRemoteHost(), (Int_t)TAuthenticate::kKrb5, offset,
-             details, token, expDate, 0, rsaKey);
+         auth->GetHostAuth()->CreateSecContext((const char *)lUser, auth->GetRemoteHost(), (Int_t)TAuthenticate::kKrb5,
+                                               offset, details, token, expDate, nullptr, rsaKey);
       // Transmit it to TAuthenticate
       auth->SetSecContext(ctx);
 
@@ -685,10 +682,8 @@ Int_t Krb5Authenticate(TAuthenticate *auth, TString &user, TString &det,
 
       // Get a SecContext for the record and avoid problems
       // with fSecContext undefined in TAuthenticate
-      TRootSecContext *ctx =
-         auth->GetHostAuth()->CreateSecContext((const char *)user,
-             auth->GetRemoteHost(), (Int_t)TAuthenticate::kKrb5, -1,
-             details, 0);
+      TRootSecContext *ctx = auth->GetHostAuth()->CreateSecContext((const char *)user, auth->GetRemoteHost(),
+                                                                   (Int_t)TAuthenticate::kKrb5, -1, details, nullptr);
       // Transmit it to TAuthenticate
       auth->SetSecContext(ctx);
    }
@@ -751,7 +746,7 @@ Int_t Krb5CheckCred(krb5_context kCont, krb5_ccache Cc,
                     TString principal, TDatime &expDate)
 {
    Int_t retval;
-   Int_t now = time(0);
+   Int_t now = time(nullptr);
    Int_t valid = -1;
 
    TString pdata = principal;

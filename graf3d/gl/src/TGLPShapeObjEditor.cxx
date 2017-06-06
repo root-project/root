@@ -71,18 +71,15 @@ enum EGLEditorIdent {
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor of TGLPhysicalShape editor GUI.
 
-TGLPShapeObjEditor::TGLPShapeObjEditor(const TGWindow *p,  Int_t width, Int_t height, UInt_t options, Pixel_t back)
-   : TGedFrame(p,  width, height, options | kVerticalFrame, back),
-     fLb(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 2, 2, 3, 3), //button
-     fLe(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 0, 0, 3, 3), //entries
-     fLl(kLHintsLeft, 0, 8, 6, 0), // labels
-     fLs(kLHintsTop | kLHintsCenterX, 2, 2, 0, 0),  ///sliders
-     fGeoFrame(0),fGeoApplyButton(0),
-     fColorFrame(0),
-     fRedSlider(0), fGreenSlider(0), fBlueSlider(0), fAlphaSlider(0), fShineSlider(0),
-     fColorApplyButton(0), fColorApplyFamily(0),
-     fRGBA(),
-     fPShapeObj(0)
+TGLPShapeObjEditor::TGLPShapeObjEditor(const TGWindow *p, Int_t width, Int_t height, UInt_t options, Pixel_t back)
+   : TGedFrame(p, width, height, options | kVerticalFrame, back),
+     fLb(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 2, 2, 3, 3), // button
+     fLe(kLHintsTop | kLHintsCenterX | kLHintsExpandX, 0, 0, 3, 3), // entries
+     fLl(kLHintsLeft, 0, 8, 6, 0),                                  // labels
+     fLs(kLHintsTop | kLHintsCenterX, 2, 2, 0, 0),                  /// sliders
+     fGeoFrame(nullptr), fGeoApplyButton(nullptr), fColorFrame(nullptr), fRedSlider(nullptr), fGreenSlider(nullptr),
+     fBlueSlider(nullptr), fAlphaSlider(nullptr), fShineSlider(nullptr), fColorApplyButton(nullptr),
+     fColorApplyFamily(nullptr), fRGBA(), fPShapeObj(nullptr)
 {
    fRGBA[12] = fRGBA[13] = fRGBA[14] = 0.0f;
    fRGBA[15] = 1.0f;
@@ -107,7 +104,7 @@ TGLPShapeObjEditor::~TGLPShapeObjEditor()
 void TGLPShapeObjEditor::SetPShape(TGLPhysicalShape * shape)
 {
    TGLPShapeRef::SetPShape(shape);
-   if (shape == 0 && fGedEditor->GetModel() == fPShapeObj)
+   if (shape == nullptr && fGedEditor->GetModel() == fPShapeObj)
       fGedEditor->SetModel(fGedEditor->GetPad(), fPShapeObj->fViewer, kButton1Down);
 }
 
@@ -120,7 +117,7 @@ void TGLPShapeObjEditor::PShapeModified()
    if (fGedEditor->GetModel() == fPShapeObj)
       fGedEditor->SetModel(fGedEditor->GetPad(), fPShapeObj, kButton1Down);
    else
-      SetPShape(0);
+      SetPShape(nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -128,7 +125,7 @@ void TGLPShapeObjEditor::PShapeModified()
 
 void TGLPShapeObjEditor::SetModel(TObject* obj)
 {
-   fPShapeObj = 0;
+   fPShapeObj = nullptr;
 
    fPShapeObj = static_cast<TGLPShapeObj *>(obj);
    SetPShape(fPShapeObj->fPShape);
@@ -205,7 +202,7 @@ void TGLPShapeObjEditor::CreateGeoControls()
 {
    fGeoFrame = CreateEditorTabSubFrame("Geometry");
 
-   TGLabel *label=0;
+   TGLabel *label = nullptr;
 
    // Postion container
    TGGroupFrame* container = new TGGroupFrame(fGeoFrame, "Object position:");
@@ -586,7 +583,7 @@ void TGLPShapeObjEditor::CreateColorControls()
 {
    fColorFrame = this;
 
-   fMatView = TGLWidget::Create(fColorFrame, kFALSE, kTRUE, 0, 120, 120);
+   fMatView = TGLWidget::Create(fColorFrame, kFALSE, kTRUE, nullptr, 120, 120);
    fColorFrame->AddFrame(fMatView, new TGLayoutHints(kLHintsTop | kLHintsCenterX, 2, 0, 2, 2));
 
    CreateColorRadioButtons();

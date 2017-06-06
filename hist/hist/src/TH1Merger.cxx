@@ -258,7 +258,7 @@ TH1Merger::EMergerType TH1Merger::ExamineHistograms() {
       if (gDebug)
          Info("TH1Merger::ExamineHistogram","Examine histogram %s - labels %d - same limits %d - axis found %d",h->GetName(),allHaveLabels,allSameLimits,initialLimitsFound );
 
-   }    while ( ( h = dynamic_cast<TH1*> ( next() ) ) != NULL );
+   } while ((h = dynamic_cast<TH1 *>(next())) != nullptr);
 
    if (!h && (*next) ) {
       Error("Merge","Attempt to merge object of class: %s to a %s",
@@ -305,7 +305,7 @@ void TH1Merger::DefineNewAxes() {
       Bool_t mustCleanup = fH0->TestBit(kMustCleanup);
       if (mustCleanup) fH0->ResetBit(kMustCleanup);
       fHClone = (TH1*)fH0->IsA()->New();
-      fHClone->SetDirectory(0);
+      fHClone->SetDirectory(nullptr);
       fH0->Copy(*fHClone);
       if (mustCleanup) fH0->SetBit(kMustCleanup);
       fH0->BufferEmpty(1);         // To remove buffer.
@@ -595,9 +595,9 @@ Bool_t TH1Merger::LabelMerge() {
          hist->GetBinXYZ(ibin, binx, biny, binz);
 
          // here only in the case of bins with labels
-         const char * labelX = 0; 
-         const char * labelY = 0; 
-         const char * labelZ = 0; 
+         const char *labelX = nullptr;
+         const char *labelY = nullptr;
+         const char *labelZ = nullptr;
          labelX=hist->GetXaxis()->GetBinLabel(binx);
          if (fH0->fDimension > 1) labelY = hist->GetYaxis()->GetBinLabel(biny);
          if (fH0->fDimension > 2) labelZ = hist->GetYaxis()->GetBinLabel(binz);

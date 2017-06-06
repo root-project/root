@@ -116,8 +116,8 @@ TGenCollectionProxy *TEmulatedCollectionProxy::InitializeEx(Bool_t silent)
 
 
    TClass *cl = TClass::GetClass(fName.c_str());
-   fEnv = 0;
-   fKey = 0;
+   fEnv = nullptr;
+   fKey = nullptr;
    if ( cl )  {
       int nested = 0;
       std::vector<std::string> inside;
@@ -145,7 +145,7 @@ TGenCollectionProxy *TEmulatedCollectionProxy::InitializeEx(Bool_t silent)
             case ROOT::kSTLmultimap:
                nam = "pair<"+inside[1]+","+inside[2];
                nam += (nam[nam.length()-1]=='>') ? " >" : ">";
-               if (0==TClass::GetClass(nam.c_str())) {
+               if (nullptr == TClass::GetClass(nam.c_str())) {
                   // We need to emulate the pair
                   R__GenerateTClassForPair(inside[1],inside[2]);
                }
@@ -153,7 +153,7 @@ TGenCollectionProxy *TEmulatedCollectionProxy::InitializeEx(Bool_t silent)
                fKey   = new Value(inside[1],silent);
                fVal   = new Value(inside[2],silent);
                if ( !(*fValue).IsValid() || !fKey->IsValid() || !fVal->IsValid() ) {
-                  return 0;
+                  return nullptr;
                }
                fPointers |= 0 != (fKey->fCase&kIsPointer);
                if (fPointers || (0 != (fKey->fProperties&kNeedDelete))) {
@@ -173,7 +173,7 @@ TGenCollectionProxy *TEmulatedCollectionProxy::InitializeEx(Bool_t silent)
                fValue = new Value(inside[1],silent);
                fVal   = new Value(*fValue);
                if ( !(*fValue).IsValid() || !fVal->IsValid() ) {
-                  return 0;
+                  return nullptr;
                }
                if ( 0 == fValDiff )  {
                   fValDiff  = fVal->fSize;
@@ -192,13 +192,13 @@ TGenCollectionProxy *TEmulatedCollectionProxy::InitializeEx(Bool_t silent)
       Fatal("TEmulatedCollectionProxy","Components of %s not analysed!",cl->GetName());
    }
    Fatal("TEmulatedCollectionProxy","Collection class %s not found!",fTypeinfo.name());
-   return 0;
+   return nullptr;
 }
 
 Bool_t TEmulatedCollectionProxy::IsValid() const
 {
    // Return true if the collection proxy was well initialized.
-   return  (0 != fCreateEnv.call);
+   return (nullptr != fCreateEnv.call);
 }
 
 UInt_t TEmulatedCollectionProxy::Size() const
@@ -253,7 +253,7 @@ void TEmulatedCollectionProxy::Shrink(UInt_t nCurr, UInt_t left, Bool_t force )
                   //(but only when needed).
                   void* ptr = h->ptr();
                   if (force) fKey->fType->Destructor(ptr);
-                  h->set(0);
+                  h->set(nullptr);
                }
                break;
             case kIsPointer|kBIT_ISSTRING:
@@ -262,14 +262,14 @@ void TEmulatedCollectionProxy::Shrink(UInt_t nCurr, UInt_t left, Bool_t force )
                   //Eventually we'll need to delete this
                   //(but only when needed).
                   if (force) delete (std::string*)h->ptr();
-                  h->set(0);
+                  h->set(nullptr);
                }
                break;
             case kIsPointer|kBIT_ISTSTRING|kIsClass:
                for( i=nCurr; i<left; ++i, addr += fValDiff )   {
                   StreamHelper* h = (StreamHelper*)addr;
                   if (force) delete (TString*)h->ptr();
-                  h->set(0);
+                  h->set(nullptr);
                }
                break;
          }
@@ -299,27 +299,27 @@ void TEmulatedCollectionProxy::Shrink(UInt_t nCurr, UInt_t left, Bool_t force )
                   if ( p && force )  {
                      fVal->fType->Destructor(p);
                   }
-                  h->set(0);
+                  h->set(nullptr);
                }
                break;
             case kIsPointer|kBIT_ISSTRING:
                for( i=nCurr; i<left; ++i, addr += fValDiff )   {
                   StreamHelper* h = (StreamHelper*)addr;
                   if (force) delete (std::string*)h->ptr();
-                  h->set(0);
+                  h->set(nullptr);
                }
                break;
             case kIsPointer|kBIT_ISTSTRING|kIsClass:
                for( i=nCurr; i<left; ++i, addr += fValDiff )   {
                   StreamHelper* h = (StreamHelper*)addr;
                   if (force) delete (TString*)h->ptr();
-                  h->set(0);
+                  h->set(nullptr);
                }
                break;
          }
    }
    c->resize(left*fValDiff,0);
-   fEnv->fStart = left>0 ? &(*c->begin()) : 0;
+   fEnv->fStart = left > 0 ? &(*c->begin()) : nullptr;
    return;
 }
 
@@ -330,7 +330,7 @@ void TEmulatedCollectionProxy::Expand(UInt_t nCurr, UInt_t left)
    PCont_t c   = PCont_t(fEnv->fObject);
    c->resize(left*fValDiff,0);
    void *oldstart = fEnv->fStart;
-   fEnv->fStart = left>0 ? &(*c->begin()) : 0;
+   fEnv->fStart = left > 0 ? &(*c->begin()) : nullptr;
 
    char* addr = ((char*)fEnv->fStart) + fValDiff*nCurr;
    switch ( fSTL_type )  {
@@ -360,8 +360,7 @@ void TEmulatedCollectionProxy::Expand(UInt_t nCurr, UInt_t left)
             case kIsPointer|kIsClass:
             case kIsPointer|kBIT_ISSTRING:
             case kIsPointer|kBIT_ISTSTRING|kIsClass:
-               for( i=nCurr; i<left; ++i, addr += fValDiff )
-                  *(void**)addr = 0;
+               for (i = nCurr; i < left; ++i, addr += fValDiff) *(void **)addr = nullptr;
                break;
          }
          addr = ((char*)fEnv->fStart)+fValOffset+fValDiff*nCurr;
@@ -394,8 +393,7 @@ void TEmulatedCollectionProxy::Expand(UInt_t nCurr, UInt_t left)
             case kIsPointer|kIsClass:
             case kIsPointer|kBIT_ISSTRING:
             case kIsPointer|kBIT_ISTSTRING|kIsClass:
-               for( i=nCurr; i<left; ++i, addr += fValDiff )
-                  *(void**)addr = 0;
+               for (i = nCurr; i < left; ++i, addr += fValDiff) *(void **)addr = nullptr;
                break;
          }
          break;
@@ -409,7 +407,7 @@ void TEmulatedCollectionProxy::Resize(UInt_t left, Bool_t force)
    if ( fEnv && fEnv->fObject )   {
       size_t nCurr = Size();
       PCont_t c = PCont_t(fEnv->fObject);
-      fEnv->fStart = nCurr>0 ? &(*c->begin()) : 0;
+      fEnv->fStart = nCurr > 0 ? &(*c->begin()) : nullptr;
       if ( left == nCurr )  {
          return;
       }
@@ -430,12 +428,12 @@ void* TEmulatedCollectionProxy::At(UInt_t idx)
       PCont_t c = PCont_t(fEnv->fObject);
       size_t  s = c->size();
       if ( idx >= (s/fValDiff) )  {
-         return 0;
+         return nullptr;
       }
-      return idx<(s/fValDiff) ? ((char*)&(*c->begin()))+idx*fValDiff : 0;
+      return idx < (s / fValDiff) ? ((char *)&(*c->begin())) + idx * fValDiff : nullptr;
    }
    Fatal("TEmulatedCollectionProxy","At> Logic error - no proxy object set.");
-   return 0;
+   return nullptr;
 }
 
 void* TEmulatedCollectionProxy::Allocate(UInt_t n, Bool_t forceDelete)
@@ -618,7 +616,7 @@ static TStreamerElement* R__CreateEmulatedElement(const char *dmName, const char
       if (dmIsPtr && dtype != kCharStar) {
          Error("Pair Emulation Building","%s is not yet supported in pair emulation",
                dmFull);
-         return 0;
+         return nullptr;
       } else {
          TStreamerElement *el = new TStreamerBasicType(dmName,dmTitle,offset,dtype,dmFull);
          el->SetSize(dsize);
@@ -670,7 +668,7 @@ static TStreamerInfo *R__GenerateTClassForPair(const std::string &fname, const s
    std::string pname = "pair<"+fname+","+sname;
    pname += (pname[pname.length()-1]=='>') ? " >" : ">";
    i->SetName(pname.c_str());
-   i->SetClass(0);
+   i->SetClass(nullptr);
    i->GetElements()->Delete();
    TStreamerElement *fel = R__CreateEmulatedElement("first", fname.c_str(), 0);
    Int_t size = 0;
@@ -683,14 +681,14 @@ static TStreamerInfo *R__GenerateTClassForPair(const std::string &fname, const s
       if (size%sp != 0) size = size - size%sp + sp;
    } else {
       delete i;
-      return 0;
+      return nullptr;
    }
    TStreamerElement *second = R__CreateEmulatedElement("second", sname.c_str(), size);
    if (second) {
       i->GetElements()->Add( second );
    } else {
       delete i;
-      return 0;
+      return nullptr;
    }
    Int_t oldlevel = gErrorIgnoreLevel;
    // Hide the warning about the missing pair dictionary.

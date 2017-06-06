@@ -51,9 +51,9 @@ TDataSetIter::TDataSetIter(TDataSet *link, Bool_t dir)
    fWorkingDataSet= fRootDataSet   =link;
    fMaxDepth      = fDepth         =1;
    fDataSet= fgNullDataSet ;
-   fNext = link ? new TIter(link->GetCollection() ,dir):0;
+   fNext = link ? new TIter(link->GetCollection(), dir) : nullptr;
    for(UInt_t i = 0; i < sizeof(fNextSet) / sizeof(TIter*); ++i) {
-      fNextSet[i] = (TIter*)0;
+      fNextSet[i] = (TIter *)nullptr;
    }
 }
 
@@ -66,14 +66,14 @@ TDataSetIter::TDataSetIter(TDataSet *link, Int_t depth, Bool_t dir)
    fMaxDepth    = depth;
    fDepth       = 1;
    fDataSet     = fgNullDataSet;
-   fNext        = (link)? new TIter(link->GetCollection() ,dir):0;
+   fNext = (link) ? new TIter(link->GetCollection(), dir) : nullptr;
 
    // Create a DataSet iterator to pass all nodes of the
    //     "depth"  levels
    //  of  TDataSet *link
 
    for(UInt_t i = 0; i < sizeof(fNextSet) / sizeof(TIter*); ++i) {
-      fNextSet[i] = (TIter*)0;
+      fNextSet[i] = (TIter *)nullptr;
    }
    if (fMaxDepth != 1) {
       fNextSet[0] = fNext;
@@ -136,7 +136,7 @@ TDataSet *TDataSetIter::GetNullSet()
 
 TDataSet *TDataSetIter::Add(TDataSet *set, TDataSet *dataset)
 {
-   if (!set) return 0;
+   if (!set) return nullptr;
    TDataSet *s =  dataset;
    if (!s) s = Cwd();
    if (s) {
@@ -151,7 +151,7 @@ TDataSet *TDataSetIter::Add(TDataSet *set, TDataSet *dataset)
       if (fNext) {
          Error("Add","TDataSetIter.has been corrupted ;-!");
          delete fNext;
-         fNext = 0;
+         fNext = nullptr;
       }
       fNext = new TIter(s->GetCollection() );
    }
@@ -175,8 +175,8 @@ TDataSet *TDataSetIter::Add(TDataSet *set, TDataSet *dataset)
 
 TDataSet *TDataSetIter::Add(TDataSet *dataset, const Char_t *path)
 {
-   if (!dataset) return 0;
-   TDataSet *set = 0;
+   if (!dataset) return nullptr;
+   TDataSet *set = nullptr;
    if (path && strlen(path)) set = Find(path);
    return Add(dataset,set);
 }
@@ -198,7 +198,7 @@ TDataSet *TDataSetIter::Add(TDataSet *dataset, const Char_t *path)
 //////////////////////////////////////////////////////////////////////
 
 TDataSet *TDataSetIter::Cd(const Char_t *dirname){
-   TDataSet *set = 0;
+   TDataSet *set = nullptr;
    if (strcmp(dirname,".."))
       set =  Find(dirname);
    else
@@ -225,7 +225,7 @@ TDataSet *TDataSetIter::Cd(const Char_t *dirname){
 
 TDataSet *TDataSetIter::Cd(TDataSet *ds)
 {
-   TDataSet *nextSet = 0;
+   TDataSet *nextSet = nullptr;
    if (Cwd()) {
       TDataSetIter next(Cwd(),0);
       while ( (nextSet = next()) )
@@ -254,7 +254,7 @@ TDataSet *TDataSetIter::Dir(Char_t *dirname)
 Int_t TDataSetIter::Du() const {
    if (!fWorkingDataSet) return 0;
    TDataSetIter next(fWorkingDataSet,0);
-   TDataSet *nextset = 0;
+   TDataSet *nextset = nullptr;
    Int_t count = 0;
    while((nextset = (count) ? next():fWorkingDataSet)) {
       count++;
@@ -303,19 +303,19 @@ TDataSet  *TDataSetIter::FindByTitle(const Char_t *title,const Char_t *path,Opti
 
 TDataSet *TDataSetIter::FindDataSet(const Char_t *name,const Char_t *path,Option_t *opt)
 {
-   if (!name || !name[0]) return 0;
+   if (!name || !name[0]) return nullptr;
    if (strchr(name,'/')) {
       Error("FindDataSet","The name of the object <%s> can not contain any \"/\"",name);
-      return 0;
+      return nullptr;
    }
 
    Bool_t opti = opt ? strcasecmp(opt,"-i") == 0 : kFALSE;
    Bool_t optt = opt ? strcasecmp(opt,"-t") == 0 : kFALSE;
 
-   TDataSet *startset = 0;
+   TDataSet *startset = nullptr;
    if (path && strlen(path)) startset = Find(path);
    else                      startset = fWorkingDataSet;
-   if (!startset) return 0;
+   if (!startset) return nullptr;
 
    TDataSet *set = startset;
    if ( !((opti && strcasecmp( optt ? set->GetTitle() : set->GetName(),name) == 0 ) ||
@@ -340,16 +340,16 @@ TDataSet *TDataSetIter::FindDataSet(const Char_t *name,const Char_t *path,Option
 
 TDataSet *TDataSetIter::FindDataSet(TDataSet *set,const Char_t *path,Option_t *opt)
 {
-   if (!set) return 0;
+   if (!set) return nullptr;
    if (opt) {/* no used */}
 
-   TDataSet *startset = 0;
+   TDataSet *startset = nullptr;
    if (path) startset = Find(path);
    else      startset = fWorkingDataSet;
-   if (!startset) return 0;
+   if (!startset) return nullptr;
 
    TDataSetIter next(startset);
-   TDataSet *nextSet = 0;
+   TDataSet *nextSet = nullptr;
    while ( (nextSet = next()) )
       if (set == nextSet) break;
 
@@ -384,15 +384,15 @@ TObject  *TDataSetIter::FindObject(const TObject *dataset) const
 
 TDataSet *TDataSetIter::FindByPointer(TDataSet *set,const Char_t *path,Option_t *)
 {
-   if (!set) return 0;
+   if (!set) return nullptr;
 
-   TDataSet *startset = 0;
+   TDataSet *startset = nullptr;
    if (path && path[0]) startset = Find(path);
    else      startset = fWorkingDataSet;
-   if (!startset) return 0;
+   if (!startset) return nullptr;
 
    TDataSetIter next(startset);
-   TDataSet *nextSet = 0;
+   TDataSet *nextSet = nullptr;
    while ( (nextSet = next()) )
       if (set == nextSet) break;
 
@@ -429,9 +429,9 @@ Int_t TDataSetIter::Flag(TDataSet *dataset,UInt_t flag,TDataSet::EBitOpt reset)
 ///
 
 TDataSet *TDataSetIter::Ls(const Char_t *dirname,Option_t *opt) const {
-   TDataSet *set= 0;
+   TDataSet *set = nullptr;
    if (dirname && strlen(dirname)) set = ((TDataSetIter*)this)->Find(dirname);
-   if (!set && dirname==0) set=Cwd();
+   if (!set && dirname == nullptr) set = Cwd();
    if (set) set->ls(opt);
    return set;
 }
@@ -463,8 +463,8 @@ TDataSet *TDataSetIter::Ls(const Char_t *dirname,Int_t depth) const {
 
 TDataSet *TDataSetIter::Mkdir(const Char_t *dirname)
 {
-   TDataSet *set = 0;
-   set = Find(dirname,0,kTRUE);
+   TDataSet *set = nullptr;
+   set = Find(dirname, nullptr, kTRUE);
    if (!fNext)  Reset();  // Create a new iterator
    // If this dataset is first one then make it the root and working
    if (!fRootDataSet ) fRootDataSet  = set;
@@ -503,7 +503,7 @@ TDataSet *TDataSetIter::Rmdir(TDataSet *dataset,Option_t *)
          fWorkingDataSet = set->GetParent();
       }
       if (set == fRootDataSet) {
-         fRootDataSet = 0;
+         fRootDataSet = nullptr;
       }
       delete set;
    }
@@ -525,7 +525,8 @@ TDataSet *TDataSetIter::Rmdir(TDataSet *dataset,Option_t *)
 
 TDataSet *TDataSetIter::Next( TDataSet::EDataSetPass mode)
 {
-   if (fMaxDepth==1) fDataSet = fNext ? NextDataSet(*fNext) :0;
+   if (fMaxDepth==1)
+      fDataSet = fNext ? NextDataSet(*fNext) : nullptr;
    else {
       // Check the whether the next level does exist
       if (fDepth==0) fDepth = 1;
@@ -540,7 +541,7 @@ TDataSet *TDataSetIter::Next( TDataSet::EDataSetPass mode)
             if (fDepth >= 100) {
                Error("Next()"
                   ," too many (%d) nested levels of your TDataSet has been detected",fDepth);
-               return 0;
+               return nullptr;
             }
             fNextSet[fDepth-1] = new TIter(list);
          }
@@ -549,7 +550,7 @@ TDataSet *TDataSetIter::Next( TDataSet::EDataSetPass mode)
       // Pick the next object of the current level
       TIter *next = fNextSet[fDepth-1];
       if (next) {
-         fDataSet = 0;
+         fDataSet = nullptr;
          if (mode != TDataSet::kUp) fDataSet = NextDataSet(*next);
 
          // Go upstair if the current one has been escaped
@@ -585,7 +586,7 @@ TDataSet *TDataSetIter::NextDataSet(Int_t nDataSet)
 {
    TIter *next = fNextSet[nDataSet];
    if (next) return NextDataSet(*next);
-   return 0;
+   return nullptr;
 }
 ////////////////////////////////////////////////////////////////////////////////
 ///to be documented
@@ -619,10 +620,10 @@ TDataSet  *TDataSetIter::FindByPath(const Char_t *path, TDataSet *rootset,Bool_t
 TDataSet *TDataSetIter::Find(const Char_t *path, TDataSet *rootset,
                              Bool_t mkdirflag,Bool_t titleFlag)
 {
-   TDataSet *dataset=0,*dsnext=0,*ds=0;
+   TDataSet *dataset = nullptr, *dsnext = nullptr, *ds = nullptr;
    Int_t len=0,nextlen=0,yes=0,anywhere=0,rootdir=0;
-   const Char_t *name=0,*nextname=0;
-   TSeqCollection *tl=0;
+   const Char_t *name = nullptr, *nextname = nullptr;
+   TSeqCollection *tl = nullptr;
 
    name = path;
    if (!name) return rootset;
@@ -707,7 +708,7 @@ NOTFOUND:
       return Find(name,dataset,mkdirflag);
    }
 
-   return 0;
+   return nullptr;
 }
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -727,7 +728,7 @@ void TDataSetIter::Reset(TDataSet *l, int depth)
          TIter *s = fNextSet[i];
          if (s) delete s;
       }
-      fNext = 0; // this iterator has been deleted in the loop above
+      fNext = nullptr; // this iterator has been deleted in the loop above
    }
 
    fDepth = 0;
@@ -768,7 +769,7 @@ void TDataSetIter::Reset(TDataSet *l, int depth)
 
 TDataSet *TDataSetIter::Shunt(TDataSet *set, TDataSet *dataset)
 {
-   if (!set) return 0;
+   if (!set) return nullptr;
    TDataSet *s =  dataset;
    if (!s) s = Cwd();
    if (s) {
@@ -783,7 +784,7 @@ TDataSet *TDataSetIter::Shunt(TDataSet *set, TDataSet *dataset)
       if (fNext) {
          Error("Shunt","TDataSetIter.has been corrupted ;-!");
          delete fNext;
-         fNext = 0;
+         fNext = nullptr;
       }
       fNext = new TIter(s->GetCollection() );
    }
@@ -808,8 +809,8 @@ TDataSet *TDataSetIter::Shunt(TDataSet *set, TDataSet *dataset)
 
 TDataSet *TDataSetIter::Shunt(TDataSet *dataset, const Char_t *path)
 {
-   if (!dataset) return 0;
-   TDataSet *set = 0;
+   if (!dataset) return nullptr;
+   TDataSet *set = nullptr;
    if (path && strlen(path)) set = Find(path);
    return Shunt(dataset,set);
 }
@@ -831,5 +832,5 @@ TDataSet *TDataSetIter::operator[](const Char_t *path)
 {
    TDataSet *dataSet = Find(path);
    if (dataSet && dataSet->HasData()) return dataSet;
-   return 0;
+   return nullptr;
 }

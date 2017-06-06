@@ -47,26 +47,16 @@ using namespace std;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-HypoTestInverterOriginal::HypoTestInverterOriginal( ) :
-   fCalculator0(0),
-   fScannedVariable(0),
-   fResults(0),
-   fUseCLs(false),
-   fSize(0)
+HypoTestInverterOriginal::HypoTestInverterOriginal()
+   : fCalculator0(nullptr), fScannedVariable(nullptr), fResults(nullptr), fUseCLs(false), fSize(0)
 {
   // default constructor (doesn't do anything)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-HypoTestInverterOriginal::HypoTestInverterOriginal( HypoTestCalculator& myhc0,
-                RooRealVar& scannedVariable, double size ) :
-   TNamed( ),
-   fCalculator0(&myhc0),
-   fScannedVariable(&scannedVariable),
-   fResults(0),
-   fUseCLs(false),
-   fSize(size)
+HypoTestInverterOriginal::HypoTestInverterOriginal(HypoTestCalculator &myhc0, RooRealVar &scannedVariable, double size)
+   : TNamed(), fCalculator0(&myhc0), fScannedVariable(&scannedVariable), fResults(nullptr), fUseCLs(false), fSize(size)
 {
    // constructor from a reference to an HypoTestCalculator
    // (it must be an HybridCalculator type) and a RooRealVar for the variable
@@ -74,7 +64,7 @@ HypoTestInverterOriginal::HypoTestInverterOriginal( HypoTestCalculator& myhc0,
 
 
    HybridCalculatorOriginal * hc = dynamic_cast<HybridCalculatorOriginal *> (fCalculator0);
-   if (hc == 0) {
+   if (hc == nullptr) {
       Fatal("HypoTestInverterOriginal","Using non HybridCalculatorOriginal class IS NOT SUPPORTED");
    }
 
@@ -94,11 +84,11 @@ HypoTestInverterOriginal::~HypoTestInverterOriginal()
 
 void  HypoTestInverterOriginal::CreateResults() {
   // create a new HypoTestInverterResult to hold all computed results
-   if (fResults == 0) {
-      TString results_name = this->GetName();
-      results_name += "_results";
-      fResults = new HypoTestInverterResult(results_name,*fScannedVariable,ConfidenceLevel());
-      fResults->SetTitle("HypoTestInverterOriginal Result");
+  if (fResults == nullptr) {
+     TString results_name = this->GetName();
+     results_name += "_results";
+     fResults = new HypoTestInverterResult(results_name, *fScannedVariable, ConfidenceLevel());
+     fResults->SetTitle("HypoTestInverterOriginal Result");
    }
    fResults->UseCLs(fUseCLs);
 }

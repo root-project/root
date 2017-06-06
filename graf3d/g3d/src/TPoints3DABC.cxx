@@ -130,7 +130,7 @@ Int_t TPoints3DABC::GetN() const
 
 Float_t *TPoints3DABC::GetP() const
 {
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

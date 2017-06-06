@@ -29,7 +29,7 @@ ClassImp(TBuffer);
 
 static char *R__NoReAllocChar(char *, size_t, size_t)
 {
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -42,7 +42,7 @@ TBuffer::TBuffer(EMode mode)
    fBufSize      = kInitialSize;
    fMode         = mode;
    fVersion      = 0;
-   fParent       = 0;
+   fParent = nullptr;
 
    SetBit(kIsOwner);
 
@@ -51,7 +51,7 @@ TBuffer::TBuffer(EMode mode)
    fBufCur = fBuffer;
    fBufMax = fBuffer + fBufSize;
 
-   SetReAllocFunc( 0 );
+   SetReAllocFunc(nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -64,7 +64,7 @@ TBuffer::TBuffer(EMode mode, Int_t bufsiz)
    fBufSize  = bufsiz;
    fMode     = mode;
    fVersion  = 0;
-   fParent   = 0;
+   fParent = nullptr;
 
    SetBit(kIsOwner);
 
@@ -73,7 +73,7 @@ TBuffer::TBuffer(EMode mode, Int_t bufsiz)
    fBufCur = fBuffer;
    fBufMax = fBuffer + fBufSize;
 
-   SetReAllocFunc( 0 );
+   SetReAllocFunc(nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -92,7 +92,7 @@ TBuffer::TBuffer(EMode mode, Int_t bufsiz, void *buf, Bool_t adopt, ReAllocCharF
    fBufSize  = bufsiz;
    fMode     = mode;
    fVersion  = 0;
-   fParent   = 0;
+   fParent = nullptr;
 
    SetBit(kIsOwner);
 
@@ -127,8 +127,8 @@ TBuffer::~TBuffer()
       //printf("Deleting fBuffer=%lx\n", fBuffer);
       delete [] fBuffer;
    }
-   fBuffer = 0;
-   fParent = 0;
+   fBuffer = nullptr;
+   fParent = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -211,7 +211,7 @@ void TBuffer::Expand(Int_t newsize, Bool_t copy)
       fBuffer  = fReAllocFunc(fBuffer, newsize,
                               copy ? fBufSize : 0);
    }
-   if (fBuffer == 0) {
+   if (fBuffer == nullptr) {
       if (fReAllocFunc == TStorage::ReAllocChar) {
          Fatal("Expand","Failed to expand the data buffer using TStorage::ReAllocChar.");
       } else if (fReAllocFunc == R__NoReAllocChar) {
@@ -313,7 +313,7 @@ TClass *TBuffer::GetClass(const char *className)
 TProcessID *TBuffer::ReadProcessID(UShort_t pidf)
 {
    if (!pidf) return TProcessID::GetPID(); //may happen when cloning an object
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -339,7 +339,7 @@ void TBuffer::PushDataCache(TVirtualArray *obj)
 
 TVirtualArray *TBuffer::PeekDataCache() const
 {
-   if (fCacheStack.empty()) return 0;
+   if (fCacheStack.empty()) return nullptr;
    return fCacheStack.back();
 }
 

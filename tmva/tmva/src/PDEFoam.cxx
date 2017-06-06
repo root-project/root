@@ -101,36 +101,12 @@ using namespace std;
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor for streamer, user should not use it.
 
-TMVA::PDEFoam::PDEFoam() :
-   fName("PDEFoam"),
-   fDim(0),
-   fNCells(0),
-   fNBin(5),
-   fNSampl(2000),
-   fEvPerBin(0),
-   fMaskDiv(0),
-   fInhiDiv(0),
-   fNoAct(1),
-   fLastCe(-1),
-   fCells(0),
-   fHistEdg(0),
-   fRvec(0),
-   fPseRan(new TRandom3(4356)),
-   fAlpha(0),
-   fFoamType(kSeparate),
-   fXmin(0),
-   fXmax(0),
-   fNElements(0),
-   fNmin(100),
-   fMaxDepth(0),
-   fVolFrac(1.0/15.0),
-   fFillFoamWithOrigWeights(kFALSE),
-   fDTSeparation(kFoam),
-   fPeekMax(kTRUE),
-   fDistr(NULL),
-   fTimer(new Timer(0, "PDEFoam", kTRUE)),
-   fVariableNames(new TObjArray()),
-   fLogger(new MsgLogger("PDEFoam"))
+TMVA::PDEFoam::PDEFoam()
+   : fName("PDEFoam"), fDim(0), fNCells(0), fNBin(5), fNSampl(2000), fEvPerBin(0), fMaskDiv(nullptr), fInhiDiv(nullptr),
+     fNoAct(1), fLastCe(-1), fCells(nullptr), fHistEdg(nullptr), fRvec(nullptr), fPseRan(new TRandom3(4356)),
+     fAlpha(nullptr), fFoamType(kSeparate), fXmin(nullptr), fXmax(nullptr), fNElements(0), fNmin(100), fMaxDepth(0),
+     fVolFrac(1.0 / 15.0), fFillFoamWithOrigWeights(kFALSE), fDTSeparation(kFoam), fPeekMax(kTRUE), fDistr(nullptr),
+     fTimer(new Timer(0, "PDEFoam", kTRUE)), fVariableNames(new TObjArray()), fLogger(new MsgLogger("PDEFoam"))
 {
    // fVariableNames may delete it's heap-based content
    if (fVariableNames)
@@ -140,36 +116,12 @@ TMVA::PDEFoam::PDEFoam() :
 ////////////////////////////////////////////////////////////////////////////////
 /// User constructor, to be employed by the user
 
-TMVA::PDEFoam::PDEFoam(const TString& name) :
-   fName(name),
-   fDim(0),
-   fNCells(1000),
-   fNBin(5),
-   fNSampl(2000),
-   fEvPerBin(0),
-   fMaskDiv(0),
-   fInhiDiv(0),
-   fNoAct(1),
-   fLastCe(-1),
-   fCells(0),
-   fHistEdg(0),
-   fRvec(0),
-   fPseRan(new TRandom3(4356)),
-   fAlpha(0),
-   fFoamType(kSeparate),
-   fXmin(0),
-   fXmax(0),
-   fNElements(0),
-   fNmin(100),
-   fMaxDepth(0),
-   fVolFrac(1.0/15.0),
-   fFillFoamWithOrigWeights(kFALSE),
-   fDTSeparation(kFoam),
-   fPeekMax(kTRUE),
-   fDistr(NULL),
-   fTimer(new Timer(1, "PDEFoam", kTRUE)),
-   fVariableNames(new TObjArray()),
-   fLogger(new MsgLogger("PDEFoam"))
+TMVA::PDEFoam::PDEFoam(const TString &name)
+   : fName(name), fDim(0), fNCells(1000), fNBin(5), fNSampl(2000), fEvPerBin(0), fMaskDiv(nullptr), fInhiDiv(nullptr),
+     fNoAct(1), fLastCe(-1), fCells(nullptr), fHistEdg(nullptr), fRvec(nullptr), fPseRan(new TRandom3(4356)),
+     fAlpha(nullptr), fFoamType(kSeparate), fXmin(nullptr), fXmax(nullptr), fNElements(0), fNmin(100), fMaxDepth(0),
+     fVolFrac(1.0 / 15.0), fFillFoamWithOrigWeights(kFALSE), fDTSeparation(kFoam), fPeekMax(kTRUE), fDistr(nullptr),
+     fTimer(new Timer(1, "PDEFoam", kTRUE)), fVariableNames(new TObjArray()), fLogger(new MsgLogger("PDEFoam"))
 {
    if(strlen(name) > 128)
       Log() << kFATAL << "Name too long " << name.Data() << Endl;
@@ -188,11 +140,15 @@ TMVA::PDEFoam::~PDEFoam()
    delete fTimer;
    if (fDistr)  delete fDistr;
    if (fPseRan) delete fPseRan;
-   if (fXmin) { delete [] fXmin;  fXmin=0; }
-   if (fXmax) { delete [] fXmax;  fXmax=0; }
+   if (fXmin) { delete [] fXmin;
+      fXmin = nullptr;
+   }
+   if (fXmax) { delete [] fXmax;
+      fXmax = nullptr;
+   }
 
    ResetCellElements();
-   if(fCells!= 0) {
+   if (fCells != nullptr) {
       for(Int_t i=0; i<fNCells; i++) delete fCells[i]; // PDEFoamCell*[]
       delete [] fCells;
    }
@@ -207,36 +163,12 @@ TMVA::PDEFoam::~PDEFoam()
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy Constructor  NOT IMPLEMENTED (NEVER USED)
 
-TMVA::PDEFoam::PDEFoam(const PDEFoam &from) :
-   TObject(from)
-   , fDim(0)
-   , fNCells(0)
-   , fNBin(0)
-   , fNSampl(0)
-   , fEvPerBin(0)
-   , fMaskDiv(0)
-   , fInhiDiv(0)
-   , fNoAct(0)
-   , fLastCe(0)
-   , fCells(0)
-   , fHistEdg(0)
-   , fRvec(0)
-   , fPseRan(0)
-   , fAlpha(0)
-   , fFoamType(kSeparate)
-   , fXmin(0)
-   , fXmax(0)
-   , fNElements(0)
-   , fNmin(0)
-   , fMaxDepth(0)
-   , fVolFrac(1.0/15.0)
-   , fFillFoamWithOrigWeights(kFALSE)
-   , fDTSeparation(kFoam)
-   , fPeekMax(kTRUE)
-   , fDistr(0)
-   , fTimer(0)
-   , fVariableNames(0)
-   , fLogger(new MsgLogger(*from.fLogger))
+TMVA::PDEFoam::PDEFoam(const PDEFoam &from)
+   : TObject(from), fDim(0), fNCells(0), fNBin(0), fNSampl(0), fEvPerBin(0), fMaskDiv(nullptr), fInhiDiv(nullptr),
+     fNoAct(0), fLastCe(0), fCells(nullptr), fHistEdg(nullptr), fRvec(nullptr), fPseRan(nullptr), fAlpha(nullptr),
+     fFoamType(kSeparate), fXmin(nullptr), fXmax(nullptr), fNElements(0), fNmin(0), fMaxDepth(0), fVolFrac(1.0 / 15.0),
+     fFillFoamWithOrigWeights(kFALSE), fDTSeparation(kFoam), fPeekMax(kTRUE), fDistr(nullptr), fTimer(nullptr),
+     fVariableNames(nullptr), fLogger(new MsgLogger(*from.fLogger))
 {
    Log() << kFATAL << "COPY CONSTRUCTOR NOT IMPLEMENTED" << Endl;
 
@@ -295,8 +227,8 @@ void TMVA::PDEFoam::Create()
    Bool_t addStatus = TH1::AddDirectoryStatus();
    TH1::AddDirectory(kFALSE);
 
-   if(fPseRan==0) Log() << kFATAL << "Random number generator not set" << Endl;
-   if(fDistr==0)  Log() << kFATAL << "Distribution function not set" << Endl;
+   if (fPseRan == nullptr) Log() << kFATAL << "Random number generator not set" << Endl;
+   if (fDistr == nullptr) Log() << kFATAL << "Distribution function not set" << Endl;
    if(fDim==0)    Log() << kFATAL << "Zero dimension not allowed" << Endl;
 
    /////////////////////////////////////////////////////////////////////////
@@ -304,20 +236,20 @@ void TMVA::PDEFoam::Create()
    //  it is done globally, not for each cell, to save on allocation time //
    /////////////////////////////////////////////////////////////////////////
    fRvec = new Double_t[fDim];   // Vector of random numbers
-   if(fRvec==0)  Log() << kFATAL << "Cannot initialize buffer fRvec" << Endl;
+   if (fRvec == nullptr) Log() << kFATAL << "Cannot initialize buffer fRvec" << Endl;
 
    if(fDim>0){
       fAlpha = new Double_t[fDim];    // sum<1 for internal parametrization of the simplex
-      if(fAlpha==0)  Log() << kFATAL << "Cannot initialize buffer fAlpha" << Endl;
+      if (fAlpha == nullptr) Log() << kFATAL << "Cannot initialize buffer fAlpha" << Endl;
    }
 
    //====== List of directions inhibited for division
-   if(fInhiDiv == 0){
+   if (fInhiDiv == nullptr) {
       fInhiDiv = new Int_t[fDim];
       for(Int_t i=0; i<fDim; i++) fInhiDiv[i]=0;
    }
    //====== Dynamic mask used in Explore for edge determination
-   if(fMaskDiv == 0){
+   if (fMaskDiv == nullptr) {
       fMaskDiv = new Int_t[fDim];
       for(Int_t i=0; i<fDim; i++) fMaskDiv[i]=1;
    }
@@ -357,7 +289,7 @@ void TMVA::PDEFoam::Create()
 void TMVA::PDEFoam::InitCells()
 {
    fLastCe =-1;                             // Index of the last cell
-   if(fCells!= 0) {
+   if (fCells != nullptr) {
       for(Int_t i=0; i<fNCells; i++) delete fCells[i];
       delete [] fCells;
    }
@@ -375,7 +307,7 @@ void TMVA::PDEFoam::InitCells()
    /////////////////////////////////////////////////////////////////////////////
    //              Single Root Hypercube                                      //
    /////////////////////////////////////////////////////////////////////////////
-   CellFill(1,   0);  //  0-th cell ACTIVE
+   CellFill(1, nullptr); //  0-th cell ACTIVE
 
    // Exploration of the root cell(s)
    for(Long_t iCell=0; iCell<=fLastCe; iCell++){
@@ -397,12 +329,12 @@ Int_t TMVA::PDEFoam::CellFill(Int_t status, PDEFoamCell *parent)
 
    cell = fCells[fLastCe];
 
-   cell->Fill(status, parent, 0, 0);
+   cell->Fill(status, parent, nullptr, nullptr);
 
    cell->SetBest( -1);         // pointer for planning division of the cell
    cell->SetXdiv(0.5);         // factor for division
    Double_t xInt2,xDri2;
-   if(parent!=0){
+   if (parent != nullptr) {
       xInt2  = 0.5*parent->GetIntg();
       xDri2  = 0.5*parent->GetDriv();
       cell->SetIntg(xInt2);
@@ -456,7 +388,7 @@ void TMVA::PDEFoam::Explore(PDEFoamCell *cell)
 
    Double_t *xRand = new Double_t[fDim];
 
-   Double_t *volPart=0;
+   Double_t *volPart = nullptr;
 
    // calculate volume scale
    Double_t vol_scale = 1.0;
@@ -551,7 +483,7 @@ void TMVA::PDEFoam::Explore(PDEFoamCell *cell)
 
    // correct/update integrals in all parent cells to the top of the tree
    Double_t  parIntg, parDriv;
-   for (parent = cell->GetPare(); parent!=0; parent = parent->GetPare()){
+   for (parent = cell->GetPare(); parent != nullptr; parent = parent->GetPare()) {
       parIntg = parent->GetIntg();
       parDriv = parent->GetDriv();
       parent->SetIntg( parIntg   +intTrue -intOld );
@@ -803,7 +735,7 @@ void TMVA::PDEFoam::Grow()
 void  TMVA::PDEFoam::SetInhiDiv(Int_t iDim, Int_t inhiDiv)
 {
    if(fDim==0) Log() << kFATAL << "SetInhiDiv: fDim=0" << Endl;
-   if(fInhiDiv == 0) {
+   if (fInhiDiv == nullptr) {
       fInhiDiv = new Int_t[ fDim ];
       for(Int_t i=0; i<fDim; i++) fInhiDiv[i]=0;
    }
@@ -831,16 +763,16 @@ void TMVA::PDEFoam::CheckAll(Int_t level)
    for(iCell=1; iCell<=fLastCe; iCell++) {
       cell = fCells[iCell];
       //  checking general rules
-      if( ((cell->GetDau0()==0) && (cell->GetDau1()!=0) ) ||
-          ((cell->GetDau1()==0) && (cell->GetDau0()!=0) ) ) {
+      if (((cell->GetDau0() == nullptr) && (cell->GetDau1() != nullptr)) ||
+          ((cell->GetDau1() == nullptr) && (cell->GetDau0() != nullptr))) {
          errors++;
          if (level==1) Log() << kFATAL << "ERROR: Cell's no %d has only one daughter " << iCell << Endl;
       }
-      if( (cell->GetDau0()==0) && (cell->GetDau1()==0) && (cell->GetStat()==0) ) {
+      if ((cell->GetDau0() == nullptr) && (cell->GetDau1() == nullptr) && (cell->GetStat() == 0)) {
          errors++;
          if (level==1) Log() << kFATAL << "ERROR: Cell's no %d  has no daughter and is inactive " << iCell << Endl;
       }
-      if( (cell->GetDau0()!=0) && (cell->GetDau1()!=0) && (cell->GetStat()==1) ) {
+      if ((cell->GetDau0() != nullptr) && (cell->GetDau1() != nullptr) && (cell->GetStat() == 1)) {
          errors++;
          if (level==1) Log() << kFATAL << "ERROR: Cell's no %d has two daughters and is active " << iCell << Endl;
       }
@@ -854,13 +786,13 @@ void TMVA::PDEFoam::CheckAll(Int_t level)
       }
 
       // checking daughters
-      if(cell->GetDau0()!=0) {
+      if (cell->GetDau0() != nullptr) {
          if(cell != (cell->GetDau0())->GetPare()) {
             errors++;
             if (level==1)  Log() << kFATAL << "ERROR: Cell's no %d daughter 0 not pointing to this cell " << iCell << Endl;
          }
       }
-      if(cell->GetDau1()!=0) {
+      if (cell->GetDau1() != nullptr) {
          if(cell != (cell->GetDau1())->GetPare()) {
             errors++;
             if (level==1) Log() << kFATAL << "ERROR: Cell's no %d daughter 1 not pointing to this cell " << iCell << Endl;
@@ -926,7 +858,7 @@ void TMVA::PDEFoam::PrintCell(Long_t iCell)
    // print the cell elements
    Log() << "Elements: [";
    TVectorD *vec = (TVectorD*)fCells[iCell]->GetElement();
-   if (vec != NULL){
+   if (vec != nullptr) {
       for (Int_t i=0; i<vec->GetNrows(); i++){
          if (i>0) Log() << ", ";
          Log() << GetCellElement(fCells[iCell], i);
@@ -978,7 +910,7 @@ void TMVA::PDEFoam::ResetCellElements()
       TObject* elements = fCells[iCell]->GetElement();
       if (elements) {
          delete elements;
-         fCells[iCell]->SetElement(NULL);
+         fCells[iCell]->SetElement(nullptr);
       }
    }
 }
@@ -1017,7 +949,7 @@ Bool_t TMVA::PDEFoam::CellValueIsUndefined( PDEFoamCell* /* cell */ )
 Float_t TMVA::PDEFoam::GetCellValue(const std::vector<Float_t> &xvec, ECellValue cv, PDEFoamKernelBase *kernel)
 {
    std::vector<Float_t> txvec(VarTransform(xvec));
-   if (kernel == NULL)
+   if (kernel == nullptr)
       return GetCellValue(FindCell(txvec), cv);
    else
       return kernel->Estimate(this, txvec, cv);
@@ -1236,7 +1168,7 @@ TH1D* TMVA::PDEFoam::Draw1Dim( ECellValue cell_value, Int_t nbin, PDEFoamKernelB
       std::vector<Float_t> txvec;
       txvec.push_back( VarTransform(0, h1->GetBinCenter(ibinx)) );
       Float_t val = 0;
-      if (kernel != NULL) {
+      if (kernel != nullptr) {
          // get cell value using the kernel
          val = kernel->Estimate(this, txvec, cell_value);
       } else {
@@ -1331,7 +1263,7 @@ TH2D* TMVA::PDEFoam::Project2( Int_t idim1, Int_t idim2, ECellValue cell_value, 
                else
                   tvec.push_back(txvec[i]);
             }
-            if (kernel != NULL) {
+            if (kernel != nullptr) {
                // get the cell value using the kernel
                sum_cv += kernel->Estimate(this, tvec, cell_value);
             } else {
@@ -1432,11 +1364,11 @@ Double_t TMVA::PDEFoam::GetCellElement( const PDEFoamCell *cell, UInt_t i ) cons
 
 void TMVA::PDEFoam::SetCellElement( PDEFoamCell *cell, UInt_t i, Double_t value )
 {
-   TVectorD *vec = NULL;
+   TVectorD *vec = nullptr;
 
    // if no cell elements are set, create TVectorD with i+1 entries,
    // ranging from [0,i]
-   if (cell->GetElement() == NULL) {
+   if (cell->GetElement() == nullptr) {
       vec = new TVectorD(i+1);
       vec->Zero();       // set all values to zero
       (*vec)(i) = value; // set element i to value
@@ -1564,8 +1496,7 @@ void TMVA::PDEFoam::RootPlot2dim( const TString& filename, TString opt,
       outfile <<"b1->SetFillStyle(0);"<<std::endl;
    }
 
-   if (fillcells)
-      (colors ? gStyle->SetPalette(1, 0) : gStyle->SetPalette(0) );
+   if (fillcells) (colors ? gStyle->SetPalette(1, nullptr) : gStyle->SetPalette(0));
 
    Float_t zmin = 1E8;  // minimal value (for color calculation)
    Float_t zmax = -1E8; // maximal value (for color calculation)
@@ -1667,5 +1598,5 @@ void TMVA::PDEFoam::FillBinarySearchTree( const Event* ev )
 void TMVA::PDEFoam::DeleteBinarySearchTree()
 {
    if(fDistr) delete fDistr;
-   fDistr = NULL;
+   fDistr = nullptr;
 }

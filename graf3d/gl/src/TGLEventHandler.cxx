@@ -55,25 +55,12 @@ ClassImp(TGLEventHandler);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TGLEventHandler::TGLEventHandler(TGWindow *w, TObject *obj) :
-   TGEventHandler      ("TGLEventHandler", w, obj),
-   fGLViewer           ((TGLViewer *)obj),
-   fMouseTimer         (0),
-   fLastPos            (-1, -1),
-   fLastMouseOverPos   (-1, -1),
-   fLastMouseOverShape (0),
-   fTooltip            (0),
-   fActiveButtonID     (0),
-   fLastEventState     (0),
-   fIgnoreButtonUp     (kFALSE),
-   fInPointerGrab      (kFALSE),
-   fMouseTimerRunning  (kFALSE),
-   fTooltipShown       (kFALSE),
-   fArcBall            (kFALSE),
-   fTooltipPixelTolerance (3),
-   fSecSelType(TGLViewer::kOnRequest),
-   fDoInternalSelection(kTRUE),
-   fViewerCentricControls(kFALSE)
+TGLEventHandler::TGLEventHandler(TGWindow *w, TObject *obj)
+   : TGEventHandler("TGLEventHandler", w, obj), fGLViewer((TGLViewer *)obj), fMouseTimer(nullptr), fLastPos(-1, -1),
+     fLastMouseOverPos(-1, -1), fLastMouseOverShape(nullptr), fTooltip(nullptr), fActiveButtonID(0), fLastEventState(0),
+     fIgnoreButtonUp(kFALSE), fInPointerGrab(kFALSE), fMouseTimerRunning(kFALSE), fTooltipShown(kFALSE),
+     fArcBall(kFALSE), fTooltipPixelTolerance(3), fSecSelType(TGLViewer::kOnRequest), fDoInternalSelection(kTRUE),
+     fViewerCentricControls(kFALSE)
 {
    fMouseTimer = new TTimer(this, 80);
    fTooltip    = new TGToolTip(0, 0, "", 650);
@@ -375,7 +362,7 @@ Bool_t TGLEventHandler::HandleEvent(Event_t *event)
 
 Bool_t TGLEventHandler::HandleFocusChange(Event_t *event)
 {
-   fGLViewer->MouseIdle(0, 0, 0);
+   fGLViewer->MouseIdle(nullptr, 0, 0);
    if (event->fType == kFocusIn) {
       if (fGLViewer->fDragAction != TGLViewer::kDragNone) {
          Error("TGLEventHandler::HandleFocusChange", "active drag-action at focus-in.");
@@ -407,7 +394,7 @@ Bool_t TGLEventHandler::HandleCrossing(Event_t *event)
       return kTRUE;
    }
 
-   fGLViewer->MouseIdle(0, 0, 0);
+   fGLViewer->MouseIdle(nullptr, 0, 0);
    if (event->fType == kEnterNotify) {
       if (fGLViewer->fDragAction != TGLViewer::kDragNone) {
          Error("TGLEventHandler::HandleCrossing", "active drag-action at enter-notify.");
@@ -499,7 +486,7 @@ Bool_t TGLEventHandler::HandleButton(Event_t * event)
    {
       GrabMouse();
 
-      fGLViewer->MouseIdle(0, 0, 0);
+      fGLViewer->MouseIdle(nullptr, 0, 0);
 
       fButtonPushPos.fX = event->fX;
       fButtonPushPos.fY = event->fY;
@@ -687,12 +674,11 @@ Bool_t TGLEventHandler::HandleDoubleClick(Event_t *event)
    fActiveButtonID = event->fCode;
    GrabMouse();
 
-   fGLViewer->MouseIdle(0, 0, 0);
+   fGLViewer->MouseIdle(nullptr, 0, 0);
    if (event->fCode == kButton1)
    {
       fGLViewer->DoubleClicked();
-      if (fGLViewer->GetSelected() == 0)
-         fGLViewer->SelectionChanged();
+      if (fGLViewer->GetSelected() == nullptr) fGLViewer->SelectionChanged();
    }
    return kTRUE;
 }
@@ -753,7 +739,7 @@ Bool_t TGLEventHandler::HandleKey(Event_t *event)
 
    fLastEventState = event->fState;
 
-   fGLViewer->MouseIdle(0, 0, 0);
+   fGLViewer->MouseIdle(nullptr, 0, 0);
    if (fGLViewer->IsLocked()) {
       if (gDebug>3) {
          Info("TGLEventHandler::HandleKey", "ignored - viewer is %s",
@@ -888,7 +874,7 @@ Bool_t TGLEventHandler::HandleKey(Event_t *event)
 
 Bool_t TGLEventHandler::HandleMotion(Event_t * event)
 {
-   fGLViewer->MouseIdle(0, 0, 0);
+   fGLViewer->MouseIdle(nullptr, 0, 0);
    if (fGLViewer->IsLocked()) {
       if (gDebug>3) {
          Info("TGLEventHandler::HandleMotion", "ignored - viewer is %s",
@@ -1033,10 +1019,10 @@ void TGLEventHandler::StopMouseTimer()
 void TGLEventHandler::ClearMouseOver()
 {
    fLastMouseOverPos.fX = fLastMouseOverPos.fY = -1;
-   fLastMouseOverShape = 0;
+   fLastMouseOverShape = nullptr;
    fGLViewer->MouseOver(fLastMouseOverShape);
    fGLViewer->MouseOver(fLastMouseOverShape, fLastEventState);
-   fGLViewer->MouseOver((TObject*)0, fLastEventState);
+   fGLViewer->MouseOver((TObject *)nullptr, fLastEventState);
 
    fGLViewer->ClearCurrentOvlElm();
 }

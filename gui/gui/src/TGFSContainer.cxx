@@ -224,7 +224,7 @@ Int_t TGFSFrameElement::Compare(const TObject *obj) const
 
 Bool_t TViewUpdateTimer::Notify()
 {
-   fContainer->HandleTimer(0);
+   fContainer->HandleTimer(nullptr);
    Reset();
    return kFALSE;
 }
@@ -243,13 +243,10 @@ void TGFileIcon::DoRedraw()
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a list view item.
 
-TGFileItem::TGFileItem(const TGWindow *p,
-                       const TGPicture *bpic, const TGPicture *blpic,
-                       const TGPicture *spic, const TGPicture *slpic,
-                       TGString *name, Int_t type, Long64_t size, Int_t uid,
-                       Int_t gid, Long_t modtime, EListViewMode viewMode,
-                       UInt_t options, ULong_t back) :
-   TGLVEntry(p, bpic, spic, name, 0, viewMode, options, back)
+TGFileItem::TGFileItem(const TGWindow *p, const TGPicture *bpic, const TGPicture *blpic, const TGPicture *spic,
+                       const TGPicture *slpic, TGString *name, Int_t type, Long64_t size, Int_t uid, Int_t gid,
+                       Long_t modtime, EListViewMode viewMode, UInt_t options, ULong_t back)
+   : TGLVEntry(p, bpic, spic, name, nullptr, viewMode, options, back)
 {
    FileStat_t buf;
 
@@ -258,7 +255,7 @@ TGFileItem::TGFileItem(const TGWindow *p,
    buf.fUid    = uid;
    buf.fGid    = gid;
    buf.fMtime  = modtime;
-   buf.fIsLink = (blpic != 0);  // FIXME: hack...
+   buf.fIsLink = (blpic != nullptr); // FIXME: hack...
 
    Init(blpic, slpic, buf, viewMode);
 }
@@ -266,12 +263,10 @@ TGFileItem::TGFileItem(const TGWindow *p,
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a list view item.
 
-TGFileItem::TGFileItem(const TGWindow *p,
-                       const TGPicture *bpic, const TGPicture *blpic,
-                       const TGPicture *spic, const TGPicture *slpic,
-                       TGString *name, FileStat_t &stat, EListViewMode viewMode,
-                       UInt_t options, ULong_t back) :
-   TGLVEntry(p, bpic, spic, name, 0, viewMode, options, back)
+TGFileItem::TGFileItem(const TGWindow *p, const TGPicture *bpic, const TGPicture *blpic, const TGPicture *spic,
+                       const TGPicture *slpic, TGString *name, FileStat_t &stat, EListViewMode viewMode, UInt_t options,
+                       ULong_t back)
+   : TGLVEntry(p, bpic, spic, name, nullptr, viewMode, options, back)
 {
    Init(blpic, slpic, stat, viewMode);
 }
@@ -285,8 +280,8 @@ void TGFileItem::Init(const TGPicture *blpic, const TGPicture *slpic,
    char tmp[256];
    Long64_t fsize, bsize;
 
-   fBuf = 0;
-   fDNDData.fData = 0;
+   fBuf = nullptr;
+   fDNDData.fData = nullptr;
    fDNDData.fDataLength = 0;
    fDNDData.fDataType = 0;
    fLcurrent =
@@ -373,14 +368,14 @@ void TGFileItem::Init(const TGPicture *blpic, const TGPicture *slpic,
    else
       fSubnames[4] = new TGString("1901-01-01 00:00");
 
-   fSubnames[5] = 0;
+   fSubnames[5] = nullptr;
 
    int i;
-   for (i = 0; fSubnames[i] != 0; ++i)
+   for (i = 0; fSubnames[i] != nullptr; ++i)
       ;
    fCtw = new int[i+1];
    fCtw[i] = 0;
-   for (i = 0; fSubnames[i] != 0; ++i)
+   for (i = 0; fSubnames[i] != nullptr; ++i)
       fCtw[i] = gVirtualX->TextWidth(fFontStruct, fSubnames[i]->GetString(),
                                      fSubnames[i]->GetLength());
 
@@ -441,7 +436,7 @@ TGFileContainer::TGFileContainer(const TGWindow *p, UInt_t w, UInt_t h,
    TGLVContainer(p, w, h, options, back)
 {
    fSortType  = kSortByName;
-   fFilter    = 0;
+   fFilter = nullptr;
    fMtime     = 0;
    fDirectory = gSystem->WorkingDirectory();
    fRefresh   = new TViewUpdateTimer(this, 1000);
@@ -476,7 +471,7 @@ TGFileContainer::TGFileContainer(TGCanvas *p, UInt_t options, ULong_t back) :
    TGLVContainer(p,options, back)
 {
    fSortType  = kSortByName;
-   fFilter    = 0;
+   fFilter = nullptr;
    fMtime     = 0;
    fDirectory = gSystem->WorkingDirectory();
    fRefresh   = new TViewUpdateTimer(this, 1000);
@@ -588,11 +583,11 @@ void TGFileContainer::GetFilePictures(const TGPicture **pic,
              const char *name, Bool_t /*small*/)
 {
    static TString cached_ext;
-   static const TGPicture *cached_spic = 0;
-   static const TGPicture *cached_lpic = 0;
-   const char *ext = name ? strrchr(name, '.') : 0;
-   *pic = 0;
-   *lpic = 0;
+   static const TGPicture *cached_spic = nullptr;
+   static const TGPicture *cached_lpic = nullptr;
+   const char *ext = name ? strrchr(name, '.') : nullptr;
+   *pic = nullptr;
+   *lpic = nullptr;
 
    if (fCachePictures && ext && cached_spic && cached_lpic && (cached_ext == ext)) {
       *pic = cached_spic;
@@ -618,10 +613,10 @@ void TGFileContainer::GetFilePictures(const TGPicture **pic,
          }
       }
    } else {
-      *pic = 0;
+      *pic = nullptr;
    }
 
-   if (*pic == 0) {
+   if (*pic == nullptr) {
       *pic = fDoc_t;
       *lpic = fDoc_s;
 
@@ -673,8 +668,8 @@ void TGFileContainer::GetFilePictures(const TGPicture **pic,
       }
    }
 
-   cached_lpic = 0;
-   cached_spic = 0;
+   cached_lpic = nullptr;
+   cached_spic = nullptr;
    cached_ext = "";
 }
 
@@ -726,13 +721,13 @@ void TGFileContainer::CreateFileList()
       fMtime = sbuf.fMtime;
 
    void *dirp;
-   if ((dirp = gSystem->OpenDirectory(".")) == 0) {
+   if ((dirp = gSystem->OpenDirectory(".")) == nullptr) {
       gSystem->ChangeDirectory(savdir.Data());
       return;
    }
 
    const char *name;
-   while ((name = gSystem->GetDirEntry(dirp)) != 0 && fDisplayStat) {
+   while ((name = gSystem->GetDirEntry(dirp)) != nullptr && fDisplayStat) {
       if (strcmp(name, ".") && strcmp(name, ".."))
          AddFile(name);
       gSystem->ProcessEvents();
@@ -749,7 +744,7 @@ TGFileItem *TGFileContainer::AddFile(const char *name,  const TGPicture *ipic,
                                      const TGPicture *ilpic)
 {
    TString     filename;
-   TGFileItem *item = 0;
+   TGFileItem *item = nullptr;
    const TGPicture *spic, *slpic;
    TGPicture *pic, *lpic;
 
@@ -769,8 +764,7 @@ TGFileItem *TGFileContainer::AddFile(const char *name,  const TGPicture *ipic,
    }
 
    filename = name;
-   if (R_ISDIR(sbuf.fMode) || fFilter == 0 ||
-       (fFilter && filename.Index(*fFilter) != kNPOS)) {
+   if (R_ISDIR(sbuf.fMode) || fFilter == nullptr || (fFilter && filename.Index(*fFilter) != kNPOS)) {
 
       if (ipic && ilpic) { // dynamic icons
          spic = ipic;
@@ -798,7 +792,7 @@ TGFileItem *TGFileContainer::AddRemoteFile(TObject *obj, const TGPicture *ipic,
                                            const TGPicture *ilpic)
 {
    TString     filename;
-   TGFileItem *item = 0;
+   TGFileItem *item = nullptr;
    const TGPicture *spic, *slpic;
    TGPicture *pic, *lpic;
 
@@ -809,8 +803,7 @@ TGFileItem *TGFileContainer::AddRemoteFile(TObject *obj, const TGPicture *ipic,
    robj->GetFileStat(&sbuf);
    filename = robj->GetName();
 
-   if (R_ISDIR(sbuf.fMode) || fFilter == 0 ||
-       (fFilter && filename.Index(*fFilter) != kNPOS)) {
+   if (R_ISDIR(sbuf.fMode) || fFilter == nullptr || (fFilter && filename.Index(*fFilter) != kNPOS)) {
 
       if (ipic && ilpic) { // dynamic icons
          spic = ipic;
@@ -835,7 +828,7 @@ TGFileItem *TGFileContainer::AddRemoteFile(TObject *obj, const TGPicture *ipic,
 void TGFileContainer::StopRefreshTimer()
 {
    if (fRefresh) delete fRefresh;
-   fRefresh = 0;
+   fRefresh = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

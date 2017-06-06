@@ -46,7 +46,9 @@ private:
    TBits        fTriggerBits;  //Bits triggered by this track.
 
 public:
-   Track() : fTriggerBits(64) { fNsp = 0; fPointValue = 0; }
+   Track() : fTriggerBits(64) { fNsp = 0;
+      fPointValue = nullptr;
+   }
    Track(const Track& orig);
    Track(Float_t random);
    virtual ~Track() {Clear(); delete [] fPointValue; fPointValue = nullptr; }
@@ -136,7 +138,7 @@ public:
    void          Clear(Option_t *option ="");
    Bool_t        IsValid() const { return fIsValid; }
    static void   Reset(Option_t *option ="");
-   void          ResetHistogramPointer() {fH=0;}
+   void ResetHistogramPointer() { fH = nullptr; }
    void          SetNseg(Int_t n) { fNseg = n; }
    void          SetNtrack(Int_t n) { fNtrack = n; }
    void          SetNvertex(Int_t n) { fNvertex = n; SetRandomVertex(); }

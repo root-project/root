@@ -54,7 +54,7 @@ static TString &IncludeNameBuffer() {
 
 static TStreamerBasicType *InitCounter(const char *countClass, const char *countName, TVirtualStreamerInfo *directive)
 {
-   TStreamerBasicType *counter = 0;
+   TStreamerBasicType *counter = nullptr;
 
    TClass *cl = TClass::GetClass(countClass);
 
@@ -64,28 +64,28 @@ static TStreamerBasicType *InitCounter(const char *countClass, const char *count
          // The info we have been passed is indeed describing the counter holder, just look there.
 
          TStreamerElement *element = (TStreamerElement *)directive->GetElements()->FindObject(countName);
-         if (!element) return 0;
-         if (element->IsA() != TStreamerBasicType::Class()) return 0;
+         if (!element) return nullptr;
+         if (element->IsA() != TStreamerBasicType::Class()) return nullptr;
          counter = (TStreamerBasicType*)element;
 
       } else {
          if (directive->GetClass()->GetListOfRealData()) {
             TRealData* rdCounter = (TRealData*) directive->GetClass()->GetListOfRealData()->FindObject(countName);
-            if (!rdCounter) return 0;
+            if (!rdCounter) return nullptr;
             TDataMember *dmCounter = rdCounter->GetDataMember();
             cl = dmCounter->GetClass();
          } else {
             TStreamerElement *element = (TStreamerElement *)directive->GetElements()->FindObject(countName);
-            if (!element) return 0;
-            if (element->IsA() != TStreamerBasicType::Class()) return 0;
+            if (!element) return nullptr;
+            if (element->IsA() != TStreamerBasicType::Class()) return nullptr;
             cl = directive->GetClass();
          }
-         if (cl==0) return 0;
+         if (cl == nullptr) return nullptr;
          counter = TVirtualStreamerInfo::GetElementCounter(countName,cl);
       }
    } else {
 
-      if (cl==0) return 0;
+      if (cl == nullptr) return nullptr;
       counter = TVirtualStreamerInfo::GetElementCounter(countName,cl);
    }
 
@@ -130,9 +130,9 @@ static void GetRange(const char *comments, Double_t &xmin, Double_t &xmax, Doubl
       if (!comma || comma >right) return;
    }
    //search if nbits is specified
-   const char *comma2 = 0;
+   const char *comma2 = nullptr;
    if (comma) comma2 = strstr(comma+1,",");
-   if (comma2 > right) comma2 = 0;
+   if (comma2 > right) comma2 = nullptr;
    Int_t nbits = 32;
    if (comma2) {
       TString sbits(comma2+1,right-comma2-1);
@@ -191,10 +191,10 @@ TStreamerElement::TStreamerElement()
    fNewType     = 0;
    fArrayDim    = 0;
    fArrayLength = 0;
-   fStreamer    = 0;
+   fStreamer = nullptr;
    fOffset      = 0;
    fClassObject = (TClass*)(-1);
-   fNewClass    = 0;
+   fNewClass = nullptr;
    fTObjectOffset = 0;
    fFactor      = 0;
    fXmin        = 0;
@@ -222,9 +222,9 @@ TStreamerElement::TStreamerElement(const char *name, const char *title, Int_t of
       R__LOCKGUARD(gInterpreterMutex);
       fTypeName    = TClassEdit::ResolveTypedef(typeName);
    }
-   fStreamer    = 0;
+   fStreamer = nullptr;
    fClassObject = (TClass*)(-1);
-   fNewClass    = 0;
+   fNewClass = nullptr;
    fTObjectOffset = 0;
    fFactor      = 0;
    fXmin        = 0;
@@ -571,7 +571,7 @@ void TStreamerElement::Update(const TClass *oldClass, TClass *newClass)
       if (fClassObject && fClassObject->IsTObject()) {
          fTObjectOffset = fClassObject->GetBaseClassOffset(TObject::Class());
       }
-   } else if (fClassObject==0) {
+   } else if (fClassObject == nullptr) {
       // Well since some emulated class is replaced by a real class, we can
       // assume a new library has been loaded.  If this is the case, we should
       // check whether the class now exist (this would be the case for example
@@ -596,25 +596,25 @@ ClassImp(TStreamerBase);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-TStreamerBase::TStreamerBase() :
-   // Abuse TStreamerElement data member that is not used by TStreamerBase
-   fBaseCheckSum( *( (UInt_t*)&(fMaxIndex[1]) ) ),
-   fStreamerFunc(0), fConvStreamerFunc(0), fStreamerInfo(0)
+TStreamerBase::TStreamerBase()
+   : // Abuse TStreamerElement data member that is not used by TStreamerBase
+     fBaseCheckSum(*((UInt_t *)&(fMaxIndex[1]))),
+     fStreamerFunc(nullptr), fConvStreamerFunc(nullptr), fStreamerInfo(nullptr)
 {
    // Default ctor.
 
    fBaseClass = (TClass*)(-1);
    fBaseVersion = 0;
-   fNewBaseClass = 0;
+   fNewBaseClass = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 TStreamerBase::TStreamerBase(const char *name, const char *title, Int_t offset)
-   : TStreamerElement(name,title,offset,TVirtualStreamerInfo::kBase,"BASE"),
+   : TStreamerElement(name, title, offset, TVirtualStreamerInfo::kBase, "BASE"),
      // Abuse TStreamerElement data member that is not used by TStreamerBase
-     fBaseCheckSum( *( (UInt_t*)&(fMaxIndex[1]) ) ),
-     fStreamerFunc(0), fConvStreamerFunc(0), fStreamerInfo(0)
+     fBaseCheckSum(*((UInt_t *)&(fMaxIndex[1]))), fStreamerFunc(nullptr), fConvStreamerFunc(nullptr),
+     fStreamerInfo(nullptr)
 
 {
    // Create a TStreamerBase object.
@@ -633,7 +633,7 @@ TStreamerBase::TStreamerBase(const char *name, const char *title, Int_t offset)
    } else {
       fBaseVersion = 0;
    }
-   fNewBaseClass = 0;
+   fNewBaseClass = nullptr;
    Init();
 }
 
@@ -697,9 +697,9 @@ void TStreamerBase::InitStreaming()
          fStreamerInfo = fBaseClass->FindStreamerInfo(fBaseCheckSum);
       }
    } else {
-      fStreamerFunc = 0;
-      fConvStreamerFunc = 0;
-      fStreamerInfo = 0;
+      fStreamerFunc = nullptr;
+      fConvStreamerFunc = nullptr;
+      fStreamerInfo = nullptr;
    }
 }
 
@@ -795,7 +795,7 @@ void TStreamerBase::Streamer(TBuffer &R__b)
       // order (derived class,base class) and hence the base class is not
       // yet emulated.
       fBaseClass = (TClass*)-1;
-      fNewBaseClass = 0;
+      fNewBaseClass = nullptr;
       // Eventually we need a v3 that stores directly fBaseCheckSum (and
       // a version of TStreamerElement should not stored fMaxIndex)
       if (R__v > 2) {
@@ -820,12 +820,12 @@ void TStreamerBase::Streamer(TBuffer &R__b)
 void TStreamerBase::Update(const TClass *oldClass, TClass *newClass)
 {
    if (fClassObject == oldClass) fClassObject = newClass;
-   else if (fClassObject == 0) {
+   else if (fClassObject == nullptr) {
       fClassObject = (TClass*)-1;
       GetClassPointer(); //force fClassObject
    }
    if (fBaseClass   == oldClass) fBaseClass   = newClass;
-   else if (fBaseClass == 0 ) {
+   else if (fBaseClass == nullptr) {
       fBaseClass = (TClass*)-1;
       GetClassPointer(); //force fClassObject
    }
@@ -888,9 +888,9 @@ ClassImp(TStreamerBasicPointer);
 ////////////////////////////////////////////////////////////////////////////////
 /// Default ctor.
 
-TStreamerBasicPointer::TStreamerBasicPointer() : fCountVersion(0),fCountName(),fCountClass(),fCounter(0)
+TStreamerBasicPointer::TStreamerBasicPointer() : fCountVersion(0), fCountName(), fCountClass(), fCounter(nullptr)
 {
-   fCounter = 0;
+   fCounter = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1001,7 +1001,7 @@ ClassImp(TStreamerLoop);
 ////////////////////////////////////////////////////////////////////////////////
 /// Default ctor.
 
-TStreamerLoop::TStreamerLoop() : fCountVersion(0),fCountName(),fCountClass(),fCounter(0)
+TStreamerLoop::TStreamerLoop() : fCountVersion(0), fCountName(), fCountClass(), fCounter(nullptr)
 {
 }
 
@@ -1722,7 +1722,7 @@ TStreamerSTL::TStreamerSTL(const char *name, const char *title, Int_t offset,
    char *s = new char[nch+1];
    strlcpy(s,t,nch+1);
    char *sopen  = strchr(s,'<');
-   if (sopen == 0) {
+   if (sopen == nullptr) {
       Fatal("TStreamerSTL","For %s, the type name (%s) is seemingly not a template (template argument not found)", name, s);
       return;
    }
@@ -1741,7 +1741,7 @@ TStreamerSTL::TStreamerSTL(const char *name, const char *title, Int_t offset,
    char *sclose = current; *sclose = 0; sclose--;
    char *sconst = strstr(sopen,"const ");
    char *sbracket = strstr(sopen,"<");
-   if (sconst && (sbracket==0 || sconst < sbracket)) {
+   if (sconst && (sbracket == nullptr || sconst < sbracket)) {
       // the string "const" may be part of the classname!
       char *pconst = sconst-1;
       if (*pconst == ' ' || *pconst == '<' || *pconst == '*' || *pconst == '\0') sopen = sconst + 5;
@@ -1858,7 +1858,7 @@ Int_t TStreamerSTL::GetSize() const
    // current size!
    TClass *cl = GetClassPointer();
    UInt_t size = 0;
-   if (cl==0) {
+   if (cl == nullptr) {
       if (!TestBit(kWarned)) {
          Error("GetSize","Could not find the TClass for %s.\n"
                "This is likely to have been a typedef, if possible please declare it in CINT to work around the issue\n",fTypeName.Data());

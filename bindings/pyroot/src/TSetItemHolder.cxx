@@ -34,7 +34,7 @@ PyObject* PyROOT::TSetItemHolder::PreProcessArgs(
    int nArgs = PyTuple_GET_SIZE( args );
    if ( nArgs <= 1 ) {
       PyErr_SetString( PyExc_TypeError, "insufficient arguments to __setitem__" );
-      return 0;
+      return nullptr;
    }
 
 // strip the last element of args to be used on return
@@ -49,7 +49,7 @@ PyObject* PyROOT::TSetItemHolder::PreProcessArgs(
    }
 
 // unroll any tuples, if present in the arguments
-   PyObject* unrolled = 0;
+   PyObject *unrolled = nullptr;
    if ( realsize != nArgs - 1 ) {
       unrolled = PyTuple_New( realsize );
 

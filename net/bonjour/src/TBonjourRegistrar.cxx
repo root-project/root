@@ -44,7 +44,7 @@ ClassImp(TBonjourRegistrar);
 ////////////////////////////////////////////////////////////////////////////////
 /// Default ctor.
 
-TBonjourRegistrar::TBonjourRegistrar() : fDNSRef(0), fBonjourSocketHandler(0)
+TBonjourRegistrar::TBonjourRegistrar() : fDNSRef(nullptr), fBonjourSocketHandler(nullptr)
 {
    // silence Avahi about using Bonjour compat layer
    gSystem->Setenv("AVAHI_COMPAT_NOWARN", "1");
@@ -59,7 +59,7 @@ TBonjourRegistrar::~TBonjourRegistrar()
 
    if (fDNSRef) {
       DNSServiceRefDeallocate(fDNSRef);
-      fDNSRef = 0;
+      fDNSRef = nullptr;
    }
 }
 
@@ -77,18 +77,11 @@ Int_t TBonjourRegistrar::RegisterService(const TBonjourRecord &record, UShort_t 
    UShort_t sport = htons(servicePort);
 
    // register our service and callback
-   DNSServiceErrorType err = DNSServiceRegister(&fDNSRef, 0, kDNSServiceInterfaceIndexAny,
-                                                !strlen(record.GetServiceName()) ? 0
-                                                : record.GetServiceName(),
-                                                record.GetRegisteredType(),
-                                                !strlen(record.GetReplyDomain()) ? 0
-                                                : record.GetReplyDomain(),
-                                                0, sport,
-                                                record.GetTXTRecordsLength(),
-                                                !strlen(record.GetTXTRecords()) ? 0
-                                                : record.GetTXTRecords(),
-                                                (DNSServiceRegisterReply)BonjourRegisterService,
-                                                this);
+   DNSServiceErrorType err = DNSServiceRegister(
+      &fDNSRef, 0, kDNSServiceInterfaceIndexAny, !strlen(record.GetServiceName()) ? nullptr : record.GetServiceName(),
+      record.GetRegisteredType(), !strlen(record.GetReplyDomain()) ? nullptr : record.GetReplyDomain(), nullptr, sport,
+      record.GetTXTRecordsLength(), !strlen(record.GetTXTRecords()) ? nullptr : record.GetTXTRecords(),
+      (DNSServiceRegisterReply)BonjourRegisterService, this);
    if (err != kDNSServiceErr_NoError) {
       Error("RegisterService", "error in DNSServiceRegister (%d)", err);
       return -1;

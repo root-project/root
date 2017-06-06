@@ -25,7 +25,7 @@ ClassImp(TVirtualIndex);
 
 TVirtualIndex::TVirtualIndex(): TNamed()
 {
-   fTree         = 0;
+   fTree = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

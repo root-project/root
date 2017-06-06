@@ -160,7 +160,7 @@ public:
    static MacOSXSystem *fgInstance;
 };
 
-MacOSXSystem *MacOSXSystem::fgInstance = 0;
+MacOSXSystem *MacOSXSystem::fgInstance = nullptr;
 
 extern "C" {
 
@@ -171,7 +171,7 @@ void TMacOSXSystem_ReadCallback(CFFileDescriptorRef fdref, CFOptionFlags /*callB
    const int nativeFD = CFFileDescriptorGetNativeDescriptor(fdref);
 
    //We do not need this descriptor anymore.
-   assert(MacOSXSystem::fgInstance != 0 && "TMacOSXSystem_ReadCallback, MacOSXSystem's singleton is null");
+   assert(MacOSXSystem::fgInstance != nullptr && "TMacOSXSystem_ReadCallback, MacOSXSystem's singleton is null");
    MacOSXSystem::fgInstance->UnregisterFileDescriptor(fdref);
 
    CFFileDescriptorInvalidate(fdref);
@@ -191,7 +191,7 @@ void TMacOSXSystem_WriteCallback(CFFileDescriptorRef fdref, CFOptionFlags /*call
    const int nativeFD = CFFileDescriptorGetNativeDescriptor(fdref);
 
    //We do not need this descriptor anymore.
-   assert(MacOSXSystem::fgInstance != 0 && "TMacOSXSystem_WriteCallback, MacOSXSystem's singleton is null");
+   assert(MacOSXSystem::fgInstance != nullptr && "TMacOSXSystem_WriteCallback, MacOSXSystem's singleton is null");
    MacOSXSystem::fgInstance->UnregisterFileDescriptor(fdref);
 
    CFFileDescriptorInvalidate(fdref);
@@ -211,7 +211,7 @@ MacOSXSystem::MacOSXSystem()
                 : fPool(true), //Delay the pool creation!
                   fCocoaInitialized(false)
 {
-   assert(fgInstance == 0 && "MacOSXSystem, fgInstance was initialized already");
+   assert(fgInstance == nullptr && "MacOSXSystem, fgInstance was initialized already");
    fgInstance = this;
 }
 
@@ -240,7 +240,7 @@ bool MacOSXSystem::SetFileDescriptors(const TSeqCollection *fileHandlers)
    //in case of exception (std::bad_alloc) and
    //return false. Return true if everything is ok.
 
-   assert(fileHandlers != 0 && "SetFileDescriptors, parameter 'fileHandlers' is null");
+   assert(fileHandlers != nullptr && "SetFileDescriptors, parameter 'fileHandlers' is null");
 
    try {
       //This iteration is really stupid: add a null pointer into the middle of collection
@@ -300,8 +300,8 @@ void MacOSXSystem::SetFileDescriptor(int fd, DescriptorType fdType)
    assert(fd != -1 && "SetFileDescriptor, invalid file descriptor");
 
    const bool read = fdType == kDTRead;
-   CFFileDescriptorRef fdref = CFFileDescriptorCreate(kCFAllocatorDefault, fd, false,
-                               read ? TMacOSXSystem_ReadCallback : TMacOSXSystem_WriteCallback, 0);
+   CFFileDescriptorRef fdref = CFFileDescriptorCreate(
+      kCFAllocatorDefault, fd, false, read ? TMacOSXSystem_ReadCallback : TMacOSXSystem_WriteCallback, nullptr);
 
    if (!fdref)
       throw std::runtime_error("MacOSXSystem::SetFileDescriptors: CFFileDescriptorCreate failed");
@@ -541,7 +541,7 @@ TFileHandler *TMacOSXSystem::RemoveFileHandler(TFileHandler *fh)
    if (fh)
       return TUnixSystem::RemoveFileHandler(fh);
 
-   return 0;
+   return nullptr;
 }
 
 //______________________________________________________________________________

@@ -270,7 +270,7 @@ TFormula::TFormula()
    fReadyToExecute = false;
    fClingInitialized = false;
    fAllParametersSetted = false;
-   fMethod = 0;
+   fMethod = nullptr;
    fNdim = 0;
    fNpar = 0;
    fNumber = 0;
@@ -316,18 +316,18 @@ TFormula::TFormula(const char *name, const char *formula, bool addToGlobList)   
 {
    fReadyToExecute = false;
    fClingInitialized = false;
-   fMethod = 0;
+   fMethod = nullptr;
    fNdim = 0;
    fNpar = 0;
    fNumber = 0;
-   fMethod = 0;
+   fMethod = nullptr;
    fLambdaPtr = nullptr;
 
    FillDefaults();
 
 
    if (addToGlobList && gROOT) {
-      TFormula *old = 0;
+      TFormula *old = nullptr;
       R__LOCKGUARD(gROOTMutex);
       old = dynamic_cast<TFormula*> ( gROOT->GetListOfFunctions()->FindObject(name) );
       if (old)
@@ -360,7 +360,7 @@ TFormula::TFormula(const char *name, const char *formula, int ndim, int npar, bo
    fReadyToExecute = false;
     fClingInitialized = false;
    fNpar = 0;
-   fMethod = 0;
+   fMethod = nullptr;
    fNumber = 0;
    fLambdaPtr = nullptr;
    fFuncPtr = nullptr;
@@ -382,7 +382,7 @@ TFormula::TFormula(const char *name, const char *formula, int ndim, int npar, bo
       fReadyToExecute = true;
 
       if (addToGlobList && gROOT) {
-         TFormula *old = 0;
+         TFormula *old = nullptr;
          R__LOCKGUARD(gROOTMutex);
          old = dynamic_cast<TFormula*> ( gROOT->GetListOfFunctions()->FindObject(name) );
          if (old)
@@ -404,7 +404,7 @@ TFormula::TFormula(const TFormula &formula) :
 {
    fReadyToExecute = false;
    fClingInitialized = false;
-   fMethod = 0;
+   fMethod = nullptr;
    fNdim = formula.GetNdim();
    fNpar = formula.GetNpar();
    fNumber = formula.GetNumber();
@@ -1532,7 +1532,7 @@ void TFormula::ExtractFunctors(TString &formula)
             //std::cout << "check if character : " << i << " " << formula[i] << " from name " << name << "  is a function " << std::endl;
 
             // check if function is provided by gROOT
-            TObject *obj = 0;
+            TObject *obj = nullptr;
             {
                R__LOCKGUARD(gROOTMutex);
                obj = gROOT->GetListOfFunctions()->FindObject(name);
@@ -1725,7 +1725,7 @@ void TFormula::ProcessFormula(TString &formula)
       }
       else
       {
-         TFormula* old = 0;
+         TFormula *old = nullptr;
          {
             R__LOCKGUARD(gROOTMutex);
             old = (TFormula*)gROOT->GetListOfFunctions()->FindObject(gNamePrefix + fun.fName);
@@ -2385,7 +2385,7 @@ Double_t* TFormula::GetParameters() const
 {
    if(!fClingParameters.empty())
       return const_cast<Double_t*>(&fClingParameters[0]);
-   return 0;
+   return nullptr;
 }
 
 void TFormula::GetParameters(Double_t *params) const
@@ -2693,11 +2693,11 @@ Double_t TFormula::DoEval(const double * x, const double * params) const
    double * vars = (x) ? const_cast<double*>(x) : const_cast<double*>(fClingVariables.data());
    args[0] = &vars;
    if (fNpar <= 0)
-      (*fFuncPtr)(0, 1, args, &result);
+      (*fFuncPtr)(nullptr, 1, args, &result);
    else {
       double * pars = (params) ? const_cast<double*>(params) : const_cast<double*>(fClingParameters.data());
       args[1] = &pars;
-      (*fFuncPtr)(0, 2, args, &result);
+      (*fFuncPtr)(nullptr, 2, args, &result);
    }
    return result;
 }

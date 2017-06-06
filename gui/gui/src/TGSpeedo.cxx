@@ -48,7 +48,7 @@ ClassImp(TGSpeedo);
 /// TGSpeedo widget constructor.
 
 TGSpeedo::TGSpeedo(const TGWindow *p, int id)
-   : TGFrame(p, 1, 1), TGWidget (id), fImage(0), fImage2(0), fBase(0)
+   : TGFrame(p, 1, 1), TGWidget(id), fImage(nullptr), fImage2(nullptr), fBase(nullptr)
 {
    fAngleMin = -133.5;
    fAngleMax =  133.5;
@@ -78,10 +78,9 @@ TGSpeedo::TGSpeedo(const TGWindow *p, int id)
 ////////////////////////////////////////////////////////////////////////////////
 /// TGSpeedo widget constructor.
 
-TGSpeedo::TGSpeedo(const TGWindow *p, Float_t smin, Float_t smax,
-                   const char *lbl1, const char *lbl2, const char *dsp1,
+TGSpeedo::TGSpeedo(const TGWindow *p, Float_t smin, Float_t smax, const char *lbl1, const char *lbl2, const char *dsp1,
                    const char *dsp2, int id)
-   : TGFrame(p, 1, 1), TGWidget (id), fImage(0), fImage2(0), fBase(0)
+   : TGFrame(p, 1, 1), TGWidget(id), fImage(nullptr), fImage2(nullptr), fBase(nullptr)
 {
    fAngleMin = -133.5;
    fAngleMax =  133.5;
@@ -230,7 +229,7 @@ TGDimension TGSpeedo::GetDefaultSize() const
 void TGSpeedo::Glow(EGlowColor col)
 {
    static EGlowColor act_col = kNoglow;
-   TImage *glowImage = 0;
+   TImage *glowImage = nullptr;
 
    if (col == act_col)
       return;
@@ -245,21 +244,21 @@ void TGSpeedo::Glow(EGlowColor col)
          glowImage = TImage::Open("glow_green.png");
          if (!glowImage || !glowImage->IsValid()) {
             Error("TGSpeedo::Glow", "glow_green.png not found");
-            glowImage = 0;
+            glowImage = nullptr;
          }
          break;
       case kOrange:
          glowImage = TImage::Open("glow_orange.png");
          if (!glowImage || !glowImage->IsValid()) {
             Error("TGSpeedo::Glow", "glow_orange.png not found");
-            glowImage = 0;
+            glowImage = nullptr;
          }
          break;
       case kRed:
          glowImage = TImage::Open("glow_red.png");
          if (!glowImage || !glowImage->IsValid()) {
             Error("TGSpeedo::Glow", "glow_red.png not found");
-            glowImage = 0;
+            glowImage = nullptr;
          }
          break;
    }

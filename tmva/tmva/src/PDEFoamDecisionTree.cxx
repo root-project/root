@@ -66,9 +66,7 @@ ClassImp(TMVA::PDEFoamDecisionTree);
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor for streamer, user should not use it.
 
-TMVA::PDEFoamDecisionTree::PDEFoamDecisionTree()
-: PDEFoamDiscriminant()
-   , fSepType(NULL)
+TMVA::PDEFoamDecisionTree::PDEFoamDecisionTree() : PDEFoamDiscriminant(), fSepType(nullptr)
 {
 }
 
@@ -158,7 +156,7 @@ void TMVA::PDEFoamDecisionTree::Explore(PDEFoamCell *cell)
 
    // fDistr must be of type PDEFoamDecisionTreeDensity*
    PDEFoamDecisionTreeDensity *distr = dynamic_cast<PDEFoamDecisionTreeDensity*>(fDistr);
-   if (distr == NULL)
+   if (distr == nullptr)
       Log() << kFATAL << "<PDEFoamDecisionTree::Explore>: cast failed: "
             << "PDEFoamDensityBase* --> PDEFoamDecisionTreeDensity*" << Endl;
 

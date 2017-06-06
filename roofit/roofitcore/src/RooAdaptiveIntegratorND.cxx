@@ -69,17 +69,17 @@ void RooAdaptiveIntegratorND::registerIntegrator(RooNumIntFactory& fact)
 
 RooAdaptiveIntegratorND::RooAdaptiveIntegratorND()
 {
-  _xmin = 0 ;
-  _xmax = 0 ;
-  _epsRel = 1e-7 ;
-  _epsAbs = 1e-7 ;
-  _nmax = 10000 ;
-  _func = 0 ;
-  _integrator = 0 ;
-  _nError = 0 ;
-  _nWarn = 0 ;
-  _useIntegrandLimits = kTRUE ;
-  _intName = "(none)" ;
+   _xmin = nullptr;
+   _xmax = nullptr;
+   _epsRel = 1e-7;
+   _epsAbs = 1e-7;
+   _nmax = 10000;
+   _func = nullptr;
+   _integrator = nullptr;
+   _nError = 0;
+   _nWarn = 0;
+   _useIntegrandLimits = kTRUE;
+   _intName = "(none)";
 }
 
 
@@ -108,8 +108,8 @@ RooAdaptiveIntegratorND::RooAdaptiveIntegratorND(const RooAbsFunc& function, con
   _integrator->SetFunction(*_func) ;
   _useIntegrandLimits=kTRUE ;
 
-  _xmin = 0 ;
-  _xmax = 0 ;
+  _xmin = nullptr;
+  _xmax = nullptr;
   _nError = 0 ;
   _nWarn = 0 ;
   checkLimits() ;
@@ -179,8 +179,9 @@ Bool_t RooAdaptiveIntegratorND::checkLimits() const
 Bool_t RooAdaptiveIntegratorND::setLimits(Double_t *xmin, Double_t *xmax) 
 {
   if(_useIntegrandLimits) {
-    oocoutE((TObject*)0,Integration) << "RooAdaptiveIntegratorND::setLimits: cannot override integrand's limits" << endl;
-    return kFALSE;
+     oocoutE((TObject *)nullptr, Integration)
+        << "RooAdaptiveIntegratorND::setLimits: cannot override integrand's limits" << endl;
+     return kFALSE;
   }
   for (UInt_t i=0 ; i<_func->NDim() ; i++) {
     _xmin[i]= xmin[i];

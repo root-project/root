@@ -83,38 +83,20 @@ ClassImp(TMVA::MethodFDA);
 ////////////////////////////////////////////////////////////////////////////////
 /// standard constructor
 
-   TMVA::MethodFDA::MethodFDA( const TString& jobName,
-                               const TString& methodTitle,
-                               DataSetInfo& theData,
-                               const TString& theOption)
-   : MethodBase( jobName, Types::kFDA, methodTitle, theData, theOption),
-   IFitterTarget   (),
-   fFormula        ( 0 ),
-   fNPars          ( 0 ),
-   fFitter         ( 0 ),
-   fConvergerFitter( 0 ),
-   fSumOfWeightsSig( 0 ),
-   fSumOfWeightsBkg( 0 ),
-   fSumOfWeights   ( 0 ),
-   fOutputDimensions( 0 )
+TMVA::MethodFDA::MethodFDA(const TString &jobName, const TString &methodTitle, DataSetInfo &theData,
+                           const TString &theOption)
+   : MethodBase(jobName, Types::kFDA, methodTitle, theData, theOption), IFitterTarget(), fFormula(nullptr), fNPars(0),
+     fFitter(nullptr), fConvergerFitter(nullptr), fSumOfWeightsSig(0), fSumOfWeightsBkg(0), fSumOfWeights(0),
+     fOutputDimensions(0)
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor from weight file
 
-TMVA::MethodFDA::MethodFDA( DataSetInfo& theData,
-                            const TString& theWeightFile)
-   : MethodBase( Types::kFDA, theData, theWeightFile),
-     IFitterTarget   (),
-     fFormula        ( 0 ),
-     fNPars          ( 0 ),
-     fFitter         ( 0 ),
-     fConvergerFitter( 0 ),
-     fSumOfWeightsSig( 0 ),
-     fSumOfWeightsBkg( 0 ),
-     fSumOfWeights   ( 0 ),
-     fOutputDimensions( 0 )
+TMVA::MethodFDA::MethodFDA(DataSetInfo &theData, const TString &theWeightFile)
+   : MethodBase(Types::kFDA, theData, theWeightFile), IFitterTarget(), fFormula(nullptr), fNPars(0), fFitter(nullptr),
+     fConvergerFitter(nullptr), fSumOfWeightsSig(0), fSumOfWeightsBkg(0), fSumOfWeights(0), fOutputDimensions(0)
 {
 }
 
@@ -140,8 +122,7 @@ void TMVA::MethodFDA::Init( void )
    fConverger       = "";
 
    if( DoMulticlass() )
-      if (fMulticlassReturnVal == NULL) fMulticlassReturnVal = new std::vector<Float_t>();
-
+      if (fMulticlassReturnVal == nullptr) fMulticlassReturnVal = new std::vector<Float_t>();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -258,7 +239,7 @@ void TMVA::MethodFDA::ProcessOptions()
    }
 
    fParRange.resize( fNPars );
-   for (UInt_t ipar=0; ipar<fNPars; ipar++) fParRange[ipar] = 0;
+   for (UInt_t ipar = 0; ipar < fNPars; ipar++) fParRange[ipar] = nullptr;
 
    for (UInt_t ipar=0; ipar<fNPars; ipar++) {
       // parse (a,b)
@@ -349,11 +330,17 @@ void TMVA::MethodFDA::ClearAll( void )
    // hence, ... erase the copied pointers to assure, that they are deleted only once.
    //   fParRange.erase( fParRange.begin()+(fNPars), fParRange.end() );
    for (UInt_t ipar=0; ipar<fParRange.size() && ipar<fNPars; ipar++) {
-      if (fParRange[ipar] != 0) { delete fParRange[ipar]; fParRange[ipar] = 0; }
+      if (fParRange[ipar] != nullptr) {
+         delete fParRange[ipar];
+         fParRange[ipar] = nullptr;
+      }
    }
    fParRange.clear();
 
-   if (fFormula  != 0) { delete fFormula; fFormula = 0; }
+   if (fFormula != nullptr) {
+      delete fFormula;
+      fFormula = nullptr;
+   }
    fBestPars.clear();
 }
 
@@ -406,10 +393,11 @@ void TMVA::MethodFDA::Train( void )
    // print results
    PrintResults( fFitMethod, fBestPars, estimator );
 
-   delete fFitter; fFitter = 0;
-   if (fConvergerFitter!=0 && fConvergerFitter!=(IFitterTarget*)this) {
+   delete fFitter;
+   fFitter = nullptr;
+   if (fConvergerFitter != nullptr && fConvergerFitter != (IFitterTarget *)this) {
       delete fConvergerFitter;
-      fConvergerFitter = 0;
+      fConvergerFitter = nullptr;
    }
    ExitFromTraining();
 }
@@ -529,7 +517,7 @@ Double_t TMVA::MethodFDA::GetMvaValue( Double_t* err, Double_t* errUpper )
 
 const std::vector<Float_t>& TMVA::MethodFDA::GetRegressionValues()
 {
-   if (fRegressionReturnVal == NULL) fRegressionReturnVal = new std::vector<Float_t>();
+   if (fRegressionReturnVal == nullptr) fRegressionReturnVal = new std::vector<Float_t>();
    fRegressionReturnVal->clear();
 
    const Event* ev = GetEvent();
@@ -552,7 +540,7 @@ const std::vector<Float_t>& TMVA::MethodFDA::GetRegressionValues()
 
 const std::vector<Float_t>& TMVA::MethodFDA::GetMulticlassValues()
 {
-   if (fMulticlassReturnVal == NULL) fMulticlassReturnVal = new std::vector<Float_t>();
+   if (fMulticlassReturnVal == nullptr) fMulticlassReturnVal = new std::vector<Float_t>();
    fMulticlassReturnVal->clear();
    std::vector<Float_t> temp;
 

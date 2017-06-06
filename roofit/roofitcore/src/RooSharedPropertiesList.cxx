@@ -77,9 +77,9 @@ RooSharedPropertiesList::~RooSharedPropertiesList()
 
 RooSharedProperties* RooSharedPropertiesList::registerProperties(RooSharedProperties* prop, Bool_t canDeleteIncoming) 
 {
-  if (prop==0) {
-    oocoutE((TObject*)0,InputArguments) << "RooSharedPropertiesList::ERROR null pointer!:" << endl ;
-    return 0 ;
+   if (prop == nullptr) {
+      oocoutE((TObject *)nullptr, InputArguments) << "RooSharedPropertiesList::ERROR null pointer!:" << endl;
+      return nullptr;
   }
 
 

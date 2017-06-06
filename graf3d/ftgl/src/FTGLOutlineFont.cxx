@@ -27,7 +27,7 @@ FTGlyph* FTGLOutlineFont::MakeGlyph( unsigned int g)
     }
 
     err = face.Error();
-    return NULL;
+    return nullptr;
 }
 
 

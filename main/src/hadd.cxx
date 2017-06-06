@@ -209,7 +209,7 @@ int main( int argc, char **argv )
                }
             }
             if (request == 1) {
-               request = strtol(argv[a + 1], 0, 10);
+               request = strtol(argv[a + 1], nullptr, 10);
                if (request < kMaxLong && request >= 0) {
                   nProcesses = (Int_t)request;
                   ++a;
@@ -272,7 +272,7 @@ int main( int argc, char **argv )
          if (a+1 >= argc) {
             std::cerr << "Error: no maximum number of opened was provided after -n.\n";
          } else {
-            Long_t request = strtol(argv[a+1], 0, 10);
+            Long_t request = strtol(argv[a + 1], nullptr, 10);
             if (request < kMaxLong && request >= 0) {
                maxopenedfiles = (Int_t)request;
                ++a;
@@ -298,7 +298,7 @@ int main( int argc, char **argv )
                }
             }
             if (request == 1) {
-               request = strtol(argv[a+1], 0, 10);
+               request = strtol(argv[a + 1], nullptr, 10);
                if (request < kMaxLong && request >= 0) {
                   verbosity = (Int_t)request;
                   ++a;
@@ -358,7 +358,7 @@ int main( int argc, char **argv )
 
    gSystem->Load("libTreePlayer");
 
-   const char *targetname = 0;
+   const char *targetname = nullptr;
    if (outputPlace) {
       targetname = argv[outputPlace];
    } else {

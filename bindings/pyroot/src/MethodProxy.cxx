@@ -44,7 +44,7 @@ namespace PyROOT {
 
       virtual ~TPythonCallback() {
          Py_DECREF( fCallable );
-         fCallable = 0;
+         fCallable = nullptr;
       }
 
       virtual PyObject* GetSignature() { return PyROOT_PyUnicode_FromString( "*args, **kwargs" ); } ;
@@ -108,13 +108,13 @@ namespace {
 
 // helper for collecting/maintaining exception data in overload dispatch
    struct PyError_t {
-      PyError_t() { fType = fValue = fTrace = 0; }
+      PyError_t() { fType = fValue = fTrace = nullptr; }
 
       static void Clear( PyError_t& e )
       {
       // Remove exception information.
          Py_XDECREF( e.fType ); Py_XDECREF( e.fValue ); Py_XDECREF( e.fTrace );
-         e.fType = e.fValue = e.fTrace = 0;
+         e.fType = e.fValue = e.fTrace = nullptr;
       }
 
       PyObject *fType, *fValue, *fTrace;
@@ -258,8 +258,8 @@ namespace {
       if ( IsPseudoFunc( pymeth ) ) {
          PyErr_Format( PyExc_AttributeError,
             "function %s has no attribute \'im_self\'", pymeth->fMethodInfo->fName.c_str() );
-         return 0;
-      } else if ( pymeth->fSelf != 0 ) {
+         return nullptr;
+      } else if (pymeth->fSelf != nullptr) {
          Py_INCREF( (PyObject*)pymeth->fSelf );
          return (PyObject*)pymeth->fSelf;
       }
@@ -305,7 +305,7 @@ namespace {
 
    // collect arguments only if there is just 1 overload, otherwise put in a
    // fake *args (see below for co_varnames)
-      PyObject* co_varnames = methods.size() == 1 ? methods[0]->GetCoVarNames() : NULL;
+      PyObject *co_varnames = methods.size() == 1 ? methods[0]->GetCoVarNames() : nullptr;
       if ( !co_varnames ) {
       // TODO: static methods need no 'self' (but is harmless otherwise)
          co_varnames = PyTuple_New( 1 /* self */ + 1 /* fake */ );
@@ -532,46 +532,44 @@ namespace {
 ////////////////////////////////////////////////////////////////////////////////
 
    PyGetSetDef mp_getset[] = {
-      { (char*)"__name__",   (getter)mp_name,   NULL, NULL, NULL },
-      { (char*)"__module__", (getter)mp_module, NULL, NULL, NULL },
-      { (char*)"__doc__",    (getter)mp_doc,    NULL, NULL, NULL },
+      {(char *)"__name__", (getter)mp_name, nullptr, nullptr, nullptr},
+      {(char *)"__module__", (getter)mp_module, nullptr, nullptr, nullptr},
+      {(char *)"__doc__", (getter)mp_doc, nullptr, nullptr, nullptr},
 
-   // to be more python-like, where these are duplicated as well; to actually
-   // derive from the python method or function type is too memory-expensive,
-   // given that most of the members of those types would not be used
-      { (char*)"im_func",  (getter)mp_meth_func,  NULL, NULL, NULL },
-      { (char*)"im_self",  (getter)mp_meth_self,  NULL, NULL, NULL },
-      { (char*)"im_class", (getter)mp_meth_class, NULL, NULL, NULL },
+      // to be more python-like, where these are duplicated as well; to actually
+      // derive from the python method or function type is too memory-expensive,
+      // given that most of the members of those types would not be used
+      {(char *)"im_func", (getter)mp_meth_func, nullptr, nullptr, nullptr},
+      {(char *)"im_self", (getter)mp_meth_self, nullptr, nullptr, nullptr},
+      {(char *)"im_class", (getter)mp_meth_class, nullptr, nullptr, nullptr},
 
-      { (char*)"func_closure",  (getter)mp_func_closure,  NULL, NULL, NULL },
-      { (char*)"func_code",     (getter)mp_func_code,     NULL, NULL, NULL },
-      { (char*)"func_defaults", (getter)mp_func_defaults, NULL, NULL, NULL },
-      { (char*)"func_globals",  (getter)mp_func_globals,  NULL, NULL, NULL },
-      { (char*)"func_doc",      (getter)mp_doc,           NULL, NULL, NULL },
-      { (char*)"func_name",     (getter)mp_name,          NULL, NULL, NULL },
+      {(char *)"func_closure", (getter)mp_func_closure, nullptr, nullptr, nullptr},
+      {(char *)"func_code", (getter)mp_func_code, nullptr, nullptr, nullptr},
+      {(char *)"func_defaults", (getter)mp_func_defaults, nullptr, nullptr, nullptr},
+      {(char *)"func_globals", (getter)mp_func_globals, nullptr, nullptr, nullptr},
+      {(char *)"func_doc", (getter)mp_doc, nullptr, nullptr, nullptr},
+      {(char *)"func_name", (getter)mp_name, nullptr, nullptr, nullptr},
 
-      { (char*)"_creates", (getter)mp_getcreates, (setter)mp_setcreates,
-            (char*)"For ownership rules of result: if true, objects are python-owned", NULL },
-      { (char*)"_mempolicy", (getter)mp_getmempolicy, (setter)mp_setmempolicy,
-            (char*)"For argument ownership rules: like global, either heuristic or strict", NULL },
-      { (char*)"_manage_smart_ptr", (getter)mp_get_manage_smart_ptr, (setter)mp_set_manage_smart_ptr,
-        (char*)"If a smart pointer is returned, determines management policy.", NULL },
-      { (char*)"_threaded", (getter)mp_getthreaded, (setter)mp_setthreaded,
-            (char*)"If true, releases GIL on call into C++", NULL },
-      { (char*)NULL, NULL, NULL, NULL, NULL }
-   };
+      {(char *)"_creates", (getter)mp_getcreates, (setter)mp_setcreates,
+       (char *)"For ownership rules of result: if true, objects are python-owned", nullptr},
+      {(char *)"_mempolicy", (getter)mp_getmempolicy, (setter)mp_setmempolicy,
+       (char *)"For argument ownership rules: like global, either heuristic or strict", nullptr},
+      {(char *)"_manage_smart_ptr", (getter)mp_get_manage_smart_ptr, (setter)mp_set_manage_smart_ptr,
+       (char *)"If a smart pointer is returned, determines management policy.", nullptr},
+      {(char *)"_threaded", (getter)mp_getthreaded, (setter)mp_setthreaded,
+       (char *)"If true, releases GIL on call into C++", nullptr},
+      {(char *)nullptr, nullptr, nullptr, nullptr, nullptr}};
 
-//= PyROOT method proxy function behavior ====================================
+   //= PyROOT method proxy function behavior ====================================
    PyObject* mp_call( MethodProxy* pymeth, PyObject* args, PyObject* kwds )
    {
    // Call the appropriate overload of this method.
 
    // if called through im_func pseudo-representation (this can be gamed if the
    // user really wants to ... )
-      if ( IsPseudoFunc( pymeth ) )
-         pymeth->fSelf = NULL;
+   if (IsPseudoFunc(pymeth)) pymeth->fSelf = nullptr;
 
-      ObjectProxy* oldSelf = pymeth->fSelf;
+   ObjectProxy *oldSelf = pymeth->fSelf;
 
    // get local handles to proxy internals
       auto& methods     = pymeth->fMethodInfo->fMethods;
@@ -603,10 +601,9 @@ namespace {
          PyObject* result = methods[ index ]->Call( pymeth->fSelf, args, kwds, &ctxt );
          result = HandleReturn( pymeth, oldSelf, result );
 
-         if ( result != 0 )
-            return result;
+         if (result != nullptr) return result;
 
-      // fall through: python is dynamic, and so, the hashing isn't infallible
+         // fall through: python is dynamic, and so, the hashing isn't infallible
          ResetCallState( pymeth->fSelf, oldSelf, kTRUE );
       }
 
@@ -620,8 +617,8 @@ namespace {
       for ( Int_t i = 0; i < nMethods; ++i ) {
          PyObject* result = methods[i]->Call( pymeth->fSelf, args, kwds, &ctxt );
 
-         if ( result != 0 ) {
-         // success: update the dispatch map for subsequent calls
+         if (result != nullptr) {
+            // success: update the dispatch map for subsequent calls
             dispatchMap[ sighash ] = i;
             std::for_each( errors.begin(), errors.end(), PyError_t::Clear );
             return HandleReturn( pymeth, oldSelf, result );
@@ -647,7 +644,7 @@ namespace {
       PyObject* separator = PyROOT_PyUnicode_FromString( "\n  " );
 
    // if this point is reached, none of the overloads succeeded: notify user
-      PyObject* exc_type = NULL;
+      PyObject *exc_type = nullptr;
       for ( std::vector< PyError_t >::iterator e = errors.begin(); e != errors.end(); ++e ) {
          if ( e->fType != PyExc_NotImplementedError ) {
             if ( ! exc_type ) exc_type = e->fType;
@@ -663,7 +660,7 @@ namespace {
    // report failure
       PyErr_SetObject( exc_type ? exc_type : PyExc_TypeError, value );
       Py_DECREF( value );
-      return 0;
+      return nullptr;
    }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -690,7 +687,7 @@ namespace {
    {
    // Create a new method proxy object.
       MethodProxy* pymeth = PyObject_GC_New( MethodProxy, &MethodProxy_Type );
-      pymeth->fSelf = NULL;
+      pymeth->fSelf = nullptr;
       pymeth->fMethodInfo = new MethodProxy::MethodInfo_t;
 
       PyObject_GC_Track( pymeth );
@@ -706,7 +703,7 @@ namespace {
 
       if ( ! IsPseudoFunc( pymeth ) )
          Py_CLEAR( pymeth->fSelf );
-      pymeth->fSelf = NULL;
+      pymeth->fSelf = nullptr;
 
       if ( --(*pymeth->fMethodInfo->fRefCount) <= 0 ) {
          delete pymeth->fMethodInfo;
@@ -743,7 +740,7 @@ namespace {
    {
       if ( ! IsPseudoFunc( pymeth ) )
          Py_CLEAR( pymeth->fSelf );
-      pymeth->fSelf = NULL;
+      pymeth->fSelf = nullptr;
 
       return 0;
    }
@@ -774,7 +771,7 @@ namespace {
       if ( ! PyROOT_PyUnicode_Check( sigarg ) ) {
          PyErr_Format( PyExc_TypeError, "disp() argument 1 must be string, not %.50s",
                        sigarg == Py_None ? "None" : Py_TYPE(sigarg)->tp_name );
-         return 0;
+         return nullptr;
       }
 
       PyObject* sig1 = PyROOT_PyUnicode_FromFormat( "(%s)", PyROOT_PyUnicode_AsString( sigarg ) );
@@ -786,7 +783,7 @@ namespace {
          if ( PyObject_RichCompareBool( sig1, sig2, Py_EQ ) ) {
             Py_DECREF( sig2 );
 
-            MethodProxy* newmeth = mp_new( NULL, NULL, NULL );
+            MethodProxy *newmeth = mp_new(nullptr, nullptr, nullptr);
             MethodProxy::Methods_t vec; vec.push_back( methods[ i ]->Clone() );
             newmeth->Set( pymeth->fMethodInfo->fName, vec );
 
@@ -804,7 +801,7 @@ namespace {
 
       Py_DECREF( sig1 );
       PyErr_Format( PyExc_LookupError, "signature \"%s\" not found", PyROOT_PyUnicode_AsString( sigarg ) );
-      return 0;
+      return nullptr;
    }
 
 //= PyROOT method proxy access to internals =================================
@@ -817,10 +814,9 @@ namespace {
    }
 
    PyMethodDef mp_methods[] = {
-      { (char*)"disp",             (PyCFunction)mp_disp, METH_O, (char*)"select overload for dispatch" },
-      { (char*)"__add_overload__", (PyCFunction)mp_add_overload, METH_O, (char*)"add a new overload" },
-      { (char*)NULL, NULL, 0, NULL }
-   };
+      {(char *)"disp", (PyCFunction)mp_disp, METH_O, (char *)"select overload for dispatch"},
+      {(char *)"__add_overload__", (PyCFunction)mp_add_overload, METH_O, (char *)"add a new overload"},
+      {(char *)nullptr, nullptr, 0, nullptr}};
 
 } // unnamed namespace
 
@@ -829,59 +825,61 @@ namespace {
 
 //= PyROOT method proxy type =================================================
 PyTypeObject MethodProxy_Type = {
-   PyVarObject_HEAD_INIT( &PyType_Type, 0 )
-   (char*)"ROOT.MethodProxy", // tp_name
-   sizeof(MethodProxy),       // tp_basicsize
-   0,                         // tp_itemsize
-   (destructor)mp_dealloc,    // tp_dealloc
-   0,                         // tp_print
-   0,                         // tp_getattr
-   0,                         // tp_setattr
-   0,                         // tp_compare
-   0,                         // tp_repr
-   0,                         // tp_as_number
-   0,                         // tp_as_sequence
-   0,                         // tp_as_mapping
-   (hashfunc)mp_hash,         // tp_hash
-   (ternaryfunc)mp_call,      // tp_call
-   0,                         // tp_str
-   0,                         // tp_getattro
-   0,                         // tp_setattro
-   0,                         // tp_as_buffer
-   Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC,      // tp_flags
-   (char*)"PyROOT method proxy (internal)",      // tp_doc
-   (traverseproc)mp_traverse, // tp_traverse
-   (inquiry)mp_clear,         // tp_clear
-   (richcmpfunc)mp_richcompare,                  // tp_richcompare
-   0,                         // tp_weaklistoffset
-   0,                         // tp_iter
-   0,                         // tp_iternext
-   mp_methods,                // tp_methods
-   0,                         // tp_members
-   mp_getset,                 // tp_getset
-   0,                         // tp_base
-   0,                         // tp_dict
-   (descrgetfunc)mp_descrget, // tp_descr_get
-   0,                         // tp_descr_set
-   0,                         // tp_dictoffset
-   0,                         // tp_init
-   0,                         // tp_alloc
-   (newfunc)mp_new,           // tp_new
-   0,                         // tp_free
-   0,                         // tp_is_gc
-   0,                         // tp_bases
-   0,                         // tp_mro
-   0,                         // tp_cache
-   0,                         // tp_subclasses
-   0                          // tp_weaklist
+   PyVarObject_HEAD_INIT(&PyType_Type, 0)(char *) "ROOT.MethodProxy", // tp_name
+   sizeof(MethodProxy),                                               // tp_basicsize
+   0,                                                                 // tp_itemsize
+   (destructor)mp_dealloc,                                            // tp_dealloc
+   nullptr,                                                           // tp_print
+   nullptr,                                                           // tp_getattr
+   nullptr,                                                           // tp_setattr
+   nullptr,                                                           // tp_compare
+   nullptr,                                                           // tp_repr
+   nullptr,                                                           // tp_as_number
+   nullptr,                                                           // tp_as_sequence
+   nullptr,                                                           // tp_as_mapping
+   (hashfunc)mp_hash,                                                 // tp_hash
+   (ternaryfunc)mp_call,                                              // tp_call
+   nullptr,                                                           // tp_str
+   nullptr,                                                           // tp_getattro
+   nullptr,                                                           // tp_setattro
+   nullptr,                                                           // tp_as_buffer
+   Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC,                           // tp_flags
+   (char *)"PyROOT method proxy (internal)",                          // tp_doc
+   (traverseproc)mp_traverse,                                         // tp_traverse
+   (inquiry)mp_clear,                                                 // tp_clear
+   (richcmpfunc)mp_richcompare,                                       // tp_richcompare
+   0,                                                                 // tp_weaklistoffset
+   nullptr,                                                           // tp_iter
+   nullptr,                                                           // tp_iternext
+   mp_methods,                                                        // tp_methods
+   nullptr,                                                           // tp_members
+   mp_getset,                                                         // tp_getset
+   nullptr,                                                           // tp_base
+   nullptr,                                                           // tp_dict
+   (descrgetfunc)mp_descrget,                                         // tp_descr_get
+   nullptr,                                                           // tp_descr_set
+   0,                                                                 // tp_dictoffset
+   nullptr,                                                           // tp_init
+   nullptr,                                                           // tp_alloc
+   (newfunc)mp_new,                                                   // tp_new
+   nullptr,                                                           // tp_free
+   nullptr,                                                           // tp_is_gc
+   nullptr,                                                           // tp_bases
+   nullptr,                                                           // tp_mro
+   nullptr,                                                           // tp_cache
+   nullptr,                                                           // tp_subclasses
+   nullptr                                                            // tp_weaklist
 #if PY_VERSION_HEX >= 0x02030000
-   , 0                        // tp_del
+   ,
+   nullptr // tp_del
 #endif
 #if PY_VERSION_HEX >= 0x02060000
-   , 0                        // tp_version_tag
+   ,
+   0 // tp_version_tag
 #endif
 #if PY_VERSION_HEX >= 0x03040000
-   , 0                        // tp_finalize
+   ,
+   0 // tp_finalize
 #endif
 };
 

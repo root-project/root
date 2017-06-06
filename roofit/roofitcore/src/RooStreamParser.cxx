@@ -156,8 +156,9 @@ TString RooStreamParser::readToken()
   while(1) {
     // Buffer overflow protection
     if (bufptr>=10239) {
-      oocoutW((TObject*)0,InputArguments) << "RooStreamParser::readToken: token length exceeds buffer capacity, terminating token early" << endl ;
-      break ;
+       oocoutW((TObject *)nullptr, InputArguments)
+          << "RooStreamParser::readToken: token length exceeds buffer capacity, terminating token early" << endl;
+       break;
     }
 
     // Read next char
@@ -263,7 +264,7 @@ TString RooStreamParser::readToken()
 
   // Check if closing quote was encountered
   if (quotedString) {
-    oocoutW((TObject*)0,InputArguments) << "RooStreamParser::readToken: closing quote (\") missing" << endl ;
+     oocoutW((TObject *)nullptr, InputArguments) << "RooStreamParser::readToken: closing quote (\") missing" << endl;
   }
 
   // Absorb trailing white space or absorb rest of line if // is encountered
@@ -396,9 +397,9 @@ Bool_t RooStreamParser::expectToken(const TString& expected, Bool_t zapOnError)
 
   Bool_t error=token.CompareTo(expected) ;
   if (error && !_prefix.IsNull()) {
-    oocoutW((TObject*)0,InputArguments) << _prefix << ": parse error, expected '"
-					<< expected << "'" << ", got '" << token << "'" << endl ;
-    if (zapOnError) zapToEnd(kTRUE) ;
+     oocoutW((TObject *)nullptr, InputArguments) << _prefix << ": parse error, expected '" << expected << "'"
+                                                 << ", got '" << token << "'" << endl;
+     if (zapOnError) zapToEnd(kTRUE);
   }
   return error ;
 }
@@ -424,21 +425,21 @@ Bool_t RooStreamParser::readDouble(Double_t& value, Bool_t /*zapOnError*/)
 
 Bool_t RooStreamParser::convertToDouble(const TString& token, Double_t& value)
 {
-  char* endptr = 0;
-  const char* data=token.Data() ;
+   char *endptr = nullptr;
+   const char *data = token.Data();
 
-  // Handle +/- infinity cases, (token is guaranteed to be >1 char long)
-  if (!strcasecmp(data,"inf") || !strcasecmp(data+1,"inf")) {
-    value = (data[0]=='-') ? -RooNumber::infinity() : RooNumber::infinity() ;
-    return kFALSE ;
+   // Handle +/- infinity cases, (token is guaranteed to be >1 char long)
+   if (!strcasecmp(data, "inf") || !strcasecmp(data + 1, "inf")) {
+      value = (data[0] == '-') ? -RooNumber::infinity() : RooNumber::infinity();
+      return kFALSE;
   }
 
   value = strtod(data,&endptr) ;
   Bool_t error = (endptr-data!=token.Length()) ;
 
   if (error && !_prefix.IsNull()) {
-    oocoutE((TObject*)0,InputArguments) << _prefix << ": parse error, cannot convert '"
-					<< token << "'" << " to double precision" <<  endl ;
+     oocoutE((TObject *)nullptr, InputArguments) << _prefix << ": parse error, cannot convert '" << token << "'"
+                                                 << " to double precision" << endl;
   }
   return error ;
 }
@@ -464,14 +465,14 @@ Bool_t RooStreamParser::readInteger(Int_t& value, Bool_t /*zapOnError*/)
 
 Bool_t RooStreamParser::convertToInteger(const TString& token, Int_t& value)
 {
-  char* endptr = 0;
-  const char* data=token.Data() ;
-  value = strtol(data,&endptr,10) ;
-  Bool_t error = (endptr-data!=token.Length()) ;
+   char *endptr = nullptr;
+   const char *data = token.Data();
+   value = strtol(data, &endptr, 10);
+   Bool_t error = (endptr - data != token.Length());
 
-  if (error && !_prefix.IsNull()) {
-    oocoutE((TObject*)0,InputArguments)<< _prefix << ": parse error, cannot convert '"
-				       << token << "'" << " to integer" <<  endl ;
+   if (error && !_prefix.IsNull()) {
+      oocoutE((TObject *)nullptr, InputArguments) << _prefix << ": parse error, cannot convert '" << token << "'"
+                                                  << " to integer" << endl;
   }
   return error ;
 }
@@ -501,8 +502,9 @@ Bool_t RooStreamParser::convertToString(const TString& token, TString& string)
   char buffer[10240],*ptr ;
   strncpy(buffer,token.Data(),10239) ;
   if (token.Length()>=10239) {
-    oocoutW((TObject*)0,InputArguments) << "RooStreamParser::convertToString: token length exceeds 1023, truncated" << endl ;
-    buffer[10239]=0 ;
+     oocoutW((TObject *)nullptr, InputArguments)
+        << "RooStreamParser::convertToString: token length exceeds 1023, truncated" << endl;
+     buffer[10239] = 0;
   }
   int len = strlen(buffer) ;
 

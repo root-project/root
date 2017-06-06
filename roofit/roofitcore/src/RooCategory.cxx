@@ -49,18 +49,14 @@ RooCategorySharedProperties RooCategory::_nullProp("00000000-0000-0000-0000-0000
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooCategory::RooCategory() : _sharedProp(0)
-{
-  TRACE_CREATE 
-}
+RooCategory::RooCategory()
+   : _sharedProp(nullptr){TRACE_CREATE}
 
+     ////////////////////////////////////////////////////////////////////////////////
+     /// Constructor. Types must be defined using defineType() before variable can be used
 
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor. Types must be defined using defineType() before variable can be used
-
-RooCategory::RooCategory(const char *name, const char *title) : 
-  RooAbsCategoryLValue(name,title)
+     RooCategory::RooCategory(const char *name, const char *title)
+   : RooAbsCategoryLValue(name, title)
 {
   _sharedProp = (RooCategorySharedProperties*) _sharedPropList.registerProperties(new RooCategorySharedProperties()) ;
 
@@ -260,7 +256,7 @@ void RooCategory::addToRange(const char* name, const char* stateNameList)
       coutW(InputArguments) << "RooCategory::setRange(" << GetName() << ") WARNING: Ignoring invalid state name '" 
 			    << token << "' in state name list" << endl ;
     }
-    token = strtok(0,",") ;
+    token = strtok(nullptr, ",");
   }
 
   delete[] buf ;
@@ -317,7 +313,7 @@ void RooCategory::Streamer(TBuffer &R__b)
 	_sharedProp = (RooCategorySharedProperties*) _sharedPropList.registerProperties(tmpSharedProp,kFALSE) ;
       } else {
 	delete tmpSharedProp ;
-	_sharedProp = 0 ;
+   _sharedProp = nullptr;
       }
     }
 

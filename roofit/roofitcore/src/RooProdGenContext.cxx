@@ -46,9 +46,9 @@ ClassImp(RooProdGenContext);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &vars, 
-				     const RooDataSet *prototype, const RooArgSet* auxProto, Bool_t verbose) :
-  RooAbsGenContext(model,vars,prototype,auxProto,verbose), _uniIter(0), _pdf(&model)
+RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &vars, const RooDataSet *prototype,
+                                     const RooArgSet *auxProto, Bool_t verbose)
+   : RooAbsGenContext(model, vars, prototype, auxProto, verbose), _uniIter(nullptr), _pdf(&model)
 {
   // Constructor of optimization generator context for RooProdPdf objects
 
@@ -109,8 +109,8 @@ RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &v
 
       impDeps = (RooArgSet*)impIter->Next() ;
       termDeps = (RooArgSet*)normIter->Next() ;
-      if (impDeps==0 || termDeps==0) {
-	break ;
+      if (impDeps == nullptr || termDeps == nullptr) {
+         break;
       }
 
       cxcoutD(Generation) << "RooProdGenContext::ctor() analyzing product term " << *term << " with observable(s) " << *termDeps ;
@@ -170,27 +170,27 @@ RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &v
 	
 	// Composite term
 	if (termDeps->getSize()>0) {
-	  const std::string name = model.makeRGPPName("PRODGEN_",*term,RooArgSet(),RooArgSet(),0) ;      
-	  
-	  // Construct auxiliary PDF expressing product of composite terms, 
-	  // following Conditional component specification of input model
-	  RooLinkedList cmdList ;
-	  RooLinkedList pdfSetList ;
-	  pdfIter->Reset() ;
-	  RooArgSet fullPdfSet ;
-	  while((pdf=(RooAbsPdf*)pdfIter->Next())) {
+      const std::string name = model.makeRGPPName("PRODGEN_", *term, RooArgSet(), RooArgSet(), nullptr);
 
-	    RooArgSet* pdfnset = model.findPdfNSet(*pdf) ;
-	    RooArgSet* pdfSet = new RooArgSet(*pdf) ;
-	    pdfSetList.Add(pdfSet) ;
+      // Construct auxiliary PDF expressing product of composite terms,
+      // following Conditional component specification of input model
+      RooLinkedList cmdList;
+      RooLinkedList pdfSetList;
+      pdfIter->Reset();
+      RooArgSet fullPdfSet;
+      while ((pdf = (RooAbsPdf *)pdfIter->Next())) {
 
-	    if (pdfnset && pdfnset->getSize()>0) {
-	      // This PDF requires a Conditional() construction
-	      cmdList.Add(RooFit::Conditional(*pdfSet,*pdfnset).Clone()) ;
-//   	      cout << "Conditional " << pdf->GetName() << " " ; pdfnset->Print("1") ;
-	    } else {
-	      fullPdfSet.add(*pdfSet) ;
-	    }
+         RooArgSet *pdfnset = model.findPdfNSet(*pdf);
+         RooArgSet *pdfSet = new RooArgSet(*pdf);
+         pdfSetList.Add(pdfSet);
+
+         if (pdfnset && pdfnset->getSize() > 0) {
+            // This PDF requires a Conditional() construction
+            cmdList.Add(RooFit::Conditional(*pdfSet, *pdfnset).Clone());
+            //   	      cout << "Conditional " << pdf->GetName() << " " ; pdfnset->Print("1") ;
+         } else {
+            fullPdfSet.add(*pdfSet);
+         }
 	    
 	  }
 	  RooProdPdf* multiPdf = new RooProdPdf(name.c_str(),name.c_str(),fullPdfSet,cmdList) ;
@@ -245,8 +245,8 @@ RooProdGenContext::RooProdGenContext(const RooProdPdf &model, const RooArgSet &v
       trailerTermDeps.add(*termDeps) ;
     }
 
-    const std::string name = model.makeRGPPName("PRODGEN_",trailerTerm,RooArgSet(),RooArgSet(),0) ;      
-      
+    const std::string name = model.makeRGPPName("PRODGEN_", trailerTerm, RooArgSet(), RooArgSet(), nullptr);
+
     // Construct auxiliary PDF expressing product of composite terms, 
     // following Partial/Full component specification of input model
     RooLinkedList cmdList ;

@@ -45,8 +45,8 @@ End_Macro
 TPolyLine::TPolyLine(): TObject()
 {
    fN = 0;
-   fX = 0;
-   fY = 0;
+   fX = nullptr;
+   fY = nullptr;
    fLastPoint = -1;
 }
 
@@ -62,7 +62,7 @@ TPolyLine::TPolyLine(Int_t n, Option_t *option)
    if (n <= 0) {
       fN = 0;
       fLastPoint = -1;
-      fX = fY = 0;
+      fX = fY = nullptr;
       return;
    }
    fN = n;
@@ -83,7 +83,7 @@ TPolyLine::TPolyLine(Int_t n, Float_t *x, Float_t *y, Option_t *option)
    if (n <= 0) {
       fN = 0;
       fLastPoint = -1;
-      fX = fY = 0;
+      fX = fY = nullptr;
       return;
    }
    fN = n;
@@ -107,7 +107,7 @@ TPolyLine::TPolyLine(Int_t n, Double_t *x, Double_t *y, Option_t *option)
    if (n <= 0) {
       fN = 0;
       fLastPoint = -1;
-      fX = fY = 0;
+      fX = fY = nullptr;
       return;
    }
    fN = n;
@@ -151,8 +151,8 @@ TPolyLine::~TPolyLine()
 TPolyLine::TPolyLine(const TPolyLine &polyline) : TObject(polyline), TAttLine(polyline), TAttFill(polyline)
 {
    fN = 0;
-   fX = 0;
-   fY = 0;
+   fX = nullptr;
+   fY = nullptr;
    fLastPoint = -1;
    ((TPolyLine&)polyline).Copy(*this);
 }
@@ -171,8 +171,8 @@ void TPolyLine::Copy(TObject &obj) const
       ((TPolyLine&)obj).fY = new Double_t[fN];
       for (Int_t i=0; i<fN;i++)  {((TPolyLine&)obj).fX[i] = fX[i]; ((TPolyLine&)obj).fY[i] = fY[i];}
    } else {
-      ((TPolyLine&)obj).fX = 0;
-      ((TPolyLine&)obj).fY = 0;
+      ((TPolyLine &)obj).fX = nullptr;
+      ((TPolyLine &)obj).fY = nullptr;
    }
    ((TPolyLine&)obj).fOption = fOption;
    ((TPolyLine&)obj).fLastPoint = fLastPoint;
@@ -270,7 +270,7 @@ void TPolyLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    static Int_t px1,px2,py1,py2;
    static Int_t pxold, pyold, px1old, py1old, px2old, py2old;
    static Int_t dpx, dpy;
-   static Int_t *x=0, *y=0;
+   static Int_t *x = nullptr, *y = nullptr;
    Bool_t opaque  = gPad->OpaqueMoving();
 
    if (!gPad->IsEditable()) return;
@@ -471,8 +471,10 @@ void TPolyLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             fX[ipoint] = gPad->PadtoX(gPad->AbsPixeltoX(pxold));
             fY[ipoint] = gPad->PadtoY(gPad->AbsPixeltoY(pyold));
          }
-         delete [] x; x = 0;
-         delete [] y; y = 0;
+         delete [] x;
+         x = nullptr;
+         delete [] y;
+         y = nullptr;
       }
       gPad->Modified(kTRUE);
       gVirtualX->SetLineColor(-1);
@@ -674,7 +676,7 @@ void TPolyLine::SetPolyLine(Int_t n)
       fLastPoint = -1;
       delete [] fX;
       delete [] fY;
-      fX = fY = 0;
+      fX = fY = nullptr;
       return;
    }
    if (n < fN) {
@@ -697,7 +699,7 @@ void TPolyLine::SetPolyLine(Int_t n, Float_t *x, Float_t *y, Option_t *option)
       fLastPoint = -1;
       delete [] fX;
       delete [] fY;
-      fX = fY = 0;
+      fX = fY = nullptr;
       return;
    }
    fN =n;
@@ -725,7 +727,7 @@ void TPolyLine::SetPolyLine(Int_t n, Double_t *x, Double_t *y, Option_t *option)
       fLastPoint = -1;
       delete [] fX;
       delete [] fY;
-      fX = fY = 0;
+      fX = fY = nullptr;
       return;
    }
    fN =n;

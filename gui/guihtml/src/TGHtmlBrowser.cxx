@@ -55,63 +55,58 @@ enum EMyMessageTypes {
    kM_HELP_ABOUT
 };
 
-static const char *gHtmlFTypes[] = {
-   "HTML files",    "*.htm*",
-   "All files",     "*",
-    0,               0
-};
+static const char *gHtmlFTypes[] = {"HTML files", "*.htm*", "All files", "*", nullptr, nullptr};
 
-const char *HtmlError[] = {
-"<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \"http://www.w3c.org/TR/1999/REC-html401-19991224/loose.dtd\"> ",
-"<HTML><HEAD><TITLE>RHTML cannot display the webpage</TITLE> ",
-"<META http-equiv=Content-Type content=\"text/html; charset=UTF-8\"></HEAD> ",
-"<BODY> ",
-"<TABLE cellSpacing=0 cellPadding=0 width=730 border=0> ",
-"  <TBODY> ",
-"  <TR> ",
-"    <TD id=infoIconAlign vAlign=top align=left width=60 rowSpan=2> ",
-"    <IMG src=\"info.gif\"> ",
-"    </TD> ",
-"    <TD id=mainTitleAlign vAlign=center align=left width=*> ",
-"      <H1 id=mainTitle>RHTML cannot display the webpage</H1></TD></TR> ",
-"  <TR> ",
-"    <TD class=errorCodeAndDivider id=errorCodeAlign align=right>&nbsp;  ",
-"      <DIV class=divider></DIV></TD></TR> ",
-"  <TR> ",
-"      <UL> ",
-"      </UL> ",
-"    <TD>&nbsp; </TD> ",
-"    <TD id=MostLikelyAlign vAlign=top align=left> ",
-"      <H3 id=likelyCauses>Most likely causes:</H3> ",
-"      <UL> ",
-"        <LI id=causeNotConnected>You are not connected to the Internet.  ",
-"        <LI id=causeSiteProblem>The website is encountering problems.  ",
-"        <LI id=causeErrorInAddress>There might be a typing error in the address.  ",
-"        <LI id=causeOtherError>  ",
-"        </LI></UL></TD></TR> ",
-"  <TR> ",
-"    <TD id=infoBlockAlign vAlign=top align=right>&nbsp; </TD> ",
-"    <TD id=moreInformationAlign vAlign=center align=left> ",
-"      <H4> ",
-"      <TABLE> ",
-"        <TBODY> ",
-"        <TR> ",
-"          <TD vAlign=top><SPAN id=moreInfoContainer></SPAN><ID  ",
-"            id=moreInformation>More information</ID> ",
-"      </TD></TR></TBODY></TABLE></H4> ",
-"      <DIV class=infoBlock id=infoBlockID> ",
-"      <P><ID id=errorExpl1>This problem can be caused by a variety of issues,  ",
-"      including:</ID>  ",
-"      <UL> ",
-"        <LI id=errorExpl2>Internet connectivity has been lost.  ",
-"        <LI id=errorExpl3>The website is temporarily unavailable.  ",
-"        <LI id=errorExpl4>The Domain Name Server (DNS) is not reachable.  ",
-"        <LI id=errorExpl5>The Domain Name Server (DNS) does not have a listing  ",
-"        for the website's domain.  ",
-"      <P></P> ",
-"      <P></P></DIV></TD></TR></TBODY></TABLE></BODY></HTML> ",
-0
-};
+const char *HtmlError[] = {"<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" "
+                           "\"http://www.w3c.org/TR/1999/REC-html401-19991224/loose.dtd\"> ",
+                           "<HTML><HEAD><TITLE>RHTML cannot display the webpage</TITLE> ",
+                           "<META http-equiv=Content-Type content=\"text/html; charset=UTF-8\"></HEAD> ",
+                           "<BODY> ",
+                           "<TABLE cellSpacing=0 cellPadding=0 width=730 border=0> ",
+                           "  <TBODY> ",
+                           "  <TR> ",
+                           "    <TD id=infoIconAlign vAlign=top align=left width=60 rowSpan=2> ",
+                           "    <IMG src=\"info.gif\"> ",
+                           "    </TD> ",
+                           "    <TD id=mainTitleAlign vAlign=center align=left width=*> ",
+                           "      <H1 id=mainTitle>RHTML cannot display the webpage</H1></TD></TR> ",
+                           "  <TR> ",
+                           "    <TD class=errorCodeAndDivider id=errorCodeAlign align=right>&nbsp;  ",
+                           "      <DIV class=divider></DIV></TD></TR> ",
+                           "  <TR> ",
+                           "      <UL> ",
+                           "      </UL> ",
+                           "    <TD>&nbsp; </TD> ",
+                           "    <TD id=MostLikelyAlign vAlign=top align=left> ",
+                           "      <H3 id=likelyCauses>Most likely causes:</H3> ",
+                           "      <UL> ",
+                           "        <LI id=causeNotConnected>You are not connected to the Internet.  ",
+                           "        <LI id=causeSiteProblem>The website is encountering problems.  ",
+                           "        <LI id=causeErrorInAddress>There might be a typing error in the address.  ",
+                           "        <LI id=causeOtherError>  ",
+                           "        </LI></UL></TD></TR> ",
+                           "  <TR> ",
+                           "    <TD id=infoBlockAlign vAlign=top align=right>&nbsp; </TD> ",
+                           "    <TD id=moreInformationAlign vAlign=center align=left> ",
+                           "      <H4> ",
+                           "      <TABLE> ",
+                           "        <TBODY> ",
+                           "        <TR> ",
+                           "          <TD vAlign=top><SPAN id=moreInfoContainer></SPAN><ID  ",
+                           "            id=moreInformation>More information</ID> ",
+                           "      </TD></TR></TBODY></TABLE></H4> ",
+                           "      <DIV class=infoBlock id=infoBlockID> ",
+                           "      <P><ID id=errorExpl1>This problem can be caused by a variety of issues,  ",
+                           "      including:</ID>  ",
+                           "      <UL> ",
+                           "        <LI id=errorExpl2>Internet connectivity has been lost.  ",
+                           "        <LI id=errorExpl3>The website is temporarily unavailable.  ",
+                           "        <LI id=errorExpl4>The Domain Name Server (DNS) is not reachable.  ",
+                           "        <LI id=errorExpl5>The Domain Name Server (DNS) does not have a listing  ",
+                           "        for the website's domain.  ",
+                           "      <P></P> ",
+                           "      <P></P></DIV></TD></TR></TBODY></TABLE></BODY></HTML> ",
+                           nullptr};
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TGHtmlBrowser constructor.
@@ -124,31 +119,25 @@ TGHtmlBrowser::TGHtmlBrowser(const char *filename, const TGWindow *p, UInt_t w, 
    fMenuBar = new TGMenuBar(this, 35, 50, kHorizontalFrame);
 
    fMenuFile = new TGPopupMenu(gClient->GetDefaultRoot());
-   fMenuFile->AddEntry(" &Open...\tCtrl+O", kM_FILE_OPEN, 0,
-                       gClient->GetPicture("ed_open.png"));
-   fMenuFile->AddEntry(" Save &As...\tCtrl+A", kM_FILE_SAVEAS, 0,
-                       gClient->GetPicture("ed_save.png"));
+   fMenuFile->AddEntry(" &Open...\tCtrl+O", kM_FILE_OPEN, nullptr, gClient->GetPicture("ed_open.png"));
+   fMenuFile->AddEntry(" Save &As...\tCtrl+A", kM_FILE_SAVEAS, nullptr, gClient->GetPicture("ed_save.png"));
    fMenuFile->AddEntry(" &Browse...\tCtrl+B", kM_FILE_BROWSE);
    fMenuFile->AddSeparator();
-   fMenuFile->AddEntry(" E&xit\tCtrl+Q", kM_FILE_EXIT, 0,
-                       gClient->GetPicture("bld_exit.png"));
+   fMenuFile->AddEntry(" E&xit\tCtrl+Q", kM_FILE_EXIT, nullptr, gClient->GetPicture("bld_exit.png"));
    fMenuFile->Associate(this);
 
    fMenuFavorites = new TGPopupMenu(gClient->GetDefaultRoot());
-   fMenuFavorites->AddEntry("&Add to Favorites", kM_FAVORITES_ADD, 0,
-                            gClient->GetPicture("bld_plus.png"));
+   fMenuFavorites->AddEntry("&Add to Favorites", kM_FAVORITES_ADD, nullptr, gClient->GetPicture("bld_plus.png"));
    fMenuFavorites->AddSeparator();
-   fMenuFavorites->AddEntry("http://root.cern.ch", fNbFavorites++, 0,
-                            gClient->GetPicture("htmlfile.gif"));
+   fMenuFavorites->AddEntry("http://root.cern.ch", fNbFavorites++, nullptr, gClient->GetPicture("htmlfile.gif"));
    fMenuFavorites->Associate(this);
 
    fMenuTools = new TGPopupMenu(gClient->GetDefaultRoot());
-   fMenuTools->AddEntry("&Clear History", kM_TOOLS_CLEARHIST, 0,
-                        gClient->GetPicture("ed_delete.png"));
+   fMenuTools->AddEntry("&Clear History", kM_TOOLS_CLEARHIST, nullptr, gClient->GetPicture("ed_delete.png"));
    fMenuTools->Associate(this);
 
    fMenuHelp = new TGPopupMenu(gClient->GetDefaultRoot());
-   fMenuHelp->AddEntry(" &About...", kM_HELP_ABOUT, 0, gClient->GetPicture("about.xpm"));
+   fMenuHelp->AddEntry(" &About...", kM_HELP_ABOUT, nullptr, gClient->GetPicture("about.xpm"));
    fMenuHelp->Associate(this);
 
    fMenuBar->AddPopup("&File", fMenuFile, new TGLayoutHints(kLHintsTop | kLHintsLeft, 0, 4, 0, 0));
@@ -284,7 +273,7 @@ Ssiz_t ReadSize(const char *url)
 
 static char *ReadRemote(const char *url)
 {
-   static char *buf = 0;
+   static char *buf = nullptr;
    TUrl fUrl(url);
 
    Ssiz_t size = ReadSize(url);
@@ -301,17 +290,14 @@ static char *ReadRemote(const char *url)
    msg += "\r\n";
 
    TString uri(url);
-   if (!uri.BeginsWith("http://"))
-      return 0;
+   if (!uri.BeginsWith("http://")) return nullptr;
    TSocket s(fUrl.GetHost(), fUrl.GetPort());
-   if (!s.IsValid())
-      return 0;
-   if (s.SendRaw(msg.Data(), msg.Length()) == -1)
-      return 0;
+   if (!s.IsValid()) return nullptr;
+   if (s.SendRaw(msg.Data(), msg.Length()) == -1) return nullptr;
    buf = (char *)calloc(size+1, sizeof(char));
    if (s.RecvRaw(buf, size) == -1) {
       free(buf);
-      return 0;
+      return nullptr;
    }
    return buf;
 }
@@ -321,7 +307,7 @@ static char *ReadRemote(const char *url)
 
 void TGHtmlBrowser::Selected(const char *uri)
 {
-   char *buf = 0;
+   char *buf = nullptr;
    FILE *f;
 
    if (CheckAnchors(uri))
@@ -613,9 +599,8 @@ Bool_t TGHtmlBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                      break;
 
                   case kM_FAVORITES_ADD:
-                     fMenuFavorites->AddEntry(Form("%s",
-                           fURL->GetText()), fNbFavorites++, 0,
-                           gClient->GetPicture("htmlfile.gif"));
+                     fMenuFavorites->AddEntry(Form("%s", fURL->GetText()), fNbFavorites++, nullptr,
+                                              gClient->GetPicture("htmlfile.gif"));
                      break;
 
                   case kM_TOOLS_CLEARHIST:

@@ -128,7 +128,7 @@ enum RefFileEnum {
 };
 
 const int refFileOption = 1;
-TFile * refFile = 0;
+TFile *refFile = nullptr;
 const char* refFileName = "http://root.cern.ch/files/stressHistogram.5.18.00.root";
 
 TRandom2 r;
@@ -7153,10 +7153,10 @@ bool testSparseData1DFull()
    double min[dim] = {minRange};
    double max[dim] = {maxRange};
    ROOT::Fit::SparseData spTH1(dim, min,max);
-   ROOT::Fit::FillData(spTH1,h1, 0);
+   ROOT::Fit::FillData(spTH1, h1, nullptr);
 
    ROOT::Fit::SparseData spSparse(dim, min,max);
-   ROOT::Fit::FillData(spSparse,s1, 0);
+   ROOT::Fit::FillData(spSparse, s1, nullptr);
 
    int status = 1;
    if ( (spTH1 == spSparse ) &&
@@ -7189,10 +7189,10 @@ bool testSparseData1DSparse()
    double min[dim] = {minRange};
    double max[dim] = {maxRange};
    ROOT::Fit::SparseData spTH1(dim, min,max);
-   ROOT::Fit::FillData(spTH1,h1, 0);
+   ROOT::Fit::FillData(spTH1, h1, nullptr);
 
    ROOT::Fit::SparseData spSparse(dim, min,max);
-   ROOT::Fit::FillData(spSparse,s1, 0);
+   ROOT::Fit::FillData(spSparse, s1, nullptr);
 
    int status = 1;
    if ( (spTH1 == spSparse ) &&
@@ -7227,10 +7227,10 @@ bool testSparseData2DFull()
    double min[dim] = {minRange};
    double max[dim] = {maxRange};
    ROOT::Fit::SparseData spTH2(dim, min,max);
-   ROOT::Fit::FillData(spTH2,h2, 0);
+   ROOT::Fit::FillData(spTH2, h2, nullptr);
 
    ROOT::Fit::SparseData spSparse(dim, min,max);
-   ROOT::Fit::FillData(spSparse,s2, 0);
+   ROOT::Fit::FillData(spSparse, s2, nullptr);
 
    int status = 1;
    if ( (spTH2 == spSparse ) &&
@@ -7265,10 +7265,10 @@ bool testSparseData2DSparse()
    double min[dim] = {minRange};
    double max[dim] = {maxRange};
    ROOT::Fit::SparseData spTH2(dim, min,max);
-   ROOT::Fit::FillData(spTH2,h2, 0);
+   ROOT::Fit::FillData(spTH2, h2, nullptr);
 
    ROOT::Fit::SparseData spSparse(dim, min,max);
-   ROOT::Fit::FillData(spSparse,s2, 0);
+   ROOT::Fit::FillData(spSparse, s2, nullptr);
 
    int status = 1;
    if ( (spTH2 == spSparse ) &&
@@ -7305,10 +7305,10 @@ bool testSparseData3DFull()
    double min[dim] = {minRange};
    double max[dim] = {maxRange};
    ROOT::Fit::SparseData spTH3(dim, min,max);
-   ROOT::Fit::FillData(spTH3,h3, 0);
+   ROOT::Fit::FillData(spTH3, h3, nullptr);
 
    ROOT::Fit::SparseData spSparse(dim, min,max);
-   ROOT::Fit::FillData(spSparse,s3, 0);
+   ROOT::Fit::FillData(spSparse, s3, nullptr);
 
    int status = 1;
    if ( (spTH3 == spSparse ) &&
@@ -7345,10 +7345,10 @@ bool testSparseData3DSparse()
    double min[dim] = {minRange};
    double max[dim] = {maxRange};
    ROOT::Fit::SparseData spTH3(dim, min,max);
-   ROOT::Fit::FillData(spTH3,h3, 0);
+   ROOT::Fit::FillData(spTH3, h3, nullptr);
 
    ROOT::Fit::SparseData spSparse(dim, min,max);
-   ROOT::Fit::FillData(spSparse,s3, 0);
+   ROOT::Fit::FillData(spSparse, s3, nullptr);
 
    int status = 1;
    if ( (spTH3 == spSparse ) &&
@@ -7384,7 +7384,7 @@ bool testBinDataData1D()
    double min[dim] = {minRange};
    double max[dim] = {maxRange};
    ROOT::Fit::SparseData spSparseTmp(dim, min,max);
-   ROOT::Fit::FillData(spSparseTmp,s1, 0);
+   ROOT::Fit::FillData(spSparseTmp, s1, nullptr);
    ROOT::Fit::BinData bdSparse;
    spSparseTmp.GetBinData(bdSparse);
 
@@ -7426,7 +7426,7 @@ bool testBinDataData2D()
    double min[dim] = {minRange, minRange};
    double max[dim] = {maxRange, maxRange};
    ROOT::Fit::SparseData spSparseTmp(dim, min,max);
-   ROOT::Fit::FillData(spSparseTmp,s2, 0);
+   ROOT::Fit::FillData(spSparseTmp, s2, nullptr);
    ROOT::Fit::BinData bdSparse(spSparseTmp.NPoints(), spSparseTmp.NDim());
    spSparseTmp.GetBinData(bdSparse);
 
@@ -7470,7 +7470,7 @@ bool testBinDataData3D()
    double min[dim] = {minRange, minRange, minRange};
    double max[dim] = {maxRange, maxRange, maxRange};
    ROOT::Fit::SparseData spSparseTmp(dim, min,max);
-   ROOT::Fit::FillData(spSparseTmp,s3, 0);
+   ROOT::Fit::FillData(spSparseTmp, s3, nullptr);
    ROOT::Fit::BinData bdSparse(spSparseTmp.NPoints(), spSparseTmp.NDim());
    spSparseTmp.GetBinData(bdSparse);
 
@@ -7513,7 +7513,7 @@ bool testBinDataData1DInt()
    double min[dim] = {minRange};
    double max[dim] = {maxRange};
    ROOT::Fit::SparseData spSparseTmp(dim, min,max);
-   ROOT::Fit::FillData(spSparseTmp,s1, 0);
+   ROOT::Fit::FillData(spSparseTmp, s1, nullptr);
    ROOT::Fit::BinData bdSparse;
    spSparseTmp.GetBinDataIntegral(bdSparse);
 
@@ -7559,7 +7559,7 @@ bool testBinDataData2DInt()
    double min[dim] = {minRange, minRange};
    double max[dim] = {maxRange, maxRange};
    ROOT::Fit::SparseData spSparseTmp(dim, min,max);
-   ROOT::Fit::FillData(spSparseTmp,s2, 0);
+   ROOT::Fit::FillData(spSparseTmp, s2, nullptr);
    ROOT::Fit::BinData bdSparse(spSparseTmp.NPoints(), spSparseTmp.NDim());
    spSparseTmp.GetBinDataIntegral(bdSparse);
 
@@ -7607,7 +7607,7 @@ bool testBinDataData3DInt()
    double min[dim] = {minRange, minRange, minRange};
    double max[dim] = {maxRange, maxRange, maxRange};
    ROOT::Fit::SparseData spSparseTmp(dim, min,max);
-   ROOT::Fit::FillData(spSparseTmp,s3, 0);
+   ROOT::Fit::FillData(spSparseTmp, s3, nullptr);
    ROOT::Fit::BinData bdSparse(spSparseTmp.NPoints(), spSparseTmp.NDim());
    spSparseTmp.GetBinDataIntegral(bdSparse);
 
@@ -7629,7 +7629,7 @@ bool testRefRead1D()
 {
    // Tests consistency with a reference file for 1D Histogram
 
-   TH1D* h1 = 0;
+   TH1D *h1 = nullptr;
    bool ret = 0;
    if ( refFileOption == refFileWrite ) {
       h1 = new TH1D("rr1D-h1", "h1-Title", numberOfBins, minRange, maxRange);
@@ -7662,7 +7662,7 @@ bool testRefReadProf1D()
    // Tests consistency with a reference file for 1D Profile
 
    bool ret = 0;
-   TProfile* p1 = 0;
+   TProfile *p1 = nullptr;
    if ( refFileOption == refFileWrite ) {
       p1 = new TProfile("rr1D-p1", "p1-Title", numberOfBins, minRange, maxRange);
 //      p1->Sumw2();
@@ -7697,7 +7697,7 @@ bool testRefRead2D()
 {
    // Tests consistency with a reference file for 2D Histogram
 
-   TH2D* h1 = 0;
+   TH2D *h1 = nullptr;
    bool ret = 0;
    if ( refFileOption == refFileWrite ) {
       h1 = new TH2D("rr2D-h1", "h1-Title",
@@ -7734,7 +7734,7 @@ bool testRefReadProf2D()
 {
    // Tests consistency with a reference file for 2D Profile
 
-   TProfile2D* p1 = 0;
+   TProfile2D *p1 = nullptr;
    bool ret = 0;
    if ( refFileOption == refFileWrite ) {
       p1 = new TProfile2D("rr2D-p1", "p1-Title",
@@ -7771,7 +7771,7 @@ bool testRefRead3D()
 {
    // Tests consistency with a reference file for 3D Histogram
 
-   TH3D* h1 = 0;
+   TH3D *h1 = nullptr;
    bool ret = 0;
    if ( refFileOption == refFileWrite ) {
       h1 = new TH3D("rr3D-h1", "h1-Title",
@@ -7812,7 +7812,7 @@ bool testRefReadProf3D()
 {
    // Tests consistency with a reference file for 3D Profile
 
-   TProfile3D* p1 = 0;
+   TProfile3D *p1 = nullptr;
    bool ret = 0;
    if ( refFileOption == refFileWrite ) {
       p1 = new TProfile3D("rr3D-p1", "p1-Title",
@@ -7859,7 +7859,7 @@ bool testRefReadSparse()
    Double_t xmin[] = {minRange, minRange, minRange};
    Double_t xmax[] = {maxRange, maxRange, maxRange};
 
-   THnSparseD* s1 = 0;
+   THnSparseD *s1 = nullptr;
    bool ret = 0;
 
    if ( refFileOption == refFileWrite ) {
@@ -8469,36 +8469,41 @@ bool testTH3toTH1()
    int status = 0;
    int options = cmpOptStats;
 
-   TH1D* tmp1 = 0;
+   TH1D *tmp1 = nullptr;
 
    options = cmpOptStats;
    status += equals("TH3 -> X", h1X, (TH1D*) h3->Project3D("x"), options);
    tmp1 = h3->ProjectionX("x335");
    status += equals("TH3 -> X(x2)", tmp1, (TH1D*) h3->Project3D("x2"), options);
-   delete tmp1; tmp1 = 0;
+   delete tmp1;
+   tmp1 = nullptr;
    status += equals("TH3 -> Y", h1Y, (TH1D*) h3->Project3D("y"), options);
    tmp1 = h3->ProjectionY("y335");
    status += equals("TH3 -> Y(x2)", tmp1, (TH1D*) h3->Project3D("y2"), options);
-   delete tmp1; tmp1 = 0;
+   delete tmp1;
+   tmp1 = nullptr;
    status += equals("TH3 -> Z", h1Z, (TH1D*) h3->Project3D("z"), options);
    tmp1 = h3->ProjectionZ("z335");
    status += equals("TH3 -> Z(x2)", tmp1, (TH1D*) h3->Project3D("z2"), options);
-   delete tmp1; tmp1 = 0;
-
+   delete tmp1;
+   tmp1 = nullptr;
 
    options = cmpOptStats;
    status += equals("TH3O -> X", h1X, (TH1D*) h3->Project3D("ox"), options);
    tmp1 = h3->ProjectionX("x1335");
    status += equals("TH3O -> X(x2)", tmp1, (TH1D*) h3->Project3D("ox2"), options);
-   delete tmp1; tmp1 = 0;
+   delete tmp1;
+   tmp1 = nullptr;
    status += equals("TH3O -> Y", h1Y, (TH1D*) h3->Project3D("oy"), options);
    tmp1 = h3->ProjectionY("y1335");
    status += equals("TH3O -> Y(x2)", tmp1, (TH1D*) h3->Project3D("oy2"), options);
-   delete tmp1; tmp1 = 0;
+   delete tmp1;
+   tmp1 = nullptr;
    status += equals("TH3O -> Z", h1Z, (TH1D*) h3->Project3D("oz"), options);
    tmp1 = h3->ProjectionZ("z1335");
    status += equals("TH3O -> Z(x2)", tmp1, (TH1D*) h3->Project3D("oz2"), options);
-   delete tmp1; tmp1 = 0;
+   delete tmp1;
+   tmp1 = nullptr;
 
    h3->GetXaxis()->SetRange(minbinX, maxbinX);
    h3->GetYaxis()->SetRange(minbinY, maxbinY);
@@ -8513,29 +8518,35 @@ bool testTH3toTH1()
    status += equals("TH3R -> X", h1XR, (TH1D*) h3->Project3D("x34"), options );
    tmp1 = h3->ProjectionX("x3335", minbinY, maxbinY, minbinZ, maxbinZ);
    status += equals("TH3R -> X(x2)", tmp1, (TH1D*) h3->Project3D("x22"), options);
-   delete tmp1; tmp1 = 0;
+   delete tmp1;
+   tmp1 = nullptr;
    status += equals("TH3R -> Y", h1YR, (TH1D*) h3->Project3D("y34"), options);
    tmp1 = h3->ProjectionY("y3335", minbinX, maxbinX, minbinZ, maxbinZ);
    status += equals("TH3R -> Y(x2)", tmp1, (TH1D*) h3->Project3D("y22"), options);
-   delete tmp1; tmp1 = 0;
+   delete tmp1;
+   tmp1 = nullptr;
    status += equals("TH3R -> Z", h1ZR, (TH1D*) h3->Project3D("z34"), options);
    tmp1 = h3->ProjectionZ("z3335", minbinX, maxbinX, minbinY, maxbinY);
    status += equals("TH3R -> Z(x2)", tmp1, (TH1D*) h3->Project3D("z22"), options);
-   delete tmp1; tmp1 = 0;
+   delete tmp1;
+   tmp1 = nullptr;
 
    options = 0;
    status += equals("TH3RO -> X", h1XOR, (TH1D*) h3->Project3D("ox"), options);
    tmp1 = h3->ProjectionX("x1335", minbinY, maxbinY, minbinZ, maxbinZ,"o");
    status += equals("TH3RO-> X(x2)", tmp1, (TH1D*) h3->Project3D("ox2"), options );
-   delete tmp1; tmp1 = 0;
+   delete tmp1;
+   tmp1 = nullptr;
    status += equals("TH3RO -> Y", h1YOR, (TH1D*) h3->Project3D("oy"), options);
    tmp1 = h3->ProjectionY("y1335", minbinX, maxbinX, minbinZ, maxbinZ,"o");
    status += equals("TH3RO-> Y(x2)", tmp1, (TH1D*) h3->Project3D("oy2"), options);
-   delete tmp1; tmp1 = 0;
+   delete tmp1;
+   tmp1 = nullptr;
    status += equals("TH3RO-> Z", h1ZOR, (TH1D*) h3->Project3D("oz"), options);
    tmp1 = h3->ProjectionZ("z1335", minbinX, maxbinX, minbinY, maxbinY,"o");
    status += equals("TH3RO-> Z(x2)", tmp1, (TH1D*) h3->Project3D("oz2"), options);
-   delete tmp1; tmp1 = 0;
+   delete tmp1;
+   tmp1 = nullptr;
 
    options = 0;
 
@@ -9155,7 +9166,7 @@ public:
       // delete all histogram in gROOT
       TList * l = gROOT->GetList();
       TIter next(l);
-      TObject * obj = 0;
+      TObject *obj = nullptr;
       while ((obj = next()))
          if (obj->InheritsFrom(TH1::Class()) ) delete obj;
 
@@ -9458,19 +9469,22 @@ public:
 
       // TH1 derived from TH3
       options = cmpOptStats;
-      TH1D* tmp1 = 0;
+      TH1D *tmp1 = nullptr;
       status += equals("TH3 -> X", h1X, (TH1D*) h3->Project3D("x"), options);
       tmp1 = h3->ProjectionX("x335");
       status += equals("TH3 -> X(x2)", tmp1, (TH1D*) h3->Project3D("x2"), options);
-      delete tmp1; tmp1 = 0;
+      delete tmp1;
+      tmp1 = nullptr;
       status += equals("TH3 -> Y", h1Y, (TH1D*) h3->Project3D("y"), options);
       tmp1 = h3->ProjectionY("y335");
       status += equals("TH3 -> Y(x2)", tmp1, (TH1D*) h3->Project3D("y2"), options);
-      delete tmp1; tmp1 = 0;
+      delete tmp1;
+      tmp1 = nullptr;
       status += equals("TH3 -> Z", h1Z, (TH1D*) h3->Project3D("z"), options);
       tmp1 = h3->ProjectionZ("z335");
       status += equals("TH3 -> Z(x2)", tmp1, (TH1D*) h3->Project3D("z2"), options);
-      delete tmp1; tmp1 = 0;
+      delete tmp1;
+      tmp1 = nullptr;
 
       options = 0;
       if ( defaultEqualOptions & cmpOptPrint )
@@ -9782,19 +9796,22 @@ public:
       // TProfile1 derived from TProfile2D from TProfile3D
       options = cmpOptStats;
       //options = cmpOptDebug;
-      TProfile2D* tmp1 = 0;
+      TProfile2D *tmp1 = nullptr;
       status += equals("TProfile2D -> X", p1X, p2XY->ProfileX(), options);
       tmp1 = p3->Project3DProfile("xz");
       status += equals("TProfile3D -> X", p1X, tmp1->ProfileY(), options);
-      delete tmp1; tmp1 = 0;
+      delete tmp1;
+      tmp1 = nullptr;
       status += equals("TProfile2D -> Y", p1Y, p2ZY->ProfileY(), options);
       tmp1 = p3->Project3DProfile("xy");
       status += equals("TProfile3D -> X", p1Y, tmp1->ProfileX(), options);
-      delete tmp1; tmp1 = 0;
+      delete tmp1;
+      tmp1 = nullptr;
       status += equals("TProfile2D -> Z", p1Z, p2ZX->ProfileX(), options);
       tmp1 = p3->Project3DProfile("zy");
       status += equals("TProfile3D -> Z", p1Z, tmp1->ProfileY(), options);
-      delete tmp1; tmp1 = 0;
+      delete tmp1;
+      tmp1 = nullptr;
 
       return status;
    }
@@ -10215,7 +10232,7 @@ int stressHistogram()
       gROOT->SetBatch(isBatch);
    }
 
-   if ( refFile != 0 ) {
+   if (refFile != nullptr) {
       r.SetSeed(8652);
       status = 0;
       for ( unsigned int j = 0; j < refReadTestSuite.nTests; ++j ) {
@@ -10679,7 +10696,7 @@ int compareStatistics( TH1* h1, TH1* h2, bool debug, double ERRORLIMIT)
 
 int main(int argc, char** argv)
 {
-   TApplication* theApp = 0;
+   TApplication *theApp = nullptr;
 
    //TH1::SetDefaultSumw2();
 
@@ -10696,7 +10713,7 @@ int main(int argc, char** argv)
    if ( __DRAW__ ) {
       theApp->Run();
       delete theApp;
-      theApp = 0;
+      theApp = nullptr;
    }
 
    gROOT->CloseFiles();

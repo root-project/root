@@ -78,8 +78,7 @@ void TLDAPEntry::Print(Option_t *) const
 {
    std::cout << "dn: "<< fDn << std::endl;
    TLDAPAttribute *attr = GetAttribute("objectClass");
-   if (attr != 0)
-      attr->Print();
+   if (attr != nullptr) attr->Print();
    Int_t n = GetCount();
    for (Int_t i = 0; i < n; i++) {
       attr = (TLDAPAttribute*) fAttr->At(i);
@@ -100,7 +99,7 @@ TLDAPAttribute *TLDAPEntry::GetAttribute() const
       return (TLDAPAttribute*)fAttr->At(fNCount++);
    } else {
       fNCount = 0;
-      return 0;
+      return nullptr;
    }
 }
 
@@ -117,7 +116,7 @@ TLDAPAttribute *TLDAPEntry::GetAttribute(const char *name) const
          return (TLDAPAttribute*)fAttr->At(i);
       }
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -170,7 +169,7 @@ TList *TLDAPEntry::GetReferrals() const
 {
    TList *list = new TList;
    TLDAPAttribute *ref = GetAttribute("ref");
-   if (ref != 0) {
+   if (ref != nullptr) {
       Int_t n = ref->GetCount();
       for (Int_t i = 0; i < n; i++) {
          list->Add(ref->fValues->At(i));
@@ -188,6 +187,6 @@ LDAPMod **TLDAPEntry::GetMods(Int_t op)
    LDAPMod **mods = new LDAPMod* [n + 1];
    for (Int_t i = 0; i < n; i++)
       mods[i] = ((TLDAPAttribute*)(fAttr->At(i)))->GetMod(op);
-   mods[n] = 0;
+   mods[n] = nullptr;
    return mods;
 }

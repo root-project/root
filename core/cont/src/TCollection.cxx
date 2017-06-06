@@ -45,10 +45,10 @@ In a later release the collections may become templatized.
 #include "TSystem.h"
 #include <sstream>
 
-TVirtualMutex *gCollectionMutex = 0;
+TVirtualMutex *gCollectionMutex = nullptr;
 
-TCollection   *TCollection::fgCurrentCollection = 0;
-TObjectTable  *TCollection::fgGarbageCollection = 0;
+TCollection *TCollection::fgCurrentCollection = nullptr;
+TObjectTable *TCollection::fgGarbageCollection = nullptr;
 Bool_t         TCollection::fgEmptyingGarbage   = kFALSE;
 Int_t          TCollection::fgGarbageStack      = 0;
 
@@ -328,7 +328,7 @@ TObject *TCollection::FindObject(const char *name) const
 
    while ((obj = next()))
       if (!strcmp(name, obj->GetName())) return obj;
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -353,7 +353,7 @@ TObject *TCollection::FindObject(const TObject *obj) const
 
    while ((ob = next()))
       if (ob->IsEqual(obj)) return ob;
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -400,7 +400,7 @@ void TCollection::ls(Option_t *option) const
    TRegexp re(option,kTRUE);
    TIter next(this);
    TObject *object;
-   char *star = 0;
+   char *star = nullptr;
    if (option) star = (char*)strchr(option,'*');
 
    TROOT::IncreaseDirLevel();
@@ -773,7 +773,7 @@ TIter::TIter(const TIter &iter)
       fIterator = iter.GetCollection()->MakeIterator();
       fIterator->operator=(*iter.fIterator);
    } else
-      fIterator = 0;
+      fIterator = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

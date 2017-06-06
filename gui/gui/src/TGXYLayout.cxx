@@ -252,8 +252,7 @@ void TGXYLayout::Layout()
    while ((ptr = (TGFrameElement *) next()))  {
       if (ptr->fState & kIsVisible) {
          layout = (TGXYLayoutHints*)ptr->fLayout;
-         if (layout == 0)
-            continue;
+         if (layout == nullptr) continue;
 
          temp = layout->GetX() * fTWidth ;
          if (layout->GetFlag() & TGXYLayoutHints::kLRubberX)

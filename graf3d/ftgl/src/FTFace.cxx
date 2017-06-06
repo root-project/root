@@ -3,10 +3,7 @@
 
 #include FT_TRUETYPE_TABLES_H
 
-FTFace::FTFace( const char* fontFilePath)
-:   numGlyphs(0),
-    fontEncodingList(0),
-    err(0)
+FTFace::FTFace(const char *fontFilePath) : numGlyphs(0), fontEncodingList(nullptr), err(0)
 {
     const FT_Long DEFAULT_FACE_INDEX = 0;
     ftFace = new FT_Face;
@@ -14,7 +11,7 @@ FTFace::FTFace( const char* fontFilePath)
     err = FT_New_Face( *FTLibrary::Instance().GetLibrary(), fontFilePath, DEFAULT_FACE_INDEX, ftFace);
     if (err) {
         delete ftFace;
-        ftFace = 0;
+        ftFace = nullptr;
     } else {
         numGlyphs = (*ftFace)->num_glyphs;
         hasKerningTable = FT_HAS_KERNING((*ftFace));
@@ -33,7 +30,7 @@ FTFace::FTFace( const unsigned char *pBufferBytes, size_t bufferSizeInBytes)
 
     if (err) {
         delete ftFace;
-        ftFace = 0;
+        ftFace = nullptr;
     } else {
         numGlyphs = (*ftFace)->num_glyphs;
     }
@@ -45,7 +42,7 @@ FTFace::~FTFace()
     if (ftFace) {
         FT_Done_Face( *ftFace);
         delete ftFace;
-        ftFace = 0;
+        ftFace = nullptr;
     }
 }
 
@@ -87,11 +84,11 @@ unsigned int FTFace::CharMapCount()
 
 FT_Encoding* FTFace::CharMapList()
 {
-    if (0 == fontEncodingList) {
-        fontEncodingList = new FT_Encoding[CharMapCount()];
-        for (size_t encodingIndex = 0; encodingIndex < CharMapCount(); ++encodingIndex) {
-            fontEncodingList[encodingIndex] = (*ftFace)->charmaps[encodingIndex]->encoding;
-        }
+   if (nullptr == fontEncodingList) {
+      fontEncodingList = new FT_Encoding[CharMapCount()];
+      for (size_t encodingIndex = 0; encodingIndex < CharMapCount(); ++encodingIndex) {
+         fontEncodingList[encodingIndex] = (*ftFace)->charmaps[encodingIndex]->encoding;
+      }
     }
 
     return fontEncodingList;
@@ -121,6 +118,6 @@ FTPoint FTFace::KernAdvance( unsigned int index1, unsigned int index2)
 FT_GlyphSlot FTFace::Glyph( unsigned int index, FT_Int load_flags)
 {
     err = FT_Load_Glyph( *ftFace, index, load_flags);
-    if (err) return NULL;
+    if (err) return nullptr;
     return (*ftFace)->glyph;
 }

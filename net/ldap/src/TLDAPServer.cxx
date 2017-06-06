@@ -36,7 +36,7 @@ ClassImp(TLDAPServer);
 TLDAPServer::TLDAPServer(const char *host, Int_t port, const char *binddn,
                          const char *password, Int_t version)
 {
-   fLd          = 0;
+   fLd = nullptr;
    fIsConnected = kFALSE;
    fBinddn      = binddn;
    fPassword    = password;
@@ -139,9 +139,9 @@ const char *TLDAPServer::GetNamingContexts()
    TList *attrs = new TList;
    attrs->SetOwner();
    attrs->AddLast(new TObjString("namingContexts"));
-   const char *namingcontexts = 0;
+   const char *namingcontexts = nullptr;
 
-   TLDAPResult *result = Search("", LDAP_SCOPE_BASE, 0, attrs, 0);
+   TLDAPResult *result = Search("", LDAP_SCOPE_BASE, nullptr, attrs, 0);
 
    if (result) {
       TLDAPEntry *entry = result->GetNext();
@@ -168,9 +168,9 @@ const char *TLDAPServer::GetSubschemaSubentry()
    TList *attrs = new TList;
    attrs->SetOwner();
    attrs->AddLast(new TObjString("subschemaSubentry"));
-   const char *subschema = 0;
+   const char *subschema = nullptr;
 
-   TLDAPResult *result = Search("", LDAP_SCOPE_BASE, 0, attrs, 0);
+   TLDAPResult *result = Search("", LDAP_SCOPE_BASE, nullptr, attrs, 0);
 
    if (result) {
       TLDAPEntry *entry = result->GetNext();
@@ -200,7 +200,7 @@ TLDAPResult *TLDAPServer::GetObjectClasses()
    attrs->SetOwner();
    attrs->AddLast(new TObjString("objectClasses"));
 
-   TLDAPResult *result = Search(subschema, LDAP_SCOPE_BASE, 0, attrs, 0);
+   TLDAPResult *result = Search(subschema, LDAP_SCOPE_BASE, nullptr, attrs, 0);
 
    delete attrs;
 
@@ -220,7 +220,7 @@ TLDAPResult *TLDAPServer::GetAttributeTypes()
    attrs->SetOwner();
    attrs->AddLast(new TObjString("attributeTypes"));
 
-   TLDAPResult *result = Search(subschema, LDAP_SCOPE_BASE, 0, attrs, 0);
+   TLDAPResult *result = Search(subschema, LDAP_SCOPE_BASE, nullptr, attrs, 0);
 
    delete attrs;
 
@@ -254,21 +254,20 @@ TLDAPResult *TLDAPServer::Search(const char *base, Int_t scope,
    Bind();
 
    Int_t errcode;
-   TLDAPResult *result = 0;
+   TLDAPResult *result = nullptr;
 
    if (IsConnected()) {
 
       LDAPMessage *searchresult;
-      char **attrslist = 0;
+      char **attrslist = nullptr;
       if (attrs) {
          Int_t n = attrs->GetSize();
          attrslist = new char* [n + 1];
          for (Int_t i = 0; i < n; i++)
             attrslist[i] = (char*) ((TObjString*)attrs->At(i))->GetName();
-         attrslist[n] = 0;
+         attrslist[n] = nullptr;
       }
-      if (filter == 0)
-         filter = "(objectClass=*)";
+      if (filter == nullptr) filter = "(objectClass=*)";
 
       errcode = ldap_search_s(fLd, base, scope, filter, attrslist,
                               attrsonly, &searchresult);

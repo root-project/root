@@ -37,7 +37,7 @@ ClassImp(TBonjourResolver);
 ////////////////////////////////////////////////////////////////////////////////
 /// Default ctor.
 
-TBonjourResolver::TBonjourResolver() : fDNSRef(0), fBonjourSocketHandler(0), fPort(0)
+TBonjourResolver::TBonjourResolver() : fDNSRef(nullptr), fBonjourSocketHandler(nullptr), fPort(0)
 {
 }
 
@@ -50,7 +50,7 @@ TBonjourResolver::~TBonjourResolver()
 
    if (fDNSRef) {
       DNSServiceRefDeallocate(fDNSRef);
-      fDNSRef = 0;
+      fDNSRef = nullptr;
    }
 }
 

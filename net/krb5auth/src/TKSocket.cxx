@@ -151,16 +151,14 @@ int krb5_net_write(krb5_context /*context*/, int fd, register const char *buf, i
 
 ClassImp(TKSocket);
 
-
-krb5_context TKSocket::fgContext = 0;
-krb5_ccache TKSocket::fgCCDef = 0;
-krb5_principal TKSocket::fgClient = 0;
+krb5_context TKSocket::fgContext = nullptr;
+krb5_ccache TKSocket::fgCCDef = nullptr;
+krb5_principal TKSocket::fgClient = nullptr;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor
 
-TKSocket::TKSocket(TSocket *s)
-   : fSocket(s), fServer(0), fAuthContext(0)
+TKSocket::TKSocket(TSocket *s) : fSocket(s), fServer(nullptr), fAuthContext(nullptr)
 {
 }
 
@@ -181,29 +179,32 @@ TKSocket *TKSocket::Connect(const char *server, Int_t port)
 {
    Int_t rc;
 
-   if (fgContext == 0) {
+   if (fgContext == nullptr) {
       rc = krb5_init_context(&fgContext);
       if (rc != 0) {
          ::Error("TKSocket::Connect","while initializing krb5 (%d), %s",
                  rc, error_message(rc));
-         return 0;
+         return nullptr;
       }
 
       rc = krb5_cc_default(fgContext, &fgCCDef);
       if (rc != 0) {
          ::Error("TKSocket::Connect","while getting default credential cache (%d), %s",
                  rc, error_message(rc));
-         krb5_free_context(fgContext); fgContext = 0;
-         return 0;
+         krb5_free_context(fgContext);
+         fgContext = nullptr;
+         return nullptr;
       }
 
       rc = krb5_cc_get_principal(fgContext, fgCCDef, &fgClient);
       if (rc != 0) {
          ::Error("TKSocket::Connect","while getting client principal from %s (%d), %s",
                  krb5_cc_get_name(fgContext,fgCCDef), rc, error_message(rc));
-         krb5_cc_close(fgContext,fgCCDef); fgCCDef = 0;
-         krb5_free_context(fgContext); fgContext = 0;
-         return 0;
+         krb5_cc_close(fgContext,fgCCDef);
+         fgCCDef = nullptr;
+         krb5_free_context(fgContext);
+         fgContext = nullptr;
+         return nullptr;
       }
    }
 
@@ -212,7 +213,7 @@ TKSocket *TKSocket::Connect(const char *server, Int_t port)
    if (!s->IsValid()) {
       ::SysError("TKSocket::Connect","Cannot connect to %s:%d", server, port);
       delete s;
-      return 0;
+      return nullptr;
    }
 
    TKSocket *ks = new TKSocket(s);
@@ -222,7 +223,7 @@ TKSocket *TKSocket::Connect(const char *server, Int_t port)
       ::Error("TKSocket::Connect","while getting server principal (%d), %s",
               rc, error_message(rc));
       delete ks;
-      return 0;
+      return nullptr;
    }
 
    krb5_data cksum_data;
@@ -233,12 +234,9 @@ TKSocket *TKSocket::Connect(const char *server, Int_t port)
    krb5_ap_rep_enc_part *rep_ret;
 
    int sock = ks->fSocket->GetDescriptor();
-   rc = krb5_sendauth(fgContext, &ks->fAuthContext, (krb5_pointer) &sock,
-                      (char *)"KRB5_TCP_Python_v1.0", fgClient, ks->fServer,
-                      AP_OPTS_MUTUAL_REQUIRED,
-                      &cksum_data,
-                      0,           /* no creds, use ccache instead */
-                      fgCCDef, &err_ret, &rep_ret, 0);
+   rc = krb5_sendauth(fgContext, &ks->fAuthContext, (krb5_pointer)&sock, (char *)"KRB5_TCP_Python_v1.0", fgClient,
+                      ks->fServer, AP_OPTS_MUTUAL_REQUIRED, &cksum_data, nullptr, /* no creds, use ccache instead */
+                      fgCCDef, &err_ret, &rep_ret, nullptr);
 
    delete [] cksum_data.data;
 
@@ -246,7 +244,7 @@ TKSocket *TKSocket::Connect(const char *server, Int_t port)
       ::Error("TKSocket::Connect","while sendauth (%d), %s",
               rc, error_message(rc));
       delete ks;
-      return 0;
+      return nullptr;
    }
 
    return ks;
@@ -295,12 +293,8 @@ Int_t TKSocket::BlockRead(char *&buf, EEncoding &type)
       buf = enc.data;
       rc = enc.length;
       break;
-   case kSafe:
-      rc = krb5_rd_safe(fgContext, fAuthContext, &enc, &out, 0);
-      break;
-   case kPriv:
-      rc = krb5_rd_priv(fgContext, fAuthContext, &enc, &out, 0);
-      break;
+   case kSafe: rc = krb5_rd_safe(fgContext, fAuthContext, &enc, &out, nullptr); break;
+   case kPriv: rc = krb5_rd_priv(fgContext, fAuthContext, &enc, &out, nullptr); break;
    default:
       Error("BlockWrite","unknown encoding type (%d)", type);
       return -1;
@@ -336,12 +330,8 @@ Int_t TKSocket::BlockWrite(const char *buf, Int_t length, EEncoding type)
       enc.data = in.data;
       enc.length = in.length;
       break;
-   case kSafe:
-      rc = krb5_mk_safe(fgContext, fAuthContext, &in, &enc, 0);
-      break;
-   case kPriv:
-      rc = krb5_mk_priv(fgContext, fAuthContext, &in, &enc, 0);
-      break;
+   case kSafe: rc = krb5_mk_safe(fgContext, fAuthContext, &in, &enc, nullptr); break;
+   case kPriv: rc = krb5_mk_priv(fgContext, fAuthContext, &in, &enc, nullptr); break;
    default:
       Error("BlockWrite","unknown encoding type (%d)", type);
       return -1;

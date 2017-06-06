@@ -188,7 +188,7 @@ bool Fitter::SetFCN(const ROOT::Math::IMultiGenFunction & fcn, const double * pa
       MATH_ERROR_MSG("Fitter::SetFCN","FCN function has zero parameters ");
       return false;
    }
-   if (params != 0 )
+   if (params != nullptr)
       fConfig.SetParamsSettings(npar, params);
    else {
       if ( fConfig.ParamsSettings().size() != npar) {
@@ -294,7 +294,7 @@ bool Fitter::FitFCN() {
    // fit using the previously set  FCN function
 
    // in case a model function exists from a previous fit - reset shared-ptr
-   if (fFunc && fResult->FittedFunction() == 0) fFunc.reset();
+   if (fFunc && fResult->FittedFunction() == nullptr) fFunc.reset();
 
    if (!fObjFunction) {
       MATH_ERROR_MSG("Fitter::FitFCN","Objective function has not been set");
@@ -311,7 +311,7 @@ bool Fitter::FitFCN() {
 bool Fitter::EvalFCN() {
    // evaluate the FCN using the stored values in fConfig
 
-   if (fFunc && fResult->FittedFunction() == 0) fFunc.reset();
+   if (fFunc && fResult->FittedFunction() == nullptr) fFunc.reset();
 
    if (!fObjFunction) {
       MATH_ERROR_MSG("Fitter::FitFCN","Objective function has not been set");
@@ -551,7 +551,7 @@ bool Fitter::DoLinearFit( ) {
 bool Fitter::CalculateHessErrors() {
    // compute the Hesse errors according to configuration
    // set in the parameters and append value in fit result
-   if (fObjFunction.get() == 0) {
+   if (fObjFunction.get() == nullptr) {
       MATH_ERROR_MSG("Fitter::CalculateHessErrors","Objective function has not been set");
       return false;
    }
@@ -704,7 +704,7 @@ bool Fitter::DoInitMinimizer() {
    // create first Minimizer
    // using an auto_Ptr will delete the previous existing one
    fMinimizer = std::shared_ptr<ROOT::Math::Minimizer> ( fConfig.CreateMinimizer() );
-   if (fMinimizer.get() == 0) {
+   if (fMinimizer.get() == nullptr) {
       MATH_ERROR_MSG("Fitter::FitFCN","Minimizer cannot be created");
       return false;
    }
@@ -813,7 +813,7 @@ bool Fitter::ApplyWeightCorrection(const ROOT::Math::IMultiGenFunction & loglw2,
    // - the objective function is a likelihood function and Likelihood::UseSumOfWeightSquare()
    //    has been called before
 
-   if (fMinimizer.get() == 0) {
+   if (fMinimizer.get() == nullptr) {
       MATH_ERROR_MSG("Fitter::ApplyWeightCorrection","Must perform first a fit before applying the correction");
       return false;
    }

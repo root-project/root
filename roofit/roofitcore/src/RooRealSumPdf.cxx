@@ -327,8 +327,7 @@ Int_t RooRealSumPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& anal
 
   // Select subset of allVars that are actual dependents
   analVars.add(allVars) ;
-  RooArgSet* normSet = normSet2 ? getObservables(normSet2) : 0 ;
-
+  RooArgSet *normSet = normSet2 ? getObservables(normSet2) : nullptr;
 
   // Check if this configuration was created before
   Int_t sterileIdx(-1) ;
@@ -380,8 +379,10 @@ Double_t RooRealSumPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSe
 
   // WVE needs adaptation for rangeName feature
   CacheElem* cache = (CacheElem*) _normIntMgr.getObjByIndex(code-1) ;
-  if (cache==0) { // revive the (sterilized) cache
-     //cout << "RooRealSumPdf("<<this<<")::analyticalIntegralWN:"<<GetName()<<"("<<code<<","<<(normSet2?*normSet2:RooArgSet())<<","<<(rangeName?rangeName:"<none>") << ": reviving cache "<< endl;
+  if (cache == nullptr) { // revive the (sterilized) cache
+     // cout <<
+     // "RooRealSumPdf("<<this<<")::analyticalIntegralWN:"<<GetName()<<"("<<code<<","<<(normSet2?*normSet2:RooArgSet())<<","<<(rangeName?rangeName:"<none>")
+     // << ": reviving cache "<< endl;
      std::unique_ptr<RooArgSet> vars( getParameters(RooArgSet()) );
      std::unique_ptr<RooArgSet> iset(  _normIntMgr.nameSet2ByIndex(code-1)->select(*vars) );
      std::unique_ptr<RooArgSet> nset(  _normIntMgr.nameSet1ByIndex(code-1)->select(*vars) );
@@ -389,13 +390,13 @@ Double_t RooRealSumPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSe
      Int_t code2 = getAnalyticalIntegralWN(*iset,dummy,nset.get(),rangeName);
      R__ASSERT(code==code2); // must have revived the right (sterilized) slot...
      cache = (CacheElem*) _normIntMgr.getObjByIndex(code-1) ;
-     R__ASSERT(cache!=0);
+     R__ASSERT(cache != nullptr);
   }
 
   RooFIter funcIntIter = cache->_funcIntList.fwdIterator() ;
   RooFIter coefIter = _coefList.fwdIterator() ;
   RooFIter funcIter = _funcList.fwdIterator() ;
-  RooAbsReal *coef(0), *funcInt(0), *func(0) ;
+  RooAbsReal *coef(nullptr), *funcInt(nullptr), *func(nullptr);
   Double_t value(0) ;
 
   // N funcs, N-1 coefficients 
@@ -406,9 +407,9 @@ Double_t RooRealSumPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSe
     Double_t coefVal = coef->getVal(normSet2) ;
     if (coefVal) {
       assert(func);
-      if (normSet2 ==0 || func->isSelectedComp()) {
-	assert(funcInt);
-	value += funcInt->getVal()*coefVal ;
+      if (normSet2 == nullptr || func->isSelectedComp()) {
+         assert(funcInt);
+         value += funcInt->getVal() * coefVal;
       }
       lastCoef -= coef->getVal(normSet2) ;
     }
@@ -417,9 +418,9 @@ Double_t RooRealSumPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSe
   if (!_haveLastCoef) {
     // Add last func with correct coefficient
     funcInt = (RooAbsReal*) funcIntIter.next() ;
-    if (normSet2 ==0 || func->isSelectedComp()) {
-      assert(funcInt);
-      value += funcInt->getVal()*lastCoef ;
+    if (normSet2 == nullptr || func->isSelectedComp()) {
+       assert(funcInt);
+       value += funcInt->getVal() * lastCoef;
     }
     
     // Warn about coefficient degeneration
@@ -475,35 +476,35 @@ Double_t RooRealSumPdf::expectedEvents(const RooArgSet* nset) const
 
 std::list<Double_t>* RooRealSumPdf::binBoundaries(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const
 {
-  list<Double_t>* sumBinB = 0 ;
-  Bool_t needClean(kFALSE) ;
-  
-  RooFIter iter = _funcList.fwdIterator() ;
-  RooAbsReal* func ;
-  // Loop over components pdf
-  while((func=(RooAbsReal*)iter.next())) {
+   list<Double_t> *sumBinB = nullptr;
+   Bool_t needClean(kFALSE);
 
-    list<Double_t>* funcBinB = func->binBoundaries(obs,xlo,xhi) ;
-    
-    // Process hint
-    if (funcBinB) {
-      if (!sumBinB) {
-	// If this is the first hint, then just save it
-	sumBinB = funcBinB ;
-      } else {
-	
-	list<Double_t>* newSumBinB = new list<Double_t>(sumBinB->size()+funcBinB->size()) ;
+   RooFIter iter = _funcList.fwdIterator();
+   RooAbsReal *func;
+   // Loop over components pdf
+   while ((func = (RooAbsReal *)iter.next())) {
 
-	// Merge hints into temporary array
-	merge(funcBinB->begin(),funcBinB->end(),sumBinB->begin(),sumBinB->end(),newSumBinB->begin()) ;
-	
-	// Copy merged array without duplicates to new sumBinBArrau
-	delete sumBinB ;
-	delete funcBinB ;
-	sumBinB = newSumBinB ;
-	needClean = kTRUE ;	
+      list<Double_t> *funcBinB = func->binBoundaries(obs, xlo, xhi);
+
+      // Process hint
+      if (funcBinB) {
+         if (!sumBinB) {
+            // If this is the first hint, then just save it
+            sumBinB = funcBinB;
+         } else {
+
+            list<Double_t> *newSumBinB = new list<Double_t>(sumBinB->size() + funcBinB->size());
+
+            // Merge hints into temporary array
+            merge(funcBinB->begin(), funcBinB->end(), sumBinB->begin(), sumBinB->end(), newSumBinB->begin());
+
+            // Copy merged array without duplicates to new sumBinBArrau
+            delete sumBinB;
+            delete funcBinB;
+            sumBinB = newSumBinB;
+            needClean = kTRUE;
+         }
       }
-    }
   }
 
   // Remove consecutive duplicates
@@ -541,36 +542,36 @@ Bool_t RooRealSumPdf::isBinnedDistribution(const RooArgSet& obs) const
 
 std::list<Double_t>* RooRealSumPdf::plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const
 {
-  list<Double_t>* sumHint = 0 ;
-  Bool_t needClean(kFALSE) ;
-  
-  RooFIter iter = _funcList.fwdIterator() ;
-  RooAbsReal* func ;
-  // Loop over components pdf
-  while((func=(RooAbsReal*)iter.next())) {
+   list<Double_t> *sumHint = nullptr;
+   Bool_t needClean(kFALSE);
 
-    list<Double_t>* funcHint = func->plotSamplingHint(obs,xlo,xhi) ;
-    
-    // Process hint
-    if (funcHint) {
-      if (!sumHint) {
+   RooFIter iter = _funcList.fwdIterator();
+   RooAbsReal *func;
+   // Loop over components pdf
+   while ((func = (RooAbsReal *)iter.next())) {
 
-	// If this is the first hint, then just save it
-	sumHint = funcHint ;
+      list<Double_t> *funcHint = func->plotSamplingHint(obs, xlo, xhi);
 
-      } else {
-	
-	list<Double_t>* newSumHint = new list<Double_t>(sumHint->size()+funcHint->size()) ;
-	
-	// Merge hints into temporary array
-	merge(funcHint->begin(),funcHint->end(),sumHint->begin(),sumHint->end(),newSumHint->begin()) ;
+      // Process hint
+      if (funcHint) {
+         if (!sumHint) {
 
-	// Copy merged array without duplicates to new sumHintArrau
-	delete sumHint ;
-	sumHint = newSumHint ;
-	needClean = kTRUE ;	
+            // If this is the first hint, then just save it
+            sumHint = funcHint;
+
+         } else {
+
+            list<Double_t> *newSumHint = new list<Double_t>(sumHint->size() + funcHint->size());
+
+            // Merge hints into temporary array
+            merge(funcHint->begin(), funcHint->end(), sumHint->begin(), sumHint->end(), newSumHint->begin());
+
+            // Copy merged array without duplicates to new sumHintArrau
+            delete sumHint;
+            sumHint = newSumHint;
+            needClean = kTRUE;
+         }
       }
-    }
   }
 
   // Remove consecutive duplicates

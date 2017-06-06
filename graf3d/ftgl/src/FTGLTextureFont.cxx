@@ -91,7 +91,7 @@ FTGlyph* FTGLTextureFont::MakeGlyph( unsigned int glyphIndex)
     }
 
     err = face.Error();
-    return NULL;
+    return nullptr;
 }
 
 

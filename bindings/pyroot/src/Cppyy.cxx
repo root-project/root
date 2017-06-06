@@ -134,7 +134,7 @@ std::string Cppyy::GetScopeName( TCppScope_t parent, TCppIndex_t iscope )
 {
 // Retrieve the scope name of the scope indexed with iscope in parent.
    TClassRef& cr = type_from_handle( parent );
-   if ( cr.GetClass() ) return 0;   // not supported if not at global scope
+   if (cr.GetClass()) return nullptr; // not supported if not at global scope
    assert( parent == (TCppScope_t)GLOBAL_HANDLE );
    std::string name = gClassTable->At( iscope );
    if ( name.find("::") == std::string::npos )
@@ -303,7 +303,7 @@ static CallFunc_t* GetCallFunc( Cppyy::TCppMethod_t method )
       TCollection* method_args = func->GetListOfMethodArgs();
       TIter iarg( method_args );
 
-      TMethodArg* method_arg = 0;
+      TMethodArg *method_arg = nullptr;
       while ((method_arg = (TMethodArg*)iarg.Next())) {
          std::string fullType = method_arg->GetTypeNormalizedName();
          if ( callString.empty() )
@@ -486,7 +486,7 @@ Cppyy::TCppObject_t Cppyy::CallConstructor(
    void* obj = nullptr;
    if ( FastCall( method, args, nullptr, &obj ) )
       return (TCppObject_t)obj;
-   return (TCppObject_t)0;
+   return (TCppObject_t) nullptr;
 }
 
 void Cppyy::CallDestructor( TCppType_t type, TCppObject_t self )
@@ -503,13 +503,13 @@ Cppyy::TCppObject_t Cppyy::CallO( TCppMethod_t method,
    void* obj = malloc( s );
    if ( FastCall( method, args, self, obj ) )
       return (TCppObject_t)obj;
-   return (TCppObject_t)0;
+   return (TCppObject_t) nullptr;
 }
 
 Cppyy::TCppMethPtrGetter_t Cppyy::GetMethPtrGetter(
       TCppScope_t /* scope */, TCppIndex_t /* imeth */ )
 {
-   return (TCppMethPtrGetter_t)0;
+   return (TCppMethPtrGetter_t) nullptr;
 }
 
 
@@ -584,8 +584,7 @@ Cppyy::TCppIndex_t Cppyy::GetNumBases( TCppType_t klass )
 {
 // Get the total number of base classes that this class has.
    TClassRef& cr = type_from_handle( klass );
-   if ( cr.GetClass() && cr->GetListOfBases() != 0 )
-      return cr->GetListOfBases()->GetSize();
+   if (cr.GetClass() && cr->GetListOfBases() != nullptr) return cr->GetListOfBases()->GetSize();
    return 0;
 }
 
@@ -601,7 +600,7 @@ Bool_t Cppyy::IsSubtype( TCppType_t derived, TCppType_t base )
       return kTRUE;
    TClassRef& derived_type = type_from_handle( derived );
    TClassRef& base_type = type_from_handle( base );
-   return derived_type->GetBaseClass( base_type ) != 0;
+   return derived_type->GetBaseClass(base_type) != nullptr;
 }
 
 void Cppyy::AddSmartPtrType( const std::string& type_name ) {
@@ -700,7 +699,7 @@ std::vector< Cppyy::TCppMethod_t > Cppyy::GetMethodsFromName(
 
       TIter ifunc(funcs);
 
-      TFunction* func = 0;
+      TFunction *func = nullptr;
       while ( (func = (TFunction*)ifunc.Next()) ) {
       // cover not only direct matches, but also template matches
          std::string fn = func->GetName();
@@ -887,7 +886,7 @@ Cppyy::TCppIndex_t Cppyy::GetNumDatamembers( TCppScope_t scope )
 
          TIter ivar(vars);
 
-         TGlobal* var = 0;
+         TGlobal *var = nullptr;
          while ( (var = (TGlobal*)ivar.Next()) )
             g_globalvars.push_back( var );
       }

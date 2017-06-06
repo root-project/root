@@ -83,7 +83,7 @@ Double_t RooGaussian::getLogVal(const RooArgSet* set) const
 
   //static const Double_t rootPiBy2 = sqrt(atan2(0.0,-1.0)/2.0);
   //Double_t extra = -0.5*arg*arg/(sig*sig) - log(2*rootPiBy2*sig) ;
-  Double_t extra = -0.5*arg*arg/(sig*sig) - log(analyticalIntegral(1,0)) ;
+  Double_t extra = -0.5 * arg * arg / (sig * sig) - log(analyticalIntegral(1, nullptr));
 
   return extra ;
 

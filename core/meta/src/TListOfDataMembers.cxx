@@ -37,8 +37,8 @@ ClassImp(TListOfDataMembers);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TListOfDataMembers::TListOfDataMembers(TClass *cl /*=0*/) :
-   fClass(cl),fIds(0),fUnloaded(0),fIsLoaded(kFALSE), fLastLoadMarker(0)
+TListOfDataMembers::TListOfDataMembers(TClass *cl /*=0*/)
+   : fClass(cl), fIds(nullptr), fUnloaded(nullptr), fIsLoaded(kFALSE), fLastLoadMarker(0)
 {
 }
 
@@ -194,14 +194,15 @@ TObject *TListOfDataMembers::FindObject(const char *name) const
    if (!result) {
       if (IsLoaded() && fClass && fClass->Property() & (kIsClass|kIsStruct|kIsUnion)) {
          // We already have all the information, no need to search more
-         return 0;
+         return nullptr;
       }
 
       R__LOCKGUARD(gInterpreterMutex);
 
       TInterpreter::DeclId_t decl;
       if (fClass) decl = gInterpreter->GetDataMember(fClass->GetClassInfo(),name);
-      else        decl = gInterpreter->GetDataMember(0,name);
+      else
+         decl = gInterpreter->GetDataMember(nullptr, name);
       if (decl) result = const_cast<TListOfDataMembers*>(this)->Get(decl);
    }
    return result;
@@ -213,9 +214,9 @@ TObject *TListOfDataMembers::FindObject(const char *name) const
 
 TDictionary *TListOfDataMembers::Find(DeclId_t id) const
 {
-   if (!id) return 0;
+   if (!id) return nullptr;
 
-   return fIds ? (TDataMember*)fIds->GetValue((Long64_t)id) : 0;
+   return fIds ? (TDataMember *)fIds->GetValue((Long64_t)id) : nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -224,7 +225,7 @@ TDictionary *TListOfDataMembers::Find(DeclId_t id) const
 
 TDictionary *TListOfDataMembers::Get(DeclId_t id)
 {
-   if (!id) return 0;
+   if (!id) return nullptr;
 
    TDictionary *dm = Find(id);
    if (dm) return dm;
@@ -236,21 +237,21 @@ TDictionary *TListOfDataMembers::Get(DeclId_t id)
          // So this decl can not possibly be part of this class.
          // [In addition calling GetClassInfo would trigger a late parsing
          //  of the header which we want to avoid].
-         return 0;
+         return nullptr;
       }
-      if (!gInterpreter->ClassInfo_Contains(fClass->GetClassInfo(),id)) return 0;
+      if (!gInterpreter->ClassInfo_Contains(fClass->GetClassInfo(), id)) return nullptr;
    } else {
-      if (!gInterpreter->ClassInfo_Contains(0,id)) return 0;
+      if (!gInterpreter->ClassInfo_Contains(nullptr, id)) return nullptr;
    }
 
    R__LOCKGUARD(gInterpreterMutex);
 
-   DataMemberInfo_t *info = gInterpreter->DataMemberInfo_Factory(id,fClass ? fClass->GetClassInfo() : 0);
+   DataMemberInfo_t *info = gInterpreter->DataMemberInfo_Factory(id, fClass ? fClass->GetClassInfo() : nullptr);
 
    // Let's see if this is a reload ...
    const char *name = gInterpreter->DataMemberInfo_Name(info);
 
-   TDictionary *update = fUnloaded ? (TDictionary *)fUnloaded->FindObject(name) : 0;
+   TDictionary *update = fUnloaded ? (TDictionary *)fUnloaded->FindObject(name) : nullptr;
    if (update) {
       if (fClass) {
          ((TDataMember*)update)->Update(info);
@@ -282,11 +283,11 @@ TDictionary *TListOfDataMembers::Get(DeclId_t id)
 
 TDictionary *TListOfDataMembers::Get(DataMemberInfo_t *info, bool skipChecks)
 {
-   if (!info) return 0;
+   if (!info) return nullptr;
 
    TDictionary::DeclId_t id = gInterpreter->GetDeclId(info);
-   R__ASSERT( id != 0 && "DeclId should not be null");
-   TDictionary *dm = fIds ? (TDataMember*)fIds->GetValue((Long64_t)id) : 0;
+   R__ASSERT(id != nullptr && "DeclId should not be null");
+   TDictionary *dm = fIds ? (TDataMember *)fIds->GetValue((Long64_t)id) : nullptr;
    if (!dm) {
       if (fClass) {
          if (!fClass->HasInterpreterInfoInMemory()) {
@@ -295,11 +296,11 @@ TDictionary *TListOfDataMembers::Get(DataMemberInfo_t *info, bool skipChecks)
             // So this decl can not possibly be part of this class.
             // [In addition calling GetClassInfo would trigger a late parsing
             //  of the header which we want to avoid].
-            return 0;
+            return nullptr;
          }
-         if (!skipChecks && !gInterpreter->ClassInfo_Contains(fClass->GetClassInfo(),id)) return 0;
+         if (!skipChecks && !gInterpreter->ClassInfo_Contains(fClass->GetClassInfo(), id)) return nullptr;
       } else {
-         if (!skipChecks && !gInterpreter->ClassInfo_Contains(0,id)) return 0;
+         if (!skipChecks && !gInterpreter->ClassInfo_Contains(nullptr, id)) return nullptr;
       }
 
       R__LOCKGUARD(gInterpreterMutex);
@@ -308,7 +309,7 @@ TDictionary *TListOfDataMembers::Get(DataMemberInfo_t *info, bool skipChecks)
 
       // Let's see if this is a reload ...
       const char *name = gInterpreter->DataMemberInfo_Name(info);
-      TDataMember *update = fUnloaded ? (TDataMember *)fUnloaded->FindObject(name) : 0;
+      TDataMember *update = fUnloaded ? (TDataMember *)fUnloaded->FindObject(name) : nullptr;
       if (update) {
          update->Update(dm_info);
          dm = update;
@@ -338,7 +339,7 @@ void TListOfDataMembers::UnmapObject(TObject* obj)
          if (d->GetDeclId()) {
             fIds->Remove((Long64_t)d->GetDeclId());
          }
-         d->Update(0);
+         d->Update(nullptr);
       }
    } else {
       TGlobal *g = dynamic_cast<TGlobal*>(obj);
@@ -346,7 +347,7 @@ void TListOfDataMembers::UnmapObject(TObject* obj)
          if (g->GetDeclId()) {
             fIds->Remove((Long64_t)g->GetDeclId());
          }
-         g->Update(0);
+         g->Update(nullptr);
       }
    }
 }
@@ -383,7 +384,8 @@ TObject* TListOfDataMembers::Remove(TObject *obj)
    }
    UnmapObject(obj);
    if (found) return obj;
-   else return 0;
+   else
+      return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -391,7 +393,7 @@ TObject* TListOfDataMembers::Remove(TObject *obj)
 
 TObject* TListOfDataMembers::Remove(TObjLink *lnk)
 {
-   if (!lnk) return 0;
+   if (!lnk) return nullptr;
 
    TObject *obj = lnk->GetObject();
 
@@ -415,7 +417,7 @@ void TListOfDataMembers::Load()
    }
 
    // This will provoke the parsing of the headers if need be.
-   if (fClass && fClass->GetClassInfo() == 0) return;
+   if (fClass && fClass->GetClassInfo() == nullptr) return;
 
    R__LOCKGUARD(gInterpreterMutex);
 
@@ -512,7 +514,7 @@ void TListOfDataMembers::Update(TDictionary *member) {
             if (!fIds) fIds = new TExMap(idsSize);
             fIds->Add((Long64_t)d->GetDeclId(),(Long64_t)d);
          }
-         TDictionary *update = fUnloaded ? (TDictionary *)fUnloaded->FindObject(d->GetName()) : 0;
+         TDictionary *update = fUnloaded ? (TDictionary *)fUnloaded->FindObject(d->GetName()) : nullptr;
          if (update) fUnloaded->Remove(update);
 
          if (! THashList::FindObject(d) ) {
@@ -528,7 +530,7 @@ void TListOfDataMembers::Update(TDictionary *member) {
             if (!fIds) fIds = new TExMap(idsSize);
             fIds->Add((Long64_t)g->GetDeclId(),(Long64_t)g);
 
-            TDictionary *update = fUnloaded ? (TDictionary *)fUnloaded->FindObject(g->GetName()) : 0;
+            TDictionary *update = fUnloaded ? (TDictionary *)fUnloaded->FindObject(g->GetName()) : nullptr;
             if (update) fUnloaded->Remove(update);
 
             if (! THashList::FindObject(g) ) {

@@ -63,19 +63,10 @@ ClassImp(TGLPhysicalShape);
 ///  - invertedWind   - use inverted face polygon winding?
 ///  - rgba           - basic four component (RGBA) diffuse color
 
-TGLPhysicalShape::TGLPhysicalShape(UInt_t id, const TGLLogicalShape & logicalShape,
-                                   const TGLMatrix & transform, Bool_t invertedWind,
-                                   const Float_t rgba[4]) :
-   fLogicalShape (&logicalShape),
-   fNextPhysical (0),
-   fFirstPSRef   (0),
-   fID           (id),
-   fTransform    (transform),
-   fManip        (kManipAll),
-   fSelected     (0),
-   fInvertedWind (invertedWind),
-   fModified     (kFALSE),
-   fIsScaleForRnr(kFALSE)
+TGLPhysicalShape::TGLPhysicalShape(UInt_t id, const TGLLogicalShape &logicalShape, const TGLMatrix &transform,
+                                   Bool_t invertedWind, const Float_t rgba[4])
+   : fLogicalShape(&logicalShape), fNextPhysical(nullptr), fFirstPSRef(nullptr), fID(id), fTransform(transform),
+     fManip(kManipAll), fSelected(0), fInvertedWind(invertedWind), fModified(kFALSE), fIsScaleForRnr(kFALSE)
 {
    fLogicalShape->AddRef(this);
    UpdateBoundingBox();
@@ -92,19 +83,10 @@ TGLPhysicalShape::TGLPhysicalShape(UInt_t id, const TGLLogicalShape & logicalSha
 ///  - invertedWind   - use inverted face polygon winding?
 ///  - rgba           - basic four component (RGBA) diffuse color
 
-TGLPhysicalShape::TGLPhysicalShape(UInt_t id, const TGLLogicalShape & logicalShape,
-                                   const Double_t * transform, Bool_t invertedWind,
-                                   const Float_t rgba[4]) :
-   fLogicalShape (&logicalShape),
-   fNextPhysical (0),
-   fFirstPSRef   (0),
-   fID           (id),
-   fTransform    (transform),
-   fManip        (kManipAll),
-   fSelected     (0),
-   fInvertedWind (invertedWind),
-   fModified     (kFALSE),
-   fIsScaleForRnr(kFALSE)
+TGLPhysicalShape::TGLPhysicalShape(UInt_t id, const TGLLogicalShape &logicalShape, const Double_t *transform,
+                                   Bool_t invertedWind, const Float_t rgba[4])
+   : fLogicalShape(&logicalShape), fNextPhysical(nullptr), fFirstPSRef(nullptr), fID(id), fTransform(transform),
+     fManip(kManipAll), fSelected(0), fInvertedWind(invertedWind), fModified(kFALSE), fIsScaleForRnr(kFALSE)
 {
    fLogicalShape->AddRef(this);
 
@@ -129,7 +111,7 @@ TGLPhysicalShape::~TGLPhysicalShape()
 
    // Remove all references.
    while (fFirstPSRef) {
-      fFirstPSRef->SetPShape(0);
+      fFirstPSRef->SetPShape(nullptr);
    }
 }
 
@@ -138,7 +120,7 @@ TGLPhysicalShape::~TGLPhysicalShape()
 
 void TGLPhysicalShape::AddReference(TGLPShapeRef* ref)
 {
-   assert(ref != 0);
+   assert(ref != nullptr);
 
    ref->fNextPSRef = fFirstPSRef;
    fFirstPSRef = ref;
@@ -149,7 +131,7 @@ void TGLPhysicalShape::AddReference(TGLPShapeRef* ref)
 
 void TGLPhysicalShape::RemoveReference(TGLPShapeRef* ref)
 {
-   assert(ref != 0);
+   assert(ref != nullptr);
 
    Bool_t found = kFALSE;
    if (fFirstPSRef == ref) {
@@ -157,7 +139,7 @@ void TGLPhysicalShape::RemoveReference(TGLPShapeRef* ref)
       found = kTRUE;
    } else {
       TGLPShapeRef *shp1 = fFirstPSRef, *shp2;
-      while ((shp2 = shp1->fNextPSRef) != 0) {
+      while ((shp2 = shp1->fNextPSRef) != nullptr) {
          if (shp2 == ref) {
             shp1->fNextPSRef = shp2->fNextPSRef;
             found = kTRUE;
@@ -167,7 +149,7 @@ void TGLPhysicalShape::RemoveReference(TGLPShapeRef* ref)
       }
    }
    if (found) {
-      ref->fNextPSRef = 0;
+      ref->fNextPSRef = nullptr;
    } else {
       Error("TGLPhysicalShape::RemoveReference", "Attempt to un-ref an unregistered shape-ref.");
    }
@@ -291,7 +273,7 @@ void TGLPhysicalShape::SetDiffuseColor(Color_t ci, UChar_t transparency)
 
 void TGLPhysicalShape::SetupGLColors(TGLRnrCtx & rnrCtx, const Float_t* color) const
 {
-   if (color == 0) color = fColor;
+   if (color == nullptr) color = fColor;
 
    switch (rnrCtx.DrawPass()) {
       case TGLRnrCtx::kPassWireFrame:

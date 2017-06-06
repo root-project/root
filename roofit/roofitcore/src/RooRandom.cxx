@@ -37,15 +37,16 @@ using namespace std;
 ClassImp(RooRandom);
   ;
 
+  TRandom *RooRandom::_theGenerator = nullptr;
+  RooQuasiRandomGenerator *RooRandom::_theQuasiGenerator = nullptr;
+  RooRandom::Guard RooRandom::guard;
 
-TRandom* RooRandom::_theGenerator = 0;
-RooQuasiRandomGenerator* RooRandom::_theQuasiGenerator = 0;
-RooRandom::Guard RooRandom::guard;
+  ////////////////////////////////////////////////////////////////////////////////
 
-////////////////////////////////////////////////////////////////////////////////
-
-RooRandom::Guard::~Guard()
-{ delete RooRandom::_theGenerator; delete RooRandom::_theQuasiGenerator; }
+  RooRandom::Guard::~Guard()
+  {
+     delete RooRandom::_theGenerator;
+     delete RooRandom::_theQuasiGenerator; }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return a pointer to a singleton random-number generator

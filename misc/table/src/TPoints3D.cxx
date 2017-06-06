@@ -143,7 +143,7 @@ void TPoints3D::Copy(TObject &obj) const
 void TPoints3D::Delete()
 {
    if (fPoints && IsOwner()) delete fPoints;
-   fPoints = 0;
+   fPoints = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

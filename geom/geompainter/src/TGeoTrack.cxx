@@ -38,7 +38,7 @@ TGeoTrack::TGeoTrack()
 {
    fPointsSize = 0;
    fNpoints    = 0;
-   fPoints     = 0;
+   fPoints = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -49,8 +49,8 @@ TGeoTrack::TGeoTrack(Int_t id, Int_t pdgcode, TVirtualGeoTrack *parent, TObject 
 {
    fPointsSize = 0;
    fNpoints    = 0;
-   fPoints     = 0;
-   if (fParent==0) {
+   fPoints = nullptr;
+   if (fParent == nullptr) {
       SetMarkerColor(2);
       SetMarkerStyle(8);
       SetMarkerSize(0.6);
@@ -387,7 +387,7 @@ Int_t TGeoTrack::GetPoint(Int_t i, Double_t &x, Double_t &y, Double_t &z, Double
 
 const Double_t *TGeoTrack::GetPoint(Int_t i) const
 {
-   if (!fNpoints) return 0;
+   if (!fNpoints) return nullptr;
    return (&fPoints[i<<2]);
 }
 
@@ -712,8 +712,8 @@ void TGeoTrack::ResetTrack()
    fNpoints    = 0;
    fPointsSize = 0;
    if (fTracks) {fTracks->Delete(); delete fTracks;}
-   fTracks = 0;
+   fTracks = nullptr;
    if (fPoints) delete [] fPoints;
-   fPoints = 0;
+   fPoints = nullptr;
 }
 

@@ -42,7 +42,7 @@ TGeoTranslationEditor::TGeoTranslationEditor(const TGWindow *p, Int_t width,
                                    Int_t height, UInt_t options, Pixel_t back)
    : TGeoGedFrame(p, width, height, options | kVerticalFrame, back)
 {
-   fTranslation   = 0;
+   fTranslation = nullptr;
    fDxi = fDyi = fDzi = 0.0;
    fNamei = "";
    fIsModified = kFALSE;
@@ -149,7 +149,7 @@ void TGeoTranslationEditor::ConnectSignals2Slots()
 
 void TGeoTranslationEditor::SetModel(TObject* obj)
 {
-   if (obj == 0 || (obj->IsA()!=TGeoTranslation::Class())) {
+   if (obj == nullptr || (obj->IsA() != TGeoTranslation::Class())) {
       SetActive(kFALSE);
       return;
    }
@@ -296,7 +296,7 @@ TGeoRotationEditor::TGeoRotationEditor(const TGWindow *p, Int_t width,
                                    Int_t height, UInt_t options, Pixel_t back)
    : TGeoGedFrame(p, width, height, options | kVerticalFrame, back)
 {
-   fRotation   = 0;
+   fRotation = nullptr;
    fPhii = fThetai = fPsii = 0.0;
    fAngleX = fAngleY = fAngleZ = 0.0;
    fNamei = "";
@@ -432,7 +432,7 @@ void TGeoRotationEditor::ConnectSignals2Slots()
 
 void TGeoRotationEditor::SetModel(TObject* obj)
 {
-   if (obj == 0 || (obj->IsA()!=TGeoRotation::Class())) {
+   if (obj == nullptr || (obj->IsA() != TGeoRotation::Class())) {
       SetActive(kFALSE);
       return;
    }
@@ -605,7 +605,7 @@ TGeoCombiTransEditor::TGeoCombiTransEditor(const TGWindow *p, Int_t width,
                                    Int_t height, UInt_t options, Pixel_t back)
    : TGeoGedFrame(p, width, height, options | kVerticalFrame, back)
 {
-   fCombi   = 0;
+   fCombi = nullptr;
    fPhii = fThetai = fPsii = 0.0;
    fDxi = fDyi = fDzi = 0.0;
    fAngleX = fAngleY = fAngleZ = 0.0;
@@ -787,7 +787,7 @@ void TGeoCombiTransEditor::ConnectSignals2Slots()
 
 void TGeoCombiTransEditor::SetModel(TObject* obj)
 {
-   if (obj == 0 || (obj->IsA()!=TGeoCombiTrans::Class())) {
+   if (obj == nullptr || (obj->IsA() != TGeoCombiTrans::Class())) {
       SetActive(kFALSE);
       return;
    }

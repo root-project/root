@@ -312,7 +312,7 @@ using namespace UnitTesting;
 void UnitTestSuite::addTest(UnitTest* t)
 {
    // Verify test is valid and has a stream:
-   if (t == 0)
+   if (t == nullptr)
       throw UnitTestSuiteError("Null test in UnitTestSuite::addTest");
    else if (osptr && !t->getStream())
       t->setStream(osptr);
@@ -334,7 +334,7 @@ void UnitTestSuite::free()
    for (size_t i = 0; i < tests.size(); ++i)
       {
          delete tests[i];
-         tests[i] = 0;
+         tests[i] = nullptr;
       }
 }
 
@@ -1602,8 +1602,8 @@ bool utFactory::operateSingleFactory(const char* factoryname, const char* opt)
    std::cout <<"operateSingleFactory option="<<opt<<std::endl;
 #endif
    TString option=opt;
-   TTree* tree(0);
-   TFile* inFile(0);
+   TTree *tree(nullptr);
+   TFile *inFile(nullptr);
    if (!(option.Contains("MemoryResidentTree"))){
       inFile = TFile::Open( "weights/input.root", "RECREATE" );
       tree = create_Tree();
@@ -1974,10 +1974,13 @@ using namespace std;
 using namespace UnitTesting;
 using namespace TMVA;
 
-MethodUnitTestWithROCLimits::MethodUnitTestWithROCLimits(const Types::EMVA& theMethod, const TString& methodTitle, const TString& theOption,
-                                                         double lowLimit, double upLimit,
-                                                         const std::string & /* xname */ ,const std::string & /* filename */ , std::ostream* /* sptr */ ) :
-   UnitTest((string)methodTitle, __FILE__), _methodType(theMethod) , _methodTitle(methodTitle), _methodOption(theOption), _upROCLimit(upLimit), _lowROCLimit(lowLimit), _VariableNames(0), _TreeVariableNames(0)
+MethodUnitTestWithROCLimits::MethodUnitTestWithROCLimits(const Types::EMVA &theMethod, const TString &methodTitle,
+                                                         const TString &theOption, double lowLimit, double upLimit,
+                                                         const std::string & /* xname */,
+                                                         const std::string & /* filename */, std::ostream * /* sptr */)
+   : UnitTest((string)methodTitle, __FILE__), _methodType(theMethod), _methodTitle(methodTitle),
+     _methodOption(theOption), _upROCLimit(upLimit), _lowROCLimit(lowLimit), _VariableNames(nullptr),
+     _TreeVariableNames(nullptr)
 {
    _VariableNames  = new std::vector<TString>(0);
    _TreeVariableNames = new std::vector<TString>(0);
@@ -2024,7 +2027,7 @@ void MethodUnitTestWithROCLimits::run()
   dataloader->AddVariable( _VariableNames->at(2),                "Variable 3", "units", 'F' );
   dataloader->AddVariable( _VariableNames->at(3),                "Variable 4", "units", 'F' );
 
-  TFile* input(0);
+  TFile *input(nullptr);
   FileStat_t stat;
 
   TString fname = "./tmva_class_example.root";
@@ -2034,7 +2037,7 @@ void MethodUnitTestWithROCLimits::run()
      TFile::SetCacheFileDir(".");
      input = TFile::Open("http://root.cern.ch/files/tmva_class_example.root", "CACHEREAD");
   }
-  if (input == NULL) {
+  if (input == nullptr) {
      cerr << "broken/inaccessible input file" << endl;
   }
 
@@ -2122,7 +2125,7 @@ void MethodUnitTestWithROCLimits::run()
   int stuckCount=0, nevt= TMath::Min((int) testTree->GetEntries(),100);
   const float effS=0.301;
 
-  TMVA::Reader* reader2=0;
+  TMVA::Reader *reader2 = nullptr;
   std::vector< TMVA::Reader* > reader(nTest);
   for (int iTest=0;iTest<nTest;iTest++){
      //std::cout << "iTest="<<iTest<<std::endl;
@@ -2447,7 +2450,7 @@ void RegressionUnitTestWithDeviation::run()
    TString _targetname="fvalue";
    dataloader->AddTarget  ( _targetname.Data() ); // fix me _targetname.Data()
 
-   TFile* input(0);
+   TFile *input(nullptr);
    FileStat_t stat;
 
    TString fname = "./tmva_reg_example.root";
@@ -2457,7 +2460,7 @@ void RegressionUnitTestWithDeviation::run()
       TFile::SetCacheFileDir(".");
       input = TFile::Open("http://root.cern.ch/files/tmva_reg_example.root", "CACHEREAD");
    }
-   if (input == NULL) {
+   if (input == nullptr) {
       cerr << "broken/inaccessible input file" << endl;
    }
 
@@ -2694,15 +2697,14 @@ void MethodUnitTestWithComplexData::run()
   dataloader->AddSpectator( "is1", 'I' );
   dataloader->AddSpectator( "evtno", 'I' );
 
-  TFile* input(0);
-// FIXME:: give the filename of the sample somewhere else?
+  TFile *input(nullptr);
+  // FIXME:: give the filename of the sample somewhere else?
   TString fname = "weights/tmva_complex_data.root";
   input = TFile::Open( fname );
-  if (input == NULL) create_data("weights/tmva_complex_data.root");
+  if (input == nullptr) create_data("weights/tmva_complex_data.root");
   input = TFile::Open( fname );
-  if (input == NULL)
-    {
-      cerr << "broken/inaccessible input file" << endl;
+  if (input == nullptr) {
+     cerr << "broken/inaccessible input file" << endl;
     }
 
   TTree *sig1     = (TTree*)input->Get("TreeS1");
@@ -2898,8 +2900,8 @@ void utIPythonInteractive::run()
 void utIPythonInteractive::testInit()
 {
   ipyi = new TMVA::IPythonInteractive();
-  test_(ipyi->Get() != NULL);
-  
+  test_(ipyi->Get() != nullptr);
+
   ipyi->Init(titles);
   test_(!ipyi->NotInitialized());
 }

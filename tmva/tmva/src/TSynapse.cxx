@@ -45,13 +45,7 @@ ClassImp(TMVA::TSynapse);
 /// constructor
 
 TMVA::TSynapse::TSynapse()
-   : fWeight( 0 ),
-     fLearnRate( 0 ),
-     fDelta( 0 ),
-     fDEDw( 0 ),
-     fCount( 0 ),
-     fPreNeuron( NULL ),
-     fPostNeuron( NULL )
+   : fWeight(0), fLearnRate(0), fDelta(0), fDEDw(0), fCount(0), fPreNeuron(nullptr), fPostNeuron(nullptr)
 {
    fWeight     = fgUNINITIALIZED;
 }
@@ -76,8 +70,7 @@ void TMVA::TSynapse::SetWeight(Double_t weight)
 
 Double_t TMVA::TSynapse::GetWeightedValue()
 {
-   if (fPreNeuron == NULL)
-      Log() << kFATAL << "<GetWeightedValue> synapse not connected to neuron" << Endl;
+   if (fPreNeuron == nullptr) Log() << kFATAL << "<GetWeightedValue> synapse not connected to neuron" << Endl;
 
    return (fWeight * fPreNeuron->GetActivationValue());
 }
@@ -87,8 +80,7 @@ Double_t TMVA::TSynapse::GetWeightedValue()
 
 Double_t TMVA::TSynapse::GetWeightedDelta()
 {
-   if (fPostNeuron == NULL)
-      Log() << kFATAL << "<GetWeightedDelta> synapse not connected to neuron" << Endl;
+   if (fPostNeuron == nullptr) Log() << kFATAL << "<GetWeightedDelta> synapse not connected to neuron" << Endl;
 
    return fWeight * fPostNeuron->GetDelta();
 }

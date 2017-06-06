@@ -31,7 +31,7 @@ ClassImp(TGLParametricEquationGL);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TGLParametricEquationGL::TGLParametricEquationGL() : TGLPlot3D(), fM(0)
+TGLParametricEquationGL::TGLParametricEquationGL() : TGLPlot3D(), fM(nullptr)
 {
 }
 
@@ -49,7 +49,7 @@ Bool_t TGLParametricEquationGL::SetModel(TObject* obj, const Option_t* opt)
 {
    fM = SetModelDynCast<TGLParametricEquation>(obj);
 
-   SetPainter( new TGLParametricPlot(fM, 0) );
+   SetPainter(new TGLParametricPlot(fM, nullptr));
    TString option(opt);
    fPlotPainter->AddOption(option);
    fPlotPainter->InitGeometry();

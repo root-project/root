@@ -204,7 +204,7 @@ TStructNodeProperty* TStructNodeEditor::FindNodeProperty(TStructNode* node)
       }
    }
 
-   return NULL;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

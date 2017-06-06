@@ -269,12 +269,12 @@ void RooStats::HistFactory::Measurement::PrintXML( std::string directory, std::s
 
   // First, check that the directory exists:
 
-  if( directory != "" && gSystem->OpenDirectory( directory.c_str() ) == 0 ) {
-    int success = gSystem->MakeDirectory(directory.c_str() );    
-    if( success != 0 ) {
-      std::cout << "Error: Failed to make directory: " << directory << std::endl;
-      throw hf_exc();
-    }
+  if (directory != "" && gSystem->OpenDirectory(directory.c_str()) == nullptr) {
+     int success = gSystem->MakeDirectory(directory.c_str());
+     if (success != 0) {
+        std::cout << "Error: Failed to make directory: " << directory << std::endl;
+        throw hf_exc();
+     }
   }
 
   // If supplied new Prefix, use that one:
@@ -477,18 +477,17 @@ void RooStats::HistFactory::Measurement::writeToFile( TFile* file )
     // for this channel
 
     TDirectory* chanDir = file->mkdir( (chanName + "_hists").c_str() );
-    if( chanDir == NULL ) {
-      std::cout << "Error: Cannot create channel " << (chanName + "_hists")
-		<< std::endl;
-      throw hf_exc();
+    if (chanDir == nullptr) {
+       std::cout << "Error: Cannot create channel " << (chanName + "_hists") << std::endl;
+       throw hf_exc();
     }
     chanDir->cd();
 
     // Save the data:
     TDirectory* dataDir = chanDir->mkdir( "data" );
-    if( dataDir == NULL ) {
-      std::cout << "Error: Cannot make directory " << chanDir << std::endl;
-      throw hf_exc();
+    if (dataDir == nullptr) {
+       std::cout << "Error: Cannot make directory " << chanDir << std::endl;
+       throw hf_exc();
     }
     dataDir->cd();
 
@@ -519,9 +518,9 @@ void RooStats::HistFactory::Measurement::writeToFile( TFile* file )
       file->cd();
       chanDir->cd();
       TDirectory* sampleDir = chanDir->mkdir( sampName.c_str() );
-      if( sampleDir == NULL ) {
-	std::cout << "Error: Directory " << sampName << " not created properly" << std::endl;
-	throw hf_exc();
+      if (sampleDir == nullptr) {
+         std::cout << "Error: Directory " << sampName << " not created properly" << std::endl;
+         throw hf_exc();
       }
       std::string sampleDirPath = GetDirPath( sampleDir );
 

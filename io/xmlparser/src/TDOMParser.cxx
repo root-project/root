@@ -34,7 +34,7 @@ ClassImp(TDOMParser);
 ////////////////////////////////////////////////////////////////////////////////
 /// TDOMParser constructor.
 
-TDOMParser::TDOMParser() : fTXMLDoc(0)
+TDOMParser::TDOMParser() : fTXMLDoc(nullptr)
 {
 }
 
@@ -53,7 +53,7 @@ void TDOMParser::ReleaseUnderlying()
 {
    if (fTXMLDoc) {
       delete fTXMLDoc;
-      fTXMLDoc = 0;
+      fTXMLDoc = nullptr;
    }
 
    SetParseCode(0);

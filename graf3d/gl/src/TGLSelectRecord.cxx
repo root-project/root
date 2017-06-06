@@ -26,24 +26,15 @@ ClassImp(TGLSelectRecordBase);
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
 
-TGLSelectRecordBase::TGLSelectRecordBase() :
-   fN     (0),
-   fItems (0),
-   fMinZ  (0),
-   fMaxZ  (0),
-   fPos   (0)
+TGLSelectRecordBase::TGLSelectRecordBase() : fN(0), fItems(nullptr), fMinZ(0), fMaxZ(0), fPos(0)
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor from raw GL-select record.
 
-TGLSelectRecordBase::TGLSelectRecordBase(UInt_t* data) :
-   fN     (data[0]),
-   fItems (0),
-   fMinZ  ((Float_t)data[1] / 0x7fffffff),
-   fMaxZ  ((Float_t)data[2] / 0x7fffffff),
-   fPos   (0)
+TGLSelectRecordBase::TGLSelectRecordBase(UInt_t *data)
+   : fN(data[0]), fItems(nullptr), fMinZ((Float_t)data[1] / 0x7fffffff), fMaxZ((Float_t)data[2] / 0x7fffffff), fPos(0)
 {
    CopyItems(&data[3]);
 }
@@ -51,12 +42,8 @@ TGLSelectRecordBase::TGLSelectRecordBase(UInt_t* data) :
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor.
 
-TGLSelectRecordBase::TGLSelectRecordBase(const TGLSelectRecordBase& rec) :
-   fN     (rec.fN),
-   fItems (0),
-   fMinZ  (rec.fMinZ),
-   fMaxZ  (rec.fMaxZ),
-   fPos   (rec.fPos)
+TGLSelectRecordBase::TGLSelectRecordBase(const TGLSelectRecordBase &rec)
+   : fN(rec.fN), fItems(nullptr), fMinZ(rec.fMinZ), fMaxZ(rec.fMaxZ), fPos(rec.fPos)
 {
    CopyItems(rec.fItems);
 }
@@ -95,7 +82,7 @@ void TGLSelectRecordBase::CopyItems(UInt_t* items)
       fItems = new UInt_t[fN];
       memcpy(fItems, items, fN*sizeof(UInt_t));
    } else {
-      fItems = 0;
+      fItems = nullptr;
    }
 }
 
@@ -129,7 +116,7 @@ void TGLSelectRecordBase::Reset()
 {
    delete [] fItems;
    fN     = 0;
-   fItems = 0;
+   fItems = nullptr;
    fMinZ  = 0;
    fMaxZ  = 0;
    fPos   = 0;
@@ -148,34 +135,18 @@ ClassImp(TGLSelectRecord);
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
 
-TGLSelectRecord::TGLSelectRecord() :
-   TGLSelectRecordBase(),
-   fTransparent (kFALSE),
-   fSceneInfo   (0),
-   fPhysShape   (0),
-   fLogShape    (0),
-   fObject      (0),
-   fSpecific    (0),
-   fMultiple    (kFALSE),
-   fHighlight   (kFALSE),
-   fSecSelRes   (kNone)
+TGLSelectRecord::TGLSelectRecord()
+   : TGLSelectRecordBase(), fTransparent(kFALSE), fSceneInfo(nullptr), fPhysShape(nullptr), fLogShape(nullptr),
+     fObject(nullptr), fSpecific(nullptr), fMultiple(kFALSE), fHighlight(kFALSE), fSecSelRes(kNone)
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor from raw GL-select record.
 
-TGLSelectRecord::TGLSelectRecord(UInt_t* data) :
-   TGLSelectRecordBase(data),
-   fTransparent (kFALSE),
-   fSceneInfo   (0),
-   fPhysShape   (0),
-   fLogShape    (0),
-   fObject      (0),
-   fSpecific    (0),
-   fMultiple    (kFALSE),
-   fHighlight   (kFALSE),
-   fSecSelRes   (kNone)
+TGLSelectRecord::TGLSelectRecord(UInt_t *data)
+   : TGLSelectRecordBase(data), fTransparent(kFALSE), fSceneInfo(nullptr), fPhysShape(nullptr), fLogShape(nullptr),
+     fObject(nullptr), fSpecific(nullptr), fMultiple(kFALSE), fHighlight(kFALSE), fSecSelRes(kNone)
 {
 }
 
@@ -232,11 +203,11 @@ void TGLSelectRecord::Set(UInt_t* data)
 {
    TGLSelectRecordBase::Set(data);
    fTransparent = kFALSE;
-   fSceneInfo   = 0;
-   fPhysShape   = 0;
-   fLogShape    = 0;
-   fObject      = 0;
-   fSpecific    = 0;
+   fSceneInfo = nullptr;
+   fPhysShape = nullptr;
+   fLogShape = nullptr;
+   fObject = nullptr;
+   fSpecific = nullptr;
    fMultiple    = kFALSE;
    fHighlight   = kFALSE;
    fSecSelRes   = kNone;
@@ -249,11 +220,11 @@ void TGLSelectRecord::Reset()
 {
    TGLSelectRecordBase::Reset();
    fTransparent = kFALSE;
-   fSceneInfo   = 0;
-   fPhysShape   = 0;
-   fLogShape    = 0;
-   fObject      = 0;
-   fSpecific    = 0;
+   fSceneInfo = nullptr;
+   fPhysShape = nullptr;
+   fLogShape = nullptr;
+   fObject = nullptr;
+   fSpecific = nullptr;
    fMultiple    = kFALSE;
    fHighlight   = kFALSE;
    fSecSelRes   = kNone;
@@ -295,18 +266,14 @@ ClassImp(TGLOvlSelectRecord);
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
 
-TGLOvlSelectRecord::TGLOvlSelectRecord() :
-   TGLSelectRecordBase(),
-   fOvlElement (0)
+TGLOvlSelectRecord::TGLOvlSelectRecord() : TGLSelectRecordBase(), fOvlElement(nullptr)
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor from raw GL-select record.
 
-TGLOvlSelectRecord::TGLOvlSelectRecord(UInt_t* data) :
-   TGLSelectRecordBase(data),
-   fOvlElement (0)
+TGLOvlSelectRecord::TGLOvlSelectRecord(UInt_t *data) : TGLSelectRecordBase(data), fOvlElement(nullptr)
 {
 }
 
@@ -346,7 +313,7 @@ TGLOvlSelectRecord& TGLOvlSelectRecord::operator=(const TGLOvlSelectRecord& rec)
 void TGLOvlSelectRecord::Set(UInt_t* data)
 {
    TGLSelectRecordBase::Set(data);
-   fOvlElement = 0;
+   fOvlElement = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -355,6 +322,6 @@ void TGLOvlSelectRecord::Set(UInt_t* data)
 void TGLOvlSelectRecord::Reset()
 {
    TGLSelectRecordBase::Reset();
-   fOvlElement = 0;
+   fOvlElement = nullptr;
 }
 

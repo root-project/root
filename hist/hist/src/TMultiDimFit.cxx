@@ -421,8 +421,7 @@ ClassImp(TMultiDimFit);
 
 //____________________________________________________________________
 // Static instance. Used with mdfHelper and TMinuit
-TMultiDimFit* TMultiDimFit::fgInstance = 0;
-
+TMultiDimFit *TMultiDimFit::fgInstance = nullptr;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Empty CTOR. Do not use
@@ -443,17 +442,17 @@ TMultiDimFit::TMultiDimFit()
    fMaxAngle               = 0;
    fMaxTerms               = 0;
    fMinRelativeError       = 0;
-   fMaxPowers              = 0;
+   fMaxPowers = nullptr;
    fPowerLimit             = 0;
 
    fMaxFunctions           = 0;
-   fFunctionCodes          = 0;
+   fFunctionCodes = nullptr;
    fMaxStudy               = 0;
    fMaxFuncNV              = 0;
 
-   fMaxPowersFinal         = 0;
-   fPowers                 = 0;
-   fPowerIndex             = 0;
+   fMaxPowersFinal = nullptr;
+   fPowers = nullptr;
+   fPowerIndex = nullptr;
 
    fMaxResidual            = 0;
    fMinResidual            = 0;
@@ -473,12 +472,12 @@ TMultiDimFit::TMultiDimFit()
    fCorrelationCoeff       = 0;
    fTestCorrelationCoeff   = 0;
 
-   fHistograms             = 0;
+   fHistograms = nullptr;
    fHistogramMask          = 0;
    fBinVarX                = 100;
    fBinVarY                = 100;
 
-   fFitter                 = 0;
+   fFitter = nullptr;
    fPolyType               = kMonomials;
    fShowCorrelation        = kFALSE;
    fIsUserFunction         = kFALSE;
@@ -533,13 +532,13 @@ fMinVariables(dimension)
    fPowerLimit             = 1;
 
    fMaxFunctions           = 0;
-   fFunctionCodes          = 0;
+   fFunctionCodes = nullptr;
    fMaxStudy               = 0;
    fMaxFuncNV              = 0;
 
    fMaxPowersFinal         = new Int_t[dimension];
-   fPowers                 = 0;
-   fPowerIndex             = 0;
+   fPowers = nullptr;
+   fPowerIndex = nullptr;
 
    fMaxResidual            = 0;
    fMinResidual            = 0;
@@ -559,12 +558,12 @@ fMinVariables(dimension)
    fCorrelationCoeff       = 0;
    fTestCorrelationCoeff   = 0;
 
-   fHistograms             = 0;
+   fHistograms = nullptr;
    fHistogramMask          = 0;
    fBinVarX                = 100;
    fBinVarY                = 100;
 
-   fFitter                 = 0;
+   fFitter = nullptr;
    fPolyType               = type;
    fShowCorrelation        = kFALSE;
    fIsUserFunction         = kFALSE;
@@ -735,7 +734,7 @@ void TMultiDimFit::Browse(TBrowser* b)
 {
    if (fHistograms) {
       TIter next(fHistograms);
-      TH1* h = 0;
+      TH1 *h = nullptr;
       while ((h = (TH1*)next()))
          b->Add(h,h->GetName());
    }
@@ -1049,7 +1048,7 @@ void TMultiDimFit::Fit(Option_t *option)
       return;
    }
 
-   fFitter = TVirtualFitter::Fitter(0,fNCoefficients);
+   fFitter = TVirtualFitter::Fitter(nullptr, fNCoefficients);
    if (!fFitter) {
       Error("Fit", "Cannot create Fitter");
       delete [] x;

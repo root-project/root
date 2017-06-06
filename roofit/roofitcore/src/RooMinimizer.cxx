@@ -80,9 +80,7 @@ using namespace std;
 ClassImp(RooMinimizer);
 ;
 
-ROOT::Fit::Fitter *RooMinimizer::_theFitter = 0 ;
-
-
+ROOT::Fit::Fitter *RooMinimizer::_theFitter = nullptr;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Cleanup method called by atexit handler installed by RooSentinel
@@ -92,7 +90,7 @@ void RooMinimizer::cleanup()
 {
   if (_theFitter) {
     delete _theFitter ;
-    _theFitter =0 ;
+    _theFitter = nullptr;
   }
 }
 
@@ -115,7 +113,7 @@ RooMinimizer::RooMinimizer(RooAbsReal& function)
   RooSentinel::activate() ;
 
   // Store function reference
-  _extV = 0 ;
+  _extV = nullptr;
   _func = &function ;
   _optConst = kFALSE ;
   _verbose = kFALSE ;
@@ -302,7 +300,7 @@ RooFitResult* RooMinimizer::fit(const char* options)
   if (opts.Contains("h")||!opts.Contains("m")) hesse() ;
   if (!opts.Contains("m")) minos() ;
 
-  return (opts.Contains("r")) ? save() : 0 ;
+  return (opts.Contains("r")) ? save() : nullptr;
 }
 
 
@@ -372,10 +370,9 @@ Int_t RooMinimizer::migrad()
 
 Int_t RooMinimizer::hesse()
 {
-  if (_theFitter->GetMinimizer()==0) {
-    coutW(Minimization) << "RooMinimizer::hesse: Error, run Migrad before Hesse!"
-			<< endl ;
-    _status = -1;
+   if (_theFitter->GetMinimizer() == nullptr) {
+      coutW(Minimization) << "RooMinimizer::hesse: Error, run Migrad before Hesse!" << endl;
+      _status = -1;
   }
   else {
 
@@ -409,10 +406,9 @@ Int_t RooMinimizer::hesse()
 
 Int_t RooMinimizer::minos()
 {
-  if (_theFitter->GetMinimizer()==0) {
-    coutW(Minimization) << "RooMinimizer::minos: Error, run Migrad before Minos!"
-			<< endl ;
-    _status = -1;
+   if (_theFitter->GetMinimizer() == nullptr) {
+      coutW(Minimization) << "RooMinimizer::minos: Error, run Migrad before Minos!" << endl;
+      _status = -1;
   }
   else {
 
@@ -447,10 +443,9 @@ Int_t RooMinimizer::minos()
 
 Int_t RooMinimizer::minos(const RooArgSet& minosParamList)
 {
-  if (_theFitter->GetMinimizer()==0) {
-    coutW(Minimization) << "RooMinimizer::minos: Error, run Migrad before Minos!"
-			<< endl ;
-    _status = -1;
+   if (_theFitter->GetMinimizer() == nullptr) {
+      coutW(Minimization) << "RooMinimizer::minos: Error, run Migrad before Minos!" << endl;
+      _status = -1;
   }
   else if (minosParamList.getSize()>0) {
 
@@ -634,10 +629,9 @@ void RooMinimizer::optimizeConst(Int_t flag)
 
 RooFitResult* RooMinimizer::save(const char* userName, const char* userTitle)
 {
-  if (_theFitter->GetMinimizer()==0) {
-    coutW(Minimization) << "RooMinimizer::save: Error, run minimization before!"
-			<< endl ;
-    return 0;
+   if (_theFitter->GetMinimizer() == nullptr) {
+      coutW(Minimization) << "RooMinimizer::save: Error, run minimization before!" << endl;
+      return nullptr;
   }
 
   TString name,title ;
@@ -711,7 +705,7 @@ RooPlot* RooMinimizer::contour(RooRealVar& var1, RooRealVar& var2,
 			<< ") ERROR: " << var1.GetName()
 			<< " is not a floating parameter of "
 			<< _func->GetName() << endl ;
-    return 0;
+    return nullptr;
   }
 
   Int_t index2= _fcn->GetFloatParamList()->index(&var2);
@@ -720,7 +714,7 @@ RooPlot* RooMinimizer::contour(RooRealVar& var1, RooRealVar& var2,
 			<< ") ERROR: " << var2.GetName()
 			<< " is not a floating parameter of PDF "
 			<< _func->GetName() << endl ;
-    return 0;
+    return nullptr;
   }
 
   // create and draw a frame
@@ -731,8 +725,8 @@ RooPlot* RooMinimizer::contour(RooRealVar& var1, RooRealVar& var2,
   frame->addObject(point) ;
 
   // check first if a inimizer is available. If not means
-  // the minimization is not done , so do it 
-  if (_theFitter->GetMinimizer()==0) {
+  // the minimization is not done , so do it
+  if (_theFitter->GetMinimizer() == nullptr) {
      coutW(Minimization) << "RooMinimizer::contour: Error, run Migrad before contours!"
                          << endl ;
      return frame;
@@ -841,19 +835,18 @@ RooFitResult* RooMinimizer::lastMinuitFit(const RooArgList& varList)
   // Import the results of the last fit performed, interpreting
   // the fit parameters as the given varList of parameters.
 
-  if (_theFitter==0 || _theFitter->GetMinimizer()==0) {
-    oocoutE((TObject*)0,InputArguments) << "RooMinimizer::save: Error, run minimization before!"
-					<< endl ;
-    return 0;
+  if (_theFitter == nullptr || _theFitter->GetMinimizer() == nullptr) {
+     oocoutE((TObject *)nullptr, InputArguments) << "RooMinimizer::save: Error, run minimization before!" << endl;
+     return nullptr;
   }
 
   // Verify length of supplied varList
   if (varList.getSize()>0 && varList.getSize()!=Int_t(_theFitter->Result().NTotalParameters())) {
-    oocoutE((TObject*)0,InputArguments)
-      << "RooMinimizer::lastMinuitFit: ERROR: supplied variable list must be either empty " << endl
-      << "                             or match the number of variables of the last fit ("
-      << _theFitter->Result().NTotalParameters() << ")" << endl ;
-    return 0 ;
+     oocoutE((TObject *)nullptr, InputArguments)
+        << "RooMinimizer::lastMinuitFit: ERROR: supplied variable list must be either empty " << endl
+        << "                             or match the number of variables of the last fit ("
+        << _theFitter->Result().NTotalParameters() << ")" << endl;
+     return nullptr;
   }
 
 
@@ -862,9 +855,9 @@ RooFitResult* RooMinimizer::lastMinuitFit(const RooArgList& varList)
   RooAbsArg* arg  ;
   while((arg=(RooAbsArg*)iter->Next())) {
     if (!dynamic_cast<RooRealVar*>(arg)) {
-      oocoutE((TObject*)0,InputArguments) << "RooMinimizer::lastMinuitFit: ERROR: variable '"
-					  << arg->GetName() << "' is not of type RooRealVar" << endl ;
-      return 0 ;
+       oocoutE((TObject *)nullptr, InputArguments) << "RooMinimizer::lastMinuitFit: ERROR: variable '" << arg->GetName()
+                                                   << "' is not of type RooRealVar" << endl;
+       return nullptr;
     }
   }
   delete iter ;
@@ -906,8 +899,8 @@ RooFitResult* RooMinimizer::lastMinuitFit(const RooArgList& varList)
       }
 
       if (varName.CompareTo(var->GetName())) {
-	oocoutI((TObject*)0,Eval)  << "RooMinimizer::lastMinuitFit: fit parameter '" << varName
-				   << "' stored in variable '" << var->GetName() << "'" << endl ;
+         oocoutI((TObject *)nullptr, Eval) << "RooMinimizer::lastMinuitFit: fit parameter '" << varName
+                                           << "' stored in variable '" << var->GetName() << "'" << endl;
       }
 
     }

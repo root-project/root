@@ -89,17 +89,17 @@ void TRootSecContext::DeActivate(Option_t *Opt)
        fMethod == TAuthenticate::kSRP)
       if (fContext) {
          delete (TPwdCtx *)fContext;
-         fContext = 0;
+         fContext = nullptr;
       }
 
    // Cleanup globus security context if needed
    if (fMethod == TAuthenticate::kGlobus && fContext) {
       GlobusAuth_t globusAuthHook = TAuthenticate::GetGlobusAuthHook();
-      if (globusAuthHook != 0) {
+      if (globusAuthHook != nullptr) {
          TString det("context");
          TString us("-1");
          (*globusAuthHook)((TAuthenticate *)fContext,us,det);
-         fContext = 0;
+         fContext = nullptr;
       }
    }
 
@@ -134,7 +134,7 @@ Bool_t TRootSecContext::CleanupSecContext(Bool_t all)
    // Contact remote services that used this context,
    // starting from the last ...
    TIter last(fCleanup,kIterBackward);
-   TSecContextCleanup *nscc = 0;
+   TSecContextCleanup *nscc = nullptr;
    while ((nscc = (TSecContextCleanup *)last()) && !cleaned) {
 
       // First check if remote daemon supports cleaning

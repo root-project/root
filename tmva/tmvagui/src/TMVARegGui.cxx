@@ -16,7 +16,7 @@ TList* TMVA::RegGuiGetKeyList( const TString& pattern )
    TList* list = new TList();
 
    TIter next( TMVARegGui_keyContent );
-   TKey* key(0);
+   TKey *key(nullptr);
    while ((key = (TKey*)next())) {         
       if (TString(key->GetName()).Contains( pattern )) { list->Add( new TObjString( key->GetName() ) ); }
    }
@@ -34,7 +34,7 @@ void TMVA::RegGuiActionButton( TControlBar* cbar,
    if (requiredKey != "") {
       Bool_t found = kFALSE;
       TIter next( TMVARegGui_keyContent );
-      TKey* key(0);
+      TKey *key(nullptr);
       while ((key = (TKey*)next())) {         
          if (TString(key->GetName()).Contains( requiredKey )) { found = kTRUE; break; }
       }
@@ -129,7 +129,7 @@ void TMVA::TMVARegGui( const char* fName ,TString dataset)
    // find all input variables types
    TList* keylist = RegGuiGetKeyList( "InputVariables" );
    TListIter it( keylist );
-   TObjString* str = 0;
+   TObjString *str = nullptr;
    char ch = 'a';
    while ( (str = (TObjString*)it()) ) {
       TString tmp   = str->GetString();

@@ -58,14 +58,13 @@ ClassImp(RooFormulaVar);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor with formula expression and list of input variables
 
-RooFormulaVar::RooFormulaVar(const char *name, const char *title, const char* inFormula, const RooArgList& dependents) : 
-  RooAbsReal(name,title), 
-  _actualVars("actualVars","Variables used by formula expression",this),
-  _formula(0), _formExpr(inFormula)
+RooFormulaVar::RooFormulaVar(const char *name, const char *title, const char *inFormula, const RooArgList &dependents)
+   : RooAbsReal(name, title), _actualVars("actualVars", "Variables used by formula expression", this),
+     _formula(nullptr), _formExpr(inFormula)
 {  
-  _actualVars.add(dependents) ; 
+  _actualVars.add(dependents) ;
 
-  if (_actualVars.getSize()==0) _value = traceEval(0) ;
+  if (_actualVars.getSize() == 0) _value = traceEval(nullptr);
 }
 
 
@@ -73,14 +72,13 @@ RooFormulaVar::RooFormulaVar(const char *name, const char *title, const char* in
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor with formula expression, title and list of input variables
 
-RooFormulaVar::RooFormulaVar(const char *name, const char *title, const RooArgList& dependents) : 
-  RooAbsReal(name,title),
-  _actualVars("actualVars","Variables used by formula expression",this),
-  _formula(0), _formExpr(title)
+RooFormulaVar::RooFormulaVar(const char *name, const char *title, const RooArgList &dependents)
+   : RooAbsReal(name, title), _actualVars("actualVars", "Variables used by formula expression", this),
+     _formula(nullptr), _formExpr(title)
 {  
-  _actualVars.add(dependents) ; 
+  _actualVars.add(dependents) ;
 
-  if (_actualVars.getSize()==0) _value = traceEval(0) ;
+  if (_actualVars.getSize() == 0) _value = traceEval(nullptr);
 }
 
 
@@ -88,10 +86,9 @@ RooFormulaVar::RooFormulaVar(const char *name, const char *title, const RooArgLi
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-RooFormulaVar::RooFormulaVar(const RooFormulaVar& other, const char* name) : 
-  RooAbsReal(other, name), 
-  _actualVars("actualVars",this,other._actualVars),
-  _formula(0), _formExpr(other._formExpr)
+RooFormulaVar::RooFormulaVar(const RooFormulaVar &other, const char *name)
+   : RooAbsReal(other, name), _actualVars("actualVars", this, other._actualVars), _formula(nullptr),
+     _formExpr(other._formExpr)
 {
 }
 
@@ -214,8 +211,8 @@ std::list<Double_t>* RooFormulaVar::binBoundaries(RooAbsRealLValue& obs, Double_
       return binb ;
     }
   }
-  
-  return 0 ;  
+
+  return nullptr;
 }
 
 
@@ -233,8 +230,8 @@ std::list<Double_t>* RooFormulaVar::plotSamplingHint(RooAbsRealLValue& obs, Doub
       return hint ;
     }
   }
-  
-  return 0 ;
+
+  return nullptr;
 }
 
 
@@ -250,18 +247,18 @@ std::list<Double_t>* RooFormulaVar::plotSamplingHint(RooAbsRealLValue& obs, Doub
 
 Double_t RooFormulaVar::defaultErrorLevel() const 
 {
-  RooAbsReal* nllArg(0) ;
-  RooAbsReal* chi2Arg(0) ;
+   RooAbsReal *nllArg(nullptr);
+   RooAbsReal *chi2Arg(nullptr);
 
-  TIterator* iter = _actualVars.createIterator() ;
-  RooAbsArg* arg ;
-  while((arg=(RooAbsArg*)iter->Next())) {
-    if (dynamic_cast<RooNLLVar*>(arg)) {
-      nllArg = (RooAbsReal*)arg ;
-    }
-    if (dynamic_cast<RooChi2Var*>(arg)) {
-      chi2Arg = (RooAbsReal*)arg ;
-    }
+   TIterator *iter = _actualVars.createIterator();
+   RooAbsArg *arg;
+   while ((arg = (RooAbsArg *)iter->Next())) {
+      if (dynamic_cast<RooNLLVar *>(arg)) {
+         nllArg = (RooAbsReal *)arg;
+      }
+      if (dynamic_cast<RooChi2Var *>(arg)) {
+         chi2Arg = (RooAbsReal *)arg;
+      }
   }
   delete iter ;
 

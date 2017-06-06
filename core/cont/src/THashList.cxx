@@ -211,7 +211,7 @@ void THashList::Delete(Option_t *option)
 
          delete tlk;
       }
-      fFirst = fLast = fCache = 0;
+      fFirst = fLast = fCache = nullptr;
       fSize  = 0;
 
       // These objects cannot expect to have a valid TDirectory anymore;
@@ -305,7 +305,7 @@ void THashList::Rehash(Int_t newCapacity)
 
 TObject *THashList::Remove(TObject *obj)
 {
-   if (!obj || !fTable->FindObject(obj)) return 0;
+   if (!obj || !fTable->FindObject(obj)) return nullptr;
 
    TList::Remove(obj);
    return fTable->Remove(obj);
@@ -316,7 +316,7 @@ TObject *THashList::Remove(TObject *obj)
 
 TObject *THashList::Remove(TObjLink *lnk)
 {
-   if (!lnk) return 0;
+   if (!lnk) return nullptr;
 
    TObject *obj = lnk->GetObject();
 

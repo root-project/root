@@ -84,10 +84,17 @@ private:
    bool fIsFromTypedef = false;
 
 public:
+   BaseSelectionRule(ESelect sel)
+      : fIndex(-1), fIsSelected(sel), fMatchFound(false), fCXXRecordDecl(nullptr), fRequestedType(nullptr),
+        fInterp(nullptr)
+   {
+   }
 
-   BaseSelectionRule(ESelect sel) : fIndex(-1),fIsSelected(sel),fMatchFound(false),fCXXRecordDecl(NULL),fRequestedType(NULL),fInterp(NULL) {}
-
-   BaseSelectionRule(long index, cling::Interpreter &interp, const char* selFileName = "", long lineno=-1) : fIndex(index),fLineNumber(lineno),fSelFileName(selFileName),fIsSelected(kNo),fMatchFound(false),fCXXRecordDecl(0),fRequestedType(0),fInterp(&interp) {}
+   BaseSelectionRule(long index, cling::Interpreter &interp, const char *selFileName = "", long lineno = -1)
+      : fIndex(index), fLineNumber(lineno), fSelFileName(selFileName), fIsSelected(kNo), fMatchFound(false),
+        fCXXRecordDecl(nullptr), fRequestedType(nullptr), fInterp(&interp)
+   {
+   }
 
    BaseSelectionRule(long index, ESelect sel, const std::string& attributeName, const std::string& attributeValue, cling::Interpreter &interp, const char* selFileName = "",long lineno=-1);
 
@@ -136,7 +143,7 @@ public:
    ESelect GetSelected() const;
    void    SetSelected(ESelect sel);
 
-   bool  HasInterpreter() const {return fInterp!=NULL; };
+   bool HasInterpreter() const { return fInterp != nullptr; };
    void  SetInterpreter(cling::Interpreter& interp) {fInterp=&interp; };
 
    const AttributesMap_t& GetAttributes() const; // returns the list of attributes

@@ -22,7 +22,7 @@ namespace PyROOT {
       virtual ~TConverter() {}
 
    public:
-      virtual Bool_t SetArg( PyObject*, TParameter&, TCallContext* ctxt = 0 ) = 0;
+      virtual Bool_t SetArg(PyObject *, TParameter &, TCallContext *ctxt = nullptr) = 0;
       virtual PyObject* FromMemory( void* address );
       virtual Bool_t ToMemory( PyObject* value, void* address );
    };
@@ -98,7 +98,7 @@ namespace PyROOT {
 
    class TVoidConverter : public TConverter {
    public:
-      virtual Bool_t SetArg( PyObject*, TParameter&, TCallContext* ctxt = 0 );
+      virtual Bool_t SetArg(PyObject *, TParameter &, TCallContext *ctxt = nullptr);
    };
 
    class TCStringConverter : public TConverter {
@@ -106,7 +106,7 @@ namespace PyROOT {
       TCStringConverter( UInt_t maxSize = UINT_MAX ) : fMaxSize( maxSize ) {}
 
    public:
-      virtual Bool_t SetArg( PyObject*, TParameter&, TCallContext* ctxt = 0 );
+      virtual Bool_t SetArg(PyObject *, TParameter &, TCallContext *ctxt = nullptr);
       virtual PyObject* FromMemory( void* address );
       virtual Bool_t ToMemory( PyObject* value, void* address );
 
@@ -120,7 +120,7 @@ namespace PyROOT {
       TNonConstCStringConverter( UInt_t maxSize = UINT_MAX ) : TCStringConverter( maxSize ) {}
 
    public:
-      virtual Bool_t SetArg( PyObject*, TParameter&, TCallContext* ctxt = 0 );
+      virtual Bool_t SetArg(PyObject *, TParameter &, TCallContext *ctxt = nullptr);
       virtual PyObject* FromMemory( void* address );
    };
 
@@ -129,14 +129,14 @@ namespace PyROOT {
       TNonConstUCStringConverter( UInt_t maxSize = UINT_MAX ) : TNonConstCStringConverter( maxSize ) {}
 
    public:
-      virtual Bool_t SetArg( PyObject*, TParameter&, TCallContext* ctxt = 0 );
+      virtual Bool_t SetArg(PyObject *, TParameter &, TCallContext *ctxt = nullptr);
    };
 
 // pointer/array conversions
    class TVoidArrayConverter : public TConverter {
    public:
       TVoidArrayConverter( Bool_t keepControl = kTRUE ) { fKeepControl = keepControl; }
-      virtual Bool_t SetArg( PyObject*, TParameter&, TCallContext* ctxt = 0 );
+      virtual Bool_t SetArg(PyObject *, TParameter &, TCallContext *ctxt = nullptr);
       virtual PyObject* FromMemory( void* address );
       virtual Bool_t ToMemory( PyObject* value, void* address );
 
@@ -162,7 +162,7 @@ namespace PyROOT {
 
    class TLongLongArrayConverter : public TVoidArrayConverter {
    public:
-      virtual Bool_t SetArg( PyObject*, TParameter&, TCallContext* ctxt = 0 );
+      virtual Bool_t SetArg(PyObject *, TParameter &, TCallContext *ctxt = nullptr);
    };
 
 // converters for special cases
@@ -172,7 +172,7 @@ namespace PyROOT {
          TVoidArrayConverter( keepControl ), fClass( klass ) {}
 
    public:
-      virtual Bool_t SetArg( PyObject*, TParameter&, TCallContext* ctxt = 0 );
+      virtual Bool_t SetArg(PyObject *, TParameter &, TCallContext *ctxt = nullptr);
       virtual PyObject* FromMemory( void* address );
       virtual Bool_t ToMemory( PyObject* value, void* address );
 
@@ -193,7 +193,7 @@ namespace PyROOT {
       using TStrictCppObjectConverter::TStrictCppObjectConverter;
 
    public:
-      virtual Bool_t SetArg( PyObject*, TParameter&, TCallContext* ctxt = 0 );
+      virtual Bool_t SetArg(PyObject *, TParameter &, TCallContext *ctxt = nullptr);
    };
 
    class TRefCppObjectConverter : public TConverter  {
@@ -201,7 +201,7 @@ namespace PyROOT {
       TRefCppObjectConverter( Cppyy::TCppType_t klass ) : fClass( klass ) {}
 
    public:
-      virtual Bool_t SetArg( PyObject*, TParameter&, TCallContext* ctxt = 0 );
+      virtual Bool_t SetArg(PyObject *, TParameter &, TCallContext *ctxt = nullptr);
 
    protected:
       Cppyy::TCppType_t fClass;
@@ -213,7 +213,7 @@ namespace PyROOT {
       using TCppObjectConverter::TCppObjectConverter;
 
    public:
-      virtual Bool_t SetArg( PyObject*, TParameter&, TCallContext* ctxt = 0 );
+      virtual Bool_t SetArg(PyObject *, TParameter &, TCallContext *ctxt = nullptr);
       virtual PyObject* FromMemory( void* address );
       virtual Bool_t ToMemory( PyObject* value, void* address );
    };
@@ -227,7 +227,7 @@ namespace PyROOT {
          TCppObjectConverter( klass, keepControl ), m_size( size ) {}
 
    public:
-      virtual Bool_t SetArg( PyObject*, TParameter&, TCallContext* ctxt = 0 );
+      virtual Bool_t SetArg(PyObject *, TParameter &, TCallContext *ctxt = nullptr);
       virtual PyObject* FromMemory( void* address );
       virtual Bool_t ToMemory( PyObject* value, void* address );
 
@@ -239,18 +239,18 @@ namespace PyROOT {
 // they come in a bazillion different guises, so just do whatever
    class TSTLIteratorConverter : public TConverter {
    public:
-      virtual Bool_t SetArg( PyObject*, TParameter&, TCallContext* ctxt = 0 );
+      virtual Bool_t SetArg(PyObject *, TParameter &, TCallContext *ctxt = nullptr);
    };
 // -- END CLING WORKAROUND
 
    class TVoidPtrRefConverter : public TConverter {
    public:
-      virtual Bool_t SetArg( PyObject*, TParameter&, TCallContext* ctxt = 0 );
+      virtual Bool_t SetArg(PyObject *, TParameter &, TCallContext *ctxt = nullptr);
    };
 
    class TVoidPtrPtrConverter : public TConverter {
    public:
-      virtual Bool_t SetArg( PyObject*, TParameter&, TCallContext* ctxt = 0 );
+      virtual Bool_t SetArg(PyObject *, TParameter &, TCallContext *ctxt = nullptr);
       virtual PyObject* FromMemory( void* address );
    };
 
@@ -274,7 +274,7 @@ namespace PyROOT {
 
    class TNotImplementedConverter : public TConverter {
    public:
-      virtual Bool_t SetArg( PyObject*, TParameter&, TCallContext* = 0 );
+      virtual Bool_t SetArg(PyObject *, TParameter &, TCallContext * = nullptr);
    };
 
 // smart pointer converter
@@ -289,7 +289,7 @@ namespace PyROOT {
            fKeepControl( keepControl ), fHandlePtr( handlePtr ) {}
 
    public:
-      virtual Bool_t SetArg( PyObject*, TParameter&, TCallContext* ctxt = 0 );
+      virtual Bool_t SetArg(PyObject *, TParameter &, TCallContext *ctxt = nullptr);
       virtual PyObject* FromMemory( void* address );
       //virtual Bool_t ToMemory( PyObject* value, void* address );
 

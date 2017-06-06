@@ -49,12 +49,10 @@ Bool_t RooObjCacheManager::_clearObsList(kFALSE) ;
 /// what you're doing as properly implementing server redirect in cache elements can get very
 /// complicated, especially if there are (cyclical) reference back to the owning object
 
-RooObjCacheManager::RooObjCacheManager(RooAbsArg* owner, Int_t maxSize, Bool_t clearCacheOnServerRedirect, Bool_t allowOptimize) : 
-  RooCacheManager<RooAbsCacheElement>(owner,maxSize), 
-  _clearOnRedirect(clearCacheOnServerRedirect), 
-  _allowOptimize(allowOptimize),
-  _optCacheModeSeen(kFALSE),
-  _optCacheObservables(0)
+RooObjCacheManager::RooObjCacheManager(RooAbsArg *owner, Int_t maxSize, Bool_t clearCacheOnServerRedirect,
+                                       Bool_t allowOptimize)
+   : RooCacheManager<RooAbsCacheElement>(owner, maxSize), _clearOnRedirect(clearCacheOnServerRedirect),
+     _allowOptimize(allowOptimize), _optCacheModeSeen(kFALSE), _optCacheObservables(nullptr)
 {
 }
 
@@ -62,12 +60,11 @@ RooObjCacheManager::RooObjCacheManager(RooAbsArg* owner, Int_t maxSize, Bool_t c
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-RooObjCacheManager::RooObjCacheManager(const RooObjCacheManager& other, RooAbsArg* owner) : 
-  RooCacheManager<RooAbsCacheElement>(other,owner),
-  _clearOnRedirect(other._clearOnRedirect),
-  _allowOptimize(other._allowOptimize),
-  _optCacheModeSeen(kFALSE), // cache mode properties are not transferred in copy ctor
-  _optCacheObservables(0)
+RooObjCacheManager::RooObjCacheManager(const RooObjCacheManager &other, RooAbsArg *owner)
+   : RooCacheManager<RooAbsCacheElement>(other, owner), _clearOnRedirect(other._clearOnRedirect),
+     _allowOptimize(other._allowOptimize),
+     _optCacheModeSeen(kFALSE), // cache mode properties are not transferred in copy ctor
+     _optCacheObservables(nullptr)
 {
 }
 
@@ -166,7 +163,7 @@ void RooObjCacheManager::sterilize()
 
   if (_optCacheObservables && _clearObsList) {
     delete _optCacheObservables ;
-    _optCacheObservables = 0 ;
+    _optCacheObservables = nullptr;
     _optCacheModeSeen = kFALSE ;
   }
   

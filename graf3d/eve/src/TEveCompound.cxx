@@ -94,8 +94,7 @@ void TEveCompound::SetMainTransparency(Char_t t)
 void TEveCompound::AddElement(TEveElement* el)
 {
    TEveElementList::AddElement(el);
-   if (IsCompoundOpen() && el->GetCompound() == 0)
-      el->SetCompound(this);
+   if (IsCompoundOpen() && el->GetCompound() == nullptr) el->SetCompound(this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -103,8 +102,7 @@ void TEveCompound::AddElement(TEveElement* el)
 
 void TEveCompound::RemoveElementLocal(TEveElement* el)
 {
-   if (el->GetCompound() == this)
-      el->SetCompound(0);
+   if (el->GetCompound() == this) el->SetCompound(nullptr);
 
    TEveElementList::RemoveElementLocal(el);
 }
@@ -116,8 +114,7 @@ void TEveCompound::RemoveElementsLocal()
 {
    for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
    {
-      if ((*i)->GetCompound() == this)
-         (*i)->SetCompound(0);
+      if ((*i)->GetCompound() == this) (*i)->SetCompound(nullptr);
    }
 
    TEveElementList::RemoveElementsLocal();

@@ -43,8 +43,7 @@ private:
    int                       fIdx; // Iterator, current parameter index.
 
 public:
-
-   explicit TClingMethodArgInfo(cling::Interpreter *interp) : fInterp(interp), fMethodInfo(0), fIdx(-1) {}
+   explicit TClingMethodArgInfo(cling::Interpreter *interp) : fInterp(interp), fMethodInfo(nullptr), fIdx(-1) {}
    TClingMethodArgInfo(cling::Interpreter *interp, const TClingMethodInfo *mi) : fInterp(interp), fMethodInfo(mi), fIdx(-1) {}
 
    bool                   IsValid() const;

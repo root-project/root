@@ -46,22 +46,12 @@ UInt_t TGLSceneBase::fgSceneIDSrc = 1;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-TGLSceneBase::TGLSceneBase() :
-   TGLLockable(),
+TGLSceneBase::TGLSceneBase()
+   : TGLLockable(),
 
-   fTimeStamp        (1),
-   fMinorStamp       (1),
-   fLOD              (TGLRnrCtx::kLODHigh),
-   fStyle            (TGLRnrCtx::kStyleUndef),
-   fWFLineW          (0),
-   fOLLineW          (0),
-   fClip             (0),
-   fSelectable       (kTRUE),
-   fBoundingBox      (),
-   fBoundingBoxValid (kFALSE),
-   fDoFrustumCheck   (kTRUE),
-   fDoClipCheck      (kTRUE),
-   fAutoDestruct     (kTRUE)
+     fTimeStamp(1), fMinorStamp(1), fLOD(TGLRnrCtx::kLODHigh), fStyle(TGLRnrCtx::kStyleUndef), fWFLineW(0), fOLLineW(0),
+     fClip(nullptr), fSelectable(kTRUE), fBoundingBox(), fBoundingBoxValid(kFALSE), fDoFrustumCheck(kTRUE),
+     fDoClipCheck(kTRUE), fAutoDestruct(kTRUE)
 {
    // Default constructor.
 
@@ -155,8 +145,8 @@ void TGLSceneBase::RebuildSceneInfo(TGLRnrCtx& ctx)
 {
    TGLSceneInfo* sinfo = ctx.GetSceneInfo();
 
-   sinfo->SetLastClip(0);
-   sinfo->SetLastCamera(0);
+   sinfo->SetLastClip(nullptr);
+   sinfo->SetLastCamera(nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -206,7 +196,7 @@ void TGLSceneBase::UpdateSceneInfo(TGLRnrCtx& ctx)
    // All these are now done in TGLViewerBase::PreRender() via
    // TGLSceneInfo::SetupTransformsAndBBox().
 
-   sinfo->SetLastClip(0);
+   sinfo->SetLastClip(nullptr);
    sinfo->FrustumPlanes().clear();
    sinfo->ClipPlanes().clear();
 
@@ -336,9 +326,11 @@ void TGLSceneBase::PreDraw(TGLRnrCtx & rnrCtx)
       needUpdate = kTRUE;
    }
 
-   TGLClip* clip = 0;
-   if (sInfo.Clip() != 0) clip = sInfo.Clip();
-   else if (fClip   != 0) clip = fClip;
+   TGLClip *clip = nullptr;
+   if (sInfo.Clip() != nullptr)
+      clip = sInfo.Clip();
+   else if (fClip != nullptr)
+      clip = fClip;
    else                   clip = rnrCtx.ViewerClip();
    if (clip != sInfo.LastClip())
    {

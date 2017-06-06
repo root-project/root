@@ -86,7 +86,7 @@ Different options are explained in the function comments
 #include "TEnv.h"
 #include "TError.h"
 
-TVirtualFFT *TVirtualFFT::fgFFT    = 0;
+TVirtualFFT *TVirtualFFT::fgFFT = nullptr;
 TString      TVirtualFFT::fgDefault   = "";
 
 ClassImp(TVirtualFFT);
@@ -96,8 +96,7 @@ ClassImp(TVirtualFFT);
 
 TVirtualFFT::~TVirtualFFT()
 {
-   if (this==fgFFT)
-      fgFFT = 0;
+   if (this == fgFFT) fgFFT = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -169,7 +168,7 @@ TVirtualFFT* TVirtualFFT::FFT(Int_t ndim, Int_t *n, Option_t *option)
          }
          if (ndiff>0){
             delete fgFFT;
-            fgFFT = 0;
+            fgFFT = nullptr;
          }
       }
    }
@@ -180,7 +179,7 @@ TVirtualFFT* TVirtualFFT::FFT(Int_t ndim, Int_t *n, Option_t *option)
    if (opt.Contains("C2CF") || opt.Contains("R2C"))
       sign = -1;
 
-   TVirtualFFT *fft = 0;
+   TVirtualFFT *fft = nullptr;
    if (opt.Contains("K") || !fgFFT) {
 
       R__LOCKGUARD(gROOTMutex);
@@ -196,12 +195,12 @@ TVirtualFFT* TVirtualFFT::FFT(Int_t ndim, Int_t *n, Option_t *option)
          if ((h=gROOT->GetPluginManager()->FindHandler("TVirtualFFT", pluginname))) {
             if (h->LoadPlugin()==-1) {
                ::Error("TVirtualFFT::FFT", "handler not found");
-               return 0;
+               return nullptr;
             }
             fft = (TVirtualFFT*)h->ExecPlugin(3, ndim, n, kFALSE);
             if (!fft) {
                ::Error("TVirtualFFT::FFT", "plugin failed to create TVirtualFFT object");
-               return 0;
+               return nullptr;
             }
             Int_t *kind = new Int_t[1];
             if (pluginname=="fftwr2r") {
@@ -218,7 +217,7 @@ TVirtualFFT* TVirtualFFT::FFT(Int_t ndim, Int_t *n, Option_t *option)
          }
          else {
             ::Error("TVirtualFFT::FFT", "plugin not found");
-            return 0;
+            return nullptr;
          }
       }
    } else {
@@ -303,11 +302,11 @@ TVirtualFFT* TVirtualFFT::SineCosine(Int_t ndim, Int_t *n, Int_t *r2rkind, Optio
          }
          if (ndiff>0) {
             delete fgFFT;
-            fgFFT = 0;
+            fgFFT = nullptr;
          }
       }
    }
-   TVirtualFFT *fft = 0;
+   TVirtualFFT *fft = nullptr;
 
    R__LOCKGUARD(gROOTMutex);
 
@@ -320,12 +319,12 @@ TVirtualFFT* TVirtualFFT::SineCosine(Int_t ndim, Int_t *n, Int_t *r2rkind, Optio
          if ((h=gROOT->GetPluginManager()->FindHandler("TVirtualFFT", pluginname))) {
             if (h->LoadPlugin()==-1){
                ::Error("TVirtualFFT::SineCosine", "handler not found");
-               return 0;
+               return nullptr;
             }
             fft = (TVirtualFFT*)h->ExecPlugin(3, ndim, n, kFALSE);
             if (!fft) {
                ::Error("TVirtualFFT::SineCosine", "plugin failed to create TVirtualFFT object");
-               return 0;
+               return nullptr;
             }
             fft->Init(flag, 0, r2rkind);
             if (!opt.Contains("K"))
@@ -333,7 +332,7 @@ TVirtualFFT* TVirtualFFT::SineCosine(Int_t ndim, Int_t *n, Int_t *r2rkind, Optio
             return fft;
          } else {
             ::Error("TVirtualFFT::SineCosine", "handler not found");
-            return 0;
+            return nullptr;
          }
       }
    }
@@ -352,7 +351,7 @@ TVirtualFFT* TVirtualFFT::GetCurrentTransform()
       return fgFFT;
    else{
       ::Warning("TVirtualFFT::GetCurrentTransform", "fgFFT is not defined yet");
-      return 0;
+      return nullptr;
    }
 }
 
@@ -379,6 +378,6 @@ void TVirtualFFT::SetDefaultFFT(const char *name)
 {
    if (fgDefault == name) return;
    delete fgFFT;
-   fgFFT = 0;
+   fgFFT = nullptr;
    fgDefault = name;
 }

@@ -151,8 +151,7 @@ void TGLManipSet::MouseLeave()
 
 void TGLManipSet::Render(TGLRnrCtx& rnrCtx)
 {
-   if (fPShape == 0)
-      return;
+   if (fPShape == nullptr) return;
 
    if (rnrCtx.Selection())
    {

@@ -46,7 +46,7 @@ ClassImp(TGIcon);
 
 TGIcon::TGIcon(const TGWindow *p, const char *image) : TGFrame(p, 1, 1)
 {
-   fPic = 0;
+   fPic = nullptr;
    char *path;
 
    if (!image)

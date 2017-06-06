@@ -281,11 +281,10 @@ TVirtualViewer3D::~TVirtualViewer3D() {}
 
 TVirtualViewer3D* TVirtualViewer3D::Viewer3D(TVirtualPad *pad, Option_t *type)
 {
-   TVirtualViewer3D *viewer = 0;
+   TVirtualViewer3D *viewer = nullptr;
    TPluginHandler *h;
    if ((h = gPluginMgr->FindHandler("TVirtualViewer3D", type))) {
-      if (h->LoadPlugin() == -1)
-         return 0;
+      if (h->LoadPlugin() == -1) return nullptr;
 
       if (!pad) {
          viewer = (TVirtualViewer3D *) h->ExecPlugin(1, gPad);

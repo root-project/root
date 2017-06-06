@@ -28,10 +28,7 @@ ClassImp(TEveTextGL);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TEveTextGL::TEveTextGL() :
-   TGLObject(),
-   fM(0),
-   fFont()
+TEveTextGL::TEveTextGL() : TGLObject(), fM(nullptr), fFont()
 {
    fDLCache = kFALSE; // Disable display list.
 }

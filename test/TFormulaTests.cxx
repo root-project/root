@@ -432,7 +432,7 @@ Bool_t TFormulaTests::Stress(Int_t n)
    for(Int_t i = 0; i < neval; ++i)
    {
       if (i > 0) rndm.RndmArray(4,xx);
-      double f = test->EvalPar(xx,0);
+      double f = test->EvalPar(xx, nullptr);
       if (i == 0) printf(" f = %20.16g \n",f);
       if (TMath::Even(i) ) s += f; 
       else s -= f;          
@@ -467,8 +467,8 @@ Bool_t TFormulaTests::Stress(Int_t n)
    double xx2[4] = {3,3,3,3};
    for(Int_t i = 0; i < neval; ++i)
    {
-      if (i > 0) rndm2.RndmArray(4,xx2);      
-      double f = testOld->EvalPar(xx2,0);
+      if (i > 0) rndm2.RndmArray(4,xx2);
+      double f = testOld->EvalPar(xx2, nullptr);
       if (i == 0) printf(" f = %20.16g \n",f);
       if (TMath::Even(i) ) s += f; 
       else s -= f;          

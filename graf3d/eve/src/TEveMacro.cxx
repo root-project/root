@@ -63,8 +63,7 @@ Long_t TEveMacro::Exec(const char* params, Int_t* error)
 {
    Long_t retval = -1;
 
-   if (gROOT->GetGlobalFunction(fName, 0, kTRUE) != 0)
-   {
+   if (gROOT->GetGlobalFunction(fName, nullptr, kTRUE) != nullptr) {
       gROOT->SetExecutingMacro(kTRUE);
       gROOT->SetExecutingMacro(kFALSE);
       retval = gROOT->ProcessLine(Form("%s()", fName.Data()), error);

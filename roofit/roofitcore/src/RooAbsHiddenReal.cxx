@@ -41,8 +41,7 @@ using namespace std;
 ClassImp(RooAbsHiddenReal);
 ;
 
-RooCategory* RooAbsHiddenReal::_dummyBlindState = 0;
-
+RooCategory *RooAbsHiddenReal::_dummyBlindState = nullptr;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor

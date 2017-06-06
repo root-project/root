@@ -154,9 +154,9 @@ myuint modadd(myuint foo, myuint bar){
 rng_state_t* rng_alloc()
 {
 /* allocate the state */
-	rng_state_t  *p = (rng_state_t*)malloc(sizeof(rng_state_t)); 
-	p->fh=NULL; // by default, set the output file handle to stdout  
-	return p;
+	rng_state_t  *p = (rng_state_t*)malloc(sizeof(rng_state_t));
+   p->fh = nullptr; // by default, set the output file handle to stdout
+   return p;
 }
 
 int rng_free(rng_state_t* X) /* free the memory occupied by the state */
@@ -199,7 +199,9 @@ int i;
 	X->counter = N;  // set the counter to N if iteration should happen right away
 	//precalc(X);
     X->sumtot = 1; //(index ? 1:0);
-	if (X->fh==NULL){X->fh=stdout;}	
+    if (X->fh == nullptr) {
+       X->fh = stdout;
+    }
 }
 
 void seed_spbox(rng_state_t* X, myuint seed)
@@ -215,8 +217,10 @@ void seed_spbox(rng_state_t* X, myuint seed)
 	myuint l = seed;
 
 	//X->V[0] = l & MERSBASE;
-	if (X->fh==NULL){X->fh=stdout;} // if the filehandle is not yet set, make it stdout
-	for (i=0; i < N; i++){
+   if (X->fh == nullptr) {
+      X->fh = stdout;
+   } // if the filehandle is not yet set, make it stdout
+   for (i=0; i < N; i++){
 		l*=MULT64; l = (l << 32) ^ (l>>32);
 		X->V[i] = l & MERSBASE;
         sumtot += X->V[(i)]; if (sumtot < X->V[(i)]) {ovflow++;}

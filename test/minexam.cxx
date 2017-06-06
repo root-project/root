@@ -44,7 +44,7 @@ int minexam()
    TStopwatch timer;
 
    // Initialize TMinuit via generic fitter interface with a maximum of 5 params
-   TVirtualFitter *minuit = TVirtualFitter::Fitter(0, 5);
+   TVirtualFitter *minuit = TVirtualFitter::Fitter(nullptr, 5);
    printf("Starting timer\n");
    timer.Start();
    minuit->SetFCN(fcnk0);

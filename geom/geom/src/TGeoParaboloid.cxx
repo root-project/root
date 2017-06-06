@@ -285,7 +285,7 @@ TGeoVolume *TGeoParaboloid::Divide(TGeoVolume * /*voldiv*/, const char * /*divna
                              Double_t /*start*/, Double_t /*step*/)
 {
    Error("Divide", "Paraboloid divisions not implemented");
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -307,7 +307,7 @@ void TGeoParaboloid::GetBoundingCylinder(Double_t *param) const
 
 TGeoShape *TGeoParaboloid::GetMakeRuntimeShape(TGeoShape *, TGeoMatrix *) const
 {
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

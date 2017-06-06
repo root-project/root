@@ -82,7 +82,7 @@ It is possible to select a range on the axis to set the min/max in z
 
 TPaletteAxis::TPaletteAxis(): TPave()
 {
-   fH  = 0;
+   fH = nullptr;
    SetName("");
 }
 
@@ -480,7 +480,7 @@ void TPaletteAxis::UnZoom()
    TView *view = gPad->GetView();
    if (view) {
       delete view;
-      gPad->SetView(0);
+      gPad->SetView(nullptr);
    }
    fH->GetZaxis()->SetRange(0, 0);
    if (fH->GetDimension() == 2) {

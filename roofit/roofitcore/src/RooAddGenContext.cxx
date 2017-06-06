@@ -88,8 +88,8 @@ RooAddGenContext::RooAddGenContext(const RooAddPdf &model, const RooArgSet &vars
   ((RooAddPdf*)_pdf)->getProjCache(_vars) ;
   _pdf->recursiveRedirectServers(*_theEvent) ;
 
-  _mcache = 0 ;
-  _pcache = 0 ;
+  _mcache = nullptr;
+  _pcache = nullptr;
 }
 
 
@@ -127,8 +127,8 @@ RooAddGenContext::RooAddGenContext(const RooAddModel &model, const RooArgSet &va
   ((RooAddModel*)_pdf)->getProjCache(_vars) ;
   _pdf->recursiveRedirectServers(*_theEvent) ;
 
-  _mcache = 0 ;
-  _pcache = 0 ;
+  _mcache = nullptr;
+  _pcache = nullptr;
 }
 
 
@@ -177,7 +177,7 @@ void RooAddGenContext::initGenerator(const RooArgSet &theEvent)
     _mcache = amod->getProjCache(_vars) ;
   } else {
     RooAddPdf* apdf = (RooAddPdf*) _pdf ;
-    _pcache = apdf->getProjCache(_vars,0,"FULL_RANGE_ADDGENCONTEXT") ;
+    _pcache = apdf->getProjCache(_vars, nullptr, "FULL_RANGE_ADDGENCONTEXT");
   }
   
   // Forward initGenerator call to all components

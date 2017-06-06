@@ -46,46 +46,23 @@ ClassImp(TEveTrack);
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
 
-TEveTrack::TEveTrack() :
-   TEveLine(),
+TEveTrack::TEveTrack()
+   : TEveLine(),
 
-   fV(),
-   fP(),
-   fPEnd(),
-   fBeta(0),
-   fDpDs(0),
-   fPdg(0),
-   fCharge(0),
-   fLabel(kMinInt),
-   fIndex(kMinInt),
-   fStatus(0),
-   fLockPoints(kFALSE),
-   fPathMarks(),
-   fLastPMIdx(0),
-   fPropagator(0)
+     fV(), fP(), fPEnd(), fBeta(0), fDpDs(0), fPdg(0), fCharge(0), fLabel(kMinInt), fIndex(kMinInt), fStatus(0),
+     fLockPoints(kFALSE), fPathMarks(), fLastPMIdx(0), fPropagator(nullptr)
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor from TParticle.
 
-TEveTrack::TEveTrack(TParticle* t, Int_t label, TEveTrackPropagator* prop):
-   TEveLine(),
+TEveTrack::TEveTrack(TParticle *t, Int_t label, TEveTrackPropagator *prop)
+   : TEveLine(),
 
-   fV(t->Vx(), t->Vy(), t->Vz()),
-   fP(t->Px(), t->Py(), t->Pz()),
-   fPEnd(),
-   fBeta(t->P()/t->Energy()),
-   fDpDs(0),
-   fPdg(0),
-   fCharge(0),
-   fLabel(label),
-   fIndex(kMinInt),
-   fStatus(t->GetStatusCode()),
-   fLockPoints(kFALSE),
-   fPathMarks(),
-   fLastPMIdx(0),
-   fPropagator(0)
+     fV(t->Vx(), t->Vy(), t->Vz()), fP(t->Px(), t->Py(), t->Pz()), fPEnd(), fBeta(t->P() / t->Energy()), fDpDs(0),
+     fPdg(0), fCharge(0), fLabel(label), fIndex(kMinInt), fStatus(t->GetStatusCode()), fLockPoints(kFALSE),
+     fPathMarks(), fLastPMIdx(0), fPropagator(nullptr)
 {
    SetPropagator(prop);
    fMainColorPtr = &fLineColor;
@@ -101,23 +78,12 @@ TEveTrack::TEveTrack(TParticle* t, Int_t label, TEveTrackPropagator* prop):
 
 ////////////////////////////////////////////////////////////////////////////////
 
-TEveTrack::TEveTrack(TEveMCTrack* t, TEveTrackPropagator* prop):
-   TEveLine(),
+TEveTrack::TEveTrack(TEveMCTrack *t, TEveTrackPropagator *prop)
+   : TEveLine(),
 
-   fV(t->Vx(), t->Vy(), t->Vz()),
-   fP(t->Px(), t->Py(), t->Pz()),
-   fPEnd(),
-   fBeta(t->P()/t->Energy()),
-   fDpDs(0),
-   fPdg(0),
-   fCharge(0),
-   fLabel(t->fLabel),
-   fIndex(t->fIndex),
-   fStatus(t->GetStatusCode()),
-   fLockPoints(kFALSE),
-   fPathMarks(),
-   fLastPMIdx(0),
-   fPropagator(0)
+     fV(t->Vx(), t->Vy(), t->Vz()), fP(t->Px(), t->Py(), t->Pz()), fPEnd(), fBeta(t->P() / t->Energy()), fDpDs(0),
+     fPdg(0), fCharge(0), fLabel(t->fLabel), fIndex(t->fIndex), fStatus(t->GetStatusCode()), fLockPoints(kFALSE),
+     fPathMarks(), fLastPMIdx(0), fPropagator(nullptr)
 {
    // Constructor from TEveUtil Monte Carlo track.
 
@@ -135,23 +101,11 @@ TEveTrack::TEveTrack(TEveMCTrack* t, TEveTrackPropagator* prop):
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor from TEveRecTrack<double> reconstructed track.
 
-TEveTrack::TEveTrack(TEveRecTrackD* t, TEveTrackPropagator* prop) :
-   TEveLine(),
+TEveTrack::TEveTrack(TEveRecTrackD *t, TEveTrackPropagator *prop)
+   : TEveLine(),
 
-   fV(t->fV),
-   fP(t->fP),
-   fPEnd(),
-   fBeta(t->fBeta),
-   fDpDs(0),
-   fPdg(0),
-   fCharge(t->fSign),
-   fLabel(t->fLabel),
-   fIndex(t->fIndex),
-   fStatus(t->fStatus),
-   fLockPoints(kFALSE),
-   fPathMarks(),
-   fLastPMIdx(0),
-   fPropagator(0)
+     fV(t->fV), fP(t->fP), fPEnd(), fBeta(t->fBeta), fDpDs(0), fPdg(0), fCharge(t->fSign), fLabel(t->fLabel),
+     fIndex(t->fIndex), fStatus(t->fStatus), fLockPoints(kFALSE), fPathMarks(), fLastPMIdx(0), fPropagator(nullptr)
 {
    SetPropagator(prop);
    fMainColorPtr = &fLineColor;
@@ -164,23 +118,11 @@ TEveTrack::TEveTrack(TEveRecTrackD* t, TEveTrackPropagator* prop) :
 /// It is recommended to use constructor with  TEveRecTrack<double> since
 /// TEveTrackPropagator operates with double type.
 
-TEveTrack::TEveTrack(TEveRecTrack* t, TEveTrackPropagator* prop) :
-   TEveLine(),
+TEveTrack::TEveTrack(TEveRecTrack *t, TEveTrackPropagator *prop)
+   : TEveLine(),
 
-   fV(t->fV),
-   fP(t->fP),
-   fPEnd(),
-   fBeta(t->fBeta),
-   fDpDs(0),
-   fPdg(0),
-   fCharge(t->fSign),
-   fLabel(t->fLabel),
-   fIndex(t->fIndex),
-   fStatus(t->fStatus),
-   fLockPoints(kFALSE),
-   fPathMarks(),
-   fLastPMIdx(0),
-   fPropagator(0)
+     fV(t->fV), fP(t->fP), fPEnd(), fBeta(t->fBeta), fDpDs(0), fPdg(0), fCharge(t->fSign), fLabel(t->fLabel),
+     fIndex(t->fIndex), fStatus(t->fStatus), fLockPoints(kFALSE), fPathMarks(), fLastPMIdx(0), fPropagator(nullptr)
 {
    SetPropagator(prop);
    fMainColorPtr = &fLineColor;
@@ -194,22 +136,10 @@ TEveTrack::TEveTrack(TEveRecTrack* t, TEveTrackPropagator* prop) :
 /// MakeTrack() to do that.
 /// If points of 't' are locked, they are cloned.
 
-TEveTrack::TEveTrack(const TEveTrack& t) :
-   TEveLine(),
-   fV(t.fV),
-   fP(t.fP),
-   fPEnd(),
-   fBeta(t.fBeta),
-   fDpDs(t.fDpDs),
-   fPdg(t.fPdg),
-   fCharge(t.fCharge),
-   fLabel(t.fLabel),
-   fIndex(t.fIndex),
-   fStatus(t.fStatus),
-   fLockPoints(t.fLockPoints),
-   fPathMarks(),
-   fLastPMIdx(t.fLastPMIdx),
-   fPropagator(0)
+TEveTrack::TEveTrack(const TEveTrack &t)
+   : TEveLine(), fV(t.fV), fP(t.fP), fPEnd(), fBeta(t.fBeta), fDpDs(t.fDpDs), fPdg(t.fPdg), fCharge(t.fCharge),
+     fLabel(t.fLabel), fIndex(t.fIndex), fStatus(t.fStatus), fLockPoints(t.fLockPoints), fPathMarks(),
+     fLastPMIdx(t.fLastPMIdx), fPropagator(nullptr)
 {
    if (fLockPoints)
       ClonePoints(t);
@@ -225,7 +155,7 @@ TEveTrack::TEveTrack(const TEveTrack& t) :
 
 TEveTrack::~TEveTrack()
 {
-   SetPropagator(0);
+   SetPropagator(nullptr);
 }
 
 
@@ -344,7 +274,7 @@ void TEveTrack::MakeTrack(Bool_t recurse)
       Reset(0);
       fLastPMIdx = 0;
 
-      TEveTrackPropagator& rTP((fPropagator != 0) ? *fPropagator : TEveTrackPropagator::fgDefault);
+      TEveTrackPropagator &rTP((fPropagator != nullptr) ? *fPropagator : TEveTrackPropagator::fgDefault);
 
       const Double_t maxRsq = rTP.GetMaxR() * rTP.GetMaxR();
       const Double_t maxZ   = rTP.GetMaxZ();
@@ -564,25 +494,19 @@ ClassImp(TEveTrackList);
 /// Constructor. If track-propagator argument is 0, a new default
 /// one is created.
 
-TEveTrackList::TEveTrackList(TEveTrackPropagator* prop) :
-   TEveElementList(),
-   TAttMarker(1, 20, 1),
-   TAttLine(1,1,1),
+TEveTrackList::TEveTrackList(TEveTrackPropagator *prop)
+   : TEveElementList(), TAttMarker(1, 20, 1), TAttLine(1, 1, 1),
 
-   fPropagator(0),
-   fRecurse(kTRUE),
-   fRnrLine(kTRUE),
-   fRnrPoints(kFALSE),
+     fPropagator(nullptr), fRecurse(kTRUE), fRnrLine(kTRUE), fRnrPoints(kFALSE),
 
-   fMinPt (0), fMaxPt (0), fLimPt (0),
-   fMinP  (0), fMaxP  (0), fLimP  (0)
+     fMinPt(0), fMaxPt(0), fLimPt(0), fMinP(0), fMaxP(0), fLimP(0)
 {
 
    fChildClass = TEveTrack::Class(); // override member from base TEveElementList
 
    fMainColorPtr = &fLineColor;
 
-   if (prop == 0) prop = new TEveTrackPropagator;
+   if (prop == nullptr) prop = new TEveTrackPropagator;
    SetPropagator(prop);
 }
 
@@ -590,24 +514,18 @@ TEveTrackList::TEveTrackList(TEveTrackPropagator* prop) :
 /// Constructor. If track-propagator argument is 0, a new default
 /// one is created.
 
-TEveTrackList::TEveTrackList(const char* name, TEveTrackPropagator* prop) :
-   TEveElementList(name),
-   TAttMarker(1, 20, 1),
-   TAttLine(1,1,1),
+TEveTrackList::TEveTrackList(const char *name, TEveTrackPropagator *prop)
+   : TEveElementList(name), TAttMarker(1, 20, 1), TAttLine(1, 1, 1),
 
-   fPropagator(0),
-   fRecurse(kTRUE),
-   fRnrLine(kTRUE),
-   fRnrPoints(kFALSE),
+     fPropagator(nullptr), fRecurse(kTRUE), fRnrLine(kTRUE), fRnrPoints(kFALSE),
 
-   fMinPt (0), fMaxPt (0), fLimPt (0),
-   fMinP  (0), fMaxP  (0), fLimP  (0)
+     fMinPt(0), fMaxPt(0), fLimPt(0), fMinP(0), fMaxP(0), fLimP(0)
 {
    fChildClass = TEveTrack::Class(); // override member from base TEveElementList
 
    fMainColorPtr = &fLineColor;
 
-   if (prop == 0) prop = new TEveTrackPropagator;
+   if (prop == nullptr) prop = new TEveTrackPropagator;
    SetPropagator(prop);
 }
 
@@ -616,7 +534,7 @@ TEveTrackList::TEveTrackList(const char* name, TEveTrackPropagator* prop) :
 
 TEveTrackList::~TEveTrackList()
 {
-   SetPropagator(0);
+   SetPropagator(nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1101,7 +1019,7 @@ TEveTrack* TEveTrackList::FindTrackByLabel(Int_t label)
          return (TEveTrack*) *i;
       }
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1124,7 +1042,7 @@ TEveTrack* TEveTrackList::FindTrackByIndex(Int_t index)
          return (TEveTrack*) *i;
       }
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

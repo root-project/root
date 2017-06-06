@@ -102,13 +102,13 @@ messages to all workers, it collects results, etc.
 
 #include <mutex>
 
-TProof *gProof = 0;
+TProof *gProof = nullptr;
 
 // Rotating indicator
 char TProofMergePrg::fgCr[4] = {'-', '\\', '|', '/'};
 
-TList   *TProof::fgProofEnvList = 0;          // List of env vars for proofserv
-TPluginHandler *TProof::fgLogViewer = 0;      // Log viewer handler
+TList *TProof::fgProofEnvList = nullptr;       // List of env vars for proofserv
+TPluginHandler *TProof::fgLogViewer = nullptr; // Log viewer handler
 
 ClassImp(TProof);
 
@@ -125,7 +125,7 @@ Bool_t TProofInterruptHandler::Notify()
 
    } else {
       // Real stop or request to switch to asynchronous?
-      const char *a = 0;
+      const char *a = nullptr;
       if (fProof->GetRemoteProtocol() < 22) {
          a = Getline("\nSwitch to asynchronous mode not supported remotely:"
                      "\nEnter S/s to stop, Q/q to quit, any other key to continue: ");
@@ -525,45 +525,45 @@ void TProof::InitMembers()
 {
    fValid = kFALSE;
    fTty = kFALSE;
-   fRecvMessages = 0;
-   fSlaveInfo = 0;
+   fRecvMessages = nullptr;
+   fSlaveInfo = nullptr;
    fMasterServ = kFALSE;
    fSendGroupView = kFALSE;
    fIsPollingWorkers = kFALSE;
    fLastPollWorkers_s = -1;
-   fActiveSlaves = 0;
-   fInactiveSlaves = 0;
-   fUniqueSlaves = 0;
-   fAllUniqueSlaves = 0;
-   fNonUniqueMasters = 0;
-   fActiveMonitor = 0;
-   fUniqueMonitor = 0;
-   fAllUniqueMonitor = 0;
-   fCurrentMonitor = 0;
+   fActiveSlaves = nullptr;
+   fInactiveSlaves = nullptr;
+   fUniqueSlaves = nullptr;
+   fAllUniqueSlaves = nullptr;
+   fNonUniqueMasters = nullptr;
+   fActiveMonitor = nullptr;
+   fUniqueMonitor = nullptr;
+   fAllUniqueMonitor = nullptr;
+   fCurrentMonitor = nullptr;
    fBytesRead = 0;
    fRealTime = 0;
    fCpuTime = 0;
-   fIntHandler = 0;
-   fProgressDialog = 0;
+   fIntHandler = nullptr;
+   fProgressDialog = nullptr;
    fProgressDialogStarted = kFALSE;
    SetBit(kUseProgressDialog);
-   fPlayer = 0;
-   fFeedback = 0;
-   fChains = 0;
-   fDSet = 0;
+   fPlayer = nullptr;
+   fFeedback = nullptr;
+   fChains = nullptr;
+   fDSet = nullptr;
    fNotIdle = 0;
    fSync = kTRUE;
    fRunStatus = kRunning;
    fIsWaiting = kFALSE;
    fRedirLog = kFALSE;
-   fLogFileW = 0;
-   fLogFileR = 0;
+   fLogFileW = nullptr;
+   fLogFileR = nullptr;
    fLogToWindowOnly = kFALSE;
    fSaveLogToMacro = kFALSE;
    fMacroLog.SetName("ProofLogMacro");
 
-   fWaitingSlaves = 0;
-   fQueries = 0;
+   fWaitingSlaves = nullptr;
+   fQueries = nullptr;
    fOtherQueries = 0;
    fDrawQueries = 0;
    fMaxDrawQueries = 1;
@@ -572,36 +572,36 @@ void TProof::InitMembers()
    fSessionID = -1;
    fEndMaster = kFALSE;
 
-   fPackMgr = 0;
-   fEnabledPackagesOnCluster = 0;
+   fPackMgr = nullptr;
+   fEnabledPackagesOnCluster = nullptr;
 
-   fInputData = 0;
+   fInputData = nullptr;
 
-   fPrintProgress = 0;
+   fPrintProgress = nullptr;
 
-   fLoadedMacros = 0;
+   fLoadedMacros = nullptr;
 
    fProtocol = -1;
-   fSlaves = 0;
-   fTerminatedSlaveInfos = 0;
-   fBadSlaves = 0;
-   fAllMonitor = 0;
+   fSlaves = nullptr;
+   fTerminatedSlaveInfos = nullptr;
+   fBadSlaves = nullptr;
+   fAllMonitor = nullptr;
    fDataReady = kFALSE;
    fBytesReady = 0;
    fTotalBytes = 0;
-   fAvailablePackages = 0;
-   fEnabledPackages = 0;
-   fRunningDSets = 0;
+   fAvailablePackages = nullptr;
+   fEnabledPackages = nullptr;
+   fRunningDSets = nullptr;
 
    fCollectTimeout = -1;
 
-   fManager = 0;
+   fManager = nullptr;
    fQueryMode = kSync;
    fDynamicStartup = kFALSE;
 
    fMergersSet = kFALSE;
    fMergersByHost = kFALSE;
-   fMergers = 0;
+   fMergers = nullptr;
    fMergersCount = -1;
    fLastAssignedMerger = 0;
    fWorkersToMerge = 0;
@@ -609,9 +609,9 @@ void TProof::InitMembers()
 
    fPerfTree = "";
 
-   fWrksOutputReady = 0;
+   fWrksOutputReady = nullptr;
 
-   fSelector = 0;
+   fSelector = nullptr;
 
    fPrepTime = 0.;
 
@@ -787,19 +787,19 @@ Int_t TProof::Init(const char *, const char *conffile,
    fProtocol       = kPROOF_Protocol;
    fSendGroupView  = kTRUE;
    fImage          = fMasterServ ? "" : "<local>";
-   fIntHandler     = 0;
+   fIntHandler = nullptr;
    fStatus         = 0;
    fRecvMessages   = new TList;
    fRecvMessages->SetOwner(kTRUE);
-   fSlaveInfo      = 0;
+   fSlaveInfo = nullptr;
    fChains         = new TList;
-   fAvailablePackages = 0;
-   fEnabledPackages = 0;
-   fRunningDSets   = 0;
+   fAvailablePackages = nullptr;
+   fEnabledPackages = nullptr;
+   fRunningDSets = nullptr;
    fEndMaster      = TestBit(TProof::kIsMaster) ? kTRUE : kFALSE;
-   fInputData      = 0;
+   fInputData = nullptr;
    ResetBit(TProof::kNewInputData);
-   fPrintProgress  = 0;
+   fPrintProgress = nullptr;
 
    // Timeout for some collect actions
    fCollectTimeout = gEnv->GetValue("Proof.CollectTimeout", -1);
@@ -813,7 +813,7 @@ Int_t TProof::Init(const char *, const char *conffile,
    else
       fDataPoolUrl = "";
 
-   fProgressDialog        = 0;
+   fProgressDialog = nullptr;
    fProgressDialogStarted = kFALSE;
 
    // Default alias is the master name
@@ -824,10 +824,8 @@ Int_t TProof::Init(const char *, const char *conffile,
    fRedirLog = kFALSE;
    if (TestBit(TProof::kIsClient)) {
       fLogFileName.Form("%s/ProofLog_%d", gSystem->TempDirectory(), gSystem->GetPid());
-      if ((fLogFileW = fopen(fLogFileName, "w")) == 0)
-         Error("Init", "could not create temporary logfile");
-      if ((fLogFileR = fopen(fLogFileName, "r")) == 0)
-         Error("Init", "could not open temp logfile for reading");
+      if ((fLogFileW = fopen(fLogFileName, "w")) == nullptr) Error("Init", "could not create temporary logfile");
+      if ((fLogFileR = fopen(fLogFileName, "r")) == nullptr) Error("Init", "could not open temp logfile for reading");
    }
    fLogToWindowOnly = kFALSE;
 
@@ -844,7 +842,7 @@ Int_t TProof::Init(const char *, const char *conffile,
    fCpuTime = 0;
 
    // List of queries
-   fQueries = 0;
+   fQueries = nullptr;
    fOtherQueries = 0;
    fDrawQueries = 0;
    fMaxDrawQueries = 1;
@@ -854,10 +852,10 @@ Int_t TProof::Init(const char *, const char *conffile,
    fSessionID = -1;
 
    // Part of active query
-   fWaitingSlaves = 0;
+   fWaitingSlaves = nullptr;
 
    // Make remote PROOF player
-   fPlayer = 0;
+   fPlayer = nullptr;
    MakePlayer();
 
    fFeedback = new TList;
@@ -877,13 +875,13 @@ Int_t TProof::Init(const char *, const char *conffile,
    fActiveMonitor    = new TMonitor;
    fUniqueMonitor    = new TMonitor;
    fAllUniqueMonitor = new TMonitor;
-   fCurrentMonitor   = 0;
+   fCurrentMonitor = nullptr;
 
    fTerminatedSlaveInfos = new TList;
    fTerminatedSlaveInfos->SetOwner(kTRUE);
 
-   fLoadedMacros            = 0;
-   fPackMgr                 = 0;
+   fLoadedMacros = nullptr;
+   fPackMgr = nullptr;
 
    // Enable optimized sending of streamer infos to use embedded backward/forward
    // compatibility support between different ROOT versions and different versions of
@@ -960,7 +958,7 @@ Int_t TProof::Init(const char *, const char *conffile,
 
    // By default go into parallel mode
    Int_t nwrk = GetRemoteProtocol() > 35 ? -1 : 9999;
-   TNamed *n = 0;
+   TNamed *n = nullptr;
    if (TProof::GetEnvVars() &&
       (n = (TNamed *) TProof::GetEnvVars()->FindObject("PROOF_NWORKERS"))) {
       TString s(n->GetTitle());
@@ -1046,7 +1044,7 @@ void TProof::ParseConfigField(const char *config)
          // will add option "--time-stamp --leak-check=full" to our default options
          TString mst, top, sub, wrk, all;
          TList *envs = fgProofEnvList;
-         TNamed *n = 0;
+         TNamed *n = nullptr;
          if (envs) {
             if ((n = (TNamed *) envs->FindObject("PROOF_WRAPPERCMD")))
                all = n->GetTitle();
@@ -1376,7 +1374,7 @@ Int_t TProof::AddWorkers(TList *workerList)
             u.SetUser(gProofServ->GetUser());
          u.SetPasswd(gProofServ->GetGroup());
       }
-      TSlave *slave = 0;
+      TSlave *slave = nullptr;
       if (worker->IsWorker()) {
          slave = CreateSlave(u.GetUrl(), fullord, perfidx, image, workdir);
       } else {
@@ -1419,12 +1417,11 @@ Int_t TProof::AddWorkers(TList *workerList)
    // Here we finalize the server startup: in this way the bulk
    // of remote operations are almost parallelized
    TIter nxsl(addedWorkers);
-   TSlave *sl = 0;
+   TSlave *sl = nullptr;
    while ((sl = (TSlave *) nxsl())) {
 
       // Finalize setup of the server
-      if (sl->IsValid())
-          sl->SetupServ(TSlave::kSlave, 0);
+      if (sl->IsValid()) sl->SetupServ(TSlave::kSlave, nullptr);
 
       // Monitor good slaves
       Bool_t slaveOk = kTRUE;
@@ -1451,7 +1448,7 @@ Int_t TProof::AddWorkers(TList *workerList)
    // gSystem->GetDynamicPath() and gSystem->GetIncludePath()
    // no need to load packages that are only loaded and not enabled (dyn mode)
    Int_t nwrk = GetRemoteProtocol() > 35 ? -1 : 9999;
-   TNamed *n = 0;
+   TNamed *n = nullptr;
    if (TProof::GetEnvVars() &&
       (n = (TNamed *) TProof::GetEnvVars()->FindObject("PROOF_NWORKERS"))) {
       TString s(n->GetTitle());
@@ -1514,8 +1511,8 @@ void TProof::SetupWorkersEnv(TList *addedWorkers, Bool_t increasingWorkers)
    // Packages
    TList *packs = gProofServ ? gProofServ->GetEnabledPackages() : GetEnabledPackages();
    if (packs && packs->GetSize() > 0) {
-      TIter nxp(packs);      
-      TPair *pck = 0;
+      TIter nxp(packs);
+      TPair *pck = nullptr;
       while ((pck = (TPair *) nxp())) {
          // Upload and Enable methods are intelligent and avoid
          // re-uploading or re-enabling of a package to a node that has it.
@@ -1537,7 +1534,7 @@ void TProof::SetupWorkersEnv(TList *addedWorkers, Bool_t increasingWorkers)
    // Loaded macros
    if (fLoadedMacros) {
       TIter nxp(fLoadedMacros);
-      TObjString *os = 0;
+      TObjString *os = nullptr;
       while ((os = (TObjString *) nxp())) {
          PDB(kGlobal, 3) {
             Info("SetupWorkersEnv", "will invoke Load() on selected workers");
@@ -1584,7 +1581,7 @@ Int_t TProof::RemoveWorkers(TList *workerList)
    if (!workerList) {
       // shutdown all the workers
       TIter nxsl(fSlaves);
-      TSlave *sl = 0;
+      TSlave *sl = nullptr;
       while ((sl = (TSlave *) nxsl())) {
          // Shut down the worker assumig that it is not processing
          TerminateWorker(sl);
@@ -1601,7 +1598,7 @@ Int_t TProof::RemoveWorkers(TList *workerList)
       TObject *to;
       TProofNodeInfo *worker;
       while ((to = next())) {
-         TSlave *sl = 0;
+         TSlave *sl = nullptr;
          if (!strcmp(to->ClassName(), "TProofNodeInfo")) {
             // Get the next worker from the list
             worker = (TProofNodeInfo *)to;
@@ -1658,7 +1655,7 @@ Bool_t TProof::StartSlaves(Bool_t attach)
 
       // create master server
       Printf("Starting master: opening connection ...");
-      TSlave *slave = CreateSubmaster(fUrl.GetUrl(), "0", "master", 0);
+      TSlave *slave = CreateSubmaster(fUrl.GetUrl(), "0", "master", nullptr);
 
       if (slave->IsValid()) {
 
@@ -1731,8 +1728,7 @@ Bool_t TProof::StartSlaves(Bool_t attach)
                if (!gROOT->IsBatch() && TestBit(kUseProgressDialog)) {
                   if ((fProgressDialog =
                      gROOT->GetPluginManager()->FindHandler("TProofProgressDialog")))
-                     if (fProgressDialog->LoadPlugin() == -1)
-                        fProgressDialog = 0;
+                     if (fProgressDialog->LoadPlugin() == -1) fProgressDialog = nullptr;
                }
             } else {
                // Notify
@@ -1747,8 +1743,7 @@ Bool_t TProof::StartSlaves(Bool_t attach)
             if (!gROOT->IsBatch() && TestBit(kUseProgressDialog)) {
                if ((fProgressDialog =
                   gROOT->GetPluginManager()->FindHandler("TProofProgressDialog")))
-                  if (fProgressDialog->LoadPlugin() == -1)
-                     fProgressDialog = 0;
+                  if (fProgressDialog->LoadPlugin() == -1) fProgressDialog = nullptr;
             }
 
             fSlaves->Add(slave);
@@ -1783,7 +1778,7 @@ void TProof::Close(Option_t *opt)
             fIntHandler->Remove();
 
          TIter nxs(fSlaves);
-         TSlave *sl = 0;
+         TSlave *sl = nullptr;
          while ((sl = (TSlave *)nxs()))
             sl->Close(opt);
 
@@ -1831,8 +1826,7 @@ void TProof::Close(Option_t *opt)
 TSlave *TProof::CreateSlave(const char *url, const char *ord,
                             Int_t perf, const char *image, const char *workdir)
 {
-   TSlave* sl = TSlave::Create(url, ord, perf, image,
-                               this, TSlave::kSlave, workdir, 0);
+   TSlave *sl = TSlave::Create(url, ord, perf, image, this, TSlave::kSlave, workdir, nullptr);
 
    if (sl->IsValid()) {
       sl->SetInputHandler(new TProofInputHandler(this, sl->GetSocket()));
@@ -1853,8 +1847,7 @@ TSlave *TProof::CreateSlave(const char *url, const char *ord,
 TSlave *TProof::CreateSubmaster(const char *url, const char *ord,
                                 const char *image, const char *msd, Int_t nwk)
 {
-   TSlave *sl = TSlave::Create(url, ord, 100, image, this,
-                               TSlave::kMaster, 0, msd, nwk);
+   TSlave *sl = TSlave::Create(url, ord, 100, image, this, TSlave::kMaster, nullptr, msd, nwk);
 
    if (sl->IsValid()) {
       sl->SetInputHandler(new TProofInputHandler(this, sl->GetSocket()));
@@ -1875,7 +1868,7 @@ TSlave *TProof::FindSlave(TSocket *s) const
       if (sl->IsValid() && sl->GetSocket() == s)
          return sl;
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1908,7 +1901,7 @@ void TProof::FindUniqueSlaves()
       }
 
       TIter next2(fUniqueSlaves);
-      TSlave *replace_slave = 0;
+      TSlave *replace_slave = nullptr;
       Bool_t add = kTRUE;
       while (TSlave *sl2 = dynamic_cast<TSlave*>(next2())) {
          if (sl->fImage == sl2->fImage) {
@@ -2020,12 +2013,12 @@ void TProof::GetStatistics(Bool_t verbose)
       RedirectHandle_t rh;
       gSystem->RedirectOutput(fLogFileName, "a", &rh);
       Print();
-      gSystem->RedirectOutput(0, 0, &rh);
+      gSystem->RedirectOutput(nullptr, nullptr, &rh);
       TMacro *mp = GetLastLog();
       if (mp) {
          // Look for global directories
          TIter nxl(mp->GetListOfLines());
-         TObjString *os = 0;
+         TObjString *os = nullptr;
          while ((os = (TObjString *) nxl())) {
             TString s(os->GetName());
             if (s.Contains("Total MB's processed:")) {
@@ -2065,7 +2058,7 @@ void TProof::AskParallel()
 
 TList *TProof::GetListOfQueries(Option_t *opt)
 {
-   if (!IsValid() || TestBit(TProof::kIsMaster)) return (TList *)0;
+   if (!IsValid() || TestBit(TProof::kIsMaster)) return (TList *)nullptr;
 
    Bool_t all = ((strchr(opt,'A') || strchr(opt,'a'))) ? kTRUE : kFALSE;
    TMessage m(kPROOF_QUERYLIST);
@@ -2116,7 +2109,7 @@ void TProof::GetMaxQueries()
 
 TList *TProof::GetQueryResults()
 {
-   return (fPlayer ? fPlayer->GetListOfResults() : (TList *)0);
+   return (fPlayer ? fPlayer->GetListOfResults() : (TList *)nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2125,7 +2118,7 @@ TList *TProof::GetQueryResults()
 
 TQueryResult *TProof::GetQueryResult(const char *ref)
 {
-   return (fPlayer ? fPlayer->GetQueryResult(ref) : (TQueryResult *)0);
+   return (fPlayer ? fPlayer->GetQueryResult(ref) : (TQueryResult *)nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2168,7 +2161,7 @@ void TProof::ShowQueries(Option_t *opt)
 
    Bool_t local = ((strchr(opt,'L') || strchr(opt,'l'))) ? kTRUE : kFALSE;
 
-   TObject *pq = 0;
+   TObject *pq = nullptr;
    if (!local) {
       GetListOfQueries(opt);
 
@@ -2200,7 +2193,7 @@ void TProof::ShowQueries(Option_t *opt)
               GetNumberOfQueries(), fDrawQueries);
 
       // Queries available locally
-      TList *listlocal = fPlayer ? fPlayer->GetListOfResults() : (TList *)0;
+      TList *listlocal = fPlayer ? fPlayer->GetListOfResults() : (TList *)nullptr;
       if (listlocal) {
          Printf("+++");
          Printf("+++ Queries available locally: %d", listlocal->GetSize());
@@ -2255,7 +2248,7 @@ void TProof::Interrupt(EUrgent type, ESlaves list)
 {
    if (!IsValid()) return;
 
-   TList *slaves = 0;
+   TList *slaves = nullptr;
    if (list == kAll)       slaves = fSlaves;
    if (list == kActive)    slaves = fActiveSlaves;
    if (list == kUnique)    slaves = fUniqueSlaves;
@@ -2298,9 +2291,9 @@ Int_t TProof::GetParallel() const
 
 TList *TProof::GetListOfSlaveInfos()
 {
-   if (!IsValid()) return 0;
+   if (!IsValid()) return nullptr;
 
-   if (fSlaveInfo == 0) {
+   if (fSlaveInfo == nullptr) {
       fSlaveInfo = new TSortedList(kSortDescending);
       fSlaveInfo->SetOwner();
    } else {
@@ -2311,7 +2304,7 @@ TList *TProof::GetListOfSlaveInfos()
    TIter next(GetListOfSlaves());
    TSlave *slave;
 
-   while ((slave = (TSlave *) next()) != 0) {
+   while ((slave = (TSlave *)next()) != nullptr) {
       if (slave->GetSlaveType() == TSlave::kSlave) {
          const char *name = IsLite() ? gSystem->HostName() : slave->GetName();
          TSlaveInfo *slaveinfo = new TSlaveInfo(slave->GetOrdinal(),
@@ -2428,7 +2421,7 @@ Int_t TProof::BroadcastGroupPriority(const char *grp, Int_t priority, TList *wor
 
 Int_t TProof::BroadcastGroupPriority(const char *grp, Int_t priority, ESlaves list)
 {
-   TList *workers = 0;
+   TList *workers = nullptr;
    if (list == kAll)       workers = fSlaves;
    if (list == kActive)    workers = fActiveSlaves;
    if (list == kUnique)    workers = fUniqueSlaves;
@@ -2479,7 +2472,7 @@ Int_t TProof::Broadcast(const TMessage &mess, TList *slaves)
 
 Int_t TProof::Broadcast(const TMessage &mess, ESlaves list)
 {
-   TList *slaves = 0;
+   TList *slaves = nullptr;
    if (list == kAll)       slaves = fSlaves;
    if (list == kActive)    slaves = fActiveSlaves;
    if (list == kUnique)    slaves = fUniqueSlaves;
@@ -2571,7 +2564,7 @@ Int_t TProof::BroadcastRaw(const void *buffer, Int_t length, TList *slaves)
 
 Int_t TProof::BroadcastRaw(const void *buffer, Int_t length, ESlaves list)
 {
-   TList *slaves = 0;
+   TList *slaves = nullptr;
    if (list == kAll)       slaves = fSlaves;
    if (list == kActive)    slaves = fActiveSlaves;
    if (list == kUnique)    slaves = fUniqueSlaves;
@@ -2616,7 +2609,7 @@ Int_t TProof::BroadcastFile(const char *file, Int_t opt, const char *rfile, TLis
 
 Int_t TProof::BroadcastFile(const char *file, Int_t opt, const char *rfile, ESlaves list)
 {
-   TList *wrks = 0;
+   TList *wrks = nullptr;
    if (list == kAll)       wrks = fSlaves;
    if (list == kActive)    wrks = fActiveSlaves;
    if (list == kUnique)    wrks = fUniqueSlaves;
@@ -2648,7 +2641,7 @@ Int_t TProof::Collect(const TSlave *sl, Long_t timeout, Int_t endtype, Bool_t de
 {
    Int_t rc = 0;
 
-   TMonitor *mon = 0;
+   TMonitor *mon = nullptr;
    if (!sl->IsValid()) return 0;
 
    if (fCurrentMonitor == fAllMonitor) {
@@ -2675,7 +2668,7 @@ Int_t TProof::Collect(TList *slaves, Long_t timeout, Int_t endtype, Bool_t deact
 {
    Int_t rc = 0;
 
-   TMonitor *mon = 0;
+   TMonitor *mon = nullptr;
 
    if (fCurrentMonitor == fAllMonitor) {
       mon = new TMonitor;
@@ -2705,7 +2698,7 @@ Int_t TProof::Collect(TList *slaves, Long_t timeout, Int_t endtype, Bool_t deact
 Int_t TProof::Collect(ESlaves list, Long_t timeout, Int_t endtype, Bool_t deactonfail)
 {
    Int_t rc = 0;
-   TMonitor *mon = 0;
+   TMonitor *mon = nullptr;
 
    if (list == kAll)       mon = fAllMonitor;
    if (list == kActive)    mon = fActiveMonitor;
@@ -2749,7 +2742,7 @@ Int_t TProof::Collect(TMonitor *mon, Long_t timeout, Int_t endtype, Bool_t deact
    DeActivateAsyncInput();
 
    // Used by external code to know what we are monitoring
-   TMonitor *savedMonitor = 0;
+   TMonitor *savedMonitor = nullptr;
    if (fCurrentMonitor) {
       savedMonitor = fCurrentMonitor;
       fCurrentMonitor = mon;
@@ -2792,7 +2785,7 @@ Int_t TProof::Collect(TMonitor *mon, Long_t timeout, Int_t endtype, Bool_t deact
             if (al && al->GetSize() > 0) {
                Info("Collect"," %d node(s) still active:", al->GetSize());
                TIter nxs(al);
-               TSocket *xs = 0;
+               TSocket *xs = nullptr;
                while ((xs = (TSocket *)nxs())) {
                   TSlave *wrk = FindSlave(xs);
                   if (wrk)
@@ -2808,10 +2801,10 @@ Int_t TProof::Collect(TMonitor *mon, Long_t timeout, Int_t endtype, Bool_t deact
       // Preemptive poll for new workers on the master only in Dynamic Mode and only
       // during processing (TODO: should work on Top Master only)
       if (TestBit(TProof::kIsMaster) && !IsIdle() && fDynamicStartup && !fIsPollingWorkers &&
-         ((fLastPollWorkers_s == -1) || (time(0)-fLastPollWorkers_s >= pollint))) {
+          ((fLastPollWorkers_s == -1) || (time(nullptr) - fLastPollWorkers_s >= pollint))) {
          fIsPollingWorkers = kTRUE;
          if (PollForNewWorkers() > 0) DeActivateAsyncInput();
-         fLastPollWorkers_s = time(0);
+         fLastPollWorkers_s = time(nullptr);
          fIsPollingWorkers = kFALSE;
          PDB(kCollect, 1)
             Info("Collect","#%04d: now active: %d", collectId, mon->GetActive());
@@ -2866,7 +2859,7 @@ Int_t TProof::Collect(TMonitor *mon, Long_t timeout, Int_t endtype, Bool_t deact
          if (TProof::GetParameter(fPlayer->GetInputList(), "PROOF_ControlSendOutput", mxws) != 0)
             mxws = gEnv->GetValue("Proof.ControlSendOutput", 1);
          TIter nxwr(fWrksOutputReady);
-         TSlave *wrk = 0;
+         TSlave *wrk = nullptr;
          while (mxws && (wrk = (TSlave *) nxwr())) {
             if (!wrk->TestBit(TSlave::kOutputRequested)) {
                // Ask worker for output
@@ -2901,7 +2894,7 @@ Int_t TProof::Collect(TMonitor *mon, Long_t timeout, Int_t endtype, Bool_t deact
          // Notify the name of those which did timeout
          Info("Collect"," %d node(s) went in timeout:", al->GetSize());
          TIter nxs(al);
-         TSocket *xs = 0;
+         TSocket *xs = nullptr;
          while ((xs = (TSocket *)nxs())) {
             TSlave *wrk = FindSlave(xs);
             if (wrk)
@@ -3019,7 +3012,7 @@ void TProof::CleanGDirectory(TList *ol)
 {
    if (ol) {
       TIter nxo(ol);
-      TObject *o = 0;
+      TObject *o = nullptr;
       while ((o = nxo()))
          gDirectory->RecursiveRemove(o);
    }
@@ -3160,36 +3153,36 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess, Bool_t deactonfail)
          {
             PDB(kGlobal,2)
                Info("HandleInputMessage","%s: kPROOF_GETPACKET", sl->GetOrdinal());
-            TDSetElement *elem = 0;
-            elem = fPlayer ? fPlayer->GetNextPacket(sl, mess) : 0;
+               TDSetElement *elem = nullptr;
+               elem = fPlayer ? fPlayer->GetNextPacket(sl, mess) : nullptr;
 
-            if (elem != (TDSetElement*) -1) {
-               TMessage answ(kPROOF_GETPACKET);
-               answ << elem;
-               s->Send(answ);
+               if (elem != (TDSetElement *)-1) {
+                  TMessage answ(kPROOF_GETPACKET);
+                  answ << elem;
+                  s->Send(answ);
 
-               while (fWaitingSlaves != 0 && fWaitingSlaves->GetSize()) {
-                  TPair *p = (TPair*) fWaitingSlaves->First();
-                  s = (TSocket*) p->Key();
-                  TMessage *m = (TMessage*) p->Value();
+                  while (fWaitingSlaves != nullptr && fWaitingSlaves->GetSize()) {
+                     TPair *p = (TPair *)fWaitingSlaves->First();
+                     s = (TSocket *)p->Key();
+                     TMessage *m = (TMessage *)p->Value();
 
-                  elem = fPlayer ? fPlayer->GetNextPacket(sl, m) : 0;
-                  if (elem != (TDSetElement*) -1) {
-                     TMessage a(kPROOF_GETPACKET);
-                     a << elem;
-                     s->Send(a);
-                     // remove has to happen via Links because TPair does not have
-                     // a Compare() function and therefore RemoveFirst() and
-                     // Remove(TObject*) do not work
-                     fWaitingSlaves->Remove(fWaitingSlaves->FirstLink());
-                     delete p;
-                     delete m;
-                  } else {
-                     break;
+                     elem = fPlayer ? fPlayer->GetNextPacket(sl, m) : nullptr;
+                     if (elem != (TDSetElement *)-1) {
+                        TMessage a(kPROOF_GETPACKET);
+                        a << elem;
+                        s->Send(a);
+                        // remove has to happen via Links because TPair does not have
+                        // a Compare() function and therefore RemoveFirst() and
+                        // Remove(TObject*) do not work
+                        fWaitingSlaves->Remove(fWaitingSlaves->FirstLink());
+                        delete p;
+                        delete m;
+                     } else {
+                        break;
+                     }
                   }
-               }
             } else {
-               if (fWaitingSlaves == 0) fWaitingSlaves = new TList;
+               if (fWaitingSlaves == nullptr) fWaitingSlaves = new TList;
                fWaitingSlaves->Add(new TPair(s, mess));
                delete_mess = kFALSE;
             }
@@ -3397,7 +3390,7 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess, Bool_t deactonfail)
                            if (pq) {
                               pq->SetOutputList(fPlayer->GetOutputList(), kFALSE);
                               // Add input objects (do not override remote settings, if any)
-                              TObject *xo = 0;
+                              TObject *xo = nullptr;
                               TIter nxin(fPlayer->GetInputList());
                               // Servers prior to 5.28/00 do not create the input list in the TQueryResult
                               if (!pq->GetInputList()) pq->SetInputList(new TList());
@@ -3426,26 +3419,25 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess, Bool_t deactonfail)
 
             PDB(kGlobal,2)
                Info("HandleInputMessage","%s: kPROOF_OUTPUTLIST: enter", sl->GetOrdinal());
-            TList *out = 0;
-            if (fPlayer) {
-               if (TestBit(TProof::kIsMaster) || fProtocol < 7) {
-                  out = (TList *) mess->ReadObject(TList::Class());
-               } else {
-                  TQueryResult *pq =
-                     (TQueryResult *) mess->ReadObject(TQueryResult::Class());
-                  if (pq) {
-                     // Add query to the result list in TProofPlayer
-                     fPlayer->AddQueryResult(pq);
-                     fPlayer->SetCurrentQuery(pq);
-                     // To avoid accidental cleanups from anywhere else
-                     // remove objects from gDirectory and clone the list
-                     out = pq->GetOutputList();
-                     CleanGDirectory(out);
-                     out = (TList *) out->Clone();
-                     // Notify the GUI that the result arrived
-                     QueryResultReady(TString::Format("%s:%s", pq->GetTitle(), pq->GetName()));
+               TList *out = nullptr;
+               if (fPlayer) {
+                  if (TestBit(TProof::kIsMaster) || fProtocol < 7) {
+                     out = (TList *)mess->ReadObject(TList::Class());
                   } else {
-                     PDB(kGlobal,2)
+                     TQueryResult *pq = (TQueryResult *)mess->ReadObject(TQueryResult::Class());
+                     if (pq) {
+                        // Add query to the result list in TProofPlayer
+                        fPlayer->AddQueryResult(pq);
+                        fPlayer->SetCurrentQuery(pq);
+                        // To avoid accidental cleanups from anywhere else
+                        // remove objects from gDirectory and clone the list
+                        out = pq->GetOutputList();
+                        CleanGDirectory(out);
+                        out = (TList *)out->Clone();
+                        // Notify the GUI that the result arrived
+                        QueryResultReady(TString::Format("%s:%s", pq->GetTitle(), pq->GetName()));
+                     } else {
+                        PDB(kGlobal, 2)
                         Info("HandleInputMessage",
                              "%s: kPROOF_OUTPUTLIST: query result missing", sl->GetOrdinal());
                   }
@@ -3476,7 +3468,7 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess, Bool_t deactonfail)
             if (fQueries) {
                fQueries->Delete();
                delete fQueries;
-               fQueries = 0;
+               fQueries = nullptr;
             }
             fQueries = (TList *) mess->ReadObject(TList::Class());
          }
@@ -3535,7 +3527,7 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess, Bool_t deactonfail)
                   if (fSync)
                      fprintf(stderr,"%s", msg);
                   else
-                     NotifyLogMsg(msg, 0);
+                     NotifyLogMsg(msg, nullptr);
                }
                // Notify GUIs
                StartupMessage(action.Data(), st, (Int_t)done, (Int_t)tot);
@@ -3574,7 +3566,7 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess, Bool_t deactonfail)
                   if (fSync)
                      fprintf(stderr,"%s", msg);
                   else
-                     NotifyLogMsg(msg, 0);
+                     NotifyLogMsg(msg, nullptr);
                }
                // Notify GUIs
                DataSetStatus(action.Data(), st, (Int_t)done, (Int_t)tot);
@@ -3756,7 +3748,7 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess, Bool_t deactonfail)
 
             if (GetRemoteProtocol() > 25) {
                // New format
-               TProofProgressInfo *pi = 0;
+               TProofProgressInfo *pi = nullptr;
                (*mess) >> pi;
                fPlayer->Progress(sl,pi);
             } else if (GetRemoteProtocol() > 11) {
@@ -3790,7 +3782,7 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess, Bool_t deactonfail)
 
             Long64_t events = 0;
             Bool_t abort = kFALSE;
-            TProofProgressStatus *status = 0;
+            TProofProgressStatus *status = nullptr;
 
             if ((mess->BufferSize() > mess->Length()) && (fProtocol > 18)) {
                (*mess) >> status >> abort;
@@ -3801,7 +3793,7 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess, Bool_t deactonfail)
             }
             if (fPlayer) {
                if (fProtocol > 18) {
-                  TList *listOfMissingFiles = 0;
+                  TList *listOfMissingFiles = nullptr;
                   if (!(listOfMissingFiles = (TList *)GetOutput("MissingFiles"))) {
                      listOfMissingFiles = new TList();
                      listOfMissingFiles->SetName("MissingFiles");
@@ -3814,7 +3806,7 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess, Bool_t deactonfail)
                      if (ret > 0)
                         fPlayer->GetPacketizer()->MarkBad(sl, status, &listOfMissingFiles);
                      // This object is now owned by the packetizer
-                     status = 0;
+                     status = nullptr;
                   }
                   if (status) fPlayer->AddEventsProcessed(status->GetEntries());
                } else {
@@ -3838,11 +3830,11 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess, Bool_t deactonfail)
          {
             PDB(kGlobal,2) Info("HandleInputMessage", "kPROOF_GETSLAVEINFO: enter");
 
-            Bool_t active = (GetListOfActiveSlaves()->FindObject(sl) != 0);
-            Bool_t bad = (GetListOfBadSlaves()->FindObject(sl) != 0);
-            TList* tmpinfo = 0;
+            Bool_t active = (GetListOfActiveSlaves()->FindObject(sl) != nullptr);
+            Bool_t bad = (GetListOfBadSlaves()->FindObject(sl) != nullptr);
+            TList *tmpinfo = nullptr;
             (*mess) >> tmpinfo;
-            if (tmpinfo == 0) {
+            if (tmpinfo == nullptr) {
                Error("HandleInputMessage", "kPROOF_GETSLAVEINFO: no list received!");
             } else {
                tmpinfo->SetOwner(kFALSE);
@@ -3855,7 +3847,7 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess, Bool_t deactonfail)
                      if (IsLite()) slinfo->fHostName = gSystem->HostName();
                      // Check if we have already a instance for this worker
                      TIter nxw(fSlaveInfo);
-                     TSlaveInfo *ourwi = 0;
+                     TSlaveInfo *ourwi = nullptr;
                      while ((ourwi = (TSlaveInfo *)nxw())) {
                         if (!strcmp(ourwi->GetOrdinal(), slinfo->GetOrdinal())) {
                            ourwi->SetSysInfo(slinfo->GetSysInfo());
@@ -3888,13 +3880,13 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess, Bool_t deactonfail)
          {
             PDB(kGlobal,2)
                Info("HandleInputMessage", "kPROOF_VALIDATE_DSET: enter");
-            TDSet* dset = 0;
-            (*mess) >> dset;
-            if (!fDSet)
-               Error("HandleInputMessage", "kPROOF_VALIDATE_DSET: fDSet not set");
-            else
-               fDSet->Validate(dset);
-            delete dset;
+               TDSet *dset = nullptr;
+               (*mess) >> dset;
+               if (!fDSet)
+                  Error("HandleInputMessage", "kPROOF_VALIDATE_DSET: fDSet not set");
+               else
+                  fDSet->Validate(dset);
+               delete dset;
          }
          break;
 
@@ -4054,7 +4046,7 @@ void TProof::HandleSubmerger(TMessage *mess, TSlave *sl)
 
             // Ask for results from all workers assigned to this merger
             TIter nxo(mi->GetWorkers());
-            TObject * o = 0;
+            TObject *o = nullptr;
             while ((o = nxo())) {
                AskForOutput((TSlave *)o);
             }
@@ -4128,7 +4120,7 @@ void TProof::HandleSubmerger(TMessage *mess, TSlave *sl)
                         fMergersCount = 0;
                         THashList hosts;
                         TIter nxwk(fSlaves);
-                        TObject *wrk = 0;
+                        TObject *wrk = nullptr;
                         while ((wrk = nxwk())) {
                            if (!hosts.FindObject(wrk->GetName())) {
                               hosts.Add(new TObjString(wrk->GetName()));
@@ -4195,7 +4187,7 @@ void TProof::HandleSubmerger(TMessage *mess, TSlave *sl)
                         Bool_t newMerger = kTRUE;
                         if (fMergersByHost) {
                            TIter nxmg(fMergers);
-                           TMergerInfo *mgi = 0;
+                           TMergerInfo *mgi = nullptr;
                            while ((mgi = (TMergerInfo *) nxmg())) {
                               if (!strcmp(sl->GetName(), mgi->GetMerger()->GetName())) {
                                  newMerger = kFALSE;
@@ -4412,7 +4404,7 @@ Int_t TProof::GetActiveMergersCount()
    Int_t active_mergers = 0;
 
    TIter mergers(fMergers);
-   TMergerInfo *mi = 0;
+   TMergerInfo *mi = nullptr;
    while ((mi = (TMergerInfo *)mergers())) {
       if (mi->IsActive()) active_mergers++;
    }
@@ -4553,7 +4545,7 @@ void TProof::MarkBad(TSlave *wrk, const char *reason)
    if (IsMaster() && reason) {
       if (strcmp(reason, kPROOF_TerminateWorker)) {
          // if the reason was not a planned termination
-         TList *listOfMissingFiles = 0;
+         TList *listOfMissingFiles = nullptr;
          if (!(listOfMissingFiles = (TList *)GetOutput("MissingFiles"))) {
             listOfMissingFiles = new TList();
             listOfMissingFiles->SetName("MissingFiles");
@@ -4562,10 +4554,10 @@ void TProof::MarkBad(TSlave *wrk, const char *reason)
          }
          // If a query is being processed, assume that the work done by
          // the worker was lost and needs to be reassigned.
-         TVirtualPacketizer *packetizer = fPlayer ? fPlayer->GetPacketizer() : 0;
+         TVirtualPacketizer *packetizer = fPlayer ? fPlayer->GetPacketizer() : nullptr;
          if (packetizer) {
             // the worker was lost so do resubmit the packets
-            packetizer->MarkBad(wrk, 0, &listOfMissingFiles);
+            packetizer->MarkBad(wrk, nullptr, &listOfMissingFiles);
          }
       } else {
          // Tell the coordinator that we are gone
@@ -4695,7 +4687,7 @@ void TProof::TerminateWorker(const char *ord)
       Bool_t all = (ord[0] == '*') ? kTRUE : kFALSE;
       if (IsMaster()) {
          TIter nxw(fSlaves);
-         TSlave *wrk = 0;
+         TSlave *wrk = nullptr;
          while ((wrk = (TSlave *)nxw())) {
             if (all || !strcmp(wrk->GetOrdinal(), ord)) {
                TerminateWorker(wrk);
@@ -4723,7 +4715,7 @@ Int_t TProof::Ping()
 
 Int_t TProof::Ping(ESlaves list)
 {
-   TList *slaves = 0;
+   TList *slaves = nullptr;
    if (list == kAll)       slaves = fSlaves;
    if (list == kActive)    slaves = fActiveSlaves;
    if (list == kUnique)    slaves = fUniqueSlaves;
@@ -5082,7 +5074,7 @@ Int_t TProof::HandleOutputOptions(TString &opt, TString &target, Int_t action)
             // Find the dataset
             dsname = "";
             TIter nxo(GetOutputList());
-            TObject *o = 0;
+            TObject *o = nullptr;
             while ((o = nxo())) {
                if (o->InheritsFrom(TFileCollection::Class())) {
                   VerifyDataSet(o->GetName());
@@ -5102,7 +5094,7 @@ Int_t TProof::HandleOutputOptions(TString &opt, TString &target, Int_t action)
             }
          } else {
             Bool_t targetcopied = kFALSE;
-            TProofOutputFile *pf = 0;
+            TProofOutputFile *pf = nullptr;
             if (!target.IsNull())
                pf = (TProofOutputFile *) GetOutputList()->FindObject(gSystem->BaseName(target.Data()));
             if (pf) {
@@ -5117,8 +5109,8 @@ Int_t TProof::HandleOutputOptions(TString &opt, TString &target, Int_t action)
                   }
                }
             }
-            TFile *fout = 0;
-            TObject *o = 0;
+            TFile *fout = nullptr;
+            TObject *o = nullptr;
             TIter nxo(GetOutputList());
             Bool_t swapcopied = kFALSE;
             while ((o = nxo())) {
@@ -5305,7 +5297,7 @@ Long64_t TProof::Process(TDSet *dset, const char *selector, Option_t *option,
 
    // deactivate the default application interrupt handler
    // ctrl-c's will be forwarded to PROOF to stop the processing
-   TSignalHandler *sh = 0;
+   TSignalHandler *sh = nullptr;
    if (fSync) {
       if (gApplication)
          sh = gSystem->RemoveSignalHandler(gApplication->GetSignalHandler());
@@ -5366,7 +5358,7 @@ Long64_t TProof::Process(TDSet *dset, const char *selector, Option_t *option,
       if (!fPerfTree.IsNull()) {
          if (SavePerfTree() != 0) Error("Process", "saving performance info ...");
          // Must be re-enabled each time
-         SetPerfTree(0);
+         SetPerfTree(nullptr);
       }
    }
 
@@ -5394,7 +5386,7 @@ Long64_t TProof::Process(TFileCollection *fc, const char *selector,
 
    // We include the TFileCollection to the input list and we create a
    // fake TDSet with infor about it
-   TDSet *dset = new TDSet(TString::Format("TFileCollection:%s", fc->GetName()), 0, 0, "");
+   TDSet *dset = new TDSet(TString::Format("TFileCollection:%s", fc->GetName()), nullptr, nullptr, "");
    fPlayer->AddInput(fc);
 
 
@@ -5537,7 +5529,7 @@ Long64_t TProof::Process(const char *dsetname, const char *selector,
       return -1;
    }
 
-   TEntryList *el = 0;
+   TEntryList *el = nullptr;
    TString dsobj, dsdir;
    Int_t from = 0;
    while (names.Tokenize(name, from, "[, |]")) {
@@ -5590,8 +5582,8 @@ Long64_t TProof::Process(const char *dsetname, const char *selector,
       if (ienl != kNPOS) {
          // Get entrylist name or path
          enl = name(ienl, name.Length());
-         el = 0;
-         TObject *oel = 0;
+         el = nullptr;
+         TObject *oel = nullptr;
          // If not in the input list ...
          TList *inpl = GetInputList();
          if (inpl && (oel = inpl->FindObject(enl))) el = dynamic_cast<TEntryList *>(oel);
@@ -5610,7 +5602,7 @@ Long64_t TProof::Process(const char *dsetname, const char *selector,
                TFile *f = TFile::Open(enl);
                if (f && !(f->IsZombie()) && f->GetListOfKeys()) {
                   TIter nxk(f->GetListOfKeys());
-                  TKey *k = 0;
+                  TKey *k = nullptr;
                   while ((k = (TKey *) nxk())) {
                      if (!strcmp(k->GetClassName(), "TEntryList")) {
                         if (!el) {
@@ -5743,8 +5735,8 @@ Long64_t TProof::Process(TDSet *dset, TSelector *selector, Option_t *option,
       return -1;
    }
    fSelector = selector;
-   Long64_t rc = Process(dset, (const char*)0, option, nentries, first);
-   fSelector = 0;
+   Long64_t rc = Process(dset, (const char *)nullptr, option, nentries, first);
+   fSelector = nullptr;
    // Done
    return rc;
 }
@@ -5769,8 +5761,8 @@ Long64_t TProof::Process(TFileCollection *fc, TSelector *selector,
       return -1;
    }
    fSelector = selector;
-   Long64_t rc = Process(fc, (const char*)0, option, nentries, first);
-   fSelector = 0;
+   Long64_t rc = Process(fc, (const char *)nullptr, option, nentries, first);
+   fSelector = nullptr;
    // Done
    return rc;
 }
@@ -5792,8 +5784,8 @@ Long64_t TProof::Process(const char *dsetname, TSelector *selector,
       return -1;
    }
    fSelector = selector;
-   Long64_t rc = Process(dsetname, (const char*)0, option, nentries, first, elist);
-   fSelector = 0;
+   Long64_t rc = Process(dsetname, (const char *)nullptr, option, nentries, first, elist);
+   fSelector = nullptr;
    // Done
    return rc;
 }
@@ -5816,8 +5808,8 @@ Long64_t TProof::Process(TSelector *selector, Long64_t n, Option_t *option)
       return -1;
    }
    fSelector = selector;
-   Long64_t rc = Process((const char*)0, n, option);
-   fSelector = 0;
+   Long64_t rc = Process((const char *)nullptr, n, option);
+   fSelector = nullptr;
    // Done
    return rc;
 }
@@ -5834,7 +5826,7 @@ Int_t TProof::GetQueryReference(Int_t qry, TString &ref)
          GetListOfQueries();
       if (fQueries) {
          TIter nxq(fQueries);
-         TQueryResult *qr = 0;
+         TQueryResult *qr = nullptr;
          while ((qr = (TQueryResult *) nxq()))
             if (qr->GetSeqNum() == qry) {
                ref.Form("%s:%s", qr->GetTitle(), qr->GetName());
@@ -5896,7 +5888,7 @@ Long64_t TProof::Finalize(const char *ref, Bool_t force)
             } else {
                Info("Finalize","query already finalized:"
                      " use Finalize(<qry>,kTRUE) to force new retrieval");
-               qr = 0;
+               qr = nullptr;
             }
          } else {
             retrieve = kTRUE;
@@ -5948,7 +5940,7 @@ Int_t TProof::Retrieve(const char *ref, const char *path)
       if (path) {
 
          // Get pointer to query
-         TQueryResult *qr = fPlayer ? fPlayer->GetQueryResult(ref) : 0;
+         TQueryResult *qr = fPlayer ? fPlayer->GetQueryResult(ref) : nullptr;
 
          if (qr) {
 
@@ -6969,7 +6961,7 @@ Int_t TProof::SendFile(const char *file, Int_t opt, const char *rfile, TSlave *w
                SysError("SendFile", "error writing to slave %s:%s (now offline)",
                         sl->GetName(), sl->GetOrdinal());
                MarkBad(sl, "sendraw failure");
-               sl = 0;
+               sl = nullptr;
                break;
             }
 
@@ -7150,7 +7142,7 @@ Int_t TProof::GoMoreParallel(Int_t nWorkersToAdd)
       return -1;
    }
 
-   TSlave *sl = 0x0;
+   TSlave *sl = nullptr;
    TIter next( fSlaves );
    Int_t nAddedWorkers = 0;
 
@@ -7251,7 +7243,7 @@ Int_t TProof::GoParallel(Int_t nodes, Bool_t attach, Bool_t random)
 
    // Prepare the list of candidates first.
    // Algorithm depends on random option.
-   TSlave *sl = 0;
+   TSlave *sl = nullptr;
    TList *wlst = new TList;
    TIter nxt(fSlaves);
    fInactiveSlaves->Clear();
@@ -7422,7 +7414,7 @@ void TProof::ClearData(UInt_t what, const char *dsname)
       // Loop through the files
       Bool_t rmds = kTRUE;
       TIter nxf(fc->GetList());
-      TFileInfo *fi = 0;
+      TFileInfo *fi = nullptr;
       Int_t rfiles = 0, nfiles = fc->GetList()->GetSize();
       while ((fi = (TFileInfo *) nxf())) {
          // Fill the host info
@@ -7439,7 +7431,7 @@ void TProof::ClearData(UInt_t what, const char *dsname)
          // Now search for any "file:" url
          Int_t nurl = fi->GetNUrls();
          fi->ResetUrl();
-         TUrl *up = 0;
+         TUrl *up = nullptr;
          while (nurl-- && fi->NextUrl()) {
             up = fi->GetCurrentUrl();
             if (!strcmp(up->GetProtocol(), "file")) {
@@ -7479,7 +7471,7 @@ void TProof::ClearData(UInt_t what, const char *dsname)
       RedirectHandle_t h;
       gSystem->RedirectOutput(outtmp.Data(), "w", &h);
       ShowData();
-      gSystem->RedirectOutput(0, 0, &h);
+      gSystem->RedirectOutput(nullptr, nullptr, &h);
       // Parse the output file now
       std::ifstream in;
       in.open(outtmp.Data());
@@ -7532,19 +7524,19 @@ void TProof::ClearData(UInt_t what, const char *dsname)
 
       // Go thorugh and prepare the lists per node
       TString opt;
-      TObjString *os = 0;
+      TObjString *os = nullptr;
       if (fcmap) {
          TIter nxfc(fcmap);
          while ((os = (TObjString *) nxfc())) {
-            TFileCollection *fc = 0;
+            TFileCollection *fc = nullptr;
             if ((fc = (TFileCollection *) fcmap->GetValue(os))) {
-               TFileInfo *fi = 0;
+               TFileInfo *fi = nullptr;
                TIter nxfi(fc->GetList());
                while ((fi = (TFileInfo *) nxfi())) {
                   // Get special "file:" url
                   fi->ResetUrl();
                   Int_t nurl = fi->GetNUrls();
-                  TUrl *up = 0;
+                  TUrl *up = nullptr;
                   while (nurl-- && fi->NextUrl()) {
                      up = fi->GetCurrentUrl();
                      if (!strcmp(up->GetProtocol(), "file")) {
@@ -7592,10 +7584,10 @@ void TProof::ClearData(UInt_t what, const char *dsname)
       Int_t rfiles = 0;
       TIter nxls(afmap);
       while ((os = (TObjString *) nxls())) {
-         TList *fl = 0;
+         TList *fl = nullptr;
          if ((fl = (TList *) afmap->GetValue(os))) {
             TIter nxf(fl);
-            TObjString *fn = 0;
+            TObjString *fn = nullptr;
             while ((fn = (TObjString *) nxf())) {
                // Issue a remove request now
                if (fManager->Rm(fn->GetName(), "-f", os->GetName()) != 0) {
@@ -8121,7 +8113,7 @@ Int_t TProof::UnloadPackages()
    if (!IsValid()) return -1;
 
    if (TestBit(TProof::kIsClient)) {
-      if (fPackMgr->Unload(0) < 0) return -1;
+      if (fPackMgr->Unload(nullptr) < 0) return -1;
    }
 
    // Nothing more to do if we are a Lite-session
@@ -8147,7 +8139,7 @@ Int_t TProof::UnloadPackages()
 Int_t TProof::EnablePackage(const char *package, Bool_t notOnClient,
    TList *workers)
 {
-   return EnablePackage(package, (TList *)0, notOnClient, workers);
+   return EnablePackage(package, (TList *)nullptr, notOnClient, workers);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -8169,7 +8161,7 @@ Int_t TProof::EnablePackage(const char *package, Bool_t notOnClient,
 Int_t TProof::EnablePackage(const char *package, const char *loadopts,
                             Bool_t notOnClient, TList *workers)
 {
-   TList *optls = 0;
+   TList *optls = nullptr;
    if (loadopts && strlen(loadopts)) {
       if (fProtocol > 28) {
          TObjString *os = new TObjString(loadopts);
@@ -8272,10 +8264,10 @@ Int_t TProof::EnablePackage(const char *package, TList *loadopts,
    if (BuildPackage(pac, opt, chkveropt, workers) == -1)
       return -1;
 
-   TList *optls = (loadopts && loadopts->GetSize() > 0) ? loadopts : 0;
+   TList *optls = (loadopts && loadopts->GetSize() > 0) ? loadopts : nullptr;
    if (optls && fProtocol <= 28) {
       Warning("EnablePackage", "remote server does not support options: ignoring the option list");
-      optls = 0;
+      optls = nullptr;
    }
 
    if (LoadPackage(pac, notOnClient, optls, workers) == -1)
@@ -8288,7 +8280,7 @@ Int_t TProof::EnablePackage(const char *package, TList *loadopts,
    }
    if (!fEnabledPackagesOnCluster->FindObject(pac)) {
       TPair *pck = (optls && optls->GetSize() > 0) ? new TPair(new TObjString(pac), optls->Clone())
-                                                   : new TPair(new TObjString(pac), 0);
+                                                   : new TPair(new TObjString(pac), nullptr);
       fEnabledPackagesOnCluster->Add(pck);
    }
 
@@ -8341,8 +8333,7 @@ Int_t TProof::DownloadPackage(const char *pack, const char *dstdir)
    if (gSystem->RedirectOutput(fLogFileName, "a", &rh) != 0)
       Warning("DownloadPackage", "problems redirecting output to '%s'", fLogFileName.Data());
    Int_t rc = fManager->Stat(src, stsrc);
-   if (gSystem->RedirectOutput(0, 0, &rh) != 0)
-      Warning("DownloadPackage", "problems restoring output");
+   if (gSystem->RedirectOutput(nullptr, nullptr, &rh) != 0) Warning("DownloadPackage", "problems restoring output");
    if (rc != 0) {
       // Check if there is another possible source
       ShowPackages(kFALSE, kTRUE);
@@ -8351,7 +8342,7 @@ Int_t TProof::DownloadPackage(const char *pack, const char *dstdir)
          // Look for global directories
          Bool_t isGlobal = kFALSE;
          TIter nxl(mp->GetListOfLines());
-         TObjString *os = 0;
+         TObjString *os = nullptr;
          TString globaldir;
          while ((os = (TObjString *) nxl())) {
             TString s(os->GetName());
@@ -8501,7 +8492,7 @@ Int_t TProof::UploadPackage(const char *pack, EUploadPackageOpt opt,
    if (!workers)
       workers = fUniqueSlaves;
    TIter next(workers);
-   TSlave *sl = 0;
+   TSlave *sl = nullptr;
    while ((sl = (TSlave *) next())) {
       if (!sl->IsValid())
          continue;
@@ -8686,7 +8677,7 @@ Int_t TProof::Load(const char *macro, Bool_t notOnClient, Bool_t uniqueWorkers,
       // Additional files
       if (addfiles.GetSize() > 0) {
          TIter nxfn(&addfiles);
-         TObjString *os = 0;
+         TObjString *os = nullptr;
          while ((os = (TObjString *) nxfn())) {
             // These files need to be available everywhere, cache and sandbox
             if (SendFile(os->GetName(), kAscii | kForward, "cache") == -1) {
@@ -8773,7 +8764,7 @@ Int_t TProof::Load(const char *macro, Bool_t notOnClient, Bool_t uniqueWorkers,
 
          // We then send a tuned loading request to the other workers
          TList others;
-         TSlave *wrk = 0;
+         TSlave *wrk = nullptr;
          TIter nxw(fActiveSlaves);
          while ((wrk = (TSlave *)nxw())) {
             if (!fUniqueSlaves->FindObject(wrk)) {
@@ -8982,7 +8973,7 @@ void TProof::HandleLibIncPath(const char *what, Bool_t add, const char *dirs)
    path.ReplaceAll(","," ");
 
    // Decompose lists
-   TObjArray *op = 0;
+   TObjArray *op = nullptr;
    if (path.Length() > 0 && path != "-") {
       if (!(op = path.Tokenize(" "))) {
          Warning("HandleLibIncPath","decomposing path %s", path.Data());
@@ -8996,7 +8987,7 @@ void TProof::HandleLibIncPath(const char *what, Bool_t add, const char *dirs)
 
          // Add libs
          TIter nxl(op, kIterBackward);
-         TObjString *lib = 0;
+         TObjString *lib = nullptr;
          while ((lib = (TObjString *) nxl())) {
             // Expand path
             TString xlib = lib->GetName();
@@ -9023,7 +9014,7 @@ void TProof::HandleLibIncPath(const char *what, Bool_t add, const char *dirs)
 
          // Add incs
          TIter nxi(op);
-         TObjString *inc = 0;
+         TObjString *inc = nullptr;
          while ((inc = (TObjString *) nxi())) {
             // Expand path
             TString xinc = inc->GetName();
@@ -9047,7 +9038,7 @@ void TProof::HandleLibIncPath(const char *what, Bool_t add, const char *dirs)
 
          // Remove libs
          TIter nxl(op);
-         TObjString *lib = 0;
+         TObjString *lib = nullptr;
          while ((lib = (TObjString *) nxl())) {
             // Expand path
             TString xlib = lib->GetName();
@@ -9062,7 +9053,7 @@ void TProof::HandleLibIncPath(const char *what, Bool_t add, const char *dirs)
 
          // Remove incs
          TIter nxi(op);
-         TObjString *inc = 0;
+         TObjString *inc = nullptr;
          while ((inc = (TObjString *) nxi())) {
             TString newincpath = gSystem->GetIncludePath();
             newincpath.ReplaceAll(TString::Format("-I%s", inc->GetName()),"");
@@ -9079,8 +9070,7 @@ void TProof::HandleLibIncPath(const char *what, Bool_t add, const char *dirs)
 
 TList *TProof::GetListOfPackages()
 {
-   if (!IsValid())
-      return (TList *)0;
+   if (!IsValid()) return (TList *)nullptr;
 
    TMessage mess(kPROOF_CACHE);
    mess << Int_t(kListPackages);
@@ -9095,8 +9085,7 @@ TList *TProof::GetListOfPackages()
 
 TList *TProof::GetListOfEnabledPackages()
 {
-   if (!IsValid())
-      return (TList *)0;
+   if (!IsValid()) return (TList *)nullptr;
 
    TMessage mess(kPROOF_CACHE);
    mess << Int_t(kListEnabledPackages);
@@ -9323,7 +9312,7 @@ void TProof::SendDataSetStatus(const char *action, UInt_t done,
          if (fSync)
             fprintf(stderr,"%s", msg);
          else
-            NotifyLogMsg(msg, 0);
+            NotifyLogMsg(msg, nullptr);
       }
       return;
    }
@@ -9364,7 +9353,7 @@ void TProof::ValidateDSet(TDSet *dset)
    // build nodelist with slaves and elements
    TIter nextSlave(GetListOfActiveSlaves());
    while (TSlave *sl = dynamic_cast<TSlave*>(nextSlave())) {
-      TList *sllist = 0;
+      TList *sllist = nullptr;
       TPair *p = dynamic_cast<TPair*>(nodes.FindObject(sl->GetName()));
       if (!p) {
          sllist = new TList;
@@ -9481,7 +9470,7 @@ void TProof::ValidateDSet(TDSet *dset)
    PDB(kGlobal,1)
       Info("ValidateDSet","Calling Collect");
    Collect(&usedslaves);
-   SetDSet(0);
+   SetDSet(nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -9517,7 +9506,7 @@ void TProof::ClearInputData(TObject *obj)
       ResetBit(TProof::kNewInputData);
 
       // Also remove any info about input data in the input list
-      TObject *o = 0;
+      TObject *o = nullptr;
       TList *in = GetInputList();
       while ((o = GetInputList()->FindObject("PROOF_InputDataFile")))
          in->Remove(o);
@@ -9543,7 +9532,7 @@ void TProof::ClearInputData(TObject *obj)
 
 void TProof::ClearInputData(const char *name)
 {
-   TObject *obj = (fInputData && name) ? fInputData->FindObject(name) : 0;
+   TObject *obj = (fInputData && name) ? fInputData->FindObject(name) : nullptr;
    if (obj) ClearInputData(obj);
 }
 
@@ -9628,7 +9617,7 @@ void TProof::PrepareInputDataFile(TString &dataFile)
    }
 
    // Remove any info about input data in the input list
-   TObject *o = 0;
+   TObject *o = nullptr;
    TList *in = GetInputList();
    while ((o = GetInputList()->FindObject("PROOF_InputDataFile")))
       in->Remove(o);
@@ -9654,7 +9643,7 @@ void TProof::PrepareInputDataFile(TString &dataFile)
          TIter next(fInputData);
          TObject *obj;
          while ((obj = next())) {
-            obj->Write(0, TObject::kSingleKey, 0);
+            obj->Write(nullptr, TObject::kSingleKey, 0);
          }
          f->Close();
          SafeDelete(f);
@@ -9682,9 +9671,9 @@ void TProof::PrepareInputDataFile(TString &dataFile)
          if (f) {
             f->cd();
             TIter next(fInputData);
-            TObject *obj = 0;
+            TObject *obj = nullptr;
             while ((obj = next())) {
-               obj->Write(0, TObject::kSingleKey, 0);
+               obj->Write(nullptr, TObject::kSingleKey, 0);
             }
             f->Close();
             SafeDelete(f);
@@ -9724,7 +9713,7 @@ void TProof::ClearInput()
 
 TList *TProof::GetInputList()
 {
-   return (fPlayer ? fPlayer->GetInputList() : (TList *)0);
+   return (fPlayer ? fPlayer->GetInputList() : (TList *)nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -9736,10 +9725,10 @@ TObject *TProof::GetOutput(const char *name)
 
    if (TestBit(TProof::kIsMaster))
       // Can be called by MarkBad on the master before the player is initialized
-      return (fPlayer) ? fPlayer->GetOutput(name) : (TObject *)0;
+      return (fPlayer) ? fPlayer->GetOutput(name) : (TObject *)nullptr;
 
    // This checks also associated output files
-   return (GetOutputList()) ? GetOutputList()->FindObject(name) : (TObject *)0;
+   return (GetOutputList()) ? GetOutputList()->FindObject(name) : (TObject *)nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -9747,18 +9736,18 @@ TObject *TProof::GetOutput(const char *name)
 
 TObject *TProof::GetOutput(const char *name, TList *out)
 {
-   TObject *o = 0;
+   TObject *o = nullptr;
    if (!name || (name && strlen(name) <= 0) ||
        !out || (out && out->GetSize() <= 0)) return o;
    if ((o = out->FindObject(name))) return o;
 
    // For the time being we always check for all the files; this may require
    // some caching
-   TProofOutputFile *pf = 0;
+   TProofOutputFile *pf = nullptr;
    TIter nxo(out);
    while ((o = nxo())) {
       if ((pf = dynamic_cast<TProofOutputFile *> (o))) {
-         TFile *f = 0;
+         TFile *f = nullptr;
          if (!(f = (TFile *) gROOT->GetListOfFiles()->FindObject(pf->GetOutputFileName()))) {
             TString fn = TString::Format("%s/%s", pf->GetDir(), pf->GetFileName());
             f = TFile::Open(fn.Data());
@@ -9784,7 +9773,7 @@ TList *TProof::GetOutputList()
       fOutputList.AttachList(fPlayer->GetOutputList());
       return &fOutputList;
    }
-   return (TList *)0;
+   return (TList *)nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -9891,7 +9880,7 @@ TObject *TProof::GetParameter(const char *par) const
 {
    if (!fPlayer) {
       Warning("GetParameter", "player undefined! Ignoring");
-      return (TObject *)0;
+      return (TObject *)nullptr;
    }
 
    TList *il = fPlayer->GetInputList();
@@ -9912,7 +9901,7 @@ void TProof::DeleteParameters(const char *wildcard)
 
    TList *il = fPlayer->GetInputList();
    if (il) {
-      TObject *p = 0;
+      TObject *p = nullptr;
       TIter next(il);
       while ((p = next())) {
          TString s = p->GetName();
@@ -9962,8 +9951,7 @@ void TProof::AddFeedback(const char *name)
 {
    PDB(kFeedback, 3)
       Info("AddFeedback", "Adding object \"%s\" to feedback", name);
-   if (fFeedback->FindObject(name) == 0)
-      fFeedback->Add(new TObjString(name));
+      if (fFeedback->FindObject(name) == nullptr) fFeedback->Add(new TObjString(name));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -9972,7 +9960,7 @@ void TProof::AddFeedback(const char *name)
 void TProof::RemoveFeedback(const char *name)
 {
    TObject *obj = fFeedback->FindObject(name);
-   if (obj != 0) {
+   if (obj != nullptr) {
       fFeedback->Remove(obj);
       delete obj;
    }
@@ -10015,9 +10003,9 @@ TTree *TProof::GetTreeHeader(TDSet *dset)
 {
    TList *l = GetListOfActiveSlaves();
    TSlave *sl = (TSlave*) l->First();
-   if (sl == 0) {
+   if (sl == nullptr) {
       Error("GetTreeHeader", "No connection");
-      return 0;
+      return nullptr;
    }
 
    TSocket *soc = sl->GetSocket();
@@ -10037,11 +10025,11 @@ TTree *TProof::GetTreeHeader(TDSet *dset)
    }
    if (!reply) {
       Error("GetTreeHeader", "Error getting a replay from the master.Result %d", (int) d);
-      return 0;
+      return nullptr;
    }
 
    TString s1;
-   TTree *t = 0;
+   TTree *t = nullptr;
    (*reply) >> s1;
    if (s1 == "Success")
       (*reply) >> t;
@@ -10065,7 +10053,7 @@ TTree *TProof::GetTreeHeader(TDSet *dset)
 
 TDrawFeedback *TProof::CreateDrawFeedback()
 {
-   return (fPlayer ? fPlayer->CreateDrawFeedback(this) : (TDrawFeedback *)0);
+   return (fPlayer ? fPlayer->CreateDrawFeedback(this) : (TDrawFeedback *)nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -10089,60 +10077,60 @@ void TProof::DeleteDrawFeedback(TDrawFeedback *f)
 
 TList *TProof::GetOutputNames()
 {
-   return 0;
-/*
-   TMessage msg(kPROOF_GETOUTPUTLIST);
-   TList* slaves = fActiveSlaves;
-   Broadcast(msg, slaves);
-   TMonitor mon;
-   TList* outputList = new TList();
+   return nullptr;
+   /*
+      TMessage msg(kPROOF_GETOUTPUTLIST);
+      TList* slaves = fActiveSlaves;
+      Broadcast(msg, slaves);
+      TMonitor mon;
+      TList* outputList = new TList();
 
-   TIter    si(slaves);
-   TSlave   *slave;
-   while ((slave = (TSlave*)si.Next()) != 0) {
-      PDB(kGlobal,4) Info("GetOutputNames","Socket added to monitor: %p (%s)",
-          slave->GetSocket(), slave->GetName());
-      mon.Add(slave->GetSocket());
-   }
-   mon.ActivateAll();
-   ((TProof*)gProof)->DeActivateAsyncInput();
-   ((TProof*)gProof)->fCurrentMonitor = &mon;
+      TIter    si(slaves);
+      TSlave   *slave;
+      while ((slave = (TSlave*)si.Next()) != 0) {
+         PDB(kGlobal,4) Info("GetOutputNames","Socket added to monitor: %p (%s)",
+             slave->GetSocket(), slave->GetName());
+         mon.Add(slave->GetSocket());
+      }
+      mon.ActivateAll();
+      ((TProof*)gProof)->DeActivateAsyncInput();
+      ((TProof*)gProof)->fCurrentMonitor = &mon;
 
-   while (mon.GetActive() != 0) {
-      TSocket *sock = mon.Select();
-      if (!sock) {
-         Error("GetOutputList","TMonitor::.Select failed!");
-         break;
-      }
-      mon.DeActivate(sock);
-      TMessage *reply;
-      if (sock->Recv(reply) <= 0) {
-         MarkBad(slave, "receive failed after kPROOF_GETOUTPUTLIST request");
-//         Error("GetOutputList","Recv failed! for slave-%d (%s)",
-//               slave->GetOrdinal(), slave->GetName());
-         continue;
-      }
-      if (reply->What() != kPROOF_GETOUTPUTNAMES ) {
-//         Error("GetOutputList","unexpected message %d from slawe-%d (%s)",  reply->What(),
-//               slave->GetOrdinal(), slave->GetName());
-         MarkBad(slave, "wrong reply to kPROOF_GETOUTPUTLIST request");
-         continue;
-      }
-      TList* l;
+      while (mon.GetActive() != 0) {
+         TSocket *sock = mon.Select();
+         if (!sock) {
+            Error("GetOutputList","TMonitor::.Select failed!");
+            break;
+         }
+         mon.DeActivate(sock);
+         TMessage *reply;
+         if (sock->Recv(reply) <= 0) {
+            MarkBad(slave, "receive failed after kPROOF_GETOUTPUTLIST request");
+   //         Error("GetOutputList","Recv failed! for slave-%d (%s)",
+   //               slave->GetOrdinal(), slave->GetName());
+            continue;
+         }
+         if (reply->What() != kPROOF_GETOUTPUTNAMES ) {
+   //         Error("GetOutputList","unexpected message %d from slawe-%d (%s)",  reply->What(),
+   //               slave->GetOrdinal(), slave->GetName());
+            MarkBad(slave, "wrong reply to kPROOF_GETOUTPUTLIST request");
+            continue;
+         }
+         TList* l;
 
-      (*reply) >> l;
-      TIter next(l);
-      TNamed *n;
-      while ( (n = dynamic_cast<TNamed*> (next())) ) {
-         if (!outputList->FindObject(n->GetName()))
-            outputList->Add(n);
+         (*reply) >> l;
+         TIter next(l);
+         TNamed *n;
+         while ( (n = dynamic_cast<TNamed*> (next())) ) {
+            if (!outputList->FindObject(n->GetName()))
+               outputList->Add(n);
+         }
+         delete reply;
       }
-      delete reply;
-   }
-   ((TProof*)gProof)->fCurrentMonitor = 0;
+      ((TProof*)gProof)->fCurrentMonitor = 0;
 
-   return outputList;
-*/
+      return outputList;
+   */
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -10228,7 +10216,7 @@ void TProof::GetLog(Int_t start, Int_t end)
 
 TMacro *TProof::GetLastLog()
 {
-   TMacro *maclog = 0;
+   TMacro *maclog = nullptr;
 
    // Save present offset
    off_t nowlog = lseek(fileno(fLogFileR), (off_t) 0, SEEK_CUR);
@@ -10297,7 +10285,7 @@ void TProof::PutLog(TQueryResult *pq)
    TList *lines = pq->GetLogFile()->GetListOfLines();
    if (lines) {
       TIter nxl(lines);
-      TObjString *l = 0;
+      TObjString *l = nullptr;
       while ((l = (TObjString *)nxl()))
          EmitVA("LogMessage(const char*,Bool_t)", 2, l->GetName(), kFALSE);
    }
@@ -10317,7 +10305,7 @@ void TProof::ShowLog(const char *queryref)
       if (queryref) {
          if (fPlayer->GetListOfResults()) {
             TIter nxq(fPlayer->GetListOfResults());
-            TQueryResult *qr = 0;
+            TQueryResult *qr = nullptr;
             while ((qr = (TQueryResult *) nxq()))
                if (strstr(queryref, qr->GetTitle()) &&
                    strstr(queryref, qr->GetName()))
@@ -10363,10 +10351,10 @@ void TProof::ShowLog(Int_t qry)
       lseek(fileno(fLogFileR), (off_t) 0, SEEK_SET);
    } else if (qry != -1) {
 
-      TQueryResult *pq = 0;
+      TQueryResult *pq = nullptr;
       if (qry == -2) {
          // Pickup the last one
-         pq = (GetQueryResults()) ? ((TQueryResult *)(GetQueryResults()->Last())) : 0;
+         pq = (GetQueryResults()) ? ((TQueryResult *)(GetQueryResults()->Last())) : nullptr;
          if (!pq) {
             GetListOfQueries();
             if (fQueries)
@@ -10494,7 +10482,7 @@ void TProof::Detach(Option_t *opt)
 
    // Get worker and socket instances
    TSlave *sl = (TSlave *) fActiveSlaves->First();
-   TSocket *s = 0;
+   TSocket *s = nullptr;
    if (!sl || !(sl->IsValid()) || !(s = sl->GetSocket())) {
       Error("Detach","corrupted worker instance: wrk:%p, sock:%p", sl, s);
       return;
@@ -10531,10 +10519,10 @@ void TProof::Detach(Option_t *opt)
    // Update info in the table of our manager, if any
    if (GetManager() && GetManager()->QuerySessions("L")) {
       TIter nxd(GetManager()->QuerySessions("L"));
-      TProofDesc *d = 0;
+      TProofDesc *d = nullptr;
       while ((d = (TProofDesc *)nxd())) {
          if (d->GetProof() == this) {
-            d->SetProof(0);
+            d->SetProof(nullptr);
             GetManager()->QuerySessions("L")->Remove(d);
             break;
          }
@@ -10783,7 +10771,7 @@ TMap *TProof::GetDataSets(const char *uri, const char *optStr)
    if (fProtocol < 15) {
       Info("GetDataSets",
            "functionality not available: the server does not have dataset support");
-      return 0;
+      return nullptr;
    }
    if (fProtocol < 31 && strstr(optStr, ":lite:"))
       Warning("GetDataSets", "'lite' option not supported by the server");
@@ -10795,7 +10783,7 @@ TMap *TProof::GetDataSets(const char *uri, const char *optStr)
    Broadcast(mess);
    Collect(kActive, fCollectTimeout);
 
-   TMap *dataSetMap = 0;
+   TMap *dataSetMap = nullptr;
    if (fStatus != 0) {
       Error("GetDataSets", "error receiving datasets information");
    } else {
@@ -10911,12 +10899,12 @@ TFileCollection *TProof::GetDataSet(const char *uri, const char *optStr)
    if (fProtocol < 15) {
       Info("GetDataSet", "functionality not available: the server has an"
                          " incompatible version of TFileInfo");
-      return 0;
+      return nullptr;
    }
 
    if (!uri || strlen(uri) <= 0) {
       Info("GetDataSet", "specifying a dataset name is mandatory");
-      return 0;
+      return nullptr;
    }
 
    TMessage nameMess(kPROOF_DATASETS);
@@ -10927,7 +10915,7 @@ TFileCollection *TProof::GetDataSet(const char *uri, const char *optStr)
       Error("GetDataSet", "sending request failed");
 
    Collect(kActive, fCollectTimeout);
-   TFileCollection *fileList = 0;
+   TFileCollection *fileList = nullptr;
    if (fStatus != 0) {
       Error("GetDataSet", "error receiving datasets information");
    } else {
@@ -10948,7 +10936,7 @@ TFileCollection *TProof::GetDataSet(const char *uri, const char *optStr)
 
 void TProof::ShowDataSet(const char *uri, const char* opt)
 {
-   TFileCollection *fileList = 0;
+   TFileCollection *fileList = nullptr;
    if ((fileList = GetDataSet(uri))) {
       fileList->Print(opt);
       delete fileList;
@@ -10982,7 +10970,7 @@ Int_t TProof::RemoveDataSet(const char *uri, const char* optStr)
 TList* TProof::FindDataSets(const char* /*searchString*/, const char* /*optStr*/)
 {
    Error ("FindDataSets", "not yet implemented");
-   return (TList *) 0;
+   return (TList *)nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -11047,7 +11035,7 @@ TFileCollection *TProof::GetStagingStatusDataSet(const char *dataset)
    if (fProtocol < 35) {
       Error("GetStagingStatusDataSet",
          "functionality not supported by the server");
-      return NULL;
+      return nullptr;
    }
 
    TMessage nameMess(kPROOF_DATASETS);
@@ -11055,11 +11043,11 @@ TFileCollection *TProof::GetStagingStatusDataSet(const char *dataset)
    nameMess << TString(dataset);
    if (Broadcast(nameMess) < 0) {
       Error("GetStagingStatusDataSet", "sending request failed");
-      return NULL;
+      return nullptr;
    }
 
    Collect(kActive, fCollectTimeout);
-   TFileCollection *fc = NULL;
+   TFileCollection *fc = nullptr;
 
    if (fStatus < 0) {
       Error("GetStagingStatusDataSet", "problem processing the request");
@@ -11211,7 +11199,7 @@ Int_t TProof::VerifyDataSetParallel(const char *uri, const char *optStr)
       TList *l = dynamic_cast<TList *>(obj);
       if (l && TString(l->GetName()).BeginsWith("PROOF_ListFileInfos_")) {
          TIter nxt(l);
-         TFileInfo *fiindout = 0;
+         TFileInfo *fiindout = nullptr;
          while ((fiindout = (TFileInfo*) nxt())) {
             lfiindout->Add(fiindout);
          }
@@ -11249,7 +11237,7 @@ TMap *TProof::GetDataSetQuota(const char* optStr)
 {
    if (IsLite()) {
       Info("UploadDataSet", "Lite-session: functionality not implemented");
-      return (TMap *)0;
+      return (TMap *)nullptr;
    }
 
    TMessage mess(kPROOF_DATASETS);
@@ -11258,7 +11246,7 @@ TMap *TProof::GetDataSetQuota(const char* optStr)
    Broadcast(mess);
 
    Collect(kActive, fCollectTimeout);
-   TMap *groupQuotaMap = 0;
+   TMap *groupQuotaMap = nullptr;
    if (fStatus < 0) {
       Info("GetDataSetQuota", "could not receive quota");
    } else {
@@ -11398,7 +11386,7 @@ Int_t TProof::ModifyWorkerLists(const char *ord, Bool_t add, Bool_t save)
 
    if (IsEndMaster() && !restoring) {
       // Create the hash list of ordinal numbers
-      THashList *ords = 0;
+      THashList *ords = nullptr;
       if (!allord) {
          ords = new THashList();
          const char *masterord = (gProofServ) ? gProofServ->GetOrdinal() : "0";
@@ -11410,12 +11398,12 @@ Int_t TProof::ModifyWorkerLists(const char *ord, Bool_t add, Bool_t save)
       // We do not need to send forward
       fw = kFALSE;
       // Look for the worker in the initial list
-      TObject *os = 0;
-      TSlave *wrk = 0;
+      TObject *os = nullptr;
+      TSlave *wrk = nullptr;
       if (in->GetSize() > 0) {
          TIter nxw(in);
          while ((wrk = (TSlave *) nxw())) {
-            os = 0;
+            os = nullptr;
             if (allord || (ords && (os = ords->FindObject(wrk->GetOrdinal())))) {
                // Add it to the final list
                if (!out->FindObject(wrk)) {
@@ -11518,7 +11506,7 @@ void TProof::SaveActiveList()
       fActiveSlavesSaved = "*";
    } else {
       TIter nxw(fActiveSlaves);
-      TSlave *wk = 0;
+      TSlave *wk = nullptr;
       while ((wk = (TSlave *)nxw())) { fActiveSlavesSaved += TString::Format("%s,", wk->GetOrdinal()); }
    }
 }
@@ -11564,32 +11552,32 @@ TProof *TProof::Open(const char *cluster, const char *conffile,
       TPluginManager *pm = gROOT->GetPluginManager();
       if (!pm) {
          ::Error(pn, "plugin manager not found");
-         return 0;
+         return nullptr;
       }
 
       if (gROOT->IsBatch()) {
          ::Error(pn, "we are in batch mode, cannot show PROOF Session Viewer");
-         return 0;
+         return nullptr;
       }
       // start PROOF Session Viewer
       TPluginHandler *sv = pm->FindHandler("TSessionViewer", "");
       if (!sv) {
          ::Error(pn, "no plugin found for TSessionViewer");
-         return 0;
+         return nullptr;
       }
       if (sv->LoadPlugin() == -1) {
          ::Error(pn, "plugin for TSessionViewer could not be loaded");
-         return 0;
+         return nullptr;
       }
       sv->ExecPlugin(0);
-      return 0;
+      return nullptr;
 
    } else {
 
       TString clst(cluster);
 
       // Check for PoD cluster
-      if (PoDCheckUrl( &clst ) < 0) return 0;
+      if (PoDCheckUrl(&clst) < 0) return nullptr;
 
       if (clst.BeginsWith("workers=")) clst.Insert(0, "lite:///?");
       if (clst.BeginsWith("tunnel=")) clst.Insert(0, "/?");
@@ -11653,14 +11641,14 @@ TProof *TProof::Open(const char *cluster, const char *conffile,
       // Attach-to or create the appropriate manager
       TProofMgr *mgr = TProofMgr::Create(u.GetUrl());
 
-      TProof *proof = 0;
+      TProof *proof = nullptr;
       if (mgr && mgr->IsValid()) {
 
          // If XProofd we always attempt an attach first (unless
          // explicitly not requested).
          Bool_t attach = (create || mgr->IsProofd() || mgr->IsLite()) ? kFALSE : kTRUE;
          if (attach) {
-            TProofDesc *d = 0;
+            TProofDesc *d = nullptr;
             if (locid < 0)
                // Get the list of sessions
                d = (TProofDesc *) mgr->QuerySessions("")->First();
@@ -11695,8 +11683,7 @@ TProof *TProof::Open(const char *cluster, const char *conffile,
 
 TProofMgr *TProof::Mgr(const char *url)
 {
-   if (!url)
-      return (TProofMgr *)0;
+   if (!url) return (TProofMgr *)nullptr;
 
    // Attach or create the relevant instance
    return TProofMgr::Create(url);
@@ -11733,14 +11720,14 @@ void TProof::AddEnvVar(const char *name, const char *value)
 {
    if (gDebug > 0) ::Info("TProof::AddEnvVar","%s=%s", name, value);
 
-   if (fgProofEnvList == 0) {
+   if (fgProofEnvList == nullptr) {
       // initialize the list if needed
       fgProofEnvList = new TList;
       fgProofEnvList->SetOwner();
    } else {
       // replace old entries with the same name
       TObject *o = fgProofEnvList->FindObject(name);
-      if (o != 0) {
+      if (o != nullptr) {
          fgProofEnvList->Remove(o);
       }
    }
@@ -11753,10 +11740,10 @@ void TProof::AddEnvVar(const char *name, const char *value)
 
 void TProof::DelEnvVar(const char *name)
 {
-   if (fgProofEnvList == 0) return;
+   if (fgProofEnvList == nullptr) return;
 
    TObject *o = fgProofEnvList->FindObject(name);
-   if (o != 0) {
+   if (o != nullptr) {
       fgProofEnvList->Remove(o);
    }
 }
@@ -11767,7 +11754,7 @@ void TProof::DelEnvVar(const char *name)
 
 void TProof::ResetEnvVars()
 {
-   if (fgProofEnvList == 0) return;
+   if (fgProofEnvList == nullptr) return;
 
    SafeDelete(fgProofEnvList);
 }
@@ -11826,7 +11813,7 @@ void TProof::SaveWorkerInfo()
 
    // Loop over the list of workers (active is any worker not flagged as bad)
    TIter nxa(fSlaves);
-   TSlave *wrk = 0;
+   TSlave *wrk = nullptr;
    TString logfile;
    while ((wrk = (TSlave *) nxa())) {
       Int_t status = (fBadSlaves && fBadSlaves->FindObject(wrk)) ? 0 : 1;
@@ -11894,7 +11881,7 @@ void TProof::SaveWorkerInfo()
 
 Int_t TProof::GetParameter(TCollection *c, const char *par, TString &value)
 {
-   TObject *obj = c ? c->FindObject(par) : (TObject *)0;
+   TObject *obj = c ? c->FindObject(par) : (TObject *)nullptr;
    if (obj) {
       TNamed *p = dynamic_cast<TNamed*>(obj);
       if (p) {
@@ -11913,7 +11900,7 @@ Int_t TProof::GetParameter(TCollection *c, const char *par, TString &value)
 
 Int_t TProof::GetParameter(TCollection *c, const char *par, Int_t &value)
 {
-   TObject *obj = c ? c->FindObject(par) : (TObject *)0;
+   TObject *obj = c ? c->FindObject(par) : (TObject *)nullptr;
    if (obj) {
       TParameter<Int_t> *p = dynamic_cast<TParameter<Int_t>*>(obj);
       if (p) {
@@ -11931,7 +11918,7 @@ Int_t TProof::GetParameter(TCollection *c, const char *par, Int_t &value)
 
 Int_t TProof::GetParameter(TCollection *c, const char *par, Long_t &value)
 {
-   TObject *obj = c ? c->FindObject(par) : (TObject *)0;
+   TObject *obj = c ? c->FindObject(par) : (TObject *)nullptr;
    if (obj) {
       TParameter<Long_t> *p = dynamic_cast<TParameter<Long_t>*>(obj);
       if (p) {
@@ -11949,7 +11936,7 @@ Int_t TProof::GetParameter(TCollection *c, const char *par, Long_t &value)
 
 Int_t TProof::GetParameter(TCollection *c, const char *par, Long64_t &value)
 {
-   TObject *obj = c ? c->FindObject(par) : (TObject *)0;
+   TObject *obj = c ? c->FindObject(par) : (TObject *)nullptr;
    if (obj) {
       TParameter<Long64_t> *p = dynamic_cast<TParameter<Long64_t>*>(obj);
       if (p) {
@@ -11967,7 +11954,7 @@ Int_t TProof::GetParameter(TCollection *c, const char *par, Long64_t &value)
 
 Int_t TProof::GetParameter(TCollection *c, const char *par, Double_t &value)
 {
-   TObject *obj = c ? c->FindObject(par) : (TObject *)0;
+   TObject *obj = c ? c->FindObject(par) : (TObject *)nullptr;
    if (obj) {
       TParameter<Double_t> *p = dynamic_cast<TParameter<Double_t>*>(obj);
       if (p) {
@@ -11996,7 +11983,7 @@ Int_t TProof::AssertDataSet(TDSet *dset, TList *input,
    }
 
    TList *datasets = new TList;
-   TFileCollection *dataset = 0;
+   TFileCollection *dataset = nullptr;
    TString lookupopt;
    TString dsname(dset->GetName());
 
@@ -12108,7 +12095,7 @@ Int_t TProof::AssertDataSet(TDSet *dset, TList *input,
                datasets->Add(new TPair(dataset, new TObjString(enlname.Data())));
             }
             // Reset the pointer
-            dataset = 0;
+            dataset = nullptr;
          }
 
       }
@@ -12145,7 +12132,7 @@ Int_t TProof::AssertDataSet(TDSet *dset, TList *input,
    // use the default as the flow will determine
    TString dsTree;
    // Get the [subdir/]tree, if any
-   mgr->ParseUri(dsnparse.Data(), 0, 0, 0, &dsTree);
+   mgr->ParseUri(dsnparse.Data(), nullptr, nullptr, nullptr, &dsTree);
    if (dsTree.IsNull()) {
       // Use what we have in the original dataset; we need this to locate the
       // meta data information
@@ -12189,14 +12176,14 @@ Int_t TProof::AssertDataSet(TDSet *dset, TList *input,
    if (datasets->GetSize() > 1) dset->SetBit(TDSet::kMultiDSet);
    // Loop over the list of datasets
    TList *listOfMissingFiles = new TList;
-   TEntryList *entrylist = 0;
-   TPair *pair = 0;
+   TEntryList *entrylist = nullptr;
+   TPair *pair = nullptr;
    TIter nxds(datasets);
    while ((pair = (TPair *) nxds())) {
       // File Collection
       dataset = (TFileCollection *) pair->Key();
       // Entry list, if any
-      TEntryList *enl = 0;
+      TEntryList *enl = nullptr;
       TObjString *os = (TObjString *) pair->Value();
       if (strlen(os->GetName())) {
          if (!(enl = dynamic_cast<TEntryList *>(input->FindObject(os->GetName())))) {
@@ -12283,7 +12270,7 @@ Int_t TProof::AssertDataSet(TDSet *dset, TList *input,
 
 Int_t TProof::SaveInputData(TQueryResult *qr, const char *cachedir, TString &emsg)
 {
-   TList *input = 0;
+   TList *input = nullptr;
 
    // We must have got something to process
    if (!qr || !(input = qr->GetInputList()) ||
@@ -12352,7 +12339,7 @@ Int_t TProof::SaveInputData(TQueryResult *qr, const char *cachedir, TString &ems
 
 Int_t TProof::SendInputData(TQueryResult *qr, TProof *p, TString &emsg)
 {
-   TList *input = 0;
+   TList *input = nullptr;
 
    // We must have got something to process
    if (!qr || !(input = qr->GetInputList())) return 0;
@@ -12411,7 +12398,7 @@ Int_t TProof::GetInputData(TList *input, const char *cachedir, TString &emsg)
          return -1;
       }
       TIter nxk(keys);
-      TKey *k = 0;
+      TKey *k = nullptr;
       while ((k = (TKey *)nxk())) {
          TObject *o = f->Get(k->GetName());
          if (o) {
@@ -12448,7 +12435,7 @@ void TProof::LogViewer(const char *url, Int_t idx)
          if ((fgLogViewer =
             gROOT->GetPluginManager()->FindHandler("TProofProgressLog"))) {
             if (fgLogViewer->LoadPlugin() == -1) {
-               fgLogViewer = 0;
+               fgLogViewer = nullptr;
                ::Error("TProof::LogViewer", "cannot load the relevant plug-in");
                return;
             }
@@ -12501,7 +12488,7 @@ void TProof::ShowMissingFiles(TQueryResult *qr)
    }
 
    // Get the list, if any
-   TList *missing = (xqr->GetOutputList()) ? (TList *) xqr->GetOutputList()->FindObject("MissingFiles") : 0;
+   TList *missing = (xqr->GetOutputList()) ? (TList *)xqr->GetOutputList()->FindObject("MissingFiles") : nullptr;
    if (!missing) {
       Info("ShowMissingFiles", "no files missing in query %s:%s", xqr->GetTitle(), xqr->GetName());
       return;
@@ -12510,7 +12497,7 @@ void TProof::ShowMissingFiles(TQueryResult *qr)
    Int_t nmf = 0, ncf = 0;
    Long64_t msz = 0, mszzip = 0, mev = 0;
    // Scan the list
-   TFileInfo *fi = 0;
+   TFileInfo *fi = nullptr;
    TIter nxf(missing);
    while ((fi = (TFileInfo *) nxf())) {
       char status = 'M';
@@ -12553,7 +12540,7 @@ void TProof::ShowMissingFiles(TQueryResult *qr)
 
 TFileCollection *TProof::GetMissingFiles(TQueryResult *qr)
 {
-   TFileCollection *fc = 0;
+   TFileCollection *fc = nullptr;
 
    TQueryResult *xqr = (qr) ? qr : GetQueryResult();
    if (!xqr) {
@@ -12562,7 +12549,7 @@ TFileCollection *TProof::GetMissingFiles(TQueryResult *qr)
    }
 
    // Get the list, if any
-   TList *missing = (xqr->GetOutputList()) ? (TList *) xqr->GetOutputList()->FindObject("MissingFiles") : 0;
+   TList *missing = (xqr->GetOutputList()) ? (TList *)xqr->GetOutputList()->FindObject("MissingFiles") : nullptr;
    if (!missing) {
       if (gDebug > 0)
          Info("ShowMissingFiles", "no files missing in query %s:%s", xqr->GetTitle(), xqr->GetName());
@@ -12581,7 +12568,7 @@ TFileCollection *TProof::GetMissingFiles(TQueryResult *qr)
    fc = new TFileCollection(fcname, "Missing Files");
    if (ds) fc->SetDefaultTreeName(ds->GetObjName());
    // Scan the list
-   TFileInfo *fi = 0;
+   TFileInfo *fi = nullptr;
    TIter nxf(missing);
    while ((fi = (TFileInfo *) nxf())) {
       fc->Add((TFileInfo *) fi->Clone());
@@ -12653,7 +12640,7 @@ Int_t TProof::SavePerfTree(const char *pf, const char *ref)
    } else {
       f.cd();
       TIter nxo(outls);
-      TObject* obj = 0;
+      TObject *obj = nullptr;
       while ((obj = nxo())) {
          TString objname(obj->GetName());
          if (objname.BeginsWith("PROOF_")) {

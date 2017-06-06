@@ -45,13 +45,9 @@ Class that contains all the information of a class.
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor
 
-TMVA::ClassInfo::ClassInfo( const TString& name )
-    : TNamed(name.Data(),name.Data()),
-     fWeight( "" ),
-     fCut( "" ),
-     fNumber( 0 ),
-     fCorrMatrix( 0 ),
-     fLogger( new MsgLogger("ClassInfo", kINFO) )
+TMVA::ClassInfo::ClassInfo(const TString &name)
+   : TNamed(name.Data(), name.Data()), fWeight(""), fCut(""), fNumber(0), fCorrMatrix(nullptr),
+     fLogger(new MsgLogger("ClassInfo", kINFO))
 {
 }
 

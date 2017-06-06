@@ -65,9 +65,9 @@ char* operator+( streampos&, char* );
 ClassImp(RooArgSet);
   ;
 
-char* RooArgSet::_poolBegin = 0 ;
-char* RooArgSet::_poolCur = 0 ;
-char* RooArgSet::_poolEnd = 0 ;
+  char *RooArgSet::_poolBegin = nullptr;
+  char *RooArgSet::_poolCur = nullptr;
+  char *RooArgSet::_poolEnd = nullptr;
 #define POOLSIZE 1048576
 
 struct POOLDATA 
@@ -85,7 +85,7 @@ void RooArgSet::cleanup()
   std::list<POOLDATA>::iterator iter = _memPoolList.begin() ;
   while(iter!=_memPoolList.end()) {
     free(iter->_base) ;
-    iter->_base=0 ;
+    iter->_base = nullptr;
     iter++ ;
   }
   _memPoolList.clear() ;
@@ -107,29 +107,30 @@ void* RooArgSet::operator new (size_t bytes)
 
   if (!_poolBegin || _poolCur+(sizeof(RooArgSet)) >= _poolEnd) {
 
-    if (_poolBegin!=0) {
-      oocxcoutD((TObject*)0,Caching) << "RooArgSet::operator new(), starting new 1MB memory pool" << endl ;
+     if (_poolBegin != nullptr) {
+        oocxcoutD((TObject *)nullptr, Caching) << "RooArgSet::operator new(), starting new 1MB memory pool" << endl;
     }
 
     RooTrace::createSpecial("RooArgSet_pool",POOLSIZE) ;
 
     // Start pruning empty memory pools if number exceeds 3
     if (_memPoolList.size()>3) {
-      
-      void* toFree(0) ;
 
-      for (std::list<POOLDATA>::iterator poolIter =  _memPoolList.begin() ; poolIter!=_memPoolList.end() ; ++poolIter) {
+       void *toFree(nullptr);
 
-	// If pool is empty, delete it and remove it from list
-	if ((*(Int_t*)(poolIter->_base))==0) {
-	  oocxcoutD((TObject*)0,Caching) << "RooArgSet::operator new(), pruning empty memory pool " << (void*)(poolIter->_base) << endl ;
+       for (std::list<POOLDATA>::iterator poolIter = _memPoolList.begin(); poolIter != _memPoolList.end(); ++poolIter) {
 
-	  toFree = poolIter->_base ;
-	  _memPoolList.erase(poolIter) ;
-	  RooTrace::destroySpecial("RooArgSet_pool") ;
-	  
-	  break ;
-	}
+          // If pool is empty, delete it and remove it from list
+          if ((*(Int_t *)(poolIter->_base)) == 0) {
+             oocxcoutD((TObject *)nullptr, Caching)
+                << "RooArgSet::operator new(), pruning empty memory pool " << (void *)(poolIter->_base) << endl;
+
+             toFree = poolIter->_base;
+             _memPoolList.erase(poolIter);
+             RooTrace::destroySpecial("RooArgSet_pool");
+
+             break;
+          }
       }      
 
       free(toFree) ;      
@@ -475,7 +476,7 @@ Bool_t RooArgSet::addOwned(RooAbsArg& var, Bool_t silent)
 
 RooAbsArg* RooArgSet::addClone(const RooAbsArg& var, Bool_t silent) 
 {
-  return checkForDup(var,silent)? 0 : RooAbsCollection::addClone(var,silent) ;
+   return checkForDup(var, silent) ? nullptr : RooAbsCollection::addClone(var, silent);
 }
 
 
@@ -743,11 +744,11 @@ void RooArgSet::writeToStream(ostream& os, Bool_t compact, const char* /*section
   }
 
   TIterator *iterat= createIterator();
-  RooAbsArg *next = 0;
-  while((0 != (next= (RooAbsArg*)iterat->Next()))) {
-    os << next->GetName() << " = " ;
-    next->writeToStream(os,kFALSE) ;
-    os << endl ;
+  RooAbsArg *next = nullptr;
+  while ((nullptr != (next = (RooAbsArg *)iterat->Next()))) {
+     os << next->GetName() << " = ";
+     next->writeToStream(os, kFALSE);
+     os << endl;
   }
   delete iterat;  
 }
@@ -854,7 +855,7 @@ Bool_t RooArgSet::readFromStream(istream& is, Bool_t compact, const char* flagRe
       }
       coutI(InputArguments) << "RooArgSet::readFromStream(" << GetName() << "): processing include file " 
 			    << filename << endl ;
-      if (readFromStream(incfs,compact,flagReadAtt,inSection?0:section,verbose)) return kTRUE ;
+      if (readFromStream(incfs, compact, flagReadAtt, inSection ? nullptr : section, verbose)) return kTRUE;
       continue ;
     }
 
@@ -1031,7 +1032,7 @@ Bool_t RooArgSet::isInRange(const char* rangeSpec)
       return kTRUE ;
     }
 
-    token = strtok(0,",") ;
+    token = strtok(nullptr, ",");
   }
 
   delete iter ;

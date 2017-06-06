@@ -308,8 +308,8 @@ Double_t TF1Convolution::EvalNumConv(Double_t t)
 
 Double_t TF1Convolution::operator()(Double_t* t, Double_t* p)//used in TF1 when doing the fit, will be valuated at each point
 {
-   if (p!=0)   TF1Convolution::SetParameters(p);                           // first refresh the parameters
-  
+   if (p != nullptr) TF1Convolution::SetParameters(p); // first refresh the parameters
+
    Double_t result = 0.;
    if (fFlagFFT)  result = EvalFFTConv(t[0]);
    else           result = EvalNumConv(t[0]);

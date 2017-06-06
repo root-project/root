@@ -19,18 +19,9 @@
 
 #include <cassert>
 
-
-TUnuranDiscrDist::TUnuranDiscrDist (const ROOT::Math::IGenFunction & func, bool copyFunc) :
-   fPmf(&func),
-   fCdf(0),
-   fXmin(1),
-   fXmax(-1),
-   fMode(0),
-   fSum(0),
-   fHasDomain(0),
-   fHasMode(0),
-   fHasSum(0),
-   fOwnFunc(copyFunc)
+TUnuranDiscrDist::TUnuranDiscrDist(const ROOT::Math::IGenFunction &func, bool copyFunc)
+   : fPmf(&func), fCdf(nullptr), fXmin(1), fXmax(-1), fMode(0), fSum(0), fHasDomain(0), fHasMode(0), fHasSum(0),
+     fOwnFunc(copyFunc)
 {
    //Constructor from a generic function object
    if (fOwnFunc) {
@@ -39,27 +30,14 @@ TUnuranDiscrDist::TUnuranDiscrDist (const ROOT::Math::IGenFunction & func, bool 
    }
 }
 
-
-TUnuranDiscrDist::TUnuranDiscrDist (TF1 * func) :
-   fPmf( (func) ? new ROOT::Math::WrappedTF1 ( *func) : 0 ),
-   fCdf(0),
-   fXmin(1),
-   fXmax(-1),
-   fMode(0),
-   fSum(0),
-   fHasDomain(0),
-   fHasMode(0),
-   fHasSum(0),
-   fOwnFunc(true)
+TUnuranDiscrDist::TUnuranDiscrDist(TF1 *func)
+   : fPmf((func) ? new ROOT::Math::WrappedTF1(*func) : nullptr), fCdf(nullptr), fXmin(1), fXmax(-1), fMode(0), fSum(0),
+     fHasDomain(0), fHasMode(0), fHasSum(0), fOwnFunc(true)
 {
    //Constructor from a TF1 objects
 }
 
-
-TUnuranDiscrDist::TUnuranDiscrDist(const TUnuranDiscrDist & rhs) :
-   TUnuranBaseDist(),
-   fPmf(0),
-   fCdf(0)
+TUnuranDiscrDist::TUnuranDiscrDist(const TUnuranDiscrDist &rhs) : TUnuranBaseDist(), fPmf(nullptr), fCdf(nullptr)
 {
    // Implementation of copy ctor using aassignment operator
    operator=(rhs);
@@ -86,8 +64,8 @@ TUnuranDiscrDist & TUnuranDiscrDist::operator = (const TUnuranDiscrDist &rhs)
    else {
       if (fPmf) delete fPmf;
       if (fCdf) delete fCdf;
-      fPmf  = (rhs.fPmf)  ? rhs.fPmf->Clone()  : 0;
-      fCdf  = (rhs.fCdf)  ? rhs.fCdf->Clone()  : 0;
+      fPmf = (rhs.fPmf) ? rhs.fPmf->Clone() : nullptr;
+      fCdf = (rhs.fCdf) ? rhs.fCdf->Clone() : nullptr;
    }
 
    return *this;
@@ -115,7 +93,7 @@ void TUnuranDiscrDist::SetCdf(TF1 *  cdf) {
    else
       if (fCdf) delete fCdf;
 
-   fCdf = (cdf) ? new ROOT::Math::WrappedTF1 ( *cdf) : 0;
+   fCdf = (cdf) ? new ROOT::Math::WrappedTF1(*cdf) : nullptr;
    fOwnFunc = true;
 }
 

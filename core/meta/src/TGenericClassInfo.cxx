@@ -79,41 +79,31 @@ namespace Internal {
    }
 } // Internal
 
+TGenericClassInfo::TGenericClassInfo(const char *fullClassname, const char *declFileName, Int_t declFileLine,
+                                     const std::type_info &info, const Internal::TInitBehavior *action,
+                                     DictFuncPtr_t dictionary, TVirtualIsAProxy *isa, Int_t pragmabits, Int_t sizof)
+   : fAction(action), fClass(nullptr), fClassName(fullClassname), fDeclFileName(declFileName),
+     fDeclFileLine(declFileLine), fDictionary(dictionary), fInfo(info), fImplFileName(nullptr), fImplFileLine(0),
+     fIsA(isa), fVersion(1), fMerge(nullptr), fResetAfterMerge(nullptr), fNew(nullptr), fNewArray(nullptr),
+     fDelete(nullptr), fDeleteArray(nullptr), fDestructor(nullptr), fDirAutoAdd(nullptr), fStreamer(nullptr),
+     fStreamerFunc(nullptr), fConvStreamerFunc(nullptr), fCollectionProxy(nullptr), fSizeof(sizof),
+     fPragmaBits(pragmabits), fCollectionProxyInfo(nullptr), fCollectionStreamerInfo(nullptr)
+{
+   // Constructor.
 
-   TGenericClassInfo::TGenericClassInfo(const char *fullClassname,
-                                        const char *declFileName, Int_t declFileLine,
-                                        const std::type_info &info, const Internal::TInitBehavior  *action,
-                                        DictFuncPtr_t dictionary,
-                                        TVirtualIsAProxy *isa, Int_t pragmabits, Int_t sizof)
-      : fAction(action), fClass(0), fClassName(fullClassname),
-        fDeclFileName(declFileName), fDeclFileLine(declFileLine),
-        fDictionary(dictionary), fInfo(info),
-        fImplFileName(0), fImplFileLine(0),
-        fIsA(isa),
-        fVersion(1),
-        fMerge(0),fResetAfterMerge(0),fNew(0),fNewArray(0),fDelete(0),fDeleteArray(0),fDestructor(0), fDirAutoAdd(0), fStreamer(0),
-        fStreamerFunc(0), fConvStreamerFunc(0), fCollectionProxy(0), fSizeof(sizof), fPragmaBits(pragmabits),
-        fCollectionProxyInfo(0), fCollectionStreamerInfo(0)
-   {
-      // Constructor.
-
-      Init(pragmabits);
+   Init(pragmabits);
    }
 
-   TGenericClassInfo::TGenericClassInfo(const char *fullClassname, Int_t version,
-                                        const char *declFileName, Int_t declFileLine,
-                                        const std::type_info &info, const Internal::TInitBehavior  *action,
-                                        DictFuncPtr_t dictionary,
+   TGenericClassInfo::TGenericClassInfo(const char *fullClassname, Int_t version, const char *declFileName,
+                                        Int_t declFileLine, const std::type_info &info,
+                                        const Internal::TInitBehavior *action, DictFuncPtr_t dictionary,
                                         TVirtualIsAProxy *isa, Int_t pragmabits, Int_t sizof)
-      : fAction(action), fClass(0), fClassName(fullClassname),
-        fDeclFileName(declFileName), fDeclFileLine(declFileLine),
-        fDictionary(dictionary), fInfo(info),
-        fImplFileName(0), fImplFileLine(0),
-        fIsA(isa),
-        fVersion(version),
-        fMerge(0),fResetAfterMerge(0),fNew(0),fNewArray(0),fDelete(0),fDeleteArray(0),fDestructor(0), fDirAutoAdd(0), fStreamer(0),
-        fStreamerFunc(0), fConvStreamerFunc(0), fCollectionProxy(0), fSizeof(sizof), fPragmaBits(pragmabits),
-        fCollectionProxyInfo(0), fCollectionStreamerInfo(0)
+      : fAction(action), fClass(nullptr), fClassName(fullClassname), fDeclFileName(declFileName),
+        fDeclFileLine(declFileLine), fDictionary(dictionary), fInfo(info), fImplFileName(nullptr), fImplFileLine(0),
+        fIsA(isa), fVersion(version), fMerge(nullptr), fResetAfterMerge(nullptr), fNew(nullptr), fNewArray(nullptr),
+        fDelete(nullptr), fDeleteArray(nullptr), fDestructor(nullptr), fDirAutoAdd(nullptr), fStreamer(nullptr),
+        fStreamerFunc(nullptr), fConvStreamerFunc(nullptr), fCollectionProxy(nullptr), fSizeof(sizof),
+        fPragmaBits(pragmabits), fCollectionProxyInfo(nullptr), fCollectionStreamerInfo(nullptr)
 
    {
       // Constructor with version number and no showmembers.
@@ -123,19 +113,15 @@ namespace Internal {
 
    class TForNamespace {}; // Dummy class to give a typeid to namespace (See also TClassTable.cc)
 
-   TGenericClassInfo::TGenericClassInfo(const char *fullClassname, Int_t version,
-                                        const char *declFileName, Int_t declFileLine,
-                                        const Internal::TInitBehavior  *action,
+   TGenericClassInfo::TGenericClassInfo(const char *fullClassname, Int_t version, const char *declFileName,
+                                        Int_t declFileLine, const Internal::TInitBehavior *action,
                                         DictFuncPtr_t dictionary, Int_t pragmabits)
-      : fAction(action), fClass(0), fClassName(fullClassname),
-        fDeclFileName(declFileName), fDeclFileLine(declFileLine),
-        fDictionary(dictionary), fInfo(typeid(TForNamespace)),
-        fImplFileName(0), fImplFileLine(0),
-        fIsA(0),
-        fVersion(version),
-        fMerge(0),fResetAfterMerge(0),fNew(0),fNewArray(0),fDelete(0),fDeleteArray(0),fDestructor(0), fDirAutoAdd(0), fStreamer(0),
-        fStreamerFunc(0), fConvStreamerFunc(0), fCollectionProxy(0), fSizeof(0), fPragmaBits(pragmabits),
-        fCollectionProxyInfo(0), fCollectionStreamerInfo(0)
+      : fAction(action), fClass(nullptr), fClassName(fullClassname), fDeclFileName(declFileName),
+        fDeclFileLine(declFileLine), fDictionary(dictionary), fInfo(typeid(TForNamespace)), fImplFileName(nullptr),
+        fImplFileLine(0), fIsA(nullptr), fVersion(version), fMerge(nullptr), fResetAfterMerge(nullptr), fNew(nullptr),
+        fNewArray(nullptr), fDelete(nullptr), fDeleteArray(nullptr), fDestructor(nullptr), fDirAutoAdd(nullptr),
+        fStreamer(nullptr), fStreamerFunc(nullptr), fConvStreamerFunc(nullptr), fCollectionProxy(nullptr), fSizeof(0),
+        fPragmaBits(pragmabits), fCollectionProxyInfo(nullptr), fCollectionStreamerInfo(nullptr)
 
    {
       // Constructor for namespace
@@ -213,7 +199,7 @@ namespace Internal {
       delete fCollectionStreamerInfo;
       delete fStreamer;
       if (!fClass) delete fIsA; // fIsA is adopted by the class if any.
-      fIsA = 0;
+      fIsA = nullptr;
       using ROOT::Internal::gROOTLocal;
       if (!gROOTLocal || !gROOTLocal->Initialized() || !gROOTLocal->GetListOfClasses()) return;
       if (fAction) GetAction().Unregister(GetClassName());
@@ -266,7 +252,8 @@ namespace Internal {
          fClass->SetConvStreamerFunc(fConvStreamerFunc);
          fClass->SetMerge(fMerge);
          fClass->SetResetAfterMerge(fResetAfterMerge);
-         fClass->AdoptStreamer(fStreamer); fStreamer = 0;
+         fClass->AdoptStreamer(fStreamer);
+         fStreamer = nullptr;
          // If IsZombie is true, something went wrong and we will not be
          // able to properly copy the collection proxy
          if (!fClass->IsZombie()) {
@@ -386,7 +373,7 @@ namespace Internal {
    {
       // Import the information from the class template.
 
-      TNamed *info = ROOT::RegisterClassTemplate(GetClassName(), 0, 0);
+      TNamed *info = ROOT::RegisterClassTemplate(GetClassName(), nullptr, 0);
       if (info) SetImplFile(info->GetTitle(), info->GetUniqueID());
    }
 
@@ -442,7 +429,8 @@ namespace Internal {
       // Set a Streamer object.  The streamer object is now 'owned'
       // by the TGenericClassInfo.
 
-      delete fStreamer; fStreamer = 0;
+      delete fStreamer;
+      fStreamer = nullptr;
       if (fClass) {
          fClass->AdoptStreamer(streamer);
       } else {
@@ -456,7 +444,8 @@ namespace Internal {
       // Set the CollectProxy object.  The CollectionProxy object is now 'owned'
       // by the TGenericClassInfo.
 
-      delete fCollectionProxy; fCollectionProxy = 0;
+      delete fCollectionProxy;
+      fCollectionProxy = nullptr;
       fCollectionProxy = collProxy;
       if (fClass && fCollectionProxy && !fClass->IsZombie()) {
          fClass->CopyCollectionProxy(*fCollectionProxy);
@@ -481,7 +470,8 @@ namespace Internal {
    {
       // Set a External Streamer function.
 
-      delete fStreamer; fStreamer = 0;
+      delete fStreamer;
+      fStreamer = nullptr;
       if (fClass) {
          fClass->AdoptStreamer(new TClassStreamer(streamer));
       } else {

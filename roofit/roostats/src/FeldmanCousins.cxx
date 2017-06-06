@@ -65,21 +65,10 @@ using namespace std;
 ////////////////////////////////////////////////////////////////////////////////
 /// standard constructor
 
-FeldmanCousins::FeldmanCousins(RooAbsData& data, ModelConfig& model) :
-  fSize(0.05),
-  fModel(model),
-  fData(data),
-  fTestStatSampler(0),
-  fPointsToTest(0),
-  fPOIToTest(0),
-  fConfBelt(0),
-  fAdaptiveSampling(false),
-  fAdditionalNToysFactor(1.),
-  fNbins(10),
-  fFluctuateData(true),
-  fDoProfileConstruction(true),
-  fSaveBeltToFile(false),
-  fCreateBelt(false)
+FeldmanCousins::FeldmanCousins(RooAbsData &data, ModelConfig &model)
+   : fSize(0.05), fModel(model), fData(data), fTestStatSampler(nullptr), fPointsToTest(nullptr), fPOIToTest(nullptr),
+     fConfBelt(nullptr), fAdaptiveSampling(false), fAdditionalNToysFactor(1.), fNbins(10), fFluctuateData(true),
+     fDoProfileConstruction(true), fSaveBeltToFile(false), fCreateBelt(false)
 {
 }
 
@@ -165,7 +154,7 @@ void FeldmanCousins::CreateParameterPoints() const{
 
     // get dataset for POI scan
     //     RooDataHist* parameterScan = NULL;
-    RooAbsData* parameterScan = NULL;
+    RooAbsData *parameterScan = nullptr;
     if(fPOIToTest)
       parameterScan = fPOIToTest;
     else

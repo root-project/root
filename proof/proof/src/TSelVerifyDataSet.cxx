@@ -80,7 +80,7 @@ void TSelVerifyDataSet::InitMembers()
    fTouched = 0;
    fOpened = 0;
    fDisappeared = 0;
-   fSubDataSet = 0;
+   fSubDataSet = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -228,8 +228,8 @@ void TSelVerifyDataSet::SlaveBegin(TTree *)
 
 Bool_t TSelVerifyDataSet::Process(Long64_t entry)
 {
-   TDSetElement *fCurrent = 0;
-   TPair *elemPair = 0;
+   TDSetElement *fCurrent = nullptr;
+   TPair *elemPair = nullptr;
    if (fInput && (elemPair = dynamic_cast<TPair *>
                       (fInput->FindObject("PROOF_CurrentElement")))) {
       if ((fCurrent = dynamic_cast<TDSetElement *>(elemPair->Value())))
@@ -251,7 +251,7 @@ Bool_t TSelVerifyDataSet::Process(Long64_t entry)
       fileInfo->Print("L");
    }
 
-   TFileStager *stager = 0;
+   TFileStager *stager = nullptr;
    Bool_t createStager = kFALSE;
 
    TFileInfo* newfileinfo = new TFileInfo(*fileInfo);
@@ -259,7 +259,7 @@ Bool_t TSelVerifyDataSet::Process(Long64_t entry)
 
    if (fDoall || fGetlistonly) {
 
-      stager = (fMss && strlen(fMss) > 0) ? TFileStager::Open(fMss) : 0;
+      stager = (fMss && strlen(fMss) > 0) ? TFileStager::Open(fMss) : nullptr;
       createStager = (stager) ? kFALSE : kTRUE;
 
       // Check which files have been staged, this can be replaced by a bulk command,
@@ -311,7 +311,7 @@ Bool_t TSelVerifyDataSet::Process(Long64_t entry)
 
       // If staging files, prepare the stager
       if (fLocateonly || fStageonly) {
-         stager = (fMss && strlen(fMss) > 0) ? TFileStager::Open(fMss) : 0;
+         stager = (fMss && strlen(fMss) > 0) ? TFileStager::Open(fMss) : nullptr;
          createStager = (stager) ? kFALSE : kTRUE;
       }
 

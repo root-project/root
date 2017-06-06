@@ -199,41 +199,15 @@ namespace TMVA
             }
         }
 
-
-
-
-
-
-
-
-
-
-        Settings::Settings (TString name,
-                            size_t _convergenceSteps, size_t _batchSize, size_t _testRepetitions, 
-                            double _factorWeightDecay, EnumRegularization eRegularization,
-                            MinimizerType _eMinimizerType, double _learningRate, 
-                            double _momentum, int _repetitions, bool _useMultithreading)
-            : m_timer (100, name)
-            , m_minProgress (0)
-            , m_maxProgress (100)
-            , m_convergenceSteps (_convergenceSteps)
-            , m_batchSize (_batchSize)
-            , m_testRepetitions (_testRepetitions)
-            , m_factorWeightDecay (_factorWeightDecay)
-            , count_E (0)
-            , count_dE (0)
-            , count_mb_E (0)
-            , count_mb_dE (0)
-            , m_regularization (eRegularization)
-            , fLearningRate (_learningRate)
-            , fMomentum (_momentum)
-            , fRepetitions (_repetitions)
-            , fMinimizerType (_eMinimizerType)
-            , m_convergenceCount (0)
-            , m_maxConvergenceCount (0)
-            , m_minError (1e10)
-            , m_useMultithreading (_useMultithreading)
-            , fMonitoring (NULL)
+        Settings::Settings(TString name, size_t _convergenceSteps, size_t _batchSize, size_t _testRepetitions,
+                           double _factorWeightDecay, EnumRegularization eRegularization, MinimizerType _eMinimizerType,
+                           double _learningRate, double _momentum, int _repetitions, bool _useMultithreading)
+           : m_timer(100, name), m_minProgress(0), m_maxProgress(100), m_convergenceSteps(_convergenceSteps),
+             m_batchSize(_batchSize), m_testRepetitions(_testRepetitions), m_factorWeightDecay(_factorWeightDecay),
+             count_E(0), count_dE(0), count_mb_E(0), count_mb_dE(0), m_regularization(eRegularization),
+             fLearningRate(_learningRate), fMomentum(_momentum), fRepetitions(_repetitions),
+             fMinimizerType(_eMinimizerType), m_convergenceCount(0), m_maxConvergenceCount(0), m_minError(1e10),
+             m_useMultithreading(_useMultithreading), fMonitoring(nullptr)
         {
         }
     

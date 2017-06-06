@@ -48,7 +48,7 @@ TGWindow::TGWindow(const TGWindow *p, Int_t x, Int_t y, UInt_t w, UInt_t h,
 {
    UInt_t type = wtype;
    fId = 0;
-   fParent = 0;
+   fParent = nullptr;
    fNeedRedraw = kFALSE;
 
    if (!p && gClient) {
@@ -132,7 +132,7 @@ void TGWindow::SetWindowName(const char *name)
 
 const TGWindow *TGWindow::GetMainFrame() const
 {
-   return ((fParent == 0) || (fParent == fClient->GetDefaultRoot())) ? this : fParent->GetMainFrame();
+   return ((fParent == nullptr) || (fParent == fClient->GetDefaultRoot())) ? this : fParent->GetMainFrame();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

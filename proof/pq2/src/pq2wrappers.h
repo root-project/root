@@ -26,9 +26,9 @@
 void             DataSetCache(bool clear, const char *ds);
 void             ShowDataSets(const char *ds, const char *opt = "");
 TFileCollection *GetDataSet(const char *ds, const char *server = "");
-TMap            *GetDataSets(const char *owner = "", const char *server = "", const char *opt = 0);
+TMap *GetDataSets(const char *owner = "", const char *server = "", const char *opt = nullptr);
 Int_t            RemoveDataSet(const char *dsname);
-Int_t            VerifyDataSet(const char *dsname, const char *opt = 0, const char *redir = 0);
+Int_t VerifyDataSet(const char *dsname, const char *opt = nullptr, const char *redir = nullptr);
 Bool_t           ExistsDataSet(const char *dsname);
 Int_t            RegisterDataSet(const char *dsname, TFileCollection *fc, const char *opt = "");
 

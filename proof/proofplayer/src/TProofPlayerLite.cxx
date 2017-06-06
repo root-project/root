@@ -44,7 +44,7 @@ and masters. It is used in optmized local sessions.
 
 Int_t TProofPlayerLite::MakeSelector(const char *selfile)
 {
-   fSelectorClass = 0;
+   fSelectorClass = nullptr;
    SafeDelete(fSelector);
    if (!selfile || strlen(selfile) <= 0) {
       Error("MakeSelector", "input file path or name undefined");
@@ -141,7 +141,7 @@ Long64_t TProofPlayerLite::Process(TDSet *dset, const char *selector_file,
    if (fOutputLists) {
       fOutputLists->Delete();
       delete fOutputLists;
-      fOutputLists = 0;
+      fOutputLists = nullptr;
    }
 
    if (!sync) {
@@ -152,21 +152,20 @@ Long64_t TProofPlayerLite::Process(TDSet *dset, const char *selector_file,
 
    if (fCreateSelObj) {
       if (MakeSelector(selector_file) != 0) {
-         if (!sync)
-            gSystem->RedirectOutput(0);
+         if (!sync) gSystem->RedirectOutput(nullptr);
          return -1;
       }
    }
 
    fSelectorClass = fSelector->IsA();
    // Add fSelector to inputlist if processing with object
-   TList *inputtmp = 0;  // List of temporary input objects
+   TList *inputtmp = nullptr; // List of temporary input objects
    if (!fCreateSelObj) {
       // In any input list was set into the selector move it to the PROOF
       // input list, because we do not want to stream the selector one
       if (fSelector->GetInputList() && fSelector->GetInputList()->GetSize() > 0) {
          TIter nxi(fSelector->GetInputList());
-         TObject *o = 0;
+         TObject *o = nullptr;
          while ((o = nxi())) {
             if (!fInput->FindObject(o)) {
                fInput->Add(o);
@@ -186,13 +185,13 @@ Long64_t TProofPlayerLite::Process(TDSet *dset, const char *selector_file,
    if (fSelector->GetOutputList()) fSelector->GetOutputList()->Clear();
 
    PDB(kLoop,1) Info("Process","Call Begin(0)");
-   fSelector->Begin(0);
+   fSelector->Begin(nullptr);
 
    // Send large input data objects, if any
    gProof->SendInputDataFile();
 
    // Attach to the transient histogram with the assigned packets, if required
-   if (fInput->FindObject("PROOF_StatsHist") != 0) {
+   if (fInput->FindObject("PROOF_StatsHist") != nullptr) {
       if (!(fProcPackets = (TH1 *) fOutput->FindObject("PROOF_ProcPcktHist"))) {
          Warning("Process", "could not attach to histogram 'PROOF_ProcPcktHist'");
       } else {
@@ -238,8 +237,7 @@ Long64_t TProofPlayerLite::Process(TDSet *dset, const char *selector_file,
    //  ... and the sequential number
    fProof->SetParameter("PROOF_QuerySeqNum", fProof->fSeqNum);
 
-   if (!sync)
-      gSystem->RedirectOutput(0);
+   if (!sync) gSystem->RedirectOutput(nullptr);
 
    TCleanup clean(this);
    SetupFeedback();
@@ -251,10 +249,9 @@ Long64_t TProofPlayerLite::Process(TDSet *dset, const char *selector_file,
    Long64_t fst = (fProof->IsParallel()) ? -1 : first;
 
    // Entry- or Event- list ?
-   TEntryList *enl = (!fProof->IsMaster()) ? dynamic_cast<TEntryList *>(set->GetEntryList())
-                                           : (TEntryList *)0;
-   TEventList *evl = (!fProof->IsMaster() && !enl) ? dynamic_cast<TEventList *>(set->GetEntryList())
-                                           : (TEventList *)0;
+   TEntryList *enl = (!fProof->IsMaster()) ? dynamic_cast<TEntryList *>(set->GetEntryList()) : (TEntryList *)nullptr;
+   TEventList *evl =
+      (!fProof->IsMaster() && !enl) ? dynamic_cast<TEventList *>(set->GetEntryList()) : (TEventList *)nullptr;
    // Reset the merging progress information
    fProof->ResetMergePrg();
 
@@ -292,8 +289,7 @@ Long64_t TProofPlayerLite::Process(TDSet *dset, const char *selector_file,
       // at the time it was called)
       fProof->fRedirLog = kFALSE;
 
-      if (!TSelector::IsStandardDraw(fn))
-         HandleTimer(0); // force an update of final result
+      if (!TSelector::IsStandardDraw(fn)) HandleTimer(nullptr); // force an update of final result
       if (fPacketizer) {
          fPacketizer->StopProcess(kFALSE, kTRUE);
          // The progress timer will now stop itself at the next call
@@ -314,7 +310,7 @@ Long64_t TProofPlayerLite::Process(TDSet *dset, const char *selector_file,
       // Remove temporary input objects, if any
       if (inputtmp) {
          TIter nxi(inputtmp);
-         TObject *o = 0;
+         TObject *o = nullptr;
          while ((o = nxi())) fInput->Remove(o);
          SafeDelete(inputtmp);
       }
@@ -330,7 +326,7 @@ Long64_t TProofPlayerLite::Process(TDSet *dset, const char *selector_file,
 
 Long64_t TProofPlayerLite::Finalize(Bool_t force, Bool_t sync)
 {
-   if (fOutputLists == 0) {
+   if (fOutputLists == nullptr) {
       if (force && fQuery)
          return fProof->Finalize(Form("%s:%s", fQuery->GetTitle(),
                                                fQuery->GetName()), force);
@@ -411,7 +407,7 @@ Long64_t TProofPlayerLite::Finalize(Bool_t force, Bool_t sync)
          fInput->Remove(fSelector);
          fOutput->Remove(fSelector);
          if (output) output->Remove(fSelector);
-         fSelector = 0;
+         fSelector = nullptr;
       }
 
       // We have transferred copy of the output objects in TQueryResult,
@@ -429,7 +425,7 @@ Long64_t TProofPlayerLite::Finalize(Bool_t force, Bool_t sync)
       // Cleanup
       fOutput->SetOwner();
       SafeDelete(fSelector);
-      if (!fCreateSelObj) fSelector = 0;
+      if (!fCreateSelObj) fSelector = nullptr;
    }
 
    PDB(kGlobal,1) Info("Finalize","exit");
@@ -444,18 +440,17 @@ Bool_t TProofPlayerLite::HandleTimer(TTimer *)
    PDB(kFeedback,2)
       Info("HandleTimer","Entry: %p", fFeedbackTimer);
 
-   if (fFeedbackTimer == 0) return kFALSE; // timer already switched off
+      if (fFeedbackTimer == nullptr) return kFALSE; // timer already switched off
 
+      // process local feedback objects
 
-   // process local feedback objects
+      TList *fb = new TList;
+      fb->SetOwner();
 
-   TList *fb = new TList;
-   fb->SetOwner();
-
-   TIter next(fFeedback);
-   while( TObjString *name = (TObjString*) next() ) {
-      TObject *o = fOutput->FindObject(name->GetName());
-      if (o != 0) fb->Add(o->Clone());
+      TIter next(fFeedback);
+      while (TObjString *name = (TObjString *)next()) {
+         TObject *o = fOutput->FindObject(name->GetName());
+         if (o != nullptr) fb->Add(o->Clone());
    }
 
    if (fb->GetSize() > 0)
@@ -463,7 +458,7 @@ Bool_t TProofPlayerLite::HandleTimer(TTimer *)
    else
       delete fb;
 
-   if (fFeedbackLists == 0) {
+   if (fFeedbackLists == nullptr) {
       fFeedbackTimer->Start(fFeedbackPeriod, kTRUE);   // maybe next time
       return kFALSE;
    }
@@ -494,7 +489,7 @@ void TProofPlayerLite::SetupFeedback()
          Info("SetupFeedback","\"FeedbackList\" NOT found");
    }
 
-   if (fFeedback == 0 || fFeedback->GetSize() == 0) return;
+   if (fFeedback == nullptr || fFeedback->GetSize() == 0) return;
 
    // OK, feedback was requested, setup the timer
    SafeDelete(fFeedbackTimer);
@@ -513,13 +508,13 @@ void TProofPlayerLite::StoreFeedback(TObject *slave, TList *out)
    PDB(kFeedback,1)
       Info("StoreFeedback","Enter (%p,%p,%d)", fFeedbackLists, out, (out ? out->GetSize() : -1));
 
-   if ( out == 0 ) {
-      PDB(kFeedback,1)
+      if (out == nullptr) {
+         PDB(kFeedback, 1)
          Info("StoreFeedback","Leave (empty)");
       return;
    }
 
-   if (fFeedbackLists == 0) {
+   if (fFeedbackLists == nullptr) {
       PDB(kFeedback,2) Info("StoreFeedback","Create fFeedbackLists");
       fFeedbackLists = new TList;
       fFeedbackLists->SetOwner();
@@ -534,7 +529,7 @@ void TProofPlayerLite::StoreFeedback(TObject *slave, TList *out)
          Info("StoreFeedback","Find '%s'", obj->GetName() );
 
       TMap *map = (TMap*) fFeedbackLists->FindObject(obj->GetName());
-      if ( map == 0 ) {
+      if (map == nullptr) {
          PDB(kFeedback,2)
             Info("StoreFeedback", "map for '%s' not found (creating)", obj->GetName());
          // map must not be owner (ownership is with regards to the keys (only))

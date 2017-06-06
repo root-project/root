@@ -92,7 +92,7 @@ ClassImp(TTable3Points);
 ////////////////////////////////////////////////////////////////////////////////
 ///to be documented
 
-TTable3Points::TTable3Points():fColumnOffset(0)
+TTable3Points::TTable3Points() : fColumnOffset(nullptr)
 {
 }
 
@@ -136,7 +136,7 @@ TTable3Points::~TTable3Points()
 Float_t TTable3Points::GetAnyPoint(Int_t idx, EPointDirection xAxis) const
 {
    Float_t point  = 0;
-   TTable  *table = 0;
+   TTable *table = nullptr;
    if (fTableSorter) table = fTableSorter->GetTable();
    if (table) {
       const Char_t *tablePtr = ((Char_t *)table->At(Indx(idx))) + fColumnOffset[xAxis] ;

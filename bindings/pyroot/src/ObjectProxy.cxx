@@ -62,7 +62,7 @@ void PyROOT::op_dealloc_nofree( ObjectProxy* pyobj ) {
          }
       }
    }
-   pyobj->fObject = NULL;
+   pyobj->fObject = nullptr;
 }
 
 
@@ -109,7 +109,7 @@ namespace {
    // directly from the buffer, so handle them in a special case
       static Cppyy::TCppType_t s_bfClass = Cppyy::GetScope( "TBufferFile" );
 
-      TBufferFile* buff = 0;
+      TBufferFile *buff = nullptr;
       if ( s_bfClass == self->ObjectIsA() ) {
          buff = (TBufferFile*)self->GetObject();
       } else {
@@ -121,7 +121,7 @@ namespace {
                TClass::GetClass( Cppyy::GetFinalName( self->ObjectIsA() ).c_str() ) ) != 1 ) {
             PyErr_Format( PyExc_IOError,
                "could not stream object of type %s", Cppyy::GetFinalName( self->ObjectIsA() ).c_str() );
-            return 0;
+            return nullptr;
          }
          buff = &s_buff;
       }
@@ -146,21 +146,20 @@ namespace {
    {
    // User-side __dispatch__ method to allow selection of a specific overloaded
    // method. The actual selection is in the disp() method of MethodProxy.
-      PyObject *mname = 0, *sigarg = 0;
-      if ( ! PyArg_ParseTuple( args, const_cast< char* >( "O!O!:__dispatch__" ),
-              &PyROOT_PyUnicode_Type, &mname, &PyROOT_PyUnicode_Type, &sigarg ) )
-         return 0;
+   PyObject *mname = nullptr, *sigarg = nullptr;
+   if (!PyArg_ParseTuple(args, const_cast<char *>("O!O!:__dispatch__"), &PyROOT_PyUnicode_Type, &mname,
+                         &PyROOT_PyUnicode_Type, &sigarg))
+      return nullptr;
 
    // get the named overload
       PyObject* pymeth = PyObject_GetAttr( self, mname );
-      if ( ! pymeth )
-         return 0;
+      if (!pymeth) return nullptr;
 
-   // get the 'disp' method to allow overload selection
+      // get the 'disp' method to allow overload selection
       PyObject* pydisp = PyObject_GetAttrString( pymeth, const_cast<char*>( "disp" ) );
       if ( ! pydisp ) {
          Py_DECREF( pymeth );
-         return 0;
+         return nullptr;
       }
 
    // finally, call dispatch to get the specific overload
@@ -182,26 +181,25 @@ namespace {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-   PyMethodDef op_methods[] = {
-      { (char*)"__nonzero__",  (PyCFunction)op_nonzero,  METH_NOARGS, NULL },
-      { (char*)"__bool__",     (PyCFunction)op_nonzero,  METH_NOARGS, NULL }, // for p3
-      { (char*)"__destruct__", (PyCFunction)op_destruct, METH_NOARGS, NULL },
-      { (char*)"__reduce__",   (PyCFunction)op_reduce,   METH_NOARGS, NULL },
-      { (char*)"__dispatch__", (PyCFunction)op_dispatch, METH_VARARGS, (char*)"dispatch to selected overload" },
-      { (char*)"_get_smart_ptr", (PyCFunction)op_get_smart_ptr, METH_NOARGS, (char*)"get associated smart pointer, if any" },
-      { (char*)NULL, NULL, 0, NULL }
-   };
+  PyMethodDef op_methods[] = {
+     {(char *)"__nonzero__", (PyCFunction)op_nonzero, METH_NOARGS, nullptr},
+     {(char *)"__bool__", (PyCFunction)op_nonzero, METH_NOARGS, nullptr}, // for p3
+     {(char *)"__destruct__", (PyCFunction)op_destruct, METH_NOARGS, nullptr},
+     {(char *)"__reduce__", (PyCFunction)op_reduce, METH_NOARGS, nullptr},
+     {(char *)"__dispatch__", (PyCFunction)op_dispatch, METH_VARARGS, (char *)"dispatch to selected overload"},
+     {(char *)"_get_smart_ptr", (PyCFunction)op_get_smart_ptr, METH_NOARGS,
+      (char *)"get associated smart pointer, if any"},
+     {(char *)nullptr, nullptr, 0, nullptr}};
 
+  //= PyROOT object proxy construction/destruction =============================
+  ObjectProxy *op_new(PyTypeObject *subtype, PyObject *, PyObject *)
+  {
+     // Create a new object proxy (holder only).
+     ObjectProxy *pyobj = (ObjectProxy *)subtype->tp_alloc(subtype, 0);
+     pyobj->fObject = nullptr;
+     pyobj->fFlags = 0;
 
-//= PyROOT object proxy construction/destruction =============================
-   ObjectProxy* op_new( PyTypeObject* subtype, PyObject*, PyObject* )
-   {
-   // Create a new object proxy (holder only).
-      ObjectProxy* pyobj = (ObjectProxy*)subtype->tp_alloc( subtype, 0 );
-      pyobj->fObject = NULL;
-      pyobj->fFlags  = 0;
-
-      return pyobj;
+     return pyobj;
    }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -325,129 +323,136 @@ PYROOT_STUB( div, /, PyStrings::gDiv )
 
 ////////////////////////////////////////////////////////////////////////////////
 
-   PyNumberMethods op_as_number = {
-      (binaryfunc)op_add_stub,        // nb_add
-      (binaryfunc)op_sub_stub,        // nb_subtract
-      (binaryfunc)op_mul_stub,        // nb_multiply
+PyNumberMethods op_as_number = {
+   (binaryfunc)op_add_stub, // nb_add
+   (binaryfunc)op_sub_stub, // nb_subtract
+   (binaryfunc)op_mul_stub, // nb_multiply
 #if PY_VERSION_HEX < 0x03000000
-      (binaryfunc)op_div_stub,        // nb_divide
+   (binaryfunc)op_div_stub, // nb_divide
 #endif
-      0,                              // nb_remainder
-      0,                              // nb_divmod
-      0,                              // nb_power
-      0,                              // nb_negative
-      0,                              // nb_positive
-      0,                              // nb_absolute
-      0,                              // tp_nonzero (nb_bool in p3)
-      0,                              // nb_invert
-      0,                              // nb_lshift
-      0,                              // nb_rshift
-      0,                              // nb_and
-      0,                              // nb_xor
-      0,                              // nb_or
+   nullptr, // nb_remainder
+   nullptr, // nb_divmod
+   nullptr, // nb_power
+   nullptr, // nb_negative
+   nullptr, // nb_positive
+   nullptr, // nb_absolute
+   nullptr, // tp_nonzero (nb_bool in p3)
+   nullptr, // nb_invert
+   nullptr, // nb_lshift
+   nullptr, // nb_rshift
+   nullptr, // nb_and
+   nullptr, // nb_xor
+   nullptr, // nb_or
 #if PY_VERSION_HEX < 0x03000000
-      0,                              // nb_coerce
+   nullptr, // nb_coerce
 #endif
-      0,                              // nb_int
-      0,                              // nb_long (nb_reserved in p3)
-      0,                              // nb_float
+   nullptr, // nb_int
+   nullptr, // nb_long (nb_reserved in p3)
+   nullptr, // nb_float
 #if PY_VERSION_HEX < 0x03000000
-      0,                              // nb_oct
-      0,                              // nb_hex
+   nullptr, // nb_oct
+   nullptr, // nb_hex
 #endif
-      0,                              // nb_inplace_add
-      0,                              // nb_inplace_subtract
-      0,                              // nb_inplace_multiply
+   nullptr, // nb_inplace_add
+   nullptr, // nb_inplace_subtract
+   nullptr, // nb_inplace_multiply
 #if PY_VERSION_HEX < 0x03000000
-      0,                              // nb_inplace_divide
+   nullptr, // nb_inplace_divide
 #endif
-      0,                              // nb_inplace_remainder
-      0,                              // nb_inplace_power
-      0,                              // nb_inplace_lshift
-      0,                              // nb_inplace_rshift
-      0,                              // nb_inplace_and
-      0,                              // nb_inplace_xor
-      0                               // nb_inplace_or
+   nullptr, // nb_inplace_remainder
+   nullptr, // nb_inplace_power
+   nullptr, // nb_inplace_lshift
+   nullptr, // nb_inplace_rshift
+   nullptr, // nb_inplace_and
+   nullptr, // nb_inplace_xor
+   nullptr  // nb_inplace_or
 #if PY_VERSION_HEX >= 0x02020000
-      , 0                             // nb_floor_divide
+   ,
+   nullptr // nb_floor_divide
 #if PY_VERSION_HEX < 0x03000000
-      , 0                             // nb_true_divide
+   ,
+   nullptr // nb_true_divide
 #else
-      , (binaryfunc)op_div_stub       // nb_true_divide
+   ,
+   (binaryfunc)op_div_stub // nb_true_divide
 #endif
-      , 0                             // nb_inplace_floor_divide
-      , 0                             // nb_inplace_true_divide
+   ,
+   nullptr // nb_inplace_floor_divide
+   ,
+   nullptr // nb_inplace_true_divide
 #endif
 #if PY_VERSION_HEX >= 0x02050000
-      , 0                             // nb_index
+   ,
+   nullptr // nb_index
 #endif
 #if PY_VERSION_HEX >= 0x03050000
-      , 0                             // nb_matrix_multiply
-      , 0                             // nb_inplace_matrix_multiply
+   ,
+   0 // nb_matrix_multiply
+   ,
+   0 // nb_inplace_matrix_multiply
 #endif
-   };
+};
 
 } // unnamed namespace
 
 
 //= PyROOT object proxy type =================================================
 PyTypeObject ObjectProxy_Type = {
-   PyVarObject_HEAD_INIT( &PyRootType_Type, 0 )
-   (char*)"ROOT.ObjectProxy", // tp_name
-   sizeof(ObjectProxy),       // tp_basicsize
-   0,                         // tp_itemsize
-   (destructor)op_dealloc,    // tp_dealloc
-   0,                         // tp_print
-   0,                         // tp_getattr
-   0,                         // tp_setattr
-   0,                         // tp_compare
-   (reprfunc)op_repr,         // tp_repr
-   &op_as_number,             // tp_as_number
-   0,                         // tp_as_sequence
-   0,                         // tp_as_mapping
-   PyBaseObject_Type.tp_hash, // tp_hash
-   0,                         // tp_call
-   0,                         // tp_str
-   0,                         // tp_getattro
-   0,                         // tp_setattro
-   0,                         // tp_as_buffer
-   Py_TPFLAGS_DEFAULT |
-      Py_TPFLAGS_BASETYPE |
-      Py_TPFLAGS_HAVE_GC |
-      Py_TPFLAGS_CHECKTYPES,  // tp_flags
-   (char*)"PyROOT object proxy (internal)",      // tp_doc
-   0,                         // tp_traverse
-   0,                         // tp_clear
-   (richcmpfunc)op_richcompare,                  // tp_richcompare
-   0,                         // tp_weaklistoffset
-   0,                         // tp_iter
-   0,                         // tp_iternext
-   op_methods,                // tp_methods
-   0,                         // tp_members
-   0,                         // tp_getset
-   0,                         // tp_base
-   0,                         // tp_dict
-   0,                         // tp_descr_get
-   0,                         // tp_descr_set
-   0,                         // tp_dictoffset
-   0,                         // tp_init
-   0,                         // tp_alloc
-   (newfunc)op_new,           // tp_new
-   0,                         // tp_free
-   0,                         // tp_is_gc
-   0,                         // tp_bases
-   0,                         // tp_mro
-   0,                         // tp_cache
-   0,                         // tp_subclasses
-   0                          // tp_weaklist
+   PyVarObject_HEAD_INIT(&PyRootType_Type, 0)(char *) "ROOT.ObjectProxy",                 // tp_name
+   sizeof(ObjectProxy),                                                                   // tp_basicsize
+   0,                                                                                     // tp_itemsize
+   (destructor)op_dealloc,                                                                // tp_dealloc
+   nullptr,                                                                               // tp_print
+   nullptr,                                                                               // tp_getattr
+   nullptr,                                                                               // tp_setattr
+   nullptr,                                                                               // tp_compare
+   (reprfunc)op_repr,                                                                     // tp_repr
+   &op_as_number,                                                                         // tp_as_number
+   nullptr,                                                                               // tp_as_sequence
+   nullptr,                                                                               // tp_as_mapping
+   PyBaseObject_Type.tp_hash,                                                             // tp_hash
+   nullptr,                                                                               // tp_call
+   nullptr,                                                                               // tp_str
+   nullptr,                                                                               // tp_getattro
+   nullptr,                                                                               // tp_setattro
+   nullptr,                                                                               // tp_as_buffer
+   Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE | Py_TPFLAGS_HAVE_GC | Py_TPFLAGS_CHECKTYPES, // tp_flags
+   (char *)"PyROOT object proxy (internal)",                                              // tp_doc
+   nullptr,                                                                               // tp_traverse
+   nullptr,                                                                               // tp_clear
+   (richcmpfunc)op_richcompare,                                                           // tp_richcompare
+   0,                                                                                     // tp_weaklistoffset
+   nullptr,                                                                               // tp_iter
+   nullptr,                                                                               // tp_iternext
+   op_methods,                                                                            // tp_methods
+   nullptr,                                                                               // tp_members
+   nullptr,                                                                               // tp_getset
+   nullptr,                                                                               // tp_base
+   nullptr,                                                                               // tp_dict
+   nullptr,                                                                               // tp_descr_get
+   nullptr,                                                                               // tp_descr_set
+   0,                                                                                     // tp_dictoffset
+   nullptr,                                                                               // tp_init
+   nullptr,                                                                               // tp_alloc
+   (newfunc)op_new,                                                                       // tp_new
+   nullptr,                                                                               // tp_free
+   nullptr,                                                                               // tp_is_gc
+   nullptr,                                                                               // tp_bases
+   nullptr,                                                                               // tp_mro
+   nullptr,                                                                               // tp_cache
+   nullptr,                                                                               // tp_subclasses
+   nullptr                                                                                // tp_weaklist
 #if PY_VERSION_HEX >= 0x02030000
-   , 0                        // tp_del
+   ,
+   nullptr // tp_del
 #endif
 #if PY_VERSION_HEX >= 0x02060000
-   , 0                        // tp_version_tag
+   ,
+   0 // tp_version_tag
 #endif
 #if PY_VERSION_HEX >= 0x03040000
-   , 0                        // tp_finalize
+   ,
+   0 // tp_finalize
 #endif
 };
 

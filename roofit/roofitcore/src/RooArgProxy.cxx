@@ -45,12 +45,12 @@ ClassImp(RooArgProxy);
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor with owner and proxied variable. 
+/// Constructor with owner and proxied variable.
 
-RooArgProxy::RooArgProxy(const char* inName, const char* desc, RooAbsArg* owner,
-			 Bool_t valueServer, Bool_t shapeServer, Bool_t proxyOwnsArg) : 
-  TNamed(inName,desc), _owner(owner), _arg(0),
-  _valueServer(valueServer), _shapeServer(shapeServer), _ownArg(proxyOwnsArg)
+RooArgProxy::RooArgProxy(const char *inName, const char *desc, RooAbsArg *owner, Bool_t valueServer, Bool_t shapeServer,
+                         Bool_t proxyOwnsArg)
+   : TNamed(inName, desc), _owner(owner), _arg(nullptr), _valueServer(valueServer), _shapeServer(shapeServer),
+     _ownArg(proxyOwnsArg)
 {
   _owner->registerProxy(*this) ;
 }
@@ -82,7 +82,7 @@ RooArgProxy::RooArgProxy(const char* inName, RooAbsArg* owner, const RooArgProxy
   _isFund(other._isFund), _ownArg(other._ownArg) 
 {
   if (_ownArg) {
-    _arg = _arg ? (RooAbsArg*) _arg->Clone() : 0 ;
+     _arg = _arg ? (RooAbsArg *)_arg->Clone() : nullptr;
   }
 
   _owner->registerProxy(*this) ;
@@ -112,12 +112,12 @@ Bool_t RooArgProxy::changePointer(const RooAbsCollection& newServerList, Bool_t 
   Bool_t initEmpty = _arg ? kFALSE : kTRUE ;
   if (_arg) {
     newArg= _arg->findNewServer(newServerList, nameChange);
-    if (newArg==_owner) newArg = 0 ;
+    if (newArg == _owner) newArg = nullptr;
   } else if (factoryInitMode) {
     newArg = newServerList.first() ;
     _owner->addServer(*newArg,_valueServer,_shapeServer) ;
   } else {
-    newArg = 0 ;
+     newArg = nullptr;
   }
   if (newArg) {
     _arg = newArg ;

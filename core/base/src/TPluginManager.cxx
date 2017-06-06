@@ -118,20 +118,10 @@ ClassImp(TPluginHandler);
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a plugin handler. Called by TPluginManager.
 
-TPluginHandler::TPluginHandler(const char *base, const char *regexp,
-                               const char *className, const char *pluginName,
-                               const char *ctor, const char *origin):
-   fBase(base),
-   fRegexp(regexp),
-   fClass(className),
-   fPlugin(pluginName),
-   fCtor(ctor),
-   fOrigin(origin),
-   fCallEnv(0),
-   fMethod(0),
-   fCanCall(0),
-   fIsMacro(kFALSE),
-   fIsGlobal(kFALSE)
+TPluginHandler::TPluginHandler(const char *base, const char *regexp, const char *className, const char *pluginName,
+                               const char *ctor, const char *origin)
+   : fBase(base), fRegexp(regexp), fClass(className), fPlugin(pluginName), fCtor(ctor), fOrigin(origin),
+     fCallEnv(nullptr), fMethod(nullptr), fCanCall(0), fIsMacro(kFALSE), fIsGlobal(kFALSE)
 {
    TString aclicMode, arguments, io;
    TString fname = gSystem->SplitAclicMode(fPlugin, aclicMode, arguments, io);
@@ -140,8 +130,7 @@ TPluginHandler::TPluginHandler(const char *base, const char *regexp,
        fname.EndsWith(".cc"))
       validMacro = kTRUE;
 
-   if (validMacro && gROOT->LoadMacro(fPlugin, 0, kTRUE) == 0)
-      fIsMacro = kTRUE;
+   if (validMacro && gROOT->LoadMacro(fPlugin, nullptr, kTRUE) == 0) fIsMacro = kTRUE;
 
    if (fCtor.BeginsWith("::")) {
       fIsGlobal = kTRUE;
@@ -211,7 +200,7 @@ void TPluginHandler::SetupCallEnv()
    TString proto  = fCtor(fCtor.Index("(")+1, fCtor.Index(")")-fCtor.Index("(")-1);
 
    if (fIsGlobal) {
-      cl = 0;
+      cl = nullptr;
       fMethod = gROOT->GetGlobalFunctionWithPrototype(method, proto, kFALSE);
    } else {
       fMethod = cl->GetMethodWithPrototype(method, proto);
@@ -247,7 +236,7 @@ Int_t TPluginHandler::CheckPlugin() const
 {
    if (fIsMacro) {
       if (TClass::GetClass(fClass)) return 0;
-      return gROOT->LoadMacro(fPlugin, 0, kTRUE);
+      return gROOT->LoadMacro(fPlugin, nullptr, kTRUE);
    } else
       return gROOT->LoadClass(fClass, fPlugin, kTRUE);
 }
@@ -366,21 +355,20 @@ void TPluginManager::LoadHandlersFromEnv(TEnv *env)
          // use s, i.e. skip possible OS and application prefix to Plugin.
          // so that GetValue() takes properly care of returning the value
          // for the specified OS and/or application
-         const char *val = env->GetValue(s, (const char*)0);
+         const char *val = env->GetValue(s, (const char *)nullptr);
          if (val) {
             Int_t cnt = 0;
             char *v = StrDup(val);
             s += 7;
             while (1) {
-               TString regexp = strtok(!cnt ? v : 0, "; ");
+               TString regexp = strtok(!cnt ? v : nullptr, "; ");
                if (regexp.IsNull()) break;
-               TString clss   = strtok(0, "; ");
+               TString clss = strtok(nullptr, "; ");
                if (clss.IsNull()) break;
-               TString plugin = strtok(0, "; ");
+               TString plugin = strtok(nullptr, "; ");
                if (plugin.IsNull()) break;
-               TString ctor = strtok(0, ";\"");
-               if (!ctor.Contains("("))
-                  ctor = strtok(0, ";\"");
+               TString ctor = strtok(nullptr, ";\"");
+               if (!ctor.Contains("(")) ctor = strtok(nullptr, ";\"");
                AddHandler(s, regexp, clss, plugin, ctor, "TEnv");
                cnt++;
             }
@@ -419,7 +407,7 @@ void TPluginManager::LoadHandlerMacros(const char *path)
          if (gDebug > 1)
             Info("LoadHandlerMacros", "   plugin macro: %s", s->String().Data());
          Long_t res;
-         if ((res = gROOT->Macro(s->String(), 0, kFALSE)) < 0) {
+         if ((res = gROOT->Macro(s->String(), nullptr, kFALSE)) < 0) {
             Error("LoadHandlerMacros", "pluging macro %s returned %ld",
                   s->String().Data(), res);
          }
@@ -474,7 +462,7 @@ void TPluginManager::LoadHandlersFromPluginDirs(const char *base)
 
       TPH__IsReadingDirs() = kTRUE;
 
-      TString plugindirs = gEnv->GetValue("Root.PluginPath", (char*)0);
+      TString plugindirs = gEnv->GetValue("Root.PluginPath", (char *)nullptr);
       if (plugindirs.Length() == 0) {
          plugindirs = "plugins";
          gSystem->PrependPathName(TROOT::GetEtcDir(), plugindirs);
@@ -603,7 +591,7 @@ TPluginHandler *TPluginManager::FindHandler(const char *base, const char *uri)
          Info("FindHandler", "did not find plugin for class %s", base);
    }
 
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

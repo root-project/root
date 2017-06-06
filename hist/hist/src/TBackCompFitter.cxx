@@ -77,10 +77,7 @@ ClassImp(TBackCompFitter);
 /// Constructor needed by TVirtualFitter interface. Same behavior as default constructor.
 /// initialize setting name and the global pointer
 
-TBackCompFitter::TBackCompFitter( ) :
-   fMinimizer(0),
-   fObjFunc(0),
-   fModelFunc(0)
+TBackCompFitter::TBackCompFitter() : fMinimizer(nullptr), fObjFunc(nullptr), fModelFunc(nullptr)
 {
    SetName("BCFitter");
 }
@@ -89,12 +86,9 @@ TBackCompFitter::TBackCompFitter( ) :
 /// Constructor used after having fit using directly ROOT::Fit::Fitter
 /// will create a dummy fitter copying configuration and parameter settings
 
-TBackCompFitter::TBackCompFitter(const std::shared_ptr<ROOT::Fit::Fitter> & fitter, const std::shared_ptr<ROOT::Fit::FitData> & data) :
-   fFitData(data),
-   fFitter(fitter),
-   fMinimizer(0),
-   fObjFunc(0),
-   fModelFunc(0)
+TBackCompFitter::TBackCompFitter(const std::shared_ptr<ROOT::Fit::Fitter> &fitter,
+                                 const std::shared_ptr<ROOT::Fit::FitData> &data)
+   : fFitData(data), fFitter(fitter), fMinimizer(nullptr), fObjFunc(nullptr), fModelFunc(nullptr)
 {
    SetName("LastFitter");
 }
@@ -283,7 +277,7 @@ Int_t TBackCompFitter::ExecuteCommand(const char *command, Double_t *args, Int_t
    else if (scommand.Contains("CALL FCN"))   {
       //     call fcn function (global pointer to free function)
 
-      if (nargs < 1 || fFCN == 0 ) return -1;
+      if (nargs < 1 || fFCN == nullptr) return -1;
       int npar = fObjFunc->NDim();
       // use values in fit result if existing  otherwise in ParameterSettings
       std::vector<double> params(npar);
@@ -291,7 +285,7 @@ Int_t TBackCompFitter::ExecuteCommand(const char *command, Double_t *args, Int_t
          params[i] = GetParameter(i);
 
       double fval = 0;
-      (*fFCN)(npar, 0, fval, &params[0],int(args[0]) ) ;
+      (*fFCN)(npar, nullptr, fval, &params[0], int(args[0]));
       return 0;
    }
    else {
@@ -386,7 +380,7 @@ void TBackCompFitter::GetConfidenceIntervals(TObject *obj, Double_t cl)
    if (fitobj->InheritsFrom(TGraph2D::Class())) datadim = 2;
    if (fitobj->InheritsFrom(TH1::Class())) {
       TH1 * h1 = dynamic_cast<TH1*>(fitobj);
-      assert(h1 != 0);
+      assert(h1 != nullptr);
       datadim = h1->GetDimension();
    }
 
@@ -430,7 +424,7 @@ void TBackCompFitter::GetConfidenceIntervals(TObject *obj, Double_t cl)
    fFitter->Result().GetConfidenceIntervals(data,&ci[0],cl);
 
    const ROOT::Math::IParamMultiFunction * func =  fFitter->Result().FittedFunction();
-   assert(func != 0);
+   assert(func != nullptr);
 
    // fill now the object with cl data
    for (unsigned int i = 0; i < n; ++i) {
@@ -439,19 +433,19 @@ void TBackCompFitter::GetConfidenceIntervals(TObject *obj, Double_t cl)
 
       if (obj->InheritsFrom(TGraphErrors::Class()) ) {
          TGraphErrors * gr = dynamic_cast<TGraphErrors *> (obj);
-         assert(gr != 0);
+         assert(gr != nullptr);
          gr->SetPoint(i, *x, y);
          gr->SetPointError(i, 0, ci[i]);
       }
       if (obj->InheritsFrom(TGraph2DErrors::Class()) ) {
          TGraph2DErrors * gr = dynamic_cast<TGraph2DErrors *> (obj);
-         assert(gr != 0);
+         assert(gr != nullptr);
          gr->SetPoint(i, x[0], x[1], y);
          gr->SetPointError(i, 0, 0, ci[i]);
       }
       if (obj->InheritsFrom(TH1::Class()) ) {
          TH1 * h1 = dynamic_cast<TH1 *> (obj);
-         assert(h1 != 0);
+         assert(h1 != nullptr);
          int ibin = 0;
          if (datadim == 1) ibin = h1->FindBin(*x);
          if (datadim == 2) ibin = h1->FindBin(x[0],x[1]);
@@ -476,7 +470,7 @@ Double_t* TBackCompFitter::GetCovarianceMatrix() const {
 
    if (!fFitter->Result().IsValid() ) {
       Warning("GetCovarianceMatrix","Invalid fit result");
-      return 0;
+      return nullptr;
    }
 
    unsigned int l = 0;
@@ -503,7 +497,7 @@ Double_t TBackCompFitter::GetCovarianceMatrixElement(Int_t i, Int_t j) const {
    unsigned int npar = GetNumberFreeParameters();
    if ( np2 == 0 || np2 != npar *npar ) {
       double * c = GetCovarianceMatrix();
-      if (c == 0) return 0;
+      if (c == nullptr) return 0;
    }
    return fCovar[i*npar + j];
 }
@@ -592,7 +586,7 @@ Int_t TBackCompFitter::GetParameter(Int_t ipar,char *name,Double_t &value,Double
 
 const char *TBackCompFitter::GetParName(Int_t ipar) const {
    if (!ValidParameterIndex(ipar) )    {
-      return 0;
+      return nullptr;
    }
    return fFitter->Config().ParSettings(ipar).Name().c_str();
 }
@@ -692,7 +686,7 @@ void TBackCompFitter::ReCreateMinimizer() {
    assert(fFitData.get());
 
    // case of standard fits (not made fia Fitter::FitFCN)
-   if (fFitter->Result().FittedFunction() != 0) {
+   if (fFitter->Result().FittedFunction() != nullptr) {
 
       if (fModelFunc) delete fModelFunc;
       fModelFunc =  dynamic_cast<ROOT::Math::IParamMultiFunction *>((fFitter->Result().FittedFunction())->Clone());
@@ -715,7 +709,7 @@ void TBackCompFitter::ReCreateMinimizer() {
 
    // recreate the minimizer
    fMinimizer = fFitter->Config().CreateMinimizer();
-   if (fMinimizer == 0) {
+   if (fMinimizer == nullptr) {
       Error("SetMinimizerFunction","cannot create minimizer %s",fFitter->Config().MinimizerType().c_str() );
    }
    else {
@@ -757,7 +751,7 @@ void TBackCompFitter::SetObjFunction(ROOT::Math::IMultiGenFunction   * fcn) {
 void TBackCompFitter::DoSetDimension() {
    if (!fObjFunc) return;
    ROOT::Fit::FcnAdapter * fobj = dynamic_cast<ROOT::Fit::FcnAdapter*>(fObjFunc);
-   assert(fobj != 0);
+   assert(fobj != nullptr);
    int ndim = fFitter->Config().ParamsSettings().size();
    if (ndim != 0) fobj->SetDimension(ndim);
 }
@@ -788,7 +782,7 @@ ROOT::Math::Minimizer * TBackCompFitter::GetMinimizer( ) const {
 /// Return a new copy of the TFitResult object which needs to be deleted later by the user
 
 TFitResult * TBackCompFitter::GetTFitResult( ) const {
-   if (!fFitter.get() ) return 0;
+   if (!fFitter.get()) return nullptr;
    return new TFitResult( fFitter->Result() );
 }
 

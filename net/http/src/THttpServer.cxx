@@ -74,7 +74,7 @@ protected:
    TString fBuf;        ///< single entry to keep data which is not yet send to the client
 
 public:
-   TLongPollEngine(const char *name, const char *title) : THttpWSEngine(name, title), fPoll(0), fBuf() {}
+   TLongPollEngine(const char *name, const char *title) : THttpWSEngine(name, title), fPoll(nullptr), fBuf() {}
 
    virtual ~TLongPollEngine() {}
 
@@ -89,7 +89,7 @@ public:
       if (fPoll) {
          fPoll->Set404();
          fPoll->NotifyCondition();
-         fPoll = 0;
+         fPoll = nullptr;
       }
    }
 
@@ -104,7 +104,7 @@ public:
          fPoll->SetContentType("text/plain");
          fPoll->SetContent(buf);
          fPoll->NotifyCondition();
-         fPoll = 0;
+         fPoll = nullptr;
       } else if (fBuf.Length() == 0) {
          fBuf = buf;
       } else {
@@ -131,7 +131,7 @@ public:
          fPoll->SetContentType("text/plain");
          fPoll->SetContent("<<nope>>"); // normally should never happen
          fPoll->NotifyCondition();
-         fPoll = 0;
+         fPoll = nullptr;
       }
 
       if (fBuf.Length() > 0) {
@@ -209,8 +209,8 @@ ClassImp(THttpServer);
    /// Typically JSROOT sources located in $ROOTSYS/etc/http directory,
    /// but one could set JSROOTSYS variable to specify alternative location
 
-   THttpServer::THttpServer(const char *engine)
-   : TNamed("http", "ROOT http server"), fEngines(), fTimer(0), fSniffer(0), fMainThrdId(0), fJSROOTSYS(),
+THttpServer::THttpServer(const char *engine)
+   : TNamed("http", "ROOT http server"), fEngines(), fTimer(nullptr), fSniffer(nullptr), fMainThrdId(0), fJSROOTSYS(),
      fTopName("ROOT"), fJSROOT(), fLocations(), fDefaultPage(), fDefaultPageCont(), fDrawPage(), fDrawPageCont(),
      fCallArgs()
 {
@@ -222,7 +222,7 @@ ClassImp(THttpServer);
 #endif
 
    const char *jsrootsys = gSystem->Getenv("JSROOTSYS");
-   if (jsrootsys != 0) fJSROOTSYS = jsrootsys;
+   if (jsrootsys != nullptr) fJSROOTSYS = jsrootsys;
 
    if (fJSROOTSYS.Length() == 0) {
       TString jsdir = TString::Format("%s/http", TROOT::GetEtcDir().Data());
@@ -247,7 +247,7 @@ ClassImp(THttpServer);
    // start timer
    SetTimer(20, kTRUE);
 
-   if (strchr(engine, ';') == 0) {
+   if (strchr(engine, ';') == nullptr) {
       CreateEngine(engine);
    } else {
       TObjArray *lst = TString(engine).Tokenize(";");
@@ -288,7 +288,7 @@ THttpServer::~THttpServer()
 {
    fEngines.Delete();
 
-   SetSniffer(0);
+   SetSniffer(nullptr);
 
    SetTimer(0);
 }
@@ -329,10 +329,10 @@ void THttpServer::SetReadOnly(Bool_t readonly)
 
 void THttpServer::AddLocation(const char *prefix, const char *path)
 {
-   if ((prefix == 0) || (*prefix == 0)) return;
+   if ((prefix == nullptr) || (*prefix == 0)) return;
 
    TNamed *obj = dynamic_cast<TNamed *>(fLocations.FindObject(prefix));
-   if (obj != 0) {
+   if (obj != nullptr) {
       obj->SetTitle(path);
    } else {
       fLocations.Add(new TNamed(prefix, path));
@@ -361,7 +361,7 @@ void THttpServer::SetJSROOT(const char *location)
 
 void THttpServer::SetDefaultPage(const char *filename)
 {
-   if ((filename != 0) && (*filename != 0))
+   if ((filename != nullptr) && (*filename != 0))
       fDefaultPage = filename;
    else
       fDefaultPage = fJSROOTSYS + "/files/online.htm";
@@ -378,7 +378,7 @@ void THttpServer::SetDefaultPage(const char *filename)
 
 void THttpServer::SetDrawPage(const char *filename)
 {
-   if ((filename != 0) && (*filename != 0))
+   if ((filename != nullptr) && (*filename != 0))
       fDrawPage = filename;
    else
       fDrawPage = fJSROOTSYS + "/files/draw.htm";
@@ -399,10 +399,10 @@ void THttpServer::SetDrawPage(const char *filename)
 
 Bool_t THttpServer::CreateEngine(const char *engine)
 {
-   if (engine == 0) return kFALSE;
+   if (engine == nullptr) return kFALSE;
 
    const char *arg = strchr(engine, ':');
-   if (arg == 0) return kFALSE;
+   if (arg == nullptr) return kFALSE;
 
    TString clname;
    if (arg != engine) clname.Append(engine, arg - engine);
@@ -416,10 +416,10 @@ Bool_t THttpServer::CreateEngine(const char *engine)
 
    // ensure that required engine class exists before we try to create it
    TClass *engine_class = gROOT->LoadClass(clname.Data());
-   if (engine_class == 0) return kFALSE;
+   if (engine_class == nullptr) return kFALSE;
 
    THttpEngine *eng = (THttpEngine *)engine_class->New();
-   if (eng == 0) return kFALSE;
+   if (eng == nullptr) return kFALSE;
 
    eng->SetServer(this);
 
@@ -447,7 +447,7 @@ void THttpServer::SetTimer(Long_t milliSec, Bool_t mode)
    if (fTimer) {
       fTimer->Stop();
       delete fTimer;
-      fTimer = 0;
+      fTimer = nullptr;
    }
    if (milliSec > 0) {
       fTimer = new THttpTimer(milliSec, mode, this);
@@ -461,7 +461,7 @@ void THttpServer::SetTimer(Long_t milliSec, Bool_t mode)
 
 Bool_t THttpServer::VerifyFilePath(const char *fname)
 {
-   if ((fname == 0) || (*fname == 0)) return kFALSE;
+   if ((fname == nullptr) || (*fname == 0)) return kFALSE;
 
    Int_t level = 0;
 
@@ -469,7 +469,7 @@ Bool_t THttpServer::VerifyFilePath(const char *fname)
 
       // find next slash or backslash
       const char *next = strpbrk(fname, "/\\");
-      if (next == 0) return kTRUE;
+      if (next == nullptr) return kTRUE;
 
       // most important - change to parent dir
       if ((next == fname + 2) && (*fname == '.') && (*(fname + 1) == '.')) {
@@ -507,13 +507,13 @@ Bool_t THttpServer::VerifyFilePath(const char *fname)
 
 Bool_t THttpServer::IsFileRequested(const char *uri, TString &res) const
 {
-   if ((uri == 0) || (strlen(uri) == 0)) return kFALSE;
+   if ((uri == nullptr) || (strlen(uri) == 0)) return kFALSE;
 
    TString fname = uri;
 
    TIter iter(&fLocations);
-   TObject *obj(0);
-   while ((obj = iter()) != 0) {
+   TObject *obj(nullptr);
+   while ((obj = iter()) != nullptr) {
       Ssiz_t pos = fname.Index(obj->GetName());
       if (pos == kNPOS) continue;
       fname.Remove(0, pos + (strlen(obj->GetName()) - 1));
@@ -591,7 +591,7 @@ void THttpServer::ProcessRequests()
 
    std::unique_lock<std::mutex> lk(fMutex, std::defer_lock);
    while (true) {
-      THttpCallArg *arg = 0;
+      THttpCallArg *arg = nullptr;
 
       lk.lock();
       if (fCallArgs.GetSize() > 0) {
@@ -600,15 +600,15 @@ void THttpServer::ProcessRequests()
       }
       lk.unlock();
 
-      if (arg == 0) break;
+      if (arg == nullptr) break;
 
       fSniffer->SetCurrentCallArg(arg);
 
       try {
          ProcessRequest(arg);
-         fSniffer->SetCurrentCallArg(0);
+         fSniffer->SetCurrentCallArg(nullptr);
       } catch (...) {
-         fSniffer->SetCurrentCallArg(0);
+         fSniffer->SetCurrentCallArg(nullptr);
       }
 
       // workaround for longpoll handle, it sometime notifies condition before server
@@ -617,8 +617,8 @@ void THttpServer::ProcessRequests()
 
    // regularly call Process() method of engine to let perform actions in ROOT context
    TIter iter(&fEngines);
-   THttpEngine *engine = 0;
-   while ((engine = (THttpEngine *)iter()) != 0) engine->Process();
+   THttpEngine *engine = nullptr;
+   while ((engine = (THttpEngine *)iter()) != nullptr) engine->Process();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -706,7 +706,7 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
 
          if (arg->fContent.Index(rootjsontag) != kNPOS) {
             TString str;
-            void *bindata = 0;
+            void *bindata = nullptr;
             Long_t bindatalen = 0;
             if (fSniffer->Produce(arg->fPathName.Data(), "root.json", "compact=3", bindata, bindatalen, str)) {
                arg->fContent.ReplaceAll(rootjsontag, str);
@@ -738,7 +738,7 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
       iszip = kTRUE;
    }
 
-   void *bindata(0);
+   void *bindata(nullptr);
    Long_t bindatalen(0);
 
    if ((filename == "h.xml") || (filename == "get.xml")) {
@@ -835,7 +835,7 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
 
    } else if (fSniffer->Produce(arg->fPathName.Data(), filename.Data(), arg->fQuery.Data(), bindata, bindatalen,
                                 arg->fContent)) {
-      if (bindata != 0) arg->SetBinData(bindata, bindatalen);
+      if (bindata != nullptr) arg->SetBinData(bindata, bindatalen);
 
       // define content type base on extension
       arg->SetContentType(GetMimeType(filename.Data()));
@@ -932,7 +932,7 @@ Bool_t THttpServer::RegisterCommand(const char *cmdname, const char *method, con
 
 Bool_t THttpServer::Hide(const char *foldername, Bool_t hide)
 {
-   return SetItemField(foldername, "_hidden", hide ? "true" : (const char *)0);
+   return SetItemField(foldername, "_hidden", hide ? "true" : (const char *)nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1024,11 +1024,11 @@ const char *THttpServer::GetMimeType(const char *path)
                              {".avi", 4, "video/x-msvideo"},
                              {".bmp", 4, "image/bmp"},
                              {".ttf", 4, "application/x-font-ttf"},
-                             {NULL, 0, NULL}};
+                             {nullptr, 0, nullptr}};
 
    int path_len = strlen(path);
 
-   for (int i = 0; builtin_mime_types[i].extension != NULL; i++) {
+   for (int i = 0; builtin_mime_types[i].extension != nullptr; i++) {
       if (path_len <= builtin_mime_types[i].ext_len) continue;
       const char *ext = path + (path_len - builtin_mime_types[i].ext_len);
       if (strcmp(ext, builtin_mime_types[i].extension) == 0) {
@@ -1047,7 +1047,7 @@ char *THttpServer::ReadFileContent(const char *filename, Int_t &len)
    len = 0;
 
    std::ifstream is(filename);
-   if (!is) return 0;
+   if (!is) return nullptr;
 
    is.seekg(0, is.end);
    len = is.tellg();
@@ -1058,7 +1058,7 @@ char *THttpServer::ReadFileContent(const char *filename, Int_t &len)
    if (!is) {
       free(buf);
       len = 0;
-      return 0;
+      return nullptr;
    }
 
    return buf;

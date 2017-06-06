@@ -47,7 +47,7 @@ It is filled via:
 TNtuple::TNtuple(): TTree()
 {
    fNvar = 0;
-   fArgs = 0;
+   fArgs = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -69,9 +69,9 @@ TNtuple::TNtuple(const char *name, const char *title, const char *varlist, Int_t
 {
    Int_t i;
    fNvar = 0;
-   fArgs = 0;
+   fArgs = nullptr;
 
-//   Count number of variables (separated by :)
+   //   Count number of variables (separated by :)
    Int_t nch = strlen(varlist);
    if (nch == 0) return;
    char *vars = new char[nch+1];
@@ -104,7 +104,7 @@ TNtuple::TNtuple(const char *name, const char *title, const char *varlist, Int_t
 TNtuple::~TNtuple()
 {
    delete [] fArgs;
-   fArgs = 0;
+   fArgs = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

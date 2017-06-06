@@ -119,8 +119,7 @@ TGInputDialog::TGInputDialog(const TGWindow *p, const TGWindow *main,
    MapWindow();
    fTE->SetFocus();
 
-   if (retstr == 0)
-      retstr = new char[256];
+   if (retstr == nullptr) retstr = new char[256];
 
    fRetStr = retstr;
 

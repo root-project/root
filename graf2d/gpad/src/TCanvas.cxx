@@ -118,7 +118,7 @@ c1->SetWindowSize(500, 500);
 
 TCanvas::TCanvas(Bool_t build) : TPad(), fDoubleBuffer(0)
 {
-   fPainter          = 0;
+   fPainter = nullptr;
    fWindowTopX       = 0;
    fWindowTopY       = 0;
    fWindowWidth      = 0;
@@ -137,13 +137,13 @@ TCanvas::TCanvas(Bool_t build) : TPad(), fDoubleBuffer(0)
    fSelectedY        = 0;
    fRetained         = kTRUE;
    fDrawn            = kFALSE;
-   fSelected         = 0;
-   fClickSelected    = 0;
-   fSelectedPad      = 0;
-   fClickSelectedPad = 0;
-   fPadSave          = 0;
-   fCanvasImp        = 0;
-   fContextMenu      = 0;
+   fSelected = nullptr;
+   fClickSelected = nullptr;
+   fSelectedPad = nullptr;
+   fClickSelectedPad = nullptr;
+   fPadSave = nullptr;
+   fCanvasImp = nullptr;
+   fContextMenu = nullptr;
 
    fUseGL = gStyle->GetCanvasPreferGL();
 
@@ -174,21 +174,21 @@ void TCanvas::Constructor()
    if (gThreadXAR) {
       void *arr[2];
       arr[1] = this;
-      if ((*gThreadXAR)("CANV", 2, arr, 0)) return;
+      if ((*gThreadXAR)("CANV", 2, arr, nullptr)) return;
    }
 
-   fCanvas    = 0;
+   fCanvas = nullptr;
    fCanvasID  = -1;
-   fCanvasImp = 0;
+   fCanvasImp = nullptr;
    fBatch     = kTRUE;
    fUpdating  = kFALSE;
 
-   fContextMenu   = 0;
-   fSelected      = 0;
-   fClickSelected = 0;
-   fSelectedPad   = 0;
-   fClickSelectedPad = 0;
-   fPadSave       = 0;
+   fContextMenu = nullptr;
+   fSelected = nullptr;
+   fClickSelected = nullptr;
+   fSelectedPad = nullptr;
+   fClickSelectedPad = nullptr;
+   fPadSave = nullptr;
    SetBit(kAutoExec);
    SetBit(kShowEditor);
    SetBit(kShowToolBar);
@@ -203,7 +203,7 @@ void TCanvas::Constructor()
 
 TCanvas::TCanvas(const char *name, Int_t ww, Int_t wh, Int_t winid) : TPad(), fDoubleBuffer(0)
 {
-   fPainter = 0;
+   fPainter = nullptr;
    Init();
 
    fCanvasID     = winid;
@@ -248,7 +248,7 @@ TCanvas::TCanvas(const char *name, Int_t ww, Int_t wh, Int_t winid) : TPad(), fD
 
 TCanvas::TCanvas(const char *name, const char *title, Int_t form) : TPad(), fDoubleBuffer(0)
 {
-   fPainter = 0;
+   fPainter = nullptr;
    fUseGL = gStyle->GetCanvasPreferGL();
 
    Constructor(name, title, form);
@@ -271,7 +271,7 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t form)
       static Int_t ww = 500;
       static Int_t wh = 500;
       arr[1] = this; arr[2] = (void*)name; arr[3] = (void*)title; arr[4] =&ww; arr[5] = &wh;
-      if ((*gThreadXAR)("CANV", 6, arr, 0)) return;
+      if ((*gThreadXAR)("CANV", 6, arr, nullptr)) return;
    }
 
    Init();
@@ -351,7 +351,7 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t form)
 
 TCanvas::TCanvas(const char *name, const char *title, Int_t ww, Int_t wh) : TPad(), fDoubleBuffer(0)
 {
-   fPainter = 0;
+   fPainter = nullptr;
    fUseGL = gStyle->GetCanvasPreferGL();
 
    Constructor(name, title, ww, wh);
@@ -371,7 +371,7 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t ww, Int_t w
    if (gThreadXAR) {
       void *arr[6];
       arr[1] = this; arr[2] = (void*)name; arr[3] = (void*)title; arr[4] =&ww; arr[5] = &wh;
-      if ((*gThreadXAR)("CANV", 6, arr, 0)) return;
+      if ((*gThreadXAR)("CANV", 6, arr, nullptr)) return;
    }
 
    Init();
@@ -434,7 +434,7 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t ww, Int_t w
 TCanvas::TCanvas(const char *name, const char *title, Int_t wtopx, Int_t wtopy, Int_t ww, Int_t wh)
         : TPad(), fDoubleBuffer(0)
 {
-   fPainter = 0;
+   fPainter = nullptr;
    fUseGL = gStyle->GetCanvasPreferGL();
 
    Constructor(name, title, wtopx, wtopy, ww, wh);
@@ -457,7 +457,7 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t wtopx,
       void *arr[8];
       arr[1] = this;   arr[2] = (void*)name;   arr[3] = (void*)title;
       arr[4] = &wtopx; arr[5] = &wtopy; arr[6] = &ww; arr[7] = &wh;
-      if ((*gThreadXAR)("CANV", 8, arr, 0)) return;
+      if ((*gThreadXAR)("CANV", 8, arr, nullptr)) return;
    }
 
    Init();
@@ -540,17 +540,17 @@ void TCanvas::Init()
    fDISPLAY         = "$DISPLAY";
    fUpdating        = kFALSE;
    fRetained        = kTRUE;
-   fSelected        = 0;
-   fClickSelected   = 0;
+   fSelected = nullptr;
+   fClickSelected = nullptr;
    fSelectedX       = 0;
    fSelectedY       = 0;
-   fSelectedPad     = 0;
-   fClickSelectedPad= 0;
-   fPadSave         = 0;
+   fSelectedPad = nullptr;
+   fClickSelectedPad = nullptr;
+   fPadSave = nullptr;
    fEvent           = -1;
    fEventX          = -1;
    fEventY          = -1;
-   fContextMenu     = 0;
+   fContextMenu = nullptr;
    fDrawn           = kFALSE;
 }
 
@@ -665,12 +665,14 @@ void TCanvas::Destructor()
    if (gThreadXAR) {
       void *arr[2];
       arr[1] = this;
-      if ((*gThreadXAR)("CDEL", 2, arr, 0)) return;
+      if ((*gThreadXAR)("CDEL", 2, arr, nullptr)) return;
    }
 
    if (!TestBit(kNotDeleted)) return;
 
-   if (fContextMenu) { delete fContextMenu; fContextMenu = 0; }
+   if (fContextMenu) { delete fContextMenu;
+      fContextMenu = nullptr;
+   }
    if (!gPad) return;
 
    Close();
@@ -686,7 +688,7 @@ void TCanvas::Destructor()
 
 TVirtualPad *TCanvas::cd(Int_t subpadnumber)
 {
-   if (fCanvasID == -1) return 0;
+   if (fCanvasID == -1) return nullptr;
 
    TPad::cd(subpadnumber);
 
@@ -727,10 +729,10 @@ void TCanvas::Clear(Option_t *option)
       TPad::Clear(option);   //Remove primitives from pad
    }
 
-   fSelected      = 0;
-   fClickSelected = 0;
-   fSelectedPad   = 0;
-   fClickSelectedPad = 0;
+   fSelected = nullptr;
+   fClickSelected = nullptr;
+   fSelectedPad = nullptr;
+   fClickSelectedPad = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -757,7 +759,7 @@ void TCanvas::Closed()
 void TCanvas::Close(Option_t *option)
 {
    TPad    *padsave = (TPad*)gPad;
-   TCanvas *cansave = 0;
+   TCanvas *cansave = nullptr;
    if (padsave) cansave = (TCanvas*)gPad->GetCanvas();
 
    if (fCanvasID != -1 && fCanvasImp) {
@@ -899,7 +901,7 @@ TObject *TCanvas::DrawClonePad()
    TPad *selpad = (TPad*)gROOT->GetSelectedPad();
    TPad *pad = padsav;
    if (pad == this) pad = selpad;
-   if (padsav == 0 || pad == 0 || pad == this) {
+   if (padsav == nullptr || pad == nullptr || pad == this) {
       TCanvas *newCanvas = (TCanvas*)DrawClone();
       newCanvas->SetWindowSize(GetWindowWidth(),GetWindowHeight());
       return newCanvas;
@@ -907,7 +909,7 @@ TObject *TCanvas::DrawClonePad()
    if (fCanvasID == -1) {
       fCanvasImp = gGuiFactory->CreateCanvasImp(this, GetName(), fWindowTopX, fWindowTopY,
                                              fWindowWidth, fWindowHeight);
-      if (!fCanvasImp) return 0;
+      if (!fCanvasImp) return nullptr;
       fCanvasImp->ShowMenuBar(TestBit(kMenuBar));
       fCanvasID = fCanvasImp->InitWindow();
    }
@@ -939,7 +941,7 @@ TObject *TCanvas::DrawClonePad()
    pad->Modified();
    pad->Update();
    if (padsav) padsav->cd();
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1093,7 +1095,7 @@ void TCanvas::Flush()
          gVirtualX->UpdateWindow(1);
       } else {
          TVirtualPS *tvps = gVirtualPS;
-         gVirtualPS = 0;
+         gVirtualPS = nullptr;
          gGLManager->MakeCurrent(fGLDevice);
          fPainter->InitPainter();
          Paint();
@@ -1206,8 +1208,8 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
          // force popdown of tooltips
          TObject *sobj = fSelected;
          TPad    *spad = fSelectedPad;
-         fSelected     = 0;
-         fSelectedPad  = 0;
+         fSelected = nullptr;
+         fSelectedPad = nullptr;
          EnterLeave(prevSelPad, prevSelObj);
          fSelected     = sobj;
          fSelectedPad  = spad;
@@ -1476,14 +1478,14 @@ void TCanvas::Paint(Option_t *option)
 
 TPad *TCanvas::Pick(Int_t px, Int_t py, TObject *prevSelObj)
 {
-   TObjLink *pickobj = 0;
+   TObjLink *pickobj = nullptr;
 
-   fSelected    = 0;
+   fSelected = nullptr;
    fSelectedOpt = "";
-   fSelectedPad = 0;
+   fSelectedPad = nullptr;
 
    TPad *pad = Pick(px, py, pickobj);
-   if (!pad) return 0;
+   if (!pad) return nullptr;
 
    if (!pickobj) {
       fSelected    = pad;
@@ -2085,7 +2087,7 @@ void TCanvas::Streamer(TBuffer &b)
       //we must protect the case when two or more canvases are saved
       //in the same buffer. If the list of colors has already been saved
       //in the buffer, do not add the list of colors to the list of primitives.
-      TObjArray *colors = 0;
+      TObjArray *colors = nullptr;
       if (!b.CheckObject(gROOT->GetListOfColors(),TObjArray::Class())) {
          colors = (TObjArray*)gROOT->GetListOfColors();
          fPrimitives->Add(colors);
@@ -2232,7 +2234,7 @@ void TCanvas::Update()
       void *arr[3];
       arr[1] = this;
       arr[2] = castFromFuncToVoidPtr.fVoidPtr;
-      if ((*gThreadXAR)("CUPD", 3, arr, 0)) return;
+      if ((*gThreadXAR)("CUPD", 3, arr, nullptr)) return;
    }
 
    if (!fCanvasImp) return;
@@ -2266,7 +2268,7 @@ void TCanvas::Update()
 void TCanvas::DisconnectWidget()
 {
    fCanvasID    = 0;
-   fContextMenu = 0;
+   fContextMenu = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2335,7 +2337,7 @@ void TCanvas::DeleteCanvasPainter()
    }
 
    delete fPainter;
-   fPainter = 0;
+   fPainter = nullptr;
 
    if (fGLDevice != -1) {
       gGLManager->DeleteGLContext(fGLDevice);//?

@@ -113,32 +113,12 @@ bool almost_equal_double(double x, double y, int ulp=4){
 /// no restrictions on minium number of events in a leave note or the
 /// separation gain in the node splitting
 
-TMVA::DecisionTree::DecisionTree():
-   BinaryTree(),
-   fNvars          (0),
-   fNCuts          (-1),
-   fUseFisherCuts  (kFALSE),
-   fMinLinCorrForFisher (1),
-   fUseExclusiveVars (kTRUE),
-   fSepType        (NULL),
-   fRegType        (NULL),
-   fMinSize        (0),
-   fMinNodeSize    (1),
-   fMinSepGain (0),
-   fUseSearchTree(kFALSE),
-   fPruneStrength(0),
-   fPruneMethod    (kNoPruning),
-   fNNodesBeforePruning(0),
-   fNodePurityLimit(0.5),
-   fRandomisedTree (kFALSE),
-   fUseNvars       (0),
-   fUsePoissonNvars(kFALSE),
-   fMyTrandom (NULL),
-   fMaxDepth       (999999),
-   fSigClass       (0),
-   fTreeID         (0),
-   fAnalysisType   (Types::kClassification),
-   fDataSetInfo    (NULL)
+TMVA::DecisionTree::DecisionTree()
+   : BinaryTree(), fNvars(0), fNCuts(-1), fUseFisherCuts(kFALSE), fMinLinCorrForFisher(1), fUseExclusiveVars(kTRUE),
+     fSepType(nullptr), fRegType(nullptr), fMinSize(0), fMinNodeSize(1), fMinSepGain(0), fUseSearchTree(kFALSE),
+     fPruneStrength(0), fPruneMethod(kNoPruning), fNNodesBeforePruning(0), fNodePurityLimit(0.5),
+     fRandomisedTree(kFALSE), fUseNvars(0), fUsePoissonNvars(kFALSE), fMyTrandom(nullptr), fMaxDepth(999999),
+     fSigClass(0), fTreeID(0), fAnalysisType(Types::kClassification), fDataSetInfo(nullptr)
 {
 }
 
@@ -148,38 +128,19 @@ TMVA::DecisionTree::DecisionTree():
 /// number of bins in the grid used in applying the cut for the node
 /// splitting.
 
-TMVA::DecisionTree::DecisionTree( TMVA::SeparationBase *sepType, Float_t minSize, Int_t nCuts, DataSetInfo* dataInfo, UInt_t cls,
-                                  Bool_t randomisedTree, Int_t useNvars, Bool_t usePoissonNvars,
-                                  UInt_t nMaxDepth, Int_t iSeed, Float_t purityLimit, Int_t treeID):
-   BinaryTree(),
-   fNvars          (0),
-   fNCuts          (nCuts),
-   fUseFisherCuts  (kFALSE),
-   fMinLinCorrForFisher (1),
-   fUseExclusiveVars (kTRUE),
-   fSepType        (sepType),
-   fRegType        (NULL),
-   fMinSize        (0),
-   fMinNodeSize    (minSize),
-   fMinSepGain     (0),
-   fUseSearchTree  (kFALSE),
-   fPruneStrength  (0),
-   fPruneMethod    (kNoPruning),
-   fNNodesBeforePruning(0),
-   fNodePurityLimit(purityLimit),
-   fRandomisedTree (randomisedTree),
-   fUseNvars       (useNvars),
-   fUsePoissonNvars(usePoissonNvars),
-   fMyTrandom      (new TRandom3(iSeed)),
-   fMaxDepth       (nMaxDepth),
-   fSigClass       (cls),
-   fTreeID         (treeID),
-   fAnalysisType   (Types::kClassification),
-   fDataSetInfo    (dataInfo)
+TMVA::DecisionTree::DecisionTree(TMVA::SeparationBase *sepType, Float_t minSize, Int_t nCuts, DataSetInfo *dataInfo,
+                                 UInt_t cls, Bool_t randomisedTree, Int_t useNvars, Bool_t usePoissonNvars,
+                                 UInt_t nMaxDepth, Int_t iSeed, Float_t purityLimit, Int_t treeID)
+   : BinaryTree(), fNvars(0), fNCuts(nCuts), fUseFisherCuts(kFALSE), fMinLinCorrForFisher(1), fUseExclusiveVars(kTRUE),
+     fSepType(sepType), fRegType(nullptr), fMinSize(0), fMinNodeSize(minSize), fMinSepGain(0), fUseSearchTree(kFALSE),
+     fPruneStrength(0), fPruneMethod(kNoPruning), fNNodesBeforePruning(0), fNodePurityLimit(purityLimit),
+     fRandomisedTree(randomisedTree), fUseNvars(useNvars), fUsePoissonNvars(usePoissonNvars),
+     fMyTrandom(new TRandom3(iSeed)), fMaxDepth(nMaxDepth), fSigClass(cls), fTreeID(treeID),
+     fAnalysisType(Types::kClassification), fDataSetInfo(dataInfo)
 {
-   if (sepType == NULL) { // it is interpreted as a regression tree, where
-                          // currently the separation type (simple least square)
-                          // cannot be chosen freely)
+   if (sepType == nullptr) { // it is interpreted as a regression tree, where
+                             // currently the separation type (simple least square)
+                             // cannot be chosen freely)
       fAnalysisType = Types::kRegression;
       fRegType = new RegressionVariance();
       if ( nCuts <=0 ) {
@@ -247,26 +208,26 @@ TMVA::DecisionTree::~DecisionTree()
 
 void TMVA::DecisionTree::SetParentTreeInNodes( Node *n )
 {
-   if (n == NULL) { //default, start at the tree top, then descend recursively
+   if (n == nullptr) { // default, start at the tree top, then descend recursively
       n = this->GetRoot();
-      if (n == NULL) {
+      if (n == nullptr) {
          Log() << kFATAL << "SetParentTreeNodes: started with undefined ROOT node" <<Endl;
          return ;
       }
    }
 
-   if ((this->GetLeftDaughter(n) == NULL) && (this->GetRightDaughter(n) != NULL) ) {
+   if ((this->GetLeftDaughter(n) == nullptr) && (this->GetRightDaughter(n) != nullptr)) {
       Log() << kFATAL << " Node with only one daughter?? Something went wrong" << Endl;
       return;
-   }  else if ((this->GetLeftDaughter(n) != NULL) && (this->GetRightDaughter(n) == NULL) ) {
+   } else if ((this->GetLeftDaughter(n) != nullptr) && (this->GetRightDaughter(n) == nullptr)) {
       Log() << kFATAL << " Node with only one daughter?? Something went wrong" << Endl;
       return;
    }
    else {
-      if (this->GetLeftDaughter(n) != NULL) {
+      if (this->GetLeftDaughter(n) != nullptr) {
          this->SetParentTreeInNodes( this->GetLeftDaughter(n) );
       }
-      if (this->GetRightDaughter(n) != NULL) {
+      if (this->GetRightDaughter(n) != nullptr) {
          this->SetParentTreeInNodes( this->GetRightDaughter(n) );
       }
    }
@@ -294,7 +255,7 @@ TMVA::DecisionTree* TMVA::DecisionTree::CreateFromXML(void* node, UInt_t tmva_Ve
 UInt_t TMVA::DecisionTree::BuildTree( const std::vector<const TMVA::Event*> & eventSample,
                                       TMVA::DecisionTreeNode *node)
 {
-   if (node==NULL) {
+   if (node == nullptr) {
       //start with the root node
       node = new TMVA::DecisionTreeNode();
       fNNodes = 1;
@@ -530,7 +491,7 @@ UInt_t TMVA::DecisionTree::BuildTree( const std::vector<const TMVA::Event*> & ev
 void TMVA::DecisionTree::FillTree( const std::vector<TMVA::Event*> & eventSample )
 {
    for (UInt_t i=0; i<eventSample.size(); i++) {
-      this->FillEvent(*(eventSample[i]),NULL);
+      this->FillEvent(*(eventSample[i]), nullptr);
    }
 }
 
@@ -541,7 +502,7 @@ void TMVA::DecisionTree::FillTree( const std::vector<TMVA::Event*> & eventSample
 void TMVA::DecisionTree::FillEvent( const TMVA::Event & event,
                                     TMVA::DecisionTreeNode *node )
 {
-   if (node == NULL) { // that's the start, take the Root node
+   if (node == nullptr) { // that's the start, take the Root node
       node = this->GetRoot();
    }
 
@@ -572,8 +533,7 @@ void TMVA::DecisionTree::FillEvent( const TMVA::Event & event,
 
 void TMVA::DecisionTree::ClearTree()
 {
-   if (this->GetRoot()!=NULL) this->GetRoot()->ClearNodeAndAllDaughters();
-
+   if (this->GetRoot() != nullptr) this->GetRoot()->ClearNodeAndAllDaughters();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -586,7 +546,7 @@ void TMVA::DecisionTree::ClearTree()
 
 UInt_t TMVA::DecisionTree::CleanTree( DecisionTreeNode *node )
 {
-   if (node==NULL) {
+   if (node == nullptr) {
       node = this->GetRoot();
    }
 
@@ -613,8 +573,8 @@ UInt_t TMVA::DecisionTree::CleanTree( DecisionTreeNode *node )
 
 Double_t TMVA::DecisionTree::PruneTree( const EventConstList* validationSample )
 {
-   IPruneTool* tool(NULL);
-   PruningInfo* info(NULL);
+   IPruneTool *tool(nullptr);
+   PruningInfo *info(nullptr);
 
    if( fPruneMethod == kNoPruning ) return 0.0;
 
@@ -634,7 +594,7 @@ Double_t TMVA::DecisionTree::PruneTree( const EventConstList* validationSample )
 
    tool->SetPruneStrength(GetPruneStrength());
    if(tool->IsAutomatic()) {
-      if(validationSample == NULL){
+      if (validationSample == nullptr) {
          Log() << kFATAL << "Cannot automate the pruning algorithm without an "
                << "independent validation sample!" << Endl;
       }else if(validationSample->size() == 0) {
@@ -692,15 +652,15 @@ void TMVA::DecisionTree::ApplyValidationSample( const EventConstList* validation
 
 Double_t TMVA::DecisionTree::TestPrunedTreeQuality( const DecisionTreeNode* n, Int_t mode ) const
 {
-   if (n == NULL) { // default, start at the tree top, then descend recursively
+   if (n == nullptr) { // default, start at the tree top, then descend recursively
       n = this->GetRoot();
-      if (n == NULL) {
+      if (n == nullptr) {
          Log() << kFATAL << "TestPrunedTreeQuality: started with undefined ROOT node" <<Endl;
          return 0;
       }
    }
 
-   if( n->GetLeft() != NULL && n->GetRight() != NULL && !n->IsTerminal() ) {
+   if (n->GetLeft() != nullptr && n->GetRight() != nullptr && !n->IsTerminal()) {
       return (TestPrunedTreeQuality( n->GetLeft(), mode ) +
               TestPrunedTreeQuality( n->GetRight(), mode ));
    }
@@ -735,11 +695,11 @@ Double_t TMVA::DecisionTree::TestPrunedTreeQuality( const DecisionTreeNode* n, I
 void TMVA::DecisionTree::CheckEventWithPrunedTree( const Event* e ) const
 {
    DecisionTreeNode* current =  this->GetRoot();
-   if (current == NULL) {
+   if (current == nullptr) {
       Log() << kFATAL << "CheckEventWithPrunedTree: started with undefined ROOT node" <<Endl;
    }
 
-   while(current != NULL) {
+   while (current != nullptr) {
       if(e->GetClass() == fSigClass)
          current->SetNSValidation(current->GetNSValidation() + e->GetWeight());
       else
@@ -750,8 +710,8 @@ void TMVA::DecisionTree::CheckEventWithPrunedTree( const Event* e ) const
          current->AddToSumTarget2(e->GetWeight()*e->GetTarget(0)*e->GetTarget(0));
       }
 
-      if (current->GetRight() == NULL || current->GetLeft() == NULL) {
-         current = NULL;
+      if (current->GetRight() == nullptr || current->GetLeft() == nullptr) {
+         current = nullptr;
       }
       else {
          if (current->GoesRight(*e))
@@ -780,9 +740,9 @@ Double_t TMVA::DecisionTree::GetSumWeights( const EventConstList* validationSamp
 
 UInt_t TMVA::DecisionTree::CountLeafNodes( TMVA::Node *n )
 {
-   if (n == NULL) { // default, start at the tree top, then descend recursively
+   if (n == nullptr) { // default, start at the tree top, then descend recursively
       n =  this->GetRoot();
-      if (n == NULL) {
+      if (n == nullptr) {
          Log() << kFATAL << "CountLeafNodes: started with undefined ROOT node" <<Endl;
          return 0;
       }
@@ -790,14 +750,14 @@ UInt_t TMVA::DecisionTree::CountLeafNodes( TMVA::Node *n )
 
    UInt_t countLeafs=0;
 
-   if ((this->GetLeftDaughter(n) == NULL) && (this->GetRightDaughter(n) == NULL) ) {
+   if ((this->GetLeftDaughter(n) == nullptr) && (this->GetRightDaughter(n) == nullptr)) {
       countLeafs += 1;
    }
    else {
-      if (this->GetLeftDaughter(n) != NULL) {
+      if (this->GetLeftDaughter(n) != nullptr) {
          countLeafs += this->CountLeafNodes( this->GetLeftDaughter(n) );
       }
-      if (this->GetRightDaughter(n) != NULL) {
+      if (this->GetRightDaughter(n) != nullptr) {
          countLeafs += this->CountLeafNodes( this->GetRightDaughter(n) );
       }
    }
@@ -809,30 +769,28 @@ UInt_t TMVA::DecisionTree::CountLeafNodes( TMVA::Node *n )
 
 void TMVA::DecisionTree::DescendTree( Node* n )
 {
-   if (n == NULL) { // default, start at the tree top, then descend recursively
+   if (n == nullptr) { // default, start at the tree top, then descend recursively
       n =  this->GetRoot();
-      if (n == NULL) {
+      if (n == nullptr) {
          Log() << kFATAL << "DescendTree: started with undefined ROOT node" <<Endl;
          return ;
       }
    }
 
-   if ((this->GetLeftDaughter(n) == NULL) && (this->GetRightDaughter(n) == NULL) ) {
+   if ((this->GetLeftDaughter(n) == nullptr) && (this->GetRightDaughter(n) == nullptr)) {
       // do nothing
-   }
-   else if ((this->GetLeftDaughter(n) == NULL) && (this->GetRightDaughter(n) != NULL) ) {
+   } else if ((this->GetLeftDaughter(n) == nullptr) && (this->GetRightDaughter(n) != nullptr)) {
       Log() << kFATAL << " Node with only one daughter?? Something went wrong" << Endl;
       return;
-   }
-   else if ((this->GetLeftDaughter(n) != NULL) && (this->GetRightDaughter(n) == NULL) ) {
+   } else if ((this->GetLeftDaughter(n) != nullptr) && (this->GetRightDaughter(n) == nullptr)) {
       Log() << kFATAL << " Node with only one daughter?? Something went wrong" << Endl;
       return;
    }
    else {
-      if (this->GetLeftDaughter(n) != NULL) {
+      if (this->GetLeftDaughter(n) != nullptr) {
          this->DescendTree( this->GetLeftDaughter(n) );
       }
-      if (this->GetRightDaughter(n) != NULL) {
+      if (this->GetRightDaughter(n) != nullptr) {
          this->DescendTree( this->GetRightDaughter(n) );
       }
    }
@@ -846,8 +804,8 @@ void TMVA::DecisionTree::PruneNode( DecisionTreeNode* node )
    DecisionTreeNode *l = node->GetLeft();
    DecisionTreeNode *r = node->GetRight();
 
-   node->SetRight(NULL);
-   node->SetLeft(NULL);
+   node->SetRight(nullptr);
+   node->SetLeft(nullptr);
    node->SetSelector(-1);
    node->SetSeparationGain(-1);
    if (node->GetPurity() > fNodePurityLimit) node->SetNodeType(1);
@@ -865,7 +823,7 @@ void TMVA::DecisionTree::PruneNode( DecisionTreeNode* node )
 /// pruning stages without "touching" the tree.
 
 void TMVA::DecisionTree::PruneNodeInPlace( DecisionTreeNode* node ) {
-   if(node == NULL) return;
+   if (node == nullptr) return;
    node->SetNTerminal(1);
    node->SetSubTreeR( node->GetNodeR() );
    node->SetAlpha( std::numeric_limits<double>::infinity( ) );
@@ -1623,7 +1581,7 @@ Double_t TMVA::DecisionTree::TrainNodeFull( const EventConstList & eventSample,
       // Locate the optimal cut for this (ivar-th) variable
       for( it = bdtEventSample.begin(); it != it_end; ++it ) {
          if( index == 0 ) { ++index; continue; }
-         if( *(*it) == NULL ) {
+         if (*(*it) == nullptr) {
             Log() << kFATAL << "In TrainNodeFull(): have a null event! Where index="
                   << index << ", and parent node=" << node->GetParent() << Endl;
             break;

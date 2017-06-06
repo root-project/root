@@ -26,7 +26,7 @@ void TPyArg::CallConstructor( PyObject*& pyself, PyObject* pyclass, const std::v
    PyObject* pyargs = PyTuple_New( nArgs );
    for ( int i = 0; i < nArgs; ++i )
       PyTuple_SET_ITEM( pyargs, i, (PyObject*)args[i] );
-   pyself = PyObject_Call( pyclass, pyargs, NULL );
+   pyself = PyObject_Call(pyclass, pyargs, nullptr);
    Py_DECREF( pyargs );
 }
 
@@ -34,8 +34,8 @@ void TPyArg::CallConstructor( PyObject*& pyself, PyObject* pyclass, const std::v
 void CallConstructor( PyObject*& pyself, PyObject* pyclass )
 {
    PyObject* pyargs = PyTuple_New( 0 );
-   pyself = PyObject_Call( pyclass, pyargs, NULL );
-    Py_DECREF( pyargs );
+   pyself = PyObject_Call(pyclass, pyargs, nullptr);
+   Py_DECREF(pyargs);
 }
 
 //- generic dispatcher -------------------------------------------------------
@@ -45,7 +45,7 @@ PyObject* TPyArg::CallMethod( PyObject* pymeth, const std::vector<TPyArg>& args 
    PyObject* pyargs = PyTuple_New( nArgs );
    for ( int i = 0; i < nArgs; ++i )
       PyTuple_SET_ITEM( pyargs, i, (PyObject*)args[i] );
-   PyObject* result = PyObject_Call( pymeth, pyargs, NULL );
+   PyObject *result = PyObject_Call(pymeth, pyargs, nullptr);
    Py_DECREF( pyargs );
    return result;
 }
@@ -129,7 +129,7 @@ TPyArg& TPyArg::operator=( const TPyArg& s )
 TPyArg::~TPyArg()
 {
    Py_XDECREF( fPyObject );
-   fPyObject = NULL;
+   fPyObject = nullptr;
 }
 
 //- public members -----------------------------------------------------------

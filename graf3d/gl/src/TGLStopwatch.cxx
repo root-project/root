@@ -107,7 +107,7 @@ Double_t TGLStopwatch::GetClock(void) const
    return static_cast<Double_t>(t /= 1E4);   // Milliseconds
 #else
    struct timeval tv;
-   gettimeofday(&tv, 0);
+   gettimeofday(&tv, nullptr);
    return static_cast<Double_t>(tv.tv_sec*1E3) + static_cast<Double_t>(tv.tv_usec) / 1E3;
 #endif
 }

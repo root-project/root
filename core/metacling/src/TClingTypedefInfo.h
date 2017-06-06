@@ -53,9 +53,8 @@ private:
    std::string          fTitle; // The meta info for the typedef.
 
 public:
-
    explicit TClingTypedefInfo(cling::Interpreter *interp)
-      : fInterp(interp), fFirstTime(true), fDescend(false), fDecl(0), fTitle("")
+      : fInterp(interp), fFirstTime(true), fDescend(false), fDecl(nullptr), fTitle("")
    {
       const clang::TranslationUnitDecl *TU = fInterp->getCI()->getASTContext().getTranslationUnitDecl();
       const clang::DeclContext *DC = llvm::cast<clang::DeclContext>(TU);

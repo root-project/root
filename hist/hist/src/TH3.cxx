@@ -184,7 +184,7 @@ Int_t TH3::BufferEmpty(Int_t action)
    if (nbentries < 0) {
       if (action == 0) return 0;
       nbentries  = -nbentries;
-      fBuffer=0;
+      fBuffer = nullptr;
       Reset("ICES");
       fBuffer = buffer;
    }
@@ -212,7 +212,7 @@ Int_t TH3::BufferEmpty(Int_t action)
          if (fXaxis.GetXmax() <= fXaxis.GetXmin() || fYaxis.GetXmax() <= fYaxis.GetXmin() || fZaxis.GetXmax() <= fZaxis.GetXmin()) {
             THLimitsFinder::GetLimitsFinder()->FindGoodLimits(this,xmin,xmax,ymin,ymax,zmin,zmax);
          } else {
-            fBuffer = 0;
+            fBuffer = nullptr;
             Int_t keep = fBufferSize; fBufferSize = 0;
             if (xmin <  fXaxis.GetXmin()) ExtendAxis(xmin,&fXaxis);
             if (xmax >= fXaxis.GetXmax()) ExtendAxis(xmax,&fXaxis);
@@ -224,15 +224,17 @@ Int_t TH3::BufferEmpty(Int_t action)
             fBufferSize = keep;
          }
    }
-   fBuffer = 0;
+   fBuffer = nullptr;
 
    for (Int_t i=0;i<nbentries;i++) {
       Fill(buffer[4*i+2],buffer[4*i+3],buffer[4*i+4],buffer[4*i+1]);
    }
    fBuffer = buffer;
 
-   if (action > 0) { delete [] fBuffer; fBuffer = 0; fBufferSize = 0;}
-   else {
+   if (action > 0) { delete [] fBuffer;
+      fBuffer = nullptr;
+      fBufferSize = 0;
+   } else {
       if (nbentries == (Int_t)fEntries) fBuffer[0] = -nbentries;
       else                              fBuffer[0] = 0;
    }
@@ -256,7 +258,8 @@ Int_t TH3::BufferFill(Double_t x, Double_t y, Double_t z, Double_t w)
       nbentries  = -nbentries;
       fBuffer[0] =  nbentries;
       if (fEntries > 0) {
-         Double_t *buffer = fBuffer; fBuffer=0;
+         Double_t *buffer = fBuffer;
+         fBuffer = nullptr;
          Reset("ICES");
          fBuffer = buffer;
       }
@@ -874,9 +877,10 @@ void TH3::FitSlicesZ(TF1 *f1, Int_t binminx, Int_t binmaxx, Int_t binminy, Int_t
    if (binmaxy < binminy) {binminy = 1; binmaxy = nbinsy;}
 
    //default is to fit with a gaussian
-   if (f1 == 0) {
+   if (f1 == nullptr) {
       f1 = (TF1*)gROOT->GetFunction("gaus");
-      if (f1 == 0) f1 = new TF1("gaus","gaus",fZaxis.GetXmin(),fZaxis.GetXmax());
+      if (f1 == nullptr)
+         f1 = new TF1("gaus", "gaus", fZaxis.GetXmin(), fZaxis.GetXmax());
       else         f1->SetRange(fZaxis.GetXmin(),fZaxis.GetXmax());
    }
    const char *fname = f1->GetName();
@@ -1360,7 +1364,7 @@ Double_t TH3::KolmogorovTest(const TH1 *h2, Option_t *option) const
 
    Double_t prb = 0;
    TH1 *h1 = (TH1*)this;
-   if (h2 == 0) return 0;
+   if (h2 == nullptr) return 0;
    const TAxis *xaxis1 = h1->GetXaxis();
    const TAxis *xaxis2 = h2->GetXaxis();
    const TAxis *yaxis1 = h1->GetYaxis();
@@ -1706,7 +1710,7 @@ TH1D *TH3::DoProject1D(const char* name, const char * title, const TAxis* projX,
 
 
    // Create the projection histogram
-   TH1D *h1 = 0;
+   TH1D *h1 = nullptr;
 
    // Get range to use as well as bin limits
    // Projected range must be inside and not outside original one (ROOT-8781)
@@ -1719,7 +1723,7 @@ TH1D *TH3::DoProject1D(const char* name, const char * title, const TAxis* projX,
    if (h1obj && h1obj->InheritsFrom(TH1::Class())) {
       if (h1obj->IsA() != TH1D::Class() ) {
          Error("DoProject1D","Histogram with name %s must be a TH1D and is a %s",name,h1obj->ClassName());
-         return 0;
+         return nullptr;
       }
       h1 = (TH1D*)h1obj;
       // reset histogram and re-set the axis in any case
@@ -1780,8 +1784,8 @@ TH1D *TH3::DoProject1D(const char* name, const char * title, const TAxis* projX,
    if ( computeErrors ) h1->Sumw2();
 
    // Set references to the axis, so that the bucle has no branches.
-   const TAxis* out1 = 0;
-   const TAxis* out2 = 0;
+   const TAxis *out1 = nullptr;
+   const TAxis *out2 = nullptr;
    if ( projX == GetXaxis() ) {
       out1 = GetYaxis();
       out2 = GetZaxis();
@@ -1793,12 +1797,12 @@ TH1D *TH3::DoProject1D(const char* name, const char * title, const TAxis* projX,
       out2 = GetXaxis();
    }
 
-   Int_t *refX = 0, *refY = 0, *refZ = 0;
+   Int_t *refX = nullptr, *refY = nullptr, *refZ = nullptr;
    Int_t ixbin, out1bin, out2bin;
    if ( projX == GetXaxis() ) { refX = &ixbin;   refY = &out1bin; refZ = &out2bin; }
    if ( projX == GetYaxis() ) { refX = &out2bin; refY = &ixbin;   refZ = &out1bin; }
    if ( projX == GetZaxis() ) { refX = &out2bin; refY = &out1bin; refZ = &ixbin;   }
-   R__ASSERT (refX != 0 && refY != 0 && refZ != 0);
+   R__ASSERT(refX != nullptr && refY != nullptr && refZ != nullptr);
 
    // Fill the projected histogram excluding underflow/overflows if considered in the option
    // if specified in the option (by default they considered)
@@ -1900,7 +1904,7 @@ TH2D *TH3::DoProject2D(const char* name, const char * title, const TAxis* projX,
                     bool computeErrors, bool originalRange,
                     bool useUF, bool useOF) const
 {
-   TH2D *h2 = 0;
+   TH2D *h2 = nullptr;
 
    // Get range to use as well as bin limits
    Int_t ixmin = std::max(projX->GetFirst(),1);
@@ -1918,7 +1922,7 @@ TH2D *TH3::DoProject2D(const char* name, const char * title, const TAxis* projX,
    if (h2obj && h2obj->InheritsFrom(TH1::Class())) {
       if ( h2obj->IsA() != TH2D::Class() ) {
          Error("DoProject2D","Histogram with name %s must be a TH2D and is a %s",name,h2obj->ClassName());
-         return 0;
+         return nullptr;
       }
       h2 = (TH2D*)h2obj;
       // reset histogram and its axes
@@ -1978,8 +1982,8 @@ TH2D *TH3::DoProject2D(const char* name, const char * title, const TAxis* projX,
    }
 
    // Copy the axis attributes and the axis labels if needed.
-   THashList* labels1 = 0;
-   THashList* labels2 = 0;
+   THashList *labels1 = nullptr;
+   THashList *labels2 = nullptr;
    // "xy"
    h2->GetXaxis()->ImportAttributes(projY);
    h2->GetYaxis()->ImportAttributes(projX);
@@ -2012,7 +2016,7 @@ TH2D *TH3::DoProject2D(const char* name, const char * title, const TAxis* projX,
    if ( computeErrors) h2->Sumw2();
 
    // Set references to the axis, so that the bucle has no branches.
-   const TAxis* out = 0;
+   const TAxis *out = nullptr;
    if ( projX != GetXaxis() && projY != GetXaxis() ) {
       out = GetXaxis();
    } else if ( projX != GetYaxis() && projY != GetYaxis() ) {
@@ -2021,7 +2025,7 @@ TH2D *TH3::DoProject2D(const char* name, const char * title, const TAxis* projX,
       out = GetZaxis();
    }
 
-   Int_t *refX = 0, *refY = 0, *refZ = 0;
+   Int_t *refX = nullptr, *refY = nullptr, *refZ = nullptr;
    Int_t ixbin, iybin, outbin;
    if ( projX == GetXaxis() && projY == GetYaxis() ) { refX = &ixbin;  refY = &iybin;  refZ = &outbin; }
    if ( projX == GetYaxis() && projY == GetXaxis() ) { refX = &iybin;  refY = &ixbin;  refZ = &outbin; }
@@ -2029,7 +2033,7 @@ TH2D *TH3::DoProject2D(const char* name, const char * title, const TAxis* projX,
    if ( projX == GetZaxis() && projY == GetXaxis() ) { refX = &iybin;  refY = &outbin; refZ = &ixbin;  }
    if ( projX == GetYaxis() && projY == GetZaxis() ) { refX = &outbin; refY = &ixbin;  refZ = &iybin;  }
    if ( projX == GetZaxis() && projY == GetYaxis() ) { refX = &outbin; refY = &iybin;  refZ = &ixbin;  }
-   R__ASSERT (refX != 0 && refY != 0 && refZ != 0);
+   R__ASSERT(refX != nullptr && refY != nullptr && refZ != nullptr);
 
    // Fill the projected histogram excluding underflow/overflows if considered in the option
    // if specified in the option (by default they considered)
@@ -2215,7 +2219,7 @@ TH1 *TH3::Project3D(Option_t *option) const
 
    if (pcase == 0) {
       Error("Project3D","No projection axis specified - return a NULL pointer");
-      return 0;
+      return nullptr;
    }
    // do not remove ptype from opt to use later in the projected histo name
 
@@ -2244,7 +2248,7 @@ TH1 *TH3::Project3D(Option_t *option) const
 
 
    // Create the projection histogram
-   TH1 *h = 0;
+   TH1 *h = nullptr;
 
    TString name = GetName();
    TString title = GetTitle();
@@ -2369,7 +2373,7 @@ TProfile2D *TH3::DoProjectProfile2D(const char* name, const char * title, const 
    Int_t ny = iymax-iymin+1;
 
    // Create the projected profiles
-   TProfile2D *p2 = 0;
+   TProfile2D *p2 = nullptr;
 
    // Create the histogram, either reseting a preexisting one
    // Does an object with the same name exists?
@@ -2377,7 +2381,7 @@ TProfile2D *TH3::DoProjectProfile2D(const char* name, const char * title, const 
    if (p2obj && p2obj->InheritsFrom(TH1::Class())) {
       if (p2obj->IsA() != TProfile2D::Class() ) {
          Error("DoProjectProfile2D","Histogram with name %s must be a TProfile2D and is a %s",name,p2obj->ClassName());
-         return 0;
+         return nullptr;
       }
       p2 = (TProfile2D*)p2obj;
       // reset existing profile and re-set bins
@@ -2435,7 +2439,7 @@ TProfile2D *TH3::DoProjectProfile2D(const char* name, const char * title, const 
    }
 
    // Set references to the axis, so that the loop has no branches.
-   const TAxis* outAxis = 0;
+   const TAxis *outAxis = nullptr;
    if ( projX != GetXaxis() && projY != GetXaxis() ) {
       outAxis = GetXaxis();
    } else if ( projX != GetYaxis() && projY != GetYaxis() ) {
@@ -2449,7 +2453,7 @@ TProfile2D *TH3::DoProjectProfile2D(const char* name, const char * title, const 
    if (useWeights ) p2->Sumw2(); // store sum of w2 in profile if histo is weighted
 
    // Set references to the bins, so that the loop has no branches.
-   Int_t *refX = 0, *refY = 0, *refZ = 0;
+   Int_t *refX = nullptr, *refY = nullptr, *refZ = nullptr;
    Int_t ixbin, iybin, outbin;
    if ( projX == GetXaxis() && projY == GetYaxis() ) { refX = &ixbin;  refY = &iybin;  refZ = &outbin; }
    if ( projX == GetYaxis() && projY == GetXaxis() ) { refX = &iybin;  refY = &ixbin;  refZ = &outbin; }
@@ -2457,7 +2461,7 @@ TProfile2D *TH3::DoProjectProfile2D(const char* name, const char * title, const 
    if ( projX == GetZaxis() && projY == GetXaxis() ) { refX = &iybin;  refY = &outbin; refZ = &ixbin;  }
    if ( projX == GetYaxis() && projY == GetZaxis() ) { refX = &outbin; refY = &ixbin;  refZ = &iybin;  }
    if ( projX == GetZaxis() && projY == GetYaxis() ) { refX = &outbin; refY = &iybin;  refZ = &ixbin;  }
-   R__ASSERT (refX != 0 && refY != 0 && refZ != 0);
+   R__ASSERT(refX != nullptr && refY != nullptr && refZ != nullptr);
 
    Int_t outmin = outAxis->GetFirst();
    Int_t outmax = outAxis->GetLast();
@@ -2575,7 +2579,7 @@ TProfile2D *TH3::Project3DProfile(Option_t *option) const
 
    if (pcase == 0) {
       Error("Project3D","No projection axis specified - return a NULL pointer");
-      return 0;
+      return nullptr;
    }
    // do not remove ptype from opt to use later in the projected histo name
 
@@ -2597,7 +2601,7 @@ TProfile2D *TH3::Project3DProfile(Option_t *option) const
    }
 
    // Create the projected profile
-   TProfile2D *p2 = 0;
+   TProfile2D *p2 = nullptr;
    TString name = GetName();
    TString title = GetTitle();
    name  += "_p";   name  += opt;  // opt may include a user defined name
@@ -2726,15 +2730,15 @@ TH3 *TH3::Rebin3D(Int_t nxgroup, Int_t nygroup, Int_t nzgroup, const char *newna
    Double_t zmax  = fZaxis.GetXmax();
    if ((nxgroup <= 0) || (nxgroup > nxbins)) {
       Error("Rebin", "Illegal value of nxgroup=%d",nxgroup);
-      return 0;
+      return nullptr;
    }
    if ((nygroup <= 0) || (nygroup > nybins)) {
       Error("Rebin", "Illegal value of nygroup=%d",nygroup);
-      return 0;
+      return nullptr;
    }
    if ((nzgroup <= 0) || (nzgroup > nzbins)) {
       Error("Rebin", "Illegal value of nzgroup=%d",nzgroup);
-      return 0;
+      return nullptr;
    }
 
    Int_t newxbins = nxbins/nxgroup;
@@ -2747,7 +2751,7 @@ TH3 *TH3::Rebin3D(Int_t nxgroup, Int_t nygroup, Int_t nzgroup, const char *newna
    for (Int_t ibin = 0; ibin < fNcells; ibin++) {
       oldBins[ibin] = RetrieveBinContent(ibin);
    }
-   Double_t *oldSumw2 = 0;
+   Double_t *oldSumw2 = nullptr;
    if (fSumw2.fN != 0) {
       oldSumw2 = new Double_t[fNcells];
       for (Int_t ibin = 0; ibin < fNcells; ibin++) {
@@ -3465,7 +3469,7 @@ TH3C operator*(Float_t c1, TH3C &h1)
 {
    TH3C hnew = h1;
    hnew.Scale(c1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -3477,7 +3481,7 @@ TH3C operator+(TH3C &h1, TH3C &h2)
 {
    TH3C hnew = h1;
    hnew.Add(&h2,1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -3489,7 +3493,7 @@ TH3C operator-(TH3C &h1, TH3C &h2)
 {
    TH3C hnew = h1;
    hnew.Add(&h2,-1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -3501,7 +3505,7 @@ TH3C operator*(TH3C &h1, TH3C &h2)
 {
    TH3C hnew = h1;
    hnew.Multiply(&h2);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -3513,7 +3517,7 @@ TH3C operator/(TH3C &h1, TH3C &h2)
 {
    TH3C hnew = h1;
    hnew.Divide(&h2);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -3697,7 +3701,7 @@ TH3S operator*(Float_t c1, TH3S &h1)
 {
    TH3S hnew = h1;
    hnew.Scale(c1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -3709,7 +3713,7 @@ TH3S operator+(TH3S &h1, TH3S &h2)
 {
    TH3S hnew = h1;
    hnew.Add(&h2,1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -3721,7 +3725,7 @@ TH3S operator-(TH3S &h1, TH3S &h2)
 {
    TH3S hnew = h1;
    hnew.Add(&h2,-1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -3733,7 +3737,7 @@ TH3S operator*(TH3S &h1, TH3S &h2)
 {
    TH3S hnew = h1;
    hnew.Multiply(&h2);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -3745,7 +3749,7 @@ TH3S operator/(TH3S &h1, TH3S &h2)
 {
    TH3S hnew = h1;
    hnew.Divide(&h2);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -3896,7 +3900,7 @@ TH3I operator*(Float_t c1, TH3I &h1)
 {
    TH3I hnew = h1;
    hnew.Scale(c1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -3908,7 +3912,7 @@ TH3I operator+(TH3I &h1, TH3I &h2)
 {
    TH3I hnew = h1;
    hnew.Add(&h2,1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -3920,7 +3924,7 @@ TH3I operator-(TH3I &h1, TH3I &h2)
 {
    TH3I hnew = h1;
    hnew.Add(&h2,-1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -3932,7 +3936,7 @@ TH3I operator*(TH3I &h1, TH3I &h2)
 {
    TH3I hnew = h1;
    hnew.Multiply(&h2);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -3944,7 +3948,7 @@ TH3I operator/(TH3I &h1, TH3I &h2)
 {
    TH3I hnew = h1;
    hnew.Divide(&h2);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -4107,7 +4111,7 @@ TH3F operator*(Float_t c1, TH3F &h1)
 {
    TH3F hnew = h1;
    hnew.Scale(c1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -4119,7 +4123,7 @@ TH3F operator+(TH3F &h1, TH3F &h2)
 {
    TH3F hnew = h1;
    hnew.Add(&h2,1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -4131,7 +4135,7 @@ TH3F operator-(TH3F &h1, TH3F &h2)
 {
    TH3F hnew = h1;
    hnew.Add(&h2,-1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -4143,7 +4147,7 @@ TH3F operator*(TH3F &h1, TH3F &h2)
 {
    TH3F hnew = h1;
    hnew.Multiply(&h2);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -4155,7 +4159,7 @@ TH3F operator/(TH3F &h1, TH3F &h2)
 {
    TH3F hnew = h1;
    hnew.Divide(&h2);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -4318,7 +4322,7 @@ TH3D operator*(Float_t c1, TH3D &h1)
 {
    TH3D hnew = h1;
    hnew.Scale(c1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -4330,7 +4334,7 @@ TH3D operator+(TH3D &h1, TH3D &h2)
 {
    TH3D hnew = h1;
    hnew.Add(&h2,1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -4342,7 +4346,7 @@ TH3D operator-(TH3D &h1, TH3D &h2)
 {
    TH3D hnew = h1;
    hnew.Add(&h2,-1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -4354,7 +4358,7 @@ TH3D operator*(TH3D &h1, TH3D &h2)
 {
    TH3D hnew = h1;
    hnew.Multiply(&h2);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -4366,6 +4370,6 @@ TH3D operator/(TH3D &h1, TH3D &h2)
 {
    TH3D hnew = h1;
    hnew.Divide(&h2);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }

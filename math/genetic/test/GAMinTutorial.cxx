@@ -48,7 +48,7 @@ int GAMinimize(ROOT::Math::IMultiGenFunction& chi2Func, double& xm1, double& xm2
 {
    // minimize the function
    ROOT::Math::GeneticMinimizer* min = new ROOT::Math::GeneticMinimizer();
-   if (min == 0) {
+   if (min == nullptr) {
       cout << "Error creating minimizer " << endl;
       return -1;
    }
@@ -112,9 +112,9 @@ const double* Min2Minimize(ROOT::Math::IMultiGenFunction& chi2Func, double &xm1,
 
    // minimize the function
    ROOT::Math::Minimizer * min = ROOT::Math::Factory::CreateMinimizer("Minuit2", "Migrad");
-   if (min == 0) {
+   if (min == nullptr) {
       min = ROOT::Math::Factory::CreateMinimizer("Minuit", "Migrad");
-      if (min == 0) {
+      if (min == nullptr) {
          cout << "Error creating minimizer " << endl;
          exit(-1);
       }
@@ -263,7 +263,7 @@ int main(int argc, char **argv)
          return -1;
       }
    }
-   TApplication* theApp = 0;
+   TApplication *theApp = nullptr;
    if (showGraphics)
       theApp = new TApplication("App",&argc,argv);
 
@@ -272,7 +272,7 @@ int main(int argc, char **argv)
    if (showGraphics) {
       theApp->Run();
       delete theApp;
-      theApp = 0;
+      theApp = nullptr;
    }
 
    return status;

@@ -92,7 +92,7 @@ End_Macro
 TPolyLine3D::TPolyLine3D()
 {
    fN = 0;
-   fP = 0;
+   fP = nullptr;
    fLastPoint = -1;
 }
 
@@ -107,7 +107,7 @@ TPolyLine3D::TPolyLine3D(Int_t n, Option_t *option)
    fLastPoint = -1;
    if (n <= 0) {
       fN = 0;
-      fP = 0;
+      fP = nullptr;
       return;
    }
 
@@ -127,7 +127,7 @@ TPolyLine3D::TPolyLine3D(Int_t n, Float_t *p, Option_t *option)
    fLastPoint = -1;
    if (n <= 0) {
       fN = 0;
-      fP = 0;
+      fP = nullptr;
       return;
    }
 
@@ -150,7 +150,7 @@ TPolyLine3D::TPolyLine3D(Int_t n, Double_t *p, Option_t *option)
    fLastPoint = -1;
    if (n <= 0) {
       fN = 0;
-      fP = 0;
+      fP = nullptr;
       return;
    }
 
@@ -173,7 +173,7 @@ TPolyLine3D::TPolyLine3D(Int_t n, Float_t *x, Float_t *y, Float_t *z, Option_t *
    fLastPoint = -1;
    if (n <= 0) {
       fN = 0;
-      fP = 0;
+      fP = nullptr;
       return;
    }
 
@@ -201,7 +201,7 @@ TPolyLine3D::TPolyLine3D(Int_t n, Double_t *x, Double_t *y, Double_t *z, Option_
    fLastPoint = -1;
    if (n <= 0) {
       fN = 0;
-      fP = 0;
+      fP = nullptr;
       return;
    }
 
@@ -247,7 +247,7 @@ TPolyLine3D::~TPolyLine3D()
 
 TPolyLine3D::TPolyLine3D(const TPolyLine3D &polyline) : TObject(polyline), TAttLine(polyline), TAtt3D(polyline)
 {
-   fP         = 0;
+   fP = nullptr;
    fLastPoint = 0;
    fN         = 0;
    ((TPolyLine3D&)polyline).TPolyLine3D::Copy(*this);
@@ -267,7 +267,7 @@ void TPolyLine3D::Copy(TObject &obj) const
       ((TPolyLine3D&)obj).fP = new Float_t[3*fN];
       for (Int_t i=0; i<3*fN;i++)  {((TPolyLine3D&)obj).fP[i] = fP[i];}
    } else {
-      ((TPolyLine3D&)obj).fP = 0;
+      ((TPolyLine3D &)obj).fP = nullptr;
    }
    ((TPolyLine3D&)obj).fOption = fOption;
    ((TPolyLine3D&)obj).fLastPoint = fLastPoint;
@@ -647,7 +647,7 @@ void TPolyLine3D::SetPolyLine(Int_t n, Option_t *option)
       fN = 0;
       fLastPoint = -1;
       delete [] fP;
-      fP = 0;
+      fP = nullptr;
       return;
    }
    fN = n;
@@ -668,7 +668,7 @@ void TPolyLine3D::SetPolyLine(Int_t n, Float_t *p, Option_t *option)
       fN = 0;
       fLastPoint = -1;
       delete [] fP;
-      fP = 0;
+      fP = nullptr;
       return;
    }
    fN = n;
@@ -697,7 +697,7 @@ void TPolyLine3D::SetPolyLine(Int_t n, Double_t *p, Option_t *option)
       fN = 0;
       fLastPoint = -1;
       delete [] fP;
-      fP = 0;
+      fP = nullptr;
       return;
    }
    fN = n;

@@ -22,8 +22,7 @@ ClassImp(TLDAPResult);
 TLDAPResult::TLDAPResult(LDAP *ld, LDAPMessage *searchresult)
    : fLd(ld), fSearchResult(searchresult), fCurrentEntry(searchresult)
 {
-   if (!GetCount())
-      fCurrentEntry = 0;
+   if (!GetCount()) fCurrentEntry = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -68,8 +67,8 @@ TLDAPResult::~TLDAPResult()
 TLDAPEntry *TLDAPResult::GetNext()
 {
    TLDAPEntry *entry = CreateEntry(fCurrentEntry);
-   fCurrentEntry = (fCurrentEntry != 0 ? ldap_next_entry(fLd, fCurrentEntry) :
-                   (GetCount() != 0 ? fSearchResult : 0));
+   fCurrentEntry =
+      (fCurrentEntry != nullptr ? ldap_next_entry(fLd, fCurrentEntry) : (GetCount() != 0 ? fSearchResult : nullptr));
    return entry;
 }
 
@@ -82,8 +81,7 @@ TLDAPEntry *TLDAPResult::GetNext()
 
 TLDAPEntry *TLDAPResult::CreateEntry(LDAPMessage *entry)
 {
-   if (entry == 0)
-      return 0;
+   if (entry == nullptr) return nullptr;
 
    char *dn;
    char *attr;
@@ -92,12 +90,11 @@ TLDAPEntry *TLDAPResult::CreateEntry(LDAPMessage *entry)
 
    dn = ldap_get_dn(fLd, entry);
    TLDAPEntry *ldapentry = new TLDAPEntry(dn);
-   for (attr = ldap_first_attribute(fLd, entry, &ptr); attr != 0;
-        attr = ldap_next_attribute(fLd, entry, ptr)) {
+   for (attr = ldap_first_attribute(fLd, entry, &ptr); attr != nullptr; attr = ldap_next_attribute(fLd, entry, ptr)) {
       TLDAPAttribute attribute(attr);
       vals = ldap_get_values_len(fLd, entry, attr);
       if (vals) {
-         for (Int_t i = 0; vals[i] != 0; i++) {
+         for (Int_t i = 0; vals[i] != nullptr; i++) {
             attribute.AddValue(vals[i]->bv_val);
          }
          ldap_value_free_len(vals);

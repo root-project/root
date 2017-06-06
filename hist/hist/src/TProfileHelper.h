@@ -115,8 +115,8 @@ Bool_t TProfileHelper::Add(T* p, const TH1 *h1,  const TH1 *h2, Double_t c1, Dou
    // create sumw2 per bin if not set
    if (p->fBinSumw2.fN == 0 && (p1->fBinSumw2.fN != 0 || p2->fBinSumw2.fN != 0) ) p->Sumw2();
    // if p1 has not the sum of weight squared/bin stored use just the sum of weights
-   if (ew1 == 0) ew1 = en1;
-   if (ew2 == 0) ew2 = en2;
+   if (ew1 == nullptr) ew1 = en1;
+   if (ew2 == nullptr) ew2 = en2;
    for (bin =0;bin< p->fN;bin++) {
       p->fArray[bin]             = c1*cu1[bin] + c2*cu2[bin];
       p->fSumw2.fArray[bin]      = ac1*er1[bin] + ac2*er2[bin];
@@ -274,7 +274,7 @@ Long64_t TProfileHelper::Merge(T* p, TCollection *li) {
             }
          }
       }
-   }  while ( ( h = dynamic_cast<T*> ( next() ) ) != NULL );
+   } while ((h = dynamic_cast<T *>(next())) != nullptr);
    if (!h && (*next) ) {
       Error("TProfileHelper::Merge","Attempt to merge object of class: %s to a %s",
             (*next)->ClassName(),p->ClassName());
@@ -287,7 +287,7 @@ Long64_t TProfileHelper::Merge(T* p, TCollection *li) {
    // newX(Y)Axis will now have the new found limits
    // but one needs first to clone this histogram to perform the merge
    // The clone is not needed when all histograms have the same limits
-   T * hclone = 0;
+   T *hclone = nullptr;
    if (!allSameLimits) {
       // We don't want to add the clone to gDirectory,
       // so remove our kMustCleanup bit temporarily
@@ -295,7 +295,7 @@ Long64_t TProfileHelper::Merge(T* p, TCollection *li) {
       if (mustCleanup) p->ResetBit(kMustCleanup);
       hclone = (T*)p->IsA()->New();
       R__ASSERT(hclone);
-      hclone->SetDirectory(0);
+      hclone->SetDirectory(nullptr);
       p->Copy(*hclone);
       if (mustCleanup) p->SetBit(kMustCleanup);
       p->BufferEmpty(1);         // To remove buffer.
@@ -429,51 +429,49 @@ T* TProfileHelper::ExtendAxis(T* p, Double_t x, TAxis *axis)
 // The axis must be extendable before invoking this function.
 // Ex: h->GetXaxis()->SetCanExtend(kTRUE)
 
+if (!axis->CanExtend()) return nullptr;
+if (axis->GetXmin() >= axis->GetXmax()) return nullptr;
+if (axis->GetNbins() <= 0) return nullptr;
 
-   if (!axis->CanExtend()) return 0;
-   if (axis->GetXmin() >= axis->GetXmax()) return 0;
-   if (axis->GetNbins() <= 0) return 0;
+Double_t xmin, xmax;
+if (!p->FindNewAxisLimits(axis, x, xmin, xmax)) return nullptr;
 
-   Double_t xmin, xmax;
-   if (!p->FindNewAxisLimits(axis, x, xmin, xmax))
-      return 0;
+// save a copy of this histogram
+T *hold = (T *)p->IsA()->New();
+R__ASSERT(hold);
+hold->SetDirectory(nullptr);
+p->Copy(*hold);
+// set new axis limits
+axis->SetLimits(xmin, xmax);
+if (p->fBinSumw2.fN) hold->Sumw2();
 
-   //save a copy of this histogram
-   T* hold = (T*)p->IsA()->New();
-   R__ASSERT(hold);
-   hold->SetDirectory(0);
-   p->Copy(*hold);
-   //set new axis limits
-   axis->SetLimits(xmin,xmax);
-   if (p->fBinSumw2.fN) hold->Sumw2();
+Int_t nbinsx = p->fXaxis.GetNbins();
+Int_t nbinsy = p->fYaxis.GetNbins();
+Int_t nbinsz = p->fZaxis.GetNbins();
 
-   Int_t  nbinsx = p->fXaxis.GetNbins();
-   Int_t  nbinsy = p->fYaxis.GetNbins();
-   Int_t  nbinsz = p->fZaxis.GetNbins();
+// now loop on all bins and refill
+p->Reset("ICE"); // reset only Integral, contents and Errors
 
-   //now loop on all bins and refill
-   p->Reset("ICE"); //reset only Integral, contents and Errors
+Double_t bx, by, bz;
+Int_t ix, iy, iz, binx, biny, binz;
+for (binz = 1; binz <= nbinsz; binz++) {
+   bz = hold->GetZaxis()->GetBinCenter(binz);
+   iz = p->fZaxis.FindFixBin(bz);
+   for (biny = 1; biny <= nbinsy; biny++) {
+      by = hold->GetYaxis()->GetBinCenter(biny);
+      iy = p->fYaxis.FindFixBin(by);
+      for (binx = 1; binx <= nbinsx; binx++) {
+         bx = hold->GetXaxis()->GetBinCenter(binx);
+         ix = p->fXaxis.FindFixBin(bx);
 
-   Double_t bx,by,bz;
-   Int_t ix, iy, iz, binx, biny, binz;
-   for (binz=1;binz<=nbinsz;binz++) {
-      bz  = hold->GetZaxis()->GetBinCenter(binz);
-      iz  = p->fZaxis.FindFixBin(bz);
-      for (biny=1;biny<=nbinsy;biny++) {
-         by  = hold->GetYaxis()->GetBinCenter(biny);
-         iy  = p->fYaxis.FindFixBin(by);
-         for (binx=1;binx<=nbinsx;binx++) {
-            bx = hold->GetXaxis()->GetBinCenter(binx);
-            ix  = p->fXaxis.FindFixBin(bx);
-
-            Int_t sourceBin = hold->GetBin(binx,biny,binz);
-            Int_t destinationBin = p->GetBin(ix,iy,iz);
-            p->AddBinContent(destinationBin, hold->fArray[sourceBin]);
-            p->fBinEntries.fArray[destinationBin] += hold->fBinEntries.fArray[sourceBin];
-            p->fSumw2.fArray[destinationBin] += hold->fSumw2.fArray[sourceBin];
-            if (p->fBinSumw2.fN) p->fBinSumw2.fArray[destinationBin] += hold->fBinSumw2.fArray[sourceBin];
-         }
+         Int_t sourceBin = hold->GetBin(binx, biny, binz);
+         Int_t destinationBin = p->GetBin(ix, iy, iz);
+         p->AddBinContent(destinationBin, hold->fArray[sourceBin]);
+         p->fBinEntries.fArray[destinationBin] += hold->fBinEntries.fArray[sourceBin];
+         p->fSumw2.fArray[destinationBin] += hold->fSumw2.fArray[sourceBin];
+         if (p->fBinSumw2.fN) p->fBinSumw2.fArray[destinationBin] += hold->fBinSumw2.fArray[sourceBin];
       }
+   }
    }
    return hold;
 }
@@ -560,7 +558,7 @@ void TProfileHelper::LabelsDeflate(T* p, Option_t *ax)
    if (nbins==axis->GetNbins()) return;
 
    T *hold = (T*)p->IsA()->New();;
-   hold->SetDirectory(0);
+   hold->SetDirectory(nullptr);
    p->Copy(*hold);
 
 
@@ -604,7 +602,7 @@ void TProfileHelper::LabelsInflate(T* p, Option_t *ax)
    TAxis *axis = p->GetXaxis();
    if (ax[0] == 'y' || ax[0] == 'Y') axis = p->GetYaxis();
    T *hold = (T*)p->IsA()->New();;
-   hold->SetDirectory(0);
+   hold->SetDirectory(nullptr);
    p->Copy(*hold);
 
 

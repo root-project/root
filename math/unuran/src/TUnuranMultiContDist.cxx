@@ -25,11 +25,8 @@ TUnuranMultiContDist::TUnuranMultiContDist (const ROOT::Math::IMultiGenFunction 
    //Constructor from generic function interfaces
 }
 
-
-TUnuranMultiContDist::TUnuranMultiContDist (TF1 * func, unsigned int dim, bool isLogPdf) :
-   fPdf(0),
-   fIsLogPdf(isLogPdf),
-   fOwnFunc(false)
+TUnuranMultiContDist::TUnuranMultiContDist(TF1 *func, unsigned int dim, bool isLogPdf)
+   : fPdf(nullptr), fIsLogPdf(isLogPdf), fOwnFunc(false)
 {
    //Constructor from a TF1 objects
    if (func) {
@@ -38,11 +35,7 @@ TUnuranMultiContDist::TUnuranMultiContDist (TF1 * func, unsigned int dim, bool i
    }
 }
 
-
-
-TUnuranMultiContDist::TUnuranMultiContDist(const TUnuranMultiContDist & rhs) :
-   TUnuranBaseDist(),
-   fPdf(0)
+TUnuranMultiContDist::TUnuranMultiContDist(const TUnuranMultiContDist &rhs) : TUnuranBaseDist(), fPdf(nullptr)
 {
    // Implementation of copy ctor using assignment operator
    operator=(rhs);
@@ -61,7 +54,7 @@ TUnuranMultiContDist & TUnuranMultiContDist::operator = (const TUnuranMultiContD
       fPdf   = rhs.fPdf;
    else {
        if (fPdf) delete fPdf;
-       fPdf  = (rhs.fPdf)  ? rhs.fPdf->Clone()  : 0;
+       fPdf = (rhs.fPdf) ? rhs.fPdf->Clone() : nullptr;
    }
    return *this;
 }
@@ -74,7 +67,7 @@ TUnuranMultiContDist::~TUnuranMultiContDist() {
 
 double TUnuranMultiContDist::Pdf ( const double * x) const {
    // evaluate the distribution
-   assert(fPdf != 0);
+   assert(fPdf != nullptr);
    return (*fPdf)(x);
 }
 
@@ -95,25 +88,29 @@ double TUnuranMultiContDist::Derivative( const double * x, int coord) const {
 
    //double eps = 0.001;
    //const double kC1 = 8*std::numeric_limits<double>::epsilon();
-   assert(fPdf != 0);
+    assert(fPdf != nullptr);
 
-   double h = 0.001;
+    double h = 0.001;
 
-   std::vector<double> xx(NDim() );
+    std::vector<double> xx(NDim());
 
-   xx[coord] = x[coord]+h;     double f1 = (*fPdf)(&xx.front());
-   xx[coord] = x[coord]-h;     double f2 = (*fPdf)(&xx.front());
+    xx[coord] = x[coord] + h;
+    double f1 = (*fPdf)(&xx.front());
+    xx[coord] = x[coord] - h;
+    double f2 = (*fPdf)(&xx.front());
 
-   xx[coord] = x[coord]+h/2;   double g1 = (*fPdf)(&xx.front());
-   xx[coord] = x[coord]-h/2;   double g2 = (*fPdf)(&xx.front());
+    xx[coord] = x[coord] + h / 2;
+    double g1 = (*fPdf)(&xx.front());
+    xx[coord] = x[coord] - h / 2;
+    double g2 = (*fPdf)(&xx.front());
 
-   //compute the central differences
-   double h2    = 1/(2.*h);
-   double d0    = f1 - f2;
-   double d2    = 2*(g1 - g2);
-   //double error  = kC1*h2*fx;  //compute the error
-   double deriv = h2*(4*d2 - d0)/3.;
-   return deriv;
+    // compute the central differences
+    double h2 = 1 / (2. * h);
+    double d0 = f1 - f2;
+    double d2 = 2 * (g1 - g2);
+    // double error  = kC1*h2*fx;  //compute the error
+    double deriv = h2 * (4 * d2 - d0) / 3.;
+    return deriv;
 }
 
 

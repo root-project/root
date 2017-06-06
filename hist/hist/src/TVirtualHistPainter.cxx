@@ -13,8 +13,7 @@
 #include "TPluginManager.h"
 #include "TClass.h"
 
-TClass *TVirtualHistPainter::fgPainter = 0;
-
+TClass *TVirtualHistPainter::fgPainter = nullptr;
 
 ClassImp(TVirtualHistPainter);
 
@@ -35,13 +34,12 @@ TVirtualHistPainter *TVirtualHistPainter::HistPainter(TH1 *obj)
    if (!fgPainter) {
       TPluginHandler *h;
       if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualHistPainter"))) {
-         if (h->LoadPlugin() == -1)
-            return 0;
+         if (h->LoadPlugin() == -1) return nullptr;
          TVirtualHistPainter::SetPainter(h->GetClass());
-         if (!fgPainter) return 0;
+         if (!fgPainter) return nullptr;
       } else {
          // fgPainter is still null
-         return 0;
+         return nullptr;
       }
    }
 

@@ -42,7 +42,7 @@ void PopulateMainMenu()
    [mainMenu setSubmenu : submenu forItem : menuItem];
    [NSApp setWindowsMenu : submenu];
 
-   menuItem = [mainMenu addItemWithTitle:@"Help" action:NULL keyEquivalent:@""];
+   menuItem = [mainMenu addItemWithTitle:@"Help" action:nullptr keyEquivalent:@""];
    submenu = [[NSMenu alloc] initWithTitle:NSLocalizedString(@"Help", @"The Help menu")];
    const Util::NSScopeGuard<NSMenu> submenuGuard3(submenu);
    PopulateHelpMenu(submenu);

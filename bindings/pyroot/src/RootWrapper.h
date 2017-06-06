@@ -20,10 +20,9 @@ namespace PyROOT {
    PyObject* GetScopeProxy( Cppyy::TCppScope_t );
    PyObject* CreateScopeProxy( Cppyy::TCppScope_t );
    PyObject* CreateScopeProxy( PyObject*, PyObject* args );
-   PyObject* CreateScopeProxy(
-      const std::string& scope_name, PyObject* parent = 0 );
+   PyObject *CreateScopeProxy(const std::string &scope_name, PyObject *parent = nullptr);
 
-// convenience function to retrieve global variables and enums
+   // convenience function to retrieve global variables and enums
    PyObject* GetCppGlobal( const std::string& name );
    PyObject* GetCppGlobal( PyObject*, PyObject* args );
 

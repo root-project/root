@@ -53,12 +53,12 @@ TGHtmlImage::TGHtmlImage(TGHtml *htm, const char *url, const char *width,
    fZUrl = StrDup(url);
    fZWidth = StrDup(width);
    fZHeight = StrDup(height);
-   fImage = NULL;
-   fPNext = NULL;
-   fPList = NULL;
+   fImage = nullptr;
+   fPNext = nullptr;
+   fPList = nullptr;
    fW = 0;
    fH = 0;
-   fTimer = NULL;
+   fTimer = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -98,7 +98,7 @@ int TGHtml::GetImageAlignment(TGHtmlElement *p)
       { "right",     IMAGE_ALIGN_Right     },
    };
 
-   z = p->MarkupArg("align", 0);
+   z = p->MarkupArg("align", nullptr);
    result = IMAGE_ALIGN_Bottom;
    if (z) {
       for (i = 0; i < int(sizeof(aligns) / sizeof(aligns[0])); i++) {
@@ -162,13 +162,15 @@ TGHtmlImage *TGHtml::GetImage(TGHtmlImageMarkup *p)
    const char *zSrc;
    TGHtmlImage *pImage;
 
-   if (p->fType != Html_IMG) { CANT_HAPPEN; return 0; }
+   if (p->fType != Html_IMG) { CANT_HAPPEN;
+      return nullptr;
+   }
 
-   zSrc = p->MarkupArg("src", 0);
-   if (zSrc == 0) return 0;
+   zSrc = p->MarkupArg("src", nullptr);
+   if (zSrc == nullptr) return nullptr;
 
    zSrc = ResolveUri(zSrc);
-   if (zSrc == 0) return 0;
+   if (zSrc == nullptr) return nullptr;
 
    zWidth = p->MarkupArg("width", "");
    zHeight = p->MarkupArg("height", "");
@@ -197,7 +199,7 @@ TGHtmlImage *TGHtml::GetImage(TGHtmlImageMarkup *p)
       pImage->fPNext = fImageList;
       fImageList = pImage;
    } else {
-      pImage = 0;
+      pImage = nullptr;
    }
 
    delete [] zSrc;
@@ -210,7 +212,7 @@ TGHtmlImage *TGHtml::GetImage(TGHtmlImageMarkup *p)
 
 static TImage *ReadRemoteImage(const char *url)
 {
-   TImage *image = 0;
+   TImage *image = nullptr;
    FILE *tmp;
    char *buf;
    TUrl fUrl(url);
@@ -226,26 +228,23 @@ static TImage *ReadRemoteImage(const char *url)
    msg += "\r\n";
 
    TString uri(url);
-   if (!uri.BeginsWith("http://") || uri.EndsWith(".html"))
-      return 0;
+   if (!uri.BeginsWith("http://") || uri.EndsWith(".html")) return nullptr;
    TSocket s(fUrl.GetHost(), fUrl.GetPort());
-   if (!s.IsValid())
-      return 0;
-   if (s.SendRaw(msg.Data(), msg.Length()) == -1)
-      return 0;
+   if (!s.IsValid()) return nullptr;
+   if (s.SendRaw(msg.Data(), msg.Length()) == -1) return nullptr;
    Int_t size = 1024*1024;
    buf = (char *)calloc(size, sizeof(char));
-   if (!buf) return 0;
+   if (!buf) return nullptr;
    if (s.RecvRaw(buf, size) == -1) {
       free(buf);
-      return 0;
+      return nullptr;
    }
    TString pathtmp = TString::Format("%s/%s", gSystem->TempDirectory(),
                                      gSystem->BaseName(url));
    tmp = fopen(pathtmp.Data(), "wb");
    if (!tmp) {
       free(buf);
-      return 0;
+      return nullptr;
    }
    fwrite(buf, sizeof(char), size, tmp);
    fclose(tmp);
@@ -253,7 +252,7 @@ static TImage *ReadRemoteImage(const char *url)
    image = TImage::Open(pathtmp.Data());
    if (image && !image->IsValid()) {
       delete image;
-      image = 0;
+      image = nullptr;
    }
    gSystem->Unlink(pathtmp.Data());
    return image;
@@ -265,7 +264,7 @@ static TImage *ReadRemoteImage(const char *url)
 
 TImage *TGHtml::LoadImage(const char *url, int w, int h)
 {
-   TImage *image = 0;
+   TImage *image = nullptr;
 
    //TGHtmlUri uri(url);
 
@@ -277,8 +276,8 @@ TImage *TGHtml::LoadImage(const char *url, int w, int h)
    if (image) {
       if (!image->IsValid()) {
          delete image;
-         image = 0;
-         return 0;
+         image = nullptr;
+         return nullptr;
       }
       if ((w > 0 && h > 0) && ((w != (int)image->GetWidth()) ||
           (h != (int)image->GetHeight()))) {
@@ -314,7 +313,7 @@ const char *TGHtml::GetPctWidth(TGHtmlElement *p, char *opt, char *ret)
    } else {
       while (pElem && pElem->fType != Html_TD) pElem = pElem->fPPrev;
       if (!pElem) return z;
-      tz = pElem->MarkupArg(opt, 0);
+      tz = pElem->MarkupArg(opt, nullptr);
       // coverity[secure_coding]
       if (tz && !strchr(tz, '%') && sscanf(tz, "%d", &m)) {
          snprintf(ret, 15, "%d", m * 100 / n);
@@ -322,7 +321,7 @@ const char *TGHtml::GetPctWidth(TGHtmlElement *p, char *opt, char *ret)
       }
       pElem = ((TGHtmlCell *)pElem)->fPTable;
       if (!pElem) return z;
-      tz = pElem->MarkupArg(opt, 0);
+      tz = pElem->MarkupArg(opt, nullptr);
       // coverity[secure_coding]
       if (tz && !strchr(tz, '%') && sscanf(tz, "%d", &m)) {
          snprintf(ret, 15, "%d", m * 100 / n);

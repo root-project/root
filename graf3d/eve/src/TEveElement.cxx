@@ -52,78 +52,32 @@ management, rendering control and list-tree item management.
 
 ClassImp(TEveElement);
 
-const TGPicture* TEveElement::fgRnrIcons[4]      = { 0 };
-const TGPicture* TEveElement::fgListTreeIcons[9] = { 0 };
+const TGPicture *TEveElement::fgRnrIcons[4] = {nullptr};
+const TGPicture *TEveElement::fgListTreeIcons[9] = {nullptr};
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
 
-TEveElement::TEveElement() :
-   fParents             (),
-   fChildren            (),
-   fCompound            (0),
-   fVizModel            (0),
-   fVizTag              (),
-   fNumChildren         (0),
-   fParentIgnoreCnt     (0),
-   fTopItemCnt          (0),
-   fDenyDestroy         (0),
-   fDestroyOnZeroRefCnt (kTRUE),
-   fRnrSelf             (kTRUE),
-   fRnrChildren         (kTRUE),
-   fCanEditMainColor    (kFALSE),
-   fCanEditMainTransparency(kFALSE),
-   fCanEditMainTrans    (kFALSE),
-   fMainTransparency    (0),
-   fMainColorPtr        (0),
-   fMainTrans           (0),
-   fItems               (),
-   fSource              (),
-   fUserData            (0),
-   fPickable            (kFALSE),
-   fSelected            (kFALSE),
-   fHighlighted         (kFALSE),
-   fImpliedSelected     (0),
-   fImpliedHighlighted  (0),
-   fCSCBits             (0),
-   fChangeBits          (0),
-   fDestructing         (kNone)
+TEveElement::TEveElement()
+   : fParents(), fChildren(), fCompound(nullptr), fVizModel(nullptr), fVizTag(), fNumChildren(0), fParentIgnoreCnt(0),
+     fTopItemCnt(0), fDenyDestroy(0), fDestroyOnZeroRefCnt(kTRUE), fRnrSelf(kTRUE), fRnrChildren(kTRUE),
+     fCanEditMainColor(kFALSE), fCanEditMainTransparency(kFALSE), fCanEditMainTrans(kFALSE), fMainTransparency(0),
+     fMainColorPtr(nullptr), fMainTrans(nullptr), fItems(), fSource(), fUserData(nullptr), fPickable(kFALSE),
+     fSelected(kFALSE), fHighlighted(kFALSE), fImpliedSelected(0), fImpliedHighlighted(0), fCSCBits(0), fChangeBits(0),
+     fDestructing(kNone)
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TEveElement::TEveElement(Color_t& main_color) :
-   fParents             (),
-   fChildren            (),
-   fCompound            (0),
-   fVizModel            (0),
-   fVizTag              (),
-   fNumChildren         (0),
-   fParentIgnoreCnt     (0),
-   fTopItemCnt          (0),
-   fDenyDestroy         (0),
-   fDestroyOnZeroRefCnt (kTRUE),
-   fRnrSelf             (kTRUE),
-   fRnrChildren         (kTRUE),
-   fCanEditMainColor    (kFALSE),
-   fCanEditMainTransparency(kFALSE),
-   fCanEditMainTrans    (kFALSE),
-   fMainTransparency    (0),
-   fMainColorPtr        (&main_color),
-   fMainTrans           (0),
-   fItems               (),
-   fSource              (),
-   fUserData            (0),
-   fPickable            (kFALSE),
-   fSelected            (kFALSE),
-   fHighlighted         (kFALSE),
-   fImpliedSelected     (0),
-   fImpliedHighlighted  (0),
-   fCSCBits             (0),
-   fChangeBits          (0),
-   fDestructing         (kNone)
+TEveElement::TEveElement(Color_t &main_color)
+   : fParents(), fChildren(), fCompound(nullptr), fVizModel(nullptr), fVizTag(), fNumChildren(0), fParentIgnoreCnt(0),
+     fTopItemCnt(0), fDenyDestroy(0), fDestroyOnZeroRefCnt(kTRUE), fRnrSelf(kTRUE), fRnrChildren(kTRUE),
+     fCanEditMainColor(kFALSE), fCanEditMainTransparency(kFALSE), fCanEditMainTrans(kFALSE), fMainTransparency(0),
+     fMainColorPtr(&main_color), fMainTrans(nullptr), fItems(), fSource(), fUserData(nullptr), fPickable(kFALSE),
+     fSelected(kFALSE), fHighlighted(kFALSE), fImpliedSelected(0), fImpliedHighlighted(0), fCSCBits(0), fChangeBits(0),
+     fDestructing(kNone)
 {
 }
 
@@ -140,36 +94,14 @@ TEveElement::TEveElement(Color_t& main_color) :
 /// Not implemented for most sub-classes, let us know.
 /// Note that sub-classes of TEveProjected are NOT and will NOT be copyable.
 
-TEveElement::TEveElement(const TEveElement& e) :
-   fParents             (),
-   fChildren            (),
-   fCompound            (0),
-   fVizModel            (0),
-   fVizTag              (e.fVizTag),
-   fNumChildren         (0),
-   fParentIgnoreCnt     (0),
-   fTopItemCnt          (0),
-   fDenyDestroy         (0),
-   fDestroyOnZeroRefCnt (e.fDestroyOnZeroRefCnt),
-   fRnrSelf             (e.fRnrSelf),
-   fRnrChildren         (e.fRnrChildren),
-   fCanEditMainColor    (e.fCanEditMainColor),
-   fCanEditMainTransparency(e.fCanEditMainTransparency),
-   fCanEditMainTrans    (e.fCanEditMainTrans),
-   fMainTransparency    (e.fMainTransparency),
-   fMainColorPtr        (0),
-   fMainTrans           (0),
-   fItems               (),
-   fSource              (e.fSource),
-   fUserData            (0),
-   fPickable            (e.fPickable),
-   fSelected            (kFALSE),
-   fHighlighted         (kFALSE),
-   fImpliedSelected     (0),
-   fImpliedHighlighted  (0),
-   fCSCBits             (e.fCSCBits),
-   fChangeBits          (0),
-   fDestructing         (kNone)
+TEveElement::TEveElement(const TEveElement &e)
+   : fParents(), fChildren(), fCompound(nullptr), fVizModel(nullptr), fVizTag(e.fVizTag), fNumChildren(0),
+     fParentIgnoreCnt(0), fTopItemCnt(0), fDenyDestroy(0), fDestroyOnZeroRefCnt(e.fDestroyOnZeroRefCnt),
+     fRnrSelf(e.fRnrSelf), fRnrChildren(e.fRnrChildren), fCanEditMainColor(e.fCanEditMainColor),
+     fCanEditMainTransparency(e.fCanEditMainTransparency), fCanEditMainTrans(e.fCanEditMainTrans),
+     fMainTransparency(e.fMainTransparency), fMainColorPtr(nullptr), fMainTrans(nullptr), fItems(), fSource(e.fSource),
+     fUserData(nullptr), fPickable(e.fPickable), fSelected(kFALSE), fHighlighted(kFALSE), fImpliedSelected(0),
+     fImpliedHighlighted(0), fCSCBits(e.fCSCBits), fChangeBits(0), fDestructing(kNone)
 {
    SetVizModel(e.fVizModel);
    if (e.fMainColorPtr)
@@ -442,8 +374,7 @@ void TEveElement::PropagateVizParamsToProjecteds()
 
 void TEveElement::PropagateVizParamsToElements(TEveElement* el)
 {
-   if (el == 0)
-      el = this;
+   if (el == nullptr) el = this;
 
    for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
    {
@@ -589,7 +520,7 @@ void TEveElement::VizDB_Insert(const char* tag, Bool_t replace, Bool_t update)
 
    TClass* cls = GetObject(eh)->IsA();
    TEveElement* el = reinterpret_cast<TEveElement*>(cls->New());
-   if (el == 0) {
+   if (el == nullptr) {
       Error("VizDB_Insert", "Creation of replica failed.");
       return;
    }
@@ -729,8 +660,7 @@ void TEveElement::CollectSceneParentsFromChildren(List_t&      scenes,
 void TEveElement::ExpandIntoListTree(TGListTree* ltree,
                                      TGListTreeItem* parent)
 {
-   if (parent->GetFirstChild() != 0)
-      return;
+   if (parent->GetFirstChild() != nullptr) return;
    for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i) {
       (*i)->AddIntoListTree(ltree, parent);
    }
@@ -743,8 +673,7 @@ void TEveElement::DestroyListSubTree(TGListTree* ltree,
                                      TGListTreeItem* parent)
 {
    TGListTreeItem* i = parent->GetFirstChild();
-   while (i != 0)
-   {
+   while (i != nullptr) {
       TEveElement* re = (TEveElement*) i->GetUserData();
       i = i->GetNextSibling();
       re->RemoveFromListTree(ltree, parent);
@@ -765,8 +694,7 @@ TGListTreeItem* TEveElement::AddIntoListTree(TGListTree* ltree,
    ltree->AddItem(parent_lti, item);
    fItems.insert(TEveListTreeInfo(ltree, item));
 
-   if (parent_lti == 0)
-      ++fTopItemCnt;
+   if (parent_lti == nullptr) ++fTopItemCnt;
 
    for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
    {
@@ -786,9 +714,9 @@ TGListTreeItem* TEveElement::AddIntoListTree(TGListTree* ltree,
 TGListTreeItem* TEveElement::AddIntoListTree(TGListTree* ltree,
                                              TEveElement* parent)
 {
-   TGListTreeItem* lti = 0;
-   if (parent == 0) {
-      lti = AddIntoListTree(ltree, (TGListTreeItem*) 0);
+   TGListTreeItem *lti = nullptr;
+   if (parent == nullptr) {
+      lti = AddIntoListTree(ltree, (TGListTreeItem *)nullptr);
    } else {
       for (sLTI_ri i = parent->fItems.rbegin(); i != parent->fItems.rend(); ++i)
       {
@@ -806,7 +734,7 @@ TGListTreeItem* TEveElement::AddIntoListTree(TGListTree* ltree,
 
 TGListTreeItem* TEveElement::AddIntoListTrees(TEveElement* parent)
 {
-   TGListTreeItem* lti = 0;
+   TGListTreeItem *lti = nullptr;
    for (sLTI_ri i = parent->fItems.rbegin(); i != parent->fItems.rend(); ++i)
    {
       lti = AddIntoListTree(i->fTree, i->fItem);
@@ -831,7 +759,7 @@ Bool_t TEveElement::RemoveFromListTree(TGListTree* ltree,
       ltree->DeleteItem(i->fItem);
       ltree->ClearViewPort();
       fItems.erase(i);
-      if (parent_lti == 0) {
+      if (parent_lti == nullptr) {
          --fTopItemCnt;
          CheckReferenceCount(eh);
       }
@@ -856,21 +784,17 @@ Int_t TEveElement::RemoveFromListTrees(TEveElement* parent)
    {
       sLTI_i j = i++;
       TGListTreeItem *plti = j->fItem->GetParent();
-      if ((plti != 0 && (TEveElement*) plti->GetUserData() == parent) ||
-          (plti == 0 && parent == 0))
-      {
+      if ((plti != nullptr && (TEveElement *)plti->GetUserData() == parent) || (plti == nullptr && parent == nullptr)) {
          DestroyListSubTree(j->fTree, j->fItem);
          j->fTree->DeleteItem(j->fItem);
          j->fTree->ClearViewPort();
          fItems.erase(j);
-         if (parent == 0)
-            --fTopItemCnt;
+         if (parent == nullptr) --fTopItemCnt;
          ++count;
       }
    }
 
-   if (parent == 0 && count > 0)
-      CheckReferenceCount(eh);
+   if (parent == nullptr && count > 0) CheckReferenceCount(eh);
 
    return count;
 }
@@ -911,7 +835,7 @@ TGListTreeItem* TEveElement::FindListTreeItem(TGListTree* ltree)
    for (sLTI_i i = fItems.begin(); i != fItems.end(); ++i)
       if (i->fTree == ltree)
          return i->fItem;
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -924,7 +848,7 @@ TGListTreeItem* TEveElement::FindListTreeItem(TGListTree* ltree,
    for (sLTI_i i = fItems.begin(); i != fItems.end(); ++i)
       if (i->fTree == ltree && i->fItem->GetParent() == parent_lti)
          return i->fItem;
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -937,8 +861,7 @@ TGListTreeItem* TEveElement::FindListTreeItem(TGListTree* ltree,
 TObject* TEveElement::GetObject(const TEveException& eh) const
 {
    const TObject* obj = dynamic_cast<const TObject*>(this);
-   if (obj == 0)
-      throw(eh + "not a TObject.");
+   if (obj == nullptr) throw(eh + "not a TObject.");
    return const_cast<TObject*>(obj);
 }
 
@@ -1013,7 +936,7 @@ void TEveElement::PadPaint(Option_t* option)
 {
    static const TEveException eh("TEveElement::PadPaint ");
 
-   TObject* obj = 0;
+   TObject *obj = nullptr;
    if (GetRnrSelf() && (obj = GetRenderObject(eh)))
       obj->Paint(option);
 
@@ -1287,7 +1210,7 @@ void TEveElement::InitMainTrans(Bool_t can_edit)
 void TEveElement::DestroyMainTrans()
 {
    delete fMainTrans;
-   fMainTrans = 0;
+   fMainTrans = nullptr;
    fCanEditMainTrans = kFALSE;
 }
 
@@ -1487,7 +1410,7 @@ TEveElement* TEveElement::FindChild(const TString&  name, const TClass* cls)
             return *i;
       }
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1506,7 +1429,7 @@ TEveElement* TEveElement::FindChild(TPRegexp& regexp, const TClass* cls)
             return *i;
       }
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1562,7 +1485,7 @@ Int_t TEveElement::FindChildren(List_t& matches,
 
 TEveElement* TEveElement::FirstChild() const
 {
-   return HasChildren() ? fChildren.front() : 0;
+   return HasChildren() ? fChildren.front() : nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1570,7 +1493,7 @@ TEveElement* TEveElement::FirstChild() const
 
 TEveElement* TEveElement::LastChild () const
 {
-   return HasChildren() ? fChildren.back() : 0;
+   return HasChildren() ? fChildren.back() : nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1873,7 +1796,7 @@ void TEveElement::SetPickableRecursively(Bool_t p)
 
 TEveElement* TEveElement::ForwardSelection()
 {
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1883,7 +1806,7 @@ TEveElement* TEveElement::ForwardSelection()
 
 TEveElement* TEveElement::ForwardEdit()
 {
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2104,11 +2027,8 @@ TEveElementObjectPtr::TEveElementObjectPtr(TObject* obj, Color_t& mainColor, Boo
 /// It is assumed that the main-color has its origin in the TObject pointed to so
 /// it is fixed here accordingly.
 
-TEveElementObjectPtr::TEveElementObjectPtr(const TEveElementObjectPtr& e) :
-   TEveElement (e),
-   TObject     (e),
-   fObject     (0),
-   fOwnObject  (e.fOwnObject)
+TEveElementObjectPtr::TEveElementObjectPtr(const TEveElementObjectPtr &e)
+   : TEveElement(e), TObject(e), fObject(nullptr), fOwnObject(e.fOwnObject)
 {
    if (fOwnObject && e.fObject)
    {
@@ -2136,8 +2056,7 @@ TEveElementObjectPtr* TEveElementObjectPtr::CloneElement() const
 
 TObject* TEveElementObjectPtr::GetObject(const TEveException& eh) const
 {
-   if (fObject == 0)
-      throw eh + "fObject not set.";
+   if (fObject == nullptr) throw eh + "fObject not set.";
    return fObject;
 }
 
@@ -2179,12 +2098,8 @@ ClassImp(TEveElementList);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TEveElementList::TEveElementList(const char* n, const char* t, Bool_t doColor, Bool_t doTransparency) :
-   TEveElement(),
-   TNamed(n, t),
-   TEveProjectable(),
-   fColor(0),
-   fChildClass(0)
+TEveElementList::TEveElementList(const char *n, const char *t, Bool_t doColor, Bool_t doTransparency)
+   : TEveElement(), TNamed(n, t), TEveProjectable(), fColor(0), fChildClass(nullptr)
 {
    if (doColor) {
       fCanEditMainColor = kTRUE;

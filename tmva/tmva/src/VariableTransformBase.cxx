@@ -63,26 +63,12 @@ ClassImp(TMVA::VariableTransformBase);
 ////////////////////////////////////////////////////////////////////////////////
 /// standard constructor
 
-TMVA::VariableTransformBase::VariableTransformBase( DataSetInfo& dsi,
-                                                    Types::EVariableTransform tf,
-                                                    const TString& trfName )
-: TObject(),
-   fDsi(dsi),
-   fDsiOutput(NULL),
-   fTransformedEvent(0),
-   fBackTransformedEvent(0),
-   fVariableTransform(tf),
-   fEnabled( kTRUE ),
-   fCreated( kFALSE ),
-   fNormalise( kFALSE ),
-   fTransformName(trfName),
-   fVariableTypesAreCounted(false),
-   fNVariables(0),
-   fNTargets(0),
-   fNSpectators(0),
-   fSortGet(kTRUE),
-   fTMVAVersion(TMVA_VERSION_CODE),
-   fLogger( 0 )
+TMVA::VariableTransformBase::VariableTransformBase(DataSetInfo &dsi, Types::EVariableTransform tf,
+                                                   const TString &trfName)
+   : TObject(), fDsi(dsi), fDsiOutput(nullptr), fTransformedEvent(nullptr), fBackTransformedEvent(nullptr),
+     fVariableTransform(tf), fEnabled(kTRUE), fCreated(kFALSE), fNormalise(kFALSE), fTransformName(trfName),
+     fVariableTypesAreCounted(false), fNVariables(0), fNTargets(0), fNSpectators(0), fSortGet(kTRUE),
+     fTMVAVersion(TMVA_VERSION_CODE), fLogger(nullptr)
 {
    fLogger = new MsgLogger(this, kINFO);
    for (UInt_t ivar = 0; ivar < fDsi.GetNVariables(); ivar++) {
@@ -100,8 +86,8 @@ TMVA::VariableTransformBase::VariableTransformBase( DataSetInfo& dsi,
 
 TMVA::VariableTransformBase::~VariableTransformBase()
 {
-   if (fTransformedEvent!=0)     delete fTransformedEvent;
-   if (fBackTransformedEvent!=0) delete fBackTransformedEvent;
+   if (fTransformedEvent != nullptr) delete fTransformedEvent;
+   if (fBackTransformedEvent != nullptr) delete fBackTransformedEvent;
    // destructor
    delete fLogger;
 }

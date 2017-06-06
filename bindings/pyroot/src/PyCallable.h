@@ -32,8 +32,7 @@ namespace PyROOT {
       virtual PyCallable* Clone() = 0;
 
    public:
-      virtual PyObject* Call(
-         ObjectProxy*& self, PyObject* args, PyObject* kwds, TCallContext* ctxt = 0 ) = 0;
+      virtual PyObject *Call(ObjectProxy *&self, PyObject *args, PyObject *kwds, TCallContext *ctxt = nullptr) = 0;
    };
 
 } // namespace PyROOT

@@ -60,9 +60,8 @@ ClassImp(TGFontTypeComboBox);
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a combo box popup frame.
 
-TGComboBoxPopup::TGComboBoxPopup(const TGWindow *p, UInt_t w, UInt_t h,
-                                 UInt_t options, ULong_t back) :
-   TGCompositeFrame (p, w, h, options, back), fListBox(0), fSelected(0)
+TGComboBoxPopup::TGComboBoxPopup(const TGWindow *p, UInt_t w, UInt_t h, UInt_t options, ULong_t back)
+   : TGCompositeFrame(p, w, h, options, back), fListBox(nullptr), fSelected(nullptr)
 {
    SetWindowAttributes_t wattr;
 
@@ -85,8 +84,7 @@ TGComboBoxPopup::TGComboBoxPopup(const TGWindow *p, UInt_t w, UInt_t h,
 Bool_t TGComboBoxPopup::HandleButton(Event_t *event)
 {
    if (event->fType == kButtonPress && event->fCode == kButton1) {
-      if ((fListBox != 0) && (fSelected != 0) &&
-          fListBox->GetSelectedEntry() != fSelected) {
+      if ((fListBox != nullptr) && (fSelected != nullptr) && fListBox->GetSelectedEntry() != fSelected) {
          // in the case the combo box popup is closed by clicking outside the
          // list box, then select the previously selected entry
          fListBox->Select(fSelected->EntryId());
@@ -142,12 +140,12 @@ void TGComboBoxPopup::PlacePopup(Int_t x, Int_t y, UInt_t w, UInt_t h)
    if (y + fHeight > rh) y = rh - fHeight;
 
    // remember the current selected entry
-   if (fListBox == 0) {
+   if (fListBox == nullptr) {
       // the listbox should be the first in the list
       TGFrameElement *el = (TGFrameElement *)fList->First();
       fListBox = dynamic_cast<TGListBox *>(el->fFrame);
    }
-   fSelected = fListBox ? fListBox->GetSelectedEntry() : 0;
+   fSelected = fListBox ? fListBox->GetSelectedEntry() : nullptr;
 
    MoveResize(x, y, w, h);
    MapSubwindows();
@@ -219,7 +217,7 @@ TGComboBox::TGComboBox(const TGWindow *p, Int_t id, UInt_t options,
 {
    fWidgetId  = id;
    fMsgWindow = p;
-   fTextEntry = 0;
+   fTextEntry = nullptr;
 
    fSelEntry = new TGTextLBEntry(this, new TGString(""), 0);
    fSelEntry->ChangeOptions(fSelEntry->GetOptions() | kOwnBackground);
@@ -238,7 +236,7 @@ TGComboBox::TGComboBox(const TGWindow *p, const char *text, Int_t id,
 {
    fWidgetId  = id;
    fMsgWindow = p;
-   fSelEntry = 0;
+   fSelEntry = nullptr;
 
    fTextEntry = new TGTextEntry(this, text, id);
    fTextEntry->SetFrameDrawn(kFALSE);
@@ -369,7 +367,7 @@ void TGComboBox::EnableTextInput(Bool_t on)
          //h = fSelEntry->GetHeight();
          fSelEntry->DestroyWindow();
          delete fSelEntry;
-         fSelEntry = 0;
+         fSelEntry = nullptr;
       }
       if (!fTextEntry) {
          fTextEntry = new TGTextEntry(this, text, 0);
@@ -392,7 +390,7 @@ void TGComboBox::EnableTextInput(Bool_t on)
          //w = fTextEntry->GetWidth();
          //h = fTextEntry->GetHeight();
          delete fTextEntry;
-         fTextEntry = 0;
+         fTextEntry = nullptr;
       }
       if (!fSelEntry) {
          fSelEntry = new TGTextLBEntry(this, new TGString(text), 0);
@@ -413,7 +411,7 @@ void TGComboBox::EnableTextInput(Bool_t on)
 
 TGLBEntry *TGComboBox::FindEntry(const char *s) const
 {
-   TGLBEntry *sel = 0;
+   TGLBEntry *sel = nullptr;
    sel = fListBox->FindEntry(s);
    return sel;
 }
@@ -812,23 +810,22 @@ void TGLineWidthComboBox::SavePrimitive(std::ostream &out, Option_t *option /*= 
    out << "   " << GetName() << "->Select(" << GetSelected() << ");" << std::endl;
 }
 
-static const char *gFonts[][2] = {    //   unix name,     name
-   { "",                                           ""                         }, //not used
-   { "-*-times-medium-i-*-*-12-*-*-*-*-*-*-*",     "1. times italic"          },
-   { "-*-times-bold-r-*-*-12-*-*-*-*-*-*-*",       "2. times bold"            },
-   { "-*-times-bold-i-*-*-12-*-*-*-*-*-*-*",       "3. times bold italic"     },
-   { "-*-helvetica-medium-r-*-*-12-*-*-*-*-*-*-*", "4. helvetica"             },
-   { "-*-helvetica-medium-o-*-*-12-*-*-*-*-*-*-*", "5. helvetica italic"      },
-   { "-*-helvetica-bold-r-*-*-12-*-*-*-*-*-*-*",   "6. helvetica bold"        },
-   { "-*-helvetica-bold-o-*-*-12-*-*-*-*-*-*-*",   "7. helvetica bold italic" },
-   { "-*-courier-medium-r-*-*-12-*-*-*-*-*-*-*",   "8. courier"               },
-   { "-*-courier-medium-o-*-*-12-*-*-*-*-*-*-*",   "9. courier italic"        },
-   { "-*-courier-bold-r-*-*-12-*-*-*-*-*-*-*",     "10. courier bold"         },
-   { "-*-courier-bold-o-*-*-12-*-*-*-*-*-*-*",     "11. courier bold italic"  },
-   { "-*-symbol-medium-r-*-*-12-*-*-*-*-*-*-*",    "12. symbol"               },
-   { "-*-times-medium-r-*-*-12-*-*-*-*-*-*-*",     "13. times"                },
-   { 0, 0}
-};
+static const char *gFonts[][2] = { //   unix name,     name
+   {"", ""},                       // not used
+   {"-*-times-medium-i-*-*-12-*-*-*-*-*-*-*", "1. times italic"},
+   {"-*-times-bold-r-*-*-12-*-*-*-*-*-*-*", "2. times bold"},
+   {"-*-times-bold-i-*-*-12-*-*-*-*-*-*-*", "3. times bold italic"},
+   {"-*-helvetica-medium-r-*-*-12-*-*-*-*-*-*-*", "4. helvetica"},
+   {"-*-helvetica-medium-o-*-*-12-*-*-*-*-*-*-*", "5. helvetica italic"},
+   {"-*-helvetica-bold-r-*-*-12-*-*-*-*-*-*-*", "6. helvetica bold"},
+   {"-*-helvetica-bold-o-*-*-12-*-*-*-*-*-*-*", "7. helvetica bold italic"},
+   {"-*-courier-medium-r-*-*-12-*-*-*-*-*-*-*", "8. courier"},
+   {"-*-courier-medium-o-*-*-12-*-*-*-*-*-*-*", "9. courier italic"},
+   {"-*-courier-bold-r-*-*-12-*-*-*-*-*-*-*", "10. courier bold"},
+   {"-*-courier-bold-o-*-*-12-*-*-*-*-*-*-*", "11. courier bold italic"},
+   {"-*-symbol-medium-r-*-*-12-*-*-*-*-*-*-*", "12. symbol"},
+   {"-*-times-medium-r-*-*-12-*-*-*-*-*-*-*", "13. times"},
+   {nullptr, nullptr}};
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a text font combo box.
@@ -839,7 +836,7 @@ TGFontTypeComboBox::TGFontTypeComboBox(const TGWindow *p, Int_t id,
 {
    Int_t noFonts = 0;
 
-   for (Int_t i = 1; gFonts[i][0] != 0 && noFonts < kMaxFonts; i++) {
+   for (Int_t i = 1; gFonts[i][0] != nullptr && noFonts < kMaxFonts; i++) {
 
       fFonts[noFonts] = gVirtualX->LoadQueryFont(gFonts[i][0]);
 

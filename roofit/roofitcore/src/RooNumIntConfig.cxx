@@ -42,8 +42,7 @@ using namespace std;
 ClassImp(RooNumIntConfig);
 ;
 
-RooNumIntConfig* RooNumIntConfig::_default = 0 ;
-
+RooNumIntConfig *RooNumIntConfig::_default = nullptr;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Function called by atexit() handler installed by RooSentinel to
@@ -53,7 +52,7 @@ void RooNumIntConfig::cleanup()
 {
   if (_default) {
     delete _default ;
-    _default = 0 ;
+    _default = nullptr;
   }
 }
 
@@ -65,9 +64,9 @@ void RooNumIntConfig::cleanup()
 RooNumIntConfig& RooNumIntConfig::defaultConfig() 
 {
   // Instantiate object if it doesn't exist yet
-  if (_default==0) {
-    _default = new RooNumIntConfig ;    
-    RooNumIntFactory::instance() ;
+  if (_default == nullptr) {
+     _default = new RooNumIntConfig;
+     RooNumIntFactory::instance();
   }
   return *_default ;
 }
@@ -233,8 +232,9 @@ const RooArgSet& RooNumIntConfig::getConfigSection(const char* name) const
   static RooArgSet dummy ;
   RooArgSet* config = (RooArgSet*) _configSets.FindObject(name) ;
   if (!config) {
-    oocoutE((TObject*)0,InputArguments) << "RooNumIntConfig::getIntegrator: ERROR: no configuration stored for integrator '" << name << "'" << endl ;
-    return dummy ;
+     oocoutE((TObject *)nullptr, InputArguments)
+        << "RooNumIntConfig::getIntegrator: ERROR: no configuration stored for integrator '" << name << "'" << endl;
+     return dummy;
   }
   return *config ;
 }
@@ -247,8 +247,9 @@ const RooArgSet& RooNumIntConfig::getConfigSection(const char* name) const
 void RooNumIntConfig::setEpsAbs(Double_t newEpsAbs)
 {
   if (newEpsAbs<0) {
-    oocoutE((TObject*)0,InputArguments) << "RooNumIntConfig::setEpsAbs: ERROR: target absolute precision must be greater or equal than zero" << endl ;
-    return ;
+     oocoutE((TObject *)nullptr, InputArguments)
+        << "RooNumIntConfig::setEpsAbs: ERROR: target absolute precision must be greater or equal than zero" << endl;
+     return;
   }
   _epsAbs = newEpsAbs ;
 }
@@ -277,8 +278,9 @@ RooPrintable::StyleOption RooNumIntConfig::defaultPrintStyle(Option_t* opt) cons
 void RooNumIntConfig::setEpsRel(Double_t newEpsRel) 
 {
   if (newEpsRel<0) {
-    oocoutE((TObject*)0,InputArguments) << "RooNumIntConfig::setEpsRel: ERROR: target absolute precision must be greater or equal than zero" << endl ;
-    return ;
+     oocoutE((TObject *)nullptr, InputArguments)
+        << "RooNumIntConfig::setEpsRel: ERROR: target absolute precision must be greater or equal than zero" << endl;
+     return;
   }
   _epsRel = newEpsRel ;
 }

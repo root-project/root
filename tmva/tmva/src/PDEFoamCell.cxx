@@ -51,19 +51,8 @@ ClassImp(TMVA::PDEFoamCell);
 /// Default constructor for streamer
 
 TMVA::PDEFoamCell::PDEFoamCell()
-: TObject(),
-   fDim(0),
-   fSerial(0),
-   fStatus(1),
-   fParent(0),
-   fDaught0(0),
-   fDaught1(0),
-   fXdiv(0.0),
-   fBest(0),
-   fVolume(0.0),
-   fIntegral(0.0),
-   fDrive(0.0),
-   fElement(0)
+   : TObject(), fDim(0), fSerial(0), fStatus(1), fParent(nullptr), fDaught0(nullptr), fDaught1(nullptr), fXdiv(0.0),
+     fBest(0), fVolume(0.0), fIntegral(0.0), fDrive(0.0), fElement(nullptr)
 {
 }
 
@@ -71,19 +60,8 @@ TMVA::PDEFoamCell::PDEFoamCell()
 /// User constructor allocating single empty Cell
 
 TMVA::PDEFoamCell::PDEFoamCell(Int_t kDim)
-   : TObject(),
-     fDim(kDim),
-     fSerial(0),
-     fStatus(1),
-     fParent(0),
-     fDaught0(0),
-     fDaught1(0),
-     fXdiv(0.0),
-     fBest(0),
-     fVolume(0.0),
-     fIntegral(0.0),
-     fDrive(0.0),
-     fElement(0)
+   : TObject(), fDim(kDim), fSerial(0), fStatus(1), fParent(nullptr), fDaught0(nullptr), fDaught1(nullptr), fXdiv(0.0),
+     fBest(0), fVolume(0.0), fIntegral(0.0), fDrive(0.0), fElement(nullptr)
 {
    if ( kDim <= 0 )
       Error( "PDEFoamCell", "Dimension has to be >0" );
@@ -143,9 +121,9 @@ void    TMVA::PDEFoamCell::GetHcub( PDEFoamVect &cellPosi, PDEFoamVect &cellSize
    const PDEFoamCell *pCell,*dCell;
    cellPosi = 0.0; cellSize=1.0; // load all components
    dCell = this;
-   while(dCell != 0) {
+   while (dCell != nullptr) {
       pCell = dCell->GetPare();
-      if( pCell== 0) break;
+      if (pCell == nullptr) break;
       Int_t    kDiv = pCell->fBest;
       Double_t xDivi = pCell->fXdiv;
       if(dCell == pCell->GetDau0()  ) {
@@ -172,9 +150,9 @@ void    TMVA::PDEFoamCell::GetHSize( PDEFoamVect &cellSize)  const
    const PDEFoamCell *pCell,*dCell;
    cellSize=1.0; // load all components
    dCell = this;
-   while(dCell != 0) {
+   while (dCell != nullptr) {
       pCell = dCell->GetPare();
-      if( pCell== 0) break;
+      if (pCell == nullptr) break;
       Int_t    kDiv = pCell->fBest;
       Double_t xDivi = pCell->fXdiv;
       if(dCell == pCell->GetDau0() ) {
@@ -210,12 +188,11 @@ void TMVA::PDEFoamCell::CalcVolume(void)
 UInt_t TMVA::PDEFoamCell::GetDepth()
 {
    // check whether we are in the root cell
-   if (fParent == 0)
-      return 1;
+   if (fParent == nullptr) return 1;
 
    UInt_t depth = 1;
    PDEFoamCell *cell = this;
-   while ((cell=cell->GetPare()) != 0){
+   while ((cell = cell->GetPare()) != nullptr) {
       ++depth;
    }
    return depth;
@@ -230,10 +207,8 @@ UInt_t TMVA::PDEFoamCell::GetTreeDepth(UInt_t depth)
       return depth + 1;
 
    UInt_t depth0 = 0, depth1 = 0;
-   if (GetDau0() != NULL)
-      depth0 = GetDau0()->GetTreeDepth(depth+1);
-   if (GetDau1() != NULL)
-      depth1 = GetDau1()->GetTreeDepth(depth+1);
+   if (GetDau0() != nullptr) depth0 = GetDau0()->GetTreeDepth(depth + 1);
+   if (GetDau1() != nullptr) depth1 = GetDau1()->GetTreeDepth(depth + 1);
 
    return (depth0 > depth1 ? depth0 : depth1);
 }

@@ -64,15 +64,9 @@ ClassImp(TSQLClassInfo);
 ////////////////////////////////////////////////////////////////////////////////
 /// default constructor
 
-TSQLClassInfo::TSQLClassInfo() :
-   TObject(),
-   fClassName(),
-   fClassVersion(0),
-   fClassId(0),
-   fClassTable(),
-   fRawTable(),
-   fColumns(0),
-   fRawtableExist(kFALSE)
+TSQLClassInfo::TSQLClassInfo()
+   : TObject(), fClassName(), fClassVersion(0), fClassId(0), fClassTable(), fRawTable(), fColumns(nullptr),
+     fRawtableExist(kFALSE)
 {
 }
 
@@ -80,17 +74,9 @@ TSQLClassInfo::TSQLClassInfo() :
 /// normal constructor of TSQLClassInfo class
 /// Sets names of tables, which are used for that version of class
 
-TSQLClassInfo::TSQLClassInfo(Long64_t classid,
-                             const char* classname,
-                             Int_t version) :
-   TObject(),
-   fClassName(classname),
-   fClassVersion(version),
-   fClassId(classid),
-   fClassTable(),
-   fRawTable(),
-   fColumns(0),
-   fRawtableExist(kFALSE)
+TSQLClassInfo::TSQLClassInfo(Long64_t classid, const char *classname, Int_t version)
+   : TObject(), fClassName(classname), fClassVersion(version), fClassId(classid), fClassTable(), fRawTable(),
+     fColumns(nullptr), fRawtableExist(kFALSE)
 {
    fClassTable.Form("%s_ver%d", classname, version);
    fRawTable.Form("%s_raw%d", classname, version);
@@ -101,7 +87,7 @@ TSQLClassInfo::TSQLClassInfo(Long64_t classid,
 
 TSQLClassInfo::~TSQLClassInfo()
 {
-   if (fColumns!=0) {
+   if (fColumns != nullptr) {
       fColumns->Delete();
       delete fColumns;
    }
@@ -112,7 +98,7 @@ TSQLClassInfo::~TSQLClassInfo()
 
 void TSQLClassInfo::SetColumns(TObjArray* columns)
 {
-   if (fColumns!=0) {
+   if (fColumns != nullptr) {
       fColumns->Delete();
       delete fColumns;
    }
@@ -137,15 +123,15 @@ void TSQLClassInfo::SetTableStatus(TObjArray* columns, Bool_t israwtable)
 
 Int_t TSQLClassInfo::FindColumn(const char* name, Bool_t sqlname)
 {
-   if ((name==0) || (fColumns==0)) return -1;
+   if ((name == nullptr) || (fColumns == nullptr)) return -1;
 
    TIter next(fColumns);
 
-   TSQLClassColumnInfo* col = 0;
+   TSQLClassColumnInfo *col = nullptr;
 
    Int_t indx = 0;
 
-   while ((col = (TSQLClassColumnInfo*) next()) != 0) {
+   while ((col = (TSQLClassColumnInfo *)next()) != nullptr) {
       const char* colname = sqlname ? col->GetSQLName() : col->GetName();
       if (strcmp(colname, name)==0) return indx;
       indx++;

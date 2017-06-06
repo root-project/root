@@ -3421,7 +3421,7 @@ public:
   RooRealVar* w = (RooRealVar*) data->addColumn(wFunc) ;
 
   // Instruct dataset d in interpret w as event weight rather than as observable
-  RooDataSet dataw(data->GetName(),data->GetTitle(),data,*data->get(),0,w->GetName()) ;
+  RooDataSet dataw(data->GetName(), data->GetTitle(), data, *data->get(), nullptr, w->GetName());
   //data->setWeightVar(*w) ;
 
 

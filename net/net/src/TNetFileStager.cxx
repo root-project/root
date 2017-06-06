@@ -28,7 +28,7 @@
 
 TNetFileStager::TNetFileStager(const char *url) : TFileStager("net")
 {
-   fSystem = 0;
+   fSystem = nullptr;
    if (url && strlen(url) > 0) {
       GetPrefix(url, fPrefix);
 

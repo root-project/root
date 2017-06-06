@@ -65,8 +65,7 @@ ClassImp(TGraphPolar);
 ////////////////////////////////////////////////////////////////////////////////
 /// TGraphPolar default constructor.
 
-TGraphPolar::TGraphPolar() : TGraphErrors(),
-             fOptionAxis(kFALSE),fPolargram(0),fXpol(0),fYpol(0)
+TGraphPolar::TGraphPolar() : TGraphErrors(), fOptionAxis(kFALSE), fPolargram(nullptr), fXpol(nullptr), fYpol(nullptr)
 {
 }
 
@@ -79,10 +78,8 @@ TGraphPolar::TGraphPolar() : TGraphErrors(),
 /// \param[in] etheta    errors on angular values.
 /// \param[in] er        errors on radial values.
 
-TGraphPolar::TGraphPolar(Int_t n, const Double_t* theta, const Double_t* r,
-                                  const Double_t *etheta, const Double_t* er)
-  : TGraphErrors(n,theta,r,etheta,er),
-             fOptionAxis(kFALSE),fPolargram(0),fXpol(0),fYpol(0)
+TGraphPolar::TGraphPolar(Int_t n, const Double_t *theta, const Double_t *r, const Double_t *etheta, const Double_t *er)
+   : TGraphErrors(n, theta, r, etheta, er), fOptionAxis(kFALSE), fPolargram(nullptr), fXpol(nullptr), fYpol(nullptr)
 {
    SetEditable(kFALSE);
 }

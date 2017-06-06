@@ -372,7 +372,7 @@ bool SetFillPattern(CGContextRef ctx, const unsigned *patternIndex)
 
    CGContextSetFillColorSpace(ctx, patternSpace.Get());
 
-   CGPatternCallbacks callbacks = {0, &DrawPattern, 0};
+   CGPatternCallbacks callbacks = {0, &DrawPattern, nullptr};
    const Util::CFScopeGuard<CGPatternRef> pattern(CGPatternCreate((void*)patternIndex,
                                                   CGRectMake(0, 0, 16, 16),
                                                   CGAffineTransformIdentity, 16, 16,

@@ -62,7 +62,7 @@ void RooSegmentedIntegrator1D::registerIntegrator(RooNumIntFactory& fact)
 ///
 /// coverity[UNINIT_CTOR]
 
-RooSegmentedIntegrator1D::RooSegmentedIntegrator1D() : _array(0)
+RooSegmentedIntegrator1D::RooSegmentedIntegrator1D() : _array(nullptr)
 {
 }
 
@@ -118,24 +118,24 @@ typedef RooIntegrator1D* pRooIntegrator1D ;
 
 Bool_t RooSegmentedIntegrator1D::initialize()
 {
-  _array = 0 ;
-  
-  Bool_t limitsOK = checkLimits(); 
-  if (!limitsOK) return kFALSE ;
+   _array = nullptr;
 
-  // Make array of integrators for each segment
-  _array = new pRooIntegrator1D[_nseg] ;
+   Bool_t limitsOK = checkLimits();
+   if (!limitsOK) return kFALSE;
 
-  Int_t i ;
+   // Make array of integrators for each segment
+   _array = new pRooIntegrator1D[_nseg];
 
-  Double_t segSize = (_xmax - _xmin) / _nseg ;
+   Int_t i;
 
-  // Adjust integrator configurations for reduced intervals
-  _config.setEpsRel(_config.epsRel()/sqrt(1.*_nseg)) ;
-  _config.setEpsAbs(_config.epsAbs()/sqrt(1.*_nseg)) ;
-    
-  for (i=0 ; i<_nseg ; i++) {
-    _array[i] = new RooIntegrator1D(*_function,_xmin+i*segSize,_xmin+(i+1)*segSize,_config) ;
+   Double_t segSize = (_xmax - _xmin) / _nseg;
+
+   // Adjust integrator configurations for reduced intervals
+   _config.setEpsRel(_config.epsRel() / sqrt(1. * _nseg));
+   _config.setEpsAbs(_config.epsAbs() / sqrt(1. * _nseg));
+
+   for (i = 0; i < _nseg; i++) {
+      _array[i] = new RooIntegrator1D(*_function, _xmin + i * segSize, _xmin + (i + 1) * segSize, _config);
   }
 
   return kTRUE ;
@@ -166,8 +166,9 @@ RooSegmentedIntegrator1D::~RooSegmentedIntegrator1D()
 Bool_t RooSegmentedIntegrator1D::setLimits(Double_t* xmin, Double_t* xmax) 
 {
   if(_useIntegrandLimits) {
-    oocoutE((TObject*)0,InputArguments) << "RooSegmentedIntegrator1D::setLimits: cannot override integrand's limits" << endl;
-    return kFALSE;
+     oocoutE((TObject *)nullptr, InputArguments)
+        << "RooSegmentedIntegrator1D::setLimits: cannot override integrand's limits" << endl;
+     return kFALSE;
   }
   _xmin= *xmin;
   _xmax= *xmax;
@@ -183,14 +184,14 @@ Bool_t RooSegmentedIntegrator1D::setLimits(Double_t* xmin, Double_t* xmax)
 Bool_t RooSegmentedIntegrator1D::checkLimits() const 
 {
   if(_useIntegrandLimits) {
-    assert(0 != integrand() && integrand()->isValid());
-    _xmin= integrand()->getMinLimit(0);
-    _xmax= integrand()->getMaxLimit(0);
+     assert(nullptr != integrand() && integrand()->isValid());
+     _xmin = integrand()->getMinLimit(0);
+     _xmax = integrand()->getMaxLimit(0);
   }
   _range= _xmax - _xmin;
   if(_range <= 0) {
-    oocoutE((TObject*)0,InputArguments) << "RooIntegrator1D::checkLimits: bad range with min >= max" << endl;
-    return kFALSE;
+     oocoutE((TObject *)nullptr, InputArguments) << "RooIntegrator1D::checkLimits: bad range with min >= max" << endl;
+     return kFALSE;
   }
   Bool_t ret =  (RooNumber::isInfinite(_xmin) || RooNumber::isInfinite(_xmax)) ? kFALSE : kTRUE;
 

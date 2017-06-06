@@ -106,11 +106,8 @@ ClassImp(TEveParamListEditor);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TEveParamListEditor::TEveParamListEditor(const TGWindow *p, Int_t width, Int_t height,
-                                         UInt_t options, Pixel_t back) :
-   TGedFrame(p, width, height, options | kVerticalFrame, back),
-   fM          (0),
-   fParamFrame (0)
+TEveParamListEditor::TEveParamListEditor(const TGWindow *p, Int_t width, Int_t height, UInt_t options, Pixel_t back)
+   : TGedFrame(p, width, height, options | kVerticalFrame, back), fM(nullptr), fParamFrame(nullptr)
 {
    MakeTitle("TEveParamList");
 }

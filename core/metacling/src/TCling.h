@@ -174,7 +174,7 @@ public: // Public Interface
    Int_t   GetMore() const { return fMore; }
    TClass *GenerateTClass(const char *classname, Bool_t emulation, Bool_t silent = kFALSE);
    TClass *GenerateTClass(ClassInfo_t *classinfo, Bool_t silent = kFALSE);
-   Int_t   GenerateDictionary(const char* classes, const char* includes = 0, const char* options = 0);
+   Int_t GenerateDictionary(const char *classes, const char *includes = nullptr, const char *options = nullptr);
    char*   GetPrompt() { return fPrompt; }
    const char* GetSharedLibs();
    const char* GetClassSharedLibs(const char* cls);
@@ -187,15 +187,15 @@ public: // Public Interface
    void    InspectMembers(TMemberInspector&, const void* obj, const TClass* cl, Bool_t isTransient);
    Bool_t  IsLoaded(const char* filename) const;
    Int_t   Load(const char* filenam, Bool_t system = kFALSE);
-   void    LoadMacro(const char* filename, EErrorCode* error = 0);
-   Int_t   LoadLibraryMap(const char* rootmapfile = 0);
+   void LoadMacro(const char *filename, EErrorCode *error = nullptr);
+   Int_t LoadLibraryMap(const char *rootmapfile = nullptr);
    Int_t   RescanLibraryMap();
    Int_t   ReloadAllSharedLibraryMaps();
    Int_t   UnloadAllSharedLibraryMaps();
    Int_t   UnloadLibraryMap(const char* library);
-   Long_t  ProcessLine(const char* line, EErrorCode* error = 0);
-   Long_t  ProcessLineAsynch(const char* line, EErrorCode* error = 0);
-   Long_t  ProcessLineSynch(const char* line, EErrorCode* error = 0);
+   Long_t ProcessLine(const char *line, EErrorCode *error = nullptr);
+   Long_t ProcessLineAsynch(const char *line, EErrorCode *error = nullptr);
+   Long_t ProcessLineSynch(const char *line, EErrorCode *error = nullptr);
    void    PrintIntro();
    void    RegisterModule(const char* modulename,
                           const char** headers,
@@ -227,7 +227,7 @@ public: // Public Interface
    void    SetClassInfo(TClass* cl, Bool_t reload = kFALSE);
    Bool_t  CheckClassInfo(const char* name, Bool_t autoload, Bool_t isClassOrNamespaceOnly = kFALSE);
    Bool_t  CheckClassTemplate(const char *name);
-   Long_t  Calc(const char* line, EErrorCode* error = 0);
+   Long_t Calc(const char *line, EErrorCode *error = nullptr);
    void    CreateListOfBaseClasses(TClass* cl) const;
    void    CreateListOfDataMembers(TClass* cl) const;
    void    CreateListOfMethods(TClass* cl) const;
@@ -254,12 +254,14 @@ public: // Public Interface
    virtual void     LoadFunctionTemplates(TClass* cl) const;
 
    void    GetInterpreterTypeName(const char* name, std::string &output, Bool_t full = kFALSE);
-   void    Execute(const char* function, const char* params, int* error = 0);
-   void    Execute(TObject* obj, TClass* cl, const char* method, const char* params, int* error = 0);
-   void    Execute(TObject* obj, TClass* cl, const char* method, const char* params, Bool_t objectIsConst, int* error = 0);
-   void    Execute(TObject* obj, TClass* cl, TMethod* method, TObjArray* params, int* error = 0);
-   void    ExecuteWithArgsAndReturn(TMethod* method, void* address, const void* args[] = 0, int nargs = 0, void* ret= 0) const;
-   Long_t  ExecuteMacro(const char* filename, EErrorCode* error = 0);
+   void Execute(const char *function, const char *params, int *error = nullptr);
+   void Execute(TObject *obj, TClass *cl, const char *method, const char *params, int *error = nullptr);
+   void Execute(TObject *obj, TClass *cl, const char *method, const char *params, Bool_t objectIsConst,
+                int *error = nullptr);
+   void Execute(TObject *obj, TClass *cl, TMethod *method, TObjArray *params, int *error = nullptr);
+   void ExecuteWithArgsAndReturn(TMethod *method, void *address, const void *args[] = nullptr, int nargs = 0,
+                                 void *ret = nullptr) const;
+   Long_t ExecuteMacro(const char *filename, EErrorCode *error = nullptr);
    void    RecursiveRemove(TObject* obj);
    Bool_t  IsErrorMessagesEnabled() const;
    Bool_t  SetErrorMessages(Bool_t enable = kTRUE);
@@ -318,7 +320,8 @@ public: // Public Interface
    virtual void   CallFunc_Exec(CallFunc_t* func, void* address) const;
    virtual void   CallFunc_Exec(CallFunc_t* func, void* address, TInterpreterValue& val) const;
    virtual void   CallFunc_ExecWithReturn(CallFunc_t* func, void* address, void* ret) const;
-   virtual void   CallFunc_ExecWithArgsAndReturn(CallFunc_t* func, void* address, const void* args[] = 0, int nargs = 0, void* ret = 0) const;
+   virtual void CallFunc_ExecWithArgsAndReturn(CallFunc_t *func, void *address, const void *args[] = nullptr,
+                                               int nargs = 0, void *ret = nullptr) const;
    virtual Long_t    CallFunc_ExecInt(CallFunc_t* func, void* address) const;
    virtual Long64_t  CallFunc_ExecInt64(CallFunc_t* func, void* address) const;
    virtual Double_t  CallFunc_ExecDouble(CallFunc_t* func, void* address) const;
@@ -404,7 +407,7 @@ public: // Public Interface
    virtual DeclId_t GetDeclId(DataMemberInfo_t *info) const;
    virtual int    DataMemberInfo_ArrayDim(DataMemberInfo_t* dminfo) const;
    virtual void   DataMemberInfo_Delete(DataMemberInfo_t* dminfo) const;
-   virtual DataMemberInfo_t*  DataMemberInfo_Factory(ClassInfo_t* clinfo = 0) const;
+   virtual DataMemberInfo_t *DataMemberInfo_Factory(ClassInfo_t *clinfo = nullptr) const;
    virtual DataMemberInfo_t  *DataMemberInfo_Factory(DeclId_t declid, ClassInfo_t* clinfo) const;
    virtual DataMemberInfo_t*  DataMemberInfo_FactoryCopy(DataMemberInfo_t* dminfo) const;
    virtual bool   DataMemberInfo_IsValid(DataMemberInfo_t* dminfo) const;
@@ -527,9 +530,7 @@ private: // Private Utility Functions and Classes
    TCling(const TCling&); // NOT IMPLEMENTED
    TCling& operator=(const TCling&); // NOT IMPLEMENTED
 
-   void Execute(TMethod*, TObjArray*, int* /*error*/ = 0)
-   {
-   }
+   void Execute(TMethod *, TObjArray *, int * /*error*/ = nullptr) {}
 
    void UpdateListOfLoadedSharedLibraries();
    void RegisterLoadedSharedLibrary(const char* name);

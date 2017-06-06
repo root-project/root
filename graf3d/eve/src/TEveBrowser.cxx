@@ -114,15 +114,9 @@ TString TEveGListTreeEditorFrame::fgEditorClass("TEveGedEditor");
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TEveGListTreeEditorFrame::TEveGListTreeEditorFrame(const TGWindow* p, Int_t width, Int_t height) :
-   TGMainFrame (p ? p : gClient->GetRoot(), width, height),
-   fFrame      (0),
-   fLTFrame    (0),
-   fListTree   (0),
-   fSplitter   (0),
-   fEditor     (0),
-   fCtxMenu    (0),
-   fSignalsConnected (kFALSE)
+TEveGListTreeEditorFrame::TEveGListTreeEditorFrame(const TGWindow *p, Int_t width, Int_t height)
+   : TGMainFrame(p ? p : gClient->GetRoot(), width, height), fFrame(nullptr), fLTFrame(nullptr), fListTree(nullptr),
+     fSplitter(nullptr), fEditor(nullptr), fCtxMenu(nullptr), fSignalsConnected(kFALSE)
 {
    SetCleanup(kNoCleanup);
 
@@ -156,7 +150,7 @@ TEveGListTreeEditorFrame::TEveGListTreeEditorFrame(const TGWindow* p, Int_t widt
    fFrame->SetEditable(kEditDisable);
    fFrame->SetEditable(kFALSE);
    {
-      TGFrameElement *el = 0;
+      TGFrameElement *el = nullptr;
       TIter next(fFrame->GetList());
       while ((el = (TGFrameElement *) next())) {
          if (el->fFrame == fEditor)
@@ -253,7 +247,7 @@ void TEveGListTreeEditorFrame::ReconfToHorizontal()
    fLTFrame->ChangeOptions(kHorizontalFrame);
    fListTree->ChangeOptions(kVerticalFrame);
 
-   TGFrameElement *el = 0;
+   TGFrameElement *el = nullptr;
    TIter next(fFrame->GetList());
    while ((el = (TGFrameElement *) next()))
    {
@@ -294,7 +288,7 @@ void TEveGListTreeEditorFrame::ReconfToVertical()
    fLTFrame->ChangeOptions(kVerticalFrame);
    fListTree->ChangeOptions(kHorizontalFrame);
 
-   TGFrameElement *el = 0;
+   TGFrameElement *el = nullptr;
    TIter next(fFrame->GetList());
    while ((el = (TGFrameElement *) next()))
    {
@@ -329,7 +323,7 @@ void TEveGListTreeEditorFrame::ReconfToVertical()
 
 void TEveGListTreeEditorFrame::ItemBelowMouse(TGListTreeItem *entry, UInt_t /*mask*/)
 {
-   TEveElement* el = entry ? (TEveElement*) entry->GetUserData() : 0;
+   TEveElement *el = entry ? (TEveElement *)entry->GetUserData() : nullptr;
    gEve->GetHighlight()->UserPickedElement(el, kFALSE);
 }
 
@@ -347,7 +341,7 @@ void TEveGListTreeEditorFrame::ItemClicked(TGListTreeItem *item, Int_t btn, UInt
    static const TEveException eh("TEveGListTreeEditorFrame::ItemClicked ");
 
    TEveElement* el = (TEveElement*) item->GetUserData();
-   if (el == 0) return;
+   if (el == nullptr) return;
    TObject* obj = el->GetObject(eh);
 
    switch (btn)
@@ -384,7 +378,7 @@ void TEveGListTreeEditorFrame::ItemDblClicked(TGListTreeItem* item, Int_t btn)
    if (btn != 1) return;
 
    TEveElement* el = (TEveElement*) item->GetUserData();
-   if (el == 0) return;
+   if (el == nullptr) return;
 
    el->ExpandIntoListTree(fListTree, item);
 
@@ -395,8 +389,7 @@ void TEveGListTreeEditorFrame::ItemDblClicked(TGListTreeItem* item, Int_t btn)
       if (obj->IsA()->InheritsFrom(TGeoNode::Class()))
       {
          TGeoNode* n = dynamic_cast<TGeoNode*>(obj);
-         if (item->GetFirstChild() == 0 && n->GetNdaughters())
-         {
+         if (item->GetFirstChild() == nullptr && n->GetNdaughters()) {
             fListTree->DeleteChildren(item);
             for (Int_t i=0; i< n->GetNdaughters(); i++)
             {
@@ -424,7 +417,7 @@ void TEveGListTreeEditorFrame::ItemKeyPress(TGListTreeItem *entry, UInt_t keysym
    static const TEveException eh("TEveGListTreeEditorFrame::ItemKeyPress ");
 
    entry = fListTree->GetCurrent();
-   if (entry == 0) return;
+   if (entry == nullptr) return;
 
    TEveElement* el = (TEveElement*) entry->GetUserData();
 
@@ -524,12 +517,9 @@ enum EEveMenu_e {
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TEveBrowser::TEveBrowser(UInt_t w, UInt_t h) :
-   TRootBrowser(0, "Eve Main Window", w, h, "", kFALSE),
-   fFileBrowser(0),
-   fEvePopup   (0),
-   fSelPopup   (0),
-   fHilPopup   (0)
+TEveBrowser::TEveBrowser(UInt_t w, UInt_t h)
+   : TRootBrowser(nullptr, "Eve Main Window", w, h, "", kFALSE), fFileBrowser(nullptr), fEvePopup(nullptr),
+     fSelPopup(nullptr), fHilPopup(nullptr)
 {
    // Construct Eve menu.
 
@@ -607,12 +597,12 @@ void TEveBrowser::EveMenu(Int_t id)
    switch (id)
    {
       case kNewMainFrameSlot: {
-         TEveWindowSlot* ew_slot = TEveWindow::CreateWindowMainFrame(0);
+         TEveWindowSlot *ew_slot = TEveWindow::CreateWindowMainFrame(nullptr);
          gEve->GetWindowManager()->SelectWindow(ew_slot);
          break;
       }
       case kNewTabSlot: {
-         TEveWindowSlot* ew_slot = TEveWindow::CreateWindowInTab(GetTabRight(), 0);
+         TEveWindowSlot *ew_slot = TEveWindow::CreateWindowInTab(GetTabRight(), nullptr);
          gEve->GetWindowManager()->SelectWindow(ew_slot);
          break;
       }

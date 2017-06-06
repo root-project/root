@@ -42,10 +42,10 @@ namespace HistFactory{
     // ie the channel WITHOUT constraints
     std::string realSumPdfName = ChannelName + "_model";
 
-    RooAbsPdf* sum_pdf = NULL;        
+    RooAbsPdf *sum_pdf = nullptr;
     TIterator* iter_sum_pdf = sim_channel->getComponents()->createIterator(); //serverIterator();
     bool FoundSumPdf=false;
-    RooAbsArg* sum_pdf_arg=NULL;
+    RooAbsArg *sum_pdf_arg = nullptr;
     while((sum_pdf_arg=(RooAbsArg*)iter_sum_pdf->Next())) {
       std::string NodeClassName = sum_pdf_arg->ClassName();
       if( NodeClassName == std::string("RooRealSumPdf") ) {
@@ -59,14 +59,14 @@ namespace HistFactory{
 	std::cout << "Failed to find RooRealSumPdf for channel: " << sim_channel->GetName() << std::endl;
 	sim_channel->getComponents()->Print("V");
       }
-      sum_pdf=NULL;
+      sum_pdf = nullptr;
       //throw std::runtime_error("Failed to find RooRealSumPdf for channel");
     } 
     else {
       if(verbose) std::cout << "Found RooRealSumPdf: " << sum_pdf->GetName() << std::endl;
     }
     delete iter_sum_pdf;
-    iter_sum_pdf = NULL;
+    iter_sum_pdf = nullptr;
 
     return sum_pdf;
 
@@ -87,7 +87,7 @@ namespace HistFactory{
       } else if (id == typeid(RooSimultaneous) || id == typeid(HistFactorySimultaneous) ) {    //|| id == typeid(RooSimultaneousOpt)) {
          RooSimultaneous *sim  = dynamic_cast<RooSimultaneous *>(&pdf);
          RooAbsCategoryLValue *cat = (RooAbsCategoryLValue *) sim->indexCat().Clone();
-         for (int ic = 0, nc = cat->numBins((const char *)0); ic < nc; ++ic) {
+         for (int ic = 0, nc = cat->numBins((const char *)nullptr); ic < nc; ++ic) {
             cat->setBin(ic);
             FactorizeHistFactoryPdf(observables, *sim->getPdf(cat->getLabel()), obsTerms, constraints);
          }
@@ -185,7 +185,7 @@ namespace HistFactory{
     //TIterator* iter = channel->serverIterator();
     TIterator* iter = channel->getComponents()->createIterator(); //serverIterator();
     bool FoundParamHistFunc=false;
-    RooAbsArg* paramfunc_arg = NULL;        
+    RooAbsArg *paramfunc_arg = nullptr;
     while(( paramfunc_arg = (RooAbsArg*) iter->Next() )) {
       std::string NodeName = paramfunc_arg->GetName();
       std::string NodeClassName = paramfunc_arg->ClassName();
@@ -202,7 +202,7 @@ namespace HistFactory{
     }                                               
     
     delete iter;
-    iter = NULL;
+    iter = nullptr;
 
     // Now, get the set of gamma's
     gammaList = (RooArgList*) &( paramfunc->paramList());
@@ -225,8 +225,8 @@ namespace HistFactory{
     // get category label
     RooArgSet* allobs = (RooArgSet*) data->get();
     TIterator* obsIter = allobs->createIterator();
-    RooCategory* cat = NULL;
-    RooAbsArg* temp = NULL;
+    RooCategory *cat = nullptr;
+    RooAbsArg *temp = nullptr;
     while( (temp=(RooAbsArg*) obsIter->Next())) {
       // use dynamic cast here instead
       if( strcmp(temp->ClassName(),"RooCategory")==0){
@@ -249,7 +249,7 @@ namespace HistFactory{
     // loop over channels
     RooCategory* channelCat = (RooCategory*) (&simPdf->indexCat());
     TIterator* iter = channelCat->typeIterator() ;
-    RooCatType* tt = NULL;
+    RooCatType *tt = nullptr;
     while((tt=(RooCatType*) iter->Next())) {
 
       // Get pdf associated with state from simpdf
@@ -308,9 +308,9 @@ namespace HistFactory{
     // and look for the gamma_stat name as well as '_constraint'
     // std::string constraintTermName = std::string(gamma_stat->GetName()) + "_constraint";
     TIterator* iter_list = constraints->createIterator();
-    RooAbsArg* term_constr=NULL;
+    RooAbsArg *term_constr = nullptr;
     bool FoundConstraintTerm=false;
-    RooAbsPdf* constraintTerm=NULL;
+    RooAbsPdf *constraintTerm = nullptr;
     while((term_constr=(RooAbsArg*)iter_list->Next())) {
       std::string TermName = term_constr->GetName();
       // std::cout << "Checking if is a constraint term: " << TermName << std::endl;
@@ -371,7 +371,7 @@ namespace HistFactory{
     // the "mean" which is the product: gamma*tau
     // Then, from that mean, find tau
     TIterator* iter_constr = constraintTerm->serverIterator(); //constraint_args
-    RooAbsArg* pois_mean_arg=NULL;
+    RooAbsArg *pois_mean_arg = nullptr;
     bool FoundPoissonMean = false;
     while(( pois_mean_arg = (RooAbsArg*) iter_constr->Next() )) {
       std::string serverName = pois_mean_arg->GetName();

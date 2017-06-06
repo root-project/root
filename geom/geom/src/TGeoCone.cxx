@@ -571,7 +571,7 @@ TGeoVolume *TGeoCone::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
    switch (iaxis) {
       case 1:  //---              R division
          Error("Divide","division of a cone on R not implemented");
-         return 0;
+         return nullptr;
       case 2:  // ---             Phi division
          finder = new TGeoPatternCylPhi(voldiv, ndiv, start, end);
          voldiv->SetFinder(finder);
@@ -606,9 +606,7 @@ TGeoVolume *TGeoCone::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
             ((TGeoNodeOffset*)voldiv->GetNodes()->At(voldiv->GetNdaughters()-1))->SetFinder(finder);
          }
          return vmulti;
-      default:
-         Error("Divide", "Wrong axis type for division");
-         return 0;
+      default: Error("Divide", "Wrong axis type for division"); return nullptr;
    }
 }
 
@@ -671,10 +669,10 @@ void TGeoCone::GetBoundingCylinder(Double_t *param) const
 
 TGeoShape *TGeoCone::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/) const
 {
-   if (!TestShapeBit(kGeoRunTimeShape)) return 0;
+   if (!TestShapeBit(kGeoRunTimeShape)) return nullptr;
    if (!mother->TestShapeBit(kGeoCone)) {
       Error("GetMakeRuntimeShape", "invalid mother");
-      return 0;
+      return nullptr;
    }
    Double_t rmin1, rmax1, rmin2, rmax2, dz;
    rmin1 = fRmin1;
@@ -1930,7 +1928,7 @@ TGeoVolume *TGeoConeSeg::Divide(TGeoVolume *voldiv, const char *divname, Int_t i
    switch (iaxis) {
       case 1:  //---               R division
          Error("Divide","division of a cone segment on R not implemented");
-         return 0;
+         return nullptr;
       case 2:  //---               Phi division
          dphi = fPhi2-fPhi1;
          if (dphi<0) dphi+=360.;
@@ -1967,9 +1965,7 @@ TGeoVolume *TGeoConeSeg::Divide(TGeoVolume *voldiv, const char *divname, Int_t i
             ((TGeoNodeOffset*)voldiv->GetNodes()->At(voldiv->GetNdaughters()-1))->SetFinder(finder);
          }
          return vmulti;
-      default:
-         Error("Divide", "Wrong axis type for division");
-         return 0;
+      default: Error("Divide", "Wrong axis type for division"); return nullptr;
    }
 }
 
@@ -2017,10 +2013,10 @@ void TGeoConeSeg::GetBoundingCylinder(Double_t *param) const
 
 TGeoShape *TGeoConeSeg::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/) const
 {
-   if (!TestShapeBit(kGeoRunTimeShape)) return 0;
+   if (!TestShapeBit(kGeoRunTimeShape)) return nullptr;
    if (!mother->TestShapeBit(kGeoConeSeg)) {
       Error("GetMakeRuntimeShape", "invalid mother");
-      return 0;
+      return nullptr;
    }
    Double_t rmin1, rmax1, rmin2, rmax2, dz;
    rmin1 = fRmin1;

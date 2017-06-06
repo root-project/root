@@ -1378,7 +1378,7 @@ double *TCL::trata(const double *a, double *r__, int m, int n)
       }
    }
 
-   return 0;
+   return nullptr;
 } /* trata_ */
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1426,7 +1426,7 @@ double *TCL::trats(const double *a, const double *s, double *b, int m, int n)
       ++i__;
    } while (i__ < n);
 
-   return 0;
+   return nullptr;
 } /* trats_ */
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1482,7 +1482,7 @@ double *TCL::tratsa(const double *a, const double *s, double *r__, int m, int n)
       ++i__;
    } while (i__ < n);
 
-   return 0;
+   return nullptr;
 } /* tratsa_ */
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1542,7 +1542,7 @@ L42:
 
    } while  (i__ < n);
 
-   return 0;
+   return nullptr;
 } /* trchlu_ */
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1605,7 +1605,7 @@ L42:
       --i__;
    } while  (i__ > 0);
 
-   return 0;
+   return nullptr;
 } /* trchul_ */
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1662,7 +1662,7 @@ double *TCL::trinv(const double *t, double *s, int n)
       --i;
    } while (i > 0);
 
-   return 0;
+   return nullptr;
 } /* trinv_ */
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1705,7 +1705,7 @@ double *TCL::trla(const double *u, const double *a, double *b, int m, int n)
       ipiv = iu;
    } while (iu > 0);
 
-   return 0;
+   return nullptr;
 } /* trla_ */
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1755,7 +1755,7 @@ double *TCL::trlta(const double *u, const double *a, double *b, int m, int n)
 
    } while (i__ < m);
 
-   return 0;
+   return nullptr;
 } /* trlta_ */
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1789,7 +1789,7 @@ double *TCL::trpck(const double *s, double *u, int n)
       ia = ia + n - i__;
    }
 
-   return 0;
+   return nullptr;
 } /* trpck_ */
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1854,7 +1854,7 @@ double *TCL::trqsq(const double *q, const double *s, double *r__, int m)
       ++i__;
    } while (i__ < m);
 
-   return 0;
+   return nullptr;
 } /* trqsq_ */
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1902,7 +1902,7 @@ double *TCL::trsa(const double *s, const double *a, double *b, int m, int n)
       ++i__;
    } while (i__ < m);
 
-   return 0;
+   return nullptr;
 } /* trsa_ */
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1922,7 +1922,7 @@ double *TCL::trsinv(const double *g, double *gi, int n)
    trinv(gi, gi, n);
    trsmul(gi, gi, n);
 
-   return 0;
+   return nullptr;
 } /* trsinv_ */
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1958,7 +1958,7 @@ double *TCL::trsmlu(const double *u, double *s, int n)
       }
    }
 
-   return 0;
+   return nullptr;
 } /* trsmlu_ */
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1995,7 +1995,7 @@ double *TCL::trsmul(const double *g, double *gi, int n)
       }
    }
 
-   return 0;
+   return nullptr;
 } /* trsmul_ */
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2044,7 +2044,7 @@ double *TCL::trupck(const double *u, double *s, int m)
       is = is + m + 1;
    } while (is < m2);
 
-   return 0;
+   return nullptr;
 } /* trupck_ */
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2092,7 +2092,7 @@ double *TCL::trsat(const double *s, const double *a, double *b, int m, int n)
       ++i__;
    } while (i__ < m);
 
-   return 0;
+   return nullptr;
 } /* trsat_ */
 
 // ------------ Victor Perevoztchikov's addition

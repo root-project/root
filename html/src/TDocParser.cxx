@@ -68,8 +68,8 @@ namespace {
             ++l;
             ++r;
          }
-         TClass *lcl = 0;
-         TClass *rcl = 0;
+         TClass *lcl = nullptr;
+         TClass *rcl = nullptr;
          if (fMeth->Property() & (kIsConstructor|kIsDestructor)) {
             lcl = TClass::GetClass(l);
          }
@@ -96,7 +96,7 @@ namespace {
       Int_t fOverloadIdx; // this is the n-th overload
    };
 
-   const TClass* TMethodWrapperImpl::fgClass = 0;
+   const TClass *TMethodWrapperImpl::fgClass = nullptr;
 }
 
 
@@ -147,12 +147,10 @@ std::set<std::string>  TDocParser::fgKeywords;
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor called for parsing class sources
 
-TDocParser::TDocParser(TClassDocOutput& docOutput, TClass* cl):
-   fHtml(docOutput.GetHtml()), fDocOutput(&docOutput), fLineNo(0),
-   fCurrentClass(cl), fRecentClass(0), fCurrentModule(0),
-   fDirectiveCount(0), fLineNumber(0), fDocContext(kIgnore),
-   fCheckForMethod(kFALSE), fClassDocState(kClassDoc_Uninitialized),
-   fCommentAtBOL(kFALSE), fAllowDirectives(kTRUE)
+TDocParser::TDocParser(TClassDocOutput &docOutput, TClass *cl)
+   : fHtml(docOutput.GetHtml()), fDocOutput(&docOutput), fLineNo(0), fCurrentClass(cl), fRecentClass(nullptr),
+     fCurrentModule(0), fDirectiveCount(0), fLineNumber(0), fDocContext(kIgnore), fCheckForMethod(kFALSE),
+     fClassDocState(kClassDoc_Uninitialized), fCommentAtBOL(kFALSE), fAllowDirectives(kTRUE)
 {
    InitKeywords();
 
@@ -168,8 +166,8 @@ TDocParser::TDocParser(TClassDocOutput& docOutput, TClass* cl):
       fMethods[ia].Rehash(101);
    }
 
-   AddClassMethodsRecursively(0);
-   AddClassDataMembersRecursively(0);
+   AddClassMethodsRecursively(nullptr);
+   AddClassDataMembersRecursively(nullptr);
 
    // needed for list of methods,...
    fParseContext.push_back(kCode);
@@ -187,12 +185,10 @@ TDocParser::TDocParser(TClassDocOutput& docOutput, TClass* cl):
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor called for parsing text files with Convert()
 
-TDocParser::TDocParser(TDocOutput& docOutput):
-   fHtml(docOutput.GetHtml()), fDocOutput(&docOutput), fLineNo(0),
-   fCurrentClass(0), fRecentClass(0), fDirectiveCount(0),
-   fLineNumber(0), fDocContext(kIgnore),
-   fCheckForMethod(kFALSE), fClassDocState(kClassDoc_Uninitialized),
-   fCommentAtBOL(kFALSE), fAllowDirectives(kFALSE)
+TDocParser::TDocParser(TDocOutput &docOutput)
+   : fHtml(docOutput.GetHtml()), fDocOutput(&docOutput), fLineNo(0), fCurrentClass(nullptr), fRecentClass(nullptr),
+     fDirectiveCount(0), fLineNumber(0), fDocContext(kIgnore), fCheckForMethod(kFALSE),
+     fClassDocState(kClassDoc_Uninitialized), fCommentAtBOL(kFALSE), fAllowDirectives(kFALSE)
 {
    InitKeywords();
 
@@ -202,7 +198,7 @@ TDocParser::TDocParser(TDocOutput& docOutput):
 
    fClassDescrTag = fHtml->GetClassDocTag();
 
-   TMethodWrapperImpl::SetClass(0);
+   TMethodWrapperImpl::SetClass(nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -218,7 +214,7 @@ TDocParser::~TDocParser()
             fCurrentClass ? fCurrentClass->GetName() : "",
             iMethod->first.c_str());
       TIter iDirective(&fDirectiveHandlers);
-      TDocDirective* directive = 0;
+      TDocDirective *directive = nullptr;
       while ((directive = (TDocDirective*) iDirective())) {
          TString directiveName;
          directive->GetName(directiveName);
@@ -287,7 +283,7 @@ void TDocParser::AddClassMethodsRecursively(TBaseClass* bc)
    }
 
    TIter iBase(cl->GetListOfBases());
-   TBaseClass* base = 0;
+   TBaseClass *base = nullptr;
    while ((base = (TBaseClass*)iBase()))
       AddClassMethodsRecursively(base);
 
@@ -361,7 +357,7 @@ void TDocParser::AddClassDataMembersRecursively(TBaseClass* bc) {
    }
 
    TIter iBase(cl->GetListOfBases());
-   TBaseClass* base = 0;
+   TBaseClass *base = nullptr;
    while ((base = (TBaseClass*)iBase()))
       AddClassDataMembersRecursively(base);
 
@@ -471,7 +467,7 @@ void TDocParser::DecorateKeywords(TString& line)
       kNumAccesses
    } scoping = kNada;
 
-   currentType.push_back(0);
+   currentType.push_back(nullptr);
 
    Ssiz_t i = 0;
    while (isspace((UChar_t)line[i]))
@@ -543,7 +539,7 @@ void TDocParser::DecorateKeywords(TString& line)
             }
          switch (line[i]) {
             case '(':
-               currentType.push_back(0);
+               currentType.push_back(nullptr);
                scoping = kNada;
                continue;
                break;
@@ -557,8 +553,7 @@ void TDocParser::DecorateKeywords(TString& line)
          if (i >= line.Length())
             break;
       } else // code or comment
-         currentType.back() = 0;
-
+         currentType.back() = nullptr;
 
       if (!IsWord(line[i])){
 
@@ -588,14 +583,14 @@ void TDocParser::DecorateKeywords(TString& line)
 
                fDocOutput->DecorateEntityBegin(line, i, kString);
                fParseContext.push_back(kString);
-               currentType.back() = 0;
+               currentType.back() = nullptr;
                closeString = kFALSE;
             } else if (context == kCode
                && line[i] == '/' && (line[i+1] == '/' || line[i+1] == '*')) {
                fParseContext.push_back(kComment);
                if (line[i+1] == '/')
                   fParseContext.back() |= kCXXComment;
-               currentType.back() = 0;
+               currentType.back() = nullptr;
                fDocOutput->DecorateEntityBegin(line, i, kComment);
                ++i;
             } else if (context == kComment
@@ -605,7 +600,7 @@ void TDocParser::DecorateKeywords(TString& line)
                if (fParseContext.size()>1)
                   fParseContext.pop_back();
 
-               currentType.back() = 0;
+               currentType.back() = nullptr;
                i += 2;
                fDocOutput->DecorateEntityEnd(line, i, kComment);
                if (!fCommentAtBOL) {
@@ -630,7 +625,7 @@ void TDocParser::DecorateKeywords(TString& line)
             if (fParseContext.size()>1)
                fParseContext.pop_back();
 
-            currentType.back() = 0;
+            currentType.back() = nullptr;
          }
          --i; // i already moved by ReplaceSpecialChar
 
@@ -654,7 +649,7 @@ void TDocParser::DecorateKeywords(TString& line)
       if ((i == 0 || (i > 0 && line[i - 1] != '"'))
          && HandleDirective(line, i, word, copiedToCommentUpTo)) {
          // something special happened; the currentType is gone.
-         currentType.back() = 0;
+         currentType.back() = nullptr;
          continue;
       }
 
@@ -665,7 +660,7 @@ void TDocParser::DecorateKeywords(TString& line)
          i += word.Length();
          fDocOutput->DecorateEntityEnd(line, i, kKeyword);
          --i; // -1 for ++i
-         currentType.back() = 0;
+         currentType.back() = nullptr;
          continue;
       }
 
@@ -676,14 +671,14 @@ void TDocParser::DecorateKeywords(TString& line)
       // we iterate through this, first scope is A, and currentType will be set toA,
       // next we see ::B, "::" signals to use currentType,...
 
-      TDataType* subType = 0;
-      TClass* subClass = 0;
-      TDataMember *datamem = 0;
-      TMethod *meth = 0;
-      const char* globalTypeName = 0;
+      TDataType *subType = nullptr;
+      TClass *subClass = nullptr;
+      TDataMember *datamem = nullptr;
+      TMethod *meth = nullptr;
+      const char *globalTypeName = nullptr;
       if (!currentType.size()) {
          Warning("DecorateKeywords", "type context is empty!");
-         currentType.push_back(0);
+         currentType.push_back(nullptr);
       }
       TClass* lookupScope = currentType.back();
 
@@ -708,7 +703,7 @@ void TDocParser::DecorateKeywords(TString& line)
                   subType = gROOT->GetType(globalTypeName);
                else // hack to prevent current THtml obj from showing up - we only want gHtml
                   if (subClass == THtml::Class() && word != "gHtml")
-                     subClass = 0;
+                  subClass = nullptr;
             }
          }
          if (!subType && !subClass) {
@@ -792,7 +787,7 @@ void TDocParser::DecorateKeywords(TString& line)
       if (subType) {
          fDocOutput->ReferenceEntity(substr, subType,
             globalTypeName ? globalTypeName : subType->GetName());
-         currentType.back() = 0;
+         currentType.back() = nullptr;
       } else if (subClass) {
          fDocOutput->ReferenceEntity(substr, subClass,
             globalTypeName ? globalTypeName : subClass->GetName());
@@ -819,7 +814,7 @@ void TDocParser::DecorateKeywords(TString& line)
                   currentType.back() = fHtml->GetClass(retTypeName);
             }
       } else
-         currentType.back() = 0;
+         currentType.back() = nullptr;
 
       //i += mangledWord.Length();
       i += substr.Length();
@@ -834,7 +829,7 @@ void TDocParser::DecorateKeywords(TString& line)
       fDocOutput->DecorateEntityEnd(line, i, kString);
       if (fParseContext.size()>1)
          fParseContext.pop_back();
-      currentType.back() = 0;
+      currentType.back() = nullptr;
    }
 
    // HandleDirective already copied the chunk before the directive
@@ -858,7 +853,7 @@ void TDocParser::DecorateKeywords(TString& line)
          fDocOutput->DecorateEntityEnd(fLineComment, pos, kComment);
       }
       RemoveCommentContext(kTRUE);
-      currentType.back() = 0;
+      currentType.back() = nullptr;
    }
 }
 
@@ -884,7 +879,7 @@ void TDocParser::DecrementMethodCount(const char* name)
 void  TDocParser::DeleteDirectiveOutput() const
 {
    TIter iClass(gROOT->GetListOfClasses());
-   TClass* cl = 0;
+   TClass *cl = nullptr;
    while ((cl = (TClass*) iClass()))
       if (cl != TDocDirective::Class()
          && cl->InheritsFrom(TDocDirective::Class())) {
@@ -985,7 +980,7 @@ Bool_t TDocParser::HandleDirective(TString& line, Ssiz_t& pos, TString& word,
    // we'll need end later on: afer the begin block, both end _and_ begin can be true.
    Bool_t end = !begin;
 
-   TDocDirective* directive = 0; // allow re-use of object from begin block in end
+   TDocDirective *directive = nullptr; // allow re-use of object from begin block in end
 
    if (begin) {
       // copy from fLineSource to fLineComment, starting at copiedToCommentUpTo
@@ -1254,14 +1249,12 @@ TClass* TDocParser::IsDirective(const TString& line, Ssiz_t pos,
                                         const TString& word, Bool_t& begin) const
 {
    // '"' serves as escape char
-   if (pos > 0 &&  line[pos - 1] == '"')
-      return 0;
+   if (pos > 0 && line[pos - 1] == '"') return nullptr;
 
    begin      = word.BeginsWith("begin_", TString::kIgnoreCase);
    Bool_t end = word.BeginsWith("end_", TString::kIgnoreCase);
 
-   if (!begin && !end)
-      return 0;
+   if (!begin && !end) return nullptr;
 
    /* NO - we can have "BEGIN_HTML / * ..."
    if (!InContext(kComment))
@@ -1270,8 +1263,7 @@ TClass* TDocParser::IsDirective(const TString& line, Ssiz_t pos,
 
    TString tag = word( begin ? 6 : 4, word.Length());
 
-   if (!tag.Length())
-      return 0;
+   if (!tag.Length()) return nullptr;
 
    tag.ToLower();
    tag[0] -= 'a' - 'A'; // first char is caps
@@ -1351,7 +1343,7 @@ TMethod* TDocParser::LocateMethodInCurrentLine(Ssiz_t &posMethodName, TString& r
 
    if (posMethodName == kNPOS) {
       name.Remove(0);
-      TMethod * meth = 0;
+      TMethod *meth = nullptr;
       Ssiz_t posBlock = fLineRaw.Index('{');
       Ssiz_t posQuote = fLineRaw.Index('"');
       if (posQuote != kNPOS && (posBlock == kNPOS || posQuote < posBlock))
@@ -1376,7 +1368,7 @@ TMethod* TDocParser::LocateMethodInCurrentLine(Ssiz_t &posMethodName, TString& r
             }
          }
       }
-      return 0;
+      return nullptr;
    }
 
    name = fLineRaw(posMethodName, fLineRaw.Length() - posMethodName);
@@ -1415,7 +1407,7 @@ TMethod* TDocParser::LocateMethodInCurrentLine(Ssiz_t &posMethodName, TString& r
       ret.Remove(0);
       name.Remove(0);
       params.Remove(0);
-      return 0;
+      return nullptr;
    }
 
    if (name.BeginsWith("operator")) {
@@ -1436,7 +1428,7 @@ TMethod* TDocParser::LocateMethodInCurrentLine(Ssiz_t &posMethodName, TString& r
       ret.Remove(0);
       name.Remove(0);
       params.Remove(0);
-      return 0;
+      return nullptr;
    }
 
    params = name(posParam, name.Length() - posParam);
@@ -1447,7 +1439,7 @@ TMethod* TDocParser::LocateMethodInCurrentLine(Ssiz_t &posMethodName, TString& r
       ret.Remove(0);
       name.Remove(0);
       params.Remove(0);
-      return 0;
+      return nullptr;
    }
 
    MethodCount_t::const_iterator iMethodName = fMethodCounts.find(name.Data());
@@ -1455,7 +1447,7 @@ TMethod* TDocParser::LocateMethodInCurrentLine(Ssiz_t &posMethodName, TString& r
       ret.Remove(0);
       name.Remove(0);
       params.Remove(0);
-      return 0;
+      return nullptr;
    }
 
    // find end of param
@@ -1512,7 +1504,7 @@ TMethod* TDocParser::LocateMethodInCurrentLine(Ssiz_t &posMethodName, TString& r
                ret.Remove(0);
                name.Remove(0);
                params.Remove(0);
-               return 0;
+               return nullptr;
             }
             ++posParamEnd; // skip trailing '"'
             break;
@@ -1547,7 +1539,7 @@ TMethod* TDocParser::LocateMethodInCurrentLine(Ssiz_t &posMethodName, TString& r
    if (!params.Length()) {
       ret.Remove(0);
       name.Remove(0);
-      return 0;
+      return nullptr;
    }
    // update posMethodName to point behind the method
    posMethodName = posParam + posParamEnd;
@@ -1561,7 +1553,7 @@ TMethod* TDocParser::LocateMethodInCurrentLine(Ssiz_t &posMethodName, TString& r
       }
    }
 
-   return 0;
+   return nullptr;
 }
 
 
@@ -1643,7 +1635,7 @@ void TDocParser::LocateMethods(std::ostream& out, const char* filename,
       static_cast<TClassDocOutput*>(fDocOutput)->CreateSourceOutputStream(srcHtmlOut, sourceExt, srcHtmlOutName);
       fLineNumber = 0;
    } else {
-      sourceExt = 0;
+      sourceExt = nullptr;
       srcHtmlOutName = fCurrentClass->GetName();
       fDocOutput->NameSpace2FileName(srcHtmlOutName);
       gSystem->PrependPathName("src", srcHtmlOutName);
@@ -1890,16 +1882,16 @@ void TDocParser::LocateMethodsInHeaderInline(std::ostream& out)
 
    TString declFileName;
    if (fHtml->GetDeclFileName(fCurrentClass, kTRUE, declFileName)) {
-      LocateMethods(out, declFileName, kTRUE /*source info*/, useDocxxStyle,
-                    kFALSE /*allowPureVirtual*/, pattern, 0);
+      LocateMethods(out, declFileName, kTRUE /*source info*/, useDocxxStyle, kFALSE /*allowPureVirtual*/, pattern,
+                    nullptr);
       Ssiz_t posGt = pattern.Index('>');
       if (posGt != kNPOS) {
          // template! Re-run with pattern '...<.*>::'
          Ssiz_t posLt = pattern.Index('<');
          if (posLt != kNPOS && posLt < posGt) {
             pattern.Replace(posLt + 1, posGt - posLt - 1, ".*");
-            LocateMethods(out, declFileName, kTRUE /*source info*/, useDocxxStyle,
-                    kFALSE /*allowPureVirtual*/, pattern, 0);
+            LocateMethods(out, declFileName, kTRUE /*source info*/, useDocxxStyle, kFALSE /*allowPureVirtual*/, pattern,
+                          nullptr);
          }
       }
    }
@@ -1914,8 +1906,8 @@ void TDocParser::LocateMethodsInHeaderClassDecl(std::ostream& out)
 {
    TString declFileName;
    if (fHtml->GetDeclFileName(fCurrentClass, kTRUE, declFileName))
-      LocateMethods(out, declFileName, kTRUE/*source info*/, kTRUE /*useDocxxStyle*/,
-                    kTRUE /*allowPureVirtual*/, 0, ".h.html");
+      LocateMethods(out, declFileName, kTRUE /*source info*/, kTRUE /*useDocxxStyle*/, kTRUE /*allowPureVirtual*/,
+                    nullptr, ".h.html");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2192,7 +2184,7 @@ namespace {
                continue;
             suppressed.Clear();
             iCandidate.Reset();
-            TDocMethodWrapper* method = 0;
+            TDocMethodWrapper *method = nullptr;
             while ((method = (TDocMethodWrapper*) iCandidate())) {
                TMethodArg* methArg = (TMethodArg*) method->GetMethod()->GetListOfMethodArgs()->At(iparam);
                TString sMethArg = methArg->GetFullTypeName();
@@ -2222,7 +2214,7 @@ namespace {
          // use TDocMethodWrapper::kDocumented bit
          suppressed.Clear();
          iCandidate.Reset();
-         TDocMethodWrapper* method = 0;
+         TDocMethodWrapper *method = nullptr;
          while ((method = (TDocMethodWrapper*) iCandidate())) {
             if (method->TestBit(TDocMethodWrapper::kDocumented)) {
                suppressed.AddLast(method);
@@ -2267,7 +2259,7 @@ void TDocParser::WriteMethod(std::ostream& out, TString& ret,
       if (!methList) continue;
 
       TIter nextMethod(methList);
-      TDocMethodWrapper* method = 0;
+      TDocMethodWrapper *method = nullptr;
       while ((method = (TDocMethodWrapper *) nextMethod())) {
          if (name == method->GetName()
              && isconst == ((method->GetMethod()->Property() & kIsConstMethod) > 0)
@@ -2281,7 +2273,7 @@ void TDocParser::WriteMethod(std::ostream& out, TString& ret,
       MatchOverloadSignatures(&candidates, &paramArr);
    }
 
-   TDocMethodWrapper* guessedMethod = 0;
+   TDocMethodWrapper *guessedMethod = nullptr;
    if (candidates.GetSize() == 1) {
       guessedMethod = (TDocMethodWrapper*) candidates.First();
       guessedMethod->SetBit(TDocMethodWrapper::kDocumented);

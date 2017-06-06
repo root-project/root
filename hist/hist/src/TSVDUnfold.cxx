@@ -76,24 +76,10 @@ using namespace std;
 /// Alternative constructor
 /// User provides data and MC test spectra, as well as detector response matrix, diagonal covariance matrix of measured spectrum built from the uncertainties on measured spectrum
 
-TSVDUnfold::TSVDUnfold( const TH1D *bdat, const TH1D *bini, const TH1D *xini, const TH2D *Adet )
-: TObject     (),
-fNdim       (0),
-fDdim       (2),
-fNormalize  (kFALSE),
-fKReg       (-1),
-fDHist      (NULL),
-fSVHist     (NULL),
-fXtau       (NULL),
-fXinv       (NULL),
-fBdat       (bdat),
-fBini       (bini),
-fXini       (xini),
-fAdet       (Adet),
-fToyhisto   (NULL),
-fToymat     (NULL),
-fToyMode    (kFALSE),
-fMatToyMode (kFALSE)
+TSVDUnfold::TSVDUnfold(const TH1D *bdat, const TH1D *bini, const TH1D *xini, const TH2D *Adet)
+   : TObject(), fNdim(0), fDdim(2), fNormalize(kFALSE), fKReg(-1), fDHist(nullptr), fSVHist(nullptr), fXtau(nullptr),
+     fXinv(nullptr), fBdat(bdat), fBini(bini), fXini(xini), fAdet(Adet), fToyhisto(nullptr), fToymat(nullptr),
+     fToyMode(kFALSE), fMatToyMode(kFALSE)
 {
    if (bdat->GetNbinsX() != bini->GetNbinsX() ||
        bdat->GetNbinsX() != xini->GetNbinsX() ||
@@ -129,25 +115,10 @@ fMatToyMode (kFALSE)
 /// Initialisation of TSVDUnfold
 /// User provides data and MC test spectra, as well as detector response matrix and the covariance matrix of the measured distribution
 
-TSVDUnfold::TSVDUnfold( const TH1D *bdat, TH2D* Bcov, const TH1D *bini, const TH1D *xini, const TH2D *Adet )
-: TObject     (),
-fNdim       (0),
-fDdim       (2),
-fNormalize  (kFALSE),
-fKReg       (-1),
-fDHist      (NULL),
-fSVHist     (NULL),
-fXtau       (NULL),
-fXinv       (NULL),
-fBdat       (bdat),
-fBcov       (Bcov),
-fBini       (bini),
-fXini       (xini),
-fAdet       (Adet),
-fToyhisto   (NULL),
-fToymat     (NULL),
-fToyMode    (kFALSE),
-fMatToyMode (kFALSE)
+TSVDUnfold::TSVDUnfold(const TH1D *bdat, TH2D *Bcov, const TH1D *bini, const TH1D *xini, const TH2D *Adet)
+   : TObject(), fNdim(0), fDdim(2), fNormalize(kFALSE), fKReg(-1), fDHist(nullptr), fSVHist(nullptr), fXtau(nullptr),
+     fXinv(nullptr), fBdat(bdat), fBcov(Bcov), fBini(bini), fXini(xini), fAdet(Adet), fToyhisto(nullptr),
+     fToymat(nullptr), fToyMode(kFALSE), fMatToyMode(kFALSE)
 {
    if (bdat->GetNbinsX() != bini->GetNbinsX() ||
        bdat->GetNbinsX() != xini->GetNbinsX() ||
@@ -203,37 +174,37 @@ TSVDUnfold::~TSVDUnfold()
 {
    if(fToyhisto){
       delete fToyhisto;
-      fToyhisto = 0;
+      fToyhisto = nullptr;
    }
 
    if(fToymat){
       delete fToymat;
-      fToymat = 0;
+      fToymat = nullptr;
    }
 
    if(fDHist){
       delete fDHist;
-      fDHist = 0;
+      fDHist = nullptr;
    }
 
    if(fSVHist){
       delete fSVHist;
-      fSVHist = 0;
+      fSVHist = nullptr;
    }
 
    if(fXtau){
       delete fXtau;
-      fXtau = 0;
+      fXtau = nullptr;
    }
 
    if(fXinv){
       delete fXinv;
-      fXinv = 0;
+      fXinv = nullptr;
    }
 
    if(fBcov){
       delete fBcov;
-      fBcov = 0;
+      fBcov = nullptr;
    }
 }
 
@@ -411,7 +382,7 @@ TH1D* TSVDUnfold::Unfold( Int_t kreg )
 TH2D* TSVDUnfold::GetUnfoldCovMatrix( const TH2D* cov, Int_t ntoys, Int_t seed )
 {
    fToyMode = true;
-   TH1D* unfres = 0;
+   TH1D *unfres = nullptr;
    TH2D* unfcov = (TH2D*)fAdet->Clone("unfcovmat");
    unfcov->SetTitle("Toy covariance matrix");
    for(int i=1; i<=fNdim; i++)
@@ -470,7 +441,7 @@ TH2D* TSVDUnfold::GetUnfoldCovMatrix( const TH2D* cov, Int_t ntoys, Int_t seed )
          toymean->SetBinContent(j, toymean->GetBinContent(j) + unfres->GetBinContent(j)/ntoys);
       }
       delete unfres;
-      unfres = 0;
+      unfres = nullptr;
    }
 
    // Reset the random seed
@@ -499,7 +470,7 @@ TH2D* TSVDUnfold::GetUnfoldCovMatrix( const TH2D* cov, Int_t ntoys, Int_t seed )
          }
       }
       delete unfres;
-      unfres = 0;
+      unfres = nullptr;
    }
    delete Lt;
    delete toymean;
@@ -517,7 +488,7 @@ TH2D* TSVDUnfold::GetUnfoldCovMatrix( const TH2D* cov, Int_t ntoys, Int_t seed )
 TH2D* TSVDUnfold::GetAdetCovMatrix( Int_t ntoys, Int_t seed )
 {
    fMatToyMode = true;
-   TH1D* unfres = 0;
+   TH1D *unfres = nullptr;
    TH2D* unfcov = (TH2D*)fAdet->Clone("unfcovmat");
    unfcov->SetTitle("Toy covariance matrix");
    for(int i=1; i<=fNdim; i++)
@@ -546,7 +517,7 @@ TH2D* TSVDUnfold::GetAdetCovMatrix( Int_t ntoys, Int_t seed )
          toymean->SetBinContent(j, toymean->GetBinContent(j) + unfres->GetBinContent(j)/ntoys);
       }
       delete unfres;
-      unfres = 0;
+      unfres = nullptr;
    }
 
    // Reset the random seed
@@ -568,7 +539,7 @@ TH2D* TSVDUnfold::GetAdetCovMatrix( Int_t ntoys, Int_t seed )
          }
       }
       delete unfres;
-      unfres = 0;
+      unfres = nullptr;
    }
    delete toymean;
    fMatToyMode = kFALSE;

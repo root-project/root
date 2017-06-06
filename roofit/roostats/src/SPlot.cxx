@@ -84,8 +84,7 @@ SPlot::SPlot():
 
   fSWeightVars = Args;
 
-  fSData = NULL;
-
+  fSData = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -97,8 +96,7 @@ SPlot::SPlot(const char* name, const char* title):
 
   fSWeightVars = Args;
 
-  fSData = NULL;
-
+  fSData = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -170,7 +168,7 @@ RooDataSet* SPlot::SetSData(RooDataSet* data)
     fSData = (RooDataSet*) data;
     return fSData;
   }  else
-    return NULL;
+     return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

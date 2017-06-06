@@ -116,12 +116,12 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& model, const RooArgSet& observables,
 
   // Select the pdf-specific commands 
   RooCmdConfig pc(Form("RooMCStudy::RooMCStudy(%s)",model.GetName())) ;
-  
-  pc.defineObject("fitModel","FitModel",0,0) ;
-  pc.defineObject("condObs","ProjectedDependents",0,0) ;
-  pc.defineObject("protoData","PrototypeData",0,0) ;
-  pc.defineSet("cPars","Constrain",0,0) ;
-  pc.defineSet("extCons","ExternalConstraints",0,0) ;
+
+  pc.defineObject("fitModel", "FitModel", 0, nullptr);
+  pc.defineObject("condObs", "ProjectedDependents", 0, nullptr);
+  pc.defineObject("protoData", "PrototypeData", 0, nullptr);
+  pc.defineSet("cPars", "Constrain", 0, nullptr);
+  pc.defineSet("extCons", "ExternalConstraints", 0, nullptr);
   pc.defineInt("silence","Silence",0,0) ;
   pc.defineInt("randProtoData","PrototypeData",0,0) ;
   pc.defineInt("verboseGen","Verbose",0,0) ;
@@ -197,7 +197,7 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& model, const RooArgSet& observables,
       delete params ;
       delete cparams ;
     }
-    _constrGenContext = _constrPdf->genContext(consPars,0,0,_verboseGen) ;
+    _constrGenContext = _constrPdf->genContext(consPars, nullptr, nullptr, _verboseGen);
 
     _perExptGenParams = kTRUE ;
 
@@ -205,23 +205,23 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& model, const RooArgSet& observables,
 
 
   } else {
-    _constrPdf = 0 ;
-    _constrGenContext=0 ;
+     _constrPdf = nullptr;
+     _constrGenContext = nullptr;
 
-    _perExptGenParams = kFALSE ;
+     _perExptGenParams = kFALSE;
   }
 
   
   // Extract generator and fit models
   _genModel = const_cast<RooAbsPdf*>(&model) ;
-  _genSample = 0 ;
-  RooAbsPdf* fitModel = static_cast<RooAbsPdf*>(pc.getObject("fitModel",0)) ;
+  _genSample = nullptr;
+  RooAbsPdf *fitModel = static_cast<RooAbsPdf *>(pc.getObject("fitModel", nullptr));
   _fitModel = fitModel ? fitModel : _genModel ;
   
   // Extract conditional observables and prototype data
-  _genProtoData = static_cast<RooDataSet*>(pc.getObject("protoData",0)) ;
-  if (pc.getObject("condObs",0)) {
-    _projDeps.add(static_cast<RooArgSet&>(*pc.getObject("condObs",0))) ;
+  _genProtoData = static_cast<RooDataSet *>(pc.getObject("protoData", nullptr));
+  if (pc.getObject("condObs", nullptr)) {
+     _projDeps.add(static_cast<RooArgSet &>(*pc.getObject("condObs", nullptr)));
   }
   
   _dependents.add(observables) ;
@@ -239,10 +239,10 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& model, const RooArgSet& observables,
   
   _genParams = _genModel->getParameters(&_dependents) ;
   if (!_binGenData) {
-    _genContext = _genModel->genContext(_dependents,_genProtoData,0,_verboseGen) ;
-    _genContext->attach(*_genParams) ;
+     _genContext = _genModel->genContext(_dependents, _genProtoData, nullptr, _verboseGen);
+     _genContext->attach(*_genParams);
   } else {
-    _genContext = 0 ;
+     _genContext = nullptr;
   }
 
   _genInitParams = (RooArgSet*) _genParams->snapshot(kFALSE) ;
@@ -281,7 +281,7 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& model, const RooArgSet& observables,
   if (_perExptGenParams) {
     _genParData = new RooDataSet("genParData","Generated Parameters dataset",*_genParams) ;
   } else {
-    _genParData = 0 ;
+     _genParData = nullptr;
   }
   
   // Append proto variables to allDependents
@@ -319,26 +319,13 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& model, const RooArgSet& observables,
 ///  See RooAbsPdf::fitTo()
 ///
 
-RooMCStudy::RooMCStudy(const RooAbsPdf& genModel, const RooAbsPdf& fitModel, 
-   		       const RooArgSet& dependents, const char* genOptions, 
-   		       const char* fitOptions, const RooDataSet* genProtoData, 
-   		       const RooArgSet& projDeps) :
-  TNamed("mcstudy","mcstudy"),
-  _genModel((RooAbsPdf*)&genModel), 
-  _genProtoData(genProtoData),
-  _projDeps(projDeps),
-  _constrPdf(0),
-  _constrGenContext(0),
-  _dependents(dependents), 
-  _allDependents(dependents), 
-  _fitModel((RooAbsPdf*)&fitModel), 
-  _nllVar(0),
-  _ngenVar(0),
-  _genParData(0),
-  _fitOptions(fitOptions),
-  _canAddFitResults(kTRUE),
-  _perExptGenParams(0),
-  _silence(kFALSE)
+RooMCStudy::RooMCStudy(const RooAbsPdf &genModel, const RooAbsPdf &fitModel, const RooArgSet &dependents,
+                       const char *genOptions, const char *fitOptions, const RooDataSet *genProtoData,
+                       const RooArgSet &projDeps)
+   : TNamed("mcstudy", "mcstudy"), _genModel((RooAbsPdf *)&genModel), _genProtoData(genProtoData), _projDeps(projDeps),
+     _constrPdf(nullptr), _constrGenContext(nullptr), _dependents(dependents), _allDependents(dependents),
+     _fitModel((RooAbsPdf *)&fitModel), _nllVar(nullptr), _ngenVar(nullptr), _genParData(nullptr),
+     _fitOptions(fitOptions), _canAddFitResults(kTRUE), _perExptGenParams(0), _silence(kFALSE)
 {
   // Decode generator options
   TString genOpt(genOptions) ;
@@ -356,12 +343,12 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& genModel, const RooAbsPdf& fitModel,
   }
   
   if (!_binGenData) {
-    _genContext = genModel.genContext(dependents,genProtoData,0,_verboseGen) ;
+     _genContext = genModel.genContext(dependents, genProtoData, nullptr, _verboseGen);
   } else {
-    _genContext = 0 ;
+     _genContext = nullptr;
   }
   _genParams = _genModel->getParameters(&_dependents) ;
-  _genSample = 0 ;
+  _genSample = nullptr;
   RooArgSet* tmp = genModel.getParameters(&dependents) ;
   _genInitParams = (RooArgSet*) tmp->snapshot(kFALSE) ;
   delete tmp ;
@@ -481,7 +468,7 @@ Bool_t RooMCStudy::run(Bool_t doGenerate, Bool_t DoFit, Int_t nSamples, Int_t nE
       ooccoutP(_fitModel,Generation) << "sample " << nSamples << endl ;
     }
 
-    _genSample = 0;
+    _genSample = nullptr;
     Bool_t existingData = kFALSE ;
     if (doGenerate) {
       // Generate sample
@@ -718,8 +705,8 @@ Bool_t RooMCStudy::fit(Int_t nSamples, TList& dataSetList)
     _genDataList.Add(gset) ;
   }
   delete iter ;
-  
-  return run(kFALSE,kTRUE,nSamples,0,kTRUE,0) ;
+
+  return run(kFALSE, kTRUE, nSamples, 0, kTRUE, nullptr);
 }
 
 
@@ -795,7 +782,7 @@ RooFitResult* RooMCStudy::refit(RooAbsData* genSample)
     genSample = _genSample ;
   }
 
-  RooFitResult* fr(0) ;
+  RooFitResult *fr(nullptr);
   if (genSample->sumEntries()>0) {
     fr = doFit(genSample) ;
   }
@@ -823,7 +810,7 @@ Bool_t RooMCStudy::fitSample(RooAbsData* genSample)
 
   // Perform actual fit
   Bool_t ok ;
-  RooFitResult* fr(0) ;
+  RooFitResult *fr(nullptr);
   if (genSample->sumEntries()>0) {
     fr = doFit(genSample) ;
     ok = (fr->status()==0) ;
@@ -977,8 +964,8 @@ const RooArgSet* RooMCStudy::fitParams(Int_t sampleNum) const
 {
   // Check if sampleNum is in range
   if (sampleNum<0 || sampleNum>=_fitParData->numEntries()) {
-    oocoutE(_fitModel,InputArguments) << "RooMCStudy::fitParams: ERROR, invalid sample number: " << sampleNum << endl ;    
-    return 0 ;
+    oocoutE(_fitModel,InputArguments) << "RooMCStudy::fitParams: ERROR, invalid sample number: " << sampleNum << endl ;
+    return nullptr;
   }
   
   return _fitParData->get(sampleNum) ;
@@ -993,8 +980,8 @@ const RooFitResult* RooMCStudy::fitResult(Int_t sampleNum) const
 {
   // Check if sampleNum is in range
   if (sampleNum<0 || sampleNum>=_fitResList.GetSize()) {
-    oocoutE(_fitModel,InputArguments) << "RooMCStudy::fitResult: ERROR, invalid sample number: " << sampleNum << endl ;    
-    return 0 ;
+    oocoutE(_fitModel,InputArguments) << "RooMCStudy::fitResult: ERROR, invalid sample number: " << sampleNum << endl ;
+    return nullptr;
   }
   
   // Retrieve fit result object
@@ -1005,7 +992,7 @@ const RooFitResult* RooMCStudy::fitResult(Int_t sampleNum) const
     oocoutE(_fitModel,InputArguments) << "RooMCStudy::fitResult: ERROR, no fit result saved for sample " 
 			  << sampleNum << ", did you use the 'r; fit option?" << endl ;
   }
-  return 0 ;
+  return nullptr;
 }
 
 
@@ -1019,13 +1006,13 @@ const RooAbsData* RooMCStudy::genData(Int_t sampleNum) const
   // Check that generated data was saved
   if (_genDataList.GetSize()==0) {
     oocoutE(_fitModel,InputArguments) << "RooMCStudy::genData() ERROR, generated data was not saved" << endl ;
-    return 0 ;
+    return nullptr;
   }
   
   // Check if sampleNum is in range
   if (sampleNum<0 || sampleNum>=_genDataList.GetSize()) {
-    oocoutE(_fitModel,InputArguments) << "RooMCStudy::genData() ERROR, invalid sample number: " << sampleNum << endl ;    
-    return 0 ;
+    oocoutE(_fitModel,InputArguments) << "RooMCStudy::genData() ERROR, invalid sample number: " << sampleNum << endl ;
+    return nullptr;
   }
   
   return  (RooAbsData*) _genDataList.At(sampleNum) ;
@@ -1070,8 +1057,8 @@ RooPlot* RooMCStudy::plotParam(const char* paramName, const RooCmdArg& arg1, con
   // Find parameter in fitParDataSet
   RooRealVar* param = static_cast<RooRealVar*>(_fitParData->get()->find(paramName)) ;
   if (!param) {
-    oocoutE(_fitModel,InputArguments) << "RooMCStudy::plotParam: ERROR: no parameter defined with name " << paramName << endl ;  
-    return 0 ;
+    oocoutE(_fitModel,InputArguments) << "RooMCStudy::plotParam: ERROR: no parameter defined with name " << paramName << endl ;
+    return nullptr;
   }
 
   // Forward to implementation below
@@ -1249,7 +1236,7 @@ RooPlot* RooMCStudy::makeFrameAndPlotCmd(const RooRealVar& param, RooLinkedList&
   pc.allowUndefined() ;
   pc.process(cmdList) ;
   if (!pc.ok(kTRUE)) {
-    return 0 ;
+     return nullptr;
   }
   
   // Make frame according to specs
