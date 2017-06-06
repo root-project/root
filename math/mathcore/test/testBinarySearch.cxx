@@ -38,10 +38,10 @@ template <typename T> void testBinarySearch()
 
       T* pind;
       pind = std::lower_bound(begin, end, elem);
-      Long_t index2 = (pind!=end && (*pind == elem)? (pind - k): ( pind - k - 1));
+      Long_t index2 = ((pind!=end && (*pind == elem)) ? (pind - k): ( pind - k - 1));
 
       pind = std::upper_bound(begin, end, elem);
-      Long_t index3 = (pind!=end && (*pind == elem)? (pind - k): ( pind - k - 1));
+      Long_t index3 = ((pind!=end && (*pind == elem)) ? (pind - k): ( pind - k - 1));
 
       cout << " ELEM = " << elem;
       cout << " [TMATH] [i:" << index  << " k[i]:"; if (index>=0 && index<nn) cout << k[index]; else cout << "n/a"; cout << ']';
