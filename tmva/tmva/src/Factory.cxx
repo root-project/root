@@ -660,12 +660,23 @@ std::map<TString,Double_t> TMVA::Factory::OptimizeAllMethods(TString fomType, TS
 
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Private method to generate an instance of a ROCCurve regardless of 
+/// analysis type.
+///
+/// \note You own the retured pointer.
+/// 
+
 TMVA::ROCCurve * TMVA::Factory::GetROC(TMVA::DataLoader *loader, TString theMethodName, UInt_t iClass) {
    return GetROC((TString)loader->GetName(), theMethodName, iClass);
 }
 
-///////
-/// NOTE: You own the retured pointer.
+////////////////////////////////////////////////////////////////////////////////
+/// Private method to generate an instance of a ROCCurve regardless of 
+/// analysis type.
+///
+/// \note You own the retured pointer.
+/// 
  
 TMVA::ROCCurve * TMVA::Factory::GetROC(TString datasetname, TString theMethodName, UInt_t iClass) {
    if (fMethodsMap.find(datasetname) == fMethodsMap.end()) {
@@ -739,6 +750,12 @@ TMVA::ROCCurve * TMVA::Factory::GetROC(TString datasetname, TString theMethodNam
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Calculate the integral of the ROC curve, also known as the area under curve
+/// (AUC), for a given method.
+/// 
+/// Argument iClass specifies the class to generate the ROC curve in a 
+/// multiclass setting. It is ignored for binary classification.
+/// 
 
 Double_t TMVA::Factory::GetROCIntegral(TMVA::DataLoader *loader, TString theMethodName, UInt_t iClass)
 {
@@ -746,6 +763,12 @@ Double_t TMVA::Factory::GetROCIntegral(TMVA::DataLoader *loader, TString theMeth
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Calculate the integral of the ROC curve, also known as the area under curve
+/// (AUC), for a given method.
+/// 
+/// Argument iClass specifies the class to generate the ROC curve in a 
+/// multiclass setting. It is ignored for binary classification.
+/// 
 
 Double_t TMVA::Factory::GetROCIntegral(TString datasetname, TString theMethodName, UInt_t iClass)
 {
@@ -759,9 +782,9 @@ Double_t TMVA::Factory::GetROCIntegral(TString datasetname, TString theMethodNam
       return 0;
    }
 
-   std::set<Types::EAnalysisType> allowedAnalysisTypes = {Types::kClassification/*, Types::kMulticlass*/};
+   std::set<Types::EAnalysisType> allowedAnalysisTypes = {Types::kClassification, Types::kMulticlass};
    if ( allowedAnalysisTypes.count(this->fAnalysisType) == 0 ) {
-      Log() << kERROR << Form("Can only generate ROC integral for analysis type kClassification."/*"and kMulticlass."*/) << Endl;
+      Log() << kERROR << Form("Can only generate ROC integral for analysis type kClassification. and kMulticlass.") << Endl;
       return 0;
    }
 
