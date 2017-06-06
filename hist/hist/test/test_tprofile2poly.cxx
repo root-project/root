@@ -192,7 +192,7 @@ void test_binEntryStats() {
    DMerge.Clear();
    PMerge.Clear();
 
-  delete TP2D;
+   delete TP2D;
    delete TP2D_2;
    delete TP2P;
    delete TP2P_2;
