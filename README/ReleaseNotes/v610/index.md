@@ -27,7 +27,8 @@ The following people have contributed to this new version:
  Fons Rademakers, CERN/SFT,\
  Enric Tejedor Saavedra, CERN/SFT,\
  Vassil Vassilev, Fermilab/CMS,\
- Wouter Verkerke, NIKHEF/Atlas, RooFit
+ Wouter Verkerke, NIKHEF/Atlas, RooFit,
+ Xavier Valls, CERN/SFT, UJI
 
 ## Removed interfaces
 
@@ -79,7 +80,12 @@ The following interfaces have been removed, after deprecation in v6.08.
 
 ## Math Libraries
 
-* Improve thread friendliness of the TMinuit class.
+- Improve thread friendliness of the TMinuit class.
+- Introduced Vectorization:
+    - New `ROOT::Double_v` type (vectorized double).
+    - Adapted TF1 to accept functions with `ROOT::Double_v` types as the data parameter.
+    - Support Vectorization for the Binned Chi2 fitting and the Unbinned Likelihood fitting.
+- Multithreaded parallelization of the Binned Chi2 fitting and the Unbinned Likelihood fitting.
 
 ## RooFit Libraries
 
