@@ -802,6 +802,7 @@ Double_t TMVA::Factory::GetROCIntegral(TString datasetname, TString theMethodNam
             << Form("ROCCurve object was not created in Method = %s not found with Dataset = %s ", theMethodName.Data(),
                     datasetname.Data())
             << Endl;
+      return 0;
    }
 
    Int_t npoints = TMVA::gConfig().fVariablePlotting.fNbinsXOfROCCurve + 1;
