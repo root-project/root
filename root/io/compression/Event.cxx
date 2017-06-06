@@ -255,7 +255,8 @@ void Event::AddTrack(Float_t random)
 
    TClonesArray &tracks = *fTracks;
    //new(tracks[fNtrack++]) Track(random);
-   new(tracks[fNtrack++]) BigTrack(random,fNtrack%100);
+   new(tracks[fNtrack]) BigTrack(random,fNtrack%100);
+   fNtrack++;
 }
 
 //______________________________________________________________________________
@@ -347,10 +348,10 @@ void Event::SetRandomVertex() {
 }
 
 //______________________________________________________________________________
-void Event::ShowLachaud() {
-   
+void Event::ShowLachaud()
+{
    vector<string>::iterator R__k;
-   printf("Lachaud vector has %u entries\n", fLachaud.size());
+   printf("Lachaud vector has %u entries\n", (unsigned int)fLachaud.size());
    for (R__k = fLachaud.begin(); R__k != fLachaud.end(); ++R__k) {
       printf(" %s\n",(*R__k).c_str());
    }
