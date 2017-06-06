@@ -199,7 +199,7 @@ public:
       /// create the solver from the type and size of number of fitting points and number of parameters
       if (fSolver) gsl_multiroot_fsolver_free(fSolver);
       fSolver = gsl_multiroot_fsolver_alloc(type, n);
-
+      fName =  std::string(gsl_multiroot_fsolver_name(fSolver) );
    }
 
 
@@ -222,7 +222,7 @@ public:
 
    virtual std::string Name() const {
       if (fSolver == 0 ) return "undefined";
-      return std::string(gsl_multiroot_fsolver_name(fSolver) );
+      return fName; 
    }
 
    virtual int Iterate() {
@@ -255,6 +255,7 @@ private:
    gsl_multiroot_fsolver * fSolver;
    // cached vector to avoid re-allocating every time a new one
    mutable gsl_vector * fVec;
+   std::string fName;   // solver nane
 
 };
 
@@ -312,6 +313,7 @@ public:
       /// create the solver from the type and size of number of fitting points and number of parameters
       if (fDerivSolver) gsl_multiroot_fdfsolver_free(fDerivSolver);
       fDerivSolver = gsl_multiroot_fdfsolver_alloc(type, n);
+      fName = std::string(gsl_multiroot_fdfsolver_name(fDerivSolver) );
    }
 
 
@@ -344,7 +346,7 @@ public:
 
    virtual std::string Name() const {
       if (fDerivSolver == 0 ) return "undefined";
-      return std::string(gsl_multiroot_fdfsolver_name(fDerivSolver) );
+      return fName; 
    }
 
    virtual int Iterate() {
@@ -379,6 +381,7 @@ private:
    // cached vector to avoid re-allocating every time a new one
    mutable gsl_vector * fVec;
    std::vector<ROOT::Math::IMultiGradFunction*> fGradFuncVec;
+   std::string fName;   // solver nane
 
 };
 
