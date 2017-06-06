@@ -13,6 +13,7 @@ set(TestMathMoreSource
      testGSLIntegration.cxx
      testMCIntegration.cxx
      testGSLRootFinder.cxx
+     testMultiRootFinder.cxx
      testMinimization1D.cxx
      testInterpolation.cxx
      testRandom.cxx
