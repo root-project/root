@@ -89,7 +89,7 @@ public:
    }
 
    /// return name
-   virtual std::string Name() const  = 0;
+   virtual const std::string & Name() const  = 0;
 
    /// perform an iteration
    virtual int Iterate() = 0;
@@ -161,7 +161,8 @@ public:
    */
    GSLMultiRootSolver (const gsl_multiroot_fsolver_type * type, int n ) :
       fSolver(0),
-      fVec(0)
+      fVec(0),
+      fName(std::string("undefined"))
    {
       CreateSolver(type, n);
    }
@@ -220,8 +221,7 @@ public:
       return gsl_multiroot_fsolver_set(fSolver, fFunctions.GetFunctions(), fVec);
    }
 
-   virtual std::string Name() const {
-      if (fSolver == 0 ) return "undefined";
+   virtual const std::string & Name() const {
       return fName; 
    }
 
@@ -274,7 +274,8 @@ public:
    */
    GSLMultiRootDerivSolver (const gsl_multiroot_fdfsolver_type * type, int n ) :
       fDerivSolver(0),
-      fVec(0)
+      fVec(0),
+      fName(std::string("undefined"))
    {
       CreateSolver(type, n);
    }
@@ -344,8 +345,7 @@ public:
       return gsl_multiroot_fdfsolver_set(fDerivSolver, fDerivFunctions.GetFunctions(), fVec);
    }
 
-   virtual std::string Name() const {
-      if (fDerivSolver == 0 ) return "undefined";
+   virtual const std::string & Name() const {
       return fName; 
    }
 
