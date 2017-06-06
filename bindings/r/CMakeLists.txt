@@ -3,11 +3,9 @@
 ############################################################################
 #Autor: Omar Andres Zapata Mesa 31/05/2013,14/07/2014
 
-# set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/r")
-
 set(libname RInterface)
 
-include_directories(${R_INCLUDE_DIRS})
+include_directories(SYSTEM ${R_INCLUDE_DIRS})
 
 ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-overloaded-virtual)
 
@@ -23,9 +21,3 @@ ROOT_GENERATE_DICTIONARY(G__RInterface ${R_HEADERS} MODULE ${libname} LINKDEF Li
 ROOT_LINKER_LIBRARY(RInterface *.cxx G__RInterface.cxx LIBRARIES ${R_LIBRARIES} DEPENDENCIES Core Matrix Thread RIO readline)
 
 ROOT_INSTALL_HEADERS()
-
-
-
-
-
-
