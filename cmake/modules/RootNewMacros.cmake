@@ -56,18 +56,6 @@ else()
       IMPORT_PREFIX ${libprefix} )
 endif()
 
-#---Modify the behaviour for local and non-local builds--------------------------------------------
-
-if(CMAKE_PROJECT_NAME STREQUAL ROOT)
-  set(rootcint_cmd rootcling_stage1)
-  set(genreflex_cmd genreflex)
-  set(ROOTCINTDEP rootcling_stage1)
-else()
-  set(rootcint_cmd rootcling)
-  set(genreflex_cmd genreflex)
-  set(ROOTCINTDEP)
-endif()
-
 set(CMAKE_VERBOSE_MAKEFILES OFF)
 set(CMAKE_INCLUDE_CURRENT_DIR OFF)
 
@@ -367,6 +355,8 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     if(CMAKE_PROJECT_NAME STREQUAL ROOT)
       set(command ${CMAKE_COMMAND} -E env "LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH}" "ROOTIGNOREPREFIX=1" $<TARGET_FILE:rootcling> -rootbuild)
       set(ROOTCINTDEP rootcling)
+    elseif(TARGET ROOT::rootcling)
+      set(command ROOT::rootcling)
     else()
       set(command rootcling)
     endif()
