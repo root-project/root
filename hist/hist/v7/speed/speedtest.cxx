@@ -106,9 +106,8 @@ void GenerateInput(std::vector<T> &numbers, double minVal, double maxVal, UInt_t
    }
    T range = maxVal - minVal;
    TRandom3 r(seed);
-   size_t len = numbers.size();
-   for(auto c = numbers.begin(); c != numbers.end(); ++c) {
-      *c = minVal + range * r.Rndm();
+   for (auto &c: numbers) {
+      c = minVal + range * r.Rndm();
    }
 }
 
@@ -684,7 +683,7 @@ void histspeedtest(size_t iter, int what) {
 
 int main(int argc, char **argv) {
 
-   size_t iter = 1e9;
+   size_t iter = 1e7;
    int what = 1|2|4|8;
    if (argc > 1) iter = atof(argv[1]);
    if (argc > 2) what = atoi(argv[2]);
