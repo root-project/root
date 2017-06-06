@@ -16,4 +16,8 @@ ROOT_INSTALL_HEADERS()
 
 if(testing)
   add_subdirectory(test)
+
+if(root7)
+    add_subdirectory(v7/test)
+  endif()
 endif()
