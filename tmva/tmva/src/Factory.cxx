@@ -1364,10 +1364,12 @@ void TMVA::Factory::EvaluateAllMethods( void )
         doMulticlass = kTRUE;
         Log() << kINFO << "Evaluate multiclass classification method: " << theMethod->GetMethodName() << Endl;
 
-        theMethod->TestMulticlass();
 
+        // This part uses a genetic alg. to evaluate the optimal sig eff * sig pur.
+        // This is why it is disabled for now.
         // Find approximate optimal working point w.r.t. signalEfficiency * signalPurity.
-        multiclass_testEff.push_back(theMethod->GetMulticlassEfficiency(multiclass_testPur));
+        // theMethod->TestMulticlass(); // This is where the actual GA calc is done
+        // multiclass_testEff.push_back(theMethod->GetMulticlassEfficiency(multiclass_testPur));
 
         // Confusion matrix at three background efficiency levels
         multiclass_testConfusionEffB01.push_back(theMethod->GetMulticlassConfusionMatrix(0.01, Types::kTesting));
@@ -1730,37 +1732,40 @@ void TMVA::Factory::EvaluateAllMethods( void )
          TString hLine =
             "-------------------------------------------------------------------------------------------------------";
 
-         // --- Acheivable signal efficiency * signal purity
-         // --------------------------------------------------------------------
-         Log() << kINFO << Endl;
-         Log() << kINFO << "Evaluation results ranked by best signal efficiency times signal purity " << Endl;
-         Log() << kINFO << hLine << Endl;
+         // This part uses a genetic alg. to evaluate the optimal sig eff * sig pur.
+         // This is why it is disabled for now.
+         // 
+         // // --- Acheivable signal efficiency * signal purity
+         // // --------------------------------------------------------------------
+         // Log() << kINFO << Endl;
+         // Log() << kINFO << "Evaluation results ranked by best signal efficiency times signal purity " << Endl;
+         // Log() << kINFO << hLine << Endl;
 
-         // iterate over methods and evaluate
-         for (MVector::iterator itrMethod = methods->begin(); itrMethod != methods->end(); itrMethod++) {
-            MethodBase *theMethod = dynamic_cast<MethodBase *>(*itrMethod);
-            if (theMethod == 0) {
-               continue;
-            }
+         // // iterate over methods and evaluate
+         // for (MVector::iterator itrMethod = methods->begin(); itrMethod != methods->end(); itrMethod++) {
+         //    MethodBase *theMethod = dynamic_cast<MethodBase *>(*itrMethod);
+         //    if (theMethod == 0) {
+         //       continue;
+         //    }
 
-            TString header = "DataSet Name     MVA Method     ";
-            for (UInt_t icls = 0; icls < theMethod->fDataSetInfo.GetNClasses(); ++icls) {
-               header += Form("%-12s ", theMethod->fDataSetInfo.GetClassInfo(icls)->GetName());
-            }
+         //    TString header = "DataSet Name     MVA Method     ";
+         //    for (UInt_t icls = 0; icls < theMethod->fDataSetInfo.GetNClasses(); ++icls) {
+         //       header += Form("%-12s ", theMethod->fDataSetInfo.GetClassInfo(icls)->GetName());
+         //    }
 
-            Log() << kINFO << header << Endl;
-            Log() << kINFO << hLine << Endl;
-            for (Int_t i = 0; i < nmeth_used[0]; i++) {
-               TString res = Form("[%-14s] %-15s", theMethod->fDataSetInfo.GetName(), (const char *)mname[0][i]);
-               for (UInt_t icls = 0; icls < theMethod->fDataSetInfo.GetNClasses(); ++icls) {
-                  res += Form("%#1.3f        ", (multiclass_testEff[i][icls]) * (multiclass_testPur[i][icls]));
-               }
-               Log() << kINFO << res << Endl;
-            }
+         //    Log() << kINFO << header << Endl;
+         //    Log() << kINFO << hLine << Endl;
+         //    for (Int_t i = 0; i < nmeth_used[0]; i++) {
+         //       TString res = Form("[%-14s] %-15s", theMethod->fDataSetInfo.GetName(), (const char *)mname[0][i]);
+         //       for (UInt_t icls = 0; icls < theMethod->fDataSetInfo.GetNClasses(); ++icls) {
+         //          res += Form("%#1.3f        ", (multiclass_testEff[i][icls]) * (multiclass_testPur[i][icls]));
+         //       }
+         //       Log() << kINFO << res << Endl;
+         //    }
 
-            Log() << kINFO << hLine << Endl;
-            Log() << kINFO << Endl;
-         }
+         //    Log() << kINFO << hLine << Endl;
+         //    Log() << kINFO << Endl;
+         // }
 
          // --- 1 vs Rest ROC AUC, signal efficiency @ given background efficiency
          // --------------------------------------------------------------------
