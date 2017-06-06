@@ -37,7 +37,6 @@ namespace {
       PyObject*  fBase;            // b_base in python
       void*      fPtr;             // b_ptr in python
       Py_ssize_t fSize;            // b_size in python
-      Py_ssize_t fItemSize;        // b_itemsize in python
    };
 
 // callable cache
@@ -64,15 +63,14 @@ namespace {
    {
    // Retrieve the (type-strided) size of the the buffer; may be a guess.
 #if PY_VERSION_HEX < 0x03000000
-      Py_ssize_t nlen = ((PyBufferTop_t*)self)->fSize;
-      Py_ssize_t item = ((PyBufferTop_t*)self)->fItemSize;
+      Py_ssize_t nlen = (*(PyBuffer_Type.tp_as_sequence->sq_length))(self);
 #else
-      Py_buffer* bufinfo = PyMemoryView_GET_BUFFER(self);
-      Py_ssize_t nlen = bufinfo->len;
-      Py_ssize_t item = bufinfo->itemsize;
+      Py_buffer bufinfo;
+      (*(Py_TYPE(self)->tp_as_buffer->bf_getbuffer))( self, &bufinfo, PyBUF_SIMPLE );
+      Py_ssize_t nlen = bufinfo.len;
 #endif
       if ( nlen != INT_MAX )  // INT_MAX is the default, i.e. unknown actual length
-         return nlen/item;
+         return nlen;
 
       std::map< PyObject*, PyObject* >::iterator iscbp = gSizeCallbacks.find( self );
       if ( iscbp != gSizeCallbacks.end() ) {
@@ -191,10 +189,10 @@ namespace {
          return 0;
 
 #if PY_VERSION_HEX < 0x03000000
-      ((PyBufferTop_t*)self)->fSize = nlen * ((PyBufferTop_t*)self)->fItemSize;
+      ((PyBufferTop_t*)self)->fSize = nlen;
 #else
-      PyMemoryView_GET_BUFFER(self)->len = nlen * PyMemoryView_GET_BUFFER(self)->itemsize;
-#endif 
+      PyMemoryView_GET_BUFFER(self)->len = nlen;
+#endif
 
       Py_INCREF( Py_None );
       return Py_None;
@@ -294,23 +292,6 @@ PyROOT::TPyBufferFactory::~TPyBufferFactory()
 {
 }
 
-const char* getBoolFormat()   { return "b";}
-const char* getShortFormat()  { return "h";}
-const char* getUShortFormat() { return "H";}
-const char* getIntFormat()    { return "i";}
-const char* getUIntFormat()   { return "I";}
-const char* getLongFormat()   { return "l";}
-const char* getULongFormat()  { return "L";}
-const char* getFloatFormat()  { return "f";}
-const char* getDoubleFormat() { return "d";}
-
-#if PY_VERSION_HEX < 0x03000000
-   #define PYBUFFER_SETITEMSIZE(buf,type) ((PyBufferTop_t*)buf)->fItemSize = Py_ssize_t(sizeof(type))
-   #define PYBUFFER_SETFORMAT(buf,name) 
-#else
-   #define PYBUFFER_SETITEMSIZE(buf,type) PyMemoryView_GET_BUFFER(buf)->itemsize = Py_ssize_t(sizeof(type))
-   #define PYBUFFER_SETFORMAT(buf,name) PyMemoryView_GET_BUFFER(buf)->format = (char *)get##name##Format() 
-#endif
 
 //- public members --------------------------------------------------------------
 #define PYROOT_IMPLEMENT_PYBUFFER_FROM_MEMORY( name, type )                     \
@@ -321,8 +302,6 @@ PyObject* PyROOT::TPyBufferFactory::PyBuffer_FromMemory( type* address, Py_ssize
    if ( buf ) {                                                                 \
       Py_INCREF( (PyObject*)(void*)&Py##name##Buffer_Type );                    \
       buf->ob_type = &Py##name##Buffer_Type;                                    \
-      PYBUFFER_SETITEMSIZE(buf,type);                                           \
-      PYBUFFER_SETFORMAT(buf, name);                                            \
    }                                                                            \
    return buf;                                                                  \
 }                                                                               \
