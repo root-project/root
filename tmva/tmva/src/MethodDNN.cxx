@@ -122,12 +122,11 @@ Bool_t TMVA::MethodDNN::HasAnalysisType(Types::EAnalysisType type,
 void TMVA::MethodDNN::Init()
 {
    // TODO: Remove once weights are considered by the method.
-   auto & dsi = this->DataInfo();
+   auto &dsi = this->DataInfo();
    auto numClasses = dsi.GetNClasses();
    for (UInt_t i = 0; i < numClasses; ++i) {
       if (dsi.GetWeightExpression(i) != TString("")) {
-         Log() << kERROR
-         << "Currently event weights are not considered properly by this method." << Endl;
+         Log() << kERROR << "Currently event weights are not considered properly by this method." << Endl;
          Log() << kFATAL << "See above." << Endl;
       }
    }
@@ -418,47 +417,63 @@ void TMVA::MethodDNN::ProcessOptions()
    }
 
    if (fArchitectureString == "STANDARD") {
-      Log() << kERROR << "The STANDARD architecture has been deprecated. "
-                         "Please use Architecture=CPU or Architecture=CPU."
-                         "See the TMVA Users' Guide for instructions if you "
-                         "encounter problems." << Endl;
-      Log() << kFATAL << "The STANDARD architecture has been deprecated. "
-                         "Please use Architecture=CPU or Architecture=CPU."
-                         "See the TMVA Users' Guide for instructions if you "
-                         "encounter problems." << Endl;
+      Log() << kERROR
+            << "The STANDARD architecture has been deprecated. "
+               "Please use Architecture=CPU or Architecture=CPU."
+               "See the TMVA Users' Guide for instructions if you "
+               "encounter problems."
+            << Endl;
+      Log() << kFATAL
+            << "The STANDARD architecture has been deprecated. "
+               "Please use Architecture=CPU or Architecture=CPU."
+               "See the TMVA Users' Guide for instructions if you "
+               "encounter problems."
+            << Endl;
    }
 
    if (fArchitectureString == "OPENCL") {
-      Log() << kERROR << "The OPENCL architecture has not been implemented yet. "
-                         "Please use Architecture=CPU or Architecture=CPU for the "
-                         "time being. See the TMVA Users' Guide for instructions "
-                         "if you encounter problems." << Endl;
-      Log() << kFATAL << "The OPENCL architecture has not been implemented yet. "
-                         "Please use Architecture=CPU or Architecture=CPU for the "
-                         "time being. See the TMVA Users' Guide for instructions "
-                         "if you encounter problems." << Endl;
+      Log() << kERROR
+            << "The OPENCL architecture has not been implemented yet. "
+               "Please use Architecture=CPU or Architecture=CPU for the "
+               "time being. See the TMVA Users' Guide for instructions "
+               "if you encounter problems."
+            << Endl;
+      Log() << kFATAL
+            << "The OPENCL architecture has not been implemented yet. "
+               "Please use Architecture=CPU or Architecture=CPU for the "
+               "time being. See the TMVA Users' Guide for instructions "
+               "if you encounter problems."
+            << Endl;
    }
 
    if (fArchitectureString == "GPU") {
-      #ifndef DNNCUDA // Included only if DNNCUDA flag is _not_ set.
-      Log() << kERROR << "CUDA backend not enabled. Please make sure "
-                         "you have CUDA installed and it was successfully "
-                         "detected by CMAKE." << Endl;
-      Log() << kFATAL << "CUDA backend not enabled. Please make sure "
-                         "you have CUDA installed and it was successfully "
-                         "detected by CMAKE." << Endl;
-      #endif // DNNCUDA
+#ifndef DNNCUDA // Included only if DNNCUDA flag is _not_ set.
+      Log() << kERROR
+            << "CUDA backend not enabled. Please make sure "
+               "you have CUDA installed and it was successfully "
+               "detected by CMAKE."
+            << Endl;
+      Log() << kFATAL
+            << "CUDA backend not enabled. Please make sure "
+               "you have CUDA installed and it was successfully "
+               "detected by CMAKE."
+            << Endl;
+#endif // DNNCUDA
    }
 
    if (fArchitectureString == "CPU") {
-      #ifndef DNNCPU // Included only if DNNCPU flag is _not_ set.
-      Log() << kERROR << "Multi-core CPU backend not enabled. Please make sure "
-                      "you have a BLAS implementation and it was successfully "
-                      "detected by CMake as well that the imt CMake flag is set." << Endl;
-      Log() << kFATAL << "Multi-core CPU backend not enabled. Please make sure "
-                      "you have a BLAS implementation and it was successfully "
-                      "detected by CMake as well that the imt CMake flag is set." << Endl;
-      #endif // DNNCPU
+#ifndef DNNCPU // Included only if DNNCPU flag is _not_ set.
+      Log() << kERROR
+            << "Multi-core CPU backend not enabled. Please make sure "
+               "you have a BLAS implementation and it was successfully "
+               "detected by CMake as well that the imt CMake flag is set."
+            << Endl;
+      Log() << kFATAL
+            << "Multi-core CPU backend not enabled. Please make sure "
+               "you have a BLAS implementation and it was successfully "
+               "detected by CMake as well that the imt CMake flag is set."
+            << Endl;
+#endif // DNNCPU
    }
 
    //

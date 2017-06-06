@@ -144,7 +144,6 @@ std::vector<Double_t> TMVA::ROCCurve::ComputeSpecificity(const UInt_t num_points
       specificity_vector.push_back(specificity);
    }
 
-
    specificity_vector.push_back(1.0);
    return specificity_vector;
 }
