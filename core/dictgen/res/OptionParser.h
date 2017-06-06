@@ -1400,6 +1400,8 @@ struct Parser::Action
     (void) args;
     return true;
   }
+
+  virtual ~Action() = default;
 };
 
 /**
@@ -1718,6 +1720,8 @@ struct PrintUsageImplementation
     virtual void operator()(const char*, int)
     {
     }
+
+    virtual ~IStringWriter() = default;
   };
 
   /**
