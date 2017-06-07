@@ -519,7 +519,7 @@ class TJsonEx7 {
       std::bitset<64>             fBitsSet64;
 
 
-   TJsonEx7(bool setvalues = false)
+   TJsonEx7(int numelem = 0)
    {
       fStrPtr1 = nullptr;
       fStrPtr2 = nullptr;
@@ -530,7 +530,7 @@ class TJsonEx7 {
         fVectPtrDoubleArr[n] = nullptr;
       }
 
-      if (!setvalues) return;
+      if (numelem <= 0) return;
 
       fStr1 = "String with special characters: \" & < >";
       fStr2 = "Very long Value of STL string// ***********************************************************8// ***********************************************************8// ***********************************************************8// ***********************************************************8// ***********************************************************8// ***********************************************************8// ***********************************************************8// ***********************************************************8// ***********************************************************8";
@@ -546,7 +546,7 @@ class TJsonEx7 {
       fStrPtrArr[1] = new string("value of fStrPtrArr[1]");
       fStrPtrArr[2] = new string("value of fStrPtrArr[2]");
 
-      for (int n=0;n<10;n++) {
+      for (int n=0;n<numelem;n++) {
          fVectDouble.push_back(n*3);
          fBoolArr[n] = (n%2 == 1);
          fVectBool.push_back(n%2 == 1);
@@ -561,7 +561,9 @@ class TJsonEx7 {
          fVectEx11.push_back(TJsonEx11());
       }
 
-      for (int n=0;n<3;n++) {
+      int sz3 = numelem>=3 ? numelem/3 : 1;
+
+      for (int n=0;n<sz3;n++) {
         TJsonEx1 *ex1 = new TJsonEx1;
         fVectEx1Ptr.push_back(ex1);
         fVectEx1Ptr.push_back(ex1);
@@ -569,16 +571,16 @@ class TJsonEx7 {
       }
 
       fVectPtrDouble = new std::vector<double>;
-      for (int n=0;n<10;n++)
+      for (int n=0;n<numelem;n++)
          fVectPtrDouble->push_back(n*3);
 
-      for (int i=0;i<3;i++) {
+      for (int i=0;i<sz3;i++) {
          fVectPtrDoubleArr[i] = new std::vector<double>;
-         for (int n=0;n<10;n++)
+         for (int n=0;n<numelem;n++)
             fVectPtrDoubleArr[i]->push_back(i*100 + n*3);
       }
 
-      for (int n=0;n<10;n++) {
+      for (int n=0;n<numelem;n++) {
          TBox box(n*11,n*22,n*33,n*44);
          fVectBox.push_back(box);
 
@@ -586,13 +588,15 @@ class TJsonEx7 {
          fVectNames.push_back(name);
       }
 
-      for (int n=0;n<5;n++) {
+      int sz5 = numelem>=2 ? numelem/2 : 1;
+
+      for (int n=0;n<sz5;n++) {
         fVectString.push_back(Form("string %d content",n));
         fVectStringPtr.push_back(new string(Form("string pointer %d content",n)));
       }
 
 
-      for (int n=0;n<10;n++) {
+      for (int n=0;n<numelem;n++) {
 
          fVectDoubleArr[0].push_back(n*3);
          fVectDoubleArr[1].push_back(n*3);
@@ -625,7 +629,6 @@ class TJsonEx7 {
 
       for (int k=0;k<64;++k)
         fBitsSet64.set(k, k%3);
-
    }
 
 
@@ -659,16 +662,16 @@ class TJsonEx8 : public std::vector<int> {
      int                    fInt;
      std::string            fStdString;
 
-   TJsonEx8(bool setvalues = false)
+   TJsonEx8(int numelem = 0)
    {
-      if (setvalues) {
-         for (int n=0;n<10;n++)
+      if (numelem > 0) {
+         for (int n=0;n<numelem;n++)
            push_back(n*14);
          fInt = 12345;
          fStdString = "Value of STL string";
       }
-
    }
+
    virtual ~TJsonEx8() {}
 
    void Print()

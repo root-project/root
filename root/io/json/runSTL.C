@@ -9,8 +9,8 @@
    gROOT->ProcessLine(".x runSTL.C");
 #else
 
-   TJsonEx7* ex7 = new TJsonEx7(true);
-   TJsonEx8* ex8 = new TJsonEx8(true);
+   TJsonEx7* ex7 = new TJsonEx7(10);
+   TJsonEx8* ex8 = new TJsonEx8(10);
    TJsonEx12* ex12 = new TJsonEx12();
    ex12->SetValues(10);
 
