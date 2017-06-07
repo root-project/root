@@ -5498,7 +5498,7 @@ Processing runSTL.C...
     "fLong" : 0,
     "fFloat" : 0,
     "fDouble" : 0
-  }, "second" : {
+  }, "second" : [{
     "_typename" : "TJsonEx1",
     "fBool" : false,
     "fChar" : 0,
@@ -5507,7 +5507,7 @@ Processing runSTL.C...
     "fLong" : 0,
     "fFloat" : 0,
     "fDouble" : 0
-  }}, {"$pair" : "pair<TJsonEx1,set<TJsonEx1> >", "first" : {
+  }]}, {"$pair" : "pair<TJsonEx1,set<TJsonEx1> >", "first" : {
     "_typename" : "TJsonEx1",
     "fBool" : true,
     "fChar" : 1,
