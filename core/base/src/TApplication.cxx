@@ -468,7 +468,47 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
          } else {
             Warning("GetOptions", "-e must be followed by an expression.");
          }
+      } else if (!strcmp(argv[i], "--")) {
+         TObjString* macro = nullptr;
+         bool warnShown = false;
 
+         if (fFiles) {
+            for (auto f: *fFiles) {
+               TObjString* file = dynamic_cast<TObjString*>(f);
+
+               if (file->TestBit(kExpression))
+                  continue;
+               if (file->String().EndsWith(".root"))
+                  continue;
+               if (file->String().Contains('('))
+                  continue;
+
+               if (macro && !warnShown && (warnShown = true))
+                  Warning("GetOptions", "-- is used with several macros. "
+                                        "The arguments will be passed to the last one.");
+
+               macro = file;
+            }
+         }
+
+         if (macro) {
+            argv[i] = null;
+            ++i;
+            TString& str = macro->String();
+
+            str += '(';
+            for (; i < *argc; i++) {
+               str += argv[i];
+               str += ',';
+               argv[i] = null;
+            }
+            str.EndsWith(",") ? str[str.Length() - 1] = ')' : str += ')';
+         } else {
+            Warning("GetOptions", "no macro to pass arguments to was provided. "
+                                  "Everything after the -- will be ignored.");
+            for (; i < *argc; i++)
+               argv[i] = null;
+         }
       } else if (argv[i][0] != '-' && argv[i][0] != '+') {
          Long64_t size;
          Long_t id, flags, modtime;
