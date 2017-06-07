@@ -108,7 +108,7 @@ class TArrayIndexProducer {
       {
          Bool_t usearrayindx = elem && (elem->GetArrayDim() > 0);
          Bool_t isloop = elem && ((elem->GetType() == TStreamerInfo::kStreamLoop) ||
-                         (elem->GetType() == TStreamerInfo::kOffsetL + TStreamerInfo::kStreamLoop));
+                                  (elem->GetType() == TStreamerInfo::kOffsetL + TStreamerInfo::kStreamLoop));
          Bool_t usearraylen = (arraylen > (isloop ? 0 : 1));
 
          if (usearrayindx && (arraylen > 0)) {
@@ -1105,9 +1105,9 @@ void TBufferJSON::JsonWriteObject(const void *obj, const TClass *cl, Bool_t chec
                // Create entries like { '$pair': 'typename' , 'first' : key, 'second' : value }
 
                TString pairtype = cl->GetName();
-               if (pairtype.Index("multimap<")==0)
+               if (pairtype.Index("multimap<") == 0)
                   pairtype.Replace(0, 9, "pair<");
-               else if (pairtype.Index("map<")==0)
+               else if (pairtype.Index("map<") == 0)
                   pairtype.Replace(0, 4, "pair<");
                else
                   pairtype = "TPair";
