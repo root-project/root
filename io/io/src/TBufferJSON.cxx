@@ -107,16 +107,17 @@ class TArrayIndexProducer {
          fIsArray(kFALSE)
       {
          Bool_t usearrayindx = elem && (elem->GetArrayDim() > 0);
-         Bool_t isloop = (elem->GetType() == TStreamerInfo::kOffsetL + TStreamerInfo::kStreamLoop) ||
-                         (elem->GetType() == TStreamerInfo::kStreamLoop);
+         Bool_t isloop = elem && ((elem->GetType() == TStreamerInfo::kStreamLoop) ||
+                         (elem->GetType() == TStreamerInfo::kOffsetL + TStreamerInfo::kStreamLoop));
          Bool_t usearraylen = (arraylen > (isloop ? 0 : 1));
 
          if (usearrayindx && (arraylen > 0)) {
-            if (isloop) { usearrayindx = kFALSE; usearraylen = kTRUE; }
-            else
-               if (arraylen != elem->GetArrayLength()) {
-                  printf("Problem with JSON coding of element %s type %d \n", elem->GetName(), elem->GetType());
-               }
+            if (isloop) {
+               usearrayindx = kFALSE;
+               usearraylen = kTRUE;
+            } else if (arraylen != elem->GetArrayLength()) {
+               printf("Problem with JSON coding of element %s type %d \n", elem->GetName(), elem->GetType());
+            }
          }
 
          if (usearrayindx) {
@@ -1081,7 +1082,7 @@ void TBufferJSON::JsonWriteObject(const void *obj, const TClass *cl, Bool_t chec
 
          Int_t size = TString(stack->fValues.At(0)->GetName()).Atoi();
 
-         if ((stack->fValues.GetLast() == 0) && ((size>1) || (fValue.Index("[")==0))) {
+         if ((stack->fValues.GetLast() == 0) && ((size > 1) || (fValue.Index("[") == 0))) {
             // case of simple vector, array already in the value
             stack->fValues.Delete();
             if (fValue.Length() == 0) {
@@ -1097,15 +1098,19 @@ void TBufferJSON::JsonWriteObject(const void *obj, const TClass *cl, Bool_t chec
                fValue.Clear();
             }
 
-
             if ((size * 2 == stack->fValues.GetLast()) &&
-                  ((special_kind == TClassEdit::kMap) || (special_kind == TClassEdit::kMultiMap) ||
-                        (special_kind == TClassEdit::kUnorderedMap) || (special_kind == TClassEdit::kUnorderedMultiMap))) {
-               // special handling for std::map. Create entries like { '$pair': 'typename' , 'first' : key, 'second' : value }
+                ((special_kind == TClassEdit::kMap) || (special_kind == TClassEdit::kMultiMap) ||
+                 (special_kind == TClassEdit::kUnorderedMap) || (special_kind == TClassEdit::kUnorderedMultiMap))) {
+               // special handling for std::map.
+               // Create entries like { '$pair': 'typename' , 'first' : key, 'second' : value }
 
                TString pairtype = cl->GetName();
-               if (pairtype.Index("multimap<")==0) pairtype.Replace(0, 9, "pair<"); else
-                  if (pairtype.Index("map<")==0) pairtype.Replace(0, 4, "pair<"); else pairtype = "TPair";
+               if (pairtype.Index("multimap<")==0)
+                  pairtype.Replace(0, 9, "pair<");
+               else if (pairtype.Index("map<")==0)
+                  pairtype.Replace(0, 4, "pair<");
+               else
+                  pairtype = "TPair";
                pairtype = TString("\"") + pairtype + TString("\"");
                for (Int_t k = 1; k < stack->fValues.GetLast(); k += 2) {
                   fValue.Append(separ);
