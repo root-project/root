@@ -617,7 +617,7 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
          Int_t len = 0;
          char *buf = ReadFileContent(fDefaultPage.Data(), len);
          if (len > 0) fDefaultPageCont.Append(buf, len);
-         delete buf;
+         free(buf);
       }
 
       if (fDefaultPageCont.Length() == 0) {
@@ -658,7 +658,7 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
          Int_t len = 0;
          char *buf = ReadFileContent(fDrawPage.Data(), len);
          if (len > 0) fDrawPageCont.Append(buf, len);
-         delete buf;
+         free(buf);
       }
 
       if (fDrawPageCont.Length() == 0) {
