@@ -30,13 +30,15 @@ struct TCoordArray: std::array<double, DIMENSIONS> {
    TCoordArray() = default;
 
    /// Construction with one `double` per `DIMENSION`.
-   template<class...ELEMENTS, class = typename std::enable_if<sizeof...(ELEMENTS) == DIMENSIONS>::type>
-   TCoordArray(double x, ELEMENTS...el){}
+   template<class...ELEMENTS, class = typename std::enable_if<sizeof...(ELEMENTS) + 1 == DIMENSIONS>::type>
+   TCoordArray(double x, ELEMENTS...el): Base_t{{x, el...}} {}
 
    /// Fallback constructor, invoked if the one above fails because of the wrong number of
    /// arguments / coordinates.
-   template<class T, class...ELEMENTS>
-   TCoordArray(T, ELEMENTS...) { static_assert(sizeof...(ELEMENTS) + 1 == DIMENSIONS, "Number of coordinates does not match DIMENSIONS"); }
+   template<class T, class...ELEMENTS, class = typename std::enable_if<sizeof...(ELEMENTS) + 1 != DIMENSIONS>::type>
+   TCoordArray(T, ELEMENTS...) {
+      static_assert(sizeof...(ELEMENTS) + 1 == DIMENSIONS, "Number of coordinates does not match DIMENSIONS");
+   }
 
    /// Construction from a C-style array.
    TCoordArray(double (&arr)[DIMENSIONS]): Base_t(arr) {}
