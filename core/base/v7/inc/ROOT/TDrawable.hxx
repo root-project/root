@@ -54,8 +54,8 @@ public:
    /// Locks if needed.
    class Accessor {
       union {
-         std::shared_ptr<T> fShared;
-         T* fRaw;
+         T* fRaw; ///< The raw, non-owning pointer accessing a TUniWeak's unique_ptr
+         std::shared_ptr<T> fShared; ///< The shared_ptr accessing a TUniWeak's weak_ptr
       };
       bool fIsShared;  ///< fRaw or fShared?
 
@@ -63,14 +63,14 @@ public:
       Accessor(const TUniWeakPtr& uniweak):
          fIsShared(uniweak.fIsWeak) {
          if (fIsShared)
-            fShared = uniweak.fWeak.lock();
+            new (&fShared) std::shared_ptr<T>(uniweak.fWeak.lock());
          else
             fRaw = uniweak.fUnique.get();
       }
 
       Accessor(Accessor&& rhs): fIsShared(rhs.fIsShared) {
          if (fIsShared)
-            fShared.swap(rhs.fShared);
+            new (&fShared) std::shared_ptr<T>(std::move(rhs.fShared));
          else
             fRaw = rhs.fRaw;
       }
