@@ -1077,62 +1077,66 @@ void TBufferJSON::JsonWriteObject(const void *obj, const TClass *cl, Bool_t chec
          // empty container
          if (fValue != "0") Error("JsonWriteObject", "With empty stack fValue!=0");
          fValue = "[]";
-      } else if (stack->fValues.GetLast() == 0) {
-         // case of simple vector, array already in the value
-         stack->fValues.Delete();
-         if (fValue.Length() == 0) {
-            Error("JsonWriteObject", "Empty value when it should contain something");
-            fValue = "[]";
-         }
-
       } else {
-         const char *separ = "[";
-
-         if (fValue.Length() > 0) {
-            stack->fValues.Add(new TObjString(fValue));
-            fValue.Clear();
-         }
 
          Int_t size = TString(stack->fValues.At(0)->GetName()).Atoi();
 
-         if ((size * 2 == stack->fValues.GetLast()) &&
-               ((special_kind == TClassEdit::kMap) || (special_kind == TClassEdit::kMultiMap) ||
-                (special_kind == TClassEdit::kUnorderedMap) || (special_kind == TClassEdit::kUnorderedMultiMap))) {
-            // special handling for std::map. Create entries like { '$pair': 'typename' , 'first' : key, 'second' : value }
-
-            TString pairtype = cl->GetName();
-            if (pairtype.Index("multimap<")==0) pairtype.Replace(0, 9, "pair<"); else
-            if (pairtype.Index("map<")==0) pairtype.Replace(0, 4, "pair<"); else pairtype = "TPair";
-            pairtype = TString("\"") + pairtype + TString("\"");
-            for (Int_t k = 1; k < stack->fValues.GetLast(); k += 2) {
-               fValue.Append(separ);
-               separ = fArraySepar.Data();
-               // fJsonrCnt++; // do not add entry in the map, can conflict with objects inside values
-               fValue.Append("{");
-               fValue.Append("\"$pair\"");
-               fValue.Append(fSemicolon);
-               fValue.Append(pairtype.Data());
-               fValue.Append(fArraySepar);
-               fValue.Append("\"first\"");
-               fValue.Append(fSemicolon);
-               fValue.Append(stack->fValues.At(k)->GetName());
-               fValue.Append(fArraySepar);
-               fValue.Append("\"second\"");
-               fValue.Append(fSemicolon);
-               fValue.Append(stack->fValues.At(k + 1)->GetName());
-               fValue.Append("}");
+         if ((stack->fValues.GetLast() == 0) && ((size>1) || (fValue.Index("[")==0))) {
+            // case of simple vector, array already in the value
+            stack->fValues.Delete();
+            if (fValue.Length() == 0) {
+               Error("JsonWriteObject", "Empty value when it should contain something");
+               fValue = "[]";
             }
+
          } else {
-            // for most stl containers write just like blob, but skipping first element with size
-            for (Int_t k = 1; k <= stack->fValues.GetLast(); k++) {
-               fValue.Append(separ);
-               separ = fArraySepar.Data();
-               fValue.Append(stack->fValues.At(k)->GetName());
-            }
-         }
+            const char *separ = "[";
 
-         fValue.Append("]");
-         stack->fValues.Delete();
+            if (fValue.Length() > 0) {
+               stack->fValues.Add(new TObjString(fValue));
+               fValue.Clear();
+            }
+
+
+            if ((size * 2 == stack->fValues.GetLast()) &&
+                  ((special_kind == TClassEdit::kMap) || (special_kind == TClassEdit::kMultiMap) ||
+                        (special_kind == TClassEdit::kUnorderedMap) || (special_kind == TClassEdit::kUnorderedMultiMap))) {
+               // special handling for std::map. Create entries like { '$pair': 'typename' , 'first' : key, 'second' : value }
+
+               TString pairtype = cl->GetName();
+               if (pairtype.Index("multimap<")==0) pairtype.Replace(0, 9, "pair<"); else
+                  if (pairtype.Index("map<")==0) pairtype.Replace(0, 4, "pair<"); else pairtype = "TPair";
+               pairtype = TString("\"") + pairtype + TString("\"");
+               for (Int_t k = 1; k < stack->fValues.GetLast(); k += 2) {
+                  fValue.Append(separ);
+                  separ = fArraySepar.Data();
+                  // fJsonrCnt++; // do not add entry in the map, can conflict with objects inside values
+                  fValue.Append("{");
+                  fValue.Append("\"$pair\"");
+                  fValue.Append(fSemicolon);
+                  fValue.Append(pairtype.Data());
+                  fValue.Append(fArraySepar);
+                  fValue.Append("\"first\"");
+                  fValue.Append(fSemicolon);
+                  fValue.Append(stack->fValues.At(k)->GetName());
+                  fValue.Append(fArraySepar);
+                  fValue.Append("\"second\"");
+                  fValue.Append(fSemicolon);
+                  fValue.Append(stack->fValues.At(k + 1)->GetName());
+                  fValue.Append("}");
+               }
+            } else {
+               // for most stl containers write just like blob, but skipping first element with size
+               for (Int_t k = 1; k <= stack->fValues.GetLast(); k++) {
+                  fValue.Append(separ);
+                  separ = fArraySepar.Data();
+                  fValue.Append(stack->fValues.At(k)->GetName());
+               }
+            }
+
+            fValue.Append("]");
+            stack->fValues.Delete();
+         }
       }
    }
 
