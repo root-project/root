@@ -68,7 +68,7 @@ protected:
   /// \return Returns the bin number adjusted for potential over- and underflow
   /// bins. Returns kIgnoreBin if the axis cannot handle the over- / underflow,
   /// in which case `status` will tell how to deal with this overflow.
-  int AdjustOverflowBinNumber(int rawbin) const {
+  int AdjustOverflowBinNumber(double rawbin) const {
     if (rawbin < 0) return 0;
     // Take underflow into account.
     ++rawbin;
@@ -76,7 +76,7 @@ protected:
     if (rawbin >= GetNBins())
       return GetNBins() - 1;
 
-    return rawbin;
+    return (int)rawbin;
   }
 
 public:
@@ -485,7 +485,7 @@ public:
   /// \note Passing a bin border coordinate can either return the bin above or
   /// below the bin border. I.e. don't do that for reliable results!
   int FindBin(double x) const noexcept {
-    int rawbin = (x - fLow) * fInvBinWidth;
+    double rawbin = (x - fLow) * fInvBinWidth;
     return AdjustOverflowBinNumber(rawbin);
   }
 
