@@ -697,6 +697,14 @@ if(mysql)
 endif()
 
 #---Check for Oracle-------------------------------------------------------------------
+# OCCI is compiled with libstdc++ which has a different ABI than libc++.
+# So we better turn of Oracle in this situation to prevent linking errors between
+# ROOT using libc++ and libOracle.so using libstdc++.
+if(oracle AND libcxx)
+    message(WARNING "Oracle not supported when compiling with libc++!")
+    set(oracle OFF CACHE BOOL "" FORCE)
+endif()
+
 if(oracle)
   message(STATUS "Looking for Oracle")
   find_package(Oracle)
