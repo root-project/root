@@ -2249,14 +2249,18 @@ void TCanvas::Update()
 
    fUpdating = kTRUE;
 
-   if (!IsBatch()) FeedbackMode(kFALSE);      // Goto double buffer mode
+   if (!fCanvasImp->PerformUpdate()) {
 
-   if (!UseGL())
-      PaintModified();           // Repaint all modified pad's
+      if (!IsBatch()) FeedbackMode(kFALSE);      // Goto double buffer mode
 
-   Flush();                   // Copy all pad pixmaps to the screen
+      if (!UseGL())
+         PaintModified();           // Repaint all modified pad's
 
-   SetCursor(kCross);
+      Flush();                   // Copy all pad pixmaps to the screen
+
+      SetCursor(kCross);
+   }
+
    fUpdating = kFALSE;
 }
 
@@ -2299,9 +2303,10 @@ void TCanvas::CreatePainter()
 {
    //Even for batch mode painter is still required, just to delegate
    //some calls to batch "virtual X".
-   if (!UseGL() || fBatch)
-      fPainter = new TPadPainter;//Do not need plugin manager for this!
-   else {
+   if (!UseGL() || fBatch) {
+      fPainter = !fCanvasImp ? 0 : fCanvasImp->CreatePadPainter();
+      if (!fPainter) fPainter = new TPadPainter;//Do not need plugin manager for this!
+   } else {
       fPainter = TVirtualPadPainter::PadPainter("gl");
       if (!fPainter) {
          Error("CreatePainter", "GL Painter creation failed! Will use default!");
