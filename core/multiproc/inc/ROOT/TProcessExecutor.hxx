@@ -43,19 +43,19 @@ public:
    TProcessExecutor &operator=(const TProcessExecutor &) = delete;
 
    // Map
+   using TExecutor<TProcessExecutor>::Map;
    template<class F, class Cond = noReferenceCond<F>>
    auto Map(F func, unsigned nTimes) -> std::vector<typename std::result_of<F()>::type>;
    template<class F, class INTEGER, class Cond = noReferenceCond<F, INTEGER>>
    auto Map(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typename std::result_of<F(INTEGER)>::type>;
    template<class F, class T, class Cond = noReferenceCond<F, T>>
    auto Map(F func, std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type>;
-   using TExecutor<TProcessExecutor>::Map;
 
    void SetNWorkers(unsigned n) { TMPClient::SetNWorkers(n); }
    unsigned GetNWorkers() const { return TMPClient::GetNWorkers(); }
 
-   template<class T, class R> T Reduce(const std::vector<T> &objs, R redfunc);
    using TExecutor<TProcessExecutor>::Reduce;
+   template<class T, class R> T Reduce(const std::vector<T> &objs, R redfunc);
 
 private:
    template<class T> void Collect(std::vector<T> &reslist);
