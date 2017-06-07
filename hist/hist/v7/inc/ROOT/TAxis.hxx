@@ -681,13 +681,11 @@ public:
   int FindBin(double x) const noexcept {
     const auto bBegin = fBinBorders.begin();
     const auto bEnd = fBinBorders.end();
+    // lower_bound finds the first bin border that is >= x.
     auto iNotLess = std::lower_bound(bBegin, bEnd, x);
     int rawbin = iNotLess - bBegin;
-    // if x is < bBegin then iNotLess == bBegin thus rawbin == 0:
-    // we don't want not-less but just-below, thus:
-    rawbin -= 1;
-    // No need for AdjustOverflowBinNumber(rawbin) here; lower_bound() - 1 is
-    // the answer.
+    // No need for AdjustOverflowBinNumber(rawbin) here; lower_bound() is the
+    // answer: e.g. for x < *bBegin, rawbin is 0.
     return rawbin;
   }
 
