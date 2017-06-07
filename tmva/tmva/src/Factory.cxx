@@ -705,9 +705,8 @@ TMVA::ROCCurve *TMVA::Factory::GetROC(TString datasetname, TString theMethodName
 
    UInt_t nClasses = method->DataInfo().GetNClasses();
    if (this->fAnalysisType == Types::kMulticlass && iClass >= nClasses) {
-      Log() << kERROR
-            << Form("Given class number (iClass = %i) does not exist. There are %i classes in dataset.", iClass,
-                    nClasses)
+      Log() << kERROR << Form("Given class number (iClass = %i) does not exist. There are %i classes in dataset.",
+                              iClass, nClasses)
             << Endl;
       return nullptr;
    }
@@ -798,9 +797,8 @@ Double_t TMVA::Factory::GetROCIntegral(TString datasetname, TString theMethodNam
 
    TMVA::ROCCurve *rocCurve = GetROC(datasetname, theMethodName, iClass);
    if (!rocCurve) {
-      Log() << kFATAL
-            << Form("ROCCurve object was not created in Method = %s not found with Dataset = %s ", theMethodName.Data(),
-                    datasetname.Data())
+      Log() << kFATAL << Form("ROCCurve object was not created in Method = %s not found with Dataset = %s ",
+                              theMethodName.Data(), datasetname.Data())
             << Endl;
       return 0;
    }
