@@ -1,0 +1,69 @@
+
+Processing runSTL0.C...
+ ====== different STL containers TJsonEx7 (len=0) ===== 
+{
+  "_typename" : "TJsonEx7",
+  "fStr1" : "",
+  "fStr2" : "",
+  "fStrPtr1" : null,
+  "fStrPtr2" : null,
+  "fStrArr" : ["", "", ""],
+  "fStrPtrArr" : [null, null, null],
+  "fBoolArr" : [false, false, false, false, false, false, false, false, false, false],
+  "fVectDouble" : [],
+  "fVectBool" : [],
+  "fVectDoubleArr" : [[], [], []],
+  "fVectPtrDouble" : null,
+  "fVectPtrDoubleArr" : [null, null, null],
+  "fVectEx1" : [],
+  "fVectEx1Ptr" : [],
+  "fVectEx2" : [],
+  "fVectEx3" : [],
+  "fVectBox" : [],
+  "fVectNames" : [],
+  "fVectEx11" : [],
+  "fVectString" : [],
+  "fVectStringPtr" : [],
+  "fListDouble" : [],
+  "fListBool" : [],
+  "fListEx1" : [],
+  "fListEx1Ptr" : [],
+  "fDequeDouble" : [],
+  "fDequeBool" : [],
+  "fDequeEx1" : [],
+  "fDequeEx1Ptr" : [],
+  "fMapStrInt" : [],
+  "fMapIntDouble" : [],
+  "fMapIntEx1" : [],
+  "fMapIntEx1Ptr" : [],
+  "fMultimapIntDouble" : [],
+  "fSetDouble" : [],
+  "fMultisetDouble" : [],
+  "fBitsSet16" : [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false],
+  "fBitsSet64" : [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false]
+}
+
+ ====== STL as basec class TJsonEx8 (len=0) ===== 
+{
+  "_typename" : "TJsonEx8",
+  "fVector" : [],
+  "fInt" : 1395750981,
+  "fStdString" : ""
+}
+
+ ====== STL vector of complex classes TJsonEx12 (len=0) ===== 
+{
+  "_typename" : "TJsonEx12",
+  "vect1" : [],
+  "vect9" : []
+}
+
+ ====== More exotic STL containers as set or map with TRef inside TJsonEx13 (len=0) ===== 
+{
+  "_typename" : "TJsonEx13",
+  "set1" : [],
+  "map1" : [],
+  "map2" : [],
+  "vect1" : []
+}
+

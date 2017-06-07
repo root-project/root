@@ -530,6 +530,14 @@ class TJsonEx7 {
         fVectPtrDoubleArr[n] = nullptr;
       }
 
+      for (int n=0;n<10;n++) fBoolArr[n] = false;
+
+      for (int k=0;k<16;++k)
+         fBitsSet16.set(k, false);
+
+      for (int k=0;k<64;++k)
+        fBitsSet64.set(k, false);
+
       if (numelem <= 0) return;
 
       fStr1 = "String with special characters: \" & < >";
@@ -561,7 +569,7 @@ class TJsonEx7 {
          fVectEx11.push_back(TJsonEx11());
       }
 
-      int sz3 = numelem>=3 ? numelem/3 : 1;
+      int sz3 = numelem>=3 ? numelem/3 : numelem;
 
       for (int n=0;n<sz3;n++) {
         TJsonEx1 *ex1 = new TJsonEx1;
@@ -574,7 +582,7 @@ class TJsonEx7 {
       for (int n=0;n<numelem;n++)
          fVectPtrDouble->push_back(n*3);
 
-      for (int i=0;i<sz3;i++) {
+      for (int i=0;i<3;i++) {
          fVectPtrDoubleArr[i] = new std::vector<double>;
          for (int n=0;n<numelem;n++)
             fVectPtrDoubleArr[i]->push_back(i*100 + n*3);

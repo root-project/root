@@ -1,0 +1,241 @@
+
+Processing runSTL1.C...
+ ====== different STL containers TJsonEx7 (len=1) ===== 
+{
+  "_typename" : "TJsonEx7",
+  "fStr1" : "String with special characters: \" & < >",
+  "fStr2" : "Very long Value of STL string\/\/ ***********************************************************8\/\/ ***********************************************************8\/\/ ***********************************************************8\/\/ ***********************************************************8\/\/ ***********************************************************8\/\/ ***********************************************************8\/\/ ***********************************************************8\/\/ ***********************************************************8\/\/ ***********************************************************8",
+  "fStrPtr1" : "Value of < >  &lt; &gt; string fStrPtr1",
+  "fStrPtr2" : null,
+  "fStrArr" : ["Value of fStrArr[0]", "Value of fStrArr[1]", "Value of fStrArr[2]"],
+  "fStrPtrArr" : ["value of fStrPtrArr[0]", "value of fStrPtrArr[1]", "value of fStrPtrArr[2]"],
+  "fBoolArr" : [false, false, false, false, false, false, false, false, false, false],
+  "fVectDouble" : [0],
+  "fVectBool" : [false],
+  "fVectDoubleArr" : [[0, 0], [10, 0], [20, 0]],
+  "fVectPtrDouble" : [0],
+  "fVectPtrDoubleArr" : [[0], [100], [200]],
+  "fVectEx1" : {
+    "_typename" : "TJsonEx1",
+    "fBool" : false,
+    "fChar" : 67,
+    "fShort" : 123,
+    "fInt" : 123456,
+    "fLong" : 7654321,
+    "fFloat" : 1.2,
+    "fDouble" : 3.8
+  },
+  "fVectEx1Ptr" : [{
+    "_typename" : "TJsonEx1",
+    "fBool" : false,
+    "fChar" : 67,
+    "fShort" : 123,
+    "fInt" : 123456,
+    "fLong" : 7654321,
+    "fFloat" : 1.2,
+    "fDouble" : 3.8
+  }, {"$ref":2}, {"$ref":2}],
+  "fVectEx2" : {
+    "_typename" : "TJsonEx2",
+    "fTest1" : [11111, 22222, 33333, 44444],
+    "fTest2" : [[1, 2], [3, 4]],
+    "fBool" : [[[false, false, false, false], [true, true, true, true], [false, false, false, false]], [[true, true, true, true], [false, false, false, false], [true, true, true, true]]],
+    "fChar" : [["0123", "1234", "2345"], ["1234", "2345", "3456"]],
+    "fShort" : [[[0, 1, 2, 3], [1, 2, 3, 4], [2, 3, 4, 5]], [[1, 2, 3, 4], [2, 3, 4, 5], [3, 4, 5, 6]]],
+    "fInt" : [[[0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]], [[0, 1, 2, 3], [1, 2, 3, 4], [2, 3, 4, 5]]],
+    "fLong" : [[[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]], [[0, 0, 0, 0], [0, 1, 2, 3], [0, 2, 4, 6]]],
+    "fFloat" : [[[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]], [[0, 0, 0, 0], [0, 1, 2, 3], [0, 2, 4, 6]]],
+    "fDouble" : [[[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]], [[0, 0, 0, 0], [0, 1, 2, 3], [0, 2, 4, 6]]]
+  },
+  "fVectEx3" : {
+    "_typename" : "TJsonEx3",
+    "fSize" : 5,
+    "fBool" : [false, false, false, false, false],
+    "fChar" : "12345",
+    "fShort" : [0, 2, 4, 6, 8],
+    "fInt" : [0, 5, 10, 15, 20],
+    "fLong" : [0, 123, 246, 369, 492],
+    "fFloat" : [0, 3, 6, 9, 12],
+    "fDouble" : [0, 7, 14, 21, 28]
+  },
+  "fVectBox" : {
+    "_typename" : "TBox",
+    "fUniqueID" : 0,
+    "fBits" : 33554432,
+    "fLineColor" : 1,
+    "fLineStyle" : 1,
+    "fLineWidth" : 1,
+    "fFillColor" : 19,
+    "fFillStyle" : 1001,
+    "fX1" : 0,
+    "fY1" : 0,
+    "fX2" : 0,
+    "fY2" : 0
+  },
+  "fVectNames" : {
+    "_typename" : "TNamed",
+    "fUniqueID" : 0,
+    "fBits" : 33554432,
+    "fName" : "Name0",
+    "fTitle" : "Title0"
+  },
+  "fVectEx11" : {
+    "_typename" : "TJsonEx11",
+    "fBool" : false,
+    "fChar" : 67,
+    "fShort" : 123,
+    "fInt" : 123456,
+    "fLong" : 7654321,
+    "fFloat" : 1.2,
+    "fDouble" : 3.8,
+    "fInt2" : 22
+  },
+  "fVectString" : "string 0 content",
+  "fVectStringPtr" : "string pointer 0 content",
+  "fListDouble" : [0],
+  "fListBool" : [false],
+  "fListEx1" : {
+    "_typename" : "TJsonEx1",
+    "fBool" : false,
+    "fChar" : 67,
+    "fShort" : 123,
+    "fInt" : 123456,
+    "fLong" : 7654321,
+    "fFloat" : 1.2,
+    "fDouble" : 3.8
+  },
+  "fListEx1Ptr" : {
+    "_typename" : "TJsonEx1",
+    "fBool" : false,
+    "fChar" : 67,
+    "fShort" : 123,
+    "fInt" : 123456,
+    "fLong" : 7654321,
+    "fFloat" : 1.2,
+    "fDouble" : 3.8
+  },
+  "fDequeDouble" : [0],
+  "fDequeBool" : [false],
+  "fDequeEx1" : {
+    "_typename" : "TJsonEx1",
+    "fBool" : false,
+    "fChar" : 67,
+    "fShort" : 123,
+    "fInt" : 123456,
+    "fLong" : 7654321,
+    "fFloat" : 1.2,
+    "fDouble" : 3.8
+  },
+  "fDequeEx1Ptr" : {
+    "_typename" : "TJsonEx1",
+    "fBool" : false,
+    "fChar" : 67,
+    "fShort" : 123,
+    "fInt" : 123456,
+    "fLong" : 7654321,
+    "fFloat" : 1.2,
+    "fDouble" : 3.8
+  },
+  "fMapStrInt" : [{"$pair" : "pair<TString,int>", "first" : "Str0", "second" : 10}],
+  "fMapIntDouble" : [{"$pair" : "pair<int,double>", "first" : 0, "second" : 0}],
+  "fMapIntEx1" : [{"$pair" : "pair<int,TJsonEx1>", "first" : 0, "second" : {
+    "_typename" : "TJsonEx1",
+    "fBool" : false,
+    "fChar" : 67,
+    "fShort" : 123,
+    "fInt" : 123456,
+    "fLong" : 7654321,
+    "fFloat" : 1.2,
+    "fDouble" : 3.8
+  }}],
+  "fMapIntEx1Ptr" : [{"$pair" : "pair<int,TJsonEx1*>", "first" : 0, "second" : {"$ref":12}}],
+  "fMultimapIntDouble" : [{"$pair" : "pair<int,double>", "first" : 0, "second" : 0}, {"$pair" : "pair<int,double>", "first" : 0, "second" : 1000}],
+  "fSetDouble" : [0],
+  "fMultisetDouble" : [0],
+  "fBitsSet16" : [false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true],
+  "fBitsSet64" : [false, true, true, false, true, true, false, true, true, false, true, true, false, true, true, false, true, true, false, true, true, false, true, true, false, true, true, false, true, true, false, true, true, false, true, true, false, true, true, false, true, true, false, true, true, false, true, true, false, true, true, false, true, true, false, true, true, false, true, true, false, true, true, false]
+}
+
+ ====== STL as basec class TJsonEx8 (len=1) ===== 
+{
+  "_typename" : "TJsonEx8",
+  "fVector" : [0],
+  "fInt" : 12345,
+  "fStdString" : "Value of STL string"
+}
+
+ ====== STL vector of complex classes TJsonEx12 (len=1) ===== 
+{
+  "_typename" : "TJsonEx12",
+  "vect1" : {
+    "_typename" : "TJsonEx1",
+    "fBool" : false,
+    "fChar" : 67,
+    "fShort" : 123,
+    "fInt" : 123456,
+    "fLong" : 7654321,
+    "fFloat" : 1.2,
+    "fDouble" : 3.8
+  },
+  "vect9" : {
+    "_typename" : "TJsonEx9",
+    "fCnt" : 0,
+    "fStr" : null,
+    "fStr2" : [null, null, null],
+    "fStr4" : [[null, null, null, null, null], [null, null, null, null, null]],
+    "fStr6" : [null, null, null],
+    "fNm2" : [null, null, null],
+    "fNm4" : [[null, null, null, null, null], [null, null, null, null, null]],
+    "fNm6" : [null, null, null],
+    "fArr2" : [null, null, null],
+    "fArr4" : [[null, null, null, null, null], [null, null, null, null, null]],
+    "fArr6" : [null, null, null]
+  }
+}
+
+ ====== More exotic STL containers as set or map with TRef inside TJsonEx13 (len=1) ===== 
+{
+  "_typename" : "TJsonEx13",
+  "set1" : {
+    "_typename" : "TJsonEx1",
+    "fBool" : false,
+    "fChar" : 0,
+    "fShort" : 0,
+    "fInt" : 0,
+    "fLong" : 0,
+    "fFloat" : 0,
+    "fDouble" : 0
+  },
+  "map1" : [{"$pair" : "pair<TJsonEx1,set<TJsonEx1> >", "first" : {
+    "_typename" : "TJsonEx1",
+    "fBool" : false,
+    "fChar" : 0,
+    "fShort" : 0,
+    "fInt" : 0,
+    "fLong" : 0,
+    "fFloat" : 0,
+    "fDouble" : 0
+  }, "second" : {
+    "_typename" : "TJsonEx1",
+    "fBool" : false,
+    "fChar" : 0,
+    "fShort" : 0,
+    "fInt" : 0,
+    "fLong" : 0,
+    "fFloat" : 0,
+    "fDouble" : 0
+  }}],
+  "map2" : [{"$pair" : "pair<int,TRef>", "first" : 0, "second" : {
+    "_typename" : "TRef",
+    "fUniqueID" : 0,
+    "fBits" : 33554432,
+    "fPID" : 0
+  }}],
+  "vect1" : {
+    "_typename" : "TRef",
+    "fUniqueID" : 0,
+    "fBits" : 33554432,
+    "fPID" : 0
+  }
+}
+
