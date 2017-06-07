@@ -25,16 +25,16 @@ TEST(BinIterNBins, BinRef) {
   double x = 0.11;
   double y = 0.33;
   double w = 3.141;
-  h.Fill({{x, y}}, w);
-  h.Fill({{x, y}}, 2. * w);
-  EXPECT_FLOAT_EQ(3. * w, h.GetBinContent({{x,y}}));
+  h.Fill({x, y}, w);
+  h.Fill({x, y}, 2. * w);
+  EXPECT_FLOAT_EQ(3. * w, h.GetBinContent({x,y}));
 
   int xbin = h.GetImpl()->GetAxis(0).FindBin(x);
   EXPECT_EQ(6, xbin);
   int ybin = h.GetImpl()->GetAxis(1).FindBin(y);
   EXPECT_EQ(7, ybin);
 
-  int linbin =  h.GetImpl()->GetBinIndex({{x, y}});
+  int linbin =  h.GetImpl()->GetBinIndex({x, y});
   const int expectedLinBin = xbin + ybin * 12;
   EXPECT_EQ(expectedLinBin, linbin);
 
@@ -43,7 +43,7 @@ TEST(BinIterNBins, BinRef) {
   int foundbin = -1;
   double foundweight = -1.;
   double founduncert = -1.;
-  std::array<double,2> foundcoord{};
+  TH2F::CoordArray_t foundcoord{};
 
   int nBins = 0;
   for (auto bin: h) {
