@@ -20,7 +20,7 @@ Processing runStreamerLoop.C...
 {
   "_typename" : "TJsonEx9",
   "fCnt" : 1,
-  "fStr" : "String0",
+  "fStr" : ["String0"],
   "fStr2" : [["String[0][0]"], ["String[1][0]"], ["String[2][0]"]],
   "fStr4" : [[["String[0][0][0]"], ["String[0][1][0]"], ["String[0][2][0]"], ["String[0][3][0]"], ["String[0][4][0]"]], [["String[1][0][0]"], ["String[1][1][0]"], ["String[1][2][0]"], ["String[1][3][0]"], ["String[1][4][0]"]]],
   "fStr6" : [[null], ["String[1][0]"], ["String[2][0]"]],
