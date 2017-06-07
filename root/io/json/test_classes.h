@@ -202,7 +202,7 @@ class TJsonEx3 {
         fDouble = new double[fSize];
      }
 
-     void Release() 
+     void Release()
      {
        delete [] fBool; fBool = nullptr;
        delete [] fChar; fChar = nullptr;
@@ -606,10 +606,6 @@ class TJsonEx7 {
 
       for (int n=0;n<numelem;n++) {
 
-         fVectDoubleArr[0].push_back(n*3);
-         fVectDoubleArr[1].push_back(n*3);
-         fVectDoubleArr[2].push_back(n*3);
-
          fListDouble.push_back(n*4);
          fListBool.push_back(n%2 == 1);
          fListEx1.push_back(TJsonEx1());
@@ -672,6 +668,9 @@ class TJsonEx8 : public std::vector<int> {
 
    TJsonEx8(int numelem = 0)
    {
+      fInt = 0;
+      fStdString = "";
+
       if (numelem > 0) {
          for (int n=0;n<numelem;n++)
            push_back(n*14);

@@ -12,7 +12,7 @@ Processing runSTL1.C...
   "fBoolArr" : [false, false, false, false, false, false, false, false, false, false],
   "fVectDouble" : [0],
   "fVectBool" : [false],
-  "fVectDoubleArr" : [[0, 0], [10, 0], [20, 0]],
+  "fVectDoubleArr" : [[0], [10], [20]],
   "fVectPtrDouble" : [0],
   "fVectPtrDoubleArr" : [[0], [100], [200]],
   "fVectEx1" : {
