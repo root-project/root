@@ -107,11 +107,12 @@ class TArrayIndexProducer {
          fIsArray(kFALSE)
       {
          Bool_t usearrayindx = elem && (elem->GetArrayDim() > 0);
-         Bool_t usearraylen = (arraylen > 1);
+         Bool_t isloop = (elem->GetType() == TStreamerInfo::kOffsetL + TStreamerInfo::kStreamLoop) ||
+                         (elem->GetType() == TStreamerInfo::kStreamLoop);
+         Bool_t usearraylen = (arraylen > (isloop ? 0 : 1));
 
          if (usearrayindx && (arraylen > 0)) {
-            if ((elem->GetType() == TStreamerInfo::kOffsetL + TStreamerInfo::kStreamLoop) ||
-                (elem->GetType() == TStreamerInfo::kStreamLoop)) { usearrayindx = kFALSE; usearraylen = kTRUE; }
+            if (isloop) { usearrayindx = kFALSE; usearraylen = kTRUE; }
             else
                if (arraylen != elem->GetArrayLength()) {
                   printf("Problem with JSON coding of element %s type %d \n", elem->GetName(), elem->GetType());
