@@ -78,21 +78,25 @@ namespace cling {
 inline std::string printValue(ROOT::Experimental::TDataFrame *tdf)
 {
    auto df = tdf->GetDataFrameChecked();
-   auto treeName = df->GetTreeName();
+   auto *tree = df->GetTree();
    auto defBranches = df->GetDefaultBranches();
    auto tmpBranches = df->GetTmpBranches();
 
    std::ostringstream ret;
-   ret << "A data frame built on top of the " << treeName << " dataset.";
-   if (!defBranches.empty()) {
-      if (defBranches.size() == 1)
-         ret << "\nDefault branch: " << defBranches[0];
-      else {
-         ret << "\nDefault branches:\n";
-         for (auto &&branch : defBranches) {
-            ret << " - " << branch << "\n";
+   if (tree) {
+      ret << "A data frame built on top of the " << tree->GetName() << " dataset.";
+      if (!defBranches.empty()) {
+         if (defBranches.size() == 1)
+            ret << "\nDefault branch: " << defBranches[0];
+         else {
+            ret << "\nDefault branches:\n";
+            for (auto &&branch : defBranches) {
+               ret << " - " << branch << "\n";
+            }
          }
       }
+   } else {
+      ret << "A data frame that will create " << df->GetNEmptyEntries() << " entries\n";
    }
 
    return ret.str();
