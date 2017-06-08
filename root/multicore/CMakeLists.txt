@@ -24,8 +24,14 @@ ROOTTEST_ADD_TEST(testSetAddressLoop
 ROOTTEST_ADD_TEST(checkTThreadedObjectCopies
                   MACRO checkTThreadedObjectCopies.C)
 
+# Workaround for gcc 5.x (x<4) bug in optimized mode
+if(CMAKE_COMPILER_IS_GNUCXX AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 5.0 AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.4)
+  set(PROCESSOREXECUTORH1TEST_EXE_COMPILE_FLAGS "-O1 -I${ROOTSYS}/tutorials/multicore")
+else()
+  set(PROCESSOREXECUTORH1TEST_EXE_COMPILE_FLAGS "-I${ROOTSYS}/tutorials/multicore")
+endif()
 
-ROOTTEST_GENERATE_EXECUTABLE(processExecutorH1Test tProcessExecutorH1Test.cpp COMPILE_FLAGS -I${ROOTSYS}/tutorials/multicore LIBRARIES MultiProc Core Net TreePlayer Tree RIO Hist Gpad Graf)
+ROOTTEST_GENERATE_EXECUTABLE(processExecutorH1Test tProcessExecutorH1Test.cpp COMPILE_FLAGS ${PROCESSOREXECUTORH1TEST_EXE_COMPILE_FLAGS} LIBRARIES MultiProc Core Net TreePlayer Tree RIO Hist Gpad Graf)
 
 ROOTTEST_ADD_TEST(processExecutorH1Test
                   EXEC processExecutorH1Test
