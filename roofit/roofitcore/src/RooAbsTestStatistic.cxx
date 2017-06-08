@@ -51,14 +51,11 @@ combined in the main thread.
 #include "TTimeStamp.h"
 #include "RooProdPdf.h"
 #include "RooRealSumPdf.h"
-
 #include <string>
 
 using namespace std;
 
 ClassImp(RooAbsTestStatistic);
-;
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
