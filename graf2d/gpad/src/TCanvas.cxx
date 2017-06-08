@@ -2251,14 +2251,14 @@ void TCanvas::Update()
 
    if (!fCanvasImp->PerformUpdate()) {
 
-      if (!IsBatch()) FeedbackMode(kFALSE);      // Goto double buffer mode
+      if (!IsBatch()) FeedbackMode(kFALSE); // Goto double buffer mode
 
-      if (!UseGL())
-         PaintModified();           // Repaint all modified pad's
+      if (!UseGL()) PaintModified(); // Repaint all modified pad's
 
-      Flush();                   // Copy all pad pixmaps to the screen
+      Flush(); // Copy all pad pixmaps to the screen
 
       SetCursor(kCross);
+
    }
 
    fUpdating = kFALSE;
@@ -2305,7 +2305,7 @@ void TCanvas::CreatePainter()
    //some calls to batch "virtual X".
    if (!UseGL() || fBatch) {
       fPainter = !fCanvasImp ? 0 : fCanvasImp->CreatePadPainter();
-      if (!fPainter) fPainter = new TPadPainter;//Do not need plugin manager for this!
+      if (!fPainter) fPainter = new TPadPainter; // Do not need plugin manager for this!
    } else {
       fPainter = TVirtualPadPainter::PadPainter("gl");
       if (!fPainter) {
