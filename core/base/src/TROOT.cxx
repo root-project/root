@@ -780,8 +780,6 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fCleanups->Add(fTasks);    fTasks->SetBit(kMustCleanup);
    fCleanups->Add(fFiles);    fFiles->SetBit(kMustCleanup);
    fCleanups->Add(fClosedObjects); fClosedObjects->SetBit(kMustCleanup);
-   // And add TROOT's TDirectory personality
-   fCleanups->Add(fList);
 
    fExecutingMacro= kFALSE;
    fForceStyle    = kFALSE;
