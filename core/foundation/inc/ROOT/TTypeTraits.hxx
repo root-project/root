@@ -15,6 +15,7 @@
 #include <type_traits>
 
 namespace ROOT{
+namespace TypeTraits {
 
 ///\class ROOT::TypeTraits::
 template <class T>
@@ -26,5 +27,6 @@ class IsSmartOrDumbPtr<std::shared_ptr<P>>: public std::true_type {};
 template <class P>
 class IsSmartOrDumbPtr<std::unique_ptr<P>>: public std::true_type {};
 
-}
+} // ns ROOT
+} // ns TypeTraits
 #endif //ROOT_TTypeTraits
