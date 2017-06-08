@@ -1056,7 +1056,7 @@ namespace {
             cursor->SetObject(&harmless); // this must not be zero otherwise things go wrong.
             dir->Close();
             // Put it back
-            cursor->SetObject(dir);
+             cursor->SetObject(dir);
          }
          cursor = cursor->Next();
       };
