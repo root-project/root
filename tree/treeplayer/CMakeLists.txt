@@ -18,7 +18,7 @@ if(NOT imt)
   list(REMOVE_ITEM dictHeaders ${CMAKE_CURRENT_SOURCE_DIR}/inc/ROOT/TTreeProcessorMT.h)
   list(REMOVE_ITEM sources ${CMAKE_CURRENT_SOURCE_DIR}/src/TTreeProcessorMT.cxx)
 else()
-  include_directories(${TBB_INCLUDE_DIRS})
+  include_directories(SYSTEM ${TBB_INCLUDE_DIRS})
 endif()
 
 ROOT_GENERATE_DICTIONARY(G__${libname} ${dictHeaders} MODULE ${libname} LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM")
