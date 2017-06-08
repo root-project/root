@@ -4,30 +4,81 @@
 
 ## Introduction
 
-ROOT version 6.10/00 is scheduled for release in 2017.
+ROOT version 6.10/00 has been released on June 2017
 
-For more information, see:
+For more information, see [http://root.cern.ch](http://root.cern.ch)
 
-[http://root.cern.ch](http://root.cern.ch)
+### The following people have contributed to this new version:
 
-The following people have contributed to this new version:
-
- Bertrand Bellenot, CERN/SFT,\
- Georgios Bitzes, CERN/IT,\
- Rene Brun, CERN/SFT,\
- Philippe Canal, FNAL,\
- Olivier Couet, CERN/SFT,\
- Gerri Ganis, CERN/SFT,\
- Andrei Gheata, CERN/SFT,\
- Sergey Linev, GSI, http,\
- Pere Mato, CERN/SFT,\
- Lorenzo Moneta, CERN/SFT,\
- Axel Naumann, CERN/SFT,\
- Danilo Piparo, CERN/SFT,\
- Fons Rademakers, CERN/SFT,\
- Enric Tejedor Saavedra, CERN/SFT,\
- Vassil Vassilev, Fermilab/CMS,\
- Wouter Verkerke, NIKHEF/Atlas, RooFit
+David Abdurachmanov,
+Kim Albertsson,
+Guilherme Amadio,
+Whitney Armstrong,
+Attila Bagoly,
+Benjamin Bannier,
+Wolf Behrenhoff,
+Bertrand Bellenot,
+Georgios Bitzes,
+Brian Bockelman,
+Will Breaden,
+Philippe Canal,
+Santiago Castro,
+Sylvain Corlay,
+Olivier Couet,
+Sergey Divakov,
+Mattias Ellert,
+Giulio Eulisse,
+Gerardo Ganis,
+Andrei Gheata,
+Luca Giommi,
+Konstantin Gizdov,
+Enrico Guiraud,
+John Harvey,
+Ivana Hrivnacova,
+Filip Ilic,
+Raphael Isemann,
+Thomas James,
+Chris Jones,
+David Lange,
+Wim Lavrijsen,
+Lawrence Lee J,
+Sergey Linev,
+Olli Lupton,
+Spencer Lyon,
+Shahzad Malik,
+Maurizio Martinelli,
+Pere Mato,
+Lorenzo Moneta,
+Lorenzo Moneta,
+Abhinav Moudgil,
+Frederich Munch,
+Jan Musinsky,
+Axel Naumann,
+Ajith Pandel,
+Simon Pfreundschuh,
+Danilo Piparo,
+Timur Pocheptsov,
+Dmitry Polukhin,
+Fons Rademakers,
+Martin Ritter,
+Heshy Roskes,
+Maarten Scholl,
+Paul Seyfert,
+Karl Smith,
+Martin Storø Nyflott,
+Matevz Tadel,
+Enric Tejedor,
+Diego Torres,
+Sebastian Uhl,
+Xavier Valls,
+Peter Van Gemeren,
+Vassil Vassilev,
+Andreas Weiden,
+Sandro Wenzel,
+Stefan Wunsch,
+Omar Zapata,
+Zhe Zhang,
+Roman Zulak
 
 ## Removed interfaces
 
@@ -38,6 +89,8 @@ The following interfaces have been removed, after deprecation in v6.08.
 - `TInterpreter`'s `Getgvp()`, `Getp2f2funcname(void*)`, `Setgvp(Long_t)`, `SetRTLD_NOW()`, `SetRTLD_LAZY()`.
 - `SetFCN(void*)` from TVirtualFitter, TFitter, TBackCompFitter, TMinuit
 - `TFoam::SetRhoInt(void*)`
+### RooFit
+- Removed deprecated `RooComplex` superseded by `std::complex`.
 
 ## Interpreter
 
@@ -104,10 +157,6 @@ please use the new function `CopyString()` which clearly indicates that it invol
 ## Math Libraries
 
 * Improve thread friendliness of the TMinuit class.
-
-## RooFit Libraries
-
-- Remove deprecated `RooComplex` superseded by `std::complex`.
 
 ## TTree Libraries
 
@@ -273,8 +322,6 @@ See [the online documentation](https://root.cern.ch/doc/master/classROOT_1_1Expe
   bin content to be conform to the 2D case where the surface of the boxes is
   proportional to the bin content.
 
-## Geometry Libraries
-
 ## Dictionaries
 - Stop dictionary generation early, during AST scanning, if a union is selected for I/O as this is not supported (triggered by [ROOT-8492](https://sft.its.cern.ch/jira/browse/ROOT-8492))
 - Allow inclusion of headers in linkdef files [ROOT-7765](https://sft.its.cern.ch/jira/browse/ROOT-7765)
@@ -288,19 +335,7 @@ See [the online documentation](https://root.cern.ch/doc/master/classROOT_1_1Expe
 - Fix error sometimes prompted when trying to write std::array column-wise
 
 
-## Database Libraries
-
-
-## Networking Libraries
-
-
-## GUI Libraries
-
-
-## Montecarlo Libraries
-
-
-## Parallelism and PROOF
+## Parallelism
 - Add ROOT::GetImplicitMTPoolSize function to get the size of the pool used to enable implicit multi threading
 - Add the TThreadExecutor::Foreach method for parallelising functions featuring void return type
 - Add TBufferMerger and TBufferMergerFile classes
@@ -328,12 +363,9 @@ See [the online documentation](https://root.cern.ch/doc/master/classROOT_1_1Expe
   };
   ```
 
-## Language Bindings
+## PyROOT
 
-- Add in PyROOT the converter for std::string_view
-- Fix ROOT-8811: pickling of ROOT.Long now works
-- Fix ROOT-8809: push_back on a vector of pointers
-- Fix ROOT-8805: itemsize was not set on buffers returned by PyROOT functions
+- Added in PyROOT the converter for std::string_view
 
 ## JavaScript ROOT
 
@@ -372,3 +404,153 @@ See [the online documentation](https://root.cern.ch/doc/master/classROOT_1_1Expe
 - The IMT switch is set to on by default.
 - A new library is now created, libImt. It contains all classes which depend on TBB. Those classes were previously part of libThread. As a consequence rootcling/genreflex do not depend anymore from TBB even in presence of imt builds.
 - Refactoring of several math tests to avoid exact comparisons of floating point numbers
+
+
+## Bugs fixed in this release
+
+*   [[ROOT-3798](https://sft.its.cern.ch/jira/browse/ROOT-3798)] - The various TTree::Branch functions are very hard to figure out
+*   [[ROOT-4489](https://sft.its.cern.ch/jira/browse/ROOT-4489)] - Memory leak when TTree::BuildIndex is called multiple times
+*   [[ROOT-4568](https://sft.its.cern.ch/jira/browse/ROOT-4568)] - SIGPIPE handler can cause infinite loop when stderr pipe is gone
+*   [[ROOT-4812](https://sft.its.cern.ch/jira/browse/ROOT-4812)] - cling::InputValidator::validate and #ifdef
+*   [[ROOT-4865](https://sft.its.cern.ch/jira/browse/ROOT-4865)] - I/O for private and protected classes is not yet supported
+*   [[ROOT-5035](https://sft.its.cern.ch/jira/browse/ROOT-5035)] - Custom converter not called correctly on member variables
+*   [[ROOT-5540](https://sft.its.cern.ch/jira/browse/ROOT-5540)] - Problem switching from small to large size mode when updating a ROOT File.
+*   [[ROOT-5682](https://sft.its.cern.ch/jira/browse/ROOT-5682)] - enums as template parameter for template class
+*   [[ROOT-5727](https://sft.its.cern.ch/jira/browse/ROOT-5727)] - ROOT6 does not expand typedef while computing class checksum
+*   [[ROOT-5837](https://sft.its.cern.ch/jira/browse/ROOT-5837)] - ROOT ProcessLine doesnt print error after #include
+*   [[ROOT-5971](https://sft.its.cern.ch/jira/browse/ROOT-5971)] - Ambiguity between std:: and ::
+*   [[ROOT-6000](https://sft.its.cern.ch/jira/browse/ROOT-6000)] - Problem with EmulatedCollectionProxy for STL containers instantiation known to cling
+*   [[ROOT-6011](https://sft.its.cern.ch/jira/browse/ROOT-6011)] - cling dynamic library manager fails
+*   [[ROOT-6022](https://sft.its.cern.ch/jira/browse/ROOT-6022)] - Inconsistency detected by ld.so in libcling
+*   [[ROOT-6123](https://sft.its.cern.ch/jira/browse/ROOT-6123)] - Inconsistency in std functions / GetListOfFunctions()
+*   [[ROOT-6203](https://sft.its.cern.ch/jira/browse/ROOT-6203)] - Same name classes in different namespaces
+*   [[ROOT-6211](https://sft.its.cern.ch/jira/browse/ROOT-6211)] - Problem converting template instance with argument double to one with argument Double32_t
+*   [[ROOT-6384](https://sft.its.cern.ch/jira/browse/ROOT-6384)] - Can't build with builtin-afterimage on OS X system with homebrew present
+*   [[ROOT-6476](https://sft.its.cern.ch/jira/browse/ROOT-6476)] - Handle TTreeReaderValue accessing invalid entry in TTreeReader
+*   [[ROOT-6576](https://sft.its.cern.ch/jira/browse/ROOT-6576)] - .L not reflected in TCling::GetSharedLibs
+*   [[ROOT-6721](https://sft.its.cern.ch/jira/browse/ROOT-6721)] - Recovery after an error and mysterious error message
+*   [[ROOT-6810](https://sft.its.cern.ch/jira/browse/ROOT-6810)] - Return value with void function
+*   [[ROOT-7016](https://sft.its.cern.ch/jira/browse/ROOT-7016)] - int i[1][1];
+*   [[ROOT-7172](https://sft.its.cern.ch/jira/browse/ROOT-7172)] - MIsleading diagnostic and crash when executing named macro
+*   [[ROOT-7244](https://sft.its.cern.ch/jira/browse/ROOT-7244)] - gSystem->IsFileInIncludePath() does not understand quoted paths (esp. crucial since ROOT-7226 fix auto-quotes paths)
+*   [[ROOT-7354](https://sft.its.cern.ch/jira/browse/ROOT-7354)] - Solo opening parenthesis in block comment not interpreted properly in cling
+*   [[ROOT-7424](https://sft.its.cern.ch/jira/browse/ROOT-7424)] - Label on a TH1F histogram causes ROOT to segfault
+*   [[ROOT-7514](https://sft.its.cern.ch/jira/browse/ROOT-7514)] - Cannot reload TGedFrame.h
+*   [[ROOT-7538](https://sft.its.cern.ch/jira/browse/ROOT-7538)] - Can't run root in the build tree for an installation build
+*   [[ROOT-7641](https://sft.its.cern.ch/jira/browse/ROOT-7641)] - TMethodCall::Execute (unnecessary) slowness in ROOT 6
+*   [[ROOT-7659](https://sft.its.cern.ch/jira/browse/ROOT-7659)] - ROOT signal handler should ignore SIGPIPE (or ignore it while it is handling it)
+*   [[ROOT-7669](https://sft.its.cern.ch/jira/browse/ROOT-7669)] - Spurious segfaults on creation of TRint instance if rootlogon uses <iostream>
+*   [[ROOT-7792](https://sft.its.cern.ch/jira/browse/ROOT-7792)] - Weird type output in interactive root
+*   [[ROOT-7984](https://sft.its.cern.ch/jira/browse/ROOT-7984)] - TTreeReaderArray and variable-sized C-style array don't mix
+*   [[ROOT-8046](https://sft.its.cern.ch/jira/browse/ROOT-8046)] - Python C++ class wrappers in cppyy do not report the proper name (preventing pickling)
+*   [[ROOT-8060](https://sft.its.cern.ch/jira/browse/ROOT-8060)] - cmake (at least ninja) dependency problem
+*   [[ROOT-8064](https://sft.its.cern.ch/jira/browse/ROOT-8064)] - excessive warning messages from ROOT cling
+*   [[ROOT-8080](https://sft.its.cern.ch/jira/browse/ROOT-8080)] - Floating point exceptions in lambda-functions executed by interpreter not catched
+*   [[ROOT-8109](https://sft.its.cern.ch/jira/browse/ROOT-8109)] - Segmentation Fault in TFile::Open if gPluginMgr is present
+*   [[ROOT-8175](https://sft.its.cern.ch/jira/browse/ROOT-8175)] - C++ exceptions not propagated to Python in PyROOT on MacOSX 10.11
+*   [[ROOT-8230](https://sft.its.cern.ch/jira/browse/ROOT-8230)] - Inherited method in PyROOT/RooFit not found
+*   [[ROOT-8240](https://sft.its.cern.ch/jira/browse/ROOT-8240)] - Must not unload or reload cling runtime universe
+*   [[ROOT-8264](https://sft.its.cern.ch/jira/browse/ROOT-8264)] - ROOT 6 master: Too many open files
+*   [[ROOT-8283](https://sft.its.cern.ch/jira/browse/ROOT-8283)] - Cannot unload + reload inline functions
+*   [[ROOT-8289](https://sft.its.cern.ch/jira/browse/ROOT-8289)] - valgrind issue in clang::ASTDeclReader::VisitFriendDecl()
+*   [[ROOT-8362](https://sft.its.cern.ch/jira/browse/ROOT-8362)] - TDavixFile does not increment read and write bytes counters
+*   [[ROOT-8396](https://sft.its.cern.ch/jira/browse/ROOT-8396)] - CMake: spurious errors from keras and friends...
+*   [[ROOT-8399](https://sft.its.cern.ch/jira/browse/ROOT-8399)] - Prompt redirection skips parts of file name
+*   [[ROOT-8406](https://sft.its.cern.ch/jira/browse/ROOT-8406)] - TGHSlider crash when start=end
+*   [[ROOT-8410](https://sft.its.cern.ch/jira/browse/ROOT-8410)] - Outdated textEntries.C gui tutorial
+*   [[ROOT-8416](https://sft.its.cern.ch/jira/browse/ROOT-8416)] - DrawClone from GUI Context Menu does not work
+*   [[ROOT-8421](https://sft.its.cern.ch/jira/browse/ROOT-8421)] - Python not finding functions in a namespace
+*   [[ROOT-8422](https://sft.its.cern.ch/jira/browse/ROOT-8422)] - segmentation fault when instantiating a templated class with "disabled" methods
+*   [[ROOT-8429](https://sft.its.cern.ch/jira/browse/ROOT-8429)] - Error during dictionary creation of PyMVA on SuSe 13.1 and OpenSuSE Leap 42.1
+*   [[ROOT-8432](https://sft.its.cern.ch/jira/browse/ROOT-8432)] - Autoparse error for outlined template functions
+*   [[ROOT-8433](https://sft.its.cern.ch/jira/browse/ROOT-8433)] - TBuffer::WriteStdString fails
+*   [[ROOT-8437](https://sft.its.cern.ch/jira/browse/ROOT-8437)] - Warning and segfault when writing custom class into TTree (with dictionary)
+*   [[ROOT-8441](https://sft.its.cern.ch/jira/browse/ROOT-8441)] - template arguments deduction not working in Python
+*   [[ROOT-8442](https://sft.its.cern.ch/jira/browse/ROOT-8442)] - Cling fails to correct initialise a variable to zero when it is not correctly declared
+*   [[ROOT-8443](https://sft.its.cern.ch/jira/browse/ROOT-8443)] - Major failure on linux interactive python with template instantiations
+*   [[ROOT-8444](https://sft.its.cern.ch/jira/browse/ROOT-8444)] - Export cmake targets into own namespace
+*   [[ROOT-8445](https://sft.its.cern.ch/jira/browse/ROOT-8445)] - Failure on linux interactive C++ with auto
+*   [[ROOT-8452](https://sft.its.cern.ch/jira/browse/ROOT-8452)] - Incorrect handling of files and TChains with xrootd with ?svcClass tag
+*   [[ROOT-8453](https://sft.its.cern.ch/jira/browse/ROOT-8453)] - ROOTTEST_GENERATE_REFLEX_DICTIONARY output does not depend on rootcling/genreflex
+*   [[ROOT-8454](https://sft.its.cern.ch/jira/browse/ROOT-8454)] - linking against libNew produce not working programs, TMapfile not usable
+*   [[ROOT-8456](https://sft.its.cern.ch/jira/browse/ROOT-8456)] - Issues with TTreeReader
+*   [[ROOT-8467](https://sft.its.cern.ch/jira/browse/ROOT-8467)] - Support .x filename-with-non-C++-identifiers-characters.C
+*   [[ROOT-8468](https://sft.its.cern.ch/jira/browse/ROOT-8468)] - System crash when running parallel unzipping in MainEvent.cxx
+*   [[ROOT-8469](https://sft.its.cern.ch/jira/browse/ROOT-8469)] - redirecting output in macro
+*   [[ROOT-8470](https://sft.its.cern.ch/jira/browse/ROOT-8470)] - CMake: -Dminimal=On causes build error
+*   [[ROOT-8474](https://sft.its.cern.ch/jira/browse/ROOT-8474)] - Setting status bar of TRootBrowser to 1 column produces error message if a TCanvas is also open.
+*   [[ROOT-8475](https://sft.its.cern.ch/jira/browse/ROOT-8475)] - PTR macro defined in mmalloc.h is not undefined
+*   [[ROOT-8478](https://sft.its.cern.ch/jira/browse/ROOT-8478)] - Silent I/O failure when missing STL container dictionary
+*   [[ROOT-8480](https://sft.its.cern.ch/jira/browse/ROOT-8480)] - CMake: root-config does not get updated
+*   [[ROOT-8483](https://sft.its.cern.ch/jira/browse/ROOT-8483)] - misleading error message from TTreeReaderValue
+*   [[ROOT-8485](https://sft.its.cern.ch/jira/browse/ROOT-8485)] - compile-time errors when filling a THist
+*   [[ROOT-8490](https://sft.its.cern.ch/jira/browse/ROOT-8490)] - TUnixSystem / TFile::Open() does not handle ~invaliduser/file
+*   [[ROOT-8499](https://sft.its.cern.ch/jira/browse/ROOT-8499)] - cling/clang crash on initialization of static template member
+*   [[ROOT-8502](https://sft.its.cern.ch/jira/browse/ROOT-8502)] - TBuffer::ReadStdString(std::string &s) suddenly gone / replaced in 6.08.02
+*   [[ROOT-8506](https://sft.its.cern.ch/jira/browse/ROOT-8506)] - Roottest/python tests wrong ROOT
+*   [[ROOT-8510](https://sft.its.cern.ch/jira/browse/ROOT-8510)] - CMake: default config on MacOS fails due to fortran
+*   [[ROOT-8511](https://sft.its.cern.ch/jira/browse/ROOT-8511)] - Filter MacOSX bundles from the lists of ACliC libraries (MH_BUNDLE versus MH_DYLIB
+*   [[ROOT-8514](https://sft.its.cern.ch/jira/browse/ROOT-8514)] - segmentation violation when calling gROOT->ProcessLine()
+*   [[ROOT-8520](https://sft.its.cern.ch/jira/browse/ROOT-8520)] - TTreePerfStats cannot be read from the file
+*   [[ROOT-8523](https://sft.its.cern.ch/jira/browse/ROOT-8523)] - Failure to catch exceptions in interactive C++ on linux.
+*   [[ROOT-8529](https://sft.its.cern.ch/jira/browse/ROOT-8529)] - Failed parsing of multiplication/division in interactive session
+*   [[ROOT-8533](https://sft.its.cern.ch/jira/browse/ROOT-8533)] - Recursive Parsing and ExpressionEvaluationContext
+*   [[ROOT-8536](https://sft.its.cern.ch/jira/browse/ROOT-8536)] - TBrowser crashes when click branch vector<TString>
+*   [[ROOT-8537](https://sft.its.cern.ch/jira/browse/ROOT-8537)] - ChangeLabel does not work for logarithmic axes
+*   [[ROOT-8539](https://sft.its.cern.ch/jira/browse/ROOT-8539)] - Problem with interpreting a macro when moving from ROOT 6.06/08 to 6.08/04
+*   [[ROOT-8542](https://sft.its.cern.ch/jira/browse/ROOT-8542)] - GetListOfMethods() fails on string_view
+*   [[ROOT-8544](https://sft.its.cern.ch/jira/browse/ROOT-8544)] - Regression in ROOT 6.08.04: MPI program hangs when loading TFile plugins
+*   [[ROOT-8546](https://sft.its.cern.ch/jira/browse/ROOT-8546)] - Building debug via CMake non standard.
+*   [[ROOT-8568](https://sft.its.cern.ch/jira/browse/ROOT-8568)] - TSystem OpenConnection does not work in latest root (6.08.04, 6.09.01), but works in root 6.06.04
+*   [[ROOT-8572](https://sft.its.cern.ch/jira/browse/ROOT-8572)] - Interpolator never prints warning about not printing further warnings
+*   [[ROOT-8574](https://sft.its.cern.ch/jira/browse/ROOT-8574)] - Bug with TVirtualCollectionProxy and std::bitset
+*   [[ROOT-8579](https://sft.its.cern.ch/jira/browse/ROOT-8579)] - TApplication::ProcessLine / ExecuteFile does not return error state if file not present
+*   [[ROOT-8585](https://sft.its.cern.ch/jira/browse/ROOT-8585)] - TTree::MakeProxy fails for non-split objects
+*   [[ROOT-8692](https://sft.its.cern.ch/jira/browse/ROOT-8692)] - make install: python files are not compiled correctly
+*   [[ROOT-8694](https://sft.its.cern.ch/jira/browse/ROOT-8694)] - Segfault when drawing TKDE
+*   [[ROOT-8696](https://sft.its.cern.ch/jira/browse/ROOT-8696)] - floating point constants recognized as file descriptor numbers
+*   [[ROOT-8697](https://sft.its.cern.ch/jira/browse/ROOT-8697)] - Streaming/Loading of TRandom with a TBufferFile fails
+*   [[ROOT-8698](https://sft.its.cern.ch/jira/browse/ROOT-8698)] - CMake build does not ignore previous ROOT installations
+*   [[ROOT-8701](https://sft.its.cern.ch/jira/browse/ROOT-8701)] - Problems with hard-coded #include statements
+*   [[ROOT-8702](https://sft.its.cern.ch/jira/browse/ROOT-8702)] - Compiling root on Aarch64
+*   [[ROOT-8704](https://sft.its.cern.ch/jira/browse/ROOT-8704)] - thisroot.sh does not always modify LD_LIBRARY_PATH correctly.
+*   [[ROOT-8713](https://sft.its.cern.ch/jira/browse/ROOT-8713)] - Regression in ROOT: conflict with namespaces and global variables
+*   [[ROOT-8714](https://sft.its.cern.ch/jira/browse/ROOT-8714)] - TBrowser doesn't correctly parse branches with "." in the master branch name
+*   [[ROOT-8715](https://sft.its.cern.ch/jira/browse/ROOT-8715)] - Bad interaction of TTreeViewer vs cling
+*   [[ROOT-8722](https://sft.its.cern.ch/jira/browse/ROOT-8722)] - Crash TBrowser-ing class TFile on macOS
+*   [[ROOT-8723](https://sft.its.cern.ch/jira/browse/ROOT-8723)] - TBrowser-ing a TClass dumps the class
+*   [[ROOT-8728](https://sft.its.cern.ch/jira/browse/ROOT-8728)] - ROOT won't build on clang (libc++) 4
+*   [[ROOT-8731](https://sft.its.cern.ch/jira/browse/ROOT-8731)] - Using Double32_t with TTreeReader
+*   [[ROOT-8732](https://sft.its.cern.ch/jira/browse/ROOT-8732)] - PyROOT cannot read/write C++ class fields of Double32_t
+*   [[ROOT-8739](https://sft.its.cern.ch/jira/browse/ROOT-8739)] - Cannot generate dictionaries for classes in "next" namespace.
+*   [[ROOT-8746](https://sft.its.cern.ch/jira/browse/ROOT-8746)] - ROOT requires more recent version of GSL than tested by Cmake
+*   [[ROOT-8747](https://sft.its.cern.ch/jira/browse/ROOT-8747)] - TTreeReader bogus data in std::vector if first element skipped
+*   [[ROOT-8752](https://sft.its.cern.ch/jira/browse/ROOT-8752)] - ROOT_GENERATE_DICTIONARY generates rootmap with wrong libsuffix on MacOS
+*   [[ROOT-8763](https://sft.its.cern.ch/jira/browse/ROOT-8763)] - Segmentation violation with TBrowser
+*   [[ROOT-8764](https://sft.its.cern.ch/jira/browse/ROOT-8764)] - Missing implicit header dependencies in ROOT dictionaries
+*   [[ROOT-8769](https://sft.its.cern.ch/jira/browse/ROOT-8769)] - rootcling crashes on Ubuntu 16.04/Fedora/Arch when generating dictionaries
+*   [[ROOT-8773](https://sft.its.cern.ch/jira/browse/ROOT-8773)] - variables declared in gROOT->Macro lost from scope
+*   [[ROOT-8791](https://sft.its.cern.ch/jira/browse/ROOT-8791)] - -Dbuiltin_all=On and Vc versus VecCore
+*   [[ROOT-8792](https://sft.its.cern.ch/jira/browse/ROOT-8792)] - Compilation with builtin XRootD fails with GCC 7
+*   [[ROOT-8795](https://sft.its.cern.ch/jira/browse/ROOT-8795)] - TMinuit and TH2::DoProjection interfere when using threads
+*   [[ROOT-8797](https://sft.its.cern.ch/jira/browse/ROOT-8797)] - GCC 7: Setting "SetRangeUser" of TAxis fails with TClingCallFunc errors
+*   [[ROOT-8804](https://sft.its.cern.ch/jira/browse/ROOT-8804)] - Segfault during TClass::GetClass for missing dictionary
+*   [[ROOT-8809](https://sft.its.cern.ch/jira/browse/ROOT-8809)] - push_back on a vector of pointers may not work in PyROOT
+*   [[ROOT-8811](https://sft.its.cern.ch/jira/browse/ROOT-8811)] - python: cannot pickle ROOT.Long() (not found as ROOT.long)
+*   [[ROOT-8815](https://sft.its.cern.ch/jira/browse/ROOT-8815)] - Memory hoarding in TTree
+
+## New Features and Tasks
+
+*   [[ROOT-4515](https://sft.its.cern.ch/jira/browse/ROOT-4515)] - Provide a TChain-like interface to THnSparse
+*   [[ROOT-6284](https://sft.its.cern.ch/jira/browse/ROOT-6284)] - New inline-only ClassDef() not requiring a generated dictionary
+*   [[ROOT-8803](https://sft.its.cern.ch/jira/browse/ROOT-8803)] - Running GDMLParser on a file with arithmetic expressions
+*   [[ROOT-5072](https://sft.its.cern.ch/jira/browse/ROOT-5072)] - File Format Enhancements
+*   [[ROOT-5487](https://sft.its.cern.ch/jira/browse/ROOT-5487)] - Rewrite unnamed macro parsing / execution
+*   [[ROOT-5922](https://sft.its.cern.ch/jira/browse/ROOT-5922)] - TRefTable use a global state
+*   [[ROOT-8513](https://sft.its.cern.ch/jira/browse/ROOT-8513)] - Move core/multiproc to a more natural place.
+*   [[ROOT-8612](https://sft.its.cern.ch/jira/browse/ROOT-8612)] - Interpreter - Reduce amount of emitted symbols
+*   [[ROOT-8613](https://sft.its.cern.ch/jira/browse/ROOT-8613)] - Interpreter - JIT optimization level
+*   [[ROOT-6912](https://sft.its.cern.ch/jira/browse/ROOT-6912)] - ROOT slow on startup
+*   [[ROOT-7658](https://sft.its.cern.ch/jira/browse/ROOT-7658)] - Improve ValuePrinter type printing.
+*   [[ROOT-8408](https://sft.its.cern.ch/jira/browse/ROOT-8408)] - valgrind leak reports with bare ROOT start and quit
+*   [[ROOT-8438](https://sft.its.cern.ch/jira/browse/ROOT-8438)] - Add a CMake option -Dbuiltin_all=ON
