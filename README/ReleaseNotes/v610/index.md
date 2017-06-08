@@ -407,6 +407,11 @@ See [the online documentation](https://root.cern.ch/doc/master/classROOT_1_1Expe
      f->Write();
   };
   ```
+- Global reorganization of the new multi-process / multi-thread code: the part of TProcessExecutor dedicated
+  to TTree processing is moved to a new class TTreeProcessorMP, located under tree/treeplayer and included in
+  the libTreePlayer library. Methods 'ProcTree' have been renamed to 'Process', following TTreeProcessorMT.
+- Full support for TSelector processing and TEntryList has been added to TTreeProcessorMP, with new related
+  tutorials (multicore/{mp104_processH1,mp105_processEntryList}.C) and roottests (root/multicore/tProcessExecutorH1Test.cpp).
 
 ## PyROOT
 
