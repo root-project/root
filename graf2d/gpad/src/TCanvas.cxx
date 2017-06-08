@@ -2258,7 +2258,6 @@ void TCanvas::Update()
       Flush(); // Copy all pad pixmaps to the screen
 
       SetCursor(kCross);
-
    }
 
    fUpdating = kFALSE;
