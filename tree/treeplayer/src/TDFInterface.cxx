@@ -89,7 +89,7 @@ Long_t JitTransformation(void *thisPtr, const std::string &methodName, const std
          // The map is a const reference, so no operator[]
          auto tmpBrIt = tmpBookedBranches.find(brName);
          auto tmpBr = tmpBrIt == tmpBookedBranches.end() ? nullptr : tmpBrIt->second.get();
-         auto brTypeName = ColumnName2ColumnTypeName(brName, *tree, tmpBr);
+         auto brTypeName = ColumnName2ColumnTypeName(brName, tree, tmpBr);
          ss << brTypeName << " " << brName << ";\n";
          usedBranchesTypes.emplace_back(brTypeName);
       }
@@ -166,7 +166,7 @@ Long_t JitTransformation(void *thisPtr, const std::string &methodName, const std
 // Jit and call something equivalent to "this->BuildAndBook<BranchTypes...>(params...)"
 // (see comments in the body for actual jitted code)
 void JitBuildAndBook(const ColumnNames_t &bl, const std::string &nodeTypename, void *thisPtr, const std::type_info &art,
-                     const std::type_info &at, const void *r, TTree &tree, unsigned int nSlots,
+                     const std::type_info &at, const void *r, TTree *tree, unsigned int nSlots,
                      const std::map<std::string, TmpBranchBasePtr_t> &tmpBranches)
 {
    gInterpreter->ProcessLine("#include \"ROOT/TDataFrame.hxx\"");
