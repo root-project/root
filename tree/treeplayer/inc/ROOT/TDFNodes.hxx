@@ -81,7 +81,7 @@ public:
    TCustomColumnBase *GetBookedBranch(const std::string &name) const;
    const std::map<std::string, TmpBranchBasePtr_t> &GetBookedBranches() const { return fBookedBranches; }
    ::TDirectory *GetDirectory() const;
-   std::string GetTreeName() const;
+   Long64_t GetNEmptyEntries() const { return fNEmptyEntries; }
    void Book(const ActionBasePtr_t &actionPtr);
    void Book(const FilterBasePtr_t &filterPtr);
    void Book(const TmpBranchBasePtr_t &branchPtr);

@@ -277,11 +277,6 @@ TDirectory *TLoopManager::GetDirectory() const
    return fDirPtr;
 }
 
-std::string TLoopManager::GetTreeName() const
-{
-   return fTree->GetName();
-}
-
 void TLoopManager::Book(const ActionBasePtr_t &actionPtr)
 {
    fBookedActions.emplace_back(actionPtr);
