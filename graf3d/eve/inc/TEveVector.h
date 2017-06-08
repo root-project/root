@@ -15,6 +15,8 @@
 #include "TMath.h"
 #include <cstddef>
 
+#include <array>
+
 class TVector3;
 
 
@@ -25,15 +27,23 @@ class TVector3;
 template <typename TT>
 class TEveVectorT
 {
+   /// The std::array guarantees that the data is contiguous in memory and we can implement safely Arr().
+   std::array<TT, 3> fXYZ {{0}};
 public:
-   TT fX, fY, fZ; // Components of the vector.
+   TT &fX = *&fXYZ[0], fY = *&fXYZ[1], fZ = *&fXYZ[3]; // Components of the vector.
 
-   TEveVectorT() : fX(0), fY(0), fZ(0) {}
+   TEveVectorT() {}
    template <typename OO>
-   TEveVectorT(const TEveVectorT<OO>& v) : fX(v.fX), fY(v.fY), fZ(v.fZ) {}
-   TEveVectorT(const Float_t*  v) : fX(v[0]), fY(v[1]), fZ(v[2]) {}
-   TEveVectorT(const Double_t* v) : fX(v[0]), fY(v[1]), fZ(v[2]) {}
-   TEveVectorT(TT x, TT y, TT  z) : fX(x), fY(y), fZ(z) {}
+   TEveVectorT(const TEveVectorT<OO>& v) : fXYZ({{v.fX, v.fY, v.fZ}}) {}
+   // Enable this only when we do type narrowing, eg. double -> float.
+   template <class = std::enable_if<!std::is_same<TT, const Double_t*>::value>>
+   TEveVectorT(const TEveVectorT<Double_t>& v)
+      : fXYZ({{static_cast<TT>(v[0]), static_cast<TT>(v[1]), static_cast<TT>(v[2])}}) {}
+   template <class = std::enable_if<!std::is_same<TT, const Double_t*>::value>>
+   TEveVectorT(const Double_t* v)
+      : fXYZ({{static_cast<TT>(v[0]), static_cast<TT>(v[1]), static_cast<TT>(v[2])}}) {}
+   TEveVectorT(const Float_t*  v) : fXYZ({{v[0], v[1], v[2]}}) {}
+   TEveVectorT(TT x, TT y, TT  z) : fXYZ({{x, y, z}}) {}
 
    void Dump() const;
 
@@ -52,6 +62,14 @@ public:
    TT  operator [] (Int_t idx) const { return Arr()[idx]; }
    TT& operator [] (Int_t idx)       { return Arr()[idx]; }
 
+   TEveVectorT& operator=(const TEveVectorT& v)
+   {
+      fXYZ = v.fXYZ;
+      fX = *&fXYZ[0];
+      fY = *&fXYZ[1];
+      fZ = *&fXYZ[2];
+      return *this;
+   }
    TEveVectorT& operator*=(TT s)                 { fX *= s;    fY *= s;    fZ *= s;    return *this; }
    TEveVectorT& operator+=(const TEveVectorT& v) { fX += v.fX; fY += v.fY; fZ += v.fZ; return *this; }
    TEveVectorT& operator-=(const TEveVectorT& v) { fX -= v.fX; fY -= v.fY; fZ -= v.fZ; return *this; }
@@ -94,7 +112,7 @@ public:
 
    Bool_t       IsZero() const { return fX == 0 && fY == 0 && fZ == 0; }
 
-   ClassDefNV(TEveVectorT, 2); // A three-vector template without TObject inheritance and virtual functions.
+   ClassDefNV(TEveVectorT, 3); // A three-vector template without TObject inheritance and virtual functions.
 };
 
 typedef TEveVectorT<Float_t>  TEveVector;
