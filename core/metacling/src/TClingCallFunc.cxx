@@ -270,9 +270,8 @@ void *TClingCallFunc::compile_wrapper(const string &wrapper_name, const string &
                                    withAccessControl);
 }
 
-void TClingCallFunc::collect_type_info(QualType &QT, ostringstream &typedefbuf,
-                                       ostringstream &callbuf, string &type_name,
-                                       bool &isReference, bool &isPointer, int indent_level,
+void TClingCallFunc::collect_type_info(QualType &QT, ostringstream &typedefbuf, std::ostringstream &callbuf,
+                                       string &type_name, bool &isReference, bool &isPointer, int indent_level,
                                        bool forArgument)
 {
    //
@@ -387,9 +386,8 @@ void TClingCallFunc::make_narg_ctor(const unsigned N, ostringstream &typedefbuf,
    callbuf << ")";
 }
 
-void TClingCallFunc::make_narg_call(const unsigned N, ostringstream &typedefbuf,
-                                    ostringstream &callbuf, const string &class_name,
-                                    int indent_level)
+void TClingCallFunc::make_narg_call(const std::string &return_type, const unsigned N, ostringstream &typedefbuf,
+                                    ostringstream &callbuf, const string &class_name, int indent_level)
 {
    //
    // Make a code string that follows this pattern:
@@ -397,6 +395,50 @@ void TClingCallFunc::make_narg_call(const unsigned N, ostringstream &typedefbuf,
    // ((<class>*)obj)-><method>(*(<arg-i-type>*)args[i], ...)
    //
    const FunctionDecl *FD = GetDecl();
+
+   // Sometimes it's necessary that we cast the function we want to call first
+   // to its explicit function type before calling it. This is supposed to prevent
+   // that we accidentially ending up in a function that is not the one we're
+   // supposed to call here (e.g. because the C++ function lookup decides to take
+   // another function that better fits).
+   // This method has some problems, e.g. when we call a function with default
+   // arguments and we don't provide all arguments, we would fail with this pattern.
+   // Same applies with member methods which seem to cause parse failures even when
+   // we supply the object parameter.
+   // Therefore we only use it in cases where we know it works and set this variable
+   // to true when we do.
+   bool ShouldCastFunction = !isa<CXXMethodDecl>(FD) && N == FD->getNumParams();
+   if (ShouldCastFunction) {
+      callbuf << "(";
+      callbuf << "(";
+      callbuf << return_type << " (&)";
+      {
+         callbuf << "(";
+         for (unsigned i = 0U; i < N; ++i) {
+            if (i) {
+               callbuf << ',';
+               if (i % 2) {
+                  callbuf << ' ';
+               } else {
+                  callbuf << "\n";
+                  for (int j = 0; j <= indent_level; ++j) {
+                     callbuf << kIndentString;
+                  }
+               }
+            }
+            const ParmVarDecl *PVD = FD->getParamDecl(i);
+            QualType Ty = PVD->getType();
+            QualType QT = Ty.getCanonicalType();
+            std::string arg_type;
+            ROOT::TMetaUtils::GetNormalizedName(arg_type, QT, *fInterp, fNormCtxt);
+            callbuf << arg_type;
+         }
+         callbuf << ")";
+      }
+
+      callbuf << ")";
+   }
+
    if (const CXXMethodDecl *MD = dyn_cast<CXXMethodDecl>(FD)) {
       // This is a class, struct, or union member.
       if (MD->isConst())
@@ -416,8 +458,11 @@ void TClingCallFunc::make_narg_call(const unsigned N, ostringstream &typedefbuf,
          llvm::raw_string_ostream stream(name);
          FD->getNameForDiagnostic(stream, FD->getASTContext().getPrintingPolicy(), /*Qualified=*/false);
       }
-      callbuf << name << "(";
+      callbuf << name;
    }
+   if (ShouldCastFunction) callbuf << ")";
+
+   callbuf << "(";
    for (unsigned i = 0U; i < N; ++i) {
       const ParmVarDecl *PVD = FD->getParamDecl(i);
       QualType Ty = PVD->getType();
@@ -425,8 +470,8 @@ void TClingCallFunc::make_narg_call(const unsigned N, ostringstream &typedefbuf,
       string type_name;
       bool isReference = false;
       bool isPointer = false;
-      collect_type_info(QT, typedefbuf, callbuf, type_name,
-                        isReference, isPointer, indent_level, true);
+      collect_type_info(QT, typedefbuf, callbuf, type_name, isReference, isPointer, indent_level, true);
+
       if (i) {
          callbuf << ',';
          if (i % 2) {
@@ -438,6 +483,7 @@ void TClingCallFunc::make_narg_call(const unsigned N, ostringstream &typedefbuf,
             }
          }
       }
+
       if (isReference) {
          callbuf << "(" << type_name.c_str() << "&)*(" << type_name.c_str() << "*)args["
                  << i << "]";
@@ -528,6 +574,389 @@ void TClingCallFunc::make_narg_ctor_with_return(const unsigned N, const string &
    buf << "}\n";
 }
 
+int TClingCallFunc::print_wrapper(std::string &wrapper_name, std::string &wrapper)
+{
+   const FunctionDecl *FD = GetDecl();
+   assert(FD && "generate_wrapper called without a function decl!");
+   ASTContext &Context = FD->getASTContext();
+   PrintingPolicy Policy(Context.getPrintingPolicy());
+   //
+   //  Get the class or namespace name.
+   //
+   string class_name;
+   if (const TypeDecl *TD = dyn_cast<TypeDecl>(FD->getDeclContext())) {
+      // This is a class, struct, or union member.
+      QualType QT(TD->getTypeForDecl(), 0);
+      ROOT::TMetaUtils::GetNormalizedName(class_name, QT, *fInterp, fNormCtxt);
+   } else if (const NamedDecl *ND = dyn_cast<NamedDecl>(FD->getDeclContext())) {
+      // This is a namespace member.
+      raw_string_ostream stream(class_name);
+      ND->getNameForDiagnostic(stream, Policy, /*Qualified=*/true);
+      stream.flush();
+   }
+   //
+   //  Check to make sure that we can
+   //  instantiate and codegen this function.
+   //
+   bool needInstantiation = false;
+   const FunctionDecl *Definition = 0;
+   if (!FD->isDefined(Definition)) {
+      FunctionDecl::TemplatedKind TK = FD->getTemplatedKind();
+      switch (TK) {
+      case FunctionDecl::TK_NonTemplate: {
+         // Ordinary function, not a template specialization.
+         // Note: This might be ok, the body might be defined
+         //       in a library, and all we have seen is the
+         //       header file.
+         //::Error("TClingCallFunc::make_wrapper",
+         //      "Cannot make wrapper for a function which is "
+         //      "declared but not defined!");
+         // return 0;
+      } break;
+      case FunctionDecl::TK_FunctionTemplate: {
+         // This decl is actually a function template,
+         // not a function at all.
+         ::Error("TClingCallFunc::make_wrapper", "Cannot make wrapper for a function template!");
+         return 0;
+      } break;
+      case FunctionDecl::TK_MemberSpecialization: {
+         // This function is the result of instantiating an ordinary
+         // member function of a class template, or of instantiating
+         // an ordinary member function of a class member of a class
+         // template, or of specializing a member function template
+         // of a class template, or of specializing a member function
+         // template of a class member of a class template.
+         if (!FD->isTemplateInstantiation()) {
+            // We are either TSK_Undeclared or
+            // TSK_ExplicitSpecialization.
+            // Note: This might be ok, the body might be defined
+            //       in a library, and all we have seen is the
+            //       header file.
+            //::Error("TClingCallFunc::make_wrapper",
+            //      "Cannot make wrapper for a function template "
+            //      "explicit specialization which is declared "
+            //      "but not defined!");
+            // return 0;
+            break;
+         }
+         const FunctionDecl *Pattern = FD->getTemplateInstantiationPattern();
+         if (!Pattern) {
+            ::Error("TClingCallFunc::make_wrapper", "Cannot make wrapper for a member function "
+                                                    "instantiation with no pattern!");
+            return 0;
+         }
+         FunctionDecl::TemplatedKind PTK = Pattern->getTemplatedKind();
+         TemplateSpecializationKind PTSK = Pattern->getTemplateSpecializationKind();
+         if (
+            // The pattern is an ordinary member function.
+            (PTK == FunctionDecl::TK_NonTemplate) ||
+            // The pattern is an explicit specialization, and
+            // so is not a template.
+            ((PTK != FunctionDecl::TK_FunctionTemplate) &&
+             ((PTSK == TSK_Undeclared) || (PTSK == TSK_ExplicitSpecialization)))) {
+            // Note: This might be ok, the body might be defined
+            //       in a library, and all we have seen is the
+            //       header file.
+            break;
+         } else if (!Pattern->hasBody()) {
+            ::Error("TClingCallFunc::make_wrapper", "Cannot make wrapper for a member function "
+                                                    "instantiation with no body!");
+            return 0;
+         }
+         if (FD->isImplicitlyInstantiable()) {
+            needInstantiation = true;
+         }
+      } break;
+      case FunctionDecl::TK_FunctionTemplateSpecialization: {
+         // This function is the result of instantiating a function
+         // template or possibly an explicit specialization of a
+         // function template.  Could be a namespace scope function or a
+         // member function.
+         if (!FD->isTemplateInstantiation()) {
+            // We are either TSK_Undeclared or
+            // TSK_ExplicitSpecialization.
+            // Note: This might be ok, the body might be defined
+            //       in a library, and all we have seen is the
+            //       header file.
+            //::Error("TClingCallFunc::make_wrapper",
+            //      "Cannot make wrapper for a function template "
+            //      "explicit specialization which is declared "
+            //      "but not defined!");
+            // return 0;
+            break;
+         }
+         const FunctionDecl *Pattern = FD->getTemplateInstantiationPattern();
+         if (!Pattern) {
+            ::Error("TClingCallFunc::make_wrapper", "Cannot make wrapper for a function template"
+                                                    "instantiation with no pattern!");
+            return 0;
+         }
+         FunctionDecl::TemplatedKind PTK = Pattern->getTemplatedKind();
+         TemplateSpecializationKind PTSK = Pattern->getTemplateSpecializationKind();
+         if (
+            // The pattern is an ordinary member function.
+            (PTK == FunctionDecl::TK_NonTemplate) ||
+            // The pattern is an explicit specialization, and
+            // so is not a template.
+            ((PTK != FunctionDecl::TK_FunctionTemplate) &&
+             ((PTSK == TSK_Undeclared) || (PTSK == TSK_ExplicitSpecialization)))) {
+            // Note: This might be ok, the body might be defined
+            //       in a library, and all we have seen is the
+            //       header file.
+            break;
+         }
+         if (!Pattern->hasBody()) {
+            ::Error("TClingCallFunc::make_wrapper", "Cannot make wrapper for a function template"
+                                                    "instantiation with no body!");
+            return 0;
+         }
+         if (FD->isImplicitlyInstantiable()) {
+            needInstantiation = true;
+         }
+      } break;
+      case FunctionDecl::TK_DependentFunctionTemplateSpecialization: {
+         // This function is the result of instantiating or
+         // specializing a  member function of a class template,
+         // or a member function of a class member of a class template,
+         // or a member function template of a class template, or a
+         // member function template of a class member of a class
+         // template where at least some part of the function is
+         // dependent on a template argument.
+         if (!FD->isTemplateInstantiation()) {
+            // We are either TSK_Undeclared or
+            // TSK_ExplicitSpecialization.
+            // Note: This might be ok, the body might be defined
+            //       in a library, and all we have seen is the
+            //       header file.
+            //::Error("TClingCallFunc::make_wrapper",
+            //      "Cannot make wrapper for a dependent function "
+            //      "template explicit specialization which is declared "
+            //      "but not defined!");
+            // return 0;
+            break;
+         }
+         const FunctionDecl *Pattern = FD->getTemplateInstantiationPattern();
+         if (!Pattern) {
+            ::Error("TClingCallFunc::make_wrapper", "Cannot make wrapper for a dependent function template"
+                                                    "instantiation with no pattern!");
+            return 0;
+         }
+         FunctionDecl::TemplatedKind PTK = Pattern->getTemplatedKind();
+         TemplateSpecializationKind PTSK = Pattern->getTemplateSpecializationKind();
+         if (
+            // The pattern is an ordinary member function.
+            (PTK == FunctionDecl::TK_NonTemplate) ||
+            // The pattern is an explicit specialization, and
+            // so is not a template.
+            ((PTK != FunctionDecl::TK_FunctionTemplate) &&
+             ((PTSK == TSK_Undeclared) || (PTSK == TSK_ExplicitSpecialization)))) {
+            // Note: This might be ok, the body might be defined
+            //       in a library, and all we have seen is the
+            //       header file.
+            break;
+         }
+         if (!Pattern->hasBody()) {
+            ::Error("TClingCallFunc::make_wrapper", "Cannot make wrapper for a dependent function template"
+                                                    "instantiation with no body!");
+            return 0;
+         }
+         if (FD->isImplicitlyInstantiable()) {
+            needInstantiation = true;
+         }
+      } break;
+      default: {
+         // Will only happen if clang implementation changes.
+         // Protect ourselves in case that happens.
+         ::Error("TClingCallFunc::make_wrapper", "Unhandled template kind!");
+         return 0;
+      } break;
+      }
+      // We do not set needInstantiation to true in these cases:
+      //
+      // isInvalidDecl()
+      // TSK_Undeclared
+      // TSK_ExplicitInstantiationDefinition
+      // TSK_ExplicitSpecialization && !getClassScopeSpecializationPattern()
+      // TSK_ExplicitInstantiationDeclaration &&
+      //    getTemplateInstantiationPattern() &&
+      //    PatternDecl->hasBody() &&
+      //    !PatternDecl->isInlined()
+      //
+      // Set it true in these cases:
+      //
+      // TSK_ImplicitInstantiation
+      // TSK_ExplicitInstantiationDeclaration && (!getPatternDecl() ||
+      //    !PatternDecl->hasBody() || PatternDecl->isInlined())
+      //
+   }
+   if (needInstantiation) {
+      clang::FunctionDecl *FDmod = const_cast<clang::FunctionDecl *>(FD);
+      clang::Sema &S = fInterp->getSema();
+      // Could trigger deserialization of decls.
+      cling::Interpreter::PushTransactionRAII RAII(fInterp);
+      S.InstantiateFunctionDefinition(SourceLocation(), FDmod,
+                                      /*Recursive=*/true,
+                                      /*DefinitionRequired=*/true);
+      if (!FD->isDefined(Definition)) {
+         ::Error("TClingCallFunc::make_wrapper", "Failed to force template instantiation!");
+         return 0;
+      }
+   }
+   if (Definition) {
+      FunctionDecl::TemplatedKind TK = Definition->getTemplatedKind();
+      switch (TK) {
+      case FunctionDecl::TK_NonTemplate: {
+         // Ordinary function, not a template specialization.
+         if (Definition->isDeleted()) {
+            ::Error("TClingCallFunc::make_wrapper", "Cannot make wrapper for a deleted function!");
+            return 0;
+         } else if (Definition->isLateTemplateParsed()) {
+            ::Error("TClingCallFunc::make_wrapper", "Cannot make wrapper for a late template parsed "
+                                                    "function!");
+            return 0;
+         }
+         // else if (Definition->isDefaulted()) {
+         //   // Might not have a body, but we can still use it.
+         //}
+         // else {
+         //   // Has a body.
+         //}
+      } break;
+      case FunctionDecl::TK_FunctionTemplate: {
+         // This decl is actually a function template,
+         // not a function at all.
+         ::Error("TClingCallFunc::make_wrapper", "Cannot make wrapper for a function template!");
+         return 0;
+      } break;
+      case FunctionDecl::TK_MemberSpecialization: {
+         // This function is the result of instantiating an ordinary
+         // member function of a class template or of a member class
+         // of a class template.
+         if (Definition->isDeleted()) {
+            ::Error("TClingCallFunc::make_wrapper", "Cannot make wrapper for a deleted member function "
+                                                    "of a specialization!");
+            return 0;
+         } else if (Definition->isLateTemplateParsed()) {
+            ::Error("TClingCallFunc::make_wrapper", "Cannot make wrapper for a late template parsed "
+                                                    "member function of a specialization!");
+            return 0;
+         }
+         // else if (Definition->isDefaulted()) {
+         //   // Might not have a body, but we can still use it.
+         //}
+         // else {
+         //   // Has a body.
+         //}
+      } break;
+      case FunctionDecl::TK_FunctionTemplateSpecialization: {
+         // This function is the result of instantiating a function
+         // template or possibly an explicit specialization of a
+         // function template.  Could be a namespace scope function or a
+         // member function.
+         if (Definition->isDeleted()) {
+            ::Error("TClingCallFunc::make_wrapper", "Cannot make wrapper for a deleted function "
+                                                    "template specialization!");
+            return 0;
+         } else if (Definition->isLateTemplateParsed()) {
+            ::Error("TClingCallFunc::make_wrapper", "Cannot make wrapper for a late template parsed "
+                                                    "function template specialization!");
+            return 0;
+         }
+         // else if (Definition->isDefaulted()) {
+         //   // Might not have a body, but we can still use it.
+         //}
+         // else {
+         //   // Has a body.
+         //}
+      } break;
+      case FunctionDecl::TK_DependentFunctionTemplateSpecialization: {
+         // This function is the result of instantiating or
+         // specializing a  member function of a class template,
+         // or a member function of a class member of a class template,
+         // or a member function template of a class template, or a
+         // member function template of a class member of a class
+         // template where at least some part of the function is
+         // dependent on a template argument.
+         if (Definition->isDeleted()) {
+            ::Error("TClingCallFunc::make_wrapper", "Cannot make wrapper for a deleted dependent function "
+                                                    "template specialization!");
+            return 0;
+         } else if (Definition->isLateTemplateParsed()) {
+            ::Error("TClingCallFunc::make_wrapper", "Cannot make wrapper for a late template parsed "
+                                                    "dependent function template specialization!");
+            return 0;
+         }
+         // else if (Definition->isDefaulted()) {
+         //   // Might not have a body, but we can still use it.
+         //}
+         // else {
+         //   // Has a body.
+         //}
+      } break;
+      default: {
+         // Will only happen if clang implementation changes.
+         // Protect ourselves in case that happens.
+         ::Error("TClingCallFunc::make_wrapper", "Unhandled template kind!");
+         return 0;
+      } break;
+      }
+   }
+   unsigned min_args = GetMinRequiredArguments();
+   unsigned num_params = FD->getNumParams();
+   //
+   //  Make the wrapper name.
+   //
+   {
+      ostringstream buf;
+      buf << "__cf";
+      // const NamedDecl* ND = dyn_cast<NamedDecl>(FD);
+      // string mn;
+      // fInterp->maybeMangleDeclName(ND, mn);
+      // buf << '_' << mn;
+      buf << '_' << gWrapperSerial++;
+      wrapper_name = buf.str();
+   }
+   //
+   //  Write the wrapper code.
+   // FIXME: this should be synthesized into the AST!
+   //
+   int indent_level = 0;
+   ostringstream buf;
+   buf << "#pragma clang diagnostic push\n"
+          "#pragma clang diagnostic ignored \"-Wformat-security\"\n"
+          "__attribute__((used)) "
+          "extern \"C\" void ";
+   buf << wrapper_name;
+   buf << "(void* obj, int nargs, void** args, void* ret)\n"
+          "{\n";
+   ++indent_level;
+   if (min_args == num_params) {
+      // No parameters with defaults.
+      make_narg_call_with_return(num_params, class_name, buf, indent_level);
+   } else {
+      // We need one function call clause compiled for every
+      // possible number of arguments per call.
+      for (unsigned N = min_args; N <= num_params; ++N) {
+         for (int i = 0; i < indent_level; ++i) {
+            buf << kIndentString;
+         }
+         buf << "if (nargs == " << N << ") {\n";
+         ++indent_level;
+         make_narg_call_with_return(N, class_name, buf, indent_level);
+         --indent_level;
+         for (int i = 0; i < indent_level; ++i) {
+            buf << kIndentString;
+         }
+         buf << "}\n";
+      }
+   }
+   --indent_level;
+   buf << "}\n"
+          "#pragma clang diagnostic pop";
+   wrapper = buf.str();
+   return 1;
+}
+
 void TClingCallFunc::make_narg_call_with_return(const unsigned N, const string &class_name,
       ostringstream &buf, int indent_level)
 {
@@ -553,7 +982,7 @@ void TClingCallFunc::make_narg_call_with_return(const unsigned N, const string &
       for (int i = 0; i < indent_level; ++i) {
          callbuf << kIndentString;
       }
-      make_narg_call(N, typedefbuf, callbuf, class_name, indent_level);
+      make_narg_call("void", N, typedefbuf, callbuf, class_name, indent_level);
       callbuf << ";\n";
       for (int i = 0; i < indent_level; ++i) {
          callbuf << kIndentString;
@@ -564,6 +993,11 @@ void TClingCallFunc::make_narg_call_with_return(const unsigned N, const string &
       for (int i = 0; i < indent_level; ++i) {
          buf << kIndentString;
       }
+
+      string type_name;
+      bool isReference = false;
+      bool isPointer = false;
+
       buf << "if (ret) {\n";
       ++indent_level;
       {
@@ -576,9 +1010,6 @@ void TClingCallFunc::make_narg_call_with_return(const unsigned N, const string &
             callbuf << kIndentString;
          }
          callbuf << "new (ret) ";
-         string type_name;
-         bool isReference = false;
-         bool isPointer = false;
          collect_type_info(QT, typedefbuf, callbuf, type_name,
                            isReference, isPointer, indent_level, false);
          //
@@ -587,15 +1018,17 @@ void TClingCallFunc::make_narg_call_with_return(const unsigned N, const string &
          callbuf << "(" << type_name.c_str();
          if (isReference) {
             callbuf << "*) (&";
+            type_name += "&";
          } else if (isPointer) {
             callbuf << "*) (";
+            type_name += "*";
          } else {
             callbuf << ") (";
          }
          //
          //  Write the actual function call.
          //
-         make_narg_call(N, typedefbuf, callbuf, class_name, indent_level);
+         make_narg_call(type_name, N, typedefbuf, callbuf, class_name, indent_level);
          //
          //  End the placement new.
          //
@@ -625,7 +1058,12 @@ void TClingCallFunc::make_narg_call_with_return(const unsigned N, const string &
          for (int i = 0; i < indent_level; ++i) {
             callbuf << kIndentString;
          }
-         make_narg_call(N, typedefbuf, callbuf, class_name, indent_level);
+         if (isReference) {
+            type_name += "&";
+         } else if (isPointer) {
+            type_name += "*";
+         }
+         make_narg_call(type_name, N, typedefbuf, callbuf, class_name, indent_level);
          callbuf << ";\n";
          for (int i = 0; i < indent_level; ++i) {
             callbuf << kIndentString;
@@ -646,428 +1084,11 @@ tcling_callfunc_Wrapper_t TClingCallFunc::make_wrapper()
    R__LOCKGUARD(gInterpreterMutex);
 
    const FunctionDecl *FD = GetDecl();
-   ASTContext &Context = FD->getASTContext();
-   PrintingPolicy Policy(Context.getPrintingPolicy());
-   //
-   //  Get the class or namespace name.
-   //
-   string class_name;
-   if (const TypeDecl *TD =
-            dyn_cast<TypeDecl>(FD->getDeclContext())) {
-      // This is a class, struct, or union member.
-      QualType QT(TD->getTypeForDecl(), 0);
-      ROOT::TMetaUtils::GetNormalizedName(class_name, QT, *fInterp, fNormCtxt);
-   } else if (const NamedDecl *ND =
-                 dyn_cast<NamedDecl>(FD->getDeclContext())) {
-      // This is a namespace member.
-      raw_string_ostream stream(class_name);
-      ND->getNameForDiagnostic(stream, Policy, /*Qualified=*/true);
-      stream.flush();
-   }
-   //
-   //  Check to make sure that we can
-   //  instantiate and codegen this function.
-   //
-   bool needInstantiation = false;
-   const FunctionDecl *Definition = 0;
-   if (!FD->isDefined(Definition)) {
-      FunctionDecl::TemplatedKind TK = FD->getTemplatedKind();
-      switch (TK) {
-         case FunctionDecl::TK_NonTemplate: {
-               // Ordinary function, not a template specialization.
-               // Note: This might be ok, the body might be defined
-               //       in a library, and all we have seen is the
-               //       header file.
-               //::Error("TClingCallFunc::make_wrapper",
-               //      "Cannot make wrapper for a function which is "
-               //      "declared but not defined!");
-               //return 0;
-            }
-            break;
-         case FunctionDecl::TK_FunctionTemplate: {
-               // This decl is actually a function template,
-               // not a function at all.
-               ::Error("TClingCallFunc::make_wrapper",
-                     "Cannot make wrapper for a function template!");
-               return 0;
-            }
-            break;
-         case FunctionDecl::TK_MemberSpecialization: {
-               // This function is the result of instantiating an ordinary
-               // member function of a class template, or of instantiating
-               // an ordinary member function of a class member of a class
-               // template, or of specializing a member function template
-               // of a class template, or of specializing a member function
-               // template of a class member of a class template.
-               if (!FD->isTemplateInstantiation()) {
-                  // We are either TSK_Undeclared or
-                  // TSK_ExplicitSpecialization.
-                  // Note: This might be ok, the body might be defined
-                  //       in a library, and all we have seen is the
-                  //       header file.
-                  //::Error("TClingCallFunc::make_wrapper",
-                  //      "Cannot make wrapper for a function template "
-                  //      "explicit specialization which is declared "
-                  //      "but not defined!");
-                  //return 0;
-                  break;
-               }
-               const FunctionDecl *Pattern =
-                  FD->getTemplateInstantiationPattern();
-               if (!Pattern) {
-                  ::Error("TClingCallFunc::make_wrapper",
-                        "Cannot make wrapper for a member function "
-                        "instantiation with no pattern!");
-                  return 0;
-               }
-               FunctionDecl::TemplatedKind PTK = Pattern->getTemplatedKind();
-               TemplateSpecializationKind PTSK =
-                  Pattern->getTemplateSpecializationKind();
-               if (
-                  // The pattern is an ordinary member function.
-                  (PTK == FunctionDecl::TK_NonTemplate) ||
-                  // The pattern is an explicit specialization, and
-                  // so is not a template.
-                  ((PTK != FunctionDecl::TK_FunctionTemplate) &&
-                   ((PTSK == TSK_Undeclared) ||
-                    (PTSK == TSK_ExplicitSpecialization)))
-               ) {
-                  // Note: This might be ok, the body might be defined
-                  //       in a library, and all we have seen is the
-                  //       header file.
-                  break;
-               } else if (!Pattern->hasBody()) {
-                  ::Error("TClingCallFunc::make_wrapper",
-                        "Cannot make wrapper for a member function "
-                        "instantiation with no body!");
-                  return 0;
-               }
-               if (FD->isImplicitlyInstantiable()) {
-                  needInstantiation = true;
-               }
-            }
-            break;
-         case FunctionDecl::TK_FunctionTemplateSpecialization: {
-               // This function is the result of instantiating a function
-               // template or possibly an explicit specialization of a
-               // function template.  Could be a namespace scope function or a
-               // member function.
-               if (!FD->isTemplateInstantiation()) {
-                  // We are either TSK_Undeclared or
-                  // TSK_ExplicitSpecialization.
-                  // Note: This might be ok, the body might be defined
-                  //       in a library, and all we have seen is the
-                  //       header file.
-                  //::Error("TClingCallFunc::make_wrapper",
-                  //      "Cannot make wrapper for a function template "
-                  //      "explicit specialization which is declared "
-                  //      "but not defined!");
-                  //return 0;
-                  break;
-               }
-               const FunctionDecl *Pattern =
-                  FD->getTemplateInstantiationPattern();
-               if (!Pattern) {
-                  ::Error("TClingCallFunc::make_wrapper",
-                        "Cannot make wrapper for a function template"
-                        "instantiation with no pattern!");
-                  return 0;
-               }
-               FunctionDecl::TemplatedKind PTK = Pattern->getTemplatedKind();
-               TemplateSpecializationKind PTSK =
-                  Pattern->getTemplateSpecializationKind();
-               if (
-                  // The pattern is an ordinary member function.
-                  (PTK == FunctionDecl::TK_NonTemplate) ||
-                  // The pattern is an explicit specialization, and
-                  // so is not a template.
-                  ((PTK != FunctionDecl::TK_FunctionTemplate) &&
-                   ((PTSK == TSK_Undeclared) ||
-                    (PTSK == TSK_ExplicitSpecialization)))
-               ) {
-                  // Note: This might be ok, the body might be defined
-                  //       in a library, and all we have seen is the
-                  //       header file.
-                  break;
-               }
-               if (!Pattern->hasBody()) {
-                  ::Error("TClingCallFunc::make_wrapper",
-                        "Cannot make wrapper for a function template"
-                        "instantiation with no body!");
-                  return 0;
-               }
-               if (FD->isImplicitlyInstantiable()) {
-                  needInstantiation = true;
-               }
-            }
-            break;
-         case FunctionDecl::TK_DependentFunctionTemplateSpecialization: {
-               // This function is the result of instantiating or
-               // specializing a  member function of a class template,
-               // or a member function of a class member of a class template,
-               // or a member function template of a class template, or a
-               // member function template of a class member of a class
-               // template where at least some part of the function is
-               // dependent on a template argument.
-               if (!FD->isTemplateInstantiation()) {
-                  // We are either TSK_Undeclared or
-                  // TSK_ExplicitSpecialization.
-                  // Note: This might be ok, the body might be defined
-                  //       in a library, and all we have seen is the
-                  //       header file.
-                  //::Error("TClingCallFunc::make_wrapper",
-                  //      "Cannot make wrapper for a dependent function "
-                  //      "template explicit specialization which is declared "
-                  //      "but not defined!");
-                  //return 0;
-                  break;
-               }
-               const FunctionDecl *Pattern =
-                  FD->getTemplateInstantiationPattern();
-               if (!Pattern) {
-                  ::Error("TClingCallFunc::make_wrapper",
-                        "Cannot make wrapper for a dependent function template"
-                        "instantiation with no pattern!");
-                  return 0;
-               }
-               FunctionDecl::TemplatedKind PTK = Pattern->getTemplatedKind();
-               TemplateSpecializationKind PTSK =
-                  Pattern->getTemplateSpecializationKind();
-               if (
-                  // The pattern is an ordinary member function.
-                  (PTK == FunctionDecl::TK_NonTemplate) ||
-                  // The pattern is an explicit specialization, and
-                  // so is not a template.
-                  ((PTK != FunctionDecl::TK_FunctionTemplate) &&
-                   ((PTSK == TSK_Undeclared) ||
-                    (PTSK == TSK_ExplicitSpecialization)))
-               ) {
-                  // Note: This might be ok, the body might be defined
-                  //       in a library, and all we have seen is the
-                  //       header file.
-                  break;
-               }
-               if (!Pattern->hasBody()) {
-                  ::Error("TClingCallFunc::make_wrapper",
-                        "Cannot make wrapper for a dependent function template"
-                        "instantiation with no body!");
-                  return 0;
-               }
-               if (FD->isImplicitlyInstantiable()) {
-                  needInstantiation = true;
-               }
-            }
-            break;
-         default: {
-               // Will only happen if clang implementation changes.
-               // Protect ourselves in case that happens.
-               ::Error("TClingCallFunc::make_wrapper",
-                     "Unhandled template kind!");
-               return 0;
-            }
-            break;
-      }
-      // We do not set needInstantiation to true in these cases:
-      //
-      // isInvalidDecl()
-      // TSK_Undeclared
-      // TSK_ExplicitInstantiationDefinition
-      // TSK_ExplicitSpecialization && !getClassScopeSpecializationPattern()
-      // TSK_ExplicitInstantiationDeclaration &&
-      //    getTemplateInstantiationPattern() &&
-      //    PatternDecl->hasBody() &&
-      //    !PatternDecl->isInlined()
-      //
-      // Set it true in these cases:
-      //
-      // TSK_ImplicitInstantiation
-      // TSK_ExplicitInstantiationDeclaration && (!getPatternDecl() ||
-      //    !PatternDecl->hasBody() || PatternDecl->isInlined())
-      //
-   }
-   if (needInstantiation) {
-      clang::FunctionDecl *FDmod = const_cast<clang::FunctionDecl *>(FD);
-      clang::Sema &S = fInterp->getSema();
-      // Could trigger deserialization of decls.
-      cling::Interpreter::PushTransactionRAII RAII(fInterp);
-      S.InstantiateFunctionDefinition(SourceLocation(), FDmod,
-                                      /*Recursive=*/ true,
-                                      /*DefinitionRequired=*/ true);
-      if (!FD->isDefined(Definition)) {
-         ::Error("TClingCallFunc::make_wrapper",
-               "Failed to force template instantiation!");
-         return 0;
-      }
-   }
-   if (Definition) {
-      FunctionDecl::TemplatedKind TK = Definition->getTemplatedKind();
-      switch (TK) {
-         case FunctionDecl::TK_NonTemplate: {
-               // Ordinary function, not a template specialization.
-               if (Definition->isDeleted()) {
-                  ::Error("TClingCallFunc::make_wrapper",
-                        "Cannot make wrapper for a deleted function!");
-                  return 0;
-               } else if (Definition->isLateTemplateParsed()) {
-                  ::Error("TClingCallFunc::make_wrapper",
-                        "Cannot make wrapper for a late template parsed "
-                        "function!");
-                  return 0;
-               }
-               //else if (Definition->isDefaulted()) {
-               //   // Might not have a body, but we can still use it.
-               //}
-               //else {
-               //   // Has a body.
-               //}
-            }
-            break;
-         case FunctionDecl::TK_FunctionTemplate: {
-               // This decl is actually a function template,
-               // not a function at all.
-               ::Error("TClingCallFunc::make_wrapper",
-                     "Cannot make wrapper for a function template!");
-               return 0;
-            }
-            break;
-         case FunctionDecl::TK_MemberSpecialization: {
-               // This function is the result of instantiating an ordinary
-               // member function of a class template or of a member class
-               // of a class template.
-               if (Definition->isDeleted()) {
-                  ::Error("TClingCallFunc::make_wrapper",
-                        "Cannot make wrapper for a deleted member function "
-                        "of a specialization!");
-                  return 0;
-               } else if (Definition->isLateTemplateParsed()) {
-                  ::Error("TClingCallFunc::make_wrapper",
-                        "Cannot make wrapper for a late template parsed "
-                        "member function of a specialization!");
-                  return 0;
-               }
-               //else if (Definition->isDefaulted()) {
-               //   // Might not have a body, but we can still use it.
-               //}
-               //else {
-               //   // Has a body.
-               //}
-            }
-            break;
-         case FunctionDecl::TK_FunctionTemplateSpecialization: {
-               // This function is the result of instantiating a function
-               // template or possibly an explicit specialization of a
-               // function template.  Could be a namespace scope function or a
-               // member function.
-               if (Definition->isDeleted()) {
-                  ::Error("TClingCallFunc::make_wrapper",
-                        "Cannot make wrapper for a deleted function "
-                        "template specialization!");
-                  return 0;
-               } else if (Definition->isLateTemplateParsed()) {
-                  ::Error("TClingCallFunc::make_wrapper",
-                        "Cannot make wrapper for a late template parsed "
-                        "function template specialization!");
-                  return 0;
-               }
-               //else if (Definition->isDefaulted()) {
-               //   // Might not have a body, but we can still use it.
-               //}
-               //else {
-               //   // Has a body.
-               //}
-            }
-            break;
-         case FunctionDecl::TK_DependentFunctionTemplateSpecialization: {
-               // This function is the result of instantiating or
-               // specializing a  member function of a class template,
-               // or a member function of a class member of a class template,
-               // or a member function template of a class template, or a
-               // member function template of a class member of a class
-               // template where at least some part of the function is
-               // dependent on a template argument.
-               if (Definition->isDeleted()) {
-                  ::Error("TClingCallFunc::make_wrapper",
-                        "Cannot make wrapper for a deleted dependent function "
-                        "template specialization!");
-                  return 0;
-               } else if (Definition->isLateTemplateParsed()) {
-                  ::Error("TClingCallFunc::make_wrapper",
-                        "Cannot make wrapper for a late template parsed "
-                        "dependent function template specialization!");
-                  return 0;
-               }
-               //else if (Definition->isDefaulted()) {
-               //   // Might not have a body, but we can still use it.
-               //}
-               //else {
-               //   // Has a body.
-               //}
-            }
-            break;
-         default: {
-               // Will only happen if clang implementation changes.
-               // Protect ourselves in case that happens.
-               ::Error("TClingCallFunc::make_wrapper",
-                     "Unhandled template kind!");
-               return 0;
-            }
-            break;
-      }
-   }
-   unsigned min_args = GetMinRequiredArguments();
-   unsigned num_params = FD->getNumParams();
-   //
-   //  Make the wrapper name.
-   //
    string wrapper_name;
-   {
-      ostringstream buf;
-      buf << "__cf";
-      //const NamedDecl* ND = dyn_cast<NamedDecl>(FD);
-      //string mn;
-      //fInterp->maybeMangleDeclName(ND, mn);
-      //buf << '_' << mn;
-      buf << '_' << gWrapperSerial++;
-      wrapper_name = buf.str();
-   }
-   //
-   //  Write the wrapper code.
-   // FIXME: this should be synthesized into the AST!
-   //
-   int indent_level = 0;
-   ostringstream buf;
-   buf << "#pragma clang diagnostic push\n"
-      "#pragma clang diagnostic ignored \"-Wformat-security\"\n"
-      "__attribute__((used)) "
-      "extern \"C\" void ";
-   buf << wrapper_name;
-   buf << "(void* obj, int nargs, void** args, void* ret)\n"
-      "{\n";
-   ++indent_level;
-   if (min_args == num_params) {
-      // No parameters with defaults.
-      make_narg_call_with_return(num_params, class_name, buf, indent_level);
-   } else {
-      // We need one function call clause compiled for every
-      // possible number of arguments per call.
-      for (unsigned N = min_args; N <= num_params; ++N) {
-         for (int i = 0; i < indent_level; ++i) {
-            buf << kIndentString;
-         }
-         buf << "if (nargs == " << N << ") {\n";
-         ++indent_level;
-         make_narg_call_with_return(N, class_name, buf, indent_level);
-         --indent_level;
-         for (int i = 0; i < indent_level; ++i) {
-            buf << kIndentString;
-         }
-         buf << "}\n";
-      }
-   }
-   --indent_level;
-   buf << "}\n"
-      "#pragma clang diagnostic pop";
-   string wrapper(buf.str());
+   string wrapper;
+
+   if (print_wrapper(wrapper_name, wrapper) == 0) return 0;
+
    //fprintf(stderr, "%s\n", wrapper.c_str());
    //
    //  Compile the wrapper code.
