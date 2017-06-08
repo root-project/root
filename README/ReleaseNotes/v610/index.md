@@ -192,6 +192,17 @@ Two tutorials outlining the use of the added class can be found at:
 * Add a compiler error when using operator `[i,j]` to assign matrix elements instead of assigning wrong values.
 
 
+## TMVA
+
+* Fixed ` TMVA::ROCCurve` class by adding support for weights and improve computation of integral and curve in case of low statistics
+* Improved support for multi class classification. TMVA is undergoing an effort to improve support for multi class classification. Fixes and improvements in this release include additional analysis output (1-vs-rest roc curves, confusion matrices) and various bugfixes. Work in this area is still ongoing.
+* Apply few bug fixes in the DNN. Make the DNN CPU the default and deprecate the Standard DNN.
+* Apply some performance optimizations to BDT. 
+
+## RooStats
+
+* Add a function computing the Asimov median significance: `RooStats::AsimovSignificance(s,b,sigma_b)` , using as input the expected number of signal events, the background events and optionally the uncertainty in the number of background events.
+
 ## TTree Libraries
 
 - `TTreeReader` now supports `TEntryList`s, `Double32_t` / `Float16_t`.
