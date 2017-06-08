@@ -10,7 +10,7 @@ if (imt)
   set(sources ${sources} TImplicitMT.cxx TThreadExecutor.cxx TPoolManager.cxx G__Imt.cxx)
 endif()
 
-include_directories(${TBB_INCLUDE_DIRS})
+include_directories(SYSTEM ${TBB_INCLUDE_DIRS})
 
 ROOT_LINKER_LIBRARY(Imt ${sources} LIBRARIES ${CMAKE_THREAD_LIBS_INIT} ${TBB_LIBRARIES} DEPENDENCIES Core Thread BUILTINS TBB)
 ROOT_INSTALL_HEADERS(${installoptions})
