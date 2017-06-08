@@ -353,12 +353,15 @@ Int_t TMPWorkerTree::LoadTree(UInt_t code, MPCodeBufPair &msg, Long64_t &start, 
          return -1;
       }
 
-      // Open the file
-      fFile = OpenFile(fFileNames[fileN]);
-      if (fFile == nullptr) {
-         //errors are handled inside OpenFile
-         errmsg = mgroot + std::string("unable to open file ") + fFileNames[fileN];
-         return -1;
+      // Open the file if required
+      if (fFile && strcmp(fFileNames[fileN].c_str(), fFile->GetName())) CloseFile();
+      if (!fFile) {
+         fFile = OpenFile(fFileNames[fileN]);
+         if (fFile == nullptr) {
+            // errors are handled inside OpenFile
+            errmsg = mgroot + std::string("unable to open file ") + fFileNames[fileN];
+            return -1;
+         }
       }
 
       //retrieve the TTree with the specified name from file
