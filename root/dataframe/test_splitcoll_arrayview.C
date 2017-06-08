@@ -16,7 +16,9 @@ public:
 };
 
 
+#ifdef __ROOTCLING__
 #pragma link C++ class std::vector<A>+;
+#endif
 
 void fill_tree(const char* filename, const char* treeName) {
    TFile f(filename,"RECREATE");
