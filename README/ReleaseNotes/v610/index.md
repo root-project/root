@@ -49,7 +49,6 @@ Shahzad Malik,
 Maurizio Martinelli,
 Pere Mato,
 Lorenzo Moneta,
-Lorenzo Moneta,
 Abhinav Moudgil,
 Frederich Munch,
 Jan Musinsky,
@@ -153,10 +152,45 @@ please use the new function `CopyString()` which clearly indicates that it invol
   TH1* projection = chain->Projection(0)
   ```
 
+### TProfile2Poly
+
+Addition of `TProfile2Poly` class. It is analogous to `TH2D`/`TProfile2D` except it allows the creation of profiles of histograms that have polygonal bins.
+Just for a quick recap some of the functionality includes: 
+
+* Creatation of bins that allow filling with Fill()
+* Setting the error being calculated as either `kERRORSPREAD` or `kERRORMEAN`
+* Setting the bin content to either the Average or Error in Z for plotting purposes (SetContentToAverage() / SetContentToAverage()) 
+* Merging whole `TProfile2Poly`'s
+
+Two tutorials outlining the use of the added class can be found at:
+* root/tutorials/hist/tprofile2polyRealistic.C
+* root/tutorials/hist/tprofile2polyRealisticModuleError.C
+
+### Other features added in the Hist Library
+
+* Added option `S` in `TEfficiency::Fit` to return a FitResult object
+* Improve check in `TEfficiency` for compatibility of weighted histograms
+* Fix computation of Chi2 for PoissonLikelihood fits (using Baker-Cousins chi2)
 
 ## Math Libraries
 
+### MathCore
+
 * Improve thread friendliness of the TMinuit class.
+* Added a new class `ROOT::Math::KahanSum<T>` for compensated summations
+* Modify the internal structure of the FitData classes (`ROOT::Fit::BinData` and `ROOT::Fit::UnBinData`) to make them able to support vectorization.
+* Add new templated interfaces for function evaluation that support vectorized types
+
+### GenVector
+
+
+* Extend support for Vectorized types (e.g. types from the `Vc` library)  in GenVector. Make for exampole the class Plane3D templated on the contained type.
+* Add a new method `Transform2D::ApplyInverse` to apply efficiently inverse transformations (it avoids the intermidiate calculations by using Inverse() and then operator() ).
+
+### TMatrix
+
+* Add a compiler error when using operator `[i,j]` to assign matrix elements instead of assigning wrong values.
+
 
 ## TTree Libraries
 
