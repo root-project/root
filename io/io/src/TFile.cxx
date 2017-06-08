@@ -938,7 +938,7 @@ void TFile::Close(Option_t *option)
    // If gDirectory points to this object or any of the nested
    // TDirectoryFile, TDirectoryFile::Close will induce the proper cd.
    fMustFlush = kFALSE; // Make sure there is only one Flush.
-   TDirectoryFile::Close();
+   TDirectoryFile::Close(option);
 
    if (IsWritable()) {
       TFree *f1 = (TFree*)fFree->First();
