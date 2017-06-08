@@ -337,6 +337,7 @@ public:
    virtual void   CallFunc_SetFuncProto(CallFunc_t* func, ClassInfo_t* info, const char* method, const std::vector<TypeInfo_t*> &proto, Long_t* Offset, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch) const = 0;
    virtual void   CallFunc_SetFuncProto(CallFunc_t* func, ClassInfo_t* info, const char* method, const std::vector<TypeInfo_t*> &proto, bool objectIsConst, Long_t* Offset, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch) const = 0;
 
+   virtual std::string CallFunc_GetWrapperCode(CallFunc_t *func) const = 0;
 
    // ClassInfo interface
    virtual Bool_t ClassInfo_Contains(ClassInfo_t *info, DeclId_t decl) const = 0;

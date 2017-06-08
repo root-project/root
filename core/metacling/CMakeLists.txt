@@ -40,3 +40,7 @@ target_link_libraries(Cling -Wl,-bind_at_load -Wl,-undefined -Wl,dynamic_lookup)
 else()
 target_link_libraries(Cling -Wl,--unresolved-symbols=ignore-in-object-files)
 endif()
+
+if(testing)
+    add_subdirectory(test)
+endif()

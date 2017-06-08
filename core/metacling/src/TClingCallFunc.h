@@ -85,9 +85,8 @@ private:
                           bool& isReference, bool& isPointer, int indent_level,
                           bool forArgument);
 
-   void make_narg_call(const unsigned N, std::ostringstream& typedefbuf,
-                       std::ostringstream& callbuf,
-                       const std::string& class_name, int indent_level);
+   void make_narg_call(const std::string &return_type, const unsigned N, std::ostringstream &typedefbuf,
+                       std::ostringstream &callbuf, const std::string &class_name, int indent_level);
 
    void make_narg_ctor(const unsigned N, std::ostringstream& typedefbuf,
                        std::ostringstream& callbuf,
@@ -187,6 +186,8 @@ public:
          fDecl = fMethod->GetMethodDecl();
       return fDecl;
    }
+
+   int print_wrapper(std::string &wrapper_name, std::string &wrapper);
 
    const clang::FunctionDecl* GetDecl() const {
       if (fDecl)

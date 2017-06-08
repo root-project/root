@@ -6851,6 +6851,15 @@ void TCling::CallFunc_SetFuncProto(CallFunc_t* func, ClassInfo_t* info, const ch
    f->SetFuncProto(ci, method, funcProto, objectIsConst, offset, mode);
 }
 
+std::string TCling::CallFunc_GetWrapperCode(CallFunc_t *func) const
+{
+   TClingCallFunc *f = (TClingCallFunc *)func;
+   std::string wrapper_name;
+   std::string wrapper;
+   f->print_wrapper(wrapper_name, wrapper);
+   return wrapper;
+}
+
 //______________________________________________________________________________
 //
 //  ClassInfo interface
