@@ -30,7 +30,8 @@
 #include <queue>
 
 #ifdef R__USE_IMT
-#include "tbb/concurrent_vector.h"
+#include "tbb/task.h"
+#include <vector>
 #endif
 
 class TTree;
@@ -40,13 +41,20 @@ class TCondition;
 class TBasket;
 class TMutex;
 
+class UnzipTask;
+class MappingTask;
+
 class TTreeCacheUnzip : public TTreeCache {
+
 public:
    // We have three possibilities for the unzipping mode:
    // enable, disable and force
    enum EParUnzipMode { kEnable, kDisable, kForce };
 
 protected:
+
+   friend class UnzipTask;
+   friend class MappingTask;
 
    // Members for paral. managing
    TThread    *fUnzipThread[10];
@@ -65,17 +73,10 @@ protected:
    Int_t       fBlocksToGo;
 
    // Unzipping related members
-
-#ifdef R__USE_IMT
-   tbb::concurrent_vector<Int_t>  fUnzipLen;
-   tbb::concurrent_vector<char*>  fUnzipChunks;
-   tbb::concurrent_vector<Byte_t> fUnzipStatus;
-#else
    Int_t      *fUnzipLen;         ///<! [fNseek] Length of the unzipped buffers
    char      **fUnzipChunks;      ///<! [fNseek] Individual unzipped chunks. Their summed size is kept under control.
-   Byte_t     *fUnzipStatus;      ///<! [fNSeek] For each blk, tells us if it's unzipped or pending
-#endif
-
+   Byte_t     *fUnzipStatus;      ///<! [fNSeek] 
+   tbb::task **fUnzipTasks;       ///<! [fNSeek]  
    Long64_t    fTotalUnzipBytes;  ///<! The total sum of the currently unzipped blks
 
    Int_t       fNseekMax;         ///<!  fNseek can change so we need to know its max size
