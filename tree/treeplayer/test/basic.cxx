@@ -100,7 +100,7 @@ TEST(TTreeReaderBasic, Interfaces) {
    EXPECT_EQ(3u, x.GetSize());
    EXPECT_EQ(5u, y.GetSize());
    EXPECT_DOUBLE_EQ(43., x[2]);
-   //FAILS: EXPECT_EQ(7, y[4]);
+   EXPECT_EQ(7, y[4]);
 
    for (int entry = 2; entry < 20; ++entry)
       EXPECT_TRUE(tr.Next());
@@ -314,8 +314,7 @@ TEST(TTreeReaderBasic, Values) {
 
    EXPECT_DOUBLE_EQ(42, x[1]);
    EXPECT_EQ(42u, *ny);
-   // FAILS! Already in TLeafI, fNData == 42 (good!) but GetValue(0) == 0.
-   // EXPECT_EQ(17, y[0]);
+   EXPECT_EQ(17, y[0]);
    EXPECT_STREQ("first", str->c_str());
    EXPECT_FLOAT_EQ(12, *d32);
    EXPECT_FLOAT_EQ(-12, *f16);
