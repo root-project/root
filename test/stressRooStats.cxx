@@ -282,7 +282,16 @@ Int_t stressRooStats(const char* refFile, Bool_t writeRef, Int_t verbose, Bool_t
    delete gBenchmark ;
    gBenchmark = 0 ;
 
-   memDir->GetList()->Clear("nodelete"); // Forget RooFit objects (return to the behavior when ROOT thought they were all on the stack)
+   // Some of the object are multiple times in the list, let's make sure they
+   // are not deleted twice.
+   // The addition of memDir to the list of Cleanups is not needed if it already
+   // there, for example if memDir is gROOT.
+   bool needCleanupAdd = nullptr == gROOT->GetListOfCleanups()->FindObject(memDir->GetList());
+   if (needCleanupAdd) gROOT->GetListOfCleanups()->Add(memDir->GetList());
+
+   memDir->GetList()->Delete("slow");
+
+   if (needCleanupAdd) gROOT->GetListOfCleanups()->Remove(memDir->GetList());
 
    return nFailed;
 }
