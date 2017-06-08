@@ -158,7 +158,7 @@ const double * GSLMultiRootFinder::FVal() const {
 }
 const char * GSLMultiRootFinder::Name() const {
    // get GSL name
-   return (fSolver != 0) ? fSolver->Name().c_str() : "";
+   return (fSolver != 0) ? fSolver->Name().c_str() : nullptr;
 }
 
 // bool GSLMultiRootFinder::AddFunction( const ROOT::Math::IMultiGenFunction & func) {
