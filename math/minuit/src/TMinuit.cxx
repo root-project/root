@@ -6227,10 +6227,10 @@ L400:
       xvalus[ibk-1] = xmin + Double_t(ibk-1)*10*bwidx;
    }
    iten = (nx + 9) / 10;
-   for (ibk = 1; ibk <= iten && ibk <= 12; ++ibk) {
-      snprintf(cline + (ibk-1)*12, 12-(ibk == 12), "%#9.3g ", xvalus[ibk-1]);
-   }
-   Printf("           %s", cline);
+   Printf("           ");
+   for (ibk = 1; ibk <= iten; ++ibk)
+      Printf("%# 8.3g ", xvalus[ibk-1]);
+   Printf("\n");
    chmess = " ";
    if (overpr) chmess = "   Overprint character is &";
    Printf("                         ONE COLUMN=%13.7g%s",bwidx,(const char*)chmess);
