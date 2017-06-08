@@ -59,7 +59,7 @@ Long_t JitTransformation(void *thisPtr, const std::string &methodName, const std
                          const std::map<std::string, TmpBranchBasePtr_t> &tmpBookedBranches, TTree *tree);
 
 void JitBuildAndBook(const ColumnNames_t &bl, const std::string &nodeTypename, void *thisPtr, const std::type_info &art,
-                     const std::type_info &at, const void *r, TTree &tree, unsigned int nSlots,
+                     const std::type_info &at, const void *r, TTree *tree, unsigned int nSlots,
                      const std::map<std::string, TmpBranchBasePtr_t> &tmpBranches);
 
 } // namespace TDF
@@ -286,7 +286,7 @@ public:
       bool first = true;
       for (auto &b : bnames) {
          if (!first) snapCall << ", ";
-         snapCall << TDFInternal::ColumnName2ColumnTypeName(b, *tree, df->GetBookedBranch(b));
+         snapCall << TDFInternal::ColumnName2ColumnTypeName(b, tree, df->GetBookedBranch(b));
          first = false;
       };
       // TODO is there a way to use ColumnNames_t instead of std::vector<std::string> without parsing the whole header?
@@ -333,11 +333,14 @@ public:
       }
 
       auto df = GetDataFrameChecked();
-      const auto branches = df->GetTree()->GetListOfBranches();
-      for (auto branch : *branches) {
-         auto branchName = branch->GetName();
-         if (isEmptyRegex || -1 != regexp.Index(branchName, &dummy)) {
-            selectedColumns.emplace_back(branchName);
+      auto tree = df->GetTree();
+      if (tree) {
+         const auto branches = tree->GetListOfBranches();
+         for (auto branch : *branches) {
+            auto branchName = branch->GetName();
+            if (isEmptyRegex || -1 != regexp.Index(branchName, &dummy)) {
+               selectedColumns.emplace_back(branchName);
+            }
          }
       }
 
@@ -1022,7 +1025,7 @@ private:
       const auto &tmpBranches = df->GetBookedBranches();
       auto tree = df->GetTree();
       TDFInternal::JitBuildAndBook(bl, GetNodeTypeName(), this, typeid(std::shared_ptr<ActionResultType>),
-                                   typeid(ActionType), &r, *tree, nSlots, tmpBranches);
+                                   typeid(ActionType), &r, tree, nSlots, tmpBranches);
       fProxiedPtr->IncrChildrenCount();
       return MakeResultProxy(r, df);
    }

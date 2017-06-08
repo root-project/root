@@ -27,9 +27,14 @@ namespace TDF {
 
 /// Return a string containing the type of the given branch. Works both with real TTree branches and with temporary
 /// column created by Define.
-std::string ColumnName2ColumnTypeName(const std::string &colName, TTree &tree, TCustomColumnBase *tmpBranch)
+std::string ColumnName2ColumnTypeName(const std::string &colName, TTree *tree, TCustomColumnBase *tmpBranch)
 {
-   if (auto branch = tree.GetBranch(colName.c_str())) {
+   if (!tree and !tmpBranch) {
+      throw std::runtime_error("No tree and no tmp branch!");
+   }
+   TBranch* branch = nullptr;
+   if (tree) branch = tree->GetBranch(colName.c_str());
+   if (branch) {
       // this must be a real TTree branch
       static const TClassRef tbranchelRef("TBranchElement");
       if (branch->InheritsFrom(tbranchelRef)) {
