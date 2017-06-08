@@ -127,7 +127,6 @@ void TMVA::MethodDNN::Init()
    for (UInt_t i = 0; i < numClasses; ++i) {
       if (dsi.GetWeightExpression(i) != TString("")) {
          Log() << kERROR << "Currently event weights are not considered properly by this method." << Endl;
-         Log() << kFATAL << "See above." << Endl;
       }
    }
 }
