@@ -2387,3 +2387,16 @@ void RooAbsData::convertToTreeStore()
       storageType = RooAbsData::Tree;
    }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// If one of the TObject we have a referenced to is deleted, remove the
+/// reference.
+
+void RooAbsData::RecursiveRemove(TObject *obj)
+{
+  for(auto &iter : _ownedComponents) {
+    if (iter.second == obj) {
+      iter.second = nullptr;
+    }
+  }
+}
