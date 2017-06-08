@@ -96,6 +96,8 @@ TList::~TList()
 
 void TList::AddFirst(TObject *obj)
 {
+   // R__COLLECTION_GUARD();
+
    if (IsArgNull("AddFirst", obj)) return;
 
    if (!fFirst) {

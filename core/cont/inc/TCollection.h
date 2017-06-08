@@ -39,7 +39,77 @@ const Bool_t kIterBackward = !kIterForward;
 
 R__EXTERN TVirtualMutex *gCollectionMutex;
 
+#define R__CHECK_COLLECTION_MULTI_ACCESS
+#ifdef R__CHECK_COLLECTION_MULTI_ACCESS
+#include <atomic>
+#include <thread>
+#include <unordered_set>
+#endif
+
 class TCollection : public TObject {
+
+#ifdef R__CHECK_COLLECTION_MULTI_ACCESS
+protected:
+   class TErrorLock {
+      // Warn when multiple thread try to acquire the same 'lock'
+      std::atomic<std::thread::id> fWriteCurrent;
+      std::atomic<size_t> fWriteCurrentRecurse;
+      std::atomic<size_t> fReadCurrentRecurse;
+      std::unordered_multiset<std::thread::id> fReadSet;
+      std::atomic_flag fSpinLockFlag;
+
+      void Lock(const TCollection *collection, const char *function);
+
+      void Unlock();
+
+      void ReadLock(const TCollection *collection, const char *function);
+
+      void ReadUnlock();
+
+      void ConflictReport(std::thread::id holder, const char *accesstype, const TCollection *collection,
+                          const char *function);
+
+   public:
+      TErrorLock() : fWriteCurrentRecurse(0), fReadCurrentRecurse(0) { std::atomic_flag_clear(&fSpinLockFlag); }
+
+      class WriteGuard {
+         TErrorLock *fLock;
+
+      public:
+         WriteGuard(TErrorLock &lock, const TCollection *collection, const char *function) : fLock(&lock)
+         {
+            fLock->Lock(collection, function);
+         }
+         ~WriteGuard() { fLock->Unlock(); }
+      };
+
+      class ReadGuard {
+         TErrorLock *fLock;
+
+      public:
+         ReadGuard(TErrorLock &lock, const TCollection *collection, const char *function) : fLock(&lock)
+         {
+            fLock->ReadLock(collection, function);
+         }
+         ~ReadGuard() { fLock->ReadUnlock(); }
+      };
+   };
+
+   mutable TErrorLock fLock; //! Special 'lock' to detect multiple access to a collection.
+
+#define R__COLLECTION_WRITE_GUARD() TCollection::TErrorLock::WriteGuard wg(fLock, this, __PRETTY_FUNCTION__)
+#define R__COLLECTION_READ_GUARD() TCollection::TErrorLock::ReadGuard rg(fLock, this, __PRETTY_FUNCTION__)
+
+#define R__COLLECTION_ITER_GUARD(collection) \
+   TCollection::TErrorLock::ReadGuard rg(collection->fLock, collection, __PRETTY_FUNCTION__)
+
+#else
+
+#define R__COLLECTION_WRITE_GUARD()
+#define R__COLLECTION_READ_GUARD()
+#define R__COLLECTION_ITER_GUARD(collection)
+
+#endif
 
 private:
    static TCollection  *fgCurrentCollection;  //used by macro R__FOR_EACH
