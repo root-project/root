@@ -203,7 +203,7 @@ public:
                           const char* cutSpec=0, const char* cutRange=0, 
                           const RooCmdArg* formatCmd=0);
 
-
+  virtual void RecursiveRemove(TObject *obj);
 
   Bool_t hasFilledCache() const ; 
 
