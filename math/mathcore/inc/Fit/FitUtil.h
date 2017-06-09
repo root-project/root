@@ -223,7 +223,7 @@ namespace FitUtil {
                 vecCore::Load<ROOT::Double_v>(xx, x);
                 const double *p0 = p;
                 auto res =  (*f)( &xx, (const double *)p0);
-                return res[0];
+                return vecCore::Get<ROOT::Double_v>(res, 0);
             }
 #endif
 
@@ -274,8 +274,10 @@ namespace FitUtil {
        return also nPoints as the effective number of used points in the LogL evaluation
    */
    void EvaluateLogLGradient(const IModelFunction & func, const UnBinData & data, const double * x, double * grad, unsigned int & nPoints);
+
 #ifdef R__HAS_VECCORE
-   void EvaluateLogLGradient(const IModelFunctionTempl<ROOT::Double_v> &, const UnBinData &, const double *, double *, unsigned int & ) ;
+   template<class NotCompileIfScalarBackend = std::enable_if<!(std::is_same<double, ROOT::Double_v>::value)>>
+   void EvaluateLogLGradient(const IModelFunctionTempl<ROOT::Double_v> &, const UnBinData &, const double *, double *, unsigned int & ) {}
 #endif
 
    /**
@@ -308,9 +310,20 @@ namespace FitUtil {
        is used
    */
    double EvaluatePdf(const IModelFunction & func, const UnBinData & data, const double * x, unsigned int ipoint, double * g = 0);
+
 #ifdef R__HAS_VECCORE
-   double EvaluatePdf(const IModelFunctionTempl<ROOT::Double_v> & func, const UnBinData & data, const double * p, unsigned int i, double *);
+   template<class NotCompileIfScalarBackend = std::enable_if<!(std::is_same<double, ROOT::Double_v>::value)>>
+   double EvaluatePdf(const IModelFunctionTempl<ROOT::Double_v> & func, const UnBinData & data, const double * p, unsigned int i, double *){
+       // evaluate the pdf contribution to the generic logl function in case of bin data
+       // return actually the log of the pdf and its derivatives
+       //func.SetParameters(p);
+       const auto x = vecCore::FromPtr<ROOT::Double_v>(data.GetCoordComponent(i,0));
+       auto fval = func (&x, p);
+       auto logPdf = ROOT::Math::Util::EvalLog(fval);
+       return vecCore::Get<ROOT::Double_v>(logPdf, 0);
+   }
 #endif
+
    /**
        evaluate the pdf contribution to the Poisson LogL given a model function and the BinPoint data.
        If the pointer g is not null evaluate also the gradient of the Poisson pdf.

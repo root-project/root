@@ -128,21 +128,6 @@ void Fitter::SetFunction(const IModelFunction & func, bool useGradient)
    fFunc_v.reset();
 }
 
-#ifdef R__HAS_VECCORE
-void Fitter::SetFunction(const IModelFunction_v & func)
-{
-   //  set the fit model function (clone the given one and keep a copy )
-   //std::cout << "set a non-grad function" << std::endl;
-   fUseGradient = false;
-   fFunc_v = std::shared_ptr<IModelFunction_v>(dynamic_cast<IModelFunction_v *>(func.Clone() ) );
-   assert(fFunc_v);
-
-   // creates the parameter  settings
-   fConfig.CreateParamsSettings(*fFunc_v);
-   fFunc.reset();
-}
-#endif
-
 void Fitter::SetFunction(const IModel1DFunction & func, bool useGradient)
 {
    fUseGradient = useGradient;
