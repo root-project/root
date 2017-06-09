@@ -176,7 +176,6 @@ public:
    TClingMethodInfo* FactoryMethod() const;
    void IgnoreExtraArgs(bool ignore) { fIgnoreExtraArgs = ignore; }
    void Init();
-   void Init(const clang::FunctionDecl *);
    void Init(const TClingMethodInfo&);
    void Init(std::unique_ptr<TClingMethodInfo>);
    void Invoke(cling::Value* result = 0) const;
