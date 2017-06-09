@@ -68,8 +68,8 @@ public:
       }
       ASSERT_EQ(int(fDataX.size()), fNGen);
       ASSERT_EQ(int(fDataY.size()), fNGen);
-      if (Dim >= 3) ASSERT_EQ(int(fDataZ.size()), fNGen);
-      if (Dim >= 4) ASSERT_EQ(int(fDataE.size()), fNGen);
+      if (Dim >= 3) { ASSERT_EQ(int(fDataZ.size()), fNGen); }
+      if (Dim >= 4) { ASSERT_EQ(int(fDataE.size()), fNGen); }
    }
 
    // gen data for a Ndim matrix or vector
