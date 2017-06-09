@@ -227,19 +227,19 @@ int main()
       Error("testLogLExecPolicy", "Fit failed!");
       return -1;
    }
-#if defined(R__USE_IMT) && defined(R__HAS_VECCORE)
+#if defined(R__USE_IMT) || defined(R__HAS_VECCORE)
    auto seq = test.GetFitter().Result().MinFcnValue();
 #endif
 
-// #ifdef R__USE_IMT
-//    //Multithreaded
-//    if (!test.testMTFit()) {
-//       Error("testLogLExecPolicy", "Multithreaded Fit failed!");
-//       return -1;
-//    }
-//    auto seqMT = test.GetFitter().Result().MinFcnValue();
-//    compareResult(seqMT, seq, "Mutithreaded LogL Fit: ");
-// #endif
+#ifdef R__USE_IMT
+   //Multithreaded
+   if (!test.testMTFit()) {
+      Error("testLogLExecPolicy", "Multithreaded Fit failed!");
+      return -1;
+   }
+   auto seqMT = test.GetFitter().Result().MinFcnValue();
+   compareResult(seqMT, seq, "Mutithreaded LogL Fit: ");
+#endif
 
 #ifdef R__HAS_VECCORE
    //Vectorized
@@ -250,15 +250,15 @@ int main()
    auto vec = test.GetFitter().Result().MinFcnValue();
    compareResult(vec, seq, "vectorized LogL Fit: ");
 
-// #ifdef R__USE_IMT
-//    //Multithreaded and vectorized
-//    if (!test.testMTFitVec()) {
-//       Error("testLogLExecPolicy", "Multithreaded + vectorized Fit failed!");
-//       return -1;
-//    }
-//    auto vecMT = test.GetFitter().Result().MinFcnValue();
-//    compareResult(vecMT, seq, "Mutithreaded + vectorized LogL Fit: ");
-// #endif
+#ifdef R__USE_IMT
+   //Multithreaded and vectorized
+   if (!test.testMTFitVec()) {
+      Error("testLogLExecPolicy", "Multithreaded + vectorized Fit failed!");
+      return -1;
+   }
+   auto vecMT = test.GetFitter().Result().MinFcnValue();
+   compareResult(vecMT, seq, "Mutithreaded + vectorized LogL Fit: ");
+#endif
 #endif
 
 //    //Multiprocessed
