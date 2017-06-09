@@ -14,7 +14,7 @@ To start the http server, at any time, create an instance of the [THttpServer](h
 
 This will start a [civetweb](https://github.com/civetweb/civetweb)-based http server on the port 8080. Then one should be able to open the address "http://localhost:8080" in any modern browser (Firefox, Chrome, Opera, Safari, IE11) and browse objects created in application. By default, the server can access files, canvases, and histograms via the gROOT pointer. All those objects can be displayed with JSROOT graphics.
 
-There is a [server snapshot](https://root.cern/js/latest/httpserver.C/?layout=simple&item=Canvases/c1) of running macro [tutorials/http/httpserver.C](https://github.com/root-project/root/blob/master/tutorials/http/httpserver.C) from ROOT tutorials.
+There is a [server snapshot](https://root.cern/js/latest/httpserver.C/?layout=simple&item=Canvases/c1) of running macro [tutorials/http/httpserver.C](https://github.com/root-mirror/root/blob/master/tutorials/http/httpserver.C) from ROOT tutorials.
 
 One could specify several options when creating http server. They could be add as additional URL parameters to the constructor arguments like:
 
@@ -33,6 +33,16 @@ If necessary, one could bind http server to specific IP address like:
 
     new THttpServer("http:192.168.1.17:8080")
 
+One also can provide extra arguments for THttpServer itself 
+
+   - readonly, ro   - use server in read-only mode (default)
+   - readwrite, rw  - use server in read-write mode
+   - global         - let scan global directories for canvases and files (default)
+   - noglobal       - disable scan of global directories 
+
+Example:
+
+    new THttpServer("http:8080;ro;noglobal")
 
 
 ## Registering objects
@@ -70,7 +80,7 @@ For that one should use `%arg1`, `%arg2` and so on identifiers. Like:
     serv->RegisterCommand("/DoSomething","SomeFunction(%arg1%,%arg2%)");
 
 User will be requested to enter arguments values, when command element clicked in the browser.
-Example of the command which executes arbitrary string in application via ProcessLine looks like:
+Example of the command which executes arbitrary string in appliction via ProcessLine looks like:
 
     serv->RegisterCommand("/Process","%arg1%");
 
@@ -83,8 +93,7 @@ string to the icon name to let browser show command as extra button. In last cas
 
     serv->Hide("/DoSomething");
 
-One can find example of command interface usage in [tutorials/http/httpcontrol.C](https://github.com/root-project/root/blob/master/tutorials/http/httpcontrol.C) macro.
-
+One can find example of command interface usage in [tutorials/http/httpcontrol.C](https://github.com/root-mirror/root/blob/master/tutorials/http/httpcontrol.C) macro.
 
 
 ## Configuring user access
@@ -142,7 +151,7 @@ One could specify a debug parameter to be able to adjust the FastCGI configurati
 
 All user access will be ruled by the main web server. Authorized account names could be used to configure access restriction in THttpServer.
 
-### Configure fastcgi with Apache2
+### Configure fastcgi with Apcahe2
 
 First of all, one should compile and install [mod_fastcgi](http://www.fastcgi.com) module.
 Then *mod_fastcgi* should be specified in httpd.conf to load it when Apache server is started.
@@ -387,7 +396,7 @@ One could specify them in the URL string:
 
 ### Performing multiple requests at once
 
-To minimize traffic between sever and client, one could submit several requests at once. This is especially useful when big number of small objects should be requested simultaneously. For this purposes `multi.bin` or `multi.json` requests could be used.
+To minimize traffic between sever and client, one could submit several requests at once. This is especially useful when big number of small objects should be requestsed simultaneosely. For this purposes `multi.bin` or `multi.json` requests could be used.
 Both require string as POST data which format as:
 
     subfolder/item1/root.json\n
@@ -405,7 +414,7 @@ For `multi.bin` any kind of requests can be used. It returns binary buffer with 
     [size2 (little endian), 4 bytes] + [request2 result, size2 bytes]
     [size3 (little endian), 4 bytes] + [request3 result, size3 bytes]
 
-While POST data in request used to transfer list of multiple requests, it is not possible to submit
+While POST data in request used to transfer list of multiple reqeusts, it is not possible to submit
 such kind of requests, which themselvs require data from POST block.
 
 To use `multi.json` request from the JavaScript, one should create special 'POST' HTTP request and properly parse it. JSROOT provides special method to do this:
@@ -419,5 +428,4 @@ To use `multi.json` request from the JavaScript, one should create special 'POST
      });
      xhr.send("Files/job1.root/hpx/root.json\nFiles/job1.root/hpxpy/root.json\nFiles/job1.root/hprof/root.json\n");
 
-Here argument "multi" identifies, that server response should be parsed with `JSROOT.parse_multi()` function, which correctly interprets JSON code, produced by `multi.json` request. When sending such request to the server, one should provide list of objects names and not forget "?number=N" parameter in the request URL string.
-
+Here arguemnt "multi" identifies, that server response should be parsed with `JSROOT.parse_multi()` function, which correctly interprets JSON code, produced by `multi.json` request. When sending such request to the server, one should provide list of objects names and not forget "?number=N" parameter in the request URL string.
