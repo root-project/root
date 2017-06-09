@@ -80,6 +80,7 @@ namespace Experimental {
 namespace TDF {
 namespace TDFDetail = ROOT::Detail::TDF;
 namespace TDFInternal = ROOT::Internal::TDF;
+namespace TTraits = ROOT::TypeTraits;
 
 /**
 * \class ROOT::Experimental::TDF::TInterface
@@ -127,7 +128,7 @@ public:
       TDFInternal::CheckFilter(f);
       auto df = GetDataFrameChecked();
       const ColumnNames_t &defBl = df->GetDefaultBranches();
-      auto nArgs = TDFInternal::TFunctionTraits<F>::Args_t::fgSize;
+      auto nArgs = TTraits::CallableTraits<F>::arg_types::list_size;
       const ColumnNames_t &actualBl = TDFInternal::PickBranchNames(nArgs, bn, defBl);
       using DFF_t = TDFDetail::TFilter<F, Proxied>;
       auto FilterPtr = std::make_shared<DFF_t>(std::move(f), actualBl, *fProxiedPtr, name);
@@ -207,7 +208,7 @@ public:
       auto df = GetDataFrameChecked();
       TDFInternal::CheckTmpBranch(name, df->GetTree());
       const ColumnNames_t &defBl = df->GetDefaultBranches();
-      auto nArgs = TDFInternal::TFunctionTraits<F>::Args_t::fgSize;
+      auto nArgs = TTraits::CallableTraits<F>::arg_types::list_size;
       const ColumnNames_t &actualBl = TDFInternal::PickBranchNames(nArgs, bl, defBl);
       using DFB_t = TDFDetail::TCustomColumn<F, Proxied>;
       const std::string nameInt(name);
@@ -245,7 +246,7 @@ public:
    TInterface<TLoopManager> Snapshot(std::string_view treename, std::string_view filename,
                                      const ColumnNames_t &bnames)
    {
-      using TypeInd_t = typename TDFInternal::TGenStaticSeq<sizeof...(BranchTypes)>::Type_t;
+      using TypeInd_t = typename TTraits::GenStaticSeq<sizeof...(BranchTypes)>::type;
       return SnapshotImpl<BranchTypes...>(treename, filename, bnames, TypeInd_t());
    }
 
@@ -375,9 +376,9 @@ public:
    template <typename F>
    void Foreach(F f, const ColumnNames_t &bl = {})
    {
-      using Args_t = typename TDFInternal::TFunctionTraits<decltype(f)>::ArgsNoDecay_t;
-      using Ret_t = typename TDFInternal::TFunctionTraits<decltype(f)>::Ret_t;
-      ForeachSlot(TDFInternal::AddSlotParameter<Ret_t>(f, Args_t()), bl);
+      using arg_types = typename TTraits::CallableTraits<decltype(f)>::arg_types_nodecay;
+      using ret_type = typename TTraits::CallableTraits<decltype(f)>::ret_type;
+      ForeachSlot(TDFInternal::AddSlotParameter<ret_type>(f, arg_types()), bl);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -401,7 +402,7 @@ public:
    {
       auto df = GetDataFrameChecked();
       const ColumnNames_t &defBl = df->GetDefaultBranches();
-      auto nArgs = TDFInternal::TFunctionTraits<F>::Args_t::fgSize;
+      auto nArgs = TTraits::CallableTraits<F>::arg_types::list_size;
       const ColumnNames_t &actualBl = TDFInternal::PickBranchNames(nArgs - 1, bl, defBl);
       using Op_t = TDFInternal::ForeachSlotHelper<F>;
       using DFA_t = TDFInternal::TAction<Op_t, Proxied>;
@@ -426,7 +427,7 @@ public:
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
-   template <typename F, typename T = typename TDFInternal::TFunctionTraits<F>::Ret_t>
+   template <typename F, typename T = typename TTraits::CallableTraits<F>::ret_type>
    TResultProxy<T> Reduce(F f, std::string_view branchName = {})
    {
       static_assert(std::is_default_constructible<T>::value,
@@ -443,11 +444,11 @@ public:
    /// \param[in] initValue The reduced object is initialised to this value rather than being default-constructed
    ///
    /// See the description of the other Reduce overload for more information.
-   template <typename F, typename T = typename TDFInternal::TFunctionTraits<F>::Ret_t>
+   template <typename F, typename T = typename TTraits::CallableTraits<F>::ret_type>
    TResultProxy<T> Reduce(F f, std::string_view branchName, const T &initValue)
    {
-      using Args_t = typename TDFInternal::TFunctionTraits<F>::Args_t;
-      TDFInternal::CheckReduce(f, Args_t());
+      using arg_types = typename TTraits::CallableTraits<F>::arg_types;
+      TDFInternal::CheckReduce(f, arg_types());
       auto df = GetDataFrameChecked();
       unsigned int nSlots = df->GetNSlots();
       auto bl = GetBranchNames<T>({branchName}, "reduce branch values");
@@ -941,7 +942,7 @@ private:
                      ActionType *)
    {
       using Op_t = TDFInternal::FillTOHelper<ActionResultType>;
-      using DFA_t = TDFInternal::TAction<Op_t, Proxied, TDFInternal::TTypeList<BranchTypes...>>;
+      using DFA_t = TDFInternal::TAction<Op_t, Proxied, TTraits::TypeList<BranchTypes...>>;
       auto df = GetDataFrameChecked();
       df->Book(std::make_shared<DFA_t>(Op_t(h, nSlots), bl, *fProxiedPtr));
    }
@@ -956,11 +957,11 @@ private:
 
       if (hasAxisLimits) {
          using Op_t = TDFInternal::FillTOHelper<::TH1F>;
-         using DFA_t = TDFInternal::TAction<Op_t, Proxied, TDFInternal::TTypeList<BranchTypes...>>;
+         using DFA_t = TDFInternal::TAction<Op_t, Proxied, TTraits::TypeList<BranchTypes...>>;
          df->Book(std::make_shared<DFA_t>(Op_t(h, nSlots), bl, *fProxiedPtr));
       } else {
          using Op_t = TDFInternal::FillHelper;
-         using DFA_t = TDFInternal::TAction<Op_t, Proxied, TDFInternal::TTypeList<BranchTypes...>>;
+         using DFA_t = TDFInternal::TAction<Op_t, Proxied, TTraits::TypeList<BranchTypes...>>;
          df->Book(std::make_shared<DFA_t>(Op_t(h, nSlots), bl, *fProxiedPtr));
       }
    }
@@ -971,7 +972,7 @@ private:
                      TDFInternal::ActionTypes::Min *)
    {
       using Op_t = TDFInternal::MinHelper;
-      using DFA_t = TDFInternal::TAction<Op_t, Proxied, TDFInternal::TTypeList<BranchType>>;
+      using DFA_t = TDFInternal::TAction<Op_t, Proxied, TTraits::TypeList<BranchType>>;
       auto df = GetDataFrameChecked();
       df->Book(std::make_shared<DFA_t>(Op_t(minV, nSlots), bl, *fProxiedPtr));
    }
@@ -982,7 +983,7 @@ private:
                      TDFInternal::ActionTypes::Max *)
    {
       using Op_t = TDFInternal::MaxHelper;
-      using DFA_t = TDFInternal::TAction<Op_t, Proxied, TDFInternal::TTypeList<BranchType>>;
+      using DFA_t = TDFInternal::TAction<Op_t, Proxied, TTraits::TypeList<BranchType>>;
       auto df = GetDataFrameChecked();
       df->Book(std::make_shared<DFA_t>(Op_t(maxV, nSlots), bl, *fProxiedPtr));
    }
@@ -993,7 +994,7 @@ private:
                      TDFInternal::ActionTypes::Mean *)
    {
       using Op_t = TDFInternal::MeanHelper;
-      using DFA_t = TDFInternal::TAction<Op_t, Proxied, TDFInternal::TTypeList<BranchType>>;
+      using DFA_t = TDFInternal::TAction<Op_t, Proxied, TTraits::TypeList<BranchType>>;
       auto df = GetDataFrameChecked();
       df->Book(std::make_shared<DFA_t>(Op_t(meanV, nSlots), bl, *fProxiedPtr));
    }
@@ -1070,7 +1071,7 @@ protected:
    /// the TTreeReaderValue/TemporaryBranch
    template <typename... BranchTypes, int... S>
    TInterface<TLoopManager> SnapshotImpl(std::string_view treename, std::string_view filename,
-                                         const ColumnNames_t &bnames, TDFInternal::TStaticSeq<S...> /*dummy*/)
+                                         const ColumnNames_t &bnames, TTraits::StaticSeq<S...> /*dummy*/)
    {
       // check for input sanity
       const auto templateParamsN = sizeof...(S);
@@ -1108,7 +1109,7 @@ protected:
       if (!ROOT::IsImplicitMTEnabled()) {
          // single-thread snapshot
          using Op_t = TDFInternal::SnapshotHelper<BranchTypes...>;
-         using DFA_t = TDFInternal::TAction<Op_t, Proxied, TDFInternal::TTypeList<BranchTypes...>>;
+         using DFA_t = TDFInternal::TAction<Op_t, Proxied, TTraits::TypeList<BranchTypes...>>;
          actionPtr.reset(new DFA_t(Op_t(filenameInt, dirnameInt, treenameInt, bnames), bnames, *fProxiedPtr));
       } else {
          // multi-thread snapshot
