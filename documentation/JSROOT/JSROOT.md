@@ -11,9 +11,9 @@ In most practical cases it is not necessary to install JSROOT - it can be used d
 
 When required, there are following alternatives to install JSROOT on other web servers:
 
-   - download and unpack [provided](https://github.com/linev/jsroot/releases) packages (recommended)
+   - download and unpack [provided](https://github.com/root-project/jsroot/releases) packages (recommended)
    - use [bower](https://bower.io/) package manager and invoke `bower install jsroot`
-   - clone master branch from [repository](https://github.com/linev/jsroot/)
+   - clone master branch from [repository](https://github.com/root-project/jsroot/)
 
 One could use JSROOT directly from local file system. If source code was unpacked/checked-out in `/home/user/jsroot/` subfolder, one could just open it in browser with <file:///home/user/jsroot/index.htm> address.
 
@@ -32,6 +32,7 @@ To automate files loading and objects drawing, one can provide number of URL par
 - opt - drawing option for the item
 - items - array of items name
 - opts - array of drawing options for the items
+- title - set browser title  
 - layout - can be 'simple', 'flex', 'collapsible', 'tabs', 'gridNxM', 'horizNMK', 'vertNMK'
 - browser - layout of the browser 'float', 'fix', 'no', 'off'
 - nobrowser - do not display file browser (same as browser=no)
@@ -288,10 +289,18 @@ Following draw options could be specified (separated by semicolon or ';'):
    - more3 - show 3 times more volumes as usual
    - all - try to display all geometry volumes (may lead to browser hanging)
    - highlight - force highlighting of selected volume, normally activated for moderate-size geometries
+   - nohighlight - disable volumes highlighting (can be activated via context menu)
    - macro:name.C - invoke ROOT configuration macro
-   - dflt_colors - set default volumes colors as TGeoManager::DefaultColors() does
+   - dflt - set default volumes colors as TGeoManager::DefaultColors() does
    - transpXY - set global transparency value (XY is number between 1 and 99)
+   - zoomFACTOR - set initial zoom factor (FACTOR is integer value from 1 to 10000, default is 100)
    - rotate - enable automatic rotation of the geometry
+   - tracks - show tracks from TGeoManager
+   - dray - calculate rendering order using raytracing (extensive calculations)
+   - dbox - use distance to nearest point from bounding box for rendering order (default)
+   - dpnt - use distance to shape center as rendering order
+   - dsize - use volume size as rendering order
+   - ddflt - let three.js to calculate rendering order
 
 
 It is possible to display only part of geometry model. For instance, one could select sub-item like:
@@ -336,22 +345,31 @@ Example of major LHC detectors:
  * ALICE: [full](https://root.cern/js/latest/?file=https://root.cern/files/alice2.root&item=Geometry;1&opt=macro:https://root.cern/js/files/geomAlice.C)
  * ATLAS: [full](https://root.cern/js/latest/?file=https://root.cern/files/atlas.root&item=atlas;1&opt=clipxyz), [cryo](https://root.cern/js/latest/?file=https://root.cern/files/atlas.root&item=atlas;1&opt=macro:https://root.cern/files/atlas_cryo.C), [sctt](https://root.cern/js/latest/?file=https://root.cern/files/atlas.root&item=atlas;1&opt=macro:https://root.cern/files/atlas_sctt.C)
  * CMS: [cmse](https://root.cern/js/latest/?file=https://root.cern/files/cms.root&item=cms;1&opt=macro:https://root.cern/files/cms_cmse.C;clipxyz), [calo](https://root.cern/js/latest/?file=https://root.cern/files/cms.root&item=cms;1&opt=macro:https://root.cern/files/cms_calo.C;clipxyz)
- * LHCb: [full](https://root.cern/js/latest/?file=https://root.cern/files/lhcbfull.root&item=Geometry;1&opt=all;dflt_colors)
+ * LHCb: [full](https://root.cern/js/latest/?file=https://root.cern/files/lhcbfull.root&item=Geometry;1&opt=all;dflt)
 
 Other detectors examples:
- * HADES: [full](https://root.cern/js/latest/?file=https://root.cern/files/hades2.root&item=CBMGeom;1&opt=all;dflt_colors), [preselected](https://root.cern/js/latest/?json=../files/geom/hades.json.gz)
+ * HADES: [full](https://root.cern/js/latest/?file=https://root.cern/files/hades2.root&item=CBMGeom;1&opt=all;dflt), [preselected](https://root.cern/js/latest/?json=../files/geom/hades.json.gz)
  * BABAR: [full](https://root.cern/js/latest/?file=https://root.cern/files/babar.root&item=babar;1&opt=macro:https://root.cern/files/babar_all.C), [emca](https://root.cern/js/latest/?file=https://root.cern/files/babar.root&item=babar;1&opt=macro:https://root.cern/files/babar_emca.C)
  * STAR: [full](https://root.cern/js/latest/?file=https://root.cern/files/star.root&item=star;1&opt=macro:https://root.cern/files/star_all.C;clipxyz), [svtt](https://root.cern/js/latest/?file=https://root.cern/files/star.root&item=star;1&opt=macro:https://root.cern/files/star_svtt.C)
  * D0: [full](https://root.cern/js/latest/?file=https://root.cern/files/d0.root&item=d0;1&opt=clipxyz)
- * NA47: [full](https://root.cern/js/latest/?file=https://root.cern/files/na47.root&item=na47;1&opt=dflt_colors)
- * BRAHMS: [full](https://root.cern/js/latest/?file=https://root.cern/files/brahms.root&item=brahms;1&opt=dflt_colors)
- * SLD: [full](https://root.cern/js/latest/?file=https://root.cern/files/sld.root&item=sld;1&opt=dflt_colors;clipxyz)
+ * NA47: [full](https://root.cern/js/latest/?file=https://root.cern/files/na47.root&item=na47;1&opt=dflt)
+ * BRAHMS: [full](https://root.cern/js/latest/?file=https://root.cern/files/brahms.root&item=brahms;1&opt=dflt)
+ * SLD: [full](https://root.cern/js/latest/?file=https://root.cern/files/sld.root&item=sld;1&opt=dflt;clipxyz)
 
-Together with geometry one could display tracks (TEveTrack) and hits (TEvePointSet) objects.
+Together with geometry one could display tracks (TEveTrack) and hits (TEvePointSet, TPolyMarker3D) objects.
 Either one do it interactively by drag and drop, or superimpose drawing with `+` sign like:
 
 - [item=simple_alice.json.gz+tracks_hits.root/tracks+tracks_hits.root/hits](https://root.cern/js/latest/?nobrowser&json=../files/geom/simple_alice.json.gz&file=../files/geom/tracks_hits.root&item=simple_alice.json.gz+tracks_hits.root/tracks+tracks_hits.root/hits)
 
+
+There is a problem of correct rendering of transparent volumes. To solve problem in general is very expensive 
+(in terms of computing power), therefore several approximation solution can be applied: 
+   * **dpnt**: distance from camera view to the volume center used as rendering order
+   * **dbox**: distance to nearest point from bonding box used as rendering order (**default**)
+   * **dsize**: volume size is used as rendreing order, can be used for centered volumes with many shells around
+   * **dray**: use raycasting to sort volumes in order they appear along rays, comming out of camera point
+   * **ddflt**: default three.js method for rendering transparent volumes       
+For different geometries different methods can be applied. In any case, all opaque volumes rendered first. 
 
 
 ## Reading ROOT files from other servers
@@ -525,6 +543,8 @@ When JSROOT installed with bower package manager, one could re-use basic librari
 
 Bower support will be automatically enabled when script path conatin __"bower_components/jsroot/"__ string.
 
+One also could use bower and gulp to produce single script with all libraries included.  
+This is shown in the example <https://github.com/root-project/jsroot/tree/master/demo/gulp>
 
 
 ### Use of JSON
@@ -568,7 +588,7 @@ One could use the JSROOT.draw function:
 
 The first argument is the id of the HTML div element, where drawing will be performed. The second argument is the object to draw and the third one is the drawing option.
 
-Here is complete [running example](https://root.cern/js/latest/api.htm#custom_html_read_json) ans [source code](https://github.com/linev/jsroot/blob/master/demo/read_json.htm):
+Here is complete [running example](https://root.cern/js/latest/api.htm#custom_html_read_json) ans [source code](https://github.com/root-project/jsroot/blob/master/demo/read_json.htm):
 
     var filename = "https://root.cern/js/files/th2ul.json.gz";
     JSROOT.NewHttpRequest(filename, 'object', function(obj) {
@@ -610,7 +630,7 @@ For example, reading an object from a file and displaying it will look like:
        });
     });
 
-Here is [running example](https://root.cern/js/latest/api.htm#custom_html_read_root_file) and [source code](https://github.com/linev/jsroot/blob/master/demo/read_file.htm)
+Here is [running example](https://root.cern/js/latest/api.htm#custom_html_read_root_file) and [source code](https://github.com/root-project/jsroot/blob/master/demo/read_file.htm)
 
 
 
@@ -662,7 +682,7 @@ To get access to selected branches, one should use TSelector class:
        });
     });
 
-Here is [running example](https://root.cern/js/latest/api.htm#ttree_tselector) and [source code](https://github.com/linev/jsroot/blob/master/demo/read_tree.htm)
+Here is [running example](https://root.cern/js/latest/api.htm#ttree_tselector) and [source code](https://github.com/root-project/jsroot/blob/master/demo/read_tree.htm)
 
 This examples shows how read TTree from binary file and create JSROOT.TSelector object.
 Logically it is similar to original TSelector class - for every read entry TSelector::Process() method is called.
@@ -674,3 +694,56 @@ As second parameter of tree.Process() function one could provide object with arg
     var args = { numentries: 1000, firstentry: 500 };
     tree.Process(selector, args);
 
+
+### TGeo API
+
+Any supported TGeo object can be drawn with normal JSROOR.draw() function.
+
+If necessary, one can create three.js model for supported object directly and use such model
+separately. This can be done with the function:
+
+    var opt = { numfaces: 100000};
+    var obj3d = JSROOT.GEO.build(obj, opt);
+    scene.add( obj3d );
+
+Following options can be specified:
+
+   - numfaces - approximate maximal number of faces in three.js model (default 100000)
+   - numnodes - approximate maximal number of meshes in three.js model (default 1000)
+   - doubleside - use double-side material (default only front side is set)
+   - wireframe - show wireframe for created materials (default - off)
+
+When transparent volumes appeared in the model, one could use JSROOT.GEO.produceRenderOrder() function
+to correctly set rendering order. It should be used as:
+
+    JSROOT.GEO.produceRenderOrder(scene, camera.position, 'box');
+    
+Following methods can be applied: "box", "pnt", "size", "ray" and "dflt". See more info in draw options description for TGeo classes.    
+
+Here is [running example](https://root.cern/js/latest/api.htm#custom_html_geometry) and [source code](https://github.com/root-project/jsroot/blob/master/demo/tgeo_build.htm).
+
+
+### Use with Node.js
+
+Starting from version 5.2.0, JSROOT can be used in Node.js. To install it, use:
+
+    [shell] npm install jsroot
+    
+To use in the Node.js scripts, one should add following line:
+
+     var jsroot = require('jsroot');
+     
+Using JSROOT functionality, one can open binary ROOT files (local and remote), parse ROOT JSON,
+create SVG output. For example, open create SVG image with lego plot, one should do:
+
+    var jsroot = require("jsroot");
+    var fs = require("fs");
+
+    jsroot.OpenFile("https://root.cern/js/files/hsimple.root", function(file) {
+        file.ReadObject("hpx;1", function(obj) {
+            jsroot.MakeSVG( { object: obj, option: "lego2", width: 1200, height: 800 }, function(svg) {
+                fs.writeFileSync("lego2.svg", svg);
+            });
+        });
+     });               
+ 
