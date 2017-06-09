@@ -1037,6 +1037,3 @@ Bool_t RooArgSet::isInRange(const char* rangeSpec)
   delete iter ;
   return kFALSE ;
 }
-
-
-
