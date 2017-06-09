@@ -11,6 +11,7 @@
 #ifndef ROOT_TDFUTILS
 #define ROOT_TDFUTILS
 
+#include "ROOT/TypeTraits.hxx"
 #include "ROOT/RArrayView.hxx"
 #include "TH1.h"
 #include "TTreeReaderArray.h"
@@ -39,7 +40,11 @@ class THist;
 namespace Detail {
 namespace TDF {
 using ColumnNames_t = std::vector<std::string>;
-class TCustomColumnBase; // fwd decl for ColumnName2ColumnTypeName
+
+// fwd decl for ColumnName2ColumnTypeName
+class TCustomColumnBase;
+
+// type used for tag dispatching
 struct TInferType {
 };
 } // end ns Detail
@@ -47,6 +52,7 @@ struct TInferType {
 
 namespace Internal {
 namespace TDF {
+using namespace ROOT::TypeTraits;
 using namespace ROOT::Detail::TDF;
 
 /// Compile-time integer sequence generator
@@ -69,7 +75,7 @@ using GenStaticSeq_t = typename GenStaticSeq<S...>::type;
 
 // return wrapper around f that prepends an `unsigned int slot` parameter
 template <typename R, typename F, typename... Args>
-std::function<R(unsigned int, Args...)> AddSlotParameter(F &f, TTypeList<Args...>)
+std::function<R(unsigned int, Args...)> AddSlotParameter(F &f, TypeList<Args...>)
 {
    return [f](unsigned int, Args... a) -> R { return f(a...); };
 }
@@ -125,7 +131,7 @@ using ReaderValueOrArray_t = typename TReaderValueOrArray<T>::Proxy_t;
 template <typename TDFValueTuple, int... S>
 void InitTDFValues(unsigned int slot, TDFValueTuple &valueTuple, TTreeReader *r, const ColumnNames_t &bn,
                    const ColumnNames_t &tmpbn,
-                   const std::map<std::string, std::shared_ptr<TCustomColumnBase>> &tmpBranches, TStaticSeq<S...>)
+                   const std::map<std::string, std::shared_ptr<TCustomColumnBase>> &tmpBranches, StaticSeq<S...>)
 {
    // isTmpBranch has length bn.size(). Elements are true if the corresponding
    // branch is a temporary branch created with Define, false if they are
@@ -149,7 +155,7 @@ void InitTDFValues(unsigned int slot, TDFValueTuple &valueTuple, TTreeReader *r,
 template <typename Filter>
 void CheckFilter(Filter &)
 {
-   using FilterRet_t = typename TDF::TFunctionTraits<Filter>::Ret_t;
+   using FilterRet_t = typename TDF::CallableTraits<Filter>::ret_type;
    static_assert(std::is_same<FilterRet_t, bool>::value, "filter functions must return a bool");
 }
 
@@ -160,15 +166,15 @@ void CheckTmpBranch(std::string_view branchName, TTree *treePtr);
 /// - takes exactly two arguments of the same type
 /// - has a return value of the same type as the arguments
 template <typename F, typename T>
-void CheckReduce(F &, TTypeList<T, T>)
+void CheckReduce(F &, TypeList<T, T>)
 {
-   using Ret_t = typename TFunctionTraits<F>::Ret_t;
-   static_assert(std::is_same<Ret_t, T>::value, "reduce function must have return type equal to argument type");
+   using ret_type = typename CallableTraits<F>::ret_type;
+   static_assert(std::is_same<ret_type, T>::value, "reduce function must have return type equal to argument type");
    return;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-/// This overload of CheckReduce is called if T is not a TTypeList<T,T>
+/// This overload of CheckReduce is called if T is not a TypeList<T,T>
 template <typename F, typename T>
 void CheckReduce(F &, T)
 {
