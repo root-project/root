@@ -9,8 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TTypeTraits
-#define ROOT_TTypeTraits
+#ifndef ROOT_TypeTraits
+#define ROOT_TypeTraits
 
 #include <type_traits>
 
