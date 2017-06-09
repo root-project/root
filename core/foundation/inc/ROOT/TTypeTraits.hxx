@@ -14,7 +14,17 @@
 
 #include <type_traits>
 
-namespace ROOT{
+// fwd declaration for IsV7Hist
+class TH1;
+
+namespace ROOT {
+
+// fwd declaration for IsV7Hist
+namespace Experimental {
+template <int D, typename P, template <int, typename, template <typename> class> class... S>
+class THist;
+} // ns Experimental
+
 /// ROOT type_traits extensions
 namespace TypeTraits {
 
