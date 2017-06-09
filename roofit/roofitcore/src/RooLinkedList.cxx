@@ -470,6 +470,15 @@ Bool_t RooLinkedList::Remove(TObject* arg)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// If one of the TObject we have a referenced to is deleted, remove the
+/// reference.
+
+void RooLinkedList::RecursiveRemove(TObject *obj)
+{
+   Remove(obj); // This is a nop if the obj is not in the collection.
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Return object stored in sequential position given by index.
 /// If index is out of range, a null pointer is returned.
 
