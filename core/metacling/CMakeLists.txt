@@ -19,9 +19,16 @@ else()
 set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/src/TClingCallbacks.cxx COMPILE_FLAGS -fno-rtti)
 endif()
 
-# This to avoid warning coming from  message coming from llvm/src/tools/clang/include/clang/Sema/Lookup.h:441
+# This to avoid warning coming from llvm/src/tools/clang/include/clang/Sema/Lookup.h:441
 # in clang + llvm version r227800.
-ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-conditional-uninitialized)
+if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
+  ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-conditional-uninitialized)
+endif()
+
+# This is to avoid warnings coming from GCC 7 in llvm/src/include/llvm/ADT/DenseMap.h:1010
+if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
+  ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-maybe-uninitialized)
+endif()
 
 ROOT_OBJECT_LIBRARY(MetaCling ${sources})
 add_dependencies(MetaCling CLING)
