@@ -80,7 +80,7 @@ For that one should use `%arg1`, `%arg2` and so on identifiers. Like:
     serv->RegisterCommand("/DoSomething","SomeFunction(%arg1%,%arg2%)");
 
 User will be requested to enter arguments values, when command element clicked in the browser.
-Example of the command which executes arbitrary string in appliction via ProcessLine looks like:
+Example of the command which executes arbitrary string in application via ProcessLine looks like:
 
     serv->RegisterCommand("/Process","%arg1%");
 
@@ -151,7 +151,7 @@ One could specify a debug parameter to be able to adjust the FastCGI configurati
 
 All user access will be ruled by the main web server. Authorized account names could be used to configure access restriction in THttpServer.
 
-### Configure fastcgi with Apcahe2
+### Configure fastcgi with Apache2
 
 First of all, one should compile and install [mod_fastcgi](http://www.fastcgi.com) module.
 Then *mod_fastcgi* should be specified in httpd.conf to load it when Apache server is started.
@@ -396,7 +396,7 @@ One could specify them in the URL string:
 
 ### Performing multiple requests at once
 
-To minimize traffic between sever and client, one could submit several requests at once. This is especially useful when big number of small objects should be requestsed simultaneosely. For this purposes `multi.bin` or `multi.json` requests could be used.
+To minimize traffic between sever and client, one could submit several requests at once. This is especially useful when big number of small objects should be requested simultaneously. For this purposes `multi.bin` or `multi.json` requests could be used.
 Both require string as POST data which format as:
 
     subfolder/item1/root.json\n
