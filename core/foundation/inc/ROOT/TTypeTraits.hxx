@@ -58,9 +58,14 @@ struct IsContainer {
 };
 
 /// Check whether a histogram type is a classic or v7 histogram.
-// FIXME true for all types that do not inherit from TH1
-template <typename T>
-struct IsV7Histo : public std::integral_constant<bool, !std::is_base_of<TH1, T>::value> {};
+template<typename T>
+struct IsV7Hist : public std::false_type {
+   static_assert(std::is_base_of<TH1,T>::value, "not implemented for this type");
+};
+
+template <int D, typename P, template <int, typename, template <typename> class> class... S>
+struct IsV7Hist<ROOT::Experimental::THist<D, P, S...>> : public std::true_type {
+};
 
 /// Lightweight storage for a collection of types.
 /// Differently from std::tuple, no instantiation of objects of stored types is performed
