@@ -254,6 +254,10 @@ ClassImp(THttpServer);
             GetSniffer()->SetReadOnly(kTRUE);
          } else if ((strcmp(opt, "readwrite") == 0) || (strcmp(opt, "rw") == 0)) {
             GetSniffer()->SetReadOnly(kFALSE);
+         } else if (strcmp(opt, "global") == 0) {
+            GetSniffer()->SetScanGlobalDir(kTRUE);
+         } else if (strcmp(opt, "noglobal") == 0) {
+            GetSniffer()->SetScanGlobalDir(kFALSE);
          } else
             CreateEngine(opt);
       }
