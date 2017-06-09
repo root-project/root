@@ -367,6 +367,9 @@ See [the online documentation](https://root.cern.ch/doc/master/classROOT_1_1Expe
   bin content to be conform to the 2D case where the surface of the boxes is
   proportional to the bin content.
 
+## Geometry
+- It is possible now to run GDMLParser on a file with arithmetic expressions
+
 ## Dictionaries
 - Stop dictionary generation early, during AST scanning, if a union is selected for I/O as this is not supported (triggered by [ROOT-8492](https://sft.its.cern.ch/jira/browse/ROOT-8492))
 - Allow inclusion of headers in linkdef files [ROOT-7765](https://sft.its.cern.ch/jira/browse/ROOT-7765)
@@ -419,12 +422,24 @@ See [the online documentation](https://root.cern.ch/doc/master/classROOT_1_1Expe
 
 ## JavaScript ROOT
 
+JSROOT upgraded from 4.6.0 to 5.1.2. The major changes:
+
+- Support most 2D and 3D draw options for TH1, TH2 and TH3
+- Support new classes: TH2Poly, TGraph2D
+- Improve handling of THStack and TMultiGraph
+- Full implementation of binary ROOT I/O, including TTree
+- Extensive TTree::Draw() functionality
+- Support improved JSON format, including arrays compression
+- New 'float' hierarchy browser overlays with objects drawing
 
 ## Tutorials
 
-
-## Class Reference Guide
-
+New tutorials have been added:
+- TDataFrame tutorials to exercise the different use cases
+- Annotation on a 3D plot using 3D plylines
+- Palette coloring for graphs
+- CandlePlot tutorials to exercise different options
+- Multicore tutorials for multi-threaded and multi-process
 
 ## Build, Configuration and Testing Infrastructure
 
@@ -448,7 +463,7 @@ See [the online documentation](https://root.cern.ch/doc/master/classROOT_1_1Expe
   target_link_libraries(Main Event)
   ```
 - Added option `builtin_all` to enable all the built in options.
-- For rootcling_stage1 (formerly known as rootcling_tmp), the package structure was changed to enable homogenous visibility
+- For rootcling_stage1 (formerly known as rootcling_tmp), the package structure was changed to enable homogeneous visibility
   settings across object files. See core/README for an overview.
 - Several non-public headers are not copied into include/ anymore; they reside in the PACKAGE/res/ subdirectory in the source tree.
 - The IMT switch is set to on by default.
@@ -588,6 +603,7 @@ See [the online documentation](https://root.cern.ch/doc/master/classROOT_1_1Expe
 *   [[ROOT-8809](https://sft.its.cern.ch/jira/browse/ROOT-8809)] - push_back on a vector of pointers may not work in PyROOT
 *   [[ROOT-8811](https://sft.its.cern.ch/jira/browse/ROOT-8811)] - python: cannot pickle ROOT.Long() (not found as ROOT.long)
 *   [[ROOT-8815](https://sft.its.cern.ch/jira/browse/ROOT-8815)] - Memory hoarding in TTree
+<<<<<<< Updated upstream
 
 ## New Features and Tasks
 
@@ -604,3 +620,5 @@ See [the online documentation](https://root.cern.ch/doc/master/classROOT_1_1Expe
 *   [[ROOT-7658](https://sft.its.cern.ch/jira/browse/ROOT-7658)] - Improve ValuePrinter type printing.
 *   [[ROOT-8408](https://sft.its.cern.ch/jira/browse/ROOT-8408)] - valgrind leak reports with bare ROOT start and quit
 *   [[ROOT-8438](https://sft.its.cern.ch/jira/browse/ROOT-8438)] - Add a CMake option -Dbuiltin_all=ON
+=======
+>>>>>>> Stashed changes
