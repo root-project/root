@@ -728,7 +728,7 @@ class UnzipTask: public tbb::task {
 
 private:
    TTreeCacheUnzip* cache;
-   std::vector<Int_t> indices;
+   std::vector<int> indices;
    Int_t cycle;
    Int_t nseek;
    Bool_t learning;
@@ -742,9 +742,10 @@ private:
    Int_t nunzip;
   
 public:
-   UnzipTask(TTreeCacheUnzip* c, std::vector<int>& ins, Int_t cyc, Int_t ns, Bool_t l, Bool_t t,  Long64_t*& sk, Int_t*& sl, Int_t*& ul, char**& uc, tbb::task**& ut, Int_t& nup) {
+   UnzipTask(TTreeCacheUnzip* c, std::vector<int> ins, Int_t cyc, Int_t ns, Bool_t l, Bool_t t,  Long64_t*& sk, Int_t*& sl, Int_t*& ul, char**& uc, tbb::task**& ut, Int_t& nup) {
       cache = c;
       indices = ins;
+      for(size_t i = 0; i < ins.size(); ++i) printf("in UnzipTask init, ins[%lu]=%d\n", i, ins[i]);
       cycle = cyc;
       nseek = ns;
       learning = l;
@@ -770,10 +771,14 @@ public:
 
       // To synchronize with the 'paging'
       myCycle = cycle;
+      if(indices.size()) printf("indices.size = %d\n", (int)indices.size());
+      else printf("indices.size is empty\n");
+//      printf("indices range: indices[%d]=%d~indices[%d]=%d\n", 0, indices[0], (int)indices.size()-1, indices[(int)indices.size()-1]);//##
       for(size_t i = 0; i < indices.size(); ++i) {
          Int_t reqi = indices[i];
          printf("unziptasks[%d] and seeklen = %d\n", reqi, seeklen[reqi]);//##
-         if (unziptasks[reqi] == nullptr && (seeklen[reqi] > 256)) {
+//         if (unziptasks[reqi] == nullptr && (seeklen[reqi] > 256)) {
+         if (unziptasks[reqi] == nullptr) {
             // We found a chunk which is not unzipped nor pending
             unziptasks[reqi] = this; // Set it as pending
             rdoffs = seek[reqi];
@@ -886,13 +891,17 @@ public:
    tbb::task* execute() {
       Int_t accusz = 0;
       for (Int_t ii = 0; ii < nseek; ii++) {
-         printf("ii = %d\n", ii);//##
-         while (seeklen[ii] > 256 && accusz < 102400) {
+         printf("ii = %d, seeklen = %d\n", ii, seeklen[ii]);//##
+//         while (seeklen[ii] > 256 && accusz < 102400) {
+         while (accusz < 102400) {
             accusz += seeklen[ii];
             indices.push_back(ii);
+            printf("incides push back ii = %d\n", ii);//##
             ii++;
             if (ii >= nseek) break;
          }
+         ii--;
+         printf("accusz = %d\n", accusz);//##
          UnzipTask* t = new(this->allocate_child()) UnzipTask(cache, indices, cycle, nseek, learning, transferred, seek, seeklen, unziplen, unzipchunks, unziptasks, nunzip);
          spawn(*t);
          for (size_t index = 0; index < indices.size(); ++index) {
@@ -1022,7 +1031,7 @@ Int_t TTreeCacheUnzip::GetUnzipBuffer(char **buf, Long64_t pos, Int_t len, Bool_
 			   //			   fUnzipStatus[seekidx] = 2;
 			   //			   fUnzipChunks[seekidx] = 0;
 
-//			   res = UnzipCacheTBB();//##
+			   res = UnzipCacheTBB();//##
 			   // Here the block is not pending. It could be done or aborted or not yet being processed.
 			   if ( (seekidx >= 0) && (fUnzipTasks[seekidx] == nullptr) && (fUnzipChunks[seekidx]) && (fUnzipLen[seekidx] > 0) ) {
 
