@@ -3,7 +3,7 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-include_directories(${R_INCLUDE_DIRS})
+include_directories(SYSTEM ${R_INCLUDE_DIRS})
 
 ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-overloaded-virtual)
 
