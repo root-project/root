@@ -11,6 +11,7 @@
 #ifndef ROOT_TDFNODES
 #define ROOT_TDFNODES
 
+#include "ROOT/TypeTraits.hxx"
 #include "ROOT/TDFUtils.hxx"
 #include "ROOT/RArrayView.hxx"
 #include "ROOT/TSpinMutex.hxx"
@@ -32,6 +33,7 @@ class TActionBase;
 
 namespace Detail {
 namespace TDF {
+using namespace ROOT::TypeTraits;
 namespace TDFInternal = ROOT::Internal::TDF;
 
 // forward declarations for TLoopManager
@@ -137,7 +139,7 @@ class TColumnValue {
    // following line is equivalent to pseudo-code: ProxyParam_t == array_view<U> ? U : T
    // ReaderValueOrArray_t is a TTreeReaderValue<T> unless T is array_view<U>
    using ProxyParam_t = typename std::conditional<std::is_same<ReaderValueOrArray_t<T>, TTreeReaderValue<T>>::value, T,
-                                                  ExtractType_t<T>>::type;
+                                                  TakeFirstParameter_t<T>>::type;
    std::unique_ptr<TTreeReaderValue<T>> fReaderValue{nullptr}; //< Owning ptr to a TTreeReaderValue. Used for
                                                                /// non-temporary columns and T != std::array_view<U>
    std::unique_ptr<TTreeReaderArray<ProxyParam_t>> fReaderArray{nullptr}; //< Owning ptr to a TTreeReaderArray. Used for
@@ -196,7 +198,7 @@ struct TTDFValueTuple {
 };
 
 template <typename... BranchTypes>
-struct TTDFValueTuple<TTypeList<BranchTypes...>> {
+struct TTDFValueTuple<TypeList<BranchTypes...>> {
    using type = std::tuple<TColumnValue<BranchTypes>...>;
 };
 
@@ -220,7 +222,7 @@ public:
 
 template <typename Helper, typename PrevDataFrame, typename BranchTypes_t = typename Helper::BranchTypes_t>
 class TAction final : public TActionBase {
-   using TypeInd_t = typename TGenStaticSeq<BranchTypes_t::fgSize>::Type_t;
+   using TypeInd_t = typename GenStaticSeq<BranchTypes_t::list_size>::type;
 
    Helper fHelper;
    const ColumnNames_t fBranches;
@@ -250,7 +252,7 @@ public:
    }
 
    template <int... S>
-   void Exec(unsigned int slot, Long64_t entry, TStaticSeq<S...>)
+   void Exec(unsigned int slot, Long64_t entry, StaticSeq<S...>)
    {
       (void)entry; // avoid bogus 'unused parameter' warning in gcc4.9
       fHelper.Exec(slot, std::get<S>(fValues[slot]).Get(entry)...);
@@ -294,13 +296,13 @@ public:
 
 template <typename F, typename PrevData>
 class TCustomColumn final : public TCustomColumnBase {
-   using BranchTypes_t = typename TDFInternal::TFunctionTraits<F>::Args_t;
-   using TypeInd_t = typename TDFInternal::TGenStaticSeq<BranchTypes_t::fgSize>::Type_t;
-   using Ret_t = typename TDFInternal::TFunctionTraits<F>::Ret_t;
+   using BranchTypes_t = typename CallableTraits<F>::arg_types;
+   using TypeInd_t = typename GenStaticSeq<BranchTypes_t::list_size>::type;
+   using ret_type = typename CallableTraits<F>::ret_type;
 
    F fExpression;
    const ColumnNames_t fBranches;
-   std::vector<std::unique_ptr<Ret_t>> fLastResultPtr;
+   std::vector<std::unique_ptr<ret_type>> fLastResultPtr;
    PrevData &fPrevData;
    std::vector<Long64_t> fLastCheckedEntry = {-1};
 
@@ -333,14 +335,15 @@ public:
       }
    }
 
-   const std::type_info &GetTypeId() const { return typeid(Ret_t); }
+   const std::type_info &GetTypeId() const { return typeid(ret_type); }
 
    void CreateSlots(unsigned int nSlots) final
    {
       fValues.resize(nSlots);
       fLastCheckedEntry.resize(nSlots, -1);
       fLastResultPtr.resize(nSlots);
-      std::generate(fLastResultPtr.begin(), fLastResultPtr.end(), []() { return std::unique_ptr<Ret_t>(new Ret_t()); });
+      std::generate(fLastResultPtr.begin(), fLastResultPtr.end(),
+                    []() { return std::unique_ptr<ret_type>(new ret_type()); });
    }
 
    bool CheckFilters(unsigned int slot, Long64_t entry) final
@@ -350,8 +353,7 @@ public:
    }
 
    template <int... S, typename... BranchTypes>
-   void UpdateHelper(unsigned int slot, Long64_t entry, TDFInternal::TStaticSeq<S...>,
-                     TDFInternal::TTypeList<BranchTypes...>)
+   void UpdateHelper(unsigned int slot, Long64_t entry, StaticSeq<S...>, TypeList<BranchTypes...>)
    {
       *fLastResultPtr[slot] = fExpression(std::get<S>(fValues[slot]).Get(entry)...);
    }
@@ -400,8 +402,8 @@ public:
 
 template <typename FilterF, typename PrevDataFrame>
 class TFilter final : public TFilterBase {
-   using BranchTypes_t = typename TDFInternal::TFunctionTraits<FilterF>::Args_t;
-   using TypeInd_t = typename TDFInternal::TGenStaticSeq<BranchTypes_t::fgSize>::Type_t;
+   using BranchTypes_t = typename CallableTraits<FilterF>::arg_types;
+   using TypeInd_t = typename GenStaticSeq<BranchTypes_t::list_size>::type;
 
    FilterF fFilter;
    const ColumnNames_t fBranches;
@@ -447,7 +449,7 @@ public:
    }
 
    template <int... S>
-   bool CheckFilterHelper(unsigned int slot, Long64_t entry, TDFInternal::TStaticSeq<S...>)
+   bool CheckFilterHelper(unsigned int slot, Long64_t entry, StaticSeq<S...>)
    {
       return fFilter(std::get<S>(fValues[slot]).Get(entry)...);
    }
