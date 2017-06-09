@@ -14,6 +14,11 @@ include_directories(${LLVM_INCLUDE_DIRS} ${CLING_INCLUDE_DIRS})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/res ${CMAKE_CURRENT_SOURCE_DIR}/../foundation/res)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CLING_CXXFLAGS}")
 
+# This is to avoid warnings coming from GCC 7 in llvm/src/include/llvm/ADT/DenseMap.h:1010
+if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
+  ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-maybe-uninitialized)
+endif()
+
 ROOT_OBJECT_LIBRARY(ClingUtils ${sources})
 
 add_dependencies(ClingUtils CLING)
