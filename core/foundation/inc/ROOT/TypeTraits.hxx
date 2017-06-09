@@ -12,7 +12,9 @@
 #ifndef ROOT_TypeTraits
 #define ROOT_TypeTraits
 
+#include <memory> // shared_ptr, unique_ptr for IsSmartOrDumbPtr
 #include <type_traits>
+#include <vector> // for IsContainer
 
 namespace ROOT {
 
