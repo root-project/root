@@ -86,7 +86,7 @@ endif
 
 $(LLVMRES): $(LLVMLIB)
 		@mkdir -p $(dir $(LLVMRES))
-#		@cp $(LLVMDIRI)/lib/clang/$(LLVMVERSION)/include/* $(dir $(LLVMRES))
+		@cp -r $(LLVMDIRI)/lib/clang/$(LLVMVERSION)/include/* $(dir $(LLVMRES))
 
 $(LLVMRESEXTRA): $(dir $(firstword $(LLVMRESEXTRA)))%: $(MODDIR)/ROOT/%
 		@mkdir -p $(dir $@)
