@@ -6095,7 +6095,7 @@ void TMinuit::mnplot(Double_t *xpt, Double_t *ypt, char *chpt, Int_t nxypt, Int_
    Int_t nxbest, nybest, km1, ibk, isp1, nx, ny, ks, ix;
    TString chmess, ctemp;
    Bool_t overpr;
-   char cline[120];
+   char cline[144];
    char chsav, chbest;
 
    /* Function Body */
@@ -6228,7 +6228,7 @@ L400:
    }
    iten = (nx + 9) / 10;
    for (ibk = 1; ibk <= iten && ibk <= 12; ++ibk) {
-      snprintf(cline + (ibk-1)*10, 11-(ibk == 12), "%#9.3g ", xvalus[ibk-1]);
+      snprintf(cline + (ibk-1)*12, 12-(ibk == 12), "%#9.3g ", xvalus[ibk-1]);
    }
    Printf("           %s", cline);
    chmess = " ";

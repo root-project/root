@@ -365,7 +365,7 @@ TList *TGraph2DPainter::GetContourList(Double_t contour)
       }
    }
 
-   Bool_t *segUsed = new Bool_t[fNdt];
+   Bool_t *segUsed = new Bool_t[size_t(fNdt)];
    for(i=0; i<fNdt; i++) segUsed[i]=kFALSE;
 
    // Find all the graphs making the contour. There is two kind of graphs,

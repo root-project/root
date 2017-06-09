@@ -7,7 +7,7 @@
 
 set(libname RMVA)
 
-include_directories(${R_INCLUDE_DIRS})
+include_directories(SYSTEM ${R_INCLUDE_DIRS})
 
 set(R_HEADERS ${CMAKE_SOURCE_DIR}/tmva/rmva/inc/TMVA/RMethodBase.h 
               ${CMAKE_SOURCE_DIR}/tmva/rmva/inc/TMVA/MethodC50.h
