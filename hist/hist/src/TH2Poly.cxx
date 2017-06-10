@@ -1269,7 +1269,9 @@ void TH2Poly::SetFloat(Bool_t flag)
 
 Bool_t TH2Poly::IsInsideBin(Int_t binnr, Double_t x, Double_t y)
 {
+   if (!fBins) return false;
    TH2PolyBin* bin = (TH2PolyBin*)fBins->At(binnr);
+   if (!bin) return false;
    return bin->IsInside(x,y);
 }
 
