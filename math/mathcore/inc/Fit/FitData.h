@@ -133,7 +133,7 @@ namespace ROOT {
             }
 
             if (fpTmpCoordVector) {
-               delete fpTmpCoordVector;
+               delete[] fpTmpCoordVector;
                fpTmpCoordVector = NULL;
             }
 
@@ -188,7 +188,7 @@ namespace ROOT {
             }
 
             if (fpTmpCoordVector) {
-               delete fpTmpCoordVector;
+               delete[] fpTmpCoordVector;
                fpTmpCoordVector = NULL;
             }
 
