@@ -16,6 +16,12 @@ void tprofile2polyRealisticModuleError(Int_t numEvents = 1000000)
 
    ifstream infile;
    infile.open("./tutorials/hist/data/tprofile2poly_tutorial.data");
+   if (!infile) // Verify that the file was open successfully
+   {
+      std::cerr << "File ./tutorials/hist/data/tprofile2poly_tutorial.data could not be opened!\n"; // Report error
+      std::cerr << "Error code: " << strerror(errno); // Get some info as to why
+      return;
+   }
 
    vector<pair<Double_t, Double_t>> allCoords;
    Double_t a, b;
