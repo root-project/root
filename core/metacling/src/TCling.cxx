@@ -561,10 +561,13 @@ void TCling__UpdateListsOnUnloaded(const cling::Transaction &T) {
 
    ((TCling*)gCling)->UpdateListsOnUnloaded(T);
 }
+
+extern "C"
 void TCling__TransactionRollback(const cling::Transaction &T) {
 
    ((TCling*)gCling)->TransactionRollback(T);
 }
+
 extern "C" void TCling__LibraryLoadedRTTI(const void* dyLibHandle,
                                           const char* canonicalName) {
 
