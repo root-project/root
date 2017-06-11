@@ -1508,7 +1508,8 @@ Double_t TMVA::MethodBDT::GradBoost(std::vector<const TMVA::Event*>& eventSample
       if (iLeave.second.sum2 < minValue) {
          iLeave.second.sum2 = minValue;
       }
-      iLeave.first->SetResponse(fShrinkage/DataInfo().GetNClasses() * iLeave.second.sumWeightTarget/iLeave.second.sum2);
+      const Double_t K = DataInfo().GetNClasses();
+      iLeave.first->SetResponse(fShrinkage * (K-1) / K * iLeave.second.sumWeightTarget/iLeave.second.sum2);
    }
 
    //call UpdateTargets before next tree is grown
