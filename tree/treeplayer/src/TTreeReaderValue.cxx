@@ -527,10 +527,10 @@ const char* ROOT::Internal::TTreeReaderValueBase::GetBranchDataType(TBranch* bra
          dict = TDictionary::GetDictionary(((TDataType*)dict)->GetTypeName());
          if (dict->IsA() != TDataType::Class()) {
             // Might be a class.
-            if (dict != fDict) {
+            if (dict != curDict) {
                dict = TClass::GetClass(brElement->GetTypeName());
             }
-            if (dict != fDict) {
+            if (dict != curDict) {
                dict = brElement->GetCurrentClass();
             }
          }
