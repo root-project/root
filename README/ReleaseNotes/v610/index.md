@@ -603,22 +603,3 @@ New tutorials have been added:
 *   [[ROOT-8809](https://sft.its.cern.ch/jira/browse/ROOT-8809)] - push_back on a vector of pointers may not work in PyROOT
 *   [[ROOT-8811](https://sft.its.cern.ch/jira/browse/ROOT-8811)] - python: cannot pickle ROOT.Long() (not found as ROOT.long)
 *   [[ROOT-8815](https://sft.its.cern.ch/jira/browse/ROOT-8815)] - Memory hoarding in TTree
-<<<<<<< Updated upstream
-
-## New Features and Tasks
-
-*   [[ROOT-4515](https://sft.its.cern.ch/jira/browse/ROOT-4515)] - Provide a TChain-like interface to THnSparse
-*   [[ROOT-6284](https://sft.its.cern.ch/jira/browse/ROOT-6284)] - New inline-only ClassDef() not requiring a generated dictionary
-*   [[ROOT-8803](https://sft.its.cern.ch/jira/browse/ROOT-8803)] - Running GDMLParser on a file with arithmetic expressions
-*   [[ROOT-5072](https://sft.its.cern.ch/jira/browse/ROOT-5072)] - File Format Enhancements
-*   [[ROOT-5487](https://sft.its.cern.ch/jira/browse/ROOT-5487)] - Rewrite unnamed macro parsing / execution
-*   [[ROOT-5922](https://sft.its.cern.ch/jira/browse/ROOT-5922)] - TRefTable use a global state
-*   [[ROOT-8513](https://sft.its.cern.ch/jira/browse/ROOT-8513)] - Move core/multiproc to a more natural place.
-*   [[ROOT-8612](https://sft.its.cern.ch/jira/browse/ROOT-8612)] - Interpreter - Reduce amount of emitted symbols
-*   [[ROOT-8613](https://sft.its.cern.ch/jira/browse/ROOT-8613)] - Interpreter - JIT optimization level
-*   [[ROOT-6912](https://sft.its.cern.ch/jira/browse/ROOT-6912)] - ROOT slow on startup
-*   [[ROOT-7658](https://sft.its.cern.ch/jira/browse/ROOT-7658)] - Improve ValuePrinter type printing.
-*   [[ROOT-8408](https://sft.its.cern.ch/jira/browse/ROOT-8408)] - valgrind leak reports with bare ROOT start and quit
-*   [[ROOT-8438](https://sft.its.cern.ch/jira/browse/ROOT-8438)] - Add a CMake option -Dbuiltin_all=ON
-=======
->>>>>>> Stashed changes
