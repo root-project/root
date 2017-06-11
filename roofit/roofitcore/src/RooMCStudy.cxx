@@ -1365,13 +1365,15 @@ RooPlot* RooMCStudy::plotPull(const RooRealVar& param, Double_t lo, Double_t hi,
 
 void RooMCStudy::RecursiveRemove(TObject *obj)
 {
+   _fitResList.RecursiveRemove(obj);
    _genDataList.RecursiveRemove(obj);
    _fitOptList.RecursiveRemove(obj);
    if (_ngenVar == obj) _ngenVar = nullptr;
+
    if (_fitParData) _fitParData->RecursiveRemove(obj);
    if (_fitParData == obj) _fitParData = nullptr;
+
    if (_genParData) _genParData->RecursiveRemove(obj);
    if (_genParData == obj) _genParData = nullptr;
-
 }
 
