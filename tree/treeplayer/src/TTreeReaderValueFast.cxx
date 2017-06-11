@@ -73,6 +73,7 @@ void ROOT::Internal::TTreeReaderValueFastBase::CreateProxy() {
          if (!fLeaf) {
             Error("TTreeReaderValueBase::GetLeaf()", "Failed to get the leaf from the branch");
          }
+         fBranch = myBranch;
       }
    }
    else {

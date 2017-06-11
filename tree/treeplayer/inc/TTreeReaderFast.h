@@ -44,8 +44,9 @@ public:
    class Iterator_t:
       public std::iterator<std::input_iterator_tag, const Long64_t, Long64_t> {
    private:
-      Int_t fIdx{0}; ///< Current offset inside this cluster.
+      Int_t* fIdx{nullptr}; ///< Current offset inside this cluster.
       Int_t fCount{0}; ///< Number of entries inside this cluster.
+      Int_t fTotCount{0}; ///< Number of entries we wish to iterate over.
       Long64_t fEntry{-1}; ///< Entry number of the tree referenced by this iterator; -1 is invalid.
       TTreeReaderFast* fReader{nullptr}; ///< The reader we select the entries on.
 
@@ -59,7 +60,12 @@ public:
       /// Initialize the iterator with the reader it steers and a
       /// tree entry number; -1 is invalid.
       Iterator_t(TTreeReaderFast& reader, Long64_t first, Long64_t count):
-         fCount(count), fEntry(first), fReader(&reader) {}
+         fIdx(&(reader.fEvtIndex)), fTotCount(count), fEntry(first), fReader(&reader)
+      {
+         //printf("Initializing new iterator; start of %lld, proceed for %lld events.\n", first, count);
+         fCount = fReader->GetNextRange(fEntry);
+         *fIdx = 0;
+      }
 
       /// Compare two iterators for equality.
       bool operator==(const Iterator_t& lhs) const {
@@ -82,11 +88,13 @@ public:
 
       /// Increment the iterator (prefix ++i).
       Iterator_t& operator++() {
-         fIdx++;
-         if (R__unlikely(fIdx == fCount)) {
+         (*fIdx)++;
+         if (R__unlikely(*fIdx == fCount)) {
+             //printf("Hit end-of-basket of %d events.  Get next entry.\n", fCount);
              fEntry += fCount;
-             fIdx = 0;
-             fCount = fReader->GetNextRange(fCount);
+             *fIdx = 0;
+             fCount = fReader->GetNextRange(fEntry);
+             //printf("This chunk has %d events.\n", fCount);
              if (R__unlikely(!fCount)) {
                  fEntry = -1;
              }
@@ -96,7 +104,7 @@ public:
 
       /// Set the entry number in the reader and return it.
       Long64_t operator*() {
-         return fEntry + fIdx;
+         return fEntry + *fIdx;
       }
 
       Long64_t operator*() const {
@@ -127,7 +135,7 @@ public:
 
    /// Return an iterator to the 0th TTree entry.
    Iterator_t begin() {
-      return Iterator_t(*this, 0, this->GetNextRange(0));
+      return Iterator_t(*this, 0, fTree->GetEntries());
    }
    Iterator_t end() const { return Iterator_t(); }
 

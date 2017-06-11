@@ -59,15 +59,17 @@ void TTreeReaderFast::Initialize()
       fDirector = new ROOT::Internal::TBranchProxyDirector(fTree, -1);
    }
 
-   bool IsOK;
+   bool IsOK = true;
    // Tell readers we now have a tree
    for (auto &reader : fValues) {
       reader->CreateProxy();
       if (reader->GetSetupStatus() != ROOT::Internal::TTreeReaderValueBase::kSetupMatch) {
+         //printf("Reader setup failed.  Status: %d\n", reader->GetSetupStatus());
          IsOK = false;
       }
    }
    if (!IsOK) {
+      //printf("Failed to initialize the reader.\n");
       fEntryStatus = TTreeReader::kEntryBadReader;
    }
 }
@@ -98,7 +100,7 @@ TTreeReaderFast::SetEntry(Long64_t entry)
 
    if (!prevTree || fDirector->GetReadEntry() == -1)
    {
-      bool IsOK;
+      bool IsOK = true;
       // Tell readers we now have a tree
       for (auto &reader : fValues) {
          reader->CreateProxy();
@@ -106,6 +108,7 @@ TTreeReaderFast::SetEntry(Long64_t entry)
       }
       fEntryStatus = IsOK ? TTreeReader::kEntryValid : TTreeReader::kEntryBadReader;
    }
+
    return fEntryStatus;
 }
 
@@ -141,8 +144,8 @@ Int_t
 TTreeReaderFast::GetNextRange(Int_t eventNum)
 {
    Int_t remaining = INT_MAX;
-   for (auto &reader : fValues) {
-      Int_t valueRemaining = reader->GetEvents(eventNum);
+   for (auto &value : fValues) {
+      Int_t valueRemaining = value->GetEvents(eventNum);
       if (valueRemaining < remaining) {
           remaining = valueRemaining;
       }
