@@ -3094,23 +3094,23 @@ void RooWorkspace::unExport()
 /// If one of the TObject we have a referenced to is deleted, remove the
 /// reference.
 
-void RooWorkspace::RecursiveRemove(TObject *obj)
+void RooWorkspace::RecursiveRemove(TObject *removedObj)
 {
-   _dataList.RecursiveRemove(obj);
-   if (obj == _dir) _dir = nullptr;
+   _dataList.RecursiveRemove(removedObj);
+   if (removedObj == _dir) _dir = nullptr;
 
-   _allOwnedNodes.RecursiveRemove(obj); // RooArgSet
+   _allOwnedNodes.RecursiveRemove(removedObj); // RooArgSet
 
-   _dataList.RecursiveRemove(obj);
-   _embeddedDataList.RecursiveRemove(obj);
-   _views.RecursiveRemove(obj);
-   _snapshots.RecursiveRemove(obj);
-   _genObjects.RecursiveRemove(obj);
-   _studyMods.RecursiveRemove(obj);
+   _dataList.RecursiveRemove(removedObj);
+   _embeddedDataList.RecursiveRemove(removedObj);
+   _views.RecursiveRemove(removedObj);
+   _snapshots.RecursiveRemove(removedObj);
+   _genObjects.RecursiveRemove(removedObj);
+   _studyMods.RecursiveRemove(removedObj);
 
    for(auto c : _namedSets) {
-      c.second.RecursiveRemove(obj);
+      c.second.RecursiveRemove(removedObj);
    }
 
-   _eocache.RecursiveRemove(obj); // RooExpensiveObjectCache
+   _eocache.RecursiveRemove(removedObj); // RooExpensiveObjectCache
 }
