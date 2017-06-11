@@ -497,9 +497,6 @@ namespace Internal {
    /// Enables the global mutex to make ROOT thread safe/aware.
    void EnableThreadSafety()
    {
-      // 'Insure' gROOT is created before initializing the Thread safe behavior
-      // (to make sure we do not have two attempting to create it).
-      GetROOT();
       static void (*sym)() = (void(*)())Internal::GetSymInLibImt("ROOT_TThread_Initialize");
       if (sym)
          sym();
