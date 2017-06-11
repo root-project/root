@@ -54,7 +54,8 @@ class TTreeReaderValueFastBase {
       }
 
       Int_t GetEvents(Long64_t eventNum) {
-          if (fRemaining + fEventBase > eventNum) {
+          //printf("Getting events starting at %lld.  Current remaining is %d events with base %lld.\n", eventNum, fRemaining, fEventBase);
+          if (fEventBase >= 0 && (fRemaining + fEventBase > eventNum)) {
              Int_t adjust = (eventNum - fEventBase);
              if (R__unlikely(Adjust(adjust) < 0)) {
                 return -1;
@@ -66,6 +67,8 @@ class TTreeReaderValueFastBase {
              fReadStatus = TTreeReaderValueBase::kReadError;
              return -1;
           }
+          fEventBase = eventNum;
+          //printf("After getting events, the base is %lld with %d remaining.\n", fEventBase, fRemaining);
           fReadStatus = TTreeReaderValueBase::kReadSuccess;
           return fRemaining;
       }
@@ -147,6 +150,7 @@ class TTreeReaderValueFast<float> final : public ROOT::Internal::TTreeReaderValu
 
       // TODO: why isn't template specialization working here?
       float* Get() {
+         //printf("Float: Attempting to deserialize buffer %p from index %d.\n", fBuffer.GetCurrent(), fEvtIndex);
          return Deserialize(reinterpret_cast<char *>(reinterpret_cast<float*>(fBuffer.GetCurrent()) + fEvtIndex));
       }
       float* operator->() { return Get(); }
