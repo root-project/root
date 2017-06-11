@@ -850,7 +850,12 @@ void TMVA::MethodBDT::InitEventSample( void )
       if (fPairNegWeightsGlobal) PreProcessNegativeEventWeights();
    }
 
-   if (!DoRegression() && !fSkipNormalization){
+   if ( DoRegression() ) {
+      // Regression, no reweighting to do
+   } else if ( DoMulticlass() ) {
+      // Multiclass, only gradboost is supported. No reweighting.
+   } else if ( !fSkipNormalization ) {
+      //Binary classification.
       Log() << kDEBUG << "\t<InitEventSample> For classification trees, "<< Endl;
       Log() << kDEBUG << " \tthe effective number of backgrounds is scaled to match "<<Endl;
       Log() << kDEBUG << " \tthe signal. Otherwise the first boosting step would do 'just that'!"<<Endl;
