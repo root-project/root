@@ -1281,8 +1281,12 @@ void TMVA::MethodBDT::Train()
                   << "Please change boost option accordingly (GradBoost)."
                   << Endl;
          }
+
          UInt_t nClasses = DataInfo().GetNClasses();
          for (UInt_t i=0;i<nClasses;i++){
+            // Careful: If fSepType is nullptr, the tree will be considered a regression tree and
+            // use the correct output for gradboost (response rather than yesnoleaf) in checkEvent.
+            // See TMVA::MethodBDT::InitGradBoost.
             fForest.push_back( new DecisionTree( fSepType, fMinNodeSize, fNCuts, &(DataInfo()), i,
                                                  fRandomisedTrees, fUseNvars, fUsePoissonNvars, fMaxDepth,
                                                  itree*nClasses+i, fNodePurityLimit, itree*nClasses+1));
