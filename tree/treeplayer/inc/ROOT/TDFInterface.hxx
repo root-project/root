@@ -246,7 +246,7 @@ public:
    TInterface<TLoopManager> Snapshot(std::string_view treename, std::string_view filename,
                                      const ColumnNames_t &bnames)
    {
-      using TypeInd_t = typename TTraits::GenStaticSeq<sizeof...(BranchTypes)>::type;
+      using TypeInd_t = TTraits::GenStaticSeq_t<sizeof...(BranchTypes)>;
       return SnapshotImpl<BranchTypes...>(treename, filename, bnames, TypeInd_t());
    }
 
