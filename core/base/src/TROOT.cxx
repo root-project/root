@@ -1166,7 +1166,7 @@ void TROOT::EndOfProcessCleanups()
    fFunctions->Delete();
    fGeometries->Delete();
    fBrowsers->Delete();
-   fCanvases->Delete();
+   fCanvases->Delete("slow");
    fColors->Delete();
    fStyles->Delete();
 }
