@@ -222,7 +222,7 @@ public:
 
 template <typename Helper, typename PrevDataFrame, typename BranchTypes_t = typename Helper::BranchTypes_t>
 class TAction final : public TActionBase {
-   using TypeInd_t = typename GenStaticSeq<BranchTypes_t::list_size>::type;
+   using TypeInd_t = GenStaticSeq_t<BranchTypes_t::list_size>;
 
    Helper fHelper;
    const ColumnNames_t fBranches;
@@ -297,7 +297,7 @@ public:
 template <typename F, typename PrevData>
 class TCustomColumn final : public TCustomColumnBase {
    using BranchTypes_t = typename CallableTraits<F>::arg_types;
-   using TypeInd_t = typename GenStaticSeq<BranchTypes_t::list_size>::type;
+   using TypeInd_t = GenStaticSeq_t<BranchTypes_t::list_size>;
    using ret_type = typename CallableTraits<F>::ret_type;
 
    F fExpression;
@@ -403,7 +403,7 @@ public:
 template <typename FilterF, typename PrevDataFrame>
 class TFilter final : public TFilterBase {
    using BranchTypes_t = typename CallableTraits<FilterF>::arg_types;
-   using TypeInd_t = typename GenStaticSeq<BranchTypes_t::list_size>::type;
+   using TypeInd_t = GenStaticSeq_t<BranchTypes_t::list_size>;
 
    FilterF fFilter;
    const ColumnNames_t fBranches;
