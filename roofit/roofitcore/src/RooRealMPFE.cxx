@@ -438,7 +438,11 @@ void RooRealMPFE::serverLoop() {
     if (RooTrace::timing_flag == 9) {
       timer.start();
     }
+    auto time = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+    std::cout << "DEBUG: serverloop pipe message reception, before: " << time;
     *_pipe >> msg;
+    time = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+    std::cout << ", after: " << time << std::endl;
     if (Terminate == msg) {
       if (_verboseServer)
         cout << "RooRealMPFE::serverLoop(" << GetName()
