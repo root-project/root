@@ -924,7 +924,13 @@ Double_t RooRealIntegral::getValV(const RooArgSet* nset) const
 
 Double_t RooRealIntegral::evaluate() const 
 {
-  RooWallTimer timer;
+  std::unique_ptr<RooWallTimer> timer;
+
+  if (_timeNumInt) {
+    std::unique_ptr<RooWallTimer> timer_dummy(new RooWallTimer);
+    timer = std::move(timer_dummy);
+    timer->start();
+  }
 
   Double_t retVal(0) ;
   switch (_intOperMode) {    
@@ -1031,8 +1037,8 @@ Double_t RooRealIntegral::evaluate() const
   }
 
   if (_timeNumInt) {
-    timer.stop();
-    timer.store_timing_in_RooTrace(GetName());
+    timer->stop();
+    timer->store_timing_in_RooTrace(GetName());
   }
 //  } else {
 //    std::cout << "did not time integral " << GetName() << " at " << this << " with _function.absArg() " << _function.absArg() << " which is a " << ClassName()
