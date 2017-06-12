@@ -195,8 +195,8 @@ public:
    }
 
    template <typename X0, typename X1, typename X2,
-             typename std::enable_if<
-                IsContainer<X0>::value && IsContainer<X1>::value && IsContainer<X2>::value, int>::type = 0>
+             typename std::enable_if<IsContainer<X0>::value && IsContainer<X1>::value && IsContainer<X2>::value,
+                                     int>::type = 0>
    void Exec(unsigned int slot, const X0 &x0s, const X1 &x1s, const X2 &x2s)
    {
       auto thisSlotH = fTo->GetAtSlotUnchecked(slot);
@@ -212,8 +212,8 @@ public:
       }
    }
    template <typename X0, typename X1, typename X2, typename X3,
-             typename std::enable_if<IsContainer<X0>::value && IsContainer<X1>::value &&
-                                        IsContainer<X2>::value && IsContainer<X3>::value,
+             typename std::enable_if<IsContainer<X0>::value && IsContainer<X1>::value && IsContainer<X2>::value &&
+                                        IsContainer<X3>::value,
                                      int>::type = 0>
    void Exec(unsigned int slot, const X0 &x0s, const X1 &x1s, const X2 &x2s, const X3 &x3s)
    {

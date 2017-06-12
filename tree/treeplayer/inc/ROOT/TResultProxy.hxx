@@ -111,10 +111,7 @@ public:
 
    /// Get a const reference to the encapsulated object.
    /// Triggers event loop and execution of all actions booked in the associated TLoopManager.
-   const T &GetValue()
-   {
-      return *Get();
-   }
+   const T &GetValue() { return *Get(); }
 
    /// Get a pointer to the encapsulated object.
    /// Triggers event loop and execution of all actions booked in the associated TLoopManager.

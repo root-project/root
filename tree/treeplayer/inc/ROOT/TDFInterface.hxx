@@ -243,8 +243,7 @@ public:
    ///
    /// This function returns a `TDataFrame` built with the output tree as a source.
    template <typename... BranchTypes>
-   TInterface<TLoopManager> Snapshot(std::string_view treename, std::string_view filename,
-                                     const ColumnNames_t &bnames)
+   TInterface<TLoopManager> Snapshot(std::string_view treename, std::string_view filename, const ColumnNames_t &bnames)
    {
       using TypeInd_t = TTraits::GenStaticSeq_t<sizeof...(BranchTypes)>;
       return SnapshotImpl<BranchTypes...>(treename, filename, bnames, TypeInd_t());
@@ -258,8 +257,7 @@ public:
    ///
    /// This function returns a `TDataFrame` built with the output tree as a source.
    /// The types of the branches are automatically inferred and do not need to be specified.
-   TInterface<TLoopManager> Snapshot(std::string_view treename, std::string_view filename,
-                                     const ColumnNames_t &bnames)
+   TInterface<TLoopManager> Snapshot(std::string_view treename, std::string_view filename, const ColumnNames_t &bnames)
    {
       auto df = GetDataFrameChecked();
       auto tree = df->GetTree();
@@ -300,7 +298,7 @@ public:
       const auto isEmptyRegex = 0 == theRegexSize;
       // This is to avoid cases where branches called b1, b2, b3 are all matched by expression "b"
       if (theRegexSize > 0 && theRegex[0] != '^') theRegex = "^" + theRegex;
-      if (theRegexSize > 0 && theRegex[theRegexSize-1] != '$') theRegex = theRegex + "$";
+      if (theRegexSize > 0 && theRegex[theRegexSize - 1] != '$') theRegex = theRegex + "$";
 
       ColumnNames_t selectedColumns;
       selectedColumns.reserve(32);
@@ -690,8 +688,7 @@ public:
    /// booked but not executed. See TResultProxy documentation.
    /// The user gives up ownership of the model profile object.
    template <typename V1 = TDFDetail::TInferType, typename V2 = TDFDetail::TInferType>
-   TResultProxy<::TProfile> Profile1D(::TProfile &&model, std::string_view v1Name = "",
-                                      std::string_view v2Name = "")
+   TResultProxy<::TProfile> Profile1D(::TProfile &&model, std::string_view v1Name = "", std::string_view v2Name = "")
    {
       auto h = std::make_shared<::TProfile>(std::move(model));
       if (!TDFInternal::HistoUtils<::TProfile>::HasAxisLimits(*h)) {
@@ -910,7 +907,7 @@ private:
 
    /// Returns the default branches if needed, takes care of the error handling.
    template <typename T1, typename T2 = void, typename T3 = void, typename T4 = void>
-   ColumnNames_t GetBranchNames(const std::vector<std::string_view>& bl, std::string_view actionNameForErr)
+   ColumnNames_t GetBranchNames(const std::vector<std::string_view> &bl, std::string_view actionNameForErr)
    {
       constexpr auto isT2Void = std::is_same<T2, void>::value;
       constexpr auto isT3Void = std::is_same<T3, void>::value;
