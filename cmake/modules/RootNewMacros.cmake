@@ -368,6 +368,13 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     set(excludepathsargs ${excludepathsargs} -excludePath ${excludepath})
   endforeach()
 
+  set(genverbosity "")
+  # Set -v2 when generating modules in cxxmodules mode to get warnings if the
+  # modulemap doesn't fit to the structure of our dictionaries.
+  if (cxxmodules)
+      set(genverbosity "-v2")
+  endif(cxxmodules)
+
   #---build the implicit dependencies arguments
   foreach(_dep ${_linkdef} ${_list_of_header_dependencies})
     list(APPEND _implicitdeps CXX ${_dep})
@@ -375,7 +382,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
 
   #---call rootcint------------------------------------------
   add_custom_command(OUTPUT ${dictionary}.cxx ${pcm_name} ${rootmap_name}
-                     COMMAND ${command} -f  ${dictionary}.cxx ${newargs} ${excludepathsargs} ${rootmapargs}
+                     COMMAND ${command} ${genverbosity} -f  ${dictionary}.cxx ${newargs} ${excludepathsargs} ${rootmapargs}
                                         ${ARG_OPTIONS} ${definitions} ${includedirs} ${headerfiles} ${_linkdef}
                      IMPLICIT_DEPENDS ${_implicitdeps}
                      DEPENDS ${_list_of_header_dependencies} ${_linkdef} ${ROOTCINTDEP})
