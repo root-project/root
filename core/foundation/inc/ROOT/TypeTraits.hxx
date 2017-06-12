@@ -1,5 +1,5 @@
 // @(#)root/foundation:
-// Author: Axel Naumann, 2017-06-02
+// Author: Axel Naumann, Enrico Guiraud, June 2017
 
 /*************************************************************************
  * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
