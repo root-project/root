@@ -817,7 +817,6 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   Int_t numcpu   = pc.getInt("numcpu") ;
   RooFit::MPSplit interl = (RooFit::MPSplit) pc.getInt("interleave") ;
   Bool_t cpuAffinity = static_cast<Bool_t>(pc.getInt("cpuAffinity"));
-  std::cout << "DEBUG: cpu affinity set to " << cpuAffinity << " in RooAbsPdf::createNLL" << std::endl;
 
   Int_t splitr   = pc.getInt("splitRange") ;
   Bool_t verbose = pc.getInt("verbose") ;
