@@ -16,10 +16,6 @@ module "libc" {
     export *
     header "fenv.h"
   }
-  module "float.h" {
-    export *
-    header "float.h"
-  }
   module "inttypes.h" {
     export *
     header "inttypes.h"
