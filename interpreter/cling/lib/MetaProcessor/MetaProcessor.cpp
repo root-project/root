@@ -17,11 +17,15 @@
 #include "cling/Interpreter/Value.h"
 #include "cling/Utils/Output.h"
 
+#include "clang/AST/Expr.h"
+#include "clang/AST/ExprCXX.h"
 #include "clang/Basic/FileManager.h"
 #include "clang/Basic/TargetInfo.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Lex/Preprocessor.h"
+#include "clang/Sema/Sema.h"
 
+#include "llvm/ADT/ScopeExit.h"
 #include "llvm/Support/Path.h"
 
 #include <fcntl.h>
@@ -40,6 +44,7 @@
 #endif
 
 using namespace clang;
+using namespace llvm;
 
 namespace cling {
 
@@ -280,6 +285,244 @@ namespace cling {
   MetaProcessor::MaybeRedirectOutputRAII::~MaybeRedirectOutputRAII() {
     if (m_MetaProcessor.m_RedirectOutput)
       m_MetaProcessor.m_RedirectOutput->resetStdOut();
+  }
+
+  using positionalArgs_t = SmallVector<const Expr*, 10>;
+  using positionalArgsImp_t = SmallVectorImpl<const Expr*>;
+  using argnameToPositionMap_t = DenseMap<StringRef, positionalArgs_t::size_type>;
+
+  static bool fillPositional(positionalArgsImp_t&,
+                             const argnameToPositionMap_t&,
+                             const Stmt*);
+  static bool fillPositional(positionalArgsImp_t&,
+                             const argnameToPositionMap_t&,
+                             const CXXOperatorCallExpr*);
+  static bool fillPositional(positionalArgsImp_t&,
+                             const argnameToPositionMap_t&,
+                             const BinaryOperator*);
+
+  static bool fillPositional(positionalArgsImp_t& positionalArgs,
+                             const argnameToPositionMap_t& argnameToPosition,
+                             const Stmt* stmt) {
+    if (dyn_cast<ExprWithCleanups>(stmt))
+      return fillPositional(positionalArgs,
+                            argnameToPosition,
+                            dyn_cast<ExprWithCleanups>(stmt)->getSubExpr());
+    else if (dyn_cast<CXXOperatorCallExpr>(stmt))
+      return fillPositional(positionalArgs,
+                            argnameToPosition,
+                            dyn_cast<CXXOperatorCallExpr>(stmt));
+    else if (dyn_cast<BinaryOperator>(stmt))
+      return fillPositional(positionalArgs,
+                            argnameToPosition,
+                            dyn_cast<BinaryOperator>(stmt));
+    else
+      return false;
+  }
+
+  static bool fillPositional(positionalArgsImp_t& positionalArgs,
+                             const argnameToPositionMap_t& argnameToPosition,
+                             const CXXOperatorCallExpr* opcal) {
+    if (opcal->getOperator() != OO_Equal)
+      return false;
+
+    if (opcal->getNumArgs() != 2) // paranoid check
+      return false;
+
+    auto LHS = dyn_cast<DeclRefExpr>(opcal->getArg(0));
+    auto RHS = opcal->getArg(1);
+
+    if (!LHS)
+      return false;
+
+    auto decl = LHS->getDecl();
+    if (!decl)
+      return false;
+    if (decl->getKind() != Decl::ParmVar)
+      return false;
+
+    positionalArgs[argnameToPosition.find(decl->getName())->second] = RHS;
+
+    return true;
+  }
+
+  static bool fillPositional(positionalArgsImp_t& positionalArgs,
+                             const argnameToPositionMap_t& argnameToPosition,
+                             const BinaryOperator* binop) {
+    switch (binop->getOpcode()) {
+    case BO_Comma: {
+      auto LHS = binop->getLHS();
+      auto RHS = binop->getRHS();
+
+      if (!LHS || !RHS)
+        return false;
+
+      return fillPositional(positionalArgs, argnameToPosition, LHS)
+          && fillPositional(positionalArgs, argnameToPosition, RHS);
+    }
+    case BO_Assign: {
+      auto LHS = dyn_cast<DeclRefExpr>(binop->getLHS());
+      auto RHS = binop->getRHS();
+
+      if (!LHS || !RHS)
+        return false;
+
+      auto decl = LHS->getDecl();
+      if (!decl)
+        return false;
+      if (decl->getKind() != Decl::ParmVar)
+        return false;
+
+      positionalArgs[argnameToPosition.find(decl->getName())->second] = RHS;
+
+      return true;
+    }
+    default:
+      return false;
+    }
+  }
+
+  std::string MetaProcessor::positionalizeArgs(cling::Interpreter* Interpreter,
+                                               StringRef FuncName,
+                                               StringRef args) {
+    const FunctionDecl* fdecl = nullptr;
+
+    auto& Sema = Interpreter->getSema();
+    auto& PP = Sema.getPreprocessor();
+    auto& ASTC = Sema.getASTContext();
+    TranslationUnitDecl* TUD = ASTC.getTranslationUnitDecl();
+    IdentifierInfo* II = PP.getIdentifierInfo(FuncName);
+    auto lookup_result = TUD->lookup(II);
+    for (auto ND : lookup_result) {
+      if (auto FD = dyn_cast<FunctionDecl>(ND)) {
+        if (!FD->param_empty()) {
+          if (fdecl)
+            return "Too many functions";
+          else
+            fdecl = FD;
+        }
+      }
+    }
+
+    return positionalizeArgs(Interpreter, fdecl, args);
+  }
+
+  std::string MetaProcessor::positionalizeArgs(cling::Interpreter* Interpreter,
+                                               const Transaction* T,
+                                               StringRef FuncName,
+                                               StringRef args) {
+    const FunctionDecl* fdecl = nullptr;
+
+    for (auto I = T->decls_begin(), E = T->decls_end(); I != E; ++I) {
+      for (auto DI : I->m_DGR) {
+        if (FunctionDecl* FD = dyn_cast<FunctionDecl>(DI)) {
+          if (FuncName.equals(FD->getName()) && !FD->param_empty()) {
+            if (fdecl)
+              return "Too many functions";
+            else
+              fdecl = FD;
+          }
+        }
+      }
+    }
+
+    return positionalizeArgs(Interpreter, fdecl, args);
+  }
+
+  std::string MetaProcessor::positionalizeArgs(cling::Interpreter* Interpreter,
+                                               const FunctionDecl* fdecl,
+                                               StringRef args) {
+    if (!fdecl)
+      return "()";
+
+    bool empty = true;
+    for (auto c : args) {
+      if (!std::isspace(c)) {
+        empty = false;
+        break;
+      }
+    }
+    if (empty)
+      return "()";
+
+    Sema& Sema = Interpreter->getSema();
+    SourceManager& SM = Sema.SourceMgr;
+
+    positionalArgs_t positionalArgs;
+    argnameToPositionMap_t argnameToPosition(10);
+
+    std::string fn;
+    raw_string_ostream fn_ostr(fn);
+    std::string unique_name;
+    Interpreter->createUniqueName(unique_name);
+
+    fn_ostr << "void " << unique_name << '(';
+    for (auto i = fdecl->param_begin(), pe = fdecl->param_end(); i != pe; ++i) {
+      ParmVarDecl* decl = *i;
+
+      positionalArgs.push_back(decl->getDefaultArg());
+      argnameToPosition.insert({decl->getName(), positionalArgs.size() - 1});
+
+      SourceLocation b(decl->getLocStart());
+      SourceLocation e(Sema.getLocForEndOfToken(decl->getLocEnd(), 0));
+      StringRef decl_src(SM.getCharacterData(b),
+                         SM.getCharacterData(e) - SM.getCharacterData(b));
+      fn_ostr << decl_src << ',';
+    }
+    fn_ostr.flush();
+    fn.back() = ')';
+    fn_ostr << " {\n\t" << args << ";\n}";
+    fn_ostr.flush();
+
+    cling::Transaction* positionalT = nullptr;
+    Interpreter->declare(fn, &positionalT);
+
+    const char* malformed = "Named arguments sequence is malformed";
+
+    if (!positionalT)
+      return malformed;
+
+    auto unloadTransactionOnReturn = make_scope_exit([&] {
+      Interpreter->unload(*positionalT);
+    });
+
+    FunctionDecl* fnDecl = nullptr;
+    for (auto I = positionalT->decls_begin(), E = positionalT->decls_end();
+         I != E && !fnDecl; ++I)
+      for (auto DI : I->m_DGR)
+        if ((fnDecl = dyn_cast<FunctionDecl>(DI)) &&
+            !fnDecl->getName().compare(unique_name) || (fnDecl = nullptr))
+          break;
+
+    if (!fnDecl)
+      return malformed;
+    auto fnBody = dyn_cast<CompoundStmt>(fnDecl->getBody());
+    if (!fnBody)
+      return malformed;
+    if (std::distance(fnBody->body_begin(), fnBody->body_end()) != 1)
+      return malformed;
+
+    if (!fillPositional(positionalArgs, argnameToPosition, *fnBody->body_begin()))
+      return malformed;
+    for (auto expr : positionalArgs)
+      if (!expr)
+        return "Some positional arguments left uninitialized";
+
+    std::string ret;
+    raw_string_ostream ret_ostr(ret);
+    ret_ostr << '(';
+    for (auto expr : positionalArgs) {
+      SourceLocation b(expr->getLocStart());
+      SourceLocation e(Sema.getLocForEndOfToken(expr->getLocEnd(), 0));
+      StringRef expr_src(SM.getCharacterData(b),
+                         SM.getCharacterData(e) - SM.getCharacterData(b));
+
+      ret_ostr << expr_src.substr(expr_src[0] == '=') << ',';
+    }
+    ret_ostr.flush();
+    ret.back() = ')';
+
+    return ret;
   }
 
   MetaProcessor::MetaProcessor(Interpreter& interp, raw_ostream& outs)

@@ -2000,8 +2000,24 @@ Long_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
                   fname.Remove(ext);
                }
                const char *function = gSystem->BaseName(fname);
-               mod_line = function + arguments + io;
-               indent = HandleInterpreterException(fMetaProcessor, mod_line, compRes, &result);
+
+               bool named = arguments[1] == '#' &&
+                            arguments[arguments.Length() - 2] == '#';
+
+               const TString& actual_args = named
+                   ? cling::MetaProcessor::positionalizeArgs(
+                       fInterpreter,
+                       function,
+                       llvm::StringRef(arguments.Data() + 2, arguments.Length() - 4))
+                   : arguments;
+
+               if (actual_args[0] != '(') {
+                  Error("ProcessLine", "%s", actual_args.Data());
+                  compRes = cling::Interpreter::kFailure;
+               } else {
+                  mod_line = function + actual_args + io;
+                  indent = HandleInterpreterException(fMetaProcessor, mod_line, compRes, &result);
+               }
             }
          }
       } else {
