@@ -53,8 +53,7 @@ public:
    /// methods available.
    template <typename FILENAMESCOLL = std::vector<std::string>,
              typename std::enable_if<TTraits::IsContainer<FILENAMESCOLL>::value, int>::type = 0>
-   TDataFrame(std::string_view treeName, const FILENAMESCOLL &filenamescoll,
-              const ColumnNames_t &defaultBranches = {});
+   TDataFrame(std::string_view treeName, const FILENAMESCOLL &filenamescoll, const ColumnNames_t &defaultBranches = {});
    TDataFrame(std::string_view treeName, ::TDirectory *dirPtr, const ColumnNames_t &defaultBranches = {});
    TDataFrame(TTree &tree, const ColumnNames_t &defaultBranches = {});
    TDataFrame(Long64_t numEntries);
