@@ -89,7 +89,7 @@ Different options are explained in the function comments
 TVirtualFFT *TVirtualFFT::fgFFT    = 0;
 TString      TVirtualFFT::fgDefault   = "";
 
-ClassImp(TVirtualFFT)
+ClassImp(TVirtualFFT);
 
 ////////////////////////////////////////////////////////////////////////////////
 ///destructor
@@ -183,7 +183,7 @@ TVirtualFFT* TVirtualFFT::FFT(Int_t ndim, Int_t *n, Option_t *option)
    TVirtualFFT *fft = 0;
    if (opt.Contains("K") || !fgFFT) {
 
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
 
       TPluginHandler *h;
       TString pluginname;
@@ -223,7 +223,7 @@ TVirtualFFT* TVirtualFFT::FFT(Int_t ndim, Int_t *n, Option_t *option)
       }
    } else {
 
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
 
       //if the global transform already exists and just needs to be reinitialised
       //with different parameters
@@ -309,7 +309,7 @@ TVirtualFFT* TVirtualFFT::SineCosine(Int_t ndim, Int_t *n, Int_t *r2rkind, Optio
    }
    TVirtualFFT *fft = 0;
 
-   R__LOCKGUARD2(gROOTMutex);
+   R__LOCKGUARD(gROOTMutex);
 
    if (!fgFFT || opt.Contains("K")) {
       TPluginHandler *h;

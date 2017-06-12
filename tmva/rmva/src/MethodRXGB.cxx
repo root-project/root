@@ -41,7 +41,7 @@ using namespace TMVA;
 
 REGISTER_METHOD(RXGB)
 
-ClassImp(MethodRXGB)
+ClassImp(MethodRXGB);
 
 //creating an Instance
 Bool_t MethodRXGB::IsModuleLoaded = ROOT::R::TRInterface::Instance().Require("xgboost");

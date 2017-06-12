@@ -18,7 +18,8 @@
 
 #include <cmath>
 #include <limits>
-#include <vector>
+#include "Math_vectypes.hxx"
+
 
 // for defining unused variables in the interfaces
 //  and have still them in the documentation
@@ -50,6 +51,12 @@ namespace ROOT {
    /// safe evaluation of log(x) with a protections against negative or zero argument to the log
    /// smooth linear extrapolation below function values smaller than  epsilon
    /// (better than a simple cut-off)
+
+   template<class T>
+   inline T EvalLog(T x) {
+      return std::log(x);
+   }
+
    inline double EvalLog(double x)
    {
    // evaluate the log
@@ -66,35 +73,64 @@ namespace ROOT {
 
    } // end namespace Util
 
+   ///\class KahanSum
+   /// The Kahan compensate summation algorithm significantly reduces the numerical error in the total obtained
+   /// by adding a sequence of finite precision floating point numbers.
+   /// This is done by keeping a separate running compensation (a variable to accumulate small errors).\n
+   ///
+   /// The intial values of the result and the correction are set to the default value of the type it hass been
+   /// instantiated with.\n
+   /// ####Examples:
+   /// ~~~{.cpp}
+   /// std::vector<double> numbers = {0.01, 0.001, 0.0001, 0.000001, 0.00000000001};
+   /// ROOT::Math::KahanSum<double> k;
+   /// k.Add(numbers);
+   /// ~~~
+   /// ~~~{.cpp}
+   /// auto result = ROOT::Math::KahanSum<double>::Accumulate(numbers);
+   /// ~~~
    template <class T>
    class KahanSum {
    public:
+      /// Constructor accepting a initial value for the summation as parameter
+      KahanSum(const T &initialValue = T{}) : fSum(initialValue) {}
+
+      /// Single element accumulated addition.
       void Add(const T &x)
       {
-         auto y = x - correction;
-         auto t = sum + y;
-         correction = (t - sum) - y;
-         sum = t;
+         auto y = x - fCorrection;
+         auto t = fSum + y;
+         fCorrection = (t - fSum) - y;
+         fSum = t;
       }
 
-      void Add(const std::vector<T> &elements)
+      /// Iterate over a datastructure referenced by a pointer and accumulate on the exising result
+      template <class Iterator>
+      void Add(const Iterator begin, const Iterator end)
       {
-         for (auto e : elements) this->Add(e);
+         static_assert(!std::is_same<decltype(*begin), T>::value,
+                       "Iterator points to an element of the different type than the KahanSum class");
+         for (auto it = begin; it != end; it++) this->Add(*it);
       }
 
-      static T Accumulate(const std::vector<T> &elements)
+      /// Iterate over a datastructure referenced by a pointer and return the result of its accumulation.
+      /// Can take an initial value as third parameter.
+      template <class Iterator>
+      static T Accumulate(const Iterator begin, const Iterator end, const T &initialValue = T{})
       {
-
-         KahanSum init;
-         init.Add(elements);
-         return init.sum;
+         static_assert(!std::is_same<decltype(*begin), T>::value,
+                       "Iterator points to an element of the different type than the KahanSum class");
+         KahanSum init(initialValue);
+         init.Add(begin, end);
+         return init.fSum;
       }
 
-      T Result() { return sum; }
+      /// Return the result
+      T Result() { return fSum; }
 
    private:
-      T sum{};
-      T correction{};
+      T fSum{};
+      T fCorrection{};
    };
 
    } // end namespace Math

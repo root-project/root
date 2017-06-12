@@ -57,7 +57,7 @@ void TMemberInspector::TParentBuf::Remove(Ssiz_t startingAt)
    fBuf[startingAt] = 0;
 }
 
-ClassImp(TMemberInspector)
+ClassImp(TMemberInspector);
 
 TMemberInspector::TMemberInspector():
    fObjectPointerState(kUnset)

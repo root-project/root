@@ -63,6 +63,8 @@
 #pragma link C++ class TH2F-;
 #pragma link C++ class TH2Poly+;
 #pragma link C++ class TH2PolyBin+;
+#pragma link C++ class TProfile2Poly+;
+#pragma link C++ class TProfile2PolyBin+;
 #pragma link C++ class TH2S-;
 #pragma link C++ class TH2I+;
 #pragma link C++ class TH3-;
@@ -352,6 +354,7 @@
 #pragma link C++ class ROOT::Experimental::TAxisEquidistant+;
 #pragma link C++ class ROOT::Experimental::TAxisIrregular+;
 #pragma link C++ class ROOT::Experimental::TAxisBase+;
+#pragma link C++ class ROOT::Experimental::TOrdinarySnapshot<TH1>+;
 #endif
 
 #endif

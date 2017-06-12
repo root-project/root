@@ -371,14 +371,14 @@ namespace Internal {
 
    static GetROOTFun_t gGetROOT = &GetROOT1;
 
-   static Func_t GetSymInLibThread(const char *funcname)
+   static Func_t GetSymInLibImt(const char *funcname)
    {
-      const static bool loadSuccess = dlsym(RTLD_DEFAULT, "usedToIdentifyRootClingByDlSym")? false : 0 <= gSystem->Load("libThread");
+      const static bool loadSuccess = dlsym(RTLD_DEFAULT, "usedToIdentifyRootClingByDlSym")? false : 0 <= gSystem->Load("libImt");
       if (loadSuccess) {
          if (auto sym = gSystem->DynFindSymbol(nullptr, funcname)) {
             return sym;
          } else {
-            Error("GetSymInLibThread", "Cannot get symbol %s.", funcname);
+            Error("GetSymInLibImt", "Cannot get symbol %s.", funcname);
          }
       }
       return nullptr;
@@ -395,7 +395,7 @@ namespace Internal {
 #ifdef R__USE_IMT
       if (!IsImplicitMTEnabled())
          EnableImplicitMT();
-      static void (*sym)() = (void(*)())Internal::GetSymInLibThread("ROOT_TImplicitMT_EnableParBranchProcessing");
+      static void (*sym)() = (void(*)())Internal::GetSymInLibImt("ROOT_TImplicitMT_EnableParBranchProcessing");
       if (sym)
          sym();
 #else
@@ -409,7 +409,7 @@ namespace Internal {
    void DisableParBranchProcessing()
    {
 #ifdef R__USE_IMT
-      static void (*sym)() = (void(*)())Internal::GetSymInLibThread("ROOT_TImplicitMT_DisableParBranchProcessing");
+      static void (*sym)() = (void(*)())Internal::GetSymInLibImt("ROOT_TImplicitMT_DisableParBranchProcessing");
       if (sym)
          sym();
 #else
@@ -422,7 +422,7 @@ namespace Internal {
    Bool_t IsParBranchProcessingEnabled()
    {
 #ifdef R__USE_IMT
-      static Bool_t (*sym)() = (Bool_t(*)())Internal::GetSymInLibThread("ROOT_TImplicitMT_IsParBranchProcessingEnabled");
+      static Bool_t (*sym)() = (Bool_t(*)())Internal::GetSymInLibImt("ROOT_TImplicitMT_IsParBranchProcessingEnabled");
       if (sym)
          return sym();
       else
@@ -444,7 +444,7 @@ namespace Internal {
 #ifdef R__USE_IMT
       if (!IsImplicitMTEnabled())
          EnableImplicitMT();
-      static void (*sym)() = (void(*)())Internal::GetSymInLibThread("ROOT_TImplicitMT_EnableParTreeProcessing");
+      static void (*sym)() = (void(*)())Internal::GetSymInLibImt("ROOT_TImplicitMT_EnableParTreeProcessing");
       if (sym)
          sym();
 #else
@@ -458,7 +458,7 @@ namespace Internal {
    void DisableParTreeProcessing()
    {
 #ifdef R__USE_IMT
-      static void (*sym)() = (void(*)())Internal::GetSymInLibThread("ROOT_TImplicitMT_DisableParTreeProcessing");
+      static void (*sym)() = (void(*)())Internal::GetSymInLibImt("ROOT_TImplicitMT_DisableParTreeProcessing");
       if (sym)
          sym();
 #else
@@ -471,7 +471,7 @@ namespace Internal {
    Bool_t IsParTreeProcessingEnabled()
    {
 #ifdef R__USE_IMT
-      static Bool_t (*sym)() = (Bool_t(*)())Internal::GetSymInLibThread("ROOT_TImplicitMT_IsParTreeProcessingEnabled");
+      static Bool_t (*sym)() = (Bool_t(*)())Internal::GetSymInLibImt("ROOT_TImplicitMT_IsParTreeProcessingEnabled");
       if (sym)
          return sym();
       else
@@ -497,7 +497,10 @@ namespace Internal {
    /// Enables the global mutex to make ROOT thread safe/aware.
    void EnableThreadSafety()
    {
-      static void (*sym)() = (void(*)())Internal::GetSymInLibThread("ROOT_TThread_Initialize");
+      // 'Insure' gROOT is created before initializing the Thread safe behavior
+      // (to make sure we do not have two attempting to create it).
+      GetROOT();
+      static void (*sym)() = (void(*)())Internal::GetSymInLibImt("ROOT_TThread_Initialize");
       if (sym)
          sym();
    }
@@ -526,7 +529,7 @@ namespace Internal {
    {
 #ifdef R__USE_IMT
       EnableThreadSafety();
-      static void (*sym)(UInt_t) = (void(*)(UInt_t))Internal::GetSymInLibThread("ROOT_TImplicitMT_EnableImplicitMT");
+      static void (*sym)(UInt_t) = (void(*)(UInt_t))Internal::GetSymInLibImt("ROOT_TImplicitMT_EnableImplicitMT");
       if (sym)
          sym(numthreads);
 #else
@@ -539,7 +542,7 @@ namespace Internal {
    void DisableImplicitMT()
    {
 #ifdef R__USE_IMT
-      static void (*sym)() = (void(*)())Internal::GetSymInLibThread("ROOT_TImplicitMT_DisableImplicitMT");
+      static void (*sym)() = (void(*)())Internal::GetSymInLibImt("ROOT_TImplicitMT_DisableImplicitMT");
       if (sym)
          sym();
 #else
@@ -552,7 +555,7 @@ namespace Internal {
    Bool_t IsImplicitMTEnabled()
    {
 #ifdef R__USE_IMT
-      static Bool_t (*sym)() = (Bool_t(*)())Internal::GetSymInLibThread("ROOT_TImplicitMT_IsImplicitMTEnabled");
+      static Bool_t (*sym)() = (Bool_t(*)())Internal::GetSymInLibImt("ROOT_TImplicitMT_IsImplicitMTEnabled");
       if (sym)
          return sym();
       else
@@ -567,7 +570,7 @@ namespace Internal {
    UInt_t GetImplicitMTPoolSize()
    {
 #ifdef R__USE_IMT
-      static UInt_t (*sym)() = (UInt_t(*)())Internal::GetSymInLibThread("ROOT_TImplicitMT_GetImplicitMTPoolSize");
+      static UInt_t (*sym)() = (UInt_t(*)())Internal::GetSymInLibImt("ROOT_TImplicitMT_GetImplicitMTPoolSize");
       if (sym)
          return sym();
       else
@@ -588,7 +591,7 @@ TROOT *ROOT::Internal::gROOTLocal = ROOT::GetROOT();
 Int_t gDebug;
 
 
-ClassImp(TROOT)
+ClassImp(TROOT);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default ctor.
@@ -644,7 +647,7 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
       return;
    }
 
-   R__LOCKGUARD2(gROOTMutex);
+   R__LOCKGUARD(gROOTMutex);
 
    ROOT::Internal::gROOTLocal = this;
    gDirectory = 0;
@@ -780,6 +783,8 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fCleanups->Add(fTasks);    fTasks->SetBit(kMustCleanup);
    fCleanups->Add(fFiles);    fFiles->SetBit(kMustCleanup);
    fCleanups->Add(fClosedObjects); fClosedObjects->SetBit(kMustCleanup);
+   // And add TROOT's TDirectory personality
+   fCleanups->Add(fList);
 
    fExecutingMacro= kFALSE;
    fForceStyle    = kFALSE;
@@ -991,6 +996,18 @@ void TROOT::AddClassGenerator(TClassGenerator *generator)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Append object to this directory.
+///
+/// If replace is true:
+///   remove any existing objects with the same same (if the name is not "")
+
+void TROOT::Append(TObject *obj, Bool_t replace /* = kFALSE */)
+{
+   R__LOCKGUARD(gROOTMutex);
+   TDirectory::Append(obj,replace);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Add browsable objects to TBrowser.
 
 void TROOT::Browse(TBrowser *b)
@@ -1064,7 +1081,7 @@ void TROOT::CloseFiles()
       R__ListSlowClose(static_cast<TList*>(fFiles));
    }
    // and Close TROOT itself.
-   Close();
+   Close("slow");
    // Now sockets.
    if (fSockets && fSockets->First()) {
       if (0==fCleanups->FindObject(fSockets) ) {
@@ -1193,13 +1210,16 @@ TObject *TROOT::FindObject(const char *name) const
    temp   = fFiles->FindObject(name);       if (temp) return temp;
    temp   = fMappedFiles->FindObject(name); if (temp) return temp;
    {
-      R__LOCKGUARD2(gROOTMutex);
-      temp   = fFunctions->FindObject(name);   if (temp) return temp;
+      R__LOCKGUARD(gROOTMutex);
+      temp   = fFunctions->FindObject(name);if (temp) return temp;
    }
    temp   = fGeometries->FindObject(name);  if (temp) return temp;
    temp   = fCanvases->FindObject(name);    if (temp) return temp;
    temp   = fStyles->FindObject(name);      if (temp) return temp;
-   temp   = fSpecials->FindObject(name);    if (temp) return temp;
+   {
+      R__LOCKGUARD(gROOTMutex);
+      temp = fSpecials->FindObject(name);   if (temp) return temp;
+   }
    TIter next(fGeometries);
    TObject *obj;
    while ((obj=next())) {
@@ -1249,7 +1269,7 @@ TObject *TROOT::FindSpecialObject(const char *name, void *&where)
       where = fMappedFiles;
    }
    if (!temp) {
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       temp  = fFunctions->FindObject(name);
       where = fFunctions;
    }
@@ -1462,14 +1482,14 @@ TObject *TROOT::GetFunction(const char *name) const
    }
 
    {
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       TObject *f1 = fFunctions->FindObject(name);
       if (f1) return f1;
    }
 
    gROOT->ProcessLine("TF1::InitStandardFunctions();");
 
-   R__LOCKGUARD2(gROOTMutex);
+   R__LOCKGUARD(gROOTMutex);
    return fFunctions->FindObject(name);
 }
 
@@ -1546,13 +1566,13 @@ TFunction *TROOT::GetGlobalFunction(const char *function, const char *params,
                                     Bool_t load)
 {
    if (!params) {
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       return (TFunction *)GetListOfGlobalFunctions(load)->FindObject(function);
    } else {
       if (!fInterpreter)
          Fatal("GetGlobalFunction", "fInterpreter not initialized");
 
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       TInterpreter::DeclId_t decl = gInterpreter->GetFunctionWithValues(0,
                                                                  function, params,
                                                                  false);
@@ -1579,13 +1599,13 @@ TFunction *TROOT::GetGlobalFunctionWithPrototype(const char *function,
                                                const char *proto, Bool_t load)
 {
    if (!proto) {
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       return (TFunction *)GetListOfGlobalFunctions(load)->FindObject(function);
    } else {
       if (!fInterpreter)
          Fatal("GetGlobalFunctionWithPrototype", "fInterpreter not initialized");
 
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       TInterpreter::DeclId_t decl = gInterpreter->GetFunctionWithPrototype(0,
                                                                            function, proto);
 
@@ -1614,13 +1634,13 @@ TObject *TROOT::GetGeometry(const char *name) const
 TCollection *TROOT::GetListOfEnums(Bool_t load /* = kTRUE */)
 {
    if(!fEnums.load()) {
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       // Test again just in case, another thread did the work while we were
       // waiting.
       if (!fEnums.load()) fEnums = new TListOfEnumsWithLock(0);
    }
    if (load) {
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       (*fEnums).Load(); // Refresh the list of enums.
    }
    return fEnums.load();
@@ -1630,7 +1650,7 @@ TCollection *TROOT::GetListOfEnums(Bool_t load /* = kTRUE */)
 
 TCollection *TROOT::GetListOfFunctionTemplates()
 {
-   R__LOCKGUARD2(gROOTMutex);
+   R__LOCKGUARD(gROOTMutex);
    if(!fFuncTemplate) {
       fFuncTemplate = new TListOfFunctionTemplates(0);
    }
@@ -1684,7 +1704,7 @@ TCollection *TROOT::GetListOfGlobals(Bool_t load)
 
 TCollection *TROOT::GetListOfGlobalFunctions(Bool_t load)
 {
-   R__LOCKGUARD2(gROOTMutex);
+   R__LOCKGUARD(gROOTMutex);
 
    if (!fGlobalFunctions) {
       fGlobalFunctions = new TListOfFunctions(0);
@@ -2439,6 +2459,16 @@ void TROOT::RegisterModule(const char* modulename,
          .push_back(ModuleHeaderInfo_t (modulename, headers, includePaths, payloadCode, fwdDeclCode,
                                         triggerFunc, fwdDeclsArgToSkip,classesHeaders));
    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Remove an object from the in-memory list.
+///    Since TROOT is global resource, this is lock protected.
+
+TObject *TROOT::Remove(TObject* obj)
+{
+   R__LOCKGUARD(gROOTMutex);
+   return TDirectory::Remove(obj);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

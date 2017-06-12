@@ -107,9 +107,9 @@ public:
    TEveException(const char* s)    : TString(s) {}
    TEveException(const std::string& s);
 
-   virtual ~TEveException() throw () {}
+   virtual ~TEveException() noexcept {}
 
-   virtual const char* what() const throw () { return Data(); }
+   virtual const char* what() const noexcept { return Data(); }
 
    ClassDef(TEveException, 1); // Exception-type thrown by Eve classes.
 };

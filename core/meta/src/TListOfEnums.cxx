@@ -27,7 +27,7 @@ unloaded enum.
 
 const unsigned int listSize=3;
 
-ClassImp(TListOfEnums)
+ClassImp(TListOfEnums);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

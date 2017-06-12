@@ -126,14 +126,14 @@ static const char *gSaveMacroTypes[] = {
 
 TList *gListOfHiddenFrames = new TList();
 
-ClassImp(TGFrame)
-ClassImp(TGCompositeFrame)
-ClassImp(TGVerticalFrame)
-ClassImp(TGHorizontalFrame)
-ClassImp(TGMainFrame)
-ClassImp(TGTransientFrame)
-ClassImp(TGGroupFrame)
-ClassImp(TGHeaderFrame)
+ClassImp(TGFrame);
+ClassImp(TGCompositeFrame);
+ClassImp(TGVerticalFrame);
+ClassImp(TGHorizontalFrame);
+ClassImp(TGMainFrame);
+ClassImp(TGTransientFrame);
+ClassImp(TGGroupFrame);
+ClassImp(TGHeaderFrame);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2915,7 +2915,6 @@ void TGMainFrame::SaveSource(const char *filename, Option_t *option)
 
    TGMainFrame::SavePrimitive(out, option);
 
-   GetClassHints((const char *&)fClassName, (const char *&)fResourceName);
    if (strlen(fClassName) || strlen(fResourceName)) {
       out << "   " << GetName() << "->SetClassHints(" << quote << fClassName
           << quote << "," << quote << fResourceName << quote << ");" << std::endl;
@@ -3432,7 +3431,6 @@ void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
 
    TGTransientFrame::SavePrimitive(out, option);
 
-   GetClassHints((const char *&)fClassName, (const char *&)fResourceName);
    if (strlen(fClassName) || strlen(fResourceName)) {
       out<<"   "<<GetName()<< "->SetClassHints("<<quote<<fClassName<<quote
                                             <<"," <<quote<<fResourceName<<quote

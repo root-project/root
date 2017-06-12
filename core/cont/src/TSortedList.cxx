@@ -18,7 +18,7 @@ TObject can be inserted in a TSortedList.
 #include "TSortedList.h"
 
 
-ClassImp(TSortedList)
+ClassImp(TSortedList);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Add object in sorted list. Uses object Compare() member to find right

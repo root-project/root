@@ -197,9 +197,9 @@ $(ROOTSSH):     $(call stripsrc,$(MAINDIRS)/roots.sh)
 		@cp $< $@
 		@chmod 0755 $@
 
-$(HADD):        $(HADDO) $(ROOTLIBSDEP)
+$(HADD):        $(HADDO) $(ROOTLIBSDEP) $(MULTIPROCLIB)
 		$(LD) $(LDFLAGS) -o $@ $(HADDO) $(ROOTULIBS) \
-		   $(RPATH) $(ROOTLIBS) $(SYSLIBS)
+		   $(RPATH) $(ROOTLIBS) $(SYSLIBS) $(HADDLIBEXTRA)
 
 $(SSH2RPD):     $(SSH2RPDO) $(SNPRINTFO) $(STRLCPYO)
 		$(LD) $(LDFLAGS) -o $@ $(SSH2RPDO) $(SNPRINTFO) $(STRLCPYO) \

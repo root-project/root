@@ -129,7 +129,7 @@ TVirtualMutex *gAuthenticateMutex = 0;
 Int_t StdCheckSecCtx(const char *, TRootSecContext *);
 
 
-ClassImp(TAuthenticate)
+ClassImp(TAuthenticate);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// rand() implementation using /udev/random or /dev/random, if available
@@ -1670,38 +1670,40 @@ Int_t TAuthenticate::SshError(const char *errorfile)
       if (ferr) {
          // Get list of errors for which one should retry
          char *serr = StrDup(gEnv->GetValue("SSH.ErrorRetry", ""));
-         // Prepare for parsing getting rid of '"'s
-         Int_t lerr = strlen(serr);
-         char *pc = (char *)memchr(serr,'"',lerr);
-         while (pc) {
-            *pc = '\0';
-            pc = (char *)memchr(pc+1,'"',strlen(pc+1));
-         }
-         // Now read the file
-         char line[kMAXPATHLEN];
-         while (fgets(line,sizeof(line),ferr)) {
-            // Get rid of trailing '\n'
-            if (line[strlen(line)-1] == '\n')
-               line[strlen(line)-1] = '\0';
-            if (gDebug > 2)
-               Info("SshError","read line: %s",line);
-            pc = serr;
-            while (pc < serr + lerr) {
-               if (pc[0] == '\0' || pc[0] == ' ')
-                  pc++;
-               else {
-                  if (gDebug > 2)
-                     Info("SshError","checking error: '%s'",pc);
-                  if (strstr(line,pc))
-                     error = 1;
-                  pc += strlen(pc);
+         if (serr) {
+            // Prepare for parsing getting rid of '"'s
+            Int_t lerr = strlen(serr);
+            char *pc = (char *)memchr(serr,'"',lerr);
+            while (pc) {
+               *pc = '\0';
+               pc = (char *)memchr(pc+1,'"',strlen(pc+1));
+            }
+            // Now read the file
+            char line[kMAXPATHLEN];
+            while (fgets(line,sizeof(line),ferr)) {
+               // Get rid of trailing '\n'
+               if (line[strlen(line)-1] == '\n')
+                  line[strlen(line)-1] = '\0';
+               if (gDebug > 2)
+                  Info("SshError","read line: %s",line);
+               pc = serr;
+               while (pc < serr + lerr) {
+                  if (pc[0] == '\0' || pc[0] == ' ')
+                     pc++;
+                  else {
+                     if (gDebug > 2)
+                        Info("SshError","checking error: '%s'",pc);
+                     if (strstr(line,pc))
+                        error = 1;
+                     pc += strlen(pc);
+                  }
                }
             }
+            // Close file
+            fclose(ferr);
+            // Free allocated memory
+            delete [] serr;
          }
-         // Close file
-         fclose(ferr);
-         // Free allocated memory
-         if (serr) delete [] serr;
       }
    }
    return error;
@@ -1924,8 +1926,7 @@ Int_t TAuthenticate::SshAuth(TString &user)
          if (chmod(fileLoc, 0600) == -1) {
             Info("SshAuth", "fchmod error: %d", errno);
             ssh_rc = 2;
-         } else {
-            floc = fopen(fileLoc, "w");
+         } else if ((floc = fopen(fileLoc, "w"))) {
             if (reuse == 1) {
                // Send our public key
                if (fVersion > 4) {

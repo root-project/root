@@ -29,7 +29,7 @@
 #include "TGLabel.h"
 #include "TG3DLine.h"
 
-ClassImp(TGeoMediumEditor)
+ClassImp(TGeoMediumEditor);
 
 enum ETGeoMediumWid {
    kMED_NAME, kMED_ID, kMED_MATSEL,

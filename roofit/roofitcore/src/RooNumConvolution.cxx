@@ -75,7 +75,7 @@ convolution precision.
 
 using namespace std;
 
-ClassImp(RooNumConvolution)
+ClassImp(RooNumConvolution);
 ;
 
 

@@ -52,7 +52,6 @@ AVRRegisterInfo::getCallPreservedMask(const MachineFunction &MF,
 BitVector AVRRegisterInfo::getReservedRegs(const MachineFunction &MF) const {
   BitVector Reserved(getNumRegs());
   const AVRTargetMachine &TM = static_cast<const AVRTargetMachine&>(MF.getTarget());
-  const TargetFrameLowering *TFI = TM.getSubtargetImpl()->getFrameLowering();
 
   // Reserve the intermediate result registers r1 and r2
   // The result of instructions like 'mul' is always stored here.
@@ -65,12 +64,18 @@ BitVector AVRRegisterInfo::getReservedRegs(const MachineFunction &MF) const {
   Reserved.set(AVR::SPH);
   Reserved.set(AVR::SP);
 
-  // Reserve the frame pointer registers r28 and r29 if the function requires one.
-  if (TFI->hasFP(MF)) {
-    Reserved.set(AVR::R28);
-    Reserved.set(AVR::R29);
-    Reserved.set(AVR::R29R28);
-  }
+  // We tenatively reserve the frame pointer register r29:r28 because the
+  // function may require one, but we cannot tell until register allocation
+  // is complete, which can be too late.
+  //
+  // Instead we just unconditionally reserve the Y register.
+  //
+  // TODO: Write a pass to enumerate functions which reserved the Y register
+  //       but didn't end up needing a frame pointer. In these, we can
+  //       convert one or two of the spills inside to use the Y register.
+  Reserved.set(AVR::R28);
+  Reserved.set(AVR::R29);
+  Reserved.set(AVR::R29R28);
 
   return Reserved;
 }
@@ -78,11 +83,12 @@ BitVector AVRRegisterInfo::getReservedRegs(const MachineFunction &MF) const {
 const TargetRegisterClass *
 AVRRegisterInfo::getLargestLegalSuperClass(const TargetRegisterClass *RC,
                                            const MachineFunction &MF) const {
-  if (RC->hasType(MVT::i16)) {
+  const TargetRegisterInfo *TRI = MF.getSubtarget().getRegisterInfo();
+  if (TRI->isTypeLegalForClass(*RC, MVT::i16)) {
     return &AVR::DREGSRegClass;
   }
 
-  if (RC->hasType(MVT::i8)) {
+  if (TRI->isTypeLegalForClass(*RC, MVT::i8)) {
     return &AVR::GPR8RegClass;
   }
 
@@ -129,13 +135,13 @@ void AVRRegisterInfo::eliminateFrameIndex(MachineBasicBlock::iterator II,
   const MachineFunction &MF = *MBB.getParent();
   const AVRTargetMachine &TM = (const AVRTargetMachine &)MF.getTarget();
   const TargetInstrInfo &TII = *TM.getSubtargetImpl()->getInstrInfo();
-  const MachineFrameInfo *MFI = MF.getFrameInfo();
+  const MachineFrameInfo &MFI = MF.getFrameInfo();
   const TargetFrameLowering *TFI = TM.getSubtargetImpl()->getFrameLowering();
   int FrameIndex = MI.getOperand(FIOperandNum).getIndex();
-  int Offset = MFI->getObjectOffset(FrameIndex);
+  int Offset = MFI.getObjectOffset(FrameIndex);
 
   // Add one to the offset because SP points to an empty slot.
-  Offset += MFI->getStackSize() - TFI->getOffsetOfLocalArea() + 1;
+  Offset += MFI.getStackSize() - TFI->getOffsetOfLocalArea() + 1;
   // Fold incoming offset.
   Offset += MI.getOperand(FIOperandNum + 1).getImm();
 
@@ -172,7 +178,7 @@ void AVRRegisterInfo::eliminateFrameIndex(MachineBasicBlock::iterator II,
         Opcode = AVR::ADIWRdK;
         break;
       }
-      // Fallthrough
+      LLVM_FALLTHROUGH;
     }
     default: {
       // This opcode will get expanded into a pair of subi/sbci.
@@ -193,7 +199,7 @@ void AVRRegisterInfo::eliminateFrameIndex(MachineBasicBlock::iterator II,
   // If the offset is too big we have to adjust and restore the frame pointer
   // to materialize a valid load/store with displacement.
   //:TODO: consider using only one adiw/sbiw chain for more than one frame index
-  if (Offset >= 63) {
+  if (Offset > 63) {
     unsigned AddOpc = AVR::ADIWRdK, SubOpc = AVR::SBIWRdK;
     int AddOffset = Offset - 63 + 1;
 
@@ -253,4 +259,14 @@ AVRRegisterInfo::getPointerRegClass(const MachineFunction &MF,
   return &AVR::PTRDISPREGSRegClass;
 }
 
+void AVRRegisterInfo::splitReg(unsigned Reg,
+                               unsigned &LoReg,
+                               unsigned &HiReg) const {
+    assert(AVR::DREGSRegClass.contains(Reg) && "can only split 16-bit registers");
+
+    LoReg = getSubReg(Reg, AVR::sub_lo);
+    HiReg = getSubReg(Reg, AVR::sub_hi);
+}
+
 } // end of namespace llvm
+

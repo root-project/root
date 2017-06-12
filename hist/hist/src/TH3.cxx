@@ -24,7 +24,7 @@
 #include "TMath.h"
 #include "TObjString.h"
 
-ClassImp(TH3)
+ClassImp(TH3);
 
 /** \addtogroup Hist
 @{
@@ -1709,9 +1709,9 @@ TH1D *TH3::DoProject1D(const char* name, const char * title, const TAxis* projX,
    TH1D *h1 = 0;
 
    // Get range to use as well as bin limits
-   Int_t ixmin = projX->GetFirst();
-   Int_t ixmax = projX->GetLast();
-//   if (ixmin == 0 && ixmax == 0) { ixmin = 1; ixmax = projX->GetNbins(); }
+   // Projected range must be inside and not outside original one (ROOT-8781)
+   Int_t ixmin = std::max(projX->GetFirst(),1);
+   Int_t ixmax = std::min(projX->GetLast(),projX->GetNbins());
    Int_t nx = ixmax-ixmin+1;
 
    // Create the histogram, either reseting a preexisting one
@@ -1903,12 +1903,11 @@ TH2D *TH3::DoProject2D(const char* name, const char * title, const TAxis* projX,
    TH2D *h2 = 0;
 
    // Get range to use as well as bin limits
-   Int_t ixmin = projX->GetFirst();
-   Int_t ixmax = projX->GetLast();
-   Int_t iymin = projY->GetFirst();
-   Int_t iymax = projY->GetLast();
-   if (ixmin == 0 && ixmax == 0) { ixmin = 1; ixmax = projX->GetNbins(); }
-   if (iymin == 0 && iymax == 0) { iymin = 1; iymax = projY->GetNbins(); }
+   Int_t ixmin = std::max(projX->GetFirst(),1);
+   Int_t ixmax = std::min(projX->GetLast(),projX->GetNbins());
+   Int_t iymin = std::max(projY->GetFirst(),1);
+   Int_t iymax = std::min(projY->GetLast(),projY->GetNbins());
+
    Int_t nx = ixmax-ixmin+1;
    Int_t ny = iymax-iymin+1;
 
@@ -2361,12 +2360,11 @@ TProfile2D *TH3::DoProjectProfile2D(const char* name, const char * title, const 
                                           bool originalRange, bool useUF, bool useOF) const
 {
    // Get the ranges where we will work.
-   Int_t ixmin = projX->GetFirst();
-   Int_t ixmax = projX->GetLast();
-   Int_t iymin = projY->GetFirst();
-   Int_t iymax = projY->GetLast();
-   if (ixmin == 0 && ixmax == 0) { ixmin = 1; ixmax = projX->GetNbins(); }
-   if (iymin == 0 && iymax == 0) { iymin = 1; iymax = projY->GetNbins(); }
+   Int_t ixmin = std::max(projX->GetFirst(),1);
+   Int_t ixmax = std::min(projX->GetLast(),projX->GetNbins());
+   Int_t iymin = std::max(projY->GetFirst(),1);
+   Int_t iymax = std::min(projY->GetLast(),projY->GetNbins());
+
    Int_t nx = ixmax-ixmin+1;
    Int_t ny = iymax-iymin+1;
 
@@ -2463,8 +2461,7 @@ TProfile2D *TH3::DoProjectProfile2D(const char* name, const char * title, const 
 
    Int_t outmin = outAxis->GetFirst();
    Int_t outmax = outAxis->GetLast();
-   // GetFirst(), GetLast() can return (0,0) when the range bit is set artifically (see TAxis::SetRange)
-   if (outmin == 0 && outmax == 0) { outmin = 1; outmax = outAxis->GetNbins(); }
+   // GetFirst, GetLast can return underflow or overflow bins
    // correct for underflow/overflows
    if (useUF && !outAxis->TestBit(TAxis::kAxisRange) )  outmin -= 1;
    if (useOF && !outAxis->TestBit(TAxis::kAxisRange) )  outmax += 1;
@@ -3265,7 +3262,7 @@ void TH3::Streamer(TBuffer &R__b)
 //  TH3C a 3-D histogram with one byte per cell (char)
 //______________________________________________________________________________
 
-ClassImp(TH3C)
+ClassImp(TH3C);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3526,7 +3523,7 @@ TH3C operator/(TH3C &h1, TH3C &h2)
 //  TH3S a 3-D histogram with two bytes per cell (short integer)
 //______________________________________________________________________________
 
-ClassImp(TH3S)
+ClassImp(TH3S);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3758,7 +3755,7 @@ TH3S operator/(TH3S &h1, TH3S &h2)
 //  TH3I a 3-D histogram with four bytes per cell (32 bits integer)
 //______________________________________________________________________________
 
-ClassImp(TH3I)
+ClassImp(TH3I);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3957,7 +3954,7 @@ TH3I operator/(TH3I &h1, TH3I &h2)
 //  TH3F a 3-D histogram with four bytes per cell (float)
 //______________________________________________________________________________
 
-ClassImp(TH3F)
+ClassImp(TH3F);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4168,7 +4165,7 @@ TH3F operator/(TH3F &h1, TH3F &h2)
 //  TH3D a 3-D histogram with eight bytes per cell (double)
 //______________________________________________________________________________
 
-ClassImp(TH3D)
+ClassImp(TH3D);
 
 
 ////////////////////////////////////////////////////////////////////////////////

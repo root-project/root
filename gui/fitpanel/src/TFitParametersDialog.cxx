@@ -50,7 +50,7 @@ enum EParametersDialogWid {
    kCANCEL
 };
 
-ClassImp(TFitParametersDialog)
+ClassImp(TFitParametersDialog);
 
 ////////////////////////////////////////////////////////////////////////////////
 

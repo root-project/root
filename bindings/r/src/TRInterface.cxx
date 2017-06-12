@@ -17,9 +17,9 @@ extern "C"
 #include<TRint.h>
 
 using namespace ROOT::R;
-ClassImp(TRInterface)
+ClassImp(TRInterface);
 
-static ROOT::R::TRInterface *gR = NULL;
+static ROOT::R::TRInterface *gR = nullptr;
 static Bool_t statusEventLoop;
 
 TRInterface::TRInterface(const Int_t argc, const Char_t *argv[], const Bool_t loadRcpp, const Bool_t verbose,
@@ -53,7 +53,10 @@ TRInterface::TRInterface(const Int_t argc, const Char_t *argv[], const Bool_t lo
 
 TRInterface::~TRInterface()
 {
+   statusEventLoop = kFALSE;
    if (th) delete th;
+   if (fR) delete fR;
+   if (gR == this) gR = nullptr;
 }
 
 //______________________________________________________________________________
@@ -199,18 +202,16 @@ Bool_t TRInterface::Install(TString pkg, TString repos)
 void TRInterface::ProcessEventsLoop()
 {
    if (!statusEventLoop) {
-      th = new TThread([](void */*args*/) {
-         while (kTRUE) {
-            if (gR) { // in case global object was freed
-               fd_set *fd;
-               Int_t usec = 10000;
-               fd = R_checkActivity(usec, 0);
-               R_runHandlers(R_InputHandlers, fd);
-               if (gSystem) gSystem->Sleep(100);
-            }
+      th = new TThread([](void */*args */) {
+         while (statusEventLoop) {
+            fd_set *fd;
+            Int_t usec = 10000;
+            fd = R_checkActivity(usec, 0);
+            R_runHandlers(R_InputHandlers, fd);
+            if (gSystem) gSystem->Sleep(100);
          }
       });
-      th->Run();
       statusEventLoop = kTRUE;
+      th->Run();
    }
 }

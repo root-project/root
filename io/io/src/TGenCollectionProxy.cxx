@@ -365,7 +365,7 @@ TGenCollectionProxy::Value::Value(const std::string& inside_type, Bool_t silent)
          fDtor   = fType->GetDestructor();
          fDelete = fType->GetDelete();
       } else {
-         R__LOCKGUARD2(gInterpreterMutex);
+         R__LOCKGUARD(gInterpreterMutex);
 
          // Try to avoid autoparsing.
 
@@ -816,7 +816,7 @@ static TGenCollectionProxy::Value *R__CreateValue(const std::string &name, Bool_
 
 TGenCollectionProxy *TGenCollectionProxy::InitializeEx(Bool_t silent)
 {
-   R__LOCKGUARD2(gInterpreterMutex);
+   R__LOCKGUARD(gInterpreterMutex);
    if (fValue.load()) return this;
 
    TClass *cl = fClass ? fClass.GetClass() : TClass::GetClass(fTypeinfo,kTRUE,silent);

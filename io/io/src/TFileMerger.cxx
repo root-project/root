@@ -39,6 +39,7 @@ to be merged, like the standalone hadd program.
 #include "TClassRef.h"
 #include "TROOT.h"
 #include "TMemFile.h"
+#include "TVirtualMutex.h"
 
 #ifdef WIN32
 // For _getmaxstdio
@@ -49,7 +50,7 @@ to be merged, like the standalone hadd program.
 #include <sys/resource.h>
 #endif
 
-ClassImp(TFileMerger)
+ClassImp(TFileMerger);
 
 TClassRef R__TH1_Class("TH1");
 TClassRef R__TTree_Class("TTree");
@@ -99,6 +100,7 @@ TFileMerger::TFileMerger(Bool_t isLocal, Bool_t histoOneGo)
    fExcessFiles = new TList;
    fExcessFiles->SetOwner(kTRUE);
 
+   R__LOCKGUARD(gROOTMutex);
    gROOT->GetListOfCleanups()->Add(this);
 }
 
@@ -107,7 +109,10 @@ TFileMerger::TFileMerger(Bool_t isLocal, Bool_t histoOneGo)
 
 TFileMerger::~TFileMerger()
 {
-   gROOT->GetListOfCleanups()->Remove(this);
+   {
+      R__LOCKGUARD(gROOTMutex);
+      gROOT->GetListOfCleanups()->Remove(this);
+   }
    SafeDelete(fFileList);
    SafeDelete(fMergeList);
    SafeDelete(fOutputFile);
@@ -818,7 +823,7 @@ Bool_t TFileMerger::PartialMerge(Int_t in_type)
       if (file->TestBit(kCanDelete)) file->Close();
 
       // Remove the temporary file
-      if (fLocal) {
+      if (fLocal && !file->InheritsFrom(TMemFile::Class())) {
          TUrl u(file->GetPath(), kTRUE);
          if (gSystem->Unlink(u.GetFile()) != 0)
             Warning("PartialMerge", "problems removing temporary local file '%s'", u.GetFile());
@@ -843,7 +848,7 @@ Bool_t TFileMerger::PartialMerge(Int_t in_type)
          // close the files
          if (file->TestBit(kCanDelete)) file->Close();
          // remove the temporary files
-         if(fLocal) {
+         if(fLocal && !file->InheritsFrom(TMemFile::Class())) {
             TString p(file->GetPath());
             // coverity[unchecked_value] Index is return a value with range or NPos to select the whole name.
             p = p(0, p.Index(':',0));

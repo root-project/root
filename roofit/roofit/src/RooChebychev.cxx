@@ -43,7 +43,7 @@ Chebychev polynomial p.d.f. of the first kind
 #define __my_func__ __func__
 #endif
 
-ClassImp(RooChebychev)
+ClassImp(RooChebychev);
 
 ////////////////////////////////////////////////////////////////////////////////
 

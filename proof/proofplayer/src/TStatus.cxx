@@ -25,7 +25,7 @@ No messages indicates success.
 #include "TClass.h"
 #include "TProofDebug.h"
 
-ClassImp(TStatus)
+ClassImp(TStatus);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.

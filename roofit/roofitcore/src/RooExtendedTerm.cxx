@@ -29,7 +29,7 @@ is constructed.
 
 using namespace std;
 
-ClassImp(RooExtendedTerm)
+ClassImp(RooExtendedTerm);
 ;
 
 

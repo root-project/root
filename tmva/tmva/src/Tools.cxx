@@ -163,9 +163,9 @@ Double_t TMVA::Tools::GetSeparation( TH1* S, TH1* B ) const
          Double_t s = S->GetBinContent( bin+1 )/Double_t(nS);
          Double_t b = B->GetBinContent( bin+1 )/Double_t(nB);
          // separation
-         if (s + b > 0) separation += 0.5*(s - b)*(s - b)/(s + b);
+         if (s + b > 0) separation += (s - b)*(s - b)/(s + b);
       }
-      separation *= intBin;
+      separation *= (0.5*intBin);
    }
    else {
       Log() << kWARNING << "<GetSeparation> histograms with zero entries: "
@@ -557,7 +557,7 @@ void TMVA::Tools::UsefulSortAscending( std::vector<vector<Double_t> >& v, std::v
                for (UInt_t k=0; k< nArrays; k++) {
                   temp = v[k][j-1]; v[k][j-1] = v[k][j]; v[k][j] = temp;
                }
-               if (NULL != vs) {
+               if (nullptr != vs) {
                   TString temps = (*vs)[j-1]; (*vs)[j-1] = (*vs)[j]; (*vs)[j] = temps;
                }
             }
@@ -584,7 +584,7 @@ void TMVA::Tools::UsefulSortDescending( std::vector<std::vector<Double_t> >& v, 
                for (UInt_t k=0; k< nArrays; k++) {
                   temp = v[k][j-1]; v[k][j-1] = v[k][j]; v[k][j] = temp;
                }
-               if (NULL != vs) {
+               if (nullptr != vs) {
                   TString temps = (*vs)[j-1]; (*vs)[j-1] = (*vs)[j]; (*vs)[j] = temps;
                }
             }
@@ -1789,4 +1789,40 @@ TH1* TMVA::Tools::GetCumulativeDist( TH1* h)
       cumulativeDist->SetBinContent(ibin,partialSum*inverseSum);
    }
    return cumulativeDist;
+}
+
+void TMVA::Tools::ReadAttr(void *node, const char *attrname, float &value)
+{
+   // read attribute from xml
+   const char *val = xmlengine().GetAttr(node, attrname);
+   if (val == nullptr) {
+      const char *nodename = xmlengine().GetNodeName(node);
+      Log() << kFATAL << "Trying to read non-existing attribute '" << attrname << "' from xml node '" << nodename << "'"
+            << Endl;
+   } else
+      value = atof(val);
+}
+
+void TMVA::Tools::ReadAttr(void *node, const char *attrname, int &value)
+{
+   // read attribute from xml
+   const char *val = xmlengine().GetAttr(node, attrname);
+   if (val == nullptr) {
+      const char *nodename = xmlengine().GetNodeName(node);
+      Log() << kFATAL << "Trying to read non-existing attribute '" << attrname << "' from xml node '" << nodename << "'"
+            << Endl;
+   } else
+      value = atoi(val);
+}
+
+void TMVA::Tools::ReadAttr(void *node, const char *attrname, short &value)
+{
+   // read attribute from xml
+   const char *val = xmlengine().GetAttr(node, attrname);
+   if (val == nullptr) {
+      const char *nodename = xmlengine().GetNodeName(node);
+      Log() << kFATAL << "Trying to read non-existing attribute '" << attrname << "' from xml node '" << nodename << "'"
+            << Endl;
+   } else
+      value = atoi(val);
 }

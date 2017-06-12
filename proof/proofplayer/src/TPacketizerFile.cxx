@@ -86,7 +86,7 @@ public:
    void        Print(Option_t* option = "") const;
 };
 
-ClassImp(TPacketizerFile)
+ClassImp(TPacketizerFile);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor

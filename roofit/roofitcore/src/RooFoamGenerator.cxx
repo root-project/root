@@ -51,7 +51,7 @@ do not define internal methods
 
 using namespace std;
 
-ClassImp(RooFoamGenerator)
+ClassImp(RooFoamGenerator);
   ;
 
 

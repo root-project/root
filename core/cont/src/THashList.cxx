@@ -21,9 +21,10 @@ can override Hash() as it sees fit.
 
 #include "THashList.h"
 #include "THashTable.h"
+#include "TClass.h"
 
 
-ClassImp(THashList)
+ClassImp(THashList);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a THashList object. Capacity is the initial hashtable capacity
@@ -189,20 +190,40 @@ void THashList::Delete(Option_t *option)
       fTable->Clear("nodelete");     // clear table so no more lookups
       TList::Delete(option);         // this deletes the objects
    } else {
+      TList removeDirectory; // need to deregister these from their directory
+
       while (fFirst) {
          TObjLink *tlk = fFirst;
          fFirst = fFirst->Next();
          fSize--;
          // remove object from table
          fTable->Remove(tlk->GetObject());
+
          // delete only heap objects
-         if (tlk->GetObject() && tlk->GetObject()->IsOnHeap())
-            TCollection::GarbageCollect(tlk->GetObject());
+         auto obj = tlk->GetObject();
+         if (obj && !obj->TestBit(kNotDeleted))
+            Error("Delete", "A list is accessing an object (%p) already deleted (list name = %s)",
+                  obj, GetName());
+         else if (obj && obj->IsOnHeap())
+            TCollection::GarbageCollect(obj);
+         else if (obj && obj->IsA()->GetDirectoryAutoAdd())
+            removeDirectory.Add(obj);
 
          delete tlk;
       }
       fFirst = fLast = fCache = 0;
       fSize  = 0;
+
+      // These objects cannot expect to have a valid TDirectory anymore;
+      // e.g. because *this is the TDirectory's list of objects. Even if
+      // not, they are supposed to be deleted, so we can as well unregister
+      // them from their directory, even if they are stack-based:
+      TIter iRemDir(&removeDirectory);
+      TObject* dirRem = 0;
+      while ((dirRem = iRemDir())) {
+            (*dirRem->IsA()->GetDirectoryAutoAdd())(dirRem, 0);
+      }
+      Changed();
    }
 }
 

@@ -44,7 +44,7 @@ though usually only one observable actually changes.
 
 using namespace std ;
 
-ClassImp(RooChangeTracker)
+ClassImp(RooChangeTracker);
 ;
 
 ////////////////////////////////////////////////////////////////////////////////

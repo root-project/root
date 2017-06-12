@@ -167,6 +167,11 @@ Hist.Binning.3D.z:           20
 Hist.Binning.3D.Profx:      100
 Hist.Binning.3D.Profy:      100
 
+# Default histogram precision for TTree::Draw(). It can be 'float"or "double"
+Hist.Precision.1D:           float
+Hist.Precision.2D:           float
+Hist.Precision.3D:           float
+
 # Default statistics parameters names.
 Hist.Stats.Entries:          Entries
 Hist.Stats.Mean:             Mean

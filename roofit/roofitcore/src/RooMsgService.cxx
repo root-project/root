@@ -60,7 +60,7 @@ The singleton instance is accessible through RooMsgService::instance() ;
 using namespace std ;
 using namespace RooFit ;
 
-ClassImp(RooMsgService)
+ClassImp(RooMsgService);
 ;
 
 RooMsgService* gMsgService = 0 ;

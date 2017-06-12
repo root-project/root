@@ -34,7 +34,7 @@ List of files to be cleaned for each node is provided by client.
 #include <fcntl.h>
 
 
-ClassImp(TSelHandleDataSet)
+ClassImp(TSelHandleDataSet);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Init the type from the input parameters

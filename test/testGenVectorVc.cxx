@@ -21,7 +21,9 @@
 int compare(double v1, double v2, const std::string &name = "", double scale = 1000.0)
 {
    //  ntest = ntest + 1;
-
+#if defined(__clang__) && defined(__FAST_MATH__)
+      scale *= 100;
+#endif
    // numerical double limit for epsilon
    const double eps     = scale * std::numeric_limits<double>::epsilon();
    int          iret    = 0;
@@ -216,6 +218,7 @@ int main(int /*argc*/, char ** /*argv*/)
 
       // Loop over the two containers and compare
       std::cout << "Ray Tracing :-" << std::endl;
+
       for (size_t i = 0; i < nPhotons; ++i) {
          auto &sc = scalar_data[i];
          auto &vc = vc_data[i];

@@ -63,7 +63,7 @@ as a TString, construct a TString from it, eg:
 namespace std { using ::list; }
 #endif
 
-ClassImp(TString)
+ClassImp(TString);
 
 // Amount to shift hash values to avoid clustering
 const UInt_t kHashShift = 5;
@@ -178,6 +178,16 @@ TString::TString(TString &&s)
    // Short or long, all data is in fRaw.
    fRep.fRaw = s.fRep.fRaw;
    s.Init(0,0);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Copy a std::string_view in a TString.
+
+TString::TString(const std::string_view& substr)
+{
+   Ssiz_t len = substr.length();
+   char *data = Init(len, len);
+   memcpy(data, substr.data(), len);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

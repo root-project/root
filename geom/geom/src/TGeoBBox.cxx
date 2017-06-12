@@ -128,7 +128,7 @@ See also class TGeoShape for utility methods provided by any particular shape.
 #include "TMath.h"
 #include "TRandom.h"
 
-ClassImp(TGeoBBox)
+ClassImp(TGeoBBox);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor

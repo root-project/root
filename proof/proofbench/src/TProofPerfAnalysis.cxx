@@ -1196,7 +1196,7 @@ void TProofPerfAnalysis::FillWrkInfo(Bool_t force)
 
    // Final analysis to find relevant times
    fMergeTime = fMaxTime;
-   Int_t rsw = (fWrksInfo.GetSize() > 1) ? 2 : 2, ksw = 0;
+   Int_t rsw = (fWrksInfo.GetSize() > 1) ? 2 : 1, ksw = 0;
    TIter nxsw(&fWrksInfo);
    while ((wi = (TWrkInfo *) nxsw())) {
       if (wi->fStop > 0.) ksw++;
@@ -1450,8 +1450,7 @@ Int_t TProofPerfAnalysis::SetSaveResult(const char *file, Option_t *mode)
    if (!f || f->IsZombie()) {
       if (f) delete f;
       fFileResult = "";
-      Error("SetSaveResult", "could not open file '%s' in mode '%s'",
-                             file ? file : "(undefined)", mode);
+      Error("SetSaveResult", "could not open file '%s' in mode '%s'", file, mode);
       gDirectory = curdir;
       return -1;
    }

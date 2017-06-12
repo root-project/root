@@ -819,15 +819,17 @@ template <typename LAYERDATA>
                             std::tuple<double,std::vector<double>> result = f.get ();
                             testError += std::get<0>(result) / batches.size ();
                             std::vector<double> output = std::get<1>(result);
-
-                            //if (output.size () == testPattern.size ())
+                            if (output.size() == (outputSize() - 1) * itBatch->size())
                             {
-                                //auto it = begin (testPattern);
-                                auto it = (*itBatch).begin ();
-                                for (double out : output)
+                                auto output_iterator = output.begin();
+                                for (auto pattern_it = itBatch->begin(); pattern_it != itBatch->end(); ++pattern_it) 
                                 {
-                                    settings.testSample (0, out, (*it).output ().at (0), (*it).weight ());
-                                    ++it;
+                                    for (size_t output_index = 1; output_index < outputSize(); ++output_index)
+                                    {
+                                        settings.testSample (0, *output_iterator, (*pattern_it).output ().at (0),
+                                                                                  (*pattern_it).weight ());
+                                        ++output_iterator;
+                                    }
                                 }
                             }
                         ++itBatch;
@@ -846,15 +848,19 @@ template <typename LAYERDATA>
                             output.clear ();
                         pass_through_type passThrough (settings, batch, dropContainerTest);
                             double testPatternError = (*this) (passThrough, weights, ModeOutput::FETCH, output);
-
-                        auto it = batch.begin ();
-                        for (double out : output)
+                        if (output.size() == (outputSize() - 1) * batch.size())
+                        {
+                            auto output_iterator = output.begin();
+                            for (auto pattern_it = batch.begin(); pattern_it != batch.end(); ++pattern_it) 
                             {
-                            settings.testSample (0, out, (*it).output ().at (0), (*it).weight ());
-                            ++it;
+                                for (size_t output_index = 1; output_index < outputSize(); ++output_index)
+                                {
+                                    settings.testSample (0, *output_iterator, (*pattern_it).output ().at (0),
+                                                                              (*pattern_it).weight ());
+                                    ++output_iterator;
+                                }
                             }
-                            //weightSum += fabs (weight);
-                            //testError += testPatternError*weight;
+                        }
                         testError += testPatternError; /// batch.size ();
                         }
                     // testError /= testPattern.size ();
@@ -1326,7 +1332,7 @@ template <typename LAYERDATA>
                                                                                ItWeight itWeightEnd) const
     {
         typename std::vector<LayerData>::iterator itLayerData    = lastLayerData.begin ();
-        typename std::vector<LayerData>::iterator itLayerDataEnd = lastLayerData.end ();
+//        typename std::vector<LayerData>::iterator itLayerDataEnd = lastLayerData.end ();
 
         typename std::vector<Pattern>::const_iterator itPattern = batch.begin ();
         typename std::vector<Pattern>::const_iterator itPatternEnd = batch.end ();
@@ -1335,6 +1341,7 @@ template <typename LAYERDATA>
         double sumError (0.0);
         
         size_t idxPattern = 0;
+// FIXME: check that iteration doesn't go beyond itLayerDataEnd!
         for ( ; itPattern != itPatternEnd; ++itPattern, ++itLayerData)
         {
             ++idxPattern;
@@ -1376,8 +1383,9 @@ template <typename LAYERDATA>
                 std::vector<LayerData>& prevLayerDataColl = *(itLayerPatternData+1);
                 
                 size_t idxPattern = 0;
+// FIXME: check that itPrevLayerData doesn't go beyond itPrevLayerDataEnd!
                 for (typename std::vector<LayerData>::iterator itCurrLayerData = begin (currLayerDataColl), itCurrLayerDataEnd = end (currLayerDataColl),
-                     itPrevLayerData = begin (prevLayerDataColl), itPrevLayerDataEnd = end (prevLayerDataColl);
+                     itPrevLayerData = begin (prevLayerDataColl) /*, itPrevLayerDataEnd = end (prevLayerDataColl)*/;
                      itCurrLayerData != itCurrLayerDataEnd; ++itCurrLayerData, ++itPrevLayerData, ++idxPattern)
                 {
                     LayerData& currLayerData = (*itCurrLayerData);

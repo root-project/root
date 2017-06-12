@@ -36,7 +36,7 @@ associated normalization and integration sets.
 
 using namespace std;
 
-ClassImp(RooAICRegistry)
+ClassImp(RooAICRegistry);
 ;
 
 ////////////////////////////////////////////////////////////////////////////////

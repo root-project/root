@@ -25,7 +25,7 @@ occupied by the upper bits that are 0.
 
 #include <string.h>
 
-ClassImp(TBits)
+ClassImp(TBits);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TBits constructor.  All bits set to 0

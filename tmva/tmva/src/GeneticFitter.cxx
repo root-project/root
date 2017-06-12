@@ -44,7 +44,7 @@ Fitter using a Genetic Algorithm.
 
 #include <iostream>
 
-ClassImp(TMVA::GeneticFitter)
+ClassImp(TMVA::GeneticFitter);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor

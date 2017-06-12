@@ -2910,6 +2910,7 @@
    JSROOT.GEO.ClonedNodes = function(obj, clones) {
       this.toplevel = true; // indicate if object creates top-level structure with Nodes and Volumes folder
       this.name_prefix = ""; // name prefix used for nodes names
+      this.maxdepth = 1; // maximal hierarchy depth, required for transparancy
 
       if (obj) {
          if (obj.$geoh) this.toplevel = false;
@@ -2970,6 +2971,7 @@
 
        obj._refid = this.origin.length;
        this.origin.push(obj);
+       if (sublevel>this.maxdepth) this.maxdepth = sublevel; 
 
        var chlds = null;
        if (kind===0)

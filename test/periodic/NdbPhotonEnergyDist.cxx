@@ -1,4 +1,4 @@
 #include "NdbPhotonEnergyDist.h"
 
-ClassImp(NdbPhotonEnergyDist)
+ClassImp(NdbPhotonEnergyDist);
 

@@ -55,7 +55,7 @@
 #include "TList.h"
 #include "TObjString.h"
 
-ClassImp(TOracleServer)
+ClassImp(TOracleServer);
 
 using namespace std;
 using namespace oracle::occi;

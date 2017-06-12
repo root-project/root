@@ -147,11 +147,11 @@ fi
 
 ### machine dependent settings ###
 
-if test "x$cxxversion" = "xcxx14" ; then
-   cxxversionflag="-std=c++1y "
-else
-   cxxversionflag="-std=c++11 "
-fi
+case "$cxxversion" in
+  cxx17) cxxversionflag="-std=c++1z " ;;
+  cxx14) cxxversionflag="-std=c++1y " ;;
+  *)     cxxversionflag="-std=c++11 " ;;
+esac
 
 case $arch in
 aix5)

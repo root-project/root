@@ -58,7 +58,7 @@
 #include "TGeoTabManager.h"
 #include "TGedEditor.h"
 
-ClassImp(TGeoVolumeEditor)
+ClassImp(TGeoVolumeEditor);
 
 enum ETGeoVolumeWid {
    kVOL_NAME, kVOL_TITLE, kVOL_SHAPE_SELECT, kVOL_MEDIA_SELECT, kVOL_NODE_SELECT,

@@ -44,6 +44,7 @@ const GLenum pointSizePNAME = GLenum(GL_SMOOTH_POINT_SIZE_RANGE);
 Auxiliary class to converts ROOT's polygon stipples from
 RStipples.h into GL's stipples and hold them in a fStipples array.
 */
+
 ////////////////////////////////////////////////////////////////////////////////
 
 PolygonStippleSet::PolygonStippleSet()
@@ -231,8 +232,9 @@ LineAttribSet::~LineAttribSet()
 /*
 Auxiliary class to draw markers in a gl-pad.
 */
+
 ////////////////////////////////////////////////////////////////////////////////
-///Simple 1-pixel dots.
+/// Simple 1-pixel dots.
 
 void MarkerPainter::DrawDot(UInt_t n, const TPoint *xy)const
 {
@@ -245,7 +247,7 @@ void MarkerPainter::DrawDot(UInt_t n, const TPoint *xy)const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///+ sign. 1 pixel width lines.
+/// + sign. 1 pixel width lines.
 
 void MarkerPainter::DrawPlus(UInt_t n, const TPoint *xy)const
 {
@@ -265,7 +267,7 @@ void MarkerPainter::DrawPlus(UInt_t n, const TPoint *xy)const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///* - marker.
+/// * marker.
 
 void MarkerPainter::DrawStar(UInt_t n, const TPoint *xy)const
 {
@@ -462,7 +464,44 @@ void MarkerPainter::DrawDiamond(UInt_t n, const TPoint *xy)const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MarkerPainter::DrawCross(UInt_t n, const TPoint *xy)const
+void MarkerPainter::DrawFullDiamond(UInt_t n, const TPoint *xy)const
+{
+   const Int_t im  = Int_t(4 * gVirtualX->GetMarkerSize() + 0.5);
+   const Int_t imx = Int_t(2.66 * gVirtualX->GetMarkerSize() + 0.5);
+
+   for (UInt_t i = 0; i < n; ++i) {
+      const Double_t x = xy[i].fX;
+      const Double_t y = xy[i].fY;
+
+      glBegin(GL_POLYGON);
+      glVertex2d(x - imx,  y);
+      glVertex2d(x, y - im);
+      glVertex2d(x + imx, y);
+      glVertex2d(x, y + im);
+      glEnd();
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MarkerPainter::DrawOpenTrianlgeDown(UInt_t n, const TPoint *xy)const
+{
+   const Int_t im = Int_t(4 * gVirtualX->GetMarkerSize() + 0.5);
+
+   for (UInt_t i = 0; i < n; ++i) {
+      const Double_t x = xy[i].fX;
+      const Double_t y = xy[i].fY;
+      glBegin(GL_LINE_LOOP);
+      glVertex2d(x - im, y + im);
+      glVertex2d(x, y - im);
+      glVertex2d(im + x, y + im);
+      glEnd();
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MarkerPainter::DrawOpenCross(UInt_t n, const TPoint *xy)const
 {
    const Int_t im  = Int_t(4 * gVirtualX->GetMarkerSize() + 0.5);
    const Int_t imx = Int_t(1.33 * gVirtualX->GetMarkerSize() + 0.5);
@@ -489,7 +528,40 @@ void MarkerPainter::DrawCross(UInt_t n, const TPoint *xy)const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// HIGZ full star pentagone
+
+void MarkerPainter::DrawFullCross(UInt_t n, const TPoint *xy)const
+{
+   const Int_t im  = Int_t(4 * gVirtualX->GetMarkerSize() + 0.5);
+   const Int_t imx = Int_t(1.33 * gVirtualX->GetMarkerSize() + 0.5);
+
+   for (UInt_t i = 0; i < n; ++i) {
+      const Double_t x = xy[i].fX;
+      const Double_t y = xy[i].fY;
+
+      glBegin(GL_POLYGON);
+      glVertex2d(x - im, y - imx);
+      glVertex2d(x - im, y + imx);
+      glVertex2d(x + im, y + imx);
+      glVertex2d(x + im, y - imx);
+      glEnd();
+      glBegin(GL_POLYGON);
+      glVertex2d(x - imx, y + imx);
+      glVertex2d(x - imx, y + im);
+      glVertex2d(x + imx, y + im);
+      glVertex2d(x + imx, y + imx);
+      glEnd();
+      glEnd();
+      glBegin(GL_POLYGON);
+      glVertex2d(x - imx, y - imx);
+      glVertex2d(x - imx, y - im);
+      glVertex2d(x + imx, y - im);
+      glVertex2d(x + imx, y - imx);
+      glEnd();
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Full star pentagone
 
 void MarkerPainter::DrawFullStar(UInt_t n, const TPoint *xy)const
 {
@@ -542,7 +614,7 @@ void MarkerPainter::DrawFullStar(UInt_t n, const TPoint *xy)const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// HIGZ full star pentagone
+/// Full star pentagone
 
 void MarkerPainter::DrawOpenStar(UInt_t n, const TPoint *xy)const
 {
@@ -567,6 +639,472 @@ void MarkerPainter::DrawOpenStar(UInt_t n, const TPoint *xy)const
       glVertex2d(x + im4, y - im4);
       glVertex2d(x, y - im);
       glVertex2d(x - im4, y - im4);
+      glEnd();
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MarkerPainter::DrawOpenSquareDiagonal(UInt_t n, const TPoint *xy)const
+{
+   const Int_t im  = Int_t(4 * gVirtualX->GetMarkerSize() + 0.5);
+
+   for (unsigned i = 0; i < n; ++i) {
+      const Double_t x = xy[i].fX;
+      const Double_t y = xy[i].fY;
+
+      glBegin(GL_LINE_LOOP);
+      glVertex2d(x - im, y - im);
+      glVertex2d(x + im, y - im);
+      glVertex2d(x + im, y + im);
+      glVertex2d(x - im, y + im);
+      glVertex2d(x - im, y - im);
+      glVertex2d(x + im, y + im);
+      glVertex2d(x - im, y + im);
+      glVertex2d(x + im, y - im);
+      glEnd();
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MarkerPainter::DrawOpenDiamondCross(UInt_t n, const TPoint *xy)const
+{
+   const Int_t im  = Int_t(4 * gVirtualX->GetMarkerSize() + 0.5);
+
+   for (unsigned i = 0; i < n; ++i) {
+      const Double_t x = xy[i].fX;
+      const Double_t y = xy[i].fY;
+
+      glBegin(GL_LINE_LOOP);
+      glVertex2d(x - im, y     );
+      glVertex2d(x     , y - im);
+      glVertex2d(x + im, y     );
+      glVertex2d(x     , y + im);
+      glVertex2d(x - im, y     );
+      glVertex2d(x + im, y     );
+      glVertex2d(x     , y + im);
+      glVertex2d(x     , y - im);
+      glEnd();
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MarkerPainter::DrawOpenThreeTriangles(UInt_t n, const TPoint *xy)const
+{
+   const Int_t im  = Int_t(4 * gVirtualX->GetMarkerSize() + 0.5);
+   const Int_t im2 = Int_t(2.00 * gVirtualX->GetMarkerSize() + 0.5);
+
+   for (unsigned i = 0; i < n; ++i) {
+      const Double_t x = xy[i].fX;
+      const Double_t y = xy[i].fY;
+
+      glBegin(GL_LINE_LOOP);
+      glVertex2d(x     , y     );
+      glVertex2d(x -im2, y + im);
+      glVertex2d(x - im, y     );
+      glVertex2d(x     , y     );
+      glVertex2d(x -im2, y - im);
+      glVertex2d(x +im2, y - im);
+      glVertex2d(x     , y     );
+      glVertex2d(x + im, y     );
+      glVertex2d(x +im2, y + im);
+      glVertex2d(x     , y     );
+      glEnd();
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MarkerPainter::DrawOctagonCross(UInt_t n, const TPoint *xy)const
+{
+   const Int_t im  = Int_t(4 * gVirtualX->GetMarkerSize() + 0.5);
+   const Int_t im2 = Int_t(2.00 * gVirtualX->GetMarkerSize() + 0.5);
+
+   for (unsigned i = 0; i < n; ++i) {
+      const Double_t x = xy[i].fX;
+      const Double_t y = xy[i].fY;
+
+      glBegin(GL_LINE_LOOP);
+      glVertex2d(x-im, y   );
+      glVertex2d(x-im, y-im2);
+      glVertex2d(x-im2, y-im);
+      glVertex2d(x+im2, y-im);
+      glVertex2d(x+im, y-im2);
+      glVertex2d(x+im, y+im2);
+      glVertex2d(x+im2, y+im);
+      glVertex2d(x-im2, y+im);
+      glVertex2d(x-im, y+im2);
+      glVertex2d(x-im, y   );
+      glVertex2d(x+im, y   );
+      glVertex2d(x   , y   );
+      glVertex2d(x   , y-im);
+      glVertex2d(x   , y+im);
+      glVertex2d(x   , y);
+      glEnd();
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MarkerPainter::DrawFullThreeTriangles(UInt_t n, const TPoint *xy)const
+{
+   const Int_t im  = Int_t(4 * gVirtualX->GetMarkerSize() + 0.5);
+   const Int_t im2 = Int_t(2.00 * gVirtualX->GetMarkerSize() + 0.5);
+
+   for (unsigned i = 0; i < n; ++i) {
+      const Double_t x = xy[i].fX;
+      const Double_t y = xy[i].fY;
+
+      glBegin(GL_POLYGON);
+      glVertex2d(x     , y     );
+      glVertex2d(x -im2, y + im);
+      glVertex2d(x - im, y     );
+      glVertex2d(x     , y     );
+      glVertex2d(x -im2, y - im);
+      glVertex2d(x +im2, y - im);
+      glVertex2d(x     , y     );
+      glVertex2d(x + im, y     );
+      glVertex2d(x +im2, y + im);
+      glVertex2d(x     , y     );
+      glEnd();
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MarkerPainter::DrawOpenFourTrianglesX(UInt_t n, const TPoint *xy)const
+{
+   const Int_t im  = Int_t(4 * gVirtualX->GetMarkerSize() + 0.5);
+   const Int_t im2 = Int_t(2.00 * gVirtualX->GetMarkerSize() + 0.5);
+
+   for (unsigned i = 0; i < n; ++i) {
+      const Double_t x = xy[i].fX;
+      const Double_t y = xy[i].fY;
+
+      glBegin(GL_LINE_LOOP);
+      glVertex2d(x    , y   );
+      glVertex2d(x+im2, y+im);
+      glVertex2d(x+im , y+im2);
+      glVertex2d(x    , y   );
+      glVertex2d(x+im , y-im2);
+      glVertex2d(x+im2, y-im);
+      glVertex2d(x    , y   );
+      glVertex2d(x-im2, y-im);
+      glVertex2d(x-im , y-im2);
+      glVertex2d(x    , y   );
+      glVertex2d(x-im , y+im2);
+      glVertex2d(x-im2, y+im);
+      glVertex2d(x    , y   );
+      glEnd();
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MarkerPainter::DrawFullFourTrianglesX(UInt_t n, const TPoint *xy)const
+{
+   const Int_t im  = Int_t(4 * gVirtualX->GetMarkerSize() + 0.5);
+   const Int_t im2 = Int_t(2.00 * gVirtualX->GetMarkerSize() + 0.5);
+
+   for (unsigned i = 0; i < n; ++i) {
+      const Double_t x = xy[i].fX;
+      const Double_t y = xy[i].fY;
+
+      glBegin(GL_POLYGON);
+      glVertex2d(x    , y   );
+      glVertex2d(x+im2, y+im);
+      glVertex2d(x+im , y+im2);
+      glVertex2d(x    , y   );
+      glVertex2d(x+im , y-im2);
+      glVertex2d(x+im2, y-im);
+      glVertex2d(x    , y   );
+      glVertex2d(x-im2, y-im);
+      glVertex2d(x-im , y-im2);
+      glVertex2d(x    , y   );
+      glVertex2d(x-im , y+im2);
+      glVertex2d(x-im2, y+im);
+      glVertex2d(x    , y   );
+      glEnd();
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MarkerPainter::DrawOpenDoubleDiamond(UInt_t n, const TPoint *xy)const
+{
+   const Int_t im  = Int_t(4 * gVirtualX->GetMarkerSize() + 0.5);
+   const Int_t im4 = Int_t(1.33 * gVirtualX->GetMarkerSize() + 0.5);
+
+   for (unsigned i = 0; i < n; ++i) {
+      const Double_t x = xy[i].fX;
+      const Double_t y = xy[i].fY;
+
+      glBegin(GL_LINE_LOOP);
+      glVertex2d(x    , y+im );
+      glVertex2d(x-im4, y+im4);
+      glVertex2d(x-im , y    );
+      glVertex2d(x-im4, y-im4);
+      glVertex2d(x    , y-im );
+      glVertex2d(x+im4, y-im4);
+      glVertex2d(x+im , y    );
+      glVertex2d(x+im4, y+im4);
+      glVertex2d(x    , y+im );
+      glEnd();
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MarkerPainter::DrawFullDoubleDiamond(UInt_t n, const TPoint *xy)const
+{
+   const Int_t im  = Int_t(4 * gVirtualX->GetMarkerSize() + 0.5);
+   const Int_t im4 = Int_t(1.33 * gVirtualX->GetMarkerSize() + 0.5);
+
+   for (unsigned i = 0; i < n; ++i) {
+      const Double_t x = xy[i].fX;
+      const Double_t y = xy[i].fY;
+
+      glBegin(GL_POLYGON);
+      glVertex2d(x, y+im );
+      glVertex2d(x-im4, y+im4);
+      glVertex2d(x, y);
+      glEnd();
+      glBegin(GL_POLYGON);
+      glVertex2d(x-im4, y+im4);
+      glVertex2d(x-im, y);
+      glVertex2d(x, y );
+      glEnd();
+      glBegin(GL_POLYGON);
+      glVertex2d(x-im, y);
+      glVertex2d(x-im4, y-im4);
+      glVertex2d(x, y );
+      glEnd();
+      glBegin(GL_POLYGON);
+      glVertex2d(x-im4, y-im4);
+      glVertex2d(x, y-im);
+      glVertex2d(x, y );
+      glEnd();
+      glBegin(GL_POLYGON);
+      glVertex2d(x, y-im);
+      glVertex2d(x+im4, y-im4);
+      glVertex2d(x, y );
+      glEnd();
+      glBegin(GL_POLYGON);
+      glVertex2d(x+im4, y-im4);
+      glVertex2d(x+im, y);
+      glVertex2d(x, y );
+      glEnd();
+      glBegin(GL_POLYGON);
+      glVertex2d(x+im, y);
+      glVertex2d(x+im4, y+im4);
+      glVertex2d(x, y );
+      glEnd();
+      glBegin(GL_POLYGON);
+      glVertex2d(x+im4, y+im4);
+      glVertex2d(x, y+im);
+      glVertex2d(x, y );
+      glEnd();
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MarkerPainter::DrawOpenFourTrianglesPlus(UInt_t n, const TPoint *xy)const
+{
+   const Int_t im  = Int_t(4 * gVirtualX->GetMarkerSize() + 0.5);
+   const Int_t im2 = Int_t(2.00 * gVirtualX->GetMarkerSize() + 0.5);
+
+   for (unsigned i = 0; i < n; ++i) {
+      const Double_t x = xy[i].fX;
+      const Double_t y = xy[i].fY;
+
+      glBegin(GL_LINE_LOOP);
+      glVertex2d(x   , y   );
+      glVertex2d(x+im2, y+im);
+      glVertex2d(x-im2, y+im);
+      glVertex2d(x+im2, y-im);
+      glVertex2d(x-im2, y-im);
+      glVertex2d(x   , y   );
+      glVertex2d(x+im, y+im2);
+      glVertex2d(x+im, y-im2);
+      glVertex2d(x-im, y+im2);
+      glVertex2d(x-im, y-im2);
+      glVertex2d(x   , y   );
+      glEnd();
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MarkerPainter::DrawFullFourTrianglesPlus(UInt_t n, const TPoint *xy)const
+{
+   const Int_t im  = Int_t(4 * gVirtualX->GetMarkerSize() + 0.5);
+   const Int_t im2 = Int_t(2.00 * gVirtualX->GetMarkerSize() + 0.5);
+
+   for (unsigned i = 0; i < n; ++i) {
+      const Double_t x = xy[i].fX;
+      const Double_t y = xy[i].fY;
+
+      glBegin(GL_POLYGON);
+      glVertex2d(x   , y   );
+      glVertex2d(x+im2, y+im);
+      glVertex2d(x-im2, y+im);
+      glVertex2d(x+im2, y-im);
+      glVertex2d(x-im2, y-im);
+      glVertex2d(x   , y   );
+      glVertex2d(x+im, y+im2);
+      glVertex2d(x+im, y-im2);
+      glVertex2d(x-im, y+im2);
+      glVertex2d(x-im, y-im2);
+      glVertex2d(x   , y   );
+      glEnd();
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MarkerPainter::DrawOpenCrossX(UInt_t n, const TPoint *xy)const
+{
+   const Int_t im  = Int_t(4 * gVirtualX->GetMarkerSize() + 0.5);
+   const Int_t im2 = Int_t(2.00 * gVirtualX->GetMarkerSize() + 0.5);
+
+   for (unsigned i = 0; i < n; ++i) {
+      const Double_t x = xy[i].fX;
+      const Double_t y = xy[i].fY;
+
+      glBegin(GL_LINE_LOOP);
+      glVertex2d(x     , y +im2);
+      glVertex2d(x -im2, y + im);
+      glVertex2d(x - im, y +im2);
+      glVertex2d(x -im2, y     );
+      glVertex2d(x - im, y -im2);
+      glVertex2d(x -im2, y - im);
+      glVertex2d(x     , y -im2);
+      glVertex2d(x +im2, y - im);
+      glVertex2d(x + im, y -im2);
+      glVertex2d(x +im2, y     );
+      glVertex2d(x + im, y +im2);
+      glVertex2d(x +im2, y + im);
+      glVertex2d(x     , y +im2);
+      glEnd();
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MarkerPainter::DrawFullCrossX(UInt_t n, const TPoint *xy)const
+{
+   const Int_t im  = Int_t(4 * gVirtualX->GetMarkerSize() + 0.5);
+   const Int_t im2 = Int_t(2.00 * gVirtualX->GetMarkerSize() + 0.5);
+
+   for (unsigned i = 0; i < n; ++i) {
+      const Double_t x = xy[i].fX;
+      const Double_t y = xy[i].fY;
+
+      glBegin(GL_POLYGON);
+      glVertex2d(x     , y +im2);
+      glVertex2d(x -im2, y +im);
+      glVertex2d(x -im , y +im2);
+      glVertex2d(x -im2, y );
+      glVertex2d(x     , y );
+      glEnd();
+      glBegin(GL_POLYGON);
+      glVertex2d(x -im2, y);
+      glVertex2d(x -im, y -im2);
+      glVertex2d(x -im2, y -im);
+      glVertex2d(x     , y-im2);
+      glVertex2d(x     , y );
+      glEnd();
+      glBegin(GL_POLYGON);
+      glVertex2d(x     , y -im2);
+      glVertex2d(x +im2, y -im);
+      glVertex2d(x +im , y -im2);
+      glVertex2d(x +im2, y);
+      glVertex2d(x     , y );
+      glEnd();
+      glBegin(GL_POLYGON);
+      glVertex2d(x +im2, y);
+      glVertex2d(x +im , y +im2);
+      glVertex2d(x +im2, y +im);
+      glVertex2d(x     , y +im2);
+      glVertex2d(x     , y );
+      glEnd();   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MarkerPainter::DrawFourSquaresX(UInt_t n, const TPoint *xy)const
+{
+   const Int_t im  = Int_t(4 * gVirtualX->GetMarkerSize() + 0.5);
+   const Int_t im2 = Int_t(2.00 * gVirtualX->GetMarkerSize() + 0.5);
+
+   for (unsigned i = 0; i < n; ++i) {
+      const Double_t x = xy[i].fX;
+      const Double_t y = xy[i].fY;
+
+      glBegin(GL_POLYGON);
+      glVertex2d(x, y+im2);
+      glVertex2d(x-im2 , y+im);
+      glVertex2d(x-im, y+im2);
+      glVertex2d(x-im2 , y);
+      glEnd();
+      glBegin(GL_POLYGON);
+      glVertex2d(x-im2, y);
+      glVertex2d(x-im , y-im2);
+      glVertex2d(x-im2, y-im);
+      glVertex2d(x, y-im2);
+      glEnd();
+      glBegin(GL_POLYGON);
+      glVertex2d(x, y-im2);
+      glVertex2d(x+im2 , y-im);
+      glVertex2d(x+im, y-im2);
+      glVertex2d(x+im2, y);
+      glEnd();
+      glBegin(GL_POLYGON);
+      glVertex2d(x+im2, y);
+      glVertex2d(x+im , y+im2);
+      glVertex2d(x+im2, y+im);
+      glVertex2d(x, y+im2);
+      glEnd();
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MarkerPainter::DrawFourSquaresPlus(UInt_t n, const TPoint *xy)const
+{
+   const Int_t im  = Int_t(4 * gVirtualX->GetMarkerSize() + 0.5);
+   const Int_t im2 = Int_t(1.33 * gVirtualX->GetMarkerSize() + 0.5);
+
+   for (unsigned i = 0; i < n; ++i) {
+      const Double_t x = xy[i].fX;
+      const Double_t y = xy[i].fY;
+
+      glBegin(GL_POLYGON);
+      glVertex2d(x+im2, y+im2);
+      glVertex2d(x+im2, y+im);
+      glVertex2d(x-im2, y+im);
+      glVertex2d(x-im2, y+im2);
+      glEnd();
+      glBegin(GL_POLYGON);
+      glVertex2d(x-im2, y+im2);
+      glVertex2d(x-im, y+im2);
+      glVertex2d(x-im, y-im2);
+      glVertex2d(x-im2, y-im2);
+      glEnd();
+      glBegin(GL_POLYGON);
+      glVertex2d(x-im2, y-im2);
+      glVertex2d(x-im2, y-im);
+      glVertex2d(x+im2, y-im);
+      glVertex2d(x+im2, y-im2);
+      glEnd();
+      glBegin(GL_POLYGON);
+      glVertex2d(x+im2, y-im2);
+      glVertex2d(x+im, y-im2);
+      glVertex2d(x+im, y+im2);
+      glVertex2d(x+im2, y+im2);
       glEnd();
    }
 }

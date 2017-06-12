@@ -46,7 +46,7 @@ TImageDump can be used in any mode (batch, interactive) as follows
 #include "TObjArray.h"
 
 
-ClassImp(TImageDump)
+ClassImp(TImageDump);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
@@ -306,6 +306,9 @@ void TImageDump::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
    Double_t m2 = m/2;
    Double_t m3 = m/3;
    Double_t m6 = m/6;
+   Double_t m4 = m/4;
+   Double_t m8 = m/8;
+   Double_t m0 = m*0.1;
 
    TColor *col = gROOT->GetColor(fMarkerColor);
    if (!col) { // no color
@@ -433,6 +436,181 @@ void TImageDump::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
          pt[10].fX = Short_t(ix);             pt[10].fY = Short_t(iy+m2);
          ms == 30 ? fImage->DrawPolyLine(11, pt, col->AsHexString()) :
                     fImage->DrawFillArea(10, pt, col->AsHexString());
+         break;
+      case 35:
+         pt[0].fX = Short_t(ix-m2);  pt[0].fY = Short_t(iy-m2);
+         pt[1].fX = Short_t(ix+m2);  pt[1].fY = Short_t(iy-m2);
+         pt[2].fX = Short_t(ix+m2);  pt[2].fY = Short_t(iy+m2);
+         pt[3].fX = Short_t(ix-m2);  pt[3].fY = Short_t(iy+m2);
+         pt[4].fX = Short_t(ix-m2);  pt[4].fY = Short_t(iy-m2);
+         pt[5].fX = Short_t(ix+m2);  pt[5].fY = Short_t(iy+m2);
+         pt[6].fX = Short_t(ix-m2);  pt[6].fY = Short_t(iy+m2);
+         pt[7].fX = Short_t(ix+m2);  pt[7].fY = Short_t(iy-m2);
+         fImage->DrawPolyLine(8, pt, col->AsHexString()) ;
+         break;
+      case 36:
+         pt[0].fX = Short_t(ix-m2);  pt[0].fY = Short_t(iy   );
+         pt[1].fX = Short_t(ix   );  pt[1].fY = Short_t(iy-m2);
+         pt[2].fX = Short_t(ix+m2);  pt[2].fY = Short_t(iy   );
+         pt[3].fX = Short_t(ix   );  pt[3].fY = Short_t(iy+m2);
+         pt[4].fX = Short_t(ix-m2);  pt[4].fY = Short_t(iy   );
+         pt[5].fX = Short_t(ix+m2);  pt[5].fY = Short_t(iy   );
+         pt[6].fX = Short_t(ix   );  pt[6].fY = Short_t(iy+m2);
+         pt[7].fX = Short_t(ix   );  pt[7].fY = Short_t(iy-m2);
+         fImage->DrawPolyLine(8, pt, col->AsHexString()) ;
+         break;
+      case 37:
+      case 39:
+         pt[0].fX = Short_t(ix   );  pt[0].fY = Short_t(iy   );
+         pt[1].fX = Short_t(ix-m4);  pt[1].fY = Short_t(iy+m2);
+         pt[2].fX = Short_t(ix-m2);  pt[2].fY = Short_t(iy   );
+         pt[3].fX = Short_t(ix   );  pt[3].fY = Short_t(iy   );
+         pt[4].fX = Short_t(ix-m4);  pt[4].fY = Short_t(iy-m2);
+         pt[5].fX = Short_t(ix+m4);  pt[5].fY = Short_t(iy-m2);
+         pt[6].fX = Short_t(ix   );  pt[6].fY = Short_t(iy   );
+         pt[7].fX = Short_t(ix+m2);  pt[7].fY = Short_t(iy   );
+         pt[8].fX = Short_t(ix+m4);  pt[8].fY = Short_t(iy+m2);
+         pt[9].fX = Short_t(ix   );  pt[9].fY = Short_t(iy   );
+         ms == 37 ? fImage->DrawPolyLine(10, pt, col->AsHexString()) :
+                    fImage->DrawFillArea(9, pt, col->AsHexString());
+         break;
+      case 38:
+         pt[0].fX = Short_t(ix-m2);  pt[0].fY = Short_t(iy   );
+         pt[1].fX = Short_t(ix-m2);  pt[1].fY = Short_t(iy-m4);
+         pt[2].fX = Short_t(ix-m4);  pt[2].fY = Short_t(iy-m2);
+         pt[3].fX = Short_t(ix+m4);  pt[3].fY = Short_t(iy-m2);
+         pt[4].fX = Short_t(ix+m2);  pt[4].fY = Short_t(iy-m4);
+         pt[5].fX = Short_t(ix+m2);  pt[5].fY = Short_t(iy+m4);
+         pt[6].fX = Short_t(ix+m4);  pt[6].fY = Short_t(iy+m2);
+         pt[7].fX = Short_t(ix-m4);  pt[7].fY = Short_t(iy+m2);
+         pt[8].fX = Short_t(ix-m2);  pt[8].fY = Short_t(iy+m4);
+         pt[9].fX = Short_t(ix-m2);  pt[9].fY = Short_t(iy   );
+         pt[10].fX = Short_t(ix+m2);  pt[10].fY = Short_t(iy   );
+         pt[11].fX = Short_t(ix   );  pt[11].fY = Short_t(iy   );
+         pt[12].fX = Short_t(ix   );  pt[12].fY = Short_t(iy-m2);
+         pt[13].fX = Short_t(ix   );  pt[13].fY = Short_t(iy+m2);
+         pt[14].fX = Short_t(ix   );  pt[14].fY = Short_t(iy   );
+         fImage->DrawPolyLine(15, pt, col->AsHexString()) ;
+         break;
+      case 40:
+      case 41:
+         pt[0].fX = Short_t(ix   );  pt[0].fY = Short_t(iy   );
+         pt[1].fX = Short_t(ix+m4);  pt[1].fY = Short_t(iy+m2);
+         pt[2].fX = Short_t(ix+m2);  pt[2].fY = Short_t(iy+m4);
+         pt[3].fX = Short_t(ix   );  pt[3].fY = Short_t(iy   );
+         pt[4].fX = Short_t(ix+m2);  pt[4].fY = Short_t(iy-m4);
+         pt[5].fX = Short_t(ix+m4);  pt[5].fY = Short_t(iy-m2);
+         pt[6].fX = Short_t(ix   );  pt[6].fY = Short_t(iy   );
+         pt[7].fX = Short_t(ix-m4);  pt[7].fY = Short_t(iy-m2);
+         pt[8].fX = Short_t(ix-m2);  pt[8].fY = Short_t(iy-m4);
+         pt[9].fX = Short_t(ix   );  pt[9].fY = Short_t(iy   );
+         pt[10].fX = Short_t(ix-m2);  pt[10].fY = Short_t(iy+m4);
+         pt[11].fX = Short_t(ix-m4);  pt[11].fY = Short_t(iy+m2);
+         pt[12].fX = Short_t(ix   );  pt[12].fY = Short_t(iy   );
+         ms == 40 ? fImage->DrawPolyLine(13, pt, col->AsHexString()) :
+                    fImage->DrawFillArea(12, pt, col->AsHexString());
+         break;
+      case 42:
+      case 43:
+         pt[0].fX = Short_t(ix   );  pt[0].fY = Short_t(iy+m2);
+         pt[1].fX = Short_t(ix-m8);  pt[1].fY = Short_t(iy+m8);
+         pt[2].fX = Short_t(ix-m2);  pt[2].fY = Short_t(iy   );
+         pt[3].fX = Short_t(ix-m8);  pt[3].fY = Short_t(iy-m8);
+         pt[4].fX = Short_t(ix   );  pt[4].fY = Short_t(iy-m2);
+         pt[5].fX = Short_t(ix+m8);  pt[5].fY = Short_t(iy-m8);
+         pt[6].fX = Short_t(ix+m2);  pt[6].fY = Short_t(iy   );
+         pt[7].fX = Short_t(ix+m8);  pt[7].fY = Short_t(iy+m8);
+         pt[8].fX = Short_t(ix   );  pt[8].fY = Short_t(iy+m2);
+         ms == 42 ? fImage->DrawPolyLine(9, pt, col->AsHexString()) :
+                    fImage->DrawFillArea(8, pt, col->AsHexString());
+         break;
+      case 44:
+         pt[0].fX = Short_t(ix   );  pt[0].fY = Short_t(iy   );
+         pt[1].fX = Short_t(ix+m4);  pt[1].fY = Short_t(iy+m2);
+         pt[2].fX = Short_t(ix-m4);  pt[2].fY = Short_t(iy+m2);
+         pt[3].fX = Short_t(ix+m4);  pt[3].fY = Short_t(iy-m2);
+         pt[4].fX = Short_t(ix-m4);  pt[4].fY = Short_t(iy-m2);
+         pt[5].fX = Short_t(ix   );  pt[5].fY = Short_t(iy   );
+         pt[6].fX = Short_t(ix+m2);  pt[6].fY = Short_t(iy+m4);
+         pt[7].fX = Short_t(ix+m2);  pt[7].fY = Short_t(iy-m4);
+         pt[8].fX = Short_t(ix-m2);  pt[8].fY = Short_t(iy+m4);
+         pt[9].fX = Short_t(ix-m2);  pt[9].fY = Short_t(iy-m4);
+         pt[10].fX = Short_t(ix   );  pt[10].fY = Short_t(iy   );
+         fImage->DrawPolyLine(11, pt, col->AsHexString()) ;
+         break;
+      case 45:
+         pt[0].fX = Short_t(ix+m0);  pt[0].fY = Short_t(iy+m0);
+         pt[1].fX = Short_t(ix+m4);  pt[1].fY = Short_t(iy+m2);
+         pt[2].fX = Short_t(ix-m4);  pt[2].fY = Short_t(iy+m2);
+         pt[3].fX = Short_t(ix-m0);  pt[3].fY = Short_t(iy+m0);
+         pt[4].fX = Short_t(ix-m2);  pt[4].fY = Short_t(iy+m4);
+         pt[5].fX = Short_t(ix-m2);  pt[5].fY = Short_t(iy-m4);
+         pt[6].fX = Short_t(ix-m0);  pt[6].fY = Short_t(iy-m0);
+         pt[7].fX = Short_t(ix-m4);  pt[7].fY = Short_t(iy-m2);
+         pt[8].fX = Short_t(ix+m4);  pt[8].fY = Short_t(iy-m2);
+         pt[9].fX = Short_t(ix+m0);  pt[9].fY = Short_t(iy-m0);
+         pt[10].fX = Short_t(ix+m2);  pt[10].fY = Short_t(iy-m4);
+         pt[11].fX = Short_t(ix+m2);  pt[11].fY = Short_t(iy+m4);
+         pt[12].fX = Short_t(ix+m0);  pt[12].fY = Short_t(iy+m0);
+         fImage->DrawFillArea(13, pt, col->AsHexString());
+         break;
+      case 46:
+      case 47:
+         pt[0].fX = Short_t(ix   );  pt[0].fY = Short_t(iy+m4);
+         pt[1].fX = Short_t(ix-m4);  pt[1].fY = Short_t(iy+m2);
+         pt[2].fX = Short_t(ix-m2);  pt[2].fY = Short_t(iy+m4);
+         pt[3].fX = Short_t(ix-m4);  pt[3].fY = Short_t(iy   );
+         pt[4].fX = Short_t(ix-m2);  pt[4].fY = Short_t(iy-m4);
+         pt[5].fX = Short_t(ix-m4);  pt[5].fY = Short_t(iy-m2);
+         pt[6].fX = Short_t(ix   );  pt[6].fY = Short_t(iy-m4);
+         pt[7].fX = Short_t(ix+m4);  pt[7].fY = Short_t(iy-m2);
+         pt[8].fX = Short_t(ix+m2);  pt[8].fY = Short_t(iy-m4);
+         pt[9].fX = Short_t(ix+m4);  pt[9].fY = Short_t(iy   );
+         pt[10].fX = Short_t(ix+m2);  pt[10].fY = Short_t(iy+m4);
+         pt[11].fX = Short_t(ix+m4);  pt[11].fY = Short_t(iy+m2);
+         pt[12].fX = Short_t(ix   );  pt[12].fY = Short_t(iy+m4);
+         ms == 46 ? fImage->DrawPolyLine(13, pt, col->AsHexString()) :
+                    fImage->DrawFillArea(12, pt, col->AsHexString());
+         break;
+      case 48:
+         pt[0].fX = Short_t(ix   );  pt[0].fY = Short_t(iy+m4*1.005);
+         pt[1].fX = Short_t(ix-m4);  pt[1].fY = Short_t(iy+m2);
+         pt[2].fX = Short_t(ix-m2);  pt[2].fY = Short_t(iy+m4);
+         pt[3].fX = Short_t(ix-m4);  pt[3].fY = Short_t(iy   );
+         pt[4].fX = Short_t(ix-m2);  pt[4].fY = Short_t(iy-m4);
+         pt[5].fX = Short_t(ix-m4);  pt[5].fY = Short_t(iy-m2);
+         pt[6].fX = Short_t(ix   );  pt[6].fY = Short_t(iy-m4);
+         pt[7].fX = Short_t(ix+m4);  pt[7].fY = Short_t(iy-m2);
+         pt[8].fX = Short_t(ix+m2);  pt[8].fY = Short_t(iy-m4);
+         pt[9].fX = Short_t(ix+m4);  pt[9].fY = Short_t(iy   );
+         pt[10].fX = Short_t(ix+m2);  pt[10].fY = Short_t(iy+m4);
+         pt[11].fX = Short_t(ix+m4);  pt[11].fY = Short_t(iy+m2);
+         pt[12].fX = Short_t(ix   );  pt[12].fY = Short_t(iy+m4*0.995);
+         pt[13].fX = Short_t(ix+m4*0.995);  pt[13].fY = Short_t(iy   );
+         pt[14].fX = Short_t(ix   );  pt[14].fY = Short_t(iy-m4*0.995);
+         pt[15].fX = Short_t(ix-m4*0.995);  pt[15].fY = Short_t(iy   );
+         pt[16].fX = Short_t(ix   );  pt[16].fY = Short_t(iy+m4*0.995);
+         fImage->DrawFillArea(17, pt, col->AsHexString());
+         break;
+      case 49:
+         pt[0].fX = Short_t(ix-m6);  pt[0].fY = Short_t(iy-m6*1.005);
+         pt[1].fX = Short_t(ix-m6);  pt[1].fY = Short_t(iy-m2);
+         pt[2].fX = Short_t(ix+m6);  pt[2].fY = Short_t(iy-m2);
+         pt[3].fX = Short_t(ix+m6);  pt[3].fY = Short_t(iy-m6);
+         pt[4].fX = Short_t(ix+m2);  pt[4].fY = Short_t(iy-m6);
+         pt[5].fX = Short_t(ix+m2);  pt[5].fY = Short_t(iy+m6);
+         pt[6].fX = Short_t(ix+m6);  pt[6].fY = Short_t(iy+m6);
+         pt[7].fX = Short_t(ix+m6);  pt[7].fY = Short_t(iy+m2);
+         pt[8].fX = Short_t(ix-m6);  pt[8].fY = Short_t(iy+m2);
+         pt[9].fX = Short_t(ix-m6);  pt[9].fY = Short_t(iy+m6);
+         pt[10].fX = Short_t(ix-m2);  pt[10].fY = Short_t(iy+m6);
+         pt[11].fX = Short_t(ix-m2);  pt[11].fY = Short_t(iy-m6);
+         pt[12].fX = Short_t(ix-m6);  pt[12].fY = Short_t(iy-m6*0.995);
+         pt[13].fX = Short_t(ix-m6);  pt[13].fY = Short_t(iy+m6);
+         pt[14].fX = Short_t(ix+m6);  pt[14].fY = Short_t(iy+m6);
+         pt[15].fX = Short_t(ix+m6);  pt[15].fY = Short_t(iy-m6);
+         pt[16].fX = Short_t(ix-m6);  pt[16].fY = Short_t(iy-m6*1.005);
+         fImage->DrawFillArea(17, pt, col->AsHexString());
          break;
       default:
          fImage->PutPixel(UInt_t(ix), UInt_t(iy), col->AsHexString());

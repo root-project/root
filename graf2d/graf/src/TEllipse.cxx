@@ -21,7 +21,7 @@
 
 const Double_t kPI = 3.14159265358979323846;
 
-ClassImp(TEllipse)
+ClassImp(TEllipse);
 
 /** \class TEllipse
 \ingroup BasicGraphics

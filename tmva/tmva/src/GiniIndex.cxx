@@ -67,7 +67,7 @@ Gini(Sample) = \frac{2sb}{(s+b)^2}
 
 #include "Rtypes.h"
 
-ClassImp(TMVA::GiniIndex)
+ClassImp(TMVA::GiniIndex);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// what we use here is 2*Gini.. as for the later use the factor

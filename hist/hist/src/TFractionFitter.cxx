@@ -153,7 +153,7 @@ Any serious inconsistency results in an error.
 #include "Math/Functor.h"
 #include "TFractionFitter.h"
 
-ClassImp(TFractionFitter)
+ClassImp(TFractionFitter);
 
 
 ////////////////////////////////////////////////////////////////////////////////

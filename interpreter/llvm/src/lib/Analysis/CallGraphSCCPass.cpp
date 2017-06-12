@@ -67,9 +67,7 @@ public:
     Info.setPreservesAll();
   }
 
-  const char *getPassName() const override {
-    return "CallGraph Pass Manager";
-  }
+  StringRef getPassName() const override { return "CallGraph Pass Manager"; }
 
   PMDataManager *getAsPMDataManager() override { return this; }
   Pass *getAsPass() override { return this; }
@@ -100,7 +98,7 @@ private:
   bool RunPassOnSCC(Pass *P, CallGraphSCC &CurSCC,
                     CallGraph &CG, bool &CallGraphUpToDate,
                     bool &DevirtualizedCall);
-  bool RefreshCallGraph(CallGraphSCC &CurSCC, CallGraph &CG,
+  bool RefreshCallGraph(const CallGraphSCC &CurSCC, CallGraph &CG,
                         bool IsCheckingMode);
 };
 
@@ -175,8 +173,8 @@ bool CGPassManager::RunPassOnSCC(Pass *P, CallGraphSCC &CurSCC,
 /// a function pass like GVN optimizes away stuff feeding the indirect call.
 /// This never happens in checking mode.
 ///
-bool CGPassManager::RefreshCallGraph(CallGraphSCC &CurSCC,
-                                     CallGraph &CG, bool CheckingMode) {
+bool CGPassManager::RefreshCallGraph(const CallGraphSCC &CurSCC, CallGraph &CG,
+                                     bool CheckingMode) {
   DenseMap<Value*, CallGraphNode*> CallSites;
   
   DEBUG(dbgs() << "CGSCCPASSMGR: Refreshing SCC with " << CurSCC.size()
@@ -206,7 +204,7 @@ bool CGPassManager::RefreshCallGraph(CallGraphSCC &CurSCC,
     // Get the set of call sites currently in the function.
     for (CallGraphNode::iterator I = CGN->begin(), E = CGN->end(); I != E; ) {
       // If this call site is null, then the function pass deleted the call
-      // entirely and the WeakVH nulled it out.  
+      // entirely and the WeakTrackingVH nulled it out.
       if (!I->first ||
           // If we've already seen this call site, then the FunctionPass RAUW'd
           // one call with another, which resulted in two "uses" in the edge
@@ -349,7 +347,8 @@ bool CGPassManager::RefreshCallGraph(CallGraphSCC &CurSCC,
       DevirtualizedCall = true;
     
     // After scanning this function, if we still have entries in callsites, then
-    // they are dangling pointers.  WeakVH should save us for this, so abort if
+    // they are dangling pointers.  WeakTrackingVH should save us for this, so
+    // abort if
     // this happens.
     assert(CallSites.empty() && "Dangling pointers found in call sites map");
     
@@ -450,7 +449,7 @@ bool CGPassManager::runOnModule(Module &M) {
     // Copy the current SCC and increment past it so that the pass can hack
     // on the SCC if it wants to without invalidating our iterator.
     const std::vector<CallGraphNode *> &NodeVec = *CGI;
-    CurSCC.initialize(NodeVec.data(), NodeVec.data() + NodeVec.size());
+    CurSCC.initialize(NodeVec);
     ++CGI;
 
     // At the top level, we run all the passes in this pass manager on the
@@ -611,16 +610,28 @@ namespace {
     }
 
     bool runOnSCC(CallGraphSCC &SCC) override {
-      Out << Banner;
+      auto PrintBannerOnce = [&] () {
+        static bool BannerPrinted = false;
+        if (BannerPrinted)
+          return;
+        Out << Banner;
+        BannerPrinted = true;
+        };
       for (CallGraphNode *CGN : SCC) {
         if (CGN->getFunction()) {
-          if (isFunctionInPrintList(CGN->getFunction()->getName()))
+          if (isFunctionInPrintList(CGN->getFunction()->getName())) {
+            PrintBannerOnce();
             CGN->getFunction()->print(Out);
-        } else
+          }
+        } else if (llvm::isFunctionInPrintList("*")) {
+          PrintBannerOnce();
           Out << "\nPrinting <null> Function\n";
+        }
       }
       return false;
     }
+    
+    StringRef getPassName() const override { return "Print CallGraph IR"; }
   };
   
 } // end anonymous namespace.

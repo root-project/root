@@ -29,7 +29,7 @@
 
 using namespace std;
 
-ClassImp(RooMomentMorph)
+ClassImp(RooMomentMorph);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// coverity[UNINIT_CTOR]

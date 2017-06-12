@@ -22,7 +22,7 @@ A TLeaf for a variable length string.
 #include "Riostream.h"
 #include <string>
 
-ClassImp(TLeafC)
+ClassImp(TLeafC);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor for LeafC.

@@ -49,8 +49,8 @@ TObjectTable  *TCollection::fgGarbageCollection = 0;
 Bool_t         TCollection::fgEmptyingGarbage   = kFALSE;
 Int_t          TCollection::fgGarbageStack      = 0;
 
-ClassImp(TCollection)
-ClassImp(TIter)
+ClassImp(TCollection);
+ClassImp(TIter);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Add all objects from collection col to this collection.
@@ -263,6 +263,15 @@ void TCollection::ls(Option_t *option) const
       object->ls(option);
    }
    TROOT::DecreaseDirLevel();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// 'Notify' all objects in this collection.
+Bool_t TCollection::Notify()
+{
+   Bool_t success = true;
+   for (auto obj : *this) success &= obj->Notify();
+   return success;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

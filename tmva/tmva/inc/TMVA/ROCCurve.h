@@ -1,5 +1,5 @@
 // @(#)root/tmva $Id$
-// Author: Omar Zapata, Lorenzo Moneta, Sergei Gleyzer
+// Author: Omar Zapata, Lorenzo Moneta, Sergei Gleyzer, Kim Albertsson
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -13,6 +13,7 @@
  *      Omar Zapata     <Omar.Zapata@cern.ch>    - UdeA/ITM Colombia              *
  *      Lorenzo Moneta  <Lorenzo.Moneta@cern.ch> - CERN, Switzerland              *
  *      Sergei Gleyzer  <Sergei.Gleyzer@cern.ch> - U of Florida & CERN            *
+ *      Kim Albertsson  <kim.albertsson@cern.ch> - LTU & CERN                     *
  *                                                                                *
  * Copyright (c) 2015:                                                            *
  *      CERN, Switzerland                                                         *
@@ -41,30 +42,41 @@ class TGraph;
 
 namespace TMVA {
 
-  class MsgLogger;
+class MsgLogger;
 
+class ROCCurve {
 
-  class ROCCurve {
+public:
+   ROCCurve(const std::vector<Float_t> &mvaValues, const std::vector<Bool_t> &mvaTargets,
+            const std::vector<Float_t> &mvaWeights);
 
-  public:
-    ROCCurve( const std::vector<Float_t> & mvaS, const std::vector<Bool_t> & mvat);
+   ROCCurve(const std::vector<Float_t> &mvaValues, const std::vector<Bool_t> &mvaTargets);
 
-    ~ROCCurve();
+   ROCCurve(const std::vector<Float_t> &mvaSignal, const std::vector<Float_t> &mvaBackground,
+            const std::vector<Float_t> &mvaSignalWeights, const std::vector<Float_t> &mvaBackgroundWeights);
 
+   ROCCurve(const std::vector<Float_t> &mvaSignal, const std::vector<Float_t> &mvaBackground);
 
-    Double_t GetROCIntegral();
-    TGraph* GetROCCurve(const UInt_t points=100);//n divisions = #points -1
+   ~ROCCurve();
 
-  private:
-    void EpsilonCount();
-    mutable MsgLogger* fLogger;   //! message logger
-    MsgLogger& Log() const { return *fLogger; }
-    TGraph *fGraph;
-    std::vector<Float_t> fMvaS;
-    std::vector<Float_t> fMvaB;
-    std::vector<Float_t> fEpsilonSig;
-    std::vector<Float_t> fEpsilonBgk;
+   Double_t GetEffSForEffB(Double_t effB, const UInt_t num_points = 41);
 
-  };
+   Double_t GetROCIntegral(const UInt_t points = 41);
+   TGraph *GetROCCurve(const UInt_t points = 100); // n divisions = #points -1
+
+private:
+   mutable MsgLogger *fLogger; //! message logger
+   MsgLogger &Log() const { return *fLogger; }
+
+   TGraph *fGraph;
+
+   std::vector<Float_t> fMvaSignal;
+   std::vector<Float_t> fMvaBackground;
+   std::vector<Float_t> fMvaSignalWeights;
+   std::vector<Float_t> fMvaBackgroundWeights;
+
+   std::vector<Double_t> ComputeSensitivity(const UInt_t num_points);
+   std::vector<Double_t> ComputeSpecificity(const UInt_t num_points);
+};
 }
 #endif

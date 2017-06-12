@@ -30,6 +30,9 @@ void CGCXXABI::ErrorUnsupportedABI(CodeGenFunction &CGF, StringRef S) {
 }
 
 bool CGCXXABI::canCopyArgument(const CXXRecordDecl *RD) const {
+  // See also Sema::ShouldDeleteSpecialMember. These two functions
+  // should be kept consistent.
+
   // If RD has a non-trivial move or copy constructor, we cannot copy the
   // argument.
   if (RD->hasNonTrivialCopyConstructor() || RD->hasNonTrivialMoveConstructor())
@@ -41,10 +44,7 @@ bool CGCXXABI::canCopyArgument(const CXXRecordDecl *RD) const {
 
   // We can only copy the argument if there exists at least one trivial,
   // non-deleted copy or move constructor.
-  // FIXME: This assumes that all lazily declared copy and move constructors are
-  // not deleted.  This assumption might not be true in some corner cases.
-  bool CopyDeleted = false;
-  bool MoveDeleted = false;
+  bool CopyOrMoveDeleted = false;
   for (const CXXConstructorDecl *CD : RD->ctors()) {
     if (CD->isCopyConstructor() || CD->isMoveConstructor()) {
       assert(CD->isTrivial());
@@ -52,16 +52,27 @@ bool CGCXXABI::canCopyArgument(const CXXRecordDecl *RD) const {
       // directly.
       if (!CD->isDeleted())
         return true;
-      if (CD->isCopyConstructor())
-        CopyDeleted = true;
-      else
-        MoveDeleted = true;
+      CopyOrMoveDeleted = true;
     }
   }
+#if __clang_major__ < 5
+  // If a move constructor or move assignment operator was declared, the
+  // default copy constructors are implicitly deleted, except in one case
+  // related to compatibility with MSVC pre-2015.
+  if (RD->hasUserDeclaredMoveConstructor())
+    return false;
+  if (RD->hasUserDeclaredMoveAssignment()) {
+    const LangOptions &opts = CGM.getLangOpts();
+    bool DeletesOnlyMatchingCopy =
+      opts.MSVCCompat && !opts.isCompatibleWithMSVC(LangOptions::MSVC2015);
+    if (!DeletesOnlyMatchingCopy)
+      return false;
+  }
+#endif
 
   // If all trivial copy and move constructors are deleted, we cannot copy the
   // argument.
-  return !(CopyDeleted && MoveDeleted);
+  return !CopyOrMoveDeleted;
 }
 
 llvm::Constant *CGCXXABI::GetBogusMemberPointer(QualType T) {
@@ -73,7 +84,7 @@ CGCXXABI::ConvertMemberPointerType(const MemberPointerType *MPT) {
   return CGM.getTypes().ConvertType(CGM.getContext().getPointerDiffType());
 }
 
-llvm::Value *CGCXXABI::EmitLoadOfMemberFunctionPointer(
+CGCallee CGCXXABI::EmitLoadOfMemberFunctionPointer(
     CodeGenFunction &CGF, const Expr *E, Address This,
     llvm::Value *&ThisPtrForCall,
     llvm::Value *MemPtr, const MemberPointerType *MPT) {
@@ -86,7 +97,8 @@ llvm::Value *CGCXXABI::EmitLoadOfMemberFunctionPointer(
     cast<CXXRecordDecl>(MPT->getClass()->getAs<RecordType>()->getDecl());
   llvm::FunctionType *FTy = CGM.getTypes().GetFunctionType(
       CGM.getTypes().arrangeCXXMethodType(RD, FPT, /*FD=*/nullptr));
-  return llvm::Constant::getNullValue(FTy->getPointerTo());
+  llvm::Constant *FnPtr = llvm::Constant::getNullValue(FTy->getPointerTo());
+  return CGCallee::forDirect(FnPtr, FPT);
 }
 
 llvm::Value *

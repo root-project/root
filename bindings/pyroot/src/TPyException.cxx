@@ -20,7 +20,7 @@
 
 
 //- data ---------------------------------------------------------------------
-ClassImp(PyROOT::TPyException)
+ClassImp(PyROOT::TPyException);
 
 
 //- constructors/destructor --------------------------------------------------
@@ -29,14 +29,14 @@ PyROOT::TPyException::TPyException()
 // default constructor
 }
 
-PyROOT::TPyException::~TPyException() throw()
+PyROOT::TPyException::~TPyException() noexcept
 {
 // destructor
 }
 
 
 //- public members -----------------------------------------------------------
-const char* PyROOT::TPyException::what() const throw()
+const char* PyROOT::TPyException::what() const noexcept
 {
 // Return reason for throwing this exception: a python exception was raised.
    return "python exception";

@@ -593,7 +593,7 @@ void TPad::Clear(Option_t *option)
 {
    if (!IsEditable()) return;
 
-   R__LOCKGUARD2(gROOTMutex);
+   R__LOCKGUARD(gROOTMutex);
 
    if (!fPadPaint) {
       SafeDelete(fView);
@@ -3047,7 +3047,7 @@ Bool_t TPad::PlaceBox(TObject *o, Double_t w, Double_t h, Double_t &xl, Double_t
    return kFALSE;
 }
 
-#define NotFree(i, j) fCollideGrid[i+j*fCGnx] = kFALSE;
+#define NotFree(i, j) fCollideGrid[TMath::Max(TMath::Min(i+j*fCGnx,fCGnx*fCGny),0)] = kFALSE;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Mark as "not free" the cells along a line.
@@ -3057,9 +3057,6 @@ void TPad::LineNotFree(Int_t x1, Int_t x2, Int_t y1, Int_t y2)
    NotFree(x1, y1);
    NotFree(x2, y2);
    Int_t i, j, xt, yt;
-
-   if (x1>x2) {xt = x1; x1 = x2; x2 = xt;}
-   if (y1>y2) {yt = y1; y1 = y2; y2 = yt;}
 
    // horizontal lines
    if (y1==y2) {
@@ -3074,13 +3071,21 @@ void TPad::LineNotFree(Int_t x1, Int_t x2, Int_t y1, Int_t y2)
    }
 
    // other lines
-   if (x2-x1>y2-y1) {
+   if (TMath::Abs(x2-x1)>TMath::Abs(y2-y1)) {
+      if (x1>x2) {
+         xt = x1; x1 = x2; x2 = xt;
+         yt = y1; y1 = y2; y2 = yt;
+      }
       for (i=x1+1; i<x2; i++) {
          j = (Int_t)((Double_t)(y2-y1)*(Double_t)((i-x1)/(Double_t)(x2-x1))+y1);
          NotFree(i,j);
          NotFree(i,(j+1));
       }
    } else {
+      if (y1>y2) {
+         yt = y1; y1 = y2; y2 = yt;
+         xt = x1; x1 = x2; x2 = xt;
+      }
       for (j=y1+1; j<y2; j++) {
          i = (Int_t)((Double_t)(x2-x1)*(Double_t)((j-y1)/(Double_t)(y2-y1))+x1);
          NotFree(i,j);
@@ -3142,9 +3147,22 @@ void TPad::FillCollideGridTGraph(TObject *o)
 
    Int_t n = g->GetN();
    Double_t x1, x2, y1, y2;
+
    for (Int_t i=1; i<n; i++) {
       g->GetPoint(i-1,x1,y1);
-      g->GetPoint(i,x2,y2);
+      g->GetPoint(i  ,x2,y2);
+      if (fLogx) {
+         if (x1 > 0) x1 = TMath::Log10(x1);
+         else        x1 = fUxmin;
+         if (x2 > 0) x2 = TMath::Log10(x2);
+         else        x2 = fUxmin;
+      }
+      if (fLogy) {
+         if (y1 > 0) y1 = TMath::Log10(y1);
+         else        y1 = fUymin;
+         if (y2 > 0) y2 = TMath::Log10(y2);
+         else        y2 = fUymin;
+      }
       LineNotFree((int)((x1-fX1)/xs), (int)((x2-fX1)/xs),
                   (int)((y1-fY1)/ys), (int)((y2-fY1)/ys));
    }
@@ -3154,6 +3172,9 @@ void TPad::FillCollideGridTGraph(TObject *o)
 void TPad::FillCollideGridTH1(TObject *o)
 {
    TH1 *h = (TH1 *)o;
+
+   TString name = h->GetName();
+   if (name.Index("hframe") >= 0) return;
 
    Double_t xs   = (fX2-fX1)/fCGnx;
    Double_t ys   = (fY2-fY1)/fCGny;
@@ -3170,17 +3191,51 @@ void TPad::FillCollideGridTH1(TObject *o)
    Int_t nx = h->GetNbinsX();
    Int_t  x1, y1, y2;
    Int_t i, j;
+   Double_t x1l, y1l, y2l;
+
    for (i = 1; i<nx; i++) {
       if (haserrors) {
-         x1 = (Int_t)((h->GetBinCenter(i)-fX1)/xs);
-         y1 = (Int_t)((h->GetBinContent(i)-h->GetBinErrorLow(i)-fY1)/ys);
-         y2 = (Int_t)((h->GetBinContent(i)+h->GetBinErrorUp(i)-fY1)/ys);
-         for (j=y1; j<=y2; j++) NotFree(x1, j);
+         x1l = h->GetBinCenter(i);
+         if (fLogx) {
+            if (x1l > 0) x1l = TMath::Log10(x1l);
+            else         x1l = fUxmin;
+         }
+         x1 = (Int_t)((x1l-fX1)/xs);
+         y1l = h->GetBinContent(i)-h->GetBinErrorLow(i);
+         if (fLogy) {
+            if (y1l > 0) y1l = TMath::Log10(y1l);
+            else         y1l = fUymin;
+         }
+         y1 = (Int_t)((y1l-fY1)/ys);
+         y2l = h->GetBinContent(i)+h->GetBinErrorUp(i);
+         if (fLogy) {
+            if (y2l > 0) y2l = TMath::Log10(y2l);
+            else         y2l = fUymin;
+         }
+         y2 = (Int_t)((y2l-fY1)/ys);
+         for (j=y1; j<=y2; j++) {
+         NotFree(x1, j);
+         }
       }
-      x1 = (Int_t)((h->GetBinLowEdge(i)-fX1)/xs);
-      y1 = (Int_t)((h->GetBinContent(i)-fY1)/ys);
+      x1l = h->GetBinLowEdge(i);
+      if (fLogx) {
+         if (x1l > 0) x1l = TMath::Log10(x1l);
+         else         x1l = fUxmin;
+      }
+      x1 = (Int_t)((x1l-fX1)/xs);
+      y1l = h->GetBinContent(i);
+      if (fLogy) {
+         if (y1l > 0) y1l = TMath::Log10(y1l);
+         else         y1l = fUymin;
+      }
+      y1 = (Int_t)((y1l-fY1)/ys);
       NotFree(x1, y1);
-      x1 = (int)((h->GetBinLowEdge(i)+h->GetBinWidth(i)-fX1)/xs);
+      x1l = h->GetBinLowEdge(i)+h->GetBinWidth(i);
+      if (fLogx) {
+         if (x1l > 0) x1l = TMath::Log10(x1l);
+         else         x1l = fUxmin;
+      }
+      x1 = (int)((x1l-fX1)/xs);
       NotFree(x1, y1);
    }
 
@@ -3201,25 +3256,47 @@ void TPad::DrawCollideGrid()
    Double_t xs   = (fX2-fX1)/fCGnx;
    Double_t ys   = (fY2-fY1)/fCGny;
 
-   double Y1, Y2;
-   double X1 = fX1;
-   double X2 = X1+xs;
+   Double_t X1L, X2L, Y1L, Y2L;
+   Double_t t = 0.15;
+   Double_t Y1, Y2;
+   Double_t X1 = fX1;
+   Double_t X2 = X1+xs;
 
    for (int i = 0; i<fCGnx; i++) {
       Y1 = fY1;
       Y2 = Y1+ys;
       for (int j = 0; j<fCGny; j++) {
+         if (gPad->GetLogx()) {
+            X1L = TMath::Power(10,X1);
+            X2L = TMath::Power(10,X2);
+         } else {
+            X1L = X1;
+            X2L = X2;
+         }
+         if (gPad->GetLogy()) {
+            Y1L = TMath::Power(10,Y1);
+            Y2L = TMath::Power(10,Y2);
+         } else {
+            Y1L = Y1;
+            Y2L = Y2;
+         }
          if (!fCollideGrid[i + j*fCGnx]) {
-            box->SetFillColorAlpha(kBlack,0.15);
-            box->DrawBox(X1, Y1, X2, Y2);
+            box->SetFillColorAlpha(kBlack,t);
+            box->DrawBox(X1L, Y1L, X2L, Y2L);
+         } else {
+            box->SetFillColorAlpha(kRed,t);
+            box->DrawBox(X1L, Y1L, X2L, Y2L);
          }
          Y1 = Y2;
          Y2 = Y1+ys;
+         if (t==0.15) t = 0.1;
+         else         t = 0.15;
       }
       X1 = X2;
       X2 = X1+xs;
    }
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Convert x from pad to X.

@@ -154,7 +154,7 @@ using std::make_pair;
 
 REGISTER_METHOD(BDT)
 
-ClassImp(TMVA::MethodBDT)
+ClassImp(TMVA::MethodBDT);
 
    const Int_t TMVA::MethodBDT::fgDebugLevel = 0;
 

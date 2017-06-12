@@ -818,9 +818,10 @@
       var jmain = $("#"+this.gui_div+" .jsroot_browser"), top = 7, left = 7;
 
       if (this.browser_visible) {
-         var area = jmain.find(".jsroot_browser_area");
-         top = area.offset().top + 7;
-         left = area.offset().left + area.innerWidth() - 27;
+         var area = jmain.find(".jsroot_browser_area"),
+             off0 = jmain.offset(), off1 = area.offset(); 
+         top = off1.top - off0.top + 7;
+         left = off1.left - off0.left + area.innerWidth() - 27;
       }
 
       jmain.find(".jsroot_browser_btns")

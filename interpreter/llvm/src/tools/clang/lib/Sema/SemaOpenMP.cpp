@@ -72,8 +72,13 @@ private:
   typedef llvm::DenseMap<ValueDecl *, Expr *> AlignedMapTy;
   typedef std::pair<unsigned, VarDecl *> LCDeclInfo;
   typedef llvm::DenseMap<ValueDecl *, LCDeclInfo> LoopControlVariablesMapTy;
-  typedef llvm::DenseMap<
-      ValueDecl *, OMPClauseMappableExprCommon::MappableExprComponentLists>
+  /// Struct that associates a component with the clause kind where they are
+  /// found.
+  struct MappedExprComponentTy {
+    OMPClauseMappableExprCommon::MappableExprComponentLists Components;
+    OpenMPClauseKind Kind = OMPC_unknown;
+  };
+  typedef llvm::DenseMap<ValueDecl *, MappedExprComponentTy>
       MappedExprComponentsTy;
   typedef llvm::StringMap<std::pair<OMPCriticalDirective *, llvm::APSInt>>
       CriticalsWithHintsTy;
@@ -113,7 +118,9 @@ private:
   typedef SmallVector<SharingMapTy, 4> StackTy;
 
   /// \brief Stack of used declaration and their data-sharing attributes.
-  StackTy Stack;
+  DeclSAMapTy Threadprivates;
+  const FunctionScopeInfo *CurrentNonCapturingFunctionScope = nullptr;
+  SmallVector<std::pair<StackTy, const FunctionScopeInfo *>, 4> Stack;
   /// \brief true, if check for DSA must be from parent directive, false, if
   /// from current directive.
   OpenMPClauseKind ClauseKindMode = OMPC_unknown;
@@ -123,13 +130,19 @@ private:
 
   typedef SmallVector<SharingMapTy, 8>::reverse_iterator reverse_iterator;
 
-  DSAVarData getDSA(StackTy::reverse_iterator& Iter, ValueDecl *D);
+  DSAVarData getDSA(StackTy::reverse_iterator &Iter, ValueDecl *D);
 
   /// \brief Checks if the variable is a local for OpenMP region.
   bool isOpenMPLocal(VarDecl *D, StackTy::reverse_iterator Iter);
 
+  bool isStackEmpty() const {
+    return Stack.empty() ||
+           Stack.back().second != CurrentNonCapturingFunctionScope ||
+           Stack.back().first.empty();
+  }
+
 public:
-  explicit DSAStackTy(Sema &S) : Stack(1), SemaRef(S) {}
+  explicit DSAStackTy(Sema &S) : SemaRef(S) {}
 
   bool isClauseParsingMode() const { return ClauseKindMode != OMPC_unknown; }
   void setClauseParsingMode(OpenMPClauseKind K) { ClauseKindMode = K; }
@@ -139,13 +152,38 @@ public:
 
   void push(OpenMPDirectiveKind DKind, const DeclarationNameInfo &DirName,
             Scope *CurScope, SourceLocation Loc) {
-    Stack.push_back(SharingMapTy(DKind, DirName, CurScope, Loc));
-    Stack.back().DefaultAttrLoc = Loc;
+    if (Stack.empty() ||
+        Stack.back().second != CurrentNonCapturingFunctionScope)
+      Stack.emplace_back(StackTy(), CurrentNonCapturingFunctionScope);
+    Stack.back().first.emplace_back(DKind, DirName, CurScope, Loc);
+    Stack.back().first.back().DefaultAttrLoc = Loc;
   }
 
   void pop() {
-    assert(Stack.size() > 1 && "Data-sharing attributes stack is empty!");
-    Stack.pop_back();
+    assert(!Stack.back().first.empty() &&
+           "Data-sharing attributes stack is empty!");
+    Stack.back().first.pop_back();
+  }
+
+  /// Start new OpenMP region stack in new non-capturing function.
+  void pushFunction() {
+    const FunctionScopeInfo *CurFnScope = SemaRef.getCurFunction();
+    assert(!isa<CapturingScopeInfo>(CurFnScope));
+    CurrentNonCapturingFunctionScope = CurFnScope;
+  }
+  /// Pop region stack for non-capturing function.
+  void popFunction(const FunctionScopeInfo *OldFSI) {
+    if (!Stack.empty() && Stack.back().second == OldFSI) {
+      assert(Stack.back().first.empty());
+      Stack.pop_back();
+    }
+    CurrentNonCapturingFunctionScope = nullptr;
+    for (const FunctionScopeInfo *FSI : llvm::reverse(SemaRef.FunctionScopes)) {
+      if (!isa<CapturingScopeInfo>(FSI)) {
+        CurrentNonCapturingFunctionScope = FSI;
+        break;
+      }
+    }
   }
 
   void addCriticalWithHint(OMPCriticalDirective *D, llvm::APSInt Hint) {
@@ -224,31 +262,35 @@ public:
 
   /// \brief Returns currently analyzed directive.
   OpenMPDirectiveKind getCurrentDirective() const {
-    return Stack.back().Directive;
+    return isStackEmpty() ? OMPD_unknown : Stack.back().first.back().Directive;
   }
   /// \brief Returns parent directive.
   OpenMPDirectiveKind getParentDirective() const {
-    if (Stack.size() > 2)
-      return Stack[Stack.size() - 2].Directive;
-    return OMPD_unknown;
+    if (isStackEmpty() || Stack.back().first.size() == 1)
+      return OMPD_unknown;
+    return std::next(Stack.back().first.rbegin())->Directive;
   }
 
   /// \brief Set default data sharing attribute to none.
   void setDefaultDSANone(SourceLocation Loc) {
-    Stack.back().DefaultAttr = DSA_none;
-    Stack.back().DefaultAttrLoc = Loc;
+    assert(!isStackEmpty());
+    Stack.back().first.back().DefaultAttr = DSA_none;
+    Stack.back().first.back().DefaultAttrLoc = Loc;
   }
   /// \brief Set default data sharing attribute to shared.
   void setDefaultDSAShared(SourceLocation Loc) {
-    Stack.back().DefaultAttr = DSA_shared;
-    Stack.back().DefaultAttrLoc = Loc;
+    assert(!isStackEmpty());
+    Stack.back().first.back().DefaultAttr = DSA_shared;
+    Stack.back().first.back().DefaultAttrLoc = Loc;
   }
 
   DefaultDataSharingAttributes getDefaultDSA() const {
-    return Stack.back().DefaultAttr;
+    return isStackEmpty() ? DSA_unspecified
+                          : Stack.back().first.back().DefaultAttr;
   }
   SourceLocation getDefaultDSALocation() const {
-    return Stack.back().DefaultAttrLoc;
+    return isStackEmpty() ? SourceLocation()
+                          : Stack.back().first.back().DefaultAttrLoc;
   }
 
   /// \brief Checks if the specified variable is a threadprivate.
@@ -259,54 +301,64 @@ public:
 
   /// \brief Marks current region as ordered (it has an 'ordered' clause).
   void setOrderedRegion(bool IsOrdered, Expr *Param) {
-    Stack.back().OrderedRegion.setInt(IsOrdered);
-    Stack.back().OrderedRegion.setPointer(Param);
+    assert(!isStackEmpty());
+    Stack.back().first.back().OrderedRegion.setInt(IsOrdered);
+    Stack.back().first.back().OrderedRegion.setPointer(Param);
   }
   /// \brief Returns true, if parent region is ordered (has associated
   /// 'ordered' clause), false - otherwise.
   bool isParentOrderedRegion() const {
-    if (Stack.size() > 2)
-      return Stack[Stack.size() - 2].OrderedRegion.getInt();
-    return false;
+    if (isStackEmpty() || Stack.back().first.size() == 1)
+      return false;
+    return std::next(Stack.back().first.rbegin())->OrderedRegion.getInt();
   }
   /// \brief Returns optional parameter for the ordered region.
   Expr *getParentOrderedRegionParam() const {
-    if (Stack.size() > 2)
-      return Stack[Stack.size() - 2].OrderedRegion.getPointer();
-    return nullptr;
+    if (isStackEmpty() || Stack.back().first.size() == 1)
+      return nullptr;
+    return std::next(Stack.back().first.rbegin())->OrderedRegion.getPointer();
   }
   /// \brief Marks current region as nowait (it has a 'nowait' clause).
   void setNowaitRegion(bool IsNowait = true) {
-    Stack.back().NowaitRegion = IsNowait;
+    assert(!isStackEmpty());
+    Stack.back().first.back().NowaitRegion = IsNowait;
   }
   /// \brief Returns true, if parent region is nowait (has associated
   /// 'nowait' clause), false - otherwise.
   bool isParentNowaitRegion() const {
-    if (Stack.size() > 2)
-      return Stack[Stack.size() - 2].NowaitRegion;
-    return false;
+    if (isStackEmpty() || Stack.back().first.size() == 1)
+      return false;
+    return std::next(Stack.back().first.rbegin())->NowaitRegion;
   }
   /// \brief Marks parent region as cancel region.
   void setParentCancelRegion(bool Cancel = true) {
-    if (Stack.size() > 2)
-      Stack[Stack.size() - 2].CancelRegion =
-          Stack[Stack.size() - 2].CancelRegion || Cancel;
+    if (!isStackEmpty() && Stack.back().first.size() > 1) {
+      auto &StackElemRef = *std::next(Stack.back().first.rbegin());
+      StackElemRef.CancelRegion |= StackElemRef.CancelRegion || Cancel;
+    }
   }
   /// \brief Return true if current region has inner cancel construct.
   bool isCancelRegion() const {
-    return Stack.back().CancelRegion;
+    return isStackEmpty() ? false : Stack.back().first.back().CancelRegion;
   }
 
   /// \brief Set collapse value for the region.
-  void setAssociatedLoops(unsigned Val) { Stack.back().AssociatedLoops = Val; }
+  void setAssociatedLoops(unsigned Val) {
+    assert(!isStackEmpty());
+    Stack.back().first.back().AssociatedLoops = Val;
+  }
   /// \brief Return collapse value for region.
-  unsigned getAssociatedLoops() const { return Stack.back().AssociatedLoops; }
+  unsigned getAssociatedLoops() const {
+    return isStackEmpty() ? 0 : Stack.back().first.back().AssociatedLoops;
+  }
 
   /// \brief Marks current target region as one with closely nested teams
   /// region.
   void setParentTeamsRegionLoc(SourceLocation TeamsRegionLoc) {
-    if (Stack.size() > 2)
-      Stack[Stack.size() - 2].InnerTeamsRegionLoc = TeamsRegionLoc;
+    if (!isStackEmpty() && Stack.back().first.size() > 1) {
+      std::next(Stack.back().first.rbegin())->InnerTeamsRegionLoc =
+          TeamsRegionLoc;
+    }
   }
   /// \brief Returns true, if current region has closely nested teams region.
   bool hasInnerTeamsRegion() const {
@@ -314,23 +366,32 @@ public:
   }
   /// \brief Returns location of the nested teams region (if any).
   SourceLocation getInnerTeamsRegionLoc() const {
-    if (Stack.size() > 1)
-      return Stack.back().InnerTeamsRegionLoc;
-    return SourceLocation();
+    return isStackEmpty() ? SourceLocation()
+                          : Stack.back().first.back().InnerTeamsRegionLoc;
   }
 
-  Scope *getCurScope() const { return Stack.back().CurScope; }
-  Scope *getCurScope() { return Stack.back().CurScope; }
-  SourceLocation getConstructLoc() { return Stack.back().ConstructLoc; }
+  Scope *getCurScope() const {
+    return isStackEmpty() ? nullptr : Stack.back().first.back().CurScope;
+  }
+  Scope *getCurScope() {
+    return isStackEmpty() ? nullptr : Stack.back().first.back().CurScope;
+  }
+  SourceLocation getConstructLoc() {
+    return isStackEmpty() ? SourceLocation()
+                          : Stack.back().first.back().ConstructLoc;
+  }
 
-  // Do the check specified in \a Check to all component lists and return true
-  // if any issue is found.
+  /// Do the check specified in \a Check to all component lists and return true
+  /// if any issue is found.
   bool checkMappableExprComponentListsForDecl(
       ValueDecl *VD, bool CurrentRegionOnly,
-      const llvm::function_ref<bool(
-          OMPClauseMappableExprCommon::MappableExprComponentListRef)> &Check) {
-    auto SI = Stack.rbegin();
-    auto SE = Stack.rend();
+      const llvm::function_ref<
+          bool(OMPClauseMappableExprCommon::MappableExprComponentListRef,
+               OpenMPClauseKind)> &Check) {
+    if (isStackEmpty())
+      return false;
+    auto SI = Stack.back().first.rbegin();
+    auto SE = Stack.back().first.rend();
 
     if (SI == SE)
       return false;
@@ -344,44 +405,48 @@ public:
     for (; SI != SE; ++SI) {
       auto MI = SI->MappedExprComponents.find(VD);
       if (MI != SI->MappedExprComponents.end())
-        for (auto &L : MI->second)
-          if (Check(L))
+        for (auto &L : MI->second.Components)
+          if (Check(L, MI->second.Kind))
             return true;
     }
     return false;
   }
 
-  // Create a new mappable expression component list associated with a given
-  // declaration and initialize it with the provided list of components.
+  /// Create a new mappable expression component list associated with a given
+  /// declaration and initialize it with the provided list of components.
   void addMappableExpressionComponents(
       ValueDecl *VD,
-      OMPClauseMappableExprCommon::MappableExprComponentListRef Components) {
-    assert(Stack.size() > 1 &&
+      OMPClauseMappableExprCommon::MappableExprComponentListRef Components,
+      OpenMPClauseKind WhereFoundClauseKind) {
+    assert(!isStackEmpty() &&
            "Not expecting to retrieve components from a empty stack!");
-    auto &MEC = Stack.back().MappedExprComponents[VD];
+    auto &MEC = Stack.back().first.back().MappedExprComponents[VD];
     // Create new entry and append the new components there.
-    MEC.resize(MEC.size() + 1);
-    MEC.back().append(Components.begin(), Components.end());
+    MEC.Components.resize(MEC.Components.size() + 1);
+    MEC.Components.back().append(Components.begin(), Components.end());
+    MEC.Kind = WhereFoundClauseKind;
   }
 
   unsigned getNestingLevel() const {
-    assert(Stack.size() > 1);
-    return Stack.size() - 2;
+    assert(!isStackEmpty());
+    return Stack.back().first.size() - 1;
   }
   void addDoacrossDependClause(OMPDependClause *C, OperatorOffsetTy &OpsOffs) {
-    assert(Stack.size() > 2);
-    assert(isOpenMPWorksharingDirective(Stack[Stack.size() - 2].Directive));
-    Stack[Stack.size() - 2].DoacrossDepends.insert({C, OpsOffs});
+    assert(!isStackEmpty() && Stack.back().first.size() > 1);
+    auto &StackElem = *std::next(Stack.back().first.rbegin());
+    assert(isOpenMPWorksharingDirective(StackElem.Directive));
+    StackElem.DoacrossDepends.insert({C, OpsOffs});
   }
   llvm::iterator_range<DoacrossDependMapTy::const_iterator>
   getDoacrossDependClauses() const {
-    assert(Stack.size() > 1);
-    if (isOpenMPWorksharingDirective(Stack[Stack.size() - 1].Directive)) {
-      auto &Ref = Stack[Stack.size() - 1].DoacrossDepends;
+    assert(!isStackEmpty());
+    auto &StackElem = Stack.back().first.back();
+    if (isOpenMPWorksharingDirective(StackElem.Directive)) {
+      auto &Ref = StackElem.DoacrossDepends;
       return llvm::make_range(Ref.begin(), Ref.end());
     }
-    return llvm::make_range(Stack[0].DoacrossDepends.end(),
-                            Stack[0].DoacrossDepends.end());
+    return llvm::make_range(StackElem.DoacrossDepends.end(),
+                            StackElem.DoacrossDepends.end());
   }
 };
 bool isParallelOrTaskRegion(OpenMPDirectiveKind DKind) {
@@ -393,7 +458,7 @@ bool isParallelOrTaskRegion(OpenMPDirectiveKind DKind) {
 static ValueDecl *getCanonicalDecl(ValueDecl *D) {
   auto *VD = dyn_cast<VarDecl>(D);
   auto *FD = dyn_cast<FieldDecl>(D);
-  if (VD  != nullptr) {
+  if (VD != nullptr) {
     VD = VD->getCanonicalDecl();
     D = VD;
   } else {
@@ -404,13 +469,13 @@ static ValueDecl *getCanonicalDecl(ValueDecl *D) {
   return D;
 }
 
-DSAStackTy::DSAVarData DSAStackTy::getDSA(StackTy::reverse_iterator& Iter,
+DSAStackTy::DSAVarData DSAStackTy::getDSA(StackTy::reverse_iterator &Iter,
                                           ValueDecl *D) {
   D = getCanonicalDecl(D);
   auto *VD = dyn_cast<VarDecl>(D);
   auto *FD = dyn_cast<FieldDecl>(D);
   DSAVarData DVar;
-  if (Iter == std::prev(Stack.rend())) {
+  if (isStackEmpty() || Iter == Stack.back().first.rend()) {
     // OpenMP [2.9.1.1, Data-sharing Attribute Rules for Variables Referenced
     // in a region but not in construct]
     //  File-scope or namespace-scope variables referenced in called routines
@@ -484,8 +549,9 @@ DSAStackTy::DSAVarData DSAStackTy::getDSA(StackTy::reverse_iterator& Iter,
     //  bound to the current team is shared.
     if (isOpenMPTaskingDirective(DVar.DKind)) {
       DSAVarData DVarTemp;
-      for (StackTy::reverse_iterator I = std::next(Iter), EE = Stack.rend();
-           I != EE; ++I) {
+      auto I = Iter, E = Stack.back().first.rend();
+      do {
+        ++I;
         // OpenMP [2.9.1.1, Data-sharing Attribute Rules for Variables
         // Referenced in a Construct, implicitly determined, p.6]
         //  In a task construct, if no default clause is present, a variable
@@ -497,9 +563,7 @@ DSAStackTy::DSAVarData DSAStackTy::getDSA(StackTy::reverse_iterator& Iter,
           DVar.CKind = OMPC_firstprivate;
           return DVar;
         }
-        if (isParallelOrTaskRegion(I->Directive))
-          break;
-      }
+      } while (I != E && !isParallelOrTaskRegion(I->Directive));
       DVar.CKind =
           (DVarTemp.CKind == OMPC_unknown) ? OMPC_firstprivate : OMPC_shared;
       return DVar;
@@ -514,12 +578,13 @@ DSAStackTy::DSAVarData DSAStackTy::getDSA(StackTy::reverse_iterator& Iter,
 }
 
 Expr *DSAStackTy::addUniqueAligned(ValueDecl *D, Expr *NewDE) {
-  assert(Stack.size() > 1 && "Data sharing attributes stack is empty");
+  assert(!isStackEmpty() && "Data sharing attributes stack is empty");
   D = getCanonicalDecl(D);
-  auto It = Stack.back().AlignedMap.find(D);
-  if (It == Stack.back().AlignedMap.end()) {
+  auto &StackElem = Stack.back().first.back();
+  auto It = StackElem.AlignedMap.find(D);
+  if (It == StackElem.AlignedMap.end()) {
     assert(NewDE && "Unexpected nullptr expr to be added into aligned map");
-    Stack.back().AlignedMap[D] = NewDE;
+    StackElem.AlignedMap[D] = NewDE;
     return nullptr;
   } else {
     assert(It->second && "Unexpected nullptr expr in the aligned map");
@@ -529,35 +594,43 @@ Expr *DSAStackTy::addUniqueAligned(ValueDecl *D, Expr *NewDE) {
 }
 
 void DSAStackTy::addLoopControlVariable(ValueDecl *D, VarDecl *Capture) {
-  assert(Stack.size() > 1 && "Data-sharing attributes stack is empty");
+  assert(!isStackEmpty() && "Data-sharing attributes stack is empty");
   D = getCanonicalDecl(D);
-  Stack.back().LCVMap.insert(
-      std::make_pair(D, LCDeclInfo(Stack.back().LCVMap.size() + 1, Capture)));
+  auto &StackElem = Stack.back().first.back();
+  StackElem.LCVMap.insert(
+      {D, LCDeclInfo(StackElem.LCVMap.size() + 1, Capture)});
 }
 
 DSAStackTy::LCDeclInfo DSAStackTy::isLoopControlVariable(ValueDecl *D) {
-  assert(Stack.size() > 1 && "Data-sharing attributes stack is empty");
+  assert(!isStackEmpty() && "Data-sharing attributes stack is empty");
   D = getCanonicalDecl(D);
-  return Stack.back().LCVMap.count(D) > 0 ? Stack.back().LCVMap[D]
-                                          : LCDeclInfo(0, nullptr);
+  auto &StackElem = Stack.back().first.back();
+  auto It = StackElem.LCVMap.find(D);
+  if (It != StackElem.LCVMap.end())
+    return It->second;
+  return {0, nullptr};
 }
 
 DSAStackTy::LCDeclInfo DSAStackTy::isParentLoopControlVariable(ValueDecl *D) {
-  assert(Stack.size() > 2 && "Data-sharing attributes stack is empty");
+  assert(!isStackEmpty() && Stack.back().first.size() > 1 &&
+         "Data-sharing attributes stack is empty");
   D = getCanonicalDecl(D);
-  return Stack[Stack.size() - 2].LCVMap.count(D) > 0
-             ? Stack[Stack.size() - 2].LCVMap[D]
-             : LCDeclInfo(0, nullptr);
+  auto &StackElem = *std::next(Stack.back().first.rbegin());
+  auto It = StackElem.LCVMap.find(D);
+  if (It != StackElem.LCVMap.end())
+    return It->second;
+  return {0, nullptr};
 }
 
 ValueDecl *DSAStackTy::getParentLoopControlVariable(unsigned I) {
-  assert(Stack.size() > 2 && "Data-sharing attributes stack is empty");
-  if (Stack[Stack.size() - 2].LCVMap.size() < I)
+  assert(!isStackEmpty() && Stack.back().first.size() > 1 &&
+         "Data-sharing attributes stack is empty");
+  auto &StackElem = *std::next(Stack.back().first.rbegin());
+  if (StackElem.LCVMap.size() < I)
     return nullptr;
-  for (auto &Pair : Stack[Stack.size() - 2].LCVMap) {
+  for (auto &Pair : StackElem.LCVMap)
     if (Pair.second.first == I)
       return Pair.first;
-  }
   return nullptr;
 }
 
@@ -565,13 +638,13 @@ void DSAStackTy::addDSA(ValueDecl *D, Expr *E, OpenMPClauseKind A,
                         DeclRefExpr *PrivateCopy) {
   D = getCanonicalDecl(D);
   if (A == OMPC_threadprivate) {
-    auto &Data = Stack[0].SharingMap[D];
+    auto &Data = Threadprivates[D];
     Data.Attributes = A;
     Data.RefExpr.setPointer(E);
     Data.PrivateCopy = nullptr;
   } else {
-    assert(Stack.size() > 1 && "Data-sharing attributes stack is empty");
-    auto &Data = Stack.back().SharingMap[D];
+    assert(!isStackEmpty() && "Data-sharing attributes stack is empty");
+    auto &Data = Stack.back().first.back().SharingMap[D];
     assert(Data.Attributes == OMPC_unknown || (A == Data.Attributes) ||
            (A == OMPC_firstprivate && Data.Attributes == OMPC_lastprivate) ||
            (A == OMPC_lastprivate && Data.Attributes == OMPC_firstprivate) ||
@@ -586,7 +659,7 @@ void DSAStackTy::addDSA(ValueDecl *D, Expr *E, OpenMPClauseKind A,
     Data.RefExpr.setPointerAndInt(E, IsLastprivate);
     Data.PrivateCopy = PrivateCopy;
     if (PrivateCopy) {
-      auto &Data = Stack.back().SharingMap[PrivateCopy->getDecl()];
+      auto &Data = Stack.back().first.back().SharingMap[PrivateCopy->getDecl()];
       Data.Attributes = A;
       Data.RefExpr.setPointerAndInt(PrivateCopy, IsLastprivate);
       Data.PrivateCopy = nullptr;
@@ -596,19 +669,17 @@ void DSAStackTy::addDSA(ValueDecl *D, Expr *E, OpenMPClauseKind A,
 
 bool DSAStackTy::isOpenMPLocal(VarDecl *D, StackTy::reverse_iterator Iter) {
   D = D->getCanonicalDecl();
-  if (Stack.size() > 2) {
-    reverse_iterator I = Iter, E = std::prev(Stack.rend());
+  if (!isStackEmpty() && Stack.back().first.size() > 1) {
+    reverse_iterator I = Iter, E = Stack.back().first.rend();
     Scope *TopScope = nullptr;
-    while (I != E && !isParallelOrTaskRegion(I->Directive)) {
+    while (I != E && !isParallelOrTaskRegion(I->Directive))
       ++I;
-    }
     if (I == E)
       return false;
     TopScope = I->CurScope ? I->CurScope->getParent() : nullptr;
     Scope *CurScope = getCurScope();
-    while (CurScope != TopScope && !CurScope->isDeclScope(D)) {
+    while (CurScope != TopScope && !CurScope->isDeclScope(D))
       CurScope = CurScope->getParent();
-    }
     return CurScope != TopScope;
   }
   return false;
@@ -659,16 +730,16 @@ DSAStackTy::DSAVarData DSAStackTy::getTopDSA(ValueDecl *D, bool FromParent) {
                                D->getLocation()),
            OMPC_threadprivate);
   }
-  if (Stack[0].SharingMap.count(D)) {
-    DVar.RefExpr = Stack[0].SharingMap[D].RefExpr.getPointer();
+  auto TI = Threadprivates.find(D);
+  if (TI != Threadprivates.end()) {
+    DVar.RefExpr = TI->getSecond().RefExpr.getPointer();
     DVar.CKind = OMPC_threadprivate;
     return DVar;
   }
 
-  if (Stack.size() == 1) {
+  if (isStackEmpty())
     // Not in OpenMP execution region and top scope was already checked.
     return DVar;
-  }
 
   // OpenMP [2.9.1.1, Data-sharing Attribute Rules for Variables Referenced
   // in a Construct, C/C++, predetermined, p.4]
@@ -716,11 +787,10 @@ DSAStackTy::DSAVarData DSAStackTy::getTopDSA(ValueDecl *D, bool FromParent) {
 
   // Explicitly specified attributes and local variables with predetermined
   // attributes.
-  auto StartI = std::next(Stack.rbegin());
-  auto EndI = std::prev(Stack.rend());
-  if (FromParent && StartI != EndI) {
+  auto StartI = std::next(Stack.back().first.rbegin());
+  auto EndI = Stack.back().first.rend();
+  if (FromParent && StartI != EndI)
     StartI = std::next(StartI);
-  }
   auto I = std::prev(StartI);
   if (I->SharingMap.count(D)) {
     DVar.RefExpr = I->SharingMap[D].RefExpr.getPointer();
@@ -734,12 +804,15 @@ DSAStackTy::DSAVarData DSAStackTy::getTopDSA(ValueDecl *D, bool FromParent) {
 
 DSAStackTy::DSAVarData DSAStackTy::getImplicitDSA(ValueDecl *D,
                                                   bool FromParent) {
-  D = getCanonicalDecl(D);
-  auto StartI = Stack.rbegin();
-  auto EndI = std::prev(Stack.rend());
-  if (FromParent && StartI != EndI) {
-    StartI = std::next(StartI);
+  if (isStackEmpty()) {
+    StackTy::reverse_iterator I;
+    return getDSA(I, D);
   }
+  D = getCanonicalDecl(D);
+  auto StartI = Stack.back().first.rbegin();
+  auto EndI = Stack.back().first.rend();
+  if (FromParent && StartI != EndI)
+    StartI = std::next(StartI);
   return getDSA(StartI, D);
 }
 
@@ -748,41 +821,39 @@ DSAStackTy::hasDSA(ValueDecl *D,
                    const llvm::function_ref<bool(OpenMPClauseKind)> &CPred,
                    const llvm::function_ref<bool(OpenMPDirectiveKind)> &DPred,
                    bool FromParent) {
+  if (isStackEmpty())
+    return {};
   D = getCanonicalDecl(D);
-  auto StartI = std::next(Stack.rbegin());
-  auto EndI = Stack.rend();
-  if (FromParent && StartI != EndI) {
-    StartI = std::next(StartI);
-  }
-  for (auto I = StartI, EE = EndI; I != EE; ++I) {
+  auto I = (FromParent && Stack.back().first.size() > 1)
+               ? std::next(Stack.back().first.rbegin())
+               : Stack.back().first.rbegin();
+  auto EndI = Stack.back().first.rend();
+  while (std::distance(I, EndI) > 1) {
+    std::advance(I, 1);
     if (!DPred(I->Directive) && !isParallelOrTaskRegion(I->Directive))
       continue;
     DSAVarData DVar = getDSA(I, D);
     if (CPred(DVar.CKind))
       return DVar;
   }
-  return DSAVarData();
+  return {};
 }
 
 DSAStackTy::DSAVarData DSAStackTy::hasInnermostDSA(
     ValueDecl *D, const llvm::function_ref<bool(OpenMPClauseKind)> &CPred,
     const llvm::function_ref<bool(OpenMPDirectiveKind)> &DPred,
     bool FromParent) {
+  if (isStackEmpty())
+    return {};
   D = getCanonicalDecl(D);
-  auto StartI = std::next(Stack.rbegin());
-  auto EndI = Stack.rend();
-  if (FromParent && StartI != EndI) {
+  auto StartI = std::next(Stack.back().first.rbegin());
+  auto EndI = Stack.back().first.rend();
+  if (FromParent && StartI != EndI)
     StartI = std::next(StartI);
-  }
-  for (auto I = StartI, EE = EndI; I != EE; ++I) {
-    if (!DPred(I->Directive))
-      break;
-    DSAVarData DVar = getDSA(I, D);
-    if (CPred(DVar.CKind))
-      return DVar;
-    return DSAVarData();
-  }
-  return DSAVarData();
+  if (StartI == EndI || !DPred(StartI->Directive))
+    return {};
+  DSAVarData DVar = getDSA(StartI, D);
+  return CPred(DVar.CKind) ? DVar : DSAVarData();
 }
 
 bool DSAStackTy::hasExplicitDSA(
@@ -790,9 +861,11 @@ bool DSAStackTy::hasExplicitDSA(
     unsigned Level, bool NotLastprivate) {
   if (CPred(ClauseKindMode))
     return true;
+  if (isStackEmpty())
+    return false;
   D = getCanonicalDecl(D);
-  auto StartI = std::next(Stack.begin());
-  auto EndI = Stack.end();
+  auto StartI = Stack.back().first.begin();
+  auto EndI = Stack.back().first.end();
   if (std::distance(StartI, EndI) <= (int)Level)
     return false;
   std::advance(StartI, Level);
@@ -805,8 +878,10 @@ bool DSAStackTy::hasExplicitDSA(
 bool DSAStackTy::hasExplicitDirective(
     const llvm::function_ref<bool(OpenMPDirectiveKind)> &DPred,
     unsigned Level) {
-  auto StartI = std::next(Stack.begin());
-  auto EndI = Stack.end();
+  if (isStackEmpty())
+    return false;
+  auto StartI = Stack.back().first.begin();
+  auto EndI = Stack.back().first.end();
   if (std::distance(StartI, EndI) <= (int)Level)
     return false;
   std::advance(StartI, Level);
@@ -819,13 +894,12 @@ bool DSAStackTy::hasDirective(
         &DPred,
     bool FromParent) {
   // We look only in the enclosing region.
-  if (Stack.size() < 2)
+  if (isStackEmpty())
     return false;
-  auto StartI = std::next(Stack.rbegin());
-  auto EndI = std::prev(Stack.rend());
-  if (FromParent && StartI != EndI) {
+  auto StartI = std::next(Stack.back().first.rbegin());
+  auto EndI = Stack.back().first.rend();
+  if (FromParent && StartI != EndI)
     StartI = std::next(StartI);
-  }
   for (auto I = StartI, EE = EndI; I != EE; ++I) {
     if (DPred(I->Directive, I->DirectiveName, I->ConstructLoc))
       return true;
@@ -838,6 +912,14 @@ void Sema::InitDataSharingAttributesStack() {
 }
 
 #define DSAStack static_cast<DSAStackTy *>(VarDataSharingAttributesStack)
+
+void Sema::pushOpenMPFunctionRegion() {
+  DSAStack->pushFunction();
+}
+
+void Sema::popOpenMPFunctionRegion(const FunctionScopeInfo *OldFSI) {
+  DSAStack->popFunction(OldFSI);
+}
 
 bool Sema::IsOpenMPCapturedByRef(ValueDecl *D, unsigned Level) {
   assert(LangOpts.OpenMP && "OpenMP is not allowed");
@@ -903,7 +985,6 @@ bool Sema::IsOpenMPCapturedByRef(ValueDecl *D, unsigned Level) {
     //    array section, the runtime library may pass the NULL value to the
     //    device instead of the value passed to it by the compiler.
 
-
     if (Ty->isReferenceType())
       Ty = Ty->castAs<ReferenceType>()->getPointeeType();
 
@@ -916,7 +997,13 @@ bool Sema::IsOpenMPCapturedByRef(ValueDecl *D, unsigned Level) {
     DSAStack->checkMappableExprComponentListsForDecl(
         D, /*CurrentRegionOnly=*/true,
         [&](OMPClauseMappableExprCommon::MappableExprComponentListRef
-                MapExprComponents) {
+                MapExprComponents,
+            OpenMPClauseKind WhereFoundClauseKind) {
+          // Only the map clause information influences how a variable is
+          // captured. E.g. is_device_ptr does not require changing the default
+          // behavior.
+          if (WhereFoundClauseKind != OMPC_map)
+            return false;
 
           auto EI = MapExprComponents.rbegin();
           auto EE = MapExprComponents.rend();
@@ -1045,7 +1132,8 @@ void Sema::StartOpenMPDSABlock(OpenMPDirectiveKind DKind,
                                const DeclarationNameInfo &DirName,
                                Scope *CurScope, SourceLocation Loc) {
   DSAStack->push(DKind, DirName, CurScope, Loc);
-  PushExpressionEvaluationContext(PotentiallyEvaluated);
+  PushExpressionEvaluationContext(
+      ExpressionEvaluationContext::PotentiallyEvaluated);
 }
 
 void Sema::StartOpenMPClause(OpenMPClauseKind K) {
@@ -1062,7 +1150,7 @@ void Sema::EndOpenMPDSABlock(Stmt *CurDirective) {
   //  clause requires an accessible, unambiguous default constructor for the
   //  class type, unless the list item is also specified in a firstprivate
   //  clause.
-  if (auto D = dyn_cast_or_null<OMPExecutableDirective>(CurDirective)) {
+  if (auto *D = dyn_cast_or_null<OMPExecutableDirective>(CurDirective)) {
     for (auto *C : D->clauses()) {
       if (auto *Clause = dyn_cast<OMPLastprivateClause>(C)) {
         SmallVector<Expr *, 8> PrivateCopies;
@@ -1084,7 +1172,7 @@ void Sema::EndOpenMPDSABlock(Stmt *CurDirective) {
             auto *VDPrivate = buildVarDecl(
                 *this, DE->getExprLoc(), Type.getUnqualifiedType(),
                 VD->getName(), VD->hasAttrs() ? &VD->getAttrs() : nullptr);
-            ActOnUninitializedDecl(VDPrivate, /*TypeMayContainAuto=*/false);
+            ActOnUninitializedDecl(VDPrivate);
             if (VDPrivate->isInvalidDecl())
               continue;
             PrivateCopies.push_back(buildDeclRefExpr(
@@ -1121,7 +1209,7 @@ public:
   explicit VarDeclFilterCCC(Sema &S) : SemaRef(S) {}
   bool ValidateCandidate(const TypoCorrection &Candidate) override {
     NamedDecl *ND = Candidate.getCorrectionDecl();
-    if (VarDecl *VD = dyn_cast_or_null<VarDecl>(ND)) {
+    if (auto *VD = dyn_cast_or_null<VarDecl>(ND)) {
       return VD->hasGlobalStorage() &&
              SemaRef.isDeclInScope(ND, SemaRef.getCurLexicalContext(),
                                    SemaRef.getCurScope());
@@ -1290,7 +1378,7 @@ class LocalVarRefChecker : public ConstStmtVisitor<LocalVarRefChecker, bool> {
 
 public:
   bool VisitDeclRefExpr(const DeclRefExpr *E) {
-    if (auto VD = dyn_cast<VarDecl>(E->getDecl())) {
+    if (auto *VD = dyn_cast<VarDecl>(E->getDecl())) {
       if (VD->hasLocalStorage()) {
         SemaRef.Diag(E->getLocStart(),
                      diag::err_omp_local_var_in_threadprivate_init)
@@ -1471,7 +1559,8 @@ public:
 
       auto DVar = Stack->getTopDSA(VD, false);
       // Check if the variable has explicit DSA set and stop analysis if it so.
-      if (DVar.RefExpr) return;
+      if (DVar.RefExpr)
+        return;
 
       auto ELoc = E->getExprLoc();
       auto DKind = Stack->getCurrentDirective();
@@ -1550,7 +1639,8 @@ public:
             !Stack->isLoopControlVariable(FD).first)
           ImplicitFirstprivate.push_back(E);
       }
-    }
+    } else
+      Visit(E->getBase());
   }
   void VisitOMPExecutableDirective(OMPExecutableDirective *S) {
     for (auto *C : S->clauses()) {
@@ -1583,7 +1673,11 @@ public:
 
 void Sema::ActOnOpenMPRegionStart(OpenMPDirectiveKind DKind, Scope *CurScope) {
   switch (DKind) {
-  case OMPD_parallel: {
+  case OMPD_parallel:
+  case OMPD_parallel_for:
+  case OMPD_parallel_for_simd:
+  case OMPD_parallel_sections:
+  case OMPD_teams: {
     QualType KmpInt32Ty = Context.getIntTypeForBitwidth(32, 1);
     QualType KmpInt32PtrTy =
         Context.getPointerType(KmpInt32Ty).withConst().withRestrict();
@@ -1596,103 +1690,46 @@ void Sema::ActOnOpenMPRegionStart(OpenMPDirectiveKind DKind, Scope *CurScope) {
                              Params);
     break;
   }
-  case OMPD_simd: {
-    Sema::CapturedParamNameType Params[] = {
+  case OMPD_target_teams:
+  case OMPD_target_parallel: {
+    Sema::CapturedParamNameType ParamsTarget[] = {
         std::make_pair(StringRef(), QualType()) // __context with shared vars
     };
+    // Start a captured region for 'target' with no implicit parameters.
     ActOnCapturedRegionStart(DSAStack->getConstructLoc(), CurScope, CR_OpenMP,
-                             Params);
-    break;
-  }
-  case OMPD_for: {
-    Sema::CapturedParamNameType Params[] = {
-        std::make_pair(StringRef(), QualType()) // __context with shared vars
-    };
-    ActOnCapturedRegionStart(DSAStack->getConstructLoc(), CurScope, CR_OpenMP,
-                             Params);
-    break;
-  }
-  case OMPD_for_simd: {
-    Sema::CapturedParamNameType Params[] = {
-        std::make_pair(StringRef(), QualType()) // __context with shared vars
-    };
-    ActOnCapturedRegionStart(DSAStack->getConstructLoc(), CurScope, CR_OpenMP,
-                             Params);
-    break;
-  }
-  case OMPD_sections: {
-    Sema::CapturedParamNameType Params[] = {
-        std::make_pair(StringRef(), QualType()) // __context with shared vars
-    };
-    ActOnCapturedRegionStart(DSAStack->getConstructLoc(), CurScope, CR_OpenMP,
-                             Params);
-    break;
-  }
-  case OMPD_section: {
-    Sema::CapturedParamNameType Params[] = {
-        std::make_pair(StringRef(), QualType()) // __context with shared vars
-    };
-    ActOnCapturedRegionStart(DSAStack->getConstructLoc(), CurScope, CR_OpenMP,
-                             Params);
-    break;
-  }
-  case OMPD_single: {
-    Sema::CapturedParamNameType Params[] = {
-        std::make_pair(StringRef(), QualType()) // __context with shared vars
-    };
-    ActOnCapturedRegionStart(DSAStack->getConstructLoc(), CurScope, CR_OpenMP,
-                             Params);
-    break;
-  }
-  case OMPD_master: {
-    Sema::CapturedParamNameType Params[] = {
-        std::make_pair(StringRef(), QualType()) // __context with shared vars
-    };
-    ActOnCapturedRegionStart(DSAStack->getConstructLoc(), CurScope, CR_OpenMP,
-                             Params);
-    break;
-  }
-  case OMPD_critical: {
-    Sema::CapturedParamNameType Params[] = {
-        std::make_pair(StringRef(), QualType()) // __context with shared vars
-    };
-    ActOnCapturedRegionStart(DSAStack->getConstructLoc(), CurScope, CR_OpenMP,
-                             Params);
-    break;
-  }
-  case OMPD_parallel_for: {
+                             ParamsTarget);
     QualType KmpInt32Ty = Context.getIntTypeForBitwidth(32, 1);
     QualType KmpInt32PtrTy =
         Context.getPointerType(KmpInt32Ty).withConst().withRestrict();
-    Sema::CapturedParamNameType Params[] = {
+    Sema::CapturedParamNameType ParamsTeamsOrParallel[] = {
         std::make_pair(".global_tid.", KmpInt32PtrTy),
         std::make_pair(".bound_tid.", KmpInt32PtrTy),
         std::make_pair(StringRef(), QualType()) // __context with shared vars
     };
+    // Start a captured region for 'teams' or 'parallel'.  Both regions have
+    // the same implicit parameters.
     ActOnCapturedRegionStart(DSAStack->getConstructLoc(), CurScope, CR_OpenMP,
-                             Params);
+                             ParamsTeamsOrParallel);
     break;
   }
-  case OMPD_parallel_for_simd: {
-    QualType KmpInt32Ty = Context.getIntTypeForBitwidth(32, 1);
-    QualType KmpInt32PtrTy =
-        Context.getPointerType(KmpInt32Ty).withConst().withRestrict();
+  case OMPD_simd:
+  case OMPD_for:
+  case OMPD_for_simd:
+  case OMPD_sections:
+  case OMPD_section:
+  case OMPD_single:
+  case OMPD_master:
+  case OMPD_critical:
+  case OMPD_taskgroup:
+  case OMPD_distribute:
+  case OMPD_ordered:
+  case OMPD_atomic:
+  case OMPD_target_data:
+  case OMPD_target:
+  case OMPD_target_parallel_for:
+  case OMPD_target_parallel_for_simd:
+  case OMPD_target_simd: {
     Sema::CapturedParamNameType Params[] = {
-        std::make_pair(".global_tid.", KmpInt32PtrTy),
-        std::make_pair(".bound_tid.", KmpInt32PtrTy),
-        std::make_pair(StringRef(), QualType()) // __context with shared vars
-    };
-    ActOnCapturedRegionStart(DSAStack->getConstructLoc(), CurScope, CR_OpenMP,
-                             Params);
-    break;
-  }
-  case OMPD_parallel_sections: {
-    QualType KmpInt32Ty = Context.getIntTypeForBitwidth(32, 1);
-    QualType KmpInt32PtrTy =
-        Context.getPointerType(KmpInt32Ty).withConst().withRestrict();
-    Sema::CapturedParamNameType Params[] = {
-        std::make_pair(".global_tid.", KmpInt32PtrTy),
-        std::make_pair(".bound_tid.", KmpInt32PtrTy),
         std::make_pair(StringRef(), QualType()) // __context with shared vars
     };
     ActOnCapturedRegionStart(DSAStack->getConstructLoc(), CurScope, CR_OpenMP,
@@ -1721,54 +1758,6 @@ void Sema::ActOnOpenMPRegionStart(OpenMPDirectiveKind DKind, Scope *CurScope) {
     getCurCapturedRegion()->TheCapturedDecl->addAttr(
         AlwaysInlineAttr::CreateImplicit(
             Context, AlwaysInlineAttr::Keyword_forceinline, SourceRange()));
-    break;
-  }
-  case OMPD_ordered: {
-    Sema::CapturedParamNameType Params[] = {
-        std::make_pair(StringRef(), QualType()) // __context with shared vars
-    };
-    ActOnCapturedRegionStart(DSAStack->getConstructLoc(), CurScope, CR_OpenMP,
-                             Params);
-    break;
-  }
-  case OMPD_atomic: {
-    Sema::CapturedParamNameType Params[] = {
-        std::make_pair(StringRef(), QualType()) // __context with shared vars
-    };
-    ActOnCapturedRegionStart(DSAStack->getConstructLoc(), CurScope, CR_OpenMP,
-                             Params);
-    break;
-  }
-  case OMPD_target_data:
-  case OMPD_target:
-  case OMPD_target_parallel:
-  case OMPD_target_parallel_for: {
-    Sema::CapturedParamNameType Params[] = {
-        std::make_pair(StringRef(), QualType()) // __context with shared vars
-    };
-    ActOnCapturedRegionStart(DSAStack->getConstructLoc(), CurScope, CR_OpenMP,
-                             Params);
-    break;
-  }
-  case OMPD_teams: {
-    QualType KmpInt32Ty = Context.getIntTypeForBitwidth(32, 1);
-    QualType KmpInt32PtrTy =
-        Context.getPointerType(KmpInt32Ty).withConst().withRestrict();
-    Sema::CapturedParamNameType Params[] = {
-        std::make_pair(".global_tid.", KmpInt32PtrTy),
-        std::make_pair(".bound_tid.", KmpInt32PtrTy),
-        std::make_pair(StringRef(), QualType()) // __context with shared vars
-    };
-    ActOnCapturedRegionStart(DSAStack->getConstructLoc(), CurScope, CR_OpenMP,
-                             Params);
-    break;
-  }
-  case OMPD_taskgroup: {
-    Sema::CapturedParamNameType Params[] = {
-        std::make_pair(StringRef(), QualType()) // __context with shared vars
-    };
-    ActOnCapturedRegionStart(DSAStack->getConstructLoc(), CurScope, CR_OpenMP,
-                             Params);
     break;
   }
   case OMPD_taskloop:
@@ -1806,17 +1795,17 @@ void Sema::ActOnOpenMPRegionStart(OpenMPDirectiveKind DKind, Scope *CurScope) {
             Context, AlwaysInlineAttr::Keyword_forceinline, SourceRange()));
     break;
   }
-  case OMPD_distribute: {
-    Sema::CapturedParamNameType Params[] = {
-        std::make_pair(StringRef(), QualType()) // __context with shared vars
-    };
-    ActOnCapturedRegionStart(DSAStack->getConstructLoc(), CurScope, CR_OpenMP,
-                             Params);
-    break;
-  }
   case OMPD_distribute_parallel_for_simd:
   case OMPD_distribute_simd:
-  case OMPD_distribute_parallel_for: {
+  case OMPD_distribute_parallel_for:
+  case OMPD_teams_distribute:
+  case OMPD_teams_distribute_simd:
+  case OMPD_teams_distribute_parallel_for_simd:
+  case OMPD_teams_distribute_parallel_for:
+  case OMPD_target_teams_distribute:
+  case OMPD_target_teams_distribute_parallel_for:
+  case OMPD_target_teams_distribute_parallel_for_simd:
+  case OMPD_target_teams_distribute_simd: {
     QualType KmpInt32Ty = Context.getIntTypeForBitwidth(32, 1);
     QualType KmpInt32PtrTy =
         Context.getPointerType(KmpInt32Ty).withConst().withRestrict();
@@ -1851,6 +1840,12 @@ void Sema::ActOnOpenMPRegionStart(OpenMPDirectiveKind DKind, Scope *CurScope) {
   }
 }
 
+int Sema::getOpenMPCaptureLevels(OpenMPDirectiveKind DKind) {
+  SmallVector<OpenMPDirectiveKind, 4> CaptureRegions;
+  getOpenMPCaptureRegions(CaptureRegions, DKind);
+  return CaptureRegions.size();
+}
+
 static OMPCapturedExprDecl *buildCaptureDecl(Sema &S, IdentifierInfo *Id,
                                              Expr *CaptureExpr, bool WithInit,
                                              bool AsExpression) {
@@ -1871,12 +1866,12 @@ static OMPCapturedExprDecl *buildCaptureDecl(Sema &S, IdentifierInfo *Id,
     }
     WithInit = true;
   }
-  auto *CED = OMPCapturedExprDecl::Create(C, S.CurContext, Id, Ty);
+  auto *CED = OMPCapturedExprDecl::Create(C, S.CurContext, Id, Ty,
+                                          CaptureExpr->getLocStart());
   if (!WithInit)
     CED->addAttr(OMPCaptureNoInitAttr::CreateImplicit(C, SourceRange()));
   S.CurContext->addHiddenDecl(CED);
-  S.AddInitializerToDecl(CED, Init, /*DirectInit=*/false,
-                         /*TypeMayContainAuto=*/true);
+  S.AddInitializerToDecl(CED, Init, /*DirectInit=*/false);
   return CED;
 }
 
@@ -1910,16 +1905,49 @@ static ExprResult buildCapture(Sema &S, Expr *CaptureExpr, DeclRefExpr *&Ref) {
   return CaptureExpr->isGLValue() ? Res : S.DefaultLvalueConversion(Res.get());
 }
 
+namespace {
+// OpenMP directives parsed in this section are represented as a
+// CapturedStatement with an associated statement.  If a syntax error
+// is detected during the parsing of the associated statement, the
+// compiler must abort processing and close the CapturedStatement.
+//
+// Combined directives such as 'target parallel' have more than one
+// nested CapturedStatements.  This RAII ensures that we unwind out
+// of all the nested CapturedStatements when an error is found.
+class CaptureRegionUnwinderRAII {
+private:
+  Sema &S;
+  bool &ErrorFound;
+  OpenMPDirectiveKind DKind;
+
+public:
+  CaptureRegionUnwinderRAII(Sema &S, bool &ErrorFound,
+                            OpenMPDirectiveKind DKind)
+      : S(S), ErrorFound(ErrorFound), DKind(DKind) {}
+  ~CaptureRegionUnwinderRAII() {
+    if (ErrorFound) {
+      int ThisCaptureLevel = S.getOpenMPCaptureLevels(DKind);
+      while (--ThisCaptureLevel >= 0)
+        S.ActOnCapturedRegionError();
+    }
+  }
+};
+} // namespace
+
 StmtResult Sema::ActOnOpenMPRegionEnd(StmtResult S,
                                       ArrayRef<OMPClause *> Clauses) {
+  bool ErrorFound = false;
+  CaptureRegionUnwinderRAII CaptureRegionUnwinder(
+      *this, ErrorFound, DSAStack->getCurrentDirective());
   if (!S.isUsable()) {
-    ActOnCapturedRegionError();
+    ErrorFound = true;
     return StmtError();
   }
 
   OMPOrderedClause *OC = nullptr;
   OMPScheduleClause *SC = nullptr;
   SmallVector<OMPLinearClause *, 4> LCs;
+  SmallVector<OMPClauseWithPreInit *, 8> PICs;
   // This is required for proper codegen.
   for (auto *Clause : Clauses) {
     if (isOpenMPPrivate(Clause->getClauseKind()) ||
@@ -1936,15 +1964,8 @@ StmtResult Sema::ActOnOpenMPRegionEnd(StmtResult S,
       }
       DSAStack->setForceVarCapturing(/*V=*/false);
     } else if (isParallelOrTaskRegion(DSAStack->getCurrentDirective())) {
-      // Mark all variables in private list clauses as used in inner region.
-      // Required for proper codegen of combined directives.
-      // TODO: add processing for other clauses.
-      if (auto *C = OMPClauseWithPreInit::get(Clause)) {
-        if (auto *DS = cast_or_null<DeclStmt>(C->getPreInitStmt())) {
-          for (auto *D : DS->decls())
-            MarkVariableReferenced(D->getLocation(), cast<VarDecl>(D));
-        }
-      }
+      if (auto *C = OMPClauseWithPreInit::get(Clause))
+        PICs.push_back(C);
       if (auto *C = OMPClauseWithPostUpdate::get(Clause)) {
         if (auto *E = C->getPostUpdateExpr())
           MarkDeclarationsReferencedInExpr(E);
@@ -1957,7 +1978,6 @@ StmtResult Sema::ActOnOpenMPRegionEnd(StmtResult S,
     else if (Clause->getClauseKind() == OMPC_linear)
       LCs.push_back(cast<OMPLinearClause>(Clause));
   }
-  bool ErrorFound = false;
   // OpenMP, 2.7.1 Loop Construct, Restrictions
   // The nonmonotonic modifier cannot be specified if an ordered clause is
   // specified.
@@ -1988,1135 +2008,64 @@ StmtResult Sema::ActOnOpenMPRegionEnd(StmtResult S,
     ErrorFound = true;
   }
   if (ErrorFound) {
-    ActOnCapturedRegionError();
     return StmtError();
   }
-  return ActOnCapturedRegionEnd(S.get());
+  StmtResult SR = S;
+  SmallVector<OpenMPDirectiveKind, 4> CaptureRegions;
+  getOpenMPCaptureRegions(CaptureRegions, DSAStack->getCurrentDirective());
+  for (auto ThisCaptureRegion : llvm::reverse(CaptureRegions)) {
+    // Mark all variables in private list clauses as used in inner region.
+    // Required for proper codegen of combined directives.
+    // TODO: add processing for other clauses.
+    if (isParallelOrTaskRegion(DSAStack->getCurrentDirective())) {
+      for (auto *C : PICs) {
+        OpenMPDirectiveKind CaptureRegion = C->getCaptureRegion();
+        // Find the particular capture region for the clause if the
+        // directive is a combined one with multiple capture regions.
+        // If the directive is not a combined one, the capture region
+        // associated with the clause is OMPD_unknown and is generated
+        // only once.
+        if (CaptureRegion == ThisCaptureRegion ||
+            CaptureRegion == OMPD_unknown) {
+          if (auto *DS = cast_or_null<DeclStmt>(C->getPreInitStmt())) {
+            for (auto *D : DS->decls())
+              MarkVariableReferenced(D->getLocation(), cast<VarDecl>(D));
+          }
+        }
+      }
+    }
+    SR = ActOnCapturedRegionEnd(SR.get());
+  }
+  return SR;
 }
 
-static bool CheckNestingOfRegions(Sema &SemaRef, DSAStackTy *Stack,
+static bool checkCancelRegion(Sema &SemaRef, OpenMPDirectiveKind CurrentRegion,
+                              OpenMPDirectiveKind CancelRegion,
+                              SourceLocation StartLoc) {
+  // CancelRegion is only needed for cancel and cancellation_point.
+  if (CurrentRegion != OMPD_cancel && CurrentRegion != OMPD_cancellation_point)
+    return false;
+
+  if (CancelRegion == OMPD_parallel || CancelRegion == OMPD_for ||
+      CancelRegion == OMPD_sections || CancelRegion == OMPD_taskgroup)
+    return false;
+
+  SemaRef.Diag(StartLoc, diag::err_omp_wrong_cancel_region)
+      << getOpenMPDirectiveName(CancelRegion);
+  return true;
+}
+
+static bool checkNestingOfRegions(Sema &SemaRef, DSAStackTy *Stack,
                                   OpenMPDirectiveKind CurrentRegion,
                                   const DeclarationNameInfo &CurrentName,
                                   OpenMPDirectiveKind CancelRegion,
                                   SourceLocation StartLoc) {
-  // Allowed nesting of constructs
-  // +------------------+-----------------+------------------------------------+
-  // | Parent directive | Child directive | Closely (!), No-Closely(+), Both(*)|
-  // +------------------+-----------------+------------------------------------+
-  // | parallel         | parallel        | *                                  |
-  // | parallel         | for             | *                                  |
-  // | parallel         | for simd        | *                                  |
-  // | parallel         | master          | *                                  |
-  // | parallel         | critical        | *                                  |
-  // | parallel         | simd            | *                                  |
-  // | parallel         | sections        | *                                  |
-  // | parallel         | section         | +                                  |
-  // | parallel         | single          | *                                  |
-  // | parallel         | parallel for    | *                                  |
-  // | parallel         |parallel for simd| *                                  |
-  // | parallel         |parallel sections| *                                  |
-  // | parallel         | task            | *                                  |
-  // | parallel         | taskyield       | *                                  |
-  // | parallel         | barrier         | *                                  |
-  // | parallel         | taskwait        | *                                  |
-  // | parallel         | taskgroup       | *                                  |
-  // | parallel         | flush           | *                                  |
-  // | parallel         | ordered         | +                                  |
-  // | parallel         | atomic          | *                                  |
-  // | parallel         | target          | *                                  |
-  // | parallel         | target parallel | *                                  |
-  // | parallel         | target parallel | *                                  |
-  // |                  | for             |                                    |
-  // | parallel         | target enter    | *                                  |
-  // |                  | data            |                                    |
-  // | parallel         | target exit     | *                                  |
-  // |                  | data            |                                    |
-  // | parallel         | teams           | +                                  |
-  // | parallel         | cancellation    |                                    |
-  // |                  | point           | !                                  |
-  // | parallel         | cancel          | !                                  |
-  // | parallel         | taskloop        | *                                  |
-  // | parallel         | taskloop simd   | *                                  |
-  // | parallel         | distribute      | +                                  |
-  // | parallel         | distribute      | +                                  |
-  // |                  | parallel for    |                                    |
-  // | parallel         | distribute      | +                                  |
-  // |                  |parallel for simd|                                    |
-  // | parallel         | distribute simd | +                                  |
-  // +------------------+-----------------+------------------------------------+
-  // | for              | parallel        | *                                  |
-  // | for              | for             | +                                  |
-  // | for              | for simd        | +                                  |
-  // | for              | master          | +                                  |
-  // | for              | critical        | *                                  |
-  // | for              | simd            | *                                  |
-  // | for              | sections        | +                                  |
-  // | for              | section         | +                                  |
-  // | for              | single          | +                                  |
-  // | for              | parallel for    | *                                  |
-  // | for              |parallel for simd| *                                  |
-  // | for              |parallel sections| *                                  |
-  // | for              | task            | *                                  |
-  // | for              | taskyield       | *                                  |
-  // | for              | barrier         | +                                  |
-  // | for              | taskwait        | *                                  |
-  // | for              | taskgroup       | *                                  |
-  // | for              | flush           | *                                  |
-  // | for              | ordered         | * (if construct is ordered)        |
-  // | for              | atomic          | *                                  |
-  // | for              | target          | *                                  |
-  // | for              | target parallel | *                                  |
-  // | for              | target parallel | *                                  |
-  // |                  | for             |                                    |
-  // | for              | target enter    | *                                  |
-  // |                  | data            |                                    |
-  // | for              | target exit     | *                                  |
-  // |                  | data            |                                    |
-  // | for              | teams           | +                                  |
-  // | for              | cancellation    |                                    |
-  // |                  | point           | !                                  |
-  // | for              | cancel          | !                                  |
-  // | for              | taskloop        | *                                  |
-  // | for              | taskloop simd   | *                                  |
-  // | for              | distribute      | +                                  |
-  // | for              | distribute      | +                                  |
-  // |                  | parallel for    |                                    |
-  // | for              | distribute      | +                                  |
-  // |                  |parallel for simd|                                    |
-  // | for              | distribute simd | +                                  |
-  // +------------------+-----------------+------------------------------------+
-  // | master           | parallel        | *                                  |
-  // | master           | for             | +                                  |
-  // | master           | for simd        | +                                  |
-  // | master           | master          | *                                  |
-  // | master           | critical        | *                                  |
-  // | master           | simd            | *                                  |
-  // | master           | sections        | +                                  |
-  // | master           | section         | +                                  |
-  // | master           | single          | +                                  |
-  // | master           | parallel for    | *                                  |
-  // | master           |parallel for simd| *                                  |
-  // | master           |parallel sections| *                                  |
-  // | master           | task            | *                                  |
-  // | master           | taskyield       | *                                  |
-  // | master           | barrier         | +                                  |
-  // | master           | taskwait        | *                                  |
-  // | master           | taskgroup       | *                                  |
-  // | master           | flush           | *                                  |
-  // | master           | ordered         | +                                  |
-  // | master           | atomic          | *                                  |
-  // | master           | target          | *                                  |
-  // | master           | target parallel | *                                  |
-  // | master           | target parallel | *                                  |
-  // |                  | for             |                                    |
-  // | master           | target enter    | *                                  |
-  // |                  | data            |                                    |
-  // | master           | target exit     | *                                  |
-  // |                  | data            |                                    |
-  // | master           | teams           | +                                  |
-  // | master           | cancellation    |                                    |
-  // |                  | point           |                                    |
-  // | master           | cancel          |                                    |
-  // | master           | taskloop        | *                                  |
-  // | master           | taskloop simd   | *                                  |
-  // | master           | distribute      | +                                  |
-  // | master           | distribute      | +                                  |
-  // |                  | parallel for    |                                    |
-  // | master           | distribute      | +                                  |
-  // |                  |parallel for simd|                                    |
-  // | master           | distribute simd | +                                  |
-  // +------------------+-----------------+------------------------------------+
-  // | critical         | parallel        | *                                  |
-  // | critical         | for             | +                                  |
-  // | critical         | for simd        | +                                  |
-  // | critical         | master          | *                                  |
-  // | critical         | critical        | * (should have different names)    |
-  // | critical         | simd            | *                                  |
-  // | critical         | sections        | +                                  |
-  // | critical         | section         | +                                  |
-  // | critical         | single          | +                                  |
-  // | critical         | parallel for    | *                                  |
-  // | critical         |parallel for simd| *                                  |
-  // | critical         |parallel sections| *                                  |
-  // | critical         | task            | *                                  |
-  // | critical         | taskyield       | *                                  |
-  // | critical         | barrier         | +                                  |
-  // | critical         | taskwait        | *                                  |
-  // | critical         | taskgroup       | *                                  |
-  // | critical         | ordered         | +                                  |
-  // | critical         | atomic          | *                                  |
-  // | critical         | target          | *                                  |
-  // | critical         | target parallel | *                                  |
-  // | critical         | target parallel | *                                  |
-  // |                  | for             |                                    |
-  // | critical         | target enter    | *                                  |
-  // |                  | data            |                                    |
-  // | critical         | target exit     | *                                  |
-  // |                  | data            |                                    |
-  // | critical         | teams           | +                                  |
-  // | critical         | cancellation    |                                    |
-  // |                  | point           |                                    |
-  // | critical         | cancel          |                                    |
-  // | critical         | taskloop        | *                                  |
-  // | critical         | taskloop simd   | *                                  |
-  // | critical         | distribute      | +                                  |
-  // | critical         | distribute      | +                                  |
-  // |                  | parallel for    |                                    |
-  // | critical         | distribute      | +                                  |
-  // |                  |parallel for simd|                                    |
-  // | critical         | distribute simd | +                                  |
-  // +------------------+-----------------+------------------------------------+
-  // | simd             | parallel        |                                    |
-  // | simd             | for             |                                    |
-  // | simd             | for simd        |                                    |
-  // | simd             | master          |                                    |
-  // | simd             | critical        |                                    |
-  // | simd             | simd            | *                                  |
-  // | simd             | sections        |                                    |
-  // | simd             | section         |                                    |
-  // | simd             | single          |                                    |
-  // | simd             | parallel for    |                                    |
-  // | simd             |parallel for simd|                                    |
-  // | simd             |parallel sections|                                    |
-  // | simd             | task            |                                    |
-  // | simd             | taskyield       |                                    |
-  // | simd             | barrier         |                                    |
-  // | simd             | taskwait        |                                    |
-  // | simd             | taskgroup       |                                    |
-  // | simd             | flush           |                                    |
-  // | simd             | ordered         | + (with simd clause)               |
-  // | simd             | atomic          |                                    |
-  // | simd             | target          |                                    |
-  // | simd             | target parallel |                                    |
-  // | simd             | target parallel |                                    |
-  // |                  | for             |                                    |
-  // | simd             | target enter    |                                    |
-  // |                  | data            |                                    |
-  // | simd             | target exit     |                                    |
-  // |                  | data            |                                    |
-  // | simd             | teams           |                                    |
-  // | simd             | cancellation    |                                    |
-  // |                  | point           |                                    |
-  // | simd             | cancel          |                                    |
-  // | simd             | taskloop        |                                    |
-  // | simd             | taskloop simd   |                                    |
-  // | simd             | distribute      |                                    |
-  // | simd             | distribute      |                                    |
-  // |                  | parallel for    |                                    |
-  // | simd             | distribute      |                                    |
-  // |                  |parallel for simd|                                    |
-  // | simd             | distribute simd |                                    |
-  // +------------------+-----------------+------------------------------------+
-  // | for simd         | parallel        |                                    |
-  // | for simd         | for             |                                    |
-  // | for simd         | for simd        |                                    |
-  // | for simd         | master          |                                    |
-  // | for simd         | critical        |                                    |
-  // | for simd         | simd            | *                                  |
-  // | for simd         | sections        |                                    |
-  // | for simd         | section         |                                    |
-  // | for simd         | single          |                                    |
-  // | for simd         | parallel for    |                                    |
-  // | for simd         |parallel for simd|                                    |
-  // | for simd         |parallel sections|                                    |
-  // | for simd         | task            |                                    |
-  // | for simd         | taskyield       |                                    |
-  // | for simd         | barrier         |                                    |
-  // | for simd         | taskwait        |                                    |
-  // | for simd         | taskgroup       |                                    |
-  // | for simd         | flush           |                                    |
-  // | for simd         | ordered         | + (with simd clause)               |
-  // | for simd         | atomic          |                                    |
-  // | for simd         | target          |                                    |
-  // | for simd         | target parallel |                                    |
-  // | for simd         | target parallel |                                    |
-  // |                  | for             |                                    |
-  // | for simd         | target enter    |                                    |
-  // |                  | data            |                                    |
-  // | for simd         | target exit     |                                    |
-  // |                  | data            |                                    |
-  // | for simd         | teams           |                                    |
-  // | for simd         | cancellation    |                                    |
-  // |                  | point           |                                    |
-  // | for simd         | cancel          |                                    |
-  // | for simd         | taskloop        |                                    |
-  // | for simd         | taskloop simd   |                                    |
-  // | for simd         | distribute      |                                    |
-  // | for simd         | distribute      |                                    |
-  // |                  | parallel for    |                                    |
-  // | for simd         | distribute      |                                    |
-  // |                  |parallel for simd|                                    |
-  // | for simd         | distribute simd |                                    |
-  // +------------------+-----------------+------------------------------------+
-  // | parallel for simd| parallel        |                                    |
-  // | parallel for simd| for             |                                    |
-  // | parallel for simd| for simd        |                                    |
-  // | parallel for simd| master          |                                    |
-  // | parallel for simd| critical        |                                    |
-  // | parallel for simd| simd            | *                                  |
-  // | parallel for simd| sections        |                                    |
-  // | parallel for simd| section         |                                    |
-  // | parallel for simd| single          |                                    |
-  // | parallel for simd| parallel for    |                                    |
-  // | parallel for simd|parallel for simd|                                    |
-  // | parallel for simd|parallel sections|                                    |
-  // | parallel for simd| task            |                                    |
-  // | parallel for simd| taskyield       |                                    |
-  // | parallel for simd| barrier         |                                    |
-  // | parallel for simd| taskwait        |                                    |
-  // | parallel for simd| taskgroup       |                                    |
-  // | parallel for simd| flush           |                                    |
-  // | parallel for simd| ordered         | + (with simd clause)               |
-  // | parallel for simd| atomic          |                                    |
-  // | parallel for simd| target          |                                    |
-  // | parallel for simd| target parallel |                                    |
-  // | parallel for simd| target parallel |                                    |
-  // |                  | for             |                                    |
-  // | parallel for simd| target enter    |                                    |
-  // |                  | data            |                                    |
-  // | parallel for simd| target exit     |                                    |
-  // |                  | data            |                                    |
-  // | parallel for simd| teams           |                                    |
-  // | parallel for simd| cancellation    |                                    |
-  // |                  | point           |                                    |
-  // | parallel for simd| cancel          |                                    |
-  // | parallel for simd| taskloop        |                                    |
-  // | parallel for simd| taskloop simd   |                                    |
-  // | parallel for simd| distribute      |                                    |
-  // | parallel for simd| distribute      |                                    |
-  // |                  | parallel for    |                                    |
-  // | parallel for simd| distribute      |                                    |
-  // |                  |parallel for simd|                                    |
-  // | parallel for simd| distribute simd |                                    |
-  // +------------------+-----------------+------------------------------------+
-  // | sections         | parallel        | *                                  |
-  // | sections         | for             | +                                  |
-  // | sections         | for simd        | +                                  |
-  // | sections         | master          | +                                  |
-  // | sections         | critical        | *                                  |
-  // | sections         | simd            | *                                  |
-  // | sections         | sections        | +                                  |
-  // | sections         | section         | *                                  |
-  // | sections         | single          | +                                  |
-  // | sections         | parallel for    | *                                  |
-  // | sections         |parallel for simd| *                                  |
-  // | sections         |parallel sections| *                                  |
-  // | sections         | task            | *                                  |
-  // | sections         | taskyield       | *                                  |
-  // | sections         | barrier         | +                                  |
-  // | sections         | taskwait        | *                                  |
-  // | sections         | taskgroup       | *                                  |
-  // | sections         | flush           | *                                  |
-  // | sections         | ordered         | +                                  |
-  // | sections         | atomic          | *                                  |
-  // | sections         | target          | *                                  |
-  // | sections         | target parallel | *                                  |
-  // | sections         | target parallel | *                                  |
-  // |                  | for             |                                    |
-  // | sections         | target enter    | *                                  |
-  // |                  | data            |                                    |
-  // | sections         | target exit     | *                                  |
-  // |                  | data            |                                    |
-  // | sections         | teams           | +                                  |
-  // | sections         | cancellation    |                                    |
-  // |                  | point           | !                                  |
-  // | sections         | cancel          | !                                  |
-  // | sections         | taskloop        | *                                  |
-  // | sections         | taskloop simd   | *                                  |
-  // | sections         | distribute      | +                                  |
-  // | sections         | distribute      | +                                  |
-  // |                  | parallel for    |                                    |
-  // | sections         | distribute      | +                                  |
-  // |                  |parallel for simd|                                    |
-  // | sections         | distribute simd | +                                  |
-  // +------------------+-----------------+------------------------------------+
-  // | section          | parallel        | *                                  |
-  // | section          | for             | +                                  |
-  // | section          | for simd        | +                                  |
-  // | section          | master          | +                                  |
-  // | section          | critical        | *                                  |
-  // | section          | simd            | *                                  |
-  // | section          | sections        | +                                  |
-  // | section          | section         | +                                  |
-  // | section          | single          | +                                  |
-  // | section          | parallel for    | *                                  |
-  // | section          |parallel for simd| *                                  |
-  // | section          |parallel sections| *                                  |
-  // | section          | task            | *                                  |
-  // | section          | taskyield       | *                                  |
-  // | section          | barrier         | +                                  |
-  // | section          | taskwait        | *                                  |
-  // | section          | taskgroup       | *                                  |
-  // | section          | flush           | *                                  |
-  // | section          | ordered         | +                                  |
-  // | section          | atomic          | *                                  |
-  // | section          | target          | *                                  |
-  // | section          | target parallel | *                                  |
-  // | section          | target parallel | *                                  |
-  // |                  | for             |                                    |
-  // | section          | target enter    | *                                  |
-  // |                  | data            |                                    |
-  // | section          | target exit     | *                                  |
-  // |                  | data            |                                    |
-  // | section          | teams           | +                                  |
-  // | section          | cancellation    |                                    |
-  // |                  | point           | !                                  |
-  // | section          | cancel          | !                                  |
-  // | section          | taskloop        | *                                  |
-  // | section          | taskloop simd   | *                                  |
-  // | section          | distribute      | +                                  |
-  // | section          | distribute      | +                                  |
-  // |                  | parallel for    |                                    |
-  // | section          | distribute      | +                                  |
-  // |                  |parallel for simd|                                    |
-  // | section          | distribute simd | +                                  |
-  // +------------------+-----------------+------------------------------------+
-  // | single           | parallel        | *                                  |
-  // | single           | for             | +                                  |
-  // | single           | for simd        | +                                  |
-  // | single           | master          | +                                  |
-  // | single           | critical        | *                                  |
-  // | single           | simd            | *                                  |
-  // | single           | sections        | +                                  |
-  // | single           | section         | +                                  |
-  // | single           | single          | +                                  |
-  // | single           | parallel for    | *                                  |
-  // | single           |parallel for simd| *                                  |
-  // | single           |parallel sections| *                                  |
-  // | single           | task            | *                                  |
-  // | single           | taskyield       | *                                  |
-  // | single           | barrier         | +                                  |
-  // | single           | taskwait        | *                                  |
-  // | single           | taskgroup       | *                                  |
-  // | single           | flush           | *                                  |
-  // | single           | ordered         | +                                  |
-  // | single           | atomic          | *                                  |
-  // | single           | target          | *                                  |
-  // | single           | target parallel | *                                  |
-  // | single           | target parallel | *                                  |
-  // |                  | for             |                                    |
-  // | single           | target enter    | *                                  |
-  // |                  | data            |                                    |
-  // | single           | target exit     | *                                  |
-  // |                  | data            |                                    |
-  // | single           | teams           | +                                  |
-  // | single           | cancellation    |                                    |
-  // |                  | point           |                                    |
-  // | single           | cancel          |                                    |
-  // | single           | taskloop        | *                                  |
-  // | single           | taskloop simd   | *                                  |
-  // | single           | distribute      | +                                  |
-  // | single           | distribute      | +                                  |
-  // |                  | parallel for    |                                    |
-  // | single           | distribute      | +                                  |
-  // |                  |parallel for simd|                                    |
-  // | single           | distribute simd | +                                  |
-  // +------------------+-----------------+------------------------------------+
-  // | parallel for     | parallel        | *                                  |
-  // | parallel for     | for             | +                                  |
-  // | parallel for     | for simd        | +                                  |
-  // | parallel for     | master          | +                                  |
-  // | parallel for     | critical        | *                                  |
-  // | parallel for     | simd            | *                                  |
-  // | parallel for     | sections        | +                                  |
-  // | parallel for     | section         | +                                  |
-  // | parallel for     | single          | +                                  |
-  // | parallel for     | parallel for    | *                                  |
-  // | parallel for     |parallel for simd| *                                  |
-  // | parallel for     |parallel sections| *                                  |
-  // | parallel for     | task            | *                                  |
-  // | parallel for     | taskyield       | *                                  |
-  // | parallel for     | barrier         | +                                  |
-  // | parallel for     | taskwait        | *                                  |
-  // | parallel for     | taskgroup       | *                                  |
-  // | parallel for     | flush           | *                                  |
-  // | parallel for     | ordered         | * (if construct is ordered)        |
-  // | parallel for     | atomic          | *                                  |
-  // | parallel for     | target          | *                                  |
-  // | parallel for     | target parallel | *                                  |
-  // | parallel for     | target parallel | *                                  |
-  // |                  | for             |                                    |
-  // | parallel for     | target enter    | *                                  |
-  // |                  | data            |                                    |
-  // | parallel for     | target exit     | *                                  |
-  // |                  | data            |                                    |
-  // | parallel for     | teams           | +                                  |
-  // | parallel for     | cancellation    |                                    |
-  // |                  | point           | !                                  |
-  // | parallel for     | cancel          | !                                  |
-  // | parallel for     | taskloop        | *                                  |
-  // | parallel for     | taskloop simd   | *                                  |
-  // | parallel for     | distribute      | +                                  |
-  // | parallel for     | distribute      | +                                  |
-  // |                  | parallel for    |                                    |
-  // | parallel for     | distribute      | +                                  |
-  // |                  |parallel for simd|                                    |
-  // | parallel for     | distribute simd | +                                  |
-  // +------------------+-----------------+------------------------------------+
-  // | parallel sections| parallel        | *                                  |
-  // | parallel sections| for             | +                                  |
-  // | parallel sections| for simd        | +                                  |
-  // | parallel sections| master          | +                                  |
-  // | parallel sections| critical        | +                                  |
-  // | parallel sections| simd            | *                                  |
-  // | parallel sections| sections        | +                                  |
-  // | parallel sections| section         | *                                  |
-  // | parallel sections| single          | +                                  |
-  // | parallel sections| parallel for    | *                                  |
-  // | parallel sections|parallel for simd| *                                  |
-  // | parallel sections|parallel sections| *                                  |
-  // | parallel sections| task            | *                                  |
-  // | parallel sections| taskyield       | *                                  |
-  // | parallel sections| barrier         | +                                  |
-  // | parallel sections| taskwait        | *                                  |
-  // | parallel sections| taskgroup       | *                                  |
-  // | parallel sections| flush           | *                                  |
-  // | parallel sections| ordered         | +                                  |
-  // | parallel sections| atomic          | *                                  |
-  // | parallel sections| target          | *                                  |
-  // | parallel sections| target parallel | *                                  |
-  // | parallel sections| target parallel | *                                  |
-  // |                  | for             |                                    |
-  // | parallel sections| target enter    | *                                  |
-  // |                  | data            |                                    |
-  // | parallel sections| target exit     | *                                  |
-  // |                  | data            |                                    |
-  // | parallel sections| teams           | +                                  |
-  // | parallel sections| cancellation    |                                    |
-  // |                  | point           | !                                  |
-  // | parallel sections| cancel          | !                                  |
-  // | parallel sections| taskloop        | *                                  |
-  // | parallel sections| taskloop simd   | *                                  |
-  // | parallel sections| distribute      | +                                  |
-  // | parallel sections| distribute      | +                                  |
-  // |                  | parallel for    |                                    |
-  // | parallel sections| distribute      | +                                  |
-  // |                  |parallel for simd|                                    |
-  // | parallel sections| distribute simd | +                                  |
-  // +------------------+-----------------+------------------------------------+
-  // | task             | parallel        | *                                  |
-  // | task             | for             | +                                  |
-  // | task             | for simd        | +                                  |
-  // | task             | master          | +                                  |
-  // | task             | critical        | *                                  |
-  // | task             | simd            | *                                  |
-  // | task             | sections        | +                                  |
-  // | task             | section         | +                                  |
-  // | task             | single          | +                                  |
-  // | task             | parallel for    | *                                  |
-  // | task             |parallel for simd| *                                  |
-  // | task             |parallel sections| *                                  |
-  // | task             | task            | *                                  |
-  // | task             | taskyield       | *                                  |
-  // | task             | barrier         | +                                  |
-  // | task             | taskwait        | *                                  |
-  // | task             | taskgroup       | *                                  |
-  // | task             | flush           | *                                  |
-  // | task             | ordered         | +                                  |
-  // | task             | atomic          | *                                  |
-  // | task             | target          | *                                  |
-  // | task             | target parallel | *                                  |
-  // | task             | target parallel | *                                  |
-  // |                  | for             |                                    |
-  // | task             | target enter    | *                                  |
-  // |                  | data            |                                    |
-  // | task             | target exit     | *                                  |
-  // |                  | data            |                                    |
-  // | task             | teams           | +                                  |
-  // | task             | cancellation    |                                    |
-  // |                  | point           | !                                  |
-  // | task             | cancel          | !                                  |
-  // | task             | taskloop        | *                                  |
-  // | task             | taskloop simd   | *                                  |
-  // | task             | distribute      | +                                  |
-  // | task             | distribute      | +                                  |
-  // |                  | parallel for    |                                    |
-  // | task             | distribute      | +                                  |
-  // |                  |parallel for simd|                                    |
-  // | task             | distribute simd | +                                  |
-  // +------------------+-----------------+------------------------------------+
-  // | ordered          | parallel        | *                                  |
-  // | ordered          | for             | +                                  |
-  // | ordered          | for simd        | +                                  |
-  // | ordered          | master          | *                                  |
-  // | ordered          | critical        | *                                  |
-  // | ordered          | simd            | *                                  |
-  // | ordered          | sections        | +                                  |
-  // | ordered          | section         | +                                  |
-  // | ordered          | single          | +                                  |
-  // | ordered          | parallel for    | *                                  |
-  // | ordered          |parallel for simd| *                                  |
-  // | ordered          |parallel sections| *                                  |
-  // | ordered          | task            | *                                  |
-  // | ordered          | taskyield       | *                                  |
-  // | ordered          | barrier         | +                                  |
-  // | ordered          | taskwait        | *                                  |
-  // | ordered          | taskgroup       | *                                  |
-  // | ordered          | flush           | *                                  |
-  // | ordered          | ordered         | +                                  |
-  // | ordered          | atomic          | *                                  |
-  // | ordered          | target          | *                                  |
-  // | ordered          | target parallel | *                                  |
-  // | ordered          | target parallel | *                                  |
-  // |                  | for             |                                    |
-  // | ordered          | target enter    | *                                  |
-  // |                  | data            |                                    |
-  // | ordered          | target exit     | *                                  |
-  // |                  | data            |                                    |
-  // | ordered          | teams           | +                                  |
-  // | ordered          | cancellation    |                                    |
-  // |                  | point           |                                    |
-  // | ordered          | cancel          |                                    |
-  // | ordered          | taskloop        | *                                  |
-  // | ordered          | taskloop simd   | *                                  |
-  // | ordered          | distribute      | +                                  |
-  // | ordered          | distribute      | +                                  |
-  // |                  | parallel for    |                                    |
-  // | ordered          | distribute      | +                                  |
-  // |                  |parallel for simd|                                    |
-  // | ordered          | distribute simd | +                                  |
-  // +------------------+-----------------+------------------------------------+
-  // | atomic           | parallel        |                                    |
-  // | atomic           | for             |                                    |
-  // | atomic           | for simd        |                                    |
-  // | atomic           | master          |                                    |
-  // | atomic           | critical        |                                    |
-  // | atomic           | simd            |                                    |
-  // | atomic           | sections        |                                    |
-  // | atomic           | section         |                                    |
-  // | atomic           | single          |                                    |
-  // | atomic           | parallel for    |                                    |
-  // | atomic           |parallel for simd|                                    |
-  // | atomic           |parallel sections|                                    |
-  // | atomic           | task            |                                    |
-  // | atomic           | taskyield       |                                    |
-  // | atomic           | barrier         |                                    |
-  // | atomic           | taskwait        |                                    |
-  // | atomic           | taskgroup       |                                    |
-  // | atomic           | flush           |                                    |
-  // | atomic           | ordered         |                                    |
-  // | atomic           | atomic          |                                    |
-  // | atomic           | target          |                                    |
-  // | atomic           | target parallel |                                    |
-  // | atomic           | target parallel |                                    |
-  // |                  | for             |                                    |
-  // | atomic           | target enter    |                                    |
-  // |                  | data            |                                    |
-  // | atomic           | target exit     |                                    |
-  // |                  | data            |                                    |
-  // | atomic           | teams           |                                    |
-  // | atomic           | cancellation    |                                    |
-  // |                  | point           |                                    |
-  // | atomic           | cancel          |                                    |
-  // | atomic           | taskloop        |                                    |
-  // | atomic           | taskloop simd   |                                    |
-  // | atomic           | distribute      |                                    |
-  // | atomic           | distribute      |                                    |
-  // |                  | parallel for    |                                    |
-  // | atomic           | distribute      |                                    |
-  // |                  |parallel for simd|                                    |
-  // | atomic           | distribute simd |                                    |
-  // +------------------+-----------------+------------------------------------+
-  // | target           | parallel        | *                                  |
-  // | target           | for             | *                                  |
-  // | target           | for simd        | *                                  |
-  // | target           | master          | *                                  |
-  // | target           | critical        | *                                  |
-  // | target           | simd            | *                                  |
-  // | target           | sections        | *                                  |
-  // | target           | section         | *                                  |
-  // | target           | single          | *                                  |
-  // | target           | parallel for    | *                                  |
-  // | target           |parallel for simd| *                                  |
-  // | target           |parallel sections| *                                  |
-  // | target           | task            | *                                  |
-  // | target           | taskyield       | *                                  |
-  // | target           | barrier         | *                                  |
-  // | target           | taskwait        | *                                  |
-  // | target           | taskgroup       | *                                  |
-  // | target           | flush           | *                                  |
-  // | target           | ordered         | *                                  |
-  // | target           | atomic          | *                                  |
-  // | target           | target          |                                    |
-  // | target           | target parallel |                                    |
-  // | target           | target parallel |                                    |
-  // |                  | for             |                                    |
-  // | target           | target enter    |                                    |
-  // |                  | data            |                                    |
-  // | target           | target exit     |                                    |
-  // |                  | data            |                                    |
-  // | target           | teams           | *                                  |
-  // | target           | cancellation    |                                    |
-  // |                  | point           |                                    |
-  // | target           | cancel          |                                    |
-  // | target           | taskloop        | *                                  |
-  // | target           | taskloop simd   | *                                  |
-  // | target           | distribute      | +                                  |
-  // | target           | distribute      | +                                  |
-  // |                  | parallel for    |                                    |
-  // | target           | distribute      | +                                  |
-  // |                  |parallel for simd|                                    |
-  // | target           | distribute simd | +                                  |
-  // +------------------+-----------------+------------------------------------+
-  // | target parallel  | parallel        | *                                  |
-  // | target parallel  | for             | *                                  |
-  // | target parallel  | for simd        | *                                  |
-  // | target parallel  | master          | *                                  |
-  // | target parallel  | critical        | *                                  |
-  // | target parallel  | simd            | *                                  |
-  // | target parallel  | sections        | *                                  |
-  // | target parallel  | section         | *                                  |
-  // | target parallel  | single          | *                                  |
-  // | target parallel  | parallel for    | *                                  |
-  // | target parallel  |parallel for simd| *                                  |
-  // | target parallel  |parallel sections| *                                  |
-  // | target parallel  | task            | *                                  |
-  // | target parallel  | taskyield       | *                                  |
-  // | target parallel  | barrier         | *                                  |
-  // | target parallel  | taskwait        | *                                  |
-  // | target parallel  | taskgroup       | *                                  |
-  // | target parallel  | flush           | *                                  |
-  // | target parallel  | ordered         | *                                  |
-  // | target parallel  | atomic          | *                                  |
-  // | target parallel  | target          |                                    |
-  // | target parallel  | target parallel |                                    |
-  // | target parallel  | target parallel |                                    |
-  // |                  | for             |                                    |
-  // | target parallel  | target enter    |                                    |
-  // |                  | data            |                                    |
-  // | target parallel  | target exit     |                                    |
-  // |                  | data            |                                    |
-  // | target parallel  | teams           |                                    |
-  // | target parallel  | cancellation    |                                    |
-  // |                  | point           | !                                  |
-  // | target parallel  | cancel          | !                                  |
-  // | target parallel  | taskloop        | *                                  |
-  // | target parallel  | taskloop simd   | *                                  |
-  // | target parallel  | distribute      |                                    |
-  // | target parallel  | distribute      |                                    |
-  // |                  | parallel for    |                                    |
-  // | target parallel  | distribute      |                                    |
-  // |                  |parallel for simd|                                    |
-  // | target parallel  | distribute simd |                                    |
-  // +------------------+-----------------+------------------------------------+
-  // | target parallel  | parallel        | *                                  |
-  // | for              |                 |                                    |
-  // | target parallel  | for             | *                                  |
-  // | for              |                 |                                    |
-  // | target parallel  | for simd        | *                                  |
-  // | for              |                 |                                    |
-  // | target parallel  | master          | *                                  |
-  // | for              |                 |                                    |
-  // | target parallel  | critical        | *                                  |
-  // | for              |                 |                                    |
-  // | target parallel  | simd            | *                                  |
-  // | for              |                 |                                    |
-  // | target parallel  | sections        | *                                  |
-  // | for              |                 |                                    |
-  // | target parallel  | section         | *                                  |
-  // | for              |                 |                                    |
-  // | target parallel  | single          | *                                  |
-  // | for              |                 |                                    |
-  // | target parallel  | parallel for    | *                                  |
-  // | for              |                 |                                    |
-  // | target parallel  |parallel for simd| *                                  |
-  // | for              |                 |                                    |
-  // | target parallel  |parallel sections| *                                  |
-  // | for              |                 |                                    |
-  // | target parallel  | task            | *                                  |
-  // | for              |                 |                                    |
-  // | target parallel  | taskyield       | *                                  |
-  // | for              |                 |                                    |
-  // | target parallel  | barrier         | *                                  |
-  // | for              |                 |                                    |
-  // | target parallel  | taskwait        | *                                  |
-  // | for              |                 |                                    |
-  // | target parallel  | taskgroup       | *                                  |
-  // | for              |                 |                                    |
-  // | target parallel  | flush           | *                                  |
-  // | for              |                 |                                    |
-  // | target parallel  | ordered         | *                                  |
-  // | for              |                 |                                    |
-  // | target parallel  | atomic          | *                                  |
-  // | for              |                 |                                    |
-  // | target parallel  | target          |                                    |
-  // | for              |                 |                                    |
-  // | target parallel  | target parallel |                                    |
-  // | for              |                 |                                    |
-  // | target parallel  | target parallel |                                    |
-  // | for              | for             |                                    |
-  // | target parallel  | target enter    |                                    |
-  // | for              | data            |                                    |
-  // | target parallel  | target exit     |                                    |
-  // | for              | data            |                                    |
-  // | target parallel  | teams           |                                    |
-  // | for              |                 |                                    |
-  // | target parallel  | cancellation    |                                    |
-  // | for              | point           | !                                  |
-  // | target parallel  | cancel          | !                                  |
-  // | for              |                 |                                    |
-  // | target parallel  | taskloop        | *                                  |
-  // | for              |                 |                                    |
-  // | target parallel  | taskloop simd   | *                                  |
-  // | for              |                 |                                    |
-  // | target parallel  | distribute      |                                    |
-  // | for              |                 |                                    |
-  // | target parallel  | distribute      |                                    |
-  // | for              | parallel for    |                                    |
-  // | target parallel  | distribute      |                                    |
-  // | for              |parallel for simd|                                    |
-  // | target parallel  | distribute simd |                                    |
-  // | for              |                 |                                    |
-  // +------------------+-----------------+------------------------------------+
-  // | teams            | parallel        | *                                  |
-  // | teams            | for             | +                                  |
-  // | teams            | for simd        | +                                  |
-  // | teams            | master          | +                                  |
-  // | teams            | critical        | +                                  |
-  // | teams            | simd            | +                                  |
-  // | teams            | sections        | +                                  |
-  // | teams            | section         | +                                  |
-  // | teams            | single          | +                                  |
-  // | teams            | parallel for    | *                                  |
-  // | teams            |parallel for simd| *                                  |
-  // | teams            |parallel sections| *                                  |
-  // | teams            | task            | +                                  |
-  // | teams            | taskyield       | +                                  |
-  // | teams            | barrier         | +                                  |
-  // | teams            | taskwait        | +                                  |
-  // | teams            | taskgroup       | +                                  |
-  // | teams            | flush           | +                                  |
-  // | teams            | ordered         | +                                  |
-  // | teams            | atomic          | +                                  |
-  // | teams            | target          | +                                  |
-  // | teams            | target parallel | +                                  |
-  // | teams            | target parallel | +                                  |
-  // |                  | for             |                                    |
-  // | teams            | target enter    | +                                  |
-  // |                  | data            |                                    |
-  // | teams            | target exit     | +                                  |
-  // |                  | data            |                                    |
-  // | teams            | teams           | +                                  |
-  // | teams            | cancellation    |                                    |
-  // |                  | point           |                                    |
-  // | teams            | cancel          |                                    |
-  // | teams            | taskloop        | +                                  |
-  // | teams            | taskloop simd   | +                                  |
-  // | teams            | distribute      | !                                  |
-  // | teams            | distribute      | !                                  |
-  // |                  | parallel for    |                                    |
-  // | teams            | distribute      | !                                  |
-  // |                  |parallel for simd|                                    |
-  // | teams            | distribute simd | !                                  |
-  // +------------------+-----------------+------------------------------------+
-  // | taskloop         | parallel        | *                                  |
-  // | taskloop         | for             | +                                  |
-  // | taskloop         | for simd        | +                                  |
-  // | taskloop         | master          | +                                  |
-  // | taskloop         | critical        | *                                  |
-  // | taskloop         | simd            | *                                  |
-  // | taskloop         | sections        | +                                  |
-  // | taskloop         | section         | +                                  |
-  // | taskloop         | single          | +                                  |
-  // | taskloop         | parallel for    | *                                  |
-  // | taskloop         |parallel for simd| *                                  |
-  // | taskloop         |parallel sections| *                                  |
-  // | taskloop         | task            | *                                  |
-  // | taskloop         | taskyield       | *                                  |
-  // | taskloop         | barrier         | +                                  |
-  // | taskloop         | taskwait        | *                                  |
-  // | taskloop         | taskgroup       | *                                  |
-  // | taskloop         | flush           | *                                  |
-  // | taskloop         | ordered         | +                                  |
-  // | taskloop         | atomic          | *                                  |
-  // | taskloop         | target          | *                                  |
-  // | taskloop         | target parallel | *                                  |
-  // | taskloop         | target parallel | *                                  |
-  // |                  | for             |                                    |
-  // | taskloop         | target enter    | *                                  |
-  // |                  | data            |                                    |
-  // | taskloop         | target exit     | *                                  |
-  // |                  | data            |                                    |
-  // | taskloop         | teams           | +                                  |
-  // | taskloop         | cancellation    |                                    |
-  // |                  | point           |                                    |
-  // | taskloop         | cancel          |                                    |
-  // | taskloop         | taskloop        | *                                  |
-  // | taskloop         | distribute      | +                                  |
-  // | taskloop         | distribute      | +                                  |
-  // |                  | parallel for    |                                    |
-  // | taskloop         | distribute      | +                                  |
-  // |                  |parallel for simd|                                    |
-  // | taskloop         | distribute simd | +                                  |
-  // +------------------+-----------------+------------------------------------+
-  // | taskloop simd    | parallel        |                                    |
-  // | taskloop simd    | for             |                                    |
-  // | taskloop simd    | for simd        |                                    |
-  // | taskloop simd    | master          |                                    |
-  // | taskloop simd    | critical        |                                    |
-  // | taskloop simd    | simd            | *                                  |
-  // | taskloop simd    | sections        |                                    |
-  // | taskloop simd    | section         |                                    |
-  // | taskloop simd    | single          |                                    |
-  // | taskloop simd    | parallel for    |                                    |
-  // | taskloop simd    |parallel for simd|                                    |
-  // | taskloop simd    |parallel sections|                                    |
-  // | taskloop simd    | task            |                                    |
-  // | taskloop simd    | taskyield       |                                    |
-  // | taskloop simd    | barrier         |                                    |
-  // | taskloop simd    | taskwait        |                                    |
-  // | taskloop simd    | taskgroup       |                                    |
-  // | taskloop simd    | flush           |                                    |
-  // | taskloop simd    | ordered         | + (with simd clause)               |
-  // | taskloop simd    | atomic          |                                    |
-  // | taskloop simd    | target          |                                    |
-  // | taskloop simd    | target parallel |                                    |
-  // | taskloop simd    | target parallel |                                    |
-  // |                  | for             |                                    |
-  // | taskloop simd    | target enter    |                                    |
-  // |                  | data            |                                    |
-  // | taskloop simd    | target exit     |                                    |
-  // |                  | data            |                                    |
-  // | taskloop simd    | teams           |                                    |
-  // | taskloop simd    | cancellation    |                                    |
-  // |                  | point           |                                    |
-  // | taskloop simd    | cancel          |                                    |
-  // | taskloop simd    | taskloop        |                                    |
-  // | taskloop simd    | taskloop simd   |                                    |
-  // | taskloop simd    | distribute      |                                    |
-  // | taskloop simd    | distribute      |                                    |
-  // |                  | parallel for    |                                    |
-  // | taskloop simd    | distribute      |                                    |
-  // |                  |parallel for simd|                                    |
-  // | taskloop simd    | distribute simd |                                    |
-  // +------------------+-----------------+------------------------------------+
-  // | distribute       | parallel        | *                                  |
-  // | distribute       | for             | *                                  |
-  // | distribute       | for simd        | *                                  |
-  // | distribute       | master          | *                                  |
-  // | distribute       | critical        | *                                  |
-  // | distribute       | simd            | *                                  |
-  // | distribute       | sections        | *                                  |
-  // | distribute       | section         | *                                  |
-  // | distribute       | single          | *                                  |
-  // | distribute       | parallel for    | *                                  |
-  // | distribute       |parallel for simd| *                                  |
-  // | distribute       |parallel sections| *                                  |
-  // | distribute       | task            | *                                  |
-  // | distribute       | taskyield       | *                                  |
-  // | distribute       | barrier         | *                                  |
-  // | distribute       | taskwait        | *                                  |
-  // | distribute       | taskgroup       | *                                  |
-  // | distribute       | flush           | *                                  |
-  // | distribute       | ordered         | +                                  |
-  // | distribute       | atomic          | *                                  |
-  // | distribute       | target          |                                    |
-  // | distribute       | target parallel |                                    |
-  // | distribute       | target parallel |                                    |
-  // |                  | for             |                                    |
-  // | distribute       | target enter    |                                    |
-  // |                  | data            |                                    |
-  // | distribute       | target exit     |                                    |
-  // |                  | data            |                                    |
-  // | distribute       | teams           |                                    |
-  // | distribute       | cancellation    | +                                  |
-  // |                  | point           |                                    |
-  // | distribute       | cancel          | +                                  |
-  // | distribute       | taskloop        | *                                  |
-  // | distribute       | taskloop simd   | *                                  |
-  // | distribute       | distribute      |                                    |
-  // | distribute       | distribute      |                                    |
-  // |                  | parallel for    |                                    |
-  // | distribute       | distribute      |                                    |
-  // |                  |parallel for simd|                                    |
-  // | distribute       | distribute simd |                                    |
-  // +------------------+-----------------+------------------------------------+
-  // | distribute       | parallel        | *                                  |
-  // | parallel for     |                 |                                    |
-  // | distribute       | for             | *                                  |
-  // | parallel for     |                 |                                    |
-  // | distribute       | for simd        | *                                  |
-  // | parallel for     |                 |                                    |
-  // | distribute       | master          | *                                  |
-  // | parallel for     |                 |                                    |
-  // | distribute       | critical        | *                                  |
-  // | parallel for     |                 |                                    |
-  // | distribute       | simd            | *                                  |
-  // | parallel for     |                 |                                    |
-  // | distribute       | sections        | *                                  |
-  // | parallel for     |                 |                                    |
-  // | distribute       | section         | *                                  |
-  // | parallel for     |                 |                                    |
-  // | distribute       | single          | *                                  |
-  // | parallel for     |                 |                                    |
-  // | distribute       | parallel for    | *                                  |
-  // | parallel for     |                 |                                    |
-  // | distribute       |parallel for simd| *                                  |
-  // | parallel for     |                 |                                    |
-  // | distribute       |parallel sections| *                                  |
-  // | parallel for     |                 |                                    |
-  // | distribute       | task            | *                                  |
-  // | parallel for     |                 |                                    |
-  // | parallel for     |                 |                                    |
-  // | distribute       | taskyield       | *                                  |
-  // | parallel for     |                 |                                    |
-  // | distribute       | barrier         | *                                  |
-  // | parallel for     |                 |                                    |
-  // | distribute       | taskwait        | *                                  |
-  // | parallel for     |                 |                                    |
-  // | distribute       | taskgroup       | *                                  |
-  // | parallel for     |                 |                                    |
-  // | distribute       | flush           | *                                  |
-  // | parallel for     |                 |                                    |
-  // | distribute       | ordered         | +                                  |
-  // | parallel for     |                 |                                    |
-  // | distribute       | atomic          | *                                  |
-  // | parallel for     |                 |                                    |
-  // | distribute       | target          |                                    |
-  // | parallel for     |                 |                                    |
-  // | distribute       | target parallel |                                    |
-  // | parallel for     |                 |                                    |
-  // | distribute       | target parallel |                                    |
-  // | parallel for     | for             |                                    |
-  // | distribute       | target enter    |                                    |
-  // | parallel for     | data            |                                    |
-  // | distribute       | target exit     |                                    |
-  // | parallel for     | data            |                                    |
-  // | distribute       | teams           |                                    |
-  // | parallel for     |                 |                                    |
-  // | distribute       | cancellation    | +                                  |
-  // | parallel for     | point           |                                    |
-  // | distribute       | cancel          | +                                  |
-  // | parallel for     |                 |                                    |
-  // | distribute       | taskloop        | *                                  |
-  // | parallel for     |                 |                                    |
-  // | distribute       | taskloop simd   | *                                  |
-  // | parallel for     |                 |                                    |
-  // | distribute       | distribute      |                                    |
-  // | parallel for     |                 |                                    |
-  // | distribute       | distribute      |                                    |
-  // | parallel for     | parallel for    |                                    |
-  // | distribute       | distribute      |                                    |
-  // | parallel for     |parallel for simd|                                    |
-  // | distribute       | distribute simd |                                    |
-  // | parallel for     |                 |                                    |
-  // +------------------+-----------------+------------------------------------+
-  // | distribute       | parallel        | *                                  |
-  // | parallel for simd|                 |                                    |
-  // | distribute       | for             | *                                  |
-  // | parallel for simd|                 |                                    |
-  // | distribute       | for simd        | *                                  |
-  // | parallel for simd|                 |                                    |
-  // | distribute       | master          | *                                  |
-  // | parallel for simd|                 |                                    |
-  // | distribute       | critical        | *                                  |
-  // | parallel for simd|                 |                                    |
-  // | distribute       | simd            | *                                  |
-  // | parallel for simd|                 |                                    |
-  // | distribute       | sections        | *                                  |
-  // | parallel for simd|                 |                                    |
-  // | distribute       | section         | *                                  |
-  // | parallel for simd|                 |                                    |
-  // | distribute       | single          | *                                  |
-  // | parallel for simd|                 |                                    |
-  // | distribute       | parallel for    | *                                  |
-  // | parallel for simd|                 |                                    |
-  // | distribute       |parallel for simd| *                                  |
-  // | parallel for simd|                 |                                    |
-  // | distribute       |parallel sections| *                                  |
-  // | parallel for simd|                 |                                    |
-  // | distribute       | task            | *                                  |
-  // | parallel for simd|                 |                                    |
-  // | distribute       | taskyield       | *                                  |
-  // | parallel for simd|                 |                                    |
-  // | distribute       | barrier         | *                                  |
-  // | parallel for simd|                 |                                    |
-  // | distribute       | taskwait        | *                                  |
-  // | parallel for simd|                 |                                    |
-  // | distribute       | taskgroup       | *                                  |
-  // | parallel for simd|                 |                                    |
-  // | distribute       | flush           | *                                  |
-  // | parallel for simd|                 |                                    |
-  // | distribute       | ordered         | +                                  |
-  // | parallel for simd|                 |                                    |
-  // | distribute       | atomic          | *                                  |
-  // | parallel for simd|                 |                                    |
-  // | distribute       | target          |                                    |
-  // | parallel for simd|                 |                                    |
-  // | distribute       | target parallel |                                    |
-  // | parallel for simd|                 |                                    |
-  // | distribute       | target parallel |                                    |
-  // | parallel for simd| for             |                                    |
-  // | distribute       | target enter    |                                    |
-  // | parallel for simd| data            |                                    |
-  // | distribute       | target exit     |                                    |
-  // | parallel for simd| data            |                                    |
-  // | distribute       | teams           |                                    |
-  // | parallel for simd|                 |                                    |
-  // | distribute       | cancellation    | +                                  |
-  // | parallel for simd| point           |                                    |
-  // | distribute       | cancel          | +                                  |
-  // | parallel for simd|                 |                                    |
-  // | distribute       | taskloop        | *                                  |
-  // | parallel for simd|                 |                                    |
-  // | distribute       | taskloop simd   | *                                  |
-  // | parallel for simd|                 |                                    |
-  // | distribute       | distribute      |                                    |
-  // | parallel for simd|                 |                                    |
-  // | distribute       | distribute      | *                                  |
-  // | parallel for simd| parallel for    |                                    |
-  // | distribute       | distribute      | *                                  |
-  // | parallel for simd|parallel for simd|                                    |
-  // | distribute       | distribute simd | *                                  |
-  // | parallel for simd|                 |                                    |
-  // +------------------+-----------------+------------------------------------+
-  // | distribute simd  | parallel        | *                                  |
-  // | distribute simd  | for             | *                                  |
-  // | distribute simd  | for simd        | *                                  |
-  // | distribute simd  | master          | *                                  |
-  // | distribute simd  | critical        | *                                  |
-  // | distribute simd  | simd            | *                                  |
-  // | distribute simd  | sections        | *                                  |
-  // | distribute simd  | section         | *                                  |
-  // | distribute simd  | single          | *                                  |
-  // | distribute simd  | parallel for    | *                                  |
-  // | distribute simd  |parallel for simd| *                                  |
-  // | distribute simd  |parallel sections| *                                  |
-  // | distribute simd  | task            | *                                  |
-  // | distribute simd  | taskyield       | *                                  |
-  // | distribute simd  | barrier         | *                                  |
-  // | distribute simd  | taskwait        | *                                  |
-  // | distribute simd  | taskgroup       | *                                  |
-  // | distribute simd  | flush           | *                                  |
-  // | distribute simd  | ordered         | +                                  |
-  // | distribute simd  | atomic          | *                                  |
-  // | distribute simd  | target          | *                                  |
-  // | distribute simd  | target parallel | *                                  |
-  // | distribute simd  | target parallel | *                                  |
-  // |                  | for             |                                    |
-  // | distribute simd  | target enter    | *                                  |
-  // |                  | data            |                                    |
-  // | distribute simd  | target exit     | *                                  |
-  // |                  | data            |                                    |
-  // | distribute simd  | teams           | *                                  |
-  // | distribute simd  | cancellation    | +                                  |
-  // |                  | point           |                                    |
-  // | distribute simd  | cancel          | +                                  |
-  // | distribute simd  | taskloop        | *                                  |
-  // | distribute simd  | taskloop simd   | *                                  |
-  // | distribute simd  | distribute      |                                    |
-  // | distribute simd  | distribute      | *                                  |
-  // |                  | parallel for    |                                    |
-  // | distribute simd  | distribute      | *                                  |
-  // |                  |parallel for simd|                                    |
-  // | distribute simd  | distribute simd | *                                  |
-  // |                  |                 |                                    |
-  // +------------------+-----------------+------------------------------------+
   if (Stack->getCurScope()) {
     auto ParentRegion = Stack->getParentDirective();
     auto OffendingRegion = ParentRegion;
     bool NestingProhibited = false;
     bool CloseNesting = true;
+    bool OrphanSeen = false;
     enum {
       NoRecommend,
       ShouldBeInParallelRegion,
@@ -3130,7 +2079,7 @@ static bool CheckNestingOfRegions(Sema &SemaRef, DSAStackTy *Stack,
       // OpenMP [2.8.1,simd Construct, Restrictions]
       // An ordered construct with the simd clause is the only OpenMP
       // construct that can appear in the simd region.
-      // Allowing a SIMD consruct nested in another SIMD construct is an
+      // Allowing a SIMD construct nested in another SIMD construct is an
       // extension. The OpenMP 4.5 spec does not allow it. Issue a warning
       // message.
       SemaRef.Diag(StartLoc, (CurrentRegion != OMPD_simd)
@@ -3158,9 +2107,11 @@ static bool CheckNestingOfRegions(Sema &SemaRef, DSAStackTy *Stack,
       }
       return false;
     }
-    // Allow some constructs to be orphaned (they could be used in functions,
-    // called from OpenMP regions with the required preconditions).
-    if (ParentRegion == OMPD_unknown)
+    // Allow some constructs (except teams) to be orphaned (they could be
+    // used in functions, called from OpenMP regions with the required
+    // preconditions).
+    if (ParentRegion == OMPD_unknown &&
+        !isOpenMPNestingTeamsDirective(CurrentRegion))
       return false;
     if (CurrentRegion == OMPD_cancellation_point ||
         CurrentRegion == OMPD_cancel) {
@@ -3198,20 +2149,17 @@ static bool CheckNestingOfRegions(Sema &SemaRef, DSAStackTy *Stack,
       // critical region with the same name. Note that this restriction is not
       // sufficient to prevent deadlock.
       SourceLocation PreviousCriticalLoc;
-      bool DeadLock =
-          Stack->hasDirective([CurrentName, &PreviousCriticalLoc](
-                                  OpenMPDirectiveKind K,
-                                  const DeclarationNameInfo &DNI,
-                                  SourceLocation Loc)
-                                  ->bool {
-                                if (K == OMPD_critical &&
-                                    DNI.getName() == CurrentName.getName()) {
-                                  PreviousCriticalLoc = Loc;
-                                  return true;
-                                } else
-                                  return false;
-                              },
-                              false /* skip top directive */);
+      bool DeadLock = Stack->hasDirective(
+          [CurrentName, &PreviousCriticalLoc](OpenMPDirectiveKind K,
+                                              const DeclarationNameInfo &DNI,
+                                              SourceLocation Loc) -> bool {
+            if (K == OMPD_critical && DNI.getName() == CurrentName.getName()) {
+              PreviousCriticalLoc = Loc;
+              return true;
+            } else
+              return false;
+          },
+          false /* skip top directive */);
       if (DeadLock) {
         SemaRef.Diag(StartLoc,
                      diag::err_omp_prohibited_region_critical_same_name)
@@ -3231,7 +2179,8 @@ static bool CheckNestingOfRegions(Sema &SemaRef, DSAStackTy *Stack,
                           ParentRegion == OMPD_critical ||
                           ParentRegion == OMPD_ordered;
     } else if (isOpenMPWorksharingDirective(CurrentRegion) &&
-               !isOpenMPParallelDirective(CurrentRegion)) {
+               !isOpenMPParallelDirective(CurrentRegion) &&
+               !isOpenMPTeamsDirective(CurrentRegion)) {
       // OpenMP [2.16, Nesting of Regions]
       // A worksharing region may not be closely nested inside a worksharing,
       // explicit task, critical, ordered, atomic, or master region.
@@ -3255,15 +2204,19 @@ static bool CheckNestingOfRegions(Sema &SemaRef, DSAStackTy *Stack,
                           !(isOpenMPSimdDirective(ParentRegion) ||
                             Stack->isParentOrderedRegion());
       Recommend = ShouldBeInOrderedRegion;
-    } else if (isOpenMPTeamsDirective(CurrentRegion)) {
+    } else if (isOpenMPNestingTeamsDirective(CurrentRegion)) {
       // OpenMP [2.16, Nesting of Regions]
       // If specified, a teams construct must be contained within a target
       // construct.
       NestingProhibited = ParentRegion != OMPD_target;
+      OrphanSeen = ParentRegion == OMPD_unknown;
       Recommend = ShouldBeInTargetRegion;
       Stack->setParentTeamsRegionLoc(Stack->getConstructLoc());
     }
-    if (!NestingProhibited && isOpenMPTeamsDirective(ParentRegion)) {
+    if (!NestingProhibited &&
+        !isOpenMPTargetExecutionDirective(CurrentRegion) &&
+        !isOpenMPTargetDataManagementDirective(CurrentRegion) &&
+        (ParentRegion == OMPD_teams || ParentRegion == OMPD_target_teams)) {
       // OpenMP [2.16, Nesting of Regions]
       // distribute, parallel, parallel sections, parallel workshare, and the
       // parallel loop and parallel loop SIMD constructs are the only OpenMP
@@ -3272,11 +2225,13 @@ static bool CheckNestingOfRegions(Sema &SemaRef, DSAStackTy *Stack,
                           !isOpenMPDistributeDirective(CurrentRegion);
       Recommend = ShouldBeInParallelRegion;
     }
-    if (!NestingProhibited && isOpenMPDistributeDirective(CurrentRegion)) {
+    if (!NestingProhibited &&
+        isOpenMPNestingDistributeDirective(CurrentRegion)) {
       // OpenMP 4.5 [2.17 Nesting of Regions]
       // The region associated with the distribute construct must be strictly
       // nested inside a teams region
-      NestingProhibited = !isOpenMPTeamsDirective(ParentRegion);
+      NestingProhibited =
+          (ParentRegion != OMPD_teams && ParentRegion != OMPD_target_teams);
       Recommend = ShouldBeInTeamsRegion;
     }
     if (!NestingProhibited &&
@@ -3299,9 +2254,14 @@ static bool CheckNestingOfRegions(Sema &SemaRef, DSAStackTy *Stack,
       CloseNesting = false;
     }
     if (NestingProhibited) {
-      SemaRef.Diag(StartLoc, diag::err_omp_prohibited_region)
-          << CloseNesting << getOpenMPDirectiveName(OffendingRegion)
-          << Recommend << getOpenMPDirectiveName(CurrentRegion);
+      if (OrphanSeen) {
+        SemaRef.Diag(StartLoc, diag::err_omp_orphaned_device_directive)
+            << getOpenMPDirectiveName(CurrentRegion) << Recommend;
+      } else {
+        SemaRef.Diag(StartLoc, diag::err_omp_prohibited_region)
+            << CloseNesting << getOpenMPDirectiveName(OffendingRegion)
+            << Recommend << getOpenMPDirectiveName(CurrentRegion);
+      }
       return true;
     }
   }
@@ -3395,7 +2355,9 @@ StmtResult Sema::ActOnOpenMPExecutableDirective(
     OpenMPDirectiveKind CancelRegion, ArrayRef<OMPClause *> Clauses,
     Stmt *AStmt, SourceLocation StartLoc, SourceLocation EndLoc) {
   StmtResult Res = StmtError();
-  if (CheckNestingOfRegions(*this, DSAStack, Kind, DirName, CancelRegion,
+  // First check CancelRegion which is then used in checkNestingOfRegions.
+  if (checkCancelRegion(*this, Kind, CancelRegion, StartLoc) ||
+      checkNestingOfRegions(*this, DSAStack, Kind, DirName, CancelRegion,
                             StartLoc))
     return StmtError();
 
@@ -3408,7 +2370,11 @@ StmtResult Sema::ActOnOpenMPExecutableDirective(
 
     // Check default data sharing attributes for referenced variables.
     DSAAttrChecker DSAChecker(DSAStack, *this, cast<CapturedStmt>(AStmt));
-    DSAChecker.Visit(cast<CapturedStmt>(AStmt)->getCapturedStmt());
+    int ThisCaptureLevel = getOpenMPCaptureLevels(Kind);
+    Stmt *S = AStmt;
+    while (--ThisCaptureLevel >= 0)
+      S = cast<CapturedStmt>(S)->getCapturedStmt();
+    DSAChecker.Visit(S);
     if (DSAChecker.isErrorFound())
       return StmtError();
     // Generate list of implicitly defined firstprivate variables.
@@ -3609,6 +2575,62 @@ StmtResult Sema::ActOnOpenMPExecutableDirective(
   case OMPD_distribute_simd:
     Res = ActOnOpenMPDistributeSimdDirective(
         ClausesWithImplicit, AStmt, StartLoc, EndLoc, VarsWithInheritedDSA);
+    break;
+  case OMPD_target_parallel_for_simd:
+    Res = ActOnOpenMPTargetParallelForSimdDirective(
+        ClausesWithImplicit, AStmt, StartLoc, EndLoc, VarsWithInheritedDSA);
+    AllowedNameModifiers.push_back(OMPD_target);
+    AllowedNameModifiers.push_back(OMPD_parallel);
+    break;
+  case OMPD_target_simd:
+    Res = ActOnOpenMPTargetSimdDirective(ClausesWithImplicit, AStmt, StartLoc,
+                                         EndLoc, VarsWithInheritedDSA);
+    AllowedNameModifiers.push_back(OMPD_target);
+    break;
+  case OMPD_teams_distribute:
+    Res = ActOnOpenMPTeamsDistributeDirective(
+        ClausesWithImplicit, AStmt, StartLoc, EndLoc, VarsWithInheritedDSA);
+    break;
+  case OMPD_teams_distribute_simd:
+    Res = ActOnOpenMPTeamsDistributeSimdDirective(
+        ClausesWithImplicit, AStmt, StartLoc, EndLoc, VarsWithInheritedDSA);
+    break;
+  case OMPD_teams_distribute_parallel_for_simd:
+    Res = ActOnOpenMPTeamsDistributeParallelForSimdDirective(
+        ClausesWithImplicit, AStmt, StartLoc, EndLoc, VarsWithInheritedDSA);
+    AllowedNameModifiers.push_back(OMPD_parallel);
+    break;
+  case OMPD_teams_distribute_parallel_for:
+    Res = ActOnOpenMPTeamsDistributeParallelForDirective(
+        ClausesWithImplicit, AStmt, StartLoc, EndLoc, VarsWithInheritedDSA);
+    AllowedNameModifiers.push_back(OMPD_parallel);
+    break;
+  case OMPD_target_teams:
+    Res = ActOnOpenMPTargetTeamsDirective(ClausesWithImplicit, AStmt, StartLoc,
+                                          EndLoc);
+    AllowedNameModifiers.push_back(OMPD_target);
+    break;
+  case OMPD_target_teams_distribute:
+    Res = ActOnOpenMPTargetTeamsDistributeDirective(
+        ClausesWithImplicit, AStmt, StartLoc, EndLoc, VarsWithInheritedDSA);
+    AllowedNameModifiers.push_back(OMPD_target);
+    break;
+  case OMPD_target_teams_distribute_parallel_for:
+    Res = ActOnOpenMPTargetTeamsDistributeParallelForDirective(
+        ClausesWithImplicit, AStmt, StartLoc, EndLoc, VarsWithInheritedDSA);
+    AllowedNameModifiers.push_back(OMPD_target);
+    AllowedNameModifiers.push_back(OMPD_parallel);
+    break;
+  case OMPD_target_teams_distribute_parallel_for_simd:
+    Res = ActOnOpenMPTargetTeamsDistributeParallelForSimdDirective(
+        ClausesWithImplicit, AStmt, StartLoc, EndLoc, VarsWithInheritedDSA);
+    AllowedNameModifiers.push_back(OMPD_target);
+    AllowedNameModifiers.push_back(OMPD_parallel);
+    break;
+  case OMPD_target_teams_distribute_simd:
+    Res = ActOnOpenMPTargetTeamsDistributeSimdDirective(
+        ClausesWithImplicit, AStmt, StartLoc, EndLoc, VarsWithInheritedDSA);
+    AllowedNameModifiers.push_back(OMPD_target);
     break;
   case OMPD_declare_target:
   case OMPD_end_declare_target:
@@ -3977,7 +2999,7 @@ public:
   /// \brief Build reference expression to the private counter be used for
   /// codegen.
   Expr *BuildPrivateCounterVar() const;
-  /// \brief Build initization of the counter be used for codegen.
+  /// \brief Build initialization of the counter be used for codegen.
   Expr *BuildCounterInit() const;
   /// \brief Build step of the counter be used for codegen.
   Expr *BuildCounterStep() const;
@@ -4102,8 +3124,9 @@ bool OpenMPIterationSpaceChecker::SetStep(Expr *NewStep, bool Subtract) {
       return true;
     }
     if (TestIsLessOp == Subtract) {
-      NewStep = SemaRef.CreateBuiltinUnaryOp(NewStep->getExprLoc(), UO_Minus,
-                                             NewStep).get();
+      NewStep =
+          SemaRef.CreateBuiltinUnaryOp(NewStep->getExprLoc(), UO_Minus, NewStep)
+              .get();
       Subtract = !Subtract;
     }
   }
@@ -4135,7 +3158,7 @@ bool OpenMPIterationSpaceChecker::CheckInit(Stmt *S, bool EmitDiags) {
   InitSrcRange = S->getSourceRange();
   if (Expr *E = dyn_cast<Expr>(S))
     S = E->IgnoreParens();
-  if (auto BO = dyn_cast<BinaryOperator>(S)) {
+  if (auto *BO = dyn_cast<BinaryOperator>(S)) {
     if (BO->getOpcode() == BO_Assign) {
       auto *LHS = BO->getLHS()->IgnoreParens();
       if (auto *DRE = dyn_cast<DeclRefExpr>(LHS)) {
@@ -4150,9 +3173,9 @@ bool OpenMPIterationSpaceChecker::CheckInit(Stmt *S, bool EmitDiags) {
           return SetLCDeclAndLB(ME->getMemberDecl(), ME, BO->getRHS());
       }
     }
-  } else if (auto DS = dyn_cast<DeclStmt>(S)) {
+  } else if (auto *DS = dyn_cast<DeclStmt>(S)) {
     if (DS->isSingleDecl()) {
-      if (auto Var = dyn_cast_or_null<VarDecl>(DS->getSingleDecl())) {
+      if (auto *Var = dyn_cast_or_null<VarDecl>(DS->getSingleDecl())) {
         if (Var->hasInit() && !Var->getType()->isReferenceType()) {
           // Accept non-canonical init form here but emit ext. warning.
           if (Var->getInitStyle() != VarDecl::CInit && EmitDiags)
@@ -4163,10 +3186,10 @@ bool OpenMPIterationSpaceChecker::CheckInit(Stmt *S, bool EmitDiags) {
         }
       }
     }
-  } else if (auto CE = dyn_cast<CXXOperatorCallExpr>(S)) {
+  } else if (auto *CE = dyn_cast<CXXOperatorCallExpr>(S)) {
     if (CE->getOperator() == OO_Equal) {
       auto *LHS = CE->getArg(0);
-      if (auto DRE = dyn_cast<DeclRefExpr>(LHS)) {
+      if (auto *DRE = dyn_cast<DeclRefExpr>(LHS)) {
         if (auto *CED = dyn_cast<OMPCapturedExprDecl>(DRE->getDecl()))
           if (auto *ME = dyn_cast<MemberExpr>(getExprAsWritten(CED->getInit())))
             return SetLCDeclAndLB(ME->getMemberDecl(), ME, BO->getRHS());
@@ -4228,7 +3251,7 @@ bool OpenMPIterationSpaceChecker::CheckCond(Expr *S) {
   }
   S = getExprAsWritten(S);
   SourceLocation CondLoc = S->getLocStart();
-  if (auto BO = dyn_cast<BinaryOperator>(S)) {
+  if (auto *BO = dyn_cast<BinaryOperator>(S)) {
     if (BO->isRelationalOp()) {
       if (GetInitLCDecl(BO->getLHS()) == LCDecl)
         return SetUB(BO->getRHS(),
@@ -4241,7 +3264,7 @@ bool OpenMPIterationSpaceChecker::CheckCond(Expr *S) {
                      (BO->getOpcode() == BO_LT || BO->getOpcode() == BO_GT),
                      BO->getSourceRange(), BO->getOperatorLoc());
     }
-  } else if (auto CE = dyn_cast<CXXOperatorCallExpr>(S)) {
+  } else if (auto *CE = dyn_cast<CXXOperatorCallExpr>(S)) {
     if (CE->getNumArgs() == 2) {
       auto Op = CE->getOperator();
       switch (Op) {
@@ -4277,7 +3300,7 @@ bool OpenMPIterationSpaceChecker::CheckIncRHS(Expr *RHS) {
   //   var - incr
   //
   RHS = RHS->IgnoreParenImpCasts();
-  if (auto BO = dyn_cast<BinaryOperator>(RHS)) {
+  if (auto *BO = dyn_cast<BinaryOperator>(RHS)) {
     if (BO->isAdditiveOp()) {
       bool IsAdd = BO->getOpcode() == BO_Add;
       if (GetInitLCDecl(BO->getLHS()) == LCDecl)
@@ -4285,7 +3308,7 @@ bool OpenMPIterationSpaceChecker::CheckIncRHS(Expr *RHS) {
       if (IsAdd && GetInitLCDecl(BO->getRHS()) == LCDecl)
         return SetStep(BO->getLHS(), false);
     }
-  } else if (auto CE = dyn_cast<CXXOperatorCallExpr>(RHS)) {
+  } else if (auto *CE = dyn_cast<CXXOperatorCallExpr>(RHS)) {
     bool IsAdd = CE->getOperator() == OO_Plus;
     if ((IsAdd || CE->getOperator() == OO_Minus) && CE->getNumArgs() == 2) {
       if (GetInitLCDecl(CE->getArg(0)) == LCDecl)
@@ -4325,14 +3348,15 @@ bool OpenMPIterationSpaceChecker::CheckInc(Expr *S) {
 
   IncrementSrcRange = S->getSourceRange();
   S = S->IgnoreParens();
-  if (auto UO = dyn_cast<UnaryOperator>(S)) {
+  if (auto *UO = dyn_cast<UnaryOperator>(S)) {
     if (UO->isIncrementDecrementOp() &&
         GetInitLCDecl(UO->getSubExpr()) == LCDecl)
-      return SetStep(
-          SemaRef.ActOnIntegerConstant(UO->getLocStart(),
-                                       (UO->isDecrementOp() ? -1 : 1)).get(),
-          false);
-  } else if (auto BO = dyn_cast<BinaryOperator>(S)) {
+      return SetStep(SemaRef
+                         .ActOnIntegerConstant(UO->getLocStart(),
+                                               (UO->isDecrementOp() ? -1 : 1))
+                         .get(),
+                     false);
+  } else if (auto *BO = dyn_cast<BinaryOperator>(S)) {
     switch (BO->getOpcode()) {
     case BO_AddAssign:
     case BO_SubAssign:
@@ -4346,16 +3370,17 @@ bool OpenMPIterationSpaceChecker::CheckInc(Expr *S) {
     default:
       break;
     }
-  } else if (auto CE = dyn_cast<CXXOperatorCallExpr>(S)) {
+  } else if (auto *CE = dyn_cast<CXXOperatorCallExpr>(S)) {
     switch (CE->getOperator()) {
     case OO_PlusPlus:
     case OO_MinusMinus:
       if (GetInitLCDecl(CE->getArg(0)) == LCDecl)
-        return SetStep(
-            SemaRef.ActOnIntegerConstant(
-                        CE->getLocStart(),
-                        ((CE->getOperator() == OO_MinusMinus) ? -1 : 1)).get(),
-            false);
+        return SetStep(SemaRef
+                           .ActOnIntegerConstant(
+                               CE->getLocStart(),
+                               ((CE->getOperator() == OO_MinusMinus) ? -1 : 1))
+                           .get(),
+                       false);
       break;
     case OO_PlusEqual:
     case OO_MinusEqual:
@@ -4380,6 +3405,8 @@ bool OpenMPIterationSpaceChecker::CheckInc(Expr *S) {
 static ExprResult
 tryBuildCapture(Sema &SemaRef, Expr *Capture,
                 llvm::MapVector<Expr *, DeclRefExpr *> &Captures) {
+  if (SemaRef.CurContext->isDependentContext())
+    return ExprResult(Capture);
   if (Capture->isEvaluatable(SemaRef.Context, Expr::SE_AllowSideEffects))
     return SemaRef.PerformImplicitConversion(
         Capture->IgnoreImpCasts(), Capture->getType(), Sema::AA_Converting,
@@ -4550,7 +3577,7 @@ Expr *OpenMPIterationSpaceChecker::BuildPrivateCounterVar() const {
   return nullptr;
 }
 
-/// \brief Build initization of the counter be used for codegen.
+/// \brief Build initialization of the counter to be used for codegen.
 Expr *OpenMPIterationSpaceChecker::BuildCounterInit() const { return LB; }
 
 /// \brief Build step of the counter be used for codegen.
@@ -4621,7 +3648,7 @@ static bool CheckOpenMPIterationSpace(
     llvm::MapVector<Expr *, DeclRefExpr *> &Captures) {
   // OpenMP [2.6, Canonical Loop Form]
   //   for (init-expr; test-expr; incr-expr) structured-block
-  auto For = dyn_cast_or_null<ForStmt>(S);
+  auto *For = dyn_cast_or_null<ForStmt>(S);
   if (!For) {
     SemaRef.Diag(S->getLocStart(), diag::err_omp_not_for)
         << (CollapseLoopCountExpr != nullptr || OrderedLoopCountExpr != nullptr)
@@ -4861,8 +3888,7 @@ BuildCounterUpdate(Sema &SemaRef, Scope *S, SourceLocation Loc,
 
 /// \brief Convert integer expression \a E to make it have at least \a Bits
 /// bits.
-static ExprResult WidenIterationCount(unsigned Bits, Expr *E,
-                                      Sema &SemaRef) {
+static ExprResult WidenIterationCount(unsigned Bits, Expr *E, Sema &SemaRef) {
   if (E == nullptr)
     return ExprError();
   auto &C = SemaRef.Context;
@@ -5020,15 +4046,17 @@ CheckOpenMPLoop(OpenMPDirectiveKind DKind, Expr *CollapseLoopCountExpr,
   auto PreCond = ExprResult(IterSpaces[0].PreCond);
   auto N0 = IterSpaces[0].NumIterations;
   ExprResult LastIteration32 = WidenIterationCount(
-      32 /* Bits */, SemaRef.PerformImplicitConversion(
-                                N0->IgnoreImpCasts(), N0->getType(),
-                                Sema::AA_Converting, /*AllowExplicit=*/true)
+      32 /* Bits */, SemaRef
+                         .PerformImplicitConversion(
+                             N0->IgnoreImpCasts(), N0->getType(),
+                             Sema::AA_Converting, /*AllowExplicit=*/true)
                          .get(),
       SemaRef);
   ExprResult LastIteration64 = WidenIterationCount(
-      64 /* Bits */, SemaRef.PerformImplicitConversion(
-                                N0->IgnoreImpCasts(), N0->getType(),
-                                Sema::AA_Converting, /*AllowExplicit=*/true)
+      64 /* Bits */, SemaRef
+                         .PerformImplicitConversion(
+                             N0->IgnoreImpCasts(), N0->getType(),
+                             Sema::AA_Converting, /*AllowExplicit=*/true)
                          .get(),
       SemaRef);
 
@@ -5041,24 +4069,28 @@ CheckOpenMPLoop(OpenMPDirectiveKind DKind, Expr *CollapseLoopCountExpr,
   Scope *CurScope = DSA.getCurScope();
   for (unsigned Cnt = 1; Cnt < NestedLoopCount; ++Cnt) {
     if (PreCond.isUsable()) {
-      PreCond = SemaRef.BuildBinOp(CurScope, SourceLocation(), BO_LAnd,
-                                   PreCond.get(), IterSpaces[Cnt].PreCond);
+      PreCond =
+          SemaRef.BuildBinOp(CurScope, PreCond.get()->getExprLoc(), BO_LAnd,
+                             PreCond.get(), IterSpaces[Cnt].PreCond);
     }
     auto N = IterSpaces[Cnt].NumIterations;
+    SourceLocation Loc = N->getExprLoc();
     AllCountsNeedLessThan32Bits &= C.getTypeSize(N->getType()) < 32;
     if (LastIteration32.isUsable())
       LastIteration32 = SemaRef.BuildBinOp(
-          CurScope, SourceLocation(), BO_Mul, LastIteration32.get(),
-          SemaRef.PerformImplicitConversion(N->IgnoreImpCasts(), N->getType(),
-                                            Sema::AA_Converting,
-                                            /*AllowExplicit=*/true)
+          CurScope, Loc, BO_Mul, LastIteration32.get(),
+          SemaRef
+              .PerformImplicitConversion(N->IgnoreImpCasts(), N->getType(),
+                                         Sema::AA_Converting,
+                                         /*AllowExplicit=*/true)
               .get());
     if (LastIteration64.isUsable())
       LastIteration64 = SemaRef.BuildBinOp(
-          CurScope, SourceLocation(), BO_Mul, LastIteration64.get(),
-          SemaRef.PerformImplicitConversion(N->IgnoreImpCasts(), N->getType(),
-                                            Sema::AA_Converting,
-                                            /*AllowExplicit=*/true)
+          CurScope, Loc, BO_Mul, LastIteration64.get(),
+          SemaRef
+              .PerformImplicitConversion(N->IgnoreImpCasts(), N->getType(),
+                                         Sema::AA_Converting,
+                                         /*AllowExplicit=*/true)
               .get());
   }
 
@@ -5089,7 +4121,8 @@ CheckOpenMPLoop(OpenMPDirectiveKind DKind, Expr *CollapseLoopCountExpr,
   ExprResult NumIterations = LastIteration;
   {
     LastIteration = SemaRef.BuildBinOp(
-        CurScope, SourceLocation(), BO_Sub, LastIteration.get(),
+        CurScope, LastIteration.get()->getExprLoc(), BO_Sub,
+        LastIteration.get(),
         SemaRef.ActOnIntegerConstant(SourceLocation(), 1).get());
     if (!LastIteration.isUsable())
       return 0;
@@ -5108,7 +4141,7 @@ CheckOpenMPLoop(OpenMPDirectiveKind DKind, Expr *CollapseLoopCountExpr,
 
     // Prepare SaveRef + 1.
     NumIterations = SemaRef.BuildBinOp(
-        CurScope, SourceLocation(), BO_Add, SaveRef.get(),
+        CurScope, SaveRef.get()->getExprLoc(), BO_Add, SaveRef.get(),
         SemaRef.ActOnIntegerConstant(SourceLocation(), 1).get());
     if (!NumIterations.isUsable())
       return 0;
@@ -5116,43 +4149,42 @@ CheckOpenMPLoop(OpenMPDirectiveKind DKind, Expr *CollapseLoopCountExpr,
 
   SourceLocation InitLoc = IterSpaces[0].InitSrcRange.getBegin();
 
-  // Build variables passed into runtime, nesessary for worksharing directives.
-  ExprResult LB, UB, IL, ST, EUB, PrevLB, PrevUB;
+  // Build variables passed into runtime, necessary for worksharing directives.
+  ExprResult LB, UB, IL, ST, EUB, CombLB, CombUB, PrevLB, PrevUB, CombEUB;
   if (isOpenMPWorksharingDirective(DKind) || isOpenMPTaskLoopDirective(DKind) ||
       isOpenMPDistributeDirective(DKind)) {
     // Lower bound variable, initialized with zero.
     VarDecl *LBDecl = buildVarDecl(SemaRef, InitLoc, VType, ".omp.lb");
     LB = buildDeclRefExpr(SemaRef, LBDecl, VType, InitLoc);
-    SemaRef.AddInitializerToDecl(
-        LBDecl, SemaRef.ActOnIntegerConstant(InitLoc, 0).get(),
-        /*DirectInit*/ false, /*TypeMayContainAuto*/ false);
+    SemaRef.AddInitializerToDecl(LBDecl,
+                                 SemaRef.ActOnIntegerConstant(InitLoc, 0).get(),
+                                 /*DirectInit*/ false);
 
     // Upper bound variable, initialized with last iteration number.
     VarDecl *UBDecl = buildVarDecl(SemaRef, InitLoc, VType, ".omp.ub");
     UB = buildDeclRefExpr(SemaRef, UBDecl, VType, InitLoc);
     SemaRef.AddInitializerToDecl(UBDecl, LastIteration.get(),
-                                 /*DirectInit*/ false,
-                                 /*TypeMayContainAuto*/ false);
+                                 /*DirectInit*/ false);
 
     // A 32-bit variable-flag where runtime returns 1 for the last iteration.
     // This will be used to implement clause 'lastprivate'.
     QualType Int32Ty = SemaRef.Context.getIntTypeForBitwidth(32, true);
     VarDecl *ILDecl = buildVarDecl(SemaRef, InitLoc, Int32Ty, ".omp.is_last");
     IL = buildDeclRefExpr(SemaRef, ILDecl, Int32Ty, InitLoc);
-    SemaRef.AddInitializerToDecl(
-        ILDecl, SemaRef.ActOnIntegerConstant(InitLoc, 0).get(),
-        /*DirectInit*/ false, /*TypeMayContainAuto*/ false);
+    SemaRef.AddInitializerToDecl(ILDecl,
+                                 SemaRef.ActOnIntegerConstant(InitLoc, 0).get(),
+                                 /*DirectInit*/ false);
 
     // Stride variable returned by runtime (we initialize it to 1 by default).
     VarDecl *STDecl =
         buildVarDecl(SemaRef, InitLoc, StrideVType, ".omp.stride");
     ST = buildDeclRefExpr(SemaRef, STDecl, StrideVType, InitLoc);
-    SemaRef.AddInitializerToDecl(
-        STDecl, SemaRef.ActOnIntegerConstant(InitLoc, 1).get(),
-        /*DirectInit*/ false, /*TypeMayContainAuto*/ false);
+    SemaRef.AddInitializerToDecl(STDecl,
+                                 SemaRef.ActOnIntegerConstant(InitLoc, 1).get(),
+                                 /*DirectInit*/ false);
 
     // Build expression: UB = min(UB, LastIteration)
-    // It is nesessary for CodeGen of directives with static scheduling.
+    // It is necessary for CodeGen of directives with static scheduling.
     ExprResult IsUBGreater = SemaRef.BuildBinOp(CurScope, InitLoc, BO_GT,
                                                 UB.get(), LastIteration.get());
     ExprResult CondOp = SemaRef.ActOnConditionalOp(
@@ -5166,8 +4198,32 @@ CheckOpenMPLoop(OpenMPDirectiveKind DKind, Expr *CollapseLoopCountExpr,
     // enclosing region. E.g. in 'distribute parallel for' the bounds obtained
     // by scheduling 'distribute' have to be passed to the schedule of 'for'.
     if (isOpenMPLoopBoundSharingDirective(DKind)) {
-      auto *CD = cast<CapturedStmt>(AStmt)->getCapturedDecl();
 
+      // Lower bound variable, initialized with zero.
+      VarDecl *CombLBDecl =
+          buildVarDecl(SemaRef, InitLoc, VType, ".omp.comb.lb");
+      CombLB = buildDeclRefExpr(SemaRef, CombLBDecl, VType, InitLoc);
+      SemaRef.AddInitializerToDecl(
+          CombLBDecl, SemaRef.ActOnIntegerConstant(InitLoc, 0).get(),
+          /*DirectInit*/ false);
+
+      // Upper bound variable, initialized with last iteration number.
+      VarDecl *CombUBDecl =
+          buildVarDecl(SemaRef, InitLoc, VType, ".omp.comb.ub");
+      CombUB = buildDeclRefExpr(SemaRef, CombUBDecl, VType, InitLoc);
+      SemaRef.AddInitializerToDecl(CombUBDecl, LastIteration.get(),
+                                   /*DirectInit*/ false);
+
+      ExprResult CombIsUBGreater = SemaRef.BuildBinOp(
+          CurScope, InitLoc, BO_GT, CombUB.get(), LastIteration.get());
+      ExprResult CombCondOp =
+          SemaRef.ActOnConditionalOp(InitLoc, InitLoc, CombIsUBGreater.get(),
+                                     LastIteration.get(), CombUB.get());
+      CombEUB = SemaRef.BuildBinOp(CurScope, InitLoc, BO_Assign, CombUB.get(),
+                                   CombCondOp.get());
+      CombEUB = SemaRef.ActOnFinishFullExpr(CombEUB.get());
+
+      auto *CD = cast<CapturedStmt>(AStmt)->getCapturedDecl();
       // We expect to have at least 2 more parameters than the 'parallel'
       // directive does - the lower and upper bounds of the previous schedule.
       assert(CD->getNumParams() >= 4 &&
@@ -5189,17 +4245,29 @@ CheckOpenMPLoop(OpenMPDirectiveKind DKind, Expr *CollapseLoopCountExpr,
 
   // Build the iteration variable and its initialization before loop.
   ExprResult IV;
-  ExprResult Init;
+  ExprResult Init, CombInit;
   {
     VarDecl *IVDecl = buildVarDecl(SemaRef, InitLoc, RealVType, ".omp.iv");
     IV = buildDeclRefExpr(SemaRef, IVDecl, RealVType, InitLoc);
-    Expr *RHS = (isOpenMPWorksharingDirective(DKind) ||
-                 isOpenMPTaskLoopDirective(DKind) ||
-                 isOpenMPDistributeDirective(DKind))
-                    ? LB.get()
-                    : SemaRef.ActOnIntegerConstant(SourceLocation(), 0).get();
+    Expr *RHS =
+        (isOpenMPWorksharingDirective(DKind) ||
+         isOpenMPTaskLoopDirective(DKind) || isOpenMPDistributeDirective(DKind))
+            ? LB.get()
+            : SemaRef.ActOnIntegerConstant(SourceLocation(), 0).get();
     Init = SemaRef.BuildBinOp(CurScope, InitLoc, BO_Assign, IV.get(), RHS);
     Init = SemaRef.ActOnFinishFullExpr(Init.get());
+
+    if (isOpenMPLoopBoundSharingDirective(DKind)) {
+      Expr *CombRHS =
+          (isOpenMPWorksharingDirective(DKind) ||
+           isOpenMPTaskLoopDirective(DKind) ||
+           isOpenMPDistributeDirective(DKind))
+              ? CombLB.get()
+              : SemaRef.ActOnIntegerConstant(SourceLocation(), 0).get();
+      CombInit =
+          SemaRef.BuildBinOp(CurScope, InitLoc, BO_Assign, IV.get(), CombRHS);
+      CombInit = SemaRef.ActOnFinishFullExpr(CombInit.get());
+    }
   }
 
   // Loop condition (IV < NumIterations) or (IV <= UB) for worksharing loops.
@@ -5210,7 +4278,11 @@ CheckOpenMPLoop(OpenMPDirectiveKind DKind, Expr *CollapseLoopCountExpr,
           ? SemaRef.BuildBinOp(CurScope, CondLoc, BO_LE, IV.get(), UB.get())
           : SemaRef.BuildBinOp(CurScope, CondLoc, BO_LT, IV.get(),
                                NumIterations.get());
-
+  ExprResult CombCond;
+  if (isOpenMPLoopBoundSharingDirective(DKind)) {
+    CombCond =
+        SemaRef.BuildBinOp(CurScope, CondLoc, BO_LE, IV.get(), CombUB.get());
+  }
   // Loop increment (IV = IV + 1)
   SourceLocation IncLoc;
   ExprResult Inc =
@@ -5225,7 +4297,9 @@ CheckOpenMPLoop(OpenMPDirectiveKind DKind, Expr *CollapseLoopCountExpr,
 
   // Increments for worksharing loops (LB = LB + ST; UB = UB + ST).
   // Used for directives with static scheduling.
-  ExprResult NextLB, NextUB;
+  // In combined construct, add combined version that use CombLB and CombUB
+  // base variables for the update
+  ExprResult NextLB, NextUB, CombNextLB, CombNextUB;
   if (isOpenMPWorksharingDirective(DKind) || isOpenMPTaskLoopDirective(DKind) ||
       isOpenMPDistributeDirective(DKind)) {
     // LB + ST
@@ -5248,6 +4322,59 @@ CheckOpenMPLoop(OpenMPDirectiveKind DKind, Expr *CollapseLoopCountExpr,
     NextUB = SemaRef.ActOnFinishFullExpr(NextUB.get());
     if (!NextUB.isUsable())
       return 0;
+    if (isOpenMPLoopBoundSharingDirective(DKind)) {
+      CombNextLB =
+          SemaRef.BuildBinOp(CurScope, IncLoc, BO_Add, CombLB.get(), ST.get());
+      if (!NextLB.isUsable())
+        return 0;
+      // LB = LB + ST
+      CombNextLB = SemaRef.BuildBinOp(CurScope, IncLoc, BO_Assign, CombLB.get(),
+                                      CombNextLB.get());
+      CombNextLB = SemaRef.ActOnFinishFullExpr(CombNextLB.get());
+      if (!CombNextLB.isUsable())
+        return 0;
+      // UB + ST
+      CombNextUB =
+          SemaRef.BuildBinOp(CurScope, IncLoc, BO_Add, CombUB.get(), ST.get());
+      if (!CombNextUB.isUsable())
+        return 0;
+      // UB = UB + ST
+      CombNextUB = SemaRef.BuildBinOp(CurScope, IncLoc, BO_Assign, CombUB.get(),
+                                      CombNextUB.get());
+      CombNextUB = SemaRef.ActOnFinishFullExpr(CombNextUB.get());
+      if (!CombNextUB.isUsable())
+        return 0;
+    }
+  }
+
+  // Create increment expression for distribute loop when combined in a same
+  // directive with for as IV = IV + ST; ensure upper bound expression based
+  // on PrevUB instead of NumIterations - used to implement 'for' when found
+  // in combination with 'distribute', like in 'distribute parallel for'
+  SourceLocation DistIncLoc;
+  ExprResult DistCond, DistInc, PrevEUB;
+  if (isOpenMPLoopBoundSharingDirective(DKind)) {
+    DistCond = SemaRef.BuildBinOp(CurScope, CondLoc, BO_LE, IV.get(), UB.get());
+    assert(DistCond.isUsable() && "distribute cond expr was not built");
+
+    DistInc =
+        SemaRef.BuildBinOp(CurScope, DistIncLoc, BO_Add, IV.get(), ST.get());
+    assert(DistInc.isUsable() && "distribute inc expr was not built");
+    DistInc = SemaRef.BuildBinOp(CurScope, DistIncLoc, BO_Assign, IV.get(),
+                                 DistInc.get());
+    DistInc = SemaRef.ActOnFinishFullExpr(DistInc.get());
+    assert(DistInc.isUsable() && "distribute inc expr was not built");
+
+    // Build expression: UB = min(UB, prevUB) for #for in composite or combined
+    // construct
+    SourceLocation DistEUBLoc;
+    ExprResult IsUBGreater =
+        SemaRef.BuildBinOp(CurScope, DistEUBLoc, BO_GT, UB.get(), PrevUB.get());
+    ExprResult CondOp = SemaRef.ActOnConditionalOp(
+        DistEUBLoc, DistEUBLoc, IsUBGreater.get(), PrevUB.get(), UB.get());
+    PrevEUB = SemaRef.BuildBinOp(CurScope, DistIncLoc, BO_Assign, UB.get(),
+                                 CondOp.get());
+    PrevEUB = SemaRef.ActOnFinishFullExpr(PrevEUB.get());
   }
 
   // Build updates and final values of the loop counters.
@@ -5364,6 +4491,15 @@ CheckOpenMPLoop(OpenMPDirectiveKind DKind, Expr *CollapseLoopCountExpr,
   Built.NUB = NextUB.get();
   Built.PrevLB = PrevLB.get();
   Built.PrevUB = PrevUB.get();
+  Built.DistInc = DistInc.get();
+  Built.PrevEUB = PrevEUB.get();
+  Built.DistCombinedFields.LB = CombLB.get();
+  Built.DistCombinedFields.UB = CombUB.get();
+  Built.DistCombinedFields.EUB = CombEUB.get();
+  Built.DistCombinedFields.Init = CombInit.get();
+  Built.DistCombinedFields.Cond = CombCond.get();
+  Built.DistCombinedFields.NLB = CombNextLB.get();
+  Built.DistCombinedFields.NUB = CombNextUB.get();
 
   Expr *CounterVal = SemaRef.DefaultLvalueConversion(IV.get()).get();
   // Fill data for doacross depend clauses.
@@ -5400,9 +4536,10 @@ CheckOpenMPLoop(OpenMPDirectiveKind DKind, Expr *CollapseLoopCountExpr,
           }
           assert(I->second == OO_Plus || I->second == OO_Minus);
           BinaryOperatorKind BOK = (I->second == OO_Plus) ? BO_Add : BO_Sub;
-          UpCounterVal =
-              SemaRef.BuildBinOp(CurScope, I->first->getExprLoc(), BOK,
-                                 UpCounterVal, NormalizedOffset).get();
+          UpCounterVal = SemaRef
+                             .BuildBinOp(CurScope, I->first->getExprLoc(), BOK,
+                                         UpCounterVal, NormalizedOffset)
+                             .get();
         }
         Multiplier = *ILM;
         ++I;
@@ -5432,26 +4569,44 @@ static Expr *getOrderedNumberExpr(ArrayRef<OMPClause *> Clauses) {
   return nullptr;
 }
 
-static bool checkSimdlenSafelenValues(Sema &S, const Expr *Simdlen,
-                                      const Expr *Safelen) {
-  llvm::APSInt SimdlenRes, SafelenRes;
-  if (Simdlen->isValueDependent() || Simdlen->isTypeDependent() ||
-      Simdlen->isInstantiationDependent() ||
-      Simdlen->containsUnexpandedParameterPack())
-    return false;
-  if (Safelen->isValueDependent() || Safelen->isTypeDependent() ||
-      Safelen->isInstantiationDependent() ||
-      Safelen->containsUnexpandedParameterPack())
-    return false;
-  Simdlen->EvaluateAsInt(SimdlenRes, S.Context);
-  Safelen->EvaluateAsInt(SafelenRes, S.Context);
-  // OpenMP 4.1 [2.8.1, simd Construct, Restrictions]
-  // If both simdlen and safelen clauses are specified, the value of the simdlen
-  // parameter must be less than or equal to the value of the safelen parameter.
-  if (SimdlenRes > SafelenRes) {
-    S.Diag(Simdlen->getExprLoc(), diag::err_omp_wrong_simdlen_safelen_values)
-        << Simdlen->getSourceRange() << Safelen->getSourceRange();
-    return true;
+static bool checkSimdlenSafelenSpecified(Sema &S,
+                                         const ArrayRef<OMPClause *> Clauses) {
+  OMPSafelenClause *Safelen = nullptr;
+  OMPSimdlenClause *Simdlen = nullptr;
+
+  for (auto *Clause : Clauses) {
+    if (Clause->getClauseKind() == OMPC_safelen)
+      Safelen = cast<OMPSafelenClause>(Clause);
+    else if (Clause->getClauseKind() == OMPC_simdlen)
+      Simdlen = cast<OMPSimdlenClause>(Clause);
+    if (Safelen && Simdlen)
+      break;
+  }
+
+  if (Simdlen && Safelen) {
+    llvm::APSInt SimdlenRes, SafelenRes;
+    auto SimdlenLength = Simdlen->getSimdlen();
+    auto SafelenLength = Safelen->getSafelen();
+    if (SimdlenLength->isValueDependent() || SimdlenLength->isTypeDependent() ||
+        SimdlenLength->isInstantiationDependent() ||
+        SimdlenLength->containsUnexpandedParameterPack())
+      return false;
+    if (SafelenLength->isValueDependent() || SafelenLength->isTypeDependent() ||
+        SafelenLength->isInstantiationDependent() ||
+        SafelenLength->containsUnexpandedParameterPack())
+      return false;
+    SimdlenLength->EvaluateAsInt(SimdlenRes, S.Context);
+    SafelenLength->EvaluateAsInt(SafelenRes, S.Context);
+    // OpenMP 4.5 [2.8.1, simd Construct, Restrictions]
+    // If both simdlen and safelen clauses are specified, the value of the
+    // simdlen parameter must be less than or equal to the value of the safelen
+    // parameter.
+    if (SimdlenRes > SafelenRes) {
+      S.Diag(SimdlenLength->getExprLoc(),
+             diag::err_omp_wrong_simdlen_safelen_values)
+          << SimdlenLength->getSourceRange() << SafelenLength->getSourceRange();
+      return true;
+    }
   }
   return false;
 }
@@ -5479,7 +4634,7 @@ StmtResult Sema::ActOnOpenMPSimdDirective(
   if (!CurContext->isDependentContext()) {
     // Finalize the clauses that need pre-built expressions for CodeGen.
     for (auto C : Clauses) {
-      if (auto LC = dyn_cast<OMPLinearClause>(C))
+      if (auto *LC = dyn_cast<OMPLinearClause>(C))
         if (FinishOpenMPLinearClause(*LC, cast<DeclRefExpr>(B.IterationVarRef),
                                      B.NumIterations, *this, CurScope,
                                      DSAStack))
@@ -5487,22 +4642,7 @@ StmtResult Sema::ActOnOpenMPSimdDirective(
     }
   }
 
-  // OpenMP 4.1 [2.8.1, simd Construct, Restrictions]
-  // If both simdlen and safelen clauses are specified, the value of the simdlen
-  // parameter must be less than or equal to the value of the safelen parameter.
-  OMPSafelenClause *Safelen = nullptr;
-  OMPSimdlenClause *Simdlen = nullptr;
-  for (auto *Clause : Clauses) {
-    if (Clause->getClauseKind() == OMPC_safelen)
-      Safelen = cast<OMPSafelenClause>(Clause);
-    else if (Clause->getClauseKind() == OMPC_simdlen)
-      Simdlen = cast<OMPSimdlenClause>(Clause);
-    if (Safelen && Simdlen)
-      break;
-  }
-  if (Simdlen && Safelen &&
-      checkSimdlenSafelenValues(*this, Simdlen->getSimdlen(),
-                                Safelen->getSafelen()))
+  if (checkSimdlenSafelenSpecified(*this, Clauses))
     return StmtError();
 
   getCurFunction()->setHasBranchProtectedScope();
@@ -5533,7 +4673,7 @@ StmtResult Sema::ActOnOpenMPForDirective(
   if (!CurContext->isDependentContext()) {
     // Finalize the clauses that need pre-built expressions for CodeGen.
     for (auto C : Clauses) {
-      if (auto LC = dyn_cast<OMPLinearClause>(C))
+      if (auto *LC = dyn_cast<OMPLinearClause>(C))
         if (FinishOpenMPLinearClause(*LC, cast<DeclRefExpr>(B.IterationVarRef),
                                      B.NumIterations, *this, CurScope,
                                      DSAStack))
@@ -5570,7 +4710,7 @@ StmtResult Sema::ActOnOpenMPForSimdDirective(
   if (!CurContext->isDependentContext()) {
     // Finalize the clauses that need pre-built expressions for CodeGen.
     for (auto C : Clauses) {
-      if (auto LC = dyn_cast<OMPLinearClause>(C))
+      if (auto *LC = dyn_cast<OMPLinearClause>(C))
         if (FinishOpenMPLinearClause(*LC, cast<DeclRefExpr>(B.IterationVarRef),
                                      B.NumIterations, *this, CurScope,
                                      DSAStack))
@@ -5578,22 +4718,7 @@ StmtResult Sema::ActOnOpenMPForSimdDirective(
     }
   }
 
-  // OpenMP 4.1 [2.8.1, simd Construct, Restrictions]
-  // If both simdlen and safelen clauses are specified, the value of the simdlen
-  // parameter must be less than or equal to the value of the safelen parameter.
-  OMPSafelenClause *Safelen = nullptr;
-  OMPSimdlenClause *Simdlen = nullptr;
-  for (auto *Clause : Clauses) {
-    if (Clause->getClauseKind() == OMPC_safelen)
-      Safelen = cast<OMPSafelenClause>(Clause);
-    else if (Clause->getClauseKind() == OMPC_simdlen)
-      Simdlen = cast<OMPSimdlenClause>(Clause);
-    if (Safelen && Simdlen)
-      break;
-  }
-  if (Simdlen && Safelen &&
-      checkSimdlenSafelenValues(*this, Simdlen->getSimdlen(),
-                                Safelen->getSafelen()))
+  if (checkSimdlenSafelenSpecified(*this, Clauses))
     return StmtError();
 
   getCurFunction()->setHasBranchProtectedScope();
@@ -5610,9 +4735,9 @@ StmtResult Sema::ActOnOpenMPSectionsDirective(ArrayRef<OMPClause *> Clauses,
 
   assert(isa<CapturedStmt>(AStmt) && "Captured statement expected");
   auto BaseStmt = AStmt;
-  while (CapturedStmt *CS = dyn_cast_or_null<CapturedStmt>(BaseStmt))
+  while (auto *CS = dyn_cast_or_null<CapturedStmt>(BaseStmt))
     BaseStmt = CS->getCapturedStmt();
-  if (auto C = dyn_cast_or_null<CompoundStmt>(BaseStmt)) {
+  if (auto *C = dyn_cast_or_null<CompoundStmt>(BaseStmt)) {
     auto S = C->children();
     if (S.begin() == S.end())
       return StmtError();
@@ -5787,7 +4912,7 @@ StmtResult Sema::ActOnOpenMPParallelForDirective(
   if (!CurContext->isDependentContext()) {
     // Finalize the clauses that need pre-built expressions for CodeGen.
     for (auto C : Clauses) {
-      if (auto LC = dyn_cast<OMPLinearClause>(C))
+      if (auto *LC = dyn_cast<OMPLinearClause>(C))
         if (FinishOpenMPLinearClause(*LC, cast<DeclRefExpr>(B.IterationVarRef),
                                      B.NumIterations, *this, CurScope,
                                      DSAStack))
@@ -5829,7 +4954,7 @@ StmtResult Sema::ActOnOpenMPParallelForSimdDirective(
   if (!CurContext->isDependentContext()) {
     // Finalize the clauses that need pre-built expressions for CodeGen.
     for (auto C : Clauses) {
-      if (auto LC = dyn_cast<OMPLinearClause>(C))
+      if (auto *LC = dyn_cast<OMPLinearClause>(C))
         if (FinishOpenMPLinearClause(*LC, cast<DeclRefExpr>(B.IterationVarRef),
                                      B.NumIterations, *this, CurScope,
                                      DSAStack))
@@ -5837,22 +4962,7 @@ StmtResult Sema::ActOnOpenMPParallelForSimdDirective(
     }
   }
 
-  // OpenMP 4.1 [2.8.1, simd Construct, Restrictions]
-  // If both simdlen and safelen clauses are specified, the value of the simdlen
-  // parameter must be less than or equal to the value of the safelen parameter.
-  OMPSafelenClause *Safelen = nullptr;
-  OMPSimdlenClause *Simdlen = nullptr;
-  for (auto *Clause : Clauses) {
-    if (Clause->getClauseKind() == OMPC_safelen)
-      Safelen = cast<OMPSafelenClause>(Clause);
-    else if (Clause->getClauseKind() == OMPC_simdlen)
-      Simdlen = cast<OMPSimdlenClause>(Clause);
-    if (Safelen && Simdlen)
-      break;
-  }
-  if (Simdlen && Safelen &&
-      checkSimdlenSafelenValues(*this, Simdlen->getSimdlen(),
-                                Safelen->getSafelen()))
+  if (checkSimdlenSafelenSpecified(*this, Clauses))
     return StmtError();
 
   getCurFunction()->setHasBranchProtectedScope();
@@ -5869,9 +4979,9 @@ Sema::ActOnOpenMPParallelSectionsDirective(ArrayRef<OMPClause *> Clauses,
 
   assert(isa<CapturedStmt>(AStmt) && "Captured statement expected");
   auto BaseStmt = AStmt;
-  while (CapturedStmt *CS = dyn_cast_or_null<CapturedStmt>(BaseStmt))
+  while (auto *CS = dyn_cast_or_null<CapturedStmt>(BaseStmt))
     BaseStmt = CS->getCapturedStmt();
-  if (auto C = dyn_cast_or_null<CompoundStmt>(BaseStmt)) {
+  if (auto *C = dyn_cast_or_null<CompoundStmt>(BaseStmt)) {
     auto S = C->children();
     if (S.begin() == S.end())
       return StmtError();
@@ -5905,7 +5015,7 @@ StmtResult Sema::ActOnOpenMPTaskDirective(ArrayRef<OMPClause *> Clauses,
   if (!AStmt)
     return StmtError();
 
-  CapturedStmt *CS = cast<CapturedStmt>(AStmt);
+  auto *CS = cast<CapturedStmt>(AStmt);
   // 1.2.2 OpenMP Language Terminology
   // Structured block - An executable statement with a single entry at the
   // top and a single exit at the bottom.
@@ -6202,21 +5312,21 @@ bool OpenMPAtomicUpdateChecker::checkStatement(Stmt *S, unsigned DiagId,
             AtomicCompAssignOp->getOpcode());
         OpLoc = AtomicCompAssignOp->getOperatorLoc();
         E = AtomicCompAssignOp->getRHS();
-        X = AtomicCompAssignOp->getLHS();
+        X = AtomicCompAssignOp->getLHS()->IgnoreParens();
         IsXLHSInRHSPart = true;
       } else if (auto *AtomicBinOp = dyn_cast<BinaryOperator>(
                      AtomicBody->IgnoreParenImpCasts())) {
         // Check for Binary Operation
-        if(checkBinaryOperation(AtomicBinOp, DiagId, NoteId))
+        if (checkBinaryOperation(AtomicBinOp, DiagId, NoteId))
           return true;
-      } else if (auto *AtomicUnaryOp =
-                 dyn_cast<UnaryOperator>(AtomicBody->IgnoreParenImpCasts())) {
+      } else if (auto *AtomicUnaryOp = dyn_cast<UnaryOperator>(
+                     AtomicBody->IgnoreParenImpCasts())) {
         // Check for Unary Operation
         if (AtomicUnaryOp->isIncrementDecrementOp()) {
           IsPostfixUpdate = AtomicUnaryOp->isPostfix();
           Op = AtomicUnaryOp->isIncrementOp() ? BO_Add : BO_Sub;
           OpLoc = AtomicUnaryOp->getOperatorLoc();
-          X = AtomicUnaryOp->getSubExpr();
+          X = AtomicUnaryOp->getSubExpr()->IgnoreParens();
           E = SemaRef.ActOnIntegerConstant(OpLoc, /*uint64_t Val=*/1).get();
           IsXLHSInRHSPart = true;
         } else {
@@ -6276,7 +5386,7 @@ StmtResult Sema::ActOnOpenMPAtomicDirective(ArrayRef<OMPClause *> Clauses,
   if (!AStmt)
     return StmtError();
 
-  auto CS = cast<CapturedStmt>(AStmt);
+  auto *CS = cast<CapturedStmt>(AStmt);
   // 1.2.2 OpenMP Language Terminology
   // Structured block - An executable statement with a single entry at the
   // top and a single exit at the bottom.
@@ -6344,8 +5454,8 @@ StmtResult Sema::ActOnOpenMPAtomicDirective(ArrayRef<OMPClause *> Clauses,
     SourceRange ErrorRange, NoteRange;
     // If clause is read:
     //  v = x;
-    if (auto AtomicBody = dyn_cast<Expr>(Body)) {
-      auto AtomicBinOp =
+    if (auto *AtomicBody = dyn_cast<Expr>(Body)) {
+      auto *AtomicBinOp =
           dyn_cast<BinaryOperator>(AtomicBody->IgnoreParenImpCasts());
       if (AtomicBinOp && AtomicBinOp->getOpcode() == BO_Assign) {
         X = AtomicBinOp->getRHS()->IgnoreParenImpCasts();
@@ -6406,8 +5516,8 @@ StmtResult Sema::ActOnOpenMPAtomicDirective(ArrayRef<OMPClause *> Clauses,
     SourceRange ErrorRange, NoteRange;
     // If clause is write:
     //  x = expr;
-    if (auto AtomicBody = dyn_cast<Expr>(Body)) {
-      auto AtomicBinOp =
+    if (auto *AtomicBody = dyn_cast<Expr>(Body)) {
+      auto *AtomicBinOp =
           dyn_cast<BinaryOperator>(AtomicBody->IgnoreParenImpCasts());
       if (AtomicBinOp && AtomicBinOp->getOpcode() == BO_Assign) {
         X = AtomicBinOp->getLHS();
@@ -6725,7 +5835,7 @@ StmtResult Sema::ActOnOpenMPTargetDirective(ArrayRef<OMPClause *> Clauses,
     if (auto *CS = dyn_cast<CompoundStmt>(S)) {
       auto I = CS->body_begin();
       while (I != CS->body_end()) {
-        auto OED = dyn_cast<OMPExecutableDirective>(*I);
+        auto *OED = dyn_cast<OMPExecutableDirective>(*I);
         if (!OED || !isOpenMPTeamsDirective(OED->getDirectiveKind())) {
           OMPTeamsFound = false;
           break;
@@ -6805,7 +5915,7 @@ StmtResult Sema::ActOnOpenMPTargetParallelForDirective(
   if (!CurContext->isDependentContext()) {
     // Finalize the clauses that need pre-built expressions for CodeGen.
     for (auto C : Clauses) {
-      if (auto LC = dyn_cast<OMPLinearClause>(C))
+      if (auto *LC = dyn_cast<OMPLinearClause>(C))
         if (FinishOpenMPLinearClause(*LC, cast<DeclRefExpr>(B.IterationVarRef),
                                      B.NumIterations, *this, CurScope,
                                      DSAStack))
@@ -6843,8 +5953,8 @@ StmtResult Sema::ActOnOpenMPTargetDataDirective(ArrayRef<OMPClause *> Clauses,
   // OpenMP [2.10.1, Restrictions, p. 97]
   // At least one map clause must appear on the directive.
   if (!HasMapClause(Clauses)) {
-    Diag(StartLoc, diag::err_omp_no_map_for_directive) <<
-        getOpenMPDirectiveName(OMPD_target_data);
+    Diag(StartLoc, diag::err_omp_no_map_for_directive)
+        << getOpenMPDirectiveName(OMPD_target_data);
     return StmtError();
   }
 
@@ -6923,12 +6033,6 @@ StmtResult
 Sema::ActOnOpenMPCancellationPointDirective(SourceLocation StartLoc,
                                             SourceLocation EndLoc,
                                             OpenMPDirectiveKind CancelRegion) {
-  if (CancelRegion != OMPD_parallel && CancelRegion != OMPD_for &&
-      CancelRegion != OMPD_sections && CancelRegion != OMPD_taskgroup) {
-    Diag(StartLoc, diag::err_omp_wrong_cancel_region)
-        << getOpenMPDirectiveName(CancelRegion);
-    return StmtError();
-  }
   if (DSAStack->isParentNowaitRegion()) {
     Diag(StartLoc, diag::err_omp_parent_cancel_region_nowait) << 0;
     return StmtError();
@@ -6945,12 +6049,6 @@ StmtResult Sema::ActOnOpenMPCancelDirective(ArrayRef<OMPClause *> Clauses,
                                             SourceLocation StartLoc,
                                             SourceLocation EndLoc,
                                             OpenMPDirectiveKind CancelRegion) {
-  if (CancelRegion != OMPD_parallel && CancelRegion != OMPD_for &&
-      CancelRegion != OMPD_sections && CancelRegion != OMPD_taskgroup) {
-    Diag(StartLoc, diag::err_omp_wrong_cancel_region)
-        << getOpenMPDirectiveName(CancelRegion);
-    return StmtError();
-  }
   if (DSAStack->isParentNowaitRegion()) {
     Diag(StartLoc, diag::err_omp_parent_cancel_region_nowait) << 1;
     return StmtError();
@@ -7044,7 +6142,7 @@ StmtResult Sema::ActOnOpenMPTaskLoopSimdDirective(
   if (!CurContext->isDependentContext()) {
     // Finalize the clauses that need pre-built expressions for CodeGen.
     for (auto C : Clauses) {
-      if (auto LC = dyn_cast<OMPLinearClause>(C))
+      if (auto *LC = dyn_cast<OMPLinearClause>(C))
         if (FinishOpenMPLinearClause(*LC, cast<DeclRefExpr>(B.IterationVarRef),
                                      B.NumIterations, *this, CurScope,
                                      DSAStack))
@@ -7150,6 +6248,9 @@ StmtResult Sema::ActOnOpenMPDistributeParallelForSimdDirective(
   assert((CurContext->isDependentContext() || B.builtAll()) &&
          "omp for loop exprs were not built");
 
+  if (checkSimdlenSafelenSpecified(*this, Clauses))
+    return StmtError();
+
   getCurFunction()->setHasBranchProtectedScope();
   return OMPDistributeParallelForSimdDirective::Create(
       Context, StartLoc, EndLoc, NestedLoopCount, Clauses, AStmt, B);
@@ -7183,9 +6284,458 @@ StmtResult Sema::ActOnOpenMPDistributeSimdDirective(
   assert((CurContext->isDependentContext() || B.builtAll()) &&
          "omp for loop exprs were not built");
 
+  if (checkSimdlenSafelenSpecified(*this, Clauses))
+    return StmtError();
+
   getCurFunction()->setHasBranchProtectedScope();
   return OMPDistributeSimdDirective::Create(Context, StartLoc, EndLoc,
                                             NestedLoopCount, Clauses, AStmt, B);
+}
+
+StmtResult Sema::ActOnOpenMPTargetParallelForSimdDirective(
+    ArrayRef<OMPClause *> Clauses, Stmt *AStmt, SourceLocation StartLoc,
+    SourceLocation EndLoc,
+    llvm::DenseMap<ValueDecl *, Expr *> &VarsWithImplicitDSA) {
+  if (!AStmt)
+    return StmtError();
+
+  CapturedStmt *CS = cast<CapturedStmt>(AStmt);
+  // 1.2.2 OpenMP Language Terminology
+  // Structured block - An executable statement with a single entry at the
+  // top and a single exit at the bottom.
+  // The point of exit cannot be a branch out of the structured block.
+  // longjmp() and throw() must not violate the entry/exit criteria.
+  CS->getCapturedDecl()->setNothrow();
+
+  OMPLoopDirective::HelperExprs B;
+  // In presence of clause 'collapse' or 'ordered' with number of loops, it will
+  // define the nested loops number.
+  unsigned NestedLoopCount = CheckOpenMPLoop(
+      OMPD_target_parallel_for_simd, getCollapseNumberExpr(Clauses),
+      getOrderedNumberExpr(Clauses), AStmt, *this, *DSAStack,
+      VarsWithImplicitDSA, B);
+  if (NestedLoopCount == 0)
+    return StmtError();
+
+  assert((CurContext->isDependentContext() || B.builtAll()) &&
+         "omp target parallel for simd loop exprs were not built");
+
+  if (!CurContext->isDependentContext()) {
+    // Finalize the clauses that need pre-built expressions for CodeGen.
+    for (auto C : Clauses) {
+      if (auto *LC = dyn_cast<OMPLinearClause>(C))
+        if (FinishOpenMPLinearClause(*LC, cast<DeclRefExpr>(B.IterationVarRef),
+                                     B.NumIterations, *this, CurScope,
+                                     DSAStack))
+          return StmtError();
+    }
+  }
+  if (checkSimdlenSafelenSpecified(*this, Clauses))
+    return StmtError();
+
+  getCurFunction()->setHasBranchProtectedScope();
+  return OMPTargetParallelForSimdDirective::Create(
+      Context, StartLoc, EndLoc, NestedLoopCount, Clauses, AStmt, B);
+}
+
+StmtResult Sema::ActOnOpenMPTargetSimdDirective(
+    ArrayRef<OMPClause *> Clauses, Stmt *AStmt, SourceLocation StartLoc,
+    SourceLocation EndLoc,
+    llvm::DenseMap<ValueDecl *, Expr *> &VarsWithImplicitDSA) {
+  if (!AStmt)
+    return StmtError();
+
+  CapturedStmt *CS = cast<CapturedStmt>(AStmt);
+  // 1.2.2 OpenMP Language Terminology
+  // Structured block - An executable statement with a single entry at the
+  // top and a single exit at the bottom.
+  // The point of exit cannot be a branch out of the structured block.
+  // longjmp() and throw() must not violate the entry/exit criteria.
+  CS->getCapturedDecl()->setNothrow();
+
+  OMPLoopDirective::HelperExprs B;
+  // In presence of clause 'collapse' with number of loops, it will define the
+  // nested loops number.
+  unsigned NestedLoopCount =
+      CheckOpenMPLoop(OMPD_target_simd, getCollapseNumberExpr(Clauses),
+                      getOrderedNumberExpr(Clauses), AStmt, *this, *DSAStack,
+                      VarsWithImplicitDSA, B);
+  if (NestedLoopCount == 0)
+    return StmtError();
+
+  assert((CurContext->isDependentContext() || B.builtAll()) &&
+         "omp target simd loop exprs were not built");
+
+  if (!CurContext->isDependentContext()) {
+    // Finalize the clauses that need pre-built expressions for CodeGen.
+    for (auto C : Clauses) {
+      if (auto *LC = dyn_cast<OMPLinearClause>(C))
+        if (FinishOpenMPLinearClause(*LC, cast<DeclRefExpr>(B.IterationVarRef),
+                                     B.NumIterations, *this, CurScope,
+                                     DSAStack))
+          return StmtError();
+    }
+  }
+
+  if (checkSimdlenSafelenSpecified(*this, Clauses))
+    return StmtError();
+
+  getCurFunction()->setHasBranchProtectedScope();
+  return OMPTargetSimdDirective::Create(Context, StartLoc, EndLoc,
+                                        NestedLoopCount, Clauses, AStmt, B);
+}
+
+StmtResult Sema::ActOnOpenMPTeamsDistributeDirective(
+    ArrayRef<OMPClause *> Clauses, Stmt *AStmt, SourceLocation StartLoc,
+    SourceLocation EndLoc,
+    llvm::DenseMap<ValueDecl *, Expr *> &VarsWithImplicitDSA) {
+  if (!AStmt)
+    return StmtError();
+
+  CapturedStmt *CS = cast<CapturedStmt>(AStmt);
+  // 1.2.2 OpenMP Language Terminology
+  // Structured block - An executable statement with a single entry at the
+  // top and a single exit at the bottom.
+  // The point of exit cannot be a branch out of the structured block.
+  // longjmp() and throw() must not violate the entry/exit criteria.
+  CS->getCapturedDecl()->setNothrow();
+
+  OMPLoopDirective::HelperExprs B;
+  // In presence of clause 'collapse' with number of loops, it will
+  // define the nested loops number.
+  unsigned NestedLoopCount =
+      CheckOpenMPLoop(OMPD_teams_distribute, getCollapseNumberExpr(Clauses),
+                      nullptr /*ordered not a clause on distribute*/, AStmt,
+                      *this, *DSAStack, VarsWithImplicitDSA, B);
+  if (NestedLoopCount == 0)
+    return StmtError();
+
+  assert((CurContext->isDependentContext() || B.builtAll()) &&
+         "omp teams distribute loop exprs were not built");
+
+  getCurFunction()->setHasBranchProtectedScope();
+  return OMPTeamsDistributeDirective::Create(
+      Context, StartLoc, EndLoc, NestedLoopCount, Clauses, AStmt, B);
+}
+
+StmtResult Sema::ActOnOpenMPTeamsDistributeSimdDirective(
+    ArrayRef<OMPClause *> Clauses, Stmt *AStmt, SourceLocation StartLoc,
+    SourceLocation EndLoc,
+    llvm::DenseMap<ValueDecl *, Expr *> &VarsWithImplicitDSA) {
+  if (!AStmt)
+    return StmtError();
+
+  CapturedStmt *CS = cast<CapturedStmt>(AStmt);
+  // 1.2.2 OpenMP Language Terminology
+  // Structured block - An executable statement with a single entry at the
+  // top and a single exit at the bottom.
+  // The point of exit cannot be a branch out of the structured block.
+  // longjmp() and throw() must not violate the entry/exit criteria.
+  CS->getCapturedDecl()->setNothrow();
+
+  OMPLoopDirective::HelperExprs B;
+  // In presence of clause 'collapse' with number of loops, it will
+  // define the nested loops number.
+  unsigned NestedLoopCount = CheckOpenMPLoop(
+      OMPD_teams_distribute_simd, getCollapseNumberExpr(Clauses),
+      nullptr /*ordered not a clause on distribute*/, AStmt, *this, *DSAStack,
+      VarsWithImplicitDSA, B);
+
+  if (NestedLoopCount == 0)
+    return StmtError();
+
+  assert((CurContext->isDependentContext() || B.builtAll()) &&
+         "omp teams distribute simd loop exprs were not built");
+
+  if (!CurContext->isDependentContext()) {
+    // Finalize the clauses that need pre-built expressions for CodeGen.
+    for (auto C : Clauses) {
+      if (auto *LC = dyn_cast<OMPLinearClause>(C))
+        if (FinishOpenMPLinearClause(*LC, cast<DeclRefExpr>(B.IterationVarRef),
+                                     B.NumIterations, *this, CurScope,
+                                     DSAStack))
+          return StmtError();
+    }
+  }
+
+  if (checkSimdlenSafelenSpecified(*this, Clauses))
+    return StmtError();
+
+  getCurFunction()->setHasBranchProtectedScope();
+  return OMPTeamsDistributeSimdDirective::Create(
+      Context, StartLoc, EndLoc, NestedLoopCount, Clauses, AStmt, B);
+}
+
+StmtResult Sema::ActOnOpenMPTeamsDistributeParallelForSimdDirective(
+    ArrayRef<OMPClause *> Clauses, Stmt *AStmt, SourceLocation StartLoc,
+    SourceLocation EndLoc,
+    llvm::DenseMap<ValueDecl *, Expr *> &VarsWithImplicitDSA) {
+  if (!AStmt)
+    return StmtError();
+
+  CapturedStmt *CS = cast<CapturedStmt>(AStmt);
+  // 1.2.2 OpenMP Language Terminology
+  // Structured block - An executable statement with a single entry at the
+  // top and a single exit at the bottom.
+  // The point of exit cannot be a branch out of the structured block.
+  // longjmp() and throw() must not violate the entry/exit criteria.
+  CS->getCapturedDecl()->setNothrow();
+
+  OMPLoopDirective::HelperExprs B;
+  // In presence of clause 'collapse' with number of loops, it will
+  // define the nested loops number.
+  auto NestedLoopCount = CheckOpenMPLoop(
+      OMPD_teams_distribute_parallel_for_simd, getCollapseNumberExpr(Clauses),
+      nullptr /*ordered not a clause on distribute*/, AStmt, *this, *DSAStack,
+      VarsWithImplicitDSA, B);
+
+  if (NestedLoopCount == 0)
+    return StmtError();
+
+  assert((CurContext->isDependentContext() || B.builtAll()) &&
+         "omp for loop exprs were not built");
+
+  if (!CurContext->isDependentContext()) {
+    // Finalize the clauses that need pre-built expressions for CodeGen.
+    for (auto C : Clauses) {
+      if (auto *LC = dyn_cast<OMPLinearClause>(C))
+        if (FinishOpenMPLinearClause(*LC, cast<DeclRefExpr>(B.IterationVarRef),
+                                     B.NumIterations, *this, CurScope,
+                                     DSAStack))
+          return StmtError();
+    }
+  }
+
+  if (checkSimdlenSafelenSpecified(*this, Clauses))
+    return StmtError();
+
+  getCurFunction()->setHasBranchProtectedScope();
+  return OMPTeamsDistributeParallelForSimdDirective::Create(
+      Context, StartLoc, EndLoc, NestedLoopCount, Clauses, AStmt, B);
+}
+
+StmtResult Sema::ActOnOpenMPTeamsDistributeParallelForDirective(
+    ArrayRef<OMPClause *> Clauses, Stmt *AStmt, SourceLocation StartLoc,
+    SourceLocation EndLoc,
+    llvm::DenseMap<ValueDecl *, Expr *> &VarsWithImplicitDSA) {
+  if (!AStmt)
+    return StmtError();
+
+  CapturedStmt *CS = cast<CapturedStmt>(AStmt);
+  // 1.2.2 OpenMP Language Terminology
+  // Structured block - An executable statement with a single entry at the
+  // top and a single exit at the bottom.
+  // The point of exit cannot be a branch out of the structured block.
+  // longjmp() and throw() must not violate the entry/exit criteria.
+  CS->getCapturedDecl()->setNothrow();
+
+  OMPLoopDirective::HelperExprs B;
+  // In presence of clause 'collapse' with number of loops, it will
+  // define the nested loops number.
+  unsigned NestedLoopCount = CheckOpenMPLoop(
+      OMPD_teams_distribute_parallel_for, getCollapseNumberExpr(Clauses),
+      nullptr /*ordered not a clause on distribute*/, AStmt, *this, *DSAStack,
+      VarsWithImplicitDSA, B);
+
+  if (NestedLoopCount == 0)
+    return StmtError();
+
+  assert((CurContext->isDependentContext() || B.builtAll()) &&
+         "omp for loop exprs were not built");
+
+  if (!CurContext->isDependentContext()) {
+    // Finalize the clauses that need pre-built expressions for CodeGen.
+    for (auto C : Clauses) {
+      if (auto *LC = dyn_cast<OMPLinearClause>(C))
+        if (FinishOpenMPLinearClause(*LC, cast<DeclRefExpr>(B.IterationVarRef),
+                                     B.NumIterations, *this, CurScope,
+                                     DSAStack))
+          return StmtError();
+    }
+  }
+
+  getCurFunction()->setHasBranchProtectedScope();
+  return OMPTeamsDistributeParallelForDirective::Create(
+      Context, StartLoc, EndLoc, NestedLoopCount, Clauses, AStmt, B);
+}
+
+StmtResult Sema::ActOnOpenMPTargetTeamsDirective(ArrayRef<OMPClause *> Clauses,
+                                                 Stmt *AStmt,
+                                                 SourceLocation StartLoc,
+                                                 SourceLocation EndLoc) {
+  if (!AStmt)
+    return StmtError();
+
+  CapturedStmt *CS = cast<CapturedStmt>(AStmt);
+  // 1.2.2 OpenMP Language Terminology
+  // Structured block - An executable statement with a single entry at the
+  // top and a single exit at the bottom.
+  // The point of exit cannot be a branch out of the structured block.
+  // longjmp() and throw() must not violate the entry/exit criteria.
+  CS->getCapturedDecl()->setNothrow();
+
+  getCurFunction()->setHasBranchProtectedScope();
+
+  return OMPTargetTeamsDirective::Create(Context, StartLoc, EndLoc, Clauses,
+                                         AStmt);
+}
+
+StmtResult Sema::ActOnOpenMPTargetTeamsDistributeDirective(
+    ArrayRef<OMPClause *> Clauses, Stmt *AStmt, SourceLocation StartLoc,
+    SourceLocation EndLoc,
+    llvm::DenseMap<ValueDecl *, Expr *> &VarsWithImplicitDSA) {
+  if (!AStmt)
+    return StmtError();
+
+  CapturedStmt *CS = cast<CapturedStmt>(AStmt);
+  // 1.2.2 OpenMP Language Terminology
+  // Structured block - An executable statement with a single entry at the
+  // top and a single exit at the bottom.
+  // The point of exit cannot be a branch out of the structured block.
+  // longjmp() and throw() must not violate the entry/exit criteria.
+  CS->getCapturedDecl()->setNothrow();
+
+  OMPLoopDirective::HelperExprs B;
+  // In presence of clause 'collapse' with number of loops, it will
+  // define the nested loops number.
+  auto NestedLoopCount = CheckOpenMPLoop(
+      OMPD_target_teams_distribute,
+      getCollapseNumberExpr(Clauses),
+      nullptr /*ordered not a clause on distribute*/, AStmt, *this, *DSAStack,
+      VarsWithImplicitDSA, B);
+  if (NestedLoopCount == 0)
+    return StmtError();
+
+  assert((CurContext->isDependentContext() || B.builtAll()) &&
+         "omp target teams distribute loop exprs were not built");
+
+  getCurFunction()->setHasBranchProtectedScope();
+  return OMPTargetTeamsDistributeDirective::Create(
+      Context, StartLoc, EndLoc, NestedLoopCount, Clauses, AStmt, B);
+}
+
+StmtResult Sema::ActOnOpenMPTargetTeamsDistributeParallelForDirective(
+    ArrayRef<OMPClause *> Clauses, Stmt *AStmt, SourceLocation StartLoc,
+    SourceLocation EndLoc,
+    llvm::DenseMap<ValueDecl *, Expr *> &VarsWithImplicitDSA) {
+  if (!AStmt)
+    return StmtError();
+
+  CapturedStmt *CS = cast<CapturedStmt>(AStmt);
+  // 1.2.2 OpenMP Language Terminology
+  // Structured block - An executable statement with a single entry at the
+  // top and a single exit at the bottom.
+  // The point of exit cannot be a branch out of the structured block.
+  // longjmp() and throw() must not violate the entry/exit criteria.
+  CS->getCapturedDecl()->setNothrow();
+
+  OMPLoopDirective::HelperExprs B;
+  // In presence of clause 'collapse' with number of loops, it will
+  // define the nested loops number.
+  auto NestedLoopCount = CheckOpenMPLoop(
+      OMPD_target_teams_distribute_parallel_for,
+      getCollapseNumberExpr(Clauses),
+      nullptr /*ordered not a clause on distribute*/, AStmt, *this, *DSAStack,
+      VarsWithImplicitDSA, B);
+  if (NestedLoopCount == 0)
+    return StmtError();
+
+  assert((CurContext->isDependentContext() || B.builtAll()) &&
+         "omp target teams distribute parallel for loop exprs were not built");
+
+  if (!CurContext->isDependentContext()) {
+    // Finalize the clauses that need pre-built expressions for CodeGen.
+    for (auto C : Clauses) {
+      if (auto *LC = dyn_cast<OMPLinearClause>(C))
+        if (FinishOpenMPLinearClause(*LC, cast<DeclRefExpr>(B.IterationVarRef),
+                                     B.NumIterations, *this, CurScope,
+                                     DSAStack))
+          return StmtError();
+    }
+  }
+
+  getCurFunction()->setHasBranchProtectedScope();
+  return OMPTargetTeamsDistributeParallelForDirective::Create(
+      Context, StartLoc, EndLoc, NestedLoopCount, Clauses, AStmt, B);
+}
+
+StmtResult Sema::ActOnOpenMPTargetTeamsDistributeParallelForSimdDirective(
+    ArrayRef<OMPClause *> Clauses, Stmt *AStmt, SourceLocation StartLoc,
+    SourceLocation EndLoc,
+    llvm::DenseMap<ValueDecl *, Expr *> &VarsWithImplicitDSA) {
+  if (!AStmt)
+    return StmtError();
+
+  CapturedStmt *CS = cast<CapturedStmt>(AStmt);
+  // 1.2.2 OpenMP Language Terminology
+  // Structured block - An executable statement with a single entry at the
+  // top and a single exit at the bottom.
+  // The point of exit cannot be a branch out of the structured block.
+  // longjmp() and throw() must not violate the entry/exit criteria.
+  CS->getCapturedDecl()->setNothrow();
+
+  OMPLoopDirective::HelperExprs B;
+  // In presence of clause 'collapse' with number of loops, it will
+  // define the nested loops number.
+  auto NestedLoopCount = CheckOpenMPLoop(
+      OMPD_target_teams_distribute_parallel_for_simd,
+      getCollapseNumberExpr(Clauses),
+      nullptr /*ordered not a clause on distribute*/, AStmt, *this, *DSAStack,
+      VarsWithImplicitDSA, B);
+  if (NestedLoopCount == 0)
+    return StmtError();
+
+  assert((CurContext->isDependentContext() || B.builtAll()) &&
+         "omp target teams distribute parallel for simd loop exprs were not "
+         "built");
+
+  if (!CurContext->isDependentContext()) {
+    // Finalize the clauses that need pre-built expressions for CodeGen.
+    for (auto C : Clauses) {
+      if (auto *LC = dyn_cast<OMPLinearClause>(C))
+        if (FinishOpenMPLinearClause(*LC, cast<DeclRefExpr>(B.IterationVarRef),
+                                     B.NumIterations, *this, CurScope,
+                                     DSAStack))
+          return StmtError();
+    }
+  }
+
+  getCurFunction()->setHasBranchProtectedScope();
+  return OMPTargetTeamsDistributeParallelForSimdDirective::Create(
+      Context, StartLoc, EndLoc, NestedLoopCount, Clauses, AStmt, B);
+}
+
+StmtResult Sema::ActOnOpenMPTargetTeamsDistributeSimdDirective(
+    ArrayRef<OMPClause *> Clauses, Stmt *AStmt, SourceLocation StartLoc,
+    SourceLocation EndLoc,
+    llvm::DenseMap<ValueDecl *, Expr *> &VarsWithImplicitDSA) {
+  if (!AStmt)
+    return StmtError();
+
+  auto *CS = cast<CapturedStmt>(AStmt);
+  // 1.2.2 OpenMP Language Terminology
+  // Structured block - An executable statement with a single entry at the
+  // top and a single exit at the bottom.
+  // The point of exit cannot be a branch out of the structured block.
+  // longjmp() and throw() must not violate the entry/exit criteria.
+  CS->getCapturedDecl()->setNothrow();
+
+  OMPLoopDirective::HelperExprs B;
+  // In presence of clause 'collapse' with number of loops, it will
+  // define the nested loops number.
+  auto NestedLoopCount = CheckOpenMPLoop(
+      OMPD_target_teams_distribute_simd, getCollapseNumberExpr(Clauses),
+      nullptr /*ordered not a clause on distribute*/, AStmt, *this, *DSAStack,
+      VarsWithImplicitDSA, B);
+  if (NestedLoopCount == 0)
+    return StmtError();
+
+  assert((CurContext->isDependentContext() || B.builtAll()) &&
+         "omp target teams distribute simd loop exprs were not built");
+
+  getCurFunction()->setHasBranchProtectedScope();
+  return OMPTargetTeamsDistributeSimdDirective::Create(
+      Context, StartLoc, EndLoc, NestedLoopCount, Clauses, AStmt, B);
 }
 
 OMPClause *Sema::ActOnOpenMPSingleExprClause(OpenMPClauseKind Kind, Expr *Expr,
@@ -7267,9 +6817,327 @@ OMPClause *Sema::ActOnOpenMPSingleExprClause(OpenMPClauseKind Kind, Expr *Expr,
   case OMPC_uniform:
   case OMPC_to:
   case OMPC_from:
+  case OMPC_use_device_ptr:
+  case OMPC_is_device_ptr:
     llvm_unreachable("Clause is not allowed.");
   }
   return Res;
+}
+
+// An OpenMP directive such as 'target parallel' has two captured regions:
+// for the 'target' and 'parallel' respectively.  This function returns
+// the region in which to capture expressions associated with a clause.
+// A return value of OMPD_unknown signifies that the expression should not
+// be captured.
+static OpenMPDirectiveKind getOpenMPCaptureRegionForClause(
+    OpenMPDirectiveKind DKind, OpenMPClauseKind CKind,
+    OpenMPDirectiveKind NameModifier = OMPD_unknown) {
+  OpenMPDirectiveKind CaptureRegion = OMPD_unknown;
+
+  switch (CKind) {
+  case OMPC_if:
+    switch (DKind) {
+    case OMPD_target_parallel:
+      // If this clause applies to the nested 'parallel' region, capture within
+      // the 'target' region, otherwise do not capture.
+      if (NameModifier == OMPD_unknown || NameModifier == OMPD_parallel)
+        CaptureRegion = OMPD_target;
+      break;
+    case OMPD_cancel:
+    case OMPD_parallel:
+    case OMPD_parallel_sections:
+    case OMPD_parallel_for:
+    case OMPD_parallel_for_simd:
+    case OMPD_target:
+    case OMPD_target_simd:
+    case OMPD_target_parallel_for:
+    case OMPD_target_parallel_for_simd:
+    case OMPD_target_teams:
+    case OMPD_target_teams_distribute:
+    case OMPD_target_teams_distribute_simd:
+    case OMPD_target_teams_distribute_parallel_for:
+    case OMPD_target_teams_distribute_parallel_for_simd:
+    case OMPD_teams_distribute_parallel_for:
+    case OMPD_teams_distribute_parallel_for_simd:
+    case OMPD_distribute_parallel_for:
+    case OMPD_distribute_parallel_for_simd:
+    case OMPD_task:
+    case OMPD_taskloop:
+    case OMPD_taskloop_simd:
+    case OMPD_target_data:
+    case OMPD_target_enter_data:
+    case OMPD_target_exit_data:
+    case OMPD_target_update:
+      // Do not capture if-clause expressions.
+      break;
+    case OMPD_threadprivate:
+    case OMPD_taskyield:
+    case OMPD_barrier:
+    case OMPD_taskwait:
+    case OMPD_cancellation_point:
+    case OMPD_flush:
+    case OMPD_declare_reduction:
+    case OMPD_declare_simd:
+    case OMPD_declare_target:
+    case OMPD_end_declare_target:
+    case OMPD_teams:
+    case OMPD_simd:
+    case OMPD_for:
+    case OMPD_for_simd:
+    case OMPD_sections:
+    case OMPD_section:
+    case OMPD_single:
+    case OMPD_master:
+    case OMPD_critical:
+    case OMPD_taskgroup:
+    case OMPD_distribute:
+    case OMPD_ordered:
+    case OMPD_atomic:
+    case OMPD_distribute_simd:
+    case OMPD_teams_distribute:
+    case OMPD_teams_distribute_simd:
+      llvm_unreachable("Unexpected OpenMP directive with if-clause");
+    case OMPD_unknown:
+      llvm_unreachable("Unknown OpenMP directive");
+    }
+    break;
+  case OMPC_num_threads:
+    switch (DKind) {
+    case OMPD_target_parallel:
+      CaptureRegion = OMPD_target;
+      break;
+    case OMPD_cancel:
+    case OMPD_parallel:
+    case OMPD_parallel_sections:
+    case OMPD_parallel_for:
+    case OMPD_parallel_for_simd:
+    case OMPD_target:
+    case OMPD_target_simd:
+    case OMPD_target_parallel_for:
+    case OMPD_target_parallel_for_simd:
+    case OMPD_target_teams:
+    case OMPD_target_teams_distribute:
+    case OMPD_target_teams_distribute_simd:
+    case OMPD_target_teams_distribute_parallel_for:
+    case OMPD_target_teams_distribute_parallel_for_simd:
+    case OMPD_teams_distribute_parallel_for:
+    case OMPD_teams_distribute_parallel_for_simd:
+    case OMPD_distribute_parallel_for:
+    case OMPD_distribute_parallel_for_simd:
+    case OMPD_task:
+    case OMPD_taskloop:
+    case OMPD_taskloop_simd:
+    case OMPD_target_data:
+    case OMPD_target_enter_data:
+    case OMPD_target_exit_data:
+    case OMPD_target_update:
+      // Do not capture num_threads-clause expressions.
+      break;
+    case OMPD_threadprivate:
+    case OMPD_taskyield:
+    case OMPD_barrier:
+    case OMPD_taskwait:
+    case OMPD_cancellation_point:
+    case OMPD_flush:
+    case OMPD_declare_reduction:
+    case OMPD_declare_simd:
+    case OMPD_declare_target:
+    case OMPD_end_declare_target:
+    case OMPD_teams:
+    case OMPD_simd:
+    case OMPD_for:
+    case OMPD_for_simd:
+    case OMPD_sections:
+    case OMPD_section:
+    case OMPD_single:
+    case OMPD_master:
+    case OMPD_critical:
+    case OMPD_taskgroup:
+    case OMPD_distribute:
+    case OMPD_ordered:
+    case OMPD_atomic:
+    case OMPD_distribute_simd:
+    case OMPD_teams_distribute:
+    case OMPD_teams_distribute_simd:
+      llvm_unreachable("Unexpected OpenMP directive with num_threads-clause");
+    case OMPD_unknown:
+      llvm_unreachable("Unknown OpenMP directive");
+    }
+    break;
+  case OMPC_num_teams:
+    switch (DKind) {
+    case OMPD_target_teams:
+      CaptureRegion = OMPD_target;
+      break;
+    case OMPD_cancel:
+    case OMPD_parallel:
+    case OMPD_parallel_sections:
+    case OMPD_parallel_for:
+    case OMPD_parallel_for_simd:
+    case OMPD_target:
+    case OMPD_target_simd:
+    case OMPD_target_parallel:
+    case OMPD_target_parallel_for:
+    case OMPD_target_parallel_for_simd:
+    case OMPD_target_teams_distribute:
+    case OMPD_target_teams_distribute_simd:
+    case OMPD_target_teams_distribute_parallel_for:
+    case OMPD_target_teams_distribute_parallel_for_simd:
+    case OMPD_teams_distribute_parallel_for:
+    case OMPD_teams_distribute_parallel_for_simd:
+    case OMPD_distribute_parallel_for:
+    case OMPD_distribute_parallel_for_simd:
+    case OMPD_task:
+    case OMPD_taskloop:
+    case OMPD_taskloop_simd:
+    case OMPD_target_data:
+    case OMPD_target_enter_data:
+    case OMPD_target_exit_data:
+    case OMPD_target_update:
+    case OMPD_teams:
+    case OMPD_teams_distribute:
+    case OMPD_teams_distribute_simd:
+      // Do not capture num_teams-clause expressions.
+      break;
+    case OMPD_threadprivate:
+    case OMPD_taskyield:
+    case OMPD_barrier:
+    case OMPD_taskwait:
+    case OMPD_cancellation_point:
+    case OMPD_flush:
+    case OMPD_declare_reduction:
+    case OMPD_declare_simd:
+    case OMPD_declare_target:
+    case OMPD_end_declare_target:
+    case OMPD_simd:
+    case OMPD_for:
+    case OMPD_for_simd:
+    case OMPD_sections:
+    case OMPD_section:
+    case OMPD_single:
+    case OMPD_master:
+    case OMPD_critical:
+    case OMPD_taskgroup:
+    case OMPD_distribute:
+    case OMPD_ordered:
+    case OMPD_atomic:
+    case OMPD_distribute_simd:
+      llvm_unreachable("Unexpected OpenMP directive with num_teams-clause");
+    case OMPD_unknown:
+      llvm_unreachable("Unknown OpenMP directive");
+    }
+    break;
+  case OMPC_thread_limit:
+    switch (DKind) {
+    case OMPD_target_teams:
+      CaptureRegion = OMPD_target;
+      break;
+    case OMPD_cancel:
+    case OMPD_parallel:
+    case OMPD_parallel_sections:
+    case OMPD_parallel_for:
+    case OMPD_parallel_for_simd:
+    case OMPD_target:
+    case OMPD_target_simd:
+    case OMPD_target_parallel:
+    case OMPD_target_parallel_for:
+    case OMPD_target_parallel_for_simd:
+    case OMPD_target_teams_distribute:
+    case OMPD_target_teams_distribute_simd:
+    case OMPD_target_teams_distribute_parallel_for:
+    case OMPD_target_teams_distribute_parallel_for_simd:
+    case OMPD_teams_distribute_parallel_for:
+    case OMPD_teams_distribute_parallel_for_simd:
+    case OMPD_distribute_parallel_for:
+    case OMPD_distribute_parallel_for_simd:
+    case OMPD_task:
+    case OMPD_taskloop:
+    case OMPD_taskloop_simd:
+    case OMPD_target_data:
+    case OMPD_target_enter_data:
+    case OMPD_target_exit_data:
+    case OMPD_target_update:
+    case OMPD_teams:
+    case OMPD_teams_distribute:
+    case OMPD_teams_distribute_simd:
+      // Do not capture thread_limit-clause expressions.
+      break;
+    case OMPD_threadprivate:
+    case OMPD_taskyield:
+    case OMPD_barrier:
+    case OMPD_taskwait:
+    case OMPD_cancellation_point:
+    case OMPD_flush:
+    case OMPD_declare_reduction:
+    case OMPD_declare_simd:
+    case OMPD_declare_target:
+    case OMPD_end_declare_target:
+    case OMPD_simd:
+    case OMPD_for:
+    case OMPD_for_simd:
+    case OMPD_sections:
+    case OMPD_section:
+    case OMPD_single:
+    case OMPD_master:
+    case OMPD_critical:
+    case OMPD_taskgroup:
+    case OMPD_distribute:
+    case OMPD_ordered:
+    case OMPD_atomic:
+    case OMPD_distribute_simd:
+      llvm_unreachable("Unexpected OpenMP directive with thread_limit-clause");
+    case OMPD_unknown:
+      llvm_unreachable("Unknown OpenMP directive");
+    }
+    break;
+  case OMPC_schedule:
+  case OMPC_dist_schedule:
+  case OMPC_firstprivate:
+  case OMPC_lastprivate:
+  case OMPC_reduction:
+  case OMPC_linear:
+  case OMPC_default:
+  case OMPC_proc_bind:
+  case OMPC_final:
+  case OMPC_safelen:
+  case OMPC_simdlen:
+  case OMPC_collapse:
+  case OMPC_private:
+  case OMPC_shared:
+  case OMPC_aligned:
+  case OMPC_copyin:
+  case OMPC_copyprivate:
+  case OMPC_ordered:
+  case OMPC_nowait:
+  case OMPC_untied:
+  case OMPC_mergeable:
+  case OMPC_threadprivate:
+  case OMPC_flush:
+  case OMPC_read:
+  case OMPC_write:
+  case OMPC_update:
+  case OMPC_capture:
+  case OMPC_seq_cst:
+  case OMPC_depend:
+  case OMPC_device:
+  case OMPC_threads:
+  case OMPC_simd:
+  case OMPC_map:
+  case OMPC_priority:
+  case OMPC_grainsize:
+  case OMPC_nogroup:
+  case OMPC_num_tasks:
+  case OMPC_hint:
+  case OMPC_defaultmap:
+  case OMPC_unknown:
+  case OMPC_uniform:
+  case OMPC_to:
+  case OMPC_from:
+  case OMPC_use_device_ptr:
+  case OMPC_is_device_ptr:
+    llvm_unreachable("Unexpected OpenMP clause.");
+  }
+  return CaptureRegion;
 }
 
 OMPClause *Sema::ActOnOpenMPIfClause(OpenMPDirectiveKind NameModifier,
@@ -7279,6 +7147,8 @@ OMPClause *Sema::ActOnOpenMPIfClause(OpenMPDirectiveKind NameModifier,
                                      SourceLocation ColonLoc,
                                      SourceLocation EndLoc) {
   Expr *ValExpr = Condition;
+  Stmt *HelperValStmt = nullptr;
+  OpenMPDirectiveKind CaptureRegion = OMPD_unknown;
   if (!Condition->isValueDependent() && !Condition->isTypeDependent() &&
       !Condition->isInstantiationDependent() &&
       !Condition->containsUnexpandedParameterPack()) {
@@ -7287,10 +7157,20 @@ OMPClause *Sema::ActOnOpenMPIfClause(OpenMPDirectiveKind NameModifier,
       return nullptr;
 
     ValExpr = MakeFullExpr(Val.get()).get();
+
+    OpenMPDirectiveKind DKind = DSAStack->getCurrentDirective();
+    CaptureRegion =
+        getOpenMPCaptureRegionForClause(DKind, OMPC_if, NameModifier);
+    if (CaptureRegion != OMPD_unknown) {
+      llvm::MapVector<Expr *, DeclRefExpr *> Captures;
+      ValExpr = tryBuildCapture(*this, ValExpr, Captures).get();
+      HelperValStmt = buildPreInits(Context, Captures);
+    }
   }
 
-  return new (Context) OMPIfClause(NameModifier, ValExpr, StartLoc, LParenLoc,
-                                   NameModifierLoc, ColonLoc, EndLoc);
+  return new (Context)
+      OMPIfClause(NameModifier, ValExpr, HelperValStmt, CaptureRegion, StartLoc,
+                  LParenLoc, NameModifierLoc, ColonLoc, EndLoc);
 }
 
 OMPClause *Sema::ActOnOpenMPFinalClause(Expr *Condition,
@@ -7386,6 +7266,8 @@ OMPClause *Sema::ActOnOpenMPNumThreadsClause(Expr *NumThreads,
                                              SourceLocation LParenLoc,
                                              SourceLocation EndLoc) {
   Expr *ValExpr = NumThreads;
+  Stmt *HelperValStmt = nullptr;
+  OpenMPDirectiveKind CaptureRegion = OMPD_unknown;
 
   // OpenMP [2.5, Restrictions]
   //  The num_threads expression must evaluate to a positive integer value.
@@ -7393,8 +7275,16 @@ OMPClause *Sema::ActOnOpenMPNumThreadsClause(Expr *NumThreads,
                                  /*StrictlyPositive=*/true))
     return nullptr;
 
-  return new (Context)
-      OMPNumThreadsClause(ValExpr, StartLoc, LParenLoc, EndLoc);
+  OpenMPDirectiveKind DKind = DSAStack->getCurrentDirective();
+  CaptureRegion = getOpenMPCaptureRegionForClause(DKind, OMPC_num_threads);
+  if (CaptureRegion != OMPD_unknown) {
+    llvm::MapVector<Expr *, DeclRefExpr *> Captures;
+    ValExpr = tryBuildCapture(*this, ValExpr, Captures).get();
+    HelperValStmt = buildPreInits(Context, Captures);
+  }
+
+  return new (Context) OMPNumThreadsClause(
+      ValExpr, HelperValStmt, CaptureRegion, StartLoc, LParenLoc, EndLoc);
 }
 
 ExprResult Sema::VerifyPositiveIntegerConstantInClause(Expr *E,
@@ -7553,6 +7443,8 @@ OMPClause *Sema::ActOnOpenMPSimpleClause(
   case OMPC_uniform:
   case OMPC_to:
   case OMPC_from:
+  case OMPC_use_device_ptr:
+  case OMPC_is_device_ptr:
     llvm_unreachable("Clause is not allowed.");
   }
   return Res;
@@ -7660,8 +7552,8 @@ OMPClause *Sema::ActOnOpenMPSingleExprWithArgClause(
     Res = ActOnOpenMPDefaultmapClause(
         static_cast<OpenMPDefaultmapClauseModifier>(Argument[Modifier]),
         static_cast<OpenMPDefaultmapClauseKind>(Argument[DefaultmapKind]),
-        StartLoc, LParenLoc, ArgumentLoc[Modifier],
-        ArgumentLoc[DefaultmapKind], EndLoc);
+        StartLoc, LParenLoc, ArgumentLoc[Modifier], ArgumentLoc[DefaultmapKind],
+        EndLoc);
     break;
   case OMPC_final:
   case OMPC_num_threads:
@@ -7706,6 +7598,8 @@ OMPClause *Sema::ActOnOpenMPSingleExprWithArgClause(
   case OMPC_uniform:
   case OMPC_to:
   case OMPC_from:
+  case OMPC_use_device_ptr:
+  case OMPC_is_device_ptr:
     llvm_unreachable("Clause is not allowed.");
   }
   return Res;
@@ -7893,6 +7787,8 @@ OMPClause *Sema::ActOnOpenMPClause(OpenMPClauseKind Kind,
   case OMPC_uniform:
   case OMPC_to:
   case OMPC_from:
+  case OMPC_use_device_ptr:
+  case OMPC_is_device_ptr:
     llvm_unreachable("Clause is not allowed.");
   }
   return Res;
@@ -7998,7 +7894,7 @@ OMPClause *Sema::ActOnOpenMPVarListClause(
     Res = ActOnOpenMPFlushClause(VarList, StartLoc, LParenLoc, EndLoc);
     break;
   case OMPC_depend:
-    Res = ActOnOpenMPDependClause(DepKind, DepLinMapLoc, ColonLoc, VarList, 
+    Res = ActOnOpenMPDependClause(DepKind, DepLinMapLoc, ColonLoc, VarList,
                                   StartLoc, LParenLoc, EndLoc);
     break;
   case OMPC_map:
@@ -8011,6 +7907,12 @@ OMPClause *Sema::ActOnOpenMPVarListClause(
     break;
   case OMPC_from:
     Res = ActOnOpenMPFromClause(VarList, StartLoc, LParenLoc, EndLoc);
+    break;
+  case OMPC_use_device_ptr:
+    Res = ActOnOpenMPUseDevicePtrClause(VarList, StartLoc, LParenLoc, EndLoc);
+    break;
+  case OMPC_is_device_ptr:
+    Res = ActOnOpenMPIsDevicePtrClause(VarList, StartLoc, LParenLoc, EndLoc);
     break;
   case OMPC_if:
   case OMPC_final:
@@ -8174,12 +8076,13 @@ OMPClause *Sema::ActOnOpenMPPrivateClause(ArrayRef<Expr *> VarList,
       continue;
     }
 
+    auto CurrDir = DSAStack->getCurrentDirective();
     // Variably modified types are not supported for tasks.
     if (!Type->isAnyPointerType() && Type->isVariablyModifiedType() &&
-        isOpenMPTaskingDirective(DSAStack->getCurrentDirective())) {
+        isOpenMPTaskingDirective(CurrDir)) {
       Diag(ELoc, diag::err_omp_variably_modified_type_not_supported)
           << getOpenMPClauseName(OMPC_private) << Type
-          << getOpenMPDirectiveName(DSAStack->getCurrentDirective());
+          << getOpenMPDirectiveName(CurrDir);
       bool IsDecl =
           !VD ||
           VD->isThisDeclarationADefinition(Context) == VarDecl::DeclarationOnly;
@@ -8192,14 +8095,26 @@ OMPClause *Sema::ActOnOpenMPPrivateClause(ArrayRef<Expr *> VarList,
     // OpenMP 4.5 [2.15.5.1, Restrictions, p.3]
     // A list item cannot appear in both a map clause and a data-sharing
     // attribute clause on the same construct
-    if (DSAStack->getCurrentDirective() == OMPD_target) {
+    if (CurrDir == OMPD_target || CurrDir == OMPD_target_parallel ||
+        CurrDir == OMPD_target_teams || 
+        CurrDir == OMPD_target_teams_distribute ||
+        CurrDir == OMPD_target_teams_distribute_parallel_for ||
+        CurrDir == OMPD_target_teams_distribute_parallel_for_simd ||
+        CurrDir == OMPD_target_teams_distribute_simd ||
+        CurrDir == OMPD_target_parallel_for_simd ||
+        CurrDir == OMPD_target_parallel_for) {
+      OpenMPClauseKind ConflictKind;
       if (DSAStack->checkMappableExprComponentListsForDecl(
-              VD, /* CurrentRegionOnly = */ true,
-              [&](OMPClauseMappableExprCommon::MappableExprComponentListRef)
-                  -> bool { return true; })) {
-        Diag(ELoc, diag::err_omp_variable_in_map_and_dsa)
+              VD, /*CurrentRegionOnly=*/true,
+              [&](OMPClauseMappableExprCommon::MappableExprComponentListRef,
+                  OpenMPClauseKind WhereFoundClauseKind) -> bool {
+                ConflictKind = WhereFoundClauseKind;
+                return true;
+              })) {
+        Diag(ELoc, diag::err_omp_variable_in_given_clause_and_dsa)
             << getOpenMPClauseName(OMPC_private)
-            << getOpenMPDirectiveName(DSAStack->getCurrentDirective());
+            << getOpenMPClauseName(ConflictKind)
+            << getOpenMPDirectiveName(CurrDir);
         ReportOriginalDSA(*this, DSAStack, D, DVar);
         continue;
       }
@@ -8217,17 +8132,19 @@ OMPClause *Sema::ActOnOpenMPPrivateClause(ArrayRef<Expr *> VarList,
     Type = Type.getUnqualifiedType();
     auto VDPrivate = buildVarDecl(*this, ELoc, Type, D->getName(),
                                   D->hasAttrs() ? &D->getAttrs() : nullptr);
-    ActOnUninitializedDecl(VDPrivate, /*TypeMayContainAuto=*/false);
+    ActOnUninitializedDecl(VDPrivate);
     if (VDPrivate->isInvalidDecl())
       continue;
     auto VDPrivateRefExpr = buildDeclRefExpr(
         *this, VDPrivate, RefExpr->getType().getUnqualifiedType(), ELoc);
 
     DeclRefExpr *Ref = nullptr;
-    if (!VD)
+    if (!VD && !CurContext->isDependentContext())
       Ref = buildCapture(*this, D, SimpleRefExpr, /*WithInit=*/false);
     DSAStack->addDSA(D, RefExpr->IgnoreParens(), OMPC_private, Ref);
-    Vars.push_back(VD ? RefExpr->IgnoreParens() : Ref);
+    Vars.push_back((VD || CurContext->isDependentContext())
+                       ? RefExpr->IgnoreParens()
+                       : Ref);
     PrivateCopies.push_back(VDPrivateRefExpr);
   }
 
@@ -8353,7 +8270,8 @@ OMPClause *Sema::ActOnOpenMPFirstprivateClause(ArrayRef<Expr *> VarList,
       //  worksharing regions arising from the worksharing construct ever bind
       //  to any of the parallel regions arising from the parallel construct.
       if (isOpenMPWorksharingDirective(CurrDir) &&
-          !isOpenMPParallelDirective(CurrDir)) {
+          !isOpenMPParallelDirective(CurrDir) &&
+          !isOpenMPTeamsDirective(CurrDir)) {
         DVar = DSAStack->getImplicitDSA(D, true);
         if (DVar.CKind != OMPC_shared &&
             (isOpenMPParallelDirective(DVar.DKind) ||
@@ -8441,13 +8359,25 @@ OMPClause *Sema::ActOnOpenMPFirstprivateClause(ArrayRef<Expr *> VarList,
       // OpenMP 4.5 [2.15.5.1, Restrictions, p.3]
       // A list item cannot appear in both a map clause and a data-sharing
       // attribute clause on the same construct
-      if (CurrDir == OMPD_target) {
+      if (CurrDir == OMPD_target || CurrDir == OMPD_target_parallel ||
+          CurrDir == OMPD_target_teams || 
+          CurrDir == OMPD_target_teams_distribute ||
+          CurrDir == OMPD_target_teams_distribute_parallel_for ||
+          CurrDir == OMPD_target_teams_distribute_parallel_for_simd ||
+          CurrDir == OMPD_target_teams_distribute_simd ||
+          CurrDir == OMPD_target_parallel_for_simd ||
+          CurrDir == OMPD_target_parallel_for) {
+        OpenMPClauseKind ConflictKind;
         if (DSAStack->checkMappableExprComponentListsForDecl(
-                VD, /* CurrentRegionOnly = */ true,
-                [&](OMPClauseMappableExprCommon::MappableExprComponentListRef)
-                    -> bool { return true; })) {
-          Diag(ELoc, diag::err_omp_variable_in_map_and_dsa)
+                VD, /*CurrentRegionOnly=*/true,
+                [&](OMPClauseMappableExprCommon::MappableExprComponentListRef,
+                    OpenMPClauseKind WhereFoundClauseKind) -> bool {
+                  ConflictKind = WhereFoundClauseKind;
+                  return true;
+                })) {
+          Diag(ELoc, diag::err_omp_variable_in_given_clause_and_dsa)
               << getOpenMPClauseName(OMPC_firstprivate)
+              << getOpenMPClauseName(ConflictKind)
               << getOpenMPDirectiveName(DSAStack->getCurrentDirective());
           ReportOriginalDSA(*this, DSAStack, D, DVar);
           continue;
@@ -8508,7 +8438,7 @@ OMPClause *Sema::ActOnOpenMPFirstprivateClause(ArrayRef<Expr *> VarList,
                                        RefExpr->getExprLoc());
       AddInitializerToDecl(VDPrivate,
                            DefaultLvalueConversion(VDInitRefExpr).get(),
-                           /*DirectInit=*/false, /*TypeMayContainAuto=*/false);
+                           /*DirectInit=*/false);
     }
     if (VDPrivate->isInvalidDecl()) {
       if (IsImplicitClause) {
@@ -8522,7 +8452,7 @@ OMPClause *Sema::ActOnOpenMPFirstprivateClause(ArrayRef<Expr *> VarList,
         *this, VDPrivate, RefExpr->getType().getUnqualifiedType(),
         RefExpr->getExprLoc());
     DeclRefExpr *Ref = nullptr;
-    if (!VD) {
+    if (!VD && !CurContext->isDependentContext()) {
       if (TopDVar.CKind == OMPC_lastprivate)
         Ref = TopDVar.PrivateCopy;
       else {
@@ -8532,7 +8462,9 @@ OMPClause *Sema::ActOnOpenMPFirstprivateClause(ArrayRef<Expr *> VarList,
       }
     }
     DSAStack->addDSA(D, RefExpr->IgnoreParens(), OMPC_firstprivate, Ref);
-    Vars.push_back(VD ? RefExpr->IgnoreParens() : Ref);
+    Vars.push_back((VD || CurContext->isDependentContext())
+                       ? RefExpr->IgnoreParens()
+                       : Ref);
     PrivateCopies.push_back(VDPrivateRefExpr);
     Inits.push_back(VDInitRefExpr);
   }
@@ -8608,7 +8540,8 @@ OMPClause *Sema::ActOnOpenMPLastprivateClause(ArrayRef<Expr *> VarList,
     // regions.
     DSAStackTy::DSAVarData TopDVar = DVar;
     if (isOpenMPWorksharingDirective(CurrDir) &&
-        !isOpenMPParallelDirective(CurrDir)) {
+        !isOpenMPParallelDirective(CurrDir) &&
+        !isOpenMPTeamsDirective(CurrDir)) {
       DVar = DSAStack->getImplicitDSA(D, true);
       if (DVar.CKind != OMPC_shared) {
         Diag(ELoc, diag::err_omp_required_access)
@@ -8661,7 +8594,7 @@ OMPClause *Sema::ActOnOpenMPLastprivateClause(ArrayRef<Expr *> VarList,
       continue;
 
     DeclRefExpr *Ref = nullptr;
-    if (!VD) {
+    if (!VD && !CurContext->isDependentContext()) {
       if (TopDVar.CKind == OMPC_firstprivate)
         Ref = TopDVar.PrivateCopy;
       else {
@@ -8685,7 +8618,9 @@ OMPClause *Sema::ActOnOpenMPLastprivateClause(ArrayRef<Expr *> VarList,
       }
     }
     DSAStack->addDSA(D, RefExpr->IgnoreParens(), OMPC_lastprivate, Ref);
-    Vars.push_back(VD ? RefExpr->IgnoreParens() : Ref);
+    Vars.push_back((VD || CurContext->isDependentContext())
+                       ? RefExpr->IgnoreParens()
+                       : Ref);
     SrcExprs.push_back(PseudoSrcExpr);
     DstExprs.push_back(PseudoDstExpr);
     AssignmentOps.push_back(AssignmentOp.get());
@@ -8737,10 +8672,12 @@ OMPClause *Sema::ActOnOpenMPSharedClause(ArrayRef<Expr *> VarList,
     }
 
     DeclRefExpr *Ref = nullptr;
-    if (!VD && IsOpenMPCapturedDecl(D))
+    if (!VD && IsOpenMPCapturedDecl(D) && !CurContext->isDependentContext())
       Ref = buildCapture(*this, D, SimpleRefExpr, /*WithInit=*/true);
     DSAStack->addDSA(D, RefExpr->IgnoreParens(), OMPC_shared, Ref);
-    Vars.push_back((VD || !Ref) ? RefExpr->IgnoreParens() : Ref);
+    Vars.push_back((VD || !Ref || CurContext->isDependentContext())
+                       ? RefExpr->IgnoreParens()
+                       : Ref);
   }
 
   if (Vars.empty())
@@ -8843,7 +8780,7 @@ buildDeclareReductionRef(Sema &SemaRef, SourceLocation Loc, SourceRange Range,
                  cast_or_null<UnresolvedLookupExpr>(UnresolvedReduction)) {
     Lookups.push_back(UnresolvedSet<8>());
     Decl *PrevD = nullptr;
-    for(auto *D : ULE->decls()) {
+    for (auto *D : ULE->decls()) {
       if (D == PrevD)
         Lookups.push_back(UnresolvedSet<8>());
       else if (auto *DRD = cast<OMPDeclareReductionDecl>(D))
@@ -9092,7 +9029,7 @@ OMPClause *Sema::ActOnOpenMPReductionClause(
     //  for all threads of the team.
     if (!ASE && !OASE && VD) {
       VarDecl *VDDef = VD->getDefinition();
-      if (VD->getType()->isReferenceType() && VDDef) {
+      if (VD->getType()->isReferenceType() && VDDef && VDDef->hasInit()) {
         DSARefChecker Check(DSAStack);
         if (Check.Visit(VDDef->getInit())) {
           Diag(ELoc, diag::err_omp_reduction_ref_type_arg) << ERange;
@@ -9134,7 +9071,8 @@ OMPClause *Sema::ActOnOpenMPReductionClause(
     //  worksharing regions arising from the worksharing construct bind.
     OpenMPDirectiveKind CurrDir = DSAStack->getCurrentDirective();
     if (isOpenMPWorksharingDirective(CurrDir) &&
-        !isOpenMPParallelDirective(CurrDir)) {
+        !isOpenMPParallelDirective(CurrDir) &&
+        !isOpenMPTeamsDirective(CurrDir)) {
       DVar = DSAStack->getImplicitDSA(D, true);
       if (DVar.CKind != OMPC_shared) {
         Diag(ELoc, diag::err_omp_required_access)
@@ -9219,7 +9157,7 @@ OMPClause *Sema::ActOnOpenMPReductionClause(
     if (OASE ||
         (!ASE &&
          D->getType().getNonReferenceType()->isVariablyModifiedType())) {
-      // For arays/array sections only:
+      // For arrays/array sections only:
       // Create pseudo array type for private copy. The size for this array will
       // be generated during codegen.
       // For array subscripts or single variables Private Ty is the same as Type
@@ -9350,10 +9288,9 @@ OMPClause *Sema::ActOnOpenMPReductionClause(
       }
     }
     if (Init && DeclareReductionRef.isUnset()) {
-      AddInitializerToDecl(RHSVD, Init, /*DirectInit=*/false,
-                           /*TypeMayContainAuto=*/false);
+      AddInitializerToDecl(RHSVD, Init, /*DirectInit=*/false);
     } else if (!Init)
-      ActOnUninitializedDecl(RHSVD, /*TypeMayContainAuto=*/false);
+      ActOnUninitializedDecl(RHSVD);
     if (RHSVD->isInvalidDecl())
       continue;
     if (!RHSVD->hasInit() && DeclareReductionRef.isUnset()) {
@@ -9421,7 +9358,7 @@ OMPClause *Sema::ActOnOpenMPReductionClause(
 
     DeclRefExpr *Ref = nullptr;
     Expr *VarsExpr = RefExpr->IgnoreParens();
-    if (!VD) {
+    if (!VD && !CurContext->isDependentContext()) {
       if (ASE || OASE) {
         TransformExprToCaptures RebuildToCapture(*this, D);
         VarsExpr =
@@ -9579,7 +9516,7 @@ OMPClause *Sema::ActOnOpenMPLinearClause(
     VarDecl *Init = buildVarDecl(*this, ELoc, Type, ".linear.start");
     Expr *InitExpr;
     DeclRefExpr *Ref = nullptr;
-    if (!VD) {
+    if (!VD && !CurContext->isDependentContext()) {
       Ref = buildCapture(*this, D, SimpleRefExpr, /*WithInit=*/false);
       if (!IsOpenMPCapturedDecl(D)) {
         ExprCaptures.push_back(Ref->getDecl());
@@ -9602,11 +9539,13 @@ OMPClause *Sema::ActOnOpenMPLinearClause(
     else
       InitExpr = VD ? SimpleRefExpr : Ref;
     AddInitializerToDecl(Init, DefaultLvalueConversion(InitExpr).get(),
-                         /*DirectInit=*/false, /*TypeMayContainAuto=*/false);
+                         /*DirectInit=*/false);
     auto InitRef = buildDeclRefExpr(*this, Init, Type, ELoc);
 
     DSAStack->addDSA(D, RefExpr->IgnoreParens(), OMPC_linear, Ref);
-    Vars.push_back(VD ? RefExpr->IgnoreParens() : Ref);
+    Vars.push_back((VD || CurContext->isDependentContext())
+                       ? RefExpr->IgnoreParens()
+                       : Ref);
     Privates.push_back(PrivateRef);
     Inits.push_back(InitRef);
   }
@@ -9695,7 +9634,7 @@ static bool FinishOpenMPLinearClause(OMPLinearClause &Clause, DeclRefExpr *IV,
     Expr *InitExpr = *CurInit;
 
     // Build privatized reference to the current linear var.
-    auto DE = cast<DeclRefExpr>(SimpleRefExpr);
+    auto *DE = cast<DeclRefExpr>(SimpleRefExpr);
     Expr *CapturedRef;
     if (LinKind == OMPC_LINEAR_uval)
       CapturedRef = cast<VarDecl>(DE->getDecl())->getInit();
@@ -9997,8 +9936,7 @@ OMPClause *Sema::ActOnOpenMPCopyprivateClause(ArrayRef<Expr *> VarList,
     auto *DstVD =
         buildVarDecl(*this, RefExpr->getLocStart(), Type, ".copyprivate.dst",
                      D->hasAttrs() ? &D->getAttrs() : nullptr);
-    auto *PseudoDstExpr =
-        buildDeclRefExpr(*this, DstVD, Type, ELoc);
+    auto *PseudoDstExpr = buildDeclRefExpr(*this, DstVD, Type, ELoc);
     auto AssignmentOp = BuildBinOp(DSAStack->getCurScope(), ELoc, BO_Assign,
                                    PseudoDstExpr, PseudoSrcExpr);
     if (AssignmentOp.isInvalid())
@@ -10213,9 +10151,6 @@ static bool IsCXXRecordForMappable(Sema &SemaRef, SourceLocation Loc,
   if (!RD || RD->isInvalidDecl())
     return true;
 
-  if (auto *CTSD = dyn_cast<ClassTemplateSpecializationDecl>(RD))
-    if (auto *CTD = CTSD->getSpecializedTemplate())
-      RD = CTD->getTemplatedDecl();
   auto QTy = SemaRef.Context.getRecordType(RD);
   if (RD->isDynamicClass()) {
     SemaRef.Diag(Loc, diag::err_omp_not_mappable_type) << QTy;
@@ -10259,8 +10194,7 @@ static bool CheckTypeMappable(SourceLocation SL, SourceRange SR, Sema &SemaRef,
     SemaRef.Diag(SL, diag::err_incomplete_type) << QTy << SR;
     return false;
   } else if (CXXRecordDecl *RD = dyn_cast_or_null<CXXRecordDecl>(ND)) {
-    if (!RD->isInvalidDecl() &&
-        !IsCXXRecordForMappable(SemaRef, SL, Stack, RD))
+    if (!RD->isInvalidDecl() && !IsCXXRecordForMappable(SemaRef, SL, Stack, RD))
       return false;
   }
   return true;
@@ -10289,7 +10223,7 @@ static bool CheckArrayExpressionDoesNotReferToWholeSize(Sema &SemaRef,
   auto *Length = OASE->getLength();
 
   // If there is a lower bound that does not evaluates to zero, we are not
-  // convering the whole dimension.
+  // covering the whole dimension.
   if (LowerBound) {
     llvm::APSInt ConstLowerBound;
     if (!LowerBound->EvaluateAsInt(ConstLowerBound, SemaRef.getASTContext()))
@@ -10324,8 +10258,8 @@ static bool CheckArrayExpressionDoesNotReferToWholeSize(Sema &SemaRef,
 // section or array subscript) does NOT specify a single element of the array
 // whose base type is \a BaseQTy.
 static bool CheckArrayExpressionDoesNotReferToUnitySize(Sema &SemaRef,
-                                                       const Expr *E,
-                                                       QualType BaseQTy) {
+                                                        const Expr *E,
+                                                        QualType BaseQTy) {
   auto *OASE = dyn_cast<OMPArraySectionExpr>(E);
 
   // An array subscript always refer to a single element. Also, an array section
@@ -10531,16 +10465,16 @@ static Expr *CheckMapClauseExpressionBase(
       bool NotUnity =
           CheckArrayExpressionDoesNotReferToUnitySize(SemaRef, CurE, CurType);
 
-      if (AllowWholeSizeArraySection && AllowUnitySizeArraySection) {
-        // Any array section is currently allowed.
+      if (AllowWholeSizeArraySection) {
+        // Any array section is currently allowed. Allowing a whole size array
+        // section implies allowing a unity array section as well.
         //
         // If this array section refers to the whole dimension we can still
         // accept other array sections before this one, except if the base is a
         // pointer. Otherwise, only unitary sections are accepted.
         if (NotWhole || IsPointer)
           AllowWholeSizeArraySection = false;
-      } else if ((AllowUnitySizeArraySection && NotUnity) ||
-                 (AllowWholeSizeArraySection && NotWhole)) {
+      } else if (AllowUnitySizeArraySection && NotUnity) {
         // A unity or whole array section is not allowed and that is not
         // compatible with the properties of the current array section.
         SemaRef.Diag(
@@ -10591,7 +10525,8 @@ static bool CheckMapConflicts(
   bool FoundError = DSAS->checkMappableExprComponentListsForDecl(
       VD, CurrentRegionOnly,
       [&](OMPClauseMappableExprCommon::MappableExprComponentListRef
-              StackComponents) -> bool {
+              StackComponents,
+          OpenMPClauseKind) -> bool {
 
         assert(!StackComponents.empty() &&
                "Map clause expression with no components!");
@@ -10635,6 +10570,25 @@ static bool CheckMapConflicts(
 
           // Are we dealing with different variables/fields?
           if (CI->getAssociatedDeclaration() != SI->getAssociatedDeclaration())
+            break;
+        }
+        // Check if the extra components of the expressions in the enclosing
+        // data environment are redundant for the current base declaration.
+        // If they are, the maps completely overlap, which is legal.
+        for (; SI != SE; ++SI) {
+          QualType Type;
+          if (auto *ASE =
+                  dyn_cast<ArraySubscriptExpr>(SI->getAssociatedExpression())) {
+            Type = ASE->getBase()->IgnoreParenImpCasts()->getType();
+          } else if (auto *OASE = dyn_cast<OMPArraySectionExpr>(
+                         SI->getAssociatedExpression())) {
+            auto *E = OASE->getBase()->IgnoreParenImpCasts();
+            Type =
+                OMPArraySectionExpr::getBaseOriginalType(E).getCanonicalType();
+          }
+          if (Type.isNull() || Type->isAnyPointerType() ||
+              CheckArrayExpressionDoesNotReferToWholeSize(
+                  SemaRef, SI->getAssociatedExpression(), Type))
             break;
         }
 
@@ -10927,11 +10881,16 @@ checkMappableExpressionList(Sema &SemaRef, DSAStackTy *DSAS,
       // OpenMP 4.5 [2.15.5.1, Restrictions, p.3]
       // A list item cannot appear in both a map clause and a data-sharing
       // attribute clause on the same construct
-      if (DKind == OMPD_target && VD) {
+      if ((DKind == OMPD_target || DKind == OMPD_target_teams ||
+           DKind == OMPD_target_teams_distribute ||
+           DKind == OMPD_target_teams_distribute_parallel_for ||
+           DKind == OMPD_target_teams_distribute_parallel_for_simd ||
+           DKind == OMPD_target_teams_distribute_simd) && VD) {
         auto DVar = DSAS->getTopDSA(VD, false);
         if (isOpenMPPrivate(DVar.CKind)) {
-          SemaRef.Diag(ELoc, diag::err_omp_variable_in_map_and_dsa)
+          SemaRef.Diag(ELoc, diag::err_omp_variable_in_given_clause_and_dsa)
               << getOpenMPClauseName(DVar.CKind)
+              << getOpenMPClauseName(OMPC_map)
               << getOpenMPDirectiveName(DSAS->getCurrentDirective());
           ReportOriginalDSA(SemaRef, DSAS, CurDeclaration, DVar);
           continue;
@@ -10944,7 +10903,8 @@ checkMappableExpressionList(Sema &SemaRef, DSAStackTy *DSAS,
 
     // Store the components in the stack so that they can be used to check
     // against other clauses later on.
-    DSAS->addMappableExpressionComponents(CurDeclaration, CurComponents);
+    DSAS->addMappableExpressionComponents(CurDeclaration, CurComponents,
+                                          /*WhereFoundClauseKind=*/OMPC_map);
 
     // Save the components and declaration to create the clause. For purposes of
     // the clause creation, any component list that has has base 'this' uses
@@ -11102,7 +11062,8 @@ void Sema::ActOnOpenMPDeclareReductionCombinerStart(Scope *S, Decl *D) {
   else
     CurContext = DRD;
 
-  PushExpressionEvaluationContext(PotentiallyEvaluated);
+  PushExpressionEvaluationContext(
+      ExpressionEvaluationContext::PotentiallyEvaluated);
 
   QualType ReductionType = DRD->getType();
   // Create 'T* omp_parm;T omp_in;'. All references to 'omp_in' will
@@ -11156,7 +11117,8 @@ void Sema::ActOnOpenMPDeclareReductionInitializerStart(Scope *S, Decl *D) {
   else
     CurContext = DRD;
 
-  PushExpressionEvaluationContext(PotentiallyEvaluated);
+  PushExpressionEvaluationContext(
+      ExpressionEvaluationContext::PotentiallyEvaluated);
 
   QualType ReductionType = DRD->getType();
   // Create 'T* omp_parm;T omp_priv;'. All references to 'omp_priv' will
@@ -11212,11 +11174,13 @@ Sema::DeclGroupPtrTy Sema::ActOnOpenMPDeclareReductionDirectiveEnd(
   return DeclReductions;
 }
 
-OMPClause *Sema::ActOnOpenMPNumTeamsClause(Expr *NumTeams, 
+OMPClause *Sema::ActOnOpenMPNumTeamsClause(Expr *NumTeams,
                                            SourceLocation StartLoc,
                                            SourceLocation LParenLoc,
                                            SourceLocation EndLoc) {
   Expr *ValExpr = NumTeams;
+  Stmt *HelperValStmt = nullptr;
+  OpenMPDirectiveKind CaptureRegion = OMPD_unknown;
 
   // OpenMP [teams Constrcut, Restrictions]
   // The num_teams expression must evaluate to a positive integer value.
@@ -11224,7 +11188,16 @@ OMPClause *Sema::ActOnOpenMPNumTeamsClause(Expr *NumTeams,
                                  /*StrictlyPositive=*/true))
     return nullptr;
 
-  return new (Context) OMPNumTeamsClause(ValExpr, StartLoc, LParenLoc, EndLoc);
+  OpenMPDirectiveKind DKind = DSAStack->getCurrentDirective();
+  CaptureRegion = getOpenMPCaptureRegionForClause(DKind, OMPC_num_teams);
+  if (CaptureRegion != OMPD_unknown) {
+    llvm::MapVector<Expr *, DeclRefExpr *> Captures;
+    ValExpr = tryBuildCapture(*this, ValExpr, Captures).get();
+    HelperValStmt = buildPreInits(Context, Captures);
+  }
+
+  return new (Context) OMPNumTeamsClause(ValExpr, HelperValStmt, CaptureRegion,
+                                         StartLoc, LParenLoc, EndLoc);
 }
 
 OMPClause *Sema::ActOnOpenMPThreadLimitClause(Expr *ThreadLimit,
@@ -11232,6 +11205,8 @@ OMPClause *Sema::ActOnOpenMPThreadLimitClause(Expr *ThreadLimit,
                                               SourceLocation LParenLoc,
                                               SourceLocation EndLoc) {
   Expr *ValExpr = ThreadLimit;
+  Stmt *HelperValStmt = nullptr;
+  OpenMPDirectiveKind CaptureRegion = OMPD_unknown;
 
   // OpenMP [teams Constrcut, Restrictions]
   // The thread_limit expression must evaluate to a positive integer value.
@@ -11239,8 +11214,16 @@ OMPClause *Sema::ActOnOpenMPThreadLimitClause(Expr *ThreadLimit,
                                  /*StrictlyPositive=*/true))
     return nullptr;
 
-  return new (Context) OMPThreadLimitClause(ValExpr, StartLoc, LParenLoc,
-                                            EndLoc);
+  OpenMPDirectiveKind DKind = DSAStack->getCurrentDirective();
+  CaptureRegion = getOpenMPCaptureRegionForClause(DKind, OMPC_thread_limit);
+  if (CaptureRegion != OMPD_unknown) {
+    llvm::MapVector<Expr *, DeclRefExpr *> Captures;
+    ValExpr = tryBuildCapture(*this, ValExpr, Captures).get();
+    HelperValStmt = buildPreInits(Context, Captures);
+  }
+
+  return new (Context) OMPThreadLimitClause(
+      ValExpr, HelperValStmt, CaptureRegion, StartLoc, LParenLoc, EndLoc);
 }
 
 OMPClause *Sema::ActOnOpenMPPriorityClause(Expr *Priority,
@@ -11359,18 +11342,17 @@ OMPClause *Sema::ActOnOpenMPDefaultmapClause(
     SourceLocation StartLoc, SourceLocation LParenLoc, SourceLocation MLoc,
     SourceLocation KindLoc, SourceLocation EndLoc) {
   // OpenMP 4.5 only supports 'defaultmap(tofrom: scalar)'
-  if (M != OMPC_DEFAULTMAP_MODIFIER_tofrom ||
-      Kind != OMPC_DEFAULTMAP_scalar) {
+  if (M != OMPC_DEFAULTMAP_MODIFIER_tofrom || Kind != OMPC_DEFAULTMAP_scalar) {
     std::string Value;
     SourceLocation Loc;
     Value += "'";
     if (M != OMPC_DEFAULTMAP_MODIFIER_tofrom) {
       Value += getOpenMPSimpleClauseTypeName(OMPC_defaultmap,
-                 OMPC_DEFAULTMAP_MODIFIER_tofrom);
+                                             OMPC_DEFAULTMAP_MODIFIER_tofrom);
       Loc = MLoc;
     } else {
       Value += getOpenMPSimpleClauseTypeName(OMPC_defaultmap,
-                 OMPC_DEFAULTMAP_scalar);
+                                             OMPC_DEFAULTMAP_scalar);
       Loc = KindLoc;
     }
     Value += "'";
@@ -11407,11 +11389,11 @@ void Sema::ActOnFinishOpenMPDeclareTargetDirective() {
   IsInOpenMPDeclareTargetContext = false;
 }
 
-void
-Sema::ActOnOpenMPDeclareTargetName(Scope *CurScope, CXXScopeSpec &ScopeSpec,
-                                   const DeclarationNameInfo &Id,
-                                   OMPDeclareTargetDeclAttr::MapTypeTy MT,
-                                   NamedDeclSetType &SameDirectiveDecls) {
+void Sema::ActOnOpenMPDeclareTargetName(Scope *CurScope,
+                                        CXXScopeSpec &ScopeSpec,
+                                        const DeclarationNameInfo &Id,
+                                        OMPDeclareTargetDeclAttr::MapTypeTy MT,
+                                        NamedDeclSetType &SameDirectiveDecls) {
   LookupResult Lookup(*this, Id, LookupOrdinaryName);
   LookupParsedName(Lookup, CurScope, &ScopeSpec, true);
 
@@ -11603,4 +11585,173 @@ OMPClause *Sema::ActOnOpenMPFromClause(ArrayRef<Expr *> VarList,
   return OMPFromClause::Create(Context, StartLoc, LParenLoc, EndLoc,
                                MVLI.ProcessedVarList, MVLI.VarBaseDeclarations,
                                MVLI.VarComponents);
+}
+
+OMPClause *Sema::ActOnOpenMPUseDevicePtrClause(ArrayRef<Expr *> VarList,
+                                               SourceLocation StartLoc,
+                                               SourceLocation LParenLoc,
+                                               SourceLocation EndLoc) {
+  MappableVarListInfo MVLI(VarList);
+  SmallVector<Expr *, 8> PrivateCopies;
+  SmallVector<Expr *, 8> Inits;
+
+  for (auto &RefExpr : VarList) {
+    assert(RefExpr && "NULL expr in OpenMP use_device_ptr clause.");
+    SourceLocation ELoc;
+    SourceRange ERange;
+    Expr *SimpleRefExpr = RefExpr;
+    auto Res = getPrivateItem(*this, SimpleRefExpr, ELoc, ERange);
+    if (Res.second) {
+      // It will be analyzed later.
+      MVLI.ProcessedVarList.push_back(RefExpr);
+      PrivateCopies.push_back(nullptr);
+      Inits.push_back(nullptr);
+    }
+    ValueDecl *D = Res.first;
+    if (!D)
+      continue;
+
+    QualType Type = D->getType();
+    Type = Type.getNonReferenceType().getUnqualifiedType();
+
+    auto *VD = dyn_cast<VarDecl>(D);
+
+    // Item should be a pointer or reference to pointer.
+    if (!Type->isPointerType()) {
+      Diag(ELoc, diag::err_omp_usedeviceptr_not_a_pointer)
+          << 0 << RefExpr->getSourceRange();
+      continue;
+    }
+
+    // Build the private variable and the expression that refers to it.
+    auto VDPrivate = buildVarDecl(*this, ELoc, Type, D->getName(),
+                                  D->hasAttrs() ? &D->getAttrs() : nullptr);
+    if (VDPrivate->isInvalidDecl())
+      continue;
+
+    CurContext->addDecl(VDPrivate);
+    auto VDPrivateRefExpr = buildDeclRefExpr(
+        *this, VDPrivate, RefExpr->getType().getUnqualifiedType(), ELoc);
+
+    // Add temporary variable to initialize the private copy of the pointer.
+    auto *VDInit =
+        buildVarDecl(*this, RefExpr->getExprLoc(), Type, ".devptr.temp");
+    auto *VDInitRefExpr = buildDeclRefExpr(*this, VDInit, RefExpr->getType(),
+                                           RefExpr->getExprLoc());
+    AddInitializerToDecl(VDPrivate,
+                         DefaultLvalueConversion(VDInitRefExpr).get(),
+                         /*DirectInit=*/false);
+
+    // If required, build a capture to implement the privatization initialized
+    // with the current list item value.
+    DeclRefExpr *Ref = nullptr;
+    if (!VD)
+      Ref = buildCapture(*this, D, SimpleRefExpr, /*WithInit=*/true);
+    MVLI.ProcessedVarList.push_back(VD ? RefExpr->IgnoreParens() : Ref);
+    PrivateCopies.push_back(VDPrivateRefExpr);
+    Inits.push_back(VDInitRefExpr);
+
+    // We need to add a data sharing attribute for this variable to make sure it
+    // is correctly captured. A variable that shows up in a use_device_ptr has
+    // similar properties of a first private variable.
+    DSAStack->addDSA(D, RefExpr->IgnoreParens(), OMPC_firstprivate, Ref);
+
+    // Create a mappable component for the list item. List items in this clause
+    // only need a component.
+    MVLI.VarBaseDeclarations.push_back(D);
+    MVLI.VarComponents.resize(MVLI.VarComponents.size() + 1);
+    MVLI.VarComponents.back().push_back(
+        OMPClauseMappableExprCommon::MappableComponent(SimpleRefExpr, D));
+  }
+
+  if (MVLI.ProcessedVarList.empty())
+    return nullptr;
+
+  return OMPUseDevicePtrClause::Create(
+      Context, StartLoc, LParenLoc, EndLoc, MVLI.ProcessedVarList,
+      PrivateCopies, Inits, MVLI.VarBaseDeclarations, MVLI.VarComponents);
+}
+
+OMPClause *Sema::ActOnOpenMPIsDevicePtrClause(ArrayRef<Expr *> VarList,
+                                              SourceLocation StartLoc,
+                                              SourceLocation LParenLoc,
+                                              SourceLocation EndLoc) {
+  MappableVarListInfo MVLI(VarList);
+  for (auto &RefExpr : VarList) {
+    assert(RefExpr && "NULL expr in OpenMP is_device_ptr clause.");
+    SourceLocation ELoc;
+    SourceRange ERange;
+    Expr *SimpleRefExpr = RefExpr;
+    auto Res = getPrivateItem(*this, SimpleRefExpr, ELoc, ERange);
+    if (Res.second) {
+      // It will be analyzed later.
+      MVLI.ProcessedVarList.push_back(RefExpr);
+    }
+    ValueDecl *D = Res.first;
+    if (!D)
+      continue;
+
+    QualType Type = D->getType();
+    // item should be a pointer or array or reference to pointer or array
+    if (!Type.getNonReferenceType()->isPointerType() &&
+        !Type.getNonReferenceType()->isArrayType()) {
+      Diag(ELoc, diag::err_omp_argument_type_isdeviceptr)
+          << 0 << RefExpr->getSourceRange();
+      continue;
+    }
+
+    // Check if the declaration in the clause does not show up in any data
+    // sharing attribute.
+    auto DVar = DSAStack->getTopDSA(D, false);
+    if (isOpenMPPrivate(DVar.CKind)) {
+      Diag(ELoc, diag::err_omp_variable_in_given_clause_and_dsa)
+          << getOpenMPClauseName(DVar.CKind)
+          << getOpenMPClauseName(OMPC_is_device_ptr)
+          << getOpenMPDirectiveName(DSAStack->getCurrentDirective());
+      ReportOriginalDSA(*this, DSAStack, D, DVar);
+      continue;
+    }
+
+    Expr *ConflictExpr;
+    if (DSAStack->checkMappableExprComponentListsForDecl(
+            D, /*CurrentRegionOnly=*/true,
+            [&ConflictExpr](
+                OMPClauseMappableExprCommon::MappableExprComponentListRef R,
+                OpenMPClauseKind) -> bool {
+              ConflictExpr = R.front().getAssociatedExpression();
+              return true;
+            })) {
+      Diag(ELoc, diag::err_omp_map_shared_storage) << RefExpr->getSourceRange();
+      Diag(ConflictExpr->getExprLoc(), diag::note_used_here)
+          << ConflictExpr->getSourceRange();
+      continue;
+    }
+
+    // Store the components in the stack so that they can be used to check
+    // against other clauses later on.
+    OMPClauseMappableExprCommon::MappableComponent MC(SimpleRefExpr, D);
+    DSAStack->addMappableExpressionComponents(
+        D, MC, /*WhereFoundClauseKind=*/OMPC_is_device_ptr);
+
+    // Record the expression we've just processed.
+    MVLI.ProcessedVarList.push_back(SimpleRefExpr);
+
+    // Create a mappable component for the list item. List items in this clause
+    // only need a component. We use a null declaration to signal fields in
+    // 'this'.
+    assert((isa<DeclRefExpr>(SimpleRefExpr) ||
+            isa<CXXThisExpr>(cast<MemberExpr>(SimpleRefExpr)->getBase())) &&
+           "Unexpected device pointer expression!");
+    MVLI.VarBaseDeclarations.push_back(
+        isa<DeclRefExpr>(SimpleRefExpr) ? D : nullptr);
+    MVLI.VarComponents.resize(MVLI.VarComponents.size() + 1);
+    MVLI.VarComponents.back().push_back(MC);
+  }
+
+  if (MVLI.ProcessedVarList.empty())
+    return nullptr;
+
+  return OMPIsDevicePtrClause::Create(
+      Context, StartLoc, LParenLoc, EndLoc, MVLI.ProcessedVarList,
+      MVLI.VarBaseDeclarations, MVLI.VarComponents);
 }

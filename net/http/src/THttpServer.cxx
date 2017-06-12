@@ -16,6 +16,7 @@
 #include "TSystem.h"
 #include "TImage.h"
 #include "TROOT.h"
+#include "TUrl.h"
 #include "TClass.h"
 #include "TCanvas.h"
 #include "TFolder.h"
@@ -64,6 +65,88 @@ public:
    }
 };
 
+//////////////////////////////////////////////////////////////////////////////////////////////////
+
+class TLongPollEngine : public THttpWSEngine {
+protected:
+   THttpCallArg *fPoll; ///< polling request, which can be used for the next sending
+   TString fBuf;        ///< single entry to keep data which is not yet send to the client
+
+public:
+   TLongPollEngine(const char *name, const char *title) : THttpWSEngine(name, title), fPoll(0), fBuf() {}
+
+   virtual ~TLongPollEngine() {}
+
+   virtual UInt_t GetId() const
+   {
+      const void *ptr = (const void *)this;
+      return TString::Hash((void *)&ptr, sizeof(void *));
+   }
+
+   virtual void ClearHandle()
+   {
+      if (fPoll) {
+         fPoll->Set404();
+         fPoll->NotifyCondition();
+         fPoll = 0;
+      }
+   }
+
+   virtual void Send(const void * /*buf*/, int /*len*/)
+   {
+      Error("TLongPollEngine::Send", "Should never be called, only text is supported");
+   }
+
+   virtual void SendCharStar(const char *buf)
+   {
+      if (fPoll) {
+         fPoll->SetContentType("text/plain");
+         fPoll->SetContent(buf);
+         fPoll->NotifyCondition();
+         fPoll = 0;
+      } else if (fBuf.Length() == 0) {
+         fBuf = buf;
+      } else {
+         Error("TLongPollEngine::SendCharStar", "Too many send operations, use TList object instead");
+      }
+   }
+
+   virtual Bool_t PreviewData(THttpCallArg *arg)
+   {
+      // function called in the user code before processing correspondent websocket data
+      // returns kTRUE when user should ignore such http request - it is for internal use
+
+      // this is normal request, deliver and process it as any other
+      if (!strstr(arg->GetQuery(), "&dummy")) return kFALSE;
+
+      if (arg == fPoll) {
+         Error("PreviewData", "NEVER SHOULD HAPPEN");
+         exit(12);
+      }
+
+      if (fPoll) {
+         Info("PreviewData", "Get dummy request when previous not completed");
+         // if there are pending request, reply it immediately
+         fPoll->SetContentType("text/plain");
+         fPoll->SetContent("<<nope>>"); // normally should never happen
+         fPoll->NotifyCondition();
+         fPoll = 0;
+      }
+
+      if (fBuf.Length() > 0) {
+         arg->SetContentType("text/plain");
+         arg->SetContent(fBuf.Data());
+         fBuf = "";
+      } else {
+         arg->SetPostponed();
+         fPoll = arg;
+      }
+
+      // if arguments has "&dummy" string, user should not process it
+      return kTRUE;
+   }
+};
+
 // =======================================================
 
 //////////////////////////////////////////////////////////////////////////
@@ -107,7 +190,7 @@ public:
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-ClassImp(THttpServer)
+ClassImp(THttpServer);
 
    ////////////////////////////////////////////////////////////////////////////////
    /// constructor
@@ -171,6 +254,10 @@ ClassImp(THttpServer)
             GetSniffer()->SetReadOnly(kTRUE);
          } else if ((strcmp(opt, "readwrite") == 0) || (strcmp(opt, "rw") == 0)) {
             GetSniffer()->SetReadOnly(kFALSE);
+         } else if (strcmp(opt, "global") == 0) {
+            GetSniffer()->SetScanGlobalDir(kTRUE);
+         } else if (strcmp(opt, "noglobal") == 0) {
+            GetSniffer()->SetScanGlobalDir(kFALSE);
          } else
             CreateEngine(opt);
       }
@@ -451,6 +538,29 @@ Bool_t THttpServer::ExecuteHttp(THttpCallArg *arg)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Submit http request, specified in THttpCallArg structure
+/// Contrary to ExecuteHttp, it will not block calling thread.
+/// User should reimplement THttpCallArg::HttpReplied() method
+/// to react when HTTP request is executed.
+/// Method can be called from any thread
+/// Actual execution will be done in main ROOT thread, where analysis code is running.
+/// When called from main thread and can_run_immediately==kTRUE, will be
+/// executed immediately. Returns kTRUE when was executed.
+
+Bool_t THttpServer::SubmitHttp(THttpCallArg *arg, Bool_t can_run_immediately)
+{
+   if (can_run_immediately && (fMainThrdId != 0) && (fMainThrdId == TThread::SelfId())) {
+      ProcessRequest(arg);
+      return kTRUE;
+   }
+
+   // add call arg to the list
+   std::unique_lock<std::mutex> lk(fMutex);
+   fCallArgs.Add(arg);
+   return kFALSE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Process requests, submitted for execution
 /// Regularly invoked by THttpTimer, when somewhere in the code
 /// gSystem->ProcessEvents() is called.
@@ -487,7 +597,8 @@ void THttpServer::ProcessRequests()
          fSniffer->SetCurrentCallArg(0);
       }
 
-      arg->fCond.notify_one();
+      // workaround for longpoll handle, it sometime notifies condition before server
+      if (!arg->fNotifyFlag) arg->NotifyCondition();
    }
 
    // regularly call Process() method of engine to let perform actions in ROOT context
@@ -510,7 +621,7 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
          Int_t len = 0;
          char *buf = ReadFileContent(fDefaultPage.Data(), len);
          if (len > 0) fDefaultPageCont.Append(buf, len);
-         delete buf;
+         free(buf);
       }
 
       if (fDefaultPageCont.Length() == 0) {
@@ -551,7 +662,7 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
          Int_t len = 0;
          char *buf = ReadFileContent(fDrawPage.Data(), len);
          if (len > 0) fDrawPageCont.Append(buf, len);
-         delete buf;
+         free(buf);
       }
 
       if (fDrawPageCont.Length() == 0) {
@@ -592,6 +703,11 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
          if (arg->fQuery.Index("nozip") == kNPOS) arg->SetZipping(2);
          arg->SetContentType("text/html");
       }
+      return;
+   }
+
+   if ((arg->fFileName == "favicon.ico") && arg->fPathName.IsNull()) {
+      arg->SetFile(fJSROOTSYS + "/img/RootIcon.ico");
       return;
    }
 
@@ -640,45 +756,67 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
    } else if (filename == "root.websocket") {
       // handling of web socket
 
-      TCanvas *canv = dynamic_cast<TCanvas *>(fSniffer->FindTObjectInHierarchy(arg->fPathName.Data()));
+      THttpWSHandler *handler = dynamic_cast<THttpWSHandler *>(fSniffer->FindTObjectInHierarchy(arg->fPathName.Data()));
 
-      if (canv == 0) {
-         // for the moment only TCanvas is used for web sockets
-         arg->Set404();
-      } else if (strcmp(arg->GetMethod(), "WS_CONNECT") == 0) {
-         if (canv->GetPrimitive("websocket")) {
-            // websocket already exists, ignore all other requests
-            arg->Set404();
-         }
-      } else if (strcmp(arg->GetMethod(), "WS_READY") == 0) {
-         THttpWSEngine *wshandle = dynamic_cast<THttpWSEngine *>(arg->TakeWSHandle());
-
-         if (gDebug > 0) Info("ProcessRequest", "Set WebSocket handle %p", wshandle);
-
-         if (wshandle) wshandle->AssignCanvas(canv);
-
-         // connection is established
-      } else if (strcmp(arg->GetMethod(), "WS_DATA") == 0) {
-         // process received data
-
-         THttpWSEngine *wshandle = dynamic_cast<THttpWSEngine *>(canv->GetPrimitive("websocket"));
-         if (wshandle) wshandle->ProcessData(arg);
-
-      } else if (strcmp(arg->GetMethod(), "WS_CLOSE") == 0) {
-         // connection is closed, one can remove handle
-
-         THttpWSEngine *wshandle = dynamic_cast<THttpWSEngine *>(canv->GetPrimitive("websocket"));
-
-         if (wshandle) {
-            if (gDebug > 0) Info("ProcessRequest", "Clear WebSocket handle");
-            wshandle->ClearHandle();
-            wshandle->AssignCanvas(0);
-            delete wshandle;
-         }
+      if (handler) {
+         handler->ProcessWS(arg);
       } else {
          arg->Set404();
       }
 
+      return;
+   } else if (filename == "root.longpoll") {
+      // ROOT emulation of websocket with polling requests
+      THttpWSHandler *handler = dynamic_cast<THttpWSHandler *>(fSniffer->FindTObjectInHierarchy(arg->fPathName.Data()));
+
+      if (!handler) {
+         // for the moment only TCanvas is used for web sockets
+         arg->Set404();
+      } else if (arg->fQuery == "connect") {
+         // try to emulate websocket connect
+         // if accepted, reply with connection id, which must be used in the following communications
+         arg->SetMethod("WS_CONNECT");
+
+         if (handler && handler->ProcessWS(arg)) {
+            arg->SetMethod("WS_READY");
+
+            TLongPollEngine *handle = new TLongPollEngine("longpoll", arg->fPathName.Data());
+
+            arg->SetWSId(handle->GetId());
+            arg->SetWSHandle(handle);
+
+            if (handler->ProcessWS(arg)) {
+               arg->SetContent(TString::Format("%u", arg->GetWSId()));
+               arg->SetContentType("text/plain");
+            }
+         }
+         if (!arg->IsContentType("text/plain")) arg->Set404();
+      } else {
+         TUrl url;
+         url.SetOptions(arg->fQuery);
+         url.ParseOptions();
+         Int_t connid = url.GetIntValueFromOptions("connection");
+         arg->SetWSId((UInt_t)connid);
+         if (url.HasOption("close")) {
+            arg->SetMethod("WS_CLOSE");
+            arg->SetContent("OK");
+            arg->SetContentType("text/plain");
+         } else {
+            arg->SetMethod("WS_DATA");
+            const char *post = url.GetValueFromOptions("post");
+            if (post) {
+               // posted data transferred as URL parameter
+               // done due to limitation of webengine in qt
+               Int_t len = strlen(post);
+               void *buf = malloc(len / 2 + 1);
+               char *sbuf = (char *)buf;
+               for (int n = 0; n < len; n += 2) sbuf[n / 2] = TString::BaseConvert(TString(post + n, 2), 16, 10).Atoi();
+               sbuf[len / 2] = 0; // just in case of zero-terminated string
+               arg->SetPostData(buf, len / 2);
+            }
+         }
+         if (handler && !handler->ProcessWS(arg)) arg->Set404();
+      }
       return;
 
    } else if (fSniffer->Produce(arg->fPathName.Data(), filename.Data(), arg->fQuery.Data(), bindata, bindatalen,

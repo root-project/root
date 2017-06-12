@@ -41,7 +41,7 @@ using namespace std ;
 #include "RooChangeTracker.h"
 #include "RooExpensiveObjectCache.h"
 
-ClassImp(RooAbsCachedReal) 
+ClassImp(RooAbsCachedReal); 
 
 
 

@@ -15,7 +15,6 @@
 #include "TROOT.h"
 #include "TEnv.h"
 #include "TGraph.h"
-#include "TGaxis.h"
 #include "TH1.h"
 #include "TF1.h"
 #include "TStyle.h"
@@ -43,7 +42,7 @@
 
 extern void H1LeastSquareSeqnd(Int_t n, Double_t *a, Int_t idim, Int_t &ifail, Int_t k, Double_t *b);
 
-ClassImp(TGraph)
+ClassImp(TGraph);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -165,7 +164,8 @@ TGraph::TGraph(const TGraph &gr)
    fMaxSize = gr.fMaxSize;
    if (gr.fFunctions) fFunctions = (TList*)gr.fFunctions->Clone();
    else fFunctions = new TList;
-   fHistogram = 0;
+   if (gr.fHistogram) fHistogram = (TH1F*)gr.fHistogram->Clone();
+   else fHistogram = 0;
    fMinimum = gr.fMinimum;
    fMaximum = gr.fMaximum;
    if (!fMaxSize) {
@@ -846,17 +846,19 @@ void TGraph::DrawPanel()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Interpolate points in this graph at x using a TSpline
-///  -if spline==0 and option="" a linear interpolation between the two points
-///   close to x is computed. If x is outside the graph range, a linear
-///   extrapolation is computed.
+/// Interpolate points in this graph at x using a TSpline.
+///
+///  - if spline==0 and option="" a linear interpolation between the two points
+///    close to x is computed. If x is outside the graph range, a linear
+///    extrapolation is computed.
+///  - if spline==0 and option="S" a TSpline3 object is created using this graph
+///    and the interpolated value from the spline is returned.
+///    the internally created spline is deleted on return.
+///  - if spline is specified, it is used to return the interpolated value.
+///
 ///   If the points are sorted in X a binary search is used (significantly faster)
 ///   One needs to set the bit  TGraph::SetBit(TGraph::kIsSortedX) before calling
 ///   TGraph::Eval to indicate that the graph is sorted in X.
-///  -if spline==0 and option="S" a TSpline3 object is created using this graph
-///   and the interpolated value from the spline is returned.
-///   the internally created spline is deleted on return.
-///  -if spline is specified, it is used to return the interpolated value.
 
 Double_t TGraph::Eval(Double_t x, TSpline *spline, Option_t *option) const
 {
@@ -1515,10 +1517,9 @@ TH1F *TGraph::GetHistogram() const
       if (gPad && gPad->GetLogx()) uxmax = 1.1 * rwxmax;
       else                         uxmax = 0;
    }
-   if (minimum < 0 && rwymin >= 0) {
-      if (gPad && gPad->GetLogy()) minimum = 0.9 * rwymin;
-      else                         minimum = 0;
-   }
+
+   if (minimum < 0 && rwymin >= 0) minimum = 0.9 * rwymin;
+
    if (minimum <= 0 && gPad && gPad->GetLogy()) minimum = 0.001 * maximum;
    if (uxmin <= 0 && gPad && gPad->GetLogx()) {
       if (uxmax > 1000) uxmin = 1;

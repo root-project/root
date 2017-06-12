@@ -28,7 +28,7 @@
 #include <string.h>
 
 
-ClassImp(TGGC)
+ClassImp(TGGC);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a graphics context (only called via TGGCPool::GetGC()).
@@ -875,7 +875,7 @@ void TGGC::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 }
 
 
-ClassImp(TGGCPool)
+ClassImp(TGGCPool);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create graphics context pool.

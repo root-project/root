@@ -52,7 +52,7 @@ class hierarchies (watch out for overlaps).
 Long_t TObject::fgDtorOnly = 0;
 Bool_t TObject::fgObjectStat = kTRUE;
 
-ClassImp(TObject)
+ClassImp(TObject);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy this to obj.
@@ -220,7 +220,8 @@ void TObject::DrawClass() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Draw a clone of this object in the current pad
+/// Draw a clone of this object in the current selected pad for instance with:
+/// `gROOT->SetSelectedPad(gPad)`.
 
 TObject *TObject::DrawClone(Option_t *option) const
 {

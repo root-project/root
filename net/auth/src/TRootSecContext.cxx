@@ -28,7 +28,7 @@
 #include "TUrl.h"
 #include "TVirtualMutex.h"
 
-ClassImp(TRootSecContext)
+ClassImp(TRootSecContext);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Ctor for SecContext object.
@@ -105,7 +105,7 @@ void TRootSecContext::DeActivate(Option_t *Opt)
 
    Bool_t remove = (strstr(Opt,"R") || strstr(Opt,"r"));
    if (remove && fOffSet > -1){
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       // Remove from the global list
       gROOT->GetListOfSecContexts()->Remove(this);
       // Remove also from local lists in THostAuth objects

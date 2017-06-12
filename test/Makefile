@@ -40,8 +40,10 @@ EVENTS        = Event.$(SrcSuf) EventDict.$(SrcSuf)
 EVENTSO       = libEvent.$(DllSuf)
 EVENT         = Event$(ExeSuf)
 ifeq ($(PLATFORM),win32)
+EVENTLIBS     = $(ROOTSYS)/lib/libTreePlayer.lib
 EVENTLIB      = libEvent.lib
 else
+EVENTLIBS     = -lTreePlayer
 EVENTLIB      = $(shell pwd)/$(EVENTSO)
 endif
 
@@ -381,7 +383,7 @@ endif
 		@echo "$@ done"
 
 $(EVENT):       $(EVENTSO) $(MAINEVENTO)
-		$(LD) $(LDFLAGS) $(MAINEVENTO) $(EVENTO) $(LIBS) $(OutPutOpt)$@
+		$(LD) $(LDFLAGS) $(MAINEVENTO) $(EVENTO) $(LIBS) $(EVENTLIBS) $(OutPutOpt)$@
 		$(MT_EXE)
 		@echo "$@ done"
 

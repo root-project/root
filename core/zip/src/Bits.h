@@ -16,6 +16,7 @@
 #include "Compression.h"
 #include "RConfigure.h"
 #include "ZipLZMA.h"
+#include "ZipLZ4.h"
 
 #include <stdio.h>
 #include <assert.h>
@@ -282,17 +283,21 @@ struct bits_internal_state {
   } \
 }
 
-
 /* ===========================================================================
    R__ZipMode is used to select the compression algorithm when R__zip is called
    and when R__zipMultipleAlgorithm is called with its last argument set to 0.
    R__ZipMode = 1 : ZLIB compression algorithm is used (default)
    R__ZipMode = 2 : LZMA compression algorithm is used
+   R__ZipMode = 4 : LZ4  compression algorithm is used
    R__ZipMode = 0 or 3 : a very old compression algorithm is used
    (the very old algorithm is supported for backward compatibility)
    The LZMA algorithm requires the external XZ package be installed when linking
    is done. LZMA typically has significantly higher compression factors, but takes
    more CPU time and memory resources while compressing.
+
+  The LZ4 algorithm requires the external LZ4 package to be installed when linking
+  is done.  LZ4 typically has the worst compression ratios, but much faster decompression
+  speeds - sometimes by an order of magnitude.
 */
 enum ECompressionAlgorithm R__ZipMode = 1;
 
@@ -571,6 +576,11 @@ void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize,
   int err;
   int method   = Z_DEFLATED;
 
+  if (*srcsize < 1 + HDRSIZE + 1) {
+     *irep = 0;
+     return;
+  }
+
   if (cxlevel <= 0) {
     *irep = 0;
     return;
@@ -582,8 +592,11 @@ void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize,
 
   // The LZMA compression algorithm from the XZ package
   if (compressionAlgorithm == kLZMA) {
-    R__zipLZMA(cxlevel, srcsize, src, tgtsize, tgt, irep);
-    return;
+     R__zipLZMA(cxlevel, srcsize, src, tgtsize, tgt, irep);
+     return;
+  } else if (compressionAlgorithm == kLZ4) {
+     R__zipLZ4(cxlevel, srcsize, src, tgtsize, tgt, irep);
+     return;
   }
 
   // The very old algorithm for backward compatibility
@@ -682,14 +695,11 @@ void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize,
        return;
     }
 
-    err = deflate(&stream, Z_FINISH);
-    if (err != Z_STREAM_END) {
-       deflateEnd(&stream);
-       /* No need to print an error message. We simply abandon the compression
-          the buffer cannot be compressed or compressed buffer would be larger than original buffer
-          printf("error %d in deflate (zlib) is not = %d\n",err,Z_STREAM_END);
-       */
-       return;
+    while ((err = deflate(&stream, Z_FINISH)) != Z_STREAM_END) {
+       if (err != Z_OK) {
+          deflateEnd(&stream);
+          return;
+       }
     }
 
     err = deflateEnd(&stream);

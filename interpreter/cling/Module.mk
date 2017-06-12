@@ -24,7 +24,6 @@ CLINGETC_CLING := DynamicExprInfo.h DynamicLookupRuntimeUniverse.h \
         Exception.h RuntimePrintValue.h RuntimeUniverse.h Value.h
 
 CLINGETC_LLVM := llvm/ADT/IntrusiveRefCntPtr.h \
-        llvm/ADT/StringRef.h \
         llvm/ADT/SmallVector.h \
         llvm/ADT/iterator_range.h \
         llvm/Config/llvm-config.h \

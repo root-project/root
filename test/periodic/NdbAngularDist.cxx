@@ -2,5 +2,5 @@
 #include "NdbAngularDist.h"
 
 
-ClassImp(NdbAngularDist)
+ClassImp(NdbAngularDist);
 

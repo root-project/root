@@ -60,7 +60,7 @@ template <typename T> bool testBinarySearch(const int n, double* tTMath, double*
       for ( T elem = 0; elem < maxint; ++elem ) {
          T* pind;
          pind = std::lower_bound(&k[0], &k[n], elem);
-         Long_t index2 = ((*pind == elem)? (pind - &k[0]): ( pind - &k[0] - 1));
+         Long_t index2 = (((pind != &(k[n])) && (*pind == elem)) ? (pind - &k[0]): ( pind - &k[0] - 1));
          s2+= index2;
       }
    }

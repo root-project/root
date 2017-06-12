@@ -31,6 +31,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TBonjourRegistrar.h"
+#include "TBonjourBrowser.h"
 #include "TSysEvtHandler.h"
 #include "TError.h"
 #include "TSystem.h"
@@ -38,7 +39,7 @@
 #include <arpa/inet.h>
 
 
-ClassImp(TBonjourRegistrar)
+ClassImp(TBonjourRegistrar);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default ctor.

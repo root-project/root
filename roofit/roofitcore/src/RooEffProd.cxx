@@ -30,7 +30,7 @@
 
 using namespace std;
 
-ClassImp(RooEffProd)
+ClassImp(RooEffProd);
   ;
 
 

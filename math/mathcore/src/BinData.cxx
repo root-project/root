@@ -202,13 +202,13 @@ namespace ROOT {
 
       if ( fpTmpBinEdgeVector )
       {
-        delete fpTmpBinEdgeVector;
+        delete[] fpTmpBinEdgeVector;
         fpTmpBinEdgeVector= NULL;
       }
 
       if ( fpTmpCoordErrorVector )
       {
-        delete fpTmpCoordErrorVector;
+        delete[] fpTmpCoordErrorVector;
         fpTmpCoordErrorVector = NULL;
       }
     }
@@ -230,13 +230,13 @@ namespace ROOT {
       {
         assert( Opt().fIntegral );
 
-        delete fpTmpBinEdgeVector;
+        delete[] fpTmpBinEdgeVector;
         fpTmpBinEdgeVector= NULL;
       }
 
       if ( fpTmpCoordErrorVector )
       {
-        delete fpTmpCoordErrorVector;
+        delete[] fpTmpCoordErrorVector;
         fpTmpCoordErrorVector = NULL;
       }
 
@@ -638,7 +638,7 @@ namespace ROOT {
 
       if ( fpTmpCoordErrorVector )
       {
-        delete fpTmpCoordErrorVector;
+        delete[] fpTmpCoordErrorVector;
         fpTmpCoordErrorVector = NULL;
       }
 
@@ -716,7 +716,7 @@ namespace ROOT {
 
       if ( fpTmpBinEdgeVector )
       {
-        delete fpTmpBinEdgeVector;
+        delete[] fpTmpBinEdgeVector;
         fpTmpBinEdgeVector = NULL;
       }
 

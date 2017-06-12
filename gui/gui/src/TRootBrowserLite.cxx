@@ -893,7 +893,7 @@ void TRootIconBox::RemoveAll()
 // ROOT object browser (looking like Windows Explorer).
 //_____________________________________________________________________________
 
-ClassImp(TRootBrowserLite)
+ClassImp(TRootBrowserLite);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create browser with a specified width and height.
@@ -1563,11 +1563,8 @@ TGFileContainer *TRootBrowserLite::GetIconBox() const
 
 void TRootBrowserLite::ReallyDelete()
 {
-   gInterpreter->DeleteGlobal(fBrowser);
-   if (fBrowser->IsOnHeap())
-      delete fBrowser; // will in turn delete this object
-   else
-      fBrowser->Destructor(); // will in turn delete this object
+   fBrowser->SetBrowserImp(0);
+   delete this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

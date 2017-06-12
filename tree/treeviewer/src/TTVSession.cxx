@@ -18,7 +18,7 @@
 #include "TInterpreter.h"
 
 
-ClassImp(TTVRecord)
+ClassImp(TTVRecord);
 
 /** \class TTVRecord
 I/O classes for TreeViewer session handling.
@@ -126,7 +126,7 @@ void TTVRecord::SaveSource(std::ofstream &out)
    }
 }
 
-ClassImp(TTVSession)
+ClassImp(TTVSession);
 
 /** \class TTVSession
 I/O classes for TreeViewer session handling.

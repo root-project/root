@@ -75,7 +75,7 @@ Bool_t TIdleTimer::Notify()
 }
 
 
-ClassImp(TApplication)
+ClassImp(TApplication);
 
 static void CallEndOfProcessCleanups()
 {
@@ -123,7 +123,7 @@ TApplication::TApplication(const char *appClassName, Int_t *argc, char **argv,
    fFiles(0), fIdleTimer(0), fSigHandler(0), fExitOnException(kDontExit),
    fAppRemote(0)
 {
-   R__LOCKGUARD2(gInterpreterMutex);
+   R__LOCKGUARD(gInterpreterMutex);
 
    // Create the list of applications the first time
    if (!fgApplications)
@@ -476,8 +476,18 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
          if (arg) *arg = '\0';
          char *dir = gSystem->ExpandPathName(argv[i]);
          TUrl udir(dir, kTRUE);
+         // remove options and anchor to check the path
+         TString sfx = udir.GetFileAndOptions();
+         TString fln = udir.GetFile();
+         sfx.Replace(sfx.Index(fln), fln.Length(), "");
+         TString path = udir.GetFile();
+         if (strcmp(udir.GetProtocol(), "file")) {
+            path = udir.GetUrl();
+            path.Replace(path.Index(sfx), sfx.Length(), "");
+         }
+         // 'path' is the full URL without suffices (options and/or anchor)
          if (arg) *arg = '(';
-         if (!gSystem->GetPathInfo(dir, &id, &size, &flags, &modtime)) {
+         if (!arg && !gSystem->GetPathInfo(path.Data(), &id, &size, &flags, &modtime)) {
             if ((flags & 2)) {
                // if directory set it in fWorkDir
                if (pwd == "") {
@@ -491,7 +501,7 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
             } else if (size > 0) {
                // if file add to list of files to be processed
                if (!fFiles) fFiles = new TObjArray;
-               fFiles->Add(new TObjString(argv[i]));
+               fFiles->Add(new TObjString(path.Data()));
                argv[i] = null;
             } else {
                Warning("GetOptions", "file %s has size 0, skipping", dir);
@@ -1257,7 +1267,7 @@ void TApplication::SetEchoMode(Bool_t)
 
 void TApplication::CreateApplication()
 {
-   R__LOCKGUARD2(gROOTMutex);
+   R__LOCKGUARD(gROOTMutex);
    // gApplication is set at the end of 'new TApplication.
    if (!gApplication) {
       char *a = StrDup("RootApp");

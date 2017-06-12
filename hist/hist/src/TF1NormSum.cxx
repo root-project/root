@@ -26,7 +26,7 @@
 Class adding two functions: c1*f1+c2*f2
 */
 
-//ClassImp(TF1NormSum)
+//ClassImp(TF1NormSum);
 
 
 // function to find and rename duplicate parameters with the same name

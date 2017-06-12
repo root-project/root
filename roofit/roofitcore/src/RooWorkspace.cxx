@@ -76,17 +76,17 @@ using namespace std ;
 #include <string.h>
 #include <assert.h>
 
-ClassImp(RooWorkspace)
+ClassImp(RooWorkspace);
 ;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ClassImp(RooWorkspace::CodeRepo)
+ClassImp(RooWorkspace::CodeRepo);
 ;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ClassImp(RooWorkspace::WSDir)
+ClassImp(RooWorkspace::WSDir);
 ;
 
 list<string> RooWorkspace::_classDeclDirList ;
@@ -3090,3 +3090,27 @@ void RooWorkspace::unExport()
   delete iter ;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// If one of the TObject we have a referenced to is deleted, remove the
+/// reference.
+
+void RooWorkspace::RecursiveRemove(TObject *removedObj)
+{
+   _dataList.RecursiveRemove(removedObj);
+   if (removedObj == _dir) _dir = nullptr;
+
+   _allOwnedNodes.RecursiveRemove(removedObj); // RooArgSet
+
+   _dataList.RecursiveRemove(removedObj);
+   _embeddedDataList.RecursiveRemove(removedObj);
+   _views.RecursiveRemove(removedObj);
+   _snapshots.RecursiveRemove(removedObj);
+   _genObjects.RecursiveRemove(removedObj);
+   _studyMods.RecursiveRemove(removedObj);
+
+   for(auto c : _namedSets) {
+      c.second.RecursiveRemove(removedObj);
+   }
+
+   _eocache.RecursiveRemove(removedObj); // RooExpensiveObjectCache
+}

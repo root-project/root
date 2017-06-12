@@ -36,7 +36,7 @@ Look at RooDLLSignificanceMCStudyModule for an example of an implementation
 
 using namespace std;
 
-ClassImp(RooAbsMCStudyModule)
+ClassImp(RooAbsMCStudyModule);
   ;
 
 

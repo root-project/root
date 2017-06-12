@@ -37,41 +37,40 @@ namespace ROOT {
       class MixMaxEngineImpl;
 
       /**
-         Wrapper class for the MIXMAX Random number generator.
-         It is a matrix-recursive random number generator introduced by
+         MixMaxEngine is a wrapper class for the MIXMAX Random number generator.
+         MIXMAX is a matrix-recursive random number generator introduced by
          G. Savvidy.
 
-         See the real implementation in the mixmax.h and mixmax.cxx files.
-         The generator code is available also at hepforge: http://mixmax.hepforge.org
+         The real implementation of the generator, written in C, is in the mixmax.h and mixmax.cxx files.
+         This generator code is available also at hepforge: http://mixmax.hepforge.org
+         The MIXMAX code has been created and developed by Konstantin Savvidy and it is 
+         released under GNU Lesser General Public License v3.
 
+         This wrapper class provides 3 different variants of MIXMAX according to the template para extra parameter N. 
+         The extra parameter, `SkipNumber`, is used to perform additional iterations of the generator before returning the random numbers. For example, when `SkipNumber = 2`, the generator will have two extra iterations that will be discarder. 
 
-         Created by Konstantin Savvidy.
+         *  MIXMAX with N = 240. This is a new version of  the generator (version 2.0)  described in the 2016 paper (3rd reference), with 
+            special number $s=487013230256099140$, $m=2^{51}+1$ and having a period of $10^{4389}$. 
+          
+         *  MIXMAX with N = 17, from the 2.0 version with $s=0$ and $m=2^{36}+1$. The period of the generator is $10^{294}$. 
 
-         The code is released under GNU Lesser General Public License v3
+         *  MIXMAX with N = 256 from the 1.0 version. The period is (for `SkipNumber=0`) $10^{4682}$. For this generator we recommend using a default value of `SkipNumber=2`. 
+ 
 
-         References:
+         The References for MIXMAX are 
 
-         G.K.Savvidy and N.G.Ter-Arutyunian,
-         On the Monte Carlo simulation of physical systems,
-         J.Comput.Phys. 97, 566 (1991);
+         *  G.K.Savvidy and N.G.Ter-Arutyunian, *On the Monte Carlo simulation of physical systems,
+         J.Comput.Phys. 97, 566 (1991)*;
          Preprint EPI-865-16-86, Yerevan, Jan. 1986
 
-         K.Savvidy
-         The MIXMAX random number generator
+         *  K.Savvidy, *The MIXMAX random number generator*, 
          Comp. Phys. Commun. 196 (2015), pp 161–165
          http://dx.doi.org/10.1016/j.cpc.2015.06.003
 
-         K.Savvidy and G.Savvidy
-         Spectrum and Entropy of C-systems. MIXMAX random number generator
+         *  K.Savvidy and G.Savvidy, *Spectrum and Entropy of C-systems MIXMAX Random Number Generator*,
          Chaos, Solitons & Fractals, Volume 91, (2016) pp. 33–38
          http://dx.doi.org/10.1016/j.chaos.2016.05.003
-
-         The period of the generator is 10^4682 for N=256, and
-         10^1597 for N=88
-
-         This implementation is only a wrapper around the real implemention, see mixmax.cxx and mixmax.h
-         The generator, in C code, is available also at hepforge: http://mixmax.hepforge.org
-
+    
 
          @ingroup Random
       */

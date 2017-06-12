@@ -18,7 +18,7 @@
 #include "XSVarious.h"
 #include "XSElementList.h"
 
-//ClassImp(XSElementList)
+//ClassImp(XSElementList);
 
 /* ----- XSElementList ----- */
 XSElementList::XSElementList(TGWindow* p, Int_t sortby)

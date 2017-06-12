@@ -40,7 +40,7 @@
 #include "TGLabel.h"
 #include "TGDoubleSlider.h"
 
-ClassImp(TGeoSphereEditor)
+ClassImp(TGeoSphereEditor);
 
 enum ETGeoSphereWid {
    kSPHERE_NAME, kSPHERE_RMIN, kSPHERE_RMAX, kSPHERE_THETA1,

@@ -25,7 +25,7 @@
 
 #include <errno.h>
 
-ClassImp(TWin32Condition)
+ClassImp(TWin32Condition);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create Condition variable. Ctor must be given a pointer to an

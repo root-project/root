@@ -164,7 +164,7 @@ TProofProgressStatus *TPacketizerUnit::TSlaveStat::AddProcessed(TProofProgressSt
 
 //------------------------------------------------------------------------------
 
-ClassImp(TPacketizerUnit)
+ClassImp(TPacketizerUnit);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor

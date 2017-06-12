@@ -46,10 +46,12 @@
 #include "llvm/Analysis/LoopInfo.h"
 #include "llvm/Analysis/PostDominators.h"
 #include "llvm/Analysis/ValueTracking.h"
+#include "llvm/IR/ConstantRange.h"
 #include "llvm/IR/Dominators.h"
 #include "llvm/IR/IntrinsicInst.h"
 #include "llvm/IR/PatternMatch.h"
 #include "llvm/Support/Debug.h"
+#include "llvm/Support/KnownBits.h"
 #include "llvm/Transforms/Scalar.h"
 
 using namespace llvm;
@@ -536,9 +538,9 @@ bool GuardWideningImpl::parseRangeChecks(
     } else if (match(Check.getBase(),
                      m_Or(m_Value(OpLHS), m_ConstantInt(OpRHS)))) {
       unsigned BitWidth = OpLHS->getType()->getScalarSizeInBits();
-      APInt KnownZero(BitWidth, 0), KnownOne(BitWidth, 0);
-      computeKnownBits(OpLHS, KnownZero, KnownOne, DL);
-      if ((OpRHS->getValue() & KnownZero) == OpRHS->getValue()) {
+      KnownBits Known(BitWidth);
+      computeKnownBits(OpLHS, Known, DL);
+      if ((OpRHS->getValue() & Known.Zero) == OpRHS->getValue()) {
         Check.setBase(OpLHS);
         APInt NewOffset = Check.getOffsetValue() + OpRHS->getValue();
         Check.setOffset(ConstantInt::get(Ctx, NewOffset));
@@ -567,8 +569,7 @@ bool GuardWideningImpl::combineRangeChecks(
       return RC.getBase() == CurrentBase && RC.getLength() == CurrentLength;
     };
 
-    std::copy_if(Checks.begin(), Checks.end(),
-                 std::back_inserter(CurrentChecks), IsCurrentCheck);
+    copy_if(Checks, std::back_inserter(CurrentChecks), IsCurrentCheck);
     Checks.erase(remove_if(Checks, IsCurrentCheck), Checks.end());
 
     assert(CurrentChecks.size() != 0 && "We know we have at least one!");
@@ -612,16 +613,16 @@ bool GuardWideningImpl::combineRangeChecks(
     // We have a series of f+1 checks as:
     //
     //   I+k_0 u< L   ... Chk_0
-    //   I_k_1 u< L   ... Chk_1
+    //   I+k_1 u< L   ... Chk_1
     //   ...
-    //   I_k_f u< L   ... Chk_(f+1)
+    //   I+k_f u< L   ... Chk_f
     //
-    //     with forall i in [0,f): k_f-k_i u< k_f-k_0  ... Precond_0
+    //     with forall i in [0,f]: k_f-k_i u< k_f-k_0  ... Precond_0
     //          k_f-k_0 u< INT_MIN+k_f                 ... Precond_1
     //          k_f != k_0                             ... Precond_2
     //
     // Claim:
-    //   Chk_0 AND Chk_(f+1)  implies all the other checks
+    //   Chk_0 AND Chk_f  implies all the other checks
     //
     // Informal proof sketch:
     //
@@ -653,12 +654,16 @@ bool GuardWideningImpl::combineRangeChecks(
 }
 
 PreservedAnalyses GuardWideningPass::run(Function &F,
-                                         AnalysisManager<Function> &AM) {
+                                         FunctionAnalysisManager &AM) {
   auto &DT = AM.getResult<DominatorTreeAnalysis>(F);
   auto &LI = AM.getResult<LoopAnalysis>(F);
   auto &PDT = AM.getResult<PostDominatorTreeAnalysis>(F);
-  bool Changed = GuardWideningImpl(DT, PDT, LI).run();
-  return Changed ? PreservedAnalyses::none() : PreservedAnalyses::all();
+  if (!GuardWideningImpl(DT, PDT, LI).run())
+    return PreservedAnalyses::all();
+
+  PreservedAnalyses PA;
+  PA.preserveSet<CFGAnalyses>();
+  return PA;
 }
 
 StringRef GuardWideningImpl::scoreTypeToString(WideningScore WS) {

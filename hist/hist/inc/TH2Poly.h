@@ -71,18 +71,19 @@ public:
    TH2Poly(const char *name,const char *title, Int_t nX, Double_t xlow, Double_t xup,  Int_t nY, Double_t ylow, Double_t yup);
    virtual ~TH2Poly();
 
-   Int_t        AddBin(TObject *poly);
-   Int_t        AddBin(Int_t n, const Double_t *x, const Double_t *y);
-   Int_t        AddBin(Double_t x1, Double_t y1, Double_t x2, Double_t  y2);
+   virtual TH2PolyBin *CreateBin(TObject *poly);
+   virtual Int_t AddBin(TObject *poly);
+   Int_t         AddBin(Int_t n, const Double_t *x, const Double_t *y);
+   Int_t         AddBin(Double_t x1, Double_t y1, Double_t x2, Double_t  y2);
    virtual Bool_t Add(const TH1 *h1, Double_t c1);
    virtual Bool_t Add(const TH1 *h1, const TH1 *h2, Double_t c1=1, Double_t c2=1);
    virtual Bool_t Add(TF1 *h1, Double_t c1=1, Option_t *option="");
-   void         ClearBinContents();                 // Clears the content of all bins
-   TObject     *Clone(const char* newname = "") const;
-   void         ChangePartition(Int_t n, Int_t m);  // Sets the number of partition cells to another value
-   Int_t        Fill(Double_t x,Double_t y);
-   Int_t        Fill(Double_t x,Double_t y, Double_t w);
-   Int_t        Fill(const char* name, Double_t w);
+   void          ClearBinContents();                 // Clears the content of all bins
+   TObject      *Clone(const char* newname = "") const;
+   void          ChangePartition(Int_t n, Int_t m);  // Sets the number of partition cells to another value
+   virtual Int_t Fill(Double_t x,Double_t y);
+   virtual Int_t Fill(Double_t x,Double_t y, Double_t w);
+   virtual Int_t Fill(const char* name, Double_t w);
    void         FillN(Int_t ntimes, const Double_t* x, const Double_t* y, const Double_t* w, Int_t stride = 1);
    Int_t        Fill(Double_t){return -1;}                              //MayNotUse
    Int_t        Fill(Double_t , const char *, Double_t){return -1;}     //MayNotUse
@@ -91,13 +92,13 @@ public:
    void         FillN(Int_t, const Double_t*, const Double_t*, Int_t){return;}  //MayNotUse
    Int_t        FindBin(Double_t x, Double_t y, Double_t z = 0);
    TList       *GetBins(){return fBins;}                                // Returns the TList of all bins in the histogram
-   Double_t     GetBinContent(Int_t bin) const;
-   Double_t     GetBinContent(Int_t, Int_t) const {return 0;}           //MayNotUse
-   Double_t     GetBinContent(Int_t, Int_t, Int_t) const {return 0;}    //MayNotUse
+   virtual Double_t     GetBinContent(Int_t bin) const;
+   virtual Double_t     GetBinContent(Int_t, Int_t) const {return 0;}           //MayNotUse
+   virtual Double_t     GetBinContent(Int_t, Int_t, Int_t) const {return 0;}    //MayNotUse
    Bool_t       GetBinContentChanged() const{return fBinContentChanged;}
-   Double_t     GetBinError(Int_t bin) const;
-   Double_t     GetBinError(Int_t , Int_t) const {return 0;}            //MayNotUse
-   Double_t     GetBinError(Int_t , Int_t , Int_t) const {return 0;}    //MayNotUse
+   virtual Double_t GetBinError(Int_t bin) const;
+   virtual Double_t GetBinError(Int_t , Int_t) const {return 0;}            //MayNotUse
+   virtual Double_t GetBinError(Int_t , Int_t , Int_t) const {return 0;}    //MayNotUse
    const char  *GetBinName(Int_t bin) const;
    const char  *GetBinTitle(Int_t bin) const;
    Bool_t       GetFloat(){return fFloat;}
@@ -113,15 +114,18 @@ public:
    Double_t     Integral(Int_t, Int_t, Int_t, Int_t, const Option_t*) const{return 0;}               //MayNotUse
    Double_t     Integral(Int_t, Int_t, Int_t, Int_t, Int_t, Int_t, const Option_t*) const{return 0;} //MayNotUse
    Long64_t     Merge(TCollection *);
-   void         Reset(Option_t *option);
-   void         SavePrimitive(std::ostream& out, Option_t* option = "");
+   virtual void Reset(Option_t *option);
    virtual void Scale(Double_t c1 = 1, Option_t* option = "");
+   void         SavePrimitive(std::ostream& out, Option_t* option = "");
    void         SetBinContent(Int_t bin, Double_t content);
    void         SetBinContent(Int_t, Int_t, Double_t){return;}           //MayNotUse
    void         SetBinContent(Int_t, Int_t, Int_t, Double_t){return;}    //MayNotUse
    void         SetBinContentChanged(Bool_t flag){fBinContentChanged = flag;}
    void         SetFloat(Bool_t flag = true);
    void         SetNewBinAdded(Bool_t flag){fNewBinAdded = flag;}
+   Bool_t       IsInsideBin(Int_t binnr, Double_t x, Double_t y);
+   virtual void GetStats(Double_t *stats) const;
+
 
 protected:
     enum {

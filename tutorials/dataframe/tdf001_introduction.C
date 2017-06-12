@@ -106,8 +106,8 @@ int tdf001_introduction()
    auto b1VecCl = TClass::GetClass(typeid(*b1Vec));
    std::cout << "The type of b1Vec is" << b1VecCl->GetName() << std::endl;
 
-   // ### .Histo1D` action
-   // The .Histo1D` action allows to fill an histogram. It returns a TH1F filled
+   // ### `Histo1D` action
+   // The `Histo1D` action allows to fill an histogram. It returns a TH1F filled
    // with values of the column that passed the filters. For the most common
    // types, the type of the values stored in the column is automatically
    // guessed.

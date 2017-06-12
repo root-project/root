@@ -12,6 +12,9 @@
 #include "ROOT/TDFNodes.hxx"
 #include "ROOT/TSpinMutex.hxx"
 #include "ROOT/TTreeProcessorMT.hxx"
+#ifdef R__USE_IMT
+#include "ROOT/TThreadExecutor.hxx"
+#endif
 #include "RtypesCore.h" // Long64_t
 #include "TROOT.h"      // IsImplicitMTEnabled
 #include "TTreeReader.h"
@@ -22,58 +25,59 @@
 #include <string>
 class TDirectory;
 class TTree;
+using namespace ROOT::Detail::TDF;
+using namespace ROOT::Internal::TDF;
 
 namespace ROOT {
 namespace Internal {
+namespace TDF {
 
-TDataFrameActionBase::TDataFrameActionBase(ROOT::Detail::TDataFrameImpl *implPtr, const BranchNames_t &tmpBranches)
+TActionBase::TActionBase(TLoopManager *implPtr, const ColumnNames_t &tmpBranches)
    : fImplPtr(implPtr), fTmpBranches(tmpBranches)
 {
 }
 
+} // end NS TDF
 } // end NS Internal
+} // end NS ROOT
 
-namespace Detail {
-
-TDataFrameBranchBase::TDataFrameBranchBase(TDataFrameImpl *implPtr, const BranchNames_t &tmpBranches,
-                                           const std::string &name)
+TCustomColumnBase::TCustomColumnBase(TLoopManager *implPtr, const ColumnNames_t &tmpBranches, std::string_view name)
    : fImplPtr(implPtr), fTmpBranches(tmpBranches), fName(name){};
 
-BranchNames_t TDataFrameBranchBase::GetTmpBranches() const
+ColumnNames_t TCustomColumnBase::GetTmpBranches() const
 {
    return fTmpBranches;
 }
 
-std::string TDataFrameBranchBase::GetName() const
+std::string TCustomColumnBase::GetName() const
 {
    return fName;
 }
 
-TDataFrameImpl *TDataFrameBranchBase::GetImplPtr() const
+TLoopManager *TCustomColumnBase::GetImplPtr() const
 {
    return fImplPtr;
 }
 
-TDataFrameFilterBase::TDataFrameFilterBase(TDataFrameImpl *implPtr, const BranchNames_t &tmpBranches,
-                                           const std::string &name)
+TFilterBase::TFilterBase(TLoopManager *implPtr, const ColumnNames_t &tmpBranches, std::string_view name)
    : fImplPtr(implPtr), fTmpBranches(tmpBranches), fName(name){};
 
-TDataFrameImpl *TDataFrameFilterBase::GetImplPtr() const
+TLoopManager *TFilterBase::GetImplPtr() const
 {
    return fImplPtr;
 }
 
-BranchNames_t TDataFrameFilterBase::GetTmpBranches() const
+ColumnNames_t TFilterBase::GetTmpBranches() const
 {
    return fTmpBranches;
 }
 
-bool TDataFrameFilterBase::HasName() const
+bool TFilterBase::HasName() const
 {
    return !fName.empty();
 };
 
-void TDataFrameFilterBase::PrintReport() const
+void TFilterBase::PrintReport() const
 {
    if (fName.empty()) // PrintReport is no-op for unnamed filters
       return;
@@ -119,45 +123,90 @@ unsigned int TSlotStack::Pop()
    return fBuf[--fCursor];
 }
 
-TDataFrameImpl::TDataFrameImpl(TTree *tree, const BranchNames_t &defaultBranches)
-   : fTree(tree), fDefaultBranches(defaultBranches), fNSlots(ROOT::Internal::GetNSlots())
+TLoopManager::TLoopManager(TTree *tree, const ColumnNames_t &defaultBranches)
+   : fTree(std::shared_ptr<TTree>(tree, [](TTree *) {})), fDefaultBranches(defaultBranches),
+     fNSlots(TDFInternal::GetNSlots())
 {
 }
 
-void TDataFrameImpl::Run()
+TLoopManager::TLoopManager(Long64_t nEmptyEntries) : fNEmptyEntries(nEmptyEntries), fNSlots(TDFInternal::GetNSlots())
+{
+}
+
+void TLoopManager::RunAndCheckFilters(unsigned int slot, Long64_t entry)
+{
+   for (auto &actionPtr : fBookedActions) actionPtr->Run(slot, entry);
+   for (auto &namedFilterPtr : fBookedNamedFilters) namedFilterPtr->CheckFilters(slot, entry);
+}
+
+void TLoopManager::Run()
 {
 #ifdef R__USE_IMT
    if (ROOT::IsImplicitMTEnabled()) {
-      using ttpmt_t = ROOT::TTreeProcessorMT;
-      std::unique_ptr<ttpmt_t> tp;
-      tp.reset(new ttpmt_t(*fTree));
-
       TSlotStack slotStack(fNSlots);
       CreateSlots(fNSlots);
-      tp->Process([this, &slotStack](TTreeReader &r) -> void {
-         auto slot = slotStack.Pop();
-         BuildAllReaderValues(r, slot);
-         // recursive call to check filters and conditionally execute actions
-         while (r.Next()) {
-            const auto currEntry = r.GetCurrentEntry();
-            for (auto &actionPtr : fBookedActions) actionPtr->Run(slot, currEntry);
-            for (auto &namedFilterPtr : fBookedNamedFilters) namedFilterPtr->CheckFilters(slot, currEntry);
+
+      if (fNEmptyEntries > 0) {
+         // Working with an empty tree.
+         // Evenly partition the entries according to fNSlots
+         const auto nEntriesPerSlot = fNEmptyEntries / fNSlots;
+         auto remainder = fNEmptyEntries % fNSlots;
+         std::vector<std::pair<Long64_t, Long64_t>> entryRanges;
+         Long64_t start = 0;
+         while (start < fNEmptyEntries) {
+            Long64_t end = start + nEntriesPerSlot;
+            if (remainder > 0) {
+               ++end;
+               --remainder;
+            }
+            entryRanges.emplace_back(start, end);
+            start = end;
          }
-         slotStack.Push(slot);
-      });
+
+         // Each task will generate a subrange of entries
+         auto genFunction = [this, &slotStack](const std::pair<Long64_t, Long64_t> &range) {
+            auto slot = slotStack.Pop();
+            InitAllNodes(nullptr, slot);
+            for (auto currEntry = range.first; currEntry < range.second; ++currEntry) {
+               RunAndCheckFilters(slot, currEntry);
+            }
+            slotStack.Push(slot);
+         };
+
+         ROOT::TThreadExecutor pool;
+         pool.Foreach(genFunction, entryRanges);
+      } else {
+         using ttpmt_t = ROOT::TTreeProcessorMT;
+         std::unique_ptr<ttpmt_t> tp;
+         tp.reset(new ttpmt_t(*fTree));
+
+         tp->Process([this, &slotStack](TTreeReader &r) -> void {
+            auto slot = slotStack.Pop();
+            InitAllNodes(&r, slot);
+            // recursive call to check filters and conditionally execute actions
+            while (r.Next()) {
+               RunAndCheckFilters(slot, r.GetCurrentEntry());
+            }
+            slotStack.Push(slot);
+         });
+      }
    } else {
 #endif // R__USE_IMT
-      TTreeReader r(fTree);
-
       CreateSlots(1);
-      BuildAllReaderValues(r, 0);
+      if (fNEmptyEntries > 0) {
+         InitAllNodes(nullptr, 0);
+         for (Long64_t currEntry = 0; currEntry < fNEmptyEntries && fNStopsReceived < fNChildren; ++currEntry) {
+            RunAndCheckFilters(0, currEntry);
+         }
+      } else {
+         TTreeReader r(fTree.get());
+         InitAllNodes(&r, 0);
 
-      // recursive call to check filters and conditionally execute actions
-      // in the non-MT case processing can be stopped early by ranges, hence the check on fNStopsReceived
-      while (r.Next() && fNStopsReceived < fNChildren) {
-         const auto currEntry = r.GetCurrentEntry();
-         for (auto &actionPtr : fBookedActions) actionPtr->Run(0, currEntry);
-         for (auto &namedFilterPtr : fBookedNamedFilters) namedFilterPtr->CheckFilters(0, currEntry);
+         // recursive call to check filters and conditionally execute actions
+         // in the non-MT case processing can be stopped early by ranges, hence the check on fNStopsReceived
+         while (r.Next() && fNStopsReceived < fNChildren) {
+            RunAndCheckFilters(0, r.GetCurrentEntry());
+         }
       }
 #ifdef R__USE_IMT
    }
@@ -166,11 +215,11 @@ void TDataFrameImpl::Run()
    fHasRunAtLeastOnce = true;
    // forget actions
    fBookedActions.clear();
-   // make all TActionResultProxies ready
+   // make all TResultProxies ready
    for (auto readiness : fResProxyReadiness) {
       *readiness.get() = true;
    }
-   // forget TActionResultProxies
+   // forget TResultProxies
    fResProxyReadiness.clear();
 }
 
@@ -180,13 +229,13 @@ void TDataFrameImpl::Run()
 /// calls their `BuildReaderValues` methods. It is called once per node per slot, before
 /// running the event loop. It also informs each node of the TTreeReader that
 /// a particular slot will be using.
-void TDataFrameImpl::BuildAllReaderValues(TTreeReader &r, unsigned int slot)
+void TLoopManager::InitAllNodes(TTreeReader *r, unsigned int slot)
 {
    // booked branches must be initialized first
    // because actions and filters might need to point to the values encapsulate
-   for (auto &bookedBranch : fBookedBranches) bookedBranch.second->BuildReaderValues(r, slot);
-   for (auto &ptr : fBookedActions) ptr->BuildReaderValues(r, slot);
-   for (auto &ptr : fBookedFilters) ptr->BuildReaderValues(r, slot);
+   for (auto &bookedBranch : fBookedBranches) bookedBranch.second->Init(r, slot);
+   for (auto &ptr : fBookedActions) ptr->Init(r, slot);
+   for (auto &ptr : fBookedFilters) ptr->Init(r, slot);
 }
 
 /// Initialize all nodes of the functional graph before running the event loop
@@ -195,50 +244,45 @@ void TDataFrameImpl::BuildAllReaderValues(TTreeReader &r, unsigned int slot)
 /// calls their `CreateSlots` methods. It is called once per node before running the
 /// event loop. The main effect is to inform all nodes of the number of slots
 /// (i.e. workers) that will be used to perform the event loop.
-void TDataFrameImpl::CreateSlots(unsigned int nSlots)
+void TLoopManager::CreateSlots(unsigned int nSlots)
 {
    for (auto &ptr : fBookedActions) ptr->CreateSlots(nSlots);
    for (auto &ptr : fBookedFilters) ptr->CreateSlots(nSlots);
    for (auto &bookedBranch : fBookedBranches) bookedBranch.second->CreateSlots(nSlots);
 }
 
-TDataFrameImpl *TDataFrameImpl::GetImplPtr()
+TLoopManager *TLoopManager::GetImplPtr()
 {
    return this;
 }
 
-const BranchNames_t &TDataFrameImpl::GetDefaultBranches() const
+const ColumnNames_t &TLoopManager::GetDefaultBranches() const
 {
    return fDefaultBranches;
 }
 
-TTree *TDataFrameImpl::GetTree() const
+TTree *TLoopManager::GetTree() const
 {
-   return fTree;
+   return fTree.get();
 }
 
-TDataFrameBranchBase *TDataFrameImpl::GetBookedBranch(const std::string &name) const
+TCustomColumnBase *TLoopManager::GetBookedBranch(const std::string &name) const
 {
    auto it = fBookedBranches.find(name);
    return it == fBookedBranches.end() ? nullptr : it->second.get();
 }
 
-TDirectory *TDataFrameImpl::GetDirectory() const
+TDirectory *TLoopManager::GetDirectory() const
 {
    return fDirPtr;
 }
 
-std::string TDataFrameImpl::GetTreeName() const
-{
-   return fTree->GetName();
-}
-
-void TDataFrameImpl::Book(const ActionBasePtr_t &actionPtr)
+void TLoopManager::Book(const ActionBasePtr_t &actionPtr)
 {
    fBookedActions.emplace_back(actionPtr);
 }
 
-void TDataFrameImpl::Book(const ROOT::Detail::FilterBasePtr_t &filterPtr)
+void TLoopManager::Book(const FilterBasePtr_t &filterPtr)
 {
    fBookedFilters.emplace_back(filterPtr);
    if (filterPtr->HasName()) {
@@ -246,53 +290,50 @@ void TDataFrameImpl::Book(const ROOT::Detail::FilterBasePtr_t &filterPtr)
    }
 }
 
-void TDataFrameImpl::Book(const ROOT::Detail::TmpBranchBasePtr_t &branchPtr)
+void TLoopManager::Book(const TmpBranchBasePtr_t &branchPtr)
 {
    fBookedBranches[branchPtr->GetName()] = branchPtr;
 }
 
-void TDataFrameImpl::Book(const std::shared_ptr<bool> &readinessPtr)
+void TLoopManager::Book(const std::shared_ptr<bool> &readinessPtr)
 {
    fResProxyReadiness.emplace_back(readinessPtr);
 }
 
-void TDataFrameImpl::Book(const ROOT::Detail::RangeBasePtr_t &rangePtr)
+void TLoopManager::Book(const RangeBasePtr_t &rangePtr)
 {
    fBookedRanges.emplace_back(rangePtr);
 }
 
 // dummy call, end of recursive chain of calls
-bool TDataFrameImpl::CheckFilters(int, unsigned int)
+bool TLoopManager::CheckFilters(int, unsigned int)
 {
    return true;
 }
 
-unsigned int TDataFrameImpl::GetNSlots() const
+unsigned int TLoopManager::GetNSlots() const
 {
    return fNSlots;
 }
 
 /// Call `PrintReport` on all booked filters
-void TDataFrameImpl::Report() const
+void TLoopManager::Report() const
 {
    for (const auto &fPtr : fBookedNamedFilters) fPtr->PrintReport();
 }
 
-TDataFrameRangeBase::TDataFrameRangeBase(ROOT::Detail::TDataFrameImpl *implPtr, const BranchNames_t &tmpBranches,
-                                         unsigned int start, unsigned int stop, unsigned int stride)
+TRangeBase::TRangeBase(TLoopManager *implPtr, const ColumnNames_t &tmpBranches, unsigned int start, unsigned int stop,
+                       unsigned int stride)
    : fImplPtr(implPtr), fTmpBranches(tmpBranches), fStart(start), fStop(stop), fStride(stride)
 {
 }
 
-TDataFrameImpl *TDataFrameRangeBase::GetImplPtr() const
+TLoopManager *TRangeBase::GetImplPtr() const
 {
    return fImplPtr;
 }
 
-BranchNames_t TDataFrameRangeBase::GetTmpBranches() const
+ColumnNames_t TRangeBase::GetTmpBranches() const
 {
    return fTmpBranches;
 }
-
-} // end NS Detail
-} // end NS ROOT

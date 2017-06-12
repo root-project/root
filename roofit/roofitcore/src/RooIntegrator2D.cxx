@@ -38,7 +38,7 @@ in terms of a recursive application of RooIntegrator1D
 
 using namespace std;
 
-ClassImp(RooIntegrator2D)
+ClassImp(RooIntegrator2D);
 ;
 
 

@@ -38,7 +38,7 @@
 #include "TGLabel.h"
 #include "TCanvas.h"
 
-ClassImp(TPadEditor)
+ClassImp(TPadEditor);
 
 enum EPadWid {
    kCOLOR,

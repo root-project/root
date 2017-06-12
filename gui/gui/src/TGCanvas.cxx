@@ -78,9 +78,9 @@ const Int_t kAutoScrollFudge = 10;
 const Int_t kAcceleration[kAutoScrollFudge+1] = {1,1,1,2,3,4,6,7,8,16,32};
 const Int_t kKeyboardTime = 700;
 
-ClassImp(TGCanvas)
-ClassImp(TGViewPort)
-ClassImp(TGContainer)
+ClassImp(TGCanvas);
+ClassImp(TGViewPort);
+ClassImp(TGContainer);
 
 
 ////////////////////////////////////////////////////////////////////////////////

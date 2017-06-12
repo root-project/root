@@ -70,6 +70,7 @@ Int_t stressRooStats(const char* refFile, Bool_t writeRef, Int_t verbose, Bool_t
    const Int_t lineWidth = 120;
 
    // Save memory directory location
+   auto memDir = gDirectory;
    RooUnitTest::setMemDir(gDirectory) ;
 
    if (doTreeStore) {
@@ -280,6 +281,17 @@ Int_t stressRooStats(const char* refFile, Bool_t writeRef, Int_t verbose, Bool_t
 
    delete gBenchmark ;
    gBenchmark = 0 ;
+
+   // Some of the object are multiple times in the list, let's make sure they
+   // are not deleted twice.
+   // The addition of memDir to the list of Cleanups is not needed if it already
+   // there, for example if memDir is gROOT.
+   bool needCleanupAdd = nullptr == gROOT->GetListOfCleanups()->FindObject(memDir->GetList());
+   if (needCleanupAdd) gROOT->GetListOfCleanups()->Add(memDir->GetList());
+
+   memDir->GetList()->Delete("slow");
+
+   if (needCleanupAdd) gROOT->GetListOfCleanups()->Remove(memDir->GetList());
 
    return nFailed;
 }

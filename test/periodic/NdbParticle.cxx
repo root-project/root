@@ -1,3 +1,3 @@
 #include "NdbParticle.h"
 
-ClassImp(NdbParticle)
+ClassImp(NdbParticle);

@@ -85,7 +85,7 @@ several methods to manage them.
 #include "fitsio.h"
 #include <stdlib.h>
 
-ClassImp(TFITSHDU)
+ClassImp(TFITSHDU);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Clean path from possible filter and put the result in 'dst'.
@@ -1058,15 +1058,12 @@ TVectorD* TFITSHDU::GetArrayRow(UInt_t row)
    }
 
    offset = W * row;
-   double *v = new double[W];
+   TVectorD *vec = new TVectorD(W);
+   double *v = vec->GetMatrixArray();
 
    for (i = 0; i < W; i++) {
       v[i] = fPixels->GetAt(offset+i);
    }
-
-   TVectorD *vec = new TVectorD(W, v);
-
-   delete [] v;
 
    return vec;
 }
@@ -1097,15 +1094,13 @@ TVectorD* TFITSHDU::GetArrayColumn(UInt_t col)
       return 0;
    }
 
-   double *v = new double[H];
+   TVectorD *vec = new TVectorD(H);
+   double *v = vec->GetMatrixArray();
 
    for (i = 0; i < H; i++) {
       v[i] = fPixels->GetAt(W*i+col);
    }
 
-   TVectorD *vec = new TVectorD(H, v);
-
-   delete [] v;
 
    return vec;
 }
@@ -1213,14 +1208,12 @@ TVectorD* TFITSHDU::GetTabRealVectorColumn(Int_t colnum)
 
    Int_t offset = colnum * fNRows;
 
-   Double_t *arr = new Double_t[fNRows];
+   TVectorD *res = new TVectorD(fNRows);
+   Double_t *arr = res->GetMatrixArray();
 
    for (Int_t row = 0; row < fNRows; row++) {
       arr[row] = fCells[offset + row].fRealNumber;
    }
-
-   TVectorD *res = new TVectorD();
-   res->Use(fNRows, arr);
 
    return res;
 }
@@ -1252,14 +1245,12 @@ TVectorD* TFITSHDU::GetTabRealVectorColumn(const char *colname)
 
    Int_t offset = colnum * fNRows;
 
-   Double_t *arr = new Double_t[fNRows];
+   TVectorD *res = new TVectorD(fNRows);
+   Double_t *arr = res->GetMatrixArray();
 
    for (Int_t row = 0; row < fNRows; row++) {
       arr[row] = fCells[offset + row].fRealNumber;
    }
-
-   TVectorD *res = new TVectorD();
-   res->Use(fNRows, arr);
 
    return res;
 }

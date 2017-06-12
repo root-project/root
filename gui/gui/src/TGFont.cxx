@@ -49,9 +49,9 @@
 #include "TMath.h"
 
 
-ClassImp(TGFont)
-ClassImp(TGFontPool)
-ClassImp(TGTextLayout)
+ClassImp(TGFont);
+ClassImp(TGFontPool);
+ClassImp(TGTextLayout);
 
 #define FONT_FAMILY     0
 #define FONT_SIZE       1

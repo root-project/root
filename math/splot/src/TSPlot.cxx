@@ -20,7 +20,7 @@
 
 extern void Yields(Int_t &, Double_t *, Double_t &f, Double_t *x, Int_t iflag);
 
-ClassImp(TSPlot)
+ClassImp(TSPlot);
 
 //____________________________________________________________________
 //Begin_Html <!--
@@ -674,9 +674,9 @@ void TSPlot::FillXvarHists(Int_t nbins)
    }
 
    //make the histograms
-   char name[10];
+   char name[12];
    for (i=0; i<fNx; i++){
-      snprintf(name,10, "x%d", i);
+      snprintf(name,sizeof(name), "x%d", i);
       TH1D *h = new TH1D(name, name, nbins, fMinmax(0, i), fMinmax(1, i));
       for (j=0; j<fNevents; j++)
          h->Fill(fXvar(j, i));
@@ -731,9 +731,9 @@ void TSPlot::FillYvarHists(Int_t nbins)
    }
 
    //make the histograms
-   char name[10];
+   char name[12];
    for (i=0; i<fNy; i++){
-      snprintf(name,10, "y%d", i);
+      snprintf(name,sizeof(name), "y%d", i);
       TH1D *h=new TH1D(name, name, nbins, fMinmax(0, fNx+i), fMinmax(1, fNx+i));
       for (j=0; j<fNevents; j++)
          h->Fill(fYvar(j, i));
@@ -783,10 +783,10 @@ void TSPlot::FillYpdfHists(Int_t nbins)
          return;
    }
 
-   char name[30];
+   char name[34];
    for (ispecies=0; ispecies<fNSpecies; ispecies++){
       for (i=0; i<fNy; i++){
-         snprintf(name,30, "pdf_species%d_y%d", ispecies, i);
+         snprintf(name,sizeof(name), "pdf_species%d_y%d", ispecies, i);
          //TH1D *h = new TH1D(name, name, nbins, ypdfmin[ispecies*fNy+i], ypdfmax[ispecies*fNy+i]);
          TH1D *h = new TH1D(name, name, nbins, fMinmax(0, fNx+fNy+ispecies*fNy+i), fMinmax(1, fNx+fNy+ispecies*fNy+i));
          for (j=0; j<fNevents; j++)

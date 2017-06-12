@@ -18,7 +18,7 @@
 #include "TVirtualPadEditor.h"
 #include "TColor.h"
 
-ClassImp(TAttMarker)
+ClassImp(TAttMarker);
 
 /** \class TAttMarker
 \ingroup Base
@@ -105,6 +105,21 @@ accessed via a global name (third column).
        32                    open triangle down   kOpenTriangleDown
        33                    full diamond         kFullDiamond
        34                    full cross           kFullCross
+       35                    open diamond cross   kOpenDiamondCross
+       36                    open square diagonal kOpenSquareDiagonal
+       37                    open three triangle  kOpenThreeTriangles
+       38                    octagon with cross   kOctagonCross
+       39                    full three trangles  kFullThreeTriangles
+       40                    open four triangleX  kOpenFourTrianglesX
+       41                    full four triangleX  kFullFourTrianglesX
+       42                    open double diamond  kOpenDoubleDiamond
+       43                    full double diamond  kFullDoubleDiamond
+       44                    open four triangle+  kOpenFourTrianglesPlus
+       45                    full four triangle+  kFullFourTrianglesPlus
+       46                    open cross X         kOpenCrossX
+       47                    full cross X         kFullCrossX
+       48                    four squares X       kFourSquaresX
+       49                    four squares+        kFourSquaresPlus
 ~~~
 
 Begin_Macro

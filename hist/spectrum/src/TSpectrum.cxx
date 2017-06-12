@@ -42,7 +42,7 @@ Int_t TSpectrum::fgIterations    = 3;
 Int_t TSpectrum::fgAverageWindow = 3;
 
 #define PEAK_WINDOW 1024
-ClassImp(TSpectrum)
+ClassImp(TSpectrum);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

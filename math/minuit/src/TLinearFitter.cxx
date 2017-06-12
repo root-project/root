@@ -23,7 +23,7 @@
 #include "TClass.h"
 #include "TROOT.h"
 
-ClassImp(TLinearFitter)
+ClassImp(TLinearFitter);
 
 
 std::map<TString,TFormula*> TLinearFitter::fgFormulaMap;
@@ -1573,11 +1573,11 @@ void TLinearFitter::SetFormula(const char *formula)
       fFunctions.Expand(fNfunctions);
 
       //check if the old notation of xi is used somewhere instead of x[i]
-      char pattern[5];
-      char replacement[6];
+      char pattern[12];
+      char replacement[14];
       for (i=0; i<fNdim; i++){
-         snprintf(pattern,5, "x%d", i);
-         snprintf(replacement,6, "x[%d]", i);
+         snprintf(pattern,sizeof(pattern), "x%d", i);
+         snprintf(replacement,sizeof(replacement), "x[%d]", i);
          sstring = sstring.ReplaceAll(pattern, Int_t(i/10)+2, replacement, Int_t(i/10)+4);
       }
 
@@ -1594,7 +1594,7 @@ void TLinearFitter::SetFormula(const char *formula)
             // create a new formula and add in the static map
             f = new TFormula("f", replaceformula.Data());
             {
-               R__LOCKGUARD2(gROOTMutex);
+               R__LOCKGUARD(gROOTMutex);
                fgFormulaMap[replaceformula]=f;
             }
          }

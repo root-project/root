@@ -61,7 +61,7 @@ Cursor_t TGDragWindow::fgDefaultCursor = kNone;
 // Window used as drag icon during drag and drop operations.
 //_____________________________________________________________________________
 
-ClassImp(TGDragWindow)
+ClassImp(TGDragWindow);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TGDragWindow constructor.
@@ -184,7 +184,7 @@ void TGDragWindow::DoRedraw()
 // Central Drag and Drop manager for ROOT.
 //_____________________________________________________________________________
 
-ClassImp(TGDNDManager)
+ClassImp(TGDNDManager);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TGDNDManager constructor.

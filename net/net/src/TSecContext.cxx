@@ -29,8 +29,8 @@
 #include "TError.h"
 #include "TVirtualMutex.h"
 
-ClassImp(TSecContext)
-ClassImp(TSecContextCleanup)
+ClassImp(TSecContext);
+ClassImp(TSecContextCleanup);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Ctor for SecContext object.
@@ -62,7 +62,7 @@ TSecContext::TSecContext(const char *user, const char *host, Int_t meth,
 
    // Keep official list updated with active TSecContexts
    if (fOffSet > -1) {
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfSecContexts()->Add(this);
    }
 }
@@ -98,7 +98,7 @@ TSecContext::TSecContext(const char *url, Int_t meth, Int_t offset,
 
    // Keep official list updated with active TSecContexts
    if (fOffSet > -1) {
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfSecContexts()->Add(this);
    }
 }
@@ -194,7 +194,7 @@ void TSecContext::DeActivate(Option_t *Opt)
 
    Bool_t remove = (strstr(Opt,"R") || strstr(Opt,"r"));
    if (remove && fOffSet > -1){
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       // Remove from the global list
       gROOT->GetListOfSecContexts()->Remove(this);
    }

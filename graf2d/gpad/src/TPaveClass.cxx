@@ -13,7 +13,7 @@
 #include "Buttons.h"
 #include "TPaveClass.h"
 
-ClassImp(TPaveClass)
+ClassImp(TPaveClass);
 
 
 /** \class TPaveClass

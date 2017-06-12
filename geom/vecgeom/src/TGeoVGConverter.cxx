@@ -15,7 +15,7 @@
 #include "TGeoVGConverter.h"
 #include "TGeoVGShape.h"
 
-ClassImp(TGeoVGConverter)
+ClassImp(TGeoVGConverter);
 
 ////////////////////////////////////////////////////////////////////////////////
 ///*-*-*-*-*-*-*-*-*-*-*Geometry converter default constructor*-*-*-*-*-*-*-*-*

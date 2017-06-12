@@ -18,7 +18,7 @@ using namespace TMVA;
 
 REGISTER_METHOD(PyKeras)
 
-ClassImp(MethodPyKeras)
+ClassImp(MethodPyKeras);
 
 MethodPyKeras::MethodPyKeras(const TString &jobName, const TString &methodTitle, DataSetInfo &dsi, const TString &theOption)
    : PyMethodBase(jobName, Types::kPyKeras, methodTitle, dsi, theOption) {

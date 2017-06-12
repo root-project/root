@@ -30,8 +30,8 @@ using namespace std ;
 
 #ifndef ROOFIT_R__NO_CLASS_TEMPLATE_SPECIALIZATION
 #define ROOFIT_R__NO_CLASS_TEMPLATE_SPECIALIZATION
-templateClassImp(RooCFunction2Binding)
-templateClassImp(RooCFunction2Ref)
+templateClassImp(RooCFunction2Binding);
+templateClassImp(RooCFunction2Ref);
 #endif
 
 

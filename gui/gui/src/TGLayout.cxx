@@ -56,16 +56,16 @@
 #include "Riostream.h"
 
 
-ClassImp(TGLayoutHints)
-ClassImp(TGLayoutManager)
-ClassImp(TGVerticalLayout)
-ClassImp(TGHorizontalLayout)
-ClassImp(TGRowLayout)
-ClassImp(TGColumnLayout)
-ClassImp(TGMatrixLayout)
-ClassImp(TGTileLayout)
-ClassImp(TGListLayout)
-ClassImp(TGListDetailsLayout)
+ClassImp(TGLayoutHints);
+ClassImp(TGLayoutManager);
+ClassImp(TGVerticalLayout);
+ClassImp(TGHorizontalLayout);
+ClassImp(TGRowLayout);
+ClassImp(TGColumnLayout);
+ClassImp(TGMatrixLayout);
+ClassImp(TGTileLayout);
+ClassImp(TGListLayout);
+ClassImp(TGListDetailsLayout);
 
 
 ////////////////////////////////////////////////////////////////////////////////

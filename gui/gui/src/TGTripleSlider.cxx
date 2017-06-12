@@ -68,8 +68,8 @@
 #include "TSystem.h"
 #include <stdlib.h>
 
-ClassImp(TGTripleVSlider)
-ClassImp(TGTripleHSlider)
+ClassImp(TGTripleVSlider);
+ClassImp(TGTripleHSlider);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a vertical slider widget.

@@ -9,7 +9,7 @@
  *************************************************************************/
 
 #include "RConfigure.h"      // R__USE_IMT
-#include "ROOT/TDFNodes.hxx" // ColumnName2ColumnTypeName requires TDataFrameBranchBase
+#include "ROOT/TDFNodes.hxx" // ColumnName2ColumnTypeName requires TCustomColumnBase
 #include "ROOT/TDFUtils.hxx"
 #include "TBranch.h"
 #include "TBranchElement.h"
@@ -19,16 +19,22 @@
 #include <stdexcept>
 #include <string>
 class TTree;
+using namespace ROOT::Detail::TDF;
 
 namespace ROOT {
 namespace Internal {
+namespace TDF {
 
 /// Return a string containing the type of the given branch. Works both with real TTree branches and with temporary
 /// column created by Define.
-std::string ColumnName2ColumnTypeName(const std::string &colName, TTree &tree,
-                                      ROOT::Detail::TDataFrameBranchBase *tmpBranch)
+std::string ColumnName2ColumnTypeName(const std::string &colName, TTree *tree, TCustomColumnBase *tmpBranch)
 {
-   if (auto branch = tree.GetBranch(colName.c_str())) {
+   if (!tree and !tmpBranch) {
+      throw std::runtime_error("No tree and no tmp branch!");
+   }
+   TBranch* branch = nullptr;
+   if (tree) branch = tree->GetBranch(colName.c_str());
+   if (branch) {
       // this must be a real TTree branch
       static const TClassRef tbranchelRef("TBranchElement");
       if (branch->InheritsFrom(tbranchelRef)) {
@@ -125,25 +131,30 @@ unsigned int GetNSlots()
    return nSlots;
 }
 
-void CheckTmpBranch(const std::string &branchName, TTree *treePtr)
+void CheckTmpBranch(std::string_view branchName, TTree *treePtr)
 {
-   auto branch = treePtr->GetBranch(branchName.c_str());
-   if (branch != nullptr) {
-      auto msg = "branch \"" + branchName + "\" already present in TTree";
-      throw std::runtime_error(msg);
+   if (treePtr != nullptr) {
+      std::string branchNameInt(branchName);
+      auto branch = treePtr->GetBranch(branchNameInt.c_str());
+      if (branch != nullptr) {
+         auto msg = "branch \"" + branchNameInt + "\" already present in TTree";
+         throw std::runtime_error(msg);
+      }
    }
 }
 
 /// Returns local BranchNames or default BranchNames according to which one should be used
-const BranchNames_t &PickBranchNames(unsigned int nArgs, const BranchNames_t &bl, const BranchNames_t &defBl)
+const ColumnNames_t &PickBranchNames(unsigned int nArgs, const ColumnNames_t &bl, const ColumnNames_t &defBl)
 {
    bool useDefBl = false;
    if (nArgs != bl.size()) {
       if (bl.size() == 0 && nArgs == defBl.size()) {
          useDefBl = true;
       } else {
-         auto msg = "mismatch between number of filter arguments (" + std::to_string(nArgs) +
-                    ") and number of branches (" + std::to_string(bl.size() ? bl.size() : defBl.size()) + ")";
+         auto msg = "mismatch between number of filter/define arguments (" + std::to_string(nArgs) +
+                    ") and number of columns specified (" + std::to_string(bl.size() ? bl.size() : defBl.size()) +
+                    "). Please check the number of arguments of the function/lambda/functor and the number of branches "
+                    "specified.";
          throw std::runtime_error(msg);
       }
    }
@@ -151,5 +162,6 @@ const BranchNames_t &PickBranchNames(unsigned int nArgs, const BranchNames_t &bl
    return useDefBl ? defBl : bl;
 }
 
+} // end NS TDF
 } // end NS Internal
 } // end NS ROOT

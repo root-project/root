@@ -26,7 +26,7 @@
 #include <sqlext.h>
 
 
-ClassImp(TODBCServer)
+ClassImp(TODBCServer);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Open a connection to a ODBC server. The db arguments can be:

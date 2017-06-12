@@ -10,9 +10,9 @@
 ///
 /// \author Rene Brun
 
-void copytree() {
-   gSystem->Load("$ROOTSYS/test/libEvent");
+R__LOAD_LIBRARY($ROOTSYS/test/libEvent.so)
 
+void copytree() {
    //Get old file, old tree and set top branch address
    TFile *oldfile;
    TString dir = "$ROOTSYS/test/Event.root";

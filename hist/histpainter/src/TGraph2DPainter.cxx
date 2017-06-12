@@ -29,7 +29,7 @@
 R__EXTERN TH1  *gCurrentHist;
 R__EXTERN Hoption_t Hoption;
 
-ClassImp(TGraph2DPainter)
+ClassImp(TGraph2DPainter);
 
 
 ////////////////////////////////////////////////////////////////////////////////

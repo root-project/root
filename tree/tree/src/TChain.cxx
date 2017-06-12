@@ -53,8 +53,9 @@ the trees in the chain.
 #include "TEntryListFromFile.h"
 #include "TFileStager.h"
 #include "TFilePrefetch.h"
+#include "TVirtualMutex.h"
 
-ClassImp(TChain)
+ClassImp(TChain);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
@@ -76,7 +77,7 @@ TChain::TChain()
    fFiles = new TObjArray(fTreeOffsetLen);
    fStatus = new TList();
    fTreeOffset[0]  = 0;
-   gDirectory->Remove(this);
+   if (gDirectory) gDirectory->Remove(this);
    gROOT->GetListOfSpecials()->Add(this);
    fFile = 0;
    fDirectory = 0;
@@ -89,6 +90,7 @@ TChain::TChain()
    gROOT->GetListOfDataSets()->Add(this);
 
    // Make sure we are informed if the TFile is deleted.
+   R__LOCKGUARD(gROOTMutex);
    gROOT->GetListOfCleanups()->Add(this);
 }
 
@@ -152,7 +154,7 @@ TChain::TChain(const char* name, const char* title)
    fFiles = new TObjArray(fTreeOffsetLen);
    fStatus = new TList();
    fTreeOffset[0]  = 0;
-   gDirectory->Remove(this);
+   if (gDirectory) gDirectory->Remove(this);
    gROOT->GetListOfSpecials()->Add(this);
    fFile = 0;
    fDirectory = 0;
@@ -165,6 +167,7 @@ TChain::TChain(const char* name, const char* title)
    gROOT->GetListOfDataSets()->Add(this);
 
    // Make sure we are informed if the TFile is deleted.
+   R__LOCKGUARD(gROOTMutex);
    gROOT->GetListOfCleanups()->Add(this);
 }
 
@@ -175,7 +178,10 @@ TChain::~TChain()
 {
    bool rootAlive = gROOT && !gROOT->TestBit(TObject::kInvalidObject);
 
-   if (rootAlive) gROOT->GetListOfCleanups()->Remove(this);
+   if (rootAlive) {
+      R__LOCKGUARD(gROOTMutex);
+      gROOT->GetListOfCleanups()->Remove(this);
+   }
 
    SafeDelete(fProofChain);
    fStatus->Delete();
@@ -2049,10 +2055,18 @@ Long64_t TChain::Merge(TFile* file, Int_t basketsize, Option_t* option)
 /// both the url query identifier and a wildcard. Wildcard matching is not
 /// done in this method itself.
 /// ~~~ {.cpp}
-///     /a/path/file.root[/treename]
-///     xxx://a/path/file.root[/treename][?query]
-///     xxx://a/path/file.root[?query[#treename]]
+///     [xxx://host]/a/path/file.root[/treename]
+///     [xxx://host]/a/path/file.root[/treename][?query]
+///     [xxx://host]/a/path/file.root[?query[#treename]]
 /// ~~~
+///
+/// Note that in a case like this
+/// ~~~ {.cpp}
+///     [xxx://host]/a/path/file#treename
+/// ~~~
+/// i.e. anchor but no options (query), the filename will be the full path, as the
+/// ancho may be the internal file name of an archive.
+///
 /// \param[in] name        is the original name
 /// \param[in] wildcards   indicates if the resulting filename will be treated for
 ///                        wildcards. For backwards compatibility, with most protocols
@@ -2069,76 +2083,47 @@ Long64_t TChain::Merge(TFile* file, Int_t basketsize, Option_t* option)
 ///                        a fragment this will be empty.
 /// \param[out] suffix     the portion of name which was removed to form filename.
 
-void TChain::ParseTreeFilename(const char *name, TString &filename, TString &treename, TString &query, TString &suffix, Bool_t wildcards) const
+void TChain::ParseTreeFilename(const char *name, TString &filename, TString &treename, TString &query, TString &suffix,
+                               Bool_t) const
 {
-   Ssiz_t pIdx;
-   Bool_t isUrl = kFALSE;
-   Bool_t isUrlDoFull = kFALSE;
+   Ssiz_t pIdx = kNPOS;
    filename = name;
    treename.Clear();
    query.Clear();
    suffix.Clear();
 
-   pIdx = filename.Index("://");
-   if (pIdx != kNPOS && pIdx > 0 && filename.Index("/") > pIdx) {
-      // filename has a url format "xxx://"
-      // decide if to do full search for url query and fragment identifiers
-      isUrl = kTRUE;
-      if (wildcards) {
-         TUrl url(name);
-         if (url.IsValid()) {
-            TString proto = url.GetProtocol();
-            if (proto == "http" || proto == "https") {
-               isUrlDoFull = kTRUE;
-            }
-         }
-      } else {
-         isUrlDoFull = kTRUE;
-      }
+   // General case
+   TUrl url(name, kTRUE);
+
+   TString fn = url.GetFile();
+   // Extract query (and treename, if any)
+   if (url.GetOptions() && (strlen(url.GetOptions()) > 0)) {
+      query.Form("?%s", url.GetOptions());
+      // The treename can be passed as anchor in this case
+      treename = url.GetAnchor();
+      // Suffix
+      suffix = url.GetFileAndOptions();
+      suffix.Replace(suffix.Index(fn), fn.Length(), "");
+      // Remove it from the file name
+      filename.Remove(filename.Index(fn) + fn.Length());
    }
 
-   if (isUrlDoFull) {
-      pIdx = filename.Index("?");
-      if (pIdx != kNPOS) {
-         query = filename(pIdx,filename.Length()-pIdx);
-         suffix = filename(pIdx, filename.Length()-pIdx);
-         filename.Remove(pIdx);
-      }
-      pIdx = query.Index("#");
-      if (pIdx != kNPOS) {
-         treename = query(pIdx+1,query.Length()-pIdx-1);
-         query.Remove(pIdx);
-         if (query.Length() == 1) {
-            // was only followed by the fragment
-            query.Clear();
-         }
-      }
+   // Special case: [...]file.root/treename
+   static const char *dotr = ".root/";
+   static Ssiz_t dotrl = strlen(dotr);
+   // Find the last one
+   Ssiz_t js = filename.Index(dotr);
+   while (js != kNPOS) {
+      pIdx = js;
+      js = filename.Index(dotr, js + 1);
    }
-
-   if (treename.IsNull()) {
-      Ssiz_t dotSlashPos = kNPOS;
-      pIdx = filename.Index(".root");
-      while(pIdx != kNPOS) {
-         dotSlashPos = pIdx;
-         pIdx = filename.Index(".root",dotSlashPos+1);
-      }
-      if (dotSlashPos != kNPOS && filename[dotSlashPos+5]!='/') {
-         // We found the 'last' .root in the name and it is not followed by
-         // a '/', so the tree name is _not_ specified in the name.
-         dotSlashPos = kNPOS;
-      }
-      if (dotSlashPos != kNPOS) {
-         // Copy the tree name specification and remove it from filename
-         treename = filename(dotSlashPos+6,filename.Length()-dotSlashPos-6);
-         suffix.Prepend(filename(dotSlashPos+5, filename.Length()-dotSlashPos-5));
-         filename.Remove(dotSlashPos+5);
-      }
-      if (isUrl && !isUrlDoFull) {
-         pIdx = treename.Index("?");
-         if (pIdx != kNPOS) {
-            query = treename(pIdx,treename.Length()-pIdx);
-            treename.Remove(pIdx);
-         }
+   if (pIdx != kNPOS) {
+      TString tn = filename(pIdx + dotrl, filename.Length());
+      if (!tn.EndsWith(".root")) {
+         // Good treename
+         treename = tn;
+         filename.Remove(pIdx + dotrl - 1);
+         suffix.Insert(0, TString::Format("/%s", treename.Data()));
       }
    }
 }
@@ -2831,7 +2816,10 @@ void TChain::Streamer(TBuffer& b)
 {
    if (b.IsReading()) {
       // Remove using the 'old' name.
-      gROOT->GetListOfCleanups()->Remove(this);
+      {
+         R__LOCKGUARD(gROOTMutex);
+         gROOT->GetListOfCleanups()->Remove(this);
+      }
 
       UInt_t R__s, R__c;
       Version_t R__v = b.ReadVersion(&R__s, &R__c);
@@ -2852,7 +2840,10 @@ void TChain::Streamer(TBuffer& b)
          //====end of old versions
       }
       // Re-add using the new name.
-      gROOT->GetListOfCleanups()->Add(this);
+      {
+         R__LOCKGUARD(gROOTMutex);
+         gROOT->GetListOfCleanups()->Add(this);
+      }
 
    } else {
       b.WriteClassBuffer(TChain::Class(),this);

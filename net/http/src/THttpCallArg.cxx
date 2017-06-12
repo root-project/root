@@ -24,7 +24,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-ClassImp(THttpCallArg)
+ClassImp(THttpCallArg);
 
    ////////////////////////////////////////////////////////////////////////////////
    /// constructor
@@ -32,7 +32,7 @@ ClassImp(THttpCallArg)
    THttpCallArg::THttpCallArg()
    : TObject(), fTopName(), fMethod(), fPathName(), fFileName(), fUserName(), fQuery(), fPostData(0),
      fPostDataLength(0), fWSHandle(0), fWSId(0), fContentType(), fRequestHeader(), fHeader(), fContent(), fZipping(0),
-     fBinData(0), fBinDataLength(0)
+     fBinData(0), fBinDataLength(0), fNotifyFlag(kFALSE)
 {
 }
 
@@ -311,4 +311,26 @@ Bool_t THttpCallArg::CompressWithGzip()
    SetEncoding("gzip");
 
    return kTRUE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// method used to notify condition which waiting when operation will complete
+/// Condition notified only if not-postponed state is set
+
+void THttpCallArg::NotifyCondition()
+{
+   if (!fNotifyFlag && !IsPostponed()) {
+      fNotifyFlag = kTRUE;
+      HttpReplied();
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// virtual method to inform object that http request is processed
+/// Normally condition is notified and waiting thread will be awaked
+/// One could reimplement this method in sub-class
+
+void THttpCallArg::HttpReplied()
+{
+   fCond.notify_one();
 }

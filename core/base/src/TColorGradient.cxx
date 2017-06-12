@@ -32,7 +32,7 @@ without re-writing all the graphics code.
 #include "TError.h"
 #include "TROOT.h"
 
-ClassImp(TColorGradient)
+ClassImp(TColorGradient);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -184,7 +184,7 @@ void TColorGradient::RegisterColor(Color_t colorIndex)
    }
 }
 
-ClassImp(TLinearGradient)
+ClassImp(TLinearGradient);
 
 /** \class TLinearGradient
 Define a linear color gradient.
@@ -237,7 +237,7 @@ const TColorGradient::Point &TLinearGradient::GetEnd()const
    return fEnd;
 }
 
-ClassImp(TRadialGradient)
+ClassImp(TRadialGradient);
 
 /** \class TRadialGradient
 Define a radial color gradient

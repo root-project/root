@@ -34,7 +34,7 @@ Flat p.d.f. in N dimensions
 
 using namespace std;
 
-ClassImp(RooUniform)
+ClassImp(RooUniform);
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -29,6 +29,7 @@
 #include "clang/Frontend/VerifyDiagnosticConsumer.h"
 #include "clang/Serialization/SerializationDiagnostic.h"
 #include "clang/Lex/Preprocessor.h"
+#include "clang/Lex/PreprocessorOptions.h"
 #include "clang/Sema/Sema.h"
 #include "clang/Sema/SemaDiagnostic.h"
 #include "clang/Serialization/ASTReader.h"
@@ -39,6 +40,7 @@
 #include "llvm/Support/FileSystem.h"
 #include "llvm/Support/Host.h"
 #include "llvm/Support/MemoryBuffer.h"
+#include "llvm/Support/Path.h"
 #include "llvm/Support/Process.h"
 #include "llvm/Support/TargetSelect.h"
 #include "llvm/Target/TargetOptions.h"
@@ -371,7 +373,6 @@ namespace {
       Opts.CXXExceptions = 1;
     }
 
-    Opts.Deprecated = 1;
     //Opts.Modules = 1;
 
     // See test/CodeUnloading/PCH/VTables.cpp which implicitly compares clang
@@ -399,6 +400,9 @@ namespace {
     // I would claim that the check should be relaxed to:
 
     if (Opts.CPlusPlus) {
+#if __cplusplus > 201402L
+      Opts.CPlusPlus1z = 1;
+#endif
 #if __cplusplus > 201103L
       Opts.CPlusPlus14 = 1;
 #endif
@@ -409,6 +413,14 @@ namespace {
 
 #ifdef _REENTRANT
     Opts.POSIXThreads = 1;
+#endif
+#ifdef __STRICT_ANSI__
+    Opts.GNUMode = 0;
+#else
+    Opts.GNUMode = 1;
+#endif
+#ifdef __FAST_MATH__
+    Opts.FastMath = 1;
 #endif
   }
 
@@ -665,7 +677,7 @@ static void stringifyPreprocSetting(PreprocessorOptions& PPOpts,
       return false;
     }
   };
-  
+
   static CompilerInstance*
   createCIImpl(std::unique_ptr<llvm::MemoryBuffer> Buffer,
                const CompilerOptions& COpts, const char* LLVMDir,
@@ -674,15 +686,16 @@ static void stringifyPreprocSetting(PreprocessorOptions& PPOpts,
     if (COpts.Verbose)
       cling::log() << "cling version " << ClingStringify(CLING_VERSION) << '\n';
 
+    llvm::InitializeAllTargetInfos();
+    llvm::InitializeAllTargets();
+    llvm::InitializeAllAsmParsers();
+    llvm::InitializeAllAsmPrinters();
+    llvm::InitializeAllTargetMCs();
+
     // Create an instance builder, passing the LLVMDir and arguments.
     //
 
     CheckClangCompatibility();
-
-    //  Initialize the llvm library.
-    llvm::InitializeNativeTarget();
-    llvm::InitializeNativeTargetAsmParser();
-    llvm::InitializeNativeTargetAsmPrinter();
 
     const size_t argc = COpts.Remaining.size();
     const char* const* argv = &COpts.Remaining[0];
@@ -719,8 +732,7 @@ static void stringifyPreprocSetting(PreprocessorOptions& PPOpts,
       argvCompile.push_back("-");
     }
 
-    std::unique_ptr<clang::CompilerInvocation>
-      InvocationPtr(new clang::CompilerInvocation);
+    auto InvocationPtr = std::make_shared<clang::CompilerInvocation>();
 
     // The compiler invocation is the owner of the diagnostic options.
     // Everything else points to them.
@@ -764,8 +776,7 @@ static void stringifyPreprocSetting(PreprocessorOptions& PPOpts,
 
     // Create and setup a compiler instance.
     std::unique_ptr<CompilerInstance> CI(new CompilerInstance());
-    CI->setInvocation(InvocationPtr.get());
-    InvocationPtr.release();
+    CI->setInvocation(InvocationPtr);
     CI->setDiagnostics(Diags.get()); // Diags is ref-counted
     if (!OnlyLex)
       CI->getDiagnosticOpts().ShowColors = cling::utils::ColorizeOutput();
@@ -839,7 +850,8 @@ static void stringifyPreprocSetting(PreprocessorOptions& PPOpts,
                                                CI->getFileManager(),
                                                CI->getPCHContainerReader(),
                                                false /*FindModuleFileExt*/,
-                                               listener)) {
+                                               listener,
+                                         /*ValidateDiagnosticOptions=*/false)) {
           // When running interactively pass on the info that the PCH
           // has failed so that IncrmentalParser::Initialize won't try again.
           if (!HasInput && llvm::sys::Process::StandardInIsUserInput()) {

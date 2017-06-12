@@ -37,7 +37,7 @@ RooNumConvPdf
 
 using namespace std;
 
-ClassImp(RooConvIntegrandBinding)
+ClassImp(RooConvIntegrandBinding);
 ;
 
 

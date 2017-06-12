@@ -81,7 +81,7 @@ namespace Internal {
       virtual ~TTreeReaderValueBase();
 
    protected:
-      TTreeReaderValueBase(TTreeReader* reader = 0, const char* branchname = 0, TDictionary* dict = 0);
+      TTreeReaderValueBase(TTreeReader* reader, const char* branchname, TDictionary* dict);
       TTreeReaderValueBase(const TTreeReaderValueBase&);
       TTreeReaderValueBase& operator=(const TTreeReaderValueBase&);
 
@@ -101,14 +101,16 @@ namespace Internal {
       /// Stringify the template argument.
       static std::string GetElementTypeName(const std::type_info& ti);
 
+      int          fHaveLeaf : 1; // Whether the data is in a leaf
+      int          fHaveStaticClassOffsets : 1; // Whether !fStaticClassOffsets.empty()
+      EReadStatus  fReadStatus : 2; // read status of this data access
+      ESetupStatus fSetupStatus = kSetupNotSetup; // setup status of this data access
       TString      fBranchName; // name of the branch to read data from.
       TString      fLeafName;
       TTreeReader* fTreeReader; // tree reader we belong to
       TDictionary* fDict; // type that the branch should contain
-      Detail::TBranchProxy* fProxy; // proxy for this branch, owned by TTreeReader
-      TLeaf*       fLeaf;
-      ESetupStatus fSetupStatus; // setup status of this data access
-      EReadStatus  fReadStatus; // read status of this data access
+      Detail::TBranchProxy* fProxy = nullptr; // proxy for this branch, owned by TTreeReader
+      TLeaf*       fLeaf = nullptr;
       std::vector<Long64_t> fStaticClassOffsets;
 
       // FIXME: re-introduce once we have ClassDefInline!
@@ -125,7 +127,7 @@ template <typename T>
 class TTreeReaderValue: public ROOT::Internal::TTreeReaderValueBase {
 public:
    using NonConstT_t = typename std::remove_const<T>::type;
-   TTreeReaderValue() {}
+   TTreeReaderValue() = delete;
    TTreeReaderValue(TTreeReader& tr, const char* branchname):
       TTreeReaderValueBase(&tr, branchname,
                            TDictionary::GetDictionary(typeid(NonConstT_t))) {}

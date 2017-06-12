@@ -39,7 +39,7 @@
 #include "TGNumberEntry.h"
 #include "TGLabel.h"
 
-ClassImp(TGeoPgonEditor)
+ClassImp(TGeoPgonEditor);
 
 enum ETGeoPgonWid {
    kPGON_NEDGES

@@ -19,9 +19,12 @@
 
 namespace ROOT {
 namespace Experimental {
+
 class TCanvas;
 
 namespace Internal {
+
+class TVirtualCanvasPainter;
 
 /** \class TDrawable
   Base class for drawable entities: objects that can be painted on a `TPad`.
@@ -31,8 +34,7 @@ class TDrawable {
 public:
   virtual ~TDrawable();
 
-  /// Paint the object
-  virtual void Paint(TCanvas& onCanv) = 0;
+  virtual void Paint(TVirtualCanvasPainter& onCanv) = 0;
 };
 
 /// \class TAnyPtr
@@ -52,8 +54,8 @@ public:
    /// Locks if needed.
    class Accessor {
       union {
-         std::shared_ptr<T> fShared;
-         T* fRaw;
+         T* fRaw; ///< The raw, non-owning pointer accessing a TUniWeak's unique_ptr
+         std::shared_ptr<T> fShared; ///< The shared_ptr accessing a TUniWeak's weak_ptr
       };
       bool fIsShared;  ///< fRaw or fShared?
 
@@ -61,14 +63,14 @@ public:
       Accessor(const TUniWeakPtr& uniweak):
          fIsShared(uniweak.fIsWeak) {
          if (fIsShared)
-            fShared = uniweak.fWeak.lock();
+            new (&fShared) std::shared_ptr<T>(uniweak.fWeak.lock());
          else
             fRaw = uniweak.fUnique.get();
       }
 
       Accessor(Accessor&& rhs): fIsShared(rhs.fIsShared) {
          if (fIsShared)
-            fShared.swap(rhs.fShared);
+            new (&fShared) std::shared_ptr<T>(std::move(rhs.fShared));
          else
             fRaw = rhs.fRaw;
       }
@@ -86,10 +88,10 @@ public:
    TUniWeakPtr(const std::shared_ptr<T>& ptr): fWeak(ptr), fIsWeak(true) {}
    TUniWeakPtr(std::unique_ptr<T>&& ptr): fUnique(std::move(ptr)), fIsWeak(false) {}
    TUniWeakPtr(TUniWeakPtr&& rhs): fIsWeak(rhs.fIsWeak) {
-      if (fIsWeak)
-         fWeak.swap(rhs.fWeak);
-      else
-         fUnique.swap(rhs.fUnique);
+      if (fIsWeak) {
+         fWeak.weak_ptr(std::move(rhs.fWeak));
+      } else
+         fWeak.unique_ptr(std::move(rhs.fUnique));
    }
 
    ~TUniWeakPtr() {

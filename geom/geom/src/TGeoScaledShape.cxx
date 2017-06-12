@@ -28,7 +28,7 @@ A shape scaled by a TGeoScale transformation
 \image html geom_scaledshape.png
 */
 
-ClassImp(TGeoScaledShape)
+ClassImp(TGeoScaledShape);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor

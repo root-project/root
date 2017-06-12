@@ -49,14 +49,12 @@
 
 #include "AnalyticalIntegrals.h"
 
-//#include <iostream>
-
 std::atomic<Bool_t> TF1::fgAbsValue(kFALSE);
 Bool_t TF1::fgRejectPoint = kFALSE;
 std::atomic<Bool_t> TF1::fgAddToGlobList(kTRUE);
 static Double_t gErrorTF1 = 0;
 
-ClassImp(TF1)
+ClassImp(TF1);
 
 // class wrapping evaluation of TF1(x) - y0
 class GFunc {
@@ -536,7 +534,7 @@ TF1::TF1(const char *name, Double_t (*fcn)(Double_t *, Double_t *), Double_t xmi
    fParent(0), fHistogram(0),
    fMethodCall(0),
    fNormalized(false), fNormIntegral(0),
-   fFunctor(ROOT::Math::ParamFunctor(fcn)),
+   fFunctor(new TF1FunctorPointerImpl<double>(ROOT::Math::ParamFunctor(fcn))),
    fFormula(0),
    fParams(new TF1Parameters(npar))
 
@@ -570,7 +568,7 @@ TF1::TF1(const char *name, Double_t (*fcn)(const Double_t *, const Double_t *), 
    fParent(0), fHistogram(0),
    fMethodCall(0),
    fNormalized(false), fNormIntegral(0),
-   fFunctor(ROOT::Math::ParamFunctor(fcn)),
+   fFunctor(new TF1FunctorPointerImpl<double>(ROOT::Math::ParamFunctor(fcn))),
    fFormula(0),
    fParams(new TF1Parameters(npar))
 {
@@ -602,7 +600,7 @@ TF1::TF1(const char *name, ROOT::Math::ParamFunctor f, Double_t xmin, Double_t x
    fParent(0), fHistogram(0),
    fMethodCall(0),
    fNormalized(false), fNormIntegral(0),
-   fFunctor(ROOT::Math::ParamFunctor(f)),
+   fFunctor(new TF1FunctorPointerImpl<double>(ROOT::Math::ParamFunctor(f))),
    fFormula(0),
    fParams(new TF1Parameters(npar))
 
@@ -625,10 +623,15 @@ void TF1::DoInitialize(EAddToList addToGlobalList)
                  || addToGlobalList == EAddToList::kAdd);
    if (doAdd && gROOT) {
       SetBit(kNotGlobal, kFALSE);
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       // Store formula in linked list of formula in ROOT
       TF1 *f1old = (TF1 *)gROOT->GetListOfFunctions()->FindObject(fName);
-      gROOT->GetListOfFunctions()->Remove(f1old);
+      if (f1old) {
+         gROOT->GetListOfFunctions()->Remove(f1old);
+         // We removed f1old from the list, it is not longer global.
+         // (See TF1::AddToGlobalList which requires this flag to be correct).
+         f1old->SetBit(kNotGlobal, kTRUE);
+      }
       gROOT->GetListOfFunctions()->Add(this);
    } else
       SetBit(kNotGlobal, kTRUE);
@@ -665,20 +668,20 @@ Bool_t TF1::AddToGlobalList(Bool_t on)
    bool prevStatus = !TestBit(kNotGlobal);
    if (on)  {
       if (prevStatus) {
-         R__LOCKGUARD2(gROOTMutex);
+         R__LOCKGUARD(gROOTMutex);
          assert(gROOT->GetListOfFunctions()->FindObject(this) != nullptr);
          return on; // do nothing
       }
       // do I need to delete previous one with the same name ???
       //TF1 * old = dynamic_cast<TF1*>( gROOT->GetListOfFunctions()->FindObject(GetName()) );
-      //if (old) gROOT->GetListOfFunctions()->Remove(old);
-      R__LOCKGUARD2(gROOTMutex);
+      //if (old) { gROOT->GetListOfFunctions()->Remove(old); old->SetBit(kNotGlobal, kTRUE); }
+      R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfFunctions()->Add(this);
       SetBit(kNotGlobal, kFALSE);
    } else if (prevStatus) {
       // if previous status was on and now is off we need to remove the function
       SetBit(kNotGlobal, kTRUE);
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       TF1 *old = dynamic_cast<TF1 *>(gROOT->GetListOfFunctions()->FindObject(GetName()));
       if (!old) {
          Warning("AddToGlobalList", "Function is supposed to be in the global list but it is not present");
@@ -712,7 +715,7 @@ TF1::~TF1()
 
    // this was before in TFormula destructor
    {
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       if (gROOT) gROOT->GetListOfFunctions()->Remove(this);
    }
 
@@ -783,6 +786,7 @@ void TF1::Copy(TObject &obj) const
    ((TF1 &)obj).fNdim = fNdim;
    ((TF1 &)obj).fType = fType;
    ((TF1 &)obj).fFunctor   = fFunctor;
+   ((TF1 &)obj).fFunctp   = fFunctp;
    ((TF1 &)obj).fChisquare = fChisquare;
    ((TF1 &)obj).fNpfits  = fNpfits;
    ((TF1 &)obj).fNDF     = fNDF;
@@ -1224,6 +1228,7 @@ Double_t TF1::EvalPar(const Double_t *x, const Double_t *params)
 
    if (fType == 0) {
       assert(fFormula);
+
       if (fNormalized && fNormIntegral != 0)
          return fFormula->EvalPar(x, params) / fNormIntegral;
       else
@@ -1231,10 +1236,10 @@ Double_t TF1::EvalPar(const Double_t *x, const Double_t *params)
    }
    Double_t result = 0;
    if (fType == 1)  {
-      if (!fFunctor.Empty()) {
+      if (fFunctor) {
          assert(fParams);
-         if (params) result = fFunctor((Double_t *)x, (Double_t *)params);
-         else        result = fFunctor((Double_t *)x, (Double_t *)fParams->GetParameters());
+         if (params) result = ((TF1FunctorPointerImpl<Double_t> *)fFunctor)->fImpl((Double_t *)x, (Double_t *)params);
+         else        result = ((TF1FunctorPointerImpl<Double_t> *)fFunctor)->fImpl((Double_t *)x, (Double_t *)fParams->GetParameters());
 
       } else          result = GetSave(x);
 
@@ -1254,7 +1259,18 @@ Double_t TF1::EvalPar(const Double_t *x, const Double_t *params)
    }
 
    if (fType == 3) {
-      return EvalParVec(x, params);
+      if (fFunctor) {
+         if (params) result =  EvalParVec(x, params);
+         else result =  EvalParVec(x, (Double_t *) fParams->GetParameters());
+      }
+      else {
+         result = GetSave(x);
+      }
+
+      if (fNormalized && fNormIntegral != 0)
+         result = result / fNormIntegral;
+
+      return result; 
    }
    return result;
 }
@@ -2271,7 +2287,7 @@ void TF1::InitArgs(const Double_t *x, const Double_t *params)
 void TF1::InitStandardFunctions()
 {
    TF1 *f1;
-   R__LOCKGUARD2(gROOTMutex);
+   R__LOCKGUARD(gROOTMutex);
    if (!gROOT->GetListOfFunctions()->FindObject("gaus")) {
       f1 = new TF1("gaus", "gaus", -1, 1);
       f1->SetParameters(1, 0, 1);
@@ -2653,7 +2669,7 @@ Bool_t TF1::IsValid() const
    if (fMethodCall) return fMethodCall->IsValid();
    // function built on compiled functors are always valid by definition
    // (checked at compiled time)
-   if (fFunctor.Empty() && fSave.empty()) return kFALSE;
+   if (fFunctor && fSave.empty()) return kFALSE;
    return kTRUE;
 }
 
@@ -2669,12 +2685,12 @@ void TF1::Print(Option_t *option) const
       fFormula->Print(option);
    } else if (fType >  0) {
       if (fType == 2)
-         printf("Interpreted based function: %s(double *x, double *p).  Ndim = %d, Npar = %d  \n", GetName(), GetNdim(), GetNpar());
+         printf("Interpreted based function: %s(double *x, double *p).  Ndim = %d, Npar = %d  \n", GetName(), GetNpar(), GetNdim());
       else {
-         if (!fFunctor.Empty())
-            printf("Compiled based function: %s  based on a functor object.  Ndim = %d, Npar = %d\n", GetName(), GetNdim(), GetNpar());
+         if (fFunctor)
+            printf("Compiled based function: %s  based on a functor object.  Ndim = %d, Npar = %d\n", GetName(), GetNpar(), GetNdim());
          else {
-            printf("Function based on a list of points from a compiled based function: %s.  Ndim = %d, Npar = %d, Npx = %d\n", GetName(), GetNdim(), GetNpar(), int(fSave.size()));
+            printf("Function based on a list of points from a compiled based function: %s.  Ndim = %d, Npar = %d, Npx = %d\n", GetName(), GetNpar(), GetNdim(), int(fSave.size()));
             if (fSave.empty())
                Warning("Print", "Function %s is based on a list of points but list is empty", GetName());
          }
@@ -3333,7 +3349,7 @@ void TF1::Streamer(TBuffer &b)
          // need to register the objects
          b.ReadClassBuffer(TF1::Class(), this, v, R__s, R__c);
          if (!TestBit(kNotGlobal)) {
-            R__LOCKGUARD2(gROOTMutex);
+            R__LOCKGUARD(gROOTMutex);
             gROOT->GetListOfFunctions()->Add(this);
          }
          return;
@@ -3441,7 +3457,7 @@ void TF1::Update()
       fNormIntegral = 0;
 
    // std::vector<double>x(fNdim);
-   // if ((fType == 1) && !fFunctor.Empty())  fFunctor(x.data(), (Double_t*)fParams);
+   // if ((fType == 1) && !fFunctor->Empty())  (*fFunctor)x.data(), (Double_t*)fParams);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

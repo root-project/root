@@ -17,7 +17,7 @@
 #include "XSPeriodicTable.h"
 #include "XSElementDlg.h"
 
-//ClassImp(XSElementDlg)
+//ClassImp(XSElementDlg);
 
 enum    XSElementDlgEnum {
       ELEM_OK=900,

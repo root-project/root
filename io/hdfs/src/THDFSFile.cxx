@@ -63,7 +63,7 @@ static const Bool_t R__HDFS_ALLOW_CHANGES = kFALSE;
 #define TRACE(x);
 #endif
 
-ClassImp(THDFSFile)
+ClassImp(THDFSFile);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Usual Constructor.  See the TFile constructor for details.
@@ -301,7 +301,7 @@ Directory handler for HDFS (THDFSFile).
 */
 
 
-ClassImp(THDFSSystem)
+ClassImp(THDFSSystem);
 
 ////////////////////////////////////////////////////////////////////////////////
 

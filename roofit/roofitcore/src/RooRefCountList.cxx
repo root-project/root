@@ -35,7 +35,7 @@ reference count until zero, when the object is actually removed.
 
 using namespace std;
 
-ClassImp(RooRefCountList)
+ClassImp(RooRefCountList);
   ;
 
 

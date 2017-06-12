@@ -154,7 +154,7 @@ static const char *GetAuthProto(TString &url)
    return ((sec > -1 && sec < rootNumSec) ? protoSec[sec] : "root");
 }
 
-ClassImp(TCastorFile)
+ClassImp(TCastorFile);
 
 ///////////////////////////////////////////////////////////////////////////////
 /// Create a TCastorFile. A TCastorFile is like a normal TNetFile except

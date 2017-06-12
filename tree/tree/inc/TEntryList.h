@@ -77,6 +77,13 @@ class TEntryList: public TNamed
    virtual const char *GetFileName() const { return fFileName.Data(); }
    virtual Int_t       GetTreeNumber() const { return fTreeNumber; }
    virtual Bool_t      GetReapplyCut() const { return fReapply; };
+
+   Bool_t IsValid() const
+   {
+      if ((fLists || fBlocks)) return kTRUE;
+      return kFALSE;
+   }
+
    virtual Int_t       Merge(TCollection *list);
 
    virtual Long64_t    Next();

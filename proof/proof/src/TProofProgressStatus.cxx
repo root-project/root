@@ -22,7 +22,7 @@ Container class for processing statistics
 #include "TSystem.h"
 #include "TTime.h"
 
-ClassImp(TProofProgressStatus)
+ClassImp(TProofProgressStatus);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Main and default constructor

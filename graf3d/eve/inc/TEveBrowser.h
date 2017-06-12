@@ -142,7 +142,7 @@ protected:
 
 public:
    TEveBrowser(UInt_t w, UInt_t h);
-   virtual ~TEveBrowser() {}
+   virtual ~TEveBrowser() { CloseTabs(); }
 
    virtual void ReallyDelete();
    virtual void CloseTab(Int_t id);

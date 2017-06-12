@@ -33,7 +33,7 @@ side of maximum value
 
 using namespace std;
 
-ClassImp(RooBifurGauss)
+ClassImp(RooBifurGauss);
 
 ////////////////////////////////////////////////////////////////////////////////
 

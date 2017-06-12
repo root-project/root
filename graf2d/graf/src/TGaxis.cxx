@@ -43,7 +43,7 @@ Float_t TGaxis::fYAxisExpXOffset = 0.; //Exponent X offset for the Y axis
 Float_t TGaxis::fYAxisExpYOffset = 0.; //Exponent Y offset for the Y axis
 const Int_t kHori = BIT(9); //defined in TPad
 
-ClassImp(TGaxis)
+ClassImp(TGaxis);
 
 /** \class TGaxis
 \ingroup BasicGraphics
@@ -1092,8 +1092,8 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
 
    TLatex *textaxis = new TLatex();
    SetLineStyle(1); // axis line style
-   textaxis->SetTextColor(GetTextColor());
-   textaxis->SetTextFont(GetTextFont());
+   Int_t TitleColor = GetTextColor();
+   Int_t TitleFont  = GetTextFont();
 
    if (!gPad->IsBatch()) {
       gVirtualX->GetCharacterUp(chupxvsav, chupyvsav);
@@ -1264,7 +1264,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
                   UInt_t w,h;
                   textaxis->SetText(0.,0., fAxis->GetBinLabel(i));
                   textaxis->GetBoundingBox(w,h);
-                  toffset = TMath::Max(toffset,(double)w/(double)gPad->GetWw());
+                  toffset = TMath::Max(toffset,(double)w/((double)gPad->GetWw()*gPad->GetWNDC()));
                }
                textaxis->PaintLatex(xmin + s*fAxis->GetLabelOffset()*(gPad->GetUxmax()-gPad->GetUxmin()),
                                     fAxis->GetBinCenter(i),
@@ -1583,7 +1583,9 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
                   }
                   else break;
                }
-
+// if1 and if2 are the two digits defining the format used to produce the
+// labels. The format used will be %[if1].[if2]f .
+// if1 and if2 are positive (small) integers.
                if2 = na;
                if1 = TMath::Max(nf+na,maxDigits)+1;
 L110:
@@ -1599,7 +1601,11 @@ L110:
                if (if1 > 14) if1=14;
                if (if2 > 14) if2=14;
                if (if2>0) snprintf(coded,8,"%%%d.%df",if1,if2);
-               else       snprintf(coded,8,"%%%d.%df",if1+1,1);
+               else {
+                  if (if1 < -100) if1 = -100; // Silence a warning with gcc
+                  snprintf(coded,8,"%%%d.%df",if1+1,1);
+               }
+
             }
 
 // We draw labels
@@ -1744,7 +1750,7 @@ L110:
                         UInt_t w,h;
                         textaxis->SetText(0.,0., typolabel.Data());
                         textaxis->GetBoundingBox(w,h);
-                        toffset = TMath::Max(toffset,(double)w/(double)gPad->GetWw());
+                        toffset = TMath::Max(toffset,(double)w/((double)gPad->GetWw()*gPad->GetWNDC()));
                      }
                      textaxis->PaintLatex(gPad->GetX1() + xx*(gPad->GetX2() - gPad->GetX1()),
                            gPad->GetY1() + yy*(gPad->GetY2() - gPad->GetY1()),
@@ -1950,7 +1956,7 @@ L110:
                   UInt_t w,h;
                   textaxis->SetText(0.,0., typolabel.Data());
                   textaxis->GetBoundingBox(w,h);
-                  toffset = TMath::Max(toffset,(double)w/(double)gPad->GetWw());
+                  toffset = TMath::Max(toffset,(double)w/((double)gPad->GetWw()*gPad->GetWNDC()));
                }
                textaxis->PaintLatex(gPad->GetX1() + xx*(gPad->GetX2() - gPad->GetX1()),
                                     gPad->GetY1() + yy*(gPad->GetY2() - gPad->GetY1()),
@@ -2111,6 +2117,8 @@ L200:
          }
       }
       Rotate(axispos,ylabel,cosphi,sinphi,x0,y0,xpl1,ypl1);
+      textaxis->SetTextColor(TitleColor);
+      textaxis->SetTextFont(TitleFont);
       textaxis->PaintLatex(gPad->GetX1() + xpl1*(gPad->GetX2() - gPad->GetX1()),
                            gPad->GetY1() + ypl1*(gPad->GetY2() - gPad->GetY1()),
                            phil*180/kPI,

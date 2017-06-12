@@ -43,7 +43,7 @@ Fitter using Monte Carlo sampling of parameters.
 #include "TMVA/Types.h"
 #include "TRandom3.h"
 
-ClassImp(TMVA::MCFitter)
+ClassImp(TMVA::MCFitter);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor

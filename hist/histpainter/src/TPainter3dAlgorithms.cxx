@@ -73,7 +73,7 @@ extern TH1  *gCurrentHist; //these 3 globals should be replaced by class members
 extern Hoption_t Hoption;
 extern Hparam_t  Hparam;
 
-ClassImp(TPainter3dAlgorithms)
+ClassImp(TPainter3dAlgorithms);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Lego default constructor

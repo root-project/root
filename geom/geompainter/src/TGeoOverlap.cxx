@@ -23,7 +23,7 @@
 
 #include "TGeoOverlap.h"
 
-ClassImp(TGeoOverlap)
+ClassImp(TGeoOverlap);
 
 //______________________________________________________________________________
 // TGeoOverlap - base class describing geometry overlaps. Overlaps apply

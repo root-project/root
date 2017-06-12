@@ -332,9 +332,15 @@ bool Minuit2Minimizer::GetVariableSettings(unsigned int ivar, ROOT::Fit::Paramet
    }
    const MinuitParameter & par = fState.Parameter(ivar);
    varObj.Set( par.Name(), par.Value(), par.Error() );
-   if (par.HasLowerLimit() ) varObj.SetLowerLimit(par.LowerLimit() );
-   else if (par.HasUpperLimit() ) varObj.SetUpperLimit(par.UpperLimit() );
-   else if (par.HasLimits() ) varObj.SetLimits(par.LowerLimit(), par.UpperLimit() );
+   if (par.HasLowerLimit() ) {
+     if (par.HasUpperLimit() ) {
+       varObj.SetLimits(par.LowerLimit(), par.UpperLimit() );
+     } else {
+       varObj.SetLowerLimit(par.LowerLimit() );
+     }
+   } else if (par.HasUpperLimit() ) {
+     varObj.SetUpperLimit(par.UpperLimit() );
+   }
    if (par.IsConst() || par.IsFixed() ) varObj.Fix();
    return true;
 }

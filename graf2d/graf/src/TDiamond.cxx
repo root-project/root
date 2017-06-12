@@ -19,7 +19,7 @@
 #include "TVirtualX.h"
 #include "TMath.h"
 
-ClassImp(TDiamond)
+ClassImp(TDiamond);
 
 /** \class TDiamond
 \ingroup BasicGraphics

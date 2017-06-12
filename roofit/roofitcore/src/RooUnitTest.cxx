@@ -46,7 +46,7 @@ Object          | function
 #include "RooRandom.h"
 #include <math.h>
 
-ClassImp(RooUnitTest)
+ClassImp(RooUnitTest);
 ;
 
 using namespace std;

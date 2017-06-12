@@ -27,15 +27,8 @@ else()
                          TWin32Thread.cxx TWin32ThreadFactory.cxx)
 endif()
 
-if (imt)
-  set(sources_imt TImplicitMT.cxx TThreadExecutor.cxx TPoolManager.cxx)
-  set(headers_imt ROOT/TThreadExecutor.hxx ROOT/TPoolManager.hxx)
-endif()
-
-include_directories(${TBB_INCLUDE_DIRS})
-
-ROOT_GENERATE_DICTIONARY(G__Thread ${headers} ${headers_imt} STAGE1 MODULE Thread LINKDEF LinkDef.h)
+ROOT_GENERATE_DICTIONARY(G__Thread ${headers} STAGE1 MODULE Thread LINKDEF LinkDef.h)
 
 ROOT_OBJECT_LIBRARY(ThreadObjs ${sources} G__Thread.cxx)
-ROOT_LINKER_LIBRARY(Thread $<TARGET_OBJECTS:ThreadObjs> ${sources_imt} LIBRARIES ${CMAKE_THREAD_LIBS_INIT} ${TBB_LIBRARIES} DEPENDENCIES Core BUILTINS TBB)
+ROOT_LINKER_LIBRARY(Thread $<TARGET_OBJECTS:ThreadObjs> LIBRARIES ${CMAKE_THREAD_LIBS_INIT} DEPENDENCIES Core BUILTINS)
 ROOT_INSTALL_HEADERS(${installoptions})

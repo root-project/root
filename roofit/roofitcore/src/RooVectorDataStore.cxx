@@ -45,8 +45,8 @@ use a TTree as internal storage mechanism
 #include <memory>
 using namespace std ;
 
-ClassImp(RooVectorDataStore)
-ClassImp(RooVectorDataStore::RealVector)
+ClassImp(RooVectorDataStore);
+ClassImp(RooVectorDataStore::RealVector);
 ;
 
 
@@ -1294,31 +1294,29 @@ void RooVectorDataStore::forceCacheUpdate()
 
 
 
-typedef RooVectorDataStore::RealVector* pRealVector ;
 ////////////////////////////////////////////////////////////////////////////////
 
 void RooVectorDataStore::recalculateCache( const RooArgSet *projectedArgs, Int_t firstEvent, Int_t lastEvent, Int_t stepSize, Bool_t skipZeroWeights) 
 {
   if (!_cache) return ;
 
-  pRealVector tv[1000] ;
-  Int_t ntv(0) ;
+  std::vector<RooVectorDataStore::RealVector *> tv;
+  tv.reserve(_cache->_nReal * 0.7); // Typically, 30..60% need to be recalculated
 
   // Check which items need recalculation
   for (Int_t i=0 ; i<_cache->_nReal ; i++) {
     if ((*(_cache->_firstReal+i))->needRecalc() || _forcedUpdate) {
-      tv[ntv] = (*(_cache->_firstReal+i)) ;
-      tv[ntv]->_nativeReal->setOperMode(RooAbsArg::ADirty) ;
-      tv[ntv]->_nativeReal->_operMode=RooAbsArg::Auto ;
-//       cout << "recalculate: need to update " << tv[ntv]->_nativeReal->GetName() << endl ;
-      ntv++ ;
+       RooVectorDataStore::RealVector *cacheElem = *(_cache->_firstReal + i);
+       tv.push_back(cacheElem);
+       cacheElem->_nativeReal->setOperMode(RooAbsArg::ADirty);
+       cacheElem->_nativeReal->_operMode = RooAbsArg::Auto;
     }    
   }
   _forcedUpdate = kFALSE ;
 
-  // If no recalculations are neede stop here
-  if (ntv==0) {
-    return ;
+  // If no recalculations are needed stop here
+  if (tv.empty()) {
+     return;
   }
   // Refill caches of elements that require recalculation
 //   cout << "recalc error count before update = " << RooAbsReal::numEvalErrors() << endl ;
@@ -1339,10 +1337,11 @@ void RooVectorDataStore::recalculateCache( const RooArgSet *projectedArgs, Int_t
     get(i) ;    
     Bool_t zeroWeight = (weight()==0) ;
     if (!zeroWeight || !skipZeroWeights) {
-      for (int j=0 ; j<ntv ; j++) {
-	tv[j]->_nativeReal->_valueDirty=kTRUE ;
-	tv[j]->_nativeReal->getValV(tv[j]->_nset ? tv[j]->_nset : usedNset) ;
-	tv[j]->write(i) ;
+       for (std::vector<RooVectorDataStore::RealVector *>::iterator cacheIt = tv.begin(); cacheIt != tv.end();
+            ++cacheIt) {
+          (*cacheIt)->_nativeReal->_valueDirty = kTRUE;
+          (*cacheIt)->_nativeReal->getValV((*cacheIt)->_nset ? (*cacheIt)->_nset : usedNset);
+          (*cacheIt)->write(i);
       }
     }
 //     if (zeroWeight) {
@@ -1362,8 +1361,8 @@ void RooVectorDataStore::recalculateCache( const RooArgSet *projectedArgs, Int_t
 //   cout << "recalculate: end of updating" << endl ;
 //   cout << "recalc error count after update = " << RooAbsReal::numEvalErrors() << endl ;
 
-  for (int j=0 ; j<ntv ; j++) {
-      tv[j]->_nativeReal->setOperMode(RooAbsArg::AClean) ;
+  for (std::vector<RooVectorDataStore::RealVector *>::iterator cacheIt = tv.begin(); cacheIt != tv.end(); ++cacheIt) {
+     (*cacheIt)->_nativeReal->setOperMode(RooAbsArg::AClean);
   }  
 
   delete ownedNset ;

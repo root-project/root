@@ -12,8 +12,6 @@
 
 #include "cling/Interpreter/InvocationOptions.h"
 
-#include "llvm/ADT/StringRef.h"
-
 #include <cstdlib>
 #include <memory>
 #include <string>
@@ -25,6 +23,7 @@ namespace llvm {
   class ExecutionEngine;
   class LLVMContext;
   class Module;
+  class StringRef;
   class Type;
   template <typename T> class SmallVectorImpl;
 }
@@ -179,6 +178,10 @@ namespace cling {
     ///
     bool m_RawInputEnabled;
 
+    ///\brief Flag toggling the optimization level to be used.
+    ///
+    int m_OptLevel;
+
     ///\brief Interpreter callbacks.
     ///
     std::unique_ptr<InterpreterCallbacks> m_Callbacks;
@@ -329,7 +332,7 @@ namespace cling {
 
     llvm::LLVMContext* getLLVMContext() { return m_LLVMContext.get(); }
 
-    const LookupHelper& getLookupHelper() const { return *m_LookupHelper; }
+    LookupHelper& getLookupHelper() const { return *m_LookupHelper; }
 
     const clang::Parser& getParser() const;
     clang::Parser& getParser();
@@ -376,9 +379,7 @@ namespace cling {
 
     ///\brief Adds a single include path (-I).
     ///
-    void AddIncludePath(llvm::StringRef PathsStr) {
-      return AddIncludePaths(PathsStr, nullptr);
-    }
+     void AddIncludePath(llvm::StringRef PathsStr);
 
     ///\brief Prints the current include paths that are used.
     ///
@@ -443,11 +444,13 @@ namespace cling {
     ///       initialized to point to the return value's location if the
     ///       expression result is an aggregate.
     ///\param[out] T - The cling::Transaction of the compiled input.
+    ///\param[in] disableValuePrinting - Whether to echo the expression result.
     ///
     ///\returns Whether the operation was fully successful.
     ///
     CompilationResult process(const std::string& input, Value* V = 0,
-                              Transaction** T = 0);
+                              Transaction** T = 0,
+                              bool disableValuePrinting = false);
 
     ///\brief Parses input line, which doesn't contain statements. No code
     /// generation is done.
@@ -633,10 +636,16 @@ namespace cling {
     bool isRawInputEnabled() const { return m_RawInputEnabled; }
     void enableRawInput(bool raw = true) { m_RawInputEnabled = raw; }
 
+    int getDefaultOptLevel() const { return m_OptLevel; }
+    void setDefaultOptLevel(int optLevel) { m_OptLevel = optLevel; }
+
     clang::CompilerInstance* getCI() const;
     clang::CompilerInstance* getCIOrNull() const;
     clang::Sema& getSema() const;
     clang::DiagnosticsEngine& getDiagnostics() const;
+
+    ///\brief Create suitable default compilation options.
+    CompilationOptions makeDefaultCompilationOpts() const;
 
     //FIXME: This must be in InterpreterCallbacks.
     void installLazyFunctionCreator(void* (*fp)(const std::string&));
@@ -742,7 +751,7 @@ namespace cling {
 
     ///\brief Forwards to cling::IncrementalExecutor::addModule.
     ///
-    void addModule(llvm::Module* module);
+    void addModule(llvm::Module* module, int OptLevel);
 
     void GenerateAutoloadingMap(llvm::StringRef inFile, llvm::StringRef outFile,
                                 bool enableMacros = false, bool enableLogs = true);

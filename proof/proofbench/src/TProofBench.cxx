@@ -57,7 +57,7 @@
 #include <io.h>
 #endif
 
-ClassImp(TProofBench)
+ClassImp(TProofBench);
 
 // Functions for fitting
 
@@ -449,6 +449,9 @@ void TProofBench::DrawCPU(const char *outfile, const char *opt, Bool_t verbose,
    Int_t kamx = -1, kmmx = -1, nbins = -1;
    Double_t ymx = -1., ymi = -1.;
 
+   TProfile *pf = 0;
+   Int_t kmx = -1;
+
    TProfile *pfav = 0;
    TGraphErrors *grav = 0;
    if (doAvg) {
@@ -460,6 +463,8 @@ void TProofBench::DrawCPU(const char *outfile, const char *opt, Bool_t verbose,
       }
       ymx = amx;
       ymi = ami;
+      pf = pfav;
+      kmx = kamx;
    }
    TProfile *pfmx = 0;
    TGraphErrors *grmx = 0;
@@ -476,10 +481,9 @@ void TProofBench::DrawCPU(const char *outfile, const char *opt, Bool_t verbose,
       }
       if (mmx > ymx) ymx = mmx;
       if ((ymi > 0 && mmi < ymi) || (ymi < 0.)) ymi = mmi;
+      pf = pfmx;
+      kmx = kmmx;
    }
-
-   TProfile *pf = (doMax) ? pfmx : pfav;
-   Int_t kmx = (doMax) ? kmmx : kamx;
 
    // Create the canvas
    TCanvas *cpu = new TCanvas("cpu", "Rate vs wrks",204,69,1050,502);
@@ -508,6 +512,7 @@ void TProofBench::DrawCPU(const char *outfile, const char *opt, Bool_t verbose,
    }
 
    gStyle->SetOptTitle(0);
+   TGraphErrors *gr = 0;
    if (doAvg) {
       grav->SetFillColor(1);
       grav->SetLineColor(13);
@@ -519,6 +524,7 @@ void TProofBench::DrawCPU(const char *outfile, const char *opt, Bool_t verbose,
       if (verbose) grav->Print();
       grav->Draw("alp");
       leg->AddEntry(grav, "Average", "P");
+      gr = grav;
    }
    if (doMax) {
       grmx->SetFillColor(1);
@@ -535,12 +541,12 @@ void TProofBench::DrawCPU(const char *outfile, const char *opt, Bool_t verbose,
          grmx->Draw("alp");
       }
       leg->AddEntry(grmx, "Maximum", "P");
+      gr = grmx;
    }
    leg->Draw();
    gPad->Update();
 
    if (dofit > 0) {
-      TGraphErrors *gr = (doMax) ? grmx : grav;
       // Make sure the fitting functions are defined
       Double_t xmi = 0.9;
       if (nbins > 5) xmi = 1.5;
@@ -989,9 +995,8 @@ void TProofBench::DrawDataSet(const char *outfile,
    TString oo(opt);
    Bool_t isNorm = (oo.Contains("norm")) ? kTRUE : kFALSE;
    Bool_t isX = (oo.Contains("stdx:") || oo.Contains("normx:")) ? kTRUE : kFALSE;
-   Bool_t doAvg = kTRUE, doMax = kTRUE;
-   if (oo.Contains("avg:")) doMax = kFALSE;
-   if (oo.Contains("max:")) doAvg = kFALSE;
+   Bool_t doAvg = (oo.Contains("all:") || oo.Contains("avg:")) ? kTRUE : kFALSE;
+   Bool_t doMax = (oo.Contains("all:") || oo.Contains("max:")) ? kTRUE : kFALSE;
 
    const char *dirn = (isX) ? "RunDataReadx" : "RunDataRead";
    TDirectory *d = (TDirectory *) fout->Get(dirn);
@@ -1021,6 +1026,9 @@ void TProofBench::DrawDataSet(const char *outfile,
    Int_t kamx = -1, kmmx = -1, nbins = -1;
    Double_t ymx = -1., ymi = -1.;
 
+   TProfile *pf = 0;
+   Int_t kmx = -1;
+
    TProfile *pfav = 0;
    TGraphErrors *grav = 0;
    if (doAvg) {
@@ -1032,7 +1040,10 @@ void TProofBench::DrawDataSet(const char *outfile,
       }
       ymx = amx;
       ymi = ami;
+      pf = pfav;
+      kmx = kamx;
    }
+
    TProfile *pfmx = 0;
    TGraphErrors *grmx = 0;
    if (doMax) {
@@ -1048,10 +1059,9 @@ void TProofBench::DrawDataSet(const char *outfile,
       }
       if (mmx > ymx) ymx = mmx;
       if ((ymi > 0 && mmi < ymi) || (ymi < 0.)) ymi = mmi;
+      pf = pfmx;
+      kmx = kmmx;
    }
-
-   TProfile *pf = (doMax) ? pfmx : pfav;
-   Int_t kmx = (doMax) ? kmmx : kamx;
 
    // Create the canvas
    TCanvas *cpu = new TCanvas("dataset", "Rate vs wrks",204,69,1050,502);
@@ -1084,6 +1094,7 @@ void TProofBench::DrawDataSet(const char *outfile,
       leg = new TLegend(0.1, 0.8, 0.3, 0.9);
    }
 
+   TGraphErrors *gr = 0;
    if (doAvg) {
       grav->SetFillColor(1);
       grav->SetLineColor(13);
@@ -1095,6 +1106,7 @@ void TProofBench::DrawDataSet(const char *outfile,
       if (verbose) grav->Print();
       grav->Draw("alp");
       leg->AddEntry(grav, "Average", "P");
+      gr = grav;
    }
    if (doMax) {
       grmx->SetFillColor(1);
@@ -1111,13 +1123,13 @@ void TProofBench::DrawDataSet(const char *outfile,
          grmx->Draw("alp");
       }
       leg->AddEntry(grmx, "Maximum", "P");
+      gr = grmx;
    }
    leg->Draw();
    gPad->Update();
 
    Double_t normrate = -1.;
    if (dofit > 0) {
-      TGraphErrors *gr = (doMax) ? grmx : grav;
       // Make sure the fitting functions are defined
       Double_t xmi = 0.9;
       if (nbins > 5) xmi = 1.5;

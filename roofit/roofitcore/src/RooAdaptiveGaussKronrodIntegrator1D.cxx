@@ -61,7 +61,7 @@ can be selected to speed up the converges of these integrals
 using namespace std ;
 
 
-ClassImp(RooAdaptiveGaussKronrodIntegrator1D)
+ClassImp(RooAdaptiveGaussKronrodIntegrator1D);
 ;
 
 

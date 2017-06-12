@@ -40,7 +40,7 @@
 
 #include "TDecompQRH.h"
 #include "TError.h" // For R__ASSERT
-ClassImp(TDecompQRH)
+ClassImp(TDecompQRH);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor for (nrows x ncols) matrix

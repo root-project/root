@@ -68,9 +68,9 @@ void HitNames::DeleteNames() {      // Clean up
   if(!fNames) return;
   //  std::cout << "HitNames::DeleteNames() are called" << std::endl;
   for (int i=0;i<fSize;i++) {
-    delete fNames[i];
+    delete[] fNames[i];
   }
-  delete fNames;
+  delete[] fNames;
   fNames = 0;
 }
 

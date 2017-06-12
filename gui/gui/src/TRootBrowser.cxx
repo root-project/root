@@ -103,7 +103,7 @@ static const char *gPluginFileTypes[] = {
 // The main ROOT object browser.
 //_____________________________________________________________________________
 
-ClassImp(TRootBrowser)
+ClassImp(TRootBrowser);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create browser with a specified width and height.
@@ -398,6 +398,8 @@ void TRootBrowser::CloseTabs()
    TGFrameElement *el;
    TGCompositeFrame *container;
    Int_t i;
+   TQObject::Disconnect("TCanvas", "ProcessedEvent(Int_t,Int_t,Int_t,TObject*)",
+                        this, "EventInfo(Int_t, Int_t, Int_t, TObject*)");
    Disconnect(fMenuFile, "Activated(Int_t)", this, "HandleMenu(Int_t)");
    Disconnect(fTabRight, "Selected(Int_t)", this, "DoTab(Int_t)");
    if (fPlugins.IsEmpty()) return;
@@ -412,6 +414,7 @@ void TRootBrowser::CloseTabs()
             TVirtualPadEditor::Terminate();
          }
          else if (el->fFrame->InheritsFrom("TGMainFrame")) {
+            el->fFrame->UnmapWindow();
             ((TGMainFrame *)el->fFrame)->CloseWindow();
             gSystem->ProcessEvents();
          }
@@ -436,7 +439,10 @@ void TRootBrowser::CloseTabs()
       if (el && el->fFrame) {
          el->fFrame->SetFrameElement(0);
          if (el->fFrame->InheritsFrom("TGMainFrame")) {
+            el->fFrame->UnmapWindow();
             Bool_t sleep = (el->fFrame->InheritsFrom("TRootCanvas")) ? kTRUE : kFALSE;
+            if (sleep)
+               gSystem->Sleep(150);
             ((TGMainFrame *)el->fFrame)->CloseWindow();
             if (sleep)
                gSystem->Sleep(150);
@@ -463,7 +469,9 @@ void TRootBrowser::CloseTabs()
       if (el && el->fFrame) {
          el->fFrame->SetFrameElement(0);
          if (el->fFrame->InheritsFrom("TGMainFrame")) {
+            el->fFrame->UnmapWindow();
             ((TGMainFrame *)el->fFrame)->CloseWindow();
+            gSystem->Sleep(150);
             gSystem->ProcessEvents();
          }
          else
@@ -898,11 +906,8 @@ void TRootBrowser::InitPlugins(Option_t *opt)
 
 void TRootBrowser::ReallyDelete()
 {
-   gInterpreter->DeleteGlobal(fBrowser);
-   if (fBrowser->IsOnHeap())
-      delete fBrowser; // will in turn delete this object
-   else
-      fBrowser->Destructor(); // will in turn delete this object
+   if (fBrowser) fBrowser->SetBrowserImp(0);
+   delete this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

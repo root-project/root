@@ -42,7 +42,7 @@ Use RooAbsCollection derived objects for public use
 
 using namespace std;
 
-ClassImp(RooLinkedList)
+ClassImp(RooLinkedList);
 ;
 namespace RooLinkedListImplDetails {
   /// a chunk of memory in a pool for quick allocation of RooLinkedListElems
@@ -467,6 +467,15 @@ Bool_t RooLinkedList::Remove(TObject* arg)
   _size-- ;
   deleteElement(elem) ;	
   return kTRUE ;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// If one of the TObject we have a referenced to is deleted, remove the
+/// reference.
+
+void RooLinkedList::RecursiveRemove(TObject *obj)
+{
+   Remove(obj); // This is a nop if the obj is not in the collection.
 }
 
 ////////////////////////////////////////////////////////////////////////////////

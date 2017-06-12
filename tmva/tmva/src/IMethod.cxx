@@ -10,4 +10,4 @@ Interface for all concrete MVA method implementations
 
 */
 
-ClassImp(TMVA::IMethod)
+ClassImp(TMVA::IMethod);

@@ -154,7 +154,7 @@ const char kDelim = ':';
 #endif
 
 
-ClassImp(TTabCom)
+ClassImp(TTabCom);
 // ----------------------------------------------------------------------------
 //
 //             global/file scope variables

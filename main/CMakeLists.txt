@@ -14,7 +14,7 @@ if(NOT WIN32)
 endif()
 ROOT_EXECUTABLE(root.exe rmain.cxx LIBRARIES Core Rint)
 ROOT_EXECUTABLE(proofserv.exe pmain.cxx LIBRARIES Core MathCore)
-ROOT_EXECUTABLE(hadd hadd.cxx LIBRARIES Core RIO Net Hist Graf Graf3d Gpad Tree Matrix MathCore Thread)
+ROOT_EXECUTABLE(hadd hadd.cxx LIBRARIES Core RIO Net Hist Graf Graf3d Gpad Tree Matrix MathCore MultiProc)
 ROOT_EXECUTABLE(rootnb.exe nbmain.cxx LIBRARIES Core)
 
 if(fortran AND CMAKE_Fortran_COMPILER)

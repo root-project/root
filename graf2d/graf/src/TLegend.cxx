@@ -28,7 +28,7 @@
 #include "TGraph.h"
 #include "THStack.h"
 
-ClassImp(TLegend)
+ClassImp(TLegend);
 
 /** \class TLegend
 \ingroup BasicGraphics
@@ -588,22 +588,15 @@ void TLegend::Paint( Option_t* option )
 {
    // The legend need to be placed automatically in some empty space
    if (fX1 == fX2 && fY1 == fY2) {
-      if (gPad->GetLogx() || gPad->GetLogy()) {
+      if (gPad->PlaceBox(this, fX1, fY1, fX1, fY1)) {
+         fY2 = fY2+fY1;
+         fX2 = fX2+fX1;
+      } else {
+         Warning("Paint", "Legend to large to be automatically placed. A default position is used");
          fX1 = 0.5;
          fY1 = 0.67;
          fX2 = 0.88;
          fY2 = 0.88;
-      } else {
-         if (gPad->PlaceBox(this, fX1, fY1, fX1, fY1)) {
-            fY2 = fY2+fY1;
-            fX2 = fX2+fX1;
-         } else {
-            Warning("Paint", "Legend to large to be automatically placed. A default position is used");
-            fX1 = 0.5;
-            fY1 = 0.67;
-            fX2 = 0.88;
-            fY2 = 0.88;
-         }
       }
    }
 

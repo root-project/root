@@ -17,7 +17,6 @@
 
 #include "Math/IFunctionfwd.h"
 #include "Math/IParamFunction.h"
-#include "Math/IParamFunctionfwd.h"
 #include "Math/Integrator.h"
 #include "Math/IntegratorMultiDim.h"
 #include "Math/WrappedFunction.h"
@@ -31,6 +30,7 @@
 #include <cmath>
 #include <cassert>
 #include <algorithm>
+#include <numeric>
 //#include <memory>
 
 //#define DEBUG
@@ -50,120 +50,6 @@ namespace ROOT {
 
       namespace FitUtil {
 
-         // internal class to evaluate the function or the integral
-         // and cached internal integration details
-         // if useIntegral is false no allocation is done
-         // and this is a dummy class
-         // class is templated on any parametric functor implementing operator()(x,p) and NDim()
-         // contains a constant pointer to the function
-         template <class ParamFunc = ROOT::Math::IParamMultiFunction>
-         class IntegralEvaluator {
-
-         public:
-
-            IntegralEvaluator(const ParamFunc & func, const double * p, bool useIntegral = true) :
-               fDim(0),
-               fParams(0),
-               fFunc(0),
-               fIg1Dim(0),
-               fIgNDim(0),
-               fFunc1Dim(0),
-               fFuncNDim(0)
-            {
-               if (useIntegral) {
-                  SetFunction(func, p);
-               }
-            }
-
-            void SetFunction(const ParamFunc & func, const double * p = 0) {
-               // set the integrand function and create required wrapper
-               // to perform integral in (x) of a generic  f(x,p)
-               fParams = p;
-               fDim = func.NDim();
-               // copy the function object to be able to modify the parameters
-               //fFunc = dynamic_cast<ROOT::Math::IParamMultiFunction *>( func.Clone() );
-               fFunc = &func;
-               assert(fFunc != 0);
-               // set parameters in function
-               //fFunc->SetParameters(p);
-               if (fDim == 1) {
-                  fFunc1Dim = new ROOT::Math::WrappedMemFunction< IntegralEvaluator, double (IntegralEvaluator::*)(double ) const > (*this, &IntegralEvaluator::F1);
-                  fIg1Dim = new ROOT::Math::IntegratorOneDim();
-                  //fIg1Dim->SetFunction( static_cast<const ROOT::Math::IMultiGenFunction & >(*fFunc),false);
-                  fIg1Dim->SetFunction( static_cast<const ROOT::Math::IGenFunction &>(*fFunc1Dim) );
-               }
-               else if (fDim > 1) {
-                  fFuncNDim = new ROOT::Math::WrappedMemMultiFunction< IntegralEvaluator, double (IntegralEvaluator::*)(const double *) const >  (*this, &IntegralEvaluator::FN, fDim);
-                  fIgNDim = new ROOT::Math::IntegratorMultiDim();
-                  fIgNDim->SetFunction(*fFuncNDim);
-               }
-               else
-                  assert(fDim > 0);
-            }
-
-            void SetParameters(const double *p) {
-               // copy just the pointer
-               fParams = p;
-            }
-
-            ~IntegralEvaluator() {
-               if (fIg1Dim) delete fIg1Dim;
-               if (fIgNDim) delete fIgNDim;
-               if (fFunc1Dim) delete fFunc1Dim;
-               if (fFuncNDim) delete fFuncNDim;
-               //if (fFunc) delete fFunc;
-            }
-
-            // evaluation of integrand function (one-dim)
-            double F1 (double x) const {
-               double xx[1]; xx[0] = x;
-               return (*fFunc)( xx, fParams);
-            }
-            // evaluation of integrand function (multi-dim)
-            double FN(const double * x) const {
-               return (*fFunc)( x, fParams);
-            }
-
-            double Integral(const double *x1, const double * x2) {
-               // return unormalized integral
-               return (fIg1Dim) ? fIg1Dim->Integral( *x1, *x2) : fIgNDim->Integral( x1, x2);
-            }
-            double operator()(const double *x1, const double * x2) {
-               // return normalized integral, divided by bin volume (dx1*dx...*dxn)
-               if (fIg1Dim) {
-                  double dV = *x2 - *x1;
-                  return fIg1Dim->Integral( *x1, *x2)/dV;
-               }
-               else if (fIgNDim) {
-                  double dV = 1;
-                  for (unsigned int i = 0; i < fDim; ++i)
-                     dV *= ( x2[i] - x1[i] );
-                  return fIgNDim->Integral( x1, x2)/dV;
-//                   std::cout << " do integral btw x " << x1[0] << "  " << x2[0] << " y " << x1[1] << "  " << x2[1] << " dV = " << dV << " result = " << result << std::endl;
-//                   return result;
-               }
-               else
-                  assert(1.); // should never be here
-               return 0;
-            }
-
-         private:
-
-            // objects of this class are not meant to be copied / assigned
-            IntegralEvaluator(const IntegralEvaluator& rhs);
-            IntegralEvaluator& operator=(const IntegralEvaluator& rhs);
-
-            unsigned int fDim;
-            const double * fParams;
-            //ROOT::Math::IParamMultiFunction * fFunc;  // copy of function in order to be able to change parameters
-            const ParamFunc * fFunc;       //  reference to a generic parametric function
-            ROOT::Math::IntegratorOneDim * fIg1Dim;
-            ROOT::Math::IntegratorMultiDim * fIgNDim;
-            ROOT::Math::IGenFunction * fFunc1Dim;
-            ROOT::Math::IMultiGenFunction * fFuncNDim;
-         };
-
-
          // derivative with respect of the parameter to be integrated
          template<class GradFunc = IGradModelFunction>
          struct ParamDerivFunc {
@@ -177,7 +63,7 @@ namespace ROOT {
             unsigned int fIpar;
          };
 
-         // simple gradient calculator using the 2 points rule
+// simple gradient calculator using the 2 points rule
 
          class SimpleGradientCalculator {
 
@@ -334,7 +220,7 @@ namespace ROOT {
 // for chi2 functions
 //___________________________________________________________________________________________________________________________
 
-double FitUtil::EvaluateChi2(const IModelFunction & func, const BinData & data, const double * p, unsigned int & nPoints) {
+double FitUtil::EvaluateChi2(const IModelFunction & func, const BinData & data, const double * p, unsigned int &, const unsigned int & executionPolicy, unsigned nChunks) {
    // evaluate the chi2 given a  function reference  , the data and returns the value and also in nPoints
    // the actual number of used points
    // normal chi2 using only error on values (from fitting histogram)
@@ -342,8 +228,6 @@ double FitUtil::EvaluateChi2(const IModelFunction & func, const BinData & data, 
 
    unsigned int n = data.Size();
 
-   double chi2 = 0;
-   nPoints = 0; // count the effective non-zero points
    // set parameters of the function to cache integral value
 #ifdef USE_PARAMCACHE
    (const_cast<IModelFunction &>(func)).SetParameters(p);
@@ -373,35 +257,48 @@ double FitUtil::EvaluateChi2(const IModelFunction & func, const BinData & data, 
 #endif
    double maxResValue = std::numeric_limits<double>::max() /n;
    double wrefVolume = 1.0;
-   std::vector<double> xc;
    if (useBinVolume) {
       if (fitOpt.fNormBinVolume) wrefVolume /= data.RefVolume();
-      xc.resize(data.NDim() );
    }
 
    (const_cast<IModelFunction &>(func)).SetParameters(p);
-   for (unsigned int i = 0; i < n; ++ i) {
 
-      double y = 0, invError = 1.;
+   auto mapFunction = [&](const unsigned i){
 
-      // in case of no error in y invError=1 is returned
-      const double * x1 = data.GetPoint(i,y, invError);
+      double chi2{};
+      double fval{};
 
-      double fval = 0;
+      const auto x1 = data.GetCoordComponent(i, 0);
+      const auto y = data.Value(i);
+      auto invError = data.Error(i);
 
+      invError = (invError!= 0.0) ? 1.0/invError :1;
+
+      const double * x = nullptr;
+      std::vector<double> xc;
       double binVolume = 1.0;
-        if (useBinVolume) {
+      if (useBinVolume) {
          unsigned int ndim = data.NDim();
          const double * x2 = data.BinUpEdge(i);
+         xc.resize(data.NDim());
          for (unsigned int j = 0; j < ndim; ++j) {
-            binVolume *= std::abs( x2[j]-x1[j] );
-            xc[j] = 0.5*(x2[j]+ x1[j]);
+            auto xx = *data.GetCoordComponent(i, j);
+            binVolume *= std::abs(x2[j]- xx);
+            xc[j] = 0.5*(x2[j]+ xx);
+            x = xc.data();
          }
          // normalize the bin volume using a reference value
          binVolume *= wrefVolume;
+      } else if(data.NDim() > 1) {
+         xc.resize(data.NDim());
+         xc[0] = *x1;
+         for (unsigned int j = 1; j < data.NDim(); ++j)
+            xc[j] = *data.GetCoordComponent(i, j);
+         x = xc.data();
+      } else {
+            x = x1;
       }
 
-      const double * x = (useBinVolume) ? &xc.front() : x1;
 
       if (!useBinIntegral) {
 #ifdef USE_PARAMCACHE
@@ -413,7 +310,7 @@ double FitUtil::EvaluateChi2(const IModelFunction & func, const BinData & data, 
       else {
          // calculate integral normalized by bin volume
          // need to set function and parameters here in case loop is parallelized
-         fval = igEval( x1, data.BinUpEdge(i)) ;
+         fval = igEval( x, data.BinUpEdge(i)) ;
       }
       // normalize result if requested according to bin volume
       if (useBinVolume) fval *= binVolume;
@@ -438,9 +335,7 @@ double FitUtil::EvaluateChi2(const IModelFunction & func, const BinData & data, 
 #endif
 //#undef DEBUG
 
-
       if (invError > 0) {
-         nPoints++;
 
          double tmp = ( y -fval )* invError;
          double resval = tmp * tmp;
@@ -454,17 +349,36 @@ double FitUtil::EvaluateChi2(const IModelFunction & func, const BinData & data, 
             chi2 += maxResValue;
          }
       }
+      return chi2;
+  };
 
-
-   }
-   nPoints=n;
-
-#ifdef DEBUG
-   std::cout << "chi2 = " << chi2 << " n = " << nPoints  /*<< " rejected = " << nRejected */ << std::endl;
+#ifdef R__USE_IMT
+  auto redFunction = [](const std::vector<double> & objs){
+                          return std::accumulate(objs.begin(), objs.end(), double{});
+  };
+#else
+  (void)nChunks;
 #endif
 
+  double res{};
+  if(executionPolicy == ROOT::Fit::kSerial){
+    for (unsigned int i=0; i<n; ++i) {
+      res += mapFunction(i);
+    }
+#ifdef R__USE_IMT
+  } else if(executionPolicy == ROOT::Fit::kMultithread) {
+    auto chunks = nChunks !=0? nChunks: setAutomaticChunking(data.Size());
+    ROOT::TThreadExecutor pool;
+    res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction, chunks);
+#endif
+//   } else if(executionPolicy == ROOT::Fit::kMultitProcess){
+    // ROOT::TProcessExecutor pool;
+    // res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction);
+  } else{
+    Error("FitUtil::EvaluateChi2","Execution policy unknown. Avalaible choices:\n 0: Serial (default)\n 1: MultiThread (requires IMT)\n");
+  }
 
-   return chi2;
+   return res;
 }
 
 
@@ -840,6 +754,21 @@ void FitUtil::EvaluateChi2Gradient(const IModelFunction & f, const BinData & dat
 // utility function used by the likelihoods
 
 // for LogLikelihood functions
+#ifdef R__HAS_VECCORE
+double FitUtil::EvaluatePdf(const IModelFunctionTempl<ROOT::Double_v> & func, const UnBinData & data, const double * p, unsigned int i, double *) {
+   // evaluate the pdf contribution to the generic logl function in case of bin data
+   // return actually the log of the pdf and its derivatives
+
+
+   //func.SetParameters(p);
+
+
+   const auto x = vecCore::FromPtr<ROOT::Double_v>(data.GetCoordComponent(i,0));
+   auto fval = func (&x, p);
+   auto logPdf = ROOT::Math::Util::EvalLog(fval);
+   return logPdf[0];
+}
+#endif
 
 double FitUtil::EvaluatePdf(const IModelFunction & func, const UnBinData & data, const double * p, unsigned int i, double * g) {
    // evaluate the pdf contribution to the generic logl function in case of bin data
@@ -889,23 +818,17 @@ double FitUtil::EvaluatePdf(const IModelFunction & func, const UnBinData & data,
    return logPdf;
 }
 
-double FitUtil::EvaluateLogL(const IModelFunction & func, const UnBinData & data, const double * p,
-                                   int iWeight,  bool extended, unsigned int &nPoints) {
+double FitUtil::EvaluateLogL(const IModelFunctionTempl<double>  & func, const UnBinData & data, const double * p,
+                                   int iWeight,  bool extended, unsigned int &nPoints, const unsigned int &executionPolicy, unsigned nChunks) {
    // evaluate the LogLikelihood
 
    unsigned int n = data.Size();
 
-#ifdef DEBUG
-   std::cout << "\n\nFit data size = " << n << std::endl;
-   std::cout << "func pointer is " << typeid(func).name() << std::endl;
-#endif
-
-   double logl = 0;
    //unsigned int nRejected = 0;
 
    // set parameters of the function to cache integral value
 #ifdef USE_PARAMCACHE
-   (const_cast<IModelFunction &>(func)).SetParameters(p);
+   (const_cast<IModelFunctionTempl<double> &>(func)).SetParameters(p);
 #endif
 
    // this is needed if function must be normalized
@@ -927,7 +850,7 @@ double FitUtil::EvaluateLogL(const IModelFunction & func, const UnBinData & data
          // use (-inf +inf)
          data.Range().GetRange(&xmin[0],&xmax[0]);
          // check if funcition is zero at +- inf
-         if (func(xmin.data()) != 0 || func(xmax.data()) != 0) {
+         if (func(xmin.data(), p) != 0 || func(xmax.data(), p) != 0) {
             MATH_ERROR_MSG("FitUtil::EvaluateLogLikelihood","A range has not been set and the function is not zero at +/- inf");
             return 0;
          }
@@ -936,31 +859,35 @@ double FitUtil::EvaluateLogL(const IModelFunction & func, const UnBinData & data
    }
 
    // needed to compue effective global weight in case of extended likelihood
-   double sumW = 0;
-   double sumW2 = 0;
 
-   for (unsigned int i = 0; i < n; ++ i) {
-      const double * x = data.Coords(i);
+    auto mapFunction = [&](const unsigned i){
+       double W = 0;
+       double W2 = 0;
+       double fval = 0; 
+
+       if(data.NDim() > 1) {
+          std::vector<double> x(data.NDim());
+          for (unsigned int j = 0; j < data.NDim(); ++j)
+             x[j] = *data.GetCoordComponent(i, j);
 #ifdef USE_PARAMCACHE
-       double fval = func ( x );
+          fval = func ( x.data() );
 #else
-       double fval = func ( x, p );
+          fval = func ( x.data(), p );
 #endif
-      if (normalizeFunc) fval = fval / norm;
 
-#ifdef DEBUG
-      if (i == 0) {
-         std::cout << "x [ " << data.NDim() << " ] = ";
-         for (unsigned int j = 0; j < data.NDim(); ++j)
-            std::cout << x[j] << "\t";
-         std::cout << "\tpar = [ " << func.NPar() << " ] =  ";
-         for (unsigned int ipar = 0; ipar < func.NPar(); ++ipar)
-            std::cout << p[ipar] << "\t";
-         std::cout << "\tfval = " << fval << std::endl;
-      } else {
-         std::cout << ".";
-      }
+          // one -dim case
+       } else {
+          const auto x = data.GetCoordComponent(i, 0);
+#ifdef USE_PARAMCACHE
+          fval = func ( x );
+#else
+          fval = func ( x, p );
 #endif
+
+       }
+
+      if (normalizeFunc) fval = fval * (1/norm);
+
       // function EvalLog protects against negative or too small values of fval
       double logval =  ROOT::Math::Util::EvalLog( fval);
       if (iWeight > 0) {
@@ -968,21 +895,55 @@ double FitUtil::EvaluateLogL(const IModelFunction & func, const UnBinData & data
          logval *= weight;
          if (iWeight ==2) {
             logval *= weight; // use square of weights in likelihood
-            if (extended) {
+            if (!extended) {
                // needed sum of weights and sum of weight square if likelkihood is extended
-               sumW += weight;
-               sumW2 += weight*weight;
+               W = weight;
+               W2 = weight*weight;
             }
          }
       }
-      logl += logval;
-   }
+   nPoints++;
+      return LikelihoodAux<double>(logval, W, W2);
+   };
 
-#ifdef DEBUG
-   std::cout << std::endl;
+#ifdef R__USE_IMT
+  auto redFunction = [](const std::vector<LikelihoodAux<double>> & objs){
+           return std::accumulate(objs.begin(), objs.end(), LikelihoodAux<double>(0.0,0.0,0.0),
+                       [](const LikelihoodAux<double> &l1, const LikelihoodAux<double> &l2){
+                           return l1+l2;
+                  });
+  };
+#else
+  (void)nChunks;
 #endif
 
-   if (extended) {
+  double logl{};
+  double sumW{};
+  double sumW2{};
+  if(executionPolicy == ROOT::Fit::kSerial){
+    for (unsigned int i=0; i<n; ++i) {
+      auto resArray = mapFunction(i);
+      logl+=resArray.logvalue;
+      sumW+=resArray.weight;
+      sumW2+=resArray.weight2;
+    }
+#ifdef R__USE_IMT
+  } else if(executionPolicy == ROOT::Fit::kMultithread) {
+    auto chunks = nChunks !=0? nChunks: setAutomaticChunking(data.Size());
+    ROOT::TThreadExecutor pool;
+    auto resArray = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction, chunks);
+    logl=resArray.logvalue;
+    sumW=resArray.weight;
+    sumW2=resArray.weight2;
+#endif
+//   } else if(executionPolicy == ROOT::Fit::kMultitProcess){
+    // ROOT::TProcessExecutor pool;
+    // res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction);
+  } else{
+    Error("FitUtil::EvaluateLogL","Execution policy unknown. Avalaible choices:\n 0: Serial (default)\n 1: MultiThread (requires IMT)\n");
+  }
+
+  if (extended) {
       // add Poisson extended term
       double extendedTerm = 0; // extended term in likelihood
       double nuTot = 0;
@@ -999,22 +960,16 @@ double FitUtil::EvaluateLogL(const IModelFunction & func, const UnBinData & data
             for (unsigned int ir = 0; ir < data.Range().Size(); ++ir) {
                data.Range().GetRange(&xmin[0],&xmax[0],ir);
                nuTot += igEval.Integral(xmin.data(),xmax.data());
-#ifdef DEBUG
-         std::cout << "After Integral bewteen " << xmin[0] << " and " << xmax[0] << " nexp is  " << nuTot << std::endl;
-#endif
             }
          } else {
             // use (-inf +inf)
             data.Range().GetRange(&xmin[0],&xmax[0]);
             // check if funcition is zero at +- inf
-            if (func(xmin.data()) != 0 || func(xmax.data()) != 0) {
+            if (func(xmin.data(), p) != 0 || func(xmax.data(), p) != 0) {
                MATH_ERROR_MSG("FitUtil::EvaluateLogLikelihood","A range has not been set and the function is not zero at +/- inf");
                return 0;
             }
             nuTot = igEval.Integral(&xmin[0],&xmax[0]);
-#ifdef DEBUG
-         std::cout << "Range not existig - integral bewteen " << xmin[0] << " and " << xmax[0] << "  is  " << nuTot << std::endl;
-#endif
          }
 
          // force to be last parameter value
@@ -1035,30 +990,20 @@ double FitUtil::EvaluateLogL(const IModelFunction & func, const UnBinData & data
       }
       logl += extendedTerm;
 
-#ifdef DEBUG
-      // for (unsigned int ipar = 0; ipar < func.NPar(); ++ipar)
-      //    std::cout << p[ipar] << "\t";
-      // std::cout << std::endl;
-      std::cout << "fit is extended n = " << n << " nutot " << nuTot << " extended LL term = " <<  extendedTerm << " logl = " << logl
-                << std::endl;
-#endif
    }
 
    // reset the number of fitting data points
-   nPoints = n;
-//    if (nRejected != 0)  {
-//       assert(nRejected <= n);
-//       nPoints = n - nRejected;
-//       if ( nPoints < func.NPar() )
-//          MATH_ERROR_MSG("FitUtil::EvaluateLogL","Error too many points rejected because of bad pdf values");
-
-//    }
-#ifdef DEBUG
-   std::cout << "Logl = " << logl << " np = " << nPoints << std::endl;
-#endif
+  //  nPoints = n;
+// std::cout<<", n: "<<nPoints<<std::endl;
+nPoints = 0;
 
    return -logl;
 }
+
+#ifdef R__HAS_VECCORE
+void FitUtil::EvaluateLogLGradient(const IModelFunctionTempl<ROOT::Double_v> &, const UnBinData &, const double * , double *, unsigned int & ) {
+}
+#endif
 
 void FitUtil::EvaluateLogLGradient(const IModelFunction & f, const UnBinData & data, const double * p, double * grad, unsigned int & ) {
    // evaluate the gradient of the log likelihood function
@@ -1467,6 +1412,13 @@ void FitUtil::EvaluatePoissonLogLGradient(const IModelFunction & f, const BinDat
       // copy result
       std::copy(g.begin(), g.end(), grad);
    }
+}
+
+unsigned FitUtil::setAutomaticChunking(unsigned nEvents){
+      SysInfo_t s;
+      gSystem->GetSysInfo(&s);
+      auto ncpu  = s.fCpus;
+      return ((nEvents/ncpu + 1) % 1000) *40 ; //arbitrary formula
 }
 
 }

@@ -42,7 +42,7 @@ is provided to modify the contents
 
 using namespace std;
 
-ClassImp(RooAbsString) 
+ClassImp(RooAbsString); 
 ;
 
 

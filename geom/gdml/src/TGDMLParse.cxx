@@ -117,7 +117,7 @@ When most solids or volumes are added to the geometry they
 #include <stdlib.h>
 #include <string>
 
-ClassImp(TGDMLParse)
+ClassImp(TGDMLParse);
 
 ////////////////////////////////////////////////////////////////////////////////
 ///creates the new instance of the XMLEngine called 'gdml', using the filename >>
@@ -519,64 +519,67 @@ Double_t TGDMLParse::GetScaleVal(const char* sunit)
 ////////////////////////////////////////////////////////////////////////////////
 /// Convert number in string format to double value.
 
-Double_t TGDMLParse::Value(const char* svalue) const
+Double_t TGDMLParse::Value(const char *svalue) const
 {
-   char* end;
+   char *end;
    double val = strtod(svalue, &end);
+
+   // ignore white spaces.
+   while( *end != 0 && isspace(*end) ) ++end;
 
    // Succesfully parsed all the characters up to the ending NULL, so svalue
    // was a simple number.
-   if(*end == 0) return val;
+   if (*end == 0) return val;
 
    // Otherwise we'll use TFormula to evaluate the string, having first found
    // all the GDML variable names in it and marked them with [] so that
    // TFormula will recognize them as parameters.
 
    std::string expanded;
-   expanded.reserve(strlen(svalue)*2);
+   expanded.reserve(strlen(svalue) * 2);
 
    // Be careful about locale so we always mean the same thing by
    // "alphanumeric"
-   const std::locale& loc = std::locale::classic(); // "C" locale
+   const std::locale &loc = std::locale::classic(); // "C" locale
 
    // Walk through the string inserting '[' and ']' where necessary
-   const char* p = svalue;
-   while(*p){
-     // Find a site for a '['. Just before the first alphabetic character
-     for(; *p != 0; ++p){
-       if(std::isalpha(*p, loc) || *p == '_'){
-	 expanded += '[';
-	 break;
-       }
-       expanded += *p;
-     }
-     // If we reached the end of the string while looking for the start of a
-     // token then we're done
-     if(*p == 0) break;
+   const char *p = svalue;
+   while (*p) {
+      // Find a site for a '['. Just before the first alphabetic character
+      for (; *p != 0; ++p) {
+         if (std::isalpha(*p, loc) || *p == '_') {
+            expanded += '[';
+            break;
+         }
+         expanded += *p;
+      }
+      // If we reached the end of the string while looking for the start of a
+      // token then we're done
+      if (*p == 0) break;
 
-     // Now look for the position of the following ']'. Straight before the
-     // first non-alphanumeric character
-     for(; *p != 0; ++p){
-       if(!isalnum(*p, loc) && *p != '_'){
-	 expanded += ']';
-	 break;
-       }
-       expanded += *p;
-     }
-     // If we reached the end of the string while looking for a position for a
-     // ']' then it goes here
-     if(*p == 0) expanded += ']';
+      // Now look for the position of the following ']'. Straight before the
+      // first non-alphanumeric character
+      for (; *p != 0; ++p) {
+         if (!isalnum(*p, loc) && *p != '_') {
+            expanded += ']';
+            break;
+         }
+         expanded += *p;
+      }
+      // If we reached the end of the string while looking for a position for a
+      // ']' then it goes here
+      if (*p == 0) expanded += ']';
    } // end loop over svalue
 
    TFormula f("TFormula", expanded.c_str());
 
    // Tell the TFormula about every parameter we know about
-   for(auto it: fconsts) f.SetParameter(it.first.c_str(), it.second);
+   for (auto it: fconsts) f.SetParameter(it.first.c_str(), it.second);
 
    val = f.Eval(0);
 
-   if(std::isnan(val) || std::isinf(val)){
-     Fatal("Value", "Got bad value %lf from string '%s'", val, svalue);
+   if (std::isnan(val) || std::isinf(val)) {
+      Fatal("Value", "Got bad value %lf from string '%s'", val, svalue);
    }
 
    return val;
@@ -3850,7 +3853,7 @@ XMLNodePointer_t TGDMLParse::Reflection(TXMLEngine* gdml, XMLNodePointer_t node,
 
 //===================================================================
 
-ClassImp(TGDMLRefl)
+ClassImp(TGDMLRefl);
 
 /******************************************************************
 ____________________________________________________________

@@ -34,7 +34,7 @@ Selector to verify dataset in parallel on workers
 #include "TFileCollection.h"
 #include "TFileInfo.h"
 
-ClassImp(TSelVerifyDataSet)
+ClassImp(TSelVerifyDataSet);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor

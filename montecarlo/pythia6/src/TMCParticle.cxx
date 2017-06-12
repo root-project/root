@@ -23,7 +23,7 @@ extern "C" void pyname(const Int_t &kf, const char *name, const Int_t len);
 extern "C" void pyname(const Int_t &kf, const char *name, const Int_t len);
 #endif
 
-ClassImp(TMCParticle)
+ClassImp(TMCParticle);
 
 ////////////////////////////////////////////////////////////////////////////////
 

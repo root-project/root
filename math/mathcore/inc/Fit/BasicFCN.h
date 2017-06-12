@@ -32,20 +32,21 @@ namespace ROOT {
 
 //___________________________________________________________________________________
 /**
-   BasicFCN class: base class  for the objective functions used in the fits 
-   It has a reference to the data and th emodel function used in the fit. 
-   It cannot be instantiated but constructed from the derived classes 
+   BasicFCN class: base class  for the objective functions used in the fits
+   It has a reference to the data and th emodel function used in the fit.
+   It cannot be instantiated but constructed from the derived classes
 */
-template<class FunType, class DataType>
-class BasicFCN : public ::ROOT::Math::BasicFitMethodFunction<FunType> {
+template<class DerivFunType, class ModelFunType, class DataType>
+class BasicFCN : public ::ROOT::Math::BasicFitMethodFunction<DerivFunType> {
 
 protected:
 
-   
-   typedef  ::ROOT::Math::BasicFitMethodFunction<FunType> BaseObjFunction;
+   typedef typename ModelFunType::BackendType T;
+
+   typedef  ::ROOT::Math::BasicFitMethodFunction<DerivFunType> BaseObjFunction;
    typedef typename  BaseObjFunction::BaseFunction BaseFunction;
 
-   typedef  ::ROOT::Math::IParamMultiFunction IModelFunction;
+   typedef  ::ROOT::Math::IParamMultiFunctionTempl<T> IModelFunction;
 
    /**
       Constructor from data set  and model function
@@ -57,7 +58,7 @@ protected:
    { }
 
 
-   
+
    /**
       Destructor (no operations)
    */
@@ -71,14 +72,14 @@ public:
 
    /// access to data pointer
    std::shared_ptr<DataType> DataPtr() const { return fData; }
-   
+
    /// access to const reference to the model function
    virtual const IModelFunction & ModelFunction() const { return *fFunc; }
 
-   /// access to function pointer 
+   /// access to function pointer
    std::shared_ptr<IModelFunction> ModelFunctionPtr() const { return fFunc; }
 
-   
+
 
 protected:
 

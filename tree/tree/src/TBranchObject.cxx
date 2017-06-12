@@ -32,7 +32,7 @@ A Branch for the case of an object.
 #include "TTree.h"
 #include "TVirtualPad.h"
 
-ClassImp(TBranchObject)
+ClassImp(TBranchObject);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor for BranchObject.

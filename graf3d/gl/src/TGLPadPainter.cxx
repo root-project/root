@@ -53,7 +53,7 @@ it will be mess - at any moment I do not know, where to take line attribute - fr
 gVirtualX or from my own member. So! All attributed, _ALL_ go to/from gVirtualX.
 */
 
-ClassImp(TGLPadPainter)
+ClassImp(TGLPadPainter);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -692,6 +692,7 @@ void TGLPadPainter::DrawPolyMarker()
       fMarker.DrawPlus(n, xy);
       break;
    case kStar:
+   case 31:
       fMarker.DrawStar(n, xy);
       break;
    case kCircle:
@@ -734,13 +735,68 @@ void TGLPadPainter::DrawPolyMarker()
       fMarker.DrawDiamond(n, xy);
       break;
    case kOpenCross:
-      fMarker.DrawCross(n, xy);
+      fMarker.DrawOpenCross(n, xy);
       break;
    case kFullStar:
       fMarker.DrawFullStar(n, xy);
       break;
    case kOpenStar:
       fMarker.DrawOpenStar(n, xy);
+      break;
+   case kOpenTriangleDown:
+      fMarker.DrawOpenTrianlgeDown(n, xy);
+      break;
+   case kFullDiamond:
+      fMarker.DrawFullDiamond(n, xy);
+      break;
+   case kFullCross:
+      fMarker.DrawFullCross(n, xy);
+      break;
+   case kOpenDiamondCross:
+      fMarker.DrawOpenDiamondCross(n, xy);
+      break;
+   case kOpenSquareDiagonal:
+      fMarker.DrawOpenSquareDiagonal(n, xy);
+      break;
+   case kOpenThreeTriangles:
+      fMarker.DrawOpenThreeTriangles(n, xy);
+      break;
+   case kOctagonCross:
+      fMarker.DrawOctagonCross(n, xy);
+      break;
+   case kFullThreeTriangles:
+      fMarker.DrawFullThreeTriangles(n, xy);
+      break;
+   case kOpenFourTrianglesX:
+      fMarker.DrawOpenFourTrianglesX(n, xy);
+      break;
+   case kFullFourTrianglesX:
+      fMarker.DrawFullFourTrianglesX(n, xy);
+      break;
+   case kOpenDoubleDiamond:
+      fMarker.DrawOpenDoubleDiamond(n, xy);
+      break;
+   case kFullDoubleDiamond:
+      fMarker.DrawFullDoubleDiamond(n, xy);
+      break;
+   case kOpenFourTrianglesPlus:
+      fMarker.DrawOpenFourTrianglesPlus(n, xy);
+      break;
+   case kFullFourTrianglesPlus:
+      fMarker.DrawFullFourTrianglesPlus(n, xy);
+      break;
+   case kOpenCrossX:
+      fMarker.DrawOpenCrossX(n, xy);
+      break;
+   case kFullCrossX:
+      fMarker.DrawFullCrossX(n, xy);
+      break;
+   case kFourSquaresX:
+      fMarker.DrawFourSquaresX(n, xy);
+      break;
+   case kFourSquaresPlus:
+      fMarker.DrawFourSquaresPlus(n, xy);
+      break;
    }
 
    RestoreProjectionMatrix();

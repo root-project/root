@@ -33,6 +33,7 @@ points for its contents and provides an iterator over its elements
 #include "TBuffer.h"
 #include "TClass.h"
 #include "TMath.h"
+#include "TTree.h"
 
 #include "RooAbsData.h"
 #include "RooFormulaVar.h"
@@ -64,7 +65,7 @@ points for its contents and provides an iterator over its elements
 
 using namespace std;
 
-ClassImp(RooAbsData)
+ClassImp(RooAbsData);
 ;
 
 static std::map<RooAbsData*,int> _dcc ;
@@ -75,7 +76,11 @@ RooAbsData::StorageType RooAbsData::defaultStorageType=RooAbsData::Vector ;
 
 void RooAbsData::setDefaultStorageType(RooAbsData::StorageType s)
 {
-  defaultStorageType = s ;
+   if (RooAbsData::Composite == s) {
+      cout << "Composite storage is not a valid *default* storage type." << endl;
+   } else {
+      defaultStorageType = s;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -113,6 +118,7 @@ RooAbsData::RooAbsData()
 {
   claimVars(this) ;
   _dstore = 0 ;
+  storageType = defaultStorageType;
   _iterator = _vars.createIterator() ;
   _cacheIter = _cachedVars.createIterator() ;
 
@@ -126,34 +132,41 @@ RooAbsData::RooAbsData()
 RooAbsData::RooAbsData(const char *name, const char *title, const RooArgSet& vars, RooAbsDataStore* dstore) :
   TNamed(name,title), _vars("Dataset Variables"), _cachedVars("Cached Variables"), _dstore(dstore)
 {
-  //cout << "created dataset " << this << endl ;
-  claimVars(this) ;
+   if (dynamic_cast<RooTreeDataStore *>(dstore)) {
+      storageType = RooAbsData::Tree;
+   } else if (dynamic_cast<RooVectorDataStore *>(dstore)) {
+      storageType = RooAbsData::Vector;
+   } else {
+      storageType = RooAbsData::Composite;
+   }
+   // cout << "created dataset " << this << endl ;
+   claimVars(this);
 
-  // clone the fundamentals of the given data set into internal buffer
-  TIterator* iter = vars.createIterator() ;
-  RooAbsArg *var;
-  while((0 != (var= (RooAbsArg*)iter->Next()))) {
-    if (!var->isFundamental()) {
-      coutE(InputArguments) << "RooAbsDataStore::initialize(" << GetName()
-             << "): Data set cannot contain non-fundamental types, ignoring "
-             << var->GetName() << endl ;
-    } else {
-      _vars.addClone(*var);
-    }
-  }
-  delete iter ;
+   // clone the fundamentals of the given data set into internal buffer
+   TIterator *iter = vars.createIterator();
+   RooAbsArg *var;
+   while ((0 != (var = (RooAbsArg *)iter->Next()))) {
+      if (!var->isFundamental()) {
+         coutE(InputArguments) << "RooAbsDataStore::initialize(" << GetName()
+                               << "): Data set cannot contain non-fundamental types, ignoring " << var->GetName()
+                               << endl;
+      } else {
+         _vars.addClone(*var);
+      }
+   }
+   delete iter;
 
-  // reconnect any parameterized ranges to internal dataset observables
-  iter = _vars.createIterator() ;
-  while((0 != (var= (RooAbsArg*)iter->Next()))) {
-    var->attachDataSet(*this) ;
-  }
-  delete iter ;
+   // reconnect any parameterized ranges to internal dataset observables
+   iter = _vars.createIterator();
+   while ((0 != (var = (RooAbsArg *)iter->Next()))) {
+      var->attachDataSet(*this);
+   }
+   delete iter;
 
-  _iterator= _vars.createIterator();
-  _cacheIter = _cachedVars.createIterator() ;
+   _iterator = _vars.createIterator();
+   _cacheIter = _cachedVars.createIterator();
 
-  RooTrace::create(this) ;
+   RooTrace::create(this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -198,11 +211,13 @@ RooAbsData::RooAbsData(const RooAbsData& other, const char* newname) :
 
     RooCategory* idx = (RooCategory*) _vars.find(*((RooCompositeDataStore*)other.store())->index()) ;
     _dstore = new RooCompositeDataStore(newname?newname:other.GetName(),other.GetTitle(),_vars,*idx,smap) ;
+    storageType = RooAbsData::Composite;
 
   } else {
 
     // Convert to vector store if default is vector
     _dstore = other._dstore->clone(_vars,newname?newname:other.GetName()) ;
+    storageType = other.storageType;
   }
 
   RooTrace::create(this) ;
@@ -237,11 +252,12 @@ RooAbsData::~RooAbsData()
 
 void RooAbsData::convertToVectorStore()
 {
-  if (dynamic_cast<RooTreeDataStore*>(_dstore)) {
-    RooVectorDataStore* newStore =  new RooVectorDataStore(*(RooTreeDataStore*)_dstore,_vars,GetName()) ;
-    delete _dstore ;
-    _dstore = newStore ;
-  }
+   if (storageType == RooAbsData::Tree) {
+      RooVectorDataStore *newStore = new RooVectorDataStore(*(RooTreeDataStore *)_dstore, _vars, GetName());
+      delete _dstore;
+      _dstore = newStore;
+      storageType = RooAbsData::Vector;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2330,8 +2346,57 @@ Bool_t RooAbsData::hasFilledCache() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Return a pointer to the TTree which stores the data. Returns a nullpointer
+/// if vector-based storage is used. The RooAbsData remains owner of the tree
 
-const TTree* RooAbsData::tree() const
+const TTree *RooAbsData::tree() const
 {
-  return _dstore->tree() ;
+   if (storageType == RooAbsData::Tree) {
+      return _dstore->tree();
+   } else {
+      coutW(InputArguments) << "RooAbsData::tree(" << GetName() << ") WARNING: is not of StorageType::Tree. "
+                            << "Use export_tree() instead or convert to tree storage." << endl;
+      return (TTree *)nullptr;
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return a clone of the TTree which stores the data or create such a tree
+/// if vector storage is used. The user is responsible for deleting the tree
+
+TTree *RooAbsData::GetClonedTree() const
+{
+   if (storageType == RooAbsData::Tree) {
+      auto tmp = const_cast<TTree *>(_dstore->tree());
+      return tmp->CloneTree();
+   } else {
+      RooTreeDataStore buffer(GetName(), GetTitle(), *get(), *_dstore);
+      return buffer.tree().CloneTree();
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Convert vector-based storage to tree-based storage
+
+void RooAbsData::convertToTreeStore()
+{
+   if (storageType != RooAbsData::Tree) {
+      RooTreeDataStore *newStore = new RooTreeDataStore(GetName(), GetTitle(), *get(), *_dstore);
+      delete _dstore;
+      _dstore = newStore;
+      storageType = RooAbsData::Tree;
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// If one of the TObject we have a referenced to is deleted, remove the
+/// reference.
+
+void RooAbsData::RecursiveRemove(TObject *obj)
+{
+  for(auto &iter : _ownedComponents) {
+    if (iter.second == obj) {
+      iter.second = nullptr;
+    }
+  }
 }

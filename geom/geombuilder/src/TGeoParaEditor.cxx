@@ -39,7 +39,7 @@
 #include "TGNumberEntry.h"
 #include "TGLabel.h"
 
-ClassImp(TGeoParaEditor)
+ClassImp(TGeoParaEditor);
 
 enum ETGeoParaWid {
    kPARA_NAME, kPARA_X, kPARA_Y,  kPARA_Z, kPARA_ALPHA,

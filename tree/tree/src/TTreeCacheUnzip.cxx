@@ -66,7 +66,7 @@ TTreeCacheUnzip::EParUnzipMode TTreeCacheUnzip::fgParallel = TTreeCacheUnzip::kD
 // Hence there is no good reason to limit it too much
 Double_t TTreeCacheUnzip::fgRelBuffSize = .5;
 
-ClassImp(TTreeCacheUnzip)
+ClassImp(TTreeCacheUnzip);
 
 ////////////////////////////////////////////////////////////////////////////////
 

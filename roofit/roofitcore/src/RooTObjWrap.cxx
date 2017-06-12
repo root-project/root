@@ -29,6 +29,6 @@ RooInt is a minimal implementation of a TNamed holding a TObject
 
 using namespace std;
 
-ClassImp(RooTObjWrap)
+ClassImp(RooTObjWrap);
 ;
 

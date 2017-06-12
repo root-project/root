@@ -286,7 +286,7 @@ in order to enhance rays.
 
 TGeoManager *gGeoManager = 0;
 
-ClassImp(TGeoManager)
+ClassImp(TGeoManager);
 
 std::mutex TGeoManager::fgMutex;
 Bool_t TGeoManager::fgLock         = kFALSE;

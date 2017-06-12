@@ -104,6 +104,9 @@ public:
       Create always new parameter setting list from a given model function
    */
    void CreateParamsSettings(const ROOT::Math::IParamMultiFunction & func);
+#ifdef R__HAS_VECCORE
+   void CreateParamsSettings(const ROOT::Math::IParamMultiFunctionTempl<ROOT::Double_v> & func);
+#endif
 
    /**
       set the parameter settings from number of parameters and a vector of values and optionally step values. If there are not existing or number of parameters does not match existing one, create a new parameter setting list.

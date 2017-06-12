@@ -164,8 +164,11 @@ namespace cling {
     differentContent(m_LookupTablesFile, m_DiffPair->m_LookupTablesFile,
                      "lookup tables", verbose, &builtinNames);
 
+    // We create a virtual file for each input line in the format input_line_N.
+    llvm::SmallVector<llvm::StringRef, 2> input_lines;
+    input_lines.push_back("input_line_[0-9].*");
     differentContent(m_IncludedFilesFile, m_DiffPair->m_IncludedFilesFile,
-                     "included files", verbose);
+                     "included files", verbose, &input_lines);
 
     differentContent(m_ASTFile, m_DiffPair->m_ASTFile, "AST", verbose);
 
@@ -248,7 +251,9 @@ namespace cling {
 
   void ClangInternalState::printIncludedFiles(llvm::raw_ostream& Out,
                                               const SourceManager& SM) {
-    Out << "Legend: [p] parsed; [P] parsed and open; [r] from AST file\n\n";
+    // FileInfos are stored as a mapping, and invalidating the cache
+    // can change iteration order.
+    std::vector<std::string> ParsedOpen, Parsed, AST;
     for (clang::SourceManager::fileinfo_iterator I = SM.fileinfo_begin(),
            E = SM.fileinfo_end(); I != E; ++I) {
       const clang::FileEntry *FE = I->first;
@@ -266,14 +271,24 @@ namespace cling {
           // There is content - a memory buffer or a file.
           // We know it's a file because we started off the FileEntry.
           if (FE->isOpen())
-            Out << "[P] ";
+            ParsedOpen.emplace_back(std::move(fileName));
           else
-            Out << "[p] ";
+            Parsed.emplace_back(std::move(fileName));
         } else
-          Out << "[r] ";
-        Out << fileName << '\n';
+         AST.emplace_back(std::move(fileName));
       }
     }
+    auto DumpFiles = [&Out](const char* What, std::vector<std::string>& Files) {
+      if (Files.empty())
+        return;
+      Out << What << ":\n";
+      std::sort(Files.begin(), Files.end());
+      for (auto&& FileName : Files)
+        Out << " " << FileName << '\n';
+    };
+    DumpFiles("Parsed and open", ParsedOpen);
+    DumpFiles("Parsed", Parsed);
+    DumpFiles("From AST file", AST);
   }
 
   void ClangInternalState::printAST(llvm::raw_ostream& Out, const ASTContext& C) {

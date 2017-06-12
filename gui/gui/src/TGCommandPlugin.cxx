@@ -25,7 +25,7 @@
 // Class used to redirect command line input/output.
 //_____________________________________________________________________________
 
-ClassImp(TGCommandPlugin)
+ClassImp(TGCommandPlugin);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TGCommandPlugin Constructor.
@@ -85,7 +85,9 @@ TGCommandPlugin::~TGCommandPlugin()
    TString pathtmp = TString::Format("%s/command.%d.log",
                                      gSystem->TempDirectory(), fPid);
    gSystem->Unlink(pathtmp);
+   fCommand->Disconnect("ReturnPressed()");
    delete fTimer;
+   fTimer = 0;
    Cleanup();
 }
 
@@ -154,7 +156,7 @@ void TGCommandPlugin::HandleCommand()
 
 Bool_t TGCommandPlugin::HandleTimer(TTimer *t)
 {
-   if (t != fTimer) return kTRUE;
+   if ((fTimer == 0) || (t != fTimer)) return kTRUE;
    CheckRemote("");
    return kTRUE;
 }

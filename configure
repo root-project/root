@@ -67,8 +67,10 @@ options="                    \
    enable_builtin_unuran     \
    enable_builtin_zlib       \
    enable_builtin_lzma       \
+   enable_builtin_lz4        \
    enable_builtin_llvm       \
    enable_cxx14              \
+   enable_cxx17              \
    enable_cxxmodules         \
    enable_libcxx             \
    enable_castor             \
@@ -166,6 +168,7 @@ for c in $options ; do eval ${c}_explicit="" ; done
 
 enable_cxx11=yes
 enable_cxx14=no
+enable_cxx17=no
 enable_cxxmodules=no
 enable_libcxx=no
 enable_cocoa=
@@ -202,6 +205,7 @@ enable_builtin_pcre=no
 enable_builtin_unuran=no
 enable_builtin_zlib=no
 enable_builtin_lzma=no
+enable_builtin_lz4=yes
 enable_builtin_llvm=yes
 enable_afdsmgrd=no
 enable_search_usrlocal=yes
@@ -234,6 +238,7 @@ LIBTIFF          \
 LIBJPEG          \
 LIBPNG           \
 LZMA             \
+LZ4              \
 OPENGL           \
 MYSQL            \
 ORACLE           \
@@ -1730,8 +1735,10 @@ enable/disable options, prefix with either --enable- or --disable-
   builtin-unuran     Build included libunuran, or use system libunuran
   builtin-zlib       Build included libz, or use system libz
   builtin-lzma       Build included liblzma, or use system liblzma
+  builtin-lz4        Build included liblz4, or use system liblz4
   libcxx             Build using libc++, required by clang option (MacOS X only, for the time being)
   cxx14              Build using C++14 compatible mode, requires gcc > 4.9.x or clang
+  cxx17              Build using C++14 compatible mode, requires gcc > 7.1.x or clang > 3.9
   cxxmodules         Build using clang's cxxmodules feature, requires clang > 3.8
   castor             CASTOR support, requires libshift from CASTOR >= 1.5.2
   chirp              Chirp filesystem support, requires cctools >= 3.2.2
@@ -2080,6 +2087,7 @@ win32)
    enable_builtin_unuran="yes"
    enable_builtin_zlib="yes"
    enable_builtin_lzma="yes"
+   enable_builtin_lz4="yes"
    top_builddir=`cygpath -u $top_builddir`
    top_srcdir=`cygpath -u $top_srcdir`
    ;;
@@ -2735,6 +2743,39 @@ if test "x$enable_cxx14" = "xyes"; then
         fi
         result "yes"
         cxxversion=cxx14
+    fi
+fi
+
+######################################################################
+#
+### echo %%% C++17 - compile using c++17 compatible option
+#
+# needs gcc > 7.1.x or clang 3.9
+usecxx17="undef"
+if test "x$enable_cxx17" = "xyes"; then
+    message "Checking whether c++17 mode is supported"
+    check_cxxopt -std=c++1z
+    if test $cxxopt_result -eq 0 ; then
+        enable_cxx17="no"
+        result "no"
+        result "`basename $0`: c++17 mode is requested but the current compiler does not support it."
+        exit 1
+    else
+        usecxx11="define"
+        usecxx14="define"
+        usecxx17="define"
+        enable_cxx11="no"
+        enable_cxx14="no"
+        # on OS X libcxx is required for C++11 support with clang
+        # so turn the option on when using clang
+        if test "x$platform" = "xmacosx" && echo $altcxx | grep 'clang++' > /dev/null 2>&1; then
+            enable_libcxx="yes"
+        fi
+        if test "x$platform" = "xmacosx" && echo $altcxx | grep 'icc' > /dev/null 2>&1; then
+            enable_libcxx="yes"
+        fi
+        result "yes"
+        cxxversion=cxx17
     fi
 fi
 
@@ -3448,6 +3489,48 @@ if test "x$enable_builtin_lzma" = "xno" ; then
 fi
 message "Checking whether to build included lzma"
 result "$enable_builtin_lzma"
+
+######################################################################
+#
+### echo %%% Use included lz4 or use systems
+#
+# (See http://lz4.github.io/lz4/)
+#
+if test "x$enable_builtin_lz4" = "xno" ; then
+    check_header "lz4.h" "" \
+        $LZ4 ${LZ4:+$LZ4/include} \
+        ${finkdir:+$finkdir/include} \
+        /usr/local/include /usr/include \
+        /usr/local/include/lz4 /usr/include/lz4 \
+        /opt/lz4/include
+    if test "x$found_dir" = "x" ; then
+        enable_builtin_lz4=yes
+    else
+        lz4inc=$found_hdr
+        lz4incdir=$found_dir
+    fi
+
+    check_library "liblz4" "$enable_shared" "" \
+        $LZ4 ${LZ4:+$LZ4/lib} \
+        ${finkdir:+$finkdir/lib} \
+        /usr/local/lz4/lib /usr/local/lib \
+        /usr/lib/lz4 /usr/local/lib/lz4 /usr/lz4/lib /usr/lib \
+        /usr/lz4 /usr/local/lz4 /opt/lz4 /opt/lz4/lib
+    if test "x$found_lib" = "x" ; then
+        lz4lib=""
+        lz4libdir=""
+        enable_builtin_lz4="yes"
+    else
+        lz4lib="$found_lib"
+        lz4libdir="$found_dir"
+    fi
+
+    if test "x$lz4incdir" = "x" || test "x$lz4lib" = "x"; then
+        enable_builtin_lz4="yes"
+    fi
+fi
+message "Checking whether to build included lz4"
+result "$enable_builtin_lz4"
 
 ######################################################################
 #
@@ -7128,6 +7211,12 @@ fi
 
 ######################################################################
 #
+### echo %%% vecCore Library - Contributed library
+#
+hasveccore="undef"
+
+######################################################################
+#
 ### echo %%% GDML Library - Contributed library
 #
 message "Checking whether to build libGdml"
@@ -7807,6 +7896,10 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@lzmaincdir@|$lzmaincdir|"            \
     -e "s|@lzmalib@|$lzmalib|"                  \
     -e "s|@lzmalibdir@|$lzmalibdir|"            \
+    -e "s|@builtinlz4@|$enable_builtin_lz4|"  \
+    -e "s|@lz4incdir@|$lz4incdir|"            \
+    -e "s|@lz4lib@|$lz4lib|"                  \
+    -e "s|@lz4libdir@|$lz4libdir|"            \
     -e "s|@buildroofit@|$enable_roofit|"        \
     -e "s|@buildminuit2@|$enable_minuit2|"      \
     -e "s|@buildunuran@|$enable_unuran|"        \
@@ -8027,6 +8120,7 @@ sed -e "s|@srcdir@|$ac_srcdir|"                 \
     -e "s|@buildnetxng@|$buildnetxng|"          \
     -e "s|@c++11@|$enable_cxx11|"               \
     -e "s|@c++14@|$enable_cxx14|"               \
+    -e "s|@c++17@|$enable_cxx17|"               \
     -e "s|@cxxmodules@|$enable_cxxmodules|"     \
     -e "s|@libc++@|$enable_libcxx|"             \
     -e "s|@werror@|$enable_werror|"             \
@@ -8084,8 +8178,10 @@ sed \
     -e "s|@hasxft@|$hasxft|"               \
     -e "s|@hascocoa@|$hascocoa|"           \
     -e "s|@hasvc@|$hasvc|"                 \
+    -e "s|@hasveccore@|$hasveccore|"       \
     -e "s|@usec++11@|$usecxx11|"           \
     -e "s|@usec++14@|$usecxx14|"           \
+    -e "s|@usec++17@|$usecxx17|"           \
     -e "s|@usecxxmodules@|$usecxxmodules|" \
     -e "s|@uselibc++@|$uselibcxx|"         \
     -e "s|@hasstdstringview@|$hasstdstringview|"       \

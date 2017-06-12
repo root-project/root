@@ -38,7 +38,7 @@ Event class for Support Vector Machine
 
 #include <iostream>
 
-ClassImp(TMVA::SVEvent)
+ClassImp(TMVA::SVEvent);
 
 TMVA::SVEvent::SVEvent()
 : fDataVector(0),
@@ -119,7 +119,7 @@ TMVA::SVEvent::SVEvent( const std::vector<Float_t>* svector, Float_t alpha, Floa
 TMVA::SVEvent::~SVEvent()
 {
    if (fLine != 0) {
-      delete fLine;
+      delete [] fLine;
       fLine = 0;
    }
 }

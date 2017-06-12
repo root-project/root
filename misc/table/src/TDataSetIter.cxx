@@ -27,7 +27,7 @@
 
 TDataSet *TDataSetIter::fgNullDataSet = (TDataSet *)(-1);
 
-ClassImp(TDataSetIter)
+ClassImp(TDataSetIter);
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //

@@ -41,7 +41,7 @@
 
 
 //- data ---------------------------------------------------------------------
-ClassImp(PyROOT::TPyROOTApplication)
+ClassImp(PyROOT::TPyROOTApplication);
 
 
 //- constructors/destructor --------------------------------------------------

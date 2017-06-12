@@ -26,7 +26,7 @@
 #include "TVirtualHistPainter.h"
 
 
-ClassImp(TH2)
+ClassImp(TH2);
 
 /** \addtogroup Hist
 @{
@@ -1754,12 +1754,10 @@ TProfile *TH2::DoProfile(bool onX, const char *name, Int_t firstbin, Int_t lastb
    Int_t  inN = inAxis.GetNbins();
    const char *expectedName = ( onX ? "_pfx" : "_pfy" );
 
-   Int_t firstOutBin, lastOutBin;
-   firstOutBin = outAxis.GetFirst();
-   lastOutBin = outAxis.GetLast();
-   if (firstOutBin == 0 && lastOutBin == 0) {
-      firstOutBin = 1; lastOutBin = outAxis.GetNbins();
-   }
+   // outer axis cannot be outside original axis (this fixes ROOT-8781)
+   // and firstOutBin and lastOutBin cannot be both equal to zero
+   Int_t firstOutBin = std::max(outAxis.GetFirst(),1);
+   Int_t lastOutBin = std::min(outAxis.GetLast(),outAxis.GetNbins() ) ;
 
    if ( lastbin < firstbin && inAxis.TestBit(TAxis::kAxisRange) ) {
       firstbin = inAxis.GetFirst();
@@ -2025,7 +2023,6 @@ TH1D *TH2::DoProjection(bool onX, const char *name, Int_t firstbin, Int_t lastbi
 {
    const char *expectedName = 0;
    Int_t inNbin;
-   Int_t firstOutBin, lastOutBin;
    const TAxis* outAxis;
    const TAxis* inAxis;
 
@@ -2054,11 +2051,10 @@ TH1D *TH2::DoProjection(bool onX, const char *name, Int_t firstbin, Int_t lastbi
       inAxis = GetXaxis();
    }
 
-   firstOutBin = outAxis->GetFirst();
-   lastOutBin = outAxis->GetLast();
-   if (firstOutBin == 0 && lastOutBin == 0) {
-      firstOutBin = 1; lastOutBin = outAxis->GetNbins();
-   }
+   // outer axis cannot be outside original axis (this fixes ROOT-8781)
+   // and firstOutBin and lastOutBin cannot be both equal to zero
+   Int_t firstOutBin = std::max(outAxis->GetFirst(),1);
+   Int_t lastOutBin = std::min(outAxis->GetLast(),outAxis->GetNbins() ) ;
 
    if ( lastbin < firstbin && inAxis->TestBit(TAxis::kAxisRange) ) {
       firstbin = inAxis->GetFirst();
@@ -2416,8 +2412,8 @@ TH1D* TH2::DoQuantiles(bool onX, const char * name, Double_t prob) const
       h1 = new TH1D(qname, GetTitle(), 1, 0, 1);
    }
    // set the bin content
-   Int_t firstOutBin = outAxis->GetFirst();
-   Int_t lastOutBin = outAxis->GetLast();
+   Int_t firstOutBin = std::max(outAxis->GetFirst(),1);
+   Int_t lastOutBin = std::max(outAxis->GetLast(),outAxis->GetNbins());
    const TArrayD *xbins = outAxis->GetXbins();
    if (xbins->fN == 0)
       h1->SetBins(lastOutBin-firstOutBin+1,outAxis->GetBinLowEdge(firstOutBin),outAxis->GetBinUpEdge(lastOutBin));
@@ -2693,7 +2689,7 @@ void TH2::Streamer(TBuffer &R__b)
 //  TH2C a 2-D histogram with one byte per cell (char)
 //______________________________________________________________________________
 
-ClassImp(TH2C)
+ClassImp(TH2C);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2947,7 +2943,7 @@ TH2C operator/(TH2C &h1, TH2C &h2)
 //  TH2S a 2-D histogram with two bytes per cell (short integer)
 //______________________________________________________________________________
 
-ClassImp(TH2S)
+ClassImp(TH2S);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3201,7 +3197,7 @@ TH2S operator/(TH2S &h1, TH2S &h2)
 //  TH2I a 2-D histogram with four bytes per cell (32 bits integer)
 //______________________________________________________________________________
 
-ClassImp(TH2I)
+ClassImp(TH2I);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3420,7 +3416,7 @@ TH2I operator/(TH2I &h1, TH2I &h2)
 //  TH2F a 2-D histogram with four bytes per cell (float)
 //______________________________________________________________________________
 
-ClassImp(TH2F)
+ClassImp(TH2F);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3684,7 +3680,7 @@ TH2F operator/(TH2F &h1, TH2F &h2)
 //  TH2D a 2-D histogram with eight bytes per cell (double)
 //______________________________________________________________________________
 
-ClassImp(TH2D)
+ClassImp(TH2D);
 
 
 ////////////////////////////////////////////////////////////////////////////////

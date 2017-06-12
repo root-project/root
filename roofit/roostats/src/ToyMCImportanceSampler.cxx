@@ -28,7 +28,7 @@ using namespace RooFit;
 using namespace std;
 
 
-ClassImp(RooStats::ToyMCImportanceSampler)
+ClassImp(RooStats::ToyMCImportanceSampler);
 
 namespace RooStats {
 

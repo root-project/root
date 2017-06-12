@@ -16,7 +16,7 @@
 #include "TGResourcePool.h"
 #include "TError.h"
 
-ClassImp(TGSimpleTableInterface)
+ClassImp(TGSimpleTableInterface);
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //

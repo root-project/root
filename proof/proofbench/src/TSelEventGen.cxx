@@ -37,7 +37,7 @@ Existing files are reused if not forced to be regenerated.
 #include "TProofServ.h"
 #include "TMacro.h"
 
-ClassImp(TSelEventGen)
+ClassImp(TSelEventGen);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor

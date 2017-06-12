@@ -76,8 +76,8 @@
 
 // fgClientProtocol is now in TAuthenticate
 
-ClassImp(TNetFile)
-ClassImp(TNetSystem)
+ClassImp(TNetFile);
+ClassImp(TNetSystem);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a TNetFile object. This is actually done inside Create(), so

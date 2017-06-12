@@ -19,5 +19,5 @@
 
 #include "TGridJobStatus.h"
 
-ClassImp(TGridJobStatus)
+ClassImp(TGridJobStatus);
 

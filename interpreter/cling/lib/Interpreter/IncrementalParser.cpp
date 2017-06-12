@@ -39,6 +39,7 @@
 #include "clang/CodeGen/ModuleBuilder.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Lex/Preprocessor.h"
+#include "clang/Lex/PreprocessorOptions.h"
 #include "clang/Parse/Parser.h"
 #include "clang/Sema/Sema.h"
 #include "clang/Sema/SemaDiagnostic.h"
@@ -206,11 +207,7 @@ namespace cling {
     if (hasCodeGenerator())
       getCodeGenerator()->Initialize(getCI()->getASTContext());
 
-    CompilationOptions CO;
-    CO.DeclarationExtraction = 0;
-    CO.ValuePrinting = CompilationOptions::VPDisabled;
-    CO.CodeGeneration = hasCodeGenerator();
-
+    CompilationOptions CO = m_Interpreter->makeDefaultCompilationOpts();
     Transaction* CurT = beginTransaction(CO);
     Preprocessor& PP = m_CI->getPreprocessor();
     DiagnosticsEngine& Diags = m_CI->getSema().getDiagnostics();
@@ -465,7 +462,7 @@ namespace cling {
     {
       Transaction* prevConsumerT = m_Consumer->getTransaction();
       m_Consumer->setTransaction(T);
-      Transaction* nestedT = beginTransaction(CompilationOptions());
+      Transaction* nestedT = beginTransaction(T->getCompilationOpts());
       // Pull all template instantiations in that came from the consumers.
       getCI()->getSema().PerformPendingInstantiations();
       ParseResultTransaction nestedPRT = endTransaction(nestedT);
@@ -530,22 +527,9 @@ namespace cling {
     if (!T->isNestedTransaction() && hasCodeGenerator()) {
       // The initializers are emitted to the symbol "_GLOBAL__sub_I_" + filename.
       // Make that unique!
-      ASTContext& Context = getCI()->getASTContext();
-      SourceManager &SM = Context.getSourceManager();
-      const FileEntry *MainFile = SM.getFileEntryForID(SM.getMainFileID());
-      FileEntry* NcMainFile = const_cast<FileEntry*>(MainFile);
-      // Hack to temporarily set the file entry's name to a unique name.
-      assert(MainFile->getName() == *(const char**)NcMainFile
-         && "FileEntry does not start with the name");
-      const char* &FileName = *(const char**)NcMainFile;
-      const char* OldName = FileName;
-      std::string ModName = getCodeGenerator()->GetModule()->getName().str();
-      FileName = ModName.c_str();
-
       deserT = beginTransaction(CompilationOptions());
       // Reset the module builder to clean up global initializers, c'tors, d'tors
-      getCodeGenerator()->HandleTranslationUnit(Context);
-      FileName = OldName;
+      getCodeGenerator()->HandleTranslationUnit(getCI()->getASTContext());
       auto PRT = endTransaction(deserT);
       commitTransaction(PRT);
       deserT = PRT.getPointer();
@@ -553,7 +537,7 @@ namespace cling {
       std::unique_ptr<llvm::Module> M(getCodeGenerator()->ReleaseModule());
 
       if (M) {
-        m_Interpreter->addModule(M.get());
+        m_Interpreter->addModule(M.get(), T->getCompilationOpts().OptLevel);
         T->setModule(std::move(M));
       }
 
@@ -703,20 +687,14 @@ namespace cling {
 
     // Create FileID for the current buffer.
     FileID FID;
-    if (CO.CodeCompletionOffset == -1)
-    {
-      FID = SM.createFileID(std::move(MB), SrcMgr::C_User,
-                                 /*LoadedID*/0,
-                                 /*LoadedOffset*/0, NewLoc);
-    } else {
-      // Create FileEntry and FileID for the current buffer.
-      // Enabling the completion point only works on FileEntries.
-      const clang::FileEntry* FE
-        = SM.getFileManager().getVirtualFile("vfile for " + source_name.str(),
-                                             InputSize, 0 /* mod time*/);
-      SM.overrideFileContents(FE, std::move(MB));
-      FID = SM.createFileID(FE, NewLoc, SrcMgr::C_User);
-
+    // Create FileEntry and FileID for the current buffer.
+    // Enabling the completion point only works on FileEntries.
+    const clang::FileEntry* FE
+      = SM.getFileManager().getVirtualFile(source_name.str(), InputSize,
+                                           0 /* mod time*/);
+    SM.overrideFileContents(FE, std::move(MB));
+    FID = SM.createFileID(FE, NewLoc, SrcMgr::C_User);
+    if (CO.CodeCompletionOffset != -1) {
       // The completion point is set one a 1-based line/column numbering.
       // It relies on the implementation to account for the wrapper extra line.
       PP.SetCodeCompletionPoint(FE, 1/* start point 1-based line*/,

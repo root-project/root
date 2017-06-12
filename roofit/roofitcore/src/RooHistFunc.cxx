@@ -38,7 +38,7 @@ discrete dimensions and may have negative values
 
 using namespace std;
 
-ClassImp(RooHistFunc)
+ClassImp(RooHistFunc);
 ;
 
 

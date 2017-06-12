@@ -132,7 +132,8 @@ protected:
    Bool_t         fCacheUserSet;          ///<! true if the cache setting was explicitly given by user
    Bool_t         fIMTEnabled;            ///<! true if implicit multi-threading is enabled for this tree
    UInt_t         fNEntriesSinceSorting;  ///<! Number of entries processed since the last re-sorting of branches
-   std::vector<std::pair<Long64_t,TBranch*>> fSortedBranches; ///<! Branches sorted by average task time
+   std::vector<std::pair<Long64_t,TBranch*>> fSortedBranches; ///<! Branches to be processed in parallel when IMT is on, sorted by average task time
+   std::vector<TBranch*> fSeqBranches;    ///<! Branches to be processed sequentially when IMT is on
 
    static Int_t     fgBranchStyle;        ///<  Old/New branch style
    static Long64_t  fgMaxTreeSize;        ///<  Maximum size of a file containing a Tree
@@ -146,11 +147,10 @@ private:
    mutable std::atomic<Long64_t> fIMTTotBytes;    ///<! Total bytes for the IMT flush baskets
    mutable std::atomic<Long64_t> fIMTZipBytes;    ///<! Zip bytes for the IMT flush baskets.
 
-   void             InitializeSortedBranches();
+   void             InitializeBranchLists(bool checkLeafCount);
    void             SortBranchesByTime();
 
 protected:
-   void             AddClone(TTree*);
    virtual void     KeepCircular();
    virtual TBranch *BranchImp(const char* branchname, const char* classname, TClass* ptrClass, void* addobj, Int_t bufsize, Int_t splitlevel);
    virtual TBranch *BranchImp(const char* branchname, TClass* ptrClass, void* addobj, Int_t bufsize, Int_t splitlevel);
@@ -286,6 +286,7 @@ public:
    virtual Int_t           AddBranchToCache(TBranch *branch,   Bool_t subbranches = kFALSE);
    virtual Int_t           DropBranchFromCache(const char *bname, Bool_t subbranches = kFALSE);
    virtual Int_t           DropBranchFromCache(TBranch *branch,   Bool_t subbranches = kFALSE);
+   void                    AddClone(TTree*);
    virtual TFriendElement *AddFriend(const char* treename, const char* filename = "");
    virtual TFriendElement *AddFriend(const char* treename, TFile* file);
    virtual TFriendElement *AddFriend(TTree* tree, const char* alias = "", Bool_t warn = kFALSE);
@@ -540,7 +541,19 @@ public:
    static  void            SetMaxTreeSize(Long64_t maxsize = 100000000000LL);
    virtual void            SetMaxVirtualSize(Long64_t size = 0) { fMaxVirtualSize = size; } // *MENU*
    virtual void            SetName(const char* name); // *MENU*
+
+   /**
+    * @brief Sets the address of the object to be notified when the tree is loaded.
+    *
+    * The method TObject::Notify is called for the given object when the tree
+    * is loaded. Specifically this occurs in the TTree::LoadTree method. To
+    * remove the notification call this method with nullptr:
+    * @code tree->SetNotify(nullptr); @endcode
+    *
+    * @param[in] obj Pointer to a TObject to be notified.
+    */
    virtual void            SetNotify(TObject* obj) { fNotify = obj; }
+
    virtual void            SetObject(const char* name, const char* title);
    virtual void            SetParallelUnzip(Bool_t opt=kTRUE, Float_t RelSize=-1);
    virtual void            SetPerfStats(TVirtualPerfStats* perf);

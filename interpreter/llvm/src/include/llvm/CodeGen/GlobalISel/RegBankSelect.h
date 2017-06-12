@@ -67,6 +67,7 @@
 #include "llvm/CodeGen/GlobalISel/MachineIRBuilder.h"
 #include "llvm/CodeGen/GlobalISel/RegisterBankInfo.h"
 #include "llvm/CodeGen/MachineFunctionPass.h"
+#include "llvm/CodeGen/MachineOptimizationRemarkEmitter.h"
 
 namespace llvm {
 // Forward declarations.
@@ -74,7 +75,9 @@ class BlockFrequency;
 class MachineBranchProbabilityInfo;
 class MachineBlockFrequencyInfo;
 class MachineRegisterInfo;
+class TargetPassConfig;
 class TargetRegisterInfo;
+class raw_ostream;
 
 /// This pass implements the reg bank selector pass used in the GlobalISel
 /// pipeline. At the end of this pass, all register operands have been assigned
@@ -306,7 +309,7 @@ public:
       Impossible
     };
 
-    /// Convenient types for a list of insertion points.
+    /// \name Convenient types for a list of insertion points.
     /// @{
     typedef SmallVector<std::unique_ptr<InsertPoint>, 2> InsertionPoints;
     typedef InsertionPoints::iterator insertpt_iterator;
@@ -338,7 +341,7 @@ public:
                        const TargetRegisterInfo &TRI, Pass &P,
                        RepairingKind Kind = RepairingKind::Insert);
 
-    /// Getters.
+    /// \name Getters.
     /// @{
     RepairingKind getKind() const { return Kind; }
     unsigned getOpIdx() const { return OpIdx; }
@@ -346,7 +349,7 @@ public:
     bool hasSplit() { return HasSplit; }
     /// @}
 
-    /// Overloaded methods to add an insertion point.
+    /// \name Overloaded methods to add an insertion point.
     /// @{
     /// Add a MBBInsertionPoint to the list of InsertPoints.
     void addInsertPoint(MachineBasicBlock &MBB, bool Beginning);
@@ -359,7 +362,7 @@ public:
     void addInsertPoint(InsertPoint &Point);
     /// @}
 
-    /// Accessors related to the insertion points.
+    /// \name Accessors related to the insertion points.
     /// @{
     insertpt_iterator begin() { return InsertPoints.begin(); }
     insertpt_iterator end() { return InsertPoints.end(); }
@@ -449,6 +452,18 @@ private:
     bool operator>(const MappingCost &Cost) const {
       return *this != Cost && Cost < *this;
     }
+
+    /// Print this on dbgs() stream.
+    void dump() const;
+
+    /// Print this on \p OS;
+    void print(raw_ostream &OS) const;
+
+    /// Overload the stream operator for easy debug printing.
+    friend raw_ostream &operator<<(raw_ostream &OS, const MappingCost &Cost) {
+      Cost.print(OS);
+      return OS;
+    }
   };
 
   /// Interface to the target lowering info related
@@ -470,14 +485,21 @@ private:
   /// This is required for non-fast mode.
   MachineBranchProbabilityInfo *MBPI;
 
+  /// Current optimization remark emitter. Used to report failures.
+  std::unique_ptr<MachineOptimizationRemarkEmitter> MORE;
+
   /// Helper class used for every code morphing.
   MachineIRBuilder MIRBuilder;
 
   /// Optimization mode of the pass.
   Mode OptMode;
 
+  /// Current target configuration. Controls how the pass handles errors.
+  const TargetPassConfig *TPC;
+
   /// Assign the register bank of each operand of \p MI.
-  void assignInstr(MachineInstr &MI);
+  /// \return True on success, false otherwise.
+  bool assignInstr(MachineInstr &MI);
 
   /// Initialize the field members using \p MF.
   void init(MachineFunction &MF);
@@ -520,7 +542,9 @@ private:
   ///
   /// \note The caller is supposed to do the rewriting of op if need be.
   /// I.e., Reg = op ... => <NewRegs> = NewOp ...
-  void repairReg(MachineOperand &MO,
+  ///
+  /// \return True if the repairing worked, false otherwise.
+  bool repairReg(MachineOperand &MO,
                  const RegisterBankInfo::ValueMapping &ValMapping,
                  RegBankSelect::RepairingPlacement &RepairPt,
                  const iterator_range<SmallVectorImpl<unsigned>::const_iterator>
@@ -537,7 +561,7 @@ private:
 
   /// Find the best mapping for \p MI from \p PossibleMappings.
   /// \return a reference on the best mapping in \p PossibleMappings.
-  RegisterBankInfo::InstructionMapping &
+  const RegisterBankInfo::InstructionMapping &
   findBestMapping(MachineInstr &MI,
                   RegisterBankInfo::InstructionMappings &PossibleMappings,
                   SmallVectorImpl<RepairingPlacement> &RepairPts);
@@ -570,7 +594,8 @@ private:
   /// Apply \p Mapping to \p MI. \p RepairPts represents the different
   /// mapping action that need to happen for the mapping to be
   /// applied.
-  void applyMapping(MachineInstr &MI,
+  /// \return True if the mapping was applied sucessfully, false otherwise.
+  bool applyMapping(MachineInstr &MI,
                     const RegisterBankInfo::InstructionMapping &InstrMapping,
                     SmallVectorImpl<RepairingPlacement> &RepairPts);
 
@@ -578,11 +603,20 @@ public:
   /// Create a RegBankSelect pass with the specified \p RunningMode.
   RegBankSelect(Mode RunningMode = Fast);
 
-  const char *getPassName() const override {
-    return "RegBankSelect";
-  }
+  StringRef getPassName() const override { return "RegBankSelect"; }
 
   void getAnalysisUsage(AnalysisUsage &AU) const override;
+
+  MachineFunctionProperties getRequiredProperties() const override {
+    return MachineFunctionProperties()
+        .set(MachineFunctionProperties::Property::IsSSA)
+        .set(MachineFunctionProperties::Property::Legalized);
+  }
+
+  MachineFunctionProperties getSetProperties() const override {
+    return MachineFunctionProperties().set(
+        MachineFunctionProperties::Property::RegBankSelected);
+  }
 
   /// Walk through \p MF and assign a register bank to every virtual register
   /// that are still mapped to nothing.
@@ -609,6 +643,7 @@ public:
   /// \endcode
   bool runOnMachineFunction(MachineFunction &MF) override;
 };
+
 } // End namespace llvm.
 
 #endif

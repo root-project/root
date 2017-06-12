@@ -43,7 +43,7 @@ using namespace std;
 #endif
 #include "v5/TFormula.h"
 
-ClassImp(TFormula)
+ClassImp(TFormula);
 
 /** \class TFormula  TFormula.h "inc/TFormula.h"
     \ingroup Hist
@@ -295,7 +295,7 @@ TFormula::~TFormula()
    // N.B. a memory leak may happen if user set bit after constructing the object,
    // Setting of bit should be done only internally
    if (!TestBit(TFormula::kNotGlobal) && gROOT ) {
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfFunctions()->Remove(this);
    }
 
@@ -328,7 +328,7 @@ TFormula::TFormula(const char *name, const char *formula, bool addToGlobList)   
 
    if (addToGlobList && gROOT) {
       TFormula *old = 0;
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       old = dynamic_cast<TFormula*> ( gROOT->GetListOfFunctions()->FindObject(name) );
       if (old)
          gROOT->GetListOfFunctions()->Remove(old);
@@ -383,7 +383,7 @@ TFormula::TFormula(const char *name, const char *formula, int ndim, int npar, bo
 
       if (addToGlobList && gROOT) {
          TFormula *old = 0;
-         R__LOCKGUARD2(gROOTMutex);
+         R__LOCKGUARD(gROOTMutex);
          old = dynamic_cast<TFormula*> ( gROOT->GetListOfFunctions()->FindObject(name) );
          if (old)
             gROOT->GetListOfFunctions()->Remove(old);
@@ -440,7 +440,7 @@ TFormula::TFormula(const TFormula &formula) :
 
 
    if (!TestBit(TFormula::kNotGlobal) && gROOT ) {
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       TFormula *old = (TFormula*)gROOT->GetListOfFunctions()->FindObject(formula.GetName());
       if (old)
          gROOT->GetListOfFunctions()->Remove(old);
@@ -472,7 +472,7 @@ Bool_t TFormula::InitLambdaExpression(const char * formula) {
 
    // check if formula exist already in the map
    {
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
 
       auto funcit = gClingFunctions.find(lambdaExpression);
       if (funcit != gClingFunctions.end() ) {
@@ -492,7 +492,7 @@ Bool_t TFormula::InitLambdaExpression(const char * formula) {
    gInterpreter->ProcessLine(lineExpr);
    fLambdaPtr = (void*) gInterpreter->ProcessLine(TString(lambdaName)+TString(";"));  // add ; to avoid printing
    if (fLambdaPtr != nullptr) {
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       gClingFunctions.insert ( std::make_pair ( lambdaExpression, fLambdaPtr) );
       fClingInitialized = true;
       return true;
@@ -1534,7 +1534,7 @@ void TFormula::ExtractFunctors(TString &formula)
             // check if function is provided by gROOT
             TObject *obj = 0;
             {
-               R__LOCKGUARD2(gROOTMutex);
+               R__LOCKGUARD(gROOTMutex);
                obj = gROOT->GetListOfFunctions()->FindObject(name);
             }
             TFormula * f = dynamic_cast<TFormula*> (obj);
@@ -1705,7 +1705,7 @@ void TFormula::ProcessFormula(TString &formula)
             // try to look into all the global functions in gROOT
            TFunction* f;
             {
-               R__LOCKGUARD2(gROOTMutex);
+               R__LOCKGUARD(gROOTMutex);
                f = (TFunction*) gROOT->GetListOfGlobalFunctions(true)->FindObject(fun.fName);
             }
             // if found a function with matching arguments
@@ -1727,7 +1727,7 @@ void TFormula::ProcessFormula(TString &formula)
       {
          TFormula* old = 0;
          {
-            R__LOCKGUARD2(gROOTMutex);
+            R__LOCKGUARD(gROOTMutex);
             old = (TFormula*)gROOT->GetListOfFunctions()->FindObject(gNamePrefix + fun.fName);
          }
          if(old)
@@ -1883,7 +1883,7 @@ void TFormula::ProcessFormula(TString &formula)
          fClingName = gNamePrefix;
 
          // check if formula exist already in the map
-         R__LOCKGUARD2(gROOTMutex);
+         R__LOCKGUARD(gROOTMutex);
 
          auto funcit = gClingFunctions.find(inputFormula);
 
@@ -1914,7 +1914,7 @@ void TFormula::ProcessFormula(TString &formula)
             if (fClingInitialized) {
                // if Cling has been succesfully initialized
                // dave function ptr in the static map
-               R__LOCKGUARD2(gROOTMutex);
+               R__LOCKGUARD(gROOTMutex);
                gClingFunctions.insert ( std::make_pair ( inputFormula, (void*) fFuncPtr) );
             }
 
@@ -2149,7 +2149,7 @@ void TFormula::SetName(const char* name)
       // the underlying names.
       auto listOfFunctions = gROOT->GetListOfFunctions();
       TObject* thisAsFunctionInList = nullptr;
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       if (listOfFunctions){
          thisAsFunctionInList = listOfFunctions->FindObject(this);
          if (thisAsFunctionInList) listOfFunctions->Remove(thisAsFunctionInList);
@@ -2945,7 +2945,7 @@ void TFormula::Streamer(TBuffer &b)
 
 
          if (!TestBit(kNotGlobal)) {
-            R__LOCKGUARD2(gROOTMutex);
+            R__LOCKGUARD(gROOTMutex);
             gROOT->GetListOfFunctions()->Add(this);
          }
          if (!fReadyToExecute ) {

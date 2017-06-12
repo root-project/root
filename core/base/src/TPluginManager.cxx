@@ -113,7 +113,7 @@ static bool &TPH__IsReadingDirs() {
    return readingDirs;
 }
 
-ClassImp(TPluginHandler)
+ClassImp(TPluginHandler);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a plugin handler. Called by TPluginManager.
@@ -280,6 +280,11 @@ Bool_t TPluginHandler::CheckForExecPlugin(Int_t nargs)
 
    if (fCanCall == 0) {
       // Not initialized yet.
+      // SetupCallEnv is likely to require/take the interpreter lock.
+      // Grab it now to avoid dead-lock.  In particular TPluginHandler::ExecPluginImpl
+      // takes the gInterpreterMutex and *then* call (indirectly) code that
+      // take the gPluginManagerMutex.
+      R__LOCKGUARD(gInterpreterMutex);
       R__LOCKGUARD2(gPluginManagerMutex);
 
       // Now check if another thread did not already do the work.
@@ -328,7 +333,7 @@ void TPluginHandler::Print(Option_t *opt) const
 }
 
 
-ClassImp(TPluginManager)
+ClassImp(TPluginManager);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Clean up the plugin manager.
@@ -454,7 +459,7 @@ void TPluginManager::LoadHandlersFromPluginDirs(const char *base)
    // delete the object after release the gInterpreterMutex lock
    TObjArray *dirs = nullptr;
    {
-      R__LOCKGUARD2(gInterpreterMutex);
+      R__LOCKGUARD(gInterpreterMutex);
       if (!fBasesLoaded) {
          fBasesLoaded = new THashTable();
          fBasesLoaded->SetOwner();

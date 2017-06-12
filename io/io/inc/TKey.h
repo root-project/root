@@ -15,8 +15,8 @@
 #include "TNamed.h"
 #include "TDatime.h"
 #include "TBuffer.h"
+#include "TClass.h"
 
-class TClass;
 class TBrowser;
 class TDirectory;
 class TFile;
@@ -93,6 +93,12 @@ protected:
    virtual Int_t       Read(TObject *obj);
    virtual TObject    *ReadObj();
    virtual TObject    *ReadObjWithBuffer(char *bufferRead);
+   /// To read an object (non deriving from TObject) from the file.
+   /// This is more user friendly version of TKey::ReadObjectAny.
+   /// See TKey::ReadObjectAny for more details.
+   template <typename T> T *ReadObject() {
+      return reinterpret_cast<T*>(ReadObjectAny(TClass::GetClass(typeid(T))));
+   }
    virtual void       *ReadObjectAny(const TClass *expectedClass);
    virtual void        ReadBuffer(char *&buffer);
            void        ReadKeyBuffer(char *&buffer);

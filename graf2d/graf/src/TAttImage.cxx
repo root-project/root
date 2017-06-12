@@ -94,9 +94,9 @@ This class provides a way to edit the palette via a GUI.
 #include "TStyle.h"
 
 
-ClassImp(TPaletteEditor)
-ClassImp(TAttImage)
-ClassImp(TImagePalette)
+ClassImp(TPaletteEditor);
+ClassImp(TAttImage);
+ClassImp(TImagePalette);
 
 
 // definition of a default palette

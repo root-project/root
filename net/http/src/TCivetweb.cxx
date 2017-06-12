@@ -320,7 +320,7 @@ static int begin_request_handler(struct mg_connection *conn, void *)
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-ClassImp(TCivetweb)
+ClassImp(TCivetweb);
 
    ////////////////////////////////////////////////////////////////////////////////
    /// constructor
@@ -360,6 +360,7 @@ Int_t TCivetweb::ProcessLog(const char *message)
 ///    top=name  - configure top name, visible in the web browser
 ///    auth_file=filename  - authentication file name, created with htdigets utility
 ///    auth_domain=domain   - authentication domain
+///    websocket_timeout=tm  - set web sockets timeout in seconds (default 300)
 ///    loopback  - bind specified port to loopback 127.0.0.1 address
 ///    debug  - enable debug mode, server always returns html page with request info
 
@@ -369,8 +370,7 @@ Bool_t TCivetweb::Create(const char *args)
    memset(fCallbacks, 0, sizeof(struct mg_callbacks));
    //((struct mg_callbacks *) fCallbacks)->begin_request = begin_request_handler;
    ((struct mg_callbacks *)fCallbacks)->log_message = log_message_handler;
-   TString sport = "8080";
-   TString num_threads = "5";
+   TString sport = "8080", num_threads = "5", websocket_timeout = "300000";
    TString auth_file, auth_domain, log_file;
 
    // extract arguments
@@ -404,6 +404,9 @@ Bool_t TCivetweb::Create(const char *args)
             const char *adomain = url.GetValueFromOptions("auth_domain");
             if (adomain != 0) auth_domain = adomain;
 
+            Int_t wtmout = url.GetIntValueFromOptions("websocket_timeout");
+            if (wtmout > 0) websocket_timeout.Format("%d", wtmout * 1000);
+
             if (url.HasOption("debug")) fDebug = kTRUE;
 
             if (url.HasOption("loopback") && (sport.Index(":") == kNPOS)) sport = TString("127.0.0.1:") + sport;
@@ -420,6 +423,8 @@ Bool_t TCivetweb::Create(const char *args)
    options[op++] = sport.Data();
    options[op++] = "num_threads";
    options[op++] = num_threads.Data();
+   options[op++] = "websocket_timeout_ms";
+   options[op++] = websocket_timeout.Data();
 
    if ((auth_file.Length() > 0) && (auth_domain.Length() > 0)) {
       options[op++] = "global_auth_file";

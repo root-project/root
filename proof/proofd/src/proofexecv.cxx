@@ -641,11 +641,11 @@ int exportsock(rpdunix *conn)
       int natt = 1000;
       while (natt > 0 && (fd = dup(d)) <= 2) {
          if (fd != d) close(fd);
+         fd = -1;
          natt--;
       }
       if (natt <= 0 && fd <= 2) {
          Info("exportsock: ERROR: no free filedescriptor!");
-         if (fd != d) close(fd);
          close(d);
          return -1;
       }

@@ -75,7 +75,7 @@ public:
 };
 
 
-ClassImp(TGedEditor)
+ClassImp(TGedEditor);
 
 TGedEditor* TGedEditor::fgFrameCreator = 0;
 
@@ -346,7 +346,7 @@ void TGedEditor::SetCanvas(TCanvas *newcan)
 ////////////////////////////////////////////////////////////////////////////////
 /// Activate object editors according to the selected object.
 
-void TGedEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t event)
+void TGedEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t event, Bool_t force)
 {
    if ((event != kButton1Down) || (obj && obj->InheritsFrom("TColorWheel")))
       return;
@@ -361,7 +361,7 @@ void TGedEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t event)
    TGTabElement* seltab = fTab->GetCurrentTab();
 
    Bool_t mapTabs = kFALSE;
-   if (fModel != obj) {
+   if (fModel != obj || force) {
       fModel = obj;
       if (fModel == 0 || fModel->IsA() != fClass) {
          ReinitWorkspace();

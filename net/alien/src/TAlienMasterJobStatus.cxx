@@ -22,7 +22,7 @@
 #include "TObjString.h"
 #include "TBrowser.h"
 
-ClassImp(TAlienMasterJobStatus)
+ClassImp(TAlienMasterJobStatus);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Cleanup.

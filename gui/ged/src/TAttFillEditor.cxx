@@ -33,7 +33,7 @@
 #include "TCanvas.h"
 #include "TROOT.h"
 
-ClassImp(TAttFillEditor)
+ClassImp(TAttFillEditor);
 
 enum EFillWid {
    kCOLOR,

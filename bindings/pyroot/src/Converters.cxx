@@ -743,7 +743,7 @@ PyObject* PyROOT::TVoidArrayConverter::FromMemory( void* address )
       Py_INCREF( gNullPtrObject );
       return gNullPtrObject;
    }
-   return BufFac_t::Instance()->PyBuffer_FromMemory( (Long_t*)*(ptrdiff_t**)address, 1 );
+   return BufFac_t::Instance()->PyBuffer_FromMemory( (Long_t*)*(ptrdiff_t**)address, sizeof(void*) );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -797,7 +797,7 @@ Bool_t PyROOT::T##name##ArrayRefConverter::SetArg(                           \
                                                                              \
 PyObject* PyROOT::T##name##ArrayConverter::FromMemory( void* address )       \
 {                                                                            \
-   return BufFac_t::Instance()->PyBuffer_FromMemory( *(type**)address, fSize );\
+   return BufFac_t::Instance()->PyBuffer_FromMemory( *(type**)address, fSize * sizeof(type) );\
 }                                                                            \
                                                                              \
 Bool_t PyROOT::T##name##ArrayConverter::ToMemory( PyObject* value, void* address )\
@@ -889,6 +889,7 @@ Bool_t PyROOT::T##name##Converter::ToMemory( PyObject* value, void* address ) \
 
 PYROOT_IMPLEMENT_STRING_AS_PRIMITIVE_CONVERTER( TString,   TString,     Data, Length )
 PYROOT_IMPLEMENT_STRING_AS_PRIMITIVE_CONVERTER( STLString, std::string, c_str, size )
+PYROOT_IMPLEMENT_STRING_AS_PRIMITIVE_CONVERTER( STLStringView, std::string_view, data, size )
 
 ////////////////////////////////////////////////////////////////////////////////
 /// convert <pyobject> to C++ instance*, set arg for call
@@ -1052,7 +1053,11 @@ Bool_t PyROOT::TCppObjectPtrConverter<ISREFERENCE>::SetArg(
          ((ObjectProxy*)pyobject)->Release();
 
    // set pointer (may be null) and declare success
-      para.fValue.fVoidp = &((ObjectProxy*)pyobject)->fObject;
+      if( ((ObjectProxy*)pyobject)->fFlags & ObjectProxy::kIsReference)
+        // If given object is already a reference (aka pointer) then we should not take the address of it
+        para.fValue.fVoidp = ((ObjectProxy*)pyobject)->fObject;
+      else
+        para.fValue.fVoidp = &((ObjectProxy*)pyobject)->fObject;
       para.fTypeCode = ISREFERENCE ? 'V' : 'p';
       return kTRUE;
    }
@@ -1216,7 +1221,7 @@ PyObject* PyROOT::TVoidPtrPtrConverter::FromMemory( void* address )
       Py_INCREF( gNullPtrObject );
       return gNullPtrObject;
    }
-   return BufFac_t::Instance()->PyBuffer_FromMemory( (Long_t*)*(ptrdiff_t**)address, 1 );
+   return BufFac_t::Instance()->PyBuffer_FromMemory( (Long_t*)*(ptrdiff_t**)address, sizeof(void*) );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1534,6 +1539,7 @@ namespace {
    PYROOT_BASIC_CONVERTER_FACTORY( LongLongArray )
    PYROOT_BASIC_CONVERTER_FACTORY( TString )
    PYROOT_BASIC_CONVERTER_FACTORY( STLString )
+   PYROOT_BASIC_CONVERTER_FACTORY( STLStringView )
    PYROOT_BASIC_CONVERTER_FACTORY( VoidPtrRef )
    PYROOT_BASIC_CONVERTER_FACTORY( VoidPtrPtr )
    PYROOT_BASIC_CONVERTER_FACTORY( PyObject )
@@ -1541,6 +1547,7 @@ namespace {
 // converter factories for ROOT types
    typedef std::pair< const char*, ConverterFactory_t > NFp_t;
 
+   // clang-format off
    NFp_t factories_[] = {
    // factories for built-ins
       NFp_t( "bool",                      &CreateBoolConverter               ),
@@ -1617,12 +1624,21 @@ namespace {
       NFp_t( "string",                    &CreateSTLStringConverter          ),
       NFp_t( "const std::string&",        &CreateSTLStringConverter          ),
       NFp_t( "const string&",             &CreateSTLStringConverter          ),
+      NFp_t( "std::string_view",          &CreateSTLStringViewConverter      ),
+      NFp_t( "string_view",               &CreateSTLStringViewConverter      ),
+      NFp_t( "experimental::basic_string_view<char,char_traits<char> >",&CreateSTLStringViewConverter),
       NFp_t( "void*&",                    &CreateVoidPtrRefConverter         ),
       NFp_t( "void**",                    &CreateVoidPtrPtrConverter         ),
       NFp_t( "PyObject*",                 &CreatePyObjectConverter           ),
       NFp_t( "_object*",                  &CreatePyObjectConverter           ),
-      NFp_t( "FILE*",                     &CreateVoidArrayConverter          )
+      NFp_t( "FILE*",                     &CreateVoidArrayConverter          ),
+      NFp_t( "Float16_t",                 &CreateFloatConverter              ),
+      NFp_t( "const Float16_t&",          &CreateConstFloatRefConverter      ),
+      NFp_t( "Double32_t",                &CreateDoubleConverter             ),
+      NFp_t( "Double32_t&",               &CreateDoubleRefConverter          ),
+      NFp_t( "const Double32_t&",         &CreateConstDoubleRefConverter     )
    };
+   // clang-format on
 
    struct InitConvFactories_t {
    public:

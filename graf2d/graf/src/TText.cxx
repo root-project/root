@@ -25,7 +25,7 @@
 #include <wchar.h>
 #include <cstdlib>
 
-ClassImp(TText)
+ClassImp(TText);
 
 
 /** \class TText

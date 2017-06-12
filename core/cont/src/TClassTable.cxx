@@ -52,7 +52,7 @@ Bool_t       TClassTable::fgSorted;
 UInt_t       TClassTable::fgCursor;
 TClassTable::IdMap_t *TClassTable::fgIdMap;
 
-ClassImp(TClassTable)
+ClassImp(TClassTable);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -369,6 +369,7 @@ void TClassTable::Add(TProtoClass *proto)
    // check if already in table, if so return
    TClassRec *r = FindElementImpl(cname, kTRUE);
    if (r->fName) {
+      if (r->fProto) delete r->fProto;
       r->fProto = proto;
       return;
    } else if (ROOT::Internal::gROOTLocal && gCling) {

@@ -34,10 +34,10 @@ static MachineModuleInfoMachO &getMachOMMI(AsmPrinter &AP) {
   return AP.MMI->getObjFileInfo<MachineModuleInfoMachO>();
 }
 
-
-static MCSymbol *GetSymbolFromOperand(const MachineOperand &MO, AsmPrinter &AP){
+static MCSymbol *GetSymbolFromOperand(const MachineOperand &MO,
+                                      AsmPrinter &AP) {
   const TargetMachine &TM = AP.TM;
-  Mangler *Mang = AP.Mang;
+  Mangler &Mang = TM.getObjFileLowering()->getMangler();
   const DataLayout &DL = AP.getDataLayout();
   MCContext &Ctx = AP.OutContext;
 
@@ -54,7 +54,7 @@ static MCSymbol *GetSymbolFromOperand(const MachineOperand &MO, AsmPrinter &AP){
     Mangler::getNameWithPrefix(Name, MO.getSymbolName(), DL);
   } else {
     const GlobalValue *GV = MO.getGlobal();
-    TM.getNameWithPrefix(Name, GV, *Mang);
+    TM.getNameWithPrefix(Name, GV, Mang);
   }
 
   Name += Suffix;
@@ -148,7 +148,7 @@ void llvm::LowerPPCMachineInstrToMCInst(const MachineInstr *MI, MCInst &OutMI,
     MCOperand MCOp;
     switch (MO.getType()) {
     default:
-      MI->dump();
+      MI->print(errs());
       llvm_unreachable("unknown operand type");
     case MachineOperand::MO_Register:
       assert(!MO.getSubReg() && "Subregs should be eliminated!");

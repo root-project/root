@@ -43,19 +43,25 @@ public:
    TProcessExecutor &operator=(const TProcessExecutor &) = delete;
 
    // Map
+   using TExecutor<TProcessExecutor>::Map;
    template<class F, class Cond = noReferenceCond<F>>
    auto Map(F func, unsigned nTimes) -> std::vector<typename std::result_of<F()>::type>;
    template<class F, class INTEGER, class Cond = noReferenceCond<F, INTEGER>>
    auto Map(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typename std::result_of<F(INTEGER)>::type>;
    template<class F, class T, class Cond = noReferenceCond<F, T>>
    auto Map(F func, std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type>;
-   using TExecutor<TProcessExecutor>::Map;
 
    void SetNWorkers(unsigned n) { TMPClient::SetNWorkers(n); }
    unsigned GetNWorkers() const { return TMPClient::GetNWorkers(); }
 
-   template<class T, class R> T Reduce(const std::vector<T> &objs, R redfunc);
+   using TExecutor<TProcessExecutor>::MapReduce;
+   template<class F, class R, class Cond = noReferenceCond<F>>
+   auto MapReduce(F func, unsigned nTimes, R redfunc) -> typename std::result_of<F()>::type;
+   template<class F, class T, class R, class Cond = noReferenceCond<F, T>>
+   auto MapReduce(F func, std::vector<T> &args, R redfunc) -> typename std::result_of<F(T)>::type;
+
    using TExecutor<TProcessExecutor>::Reduce;
+   template<class T, class R> T Reduce(const std::vector<T> &objs, R redfunc);
 
 private:
    template<class T> void Collect(std::vector<T> &reslist);
@@ -74,7 +80,9 @@ private:
    enum class ETask : unsigned char {
       kNoTask,       ///< no task is being executed
       kMap,          ///< a Map method with no arguments is being executed
-      kMapWithArg    ///< a Map method with arguments is being executed
+      kMapWithArg,   ///< a Map method with arguments is being executed
+      kMapRed,       ///< a MapReduce method with no arguments is being executed
+      kMapRedWithArg ///< a MapReduce method with arguments is being executed
    };
 
    ETask fTaskType = ETask::kNoTask; ///< the kind of task that is being executed, if any
@@ -181,6 +189,90 @@ auto TProcessExecutor::Map(F func, ROOT::TSeq<INTEGER> args) -> std::vector<type
    std::copy(args.begin(), args.end(), vargs.begin());
    const auto &reslist = Map(func, vargs);
    return reslist;
+}
+
+//////////////////////////////////////////////////////////////////////////
+/// This method behaves just like Map, but an additional redfunc function
+/// must be provided. redfunc is applied to the vector Map would return and
+/// must return the same type as func. In practice, redfunc can be used to
+/// "squash" the vector returned by Map into a single object by merging,
+/// adding, mixing the elements of the vector.
+template<class F, class R, class Cond>
+auto TProcessExecutor::MapReduce(F func, unsigned nTimes, R redfunc) -> typename std::result_of<F()>::type
+{
+   using retType = decltype(func());
+   //prepare environment
+   Reset();
+   fTaskType= ETask::kMapRed;
+
+   //fork max(nTimes, fNWorkers) times
+   unsigned oldNWorkers = GetNWorkers();
+   if (nTimes < oldNWorkers)
+      SetNWorkers(nTimes);
+   TMPWorkerExecutor<F, void, R> worker(func, redfunc);
+   bool ok = Fork(worker);
+   SetNWorkers(oldNWorkers);
+   if (!ok) {
+      std::cerr << "[E][C] Could not fork. Aborting operation\n";
+      return retType();
+   }
+
+   //give workers their first task
+   fNToProcess = nTimes;
+   std::vector<retType> reslist;
+   reslist.reserve(fNToProcess);
+   fNProcessed = Broadcast(MPCode::kExecFunc, fNToProcess);
+
+   //collect results/give workers their next task
+   Collect(reslist);
+
+   //clean-up and return
+   ReapWorkers();
+   fTaskType= ETask::kNoTask;
+   return redfunc(reslist);
+}
+
+//////////////////////////////////////////////////////////////////////////
+/// This method behaves just like Map, but an additional redfunc function
+/// must be provided. redfunc is applied to the vector Map would return and
+/// must return the same type as func. In practice, redfunc can be used to
+/// "squash" the vector returned by Map into a single object by merging,
+/// adding, mixing the elements of the vector.
+template<class F, class T, class R, class Cond>
+auto TProcessExecutor::MapReduce(F func, std::vector<T> &args, R redfunc) -> typename std::result_of<F(T)>::type
+{
+
+   using retType = decltype(func(args.front()));
+   //prepare environment
+   Reset();
+   fTaskType= ETask::kMapRedWithArg;
+
+   //fork max(args.size(), fNWorkers) times
+   unsigned oldNWorkers = GetNWorkers();
+   if (args.size() < oldNWorkers)
+      SetNWorkers(args.size());
+   TMPWorkerExecutor<F, T, R> worker(func, args, redfunc);
+   bool ok = Fork(worker);
+   SetNWorkers(oldNWorkers);
+   if (!ok) {
+      std::cerr << "[E][C] Could not fork. Aborting operation\n";
+      return decltype(func(args.front()))();
+   }
+
+   //give workers their first task
+   fNToProcess = args.size();
+   std::vector<retType> reslist;
+   reslist.reserve(fNToProcess);
+   std::vector<unsigned> range(fNToProcess);
+   std::iota(range.begin(), range.end(), 0);
+   fNProcessed = Broadcast(MPCode::kExecFuncWithArg, range);
+
+   //collect results/give workers their next task
+   Collect(reslist);
+
+   ReapWorkers();
+   fTaskType= ETask::kNoTask;
+   return Reduce(reslist, redfunc);
 }
 
 //////////////////////////////////////////////////////////////////////////

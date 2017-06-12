@@ -38,7 +38,7 @@ namespace cling {
   // pin *tor here so that we can have clang::Parser defined and be able to call
   // the dtor on the OwningPtr
   LookupHelper::LookupHelper(clang::Parser* P, Interpreter* interp)
-    : m_Parser(P), m_Interpreter(interp) {}
+    : m_Parser(P), m_Interpreter(interp), m_StringTy(nullptr) {}
 
   LookupHelper::~LookupHelper() {}
 
@@ -687,7 +687,7 @@ namespace cling {
     //
     //  Now try to parse the name as a type.
     //
-    if (P.TryAnnotateTypeOrScopeToken(false, false)) {
+    if (P.TryAnnotateTypeOrScopeToken()) {
       // error path
       return 0;
     }
@@ -741,7 +741,7 @@ namespace cling {
     //
     //  Now try to parse the name as a type.
     //
-    if (P.TryAnnotateTypeOrScopeToken(false, false)) {
+    if (P.TryAnnotateTypeOrScopeToken()) {
       // error path
       return 0;
     }
@@ -1268,6 +1268,7 @@ namespace cling {
     if (P.ParseUnqualifiedId(SS, /*EnteringContext*/false,
                              /*AllowDestructorName*/true,
                              /*AllowConstructorName*/true,
+                             /*AllowDeductionGuide*/ false,
                              ParsedType(), TemplateKWLoc,
                              FuncId)) {
       // Failed parse, cleanup.
@@ -1896,4 +1897,11 @@ namespace cling {
                                      hasFunctionSelector,
                                      diagOnOff);
   }
+
+  const Type* LookupHelper::getStringType() {
+    if (!m_StringTy)
+      m_StringTy = findType("std::string", WithDiagnostics).getTypePtr();
+    return m_StringTy;
+  }
+
 } // end namespace cling

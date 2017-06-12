@@ -80,7 +80,7 @@ std::atomic<Int_t> TStreamerInfo::fgCount{0};
 
 const Int_t kMaxLen = 1024;
 
-ClassImp(TStreamerInfo)
+ClassImp(TStreamerInfo);
 
 static void R__TObjArray_InsertAt(TObjArray *arr, TObject *obj, Int_t at)
 {
@@ -166,6 +166,7 @@ TStreamerInfo::TStreamerInfo()
    fWriteObjectWise = 0;
    fWriteMemberWise = 0;
    fWriteMemberWiseVecPtr = 0;
+   fWriteText = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -199,6 +200,7 @@ TStreamerInfo::TStreamerInfo(TClass *cl)
    fWriteObjectWise = 0;
    fWriteMemberWise = 0;
    fWriteMemberWiseVecPtr = 0;
+   fWriteText = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -217,6 +219,7 @@ TStreamerInfo::~TStreamerInfo()
    delete fWriteObjectWise;
    delete fWriteMemberWise;
    delete fWriteMemberWiseVecPtr;
+   delete fWriteText;
 
    if (!fElements) return;
    fElements->Delete();
@@ -1511,8 +1514,8 @@ namespace {
       if (stlkind == ROOT::kSTLmap || stlkind == ROOT::kSTLmultimap) {
 
          if (current->GetValueClass() == nullptr) {
-            // This should really never happen (the contain of map should always
-            // be a pair and thus have a TClass ... so lert's just give up
+            // This should really never happen (the content of map should always
+            // be a pair and thus have a TClass ... so let's just give up ...
             // It actually happens in the case where one of the member is an
             // enum that is part of dictionary payload that is not yet
             // autoloaded.
@@ -2516,7 +2519,7 @@ void TStreamerInfo::Clear(Option_t *option)
    opt.ToLower();
 
    if (opt.Contains("build")) {
-      R__LOCKGUARD2(gInterpreterMutex);
+      R__LOCKGUARD(gInterpreterMutex);
 
       delete [] fComp;     fComp    = 0;
       delete [] fCompFull; fCompFull= 0;
@@ -2534,6 +2537,7 @@ void TStreamerInfo::Clear(Option_t *option)
       if (fWriteObjectWise) fWriteObjectWise->fActions.clear();
       if (fWriteMemberWise) fWriteMemberWise->fActions.clear();
       if (fWriteMemberWiseVecPtr) fWriteMemberWiseVecPtr->fActions.clear();
+      if (fWriteText) fWriteText->fActions.clear();
    }
 }
 

@@ -40,7 +40,7 @@ F may have an arbitrary number of dependents and parameters
 
 using namespace std;
 
-ClassImp(RooEfficiency)
+ClassImp(RooEfficiency);
   ;
 
 

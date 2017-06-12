@@ -21,7 +21,7 @@ an ordering relation, i.e. there is a first and last element.
 #include "TClass.h"
 #include "TMethodCall.h"
 
-ClassImp(TSeqCollection)
+ClassImp(TSeqCollection);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return index of object in collection. Returns -1 when object not found.
@@ -228,6 +228,10 @@ Long64_t TSeqCollection::Merge(TCollection *list)
             Error("Merge", "some objects in the input list are not collections - merging aborted");
             SafeDelete(templist);
             return 0;
+         }
+         if (indobj > ((TSeqCollection*)collcrt)->LastIndex()) {
+            // We reached the end of this collection.
+            continue;
          }
          // The next object to be merged with is a collection
          // the iterator skips the 'holes' the collections, we also need to do so.

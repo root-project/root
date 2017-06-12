@@ -60,7 +60,7 @@ const Int_t    TMVA::PDF::fgNbin_PdfHist      = 10000;
 const Bool_t   TMVA::PDF::fgManualIntegration = kTRUE;
 const Double_t TMVA::PDF::fgEpsilon           = 1.0e-12;
 
-ClassImp(TMVA::PDF)
+ClassImp(TMVA::PDF);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// default constructor needed for ROOT I/O

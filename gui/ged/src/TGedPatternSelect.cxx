@@ -46,12 +46,12 @@
 #include "Riostream.h"
 #include "RStipples.h"
 
-ClassImp(TGedPopup)
-ClassImp(TGedSelect)
-ClassImp(TGedPatternFrame)
-ClassImp(TGedPatternSelector)
-ClassImp(TGedPatternPopup)
-ClassImp(TGedPatternSelect)
+ClassImp(TGedPopup);
+ClassImp(TGedSelect);
+ClassImp(TGedPatternFrame);
+ClassImp(TGedPatternSelector);
+ClassImp(TGedPatternPopup);
+ClassImp(TGedPatternSelect);
 
 TGGC* TGedPatternFrame::fgGC = 0;
 
@@ -76,7 +76,7 @@ TGedPatternFrame::TGedPatternFrame(const TGWindow *p, Style_t pattern,
    AddInput(kButtonPressMask | kButtonReleaseMask);
    fMsgWindow  = p;
    fActive = kFALSE;
-   snprintf(fTipText, 5, "%d", pattern);
+   snprintf(fTipText, sizeof(fTipText), "%d", pattern);
 
    // solid and hollow must be treated separately
    if (pattern != 0 && pattern != 1001)

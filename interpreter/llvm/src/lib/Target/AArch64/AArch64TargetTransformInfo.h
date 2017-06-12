@@ -34,10 +34,6 @@ class AArch64TTIImpl : public BasicTTIImplBase<AArch64TTIImpl> {
   const AArch64Subtarget *ST;
   const AArch64TargetLowering *TLI;
 
-  /// Estimate the overhead of scalarizing an instruction. Insert and Extract
-  /// are set if the result needs to be inserted and/or extracted from vectors.
-  unsigned getScalarizationOverhead(Type *Ty, bool Insert, bool Extract);
-
   const AArch64Subtarget *getST() const { return ST; }
   const AArch64TargetLowering *getTLI() const { return TLI; }
 
@@ -47,17 +43,13 @@ class AArch64TTIImpl : public BasicTTIImplBase<AArch64TTIImpl> {
     VECTOR_LDST_FOUR_ELEMENTS
   };
 
+  bool isWideningInstruction(Type *Ty, unsigned Opcode,
+                             ArrayRef<const Value *> Args);
+
 public:
   explicit AArch64TTIImpl(const AArch64TargetMachine *TM, const Function &F)
       : BaseT(TM, F.getParent()->getDataLayout()), ST(TM->getSubtargetImpl(F)),
         TLI(ST->getTargetLowering()) {}
-
-  // Provide value semantics. MSVC requires that we spell all of these out.
-  AArch64TTIImpl(const AArch64TTIImpl &Arg)
-      : BaseT(static_cast<const BaseT &>(Arg)), ST(Arg.ST), TLI(Arg.TLI) {}
-  AArch64TTIImpl(AArch64TTIImpl &&Arg)
-      : BaseT(std::move(static_cast<BaseT &>(Arg))), ST(std::move(Arg.ST)),
-        TLI(std::move(Arg.TLI)) {}
 
   /// \name Scalar TTI Implementations
   /// @{
@@ -97,7 +89,8 @@ public:
 
   unsigned getMaxInterleaveFactor(unsigned VF);
 
-  int getCastInstrCost(unsigned Opcode, Type *Dst, Type *Src);
+  int getCastInstrCost(unsigned Opcode, Type *Dst, Type *Src,
+                       const Instruction *I = nullptr);
 
   int getExtractWithExtendCost(unsigned Opcode, Type *Dst, VectorType *VecTy,
                                unsigned Index);
@@ -109,14 +102,16 @@ public:
       TTI::OperandValueKind Opd1Info = TTI::OK_AnyValue,
       TTI::OperandValueKind Opd2Info = TTI::OK_AnyValue,
       TTI::OperandValueProperties Opd1PropInfo = TTI::OP_None,
-      TTI::OperandValueProperties Opd2PropInfo = TTI::OP_None);
+      TTI::OperandValueProperties Opd2PropInfo = TTI::OP_None,
+      ArrayRef<const Value *> Args = ArrayRef<const Value *>());
 
-  int getAddressComputationCost(Type *Ty, bool IsComplex);
+  int getAddressComputationCost(Type *Ty, ScalarEvolution *SE, const SCEV *Ptr);
 
-  int getCmpSelInstrCost(unsigned Opcode, Type *ValTy, Type *CondTy);
+  int getCmpSelInstrCost(unsigned Opcode, Type *ValTy, Type *CondTy,
+                         const Instruction *I = nullptr);
 
   int getMemoryOpCost(unsigned Opcode, Type *Src, unsigned Alignment,
-                      unsigned AddressSpace);
+                      unsigned AddressSpace, const Instruction *I = nullptr);
 
   int getCostOfKeepingLiveOverCall(ArrayRef<Type *> Tys);
 
@@ -131,6 +126,10 @@ public:
                                  ArrayRef<unsigned> Indices, unsigned Alignment,
                                  unsigned AddressSpace);
 
+  bool
+  shouldConsiderAddressTypePromotion(const Instruction &I,
+                                     bool &AllowPromotionWithoutCommonHeader);
+
   unsigned getCacheLineSize();
 
   unsigned getPrefetchDistance();
@@ -138,6 +137,13 @@ public:
   unsigned getMinPrefetchStride();
 
   unsigned getMaxPrefetchIterationsAhead();
+
+  bool shouldExpandReduction(const IntrinsicInst *II) const {
+    return false;
+  }
+
+  bool useReductionIntrinsic(unsigned Opcode, Type *Ty,
+                             TTI::ReductionFlags Flags) const;
   /// @}
 };
 

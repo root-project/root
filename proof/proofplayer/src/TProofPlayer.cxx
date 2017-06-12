@@ -217,7 +217,7 @@ Bool_t TStopTimer::Notify()
 
 //------------------------------------------------------------------------------
 
-ClassImp(TProofPlayer)
+ClassImp(TProofPlayer);
 
 THashList *TProofPlayer::fgDrawInputPars = 0;
 
@@ -1841,7 +1841,7 @@ void TProofPlayerRemote::SetMerging(Bool_t on)
 
 //------------------------------------------------------------------------------
 
-ClassImp(TProofPlayerLocal)
+ClassImp(TProofPlayerLocal);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Process the specified TSelector object 'nentries' times.
@@ -1892,7 +1892,7 @@ Long64_t TProofPlayerLocal::Process(const char *selector,
 
 //------------------------------------------------------------------------------
 
-ClassImp(TProofPlayerRemote)
+ClassImp(TProofPlayerRemote);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor.
@@ -3803,7 +3803,6 @@ TObject *TProofPlayerRemote::HandleHistogram(TObject *obj, Bool_t &merged)
          }
       }
    }
-   PDB(kOutput,1) Info("HandleHistogram", "leaving");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4314,7 +4313,7 @@ void TProofPlayerRemote::SetInitTime()
 //------------------------------------------------------------------------------
 
 
-ClassImp(TProofPlayerSlave)
+ClassImp(TProofPlayerSlave);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Setup feedback.
@@ -4408,7 +4407,7 @@ Bool_t TProofPlayerSlave::HandleTimer(TTimer *)
    m << fb;
 
    // send message to client;
-   gProofServ->GetSocket()->Send(m);
+   if (gProofServ) gProofServ->GetSocket()->Send(m);
 
    delete fb;
 
@@ -4473,7 +4472,7 @@ void TProofPlayerSlave::HandleGetTreeHeader(TMessage *mess)
 
 //------------------------------------------------------------------------------
 
-ClassImp(TProofPlayerSuperMaster)
+ClassImp(TProofPlayerSuperMaster);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Process specified TDSet on PROOF. Runs on super master.

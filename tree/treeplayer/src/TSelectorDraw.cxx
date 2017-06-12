@@ -36,7 +36,7 @@ A specialized TSelector for TTree::Draw.
 #include "TClass.h"
 #include "TColor.h"
 
-ClassImp(TSelectorDraw)
+ClassImp(TSelectorDraw);
 
 const Int_t kCustomHistogram = BIT(17);
 
@@ -569,7 +569,12 @@ void TSelectorDraw::Begin(TTree *tree)
          hist    = fOldHistogram;
          fNbins[0] = hist->GetXaxis()->GetNbins();
       } else {
-         hist = new TH1F(hname, htitle.Data(), fNbins[0], fVmin[0], fVmax[0]);
+         TString precision = gEnv->GetValue("Hist.Precision.1D", "float");
+         if (precision.Contains("float")) {
+            hist = new TH1F(hname, htitle.Data(), fNbins[0], fVmin[0], fVmax[0]);
+         } else {
+            hist = new TH1D(hname, htitle.Data(), fNbins[0], fVmin[0], fVmax[0]);
+         }
          hist->SetLineColor(fTree->GetLineColor());
          hist->SetLineWidth(fTree->GetLineWidth());
          hist->SetLineStyle(fTree->GetLineStyle());
@@ -671,11 +676,16 @@ void TSelectorDraw::Begin(TTree *tree)
          fObject = hp;
 
       } else {
-         TH2F *h2;
+         TH2 *h2;
          if (fOldHistogram) {
             h2 = (TH2F*)fOldHistogram;
          } else {
-            h2 = new TH2F(hname, htitle.Data(), fNbins[1], fVmin[1], fVmax[1], fNbins[0], fVmin[0], fVmax[0]);
+            TString precision = gEnv->GetValue("Hist.Precision.2D", "float");
+            if (precision.Contains("float")) {
+               h2 = new TH2F(hname, htitle.Data(), fNbins[1], fVmin[1], fVmax[1], fNbins[0], fVmin[0], fVmax[0]);
+            } else {
+               h2 = new TH2D(hname, htitle.Data(), fNbins[1], fVmin[1], fVmax[1], fNbins[0], fVmin[0], fVmax[0]);
+            }
             h2->SetLineColor(fTree->GetLineColor());
             h2->SetLineWidth(fTree->GetLineWidth());
             h2->SetLineStyle(fTree->GetLineStyle());
@@ -837,11 +847,16 @@ void TSelectorDraw::Begin(TTree *tree)
          fObject = h2;
          fAction = 33;
       } else {
-         TH3F *h3;
+         TH3 *h3;
          if (fOldHistogram) {
             h3 = (TH3F*)fOldHistogram;
          } else {
-            h3 = new TH3F(hname, htitle.Data(), fNbins[2], fVmin[2], fVmax[2], fNbins[1], fVmin[1], fVmax[1], fNbins[0], fVmin[0], fVmax[0]);
+            TString precision = gEnv->GetValue("Hist.Precision.3D", "float");
+            if (precision.Contains("float")) {
+               h3 = new TH3F(hname, htitle.Data(), fNbins[2], fVmin[2], fVmax[2], fNbins[1], fVmin[1], fVmax[1], fNbins[0], fVmin[0], fVmax[0]);
+            } else {
+               h3 = new TH3D(hname, htitle.Data(), fNbins[2], fVmin[2], fVmax[2], fNbins[1], fVmin[1], fVmax[1], fNbins[0], fVmin[0], fVmax[0]);
+            }
             h3->SetLineColor(fTree->GetLineColor());
             h3->SetLineWidth(fTree->GetLineWidth());
             h3->SetLineStyle(fTree->GetLineStyle());

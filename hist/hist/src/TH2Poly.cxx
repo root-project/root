@@ -17,7 +17,7 @@
 #include "TList.h"
 #include "TMath.h"
 
-ClassImp(TH2Poly)
+ClassImp(TH2Poly);
 
 /** \class TH2Poly
     \ingroup Hist
@@ -185,12 +185,13 @@ TH2Poly::~TH2Poly()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Adds a new bin to the histogram. It can be any object having the method
-/// IsInside(). It returns the bin number in the histogram. It returns 0 if
-/// it failed to add. To allow the histogram limits to expand when a bin
-/// outside the limits is added, call SetFloat() before adding the bin.
+/// Create appropriate histogram bin.
+///  e.g. TH2Poly        creates TH2PolyBin,
+///       TProfile2Poly  creates TProfile2PolyBin
+/// This is done so that TH2Poly::AddBin does not have to be duplicated,
+/// but only create needs to be reimplemented for additional histogram types
 
-Int_t TH2Poly::AddBin(TObject *poly)
+TH2PolyBin *TH2Poly::CreateBin(TObject *poly)
 {
    if (!poly) return 0;
 
@@ -200,8 +201,21 @@ Int_t TH2Poly::AddBin(TObject *poly)
    }
 
    fNcells++;
+   Int_t ibin = fNcells - kNOverflow;
+   return new TH2PolyBin(poly, ibin);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Adds a new bin to the histogram. It can be any object having the method
+/// IsInside(). It returns the bin number in the histogram. It returns 0 if
+/// it failed to add. To allow the histogram limits to expand when a bin
+/// outside the limits is added, call SetFloat() before adding the bin.
+
+Int_t TH2Poly::AddBin(TObject *poly)
+{
    Int_t ibin = fNcells-kNOverflow;
-   TH2PolyBin *bin = new TH2PolyBin(poly, ibin);
+   auto *bin = CreateBin(poly);
+   if(!bin) return 0;
 
    // If the bin lies outside histogram boundaries, then extends the boundaries.
    // Also changes the partition information accordingly
@@ -1250,6 +1264,27 @@ void TH2Poly::SetFloat(Bool_t flag)
    fFloat = flag;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Return "true" if the point (x,y) is inside the bin of binnr.
+
+Bool_t TH2Poly::IsInsideBin(Int_t binnr, Double_t x, Double_t y)
+{
+   if (!fBins) return false;
+   TH2PolyBin* bin = (TH2PolyBin*)fBins->At(binnr);
+   if (!bin) return false;
+   return bin->IsInside(x,y);
+}
+
+void TH2Poly::GetStats(Double_t *stats) const
+{
+   stats[0] = fTsumw;
+   stats[1] = fTsumw2;
+   stats[2] = fTsumwx;
+   stats[3] = fTsumwx2;
+   stats[4] = fTsumwy;
+   stats[5] = fTsumwy2;
+   stats[6] = fTsumwxy;
+}
 
 /** \class TH2PolyBin
     \ingroup Hist

@@ -84,16 +84,12 @@ public:
    // // the late return types also check at compile-time whether redfunc is compatible with func,
    // // other than checking that func is compatible with the type of arguments.
    // // a static_assert check in TExecutor<subc>::Reduce is used to check that redfunc is compatible with the type returned by func
-   template<class F, class R, class Cond = noReferenceCond<F>>
-   auto MapReduce(F func, unsigned nTimes, R redfunc) -> typename std::result_of<F()>::type;
    template<class F, class INTEGER, class R, class Cond = noReferenceCond<F, INTEGER>>
    auto MapReduce(F func, ROOT::TSeq<INTEGER> args, R redfunc) -> typename std::result_of<F(INTEGER)>::type;
    /// \cond
    template<class F, class T, class R, class Cond = noReferenceCond<F, T>>
    auto MapReduce(F func, std::initializer_list<T> args, R redfunc) -> typename std::result_of<F(T)>::type;
    /// \endcond
-   template<class F, class T, class R, class Cond = noReferenceCond<F, T>>
-   auto MapReduce(F func, std::vector<T> &args, R redfunc) -> typename std::result_of<F(T)>::type;
    template<class F, class T, class Cond = noReferenceCond<F, T>>
    T* MapReduce(F func, std::vector<T*> &args);
 
@@ -157,28 +153,19 @@ auto TExecutor<subc>::Map(F func, std::vector<T> &args) -> std::vector<typename 
 /// must return the same type as func. In practice, redfunc can be used to
 /// "squash" the vector returned by Map into a single object by merging,
 /// adding, mixing the elements of the vector.
-template<class subc> template<class F, class R, class Cond>
-auto TExecutor<subc>::MapReduce(F func, unsigned nTimes, R redfunc) -> typename std::result_of<F()>::type
-{
-   return Derived().Reduce(Map(func, nTimes), redfunc);
-}
-
 template<class subc> template<class F, class INTEGER, class R, class Cond>
 auto TExecutor<subc>::MapReduce(F func, ROOT::TSeq<INTEGER> args, R redfunc) -> typename std::result_of<F(INTEGER)>::type
 {
-  return Derived().Reduce(Map(func, args), redfunc);
+  std::vector<INTEGER> vargs(args.size());
+  std::copy(args.begin(), args.end(), vargs.begin());
+  return Derived().MapReduce(func, vargs, redfunc);
 }
 
 template<class subc> template<class F, class T, class R, class Cond>
 auto TExecutor<subc>::MapReduce(F func, std::initializer_list<T> args, R redfunc) -> typename std::result_of<F(T)>::type
 {
-   return Derived().Reduce(Map(func, args), redfunc);
-}
-
-template<class subc> template<class F, class T, class R, class Cond>
-auto TExecutor<subc>::MapReduce(F func, std::vector<T> &args, R redfunc) -> typename std::result_of<F(T)>::type
-{
-   return Derived().Reduce(Map(func, args), redfunc);
+   std::vector<T> vargs(std::move(args));
+   return Derived().MapReduce(func, vargs, redfunc);
 }
 
 template<class subc> template<class F, class T, class Cond>

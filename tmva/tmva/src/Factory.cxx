@@ -1,6 +1,6 @@
 // @(#)Root/tmva $Id$
 // Author: Andreas Hoecker, Peter Speckmayer, Joerg Stelzer, Helge Voss, Kai Voss, Eckhard von Toerne, Jan Therhaag
-// Updated by: Omar Zapata
+// Updated by: Omar Zapata, Kim Albertsson
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
@@ -21,6 +21,7 @@
  *      Omar Zapata     <Omar.Zapata@cern.ch>    - UdeA/ITM Colombia              *
  *      Lorenzo Moneta  <Lorenzo.Moneta@cern.ch> - CERN, Switzerland              *
  *      Sergei Gleyzer  <Sergei.Gleyzer@cern.ch> - U of Florida & CERN            *
+ *      Kim Albertsson  <kim.albertsson@cern.ch> - LTU & CERN                     *
  *                                                                                *
  * Copyright (c) 2005-2015:                                                       *
  *      CERN, Switzerland                                                         *
@@ -98,7 +99,7 @@ evaluation phases.
 const Int_t  MinNoTrainingEvents = 10;
 //const Int_t  MinNoTestEvents     = 1;
 
-ClassImp(TMVA::Factory)
+ClassImp(TMVA::Factory);
 
 #define READXML          kTRUE
 
@@ -660,15 +661,122 @@ std::map<TString,Double_t> TMVA::Factory::OptimizeAllMethods(TString fomType, TS
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Private method to generate an instance of a ROCCurve regardless of
+/// analysis type.
+///
+/// \note You own the retured pointer.
+///
 
-Double_t TMVA::Factory::GetROCIntegral(TMVA::DataLoader *loader, TString theMethodName)
+TMVA::ROCCurve *TMVA::Factory::GetROC(TMVA::DataLoader *loader, TString theMethodName, UInt_t iClass)
 {
-  return GetROCIntegral((TString)loader->GetName(),theMethodName);
+   return GetROC((TString)loader->GetName(), theMethodName, iClass);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Private method to generate an instance of a ROCCurve regardless of
+/// analysis type.
+///
+/// \note You own the retured pointer.
+///
 
-Double_t TMVA::Factory::GetROCIntegral(TString datasetname, TString theMethodName)
+TMVA::ROCCurve *TMVA::Factory::GetROC(TString datasetname, TString theMethodName, UInt_t iClass)
+{
+   if (fMethodsMap.find(datasetname) == fMethodsMap.end()) {
+      Log() << kERROR << Form("DataSet = %s not found in methods map.", datasetname.Data()) << Endl;
+      return nullptr;
+   }
+
+   if (!this->HasMethod(datasetname, theMethodName)) {
+      Log() << kERROR << Form("Method = %s not found with Dataset = %s ", theMethodName.Data(), datasetname.Data())
+            << Endl;
+      return nullptr;
+   }
+
+   std::set<Types::EAnalysisType> allowedAnalysisTypes = {Types::kClassification, Types::kMulticlass};
+   if (allowedAnalysisTypes.count(this->fAnalysisType) == 0) {
+      Log() << kERROR << Form("Can only generate ROC curves for analysis type kClassification and kMulticlass.")
+            << Endl;
+      return nullptr;
+   }
+
+   TMVA::MethodBase *method = dynamic_cast<TMVA::MethodBase *>(this->GetMethod(datasetname, theMethodName));
+   TMVA::DataSet *dataset = method->Data();
+   TMVA::Results *results = dataset->GetResults(theMethodName, Types::kTesting, this->fAnalysisType);
+
+   UInt_t nClasses = method->DataInfo().GetNClasses();
+   if (this->fAnalysisType == Types::kMulticlass && iClass >= nClasses) {
+      Log() << kERROR << Form("Given class number (iClass = %i) does not exist. There are %i classes in dataset.",
+                              iClass, nClasses)
+            << Endl;
+      return nullptr;
+   }
+
+   TMVA::ROCCurve *rocCurve = nullptr;
+   if (this->fAnalysisType == Types::kClassification) {
+
+      std::vector<Float_t> *mvaRes = dynamic_cast<ResultsClassification *>(results)->GetValueVector();
+      std::vector<Bool_t> *mvaResTypes = dynamic_cast<ResultsClassification *>(results)->GetValueVectorTypes();
+      std::vector<Float_t> mvaResWeights;
+
+      auto eventCollection = dataset->GetEventCollection(Types::kTesting);
+      mvaResWeights.reserve(eventCollection.size());
+      for (auto ev : eventCollection) {
+         mvaResWeights.push_back(ev->GetWeight());
+      }
+
+      rocCurve = new TMVA::ROCCurve(*mvaRes, *mvaResTypes, mvaResWeights);
+
+   } else if (this->fAnalysisType == Types::kMulticlass) {
+      std::vector<Float_t> mvaRes;
+      std::vector<Bool_t> mvaResTypes;
+      std::vector<Float_t> mvaResWeights;
+
+      std::vector<std::vector<Float_t>> *rawMvaRes = dynamic_cast<ResultsMulticlass *>(results)->GetValueVector();
+
+      // Vector transpose due to values being stored as
+      //    [ [0, 1, 2], [0, 1, 2], ... ]
+      // in ResultsMulticlass::GetValueVector.
+      mvaRes.reserve(rawMvaRes->size());
+      for (auto item : *rawMvaRes) {
+         mvaRes.push_back(item[iClass]);
+      }
+
+      auto eventCollection = dataset->GetEventCollection(Types::kTesting);
+      mvaResTypes.reserve(eventCollection.size());
+      mvaResWeights.reserve(eventCollection.size());
+      for (auto ev : eventCollection) {
+         mvaResTypes.push_back(ev->GetClass() == iClass);
+         mvaResWeights.push_back(ev->GetWeight());
+      }
+
+      rocCurve = new TMVA::ROCCurve(mvaRes, mvaResTypes, mvaResWeights);
+   }
+
+   return rocCurve;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate the integral of the ROC curve, also known as the area under curve
+/// (AUC), for a given method.
+///
+/// Argument iClass specifies the class to generate the ROC curve in a
+/// multiclass setting. It is ignored for binary classification.
+///
+
+Double_t TMVA::Factory::GetROCIntegral(TMVA::DataLoader *loader, TString theMethodName, UInt_t iClass)
+{
+   return GetROCIntegral((TString)loader->GetName(), theMethodName, iClass);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate the integral of the ROC curve, also known as the area under curve
+/// (AUC), for a given method.
+///
+/// Argument iClass specifies the class to generate the ROC curve in a
+/// multiclass setting. It is ignored for binary classification.
+///
+
+Double_t TMVA::Factory::GetROCIntegral(TString datasetname, TString theMethodName, UInt_t iClass)
 {
    if (fMethodsMap.find(datasetname) == fMethodsMap.end()) {
       Log() << kERROR << Form("DataSet = %s not found in methods map.", datasetname.Data()) << Endl;
@@ -680,24 +788,26 @@ Double_t TMVA::Factory::GetROCIntegral(TString datasetname, TString theMethodNam
       return 0;
    }
 
-   std::set<Types::EAnalysisType> allowedAnalysisTypes = {Types::kClassification/*, Types::kMulticlass*/};
+   std::set<Types::EAnalysisType> allowedAnalysisTypes = {Types::kClassification, Types::kMulticlass};
    if ( allowedAnalysisTypes.count(this->fAnalysisType) == 0 ) {
-      Log() << kERROR << Form("Can only generate ROC integral for analysis type kClassification."/*"and kMulticlass."*/) << Endl;
+      Log() << kERROR << Form("Can only generate ROC integral for analysis type kClassification. and kMulticlass.")
+            << Endl;
       return 0;
    }
 
-   TMVA::MethodBase *method  = dynamic_cast<TMVA::MethodBase *>( this->GetMethod(datasetname, theMethodName) );
-   TMVA::Results    *results = method->Data()->GetResults(theMethodName, Types::kTesting, Types::kClassification);
+   TMVA::ROCCurve *rocCurve = GetROC(datasetname, theMethodName, iClass);
+   if (!rocCurve) {
+      Log() << kFATAL << Form("ROCCurve object was not created in Method = %s not found with Dataset = %s ",
+                              theMethodName.Data(), datasetname.Data())
+            << Endl;
+      return 0;
+   }
 
-   std::vector<Float_t> *mvaRes = dynamic_cast<ResultsClassification *>(results)->GetValueVector();
-   std::vector<Bool_t>  *mvaResType = dynamic_cast<ResultsClassification *>(results)->GetValueVectorTypes();
+   Int_t npoints = TMVA::gConfig().fVariablePlotting.fNbinsXOfROCCurve + 1;
+   Double_t rocIntegral = rocCurve->GetROCIntegral(npoints);
+   delete rocCurve;
 
-   TMVA::ROCCurve *fROCCurve = new TMVA::ROCCurve(*mvaRes, *mvaResType);
-   if (!fROCCurve) Log() << kFATAL << Form("ROCCurve object was not created in Method = %s not found with Dataset = %s ", theMethodName.Data(), datasetname.Data()) << Endl;
-
-   Double_t fROCalcValue = fROCCurve->GetROCIntegral();
-
-   return fROCalcValue;
+   return rocIntegral;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -750,48 +860,10 @@ TGraph* TMVA::Factory::GetROCCurve(TString datasetname, TString theMethodName, B
       Log() << kERROR << Form("Can only generate ROC curves for analysis type kClassification and kMulticlass.") << Endl;
       return nullptr;
    }
-    
-   TMVA::MethodBase *method  = dynamic_cast<TMVA::MethodBase *>( this->GetMethod(datasetname, theMethodName) );
-   TMVA::DataSet    *dataset = method->Data();
-   TMVA::Results    *results = dataset->GetResults(theMethodName, Types::kTesting, this->fAnalysisType);
-   
-   UInt_t nClasses = method->DataInfo().GetNClasses();
-   if ( this->fAnalysisType == Types::kMulticlass && iClass >= nClasses ) {
-      Log() << kERROR << Form("Given class number (iClass = %i) does not exist. There are %i classes in dataset.", iClass, nClasses) << Endl;
-      return nullptr;
-   }
 
-   std::vector<Float_t> mvaRes;
-   std::vector<Bool_t>  mvaResTypes;
-   TMVA::ROCCurve *rocCurve;
-   TGraph         *graph;
+   TMVA::ROCCurve *rocCurve = GetROC(datasetname, theMethodName, iClass);
+   TGraph *graph = nullptr;
 
-   if (this->fAnalysisType == Types::kClassification) {
-      
-      std::vector<Float_t> * rawMvaRes = dynamic_cast<ResultsClassification *>(results)->GetValueVector();
-      mvaRes = *rawMvaRes;
-
-      std::vector<Bool_t> * rawMvaResType = dynamic_cast<ResultsClassification *>(results)->GetValueVectorTypes();
-      mvaResTypes = *rawMvaResType;
-
-   } else if (this->fAnalysisType == Types::kMulticlass) {
-      std::vector<std::vector<Float_t>> * rawMvaRes = dynamic_cast<ResultsMulticlass *>(results)->GetValueVector();
-      
-      // Vector transpose due to values being stored as 
-      //    [ [0, 1, 2], [0, 1, 2], ... ]
-      // in ResultsMulticlass::GetValueVector.
-      for (auto & item : *rawMvaRes) {
-         mvaRes.push_back( item[iClass] );
-      }
-
-      auto eventCollection = dataset->GetEventCollection();
-      for (auto ev : eventCollection) {
-         mvaResTypes.push_back( ev->GetClass() == iClass );
-      }
-   }
-
-   rocCurve = new TMVA::ROCCurve(mvaRes, mvaResTypes);
-   
    if ( ! rocCurve ) {
       Log() << kFATAL << Form("ROCCurve object was not created in Method = %s not found with Dataset = %s ", theMethodName.Data(), datasetname.Data()) << Endl;
       return nullptr;
@@ -801,9 +873,9 @@ TGraph* TMVA::Factory::GetROCCurve(TString datasetname, TString theMethodName, B
    delete rocCurve;
 
    if(setTitles) {
-        graph->GetYaxis()->SetTitle("Background Rejection");
-        graph->GetXaxis()->SetTitle("Signal Efficiency");
-        graph->SetTitle( Form( "Background Rejection vs. Signal Efficiency (%s)", theMethodName.Data() ) );
+      graph->GetYaxis()->SetTitle("Background rejection (Specificity)");
+      graph->GetXaxis()->SetTitle("Signal efficiency (Sensitivity)");
+      graph->SetTitle(Form("Signal efficiency vs. Background rejection (%s)", theMethodName.Data()));
    }
 
    return graph;
@@ -919,14 +991,14 @@ TCanvas * TMVA::Factory::GetROCCurve(TString datasetname, UInt_t iClass)
    TMultiGraph *multigraph = this->GetROCCurveAsMultiGraph(datasetname, iClass);
 
    if ( multigraph ) {
-      multigraph->Draw("AC");
+      multigraph->Draw("AL");
 
-      multigraph->GetYaxis()->SetTitle("Background Rejection");
-      multigraph->GetXaxis()->SetTitle("Signal Efficiency");
+      multigraph->GetYaxis()->SetTitle("Background rejection (Specificity)");
+      multigraph->GetXaxis()->SetTitle("Signal efficiency (Sensitivity)");
 
-      TString titleString = Form( "Background Rejection vs. Signal Efficiency");
+      TString titleString = Form("Signal efficiency vs. Background rejection");
       if (this->fAnalysisType == Types::kMulticlass) {
-         titleString = Form( "Background Rejection vs. Signal Efficiency (Class=%i)", iClass );
+         titleString = Form("%s (Class=%i)", titleString.Data(), iClass);
       }
 
       // Workaround for TMultigraph not drawing title correctly.
@@ -1216,6 +1288,11 @@ void TMVA::Factory::EvaluateAllMethods( void )
       std::vector<std::vector<Float_t> > multiclass_testPur;
       std::vector<std::vector<Float_t> > multiclass_trainPur;
 
+      // Multiclass confusion matrices.
+      std::vector<TMatrixD> multiclass_testConfusionEffB01;
+      std::vector<TMatrixD> multiclass_testConfusionEffB10;
+      std::vector<TMatrixD> multiclass_testConfusionEffB30;
+
       std::vector<std::vector<Double_t> > biastrain(1);  // "bias" of the regression on the training data
       std::vector<std::vector<Double_t> > biastest(1);   // "bias" of the regression on test data
       std::vector<std::vector<Double_t> > devtrain(1);   // "dev" of the regression on the training data
@@ -1290,58 +1367,66 @@ void TMVA::Factory::EvaluateAllMethods( void )
       theMethod->WriteEvaluationHistosToFile(Types::kTesting);
       theMethod->WriteEvaluationHistosToFile(Types::kTraining);
        }
-     }
-     else if (theMethod->DoMulticlass()) {
-       doMulticlass = kTRUE;
-       Log() << kINFO << "Evaluate multiclass classification method: " << theMethod->GetMethodName() << Endl;
-       if(!IsSilentFile())
-       {
-      Log() << kDEBUG << "\tWrite evaluation histograms to file" << Endl;
-      theMethod->WriteEvaluationHistosToFile(Types::kTesting);
-      theMethod->WriteEvaluationHistosToFile(Types::kTraining);
-       }
-       theMethod->TestMulticlass();
-       multiclass_testEff.push_back(theMethod->GetMulticlassEfficiency(multiclass_testPur));
+     } else if (theMethod->DoMulticlass()) {
+        // ====================================================================
+        // === Multiclass evaluation
+        // ====================================================================
+        doMulticlass = kTRUE;
+        Log() << kINFO << "Evaluate multiclass classification method: " << theMethod->GetMethodName() << Endl;
 
-       nmeth_used[0]++;
-       mname[0].push_back( theMethod->GetMethodName() );
-     }
-     else {
+        // This part uses a genetic alg. to evaluate the optimal sig eff * sig pur.
+        // This is why it is disabled for now.
+        // Find approximate optimal working point w.r.t. signalEfficiency * signalPurity.
+        // theMethod->TestMulticlass(); // This is where the actual GA calc is done
+        // multiclass_testEff.push_back(theMethod->GetMulticlassEfficiency(multiclass_testPur));
 
-       Log() << kHEADER << "Evaluate classifier: " << theMethod->GetMethodName() << Endl << Endl;
-       isel = (theMethod->GetMethodTypeName().Contains("Variable")) ? 1 : 0;
+        // Confusion matrix at three background efficiency levels
+        multiclass_testConfusionEffB01.push_back(theMethod->GetMulticlassConfusionMatrix(0.01, Types::kTesting));
+        multiclass_testConfusionEffB10.push_back(theMethod->GetMulticlassConfusionMatrix(0.10, Types::kTesting));
+        multiclass_testConfusionEffB30.push_back(theMethod->GetMulticlassConfusionMatrix(0.30, Types::kTesting));
 
-       // perform the evaluation
-       theMethod->TestClassification();
+        if (not IsSilentFile()) {
+           Log() << kDEBUG << "\tWrite evaluation histograms to file" << Endl;
+           theMethod->WriteEvaluationHistosToFile(Types::kTesting);
+           theMethod->WriteEvaluationHistosToFile(Types::kTraining);
+        }
 
+        nmeth_used[0]++;
+        mname[0].push_back(theMethod->GetMethodName());
+     } else {
 
-       // evaluate the classifier
-       mname[isel].push_back( theMethod->GetMethodName() );
-       sig[isel].push_back  ( theMethod->GetSignificance() );
-       sep[isel].push_back  ( theMethod->GetSeparation() );
-       roc[isel].push_back  ( theMethod->GetROCIntegral() );
+        Log() << kHEADER << "Evaluate classifier: " << theMethod->GetMethodName() << Endl << Endl;
+        isel = (theMethod->GetMethodTypeName().Contains("Variable")) ? 1 : 0;
 
-       Double_t err;
-       eff01[isel].push_back( theMethod->GetEfficiency("Efficiency:0.01", Types::kTesting, err) );
-       eff01err[isel].push_back( err );
-       eff10[isel].push_back( theMethod->GetEfficiency("Efficiency:0.10", Types::kTesting, err) );
-       eff10err[isel].push_back( err );
-       eff30[isel].push_back( theMethod->GetEfficiency("Efficiency:0.30", Types::kTesting, err) );
-       eff30err[isel].push_back( err );
-       effArea[isel].push_back( theMethod->GetEfficiency("",              Types::kTesting, err)  ); // computes the area (average)
+        // perform the evaluation
+        theMethod->TestClassification();
 
-       trainEff01[isel].push_back( theMethod->GetTrainingEfficiency("Efficiency:0.01") ); // the first pass takes longer
-       trainEff10[isel].push_back( theMethod->GetTrainingEfficiency("Efficiency:0.10") );
-       trainEff30[isel].push_back( theMethod->GetTrainingEfficiency("Efficiency:0.30") );
+        // evaluate the classifier
+        mname[isel].push_back(theMethod->GetMethodName());
+        sig[isel].push_back(theMethod->GetSignificance());
+        sep[isel].push_back(theMethod->GetSeparation());
+        roc[isel].push_back(theMethod->GetROCIntegral());
 
-       nmeth_used[isel]++;
+        Double_t err;
+        eff01[isel].push_back(theMethod->GetEfficiency("Efficiency:0.01", Types::kTesting, err));
+        eff01err[isel].push_back(err);
+        eff10[isel].push_back(theMethod->GetEfficiency("Efficiency:0.10", Types::kTesting, err));
+        eff10err[isel].push_back(err);
+        eff30[isel].push_back(theMethod->GetEfficiency("Efficiency:0.30", Types::kTesting, err));
+        eff30err[isel].push_back(err);
+        effArea[isel].push_back(theMethod->GetEfficiency("", Types::kTesting, err)); // computes the area (average)
 
-       if(!IsSilentFile())
-       {
-              Log() << kDEBUG << "\tWrite evaluation histograms to file" << Endl;
-         theMethod->WriteEvaluationHistosToFile(Types::kTesting);
-         theMethod->WriteEvaluationHistosToFile(Types::kTraining);
-       }
+        trainEff01[isel].push_back(theMethod->GetTrainingEfficiency("Efficiency:0.01")); // the first pass takes longer
+        trainEff10[isel].push_back(theMethod->GetTrainingEfficiency("Efficiency:0.10"));
+        trainEff30[isel].push_back(theMethod->GetTrainingEfficiency("Efficiency:0.30"));
+
+        nmeth_used[isel]++;
+
+        if (!IsSilentFile()) {
+           Log() << kDEBUG << "\tWrite evaluation histograms to file" << Endl;
+           theMethod->WriteEvaluationHistosToFile(Types::kTesting);
+           theMethod->WriteEvaluationHistosToFile(Types::kTraining);
+        }
      }
       }
       if (doRegression) {
@@ -1386,9 +1471,10 @@ void TMVA::Factory::EvaluateAllMethods( void )
      rmstrainT[0]  = vtmp[15];
      minftestT[0]  = vtmp[16];
      minftrainT[0] = vtmp[17];
-      }
-      else if (doMulticlass) {
-     // TODO: fill in something meaningful
+      } else if (doMulticlass) {
+         // TODO: fill in something meaningful
+         // If there is some ranking of methods to be done it should be done here.
+         // However, this is not so easy to define for multiclass so it is left out for now.
 
       }
       else {
@@ -1647,131 +1733,295 @@ void TMVA::Factory::EvaluateAllMethods( void )
      }
      Log() << kINFO << hLine << Endl;
      Log() << kINFO << Endl;
-      }
-      else if( doMulticlass ){
-     Log() << Endl;
-     TString hLine = "-------------------------------------------------------------------------------------------------------";
-     Log() << kINFO << "Evaluation results ranked by best signal efficiency times signal purity " << Endl;
-     Log() << kINFO << hLine << Endl;
-     // iterate over methods and evaluate
-     for (MVector::iterator itrMethod    = methods->begin(); itrMethod != methods->end(); itrMethod++) {
-         MethodBase* theMethod = dynamic_cast<MethodBase*>(*itrMethod);
-         if(theMethod==0) continue;
+      } else if (doMulticlass) {
+         // ====================================================================
+         // === Multiclass Output
+         // ====================================================================
 
-         TString header= "DataSet Name     MVA Method     ";
-         for(UInt_t icls = 0; icls<theMethod->fDataSetInfo.GetNClasses(); ++icls){
-        header += Form("%-12s ",theMethod->fDataSetInfo.GetClassInfo(icls)->GetName());
-         }
-         Log() << kINFO << header << Endl;
+         TString hLine =
+            "-------------------------------------------------------------------------------------------------------";
+
+         // This part uses a genetic alg. to evaluate the optimal sig eff * sig pur.
+         // This is why it is disabled for now.
+         //
+         // // --- Acheivable signal efficiency * signal purity
+         // // --------------------------------------------------------------------
+         // Log() << kINFO << Endl;
+         // Log() << kINFO << "Evaluation results ranked by best signal efficiency times signal purity " << Endl;
+         // Log() << kINFO << hLine << Endl;
+
+         // // iterate over methods and evaluate
+         // for (MVector::iterator itrMethod = methods->begin(); itrMethod != methods->end(); itrMethod++) {
+         //    MethodBase *theMethod = dynamic_cast<MethodBase *>(*itrMethod);
+         //    if (theMethod == 0) {
+         //       continue;
+         //    }
+
+         //    TString header = "DataSet Name     MVA Method     ";
+         //    for (UInt_t icls = 0; icls < theMethod->fDataSetInfo.GetNClasses(); ++icls) {
+         //       header += Form("%-12s ", theMethod->fDataSetInfo.GetClassInfo(icls)->GetName());
+         //    }
+
+         //    Log() << kINFO << header << Endl;
+         //    Log() << kINFO << hLine << Endl;
+         //    for (Int_t i = 0; i < nmeth_used[0]; i++) {
+         //       TString res = Form("[%-14s] %-15s", theMethod->fDataSetInfo.GetName(), (const char *)mname[0][i]);
+         //       for (UInt_t icls = 0; icls < theMethod->fDataSetInfo.GetNClasses(); ++icls) {
+         //          res += Form("%#1.3f        ", (multiclass_testEff[i][icls]) * (multiclass_testPur[i][icls]));
+         //       }
+         //       Log() << kINFO << res << Endl;
+         //    }
+
+         //    Log() << kINFO << hLine << Endl;
+         //    Log() << kINFO << Endl;
+         // }
+
+         // --- 1 vs Rest ROC AUC, signal efficiency @ given background efficiency
+         // --------------------------------------------------------------------
+         TString header1 =
+            Form("%-15s%-15s%-10s%-10s%-10s%-10s", "Dataset", "MVA Method", "", "Sig eff", "Sig eff", "Sig eff");
+         TString header2 =
+            Form("%-15s%-15s%-10s%-10s%-10s%-10s", "Name:", "/ Class:", "ROC AUC", "@B=0.01", "@B=0.10", "@B=0.30");
+         Log() << kINFO << "1-vs-rest performance metrics per class" << Endl;
          Log() << kINFO << hLine << Endl;
-         for (Int_t i=0; i<nmeth_used[0]; i++) {
-      TString res =  Form("[%-14s] %-15s",theMethod->fDataSetInfo.GetName(),(const char*)mname[0][i]);
-      for(UInt_t icls = 0; icls<theMethod->fDataSetInfo.GetNClasses(); ++icls){
-          res += Form("%#1.3f        ",(multiclass_testEff[i][icls])*(multiclass_testPur[i][icls]));
-      }
-      Log() << kINFO << res << Endl;
+         Log() << kINFO << Endl;
+         Log() << kINFO << "Considers the listed class as signal and the other classes" << Endl;
+         Log() << kINFO << "as background, reporting the resulting binary performance." << Endl;
+
+         Log() << kINFO << Endl;
+         Log() << kINFO << header1 << Endl;
+         Log() << kINFO << header2 << Endl;
+         for (Int_t k = 0; k < 2; k++) {
+            for (Int_t i = 0; i < nmeth_used[k]; i++) {
+               if (k == 1) {
+                  mname[k][i].ReplaceAll("Variable_", "");
+               }
+
+               const TString datasetName = itrMap->first;
+               const TString mvaName = mname[k][i];
+
+               MethodBase *theMethod = dynamic_cast<MethodBase *>(GetMethod(datasetName, mvaName));
+               if (theMethod == 0) {
+                  continue;
+               }
+
+               Log() << kINFO << Endl;
+               TString row = Form("%-15s%-15s", datasetName.Data(), mvaName.Data());
+               Log() << kINFO << row << Endl;
+
+               UInt_t numClasses = theMethod->fDataSetInfo.GetNClasses();
+               DataSet *dataset = theMethod->Data();
+               TMVA::Results *results = theMethod->Data()->GetResults(mname[k][i], Types::kTesting, Types::kMulticlass);
+
+               for (UInt_t iClass = 0; iClass < numClasses; ++iClass) {
+                  std::vector<Float_t> mvaRes;
+                  std::vector<Bool_t> mvaResType;
+                  std::vector<Float_t> mvaResWeight;
+
+                  std::vector<std::vector<Float_t>> *rawMvaRes =
+                     dynamic_cast<ResultsMulticlass *>(results)->GetValueVector();
+
+                  // Vector transpose due to values being stored as
+                  //    [ [0, 1, 2], [0, 1, 2], ... ]
+                  // in ResultsMulticlass::GetValueVector.
+                  mvaRes.reserve(rawMvaRes->size());
+                  for (auto item : *rawMvaRes) {
+                     mvaRes.push_back(item[iClass]);
+                  }
+
+                  auto eventCollection = dataset->GetEventCollection();
+                  mvaResType.reserve(eventCollection.size());
+                  mvaResWeight.reserve(eventCollection.size());
+                  for (auto ev : eventCollection) {
+                     mvaResType.push_back(ev->GetClass() == iClass);
+                     mvaResWeight.push_back(ev->GetWeight());
+                  }
+
+                  ROCCurve rocCurve = ROCCurve(mvaRes, mvaResType, mvaResWeight);
+
+                  const TString className = theMethod->DataInfo().GetClassInfo(iClass)->GetName();
+                  const Double_t rocauc = rocCurve.GetROCIntegral();
+                  const Double_t effB01 = rocCurve.GetEffSForEffB(0.01);
+                  const Double_t effB10 = rocCurve.GetEffSForEffB(0.10);
+                  const Double_t effB30 = rocCurve.GetEffSForEffB(0.30);
+                  row = Form("%-15s%-15s%-10.3f%-10.3f%-10.3f%-10.3f", "", className.Data(), rocauc, effB01, effB10,
+                             effB30);
+                  Log() << kINFO << row << Endl;
+               }
+            }
          }
          Log() << kINFO << hLine << Endl;
          Log() << kINFO << Endl;
-     }
-      }
-      else {
-       if(fROC)
-       {
-        Log().EnableOutput();
-       gConfig().SetSilent(kFALSE);
-       Log() << Endl;
-      TString hLine = "-------------------------------------------------------------------------------------------------------------------";
-      Log() << kINFO << "Evaluation results ranked by best signal efficiency and purity (area)" << Endl;
-      Log() << kINFO << hLine << Endl;
-      Log() << kINFO << "DataSet       MVA                       "   << Endl;
-        Log() << kINFO << "Name:         Method:          ROC-integ"   << Endl;
 
-//       Log() << kDEBUG << "DataSet              MVA              Signal efficiency at bkg eff.(error):                | Sepa-    Signifi- "   << Endl;
-//       Log() << kDEBUG << "Name:                Method:          @B=0.01    @B=0.10    @B=0.30    ROC-integ    ROCCurve| ration:  cance:   "   << Endl;
-      Log() << kDEBUG << hLine << Endl;
-      for (Int_t k=0; k<2; k++) {
-        if (k == 1 && nmeth_used[k] > 0) {
-            Log() << kINFO << hLine << Endl;
-            Log() << kINFO << "Input Variables: " << Endl << hLine << Endl;
-        }
-        for (Int_t i=0; i<nmeth_used[k]; i++) {
-            if (k == 1) mname[k][i].ReplaceAll( "Variable_", "" );
+         // --- Confusion matrices
+         // --------------------------------------------------------------------
+         auto printMatrix = [](TMatrixD mat, std::vector<TString> classnames, UInt_t numClasses, MsgLogger &stream) {
+            // assert (classLabledWidth >= valueLabelWidth + 2)
+            // if (...) {Log() << kWARN << "..." << Endl; }
 
-            MethodBase* theMethod = dynamic_cast<MethodBase*>(GetMethod(itrMap->first,mname[k][i]));
-            if(theMethod==0) continue;
-            TMVA::Results *results=theMethod->Data()->GetResults(mname[k][i],Types::kTesting,Types::kClassification);
-                      std::vector<Float_t> *mvaRes = dynamic_cast<ResultsClassification *>(results)->GetValueVector();
-                      std::vector<Bool_t>  *mvaResType = dynamic_cast<ResultsClassification *>(results)->GetValueVectorTypes();
-                      Double_t fROCalcValue = 0;
-                      TMVA::ROCCurve *fROCCurve = nullptr;
-                      if (mvaResType->size() != 0) {
-                         fROCCurve = new TMVA::ROCCurve(*mvaRes, *mvaResType);
-                         fROCalcValue = fROCCurve->GetROCIntegral();
-                      }
+            TString header = Form("%-12s", " ");
+            for (UInt_t iCol = 0; iCol < numClasses; ++iCol) {
+               header += Form(" %-12s", classnames[iCol].Data());
+            }
+            stream << kINFO << header << Endl;
 
-              if (sep[k][i] < 0 || sig[k][i] < 0) {
-           // cannot compute separation/significance -> no MVA (usually for Cuts)
-              Log() << kINFO << Form("%-13s %-15s: %#1.3f",
-                    itrMap->first.Data(),
-                    (const char*)mname[k][i],
-                    effArea[k][i]) << Endl;
+            for (UInt_t iRow = 0; iRow < numClasses; ++iRow) {
+               stream << kINFO << Form("%-12s", classnames[iRow].Data());
 
-//               Log() << kDEBUG << Form("%-20s %-15s: %#1.3f(%02i)  %#1.3f(%02i)  %#1.3f(%02i)    %#1.3f       %#1.3f | --       --",
-//                       itrMap->first.Data(),
-//                       (const char*)mname[k][i],
-//                       eff01[k][i], Int_t(1000*eff01err[k][i]),
-//                       eff10[k][i], Int_t(1000*eff10err[k][i]),
-//                       eff30[k][i], Int_t(1000*eff30err[k][i]),
-//                       effArea[k][i],fROCalcValue) << Endl;
+               for (UInt_t iCol = 0; iCol < numClasses; ++iCol) {
+                  if (iCol == iRow) {
+                     stream << kINFO << Form(" %-12s", "-");
+                     continue;
+                  }
+
+                  Double_t value = mat[iRow][iCol];
+                  stream << kINFO << Form(" %-12.3f", value);
+               }
+               stream << kINFO << Endl;
+            }
+         };
+
+         Log() << kINFO << Endl;
+         Log() << kINFO << "Confusion matrices for all methods" << Endl;
+         Log() << kINFO << hLine << Endl;
+         Log() << kINFO << Endl;
+         Log() << kINFO << "Does a binary comparison between the two classes given by a " << Endl;
+         Log() << kINFO << "particular row-column combination. In each case, the class " << Endl;
+         Log() << kINFO << "given by the row is considered signal while the class given " << Endl;
+         Log() << kINFO << "by the column index is considered background." << Endl;
+         Log() << kINFO << Endl;
+         for (UInt_t iMethod = 0; iMethod < methods->size(); ++iMethod) {
+            MethodBase *theMethod = dynamic_cast<MethodBase *>(methods->at(iMethod));
+            if (theMethod == nullptr) {
+               continue;
+            }
+            UInt_t numClasses = theMethod->fDataSetInfo.GetNClasses();
+
+            std::vector<TString> classnames;
+            for (UInt_t iCls = 0; iCls < numClasses; ++iCls) {
+               classnames.push_back(theMethod->fDataSetInfo.GetClassInfo(iCls)->GetName());
+            }
+            Log() << kINFO << "Showing confusion matrix for method : " << Form("%-15s", (const char *)mname[0][iMethod])
+                  << Endl;
+            Log() << kINFO << "(Signal Efficiency for Background Efficiency 0.01%)" << Endl;
+            printMatrix(multiclass_testConfusionEffB01[iMethod], classnames, numClasses, Log());
+            Log() << kINFO << Endl;
+
+            Log() << kINFO << "(Signal Efficiency for Background Efficiency 0.10%)" << Endl;
+            printMatrix(multiclass_testConfusionEffB10[iMethod], classnames, numClasses, Log());
+            Log() << kINFO << Endl;
+
+            Log() << kINFO << "(Signal Efficiency for Background Efficiency 0.30%)" << Endl;
+            printMatrix(multiclass_testConfusionEffB30[iMethod], classnames, numClasses, Log());
+            Log() << kINFO << Endl;
          }
-         else {
-              Log() << kINFO << Form("%-13s %-15s: %#1.3f",
-                    itrMap->first.Data(),
-                    (const char*)mname[k][i],
-                    fROCalcValue) << Endl;
-//               Log() << kDEBUG << Form("%-20s %-15s: %#1.3f(%02i)  %#1.3f(%02i)  %#1.3f(%02i)    %#1.3f       %#1.3f | %#1.3f    %#1.3f",
-//                       itrMap->first.Data(),
-//                       (const char*)mname[k][i],
-//                       eff01[k][i], Int_t(1000*eff01err[k][i]),
-//                       eff10[k][i], Int_t(1000*eff10err[k][i]),
-//                       eff30[k][i], Int_t(1000*eff30err[k][i]),
-//                       effArea[k][i],fROCalcValue,
-//                       sep[k][i], sig[k][i]) << Endl;
-         }
-         if (fROCCurve) delete fROCCurve;
-        }
-      }
-      Log() << kINFO << hLine << Endl;
-      Log() << kINFO << Endl;
-      Log() << kINFO << "Testing efficiency compared to training efficiency (overtraining check)" << Endl;
-      Log() << kINFO << hLine << Endl;
-      Log() << kINFO << "DataSet              MVA              Signal efficiency: from test sample (from training sample) "   << Endl;
-      Log() << kINFO << "Name:                Method:          @B=0.01             @B=0.10            @B=0.30   "   << Endl;
-      Log() << kINFO << hLine << Endl;
-      for (Int_t k=0; k<2; k++) {
-        if (k == 1 && nmeth_used[k] > 0) {
+         Log() << kINFO << hLine << Endl;
+         Log() << kINFO << Endl;
+
+      } else {
+         // Binary classification
+         if (fROC) {
+            Log().EnableOutput();
+            gConfig().SetSilent(kFALSE);
+            Log() << Endl;
+            TString hLine = "------------------------------------------------------------------------------------------"
+                            "-------------------------";
+            Log() << kINFO << "Evaluation results ranked by best signal efficiency and purity (area)" << Endl;
             Log() << kINFO << hLine << Endl;
-            Log() << kINFO << "Input Variables: " << Endl << hLine << Endl;
-        }
-        for (Int_t i=0; i<nmeth_used[k]; i++) {
-            if (k == 1) mname[k][i].ReplaceAll( "Variable_", "" );
-            MethodBase* theMethod = dynamic_cast<MethodBase*>((*methods)[i]);
-            if(theMethod==0) continue;
+            Log() << kINFO << "DataSet       MVA                       " << Endl;
+            Log() << kINFO << "Name:         Method:          ROC-integ" << Endl;
 
-            Log() << kINFO << Form("%-20s %-15s: %#1.3f (%#1.3f)       %#1.3f (%#1.3f)      %#1.3f (%#1.3f)",
-                   theMethod->fDataSetInfo.GetName(),
-                   (const char*)mname[k][i],
-                   eff01[k][i],trainEff01[k][i],
-                   eff10[k][i],trainEff10[k][i],
-                   eff30[k][i],trainEff30[k][i]) << Endl;
-        }
-      }
-      Log() << kINFO << hLine << Endl;
-      Log() << kINFO << Endl;
+            //       Log() << kDEBUG << "DataSet              MVA              Signal efficiency at bkg eff.(error):
+            //       | Sepa-    Signifi- "   << Endl; Log() << kDEBUG << "Name:                Method:          @B=0.01
+            //       @B=0.10    @B=0.30    ROC-integ    ROCCurve| ration:  cance:   "   << Endl;
+            Log() << kDEBUG << hLine << Endl;
+            for (Int_t k = 0; k < 2; k++) {
+               if (k == 1 && nmeth_used[k] > 0) {
+                  Log() << kINFO << hLine << Endl;
+                  Log() << kINFO << "Input Variables: " << Endl << hLine << Endl;
+               }
+               for (Int_t i = 0; i < nmeth_used[k]; i++) {
+                  TString datasetName = itrMap->first;
+                  TString methodName = mname[k][i];
 
-      if (gTools().CheckForSilentOption( GetOptions() )) Log().InhibitOutput();
-       }//end fROC
+                  if (k == 1) {
+                     methodName.ReplaceAll("Variable_", "");
+                  }
+
+                  MethodBase *theMethod = dynamic_cast<MethodBase *>(GetMethod(datasetName, methodName));
+                  if (theMethod == 0) {
+                     continue;
+                  }
+
+                  TMVA::DataSet *dataset = theMethod->Data();
+                  TMVA::Results *results = dataset->GetResults(methodName, Types::kTesting, this->fAnalysisType);
+                  std::vector<Bool_t> *mvaResType =
+                     dynamic_cast<ResultsClassification *>(results)->GetValueVectorTypes();
+
+                  Double_t rocIntegral = 0.0;
+                  if (mvaResType->size() != 0) {
+                     rocIntegral = GetROCIntegral(datasetName, methodName);
+                  }
+
+                  if (sep[k][i] < 0 || sig[k][i] < 0) {
+                     // cannot compute separation/significance -> no MVA (usually for Cuts)
+                     Log() << kINFO << Form("%-13s %-15s: %#1.3f", datasetName.Data(), methodName.Data(), effArea[k][i])
+                           << Endl;
+
+                     //               Log() << kDEBUG << Form("%-20s %-15s: %#1.3f(%02i)  %#1.3f(%02i)  %#1.3f(%02i)
+                     //               %#1.3f       %#1.3f | --       --",
+                     //                       datasetName.Data(),
+                     //                       methodName.Data(),
+                     //                       eff01[k][i], Int_t(1000*eff01err[k][i]),
+                     //                       eff10[k][i], Int_t(1000*eff10err[k][i]),
+                     //                       eff30[k][i], Int_t(1000*eff30err[k][i]),
+                     //                       effArea[k][i],rocIntegral) << Endl;
+                  } else {
+                     Log() << kINFO << Form("%-13s %-15s: %#1.3f", datasetName.Data(), methodName.Data(), rocIntegral)
+                           << Endl;
+                     //               Log() << kDEBUG << Form("%-20s %-15s: %#1.3f(%02i)  %#1.3f(%02i)  %#1.3f(%02i)
+                     //               %#1.3f       %#1.3f | %#1.3f    %#1.3f",
+                     //                       datasetName.Data(),
+                     //                       methodName.Data(),
+                     //                       eff01[k][i], Int_t(1000*eff01err[k][i]),
+                     //                       eff10[k][i], Int_t(1000*eff10err[k][i]),
+                     //                       eff30[k][i], Int_t(1000*eff30err[k][i]),
+                     //                       effArea[k][i],rocIntegral,
+                     //                       sep[k][i], sig[k][i]) << Endl;
+                  }
+               }
+            }
+            Log() << kINFO << hLine << Endl;
+            Log() << kINFO << Endl;
+            Log() << kINFO << "Testing efficiency compared to training efficiency (overtraining check)" << Endl;
+            Log() << kINFO << hLine << Endl;
+            Log() << kINFO
+                  << "DataSet              MVA              Signal efficiency: from test sample (from training sample) "
+                  << Endl;
+            Log() << kINFO << "Name:                Method:          @B=0.01             @B=0.10            @B=0.30   "
+                  << Endl;
+            Log() << kINFO << hLine << Endl;
+            for (Int_t k = 0; k < 2; k++) {
+               if (k == 1 && nmeth_used[k] > 0) {
+                  Log() << kINFO << hLine << Endl;
+                  Log() << kINFO << "Input Variables: " << Endl << hLine << Endl;
+               }
+               for (Int_t i = 0; i < nmeth_used[k]; i++) {
+                  if (k == 1) mname[k][i].ReplaceAll("Variable_", "");
+                  MethodBase *theMethod = dynamic_cast<MethodBase *>((*methods)[i]);
+                  if (theMethod == 0) continue;
+
+                  Log() << kINFO << Form("%-20s %-15s: %#1.3f (%#1.3f)       %#1.3f (%#1.3f)      %#1.3f (%#1.3f)",
+                                         theMethod->fDataSetInfo.GetName(), (const char *)mname[k][i], eff01[k][i],
+                                         trainEff01[k][i], eff10[k][i], trainEff10[k][i], eff30[k][i], trainEff30[k][i])
+                        << Endl;
+               }
+            }
+            Log() << kINFO << hLine << Endl;
+            Log() << kINFO << Endl;
+
+            if (gTools().CheckForSilentOption(GetOptions())) Log().InhibitOutput();
+         } // end fROC
      }
      if(!IsSilentFile())
      {

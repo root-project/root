@@ -47,7 +47,7 @@ See TParticlePDG for the description of a static particle properties.
 See TParticle    for the description of a dynamic particle particle.
 */
 
-ClassImp(TDatabasePDG)
+ClassImp(TDatabasePDG);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Static function holding the instance.

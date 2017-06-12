@@ -17,7 +17,7 @@
 #include<TApplication.h>
 using namespace TMVA;
 
-ClassImp(RMethodBase)
+ClassImp(RMethodBase);
 
 //_______________________________________________________________________
 RMethodBase::RMethodBase(const TString &jobName,

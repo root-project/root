@@ -14,3 +14,10 @@ ROOT_GENERATE_DICTIONARY(G__${libname} *.h Math/*.h v5/*.h ${Hist_v7_dict_header
 ROOT_LINKER_LIBRARY(${libname} *.cxx ${root7src} G__${libname}.cxx DEPENDENCIES Matrix MathCore RIO)
 ROOT_INSTALL_HEADERS()
 
+if(testing)
+  add_subdirectory(test)
+
+if(root7)
+    add_subdirectory(v7/test)
+  endif()
+endif()

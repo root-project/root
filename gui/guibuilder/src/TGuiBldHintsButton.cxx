@@ -19,7 +19,7 @@
 // Special button class used for editing layout hints in the ROOT GUI Builder.
 //_____________________________________________________________________________
 
-ClassImp(TGuiBldHintsButton)
+ClassImp(TGuiBldHintsButton);
 
 
 ////////////////////////////////////////////////////////////////////////////////

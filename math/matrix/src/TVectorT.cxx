@@ -41,7 +41,7 @@
 #include "TROOT.h"
 #include "Varargs.h"
 
-templateClassImp(TVectorT)
+templateClassImp(TVectorT);
 
 
 ////////////////////////////////////////////////////////////////////////////////

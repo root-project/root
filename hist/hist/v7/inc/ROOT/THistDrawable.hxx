@@ -55,7 +55,7 @@ public:
 
   /// Paint a THist. All we need is access to its GetBinContent()
   virtual void Paint(TDrawable& obj, THistDrawOptions<DIMENSION> opts,
-                     TCanvas& canv) = 0;
+                     TVirtualCanvasPainter& canv) = 0;
 };
 
 extern template class THistPainterBase<1>;
@@ -67,13 +67,14 @@ protected:
   std::unique_ptr<TH1> fOldHist;
 
 public:
-  TH1* GetOldHist() const { return fOldHist.get(); }
+   TH1* GetOldHist() const { return fOldHist.get(); }
 
    THistDrawableBase();
    THistDrawableBase(THistDrawableBase&&);
    virtual ~THistDrawableBase();
 
    THistDrawableBase& operator=(THistDrawableBase&&);
+  
 };
 
 template <int DIMENSIONS>
@@ -98,10 +99,11 @@ public:
       fOpts(opts) {}
 
   /// Paint the histogram
-  void Paint(TCanvas& canv) final {
+  void Paint(TVirtualCanvasPainter& canv) final {
     if (UpdateOldHist())
       THistPainterBase<DIMENSIONS>::GetPainter()->Paint(*this, fOpts, canv);
   }
+
 };
 
 extern template class THistDrawable<1>;

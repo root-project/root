@@ -42,7 +42,7 @@ static const Int_t UNINITIALIZED = -1;
 
 using std::vector;
 
-ClassImp(TMVA::TNeuron)
+ClassImp(TMVA::TNeuron);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// standard constructor

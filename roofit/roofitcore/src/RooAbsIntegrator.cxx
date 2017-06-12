@@ -35,7 +35,7 @@ functions that implement the RooAbsFunc interface.
 
 using namespace std;
 
-ClassImp(RooAbsIntegrator)
+ClassImp(RooAbsIntegrator);
 ;
 
 

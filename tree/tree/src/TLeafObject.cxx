@@ -22,7 +22,7 @@ A TLeaf for a general object derived from TObject.
 #include "TMethodCall.h"
 #include "TDataType.h"
 
-ClassImp(TLeafObject)
+ClassImp(TLeafObject);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor for LeafObject.

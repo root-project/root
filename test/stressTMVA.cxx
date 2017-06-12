@@ -263,7 +263,7 @@ namespace UnitTesting
       long getNumFailed() const;
       const std::ostream* getStream() const;
       void setStream(std::ostream* osptr);
-      void addTest(UnitTest* t) throw (UnitTestSuiteError);
+      void addTest(UnitTest* t);
       void addSuite(const UnitTestSuite&);
       void run();  // Calls Test::run() repeatedly
       void intro() const;
@@ -309,7 +309,7 @@ namespace UnitTesting
 using namespace std;
 using namespace UnitTesting;
 
-void UnitTestSuite::addTest(UnitTest* t) throw(UnitTestSuiteError)
+void UnitTestSuite::addTest(UnitTest* t)
 {
    // Verify test is valid and has a stream:
    if (t == 0)
@@ -3036,14 +3036,9 @@ void addClassificationTests( UnitTestSuite& TMVA_test, bool full=true)
       "Regularization=None,TestRepetitions=5, Multithreading=True"
       "|LearningRate=0.001,Momentum=0.0,ConvergenceSteps=20,BatchSize=256,"
       "Regularization=None,TestRepetitions=5, Multithreading=True";
-   TString configStandard = "Architecture=STANDARD:" + config;
    TString configCpu      = "Architecture=CPU:" + config;
    TString configGpu      = "Architecture=GPU:" + config;
 
-
-    TMVA_test.addTest(new MethodUnitTestWithROCLimits(
-                          TMVA::Types::kDNN, "DNN Standard",
-                          configStandard, 0.85, 0.98));
 #ifdef DNNCPU
    TMVA_test.addTest(new MethodUnitTestWithROCLimits(
                          TMVA::Types::kDNN, "DNN CPU", configCpu, 0.85, 0.98)

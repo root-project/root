@@ -28,7 +28,20 @@ ROOT_ADD_C_FLAG(_flags -Wno-parentheses-equality)
 
 set_source_files_properties(src/triangle.c COMPILE_FLAGS "${_flags}")
 
-ROOT_LINKER_LIBRARY(MathCore *.cxx *.c G__MathCore.cxx LIBRARIES ${CMAKE_THREAD_LIBS_INIT} DEPENDENCIES Core)
+if(imt)
+  set(MATHCORE_DEPENDENCIES Imt)
+endif()
+
+if(veccore)
+  set(MATHCORE_LIBRARIES ${VecCore_LIBRARIES})
+  set(MATHCORE_BUILTINS VECCORE)
+endif()
+
+ROOT_LINKER_LIBRARY(MathCore *.cxx *.c G__MathCore.cxx LIBRARIES ${CMAKE_THREAD_LIBS_INIT} ${MATHCORE_LIBRARIES} DEPENDENCIES Core ${MATHCORE_DEPENDENCIES} BUILTINS ${MATHCORE_BUILTINS})
+
+if(veccore)
+  target_compile_definitions(MathCore INTERFACE ${VecCore_DEFINITIONS})
+endif()
 
 ROOT_INSTALL_HEADERS()
 

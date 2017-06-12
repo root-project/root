@@ -44,9 +44,9 @@
 #include <stdlib.h>
 
 
-ClassImp(TGSearchDialog)
-ClassImp(TGPrintDialog)
-ClassImp(TGGotoDialog)
+ClassImp(TGSearchDialog);
+ClassImp(TGPrintDialog);
+ClassImp(TGGotoDialog);
 
 static TString gLastSearchString;
 TGSearchDialog *TGSearchDialog::fgSearchDialog = 0;

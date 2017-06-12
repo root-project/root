@@ -64,7 +64,7 @@ and the evaluation is done here.
 
 using std::vector;
 
-ClassImp(TMVA::MethodCompositeBase)
+ClassImp(TMVA::MethodCompositeBase);
 
 ////////////////////////////////////////////////////////////////////////////////
 

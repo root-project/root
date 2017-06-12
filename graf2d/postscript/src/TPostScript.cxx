@@ -253,7 +253,7 @@ static Bool_t MustEmbed[32];
 
 Int_t TPostScript::fgLineJoin = 0;
 
-ClassImp(TPostScript)
+ClassImp(TPostScript);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default PostScript constructor
@@ -676,6 +676,9 @@ void TPostScript::DefineMarkers()
    PrintStr("/mr {mp x y w2 0 360 arc} def /m24 {mr s} def /m20 {mr f} def@");
    PrintStr("/mb {mp x y w2 add m w2 neg 0 d 0 w neg d w 0 d 0 w d cl} def@");
    PrintStr("/mt {mp x y w2 add m w2 neg w neg d w 0 d cl} def@");
+   PrintStr("/w4 {w 4 div} def@");
+   PrintStr("/w6 {w 6 div} def@");
+   PrintStr("/w8 {w 8 div} def@");
    PrintStr("/m21 {mb f} def /m25 {mb s} def /m22 {mt f} def /m26{mt s} def@");
    PrintStr("/m23 {mp x y w2 sub m w2 w d w neg 0 d cl f} def@");
    PrintStr("/m27 {mp x y w2 add m w3 neg w2 neg d w3 w2 neg d w3 w2 d cl s} def@");
@@ -696,6 +699,49 @@ void TPostScript::DefineMarkers()
    PrintStr(" 0 w3 neg d w3 0 d 0 w3 d w3 0 d ");
    PrintStr(" 0 w3 d w3 neg 0 d 0 w3 d w3 neg 0 d");
    PrintStr(" 0 w3 neg d w3 neg 0 d cl f } def@");
+   PrintStr("/m35 {mp x y w2 add m w2 neg w2 neg d w2 w2 neg d w2 w2 d w2 neg w2 d");
+   PrintStr(" x y w2 sub m 0 w d x w2 sub y m w 0 d s} def@");
+   PrintStr("/m36 {mb x w2 sub y w2 add m w w neg d x w2 sub y w2 sub m w w d s} def@");
+   PrintStr("/m37 {mp x y m w4 neg w2 d w4 neg w2 neg d w2 0 d ");
+   PrintStr(" w4 neg w2 neg d w2 0 d w4 neg w2 d w2 0 d w4 neg w2 d w4 neg w2 neg d cl s} def@");
+   PrintStr("/m38 {mp x w4 sub y w2 add m w4 neg w4 neg d 0 w2 neg d w4 w4 neg d");
+   PrintStr(" w2 0 d w4 w4 d 0 w2 d w4 neg w4 d w2 neg 0 d");
+   PrintStr(" x y w2 sub m 0 w d x w2 sub y m w 0 d cl s} def@");
+   PrintStr("/m39 {mp x y m w4 neg w2 d w4 neg w2 neg d w2 0 d ");
+   PrintStr(" w4 neg w2 neg d w2 0 d w4 neg w2 d w2 0 d w4 neg w2 d w4 neg w2 neg d cl f} def@");
+   PrintStr("/m40 {mp x y m w4 w2 d w4 w4 neg d w2 neg w4 neg d w2 w4 neg d w4 neg w4 neg d");
+   PrintStr(" w4 neg w2 d w4 neg w2 neg d w4 neg w4 d w2 w4 d w2 neg w4 d w4 w4 d w4 w2 neg d cl s} def@");
+   PrintStr("/m41 {mp x y m w4 w2 d w4 w4 neg d w2 neg w4 neg d w2 w4 neg d w4 neg w4 neg d");
+   PrintStr(" w4 neg w2 d w4 neg w2 neg d w4 neg w4 d w2 w4 d w2 neg w4 d w4 w4 d w4 w2 neg d cl f} def@");
+   PrintStr("/m42 {mp x y w2 add m w8 neg w2 -3 4 div mul d w2 -3 4 div mul w8 neg d");
+   PrintStr(" w2 3 4 div mul w8 neg d w8 w2 -3 4 div mul d");
+   PrintStr(" w8 w2 3 4 div mul d w2 3 4 div mul w8 d");
+   PrintStr(" w2 -3 4 div mul w8 d w8 neg w2 3 4 div mul d cl s} def@");
+   PrintStr("/m43 {mp x y w2 add m w8 neg w2 -3 4 div mul d w2 -3 4 div mul w8 neg d");
+   PrintStr(" w2 3 4 div mul w8 neg d w8 w2 -3 4 div mul d");
+   PrintStr(" w8 w2 3 4 div mul d w2 3 4 div mul w8 d");
+   PrintStr(" w2 -3 4 div mul w8 d w8 neg w2 3 4 div mul d cl f} def@");
+   PrintStr("/m44 {mp x y m w6 neg w2 d w2 2 3 div mul 0 d w6 neg w2 neg d");
+   PrintStr(" w2 w6 d 0 w2 -2 3 div mul d w2 neg w6 d");
+   PrintStr(" w6 w2 neg d w2 -2 3 div mul 0 d w6 w2 d");
+   PrintStr(" w2 neg w6 neg d 0 w2 2 3 div mul d w2 w6 neg d cl s} def@");
+   PrintStr("/m45 {mp x y m w6 neg w2 d w2 2 3 div mul 0 d w6 neg w2 neg d");
+   PrintStr(" w2 w6 d 0 w2 -2 3 div mul d w2 neg w6 d");
+   PrintStr(" w6 w2 neg d w2 -2 3 div mul 0 d w6 w2 d");
+   PrintStr(" w2 neg w6 neg d 0 w2 2 3 div mul d w2 w6 neg d cl f} def@");
+   PrintStr("/m46 {mp x y w4 add m w4 neg w4 d w4 neg w4 neg d ");
+   PrintStr(" w4 w4 neg d w4 neg w4 neg d w4 w4 neg d w4 w4 d");
+   PrintStr(" w4 w4 neg d w4 w4 d w4 neg w4 d w4 w4 d w4 neg w4 d w4 neg w4 neg d cl s} def@");
+   PrintStr("/m47 {mp x y w4 add m w4 neg w4 d w4 neg w4 neg d");
+   PrintStr(" w4 w4 neg d w4 neg w4 neg d  w4 w4 neg d w4 w4 d");
+   PrintStr(" w4 w4 neg d w4 w4 d w4 neg w4 d w4 w4 d w4 neg w4 d w4 neg w4 neg d cl f} def@");
+   PrintStr("/m48 {mp x y w4 add m w4 neg w4 d w4 neg w4 neg d w4 w4 neg d ");
+   PrintStr(" w4 neg w4 neg d w4 w4 neg d w4 w4 d w4 w4 neg d w4 w4 d");
+   PrintStr(" w4 neg w4 d w4 w4 d w4 neg w4 d w4 neg w4 neg d ");
+   PrintStr(" w4 w4 neg d w4 neg w4 neg d w4 neg w4 d w4 w4 d cl f} def@");
+   PrintStr("/m49 {mp x w2 sub w3 add y w2 sub w3 add m ");
+   PrintStr(" 0 w3 neg d w3 0 d 0 w3 d w3 0 d 0 w3 d w3 neg 0 d 0 w3 d w3 neg 0 d");
+   PrintStr(" 0 w3 neg d w3 neg 0 d 0 w3 neg d w3 0 d 0 w3 d w3 0 d 0 w3 neg d w3 neg 0 d cl f } def@");
    PrintStr("/m2 {mp x y w2 sub m 0 w d x w2 sub y m w 0 d s} def@");
    PrintStr("/m5 {mp x w2 sub y w2 sub m w w d x w2 sub y w2 add m w w neg d s} def@");
 }
@@ -1064,8 +1110,8 @@ void TPostScript::DrawPolyMarker(Int_t n, Float_t *x, Float_t *y)
    if (markerstyle == 4) strlcpy(chtemp, " m24",10);
    if (markerstyle == 5) strlcpy(chtemp, " m5",10);
    if (markerstyle >= 6 && markerstyle <= 19) strlcpy(chtemp, " m20",10);
-   if (markerstyle >= 20 && markerstyle <= 34 ) snprintf(chtemp,10," m%d", markerstyle);
-   if (markerstyle >= 35) strlcpy(chtemp, " m20",10);
+   if (markerstyle >= 20 && markerstyle <= 49 ) snprintf(chtemp,10," m%d", markerstyle);
+   if (markerstyle >= 50) strlcpy(chtemp, " m20",10);
 
    // Set the PostScript marker size
    if (markerstyle == 1) {
@@ -1137,8 +1183,8 @@ void TPostScript::DrawPolyMarker(Int_t n, Double_t *x, Double_t *y)
    if (markerstyle == 4) strlcpy(chtemp, " m24",10);
    if (markerstyle == 5) strlcpy(chtemp, " m5",10);
    if (markerstyle >= 6 && markerstyle <= 19) strlcpy(chtemp, " m20",10);
-   if (markerstyle >= 20 && markerstyle <= 34 ) snprintf(chtemp,10," m%d", markerstyle);
-   if (markerstyle >= 35) strlcpy(chtemp, " m20",10);
+   if (markerstyle >= 20 && markerstyle <= 49 ) snprintf(chtemp,10," m%d", markerstyle);
+   if (markerstyle >= 50) strlcpy(chtemp, " m20",10);
 
    // Set the PostScript marker size
    if (markerstyle == 1) {
@@ -2548,10 +2594,10 @@ void TPostScript::Text(Double_t xx, Double_t yy, const char *chars)
       { "Root.PSFont.5",             "/Helvetica-Oblique" },
       { "Root.PSFont.6",             "/Helvetica-Bold" },
       { "Root.PSFont.7",             "/Helvetica-BoldOblique" },
-      { "Root.PSFont.8",             "/Courrier" },
-      { "Root.PSFont.9",             "/Courrier-Oblique" },
-      { "Root.PSFont.10",            "/Courrier-Bold" },
-      { "Root.PSFont.11",            "/Courrier-BoldOblique" },
+      { "Root.PSFont.8",             "/Courier" },
+      { "Root.PSFont.9",             "/Courier-Oblique" },
+      { "Root.PSFont.10",            "/Courier-Bold" },
+      { "Root.PSFont.11",            "/Courier-BoldOblique" },
       { "Root.PSFont.12",            "/Symbol" },
       { "Root.PSFont.13",            "/Times-Roman" },
       { "Root.PSFont.14",            "/ZapfDingbats" },

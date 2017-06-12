@@ -88,12 +88,6 @@ typedef float          Size_t;      //Attribute size (float)
 #define NULL 0
 #endif
 
-#ifndef R__NULLPTR
-#ifndef nullptr
-#define nullptr 0
-#endif
-#endif
-
 const Bool_t kTRUE  = true;
 const Bool_t kFALSE = false;
 

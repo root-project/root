@@ -29,7 +29,7 @@
 #include "TObjArray.h"
 #include "TClass.h"
 
-ClassImp(TTeXDump)
+ClassImp(TTeXDump);
 
 /** \class TTeXDump
 \ingroup PS
@@ -288,7 +288,7 @@ void TTeXDump::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
          PrintStr("crosshatch");
          break;
       }
-      PrintStr(", draw opacity=0, pattern color=c");
+      PrintStr(", draw=none, pattern color=c");
       if (fCurrentAlpha != 1.) {
          PrintStr(", fill opacity=");
          WriteReal(fCurrentAlpha, kFALSE);
@@ -590,7 +590,7 @@ void TTeXDump::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
             PrintStr("crosshatch");
             break;
          }
-         PrintStr(", draw opacity=0, pattern color=c");
+         PrintStr(", draw=none, pattern color=c");
       }
       if (fCurrentAlpha != 1.) {
          PrintStr(", fill opacity=");

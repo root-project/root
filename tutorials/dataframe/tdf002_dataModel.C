@@ -109,9 +109,9 @@ int tdf002_dataModel()
                          .Define("tracks_pts", getPt)
                          .Define("tracks_pts_weights", getPtWeights);
 
-   auto trN = augmented_d.Histo1D("tracks_n", 40, -.5, 39.5);
+   auto trN = augmented_d.Histo1D(TH1F{"", "", 40, -.5, 39.5}, "tracks_n");
    auto trPts = augmented_d.Histo1D("tracks_pts");
-   auto trWPts = augmented_d.Histo1D<std::vector<double>, std::vector<double>>("tracks_pts", "tracks_pts_weights");
+   auto trWPts = augmented_d.Histo1D("tracks_pts", "tracks_pts_weights");
 
    TCanvas c1;
    trN->Draw();

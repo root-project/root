@@ -38,7 +38,7 @@ by a series of thresholds.
 
 using namespace std;
 
-ClassImp(RooThresholdCategory)
+ClassImp(RooThresholdCategory);
 
 
 

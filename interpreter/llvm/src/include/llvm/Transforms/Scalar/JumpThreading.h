@@ -17,12 +17,14 @@
 #include "llvm/ADT/DenseSet.h"
 #include "llvm/ADT/SmallPtrSet.h"
 #include "llvm/ADT/SmallSet.h"
+#include "llvm/Analysis/AliasAnalysis.h"
 #include "llvm/Analysis/BlockFrequencyInfo.h"
 #include "llvm/Analysis/BlockFrequencyInfoImpl.h"
 #include "llvm/Analysis/BranchProbabilityInfo.h"
 #include "llvm/Analysis/LazyValueInfo.h"
 #include "llvm/Analysis/TargetLibraryInfo.h"
 #include "llvm/IR/Instructions.h"
+#include "llvm/IR/IntrinsicInst.h"
 #include "llvm/IR/ValueHandle.h"
 
 namespace llvm {
@@ -59,9 +61,11 @@ enum ConstantPreference { WantInteger, WantBlockAddress };
 class JumpThreadingPass : public PassInfoMixin<JumpThreadingPass> {
   TargetLibraryInfo *TLI;
   LazyValueInfo *LVI;
+  AliasAnalysis *AA;
   std::unique_ptr<BlockFrequencyInfo> BFI;
   std::unique_ptr<BranchProbabilityInfo> BPI;
   bool HasProfileData = false;
+  bool HasGuards = false;
 #ifdef NDEBUG
   SmallPtrSet<const BasicBlock *, 16> LoopHeaders;
 #else
@@ -85,20 +89,14 @@ class JumpThreadingPass : public PassInfoMixin<JumpThreadingPass> {
 
 public:
   JumpThreadingPass(int T = -1);
-  // Hack for MSVC 2013 which seems like it can't synthesize this.
-  JumpThreadingPass(JumpThreadingPass &&Other)
-      : TLI(Other.TLI), LVI(Other.LVI), BFI(std::move(Other.BFI)),
-        BPI(std::move(Other.BPI)), HasProfileData(Other.HasProfileData),
-        LoopHeaders(std::move(Other.LoopHeaders)),
-        RecursionSet(std::move(Other.RecursionSet)),
-        BBDupThreshold(Other.BBDupThreshold) {}
 
   // Glue for old PM.
   bool runImpl(Function &F, TargetLibraryInfo *TLI_, LazyValueInfo *LVI_,
-               bool HasProfileData_, std::unique_ptr<BlockFrequencyInfo> BFI_,
+               AliasAnalysis *AA_, bool HasProfileData_,
+               std::unique_ptr<BlockFrequencyInfo> BFI_,
                std::unique_ptr<BranchProbabilityInfo> BPI_);
 
-  PreservedAnalyses run(Function &F, AnalysisManager<Function> &AM);
+  PreservedAnalyses run(Function &F, FunctionAnalysisManager &AM);
 
   void releaseMemory() {
     BFI.reset();
@@ -129,11 +127,16 @@ public:
   bool TryToUnfoldSelect(CmpInst *CondCmp, BasicBlock *BB);
   bool TryToUnfoldSelectInCurrBB(BasicBlock *BB);
 
+  bool ProcessGuards(BasicBlock *BB);
+  bool ThreadGuard(BasicBlock *BB, IntrinsicInst *Guard, BranchInst *BI);
+
 private:
   BasicBlock *SplitBlockPreds(BasicBlock *BB, ArrayRef<BasicBlock *> Preds,
                               const char *Suffix);
   void UpdateBlockFreqAndEdgeWeight(BasicBlock *PredBB, BasicBlock *BB,
                                     BasicBlock *NewBB, BasicBlock *SuccBB);
+  /// Check if the block has profile metadata for its outgoing edges.
+  bool doesBlockHaveProfileData(BasicBlock *BB);
 };
 
 } // end namespace llvm

@@ -25,6 +25,8 @@
 #include "TGenCollectionProxy.h"
 #include "TRegexp.h"
 
+#include <memory>
+
 // pin vtable
 ROOT::Internal::TVirtualCollectionReader::~TVirtualCollectionReader() {}
 
@@ -73,13 +75,6 @@ namespace {
          if (!proxy->GetWhere()) {
             Error("TSTLReader::GetCP()", "Logic error, proxy object not set in TBranchProxy.");
             return 0;
-         }
-         if (proxy->IsaPointer()) {
-            if (proxy->GetWhere() && *(void**)proxy->GetWhere()){
-               ((TGenCollectionProxy*)proxy->GetCollection())->PopProxy();
-               ((TGenCollectionProxy*)proxy->GetCollection())->PushProxy(*(void**)proxy->GetWhere());
-            }
-            else return 0;
          }
          fReadStatus = TTreeReaderValueBase::kReadSuccess;
          return (TVirtualCollectionProxy*) proxy->GetCollection();
@@ -194,13 +189,13 @@ namespace {
    class TUIntOrIntReader: public BASE {
    private:
       // The index can be of type int or unsigned int.
-      TTreeReaderValue<Int_t> fSizeReader;
+      std::unique_ptr<TTreeReaderValueBase> fSizeReader;
       bool fIsUnsigned = false;
 
    protected:
       template <class T>
       TTreeReaderValue<T>& GetSizeReader() {
-         return reinterpret_cast<TTreeReaderValue<T>&>(fSizeReader);
+         return *static_cast<TTreeReaderValue<T>*>(fSizeReader.get());
       }
 
    public:
@@ -212,9 +207,9 @@ namespace {
          if (TLeaf* sizeLeaf = treeReader->GetTree()->FindLeaf(leafName)) {
             fIsUnsigned = sizeLeaf->IsUnsigned();
             if (fIsUnsigned) {
-               GetSizeReader<UInt_t>() = TTreeReaderValue<UInt_t>(*treeReader, leafName);
+               fSizeReader.reset(new TTreeReaderValue<UInt_t>(*treeReader, leafName));
             } else {
-               GetSizeReader<Int_t>() = TTreeReaderValue<Int_t>(*treeReader, leafName);
+               fSizeReader.reset(new TTreeReaderValue<Int_t>(*treeReader, leafName));
             }
          }
       }
@@ -330,7 +325,7 @@ namespace {
 Extracts array data from a TTree.
 */
 
-ClassImp(TTreeReaderArrayBase)
+ClassImp(TTreeReaderArrayBase);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create the proxy object for our branch.
@@ -512,6 +507,7 @@ bool ROOT::Internal::TTreeReaderArrayBase::GetBranchAndLeaf(TBranch* &branch, TL
       fLeaf = myLeaf;
       fBranchName = branchName;
       fLeafName = leafName(1, leafName.Length());
+      fHaveLeaf = (fLeafName.Length() > 0);
       fSetupStatus = kSetupMatchLeaf;
    }
    else {

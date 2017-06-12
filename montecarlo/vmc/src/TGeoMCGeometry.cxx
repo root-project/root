@@ -37,7 +37,7 @@ for building TGeo geometry.
 #include "TGeoHype.h"
 #include "TMath.h"
 
-ClassImp(TGeoMCGeometry)
+ClassImp(TGeoMCGeometry);
 
 TGeoMCGeometry* TGeoMCGeometry::fgInstance=0;
 

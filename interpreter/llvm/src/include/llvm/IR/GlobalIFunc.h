@@ -20,6 +20,7 @@
 
 #include "llvm/ADT/ilist_node.h"
 #include "llvm/IR/GlobalIndirectSymbol.h"
+#include "llvm/IR/Value.h"
 
 namespace llvm {
 
@@ -32,27 +33,30 @@ template <typename ValueSubClass> class SymbolTableListTraits;
 class GlobalIFunc final : public GlobalIndirectSymbol,
                           public ilist_node<GlobalIFunc> {
   friend class SymbolTableListTraits<GlobalIFunc>;
-  void operator=(const GlobalIFunc &) = delete;
-  GlobalIFunc(const GlobalIFunc &) = delete;
-
-  void setParent(Module *parent);
 
   GlobalIFunc(Type *Ty, unsigned AddressSpace, LinkageTypes Linkage,
               const Twine &Name, Constant *Resolver, Module *Parent);
 
 public:
+  GlobalIFunc(const GlobalIFunc &) = delete;
+  GlobalIFunc &operator=(const GlobalIFunc &) = delete;
+
   /// If a parent module is specified, the ifunc is automatically inserted into
   /// the end of the specified module's ifunc list.
   static GlobalIFunc *create(Type *Ty, unsigned AddressSpace,
                              LinkageTypes Linkage, const Twine &Name,
                              Constant *Resolver, Module *Parent);
 
+  void copyAttributesFrom(const GlobalIFunc *Src) {
+    GlobalValue::copyAttributesFrom(Src);
+  }
+
   /// This method unlinks 'this' from the containing module, but does not
   /// delete it.
-  void removeFromParent() final;
+  void removeFromParent();
 
   /// This method unlinks 'this' from the containing module and deletes it.
-  void eraseFromParent() final;
+  void eraseFromParent();
 
   /// These methods retrieve and set ifunc resolver function.
   void setResolver(Constant *Resolver) {
@@ -71,6 +75,6 @@ public:
   }
 };
 
-} // End llvm namespace
+} // end namespace llvm
 
-#endif
+#endif // LLVM_IR_GLOBALIFUNC_H

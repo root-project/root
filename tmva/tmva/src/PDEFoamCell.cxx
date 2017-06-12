@@ -45,7 +45,7 @@
 
 using namespace std;
 
-ClassImp(TMVA::PDEFoamCell)
+ClassImp(TMVA::PDEFoamCell);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor for streamer

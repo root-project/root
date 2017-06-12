@@ -66,7 +66,7 @@ See also specialized branches:
  - TBranchClones in case the branch is an array of clone objects
 */
 
-ClassImp(TBranch)
+ClassImp(TBranch);
 
 
 
@@ -464,7 +464,7 @@ TBranch::~TBranch()
    if (fDirectory && (!fTree || fDirectory != fTree->GetDirectory())) {
       TString bFileName( GetRealFileName() );
 
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       TFile* file = (TFile*)gROOT->GetListOfFiles()->FindObject(bFileName);
       if (file){
          file->Close();
@@ -1421,7 +1421,7 @@ TFile* TBranch::GetFile(Int_t mode)
    // check if a file with this name is in the list of Root files
    TFile *file = 0;
    {
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       file = (TFile*)gROOT->GetListOfFiles()->FindObject(fFileName.Data());
       if (file) {
          fDirectory = file;
@@ -1626,21 +1626,14 @@ TBranch* TBranch::GetSubBranch(const TBranch* child) const
 
 Long64_t TBranch::GetTotalSize(Option_t * /*option*/) const
 {
-   TObjArray &baskets( const_cast<TObjArray&>(fBaskets) );
-   TBasket *writebasket = 0;
-   if (fNBaskets == 1) {
-      writebasket = (TBasket*)fBaskets.UncheckedAt(fWriteBasket);
-      if (writebasket && writebasket->GetNevBuf()==0) {
-         baskets[fWriteBasket] = 0;
-      } else {
-         writebasket = 0;
-      }
-   }
-   TBufferFile b(TBuffer::kWrite,10000);
-   TBranch::Class()->WriteBuffer(b,(TBranch*)this);
-   if (writebasket) {
-      baskets[fWriteBasket] = writebasket;
-   }
+   TBufferFile b(TBuffer::kWrite, 10000);
+   // This intentionally only store the TBranch part and thus slightly
+   // under-estimate the space used.
+   // Since the TBranchElement part contains pointers to other branches (branch count),
+   // doing regular Streaming would end up including those and thus greatly over-estimate
+   // the size used.
+   const_cast<TBranch *>(this)->TBranch::Streamer(b);
+
    Long64_t totbytes = 0;
    if (fZipBytes > 0) totbytes = fTotBytes;
    return totbytes + b.Length();
@@ -2569,20 +2562,28 @@ void TBranch::Streamer(TBuffer& b)
    } else {
       Int_t maxBaskets = fMaxBaskets;
       fMaxBaskets = fWriteBasket+1;
-      if (fMaxBaskets < 10) fMaxBaskets=10;
-      TBasket *writebasket = 0;
-      if (fNBaskets == 1) {
-         writebasket = (TBasket*)fBaskets.UncheckedAt(fWriteBasket);
-         if (writebasket && writebasket->GetNevBuf()==0) {
-            fBaskets[fWriteBasket] = 0;
+      Int_t lastBasket = fMaxBaskets;
+      if (fMaxBaskets < 10) fMaxBaskets = 10;
+
+      TBasket **stash = new TBasket *[lastBasket];
+      for (Int_t i = 0; i < lastBasket; ++i) {
+         TBasket *ba = (TBasket *)fBaskets.UncheckedAt(i);
+         if (ba && (fBasketBytes[i] || ba->GetNevBuf()==0)) {
+            // Already on disk or empty.
+            stash[i] = ba;
+            fBaskets[i] = nullptr;
          } else {
-            writebasket = 0;
+            stash[i] = nullptr;
          }
       }
-      b.WriteClassBuffer(TBranch::Class(),this);
-      if (writebasket) {
-         fBaskets[fWriteBasket] = writebasket;
+
+      b.WriteClassBuffer(TBranch::Class(), this);
+
+      for (Int_t i = 0; i < lastBasket; ++i) {
+         if (stash[i]) fBaskets[i] = stash[i];
       }
+
+      delete[] stash;
       fMaxBaskets = maxBaskets;
    }
 }

@@ -119,7 +119,7 @@ using std::atof;
 
 REGISTER_METHOD(Cuts)
 
-ClassImp(TMVA::MethodCuts)
+ClassImp(TMVA::MethodCuts);
 
    const Double_t TMVA::MethodCuts::fgMaxAbsCutVal = 1.0e30;
 
@@ -768,10 +768,12 @@ void  TMVA::MethodCuts::Train( void )
                isSignal &= DataInfo().IsSignal(ev2);
                evt2 = ev2->GetValue( ivar );
 
-               if (nbreak++ > 10000) Log() << kFATAL << "<MCEvents>: could not find signal events"
+               if (nbreak++ > 10000) {
+                  Log() << kFATAL << "<MCEvents>: could not find signal events"
                                            << " after 10000 trials - do you have signal events in your sample ?"
                                            << Endl;
-               isSignal = 1;
+                  isSignal = 1;
+               }
             }
 
             // sort

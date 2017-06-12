@@ -127,7 +127,7 @@ along with TUnfold.  If not, see <http://www.gnu.org/licenses/>.
 //#define DEBUG_DETAIL
 //#define FORCE_EIGENVALUE_DECOMPOSITION
 
-ClassImp(TUnfold)
+ClassImp(TUnfold);
 
 TUnfold::~TUnfold(void)
 {
@@ -1040,6 +1040,7 @@ TMatrixDSparse *TUnfold::InvertMSparseSymmPos
    if(nError>0) {
       Fatal("InvertMSparseSymmPos",
             "Matrix has %d negative elements on the diagonal", nError);
+      delete[] isZero;
       return 0;
    }
 

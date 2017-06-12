@@ -42,7 +42,7 @@ TMethodCall                            (method call environment)
 #include "TROOT.h"
 
 
-ClassImp(TDictionary)
+ClassImp(TDictionary);
 
 TDictionary::TDictionary(const TDictionary& dict):
    TNamed(dict),

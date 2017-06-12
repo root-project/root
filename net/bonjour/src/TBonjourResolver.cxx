@@ -32,7 +32,7 @@
 #include <arpa/inet.h>
 
 
-ClassImp(TBonjourResolver)
+ClassImp(TBonjourResolver);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default ctor.

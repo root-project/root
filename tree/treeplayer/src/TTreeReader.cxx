@@ -20,11 +20,14 @@
  TTreeReader is a simple, robust and fast interface to read values from a TTree,
  TChain or TNtuple.
 
- It uses TTreeReaderValue<T> and TTreeReaderArray<T> to access the data.
+ It uses `TTreeReaderValue<T>` and `TTreeReaderArray<T>` to access the data.
 
  Example code can be found in
  tutorials/tree/hsimpleReader.C and tutorials/trees/h1analysisTreeReader.h and
  tutorials/trees/h1analysisTreeReader.C for a TSelector.
+
+ You can generate a skeleton of `TTreeReaderValue<T>` and `TTreeReaderArray<T>` declarations
+ for all of a tree's branches using `TTree::MakeSelector()`.
 
  Roottest contains an
  <a href="http://root.cern.ch/gitweb?p=roottest.git;a=tree;f=root/tree/reader;hb=HEAD">example</a>
@@ -159,7 +162,7 @@ bool analyze(TFile* file) {
 ~~~
 */
 
-ClassImp(TTreeReader)
+ClassImp(TTreeReader);
 
 using namespace ROOT::Internal;
 
@@ -253,7 +256,10 @@ TTreeReader::EEntryStatus TTreeReader::SetEntriesRange(Long64_t beginEntry, Long
       fEndEntry = endEntry;
    else
       fEndEntry = -1;
-   SetEntry(beginEntry - 1);
+   if (beginEntry - 1 < 0)
+      Restart();
+   else
+      SetEntry(beginEntry - 1);
    return kEntryValid;
 }
 
@@ -266,7 +272,7 @@ void TTreeReader::Restart() {
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns the number of entries of the TEntryList if one is provided, else
-/// of the TTree / TChain.
+/// of the TTree / TChain, independent of a range set by SetEntriesRange().
 ///
 /// \param force If `IsChain()` and `force`, determines whether all TFiles of
 ///   this TChain should be opened to determine the exact number of entries
@@ -317,7 +323,7 @@ TTreeReader::EEntryStatus TTreeReader::SetEntryBase(Long64_t entry, Bool_t local
          fEntryStatus = kEntryNotFound;
          return fEntryStatus;
       }
-      entryAfterList = fEntryList->GetEntry(entry);
+      if (entry >= 0) entryAfterList = fEntryList->GetEntry(entry);
       if (local && IsChain()) {
          // Must translate the entry list's entry to the current TTree's entry number.
          local = kFALSE;

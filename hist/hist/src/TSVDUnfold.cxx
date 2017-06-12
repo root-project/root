@@ -68,7 +68,7 @@
 #include "TRandom3.h"
 #include "TMath.h"
 
-ClassImp(TSVDUnfold)
+ClassImp(TSVDUnfold);
 
 using namespace std;
 
@@ -359,7 +359,7 @@ TH1D* TSVDUnfold::Unfold( Int_t kreg )
          for (Int_t m=0; m<fNdim; m++) {
             a += mA(m,i)*mA(m,j);
          }
-         if(vxini(i)*vxini(j))
+         if(vxini(i) && vxini(j))
             Xinv(i,j) = a/vxini(i)/vxini(j);
       }
    }
@@ -733,7 +733,7 @@ void TSVDUnfold::FillCurvatureMatrix( TMatrixD& tCurv, TMatrixD& tC ) const
    tC    *= 0;
 
    if (fDdim == 0) for (Int_t i=0; i<ndim; i++) tC(i,i) = 1;
-   else if (ndim == 1) {
+   else if (fDdim == 1) {
       for (Int_t i=0; i<ndim; i++) {
          if (i < ndim-1) tC(i,i+1) = 1.0;
          tC(i,i) = 1.0;

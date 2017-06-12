@@ -41,7 +41,7 @@
 #include "TBox.h"
 #include "TPaveLabel.h"
 
-ClassImp(TPieEditor)
+ClassImp(TPieEditor);
 
 enum EPieWid {
    kPie = 0,

@@ -69,7 +69,7 @@ ReAllocCFun_t TStorage::fgReAllocCHook;
 Bool_t        TStorage::fgHasCustomNewDelete;
 
 
-ClassImp(TStorage)
+ClassImp(TStorage);
 
 //------------------------------------------------------------------------------
 
@@ -519,33 +519,6 @@ Bool_t TStorage::IsOnHeap(void *)
 }
 
 #ifdef WIN32
-////////////////////////////////////////////////////////////////////////////////
-///called by TObject's constructor to determine if object was created by call to new
-
-Bool_t TStorage::FilledByObjectAlloc(UInt_t *member)
-{
-   // This technique is necessary as there is one stack per thread
-   // and we can not rely on comparison with the current stack memory position.
-   // Note that a false positive (this routine returning true for an object
-   // created on the stack) requires the previous stack value to have been
-   // set to exactly kObjectAllocMemValue at exactly the right position (i.e.
-   // where this object's fUniqueID is located.
-   // The consequence of a false positive will be visible if and only if
-   //   the object is auto-added to a TDirectory (i.e. TTree, TH*, TGraph,
-   //      TEventList) or explicitly added to the directory by the user
-   // and
-   //   the TDirectory (or TFile) object is created on the stack *before*
-   //      the object.
-   // The consequence would be that those objects would be deleted twice, once
-   // by the TDirectory and once automatically when going out of scope
-   // (and thus quite visible).  A false negative (which is not posible with
-   // this implementation) would have been a silent memory leak.
-
-   // This will be reported by valgrind as uninitialized memory reads for
-   // object created on the stack, use $ROOTSYS/etc/valgrind-root.supp
-   return *member == kObjectAllocMemValue;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 ///return max block size
 

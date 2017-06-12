@@ -102,6 +102,15 @@ and in the batch mode simply do:
 ~~~ {.cpp}
       c->SetCanvasSize(w,h);
 ~~~
+
+If the canvas size this exceed the window size, scroll bars will be added to the canvas
+This allows to display very large canvases (even bigger than the screen size). The
+Following example shows how to proceed.
+~~~ {.cpp}
+TCanvas *c1 = new TCanvas("c1","c1");
+c1->SetCanvasSize(1500, 1500);
+c1->SetWindowSize(500, 500);
+~~~
 */
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -698,7 +707,7 @@ void TCanvas::Clear(Option_t *option)
 {
    if (fCanvasID == -1) return;
 
-   R__LOCKGUARD2(gROOTMutex);
+   R__LOCKGUARD(gROOTMutex);
 
    TString opt = option;
    opt.ToLower();
@@ -751,14 +760,14 @@ void TCanvas::Close(Option_t *option)
    TCanvas *cansave = 0;
    if (padsave) cansave = (TCanvas*)gPad->GetCanvas();
 
-   if (fCanvasID != -1) {
+   if (fCanvasID != -1 && fCanvasImp) {
 
       if ((!gROOT->IsLineProcessing()) && (!gVirtualX->IsCmdThread())) {
          gInterpreter->Execute(this, IsA(), "Close", option);
          return;
       }
 
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
 
       FeedbackMode(kFALSE);
 
@@ -770,7 +779,7 @@ void TCanvas::Close(Option_t *option)
 
          DeleteCanvasPainter();
 
-         if (fCanvasImp) fCanvasImp->Close();
+         fCanvasImp->Close();
       }
       fCanvasID = -1;
       fBatch    = kTRUE;
@@ -1111,7 +1120,7 @@ void TCanvas::UseCurrentStyle()
       return;
    }
 
-   R__LOCKGUARD2(gROOTMutex);
+   R__LOCKGUARD(gROOTMutex);
 
    TPad::UseCurrentStyle();
 
@@ -1236,8 +1245,7 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
 
          fSelected->ExecuteEvent(event, px, py);
          gVirtualX->Update();
-
-         if (!fSelected->InheritsFrom(TAxis::Class())) {
+         if (fSelected && !fSelected->InheritsFrom(TAxis::Class())) {
             Bool_t resize = kFALSE;
             if (fSelected->InheritsFrom(TBox::Class()))
                resize = ((TBox*)fSelected)->IsBeingResized();
@@ -1558,7 +1566,7 @@ void TCanvas::Resize(Option_t *)
       return;
    }
 
-   R__LOCKGUARD2(gROOTMutex);
+   R__LOCKGUARD(gROOTMutex);
 
    TPad *padsav  = (TPad*)gPad;
    cd();
@@ -1762,12 +1770,21 @@ void TCanvas::SaveSource(const char *filename, Option_t *option)
    }
 
    TString mname(fname);
+//    out <<"#ifdef __CLING__"<<std::endl;
+//    out <<"#pragma cling optimize(0)"<<std::endl;
+//    out <<"#endif"<<std::endl;
+//    out <<""<<std::endl;
    Int_t p = mname.Last('.');
    Int_t s = mname.Last('/')+1;
-   out <<"void " << mname(s,p-s) << "()" <<std::endl;
+
+   // A named macro is generated only if the function name is valid. If not, the
+   // macro is unnamed.
+   TString first(mname(s,s+1));
+   if (!first.IsDigit()) out <<"void " << mname(s,p-s) << "()" << std::endl;
+
    out <<"{"<<std::endl;
    out <<"//=========Macro generated from canvas: "<<GetName()<<"/"<<GetTitle()<<std::endl;
-   out <<"//=========  ("<<t.AsString()<<") by ROOT version"<<gROOT->GetVersion()<<std::endl;
+   out <<"//=========  ("<<t.AsString()<<") by ROOT version "<<gROOT->GetVersion()<<std::endl;
 
    if (gStyle->GetCanvasPreferGL())
       out <<std::endl<<"   gStyle->SetCanvasPreferGL(kTRUE);"<<std::endl<<std::endl;
@@ -2228,7 +2245,7 @@ void TCanvas::Update()
       return;
    }
 
-   R__LOCKGUARD2(gROOTMutex);
+   R__LOCKGUARD(gROOTMutex);
 
    fUpdating = kTRUE;
 

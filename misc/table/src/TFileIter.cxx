@@ -119,7 +119,7 @@
 #include "TFileIter.h"
 #include "TDsKey.h"
 
-ClassImp(TFileIter)
+ClassImp(TFileIter);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create iterator over all objects from the TFile provided

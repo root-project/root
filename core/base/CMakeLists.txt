@@ -3,10 +3,7 @@
 ############################################################################
 
 if(testing)
-  # FIXME: The tests in core should require only libCore. OTOH, TQObjectTests uses the interpreter to register the class.
-  # This means that if we run make CoreBaseTests the executable wouldn't be runnable because it requires libCling and
-  # onepcm targets to be built.
-  ROOT_ADD_UNITTEST_SUBDIRECTORY(test LIBRARIES Core Cling RIO)
+    add_subdirectory(test)
 endif()
 
 ROOT_GLOB_HEADERS(Base_dict_headers ${CMAKE_CURRENT_SOURCE_DIR}/inc/T*.h

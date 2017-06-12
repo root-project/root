@@ -13,7 +13,7 @@ static Int_t gCount = 0;
 //______________________________________________________________________________
 template<class T>
 struct SEnumFunctor {
-   bool operator()(TObject *aObj) const throw(std::exception) {
+   bool operator()(TObject *aObj) const {
       if (!aObj)
          throw std::invalid_argument("SEnumFunctor: aObj is a NULL pointer");
 
@@ -33,7 +33,7 @@ struct SEnumFunctor {
 //______________________________________________________________________________
 template<>
 struct SEnumFunctor<TMap> {
-   bool operator()(TObject *aObj) const throw(std::exception) {
+   bool operator()(TObject *aObj) const {
       if (!aObj)
          throw std::invalid_argument("SEnumFunctor: aObj is a NULL pointer");
 
@@ -83,7 +83,7 @@ struct SFind<TMap> : std::binary_function<TObject*, TString, bool> {
 // Checking a given container with for_each algorithm
 // Full iteration: from Begin to End
 template<class T>
-void TestContainer_for_each(const T &container, Int_t aSize) throw(std::exception)
+void TestContainer_for_each(const T &container, Int_t aSize)
 {
    gCount = 0; // TODO: a use of gCount is a very bad method. Needs to be revised.
 
@@ -98,7 +98,7 @@ void TestContainer_for_each(const T &container, Int_t aSize) throw(std::exceptio
 // Checking a given container with for_each algorithm
 // Partial iteration: from Begin to 3rd element
 template<class T>
-void TestContainer_for_each2(const T &container) throw(std::exception)
+void TestContainer_for_each2(const T &container)
 {
    gCount = 0; // TODO: a use of gCount is a very bad method. Needs to be revised.
 
@@ -118,7 +118,7 @@ void TestContainer_for_each2(const T &container) throw(std::exception)
 //______________________________________________________________________________
 // Checking a ROOT container with find_if algorithm
 template<class T>
-void TestContainer_find_if(const T &container, const TString &aToFind) throw(std::exception)
+void TestContainer_find_if(const T &container, const TString &aToFind)
 {
    typedef TIterCategory<T> iterator_t;
 
@@ -152,7 +152,7 @@ void TestContainer_find_if(const T &container, const TString &aToFind) throw(std
 //______________________________________________________________________________
 // Checking a ROOT container with count_if algorithm
 template<class T>
-void TestContainer_count_if(const T &container, const TString &aToFind, Int_t Count) throw(std::exception)
+void TestContainer_count_if(const T &container, const TString &aToFind, Int_t Count)
 {
    typedef TIterCategory<T> iterator_t;
 

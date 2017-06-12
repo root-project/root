@@ -22,7 +22,7 @@
 #include "TClass.h"
 #include "TPoint.h"
 
-ClassImp(TMarker)
+ClassImp(TMarker);
 
 
 /** \class TMarker
@@ -97,12 +97,16 @@ void TMarker::DisplayMarkerTypes()
       x += dx;
       snprintf(atext,7,"%d",i);
       marker->SetMarkerStyle(i);
-      marker->DrawMarker(x,.35);
-      text->DrawText(x,.17,atext);
+      marker->DrawMarker(x,.25);
+      text->DrawText(x,.12,atext);
       snprintf(atext,7,"%d",i+19);
       marker->SetMarkerStyle(i+19);
-      marker->DrawMarker(x,.8);
-      text->DrawText(x,.62,atext);
+      marker->DrawMarker(x,.55);
+      text->DrawText(x,.42,atext);
+      snprintf(atext,7,"%d",i+34);
+      marker->SetMarkerStyle(i+34);
+      marker->DrawMarker(x,.85);
+      text->DrawText(x,.72,atext);
    }
    delete marker;
    delete text;

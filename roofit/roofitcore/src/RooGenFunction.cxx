@@ -39,7 +39,7 @@ Lightweight interface adaptor that exports a RooAbsReal as a ROOT::Math::IGenFun
 
 using namespace std;
 
-ClassImp(RooGenFunction)
+ClassImp(RooGenFunction);
 ;
 
 ////////////////////////////////////////////////////////////////////////////////

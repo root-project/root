@@ -34,7 +34,7 @@ of TProofNodeInfo objects).
 #include "TObjString.h"
 #include "TError.h"
 
-ClassImp(TProofResourcesStatic)
+ClassImp(TProofResourcesStatic);
 
 
 ////////////////////////////////////////////////////////////////////////////////

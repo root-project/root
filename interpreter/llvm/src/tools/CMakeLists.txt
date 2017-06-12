@@ -47,14 +47,6 @@ add_llvm_external_project(llgo)
 add_llvm_external_project(lld)
 add_llvm_external_project(lldb)
 
-if(LLVM_NOCLING)
-  set(LLVM_TOOL_CLING_BUILD Off)
-endif()
-
-if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/../../../cling)
-  add_llvm_external_project(../../../cling)
-endif()
-
 # Automatically add remaining sub-directories containing a 'CMakeLists.txt'
 # file as external projects.
 add_llvm_implicit_projects()

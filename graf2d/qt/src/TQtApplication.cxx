@@ -45,7 +45,7 @@ static int QVersion(const char *ver) {
 
 TQtApplication *TQtApplication::fgQtApplication = 0;
 
-ClassImp(TQtApplication)
+ClassImp(TQtApplication);
 //
 ////////////////////////////////////////////////////////////////////////////////
 

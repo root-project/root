@@ -15,7 +15,7 @@
 #include "TFrame.h"
 #include "TStyle.h"
 
-ClassImp(TFrame)
+ClassImp(TFrame);
 
 /** \class TFrame
 \ingroup BasicGraphics

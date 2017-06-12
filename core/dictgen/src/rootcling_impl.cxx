@@ -221,6 +221,7 @@ const char *rootClingHelp =
 #include "clang/AST/CXXInheritance.h"
 #include "clang/AST/Mangle.h"
 #include "clang/Basic/Diagnostic.h"
+#include "clang/Basic/MemoryBufferCache.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Frontend/FrontendActions.h"
 #include "clang/Lex/HeaderSearch.h"
@@ -1427,7 +1428,7 @@ void WriteClassFunctions(const clang::CXXRecordDecl *cl, std::ostream &dictStrea
    if (autoLoad) {
       dictStream << "   Dictionary();\n";
    } else {
-      dictStream << "   if (!fgIsA.load()) { R__LOCKGUARD2(gInterpreterMutex); fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::";
+      dictStream << "   if (!fgIsA.load()) { R__LOCKGUARD(gInterpreterMutex); fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::";
       dictStream << fullname << "*)0x0)->GetClass(); }" << std::endl;
    }
    dictStream    << "   return fgIsA;" << std::endl
@@ -3349,10 +3350,14 @@ std::ostream *CreateStreamPtrForSplitDict(const std::string &dictpathname,
 void CheckForMinusW(const char *arg,
                     std::list<std::string> &diagnosticPragmas)
 {
-   const std::string pattern("-Wno-");
+   static const std::string pattern("-Wno-");
 
    std::string localArg(arg);
    if (localArg.find(pattern) != 0) return;
+   if (localArg == "-Wno-noexcept-type") {
+      // GCC7 warning not supported by clang 3.9
+      return;
+   }
 
    ROOT::TMetaUtils::ReplaceAll(localArg, pattern, "#pragma clang diagnostic ignored \"-W");
    localArg += "\"";
@@ -3832,7 +3837,7 @@ public:
       if (!fileEntry) return;
       auto thisFileName = fileEntry->getName();
       auto fileNameAsString = FileName.str();
-      auto isThisLinkdef = ROOT::TMetaUtils::IsLinkdefFile(thisFileName);
+      auto isThisLinkdef = ROOT::TMetaUtils::IsLinkdefFile(thisFileName.data());
       if (isThisLinkdef) {
          auto isTheIncludedLinkdef = ROOT::TMetaUtils::IsLinkdefFile(fileNameAsString.c_str());
          if (isTheIncludedLinkdef) {

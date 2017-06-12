@@ -35,7 +35,7 @@ Objects of this class can only be created via TProof member functions.
 #include "TSocket.h"
 #include "TObjString.h"
 
-ClassImp(TSlave)
+ClassImp(TSlave);
 
 // Hook for the TXSlave constructor
 TSlave_t TSlave::fgTXSlaveHook = 0;
@@ -130,7 +130,7 @@ void TSlave::Init(const char *host, Int_t port, Int_t stype)
    // ensure the correct termination of all proof servers in case the
    // root session terminates.
    {
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfSockets()->Remove(fSocket);
    }
 
@@ -432,12 +432,7 @@ Int_t TSlave::OldAuthSetup(Bool_t master, TString wconf)
    }
    //
    // Setup
-   if (oldAuthSetupHook) {
-      return (*oldAuthSetupHook)(fSocket, master, fOrdinal, wconf);
-   } else {
-      Error("OldAuthSetup", "hook to method OldSlaveAuthSetup is undefined");
-      return -1;
-   }
+   return (*oldAuthSetupHook)(fSocket, master, fOrdinal, wconf);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

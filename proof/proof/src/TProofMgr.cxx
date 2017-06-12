@@ -34,7 +34,7 @@ At most one manager instance per server is allowed.
 #include "TROOT.h"
 #include "TMath.h"
 
-ClassImp(TProofMgr)
+ClassImp(TProofMgr);
 
 // Sub-list of TROOT::fProofs with managers
 TList TProofMgr::fgListOfManagers;
@@ -577,7 +577,7 @@ TProofMgr *TProofMgr::Create(const char *uin, Int_t loglevel,
    if (m) {
       fgListOfManagers.Add(m);
       if (m->IsValid() && !(m->IsProofd())) {
-         R__LOCKGUARD2(gROOTMutex);
+         R__LOCKGUARD(gROOTMutex);
          gROOT->GetListOfProofs()->Add(m);
          gROOT->GetListOfSockets()->Add(m);
       }
@@ -1090,7 +1090,7 @@ Int_t TProofMgr::Rm(const char *what, const char *, const char *)
 //  TProofDesc
 //
 
-ClassImp(TProofDesc)
+ClassImp(TProofDesc);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Dump the content to the screen.

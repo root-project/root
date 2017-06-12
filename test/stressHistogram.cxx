@@ -118,7 +118,7 @@ enum compareOptions {
 int defaultEqualOptions = 0; //cmpOptPrint;
 //int defaultEqualOptions = cmpOptDebug;
 
-Bool_t cleanHistos = kTRUE;   // delete histogram after testing (swict off in case of debugging)
+constexpr Bool_t cleanHistos = kTRUE;   // delete histogram after testing (swicth off in case of debugging)
 
 const double defaultErrorLimit = 1.E-10;
 
@@ -7030,43 +7030,29 @@ int findBin(ROOT::Fit::BinData& bd, const double *x)
    return -1;
 }
 
-bool operator ==(ROOT::Fit::BinData& bd1, ROOT::Fit::BinData& bd2)
+bool operator==(ROOT::Fit::BinData &bd1, ROOT::Fit::BinData &bd2)
 {
    const unsigned int ndim = bd1.NDim();
    const unsigned int npoints = bd1.NPoints();
+   const double eps = TMath::Limits<double>::Epsilon();
 
-   bool equals = true;
-
-   for ( unsigned int i = 0; i < npoints && equals; ++i )
-   {
+   for (unsigned int i = 0; i < npoints; ++i) {
       double value1 = 0, error1 = 0;
       const double *x1 = bd1.GetPoint(i, value1, error1);
 
-//       std::cout << "i: " << i
-//            << " x: ";
-//       std::copy(x1, x1+ndim, ostream_iterator<double>(std::cout, " "));
-//       std::cout << " val: " << value1
-//            << " error: " << error1
-//            << std::endl;
-
       int bin = findBin(bd2, x1);
-      if ( bin < 0 )
-         Fatal("operator ==(ROOT::Fit::BinData& bd1, ROOT::Fit::BinData& bd2)","BIN NOT FOUND!");
 
       double value2 = 0, error2 = 0;
       const double *x2 = bd2.GetPoint(bin, value2, error2);
 
-      equals &= ( value1 == value2 );
-      equals &= ( error1 == error2 );
-      for ( unsigned int j = 0; j < ndim; ++j )
-      {
-         equals &= fabs(x1[j] - x2[j]) < 1E-15;
-      }
+      if (!TMath::AreEqualRel(value1, value2, eps)) return false;
+      if (!TMath::AreEqualRel(error1, error2, eps)) return false;
+
+      for (unsigned int j = 0; j < ndim; ++j)
+         if (!TMath::AreEqualRel(x1[j], x2[j], eps)) return false;
    }
-
-   return equals;
+   return true;
 }
-
 
 int findBin(ROOT::Fit::SparseData& sd,
             const std::vector<double>& minRef, const std::vector<double>& maxRef,
@@ -9853,19 +9839,23 @@ int stressHistogram()
 
 
 
-   ProjectionTester* ht = new ProjectionTester();
-   ht->buildHistograms();
-   //Ht->buildHistograms(2,4,5,6,8,10);
-   status = ht->compareHistograms();
-   GlobalStatus += status;
-   if (cleanHistos) delete ht;
-   printResult("Testing Histogram Projections without weights....................", status);
+   {
+      ProjectionTester* ht = new ProjectionTester();
+      ht->buildHistograms();
+      //Ht->buildHistograms(2,4,5,6,8,10);
+      status = ht->compareHistograms();
+      GlobalStatus += status;
+      if (cleanHistos) delete ht;
+      printResult("Testing Histogram Projections without weights....................", status);
+   }
 
-   ProjectionTester* htp = new ProjectionTester();
-   htp->buildProfiles();
-   status = htp->compareProfiles();
-   GlobalStatus += status;
-   if (cleanHistos) delete htp;
+   {
+      ProjectionTester* htp = new ProjectionTester();
+      htp->buildProfiles();
+      status = htp->compareProfiles();
+      GlobalStatus += status;
+      if (cleanHistos) delete htp;
+   }
 
    printResult("Testing Profile Projections without weights......................", status);
 
@@ -9879,20 +9869,23 @@ int stressHistogram()
    TH1::SetDefaultSumw2();
 
 
-   ProjectionTester* ht2 = new ProjectionTester();
-   ht2->buildHistogramsWithWeights();
-   status = ht2->compareHistograms();
-   GlobalStatus += status;
-   printResult("Testing Histogram Projections with weights.......................", status);
-   if (cleanHistos) delete ht2;
+   {
+      ProjectionTester* ht2 = new ProjectionTester();
+      ht2->buildHistogramsWithWeights();
+      status = ht2->compareHistograms();
+      GlobalStatus += status;
+      printResult("Testing Histogram Projections with weights.......................", status);
+      if (cleanHistos) delete ht2;
+   }
 
-
-   ProjectionTester* htp2 = new ProjectionTester(true);
-   htp2->buildProfiles();
-   status = htp2->compareProfiles();
-   GlobalStatus += status;
-   printResult("Testing Profile   Projections with weights.......................", status);
-   if (cleanHistos) delete htp2;
+   {
+      ProjectionTester* htp2 = new ProjectionTester(true);
+      htp2->buildProfiles();
+      status = htp2->compareProfiles();
+      GlobalStatus += status;
+      printResult("Testing Profile   Projections with weights.......................", status);
+      if (cleanHistos) delete htp2;
+   }
 
    // Test 3
    // Range Tests

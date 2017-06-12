@@ -39,7 +39,7 @@ void TChainIndex::TChainIndexEntry::SetMinMaxFrom(const TTreeIndex *index )
    fMaxIndexValMinor = index->GetIndexValuesMinor()[index->GetN() - 1];
 }
 
-ClassImp(TChainIndex)
+ClassImp(TChainIndex);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor for TChainIndex

@@ -26,12 +26,6 @@ sliceSet.
 
 #include "RooFit.h"
 
-#if ROOT_VERSION_CODE <= ROOT_VERSION(5,19,04)
-#ifndef nullptr
-#define nullptr 0
-#endif
-#endif
-
 #include "RooDataHist.h"
 #include "RooArgSet.h"
 #include "RooAbsLValue.h"
@@ -39,7 +33,7 @@ sliceSet.
 
 using namespace std;
 
-ClassImp(RooDataHistSliceIter)
+ClassImp(RooDataHistSliceIter);
 ;
 
 

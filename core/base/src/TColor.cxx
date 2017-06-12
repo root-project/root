@@ -20,9 +20,10 @@
 #include "TError.h"
 #include "TMathBase.h"
 #include "TApplication.h"
+#include <algorithm>
 #include <cmath>
 
-ClassImp(TColor)
+ClassImp(TColor);
 
 namespace {
    static Bool_t& TColor__GrayScaleMode() {
@@ -39,7 +40,8 @@ namespace {
    }
 }
 
-static Int_t gHighestColorIndex = 0; ///< Highest color index defined
+static Int_t   gHighestColorIndex = 0;   ///< Highest color index defined
+static Float_t gColorThreshold    = -1.; ///< Color threshold used by GetColor
 
 #define fgGrayscaleMode TColor__GrayScaleMode()
 #define fgPalette TColor__Palette()
@@ -60,6 +62,7 @@ The color creation and management class.
   - [Gray scale view of of canvas with colors](#C04)
   - [Color palettes](#C05)
   - [High quality predefined palettes](#C06)
+  - [Palette inversion](#C061)
   - [Color transparency](#C07)
 
 ## <a name="C00"></a> Introduction
@@ -895,6 +898,20 @@ Begin_Macro
 End_Macro
 </td></tr>
 </table>
+
+## <a name="C061"></a> Palette inversion
+Once a palette is defined, it is possible to invert the color order thanks to the
+method TColor::InvertPalette. The top of the palette becomes the bottom and vice versa.
+
+Begin_Macro(source)
+{
+   auto c  = new TCanvas("c","c",0,0,600,400);
+   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   f2->SetContour(99); gStyle->SetPalette(kCherry);
+   TColor::InvertPalette();
+   f2->Draw("surf2Z"); f2->SetTitle("kCherry inverted");
+}
+End_Macro
 
 ## <a name="C07"></a> Color transparency
 To make a graphics object transparent it is enough to set its color to a
@@ -1746,6 +1763,35 @@ Int_t TColor::GetColor(ULong_t pixel)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// This method specifies the color threshold used by GetColor to retrieve a color.
+///
+/// \param[in] t   Color threshold. By default is equal to 1./31. or 1./255.
+///                depending on the number of available color planes.
+///
+/// When GetColor is called, it scans the defined colors and compare them to the
+/// requested color.
+/// If the Red Green and Blue values passed to GetColor are Rr Gr Br
+/// and Rd Gd Bd the values of a defined color. These two colors are considered equal
+/// if (abs(Rr-Rd) < t  & abs(Br-Bd) < t & abs(Br-Bd) < t). If this test passes,
+/// the color defined by Rd Gd Bd is returned by GetColor.
+///
+/// To make sure GetColor will return a color having exactly the requested
+/// R G B values it is enough to specify a nul :
+/// ~~~ {.cpp}
+///   TColor::SetColorThreshold(0.);
+/// ~~~
+///
+/// To reset the color threshold to its default value it is enough to do:
+/// ~~~ {.cpp}
+///   TColor::SetColorThreshold(-1.);
+/// ~~~
+
+void TColor::SetColorThreshold(Float_t t)
+{
+   gColorThreshold = t;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Static method returning color number for color specified by
 /// r, g and b. The r,g,b should be in the range [0,255].
 /// If the specified color does not exist it will be created
@@ -1768,7 +1814,7 @@ Int_t TColor::GetColor(Int_t r, Int_t g, Int_t b)
    TColor *color = 0;
 
    // Look for color by name
-   if ((color = (TColor*)colors->FindObject(Form("#%02x%02x%02x", r, g, b))))
+   if ((color = (TColor*) colors->FindObject(Form("#%02x%02x%02x", r, g, b))))
       // We found the color by name, so we use that right away
       return color->GetNumber();
 
@@ -1779,21 +1825,21 @@ Int_t TColor::GetColor(Int_t r, Int_t g, Int_t b)
 
    TIter next(colors);
 
-   Int_t nplanes = 16;
-   Float_t thres = 1.0/31.0;   // 5 bits per color : 0 - 0x1F !
-   if (gVirtualX) gVirtualX->GetPlanes(nplanes);
-   if (nplanes >= 24)
-      thres = 1.0/255.0;       // 8 bits per color : 0 - 0xFF !
+   Float_t thres;
+   if (gColorThreshold >= 0) {
+      thres = gColorThreshold;
+   } else {
+      Int_t nplanes = 16;
+      thres = 1.0/31.0;   // 5 bits per color : 0 - 0x1F !
+      if (gVirtualX) gVirtualX->GetPlanes(nplanes);
+      if (nplanes >= 24) thres = 1.0/255.0;       // 8 bits per color : 0 - 0xFF !
+   }
 
    // Loop over all defined colors
    while ((color = (TColor*)next())) {
-      if (TMath::Abs(color->GetRed() - rr) > thres)
-         continue;
-      if (TMath::Abs(color->GetGreen() - gg) > thres)
-         continue;
-      if (TMath::Abs(color->GetBlue() - bb) > thres)
-         continue;
-
+      if (TMath::Abs(color->GetRed() - rr) > thres)   continue;
+      if (TMath::Abs(color->GetGreen() - gg) > thres) continue;
+      if (TMath::Abs(color->GetBlue() - bb) > thres)  continue;
       // We found a matching color in the color table
       return color->GetNumber();
    }
@@ -3016,3 +3062,12 @@ void TColor::SetPalette(Int_t ncolors, Int_t *colors, Float_t alpha)
    paletteType = 3;
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Invert the current color palette.
+/// The top of the palette becomes the bottom and vice versa.
+
+void TColor::InvertPalette()
+{
+   std::reverse(fgPalette.fArray, fgPalette.fArray + fgPalette.GetSize());
+}

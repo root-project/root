@@ -296,7 +296,7 @@ Bool_t TRootContainer::HandleButton(Event_t *event)
    return fCanvas->HandleContainerButton(event);
 }
 
-ClassImp(TRootCanvas)
+ClassImp(TRootCanvas);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a basic ROOT canvas.
@@ -701,14 +701,8 @@ void TRootCanvas::ReallyDelete()
    Disconnect(fCanvas, "ProcessedEvent(Int_t, Int_t, Int_t, TObject*)",
               this, "EventInfo(Int_t, Int_t, Int_t, TObject*)");
 
-   TVirtualPad *savepad = gPad;
-   gPad = 0;        // hide gPad from CINT
-   gInterpreter->DeleteGlobal(fCanvas);
-   gPad = savepad;  // restore gPad for ROOT
-   if (fCanvas->IsOnHeap())
-      delete fCanvas; // will in turn delete this object
-   else
-      fCanvas->Destructor(); // will in turn delete this object
+   fCanvas->SetCanvasImp(0);
+   delete this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

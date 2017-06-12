@@ -46,7 +46,7 @@ enum EParametersDialogWid {
    kCANCEL
 };
 
-ClassImp(TFunctionParametersDialog)
+ClassImp(TFunctionParametersDialog);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create the parameters' dialog of currently selected function 'func'.

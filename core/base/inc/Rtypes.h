@@ -328,7 +328,7 @@ public: \
    namespace ROOT { \
       TGenericClassInfo *GenerateInitInstance(const name*); \
       namespace { \
-         static int _R__UNIQUE_(_NAME2_(R__dummyint,key)) = \
+         static int _R__UNIQUE_(_NAME2_(R__dummyint,key)) __attribute__ ((unused)) = \
             GenerateInitInstance((name*)0x0)->SetImplFile(__FILE__, __LINE__); \
          R__UseDummy(_R__UNIQUE_(_NAME2_(R__dummyint,key))); \
       } \
