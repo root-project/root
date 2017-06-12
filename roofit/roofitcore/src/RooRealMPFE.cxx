@@ -439,18 +439,7 @@ void RooRealMPFE::serverLoop() {
       timer.start();
     }
 
-    auto time_1 = std::chrono::high_resolution_clock::now();
-    auto time_1_print = std::chrono::duration_cast<std::chrono::nanoseconds>(time_1.time_since_epoch()).count();
-
     *_pipe >> msg;
-
-    auto time_2 = std::chrono::high_resolution_clock::now();
-    auto time_2_print = std::chrono::duration_cast<std::chrono::nanoseconds>(time_2.time_since_epoch()).count();
-
-    double time_diff_sec = std::chrono::duration_cast<std::chrono::nanoseconds>(time_2 - time_1).count() / 1.e9;
-
-    std::cout << "DEBUG: serverloop pipe message reception, before: " << time_1_print;
-    std::cout << ", after: " << time_2_print << ",\tdifference: " << time_diff_sec << " seconds" << std::endl;
 
     if (Terminate == msg) {
       if (_verboseServer)
