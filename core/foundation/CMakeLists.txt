@@ -18,3 +18,8 @@ ROOT_OBJECT_LIBRARY(Foundation_Stage1 ${sources}) # used by rootcling_stage1
 set_target_properties(Foundation_Stage1 PROPERTIES COMPILE_FLAGS "${COMPILE_FLAGS} ${CLING_CXXFLAGS}")
 
 ROOT_INSTALL_HEADERS()
+
+if(testing)
+  add_subdirectory(test)
+endif()
+
