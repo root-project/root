@@ -161,7 +161,7 @@ RooRealMPFE::~RooRealMPFE()
   if (_state==Client) standby();
   _sentinel.remove(*this);
 
-  delete _components;
+//  delete _components;
 }
 
 
@@ -396,26 +396,26 @@ namespace RooFit {
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Convenience function to find a named component of the PDF.
-RooAbsArg* RooRealMPFE::_findComponent(std::string name) {
-  if (!_components) {
-    const RooAbsReal& true_arg = _arg.arg();
-    _components = true_arg.getComponents();
-  }
-
-  RooAbsArg* component = _components->find(name.c_str());
-
-  cout << "component: " << component <<endl << endl;
-  cout << "components size: " << _components->getSize() << endl << endl;
-
-  RooFIter iter = _components->fwdIterator();
-  RooAbsArg* node;
-  int i = 0;
-  while((node = iter.next())) {
-    cout << "name of component " << i << ": " << node->GetName() << endl << endl;
-    ++i;
-  }
-  return component;
-}
+//RooAbsArg* RooRealMPFE::_findComponent(std::string name) {
+//  if (!_components) {
+//    const RooAbsReal& true_arg = _arg.arg();
+//    _components = true_arg.getComponents();
+//  }
+//
+//  RooAbsArg* component = _components->find(name.c_str());
+//
+//  cout << "component: " << component <<endl << endl;
+//  cout << "components size: " << _components->getSize() << endl << endl;
+//
+//  RooFIter iter = _components->fwdIterator();
+//  RooAbsArg* node;
+//  int i = 0;
+//  while((node = iter.next())) {
+//    cout << "name of component " << i << ": " << node->GetName() << endl << endl;
+//    ++i;
+//  }
+//  return component;
+//}
 
 
 ////////////////////////////////////////////////////////////////////////////////

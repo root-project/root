@@ -106,8 +106,8 @@ public:
   void setMPSet(Int_t inSetNum, Int_t inNumSets);
 
 private:
-  RooArgSet* _components = 0;
-  RooAbsArg* _findComponent(std::string name);
+//  RooArgSet* _components = 0;
+//  RooAbsArg* _findComponent(std::string name);
 
   void _time_communication_overhead() const;
 
