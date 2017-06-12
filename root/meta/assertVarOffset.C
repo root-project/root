@@ -26,13 +26,17 @@ struct allowed_delta<double> {
 };
 
 
+int exitCode = 0;
+
 template <class T>
 void assertEqual(T expect, T actual, typename allowed_delta<T>::Delta_t allowed = allowed_delta<T>::val) {
    auto delta = actual - expect;
    if (   (delta > 0 && delta > allowed)
-       || (delta < 0 && -delta > allowed))
+       || (delta < 0 && -delta > allowed)) {
       std::cerr << "ERROR: expected " << expect << ", got " << actual
                 << std::endl;
+      exitCode = 1;
+   }
 }
 
 int assertVarOffset() {
@@ -40,5 +44,5 @@ int assertVarOffset() {
    assertEqual(N2, *(int*)gROOT->GetGlobal("N2")->GetAddress());
    assertEqual(f1, *(float*)gROOT->GetGlobal("f1")->GetAddress());
    assertEqual(f2, *(float*)gROOT->GetGlobal("f2")->GetAddress());
-   return 0;
+   return exitCode;
 }
