@@ -85,12 +85,6 @@ ROOTTEST_ADD_TEST(misc
                   OUTREF test_misc.ref
                   DEPENDS ${GENERATE_EXECUTABLE_TEST})
 
-ROOTTEST_GENERATE_EXECUTABLE(functiontraits test_functiontraits.cxx LIBRARIES ${DFLIBRARIES})
-ROOTTEST_ADD_TEST(functiontraits
-                  EXEC functiontraits
-                  OUTREF test_functiontraits.ref
-                  DEPENDS ${GENERATE_EXECUTABLE_TEST})
-
 ROOTTEST_ADD_TEST(ctors
                   MACRO test_ctors.C+
                   OUTREF test_ctors.ref)
