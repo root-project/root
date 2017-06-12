@@ -23,13 +23,16 @@ namespace TypeTraits {
 
 ///\class ROOT::TypeTraits::
 template <class T>
-class IsSmartOrDumbPtr: public std::integral_constant<bool, std::is_pointer<T>::value> {};
+class IsSmartOrDumbPtr : public std::integral_constant<bool, std::is_pointer<T>::value> {
+};
 
 template <class P>
-class IsSmartOrDumbPtr<std::shared_ptr<P>>: public std::true_type {};
+class IsSmartOrDumbPtr<std::shared_ptr<P>> : public std::true_type {
+};
 
 template <class P>
-class IsSmartOrDumbPtr<std::unique_ptr<P>>: public std::true_type {};
+class IsSmartOrDumbPtr<std::unique_ptr<P>> : public std::true_type {
+};
 
 /// Check for container traits.
 template <typename T>
@@ -108,22 +111,22 @@ struct CallableTraits<R(Args...)> {
 };
 
 // Return first of a variadic list of types.
-template <typename T, typename...Rest>
+template <typename T, typename... Rest>
 struct TakeFirst {
    using type = T;
 };
 
-template <typename...Types>
+template <typename... Types>
 using TakeFirst_t = typename TakeFirst<Types...>::type;
 
 // Remove first type from a variadic list of types, return a TypeList containing the rest.
 // e.g. RemoveFirst_t<A,B,C> is TypeList<B,C>
-template<typename T, typename...Rest>
+template <typename T, typename... Rest>
 struct RemoveFirst {
    using type = TypeList<Rest...>;
 };
 
-template<typename...Args>
+template <typename... Args>
 using RemoveFirst_t = typename RemoveFirst<Args...>::type;
 
 /// Return first of possibly many template parameters.
@@ -149,7 +152,7 @@ template <typename>
 struct RemoveFirstParameter {
 };
 
-template <typename T, template <typename...> class U, typename...Rest>
+template <typename T, template <typename...> class U, typename... Rest>
 struct RemoveFirstParameter<U<T, Rest...>> {
    using type = U<Rest...>;
 };
@@ -159,4 +162,4 @@ using RemoveFirstParameter_t = typename RemoveFirstParameter<T>::type;
 
 } // ns ROOT
 } // ns TypeTraits
-#endif //ROOT_TTypeTraits
+#endif // ROOT_TTypeTraits
