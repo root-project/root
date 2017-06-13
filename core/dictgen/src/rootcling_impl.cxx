@@ -2201,14 +2201,14 @@ static bool WriteAST(StringRef fileName, clang::CompilerInstance *compilerInstan
    llvm::SmallVector<char, 128> buffer;
    llvm::BitstreamWriter stream(buffer);
    clang::ASTWriter writer(stream, buffer, compilerInstance->getPCMCache(), /*Extensions=*/{});
-   std::unique_ptr<llvm::raw_ostream> out = compilerInstance->createOutputFile(fileName, /*Binary=*/true,
-                                                               /*RemoveFileOnSignal=*/false, /*InFile*/ "",
-                                                               /*Extension=*/"", /*useTemporary=*/false,
-                                                               /*CreateMissingDirectories*/ false);
+   std::unique_ptr<llvm::raw_ostream> out =
+      compilerInstance->createOutputFile(fileName, /*Binary=*/true,
+                                         /*RemoveFileOnSignal=*/false, /*InFile*/ "",
+                                         /*Extension=*/"", /*useTemporary=*/false,
+                                         /*CreateMissingDirectories*/ false);
    if (!out) {
-       ROOT::TMetaUtils::Error("WriteAST", "Couldn't open output stream to '%s'!\n",
-                               fileName.data());
-       return false;
+      ROOT::TMetaUtils::Error("WriteAST", "Couldn't open output stream to '%s'!\n", fileName.data());
+      return false;
    }
 
    compilerInstance->getFrontendOpts().RelocatablePCH = true;
