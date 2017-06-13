@@ -22,6 +22,7 @@
 #include "TFolder.h"
 #include "RVersion.h"
 #include "RConfigure.h"
+#include "TRegexp.h"
 
 #include "THttpEngine.h"
 #include "TRootSniffer.h"
@@ -200,6 +201,9 @@ ClassImp(THttpServer);
    /// at once, separating them with ; like "http:8080;fastcgi:9000"
    /// One also can configure readonly flag for sniffer like
    /// "http:8080;readonly" or "http:8080;readwrite"
+   /// CORS (cross-origine resource sharing) for response of ProcessRequest() 
+   /// can be set in the options like "http:8088s?cors" for all origins ("*") 
+   /// or like "http:8088s?cors=domain" for a specific domain.
    ///
    /// Also searches for JavaScript ROOT sources, which are used in web clients
    /// Typically JSROOT sources located in $ROOTSYS/etc/http directory,
@@ -263,6 +267,16 @@ ClassImp(THttpServer);
       }
 
       delete lst;
+   }
+
+   // CORS
+   if (TString(engine).Index("cors") != kNPOS) {
+      TString engine_s = TString(engine);
+      if(engine_s.Index("cors=") == kNPOS ) {
+         SetCors("*");
+      } else {
+         SetCors(TString(engine_s("[^&]*", engine_s.Index("cors=") + 5)));
+      }
    }
 }
 
@@ -844,6 +858,10 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
    // try to avoid caching on the browser
    arg->AddHeader("Cache-Control",
                   "private, no-cache, no-store, must-revalidate, max-age=0, proxy-revalidate, s-maxage=0");
+
+    // potentially add cors header
+   if (IsCors()) arg->AddHeader("Access-Control-Allow-Origin", GetCors());
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
