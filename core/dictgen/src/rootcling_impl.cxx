@@ -4865,7 +4865,7 @@ int RootClingMain(int argc,
          // Write the module/PCH depending on what mode we are on
          if (modGen.IsPCH()) {
             if (!GenerateAllDict(modGen, CI, currentDirectory)) return 1;
-         } else {
+         } else if (getenv("ROOT_MODULES")) {
             if (!GenerateModule(modGen, CI)) return 1;
          }
       }
