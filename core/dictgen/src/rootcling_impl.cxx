@@ -2200,9 +2200,8 @@ static bool WriteAST(StringRef fileName, clang::CompilerInstance *compilerInstan
    // From PCHGenerator and friends:
    llvm::SmallVector<char, 128> buffer;
    llvm::BitstreamWriter stream(buffer);
-   llvm::ArrayRef<llvm::IntrusiveRefCntPtr<clang::ModuleFileExtension>> extensions;
-   clang::ASTWriter writer(stream, extensions);
-   llvm::raw_ostream *out = compilerInstance->createOutputFile(fileName, /*Binary=*/true,
+   clang::ASTWriter writer(stream, buffer, compilerInstance->getPCMCache(), /*Extensions=*/{});
+   std::unique_ptr<llvm::raw_ostream> out = compilerInstance->createOutputFile(fileName, /*Binary=*/true,
                                                                /*RemoveFileOnSignal=*/false, /*InFile*/ "",
                                                                /*Extension=*/"", /*useTemporary=*/false,
                                                                /*CreateMissingDirectories*/ false);
