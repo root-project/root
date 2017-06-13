@@ -19,6 +19,10 @@ N: Mohammad Al-Turany
 E: m.al-turany@gsi.de
 D: QTGSI classes
 
+N: Guilherme Amadio
+E: guilherme.amadio@cern.ch
+D: TDataFrame, build system, parallel writing
+
 N: Eric Anciant
 E: eric.anciant@sodern.fr
 D: TQuaternion class
@@ -353,15 +357,11 @@ D: rootdrawtree and TSimpleAnalysis
 
 N: Enrico Guiraud
 E: enrico.guiraud@gmail.com
-D: author of the multiproc module
+D: Multiproc runtime, TDataFrame
 
 N: Thorsten Glebe
 E: T.Glebe@mpi-hd.mpg.de
 D: Original author of the Smatrix package
-
-N: Sergei Gleyzer
-E: Sergei.Gleyzer@cern.ch
-D: TMVA
 
 N: Piotr Golonka
 E: Piotr.Golonka@cern.ch
@@ -908,6 +908,10 @@ N: Evgueni Tcherniaev
 E: Evgueni.Tcherniaev@cern.ch
 D: Paint3DAlgorithms used by the LEGO and SURF options
 
+N: Enric Tejedor
+E: enric.tejedor@cern.ch
+D: IO, Parallelisation, Jupyter integration, TDataFrame
+
 N: Jan Therhaag
 E: therhaag@users.sourceforge.net
 D: author of the TMVA package
@@ -927,6 +931,10 @@ D: PROOF contributions
 N: Georg Troska
 E: georg.troska@tu-dortmund.de
 D: Enhancement of the CANDLE drawing option
+
+N: Xavier Valls
+E: xavier.valls.pla@cern.ch
+D: Interfaces to the MP and MT runtimes, parallelisation, vectorisation of fits
 
 N: Alexandre V. Vaniachine
 E: AVVaniachine@lbl.gov
