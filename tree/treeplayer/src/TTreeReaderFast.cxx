@@ -150,6 +150,7 @@ TTreeReaderFast::GetNextRange(Int_t eventNum)
           remaining = valueRemaining;
       }
    }
+   //printf("TTreeReaderFast::GetNextRange: Starting at %d, remaining events %d.\n", eventNum, remaining);
    return remaining;
 }
 
