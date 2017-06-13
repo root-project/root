@@ -603,3 +603,8 @@ New tutorials have been added:
 *   [[ROOT-8809](https://sft.its.cern.ch/jira/browse/ROOT-8809)] - push_back on a vector of pointers may not work in PyROOT
 *   [[ROOT-8811](https://sft.its.cern.ch/jira/browse/ROOT-8811)] - python: cannot pickle ROOT.Long() (not found as ROOT.long)
 *   [[ROOT-8815](https://sft.its.cern.ch/jira/browse/ROOT-8815)] - Memory hoarding in TTree
+
+---
+## HEAD of the v6-10-00-patches branch
+
+This changes will be part of the future 6.10/02
