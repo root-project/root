@@ -112,12 +112,12 @@ struct CallableTraits<R(Args...)> {
 
 // Return first of a variadic list of types.
 template <typename T, typename... Rest>
-struct TakeFirst {
+struct TakeFirstType {
    using type = T;
 };
 
 template <typename... Types>
-using TakeFirst_t = typename TakeFirst<Types...>::type;
+using TakeFirstType_t = typename TakeFirstType<Types...>::type;
 
 // Remove first type from a variadic list of types, return a TypeList containing the rest.
 // e.g. RemoveFirst_t<A,B,C> is TypeList<B,C>
