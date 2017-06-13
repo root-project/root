@@ -765,6 +765,7 @@ INPUT                  = . \
                          ../../core/thread/ \
                          ../../core/unix/ \
                          ../../core/winnt/ \
+                         ../../core/imt/ \
                          ../../geom/gdml/ \
                          ../../geom/geocad/ \
                          ../../geom/geom \
