@@ -15,10 +15,10 @@ TEST(TypeTraits, TypeList)
    static_assert((TypeList<int, double *>::list_size) == 2, "");
 }
 
-TEST(TypeTraits, TakeFirst)
+TEST(TypeTraits, TakeFirstType)
 {
-   ::testing::StaticAssertTypeEq<TakeFirst_t<int, void, double *>, int>();
-   ::testing::StaticAssertTypeEq<TakeFirst_t<TypeList<int, int>, TypeList<void>>, TypeList<int, int>>();
+   ::testing::StaticAssertTypeEq<TakeFirstType_t<int, void, double *>, int>();
+   ::testing::StaticAssertTypeEq<TakeFirstType_t<TypeList<int, int>, TypeList<void>>, TypeList<int, int>>();
 }
 
 TEST(TypeTraits, RemoveFirst)
