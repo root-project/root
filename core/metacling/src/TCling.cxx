@@ -6863,7 +6863,7 @@ std::string TCling::CallFunc_GetWrapperCode(CallFunc_t *func) const
    TClingCallFunc *f = (TClingCallFunc *)func;
    std::string wrapper_name;
    std::string wrapper;
-   f->print_wrapper(wrapper_name, wrapper);
+   f->get_wrapper_code(wrapper_name, wrapper);
    return wrapper;
 }
 
