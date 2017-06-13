@@ -1,0 +1,7 @@
+
+# Block Travis-CI builds on historical branches to
+# avoid confusion for PRs.
+branches:
+  except:
+    v5-34-00-patches
+
