@@ -59,14 +59,17 @@ class TTreeReaderValueFastBase {
           if (fEventBase >= 0 && (fRemaining + fEventBase > eventNum)) {
              Int_t adjust = (eventNum - fEventBase);
              if (R__unlikely(Adjust(adjust) < 0)) {
+                //printf("Failed to adjust offset to mid-buffer.\n");
                 return -1;
              }
              fRemaining -= adjust;
-          }
-          fRemaining = fBranch->GetEntriesSerialized(eventNum, fBuffer);
-          if (R__unlikely(fRemaining < 0)) {
-             fReadStatus = ROOT::Internal::TTreeReaderValueBase::kReadError;
-             return -1;
+          } else {
+             fRemaining = fBranch->GetEntriesSerialized(eventNum, fBuffer);
+             if (R__unlikely(fRemaining < 0)) {
+                fReadStatus = ROOT::Internal::TTreeReaderValueBase::kReadError;
+                //printf("Failed to retrieve entries from the branch.\n");
+                return -1;
+             }
           }
           fEventBase = eventNum;
           //printf("After getting events, the base is %lld with %d remaining.\n", fEventBase, fRemaining);
@@ -85,7 +88,7 @@ class TTreeReaderValueFastBase {
          fBuffer.SetBufferOffset(bufOffset + eventCount*GetSize());
          return 0;
       }
-      virtual Int_t GetSize() = 0;
+      virtual UInt_t GetSize() = 0;
 
       void MarkTreeReaderUnavailable() {
          fTreeReader = nullptr;
@@ -137,10 +140,10 @@ class TTreeReaderValueFast final : public ROOT::Experimental::Internal::TTreeRea
       T* Deserialize(char *) {return nullptr;}
 
       virtual const char *GetTypeName() override {return "{INCOMPLETE}";}
-      virtual Int_t GetSize() override {return sizeof(T);}
+      virtual UInt_t GetSize() override {return sizeof(T);}
 };
 
-template <>
+template<>
 class TTreeReaderValueFast<float> final : public ROOT::Experimental::Internal::TTreeReaderValueFastBase {
 
    public:
@@ -148,9 +151,7 @@ class TTreeReaderValueFast<float> final : public ROOT::Experimental::Internal::T
       TTreeReaderValueFast(TTreeReaderFast& tr, const std::string &branchname) :
             TTreeReaderValueFastBase(&tr, branchname) {}
 
-      // TODO: why isn't template specialization working here?
       float* Get() {
-         //printf("Float: Attempting to deserialize buffer %p from index %d.\n", fBuffer.GetCurrent(), fEvtIndex);
          return Deserialize(reinterpret_cast<char *>(reinterpret_cast<float*>(fBuffer.GetCurrent()) + fEvtIndex));
       }
       float* operator->() { return Get(); }
@@ -159,7 +160,7 @@ class TTreeReaderValueFast<float> final : public ROOT::Experimental::Internal::T
    protected:
       virtual const char *GetTypeName() override {return "float";}
       virtual const char *BranchTypeName() override {return "float";}
-      virtual Int_t GetSize() override {return sizeof(float);}
+      virtual UInt_t GetSize() override {return sizeof(float);}
       float * Deserialize(char *input) {frombuf(input, &fTmp); return &fTmp;}
 
       float fTmp;
@@ -175,7 +176,8 @@ class TTreeReaderValueFast<double> final : public ROOT::Experimental::Internal::
 
       // TODO: why isn't template specialization working here?
       double* Get() {
-         return Deserialize(reinterpret_cast<char *>(reinterpret_cast<float*>(fBuffer.GetCurrent()) + fEvtIndex));
+         //printf("Double: Attempting to deserialize buffer %p from index %d.\n", fBuffer.GetCurrent(), fEvtIndex);
+         return Deserialize(reinterpret_cast<char *>(reinterpret_cast<double*>(fBuffer.GetCurrent()) + fEvtIndex));
       }
       double* operator->() { return Get(); }
       double& operator*() { return *Get(); }
@@ -183,10 +185,79 @@ class TTreeReaderValueFast<double> final : public ROOT::Experimental::Internal::
    protected:
       virtual const char *GetTypeName() override {return "double";}
       virtual const char *BranchTypeName() override {return "double";}
-      virtual Int_t GetSize() override {return sizeof(double);}
+      virtual UInt_t GetSize() override {return sizeof(double);}
       double* Deserialize(char *input) {frombuf(input, &fTmp); return &fTmp;}
 
       double fTmp;
+};
+
+template <>
+class TTreeReaderValueFast<Int_t> final : public ROOT::Experimental::Internal::TTreeReaderValueFastBase {
+
+   public:
+
+      TTreeReaderValueFast(TTreeReaderFast& tr, const std::string &branchname) :
+            TTreeReaderValueFastBase(&tr, branchname) {}
+
+      Int_t* Get() {
+         return Deserialize(reinterpret_cast<char *>(reinterpret_cast<Int_t*>(fBuffer.GetCurrent()) + fEvtIndex));
+      }
+      Int_t* operator->() { return Get(); }
+      Int_t& operator*() { return *Get(); }
+
+   protected:
+      virtual const char *GetTypeName() override {return "integer";}
+      virtual const char *BranchTypeName() override {return "integer";}
+      virtual UInt_t GetSize() override {return sizeof(Int_t);}
+      Int_t* Deserialize(char *input) {frombuf(input, &fTmp); return &fTmp;}
+
+      Int_t fTmp;
+};
+
+template <>
+class TTreeReaderValueFast<UInt_t> final : public ROOT::Experimental::Internal::TTreeReaderValueFastBase {
+
+   public:
+
+      TTreeReaderValueFast(TTreeReaderFast& tr, const std::string &branchname) :
+            TTreeReaderValueFastBase(&tr, branchname) {}
+
+      UInt_t* Get() {
+         return Deserialize(reinterpret_cast<char *>(reinterpret_cast<UInt_t*>(fBuffer.GetCurrent()) + fEvtIndex));
+      }
+      UInt_t* operator->() { return Get(); }
+      UInt_t& operator*() { return *Get(); }
+
+   protected:
+      virtual const char *GetTypeName() override {return "unsigned integer";}
+      virtual const char *BranchTypeName() override {return "unsigned integer";}
+      virtual UInt_t GetSize() override {return sizeof(UInt_t);}
+      UInt_t* Deserialize(char *input) {frombuf(input, &fTmp); return &fTmp;}
+
+      UInt_t fTmp;
+};
+
+template <>
+class TTreeReaderValueFast<Bool_t> final : public ROOT::Experimental::Internal::TTreeReaderValueFastBase {
+
+   public:
+
+      TTreeReaderValueFast(TTreeReaderFast& tr, const std::string &branchname) :
+            TTreeReaderValueFastBase(&tr, branchname) {}
+
+      Bool_t* Get() {
+         return Deserialize(reinterpret_cast<char *>(reinterpret_cast<Bool_t*>(fBuffer.GetCurrent()) + fEvtIndex));
+      }
+      Bool_t* operator->() { return Get(); }
+      Bool_t& operator*() { return *Get(); }
+
+   protected:
+      virtual const char *GetTypeName() override {return "unsigned integer";}
+      virtual const char *BranchTypeName() override {return "unsigned integer";}
+      virtual UInt_t GetSize() override {return sizeof(Bool_t);}
+      Bool_t* Deserialize(char *input) {frombuf(input, &fTmp); return &fTmp;}
+
+      Bool_t fTmp;
 };
 
 }  // Experimental

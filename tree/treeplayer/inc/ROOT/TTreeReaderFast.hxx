@@ -96,8 +96,9 @@ public:
              *fIdx = 0;
              fCount = fReader->GetNextRange(fEntry);
              //printf("This chunk has %d events.\n", fCount);
-             if (R__unlikely(!fCount)) {
+             if (R__unlikely(!fCount || (fCount < 0))) {
                  fEntry = -1;
+                 fReader->fEntryStatus = TTreeReader::kEntryBadReader;
              }
          }
          return *this;
