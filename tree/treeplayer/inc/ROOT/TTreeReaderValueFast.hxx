@@ -1,8 +1,8 @@
 // @(#)root/tree:$Id$
-// Author: Axel Naumann, 2010-08-02
+// Author: Brian Bockelman, 2017-06-13
 
 /*************************************************************************
- * Copyright (C) 1995-2013, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -23,13 +23,14 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "TBufferFile.h"
-#include "TTreeReaderFast.h"
+#include "TTreeReaderFast.hxx"
 
 #include <type_traits>
 
 class TBranch;
 
 namespace ROOT {
+namespace Experimental {
 namespace Internal {
 
 /* All the common code shared by the fast reader templates.
@@ -38,8 +39,8 @@ class TTreeReaderValueFastBase {
    public:
       TTreeReaderValueFastBase(const TTreeReaderValueFastBase&) = delete;
 
-      TTreeReaderValueBase::ESetupStatus GetSetupStatus() const { return fSetupStatus; }
-      virtual TTreeReaderValueBase::EReadStatus GetReadStatus() const { return fReadStatus; }
+      ROOT::Internal::TTreeReaderValueBase::ESetupStatus GetSetupStatus() const { return fSetupStatus; }
+      virtual ROOT::Internal::TTreeReaderValueBase::EReadStatus GetReadStatus() const { return fReadStatus; }
 
       //////////////////////////////////////////////////////////////////////////////
       /// Construct a tree value reader and register it with the reader object.
@@ -64,12 +65,12 @@ class TTreeReaderValueFastBase {
           }
           fRemaining = fBranch->GetEntriesSerialized(eventNum, fBuffer);
           if (R__unlikely(fRemaining < 0)) {
-             fReadStatus = TTreeReaderValueBase::kReadError;
+             fReadStatus = ROOT::Internal::TTreeReaderValueBase::kReadError;
              return -1;
           }
           fEventBase = eventNum;
           //printf("After getting events, the base is %lld with %d remaining.\n", fEventBase, fRemaining);
-          fReadStatus = TTreeReaderValueBase::kReadSuccess;
+          fReadStatus = ROOT::Internal::TTreeReaderValueBase::kReadSuccess;
           return fRemaining;
       }
 
@@ -112,20 +113,19 @@ class TTreeReaderValueFastBase {
       Long64_t     fLastChainOffset{-1}; // Current chain in the TTree we are pointed at.
       Long64_t     fEventBase{-1};       // Event number of the current buffer position.
 
-      TTreeReaderValueBase::ESetupStatus fSetupStatus{TTreeReaderValueBase::kSetupNotSetup}; // setup status of this data access
-      TTreeReaderValueBase::EReadStatus  fReadStatus{TTreeReaderValueBase::kReadNothingYet}; // read status of this data access
+      ROOT::Internal::TTreeReaderValueBase::ESetupStatus fSetupStatus{ROOT::Internal::TTreeReaderValueBase::kSetupNotSetup}; // setup status of this data access
+      ROOT::Internal::TTreeReaderValueBase::EReadStatus  fReadStatus{ROOT::Internal::TTreeReaderValueBase::kReadNothingYet}; // read status of this data access
 
-      friend class ::TTreeReaderFast;
+      friend class ROOT::Experimental::TTreeReaderFast;
 };
 
 }  // Internal
-}  // ROOT
 
 template <typename T>
-class TTreeReaderValueFast final : public ROOT::Internal::TTreeReaderValueFastBase {
+class TTreeReaderValueFast final : public ROOT::Experimental::Internal::TTreeReaderValueFastBase {
 
    public:
-       TTreeReaderValueFast(TTreeReaderFast* reader, const std::string &branchname) : ROOT::Internal::TTreeReaderValueFastBase(reader, branchname) {}
+       TTreeReaderValueFast(TTreeReaderFast* reader, const std::string &branchname) : ROOT::Experimental::Internal::TTreeReaderValueFastBase(reader, branchname) {}
 
       T* Get() {
          return Deserialize(reinterpret_cast<char *>(reinterpret_cast<T*>(fBuffer.GetCurrent()) + fEvtIndex));
@@ -141,7 +141,7 @@ class TTreeReaderValueFast final : public ROOT::Internal::TTreeReaderValueFastBa
 };
 
 template <>
-class TTreeReaderValueFast<float> final : public ROOT::Internal::TTreeReaderValueFastBase {
+class TTreeReaderValueFast<float> final : public ROOT::Experimental::Internal::TTreeReaderValueFastBase {
 
    public:
 
@@ -164,5 +164,32 @@ class TTreeReaderValueFast<float> final : public ROOT::Internal::TTreeReaderValu
 
       float fTmp;
 };
+
+template <>
+class TTreeReaderValueFast<double> final : public ROOT::Experimental::Internal::TTreeReaderValueFastBase {
+
+   public:
+
+      TTreeReaderValueFast(TTreeReaderFast& tr, const std::string &branchname) :
+            TTreeReaderValueFastBase(&tr, branchname) {}
+
+      // TODO: why isn't template specialization working here?
+      double* Get() {
+         return Deserialize(reinterpret_cast<char *>(reinterpret_cast<float*>(fBuffer.GetCurrent()) + fEvtIndex));
+      }
+      double* operator->() { return Get(); }
+      double& operator*() { return *Get(); }
+
+   protected:
+      virtual const char *GetTypeName() override {return "double";}
+      virtual const char *BranchTypeName() override {return "double";}
+      virtual Int_t GetSize() override {return sizeof(double);}
+      double* Deserialize(char *input) {frombuf(input, &fTmp); return &fTmp;}
+
+      double fTmp;
+};
+
+}  // Experimental
+}  // ROOT
 
 #endif // ROOT_TTreeReaderValueFast

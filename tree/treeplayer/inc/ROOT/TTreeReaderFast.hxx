@@ -1,5 +1,5 @@
 // @(#)root/tree:$Id$
-// Author: Axel Naumann, 2010-08-02
+// Author: Brian Bockelman, 2017-06-13
 
 /*************************************************************************
  * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
@@ -27,12 +27,13 @@
 
 #include <deque>
 
+// Forward decl's
 namespace ROOT {
+namespace Experimental {
 namespace Internal {
 class TTreeReaderValueFast;
 class TTreeReaderValueFastBase;
-}
-}
+}  // Internal
 
 class TTreeReaderFast: public TObject {
 public:
@@ -144,8 +145,8 @@ protected:
    // Returns a reference to the current event index in the various value buffers.
    Int_t &GetIndexRef() {return fEvtIndex;}
 
-   void RegisterValueReader(ROOT::Internal::TTreeReaderValueFastBase* reader);
-   void DeregisterValueReader(ROOT::Internal::TTreeReaderValueFastBase* reader);
+   void RegisterValueReader(ROOT::Experimental::Internal::TTreeReaderValueFastBase* reader);
+   void DeregisterValueReader(ROOT::Experimental::Internal::TTreeReaderValueFastBase* reader);
 
 private:
 
@@ -156,16 +157,15 @@ private:
    TDirectory* fDirectory{nullptr}; ///< directory (or current file for chains)
    ROOT::Internal::TBranchProxyDirector* fDirector{nullptr}; ///< proxying director, owned
    TTreeReader::EEntryStatus fEntryStatus{TTreeReader::kEntryNotLoaded}; ///< status of most recent read request
-   std::deque<ROOT::Internal::TTreeReaderValueFastBase*> fValues; ///< readers that use our director
+   std::deque<ROOT::Experimental::Internal::TTreeReaderValueFastBase*> fValues; ///< readers that use our director
 
    Int_t    fEvtIndex{-1};
    Long64_t fBaseEvent{-1};
    Long64_t fLastEntry{-1};
 
-   friend class ROOT::Internal::TTreeReaderValueFastBase;
-   friend class ROOT::Internal::TTreeReaderArrayBase;
-
-   ClassDef(TTreeReaderFast, 0); // A simple interface to read trees
+   friend class ROOT::Experimental::Internal::TTreeReaderValueFastBase;
 };
 
-#endif // defined TTreeReader
+}  // Experimental
+}  // ROOT
+#endif // defined TTreeReaderFast
