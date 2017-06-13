@@ -164,13 +164,13 @@ public:
    /**
       Binned Likelihood fit. Default is extended
     */
-   bool LikelihoodFit(const BinData & data, bool extended = true) {
+   bool LikelihoodFit(const BinData & data, bool extended = true, ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::kSerial) {
       SetData(data);
-      return DoBinnedLikelihoodFit(extended);
+      return DoBinnedLikelihoodFit(extended, executionPolicy);
    }
-   bool LikelihoodFit(const std::shared_ptr<BinData> & data, bool extended = true) {
+   bool LikelihoodFit(const std::shared_ptr<BinData> & data, bool extended = true, ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::kSerial) {
       SetData(data);
-      return DoBinnedLikelihoodFit(extended);
+      return DoBinnedLikelihoodFit(extended, executionPolicy);
    }
    /**
       Unbinned Likelihood fit. Default is not extended
@@ -425,7 +425,7 @@ protected:
    /// least square fit
    bool DoLeastSquareFit(ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::kSerial);
    /// binned likelihood fit
-   bool DoBinnedLikelihoodFit( bool extended = true);
+   bool DoBinnedLikelihoodFit( bool extended = true, ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::kSerial);
    /// un-binned likelihood fit
    bool DoUnbinnedLikelihoodFit( bool extended = false, ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::kSerial);
    /// linear least square fit
