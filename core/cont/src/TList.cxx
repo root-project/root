@@ -20,11 +20,11 @@ the object pointer also a previous and next pointer.
 
 There are several ways to iterate over a TList; in order of preference, if
 not forced by other constraints:
-  0. Using the C++ range-based `for` or `begin()` / `end()`:
+  0. (Preferred way) Using the C++ range-based `for` or `begin()` / `end()`:
 ~~~ {.cpp}
          for(const auto&& obj: *GetListOfPrimitives())
             obj->Write();
-~~~ {.cpp}
+~~~
   1. Using the R__FOR_EACH macro:
 ~~~ {.cpp}
          GetListOfPrimitives()->R__FOR_EACH(TObject,Paint)(option);
