@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "TTreeReaderValueFast.h"
+#include "ROOT/TTreeReaderValueFast.hxx"
 
 #include "TTreeReader.h"
 #include "TBranchClones.h"
@@ -31,12 +31,10 @@
 Extracts data from a TTree.
 */
 
-ClassImp(ROOT::Internal::TTreeReaderValueFastBase)
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Unregister from tree reader, cleanup.
 
-ROOT::Internal::TTreeReaderValueFastBase::~TTreeReaderValueFastBase()
+ROOT::Experimental::Internal::TTreeReaderValueFastBase::~TTreeReaderValueFastBase()
 {
    if (fTreeReader) fTreeReader->DeregisterValueReader(this);
 }
@@ -45,9 +43,9 @@ ROOT::Internal::TTreeReaderValueFastBase::~TTreeReaderValueFastBase()
 /// Attach this value to the appropriate branch on the tree.  For now, we don't
 /// support the complex branch lookup of the TTreeReader -- only a fixed leaf!
 
-void ROOT::Internal::TTreeReaderValueFastBase::CreateProxy() {
-   fReadStatus = TTreeReaderValueBase::kReadError;
-   fSetupStatus = TTreeReaderValueBase::kSetupMissingBranch;
+void ROOT::Experimental::Internal::TTreeReaderValueFastBase::CreateProxy() {
+   fReadStatus = ROOT::Internal::TTreeReaderValueBase::kReadError;
+   fSetupStatus = ROOT::Internal::TTreeReaderValueBase::kSetupMissingBranch;
    if (fLeafName.size() > 0){
 
       Long64_t newChainOffset = fTreeReader->GetTree()->GetChainOffset();
@@ -79,7 +77,7 @@ void ROOT::Internal::TTreeReaderValueFastBase::CreateProxy() {
    else {
       Error("TTreeReaderValueBase::GetLeaf()", "We are not reading a leaf");
    }
-   fReadStatus = TTreeReaderValueBase::kReadSuccess;
-   fSetupStatus = TTreeReaderValueBase::kSetupMatch;
+   fReadStatus = ROOT::Internal::TTreeReaderValueBase::kReadSuccess;
+   fSetupStatus = ROOT::Internal::TTreeReaderValueBase::kSetupMatch;
 }
 

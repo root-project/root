@@ -11,13 +11,13 @@
 #include <climits>
 
 #include "TTreeReader.h"
-#include "TTreeReaderFast.h"
+#include "ROOT/TTreeReaderFast.hxx"
 
 #include "TChain.h"
 #include "TDirectory.h"
-#include "TTreeReaderValueFast.h"
+#include "ROOT/TTreeReaderValueFast.hxx"
 
-ClassImp(TTreeReaderFast)
+using namespace ROOT::Experimental;
 
 TTreeReaderFast::TTreeReaderFast(TTree* tree):
    fTree(tree)
@@ -116,7 +116,7 @@ TTreeReaderFast::SetEntry(Long64_t entry)
 ////////////////////////////////////////////////////////////////////////////////
 /// Add a value reader for this tree.
 
-void TTreeReaderFast::RegisterValueReader(ROOT::Internal::TTreeReaderValueFastBase* reader)
+void TTreeReaderFast::RegisterValueReader(ROOT::Experimental::Internal::TTreeReaderValueFastBase* reader)
 {
    fValues.push_back(reader);
 }
@@ -124,7 +124,7 @@ void TTreeReaderFast::RegisterValueReader(ROOT::Internal::TTreeReaderValueFastBa
 ////////////////////////////////////////////////////////////////////////////////
 /// Remove a value reader for this tree.
 
-void TTreeReaderFast::DeregisterValueReader(ROOT::Internal::TTreeReaderValueFastBase* reader)
+void TTreeReaderFast::DeregisterValueReader(ROOT::Experimental::Internal::TTreeReaderValueFastBase* reader)
 {
    auto iReader = std::find(fValues.begin(), fValues.end(), reader);
    if (iReader == fValues.end()) {
