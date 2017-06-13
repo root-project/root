@@ -44,6 +44,7 @@ protected:
    TString fDefaultPageCont; ///<! content of the file content
    TString fDrawPage;        ///<! file name for drawing of single element
    TString fDrawPageCont;    ///<! content of draw page
+   TString fCors;            ///<! CORS (cross-origin resource sharing): sets Access-Control-Allow-Origin for ProcessRequest responses
 
    std::mutex fMutex; ///<! mutex to protect list with arguments
    TList fCallArgs;   ///<! submitted arguments
@@ -52,6 +53,12 @@ protected:
    virtual void ProcessRequest(THttpCallArg *arg);
 
    static Bool_t VerifyFilePath(const char *fname);
+
+   /** adds CORS to ProcessRequests() responses */
+   void SetCors(const char *cor) { fCors = cor; }
+
+   const char *GetCors() const { return fCors.Data(); }
+   Bool_t IsCors() const { return fCors.Length() > 0; }
 
 public:
    THttpServer(const char *engine = "civetweb:8080");
