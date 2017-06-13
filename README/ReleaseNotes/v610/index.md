@@ -1,10 +1,10 @@
 % ROOT Version 6.10 Release Notes
-% 2016-09-30
+% 2017-06-13
 <a name="TopOfPage"></a>
 
 ## Introduction
 
-ROOT version 6.10/00 has been released on June 2017
+ROOT version 6.10/00 has been released on 13 June 2017
 
 For more information, see [http://root.cern.ch](http://root.cern.ch)
 
