@@ -14,16 +14,7 @@
 
 #include <type_traits>
 
-// fwd declaration for IsV7Hist
-class TH1;
-
 namespace ROOT {
-
-// fwd declaration for IsV7Hist
-namespace Experimental {
-template <int D, typename P, template <int, typename, template <typename> class> class... S>
-class THist;
-} // ns Experimental
 
 /// ROOT type_traits extensions
 namespace TypeTraits {
@@ -65,16 +56,6 @@ struct IsContainer {
    }
 
    static constexpr bool value = Test<Test_t>(nullptr);
-};
-
-/// Check whether a histogram type is a classic or v7 histogram.
-template<typename T>
-struct IsV7Hist : public std::false_type {
-   static_assert(std::is_base_of<TH1,T>::value, "not implemented for this type");
-};
-
-template <int D, typename P, template <int, typename, template <typename> class> class... S>
-struct IsV7Hist<ROOT::Experimental::THist<D, P, S...>> : public std::true_type {
 };
 
 /// Lightweight storage for a collection of types.
