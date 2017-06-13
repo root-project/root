@@ -48,7 +48,7 @@ template<class DerivFunType, class ModelFunType = ROOT::Math::IParamMultiFunctio
 class PoissonLikelihoodFCN : public BasicFCN<DerivFunType,ModelFunType,BinData>  {
 
 public:
-
+   typedef typename ModelFunType::BackendType T;
    typedef  BasicFCN<DerivFunType,ModelFunType,BinData> BaseFCN;
 
    typedef  ::ROOT::Math::BasicFitMethodFunction<DerivFunType> BaseObjFunction;
@@ -60,23 +60,25 @@ public:
    /**
       Constructor from unbin data set and model function (pdf)
    */
-   PoissonLikelihoodFCN (const std::shared_ptr<BinData> & data, const std::shared_ptr<IModelFunction> & func, int weight = 0, bool extended = true ) :
+   PoissonLikelihoodFCN (const std::shared_ptr<BinData> & data, const std::shared_ptr<IModelFunction> & func, int weight = 0, bool extended = true, ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::kSerial ) :
       BaseFCN( data, func),
       fIsExtended(extended),
       fWeight(weight),
       fNEffPoints(0),
-      fGrad ( std::vector<double> ( func->NPar() ) )
+      fGrad ( std::vector<double> ( func->NPar() ) ),
+      fExecutionPolicy(executionPolicy)
    { }
 
    /**
       Constructor from unbin data set and model function (pdf) managed by the users
    */
-   PoissonLikelihoodFCN (const BinData & data, const IModelFunction & func, int weight = 0, bool extended = true ) :
+   PoissonLikelihoodFCN (const BinData & data, const IModelFunction & func, int weight = 0, bool extended = true, ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::kSerial ) :
       BaseFCN(std::shared_ptr<BinData>(const_cast<BinData*>(&data), DummyDeleter<BinData>()), std::shared_ptr<IModelFunction>(dynamic_cast<IModelFunction*>(func.Clone() ) ) ),
       fIsExtended(extended),
       fWeight(weight),
       fNEffPoints(0),
-      fGrad ( std::vector<double> ( func.NPar() ) )
+      fGrad ( std::vector<double> ( func.NPar() ) ),
+      fExecutionPolicy(executionPolicy)
    { }
 
 
@@ -93,7 +95,8 @@ public:
       fIsExtended(f.fIsExtended ),
       fWeight( f.fWeight ),
       fNEffPoints( f.fNEffPoints ),
-      fGrad( f.fGrad)
+      fGrad( f.fGrad),
+      fExecutionPolicy(f.fExecutionPolicy)
    {  }
 
    /**
@@ -106,6 +109,7 @@ public:
       fGrad = rhs.fGrad;
       fIsExtended = rhs.fIsExtended;
       fWeight = rhs.fWeight;
+      fExecutionPolicy = rhs.fExecutionPolicy;
    }
 
 
@@ -157,7 +161,11 @@ private:
     */
    virtual double DoEval (const double * x) const {
       this->UpdateNCalls();
-      return FitUtil::EvaluatePoissonLogL(BaseFCN::ModelFunction(), BaseFCN::Data(), x, fWeight, fIsExtended, fNEffPoints);
+#ifdef R__HAS_VECCORE
+      return FitUtil::Evaluate<T>::EvalPoissonLogL(BaseFCN::ModelFunction(), BaseFCN::Data(), x, fWeight, fIsExtended, fNEffPoints, fExecutionPolicy);
+#else
+      return FitUtil::EvaluatePoissonLogL(BaseFCN::ModelFunction(), BaseFCN::Data(), x, fWeight, fIsExtended, fNEffPoints, fExecutionPolicy);
+#endif
    }
 
    // for derivatives
@@ -176,6 +184,7 @@ private:
 
    mutable std::vector<double> fGrad; // for derivatives
 
+   ROOT::Fit::ExecutionPolicy fExecutionPolicy; //Execution policy
 };
 
       // define useful typedef's

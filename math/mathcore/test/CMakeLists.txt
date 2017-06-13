@@ -35,7 +35,7 @@ set(TestSource
     fit/SparseDataComparer.cxx
     fit/SparseFit4.cxx
     fit/SparseFit3.cxx
-    fit/testChi2ExecPolicy.cxx
+    fit/testBinnedFitExecPolicy.cxx
     fit/testLogLExecPolicy.cxx )
 
 set(testMathRandom_LABELS longtest)

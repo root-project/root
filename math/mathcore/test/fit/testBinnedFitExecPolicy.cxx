@@ -33,17 +33,31 @@ int main()
 
    auto r1 = h1f.Fit(f, "S");
    if ((Int_t) r1 != 0) {
-      Error("testChi2ExecPolicy", "Sequential Fit failed!");
+      Error("testChi2ExecPolicy", "Sequential Chi2 Fit failed!");
+      return -1;
+   }
+
+   auto rL1 = h1f.Fit(f, "S L");
+   if ((Int_t) r1 != 0) {
+      Error("testChi2ExecPolicy", "Sequential  Binned Likelihood Fit failed!");
       return -1;
    }
 
 #ifdef R__USE_IMT
    auto r2 = h1f.Fit(f, "MULTITHREAD S");
    if ((Int_t) r2 != 0) {
-      Error("testChi2ExecPolicy", "Sequential Fit failed!");
+      Error("testChi2ExecPolicy", "Multithreaded Chi2 Fit failed!");
       return -1;
    } else {
       compareResult(r2->Chi2(), r1->Chi2(), "Mutithreaded Chi2 Fit: ");
+   }
+
+   auto rL2 = h1f.Fit(f, "MULTITHREAD S L");
+   if ((Int_t) rL2 != 0) {
+      Error("testChi2ExecPolicy", "Multithreaded Binned Likelihood Fit failed!");
+      return -1;
+   } else {
+      compareResult(rL2->Chi2(), rL1->Chi2(), "Mutithreaded Binned Likelihood Fit (PoissonLogL): ");
    }
 #endif
 
@@ -52,10 +66,18 @@ int main()
    fvecCore->SetParameters(1, 1000, 7.5, 1.5);
    auto r3 = h1f.Fit(fvecCore, "S");
    if ((Int_t) r3 != 0) {
-      Error("testChi2ExecPolicy", "Vectorized Fit failed!");
+      Error("testChi2ExecPolicy", "Vectorized Chi2 Fit failed!");
       return -1;
    } else {
       compareResult(r3->Chi2(), r1->Chi2(), "Vectorized Chi2 Fit: ");
+   }
+
+   auto rL3 = h1f.Fit(fvecCore, "S L");
+   if ((Int_t) rL3 != 0) {
+      Error("testChi2ExecPolicy", "Vectorized Binned Likelihood Fit failed!");
+      return -1;
+   } else {
+      compareResult(rL3->Chi2(), rL1->Chi2(), "Vectorized Binned Likelihood Fit (PoissonLogL) Fit: ");
    }
 
 #ifdef R__USE_IMT
@@ -65,6 +87,14 @@ int main()
       return -1;
    } else {
       compareResult(r4->Chi2(), r1->Chi2(), "Mutithreaded vectorized Chi2 Fit: ");
+   }
+
+   auto rL4 = h1f.Fit(fvecCore, "MULTITHREAD S L");
+   if ((Int_t) rL4 != 0) {
+      Error("testChi2ExecPolicy", "Multithreaded Binned Likelihood vectorized Fit failed!");
+      return -1;
+   } else {
+      compareResult(rL4->Chi2(), rL1->Chi2(), "Mutithreaded vectorized Binned Likelihood Fit (PoissonLogL) Fit: ");
    }
 
 #endif
