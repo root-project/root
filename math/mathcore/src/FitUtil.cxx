@@ -863,7 +863,7 @@ double FitUtil::EvaluateLogL(const IModelFunctionTempl<double>  & func, const Un
     auto mapFunction = [&](const unsigned i){
        double W = 0;
        double W2 = 0;
-       double fval = 0; 
+       double fval = 0;
 
        if(data.NDim() > 1) {
           std::vector<double> x(data.NDim());
@@ -1248,7 +1248,7 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction &func, const BinData &d
       } else {
          // calculate integral (normalized by bin volume)
          // need to set function and parameters here in case loop is parallelized
-         fval = igEval(x1, data.BinUpEdge(i)) ;
+         fval = igEval(x, data.BinUpEdge(i)) ;
       }
       if (useBinVolume) fval *= binVolume;
 
@@ -1257,7 +1257,7 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction &func, const BinData &d
 #ifdef DEBUG
       int NSAMPLE = 100;
       if (i % NSAMPLE == 0) {
-         std::cout << "evt " << i << " x1 = [ ";
+         std::cout << "evt " << i << " x = [ ";
          for (unsigned int j = 0; j < func.NDim(); ++j) std::cout << x[j] << " , ";
          std::cout << "]  ";
          if (fitOpt.fIntegral) {
