@@ -126,10 +126,6 @@ endif()
 
 
 #---Check for LZ4--------------------------------------------------------------------
-if(WIN32)
-  message(STATUS "Switching off builtin_lz4 (not yet supported on Windows)")
-  set(builtin_lz4 OFF CACHE BOOL "" FORCE)
-else()
 if(NOT builtin_lz4)
   message(STATUS "Looking for LZ4")
   find_package(LZ4)
@@ -147,20 +143,35 @@ if(builtin_lz4)
     set(LZ4_CFLAGS "-Wno-format-nonliteral")
   elseif( CMAKE_CXX_COMPILER_ID STREQUAL Intel)
     set(LZ4_CFLAGS "-wd188 -wd181 -wd1292 -wd10006 -wd10156 -wd2259 -wd981 -wd128 -wd3179")
+  elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+    set(LZ4_CFLAGS "/Zl")
   endif()
   set(LZ4_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}lz4${CMAKE_STATIC_LIBRARY_SUFFIX})
-  ExternalProject_Add(
-    LZ4
-    URL http://lcgpackages.web.cern.ch/lcgpackages/tarFiles/sources/lz4-${lz4_version}.tar.gz
-    URL_MD5 c9610c5ce97eb431dddddf0073d919b9
-    INSTALL_DIR ${CMAKE_BINARY_DIR}
-    CONFIGURE_COMMAND  /bin/sh -c "PREFIX=<INSTALL_DIR> make cmake"
-    BUILD_COMMAND /bin/sh -c "PREFIX=<INSTALL_DIR> MOREFLAGS=-fPIC make"
-    INSTALL_COMMAND /bin/sh -c "PREFIX=<INSTALL_DIR> make install"
-    LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1
-  )
+  if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+    file(TO_NATIVE_PATH "${CMAKE_BINARY_DIR}/include" NATIVE_INCLUDEDIR)
+    ExternalProject_Add(
+      LZ4
+      URL http://lcgpackages.web.cern.ch/lcgpackages/tarFiles/sources/lz4-${lz4_version}.tar.gz
+      URL_MD5 c9610c5ce97eb431dddddf0073d919b9
+      INSTALL_DIR ${CMAKE_BINARY_DIR}
+      CONFIGURE_COMMAND cl /c "${LZ4_CFLAGS}" lib/lz4.c lib/lz4hc.c lib/lz4frame.c lib/xxhash.c
+      BUILD_COMMAND lib /NODEFAULTLIB lz4.obj lz4hc.obj lz4frame.obj xxhash.obj /OUT:${LZ4_LIBRARIES}
+      INSTALL_COMMAND xcopy "lib\\*.h" "${NATIVE_INCLUDEDIR}\\" /Y 
+      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1
+    )
+  else()
+    ExternalProject_Add(
+      LZ4
+      URL http://lcgpackages.web.cern.ch/lcgpackages/tarFiles/sources/lz4-${lz4_version}.tar.gz
+      URL_MD5 c9610c5ce97eb431dddddf0073d919b9
+      INSTALL_DIR ${CMAKE_BINARY_DIR}
+      CONFIGURE_COMMAND  /bin/sh -c "PREFIX=<INSTALL_DIR> make cmake"
+      BUILD_COMMAND /bin/sh -c "PREFIX=<INSTALL_DIR> MOREFLAGS=-fPIC make"
+      INSTALL_COMMAND /bin/sh -c "PREFIX=<INSTALL_DIR> make install"
+      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1
+    )
+  endif()
   set(LZ4_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
-endif()
 endif()
 
 
