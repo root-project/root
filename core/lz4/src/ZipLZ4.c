@@ -33,7 +33,7 @@ static const int kHeaderSize = 9;
 
 void R__zipLZ4(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep)
 {
-   int LZ4_version = LZ4_versionNumber();
+   int returnStatus, LZ4_version = LZ4_versionNumber();
    uint64_t out_size; /* compressed size */
    uint64_t in_size = (unsigned)(*srcsize);
 
@@ -47,7 +47,6 @@ void R__zipLZ4(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, in
       return;
    }
 
-   int returnStatus;
    if (cxlevel > 9) {
       cxlevel = 9;
    }
@@ -80,7 +79,7 @@ void R__zipLZ4(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, in
 
 void R__unzipLZ4(int *srcsize, unsigned char *src, int *tgtsize, unsigned char *tgt, int *irep)
 {
-   int LZ4_version = LZ4_versionNumber() / (100 * 100);
+   int returnStatus, LZ4_version = LZ4_versionNumber() / (100 * 100);
    *irep = 0;
    if (R__unlikely(src[0] != 'L' || src[1] != '4')) {
       fprintf(stderr, "R__unzipLZ4: algorithm run against buffer with incorrect header (got %d%d; expected %d%d).\n",
@@ -94,7 +93,7 @@ void R__unzipLZ4(int *srcsize, unsigned char *src, int *tgtsize, unsigned char *
       return;
    }
 
-   int returnStatus = LZ4_decompress_safe((char *)(&src[kHeaderSize]), (char *)(tgt), *srcsize - kHeaderSize, *tgtsize);
+   returnStatus = LZ4_decompress_safe((char *)(&src[kHeaderSize]), (char *)(tgt), *srcsize - kHeaderSize, *tgtsize);
    if (R__unlikely(returnStatus < 0)) {
       fprintf(stderr, "R__unzipLZ4: error in decompression around byte %d out of maximum %d.\n", -returnStatus,
               *tgtsize);
