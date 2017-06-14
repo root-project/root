@@ -24,6 +24,7 @@
 
 #include "TBufferFile.h"
 #include "TTreeReaderFast.hxx"
+#include "TBulkBranchRead.hxx"
 
 #include <type_traits>
 
@@ -64,7 +65,7 @@ class TTreeReaderValueFastBase {
              }
              fRemaining -= adjust;
           } else {
-             fRemaining = fBranch->GetEntriesSerialized(eventNum, fBuffer);
+             fRemaining = fBranch->GetBulkRead().GetEntriesSerialized(eventNum, fBuffer);
              if (R__unlikely(fRemaining < 0)) {
                 fReadStatus = ROOT::Internal::TTreeReaderValueBase::kReadError;
                 //printf("Failed to retrieve entries from the branch.\n");
