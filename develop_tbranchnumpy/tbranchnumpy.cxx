@@ -8,6 +8,7 @@
 #include <TBranch.h>
 #include <TLeaf.h>
 #include <TBufferFile.h>
+#include <ROOT/TBulkBranchRead.hxx>
 
 static char module_docstring[] = "Tools for quickly filling Numpy arrays with TBranch contents.";
 static char fill_docstring[] = "Fills a given array with TBranch data.";
@@ -72,16 +73,15 @@ static PyObject* fill(PyObject* self, PyObject* args) {
 
   TBufferFile buffer(TBuffer::kWrite, 32*1024);
 
-  struct timeval startTime, endTime;
-
   while (arrayindex < arrayend  &&  startingEntry < numEntries) {
-    Long64_t entries = branch->GetEntriesSerialized(startingEntry, buffer);
+    Long64_t entries = branch->GetBulkRead().GetEntriesSerialized(startingEntry, buffer);
     startingEntry += entries;
 
     size_t tocopy = buffer.BufferSize();
     if (arrayindex + tocopy > arrayend)
       tocopy = arrayend - arrayindex;
 
+    memcpy(&arraydata[arrayindex], buffer.GetCurrent(), tocopy);
     arrayindex += tocopy;
   }
 

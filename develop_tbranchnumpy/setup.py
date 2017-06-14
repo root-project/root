@@ -4,7 +4,7 @@ import subprocess
 from setuptools import setup, find_packages, Extension
 import numpy.distutils.misc_util
 
-ROOTBIN = os.path.join("..", "root-install", "bin")
+ROOTBIN = os.path.join("..", "..", "root-install", "bin")
 
 def rootconfig(arg, filter, drop):
     rootconfig = subprocess.Popen([os.path.join(ROOTBIN, "root-config"), arg], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
