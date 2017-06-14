@@ -754,21 +754,6 @@ void FitUtil::EvaluateChi2Gradient(const IModelFunction & f, const BinData & dat
 // utility function used by the likelihoods
 
 // for LogLikelihood functions
-#ifdef R__HAS_VECCORE
-double FitUtil::EvaluatePdf(const IModelFunctionTempl<ROOT::Double_v> & func, const UnBinData & data, const double * p, unsigned int i, double *) {
-   // evaluate the pdf contribution to the generic logl function in case of bin data
-   // return actually the log of the pdf and its derivatives
-
-
-   //func.SetParameters(p);
-
-
-   const auto x = vecCore::FromPtr<ROOT::Double_v>(data.GetCoordComponent(i,0));
-   auto fval = func (&x, p);
-   auto logPdf = ROOT::Math::Util::EvalLog(fval);
-   return logPdf[0];
-}
-#endif
 
 double FitUtil::EvaluatePdf(const IModelFunction & func, const UnBinData & data, const double * p, unsigned int i, double * g) {
    // evaluate the pdf contribution to the generic logl function in case of bin data
@@ -1000,11 +985,6 @@ nPoints = 0;
    return -logl;
 }
 
-#ifdef R__HAS_VECCORE
-void FitUtil::EvaluateLogLGradient(const IModelFunctionTempl<ROOT::Double_v> &, const UnBinData &, const double * , double *, unsigned int & ) {
-}
-#endif
-
 void FitUtil::EvaluateLogLGradient(const IModelFunction & f, const UnBinData & data, const double * p, double * grad, unsigned int & ) {
    // evaluate the gradient of the log likelihood function
 
@@ -1151,8 +1131,7 @@ double FitUtil::EvaluatePoissonBinPdf(const IModelFunction & func, const BinData
 }
 
 double FitUtil::EvaluatePoissonLogL(const IModelFunction &func, const BinData &data, const double *p, int iWeight, bool extended,
-                                    unsigned int    &nPoints, const unsigned int &executionPolicy, unsigned nChunks)
-{
+                                    unsigned int &nPoints, const unsigned int &executionPolicy, unsigned nChunks) {
    // evaluate the Poisson Log Likelihood
    // for binned likelihood fits
    // this is Sum ( f(x_i)  -  y_i * log( f (x_i) ) )
@@ -1248,7 +1227,7 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction &func, const BinData &d
       } else {
          // calculate integral (normalized by bin volume)
          // need to set function and parameters here in case loop is parallelized
-         fval = igEval(x, data.BinUpEdge(i)) ;
+         fval = igEval(x, data.BinUpEdge(i));
       }
       if (useBinVolume) fval *= binVolume;
 
@@ -1274,7 +1253,7 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction &func, const BinData &d
       // negative values of fval
       fval = std::max(fval, 0.0);
 
-      double nloglike = 0;  // negative loglikelihood
+      double nloglike = 0; // negative loglikelihood
       if (useW2) {
          // apply weight correction . Effective weight is error^2/ y
          // and expected events in bins is fval/weight
@@ -1303,10 +1282,10 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction &func, const BinData &d
          // this is needed for Poisson likelihood (which are extened and not for multinomial)
          // the formula below  include constant term due to likelihood of saturated model (f(x) = y)
          // (same formula as in Baker-Cousins paper, page 439 except a factor of 2
-         if (extended) nloglike = fval - y ;
+         if (extended) nloglike = fval - y;
 
          if (y >  0) {
-            nloglike +=  y * (ROOT::Math::Util::EvalLog(y) - ROOT::Math::Util::EvalLog(fval));
+            nloglike += y * (ROOT::Math::Util::EvalLog(y) - ROOT::Math::Util::EvalLog(fval));
             nPoints++;
          }
       }
@@ -1344,11 +1323,12 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction &func, const BinData &d
       ROOT::TThreadExecutor pool;
       res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction, chunks);
 #endif
-//   } else if(executionPolicy == ROOT::Fit::kMultitProcess){
+      //   } else if(executionPolicy == ROOT::Fit::kMultitProcess){
       // ROOT::TProcessExecutor pool;
       // res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction);
    } else {
-      Error("FitUtil::EvaluatePoissonLogL", "Execution policy unknown. Avalaible choices:\n 0: Serial (default)\n 1: MultiThread (requires IMT)\n");
+      Error("FitUtil::EvaluatePoissonLogL",
+            "Execution policy unknown. Avalaible choices:\n 0: Serial (default)\n 1: MultiThread (requires IMT)\n");
    }
 
 #ifdef DEBUG

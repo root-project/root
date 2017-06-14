@@ -27,7 +27,7 @@ Classes used for fitting (regression analysis) and estimation of parameter value
 #include "Fit/FitConfig.h"
 #include "Fit/FitExecutionPolicy.h"
 #include "Fit/FitResult.h"
-#include "Math/IParamFunctionfwd.h"
+#include "Math/IParamFunction.h"
 #include <memory>
 
 namespace ROOT {
@@ -164,11 +164,14 @@ public:
    /**
       Binned Likelihood fit. Default is extended
     */
-   bool LikelihoodFit(const BinData & data, bool extended = true, ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::kSerial) {
+   bool LikelihoodFit(const BinData &data, bool extended = true,
+                      ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::kSerial) {
       SetData(data);
       return DoBinnedLikelihoodFit(extended, executionPolicy);
    }
-   bool LikelihoodFit(const std::shared_ptr<BinData> & data, bool extended = true, ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::kSerial) {
+   
+   bool LikelihoodFit(const std::shared_ptr<BinData> &data, bool extended = true,
+                      ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::kSerial) {
       SetData(data);
       return DoBinnedLikelihoodFit(extended, executionPolicy);
    }
@@ -324,7 +327,8 @@ public:
        Set the fitted function (model function) from a vectorized parametric function interface
    */
 #ifdef R__HAS_VECCORE
-   void  SetFunction(const IModelFunction_v & func);
+   template <class NotCompileIfScalarBackend = std::enable_if<!(std::is_same<double, ROOT::Double_v>::value)>>
+   void SetFunction(const IModelFunction_v &func);
 #endif
    /**
       Set the fitted function from a parametric 1D function interface
@@ -425,7 +429,7 @@ protected:
    /// least square fit
    bool DoLeastSquareFit(ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::kSerial);
    /// binned likelihood fit
-   bool DoBinnedLikelihoodFit( bool extended = true, ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::kSerial);
+   bool DoBinnedLikelihoodFit(bool extended = true, ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::kSerial);
    /// un-binned likelihood fit
    bool DoUnbinnedLikelihoodFit( bool extended = false, ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::kSerial);
    /// linear least square fit
@@ -516,6 +520,21 @@ bool Fitter::GetDataFromFCN()  {
    }
 }
 
+#ifdef R__HAS_VECCORE
+template <class NotCompileIfScalarBackend>
+void Fitter::SetFunction(const IModelFunction_v &func)
+{
+   //  set the fit model function (clone the given one and keep a copy )
+   // std::cout << "set a non-grad function" << std::endl;
+   fUseGradient = false;
+   fFunc_v = std::shared_ptr<IModelFunction_v>(dynamic_cast<IModelFunction_v *>(func.Clone()));
+   assert(fFunc_v);
+
+   // creates the parameter  settings
+   fConfig.CreateParamsSettings(*fFunc_v);
+   fFunc.reset();
+}
+#endif
 
    } // end namespace Fit
 
