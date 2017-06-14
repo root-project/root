@@ -95,17 +95,17 @@ TEST(StressHistorgram, TestTH2toTH1)
 
    TH1D *projection;
    // TH1 derived from h2XY
-   projection = (TH1D *)h2XY->ProjectionX("x");
+   projection = h2XY->ProjectionX("x");
    EXPECT_EQ(0, Equals("TH2XY    -> X", h1X, projection, options));
    delete projection;
-   projection = (TH1D *)h2XY->ProjectionY("y");
+   projection = h2XY->ProjectionY("y");
    EXPECT_EQ(0, Equals("TH2XY    -> Y", h1Y, projection, options));
    delete projection;
 
-   projection = (TH1D *)h2XY->ProjectionX("ox", 0, -1, "o");
+   projection = h2XY->ProjectionX("ox", 0, -1, "o");
    EXPECT_EQ(0, Equals("TH2XYO  -> X", h1X, projection, options));
    delete projection;
-   projection = (TH1D *)h2XY->ProjectionY("oy", 0, -1, "o");
+   projection = h2XY->ProjectionY("oy", 0, -1, "o");
    EXPECT_EQ(0, Equals("TH2XYO  -> Y", h1Y, projection, options));
    delete projection;
 
@@ -136,17 +136,17 @@ TEST(StressHistorgram, TestTH2toTH1)
    // This two, the statistics should work!
    options = 0;
 
-   projection = (TH1D *)h2XY->ProjectionX("x");
+   projection = h2XY->ProjectionX("x");
    EXPECT_EQ(0, Equals("TH2XYR  -> X", h1XR, projection, options));
    delete projection;
-   projection = (TH1D *)h2XY->ProjectionY("y");
+   projection = h2XY->ProjectionY("y");
    EXPECT_EQ(0, Equals("TH2XYR  -> Y", h1YR, projection, options));
    delete projection;
 
-   projection = (TH1D *)h2XY->ProjectionX("ox", 0, -1, "o");
+   projection = h2XY->ProjectionX("ox", 0, -1, "o");
    EXPECT_EQ(0, Equals("TH2XYRO -> X", h1XOR, projection, options));
    delete projection;
-   projection = (TH1D *)h2XY->ProjectionY("oy", 0, -1, "o");
+   projection = h2XY->ProjectionY("oy", 0, -1, "o");
    EXPECT_EQ(0, Equals("TH2XYRO -> Y", h1YOR, projection, options));
    delete projection;
 
