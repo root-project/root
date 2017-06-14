@@ -46,6 +46,7 @@
 #include "TVirtualPerfStats.h"
 
 #include "TBranchIMTHelper.h"
+#include "ROOT/TBulkBranchRead.hxx"
 
 #include "ROOT/TIOFeatures.hxx"
 
@@ -117,6 +118,7 @@ TBranch::TBranch()
 , fEntryBuffer(0)
 , fTransientBuffer(0)
 , fBrowsables(0)
+, fBulk(new ROOT::Experimental::Internal::TBulkBranchRead(*this))
 , fSkipZip(kFALSE)
 , fReadLeaves(&TBranch::ReadLeavesImpl)
 , fFillLeaves(&TBranch::FillLeavesImpl)
@@ -226,6 +228,7 @@ TBranch::TBranch(TTree *tree, const char *name, void *address, const char *leafl
 , fEntryBuffer(0)
 , fTransientBuffer(0)
 , fBrowsables(0)
+, fBulk(new ROOT::Experimental::Internal::TBulkBranchRead(*this))
 , fSkipZip(kFALSE)
 , fReadLeaves(&TBranch::ReadLeavesImpl)
 , fFillLeaves(&TBranch::FillLeavesImpl)
@@ -278,6 +281,7 @@ TBranch::TBranch(TBranch *parent, const char *name, void *address, const char *l
 , fEntryBuffer(0)
 , fTransientBuffer(0)
 , fBrowsables(0)
+, fBulk(new ROOT::Experimental::Internal::TBulkBranchRead(*this))
 , fSkipZip(kFALSE)
 , fReadLeaves(&TBranch::ReadLeavesImpl)
 , fFillLeaves(&TBranch::FillLeavesImpl)
@@ -1192,7 +1196,7 @@ Int_t TBranch::FlushOneBasket(UInt_t ibasket)
 /// If a new buffer must be created and the user_buffer argument is non-null,
 /// then the memory in the user_bufer will be shared with the returned TBasket.
 
-TBasket* TBranch::GetBasket(Int_t basketnumber, TBuffer* user_buffer)
+TBasket* TBranch::GetBasketImpl(Int_t basketnumber, TBuffer* user_buffer)
 {
    // This counter in the sequential case collects errors coming also from
    // different files (suppose to have a program reading f1.root, f2.root ...)
@@ -1351,7 +1355,7 @@ Int_t TBranch::GetBasketAndFirst(TBasket*&basket, Long64_t &first,
       // make sure basket buffers are in memory.
       basket = (TBasket*) fBaskets.UncheckedAt(fReadBasket);
       if (!basket) {
-         basket = GetBasket(fReadBasket, user_buffer);
+         basket = GetBasketImpl(fReadBasket, user_buffer);
          if (!basket) {
             fCurrentBasket = 0;
             fFirstBasketEntry = -1;
@@ -1599,7 +1603,7 @@ Int_t TBranch::GetEntryExport(Long64_t entry, Int_t /*getall*/, TClonesArray* li
 
    // We have found the basket containing this entry.
    // Make sure basket buffers are in memory.
-   TBasket* basket = GetBasket(fReadBasket, nullptr);
+   TBasket* basket = GetBasketImpl(fReadBasket, nullptr);
    fCurrentBasket = basket;
    if (!basket) {
       fFirstBasketEntry = -1;
@@ -2872,7 +2876,7 @@ void TBranch::Streamer(TBuffer& b)
       if (v < 2) {
          fBasketSeek = new Long64_t[fMaxBaskets];
          for (n=0;n<fWriteBasket;n++) {
-            TBasket *basket = GetBasket(n, nullptr);
+            TBasket *basket = GetBasketImpl(n, nullptr);
             fBasketSeek[n] = basket ? basket->GetSeekKey() : 0;
          }
       } else {
