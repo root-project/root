@@ -2,6 +2,8 @@
 
 #include "clang/AST/AST.h"
 
+#include "cling/Interpreter/Interpreter.h"
+
 #include "ClassSelectionRule.h"
 #include "SelectionRules.h"
 #include "TClingUtils.h"
@@ -14,13 +16,18 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-DictSelectionReader::DictSelectionReader(SelectionRules &selectionRules,
-      const clang::ASTContext &C, ROOT::TMetaUtils::TNormalizedCtxt &normCtxt)
+DictSelectionReader::DictSelectionReader(cling::Interpreter &interp, SelectionRules &selectionRules,
+                                         const clang::ASTContext &C, ROOT::TMetaUtils::TNormalizedCtxt &normCtxt)
    : fSelectionRules(selectionRules), fIsFirstPass(true), fNormCtxt(normCtxt)
 {
    clang::TranslationUnitDecl *translUnitDecl = C.getTranslationUnitDecl();
-   // Inspect the AST
-   TraverseDecl(translUnitDecl);
+
+   {
+      // We push a new transaction because we could deserialize decls here
+      cling::Interpreter::PushTransactionRAII RAII(&interp);
+      // Inspect the AST
+      TraverseDecl(translUnitDecl);
+   }
 
    // Now re-inspect the AST to find autoselected classes (double-tap)
    fIsFirstPass = false;
