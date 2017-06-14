@@ -529,8 +529,6 @@ void RooAbsTestStatistic::printCompactTreeHook(ostream& os, const char* indent)
 void RooAbsTestStatistic::constOptimizeTestStatistic(ConstOpCode opcode, Bool_t doAlsoTrackingOpt)
 {
   initialize();
-  RooWallTimer timer;
-  timer.start();
   if (SimMaster == _gofOpMode) {
     // Forward to slaves
     for (Int_t i = 0; i < _nGof; ++i) {
@@ -545,8 +543,6 @@ void RooAbsTestStatistic::constOptimizeTestStatistic(ConstOpCode opcode, Bool_t 
       _mpfeArray[i]->constOptimizeTestStatistic(opcode,doAlsoTrackingOpt);
     }
   }
-  timer.stop();
-  std::cout << "DEBUG RooAbsTestStatistic::constOptimizeTestStatistic took " << timer.timing_s() << "s" << std::endl;
 }
 
 
@@ -618,6 +614,7 @@ void RooAbsTestStatistic::initMPMode(RooAbsReal *real, RooAbsData *data, const R
 /// Using RooRealMPFE this means it should be called from the serverLoop().
 
 void RooAbsTestStatistic::_setNumIntTimingInPdfs(Bool_t flag) {
+  RooWallTimer timer;
   // find all pdf nodes with a normalization integral and set the activate timing flag on them
   // Get list of branch nodes in expression
   RooArgSet blist;
@@ -643,6 +640,9 @@ void RooAbsTestStatistic::_setNumIntTimingInPdfs(Bool_t flag) {
 
     normint->activateTimingNumInts();
   }
+
+  timer.stop();
+  std::cout << "DEBUG RooAbsTestStatistic::_setNumIntTimingInPdfs timing: " << timer.timing_s() << "s" << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
