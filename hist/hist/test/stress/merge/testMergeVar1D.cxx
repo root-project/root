@@ -29,28 +29,24 @@ TEST(StressHistorgram, TestMergeVar1D)
    Double_t v[numberOfBins + 1];
    FillVariableRange(v);
 
-   TH1D *h1 = new TH1D("h1", "h1-Title", numberOfBins, v);
-   TH1D *h2 = new TH1D("h2", "h2-Title", numberOfBins, v);
-   TH1D *h3 = new TH1D("h3", "h3-Title", numberOfBins, v);
-   TH1D *h4 = new TH1D("h4", "h4-Title", numberOfBins, v);
+   TH1D h1("h1", "h1-Title", numberOfBins, v);
+   TH1D h2("h2", "h2-Title", numberOfBins, v);
+   TH1D h3("h3", "h3-Title", numberOfBins, v);
+   TH1D h4("h4", "h4-Title", numberOfBins, v);
 
-   h1->Sumw2();
-   h2->Sumw2();
-   h3->Sumw2();
+   h1.Sumw2();
+   h2.Sumw2();
+   h3.Sumw2();
 
    FillHistograms(h1, h4);
    FillHistograms(h2, h4);
    FillHistograms(h3, h4);
 
-   TList *list = new TList;
-   list->Add(h2);
-   list->Add(h3);
+   TList list;
+   list.Add(&h2);
+   list.Add(&h3);
 
-   h1->Merge(list);
+   h1.Merge(&list);
 
    EXPECT_TRUE(HistogramsEquals(h1, h4, cmpOptStats, 1E-10));
-   delete h1;
-   delete h2;
-   delete h3;
-   delete h4;
 }

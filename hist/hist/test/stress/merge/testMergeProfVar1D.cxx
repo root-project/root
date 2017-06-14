@@ -31,24 +31,20 @@ TEST(StressHistorgram, TestMergeProfVar1D)
    Double_t v[numberOfBins + 1];
    FillVariableRange(v);
 
-   TProfile *p1 = new TProfile("p1", "p1-Title", numberOfBins, v);
-   TProfile *p2 = new TProfile("p2", "p2-Title", numberOfBins, v);
-   TProfile *p3 = new TProfile("p3", "p3-Title", numberOfBins, v);
-   TProfile *p4 = new TProfile("p4", "p4-Title", numberOfBins, v);
+   TProfile p1("p1", "p1-Title", numberOfBins, v);
+   TProfile p2("p2", "p2-Title", numberOfBins, v);
+   TProfile p3("p3", "p3-Title", numberOfBins, v);
+   TProfile p4("p4", "p4-Title", numberOfBins, v);
 
    FillProfiles(p1, p4);
    FillProfiles(p2, p4);
    FillProfiles(p3, p4);
 
-   TList *list = new TList;
-   list->Add(p2);
-   list->Add(p3);
+   TList list;
+   list.Add(&p2);
+   list.Add(&p3);
 
-   p1->Merge(list);
+   p1.Merge(&list);
 
    EXPECT_TRUE(HistogramsEquals(p1, p4, cmpOptStats, 1E-10));
-   delete p1;
-   delete p2;
-   delete p3;
-   delete p4;
 }

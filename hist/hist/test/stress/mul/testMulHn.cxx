@@ -87,10 +87,7 @@ TYPED_TEST(HistTest, TestMulHn)
       s3->SetBinContent(bin, v / 2);
    }
 
-   s1->Multiply(s2);
+   s1->Multiply(s2.get());
 
-   EXPECT_TRUE(HistogramsEquals(s3, s1, cmpOptNone, 1E-10));
-   delete s1;
-   delete s2;
-   delete s3;
+   EXPECT_TRUE(HistogramsEquals(*(THnBase*)s3.get(), *(THnBase*)s1.get(), cmpOptNone, 1E-10));
 }

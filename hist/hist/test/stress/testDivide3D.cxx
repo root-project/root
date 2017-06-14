@@ -29,13 +29,13 @@ TEST(StressHistorgram, TestDivide3D1)
    Double_t c1 = r.Rndm() + 1;
    Double_t c2 = r.Rndm() + 1;
 
-   TH3D *h1 = new TH3D("d3D1-h1", "h1-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
+   TH3D h1("d3D1-h1", "h1-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
-   TH3D *h2 = new TH3D("d3D1-h2", "h2-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
+   TH3D h2("d3D1-h2", "h2-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
 
-   h1->Sumw2();
-   h2->Sumw2();
+   h1.Sumw2();
+   h2.Sumw2();
 
    UInt_t seed = r.GetSeed();
    // For possible problems
@@ -45,57 +45,53 @@ TEST(StressHistorgram, TestDivide3D1)
       x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       z = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      h1->Fill(x, y, z, 1.0);
+      h1.Fill(x, y, z, 1.0);
       x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       z = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      h2->Fill(x, y, z, 1.0);
+      h2.Fill(x, y, z, 1.0);
    }
    // avoid bins in h2 with zero content
-   for (int i = 0; i < h2->GetSize(); ++i)
-      if (h2->GetBinContent(i) == 0) h2->SetBinContent(i, 1);
+   for (int i = 0; i < h2.GetSize(); ++i)
+      if (h2.GetBinContent(i) == 0) h2.SetBinContent(i, 1);
 
-   TH3D *h3 = new TH3D("d3D1-h3", "h3=(c1*h1)/(c2*h2)", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange,
+   TH3D h3("d3D1-h3", "h3=(c1*h1)/(c2*h2)", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange,
                        maxRange, numberOfBins + 2, minRange, maxRange);
-   h3->Divide(h1, h2, c1, c2);
+   h3.Divide(&h1, &h2, c1, c2);
 
-   TH3D *h4 = new TH3D("d3D1-h4", "h4=h3*h2)", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
+   TH3D h4("d3D1-h4", "h4=h3*h2)", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
-   h4->Multiply(h2, h3, c2 / c1, 1.0);
-   for (Int_t i = 0; i <= h4->GetNbinsX() + 1; ++i) {
-      for (Int_t j = 0; j <= h4->GetNbinsY() + 1; ++j) {
-         for (Int_t h = 0; h <= h4->GetNbinsZ() + 1; ++h) {
-            Double_t error = h4->GetBinError(i, j, h) * h4->GetBinError(i, j, h);
+   h4.Multiply(&h2, &h3, c2 / c1, 1.0);
+   for (Int_t i = 0; i <= h4.GetNbinsX() + 1; ++i) {
+      for (Int_t j = 0; j <= h4.GetNbinsY() + 1; ++j) {
+         for (Int_t h = 0; h <= h4.GetNbinsZ() + 1; ++h) {
+            Double_t error = h4.GetBinError(i, j, h) * h4.GetBinError(i, j, h);
             // error -= 2 *
             // h3->GetBinContent(i,j,h)*h3->GetBinContent(i,j,h)*h2->GetBinError(i,j,h)*h2->GetBinError(i,j,h);
-            error -= (2 * (c2 * c2) / (c1 * c1)) * h3->GetBinContent(i, j, h) * h3->GetBinContent(i, j, h) *
-                     h2->GetBinError(i, j, h) * h2->GetBinError(i, j, h);
-            h4->SetBinError(i, j, h, sqrt(error));
+            error -= (2 * (c2 * c2) / (c1 * c1)) * h3.GetBinContent(i, j, h) * h3.GetBinContent(i, j, h) *
+                     h2.GetBinError(i, j, h) * h2.GetBinError(i, j, h);
+            h4.SetBinError(i, j, h, sqrt(error));
          }
       }
    }
 
-   h4->ResetStats();
-   h1->ResetStats();
+   h4.ResetStats();
+   h1.ResetStats();
 
    EXPECT_TRUE(HistogramsEquals(h1, h4, cmpOptStats));
-   delete h1;
-   delete h2;
-   delete h3;
-   delete h4;
 }
 
 TEST(StressHistorgram, TestDivide3D2)
 {
    // Tests the second Divide method for 3D Histograms
 
-   TH3D *h1 = new TH3D("d3D2-h1", "h1-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
+   TH3D h1("d3D2-h1", "h1-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
-   TH3D *h2 = new TH3D("d3D2-h2", "h2-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
+   TH3D h2("d3D2-h2", "h2-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
 
-   h1->Sumw2();
-   h2->Sumw2();
+   h1.Sumw2();
+   h2.Sumw2();
 
    UInt_t seed = r.GetSeed();
    // For possible problems
@@ -105,39 +101,35 @@ TEST(StressHistorgram, TestDivide3D2)
       x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       z = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      h1->Fill(x, y, z, 1.0);
+      h1.Fill(x, y, z, 1.0);
       x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       z = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      h2->Fill(x, y, z, 1.0);
+      h2.Fill(x, y, z, 1.0);
    }
    // avoid bins in h2 with zero content
-   for (int i = 0; i < h2->GetSize(); ++i)
-      if (h2->GetBinContent(i) == 0) h2->SetBinContent(i, 1);
+   for (int i = 0; i < h2.GetSize(); ++i)
+      if (h2.GetBinContent(i) == 0) h2.SetBinContent(i, 1);
 
-   TH3D *h3 = static_cast<TH3D *>(h1->Clone());
-   h3->Divide(h2);
+   unique_ptr<TH3D> h3(static_cast<TH3D *>(h1.Clone()));
+   h3->Divide(&h2);
 
-   TH3D *h4 = new TH3D("d3D2-h4", "h4=h3*h2)", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
+   TH3D h4("d3D2-h4", "h4=h3*h2)", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
-   h4->Multiply(h2, h3, 1.0, 1.0);
-   for (Int_t i = 0; i <= h4->GetNbinsX() + 1; ++i) {
-      for (Int_t j = 0; j <= h4->GetNbinsY() + 1; ++j) {
-         for (Int_t h = 0; h <= h4->GetNbinsZ() + 1; ++h) {
-            Double_t error = h4->GetBinError(i, j, h) * h4->GetBinError(i, j, h);
-            error -= 2 * h3->GetBinContent(i, j, h) * h3->GetBinContent(i, j, h) * h2->GetBinError(i, j, h) *
-                     h2->GetBinError(i, j, h);
-            h4->SetBinError(i, j, h, sqrt(error));
+   h4.Multiply(&h2, h3.get(), 1.0, 1.0);
+   for (Int_t i = 0; i <= h4.GetNbinsX() + 1; ++i) {
+      for (Int_t j = 0; j <= h4.GetNbinsY() + 1; ++j) {
+         for (Int_t h = 0; h <= h4.GetNbinsZ() + 1; ++h) {
+            Double_t error = h4.GetBinError(i, j, h) * h4.GetBinError(i, j, h);
+            error -= 2 * h3->GetBinContent(i, j, h) * h3->GetBinContent(i, j, h) * h2.GetBinError(i, j, h) *
+                     h2.GetBinError(i, j, h);
+            h4.SetBinError(i, j, h, sqrt(error));
          }
       }
    }
 
-   h4->ResetStats();
-   h1->ResetStats();
+   h4.ResetStats();
+   h1.ResetStats();
 
    EXPECT_TRUE(HistogramsEquals(h1, h4, cmpOptStats));
-   delete h1;
-   delete h2;
-   delete h3;
-   delete h4;
 }

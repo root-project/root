@@ -62,10 +62,7 @@ TYPED_TEST(HistTest, TestAddHn)
       s3->Fill(points, c);
    }
 
-   s1->Add(s2, c);
+   s1->Add(s2.get(), c);
 
-   EXPECT_TRUE(HistogramsEquals(s3, s1, cmpOptStats, 1E-10));
-   delete s1;
-   delete s2;
-   delete s3;
+   EXPECT_TRUE(HistogramsEquals(*(THnBase*)s3.get(), *(THnBase*)s1.get(), cmpOptStats, 1E-10));
 }

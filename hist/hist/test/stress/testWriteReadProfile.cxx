@@ -30,57 +30,52 @@ TEST(StressHistorgram, TestWriteReadProfile1D)
 {
    // Tests the write and read methods for 1D Profiles
 
-   TProfile *p1 = new TProfile("wr1D-p1", "p1-Title", numberOfBins, minRange, maxRange);
+   TProfile p1("wr1D-p1", "p1-Title", numberOfBins, minRange, maxRange);
 
    for (Int_t e = 0; e < nEvents; ++e) {
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      p1->Fill(x, y, 1.0);
+      p1.Fill(x, y, 1.0);
    }
 
    TFile f("tmpHist.root", "RECREATE");
-   p1->Write();
+   p1.Write();
    f.Close();
 
    TFile f2("tmpHist.root");
-   TProfile *p2 = static_cast<TProfile *>(f2.Get("wr1D-p1"));
+   unique_ptr<TProfile> p2(static_cast<TProfile *>(f2.Get("wr1D-p1")));
 
-   EXPECT_TRUE(HistogramsEquals(p1, p2, cmpOptStats));
-   delete p1;
-   delete p2;
+   EXPECT_TRUE(HistogramsEquals(p1, *p2.get(), cmpOptStats));
 }
 
 TEST(StressHistorgram, TestWriteReadProfile2D)
 {
    // Tests the write and read methods for 2D Profiles
 
-   TProfile2D *p1 =
-      new TProfile2D("wr2D-p1", "p1-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange, maxRange);
+   TProfile2D p1("wr2D-p1", "p1-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange, maxRange);
 
    for (Int_t e = 0; e < nEvents * nEvents; ++e) {
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t z = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      p1->Fill(x, y, z, 1.0);
+      p1.Fill(x, y, z, 1.0);
    }
 
    TFile f("tmpHist.root", "RECREATE");
-   p1->Write();
+   p1.Write();
    f.Close();
 
    TFile f2("tmpHist.root");
-   TProfile2D *p2 = static_cast<TProfile2D *>(f2.Get("wr2D-p1"));
+   unique_ptr<TProfile2D> p2(static_cast<TProfile2D *>(f2.Get("wr2D-p1")));
 
-   EXPECT_TRUE(HistogramsEquals(p1, p2, cmpOptStats));
-   delete p1;
-   delete p2;
+   EXPECT_TRUE(HistogramsEquals(p1, *p2.get(), cmpOptStats));
 }
 
 TEST(StressHistorgram, TestWriteReadProfile3D)
 {
    // Tests the write and read methods for 3D Profile
 
-   TProfile3D *p1 = new TProfile3D("wr3D-p1", "p1-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange,
+   TProfile3D p1("wr3D-p1", "p1-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange,
                                    maxRange, numberOfBins + 2, minRange, maxRange);
 
    for (Int_t e = 0; e < nEvents * nEvents; ++e) {
@@ -88,23 +83,21 @@ TEST(StressHistorgram, TestWriteReadProfile3D)
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t z = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t t = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      p1->Fill(x, y, z, t, 1.0);
+      p1.Fill(x, y, z, t, 1.0);
    }
 
    TFile f("tmpHist.root", "RECREATE");
-   p1->Write();
+   p1.Write();
    f.Close();
 
    TFile f2("tmpHist.root");
-   TProfile3D *p2 = static_cast<TProfile3D *>(f2.Get("wr3D-p1"));
+   unique_ptr<TProfile3D> p2(static_cast<TProfile3D *>(f2.Get("wr3D-p1")));
 
    // In this particular case the statistics are not checked. The
    // Chi2Test is not properly implemented for the TProfile3D
    // class. If the cmpOptStats flag is set, then there will be a
    // crash.
-   EXPECT_TRUE(HistogramsEquals(p1, p2));
-   delete p1;
-   delete p2;
+   EXPECT_TRUE(HistogramsEquals(p1, *p2.get()));
 }
 
 TEST(StressHistorgram, TestWriteReadProfileVar1D)
@@ -114,22 +107,20 @@ TEST(StressHistorgram, TestWriteReadProfileVar1D)
    Double_t v[numberOfBins + 1];
    FillVariableRange(v);
 
-   TProfile *p1 = new TProfile("wr1D-p1", "p1-Title", numberOfBins, v);
+   TProfile p1("wr1D-p1", "p1-Title", numberOfBins, v);
 
    for (Int_t e = 0; e < nEvents; ++e) {
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      p1->Fill(x, y, 1.0);
+      p1.Fill(x, y, 1.0);
    }
 
    TFile f("tmpHist.root", "RECREATE");
-   p1->Write();
+   p1.Write();
    f.Close();
 
    TFile f2("tmpHist.root");
-   TProfile *p2 = static_cast<TProfile *>(f2.Get("wr1D-p1"));
+   unique_ptr<TProfile> p2(static_cast<TProfile *>(f2.Get("wr1D-p1")));
 
-   EXPECT_TRUE(HistogramsEquals(p1, p2, cmpOptStats));
-   delete p1;
-   delete p2;
+   EXPECT_TRUE(HistogramsEquals(p1, *p2.get(), cmpOptStats));
 }

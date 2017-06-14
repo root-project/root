@@ -44,9 +44,7 @@ TYPED_TEST(HistTest, TestCloneHn)
       s1->Fill(points);
    }
 
-   auto s2 = (TypeParam *)s1->Clone();
+   unique_ptr<TypeParam> s2((TypeParam *)s1->Clone());
 
-   EXPECT_TRUE(HistogramsEquals(s1, s2));
-   delete s1;
-   delete s2;
+   EXPECT_TRUE(HistogramsEquals(*(THnBase*)s1.get(), *(THnBase*)s2.get()));
 }

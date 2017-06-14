@@ -33,18 +33,18 @@ TEST(StressHistorgram, TestArrayRebin)
 
    const int rebin = TMath::Nint(r.Uniform(minRebin, maxRebin)) + 1;
    UInt_t seed = r.GetSeed();
-   TH1D *h1 = new TH1D("h3", "Original Histogram", TMath::Nint(r.Uniform(1, 5)) * rebin * 2, minRange, maxRange);
+   TH1D h1("h3", "Original Histogram", TMath::Nint(r.Uniform(1, 5)) * rebin * 2, minRange, maxRange);
    r.SetSeed(seed);
-   for (Int_t i = 0; i < nEvents; ++i) h1->Fill(r.Uniform(minRange * .9, maxRange * 1.1));
+   for (Int_t i = 0; i < nEvents; ++i) h1.Fill(r.Uniform(minRange * .9, maxRange * 1.1));
 
    // Create vector - generate bin edges ( nbins is always > 2)
    // ignore fact that array may contains bins with zero size
-   Double_t *rebinArray = new Double_t[rebin];
+   Double_t rebinArray[rebin];
    r.RndmArray(rebin, rebinArray);
    std::sort(rebinArray, rebinArray + rebin);
    for (Int_t i = 0; i < rebin; ++i) {
-      rebinArray[i] = TMath::Nint(rebinArray[i] * (h1->GetNbinsX() - 2) + 2);
-      rebinArray[i] = h1->GetBinLowEdge((Int_t)rebinArray[i]);
+      rebinArray[i] = TMath::Nint(rebinArray[i] * (h1.GetNbinsX() - 2) + 2);
+      rebinArray[i] = h1.GetBinLowEdge((Int_t)rebinArray[i]);
    }
 
 #ifdef __DEBUG__
@@ -53,18 +53,13 @@ TEST(StressHistorgram, TestArrayRebin)
    std::cout << "rebin: " << rebin << std::endl;
 #endif
 
-   TH1D *h2 = static_cast<TH1D *>(h1->Rebin(rebin - 1, "testArrayRebin", rebinArray));
+   unique_ptr<TH1D> h2(static_cast<TH1D *>(h1.Rebin(rebin - 1, "testArrayRebin", rebinArray)));
 
-   TH1D *h3 = new TH1D("testArrayRebin2", "testArrayRebin2", rebin - 1, rebinArray);
+   TH1D h3("testArrayRebin2", "testArrayRebin2", rebin - 1, rebinArray);
    r.SetSeed(seed);
-   for (Int_t i = 0; i < nEvents; ++i) h3->Fill(r.Uniform(minRange * .9, maxRange * 1.1));
+   for (Int_t i = 0; i < nEvents; ++i) h3.Fill(r.Uniform(minRange * .9, maxRange * 1.1));
 
-   delete[] rebinArray;
-
-   EXPECT_TRUE(HistogramsEquals(h2, h3, cmpOptStats));
-   delete h1;
-   delete h2;
-   delete h3;
+   EXPECT_TRUE(HistogramsEquals(*h2.get(), h3, cmpOptStats));
 }
 
 TEST(StressHistorgram, TestArrayRebinProfile)
@@ -75,23 +70,22 @@ TEST(StressHistorgram, TestArrayRebinProfile)
 
    const int rebin = TMath::Nint(r.Uniform(minRebin, maxRebin)) + 1;
    UInt_t seed = r.GetSeed();
-   TProfile *p1 =
-      new TProfile("p3", "Original Histogram", TMath::Nint(r.Uniform(1, 5)) * rebin * 2, minRange, maxRange);
+   TProfile p1("p3", "Original Histogram", TMath::Nint(r.Uniform(1, 5)) * rebin * 2, minRange, maxRange);
    r.SetSeed(seed);
    for (Int_t i = 0; i < nEvents; ++i) {
       Double_t x = r.Uniform(minRange * .9, maxRange * 1.1);
       Double_t y = r.Uniform(minRange * .9, maxRange * 1.1);
-      p1->Fill(x, y);
+      p1.Fill(x, y);
    }
 
    // Create vector - generate bin edges ( nbins is always > 2)
    // ignore fact that array may contains bins with zero size
-   Double_t *rebinArray = new Double_t[rebin];
+   Double_t rebinArray[rebin];
    r.RndmArray(rebin, rebinArray);
    std::sort(rebinArray, rebinArray + rebin);
    for (Int_t i = 0; i < rebin; ++i) {
-      rebinArray[i] = TMath::Nint(rebinArray[i] * (p1->GetNbinsX() - 2) + 2);
-      rebinArray[i] = p1->GetBinLowEdge((Int_t)rebinArray[i]);
+      rebinArray[i] = TMath::Nint(rebinArray[i] * (p1.GetNbinsX() - 2) + 2);
+      rebinArray[i] = p1.GetBinLowEdge((Int_t)rebinArray[i]);
    }
 
 #ifdef __DEBUG__
@@ -99,20 +93,15 @@ TEST(StressHistorgram, TestArrayRebinProfile)
    std::cout << "rebin: " << rebin << std::endl;
 #endif
 
-   TProfile *p2 = static_cast<TProfile *>(p1->Rebin(rebin - 1, "testArrayRebinProf", rebinArray));
+   unique_ptr<TProfile> p2(static_cast<TProfile *>(p1.Rebin(rebin - 1, "testArrayRebinProf", rebinArray)));
 
-   TProfile *p3 = new TProfile("testArrayRebinProf2", "testArrayRebinProf2", rebin - 1, rebinArray);
+   TProfile p3("testArrayRebinProf2", "testArrayRebinProf2", rebin - 1, rebinArray);
    r.SetSeed(seed);
    for (Int_t i = 0; i < nEvents; ++i) {
       Double_t x = r.Uniform(minRange * .9, maxRange * 1.1);
       Double_t y = r.Uniform(minRange * .9, maxRange * 1.1);
-      p3->Fill(x, y);
+      p3.Fill(x, y);
    }
 
-   delete[] rebinArray;
-
-   EXPECT_TRUE(HistogramsEquals(p2, p3, cmpOptStats));
-   delete p1;
-   delete p2;
-   delete p3;
+   EXPECT_TRUE(HistogramsEquals(*p2.get(), p3, cmpOptStats));
 }

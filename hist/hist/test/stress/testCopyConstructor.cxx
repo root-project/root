@@ -25,64 +25,58 @@ TEST(StressHistorgram, TestCopyConstructor1D)
 {
    // Tests the copy constructor for 1D Histograms
 
-   TH1D *h1 = new TH1D("cc1D-h1", "h1-Title", numberOfBins, minRange, maxRange);
+   TH1D h1("cc1D-h1", "h1-Title", numberOfBins, minRange, maxRange);
 
-   h1->Sumw2();
+   h1.Sumw2();
 
    for (Int_t e = 0; e < nEvents; ++e) {
       Double_t value = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      h1->Fill(value, 1.0);
+      h1.Fill(value, 1.0);
    }
 
-   TH1D *h2 = new TH1D(*h1);
+   TH1D h2(h1);
 
    EXPECT_TRUE(HistogramsEquals(h1, h2, cmpOptStats));
-   delete h1;
-   delete h2;
 }
 
 TEST(StressHistorgram, TestCopyConstructor2D)
 {
    // Tests the copy constructor for 2D Histograms
 
-   TH2D *h1 = new TH2D("cc2D-h1", "h1-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange, maxRange);
+   TH2D h1("cc2D-h1", "h1-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange, maxRange);
 
-   h1->Sumw2();
+   h1.Sumw2();
 
    for (Int_t e = 0; e < nEvents * nEvents; ++e) {
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      h1->Fill(x, y, 1.0);
+      h1.Fill(x, y, 1.0);
    }
 
-   TH2D *h2 = new TH2D(*h1);
+   TH2D h2(h1);
 
    EXPECT_TRUE(HistogramsEquals(h1, h2, cmpOptStats));
-   delete h1;
-   delete h2;
 }
 
 TEST(StressHistorgram, TestCopyConstructor3D)
 {
    // Tests the copy constructor for 3D Histograms
 
-   TH3D *h1 = new TH3D("cc3D-h1", "h1-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
+   TH3D h1("cc3D-h1", "h1-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
                        numberOfBins + 2, minRange, maxRange);
 
-   h1->Sumw2();
+   h1.Sumw2();
 
    for (Int_t e = 0; e < nEvents * nEvents; ++e) {
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t z = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      h1->Fill(x, y, z, 1.0);
+      h1.Fill(x, y, z, 1.0);
    }
 
-   TH3D *h2 = new TH3D(*h1);
+   TH3D h2(h1);
 
    EXPECT_TRUE(HistogramsEquals(h1, h2, cmpOptStats));
-   delete h1;
-   delete h2;
 }
 
 TEST(StressHistorgram, TestCopyConstructorVar1D)
@@ -92,18 +86,16 @@ TEST(StressHistorgram, TestCopyConstructorVar1D)
    Double_t v[numberOfBins + 1];
    FillVariableRange(v);
 
-   TH1D *h1 = new TH1D("cc1D-h1", "h1-Title", numberOfBins, v);
+   TH1D h1("cc1D-h1", "h1-Title", numberOfBins, v);
 
-   h1->Sumw2();
+   h1.Sumw2();
 
    for (Int_t e = 0; e < nEvents; ++e) {
       Double_t value = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      h1->Fill(value, 1.0);
+      h1.Fill(value, 1.0);
    }
 
-   TH1D *h2 = new TH1D(*h1);
+   TH1D h2(h1);
 
    EXPECT_TRUE(HistogramsEquals(h1, h2, cmpOptStats));
-   delete h1;
-   delete h2;
 }

@@ -34,21 +34,17 @@ TEST(StressHistorgram, TestAddVarProf1)
    Double_t c1 = r.Rndm();
    Double_t c2 = r.Rndm();
 
-   TProfile *p1 = new TProfile("t1D1-p1", "p1-Title", numberOfBins, v);
-   TProfile *p2 = new TProfile("t1D1-p2", "p2-Title", numberOfBins, v);
-   TProfile *p3 = new TProfile("t1D1-p3", "p3=c1*p1+c2*p2", numberOfBins, v);
+   TProfile p1("t1D1-p1", "p1-Title", numberOfBins, v);
+   TProfile p2("t1D1-p2", "p2-Title", numberOfBins, v);
+   TProfile p3("t1D1-p3", "p3=c1*p1+c2*p2", numberOfBins, v);
 
    FillProfiles(p1, p3, 1.0, c1);
    FillProfiles(p2, p3, 1.0, c2);
 
-   TProfile *p4 = new TProfile("t1D1-p4", "p4=c1*p1+p2*c2", numberOfBins, v);
-   p4->Add(p1, p2, c1, c2);
+   TProfile p4("t1D1-p4", "p4=c1*p1+p2*c2", numberOfBins, v);
+   p4.Add(&p1, &p2, c1, c2);
 
    EXPECT_TRUE(HistogramsEquals(p3, p4, cmpOptStats, 1E-13));
-   delete p1;
-   delete p2;
-   delete p3;
-   delete p4;
 }
 
 TEST(StressHistorgram, TestAddVarProf2)
@@ -60,21 +56,18 @@ TEST(StressHistorgram, TestAddVarProf2)
 
    Double_t c2 = r.Rndm();
 
-   TProfile *p5 = new TProfile("t1D2-p5", "p5=   p6+c2*p7", numberOfBins, v);
-   TProfile *p6 = new TProfile("t1D2-p6", "p6-Title", numberOfBins, v);
-   TProfile *p7 = new TProfile("t1D2-p7", "p7-Title", numberOfBins, v);
+   TProfile p5("t1D2-p5", "p5=   p6+c2*p7", numberOfBins, v);
+   TProfile p6("t1D2-p6", "p6-Title", numberOfBins, v);
+   TProfile p7("t1D2-p7", "p7-Title", numberOfBins, v);
 
-   p5->Sumw2();
-   p6->Sumw2();
-   p7->Sumw2();
+   p5.Sumw2();
+   p6.Sumw2();
+   p7.Sumw2();
 
    FillProfiles(p6, p5, 1.0, 1.0);
    FillProfiles(p7, p5, 1.0, c2);
 
-   p6->Add(p7, c2);
+   p6.Add(&p7, c2);
 
    EXPECT_TRUE(HistogramsEquals(p5, p6, cmpOptStats, 1E-13));
-   delete p5;
-   delete p6;
-   delete p7;
 }

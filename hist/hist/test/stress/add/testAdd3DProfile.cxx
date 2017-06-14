@@ -32,13 +32,11 @@ TEST(StressHistorgram, TestAdd3DProfile1)
    Double_t c1 = r.Rndm();
    Double_t c2 = r.Rndm();
 
-   TProfile3D *p1 = new TProfile3D("t3D1-p1", "p1", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange,
+   TProfile3D p1("t3D1-p1", "p1", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange,
                                    maxRange, numberOfBins + 2, minRange, maxRange);
-
-   TProfile3D *p2 = new TProfile3D("t3D1-p2", "p2", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange,
+   TProfile3D p2("t3D1-p2", "p2", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange,
                                    maxRange, numberOfBins + 2, minRange, maxRange);
-
-   TProfile3D *p3 = new TProfile3D("t3D1-p3", "p3=c1*p1+c2*p2", numberOfBins, minRange, maxRange, numberOfBins + 1,
+   TProfile3D p3("t3D1-p3", "p3=c1*p1+c2*p2", numberOfBins, minRange, maxRange, numberOfBins + 1,
                                    minRange, maxRange, numberOfBins + 2, minRange, maxRange);
 
    for (Int_t e = 0; e < nEvents * nEvents; ++e) {
@@ -46,8 +44,8 @@ TEST(StressHistorgram, TestAdd3DProfile1)
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t z = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t t = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      p1->Fill(x, y, z, t, 1.0);
-      p3->Fill(x, y, z, t, c1);
+      p1.Fill(x, y, z, t, 1.0);
+      p3.Fill(x, y, z, t, c1);
    }
 
    for (Int_t e = 0; e < nEvents * nEvents; ++e) {
@@ -55,18 +53,14 @@ TEST(StressHistorgram, TestAdd3DProfile1)
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t z = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t t = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      p2->Fill(x, y, z, t, 1.0);
-      p3->Fill(x, y, z, t, c2);
+      p2.Fill(x, y, z, t, 1.0);
+      p3.Fill(x, y, z, t, c2);
    }
 
-   TProfile3D *p4 = new TProfile3D("t3D1-p4", "p4=c1*p1+c2*p2", numberOfBins, minRange, maxRange, numberOfBins + 1,
+   TProfile3D p4("t3D1-p4", "p4=c1*p1+c2*p2", numberOfBins, minRange, maxRange, numberOfBins + 1,
                                    minRange, maxRange, numberOfBins + 2, minRange, maxRange);
-   p4->Add(p1, p2, c1, c2);
+   p4.Add(&p1, &p2, c1, c2);
    EXPECT_TRUE(HistogramsEquals(p3, p4, cmpOptStats, 1E-10));
-   delete p1;
-   delete p2;
-   delete p3;
-   delete p4;
 }
 
 TEST(StressHistorgram, TestAdd3DProfile2)
@@ -76,13 +70,11 @@ TEST(StressHistorgram, TestAdd3DProfile2)
 
    Double_t c2 = r.Rndm();
 
-   TProfile3D *p1 = new TProfile3D("t3D2-p1", "p1", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange,
+   TProfile3D p1("t3D2-p1", "p1", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange,
                                    maxRange, numberOfBins + 2, minRange, maxRange);
-
-   TProfile3D *p2 = new TProfile3D("t3D2-p2", "p2", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange,
+   TProfile3D p2("t3D2-p2", "p2", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange,
                                    maxRange, numberOfBins + 2, minRange, maxRange);
-
-   TProfile3D *p3 = new TProfile3D("t3D2-p3", "p3=p1+c2*p2", numberOfBins, minRange, maxRange, numberOfBins + 1,
+   TProfile3D p3("t3D2-p3", "p3=p1+c2*p2", numberOfBins, minRange, maxRange, numberOfBins + 1,
                                    minRange, maxRange, numberOfBins + 2, minRange, maxRange);
 
    for (Int_t e = 0; e < nEvents * nEvents; ++e) {
@@ -90,8 +82,8 @@ TEST(StressHistorgram, TestAdd3DProfile2)
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t z = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t t = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      p1->Fill(x, y, z, t, 1.0);
-      p3->Fill(x, y, z, t, 1.0);
+      p1.Fill(x, y, z, t, 1.0);
+      p3.Fill(x, y, z, t, 1.0);
    }
 
    for (Int_t e = 0; e < nEvents * nEvents; ++e) {
@@ -99,13 +91,10 @@ TEST(StressHistorgram, TestAdd3DProfile2)
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t z = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t t = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      p2->Fill(x, y, z, t, 1.0);
-      p3->Fill(x, y, z, t, c2);
+      p2.Fill(x, y, z, t, 1.0);
+      p3.Fill(x, y, z, t, c2);
    }
 
-   p1->Add(p2, c2);
+   p1.Add(&p2, c2);
    EXPECT_TRUE(HistogramsEquals(p3, p1, cmpOptStats, 1E-10));
-   delete p1;
-   delete p2;
-   delete p3;
 }

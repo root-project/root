@@ -65,9 +65,9 @@ TYPED_TEST(HistTest, TestDivHn1)
    }
 
    auto s3 = this->ProduceHist("dND1-s3", "s3=(c1*s1)/(c2*s2)", 3, bsize, xmin, xmax);
-   s3->Divide(s1, s2, c1, c2);
+   s3->Divide(s1.get(), s2.get(), c1, c2);
 
-   s4->Multiply(s3);
+   s4->Multiply(s3.get());
 
    // No the bin contents has to be reduced, as it was filled twice!
    for (Long64_t i = 0; i < s3->GetNbins(); ++i) {
@@ -81,11 +81,7 @@ TYPED_TEST(HistTest, TestDivHn1)
       s4->SetBinError(coord, sqrt(error));
    }
 
-   EXPECT_TRUE(HistogramsEquals(s1, s4, cmpOptStats, 1E-6));
-   delete s1;
-   delete s2;
-   delete s3;
-   delete s4;
+   EXPECT_TRUE(HistogramsEquals(*(THnBase*)s1.get(), *(THnBase*)s4.get(), cmpOptStats, 1E-6));
 }
 
 TYPED_TEST(HistTest, TestDivHn2)
@@ -125,13 +121,13 @@ TYPED_TEST(HistTest, TestDivHn2)
       s4->Fill(points, 1.0);
    }
 
-   auto s3 = static_cast<TypeParam *>(s1->Clone());
-   s3->Divide(s2);
+   unique_ptr<TypeParam> s3(static_cast<TypeParam *>(s1->Clone()));
+   s3->Divide(s2.get());
 
    auto s5 = this->ProduceHist("dND2-s5", "s5=(c1*s1)/(c2*s2)", 3, bsize, xmin, xmax);
-   s5->Divide(s1, s2);
+   s5->Divide(s1.get(), s2.get());
 
-   s4->Multiply(s3);
+   s4->Multiply(s3.get());
 
    // No the bin contents has to be reduced, as it was filled twice!
    for (Long64_t i = 0; i < s3->GetNbins(); ++i) {
@@ -145,10 +141,5 @@ TYPED_TEST(HistTest, TestDivHn2)
       s4->SetBinError(coord, sqrt(error));
    }
 
-   EXPECT_TRUE(HistogramsEquals(s1, s4, cmpOptStats, 1E-6));
-
-   delete s1;
-   delete s2;
-   delete s3;
-   delete s4;
+   EXPECT_TRUE(HistogramsEquals(*(THnBase*)s1.get(), *(THnBase*)s4.get(), cmpOptStats, 1E-6));
 }

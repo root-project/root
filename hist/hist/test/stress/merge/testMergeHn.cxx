@@ -71,15 +71,11 @@ TYPED_TEST(HistTest, TestMergeHn)
       s4->Fill(points, 1.0);
    }
 
-   TList *list = new TList;
-   list->Add(s2);
-   list->Add(s3);
+   TList list;
+   list.Add(s2.get());
+   list.Add(s3.get());
 
-   s1->Merge(list);
+   s1->Merge(&list);
 
-   EXPECT_TRUE(HistogramsEquals(s1, s4, cmpOptNone, 1E-10));
-   delete s1;
-   delete s2;
-   delete s3;
-   delete s4;
+   EXPECT_TRUE(HistogramsEquals(*(THnBase*)s1.get(), *(THnBase*)s4.get(), cmpOptNone, 1E-10));
 }

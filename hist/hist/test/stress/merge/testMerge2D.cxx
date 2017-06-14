@@ -27,49 +27,41 @@ TEST(StressHistorgram, TestMerge2D)
 {
    // Tests the merge method for 2D Histograms
 
-   TH2D *h1 =
-      new TH2D("merge2D-h1", "h1-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange, maxRange);
-   TH2D *h2 =
-      new TH2D("merge2D-h2", "h2-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange, maxRange);
-   TH2D *h3 =
-      new TH2D("merge2D-h3", "h3-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange, maxRange);
-   TH2D *h4 =
-      new TH2D("merge2D-h4", "h4-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange, maxRange);
+   TH2D h1("merge2D-h1", "h1-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange, maxRange);
+   TH2D h2("merge2D-h2", "h2-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange, maxRange);
+   TH2D h3("merge2D-h3", "h3-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange, maxRange);
+   TH2D h4("merge2D-h4", "h4-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange, maxRange);
 
-   h1->Sumw2();
-   h2->Sumw2();
-   h3->Sumw2();
+   h1.Sumw2();
+   h2.Sumw2();
+   h3.Sumw2();
 
    for (Int_t e = 0; e < nEvents * nEvents; ++e) {
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      h1->Fill(x, y, 1.0);
-      h4->Fill(x, y, 1.0);
+      h1.Fill(x, y, 1.0);
+      h4.Fill(x, y, 1.0);
    }
 
    for (Int_t e = 0; e < nEvents * nEvents; ++e) {
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      h2->Fill(x, y, 1.0);
-      h4->Fill(x, y, 1.0);
+      h2.Fill(x, y, 1.0);
+      h4.Fill(x, y, 1.0);
    }
 
    for (Int_t e = 0; e < nEvents * nEvents; ++e) {
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      h3->Fill(x, y, 1.0);
-      h4->Fill(x, y, 1.0);
+      h3.Fill(x, y, 1.0);
+      h4.Fill(x, y, 1.0);
    }
 
-   TList *list = new TList;
-   list->Add(h2);
-   list->Add(h3);
+   TList list;
+   list.Add(&h2);
+   list.Add(&h3);
 
-   h1->Merge(list);
+   h1.Merge(&list);
 
    EXPECT_TRUE(HistogramsEquals(h1, h4, cmpOptStats, 1E-10));
-   delete h1;
-   delete h2;
-   delete h3;
-   delete h4;
 }

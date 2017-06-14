@@ -35,43 +35,37 @@ TEST_P(Merge2DExtendTest, TestMerge2DExtend)
    // Tests the merge method for diferent 1D Histograms
    // when axis can be extended (e.g. for time histograms)
 
-   TH2D *h1 =
-      new TH2D("merge2D-h1", "h1-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange, maxRange);
-   TH2D *h2 =
-      new TH2D("merge2D-h2", "h2-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange, maxRange);
-   TH2D *h4 =
-      new TH2D("merge2D-h4", "h4-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange, maxRange);
+   TH2D h1("merge2D-h1", "h1-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange, maxRange);
+   TH2D h2("merge2D-h2", "h2-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange, maxRange);
+   TH2D h4("merge2D-h4", "h4-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange, maxRange);
 
-   h1->Sumw2();
-   h2->Sumw2();
-   h4->Sumw2();
+   h1.Sumw2();
+   h2.Sumw2();
+   h4.Sumw2();
 
-   h1->SetCanExtend(extendType);
-   h2->SetCanExtend(extendType);
-   h4->SetCanExtend(extendType);
+   h1.SetCanExtend(extendType);
+   h2.SetCanExtend(extendType);
+   h4.SetCanExtend(extendType);
 
    for (Int_t e = 0; e < nEvents; ++e) {
       Double_t x = r.Uniform(minRange, maxRange);
       Double_t y = r.Uniform(minRange, maxRange);
-      h1->Fill(x, y, 1.);
-      h4->Fill(x, y, 1.);
+      h1.Fill(x, y, 1.);
+      h4.Fill(x, y, 1.);
    }
    for (Int_t e = 0; e < nEvents; ++e) {
       Double_t x = r.Uniform(0.9 * maxRange, 2.1 * maxRange);
       Double_t y = r.Uniform(0.8 * maxRange, 3. * maxRange);
-      h2->Fill(x, y, 1.);
-      h4->Fill(x, y, 1.);
+      h2.Fill(x, y, 1.);
+      h4.Fill(x, y, 1.);
    }
 
-   TList *list = new TList;
-   list->Add(h2);
+   TList list;
+   list.Add(&h2);
 
-   h1->Merge(list);
+   h1.Merge(&list);
 
    EXPECT_TRUE(HistogramsEquals(h1, h4, cmpOptStats, 1E-10));
-   delete h1;
-   delete h2;
-   delete h4;
 }
 
 INSTANTIATE_TEST_CASE_P(StressHistogram, Merge2DExtendTest, ::testing::Values(TH1::kAllAxes, TH1::kXaxis, TH1::kYaxis));

@@ -26,39 +26,34 @@ using namespace std;
 TEST(StressHistorgram, TestProfile2Extend)
 {
    TProfile2D::Approximate(true);
-   TProfile2D *h1 = new TProfile2D("h1", "h1", 10, 0, 10, 10, 0, 10);
-   TProfile2D *h2 = new TProfile2D("h2", "h0", 10, 0, 10, 10, 0, 20);
-   h1->SetCanExtend(TH1::kYaxis);
+   TProfile2D h1("h1", "h1", 10, 0, 10, 10, 0, 10);
+   TProfile2D h2("h2", "h0", 10, 0, 10, 10, 0, 20);
+   h1.SetCanExtend(TH1::kYaxis);
    for (int i = 0; i < 10 * nEvents; ++i) {
       double x = r.Uniform(-1, 11);
       double y = r.Gaus(10, 3);
       double z = r.Gaus(10 + 2 * (x + y), 1);
       if (y <= 0 || y >= 20) continue; // do not want overflow in h0
-      h1->Fill(x, y, z);
-      h2->Fill(x, y, z);
+      h1.Fill(x, y, z);
+      h2.Fill(x, y, z);
    }
    EXPECT_TRUE(HistogramsEquals(h1, h2, cmpOptStats, 1E-10));
-   delete h1;
-   delete h2;
    TProfile2D::Approximate(false);
 }
 
 TEST(StressHistorgram, TestProfileExtend)
 {
-
    TProfile::Approximate(true);
-   TProfile *h1 = new TProfile("h1", "h1", 10, 0, 10);
-   TProfile *h0 = new TProfile("h0", "h0", 10, 0, 20);
-   h1->SetCanExtend(TH1::kXaxis);
+   TProfile h1("h1", "h1", 10, 0, 10);
+   TProfile h0("h0", "h0", 10, 0, 20);
+   h1.SetCanExtend(TH1::kXaxis);
    for (int i = 0; i < nEvents; ++i) {
       double x = gRandom->Gaus(10, 3);
       double y = gRandom->Gaus(10 + 2 * x, 1);
       if (x <= 0 || x >= 20) continue; // do not want overflow in h0
-      h1->Fill(x, y);
-      h0->Fill(x, y);
+      h1.Fill(x, y);
+      h0.Fill(x, y);
    }
    EXPECT_TRUE(HistogramsEquals(h1, h0, cmpOptStats, 1E-10));
-   delete h0;
-   delete h1;
    TProfile::Approximate(false);
 }

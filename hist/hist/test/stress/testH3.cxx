@@ -27,11 +27,11 @@ using namespace std;
 
 TEST(StressHistorgram, TestH3Buffer)
 {
-   TH3D *h1 = new TH3D("h1", "h1", 4, -5, 5, 4, -5, 5, 4, -5, 5);
-   TH3D *h2 = new TH3D("h2", "h2", 4, -5, 5, 4, -5, 5, 4, -5, 5);
+   TH3D h1("h1", "h1", 4, -5, 5, 4, -5, 5, 4, -5, 5);
+   TH3D h2("h2", "h2", 4, -5, 5, 4, -5, 5, 4, -5, 5);
 
    // set the buffer
-   h1->SetBuffer(10000);
+   h1.SetBuffer(10000);
 
    // fill the histograms
    int nevt = 8000;
@@ -40,12 +40,12 @@ TEST(StressHistorgram, TestH3Buffer)
       x = gRandom->Gaus(0, 2);
       y = gRandom->Gaus(1, 3);
       z = gRandom->Uniform(-5, 5);
-      h1->Fill(x, y, z);
-      h2->Fill(x, y, z);
+      h1.Fill(x, y, z);
+      h2.Fill(x, y, z);
    }
 
-   EXPECT_FALSE(h1->Integral() != h2->Integral() || h1->Integral() != h1->GetSumOfWeights())
-      << "Histogram Integral = " << h1->Integral() << "  " << h2->Integral() << " s.o.w. = " << h1->GetSumOfWeights()
+   EXPECT_FALSE(h1.Integral() != h2.Integral() || h1.Integral() != h1.GetSumOfWeights())
+      << "Histogram Integral = " << h1.Integral() << "  " << h2.Integral() << " s.o.w. = " << h1.GetSumOfWeights()
       << " -  " << std::endl;
 
    // test adding extra fills with weights
@@ -54,14 +54,11 @@ TEST(StressHistorgram, TestH3Buffer)
       y = gRandom->Uniform(-3, 3);
       z = gRandom->Uniform(-5, 5);
       double w = 2;
-      h1->Fill(x, y, z, w);
-      h2->Fill(x, y, z, w);
+      h1.Fill(x, y, z, w);
+      h2.Fill(x, y, z, w);
    }
 
    EXPECT_TRUE(HistogramsEquals(h1, h2, cmpOptStats, 1.E-15));
-
-   delete h1;
-   delete h2;
 }
 
 TEST(StressHistorgram, TestH3Integral)
@@ -75,15 +72,15 @@ TEST(StressHistorgram, TestH3Integral)
 
    TStopwatch w;
    int n = 1000000;
-   TH3D *h3 = new TH3D("h3", "h3", 50, -5, 5, 50, -5, 5, 50, -5, 5);
+   TH3D h3("h3", "h3", 50, -5, 5, 50, -5, 5, 50, -5, 5);
 
    // TF3 * gaus = new TF3("gaus3d",gaus3d,-5,5,-5,5,-5,5,7);
-   TF3 *gaus = new TF3("gaus3d", gaus3d, -5, 5, -5, 5, -5, 5, 7);
-   gaus->SetParameters(100, 0, 1.3, 1., 1., -1, 0.9);
+   TF3 gaus("gaus3d", gaus3d, -5, 5, -5, 5, -5, 5, 7);
+   gaus.SetParameters(100, 0, 1.3, 1., 1., -1, 0.9);
    w.Start();
-   h3->FillRandom("gaus3d", n);
+   h3.FillRandom("gaus3d", n);
 
-   // gaus->SetParameter(0, h3->GetMaximum() );
+   // gaus.SetParameter(0, h3.GetMaximum() );
 
    TString fitOpt = "LQ0";
    w.Stop();
@@ -92,33 +89,33 @@ TEST(StressHistorgram, TestH3Integral)
       fitOpt = "L0";
    }
    w.Start();
-   h3->Fit(gaus, fitOpt);
+   h3.Fit(&gaus, fitOpt);
    if (defaultEqualOptions & cmpOptDebug) std::cout << "Time to fit         " << w.RealTime() << std::endl;
 
    // test first nentries
    double err = 0;
    w.Start();
-   double nent = h3->IntegralAndError(0, -1, 0, -1, 0, -1, err);
+   double nent = h3.IntegralAndError(0, -1, 0, -1, 0, -1, err);
    w.Stop();
    if (defaultEqualOptions & cmpOptDebug) {
       std::cout << "Estimated entries = " << nent << " +/- " << err << std::endl;
       std::cout << "Time to integral of all  " << w.RealTime() << std::endl;
    }
 
-   EXPECT_EQ(nent, h3->GetEntries());
+   EXPECT_EQ(nent, h3.GetEntries());
 
    double err1 = 0;
    w.Start();
-   double igh = h3->IntegralAndError(ix1, ix2, iy1, iy2, iz1, iz2, err1, "width");
+   double igh = h3.IntegralAndError(ix1, ix2, iy1, iy2, iz1, iz2, err1, "width");
    w.Stop();
    if (defaultEqualOptions & cmpOptDebug) std::cout << "Time to integral of selected  " << w.RealTime() << std::endl;
 
-   double x1 = h3->GetXaxis()->GetBinLowEdge(ix1);
-   double x2 = h3->GetXaxis()->GetBinUpEdge(ix2);
-   double y1 = h3->GetYaxis()->GetBinLowEdge(iy1);
-   double y2 = h3->GetYaxis()->GetBinUpEdge(iy2);
-   double z1 = h3->GetZaxis()->GetBinLowEdge(iz1);
-   double z2 = h3->GetZaxis()->GetBinUpEdge(iz2);
+   double x1 = h3.GetXaxis()->GetBinLowEdge(ix1);
+   double x2 = h3.GetXaxis()->GetBinUpEdge(ix2);
+   double y1 = h3.GetYaxis()->GetBinLowEdge(iy1);
+   double y2 = h3.GetYaxis()->GetBinUpEdge(iy2);
+   double z1 = h3.GetZaxis()->GetBinLowEdge(iz1);
+   double z2 = h3.GetZaxis()->GetBinUpEdge(iz2);
 
    double a[3];
    double b[3];
@@ -131,10 +128,10 @@ TEST(StressHistorgram, TestH3Integral)
 
    w.Start();
    double relerr = 0;
-   double igf = gaus->IntegralMultiple(3, a, b, 1.E-4, relerr); // don't need high tolerance (use 10-4)
-   // double igf = gaus->Integral(x1,x2,y1,y2,z1,z2,1.E-4);  // don't need high tolerance
+   double igf = gaus.IntegralMultiple(3, a, b, 1.E-4, relerr); // don't need high tolerance (use 10-4)
+   // double igf = gaus.Integral(x1,x2,y1,y2,z1,z2,1.E-4);  // don't need high tolerance
 
-   double err2 = gaus->IntegralError(3, a, b);
+   double err2 = gaus.IntegralError(3, a, b);
    w.Stop();
 
    double delta = fabs(igh - igf) / err1;
@@ -147,7 +144,4 @@ TEST(StressHistorgram, TestH3Integral)
    }
 
    EXPECT_FALSE(delta > 3);
-
-   delete h3;
-   delete gaus;
 }
