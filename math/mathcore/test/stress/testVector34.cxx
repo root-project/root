@@ -64,7 +64,7 @@ TYPED_TEST_P(Vector34Test, TestVector34)
    ir = this->fVectorTest.TestRead(this->fV1);
    EXPECT_TRUE(IsNear(name + " read", ir, 0, 1));
    s1 = this->fVectorTest.TestAddition(this->fV1);
-   EXPECT_TRUE(IsNear(name + " after read", s1, sref1, 1));
+   EXPECT_TRUE(IsNear(name + " after read", s1, sref1, 10));
 
    // test Double32
    estSize = this->fNGen * 4 * this->GetDim() + 47000; // add extra bytes
