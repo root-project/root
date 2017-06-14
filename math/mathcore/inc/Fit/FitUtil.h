@@ -493,7 +493,7 @@ namespace FitUtil {
             if(data.NDim() > 1) {
                std::vector<T> x(data.NDim());
                for (unsigned int j = 0; j < data.NDim(); ++j)
-                  x[j] = *data.GetCoordComponent(i, j);
+                  vecCore::Load<T>(x[j], data.GetCoordComponent(i, j));
 #ifdef USE_PARAMCACHE
                 fval = func ( x.data() );
 #else
@@ -501,11 +501,12 @@ namespace FitUtil {
 #endif
           // one -dim case
             } else {
-             const auto x = data.GetCoordComponent(i, 0);
+             T x;
+             vecCore::Load<T>(x, data.GetCoordComponent(i, 0));
 #ifdef USE_PARAMCACHE
-             fval = func ( x );
+             fval = func ( &x );
 #else
-             fval = func ( x, p );
+             fval = func ( &x, p );
 #endif
             }
 
@@ -675,7 +676,7 @@ namespace FitUtil {
             if(data.NDim() > 1) {
                std::vector<T> x(data.NDim());
                for (unsigned int j = 0; j < data.NDim(); ++j)
-                  x[j] = *data.GetCoordComponent(i, j);
+                  vecCore::Load<T>(x[j], data.GetCoordComponent(i, j));
 #ifdef USE_PARAMCACHE
                 fval = func ( x.data() );
 #else
@@ -683,11 +684,12 @@ namespace FitUtil {
 #endif
           // one -dim case
             } else {
-             const auto x = data.GetCoordComponent(i, 0);
+             T x;
+             vecCore::Load<T>(x, data.GetCoordComponent(i, 0));
 #ifdef USE_PARAMCACHE
-             fval = func ( x );
+             fval = func ( &x );
 #else
-             fval = func ( x, p );
+             fval = func ( &x, p );
 #endif
             }
 
