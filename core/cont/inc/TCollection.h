@@ -39,7 +39,8 @@ const Bool_t kIterBackward = !kIterForward;
 
 R__EXTERN TVirtualMutex *gCollectionMutex;
 
-#define R__CHECK_COLLECTION_MULTI_ACCESS
+// #define R__CHECK_COLLECTION_MULTI_ACCESS
+
 #ifdef R__CHECK_COLLECTION_MULTI_ACCESS
 #include <atomic>
 #include <thread>
