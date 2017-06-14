@@ -19,12 +19,14 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TRWMutexImp.h"
-
+#include "ROOT/TSpinMutex.hxx"
+#include "TMutex.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Take the Read Lock of the mutex.
 
-void TRWMutexImp::ReadLock()
+template <typename MutexT>
+void TRWMutexImp<MutexT>::ReadLock()
 {
    fMutexImp.ReadLock();
 }
@@ -32,7 +34,8 @@ void TRWMutexImp::ReadLock()
 ////////////////////////////////////////////////////////////////////////////////
 /// Take the Write Lock of the mutex.
 
-void TRWMutexImp::WriteLock()
+template <typename MutexT>
+void TRWMutexImp<MutexT>::WriteLock()
 {
    fMutexImp.WriteLock();
 }
@@ -40,7 +43,8 @@ void TRWMutexImp::WriteLock()
 ////////////////////////////////////////////////////////////////////////////////
 /// Release the read lock of the mutex
 
-void TRWMutexImp::ReadUnLock()
+template <typename MutexT>
+void TRWMutexImp<MutexT>::ReadUnLock()
 {
    fMutexImp.ReadUnLock();
 }
@@ -48,7 +52,8 @@ void TRWMutexImp::ReadUnLock()
 ////////////////////////////////////////////////////////////////////////////////
 /// Release the read lock of the mutex
 
-void TRWMutexImp::WriteUnLock()
+template <typename MutexT>
+void TRWMutexImp<MutexT>::WriteUnLock()
 {
    fMutexImp.WriteUnLock();
 }
@@ -56,7 +61,11 @@ void TRWMutexImp::WriteUnLock()
 ////////////////////////////////////////////////////////////////////////////////
 /// Create mutex and return pointer to it.
 
-TVirtualRWMutex *TRWMutexImp::Factory(Bool_t /*recursive = kFALSE*/)
+template <typename MutexT>
+TVirtualRWMutex *TRWMutexImp<MutexT>::Factory(Bool_t /*recursive = kFALSE*/)
 {
    return new TRWMutexImp();
 }
+
+template class TRWMutexImp<TMutex>;
+template class TRWMutexImp<ROOT::TSpinMutex>;

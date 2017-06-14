@@ -25,7 +25,8 @@ THREADH      := $(MODDIRI)/TCondition.h $(MODDIRI)/TConditionImp.h \
                 $(MODDIRI)/TThreadImp.h $(MODDIRI)/TAtomicCount.h \
                 $(MODDIRI)/TThreadPool.h $(MODDIRI)/ThreadLocalStorage.h \
                 $(MODDIRI)/ROOT/TThreadedObject.hxx \
-                $(MODDIRI)/ROOT/TSpinMutex.hxx
+                $(MODDIRI)/ROOT/TSpinMutex.hxx \
+                $(MODDIRI)/ROOT/TReentrantRWLock.hxx
 
 ifeq ($(IMT),yes)
 THREADH      += $(MODDIRI)/ROOT/TThreadExecutor.hxx
@@ -48,7 +49,7 @@ THREADS      := $(MODDIRS)/TCondition.cxx $(MODDIRS)/TConditionImp.cxx \
                 $(MODDIRS)/TMutex.cxx $(MODDIRS)/TMutexImp.cxx \
                 $(MODDIRS)/TRWLock.cxx $(MODDIRS)/TSemaphore.cxx \
                 $(MODDIRS)/TThread.cxx $(MODDIRS)/TThreadFactory.cxx \
-                $(MODDIRS)/TThreadImp.cxx
+                $(MODDIRS)/TThreadImp.cxx $(MODDIRS)/TReentrantRWLock.cxx
 ifneq ($(ARCH),win32)
 THREADS      += $(MODDIRS)/TPosixCondition.cxx $(MODDIRS)/TPosixMutex.cxx \
                 $(MODDIRS)/TPosixThread.cxx $(MODDIRS)/TPosixThreadFactory.cxx

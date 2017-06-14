@@ -5,7 +5,7 @@
 set(headers TAtomicCount.h TCondition.h TConditionImp.h TMutex.h TMutexImp.h
             TRWLock.h ROOT/TRWSpinLock.hxx TSemaphore.h TThread.h TThreadFactory.h
             TThreadImp.h ROOT/TThreadedObject.hxx TThreadPool.h
-            ThreadLocalStorage.h ROOT/TSpinMutex.hxx)
+            ThreadLocalStorage.h ROOT/TSpinMutex.hxx ROOT/TReentrantRWLock.hxx)
 if(NOT WIN32)
   set(headers ${headers} TPosixCondition.h TPosixMutex.h
                          TPosixThread.h TPosixThreadFactory.h PosixThreadInc.h)
@@ -18,7 +18,7 @@ endif()
 
 set(sources TCondition.cxx TConditionImp.cxx TMutex.cxx TMutexImp.cxx
             TRWLock.cxx TRWSpinLock.cxx TSemaphore.cxx TThread.cxx TThreadFactory.cxx
-            TThreadImp.cxx TRWMutexImp.cxx)
+            TThreadImp.cxx TRWMutexImp.cxx TReentrantRWLock.cxx)
 if(NOT WIN32)
   set(sources ${sources} TPosixCondition.cxx TPosixMutex.cxx
                          TPosixThread.cxx TPosixThreadFactory.cxx)
