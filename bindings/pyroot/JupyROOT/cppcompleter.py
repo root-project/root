@@ -82,21 +82,21 @@ class CppCompleter(object):
     Bool_t Add(const TH1* h1, Double_t c1 = 1)
     >>> for suggestion in comp._completeImpl("TROOT::Is"):
     ...     print(suggestion)
-    IsA
-    IsBatch
-    IsEqual
-    IsEscaped
-    IsExecutingMacro
-    IsFolder
-    IsInterrupted
-    IsLineProcessing
-    IsModified
-    IsOnHeap
-    IsProofServ
-    IsRootFile
-    IsSortable
-    IsWritable
-    IsZombie
+    TROOT::IsA
+    TROOT::IsBatch
+    TROOT::IsEqual
+    TROOT::IsEscaped
+    TROOT::IsExecutingMacro
+    TROOT::IsFolder
+    TROOT::IsInterrupted
+    TROOT::IsLineProcessing
+    TROOT::IsModified
+    TROOT::IsOnHeap
+    TROOT::IsProofServ
+    TROOT::IsRootFile
+    TROOT::IsSortable
+    TROOT::IsWritable
+    TROOT::IsZombie
     >>> comp.deactivate()
     >>> for suggestion in comp._completeImpl("TG"):
     ...     print(suggestion)
