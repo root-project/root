@@ -67,8 +67,6 @@ set(llvminclude-bin ${CMAKE_BINARY_DIR}/interpreter/llvm/src/include)
 foreach(file  Interpreter/DynamicExprInfo.h
         Interpreter/DynamicLookupRuntimeUniverse.h
         Interpreter/DynamicLookupLifetimeHandler.h
-        Interpreter/Interpreter.h
-        Interpreter/InvocationOptions.h
         Interpreter/Exception.h
         Interpreter/RuntimePrintValue.h
         Interpreter/RuntimeUniverse.h
