@@ -95,32 +95,6 @@ foreach(file wchar.h bits/stat.h bits/time.h)
   endif()
 endforeach()
 
-foreach( file llvm/ADT/IntrusiveRefCntPtr.h
-        llvm/ADT/SmallVector.h
-        llvm/ADT/iterator_range.h
-        llvm/Config/llvm-config.h
-        llvm/Support/AlignOf.h
-        llvm/Support/Allocator.h
-        llvm/Support/Casting.h
-        llvm/Support/Compiler.h
-        llvm/Support/DataTypes.h
-        llvm/Support/MathExtras.h
-        llvm/Support/Memory.h
-        llvm/Support/SwapByteOrder.h
-        llvm/Support/type_traits.h )
-  get_filename_component(path ${file} PATH)
-  if(EXISTS ${llvminclude}/${file})
-    list(APPEND copy_commands COMMAND ${CMAKE_COMMAND} -E copy ${llvminclude}/${file} ${CMAKE_BINARY_DIR}/etc/cling/${file})
-    list(APPEND files_to_copy ${llvminclude}/${file})
-    install(FILES ${llvminclude}/${file} DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/cling/${path})
-  else()
-    list(APPEND copy_commands COMMAND ${CMAKE_COMMAND} -E copy ${llvminclude-bin}/${file} ${CMAKE_BINARY_DIR}/etc/cling/${file})
-    list(APPEND files_to_copy ${llvminclude-bin}/${file})
-    install(FILES ${llvminclude-bin}/${file} DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/cling/${path})
-  endif()
-  set_property(GLOBAL APPEND PROPERTY CLINGETCPCH etc/cling/${file})
-endforeach()
-
 set(stamp_file ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/LLVMRES.stamp)
 add_custom_command(OUTPUT ${stamp_file}
         COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${LLVM_VERSION}/include
