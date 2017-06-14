@@ -178,8 +178,7 @@ private:
 
    mutable std::vector<double> fGrad; // for derivatives
 
-   ROOT::Fit::ExecutionPolicy fExecutionPolicy; //Execution policy
-
+   ROOT::Fit::ExecutionPolicy fExecutionPolicy; // Execution policy
 };
       // define useful typedef's
       // using LogLikelihoodFunction_v = LogLikelihoodFCN<ROOT::Math::IMultiGenFunction, ROOT::Math::IParametricFunctionMultiDimTempl<T>>;

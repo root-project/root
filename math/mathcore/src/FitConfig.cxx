@@ -171,67 +171,6 @@ void FitConfig::SetParamsSettings(unsigned int npar, const double *params, const
    }
 }
 
-void FitConfig::CreateParamsSettings(const ROOT::Math::IParamMultiFunction & func) {
-   // initialize from model function
-   // set the parameters values from the function
-   unsigned int npar = func.NPar();
-   const double * begin = func.Parameters();
-   if (begin == 0) {
-      fSettings =  std::vector<ParameterSettings>(npar);
-      return;
-   }
-
-   fSettings.clear();
-   fSettings.reserve(npar);
-   const double * end =  begin+npar;
-   unsigned int i = 0;
-   for (const double * ipar = begin; ipar !=  end; ++ipar) {
-      double val = *ipar;
-      double step = 0.3*std::fabs(val);   // step size is 30% of par value
-      //double step = 2.0*std::fabs(val);   // step size is 30% of par value
-      if (val ==  0) step  =  0.3;
-
-      fSettings.push_back( ParameterSettings(func.ParameterName(i), val, step ) );
-#ifdef DEBUG
-      std::cout << "FitConfig: add parameter " <<  func.ParameterName(i) << " val = " << val << std::endl;
-#endif
-      i++;
-   }
-
-}
-
-#ifdef R__HAS_VECCORE
-void FitConfig::CreateParamsSettings(const ROOT::Math::IParamMultiFunctionTempl<ROOT::Double_v> & func){
-
-   // initialize from model function
-   // set the parameters values from the function
-   unsigned int npar = func.NPar();
-   const double * begin = func.Parameters();
-   if (begin == 0) {
-      fSettings =  std::vector<ParameterSettings>(npar);
-      return;
-   }
-
-   fSettings.clear();
-   fSettings.reserve(npar);
-   const double * end =  begin+npar;
-   unsigned int i = 0;
-   for (const double * ipar = begin; ipar !=  end; ++ipar) {
-      double val = *ipar;
-      double step = 0.3*std::fabs(val);   // step size is 30% of par value
-      //double step = 2.0*std::fabs(val);   // step size is 30% of par value
-      if (val ==  0) step  =  0.3;
-
-      fSettings.push_back( ParameterSettings(func.ParameterName(i), val, step ) );
-#ifdef DEBUG
-      std::cout << "FitConfig: add parameter " <<  func.ParameterName(i) << " val = " << val << std::endl;
-#endif
-      i++;
-   }
-
-}
-#endif
-
 ROOT::Math::Minimizer * FitConfig::CreateMinimizer() {
    // create minimizer according to the chosen configuration using the
    // plug-in manager

@@ -162,9 +162,11 @@ private:
    virtual double DoEval (const double * x) const {
       this->UpdateNCalls();
 #ifdef R__HAS_VECCORE
-      return FitUtil::Evaluate<T>::EvalPoissonLogL(BaseFCN::ModelFunction(), BaseFCN::Data(), x, fWeight, fIsExtended, fNEffPoints, fExecutionPolicy);
+      return FitUtil::Evaluate<T>::EvalPoissonLogL(BaseFCN::ModelFunction(), BaseFCN::Data(), x, fWeight, fIsExtended,
+                                                   fNEffPoints, fExecutionPolicy);
 #else
-      return FitUtil::EvaluatePoissonLogL(BaseFCN::ModelFunction(), BaseFCN::Data(), x, fWeight, fIsExtended, fNEffPoints, fExecutionPolicy);
+      return FitUtil::EvaluatePoissonLogL(BaseFCN::ModelFunction(), BaseFCN::Data(), x, fWeight, fIsExtended,
+                                          fNEffPoints, fExecutionPolicy);
 #endif
    }
 
@@ -184,7 +186,7 @@ private:
 
    mutable std::vector<double> fGrad; // for derivatives
 
-   ROOT::Fit::ExecutionPolicy fExecutionPolicy; //Execution policy
+   ROOT::Fit::ExecutionPolicy fExecutionPolicy; // Execution policy
 };
 
       // define useful typedef's
