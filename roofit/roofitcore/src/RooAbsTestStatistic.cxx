@@ -411,10 +411,6 @@ Bool_t RooAbsTestStatistic::initialize()
 {
   if (_init) return kFALSE;
 
-  RooWallTimer timer;
-
-  timer.start();
-
   if (RooTrace::timing_flag > 0) {
     _initTiming();
   }
@@ -432,9 +428,6 @@ Bool_t RooAbsTestStatistic::initialize()
     initSimMode((RooSimultaneous*)_func,_data,_projDeps,_rangeName.size()?_rangeName.c_str():0,_addCoefRangeName.size()?_addCoefRangeName.c_str():0) ;
   }
   _init = kTRUE;
-
-  timer.stop();
-  std::cout << "DEBUG: RooAbsTestStatistic::initialize took " << timer.timing_s() << "s" << std::endl;
 
   return kFALSE;
 }
@@ -536,6 +529,8 @@ void RooAbsTestStatistic::printCompactTreeHook(ostream& os, const char* indent)
 void RooAbsTestStatistic::constOptimizeTestStatistic(ConstOpCode opcode, Bool_t doAlsoTrackingOpt)
 {
   initialize();
+  RooWallTimer timer;
+  timer.start();
   if (SimMaster == _gofOpMode) {
     // Forward to slaves
     for (Int_t i = 0; i < _nGof; ++i) {
@@ -550,6 +545,8 @@ void RooAbsTestStatistic::constOptimizeTestStatistic(ConstOpCode opcode, Bool_t 
       _mpfeArray[i]->constOptimizeTestStatistic(opcode,doAlsoTrackingOpt);
     }
   }
+  timer.stop();
+  std::cout << "DEBUG RooAbsTestStatistic::constOptimizeTestStatistic took " << timer.timing_s() << "s" << std::endl;
 }
 
 
