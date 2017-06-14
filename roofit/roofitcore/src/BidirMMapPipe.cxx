@@ -785,18 +785,18 @@ BidirMMapPipe::BidirMMapPipe(bool useExceptions, bool useSocketpair) :
         pthread_mutex_lock(&s_openpipesmutex);
         char c;
 
-        auto time_1 = std::chrono::high_resolution_clock::now();
+//        auto time_1 = std::chrono::high_resolution_clock::now();
 
         auto fork_retval = (m_childPid = ::fork());
 
-        auto time_2 = std::chrono::high_resolution_clock::now();
-
-        auto time_1_print = std::chrono::duration_cast<std::chrono::nanoseconds>(time_1.time_since_epoch()).count();
-        auto time_2_print = std::chrono::duration_cast<std::chrono::nanoseconds>(time_2.time_since_epoch()).count();
-        double time_diff_sec = std::chrono::duration_cast<std::chrono::nanoseconds>(time_2 - time_1).count() / 1.e9;
-
-        std::cout << "DEBUG: BidirMMapPipe fork, before: " << time_1_print;
-        std::cout << ", after: " << time_2_print << ",\tdifference: " << time_diff_sec << " seconds" << std::endl;
+//        auto time_2 = std::chrono::high_resolution_clock::now();
+//
+//        auto time_1_print = std::chrono::duration_cast<std::chrono::nanoseconds>(time_1.time_since_epoch()).count();
+//        auto time_2_print = std::chrono::duration_cast<std::chrono::nanoseconds>(time_2.time_since_epoch()).count();
+//        double time_diff_sec = std::chrono::duration_cast<std::chrono::nanoseconds>(time_2 - time_1).count() / 1.e9;
+//
+//        std::cout << "DEBUG: BidirMMapPipe fork, before: " << time_1_print;
+//        std::cout << ", after: " << time_2_print << ",\tdifference: " << time_diff_sec << " seconds" << std::endl;
 
         switch (fork_retval) {
             case -1: // error in fork()

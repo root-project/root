@@ -411,6 +411,10 @@ Bool_t RooAbsTestStatistic::initialize()
 {
   if (_init) return kFALSE;
 
+  RooWallTimer timer;
+
+  timer.start();
+
   if (RooTrace::timing_flag > 0) {
     _initTiming();
   }
@@ -428,6 +432,10 @@ Bool_t RooAbsTestStatistic::initialize()
     initSimMode((RooSimultaneous*)_func,_data,_projDeps,_rangeName.size()?_rangeName.c_str():0,_addCoefRangeName.size()?_addCoefRangeName.c_str():0) ;
   }
   _init = kTRUE;
+
+  timer.stop();
+  std::cout << "DEBUG: RooAbsTestStatistic::initialize took " << timer.timing_s() << "s" << std::endl;
+
   return kFALSE;
 }
 
