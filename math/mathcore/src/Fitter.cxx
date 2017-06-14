@@ -411,7 +411,7 @@ bool Fitter::DoBinnedLikelihoodFit(bool extended, ROOT::Fit::ExecutionPolicy exe
 
    if (!fUseGradient) {
       // do minimization without using the gradient
-      PoissonLikelihoodFCN<BaseFunc> logl(data,fFunc, useWeight, extended, executionPolicy);
+      PoissonLikelihoodFCN<BaseFunc> logl(data, fFunc, useWeight, extended, executionPolicy);
       fFitType = logl.Type();
       // do minimization
       if (!DoMinimization (logl, &chi2) ) return false;
@@ -434,7 +434,7 @@ bool Fitter::DoBinnedLikelihoodFit(bool extended, ROOT::Fit::ExecutionPolicy exe
       if (!extended) {
          MATH_WARN_MSG("Fitter::DoBinnedLikelihoodFit","Not-extended binned fit with gradient not yet supported - do an extended fit");
       }
-      PoissonLikelihoodFCN<BaseGradFunc> logl(data,gradFun, useWeight, true, executionPolicy);
+      PoissonLikelihoodFCN<BaseGradFunc> logl(data, gradFun, useWeight, true, executionPolicy);
       fFitType = logl.Type();
       // do minimization
       if (!DoMinimization (logl, &chi2) ) return false;
