@@ -17,22 +17,29 @@
 
 #include <atomic>
 #include <condition_variable>
-
+#include <thread>
+#include <unordered_map>
 
 namespace ROOT {
-   class TRWSpinLock {
+   template <typename MutexT = ROOT::TSpinMutex>
+   class TReentrantRWLock {
    private:
+      using ReaderColl_t = std::unordered_map<std::thread::id,int>;
+
       std::atomic<int>             fReaders; ///<! Number of readers
       std::atomic<int>             fReaderReservation; ///<! A reader wants access
       std::atomic<int>             fWriterReservation; ///<! A writer wants access
       std::atomic<bool>            fWriter;  ///<! Is there a writer?
-      ROOT::TSpinMutex             fMutex;   ///<! RWlock internal mutex
+      MutexT                       fMutex;   ///<! RWlock internal mutex
       std::condition_variable_any  fCond;    ///<! RWlock internal condition variable
+      std::thread::id              fWriterThread; ///<! Holder of the write lock
+      size_t                       fWriteRecurse; ///<! Number of re-entry in the lock by the same thread.
+      ReaderColl_t                 fReadersCount; ///<! Set of reader thread ids
 
    public:
       ////////////////////////////////////////////////////////////////////////
       /// Regular constructor.
-      TRWSpinLock() : fReaders(0), fReaderReservation(0), fWriterReservation(0), fWriter(false) {}
+      TReentrantRWLock() : fReaders(0), fReaderReservation(0), fWriterReservation(0), fWriter(false), fWriteRecurse(0) {}
 
       void ReadLock();
       void ReadUnLock();

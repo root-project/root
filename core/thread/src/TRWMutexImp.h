@@ -12,12 +12,14 @@
 #define ROOT_TRWMutexImp
 
 #include "TVirtualRWMutex.h"
-#include "ROOT/TRWSpinLock.hxx"
+#include "ROOT/TSpinMutex.hxx"
+#include "ROOT/TReentrantRWLock.hxx"
 
 #include "TBuffer.h" // Needed by ClassDEfInlineOverride
 
+template <typename MutexT>
 class TRWMutexImp : public TVirtualRWMutex  {
-   ROOT::TRWSpinLock fMutexImp;
+   ROOT::TReentrantRWLock<MutexT> fMutexImp;
 
 public:
 
