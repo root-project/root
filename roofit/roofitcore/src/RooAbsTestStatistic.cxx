@@ -614,7 +614,6 @@ void RooAbsTestStatistic::initMPMode(RooAbsReal *real, RooAbsData *data, const R
 /// Using RooRealMPFE this means it should be called from the serverLoop().
 
 void RooAbsTestStatistic::_setNumIntTimingInPdfs(Bool_t flag) {
-  RooWallTimer timer;
   // find all pdf nodes with a normalization integral and set the activate timing flag on them
   // Get list of branch nodes in expression
   RooArgSet blist;
@@ -640,9 +639,6 @@ void RooAbsTestStatistic::_setNumIntTimingInPdfs(Bool_t flag) {
 
     normint->activateTimingNumInts();
   }
-
-  timer.stop();
-  std::cout << "DEBUG RooAbsTestStatistic::_setNumIntTimingInPdfs timing: " << timer.timing_s() << "s" << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
