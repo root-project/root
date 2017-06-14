@@ -57,6 +57,7 @@ TEST(StressHistorgram, TestH2Buffer)
    EXPECT_TRUE(HistogramsEquals(h1, h2, cmpOptStats, 1.E-15));
 
    delete h1;
+   delete h2;
 }
 
 TEST(StressHistorgram, TestH2Extend)
@@ -74,6 +75,7 @@ TEST(StressHistorgram, TestH2Extend)
    }
    EXPECT_TRUE(HistogramsEquals(h1, h2, cmpOptStats, 1E-10));
    delete h1;
+   delete h2;
 }
 
 TEST(StressHistorgram, TestH2Integral)
@@ -131,4 +133,5 @@ TEST(StressHistorgram, TestH2Integral)
    EXPECT_FALSE(delta > 3);
 
    delete h2;
+   delete gaus;
 }

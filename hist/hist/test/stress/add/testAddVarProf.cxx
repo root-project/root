@@ -48,6 +48,7 @@ TEST(StressHistorgram, TestAddVarProf1)
    delete p1;
    delete p2;
    delete p3;
+   delete p4;
 }
 
 TEST(StressHistorgram, TestAddVarProf2)
@@ -74,5 +75,6 @@ TEST(StressHistorgram, TestAddVarProf2)
 
    EXPECT_TRUE(HistogramsEquals(p5, p6, cmpOptStats, 1E-13));
    delete p5;
+   delete p6;
    delete p7;
 }

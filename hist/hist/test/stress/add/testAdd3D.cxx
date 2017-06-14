@@ -64,6 +64,7 @@ TEST(StressHistorgram, TestAdd3D1)
    delete h1;
    delete h2;
    delete h3;
+   delete h4;
 }
 
 TEST(StressHistorgram, TestAdd3D2)
@@ -103,6 +104,7 @@ TEST(StressHistorgram, TestAdd3D2)
 
    h1->Add(h2, c2);
    EXPECT_TRUE(HistogramsEquals(h3, h1, cmpOptStats, 1E-10));
+   delete h1;
    delete h2;
    delete h3;
 }
@@ -144,4 +146,5 @@ TEST(StressHistorgram, TestAdd3D3)
    EXPECT_TRUE(HistogramsEquals(h2, h3, cmpOptStats, 1E-10));
    delete h1;
    delete h2;
+   delete h3;
 }

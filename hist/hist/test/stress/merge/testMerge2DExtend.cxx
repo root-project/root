@@ -71,6 +71,7 @@ TEST_P(Merge2DExtendTest, TestMerge2DExtend)
    EXPECT_TRUE(HistogramsEquals(h1, h4, cmpOptStats, 1E-10));
    delete h1;
    delete h2;
+   delete h4;
 }
 
 INSTANTIATE_TEST_CASE_P(StressHistogram, Merge2DExtendTest, ::testing::Values(TH1::kAllAxes, TH1::kXaxis, TH1::kYaxis));

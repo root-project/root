@@ -103,6 +103,7 @@ TEST(StressHistorgram, TestH1Buffer)
    EXPECT_TRUE(HistogramsEquals(h1, h2, cmpOptStats, eps));
 
    delete h1;
+   delete h2;
 }
 
 TEST(StressHistorgram, TestH1BufferWeights)
@@ -155,6 +156,7 @@ TEST(StressHistorgram, TestH1BufferWeights)
    EXPECT_TRUE(HistogramsEquals(h1, h2, cmpOptStats, eps));
 
    delete h1;
+   delete h2;
 }
 
 TEST(StressHistorgram, TestH1Extend)
@@ -170,6 +172,7 @@ TEST(StressHistorgram, TestH1Extend)
       h0->Fill(x);
    }
    EXPECT_TRUE(HistogramsEquals(h1, h0, cmpOptStats, 1E-10));
+   delete h0;
    delete h1;
 }
 
@@ -215,5 +218,6 @@ TEST(StressHistorgram, TestH1Integral)
 
    EXPECT_FALSE(delta > 3);
 
+   delete gaus;
    delete h1;
 }

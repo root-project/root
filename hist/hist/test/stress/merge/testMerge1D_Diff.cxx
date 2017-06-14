@@ -80,6 +80,7 @@ TEST_P(MergeTest, TestMerge1D_Diff)
    delete h1;
    delete h2;
    delete h3;
+   delete h4;
 }
 
 TEST_P(MergeTest, TestMergeProf1D_Diff)
@@ -127,6 +128,7 @@ TEST_P(MergeTest, TestMergeProf1D_Diff)
    delete p1;
    delete p2;
    delete p3;
+   delete p4;
 }
 
 TEST_P(MergeTest, TestMerge3DDiff)
@@ -180,6 +182,7 @@ TEST_P(MergeTest, TestMerge3DDiff)
    delete h1;
    delete h2;
    delete h3;
+   delete h4;
 }
 
 TEST_P(MergeTest, TestMerge2D_Diff)
@@ -233,6 +236,7 @@ TEST_P(MergeTest, TestMerge2D_Diff)
    delete h1;
    delete h2;
    delete h3;
+   delete h4;
 }
 
 INSTANTIATE_TEST_CASE_P(StressHistogram, MergeTest, ::testing::Values(true, false));

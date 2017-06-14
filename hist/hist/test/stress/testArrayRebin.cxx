@@ -64,6 +64,7 @@ TEST(StressHistorgram, TestArrayRebin)
    EXPECT_TRUE(HistogramsEquals(h2, h3, cmpOptStats));
    delete h1;
    delete h2;
+   delete h3;
 }
 
 TEST(StressHistorgram, TestArrayRebinProfile)
@@ -113,4 +114,5 @@ TEST(StressHistorgram, TestArrayRebinProfile)
    EXPECT_TRUE(HistogramsEquals(p2, p3, cmpOptStats));
    delete p1;
    delete p2;
+   delete p3;
 }

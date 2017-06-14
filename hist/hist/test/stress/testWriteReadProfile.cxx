@@ -47,6 +47,7 @@ TEST(StressHistorgram, TestWriteReadProfile1D)
 
    EXPECT_TRUE(HistogramsEquals(p1, p2, cmpOptStats));
    delete p1;
+   delete p2;
 }
 
 TEST(StressHistorgram, TestWriteReadProfile2D)
@@ -72,6 +73,7 @@ TEST(StressHistorgram, TestWriteReadProfile2D)
 
    EXPECT_TRUE(HistogramsEquals(p1, p2, cmpOptStats));
    delete p1;
+   delete p2;
 }
 
 TEST(StressHistorgram, TestWriteReadProfile3D)
@@ -102,6 +104,7 @@ TEST(StressHistorgram, TestWriteReadProfile3D)
    // crash.
    EXPECT_TRUE(HistogramsEquals(p1, p2));
    delete p1;
+   delete p2;
 }
 
 TEST(StressHistorgram, TestWriteReadProfileVar1D)
@@ -128,4 +131,5 @@ TEST(StressHistorgram, TestWriteReadProfileVar1D)
 
    EXPECT_TRUE(HistogramsEquals(p1, p2, cmpOptStats));
    delete p1;
+   delete p2;
 }

@@ -75,6 +75,7 @@ TEST(StressHistorgram, TestMergeProf3D)
    delete p1;
    delete p2;
    delete p3;
+   delete p4;
 }
 
 TEST(StressHistorgram, TestMergeProf3DDiff)
@@ -126,4 +127,5 @@ TEST(StressHistorgram, TestMergeProf3DDiff)
    delete p1;
    delete p2;
    delete p3;
+   delete p4;
 }

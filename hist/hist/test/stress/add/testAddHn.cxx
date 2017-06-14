@@ -65,6 +65,7 @@ TYPED_TEST(HistTest, TestAddHn)
    s1->Add(s2, c);
 
    EXPECT_TRUE(HistogramsEquals(s3, s1, cmpOptStats, 1E-10));
+   delete s1;
    delete s2;
    delete s3;
 }

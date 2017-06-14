@@ -48,4 +48,5 @@ TYPED_TEST(HistTest, TestCloneHn)
 
    EXPECT_TRUE(HistogramsEquals(s1, s2));
    delete s1;
+   delete s2;
 }

@@ -72,6 +72,7 @@ TEST(StressHistorgram, TestMulVar1)
    delete h1;
    delete h2;
    delete h3;
+   delete h4;
 }
 
 TEST(StressHistorgram, TestMulVar2)
@@ -116,6 +117,7 @@ TEST(StressHistorgram, TestMulVar2)
    h1->Multiply(h2);
 
    EXPECT_TRUE(HistogramsEquals(h3, h1, cmpOptStats, 1E-14));
+   delete h1;
    delete h2;
    delete h3;
 }

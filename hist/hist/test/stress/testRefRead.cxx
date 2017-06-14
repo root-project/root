@@ -85,6 +85,8 @@ TEST_F(RefReadTest, TestRefRead1D)
       }
 
       EXPECT_EQ(0, Equals("Ref Read Hist 1D", h1, h2, cmpOptStats));
+
+      delete h2;
    }
 
    if (h1) delete h1;
@@ -116,6 +118,8 @@ TEST_F(RefReadTest, TestRefRead2D)
       }
 
       EXPECT_EQ(0, Equals("Ref Read Hist 2D", h1, h2, cmpOptStats));
+
+      delete h2;
    }
    if (h1) delete h1;
 }
@@ -151,6 +155,8 @@ TEST_F(RefReadTest, TestRefRead3D)
       }
 
       EXPECT_EQ(0, Equals("Ref Read Hist 3D", h1, h2, cmpOptStats));
+
+      delete h2;
    }
    if (h1) delete h1;
 }
@@ -183,6 +189,7 @@ TEST_F(RefReadTest, TestRefReadProf1D)
       }
 
       EXPECT_EQ(0, Equals("Ref Read Prof 1D", p1, p2, cmpOptStats));
+      delete p2;
       TH1::SetDefaultSumw2(true);
    }
 
@@ -216,6 +223,8 @@ TEST_F(RefReadTest, TestRefReadProf2D)
       }
 
       EXPECT_EQ(0, Equals("Ref Read Prof 2D", p1, p2, cmpOptStats));
+
+      delete p2;
    }
 
    if (p1) delete p1;
@@ -251,6 +260,8 @@ TEST_F(RefReadTest, TestRefReadProf3D)
       }
 
       EXPECT_EQ(0, Equals("Ref Read Prof 3D", p1, p2, cmpOptStats));
+
+      delete p2;
    }
 
    if (p1) delete p1;
@@ -291,6 +302,8 @@ TEST_F(RefReadTest, TestRefReadSparse)
       }
 
       EXPECT_EQ(0, Equals("Ref Read Sparse", s1, s2, cmpOptStats));
+
+      delete s2;
    }
 
    if (s1) delete s1;

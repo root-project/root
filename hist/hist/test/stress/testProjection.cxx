@@ -447,34 +447,61 @@ public:
    void compareHistograms()
    {
       int options = 0;
+      TH2D *projection;
 
       // TH2 derived from TH3
       options = cmpOptStats;
-      EXPECT_EQ(0, Equals("TH3 -> XY", h2XY, (TH2D *)h3->Project3D("yx"), options));
-      EXPECT_EQ(0, Equals("TH3 -> XZ", h2XZ, (TH2D *)h3->Project3D("zx"), options));
-      EXPECT_EQ(0, Equals("TH3 -> YX", h2YX, (TH2D *)h3->Project3D("XY"), options));
-      EXPECT_EQ(0, Equals("TH3 -> YZ", h2YZ, (TH2D *)h3->Project3D("ZY"), options));
-      EXPECT_EQ(0, Equals("TH3 -> ZX", h2ZX, (TH2D *)h3->Project3D("XZ"), options));
-      EXPECT_EQ(0, Equals("TH3 -> ZY", h2ZY, (TH2D *)h3->Project3D("YZ"), options));
+      projection = (TH2D *)h3->Project3D("yx");
+      EXPECT_EQ(0, Equals("TH3 -> XY", h2XY, projection, options));
+      delete projection;
+      projection = (TH2D *)h3->Project3D("zx");
+      EXPECT_EQ(0, Equals("TH3 -> XZ", h2XZ, projection, options));
+      delete projection;
+      projection = (TH2D *)h3->Project3D("XY");
+      EXPECT_EQ(0, Equals("TH3 -> YX", h2YX, projection, options));
+      delete projection;
+      projection = (TH2D *)h3->Project3D("ZY");
+      EXPECT_EQ(0, Equals("TH3 -> YZ", h2YZ, projection, options));
+      delete projection;
+      projection = (TH2D *)h3->Project3D("XZ");
+      EXPECT_EQ(0, Equals("TH3 -> ZX", h2ZX, projection, options));
+      delete projection;
+      projection = (TH2D *)h3->Project3D("YZ");
+      EXPECT_EQ(0, Equals("TH3 -> ZY", h2ZY, projection, options));
+      delete projection;
       options = 0;
       if (defaultEqualOptions & cmpOptPrint) std::cout << "----------------------------------------------" << std::endl;
 
       // TH1 derived from TH3
       options = cmpOptStats;
       TH1D *tmp1 = 0;
-      EXPECT_EQ(0, Equals("TH3 -> X", h1X, (TH1D *)h3->Project3D("x"), options));
+      TH1D *projectionTH1D;
+
+      projectionTH1D = (TH1D *)h3->Project3D("x");
+      EXPECT_EQ(0, Equals("TH3 -> X", h1X, projectionTH1D, options));
       tmp1 = h3->ProjectionX("x335");
-      EXPECT_EQ(0, Equals("TH3 -> X(x2)", tmp1, (TH1D *)h3->Project3D("x2"), options));
+      projectionTH1D = (TH1D *)h3->Project3D("x2");
+      EXPECT_EQ(0, Equals("TH3 -> X(x2)", tmp1, projectionTH1D, options));
+      delete projectionTH1D;
       delete tmp1;
       tmp1 = 0;
-      EXPECT_EQ(0, Equals("TH3 -> Y", h1Y, (TH1D *)h3->Project3D("y"), options));
+      projectionTH1D = (TH1D *)h3->Project3D("y");
+      EXPECT_EQ(0, Equals("TH3 -> Y", h1Y, projectionTH1D, options));
+      delete projectionTH1D;
       tmp1 = h3->ProjectionY("y335");
-      EXPECT_EQ(0, Equals("TH3 -> Y(x2)", tmp1, (TH1D *)h3->Project3D("y2"), options));
+      projectionTH1D = (TH1D *)h3->Project3D("y2");
+      EXPECT_EQ(0, Equals("TH3 -> Y(x2)", tmp1, projectionTH1D, options));
+      delete projectionTH1D;
       delete tmp1;
       tmp1 = 0;
-      EXPECT_EQ(0, Equals("TH3 -> Z", h1Z, (TH1D *)h3->Project3D("z"), options));
+      projectionTH1D = (TH1D *)h3->Project3D("z");
+      EXPECT_EQ(0, Equals("TH3 -> Z", h1Z, projectionTH1D, options));
+      delete projectionTH1D;
       tmp1 = h3->ProjectionZ("z335");
-      EXPECT_EQ(0, Equals("TH3 -> Z(x2)", tmp1, (TH1D *)h3->Project3D("z2"), options));
+      projectionTH1D = (TH1D *)h3->Project3D("z2");
+      EXPECT_EQ(0, Equals("TH3 -> Z(x2)", tmp1, projectionTH1D, options));
+      delete projectionTH1D;
+
       delete tmp1;
       tmp1 = 0;
 
@@ -483,23 +510,47 @@ public:
 
       // TH1 derived from h2XY
       options = cmpOptStats;
-      EXPECT_EQ(0, Equals("TH2XY -> X", h1X, (TH1D *)h2XY->ProjectionX("x"), options));
-      EXPECT_EQ(0, Equals("TH2XY -> Y", h1Y, (TH1D *)h2XY->ProjectionY("y"), options));
+      projectionTH1D = h2XY->ProjectionX("x");
+      EXPECT_EQ(0, Equals("TH2XY -> X", h1X, projectionTH1D, options));
+      delete projectionTH1D;
+      projectionTH1D = h2XY->ProjectionY("y");
+      EXPECT_EQ(0, Equals("TH2XY -> Y", h1Y, projectionTH1D, options));
+      delete projectionTH1D;
       // TH1 derived from h2XZ
-      EXPECT_EQ(0, Equals("TH2XZ -> X", h1X, (TH1D *)h2XZ->ProjectionX("x"), options));
-      EXPECT_EQ(0, Equals("TH2XZ -> Z", h1Z, (TH1D *)h2XZ->ProjectionY("z"), options));
+      projectionTH1D = h2XZ->ProjectionX("x");
+      EXPECT_EQ(0, Equals("TH2XZ -> X", h1X, projectionTH1D, options));
+      delete projectionTH1D;
+      projectionTH1D = h2XZ->ProjectionY("z");
+      EXPECT_EQ(0, Equals("TH2XZ -> Z", h1Z, projectionTH1D, options));
+      delete projectionTH1D;
       // TH1 derived from h2YX
-      EXPECT_EQ(0, Equals("TH2YX -> Y", h1Y, (TH1D *)h2YX->ProjectionX("y"), options));
-      EXPECT_EQ(0, Equals("TH2YX -> X", h1X, (TH1D *)h2YX->ProjectionY("x"), options));
+      projectionTH1D = h2YX->ProjectionX("y");
+      EXPECT_EQ(0, Equals("TH2YX -> Y", h1Y, projectionTH1D, options));
+      delete projectionTH1D;
+      projectionTH1D = h2YX->ProjectionY("x");
+      EXPECT_EQ(0, Equals("TH2YX -> X", h1X, projectionTH1D, options));
+      delete projectionTH1D;
       // TH1 derived from h2YZ
-      EXPECT_EQ(0, Equals("TH2YZ -> Y", h1Y, (TH1D *)h2YZ->ProjectionX("y"), options));
-      EXPECT_EQ(0, Equals("TH2YZ -> Z", h1Z, (TH1D *)h2YZ->ProjectionY("z"), options));
+      projectionTH1D = h2YZ->ProjectionX("y");
+      EXPECT_EQ(0, Equals("TH2YZ -> Y", h1Y, projectionTH1D, options));
+      delete projectionTH1D;
+      projectionTH1D = h2YZ->ProjectionY("z");
+      EXPECT_EQ(0, Equals("TH2YZ -> Z", h1Z, projectionTH1D, options));
+      delete projectionTH1D;
       // TH1 derived from h2ZX
-      EXPECT_EQ(0, Equals("TH2ZX -> Z", h1Z, (TH1D *)h2ZX->ProjectionX("z"), options));
-      EXPECT_EQ(0, Equals("TH2ZX -> X", h1X, (TH1D *)h2ZX->ProjectionY("x"), options));
+      projectionTH1D = h2ZX->ProjectionX("z");
+      EXPECT_EQ(0, Equals("TH2ZX -> Z", h1Z, projectionTH1D, options));
+      delete projectionTH1D;
+      projectionTH1D = h2ZX->ProjectionY("x");
+      EXPECT_EQ(0, Equals("TH2ZX -> X", h1X, projectionTH1D, options));
+      delete projectionTH1D;
       // TH1 derived from h2ZY
-      EXPECT_EQ(0, Equals("TH2ZY -> Z", h1Z, (TH1D *)h2ZY->ProjectionX("z"), options));
-      EXPECT_EQ(0, Equals("TH2ZY -> Y", h1Y, (TH1D *)h2ZY->ProjectionY("y"), options));
+      projectionTH1D = h2ZY->ProjectionX("z");
+      EXPECT_EQ(0, Equals("TH2ZY -> Z", h1Z, projectionTH1D, options));
+      delete projectionTH1D;
+      projectionTH1D = h2ZY->ProjectionY("y");
+      EXPECT_EQ(0, Equals("TH2ZY -> Y", h1Y, projectionTH1D, options));
+      delete projectionTH1D;
       options = 0;
       if (defaultEqualOptions & cmpOptPrint) std::cout << "----------------------------------------------" << std::endl;
 
@@ -520,46 +571,70 @@ public:
 
       // Now the histograms coming from the Profiles!
       options = cmpOptStats;
-      EXPECT_EQ(0,
-                Equals("TH3 -> PBXY", h2XY, (TH2D *)h3->Project3DProfile("yx UF OF")->ProjectionXY("1", "B"), options));
-      EXPECT_EQ(0,
-                Equals("TH3 -> PBXZ", h2XZ, (TH2D *)h3->Project3DProfile("zx UF OF")->ProjectionXY("2", "B"), options));
-      EXPECT_EQ(0,
-                Equals("TH3 -> PBYX", h2YX, (TH2D *)h3->Project3DProfile("xy UF OF")->ProjectionXY("3", "B"), options));
-      EXPECT_EQ(0,
-                Equals("TH3 -> PBYZ", h2YZ, (TH2D *)h3->Project3DProfile("zy UF OF")->ProjectionXY("4", "B"), options));
-      EXPECT_EQ(0,
-                Equals("TH3 -> PBZX", h2ZX, (TH2D *)h3->Project3DProfile("xz UF OF")->ProjectionXY("5", "B"), options));
-      EXPECT_EQ(0,
-                Equals("TH3 -> PBZY", h2ZY, (TH2D *)h3->Project3DProfile("yz UF OF")->ProjectionXY("6", "B"), options));
+      projection = (TH2D *)h3->Project3DProfile("yx UF OF")->ProjectionXY("1", "B");
+      EXPECT_EQ(0,Equals("TH3 -> PBXY", h2XY, projection, options));
+      delete projection;
+      projection = (TH2D *)h3->Project3DProfile("zx UF OF")->ProjectionXY("2", "B");
+      EXPECT_EQ(0,Equals("TH3 -> PBXZ", h2XZ, projection, options));
+      delete projection;
+      projection = (TH2D *)h3->Project3DProfile("xy UF OF")->ProjectionXY("3", "B");
+      EXPECT_EQ(0,Equals("TH3 -> PBYX", h2YX, projection, options));
+      delete projection;
+      projection = (TH2D *)h3->Project3DProfile("zy UF OF")->ProjectionXY("4", "B");
+      EXPECT_EQ(0,Equals("TH3 -> PBYZ", h2YZ, projection, options));
+      delete projection;
+      projection = (TH2D *)h3->Project3DProfile("xz UF OF")->ProjectionXY("5", "B");
+      EXPECT_EQ(0,Equals("TH3 -> PBZX", h2ZX, projection, options));
+      delete projection;
+      projection = (TH2D *)h3->Project3DProfile("yz UF OF")->ProjectionXY("6", "B");
+      EXPECT_EQ(0,Equals("TH3 -> PBZY", h2ZY, projection, options));
+      delete projection;
       options = 0;
       if (defaultEqualOptions & cmpOptPrint) std::cout << "----------------------------------------------" << std::endl;
 
       // test directly project3dprofile
       options = cmpOptStats;
-      EXPECT_EQ(0, Equals("TH3 -> PXY", (TH2D *)pe2XY, (TH2D *)h3->Project3DProfile("yx  UF OF"), options));
-      EXPECT_EQ(0, Equals("TH3 -> PXZ", (TH2D *)pe2XZ, (TH2D *)h3->Project3DProfile("zx  UF OF"), options));
-      EXPECT_EQ(0, Equals("TH3 -> PYX", (TH2D *)pe2YX, (TH2D *)h3->Project3DProfile("xy  UF OF"), options));
-      EXPECT_EQ(0, Equals("TH3 -> PYZ", (TH2D *)pe2YZ, (TH2D *)h3->Project3DProfile("zy  UF OF"), options));
-      EXPECT_EQ(0, Equals("TH3 -> PZX", (TH2D *)pe2ZX, (TH2D *)h3->Project3DProfile("xz  UF OF"), options));
-      EXPECT_EQ(0, Equals("TH3 -> PZY", (TH2D *)pe2ZY, (TH2D *)h3->Project3DProfile("yz  UF OF"), options));
+      projection = (TH2D *)h3->Project3DProfile("yx  UF OF");
+      EXPECT_EQ(0, Equals("TH3 -> PXY", (TH2D *)pe2XY, projection, options));
+      delete projection;
+      projection = (TH2D *)h3->Project3DProfile("zx  UF OF");
+      EXPECT_EQ(0, Equals("TH3 -> PXZ", (TH2D *)pe2XZ, projection, options));
+      delete projection;
+      projection = (TH2D *)h3->Project3DProfile("xy  UF OF");
+      EXPECT_EQ(0, Equals("TH3 -> PYX", (TH2D *)pe2YX, projection, options));
+      delete projection;
+      projection = (TH2D *)h3->Project3DProfile("zy  UF OF");
+      EXPECT_EQ(0, Equals("TH3 -> PYZ", (TH2D *)pe2YZ, projection, options));
+      delete projection;
+      projection = (TH2D *)h3->Project3DProfile("xz  UF OF");
+      EXPECT_EQ(0, Equals("TH3 -> PZX", (TH2D *)pe2ZX, projection, options));
+      delete projection;
+      projection = (TH2D *)h3->Project3DProfile("yz  UF OF");
+      EXPECT_EQ(0, Equals("TH3 -> PZY", (TH2D *)pe2ZY, projection, options));
+      delete projection;
       options = 0;
       if (defaultEqualOptions & cmpOptPrint) std::cout << "----------------------------------------------" << std::endl;
 
       // test option E of ProjectionXY
       options = 0;
-      EXPECT_EQ(0, Equals("TH3 -> PEXY", (TH2D *)pe2XY,
-                          (TH2D *)h3->Project3DProfile("yx  UF OF")->ProjectionXY("1", "E"), options));
-      EXPECT_EQ(0, Equals("TH3 -> PEXZ", (TH2D *)pe2XZ,
-                          (TH2D *)h3->Project3DProfile("zx  UF OF")->ProjectionXY("2", "E"), options));
-      EXPECT_EQ(0, Equals("TH3 -> PEYX", (TH2D *)pe2YX,
-                          (TH2D *)h3->Project3DProfile("xy  UF OF")->ProjectionXY("3", "E"), options));
-      EXPECT_EQ(0, Equals("TH3 -> PEYZ", (TH2D *)pe2YZ,
-                          (TH2D *)h3->Project3DProfile("zy  UF OF")->ProjectionXY("4", "E"), options));
-      EXPECT_EQ(0, Equals("TH3 -> PEZX", (TH2D *)pe2ZX,
-                          (TH2D *)h3->Project3DProfile("xz  UF OF")->ProjectionXY("5", "E"), options));
-      EXPECT_EQ(0, Equals("TH3 -> PEZY", (TH2D *)pe2ZY,
-                          (TH2D *)h3->Project3DProfile("yz  UF OF")->ProjectionXY("6", "E"), options));
+      projection = (TH2D *)h3->Project3DProfile("yx  UF OF")->ProjectionXY("1", "E");
+      EXPECT_EQ(0, Equals("TH3 -> PEXY", (TH2D *)pe2XY, projection, options));
+      delete projection;
+      projection = (TH2D *)h3->Project3DProfile("zx  UF OF")->ProjectionXY("2", "E");
+      EXPECT_EQ(0, Equals("TH3 -> PEXZ", (TH2D *)pe2XZ, projection, options));
+      delete projection;
+      projection = (TH2D *)h3->Project3DProfile("xy  UF OF")->ProjectionXY("3", "E");
+      EXPECT_EQ(0, Equals("TH3 -> PEYX", (TH2D *)pe2YX, projection, options));
+      delete projection;
+      projection = (TH2D *)h3->Project3DProfile("zy  UF OF")->ProjectionXY("4", "E");
+      EXPECT_EQ(0, Equals("TH3 -> PEYZ", (TH2D *)pe2YZ, projection, options));
+      delete projection;
+      projection = (TH2D *)h3->Project3DProfile("xz  UF OF")->ProjectionXY("5", "E");
+      EXPECT_EQ(0, Equals("TH3 -> PEZX", (TH2D *)pe2ZX, projection, options));
+      delete projection;
+      projection = (TH2D *)h3->Project3DProfile("yz  UF OF")->ProjectionXY("6", "E");
+      EXPECT_EQ(0, Equals("TH3 -> PEZY", (TH2D *)pe2ZY, projection, options));
+      delete projection;
       options = 0;
       if (defaultEqualOptions & cmpOptPrint) std::cout << "----------------------------------------------" << std::endl;
 
@@ -567,18 +642,24 @@ public:
 
       // The error fails when built with weights. It is not properly calculated
       if (buildWithWeights) options = cmpOptNoError;
-      EXPECT_EQ(0, Equals("TH3 -> PWXY", (TH2D *)h2wXY,
-                          (TH2D *)h3->Project3DProfile("yx  UF OF")->ProjectionXY("1", "W"), options));
-      EXPECT_EQ(0, Equals("TH3 -> PWXZ", (TH2D *)h2wXZ,
-                          (TH2D *)h3->Project3DProfile("zx  UF OF")->ProjectionXY("2", "W"), options));
-      EXPECT_EQ(0, Equals("TH3 -> PWYX", (TH2D *)h2wYX,
-                          (TH2D *)h3->Project3DProfile("xy  UF OF")->ProjectionXY("3", "W"), options));
-      EXPECT_EQ(0, Equals("TH3 -> PWYZ", (TH2D *)h2wYZ,
-                          (TH2D *)h3->Project3DProfile("zy  UF OF")->ProjectionXY("4", "W"), options));
-      EXPECT_EQ(0, Equals("TH3 -> PWZX", (TH2D *)h2wZX,
-                          (TH2D *)h3->Project3DProfile("xz  UF OF")->ProjectionXY("5", "W"), options));
-      EXPECT_EQ(0, Equals("TH3 -> PWZY", (TH2D *)h2wZY,
-                          (TH2D *)h3->Project3DProfile("yz  UF OF")->ProjectionXY("6", "W"), options));
+      projection = (TH2D *)h3->Project3DProfile("yx  UF OF")->ProjectionXY("1", "W");
+      EXPECT_EQ(0, Equals("TH3 -> PWXY", (TH2D *)h2wXY, projection, options));
+      delete projection;
+      projection = (TH2D *)h3->Project3DProfile("zx  UF OF")->ProjectionXY("2", "W");
+      EXPECT_EQ(0, Equals("TH3 -> PWXZ", (TH2D *)h2wXZ, projection, options));
+      delete projection;
+      projection = (TH2D *)h3->Project3DProfile("xy  UF OF")->ProjectionXY("3", "W");
+      EXPECT_EQ(0, Equals("TH3 -> PWYX", (TH2D *)h2wYX, projection, options));
+      delete projection;
+      projection = (TH2D *)h3->Project3DProfile("zy  UF OF")->ProjectionXY("4", "W");
+      EXPECT_EQ(0, Equals("TH3 -> PWYZ", (TH2D *)h2wYZ, projection, options));
+      delete projection;
+      projection = (TH2D *)h3->Project3DProfile("xz  UF OF")->ProjectionXY("5", "W");
+      EXPECT_EQ(0, Equals("TH3 -> PWZX", (TH2D *)h2wZX, projection, options));
+      delete projection;
+      projection = (TH2D *)h3->Project3DProfile("yz  UF OF")->ProjectionXY("6", "W");
+      EXPECT_EQ(0, Equals("TH3 -> PWZY", (TH2D *)h2wZY, projection, options));
+      delete projection;
       options = 0;
       if (defaultEqualOptions & cmpOptPrint) std::cout << "----------------------------------------------" << std::endl;
 
@@ -587,154 +668,166 @@ public:
       // ProfileX re-use the same histo if sme name is given.
       // need to give a diffrent name for each projectino (x,y,Z) otherwise we end-up in different bins
       // t.b.d: ProfileX make a new histo if non compatible
-      EXPECT_EQ(0, Equals("TH2XY -> PBX", h1X,
-                          (TH1D *)h2XY->ProfileX("PBX", 0, h2XY->GetYaxis()->GetNbins() + 1)->ProjectionX("1", "B"),
-                          options));
-      EXPECT_EQ(0, Equals("TH2XY -> PBY", h1Y,
-                          (TH1D *)h2XY->ProfileY("PBY", 0, h2XY->GetXaxis()->GetNbins() + 1)->ProjectionX("1", "B"),
-                          options));
-      EXPECT_EQ(0, Equals("TH2XZ -> PBX", h1X,
-                          (TH1D *)h2XZ->ProfileX("PBX", 0, h2XZ->GetYaxis()->GetNbins() + 1)->ProjectionX("1", "B"),
-                          options));
-      EXPECT_EQ(0, Equals("TH2XZ -> PBZ", h1Z,
-                          (TH1D *)h2XZ->ProfileY("PBZ", 0, h2XZ->GetXaxis()->GetNbins() + 1)->ProjectionX("1", "B"),
-                          options, 1E-12));
-      EXPECT_EQ(0, Equals("TH2YX -> PBY", h1Y,
-                          (TH1D *)h2YX->ProfileX("PBY", 0, h2YX->GetYaxis()->GetNbins() + 1)->ProjectionX("1", "B"),
-                          options));
-      EXPECT_EQ(0, Equals("TH2YX -> PBX", h1X,
-                          (TH1D *)h2YX->ProfileY("PBX", 0, h2YX->GetXaxis()->GetNbins() + 1)->ProjectionX("1", "B"),
-                          options));
-      EXPECT_EQ(0, Equals("TH2YZ -> PBY", h1Y,
-                          (TH1D *)h2YZ->ProfileX("PBY", 0, h2YZ->GetYaxis()->GetNbins() + 1)->ProjectionX("1", "B"),
-                          options));
-      EXPECT_EQ(0, Equals("TH2YZ -> PBZ", h1Z,
-                          (TH1D *)h2YZ->ProfileY("PBZ", 0, h2YZ->GetXaxis()->GetNbins() + 1)->ProjectionX("1", "B"),
-                          options, 1E-12));
-      EXPECT_EQ(0, Equals("TH2ZX -> PBZ", h1Z,
-                          (TH1D *)h2ZX->ProfileX("PBZ", 0, h2ZX->GetYaxis()->GetNbins() + 1)->ProjectionX("1", "B"),
-                          options, 1E-12));
-      EXPECT_EQ(0, Equals("TH2ZX -> PBX", h1X,
-                          (TH1D *)h2ZX->ProfileY("PBX", 0, h2ZX->GetXaxis()->GetNbins() + 1)->ProjectionX("1", "B"),
-                          options));
-      EXPECT_EQ(0, Equals("TH2ZY -> PBZ", h1Z,
-                          (TH1D *)h2ZY->ProfileX("PBZ", 0, h2ZY->GetYaxis()->GetNbins() + 1)->ProjectionX("1", "B"),
-                          options, 1E-12));
-      EXPECT_EQ(0, Equals("TH2ZY -> PBY", h1Y,
-                          (TH1D *)h2ZY->ProfileY("PBY", 0, h2ZY->GetXaxis()->GetNbins() + 1)->ProjectionX("1", "B"),
-                          options));
+      projectionTH1D = h2XY->ProfileX("PBX", 0, h2XY->GetYaxis()->GetNbins() + 1)->ProjectionX("1", "B");
+      EXPECT_EQ(0, Equals("TH2XY -> PBX", h1X, projectionTH1D, options));
+      delete projectionTH1D;
+      projectionTH1D = h2XY->ProfileY("PBY", 0, h2XY->GetXaxis()->GetNbins() + 1)->ProjectionX("1", "B");
+      EXPECT_EQ(0, Equals("TH2XY -> PBY", h1Y, projectionTH1D, options));
+      delete projectionTH1D;
+      projectionTH1D = h2XZ->ProfileX("PBX", 0, h2XZ->GetYaxis()->GetNbins() + 1)->ProjectionX("1", "B");
+      EXPECT_EQ(0, Equals("TH2XZ -> PBX", h1X, projectionTH1D, options));
+      delete projectionTH1D;
+      projectionTH1D = h2XZ->ProfileY("PBZ", 0, h2XZ->GetXaxis()->GetNbins() + 1)->ProjectionX("1", "B");
+      EXPECT_EQ(0, Equals("TH2XZ -> PBZ", h1Z, projectionTH1D, options, 1E-12));
+      delete projectionTH1D;
+      projectionTH1D = h2YX->ProfileX("PBY", 0, h2YX->GetYaxis()->GetNbins() + 1)->ProjectionX("1", "B");
+      EXPECT_EQ(0, Equals("TH2YX -> PBY", h1Y, projectionTH1D, options));
+      delete projectionTH1D;
+      projectionTH1D = h2YX->ProfileY("PBX", 0, h2YX->GetXaxis()->GetNbins() + 1)->ProjectionX("1", "B");
+      EXPECT_EQ(0, Equals("TH2YX -> PBX", h1X, projectionTH1D, options));
+      delete projectionTH1D;
+      projectionTH1D = h2YZ->ProfileX("PBY", 0, h2YZ->GetYaxis()->GetNbins() + 1)->ProjectionX("1", "B");
+      EXPECT_EQ(0, Equals("TH2YZ -> PBY", h1Y, projectionTH1D, options));
+      delete projectionTH1D;
+      projectionTH1D = h2YZ->ProfileY("PBZ", 0, h2YZ->GetXaxis()->GetNbins() + 1)->ProjectionX("1", "B");
+      EXPECT_EQ(0, Equals("TH2YZ -> PBZ", h1Z, projectionTH1D, options, 1E-12));
+      delete projectionTH1D;
+      projectionTH1D = h2ZX->ProfileX("PBZ", 0, h2ZX->GetYaxis()->GetNbins() + 1)->ProjectionX("1", "B");
+      EXPECT_EQ(0, Equals("TH2ZX -> PBZ", h1Z, projectionTH1D, options, 1E-12));
+      delete projectionTH1D;
+      projectionTH1D = h2ZX->ProfileY("PBX", 0, h2ZX->GetXaxis()->GetNbins() + 1)->ProjectionX("1", "B");
+      EXPECT_EQ(0, Equals("TH2ZX -> PBX", h1X, projectionTH1D, options));
+      delete projectionTH1D;
+      projectionTH1D = h2ZY->ProfileX("PBZ", 0, h2ZY->GetYaxis()->GetNbins() + 1)->ProjectionX("1", "B");
+      EXPECT_EQ(0, Equals("TH2ZY -> PBZ", h1Z, projectionTH1D, options, 1E-12));
+      delete projectionTH1D;
+      projectionTH1D = h2ZY->ProfileY("PBY", 0, h2ZY->GetXaxis()->GetNbins() + 1)->ProjectionX("1", "B");
+      EXPECT_EQ(0, Equals("TH2ZY -> PBY", h1Y, projectionTH1D, options));
+      delete projectionTH1D;
       options = 0;
       if (defaultEqualOptions & cmpOptPrint) std::cout << "----------------------------------------------" << std::endl;
 
       // 1D testing direct profiles
       options = cmpOptStats;
-      EXPECT_EQ(
-         0, Equals("TH2XY -> PX", pe1XY, (TH1D *)h2XY->ProfileX("PX", 0, h2XY->GetYaxis()->GetNbins() + 1), options));
-      EXPECT_EQ(
-         0, Equals("TH2XY -> PY", pe1YX, (TH1D *)h2XY->ProfileY("PY", 0, h2XY->GetXaxis()->GetNbins() + 1), options));
-      EXPECT_EQ(
-         0, Equals("TH2XZ -> PX", pe1XZ, (TH1D *)h2XZ->ProfileX("PX", 0, h2XZ->GetYaxis()->GetNbins() + 1), options));
-      EXPECT_EQ(
-         0, Equals("TH2XZ -> PZ", pe1ZX, (TH1D *)h2XZ->ProfileY("PZ", 0, h2XZ->GetXaxis()->GetNbins() + 1), options));
-      EXPECT_EQ(
-         0, Equals("TH2YX -> PY", pe1YX, (TH1D *)h2YX->ProfileX("PY", 0, h2YX->GetYaxis()->GetNbins() + 1), options));
-      EXPECT_EQ(
-         0, Equals("TH2YX -> PX", pe1XY, (TH1D *)h2YX->ProfileY("PX", 0, h2YX->GetXaxis()->GetNbins() + 1), options));
-      EXPECT_EQ(
-         0, Equals("TH2YZ -> PY", pe1YZ, (TH1D *)h2YZ->ProfileX("PY", 0, h2YZ->GetYaxis()->GetNbins() + 1), options));
-      EXPECT_EQ(
-         0, Equals("TH2YZ -> PZ", pe1ZY, (TH1D *)h2YZ->ProfileY("PZ", 0, h2YZ->GetXaxis()->GetNbins() + 1), options));
-      EXPECT_EQ(
-         0, Equals("TH2ZX -> PZ", pe1ZX, (TH1D *)h2ZX->ProfileX("PZ", 0, h2ZX->GetYaxis()->GetNbins() + 1), options));
-      EXPECT_EQ(
-         0, Equals("TH2ZX -> PX", pe1XZ, (TH1D *)h2ZX->ProfileY("PX", 0, h2ZX->GetXaxis()->GetNbins() + 1), options));
-      EXPECT_EQ(
-         0, Equals("TH2ZY -> PZ", pe1ZY, (TH1D *)h2ZY->ProfileX("PZ", 0, h2ZY->GetYaxis()->GetNbins() + 1), options));
-      EXPECT_EQ(
-         0, Equals("TH2ZY -> PY", pe1YZ, (TH1D *)h2ZY->ProfileY("PY", 0, h2ZY->GetXaxis()->GetNbins() + 1), options));
+      projectionTH1D = h2XY->ProfileX("PX", 0, h2XY->GetYaxis()->GetNbins() + 1);
+      EXPECT_EQ(0, Equals("TH2XY -> PX", pe1XY, projectionTH1D, options));
+      delete projectionTH1D;
+      projectionTH1D = h2XY->ProfileY("PY", 0, h2XY->GetXaxis()->GetNbins() + 1);
+      EXPECT_EQ(0, Equals("TH2XY -> PY", pe1YX, projectionTH1D, options));
+      delete projectionTH1D;
+      projectionTH1D = h2XZ->ProfileX("PX", 0, h2XZ->GetYaxis()->GetNbins() + 1);
+      EXPECT_EQ(0, Equals("TH2XZ -> PX", pe1XZ, projectionTH1D, options));
+      delete projectionTH1D;
+      projectionTH1D = h2XZ->ProfileY("PZ", 0, h2XZ->GetXaxis()->GetNbins() + 1);
+      EXPECT_EQ(0, Equals("TH2XZ -> PZ", pe1ZX, projectionTH1D, options));
+      delete projectionTH1D;
+      projectionTH1D = h2YX->ProfileX("PY", 0, h2YX->GetYaxis()->GetNbins() + 1);
+      EXPECT_EQ(0, Equals("TH2YX -> PY", pe1YX, projectionTH1D, options));
+      delete projectionTH1D;
+      projectionTH1D = h2YX->ProfileY("PX", 0, h2YX->GetXaxis()->GetNbins() + 1);
+      EXPECT_EQ(0, Equals("TH2YX -> PX", pe1XY, projectionTH1D, options));
+      delete projectionTH1D;
+      projectionTH1D = h2YZ->ProfileX("PY", 0, h2YZ->GetYaxis()->GetNbins() + 1);
+      EXPECT_EQ(0, Equals("TH2YZ -> PY", pe1YZ, projectionTH1D, options));
+      delete projectionTH1D;
+      projectionTH1D = h2YZ->ProfileY("PZ", 0, h2YZ->GetXaxis()->GetNbins() + 1);
+      EXPECT_EQ(0, Equals("TH2YZ -> PZ", pe1ZY, projectionTH1D, options));
+      delete projectionTH1D;
+      projectionTH1D = h2ZX->ProfileX("PZ", 0, h2ZX->GetYaxis()->GetNbins() + 1);
+      EXPECT_EQ(0, Equals("TH2ZX -> PZ", pe1ZX, projectionTH1D, options));
+      delete projectionTH1D;
+      projectionTH1D = h2ZX->ProfileY("PX", 0, h2ZX->GetXaxis()->GetNbins() + 1);
+      EXPECT_EQ(0, Equals("TH2ZX -> PX", pe1XZ, projectionTH1D, options));
+      delete projectionTH1D;
+      projectionTH1D = h2ZY->ProfileX("PZ", 0, h2ZY->GetYaxis()->GetNbins() + 1);
+      EXPECT_EQ(0, Equals("TH2ZY -> PZ", pe1ZY, projectionTH1D, options));
+      delete projectionTH1D;
+      projectionTH1D = h2ZY->ProfileY("PY", 0, h2ZY->GetXaxis()->GetNbins() + 1);
+      EXPECT_EQ(0, Equals("TH2ZY -> PY", pe1YZ, projectionTH1D, options));
+      delete projectionTH1D;
       options = 0;
       if (defaultEqualOptions & cmpOptPrint) std::cout << "----------------------------------------------" << std::endl;
 
       // 1D testing e profiles
       options = 0;
-      EXPECT_EQ(0, Equals("TH2XY -> PEX", pe1XY,
-                          (TH1D *)h2XY->ProfileX("PEX", 0, h2XY->GetYaxis()->GetNbins() + 1)->ProjectionX("1", "E"),
-                          options));
-      EXPECT_EQ(0, Equals("TH2XY -> PEY", pe1YX,
-                          (TH1D *)h2XY->ProfileY("PEY", 0, h2XY->GetXaxis()->GetNbins() + 1)->ProjectionX("1", "E"),
-                          options));
-      EXPECT_EQ(0, Equals("TH2XZ -> PEX", pe1XZ,
-                          (TH1D *)h2XZ->ProfileX("PEX", 0, h2XZ->GetYaxis()->GetNbins() + 1)->ProjectionX("1", "E"),
-                          options));
-      EXPECT_EQ(0, Equals("TH2XZ -> PEZ", pe1ZX,
-                          (TH1D *)h2XZ->ProfileY("PEZ", 0, h2XZ->GetXaxis()->GetNbins() + 1)->ProjectionX("1", "E"),
-                          options));
-      EXPECT_EQ(0, Equals("TH2YX -> PEY", pe1YX,
-                          (TH1D *)h2YX->ProfileX("PEY", 0, h2YX->GetYaxis()->GetNbins() + 1)->ProjectionX("1", "E"),
-                          options));
-      EXPECT_EQ(0, Equals("TH2YX -> PEX", pe1XY,
-                          (TH1D *)h2YX->ProfileY("PEX", 0, h2YX->GetXaxis()->GetNbins() + 1)->ProjectionX("1", "E"),
-                          options));
-      EXPECT_EQ(0, Equals("TH2YZ -> PEY", pe1YZ,
-                          (TH1D *)h2YZ->ProfileX("PEY", 0, h2YZ->GetYaxis()->GetNbins() + 1)->ProjectionX("1", "E"),
-                          options));
-      EXPECT_EQ(0, Equals("TH2YZ -> PEZ", pe1ZY,
-                          (TH1D *)h2YZ->ProfileY("PEZ", 0, h2YZ->GetXaxis()->GetNbins() + 1)->ProjectionX("1", "E"),
-                          options));
-      EXPECT_EQ(0, Equals("TH2ZX -> PEZ", pe1ZX,
-                          (TH1D *)h2ZX->ProfileX("PEZ", 0, h2ZX->GetYaxis()->GetNbins() + 1)->ProjectionX("1", "E"),
-                          options));
-      EXPECT_EQ(0, Equals("TH2ZX -> PEX", pe1XZ,
-                          (TH1D *)h2ZX->ProfileY("PEX", 0, h2ZX->GetXaxis()->GetNbins() + 1)->ProjectionX("1", "E"),
-                          options));
-      EXPECT_EQ(0, Equals("TH2ZY -> PEZ", pe1ZY,
-                          (TH1D *)h2ZY->ProfileX("PEZ", 0, h2ZY->GetYaxis()->GetNbins() + 1)->ProjectionX("1", "E"),
-                          options));
-      EXPECT_EQ(0, Equals("TH2ZY -> PEY", pe1YZ,
-                          (TH1D *)h2ZY->ProfileY("PEY", 0, h2ZY->GetXaxis()->GetNbins() + 1)->ProjectionX("1", "E"),
-                          options));
+      projectionTH1D = h2XY->ProfileX("PEX", 0, h2XY->GetYaxis()->GetNbins() + 1)->ProjectionX("1", "E");
+      EXPECT_EQ(0, Equals("TH2XY -> PEX", pe1XY, projectionTH1D, options));
+      delete projectionTH1D;
+      projectionTH1D = h2XY->ProfileY("PEY", 0, h2XY->GetXaxis()->GetNbins() + 1)->ProjectionX("1", "E");
+      EXPECT_EQ(0, Equals("TH2XY -> PEY", pe1YX, projectionTH1D, options));
+      delete projectionTH1D;
+      projectionTH1D = h2XZ->ProfileX("PEX", 0, h2XZ->GetYaxis()->GetNbins() + 1)->ProjectionX("1", "E");
+      EXPECT_EQ(0, Equals("TH2XZ -> PEX", pe1XZ, projectionTH1D, options));
+      delete projectionTH1D;
+      projectionTH1D = h2XZ->ProfileY("PEZ", 0, h2XZ->GetXaxis()->GetNbins() + 1)->ProjectionX("1", "E");
+      EXPECT_EQ(0, Equals("TH2XZ -> PEZ", pe1ZX, projectionTH1D, options));
+      delete projectionTH1D;
+      projectionTH1D = h2YX->ProfileX("PEY", 0, h2YX->GetYaxis()->GetNbins() + 1)->ProjectionX("1", "E");
+      EXPECT_EQ(0, Equals("TH2YX -> PEY", pe1YX, projectionTH1D, options));
+      delete projectionTH1D;
+      projectionTH1D = h2YX->ProfileY("PEX", 0, h2YX->GetXaxis()->GetNbins() + 1)->ProjectionX("1", "E");
+      EXPECT_EQ(0, Equals("TH2YX -> PEX", pe1XY, projectionTH1D, options));
+      delete projectionTH1D;
+      projectionTH1D = h2YZ->ProfileX("PEY", 0, h2YZ->GetYaxis()->GetNbins() + 1)->ProjectionX("1", "E");
+      EXPECT_EQ(0, Equals("TH2YZ -> PEY", pe1YZ, projectionTH1D, options));
+      delete projectionTH1D;
+      projectionTH1D = h2YZ->ProfileY("PEZ", 0, h2YZ->GetXaxis()->GetNbins() + 1)->ProjectionX("1", "E");
+      EXPECT_EQ(0, Equals("TH2YZ -> PEZ", pe1ZY, projectionTH1D, options));
+      delete projectionTH1D;
+      projectionTH1D = h2ZX->ProfileX("PEZ", 0, h2ZX->GetYaxis()->GetNbins() + 1)->ProjectionX("1", "E");
+      EXPECT_EQ(0, Equals("TH2ZX -> PEZ", pe1ZX, projectionTH1D, options));
+      delete projectionTH1D;
+      projectionTH1D = h2ZX->ProfileY("PEX", 0, h2ZX->GetXaxis()->GetNbins() + 1)->ProjectionX("1", "E");
+      EXPECT_EQ(0, Equals("TH2ZX -> PEX", pe1XZ, projectionTH1D, options));
+      delete projectionTH1D;
+      projectionTH1D = h2ZY->ProfileX("PEZ", 0, h2ZY->GetYaxis()->GetNbins() + 1)->ProjectionX("1", "E");
+      EXPECT_EQ(0, Equals("TH2ZY -> PEZ", pe1ZY, projectionTH1D, options));
+      delete projectionTH1D;
+      projectionTH1D = h2ZY->ProfileY("PEY", 0, h2ZY->GetXaxis()->GetNbins() + 1)->ProjectionX("1", "E");
+      EXPECT_EQ(0, Equals("TH2ZY -> PEY", pe1YZ, projectionTH1D, options));
+      delete projectionTH1D;
       options = 0;
       if (defaultEqualOptions & cmpOptPrint) std::cout << "----------------------------------------------" << std::endl;
 
       // 1D testing w profiles
       // The error is not properly propagated when build with weights :S
       if (buildWithWeights) options = cmpOptNoError;
-      EXPECT_EQ(0, Equals("TH2XY -> PWX", hw1XY,
-                          (TH1D *)h2XY->ProfileX("PWX", 0, h2XY->GetYaxis()->GetNbins() + 1)->ProjectionX("1", "W"),
-                          options));
-      EXPECT_EQ(0, Equals("TH2XY -> PWY", hw1YX,
-                          (TH1D *)h2XY->ProfileY("PWY", 0, h2XY->GetXaxis()->GetNbins() + 1)->ProjectionX("1", "W"),
-                          options));
-      EXPECT_EQ(0, Equals("TH2XZ -> PWX", hw1XZ,
-                          (TH1D *)h2XZ->ProfileX("PWX", 0, h2XZ->GetYaxis()->GetNbins() + 1)->ProjectionX("1", "W"),
-                          options));
-      EXPECT_EQ(0, Equals("TH2XZ -> PWZ", hw1ZX,
-                          (TH1D *)h2XZ->ProfileY("PWZ", 0, h2XZ->GetXaxis()->GetNbins() + 1)->ProjectionX("1", "W"),
-                          options));
-      EXPECT_EQ(0, Equals("TH2YX -> PWY", hw1YX,
-                          (TH1D *)h2YX->ProfileX("PWY", 0, h2YX->GetYaxis()->GetNbins() + 1)->ProjectionX("1", "W"),
-                          options));
-      EXPECT_EQ(0, Equals("TH2YX -> PWX", hw1XY,
-                          (TH1D *)h2YX->ProfileY("PWX", 0, h2YX->GetXaxis()->GetNbins() + 1)->ProjectionX("1", "W"),
-                          options));
-      EXPECT_EQ(0, Equals("TH2YZ -> PWY", hw1YZ,
-                          (TH1D *)h2YZ->ProfileX("PWY", 0, h2YZ->GetYaxis()->GetNbins() + 1)->ProjectionX("1", "W"),
-                          options));
-      EXPECT_EQ(0, Equals("TH2YZ -> PWZ", hw1ZY,
-                          (TH1D *)h2YZ->ProfileY("PWZ", 0, h2YZ->GetXaxis()->GetNbins() + 1)->ProjectionX("1", "W"),
-                          options));
-      EXPECT_EQ(0, Equals("TH2ZX -> PWZ", hw1ZX,
-                          (TH1D *)h2ZX->ProfileX("PWZ", 0, h2ZX->GetYaxis()->GetNbins() + 1)->ProjectionX("1", "W"),
-                          options));
-      EXPECT_EQ(0, Equals("TH2ZX -> PWX", hw1XZ,
-                          (TH1D *)h2ZX->ProfileY("PWX", 0, h2ZX->GetXaxis()->GetNbins() + 1)->ProjectionX("1", "W"),
-                          options));
-      EXPECT_EQ(0, Equals("TH2ZY -> PWZ", hw1ZY,
-                          (TH1D *)h2ZY->ProfileX("PWZ", 0, h2ZY->GetYaxis()->GetNbins() + 1)->ProjectionX("1", "W"),
-                          options));
-      EXPECT_EQ(0, Equals("TH2ZY -> PWY", hw1YZ,
-                          (TH1D *)h2ZY->ProfileY("PWY", 0, h2ZY->GetXaxis()->GetNbins() + 1)->ProjectionX("1", "W"),
-                          options));
+      projectionTH1D = h2XY->ProfileX("PWX", 0, h2XY->GetYaxis()->GetNbins() + 1)->ProjectionX("1", "W");
+      EXPECT_EQ(0, Equals("TH2XY -> PWX", hw1XY, projectionTH1D, options));
+      delete projectionTH1D;
+      projectionTH1D = h2XY->ProfileY("PWY", 0, h2XY->GetXaxis()->GetNbins() + 1)->ProjectionX("1", "W");
+      EXPECT_EQ(0, Equals("TH2XY -> PWY", hw1YX, projectionTH1D, options));
+      delete projectionTH1D;
+      projectionTH1D = h2XZ->ProfileX("PWX", 0, h2XZ->GetYaxis()->GetNbins() + 1)->ProjectionX("1", "W");
+      EXPECT_EQ(0, Equals("TH2XZ -> PWX", hw1XZ, projectionTH1D, options));
+      delete projectionTH1D;
+      projectionTH1D = h2XZ->ProfileY("PWZ", 0, h2XZ->GetXaxis()->GetNbins() + 1)->ProjectionX("1", "W");
+      EXPECT_EQ(0, Equals("TH2XZ -> PWZ", hw1ZX, projectionTH1D, options));
+      delete projectionTH1D;
+      projectionTH1D = h2YX->ProfileX("PWY", 0, h2YX->GetYaxis()->GetNbins() + 1)->ProjectionX("1", "W");
+      EXPECT_EQ(0, Equals("TH2YX -> PWY", hw1YX, projectionTH1D, options));
+      delete projectionTH1D;
+      projectionTH1D = h2YX->ProfileY("PWX", 0, h2YX->GetXaxis()->GetNbins() + 1)->ProjectionX("1", "W");
+      EXPECT_EQ(0, Equals("TH2YX -> PWX", hw1XY, projectionTH1D, options));
+      delete projectionTH1D;
+      projectionTH1D = h2YZ->ProfileX("PWY", 0, h2YZ->GetYaxis()->GetNbins() + 1)->ProjectionX("1", "W");
+      EXPECT_EQ(0, Equals("TH2YZ -> PWY", hw1YZ, projectionTH1D, options));
+      delete projectionTH1D;
+      projectionTH1D = h2YZ->ProfileY("PWZ", 0, h2YZ->GetXaxis()->GetNbins() + 1)->ProjectionX("1", "W");
+      EXPECT_EQ(0, Equals("TH2YZ -> PWZ", hw1ZY, projectionTH1D, options));
+      delete projectionTH1D;
+      projectionTH1D = h2ZX->ProfileX("PWZ", 0, h2ZX->GetYaxis()->GetNbins() + 1)->ProjectionX("1", "W");
+      EXPECT_EQ(0, Equals("TH2ZX -> PWZ", hw1ZX, projectionTH1D, options));
+      delete projectionTH1D;
+      projectionTH1D = h2ZX->ProfileY("PWX", 0, h2ZX->GetXaxis()->GetNbins() + 1)->ProjectionX("1", "W");
+      EXPECT_EQ(0, Equals("TH2ZX -> PWX", hw1XZ, projectionTH1D, options));
+      delete projectionTH1D;
+      projectionTH1D = h2ZY->ProfileX("PWZ", 0, h2ZY->GetYaxis()->GetNbins() + 1)->ProjectionX("1", "W");
+      EXPECT_EQ(0, Equals("TH2ZY -> PWZ", hw1ZY, projectionTH1D, options));
+      delete projectionTH1D;
+      projectionTH1D = h2ZY->ProfileY("PWY", 0, h2ZY->GetXaxis()->GetNbins() + 1)->ProjectionX("1", "W");
+      EXPECT_EQ(0, Equals("TH2ZY -> PWY", hw1YZ, projectionTH1D, options));
+      delete projectionTH1D;
 
       options = 0;
       if (defaultEqualOptions & cmpOptPrint) std::cout << "----------------------------------------------" << std::endl;
@@ -744,31 +837,67 @@ public:
 
       // TH2 derived from STH3
       options = cmpOptStats;
-      EXPECT_EQ(0, Equals("STH3 -> XY", h2XY, (TH2D *)s3->Projection(1, 0), options));
-      EXPECT_EQ(0, Equals("STH3 -> XZ", h2XZ, (TH2D *)s3->Projection(2, 0), options));
-      EXPECT_EQ(0, Equals("STH3 -> YX", h2YX, (TH2D *)s3->Projection(0, 1), options));
-      EXPECT_EQ(0, Equals("STH3 -> YZ", h2YZ, (TH2D *)s3->Projection(2, 1), options));
-      EXPECT_EQ(0, Equals("STH3 -> ZX", h2ZX, (TH2D *)s3->Projection(0, 2), options));
-      EXPECT_EQ(0, Equals("STH3 -> ZY", h2ZY, (TH2D *)s3->Projection(1, 2), options));
+      projection = (TH2D *)s3->Projection(1, 0);
+      EXPECT_EQ(0, Equals("STH3 -> XY", h2XY, projection, options));
+      delete projection;
+      projection = (TH2D *)s3->Projection(2, 0);
+      EXPECT_EQ(0, Equals("STH3 -> XZ", h2XZ, projection, options));
+      delete projection;
+      projection = (TH2D *)s3->Projection(0, 1);
+      EXPECT_EQ(0, Equals("STH3 -> YX", h2YX, projection, options));
+      delete projection;
+      projection = (TH2D *)s3->Projection(2, 1);
+      EXPECT_EQ(0, Equals("STH3 -> YZ", h2YZ, projection, options));
+      delete projection;
+      projection = (TH2D *)s3->Projection(0, 2);
+      EXPECT_EQ(0, Equals("STH3 -> ZX", h2ZX, projection, options));
+      delete projection;
+      projection = (TH2D *)s3->Projection(1, 2);
+      EXPECT_EQ(0, Equals("STH3 -> ZY", h2ZY, projection, options));
+      delete projection;
 
-      EXPECT_EQ(0, Equals("THn3 -> XY", h2XY, (TH2D *)n3->Projection(1, 0), options));
-      EXPECT_EQ(0, Equals("THn3 -> XZ", h2XZ, (TH2D *)n3->Projection(2, 0), options));
-      EXPECT_EQ(0, Equals("THn3 -> YX", h2YX, (TH2D *)n3->Projection(0, 1), options));
-      EXPECT_EQ(0, Equals("THn3 -> YZ", h2YZ, (TH2D *)n3->Projection(2, 1), options));
-      EXPECT_EQ(0, Equals("THn3 -> ZX", h2ZX, (TH2D *)n3->Projection(0, 2), options));
-      EXPECT_EQ(0, Equals("THn3 -> ZY", h2ZY, (TH2D *)n3->Projection(1, 2), options));
+      projection = (TH2D *)n3->Projection(1, 0);
+      EXPECT_EQ(0, Equals("THn3 -> XY", h2XY, projection, options));
+      delete projection;
+      projection = (TH2D *)n3->Projection(2, 0);
+      EXPECT_EQ(0, Equals("THn3 -> XZ", h2XZ, projection, options));
+      delete projection;
+      projection = (TH2D *)n3->Projection(0, 1);
+      EXPECT_EQ(0, Equals("THn3 -> YX", h2YX, projection, options));
+      delete projection;
+      projection = (TH2D *)n3->Projection(2, 1);
+      EXPECT_EQ(0, Equals("THn3 -> YZ", h2YZ, projection, options));
+      delete projection;
+      projection = (TH2D *)n3->Projection(0, 2);
+      EXPECT_EQ(0, Equals("THn3 -> ZX", h2ZX, projection, options));
+      delete projection;
+      projection = (TH2D *)n3->Projection(1, 2);
+      EXPECT_EQ(0, Equals("THn3 -> ZY", h2ZY, projection, options));
+      delete projection;
       options = 0;
       if (defaultEqualOptions & cmpOptPrint) std::cout << "----------------------------------------------" << std::endl;
 
       // TH1 derived from STH3
       options = cmpOptStats;
-      EXPECT_EQ(0, Equals("STH3 -> X", h1X, (TH1D *)s3->Projection(0), options));
-      EXPECT_EQ(0, Equals("STH3 -> Y", h1Y, (TH1D *)s3->Projection(1), options));
-      EXPECT_EQ(0, Equals("STH3 -> Z", h1Z, (TH1D *)s3->Projection(2), options));
+      projectionTH1D = s3->Projection(0);
+      EXPECT_EQ(0, Equals("STH3 -> X", h1X, projectionTH1D, options));
+      delete projectionTH1D;
+      projectionTH1D = s3->Projection(1);
+      EXPECT_EQ(0, Equals("STH3 -> Y", h1Y, projectionTH1D, options));
+      delete projectionTH1D;
+      projectionTH1D = s3->Projection(2);
+      EXPECT_EQ(0, Equals("STH3 -> Z", h1Z, projectionTH1D, options));
+      delete projectionTH1D;
 
-      EXPECT_EQ(0, Equals("THn3 -> X", h1X, (TH1D *)n3->Projection(0), options));
-      EXPECT_EQ(0, Equals("THn3 -> Y", h1Y, (TH1D *)n3->Projection(1), options));
-      EXPECT_EQ(0, Equals("THn3 -> Z", h1Z, (TH1D *)n3->Projection(2), options));
+      projectionTH1D = n3->Projection(0);
+      EXPECT_EQ(0, Equals("THn3 -> X", h1X, projectionTH1D, options));
+      delete projectionTH1D;
+      projectionTH1D = n3->Projection(1);
+      EXPECT_EQ(0, Equals("THn3 -> Y", h1Y, projectionTH1D, options));
+      delete projectionTH1D;
+      projectionTH1D = n3->Projection(2);
+      EXPECT_EQ(0, Equals("THn3 -> Z", h1Z, projectionTH1D, options));
+      delete projectionTH1D;
       options = 0;
       if (defaultEqualOptions & cmpOptPrint) std::cout << "----------------------------------------------" << std::endl;
    }
@@ -836,12 +965,25 @@ public:
       // TProfile2d derived from TProfile3d
       options = cmpOptStats;
       // options = cmpOptPrint;
-      EXPECT_EQ(0, Equals("TProfile3D -> XY", p2XY, p3->Project3DProfile("yx"), options));
-      EXPECT_EQ(0, Equals("TProfile3D -> YX", p2YX, p3->Project3DProfile("xy"), options));
-      EXPECT_EQ(0, Equals("TProfile3D -> XZ", p2XZ, p3->Project3DProfile("zx"), options));
-      EXPECT_EQ(0, Equals("TProfile3D -> ZX", p2ZX, p3->Project3DProfile("xz"), options));
-      EXPECT_EQ(0, Equals("TProfile3D -> YZ", p2YZ, p3->Project3DProfile("zy"), options));
-      EXPECT_EQ(0, Equals("TProfile3D -> ZY", p2ZY, p3->Project3DProfile("yz"), options));
+      TProfile2D *profile2D;
+      profile2D = p3->Project3DProfile("yx");
+      EXPECT_EQ(0, Equals("TProfile3D -> XY", p2XY, profile2D, options));
+      delete profile2D;
+      profile2D = p3->Project3DProfile("xy");
+      EXPECT_EQ(0, Equals("TProfile3D -> YX", p2YX, profile2D, options));
+      delete profile2D;
+      profile2D = p3->Project3DProfile("zx");
+      EXPECT_EQ(0, Equals("TProfile3D -> XZ", p2XZ, profile2D, options));
+      delete profile2D;
+      profile2D = p3->Project3DProfile("xz");
+      EXPECT_EQ(0, Equals("TProfile3D -> ZX", p2ZX, profile2D, options));
+      delete profile2D;
+      profile2D = p3->Project3DProfile("zy");
+      EXPECT_EQ(0, Equals("TProfile3D -> YZ", p2YZ, profile2D, options));
+      delete profile2D;
+      profile2D = p3->Project3DProfile("yz");
+      EXPECT_EQ(0, Equals("TProfile3D -> ZY", p2ZY, profile2D, options));
+      delete profile2D;
       options = 0;
       if (defaultEqualOptions & cmpOptPrint) cout << "----------------------------------------------" << endl;
 
@@ -849,19 +991,32 @@ public:
       options = cmpOptStats;
       // options = cmpOptDebug;
       TProfile2D *tmp1 = 0;
-      EXPECT_EQ(0, Equals("TProfile2D -> X", p1X, p2XY->ProfileX(), options));
+      TProfile *profile;
+      profile = p2XY->ProfileX();
+      EXPECT_EQ(0, Equals("TProfile2D -> X", p1X, profile, options));
+      delete profile;
       tmp1 = p3->Project3DProfile("xz");
-      EXPECT_EQ(0, Equals("TProfile3D -> X", p1X, tmp1->ProfileY(), options));
+      profile = tmp1->ProfileY();
+      EXPECT_EQ(0, Equals("TProfile3D -> X", p1X, profile, options));
+      delete profile;
       delete tmp1;
       tmp1 = 0;
-      EXPECT_EQ(0, Equals("TProfile2D -> Y", p1Y, p2ZY->ProfileY(), options));
+      profile = p2ZY->ProfileY();
+      EXPECT_EQ(0, Equals("TProfile2D -> Y", p1Y, profile, options));
+      delete profile;
       tmp1 = p3->Project3DProfile("xy");
-      EXPECT_EQ(0, Equals("TProfile3D -> X", p1Y, tmp1->ProfileX(), options));
+      profile = tmp1->ProfileX();
+      EXPECT_EQ(0, Equals("TProfile3D -> X", p1Y, profile, options));
+      delete profile;
       delete tmp1;
       tmp1 = 0;
-      EXPECT_EQ(0, Equals("TProfile2D -> Z", p1Z, p2ZX->ProfileX(), options));
+      profile = p2ZX->ProfileX();
+      EXPECT_EQ(0, Equals("TProfile2D -> Z", p1Z, profile, options));
+      delete profile;
       tmp1 = p3->Project3DProfile("zy");
-      EXPECT_EQ(0, Equals("TProfile3D -> Z", p1Z, tmp1->ProfileY(), options));
+      profile = tmp1->ProfileY();
+      EXPECT_EQ(0, Equals("TProfile3D -> Z", p1Z, profile, options));
+      delete profile;
       delete tmp1;
       tmp1 = 0;
    }

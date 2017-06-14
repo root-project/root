@@ -49,6 +49,7 @@ TEST(StressHistorgram, TestAddVar1)
    delete h1;
    delete h2;
    delete h3;
+   delete h4;
 }
 
 TEST(StressHistorgram, TestAddVar2)
@@ -75,6 +76,7 @@ TEST(StressHistorgram, TestAddVar2)
 
    EXPECT_TRUE(HistogramsEquals(h5, h6, cmpOptStats, 1E-13));
    delete h5;
+   delete h6;
    delete h7;
 }
 
@@ -108,4 +110,5 @@ TEST(StressHistorgram, TestAddVar3)
    EXPECT_TRUE(HistogramsEquals(h2, h3, cmpOptStats, 1E-13));
    delete h1;
    delete h2;
+   delete h3;
 }

@@ -69,6 +69,11 @@ TEST(StressHistorgram, TestConversion1D)
    delete s1i;
    delete s1f;
    delete s1d;
+   delete h1c;
+   delete h1s;
+   delete h1i;
+   delete h1f;
+   delete h1d;
 
    THn *n1c = THn::CreateHn("n1c", "n1cTitle", h1cn);
    THn *n1s = THn::CreateHn("n1s", "n1sTitle", h1sn);
@@ -87,6 +92,11 @@ TEST(StressHistorgram, TestConversion1D)
    delete n1i;
    delete n1f;
    delete n1d;
+   delete h1cn;
+   delete h1sn;
+   delete h1in;
+   delete h1fn;
+   delete h1dn;
 }
 
 TEST(StressHistorgram, TestConversion2D)
@@ -141,6 +151,11 @@ TEST(StressHistorgram, TestConversion2D)
    delete s2i;
    delete s2f;
    delete s2d;
+   delete h2c;
+   delete h2s;
+   delete h2i;
+   delete h2f;
+   delete h2d;
 
    THn *n2c = THn::CreateHn("n2c", "n2cTitle", h2cn);
    THn *n2s = THn::CreateHn("n2s", "n2sTitle", h2sn);
@@ -159,6 +174,11 @@ TEST(StressHistorgram, TestConversion2D)
    delete n2i;
    delete n2f;
    delete n2d;
+   delete h2cn;
+   delete h2sn;
+   delete h2in;
+   delete h2fn;
+   delete h2dn;
 }
 
 TEST(StressHistorgram, TestConversion3D)
@@ -214,6 +234,11 @@ TEST(StressHistorgram, TestConversion3D)
    delete s3i;
    delete s3f;
    delete s3d;
+   delete h3c;
+   delete h3s;
+   delete h3i;
+   delete h3f;
+   delete h3d;
 
    THn *n3c = THn::CreateHn("n3c", "n3cTitle", h3cn);
    THn *n3s = THn::CreateHn("n3s", "n3sTitle", h3sn);
@@ -232,4 +257,9 @@ TEST(StressHistorgram, TestConversion3D)
    delete n3i;
    delete n3f;
    delete n3d;
+   delete h3cn;
+   delete h3sn;
+   delete h3in;
+   delete h3fn;
+   delete h3dn;
 }

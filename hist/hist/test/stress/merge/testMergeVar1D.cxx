@@ -52,4 +52,5 @@ TEST(StressHistorgram, TestMergeVar1D)
    delete h1;
    delete h2;
    delete h3;
+   delete h4;
 }

@@ -59,6 +59,7 @@ TYPED_TEST(HistTest, TestMulFND)
 
    EXPECT_TRUE(HistogramsEquals(s1, s2));
    delete s1;
+   delete s2;
    delete f;
 }
 
@@ -96,5 +97,6 @@ TYPED_TEST(HistTest, TestMulFND2)
 
    EXPECT_TRUE(HistogramsEquals(s1, s2));
    delete s1;
+   delete s2;
    delete f;
 }

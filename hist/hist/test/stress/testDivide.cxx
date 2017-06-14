@@ -68,6 +68,7 @@ TEST(StressHistorgram, TestDivide1)
    delete h1;
    delete h2;
    delete h3;
+   delete h4;
 }
 
 TEST(StressHistorgram, TestDivide2)
@@ -112,6 +113,7 @@ TEST(StressHistorgram, TestDivide2)
    delete h1;
    delete h2;
    delete h3;
+   delete h4;
 }
 
 /*
@@ -150,4 +152,8 @@ TEST(StressHistorgram, TestDivideProf1)
    // will be finished.
 
    SUCCEED();
+
+   delete p1;
+   delete p2;
+   delete p3;
 }*/

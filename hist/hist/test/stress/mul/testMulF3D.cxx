@@ -53,6 +53,7 @@ TEST(StressHistorgram, TestMulF3D)
    // stats fails because of the error precision
    EXPECT_TRUE(HistogramsEquals(h1, h2));
    delete h1;
+   delete h2;
    delete f;
 }
 
@@ -89,5 +90,6 @@ TEST(StressHistorgram, TestMulF3D2)
    // stats fails because of the error precision
    EXPECT_TRUE(HistogramsEquals(h1, h2));
    delete h1;
+   delete h2;
    delete f;
 }

@@ -73,6 +73,7 @@ TEST(StressHistorgram, TestDivide2D1)
    delete h1;
    delete h2;
    delete h3;
+   delete h4;
 }
 
 TEST(StressHistorgram, TestDivide2D2)
@@ -121,4 +122,5 @@ TEST(StressHistorgram, TestDivide2D2)
    delete h1;
    delete h2;
    delete h3;
+   delete h4;
 }

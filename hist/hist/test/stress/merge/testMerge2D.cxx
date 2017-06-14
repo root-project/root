@@ -71,4 +71,5 @@ TEST(StressHistorgram, TestMerge2D)
    delete h1;
    delete h2;
    delete h3;
+   delete h4;
 }

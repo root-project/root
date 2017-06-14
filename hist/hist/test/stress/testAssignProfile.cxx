@@ -40,6 +40,7 @@ TEST(StressHistorgram, TestAssignProfile1D)
 
    EXPECT_TRUE(HistogramsEquals(p1, p2, cmpOptStats));
    delete p1;
+   delete p2;
 }
 
 TEST(StressHistorgram, TestAssignProfile2D)
@@ -62,6 +63,7 @@ TEST(StressHistorgram, TestAssignProfile2D)
 
    EXPECT_TRUE(HistogramsEquals(p1, p2, cmpOptStats));
    delete p1;
+   delete p2;
 }
 
 TEST(StressHistorgram, TestAssignProfile3D)
@@ -85,6 +87,7 @@ TEST(StressHistorgram, TestAssignProfile3D)
 
    EXPECT_TRUE(HistogramsEquals(p1, p2));
    delete p1;
+   delete p2;
 }
 
 TEST(StressHistorgram, TestAssignProfileVar1D)
@@ -107,4 +110,5 @@ TEST(StressHistorgram, TestAssignProfileVar1D)
 
    EXPECT_TRUE(HistogramsEquals(p1, p2, cmpOptStats));
    delete p1;
+   delete p2;
 }

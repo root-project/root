@@ -47,6 +47,7 @@ TEST(StressHistorgram, TestWriteRead1D)
 
    EXPECT_TRUE(HistogramsEquals(h1, h2, cmpOptStats));
    delete h1;
+   delete h2;
 }
 
 TEST(StressHistorgram, TestWriteRead2D)
@@ -72,6 +73,7 @@ TEST(StressHistorgram, TestWriteRead2D)
 
    EXPECT_TRUE(HistogramsEquals(h1, h2, cmpOptStats));
    delete h1;
+   delete h2;
 }
 
 TEST(StressHistorgram, TestWriteRead3D)
@@ -99,6 +101,7 @@ TEST(StressHistorgram, TestWriteRead3D)
 
    EXPECT_TRUE(HistogramsEquals(h1, h2, cmpOptStats));
    delete h1;
+   delete h2;
 }
 
 typedef ::testing::Types<THnSparseD, THnD> HistTestTypes_t;
@@ -132,6 +135,7 @@ TYPED_TEST(HistTest, TestWriteReadHn)
 
    EXPECT_TRUE(HistogramsEquals(s1, s2, cmpOptStats));
    delete s1;
+   delete s2;
 }
 
 TEST(StressHistorgram, TestWriteReadVar1D)
@@ -159,4 +163,5 @@ TEST(StressHistorgram, TestWriteReadVar1D)
 
    EXPECT_TRUE(HistogramsEquals(h1, h2, cmpOptStats));
    delete h1;
+   delete h2;
 }

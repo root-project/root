@@ -70,6 +70,7 @@ TEST(StressHistorgram, TestDivideVar1)
    delete h1;
    delete h2;
    delete h3;
+   delete h4;
 }
 
 TEST(StressHistorgram, TestDivideVar2)
@@ -117,4 +118,5 @@ TEST(StressHistorgram, TestDivideVar2)
    delete h1;
    delete h2;
    delete h3;
+   delete h4;
 }

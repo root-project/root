@@ -58,6 +58,7 @@ TEST(StressHistorgram, TestMerge1DExtend)
    EXPECT_TRUE(HistogramsEquals(h1, h4, cmpOptStats, 1E-10));
    delete h1;
    delete h2;
+   delete h4;
 }
 
 TEST(StressHistorgram, TestMerge1DExtendProf)
@@ -94,4 +95,5 @@ TEST(StressHistorgram, TestMerge1DExtendProf)
    EXPECT_TRUE(HistogramsEquals(h1, h4, cmpOptStats, 1E-10));
    delete h1;
    delete h2;
+   delete h4;
 }

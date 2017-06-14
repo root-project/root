@@ -147,6 +147,7 @@ TEST(StressHistorgram, TestMul3D2)
    h1->Multiply(h2);
 
    EXPECT_TRUE(HistogramsEquals(h3, h1, cmpOptStats, 1E-13));
+   delete h1;
    delete h2;
    delete h3;
 }

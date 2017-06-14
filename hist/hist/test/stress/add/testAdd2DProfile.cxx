@@ -99,6 +99,7 @@ TEST(StressHistorgram, TestAdd2DProfile2)
 
    p1->Add(p2, c2);
    EXPECT_TRUE(HistogramsEquals(p3, p1, cmpOptStats, 1E-10));
+   delete p1;
    delete p2;
    delete p3;
 }

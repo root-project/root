@@ -80,6 +80,7 @@ TEST(StressHistorgram, TestMerge1DLabelAll)
    delete h1;
    delete h2;
    delete h3;
+   delete h4;
 }
 
 TEST(StressHistorgram, TestMerge1DLabelAllDiff)
@@ -134,6 +135,7 @@ TEST(StressHistorgram, TestMerge1DLabelAllDiff)
    delete h1;
    delete h2;
    delete h3;
+   delete h4;
 }
 
 TEST(StressHistorgram, TestMerge1DLabelDiff)
@@ -196,6 +198,7 @@ TEST(StressHistorgram, TestMerge1DLabelDiff)
    delete h1;
    delete h2;
    delete h3;
+   delete h4;
 }
 
 TEST(StressHistorgram, TestMerge1DLabelSame)
@@ -255,4 +258,5 @@ TEST(StressHistorgram, TestMerge1DLabelSame)
    delete h1;
    delete h2;
    delete h3;
+   delete h4;
 }

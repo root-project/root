@@ -93,22 +93,36 @@ TEST(StressHistorgram, TestTH2toTH1)
 
    int options = cmpOptStats;
 
+   TH1D *projection;
    // TH1 derived from h2XY
-   EXPECT_EQ(0, Equals("TH2XY    -> X", h1X, (TH1D *)h2XY->ProjectionX("x"), options));
-   EXPECT_EQ(0, Equals("TH2XY    -> Y", h1Y, (TH1D *)h2XY->ProjectionY("y"), options));
+   projection = (TH1D *)h2XY->ProjectionX("x");
+   EXPECT_EQ(0, Equals("TH2XY    -> X", h1X, projection, options));
+   delete projection;
+   projection = (TH1D *)h2XY->ProjectionY("y");
+   EXPECT_EQ(0, Equals("TH2XY    -> Y", h1Y, projection, options));
+   delete projection;
 
-   EXPECT_EQ(0, Equals("TH2XYO  -> X", h1X, (TH1D *)h2XY->ProjectionX("ox", 0, -1, "o"), options));
-   EXPECT_EQ(0, Equals("TH2XYO  -> Y", h1Y, (TH1D *)h2XY->ProjectionY("oy", 0, -1, "o"), options));
+   projection = (TH1D *)h2XY->ProjectionX("ox", 0, -1, "o");
+   EXPECT_EQ(0, Equals("TH2XYO  -> X", h1X, projection, options));
+   delete projection;
+   projection = (TH1D *)h2XY->ProjectionY("oy", 0, -1, "o");
+   EXPECT_EQ(0, Equals("TH2XYO  -> Y", h1Y, projection, options));
+   delete projection;
 
-   EXPECT_EQ(0,
-             Equals("TH2XY -> PX", pe1XY, (TH1D *)h2XY->ProfileX("PX", 0, h2XY->GetYaxis()->GetNbins() + 1), options));
-   EXPECT_EQ(0,
-             Equals("TH2XY -> PY", pe1YX, (TH1D *)h2XY->ProfileY("PY", 0, h2XY->GetXaxis()->GetNbins() + 1), options));
+   projection = (TH1D *)h2XY->ProfileX("PX", 0, h2XY->GetYaxis()->GetNbins() + 1);
+   EXPECT_EQ(0, Equals("TH2XY -> PX", pe1XY, projection, options));
+   delete projection;
 
-   EXPECT_EQ(0, Equals("TH2XYO -> PX", pe1XY, (TH1D *)h2XY->ProfileX("OPX", 0, h2XY->GetYaxis()->GetNbins() + 1, "o"),
-                       options));
-   EXPECT_EQ(0, Equals("TH2XYO -> PY", pe1YX, (TH1D *)h2XY->ProfileY("OPY", 0, h2XY->GetXaxis()->GetNbins() + 1, "o"),
-                       options));
+   projection = (TH1D *)h2XY->ProfileY("PY", 0, h2XY->GetXaxis()->GetNbins() + 1);
+   EXPECT_EQ(0, Equals("TH2XY -> PY", pe1YX, projection, options));
+   delete projection;
+
+   projection = (TH1D *)h2XY->ProfileX("OPX", 0, h2XY->GetYaxis()->GetNbins() + 1, "o");
+   EXPECT_EQ(0, Equals("TH2XYO -> PX", pe1XY, projection, options));
+   delete projection;
+   projection = (TH1D *)h2XY->ProfileY("OPY", 0, h2XY->GetXaxis()->GetNbins() + 1, "o");
+   EXPECT_EQ(0, Equals("TH2XYO -> PY", pe1YX, projection, options));
+   delete projection;
 
    h2XY->GetXaxis()->SetRange(minbinX, maxbinX);
    h2XY->GetYaxis()->SetRange(minbinY, maxbinY);
@@ -122,17 +136,33 @@ TEST(StressHistorgram, TestTH2toTH1)
    // This two, the statistics should work!
    options = 0;
 
-   EXPECT_EQ(0, Equals("TH2XYR  -> X", h1XR, (TH1D *)h2XY->ProjectionX("x"), options));
-   EXPECT_EQ(0, Equals("TH2XYR  -> Y", h1YR, (TH1D *)h2XY->ProjectionY("y"), options));
+   projection = (TH1D *)h2XY->ProjectionX("x");
+   EXPECT_EQ(0, Equals("TH2XYR  -> X", h1XR, projection, options));
+   delete projection;
+   projection = (TH1D *)h2XY->ProjectionY("y");
+   EXPECT_EQ(0, Equals("TH2XYR  -> Y", h1YR, projection, options));
+   delete projection;
 
-   EXPECT_EQ(0, Equals("TH2XYRO -> X", h1XOR, (TH1D *)h2XY->ProjectionX("ox", 0, -1, "o"), options));
-   EXPECT_EQ(0, Equals("TH2XYRO -> Y", h1YOR, (TH1D *)h2XY->ProjectionY("oy", 0, -1, "o"), options));
+   projection = (TH1D *)h2XY->ProjectionX("ox", 0, -1, "o");
+   EXPECT_EQ(0, Equals("TH2XYRO -> X", h1XOR, projection, options));
+   delete projection;
+   projection = (TH1D *)h2XY->ProjectionY("oy", 0, -1, "o");
+   EXPECT_EQ(0, Equals("TH2XYRO -> Y", h1YOR, projection, options));
+   delete projection;
 
-   EXPECT_EQ(0, Equals("TH2XYR -> PX", pe1XYR, (TH1D *)h2XY->ProfileX("PX"), options));
-   EXPECT_EQ(0, Equals("TH2XYR -> PY", pe1YXR, (TH1D *)h2XY->ProfileY("PY"), options));
+   projection = (TH1D *)h2XY->ProfileX("PX");
+   EXPECT_EQ(0, Equals("TH2XYR -> PX", pe1XYR, projection, options));
+   delete projection;
+   projection = (TH1D *)h2XY->ProfileY("PY");
+   EXPECT_EQ(0, Equals("TH2XYR -> PY", pe1YXR, projection, options));
+   delete projection;
 
-   EXPECT_EQ(0, Equals("TH2XYRO -> PX", pe1XYOR, (TH1D *)h2XY->ProfileX("OPX", 0, -1, "o"), options));
-   EXPECT_EQ(0, Equals("TH2XYRO -> PY", pe1YXOR, (TH1D *)h2XY->ProfileY("OPY", 0, -1, "o"), options));
+   projection = (TH1D *)h2XY->ProfileX("OPX", 0, -1, "o");
+   EXPECT_EQ(0, Equals("TH2XYRO -> PX", pe1XYOR, projection, options));
+   delete projection;
+   projection = (TH1D *)h2XY->ProfileY("OPY", 0, -1, "o");
+   EXPECT_EQ(0, Equals("TH2XYRO -> PY", pe1YXOR, projection, options));
+   delete projection;
 
    options = 0;
 

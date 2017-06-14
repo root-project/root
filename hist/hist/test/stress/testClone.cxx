@@ -38,6 +38,7 @@ TEST(StressHistorgram, TestClone1D)
 
    EXPECT_TRUE(HistogramsEquals(h1, h2, cmpOptStats));
    delete h1;
+   delete h2;
 }
 
 TEST(StressHistorgram, TestClone2D)
@@ -58,6 +59,7 @@ TEST(StressHistorgram, TestClone2D)
 
    EXPECT_TRUE(HistogramsEquals(h1, h2, cmpOptStats));
    delete h1;
+   delete h2;
 }
 
 TEST(StressHistorgram, TestClone3D)
@@ -80,6 +82,7 @@ TEST(StressHistorgram, TestClone3D)
 
    EXPECT_TRUE(HistogramsEquals(h1, h2, cmpOptStats));
    delete h1;
+   delete h2;
 }
 
 TEST(StressHistorgram, TestCloneProfile1D)
@@ -98,6 +101,7 @@ TEST(StressHistorgram, TestCloneProfile1D)
 
    EXPECT_TRUE(HistogramsEquals(p1, p2, cmpOptStats));
    delete p1;
+   delete p2;
 }
 
 TEST(StressHistorgram, TestCloneProfile2D)
@@ -118,6 +122,7 @@ TEST(StressHistorgram, TestCloneProfile2D)
 
    EXPECT_TRUE(HistogramsEquals(p1, p2, cmpOptStats));
    delete p1;
+   delete p2;
 }
 
 TEST(StressHistorgram, TestCloneProfile3D)
@@ -139,6 +144,7 @@ TEST(StressHistorgram, TestCloneProfile3D)
 
    EXPECT_TRUE(HistogramsEquals(p1, p2));
    delete p1;
+   delete p2;
 }
 
 TEST(StressHistorgram, TestCloneProfileVar1D)
@@ -160,6 +166,7 @@ TEST(StressHistorgram, TestCloneProfileVar1D)
 
    EXPECT_TRUE(HistogramsEquals(p1, p2, cmpOptStats));
    delete p1;
+   delete p2;
 }
 
 TEST(StressHistorgram, TestCloneVar1D)
@@ -182,4 +189,5 @@ TEST(StressHistorgram, TestCloneVar1D)
 
    EXPECT_TRUE(HistogramsEquals(h1, h2, cmpOptStats));
    delete h1;
+   delete h2;
 }

@@ -50,6 +50,7 @@ TEST(StressHistorgram, TestMulF2D)
    // stats fails because of the error precision
    EXPECT_TRUE(HistogramsEquals(h1, h2)); //, cmpOptStats | cmpOptDebug);
    delete h1;
+   delete h2;
    delete f;
 }
 
@@ -83,5 +84,6 @@ TEST(StressHistorgram, TestMulF2D2)
    // stats fails because of the error precision
    EXPECT_TRUE(HistogramsEquals(h1, h2));
    delete h1;
+   delete h2;
    delete f;
 }

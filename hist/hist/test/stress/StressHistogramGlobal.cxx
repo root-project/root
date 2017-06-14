@@ -128,8 +128,6 @@ int Equals(const char *msg, THnBase *h1, THnBase *h2, int options, double ERRORL
 
    if (print || debug) std::cout << msg << ": \t" << (differents ? "FAILED" : "OK") << std::endl;
 
-   delete h2;
-
    return differents;
 }
 
@@ -181,7 +179,6 @@ int Equals(const char *msg, THnBase *s, TH1 *h2, int options, double ERRORLIMIT)
 
    if (print || debug) std::cout << msg << ": \t" << (differents ? "FAILED" : "OK") << std::endl;
 
-   delete h2;
    delete[] coord;
    return differents;
 }
@@ -230,8 +227,6 @@ int Equals(const char *msg, TH3D *h1, TH3D *h2, int options, double ERRORLIMIT)
    if (compareStats) differents += CompareStatistics(h1, h2, debug, ERRORLIMIT);
 
    if (print || debug) std::cout << msg << ": \t" << (differents ? "FAILED" : "OK") << std::endl;
-
-   delete h2;
 
    return differents;
 }
@@ -325,8 +320,6 @@ int Equals(const char *msg, TH2D *h1, TH2D *h2, int options, double ERRORLIMIT)
 
    if (print || debug) std::cout << msg << ": \t" << (differents ? "FAILED" : "OK") << std::endl;
 
-   delete h2;
-
    return differents;
 }
 
@@ -384,8 +377,6 @@ int Equals(const char *msg, TH1D *h1, TH1D *h2, int options, double ERRORLIMIT)
    if (compareStats) differents += CompareStatistics(h1, h2, debug, ERRORLIMIT);
 
    if (print || debug) std::cout << msg << ": \t" << (differents ? "FAILED" : "OK") << std::endl;
-
-   delete h2;
 
    return differents;
 }

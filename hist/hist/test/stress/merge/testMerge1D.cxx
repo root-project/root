@@ -50,6 +50,7 @@ TEST(StressHistorgram, TestMerge1D)
    delete h1;
    delete h2;
    delete h3;
+   delete h4;
 }
 
 TEST(StressHistorgram, TestMerge1DWithBuffer)
@@ -117,4 +118,5 @@ TEST(StressHistorgram, TestMerge1DWithBuffer)
    delete h1;
    delete h2;
    delete h3;
+   delete h4;
 }

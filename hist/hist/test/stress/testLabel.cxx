@@ -59,6 +59,7 @@ TEST(StressHistorgram, TestLabel)
 
    EXPECT_TRUE(HistogramsEquals(h1, h2, cmpOptStats, 1E-13));
    delete h1;
+   delete h2;
 }
 
 TEST(StressHistorgram, TestLabel2DX)
@@ -97,6 +98,7 @@ TEST(StressHistorgram, TestLabel2DX)
 
    EXPECT_TRUE(HistogramsEquals(h1, h2, cmpOptStats, 1E-13));
    delete h1;
+   delete h2;
 }
 
 TEST(StressHistorgram, TestLabel2DY)
@@ -135,6 +137,7 @@ TEST(StressHistorgram, TestLabel2DY)
 
    EXPECT_TRUE(HistogramsEquals(h1, h2, cmpOptStats, 1E-13));
    delete h1;
+   delete h2;
 }
 
 TEST(StressHistorgram, TestLabelsInflateProf1D)
@@ -167,4 +170,5 @@ TEST(StressHistorgram, TestLabelsInflateProf1D)
 
    EXPECT_TRUE(HistogramsEquals(p1, p2));
    delete p1;
+   delete p2;
 }

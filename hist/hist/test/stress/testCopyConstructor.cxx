@@ -38,6 +38,7 @@ TEST(StressHistorgram, TestCopyConstructor1D)
 
    EXPECT_TRUE(HistogramsEquals(h1, h2, cmpOptStats));
    delete h1;
+   delete h2;
 }
 
 TEST(StressHistorgram, TestCopyConstructor2D)
@@ -58,6 +59,7 @@ TEST(StressHistorgram, TestCopyConstructor2D)
 
    EXPECT_TRUE(HistogramsEquals(h1, h2, cmpOptStats));
    delete h1;
+   delete h2;
 }
 
 TEST(StressHistorgram, TestCopyConstructor3D)
@@ -80,6 +82,7 @@ TEST(StressHistorgram, TestCopyConstructor3D)
 
    EXPECT_TRUE(HistogramsEquals(h1, h2, cmpOptStats));
    delete h1;
+   delete h2;
 }
 
 TEST(StressHistorgram, TestCopyConstructorVar1D)
@@ -102,4 +105,5 @@ TEST(StressHistorgram, TestCopyConstructorVar1D)
 
    EXPECT_TRUE(HistogramsEquals(h1, h2, cmpOptStats));
    delete h1;
+   delete h2;
 }

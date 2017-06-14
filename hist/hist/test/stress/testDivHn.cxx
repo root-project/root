@@ -85,6 +85,7 @@ TYPED_TEST(HistTest, TestDivHn1)
    delete s1;
    delete s2;
    delete s3;
+   delete s4;
 }
 
 TYPED_TEST(HistTest, TestDivHn2)
@@ -149,4 +150,5 @@ TYPED_TEST(HistTest, TestDivHn2)
    delete s1;
    delete s2;
    delete s3;
+   delete s4;
 }

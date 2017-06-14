@@ -90,6 +90,7 @@ TYPED_TEST(HistTest, TestMulHn)
    s1->Multiply(s2);
 
    EXPECT_TRUE(HistogramsEquals(s3, s1, cmpOptNone, 1E-10));
+   delete s1;
    delete s2;
    delete s3;
 }

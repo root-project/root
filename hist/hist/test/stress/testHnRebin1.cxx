@@ -56,4 +56,5 @@ TYPED_TEST(HistTest, TestHnRebin1)
    EXPECT_TRUE(HistogramsEquals(s2, s3));
    delete s1;
    delete s2;
+   delete s3;
 }

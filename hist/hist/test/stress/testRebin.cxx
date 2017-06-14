@@ -52,6 +52,7 @@ TEST(StressHistorgram, Test2DRebin)
    EXPECT_TRUE(HistogramsEquals(h2d2, h3, cmpOptStats));
    delete h2d;
    delete h2d2;
+   delete h3;
 }
 
 TEST(StressHistorgram, Test2DRebinProfile)
@@ -81,6 +82,7 @@ TEST(StressHistorgram, Test2DRebinProfile)
    EXPECT_TRUE(HistogramsEquals(h2d2, h3, cmpOptStats));
    delete h2d;
    delete h2d2;
+   delete h3;
 }
 
 TEST(StressHistorgram, Test3DRebin)
@@ -119,4 +121,5 @@ TEST(StressHistorgram, Test3DRebin)
    EXPECT_TRUE(HistogramsEquals(h3d2, h3, cmpOptStats));
    delete h3d;
    delete h3d2;
+   delete h3;
 }

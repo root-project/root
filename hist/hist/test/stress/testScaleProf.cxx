@@ -41,6 +41,7 @@ TEST(StressHistorgram, TestScale1DProf)
 
    EXPECT_TRUE(HistogramsEquals(p1, p2, cmpOptStats));
    delete p1;
+   delete p2;
 }
 
 TEST(StressHistorgram, TestScale2DProf)
@@ -64,6 +65,7 @@ TEST(StressHistorgram, TestScale2DProf)
 
    EXPECT_TRUE(HistogramsEquals(p1, p2, cmpOptStats));
    delete p1;
+   delete p2;
 }
 
 TEST(StressHistorgram, TestScale3DProf)
@@ -88,4 +90,5 @@ TEST(StressHistorgram, TestScale3DProf)
 
    EXPECT_TRUE(HistogramsEquals(p1, p2, cmpOptStats));
    delete p1;
+   delete p2;
 }

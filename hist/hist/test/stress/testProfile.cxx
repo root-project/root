@@ -39,6 +39,7 @@ TEST(StressHistorgram, TestProfile2Extend)
    }
    EXPECT_TRUE(HistogramsEquals(h1, h2, cmpOptStats, 1E-10));
    delete h1;
+   delete h2;
    TProfile2D::Approximate(false);
 }
 
@@ -57,6 +58,7 @@ TEST(StressHistorgram, TestProfileExtend)
       h0->Fill(x, y);
    }
    EXPECT_TRUE(HistogramsEquals(h1, h0, cmpOptStats, 1E-10));
+   delete h0;
    delete h1;
    TProfile::Approximate(false);
 }
