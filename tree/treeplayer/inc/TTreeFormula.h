@@ -84,6 +84,14 @@ protected:
       kMaxIf           = 205
    };
 
+   // Helper struct to hold a cache
+   // that can accelerate calculation of the RealIndex.
+   struct RealInstanceCache {
+      Int_t fInstanceCache = 0;
+      Int_t fLocalIndexCache = 0;
+      Int_t fVirtAccumCache = 0;
+   };
+
    TTree       *fTree;            //! pointer to Tree
    Int_t        fCodes[kMAXCODES]; //  List of leaf numbers referenced in formula
    Int_t       fNdata[kMAXCODES]; //! This caches the physical number of element in the leaf or datamember.
@@ -120,6 +128,8 @@ protected:
    std::vector<std::string>  fAliasesUsed;    //! List of aliases used during the parsing of the expression.
 
    LongDouble_t*        fConstLD;   //! local version of fConsts able to store bigger numbers
+
+   RealInstanceCache fRealInstanceCache; //! Cache accelerating the GetRealInstance function
 
    TTreeFormula(const char *name, const char *formula, TTree *tree, const std::vector<std::string>& aliases);
    void Init(const char *name, const char *formula);
