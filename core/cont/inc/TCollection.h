@@ -41,6 +41,16 @@ R__EXTERN TVirtualMutex *gCollectionMutex;
 
 // #define R__CHECK_COLLECTION_MULTI_ACCESS
 
+// When R__CHECK_COLLECTION_MULTI_ACCESS is turned on (defined),
+// the normal (not locked) ROOT TCollections are instrumented with a
+// pseudo read-write lock which does not halt the execution but detects
+// and report concurrent access to the same collections.
+// Multiple readers are allowed.
+// Multiple concurrent writer is reported as a Conflict
+// Readers access while a write is running is reported as Conflict
+// Re-entrant writing call by the same Writer thread are allowed.
+// Entering a writing section by a single Reader thread is allowed.
+
 #ifdef R__CHECK_COLLECTION_MULTI_ACCESS
 #include <atomic>
 #include <thread>
