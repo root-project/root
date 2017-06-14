@@ -1,22 +1,18 @@
-############################################################################
-# CMakeLists.txt file for building ROOT core/metacling package
-############################################################################
-
 # TInterpreter implementation for cling. Only in libCling; needs to resolve
 # symbols from libCore.
 
-ROOT_GLOB_SOURCES(sources ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cxx)
+ROOT_GLOB_SOURCES(sources ${CMAKE_CURRENT_SOURCE_DIR}/*.cxx)
 
 include_directories(${LLVM_INCLUDE_DIRS} ${CLING_INCLUDE_DIRS})
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/res
-        ${CMAKE_CURRENT_SOURCE_DIR}/../clingutils/res
-        ${CMAKE_CURRENT_SOURCE_DIR}/../foundation/res)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../res
+        ${CMAKE_CURRENT_SOURCE_DIR}/../../clingutils/res
+        ${CMAKE_CURRENT_SOURCE_DIR}/../../foundation/res)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CLING_CXXFLAGS}")
 
 if(MSVC)
-set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/src/TClingCallbacks.cxx COMPILE_FLAGS -GR-)
+set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/TClingCallbacks.cxx COMPILE_FLAGS -GR-)
 else()
-set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/src/TClingCallbacks.cxx COMPILE_FLAGS -fno-rtti)
+set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/TClingCallbacks.cxx COMPILE_FLAGS -fno-rtti)
 endif()
 
 # This to avoid warning coming from llvm/src/tools/clang/include/clang/Sema/Lookup.h:441
@@ -46,8 +42,4 @@ if(APPLE)
 target_link_libraries(Cling -Wl,-bind_at_load -Wl,-undefined -Wl,dynamic_lookup)
 else()
 target_link_libraries(Cling -Wl,--unresolved-symbols=ignore-in-object-files)
-endif()
-
-if(testing)
-    add_subdirectory(test)
 endif()
