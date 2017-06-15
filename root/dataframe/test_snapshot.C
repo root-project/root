@@ -111,12 +111,12 @@ int runTest() {
    std::cout << "---- Now with a tree in the root directory\n";
    int ret = do_work(fileName, outFileName, treeName, outTreeName);
 
-//    // now we put the tree in a directory
-//    outFileName = "test_snapshot_inDirectory_output.root";
-//    treeName = "myTree";
-//    outTreeName = "a/myTree";
-//    std::cout << "---- Now with a tree in a subdirectory\n";
-//    ret += do_work(fileName, outFileName, treeName, outTreeName);
+   // now we put the tree in a directory
+   outFileName = "test_snapshot_inDirectory_output.root";
+   treeName = "myTree";
+   outTreeName = "a/myTree";
+   std::cout << "---- Now with a tree in a subdirectory\n";
+   ret += do_work(fileName, outFileName, treeName, outTreeName);
 
    return ret;
 }
