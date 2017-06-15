@@ -13,7 +13,7 @@ void fill_file(const char *filename, const int n) {
    t.Write();
 }
 
-int test_snapshot2Files() {
+int test_snapshotNFiles() {
    fill_file("file_snapshot2Files_1.root",1);
    fill_file("file_snapshot2Files_2.root",10);
    // Single threaded
@@ -49,5 +49,5 @@ int test_snapshot2Files() {
 }
 
 int main() {
-   return test_snapshot2Files();
+   return test_snapshotNFiles();
 }
