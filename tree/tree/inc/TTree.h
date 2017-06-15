@@ -35,6 +35,7 @@
 #include "TBuffer.h"
 #include "TClass.h"
 #include "TDataType.h"
+#include "TDirectory.h"
 #include "TObjArray.h"
 #include "TVirtualTreePlayer.h"
 
@@ -43,7 +44,6 @@
 class TBranch;
 class TBrowser;
 class TFile;
-class TDirectory;
 class TLeaf;
 class TH1;
 class TTreeFormula;
@@ -266,7 +266,7 @@ public:
    };
 
    TTree();
-   TTree(const char* name, const char* title, Int_t splitlevel = 99);
+   TTree(const char* name, const char* title, Int_t splitlevel = 99, TDirectory* dir = gDirectory);
    virtual ~TTree();
 
    TTree(const TTree& tt) = delete;
