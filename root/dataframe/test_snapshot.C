@@ -126,8 +126,11 @@ int test_snapshot()
    int ret(0);
    ret = runTest();
    std::cout << "+++++++++ Now MT\n";
+#ifdef R__USE_IMT
    ROOT::EnableImplicitMT(4);
+#endif
    ret += runTest();
+
    return ret;
 
 }
