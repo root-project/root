@@ -24,6 +24,7 @@ class TBulkBranchRead {
 public:
    Int_t  GetEntriesFast(Long64_t evt, TBuffer& user_buf) {return fParent.GetEntriesFast(evt, user_buf);}
    Int_t  GetEntriesSerialized(Long64_t evt, TBuffer& user_buf) {return fParent.GetEntriesSerialized(evt, user_buf);}
+   Int_t  GetEntriesSerialized(Long64_t evt, TBuffer& user_buf, TBuffer* count_buf) {return fParent.GetEntriesSerialized(evt, user_buf, count_buf);}
    Bool_t SupportsBulkRead() const {return fParent.SupportsBulkRead();}
 
 private:

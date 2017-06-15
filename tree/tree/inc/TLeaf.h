@@ -60,6 +60,7 @@ public:
    };
 
    enum DeserializeType{
+      kInvalid = 0,      // Invalid deserialization information.
       kDestructive = 0,  // Deserialization of this Leaf requires a separate output buffer.
       kInPlace,          // Deserialization can be done directly in the input buffer.
       kZeroCopy,         // In-memory and on-disk representation of this object are identical.
@@ -108,8 +109,8 @@ public:
    virtual void     PrintValue(Int_t i = 0) const;
    virtual void     ReadBasket(TBuffer &) {}
    virtual void     ReadBasketExport(TBuffer &, TClonesArray *, Int_t) {}
-   virtual bool     ReadBasketFast(TBuffer&, Long64_t) { return false; }
-   virtual bool     ReadBasketSerialized(TBuffer&, Long64_t) { return false; }
+   virtual bool     ReadBasketFast(TBuffer&, Long64_t) { return false; }  // Read contents of leaf into a user-provided buffer.
+   virtual bool     ReadBasketSerialized(TBuffer&, Long64_t) { return false; }  // Read contents of leaf into a user-provided buffer
    virtual void     ReadValue(std::istream & /*s*/, Char_t /*delim*/ = ' ') {
       Error("ReadValue", "Not implemented!");
    }
