@@ -135,7 +135,7 @@ TChain::TChain()
 /// ~~~
 
 TChain::TChain(const char* name, const char* title)
-:TTree(name, title)
+:TTree(name, title, /*splitlevel*/ 99, nullptr)
 , fTreeOffsetLen(100)
 , fNtrees(0)
 , fTreeNumber(-1)
@@ -154,10 +154,7 @@ TChain::TChain(const char* name, const char* title)
    fFiles = new TObjArray(fTreeOffsetLen);
    fStatus = new TList();
    fTreeOffset[0]  = 0;
-   if (gDirectory) gDirectory->Remove(this);
-   gROOT->GetListOfSpecials()->Add(this);
    fFile = 0;
-   fDirectory = 0;
 
    // Reset PROOF-related bits
    ResetBit(kProofUptodate);
