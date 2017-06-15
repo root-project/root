@@ -38,7 +38,7 @@ public:
 
    virtual void    Export(TClonesArray *list, Int_t n);
    virtual void    FillBasket(TBuffer &b);
-   virtual DeserializeType GetDeserializeType() const { return fLeafCount ? kDestructive : kInPlace; }
+   virtual DeserializeType GetDeserializeType() const { return kInPlace; }
    const char     *GetTypeName() const {return "Float_t";}
    Double_t        GetValue(Int_t i=0) const;
    virtual void   *GetValuePointer() const {return fValue;}
@@ -50,7 +50,7 @@ public:
    virtual void    SetAddress(void *add=0);
 
    virtual bool    ReadBasketFast(TBuffer&, Long64_t);
-   virtual bool    ReadBasketSerialized(TBuffer&, Long64_t) {return GetDeserializeType() == kInPlace; }
+   virtual bool    ReadBasketSerialized(TBuffer&, Long64_t) {return true;}
 
    ClassDef(TLeafF,1);  //A TLeaf for a 32 bit floating point data type.
 };
