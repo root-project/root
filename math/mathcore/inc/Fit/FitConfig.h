@@ -20,6 +20,7 @@
 
 #include "Math/IParamFunctionfwd.h"
 
+#include "TMath.h"
 
 #include <vector>
 
@@ -120,8 +121,8 @@ public:
       unsigned int i = 0;
       for (const double *ipar = begin; ipar != end; ++ipar) {
          double val = *ipar;
-         double step = 0.3 * std::fabs(val); // step size is 30% of par value
-         // double step = 2.0*std::fabs(val);   // step size is 30% of par value
+         double step = 0.3 * fabs(val); // step size is 30% of par value
+         // double step = 2.0*fabs(val);   // step size is 30% of par value
          if (val == 0) step = 0.3;
 
          fSettings.push_back(ParameterSettings(func.ParameterName(i), val, step));
