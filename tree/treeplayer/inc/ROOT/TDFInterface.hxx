@@ -1161,6 +1161,7 @@ protected:
 
          // called at the beginning of each task
          auto initLambda = [&trees, &merger, &files, &treenameInt, &dirnameInt, &treename, &isFirstEvent, &getDirTreeName] (TTreeReader *r, unsigned int slot) {
+            ::TDirectory::TContext c;
             if(!trees[slot]) {
                // first time this thread executes something, let's create a TBufferMerger output directory
                files[slot] = merger.GetFile();
