@@ -343,7 +343,11 @@ static PyObject* declare(PyObject* self, PyObject* args) {
     TBranch* branch;
     if (!getbranch(branch, tree, filePath, treePath, branchName)) return NULL;
 
-    return declare_branch(branch, PyObject_IsTrue(wantCounter));
+    PyObject* tofill = declare_branch(branch, PyObject_IsTrue(wantCounter));
+    if (tofill == NULL)
+      return NULL;
+
+    return tofill;
   }
 
   // TODO: check PyArg_ParseTuple(args, "O", &pyroot_tbranch) for a PyROOT tbranch
