@@ -1075,7 +1075,8 @@ protected:
    TInterface<TLoopManager> SnapshotImpl(std::string_view treename, std::string_view filename,
                                          const ColumnNames_t &bnames, TDFInternal::TStaticSeq<S...> /*dummy*/)
    {
-      const std::string treenameInt(treename);
+      std::string treenameInt;
+      std::string dirnameInt;
       const std::string filenameInt(filename);
       const auto templateParamsN = sizeof...(S);
       const auto bNamesN = bnames.size();
@@ -1088,9 +1089,28 @@ protected:
          throw std::runtime_error(err_msg.c_str());
       }
 
+      // splits name into directory and treename if needed
+      auto getDirTreeName = [](std::string_view treePath) {
+         auto lastSlash = treePath.rfind('/');
+         std::string_view treeDir, treeName;
+         if (std::string_view::npos != lastSlash) {
+            treeDir = treePath.substr(0,lastSlash);
+            treeName = treePath.substr(lastSlash+1,treePath.size());
+         } else {
+            treeName = treePath;
+         }
+         // need to convert to string for TTree and TDirectory ctors anyway
+         return std::make_pair(std::string(treeDir), std::string(treeName));
+      };
+
       auto df = GetDataFrameChecked();
       if (!ROOT::IsImplicitMTEnabled()) {
          std::unique_ptr<TFile> ofile(TFile::Open(filenameInt.c_str(), "RECREATE"));
+         std::tie(dirnameInt, treenameInt) = getDirTreeName(treename);
+         if (!dirnameInt.empty()) {
+            ofile->mkdir(dirnameInt.c_str());
+            ofile->cd(dirnameInt.c_str());
+         }
          TTree t(treenameInt.c_str(), treenameInt.c_str());
 
          bool FirstEvent = true;
@@ -1140,12 +1160,17 @@ protected:
          };
 
          // called at the beginning of each task
-         auto initLambda = [&trees, &merger, &files, &treenameInt, &isFirstEvent] (TTreeReader *r, unsigned int slot) {
+         auto initLambda = [&trees, &merger, &files, &treenameInt, &dirnameInt, &treename, &isFirstEvent, &getDirTreeName] (TTreeReader *r, unsigned int slot) {
             if(!trees[slot]) {
                // first time this thread executes something, let's create a TBufferMerger output directory
                files[slot] = merger.GetFile();
             } else {
                files[slot]->Write();
+            }
+            std::tie(dirnameInt, treenameInt) = getDirTreeName(treename);
+            if (!dirnameInt.empty()) {
+               files[slot]->mkdir(dirnameInt.c_str());
+               files[slot]->cd(dirnameInt.c_str());
             }
             trees[slot] = new TTree(treenameInt.c_str(), treenameInt.c_str());
             trees[slot]->ResetBit(kMustCleanup);
@@ -1168,10 +1193,11 @@ protected:
       }
 
       ::TDirectory::TContext ctxt;
+      std::string fullTreeNameInt(treename);
       // Now we mimic a constructor for the TDataFrame. We cannot invoke it here
       // since this would introduce a cyclic headers dependency.
       TInterface<TLoopManager> snapshotTDF(std::make_shared<TLoopManager>(nullptr, bnames));
-      auto chain = new TChain(treenameInt.c_str());
+      auto chain = new TChain(fullTreeNameInt.c_str());
       chain->Add(filenameInt.c_str());
       snapshotTDF.fProxiedPtr->SetTree(std::shared_ptr<TTree>(static_cast<TTree *>(chain)));
 
