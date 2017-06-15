@@ -1455,12 +1455,15 @@ Int_t TBranch::GetEntriesFast(Long64_t entry, TBuffer &user_buf)
 // TODO: Template this and the call above; only difference is the TLeaf function (ReadBasketFast vs
 // ReadBasketSerialized
 Int_t
-TBranch::GetEntriesSerialized(Long64_t entry, TBuffer &user_buf)
+TBranch::GetEntriesSerialized(Long64_t entry, TBuffer &user_buf, TBuffer *count_buf)
 {
    // TODO: eventually support multiple leaves.
    if (R__unlikely(fNleaves != 1)) {return -1;}
    TLeaf *leaf = static_cast<TLeaf*>(fLeaves.UncheckedAt(0));
-   if (R__unlikely(leaf->GetDeserializeType() == TLeaf::DeserializeType::kDestructive)) {return -1;}
+   if (R__unlikely(leaf->GetDeserializeType() == TLeaf::DeserializeType::kDestructive)) {
+      printf("Encountered a branch with destructive deserialization; failing.\n");
+      return -1;
+   }
 
    // Remember which entry we are reading.
    fReadEntry = entry;
@@ -1473,7 +1476,7 @@ TBranch::GetEntriesSerialized(Long64_t entry, TBuffer &user_buf)
    if (R__unlikely(result <= 0)) {return -1;}
    // Only support reading from full clusters.
    if (R__unlikely(entry != first)) {
-       //printf("Failed to read from full cluster; first entry is %ld; requested entry is %ld.\n", first, entry);
+       printf("Failed to read from full cluster; first entry is %lld; requested entry is %lld.\n", first, entry);
        return -1;
    }
 
@@ -1489,9 +1492,34 @@ TBranch::GetEntriesSerialized(Long64_t entry, TBuffer &user_buf)
    buf->SetBufferOffset(bufbegin);
 
    Int_t N = ((fNextBasketEntry < 0) ? fEntryNumber : fNextBasketEntry) - first;
-   //printf("Requesting %d events; fNextBasketEntry=%d; first=%d.\n", N, fNextBasketEntry, first);
-   if (R__unlikely(!leaf->ReadBasketSerialized(*buf, N))) {printf("Leaf failed to read.\n"); return -1;}
+   //printf("Requesting %d events; fNextBasketEntry=%d; first=%lld.\n", N, fNextBasketEntry, first);
+
+   if (R__unlikely(!leaf->ReadBasketSerialized(*buf, N))) {
+      printf("Leaf failed to read.\n");
+      return -1;
+   }
    user_buf.SetBufferOffset(bufbegin);
+
+   if (count_buf) {
+      TLeaf *count_leaf = leaf->GetLeafCount();
+      if (count_leaf) {
+         //printf("Getting leaf count entries.\n");
+         TBranch *count_branch = count_leaf->GetBranch();
+         if (R__unlikely(count_branch->GetEntriesSerialized(entry, *count_buf) < 0)) {
+            printf("Failed to read count leaf.\n");
+            return -1;
+         }
+      } else {
+         // TODO: if you ask for a count on a fixed-size branch, maybe we should
+         // just fail?
+         Int_t entry_count = __builtin_bswap32(leaf->GetLenType() * leaf->GetNdata());
+         Int_t cur_offset = count_buf->GetCurrent() - count_buf->Buffer();
+         for (int idx=0; idx<N; idx++) {
+             *count_buf << entry_count;
+         }
+         count_buf->SetBufferOffset(cur_offset);
+      }
+   }
 
    return N;
 }

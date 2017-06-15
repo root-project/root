@@ -153,7 +153,8 @@ private:
    Int_t    GetBasketAndFirst(TBasket*& basket, Long64_t& first, TBuffer* user_buffer);
    TBasket *GetBasketImpl(Int_t basket, TBuffer* user_buffer);
    Int_t    GetEntriesFast(Long64_t, TBuffer&);
-   Int_t    GetEntriesSerialized(Long64_t, TBuffer&);
+   Int_t    GetEntriesSerialized(Long64_t N, TBuffer& user_buf) {return GetEntriesSerialized(N, user_buf, nullptr);}
+   Int_t    GetEntriesSerialized(Long64_t, TBuffer&, TBuffer*);
    Int_t    FillEntryBuffer(TBasket* basket,TBuffer* buf, Int_t& lnew);
    Int_t    WriteBasketImpl(TBasket* basket, Int_t where, ROOT::Internal::TBranchIMTHelper *);
    TBranch(const TBranch&) = delete;             // not implemented

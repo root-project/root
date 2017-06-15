@@ -105,6 +105,66 @@ TLeafElement::~TLeafElement()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Determine if this TLeafElement supports bulk IO
+TLeaf::DeserializeType
+TLeafElement::GetDeserializeType() const
+{
+   if (R__likely(fDeserializeTypeCache.load(std::memory_order_relaxed) != kInvalid))
+      return fDeserializeTypeCache;
+
+   TClass *clptr = nullptr;
+   EDataType type = EDataType::kOther_t;
+   if (fBranch->GetExpectedType(clptr, type)) {  // Returns non-zero in case of failure
+      fDeserializeTypeCache.store(kDestructive, std::memory_order_relaxed);
+      return kDestructive;  // I don't know what it is, but we aren't going to use bulk IO.
+   }
+   fDataTypeCache.store(type, std::memory_order_release);
+   if (clptr) {  // Something that requires a dictionary to read; skip.
+      fDeserializeTypeCache.store(kDestructive, std::memory_order_relaxed);
+      return kDestructive;
+   }
+
+   if ((fType == EDataType::kChar_t) || fType == EDataType::kUChar_t || type == EDataType::kBool_t) {
+      fDeserializeTypeCache.store(kZeroCopy, std::memory_order_relaxed);
+      return kZeroCopy;
+   } else if ((type == EDataType::kFloat_t) || (type == EDataType::kDouble_t) ||
+              (type == EDataType::kInt_t) || (type == EDataType::kUInt_t) ||
+              (type == EDataType::kLong64_t) || (type == EDataType::kULong64_t)) {
+      fDeserializeTypeCache.store(kInPlace, std::memory_order_relaxed);
+      return kInPlace;
+   }
+
+   fDeserializeTypeCache.store(kDestructive, std::memory_order_relaxed);
+   return kDestructive;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Deserialize N events from an input buffer.
+bool
+TLeafElement::ReadBasketFast(TBuffer &input_buf, Long64_t N) {
+
+   EDataType type = fDataTypeCache.load(std::memory_order_consume);
+
+   if ((type == EDataType::kFloat_t) || (type == EDataType::kInt_t) || (type == EDataType::kUInt_t)) {
+      Int_t *buf __attribute__((aligned(8)));
+      buf = reinterpret_cast<Int_t*>(input_buf.GetCurrent());
+      for (int idx=0; idx<fLen*N; idx++) {
+         buf[idx] = __builtin_bswap32(buf[idx]);
+      }
+   } else if ((type == EDataType::kDouble_t) || (type == EDataType::kLong64_t) || (type == EDataType::kULong64_t)) {
+      Long64_t *buf __attribute__((aligned(8)));
+      buf = reinterpret_cast<Long64_t*>(input_buf.GetCurrent());
+      for (int idx=0; idx<fLen*N; idx++) {
+         buf[idx] = __builtin_bswap64(buf[idx]);
+      }
+   } else {
+      return false;
+   }
+
+   return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Returns pointer to method corresponding to name name is a string
 /// with the general form "method(list of params)" If list of params is
 /// omitted, () is assumed;
