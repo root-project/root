@@ -165,6 +165,19 @@ bool leaftype(TLeaf* leaf, const char* &dtype, Long64_t &size) {
   }
 }
 
+bool sametype(const char* dtypestr, PyArray_Descr* dtypeobj) {
+  if (strcmp(dtypestr, "bool") == 0  &&  dtypeobj->kind == 'b')
+    return true;
+  else if (strcmp(dtypestr, "u1") == 0  &&  dtypeobj->kind == 'u'  &&  dtypeobj->elsize == 1)
+    return true;
+  else if (strcmp(dtypestr, "i1") == 0  &&  dtypeobj->kind == 'i'  &&  dtypeobj->elsize == 1)
+    return true;
+  else if (strlen(dtypestr) == 3  &&  dtypestr[0] == dtypeobj->byteorder  &&  dtypestr[1] == dtypeobj->kind  &&  dtypestr[2] == dtypeobj->elsize + '0')
+    return true;
+  else
+    return false;
+}
+
 void getdim(TLeaf* leaf, std::vector<int>& dims, std::vector<std::string>& counters) {
   const char* title = leaf->GetTitle();
   bool iscounter = false;
@@ -394,9 +407,11 @@ bool fill_flat(TBranch* branch, TLeaf* leaf, PyObject* tofill, Long64_t starting
     return false;
   }
 
-  if (PyArray_DESCR(tofill)->byteorder != '>') {
-    PyErr_SetString(PyExc_ValueError, "the 'tofill' array must be big-endian (e.g. dtype='>f4', '>f8', '>i4', '>u4', etc.)");
-    return false;
+  const char* dtype;
+  Long64_t size;
+  if (!leaftype(leaf, dtype, size)  ||  !sametype(dtype, PyArray_DESCR(tofill))) {
+    PyErr_Format(PyExc_TypeError, "the 'tofill' array must have the same type as TLeaf \"%s\" (which is \"%s\")", leaf->GetName(), dtype);
+    return NULL;
   }
 
   return fill_impl(branch, tofill, startingEntry, wantCounter);
