@@ -32,15 +32,18 @@ static char module_docstring[] = "Tools for quickly loading TBranch contents int
 static char clusters_docstring[] = "Returns a list of the first entry in each cluster followed by the total number of entries (the length of this list is the number of clusters + 1).";
 static char declare_docstring[] = "Declares an array (or set of arrays) that can be filled with a given TBranch.";
 static char fill_docstring[] = "Fills a given array (or set of arrays) with TBranch data.";
+static char load_docstring[] = "Declares and fills an array (or set of arrays) with TBranch data.";
 
 static PyObject* clusters(PyObject* self, PyObject* args);
 static PyObject* declare(PyObject* self, PyObject* args);
 static PyObject* fill(PyObject* self, PyObject* args);
+static PyObject* load(PyObject* self, PyObject* args);
 
 static PyMethodDef module_methods[] = {
   {"clusters", (PyCFunction)clusters, METH_VARARGS, clusters_docstring},
   {"declare", (PyCFunction)declare, METH_VARARGS, declare_docstring},
   {"fill", (PyCFunction)fill, METH_VARARGS, fill_docstring},
+  {"load", (PyCFunction)load, METH_VARARGS, load_docstring},
   {NULL, NULL, 0, NULL}
 };
 
@@ -157,9 +160,9 @@ bool leaftype(TLeaf* leaf, const char* &dtype, Long64_t &size) {
       case kFloat_t:    dtype = ">f4";  size = 4; return true;
       case kDouble32_t: dtype = ">f4";  size = 4; return true;
       case kDouble_t:   dtype = ">f8";  size = 8; return true;
+      default: return false;
     }
   }
-  return false;
 }
 
 void getdim(TLeaf* leaf, std::vector<int>& dims, std::vector<std::string>& counters) {
@@ -328,7 +331,7 @@ static PyObject* declare(PyObject* self, PyObject* args) {
   char* treePath;
   char* branchName;
   // PyObject* pyroot_tbranch;
-  PyObject* wantCounter = NULL;
+  PyObject* wantCounter = Py_True;
 
   if (PyArg_ParseTuple(args, "sss|O", &filePath, &treePath, &branchName, &wantCounter)) {
     TFile* file;
@@ -340,10 +343,7 @@ static PyObject* declare(PyObject* self, PyObject* args) {
     TBranch* branch;
     if (!getbranch(branch, tree, filePath, treePath, branchName)) return NULL;
 
-    if (wantCounter != NULL  &&  PyObject_IsTrue(wantCounter))
-      return declare_branch(branch, true);
-    else
-      return declare_branch(branch, false);
+    return declare_branch(branch, PyObject_IsTrue(wantCounter));
   }
 
   // TODO: check PyArg_ParseTuple(args, "O", &pyroot_tbranch) for a PyROOT tbranch
@@ -355,7 +355,7 @@ static PyObject* declare(PyObject* self, PyObject* args) {
 
 /////////////////////////////////////////////////////// fill variants
 
-bool fill_impl(TBranch* branch, PyObject* tofill, Long64_t startingEntry) {
+bool fill_impl(TBranch* branch, PyObject* tofill, Long64_t startingEntry, bool wantCounter) {
   Long64_t numEntries = branch->GetTree()->GetEntries();
 
   char* arraydata = PyArray_BYTES(tofill);
@@ -379,7 +379,7 @@ bool fill_impl(TBranch* branch, PyObject* tofill, Long64_t startingEntry) {
   return true;
 }
 
-bool fill_flat(TBranch* branch, TLeaf* leaf, PyObject* tofill, Long64_t startingEntry) {
+bool fill_flat(TBranch* branch, TLeaf* leaf, PyObject* tofill, Long64_t startingEntry, bool wantCounter) {
   if (!PyArray_Check(tofill)) {
     PyErr_SetString(PyExc_TypeError, "the TBranch has one flat TLeaf; 'tofill' must be an array");
     return false;
@@ -395,60 +395,60 @@ bool fill_flat(TBranch* branch, TLeaf* leaf, PyObject* tofill, Long64_t starting
     return false;
   }
 
-  return fill_impl(branch, tofill, startingEntry);
+  return fill_impl(branch, tofill, startingEntry, wantCounter);
 }
 
-bool fill_fixedlen(TBranch* branch, TLeaf* leaf, std::vector<int> &dims, PyObject* tofill, Long64_t startingEntry) {
+bool fill_fixedlen(TBranch* branch, TLeaf* leaf, std::vector<int> &dims, PyObject* tofill, Long64_t startingEntry, bool wantCounter) {
   // TODO: fill a multidimensional Numpy array
   PyErr_SetString(PyExc_NotImplementedError, "fixedlen");
   return false;
 }
 
-bool fill_varlen(TBranch* branch, TLeaf* leaf, std::vector<int> &dims, std::vector<std::string> &counters, PyObject* tofill, Long64_t startingEntry) {
+bool fill_varlen(TBranch* branch, TLeaf* leaf, std::vector<int> &dims, std::vector<std::string> &counters, PyObject* tofill, Long64_t startingEntry, bool wantCounter) {
   // TODO: fill a single Numpy array with just the data or a 2-tuple of arrays with data and counter
   PyErr_SetString(PyExc_NotImplementedError, "varlen");
   return false;
 }
 
-bool fill_unileaf(TBranch* branch, TLeaf* leaf, PyObject* tofill, Long64_t startingEntry) {
+bool fill_unileaf(TBranch* branch, TLeaf* leaf, PyObject* tofill, Long64_t startingEntry, bool wantCounter) {
   std::vector<int> dims;
   std::vector<std::string> counters;
   getdim(leaf, dims, counters);
 
   if (has_varlen(counters))
-    return fill_varlen(branch, leaf, dims, counters, tofill, startingEntry);
+    return fill_varlen(branch, leaf, dims, counters, tofill, startingEntry, wantCounter);
   else if (!dims.empty())
-    return fill_fixedlen(branch, leaf, dims, tofill, startingEntry);
+    return fill_fixedlen(branch, leaf, dims, tofill, startingEntry, wantCounter);
   else
-    return fill_flat(branch, leaf, tofill, startingEntry);
+    return fill_flat(branch, leaf, tofill, startingEntry, wantCounter);
 }
 
-bool fill_multileaf(TBranch* branch, TObjArray* leaves, PyObject* tofill, Long64_t startingEntry) {
+bool fill_multileaf(TBranch* branch, TObjArray* leaves, PyObject* tofill, Long64_t startingEntry, bool wantCounter) {
   // TODO: fill a Numpy recarray
   PyErr_SetString(PyExc_NotImplementedError, "multileaf");
   return false;
 }
 
-bool fill_unibranch(TBranch* branch, PyObject* tofill, Long64_t startingEntry) {
+bool fill_unibranch(TBranch* branch, PyObject* tofill, Long64_t startingEntry, bool wantCounter) {
   TObjArray* leaves = branch->GetListOfLeaves();
   if (leaves->GetEntries() == 1)
-    return fill_unileaf(branch, dynamic_cast<TLeaf*>(leaves->First()), tofill, startingEntry);
+    return fill_unileaf(branch, dynamic_cast<TLeaf*>(leaves->First()), tofill, startingEntry, wantCounter);
   else
-    return fill_multileaf(branch, leaves, tofill, startingEntry);
+    return fill_multileaf(branch, leaves, tofill, startingEntry, wantCounter);
 }
 
-bool fill_multibranch(TObjArray* branches, PyObject* tofill, Long64_t startingEntry) {
+bool fill_multibranch(TObjArray* branches, PyObject* tofill, Long64_t startingEntry, bool wantCounter) {
   // TODO: fill a Python dict of arrays
   PyErr_SetString(PyExc_NotImplementedError, "multibranch");
   return false;
 }
 
-bool fill_branch(TBranch* branch, PyObject* tofill, Long64_t startingEntry) {
+bool fill_branch(TBranch* branch, PyObject* tofill, Long64_t startingEntry, bool wantCounter) {
   TObjArray* subbranches = branch->GetListOfBranches();
   if (subbranches->GetEntries() == 0)
-    return fill_unibranch(branch, tofill, startingEntry);
+    return fill_unibranch(branch, tofill, startingEntry, wantCounter);
   else
-    return fill_multibranch(subbranches, tofill, startingEntry);
+    return fill_multibranch(subbranches, tofill, startingEntry, wantCounter);
 }
 
 static PyObject* fill(PyObject* self, PyObject* args) {
@@ -458,8 +458,9 @@ static PyObject* fill(PyObject* self, PyObject* args) {
   // PyObject* pyroot_tbranch;
   PyObject* tofill;
   Long64_t startingEntry = 0;
+  PyObject* wantCounter = Py_True;
   
-  if (PyArg_ParseTuple(args, "sssO|L", &filePath, &treePath, &branchName, &tofill, &startingEntry)) {
+  if (PyArg_ParseTuple(args, "sssO|LO", &filePath, &treePath, &branchName, &tofill, &startingEntry, &wantCounter)) {
     TFile* file;
     if (!getfile(file, filePath)) return NULL;
 
@@ -469,7 +470,7 @@ static PyObject* fill(PyObject* self, PyObject* args) {
     TBranch* branch;
     if (!getbranch(branch, tree, filePath, treePath, branchName)) return NULL;
 
-    if (fill_branch(branch, tofill, startingEntry))
+    if (fill_branch(branch, tofill, startingEntry, PyObject_IsTrue(wantCounter)))
       return Py_BuildValue("O", Py_None);
     else
       return NULL;
@@ -479,6 +480,42 @@ static PyObject* fill(PyObject* self, PyObject* args) {
   // else if () { }
 
   PyErr_SetString(PyExc_TypeError, "either supply\n    filePath (str), treePath (str), branchName (str), tofill (Numpy array, tuple, dict), and optional startingEntry (default 0)\nor\n    tbranch (PyROOT), tofill (Numpy array, tuple, dict), and optional startingEntry (default 0)");
+  return NULL;
+}
+
+/////////////////////////////////////////////////////// load
+
+static PyObject* load(PyObject* self, PyObject* args) {
+  char* filePath;
+  char* treePath;
+  char* branchName;
+  // PyObject* pyroot_tbranch;
+  PyObject* wantCounter = Py_True;
+
+  if (PyArg_ParseTuple(args, "sss|O", &filePath, &treePath, &branchName, &wantCounter)) {
+    TFile* file;
+    if (!getfile(file, filePath)) return NULL;
+
+    TTree* tree;
+    if (!gettree(tree, file, filePath, treePath)) return NULL;
+
+    TBranch* branch;
+    if (!getbranch(branch, tree, filePath, treePath, branchName)) return NULL;
+
+    PyObject* tofill = declare_branch(branch, PyObject_IsTrue(wantCounter));
+    if (tofill == NULL)
+      return NULL;
+
+    if (!fill_branch(branch, tofill, 0, PyObject_IsTrue(wantCounter)))
+      return NULL;
+
+    return tofill;
+  }
+
+  // TODO: check PyArg_ParseTuple(args, "O", &pyroot_tbranch) for a PyROOT tbranch
+  // else if () { }
+
+  PyErr_SetString(PyExc_TypeError, "either supply\n    filePath (str), treePath (str), and branchName (str)\nor\n    tbranch (PyROOT)");
   return NULL;
 }
 
