@@ -26,26 +26,16 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "TBranch.h"
-
-#include "TObjArray.h"
-
-#include "TAttLine.h"
-
-#include "TAttFill.h"
-
-#include "TAttMarker.h"
-
 #include "TArrayD.h"
-
 #include "TArrayI.h"
-
+#include "TAttFill.h"
+#include "TAttLine.h"
+#include "TAttMarker.h"
+#include "TBranch.h"
 #include "TBuffer.h"
-
-#include "TDataType.h"
-
 #include "TClass.h"
-
+#include "TDataType.h"
+#include "TObjArray.h"
 #include "TVirtualTreePlayer.h"
 
 #include <atomic>
