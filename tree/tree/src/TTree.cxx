@@ -726,7 +726,8 @@ TTree::TTree()
 /// In this case, it creates automatically branches following the folder hierarchy.
 /// splitlevel may be used in this case to control the split level.
 
-TTree::TTree(const char* name, const char* title, Int_t splitlevel /* = 99 */)
+TTree::TTree(const char* name, const char* title, Int_t splitlevel /* = 99 */,
+             TDirectory* dir /* = gDirectory*/)
 : TNamed(name, title)
 , TAttLine()
 , TAttFill()
@@ -763,7 +764,7 @@ TTree::TTree(const char* name, const char* title, Int_t splitlevel /* = 99 */)
 , fMakeClass(0)
 , fFileNumber(0)
 , fNotify(0)
-, fDirectory(0)
+, fDirectory(dir)
 , fBranches()
 , fLeaves()
 , fAliases(0)
@@ -809,7 +810,6 @@ TTree::TTree(const char* name, const char* title, Int_t splitlevel /* = 99 */)
    // FIXME: This is very annoying behaviour, we should
    //        be able to choose to not do this like we
    //        can with a histogram.
-   fDirectory = gDirectory;
    if (fDirectory) fDirectory->Append(this);
 
    fBranches.SetOwner(kTRUE);
