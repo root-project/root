@@ -31,14 +31,7 @@ private:
    int fI = 0;
 };
 
-int test_snapshot()
-{
-
-   auto fileName = "test_snapshot.root";
-   auto outFileName = "test_snapshot_output.root";
-   auto treeName = "myTree";
-   fill_tree(fileName, treeName);
-
+int do_work(const char* fileName, const char* outFileName, const char* treeName, const char* outTreeName) {
    ROOT::Experimental::TDataFrame d(treeName, fileName);
 
    auto d_cut = d.Filter("b1 % 2 == 0");
@@ -48,12 +41,12 @@ int test_snapshot()
                   .Define("b2_vector", [](float b2){ std::vector<float> v; for (int i=0;i < 3; i++) v.push_back(b2*i); return v;}, {"b2"});
 
    /****** non-jitted snapshot *******/
-   auto snapshot_tdf =  d2.Snapshot<int, int, std::vector<float>, A>(treeName, outFileName, {"b1", "b1_square", "b2_vector", "a"});
+   auto snapshot_tdf =  d2.Snapshot<int, int, std::vector<float>, A>(outTreeName, outFileName, {"b1", "b1_square", "b2_vector", "a"});
 
    // Open the new file and list the branches of the tree
    TFile f(outFileName);
    TTree* t;
-   f.GetObject(treeName, t);
+   f.GetObject(outTreeName, t);
    for (auto branch : *t->GetListOfBranches()) {
       std::cout << "Branch: " << branch->GetName() << std::endl;
    }
@@ -70,12 +63,12 @@ int test_snapshot()
    }
 
    /****** jitted snapshot *******/
-   auto snapshot_jit =  d2.Snapshot(treeName, outFileName, {"b1", "b1_square", "b2_vector", "a"});
+   auto snapshot_jit =  d2.Snapshot(outTreeName, outFileName, {"b1", "b1_square", "b2_vector", "a"});
 
    // Open the new file and list the branche of the trees
    TFile jit_f(outFileName);
    TTree* jit_t;
-   jit_f.GetObject(treeName, jit_t);
+   jit_f.GetObject(outTreeName, jit_t);
    auto l = jit_t->GetListOfBranches();
    for (auto branch : *l) {
       std::cout << "Jitted branch: " << branch->GetName() << std::endl;
@@ -93,12 +86,12 @@ int test_snapshot()
    }
 
    // now we exercise the regexp functionality
-   auto snapshot_jit2 =  d2.Snapshot(treeName, outFileName, "b[1,2].*");
+   auto snapshot_jit2 =  d2.Snapshot(outTreeName, outFileName, "b[1,2].*");
 
    // Open the new file and list the branche of the trees
    TFile jit_f2(outFileName);
    TTree* jit_t2;
-   jit_f2.GetObject(treeName, jit_t2);
+   jit_f2.GetObject(outTreeName, jit_t2);
    auto l2 = jit_t2->GetListOfBranches();
    for (auto branch : *l2) {
       std::cout << "Jitted branch: " << branch->GetName() << std::endl;
@@ -106,4 +99,35 @@ int test_snapshot()
    jit_f.Close();
 
    return 0;
+}
+
+int runTest() {
+   auto fileName = "test_snapshot.root";
+   auto outFileName = "test_snapshot_output.root";
+   auto treeName = "myTree";
+   auto outTreeName = "myTree";
+   fill_tree(fileName, treeName);
+
+   std::cout << "---- Now with a tree in the root directory\n";
+   int ret = do_work(fileName, outFileName, treeName, outTreeName);
+
+//    // now we put the tree in a directory
+//    outFileName = "test_snapshot_inDirectory_output.root";
+//    treeName = "myTree";
+//    outTreeName = "a/myTree";
+//    std::cout << "---- Now with a tree in a subdirectory\n";
+//    ret += do_work(fileName, outFileName, treeName, outTreeName);
+
+   return ret;
+}
+
+int test_snapshot()
+{
+   int ret(0);
+   ret = runTest();
+   std::cout << "+++++++++ Now MT\n";
+   ROOT::EnableImplicitMT(4);
+   ret += runTest();
+   return ret;
+
 }
