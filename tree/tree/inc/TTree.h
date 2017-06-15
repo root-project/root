@@ -139,9 +139,6 @@ protected:
    static Long64_t  fgMaxTreeSize;        ///<  Maximum size of a file containing a Tree
 
 private:
-   TTree(const TTree& tt);              // not implemented
-   TTree& operator=(const TTree& tt);   // not implemented
-
    // For simplicity, although fIMTFlush is always disabled in non-IMT builds, we don't #ifdef it out.
    mutable Bool_t fIMTFlush{false};               ///<! True if we are doing a multithreaded flush.
    mutable std::atomic<Long64_t> fIMTTotBytes;    ///<! Total bytes for the IMT flush baskets
@@ -281,6 +278,9 @@ public:
    TTree();
    TTree(const char* name, const char* title, Int_t splitlevel = 99);
    virtual ~TTree();
+
+   TTree(const TTree& tt) = delete;
+   TTree& operator=(const TTree& tt) = delete;
 
    virtual Int_t           AddBranchToCache(const char *bname, Bool_t subbranches = kFALSE);
    virtual Int_t           AddBranchToCache(TBranch *branch,   Bool_t subbranches = kFALSE);
