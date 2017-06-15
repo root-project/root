@@ -1123,7 +1123,7 @@ protected:
          unsigned int nSlots = df->GetNSlots();
          TBufferMerger merger(filenameInt.c_str(), "RECREATE");
          std::vector<std::shared_ptr<TBufferMergerFile>> files(nSlots);
-         std::vector<TTree *> trees(nSlots); // ROOT owns/manages these TTrees
+         std::vector<TTree *> trees(nSlots, nullptr); // ROOT owns/manages these TTrees
          std::vector<int> isFirstEvent(nSlots, 1); // vector<bool> is evil
 
          auto fillTree = [&](unsigned int slot, Args &... args) {
@@ -1162,7 +1162,9 @@ protected:
          df->Book(std::make_shared<DFA_t>(Op_t(std::move(initLambda), std::move(fillTree)), bnames, *fProxiedPtr));
          fProxiedPtr->IncrChildrenCount();
          df->Run();
-         for (auto &&file : files) file->Write();
+         for (auto &&file : files) {
+            if (file) file->Write();
+         }
       }
 
       ::TDirectory::TContext ctxt;
