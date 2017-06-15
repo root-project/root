@@ -92,7 +92,7 @@ int assertFromHumanReadable()
    num_failed += checkParsing("1Kib",1024);
    num_failed += checkParsing("1KiB",1024);
    num_failed += checkParsing("1k",1000);
-   num_failed += checkParsing("1.2 k",1.2*1000);
+   num_failed += checkParsing("1.2 k",1200);
    num_failed += checkParsing("1.2 ki",1.2*1024);
 
 
