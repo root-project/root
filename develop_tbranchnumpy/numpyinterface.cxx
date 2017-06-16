@@ -27,7 +27,7 @@
 #include <TObjArray.h>
 #include <TTree.h>
 
-/////////////////////////////////////////////////////// module
+/////////////////////////////////////////////////////// helper classes
 
 // performance counters for diagnostics
 static Long64_t baskets_loaded = 0;
@@ -125,6 +125,16 @@ public:
   }
 };
 
+/////////////////////////////////////////////////////// Python module
+
+class ArrayInfo {
+public:
+  PyArray_Descr* dtype;
+  int nd;
+  std::vector<int> dims;
+  bool varlen;
+};
+
 typedef struct {
   PyObject_HEAD
   Long64_t alignment;
@@ -132,7 +142,7 @@ typedef struct {
   Long64_t entry_start;
   Long64_t entry_end;
   std::vector<BranchData> requested;
-  std::vector<PyArray_Descr*> dtypes;
+  std::vector<ArrayInfo> arrayinfo;
   std::vector<BranchData> extra_counters;
 } BranchesIterator;
 
@@ -176,7 +186,7 @@ static PyTypeObject BranchesIteratorType = {
 };
 
 static PyMethodDef module_methods[] = {
-  {"iterate", (PyCFunction)iterate, METH_VARARGS, "Get an iterator over a selected set of TTree branches, yielding a tuple of (entry_start, entry_end, *arrays) for each cluster.\n\n    filePath (str): name of the TFile\n    treePath (str): name of the TTree\n    *branchNames (strs): name of requested branches\n\nAlternatively, TBranch objects from PyROOT may be supplied (FIXME).\n\n    alignment=0: if supplied and positive, guarantee that the data are aligned to this number of bytes, even if that means copying data."},
+  {"iterate", (PyCFunctionWithKeywords)iterate, METH_VARARGS | METH_KEYWORDS, "Get an iterator over a selected set of TTree branches, yielding a tuple of (entry_start, entry_end, *arrays) for each cluster.\n\n    filePath (str): name of the TFile\n    treePath (str): name of the TTree\n    *branchNames (strs): name of requested branches\n\nAlternatively, TBranch objects from PyROOT may be supplied (FIXME).\n\n    alignment=0: if supplied and positive, guarantee that the data are aligned to this number of bytes, even if that means copying data."},
   {NULL, NULL, 0, NULL}
 };
 
@@ -228,6 +238,129 @@ PyMODINIT_FUNC initnumpyinterface(void) {
 }
 
 #endif
+
+/////////////////////////////////////////////////////// utility functions
+
+bool getfile(TFile* &file, char* filePath) {
+  file = TFile::Open(filePath);
+  if (file == NULL  ||  !file->IsOpen()) {
+    PyErr_Format(PyExc_IOError, "could not open file \"%s\"", filePath);
+    return false;
+  }
+  else
+    return true;
+}
+
+bool gettree(TTree* &tree, TFile* file, char* filePath, char* treePath) {
+  file->GetObject(treePath, tree);
+  if (tree == NULL) {
+    PyErr_Format(PyExc_IOError, "could not read tree \"%s\" from file \"%s\"", treePath, filePath);
+    return false;
+  }
+  else
+    return true;
+}
+
+bool getbranch(TBranch* &branch, TTree* tree, char* filePath, char* treePath, char* branchName) {
+  branch = tree->GetBranch(branchName);
+  if (branch == NULL) {
+    PyErr_Format(PyExc_IOError, "could not read branch \"%s\" from tree \"%s\" from file \"%s\"", branchName, treePath, filePath);
+    return false;
+  }
+  else
+    return true;
+}
+
+const char* leaftype(TLeaf* leaf) {
+  if (leaf->IsA() == TLeafO::Class()) {
+    return "bool";
+  }
+  else if (leaf->IsA() == TLeafB::Class()  &&  leaf->IsUnsigned()) {
+    return "u1";
+  }
+  else if (leaf->IsA() == TLeafB::Class()) {
+    return "i1";
+  }
+  else if (leaf->IsA() == TLeafS::Class()  &&  leaf->IsUnsigned()) {
+    return ">u2";
+  }
+  else if (leaf->IsA() == TLeafS::Class()) {
+    return ">i2";
+  }
+  else if (leaf->IsA() == TLeafI::Class()  &&  leaf->IsUnsigned()) {
+    return ">u4";
+  }
+  else if (leaf->IsA() == TLeafI::Class()) {
+    return ">i4";
+  }
+  else if (leaf->IsA() == TLeafL::Class()  &&  leaf->IsUnsigned()) {
+    return ">u8";
+  }
+  else if (leaf->IsA() == TLeafL::Class()) {
+    return ">i8";
+  }
+  else if (leaf->IsA() == TLeafF::Class()) {
+    return ">f4";
+  }
+  else if (leaf->IsA() == TLeafD::Class()) {
+    return ">f8";
+  }
+  else {
+    TClass* expectedClass;
+    EDataType expectedType;
+    leaf->GetBranch()->GetExpectedType(expectedClass, expectedType);
+    switch (expectedType) {
+      case kBool_t:     return "bool";
+      case kUChar_t:    return "u1";
+      case kchar:       return "i1";
+      case kChar_t:     return "i1";
+      case kUShort_t:   return ">u2";
+      case kShort_t:    return ">i2";
+      case kUInt_t:     return ">u4";
+      case kInt_t:      return ">i4";
+      case kULong_t:    return ">u8";
+      case kLong_t:     return ">i8";
+      case kULong64_t:  return ">u8";
+      case kLong64_t:   return ">i8";
+      case kFloat_t:    return ">f4";
+      case kDouble32_t: return ">f4";
+      case kDouble_t:   return ">f8";
+    }
+  }
+  return NULL;
+}
+
+void getdim(TLeaf* leaf, std::vector<int>& dims, std::vector<std::string>& counters) {
+  const char* title = leaf->GetTitle();
+  bool iscounter = false;
+
+  for (const char* c = title;  *c != 0;  c++) {
+    if (*c == '[') {
+      dims.push_back(0);
+      counters.push_back(std::string());
+      iscounter = false;
+    }
+
+    else if (*c == ']') {
+      if (iscounter)           // a dimension either fills int-valued dims or string-valued counters
+        dims.pop_back();       // because we don't handle both
+      else
+        counters.pop_back();
+    }
+
+    else if (!dims.empty()) {
+      if ('0' <= *c  &&  *c <= '9')
+        dims.back() = dims.back() * 10 + (*c - '0');
+      else
+        iscounter = true;
+      counters.back() = counters.back() + *c;   // accumulate any char that isn't '[' or ']'
+    }
+
+    // else this is part of the TLeaf name (before the first '[')
+  }
+}
+
+/////////////////////////////////////////////////////// Python iterator functions
 
 static PyObject* BranchesIterator_iter(PyObject* self) {
   Py_INCREF(self);
@@ -282,16 +415,152 @@ static PyObject* BranchesIterator_next(PyObject* self) {
   }
 }
 
-static PyObject* iterate(PyObject* self, PyObject* args) {
+/////////////////////////////////////////////////////// iterator-making function and its helpers
 
-  // Long64_t alignment;
-  // Long64_t num_entries;
-  // Long64_t entry_start;
-  // Long64_t entry_end;
-  // std::vector<BranchData> requested;
-  // std::vector<PyArray_Descr*> dtypes;
-  // std::vector<BranchData> extra_counters;
+bool dtypedim(PyArray_Descr* &dtype, TLeaf* leaf) {
+  dtype = PyArray_DescrFromType(0);
 
+  const char* asstring = leaftype(leaf);
+  if (asstring == NULL) {
+    PyErr_Format(PyExc_ValueError, "cannot convert type of TLeaf \"%s\" to Numpy", leaf->GetName());
+    return false;
+  }
 
+  if (!PyArray_DescrConverter(asstring, &dtype)) {
+    PyErr_SetString(PyExc_ValueError, "cannot create a dtype");
+    return NULL;
+  }
 
+  return true;
+}
+
+bool dtypedim_unileaf(ArrayInfo &arrayinfo, TLeaf* leaf) {
+  std::vector<std::string> counters;
+  getdim(leaf, arrayinfo->dims, counters);
+  arrayinfo->nd = 1 + arrayinfo->dims.size();    // first dimension is for the set of entries itself
+  arrayinfo->varlen = !counters.empty();
+
+  if (arrayinfo->nd > 1  &&  arrayinfo->varlen) {
+    PyErr_Format("TLeaf \"%s\" has both fixed-length dimensions and variable-length dimensions", leaf->GetTitle());
+    return false;
+  }
+
+  return dtypedim(arrayinfo->dtype, leaf);
+}
+
+bool dtypedim_multileaf(ArrayInfo &arrayinfo, TObjArray* leaves) {
+  // TODO: Numpy recarray dtype
+  PyErr_SetString(PyExc_NotImplementedError, "multileaf");
+  return false;
+}
+
+bool dtypedim_branch(ArrayInfo &arrayinfo, TBranch* branch) {
+  TObjArray* subbranches = branch->GetListOfBranches();
+  if (subbranches->GetEntries() != 0) {
+    PyErr_Format(PyErr_ValueError, "TBranch \"%s\" has subbranches; only branches of TLeaves are allowed", branch->GetName());
+    return false;
+  }
+
+  TObjArray* leaves = branch->GetListOfLeaves();
+  if (leaves->GetEntries() == 1)
+    return dtypedim_unileaf(arrayinfo, dynamic_cast<TLeaf*>(leaves->First()));
+  else
+    return dtypedim_multileaf(arrayinfo, leaves);
+}
+
+const char* gettuplestring(PyObject* p, Py_ssize_t pos) {
+  PyObject* obj = PyTuple_GET_ITEM(p, pos);
+  if (PyString_Check(obj))
+    return PyString_AsString(obj);
+  else {
+    PyErr_Format(PyExc_TypeError, "expected a string in argument %d", pos);
+    return NULL;
+  }
+}
+
+static PyObject* iterate(PyObject* self, PyObject* args, PyObject* kwds) {
+  std::vector<TBranch*> branches;
+  Long64_t alignment = 0;
+
+  if (PyTuple_GET_SIZE(args) < 1) {
+    PyErr_SetString(PyExc_TypeError, "at least one argument is required");
+    return NULL;
+  }
+
+  if (PyString_Check(PyTuple_GET_ITEM(args, 0))) {
+    // first argument is a string: filePath, treePath, branchNames... signature
+
+    if (PyTuple_GET_SIZE(args) < 3) {
+      PyErr_SetString(PyExc_TypeError, "in the string-based signture, at least three arguments are required");
+      return NULL;
+    }
+
+    const char* filePath = gettuplestring(args, 0);
+    const char* treePath = gettuplestring(args, 1);
+    if (filePath == NULL  ||  treePath == NULL)
+      return NULL;
+
+    TFile* file;
+    if (!getfile(file, filePath)) return NULL;
+
+    TTree* tree;
+    if (!gettree(tree, file, filePath, treePath)) return NULL;
+
+    for (int i = 2;  i < PyTuple_GET_SIZE(args);  i++) {
+      const char* branchName = gettuplestring(args, i);
+      TBranch* branch;
+      if (!getbranch(branch, tree, filePath, treePath, branchName)) return NULL;
+      branches.push_back(branch);
+    }
+
+    if (kwds != NULL) {
+      PyObject* py_alignment = PyDict_GetItemString(kwds, "alignment");
+      if (py_alignment != NULL) {
+        if (!PyInt_Check(py_alignment)) {
+          PyErr_SetString(PyExc_TypeError, "alignment must be an integer");
+          return NULL;
+        }
+        alignment = PyInt_AsLong(py_alignment);
+
+        if (PyDict_Size(kwds) != 1) {
+          PyErr_SetString(PyExc_TypeError, "only one keyword expected");
+          return NULL;
+        }
+      }
+      else if (PyDict_Size(kwds) != 0) {
+        PyErr_SetString(PyExc_TypeError, "only one keyword expected");
+        return NULL;
+      }
+    }
+  }
+  else {
+    // first argument is an object: TBranch, TBranch, TBranch... signature
+    // TODO: insist that all branches come from the same TTree
+    PyErr_SetString(PyExc_NotImplementedError, "FIXME: accept PyROOT TBranches");
+    return NULL;
+  }
+
+  BranchesIterator* out = PyObject_New(BranchesIterator, &BranchesIteratorType);
+
+  if (!PyObject_Init((PyObject*)out, &BranchesIteratorType)) {
+    Py_DECREF(out);
+    return NULL;
+  }
+
+  out->alignment = alignment;
+  out->num_entries = branches.front()->GetTree()->GetEntries();
+  out->entry_start = 0;
+  out->entry_end = 0;
+
+  for (unsigned int i = 0;  i < branches.size();  i++) {
+    out->requested.push_back(BranchData(branches[i]));
+    out->arrayinfo.push_back(ArrayInfo());
+
+    if (!dtypedim_branch(out->arrayinfo.back(), branches[i]))
+      return NULL;
+  }
+  
+  // FIXME: find all the counters, link them up, and put any missing from "requested" into "extra_counters"
+
+  return (PyObject*)out;
 }
