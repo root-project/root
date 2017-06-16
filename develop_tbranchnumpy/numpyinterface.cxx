@@ -8,6 +8,7 @@
 #include <ROOT/TBulkBranchRead.hxx>
 #include <TBranch.h>
 #include <TBufferFile.h>
+#include <TBuffer.h>
 #include <TClass.h>
 #include <TDataType.h>
 #include <TFile.h>
@@ -33,6 +34,8 @@ static Long64_t baskets_loaded = 0;
 static Long64_t bytes_loaded = 0;
 static Long64_t baskets_copied = 0;
 static Long64_t bytes_copied = 0;
+static Long64_t items_scanned = 0;
+static Long64_t items_copied = 0;
 
 class BasketBuffer {
 public:
@@ -54,8 +57,7 @@ class BranchData {
 public:
   TBranch* branch;
   std::deque<BasketBuffer*> buffers;
-  TBufferFile extra_buffer(TBuffer::kWrite, 32*1024);
-  
+  std::vector<char> extra_buffer;
   BranchData* counter;
 
   BranchData(TBranch* branch) : branch(branch) {
@@ -69,8 +71,57 @@ public:
     }
   }
 
-  void* getdata(Long64_t alignment, Long64_t &numbytes) {
-    // HERE
+  void* getdata(Long64_t &numbytes, Long64_t itemsize, Long64_t entry_start, Long64_t entry_end, Long64_t alignment) {
+    if (counter == NULL) {
+      Long64_t fill_end = -1;
+
+      for (unsigned int i = 0;  i < buffers.size();  ++i) {
+        BasketBuffer* buf = buffers[i];
+
+        if (entry_start == buf->entry_start  &&  entry_end == buf->entry_end  &&  (alignment <= 0  ||  (size_t)buf->buffer.GetCurrent() % alignment == 0)) {
+          // this whole buffer is exactly right, in terms of start/end and alignment; don't mess with extra_buffer, just send it (no copy)!
+          numbytes = buf->buffer.BufferSize();
+          return buf->buffer.GetCurrent();
+        }
+        else if (buf->entry_start <= entry_start  &&  entry_start < buf->entry_end) {
+          if (entry_end <= buf->entry_end)
+            fill_end = entry_end;
+          else
+            fill_end = buf->entry_end;
+
+          // where *within this buffer* should we start and end the slice?
+          Long64_t byte_start = (entry_start - buf->entry_start) * itemsize;
+          Long64_t byte_end = (fill_end - buf->entry_start) * itemsize;
+
+          // this is the first buffer in which we see the start, so we *replace* extra_buffer
+          extra_buffer.resize(byte_end - byte_start);
+          memcpy(extra_buffer.data(), &buf->buffer.GetCurrent()[byte_start], byte_end - byte_start);
+        }
+
+        else if (entry_start < buf->entry_start  &&  buf->entry_start < entry_end) {
+          if (entry_end <= buf->entry_end)
+            fill_end = entry_end;
+          else
+            fill_end = buf->entry_end;
+
+          Long64_t byte_end = (fill_end - buf->entry_start) * itemsize;
+
+          // this is not the first buffer with content that we want (may or may not be last), so we *append* extra_buffer
+          size_type oldsize = extra_buffer.size();
+          extra_buffer.resize(oldsize + byte_end);
+          memcpy(&extra_buffer.data()[oldsize], buf->buffer.GetCurrent(), byte_end);
+        }
+      }
+
+      if (fill_end != entry_end)
+        return NULL;
+      else
+        return extra_buffer.data();
+    }
+    else {
+      // die, just die
+      return NULL;
+    }
   }
 };
 
@@ -213,7 +264,7 @@ static PyObject* BranchesIterator_next(PyObject* self) {
 
     for (unsigned int i = 0;  i < thyself->requested.size();  i++) {
       Long64_t numbytes;
-      void* data = thyself->requested[i].getdata(thyself->alignment, numbytes);
+      void* data = thyself->requested[i].getdata(numbytes, thyself->dtypes[i].elsize, thyself->entry_start, thyself->entry_end, thyself->alignment);
 
       npy_intp dims[1];
       dims[0] = numbytes / thyself->dtypes[i].elsize;
