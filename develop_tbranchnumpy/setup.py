@@ -12,7 +12,7 @@ def rootconfig(arg, filter, drop):
         raise IOError(rootconfig.stderr.read())
     return [x.strip()[drop:] for x in rootconfig.stdout.read().decode().split(" ") if filter(x)]
 
-setup(name = "tbranchnumpy",
+setup(name = "numpyinterface",
       version = "0.0.1",
       packages = find_packages(),
       scripts = [],
@@ -37,8 +37,8 @@ setup(name = "tbranchnumpy",
                      "Topic :: Scientific/Engineering :: Physics",
                      ],
       platforms = "Any",
-      ext_modules = [Extension("tbranchnumpy",
-                               [os.path.join("tbranchnumpy.cxx")],
+      ext_modules = [Extension("numpyinterface",
+                               [os.path.join("numpyinterface.cxx")],
                                include_dirs = rootconfig("--cflags", lambda x: x.startswith("-I"), 2) + numpy.distutils.misc_util.get_numpy_include_dirs(),
                                library_dirs = rootconfig("--libdir", lambda x: True, 0),
                                libraries = rootconfig("--libs", lambda x: x.startswith("-l"), 2),
