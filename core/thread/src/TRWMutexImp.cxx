@@ -25,8 +25,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 /// Take the Read Lock of the mutex.
 
-template <typename MutexT>
-void TRWMutexImp<MutexT>::ReadLock()
+template <typename MutexT, typename RecurseCountsT>
+void TRWMutexImp<MutexT, RecurseCountsT>::ReadLock()
 {
    fMutexImp.ReadLock();
 }
@@ -34,8 +34,8 @@ void TRWMutexImp<MutexT>::ReadLock()
 ////////////////////////////////////////////////////////////////////////////////
 /// Take the Write Lock of the mutex.
 
-template <typename MutexT>
-void TRWMutexImp<MutexT>::WriteLock()
+template <typename MutexT, typename RecurseCountsT>
+void TRWMutexImp<MutexT, RecurseCountsT>::WriteLock()
 {
    fMutexImp.WriteLock();
 }
@@ -43,8 +43,8 @@ void TRWMutexImp<MutexT>::WriteLock()
 ////////////////////////////////////////////////////////////////////////////////
 /// Release the read lock of the mutex
 
-template <typename MutexT>
-void TRWMutexImp<MutexT>::ReadUnLock()
+template <typename MutexT, typename RecurseCountsT>
+void TRWMutexImp<MutexT, RecurseCountsT>::ReadUnLock()
 {
    fMutexImp.ReadUnLock();
 }
@@ -52,8 +52,8 @@ void TRWMutexImp<MutexT>::ReadUnLock()
 ////////////////////////////////////////////////////////////////////////////////
 /// Release the read lock of the mutex
 
-template <typename MutexT>
-void TRWMutexImp<MutexT>::WriteUnLock()
+template <typename MutexT, typename RecurseCountsT>
+void TRWMutexImp<MutexT, RecurseCountsT>::WriteUnLock()
 {
    fMutexImp.WriteUnLock();
 }
@@ -61,11 +61,13 @@ void TRWMutexImp<MutexT>::WriteUnLock()
 ////////////////////////////////////////////////////////////////////////////////
 /// Create mutex and return pointer to it.
 
-template <typename MutexT>
-TVirtualRWMutex *TRWMutexImp<MutexT>::Factory(Bool_t /*recursive = kFALSE*/)
+template <typename MutexT, typename RecurseCountsT>
+TVirtualRWMutex *TRWMutexImp<MutexT, RecurseCountsT>::Factory(Bool_t /*recursive = kFALSE*/)
 {
    return new TRWMutexImp();
 }
 
 template class TRWMutexImp<TMutex>;
 template class TRWMutexImp<ROOT::TSpinMutex>;
+template class TRWMutexImp<TMutex, ROOT::Internal::UniqueLockRecurseCount>;
+template class TRWMutexImp<ROOT::TSpinMutex, ROOT::Internal::UniqueLockRecurseCount>;

@@ -17,9 +17,9 @@
 
 #include "TBuffer.h" // Needed by ClassDEfInlineOverride
 
-template <typename MutexT>
+template <typename MutexT, typename RecurseCountsT = ROOT::Internal::RecurseCounts>
 class TRWMutexImp : public TVirtualRWMutex  {
-   ROOT::TReentrantRWLock<MutexT> fMutexImp;
+   ROOT::TReentrantRWLock<MutexT, RecurseCountsT> fMutexImp;
 
 public:
 
