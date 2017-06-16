@@ -1501,7 +1501,7 @@ Double_t TMVA::MethodBDT::GradBoost(std::vector<const TMVA::Event*>& eventSample
       auto &v = leaves[node];
       auto target = e->GetTarget(cls);
       v.sumWeightTarget += target * weight;
-      v.sum2 += fabs(target) * (1.0-fabs(target)) * weight * weight;
+      v.sum2 += fabs(target) * (1.0-fabs(target)) * weight;
    }
    for (auto &iLeave : leaves) {
       constexpr auto minValue = 1e-30;
