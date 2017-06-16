@@ -1300,6 +1300,10 @@ elseif(vc)
       set(vc OFF CACHE BOOL "" FORCE)
     endif()
   endif()
+  if(Vc_FOUND)
+    # FIXME - The altenative is to add include_dirs to all packages that include any Math headers
+    execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink ${Vc_INCLUDE_DIR}/Vc ${CMAKE_BINARY_DIR}/include/Vc)
+  endif()
 endif()
 
 if(vc AND NOT Vc_FOUND AND NOT (veccore OR builtin_veccore))
@@ -1373,6 +1377,10 @@ elseif(veccore)
       message(STATUS "Please enable the option 'builtin_veccore' to build VecCore internally.")
       set(veccore OFF CACHE BOOL "" FORCE)
     endif()
+  endif()
+  if(VecCore_FOUND)
+    # FIXME - The altenative is to add include_dirs to all packages that include any Math headers
+    execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink ${VecCore_INCLUDE_DIR}/VecCore ${CMAKE_BINARY_DIR}/include/VecCore)
   endif()
 endif()
 
