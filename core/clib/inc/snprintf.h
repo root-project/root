@@ -11,12 +11,12 @@
 #define ROOT_snprintf
 
 #include "RConfig.h"
+#include <stdio.h>
 
 #ifndef __CINT__
 
 #ifdef NEED_SNPRINTF
 
-#include <stdio.h>
 #include <stdarg.h>
 
 #ifdef __cplusplus
