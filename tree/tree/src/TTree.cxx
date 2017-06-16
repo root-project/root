@@ -6698,53 +6698,53 @@ void TTree::OptimizeBaskets(ULong64_t maxMemory, Float_t /* minComp */, Option_t
       return;
    }
 
-   Long64_t oldMemsize,newMemsize;
-   Int_t oldBaskets,newBaskets;
-   oldMemsize = 0;  //to count size of baskets in memory with old buffer size
-   newMemsize = 0;  //to count size of baskets in memory with new buffer size
-   oldBaskets = 0;  //to count number of baskets with old buffer size
-   newBaskets = 0;  //to count number of baskets with new buffer size
+   Long64_t oldMemsize, newMemsize;
+   Int_t oldBaskets, newBaskets;
+   oldMemsize = 0; // to count size of baskets in memory with old buffer size
+   newMemsize = 0; // to count size of baskets in memory with new buffer size
+   oldBaskets = 0; // to count number of baskets with old buffer size
+   newBaskets = 0; // to count number of baskets with new buffer size
 
-   std::vector<Int_t> vBaS; // vector holding Basket size
+   std::vector<Int_t> vBaS;    // vector holding Basket size
    std::vector<Int_t> vBaSAvg; // vector holding single Basket estimate (tight fit)
-   std::vector<Int_t> vNBaS; // vector holding Number of baskets
-   std::vector<Int_t> vBaES; // vector holding estimated entry size
+   std::vector<Int_t> vNBaS;   // vector holding Number of baskets
+   std::vector<Int_t> vBaES;   // vector holding estimated entry size
 
-   std::unordered_set<TBranch*> branchesWithLeaves;
-   for (Int_t i=0;i<nleaves;++i) {
-      TLeaf *leaf = (TLeaf*)leaves->At(i);
+   std::unordered_set<TBranch *> branchesWithLeaves;
+   for (Int_t i = 0; i < nleaves; ++i) {
+      TLeaf *leaf = (TLeaf *)leaves->At(i);
       TBranch *branch = leaf->GetBranch();
       branchesWithLeaves.insert(branch);
    }
 
    // summing up size of all Branches and make initial basket size to aim for a single basket
-   ULong64_t ts=0;
-   for(auto br: branchesWithLeaves) {
+   ULong64_t ts = 0;
+   for (auto br : branchesWithLeaves) {
       Long64_t totbytes = br->GetTotBytes();
       Int_t nbask = br->GetWriteBasket();
       Long64_t nentry = br->GetEntries();
 
-      if (totbytes<=0 || nbask<=0 || nentry<=0) {
+      if (totbytes <= 0 || nbask <= 0 || nentry <= 0) {
          totbytes = Double_t(treeSize) / branchesWithLeaves.size();
          nbask = 1 + totbytes / br->GetBasketSize();
          nentry = TMath::Max((Long64_t)1, GetEntries());
       }
 
-      Double_t aveEntSize = Double_t(totbytes)/nentry;
+      Double_t aveEntSize = Double_t(totbytes) / nentry;
 
       if (br->GetEntryOffsetLen()) {
-         totbytes -= sizeof(Int_t)*(nentry+2);
+         totbytes -= sizeof(Int_t) * (nentry + 2);
       }
 
       Long64_t bigbasket = totbytes * 1.5;
 
       if (br->GetEntryOffsetLen()) {
-         bigbasket += 2*sizeof(Int_t)*(nentry+2);
-         totbytes += 2*sizeof(Int_t)*(nentry+2);
+         bigbasket += 2 * sizeof(Int_t) * (nentry + 2);
+         totbytes += 2 * sizeof(Int_t) * (nentry + 2);
       }
 
-      if ((bigbasket%512)) {
-         bigbasket += 512 - bigbasket%512;
+      if ((bigbasket % 512)) {
+         bigbasket += 512 - bigbasket % 512;
       }
 
       ts += bigbasket;
@@ -6760,25 +6760,25 @@ void TTree::OptimizeBaskets(ULong64_t maxMemory, Float_t /* minComp */, Option_t
       Info("OptimizingBaskets", "Sizes starting from: %llu  goal is: %llu\n", ts, maxMemory);
    }
 
-   while (ts>maxMemory) {
+   while (ts > maxMemory) {
       // search for the biggest
-      Int_t ind=0;
-      Int_t indBig=-1;
-      Int_t valBig=0;
+      Int_t ind = 0;
+      Int_t indBig = -1;
+      Int_t valBig = 0;
       Int_t newBsize = 0;
-      for (const auto &v: vBaS) {
-         Int_t sz = Double_t(vBaSAvg[ind])/(1+vNBaS[ind]);
-         if ((sz%512)) {
-            sz += 512 - sz%512;
+      for (const auto &v : vBaS) {
+         Int_t sz = Double_t(vBaSAvg[ind]) / (1 + vNBaS[ind]);
+         if ((sz % 512)) {
+            sz += 512 - sz % 512;
          }
-         if (v>valBig && sz<v && sz>=vBaES[ind]) {
+         if (v > valBig && sz < v && sz >= vBaES[ind]) {
             valBig = v;
             indBig = ind;
             newBsize = sz;
          }
          ind++;
       }
-      if (indBig<0) break;
+      if (indBig < 0) break;
       // record new basket size and count, adjust total size count
 
       ts -= (vBaS[indBig] - newBsize);
@@ -6786,27 +6786,27 @@ void TTree::OptimizeBaskets(ULong64_t maxMemory, Float_t /* minComp */, Option_t
       vNBaS[indBig] += 1;
 
       if (pDebug) {
-         Info("OptimizeBaskets", "nbas: %d\tbsize: %d\n",vNBaS[indBig], vBaS[indBig] );
+         Info("OptimizeBaskets", "nbas: %d\tbsize: %d\n", vNBaS[indBig], vBaS[indBig]);
       }
    }
 
-   for (const auto &v: vBaS) {
+   for (const auto &v : vBaS) {
       newMemsize += v;
    }
 
-   for (const auto &n: vNBaS) {
+   for (const auto &n : vNBaS) {
       newBaskets += n;
    }
 
    // setting calculated basket sizes.
-   Int_t i=0;
-   for(auto br: branchesWithLeaves) {
+   Int_t i = 0;
+   for (auto br : branchesWithLeaves) {
       br->TBranch::SetBasketSize(vBaS[i]);
       ++i;
    }
 
    if (pDebug) {
-      Info("OptimizeBaskets", "oldMemsize = %lld,  newMemsize = %lld\n",oldMemsize, newMemsize);
+      Info("OptimizeBaskets", "oldMemsize = %lld,  newMemsize = %lld\n", oldMemsize, newMemsize);
       Info("OptimizeBaskets", "oldBaskets = %d,  newBaskets = %d\n",oldBaskets, newBaskets);
    }
 }
