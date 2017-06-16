@@ -363,18 +363,72 @@ void getdim(TLeaf* leaf, std::vector<int>& dims, std::vector<std::string>& count
 /////////////////////////////////////////////////////// Python iterator functions
 
 static PyObject* BranchesIterator_iter(PyObject* self) {
+  BranchesIterator* thyself = reinterpret_cast<BranchesIterator*>(self);
+  thyself->entry_start = 0;
+  thyself->entry_end = 0;
   Py_INCREF(self);
   return self;
 }
 
 bool update_BranchesIterator(BranchesIterator* thyself, const char* &error_string) {
+  // start is at the old end (initially both 0)
+  thyself->entry_start = thyself->entry_end;
 
+  if (thyself->entry_end >= thyself->num_entries)
+    return true;   // done! raise StopIteration!
 
+  // increment the buffers that are at the forefront
+  for (unsigned int i = 0;  i < thyself->requested.size();  i++) {
+    BranchData &branchdata = thyself->requested[i];
+    if (branchdata.buffers.back()->entry_end == thyself->entry_start)
+      branchdata.buffers.back()->read_basket(thyself->entry_start, branchdata.branch);
+  }
 
+  // check for error conditions
+  for (unsigned int i = 0;  i < thyself->requested.size();  i++) {
+    BranchData &branchdata = thyself->requested[i];
+    if (branchdata.buffers.back()->entry_end < 0) {
+      error_string = "failed to read TBasket into TBufferFile (using GetBulkRead().GetEntriesSerialized)";
+      return false;
+    }
+  }
 
+  // find the maximum entry_end
+  thyself->entry_end = -1;
+  for (unsigned int i = 0;  i < thyself->requested.size();  i++) {
+    BranchData &branchdata = thyself->requested[i];
+    if (branchdata.buffers.back()->entry_end > thyself->entry_end)
+      thyself->entry_end = branchdata.buffers.back()->entry_end;
+  }
 
+  // bring all others up to at least entry_end by reading
+  for (unsigned int i = 0;  i < thyself->requested.size();  i++) {
+    BranchData &branchdata = thyself->requested[i];
+
+    while (branchdata.buffers.back()->entry_end < thyself->entry_end) {
+      BasketBuffer *buf;
+
+      if (branchdata.buffers.front()->entry_end <= thyself->entry_start) {
+        // the front is no longer needed; move it to the back and reuse it
+        buf = branchdata.buffers.front();
+        branchdata.buffers.pop_front();
+      }
+      else {
+        // the front is still needed; add a new buffer to the back
+        buf = new BasketBuffer;
+      }
+
+      // read data from the file
+      buf->read_basket(branchdata.buffers.back()->entry_end, branchdata.branch);
+
+      // "buf" was either popped off the front (because it wasn't needed) or created anew
+      // now it goes on the back; the back is always the latest
+      branchdata.buffers.push_back(buf);
+    }
+  }
+
+  return false;   // not done; still a good iterator
 }
-
 
 static PyObject* BranchesIterator_next(PyObject* self) {
   BranchesIterator* thyself = reinterpret_cast<BranchesIterator*>(self);
@@ -396,17 +450,21 @@ static PyObject* BranchesIterator_next(PyObject* self) {
     PyTuple_SET_ITEM(out, 1, PyLong_FromLong(thyself->entry_end));
 
     for (unsigned int i = 0;  i < thyself->requested.size();  i++) {
-      Long64_t numbytes;
-      void* data = thyself->requested[i].getdata(numbytes, thyself->dtypes[i].elsize, thyself->entry_start, thyself->entry_end, thyself->alignment);
+      ArrayInfo &arrayinfo = thyself->arrayinfo[i];
 
-      npy_intp dims[1];
-      dims[0] = numbytes / thyself->dtypes[i].elsize;
+      Long64_t numbytes;
+      void* data = thyself->requested[i].getdata(numbytes, arrayinfo.dtype->elsize, thyself->entry_start, thyself->entry_end, thyself->alignment);
+
+      npy_intp dims[arrayinfo.nd];
+      dims[0] = numbytes / arrayinfo.dtype->elsize;
+      for (int j = 0;  j < arrayinfo.dims.size();  j++)
+        dims[j + 1] = arrayinfo.dims[j];
 
       int flags = NPY_ARRAY_C_CONTIGUOUS;
-      if (thyself->alignment > 0)
+      if ((size_t)data % thyself->alignment == 0)
         flags |= NPY_ARRAY_ALIGNED;
 
-      PyObject* array = PyArray_NewFromDescr(&PyArray_Type, thyself->dtypes[i], 1, dims, NULL, data, flags, NULL);
+      PyObject* array = PyArray_NewFromDescr(&PyArray_Type, arrayinfo.dtype, arrayinfo.nd, dims, NULL, data, flags, NULL);
 
       PyTuple_SET_ITEM(out, i + 2, array);
     }
