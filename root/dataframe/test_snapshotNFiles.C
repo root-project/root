@@ -26,7 +26,7 @@ int test_snapshotNFiles() {
    // Multithreaded
 #ifdef R__USE_IMT
    {
-      ROOT::EnableImplicitMT(1); // 2 to have more files per worker
+      ROOT::EnableImplicitMT(3);
       std::cout << "Now going MT\n";
       fill_file("file_snapshot2Files_3.root",5);
       fill_file("file_snapshot2Files_4.root",5);
