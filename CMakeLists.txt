@@ -63,6 +63,14 @@ if(coverage)
   set(CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS}")
 endif()
 
+#--- Enable build timing -----------------------------------------------------------------------
+if (build_timing)
+  # FIXME: This currently will override the use of ccache if -Dbuild_timing=On -Dccache=On is passed.
+  set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CMAKE_COMMAND} -E time")
+  set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK "${CMAKE_COMMAND} -E time")
+  #set_property(GLOBAL PROPERTY RULE_LAUNCH_CUSTOM "${CMAKE_COMMAND} -E time") 
+endif()
+
 #---Enable CTest package -----------------------------------------------------------------------
 #include(CTest)
 if(testing)
