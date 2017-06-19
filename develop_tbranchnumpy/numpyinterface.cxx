@@ -28,6 +28,8 @@
 #include <TObjArray.h>
 #include <TTree.h>
 
+#define ALIGNMENT 8;    // if a pointer % ALIGNMENT == 0, declare it "aligned"
+
 /////////////////////////////////////////////////////// helper classes
 
 class ArrayInfo {
@@ -48,15 +50,18 @@ private:
   Long64_t bf_entry_end;
   Long64_t ex_entry_start;
   Long64_t ex_entry_end;
+  bool spilled_to_extra;
 
 public:
   ClusterBuffer(const TBranch* branch, const Long64_t itemsize) :
     branch(branch), bf(TBuffer::kWrite, 32*1024), itemsize(itemsize),
-    bf_entry_start(0), bf_entry_end(0), ex_entry_start(0), ex_entry_end(0) { }
+    bf_entry_start(0), bf_entry_end(0), ex_entry_start(0), ex_entry_end(0), spilled_to_extra(false) { }
 
   bool readmore(Long64_t target_start, Long64_t target_end);
   void* getbuffer(Long64_t &size);
 };
+
+enum CopyMode {ALWAYS, IFUNALIGNED, TRYNOTTO};
 
 class ClusterIterator {
 private:
@@ -75,21 +80,27 @@ public:
   }
 
   bool stepforward(const char* &error_string);
-  PyObject* array(unsigned int i);
+  PyObject* arrays(CopyMode copy);
 };    
 
+// readmore asks ROOT to read from the file until reaching entry target_end
+// and ClusterBuffer ensures that entries as old as target_start are preserved
 bool ClusterBuffer::readmore(Long64_t target_start, Long64_t target_end) {
   return false;
 }
 
+// getbuffer returns a pointer to contiguous data with its size
+// if you're lucky, this is performed without any copies
 void* ClusterBuffer::getbuffer(Long64_t &size) {
   return nullptr;
 }
 
+// step all ClusterBuffers forward, for all branches
 bool ClusterIterator::stepforward(const char* &error_string) {
   return false;
 }
 
-PyObject* ClusterIterator::array(unsigned int i) {
+// get a Python tuple of arrays for all buffers
+PyObject* arrays(CopyMode copy) {
   return nullptr;
 }
