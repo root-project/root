@@ -17,6 +17,7 @@
 #include "Utility.h"
 #include "TMVA/DNN/Architectures/Reference.h"
 
+
 /** Test multiplication (standard, transposed, hadamard) operation on
  *  architecture specific matrix types and compare with results
  *  obtained with TMatrixT.

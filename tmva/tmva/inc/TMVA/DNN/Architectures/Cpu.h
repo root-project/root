@@ -9,11 +9,11 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
- //////////////////////////////////////////////////////////////////
-// Definition of the TCpu architecture, which provides a         //
- // multi-threaded CPU implementation of the low-level interface //
- // networks for Cpus using BLAS and Roots TThreadExecutor            //
- //////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+// Definition of the TCpu architecture, which provides a        //
+// multi-threaded CPU implementation of the low-level interface //
+// networks for Cpus using BLAS and Roots TThreadExecutor       //
+//////////////////////////////////////////////////////////////////
 
 #ifndef TMVA_DNN_ARCHITECTURES_CPU
 #define TMVA_DNN_ARCHITECTURES_CPU
@@ -61,6 +61,7 @@ public:
    /** Add the vectors biases row-wise to the matrix output */
    static void AddRowWise(TCpuMatrix<Scalar_t> &output,
                           const TCpuMatrix<Scalar_t> &biases);
+    
    ///@}
 
    /** @name Backward Propagation
@@ -68,8 +69,9 @@ public:
     * through the network.
     */
    ///@{
-   /** Perform the complete backward propagation step. If the provided
-    *  \p activationGradientsBackward matrix is not empty, compute the
+    
+   /** Perform the complete backward propagation step in a Fully Connected Layer.
+    *  If the provided \p activationGradientsBackward matrix is not empty, compute the
     *  gradients of the objective function with respect to the activations
     *  of the previous layer (backward direction).
     *  Also compute the weight and the bias gradients. Modifies the values
@@ -83,6 +85,7 @@ public:
                         const TCpuMatrix<Scalar_t> & activationGradients,
                         const TCpuMatrix<Scalar_t> & weights,
                         const TCpuMatrix<Scalar_t> & activationBackward);
+    
    /** Adds a the elements in matrix B scaled by c to the elements in
     *  the matrix A. This is required for the weight update in the gradient
     *  descent step.*/
@@ -249,7 +252,151 @@ public:
    static void Dropout(TCpuMatrix<Scalar_t> & A, Scalar_t p);
 
    ///@}
+    
+   //______________________________________________________________________________
+   //
+   //  Convolutional Nets Propagation
+   //______________________________________________________________________________
+    
+   /** @name Propagation in Convolutional Nets
+    */
+   ///@{
+    
+    
+   /** Transform the matrix B in local view format, suitable for
+    *  convolution, and store it in matrix A */
+   static void Im2col(TCpuMatrix<AReal> &A,
+                      TCpuMatrix<AReal> &B,
+                      size_t imgHeight,
+                      size_t imgWidth,
+                      size_t fltHeight,
+                      size_t fltWidth,
+                      size_t strideRows,
+                      size_t strideCols,
+                      size_t zeroPaddingHeight,
+                      size_t zeroPaddingWidth);
+    
+   /** Rotates the matrix \p B, which is representing a weights,
+    *  and stores them in the matrix \p A. */
+   static void RotateWeights(TCpuMatrix<AReal> &A,
+                             const TCpuMatrix<AReal> &B,
+                             size_t filterDepth,
+                             size_t filterHeight,
+                             size_t filterWidth,
+                             size_t numFilters);
+    
+   /** Flattens the tensor \p B, such that each matrix, is stretched in
+    *  one row, resulting with a matrix \p A. */
+   static void Flatten(TCpuMatrix<AReal> &A,
+                       const std::vector<TCpuMatrix<AReal>> B,
+                       size_t size,
+                       size_t nRows,
+                       size_t nCols);
+    
+   /** Transforms each row of \p B to a matrix and stores it in the
+    *  tensor \p B. */
+   static void Deflatten(std::vector<TCpuMatrix<AReal>> A,
+                         const TCpuMatrix<AReal> &B,
+                         size_t index,
+                         size_t nRows,
+                         size_t nCols);
+    
+    /** Perform the complete backward propagation step in a Convolutional Layer.
+     *  If the provided \p activationGradientsBackward matrix is not empty, compute the
+     *  gradients of the objective function with respect to the activations
+     *  of the previous layer (backward direction).
+     *  Also compute the weight and the bias gradients. Modifies the values
+     *  in \p df and thus produces only a valid result, if it is applied the
+     *  first time after the corresponding forward propagation has been per-
+     *  formed. */
+   static void ConvLayerBackward(std::vector<TCpuMatrix<Scalar_t>> activationGradientsBackward,
+                                 TCpuMatrix<Scalar_t> & weightGradients,
+                                 TCpuMatrix<Scalar_t> & biasGradients,
+                                 std::vector<TCpuMatrix<Scalar_t>> df,
+                                 const std::vector<TCpuMatrix<Scalar_t>> activationGradients,
+                                 const TCpuMatrix<Scalar_t> & weights,
+                                 const std::vector<TCpuMatrix<Scalar_t>> activationBackward,
+                                 size_t batchSize,
+                                 size_t inputHeight,
+                                 size_t inputWidth,
+                                 size_t depth,
+                                 size_t height,
+                                 size_t width,
+                                 size_t filterDepth,
+                                 size_t filterHeight,
+                                 size_t filterWidth,
+                                 size_t nLocalViews);
+    
+   /** Utility function for calculating the activation gradients of the layer
+    *  before the convolutional layer. */
+   static void CalculateConvActivationGradients(std::vector<TCpuMatrix<Scalar_t>> activationGradientsBackward,
+                                                std::vector<TCpuMatrix<Scalar_t>> df,
+                                                const TCpuMatrix<Scalar_t> & weights,
+                                                size_t batchSize,
+                                                size_t inputHeight,
+                                                size_t inputWidth,
+                                                size_t depth,
+                                                size_t height,
+                                                size_t width,
+                                                size_t filterDepth,
+                                                size_t filterHeight,
+                                                size_t filterWidth);
+    
+   /** Utility function for calculating the weight gradients of the convolutional
+    * layer. */
+   static void CalculateConvWeightGradients(TCpuMatrix<Scalar_t> & weightGradients,
+                                            std::vector<TCpuMatrix<Scalar_t>> df,
+                                            const std::vector<TCpuMatrix<Scalar_t>> activations_backward,
+                                            size_t batchSize,
+                                            size_t inputHeight,
+                                            size_t inputWidth,
+                                            size_t depth,
+                                            size_t height,
+                                            size_t width,
+                                            size_t filterDepth,
+                                            size_t filterHeight,
+                                            size_t filterWidth,
+                                            size_t nLocalViews);
+    
+   /** Utility function for calculating the bias gradients of the convolutional
+    *  layer */
+   static void CalculateConvBiasGradients(TCpuMatrix<Scalar_t> & biasGradients,
+                                          std::vector<TCpuMatrix<Scalar_t>> df,
+                                          size_t batchSize,
+                                          size_t depth,
+                                          size_t nLocalViews);
+    
+   /** Add the biases in the Convolutional Layer.  */
+   static void AddConvBiases(TCpuMatrix<Scalar_t> &output,
+                             const TCpuMatrix<Scalar_t> &biases);
 
+    
+   /** Downsample the matrix \p C to the matrix \p A, using max
+    *  operation, such that the winning indices are stored in matrix
+    *  \p B. */
+   static void Downsample(TCpuMatrix<AReal> &A,
+                          TCpuMatrix<AReal> &B,
+                          const TCpuMatrix<AReal> &C,
+                          size_t imgHeight,
+                          size_t imgWidth,
+                          size_t fltHeight,
+                          size_t fltWidth,
+                          size_t strideRows,
+                          size_t strideCols);
+    
+   /** Perform the complete backward propagation step in a Pooling Layer. Based on the
+    *  winning idices stored in the index matrix, it just forwards the actiovation
+    *  gradients to the previous layer. */
+   static void PoolLayerBackward(std::vector<TCpuMatrix<AReal>> activationGradientsBackward,
+                                 const std::vector<TCpuMatrix<AReal>> activationGradients,
+                                 const std::vector<TCpuMatrix<AReal>> indexMatrix,
+                                 size_t batchSize,
+                                 size_t depth,
+                                 size_t nLocalViews);
+    
+   ///@}
+    
+    
    //____________________________________________________________________________
    //
    // Additional Arithmetic Functions
