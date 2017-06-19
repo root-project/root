@@ -32,3 +32,9 @@ unsigned long RooJsonListFile::_next_member_index() {
   _member_index = (_member_index + 1) % _member_names.size();
   return current_index;
 }
+
+RooJsonListFile& RooJsonListFile::add_member_name(const std::string &name) {
+  _member_names.push_back(name);
+
+  return *this;
+}

@@ -22,6 +22,8 @@ public:
   template <class Iter>
   void set_member_names(Iter begin, Iter end, bool reset_index = true);
 
+  RooJsonListFile& add_member_name(const std::string &name);
+
   template <typename T>
   RooJsonListFile& operator<< (const T& obj);
 
