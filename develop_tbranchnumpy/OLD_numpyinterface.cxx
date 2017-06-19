@@ -45,6 +45,7 @@ public:
   Long64_t entry_start;
   Long64_t entry_end;
   TBufferFile buffer;
+  std::vector<char> extra_buffer;
 
   BasketBuffer() : entry_start(0), entry_end(0), buffer(TBuffer::kWrite, 32*1024) {}
 
