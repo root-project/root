@@ -341,6 +341,7 @@ Int_t RooMinimizer::minimize(const char* type, const char* alg)
 /// propagated back the RooRealVars representing
 /// the floating parameters in the MINUIT operation
 
+// TODO: this function's body could be replaced by one line: `minimize(_minimizerType.c_str(),"migrad");`, except for the saveSTATUS call...
 Int_t RooMinimizer::migrad()
 {
   _fcn->Synchronize(_theFitter->Config().ParamsSettings(),
