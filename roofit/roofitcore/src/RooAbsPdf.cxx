@@ -173,7 +173,7 @@ TString RooAbsPdf::_normRangeOverride ;
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
-RooAbsPdf::RooAbsPdf() : _norm(0), _normSet(0), _specGeneratorConfig(0), _num_int_timing_flag(kFALSE)
+RooAbsPdf::RooAbsPdf() : _norm(0), _normSet(0), _specGeneratorConfig(0)
 {
   _errorCount = 0 ;
   _negCount = 0 ;
@@ -188,7 +188,7 @@ RooAbsPdf::RooAbsPdf() : _norm(0), _normSet(0), _specGeneratorConfig(0), _num_in
 /// Constructor with name and title only
 
 RooAbsPdf::RooAbsPdf(const char *name, const char *title) : 
-  RooAbsReal(name,title), _norm(0), _normSet(0), _normMgr(this,10), _selectComp(kTRUE), _specGeneratorConfig(0), _num_int_timing_flag(kFALSE)
+  RooAbsReal(name,title), _norm(0), _normSet(0), _normMgr(this,10), _selectComp(kTRUE), _specGeneratorConfig(0)
 {
   resetErrorCounters() ;
   setTraceCounter(0) ;
@@ -201,7 +201,7 @@ RooAbsPdf::RooAbsPdf(const char *name, const char *title) :
 
 RooAbsPdf::RooAbsPdf(const char *name, const char *title, 
 		     Double_t plotMin, Double_t plotMax) :
-  RooAbsReal(name,title,plotMin,plotMax), _norm(0), _normSet(0), _normMgr(this,10), _selectComp(kTRUE), _specGeneratorConfig(0), _num_int_timing_flag(kFALSE)
+  RooAbsReal(name,title,plotMin,plotMax), _norm(0), _normSet(0), _normMgr(this,10), _selectComp(kTRUE), _specGeneratorConfig(0)
 {
   resetErrorCounters() ;
   setTraceCounter(0) ;
@@ -214,7 +214,7 @@ RooAbsPdf::RooAbsPdf(const char *name, const char *title,
 
 RooAbsPdf::RooAbsPdf(const RooAbsPdf& other, const char* name) : 
   RooAbsReal(other,name), _norm(0), _normSet(0),
-  _normMgr(other._normMgr,this), _selectComp(other._selectComp), _normRange(other._normRange), _num_int_timing_flag(other._num_int_timing_flag)
+  _normMgr(other._normMgr,this), _selectComp(other._selectComp), _normRange(other._normRange)
 {
   resetErrorCounters() ;
   setTraceCounter(other._traceCount) ;
