@@ -42,19 +42,20 @@ std::vector<std::string> GetUsedBranchesNames(const std::string expression, TObj
    int paddedExprLen = paddedExpr.size();
    static const std::string regexBit("[^a-zA-Z0-9_]");
    std::vector<std::string> usedBranches;
+   for (auto brName : tmpBranches) {
+      std::string bNameRegexContent = regexBit + brName + regexBit;
+      TRegexp bNameRegex(bNameRegexContent.c_str());
+      if (-1 != bNameRegex.Index(paddedExpr.c_str(), &paddedExprLen)) {
+         usedBranches.emplace_back(brName.c_str());
+      }
+   }
+   if (!branches) return usedBranches;
    for (auto bro : *branches) {
       auto brName = bro->GetName();
       std::string bNameRegexContent = regexBit + brName + regexBit;
       TRegexp bNameRegex(bNameRegexContent.c_str());
       if (-1 != bNameRegex.Index(paddedExpr.c_str(), &paddedExprLen)) {
          usedBranches.emplace_back(brName);
-      }
-   }
-   for (auto brName : tmpBranches) {
-      std::string bNameRegexContent = regexBit + brName + regexBit;
-      TRegexp bNameRegex(bNameRegexContent.c_str());
-      if (-1 != bNameRegex.Index(paddedExpr.c_str(), &paddedExprLen)) {
-         usedBranches.emplace_back(brName.c_str());
       }
    }
    return usedBranches;
