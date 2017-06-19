@@ -382,6 +382,8 @@ bool fill_impl(TBranch* branch, PyObject* tofill, Long64_t startingEntry, bool w
   TBufferFile buffer(TBuffer::kWrite, 32*1024);
 
   while (arrayindex < arrayend  &&  startingEntry < numEntries) {
+    std::cout << "startingEntry " << startingEntry << " buffer " << buffer.GetName() << " current " << (void*)buffer.GetCurrent() << " size " << buffer.BufferSize() << std::endl;
+
     Long64_t entries = branch->GetBulkRead().GetEntriesSerialized(startingEntry, buffer);
     startingEntry += entries;
 

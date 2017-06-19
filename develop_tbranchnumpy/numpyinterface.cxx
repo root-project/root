@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include <deque>
 #include <string>
 #include <vector>
@@ -46,10 +48,16 @@ public:
   BasketBuffer() : entry_start(0), entry_end(0), buffer(TBuffer::kWrite, 32*1024) {}
 
   void read_basket(Long64_t entry, TBranch* branch) {
+    std::cout << "BasketBuffer::read_basket " << this << std::endl;
+
+    std::cout << "read_basket START " << entry << " " << branch->GetName() << " " << buffer.GetName() << std::endl;
+
     entry_start = entry;
     entry_end = entry_start + branch->GetBulkRead().GetEntriesSerialized(entry, buffer);
     if (entry_end < entry_start)
       entry_end = -1;
+
+    std::cout << "read_basket END " << entry_end << std::endl;
   }
 };
 
@@ -60,11 +68,15 @@ public:
   std::vector<char> extra_buffer;
   BranchData* counter;
 
-  BranchData(TBranch* branch) : branch(branch) {
+  BranchData(TBranch* branch) : branch(branch), counter(NULL) {
+    std::cout << "BranchData::BranchData " << this << std::endl;
+
     buffers.push_back(new BasketBuffer);
   }
 
   ~BranchData() {
+    std::cout << "BranchData::~BranchData " << this << std::endl;
+
     while (!buffers.empty()) {
       delete buffers.front();
       buffers.pop_front();
@@ -72,53 +84,93 @@ public:
   }
 
   void* getdata(Long64_t &numbytes, Long64_t itemsize, Long64_t entry_start, Long64_t entry_end, Long64_t alignment) {
+    std::cout << "getdata START" << std::endl;
+
     if (counter == NULL) {
       Long64_t fill_end = -1;
+
+      std::cout << "we're looking for " << entry_start << ":" << entry_end << std::endl;
 
       for (unsigned int i = 0;  i < buffers.size();  ++i) {
         BasketBuffer* buf = buffers[i];
 
+        std::cout << "this one has " << buf->entry_start << ":" << buf->entry_end << std::endl;
+
         if (entry_start == buf->entry_start  &&  entry_end == buf->entry_end  &&  (alignment <= 0  ||  (size_t)buf->buffer.GetCurrent() % alignment == 0)) {
           // this whole buffer is exactly right, in terms of start/end and alignment; don't mess with extra_buffer, just send it (no copy)!
-          numbytes = buf->buffer.BufferSize();
+
+          numbytes = (entry_end - entry_start) * itemsize;
+
+          std::cout << "can do it in one buffer! returning it with numbytes=" << numbytes << std::endl;
+
           return buf->buffer.GetCurrent();
         }
         else if (buf->entry_start <= entry_start  &&  entry_start < buf->entry_end) {
+          std::cout << "we're in the section that includes start: " << buf->entry_start << " <= " << entry_start << " < " << buf->entry_end << std::endl;
+
           if (entry_end <= buf->entry_end)
             fill_end = entry_end;
           else
             fill_end = buf->entry_end;
+
+          std::cout << "fill_end is " << fill_end << (fill_end == buf->entry_end ? "the whole buffer" : "") << std::endl;
 
           // where *within this buffer* should we start and end the slice?
           Long64_t byte_start = (entry_start - buf->entry_start) * itemsize;
           Long64_t byte_end = (fill_end - buf->entry_start) * itemsize;
 
+          std::cout << "so the byte range (within this buffer) is " << byte_start << ":" << byte_end << std::endl;
+
           // this is the first buffer in which we see the start, so we *replace* extra_buffer
           extra_buffer.resize(byte_end - byte_start);
+
+          std::cout << "resize the vector to " << (byte_end - byte_start) << std::endl;
+
           memcpy(extra_buffer.data(), &buf->buffer.GetCurrent()[byte_start], byte_end - byte_start);
+
+          std::cout << "copied!" << std::endl;
+
           numbytes = byte_end - byte_start;
         }
 
         else if (entry_start < buf->entry_start  &&  buf->entry_start < entry_end) {
+          std::cout << "we're in a section after start: " << entry_start << " < " << buf->entry_start << " < " << entry_end << std::endl;
+
           if (entry_end <= buf->entry_end)
             fill_end = entry_end;
           else
             fill_end = buf->entry_end;
 
+          std::cout << "fill_end is " << fill_end << (fill_end == buf->entry_end ? "the whole buffer" : "") << std::endl;
+
           Long64_t byte_end = (fill_end - buf->entry_start) * itemsize;
+
+          std::cout << "so the byte range (within this buffer) is 0:" << byte_end << std::endl;
 
           // this is not the first buffer with content that we want (may or may not be last), so we *append* extra_buffer
           std::vector<char>::size_type oldsize = extra_buffer.size();
           extra_buffer.resize(oldsize + byte_end);
+
+          std::cout << "resize the vector to " << (oldsize + byte_end) << std::endl;
+
           memcpy(&extra_buffer.data()[oldsize], buf->buffer.GetCurrent(), byte_end);
+
+          std::cout << "copied!" << std::endl;
+
           numbytes += byte_end;
         }
       }
 
-      if (fill_end != entry_end)
+      std::cout << "getdata END: " << fill_end << " " << entry_end << " so return ";
+
+      if (fill_end != entry_end) {
+        std::cout << "NULL" << std::endl;
         return NULL;
-      else
+      }
+      else {
+        std::cout << "a pointer to the extra_buffer with numbytes=" << numbytes << std::endl;
         return extra_buffer.data();
+      }
     }
     else {
       // FIXME: handle buffers of varlen data
@@ -143,9 +195,9 @@ typedef struct {
   Long64_t num_entries;
   Long64_t entry_start;
   Long64_t entry_end;
-  std::vector<BranchData> requested;
-  std::vector<ArrayInfo> arrayinfo;
-  std::vector<BranchData> extra_counters;
+  std::vector<BranchData*> requested;
+  std::vector<ArrayInfo*> arrayinfo;
+  std::vector<BranchData*> extra_counters;
 } BranchesIterator;
 
 static PyObject* BranchesIterator_iter(PyObject* self);
@@ -160,7 +212,7 @@ static PyObject* iterate(PyObject* self, PyObject* args, PyObject* kwds);
 static PyTypeObject BranchesIteratorType = {
   PyVarObject_HEAD_INIT(NULL, 0)
   "numpyinterface.BranchesIterator", /*tp_name*/
-  sizeof(BranchesIterator), /*tp_basicsize*/
+  sizeof(BranchesIterator),  /*tp_basicsize*/
   0,                         /*tp_itemsize*/
   0,                         /*tp_dealloc*/
   0,                         /*tp_print*/
@@ -368,31 +420,42 @@ void getdim(TLeaf* leaf, std::vector<int>& dims, std::vector<std::string>& count
 /////////////////////////////////////////////////////// Python iterator functions
 
 static PyObject* BranchesIterator_iter(PyObject* self) {
+  std::cout << "BranchesIterator_iter START" << std::endl;
+
   BranchesIterator* thyself = reinterpret_cast<BranchesIterator*>(self);
   thyself->entry_start = 0;
   thyself->entry_end = 0;
   Py_INCREF(self);
+
+  std::cout << "BranchesIterator_iter END" << std::endl;
+
   return self;
 }
 
 bool update_BranchesIterator(BranchesIterator* thyself, const char* &error_string) {
+  std::cout << "update_BranchesIterator START" << std::endl;
+
   // start is at the old end (initially both 0)
   thyself->entry_start = thyself->entry_end;
 
-  if (thyself->entry_end >= thyself->num_entries)
+  if (thyself->entry_end >= thyself->num_entries) {
+    std::cout << "update_BranchesIterator DONE" << std::endl;
     return true;   // done! raise StopIteration!
+  }
 
   // increment the buffers that are at the forefront
   for (unsigned int i = 0;  i < thyself->requested.size();  i++) {
-    BranchData &branchdata = thyself->requested[i];
-    if (branchdata.buffers.back()->entry_end == thyself->entry_start)
-      branchdata.buffers.back()->read_basket(thyself->entry_start, branchdata.branch);
+    BranchData* branchdata = thyself->requested[i];
+    if (branchdata->buffers.back()->entry_end == thyself->entry_start) {
+      std::cout << "read " << branchdata->branch->GetName() << " because it's at the forefront" << std::endl;
+      branchdata->buffers.back()->read_basket(thyself->entry_start, branchdata->branch);
+    }
   }
 
   // check for error conditions
   for (unsigned int i = 0;  i < thyself->requested.size();  i++) {
-    BranchData &branchdata = thyself->requested[i];
-    if (branchdata.buffers.back()->entry_end < 0) {
+    BranchData* branchdata = thyself->requested[i];
+    if (branchdata->buffers.back()->entry_end < 0) {
       error_string = "failed to read TBasket into TBufferFile (using GetBulkRead().GetEntriesSerialized)";
       return false;
     }
@@ -401,45 +464,62 @@ bool update_BranchesIterator(BranchesIterator* thyself, const char* &error_strin
   // find the maximum entry_end
   thyself->entry_end = -1;
   for (unsigned int i = 0;  i < thyself->requested.size();  i++) {
-    BranchData &branchdata = thyself->requested[i];
-    if (branchdata.buffers.back()->entry_end > thyself->entry_end)
-      thyself->entry_end = branchdata.buffers.back()->entry_end;
+    BranchData* branchdata = thyself->requested[i];
+    if (branchdata->buffers.back()->entry_end > thyself->entry_end)
+      thyself->entry_end = branchdata->buffers.back()->entry_end;
   }
+
+  std::cout << "max entry_end is " << thyself->entry_end << std::endl;
 
   // bring all others up to at least entry_end by reading
   for (unsigned int i = 0;  i < thyself->requested.size();  i++) {
-    BranchData &branchdata = thyself->requested[i];
+    BranchData* branchdata = thyself->requested[i];
 
-    while (branchdata.buffers.back()->entry_end < thyself->entry_end) {
+    while (branchdata->buffers.back()->entry_end < thyself->entry_end) {
+      std::cout << "branch " << branchdata->branch->GetName() << " needs to be read ahead" << std::endl;
+
       BasketBuffer *buf;
 
-      if (branchdata.buffers.front()->entry_end <= thyself->entry_start) {
+      if (branchdata->buffers.front()->entry_end <= thyself->entry_start) {
+        std::cout << "we're re-using a buffer" << std::endl;
+
         // the front is no longer needed; move it to the back and reuse it
-        buf = branchdata.buffers.front();
-        branchdata.buffers.pop_front();
+        buf = branchdata->buffers.front();
+        branchdata->buffers.pop_front();
       }
       else {
+        std::cout << "we're creating a new buffer" << std::endl;
+
         // the front is still needed; add a new buffer to the back
         buf = new BasketBuffer;
       }
 
+      std::cout << "actually read it ahead" << std::endl;
+
       // read data from the file
-      buf->read_basket(branchdata.buffers.back()->entry_end, branchdata.branch);
+      buf->read_basket(branchdata->buffers.back()->entry_end, branchdata->branch);
 
       // "buf" was either popped off the front (because it wasn't needed) or created anew
       // now it goes on the back; the back is always the latest
-      branchdata.buffers.push_back(buf);
+      branchdata->buffers.push_back(buf);
+
+      std::cout << "actually has been read ahead" << std::endl;
     }
   }
 
+  std::cout << "update_BranchesIterator END" << std::endl;
   return false;   // not done; still a good iterator
 }
 
 static PyObject* BranchesIterator_next(PyObject* self) {
+  std::cout << "BranchesIterator_next START" << std::endl;
+
   BranchesIterator* thyself = reinterpret_cast<BranchesIterator*>(self);
 
   const char* error_string = NULL;
   bool done = update_BranchesIterator(thyself, error_string);
+
+  std::cout << "update_BranchesIterator finished with return value " << done << std::endl;
 
   if (error_string != NULL) {
     PyErr_SetString(PyExc_IOError, error_string);
@@ -450,29 +530,54 @@ static PyObject* BranchesIterator_next(PyObject* self) {
     return NULL;
   }
   else {
+    std::cout << "creating the output tuple with " << (2 + thyself->requested.size()) << " elements" << std::endl;
+
     PyObject* out = PyTuple_New(2 + thyself->requested.size());
     PyTuple_SET_ITEM(out, 0, PyLong_FromLong(thyself->entry_start));
     PyTuple_SET_ITEM(out, 1, PyLong_FromLong(thyself->entry_end));
 
     for (unsigned int i = 0;  i < thyself->requested.size();  i++) {
-      ArrayInfo &arrayinfo = thyself->arrayinfo[i];
+      std::cout << "dealing with branch " << i << std::endl;
+
+      ArrayInfo* arrayinfo = thyself->arrayinfo[i];
 
       Long64_t numbytes = 0;  // silence warning (numbytes *is* initialized in getdata)
-      void* data = thyself->requested[i].getdata(numbytes, arrayinfo.dtype->elsize, thyself->entry_start, thyself->entry_end, thyself->alignment);
+      void* data = thyself->requested[i]->getdata(numbytes, arrayinfo->dtype->elsize, thyself->entry_start, thyself->entry_end, thyself->alignment);
 
-      npy_intp dims[arrayinfo.nd];
-      dims[0] = numbytes / arrayinfo.dtype->elsize;
-      for (unsigned int j = 0;  j < arrayinfo.dims.size();  j++)
-        dims[j + 1] = arrayinfo.dims[j];
+      std::cout << "making the dims (nd=" << arrayinfo->nd << ")" << std::endl;
+
+      npy_intp dims[arrayinfo->nd];
+
+      std::cout << "dims[0] := " << numbytes << " / " << arrayinfo->dtype->elsize << std::endl;
+
+      dims[0] = numbytes / arrayinfo->dtype->elsize;
+
+      std::cout << "dims[0] == " << dims[0] << std::endl;
+
+      for (unsigned int j = 0;  j < arrayinfo->dims.size();  j++) {
+        dims[j + 1] = arrayinfo->dims[j];
+
+        std::cout << "dims[" << j + 1 << "] " << dims[j + 1] << std::endl;
+      }
+
+      std::cout << "HERE" << std::endl;
 
       int flags = NPY_ARRAY_C_CONTIGUOUS;
-      if ((size_t)data % thyself->alignment == 0)
+      if (thyself->alignment <= 0  ||  (size_t)data % thyself->alignment == 0)
         flags |= NPY_ARRAY_ALIGNED;
 
-      PyObject* array = PyArray_NewFromDescr(&PyArray_Type, arrayinfo.dtype, arrayinfo.nd, dims, NULL, data, flags, NULL);
+      std::cout << "about to make the array" << std::endl;
+
+      PyObject* array = PyArray_NewFromDescr(&PyArray_Type, arrayinfo->dtype, arrayinfo->nd, dims, NULL, data, flags, NULL);
+
+      std::cout << "made the array" << std::endl;
 
       PyTuple_SET_ITEM(out, i + 2, array);
+
+      std::cout << "inserted into tuple" << std::endl;
     }
+
+    std::cout << "BranchesIterator_next END" << std::endl;
 
     return out;
   }
@@ -497,27 +602,29 @@ bool dtypedim(PyArray_Descr* &dtype, TLeaf* leaf) {
   return true;
 }
 
-bool dtypedim_unileaf(ArrayInfo &arrayinfo, TLeaf* leaf) {
+bool dtypedim_unileaf(ArrayInfo* arrayinfo, TLeaf* leaf) {
   std::vector<std::string> counters;
-  getdim(leaf, arrayinfo.dims, counters);
-  arrayinfo.nd = 1 + arrayinfo.dims.size();    // first dimension is for the set of entries itself
-  arrayinfo.varlen = !counters.empty();
+  getdim(leaf, arrayinfo->dims, counters);
+  arrayinfo->nd = 1 + arrayinfo->dims.size();    // first dimension is for the set of entries itself
+  arrayinfo->varlen = !counters.empty();
 
-  if (arrayinfo.nd > 1  &&  arrayinfo.varlen) {
+  std::cout << "HERE " << arrayinfo->nd << " " << arrayinfo->varlen << " " << arrayinfo->dims.size() << std::endl;
+
+  if (arrayinfo->nd > 1  &&  arrayinfo->varlen) {
     PyErr_Format(PyExc_ValueError, "TLeaf \"%s\" has both fixed-length dimensions and variable-length dimensions", leaf->GetTitle());
     return false;
   }
 
-  return dtypedim(arrayinfo.dtype, leaf);
+  return dtypedim(arrayinfo->dtype, leaf);
 }
 
-bool dtypedim_multileaf(ArrayInfo &arrayinfo, TObjArray* leaves) {
+bool dtypedim_multileaf(ArrayInfo* arrayinfo, TObjArray* leaves) {
   // TODO: Numpy recarray dtype
   PyErr_SetString(PyExc_NotImplementedError, "multileaf");
   return false;
 }
 
-bool dtypedim_branch(ArrayInfo &arrayinfo, TBranch* branch) {
+bool dtypedim_branch(ArrayInfo* arrayinfo, TBranch* branch) {
   TObjArray* subbranches = branch->GetListOfBranches();
   if (subbranches->GetEntries() != 0) {
     PyErr_Format(PyExc_ValueError, "TBranch \"%s\" has subbranches; only branches of TLeaves are allowed", branch->GetName());
@@ -616,8 +723,8 @@ static PyObject* iterate(PyObject* self, PyObject* args, PyObject* kwds) {
   out->entry_end = 0;
 
   for (unsigned int i = 0;  i < branches.size();  i++) {
-    out->requested.push_back(BranchData(branches[i]));
-    out->arrayinfo.push_back(ArrayInfo());
+    out->requested.push_back(new BranchData(branches[i]));
+    out->arrayinfo.push_back(new ArrayInfo());
 
     if (!dtypedim_branch(out->arrayinfo.back(), branches[i]))
       return NULL;
