@@ -30,7 +30,10 @@ namespace textinput {
     virtual ~Reader();
 
     TextInputContext* GetContext() const { return fContext; }
-    void SetContext(TextInputContext* C) { fContext = C; }
+    void SetContext(TextInputContext* C) {
+      if (!C) ReleaseInputFocus();
+      fContext = C;
+    }
 
     virtual void GrabInputFocus() {}
     virtual void ReleaseInputFocus() {}

@@ -44,7 +44,7 @@ namespace textinput {
     virtual ~Display();
 
     const TextInputContext* GetContext() const { return fContext; }
-    void SetContext(TextInputContext* C) { fContext = C; }
+    void SetContext(TextInputContext* C) { if (!C) Detach(); fContext = C; }
 
     virtual void Redraw() { NotifyTextChange(Range::AllWithPrompt()); }
 
