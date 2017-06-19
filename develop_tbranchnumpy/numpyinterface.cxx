@@ -1,4 +1,5 @@
 #include <iostream>
+#include <ctype.h>
 
 #include <deque>
 #include <string>
@@ -46,6 +47,10 @@ public:
   TBufferFile buffer;
 
   BasketBuffer() : entry_start(0), entry_end(0), buffer(TBuffer::kWrite, 32*1024) {}
+
+  ~BasketBuffer() {
+    std::cout << "DELETING BasketBuffer" << std::endl;
+  }
 
   void read_basket(Long64_t entry, TBranch* branch) {
     std::cout << "BasketBuffer::read_basket " << this << std::endl;
@@ -96,12 +101,20 @@ public:
 
         std::cout << "this one has " << buf->entry_start << ":" << buf->entry_end << std::endl;
 
-        if (entry_start == buf->entry_start  &&  entry_end == buf->entry_end  &&  (alignment <= 0  ||  (size_t)buf->buffer.GetCurrent() % alignment == 0)) {
+        if (true)  { //entry_start == buf->entry_start  &&  entry_end == buf->entry_end  &&  (alignment <= 0  ||  (size_t)buf->buffer.GetCurrent() % alignment == 0)) {
           // this whole buffer is exactly right, in terms of start/end and alignment; don't mess with extra_buffer, just send it (no copy)!
 
           numbytes = (entry_end - entry_start) * itemsize;
 
           std::cout << "can do it in one buffer! returning it with numbytes=" << numbytes << std::endl;
+
+          std::cout << "Length " << buf->buffer.Length();
+          for (int qqq = 0;  qqq < 800;  qqq++) {
+            if (qqq % 40 == 0)
+              std::cout << std::endl;
+            std::cout << __toascii(buf->buffer.GetCurrent()[qqq]) << " ";
+          }
+          std::cout << std::endl;
 
           return buf->buffer.GetCurrent();
         }
@@ -113,7 +126,7 @@ public:
           else
             fill_end = buf->entry_end;
 
-          std::cout << "fill_end is " << fill_end << (fill_end == buf->entry_end ? "the whole buffer" : "") << std::endl;
+          std::cout << "fill_end is " << fill_end << (fill_end == buf->entry_end ? " (the whole buffer)" : "") << std::endl;
 
           // where *within this buffer* should we start and end the slice?
           Long64_t byte_start = (entry_start - buf->entry_start) * itemsize;
@@ -126,9 +139,11 @@ public:
 
           std::cout << "resize the vector to " << (byte_end - byte_start) << std::endl;
 
+          std::cout << "ORIGINAL: " << __toascii(buf->buffer.GetCurrent()[0]) << " " << __toascii(buf->buffer.GetCurrent()[1]) << " " << __toascii(buf->buffer.GetCurrent()[2]) << " " << __toascii(buf->buffer.GetCurrent()[3]) << std::endl;
+
           memcpy(extra_buffer.data(), &buf->buffer.GetCurrent()[byte_start], byte_end - byte_start);
 
-          std::cout << "copied!" << std::endl;
+          std::cout << "COPY:     " << __toascii(extra_buffer.data()[0]) << " " << __toascii(extra_buffer.data()[1]) << " " << __toascii(extra_buffer.data()[2]) << " " << __toascii(extra_buffer.data()[3]) << " " << std::endl;
 
           numbytes = byte_end - byte_start;
         }
@@ -155,7 +170,7 @@ public:
 
           memcpy(&extra_buffer.data()[oldsize], buf->buffer.GetCurrent(), byte_end);
 
-          std::cout << "copied!" << std::endl;
+          std::cout << "COPY:     " << __toascii(extra_buffer.data()[0]) << " " << __toascii(extra_buffer.data()[1]) << " " << __toascii(extra_buffer.data()[2]) << " " << __toascii(extra_buffer.data()[3]) << " " << std::endl;
 
           numbytes += byte_end;
         }
@@ -449,6 +464,17 @@ bool update_BranchesIterator(BranchesIterator* thyself, const char* &error_strin
     if (branchdata->buffers.back()->entry_end == thyself->entry_start) {
       std::cout << "read " << branchdata->branch->GetName() << " because it's at the forefront" << std::endl;
       branchdata->buffers.back()->read_basket(thyself->entry_start, branchdata->branch);
+
+      BasketBuffer *buf = branchdata->buffers.back();
+      std::cout << "Length " << buf->buffer.Length() << " current " << (void*)buf->buffer.GetCurrent() << " buf " << (void*)buf;
+      std::cout << "Length " << buf->buffer.Length();
+      for (int qqq = 0;  qqq < 800;  qqq++) {
+        if (qqq % 40 == 0)
+          std::cout << std::endl;
+        std::cout << __toascii(buf->buffer.GetCurrent()[qqq]) << " ";
+      }
+      std::cout << std::endl;
+
     }
   }
 
@@ -478,7 +504,7 @@ bool update_BranchesIterator(BranchesIterator* thyself, const char* &error_strin
     while (branchdata->buffers.back()->entry_end < thyself->entry_end) {
       std::cout << "branch " << branchdata->branch->GetName() << " needs to be read ahead" << std::endl;
 
-      BasketBuffer *buf;
+      BasketBuffer* buf;
 
       if (branchdata->buffers.front()->entry_end <= thyself->entry_start) {
         std::cout << "we're re-using a buffer" << std::endl;
@@ -499,11 +525,32 @@ bool update_BranchesIterator(BranchesIterator* thyself, const char* &error_strin
       // read data from the file
       buf->read_basket(branchdata->buffers.back()->entry_end, branchdata->branch);
 
+      std::cout << "Length " << buf->buffer.Length() << " current " << (void*)buf->buffer.GetCurrent() << " buf " << (void*)buf;
+      // for (int qqq = 0;  qqq < 800;  qqq++) {
+      //   if (qqq % 40 == 0)
+      //     std::cout << std::endl;
+      //   std::cout << __toascii(buf->buffer.GetCurrent()[qqq]) << " ";
+      // }
+      // std::cout << std::endl;
+
       // "buf" was either popped off the front (because it wasn't needed) or created anew
       // now it goes on the back; the back is always the latest
       branchdata->buffers.push_back(buf);
 
       std::cout << "actually has been read ahead" << std::endl;
+    }
+
+    std::cout << "Now let's look at it AGAIN (" << branchdata->branch->GetName() << ")" << std::endl;
+    for (unsigned int j = 0;  j < branchdata->buffers.size();  j++) {
+      BasketBuffer* buf = branchdata->buffers[j];
+
+      std::cout << "Length " << buf->buffer.Length() << " current " << (void*)buf->buffer.GetCurrent() << " buf " << (void*)buf;
+      for (int qqq = 0;  qqq < 800;  qqq++) {
+        if (qqq % 40 == 0)
+          std::cout << std::endl;
+        std::cout << __toascii(buf->buffer.GetCurrent()[qqq]) << " ";
+      }
+      std::cout << std::endl;
     }
   }
 
