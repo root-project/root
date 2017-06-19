@@ -58,10 +58,10 @@ public:
     bf_entry_start(0), bf_entry_end(0), ex_entry_start(0), ex_entry_end(0), spilled_to_extra(false) { }
 
   bool readmore(Long64_t target_start, Long64_t target_end);
-  void* getbuffer(Long64_t &size);
+  void* getbuffer(Long64_t &size, bool &iscopy);
 };
 
-enum CopyMode {ALWAYS, IFUNALIGNED, TRYNOTTO};
+enum CopyMode {ALWAYS, IF_UNALIGNED, TRY_NOT_TO};
 
 class ClusterIterator {
 private:
@@ -91,7 +91,7 @@ bool ClusterBuffer::readmore(Long64_t target_start, Long64_t target_end) {
 
 // getbuffer returns a pointer to contiguous data with its size
 // if you're lucky, this is performed without any copies
-void* ClusterBuffer::getbuffer(Long64_t &size) {
+void* ClusterBuffer::getbuffer(Long64_t &size, bool &iscopy) {
   return nullptr;
 }
 
@@ -101,6 +101,6 @@ bool ClusterIterator::stepforward(const char* &error_string) {
 }
 
 // get a Python tuple of arrays for all buffers
-PyObject* arrays(CopyMode copy) {
+PyObject* ClusterIterator::arrays(CopyMode copy) {
   return nullptr;
 }
