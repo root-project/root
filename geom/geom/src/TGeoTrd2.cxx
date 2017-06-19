@@ -497,35 +497,29 @@ TGeoVolume *TGeoTrd2::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
    Int_t id;
    Double_t end = start+ndiv*step;
    switch (iaxis) {
-      case 1:
-         Warning("Divide", "dividing a Trd2 on X not implemented");
-         return 0;
-      case 2:
-         Warning("Divide", "dividing a Trd2 on Y not implemented");
-         return 0;
-      case 3:
-         finder = new TGeoPatternZ(voldiv, ndiv, start, end);
-         vmulti = gGeoManager->MakeVolumeMulti(divname, voldiv->GetMedium());
-         voldiv->SetFinder(finder);
-         finder->SetDivIndex(voldiv->GetNdaughters());
-         for (id=0; id<ndiv; id++) {
-            zmin = start+id*step;
-            zmax = start+(id+1)*step;
-            dx1n = 0.5*(fDx1*(fDz-zmin)+fDx2*(fDz+zmin))/fDz;
-            dx2n = 0.5*(fDx1*(fDz-zmax)+fDx2*(fDz+zmax))/fDz;
-            dy1n = 0.5*(fDy1*(fDz-zmin)+fDy2*(fDz+zmin))/fDz;
-            dy2n = 0.5*(fDy1*(fDz-zmax)+fDy2*(fDz+zmax))/fDz;
-            shape = new TGeoTrd2(dx1n, dx2n, dy1n, dy2n, step/2.);
-            vol = new TGeoVolume(divname, shape, voldiv->GetMedium());
-            vmulti->AddVolume(vol);
-            opt = "Z";
-            voldiv->AddNodeOffset(vol, id, start+step/2+id*step, opt.Data());
-            ((TGeoNodeOffset*)voldiv->GetNodes()->At(voldiv->GetNdaughters()-1))->SetFinder(finder);
-         }
-         return vmulti;
-      default:
-         Error("Divide", "Wrong axis type for division");
-         return 0;
+   case 1: Warning("Divide", "dividing a Trd2 on X not implemented"); return nullptr;
+   case 2: Warning("Divide", "dividing a Trd2 on Y not implemented"); return nullptr;
+   case 3:
+      finder = new TGeoPatternZ(voldiv, ndiv, start, end);
+      vmulti = gGeoManager->MakeVolumeMulti(divname, voldiv->GetMedium());
+      voldiv->SetFinder(finder);
+      finder->SetDivIndex(voldiv->GetNdaughters());
+      for (id = 0; id < ndiv; id++) {
+         zmin = start + id * step;
+         zmax = start + (id + 1) * step;
+         dx1n = 0.5 * (fDx1 * (fDz - zmin) + fDx2 * (fDz + zmin)) / fDz;
+         dx2n = 0.5 * (fDx1 * (fDz - zmax) + fDx2 * (fDz + zmax)) / fDz;
+         dy1n = 0.5 * (fDy1 * (fDz - zmin) + fDy2 * (fDz + zmin)) / fDz;
+         dy2n = 0.5 * (fDy1 * (fDz - zmax) + fDy2 * (fDz + zmax)) / fDz;
+         shape = new TGeoTrd2(dx1n, dx2n, dy1n, dy2n, step / 2.);
+         vol = new TGeoVolume(divname, shape, voldiv->GetMedium());
+         vmulti->AddVolume(vol);
+         opt = "Z";
+         voldiv->AddNodeOffset(vol, id, start + step / 2 + id * step, opt.Data());
+         ((TGeoNodeOffset *)voldiv->GetNodes()->At(voldiv->GetNdaughters() - 1))->SetFinder(finder);
+      }
+      return vmulti;
+   default: Error("Divide", "Wrong axis type for division"); return nullptr;
    }
 }
 
@@ -601,10 +595,10 @@ Int_t TGeoTrd2::GetFittingBox(const TGeoBBox *parambox, TGeoMatrix *mat, Double_
 
 TGeoShape *TGeoTrd2::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/) const
 {
-   if (!TestShapeBit(kGeoRunTimeShape)) return 0;
+   if (!TestShapeBit(kGeoRunTimeShape)) return nullptr;
    if (!mother->TestShapeBit(kGeoTrd2)) {
       Error("GetMakeRuntimeShape", "invalid mother");
-      return 0;
+      return nullptr;
    }
    Double_t dx1, dx2, dy1, dy2, dz;
    if (fDx1<0) dx1=((TGeoTrd2*)mother)->GetDx1();

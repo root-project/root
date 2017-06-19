@@ -34,7 +34,10 @@ struct PCREPriv_t {
    pcre       *fPCRE;
    pcre_extra *fPCREExtra;
 
-   PCREPriv_t() { fPCRE = 0; fPCREExtra = 0; }
+   PCREPriv_t() {
+      fPCRE = nullptr;
+      fPCREExtra = nullptr;
+   }
 };
 
 
@@ -92,10 +95,10 @@ TPRegexp &TPRegexp::operator=(const TPRegexp &p)
       fPattern = p.fPattern;
       if (fPriv->fPCRE)
          pcre_free(fPriv->fPCRE);
-      fPriv->fPCRE = 0;
+      fPriv->fPCRE = nullptr;
       if (fPriv->fPCREExtra)
          pcre_free(fPriv->fPCREExtra);
-      fPriv->fPCREExtra = 0;
+      fPriv->fPCREExtra = nullptr;
       fPCREOpts  = p.fPCREOpts;
    }
    return *this;
@@ -202,8 +205,7 @@ void TPRegexp::Compile()
 
    const char *errstr;
    Int_t patIndex;
-   fPriv->fPCRE = pcre_compile(fPattern.Data(), fPCREOpts & kPCRE_INTMASK,
-                               &errstr, &patIndex, 0);
+   fPriv->fPCRE = pcre_compile(fPattern.Data(), fPCREOpts & kPCRE_INTMASK, &errstr, &patIndex, nullptr);
 
    if (!fPriv->fPCRE) {
       if (fgThrowAtCompileError) {
@@ -486,7 +488,7 @@ Int_t TPRegexp::Substitute(TString &s, const TString &replacePattern,
 
 Bool_t TPRegexp::IsValid() const
 {
-   return fPriv->fPCRE != 0;
+   return fPriv->fPCRE != nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -582,12 +584,8 @@ ClassImp(TPMERegexp);
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor. This regexp will match an empty string.
 
-TPMERegexp::TPMERegexp() :
-   TPRegexp(),
-   fNMaxMatches(10),
-   fNMatches(0),
-   fAddressOfLastString(0),
-   fLastGlobalPosition(0)
+TPMERegexp::TPMERegexp()
+   : TPRegexp(), fNMaxMatches(10), fNMatches(0), fAddressOfLastString(nullptr), fLastGlobalPosition(0)
 {
    Compile();
 }
@@ -599,12 +597,8 @@ TPMERegexp::TPMERegexp() :
 /// \param[in] opts   perl-style character flags to be set on TPME object
 /// \param[in] nMatchMax  maximum number of matches
 
-TPMERegexp::TPMERegexp(const TString& s, const TString& opts, Int_t nMatchMax) :
-   TPRegexp(s),
-   fNMaxMatches(nMatchMax),
-   fNMatches(0),
-   fAddressOfLastString(0),
-   fLastGlobalPosition(0)
+TPMERegexp::TPMERegexp(const TString &s, const TString &opts, Int_t nMatchMax)
+   : TPRegexp(s), fNMaxMatches(nMatchMax), fNMatches(0), fAddressOfLastString(nullptr), fLastGlobalPosition(0)
 {
    fPCREOpts = ParseMods(opts);
    Compile();
@@ -617,12 +611,8 @@ TPMERegexp::TPMERegexp(const TString& s, const TString& opts, Int_t nMatchMax) :
 /// \param[in] opts       PCRE-style option flags to be set on TPME object
 /// \param[in] nMatchMax  maximum number of matches
 
-TPMERegexp::TPMERegexp(const TString& s, UInt_t opts, Int_t nMatchMax) :
-   TPRegexp(s),
-   fNMaxMatches(nMatchMax),
-   fNMatches(0),
-   fAddressOfLastString(0),
-   fLastGlobalPosition(0)
+TPMERegexp::TPMERegexp(const TString &s, UInt_t opts, Int_t nMatchMax)
+   : TPRegexp(s), fNMaxMatches(nMatchMax), fNMatches(0), fAddressOfLastString(nullptr), fLastGlobalPosition(0)
 {
    fPCREOpts = opts;
    Compile();
@@ -633,12 +623,8 @@ TPMERegexp::TPMERegexp(const TString& s, UInt_t opts, Int_t nMatchMax) :
 /// Only PCRE specifics are copied, not last-match or global-match
 /// information.
 
-TPMERegexp::TPMERegexp(const TPMERegexp& r) :
-   TPRegexp(r),
-   fNMaxMatches(r.fNMaxMatches),
-   fNMatches(0),
-   fAddressOfLastString(0),
-   fLastGlobalPosition(0)
+TPMERegexp::TPMERegexp(const TPMERegexp &r)
+   : TPRegexp(r), fNMaxMatches(r.fNMaxMatches), fNMatches(0), fAddressOfLastString(nullptr), fLastGlobalPosition(0)
 {
    Compile();
 }

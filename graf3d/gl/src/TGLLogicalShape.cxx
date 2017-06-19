@@ -67,51 +67,27 @@ Bool_t TGLLogicalShape::fgIgnoreSizeForCameraInterest = kFALSE;
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TGLLogicalShape::TGLLogicalShape() :
-   fRef           (0),
-   fFirstPhysical (0),
-   fExternalObj   (0),
-   fScene         (0),
-   fDLBase        (0),
-   fDLSize        (1),
-   fDLValid       (0),
-   fDLCache       (kTRUE),
-   fRefStrong     (kFALSE),
-   fOwnExtObj     (kFALSE)
+TGLLogicalShape::TGLLogicalShape()
+   : fRef(0), fFirstPhysical(nullptr), fExternalObj(nullptr), fScene(nullptr), fDLBase(0), fDLSize(1), fDLValid(0),
+     fDLCache(kTRUE), fRefStrong(kFALSE), fOwnExtObj(kFALSE)
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor with external object.
 
-TGLLogicalShape::TGLLogicalShape(TObject* obj) :
-   fRef           (0),
-   fFirstPhysical (0),
-   fExternalObj   (obj),
-   fScene         (0),
-   fDLBase        (0),
-   fDLSize        (1),
-   fDLValid       (0),
-   fDLCache       (kTRUE),
-   fRefStrong     (kFALSE),
-   fOwnExtObj     (kFALSE)
+TGLLogicalShape::TGLLogicalShape(TObject *obj)
+   : fRef(0), fFirstPhysical(nullptr), fExternalObj(obj), fScene(nullptr), fDLBase(0), fDLSize(1), fDLValid(0),
+     fDLCache(kTRUE), fRefStrong(kFALSE), fOwnExtObj(kFALSE)
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor from TBuffer3D.
 
-TGLLogicalShape::TGLLogicalShape(const TBuffer3D & buffer) :
-   fRef           (0),
-   fFirstPhysical (0),
-   fExternalObj   (buffer.fID),
-   fScene         (0),
-   fDLBase        (0),
-   fDLSize        (1),
-   fDLValid       (0),
-   fDLCache       (kTRUE),
-   fRefStrong     (kFALSE),
-   fOwnExtObj     (kFALSE)
+TGLLogicalShape::TGLLogicalShape(const TBuffer3D &buffer)
+   : fRef(0), fFirstPhysical(nullptr), fExternalObj(buffer.fID), fScene(nullptr), fDLBase(0), fDLSize(1), fDLValid(0),
+     fDLCache(kTRUE), fRefStrong(kFALSE), fOwnExtObj(kFALSE)
 {
    // Use the bounding box in buffer if valid
    if (buffer.SectionsValid(TBuffer3D::kBoundingBox)) {
@@ -123,8 +99,7 @@ TGLLogicalShape::TGLLogicalShape(const TBuffer3D & buffer) :
 
    // If the logical is created without an external object reference,
    // we create a generic  here and delete it during the destruction.
-   if (fExternalObj == 0)
-   {
+   if (fExternalObj == nullptr) {
       fExternalObj = new TNamed("Generic object", "Internal object created for bookkeeping.");
       fOwnExtObj = kTRUE;
    }
@@ -170,7 +145,7 @@ void TGLLogicalShape::AddRef(TGLPhysicalShape* phys) const
 
 void TGLLogicalShape::SubRef(TGLPhysicalShape* phys) const
 {
-   assert(phys != 0);
+   assert(phys != nullptr);
 
    Bool_t found = kFALSE;
    if (fFirstPhysical == phys) {
@@ -178,7 +153,7 @@ void TGLLogicalShape::SubRef(TGLPhysicalShape* phys) const
       found = kTRUE;
    } else {
       TGLPhysicalShape *shp1 = fFirstPhysical, *shp2;
-      while ((shp2 = shp1->fNextPhysical) != 0) {
+      while ((shp2 = shp1->fNextPhysical) != nullptr) {
          if (shp2 == phys) {
             shp1->fNextPhysical = shp2->fNextPhysical;
             found = kTRUE;
@@ -205,13 +180,13 @@ void TGLLogicalShape::DestroyPhysicals()
    while (curr)
    {
       next = curr->fNextPhysical;
-      curr->fLogicalShape = 0;
+      curr->fLogicalShape = nullptr;
       --fRef;
       delete curr;
       curr = next;
    }
    assert (fRef == 0);
-   fFirstPhysical = 0;
+   fFirstPhysical = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -221,12 +196,12 @@ void TGLLogicalShape::DestroyPhysicals()
 
 UInt_t TGLLogicalShape::UnrefFirstPhysical()
 {
-   if (fFirstPhysical == 0) return 0;
+   if (fFirstPhysical == nullptr) return 0;
 
    TGLPhysicalShape *phys = fFirstPhysical;
    UInt_t            phid = phys->ID();
    fFirstPhysical = phys->fNextPhysical;
-   phys->fLogicalShape = 0;
+   phys->fLogicalShape = nullptr;
    --fRef;
    return phid;
 }

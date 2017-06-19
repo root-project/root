@@ -68,19 +68,10 @@ std::map <clang::Decl*, std::string> RScanner::fgAnonymousEnumMap;
 /// Regular constructor setting up the scanner to search for entities
 /// matching the 'rules'.
 
-RScanner::RScanner (SelectionRules &rules,
-                    EScanType stype,
-                    const cling::Interpreter &interpret,
-                    ROOT::TMetaUtils::TNormalizedCtxt &normCtxt,
-                    unsigned int verbose /* = 0 */) :
-  fVerboseLevel(verbose),
-  fSourceManager(0),
-  fInterpreter(interpret),
-  fRecordDeclCallback(0),
-  fNormCtxt(normCtxt),
-  fSelectionRules(rules),
-  fScanType(stype),
-  fFirstPass(true)
+RScanner::RScanner(SelectionRules &rules, EScanType stype, const cling::Interpreter &interpret,
+                   ROOT::TMetaUtils::TNormalizedCtxt &normCtxt, unsigned int verbose /* = 0 */)
+   : fVerboseLevel(verbose), fSourceManager(nullptr), fInterpreter(interpret), fRecordDeclCallback(nullptr),
+     fNormCtxt(normCtxt), fSelectionRules(rules), fScanType(stype), fFirstPass(true)
 {
    // Build the cache for all selection rules
    fSelectionRules.FillCache();
@@ -91,7 +82,7 @@ RScanner::RScanner (SelectionRules &rules,
    for (int i = 0; i <= fgTypeLast; i ++)
       fTypeTable [i] = false;
 
-   fLastDecl = 0;
+   fLastDecl = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -207,8 +198,7 @@ std::string RScanner::GetSrcLocation(clang::SourceLocation L) const
 
 std::string RScanner::GetLocation(clang::Decl* D) const
 {
-   if (D == NULL)
-   {
+   if (D == nullptr) {
       return "";
    }
    else
@@ -380,7 +370,7 @@ std::string RScanner::ExprToStr(clang::Expr* expr) const
    std::string text = "";
    llvm::raw_string_ostream stream(text);
 
-   expr->printPretty(stream, NULL, print_opts);
+   expr->printPretty(stream, nullptr, print_opts);
 
    return stream.str();
 }
@@ -515,7 +505,10 @@ int RScanner::AddAnnotatedRecordDecl(const ClassSelectionRule* selected,
                                     recordDecl->getASTContext().getTypeDeclType(recordDecl),
                                     fInterpreter,
                                     fNormCtxt);
-      ROOT::TMetaUtils::Error(0,"Union %s has been selected for I/O. This is not supported. Interactive usage of unions is supported, as all C++ entities, without the need of dictionaries.\n",normName.c_str());
+      ROOT::TMetaUtils::Error(nullptr,
+                              "Union %s has been selected for I/O. This is not supported. Interactive usage of unions "
+                              "is supported, as all C++ entities, without the need of dictionaries.\n",
+                              normName.c_str());
       return 1;
    }
 
@@ -633,7 +626,8 @@ bool RScanner::TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl)
       return true;
    }
 
-   const ClassSelectionRule *selectedFromTypedef = typedefNameDecl ? fSelectionRules.IsDeclSelected(typedefNameDecl) : 0;
+   const ClassSelectionRule *selectedFromTypedef =
+      typedefNameDecl ? fSelectionRules.IsDeclSelected(typedefNameDecl) : nullptr;
 
    const ClassSelectionRule *selectedFromRecDecl = fSelectionRules.IsDeclSelected(recordDecl);
 
@@ -718,7 +712,7 @@ bool RScanner::TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl)
             selected->Print(message);
             message << "Conflicting rule already matched:\n";
             previouslyMatchingRule->Print(message);
-            ROOT::TMetaUtils::Warning(0,"%s\n", message.str().c_str());
+            ROOT::TMetaUtils::Warning(nullptr, "%s\n", message.str().c_str());
             }
          }
 
@@ -745,7 +739,7 @@ bool RScanner::TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl)
             auto msg = "Class or struct %s was selected but its dictionary cannot be generated: "
                        "this is a private or protected class and this is not supported. No direct "
                        "I/O operation of %s instances will be possible.\n";
-            ROOT::TMetaUtils::Warning(0,msg,normName.c_str(),normName.c_str());
+            ROOT::TMetaUtils::Warning(nullptr, msg, normName.c_str(), normName.c_str());
             return true;
          }
 

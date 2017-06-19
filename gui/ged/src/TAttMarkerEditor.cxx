@@ -52,7 +52,7 @@ TAttMarkerEditor::TAttMarkerEditor(const TGWindow *p, Int_t width,
                                    Int_t height,UInt_t options, Pixel_t back)
    : TGedFrame(p, width, height, options | kVerticalFrame, back)
 {
-   fAttMarker = 0;
+   fAttMarker = nullptr;
    fSizeForText = kFALSE;
 
    MakeTitle("Marker");

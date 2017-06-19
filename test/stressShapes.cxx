@@ -117,7 +117,7 @@ void length()
       dir[2]=TMath::Cos(theta);
       gGeoManager->InitTrack(0,0,0, dir[0], dir[1], dir[2]);
       startnode = gGeoManager->GetCurrentNode();
-      if (gGeoManager->IsOutside()) startnode=0;
+      if (gGeoManager->IsOutside()) startnode = nullptr;
       icrt = 0;
       if (startnode) icrt =vlist->IndexOf(startnode->GetVolume());
       // find where we end-up
@@ -137,7 +137,7 @@ void length()
          hist = (TH1F*)(hlist->At(icrt));
          hist->Fill(step);
          // now see if we can make an other step
-         if (endnode==0 && step>1E10) break;
+         if (endnode == nullptr && step > 1E10) break;
          istep = 0;
          // generate an extra step to cross boundary
          startnode = endnode;

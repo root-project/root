@@ -66,16 +66,12 @@ using namespace TMVA;
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor
 
-CCPruner::CCPruner( DecisionTree* t_max, const EventList* validationSample,
-                    SeparationBase* qualityIndex ) :
-   fAlpha(-1.0),
-   fValidationSample(validationSample),
-   fValidationDataSet(NULL),
-   fOptimalK(-1)
+CCPruner::CCPruner(DecisionTree *t_max, const EventList *validationSample, SeparationBase *qualityIndex)
+   : fAlpha(-1.0), fValidationSample(validationSample), fValidationDataSet(nullptr), fOptimalK(-1)
 {
    fTree = t_max;
 
-   if(qualityIndex == NULL) {
+   if (qualityIndex == nullptr) {
       fOwnQIndex = true;
       fQualityIndex = new MisClassificationError();
    }
@@ -89,16 +85,12 @@ CCPruner::CCPruner( DecisionTree* t_max, const EventList* validationSample,
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor
 
-CCPruner::CCPruner( DecisionTree* t_max, const DataSet* validationSample,
-                    SeparationBase* qualityIndex ) :
-   fAlpha(-1.0),
-   fValidationSample(NULL),
-   fValidationDataSet(validationSample),
-   fOptimalK(-1)
+CCPruner::CCPruner(DecisionTree *t_max, const DataSet *validationSample, SeparationBase *qualityIndex)
+   : fAlpha(-1.0), fValidationSample(nullptr), fValidationDataSet(validationSample), fOptimalK(-1)
 {
    fTree = t_max;
 
-   if(qualityIndex == NULL) {
+   if (qualityIndex == nullptr) {
       fOwnQIndex = true;
       fQualityIndex = new MisClassificationError();
    }
@@ -134,7 +126,7 @@ void CCPruner::Optimize( )
 
    std::ofstream outfile;
    if (fDebug) outfile.open("costcomplexity.log");
-   if(!HaveStopCondition && (fValidationSample == NULL && fValidationDataSet == NULL) ) {
+   if (!HaveStopCondition && (fValidationSample == nullptr && fValidationDataSet == nullptr)) {
       if (fDebug) outfile << "ERROR: no validation sample, so cannot optimize pruning!" << std::endl;
       delete dTWrapper;
       if (fDebug) outfile.close();
@@ -189,7 +181,8 @@ void CCPruner::Optimize( )
       k += 1;
       if(!HaveStopCondition) {
          Double_t q;
-         if (fValidationDataSet != NULL) q = dTWrapper->TestTreeQuality(fValidationDataSet);
+         if (fValidationDataSet != nullptr)
+            q = dTWrapper->TestTreeQuality(fValidationDataSet);
          else q = dTWrapper->TestTreeQuality(fValidationSample);
          fQualityIndexList.push_back(q);
       }

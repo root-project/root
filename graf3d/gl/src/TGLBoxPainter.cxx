@@ -39,12 +39,10 @@ ClassImp(TGLBoxPainter);
 /// Normal constructor.
 
 TGLBoxPainter::TGLBoxPainter(TH1 *hist, TGLPlotCamera *cam, TGLPlotCoordinates *coord)
-                  : TGLPlotPainter(hist, cam, coord, kTRUE, kTRUE, kTRUE),
-                    fXOZSlice("XOZ", (TH3 *)hist, coord, &fBackBox, TGLTH3Slice::kXOZ),
-                    fYOZSlice("YOZ", (TH3 *)hist, coord, &fBackBox, TGLTH3Slice::kYOZ),
-                    fXOYSlice("XOY", (TH3 *)hist, coord, &fBackBox, TGLTH3Slice::kXOY),
-                    fType(kBox),
-                    fPolymarker(0)
+   : TGLPlotPainter(hist, cam, coord, kTRUE, kTRUE, kTRUE),
+     fXOZSlice("XOZ", (TH3 *)hist, coord, &fBackBox, TGLTH3Slice::kXOZ),
+     fYOZSlice("YOZ", (TH3 *)hist, coord, &fBackBox, TGLTH3Slice::kYOZ),
+     fXOYSlice("XOY", (TH3 *)hist, coord, &fBackBox, TGLTH3Slice::kXOY), fType(kBox), fPolymarker(nullptr)
 {
 }
 
@@ -596,7 +594,7 @@ void TGLBoxPainter::DrawPalette()const
       return;
    }
 
-   const TGLLevelPalette * palette = 0;
+   const TGLLevelPalette *palette = nullptr;
    const TGLVertex3 *frame = fBackBox.Get3DBox();
 
    if (fXOZSectionPos > frame[0].Y())

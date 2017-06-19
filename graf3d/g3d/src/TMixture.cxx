@@ -26,9 +26,9 @@ Manages a detector mixture. See class TGeometry.
 
 TMixture::TMixture()
 {
-   fAmixt = 0;
-   fZmixt = 0;
-   fWmixt = 0;
+   fAmixt = nullptr;
+   fZmixt = nullptr;
+   fWmixt = nullptr;
    fNmixt = 0;
 }
 
@@ -53,9 +53,9 @@ TMixture::TMixture(const char *name, const char *title, Int_t nmixt)
            :TMaterial(name,title,0,0,0)
 {
    if (nmixt == 0) {
-      fAmixt = 0;
-      fZmixt = 0;
-      fWmixt = 0;
+      fAmixt = nullptr;
+      fZmixt = nullptr;
+      fWmixt = nullptr;
       fNmixt = 0;
       Error("TMixture", "mixture number is 0");
       return;
@@ -75,9 +75,9 @@ TMixture::~TMixture()
    delete [] fAmixt;
    delete [] fZmixt;
    delete [] fWmixt;
-   fAmixt = 0;
-   fZmixt = 0;
-   fWmixt = 0;
+   fAmixt = nullptr;
+   fZmixt = nullptr;
+   fWmixt = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

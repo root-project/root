@@ -29,25 +29,21 @@
 
 ClassImp(TUnuranSampler);
 
-TUnuranSampler::TUnuranSampler() : ROOT::Math::DistSampler(),
-   fOneDim(false),
-   fDiscrete(false),
-   fHasMode(false), fHasArea(false),
-   fMode(0), fArea(0),
-   fFunc1D(0),
-   fUnuran(new TUnuran()  )
+TUnuranSampler::TUnuranSampler()
+   : ROOT::Math::DistSampler(), fOneDim(false), fDiscrete(false), fHasMode(false), fHasArea(false), fMode(0), fArea(0),
+     fFunc1D(nullptr), fUnuran(new TUnuran())
 {
    fLevel = ROOT::Math::DistSamplerOptions::DefaultPrintLevel();
 }
 
 TUnuranSampler::~TUnuranSampler() {
-   assert(fUnuran != 0);
+   assert(fUnuran != nullptr);
    delete fUnuran;
 }
 
 bool TUnuranSampler::Init(const char * algo) {
    // initialize unuran classes using the given algorithm
-   assert (fUnuran != 0 );
+   assert(fUnuran != nullptr);
    if (NDim() == 0)  {
       Error("TUnuranSampler::Init","Distribution function has not been set ! Need to call SetFunction first.");
       return false;
@@ -102,10 +98,10 @@ bool TUnuranSampler::DoInit1D(const char * method) {
    // need to create 1D interface from Multidim one
    // (to do: use directly 1D functions ??)
    fOneDim = true;
-   TUnuranContDist * dist = 0;
-   if (fFunc1D == 0) {
+   TUnuranContDist *dist = nullptr;
+   if (fFunc1D == nullptr) {
       ROOT::Math::OneDimMultiFunctionAdapter<> function(ParentPdf() );
-      dist = new TUnuranContDist(function,0,false,true);
+      dist = new TUnuranContDist(function, nullptr, false, true);
    }
    else {
       dist = new TUnuranContDist(*fFunc1D); // no need to copy the function
@@ -131,8 +127,8 @@ bool TUnuranSampler::DoInitDiscrete1D(const char * method) {
    // initilize for 1D sampling of discrete distributions
    fOneDim = true;
    fDiscrete = true;
-   TUnuranDiscrDist * dist = 0;
-   if (fFunc1D == 0) {
+   TUnuranDiscrDist *dist = nullptr;
+   if (fFunc1D == nullptr) {
       // need to copy the passed function pointer in this case
       ROOT::Math::OneDimMultiFunctionAdapter<> function(ParentPdf() );
       dist = new TUnuranDiscrDist(function,true);

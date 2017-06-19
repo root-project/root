@@ -85,18 +85,17 @@ ClassImp(TFoamSampler);
 
 
 */
-TFoamSampler::TFoamSampler() : ROOT::Math::DistSampler(),
-//    fOneDim(false)
-//    fDiscrete(false),
-//    fHasMode(false), fHasArea(false),
-//    fMode(0), fArea(0),
-   fFunc1D(0),
-   fFoam(new TFoam("FOAM")  ),
-   fFoamDist(0)
+TFoamSampler::TFoamSampler()
+   : ROOT::Math::DistSampler(),
+     //    fOneDim(false)
+     //    fDiscrete(false),
+     //    fHasMode(false), fHasArea(false),
+     //    fMode(0), fArea(0),
+     fFunc1D(nullptr), fFoam(new TFoam("FOAM")), fFoamDist(nullptr)
 {}
 
 TFoamSampler::~TFoamSampler() {
-   assert(fFoam != 0);
+   assert(fFoam != nullptr);
    delete fFoam;
    if (fFoamDist) delete fFoamDist;
 }
@@ -112,7 +111,7 @@ bool TFoamSampler::Init(const char *) {
 
 bool TFoamSampler::Init(const ROOT::Math::DistSamplerOptions & opt) {
    // initialize foam classes using the given algorithm
-   assert (fFoam != 0 );
+   assert(fFoam != nullptr);
    if (NDim() == 0)  {
       Error("TFoamSampler::Init","Distribution function has not been set ! Need to call SetFunction first.");
       return false;

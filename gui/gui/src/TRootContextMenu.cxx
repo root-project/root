@@ -65,7 +65,7 @@ ClassImp(TRootContextMenu);
 TRootContextMenu::TRootContextMenu(TContextMenu *c, const char *)
     : TGPopupMenu(gClient->GetDefaultRoot()), TContextMenuImp(c)
 {
-   fDialog  = 0;
+   fDialog = nullptr;
    fTrash = new TList;
 
    AddInput(kButtonPressMask | kButtonReleaseMask);
@@ -94,7 +94,7 @@ void TRootContextMenu::DisplayPopup(Int_t x, Int_t y)
 
    // delete menu items releated to previous object and reset menu size
    if (fEntryList) fEntryList->Delete();
-   fCurrent = 0;
+   fCurrent = nullptr;
    if (fTrash)   fTrash->Delete();
    fMenuHeight = 6;
    fMenuWidth  = 8;
@@ -102,7 +102,7 @@ void TRootContextMenu::DisplayPopup(Int_t x, Int_t y)
    // delete previous dialog
    if (fDialog) {
       delete fDialog;
-      fDialog = 0;
+      fDialog = nullptr;
    }
 
    // add menu items to popup menu
@@ -123,7 +123,7 @@ void TRootContextMenu::DisplayPopup(Int_t x, Int_t y)
    //to break the z-order (for example, using alt-tab to switch between
    //different aplications). This hint works ONLY for canvas though
    //(otherwise selected canvas is null).
-   TGWindow *parent = 0;
+   TGWindow *parent = nullptr;
    if (TVirtualPad *pad = fContextMenu->GetSelectedCanvas())
       parent = dynamic_cast<TGWindow *>(pad->GetCanvasImp());
    else if ((pad = fContextMenu->GetSelectedPad()) && pad->GetCanvasImp())
@@ -151,7 +151,7 @@ TGPopupMenu * TRootContextMenu::FindHierarchy(const char *commentstring, TString
    TString cmd(commentstring);
    TString option;
    TString hierarchy;
-   TGPopupMenu *currentMenu = 0;
+   TGPopupMenu *currentMenu = nullptr;
 
    // search for arguments to the MENU statement
    // strcpy(cmd,commentstring);
@@ -225,7 +225,7 @@ TGPopupMenu * TRootContextMenu::FindHierarchy(const char *commentstring, TString
 void TRootContextMenu::AddEntrySorted(TGPopupMenu *currentMenu, const char *s, Int_t id, void *ud,
                                          const TGPicture *p , Bool_t sorted)
 {
-   TGMenuEntry *ptr2 = 0;
+   TGMenuEntry *ptr2 = nullptr;
    if (sorted) {
       TIter next(currentMenu->GetListOfEntries());
       // Search for popup with corresponding name
@@ -274,7 +274,7 @@ void TRootContextMenu::CreateMenu(TObject *object)
                object->IsA()->GetMenuItems(methodList);
 
                TMethod *method;
-               TClass  *classPtr = 0;
+               TClass *classPtr = nullptr;
                TIter next(methodList);
                Bool_t needSep = kFALSE;
 
@@ -286,7 +286,7 @@ void TRootContextMenu::CreateMenu(TObject *object)
 
                   TDataMember *m;
                   EMenuItemKind menuKind = method->IsMenuItem();
-                  TGPopupMenu *currentMenu = 0;
+                  TGPopupMenu *currentMenu = nullptr;
                   TString last_component;
 
                   switch (menuKind) {
@@ -297,7 +297,8 @@ void TRootContextMenu::CreateMenu(TObject *object)
                            AddSeparator();
                            needSep = kFALSE;
                         }
-                        AddEntrySorted(currentMenu,last_component.Length() ? last_component.Data() : method->GetName(), entry++, method,0,currentMenu != this);
+                        AddEntrySorted(currentMenu, last_component.Length() ? last_component.Data() : method->GetName(),
+                                       entry++, method, nullptr, currentMenu != this);
                         break;
                      case kMenuSubMenu:
                         if ((m = method->FindDataMember())) {
@@ -337,7 +338,9 @@ void TRootContextMenu::CreateMenu(TObject *object)
                                  AddSeparator();
                                  needSep = kFALSE;
                               }
-                              AddEntrySorted(currentMenu,last_component.Length() ? last_component.Data() : method->GetName(), entry++, method,0,currentMenu != this);
+                              AddEntrySorted(currentMenu,
+                                             last_component.Length() ? last_component.Data() : method->GetName(),
+                                             entry++, method, nullptr, currentMenu != this);
                            }
                         }
                         break;
@@ -354,7 +357,9 @@ void TRootContextMenu::CreateMenu(TObject *object)
                               AddSeparator();
                               needSep = kFALSE;
                            }
-                           AddEntrySorted(currentMenu,last_component.Length() ? last_component.Data() : method->GetName(), toggle++, t,0,currentMenu != this);
+                           AddEntrySorted(currentMenu,
+                                          last_component.Length() ? last_component.Data() : method->GetName(), toggle++,
+                                          t, nullptr, currentMenu != this);
                            if (t->GetState()) currentMenu->CheckEntry(toggle-1);
                         }
                         break;
@@ -441,7 +446,7 @@ void TRootContextMenu::Dialog(TObject *object, TFunction *function)
 
    // iterate through all arguments and create apropriate input-data objects:
    // inputlines, option menus...
-   TMethodArg *argument = 0;
+   TMethodArg *argument = nullptr;
 
    TIter next(function->GetListOfMethodArgs());
    Int_t argpos = 0;
@@ -576,7 +581,7 @@ void TRootContextMenu::DrawEntry(TGMenuEntry *entry)
 Bool_t TRootContextMenu::HandleButton(Event_t *event)
 {
    int   id;
-   void *ud = 0;
+   void *ud = nullptr;
 
    if ((event->fType == kButtonRelease) && (event->fX >= (Int_t)(fMenuWidth-15)) &&
        (event->fX <= (Int_t)fMenuWidth)) {
@@ -584,7 +589,7 @@ Bool_t TRootContextMenu::HandleButton(Event_t *event)
       if (fHasGrab) gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);  // ungrab
       if (ud) {
          // retrieve the highlighted function
-         TFunction *function = 0;
+         TFunction *function = nullptr;
          if (id < kToggleStart) {
             TMethod *m = (TMethod *)ud;
             function = (TFunction *)m;
@@ -687,7 +692,7 @@ void TRootContextMenu::OnlineHelp()
          url += ".html";
       }
       if (fDialog) delete fDialog;
-      fDialog = 0;
+      fDialog = nullptr;
       cmd = TString::Format("new TGHtmlBrowser(\"%s\", 0, 900, 300);", url.Data());
       gROOT->ProcessLine(cmd.Data());
    }
@@ -733,7 +738,7 @@ Bool_t TRootContextMenu::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                   const char *args = fDialog->GetParameters();
                   GetContextMenu()->Execute((char *)args);
                   delete fDialog;
-                  fDialog = 0;
+                  fDialog = nullptr;
                }
                if (parm1 == 2) {
                   const char *args = fDialog->GetParameters();
@@ -741,7 +746,7 @@ Bool_t TRootContextMenu::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                }
                if (parm1 == 3) {
                   delete fDialog;
-                  fDialog = 0;
+                  fDialog = nullptr;
                }
                if (parm1 == 4) {
                   OnlineHelp();
@@ -762,7 +767,7 @@ Bool_t TRootContextMenu::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                   const char *args = fDialog->GetParameters();
                   GetContextMenu()->Execute((char *)args);
                   delete fDialog;
-                  fDialog = 0;
+                  fDialog = nullptr;
                }
                break;
 
@@ -787,14 +792,12 @@ Bool_t TRootContextMenu::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 void TRootContextMenu::RecursiveRemove(TObject *obj)
 {
    void *ud;
-   if (obj == fContextMenu->GetSelectedCanvas())
-      fContextMenu->SetCanvas(0);
-   if (obj == fContextMenu->GetSelectedPad())
-      fContextMenu->SetPad(0);
+   if (obj == fContextMenu->GetSelectedCanvas()) fContextMenu->SetCanvas(nullptr);
+   if (obj == fContextMenu->GetSelectedPad()) fContextMenu->SetPad(nullptr);
    if (obj == fContextMenu->GetSelectedObject()) {
       // if the object being deleted is the one selected,
       // ungrab the mouse pointer and terminate (close) the menu
-      fContextMenu->SetObject(0);
+      fContextMenu->SetObject(nullptr);
       if (fHasGrab)
          gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);
       EndMenu(ud);

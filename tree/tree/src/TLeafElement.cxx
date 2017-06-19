@@ -28,7 +28,7 @@ ClassImp(TLeafElement);
 
 TLeafElement::TLeafElement(): TLeaf()
 {
-   fAbsAddress = 0;
+   fAbsAddress = nullptr;
    fID   = -1;
    fType = -1;
 }
@@ -39,7 +39,7 @@ TLeafElement::TLeafElement(): TLeaf()
 TLeafElement::TLeafElement(TBranch *parent, const char *name, Int_t id, Int_t type)
    :TLeaf(parent, name,name)
 {
-   fAbsAddress = 0;
+   fAbsAddress = nullptr;
    fID         = id;
    fType       = type;
    if (type < TVirtualStreamerInfo::kObject) {
@@ -69,7 +69,7 @@ TLeafElement::~TLeafElement()
 
 TMethodCall *TLeafElement::GetMethodCall(const char * /*name*/)
 {
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -49,7 +49,7 @@ ClassImp(RooHistPdf);
 /// Default constructor
 /// coverity[UNINIT_CTOR]
 
-RooHistPdf::RooHistPdf() : _dataHist(0), _totVolume(0), _unitNorm(kFALSE)
+RooHistPdf::RooHistPdf() : _dataHist(nullptr), _totVolume(0), _unitNorm(kFALSE)
 {
   _histObsIter = _histObsList.createIterator() ;
   _pdfObsIter = _pdfObsList.createIterator() ;
@@ -229,8 +229,8 @@ Double_t RooHistPdf::evaluate() const
       if (harg != parg) {
 	parg->syncCache() ;
 	harg->copyCache(parg,kTRUE) ;
-	if (!harg->inRange(0)) {
-	  return 0 ;
+   if (!harg->inRange(nullptr)) {
+      return 0;
 	}
       }
     }
@@ -306,14 +306,14 @@ Int_t RooHistPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,
   RooFIter it = _pdfObsList.fwdIterator();
   RooFIter jt = _histObsList.fwdIterator();
   Int_t code = 0, frcode = 0, n = 0;
-  for (RooAbsArg *pa = 0, *ha = 0; (pa = it.next()) && (ha = jt.next()); ++n) {
-    if (allVars.find(*pa)) {
-      code |= 2 << n;
-      analVars.add(*pa);
-      if (fullRange(*pa, *ha, rangeName)) {
-	frcode |= 2 << n;
-      }
-    }
+  for (RooAbsArg *pa = nullptr, *ha = nullptr; (pa = it.next()) && (ha = jt.next()); ++n) {
+     if (allVars.find(*pa)) {
+        code |= 2 << n;
+        analVars.add(*pa);
+        if (fullRange(*pa, *ha, rangeName)) {
+           frcode |= 2 << n;
+        }
+     }
   }
 
   if (code == frcode) {
@@ -352,34 +352,31 @@ Double_t RooHistPdf::analyticalIntegral(Int_t code, const char* rangeName) const
   RooFIter it = _pdfObsList.fwdIterator();
   RooFIter jt = _histObsList.fwdIterator();
   Int_t n(0);
-  for (RooAbsArg *pa = 0, *ha = 0; (pa = it.next()) && (ha = jt.next()); ++n) {
-    if (code & (2 << n)) {
-      intSet.add(*ha);
-    }
-    if (!(code & 1)) {
-      RooAbsRealLValue* rlv = dynamic_cast<RooAbsRealLValue*>(pa);
-      if (rlv) {
-	const RooAbsBinning* binning = rlv->getBinningPtr(rangeName);
-	if (rangeName && rlv->hasRange(rangeName)) {
-	  ranges[ha] = std::make_pair(
-	      rlv->getMin(rangeName), rlv->getMax(rangeName));
-	} else if (binning) {
-	  if (!binning->isParameterized()) {
-	    ranges[ha] = std::make_pair(
-		binning->lowBound(), binning->highBound());
-	  } else {
-	    ranges[ha] = std::make_pair(
-		binning->lowBoundFunc()->getVal(), binning->highBoundFunc()->getVal());
-	  }
-	}
-      }
-    }
-    // WVE must sync hist slice list values to pdf slice list
-    // Transfer values from
-    if (ha != pa) {
-      pa->syncCache();
-      ha->copyCache(pa,kTRUE);
-    }
+  for (RooAbsArg *pa = nullptr, *ha = nullptr; (pa = it.next()) && (ha = jt.next()); ++n) {
+     if (code & (2 << n)) {
+        intSet.add(*ha);
+     }
+     if (!(code & 1)) {
+        RooAbsRealLValue *rlv = dynamic_cast<RooAbsRealLValue *>(pa);
+        if (rlv) {
+           const RooAbsBinning *binning = rlv->getBinningPtr(rangeName);
+           if (rangeName && rlv->hasRange(rangeName)) {
+              ranges[ha] = std::make_pair(rlv->getMin(rangeName), rlv->getMax(rangeName));
+           } else if (binning) {
+              if (!binning->isParameterized()) {
+                 ranges[ha] = std::make_pair(binning->lowBound(), binning->highBound());
+              } else {
+                 ranges[ha] = std::make_pair(binning->lowBoundFunc()->getVal(), binning->highBoundFunc()->getVal());
+              }
+           }
+        }
+     }
+     // WVE must sync hist slice list values to pdf slice list
+     // Transfer values from
+     if (ha != pa) {
+        pa->syncCache();
+        ha->copyCache(pa, kTRUE);
+     }
   }
 
   Double_t ret = (code & 1) ?
@@ -405,13 +402,13 @@ list<Double_t>* RooHistPdf::plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo
 {
   // No hints are required when interpolation is used
   if (_intOrder>0) {
-    return 0 ;
+     return nullptr;
   }
 
   // Check that observable is in dataset, if not no hint is generated
   _histObsIter->Reset() ;
   _pdfObsIter->Reset() ;
-  RooAbsArg *pdfObs, *histObs, *dhObs(0) ;
+  RooAbsArg *pdfObs, *histObs, *dhObs(nullptr);
   while ((pdfObs = (RooAbsArg*)_pdfObsIter->Next()) && !dhObs) {
     histObs = (RooAbsArg*) _histObsIter->Next() ;
     if (TString(obs.GetName())==pdfObs->GetName()) {
@@ -420,16 +417,16 @@ list<Double_t>* RooHistPdf::plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo
   }
 
   if (!dhObs) {
-    return 0 ;
+     return nullptr;
   }
   RooAbsLValue* lval = dynamic_cast<RooAbsLValue*>(dhObs) ;
   if (!lval) {
-    return 0 ;
+     return nullptr;
   }
 
   // Retrieve position of all bin boundaries
-  
-  const RooAbsBinning* binning = lval->getBinningPtr(0) ;
+
+  const RooAbsBinning *binning = lval->getBinningPtr(nullptr);
   Double_t* boundaries = binning->array() ;
 
   list<Double_t>* hint = new list<Double_t> ;
@@ -463,17 +460,17 @@ std::list<Double_t>* RooHistPdf::binBoundaries(RooAbsRealLValue& obs, Double_t x
 {
   // No hints are required when interpolation is used
   if (_intOrder>0) {
-    return 0 ;
+     return nullptr;
   }
 
   // Check that observable is in dataset, if not no hint is generated
   RooAbsLValue* lvarg = dynamic_cast<RooAbsLValue*>(_dataHist->get()->find(obs.GetName())) ;
   if (!lvarg) {
-    return 0 ;
+     return nullptr;
   }
 
   // Retrieve position of all bin boundaries
-  const RooAbsBinning* binning = lvarg->getBinningPtr(0) ;
+  const RooAbsBinning *binning = lvarg->getBinningPtr(nullptr);
   Double_t* boundaries = binning->array() ;
 
   list<Double_t>* hint = new list<Double_t> ;

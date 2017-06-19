@@ -53,40 +53,13 @@ ClassImp(TGeoNavigator);
 /// Constructor
 
 TGeoNavigator::TGeoNavigator()
-              :fStep(0.),
-               fSafety(0.),
-               fLastSafety(0.),
-               fThreadId(0),
-               fLevel(0),
-               fNmany(0),
-               fNextDaughterIndex(0),
-               fOverlapSize(0),
-               fOverlapMark(0),
-               fOverlapClusters(0),
-               fSearchOverlaps(kFALSE),
-               fCurrentOverlapping(kFALSE),
-               fStartSafe(kFALSE),
-               fIsEntering(kFALSE),
-               fIsExiting(kFALSE),
-               fIsStepEntering(kFALSE),
-               fIsStepExiting(kFALSE),
-               fIsOutside(kFALSE),
-               fIsOnBoundary(kFALSE),
-               fIsSameLocation(kFALSE),
-               fIsNullStep(kFALSE),
-               fGeometry(0),
-               fCache(0),
-               fCurrentVolume(0),
-               fCurrentNode(0),
-               fTopNode(0),
-               fLastNode(0),
-               fNextNode(0),
-               fForcedNode(0),
-               fBackupState(0),
-               fCurrentMatrix(0),
-               fGlobalMatrix(0),
-               fDivMatrix(0),
-               fPath()
+   : fStep(0.), fSafety(0.), fLastSafety(0.), fThreadId(0), fLevel(0), fNmany(0), fNextDaughterIndex(0),
+     fOverlapSize(0), fOverlapMark(0), fOverlapClusters(nullptr), fSearchOverlaps(kFALSE), fCurrentOverlapping(kFALSE),
+     fStartSafe(kFALSE), fIsEntering(kFALSE), fIsExiting(kFALSE), fIsStepEntering(kFALSE), fIsStepExiting(kFALSE),
+     fIsOutside(kFALSE), fIsOnBoundary(kFALSE), fIsSameLocation(kFALSE), fIsNullStep(kFALSE), fGeometry(nullptr),
+     fCache(nullptr), fCurrentVolume(nullptr), fCurrentNode(nullptr), fTopNode(nullptr), fLastNode(nullptr),
+     fNextNode(nullptr), fForcedNode(nullptr), fBackupState(nullptr), fCurrentMatrix(nullptr), fGlobalMatrix(nullptr),
+     fDivMatrix(nullptr), fPath()
 
 {
 // dummy constructor
@@ -103,41 +76,14 @@ TGeoNavigator::TGeoNavigator()
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor
 
-TGeoNavigator::TGeoNavigator(TGeoManager* geom)
-              :fStep(0.),
-               fSafety(0.),
-               fLastSafety(0.),
-               fThreadId(0),
-               fLevel(0),
-               fNmany(0),
-               fNextDaughterIndex(-2),
-               fOverlapSize(1000),
-               fOverlapMark(0),
-               fOverlapClusters(0),
-               fSearchOverlaps(kFALSE),
-               fCurrentOverlapping(kFALSE),
-               fStartSafe(kTRUE),
-               fIsEntering(kFALSE),
-               fIsExiting(kFALSE),
-               fIsStepEntering(kFALSE),
-               fIsStepExiting(kFALSE),
-               fIsOutside(kFALSE),
-               fIsOnBoundary(kFALSE),
-               fIsSameLocation(kTRUE),
-               fIsNullStep(kFALSE),
-               fGeometry(geom),
-               fCache(0),
-               fCurrentVolume(0),
-               fCurrentNode(0),
-               fTopNode(0),
-               fLastNode(0),
-               fNextNode(0),
-               fForcedNode(0),
-               fBackupState(0),
-               fCurrentMatrix(0),
-               fGlobalMatrix(0),
-               fDivMatrix(0),
-               fPath()
+TGeoNavigator::TGeoNavigator(TGeoManager *geom)
+   : fStep(0.), fSafety(0.), fLastSafety(0.), fThreadId(0), fLevel(0), fNmany(0), fNextDaughterIndex(-2),
+     fOverlapSize(1000), fOverlapMark(0), fOverlapClusters(nullptr), fSearchOverlaps(kFALSE),
+     fCurrentOverlapping(kFALSE), fStartSafe(kTRUE), fIsEntering(kFALSE), fIsExiting(kFALSE), fIsStepEntering(kFALSE),
+     fIsStepExiting(kFALSE), fIsOutside(kFALSE), fIsOnBoundary(kFALSE), fIsSameLocation(kTRUE), fIsNullStep(kFALSE),
+     fGeometry(geom), fCache(nullptr), fCurrentVolume(nullptr), fCurrentNode(nullptr), fTopNode(nullptr),
+     fLastNode(nullptr), fNextNode(nullptr), fForcedNode(nullptr), fBackupState(nullptr), fCurrentMatrix(nullptr),
+     fGlobalMatrix(nullptr), fDivMatrix(nullptr), fPath()
 
 {
 // Default constructor.
@@ -456,7 +402,7 @@ void TGeoNavigator::CdUp()
    } else {
       Int_t up = 1;
       Bool_t offset = kTRUE;
-      TGeoNode *mother = 0;
+      TGeoNode *mother = nullptr;
       while  (offset) {
          mother = GetMother(up++);
          offset = mother->IsOffset();
@@ -544,7 +490,7 @@ TGeoNode *TGeoNavigator::CrossDivisionCell()
    TGeoPatternFinder *finder = fCurrentNode->GetFinder();
    if (!finder) {
       Fatal("CrossDivisionCell", "Volume has no pattern finder");
-      return 0;
+      return nullptr;
    }
    // Mark current node and go up to the level of the divided volume
    TGeoNode *skip = fCurrentNode;
@@ -619,11 +565,11 @@ TGeoNode *TGeoNavigator::CrossBoundaryAndLocate(Bool_t downwards, TGeoNode *skip
    fPoint[1] += extra*fDirection[1];
    fPoint[2] += extra*fDirection[2];
    TGeoNode *current = SearchNode(downwards, skipnode);
-   fForcedNode = 0;
+   fForcedNode = nullptr;
    fPoint[0] -= extra*fDirection[0];
    fPoint[1] -= extra*fDirection[1];
    fPoint[2] -= extra*fDirection[2];
-   if (!current) return 0;
+   if (!current) return nullptr;
    if (downwards) {
       Int_t nextindex = current->GetVolume()->GetNextNodeIndex();
       while (nextindex>=0) {
@@ -701,7 +647,7 @@ TGeoNode *TGeoNavigator::FindNextBoundary(Double_t stepmax, const char *path, Bo
    fStep = TGeoShape::Big();
    fIsStepEntering = kFALSE;
    fIsStepExiting = kFALSE;
-   fForcedNode = 0;
+   fForcedNode = nullptr;
    Bool_t computeGlobal = kFALSE;
    fIsOnBoundary = frombdr;
    fSafety = 0.;
@@ -749,7 +695,7 @@ TGeoNode *TGeoNavigator::FindNextBoundary(Double_t stepmax, const char *path, Bo
       PushPath();
       if (!cd(path)) {
          PopPath();
-         return 0;
+         return nullptr;
       }
       if (computeGlobal) fCurrentMatrix->CopyFrom(fGlobalMatrix);
       fNextNode = fCurrentNode;
@@ -814,7 +760,7 @@ TGeoNode *TGeoNavigator::FindNextBoundary(Double_t stepmax, const char *path, Bo
          }
          return fNextNode;
       }
-      return 0;
+      return nullptr;
    }
    fGlobalMatrix->MasterToLocal(fPoint, &point[0]);
    fGlobalMatrix->MasterToLocalVect(fDirection, &dir[0]);
@@ -838,14 +784,14 @@ TGeoNode *TGeoNavigator::FindNextBoundary(Double_t stepmax, const char *path, Bo
       fIsStepEntering = kFALSE;
       if (fStep<1E-6) return fCurrentNode;
    }
-   fNextNode = (fStep<1E20)?fCurrentNode:0;
+   fNextNode = (fStep < 1E20) ? fCurrentNode : nullptr;
    // Find next daughter boundary for the current volume
    Int_t idaughter = -1;
    FindNextDaughterBoundary(point,dir,idaughter,computeGlobal);
    if (idaughter>=0) fNextDaughterIndex = idaughter;
-   TGeoNode *current = 0;
-   TGeoNode *dnode = 0;
-   TGeoVolume *mother = 0;
+   TGeoNode *current = nullptr;
+   TGeoNode *dnode = nullptr;
+   TGeoVolume *mother = nullptr;
    // if we are in an overlapping node, check also the mother(s)
    if (fNmany) {
       Double_t mothpt[3];
@@ -969,7 +915,7 @@ TGeoNode *TGeoNavigator::FindNextBoundary(Double_t stepmax, const char *path, Bo
             mothernode = GetMother(up);
             if (!mothernode) {
                Fatal("FindNextBoundary", "Cannot find mother node");
-               return 0;
+               return nullptr;
             }
             mup = mothernode;
             imother = up+1;
@@ -990,7 +936,7 @@ TGeoNode *TGeoNavigator::FindNextBoundary(Double_t stepmax, const char *path, Bo
                matrix = GetMotherMatrix(up);
                if (!matrix) {
                   Fatal("FindNextBoundary", "Cannot find mother matrix");
-                  return 0;
+                  return nullptr;
                }
                matrix->MasterToLocal(fPoint,dpt);
                matrix->MasterToLocalVect(fDirection,dvec);
@@ -1050,15 +996,15 @@ TGeoNode *TGeoNavigator::FindNextDaughterBoundary(Double_t *point, Double_t *dir
    Double_t snext = TGeoShape::Big();
    Int_t idebug = TGeoManager::GetVerboseLevel();
    idaughter = -1; // nothing crossed
-   TGeoNode *nodefound = 0;
+   TGeoNode *nodefound = nullptr;
    // Get number of daughters. If no daughters we are done.
 
    TGeoVolume *vol = fCurrentNode->GetVolume();
    Int_t nd = vol->GetNdaughters();
-   if (!nd) return 0;  // No daughter
-   if (fGeometry->IsActivityEnabled() && !vol->IsActiveDaughters()) return 0;
+   if (!nd) return nullptr; // No daughter
+   if (fGeometry->IsActivityEnabled() && !vol->IsActiveDaughters()) return nullptr;
    Double_t lpoint[3], ldir[3];
-   TGeoNode *current = 0;
+   TGeoNode *current = nullptr;
    Int_t i=0;
    // if current volume is divided, we are in the non-divided region. We
    // check first if we are inside a cell in which case compute distance to next cell
@@ -1165,7 +1111,7 @@ TGeoNode *TGeoNavigator::FindNextDaughterBoundary(Double_t *point, Double_t *dir
    // if current volume is voxelized, first get current voxel
    Int_t ncheck = 0;
    Int_t sumchecked = 0;
-   Int_t *vlist = 0;
+   Int_t *vlist = nullptr;
    TGeoStateInfo &info = *fCache->GetInfo();
    voxels->SortCrossedVoxels(point, dir, info);
    while ((sumchecked<nd) && (vlist=voxels->GetNextVoxel(point, dir, ncheck, info))) {
@@ -1228,7 +1174,7 @@ TGeoNode *TGeoNavigator::FindNextBoundaryAndStep(Double_t stepmax, Bool_t compsa
    Int_t idebug = TGeoManager::GetVerboseLevel();
    Int_t nextindex;
    Bool_t is_assembly;
-   fForcedNode = 0;
+   fForcedNode = nullptr;
    fIsStepExiting  = kFALSE;
    TGeoNode *skip;
    fIsStepEntering = kFALSE;
@@ -1309,9 +1255,9 @@ TGeoNode *TGeoNavigator::FindNextBoundaryAndStep(Double_t stepmax, Bool_t compsa
          return fNextNode;
       }
       // top node not reachable from current point/direction
-      fNextNode = 0;
+      fNextNode = nullptr;
       fIsOnBoundary = kFALSE;
-      return 0;
+      return nullptr;
    }
    Double_t point[3],dir[3];
    Int_t icrossed = -2;
@@ -1345,11 +1291,12 @@ TGeoNode *TGeoNavigator::FindNextBoundaryAndStep(Double_t stepmax, Bool_t compsa
       is_assembly = fCurrentNode->GetVolume()->IsAssembly();
       if (!fLevel && !is_assembly) {
          fIsOutside = kTRUE;
-         return 0;
+         return nullptr;
       }
       if (fCurrentNode->IsOffset()) return CrossDivisionCell();
       if (fLevel) CdUp();
-      else        skip = 0;
+      else
+         skip = nullptr;
       return CrossBoundaryAndLocate(kFALSE, skip);
    }
 
@@ -1368,9 +1315,9 @@ TGeoNode *TGeoNavigator::FindNextBoundaryAndStep(Double_t stepmax, Bool_t compsa
       icrossed = idaughter;
       fIsStepEntering = kTRUE;
    }
-   TGeoNode *current = 0;
-   TGeoNode *dnode = 0;
-   TGeoVolume *mother = 0;
+   TGeoNode *current = nullptr;
+   TGeoNode *dnode = nullptr;
+   TGeoVolume *mother = nullptr;
    // if we are in an overlapping node, check also the mother(s)
    if (fNmany) {
       Double_t mothpt[3];
@@ -1519,7 +1466,7 @@ TGeoNode *TGeoNavigator::FindNextBoundaryAndStep(Double_t stepmax, Bool_t compsa
    }
    // Compute now the distance in case we have a parallel world
    Double_t parstep = TGeoShape::Big();
-   TGeoPhysicalNode *pnode = 0;
+   TGeoPhysicalNode *pnode = nullptr;
    if (fGeometry->IsParallelWorldNav()) {
       pnode = fGeometry->GetParallelWorld()->FindNextBoundary(fPoint, fDirection, parstep, fStep);
       if (pnode) {
@@ -1558,11 +1505,12 @@ TGeoNode *TGeoNavigator::FindNextBoundaryAndStep(Double_t stepmax, Bool_t compsa
       is_assembly = fCurrentNode->GetVolume()->IsAssembly();
       if (!fLevel && !is_assembly) {
          fIsOutside = kTRUE;
-         return 0;
+         return nullptr;
       }
       if (fCurrentNode->IsOffset()) return CrossDivisionCell();
       if (fLevel) CdUp();
-      else        skip = 0;
+      else
+         skip = nullptr;
       return CrossBoundaryAndLocate(kFALSE, skip);
    }
 
@@ -1630,7 +1578,7 @@ TGeoNode *TGeoNavigator::FindNode(Double_t x, Double_t y, Double_t z)
 
 Double_t *TGeoNavigator::FindNormalFast()
 {
-   if (!fNextNode) return 0;
+   if (!fNextNode) return nullptr;
    Double_t local[3];
    Double_t ldir[3];
    Double_t lnorm[3];
@@ -1912,7 +1860,7 @@ TGeoNode *TGeoNavigator::SearchNode(Bool_t downwards, const TGeoNode *skipnode)
    }
    Double_t point[3];
    fNextDaughterIndex = -2;
-   TGeoVolume *vol = 0;
+   TGeoVolume *vol = nullptr;
    Int_t idebug = TGeoManager::GetVerboseLevel();
    Bool_t inside_current = (fCurrentNode==skipnode)?kTRUE:kFALSE;
    if (!downwards) {
@@ -1942,7 +1890,7 @@ TGeoNode *TGeoNavigator::SearchNode(Bool_t downwards, const TGeoNode *skipnode)
          // check if we can go up
          if (!fLevel) {
             fIsOutside = kTRUE;
-            return 0;
+            return nullptr;
          }
          CdUp();
          return SearchNode(kFALSE, skip);
@@ -1956,7 +1904,7 @@ TGeoNode *TGeoNavigator::SearchNode(Bool_t downwards, const TGeoNode *skipnode)
       else inside_current = vol->Contains(point);
       if (!inside_current) {
          fIsSameLocation = kFALSE;
-         return 0;
+         return nullptr;
       } else {
          if (fIsOutside) {
             fIsOutside = kFALSE;
@@ -2007,7 +1955,7 @@ TGeoNode *TGeoNavigator::SearchNode(Bool_t downwards, const TGeoNode *skipnode)
          // go inside the division cell and search downwards
          fIsSameLocation = kFALSE;
          CdDown(node->GetIndex());
-         fForcedNode = 0;
+         fForcedNode = nullptr;
          return SearchNode(kTRUE, node);
       }
       // point is not inside the division, but might be in other nodes
@@ -2017,7 +1965,7 @@ TGeoNode *TGeoNavigator::SearchNode(Bool_t downwards, const TGeoNode *skipnode)
    }
    // second, look if current volume is voxelized
    TGeoVoxelFinder *voxels = vol->GetVoxels();
-   Int_t *check_list = 0;
+   Int_t *check_list = nullptr;
    Int_t id;
    if (voxels) {
       // get the list of nodes passing thorough the current voxel
@@ -2033,7 +1981,7 @@ TGeoNode *TGeoNavigator::SearchNode(Bool_t downwards, const TGeoNode *skipnode)
          if (!fLevel) {
             fIsOutside = kTRUE;
             fCache->ReleaseInfo();
-            return 0;
+            return nullptr;
          }
          CdUp();
          fCache->ReleaseInfo();
@@ -2062,7 +2010,7 @@ TGeoNode *TGeoNavigator::SearchNode(Bool_t downwards, const TGeoNode *skipnode)
             }
          }
          CdDown(check_list[id]);
-         fForcedNode = 0;
+         fForcedNode = nullptr;
          node = SearchNode(kTRUE);
          if (node) {
             fIsSameLocation = kFALSE;
@@ -2079,7 +2027,7 @@ TGeoNode *TGeoNavigator::SearchNode(Bool_t downwards, const TGeoNode *skipnode)
       if (!fLevel) {
          fIsOutside = kTRUE;
          fCache->ReleaseInfo();
-         return 0;
+         return nullptr;
       }
       CdUp();
       fCache->ReleaseInfo();
@@ -2091,7 +2039,7 @@ TGeoNode *TGeoNavigator::SearchNode(Bool_t downwards, const TGeoNode *skipnode)
       if (node==skipnode) continue;
       if (fGeometry->IsActivityEnabled() && !node->GetVolume()->IsActive()) continue;
       CdDown(id);
-      fForcedNode = 0;
+      fForcedNode = nullptr;
       node = SearchNode(kTRUE);
       if (node) {
          fIsSameLocation = kFALSE;
@@ -2104,7 +2052,7 @@ TGeoNode *TGeoNavigator::SearchNode(Bool_t downwards, const TGeoNode *skipnode)
       node = fCurrentNode;
       if (!fLevel) {
          fIsOutside = kTRUE;
-         return 0;
+         return nullptr;
       }
       CdUp();
       return SearchNode(kFALSE,node);
@@ -2118,11 +2066,11 @@ TGeoNode *TGeoNavigator::SearchNode(Bool_t downwards, const TGeoNode *skipnode)
 
 TGeoNode *TGeoNavigator::FindInCluster(Int_t *cluster, Int_t nc)
 {
-   TGeoNode *clnode = 0;
+   TGeoNode *clnode = nullptr;
    TGeoNode *priority = fLastNode;
    // save current node
    TGeoNode *current = fCurrentNode;
-   TGeoNode *found = 0;
+   TGeoNode *found = nullptr;
    // save path
    Int_t ipop = PushPath();
    // mark this search
@@ -2253,7 +2201,7 @@ TGeoNode *TGeoNavigator::Step(Bool_t is_geom, Bool_t cross)
    if (is_geom) epsil=(cross)?1E-6:-1E-6;
    TGeoNode *old = fCurrentNode;
    Int_t idold = GetNodeId();
-   if (fIsOutside) old = 0;
+   if (fIsOutside) old = nullptr;
    fStep += epsil;
    for (Int_t i=0; i<3; i++) fPoint[i]+=fStep*fDirection[i];
    TGeoNode *current = FindNode();
@@ -2284,7 +2232,7 @@ Int_t TGeoNavigator::GetVirtualLevel()
    Int_t new_media = 0;
    TGeoMedium *medium = fCurrentNode->GetMedium();
    Int_t virtual_level = 1;
-   TGeoNode *mother = 0;
+   TGeoNode *mother = nullptr;
 
    while ((mother=GetMother(virtual_level))) {
       if (!mother->IsOverlapping() && !mother->IsOffset()) {
@@ -2471,7 +2419,7 @@ Bool_t TGeoNavigator::IsSameLocation(Double_t x, Double_t y, Double_t z, Bool_t 
    }
    // if we are not allowed to do changes, save the current path
    TGeoVoxelFinder *voxels = vol->GetVoxels();
-   Int_t *check_list = 0;
+   Int_t *check_list = nullptr;
    Int_t ncheck = 0;
    Double_t local1[3];
    if (voxels) {
@@ -2641,15 +2589,15 @@ void TGeoNavigator::ResetAll()
    fIsNullStep = kFALSE;
    fCurrentVolume = fGeometry->GetTopVolume();
    fCurrentNode = fGeometry->GetTopNode();
-   fLastNode = 0;
-   fNextNode = 0;
+   fLastNode = nullptr;
+   fNextNode = nullptr;
    fPath = "";
    if (fCache) {
       Bool_t dummy=fCache->IsDummy();
       Bool_t nodeid = fCache->HasIdArray();
       delete fCache;
       delete fBackupState;
-      fCache = 0;
+      fCache = nullptr;
       BuildCache(dummy,nodeid);
    }
 }

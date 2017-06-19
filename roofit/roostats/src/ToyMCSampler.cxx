@@ -79,7 +79,7 @@ void NuisanceParametersSampler::NextPoint(RooArgSet& nuisPoint, Double_t& weight
 
    // check whether result will have any influence
    if(fPoints->weight() == 0.0) {
-      oocoutI((TObject*)NULL,Generation) << "Weight 0 encountered. Skipping." << endl;
+      oocoutI((TObject *)nullptr, Generation) << "Weight 0 encountered. Skipping." << endl;
       NextPoint(nuisPoint, weight);
    }
 }
@@ -98,7 +98,7 @@ void NuisanceParametersSampler::Refresh() {
 
    if (fExpected) {
       // UNDER CONSTRUCTION
-      oocoutI((TObject*)NULL,InputArguments) << "Using expected nuisance parameters." << endl;
+      oocoutI((TObject *)nullptr, InputArguments) << "Using expected nuisance parameters." << endl;
 
       int nBins = fNToys;
 
@@ -119,8 +119,8 @@ void NuisanceParametersSampler::Refresh() {
       );
       if(fPoints->numEntries() != fNToys) {
          fNToys = fPoints->numEntries();
-         oocoutI((TObject*)NULL,InputArguments) <<
-            "Adjusted number of toys to number of bins of nuisance parameters: " << fNToys << endl;
+         oocoutI((TObject *)nullptr, InputArguments)
+            << "Adjusted number of toys to number of bins of nuisance parameters: " << fNToys << endl;
       }
 
 /*
@@ -136,7 +136,7 @@ void NuisanceParametersSampler::Refresh() {
 */
 
    }else{
-      oocoutI((TObject*)NULL,InputArguments) << "Using randomized nuisance parameters." << endl;
+      oocoutI((TObject *)nullptr, InputArguments) << "Using randomized nuisance parameters." << endl;
 
       fPoints = fPrior->generate(*fParams, fNToys);
    }
@@ -154,12 +154,12 @@ void ToyMCSampler::SetAlwaysUseMultiGen(Bool_t flag) { fgAlwaysUseMultiGen = fla
 ToyMCSampler::ToyMCSampler() : fSamplingDistName("SD"), fNToys(1)
 {
 
-   fPdf = NULL;
-   fParametersForTestStat = NULL;
-   fPriorNuisance = NULL;
-   fNuisancePars = NULL;
-   fObservables = NULL;
-   fGlobalObservables = NULL;
+   fPdf = nullptr;
+   fParametersForTestStat = nullptr;
+   fPriorNuisance = nullptr;
+   fNuisancePars = nullptr;
+   fObservables = nullptr;
+   fGlobalObservables = nullptr;
 
    fSize = 0.05;
    fNEvents = 0;
@@ -173,16 +173,16 @@ ToyMCSampler::ToyMCSampler() : fSamplingDistName("SD"), fNToys(1)
    fAdaptiveLowLimit = -RooNumber::infinity();
    fAdaptiveHighLimit = RooNumber::infinity();
 
-   fProtoData = NULL;
+   fProtoData = nullptr;
 
-   fProofConfig = NULL;
-   fNuisanceParametersSampler = NULL;
+   fProofConfig = nullptr;
+   fNuisanceParametersSampler = nullptr;
 
-   _allVars = NULL ;
-   _gs1 = NULL ;
-   _gs2 = NULL ;
-   _gs3 = NULL ;
-   _gs4 = NULL ;
+   _allVars = nullptr;
+   _gs1 = nullptr;
+   _gs2 = nullptr;
+   _gs3 = nullptr;
+   _gs4 = nullptr;
 
    //suppress messages for num integration of Roofit
    RooMsgService::instance().getStream(1).removeTopic(RooFit::NumIntegration);
@@ -195,12 +195,12 @@ ToyMCSampler::ToyMCSampler() : fSamplingDistName("SD"), fNToys(1)
 ToyMCSampler::ToyMCSampler(TestStatistic &ts, Int_t ntoys) :
    fSamplingDistName(ts.GetVarName()), fNToys(ntoys)
 {
-   fPdf = NULL;
-   fParametersForTestStat = NULL;
-   fPriorNuisance = NULL;
-   fNuisancePars = NULL;
-   fObservables = NULL;
-   fGlobalObservables = NULL;
+   fPdf = nullptr;
+   fParametersForTestStat = nullptr;
+   fPriorNuisance = nullptr;
+   fNuisancePars = nullptr;
+   fObservables = nullptr;
+   fGlobalObservables = nullptr;
 
    fSize = 0.05;
    fNEvents = 0;
@@ -214,16 +214,16 @@ ToyMCSampler::ToyMCSampler(TestStatistic &ts, Int_t ntoys) :
    fAdaptiveLowLimit = -RooNumber::infinity();
    fAdaptiveHighLimit = RooNumber::infinity();
 
-   fProtoData = NULL;
+   fProtoData = nullptr;
 
-   fProofConfig = NULL;
-   fNuisanceParametersSampler = NULL;
+   fProofConfig = nullptr;
+   fNuisanceParametersSampler = nullptr;
 
-   _allVars = NULL ;
-   _gs1 = NULL ;
-   _gs2 = NULL ;
-   _gs3 = NULL ;
-   _gs4 = NULL ;
+   _allVars = nullptr;
+   _gs1 = nullptr;
+   _gs2 = nullptr;
+   _gs3 = nullptr;
+   _gs4 = nullptr;
 
    //suppress messages for num integration of Roofit
    RooMsgService::instance().getStream(1).removeTopic(RooFit::NumIntegration);
@@ -248,11 +248,23 @@ ToyMCSampler::~ToyMCSampler() {
 Bool_t ToyMCSampler::CheckConfig(void) {
    bool goodConfig = true;
 
-   if(fTestStatistics.size() == 0 || fTestStatistics[0] == NULL) { ooccoutE((TObject*)NULL,InputArguments) << "Test statistic not set." << endl; goodConfig = false; }
-   if(!fObservables) { ooccoutE((TObject*)NULL,InputArguments) << "Observables not set." << endl; goodConfig = false; }
-   if(!fParametersForTestStat) { ooccoutE((TObject*)NULL,InputArguments) << "Parameter values used to evaluate the test statistic are not set." << endl; goodConfig = false; }
-   if(!fPdf) { ooccoutE((TObject*)NULL,InputArguments) << "Pdf not set." << endl; goodConfig = false; }
-
+   if (fTestStatistics.size() == 0 || fTestStatistics[0] == nullptr) {
+      ooccoutE((TObject *)nullptr, InputArguments) << "Test statistic not set." << endl;
+      goodConfig = false;
+   }
+   if(!fObservables) {
+      ooccoutE((TObject *)nullptr, InputArguments) << "Observables not set." << endl;
+      goodConfig = false;
+   }
+   if(!fParametersForTestStat) {
+      ooccoutE((TObject *)nullptr, InputArguments)
+         << "Parameter values used to evaluate the test statistic are not set." << endl;
+      goodConfig = false;
+   }
+   if(!fPdf) {
+      ooccoutE((TObject *)nullptr, InputArguments) << "Pdf not set." << endl;
+      goodConfig = false;
+   }
 
    //ooccoutI((TObject*)NULL,InputArguments) << "ToyMCSampler configuration:" << endl;
    //ooccoutI((TObject*)NULL,InputArguments) << "Pdf from SetPdf: " << fPdf << endl;
@@ -272,7 +284,7 @@ Bool_t ToyMCSampler::CheckConfig(void) {
 RooArgList* ToyMCSampler::EvaluateAllTestStatistics(RooAbsData& data, const RooArgSet& poi) {
    DetailedOutputAggregator detOutAgg;
    const RooArgList* allTS = EvaluateAllTestStatistics(data, poi, detOutAgg);
-   if (!allTS) return 0;
+   if (!allTS) return nullptr;
    // no need to delete allTS, it is deleted in destructor of detOutAgg
    return  dynamic_cast<RooArgList*>(allTS->snapshot());
 }
@@ -280,10 +292,10 @@ RooArgList* ToyMCSampler::EvaluateAllTestStatistics(RooAbsData& data, const RooA
 ////////////////////////////////////////////////////////////////////////////////
 
 const RooArgList* ToyMCSampler::EvaluateAllTestStatistics(RooAbsData& data, const RooArgSet& poi, DetailedOutputAggregator& detOutAgg) {
-   RooArgSet *allVars = fPdf ? fPdf->getVariables() : 0;
-   RooArgSet *saveAll = allVars ? dynamic_cast<RooArgSet*>(allVars->snapshot()) : 0;
+   RooArgSet *allVars = fPdf ? fPdf->getVariables() : nullptr;
+   RooArgSet *saveAll = allVars ? dynamic_cast<RooArgSet *>(allVars->snapshot()) : nullptr;
    for( unsigned int i = 0; i < fTestStatistics.size(); i++ ) {
-      if( fTestStatistics[i] == NULL ) continue;
+      if (fTestStatistics[i] == nullptr) continue;
       TString name( TString::Format("%s_TS%u", fSamplingDistName.c_str(), i) );
       RooArgSet* parForTS = dynamic_cast<RooArgSet*>(poi.snapshot());
       RooRealVar ts( name, fTestStatistics[i]->GetVarName(), fTestStatistics[i]->Evaluate( data, *parForTS ) );
@@ -305,16 +317,17 @@ const RooArgList* ToyMCSampler::EvaluateAllTestStatistics(RooAbsData& data, cons
 
 SamplingDistribution* ToyMCSampler::GetSamplingDistribution(RooArgSet& paramPointIn) {
    if(fTestStatistics.size() > 1) {
-      oocoutW((TObject*)NULL, InputArguments) << "Multiple test statistics defined, but only one distribution will be returned." << endl;
+      oocoutW((TObject *)nullptr, InputArguments)
+         << "Multiple test statistics defined, but only one distribution will be returned." << endl;
       for( unsigned int i=0; i < fTestStatistics.size(); i++ ) {
-         oocoutW((TObject*)NULL, InputArguments) << " \t test statistic: " << fTestStatistics[i] << endl;
+         oocoutW((TObject *)nullptr, InputArguments) << " \t test statistic: " << fTestStatistics[i] << endl;
       }
    }
 
    RooDataSet* r = GetSamplingDistributions(paramPointIn);
-   if(r == NULL || r->numEntries() == 0) {
-      oocoutW((TObject*)NULL, Generation) << "no sampling distribution generated" << endl;
-      return NULL;
+   if (r == nullptr || r->numEntries() == 0) {
+      oocoutW((TObject *)nullptr, Generation) << "no sampling distribution generated" << endl;
+      return nullptr;
    }
 
    SamplingDistribution* samp = new SamplingDistribution( r->GetName(), r->GetTitle(), *r );
@@ -334,18 +347,15 @@ RooDataSet* ToyMCSampler::GetSamplingDistributions(RooArgSet& paramPointIn)
 
    // ======= P A R A L L E L   R U N =======
    if (!CheckConfig()){
-      oocoutE((TObject*)NULL, InputArguments)
-         << "Bad COnfiguration in ToyMCSampler "
-         << endl;
+      oocoutE((TObject *)nullptr, InputArguments) << "Bad COnfiguration in ToyMCSampler " << endl;
       return nullptr;
    }
 
    // turn adaptive sampling off if given
    if(fToysInTails) {
       fToysInTails = 0;
-      oocoutW((TObject*)NULL, InputArguments)
-         << "Adaptive sampling in ToyMCSampler is not supported for parallel runs."
-         << endl;
+      oocoutW((TObject *)nullptr, InputArguments)
+         << "Adaptive sampling in ToyMCSampler is not supported for parallel runs." << endl;
    }
 
    // adjust number of toys on the slaves to keep the total number of toys constant
@@ -389,9 +399,7 @@ RooDataSet* ToyMCSampler::GetSamplingDistributionsSingleWorker(RooArgSet& paramP
    ClearCache();
 
    if (!CheckConfig()){
-      oocoutE((TObject*)NULL, InputArguments)
-         << "Bad COnfiguration in ToyMCSampler "
-         << endl;
+      oocoutE((TObject *)nullptr, InputArguments) << "Bad COnfiguration in ToyMCSampler " << endl;
       return nullptr;
    }
 
@@ -414,9 +422,12 @@ RooDataSet* ToyMCSampler::GetSamplingDistributionsSingleWorker(RooArgSet& paramP
 
       // status update
       if ( i% 500 == 0 && i>0 ) {
-         oocoutP((TObject*)0,Generation) << "generated toys: " << i << " / " << fNToys;
-         if (fToysInTails) ooccoutP((TObject*)0,Generation) << " (tails: " << toysInTails << " / " << fToysInTails << ")" << std::endl;
-         else ooccoutP((TObject*)0,Generation) << endl;
+         oocoutP((TObject *)nullptr, Generation) << "generated toys: " << i << " / " << fNToys;
+         if (fToysInTails)
+            ooccoutP((TObject *)nullptr, Generation)
+               << " (tails: " << toysInTails << " / " << fToysInTails << ")" << std::endl;
+         else
+            ooccoutP((TObject *)nullptr, Generation) << endl;
       }
 
       // TODO: change this treatment to keep track of all values so that the threshold
@@ -441,7 +452,7 @@ RooDataSet* ToyMCSampler::GetSamplingDistributionsSingleWorker(RooArgSet& paramP
 
       // check for nan
       if(valueFirst != valueFirst) {
-         oocoutW((TObject*)NULL, Generation) << "skip: " << valueFirst << ", " << weight << endl;
+         oocoutW((TObject *)nullptr, Generation) << "skip: " << valueFirst << ", " << weight << endl;
          continue;
       }
 
@@ -469,7 +480,7 @@ void ToyMCSampler::GenerateGlobalObservables(RooAbsPdf& pdf) const {
 
 
    if(!fGlobalObservables  ||  fGlobalObservables->getSize()==0) {
-      ooccoutE((TObject*)NULL,InputArguments) << "Global Observables not set." << endl;
+      ooccoutE((TObject *)nullptr, InputArguments) << "Global Observables not set." << endl;
       return;
    }
 
@@ -540,8 +551,8 @@ void ToyMCSampler::GenerateGlobalObservables(RooAbsPdf& pdf) const {
 RooAbsData* ToyMCSampler::GenerateToyData(RooArgSet& paramPoint, double& weight, RooAbsPdf& pdf) const {
 
    if(!fObservables) {
-      ooccoutE((TObject*)NULL,InputArguments) << "Observables not set." << endl;
-      return NULL;
+      ooccoutE((TObject *)nullptr, InputArguments) << "Observables not set." << endl;
+      return nullptr;
    }
 
    // assign input paramPoint
@@ -553,7 +564,8 @@ RooAbsData* ToyMCSampler::GenerateToyData(RooArgSet& paramPoint, double& weight,
    if(!fNuisanceParametersSampler && fPriorNuisance && fNuisancePars) {
       fNuisanceParametersSampler = new NuisanceParametersSampler(fPriorNuisance, fNuisancePars, fNToys, fExpectedNuisancePar);
       if ((fUseMultiGen || fgAlwaysUseMultiGen) &&  fNuisanceParametersSampler )
-         oocoutI((TObject*)NULL,InputArguments) << "Cannot use multigen when nuisance parameters vary for every toy" << endl;
+         oocoutI((TObject *)nullptr, InputArguments)
+            << "Cannot use multigen when nuisance parameters vary for every toy" << endl;
    }
 
    // generate global observables
@@ -612,7 +624,7 @@ RooAbsData* ToyMCSampler::Generate(RooAbsPdf &pdf, RooArgSet &observables, const
       forceEvents = protoData->numEntries();
    }
 
-   RooAbsData *data = NULL;
+   RooAbsData *data = nullptr;
    int events = forceEvents;
    if(events == 0) events = fNEvents;
 
@@ -644,9 +656,8 @@ RooAbsData* ToyMCSampler::Generate(RooAbsPdf &pdf, RooArgSet &observables, const
        }
          }
       }else{
-         oocoutE((TObject*)0,InputArguments)
-            << "ToyMCSampler: Error : pdf is not extended and number of events per toy is zero"
-            << endl;
+         oocoutE((TObject *)nullptr, InputArguments)
+            << "ToyMCSampler: Error : pdf is not extended and number of events per toy is zero" << endl;
       }
    }else{
       if(fGenerateBinned) {
@@ -709,13 +720,13 @@ SamplingDistribution* ToyMCSampler::AppendSamplingDistribution(
 void ToyMCSampler::ClearCache() {
 
    if (_gs1) delete _gs1;
-   _gs1 = 0;
+   _gs1 = nullptr;
    if (_gs2) delete _gs2;
-   _gs2 = 0;
+   _gs2 = nullptr;
    if (_gs3) delete _gs3;
-   _gs3 = 0;
+   _gs3 = nullptr;
    if (_gs4) delete _gs4;
-   _gs4 = 0;
+   _gs4 = nullptr;
 
    // no need to delete the _pdfList since it is managed by the RooSimultaneous object
    if (_pdfList.size() > 0) {
@@ -731,8 +742,7 @@ void ToyMCSampler::ClearCache() {
 
    //LM: is this set really needed ??
    if (_allVars) delete _allVars;
-   _allVars = 0;
-
+   _allVars = nullptr;
 }
 
 } // end namespace RooStats

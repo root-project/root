@@ -30,21 +30,10 @@ ClassImp(TGLClipSetSubEditor);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TGLClipSetSubEditor::TGLClipSetSubEditor(const TGWindow *p) :
-   TGVerticalFrame(p),
-   fM(0),
-   fCurrentClip(TGLClip::kClipNone),
-   fTypeButtons(0),
-   fPlanePropFrame(0),
-   fPlaneProp(),
-   fBoxPropFrame(0),
-   fBoxProp(),
-   fClipInside(0),
-   fAutoUpdate(0),
-   fClipEdit(0),
-   fClipShow(0),
-   fApplyButton(0),
-   fResetButton(0)
+TGLClipSetSubEditor::TGLClipSetSubEditor(const TGWindow *p)
+   : TGVerticalFrame(p), fM(nullptr), fCurrentClip(TGLClip::kClipNone), fTypeButtons(nullptr), fPlanePropFrame(nullptr),
+     fPlaneProp(), fBoxPropFrame(nullptr), fBoxProp(), fClipInside(nullptr), fAutoUpdate(nullptr), fClipEdit(nullptr),
+     fClipShow(nullptr), fApplyButton(nullptr), fResetButton(nullptr)
 {
    fTypeButtons = new TGButtonGroup(this, "Clip Type", kChildFrame|kHorizontalFrame);
    new TGRadioButton(fTypeButtons, "None    ");
@@ -241,11 +230,8 @@ ClassImp(TGLClipSetEditor);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TGLClipSetEditor::TGLClipSetEditor(const TGWindow *p, Int_t width, Int_t height,
-                                   UInt_t options, Pixel_t back) :
-   TGedFrame(p, width, height, options | kVerticalFrame, back),
-   fM  (0),
-   fSE (0)
+TGLClipSetEditor::TGLClipSetEditor(const TGWindow *p, Int_t width, Int_t height, UInt_t options, Pixel_t back)
+   : TGedFrame(p, width, height, options | kVerticalFrame, back), fM(nullptr), fSE(nullptr)
 {
    MakeTitle("TGLClipSet");
 

@@ -33,7 +33,7 @@ ClassImpQ(TGImageMap)
 
 TGRegionWithId  *gCurrentRegion; // current region
 
-static TGRegion *gEmptyRegion = 0;
+static TGRegion *gEmptyRegion = nullptr;
 static Int_t gPointerX;  // current X mouse position
 static Int_t gPointerY;  // current Y mouse position
 
@@ -322,8 +322,8 @@ Bool_t TGRegion::operator==(const TGRegion &r) const
 TGRegionWithId::TGRegionWithId() : TGRegion()
 {
    fId    = 0;
-   fTip   = 0;
-   fPopup = 0;
+   fTip = nullptr;
+   fPopup = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -334,8 +334,8 @@ TGRegionWithId::TGRegionWithId(Int_t id, Int_t x, Int_t y,
    TGRegion(x, y, w, h, type)
 {
    fId    = id;
-   fTip   = 0;
-   fPopup = 0;
+   fTip = nullptr;
+   fPopup = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -346,8 +346,8 @@ TGRegionWithId::TGRegionWithId(Int_t id, Int_t n, TPoint *points,
    TGRegion(n, points, winding)
 {
    fId    = id;
-   fTip   = 0;
-   fPopup = 0;
+   fTip = nullptr;
+   fPopup = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -356,8 +356,8 @@ TGRegionWithId::TGRegionWithId(Int_t id, Int_t n, TPoint *points,
 TGRegionWithId::TGRegionWithId(const TGRegionWithId &reg) : TGRegion(reg)
 {
    fId    = reg.GetId();
-   fTip   = 0;
-   fPopup = 0;
+   fTip = nullptr;
+   fPopup = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -367,8 +367,8 @@ TGRegionWithId::TGRegionWithId(const TGRegion &reg, Int_t id) :
    TGRegion(reg)
 {
    fId    = id;
-   fTip   = 0;
-   fPopup = 0;
+   fTip = nullptr;
+   fPopup = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -397,7 +397,7 @@ void TGRegionWithId::SetToolTipText(const char *text, Long_t delayms,
 {
    if (fTip) {
       delete fTip;
-      fTip = 0;
+      fTip = nullptr;
    }
 
    if (text && strlen(text))
@@ -415,7 +415,7 @@ TGImageMap::TGImageMap(const TGWindow *p, const TGPicture *pic) :
    fCursorMouseOver = kHand;
    fListOfRegions   = new TList;
    fTrash           = new TList;
-   fMainTip         = 0;
+   fMainTip = nullptr;
    fLastVisited     = 0;
    fNavMode = kNavRegions;
 
@@ -441,7 +441,7 @@ TGImageMap::TGImageMap(const TGWindow *p, const TString &pic) :
    fCursorMouseOver = kHand;
    fListOfRegions   = new TList;
    fTrash           = new TList;
-   fMainTip         = 0;
+   fMainTip = nullptr;
    fLastVisited     = 0;
    fNavMode = kNavRegions;
 
@@ -484,8 +484,8 @@ TGPopupMenu *TGImageMap::CreatePopup(Int_t id)
 {
    TIter next(fListOfRegions);
    TGRegionWithId *region;
-   TGPopupMenu    *popup = 0;
-   TGPopupMenu    *newpopup = 0;
+   TGPopupMenu *popup = nullptr;
+   TGPopupMenu *newpopup = nullptr;
 
    while ((region = (TGRegionWithId*)next())) {
       if (id == region->GetId()) {
@@ -511,7 +511,7 @@ TGPopupMenu *TGImageMap::GetPopup(Int_t id)
    while ((region = (TGRegionWithId*)next())) {
       if (id == region->GetId()) return region->GetPopup();
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -612,7 +612,7 @@ Bool_t TGImageMap::HandleButton(Event_t *event)
 void TGImageMap::SetToolTipText(const char *text, Long_t delayms)
 {
    if (fMainTip) delete fMainTip;
-   fMainTip = 0;
+   fMainTip = nullptr;
 
    if (text && strlen(text))
       fMainTip = new TGToolTip(fClient->GetDefaultRoot(), this, text, delayms);

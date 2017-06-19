@@ -41,9 +41,8 @@ ClassImp(RooLinTransBinning);
 /// Constructor with a given input binning and the slope and offset to be applied to
 /// construct the linear transformation
 
-RooLinTransBinning::RooLinTransBinning(const RooAbsBinning& input, Double_t slope, Double_t offset, const char* name) :
-  RooAbsBinning(name),
-  _array(0) 
+RooLinTransBinning::RooLinTransBinning(const RooAbsBinning &input, Double_t slope, Double_t offset, const char *name)
+   : RooAbsBinning(name), _array(nullptr)
 {
   updateInput(input,slope,offset) ;
 }
@@ -53,9 +52,8 @@ RooLinTransBinning::RooLinTransBinning(const RooAbsBinning& input, Double_t slop
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-RooLinTransBinning::RooLinTransBinning(const RooLinTransBinning& other, const char* name) :
-  RooAbsBinning(name),
-  _array(0)
+RooLinTransBinning::RooLinTransBinning(const RooLinTransBinning &other, const char *name)
+   : RooAbsBinning(name), _array(nullptr)
 {
   _input = other._input ;
   _slope = other._slope ;

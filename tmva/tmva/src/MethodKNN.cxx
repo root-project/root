@@ -59,44 +59,21 @@ ClassImp(TMVA::MethodKNN);
 ////////////////////////////////////////////////////////////////////////////////
 /// standard constructor
 
-   TMVA::MethodKNN::MethodKNN( const TString& jobName,
-                               const TString& methodTitle,
-                               DataSetInfo& theData,
-                               const TString& theOption )
-   : TMVA::MethodBase(jobName, Types::kKNN, methodTitle, theData, theOption)
-   , fSumOfWeightsS(0)
-   , fSumOfWeightsB(0)
-   , fModule(0)
-   , fnkNN(0)
-   , fBalanceDepth(0)
-   , fScaleFrac(0)
-   , fSigmaFact(0)
-   , fTrim(kFALSE)
-   , fUseKernel(kFALSE)
-   , fUseWeight(kFALSE)
-   , fUseLDA(kFALSE)
-   , fTreeOptDepth(0)
+TMVA::MethodKNN::MethodKNN(const TString &jobName, const TString &methodTitle, DataSetInfo &theData,
+                           const TString &theOption)
+   : TMVA::MethodBase(jobName, Types::kKNN, methodTitle, theData, theOption), fSumOfWeightsS(0), fSumOfWeightsB(0),
+     fModule(nullptr), fnkNN(0), fBalanceDepth(0), fScaleFrac(0), fSigmaFact(0), fTrim(kFALSE), fUseKernel(kFALSE),
+     fUseWeight(kFALSE), fUseLDA(kFALSE), fTreeOptDepth(0)
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor from weight file
 
-TMVA::MethodKNN::MethodKNN( DataSetInfo& theData,
-                            const TString& theWeightFile)
-   : TMVA::MethodBase( Types::kKNN, theData, theWeightFile)
-   , fSumOfWeightsS(0)
-   , fSumOfWeightsB(0)
-   , fModule(0)
-   , fnkNN(0)
-   , fBalanceDepth(0)
-   , fScaleFrac(0)
-   , fSigmaFact(0)
-   , fTrim(kFALSE)
-   , fUseKernel(kFALSE)
-   , fUseWeight(kFALSE)
-   , fUseLDA(kFALSE)
-   , fTreeOptDepth(0)
+TMVA::MethodKNN::MethodKNN(DataSetInfo &theData, const TString &theWeightFile)
+   : TMVA::MethodBase(Types::kKNN, theData, theWeightFile), fSumOfWeightsS(0), fSumOfWeightsB(0), fModule(nullptr),
+     fnkNN(0), fBalanceDepth(0), fScaleFrac(0), fSigmaFact(0), fTrim(kFALSE), fUseKernel(kFALSE), fUseWeight(kFALSE),
+     fUseLDA(kFALSE), fTreeOptDepth(0)
 {
 }
 
@@ -434,7 +411,7 @@ Double_t TMVA::MethodKNN::GetMvaValue( Double_t* err, Double_t* errUpper )
 
 const std::vector< Float_t >& TMVA::MethodKNN::GetRegressionValues()
 {
-   if( fRegressionReturnVal == 0 )
+   if (fRegressionReturnVal == nullptr)
       fRegressionReturnVal = new std::vector<Float_t>;
    else
       fRegressionReturnVal->clear();
@@ -517,7 +494,7 @@ const std::vector< Float_t >& TMVA::MethodKNN::GetRegressionValues()
 
 const TMVA::Ranking* TMVA::MethodKNN::CreateRanking()
 {
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -688,7 +665,7 @@ void TMVA::MethodKNN::WriteWeightsToStream(TFile &rf) const
 
    kNN::Event *event = new kNN::Event();
    TTree *tree = new TTree("knn", "event tree");
-   tree->SetDirectory(0);
+   tree->SetDirectory(nullptr);
    tree->Branch("event", "TMVA::kNN::Event", &event);
 
    Double_t size = 0.0;

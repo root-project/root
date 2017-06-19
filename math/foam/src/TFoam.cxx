@@ -175,43 +175,25 @@ private:
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor for streamer, user should not use it.
 
-TFoam::TFoam() :
-   fDim(0), fNCells(0), fRNmax(0),
-   fOptDrive(0), fChat(0), fOptRej(0),
-   fNBin(0), fNSampl(0), fEvPerBin(0),
-   fMaskDiv(0), fInhiDiv(0), fOptPRD(0), fXdivPRD(0),
-   fNoAct(0), fLastCe(0), fCells(0),
-   fMCMonit(0), fMaxWtRej(0), fCellsAct(0), fPrimAcu(0),
-   fHistEdg(0), fHistDbg(0), fHistWt(0),
-   fMCvect(0), fMCwt(0), fRvec(0),
-   fRho(0), fMethodCall(0), fPseRan(0),
-   fNCalls(0), fNEffev(0),
-   fSumWt(0), fSumWt2(0),
-   fSumOve(0), fNevGen(0),
-   fWtMax(0), fWtMin(0),
-   fPrime(0), fMCresult(0), fMCerror(0),
-   fAlpha(0)
+TFoam::TFoam()
+   : fDim(0), fNCells(0), fRNmax(0), fOptDrive(0), fChat(0), fOptRej(0), fNBin(0), fNSampl(0), fEvPerBin(0),
+     fMaskDiv(nullptr), fInhiDiv(nullptr), fOptPRD(0), fXdivPRD(nullptr), fNoAct(0), fLastCe(0), fCells(nullptr),
+     fMCMonit(nullptr), fMaxWtRej(0), fCellsAct(nullptr), fPrimAcu(nullptr), fHistEdg(nullptr), fHistDbg(nullptr),
+     fHistWt(nullptr), fMCvect(nullptr), fMCwt(0), fRvec(nullptr), fRho(nullptr), fMethodCall(nullptr),
+     fPseRan(nullptr), fNCalls(0), fNEffev(0), fSumWt(0), fSumWt2(0), fSumOve(0), fNevGen(0), fWtMax(0), fWtMin(0),
+     fPrime(0), fMCresult(0), fMCerror(0), fAlpha(nullptr)
 {
 }
 ////////////////////////////////////////////////////////////////////////////////
 /// User constructor, to be employed by the user
 
-TFoam::TFoam(const Char_t* Name) :
-   fDim(0), fNCells(0), fRNmax(0),
-   fOptDrive(0), fChat(0), fOptRej(0),
-   fNBin(0), fNSampl(0), fEvPerBin(0),
-   fMaskDiv(0), fInhiDiv(0), fOptPRD(0), fXdivPRD(0),
-   fNoAct(0), fLastCe(0), fCells(0),
-   fMCMonit(0), fMaxWtRej(0), fCellsAct(0), fPrimAcu(0),
-   fHistEdg(0), fHistDbg(0), fHistWt(0),
-   fMCvect(0), fMCwt(0), fRvec(0),
-   fRho(0), fMethodCall(0), fPseRan(0),
-   fNCalls(0), fNEffev(0),
-   fSumWt(0), fSumWt2(0),
-   fSumOve(0), fNevGen(0),
-   fWtMax(0), fWtMin(0),
-   fPrime(0), fMCresult(0), fMCerror(0),
-   fAlpha(0)
+TFoam::TFoam(const Char_t *Name)
+   : fDim(0), fNCells(0), fRNmax(0), fOptDrive(0), fChat(0), fOptRej(0), fNBin(0), fNSampl(0), fEvPerBin(0),
+     fMaskDiv(nullptr), fInhiDiv(nullptr), fOptPRD(0), fXdivPRD(nullptr), fNoAct(0), fLastCe(0), fCells(nullptr),
+     fMCMonit(nullptr), fMaxWtRej(0), fCellsAct(nullptr), fPrimAcu(nullptr), fHistEdg(nullptr), fHistDbg(nullptr),
+     fHistWt(nullptr), fMCvect(nullptr), fMCwt(0), fRvec(nullptr), fRho(nullptr), fMethodCall(nullptr),
+     fPseRan(nullptr), fNCalls(0), fNEffev(0), fSumWt(0), fSumWt2(0), fSumOve(0), fNevGen(0), fWtMax(0), fWtMin(0),
+     fPrime(0), fMCresult(0), fMCerror(0), fAlpha(nullptr)
 {
    if(strlen(Name)  >129) {
       Error("TFoam","Name too long %s \n",Name);
@@ -219,16 +201,16 @@ TFoam::TFoam(const Char_t* Name) :
    fName=Name;                                            // Class name
    fDate="  Release date:  2005.04.10";                   // Release date
    fVersion= "1.02M";                                     // Release version
-   fMaskDiv  = 0;             // Dynamic Mask for  cell division, h-cubic
-   fInhiDiv  = 0;             // Flag allowing to inhibit cell division in certain projection/edge
-   fXdivPRD  = 0;             // Lists of division values encoded in one vector per direction
-   fCells    = 0;
-   fAlpha    = 0;
-   fCellsAct = 0;
-   fPrimAcu  = 0;
-   fHistEdg  = 0;
-   fHistWt   = 0;
-   fHistDbg  = 0;
+   fMaskDiv = nullptr;                                    // Dynamic Mask for  cell division, h-cubic
+   fInhiDiv = nullptr; // Flag allowing to inhibit cell division in certain projection/edge
+   fXdivPRD = nullptr; // Lists of division values encoded in one vector per direction
+   fCells = nullptr;
+   fAlpha = nullptr;
+   fCellsAct = nullptr;
+   fPrimAcu = nullptr;
+   fHistEdg = nullptr;
+   fHistWt = nullptr;
+   fHistDbg = nullptr;
    fDim     = 0;                // dimension of hyp-cubical space
    fNCells   = 1000;             // Maximum number of Cells,    is usually re-set
    fNSampl   = 200;              // No of sampling when dividing cell
@@ -248,13 +230,13 @@ TFoam::TFoam(const Char_t* Name) :
    fWtMin = gHigh;               // Minimal weight
    fWtMax = gVlow;               // Maximal weight
    fMaxWtRej =1.10;              // Maximum weight in rejection for getting wt=1 events
-   fPseRan   = 0;                // Initialize private copy of random number generator
-   fMCMonit  = 0;                // MC efficiency monitoring
-   fRho = 0;                     // pointer to abstract class providing function to integrate
-   fMCvect   = 0;
-   fRvec     = 0;
-   fPseRan   = 0;                // generator of pseudorandom numbers
-   fMethodCall=0;                // ROOT's pointer to global distribution function
+   fPseRan = nullptr;            // Initialize private copy of random number generator
+   fMCMonit = nullptr;           // MC efficiency monitoring
+   fRho = nullptr;               // pointer to abstract class providing function to integrate
+   fMCvect = nullptr;
+   fRvec = nullptr;
+   fPseRan = nullptr;     // generator of pseudorandom numbers
+   fMethodCall = nullptr; // ROOT's pointer to global distribution function
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -264,7 +246,7 @@ TFoam::~TFoam()
 {
    Int_t i;
 
-   if(fCells!= 0) {
+   if (fCells != nullptr) {
       for(i=0; i<fNCells; i++) delete fCells[i]; // TFoamCell*[]
       delete [] fCells;
    }
@@ -276,7 +258,7 @@ TFoam::~TFoam()
    if (fMaskDiv) delete [] fMaskDiv; //int[]
    if (fInhiDiv) delete [] fInhiDiv; //int[]
 
-   if( fXdivPRD!= 0) {
+   if (fXdivPRD != nullptr) {
       for(i=0; i<fDim; i++) delete fXdivPRD[i]; // TFoamVect*[]
       delete [] fXdivPRD;
    }
@@ -378,8 +360,8 @@ void TFoam::Initialize()
       BXCLO;
    }
 
-   if(fPseRan==0) Error("Initialize", "Random number generator not set \n");
-   if(fRho==0 && fMethodCall==0 ) Error("Initialize", "Distribution function not set \n");
+   if (fPseRan == nullptr) Error("Initialize", "Random number generator not set \n");
+   if (fRho == nullptr && fMethodCall == nullptr) Error("Initialize", "Distribution function not set \n");
    if(fDim==0) Error("Initialize", "Zero dimension not allowed \n");
 
    /////////////////////////////////////////////////////////////////////////
@@ -388,29 +370,29 @@ void TFoam::Initialize()
    /////////////////////////////////////////////////////////////////////////
    fRNmax= fDim+1;
    fRvec = new Double_t[fRNmax];   // Vector of random numbers
-   if(fRvec==0)  Error("Initialize", "Cannot initialize buffer fRvec \n");
+   if (fRvec == nullptr) Error("Initialize", "Cannot initialize buffer fRvec \n");
 
    if(fDim>0){
       fAlpha = new Double_t[fDim];    // sum<1 for internal parametrization of the simplex
-      if(fAlpha==0)  Error("Initialize", "Cannot initialize buffer fAlpha \n" );
+      if (fAlpha == nullptr) Error("Initialize", "Cannot initialize buffer fAlpha \n");
    }
    fMCvect = new Double_t[fDim]; // vector generated in the MC run
-   if(fMCvect==0)  Error("Initialize", "Cannot initialize buffer fMCvect  \n" );
+   if (fMCvect == nullptr) Error("Initialize", "Cannot initialize buffer fMCvect  \n");
 
    //====== List of directions inhibited for division
-   if(fInhiDiv == 0){
+   if (fInhiDiv == nullptr) {
       fInhiDiv = new Int_t[fDim];
       for(i=0; i<fDim; i++) fInhiDiv[i]=0;
    }
    //====== Dynamic mask used in Explore for edge determination
-   if(fMaskDiv == 0){
+   if (fMaskDiv == nullptr) {
       fMaskDiv = new Int_t[fDim];
       for(i=0; i<fDim; i++) fMaskDiv[i]=1;
    }
    //====== List of predefined division values in all directions (initialized as empty)
-   if(fXdivPRD == 0){
+   if (fXdivPRD == nullptr) {
       fXdivPRD = new TFoamVect*[fDim];
-      for(i=0; i<fDim; i++)  fXdivPRD[i]=0; // Artificially extended beyond fDim
+      for (i = 0; i < fDim; i++) fXdivPRD[i] = nullptr; // Artificially extended beyond fDim
    }
    //====== Initialize list of histograms
    fHistWt  = new TH1D("HistWt","Histogram of MC weight",100,0.0, 1.5*fMaxWtRej); // MC weight
@@ -483,7 +465,7 @@ void TFoam::InitCells()
    Int_t i;
 
    fLastCe =-1;                             // Index of the last cell
-   if(fCells!= 0) {
+   if (fCells != nullptr) {
       for(i=0; i<fNCells; i++) delete fCells[i];
       delete [] fCells;
    }
@@ -493,12 +475,12 @@ void TFoam::InitCells()
       fCells[i]= new TFoamCell(fDim); // Allocate BIG list of cells
       fCells[i]->SetSerial(i);
    }
-   if(fCells==0) Error("InitCells", "Cannot initialize CELLS \n"  );
+   if (fCells == nullptr) Error("InitCells", "Cannot initialize CELLS \n");
 
    /////////////////////////////////////////////////////////////////////////////
    //              Single Root Hypercube                                      //
    /////////////////////////////////////////////////////////////////////////////
-   CellFill(1,   0);  //  0-th cell ACTIVE
+   CellFill(1, nullptr); //  0-th cell ACTIVE
 
    // Exploration of the root cell(s)
    for(Long_t iCell=0; iCell<=fLastCe; iCell++){
@@ -521,12 +503,12 @@ Int_t TFoam::CellFill(Int_t Status, TFoamCell *parent)
 
    cell = fCells[fLastCe];
 
-   cell->Fill(Status, parent, 0, 0);
+   cell->Fill(Status, parent, nullptr, nullptr);
 
    cell->SetBest( -1);         // pointer for planning division of the cell
    cell->SetXdiv(0.5);         // factor for division
    Double_t xInt2,xDri2;
-   if(parent!=0){
+   if (parent != nullptr) {
       xInt2  = 0.5*parent->GetIntg();
       xDri2  = 0.5*parent->GetDriv();
       cell->SetIntg(xInt2);
@@ -571,7 +553,7 @@ void TFoam::Explore(TFoamCell *cell)
 
    Double_t *xRand = new Double_t[fDim];
 
-   Double_t *volPart=0;
+   Double_t *volPart = nullptr;
 
    cell->CalcVolume();
    dx = cell->GetVolume();
@@ -635,7 +617,7 @@ void TFoam::Explore(TFoamCell *cell)
       for(k=0; k<fDim; k++) {
          rmin= cellPosi[k];
          rmax= cellPosi[k] +cellSize[k];
-         if( fXdivPRD[k] != 0) {
+         if (fXdivPRD[k] != nullptr) {
             Int_t n= (fXdivPRD[k])->GetDim();
             for(j=0; j<n; j++) {
                rdiv=(*fXdivPRD[k])[j];
@@ -685,7 +667,7 @@ void TFoam::Explore(TFoamCell *cell)
    cell->SetPrim(intPrim);
    // correct/update integrals in all parent cells to the top of the tree
    Double_t  parIntg, parDriv;
-   for(parent = cell->GetPare(); parent!=0; parent = parent->GetPare()){
+   for (parent = cell->GetPare(); parent != nullptr; parent = parent->GetPare()) {
       parIntg = parent->GetIntg();
       parDriv = parent->GetDriv();
       parent->SetIntg( parIntg   +intTrue -intOld );
@@ -788,7 +770,7 @@ void TFoam::Carver(Int_t &kBest, Double_t &xBest, Double_t &yBest)
    Int_t j;
 
    Double_t *bins  = new Double_t[fNBin];      // bins of histogram for single  PROJECTION
-   if(bins==0)    Error("Carver", "Cannot initialize buffer Bins \n" );
+   if (bins == nullptr) Error("Carver", "Cannot initialize buffer Bins \n");
 
    kBest =-1;
    xBest =0.5;
@@ -996,8 +978,8 @@ void TFoam::MakeActiveList()
    Long_t n, iCell;
    Double_t sum;
    // flush previous result
-   if(fPrimAcu  != 0) delete [] fPrimAcu;
-   if(fCellsAct != 0) delete fCellsAct;
+   if (fPrimAcu != nullptr) delete[] fPrimAcu;
+   if (fCellsAct != nullptr) delete fCellsAct;
 
    // Allocate tables of active cells
    fCellsAct = new TRefArray();
@@ -1018,7 +1000,7 @@ void TFoam::MakeActiveList()
    if(fPrime == 0.) Error("MakeActiveList", "Integrand function is zero  \n"  );
 
    fPrimAcu  = new  Double_t[fNoAct]; // cumulative primary for MC generation
-   if( fCellsAct==0 || fPrimAcu==0 ) Error("MakeActiveList", "Cant allocate fCellsAct or fPrimAcu \n");
+   if (fCellsAct == nullptr || fPrimAcu == nullptr) Error("MakeActiveList", "Cant allocate fCellsAct or fPrimAcu \n");
 
    sum =0.0;
    for(iCell=0; iCell<fNoAct; iCell++) {
@@ -1340,7 +1322,7 @@ void  TFoam::SetInhiDiv(Int_t iDim, Int_t InhiDiv)
 
 
    if(fDim==0) Error("TFoam","SetInhiDiv: fDim=0 \n");
-   if(fInhiDiv == 0) {
+   if (fInhiDiv == nullptr) {
       fInhiDiv = new Int_t[ fDim ];
       for(Int_t i=0; i<fDim; i++) fInhiDiv[i]=0;
    }
@@ -1367,15 +1349,14 @@ void  TFoam::SetXdivPRD(Int_t iDim, Int_t len, Double_t xDiv[])
    if(fDim<=0)  Error("SetXdivPRD", "fDim=0 \n");
    if(   len<1 )  Error("SetXdivPRD", "len<1 \n");
    // allocate list of pointers, if it was not done before
-   if(fXdivPRD == 0) {
+   if (fXdivPRD == nullptr) {
       fXdivPRD = new TFoamVect*[fDim];
-      for(i=0; i<fDim; i++)  fXdivPRD[i]=0;
+      for (i = 0; i < fDim; i++) fXdivPRD[i] = nullptr;
    }
   // set division list for direction iDim in H-cubic space!!!
    if( ( 0<=iDim) && (iDim<fDim)) {
       fOptPRD =1;      // !!!!
-      if( fXdivPRD[iDim] != 0)
-         Error("SetXdivPRD", "Second allocation of XdivPRD not allowed \n");
+      if (fXdivPRD[iDim] != nullptr) Error("SetXdivPRD", "Second allocation of XdivPRD not allowed \n");
       fXdivPRD[iDim] = new TFoamVect(len); // allocate list of division points
       for(i=0; i<len; i++) {
          (*fXdivPRD[iDim])[i]=xDiv[i]; // set list of division points
@@ -1411,16 +1392,16 @@ void TFoam::CheckAll(Int_t level)
    for(iCell=1; iCell<=fLastCe; iCell++) {
       cell = fCells[iCell];
       //  checking general rules
-      if( ((cell->GetDau0()==0) && (cell->GetDau1()!=0) ) ||
-         ((cell->GetDau1()==0) && (cell->GetDau0()!=0) ) ) {
+      if (((cell->GetDau0() == nullptr) && (cell->GetDau1() != nullptr)) ||
+          ((cell->GetDau1() == nullptr) && (cell->GetDau0() != nullptr))) {
          errors++;
          if (level==1) Error("CheckAll","ERROR: Cell's no %ld has only one daughter \n",iCell);
       }
-      if( (cell->GetDau0()==0) && (cell->GetDau1()==0) && (cell->GetStat()==0) ) {
+      if ((cell->GetDau0() == nullptr) && (cell->GetDau1() == nullptr) && (cell->GetStat() == 0)) {
          errors++;
          if (level==1) Error("CheckAll","ERROR: Cell's no %ld  has no daughter and is inactive \n",iCell);
       }
-      if( (cell->GetDau0()!=0) && (cell->GetDau1()!=0) && (cell->GetStat()==1) ) {
+      if ((cell->GetDau0() != nullptr) && (cell->GetDau1() != nullptr) && (cell->GetStat() == 1)) {
          errors++;
          if (level==1) Error("CheckAll","ERROR: Cell's no %ld has two daughters and is active \n",iCell);
       }
@@ -1434,13 +1415,13 @@ void TFoam::CheckAll(Int_t level)
       }
 
       // checking daughters
-      if(cell->GetDau0()!=0) {
+      if (cell->GetDau0() != nullptr) {
          if(cell != (cell->GetDau0())->GetPare()) {
             errors++;
             if (level==1)  Error("CheckAll","ERROR: Cell's no %ld daughter 0 not pointing to this cell \n",iCell);
          }
       }
-      if(cell->GetDau1()!=0) {
+      if (cell->GetDau1() != nullptr) {
          if(cell != (cell->GetDau1())->GetPare()) {
             errors++;
             if (level==1) Error("CheckAll","ERROR: Cell's no %ld daughter 1 not pointing to this cell \n",iCell);

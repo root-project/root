@@ -510,7 +510,7 @@ Int_t AnalysePS(const TString &filename)
 
    FILE *fp;
    Int_t status;
-   if ((fp=fopen(filename.Data(), "r"))==NULL) {
+   if ((fp = fopen(filename.Data(), "r")) == nullptr) {
       printf("ERROR1 : File can not open !..\n");
       return 0;
    }
@@ -623,7 +623,7 @@ void DoCcode(TCanvas *C)
    if (C) {
       C->SaveAs(gCfile);
       delete C;
-      C = 0;
+      C = nullptr;
    }
 
    gErrorIgnoreLevel = 0;
@@ -1428,7 +1428,7 @@ void tgaxis3()
    TCanvas *C = StartTest(700,900);
 
    time_t script_time;
-   script_time = time(0);
+   script_time = time(nullptr);
    script_time = 3600*(int)(script_time/3600);
    gStyle->SetTimeOffset(script_time);
    C->Divide(1,3);
@@ -2444,7 +2444,7 @@ void tgraph2d2()
    Double_t Px = 6.;
    Double_t Py = 6.;
    Int_t np    = 1000;
-   Double_t *rx=0, *ry=0, *rz=0;
+   Double_t *rx = nullptr, *ry = nullptr, *rz = nullptr;
    rx = new Double_t[np];
    ry = new Double_t[np];
    rz = new Double_t[np];
@@ -2488,7 +2488,7 @@ void tgraph2d3()
    Double_t Px = 6.;
    Double_t Py = 6.;
    Int_t np    = 200;
-   Double_t *rx=0, *ry=0, *rz=0;
+   Double_t *rx = nullptr, *ry = nullptr, *rz = nullptr;
    rx = new Double_t[np];
    ry = new Double_t[np];
    rz = new Double_t[np];

@@ -64,7 +64,7 @@ ClassImp(TPointsArray3D);
 TPointsArray3D::TPointsArray3D()
 {
    fN = 0;
-   fP = 0;
+   fP = nullptr;
    fLastPoint = -1;
    fGLList = 0;
    fLastPoint = 0;
@@ -162,8 +162,8 @@ TPointsArray3D::~TPointsArray3D()
 ////////////////////////////////////////////////////////////////////////////////
 ///to be documented
 
-TPointsArray3D::TPointsArray3D(const TPointsArray3D &point) : TPoints3DABC(point),
-                                                              fN(point.fN),fP(0),fGLList(point.fGLList),fLastPoint(point.fLastPoint)
+TPointsArray3D::TPointsArray3D(const TPointsArray3D &point)
+   : TPoints3DABC(point), fN(point.fN), fP(nullptr), fGLList(point.fGLList), fLastPoint(point.fLastPoint)
 {
    ((TPointsArray3D&)point).Copy(*this);
 }

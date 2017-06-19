@@ -201,12 +201,8 @@ The following types of plots are provided:
 /// fDefaultPainter is 0. In each function, which use it, I have to check the pointer first.
 
 TGLHistPainter::TGLHistPainter(TH1 *hist)
-                   : fDefaultPainter(TVirtualHistPainter::HistPainter(hist)),
-                     fEq(0),
-                     fHist(hist),
-                     fF3(0),
-                     fStack(0),
-                     fPlotType(kGLDefaultPlot)//THistPainter
+   : fDefaultPainter(TVirtualHistPainter::HistPainter(hist)), fEq(nullptr), fHist(hist), fF3(nullptr), fStack(nullptr),
+     fPlotType(kGLDefaultPlot) // THistPainter
 {
 }
 
@@ -214,11 +210,7 @@ TGLHistPainter::TGLHistPainter(TH1 *hist)
 ///This ctor creates gl-parametric plot's painter.
 
 TGLHistPainter::TGLHistPainter(TGLParametricEquation *equation)
-                   : fEq(equation),
-                     fHist(0),
-                     fF3(0),
-                     fStack(0),
-                     fPlotType(kGLParametricPlot)//THistPainter
+   : fEq(equation), fHist(nullptr), fF3(nullptr), fStack(nullptr), fPlotType(kGLParametricPlot) // THistPainter
 {
    fGLPainter.reset(new TGLParametricPlot(equation, &fCamera));
 }
@@ -227,11 +219,7 @@ TGLHistPainter::TGLHistPainter(TGLParametricEquation *equation)
 ///This ctor creates plot painter for TGL5DDataSet.
 
 TGLHistPainter::TGLHistPainter(TGL5DDataSet *data)
-                   : fEq(0),
-                     fHist(0),
-                     fF3(0),
-                     fStack(0),
-                     fPlotType(kGL5D)//THistPainter
+   : fEq(nullptr), fHist(nullptr), fF3(nullptr), fStack(nullptr), fPlotType(kGL5D) // THistPainter
 {
    fGLPainter.reset(new TGL5DPainter(data, &fCamera, &fCoord));
 }
@@ -240,11 +228,7 @@ TGLHistPainter::TGLHistPainter(TGL5DDataSet *data)
 ///This ctor creates plot painter for TGL5DDataSet.
 
 TGLHistPainter::TGLHistPainter(TGLTH3Composition *data)
-                   : fEq(0),
-                     fHist(data),
-                     fF3(0),
-                     fStack(0),
-                     fPlotType(kGLTH3Composition)
+   : fEq(nullptr), fHist(data), fF3(nullptr), fStack(nullptr), fPlotType(kGLTH3Composition)
 {
    fGLPainter.reset(new TGLTH3CompositionPainter(data, &fCamera, &fCoord));
 }
@@ -439,7 +423,7 @@ void TGLHistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
 TList *TGLHistPainter::GetContourList(Double_t contour)const
 {
-   return fDefaultPainter.get() ? fDefaultPainter->GetContourList(contour) : 0;
+   return fDefaultPainter.get() ? fDefaultPainter->GetContourList(contour) : nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -693,7 +677,7 @@ void TGLHistPainter::CreatePainter(const PlotOption_t &option, const TString &ad
 {
    if (option.fPlotType != fPlotType) {
       fCoord.ResetModified();
-      fGLPainter.reset(0);
+      fGLPainter.reset(nullptr);
    }
 
    if (option.fPlotType == kGLLegoPlot) {

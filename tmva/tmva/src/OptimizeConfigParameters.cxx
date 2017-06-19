@@ -58,16 +58,11 @@ ClassImp(TMVA::OptimizeConfigParameters);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor which sets either "Classification or Regression"
 
-TMVA::OptimizeConfigParameters::OptimizeConfigParameters(MethodBase * const method, std::map<TString,TMVA::Interval*> tuneParameters, TString fomType, TString optimizationFitType)
-:  fMethod(method),
-   fTuneParameters(tuneParameters),
-   fFOMType(fomType),
-   fOptimizationFitType(optimizationFitType),
-   fMvaSig(NULL),
-   fMvaBkg(NULL),
-   fMvaSigFineBin(NULL),
-   fMvaBkgFineBin(NULL),
-   fNotDoneYet(kFALSE)
+TMVA::OptimizeConfigParameters::OptimizeConfigParameters(MethodBase *const method,
+                                                         std::map<TString, TMVA::Interval *> tuneParameters,
+                                                         TString fomType, TString optimizationFitType)
+   : fMethod(method), fTuneParameters(tuneParameters), fFOMType(fomType), fOptimizationFitType(optimizationFitType),
+     fMvaSig(nullptr), fMvaBkg(nullptr), fMvaSigFineBin(nullptr), fMvaBkgFineBin(nullptr), fNotDoneYet(kFALSE)
 {
    std::string name = "OptimizeConfigParameters_";
    name += std::string(GetMethod()->GetName());
@@ -259,7 +254,7 @@ void TMVA::OptimizeConfigParameters::optimizeFit()
 
    // create the fitter
 
-   FitterBase* fitter = NULL;
+   FitterBase *fitter = nullptr;
 
    if ( fOptimizationFitType == "Minuit"  ) {
       TString opt="";

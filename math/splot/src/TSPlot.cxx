@@ -430,25 +430,19 @@ The results above can be obtained by running the tutorial TestSPlot.C
 ////////////////////////////////////////////////////////////////////////////////
 /// default constructor (used by I/O only)
 
-TSPlot::TSPlot() :
- fTree(0),
- fTreename(0),
- fVarexp(0),
- fSelection(0)
+TSPlot::TSPlot() : fTree(nullptr), fTreename(nullptr), fVarexp(nullptr), fSelection(nullptr)
 {
    fNx = 0;
    fNy=0;
    fNevents = 0;
    fNSpecies=0;
-   fNumbersOfEvents=0;
+   fNumbersOfEvents = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-TSPlot::TSPlot(Int_t nx, Int_t ny, Int_t ne, Int_t ns, TTree *tree) :
- fTreename(0),
- fVarexp(0),
- fSelection(0)
+TSPlot::TSPlot(Int_t nx, Int_t ny, Int_t ne, Int_t ns, TTree *tree)
+   : fTreename(nullptr), fVarexp(nullptr), fSelection(nullptr)
 
 {
    //normal TSPlot constructor
@@ -468,7 +462,7 @@ TSPlot::TSPlot(Int_t nx, Int_t ny, Int_t ne, Int_t ns, TTree *tree) :
    fYpdf.ResizeTo(fNevents, fNSpecies*fNy);
    fSWeights.ResizeTo(fNevents, fNSpecies*(fNy+1));
    fTree = tree;
-   fNumbersOfEvents = 0;
+   fNumbersOfEvents = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -493,26 +487,26 @@ void TSPlot::Browse(TBrowser *b)
 {
    if (!fSWeightsHists.IsEmpty()) {
       TIter next(&fSWeightsHists);
-      TH1D* h = 0;
+      TH1D *h = nullptr;
       while ((h = (TH1D*)next()))
          b->Add(h,h->GetName());
    }
 
    if (!fYpdfHists.IsEmpty()) {
       TIter next(&fYpdfHists);
-      TH1D* h = 0;
+      TH1D *h = nullptr;
       while ((h = (TH1D*)next()))
          b->Add(h,h->GetName());
    }
    if (!fYvarHists.IsEmpty()) {
       TIter next(&fYvarHists);
-      TH1D* h = 0;
+      TH1D *h = nullptr;
       while ((h = (TH1D*)next()))
          b->Add(h,h->GetName());
    }
    if (!fXvarHists.IsEmpty()) {
       TIter next(&fXvarHists);
-      TH1D* h = 0;
+      TH1D *h = nullptr;
       while ((h = (TH1D*)next()))
          b->Add(h,h->GetName());
    }
@@ -560,8 +554,7 @@ void TSPlot::MakeSPlot(Option_t *option)
          delete TVirtualFitter::GetFitter();
    }
 
-
-   TVirtualFitter *minuit = TVirtualFitter::Fitter(0, 2);
+   TVirtualFitter *minuit = TVirtualFitter::Fitter(nullptr, 2);
    fPdfTot.ResizeTo(fNevents, fNSpecies);
 
    //now let's do it, excluding different yvars
@@ -1019,7 +1012,7 @@ void TSPlot::SetTreeSelection(const char* varexp, const char *selection, Long64_
 
 
 //*-*- Compile selection expression if there is one
-   TTreeFormula *select = 0;
+   TTreeFormula *select = nullptr;
    if (selection && strlen(selection)) {
       select = new TTreeFormula("Selection",selection,fTree);
       if (!select) return;
@@ -1053,7 +1046,7 @@ void TSPlot::SetTreeSelection(const char* varexp, const char *selection, Long64_
    }
 
 //*-*- Create a TreeFormulaManager to coordinate the formulas
-   TTreeFormulaManager *manager=0;
+   TTreeFormulaManager *manager = nullptr;
    if (formulaList->LastIndex()>=0) {
       manager = new TTreeFormulaManager;
       for(i=0;i<=formulaList->LastIndex();i++) {

@@ -24,8 +24,8 @@ ClassImp(TRootSnifferStore);
    ////////////////////////////////////////////////////////////////////////////////
    /// normal constructor
 
-   TRootSnifferStore::TRootSnifferStore()
-   : TObject(), fResPtr(0), fResClass(0), fResMember(0), fResNumChilds(-1), fResRestrict(0)
+TRootSnifferStore::TRootSnifferStore()
+   : TObject(), fResPtr(nullptr), fResClass(nullptr), fResMember(nullptr), fResNumChilds(-1), fResRestrict(0)
 {
 }
 
@@ -73,7 +73,7 @@ ClassImp(TRootSnifferStoreXml);
 
 void TRootSnifferStoreXml::SetField(Int_t, const char *field, const char *value, Bool_t)
 {
-   if (strpbrk(value, "<>&\'\"") == 0) {
+   if (strpbrk(value, "<>&\'\"") == nullptr) {
       fBuf->Append(TString::Format(" %s=\"%s\"", field, value));
    } else {
       fBuf->Append(TString::Format(" %s=\"", field));

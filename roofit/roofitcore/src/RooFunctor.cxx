@@ -70,7 +70,7 @@ RooFunctor::RooFunctor(const RooAbsReal& func, const RooArgList& observables, co
   allVars.add(parameters) ;
 
   // Create RooFit function binding
-  _binding = new RooRealBinding(func,allVars,&_nset,kFALSE,0) ;
+  _binding = new RooRealBinding(func, allVars, &_nset, kFALSE, nullptr);
   _ownBinding = kTRUE ;
 
   // Allocate transfer array
@@ -92,7 +92,7 @@ RooFunctor::RooFunctor(const RooAbsReal& func, const RooArgList& observables, co
   allVars.add(parameters) ;
 
   // Create RooFit function binding
-  _binding = new RooRealBinding(func,allVars,&_nset,kFALSE,0) ;
+  _binding = new RooRealBinding(func, allVars, &_nset, kFALSE, nullptr);
   _ownBinding = kTRUE ;
 
   // Allocate transfer array
@@ -105,12 +105,8 @@ RooFunctor::RooFunctor(const RooAbsReal& func, const RooArgList& observables, co
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooFunctor::RooFunctor(const RooFunctor& other) :
-  _ownBinding(other._ownBinding),
-  _nset(other._nset),
-  _binding(0),
-  _npar(other._npar),
-  _nobs(other._nobs)
+RooFunctor::RooFunctor(const RooFunctor &other)
+   : _ownBinding(other._ownBinding), _nset(other._nset), _binding(nullptr), _npar(other._npar), _nobs(other._nobs)
 {
   if (other._ownBinding) {
     _binding = new RooRealBinding((RooRealBinding&)*other._binding,&_nset) ;

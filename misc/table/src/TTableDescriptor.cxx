@@ -26,7 +26,7 @@
 // TTableDescriptor - run-time descriptor of the TTable object rows.
 //______________________________________________________________________________
 
-TTableDescriptor *TTableDescriptor::fgColDescriptors = 0;
+TTableDescriptor *TTableDescriptor::fgColDescriptors = nullptr;
 // TString TTableDescriptor::fgCommentsName = TTableDescriptor::SetCommentsSetName();
 TString TTableDescriptor::fgCommentsName = ".comments";
 TableClassImp(TTableDescriptor,tableDescriptor_st);
@@ -61,7 +61,7 @@ void TTableDescriptor::SetCommentsSetName(const char *name)
 
 void TTableDescriptor::Streamer(TBuffer &R__b)
 {
-   fSecondDescriptor = 0;
+   fSecondDescriptor = nullptr;
    TTable::Streamer(R__b);
 }
 
@@ -69,7 +69,7 @@ void TTableDescriptor::Streamer(TBuffer &R__b)
 ///to be documented
 
 TTableDescriptor::TTableDescriptor(const TTable *parentTable)
- : TTable("tableDescriptor",sizeof(tableDescriptor_st)), fRowClass(0),fSecondDescriptor(0)
+   : TTable("tableDescriptor", sizeof(tableDescriptor_st)), fRowClass(nullptr), fSecondDescriptor(nullptr)
 {
    if (parentTable) {
       TClass *classPtr = parentTable->GetRowClass();
@@ -84,7 +84,7 @@ TTableDescriptor::TTableDescriptor(const TTable *parentTable)
 /// "plain" C_struture only !!!
 
 TTableDescriptor::TTableDescriptor(TClass *classPtr)
- : TTable("tableDescriptor",sizeof(tableDescriptor_st)),fRowClass(0),fSecondDescriptor(0)
+   : TTable("tableDescriptor", sizeof(tableDescriptor_st)), fRowClass(nullptr), fSecondDescriptor(nullptr)
 {
    Init(classPtr);
 }
@@ -105,7 +105,7 @@ TTableDescriptor::~TTableDescriptor()
 #endif
    if (fSecondDescriptor != this) {
       delete fSecondDescriptor;
-      fSecondDescriptor = 0;
+      fSecondDescriptor = nullptr;
    }
 }
 
@@ -116,7 +116,7 @@ Int_t TTableDescriptor::AddAt(const void *c)
 {
    if (!c) return -1;
    TDataSet *cmnt = MakeCommentField();
-   R__ASSERT(cmnt!=0);
+   R__ASSERT(cmnt != nullptr);
 
    return TTable::AddAt(c);
 }
@@ -154,7 +154,7 @@ void TTableDescriptor::AddAt(const tableDescriptor_st &element,const char *comme
 {
    TTable::AddAt(&element,indx);
    TDataSet *cmnt = MakeCommentField();
-   R__ASSERT(cmnt!=0);
+   R__ASSERT(cmnt != nullptr);
    TDataSet *comment = new TDataSet(element.fColumnName);
    comment->SetTitle(commentText);
    cmnt->AddAtAndExpand(comment,indx);
@@ -213,7 +213,7 @@ TString TTableDescriptor::CreateLeafList() const
 
 void TTableDescriptor::Init(TClass *classPtr)
 {
-   fSecondDescriptor = 0;
+   fSecondDescriptor = nullptr;
    SetType("tableDescriptor");
    if (classPtr) {
       fRowClass = classPtr; // remember my row class
@@ -265,7 +265,7 @@ void TTableDescriptor::LearnTable(TClass *classPtr)
    ReAllocate(classPtr->GetListOfDataMembers()->GetSize());
    Int_t columnIndex = 0;
    TIter next(classPtr->GetListOfDataMembers());
-   TDataMember *member = 0;
+   TDataMember *member = nullptr;
    while ( (member = (TDataMember *) next()) ) {
       memset(&elementDescriptor,0,sizeof(tableDescriptor_st));
       varname = (Char_t *) member->GetName();
@@ -283,7 +283,7 @@ void TTableDescriptor::LearnTable(TClass *classPtr)
          elementDescriptor.fType = TTable::GetTypeId(typeName);
       } else {
          TDataType *memberType = member->GetDataType();
-         R__ASSERT(memberType!=0);
+         R__ASSERT(memberType != nullptr);
          elementDescriptor.fTypeSize = memberType->Size();
          elementDescriptor.fType = TTable::GetTypeId(memberType->GetTypeName());
       }
@@ -327,10 +327,10 @@ void TTableDescriptor::LearnTable(TClass *classPtr)
 
 TTableDescriptor *TTableDescriptor::MakeDescriptor(const char *structName)
 {
-   TTableDescriptor *dsc = 0;
+   TTableDescriptor *dsc = nullptr;
    TClass *cl = TClass::GetClass(structName, kTRUE);
 //    TClass *cl = new TClass(structName,1,0,0);
-   R__ASSERT(cl!=0);
+   R__ASSERT(cl != nullptr);
    dsc = new TTableDescriptor(cl);
    return dsc;
 }
@@ -409,7 +409,7 @@ Int_t TTableDescriptor::ColumnByName(const Char_t *columnName) const
    Int_t i = -1;
    if (!elementDescriptor) return i;
    Int_t nRows = GetNRows();
-   char *bracket = 0;
+   char *bracket = nullptr;
    if (nRows) {
       char *name = StrDup(columnName);
       if ((bracket = strchr(name,'[')) )  *bracket = 0;
@@ -438,7 +438,7 @@ Int_t TTableDescriptor::Offset(const Char_t *columnName) const
       Int_t indx = ColumnByName(columnName);
       if (indx >= 0 ) {
          offset = Offset(indx);
-         const char *openBracket = 0;
+         const char *openBracket = nullptr;
          if ( (openBracket = strchr(columnName,'['))  )
             offset += atoi(openBracket+1)*TypeSize(indx);
       }

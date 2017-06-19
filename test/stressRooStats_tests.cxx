@@ -617,7 +617,8 @@ public:
          RooAbsReal::defaultIntegratorConfig()->method1D().setLabel("RooAdaptiveGaussKronrodIntegrator1D");
 
          // Uniform prior on mean
-         BayesianCalculator *bc = new BayesianCalculator(*data, *w->pdf("poiss"), *w->set("poi"), *w->pdf("prior"), NULL);
+         BayesianCalculator *bc =
+            new BayesianCalculator(*data, *w->pdf("poiss"), *w->set("poi"), *w->pdf("prior"), nullptr);
          bc->SetConfidenceLevel(fConfidenceLevel);
          bc->SetScanOfPosterior(numberScans);
          SimpleInterval *interval = bc->GetInterval();
@@ -628,7 +629,7 @@ public:
          delete interval;
 
          // Inverse of mean prior
-         bc = new BayesianCalculator(*data, *w->pdf("poiss"), *w->set("poi"), *w->pdf("priorInv"), NULL);
+         bc = new BayesianCalculator(*data, *w->pdf("poiss"), *w->set("poi"), *w->pdf("priorInv"), nullptr);
          bc->SetConfidenceLevel(fConfidenceLevel);
          bc->SetScanOfPosterior(numberScans);
          interval = bc->GetInterval();
@@ -639,7 +640,7 @@ public:
          delete interval;
 
          // Square root of inverse of mean prior
-         bc = new BayesianCalculator(*data, *w->pdf("poiss"), *w->set("poi"), *w->pdf("priorInvSqrt"), NULL);
+         bc = new BayesianCalculator(*data, *w->pdf("poiss"), *w->set("poi"), *w->pdf("priorInvSqrt"), nullptr);
          bc->SetConfidenceLevel(fConfidenceLevel);
          bc->SetScanOfPosterior(numberScans);
          interval = bc->GetInterval();
@@ -650,7 +651,7 @@ public:
          delete interval;
 
          // Gamma distribution prior
-         bc = new BayesianCalculator(*data, *w->pdf("poiss"), *w->set("poi"), *w->pdf("priorGamma"), NULL);
+         bc = new BayesianCalculator(*data, *w->pdf("poiss"), *w->set("poi"), *w->pdf("priorGamma"), nullptr);
          bc->SetConfidenceLevel(fConfidenceLevel);
          bc->SetScanOfPosterior(numberScans);
          interval = bc->GetInterval();
@@ -747,7 +748,8 @@ public:
          RooAbsReal::defaultIntegratorConfig()->method1D().setLabel("RooAdaptiveGaussKronrodIntegrator1D");
 
          // Uniform prior on mean
-         BayesianCalculator *bc = new BayesianCalculator(*data, *w->pdf("poiss"), *w->set("poi"), *w->pdf("prior"), NULL);
+         BayesianCalculator *bc =
+            new BayesianCalculator(*data, *w->pdf("poiss"), *w->set("poi"), *w->pdf("prior"), nullptr);
          bc->SetConfidenceLevel(confidenceLevel);
          bc->SetShortestInterval();
          bc->SetScanOfPosterior(numberScans);
@@ -759,7 +761,7 @@ public:
          delete interval;
 
          // Inverse of mean prior
-         bc = new BayesianCalculator(*data, *w->pdf("poiss"), *w->set("poi"), *w->pdf("priorInv"), NULL);
+         bc = new BayesianCalculator(*data, *w->pdf("poiss"), *w->set("poi"), *w->pdf("priorInv"), nullptr);
          bc->SetConfidenceLevel(confidenceLevel);
          bc->SetShortestInterval();
          bc->SetScanOfPosterior(numberScans);
@@ -1493,7 +1495,7 @@ public:
       AsymptoticCalculator::SetPrintLevel(_verb);
       HypoTestCalculatorGeneric *calc =
          buildHypoTestCalculator(fCalculatorType, *w->data("data"), *sbModel, *bModel, 100, 1);
-      HypoTestInverter *hti = new HypoTestInverter(*calc, NULL, 1.0 - fConfidenceLevel);
+      HypoTestInverter *hti = new HypoTestInverter(*calc, nullptr, 1.0 - fConfidenceLevel);
       hti->SetTestStatistic(*buildTestStatistic(fTestStatType, *sbModel, *bModel));
       hti->SetVerbose(_verb);
 
@@ -1543,7 +1545,7 @@ public:
                for (int i = 0; i < n; ++i) {
                   if (n > 1) c2->cd(i + 1);
                   SamplingDistPlot *pl = plot->MakeTestStatPlot(i);
-                  if (pl == NULL) return kTRUE;
+                  if (pl == nullptr) return kTRUE;
                   pl->SetLogYaxis(kTRUE);
                   pl->Draw();
                }
@@ -1661,7 +1663,7 @@ public:
       AsymptoticCalculator::SetPrintLevel(_verb);
       HypoTestCalculatorGeneric *calc =
          buildHypoTestCalculator(fCalculatorType, *w->data("data"), *sbModel, *bModel, 100, 100);
-      HypoTestInverter *hti = new HypoTestInverter(*calc, NULL, 1.0 - fConfidenceLevel);
+      HypoTestInverter *hti = new HypoTestInverter(*calc, nullptr, 1.0 - fConfidenceLevel);
       hti->SetTestStatistic(*buildTestStatistic(fTestStatType, *sbModel, *bModel));
       hti->SetVerbose(_verb);
 
@@ -1728,7 +1730,7 @@ public:
                for (int i = 0; i < n; ++i) {
                   if (n > 1) c2->cd(i + 1);
                   SamplingDistPlot *pl = plot->MakeTestStatPlot(i);
-                  if (pl == NULL) return kTRUE;
+                  if (pl == nullptr) return kTRUE;
                   pl->SetLogYaxis(kTRUE);
                   pl->Draw();
                }
@@ -1906,7 +1908,7 @@ public:
 
 static HypoTestCalculatorGeneric * buildHypoTestCalculator(const ECalculatorType calculatorType, RooAbsData &data, const ModelConfig &nullModel, const ModelConfig &altModel, const UInt_t toysNull, const UInt_t toysAlt)
 {
-   HypoTestCalculatorGeneric *calc = NULL;
+   HypoTestCalculatorGeneric *calc = nullptr;
 
    if(calculatorType == kAsymptotic) {
       AsymptoticCalculator *ac = new AsymptoticCalculator(data, altModel, nullModel);
@@ -1924,7 +1926,7 @@ static HypoTestCalculatorGeneric * buildHypoTestCalculator(const ECalculatorType
       calc = hc;
    }
 
-   assert(calc != NULL); // sanity check - should never happen
+   assert(calc != nullptr); // sanity check - should never happen
 
    return calc;
 }
@@ -1932,7 +1934,7 @@ static HypoTestCalculatorGeneric * buildHypoTestCalculator(const ECalculatorType
 static TestStatistic *buildTestStatistic(const ETestStatType testStatType, const ModelConfig &nullModel, const ModelConfig &altModel)
 {
 
-   TestStatistic *testStat = NULL;
+   TestStatistic *testStat = nullptr;
 
    if (testStatType == kSimpleLR) {
       SimpleLikelihoodRatioTestStat *slrts = new SimpleLikelihoodRatioTestStat(*nullModel.GetPdf(), *altModel.GetPdf());
@@ -1967,7 +1969,7 @@ static TestStatistic *buildTestStatistic(const ETestStatType testStatType, const
       testStat = plts;
    }
 
-   assert(testStat != NULL); // sanity check - should never happen
+   assert(testStat != nullptr); // sanity check - should never happen
 
    return testStat;
 }

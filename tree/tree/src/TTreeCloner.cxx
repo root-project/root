@@ -398,7 +398,7 @@ UInt_t TTreeCloner::CollectBranches(TObjArray *from, TObjArray *to)
          }
          if (fi==firstfi) {
             // We tried all the branches and there is not match.
-            fb = 0;
+            fb = nullptr;
             break;
          }
          fb = (TBranch*) from->UncheckedAt(fi);
@@ -491,7 +491,7 @@ void TTreeCloner::CopyStreamerInfos()
       if (oldInfo->IsA() != TStreamerInfo::Class()) {
          continue;
       }
-      TStreamerInfo *curInfo = 0;
+      TStreamerInfo *curInfo = nullptr;
       TClass *cl = TClass::GetClass(oldInfo->GetName());
 
       if (!cl->IsLoaded() || cl->GetNew()) {
@@ -523,12 +523,12 @@ void TTreeCloner::CopyStreamerInfos()
 
 void TTreeCloner::CopyMemoryBaskets()
 {
-   TBasket *basket = 0;
+   TBasket *basket = nullptr;
    for(Int_t i=0; i<fToBranches.GetEntries(); ++i) {
       TBranch *from = (TBranch*)fFromBranches.UncheckedAt( i );
       TBranch *to   = (TBranch*)fToBranches.UncheckedAt( i );
 
-      basket = from->GetListOfBaskets()->GetEntries() ? from->GetBasket(from->GetWriteBasket()) : 0;
+      basket = from->GetListOfBaskets()->GetEntries() ? from->GetBasket(from->GetWriteBasket()) : nullptr;
       if (basket) {
          basket = (TBasket*)basket->Clone();
          basket->SetBranch(to);
@@ -538,7 +538,7 @@ void TTreeCloner::CopyMemoryBaskets()
       }
       // In older files, if the branch is a TBranchElement non-terminal 'object' branch, it's basket will contain 0
       // events, in newer file in the same case, the write basket will be missing.
-      if (from->GetEntries()!=0 && from->GetWriteBasket()==0 && (basket==0 || basket->GetNevBuf()==0)) {
+      if (from->GetEntries() != 0 && from->GetWriteBasket() == 0 && (basket == nullptr || basket->GetNevBuf() == 0)) {
          to->SetEntries(to->GetEntries()+from->GetEntries());
       }
    }
@@ -562,7 +562,7 @@ void TTreeCloner::CopyProcessIds()
    TDirectory::TContext cur(fromfile);
    while ((key = (TKey*)next())) {
       if (!strcmp(key->GetClassName(),"TProcessID")) {
-         TProcessID *pid = (TProcessID*)key->ReadObjectAny(0);
+         TProcessID *pid = (TProcessID *)key->ReadObjectAny(nullptr);
          if (!pid) continue;
 
          //UShort_t out = TProcessID::WriteProcessID(id,tofile);

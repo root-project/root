@@ -30,7 +30,7 @@ The moving box in a TSlider
 
 TSliderBox::TSliderBox(): TWbox()
 {
-   fSlider = 0;
+   fSlider = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -39,7 +39,7 @@ TSliderBox::TSliderBox(): TWbox()
 TSliderBox::TSliderBox(Double_t x1, Double_t y1,Double_t x2, Double_t  y2, Color_t color, Short_t bordersize, Short_t bordermode)
            :TWbox(x1,y1,x2,y2,color,bordersize,bordermode)
 {
-   fSlider = 0;
+   fSlider = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

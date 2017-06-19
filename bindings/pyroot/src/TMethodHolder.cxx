@@ -39,8 +39,8 @@ inline void PyROOT::TMethodHolder::Copy_( const TMethodHolder& /* other */ )
 // fScope and fMethod handled separately
 
 // do not copy caches
-   fExecutor   = 0;
-   fArgsRequired = -1;
+fExecutor = nullptr;
+fArgsRequired = -1;
 
 // being uninitialized will trigger setting up caches as appropriate
    fIsInitialized  = kFALSE;
@@ -115,13 +115,13 @@ inline PyObject* PyROOT::TMethodHolder::CallFast( void* self, ptrdiff_t offset, 
 
 inline PyObject* PyROOT::TMethodHolder::CallSafe( void* self, ptrdiff_t offset, TCallContext* ctxt )
 {
-   PyObject* result = 0;
+   PyObject *result = nullptr;
 
    TRY {       // ROOT "try block"
       result = CallFast( self, offset, ctxt );
    } CATCH( excode ) {
       PyErr_SetString( PyExc_SystemError, "problem in C++; program state has been reset" );
-      result = 0;
+      result = nullptr;
       Throw( excode );
    } ENDTRY;
 
@@ -394,8 +394,7 @@ PyObject* PyROOT::TMethodHolder::GetCoVarNames()
 
 PyObject* PyROOT::TMethodHolder::GetArgDefault( Int_t iarg )
 {
-   if ( iarg >= (int)GetMaxArgs() )
-      return 0;
+   if (iarg >= (int)GetMaxArgs()) return nullptr;
 
    const std::string& defvalue = Cppyy::GetMethodArgDefault( fMethod, iarg );
    if ( ! defvalue.empty() ) {
@@ -411,7 +410,7 @@ PyObject* PyROOT::TMethodHolder::GetArgDefault( Int_t iarg )
       return pyval;
    }
 
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -450,7 +449,7 @@ Bool_t PyROOT::TMethodHolder::Initialize( TCallContext* ctxt )
 
 PyObject* PyROOT::TMethodHolder::PreProcessArgs( ObjectProxy*& self, PyObject* args, PyObject* )
 {
-   if ( self != 0 ) {
+   if (self != nullptr) {
       Py_INCREF( args );
       return args;
    }
@@ -479,7 +478,7 @@ PyObject* PyROOT::TMethodHolder::PreProcessArgs( ObjectProxy*& self, PyObject* a
       "unbound method %s::%s must be called with a %s instance as first argument",
       Cppyy::GetFinalName( fScope ).c_str(), Cppyy::GetMethodName( fMethod ).c_str(),
       Cppyy::GetFinalName( fScope ).c_str() ) );
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -518,7 +517,7 @@ Bool_t PyROOT::TMethodHolder::ConvertAndSetArgs( PyObject* args, TCallContext* c
 
 PyObject* PyROOT::TMethodHolder::Execute( void* self, ptrdiff_t offset, TCallContext* ctxt )
 {
-   PyObject* result = 0;
+   PyObject *result = nullptr;
 
    if ( TCallContext::sSignalPolicy == TCallContext::kFast ) {
    // bypasses ROOT try block (i.e. segfaults will abort)
@@ -531,9 +530,9 @@ PyObject* PyROOT::TMethodHolder::Execute( void* self, ptrdiff_t offset, TCallCon
    if ( result && Utility::PyErr_Occurred_WithGIL() ) {
    // can happen in the case of a CINT error: trigger exception processing
       Py_DECREF( result );
-      result = 0;
+      result = nullptr;
    } else if ( ! result && PyErr_Occurred() )
-      SetPyError_( 0 );
+      SetPyError_(nullptr);
 
    return result;
 }
@@ -544,33 +543,30 @@ PyObject* PyROOT::TMethodHolder::Execute( void* self, ptrdiff_t offset, TCallCon
 PyObject* PyROOT::TMethodHolder::Call(
       ObjectProxy*& self, PyObject* args, PyObject* kwds, TCallContext* ctxt )
 {
-   if ( kwds != 0 && PyDict_Size( kwds ) ) {
+   if (kwds != nullptr && PyDict_Size(kwds)) {
       PyErr_SetString( PyExc_TypeError, "keyword arguments are not yet supported" );
-      return 0;
+      return nullptr;
    }
 
 // setup as necessary
-   if ( ! Initialize( ctxt ) )
-      return 0;                              // important: 0, not Py_None
+   if (!Initialize(ctxt)) return nullptr; // important: 0, not Py_None
 
-// fetch self, verify, and put the arguments in usable order
-   if ( ! ( args = PreProcessArgs( self, args, kwds ) ) )
-      return 0;
+   // fetch self, verify, and put the arguments in usable order
+   if (!(args = PreProcessArgs(self, args, kwds))) return nullptr;
 
-// translate the arguments
+   // translate the arguments
    Bool_t bConvertOk = ConvertAndSetArgs( args, ctxt );
    Py_DECREF( args );
 
-   if ( bConvertOk == kFALSE )
-      return 0;                              // important: 0, not Py_None
+   if (bConvertOk == kFALSE) return nullptr; // important: 0, not Py_None
 
-// get the ROOT object that this object proxy is a handle for
+   // get the ROOT object that this object proxy is a handle for
    void* object = self->GetObject();
 
 // validity check that should not fail
    if ( ! object ) {
       PyErr_SetString( PyExc_ReferenceError, "attempt to access a null-pointer" );
-      return 0;
+      return nullptr;
    }
 
 // get its class

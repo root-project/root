@@ -53,10 +53,7 @@ ClassImp(RooGenProdProj);
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
-RooGenProdProj::RooGenProdProj() :
-  _compSetOwnedN(0), 
-  _compSetOwnedD(0),
-  _haveD(kFALSE)
+RooGenProdProj::RooGenProdProj() : _compSetOwnedN(nullptr), _compSetOwnedD(nullptr), _haveD(kFALSE)
 {
 }
 
@@ -65,15 +62,13 @@ RooGenProdProj::RooGenProdProj() :
 /// Constructor for a normalization projection of the product of p.d.f.s _prodSet
 /// integrated over _intSet in range isetRangeName while normalized over _normSet
 
-RooGenProdProj::RooGenProdProj(const char *name, const char *title, const RooArgSet& _prodSet, const RooArgSet& _intSet, 
-			       const RooArgSet& _normSet, const char* isetRangeName, const char* normRangeName, Bool_t doFactorize) :
-  RooAbsReal(name, title),
-  _compSetOwnedN(0), 
-  _compSetOwnedD(0),
-  _compSetN("compSetN","Set of integral components owned by numerator",this,kFALSE),
-  _compSetD("compSetD","Set of integral components owned by denominator",this,kFALSE),
-  _intList("intList","List of integrals",this,kTRUE),
-  _haveD(kFALSE)
+RooGenProdProj::RooGenProdProj(const char *name, const char *title, const RooArgSet &_prodSet, const RooArgSet &_intSet,
+                               const RooArgSet &_normSet, const char *isetRangeName, const char *normRangeName,
+                               Bool_t doFactorize)
+   : RooAbsReal(name, title), _compSetOwnedN(nullptr), _compSetOwnedD(nullptr),
+     _compSetN("compSetN", "Set of integral components owned by numerator", this, kFALSE),
+     _compSetD("compSetD", "Set of integral components owned by denominator", this, kFALSE),
+     _intList("intList", "List of integrals", this, kTRUE), _haveD(kFALSE)
 {
   // Set expensive object cache to that of first item in prodSet
   setExpensiveObjectCache(_prodSet.first()->expensiveObjectCache()) ;
@@ -106,13 +101,11 @@ RooGenProdProj::RooGenProdProj(const char *name, const char *title, const RooArg
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-RooGenProdProj::RooGenProdProj(const RooGenProdProj& other, const char* name) :
-  RooAbsReal(other, name), 
-  _compSetOwnedN(0), 
-  _compSetOwnedD(0),
-  _compSetN("compSetN","Set of integral components owned by numerator",this),
-  _compSetD("compSetD","Set of integral components owned by denominator",this),
-  _intList("intList","List of integrals",this)
+RooGenProdProj::RooGenProdProj(const RooGenProdProj &other, const char *name)
+   : RooAbsReal(other, name), _compSetOwnedN(nullptr), _compSetOwnedD(nullptr),
+     _compSetN("compSetN", "Set of integral components owned by numerator", this),
+     _compSetD("compSetD", "Set of integral components owned by denominator", this),
+     _intList("intList", "List of integrals", this)
 {
   // Explicitly remove all server links at this point
   TIterator* iter = serverIterator() ;
@@ -202,7 +195,7 @@ RooAbsReal* RooGenProdProj::makeIntegral(const char* name, const RooArgSet& comp
   while((pdf=(RooAbsPdf*)compIter->Next())) {
     if (doFactorize && pdf->dependsOn(anaIntSet)) {
       RooArgSet anaSet ;
-      Int_t code = pdf->getAnalyticalIntegralWN(anaIntSet,anaSet,0,isetRangeName) ;
+      Int_t code = pdf->getAnalyticalIntegralWN(anaIntSet, anaSet, nullptr, isetRangeName);
       if (code!=0) {
 	// Analytical integral, create integral object
 	RooAbsReal* pai = pdf->createIntegral(anaSet,isetRangeName) ;

@@ -54,10 +54,7 @@ enum EFileFialog {
    kIDF_CANCEL
 };
 
-static const char *gDefTypes[] = { "All files",     "*",
-                                   "ROOT files",    "*.root",
-                                   "ROOT macros",   "*.C",
-                                    0,               0 };
+static const char *gDefTypes[] = {"All files", "*", "ROOT files", "*.root", "ROOT macros", "*.C", nullptr, nullptr};
 
 static TGFileInfo gInfo;
 
@@ -71,7 +68,7 @@ TGFileInfo::~TGFileInfo()
 {
    delete [] fFilename;
    delete [] fIniDir;
-   if ( fFileNamesList != 0 ) {
+   if (fFileNamesList != nullptr) {
       fFileNamesList->Delete();
       delete fFileNamesList;
    }
@@ -89,7 +86,7 @@ void TGFileInfo::SetMultipleSelection(Bool_t option)
       else {
          fFileNamesList->Delete();
          delete fFileNamesList;
-         fFileNamesList = 0;
+         fFileNamesList = nullptr;
       }
    }
 }
@@ -102,12 +99,11 @@ void TGFileInfo::SetMultipleSelection(Bool_t option)
 /// window (the one opening the dialog), onto which the dialog is
 /// usually centered, and which is waiting for it to close.
 
-TGFileDialog::TGFileDialog(const TGWindow *p, const TGWindow *main,
-                           EFileDialogMode dlg_type, TGFileInfo *file_info) :
-   TGTransientFrame(p, main, 10, 10, kVerticalFrame), fTbfname(0), fName(0),
-   fTypes(0), fTreeLB(0), fCdup(0), fNewf(0), fList(0), fDetails(0), fCheckB(0),
-   fPcdup(0), fPnewf(0), fPlist(0), fPdetails(0), fOk(0), fCancel(0), fFv(0),
-   fFc(0), fFileInfo(0)
+TGFileDialog::TGFileDialog(const TGWindow *p, const TGWindow *main, EFileDialogMode dlg_type, TGFileInfo *file_info)
+   : TGTransientFrame(p, main, 10, 10, kVerticalFrame), fTbfname(nullptr), fName(nullptr), fTypes(nullptr),
+     fTreeLB(nullptr), fCdup(nullptr), fNewf(nullptr), fList(nullptr), fDetails(nullptr), fCheckB(nullptr),
+     fPcdup(nullptr), fPnewf(nullptr), fPlist(nullptr), fPdetails(nullptr), fOk(nullptr), fCancel(nullptr),
+     fFv(nullptr), fFc(nullptr), fFileInfo(nullptr)
 {
    SetCleanup(kDeepCleanup);
    Connect("CloseWindow()", "TGFileDialog", this, "CloseWindow()");
@@ -124,11 +120,11 @@ TGFileDialog::TGFileDialog(const TGWindow *p, const TGWindow *main,
       fFileInfo = &gInfo;
       if (fFileInfo->fIniDir) {
          delete [] fFileInfo->fIniDir;
-         fFileInfo->fIniDir = 0;
+         fFileInfo->fIniDir = nullptr;
       }
       if (fFileInfo->fFilename) {
          delete [] fFileInfo->fFilename;
-         fFileInfo->fFilename = 0;
+         fFileInfo->fFilename = nullptr;
       }
       fFileInfo->fFileTypeIdx = 0;
    } else
@@ -265,7 +261,7 @@ TGFileDialog::TGFileDialog(const TGWindow *p, const TGWindow *main,
    fTypes->Resize(230, fName->GetDefaultHeight());
 
    TString s;
-   for (i = 0; fFileInfo->fFileTypes[i] != 0; i += 2) {
+   for (i = 0; fFileInfo->fFileTypes[i] != nullptr; i += 2) {
       s.Form("%s (%s)", fFileInfo->fFileTypes[i], fFileInfo->fFileTypes[i+1]);
       fTypes->AddEntry(s.Data(), i);
    }
@@ -378,10 +374,10 @@ void TGFileDialog::CloseWindow()
 {
    if (fFileInfo->fFilename)
       delete [] fFileInfo->fFilename;
-   fFileInfo->fFilename = 0;
-   if (fFileInfo->fFileNamesList != 0) {
+   fFileInfo->fFilename = nullptr;
+   if (fFileInfo->fFileNamesList != nullptr) {
       fFileInfo->fFileNamesList->Delete();
-      fFileInfo->fFileNamesList = 0;
+      fFileInfo->fFileNamesList = nullptr;
    }
    DeleteWindow();
 }
@@ -409,7 +405,7 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
    TGTreeLBEntry *e;
    TGTextLBEntry *te;
    TGFileItem *f;
-   void *p = 0;
+   void *p = nullptr;
    TString txt;
    TString sdir = gSystem->WorkingDirectory();
 
@@ -441,7 +437,7 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                      if (fFileInfo->fMultipleSelection) {
                         if (fFileInfo->fFilename)
                            delete [] fFileInfo->fFilename;
-                        fFileInfo->fFilename = 0;
+                        fFileInfo->fFilename = nullptr;
                      }
                      else {
                         if (fFileInfo->fFilename)
@@ -463,12 +459,12 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                   case kIDF_CANCEL:
                      if (fFileInfo->fFilename)
                         delete [] fFileInfo->fFilename;
-                     fFileInfo->fFilename = 0;
+                     fFileInfo->fFilename = nullptr;
                      if (fFc->GetDisplayStat())
                         fFc->SetDisplayStat(kFALSE);
-                     if (fFileInfo->fFileNamesList != 0) {
+                     if (fFileInfo->fFileNamesList != nullptr) {
                         fFileInfo->fFileNamesList->Delete();
-                        fFileInfo->fFileNamesList = 0;
+                        fFileInfo->fFileNamesList = nullptr;
                      }
                      DeleteWindow();
                      return kTRUE;   //no need to redraw fFc
@@ -581,7 +577,7 @@ Bool_t TGFileDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                         TList *tmp = fFc->GetSelectedItems();
                         TObjString *el;
                         TIter next(tmp);
-                        if ( fFileInfo->fFileNamesList != 0 ) {
+                        if (fFileInfo->fFileNamesList != nullptr) {
                            fFileInfo->fFileNamesList->Delete();
                         }
                         else {

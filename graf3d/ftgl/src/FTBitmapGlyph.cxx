@@ -2,11 +2,7 @@
 
 #include "FTBitmapGlyph.h"
 
-FTBitmapGlyph::FTBitmapGlyph( FT_GlyphSlot glyph)
-:   FTGlyph( glyph),
-    destWidth(0),
-    destHeight(0),
-    data(0)
+FTBitmapGlyph::FTBitmapGlyph(FT_GlyphSlot glyph) : FTGlyph(glyph), destWidth(0), destHeight(0), data(nullptr)
 {
     err = FT_Render_Glyph( glyph, FT_RENDER_MODE_MONO);
     if( err || ft_glyph_format_bitmap != glyph->format)
@@ -51,15 +47,14 @@ FTBitmapGlyph::~FTBitmapGlyph()
 
 const FTPoint& FTBitmapGlyph::Render( const FTPoint& pen)
 {
-    glBitmap( 0, 0, 0.0f, 0.0f, pen.X() + pos.X(), pen.Y() - pos.Y(), (const GLubyte*)0 );
+   glBitmap(0, 0, 0.0f, 0.0f, pen.X() + pos.X(), pen.Y() - pos.Y(), (const GLubyte *)nullptr);
 
-    if( data)
-    {
-        glPixelStorei( GL_UNPACK_ROW_LENGTH, destPitch * 8);
-        glBitmap( destWidth, destHeight, 0.0f, 0.0, 0.0, 0.0, (const GLubyte*)data);
+   if (data) {
+      glPixelStorei(GL_UNPACK_ROW_LENGTH, destPitch * 8);
+      glBitmap(destWidth, destHeight, 0.0f, 0.0, 0.0, 0.0, (const GLubyte *)data);
     }
 
-    glBitmap( 0, 0, 0.0f, 0.0f, -pos.X(), pos.Y(), (const GLubyte*)0 );
+    glBitmap(0, 0, 0.0f, 0.0f, -pos.X(), pos.Y(), (const GLubyte *)nullptr);
 
     return advance;
 }

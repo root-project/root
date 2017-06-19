@@ -82,7 +82,7 @@
 
 //- data ---------------------------------------------------------------------
 ClassImp(TPython);
-static PyObject* gMainDict = 0;
+static PyObject *gMainDict = nullptr;
 
 namespace PyROOT {
    R__EXTERN PyObject* gRootModule;
@@ -402,8 +402,8 @@ const TPyReturn TPython::Eval( const char* expr )
 
 // explicit conversion for python type required
    PyObject* pyclass = PyObject_GetAttr( result, PyROOT::PyStrings::gClass );
-   if ( pyclass != 0 ) {
-   // retrieve class name and the module in which it resides
+   if (pyclass != nullptr) {
+      // retrieve class name and the module in which it resides
       PyObject* name = PyObject_GetAttr( pyclass, PyROOT::PyStrings::gName );
       PyObject* module = PyObject_GetAttr( pyclass, PyROOT::PyStrings::gModule );
 
@@ -418,8 +418,7 @@ const TPyReturn TPython::Eval( const char* expr )
       TClass* klass = TClass::GetClass( qname.c_str() );
 
    // construct general ROOT python object that pretends to be of class 'klass'
-      if ( klass != 0 )
-         return TPyReturn( result );
+      if (klass != nullptr) return TPyReturn(result);
    } else
       PyErr_Clear();
 
@@ -439,7 +438,7 @@ Bool_t TPython::Bind( TObject* object, const char* label )
 
 // bind object in the main namespace
    TClass* klass = object->IsA();
-   if ( klass != 0 ) {
+   if (klass != nullptr) {
       PyObject* bound = PyROOT::BindCppObject( (void*)object, klass->GetName() );
 
       if ( bound ) {
@@ -527,12 +526,10 @@ Bool_t TPython::MethodProxy_CheckExact( PyObject* pyobject )
 void* TPython::ObjectProxy_AsVoidPtr( PyObject* pyobject )
 {
 // setup
-   if ( ! Initialize() )
-      return 0;
+if (!Initialize()) return nullptr;
 
 // check validity of cast
-   if ( ! PyROOT::ObjectProxy_Check( pyobject ) )
-      return 0;
+if (!PyROOT::ObjectProxy_Check(pyobject)) return nullptr;
 
 // get held object (may be null)
    return ((PyROOT::ObjectProxy*)pyobject)->GetObject();
@@ -545,8 +542,7 @@ PyObject* TPython::ObjectProxy_FromVoidPtr(
    void* addr, const char* classname, Bool_t python_owns )
 {
 // setup
-   if ( ! Initialize() )
-      return 0;
+if (!Initialize()) return nullptr;
 
 // perform cast (the call will check TClass and addr, and set python errors)
    PyObject* pyobject = PyROOT::BindCppObjectNoCast( addr, Cppyy::GetScope( classname ), kFALSE );

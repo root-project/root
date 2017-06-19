@@ -80,15 +80,13 @@ const size_t kObjMaxSize = 10024;
 static Bool_t   gMemStatistics;
 static Int_t    gAllocated[kObjMaxSize], gFreed[kObjMaxSize];
 static Int_t    gAllocatedTotal, gFreedTotal;
-static void   **gTraceArray = 0;
+static void **gTraceArray = nullptr;
 static Int_t    gTraceCapacity = 10, gTraceIndex = 0,
                 gMemSize = -1, gMemIndex = -1;
 
 // Used in NewDelete.cxx; set by TMapFile.
 ROOT::Internal::FreeIfTMapFile_t *ROOT::Internal::gFreeIfTMapFile = nullptr;
-void *ROOT::Internal::gMmallocDesc = 0; //is used and set in TMapFile
-
-
+void *ROOT::Internal::gMmallocDesc = nullptr; // is used and set in TMapFile
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Register a memory allocation operation. If desired one can trap an
@@ -134,7 +132,7 @@ void TStorage::RemoveStat(void *vp)
    if ((Int_t)size == gMemSize) {
       for (int i = 0; i < gTraceIndex; i++)
          if (gTraceArray[i] == vp) {
-            gTraceArray[i] = 0;
+            gTraceArray[i] = nullptr;
             break;
          }
    }
@@ -158,8 +156,7 @@ void *TStorage::Alloc(size_t size)
 #else
    void *vp = ::operator new(size);
 #endif
-   if (vp == 0)
-      Fatal(where, "%s", gSpaceErr);
+   if (vp == nullptr) Fatal(where, "%s", gSpaceErr);
 
    return vp;
 }
@@ -200,11 +197,9 @@ void *TStorage::ReAlloc(void *ovp, size_t size)
 #else
    void *vp = ::operator new(size);
 #endif
-   if (vp == 0)
-      Fatal(where, "%s", gSpaceErr);
+   if (vp == nullptr) Fatal(where, "%s", gSpaceErr);
 
-   if (ovp == 0)
-      return vp;
+   if (ovp == nullptr) return vp;
 
    memmove(vp, ovp, size);
 #ifndef WIN32
@@ -239,11 +234,9 @@ void *TStorage::ReAlloc(void *ovp, size_t size, size_t oldsize)
 #else
    void *vp = ::operator new(size);
 #endif
-   if (vp == 0)
-      Fatal(where, "%s", gSpaceErr);
+   if (vp == nullptr) Fatal(where, "%s", gSpaceErr);
 
-   if (ovp == 0)
-      return vp;
+   if (ovp == nullptr) return vp;
 
    if (size > oldsize) {
       memcpy(vp, ovp, oldsize);
@@ -267,18 +260,16 @@ char *TStorage::ReAllocChar(char *ovp, size_t size, size_t oldsize)
    static const char *where = "TStorage::ReAllocChar";
 
    char *vp;
-   if (ovp == 0) {
+   if (ovp == nullptr) {
       vp = new char[size];
-      if (vp == 0)
-         Fatal(where, "%s", gSpaceErr);
+      if (vp == nullptr) Fatal(where, "%s", gSpaceErr);
       return vp;
    }
    if (oldsize == size)
       return ovp;
 
    vp = new char[size];
-   if (vp == 0)
-      Fatal(where, "%s", gSpaceErr);
+   if (vp == nullptr) Fatal(where, "%s", gSpaceErr);
    if (size > oldsize) {
       memcpy(vp, ovp, oldsize);
       memset((char*)vp+oldsize, 0, size-oldsize);
@@ -297,18 +288,16 @@ Int_t *TStorage::ReAllocInt(Int_t *ovp, size_t size, size_t oldsize)
    static const char *where = "TStorage::ReAllocInt";
 
    Int_t *vp;
-   if (ovp == 0) {
+   if (ovp == nullptr) {
       vp = new Int_t[size];
-      if (vp == 0)
-         Fatal(where, "%s", gSpaceErr);
+      if (vp == nullptr) Fatal(where, "%s", gSpaceErr);
       return vp;
    }
    if (oldsize == size)
       return ovp;
 
    vp = new Int_t[size];
-   if (vp == 0)
-      Fatal(where, "%s", gSpaceErr);
+   if (vp == nullptr) Fatal(where, "%s", gSpaceErr);
    if (size > oldsize) {
       memcpy(vp, ovp, oldsize*sizeof(Int_t));
       memset((Int_t*)vp+oldsize, 0, (size-oldsize)*sizeof(Int_t));

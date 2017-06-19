@@ -246,13 +246,13 @@ PyObject* PyROOT::TLongDoubleExecutor::Execute(
 
 Bool_t PyROOT::TRefExecutor::SetAssignable( PyObject* pyobject )
 {
-   if ( pyobject != 0 ) {
+   if (pyobject != nullptr) {
       Py_INCREF( pyobject );
       fAssignable = pyobject;
       return kTRUE;
    }
 
-   fAssignable = 0;
+   fAssignable = nullptr;
    return kFALSE;
 }
 
@@ -307,7 +307,7 @@ PyObject* PyROOT::TSTLStringRefExecutor::Execute(
          PyROOT_PyUnicode_AsString( fAssignable ), PyROOT_PyUnicode_GET_SIZE( fAssignable ) );
 
       Py_DECREF( fAssignable );
-      fAssignable = 0;
+      fAssignable = nullptr;
 
       Py_INCREF( Py_None );
       return Py_None;
@@ -423,15 +423,14 @@ PyObject* PyROOT::TCppObjectByValueExecutor::Execute(
    if ( ! value ) {
       if ( ! PyErr_Occurred() )         // callee may have set a python error itself
          PyErr_SetString( PyExc_ValueError, "NULL result where temporary expected" );
-      return 0;
+      return nullptr;
    }
 
 // the result can then be bound
    ObjectProxy* pyobj = (ObjectProxy*)BindCppObjectNoCast( value, fClass, kFALSE, kTRUE );
-   if ( ! pyobj )
-      return 0;
+   if (!pyobj) return nullptr;
 
-// python ref counting will now control this object's life span
+   // python ref counting will now control this object's life span
    pyobj->HoldOn();
    return (PyObject*)pyobj;
 }
@@ -460,15 +459,17 @@ PyObject* PyROOT::TCppObjectRefExecutor::Execute(
          }
          Py_XDECREF( descr );
          Py_DECREF( result );
-         Py_DECREF( fAssignable ); fAssignable = 0;
-         return 0;
+         Py_DECREF( fAssignable );
+         fAssignable = nullptr;
+         return nullptr;
       }
 
       PyObject* res2 = PyObject_CallFunction( assign, const_cast< char* >( "O" ), fAssignable );
 
       Py_DECREF( assign );
       Py_DECREF( result );
-      Py_DECREF( fAssignable ); fAssignable = 0;
+      Py_DECREF( fAssignable );
+      fAssignable = nullptr;
 
       if ( res2 ) {
          Py_DECREF( res2 );             // typically, *this from operator=()
@@ -476,7 +477,7 @@ PyObject* PyROOT::TCppObjectRefExecutor::Execute(
          return Py_None;
       }
 
-      return 0;
+      return nullptr;
    }
 }
 
@@ -510,7 +511,7 @@ PyObject* PyROOT::TCppObjectBySmartPtrExecutor::Execute(
    if ( ! value ) {
       if ( ! PyErr_Occurred() )         // callee may have set a python error itself
          PyErr_SetString( PyExc_ValueError, "NULL result where temporary expected" );
-      return 0;
+      return nullptr;
    }
 
 // fixme? - why doesn't this do the same as `self._get_smart_ptr().get()'
@@ -678,7 +679,7 @@ PyROOT::TExecutor* PyROOT::CreateExecutor( const std::string& fullType,
    }
 
 // ROOT classes and special cases (enum)
-   TExecutor* result = 0;
+   TExecutor *result = nullptr;
    if ( Cppyy::TCppType_t klass = Cppyy::GetScope( realType ) ) {
       if ( manage_smart_ptr && Cppyy::IsSmartPtr( realType ) ) {
          const std::vector< Cppyy::TCppMethod_t > methods = Cppyy::GetMethodsFromName( klass, "operator->" );

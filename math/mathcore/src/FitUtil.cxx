@@ -251,7 +251,7 @@ double FitUtil::EvaluateChi2(const IModelFunction & func, const BinData & data, 
 #endif
 
 #ifdef USE_PARAMCACHE
-   IntegralEvaluator<> igEval( func, 0, useBinIntegral);
+   IntegralEvaluator<> igEval(func, nullptr, useBinIntegral);
 #else
    IntegralEvaluator<> igEval( func, p, useBinIntegral);
 #endif
@@ -426,7 +426,7 @@ double FitUtil::EvaluateChi2Effective(const IModelFunction & func, const BinData
 
 
       double ey = 0;
-      const double * ex = 0;
+      const double *ex = nullptr;
       if (!data.HaveAsymErrors() )
          ex = data.GetPointError(i, ey);
       else {
@@ -527,10 +527,10 @@ double FitUtil::EvaluateChi2Residual(const IModelFunction & func, const BinData 
    double fval = 0;
    unsigned int ndim = data.NDim();
    double binVolume = 1.0;
-   const double * x2 = 0;
+   const double *x2 = nullptr;
    if (useBinVolume || useBinIntegral) x2 = data.BinUpEdge(i);
 
-   double * xc = 0;
+   double *xc = nullptr;
 
    if (useBinVolume) {
       xc = new double[ndim];
@@ -573,12 +573,12 @@ double FitUtil::EvaluateChi2Residual(const IModelFunction & func, const BinData 
    resval = CorrectValue(resval);
 
    // estimate gradient
-   if (g != 0) {
+   if (g != nullptr) {
 
       unsigned int npar = func.NPar();
       const IGradModelFunction * gfunc = dynamic_cast<const IGradModelFunction *>( &func);
 
-      if (gfunc != 0) {
+      if (gfunc != nullptr) {
          //case function provides gradient
          if (!useBinIntegral ) {
             gfunc->ParameterGradient(  x , p, g );
@@ -624,7 +624,7 @@ void FitUtil::EvaluateChi2Gradient(const IModelFunction & f, const BinData & dat
    unsigned int nRejected = 0;
 
    const IGradModelFunction * fg = dynamic_cast<const IGradModelFunction *>( &f);
-   assert (fg != 0); // must be called by a gradient function
+   assert(fg != nullptr); // must be called by a gradient function
 
    const IGradModelFunction & func = *fg;
    unsigned int n = data.Size();
@@ -664,7 +664,7 @@ void FitUtil::EvaluateChi2Gradient(const IModelFunction & f, const BinData & dat
       const double * x1 = data.GetPoint(i,y, invError);
 
       double fval = 0;
-      const double * x2 = 0;
+      const double *x2 = nullptr;
 
       double binVolume = 1;
       if (useBinVolume) {
@@ -767,12 +767,12 @@ double FitUtil::EvaluatePdf(const IModelFunction & func, const UnBinData & data,
    double fval = func ( x, p );
    double logPdf = ROOT::Math::Util::EvalLog(fval);
    //return
-   if (g == 0) return logPdf;
+   if (g == nullptr) return logPdf;
 
    const IGradModelFunction * gfunc = dynamic_cast<const IGradModelFunction *>( &func);
 
    // gradient  calculation
-   if (gfunc != 0) {
+   if (gfunc != nullptr) {
       //case function provides gradient
       gfunc->ParameterGradient(  x , p, g );
    }
@@ -989,7 +989,7 @@ void FitUtil::EvaluateLogLGradient(const IModelFunction & f, const UnBinData & d
    // evaluate the gradient of the log likelihood function
 
    const IGradModelFunction * fg = dynamic_cast<const IGradModelFunction *>( &f);
-   assert (fg != 0); // must be called by a grad function
+   assert(fg != nullptr); // must be called by a grad function
    const IGradModelFunction & func = *fg;
 
    unsigned int n = data.Size();
@@ -1037,7 +1037,7 @@ double FitUtil::EvaluatePoissonBinPdf(const IModelFunction & func, const BinData
 
    IntegralEvaluator<> igEval( func, p, useBinIntegral);
    double fval = 0;
-   const double * x2 = 0;
+   const double *x2 = nullptr;
    // calculate the bin volume
    double binVolume = 1;
    std::vector<double> xc;
@@ -1077,13 +1077,13 @@ double FitUtil::EvaluatePoissonBinPdf(const IModelFunction & func, const BinData
    //double pdfval =  std::exp(logPdf);
 
   //if (g == 0) return pdfval;
-   if (g == 0) return logPdf;
+   if (g == nullptr) return logPdf;
 
    unsigned int npar = func.NPar();
    const IGradModelFunction * gfunc = dynamic_cast<const IGradModelFunction *>( &func);
 
    // gradient  calculation
-   if (gfunc != 0) {
+   if (gfunc != nullptr) {
       //case function provides gradient
       if (!useBinIntegral )
          gfunc->ParameterGradient(  x , p, g );
@@ -1178,7 +1178,7 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction &func, const BinData &d
 #endif
 
 #ifdef USE_PARAMCACHE
-   IntegralEvaluator<> igEval(func, 0, useBinIntegral);
+   IntegralEvaluator<> igEval(func, nullptr, useBinIntegral);
 #else
    IntegralEvaluator<> igEval(func, p, useBinIntegral);
 #endif
@@ -1342,7 +1342,7 @@ void FitUtil::EvaluatePoissonLogLGradient(const IModelFunction & f, const BinDat
    // evaluate the gradient of the Poisson log likelihood function
 
    const IGradModelFunction * fg = dynamic_cast<const IGradModelFunction *>( &f);
-   assert (fg != 0); // must be called by a grad function
+   assert(fg != nullptr); // must be called by a grad function
    const IGradModelFunction & func = *fg;
 
    unsigned int n = data.Size();
@@ -1368,7 +1368,7 @@ void FitUtil::EvaluatePoissonLogLGradient(const IModelFunction & f, const BinDat
       const double * x1 = data.Coords(i);
       double y = data.Value(i);
       double fval = 0;
-      const double * x2 = 0;
+      const double *x2 = nullptr;
 
       double binVolume = 1.0;
       if (useBinVolume) {

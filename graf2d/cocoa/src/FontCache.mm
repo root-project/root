@@ -60,7 +60,7 @@ const CFStringRef fixedFontNames[FontCache::nPadFonts] =
 //______________________________________________________________________________
 CTFontCollectionRef CreateFontCollection(const X11::XLFDName &/*xlfd*/)
 {
-   CTFontCollectionRef ctCollection = CTFontCollectionCreateFromAvailableFonts(0);
+   CTFontCollectionRef ctCollection = CTFontCollectionCreateFromAvailableFonts(nullptr);
    if (!ctCollection)
       ::Error("CreateFontCollection", "CTFontCollectionCreateFromAvailableFonts failed");
 
@@ -105,7 +105,7 @@ CTFontCollectionRef CreateFontCollection(const X11::XLFDName &/*xlfd*/)
 bool GetFamilyName(CTFontDescriptorRef fontDescriptor, std::vector<char> &name)
 {
    //If success, this function returns a null-terminated string in a vector.
-   assert(fontDescriptor != 0 && "GetFamilyName, parameter 'fontDescriptor' is null");
+   assert(fontDescriptor != nullptr && "GetFamilyName, parameter 'fontDescriptor' is null");
 
    name.clear();
 
@@ -125,7 +125,7 @@ bool GetFamilyName(CTFontDescriptorRef fontDescriptor, std::vector<char> &name)
 bool GetPostscriptName(CTFontDescriptorRef fontDescriptor, std::vector<char> &name)
 {
    //If success, this function returns a null-terminated string in a vector.
-   assert(fontDescriptor != 0 && "GetPostscriptName, parameter 'fontDescriptor' is null");
+   assert(fontDescriptor != nullptr && "GetPostscriptName, parameter 'fontDescriptor' is null");
 
    name.clear();
 
@@ -253,7 +253,8 @@ FontStruct_t FontCache::LoadFont(const X11::XLFDName &xlfd)
    const CFScopeGuard<CFStringRef> fontName(CFStringCreateWithCString(kCFAllocatorDefault, xlfd.fFamilyName.c_str(), kCFStringEncodingMacRoman));
 #endif
 
-   const CFStrongReference<CTFontRef> baseFont(CTFontCreateWithName(fontName.Get(), xlfd.fPixelSize, 0), false);//false == do not retain
+   const CFStrongReference<CTFontRef> baseFont(CTFontCreateWithName(fontName.Get(), xlfd.fPixelSize, nullptr),
+                                               false); // false == do not retain
 
    if (!baseFont.Get()) {
       ::Error("FontCache::LoadFont", "CTFontCreateWithName failed for %s", xlfd.fFamilyName.c_str());
@@ -268,7 +269,9 @@ FontStruct_t FontCache::LoadFont(const X11::XLFDName &xlfd)
       symbolicTraits |= kCTFontItalicTrait;
 
    if (symbolicTraits) {
-      const CFStrongReference<CTFontRef> font(CTFontCreateCopyWithSymbolicTraits(baseFont.Get(), xlfd.fPixelSize, 0, symbolicTraits, symbolicTraits), false);//false == do not retain.
+      const CFStrongReference<CTFontRef> font(
+         CTFontCreateCopyWithSymbolicTraits(baseFont.Get(), xlfd.fPixelSize, nullptr, symbolicTraits, symbolicTraits),
+         false); // false == do not retain.
       if (font.Get()) {
          if (fLoadedFonts.find(font.Get()) == fLoadedFonts.end())
             fLoadedFonts[font.Get()] = font;
@@ -309,13 +312,12 @@ char **FontCache::ListFonts(const X11::XLFDName &xlfd, int maxNames, int &count)
 
    //First, create a font collection.
    const Util::CFScopeGuard<CTFontCollectionRef> collectionGuard(CreateFontCollection(xlfd));
-   if (!collectionGuard.Get())
-      return 0;
+   if (!collectionGuard.Get()) return nullptr;
 
    Util::CFScopeGuard<CFArrayRef> fonts(CTFontCollectionCreateMatchingFontDescriptors(collectionGuard.Get()));
    if (!fonts.Get()) {
       ::Error("FontCache::ListFonts", "CTFontCollectionCreateMatchingFontDescriptors failed %s", xlfd.fFamilyName.c_str());
-      return 0;
+      return nullptr;
    }
 
    std::vector<char> xlfdData;
@@ -394,7 +396,7 @@ char **FontCache::ListFonts(const X11::XLFDName &xlfd, int maxNames, int &count)
 
       return &list[0];
    } else
-      return 0;
+      return nullptr;
 }
 
 //______________________________________________________________________________
@@ -479,16 +481,16 @@ CTFontRef FontCache::SelectFont(Font_t fontIndex, Float_t fontSize)
    if (it == fFonts[fontIndex].end()) {
       //Insert the new font.
       try {
-         const CTFontGuard_t font(CTFontCreateWithName(fixedFontNames[fontIndex], fixedSize, 0), false);
+         const CTFontGuard_t font(CTFontCreateWithName(fixedFontNames[fontIndex], fixedSize, nullptr), false);
          if (!font.Get()) {//With Apple's lame documentation it's not clear, if function can return 0.
             ::Error("FontCache::SelectFont", "CTFontCreateWithName failed for font %d", fontIndex);
-            return 0;
+            return nullptr;
          }
 
          fFonts[fontIndex][fixedSize] = font;//Insetion can throw.
          return fSelectedFont = font.Get();
       } catch (const std::exception &) {//Bad alloc.
-         return 0;
+         return nullptr;
       }
    }
 
@@ -512,38 +514,38 @@ CTFontRef FontCache::SelectSymbolFont(Float_t fontSize, unsigned fontIndex)
 
       if (!fontFileName || fontFileName[0] == 0) {
          ::Error("FontCache::SelectSymbolFont", "symbol.ttf file not found");
-         return 0;
+         return nullptr;
       }
 
       try {
          const Util::CFScopeGuard<CFStringRef> path(CFStringCreateWithCString(kCFAllocatorDefault, fontFileName, kCFURLPOSIXPathStyle));
          if (!path.Get()) {
             ::Error("FontCache::SelectSymbolFont", "CFStringCreateWithCString failed");
-            return 0;
+            return nullptr;
          }
 
          const Util::CFScopeGuard<CFURLRef> fontURL(CFURLCreateWithFileSystemPath(kCFAllocatorDefault, path.Get(), kCFURLPOSIXPathStyle, false));
          if (!fontURL.Get()) {
             ::Error("FontCache::SelectSymbolFont", "CFURLCreateWithFileSystemPath failed");
-            return 0;
+            return nullptr;
          }
 
          //Try to register this font.
          if (!fSymbolFontRegistered) {
-            CFErrorRef err = 0;
+            CFErrorRef err = nullptr;
             fSymbolFontRegistered = CTFontManagerRegisterFontsForURL(fontURL.Get(), kCTFontManagerScopeProcess, &err);
             if (!fSymbolFontRegistered) {
                ::Error("FontCache::SelectSymbolFont", "CTFontManagerRegisterFontsForURL failed");
                if (err)
                   CFRelease(err);
-               return 0;
+               return nullptr;
             }
          }
 
          const Util::CFScopeGuard<CFArrayRef> arr(CTFontManagerCreateFontDescriptorsFromURL(fontURL.Get()));
          if (!arr.Get()) {
             ::Error("FontCache::SelectSymbolFont", "CTFontManagerCreateFontDescriptorsFromURL failed");
-            return 0;
+            return nullptr;
          }
 
          CTFontDescriptorRef fontDesc = (CTFontDescriptorRef)CFArrayGetValueAtIndex(arr.Get(), 0);
@@ -554,14 +556,14 @@ CTFontRef FontCache::SelectSymbolFont(Float_t fontSize, unsigned fontIndex)
                                                                            &shearMatrix, kCTFontOptionsDefault), false);
          if (!font.Get()) {
             ::Error("FontCache::SelectSymbolFont", "CTFontCreateWithFontDescriptor failed");
-            return 0;
+            return nullptr;
          }
 
          fFonts[fontIndex][fixedSize] = font;//This can throw.
          return fSelectedFont = font.Get();
       } catch (const std::exception &) {//Bad alloc.
          //RAII destructors should do their work.
-         return 0;
+         return nullptr;
       }
    }
 
@@ -571,7 +573,7 @@ CTFontRef FontCache::SelectSymbolFont(Float_t fontSize, unsigned fontIndex)
 //_________________________________________________________________
 void FontCache::GetTextBounds(UInt_t &w, UInt_t &h, const char *text)const
 {
-   assert(fSelectedFont != 0 && "GetTextBounds: no font was selected");
+   assert(fSelectedFont != nullptr && "GetTextBounds: no font was selected");
 
    try {
       const Quartz::TextLine ctLine(text, fSelectedFont);
@@ -585,7 +587,7 @@ void FontCache::GetTextBounds(UInt_t &w, UInt_t &h, const char *text)const
 //_________________________________________________________________
 void FontCache::GetTextBounds(UInt_t &w, UInt_t &h, const std::vector<UniChar> &unichars)const
 {
-   assert(fSelectedFont != 0 && "GetTextBounds: no font was selected");
+   assert(fSelectedFont != nullptr && "GetTextBounds: no font was selected");
 
    try {
       const Quartz::TextLine ctLine(unichars, fSelectedFont);
@@ -599,15 +601,15 @@ void FontCache::GetTextBounds(UInt_t &w, UInt_t &h, const std::vector<UniChar> &
 //_________________________________________________________________
 double FontCache::GetAscent()const
 {
-   assert(fSelectedFont != 0 && "GetAscent, no font was selected");
+   assert(fSelectedFont != nullptr && "GetAscent, no font was selected");
    return CTFontGetAscent(fSelectedFont) + 1;
 }
 
 //_________________________________________________________________
 double FontCache::GetAscent(const char *text)const
 {
-   assert(text != 0 && "GetAscent, parameter 'text' is null");
-   assert(fSelectedFont != 0 && "GetAscent, no font was selected");
+   assert(text != nullptr && "GetAscent, parameter 'text' is null");
+   assert(fSelectedFont != nullptr && "GetAscent, no font was selected");
 
    try {
       const Quartz::TextLine ctLine(text, fSelectedFont);
@@ -622,7 +624,7 @@ double FontCache::GetAscent(const char *text)const
 //_________________________________________________________________
 double FontCache::GetAscent(const std::vector<UniChar> &unichars)const
 {
-   assert(fSelectedFont != 0 && "GetAscent, no font was selected");
+   assert(fSelectedFont != nullptr && "GetAscent, no font was selected");
 
    try {
       const Quartz::TextLine ctLine(unichars, fSelectedFont);
@@ -637,15 +639,15 @@ double FontCache::GetAscent(const std::vector<UniChar> &unichars)const
 //_________________________________________________________________
 double FontCache::GetDescent()const
 {
-   assert(fSelectedFont != 0 && "GetDescent, no font was selected");
+   assert(fSelectedFont != nullptr && "GetDescent, no font was selected");
    return CTFontGetDescent(fSelectedFont) + 1;
 }
 
 //_________________________________________________________________
 double FontCache::GetDescent(const char *text)const
 {
-   assert(text != 0 && "GetDescent, parameter 'text' is null");
-   assert(fSelectedFont != 0 && "GetDescent, no font was selected");
+   assert(text != nullptr && "GetDescent, parameter 'text' is null");
+   assert(fSelectedFont != nullptr && "GetDescent, no font was selected");
 
    try {
       const Quartz::TextLine ctLine(text, fSelectedFont);
@@ -660,7 +662,7 @@ double FontCache::GetDescent(const char *text)const
 //_________________________________________________________________
 double FontCache::GetDescent(const std::vector<UniChar> &unichars)const
 {
-   assert(fSelectedFont != 0 && "GetDescent, no font was selected");
+   assert(fSelectedFont != nullptr && "GetDescent, no font was selected");
 
    try {
       const Quartz::TextLine ctLine(unichars, fSelectedFont);
@@ -675,7 +677,7 @@ double FontCache::GetDescent(const std::vector<UniChar> &unichars)const
 //_________________________________________________________________
 double FontCache::GetLeading()const
 {
-   assert(fSelectedFont != 0 && "GetLeading, no font was selected");
+   assert(fSelectedFont != nullptr && "GetLeading, no font was selected");
    return CTFontGetLeading(fSelectedFont);
 }
 

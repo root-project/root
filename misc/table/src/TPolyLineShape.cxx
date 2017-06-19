@@ -83,14 +83,14 @@ ClassImp(TPolyLineShape);
 
 TPolyLineShape::TPolyLineShape()
 {
-   fShape = 0;
+   fShape = nullptr;
    fSmooth = kFALSE;
-   fConnection= 0;
-   fPoints=0;
+   fConnection = nullptr;
+   fPoints = nullptr;
    SetWidthFactor();
    fHasDrawn = kFALSE;
    fShapeType = kNULL;
-   fSizeX3D   = 0;
+   fSizeX3D = nullptr;
    fPointFlag = kFALSE;
    fLineFlag  = kFALSE;
 }
@@ -100,13 +100,13 @@ TPolyLineShape::TPolyLineShape()
 
 TPolyLineShape::TPolyLineShape(TPoints3DABC  *points,Option_t* option)
 {
-   fShape      = 0;
+   fShape = nullptr;
    fShapeType   = kNULL;
    fSmooth      = kFALSE;
-   fConnection  = 0;
+   fConnection = nullptr;
    fPoints      = points;
    fHasDrawn    = kFALSE;
-   fSizeX3D     = 0;
+   fSizeX3D = nullptr;
    // Take in account the current node if any
    if (!fPoints) {
       Error("TPolyLineShape","No polyline is defined");
@@ -228,8 +228,8 @@ Int_t TPolyLineShape::PointDistancetoPrimitive(Int_t px, Int_t py)
    Int_t puxmax = gPad->XtoAbsPixel(gPad->GetUxmax());
    Int_t puymax = gPad->YtoAbsPixel(gPad->GetUymax());
 
-   TView *view = 0;
-//*-*- return if point is not in the user area
+   TView *view = nullptr;
+   //*-*- return if point is not in the user area
    if (px < puxmin - inaxis) goto END;
    if (py > puymin + inaxis) goto END;
    if (px > puxmax + inaxis) goto END;
@@ -405,7 +405,7 @@ void TPolyLineShape::Paint(Option_t *opt)
    if (!GetPoints()) return;
 
    Bool_t rangeView = opt && opt[0] && strcmp(opt,"range")==0 ? kTRUE : kFALSE;
-   TTablePadView3D *view3D = 0;
+   TTablePadView3D *view3D = nullptr;
    if (!rangeView  && (view3D = (TTablePadView3D*)gPad->GetView3D()) ) {
       TString mode;
 
@@ -537,7 +537,7 @@ void TPolyLineShape::PaintX3DLine(Option_t *)
    fSizeX3D->numSegs   = buff->numSegs   = size-1;
    fSizeX3D->numPolys  = buff->numPolys  = 0;        //NOTE: Because of different structure, our
 
-   buff->polys     = 0;     //      TPolyLine3D can't use polygons
+   buff->polys = nullptr; //      TPolyLine3D can't use polygons
    TPoints3D x3dPoints(size);
    buff->points    = fPoints->GetXYZ(x3dPoints.GetP(),0,size);
 
@@ -593,10 +593,9 @@ void TPolyLineShape::PaintX3DMarker(Option_t *)
    fSizeX3D->numPoints = buff->numPoints = buff->numSegs*2;
    fSizeX3D->numPolys  = buff->numPolys  = 0;         //NOTE: Because of different structure, our
 
-   buff->polys     = 0;      //      TPolyMarker3D can't use polygons
+   buff->polys = nullptr; //      TPolyMarker3D can't use polygons
 
-
-    //*-* Allocate memory for points *-*
+   //*-* Allocate memory for points *-*
    Float_t delta = 0.002;
 
    buff->points = new Float_t[buff->numPoints*3];

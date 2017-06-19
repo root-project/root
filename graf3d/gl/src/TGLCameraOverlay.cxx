@@ -31,22 +31,16 @@ ClassImp(TGLCameraOverlay);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-TGLCameraOverlay::TGLCameraOverlay(Bool_t showOrtho, Bool_t showPersp) :
-   TGLOverlayElement(),
+TGLCameraOverlay::TGLCameraOverlay(Bool_t showOrtho, Bool_t showPersp)
+   : TGLOverlayElement(),
 
-   fShowOrthographic(showOrtho),
-   fShowPerspective(showPersp),
+     fShowOrthographic(showOrtho), fShowPerspective(showPersp),
 
-   fOrthographicMode(kAxis),
-   fPerspectiveMode(kPlaneIntersect),
+     fOrthographicMode(kAxis), fPerspectiveMode(kPlaneIntersect),
 
-   fAxisPainter(0),
-   fAxis(0),
-   fAxisExtend(0.9),
-   fUseAxisColors(kFALSE),
+     fAxisPainter(nullptr), fAxis(nullptr), fAxisExtend(0.9), fUseAxisColors(kFALSE),
 
-   fExternalRefPlane(),
-   fUseExternalRefPlane(kFALSE)
+     fExternalRefPlane(), fUseExternalRefPlane(kFALSE)
 {
    // Constructor.
 

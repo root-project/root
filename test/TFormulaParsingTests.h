@@ -174,7 +174,7 @@ bool test7() {
 bool test8() {
    // test the operator ^
    bool ok = true;
-   TFormula * f = 0;
+   TFormula *f = nullptr;
    f = new TFormula("f","x^y");
 
    ok &= (f->Eval(2,3) == 8);
@@ -217,7 +217,7 @@ bool test9() {
    // test the exponent notations in numbers
    bool ok = true;
 
-   TFormula * f = 0;
+   TFormula *f = nullptr;
    f = new TFormula("f","x+2.0e1");
    ok &= (f->Eval(1) == 21.);
    
@@ -239,7 +239,7 @@ bool test9() {
 bool test10() {
    // test the operator "? : "
    bool ok = true;
-   TFormula * f = 0;
+   TFormula *f = nullptr;
    f  = new TFormula("f","(x<0)?-x:x");
    ok &= (f->Eval(-2) == 2); 
    ok &= (f->Eval(2) == 2);
@@ -265,8 +265,8 @@ bool test11() {
 }
 bool test12() { 
    // test parameters order 
-   bool ok = true; 
-   TFormula * f = 0; 
+   bool ok = true;
+   TFormula *f = nullptr;
    f = new TFormula("f","[2] + [3]*x + [0]*x^2 + [1]*x^3");
    f->SetParameters(1,2,3,4);
    double result = 3+4*2+1*4+2*8;

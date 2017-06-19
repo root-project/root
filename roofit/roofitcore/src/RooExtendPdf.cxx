@@ -54,8 +54,7 @@ using namespace std;
 ClassImp(RooExtendPdf);
 ;
 
-
-RooExtendPdf::RooExtendPdf() : _rangeName(0)
+RooExtendPdf::RooExtendPdf() : _rangeName(nullptr)
 {
   // Default constructor
 }

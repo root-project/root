@@ -55,7 +55,7 @@ TGeoTubeEditor::TGeoTubeEditor(const TGWindow *p, Int_t width,
                                    Int_t height, UInt_t options, Pixel_t back)
    : TGeoGedFrame(p, width, height, options | kVerticalFrame, back)
 {
-   fShape   = 0;
+   fShape = nullptr;
    fRmini = fRmaxi = fDzi = 0.0;
    fNamei = "";
    fIsModified = kFALSE;
@@ -166,7 +166,7 @@ void TGeoTubeEditor::ConnectSignals2Slots()
 
 void TGeoTubeEditor::SetModel(TObject* obj)
 {
-   if (obj == 0 || (obj->IsA()!=TGeoTube::Class())) {
+   if (obj == nullptr || (obj->IsA() != TGeoTube::Class())) {
       SetActive(kFALSE);
       return;
    }
@@ -393,7 +393,7 @@ void TGeoTubeSegEditor::ConnectSignals2Slots()
 
 void TGeoTubeSegEditor::SetModel(TObject* obj)
 {
-   if (obj == 0 || (obj->IsA()!=TGeoTubeSeg::Class())) {
+   if (obj == nullptr || (obj->IsA() != TGeoTubeSeg::Class())) {
       SetActive(kFALSE);
       return;
    }
@@ -641,7 +641,7 @@ TGeoCtubEditor::~TGeoCtubEditor()
 
 void TGeoCtubEditor::SetModel(TObject* obj)
 {
-   if (obj == 0 || (obj->IsA()!=TGeoCtub::Class())) {
+   if (obj == nullptr || (obj->IsA() != TGeoCtub::Class())) {
       SetActive(kFALSE);
       return;
    }

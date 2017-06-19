@@ -32,14 +32,13 @@ namespace PyROOT {
       Bool_t AddUsingToClass( PyObject* pyclass, const char* method );
 
    // helpers for dynamically constructing binary operators
-      Bool_t AddBinaryOperator( PyObject* left, PyObject* right,
-         const char* op, const char* label, const char* alt_label = NULL );
-      Bool_t AddBinaryOperator( PyObject* pyclass,
-         const char* op, const char* label, const char* alt_label = NULL );
-      Bool_t AddBinaryOperator( PyObject* pyclass, const std::string& lcname, const std::string& rcname,
-         const char* op, const char* label, const char* alt_label = NULL );
+      Bool_t AddBinaryOperator(PyObject *left, PyObject *right, const char *op, const char *label,
+                               const char *alt_label = nullptr);
+      Bool_t AddBinaryOperator(PyObject *pyclass, const char *op, const char *label, const char *alt_label = nullptr);
+      Bool_t AddBinaryOperator(PyObject *pyclass, const std::string &lcname, const std::string &rcname, const char *op,
+                               const char *label, const char *alt_label = nullptr);
 
-   // helper for template classes and methods
+      // helper for template classes and methods
       PyObject* BuildTemplateName( PyObject* pyname, PyObject* args, int argoff );
 
    // initialize proxy type objects

@@ -165,11 +165,12 @@ TGraph::TGraph(const TGraph &gr)
    if (gr.fFunctions) fFunctions = (TList*)gr.fFunctions->Clone();
    else fFunctions = new TList;
    if (gr.fHistogram) fHistogram = (TH1F*)gr.fHistogram->Clone();
-   else fHistogram = 0;
+   else
+      fHistogram = nullptr;
    fMinimum = gr.fMinimum;
    fMaximum = gr.fMaximum;
    if (!fMaxSize) {
-      fX = fY = 0;
+      fX = fY = nullptr;
       return;
    } else {
       fX = new Double_t[fMaxSize];
@@ -216,14 +217,15 @@ TGraph& TGraph::operator=(const TGraph &gr)
 
       if (fHistogram) delete fHistogram;
       if (gr.fHistogram) fHistogram = new TH1F(*(gr.fHistogram));
-      else fHistogram = 0;
+      else
+         fHistogram = nullptr;
 
       fMinimum = gr.fMinimum;
       fMaximum = gr.fMaximum;
       if (fX) delete [] fX;
       if (fY) delete [] fY;
       if (!fMaxSize) {
-         fX = fY = 0;
+         fX = fY = nullptr;
          return *this;
       } else {
          fX = new Double_t[fMaxSize];
@@ -449,7 +451,7 @@ TGraph::TGraph(const char *filename, const char *format, Option_t *option)
 
       // Initializing loop variables
       Bool_t isLineToBeSkipped = kFALSE ; //empty and ill-formed lines
-      char * token = NULL ;
+      char *token = nullptr;
       TString token_str = "" ;
       Int_t token_idx = 0 ;
       Double_t * value = new Double_t [2] ; //x,y buffers
@@ -462,7 +464,7 @@ TGraph::TGraph(const char *filename, const char *format, Option_t *option)
                line.erase(line.end() - 1, line.end()) ;
             }
             token = strtok(const_cast<char*>(line.c_str()), option) ;
-            while (token != NULL && value_idx < 2) {
+            while (token != nullptr && value_idx < 2) {
                if (isTokenToBeSaved[token_idx]) {
                   token_str = TString(token) ;
                   token_str.ReplaceAll("\t", "") ;
@@ -474,7 +476,7 @@ TGraph::TGraph(const char *filename, const char *format, Option_t *option)
                      value_idx++ ;
                   }
                }
-               token = strtok(NULL, option) ; //next token
+               token = strtok(nullptr, option); // next token
                token_idx++ ;
             }
             if (!isLineToBeSkipped && value_idx == 2) {
@@ -485,7 +487,7 @@ TGraph::TGraph(const char *filename, const char *format, Option_t *option)
             }
          }
          isLineToBeSkipped = kFALSE ;
-         token = NULL ;
+         token = nullptr;
          token_idx = 0 ;
          value_idx = 0 ;
       }
@@ -518,7 +520,7 @@ TGraph::~TGraph()
          delete obj;
       }
       delete fFunctions;
-      fFunctions = 0; //to avoid accessing a deleted object in RecursiveRemove
+      fFunctions = nullptr; // to avoid accessing a deleted object in RecursiveRemove
    }
    delete fHistogram;
 }
@@ -533,8 +535,7 @@ Double_t** TGraph::AllocateArrays(Int_t Narrays, Int_t arraySize)
    }
    Double_t **newarrays = new Double_t*[Narrays];
    if (!arraySize) {
-      for (Int_t i = 0; i < Narrays; ++i)
-         newarrays[i] = 0;
+      for (Int_t i = 0; i < Narrays; ++i) newarrays[i] = nullptr;
    } else {
       for (Int_t i = 0; i < Narrays; ++i)
          newarrays[i] = new Double_t[arraySize];
@@ -718,7 +719,7 @@ Bool_t TGraph::CopyPoints(Double_t **arrays, Int_t ibegin, Int_t iend,
 
 Bool_t TGraph::CtorAllocate()
 {
-   fHistogram = 0;
+   fHistogram = nullptr;
    fMaximum = -1111;
    fMinimum = -1111;
    SetBit(kClipFrame);
@@ -726,8 +727,8 @@ Bool_t TGraph::CtorAllocate()
    if (fNpoints <= 0) {
       fNpoints = 0;
       fMaxSize   = 0;
-      fX         = 0;
-      fY         = 0;
+      fX = nullptr;
+      fY = nullptr;
       return kFALSE;
    } else {
       fMaxSize   = fNpoints;
@@ -1000,7 +1001,7 @@ void TGraph::Expand(Int_t newsize, Int_t step)
 Double_t **TGraph::ExpandAndCopy(Int_t size, Int_t iend)
 {
    if (size <= fMaxSize) {
-      return 0;
+      return nullptr;
    }
    Double_t **newarrays = Allocate(2 * size);
    CopyPoints(newarrays, 0, iend, 0);
@@ -1023,7 +1024,7 @@ void TGraph::FillZero(Int_t begin, Int_t end, Bool_t)
 TObject *TGraph::FindObject(const char *name) const
 {
    if (fFunctions) return fFunctions->FindObject(name);
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1032,7 +1033,7 @@ TObject *TGraph::FindObject(const char *name) const
 TObject *TGraph::FindObject(const TObject *obj) const
 {
    if (fFunctions) return fFunctions->FindObject(obj);
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1051,7 +1052,7 @@ TFitResultPtr TGraph::Fit(const char *fname, Option_t *option, Option_t *, Axis_
 {
    char *linear;
    linear = (char*) strstr(fname, "++");
-   TF1 *f1 = 0;
+   TF1 *f1 = nullptr;
    if (linear)
       f1 = new TF1(fname, fname, xmin, xmax);
    else {
@@ -1456,7 +1457,7 @@ Double_t TGraph::GetErrorYlow(Int_t) const
 
 TF1 *TGraph::GetFunction(const char *name) const
 {
-   if (!fFunctions) return 0;
+   if (!fFunctions) return nullptr;
    return (TF1*)fFunctions->FindObject(name);
 }
 
@@ -1479,7 +1480,7 @@ TH1F *TGraph::GetHistogram() const
    // therefore they might be too strict and cut some points. In that case the
    // fHistogram limits should be recomputed ie: the existing fHistogram
    // should not be returned.
-   TH1F *historg = 0;
+   TH1F *historg = nullptr;
    if (fHistogram) {
       if (!TestBit(kResetHisto)) {
          if (gPad && gPad->GetLogx()) {
@@ -1533,12 +1534,12 @@ TH1F *TGraph::GetHistogram() const
    const char *gname = GetName();
    if (!gname[0]) gname = "Graph";
    ((TGraph*)this)->fHistogram = new TH1F(gname, GetTitle(), npt, rwxmin, rwxmax);
-   if (!fHistogram) return 0;
+   if (!fHistogram) return nullptr;
    fHistogram->SetMinimum(minimum);
    fHistogram->SetBit(TH1::kNoStats);
    fHistogram->SetMaximum(maximum);
    fHistogram->GetYaxis()->SetLimits(minimum, maximum);
-   fHistogram->SetDirectory(0);
+   fHistogram->SetDirectory(nullptr);
    // Restore the axis attributes if needed
    if (historg) {
       fHistogram->GetXaxis()->SetTitle(historg->GetXaxis()->GetTitle());
@@ -1592,7 +1593,7 @@ Int_t TGraph::GetPoint(Int_t i, Double_t &x, Double_t &y) const
 TAxis *TGraph::GetXaxis() const
 {
    TH1 *h = GetHistogram();
-   if (!h) return 0;
+   if (!h) return nullptr;
    return h->GetXaxis();
 }
 
@@ -1602,7 +1603,7 @@ TAxis *TGraph::GetXaxis() const
 TAxis *TGraph::GetYaxis() const
 {
    TH1 *h = GetHistogram();
-   if (!h) return 0;
+   if (!h) return nullptr;
    return h->GetYaxis();
 }
 
@@ -1984,7 +1985,7 @@ void TGraph::RecursiveRemove(TObject *obj)
    if (fFunctions) {
       if (!fFunctions->TestBit(kInvalidObject)) fFunctions->RecursiveRemove(obj);
    }
-   if (fHistogram == obj) fHistogram = 0;
+   if (fHistogram == obj) fHistogram = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2192,7 +2193,7 @@ void TGraph::SetTitle(const char* title)
 Double_t **TGraph::ShrinkAndCopy(Int_t size, Int_t oend)
 {
    if (size * 2 > fMaxSize || !fMaxSize) {
-      return 0;
+      return nullptr;
    }
    Double_t **newarrays = Allocate(size);
    CopyPoints(newarrays, 0, oend, 0);
@@ -2264,7 +2265,7 @@ void TGraph::Streamer(TBuffer &b)
       Version_t R__v = b.ReadVersion(&R__s, &R__c);
       if (R__v > 2) {
          b.ReadClassBuffer(TGraph::Class(), this, R__v, R__s, R__c);
-         if (fHistogram) fHistogram->SetDirectory(0);
+         if (fHistogram) fHistogram->SetDirectory(nullptr);
          TIter next(fFunctions);
          TObject *obj;
          while ((obj = next())) {
@@ -2302,7 +2303,7 @@ void TGraph::Streamer(TBuffer &b)
       }
       b >> fFunctions;
       b >> fHistogram;
-      if (fHistogram) fHistogram->SetDirectory(0);
+      if (fHistogram) fHistogram->SetDirectory(nullptr);
       if (R__v < 2) {
          Float_t mi, ma;
          b >> mi;

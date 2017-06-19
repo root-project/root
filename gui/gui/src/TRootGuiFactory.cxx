@@ -48,7 +48,7 @@ TApplicationImp *TRootGuiFactory::CreateApplicationImp(const char *classname,
    TRootApplication *app = new TRootApplication(classname, argc, argv);
    if (!app->Client()) {
       delete app;
-      app = 0;
+      app = nullptr;
    }
    return app;
 }

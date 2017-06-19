@@ -97,58 +97,37 @@ Bool_t      TGLViewer::fgUseDefaultColorSetForNewViewers = kFALSE;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-TGLViewer::TGLViewer(TVirtualPad * pad, Int_t x, Int_t y,
-                     Int_t width, Int_t height) :
-   fPad(pad),
-   fContextMenu(0),
-   fPerspectiveCameraXOZ(TGLVector3(-1.0, 0.0, 0.0), TGLVector3(0.0, 1.0, 0.0)), // XOZ floor
-   fPerspectiveCameraYOZ(TGLVector3( 0.0,-1.0, 0.0), TGLVector3(1.0, 0.0, 0.0)), // YOZ floor
-   fPerspectiveCameraXOY(TGLVector3(-1.0, 0.0, 0.0), TGLVector3(0.0, 0.0, 1.0)), // XOY floor
-   fOrthoXOYCamera (TGLOrthoCamera::kXOY,  TGLVector3( 0.0, 0.0, 1.0), TGLVector3(0.0, 1.0, 0.0)), // Looking down  Z axis,  X horz, Y vert
-   fOrthoXOZCamera (TGLOrthoCamera::kXOZ,  TGLVector3( 0.0,-1.0, 0.0), TGLVector3(0.0, 0.0, 1.0)), // Looking along Y axis,  X horz, Z vert
-   fOrthoZOYCamera (TGLOrthoCamera::kZOY,  TGLVector3(-1.0, 0.0, 0.0), TGLVector3(0.0, 1.0, 0.0)), // Looking along X axis,  Z horz, Y vert
-   fOrthoXnOYCamera(TGLOrthoCamera::kXnOY, TGLVector3( 0.0, 0.0,-1.0), TGLVector3(0.0, 1.0, 0.0)), // Looking along Z axis, -X horz, Y vert
-   fOrthoXnOZCamera(TGLOrthoCamera::kXnOZ, TGLVector3( 0.0, 1.0, 0.0), TGLVector3(0.0, 0.0, 1.0)), // Looking down  Y axis, -X horz, Z vert
-   fOrthoZnOYCamera(TGLOrthoCamera::kZnOY, TGLVector3( 1.0, 0.0, 0.0), TGLVector3(0.0, 1.0, 0.0)), // Looking down  X axis, -Z horz, Y vert
-   fCurrentCamera(&fPerspectiveCameraXOZ),
-   fAutoRotator(0),
+TGLViewer::TGLViewer(TVirtualPad *pad, Int_t x, Int_t y, Int_t width, Int_t height)
+   : fPad(pad), fContextMenu(nullptr),
+     fPerspectiveCameraXOZ(TGLVector3(-1.0, 0.0, 0.0), TGLVector3(0.0, 1.0, 0.0)), // XOZ floor
+     fPerspectiveCameraYOZ(TGLVector3(0.0, -1.0, 0.0), TGLVector3(1.0, 0.0, 0.0)), // YOZ floor
+     fPerspectiveCameraXOY(TGLVector3(-1.0, 0.0, 0.0), TGLVector3(0.0, 0.0, 1.0)), // XOY floor
+     fOrthoXOYCamera(TGLOrthoCamera::kXOY, TGLVector3(0.0, 0.0, 1.0),
+                     TGLVector3(0.0, 1.0, 0.0)), // Looking down  Z axis,  X horz, Y vert
+     fOrthoXOZCamera(TGLOrthoCamera::kXOZ, TGLVector3(0.0, -1.0, 0.0),
+                     TGLVector3(0.0, 0.0, 1.0)), // Looking along Y axis,  X horz, Z vert
+     fOrthoZOYCamera(TGLOrthoCamera::kZOY, TGLVector3(-1.0, 0.0, 0.0),
+                     TGLVector3(0.0, 1.0, 0.0)), // Looking along X axis,  Z horz, Y vert
+     fOrthoXnOYCamera(TGLOrthoCamera::kXnOY, TGLVector3(0.0, 0.0, -1.0),
+                      TGLVector3(0.0, 1.0, 0.0)), // Looking along Z axis, -X horz, Y vert
+     fOrthoXnOZCamera(TGLOrthoCamera::kXnOZ, TGLVector3(0.0, 1.0, 0.0),
+                      TGLVector3(0.0, 0.0, 1.0)), // Looking down  Y axis, -X horz, Z vert
+     fOrthoZnOYCamera(TGLOrthoCamera::kZnOY, TGLVector3(1.0, 0.0, 0.0),
+                      TGLVector3(0.0, 1.0, 0.0)), // Looking down  X axis, -Z horz, Y vert
+     fCurrentCamera(&fPerspectiveCameraXOZ), fAutoRotator(nullptr),
 
-   fStereo               (kFALSE),
-   fStereoQuadBuf        (kFALSE),
-   fStereoZeroParallax   (0.03f),
-   fStereoEyeOffsetFac   (1.0f),
-   fStereoFrustumAsymFac (1.0f),
+     fStereo(kFALSE), fStereoQuadBuf(kFALSE), fStereoZeroParallax(0.03f), fStereoEyeOffsetFac(1.0f),
+     fStereoFrustumAsymFac(1.0f),
 
-   fLightSet          (0),
-   fClipSet           (0),
-   fSelectedPShapeRef (0),
-   fCurrentOvlElm     (0),
+     fLightSet(nullptr), fClipSet(nullptr), fSelectedPShapeRef(nullptr), fCurrentOvlElm(nullptr),
 
-   fEventHandler(0),
-   fGedEditor(0),
-   fPShapeWrap(0),
-   fPushAction(kPushStd), fDragAction(kDragNone),
-   fRedrawTimer(0),
-   fMaxSceneDrawTimeHQ(5000),
-   fMaxSceneDrawTimeLQ(100),
-   fPointScale (1), fLineScale(1), fSmoothPoints(kFALSE), fSmoothLines(kFALSE),
-   fAxesType(TGLUtil::kAxesNone),
-   fAxesDepthTest(kTRUE),
-   fReferenceOn(kFALSE),
-   fReferencePos(0.0, 0.0, 0.0),
-   fDrawCameraCenter(kFALSE),
-   fCameraOverlay(0),
-   fSmartRefresh(kFALSE),
-   fDebugMode(kFALSE),
-   fIsPrinting(kFALSE),
-   fPictureFileName("viewer.jpg"),
-   fFader(0),
-   fGLWidget(0),
-   fGLDevice(-1),
-   fGLCtxId(0),
-   fIgnoreSizesOnUpdate(kFALSE),
-   fResetCamerasOnUpdate(kTRUE),
-   fResetCamerasOnNextUpdate(kFALSE)
+     fEventHandler(nullptr), fGedEditor(nullptr), fPShapeWrap(nullptr), fPushAction(kPushStd), fDragAction(kDragNone),
+     fRedrawTimer(nullptr), fMaxSceneDrawTimeHQ(5000), fMaxSceneDrawTimeLQ(100), fPointScale(1), fLineScale(1),
+     fSmoothPoints(kFALSE), fSmoothLines(kFALSE), fAxesType(TGLUtil::kAxesNone), fAxesDepthTest(kTRUE),
+     fReferenceOn(kFALSE), fReferencePos(0.0, 0.0, 0.0), fDrawCameraCenter(kFALSE), fCameraOverlay(nullptr),
+     fSmartRefresh(kFALSE), fDebugMode(kFALSE), fIsPrinting(kFALSE), fPictureFileName("viewer.jpg"), fFader(0),
+     fGLWidget(nullptr), fGLDevice(-1), fGLCtxId(nullptr), fIgnoreSizesOnUpdate(kFALSE), fResetCamerasOnUpdate(kTRUE),
+     fResetCamerasOnNextUpdate(kFALSE)
 {
    // Construct the viewer object, with following arguments:
    //    'pad' - external pad viewer is bound to
@@ -162,57 +141,37 @@ TGLViewer::TGLViewer(TVirtualPad * pad, Int_t x, Int_t y,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-TGLViewer::TGLViewer(TVirtualPad * pad) :
-   fPad(pad),
-   fContextMenu(0),
-   fPerspectiveCameraXOZ(TGLVector3(-1.0, 0.0, 0.0), TGLVector3(0.0, 1.0, 0.0)), // XOZ floor
-   fPerspectiveCameraYOZ(TGLVector3( 0.0,-1.0, 0.0), TGLVector3(1.0, 0.0, 0.0)), // YOZ floor
-   fPerspectiveCameraXOY(TGLVector3(-1.0, 0.0, 0.0), TGLVector3(0.0, 0.0, 1.0)), // XOY floor
-   fOrthoXOYCamera (TGLOrthoCamera::kXOY,  TGLVector3( 0.0, 0.0, 1.0), TGLVector3(0.0, 1.0, 0.0)), // Looking down  Z axis,  X horz, Y vert
-   fOrthoXOZCamera (TGLOrthoCamera::kXOZ,  TGLVector3( 0.0,-1.0, 0.0), TGLVector3(0.0, 0.0, 1.0)), // Looking along Y axis,  X horz, Z vert
-   fOrthoZOYCamera (TGLOrthoCamera::kZOY,  TGLVector3(-1.0, 0.0, 0.0), TGLVector3(0.0, 1.0, 0.0)), // Looking along X axis,  Z horz, Y vert
-   fOrthoXnOYCamera(TGLOrthoCamera::kXnOY, TGLVector3( 0.0, 0.0,-1.0), TGLVector3(0.0, 1.0, 0.0)), // Looking along Z axis, -X horz, Y vert
-   fOrthoXnOZCamera(TGLOrthoCamera::kXnOZ, TGLVector3( 0.0, 1.0, 0.0), TGLVector3(0.0, 0.0, 1.0)), // Looking down  Y axis, -X horz, Z vert
-   fOrthoZnOYCamera(TGLOrthoCamera::kZnOY, TGLVector3( 1.0, 0.0, 0.0), TGLVector3(0.0, 1.0, 0.0)), // Looking down  X axis, -Z horz, Y vert
-   fCurrentCamera(&fPerspectiveCameraXOZ),
-   fAutoRotator(0),
+TGLViewer::TGLViewer(TVirtualPad *pad)
+   : fPad(pad), fContextMenu(nullptr),
+     fPerspectiveCameraXOZ(TGLVector3(-1.0, 0.0, 0.0), TGLVector3(0.0, 1.0, 0.0)), // XOZ floor
+     fPerspectiveCameraYOZ(TGLVector3(0.0, -1.0, 0.0), TGLVector3(1.0, 0.0, 0.0)), // YOZ floor
+     fPerspectiveCameraXOY(TGLVector3(-1.0, 0.0, 0.0), TGLVector3(0.0, 0.0, 1.0)), // XOY floor
+     fOrthoXOYCamera(TGLOrthoCamera::kXOY, TGLVector3(0.0, 0.0, 1.0),
+                     TGLVector3(0.0, 1.0, 0.0)), // Looking down  Z axis,  X horz, Y vert
+     fOrthoXOZCamera(TGLOrthoCamera::kXOZ, TGLVector3(0.0, -1.0, 0.0),
+                     TGLVector3(0.0, 0.0, 1.0)), // Looking along Y axis,  X horz, Z vert
+     fOrthoZOYCamera(TGLOrthoCamera::kZOY, TGLVector3(-1.0, 0.0, 0.0),
+                     TGLVector3(0.0, 1.0, 0.0)), // Looking along X axis,  Z horz, Y vert
+     fOrthoXnOYCamera(TGLOrthoCamera::kXnOY, TGLVector3(0.0, 0.0, -1.0),
+                      TGLVector3(0.0, 1.0, 0.0)), // Looking along Z axis, -X horz, Y vert
+     fOrthoXnOZCamera(TGLOrthoCamera::kXnOZ, TGLVector3(0.0, 1.0, 0.0),
+                      TGLVector3(0.0, 0.0, 1.0)), // Looking down  Y axis, -X horz, Z vert
+     fOrthoZnOYCamera(TGLOrthoCamera::kZnOY, TGLVector3(1.0, 0.0, 0.0),
+                      TGLVector3(0.0, 1.0, 0.0)), // Looking down  X axis, -Z horz, Y vert
+     fCurrentCamera(&fPerspectiveCameraXOZ), fAutoRotator(nullptr),
 
-   fStereo               (kFALSE),
-   fStereoQuadBuf        (kFALSE),
-   fStereoZeroParallax   (0.03f),
-   fStereoEyeOffsetFac   (1.0f),
-   fStereoFrustumAsymFac (1.0f),
+     fStereo(kFALSE), fStereoQuadBuf(kFALSE), fStereoZeroParallax(0.03f), fStereoEyeOffsetFac(1.0f),
+     fStereoFrustumAsymFac(1.0f),
 
-   fLightSet          (0),
-   fClipSet           (0),
-   fSelectedPShapeRef (0),
-   fCurrentOvlElm     (0),
+     fLightSet(nullptr), fClipSet(nullptr), fSelectedPShapeRef(nullptr), fCurrentOvlElm(nullptr),
 
-   fEventHandler(0),
-   fGedEditor(0),
-   fPShapeWrap(0),
-   fPushAction(kPushStd), fDragAction(kDragNone),
-   fRedrawTimer(0),
-   fMaxSceneDrawTimeHQ(5000),
-   fMaxSceneDrawTimeLQ(100),
-   fPointScale (1), fLineScale(1), fSmoothPoints(kFALSE), fSmoothLines(kFALSE),
-   fAxesType(TGLUtil::kAxesNone),
-   fAxesDepthTest(kTRUE),
-   fReferenceOn(kFALSE),
-   fReferencePos(0.0, 0.0, 0.0),
-   fDrawCameraCenter(kFALSE),
-   fCameraOverlay(0),
-   fSmartRefresh(kFALSE),
-   fDebugMode(kFALSE),
-   fIsPrinting(kFALSE),
-   fPictureFileName("viewer.jpg"),
-   fFader(0),
-   fGLWidget(0),
-   fGLDevice(fPad->GetGLDevice()),
-   fGLCtxId(0),
-   fIgnoreSizesOnUpdate(kFALSE),
-   fResetCamerasOnUpdate(kTRUE),
-   fResetCamerasOnNextUpdate(kFALSE)
+     fEventHandler(nullptr), fGedEditor(nullptr), fPShapeWrap(nullptr), fPushAction(kPushStd), fDragAction(kDragNone),
+     fRedrawTimer(nullptr), fMaxSceneDrawTimeHQ(5000), fMaxSceneDrawTimeLQ(100), fPointScale(1), fLineScale(1),
+     fSmoothPoints(kFALSE), fSmoothLines(kFALSE), fAxesType(TGLUtil::kAxesNone), fAxesDepthTest(kTRUE),
+     fReferenceOn(kFALSE), fReferencePos(0.0, 0.0, 0.0), fDrawCameraCenter(kFALSE), fCameraOverlay(nullptr),
+     fSmartRefresh(kFALSE), fDebugMode(kFALSE), fIsPrinting(kFALSE), fPictureFileName("viewer.jpg"), fFader(0),
+     fGLWidget(nullptr), fGLDevice(fPad->GetGLDevice()), fGLCtxId(nullptr), fIgnoreSizesOnUpdate(kFALSE),
+     fResetCamerasOnUpdate(kTRUE), fResetCamerasOnNextUpdate(kFALSE)
 {
    //gl-embedded viewer's ctor
    // Construct the viewer object, with following arguments:
@@ -225,7 +184,7 @@ TGLViewer::TGLViewer(TVirtualPad * pad) :
    if (fGLDevice != -1) {
       // For the moment instantiate a fake context identity.
       fGLCtxId = new TGLContextIdentity;
-      fGLCtxId->AddRef(0);
+      fGLCtxId->AddRef(nullptr);
       Int_t viewport[4] = {0};
       gGLManager->ExtractViewport(fGLDevice, viewport);
       SetViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
@@ -245,7 +204,7 @@ void TGLViewer::InitSecondaryObjects()
    fSelectedPShapeRef->SetDrawBBox(kTRUE);
    AddOverlayElement(fSelectedPShapeRef);
 
-   fPShapeWrap = new TGLPShapeObj(0, this);
+   fPShapeWrap = new TGLPShapeObj(nullptr, this);
 
    fLightColorSet.StdLightBackground();
    if (fgUseDefaultColorSetForNewViewers) {
@@ -280,15 +239,13 @@ TGLViewer::~TGLViewer()
    delete fRedrawTimer;
 
    if (fEventHandler) {
-      if (fGLWidget)
-         fGLWidget->SetEventHandler(0);
+      if (fGLWidget) fGLWidget->SetEventHandler(nullptr);
       delete fEventHandler;
    }
 
    if (fPad)
       fPad->ReleaseViewer3D();
-   if (fGLDevice != -1)
-      fGLCtxId->Release(0);
+   if (fGLDevice != -1) fGLCtxId->Release(nullptr);
 }
 
 
@@ -301,16 +258,15 @@ TGLViewer::~TGLViewer()
 
 void TGLViewer::PadPaint(TVirtualPad* pad)
 {
-   TGLScenePad* scenepad = 0;
+   TGLScenePad *scenepad = nullptr;
    for (SceneInfoList_i si = fScenes.begin(); si != fScenes.end(); ++si)
    {
       scenepad = dynamic_cast<TGLScenePad*>((*si)->GetScene());
       if (scenepad && scenepad->GetPad() == pad)
          break;
-      scenepad = 0;
+      scenepad = nullptr;
    }
-   if (scenepad == 0)
-   {
+   if (scenepad == nullptr) {
       scenepad = new TGLScenePad(pad);
       AddScene(scenepad);
    }
@@ -986,7 +942,7 @@ TImage* TGLViewer::GetPictureUsingBB()
 
     if ( ! TakeLock(kDrawLock)) {
         Error(eh, "viewer locked - try later.");
-        return NULL;
+        return nullptr;
     }
 
     TUnlocker ulck(this);
@@ -1033,7 +989,7 @@ TImage* TGLViewer::GetPictureUsingFBO(Int_t w, Int_t h,Float_t pixel_object_scal
 
     if ( ! TakeLock(kDrawLock)) {
         Error(eh, "viewer locked - try later.");
-        return NULL;
+        return nullptr;
     }
 
     TUnlocker ulck(this);
@@ -1054,7 +1010,7 @@ TImage* TGLViewer::GetPictureUsingFBO(Int_t w, Int_t h,Float_t pixel_object_scal
                 Warning(eh, "Back-buffer does not support image scaling, window size will be used.");
             return GetPictureUsingBB();
         } else {
-            return NULL;
+           return nullptr;
         }
     }
 
@@ -1439,7 +1395,7 @@ Bool_t TGLViewer::DoSecondarySelect(Int_t x, Int_t y)
    pshp->Draw(*fRnrCtx);
    glPopName();
    scene->PostRender(*fRnrCtx);
-   fRnrCtx->SetSceneInfo(0);
+   fRnrCtx->SetSceneInfo(nullptr);
    PostRender();
 
    Int_t nSecHits = glRenderMode(GL_RENDER);
@@ -1529,7 +1485,7 @@ Bool_t TGLViewer::DoOverlaySelect(Int_t x, Int_t y)
    fRnrCtx->EndSelection(nHits);
 
    // Process overlay selection.
-   TGLOverlayElement * selElm = 0;
+   TGLOverlayElement *selElm = nullptr;
    if (nHits > 0)
    {
       Int_t idx = 0;
@@ -1977,8 +1933,7 @@ void TGLViewer::ReinitializeCurrentCamera(const TGLVector3& hAxis, const TGLVect
 
 TGLAutoRotator* TGLViewer::GetAutoRotator()
 {
-   if (fAutoRotator == 0)
-      fAutoRotator = new TGLAutoRotator(this);
+   if (fAutoRotator == nullptr) fAutoRotator = new TGLAutoRotator(this);
    return fAutoRotator;
 }
 
@@ -2232,7 +2187,7 @@ void TGLViewer::SelectionChanged()
       fPShapeWrap->fPShape = selected;
       fGedEditor->SetModel(fPad, fPShapeWrap, kButton1Down);
    } else {
-      fPShapeWrap->fPShape = 0;
+      fPShapeWrap->fPShape = nullptr;
       fGedEditor->SetModel(fPad, this, kButton1Down);
    }
 }
@@ -2254,8 +2209,7 @@ void TGLViewer::OverlayDragFinished()
 
 void TGLViewer::RefreshPadEditor(TObject* obj)
 {
-   if (fGedEditor && (obj == 0 || fGedEditor->GetModel() == obj))
-   {
+   if (fGedEditor && (obj == nullptr || fGedEditor->GetModel() == obj)) {
       fGedEditor->SetModel(fPad, fGedEditor->GetModel(), kButton1Down);
    }
 }
@@ -2284,7 +2238,7 @@ void  TGLViewer::RemoveOverlayElement(TGLOverlayElement* el)
 {
    if (el == fCurrentOvlElm)
    {
-      fCurrentOvlElm = 0;
+      fCurrentOvlElm = nullptr;
    }
    TGLViewerBase::RemoveOverlayElement(el);
 }
@@ -2299,7 +2253,7 @@ void TGLViewer::ClearCurrentOvlElm()
    if (fCurrentOvlElm)
    {
       fCurrentOvlElm->MouseLeave();
-      fCurrentOvlElm = 0;
+      fCurrentOvlElm = nullptr;
       RequestDraw();
    }
 }

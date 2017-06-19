@@ -93,7 +93,7 @@ Int_t TPosixThread::Kill(TThread *th)
 
 Int_t TPosixThread::SetCancelOff()
 {
-   return pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, 0);
+   return pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -102,7 +102,7 @@ Int_t TPosixThread::SetCancelOff()
 
 Int_t TPosixThread::SetCancelOn()
 {
-   return pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, 0);
+   return pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -112,7 +112,7 @@ Int_t TPosixThread::SetCancelOn()
 
 Int_t TPosixThread::SetCancelAsynchronous()
 {
-   return pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, 0);
+   return pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -122,7 +122,7 @@ Int_t TPosixThread::SetCancelAsynchronous()
 
 Int_t TPosixThread::SetCancelDeferred()
 {
-   return pthread_setcanceltype (PTHREAD_CANCEL_DEFERRED, 0);
+   return pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -133,7 +133,7 @@ Int_t TPosixThread::CancelPoint()
    int istate;
    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &istate);
    pthread_testcancel();
-   pthread_setcancelstate(istate, 0);
+   pthread_setcancelstate(istate, nullptr);
 
    return 0;
 }

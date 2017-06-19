@@ -105,7 +105,7 @@ RooAbsCollection::RooAbsCollection(const RooAbsCollection& other, const char *na
 
   // Transfer contents (not owned)
   RooFIter iterat= other.fwdIterator();
-  RooAbsArg *arg = 0;
+  RooAbsArg *arg = nullptr;
   while((arg= iterat.next())) {
     add(*arg);
   }
@@ -209,7 +209,7 @@ RooAbsCollection* RooAbsCollection::snapshot(Bool_t deepCopy) const
   Bool_t error = snapshot(*output,deepCopy) ;
   if (error) {
     delete output ;
-    return 0 ;
+    return nullptr;
   }
   output->setHashTableSize(0) ;
   return output ;
@@ -236,10 +236,10 @@ Bool_t RooAbsCollection::snapshot(RooAbsCollection& output, Bool_t deepCopy) con
 {
   // Copy contents
   RooFIter iterat= fwdIterator();
-  RooAbsArg *orig = 0;
-  while((0 != (orig= iterat.next()))) {
-    RooAbsArg *copy= (RooAbsArg*)orig->Clone();
-    output.add(*copy);
+  RooAbsArg *orig = nullptr;
+  while ((nullptr != (orig = iterat.next()))) {
+     RooAbsArg *copy = (RooAbsArg *)orig->Clone();
+     output.add(*copy);
   }
 
   RooFIter vIter = output.fwdIterator() ;
@@ -290,8 +290,8 @@ Bool_t RooAbsCollection::addServerClonesToList(const RooAbsArg& var)
       RooAbsArg* serverClone = (RooAbsArg*)server->Clone() ;
       serverClone->setAttribute("SnapShot_ExtRefClone") ;
       _list.Add(serverClone) ;
-      if (_allRRV && dynamic_cast<RooRealVar*>(serverClone)==0) {
-	_allRRV=kFALSE ;
+      if (_allRRV && dynamic_cast<RooRealVar *>(serverClone) == nullptr) {
+         _allRRV = kFALSE;
       }
       ret |= addServerClonesToList(*server) ;
     } else {
@@ -409,8 +409,8 @@ Bool_t RooAbsCollection::addOwned(RooAbsArg& var, Bool_t silent)
   _ownCont= kTRUE;
 
   _list.Add((RooAbsArg*)&var);
-  if (_allRRV && dynamic_cast<RooRealVar*>(&var)==0) {
-    _allRRV=kFALSE ;
+  if (_allRRV && dynamic_cast<RooRealVar *>(&var) == nullptr) {
+     _allRRV = kFALSE;
   }
 
   return kTRUE;
@@ -430,15 +430,15 @@ RooAbsArg *RooAbsCollection::addClone(const RooAbsArg& var, Bool_t silent)
   // check that we own our variables or else are empty
   if(!_ownCont && (getSize() > 0) && !silent) {
     coutE(ObjectHandling) << ClassName() << "::" << GetName() << "::addClone: can only add to an owned list" << endl;
-    return 0;
+    return nullptr;
   }
   _ownCont= kTRUE;
 
   // add a pointer to a clone of this variable to our list (we now own it!)
   RooAbsArg *clone2= (RooAbsArg*)var.Clone();
-  if(0 != clone2) _list.Add((RooAbsArg*)clone2);
-  if (_allRRV && dynamic_cast<const RooRealVar*>(&var)==0) {
-    _allRRV=kFALSE ;
+  if (nullptr != clone2) _list.Add((RooAbsArg *)clone2);
+  if (_allRRV && dynamic_cast<const RooRealVar *>(&var) == nullptr) {
+     _allRRV = kFALSE;
   }
 
   return clone2;
@@ -461,8 +461,8 @@ Bool_t RooAbsCollection::add(const RooAbsArg& var, Bool_t silent)
 
   // add a pointer to this variable to our list (we don't own it!)
   _list.Add((RooAbsArg*)&var);
-  if (_allRRV && dynamic_cast<const RooRealVar*>(&var)==0) {
-    _allRRV=kFALSE ;
+  if (_allRRV && dynamic_cast<const RooRealVar *>(&var) == nullptr) {
+     _allRRV = kFALSE;
   }
   return kTRUE;
 }
@@ -533,7 +533,7 @@ Bool_t RooAbsCollection::replace(const RooAbsCollection &other)
 
   // loop over elements in the other list
   RooFIter otherArgs= other.fwdIterator();
-  const RooAbsArg *arg = 0;
+  const RooAbsArg *arg = nullptr;
   while((arg= (const RooAbsArg*)otherArgs.next())) {
 
     // do we have an arg of the same name in our set?
@@ -572,10 +572,10 @@ Bool_t RooAbsCollection::replace(const RooAbsArg& var1, const RooAbsArg& var2)
   // is var2's name already in this list?
   if (dynamic_cast<RooArgSet*>(this)) {
     RooAbsArg *other = find(var2);
-    if(other != 0 && other != &var1) {
-      coutE(ObjectHandling) << "RooAbsCollection: cannot replace \"" << name
-	   << "\" with already existing \"" << var2.GetName() << "\"" << endl;
-      return kFALSE;
+    if (other != nullptr && other != &var1) {
+       coutE(ObjectHandling) << "RooAbsCollection: cannot replace \"" << name << "\" with already existing \""
+                             << var2.GetName() << "\"" << endl;
+       return kFALSE;
     }
   }
 
@@ -584,8 +584,8 @@ Bool_t RooAbsCollection::replace(const RooAbsArg& var1, const RooAbsArg& var2)
 //   _list.AddBefore((RooAbsArg*)&var1,(RooAbsArg*)&var2);
 //   _list.Remove((RooAbsArg*)&var1);
 
-  if (_allRRV && dynamic_cast<const RooRealVar*>(&var2)==0) {
-    _allRRV=kFALSE ;
+  if (_allRRV && dynamic_cast<const RooRealVar *>(&var2) == nullptr) {
+     _allRRV = kFALSE;
   }
 
   return kTRUE;
@@ -757,7 +757,7 @@ RooAbsCollection* RooAbsCollection::selectByName(const char* nameList, Bool_t ve
 	sel->add(*arg) ;
       }
     }
-    wcExpr = strtok(0,",") ;
+    wcExpr = strtok(nullptr, ",");
   }
   delete[] buf ;
 
@@ -938,7 +938,7 @@ void RooAbsCollection::printMultiline(ostream&os, Int_t contents, Bool_t /*verbo
 
   RooFIter iterat= fwdIterator();
   int index= 0;
-  RooAbsArg *next = 0;
+  RooAbsArg *next = nullptr;
   TString deeper(indent);
   deeper.Append("     ");
 
@@ -954,9 +954,9 @@ void RooAbsCollection::printMultiline(ostream&os, Int_t contents, Bool_t /*verbo
     RooPrintable::nameFieldLength(maxNameLen+1) ;
   }
 
-  while((0 != (next= iterat.next()))) {
-    os << indent << setw(3) << ++index << ") ";
-    next->printStream(os,contents,kSingleLine,"");
+  while ((nullptr != (next = iterat.next()))) {
+     os << indent << setw(3) << ++index << ") ";
+     next->printStream(os, contents, kSingleLine, "");
   }
 
   // Reset name field length, if modified
@@ -1019,7 +1019,7 @@ void RooAbsCollection::printLatex(const RooCmdArg& arg1, const RooCmdArg& arg2,
   pc.defineString("outputFile","OutputFile",0,"") ;
   pc.defineString("format","Format",0,"NEYVU") ;
   pc.defineInt("sigDigit","Format",0,1) ;
-  pc.defineObject("siblings","Sibling",0,0,kTRUE) ;
+  pc.defineObject("siblings", "Sibling", 0, nullptr, kTRUE);
   pc.defineInt("dummy","FormatArgs",0,0) ;
   pc.defineMutex("Format","FormatArgs") ;
 
@@ -1042,7 +1042,7 @@ void RooAbsCollection::printLatex(const RooCmdArg& arg1, const RooCmdArg& arg2,
     if (pc.hasProcessed("FormatArgs")) {
       RooCmdArg* formatCmd = static_cast<RooCmdArg*>(cmdList.FindObject("FormatArgs")) ;
       formatCmd->addArg(RooFit::LatexTableStyle()) ;
-      printLatex(ofs,pc.getInt("ncol"),0,0,pc.getObjectList("siblings"),formatCmd) ;
+      printLatex(ofs, pc.getInt("ncol"), nullptr, 0, pc.getObjectList("siblings"), formatCmd);
     } else {
       printLatex(ofs,pc.getInt("ncol"),pc.getString("format"),pc.getInt("sigDigit"),pc.getObjectList("siblings")) ;
     }
@@ -1050,7 +1050,7 @@ void RooAbsCollection::printLatex(const RooCmdArg& arg1, const RooCmdArg& arg2,
     if (pc.hasProcessed("FormatArgs")) {
       RooCmdArg* formatCmd = static_cast<RooCmdArg*>(cmdList.FindObject("FormatArgs")) ;
       formatCmd->addArg(RooFit::LatexTableStyle()) ;
-      printLatex(cout,pc.getInt("ncol"),0,0,pc.getObjectList("siblings"),formatCmd) ;
+      printLatex(cout, pc.getInt("ncol"), nullptr, 0, pc.getObjectList("siblings"), formatCmd);
     } else {
       printLatex(cout,pc.getInt("ncol"),pc.getString("format"),pc.getInt("sigDigit"),pc.getObjectList("siblings")) ;
     }
@@ -1100,7 +1100,7 @@ void RooAbsCollection::printLatex(ostream& ofs, Int_t ncol, const char* option, 
 
   // Make list of RRV-only components
   RooFIter lIter = listList.fwdIterator() ;
-  RooArgList* prevList = 0 ;
+  RooArgList *prevList = nullptr;
   while((col=(RooAbsCollection*)lIter.next())) {
     RooArgList* list = new RooArgList ;
     RooFIter iter = col->fwdIterator() ;
@@ -1184,8 +1184,8 @@ Bool_t RooAbsCollection::allInRange(const char* rangeSpec) const
   // Parse rangeSpec specification
   vector<string> cutVec ;
   if (rangeSpec && strlen(rangeSpec)>0) {
-    if (strchr(rangeSpec,',')==0) {
-      cutVec.push_back(rangeSpec) ;
+     if (strchr(rangeSpec, ',') == nullptr) {
+        cutVec.push_back(rangeSpec);
     } else {
       const size_t bufSize = strlen(rangeSpec)+1;
       char* buf = new char[bufSize] ;
@@ -1193,7 +1193,7 @@ Bool_t RooAbsCollection::allInRange(const char* rangeSpec) const
       const char* oneRange = strtok(buf,",") ;
       while(oneRange) {
 	cutVec.push_back(oneRange) ;
-	oneRange = strtok(0,",") ;
+   oneRange = strtok(nullptr, ",");
       }
       delete[] buf ;
     }

@@ -110,19 +110,16 @@ ClassImp(TEveCaloData);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-TEveCaloData::TEveCaloData(const char* n, const char* t):
-   TEveElement(),
-   TNamed(n, t),
+TEveCaloData::TEveCaloData(const char *n, const char *t)
+   : TEveElement(), TNamed(n, t),
 
-   fEtaAxis(0),
-   fPhiAxis(0),
+     fEtaAxis(nullptr), fPhiAxis(nullptr),
 
-   fWrapTwoPi(kTRUE),
+     fWrapTwoPi(kTRUE),
 
-   fMaxValEt(0),
-   fMaxValE(0),
+     fMaxValEt(0), fMaxValE(0),
 
-   fEps(0)
+     fEps(0)
 {
    // Constructor.
 }
@@ -736,10 +733,10 @@ ClassImp(TEveCaloDataHist);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TEveCaloDataHist::TEveCaloDataHist():
-   TEveCaloData(),
+TEveCaloDataHist::TEveCaloDataHist()
+   : TEveCaloData(),
 
-   fHStack(0)
+     fHStack(nullptr)
 {
    fHStack = new THStack();
    fEps    = 1e-5;

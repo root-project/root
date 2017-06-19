@@ -25,8 +25,8 @@ namespace Math {
 {
    // Basic contructor
    fNum = num;
-   fX = 0;
-   fW = 0;
+   fX = nullptr;
+   fW = nullptr;
 
    CalcGaussLegendreSamplingPoints();
 }
@@ -61,8 +61,7 @@ double GaussLegendreIntegrator::DoIntegral(double a, double b, const IGenFunctio
 {
    // Gauss-Legendre integral, see CalcGaussLegendreSamplingPoints.
 
-   if (fNum<=0 || fX == 0 || fW == 0)
-      return 0;
+   if (fNum <= 0 || fX == nullptr || fW == nullptr) return 0;
 
    fUsedOnce = true;
 
@@ -103,11 +102,9 @@ void GaussLegendreIntegrator::CalcGaussLegendreSamplingPoints()
    if (fNum<=0 || fEpsRel<=0)
       return;
 
-   if ( fX == 0 )
-      delete [] fX;
+   if (fX == nullptr) delete[] fX;
 
-   if ( fW == 0 )
-      delete [] fW;
+   if (fW == nullptr) delete[] fW;
 
    fX = new double[fNum];
    fW = new double[fNum];

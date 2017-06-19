@@ -49,10 +49,8 @@ ClassImp(RooBinning);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor for an initially empty binning defining the range [xlo,xhi]
 
-RooBinning::RooBinning(Double_t xlo, Double_t xhi, const char* name) :
-  RooAbsBinning(name),
-  _xlo(0), _xhi(0), _ownBoundLo(kTRUE), _ownBoundHi(kTRUE),
-  _array(0), _blo(0)
+RooBinning::RooBinning(Double_t xlo, Double_t xhi, const char *name)
+   : RooAbsBinning(name), _xlo(0), _xhi(0), _ownBoundLo(kTRUE), _ownBoundHi(kTRUE), _array(nullptr), _blo(0)
 {
   setRange(xlo,xhi);
 }
@@ -60,10 +58,8 @@ RooBinning::RooBinning(Double_t xlo, Double_t xhi, const char* name) :
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor for a uniform binning in 'nbins' bins in the range [xlo,xhi]
 
-RooBinning::RooBinning(Int_t nbins, Double_t xlo, Double_t xhi, const char* name) :
-  RooAbsBinning(name),
-  _xlo(0), _xhi(0), _ownBoundLo(kTRUE), _ownBoundHi(kTRUE),
-  _array(0), _blo(0)
+RooBinning::RooBinning(Int_t nbins, Double_t xlo, Double_t xhi, const char *name)
+   : RooAbsBinning(name), _xlo(0), _xhi(0), _ownBoundLo(kTRUE), _ownBoundHi(kTRUE), _array(nullptr), _blo(0)
 {
   _boundaries.reserve(1 + nbins);
   setRange(xlo, xhi);
@@ -74,10 +70,8 @@ RooBinning::RooBinning(Int_t nbins, Double_t xlo, Double_t xhi, const char* name
 /// Constructor for a binning in the range[xlo,xhi] with 'nbins' bin boundaries listed
 /// array 'boundaries'
 
-RooBinning::RooBinning(Int_t nbins, const Double_t* boundaries, const char* name) :
-  RooAbsBinning(name),
-  _xlo(0), _xhi(0), _ownBoundLo(kTRUE), _ownBoundHi(kTRUE),
-  _array(0), _blo(0)
+RooBinning::RooBinning(Int_t nbins, const Double_t *boundaries, const char *name)
+   : RooAbsBinning(name), _xlo(0), _xhi(0), _ownBoundLo(kTRUE), _ownBoundHi(kTRUE), _array(nullptr), _blo(0)
 {
   // Variable bin size constructor
   _boundaries.reserve(1 + nbins);
@@ -88,11 +82,10 @@ RooBinning::RooBinning(Int_t nbins, const Double_t* boundaries, const char* name
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-RooBinning::RooBinning(const RooBinning& other, const char* name) :
-  RooAbsBinning(name), _xlo(other._xlo), _xhi(other._xhi),
-  _ownBoundLo(other._ownBoundLo), _ownBoundHi(other._ownBoundHi),
-  _nbins(other._nbins), _boundaries(other._boundaries), _array(0),
-  _blo(other._blo)
+RooBinning::RooBinning(const RooBinning &other, const char *name)
+   : RooAbsBinning(name), _xlo(other._xlo), _xhi(other._xhi), _ownBoundLo(other._ownBoundLo),
+     _ownBoundHi(other._ownBoundHi), _nbins(other._nbins), _boundaries(other._boundaries), _array(nullptr),
+     _blo(other._blo)
 {
 }
 

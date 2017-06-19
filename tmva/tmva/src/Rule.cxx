@@ -61,19 +61,9 @@ intelligent fitting. See the RuleEnsemble class for more info.
 ////////////////////////////////////////////////////////////////////////////////
 /// the main constructor for a Rule
 
-TMVA::Rule::Rule( RuleEnsemble *re,
-                  const std::vector< const Node * >& nodes )
-   : fCut           ( 0 )
-   , fNorm          ( 1.0 )
-   , fSupport       ( 0.0 )
-   , fSigma         ( 0.0 )
-   , fCoefficient   ( 0.0 )
-   , fImportance    ( 0.0 )
-   , fImportanceRef ( 1.0 )
-   , fRuleEnsemble  ( re )
-   , fSSB           ( 0 )
-   , fSSBNeve       ( 0 )
-   , fLogger( new MsgLogger("RuleFit") )
+TMVA::Rule::Rule(RuleEnsemble *re, const std::vector<const Node *> &nodes)
+   : fCut(nullptr), fNorm(1.0), fSupport(0.0), fSigma(0.0), fCoefficient(0.0), fImportance(0.0), fImportanceRef(1.0),
+     fRuleEnsemble(re), fSSB(0), fSSBNeve(0), fLogger(new MsgLogger("RuleFit"))
 {
    //
    // input:
@@ -89,18 +79,9 @@ TMVA::Rule::Rule( RuleEnsemble *re,
 ////////////////////////////////////////////////////////////////////////////////
 /// the simple constructor
 
-TMVA::Rule::Rule( RuleEnsemble *re )
-   : fCut           ( 0 )
-   , fNorm          ( 1.0 )
-   , fSupport       ( 0.0 )
-   , fSigma         ( 0.0 )
-   , fCoefficient   ( 0.0 )
-   , fImportance    ( 0.0 )
-   , fImportanceRef ( 1.0 )
-   , fRuleEnsemble  ( re )
-   , fSSB           ( 0 )
-   , fSSBNeve       ( 0 )
-   , fLogger( new MsgLogger("RuleFit") )
+TMVA::Rule::Rule(RuleEnsemble *re)
+   : fCut(nullptr), fNorm(1.0), fSupport(0.0), fSigma(0.0), fCoefficient(0.0), fImportance(0.0), fImportanceRef(1.0),
+     fRuleEnsemble(re), fSSB(0), fSSBNeve(0), fLogger(new MsgLogger("RuleFit"))
 {
 }
 
@@ -108,17 +89,8 @@ TMVA::Rule::Rule( RuleEnsemble *re )
 /// the simple constructor
 
 TMVA::Rule::Rule()
-   : fCut           ( 0 )
-   , fNorm          ( 1.0 )
-   , fSupport       ( 0.0 )
-   , fSigma         ( 0.0 )
-   , fCoefficient   ( 0.0 )
-   , fImportance    ( 0.0 )
-   , fImportanceRef ( 1.0 )
-   , fRuleEnsemble  ( 0 )
-   , fSSB           ( 0 )
-   , fSSBNeve       ( 0 )
-   , fLogger( new MsgLogger("RuleFit") )
+   : fCut(nullptr), fNorm(1.0), fSupport(0.0), fSigma(0.0), fCoefficient(0.0), fImportance(0.0), fImportanceRef(1.0),
+     fRuleEnsemble(nullptr), fSSB(0), fSSBNeve(0), fLogger(new MsgLogger("RuleFit"))
 {
 }
 

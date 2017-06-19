@@ -53,12 +53,12 @@ TMessage::TMessage(UInt_t what, Int_t bufsiz) :
    fWhat  = what;
    *this << what;
 
-   fClass      = 0;
+   fClass = nullptr;
    fCompress   = 0;
-   fBufComp    = 0;
-   fBufCompCur = 0;
-   fCompPos    = 0;
-   fInfos      = 0;
+   fBufComp = nullptr;
+   fBufCompCur = nullptr;
+   fCompPos = nullptr;
+   fInfos = nullptr;
    fEvolution  = kFALSE;
 
    SetBit(kCannotHandleMemberWiseStreaming);
@@ -76,17 +76,17 @@ TMessage::TMessage(void *buf, Int_t bufsize) : TBufferFile(TBuffer::kRead, bufsi
    *this >> fWhat;
 
    fCompress   = 0;
-   fBufComp    = 0;
-   fBufCompCur = 0;
-   fCompPos    = 0;
-   fInfos      = 0;
+   fBufComp = nullptr;
+   fBufCompCur = nullptr;
+   fCompPos = nullptr;
+   fInfos = nullptr;
    fEvolution  = kFALSE;
 
    if (fWhat & kMESS_ZIP) {
       // if buffer has kMESS_ZIP set, move it to fBufComp and uncompress
       fBufComp    = fBuffer;
       fBufCompCur = fBuffer + bufsize;
-      fBuffer     = 0;
+      fBuffer = nullptr;
       Uncompress();
    }
 
@@ -96,7 +96,7 @@ TMessage::TMessage(void *buf, Int_t bufsize) : TBufferFile(TBuffer::kRead, bufsi
       SetBufferOffset(sizeof(UInt_t) + sizeof(fWhat));
       ResetMap();
    } else {
-      fClass = 0;
+      fClass = nullptr;
    }
 }
 
@@ -175,9 +175,9 @@ void TMessage::Reset()
 
    if (fBufComp) {
       delete [] fBufComp;
-      fBufComp    = 0;
-      fBufCompCur = 0;
-      fCompPos    = 0;
+      fBufComp = nullptr;
+      fBufCompCur = nullptr;
+      fCompPos = nullptr;
    }
 }
 
@@ -233,9 +233,9 @@ void TMessage::SetCompressionAlgorithm(Int_t algorithm)
    }
    if (newCompress != fCompress && fBufComp) {
       delete [] fBufComp;
-      fBufComp    = 0;
-      fBufCompCur = 0;
-      fCompPos    = 0;
+      fBufComp = nullptr;
+      fBufCompCur = nullptr;
+      fCompPos = nullptr;
    }
    fCompress = newCompress;
 }
@@ -256,9 +256,9 @@ void TMessage::SetCompressionLevel(Int_t level)
    }
    if (newCompress != fCompress && fBufComp) {
       delete [] fBufComp;
-      fBufComp    = 0;
-      fBufCompCur = 0;
-      fCompPos    = 0;
+      fBufComp = nullptr;
+      fBufCompCur = nullptr;
+      fCompPos = nullptr;
    }
    fCompress = newCompress;
 }
@@ -269,9 +269,9 @@ void TMessage::SetCompressionSettings(Int_t settings)
 {
    if (settings != fCompress && fBufComp) {
       delete [] fBufComp;
-      fBufComp    = 0;
-      fBufCompCur = 0;
-      fCompPos    = 0;
+      fBufComp = nullptr;
+      fBufCompCur = nullptr;
+      fCompPos = nullptr;
    }
    fCompress = settings;
 }
@@ -291,9 +291,9 @@ Int_t TMessage::Compress()
       // no compression specified
       if (fBufComp) {
          delete [] fBufComp;
-         fBufComp    = 0;
-         fBufCompCur = 0;
-         fCompPos    = 0;
+         fBufComp = nullptr;
+         fBufCompCur = nullptr;
+         fCompPos = nullptr;
       }
       return 0;
    }
@@ -306,9 +306,9 @@ Int_t TMessage::Compress()
    // remove any existing compressed buffer before compressing modified message
    if (fBufComp) {
       delete [] fBufComp;
-      fBufComp    = 0;
-      fBufCompCur = 0;
-      fCompPos    = 0;
+      fBufComp = nullptr;
+      fBufCompCur = nullptr;
+      fCompPos = nullptr;
    }
 
    if (Length() <= (Int_t)(256 + 2*sizeof(UInt_t))) {
@@ -336,9 +336,9 @@ Int_t TMessage::Compress()
       if (nout == 0 || nout >= messlen) {
          //this happens when the buffer cannot be compressed
          delete [] fBufComp;
-         fBufComp    = 0;
-         fBufCompCur = 0;
-         fCompPos    = 0;
+         fBufComp = nullptr;
+         fBufCompCur = nullptr;
+         fCompPos = nullptr;
          return -1;
       }
       bufcur  += nout;

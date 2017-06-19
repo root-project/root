@@ -36,18 +36,12 @@ ClassImp(TEveTextEditor);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TEveTextEditor::TEveTextEditor(const TGWindow *p, Int_t width, Int_t height,
-                               UInt_t options, Pixel_t back) :
-   TGedFrame(p, width, height, options | kVerticalFrame, back),
-   fM(0),
+TEveTextEditor::TEveTextEditor(const TGWindow *p, Int_t width, Int_t height, UInt_t options, Pixel_t back)
+   : TGedFrame(p, width, height, options | kVerticalFrame, back), fM(nullptr),
 
-   fSize(0),
-   fFile(0),
-   fMode(0),
-   fExtrude(0),
+     fSize(nullptr), fFile(nullptr), fMode(nullptr), fExtrude(nullptr),
 
-   fLighting(0),
-   fAutoLighting(0)
+     fLighting(nullptr), fAutoLighting(nullptr)
 {
    MakeTitle("TEveText");
 
@@ -73,8 +67,7 @@ TEveTextEditor::TEveTextEditor(const TGWindow *p, Int_t width, Int_t height,
    TIter next(farr);
    TObjString* os;
    Int_t cnt = 0;
-   while ((os = (TObjString*) next()) != 0)
-   {
+   while ((os = (TObjString *)next()) != nullptr) {
       fFile->AddEntry(Form("%s", os->GetString().Data()), cnt);
       cnt++;
    }

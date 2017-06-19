@@ -73,7 +73,7 @@ namespace {
 
    Bool_t HasAttrDirect( PyObject* pyclass, PyObject* pyname, Bool_t mustBePyROOT = kFALSE ) {
       PyObject* attr = PyType_Type.tp_getattro( pyclass, pyname );
-      if ( attr != 0 && ( ! mustBePyROOT || MethodProxy_Check( attr ) ) ) {
+      if (attr != nullptr && (!mustBePyROOT || MethodProxy_Check(attr))) {
          Py_DECREF( attr );
          return kTRUE;
       }
@@ -157,16 +157,15 @@ namespace {
    {
    // Helper; converts python index into straight C index.
       Py_ssize_t idx = PyInt_AsSsize_t( index );
-      if ( idx == (Py_ssize_t)-1 && PyErr_Occurred() )
-         return 0;
+      if (idx == (Py_ssize_t)-1 && PyErr_Occurred()) return nullptr;
 
       Py_ssize_t size = PySequence_Size( self );
       if ( idx >= size || ( idx < 0 && idx < -size ) ) {
          PyErr_SetString( PyExc_IndexError, "index out of range" );
-         return 0;
+         return nullptr;
       }
 
-      PyObject* pyindex = 0;
+      PyObject *pyindex = nullptr;
       if ( idx >= 0 ) {
          Py_INCREF( index );
          pyindex = index;
@@ -185,7 +184,7 @@ namespace {
       PyObject* pyindex = PyStyleIndex( (PyObject*)self, idx );
       if ( ! pyindex ) {
          Py_DECREF( (PyObject*)self );
-         return 0;
+         return nullptr;
       }
 
       PyObject* result = CallPyObjMethod( (PyObject*)self, meth, pyindex );
@@ -219,10 +218,9 @@ namespace {
          PyErr_SetString( PyExc_TypeError, "getattr(): attribute name must be string" );
 
       PyObject* pyptr = CallPyObjMethod( self, "__deref__" );
-      if ( ! pyptr )
-         return 0;
+      if (!pyptr) return nullptr;
 
-   // prevent a potential infinite loop
+      // prevent a potential infinite loop
       if ( Py_TYPE(pyptr) == Py_TYPE(self) ) {
          PyObject* val1 = PyObject_Str( self );
          PyObject* val2 = PyObject_Str( name );
@@ -232,7 +230,7 @@ namespace {
          Py_DECREF( val1 );
 
          Py_DECREF( pyptr );
-         return 0;
+         return nullptr;
       }
 
       PyObject* result = PyObject_GetAttr( pyptr, name );
@@ -250,8 +248,7 @@ namespace {
          PyErr_SetString( PyExc_TypeError, "getattr(): attribute name must be string" );
 
       PyObject* pyptr = CallPyObjMethod( self, "__follow__" );
-      if ( ! pyptr )
-         return 0;
+      if (!pyptr) return nullptr;
 
       PyObject* result = PyObject_GetAttr( pyptr, name );
       Py_DECREF( pyptr );
@@ -340,10 +337,10 @@ namespace {
    {
    // Implemented somewhat different than TClass::DynamicClass, in that "up" is
    // chosen automatically based on the relationship between self and arg pyclass.
-      ObjectProxy* pyclass = 0; PyObject* pyobject = 0;
-      if ( ! PyArg_ParseTuple( args, const_cast< char* >( "O!O:StaticCast" ),
-              &ObjectProxy_Type, &pyclass, &pyobject ) )
-         return 0;
+   ObjectProxy *pyclass = nullptr;
+   PyObject *pyobject = nullptr;
+   if (!PyArg_ParseTuple(args, const_cast<char *>("O!O:StaticCast"), &ObjectProxy_Type, &pyclass, &pyobject))
+      return nullptr;
 
    // check the given arguments (dcasts are necessary b/c of could be a TQClass
       TClass* from = (TClass*)OP2TCLASS(self)->DynamicCast( TClass::Class(), self->GetObject() );
@@ -352,23 +349,23 @@ namespace {
       if ( ! from ) {
          PyErr_SetString( PyExc_TypeError, "unbound method TClass::StaticCast "
             "must be called with a TClass instance as first argument" );
-         return 0;
+         return nullptr;
       }
 
       if ( ! to ) {
          PyErr_SetString( PyExc_TypeError, "could not convert argument 1 (TClass* expected)" );
-         return 0;
+         return nullptr;
       }
 
    // retrieve object address
-      void* address = 0;
+      void *address = nullptr;
       if ( ObjectProxy_Check( pyobject ) ) address = ((ObjectProxy*)pyobject)->GetObject();
       else if ( PyInt_Check( pyobject ) || PyLong_Check( pyobject ) ) address = (void*)PyLong_AsLong( pyobject );
       else Utility::GetBuffer( pyobject, '*', 1, address, kFALSE );
 
       if ( ! address ) {
          PyErr_SetString( PyExc_TypeError, "could not convert argument 2 (void* expected)" );
-         return 0;
+         return nullptr;
       }
 
    // determine direction of cast
@@ -381,7 +378,7 @@ namespace {
 
       if ( up == -1 ) {
          PyErr_Format( PyExc_TypeError, "unable to cast %s to %s", from->GetName(), to->GetName() );
-         return 0;
+         return nullptr;
       }
 
    // perform actual cast
@@ -398,15 +395,16 @@ namespace {
 
    PyObject* TClassDynamicCast( ObjectProxy* self, PyObject* args )
    {
-      ObjectProxy* pyclass = 0; PyObject* pyobject = 0;
+      ObjectProxy *pyclass = nullptr;
+      PyObject *pyobject = nullptr;
       Long_t up = 1;
       if ( ! PyArg_ParseTuple( args, const_cast< char* >( "O!O|l:DynamicCast" ),
               &ObjectProxy_Type, &pyclass, &pyobject, &up ) )
-         return 0;
+         return nullptr;
 
    // perform actual cast
       PyObject* meth = PyObject_GetAttr( (PyObject*)self, PyStrings::gTClassDynCast );
-      PyObject* ptr = meth ? PyObject_Call( meth, args, 0 ) : 0;
+      PyObject *ptr = meth ? PyObject_Call(meth, args, nullptr) : nullptr;
       Py_XDECREF( meth );
 
    // simply forward in case of call failure
@@ -414,7 +412,7 @@ namespace {
          return ptr;
 
    // retrieve object address
-      void* address = 0;
+      void *address = nullptr;
       if ( ObjectProxy_Check( pyobject ) ) address = ((ObjectProxy*)pyobject)->GetObject();
       else if ( PyInt_Check( pyobject ) || PyLong_Check( pyobject ) ) address = (void*)PyLong_AsLong( pyobject );
       else Utility::GetBuffer( pyobject, '*', 1, address, kFALSE );
@@ -425,7 +423,7 @@ namespace {
       }
 
    // now use binding to return a usable class
-      TClass* klass = 0;
+      TClass *klass = nullptr;
       if ( up ) {                  // up-cast: result is a base
          klass = (TClass*)OP2TCLASS(pyclass)->DynamicCast( TClass::Class(), pyclass->GetObject() );
       } else {                     // down-cast: result is a derived
@@ -459,13 +457,12 @@ namespace {
    PyObject* TCollectionRemove( PyObject* self, PyObject* obj )
    {
       PyObject* result = CallPyObjMethod( self, "Remove", obj );
-      if ( ! result )
-         return 0;
+      if (!result) return nullptr;
 
       if ( ! PyObject_IsTrue( result ) ) {
          Py_DECREF( result );
          PyErr_SetString( PyExc_ValueError, "list.remove(x): x not in list" );
-         return 0;
+         return nullptr;
       }
 
       Py_DECREF( result );
@@ -479,13 +476,12 @@ namespace {
    PyObject* TCollectionAdd( PyObject* self, PyObject* other )
    {
       PyObject* l = CallPyObjMethod( self, "Clone" );
-      if ( ! l )
-         return 0;
+      if (!l) return nullptr;
 
       PyObject* result = CallPyObjMethod( l, "extend", other );
       if ( ! result ) {
          Py_DECREF( l );
-         return 0;
+         return nullptr;
       }
 
       return l;
@@ -497,12 +493,11 @@ namespace {
    PyObject* TCollectionMul( ObjectProxy* self, PyObject* pymul )
    {
       Long_t imul = PyLong_AsLong( pymul );
-      if ( imul == -1 && PyErr_Occurred() )
-         return 0;
+      if (imul == -1 && PyErr_Occurred()) return nullptr;
 
       if ( ! self->GetObject() ) {
          PyErr_SetString( PyExc_TypeError, "unsubscriptable object" );
-         return 0;
+         return nullptr;
       }
 
       PyObject* nseq = BindCppObject(
@@ -522,8 +517,7 @@ namespace {
    PyObject* TCollectionIMul( PyObject* self, PyObject* pymul )
    {
       Long_t imul = PyLong_AsLong( pymul );
-      if ( imul == -1 && PyErr_Occurred() )
-         return 0;
+      if (imul == -1 && PyErr_Occurred()) return nullptr;
 
       PyObject* l = PySequence_List( self );
 
@@ -547,8 +541,7 @@ namespace {
 
          Py_DECREF( item );
 
-         if ( ! found )
-            return 0;                        // internal problem
+         if (!found) return nullptr; // internal problem
 
          if ( PyObject_IsTrue( found ) )
             count += 1;
@@ -564,7 +557,7 @@ namespace {
    PyObject* TCollectionIter( ObjectProxy* self ) {
       if ( ! self->GetObject() ) {
          PyErr_SetString( PyExc_TypeError, "iteration over non-sequence" );
-         return 0;
+         return nullptr;
       }
 
       TCollection* col =
@@ -583,7 +576,7 @@ namespace {
       if ( PySlice_Check( index ) ) {
          if ( ! self->GetObject() ) {
             PyErr_SetString( PyExc_TypeError, "unsubscriptable object" );
-            return 0;
+            return nullptr;
          }
 
          TClass* clSeq = OP2TCLASS(self);
@@ -609,15 +602,13 @@ namespace {
 
    PyObject* TSeqCollectionSetItem( ObjectProxy* self, PyObject* args )
    {
-      PyObject* index = 0, *obj = 0;
-      if ( ! PyArg_ParseTuple( args,
-                const_cast< char* >( "OO:__setitem__" ), &index, &obj ) )
-         return 0;
+      PyObject *index = nullptr, *obj = nullptr;
+      if (!PyArg_ParseTuple(args, const_cast<char *>("OO:__setitem__"), &index, &obj)) return nullptr;
 
       if ( PySlice_Check( index ) ) {
          if ( ! self->GetObject() ) {
             PyErr_SetString( PyExc_TypeError, "unsubscriptable object" );
-            return 0;
+            return nullptr;
          }
 
          TSeqCollection* oseq = (TSeqCollection*)OP2TCLASS(self)->DynamicCast(
@@ -641,13 +632,12 @@ namespace {
       }
 
       PyObject* pyindex = PyStyleIndex( (PyObject*)self, index );
-      if ( ! pyindex )
-         return 0;
+      if (!pyindex) return nullptr;
 
       PyObject* result  = CallPyObjMethod( (PyObject*)self, "RemoveAt", pyindex );
       if ( ! result ) {
          Py_DECREF( pyindex );
-         return 0;
+         return nullptr;
       }
 
       Py_DECREF( result );
@@ -664,7 +654,7 @@ namespace {
       if ( PySlice_Check( index ) ) {
          if ( ! self->GetObject() ) {
             PyErr_SetString( PyExc_TypeError, "unsubscriptable object" );
-            return 0;
+            return nullptr;
          }
 
          TSeqCollection* oseq = (TSeqCollection*)OP2TCLASS(self)->DynamicCast(
@@ -681,8 +671,7 @@ namespace {
       }
 
       PyObject* result = CallSelfIndex( self, (PyObject*)index, "RemoveAt" );
-      if ( ! result )
-         return 0;
+      if (!result) return nullptr;
 
       Py_DECREF( result );
       Py_INCREF( Py_None );
@@ -694,9 +683,9 @@ namespace {
 
    PyObject* TSeqCollectionInsert( PyObject* self, PyObject* args )
    {
-      PyObject* obj = 0; Long_t idx = 0;
-      if ( ! PyArg_ParseTuple( args, const_cast< char* >( "lO:insert" ), &idx, &obj ) )
-         return 0;
+      PyObject *obj = nullptr;
+      Long_t idx = 0;
+      if (!PyArg_ParseTuple(args, const_cast<char *>("lO:insert"), &idx, &obj)) return nullptr;
 
       Py_ssize_t size = PySequence_Size( self );
       if ( idx < 0 )
@@ -722,7 +711,7 @@ namespace {
       } else if ( nArgs != 1 ) {
          PyErr_Format( PyExc_TypeError,
             "pop() takes at most 1 argument (%d given)", nArgs );
-         return 0;
+         return nullptr;
       }
 
       return CallSelfIndex( self, PyTuple_GET_ITEM( args, 0 ), "RemoveAt" );
@@ -734,8 +723,7 @@ namespace {
    PyObject* TSeqCollectionReverse( PyObject* self )
    {
       PyObject* tup = PySequence_Tuple( self );
-      if ( ! tup )
-         return 0;
+      if (!tup) return nullptr;
 
       PyObject* result = CallPyObjMethod( self, "Clear" );
       Py_XDECREF( result );
@@ -760,7 +748,7 @@ namespace {
       } else {
       // sort in a python list copy
          PyObject* l = PySequence_List( self );
-         PyObject* result = 0;
+         PyObject *result = nullptr;
          if ( PyTuple_GET_SIZE( args ) == 1 )
             result = CallPyObjMethod( l, "sort", PyTuple_GET_ITEM( args, 0 ) );
          else {
@@ -772,7 +760,7 @@ namespace {
          Py_XDECREF( result );
          if ( PyErr_Occurred() ) {
             Py_DECREF( l );
-            return 0;
+            return nullptr;
          }
 
          result = CallPyObjMethod( self, "Clear" );
@@ -792,13 +780,12 @@ namespace {
    PyObject* TSeqCollectionIndex( PyObject* self, PyObject* obj )
    {
       PyObject* index = CallPyObjMethod( self, "IndexOf", obj );
-      if ( ! index )
-         return 0;
+      if (!index) return nullptr;
 
       if ( PyLong_AsLong( index ) < 0 ) {
          Py_DECREF( index );
          PyErr_SetString( PyExc_ValueError, "list.index(x): x not in list" );
-         return 0;
+         return nullptr;
       }
 
       return index;
@@ -809,12 +796,10 @@ namespace {
    {
    // GetSize on a TObjArray returns its capacity, not size in use
       PyObject* size = CallPyObjMethod( self, "GetLast" );
-      if ( ! size )
-         return 0;
+      if (!size) return nullptr;
 
       long lsize = PyLong_AsLong( size );
-      if ( lsize == -1 && PyErr_Occurred() )
-         return 0;
+      if (lsize == -1 && PyErr_Occurred()) return nullptr;
 
       Py_DECREF( size );
       return PyInt_FromLong( lsize + 1 );
@@ -827,19 +812,17 @@ namespace {
    // TClonesArray sets objects by constructing them in-place; which is impossible
    // to support as the python object given as value must exist a priori. It can,
    // however, be memcpy'd and stolen, caveat emptor.
-      ObjectProxy* pyobj = 0; PyObject* idx = 0;
-      if ( ! PyArg_ParseTuple( args,
-               const_cast< char* >( "OO!:__setitem__" ), &idx, &ObjectProxy_Type, &pyobj ) )
-         return 0;
+   ObjectProxy *pyobj = nullptr;
+   PyObject *idx = nullptr;
+   if (!PyArg_ParseTuple(args, const_cast<char *>("OO!:__setitem__"), &idx, &ObjectProxy_Type, &pyobj)) return nullptr;
 
-      if ( ! self->GetObject() ) {
-         PyErr_SetString( PyExc_TypeError, "unsubscriptable object" );
-         return 0;
+   if (!self->GetObject()) {
+      PyErr_SetString(PyExc_TypeError, "unsubscriptable object");
+      return nullptr;
       }
 
       PyObject* pyindex = PyStyleIndex( (PyObject*)self, idx );
-      if ( ! pyindex )
-         return 0;
+      if (!pyindex) return nullptr;
       int index = (int)PyLong_AsLong( pyindex );
       Py_DECREF( pyindex );
 
@@ -849,7 +832,7 @@ namespace {
 
       if ( ! cla ) {
          PyErr_SetString( PyExc_TypeError, "attempt to call with null object" );
-         return 0;
+         return nullptr;
       }
 
       if ( Cppyy::GetScope( cla->GetClass()->GetName() ) != pyobj->ObjectIsA() ) {
@@ -916,35 +899,67 @@ namespace {
    }
 
    PyTypeObject VectorIter_Type = {
-      PyVarObject_HEAD_INIT( &PyType_Type, 0 )
-      (char*)"ROOT.vectoriter",  // tp_name
-      sizeof(vectoriterobject),  // tp_basicsize
+      PyVarObject_HEAD_INIT(&PyType_Type, 0)(char *) "ROOT.vectoriter", // tp_name
+      sizeof(vectoriterobject),                                         // tp_basicsize
       0,
-      (destructor)vectoriter_dealloc,            // tp_dealloc
-      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-      Py_TPFLAGS_DEFAULT |
-         Py_TPFLAGS_HAVE_GC,     // tp_flags
+      (destructor)vectoriter_dealloc, // tp_dealloc
+      nullptr,
+      nullptr,
+      nullptr,
+      nullptr,
+      nullptr,
+      nullptr,
+      nullptr,
+      nullptr,
+      nullptr,
+      nullptr,
+      nullptr,
+      nullptr,
+      nullptr,
+      nullptr,
+      Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC, // tp_flags
+      nullptr,
+      (traverseproc)vectoriter_traverse, // tp_traverse
+      nullptr,
+      nullptr,
       0,
-      (traverseproc)vectoriter_traverse,         // tp_traverse
-      0, 0, 0,
-      PyObject_SelfIter,         // tp_iter
-      (iternextfunc)vectoriter_iternext,         // tp_iternext
-      0,                         // tp_methods
-      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+      PyObject_SelfIter,                 // tp_iter
+      (iternextfunc)vectoriter_iternext, // tp_iternext
+      nullptr,                           // tp_methods
+      nullptr,
+      nullptr,
+      nullptr,
+      nullptr,
+      nullptr,
+      nullptr,
+      0,
+      nullptr,
+      nullptr,
+      nullptr,
+      nullptr,
+      nullptr,
+      nullptr,
+      nullptr,
+      nullptr,
+      nullptr,
+      nullptr
 #if PY_VERSION_HEX >= 0x02030000
-      , 0                        // tp_del
+      ,
+      nullptr // tp_del
 #endif
 #if PY_VERSION_HEX >= 0x02060000
-      , 0                        // tp_version_tag
+      ,
+      0 // tp_version_tag
 #endif
 #if PY_VERSION_HEX >= 0x03040000
-      , 0                        // tp_finalize
+      ,
+      0 // tp_finalize
 #endif
    };
 
    static PyObject* vector_iter( PyObject* v ) {
       vectoriterobject* vi = PyObject_GC_New( vectoriterobject, &VectorIter_Type );
-      if ( ! vi ) return NULL;
+      if (!vi) return nullptr;
 
       Py_INCREF( v );
       vi->vi_vector = v;
@@ -984,11 +999,11 @@ namespace {
       if ( PySlice_Check( index ) ) {
          if ( ! self->GetObject() ) {
             PyErr_SetString( PyExc_TypeError, "unsubscriptable object" );
-            return 0;
+            return nullptr;
          }
 
          PyObject* pyclass = PyObject_GetAttr( (PyObject*)self, PyStrings::gClass );
-         PyObject* nseq = PyObject_CallObject( pyclass, NULL );
+         PyObject *nseq = PyObject_CallObject(pyclass, nullptr);
          Py_DECREF( pyclass );
 
          Py_ssize_t start, stop, step;
@@ -1009,18 +1024,17 @@ namespace {
    {
    // std::vector<bool> is a special-case in C++, and its return type depends on
    // the compiler: treat it special here as well
-      int bval = 0; PyObject* idx = 0;
-      if ( ! PyArg_ParseTuple( args, const_cast< char* >( "Oi:__setitem__" ), &idx, &bval ) )
-         return 0;
+      int bval = 0;
+      PyObject *idx = nullptr;
+      if (!PyArg_ParseTuple(args, const_cast<char *>("Oi:__setitem__"), &idx, &bval)) return nullptr;
 
       if ( ! self->GetObject() ) {
          PyErr_SetString( PyExc_TypeError, "unsubscriptable object" );
-         return 0;
+         return nullptr;
       }
 
       PyObject* pyindex = PyStyleIndex( (PyObject*)self, idx );
-      if ( ! pyindex )
-         return 0;
+      if (!pyindex) return nullptr;
       int index = (int)PyLong_AsLong( pyindex );
       Py_DECREF( pyindex );
 
@@ -1030,7 +1044,7 @@ namespace {
          PyErr_Format( PyExc_TypeError,
                        "require object of type std::vector<bool>, but %s given",
                        Cppyy::GetFinalName( self->ObjectIsA() ).c_str() );
-         return 0;
+         return nullptr;
       }
 
    // get hold of the actual std::vector<bool> (no cast, as vector is never a base)
@@ -1047,18 +1061,18 @@ namespace {
    PyObject* MapContains( PyObject* self, PyObject* obj )
    {
    // Implement python's __contains__ for std::map<>s.
-      PyObject* result = 0;
+   PyObject *result = nullptr;
 
-      PyObject* iter = CallPyObjMethod( self, "find", obj );
-      if ( ObjectProxy_Check( iter ) ) {
-         PyObject* end = CallPyObjMethod( self, "end" );
-         if ( ObjectProxy_Check( end ) ) {
-            if ( ! PyObject_RichCompareBool( iter, end, Py_EQ ) ) {
-               Py_INCREF( Py_True );
-               result = Py_True;
-            }
+   PyObject *iter = CallPyObjMethod(self, "find", obj);
+   if (ObjectProxy_Check(iter)) {
+      PyObject *end = CallPyObjMethod(self, "end");
+      if (ObjectProxy_Check(end)) {
+         if (!PyObject_RichCompareBool(iter, end, Py_EQ)) {
+            Py_INCREF(Py_True);
+            result = Py_True;
          }
-         Py_XDECREF( end );
+      }
+      Py_XDECREF(end);
       }
       Py_XDECREF( iter );
 
@@ -1110,7 +1124,7 @@ namespace {
          PyErr_SetString( PyExc_IndexError, "index out of range" );
       }
 
-      return 0;
+      return nullptr;
    }
 
 //- pair as sequence to allow tuple unpacking ---------------------------------
@@ -1118,12 +1132,11 @@ namespace {
    {
    // For std::map<> iteration, unpack std::pair<>s into tuples for the loop.
       Long_t idx = PyLong_AsLong( pyindex );
-      if ( idx == -1 && PyErr_Occurred() )
-         return 0;
+      if (idx == -1 && PyErr_Occurred()) return nullptr;
 
       if ( ! ObjectProxy_Check( self ) || ! ((ObjectProxy*)self)->GetObject() ) {
          PyErr_SetString( PyExc_TypeError, "unsubscriptable object" );
-         return 0;
+         return nullptr;
       }
 
       if ( (int)idx == 0 )
@@ -1133,7 +1146,7 @@ namespace {
 
    // still here? Trigger stop iteration
       PyErr_SetString( PyExc_IndexError, "out of bounds" );
-      return 0;
+      return nullptr;
    }
 
 //- string behavior as primitives ----------------------------------------------
@@ -1244,13 +1257,12 @@ static int PyObject_Compare( PyObject* one, PyObject* other ) {
    // Implementation of python __next__ (iterator protocol) for TIter.
       PyObject* next = CallPyObjMethod( self, "Next" );
 
-      if ( ! next )
-         return 0;
+      if (!next) return nullptr;
 
       if ( ! PyObject_IsTrue( next ) ) {
          Py_DECREF( next );
          PyErr_SetString( PyExc_StopIteration, "" );
-         return 0;
+         return nullptr;
       }
 
       return next;
@@ -1261,10 +1273,10 @@ static int PyObject_Compare( PyObject* one, PyObject* other ) {
    PyObject* StlIterNext( PyObject* self )
    {
    // Python iterator protocol __next__ for STL forward iterators.
-      PyObject* next = 0;
-      PyObject* last = PyObject_GetAttr( self, PyStrings::gEnd );
+   PyObject *next = nullptr;
+   PyObject *last = PyObject_GetAttr(self, PyStrings::gEnd);
 
-      if ( last != 0 ) {
+   if (last != nullptr) {
       // handle special case of empty container (i.e. self is end)
          if ( PyObject_RichCompareBool( last, self, Py_EQ ) ) {
             PyErr_SetString( PyExc_StopIteration, "" );
@@ -1272,7 +1284,7 @@ static int PyObject_Compare( PyObject* one, PyObject* other ) {
             PyObject* dummy = PyInt_FromLong( 1l );
             PyObject* iter = CallPyObjMethod( self, "__postinc__", dummy );
             Py_DECREF( dummy );
-            if ( iter != 0 ) {
+            if (iter != nullptr) {
                if ( PyObject_RichCompareBool( last, iter, Py_EQ ) )
                   PyErr_SetString( PyExc_StopIteration, "" );
                else
@@ -1317,18 +1329,18 @@ static int PyObject_Compare( PyObject* one, PyObject* other ) {
    PyObject* TDirectoryGetObject( ObjectProxy* self, PyObject* args )
    {
    // Pythonization of TDirector::GetObject().
-      PyObject* name = 0; ObjectProxy* ptr = 0;
-      if ( ! PyArg_ParseTuple( args, const_cast< char* >( "O!O!:TDirectory::GetObject" ),
-               &PyROOT_PyUnicode_Type, &name, &ObjectProxy_Type, &ptr ) )
-         return 0;
+   PyObject *name = nullptr;
+   ObjectProxy *ptr = nullptr;
+   if (!PyArg_ParseTuple(args, const_cast<char *>("O!O!:TDirectory::GetObject"), &PyROOT_PyUnicode_Type, &name,
+                         &ObjectProxy_Type, &ptr))
+      return nullptr;
 
-      TDirectory* dir =
-         (TDirectory*)OP2TCLASS(self)->DynamicCast( TDirectory::Class(), self->GetObject() );
+   TDirectory *dir = (TDirectory *)OP2TCLASS(self)->DynamicCast(TDirectory::Class(), self->GetObject());
 
-      if ( ! dir ) {
-         PyErr_SetString( PyExc_TypeError,
-           "TDirectory::GetObject must be called with a TDirectory instance as first argument" );
-         return 0;
+   if (!dir) {
+      PyErr_SetString(PyExc_TypeError,
+                      "TDirectory::GetObject must be called with a TDirectory instance as first argument");
+      return nullptr;
       }
 
       void* address = dir->GetObjectChecked( PyROOT_PyUnicode_AsString( name ), OP2TCLASS(ptr) );
@@ -1340,7 +1352,7 @@ static int PyObject_Compare( PyObject* one, PyObject* other ) {
       }
 
       PyErr_Format( PyExc_LookupError, "no such object, \"%s\"", PyROOT_PyUnicode_AsString( name ) );
-      return 0;
+      return nullptr;
    }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1349,12 +1361,13 @@ static int PyObject_Compare( PyObject* one, PyObject* other ) {
 
    PyObject* TDirectoryWriteObject( ObjectProxy* self, PyObject* args )
    {
-      ObjectProxy *wrt = 0; PyObject *name = 0, *option = 0;
+      ObjectProxy *wrt = nullptr;
+      PyObject *name = nullptr, *option = nullptr;
       Int_t bufsize = 0;
       if ( ! PyArg_ParseTuple( args, const_cast< char* >( "O!O!|O!i:TDirectory::WriteObject" ),
                &ObjectProxy_Type, &wrt, &PyROOT_PyUnicode_Type, &name,
                &PyROOT_PyUnicode_Type, &option, &bufsize ) )
-         return 0;
+         return nullptr;
 
       TDirectory* dir =
          (TDirectory*)OP2TCLASS(self)->DynamicCast( TDirectory::Class(), self->GetObject() );
@@ -1362,11 +1375,11 @@ static int PyObject_Compare( PyObject* one, PyObject* other ) {
       if ( ! dir ) {
          PyErr_SetString( PyExc_TypeError,
            "TDirectory::WriteObject must be called with a TDirectory instance as first argument" );
-         return 0;
+         return nullptr;
       }
 
       Int_t result = 0;
-      if ( option != 0 ) {
+      if (option != nullptr) {
          result = dir->WriteObjectAny( wrt->GetObject(), OP2TCLASS(wrt),
             PyROOT_PyUnicode_AsString( name ), PyROOT_PyUnicode_AsString( option ), bufsize );
       } else {
@@ -1387,16 +1400,15 @@ namespace PyROOT {      // workaround for Intel icc on Linux
    {
    // allow access to branches/leaves as if they are data members
       const char* name1 = PyROOT_PyUnicode_AsString( pyname );
-      if ( ! name1 )
-         return 0;
+      if (!name1) return nullptr;
 
-   // get hold of actual tree
+      // get hold of actual tree
       TTree* tree =
          (TTree*)OP2TCLASS(self)->DynamicCast( TTree::Class(), self->GetObject() );
 
       if ( ! tree ) {
          PyErr_SetString( PyExc_ReferenceError, "attempt to access a null-pointer" );
-         return 0;
+         return nullptr;
       }
 
    // deal with possible aliasing
@@ -1432,7 +1444,7 @@ namespace PyROOT {      // workaround for Intel icc on Linux
             TObjArray* leaves = branch->GetListOfLeaves();
             if ( klass && ! tree->GetLeaf( name ) &&
                  ! (leaves->GetSize() && ( leaves->First() == leaves->Last() ) ) )
-               return BindCppObjectNoCast( NULL, Cppyy::GetScope( branch->GetClassName() ) );
+               return BindCppObjectNoCast(nullptr, Cppyy::GetScope(branch->GetClassName()));
          }
       }
 
@@ -1456,7 +1468,7 @@ namespace PyROOT {      // workaround for Intel icc on Linux
             std::string typeName = leaf->GetTypeName();
             TConverter* pcnv = CreateConverter( typeName + '*', leaf->GetNdata() );
 
-            void* address = 0;
+            void *address = nullptr;
             if ( leaf->GetBranch() ) address = (void*)leaf->GetBranch()->GetAddress();
             if ( ! address ) address = (void*)leaf->GetValuePointer();
 
@@ -1467,7 +1479,7 @@ namespace PyROOT {      // workaround for Intel icc on Linux
          } else if ( leaf->GetValuePointer() ) {
          // value types
             TConverter* pcnv = CreateConverter( leaf->GetTypeName() );
-            PyObject* value = 0;
+            PyObject *value = nullptr;
             if ( leaf->IsA() == TLeafElement::Class() || leaf->IsA() == TLeafObject::Class() )
                value = pcnv->FromMemory( (void*)*(void**)leaf->GetValuePointer() );
             else
@@ -1481,7 +1493,7 @@ namespace PyROOT {      // workaround for Intel icc on Linux
    // confused
       PyErr_Format( PyExc_AttributeError,
           "\'%s\' object has no attribute \'%s\'", tree->IsA()->GetName(), name );
-      return 0;
+      return nullptr;
    }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1505,7 +1517,9 @@ namespace PyROOT {      // workaround for Intel icc on Linux
          }
          return *this;
       }
-      ~TTreeMemberFunction() { Py_DECREF( fOrg ); fOrg = 0; }
+      ~TTreeMemberFunction() { Py_DECREF( fOrg );
+         fOrg = nullptr;
+      }
 
    public:
       virtual PyObject* GetSignature() { return PyROOT_PyUnicode_FromString( "(...)" ); }
@@ -1517,7 +1531,7 @@ namespace PyROOT {      // workaround for Intel icc on Linux
          PyTuple_SET_ITEM( co_varnames, 1, PyROOT_PyUnicode_FromString( "*args" ) );
          return co_varnames;
       }
-      virtual PyObject* GetArgDefault( Int_t ) { return NULL; }
+      virtual PyObject *GetArgDefault(Int_t) { return nullptr; }
       virtual PyObject* GetScopeProxy() { return CreateScopeProxy( "TTree" ); }
 
    protected:
@@ -1550,26 +1564,26 @@ namespace PyROOT {      // workaround for Intel icc on Linux
             if ( ! tree ) {
                PyErr_SetString( PyExc_TypeError,
                   "TTree::Branch must be called with a TTree instance as first argument" );
-               return 0;
+               return nullptr;
             }
 
-            PyObject *name = 0, *clName = 0, *leaflist = 0;
-            PyObject *address = 0;
-            PyObject *bufsize = 0, *splitlevel = 0;
+            PyObject *name = nullptr, *clName = nullptr, *leaflist = nullptr;
+            PyObject *address = nullptr;
+            PyObject *bufsize = nullptr, *splitlevel = nullptr;
 
-         // try: ( const char*, void*, const char*, Int_t = 32000 )
+            // try: ( const char*, void*, const char*, Int_t = 32000 )
             if ( PyArg_ParseTuple( args, const_cast< char* >( "O!OO!|O!:Branch" ),
                    &PyROOT_PyUnicode_Type, &name, &address, &PyROOT_PyUnicode_Type,
                    &leaflist, &PyInt_Type, &bufsize ) ) {
 
-               void* buf = 0;
+               void *buf = nullptr;
                if ( ObjectProxy_Check( address ) )
                   buf = (void*)((ObjectProxy*)address)->GetObject();
                else
                   Utility::GetBuffer( address, '*', 1, buf, kFALSE );
 
-               if ( buf != 0 ) {
-                  TBranch* branch = 0;
+               if (buf != nullptr) {
+                  TBranch *branch = nullptr;
                   if ( argc == 4 ) {
                      branch = tree->Branch( PyROOT_PyUnicode_AsString( name ), buf,
                         PyROOT_PyUnicode_AsString( leaflist ), PyInt_AS_LONG( bufsize ) );
@@ -1592,7 +1606,8 @@ namespace PyROOT {      // workaround for Intel icc on Linux
                    &PyInt_Type, &bufsize, &PyInt_Type, &splitlevel ) ) {
                bIsMatch = kTRUE;
             } else {
-               PyErr_Clear(); clName = 0;    // clName no longer used
+               PyErr_Clear();
+               clName = nullptr; // clName no longer used
                if ( PyArg_ParseTuple( args, const_cast< char* >( "O!O|O!O!" ),
                       &PyROOT_PyUnicode_Type, &name, &address,
                       &PyInt_Type, &bufsize, &PyInt_Type, &splitlevel ) ) {
@@ -1603,7 +1618,7 @@ namespace PyROOT {      // workaround for Intel icc on Linux
 
             if ( bIsMatch == kTRUE ) {
                std::string klName = clName ? PyROOT_PyUnicode_AsString( clName ) : "";
-               void* buf = 0;
+               void *buf = nullptr;
 
                if ( ObjectProxy_Check( address ) ) {
                   if ( ((ObjectProxy*)address)->fFlags & ObjectProxy::kIsReference )
@@ -1618,8 +1633,8 @@ namespace PyROOT {      // workaround for Intel icc on Linux
                } else
                   Utility::GetBuffer( address, '*', 1, buf, kFALSE );
 
-               if ( buf != 0 && klName != "" ) {
-                  TBranch* branch = 0;
+               if (buf != nullptr && klName != "") {
+                  TBranch *branch = nullptr;
                   if ( argc == 3 ) {
                      branch = tree->Branch( PyROOT_PyUnicode_AsString( name ), klName.c_str(), buf );
                   } else if ( argc == 4 ) {
@@ -1639,7 +1654,7 @@ namespace PyROOT {      // workaround for Intel icc on Linux
          Py_INCREF( (PyObject*)self );
          fOrg->fSelf = self;
          PyObject* result = PyObject_Call( (PyObject*)fOrg, args, kwds );
-         fOrg->fSelf = 0;
+         fOrg->fSelf = nullptr;
          Py_DECREF( (PyObject*)self );
 
          return result;
@@ -1675,16 +1690,16 @@ namespace PyROOT {      // workaround for Intel icc on Linux
             if ( ! tree ) {
                PyErr_SetString( PyExc_TypeError,
                   "TTree::SetBranchAddress must be called with a TTree instance as first argument" );
-               return 0;
+               return nullptr;
             }
 
-            PyObject *name = 0, *address = 0;
+            PyObject *name = nullptr, *address = nullptr;
 
-         // try: ( const char*, void* )
+            // try: ( const char*, void* )
             if ( PyArg_ParseTuple( args, const_cast< char* >( "SO:SetBranchAddress" ),
                     &name, &address ) ) {
 
-               void* buf = 0;
+               void *buf = nullptr;
                if ( ObjectProxy_Check( address ) ) {
                   if ( ((ObjectProxy*)address)->fFlags & ObjectProxy::kIsReference )
                      buf = (void*)((ObjectProxy*)address)->fObject;
@@ -1693,7 +1708,7 @@ namespace PyROOT {      // workaround for Intel icc on Linux
                } else
                   Utility::GetBuffer( address, '*', 1, buf, kFALSE );
 
-               if ( buf != 0 ) {
+               if (buf != nullptr) {
                   tree->SetBranchAddress( PyROOT_PyUnicode_AsString( name ), buf );
 
                   Py_INCREF( Py_None );
@@ -1706,7 +1721,7 @@ namespace PyROOT {      // workaround for Intel icc on Linux
          Py_INCREF( (PyObject*)self );
          fOrg->fSelf = self;
          PyObject* result = PyObject_Call( (PyObject*)fOrg, args, kwds );
-         fOrg->fSelf = 0;
+         fOrg->fSelf = nullptr;
          Py_DECREF( (PyObject*)self );
 
          return result;
@@ -1717,7 +1732,7 @@ namespace PyROOT {      // workaround for Intel icc on Linux
       {
          PyErr_SetString( PyExc_TypeError,
             "TTree::SetBranchAddress must be called with a TTree instance as first argument" );
-         return 0;
+         return nullptr;
       }
    };
 
@@ -1742,7 +1757,7 @@ namespace PyROOT {      // workaround for Intel icc on Linux
       {
          PyErr_SetString( PyExc_TypeError,
             "TChain::SetBranchAddress must be called with a TChain instance as first argument" );
-         return 0;
+         return nullptr;
       }
    };
 
@@ -1786,7 +1801,7 @@ namespace PyROOT {      // workaround for Intel icc on Linux
       if ( ! pya0 )
          return 0.;
 
-      PyObject* result = 0;
+      PyObject *result = nullptr;
       if ( npar != 0 ) {
          PyObject* pya1 = BufFac_t::Instance()->PyBuffer_FromMemory( a1, npar * sizeof(double) );
          result = PyObject_CallFunction( pyfunc, (char*)"OO", pya0, pya1 );
@@ -1847,7 +1862,7 @@ namespace {
          PyTuple_SET_ITEM( co_varnames, 1, PyROOT_PyUnicode_FromString( "*args" ) );
          return co_varnames;
       }
-      virtual PyObject* GetArgDefault( Int_t ) { return NULL; }
+      virtual PyObject *GetArgDefault(Int_t) { return nullptr; }
 
       Bool_t IsCallable( PyObject* pyobject )
       {
@@ -1895,7 +1910,7 @@ namespace {
                "TFN::TFN(const char*, PyObject* callable, ...) =>\n"
                "    takes at least %d and at most %d arguments (%d given)",
                reqNArgs, reqNArgs+1, argc );
-            return 0;              // reported as an overload failure
+            return nullptr; // reported as an overload failure
          }
 
          PyObject* pyfunc = PyTuple_GET_ITEM( args, 1 );
@@ -1913,10 +1928,9 @@ namespace {
       // registration with Cling
          void* fptr = Utility::CreateWrapperMethod(
             pyfunc, npar, "double", signature, "TFNPyCallback" );
-         if ( ! fptr /* PyErr was set */ )
-            return 0;
+         if (!fptr /* PyErr was set */) return nullptr;
 
-      // get constructor
+         // get constructor
          MethodProxy* method =
             (MethodProxy*)PyObject_GetAttr( (PyObject*)self, PyStrings::gInit );
 
@@ -1929,7 +1943,7 @@ namespace {
                Py_INCREF( item );
                PyTuple_SET_ITEM( newArgs, iarg, item );
             } else {
-               PyTuple_SET_ITEM( newArgs, iarg, PyROOT_PyCapsule_New( fptr, NULL, NULL ) );
+               PyTuple_SET_ITEM(newArgs, iarg, PyROOT_PyCapsule_New(fptr, nullptr, nullptr));
             }
          }
 
@@ -1985,7 +1999,7 @@ namespace {
 
 //- TFunction behavior ---------------------------------------------------------
    PyObject* TFunctionCall( ObjectProxy*& self, PyObject* args ) {
-      return TFunctionHolder( Cppyy::gGlobalScope, (Cppyy::TCppMethod_t)self->GetObject() ).Call( self, args, 0 );
+      return TFunctionHolder(Cppyy::gGlobalScope, (Cppyy::TCppMethod_t)self->GetObject()).Call(self, args, nullptr);
    }
 
 
@@ -2013,14 +2027,13 @@ namespace {
             PyErr_Format( PyExc_TypeError,
                "TMinuit::SetFCN(PyObject* callable, ...) =>\n"
                "    takes exactly 1 argument (%d given)", argc );
-            return 0;              // reported as an overload failure
+            return nullptr; // reported as an overload failure
          }
 
          PyObject* pyfunc = PyTuple_GET_ITEM( args, 0 );
-         if ( ! IsCallable( pyfunc ) )
-            return 0;
+         if (!IsCallable(pyfunc)) return nullptr;
 
-      // create signature
+         // create signature
          std::vector<std::string> signature; signature.reserve( 5 );
          signature.push_back( "Int_t&" );
          signature.push_back( "Double_t*" );
@@ -2031,17 +2044,16 @@ namespace {
       // registration with Cling
          void* fptr = Utility::CreateWrapperMethod(
             pyfunc, 5, "void", signature, "TMinuitPyCallback" );
-         if ( ! fptr /* PyErr was set */ )
-            return 0;
+         if (!fptr /* PyErr was set */) return nullptr;
 
-      // get setter function
+         // get setter function
          MethodProxy* method =
             (MethodProxy*)PyObject_GetAttr( (PyObject*)self, PyStrings::gSetFCN );
 
       // CLING WORKAROUND: SetFCN(void* fun) is deprecated but for whatever reason
       // still available yet not functional; select the correct one based on its
       // signature of the full function pointer
-         PyCallable* setFCN = 0;
+         PyCallable *setFCN = nullptr;
          const MethodProxy::Methods_t& methods = method->fMethodInfo->fMethods;
          for ( MethodProxy::Methods_t::const_iterator im = methods.begin(); im != methods.end(); ++im ) {
              PyObject* sig = (*im)->GetSignature();
@@ -2054,15 +2066,15 @@ namespace {
              Py_DECREF( sig );
          }
          if ( ! setFCN )     // this never happens but Coverity insists; it can be
-            return 0;        // removed with the workaround in due time
-      // END CLING WORKAROUND
+            return nullptr;  // removed with the workaround in due time
+                             // END CLING WORKAROUND
 
-      // build new argument array
+         // build new argument array
          PyObject* newArgs = PyTuple_New( 1 );
-         PyTuple_SET_ITEM( newArgs, 0, PyROOT_PyCapsule_New( fptr, NULL, NULL ) );
+         PyTuple_SET_ITEM(newArgs, 0, PyROOT_PyCapsule_New(fptr, nullptr, nullptr));
 
-      // re-run
-      // CLING WORKAROUND: this is to be the call once TMinuit is fixed:
+         // re-run
+         // CLING WORKAROUND: this is to be the call once TMinuit is fixed:
          // PyObject* result = PyObject_CallObject( (PyObject*)method, newArgs );
          PyObject* result = setFCN->Call( self, newArgs, kwds, ctxt );
       // END CLING WORKAROUND
@@ -2096,7 +2108,7 @@ namespace {
             PyErr_Format( PyExc_TypeError,
                "TMinuitFitter::SetFCN(PyObject* callable, ...) =>\n"
                "    takes exactly 1 argument (%d given)", argc );
-            return 0;              // reported as an overload failure
+            return nullptr; // reported as an overload failure
          }
 
          return TMinuitSetFCN::Call( self, args, kwds, ctxt );
@@ -2104,12 +2116,12 @@ namespace {
    };
 
 //- Fit::TFitter behavior ------------------------------------------------------
-   PyObject* gFitterPyCallback = 0;
+   PyObject *gFitterPyCallback = nullptr;
 
    void FitterPyCallback( int& npar, double* gin, double& f, double* u, int flag )
    {
    // Cling-callable callback for Fit::Fitter derived objects.
-      PyObject* result = 0;
+   PyObject *result = nullptr;
 
    // prepare arguments
       PyObject* arg1 = BufFac_t::Instance()->PyBuffer_FromMemory( &npar );
@@ -2163,14 +2175,13 @@ namespace {
             PyErr_Format( PyExc_TypeError,
                "TFitter::FitFCN(PyObject* callable, ...) =>\n"
                "    takes at least 1 argument (%d given)", argc );
-            return 0;              // reported as an overload failure
+            return nullptr; // reported as an overload failure
          }
 
          PyObject* pyfunc = PyTuple_GET_ITEM( args, 0 );
-         if ( ! IsCallable( pyfunc ) )
-            return 0;
+         if (!IsCallable(pyfunc)) return nullptr;
 
-      // global registration
+         // global registration
          Py_XDECREF( gFitterPyCallback );
          Py_INCREF( pyfunc );
          gFitterPyCallback = pyfunc;
@@ -2181,7 +2192,7 @@ namespace {
 
       // build new argument array
          PyObject* newArgs = PyTuple_New( argc );
-         PyTuple_SET_ITEM( newArgs, 0, PyROOT_PyCapsule_New( (void*)FitterPyCallback, NULL, NULL ) );
+         PyTuple_SET_ITEM(newArgs, 0, PyROOT_PyCapsule_New((void *)FitterPyCallback, nullptr, nullptr));
          for ( int iarg = 1; iarg < argc; ++iarg ) {
             PyObject* pyarg = PyTuple_GET_ITEM( args, iarg );
             Py_INCREF( pyarg );
@@ -2276,8 +2287,7 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
 {
 // Add pre-defined pythonizations (for STL and ROOT) to classes based on their
 // signature and/or class name.
-   if ( pyclass == 0 )
-      return kFALSE;
+if (pyclass == nullptr) return kFALSE;
 
 //- method name based pythonization --------------------------------------------
 
@@ -2318,7 +2328,7 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
 
          TMethod* meth = klass->GetMethodAllAny( "begin" );
 
-         TClass* iklass = 0;
+         TClass *iklass = nullptr;
          if ( meth ) {
             Int_t oldl = gErrorIgnoreLevel; gErrorIgnoreLevel = 3000;
             iklass = TClass::GetClass( meth->GetReturnTypeNormalizedName().c_str() );
@@ -2552,20 +2562,24 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
       MethodProxy* original =
          (MethodProxy*)PyObject_GetAttrFromDict( pyclass, PyStrings::gBranch );
       MethodProxy* method = MethodProxy_New( "Branch", new TTreeBranch( original ) );
-      Py_DECREF( original ); original = 0;
+      Py_DECREF( original );
+      original = nullptr;
 
       PyObject_SetAttrString(
          pyclass, const_cast< char* >( method->GetName().c_str() ), (PyObject*)method );
-      Py_DECREF( method ); method = 0;
+      Py_DECREF( method );
+      method = nullptr;
 
-   // workaround for templated member SetBranchAddress()
+      // workaround for templated member SetBranchAddress()
       original = (MethodProxy*)PyObject_GetAttrFromDict( pyclass, PyStrings::gSetBranchAddress );
       method = MethodProxy_New( "SetBranchAddress", new TTreeSetBranchAddress( original ) );
-      Py_DECREF( original ); original = 0;
+      Py_DECREF( original );
+      original = nullptr;
 
       PyObject_SetAttrString(
          pyclass, const_cast< char* >( method->GetName().c_str() ), (PyObject*)method );
-      Py_DECREF( method ); method = 0;
+      Py_DECREF( method );
+      method = nullptr;
 
    }
 
@@ -2574,11 +2588,13 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
       MethodProxy* original =
          (MethodProxy*)PyObject_GetAttrFromDict( pyclass, PyStrings::gSetBranchAddress );
       MethodProxy* method = MethodProxy_New( "SetBranchAddress", new TChainSetBranchAddress( original ) );
-      Py_DECREF( original ); original = 0;
+      Py_DECREF( original );
+      original = nullptr;
 
       PyObject_SetAttrString(
          pyclass, const_cast< char* >( method->GetName().c_str() ), (PyObject*)method );
-      Py_DECREF( method ); method = 0;
+      Py_DECREF( method );
+      method = nullptr;
 
    }
 

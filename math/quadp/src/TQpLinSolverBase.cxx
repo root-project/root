@@ -66,7 +66,7 @@ TQpLinSolverBase::TQpLinSolverBase()
    fNxlo = 0;
    fMcup = 0;
    fMclo = 0;
-   fFactory = 0;
+   fFactory = nullptr;
 }
 
 

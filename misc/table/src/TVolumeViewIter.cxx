@@ -34,8 +34,8 @@ ClassImp(TVolumeViewIter);
 ////////////////////////////////////////////////////////////////////////////////
 ///to be documented
 
-TVolumeViewIter::TVolumeViewIter(TVolumeView *view, Int_t depth, Bool_t dir):
-           TDataSetIter(view,depth,dir),fPositions(0)
+TVolumeViewIter::TVolumeViewIter(TVolumeView *view, Int_t depth, Bool_t dir)
+   : TDataSetIter(view, depth, dir), fPositions(nullptr)
 {
 }
 
@@ -51,7 +51,7 @@ TVolumeViewIter::~TVolumeViewIter()
 
 const TVolumePosition *TVolumeViewIter::GetPosition(Int_t level) const
 {
-   const TVolumePosition *pos = 0;
+   const TVolumePosition *pos = nullptr;
    if (fPositions) {
       Int_t thisLevel = level;
       if (!thisLevel) thisLevel = fDepth;
@@ -69,7 +69,7 @@ TVolumePosition *TVolumeViewIter::operator[](Int_t level)
    if (pos) return new TVolumePosition(*pos);
    else {
       Error("operator[]"," GetPosition: %d %d 0x%lx", level,fDepth, (Long_t)fPositions);
-      return 0;
+      return nullptr;
    }
 }
 
@@ -80,7 +80,7 @@ void TVolumeViewIter::Notify(TDataSet *set)
 {
    if (!set) return;
    TVolumeView     *view         = (TVolumeView *) set;
-   TVolumePosition *position     = 0;
+   TVolumePosition *position = nullptr;
    position = view->GetPosition();
    UpdateTempMatrix(position);
 }
@@ -90,20 +90,20 @@ void TVolumeViewIter::Notify(TDataSet *set)
 
 TVolumePosition *TVolumeViewIter::UpdateTempMatrix(TVolumePosition *curPosition)
 {
-   TVolumePosition *newPosition = 0;
-   TVolume *curNode = 0;
+   TVolumePosition *newPosition = nullptr;
+   TVolume *curNode = nullptr;
    UInt_t curPositionId    = 0;
    if (curPosition) {
       curNode       = curPosition->GetNode();
       curPositionId = curPosition->GetId();
    } else {
       Error("UpdateTempMatrix","No position has been defined");
-      return 0;
+      return nullptr;
    }
    if (fDepth-1) {
-      TVolumePosition *oldPosition = 0;
-      const TRotMatrix *oldMatrix = 0;
-      oldPosition = fPositions ? (TVolumePosition *)fPositions->At(fDepth-1):0;
+      TVolumePosition *oldPosition = nullptr;
+      const TRotMatrix *oldMatrix = nullptr;
+      oldPosition = fPositions ? (TVolumePosition *)fPositions->At(fDepth - 1) : nullptr;
       Double_t oldTranslation[] = { 0, 0, 0 };
       if (oldPosition) {
          oldMatrix         = oldPosition->GetMatrix();

@@ -103,9 +103,8 @@ RooJeffreysPrior::RooJeffreysPrior(const RooJeffreysPrior& other, const char* na
 
 RooJeffreysPrior::RooJeffreysPrior()
 {
-  _obsIter = NULL;
-  _paramIter = NULL;
-
+   _obsIter = nullptr;
+   _paramIter = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

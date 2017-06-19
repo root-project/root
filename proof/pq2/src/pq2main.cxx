@@ -78,19 +78,19 @@ int main(int argc, char **argv)
    }
 
    // Parse options
-   const char *action = 0;
-   const char *url = 0;
-   const char *dataset = 0;
-   const char *servers = 0;
-   const char *options = 0;
-   const char *ignsrvs = 0;
-   const char *excsrvs = 0;
-   const char *metrics = 0;
-   const char *fout = 0;
-   const char *plot = 0;
-   const char *infile = 0;
-   const char *outfile = 0;
-   const char *redir = 0;
+   const char *action = nullptr;
+   const char *url = nullptr;
+   const char *dataset = nullptr;
+   const char *servers = nullptr;
+   const char *options = nullptr;
+   const char *ignsrvs = nullptr;
+   const char *excsrvs = nullptr;
+   const char *metrics = nullptr;
+   const char *fout = nullptr;
+   const char *plot = nullptr;
+   const char *infile = nullptr;
+   const char *outfile = nullptr;
+   const char *redir = nullptr;
    Int_t i = 1;
    while (i < argc) {
       if (!strcmp(argv[i],"-h")) {
@@ -218,7 +218,7 @@ int main(int argc, char **argv)
                                  "ana-dist", "cache" };
    const char *tags[nact]    = { "ls", "lsfiles", "filessrv",
                                  "infosrv", "put", "rm", "vfy", "anadist", "cache" };
-   const char *tag = 0;
+   const char *tag = nullptr;
    Int_t iact = -1;
    for (i = 0; i < nact; i++) {
       if (action && !strcmp(action, actions[i])) {
@@ -286,7 +286,7 @@ int main(int argc, char **argv)
 
       } else if (iact == 1) {
          // ls-files
-         do_ls_files_server(dataset, 0);
+         do_ls_files_server(dataset, nullptr);
 
       } else if (iact == 2) {
          // ls-files-server

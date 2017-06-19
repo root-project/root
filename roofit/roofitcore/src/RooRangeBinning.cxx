@@ -92,8 +92,8 @@ RooRangeBinning::~RooRangeBinning()
 void RooRangeBinning::setRange(Double_t xlo, Double_t xhi) 
 {
   if (xlo>xhi) {
-    oocoutE((TObject*)0,InputArguments) << "RooRangeBinning::setRange: ERROR low bound > high bound" << endl ;
-    return ;
+     oocoutE((TObject *)nullptr, InputArguments) << "RooRangeBinning::setRange: ERROR low bound > high bound" << endl;
+     return;
   }
 
   _range[0] = xlo ;

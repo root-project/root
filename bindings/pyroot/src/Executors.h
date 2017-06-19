@@ -81,7 +81,7 @@ namespace PyROOT {
 
    class TRefExecutor : public TExecutor {
    public:
-      TRefExecutor() : fAssignable( 0 ) {}
+      TRefExecutor() : fAssignable(nullptr) {}
 
    public:
       virtual Bool_t SetAssignable( PyObject* );

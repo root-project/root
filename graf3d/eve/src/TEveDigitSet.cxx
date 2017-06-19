@@ -82,31 +82,15 @@ ClassImp(TEveDigitSet);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-TEveDigitSet::TEveDigitSet(const char* n, const char* t) :
-   TEveElement     (fColor),
-   TNamed          (n, t),
+TEveDigitSet::TEveDigitSet(const char *n, const char *t)
+   : TEveElement(fColor), TNamed(n, t),
 
-   fDigitIds       (0),
-   fDefaultValue   (kMinInt),
-   fValueIsColor   (kFALSE),
-   fSingleColor    (kFALSE),
-   fAntiFlick      (kTRUE),
-   fOwnIds         (kFALSE),
-   fPlex           (),
-   fLastDigit      (0),
-   fLastIdx        (-1),
+     fDigitIds(nullptr), fDefaultValue(kMinInt), fValueIsColor(kFALSE), fSingleColor(kFALSE), fAntiFlick(kTRUE),
+     fOwnIds(kFALSE), fPlex(), fLastDigit(nullptr), fLastIdx(-1),
 
-   fColor          (kWhite),
-   fFrame          (0),
-   fPalette        (0),
-   fRenderMode     (kRM_AsIs),
-   fSelectViaFrame (kFALSE),
-   fHighlightFrame (kFALSE),
-   fDisableLighting(kTRUE),
-   fHistoButtons   (kTRUE),
-   fEmitSignals    (kFALSE),
-   fCallbackFoo    (0),
-   fTooltipCBFoo   (0)
+     fColor(kWhite), fFrame(nullptr), fPalette(nullptr), fRenderMode(kRM_AsIs), fSelectViaFrame(kFALSE),
+     fHighlightFrame(kFALSE), fDisableLighting(kTRUE), fHistoButtons(kTRUE), fEmitSignals(kFALSE),
+     fCallbackFoo(nullptr), fTooltipCBFoo(nullptr)
 {
    // Constructor.
 
@@ -122,8 +106,8 @@ TEveDigitSet::TEveDigitSet(const char* n, const char* t) :
 
 TEveDigitSet::~TEveDigitSet()
 {
-   SetFrame(0);
-   SetPalette(0);
+   SetFrame(nullptr);
+   SetPalette(nullptr);
    if (fOwnIds)
       ReleaseIds();
    delete fDigitIds;
@@ -364,7 +348,7 @@ void TEveDigitSet::DigitUserData(Int_t n, void* ud)
 
 TObject* TEveDigitSet::GetId(Int_t n) const
 {
-   return fDigitIds ? fDigitIds->At(n) : 0;
+   return fDigitIds ? fDigitIds->At(n) : nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -454,7 +438,7 @@ void TEveDigitSet::SetPalette(TEveRGBAPalette* p)
 
 TEveRGBAPalette* TEveDigitSet::AssertPalette()
 {
-   if (fPalette == 0) {
+   if (fPalette == nullptr) {
       fPalette = new TEveRGBAPalette;
       if (!fValueIsColor) {
          Int_t min, max;

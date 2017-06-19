@@ -82,7 +82,7 @@
 R__LOAD_LIBRARY( libEvent )
 
 void stressIOPlugins();
-void stressIOPluginsForProto(const char *protoName = 0, int multithread = 0);
+void stressIOPluginsForProto(const char *protoName = nullptr, int multithread = 0);
 void stressIOPlugins1();
 void stressIOPlugins2();
 void stressIOPlugins3();
@@ -94,7 +94,7 @@ int main(int argc, char **argv)
 {
    gROOT->SetBatch();
    TApplication theApp("App", &argc, argv);
-   const char *proto = 0;
+   const char *proto = nullptr;
    if (argc > 1)  proto = argv[1];
    stressIOPluginsForProto(proto);
    return 0;
@@ -137,7 +137,7 @@ TFile *openTestFile(const char *fn, const char *title) {
    if (!f) {
       printf("FAILED\n");
       Bprint(0, title);
-      return 0;
+      return nullptr;
    }
 
    printf("%s\n", f->ClassName());
@@ -173,7 +173,7 @@ int setPath(const char *proto)
 }
 
 Bool_t running_as_sftnight_with_kerberos() {
-   UserGroup_t *ug = gSystem->GetUserInfo((const char*)0);
+   UserGroup_t *ug = gSystem->GetUserInfo((const char *)nullptr);
    if (!ug) {
      return kFALSE;
    }
@@ -239,7 +239,7 @@ void stressIOPluginsForProto(const char *protoName /*=0*/, int multithread /*=0*
 
 void stressIOPlugins()
 {
-   stressIOPluginsForProto((const char*)0,0);
+   stressIOPluginsForProto((const char *)nullptr, 0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -364,7 +364,7 @@ Int_t test3read(const TString &fn, const char *title)
       return 0;
    }
    TTree *tree; hfile->GetObject("T",tree);
-   Event *event = 0;
+   Event *event = nullptr;
    tree->SetBranchAddress("event",&event);
    Int_t nentries = (Int_t)tree->GetEntries();
    Int_t nev = TMath::Max(nevent,nentries);
@@ -596,7 +596,7 @@ void stressIOPlugins5()
       printf("FAILED\n");
       return;
    }
-   TTree *tree = 0;
+   TTree *tree = nullptr;
    hfile->GetObject("T",tree);
    if (!tree) {
       printf("FAILED\n");
@@ -612,7 +612,7 @@ void stressIOPlugins5()
    } else {
       printf("OK\n");
    }
-   Event *event = 0;
+   Event *event = nullptr;
    tree->SetBranchAddress("event",&event);
    tree->GetEntry(0);
    Bprint(0,"read event (no cache)");

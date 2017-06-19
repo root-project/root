@@ -79,8 +79,8 @@ ClassImp(TFileDrawMap);
 
 TFileDrawMap::TFileDrawMap() :TNamed()
 {
-   fFile   = 0;
-   fFrame  = 0;
+   fFile = nullptr;
+   fFrame = nullptr;
    fXsize  = 1000;
    fYsize  = 1000;
 }
@@ -106,7 +106,7 @@ TFileDrawMap::TFileDrawMap(const TFile *file, const char *keys, Option_t *option
       fXsize = 1000;
    }
    fFrame = new TH1D("hmapframe","",1000,0,fXsize);
-   fFrame->SetDirectory(0);
+   fFrame->SetDirectory(nullptr);
    fFrame->SetBit(TH1::kNoStats);
    fFrame->SetBit(kCanDelete);
    fFrame->SetMinimum(0);
@@ -344,11 +344,11 @@ void TFileDrawMap::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
 TObject *TFileDrawMap::GetObject()
 {
-   if (strstr(GetName(),"entry=")) return 0;
+   if (strstr(GetName(), "entry=")) return nullptr;
    char *info = new char[fName.Length()+1];
    strlcpy(info,fName.Data(),fName.Length()+1);
    char *colon = strstr(info,"::");
-   if (!colon) return 0;
+   if (!colon) return nullptr;
    colon--;
    *colon = 0;
    return fFile->Get(info);

@@ -64,7 +64,7 @@ TSpectrum3::TSpectrum3() :TNamed("Spectrum", "Miroslav Morhac peak finder")
    fPositionY  = new Double_t[n];
    fPositionZ  = new Double_t[n];
    fResolution = 1;
-   fHistogram  = 0;
+   fHistogram = nullptr;
    fNPeaks     = 0;
 }
 
@@ -85,7 +85,7 @@ TSpectrum3::TSpectrum3(Int_t maxpositions, Double_t resolution) :TNamed("Spectru
    fPositionX = new Double_t[n];
    fPositionY = new Double_t[n];
    fPositionZ = new Double_t[n];
-   fHistogram = 0;
+   fHistogram = nullptr;
    fNPeaks    = 0;
    SetResolution(resolution);
 }
@@ -117,7 +117,7 @@ const char *TSpectrum3::Background(const TH1 * h, Int_t number_of_iterations,
 {
    Error("Background","function not yet implemented: h=%s, iter=%d, option=%sn"
         , h->GetName(), number_of_iterations, option);
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -160,8 +160,7 @@ void TSpectrum3::Print(Option_t *) const
 Int_t TSpectrum3::Search(const TH1 * hin, Double_t sigma,
                              Option_t * option, Double_t threshold)
 {
-   if (hin == 0)
-      return 0;
+   if (hin == nullptr) return 0;
    Int_t dimension = hin->GetDimension();
    if (dimension != 3) {
       Error("Search", "Must be a 3-d histogram");
@@ -762,7 +761,7 @@ const char *TSpectrum3::Background(Double_t***spectrum,
       delete[] working_space[i];
    }
    delete[] working_space;
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -887,7 +886,7 @@ const char* TSpectrum3::SmoothMarkov(Double_t***source, Int_t ssizex, Int_t ssiz
    }
    if(maxch == 0) {
       delete [] working_space;
-      return 0;
+      return nullptr;
    }
 
    nom = 0;
@@ -1400,7 +1399,7 @@ const char* TSpectrum3::SmoothMarkov(Double_t***source, Int_t ssizex, Int_t ssiz
       delete[] working_space[i];
    }
    delete[] working_space;
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1785,7 +1784,7 @@ const char *TSpectrum3::Deconvolution(Double_t***source, const Double_t***resp,
       }
    }
    delete [] working_space;
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

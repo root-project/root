@@ -61,7 +61,7 @@ TGLText::TGLText()
    fAngle1 = 90;
    fAngle2 = 0;
    fAngle3 = 0;
-   fGLTextFont = 0;
+   fGLTextFont = nullptr;
    SetGLTextFont(13); // Default font.
 }
 
@@ -77,7 +77,7 @@ TGLText::TGLText(Double_t x, Double_t y, Double_t z, const char * /*text*/)
    fAngle1 = 90;
    fAngle2 = 0;
    fAngle3 = 0;
-   fGLTextFont = 0;
+   fGLTextFont = nullptr;
    SetGLTextFont(13); // Default font.
 }
 
@@ -178,7 +178,7 @@ void TGLText::SetGLTextFont(Font_t fontnumber)
 {
    int fontid = fontnumber / 10;
 
-   const char *fontname=0;
+   const char *fontname = nullptr;
    if (fontid == 0)  fontname = "arialbd.ttf";
    if (fontid == 1)  fontname = "timesi.ttf";
    if (fontid == 2)  fontname = "timesbd.ttf";

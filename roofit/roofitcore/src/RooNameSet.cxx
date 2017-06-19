@@ -50,7 +50,7 @@ void RooNameSet::strdup(Int_t& dstlen, char* &dstbuf, const char* src)
 {
   dstlen = src ? std::strlen(src) : 0;
   if (dstlen) ++dstlen;
-  char *buf = dstlen ? new char[dstlen] : 0;
+  char *buf = dstlen ? new char[dstlen] : nullptr;
   if (buf) std::strcpy(buf, src);
   delete[] dstbuf;
   dstbuf = buf;
@@ -59,14 +59,14 @@ void RooNameSet::strdup(Int_t& dstlen, char* &dstbuf, const char* src)
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
-RooNameSet::RooNameSet() : _len(0), _nameList(0)
+RooNameSet::RooNameSet() : _len(0), _nameList(nullptr)
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct from RooArgSet
 
-RooNameSet::RooNameSet(const RooArgSet& argSet) : _len(0), _nameList(0)
+RooNameSet::RooNameSet(const RooArgSet &argSet) : _len(0), _nameList(nullptr)
 {
   refill(argSet);
 }
@@ -74,8 +74,7 @@ RooNameSet::RooNameSet(const RooArgSet& argSet) : _len(0), _nameList(0)
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-RooNameSet::RooNameSet(const RooNameSet& other) :
-  TObject(other), RooPrintable(other), _len(0), _nameList(0)
+RooNameSet::RooNameSet(const RooNameSet &other) : TObject(other), RooPrintable(other), _len(0), _nameList(nullptr)
 {
   strdup(_len, _nameList, other._nameList);
 }
@@ -131,7 +130,7 @@ void RooNameSet::extendBuffer(Int_t inc)
   assert(inc > 0 || _len >= -inc);
   int newsz = _len + inc;
   if (newsz <= 1 || !_len) newsz = 0;
-  char* newbuf = newsz ? new char[newsz] : 0;
+  char *newbuf = newsz ? new char[newsz] : nullptr;
   if (newbuf && _nameList) {
     std::strncpy(newbuf, _nameList, std::min(_len, newsz));
     newbuf[newsz - 1] = 0;
@@ -154,27 +153,27 @@ void RooNameSet::setNameList(const char* givenList)
 void RooNameSet::refill(const RooArgSet& argSet) 
 {
   delete[] _nameList;
-  _nameList = 0;
+  _nameList = nullptr;
   _len = 0;
   if (0 == argSet.getSize()) return;
 
   RooArgList tmp(argSet);
   tmp.sort();
   // figure out the length of the array we need
-  RooAbsArg* arg = 0;
-  for (RooFIter it = tmp.fwdIterator(); 0 != (arg = it.next());
-      _len += 1 + std::strlen(arg->GetName())) { }
+  RooAbsArg *arg = nullptr;
+  for (RooFIter it = tmp.fwdIterator(); nullptr != (arg = it.next()); _len += 1 + std::strlen(arg->GetName())) {
+  }
   if (_len <= 1) _len = 0;
   // allocate it
-  _nameList = _len ? new char[_len] : 0;
+  _nameList = _len ? new char[_len] : nullptr;
   if (_nameList) {
     // copy in the names of the objects
     char *p = _nameList;
-    for (RooFIter it = tmp.fwdIterator(); 0 != (arg = it.next()); ) {
-      const char *name = arg->GetName();
-      std::strcpy(p, name);
-      while (*p) ++p;
-      *p++ = ':';
+    for (RooFIter it = tmp.fwdIterator(); nullptr != (arg = it.next());) {
+       const char *name = arg->GetName();
+       std::strcpy(p, name);
+       while (*p) ++p;
+       *p++ = ':';
     }
     // zero-terminate properly
     *--p = 0;
@@ -192,7 +191,7 @@ RooArgSet* RooNameSet::select(const RooArgSet& list) const
   if (!_nameList || !std::strlen(_nameList)) return output;
 
   // need to copy _nameList because std::strtok modifies the string
-  char* tmp = 0;
+  char *tmp = nullptr;
   int dummy = 0;
   strdup(dummy, tmp, _nameList);
 
@@ -200,7 +199,7 @@ RooArgSet* RooNameSet::select(const RooArgSet& list) const
   while (token) {
     RooAbsArg* arg = list.find(token);
     if (arg) output->add(*arg);
-    token = std::strtok(0, ":");
+    token = std::strtok(nullptr, ":");
   }
   delete[] tmp;
 

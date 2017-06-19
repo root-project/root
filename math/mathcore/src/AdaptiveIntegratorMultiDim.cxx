@@ -12,20 +12,10 @@
 namespace ROOT {
 namespace Math {
 
-
-
-AdaptiveIntegratorMultiDim::AdaptiveIntegratorMultiDim(double absTol, double relTol, unsigned int maxpts, unsigned int size):
-   fDim(0),
-   fMinPts(0),
-   fMaxPts(maxpts),
-   fSize(size),
-   fAbsTol(absTol),
-   fRelTol(relTol),
-   fResult(0),
-   fError(0), fRelError(0),
-   fNEval(0),
-   fStatus(-1),
-   fFun(0)
+AdaptiveIntegratorMultiDim::AdaptiveIntegratorMultiDim(double absTol, double relTol, unsigned int maxpts,
+                                                       unsigned int size)
+   : fDim(0), fMinPts(0), fMaxPts(maxpts), fSize(size), fAbsTol(absTol), fRelTol(relTol), fResult(0), fError(0),
+     fRelError(0), fNEval(0), fStatus(-1), fFun(nullptr)
 {
    // constructor - without passing a function
    if (fAbsTol < 0) fAbsTol = ROOT::Math::IntegratorMultiDimOptions::DefaultAbsTolerance();

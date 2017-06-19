@@ -27,8 +27,7 @@ ClassImp(TGLVoxelPainter);
 ///This plot always needs a palette.
 
 TGLVoxelPainter::TGLVoxelPainter(TH1 *hist, TGLPlotCamera *cam, TGLPlotCoordinates *coord)
-                  : TGLPlotPainter(hist, cam, coord, kFALSE, kFALSE, kFALSE),
-                    fTransferFunc(0)
+   : TGLPlotPainter(hist, cam, coord, kFALSE, kFALSE, kFALSE), fTransferFunc(nullptr)
 {
    fDrawPalette = kTRUE;
 }

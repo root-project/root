@@ -706,7 +706,7 @@ Int_t ParamHistFunc::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& anal
 
   // Check if this configuration was created before
   Int_t sterileIdx(-1) ;
-  CacheElem* cache = (CacheElem*) _normIntMgr.getObj(normSet,&analVars,&sterileIdx,(const char*)0) ;
+  CacheElem *cache = (CacheElem *)_normIntMgr.getObj(normSet, &analVars, &sterileIdx, (const char *)nullptr);
   if (cache) {
     return _normIntMgr.lastIndex()+1 ;
   }
@@ -715,7 +715,7 @@ Int_t ParamHistFunc::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& anal
   cache = new CacheElem ;
 
   // Store cache element
-  Int_t code = _normIntMgr.setObj(normSet,&analVars,(RooAbsCacheElement*)cache,0) ;
+  Int_t code = _normIntMgr.setObj(normSet, &analVars, (RooAbsCacheElement *)cache, nullptr);
 
   return code+1 ; 
 
@@ -736,7 +736,7 @@ Double_t ParamHistFunc::analyticalIntegralWN(Int_t /*code*/, const RooArgSet* /*
   // multiply by the bind width
   
   RooFIter paramIter = _paramSet.fwdIterator();
-  RooRealVar* param = NULL;
+  RooRealVar *param = nullptr;
   Int_t nominalItr = 0;
   while((param = (RooRealVar*) paramIter.next())) {
 
@@ -778,35 +778,35 @@ Double_t ParamHistFunc::analyticalIntegralWN(Int_t /*code*/, const RooArgSet* /*
 std::list<Double_t>* ParamHistFunc::plotSamplingHint(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, 
 						Double_t /*xhi*/) const
 {
-  return 0;
+   return nullptr;
 
-  /*
-  // copied and edited from RooHistFunc
-  RooAbsLValue* lvarg = &obs;
+   /*
+   // copied and edited from RooHistFunc
+   RooAbsLValue* lvarg = &obs;
 
-  // Retrieve position of all bin boundaries
-  const RooAbsBinning* binning = lvarg->getBinningPtr(0) ;
-  Double_t* boundaries = binning->array() ;
+   // Retrieve position of all bin boundaries
+   const RooAbsBinning* binning = lvarg->getBinningPtr(0) ;
+   Double_t* boundaries = binning->array() ;
 
-  list<Double_t>* hint = new list<Double_t> ;
+   list<Double_t>* hint = new list<Double_t> ;
 
-  // Widen range slighty
-  xlo = xlo - 0.01*(xhi-xlo) ;
-  xhi = xhi + 0.01*(xhi-xlo) ;
+   // Widen range slighty
+   xlo = xlo - 0.01*(xhi-xlo) ;
+   xhi = xhi + 0.01*(xhi-xlo) ;
 
-  Double_t delta = (xhi-xlo)*1e-8 ;
- 
-  // Construct array with pairs of points positioned epsilon to the left and
-  // right of the bin boundaries
-  for (Int_t i=0 ; i<binning->numBoundaries() ; i++) {
-    if (boundaries[i]>=xlo && boundaries[i]<=xhi) {
-      hint->push_back(boundaries[i]-delta) ;
-      hint->push_back(boundaries[i]+delta) ;
-    }
-  }
+   Double_t delta = (xhi-xlo)*1e-8 ;
 
-  return hint ;
-  */
+   // Construct array with pairs of points positioned epsilon to the left and
+   // right of the bin boundaries
+   for (Int_t i=0 ; i<binning->numBoundaries() ; i++) {
+     if (boundaries[i]>=xlo && boundaries[i]<=xhi) {
+       hint->push_back(boundaries[i]-delta) ;
+       hint->push_back(boundaries[i]+delta) ;
+     }
+   }
+
+   return hint ;
+   */
 }
 
 
@@ -818,26 +818,26 @@ std::list<Double_t>* ParamHistFunc::plotSamplingHint(RooAbsRealLValue& /*obs*/, 
 std::list<Double_t>* ParamHistFunc::binBoundaries(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, 
 						  Double_t /*xhi*/) const 
 {
-  return 0;
+   return nullptr;
 
-  /*
-  // copied and edited from RooHistFunc
-  RooAbsLValue* lvarg = &obs;
+   /*
+   // copied and edited from RooHistFunc
+   RooAbsLValue* lvarg = &obs;
 
-  // Retrieve position of all bin boundaries
-  const RooAbsBinning* binning = lvarg->getBinningPtr(0) ;
-  Double_t* boundaries = binning->array() ;
+   // Retrieve position of all bin boundaries
+   const RooAbsBinning* binning = lvarg->getBinningPtr(0) ;
+   Double_t* boundaries = binning->array() ;
 
-  list<Double_t>* hint = new list<Double_t> ;
+   list<Double_t>* hint = new list<Double_t> ;
 
-  // Construct array with pairs of points positioned epsilon to the left and
-  // right of the bin boundaries
-  for (Int_t i=0 ; i<binning->numBoundaries() ; i++) {
-    if (boundaries[i]>=xlo && boundaries[i]<=xhi) {
-      hint->push_back(boundaries[i]) ;
-    }
-  }
+   // Construct array with pairs of points positioned epsilon to the left and
+   // right of the bin boundaries
+   for (Int_t i=0 ; i<binning->numBoundaries() ; i++) {
+     if (boundaries[i]>=xlo && boundaries[i]<=xhi) {
+       hint->push_back(boundaries[i]) ;
+     }
+   }
 
-  return hint ;
-  */
+   return hint ;
+   */
 }

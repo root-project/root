@@ -71,7 +71,7 @@ Int_t stressRooFit(const char* refFile, Bool_t writeRef, Int_t doVerbose, Int_t 
     RooAbsData::setDefaultStorageType(RooAbsData::Tree) ;
   }
 
-  TFile* fref = 0 ;
+  TFile *fref = nullptr;
   if (!dryRun) {
     if (TString(refFile).Contains("http:")) {
       if (writeRef) {
@@ -243,7 +243,7 @@ Int_t stressRooFit(const char* refFile, Bool_t writeRef, Int_t doVerbose, Int_t 
   }
 
   delete gBenchmark ;
-  gBenchmark = 0 ;
+  gBenchmark = nullptr;
 
   return retVal;
 }

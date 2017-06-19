@@ -105,7 +105,7 @@ RooAddition::RooAddition(const char* name, const char* title, const RooArgList& 
 
   std::unique_ptr<TIterator> inputIter1( sumSet1.createIterator() );
   std::unique_ptr<TIterator> inputIter2( sumSet2.createIterator() );
-  RooAbsArg *comp1(0),*comp2(0) ;
+  RooAbsArg *comp1(nullptr), *comp2(nullptr);
   while((comp1 = (RooAbsArg*)inputIter1->Next())) {
     if (!dynamic_cast<RooAbsReal*>(comp1)) {
       coutE(InputArguments) << "RooAddition::ctor(" << GetName() << ") ERROR: component " << comp1->GetName() 
@@ -190,20 +190,20 @@ Double_t RooAddition::evaluate() const
 
 Double_t RooAddition::defaultErrorLevel() const 
 {
-  RooAbsReal* nllArg(0) ;
-  RooAbsReal* chi2Arg(0) ;
+   RooAbsReal *nllArg(nullptr);
+   RooAbsReal *chi2Arg(nullptr);
 
-  RooAbsArg* arg ;
+   RooAbsArg *arg;
 
-  RooArgSet* comps = getComponents() ;
-  TIterator* iter = comps->createIterator() ;
-  while((arg=(RooAbsArg*)iter->Next())) {
-    if (dynamic_cast<RooNLLVar*>(arg)) {
-      nllArg = (RooAbsReal*)arg ;
-    }
-    if (dynamic_cast<RooChi2Var*>(arg)) {
-      chi2Arg = (RooAbsReal*)arg ;
-    }
+   RooArgSet *comps = getComponents();
+   TIterator *iter = comps->createIterator();
+   while ((arg = (RooAbsArg *)iter->Next())) {
+      if (dynamic_cast<RooNLLVar *>(arg)) {
+         nllArg = (RooAbsReal *)arg;
+      }
+      if (dynamic_cast<RooChi2Var *>(arg)) {
+         chi2Arg = (RooAbsReal *)arg;
+      }
   }
   delete iter ;
   delete comps ;
@@ -284,18 +284,18 @@ Int_t RooAddition::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars
   // check if we already have integrals for this combination of factors
   Int_t sterileIndex(-1);
   CacheElem* cache = (CacheElem*) _cacheMgr.getObj(&analVars,&analVars,&sterileIndex,RooNameReg::ptr(rangeName));
-  if (cache!=0) {
-    Int_t code = _cacheMgr.lastIndex();
-    return code+1;
+  if (cache != nullptr) {
+     Int_t code = _cacheMgr.lastIndex();
+     return code + 1;
   }
 
   // we don't, so we make it right here....
   cache = new CacheElem;
   _setIter->Reset();
-  RooAbsReal *arg(0);
-  while( (arg=(RooAbsReal*)_setIter->Next())!=0 ) {  // checked in c'tor that this will work...
-      RooAbsReal *I = arg->createIntegral(analVars,rangeName);
-      cache->_I.addOwned(*I);
+  RooAbsReal *arg(nullptr);
+  while ((arg = (RooAbsReal *)_setIter->Next()) != nullptr) { // checked in c'tor that this will work...
+     RooAbsReal *I = arg->createIntegral(analVars, rangeName);
+     cache->_I.addOwned(*I);
   }
 
   Int_t code = _cacheMgr.setObj(&analVars,&analVars,(RooAbsCacheElement*)cache,RooNameReg::ptr(rangeName));
@@ -309,22 +309,22 @@ Double_t RooAddition::analyticalIntegral(Int_t code, const char* rangeName) cons
 {
   // note: rangeName implicit encoded in code: see _cacheMgr.setObj in getPartIntList...
   CacheElem *cache = (CacheElem*) _cacheMgr.getObjByIndex(code-1);
-  if (cache==0) {
-    // cache got sterilized, trigger repopulation of this slot, then try again...
-    std::unique_ptr<RooArgSet> vars( getParameters(RooArgSet()) );
-    std::unique_ptr<RooArgSet> iset(  _cacheMgr.nameSet2ByIndex(code-1)->select(*vars) );
-    RooArgSet dummy;
-    Int_t code2 = getAnalyticalIntegral(*iset,dummy,rangeName);
-    assert(code==code2); // must have revived the right (sterilized) slot...
-    return analyticalIntegral(code2,rangeName);
+  if (cache == nullptr) {
+     // cache got sterilized, trigger repopulation of this slot, then try again...
+     std::unique_ptr<RooArgSet> vars(getParameters(RooArgSet()));
+     std::unique_ptr<RooArgSet> iset(_cacheMgr.nameSet2ByIndex(code - 1)->select(*vars));
+     RooArgSet dummy;
+     Int_t code2 = getAnalyticalIntegral(*iset, dummy, rangeName);
+     assert(code == code2); // must have revived the right (sterilized) slot...
+     return analyticalIntegral(code2, rangeName);
   }
-  assert(cache!=0);
+  assert(cache != nullptr);
 
   // loop over cache, and sum...
   std::unique_ptr<TIterator> iter( cache->_I.createIterator() );
   RooAbsReal *I;
   double result(0);
-  while ( ( I=(RooAbsReal*)iter->Next() ) != 0 ) result += I->getVal();
+  while ((I = (RooAbsReal *)iter->Next()) != nullptr) result += I->getVal();
   return result;
 
 }
@@ -335,35 +335,35 @@ Double_t RooAddition::analyticalIntegral(Int_t code, const char* rangeName) cons
 
 std::list<Double_t>* RooAddition::binBoundaries(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const
 {
-  std::list<Double_t>* sumBinB = 0 ;
-  Bool_t needClean(kFALSE) ;
-  
-  RooFIter iter = _set.fwdIterator() ;
-  RooAbsReal* func ;
-  // Loop over components pdf
-  while((func=(RooAbsReal*)iter.next())) {
+   std::list<Double_t> *sumBinB = nullptr;
+   Bool_t needClean(kFALSE);
 
-    std::list<Double_t>* funcBinB = func->binBoundaries(obs,xlo,xhi) ;
-    
-    // Process hint
-    if (funcBinB) {
-      if (!sumBinB) {
-	// If this is the first hint, then just save it
-	sumBinB = funcBinB ;
-      } else {
-	
-	std::list<Double_t>* newSumBinB = new std::list<Double_t>(sumBinB->size()+funcBinB->size()) ;
+   RooFIter iter = _set.fwdIterator();
+   RooAbsReal *func;
+   // Loop over components pdf
+   while ((func = (RooAbsReal *)iter.next())) {
 
-	// Merge hints into temporary array
-	merge(funcBinB->begin(),funcBinB->end(),sumBinB->begin(),sumBinB->end(),newSumBinB->begin()) ;
-	
-	// Copy merged array without duplicates to new sumBinBArrau
-	delete sumBinB ;
-	delete funcBinB ;
-	sumBinB = newSumBinB ;
-	needClean = kTRUE ;	
+      std::list<Double_t> *funcBinB = func->binBoundaries(obs, xlo, xhi);
+
+      // Process hint
+      if (funcBinB) {
+         if (!sumBinB) {
+            // If this is the first hint, then just save it
+            sumBinB = funcBinB;
+         } else {
+
+            std::list<Double_t> *newSumBinB = new std::list<Double_t>(sumBinB->size() + funcBinB->size());
+
+            // Merge hints into temporary array
+            merge(funcBinB->begin(), funcBinB->end(), sumBinB->begin(), sumBinB->end(), newSumBinB->begin());
+
+            // Copy merged array without duplicates to new sumBinBArrau
+            delete sumBinB;
+            delete funcBinB;
+            sumBinB = newSumBinB;
+            needClean = kTRUE;
+         }
       }
-    }
   }
 
   // Remove consecutive duplicates
@@ -399,36 +399,36 @@ Bool_t RooAddition::isBinnedDistribution(const RooArgSet& obs) const
 
 std::list<Double_t>* RooAddition::plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const
 {
-  std::list<Double_t>* sumHint = 0 ;
-  Bool_t needClean(kFALSE) ;
-  
-  RooFIter iter = _set.fwdIterator() ;
-  RooAbsReal* func ;
-  // Loop over components pdf
-  while((func=(RooAbsReal*)iter.next())) {
-    
-    std::list<Double_t>* funcHint = func->plotSamplingHint(obs,xlo,xhi) ;
-    
-    // Process hint
-    if (funcHint) {
-      if (!sumHint) {
+   std::list<Double_t> *sumHint = nullptr;
+   Bool_t needClean(kFALSE);
 
-	// If this is the first hint, then just save it
-	sumHint = funcHint ;
+   RooFIter iter = _set.fwdIterator();
+   RooAbsReal *func;
+   // Loop over components pdf
+   while ((func = (RooAbsReal *)iter.next())) {
 
-      } else {
-	
-	std::list<Double_t>* newSumHint = new std::list<Double_t>(sumHint->size()+funcHint->size()) ;
-	
-	// Merge hints into temporary array
-	merge(funcHint->begin(),funcHint->end(),sumHint->begin(),sumHint->end(),newSumHint->begin()) ;
+      std::list<Double_t> *funcHint = func->plotSamplingHint(obs, xlo, xhi);
 
-	// Copy merged array without duplicates to new sumHintArrau
-	delete sumHint ;
-	sumHint = newSumHint ;
-	needClean = kTRUE ;	
+      // Process hint
+      if (funcHint) {
+         if (!sumHint) {
+
+            // If this is the first hint, then just save it
+            sumHint = funcHint;
+
+         } else {
+
+            std::list<Double_t> *newSumHint = new std::list<Double_t>(sumHint->size() + funcHint->size());
+
+            // Merge hints into temporary array
+            merge(funcHint->begin(), funcHint->end(), sumHint->begin(), sumHint->end(), newSumHint->begin());
+
+            // Copy merged array without duplicates to new sumHintArrau
+            delete sumHint;
+            sumHint = newSumHint;
+            needClean = kTRUE;
+         }
       }
-    }
   }
 
   // Remove consecutive duplicates

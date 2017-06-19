@@ -38,14 +38,8 @@ ClassImp(TGeoParallelWorld);
 /// Default constructor
 
 TGeoParallelWorld::TGeoParallelWorld(const char *name, TGeoManager *mgr)
-                  : TNamed(name,""),
-                    fGeoManager(mgr),
-                    fPaths(new TObjArray(256)),
-                    fUseOverlaps(kFALSE),
-                    fIsClosed(kFALSE),
-                    fVolume(0),
-                    fLastState(0),
-                    fPhysical(new TObjArray(256))
+   : TNamed(name, ""), fGeoManager(mgr), fPaths(new TObjArray(256)), fUseOverlaps(kFALSE), fIsClosed(kFALSE),
+     fVolume(nullptr), fLastState(nullptr), fPhysical(new TObjArray(256))
 {
 }
 
@@ -193,7 +187,7 @@ TGeoPhysicalNode *TGeoParallelWorld::FindNode(Double_t point[3])
    TGeoStateInfo &info = *cache->GetMakePWInfo(nd);
    Int_t *check_list = voxels->GetCheckList(point, ncheck, info);
 //   cache->ReleaseInfo(); // no hierarchical use
-   if (!check_list) return 0;
+   if (!check_list) return nullptr;
    // loop all nodes in voxel
    TGeoNode *node;
    Double_t local[3];
@@ -206,7 +200,7 @@ TGeoPhysicalNode *TGeoParallelWorld::FindNode(Double_t point[3])
          return fLastState;
       }
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -217,17 +211,17 @@ TGeoPhysicalNode *TGeoParallelWorld::FindNextBoundary(Double_t point[3], Double_
                               Double_t &step, Double_t stepmax)
 {
    if (!fIsClosed) Fatal("FindNextBoundary", "Parallel geometry must be closed first");
-   TGeoPhysicalNode *pnode = 0;
+   TGeoPhysicalNode *pnode = nullptr;
    TGeoNavigator *nav = fGeoManager->GetCurrentNavigator();
    // Fast return if not in an overlapping candidate
-   if (fUseOverlaps && !nav->GetCurrentVolume()->IsOverlappingCandidate()) return 0;
-//   TIter next(fPhysical);
+   if (fUseOverlaps && !nav->GetCurrentVolume()->IsOverlappingCandidate()) return nullptr;
+   //   TIter next(fPhysical);
    // Ignore the request if the current state in the main geometry matches the
    // last touched physical node in the parallel geometry
-   if (fLastState && fLastState->IsMatchingState(nav)) return 0;
-//   while ((pnode = (TGeoPhysicalNode*)next())) {
-//      if (pnode->IsMatchingState(nav)) return 0;
-//   }
+   if (fLastState && fLastState->IsMatchingState(nav)) return nullptr;
+   //   while ((pnode = (TGeoPhysicalNode*)next())) {
+   //      if (pnode->IsMatchingState(nav)) return 0;
+   //   }
    Double_t snext = TGeoShape::Big();
    step = stepmax;
    TGeoVoxelFinder *voxels = fVolume->GetVoxels();
@@ -256,12 +250,12 @@ TGeoPhysicalNode *TGeoParallelWorld::FindNextBoundary(Double_t point[3], Double_
          return pnode;
       }
       step = TGeoShape::Big();
-      return 0;
+      return nullptr;
    }
    // Get current voxel
    Int_t ncheck = 0;
    Int_t sumchecked = 0;
-   Int_t *vlist = 0;
+   Int_t *vlist = nullptr;
    TGeoNodeCache *cache = nav->GetCache();
    TGeoStateInfo &info = *cache->GetMakePWInfo(nd);
 //   TGeoStateInfo &info = *cache->GetInfo();
@@ -272,7 +266,7 @@ TGeoPhysicalNode *TGeoParallelWorld::FindNextBoundary(Double_t point[3], Double_
          pnode = (TGeoPhysicalNode*)fPhysical->At(vlist[i]);
          if (pnode->IsMatchingState(nav)) {
             step = TGeoShape::Big();
-            return 0;
+            return nullptr;
          }
          current = fVolume->GetNode(vlist[i]);
          current->MasterToLocal(point, lpoint);
@@ -294,7 +288,7 @@ TGeoPhysicalNode *TGeoParallelWorld::FindNextBoundary(Double_t point[3], Double_
       }
    }
    step = TGeoShape::Big();
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -310,7 +304,7 @@ Double_t TGeoParallelWorld::Safety(Double_t point[3], Double_t safmax)
    Double_t local[3];
    Double_t safe = safmax;
    Double_t safnext;
-   TGeoPhysicalNode *pnode = 0;
+   TGeoPhysicalNode *pnode = nullptr;
    const Double_t tolerance = TGeoShape::Tolerance();
    Int_t nd = fVolume->GetNdaughters();
    TGeoNode *current;

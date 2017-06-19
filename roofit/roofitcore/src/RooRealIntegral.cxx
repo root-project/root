@@ -62,19 +62,10 @@ Int_t RooRealIntegral::_cacheAllNDim(2) ;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooRealIntegral::RooRealIntegral() : 
-  _valid(kFALSE),
-  _funcNormSet(0),
-  _iconfig(0),
-  _sumCatIter(0),
-  _mode(0),
-  _intOperMode(Hybrid),
-  _restartNumIntEngine(kFALSE),
-  _numIntEngine(0),
-  _numIntegrand(0),
-  _rangeName(0),
-  _params(0),
-  _cacheNum(kFALSE)
+RooRealIntegral::RooRealIntegral()
+   : _valid(kFALSE), _funcNormSet(nullptr), _iconfig(nullptr), _sumCatIter(nullptr), _mode(0), _intOperMode(Hybrid),
+     _restartNumIntEngine(kFALSE), _numIntEngine(nullptr), _numIntegrand(nullptr), _rangeName(nullptr),
+     _params(nullptr), _cacheNum(kFALSE)
 {
   _facListIter = _facList.createIterator() ;
   _jacListIter = _jacList.createIterator() ;
@@ -92,32 +83,20 @@ RooRealIntegral::RooRealIntegral() :
 /// config object prescribes how these numeric integrations are configured.
 ///
 
-RooRealIntegral::RooRealIntegral(const char *name, const char *title, 
-				 const RooAbsReal& function, const RooArgSet& depList,
-				 const RooArgSet* funcNormSet, const RooNumIntConfig* config,
-				 const char* rangeName) :
-  RooAbsReal(name,title), 
-  _valid(kTRUE), 
-  _sumList("!sumList","Categories to be summed numerically",this,kFALSE,kFALSE), 
-  _intList("!intList","Variables to be integrated numerically",this,kFALSE,kFALSE), 
-  _anaList("!anaList","Variables to be integrated analytically",this,kFALSE,kFALSE), 
-  _jacList("!jacList","Jacobian product term",this,kFALSE,kFALSE), 
-  _facList("!facList","Variables independent of function",this,kFALSE,kTRUE),
-  _facListIter(_facList.createIterator()),
-  _jacListIter(_jacList.createIterator()),
-  _function("!func","Function to be integrated",this,
-	    const_cast<RooAbsReal&>(function),kFALSE,kFALSE), 
-  _iconfig((RooNumIntConfig*)config),
-  _sumCat("!sumCat","SuperCategory for summation",this,kFALSE,kFALSE),
-  _sumCatIter(0),
-  _mode(0),
-  _intOperMode(Hybrid), 
-  _restartNumIntEngine(kFALSE),
-  _numIntEngine(0), 
-  _numIntegrand(0),
-  _rangeName((TNamed*)RooNameReg::ptr(rangeName)),
-  _params(0),
-  _cacheNum(kFALSE)
+RooRealIntegral::RooRealIntegral(const char *name, const char *title, const RooAbsReal &function,
+                                 const RooArgSet &depList, const RooArgSet *funcNormSet, const RooNumIntConfig *config,
+                                 const char *rangeName)
+   : RooAbsReal(name, title), _valid(kTRUE),
+     _sumList("!sumList", "Categories to be summed numerically", this, kFALSE, kFALSE),
+     _intList("!intList", "Variables to be integrated numerically", this, kFALSE, kFALSE),
+     _anaList("!anaList", "Variables to be integrated analytically", this, kFALSE, kFALSE),
+     _jacList("!jacList", "Jacobian product term", this, kFALSE, kFALSE),
+     _facList("!facList", "Variables independent of function", this, kFALSE, kTRUE),
+     _facListIter(_facList.createIterator()), _jacListIter(_jacList.createIterator()),
+     _function("!func", "Function to be integrated", this, const_cast<RooAbsReal &>(function), kFALSE, kFALSE),
+     _iconfig((RooNumIntConfig *)config), _sumCat("!sumCat", "SuperCategory for summation", this, kFALSE, kFALSE),
+     _sumCatIter(nullptr), _mode(0), _intOperMode(Hybrid), _restartNumIntEngine(kFALSE), _numIntEngine(nullptr),
+     _numIntegrand(nullptr), _rangeName((TNamed *)RooNameReg::ptr(rangeName)), _params(nullptr), _cacheNum(kFALSE)
 {
   //   A) Check that all dependents are lvalues 
   //
@@ -165,7 +144,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
     }
     delete iter ;
   } else {
-    _funcNormSet = 0 ;
+     _funcNormSet = nullptr;
   }
 
   //_funcNormSet = funcNormSet ? (RooArgSet*)funcNormSet->snapshot(kFALSE) : 0 ;
@@ -341,7 +320,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
 
       // Add final dependents of arg as shape servers
       RooArgSet argLeafServers ;
-      arg->leafNodeServerList(&argLeafServers,0,kFALSE) ;
+      arg->leafNodeServerList(&argLeafServers, nullptr, kFALSE);
 
       //arg->printCompactTree() ;
       //cout << "leaf nodes of server are " << argLeafServers << " depList = " << depList << endl ;
@@ -700,15 +679,15 @@ Bool_t RooRealIntegral::servesExclusively(const RooAbsArg* server,const RooArgSe
 Bool_t RooRealIntegral::initNumIntegrator() const
 {
   // if we already have an engine, check if it still works for the present limits.
-  if(0 != _numIntEngine) {
-    if(_numIntEngine->isValid() && _numIntEngine->checkLimits() && !_restartNumIntEngine ) return kTRUE;
-    // otherwise, cleanup the old engine
-    delete _numIntEngine ;
-    _numIntEngine= 0;
-    if(0 != _numIntegrand) {
-      delete _numIntegrand;
-      _numIntegrand= 0;
-    }
+  if (nullptr != _numIntEngine) {
+     if (_numIntEngine->isValid() && _numIntEngine->checkLimits() && !_restartNumIntEngine) return kTRUE;
+     // otherwise, cleanup the old engine
+     delete _numIntEngine;
+     _numIntEngine = nullptr;
+     if (nullptr != _numIntegrand) {
+        delete _numIntegrand;
+        _numIntegrand = nullptr;
+     }
   }
 
   // All done if there are no arguments to integrate numerically
@@ -722,18 +701,18 @@ Bool_t RooRealIntegral::initNumIntegrator() const
   else {
     _numIntegrand= new RooRealBinding(_function.arg(),_intList,_funcNormSet,kFALSE,_rangeName);
   }
-  if(0 == _numIntegrand || !_numIntegrand->isValid()) {
-    coutE(Integration) << ClassName() << "::" << GetName() << ": failed to create valid integrand." << endl;
-    return kFALSE;
+  if (nullptr == _numIntegrand || !_numIntegrand->isValid()) {
+     coutE(Integration) << ClassName() << "::" << GetName() << ": failed to create valid integrand." << endl;
+     return kFALSE;
   }
 
   // Create appropriate numeric integrator using factory
   Bool_t isBinned = _function.arg().isBinnedDistribution(_intList) ;
   _numIntEngine = RooNumIntFactory::instance().createIntegrator(*_numIntegrand,*_iconfig,0,isBinned) ;
 
-  if(0 == _numIntEngine || !_numIntEngine->isValid()) {
-    coutE(Integration) << ClassName() << "::" << GetName() << ": failed to create valid integrator." << endl;
-    return kFALSE;
+  if (nullptr == _numIntEngine || !_numIntEngine->isValid()) {
+     coutE(Integration) << ClassName() << "::" << GetName() << ": failed to create valid integrator." << endl;
+     return kFALSE;
   }
 
   cxcoutI(NumIntegration) << "RooRealIntegral::init(" << GetName() << ") using numeric integrator " 
@@ -752,38 +731,25 @@ Bool_t RooRealIntegral::initNumIntegrator() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-RooRealIntegral::RooRealIntegral(const RooRealIntegral& other, const char* name) : 
-  RooAbsReal(other,name), 
-  _valid(other._valid),
-  _sumList("!sumList",this,other._sumList),
-  _intList("!intList",this,other._intList), 
-  _anaList("!anaList",this,other._anaList),
-  _jacList("!jacList",this,other._jacList),
-  _facList("!facList","Variables independent of function",this,kFALSE,kTRUE),
-  _facListIter(_facList.createIterator()),
-  _jacListIter(_jacList.createIterator()),
-  _function("!func",this,other._function), 
-  _iconfig(other._iconfig),
-  _sumCat("!sumCat",this,other._sumCat),
-  _sumCatIter(0),
-  _mode(other._mode),
-  _intOperMode(other._intOperMode), 
-  _restartNumIntEngine(kFALSE),
-  _numIntEngine(0), 
-  _numIntegrand(0),
-  _rangeName(other._rangeName),
-  _params(0),
-  _cacheNum(kFALSE)
+RooRealIntegral::RooRealIntegral(const RooRealIntegral &other, const char *name)
+   : RooAbsReal(other, name), _valid(other._valid), _sumList("!sumList", this, other._sumList),
+     _intList("!intList", this, other._intList), _anaList("!anaList", this, other._anaList),
+     _jacList("!jacList", this, other._jacList),
+     _facList("!facList", "Variables independent of function", this, kFALSE, kTRUE),
+     _facListIter(_facList.createIterator()), _jacListIter(_jacList.createIterator()),
+     _function("!func", this, other._function), _iconfig(other._iconfig), _sumCat("!sumCat", this, other._sumCat),
+     _sumCatIter(nullptr), _mode(other._mode), _intOperMode(other._intOperMode), _restartNumIntEngine(kFALSE),
+     _numIntEngine(nullptr), _numIntegrand(nullptr), _rangeName(other._rangeName), _params(nullptr), _cacheNum(kFALSE)
 {
- _funcNormSet = other._funcNormSet ? (RooArgSet*)other._funcNormSet->snapshot(kFALSE) : 0 ;
+   _funcNormSet = other._funcNormSet ? (RooArgSet *)other._funcNormSet->snapshot(kFALSE) : nullptr;
 
- other._facListIter->Reset() ;
- RooAbsArg* arg ;
- while((arg=(RooAbsArg*)other._facListIter->Next())) {
-   RooAbsArg* argClone = (RooAbsArg*) arg->Clone() ;
-   _facListOwned.addOwned(*argClone) ;
-   _facList.add(*argClone) ;
-   addServer(*argClone,kFALSE,kTRUE) ;
+   other._facListIter->Reset();
+   RooAbsArg *arg;
+   while ((arg = (RooAbsArg *)other._facListIter->Next())) {
+      RooAbsArg *argClone = (RooAbsArg *)arg->Clone();
+      _facListOwned.addOwned(*argClone);
+      _facList.add(*argClone);
+      addServer(*argClone, kFALSE, kTRUE);
  }
 
  other._intList.snapshot(_saveInt) ;
@@ -830,8 +796,8 @@ RooAbsReal* RooRealIntegral::createIntegral(const RooArgSet& iset, const RooArgS
   isetAll.add(_anaList) ;
   isetAll.add(_facList) ;
 
-  const RooArgSet* newNormSet(0) ;
-  RooArgSet* tmp(0) ;
+  const RooArgSet *newNormSet(nullptr);
+  RooArgSet *tmp(nullptr);
   if (nset && !_funcNormSet) {
     newNormSet = nset ;
   } else if (!nset && _funcNormSet) {
@@ -892,7 +858,7 @@ Double_t RooRealIntegral::evaluate() const
   case Hybrid: 
     {      
       // Cache numeric integrals in >1d expensive object cache
-      RooDouble* cacheVal(0) ;
+      RooDouble *cacheVal(nullptr);
       if ((_cacheNum && _intList.getSize()>0) || _intList.getSize()>=_cacheAllNDim) {
 	cacheVal = (RooDouble*) expensiveObjectCache().retrieveObject(GetName(),RooDouble::Class(),parameters())  ;
       }
@@ -1087,7 +1053,7 @@ Bool_t RooRealIntegral::redirectServersHook(const RooAbsCollection& /*newServerL
   // Delete parameters cache if we have one
   if (_params) {
     delete _params ;
-    _params = 0 ;
+    _params = nullptr;
   }
 
   return kFALSE ;

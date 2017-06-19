@@ -58,10 +58,7 @@ const std::string & DistSamplerOptions::DefaultSampler()
    return Sampler::gDefaultSampler;
 }
 
-
-DistSamplerOptions::DistSamplerOptions(int dim):
-   fLevel( Sampler::gDefaultPrintLevel),
-   fExtraOptions(0)
+DistSamplerOptions::DistSamplerOptions(int dim) : fLevel(Sampler::gDefaultPrintLevel), fExtraOptions(nullptr)
 {
    // constructor using  the default options
 
@@ -82,8 +79,8 @@ DistSamplerOptions::DistSamplerOptions(int dim):
    }
 }
 
-
-DistSamplerOptions::DistSamplerOptions(const DistSamplerOptions & opt) : fExtraOptions(0) {
+DistSamplerOptions::DistSamplerOptions(const DistSamplerOptions &opt) : fExtraOptions(nullptr)
+{
    // copy constructor
    (*this) = opt;
 }
@@ -96,7 +93,7 @@ DistSamplerOptions & DistSamplerOptions::operator=(const DistSamplerOptions & op
    fAlgoType = opt.fAlgoType;
 
    if (fExtraOptions) delete fExtraOptions;
-   fExtraOptions = 0;
+   fExtraOptions = nullptr;
    if (opt.fExtraOptions)  fExtraOptions =  (opt.fExtraOptions)->Clone();
    return *this;
 }

@@ -124,10 +124,9 @@ ClassImp(TFileIter);
 ////////////////////////////////////////////////////////////////////////////////
 /// Create iterator over all objects from the TFile provided
 
-TFileIter::TFileIter(TFile *file) : fNestedIterator(0)
-         , fRootFile(file)
-         , fEventName("event"), fRunNumber(UInt_t(-1)),fEventNumber(UInt_t(-1))
-         , fCursorPosition(-1),  fOwnTFile(kFALSE)
+TFileIter::TFileIter(TFile *file)
+   : fNestedIterator(nullptr), fRootFile(file), fEventName("event"), fRunNumber(UInt_t(-1)), fEventNumber(UInt_t(-1)),
+     fCursorPosition(-1), fOwnTFile(kFALSE)
 {
    Initialize();
 }
@@ -135,10 +134,9 @@ TFileIter::TFileIter(TFile *file) : fNestedIterator(0)
 ////////////////////////////////////////////////////////////////////////////////
 /// Create iterator over all objects from the TDirectory provided
 
-TFileIter::TFileIter(TDirectory *directory) :  fNestedIterator(0)
-         , fRootFile(directory)
-         , fEventName("event"), fRunNumber(UInt_t(-1)),fEventNumber(UInt_t(-1))
-         , fCursorPosition(-1),  fOwnTFile(kFALSE)
+TFileIter::TFileIter(TDirectory *directory)
+   : fNestedIterator(nullptr), fRootFile(directory), fEventName("event"), fRunNumber(UInt_t(-1)),
+     fEventNumber(UInt_t(-1)), fCursorPosition(-1), fOwnTFile(kFALSE)
 {
    Initialize();
 }
@@ -146,11 +144,9 @@ TFileIter::TFileIter(TDirectory *directory) :  fNestedIterator(0)
 /// Open ROOT TFile by the name provided;
 /// This TFile is to be deleted by the TFileIter alone
 
-TFileIter::TFileIter(const char *name, Option_t *option, const char *ftitle
-                     , Int_t compress, Int_t /*netopt*/) : fNestedIterator(0)
-                                                         ,fRootFile(0)
-                                                         ,fEventName("event"), fRunNumber(UInt_t(-1)) ,fEventNumber(UInt_t(-1))
-                                                         ,fCursorPosition(-1), fOwnTFile(kFALSE)
+TFileIter::TFileIter(const char *name, Option_t *option, const char *ftitle, Int_t compress, Int_t /*netopt*/)
+   : fNestedIterator(nullptr), fRootFile(nullptr), fEventName("event"), fRunNumber(UInt_t(-1)),
+     fEventNumber(UInt_t(-1)), fCursorPosition(-1), fOwnTFile(kFALSE)
 {
    if (name && name[0]) {
       fOwnTFile = kTRUE;
@@ -168,11 +164,9 @@ TFileIter::TFileIter(const char *name, Option_t *option, const char *ftitle
 ///the next statement is illegal, spotted by coverity "Dereferencing pointer "this->fRootFile". (Deref happens because this is a virtual function call.)
 ///assert(!fRootFile->IsWritable());
 
-TFileIter::TFileIter(const TFileIter &dst) : TListIter()
-          , fNestedIterator(0)
-          ,fRootFile(dst.fRootFile),fEventName(dst.fEventName), fRunNumber(dst.fRunNumber)
-          ,fEventNumber(dst.fRunNumber),
-           fCursorPosition(-1),  fOwnTFile(dst.fOwnTFile)
+TFileIter::TFileIter(const TFileIter &dst)
+   : TListIter(), fNestedIterator(nullptr), fRootFile(dst.fRootFile), fEventName(dst.fEventName),
+     fRunNumber(dst.fRunNumber), fEventNumber(dst.fRunNumber), fCursorPosition(-1), fOwnTFile(dst.fOwnTFile)
 {
    if (fRootFile && fOwnTFile) {
       // Reopen the file
@@ -195,13 +189,14 @@ TFileIter::TFileIter(const TFileIter &dst) : TListIter()
 
 TFileIter::~TFileIter()
 {
-   TFileIter *deleteit = fNestedIterator; fNestedIterator = 0;
+   TFileIter *deleteit = fNestedIterator;
+   fNestedIterator = nullptr;
    delete deleteit;
    if (fRootFile && fOwnTFile ) {  // delete own TFile if any
       if (fRootFile->IsWritable()) fRootFile->Write();
       fRootFile->Close();
       delete fRootFile;
-      fRootFile = 0;
+      fRootFile = nullptr;
    }
 }
 
@@ -215,7 +210,7 @@ void TFileIter::Initialize()
       if (IsOpen()) Reset();
       else  {
          if (fRootFile && fOwnTFile ) delete fRootFile;
-         fRootFile = 0;
+         fRootFile = nullptr;
       }
    }
 }
@@ -255,7 +250,7 @@ Int_t TFileIter::GetDepth() const
 
 const char *TFileIter::GetKeyName() const
 {
-   const char *name = 0;
+   const char *name = nullptr;
    TKey *key  = GetCurrentKey();
    if (key) name = key->GetName();
    return name;
@@ -325,7 +320,7 @@ void TFileIter::PurgeKeys(TList *listOfKeys)
       // Check next object
       lnk = lnk->Next();
       if (lnk) {
-         TKey *nextkey = 0;
+         TKey *nextkey = nullptr;
          TObjLink *lnkThis = lnk;
          while (     lnk
              &&   (nextkey = (TKey *)lnk->GetObject())
@@ -357,7 +352,7 @@ void TFileIter::Reset()
 {
    if (fNestedIterator) {
       TFileIter *it = fNestedIterator;
-      fNestedIterator=0;
+      fNestedIterator = nullptr;
       delete it;
    }
    TListIter::Reset();
@@ -400,11 +395,11 @@ void TFileIter::SetCursorPosition(const char *keyNameToFind)
 
 TKey *TFileIter::SkipObjects(Int_t  nSkip)
 {
-   TKey *nextObject  = fNestedIterator ? fNestedIterator->SkipObjects(nSkip): 0;
+   TKey *nextObject = fNestedIterator ? fNestedIterator->SkipObjects(nSkip) : nullptr;
    if (!nextObject) {
       if (fNestedIterator) {
          TFileIter *it = fNestedIterator;
-         fNestedIterator = 0;
+         fNestedIterator = nullptr;
          delete it;
       }
       Int_t collectionSize = 0;
@@ -425,7 +420,7 @@ TKey *TFileIter::SkipObjects(Int_t  nSkip)
             } while (fCursorPosition != newPos);
             if (fCurCursor) nextObject = dynamic_cast<TKey *>(fCurCursor->GetObject());
          } else  {
-            fCurCursor = fCursor = 0;
+            fCurCursor = fCursor = nullptr;
             if (newPos < 0) {
                fCursorPosition = -1;
                if (fList) fCursor = fList->FirstLink();
@@ -451,7 +446,7 @@ TKey *TFileIter::NextEventKey(UInt_t eventNumber, UInt_t runNumber, const char *
 
    if (reset) Reset();
    //   TIter &nextKey = *fKeysIterator;
-   TKey *key = 0;
+   TKey *key = nullptr;
    TDsKey thisKey;
    while ( (key = SkipObjects()) ) {
       if (fDirection==kIterForward) fCursorPosition++;
@@ -459,19 +454,28 @@ TKey *TFileIter::NextEventKey(UInt_t eventNumber, UInt_t runNumber, const char *
       if ( name && name[0] != '*') {
          thisKey.SetKey(key->GetName());
          if (thisKey.GetName() < name)  continue;
-         if (thisKey.GetName() > name) { key = 0; break; }
+         if (thisKey.GetName() > name) {
+            key = nullptr;
+            break;
+         }
       }
       // Check "run number"
       if (runNumber != UInt_t(-1)) {
          UInt_t thisRunNumber = thisKey.RunNumber();
          if (thisRunNumber < runNumber) continue;
-         if (thisRunNumber < runNumber) { key = 0; break; }
+         if (thisRunNumber < runNumber) {
+            key = nullptr;
+            break;
+         }
       }
       // Check "event number"
       if (eventNumber != UInt_t(-1)) {
          UInt_t thisEventNumber = thisKey.EventNumber();
          if (thisEventNumber < eventNumber) continue;
-         if (thisEventNumber > eventNumber) {key = 0; break; }
+         if (thisEventNumber > eventNumber) {
+            key = nullptr;
+            break;
+         }
       }
       break;
    }
@@ -494,7 +498,7 @@ TObject *TFileIter::NextEventGet(UInt_t eventNumber, UInt_t runNumber, const cha
 
 TObject *TFileIter::ReadObj(const TKey *key)  const
 {
-   TObject *obj = 0;
+   TObject *obj = nullptr;
    if (fNestedIterator) obj = fNestedIterator->ReadObj(key);
    else if (key)  {
       obj = ((TKey *)key)->ReadObj();
@@ -558,14 +562,13 @@ TString TFileIter::MapName(const char *name, const char *localSystemKey,const ch
    if ( !mountedFileSystemKey) mountedFileSystemKey = GetForeignFileSystemKey();
    TString newName = name;
    TString fileMap = gEnv->GetValue(GetResourceName(),GetDefaultMapFileName());
-   const char *localName    = 0;
-   const char *foreignName  = 0;
+   const char *localName = nullptr;
+   const char *foreignName = nullptr;
    if ( gSystem->AccessPathName(fileMap) == 0 ){
       TEnv myMapResource(fileMap);
-      localName    = myMapResource.Defined(localSystemKey) ?
-                                    myMapResource.GetValue(localSystemKey,"") : 0;
-      foreignName  = myMapResource.Defined(mountedFileSystemKey) ?
-                                    myMapResource.GetValue(mountedFileSystemKey,""):0;
+      localName = myMapResource.Defined(localSystemKey) ? myMapResource.GetValue(localSystemKey, "") : nullptr;
+      foreignName =
+         myMapResource.Defined(mountedFileSystemKey) ? myMapResource.GetValue(mountedFileSystemKey, "") : nullptr;
    } else {
       localName    = "/castor";      // This is the default CERN name
       foreignName  = "rfio:/castor"; // and it needs "RFIO"

@@ -22,9 +22,8 @@ ClassImp(TGShapedFrame);
 ////////////////////////////////////////////////////////////////////////////////
 /// Shaped window default constructor
 
-TGShapedFrame::TGShapedFrame(const char *pname, const TGWindow *p, UInt_t w,
-                             UInt_t h, UInt_t options) :
-      TGCompositeFrame(p, w, h, options), fBgnd(0), fImage(0)
+TGShapedFrame::TGShapedFrame(const char *pname, const TGWindow *p, UInt_t w, UInt_t h, UInt_t options)
+   : TGCompositeFrame(p, w, h, options), fBgnd(nullptr), fImage(nullptr)
 {
    TString picName;
    // set a few attributes

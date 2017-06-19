@@ -40,20 +40,16 @@ namespace ROOT {
 
    namespace Math {
 
+   BasicMinimizer::BasicMinimizer() : fDim(0), fObjFunc(nullptr), fMinVal(0)
+   {
+      fValues.reserve(10);
+      fNames.reserve(10);
+      fSteps.reserve(10);
 
-BasicMinimizer::BasicMinimizer( ) :
-   fDim(0),
-   fObjFunc(0),
-   fMinVal(0)
-{
-   fValues.reserve(10);
-   fNames.reserve(10);
-   fSteps.reserve(10);
-
-   int niter = ROOT::Math::MinimizerOptions::DefaultMaxIterations();
-   if (niter <=0 ) niter = 1000;
-   SetMaxIterations(niter);
-   SetPrintLevel(ROOT::Math::MinimizerOptions::DefaultPrintLevel());
+      int niter = ROOT::Math::MinimizerOptions::DefaultMaxIterations();
+      if (niter <= 0) niter = 1000;
+      SetMaxIterations(niter);
+      SetPrintLevel(ROOT::Math::MinimizerOptions::DefaultPrintLevel());
 }
 
 
@@ -133,7 +129,7 @@ bool BasicMinimizer::SetVariableValue(unsigned int ivar, double val) {
 
 bool BasicMinimizer::SetVariableValues( const double * x) {
    // set all variable values in minimizer
-   if (x == 0) return false;
+   if (x == nullptr) return false;
    std::copy(x,x+fValues.size(), fValues.begin() );
    return true;
 }
@@ -247,7 +243,7 @@ void BasicMinimizer::SetFunction(const ROOT::Math::IMultiGenFunction & func) {
 void BasicMinimizer::SetFunction(const ROOT::Math::IMultiGradFunction & func) {
    // set the function to minimize
    fObjFunc = dynamic_cast<const ROOT::Math::IMultiGradFunction *>( func.Clone());
-   assert(fObjFunc != 0);
+   assert(fObjFunc != nullptr);
    fDim = fObjFunc->NDim();
 }
 
@@ -262,7 +258,7 @@ bool BasicMinimizer::CheckDimension() const {
 }
 
 bool BasicMinimizer::CheckObjFunction() const {
-   if (fObjFunc == 0) {
+   if (fObjFunc == nullptr) {
       MATH_ERROR_MSG("BasicMinimizer::CheckFunction","Function has not been set");
       return false;
    }
@@ -280,13 +276,13 @@ MinimTransformFunction * BasicMinimizer::CreateTransformation(std::vector<double
 
    startValues = std::vector<double>(fValues.begin(), fValues.end() );
 
-   MinimTransformFunction * trFunc  = 0;
+   MinimTransformFunction *trFunc = nullptr;
 
    // in case of transformation wrap objective function in a new transformation function
    // and transform from external variables  to internals one
    // Transformations are supported only for gradient function
    const IMultiGradFunction * gradObjFunc = (func) ? func : dynamic_cast<const IMultiGradFunction *>(fObjFunc);
-   doTransform &= (gradObjFunc != 0);
+   doTransform &= (gradObjFunc != nullptr);
 
    if (doTransform)   {
       // minim transform function manages the passed function pointer (gradObjFunc)

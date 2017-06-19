@@ -58,9 +58,7 @@ using namespace std ;
 ClassImp(RooNumIntFactory);
 ;
 
-RooNumIntFactory* RooNumIntFactory::_instance = 0 ;
-
-
+RooNumIntFactory *RooNumIntFactory::_instance = nullptr;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor. Register all known integrators by calling
@@ -117,9 +115,9 @@ RooNumIntFactory::RooNumIntFactory(const RooNumIntFactory& other) : TObject(othe
 
 RooNumIntFactory& RooNumIntFactory::instance()
 {
-  if (_instance==0) {
-    new RooNumIntFactory ;
-    RooSentinel::activate() ;
+   if (_instance == nullptr) {
+      new RooNumIntFactory;
+      RooSentinel::activate();
   } 
   return *_instance ;
 }
@@ -132,7 +130,7 @@ void RooNumIntFactory::cleanup()
 {
   if (_instance) {
     delete _instance ;
-    _instance = 0 ;
+    _instance = nullptr;
   }
 }
 
@@ -169,7 +167,7 @@ Bool_t RooNumIntFactory::storeProtoIntegrator(RooAbsIntegrator* proto, const Roo
 const RooAbsIntegrator* RooNumIntFactory::getProtoIntegrator(const char* name) 
 {
   if (_map.count(name)==0) {
-    return 0 ;
+     return nullptr;
   } 
   
   return _map[name].first ;
@@ -183,7 +181,7 @@ const RooAbsIntegrator* RooNumIntFactory::getProtoIntegrator(const char* name)
 const char* RooNumIntFactory::getDepIntegratorName(const char* name) 
 {
   if (_map.count(name)==0) {
-    return 0 ;
+     return nullptr;
   }
 
   return _map[name].second.c_str() ;
@@ -237,9 +235,10 @@ RooAbsIntegrator* RooNumIntFactory::createIntegrator(RooAbsFunc& func, const Roo
 
   // Check that a method was defined for this case
   if (!method.CompareTo("N/A")) {
-    oocoutE((TObject*)0,Integration) << "RooNumIntFactory::createIntegrator: No integration method has been defined for " 
-				     << (openEnded?"an open ended ":"a ") << ndim << "-dimensional integral" << endl ;
-    return 0 ;    
+     oocoutE((TObject *)nullptr, Integration)
+        << "RooNumIntFactory::createIntegrator: No integration method has been defined for "
+        << (openEnded ? "an open ended " : "a ") << ndim << "-dimensional integral" << endl;
+     return nullptr;
   }
 
   // Retrieve proto integrator and return clone configured for the requested integration task

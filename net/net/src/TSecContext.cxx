@@ -174,7 +174,7 @@ void TSecContext::Cleanup()
    if (fCleanup) {
       fCleanup->Delete();
       delete fCleanup;
-      fCleanup = 0;
+      fCleanup = nullptr;
    }
 }
 

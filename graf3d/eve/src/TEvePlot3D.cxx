@@ -22,10 +22,8 @@ ClassImp(TEvePlot3D);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TEvePlot3D::TEvePlot3D(const char* n, const char* t) :
-   TEveElementList(n, t),
-   fPlot(0),
-   fLogX(kFALSE), fLogY(kFALSE), fLogZ(kFALSE)
+TEvePlot3D::TEvePlot3D(const char *n, const char *t)
+   : TEveElementList(n, t), fPlot(nullptr), fLogX(kFALSE), fLogY(kFALSE), fLogZ(kFALSE)
 {
    InitMainTrans();
 }

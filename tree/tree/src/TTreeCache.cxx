@@ -249,60 +249,24 @@ ClassImp(TTreeCache);
 ////////////////////////////////////////////////////////////////////////////////
 /// Default Constructor.
 
-TTreeCache::TTreeCache() : TFileCacheRead(),
-   fEntryMin(0),
-   fEntryMax(1),
-   fEntryCurrent(-1),
-   fEntryNext(-1),
-   fNbranches(0),
-   fNReadOk(0),
-   fNReadMiss(0),
-   fNReadPref(0),
-   fBranches(0),
-   fBrNames(0),
-   fTree(0),
-   fIsLearning(kTRUE),
-   fIsManual(kFALSE),
-   fFirstBuffer(kTRUE),
-   fOneTime(kFALSE),
-   fReverseRead(0),
-   fFillTimes(0),
-   fFirstTime(kTRUE),
-   fFirstEntry(-1),
-   fReadDirectionSet(kFALSE),
-   fEnabled(kTRUE),
-   fPrefillType(GetConfiguredPrefillType()),
-   fAutoCreated(kFALSE)
+TTreeCache::TTreeCache()
+   : TFileCacheRead(), fEntryMin(0), fEntryMax(1), fEntryCurrent(-1), fEntryNext(-1), fNbranches(0), fNReadOk(0),
+     fNReadMiss(0), fNReadPref(0), fBranches(nullptr), fBrNames(nullptr), fTree(nullptr), fIsLearning(kTRUE),
+     fIsManual(kFALSE), fFirstBuffer(kTRUE), fOneTime(kFALSE), fReverseRead(0), fFillTimes(0), fFirstTime(kTRUE),
+     fFirstEntry(-1), fReadDirectionSet(kFALSE), fEnabled(kTRUE), fPrefillType(GetConfiguredPrefillType()),
+     fAutoCreated(kFALSE)
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TTreeCache::TTreeCache(TTree *tree, Int_t buffersize) : TFileCacheRead(tree->GetCurrentFile(),buffersize,tree),
-   fEntryMin(0),
-   fEntryMax(tree->GetEntriesFast()),
-   fEntryCurrent(-1),
-   fEntryNext(0),
-   fNbranches(0),
-   fNReadOk(0),
-   fNReadMiss(0),
-   fNReadPref(0),
-   fBranches(0),
-   fBrNames(new TList),
-   fTree(tree),
-   fIsLearning(kTRUE),
-   fIsManual(kFALSE),
-   fFirstBuffer(kTRUE),
-   fOneTime(kFALSE),
-   fReverseRead(0),
-   fFillTimes(0),
-   fFirstTime(kTRUE),
-   fFirstEntry(-1),
-   fReadDirectionSet(kFALSE),
-   fEnabled(kTRUE),
-   fPrefillType(GetConfiguredPrefillType()),
-   fAutoCreated(kFALSE)
+TTreeCache::TTreeCache(TTree *tree, Int_t buffersize)
+   : TFileCacheRead(tree->GetCurrentFile(), buffersize, tree), fEntryMin(0), fEntryMax(tree->GetEntriesFast()),
+     fEntryCurrent(-1), fEntryNext(0), fNbranches(0), fNReadOk(0), fNReadMiss(0), fNReadPref(0), fBranches(nullptr),
+     fBrNames(new TList), fTree(tree), fIsLearning(kTRUE), fIsManual(kFALSE), fFirstBuffer(kTRUE), fOneTime(kFALSE),
+     fReverseRead(0), fFillTimes(0), fFirstTime(kTRUE), fFirstEntry(-1), fReadDirectionSet(kFALSE), fEnabled(kTRUE),
+     fPrefillType(GetConfiguredPrefillType()), fAutoCreated(kFALSE)
 {
    fEntryNext = fEntryMin + fgLearnEntries;
    Int_t nleaves = tree->GetListOfLeaves()->GetEntries();
@@ -316,10 +280,12 @@ TTreeCache::~TTreeCache()
 {
    // Informe the TFile that we have been deleted (in case
    // we are deleted explicitly by legacy user code).
-   if (fFile) fFile->SetCacheRead(0, fTree);
+   if (fFile) fFile->SetCacheRead(nullptr, fTree);
 
    delete fBranches;
-   if (fBrNames) {fBrNames->Delete(); delete fBrNames; fBrNames=0;}
+   if (fBrNames) {fBrNames->Delete(); delete fBrNames;
+      fBrNames = nullptr;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -424,7 +390,7 @@ Int_t TTreeCache::AddBranch(const char *bname, Bool_t subbranches /*= kFALSE*/)
          }
       }
    }
-   if (nb==0 && strchr(bname,'*')==0) {
+   if (nb == 0 && strchr(bname, '*') == nullptr) {
       branch = fTree->GetBranch(bname);
       if (branch) {
          if (AddBranch(branch, subbranches)<0) {
@@ -442,14 +408,15 @@ Int_t TTreeCache::AddBranch(const char *bname, Bool_t subbranches /*= kFALSE*/)
       TString name;
       while ((fe = (TFriendElement*)nextf())) {
          TTree *t = fe->GetTree();
-         if (t==0) continue;
+         if (t == nullptr) continue;
 
          // If the alias is present replace it with the real name.
          char *subbranch = (char*)strstr(bname,fe->GetName());
-         if (subbranch!=bname) subbranch = 0;
+         if (subbranch != bname) subbranch = nullptr;
          if (subbranch) {
             subbranch += strlen(fe->GetName());
-            if ( *subbranch != '.' ) subbranch = 0;
+            if ( *subbranch != '.' )
+               subbranch = nullptr;
             else subbranch ++;
          }
          if (subbranch) {
@@ -564,7 +531,7 @@ Int_t TTreeCache::DropBranch(const char *bname, Bool_t subbranches /*= kFALSE*/)
          }
       }
    }
-   if (nb==0 && strchr(bname,'*')==0) {
+   if (nb == 0 && strchr(bname, '*') == nullptr) {
       branch = fTree->GetBranch(bname);
       if (branch) {
          if (DropBranch(branch, subbranches)<0) {
@@ -582,14 +549,15 @@ Int_t TTreeCache::DropBranch(const char *bname, Bool_t subbranches /*= kFALSE*/)
       TString name;
       while ((fe = (TFriendElement*)nextf())) {
          TTree *t = fe->GetTree();
-         if (t==0) continue;
+         if (t == nullptr) continue;
 
          // If the alias is present replace it with the real name.
          char *subbranch = (char*)strstr(bname,fe->GetName());
-         if (subbranch!=bname) subbranch = 0;
+         if (subbranch != bname) subbranch = nullptr;
          if (subbranch) {
             subbranch += strlen(fe->GetName());
-            if ( *subbranch != '.' ) subbranch = 0;
+            if ( *subbranch != '.' )
+               subbranch = nullptr;
             else subbranch ++;
          }
          if (subbranch) {
@@ -763,7 +731,7 @@ Bool_t TTreeCache::FillBuffer()
          ++pass;
          for (Int_t i=0;i<fNbranches;i++) {
             TBranch *b = (TBranch*)fBranches->UncheckedAt(i);
-            if (b->GetDirectory()==0) continue;
+            if (b->GetDirectory() == nullptr) continue;
             if (b->GetDirectory()->GetFile() != fFile) continue;
             Int_t nb = b->GetMaxBaskets();
             Int_t *lbaskets   = b->GetBasketBytes();
@@ -1182,8 +1150,8 @@ void TTreeCache::SetFile(TFile *file, TFile::ECacheAction action)
    // calling SetFile (and also by setting fFile to zero before the calling).
    if (fFile) {
       TFile *prevFile = fFile;
-      fFile = 0;
-      prevFile->SetCacheRead(0, fTree, action);
+      fFile = nullptr;
+      prevFile->SetCacheRead(nullptr, fTree, action);
    }
    TFileCacheRead::SetFile(file, action);
 }

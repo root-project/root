@@ -68,22 +68,17 @@ ClassImp(TMVA::MethodCompositeBase);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-TMVA::MethodCompositeBase::MethodCompositeBase( const TString& jobName,
-                                                Types::EMVA methodType,
-                                                const TString& methodTitle,
-                                                DataSetInfo& theData,
-                                                const TString& theOption )
-: TMVA::MethodBase( jobName, methodType, methodTitle, theData, theOption),
-   fCurrentMethodIdx(0), fCurrentMethod(0)
+TMVA::MethodCompositeBase::MethodCompositeBase(const TString &jobName, Types::EMVA methodType,
+                                               const TString &methodTitle, DataSetInfo &theData,
+                                               const TString &theOption)
+   : TMVA::MethodBase(jobName, methodType, methodTitle, theData, theOption), fCurrentMethodIdx(0),
+     fCurrentMethod(nullptr)
 {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
-TMVA::MethodCompositeBase::MethodCompositeBase( Types::EMVA methodType,
-                                                DataSetInfo& dsi,
-                                                const TString& weightFile)
-   : TMVA::MethodBase( methodType, dsi, weightFile),
-     fCurrentMethodIdx(0), fCurrentMethod(0)
+TMVA::MethodCompositeBase::MethodCompositeBase(Types::EMVA methodType, DataSetInfo &dsi, const TString &weightFile)
+   : TMVA::MethodBase(methodType, dsi, weightFile), fCurrentMethodIdx(0), fCurrentMethod(nullptr)
 {}
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -98,7 +93,7 @@ TMVA::IMethod* TMVA::MethodCompositeBase::GetMethod( const TString &methodTitle 
       MethodBase* mva = dynamic_cast<MethodBase*>(*itrMethod);
       if ( (mva->GetMethodName())==methodTitle ) return mva;
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -108,7 +103,8 @@ TMVA::IMethod* TMVA::MethodCompositeBase::GetMethod( const Int_t index ) const
 {
    std::vector<IMethod*>::const_iterator itrMethod = fMethods.begin()+index;
    if (itrMethod<fMethods.end()) return *itrMethod;
-   else                          return 0;
+   else
+      return nullptr;
 }
 
 
@@ -199,8 +195,7 @@ void TMVA::MethodCompositeBase::ReadWeightsFromXML( void* wghtnode )
       fMethodWeight.push_back(methodWeight);
       MethodBase* meth = dynamic_cast<MethodBase*>(fMethods.back());
 
-      if(meth==0)
-         Log() << kFATAL << "Could not read method from XML" << Endl;
+      if (meth == nullptr) Log() << kFATAL << "Could not read method from XML" << Endl;
 
       void* methXML = gTools().GetChild(ch);
 

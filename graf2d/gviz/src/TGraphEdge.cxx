@@ -31,12 +31,12 @@ TGraphStruct.
 
 TGraphEdge::TGraphEdge(): TObject(), TAttLine()
 {
-   fNode1  = 0;
-   fNode2  = 0;
-   fGVEdge = 0;
-   fX      = 0;
-   fY      = 0;
-   fN      = 0;
+   fNode1 = nullptr;
+   fNode2 = nullptr;
+   fGVEdge = nullptr;
+   fX = nullptr;
+   fY = nullptr;
+   fN = nullptr;
    fArrX   = 0;
    fArrY   = 0;
 }
@@ -49,10 +49,10 @@ TGraphEdge::TGraphEdge(TGraphNode *n1, TGraphNode *n2)
 {
    fNode1  = n1;
    fNode2  = n2;
-   fGVEdge = 0;
-   fX      = 0;
-   fY      = 0;
-   fN      = 0;
+   fGVEdge = nullptr;
+   fX = nullptr;
+   fY = nullptr;
+   fN = nullptr;
    fArrX   = 0;
    fArrY   = 0;
 }
@@ -64,9 +64,15 @@ TGraphEdge::~TGraphEdge()
 {
    if (fNode1) delete fNode1;
    if (fNode2) delete fNode2;
-   if (fX) { delete [] fX; fX = 0; }
-   if (fY) { delete [] fY; fY = 0; }
-   if (fN) { delete [] fN; fN = 0; }
+   if (fX) { delete [] fX;
+      fX = nullptr;
+   }
+   if (fY) { delete [] fY;
+      fY = nullptr;
+   }
+   if (fN) { delete [] fN;
+      fN = nullptr;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -78,7 +84,7 @@ void TGraphEdge::CreateGVEdge(GVizAgraph_t *gv)
       Agnode_t *n1 = (Agnode_t*)fNode1->GetGVNode();
       Agnode_t *n2 = (Agnode_t*)fNode2->GetGVNode();
 #ifdef WITH_CGRAPH
-      fGVEdge = (GVizAgedge_t*)agedge((Agraph_t *)gv, n1, n2, NULL, 1);
+      fGVEdge = (GVizAgedge_t *)agedge((Agraph_t *)gv, n1, n2, nullptr, 1);
 #else
       fGVEdge = (GVizAgedge_t*)agedge((Agraph_t *)gv, n1, n2);
 #endif
@@ -134,9 +140,15 @@ void TGraphEdge::Layout()
    bezier bz;
    Int_t i,j;
 
-   if (fX) { delete [] fX; fX = 0; }
-   if (fY) { delete [] fY; fY = 0; }
-   if (fN) { delete [] fN; fN = 0; }
+   if (fX) { delete [] fX;
+      fX = nullptr;
+   }
+   if (fY) { delete [] fY;
+      fY = nullptr;
+   }
+   if (fN) { delete [] fN;
+      fN = nullptr;
+   }
 
    Int_t np = ED_spl((Agedge_t*)fGVEdge)->size;
    fN       = new Int_t[np+1];

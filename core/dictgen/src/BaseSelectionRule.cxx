@@ -60,7 +60,7 @@ static const char *R__GetDeclSourceFileName(const clang::Decl* D)
 
 static bool R__match_filename(const char *srcname,const char *filename)
 {
-   if (srcname==0) {
+   if (srcname == nullptr) {
       return false;
    }
    if((strcmp(srcname,filename)==0)) {
@@ -89,8 +89,11 @@ static bool R__match_filename(const char *srcname,const char *filename)
    return false;
 }
 
-BaseSelectionRule::BaseSelectionRule(long index, BaseSelectionRule::ESelect sel, const std::string& attributeName, const std::string& attributeValue, cling::Interpreter &interp, const char* selFileName, long lineno)
-   : fIndex(index),fLineNumber(lineno),fSelFileName(selFileName),fIsSelected(sel),fMatchFound(false),fCXXRecordDecl(0),fRequestedType(0),fInterp(&interp)
+BaseSelectionRule::BaseSelectionRule(long index, BaseSelectionRule::ESelect sel, const std::string &attributeName,
+                                     const std::string &attributeValue, cling::Interpreter &interp,
+                                     const char *selFileName, long lineno)
+   : fIndex(index), fLineNumber(lineno), fSelFileName(selFileName), fIsSelected(sel), fMatchFound(false),
+     fCXXRecordDecl(nullptr), fRequestedType(nullptr), fInterp(&interp)
 {
    fAttributes.insert(AttributesMap_t::value_type(attributeName, attributeValue));
 }
@@ -218,22 +221,23 @@ BaseSelectionRule::EMatchType BaseSelectionRule::Match(const clang::NamedDecl *d
                                   ROOT::TMetaUtils::GetUnderlyingRecordDecl(typedefNameDecl->getUnderlyingType());
       }
 
-   if (! isTypedefNametoRecordDecl && fCXXRecordDecl !=0 && fCXXRecordDecl != (void*)-1) {
-      const clang::CXXRecordDecl *target = fCXXRecordDecl;
-      if ( target && D && target == D ) {
-         //               fprintf(stderr,"DECL MATCH: %s %s\n",name_value.c_str(),name.c_str());
-         const_cast<BaseSelectionRule*>(this)->SetMatchFound(true);
-         return kName;
-      }
+      if (!isTypedefNametoRecordDecl && fCXXRecordDecl != nullptr && fCXXRecordDecl != (void *)-1) {
+         const clang::CXXRecordDecl *target = fCXXRecordDecl;
+         if (target && D && target == D) {
+            //               fprintf(stderr,"DECL MATCH: %s %s\n",name_value.c_str(),name.c_str());
+            const_cast<BaseSelectionRule *>(this)->SetMatchFound(true);
+            return kName;
+         }
    } else if (fHasNameAttribute) {
       if (name_value == name) {
          const_cast<BaseSelectionRule*>(this)->SetMatchFound(true);
          return kName;
       } else if ( fCXXRecordDecl != (void*)-1 ) {
          // Try a real match!
-         const clang::CXXRecordDecl *target
-            = fHasFromTypedefAttribute ? nullptr : ROOT::TMetaUtils::ScopeSearch(name_value.c_str(), *fInterp,
-                                                   true /*diagnose*/, 0);
+         const clang::CXXRecordDecl *target =
+            fHasFromTypedefAttribute
+               ? nullptr
+               : ROOT::TMetaUtils::ScopeSearch(name_value.c_str(), *fInterp, true /*diagnose*/, nullptr);
 
          if ( target ) {
             const_cast<BaseSelectionRule*>(this)->fCXXRecordDecl = target;

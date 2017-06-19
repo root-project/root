@@ -136,11 +136,11 @@ Bool_t RooAbsRealLValue::inRange(Double_t value, const char* rangeName, Double_t
 
 Bool_t RooAbsRealLValue::isValidReal(Double_t value, Bool_t verbose) const 
 {
-  if (!inRange(value,0)) {
-    if (verbose)
-      coutI(InputArguments) << "RooRealVar::isValid(" << GetName() << "): value " << value
-			    << " out of range (" << getMin() << " - " << getMax() << ")" << endl ;
-    return kFALSE ;
+   if (!inRange(value, nullptr)) {
+      if (verbose)
+         coutI(InputArguments) << "RooRealVar::isValid(" << GetName() << "): value " << value << " out of range ("
+                               << getMin() << " - " << getMax() << ")" << endl;
+      return kFALSE;
   }
   return kTRUE ;
 }                                                                                                                         
@@ -172,8 +172,8 @@ void RooAbsRealLValue::writeToStream(ostream& /*os*/, Bool_t /*compact*/) const
 RooAbsArg& RooAbsRealLValue::operator=(Double_t newValue) 
 {
   Double_t clipValue ;
-  // Clip 
-  inRange(newValue,0,&clipValue) ;
+  // Clip
+  inRange(newValue, nullptr, &clipValue);
   setVal(clipValue) ;
 
   return *this ;
@@ -239,14 +239,14 @@ RooPlot* RooAbsRealLValue::frame(const RooLinkedList& cmdList) const
   pc.defineString("name","Name",0,"") ;
   pc.defineString("title","Title",0,"") ;
   pc.defineMutex("Range","RangeWithName","AutoRange") ;
-  pc.defineObject("rangeData","AutoRange",0,0) ;
+  pc.defineObject("rangeData", "AutoRange", 0, nullptr);
   pc.defineDouble("rangeMargin","AutoRange",0,0.1) ;
   pc.defineInt("rangeSym","AutoRange",0,0) ;
 
   // Process & check varargs 
   pc.process(cmdList) ;
   if (!pc.ok(kTRUE)) {
-    return 0 ;
+     return nullptr;
   }
 
   // Extract values from named arguments
@@ -259,9 +259,9 @@ RooPlot* RooAbsRealLValue::frame(const RooLinkedList& cmdList) const
       xmax = getMax() ;
     }
   } else if (pc.hasProcessed("RangeWithName")) {
-    const char* rangeName=pc.getString("rangeName",0,kTRUE) ;
-    xmin = getMin(rangeName) ;
-    xmax = getMax(rangeName) ;
+     const char *rangeName = pc.getString("rangeName", nullptr, kTRUE);
+     xmin = getMin(rangeName);
+     xmax = getMax(rangeName);
   } else if (pc.hasProcessed("AutoRange")) {
     RooTreeData* rangeData = static_cast<RooTreeData*>(pc.getObject("rangeData")) ;
     rangeData->getRange((RooRealVar&)*this,xmin,xmax) ;
@@ -288,8 +288,8 @@ RooPlot* RooAbsRealLValue::frame(const RooLinkedList& cmdList) const
   }
 
   Int_t nbins = pc.getInt("nbins") ;
-  const char* name = pc.getString("name",0,kTRUE) ;
-  const char* title = pc.getString("title",0,kTRUE) ;
+  const char *name = pc.getString("name", nullptr, kTRUE);
+  const char *title = pc.getString("title", nullptr, kTRUE);
 
   RooPlot* theFrame = new RooPlot(*this,xmin,xmax,nbins) ;
 
@@ -344,11 +344,11 @@ RooPlot *RooAbsRealLValue::frame(Int_t nbins) const
   // Plot range of variable may not be infinite or empty
   if (getMin()==getMax()) {
     coutE(InputArguments) << "RooAbsRealLValue::frame(" << GetName() << ") ERROR: empty fit range, must specify plot range" << endl ;
-    return 0 ;
+    return nullptr;
   }
   if (RooNumber::isInfinite(getMin())||RooNumber::isInfinite(getMax())) {
     coutE(InputArguments) << "RooAbsRealLValue::frame(" << GetName() << ") ERROR: open ended fit range, must specify plot range" << endl ;
-    return 0 ;
+    return nullptr;
   }
 
   return new RooPlot(*this,getMin(),getMax(),nbins);
@@ -369,11 +369,11 @@ RooPlot *RooAbsRealLValue::frame() const
   // Plot range of variable may not be infinite or empty
   if (getMin()==getMax()) {
     coutE(InputArguments) << "RooAbsRealLValue::frame(" << GetName() << ") ERROR: empty fit range, must specify plot range" << endl ;
-    return 0 ;
+    return nullptr;
   }
   if (RooNumber::isInfinite(getMin())||RooNumber::isInfinite(getMax())) {
     coutE(InputArguments) << "RooAbsRealLValue::frame(" << GetName() << ") ERROR: open ended fit range, must specify plot range" << endl ;
-    return 0 ;
+    return nullptr;
   }
 
   return new RooPlot(*this,getMin(),getMax(),getBins());
@@ -571,21 +571,21 @@ TH1* RooAbsRealLValue::createHistogram(const char *name, const RooLinkedList& cm
   // Define configuration for this method
   RooCmdConfig pc(Form("RooAbsRealLValue::createHistogram(%s)",GetName())) ;
 
-  pc.defineObject("xbinning","Binning",0,0) ;
+  pc.defineObject("xbinning", "Binning", 0, nullptr);
   pc.defineString("xbinningName","BinningName",0,"") ;
   pc.defineInt("nxbins","BinningSpec",0) ;
   pc.defineDouble("xlo","BinningSpec",0,0) ;
   pc.defineDouble("xhi","BinningSpec",1,0) ;
 
-  pc.defineObject("yvar","YVar",0,0) ;
-  pc.defineObject("ybinning","YVar::Binning",0,0) ;
+  pc.defineObject("yvar", "YVar", 0, nullptr);
+  pc.defineObject("ybinning", "YVar::Binning", 0, nullptr);
   pc.defineString("ybinningName","YVar::BinningName",0,"") ;
   pc.defineInt("nybins","YVar::BinningSpec",0) ;
   pc.defineDouble("ylo","YVar::BinningSpec",0,0) ;
   pc.defineDouble("yhi","YVar::BinningSpec",1,0) ;
 
-  pc.defineObject("zvar","ZVar",0,0) ;
-  pc.defineObject("zbinning","ZVar::Binning",0,0) ;
+  pc.defineObject("zvar", "ZVar", 0, nullptr);
+  pc.defineObject("zbinning", "ZVar::Binning", 0, nullptr);
   pc.defineString("zbinningName","ZVar::BinningName",0,"") ;
   pc.defineInt("nzbins","ZVar::BinningSpec",0) ;
   pc.defineDouble("zlo","ZVar::BinningSpec",0,0) ;
@@ -598,7 +598,7 @@ TH1* RooAbsRealLValue::createHistogram(const char *name, const RooLinkedList& cm
   // Process & check varargs 
   pc.process(cmdList) ;
   if (!pc.ok(kTRUE)) {
-    return 0 ;
+     return nullptr;
   }
 
   // Initialize arrays for call to implementation version of createHistogram
@@ -612,7 +612,7 @@ TH1* RooAbsRealLValue::createHistogram(const char *name, const RooLinkedList& cm
   if (pc.hasProcessed("Binning")) {
     binning[0] = static_cast<RooAbsBinning*>(pc.getObject("xbinning")) ;
   } else if (pc.hasProcessed("BinningName")) {
-    binning[0] = &getBinning(pc.getString("xbinningName",0,kTRUE)) ;
+     binning[0] = &getBinning(pc.getString("xbinningName", nullptr, kTRUE));
   } else if (pc.hasProcessed("BinningSpec")) { 
     Double_t xlo = pc.getDouble("xlo") ;
     Double_t xhi = pc.getDouble("xhi") ;
@@ -628,7 +628,7 @@ TH1* RooAbsRealLValue::createHistogram(const char *name, const RooLinkedList& cm
     if (pc.hasProcessed("YVar::Binning")) {
       binning[1] = static_cast<RooAbsBinning*>(pc.getObject("ybinning")) ;
     } else if (pc.hasProcessed("YVar::BinningName")) {
-      binning[1] = &yvar.getBinning(pc.getString("ybinningName",0,kTRUE)) ;
+       binning[1] = &yvar.getBinning(pc.getString("ybinningName", nullptr, kTRUE));
     } else if (pc.hasProcessed("YVar::BinningSpec")) {
       Double_t ylo = pc.getDouble("ylo") ;
       Double_t yhi = pc.getDouble("yhi") ;
@@ -645,7 +645,7 @@ TH1* RooAbsRealLValue::createHistogram(const char *name, const RooLinkedList& cm
     if (pc.hasProcessed("ZVar::Binning")) {
       binning[2] = static_cast<RooAbsBinning*>(pc.getObject("zbinning")) ;
     } else if (pc.hasProcessed("ZVar::BinningName")) {
-      binning[2] = &zvar.getBinning(pc.getString("zbinningName",0,kTRUE)) ;
+       binning[2] = &zvar.getBinning(pc.getString("zbinningName", nullptr, kTRUE));
     } else if (pc.hasProcessed("ZVar::BinningSpec")) {
       Double_t zlo = pc.getDouble("zlo") ;
       Double_t zhi = pc.getDouble("zhi") ;
@@ -681,7 +681,7 @@ TH1F *RooAbsRealLValue::createHistogram(const char *name, const char *yAxisLabel
   if (!fitRangeOKForPlotting()) {
     coutE(InputArguments) << "RooAbsRealLValue::createHistogram(" << GetName() 
 			  << ") ERROR: fit range empty or open ended, must explicitly specify range" << endl ;
-    return 0 ;
+    return nullptr;
   }
 
   RooArgList list(*this) ;
@@ -739,7 +739,7 @@ TH2F *RooAbsRealLValue::createHistogram(const char *name, const RooAbsRealLValue
   if ((!xlo && xhi) || (xlo && !xhi)) {
     coutE(InputArguments) << "RooAbsRealLValue::createHistogram(" << GetName() 
 			  << ") ERROR must specify either no range, or both limits" << endl ;
-    return 0 ;
+    return nullptr;
   }
 
   Double_t xlo_fit[2] ;
@@ -754,13 +754,13 @@ TH2F *RooAbsRealLValue::createHistogram(const char *name, const RooAbsRealLValue
 
     if (!fitRangeOKForPlotting()) {
       coutE(InputArguments) << "RooAbsRealLValue::createHistogram(" << GetName() 
-	   << ") ERROR: fit range empty or open ended, must explicitly specify range" << endl ;      
-      return 0 ;
+	   << ") ERROR: fit range empty or open ended, must explicitly specify range" << endl ;
+      return nullptr;
     }
     if (!yvar.fitRangeOKForPlotting()) {
       coutE(InputArguments) << "RooAbsRealLValue::createHistogram(" << GetName() 
-	   << ") ERROR: fit range of " << yvar.GetName() << " empty or open ended, must explicitly specify range" << endl ;      
-      return 0 ;
+	   << ") ERROR: fit range of " << yvar.GetName() << " empty or open ended, must explicitly specify range" << endl ;
+      return nullptr;
     }
 
     xlo_fit[0] = getMin() ;
@@ -813,7 +813,7 @@ TH3F *RooAbsRealLValue::createHistogram(const char *name, const RooAbsRealLValue
   if ((!xlo && xhi) || (xlo && !xhi)) {
     coutE(InputArguments) << "RooAbsRealLValue::createHistogram(" << GetName() 
 			  << ") ERROR must specify either no range, or both limits" << endl ;
-    return 0 ;
+    return nullptr;
   }
 
   Double_t xlo_fit[3] ;
@@ -827,18 +827,18 @@ TH3F *RooAbsRealLValue::createHistogram(const char *name, const RooAbsRealLValue
 
     if (!fitRangeOKForPlotting()) {
       coutE(InputArguments) << "RooAbsRealLValue::createHistogram(" << GetName() 
-			    << ") ERROR: fit range empty or open ended, must explicitly specify range" << endl ;      
-      return 0 ;
+			    << ") ERROR: fit range empty or open ended, must explicitly specify range" << endl ;
+      return nullptr;
     }
     if (!yvar.fitRangeOKForPlotting()) {
       coutE(InputArguments) << "RooAbsRealLValue::createHistogram(" << GetName() 
-			    << ") ERROR: fit range of " << yvar.GetName() << " empty or open ended, must explicitly specify range" << endl ;      
-      return 0 ;
+			    << ") ERROR: fit range of " << yvar.GetName() << " empty or open ended, must explicitly specify range" << endl ;
+      return nullptr;
     }
     if (!zvar.fitRangeOKForPlotting()) {
       coutE(InputArguments) << "RooAbsRealLValue::createHistogram(" << GetName() 
-			    << ") ERROR: fit range of " << zvar.GetName() << " empty or open ended, must explicitly specify range" << endl ;      
-      return 0 ;
+			    << ") ERROR: fit range of " << zvar.GetName() << " empty or open ended, must explicitly specify range" << endl ;
+      return nullptr;
     }
 
     xlo_fit[0] = getMin() ;
@@ -891,8 +891,8 @@ TH1 *RooAbsRealLValue::createHistogram(const char *name, RooArgList &vars, const
   const RooAbsBinning* bin[3] ;
   Int_t ndim = vars.getSize() ;
   bin[0] = new RooUniformBinning(xlo[0],xhi[0],nBins[0]) ;
-  bin[1] = (ndim>1) ? new RooUniformBinning(xlo[1],xhi[1],nBins[1]) : 0 ;
-  bin[2] = (ndim>2) ? new RooUniformBinning(xlo[2],xhi[2],nBins[2]) : 0 ;
+  bin[1] = (ndim > 1) ? new RooUniformBinning(xlo[1], xhi[1], nBins[1]) : nullptr;
+  bin[2] = (ndim > 2) ? new RooUniformBinning(xlo[2], xhi[2], nBins[2]) : nullptr;
 
   TH1* ret = createHistogram(name,vars,tAxisLabel,bin) ;
 
@@ -916,8 +916,9 @@ TH1 *RooAbsRealLValue::createHistogram(const char *name, RooArgList &vars, const
   // Check that we have 1-3 vars
   Int_t dim= vars.getSize();
   if(dim < 1 || dim > 3) {
-    oocoutE((TObject*)0,InputArguments) << "RooAbsReal::createHistogram: dimension not supported: " << dim << endl;
-    return 0;
+     oocoutE((TObject *)nullptr, InputArguments)
+        << "RooAbsReal::createHistogram: dimension not supported: " << dim << endl;
+     return nullptr;
   }
 
   // Check that all variables are AbsReals and prepare a name of the form <name>_<var1>_...
@@ -930,8 +931,9 @@ TH1 *RooAbsRealLValue::createHistogram(const char *name, RooArgList &vars, const
     const RooAbsArg *arg= vars.at(index);
     xyz[index]= dynamic_cast<const RooAbsRealLValue*>(arg);
     if(!xyz[index]) {
-      oocoutE((TObject*)0,InputArguments) << "RooAbsRealLValue::createHistogram: variable is not real lvalue: " << arg->GetName() << endl;
-      return 0;
+       oocoutE((TObject *)nullptr, InputArguments)
+          << "RooAbsRealLValue::createHistogram: variable is not real lvalue: " << arg->GetName() << endl;
+       return nullptr;
     }
     histName.Append("_");
     histName.Append(arg->GetName());
@@ -940,7 +942,7 @@ TH1 *RooAbsRealLValue::createHistogram(const char *name, RooArgList &vars, const
   histTitle.Prepend("Histogram of ");
 
   // Create the histogram
-  TH1 *histogram = 0;
+  TH1 *histogram = nullptr;
   switch(dim) {
   case 1:
     if (bins[0]->isUniform()) {
@@ -977,8 +979,9 @@ TH1 *RooAbsRealLValue::createHistogram(const char *name, RooArgList &vars, const
     break;
   }
   if(!histogram) {
-    oocoutE((TObject*)0,InputArguments) << "RooAbsReal::createHistogram: unable to create a new histogram" << endl;
-    return 0;
+     oocoutE((TObject *)nullptr, InputArguments)
+        << "RooAbsReal::createHistogram: unable to create a new histogram" << endl;
+     return nullptr;
   }
 
   // Set the histogram coordinate axis labels from the titles of each variable, adding units if necessary.
@@ -1001,33 +1004,27 @@ TH1 *RooAbsRealLValue::createHistogram(const char *name, RooArgList &vars, const
   }
 
   // Set the t-axis title if given one
-  if((0 != tAxisLabel) && (0 != strlen(tAxisLabel))) {
-    TString axisTitle(tAxisLabel);
-    axisTitle.Append(" / ( ");
-    for(Int_t index2= 0; index2 < dim; index2++) {
-      Double_t delta= bins[index2]->averageBinWidth() ; // xyz[index2]->getBins();
-      if(index2 > 0) axisTitle.Append(" x ");
-      axisTitle.Append(Form("%g",delta));
-      if(strlen(xyz[index2]->getUnit())) {
-	axisTitle.Append(" ");
-	axisTitle.Append(xyz[index2]->getUnit());
-      }
-    }
-    axisTitle.Append(" )");
-    switch(dim) {
-    case 1:
-      histogram->SetYTitle(axisTitle.Data());
-      break;
-    case 2:
-      histogram->SetZTitle(axisTitle.Data());
-      break;
-    case 3:
-      // not supported in TH1
-      break;
-    default:
-      assert(0);
-      break;
-    }
+  if ((nullptr != tAxisLabel) && (0 != strlen(tAxisLabel))) {
+     TString axisTitle(tAxisLabel);
+     axisTitle.Append(" / ( ");
+     for (Int_t index2 = 0; index2 < dim; index2++) {
+        Double_t delta = bins[index2]->averageBinWidth(); // xyz[index2]->getBins();
+        if (index2 > 0) axisTitle.Append(" x ");
+        axisTitle.Append(Form("%g", delta));
+        if (strlen(xyz[index2]->getUnit())) {
+           axisTitle.Append(" ");
+           axisTitle.Append(xyz[index2]->getUnit());
+        }
+     }
+     axisTitle.Append(" )");
+     switch (dim) {
+     case 1: histogram->SetYTitle(axisTitle.Data()); break;
+     case 2: histogram->SetZTitle(axisTitle.Data()); break;
+     case 3:
+        // not supported in TH1
+        break;
+     default: assert(0); break;
+     }
   }
 
   return histogram;

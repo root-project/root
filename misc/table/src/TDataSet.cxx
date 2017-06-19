@@ -148,13 +148,14 @@ ClassImp(TDataSet);
 ///  std::cout << "ctor for " << GetName() << " - " << GetTitle() << std::endl;
 
 TDataSet::TDataSet(const Char_t *name, TDataSet *parent, Bool_t arrayFlag)
-           : TNamed(name,"TDataSet"),fParent(0),fList(0)
+   : TNamed(name, "TDataSet"), fParent(nullptr), fList(nullptr)
 {
    if (name && strchr(name,'/')) {
       Error("TDataSet::TDataSet","dataset name (%s) cannot contain a slash", name);
       return;
    }
-   fList =0; fParent=0;
+   fList = nullptr;
+   fParent = nullptr;
    if (arrayFlag) SetBit(kArray);
    if (parent) parent->Add(this);
 //   else AddMain(this);
@@ -166,7 +167,7 @@ TDataSet::TDataSet(const Char_t *name, TDataSet *parent, Bool_t arrayFlag)
 TDataSet *TDataSet::GetRealParent()
 {
    TDataSet *p = GetParent();
-   if (fgMainSet && p == fgMainSet) p = 0;
+   if (fgMainSet && p == fgMainSet) p = nullptr;
    return p;
 }
 ////////////////////////////////////////////////////////////////////////////////
@@ -185,10 +186,10 @@ TDataSet *TDataSet::GetRealParent()
 ///
 ///  std::cout << "ctor for " << GetName() << " - " << GetTitle() << std::endl;
 
-TDataSet::TDataSet(const TDataSet &pattern,EDataSetPass iopt):TNamed(pattern.GetName(),pattern.GetTitle()),
-fParent(0),fList(0)
+TDataSet::TDataSet(const TDataSet &pattern, EDataSetPass iopt)
+   : TNamed(pattern.GetName(), pattern.GetTitle()), fParent(nullptr), fList(nullptr)
 {
-   TDataSet *set = 0;
+   TDataSet *set = nullptr;
    TDataSetIter next((TDataSet *)&pattern);
    Bool_t optsel = (iopt == kStruct);
    Bool_t optall = (iopt == kAll);
@@ -212,7 +213,8 @@ TDataSet::TDataSet(TNode &)
 
 TDataSet::~TDataSet()
 {
-   Shunt(0); Delete();
+   Shunt(nullptr);
+   Delete();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -324,14 +326,14 @@ void TDataSet::Delete(Option_t *opt)
 //      Delete list of the TDataSet
    TSeqCollection     *thisList = GetCollection();
    if (!thisList) return;
-   fList = 0;
+   fList = nullptr;
    TIter next(thisList);
-   TDataSet *son = 0;
+   TDataSet *son = nullptr;
    //  Delete the "Structural Members" of this TDataSet only
    while ((son = (TDataSet *)next())) {
       if ( (!son->TObject::IsOnHeap()) || (this != son->TDataSet::GetParent()) ) continue;
       // mark the object is deleted from the TDataSet dtor or Delete method
-      son->TDataSet::SetParent(0);
+      son->TDataSet::SetParent(nullptr);
       if (son->TDataSet::Last()) { son->TDataSet::Delete(); }
       son->TObject::SetBit(kCanDelete);
       delete son;
@@ -403,7 +405,7 @@ TDataSet *TDataSet::FindByTitle(const Char_t *title,const Char_t *path,Option_t 
 TDataSet *TDataSet::First() const
 {
    if (fList) return (TDataSet *)(fList->First());
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -428,7 +430,7 @@ TDataSet *TDataSet::GetMainSet()
 TObject *TDataSet::GetObject() const
 {
    Print("***DUMMY GetObject***\n");
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -437,7 +439,7 @@ TObject *TDataSet::GetObject() const
 TDataSet *TDataSet::Last() const
 {
    if (fList) return (TDataSet *)(fList->Last());
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -446,7 +448,7 @@ TDataSet *TDataSet::Last() const
 
 TDataSet *TDataSet::Next() const
 {
-   TDataSet *set = 0;
+   TDataSet *set = nullptr;
    TDataSet *parent = GetParent();
    if (parent) {
       TIter next(parent->GetCollection());
@@ -463,14 +465,14 @@ TDataSet *TDataSet::Next() const
 
 TDataSet *TDataSet::Prev() const
 {
-   TDataSet *prev = 0;
-   TDataSet *set  = 0;
+   TDataSet *prev = nullptr;
+   TDataSet *set = nullptr;
    TDataSet *parent = GetParent();
    if (parent) {
       TIter next(parent->GetCollection());
       // Find this object
       while ( (set = (TDataSet *)next()) && (set != this) ){prev = set;}
-      if (!set) prev = 0;
+      if (!set) prev = nullptr;
    }
    return prev;
 }
@@ -496,7 +498,7 @@ void  TDataSet::ls(Option_t *option) const
 {
    if (option && !strcmp(option,"*")) ls(Int_t(0));
    else {
-      TDataSet *set = 0;
+      TDataSet *set = nullptr;
       if (option && strlen(option) > 0) {
          TDataSetIter local((TDataSet*)this);
          set = local(option);
@@ -531,7 +533,7 @@ void TDataSet::ls(Int_t depth) const
    if (!depth) depth = 99999;
 
    TIter next(fList);
-   TDataSet *d=0;
+   TDataSet *d = nullptr;
    while ((d = (TDataSet *)next())) {
       TROOT::IncreaseDirLevel();
       d->ls(depth-1);
@@ -572,7 +574,7 @@ void TDataSet::MarkAll()
 {
    Mark();
    TDataSetIter nextMark(this,0);
-   TDataSet *set = 0;
+   TDataSet *set = nullptr;
    while ( (set = nextMark()) ) set->Mark();
 }
 
@@ -583,7 +585,7 @@ void TDataSet::UnMarkAll()
 {
    Mark(kMark,kReset);
    TDataSetIter nextMark(this,0);
-   TDataSet *set = 0;
+   TDataSet *set = nullptr;
    while ( (set = nextMark()) ) set->Mark(kMark,kReset);
 }
 
@@ -595,7 +597,7 @@ void TDataSet::InvertAllMarks()
    if (IsMarked()) Mark(kMark,kReset);
    else Mark();
    TDataSetIter nextMark(this,0);
-   TDataSet *set = 0;
+   TDataSet *set = nullptr;
    while (( set = nextMark()) ) {
       if (set->IsMarked()) set->Mark(kMark,kReset);
       else set->Mark();
@@ -641,7 +643,7 @@ TString TDataSet::Path() const
 void TDataSet::Remove(TDataSet *set)
 {
    if (fList && set) {
-      if (set->GetParent() == this) set->SetParent(0);
+      if (set->GetParent() == this) set->SetParent(nullptr);
       fList->Remove(set);
    }
 
@@ -655,11 +657,11 @@ void TDataSet::Remove(TDataSet *set)
 
 TDataSet  *TDataSet::RemoveAt(Int_t idx)
 {
-   TDataSet *set = 0;
+   TDataSet *set = nullptr;
    if (fList) {
       set = (TDataSet *)fList->At(idx);
       fList->RemoveAt(idx);
-      if (set && (set->GetParent() == this) ) set->SetParent(0);
+      if (set && (set->GetParent() == this)) set->SetParent(nullptr);
    }
    return set;
 }
@@ -695,7 +697,7 @@ TDataSet::EDataSetPass TDataSet::Pass(EDataSetPass ( *callback)(TDataSet *),Int_
    if (condition == kContinue){
       if (fList && depth != 1 ) {
          TIter next(fList);
-         TDataSet *d=0;
+         TDataSet *d = nullptr;
          while ( (d = (TDataSet *)next()) ) {
             condition = d->Pass(callback, depth == 0 ? 0 : --depth);
             if (condition == kStop || condition == kUp) break;
@@ -736,7 +738,7 @@ TDataSet::EDataSetPass TDataSet::Pass(EDataSetPass ( *callback)(TDataSet *,void*
    if (condition == kContinue){
       if (fList && depth != 1 ) {
          TIter next(fList);
-         TDataSet *d=0;
+         TDataSet *d = nullptr;
          while ((d = (TDataSet *)next())) {
             condition = d->Pass(callback, user, depth == 0 ? 0 : --depth);
             if (condition == kStop) break;
@@ -759,7 +761,7 @@ Int_t TDataSet::Purge(Option_t *)
 {
    if (!fList) return 0;
    TIter next(fList);
-   TDataSet *son = 0;
+   TDataSet *son = nullptr;
    // Purge "Structural Members" only
    TList garbage;
    while ((son = (TDataSet *)next())) {
@@ -829,15 +831,15 @@ void TDataSet::Update(TDataSet* set,UInt_t opt)
 
    SetTitle(set->GetTitle());
    TDataSetIter nextnew(set);
-   TDataSet *newset = 0;
+   TDataSet *newset = nullptr;
    while((newset = nextnew())) {
       Bool_t found = kFALSE;
       //              Check whether this has the list of the sons
       if (fList) {
          TIter nextold(fList);
          const Char_t *newname = newset->GetName();
-         TDataSet *oldset = 0;
-         while ( ((oldset = (TDataSet *)nextold())!=0) && !found) {
+         TDataSet *oldset = nullptr;
+         while (((oldset = (TDataSet *)nextold()) != nullptr) && !found) {
             // if the "new" set does contain the dataset
             // with the same name as ours update it too
             // (We do not update itself (oldset == newset)
@@ -864,7 +866,7 @@ void TDataSet::Update(TDataSet* set,UInt_t opt)
 void TDataSet::Update()
 {
    TDataSetIter next(this);
-   TDataSet *set = 0;
+   TDataSet *set = nullptr;
    while(( set = next())) set->Update();
 }
 
@@ -893,7 +895,7 @@ void TDataSet::Sort()
 Int_t TDataSet::Write(const char *name, Int_t option, Int_t bufsize)
 {
    TDataSet *saveParent = fParent; // GetParent();
-   fParent = 0;
+   fParent = nullptr;
    Int_t nbytes = TObject::Write(name,option, bufsize);
    fParent = saveParent;
    return nbytes;
@@ -909,7 +911,7 @@ Int_t TDataSet::Write(const char *name, Int_t option, Int_t bufsize)
 Int_t TDataSet::Write(const char *name, Int_t option, Int_t bufsize) const
 {
    TDataSet *saveParent = fParent; // GetParent();
-   const_cast<TDataSet*>(this)->fParent = 0;
+   const_cast<TDataSet *>(this)->fParent = nullptr;
    Int_t nbytes = TObject::Write(name,option, bufsize);
    const_cast<TDataSet*>(this)->fParent = saveParent;
    return nbytes;

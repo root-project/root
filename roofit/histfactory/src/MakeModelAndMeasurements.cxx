@@ -225,10 +225,10 @@ void topDriver( string input ) {
 
       std::vector< EstimateSummary > dummy;
       RooWorkspace* ws = factory.MakeSingleChannelModel( dummy, measurement.GetConstantParams() );
-      if( ws==NULL ) {
-	std::cout << "Failed to create SingleChannelModel for channel: " << channel.GetName()
-		  << " and measurement: " << measurement.GetName() << std::endl;
-	throw hf_exc();
+      if (ws == nullptr) {
+         std::cout << "Failed to create SingleChannelModel for channel: " << channel.GetName()
+                   << " and measurement: " << measurement.GetName() << std::endl;
+         throw hf_exc();
       }
       //RooWorkspace* ws = factory.MakeSingleChannelModel( channel );
       channel_workspaces.push_back(ws);
@@ -283,9 +283,9 @@ void topDriver( string input ) {
 
     // Now, combine the channels
     RooWorkspace* ws=factory.MakeCombinedModel(channel_names, channel_workspaces);
-    if( ws == NULL ) {
-      std::cout << "Error: Failed to create workspace" << std::endl;
-      throw hf_exc();
+    if (ws == nullptr) {
+       std::cout << "Error: Failed to create workspace" << std::endl;
+       throw hf_exc();
     }
     // Gamma/Uniform Constraints:
     // turn some Gaussian constraints into Gamma/Uniform/logNormal constraints, rename model newSimPdf

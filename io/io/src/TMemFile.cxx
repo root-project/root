@@ -45,15 +45,15 @@ Long64_t TMemFile::fgDefaultBlockSize = 2*1024*1024;
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
 
-TMemFile::TMemBlock::TMemBlock() : fPrevious(0), fNext(0), fBuffer(0), fSize(0)
+TMemFile::TMemBlock::TMemBlock() : fPrevious(nullptr), fNext(nullptr), fBuffer(nullptr), fSize(0)
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor allocating the memory buffer.
 
-TMemFile::TMemBlock::TMemBlock(Long64_t size, TMemBlock *previous) :
-   fPrevious(previous), fNext(0), fBuffer(0), fSize(0)
+TMemFile::TMemBlock::TMemBlock(Long64_t size, TMemBlock *previous)
+   : fPrevious(previous), fNext(nullptr), fBuffer(nullptr), fSize(0)
 {
    fBuffer = new UChar_t[size];
    fSize = size;
@@ -72,7 +72,7 @@ TMemFile::TMemBlock::~TMemBlock()
 
 void TMemFile::TMemBlock::CreateNext(Long64_t size)
 {
-   R__ASSERT(fNext == 0);
+   R__ASSERT(fNext == nullptr);
    fNext = new TMemBlock(size,this);
 }
 
@@ -303,7 +303,7 @@ void TMemFile::ResetAfterMerge(TFileMergeInfo *info)
    if (fFree) {
       fFree->Delete();
       delete fFree;
-      fFree      = 0;
+      fFree = nullptr;
    }
    fWritten      = 0;
    fSumBuffer    = 0;
@@ -312,20 +312,20 @@ void TMemFile::ResetAfterMerge(TFileMergeInfo *info)
    fBytesReadExtra = 0;
    fBytesWrite   = 0;
    delete fClassIndex;
-   fClassIndex   = 0;
+   fClassIndex = nullptr;
    fSeekInfo     = 0;
    fNbytesInfo   = 0;
    delete fProcessIDs;
-   fProcessIDs   = 0;
+   fProcessIDs = nullptr;
    fNProcessIDs  = 0;
    fOffset       = 0;
-   fCacheRead    = 0;
-   fCacheWrite   = 0;
+   fCacheRead = nullptr;
+   fCacheWrite = nullptr;
    fReadCalls    = 0;
    if (fFree) {
       fFree->Delete();
       delete fFree;
-      fFree = 0;
+      fFree = nullptr;
    }
 
    fSysOffset   = 0;
@@ -363,7 +363,7 @@ void TMemFile::ResetObjects(TDirectoryFile *directory, TFileMergeInfo *info) con
       TIter next(directory->GetListOfKeys());
       TKey *key;
       while( (key = (TKey*)next()) ) {
-         if (0 ==  directory->GetList()->FindObject(key->GetName())) {
+         if (nullptr == directory->GetList()->FindObject(key->GetName())) {
             Warning("ResetObjects","Key/Object %s is not attached to the directory %s and can not be ResetAfterMerge correctly",
                     key->GetName(),directory->GetName());
          }
@@ -404,7 +404,7 @@ Int_t TMemFile::SysReadImpl(Int_t, void *buf, Long64_t len)
 {
    TRACE("READ")
 
-   if (fBlockList.fBuffer == 0) {
+   if (fBlockList.fBuffer == nullptr) {
       errno = EBADF;
       gSystem->SetErrorStr("The memory file is not open.");
       return 0;
@@ -572,7 +572,7 @@ Int_t TMemFile::SysWriteImpl(Int_t /* fd */, const void *buf, Long64_t len)
 {
    TRACE("WRITE")
 
-   if (fBlockList.fBuffer == 0) {
+   if (fBlockList.fBuffer == nullptr) {
       errno = EBADF;
       gSystem->SetErrorStr("The memory file is not open.");
       return 0;

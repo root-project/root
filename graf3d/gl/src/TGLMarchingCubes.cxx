@@ -199,7 +199,7 @@ void TMeshBuilder<D, V>::BuildMesh(const D *s, const TGridGeometry<V> &g,
    SliceType_t *slice2 = fSlices + 1;
 
    this->FetchDensities();
-   NextStep(0, 0, slice1);
+   NextStep(0, nullptr, slice1);
 
    for (UInt_t i = 1, e = GetD(); i < e - 1; ++i) {
       NextStep(i, slice1, slice2);

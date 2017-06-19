@@ -63,8 +63,8 @@ using namespace RooFit ;
 ClassImp(RooMsgService);
 ;
 
-RooMsgService* gMsgService = 0 ;
-RooMsgService* RooMsgService::_instance = 0 ;
+RooMsgService *gMsgService = nullptr;
+RooMsgService *RooMsgService::_instance = nullptr;
 Int_t RooMsgService::_debugCount = 0 ;
 
 
@@ -76,7 +76,7 @@ void RooMsgService::cleanup()
 {
   if (_instance) {
     delete _instance ;
-    _instance = 0 ;
+    _instance = nullptr;
   }
 }
 
@@ -122,7 +122,7 @@ RooMsgService::RooMsgService()
   _instance = this ;
   gMsgService = this ;
 
-  _debugWorkspace = 0 ;
+  _debugWorkspace = nullptr;
   _debugCode = 0 ;
 
   // Old-style streams
@@ -216,7 +216,7 @@ Int_t RooMsgService::addStream(RooFit::MsgLevel level, const RooCmdArg& arg1, co
   pc.defineString("baseClassName","BaseClassName",0,"") ;
   pc.defineString("tagName","LabelName",0,"") ;
   pc.defineString("outFile","OutputFile",0,"") ;
-  pc.defineObject("outStream","OutputStream",0,0) ;
+  pc.defineObject("outStream", "OutputStream", 0, nullptr);
   pc.defineMutex("OutputFile","OutputStream") ;
 
   // Process & check varargs 

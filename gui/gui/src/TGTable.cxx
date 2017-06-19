@@ -165,17 +165,15 @@ End_Macro
 ////////////////////////////////////////////////////////////////////////////////
 /// TGTable constuctor.
 
-TGTable::TGTable(const TGWindow *p, Int_t id, TVirtualTableInterface *interface,
-                 UInt_t nrows, UInt_t ncolumns)
-   : TGCompositeFrame(p, 500, 500, kVerticalFrame), TGWidget(id), fRows(0),
-     fRowHeaders(0), fColumnHeaders(0), fReadOnly(kFALSE), fSelectColor(0),
-     fTMode(0), fAllData(kFALSE), fTableFrame(0), fCanvas(0), fCellWidth(80),
-     fCellHeight(25), fInterface(interface)
+TGTable::TGTable(const TGWindow *p, Int_t id, TVirtualTableInterface *interface, UInt_t nrows, UInt_t ncolumns)
+   : TGCompositeFrame(p, 500, 500, kVerticalFrame), TGWidget(id), fRows(nullptr), fRowHeaders(nullptr),
+     fColumnHeaders(nullptr), fReadOnly(kFALSE), fSelectColor(0), fTMode(0), fAllData(kFALSE), fTableFrame(nullptr),
+     fCanvas(nullptr), fCellWidth(80), fCellHeight(25), fInterface(interface)
 {
    fCurrentRange = new TTableRange();
    fDataRange = new TTableRange();
    fGotoRange = new TTableRange();
-   TGLayoutHints *hints = 0;
+   TGLayoutHints *hints = nullptr;
    fCellHintsList = new TList(hints);
    fRHdrHintsList = new TList(hints);
    fCHdrHintsList = new TList(hints);
@@ -309,7 +307,7 @@ void TGTable::Init()
 
    // Create the cells needed
    UInt_t i = 0, j = 0;
-   TGString *label = 0;
+   TGString *label = nullptr;
    fRowHeaders = new TObjArray(nrows);
    for(i = 0; i < nrows; i++) {
       TGTableHeader *hdr = new TGTableHeader(fRHdrFrame, this,
@@ -323,8 +321,8 @@ void TGTable::Init()
       fColumnHeaders->AddAt(hdr, i);
    }
 
-   TGTableCell *cell = 0;
-   TObjArray *row = 0;
+   TGTableCell *cell = nullptr;
+   TObjArray *row = nullptr;
    fRows = new TObjArray(nrows);
    for (i = 0; i < nrows; i++) {
       row = new TObjArray(ncolumns);
@@ -343,7 +341,7 @@ void TGTable::Init()
       fAllData = kFALSE;
    }
 
-   TGLayoutHints *lhints = 0;
+   TGLayoutHints *lhints = nullptr;
 
    // Add cells and headers to layout frames
    for (i = 0; i < nrows; i++) {
@@ -449,7 +447,7 @@ void TGTable::Expand(UInt_t nrows, UInt_t ncolumns)
 void TGTable::ExpandColumns(UInt_t ncolumns)
 {
    UInt_t i = 0, j = 0;
-   TGString *label = 0;
+   TGString *label = nullptr;
 
    UInt_t ntrows = GetNTableRows();
    UInt_t ntcolumns = GetNTableColumns();
@@ -497,7 +495,7 @@ void TGTable::ExpandRows(UInt_t nrows)
    for (i = 0; i < nrows; i++) {
       TObjArray *row = new TObjArray(ntcolumns);
       fRows->AddAt(row, ntrows + i);
-      TGString *label = 0;
+      TGString *label = nullptr;
       TGTableHeader *header = new TGTableHeader(fRHdrFrame, this, label,
                                                 ntrows + i, kRowHeader);
       fRowHeaders->AddAt(header, ntrows + i);
@@ -569,7 +567,7 @@ void TGTable::ShrinkColumns(UInt_t ncolumns)
    UInt_t ntrows = GetNTableRows();
    UInt_t ntcolumns = GetNTableColumns();
 
-   TGTableCell *cell = 0;
+   TGTableCell *cell = nullptr;
 
    //Destroy windows
 
@@ -587,7 +585,7 @@ void TGTable::ShrinkColumns(UInt_t ncolumns)
       GetRow(i)->Expand(ntcolumns - ncolumns);
    }
 
-   TGTableHeader *hdr = 0;
+   TGTableHeader *hdr = nullptr;
    for (j = 0; j < ncolumns; j++) {
       hdr = (TGTableHeader *)fColumnHeaders->RemoveAt(ntcolumns - ncolumns + j);
       hdr->DestroyWindow();
@@ -621,9 +619,9 @@ void TGTable::ShrinkRows(UInt_t nrows)
    UInt_t ntrows = GetNTableRows();
    UInt_t ntcolumns = GetNTableColumns();
 
-   TObjArray *row = 0;
-   TGTableCell *cell = 0;
-   TGTableHeader *hdr = 0;
+   TObjArray *row = nullptr;
+   TGTableCell *cell = nullptr;
+   TGTableHeader *hdr = nullptr;
 
    for (i = 0; i < nrows; i++) {
       for (j = 0; j < ntcolumns ; j++) {
@@ -758,7 +756,7 @@ void TGTable::ResizeTable(UInt_t newnrows, UInt_t newncolumns)
       container->SetLayoutManager(new TGMatrixLayout(container,
                                                      newnrows, newncolumns));
       // Add frames to layout frames
-      TGLayoutHints *lhints = 0;
+      TGLayoutHints *lhints = nullptr;
       for (i = 0; i < (Int_t)newnrows; i++) {
          lhints = new TGLayoutHints(kLHintsLeft | kLHintsTop);
          fRHdrHintsList->Add(lhints);
@@ -904,7 +902,7 @@ TGTableCell* TGTable::GetCell(UInt_t i, UInt_t j)
       TGTableCell *cell = (TGTableCell *)row->At(j);
       return cell;
    } else {
-      return 0;
+      return nullptr;
    }
 }
 
@@ -921,8 +919,8 @@ const TGTableCell* TGTable::FindCell(TGString label) const
 
 TGTableCell* TGTable::FindCell(TGString label)
 {
-   TObjArray *row = 0;
-   TGTableCell *cell = 0;
+   TObjArray *row = nullptr;
+   TGTableCell *cell = nullptr;
    UInt_t i = 0, j = 0;
    //continue here
    UInt_t nrows = GetNTableRows();
@@ -936,7 +934,7 @@ TGTableCell* TGTable::FindCell(TGString label)
          }
       }
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -944,8 +942,8 @@ TGTableCell* TGTable::FindCell(TGString label)
 
 void TGTable::Show()
 {
-   TGTableCell *cell = 0;
-   TGTableHeader *hdr = 0;
+   TGTableCell *cell = nullptr;
+   TGTableHeader *hdr = nullptr;
    UInt_t i = 0, j = 0;
    UInt_t nrows = GetNTableRows();
    UInt_t ncolumns = GetNTableColumns();
@@ -1076,7 +1074,7 @@ void TGTable::UpdateView()
    UInt_t i = 0, j = 0;
    UInt_t k = 0, l = 0;
 
-   TGTableCell * cell = 0;
+   TGTableCell *cell = nullptr;
    for (i = 0; i < nrows; i++) {
       for (j = 0; j < ncolumns; j++) {
          cell = GetCell(i,j);
@@ -1242,7 +1240,7 @@ void TGTable::SetOddRowBackground(Pixel_t pixel)
    UInt_t nrows = GetNTableRows();
    UInt_t ncolumns = GetNTableColumns();
    UInt_t i = 0, j = 0;
-   TGTableCell *cell = 0;
+   TGTableCell *cell = nullptr;
 
    for (i = 0; i < nrows; i++) {
       for (j = 0; j < ncolumns; j++) {
@@ -1270,7 +1268,7 @@ void TGTable::SetEvenRowBackground(Pixel_t pixel)
    UInt_t nrows = GetNTableRows();
    UInt_t ncolumns = GetNTableColumns();
    UInt_t i = 0, j = 0;
-   TGTableCell *cell = 0;
+   TGTableCell *cell = nullptr;
 
    for (i = 0; i < nrows; i++) {
       for (j = 0; j < ncolumns; j++) {
@@ -1297,7 +1295,7 @@ void TGTable::SetHeaderBackground(Pixel_t pixel)
    UInt_t nrows = GetNTableRows();
    UInt_t ncolumns = GetNTableColumns();
    UInt_t i = 0, j = 0;
-   TGTableHeader *hdr = 0;
+   TGTableHeader *hdr = nullptr;
 
    for (i = 0; i < nrows; i++) {
       hdr = GetRowHeader(i);

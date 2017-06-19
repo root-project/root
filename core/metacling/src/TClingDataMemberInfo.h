@@ -79,7 +79,7 @@ public:
    ~TClingDataMemberInfo() { delete fClassInfo; }
 
    explicit TClingDataMemberInfo(cling::Interpreter *interp)
-   : fInterp(interp), fClassInfo(0), fFirstTime(true), fSingleDecl(0), fContextIdx(0U)
+      : fInterp(interp), fClassInfo(nullptr), fFirstTime(true), fSingleDecl(nullptr), fContextIdx(0U)
    {
       fClassInfo = new TClingClassInfo(fInterp);
       fIter = fInterp->getCI()->getASTContext().getTranslationUnitDecl()->decls_begin();

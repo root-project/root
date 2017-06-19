@@ -86,6 +86,6 @@ void TTableMap::Streamer(TBuffer &R__b)
       TTableMap::iterator ptr = begin();
       vecIO.Adopt(size(),&(*ptr));
       vecIO.Streamer(R__b);
-      vecIO.fArray=0;  // we should not destroy the real array
+      vecIO.fArray = nullptr; // we should not destroy the real array
    }
 }

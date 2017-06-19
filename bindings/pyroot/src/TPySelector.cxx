@@ -104,7 +104,7 @@ void TPySelector::SetupPySelf()
 // locate the TSelector derived class
    PyObject* allvalues = PyDict_Values( dict );
 
-   PyObject* pyclass = 0;
+   PyObject *pyclass = nullptr;
    for ( int i = 0; i < PyList_GET_SIZE( allvalues ); ++i ) {
       PyObject* value = PyList_GET_ITEM( allvalues, i );
       Py_INCREF( value );
@@ -129,7 +129,7 @@ void TPySelector::SetupPySelf()
    }
 
    PyObject* args = PyTuple_New( 0 );
-   PyObject* self = PyObject_Call( pyclass, args, 0 );
+   PyObject *self = PyObject_Call(pyclass, args, nullptr);
    Py_DECREF( args );
    Py_DECREF( pyclass );
 
@@ -138,7 +138,7 @@ void TPySelector::SetupPySelf()
       if ( ! PyErr_Occurred() )
          PyErr_SetString( PyExc_RuntimeError, "could not create python selector" );
       Py_XDECREF( self );
-      Abort( 0 );
+      Abort(nullptr);
       return;
    }
 
@@ -166,10 +166,10 @@ PyObject* TPySelector::CallSelf( const char* method, PyObject* pyobject )
       return Py_None;
    }
 
-   PyObject* result = 0;
+   PyObject *result = nullptr;
 
-// get the named method and check for python side overload by not accepting the
-// binding's methodproxy
+   // get the named method and check for python side overload by not accepting the
+   // binding's methodproxy
    PyObject* pymethod = PyObject_GetAttrString( fPySelf, const_cast< char* >( method ) );
    if ( ! PyROOT::MethodProxy_CheckExact( pymethod ) ) {
       if ( pyobject )
@@ -186,15 +186,14 @@ PyObject* TPySelector::CallSelf( const char* method, PyObject* pyobject )
 
    Py_XDECREF( pymethod );
 
-   if ( ! result )
-      Abort( 0 );
+   if (!result) Abort(nullptr);
 
    return result;
 }
 
 
 //- constructors/destructor --------------------------------------------------
-TPySelector::TPySelector( TTree*, PyObject* self ) : fChain( 0 ), fPySelf( 0 )
+TPySelector::TPySelector(TTree *, PyObject *self) : fChain(nullptr), fPySelf(nullptr)
 {
 // Construct a TSelector derived with <self> as the underlying, which is
 // generally 0 to start out with in the current PROOF framework.
@@ -258,8 +257,7 @@ void TPySelector::Init( TTree* tree )
    PyObject* result = CallSelf( "Init", pytree );
    Py_DECREF( pytree );
 
-   if ( ! result )
-      Abort( 0 );
+   if (!result) Abort(nullptr);
 
    Py_XDECREF( result );
 }
@@ -271,8 +269,7 @@ Bool_t TPySelector::Notify()
 {
    PyObject* result = CallSelf( "Notify" );
 
-   if ( ! result )
-      Abort( 0 );
+   if (!result) Abort(nullptr);
 
    Py_XDECREF( result );
 
@@ -293,8 +290,7 @@ void TPySelector::Begin( TTree* )
 // passed), and hence not forwarded.
    PyObject* result = CallSelf( "Begin" );
 
-   if ( ! result )
-      Abort( 0 );
+   if (!result) Abort(nullptr);
 
    Py_XDECREF( result );
 }
@@ -308,7 +304,7 @@ void TPySelector::SlaveBegin( TTree* tree )
    SetupPySelf();
    Init( tree );
 
-   PyObject* result = 0;
+   PyObject *result = nullptr;
    if ( tree ) {
       PyObject* pytree = PyROOT::BindCppObject( (void*)tree, tree->IsA()->GetName() );
       result = CallSelf( "SlaveBegin", pytree );
@@ -317,8 +313,7 @@ void TPySelector::SlaveBegin( TTree* tree )
       result = CallSelf( "SlaveBegin", Py_None );
    }
 
-   if ( ! result )
-      Abort( 0 );
+   if (!result) Abort(nullptr);
 
    Py_XDECREF( result );
 }
@@ -340,7 +335,7 @@ Bool_t TPySelector::Process( Long64_t entry )
    PyObject* result = PyObject_CallMethod( fPySelf,
       const_cast< char* >( "Process" ), const_cast< char* >( "L" ), entry );
    if ( ! result ) {
-      Abort( 0 );
+      Abort(nullptr);
       return kFALSE;
    }
 
@@ -356,8 +351,7 @@ void TPySelector::SlaveTerminate()
 {
    PyObject* result = CallSelf( "SlaveTerminate" );
 
-   if ( ! result )
-      Abort( 0 );
+   if (!result) Abort(nullptr);
 
    Py_XDECREF( result );
 }
@@ -369,8 +363,7 @@ void TPySelector::Terminate()
 {
    PyObject* result = CallSelf( "Terminate" );
 
-   if ( ! result )
-      Abort( 0 );
+   if (!result) Abort(nullptr);
 
    Py_XDECREF( result );
 }
@@ -381,7 +374,7 @@ void TPySelector::Terminate()
 void TPySelector::Abort( const char* why, EAbort what )
 {
    if ( ! why && PyErr_Occurred() ) {
-      PyObject *pytype = 0, *pyvalue = 0, *pytrace = 0;
+      PyObject *pytype = nullptr, *pyvalue = nullptr, *pytrace = nullptr;
       PyErr_Fetch( &pytype, &pyvalue, &pytrace );
 
    // abort is delayed (done at end of loop, message is current)

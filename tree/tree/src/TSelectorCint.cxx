@@ -27,27 +27,12 @@ ClassImp(TSelectorCint);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-TSelectorCint::TSelectorCint() : TSelector(),
-   fClass(0),
-   fFuncVersion    (0),
-   fFuncInit       (0),
-   fFuncBegin      (0),
-   fFuncSlBegin    (0),
-   fFuncNotif      (0),
-   fFuncSlTerm     (0),
-   fFuncTerm       (0),
-   fFuncCut        (0),
-   fFuncFill       (0),
-   fFuncProc       (0),
-   fFuncOption     (0),
-   fFuncObj        (0),
-   fFuncInp        (0),
-   fFuncOut        (0),
-   fFuncAbort      (0),
-   fFuncGetAbort   (0),
-   fFuncResetAbort (0),
-   fFuncGetStat    (0),
-   fIntSelector(0),fIsOwner(kFALSE)
+TSelectorCint::TSelectorCint()
+   : TSelector(), fClass(nullptr), fFuncVersion(nullptr), fFuncInit(nullptr), fFuncBegin(nullptr),
+     fFuncSlBegin(nullptr), fFuncNotif(nullptr), fFuncSlTerm(nullptr), fFuncTerm(nullptr), fFuncCut(nullptr),
+     fFuncFill(nullptr), fFuncProc(nullptr), fFuncOption(nullptr), fFuncObj(nullptr), fFuncInp(nullptr),
+     fFuncOut(nullptr), fFuncAbort(nullptr), fFuncGetAbort(nullptr), fFuncResetAbort(nullptr), fFuncGetStat(nullptr),
+     fIntSelector(nullptr), fIsOwner(kFALSE)
 
 {
    // Default constructor for a Selector.
@@ -441,6 +426,6 @@ Long64_t TSelectorCint::GetStatus() const
 
 TClass *TSelectorCint::GetInterpretedClass() const
 {
-   if (!fClass) return 0;
+   if (!fClass) return nullptr;
    return TClass::GetClass(gCling->ClassInfo_FullName(fClass), kTRUE);
 }

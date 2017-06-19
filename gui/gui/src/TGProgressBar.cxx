@@ -27,10 +27,8 @@
 #include "TColor.h"
 #include "TGMsgBox.h"
 
-
-const TGFont *TGProgressBar::fgDefaultFont = 0;
-TGGC         *TGProgressBar::fgDefaultGC = 0;
-
+const TGFont *TGProgressBar::fgDefaultFont = nullptr;
+TGGC *TGProgressBar::fgDefaultGC = nullptr;
 
 ClassImp(TGProgressBar);
 ClassImp(TGHProgressBar);

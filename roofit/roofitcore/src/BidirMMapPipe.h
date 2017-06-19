@@ -141,49 +141,49 @@ namespace BidirMMapPipe_impl {
             } impl;
         public:
             /// default constructor
-            Pages() : m_pimpl(0) { }
+           Pages() : m_pimpl(nullptr) {}
 
-            /// destructor
-            ~Pages();
+           /// destructor
+           ~Pages();
 
-            /** @brief copy constructor
-             *
-             * copy Pages handle to new object - old object loses ownership,
-             * and becomes a dangling handle
-             */
-            Pages(const Pages& other);
+           /** @brief copy constructor
+            *
+            * copy Pages handle to new object - old object loses ownership,
+            * and becomes a dangling handle
+            */
+           Pages(const Pages &other);
 
-            /** @brief assignment operator
-             *
-             * assign Pages handle to new object - old object loses ownership,
-             * and becomes a dangling handle
-             */
-            Pages& operator=(const Pages& other);
+           /** @brief assignment operator
+            *
+            * assign Pages handle to new object - old object loses ownership,
+            * and becomes a dangling handle
+            */
+           Pages &operator=(const Pages &other);
 
-            /// return page size
-            static unsigned pagesize();
+           /// return page size
+           static unsigned pagesize();
 
-            /// return number of pages accessible
-            unsigned npages() const { return m_pimpl->m_npages; }
+           /// return number of pages accessible
+           unsigned npages() const { return m_pimpl->m_npages; }
 
-            /// return page number pageno
-            Page* page(unsigned pgno) const;
+           /// return page number pageno
+           Page *page(unsigned pgno) const;
 
-            /// return page number pageno
-            Page* operator[](unsigned pgno) const { return page(pgno); }
+           /// return page number pageno
+           Page *operator[](unsigned pgno) const { return page(pgno); }
 
-            /// perform page to page number mapping
-            unsigned pageno(Page* p) const;
+           /// perform page to page number mapping
+           unsigned pageno(Page *p) const;
 
-            /// perform page to page number mapping
-            unsigned operator[](Page* p) const { return pageno(p); }
+           /// perform page to page number mapping
+           unsigned operator[](Page *p) const { return pageno(p); }
 
-            /// swap with other's contents
-            void swap(Pages& other)
-            {
-                impl* tmp = other.m_pimpl;
-                other.m_pimpl = m_pimpl;
-                m_pimpl = tmp;
+           /// swap with other's contents
+           void swap(Pages &other)
+           {
+              impl *tmp = other.m_pimpl;
+              other.m_pimpl = m_pimpl;
+              m_pimpl = tmp;
             }
 
         private:

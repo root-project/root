@@ -41,7 +41,7 @@
 
 
 //- data _____________________________________________________________________
-dict_lookup_func PyROOT::gDictLookupOrg = 0;
+dict_lookup_func PyROOT::gDictLookupOrg = nullptr;
 Bool_t PyROOT::gDictLookupActive = kFALSE;
 
 typedef std::map< std::string, std::string > TC2POperatorMapping_t;
@@ -194,10 +194,10 @@ Bool_t PyROOT::Utility::AddToClass(
    pdef->ml_name  = const_cast< char* >( label );
    pdef->ml_meth  = cfunc;
    pdef->ml_flags = flags;
-   pdef->ml_doc   = NULL;
+   pdef->ml_doc = nullptr;
 
    PyObject* func = PyCFunction_New( pdef, NULL );
-   PyObject* method = TCustomInstanceMethod_New( func, NULL, pyclass );
+   PyObject *method = TCustomInstanceMethod_New(func, nullptr, pyclass);
    Bool_t isOk = PyObject_SetAttrString( pyclass, pdef->ml_name, method ) == 0;
    Py_DECREF( method );
    Py_DECREF( func );
@@ -274,7 +274,7 @@ Bool_t PyROOT::Utility::AddUsingToClass( PyObject* pyclass, const char* method )
       return kFALSE;
    }
 
-   MethodProxy* baseMethod = 0;
+   MethodProxy *baseMethod = nullptr;
    for ( int i = 1; i < PyTuple_GET_SIZE( mro ); ++i ) {
       baseMethod = (MethodProxy*)PyObject_GetAttrString(
          PyTuple_GET_ITEM( mro, i ), const_cast< char* >( method ) );
@@ -288,7 +288,7 @@ Bool_t PyROOT::Utility::AddUsingToClass( PyObject* pyclass, const char* method )
          break;
 
       Py_DECREF( baseMethod );
-      baseMethod = 0;
+      baseMethod = nullptr;
    }
 
    Py_DECREF( mro );
@@ -339,7 +339,8 @@ Bool_t PyROOT::Utility::AddBinaryOperator(
    PyObject* pyname = PyObject_GetAttr( pyclass, PyStrings::gCppName );
    if ( ! pyname ) pyname = PyObject_GetAttr( pyclass, PyStrings::gName );
    std::string cname = Cppyy::ResolveName( PyROOT_PyUnicode_AsString( pyname ) );
-   Py_DECREF( pyname ); pyname = 0;
+   Py_DECREF( pyname );
+   pyname = nullptr;
 
    return AddBinaryOperator( pyclass, cname, cname, op, label, alt );
 }
@@ -347,8 +348,9 @@ Bool_t PyROOT::Utility::AddBinaryOperator(
 ////////////////////////////////////////////////////////////////////////////////
 /// Helper to find a function with matching signature in 'funcs'.
 
-static inline Cppyy::TCppMethod_t FindAndAddOperator( const std::string& lcname, const std::string& rcname,
-     const char* op, TClass* klass = 0 ) {
+static inline Cppyy::TCppMethod_t FindAndAddOperator(const std::string &lcname, const std::string &rcname,
+                                                     const char *op, TClass *klass = nullptr)
+{
    std::string opname = "operator";
    opname += op;
    std::string proto = lcname + ", " + rcname;
@@ -391,7 +393,7 @@ Bool_t PyROOT::Utility::AddBinaryOperator( PyObject* pyclass, const std::string&
    std::call_once( sOperatorTemplateFlag, InitOperatorTemplate );
    static TClassRef _pr_int( "_pyroot_internal" );
 
-   PyCallable* pyfunc = 0;
+   PyCallable *pyfunc = nullptr;
    if ( gnucxx_exists ) {
       Cppyy::TCppMethod_t func = FindAndAddOperator( lcname, rcname, op, gnucxx.GetClass() );
       if ( func ) pyfunc = new TFunctionHolder( Cppyy::GetScope( "__gnu_cxx" ), func );
@@ -496,7 +498,7 @@ PyObject* PyROOT::Utility::BuildTemplateName( PyObject* pyname, PyObject* args, 
       } else {
          Py_DECREF( pyname );
          PyErr_SetString( PyExc_SyntaxError, "could not get __cppname__ from provided template argument. Is it a str, class, type or int?" );
-         return 0;
+         return nullptr;
       }
 
    // add a comma, as needed
@@ -546,14 +548,13 @@ int PyROOT::Utility::GetBuffer( PyObject* pyobject, char tc, int size, void*& bu
    PyBufferProcs* bufprocs = Py_TYPE(pyobject)->tp_as_buffer;
 
    PySequenceMethods* seqmeths = Py_TYPE(pyobject)->tp_as_sequence;
-   if ( seqmeths != 0 && bufprocs != 0
+   if (seqmeths != nullptr && bufprocs != nullptr
 #if  PY_VERSION_HEX < 0x03000000
-        && bufprocs->bf_getwritebuffer != 0
-        && (*(bufprocs->bf_getsegcount))( pyobject, 0 ) == 1
+       && bufprocs->bf_getwritebuffer != nullptr && (*(bufprocs->bf_getsegcount))(pyobject, nullptr) == 1
 #else
-        && bufprocs->bf_getbuffer != 0
+       && bufprocs->bf_getbuffer != 0
 #endif
-      ) {
+       ) {
 
    // get the buffer
 #if PY_VERSION_HEX < 0x03000000
@@ -573,9 +574,8 @@ int PyROOT::Utility::GetBuffer( PyObject* pyobject, char tc, int size, void*& bu
       if ( buf && check == kTRUE ) {
       // determine buffer compatibility (use "buf" as a status flag)
          PyObject* pytc = PyObject_GetAttr( pyobject, PyStrings::gTypeCode );
-         if ( pytc != 0 ) {     // for array objects
-            if ( PyROOT_PyUnicode_AsString( pytc )[0] != tc )
-               buf = 0;         // no match
+         if (pytc != nullptr) {                                          // for array objects
+            if (PyROOT_PyUnicode_AsString(pytc)[0] != tc) buf = nullptr; // no match
             Py_DECREF( pytc );
          } else if ( seqmeths->sq_length &&
                      (int)(buflen / (*(seqmeths->sq_length))( pyobject )) == size ) {
@@ -585,10 +585,10 @@ int PyROOT::Utility::GetBuffer( PyObject* pyobject, char tc, int size, void*& bu
          // also a gamble, but at least 1 item will fit into the buffer, so very likely ok ...
             PyErr_Clear();
          } else {
-            buf = 0;                      // not compatible
+            buf = nullptr; // not compatible
 
-         // clarify error message
-            PyObject* pytype = 0, *pyvalue = 0, *pytrace = 0;
+            // clarify error message
+            PyObject *pytype = nullptr, *pyvalue = nullptr, *pytrace = nullptr;
             PyErr_Fetch( &pytype, &pyvalue, &pytrace );
             PyObject* pyvalue2 = PyROOT_PyUnicode_FromFormat(
                (char*)"%s and given element size (%ld) do not match needed (%d)",
@@ -688,7 +688,7 @@ Py_ssize_t PyROOT::Utility::ArraySize( const std::string& name )
       std::string::size_type idx = cleanName.rfind( '[' );
       if ( idx != std::string::npos ) {
          const std::string asize = cleanName.substr( idx+1, cleanName.size()-2 );
-         return strtoul( asize.c_str(), NULL, 0 );
+         return strtoul(asize.c_str(), nullptr, 0);
       }
    }
 
@@ -703,15 +703,15 @@ const std::string PyROOT::Utility::ClassName( PyObject* pyobj )
 {
    std::string clname = "<unknown>";
    PyObject* pyclass = PyObject_GetAttr( pyobj, PyStrings::gClass );
-   if ( pyclass != 0 ) {
+   if (pyclass != nullptr) {
       PyObject* pyname = PyObject_GetAttr( pyclass, PyStrings::gCppName );
 
-      if ( pyname != 0 ) {
+      if (pyname != nullptr) {
          clname = PyROOT_PyUnicode_AsString( pyname );
          Py_DECREF( pyname );
       } else {
          pyname = PyObject_GetAttr( pyclass, PyStrings::gName );
-         if ( pyname != 0 ) {
+         if (pyname != nullptr) {
             clname = PyROOT_PyUnicode_AsString( pyname );
             Py_DECREF( pyname );
          } else {
@@ -828,7 +828,7 @@ void PyROOT::Utility::ErrMsgHandler( int level, Bool_t abort, const char* locati
       // the GIL.
       if (!gGlobalMutex) {
          // either printout or raise exception, depending on user settings
-         PyErr_WarnExplicit( NULL, (char*)msg, (char*)location, 0, (char*)"ROOT", NULL );
+         PyErr_WarnExplicit(nullptr, (char *)msg, (char *)location, 0, (char *)"ROOT", nullptr);
       } else {
          ::DefaultErrorHandler( level, abort, location, msg );
       }
@@ -848,10 +848,9 @@ void* PyROOT::Utility::CreateWrapperMethod( PyObject* pyfunc, Long_t user,
 {
    static Long_t s_fid = 0;
 
-   if ( ! PyCallable_Check( pyfunc ) )
-      return 0;
+   if (!PyCallable_Check(pyfunc)) return nullptr;
 
-// keep  alive (TODO: manage this intelligently)
+   // keep  alive (TODO: manage this intelligently)
    Py_INCREF( pyfunc );
 
    Long_t fid = s_fid++;
@@ -887,8 +886,7 @@ void* PyROOT::Utility::CreateWrapperMethod( PyObject* pyfunc, Long_t user,
 
 // retrieve function pointer
    void* fptr = (void*)gInterpreter->ProcessLineSynch( fptrCode.str().c_str() );
-   if ( fptr == 0 )
-      PyErr_SetString( PyExc_SyntaxError, "could not generate C++ callback wrapper" );
+   if (fptr == nullptr) PyErr_SetString(PyExc_SyntaxError, "could not generate C++ callback wrapper");
 
    return fptr;
 }
@@ -916,11 +914,11 @@ PyObject* PyROOT::Utility::PyErr_Occurred_WithGIL()
 ////////////////////////////////////////////////////////////////////////////////
 
 namespace {
-   static int (*sOldInputHook)() = NULL;
-   static PyThreadState* sInputHookEventThreadState = NULL;
+static int (*sOldInputHook)() = nullptr;
+static PyThreadState *sInputHookEventThreadState = nullptr;
 
-   static int EventInputHook()
-   {
+static int EventInputHook()
+{
    // This method is supposed to be called from CPython's command line and
    // drives the GUI.
       PyEval_RestoreThread( sInputHookEventThreadState );
@@ -950,7 +948,7 @@ PyObject* PyROOT::Utility::RemoveGUIEventInputHook()
 {
 // Remove event hook, if it was installed
    PyOS_InputHook = sOldInputHook;
-   sInputHookEventThreadState = NULL;
+   sInputHookEventThreadState = nullptr;
 
    Py_INCREF( Py_None );
    return Py_None;

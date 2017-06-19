@@ -76,7 +76,7 @@ namespace {
 
       std::map< PyObject*, PyObject* >::iterator iscbp = gSizeCallbacks.find( self );
       if ( iscbp != gSizeCallbacks.end() ) {
-         PyObject* pylen = PyObject_CallObject( iscbp->second, NULL );
+         PyObject *pylen = PyObject_CallObject(iscbp->second, nullptr);
          Py_ssize_t nlen2 = PyInt_AsSsize_t( pylen );
          Py_DECREF( pylen );
 
@@ -96,13 +96,13 @@ namespace {
    {
       if ( idx < 0 || idx >= buffer_length( self ) ) {
          PyErr_SetString( PyExc_IndexError, "buffer index out of range" );
-         return 0;
+         return nullptr;
       }
 
 #if PY_VERSION_HEX < 0x02050000
       const char* buf = 0;
 #else
-      char* buf = 0;     // interface change in 2.5, no other way to handle it
+      char *buf = nullptr; // interface change in 2.5, no other way to handle it
 #endif
 #if PY_VERSION_HEX < 0x03000000
       (*(PyBuffer_Type.tp_as_buffer->bf_getcharbuffer))( self, 0, &buf );
@@ -187,8 +187,7 @@ namespace {
    PyObject* buffer_setsize( PyObject* self, PyObject* pynlen )
    {
       Py_ssize_t nlen = PyInt_AsSsize_t( pynlen );
-      if ( nlen == -1 && PyErr_Occurred() )
-         return 0;
+      if (nlen == -1 && PyErr_Occurred()) return nullptr;
 
 #if PY_VERSION_HEX < 0x03000000
       ((PyBufferTop_t*)self)->fSize = nlen * ((PyBufferTop_t*)self)->fItemSize;
@@ -225,22 +224,18 @@ namespace {
          return PyROOT_PyUnicode_FromString( (char*)"d" );
 
       PyErr_SetString( PyExc_TypeError, "received unknown buffer object" );
-      return 0;
+      return nullptr;
    }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-   PyGetSetDef buffer_getset[] = {
-      { (char*)"typecode", (getter)buf_typecode, NULL, NULL, NULL },
-      { (char*)NULL, NULL, NULL, NULL, NULL }
-   };
+   PyGetSetDef buffer_getset[] = {{(char *)"typecode", (getter)buf_typecode, nullptr, nullptr, nullptr},
+                                  {(char *)nullptr, nullptr, nullptr, nullptr, nullptr}};
 
-////////////////////////////////////////////////////////////////////////////////
+   ////////////////////////////////////////////////////////////////////////////////
 
-   PyMethodDef buffer_methods[] = {
-      { (char*)"SetSize", (PyCFunction)buffer_setsize, METH_O, NULL },
-      { (char*)NULL, NULL, 0, NULL }
-   };
+   PyMethodDef buffer_methods[] = {{(char *)"SetSize", (PyCFunction)buffer_setsize, METH_O, nullptr},
+                                   {(char *)nullptr, nullptr, 0, nullptr}};
 
 } // unnamed namespace
 

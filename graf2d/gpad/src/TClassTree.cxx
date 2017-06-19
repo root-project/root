@@ -183,16 +183,16 @@ TClassTree::TClassTree()
    fShowMul  = 0;
    fShowRef  = 0;
    fNclasses = 0;
-   fCstatus  = 0;
-   fParents  = 0;
-   fCparent  = 0;
-   fCpointer = 0;
-   fCnames   = 0;
-   fCtitles  = 0;
-   fOptions  = 0;
-   fLinks    = 0;
-   fDerived  = 0;
-   fNdata    = 0;
+   fCstatus = nullptr;
+   fParents = nullptr;
+   fCparent = nullptr;
+   fCpointer = nullptr;
+   fCnames = nullptr;
+   fCtitles = nullptr;
+   fOptions = nullptr;
+   fLinks = nullptr;
+   fDerived = nullptr;
+   fNdata = nullptr;
    SetLabelDx();
    SetYoffset(0);
    SetSourceDir(".:src:" + TROOT::GetSourceDir());
@@ -209,16 +209,16 @@ TClassTree::TClassTree(const char *name, const char *classes)
    fShowMul  = 0;
    fShowRef  = 0;
    fNclasses = 0;
-   fCstatus  = 0;
-   fParents  = 0;
-   fCparent  = 0;
-   fCpointer = 0;
-   fCnames   = 0;
-   fCtitles  = 0;
-   fOptions  = 0;
-   fLinks    = 0;
-   fDerived  = 0;
-   fNdata    = 0;
+   fCstatus = nullptr;
+   fParents = nullptr;
+   fCparent = nullptr;
+   fCpointer = nullptr;
+   fCnames = nullptr;
+   fCtitles = nullptr;
+   fOptions = nullptr;
+   fLinks = nullptr;
+   fDerived = nullptr;
+   fNdata = nullptr;
    SetLabelDx();
    SetYoffset(0);
    SetSourceDir(".:src:" + TROOT::GetSourceDir());
@@ -403,7 +403,7 @@ void TClassTree::Init()
       TList *lb = fCpointer[i]->GetListOfBases();
       if (!lb) continue;
       clbase = (TBaseClass*)lb->First();
-      if (clbase == 0) continue;
+      if (clbase == nullptr) continue;
       cl = (TClass*)clbase->GetClassPointer();
       for (j=0;j<fNclasses;j++) {
          if(cl == fCpointer[j]) {
@@ -437,7 +437,7 @@ void TClassTree::ls(Option_t *) const
 
 TObjString *TClassTree::Mark(const char *classname, TList *los, Int_t abit)
 {
-   if (!los) return 0;
+   if (!los) return nullptr;
    TObjString *os = (TObjString*)los->FindObject(classname);
    if (!os) {
       os = new TObjString(classname);
@@ -513,7 +513,7 @@ void TClassTree::Paint(Option_t *)
             }
          }
       }
-      ptr = strtok(0,":");
+      ptr = strtok(nullptr, ":");
    }
     //mark base classes of referenced classes
    for (i=0;i<fNclasses;i++) {
@@ -692,7 +692,7 @@ void TClassTree::ScanClasses(Int_t iclass)
 {
    Int_t ic, icl;
    TList *los = fLinks[iclass];
-   TList *losref = 0;
+   TList *losref = nullptr;
    TObjString *os;
 
    // scan list of data members
@@ -856,7 +856,7 @@ void TClassTree::ScanClasses(Int_t iclass)
 
 void TClassTree::SetClasses(const char *classes, Option_t *)
 {
-   if (classes == 0) return;
+   if (classes == nullptr) return;
    fClasses = classes;
    for (Int_t i=0;i<fNclasses;i++) {
       fCstatus[i]  = 0;

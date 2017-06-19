@@ -98,8 +98,7 @@ void TEveProjectable::AddProjectedsToSet(std::set<TEveElement*>& set)
 
 void TEveProjectable::PropagateVizParams(TEveElement* el)
 {
-   if (el == 0)
-      el = dynamic_cast<TEveElement*>(this);
+   if (el == nullptr) el = dynamic_cast<TEveElement *>(this);
 
    for (ProjList_i i=fProjectedList.begin(); i!=fProjectedList.end(); ++i)
    {
@@ -158,10 +157,7 @@ ClassImp(TEveProjected);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TEveProjected::TEveProjected() :
-   fManager     (0),
-   fProjectable (0),
-   fDepth       (0)
+TEveProjected::TEveProjected() : fManager(nullptr), fProjectable(nullptr), fDepth(0)
 {
 }
 
@@ -208,7 +204,7 @@ void TEveProjected::UnRefProjectable(TEveProjectable* assumed_parent, bool notif
    R__ASSERT(fProjectable == assumed_parent);
 
    if (notifyParent) fProjectable->RemoveProjected(this);
-   fProjectable = 0;
+   fProjectable = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

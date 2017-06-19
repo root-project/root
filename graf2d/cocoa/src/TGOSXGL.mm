@@ -24,7 +24,7 @@ TGOSXGLManager::TGOSXGLManager()
    //(either from TRootCanvas or TRootEmbeddedCanvas),
    //never by user.
 
-   assert(gGLManager == 0 && "TGOSXGLManager, gGLManager is initialized");
+   assert(gGLManager == nullptr && "TGOSXGLManager, gGLManager is initialized");
    gGLManager = this;
 
    if (gROOT && gROOT->GetListOfSpecials())
@@ -169,10 +169,10 @@ Bool_t TGOSXGLManager::SelectManip(TVirtualGLManip *manip, const TGLCamera *came
 {
    //Why all this mess with pointers/references and not pointers/references everywhere???
 
-   assert(manip != 0 && "SelectManip, parameter 'manip' is null");
-   assert(camera != 0 && "SelectManip, parameter 'camera' is null");
-   assert(rect != 0 && "SelectManip, parameter 'rect' is null");
-   assert(sceneBox != 0 && "SelectManip, parameter 'sceneBox' is null");
+   assert(manip != nullptr && "SelectManip, parameter 'manip' is null");
+   assert(camera != nullptr && "SelectManip, parameter 'camera' is null");
+   assert(rect != nullptr && "SelectManip, parameter 'rect' is null");
+   assert(sceneBox != nullptr && "SelectManip, parameter 'sceneBox' is null");
 
    // Select manipulator.
    return manip->Select(*camera, *rect, *sceneBox);
@@ -182,7 +182,7 @@ Bool_t TGOSXGLManager::SelectManip(TVirtualGLManip *manip, const TGLCamera *came
 Bool_t TGOSXGLManager::PlotSelected(TVirtualGLPainter *plot, Int_t px, Int_t py)
 {
    //Analog of TObject::DistancetoPrimitive
-   assert(plot != 0 && "PlotSelected, parameter 'plot' is null");
+   assert(plot != nullptr && "PlotSelected, parameter 'plot' is null");
 
    return plot->PlotSelected(px, py);
 }
@@ -191,7 +191,7 @@ Bool_t TGOSXGLManager::PlotSelected(TVirtualGLPainter *plot, Int_t px, Int_t py)
 char *TGOSXGLManager::GetPlotInfo(TVirtualGLPainter *plot, Int_t px, Int_t py)
 {
    //Analog of TObject::GetObjectInfo
-   assert(plot != 0 && "GetPlotInfo, parameter 'plot' is null");
+   assert(plot != nullptr && "GetPlotInfo, parameter 'plot' is null");
 
    return plot->GetPlotInfo(px, py);
 }
@@ -200,7 +200,7 @@ char *TGOSXGLManager::GetPlotInfo(TVirtualGLPainter *plot, Int_t px, Int_t py)
 void TGOSXGLManager::PaintSingleObject(TVirtualGLPainter *p)
 {
    // Paint a single object.
-   assert(p != 0 && "PaintSingleObject, parameter 'p' is null");
+   assert(p != nullptr && "PaintSingleObject, parameter 'p' is null");
 
    p->Paint();
 }
@@ -209,7 +209,7 @@ void TGOSXGLManager::PaintSingleObject(TVirtualGLPainter *p)
 void TGOSXGLManager::PanObject(TVirtualGLPainter *object, Int_t x, Int_t y)
 {
    // Pan objects.
-   assert(object != 0 && "PanObject, parameter 'object' is null");
+   assert(object != nullptr && "PanObject, parameter 'object' is null");
 
    return object->Pan(x, y);
 }
@@ -218,7 +218,7 @@ void TGOSXGLManager::PanObject(TVirtualGLPainter *object, Int_t x, Int_t y)
 void TGOSXGLManager::PrintViewer(TVirtualViewer3D *vv)
 {
    // Print viewer.
-   assert(vv != 0 && "PrintViewer, parameter 'vv' is null");
+   assert(vv != nullptr && "PrintViewer, parameter 'vv' is null");
 
    vv->PrintObjects();
 }

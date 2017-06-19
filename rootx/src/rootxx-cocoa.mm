@@ -402,14 +402,14 @@ NSAutoreleasePool * topLevelPool = nil;
 //We use a signal timer to check:
 //if we got a SIGUSR1 (see rootx.cxx) or
 //if we have to remove a splash-screen after a delay.
-CFRunLoopTimerRef signalTimer = 0;
+CFRunLoopTimerRef signalTimer = nullptr;
 const CFTimeInterval signalInterval = 0.1;
 
 timeval popupCreationTime;
 const CFTimeInterval splashScreenDelayInSec = 2.;//4 seconds in rootx.cxx, I'm gonna use 2.
 
 //Timer for a scroll animation.
-CFRunLoopTimerRef scrollTimer = 0;
+CFRunLoopTimerRef scrollTimer = nullptr;
 const CFTimeInterval scrollInterval = 0.1;
 
 //Aux. functions:
@@ -437,7 +437,7 @@ void PopupLogo(bool about)
    }
 
    //0. For StayUp to check when we should hide our splash-screen.
-   if (gettimeofday(&popupCreationTime, 0) == -1) {
+   if (gettimeofday(&popupCreationTime, nullptr) == -1) {
       //TODO: check errno and issue a message,
       //we need a valid popup creation time.
       return;
@@ -535,32 +535,27 @@ bool InitCocoa()
 //_________________________________________________________________
 bool InitTimers()
 {
-   assert(scrollTimer == 0 && "InitTimers, scrollTimer was initialized already");
-   assert(signalTimer == 0 && "InitTimers, signalTimer was initialized already");
+   assert(scrollTimer == nullptr && "InitTimers, scrollTimer was initialized already");
+   assert(signalTimer == nullptr && "InitTimers, signalTimer was initialized already");
 
    using ROOT::MacOSX::Util::CFScopeGuard;
 
-   CFScopeGuard<CFRunLoopTimerRef> guard1(CFRunLoopTimerCreate(kCFAllocatorDefault,//allocator
-                                                               CFAbsoluteTimeGetCurrent() + signalInterval,//fireDate
-                                                               signalInterval,//interval in seconds(?)
-                                                               0,//flags - not used
-                                                               0,//order - not used
+   CFScopeGuard<CFRunLoopTimerRef> guard1(CFRunLoopTimerCreate(kCFAllocatorDefault,                         // allocator
+                                                               CFAbsoluteTimeGetCurrent() + signalInterval, // fireDate
+                                                               signalInterval, // interval in seconds(?)
+                                                               0,              // flags - not used
+                                                               0,              // order - not used
                                                                ROOTSplashscreenTimerCallback,
-                                                               0//info
+                                                               nullptr // info
                                                                ));
    if (!guard1.Get())
       return false;
 
    //Scroll animation.
    if (showAboutInfo) {
-      CFScopeGuard<CFRunLoopTimerRef> guard2(CFRunLoopTimerCreate(kCFAllocatorDefault,
-                                                                  CFAbsoluteTimeGetCurrent() + splashScreenDelayInSec,
-                                                                  scrollInterval,
-                                                                  0,
-                                                                  0,
-                                                                  ROOTSplashscreenTimerCallback,
-                                                                  0
-                                                                  ));
+      CFScopeGuard<CFRunLoopTimerRef> guard2(
+         CFRunLoopTimerCreate(kCFAllocatorDefault, CFAbsoluteTimeGetCurrent() + splashScreenDelayInSec, scrollInterval,
+                              0, 0, ROOTSplashscreenTimerCallback, nullptr));
       if (!guard2.Get())
          return false;
 
@@ -578,11 +573,11 @@ bool InitTimers()
 //_________________________________________________________________
 void AttachTimers()
 {
-   assert(signalTimer != 0 && "AttachTimer, invalid signalTimer (null)");
+   assert(signalTimer != nullptr && "AttachTimer, invalid signalTimer (null)");
    CFRunLoopAddTimer(CFRunLoopGetMain(), signalTimer, kCFRunLoopCommonModes);
 
    if (showAboutInfo) {
-      assert(scrollTimer != 0 && "AttachTimer, invalid scrollTimer (null)");
+      assert(scrollTimer != nullptr && "AttachTimer, invalid scrollTimer (null)");
       CFRunLoopAddTimer(CFRunLoopGetMain(), scrollTimer, kCFRunLoopCommonModes);
    }
 }
@@ -590,19 +585,19 @@ void AttachTimers()
 //_________________________________________________________________
 void RemoveTimers()
 {
-   assert(signalTimer != 0 && "RemoveTimers, signalTimer is null");
+   assert(signalTimer != nullptr && "RemoveTimers, signalTimer is null");
 
    CFRunLoopRemoveTimer(CFRunLoopGetMain(), signalTimer, kCFRunLoopCommonModes);
    CFRunLoopTimerInvalidate(signalTimer);
    //TODO: test if I also have to call release!!!
-   signalTimer = 0;
+   signalTimer = nullptr;
 
    if (showAboutInfo) {
-      assert(scrollTimer != 0 && "RemoveTimers, scrollTimer is null");
+      assert(scrollTimer != nullptr && "RemoveTimers, scrollTimer is null");
       CFRunLoopRemoveTimer(CFRunLoopGetMain(), scrollTimer, kCFRunLoopCommonModes);
       CFRunLoopTimerInvalidate(scrollTimer);
       //TODO: test if I also have to call release!!!
-      scrollTimer = 0;
+      scrollTimer = nullptr;
    }
 }
 
@@ -743,7 +738,7 @@ bool StayUp()
    tv.tv_sec  = splashScreenDelay / 1000;
    tv.tv_usec = (splashScreenDelay % 1000) * 1000;
 
-   gettimeofday(&ctv, 0);
+   gettimeofday(&ctv, nullptr);
    if ((dtv.tv_usec = ctv.tv_usec - ptv.tv_usec) < 0) {
       dtv.tv_usec += 1000000;
       ptv.tv_sec++;

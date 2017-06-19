@@ -68,6 +68,5 @@ TMVA::PDEFoamKernelBase::PDEFoamKernelBase(const PDEFoamKernelBase &other)
 
 TMVA::PDEFoamKernelBase::~PDEFoamKernelBase()
 {
-   if (fLogger != NULL)
-      delete fLogger;
+   if (fLogger != nullptr) delete fLogger;
 }

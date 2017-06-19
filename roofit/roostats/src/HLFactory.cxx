@@ -47,69 +47,47 @@ using namespace RooFit;
 /// verbosity flag. The extension for the config files is assumed to
 /// be ".rs".
 
-HLFactory::HLFactory(const char *name,
-                     const char *fileName,
-                     bool isVerbose):
-    TNamed(name,name),
-    fComboCat(0),
-    fComboBkgPdf(0),
-    fComboSigBkgPdf(0),
-    fComboDataset(0),
-    fCombinationDone(false),
-    fVerbose(isVerbose),
-    fInclusionLevel(0),
-    fOwnWs(true){
-    TString wsName(name);
-    wsName+="_ws";
-    fWs = new RooWorkspace(wsName,true);
+HLFactory::HLFactory(const char *name, const char *fileName, bool isVerbose)
+   : TNamed(name, name), fComboCat(nullptr), fComboBkgPdf(nullptr), fComboSigBkgPdf(nullptr), fComboDataset(nullptr),
+     fCombinationDone(false), fVerbose(isVerbose), fInclusionLevel(0), fOwnWs(true)
+{
+   TString wsName(name);
+   wsName += "_ws";
+   fWs = new RooWorkspace(wsName, true);
 
-    fSigBkgPdfNames.SetOwner();
-    fBkgPdfNames.SetOwner();
-    fDatasetsNames.SetOwner();
+   fSigBkgPdfNames.SetOwner();
+   fBkgPdfNames.SetOwner();
+   fDatasetsNames.SetOwner();
 
-    // Start the parsing
-    fReadFile(fileName);
+   // Start the parsing
+   fReadFile(fileName);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor without a card but with an external workspace.
 
-HLFactory::HLFactory(const char* name,
-                     RooWorkspace* externalWs,
-                     bool isVerbose):
-    TNamed(name,name),
-    fComboCat(0),
-    fComboBkgPdf(0),
-    fComboSigBkgPdf(0),
-    fComboDataset(0),
-    fCombinationDone(false),
-    fVerbose(isVerbose),
-    fInclusionLevel(0),
-    fOwnWs(false){
-    fWs=externalWs;
-    fSigBkgPdfNames.SetOwner();
-    fBkgPdfNames.SetOwner();
-    fDatasetsNames.SetOwner();
+HLFactory::HLFactory(const char *name, RooWorkspace *externalWs, bool isVerbose)
+   : TNamed(name, name), fComboCat(nullptr), fComboBkgPdf(nullptr), fComboSigBkgPdf(nullptr), fComboDataset(nullptr),
+     fCombinationDone(false), fVerbose(isVerbose), fInclusionLevel(0), fOwnWs(false)
+{
+   fWs = externalWs;
+   fSigBkgPdfNames.SetOwner();
+   fBkgPdfNames.SetOwner();
+   fDatasetsNames.SetOwner();
 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-HLFactory::HLFactory():
-    TNamed("hlfactory","hlfactory"),
-    fComboCat(0),
-    fComboBkgPdf(0),
-    fComboSigBkgPdf(0),
-    fComboDataset(0),
-    fCombinationDone(false),
-    fVerbose(false),
-    fInclusionLevel(0),
-    fOwnWs(true){
-    fWs = new RooWorkspace("hlfactory_ws",true);
+HLFactory::HLFactory()
+   : TNamed("hlfactory", "hlfactory"), fComboCat(nullptr), fComboBkgPdf(nullptr), fComboSigBkgPdf(nullptr),
+     fComboDataset(nullptr), fCombinationDone(false), fVerbose(false), fInclusionLevel(0), fOwnWs(true)
+{
+   fWs = new RooWorkspace("hlfactory_ws", true);
 
-    fSigBkgPdfNames.SetOwner();
-    fBkgPdfNames.SetOwner();
-    fDatasetsNames.SetOwner();
+   fSigBkgPdfNames.SetOwner();
+   fBkgPdfNames.SetOwner();
+   fDatasetsNames.SetOwner();
 
     }
 
@@ -117,17 +95,12 @@ HLFactory::HLFactory():
 /// destructor
 
 HLFactory::~HLFactory(){
-    if (fComboSigBkgPdf!=NULL)
-        delete fComboSigBkgPdf;
-    if (fComboBkgPdf!=NULL)
-        delete fComboBkgPdf;
-    if (fComboDataset!=NULL)
-        delete fComboDataset;
-    if (fComboCat!=NULL)
-        delete fComboCat;
+   if (fComboSigBkgPdf != nullptr) delete fComboSigBkgPdf;
+   if (fComboBkgPdf != nullptr) delete fComboBkgPdf;
+   if (fComboDataset != nullptr) delete fComboDataset;
+   if (fComboCat != nullptr) delete fComboCat;
 
-    if (fOwnWs)
-        delete fWs;
+   if (fOwnWs) delete fWs;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -148,36 +121,36 @@ int HLFactory::AddChannel(const char* label,
         return -1;
         }
 
-    if (SigBkgPdfName!=0){
-        if (fWs->pdf(SigBkgPdfName)==NULL){
-            std::cerr << "Pdf " << SigBkgPdfName << " not found in workspace!\n";
-            return -1;
-            }
-        TObjString* name = new TObjString(SigBkgPdfName);
-        fSigBkgPdfNames.Add(name);
+        if (SigBkgPdfName != nullptr) {
+           if (fWs->pdf(SigBkgPdfName) == nullptr) {
+              std::cerr << "Pdf " << SigBkgPdfName << " not found in workspace!\n";
+              return -1;
+           }
+           TObjString *name = new TObjString(SigBkgPdfName);
+           fSigBkgPdfNames.Add(name);
         }
 
-    if (BkgPdfName!=0){
-        if (fWs->pdf(BkgPdfName)==NULL){
-            std::cerr << "Pdf " << BkgPdfName << " not found in workspace!\n";
-            return -1;
-            }
-        TObjString* name = new TObjString(BkgPdfName);
-        fBkgPdfNames.Add(name);
+        if (BkgPdfName != nullptr) {
+           if (fWs->pdf(BkgPdfName) == nullptr) {
+              std::cerr << "Pdf " << BkgPdfName << " not found in workspace!\n";
+              return -1;
+           }
+           TObjString *name = new TObjString(BkgPdfName);
+           fBkgPdfNames.Add(name);
         }
 
-    if (DatasetName!=0){
-        if (fWs->data(DatasetName)==NULL){
-            std::cerr << "Dataset " << DatasetName << " not found in workspace!\n";
-            return -1;
-            }
-        TObjString* name = new TObjString(DatasetName);
-        fDatasetsNames.Add(name);
+        if (DatasetName != nullptr) {
+           if (fWs->data(DatasetName) == nullptr) {
+              std::cerr << "Dataset " << DatasetName << " not found in workspace!\n";
+              return -1;
+           }
+           TObjString *name = new TObjString(DatasetName);
+           fDatasetsNames.Add(name);
         }
 
-    if (label!=0){
-        TObjString* name = new TObjString(label);
-        fLabelsNames.Add(name);
+        if (label != nullptr) {
+           TObjString *name = new TObjString(label);
+           fLabelsNames.Add(name);
         }
     return 0;
 
@@ -188,19 +161,16 @@ int HLFactory::AddChannel(const char* label,
 /// The factory owns the object.
 
 RooAbsPdf* HLFactory::GetTotSigBkgPdf(){
-    if (fSigBkgPdfNames.GetSize()==0)
-        return 0;
+   if (fSigBkgPdfNames.GetSize() == 0) return nullptr;
 
-    if (fComboSigBkgPdf!=NULL)
-        return fComboSigBkgPdf;
+   if (fComboSigBkgPdf != nullptr) return fComboSigBkgPdf;
 
-    if (!fNamesListsConsistent())
-        return NULL;
+   if (!fNamesListsConsistent()) return nullptr;
 
-    if (fSigBkgPdfNames.GetSize()==1){
-        TString name(((TObjString*)fSigBkgPdfNames.At(0))->String());
-        fComboSigBkgPdf=fWs->pdf(name);
-        return fComboSigBkgPdf;
+   if (fSigBkgPdfNames.GetSize() == 1) {
+      TString name(((TObjString *)fSigBkgPdfNames.At(0))->String());
+      fComboSigBkgPdf = fWs->pdf(name);
+      return fComboSigBkgPdf;
         }
 
     if (!fCombinationDone)
@@ -239,18 +209,15 @@ RooAbsPdf* HLFactory::GetTotSigBkgPdf(){
 /// The factory owns the object.
 
 RooAbsPdf* HLFactory::GetTotBkgPdf(){
-    if (fBkgPdfNames.GetSize()==0)
-        return 0;
+   if (fBkgPdfNames.GetSize() == 0) return nullptr;
 
-    if (fComboBkgPdf!=NULL)
-        return fComboBkgPdf;
+   if (fComboBkgPdf != nullptr) return fComboBkgPdf;
 
-    if (!fNamesListsConsistent())
-        return NULL;
+   if (!fNamesListsConsistent()) return nullptr;
 
-    if (fBkgPdfNames.GetSize()==1){
-        fComboBkgPdf=fWs->pdf(((TObjString*)fBkgPdfNames.First())->String());
-        return fComboBkgPdf;
+   if (fBkgPdfNames.GetSize() == 1) {
+      fComboBkgPdf = fWs->pdf(((TObjString *)fBkgPdfNames.First())->String());
+      return fComboBkgPdf;
         }
 
     if (!fCombinationDone)
@@ -288,18 +255,15 @@ RooAbsPdf* HLFactory::GetTotBkgPdf(){
 /// The factory owns the object.
 
 RooDataSet* HLFactory::GetTotDataSet(){
-    if (fDatasetsNames.GetSize()==0)
-        return 0;
+   if (fDatasetsNames.GetSize() == 0) return nullptr;
 
-    if (fComboDataset!=NULL)
-        return fComboDataset;
+   if (fComboDataset != nullptr) return fComboDataset;
 
-    if (!fNamesListsConsistent())
-        return NULL;
+   if (!fNamesListsConsistent()) return nullptr;
 
-    if (fDatasetsNames.GetSize()==1){
-        fComboDataset=(RooDataSet*)fWs->data(((TObjString*)fDatasetsNames.First())->String());
-        return fComboDataset;
+   if (fDatasetsNames.GetSize() == 1) {
+      fComboDataset = (RooDataSet *)fWs->data(((TObjString *)fDatasetsNames.First())->String());
+      return fComboDataset;
         }
 
     if (!fCombinationDone)
@@ -311,7 +275,7 @@ RooDataSet* HLFactory::GetTotDataSet(){
     TObject* obj = it->Next();
     ostring = (TObjString*) obj;
     fComboDataset = (RooDataSet*) fWs->data(ostring->String()) ;
-    if (!fComboDataset) return NULL;
+    if (!fComboDataset) return nullptr;
     fComboDataset->Print();
     TString dataname(GetName());
     fComboDataset = new RooDataSet(*fComboDataset,dataname+"_TotData");
@@ -322,7 +286,7 @@ RooDataSet* HLFactory::GetTotDataSet(){
         ostring=(TObjString*) obj;
         catindex++;
         RooDataSet * data = (RooDataSet*)fWs->data(ostring->String());
-        if (!data) return NULL;
+        if (!data) return nullptr;
         RooDataSet* dummy = new RooDataSet(*data,"");
         fComboCat->setIndex(catindex);
         fComboCat->Print();
@@ -341,16 +305,13 @@ RooDataSet* HLFactory::GetTotDataSet(){
 /// The factory owns the object.
 
 RooCategory* HLFactory::GetTotCategory(){
-    if (fComboCat!=NULL)
-        return fComboCat;
+   if (fComboCat != nullptr) return fComboCat;
 
-    if (!fNamesListsConsistent())
-        return NULL;
+   if (!fNamesListsConsistent()) return nullptr;
 
-    if (!fCombinationDone)
-        fCreateCategory();
+   if (!fCombinationDone) fCreateCategory();
 
-    return fComboCat;
+   return fComboCat;
 
     }
 
@@ -624,8 +585,7 @@ int HLFactory::fParseLine(TString& line){
         TString rootfile_name (static_cast<TObjString*>(descr_array->At(0))->GetString());
 
         TFile* ifile=TFile::Open(rootfile_name);
-        if (ifile==0)
-            return 1;
+        if (ifile == nullptr) return 1;
 
         if (n_descr_parts==3){// in presence of a Ws
           o_descr.ReplaceAll(",",":");

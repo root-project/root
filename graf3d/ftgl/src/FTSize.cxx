@@ -1,13 +1,6 @@
 #include    "FTSize.h"
 
-
-FTSize::FTSize()
-:   ftFace(0),
-    ftSize(0),
-    size(0),
-    xResolution(0),
-    yResolution(0),
-    err(0)
+FTSize::FTSize() : ftFace(nullptr), ftSize(nullptr), size(0), xResolution(0), yResolution(0), err(0)
 {}
 
 
@@ -27,11 +20,11 @@ bool FTSize::CharSize( FT_Face* face, unsigned int pointSize, unsigned int xRes,
             yResolution = yRes;
             ftSize = (*ftFace)->size;
         } else {
-            ftFace = 0;
-            size = 0;
-            xResolution = 0;
-            yResolution = 0;
-            ftSize = 0;
+           ftFace = nullptr;
+           size = 0;
+           xResolution = 0;
+           yResolution = 0;
+           ftSize = nullptr;
         }
     }
 
@@ -47,22 +40,23 @@ unsigned int FTSize::CharSize() const
 
 float FTSize::Ascender() const
 {
-    return ftSize == 0 ? 0.0f : static_cast<float>( ftSize->metrics.ascender) / 64.0f;
+   return ftSize == nullptr ? 0.0f : static_cast<float>(ftSize->metrics.ascender) / 64.0f;
 }
 
 
 float FTSize::Descender() const
 {
-    return ftSize == 0 ? 0.0f : static_cast<float>( ftSize->metrics.descender) / 64.0f;
+   return ftSize == nullptr ? 0.0f : static_cast<float>(ftSize->metrics.descender) / 64.0f;
 }
 
 
 float FTSize::Height() const
 {
-    if (0 == ftSize) return 0.0f;
+   if (nullptr == ftSize) return 0.0f;
 
-    if (FT_IS_SCALABLE((*ftFace))) {
-        return ( (*ftFace)->bbox.yMax - (*ftFace)->bbox.yMin) * ( (float)ftSize->metrics.y_ppem / (float)(*ftFace)->units_per_EM);
+   if (FT_IS_SCALABLE((*ftFace))) {
+      return ((*ftFace)->bbox.yMax - (*ftFace)->bbox.yMin) *
+             ((float)ftSize->metrics.y_ppem / (float)(*ftFace)->units_per_EM);
     } else {
         return static_cast<float>( ftSize->metrics.height) / 64.0f;
     }
@@ -71,10 +65,11 @@ float FTSize::Height() const
 
 float FTSize::Width() const
 {
-    if( 0 == ftSize) return 0.0f;
+   if (nullptr == ftSize) return 0.0f;
 
-    if( FT_IS_SCALABLE((*ftFace))) {
-        return ( (*ftFace)->bbox.xMax - (*ftFace)->bbox.xMin) * ( static_cast<float>(ftSize->metrics.x_ppem) / static_cast<float>((*ftFace)->units_per_EM));
+   if (FT_IS_SCALABLE((*ftFace))) {
+      return ((*ftFace)->bbox.xMax - (*ftFace)->bbox.xMin) *
+             (static_cast<float>(ftSize->metrics.x_ppem) / static_cast<float>((*ftFace)->units_per_EM));
     } else {
         return static_cast<float>( ftSize->metrics.max_advance) / 64.0f;
     }

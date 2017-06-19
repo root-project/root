@@ -28,7 +28,7 @@
 #include "TProof.h"
 #include "TROOT.h"
 
-TDataSetManager *gDataSetManager = 0;
+TDataSetManager *gDataSetManager = nullptr;
 
 // Global variables defined by other PQ2 components
 extern TUrl    gUrl;
@@ -86,7 +86,7 @@ void ShowDataSets(const char *ds, const char *opt)
 
 TFileCollection *GetDataSet(const char *ds, const char *server)
 {
-   TFileCollection *fc = 0;
+   TFileCollection *fc = nullptr;
    if (gIsProof) {
       doParallel = kFALSE;
       if (!gProof && getProof("GetDataSet") != 0) return fc;
@@ -104,7 +104,7 @@ TFileCollection *GetDataSet(const char *ds, const char *server)
 
 TMap *GetDataSets(const char *owner, const char *server, const char *opt)
 {
-   TMap *dss = 0;
+   TMap *dss = nullptr;
    if (gIsProof) {
       doParallel = kFALSE;
       if (!gProof && getProof("GetDataSets") != 0) return dss;
@@ -120,8 +120,8 @@ TMap *GetDataSets(const char *owner, const char *server, const char *opt)
          if (server && strlen(server) > 0) {
             // The return map will be in the form   </group/user/datasetname> --> <dataset>
             TMap *rmap = new TMap;
-            TObject *k = 0;
-            TFileCollection *fc = 0, *xfc = 0;
+            TObject *k = nullptr;
+            TFileCollection *fc = nullptr, *xfc = nullptr;
             TIter nxd(dss);
             while ((k = nxd()) && (fc = (TFileCollection *) dss->GetValue(k))) {
                // Get subset on specified server, if any
@@ -131,7 +131,7 @@ TMap *GetDataSets(const char *owner, const char *server, const char *opt)
             }
             dss->DeleteAll();
             delete dss;
-            dss = 0;
+            dss = nullptr;
             if (rmap->GetSize() > 0) {
                dss = rmap;
             } else {
@@ -183,7 +183,7 @@ Int_t VerifyDataSet(const char *dsname, const char *opt, const char *redir)
       if (gProof && doParallel && gProof->GetParallel() == 0) {
          gProof->Close();
          delete gProof;
-         gProof = 0;
+         gProof = nullptr;
       }
       if (!gProof && getProof("VerifyDataSet") != 0) return -1;
       if ((rc = gProof->VerifyDataSet(dsname, opt)) == 0) {

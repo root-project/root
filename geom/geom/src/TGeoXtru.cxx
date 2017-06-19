@@ -71,8 +71,7 @@ ClassImp(TGeoXtru);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TGeoXtru::ThreadData_t::ThreadData_t() :
-   fSeg(0), fIz(0), fXc(0), fYc(0), fPoly(0)
+TGeoXtru::ThreadData_t::ThreadData_t() : fSeg(0), fIz(0), fXc(nullptr), fYc(nullptr), fPoly(nullptr)
 {
 }
 
@@ -119,7 +118,7 @@ void TGeoXtru::CreateThreadData(Int_t nthreads)
    fThreadData.resize(nthreads);
    fThreadSize = nthreads;
    for (Int_t tid=0; tid<nthreads; tid++) {
-      if (fThreadData[tid] == 0) {
+      if (fThreadData[tid] == nullptr) {
          fThreadData[tid] = new ThreadData_t;
          ThreadData_t &td = *fThreadData[tid];
          td.fXc = new Double_t [fNvert];
@@ -155,18 +154,8 @@ void TGeoXtru::SetSeg(Int_t iseg)
 /// dummy ctor
 
 TGeoXtru::TGeoXtru()
-         :TGeoBBox(),
-          fNvert(0),
-          fNz(0),
-          fZcurrent(0.),
-          fX(0),
-          fY(0),
-          fZ(0),
-          fScale(0),
-          fX0(0),
-          fY0(0),
-          fThreadData(0),
-          fThreadSize(0)
+   : TGeoBBox(), fNvert(0), fNz(0), fZcurrent(0.), fX(nullptr), fY(nullptr), fZ(nullptr), fScale(nullptr), fX0(nullptr),
+     fY0(nullptr), fThreadData(0), fThreadSize(0)
 {
    SetShapeBit(TGeoShape::kGeoXtru);
 }
@@ -175,18 +164,8 @@ TGeoXtru::TGeoXtru()
 /// Default constructor
 
 TGeoXtru::TGeoXtru(Int_t nz)
-         :TGeoBBox(0, 0, 0),
-          fNvert(0),
-          fNz(nz),
-          fZcurrent(0.),
-          fX(0),
-          fY(0),
-          fZ(new Double_t[nz]),
-          fScale(new Double_t[nz]),
-          fX0(new Double_t[nz]),
-          fY0(new Double_t[nz]),
-          fThreadData(0),
-          fThreadSize(0)
+   : TGeoBBox(0, 0, 0), fNvert(0), fNz(nz), fZcurrent(0.), fX(nullptr), fY(nullptr), fZ(new Double_t[nz]),
+     fScale(new Double_t[nz]), fX0(new Double_t[nz]), fY0(new Double_t[nz]), fThreadData(0), fThreadSize(0)
 {
    SetShapeBit(TGeoShape::kGeoXtru);
    if (nz<2) {
@@ -211,18 +190,8 @@ TGeoXtru::TGeoXtru(Int_t nz)
 ///  - param[4*(nz-1)+4] = scalen
 
 TGeoXtru::TGeoXtru(Double_t *param)
-         :TGeoBBox(0, 0, 0),
-          fNvert(0),
-          fNz(0),
-          fZcurrent(0.),
-          fX(0),
-          fY(0),
-          fZ(0),
-          fScale(0),
-          fX0(0),
-          fY0(0),
-          fThreadData(0),
-          fThreadSize(0)
+   : TGeoBBox(0, 0, 0), fNvert(0), fNz(0), fZcurrent(0.), fX(nullptr), fY(nullptr), fZ(nullptr), fScale(nullptr),
+     fX0(nullptr), fY0(nullptr), fThreadData(0), fThreadSize(0)
 {
    SetShapeBit(TGeoShape::kGeoXtru);
    SetDimensions(param);
@@ -231,19 +200,9 @@ TGeoXtru::TGeoXtru(Double_t *param)
 ////////////////////////////////////////////////////////////////////////////////
 ///copy constructor
 
-TGeoXtru::TGeoXtru(const TGeoXtru& xt) :
-  TGeoBBox(xt),
-  fNvert(0),
-  fNz(0),
-  fZcurrent(0),
-  fX(0),
-  fY(0),
-  fZ(0),
-  fScale(0),
-  fX0(0),
-  fY0(0),
-  fThreadData(0),
-  fThreadSize(0)
+TGeoXtru::TGeoXtru(const TGeoXtru &xt)
+   : TGeoBBox(xt), fNvert(0), fNz(0), fZcurrent(0), fX(nullptr), fY(nullptr), fZ(nullptr), fScale(nullptr),
+     fX0(nullptr), fY0(nullptr), fThreadData(0), fThreadSize(0)
 {
 }
 
@@ -257,12 +216,12 @@ TGeoXtru& TGeoXtru::operator=(const TGeoXtru& xt)
       fNvert=0;
       fNz=0;
       fZcurrent=0;
-      fX=0;
-      fY=0;
-      fZ=0;
-      fScale=0;
-      fX0=0;
-      fY0=0;
+      fX = nullptr;
+      fY = nullptr;
+      fZ = nullptr;
+      fScale = nullptr;
+      fX0 = nullptr;
+      fY0 = nullptr;
       fThreadSize=0;
    }
    return *this;
@@ -273,12 +232,24 @@ TGeoXtru& TGeoXtru::operator=(const TGeoXtru& xt)
 
 TGeoXtru::~TGeoXtru()
 {
-   if (fX)  {delete[] fX; fX = 0;}
-   if (fY)  {delete[] fY; fY = 0;}
-   if (fZ)  {delete[] fZ; fZ = 0;}
-   if (fScale) {delete[] fScale; fScale = 0;}
-   if (fX0)  {delete[] fX0; fX0 = 0;}
-   if (fY0)  {delete[] fY0; fY0 = 0;}
+   if (fX)  {delete[] fX;
+      fX = nullptr;
+   }
+   if (fY)  {delete[] fY;
+      fY = nullptr;
+   }
+   if (fZ)  {delete[] fZ;
+      fZ = nullptr;
+   }
+   if (fScale) {delete[] fScale;
+      fScale = nullptr;
+   }
+   if (fX0)  {delete[] fX0;
+      fX0 = nullptr;
+   }
+   if (fY0)  {delete[] fY0;
+      fY0 = nullptr;
+   }
    ClearThreadData();
 }
 

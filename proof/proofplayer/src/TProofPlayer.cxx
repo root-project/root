@@ -219,21 +219,18 @@ Bool_t TStopTimer::Notify()
 
 ClassImp(TProofPlayer);
 
-THashList *TProofPlayer::fgDrawInputPars = 0;
+THashList *TProofPlayer::fgDrawInputPars = nullptr;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default ctor.
 
 TProofPlayer::TProofPlayer(TProof *)
-   : fAutoBins(0), fOutput(0), fSelector(0), fCreateSelObj(kTRUE), fSelectorClass(0),
-     fFeedbackTimer(0), fFeedbackPeriod(2000),
-     fEvIter(0), fSelStatus(0),
-     fTotalEvents(0), fReadBytesRun(0), fReadCallsRun(0), fProcessedRun(0),
-     fQueryResults(0), fQuery(0), fPreviousQuery(0), fDrawQueries(0),
-     fMaxDrawQueries(1), fStopTimer(0), fDispatchTimer(0),
-     fProcTimeTimer(0), fProcTime(0),
-     fOutputFile(0),
-     fSaveMemThreshold(-1), fSavePartialResults(kFALSE), fSaveResultsPerPacket(kFALSE)
+   : fAutoBins(nullptr), fOutput(nullptr), fSelector(nullptr), fCreateSelObj(kTRUE), fSelectorClass(nullptr),
+     fFeedbackTimer(nullptr), fFeedbackPeriod(2000), fEvIter(nullptr), fSelStatus(nullptr), fTotalEvents(0),
+     fReadBytesRun(0), fReadCallsRun(0), fProcessedRun(0), fQueryResults(nullptr), fQuery(nullptr),
+     fPreviousQuery(nullptr), fDrawQueries(0), fMaxDrawQueries(1), fStopTimer(nullptr), fDispatchTimer(nullptr),
+     fProcTimeTimer(nullptr), fProcTime(nullptr), fOutputFile(nullptr), fSaveMemThreshold(-1),
+     fSavePartialResults(kFALSE), fSaveResultsPerPacket(kFALSE)
 {
    fInput         = new TList;
    fExitStatus    = kFinished;
@@ -290,8 +287,7 @@ void TProofPlayer::StopProcess(Bool_t abort, Int_t timeout)
    if (gDebug > 0)
       Info ("StopProcess","abort: %d, timeout: %d", abort, timeout);
 
-   if (fEvIter != 0)
-      fEvIter->StopProcess(abort);
+   if (fEvIter != nullptr) fEvIter->StopProcess(abort);
    Long_t to = 1;
    if (abort == kTRUE) {
       fExitStatus = kAborted;
@@ -359,8 +355,8 @@ void TProofPlayer::AddQueryResult(TQueryResult *q)
          fQueryResults->Add(q);
       } else {
          TIter nxr(fQueryResults);
-         TQueryResult *qr = 0;
-         TQueryResult *qp = 0;
+         TQueryResult *qr = nullptr;
+         TQueryResult *qp = nullptr;
          while ((qr = (TQueryResult *) nxr())) {
             // If same query, remove old version and break
             if (*qr == *q) {
@@ -383,7 +379,7 @@ void TProofPlayer::AddQueryResult(TQueryResult *q)
       // If max reached, eliminate first the oldest one
       if (fDrawQueries == fMaxDrawQueries && fMaxDrawQueries > 0) {
          TIter nxr(fQueryResults);
-         TQueryResult *qr = 0;
+         TQueryResult *qr = nullptr;
          while ((qr = (TQueryResult *) nxr())) {
             // If same query, remove old version and break
             if (qr->IsDraw()) {
@@ -412,7 +408,7 @@ void TProofPlayer::RemoveQueryResult(const char *ref)
 {
    if (fQueryResults) {
       TIter nxq(fQueryResults);
-      TQueryResult *qr = 0;
+      TQueryResult *qr = nullptr;
       while ((qr = (TQueryResult *) nxq())) {
          if (qr->Matches(ref)) {
             fQueryResults->Remove(qr);
@@ -431,7 +427,7 @@ TQueryResult *TProofPlayer::GetQueryResult(const char *ref)
    if (fQueryResults) {
       if (ref && strlen(ref) > 0) {
          TIter nxq(fQueryResults);
-         TQueryResult *qr = 0;
+         TQueryResult *qr = nullptr;
          while ((qr = (TQueryResult *) nxq())) {
             if (qr->Matches(ref))
                return qr;
@@ -443,7 +439,7 @@ TQueryResult *TProofPlayer::GetQueryResult(const char *ref)
    }
 
    // Nothing found
-   return (TQueryResult *)0;
+   return (TQueryResult *)nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -478,7 +474,7 @@ TObject *TProofPlayer::GetOutput(const char *name) const
 {
    if (fOutput)
       return fOutput->FindObject(name);
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -530,7 +526,7 @@ Int_t TProofPlayer::ReinitSelector(TQueryResult *qr)
       char *selc = gSystem->Which(TROOT::GetMacroPath(), selec, kReadPermission);
       if (selc) {
          // Check checksums
-         TMD5 *md5icur = 0, *md5iold = 0, *md5hcur = 0, *md5hold = 0;
+         TMD5 *md5icur = nullptr, *md5iold = nullptr, *md5hcur = nullptr, *md5hold = nullptr;
          // Implementation files
          md5icur = TMD5::FileChecksum(selc);
          md5iold = qr->GetSelecImp()->Checksum();
@@ -594,7 +590,7 @@ Int_t TProofPlayer::ReinitSelector(TQueryResult *qr)
 
    // Cleanup previous stuff
    SafeDelete(fSelector);
-   fSelectorClass = 0;
+   fSelectorClass = nullptr;
 
    // Init the selector now
    Int_t iglevelsave = gErrorIgnoreLevel;
@@ -618,7 +614,7 @@ Int_t TProofPlayer::ReinitSelector(TQueryResult *qr)
             if (oa) {
                Bool_t retry = kFALSE;
                TIter nxl(oa);
-               TObjString *os = 0;
+               TObjString *os = nullptr;
                while ((os = (TObjString *) nxl())) {
                   TString lib = gSystem->BaseName(os->GetName());
                   if (lib != "lib") {
@@ -648,7 +644,7 @@ Int_t TProofPlayer::ReinitSelector(TQueryResult *qr)
          ((TProofDraw *)fSelector)->DefVar();
       } else {
          // variables may have been initialized in Begin()
-         fSelector->Begin(0);
+         fSelector->Begin(nullptr);
       }
    }
 
@@ -805,7 +801,7 @@ Int_t TProofPlayer::SavePartialResults(Bool_t queryend, Bool_t force)
    // Get list of processed packets from the iterator
    PDB(kOutput, 2) Info("SavePartialResults", "fEvIter: %p", fEvIter);
 
-   TList *packets = (fEvIter) ? fEvIter->GetPackets() : 0;
+   TList *packets = (fEvIter) ? fEvIter->GetPackets() : nullptr;
    PDB(kOutput, 2) Info("SavePartialResults", "list of packets: %p, sz: %d",
                                               packets, (packets ? packets->GetSize(): -1));
 
@@ -840,7 +836,7 @@ Int_t TProofPlayer::SavePartialResults(Bool_t queryend, Bool_t force)
    if (packets) {
       TDirectory *packetsDir = fOutputFile->mkdir("packets");
       if (packetsDir) packetsDir->cd();
-      packets->Write(0, TObject::kSingleKey | TObject::kOverwrite);
+      packets->Write(nullptr, TObject::kSingleKey | TObject::kOverwrite);
       fOutputFile->cd();
    }
 
@@ -848,7 +844,7 @@ Int_t TProofPlayer::SavePartialResults(Bool_t queryend, Bool_t force)
    // Write out the output list
    TList torm;
    TIter nxo(fOutput);
-   TObject *o = 0;
+   TObject *o = nullptr;
    while ((o = nxo())) {
       // Skip output file drivers
       if (o->InheritsFrom(TProofOutputFile::Class())) continue;
@@ -870,13 +866,13 @@ Int_t TProofPlayer::SavePartialResults(Bool_t queryend, Bool_t force)
          if (t->GetDirectory() == fOutputFile) {
             if (queryend) {
                // ... we write it out
-               o->Write(0, TObject::kOverwrite);
+               o->Write(nullptr, TObject::kOverwrite);
                // At least something in the file
                notempty = kTRUE;
                // Flag for removal from the outputlist
                torm.Add(o);
                // Prevent double-deletion attempts
-               t->SetDirectory(0);
+               t->SetDirectory(nullptr);
             } else {
                // ... or we set in automatic flush mode
                t->SetAutoFlush();
@@ -884,7 +880,7 @@ Int_t TProofPlayer::SavePartialResults(Bool_t queryend, Bool_t force)
          }
       } else if (queryend || fSaveResultsPerPacket) {
          // Save overwriting what's already there
-         o->Write(0, TObject::kOverwrite);
+         o->Write(nullptr, TObject::kOverwrite);
          // At least something in the file
          notempty = kTRUE;
          // Flag for removal from the outputlist
@@ -898,7 +894,7 @@ Int_t TProofPlayer::SavePartialResults(Bool_t queryend, Bool_t force)
    // Close the file if required
    if (notempty) {
       if (!fOutput->FindObject(baseName)) {
-         TProofOutputFile *po = 0;
+         TProofOutputFile *po = nullptr;
          // Get directions
          TNamed *nm = (TNamed *) fInput->FindObject("PROOF_DefaultOutputOption");
          TString oname = (nm) ? nm->GetTitle() : fOutputFilePath.Data();
@@ -1028,11 +1024,11 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
    PDB(kGlobal,1) Info("Process","Enter");
 
    fExitStatus = kFinished;
-   fOutput = 0;
+   fOutput = nullptr;
 
    TCleanup clean(this);
 
-   fSelectorClass = 0;
+   fSelectorClass = nullptr;
    TString wmsg;
    TRY {
       if (AssertSelector(selector_file) != 0 || !fSelector) {
@@ -1062,7 +1058,7 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
          gProofServ->IsMaster() && !gProofServ->IsParallel()) {
          dset->Validate();
          dset->Reset();
-         TDSetElement *e = 0;
+         TDSetElement *e = nullptr;
          while ((e = dset->Next())) {
             fTotalEvents += e->GetNum();
          }
@@ -1125,17 +1121,17 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
 
       if (version == 0) {
          PDB(kLoop,1) Info("Process","Call Begin(0)");
-         fSelector->Begin(0);
+         fSelector->Begin(nullptr);
       } else {
          if (IsClient()) {
             // on client (for local run)
             PDB(kLoop,1) Info("Process","Call Begin(0)");
-            fSelector->Begin(0);
+            fSelector->Begin(nullptr);
          }
          if (!fSelStatus->TestBit(TStatus::kNotOk)) {
             PDB(kLoop,1) Info("Process","Call SlaveBegin(0)");
-            fSelector->SlaveBegin(0);  // Init is called explicitly
-                                       // from GetNextEvent()
+            fSelector->SlaveBegin(nullptr); // Init is called explicitly
+                                            // from GetNextEvent()
          }
       }
 
@@ -1201,7 +1197,7 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
          Warning("Process", "%s", wmsg.Data());
       }
 
-      TPair *currentElem = 0;
+      TPair *currentElem = nullptr;
       // The event loop on the worker
       Long64_t fst = -1, num;
       Long_t maxproctime = -1;
@@ -1379,7 +1375,7 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
    } ENDTRY;
 
    // Clean-up the envelop for the current element
-   TPair *currentElem = 0;
+   TPair *currentElem = nullptr;
    if ((currentElem = (TPair *) fInput->FindObject("PROOF_CurrentElement"))) {
       if ((currentElem = (TPair *) fInput->Remove(currentElem))) {
          delete currentElem->Key();
@@ -1404,10 +1400,8 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
 
    // Stop active timers
    SetDispatchTimer(kFALSE);
-   if (fStopTimer != 0)
-      SetStopTimer(kFALSE, gAbort);
-   if (fFeedbackTimer != 0)
-      HandleTimer(0);
+   if (fStopTimer != nullptr) SetStopTimer(kFALSE, gAbort);
+   if (fFeedbackTimer != nullptr) HandleTimer(nullptr);
 
    StopFeedback();
 
@@ -1422,7 +1416,7 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
    if (fExitStatus != kAborted) {
 
       TIter nxo(GetOutputList());
-      TObject *o = 0;
+      TObject *o = nullptr;
       while ((o = nxo())) {
          // Special treatment for files
          if (o->IsA() == TProofOutputFile::Class()) {
@@ -1494,7 +1488,7 @@ Long64_t TProofPlayer::Process(TDSet *dset, TSelector *selector,
    if (fCreateSelObj) SafeDelete(fSelector);
    fSelector = selector;
    fCreateSelObj = kFALSE;
-   return Process(dset, (const char *)0, option, nentries, first);
+   return Process(dset, (const char *)nullptr, option, nentries, first);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1608,13 +1602,13 @@ void TProofPlayer::UpdateAutoBin(const char *name,
                                  Double_t& ymin, Double_t& ymax,
                                  Double_t& zmin, Double_t& zmax)
 {
-   if ( fAutoBins == 0 ) {
+   if (fAutoBins == nullptr) {
       fAutoBins = new THashList;
    }
 
    TAutoBinVal *val = (TAutoBinVal*) fAutoBins->FindObject(name);
 
-   if ( val == 0 ) {
+   if (val == nullptr) {
       //look for info in higher master
       if (gProofServ && !gProofServ->IsTopMaster()) {
          TString key = name;
@@ -1634,7 +1628,7 @@ void TProofPlayer::UpdateAutoBin(const char *name,
 TDSetElement *TProofPlayer::GetNextPacket(TSlave *, TMessage *)
 {
    MayNotUse("GetNextPacket");
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1680,7 +1674,7 @@ void TProofPlayer::HandleRecvHisto(TMessage *mess)
    TObject *obj = mess->ReadObject(mess->GetClass());
    if (obj->InheritsFrom(TH1::Class())) {
       TH1 *h = (TH1*)obj;
-      h->SetDirectory(0);
+      h->SetDirectory(nullptr);
       TH1 *horg = (TH1*)gDirectory->GetList()->FindObject(h->GetName());
       if (horg)
          horg->Add(h);
@@ -1696,18 +1690,18 @@ void TProofPlayer::HandleRecvHisto(TMessage *mess)
 
 Int_t TProofPlayer::DrawCanvas(TObject *obj)
 {
-   static Int_t (*gDrawCanvasHook)(TObject *) = 0;
+   static Int_t (*gDrawCanvasHook)(TObject *) = nullptr;
 
    // Load the library the first time
    if (!gDrawCanvasHook) {
       // Load library needed for graphics ...
       TString drawlib = "libProofDraw";
-      char *p = 0;
+      char *p = nullptr;
       if ((p = gSystem->DynamicPathName(drawlib, kTRUE))) {
          delete[] p;
          if (gSystem->Load(drawlib) != -1) {
             // Locate DrawCanvas
-            Func_t f = 0;
+            Func_t f = nullptr;
             if ((f = gSystem->DynFindSymbol(drawlib,"DrawCanvas")))
                gDrawCanvasHook = (Int_t (*)(TObject *))(f);
             else
@@ -1731,19 +1725,18 @@ Int_t TProofPlayer::DrawCanvas(TObject *obj)
 Int_t TProofPlayer::GetDrawArgs(const char *var, const char *sel, Option_t *opt,
                                 TString &selector, TString &objname)
 {
-   static Int_t (*gGetDrawArgsHook)(const char *, const char *, Option_t *,
-                                    TString &, TString &) = 0;
+   static Int_t (*gGetDrawArgsHook)(const char *, const char *, Option_t *, TString &, TString &) = nullptr;
 
    // Load the library the first time
    if (!gGetDrawArgsHook) {
       // Load library needed for graphics ...
       TString drawlib = "libProofDraw";
-      char *p = 0;
+      char *p = nullptr;
       if ((p = gSystem->DynamicPathName(drawlib, kTRUE))) {
          delete[] p;
          if (gSystem->Load(drawlib) != -1) {
             // Locate GetDrawArgs
-            Func_t f = 0;
+            Func_t f = nullptr;
             if ((f = gSystem->DynFindSymbol(drawlib,"GetDrawArgs")))
                gGetDrawArgsHook = (Int_t (*)(const char *, const char *, Option_t *,
                                              TString &, TString &))(f);
@@ -1765,18 +1758,18 @@ Int_t TProofPlayer::GetDrawArgs(const char *var, const char *sel, Option_t *opt,
 
 void TProofPlayer::FeedBackCanvas(const char *name, Bool_t create)
 {
-   static void (*gFeedBackCanvasHook)(const char *, Bool_t) = 0;
+   static void (*gFeedBackCanvasHook)(const char *, Bool_t) = nullptr;
 
    // Load the library the first time
    if (!gFeedBackCanvasHook) {
       // Load library needed for graphics ...
       TString drawlib = "libProofDraw";
-      char *p = 0;
+      char *p = nullptr;
       if ((p = gSystem->DynamicPathName(drawlib, kTRUE))) {
          delete[] p;
          if (gSystem->Load(drawlib) != -1) {
             // Locate FeedBackCanvas
-            Func_t f = 0;
+            Func_t f = nullptr;
             if ((f = gSystem->DynFindSymbol(drawlib,"FeedBackCanvas")))
                gFeedBackCanvasHook = (void (*)(const char *, Bool_t))(f);
             else
@@ -1931,7 +1924,7 @@ Int_t TProofPlayerRemote::InitPacketizer(TDSet *dset, Long64_t nentries,
    Bool_t noData = dset->TestBit(TDSet::kEmpty) ? kTRUE : kFALSE;
 
    TString packetizer;
-   TList *listOfMissingFiles = 0;
+   TList *listOfMissingFiles = nullptr;
 
    TMethodCall callEnv;
    TClass *cl;
@@ -1946,7 +1939,7 @@ Int_t TProofPlayerRemote::InitPacketizer(TDSet *dset, Long64_t nentries,
 
       // Get linked to the related class
       cl = TClass::GetClass(packetizer);
-      if (cl == 0) {
+      if (cl == nullptr) {
          Error("InitPacketizer", "class '%s' not found", packetizer.Data());
          fExitStatus = kAborted;
          return -1;
@@ -1981,7 +1974,7 @@ Int_t TProofPlayerRemote::InitPacketizer(TDSet *dset, Long64_t nentries,
 
       // Get linked to the related class
       cl = TClass::GetClass(packetizer);
-      if (cl == 0) {
+      if (cl == nullptr) {
          Error("InitPacketizer", "class '%s' not found", packetizer.Data());
          fExitStatus = kAborted;
          return -1;
@@ -2052,7 +2045,7 @@ Int_t TProofPlayerRemote::InitPacketizer(TDSet *dset, Long64_t nentries,
 
       // Get linked to the related class
       cl = TClass::GetClass(packetizer);
-      if (cl == 0) {
+      if (cl == nullptr) {
          Error("InitPacketizer", "class '%s' not found", packetizer.Data());
          fExitStatus = kAborted;
          return -1;
@@ -2081,7 +2074,7 @@ Int_t TProofPlayerRemote::InitPacketizer(TDSet *dset, Long64_t nentries,
    // Get an instance of the packetizer
    Long_t ret = 0;
    callEnv.Execute(ret);
-   if ((fPacketizer = (TVirtualPacketizer *)ret) == 0) {
+   if ((fPacketizer = (TVirtualPacketizer *)ret) == nullptr) {
       Error("InitPacketizer", "cannot construct '%s'", cl->GetName());
       fExitStatus = kAborted;
       return -1;
@@ -2105,7 +2098,7 @@ Int_t TProofPlayerRemote::InitPacketizer(TDSet *dset, Long64_t nentries,
 
    if (!noData) {
       // Add invalid elements to the list of missing elements
-      TDSetElement *elem = 0;
+      TDSetElement *elem = nullptr;
       if (dset->TestBit(TDSet::kSomeInvalid)) {
          TIter nxe(dset->GetListOfElements());
          while ((elem = (TDSetElement *)nxe())) {
@@ -2125,7 +2118,7 @@ Int_t TProofPlayerRemote::InitPacketizer(TDSet *dset, Long64_t nentries,
          TIter missingFiles(listOfMissingFiles);
          TString msg;
          if (gDebug > 0) {
-            TFileInfo *fi = 0;
+            TFileInfo *fi = nullptr;
             while ((fi = (TFileInfo *) missingFiles.Next())) {
                if (fi->GetCurrentUrl()) {
                   msg = Form("File not found: %s - skipping!",
@@ -2219,7 +2212,7 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
    // Parse option
    Bool_t sync = (fProof->GetQueryMode(option) == TProof::kSync);
 
-   TList *inputtmp = 0;  // List of temporary input objects
+   TList *inputtmp = nullptr; // List of temporary input objects
    TDSet *set = dset;
    if (fProof->IsMaster()) {
 
@@ -2261,7 +2254,7 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
          Warning("Process", "could not forward input data: %s", emsg.Data());
 
       // Attach to the transient histogram with the assigned packets, if required
-      if (fInput->FindObject("PROOF_StatsHist") != 0) {
+      if (fInput->FindObject("PROOF_StatsHist") != nullptr) {
          if (!(fProcPackets = (TH1I *) fOutput->FindObject("PROOF_ProcPcktHist"))) {
             Warning("Process", "could not attach to histogram 'PROOF_ProcPcktHist'");
          } else {
@@ -2282,7 +2275,7 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
                Int_t mbh = gEnv->GetValue("Proof.MergersByHost",0);
                if (mbh != 0) {
                   // Administrator settings have the priority
-                  TObject *o = 0;
+                  TObject *o = nullptr;
                   if ((o = fInput->FindObject("PROOF_MergersByHost"))) { fInput->Remove(o); delete o; }
                   fInput->Add(new TParameter<Int_t>("PROOF_MergersByHost", mbh));
                }
@@ -2295,7 +2288,7 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
       if (fOutputLists) {
          fOutputLists->Delete();
          delete fOutputLists;
-         fOutputLists = 0;
+         fOutputLists = nullptr;
       }
 
       if (!sync) {
@@ -2308,13 +2301,12 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
       if (fCreateSelObj) {
          SafeDelete(fSelector);
          if (!(fSelector = TSelector::GetSelector(selector_file))) {
-            if (!sync)
-               gSystem->RedirectOutput(0);
+            if (!sync) gSystem->RedirectOutput(nullptr);
             return -1;
          }
       }
 
-      fSelectorClass = 0;
+      fSelectorClass = nullptr;
       fSelectorClass = fSelector->IsA();
 
       // Add fSelector to inputlist if processing with object
@@ -2323,7 +2315,7 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
          // input list, because we do not want to stream the selector one
          if (fSelector->GetInputList() && fSelector->GetInputList()->GetSize() > 0) {
             TIter nxi(fSelector->GetInputList());
-            TObject *o = 0;
+            TObject *o = nullptr;
             while ((o = nxi())) {
                if (!fInput->FindObject(o)) {
                   fInput->Add(o);
@@ -2343,17 +2335,16 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
       if (fSelector->GetOutputList()) fSelector->GetOutputList()->Clear();
 
       PDB(kLoop,1) Info("Process","Call Begin(0)");
-      fSelector->Begin(0);
+      fSelector->Begin(nullptr);
 
       // Reset the input list to avoid double streaming and related problems (saving
       // the TQueryResult)
-      if (!fCreateSelObj) fSelector->SetInputList(0);
+      if (!fCreateSelObj) fSelector->SetInputList(nullptr);
 
       // Send large input data objects, if any
       fProof->SendInputDataFile();
 
-      if (!sync)
-         gSystem->RedirectOutput(0);
+      if (!sync) gSystem->RedirectOutput(nullptr);
    }
 
    TCleanup clean(this);
@@ -2370,10 +2361,9 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
    Long64_t fst = (gProofServ && gProofServ->IsMaster() && gProofServ->IsParallel()) ? -1 : first;
 
    // Entry- or Event- list ?
-   TEntryList *enl = (!fProof->IsMaster()) ? dynamic_cast<TEntryList *>(set->GetEntryList())
-                                           : (TEntryList *)0;
-   TEventList *evl = (!fProof->IsMaster() && !enl) ? dynamic_cast<TEventList *>(set->GetEntryList())
-                                           : (TEventList *)0;
+   TEntryList *enl = (!fProof->IsMaster()) ? dynamic_cast<TEntryList *>(set->GetEntryList()) : (TEntryList *)nullptr;
+   TEventList *evl =
+      (!fProof->IsMaster() && !enl) ? dynamic_cast<TEventList *>(set->GetEntryList()) : (TEventList *)nullptr;
    if (fProof->fProtocol > 14) {
       if (fProcessMessage) delete fProcessMessage;
       fProcessMessage = new TMessage(kPROOF_PROCESS);
@@ -2423,7 +2413,7 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
          PDB(kGlobal,1) Info("Process","Calling Collect");
          fProof->Collect();
 
-         HandleTimer(0); // force an update of final result
+         HandleTimer(nullptr); // force an update of final result
          // This forces a last call to TPacketizer::HandleTimer via the second argument
          // (the first is ignored). This is needed when some events were skipped so that
          // the total number of entries is not the one requested. The packetizer has no
@@ -2460,7 +2450,7 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
 
       if (!IsClient()) {
          // Force an update of final result
-         HandleTimer(0);
+         HandleTimer(nullptr);
          // This forces a last call to TPacketizer::HandleTimer via the second argument
          // (the first is ignored). This is needed when some events were skipped so that
          // the total number of entries is not the one requested. The packetizer has no
@@ -2488,7 +2478,7 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, const char *selector_file,
       // Remove temporary input objects, if any
       if (inputtmp) {
          TIter nxi(inputtmp);
-         TObject *o = 0;
+         TObject *o = nullptr;
          while ((o = nxi())) fInput->Remove(o);
          SafeDelete(inputtmp);
       }
@@ -2585,11 +2575,11 @@ Bool_t TProofPlayerRemote::MergeOutputFiles()
    PDB(kOutput,1) Info("MergeOutputFiles", "enter: fOutput size: %d", fOutput->GetSize());
    PDB(kOutput,2) fOutput->ls();
 
-   TList *rmList = 0;
+   TList *rmList = nullptr;
    if (fMergeFiles) {
       TIter nxo(fOutput);
-      TObject *o = 0;
-      TProofOutputFile *pf = 0;
+      TObject *o = nullptr;
+      TProofOutputFile *pf = nullptr;
       while ((o = nxo())) {
          if ((pf = dynamic_cast<TProofOutputFile*>(o))) {
 
@@ -2686,7 +2676,7 @@ Bool_t TProofPlayerRemote::MergeOutputFiles()
                TList *fileList = filemerger->GetMergeList();
                if (fileList) {
                   TIter next(fileList);
-                  TObjString *url = 0;
+                  TObjString *url = nullptr;
                   while((url = (TObjString*)next())) {
                      TUrl u(url->GetName());
                      if (!strcmp(u.GetProtocol(), "file")) {
@@ -2744,7 +2734,7 @@ Bool_t TProofPlayerRemote::MergeOutputFiles()
    // Remove objects scheduled for removal
    if (rmList && rmList->GetSize() > 0) {
       TIter nxo(rmList);
-      TObject *o = 0;
+      TObject *o = nullptr;
       while((o = nxo())) {
          fOutput->Remove(o);
       }
@@ -2785,7 +2775,7 @@ Long64_t TProofPlayerRemote::Finalize(Bool_t force, Bool_t sync)
    // Returns -1 in case of an error, 0 otherwise.
 
    if (IsClient()) {
-      if (fOutputLists == 0) {
+      if (fOutputLists == nullptr) {
          if (force)
             if (fQuery)
                return fProof->Finalize(Form("%s:%s", fQuery->GetTitle(),
@@ -2825,13 +2815,13 @@ Long64_t TProofPlayerRemote::Finalize(Bool_t force, Bool_t sync)
          TList *parms = fPacketizer->GetConfigParams(kTRUE);
          if (parms) {
             TIter nxo(parms);
-            TObject *o = 0;
+            TObject *o = nullptr;
             while ((o = nxo())) fOutput->Add(o);
          }
 
          // If other invalid elements were found during processing, add them to the
          // list of missing elements
-         TDSetElement *elem = 0;
+         TDSetElement *elem = nullptr;
          if (fPacketizer->GetFailedPackets()) {
             TString type = (fPacketizer->TestBit(TVirtualPacketizer::kIsTree)) ? "TTree" : "";
             TList *listOfMissingFiles = (TList *) fOutput->FindObject("MissingFiles");
@@ -2871,7 +2861,7 @@ Long64_t TProofPlayerRemote::Finalize(Bool_t force, Bool_t sync)
 
          if (fPacketizer)
             if (TList *failedPackets = fPacketizer->GetFailedPackets()) {
-               fPacketizer->SetFailedPackets(0);
+               fPacketizer->SetFailedPackets(nullptr);
                failedPackets->SetName("FailedPackets");
                AddOutputObject(failedPackets);
 
@@ -2935,7 +2925,7 @@ Long64_t TProofPlayerRemote::Finalize(Bool_t force, Bool_t sync)
             fInput->Remove(fSelector);
             fOutput->Remove(fSelector);
             if (output) output->Remove(fSelector);
-            fSelector = 0;
+            fSelector = nullptr;
          }
 
          // We have transferred copy of the output objects in TQueryResult,
@@ -2955,7 +2945,7 @@ Long64_t TProofPlayerRemote::Finalize(Bool_t force, Bool_t sync)
          // Cleanup
          fOutput->SetOwner();
          SafeDelete(fSelector);
-         if (!fCreateSelObj) fSelector = 0;
+         if (!fCreateSelObj) fSelector = nullptr;
       }
    }
    PDB(kGlobal,1) Info("Process","exit");
@@ -3001,7 +2991,7 @@ Long64_t TProofPlayerRemote::Finalize(TQueryResult *qr)
    if (fOutputLists) {
       fOutputLists->Delete();
       delete fOutputLists;
-      fOutputLists = 0;
+      fOutputLists = nullptr;
    }
 
    // Re-init the selector
@@ -3010,7 +3000,7 @@ Long64_t TProofPlayerRemote::Finalize(TQueryResult *qr)
    // Import the output list
    TList *tmp = (TList *) qr->GetOutputList();
    if (!tmp) {
-      gSystem->RedirectOutput(0);
+      gSystem->RedirectOutput(nullptr);
       Info("Finalize(TQueryResult *)", "outputlist is empty");
       return -1;
    }
@@ -3018,7 +3008,7 @@ Long64_t TProofPlayerRemote::Finalize(TQueryResult *qr)
    if (fProof->fProtocol < 11)
       out = new TList;
    TIter nxo(tmp);
-   TObject *o = 0;
+   TObject *o = nullptr;
    while ((o = nxo()))
       out->Add(o->Clone());
 
@@ -3027,7 +3017,7 @@ Long64_t TProofPlayerRemote::Finalize(TQueryResult *qr)
       out->SetOwner();
       StoreOutput(out);
    }
-   gSystem->RedirectOutput(0);
+   gSystem->RedirectOutput(nullptr);
 
    SetSelectorDataMembersFromOutputList();
 
@@ -3116,7 +3106,7 @@ void TProofPlayerRemote::MergeOutput(Bool_t saveMemValues)
 {
    PDB(kOutput,1) Info("MergeOutput","Enter");
 
-   TObject *obj = 0;
+   TObject *obj = nullptr;
    if (fOutputLists) {
 
       TIter next(fOutputLists);
@@ -3164,7 +3154,7 @@ void TProofPlayerRemote::MergeOutput(Bool_t saveMemValues)
    // the case because the first coming in is taken as reference and it has the
    // internal dir and raw dir of the originating worker.
    TString key;
-   TNamed *nm = 0;
+   TNamed *nm = nullptr;
    TList rmlist;
    TIter nxo(fOutput);
    while ((obj = nxo())) {
@@ -3195,7 +3185,7 @@ void TProofPlayerRemote::MergeOutput(Bool_t saveMemValues)
                pf->SetOutputFileName(nm->GetTitle());
                rmlist.Add(nm);
             } else if (TestBit(TVirtualProofPlayer::kIsSubmerger)) {
-               pf->SetOutputFileName(0);
+               pf->SetOutputFileName(nullptr);
                pf->ResetBit(TProofOutputFile::kOutputFileNameSet);
             }
             // The filename (order is important to exclude '.merger' from the key)
@@ -3325,8 +3315,7 @@ void TProofPlayerRemote::Feedback(TList *objs)
 
 void TProofPlayerRemote::StopProcess(Bool_t abort, Int_t)
 {
-   if (fPacketizer != 0)
-      fPacketizer->StopProcess(abort, kFALSE);
+   if (fPacketizer != nullptr) fPacketizer->StopProcess(abort, kFALSE);
    if (abort == kTRUE)
       fExitStatus = kAborted;
    else
@@ -3370,13 +3359,13 @@ Int_t TProofPlayerRemote::AddOutputObject(TObject *obj)
 
       // Iterate the list of event list segments
       TIter nxevl(elists);
-      TEventList *evl = 0;
+      TEventList *evl = nullptr;
       while ((evl = dynamic_cast<TEventList *> (nxevl()))) {
 
          // Find the file offset (fDSet is the current TDSet instance)
          // locating the element by name
          TIter nxelem(fDSet->GetListOfElements());
-         TDSetElement *elem = 0;
+         TDSetElement *elem = nullptr;
          while ((elem = dynamic_cast<TDSetElement *> (nxelem()))) {
             if (!strcmp(elem->GetFileName(), evl->GetName()))
                break;
@@ -3493,7 +3482,7 @@ void TProofPlayerRemote::RedirectOutput(Bool_t on)
       fErrorHandler = SetErrorHandler(TProofServ::ErrorHandler);
    } else if (!on) {
       if (fErrorHandler) {
-         TProofServ::SetErrorHandlerFile(0);
+         TProofServ::SetErrorHandlerFile(nullptr);
          SetErrorHandler(fErrorHandler);
       }
    }
@@ -3530,13 +3519,13 @@ void TProofPlayerRemote::AddOutput(TList *out)
 
       // Iterate the list of event list segments
       TIter nxevl(elists);
-      TEventList *evl = 0;
+      TEventList *evl = nullptr;
       while ((evl = dynamic_cast<TEventList *> (nxevl()))) {
 
          // Find the file offset (fDSet is the current TDSet instance)
          // locating the element by name
          TIter nxelem(fDSet->GetListOfElements());
-         TDSetElement *elem = 0;
+         TDSetElement *elem = nullptr;
          while ((elem = dynamic_cast<TDSetElement *> (nxelem()))) {
             if (!strcmp(elem->GetFileName(), evl->GetName()))
                break;
@@ -3572,7 +3561,7 @@ void TProofPlayerRemote::AddOutput(TList *out)
 
    // Iterate on the remaining objects in the received list
    TIter nxo(out);
-   TObject *obj = 0;
+   TObject *obj = nullptr;
    while ((obj = nxo())) {
       SetLastMergingMsg(obj);
       Incorporate(obj, fOutput, merged);
@@ -3714,7 +3703,7 @@ TObject *TProofPlayerRemote::HandleHistogram(TObject *obj, Bool_t &merged)
                        h->GetName(), nent, h->GetBufferSize());
 
    // Attach to the list in the outputlists, if any
-   TList *list = 0;
+   TList *list = nullptr;
    if (!fOutputLists) {
       PDB(kOutput,2) Info("HandleHistogram", "create fOutputLists");
       fOutputLists = new TList;
@@ -3722,7 +3711,7 @@ TObject *TProofPlayerRemote::HandleHistogram(TObject *obj, Bool_t &merged)
    }
    list = (TList *) fOutputLists->FindObject(h->GetName());
 
-   TH1 *href = 0;
+   TH1 *href = nullptr;
    if (tobebinned) {
 
       // The histogram needs to be projected in a reasonable range: we
@@ -3750,7 +3739,7 @@ TObject *TProofPlayerRemote::HandleHistogram(TObject *obj, Bool_t &merged)
          list->Add(h);
       }
       // Done
-      return (TObject *)0;
+      return (TObject *)nullptr;
 
    } else {
 
@@ -3765,7 +3754,7 @@ TObject *TProofPlayerRemote::HandleHistogram(TObject *obj, Bool_t &merged)
             list->Add(h);
          }
          // Done
-         return (TObject *)0;
+         return (TObject *)nullptr;
 
       } else {
          // Check if we can 'Add' the histogram to an existing one; this is more efficient
@@ -3794,12 +3783,12 @@ TObject *TProofPlayerRemote::HandleHistogram(TObject *obj, Bool_t &merged)
                list->Add(hout);
                list->Add(h);
                // Done
-               return (TObject *)0;
+               return (TObject *)nullptr;
             }
          } else {
             // This is the first one; add it to the output list
             fOutput->Add(h);
-            return (TObject *)0;
+            return (TObject *)nullptr;
          }
       }
    }
@@ -3814,7 +3803,7 @@ Bool_t TProofPlayerRemote::HistoSameAxis(TH1 *h0, TH1 *h1)
    Bool_t rc = kFALSE;
    if (!h0 || !h1) return rc;
 
-   TAxis *a0 = 0, *a1 = 0;
+   TAxis *a0 = nullptr, *a1 = nullptr;
 
    // Check X
    a0 = h0->GetXaxis();
@@ -3854,7 +3843,7 @@ void TProofPlayerRemote::StoreOutput(TList *out)
 {
    PDB(kOutput,1) Info("StoreOutput","Enter");
 
-   if ( out == 0 ) {
+   if (out == nullptr) {
       PDB(kOutput,1) Info("StoreOutput","Leave (empty)");
       return;
    }
@@ -3862,7 +3851,7 @@ void TProofPlayerRemote::StoreOutput(TList *out)
    TIter next(out);
    out->SetOwner(kFALSE);  // take ownership of the contents
 
-   if (fOutputLists == 0) {
+   if (fOutputLists == nullptr) {
       PDB(kOutput,2) Info("StoreOutput","Create fOutputLists");
       fOutputLists = new TList;
       fOutputLists->SetOwner();
@@ -3907,7 +3896,7 @@ void TProofPlayerRemote::StoreOutput(TList *out)
       PDB(kOutput,2) Info("StoreOutput","find list for '%s'", obj->GetName() );
 
       TList *list = (TList *) fOutputLists->FindObject( obj->GetName() );
-      if ( list == 0 ) {
+      if (list == nullptr) {
          PDB(kOutput,2) Info("StoreOutput", "list for '%s' not found (creating)", obj->GetName());
          list = new TList;
          list->SetName( obj->GetName() );
@@ -3929,10 +3918,10 @@ TList *TProofPlayerRemote::MergeFeedback()
    PDB(kFeedback,1)
       Info("MergeFeedback","Enter");
 
-   if ( fFeedbackLists == 0 ) {
-      PDB(kFeedback,1)
+      if (fFeedbackLists == nullptr) {
+         PDB(kFeedback, 1)
          Info("MergeFeedback","Leave (no output)");
-      return 0;
+         return nullptr;
    }
 
    TList *fb = new TList;   // collection of feedback objects
@@ -3953,7 +3942,7 @@ TList *TProofPlayerRemote::MergeFeedback()
 
 #ifndef R__TH1MERGEFIXED
       Int_t nbmx = -1;
-      TObject *oref = 0;
+      TObject *oref = nullptr;
 #endif
       while ( TObject *key = keys() ) {
          TObject *o = map->GetValue(key);
@@ -3972,7 +3961,7 @@ TList *TProofPlayerRemote::MergeFeedback()
 #endif
          if (h) {
             TIter nxh(list);
-            TH1 *href= 0;
+            TH1 *href = nullptr;
             while ((href = (TH1 *)nxh())) {
                if (h->GetBuffer()) {
                   if (href->GetBuffer() && href->GetBufferLength() < h->GetBufferLength()) break;
@@ -4037,8 +4026,8 @@ void TProofPlayerRemote::StoreFeedback(TObject *slave, TList *out)
    PDB(kFeedback,1)
       Info("StoreFeedback","Enter");
 
-   if ( out == 0 ) {
-      PDB(kFeedback,1)
+      if (out == nullptr) {
+         PDB(kFeedback, 1)
          Info("StoreFeedback","Leave (empty)");
       return;
    }
@@ -4050,7 +4039,7 @@ void TProofPlayerRemote::StoreFeedback(TObject *slave, TList *out)
       return;
    }
 
-   if (fFeedbackLists == 0) {
+   if (fFeedbackLists == nullptr) {
       PDB(kFeedback,2) Info("StoreFeedback","Create fFeedbackLists");
       fFeedbackLists = new TList;
       fFeedbackLists->SetOwner();
@@ -4066,7 +4055,7 @@ void TProofPlayerRemote::StoreFeedback(TObject *slave, TList *out)
       PDB(kFeedback,2)
          Info("StoreFeedback","%s: Find '%s'", ord, obj->GetName() );
       TMap *map = (TMap*) fFeedbackLists->FindObject(obj->GetName());
-      if ( map == 0 ) {
+      if (map == nullptr) {
          PDB(kFeedback,2)
             Info("StoreFeedback", "%s: map for '%s' not found (creating)", ord, obj->GetName());
          // Map must not be owner (ownership is with regards to the keys (only))
@@ -4099,10 +4088,9 @@ void TProofPlayerRemote::SetupFeedback()
 
    fFeedback = (TList*) fInput->FindObject("FeedbackList");
 
-   PDB(kFeedback,1) Info("SetupFeedback","\"FeedbackList\" %sfound",
-      fFeedback == 0 ? "NOT ":"");
+   PDB(kFeedback, 1) Info("SetupFeedback", "\"FeedbackList\" %sfound", fFeedback == nullptr ? "NOT " : "");
 
-   if (fFeedback == 0 || fFeedback->GetSize() == 0) return;
+   if (fFeedback == nullptr || fFeedback->GetSize() == 0) return;
 
    // OK, feedback was requested, setup the timer
    SafeDelete(fFeedbackTimer);
@@ -4118,7 +4106,7 @@ void TProofPlayerRemote::SetupFeedback()
 
 void TProofPlayerRemote::StopFeedback()
 {
-   if (fFeedbackTimer == 0) return;
+   if (fFeedbackTimer == nullptr) return;
 
    PDB(kFeedback,1) Info("StopFeedback","Stop Timer");
 
@@ -4132,7 +4120,7 @@ Bool_t TProofPlayerRemote::HandleTimer(TTimer *)
 {
    PDB(kFeedback,2) Info("HandleTimer","Entry");
 
-   if (fFeedbackTimer == 0) return kFALSE; // timer already switched off
+   if (fFeedbackTimer == nullptr) return kFALSE; // timer already switched off
 
    // process local feedback objects
 
@@ -4142,10 +4130,10 @@ Bool_t TProofPlayerRemote::HandleTimer(TTimer *)
    TIter next(fFeedback);
    while( TObjString *name = (TObjString*) next() ) {
       TObject *o = fOutput->FindObject(name->GetName());
-      if (o != 0) {
+      if (o != nullptr) {
          fb->Add(o->Clone());
          // remove the corresponding entry from the feedback list
-         TMap *m = 0;
+         TMap *m = nullptr;
          if (fFeedbackLists &&
             (m = (TMap *) fFeedbackLists->FindObject(name->GetName()))) {
             fFeedbackLists->Remove(m);
@@ -4161,7 +4149,7 @@ Bool_t TProofPlayerRemote::HandleTimer(TTimer *)
       delete fb;
    }
 
-   if (fFeedbackLists == 0) {
+   if (fFeedbackLists == nullptr) {
       fFeedbackTimer->Start(fFeedbackPeriod, kTRUE);   // maybe next time
       return kFALSE;
    }
@@ -4201,7 +4189,7 @@ TDSetElement *TProofPlayerRemote::GetNextPacket(TSlave *slave, TMessage *r)
 
    TDSetElement *e = fPacketizer->GetNextPacket( slave, r );
 
-   if (e == 0) {
+   if (e == nullptr) {
       PDB(kPacketizer,2) 
          Info("GetNextPacket","%s: done!", slave->GetOrdinal());
    } else if (e == (TDSetElement*) -1) {
@@ -4259,7 +4247,7 @@ Long64_t TProofPlayerRemote::DrawSelect(TDSet *set, const char *varexp,
    TNamed *selectionobj = new TNamed("selection", selection);
 
    // Save the current input list
-   TObject *o = 0;
+   TObject *o = nullptr;
    TList *savedInput = new TList;
    TIter nxi(fInput);
    while ((o = nxi())) {
@@ -4329,7 +4317,7 @@ void TProofPlayerSlave::SetupFeedback()
          Info("SetupFeedback","\"FeedbackList\" NOT found");
    }
 
-   if (fb == 0 || fb->GetSize() == 0) return;
+   if (fb == nullptr || fb->GetSize() == 0) return;
 
    // OK, feedback was requested, setup the timer
 
@@ -4348,7 +4336,7 @@ void TProofPlayerSlave::SetupFeedback()
 
 void TProofPlayerSlave::StopFeedback()
 {
-   if (fFeedbackTimer == 0) return;
+   if (fFeedbackTimer == nullptr) return;
 
    PDB(kFeedback,1) Info("StopFeedback","Stop Timer");
 
@@ -4383,12 +4371,12 @@ Bool_t TProofPlayerSlave::HandleTimer(TTimer *)
       if (sendm) gProofServ->GetSocket()->Send(m);
    }
 
-   if (fFeedback == 0) return kFALSE;
+   if (fFeedback == nullptr) return kFALSE;
 
    TList *fb = new TList;
    fb->SetOwner(kFALSE);
 
-   if (fOutput == 0) {
+   if (fOutput == nullptr) {
       fOutput = (THashList *) fSelector->GetOutputList();
    }
 
@@ -4397,7 +4385,7 @@ Bool_t TProofPlayerSlave::HandleTimer(TTimer *)
       while( TObjString *name = (TObjString*) next() ) {
          // TODO: find object in memory ... maybe allow only in fOutput ?
          TObject *o = fOutput->FindObject(name->GetName());
-         if (o != 0) fb->Add(o);
+         if (o != nullptr) fb->Add(o);
       }
    }
 
@@ -4428,13 +4416,13 @@ void TProofPlayerSlave::HandleGetTreeHeader(TMessage *mess)
    dset->Reset();
    TDSetElement *e = dset->Next();
    Long64_t entries = 0;
-   TFile *f = 0;
-   TTree *t = 0;
+   TFile *f = nullptr;
+   TTree *t = nullptr;
    if (!e) {
       PDB(kGlobal, 1) Info("HandleGetTreeHeader", "empty TDSet");
    } else {
       f = TFile::Open(e->GetFileName());
-      t = 0;
+      t = nullptr;
       if (f) {
          t = (TTree*) f->Get(e->GetObjName());
          if (t) {
@@ -4443,7 +4431,7 @@ void TProofPlayerSlave::HandleGetTreeHeader(TMessage *mess)
             entries = t->GetEntries();
 
             // compute #entries in all the files
-            while ((e = dset->Next()) != 0) {
+            while ((e = dset->Next()) != nullptr) {
                TFile *f1 = TFile::Open(e->GetFileName());
                if (f1) {
                   TTree *t1 = (TTree*) f1->Get(e->GetObjName());
@@ -4524,7 +4512,7 @@ Long64_t TProofPlayerSuperMaster::Process(TDSet *dset, const char *selector_file
       // Construct msd list using the slaves
       TIter nextslave(proof->GetListOfActiveSlaves());
       while (TSlave *sl = dynamic_cast<TSlave*>(nextslave())) {
-         TList *submasters = 0;
+         TList *submasters = nullptr;
          TPair *msd = dynamic_cast<TPair*>(msds.FindObject(sl->GetMsd()));
          if (!msd) {
             submasters = new TList;
@@ -4602,8 +4590,8 @@ Long64_t TProofPlayerSuperMaster::Process(TDSet *dset, const char *selector_file
             for (Int_t j = (i*nelements)/nmasters;
                        j < ((i+1)*nelements)/nmasters;
                        j++) {
-               TDSetElement *elem = setelements ?
-                  dynamic_cast<TDSetElement*>(setelements->At(j)) : (TDSetElement *)0;
+               TDSetElement *elem =
+                  setelements ? dynamic_cast<TDSetElement *>(setelements->At(j)) : (TDSetElement *)nullptr;
                if (elem) {
                   set.Add(elem->GetFileName(), elem->GetObjName(),
                         elem->GetDirectory(), elem->GetFirst(),
@@ -4658,11 +4646,10 @@ Long64_t TProofPlayerSuperMaster::Process(TDSet *dset, const char *selector_file
          }
       }
 
-      if ( !IsClient() ) HandleTimer(0);
+      if (!IsClient()) HandleTimer(nullptr);
       PDB(kGlobal,1) Info("Process","Calling Collect");
       proof->Collect(&usedmasters);
-      HandleTimer(0);
-
+      HandleTimer(nullptr);
    }
 
    StopFeedback();
@@ -4828,7 +4815,7 @@ void TProofPlayerSuperMaster::Progress(TSlave *wrk, TProofProgressInfo *pi)
 
 Bool_t TProofPlayerSuperMaster::HandleTimer(TTimer *)
 {
-   if (fFeedbackTimer == 0) return kFALSE; // timer stopped already
+   if (fFeedbackTimer == nullptr) return kFALSE; // timer stopped already
 
    Int_t i;
    Long64_t tot = 0;
@@ -4882,7 +4869,7 @@ Bool_t TProofPlayerSuperMaster::HandleTimer(TTimer *)
    gProofServ->GetSocket()->Send(m);
 
    if (fReturnFeedback)
-      return TProofPlayerRemote::HandleTimer(0);
+      return TProofPlayerRemote::HandleTimer(nullptr);
    else
       return kFALSE;
 }

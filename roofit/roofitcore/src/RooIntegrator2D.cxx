@@ -56,8 +56,7 @@ void RooIntegrator2D::registerIntegrator(RooNumIntFactory& fact)
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
-RooIntegrator2D::RooIntegrator2D() :
-  _xIntegrator(0), _xint(0)
+RooIntegrator2D::RooIntegrator2D() : _xIntegrator(nullptr), _xint(nullptr)
 {
 }
 

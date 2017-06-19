@@ -25,25 +25,24 @@ ClassImp(TPyMultiGradFunction);
 static PyObject* GetOverriddenPyMethod( PyObject* pyself, const char* method )
 {
 // Retrieve an overriden method on pyself
-   PyObject* pymethod = 0;
+PyObject *pymethod = nullptr;
 
-   if ( pyself && pyself != Py_None ) {
-      pymethod = PyObject_GetAttrString( (PyObject*)pyself, const_cast< char* >( method ) );
-      if ( ! PyROOT::MethodProxy_CheckExact( pymethod ) )
-         return pymethod;
+if (pyself && pyself != Py_None) {
+   pymethod = PyObject_GetAttrString((PyObject *)pyself, const_cast<char *>(method));
+   if (!PyROOT::MethodProxy_CheckExact(pymethod)) return pymethod;
 
-      Py_XDECREF( pymethod );
-      pymethod = 0;
+   Py_XDECREF(pymethod);
+   pymethod = nullptr;
    }
 
    return pymethod;
 }
 
-static PyObject* DispatchCall( PyObject* pyself, const char* method, PyObject* pymethod = NULL,
-   PyObject* arg1 = NULL, PyObject* arg2 = NULL, PyObject* arg3 = NULL )
+static PyObject *DispatchCall(PyObject *pyself, const char *method, PyObject *pymethod = nullptr,
+                              PyObject *arg1 = nullptr, PyObject *arg2 = nullptr, PyObject *arg3 = nullptr)
 {
 // Forward <method> to python (need to refactor this with TPySelector).
-   PyObject* result = 0;
+PyObject *result = nullptr;
 
 // get the named method and check for python side overload by not accepting the
 // binding's methodproxy
@@ -54,9 +53,8 @@ static PyObject* DispatchCall( PyObject* pyself, const char* method, PyObject* p
       result = PyObject_CallFunctionObjArgs( pymethod, arg1, arg2, arg3, NULL );
    } else {
    // means the method has not been overridden ... simply accept its not there
-      result = 0;
-      PyErr_Format( PyExc_AttributeError,
-         "method %s needs implementing in derived class", const_cast< char* >( method ) );
+   result = nullptr;
+   PyErr_Format(PyExc_AttributeError, "method %s needs implementing in derived class", const_cast<char *>(method));
    }
 
    Py_XDECREF( pymethod );
@@ -66,7 +64,7 @@ static PyObject* DispatchCall( PyObject* pyself, const char* method, PyObject* p
 
 
 //- constructors/destructor --------------------------------------------------
-TPyMultiGenFunction::TPyMultiGenFunction( PyObject* self ) : fPySelf( 0 )
+TPyMultiGenFunction::TPyMultiGenFunction(PyObject *self) : fPySelf(nullptr)
 {
 // Construct a TPyMultiGenFunction derived with <self> as the underlying
    if ( self ) {
@@ -112,7 +110,7 @@ unsigned int TPyMultiGenFunction::NDim() const
 double TPyMultiGenFunction::DoEval( const double* x ) const
 {
    PyObject* xbuf = PyROOT::TPyBufferFactory::Instance()->PyBuffer_FromMemory( (Double_t*)x );
-   PyObject* pyresult = DispatchCall( fPySelf, "DoEval", NULL, xbuf );
+   PyObject *pyresult = DispatchCall(fPySelf, "DoEval", nullptr, xbuf);
    Py_DECREF( xbuf );
 
    if ( ! pyresult ) {
@@ -175,7 +173,7 @@ unsigned int TPyMultiGradFunction::NDim() const
 double TPyMultiGradFunction::DoEval( const double* x ) const
 {
    PyObject* xbuf = PyROOT::TPyBufferFactory::Instance()->PyBuffer_FromMemory( (Double_t*)x );
-   PyObject* pyresult = DispatchCall( fPySelf, "DoEval", NULL, xbuf );
+   PyObject *pyresult = DispatchCall(fPySelf, "DoEval", nullptr, xbuf);
    Py_DECREF( xbuf );
 
    if ( ! pyresult ) {
@@ -252,7 +250,7 @@ double TPyMultiGradFunction::DoDerivative( const double * x, unsigned int icoord
    PyObject* xbuf = PyROOT::TPyBufferFactory::Instance()->PyBuffer_FromMemory( (Double_t*)x );
    PyObject* pycoord = PyLong_FromLong( icoord );
 
-   PyObject* pyresult = DispatchCall( fPySelf, "DoDerivative", NULL, xbuf, pycoord );
+   PyObject *pyresult = DispatchCall(fPySelf, "DoDerivative", nullptr, xbuf, pycoord);
    Py_DECREF( pycoord );
    Py_DECREF( xbuf );
 

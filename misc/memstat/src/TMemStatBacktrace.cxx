@@ -36,7 +36,7 @@
 
 // This is a global variable set at MSManager init time.
 // It marks the highest used stack address.
-void *g_global_stack_end = NULL;
+void *g_global_stack_end = nullptr;
 
 #if defined(SUPPORTS_MEMSTAT)
 // Comment from Anar:
@@ -107,8 +107,7 @@ namespace Memstat {
             _RET_ADDR(33);
             _RET_ADDR(34);
             _RET_ADDR(35);
-         default:
-            return 0;
+      default: return nullptr;
       }
 #else
       if(_frame) { }
@@ -160,17 +159,16 @@ namespace Memstat {
       if(0 ==  dladdr(_pAddr, &info)) {
          return -1;
       }
-      if(NULL != info.dli_sname) {
+      if (nullptr != info.dli_sname) {
          int status(0);
-         char *ch = abi::__cxa_demangle(info.dli_sname, 0, 0, &status);
+         char *ch = abi::__cxa_demangle(info.dli_sname, nullptr, nullptr, &status);
 
          _strSymbol = (0 == status) ? ch : info.dli_sname;
 
          // it's our responsibility to free that pointer
          free(ch);
       }
-      if(NULL != info.dli_fname)
-         _strLib = info.dli_fname;
+      if (nullptr != info.dli_fname) _strLib = info.dli_fname;
 #else
       if(!_pAddr) {
          _strLib = "";
@@ -212,7 +210,7 @@ namespace Memstat {
    {
 #if defined(SUPPORTS_MEMSTAT)
       int status = 0;
-      char *ch = abi::__cxa_demangle(_codeInfo, 0, 0, &status);
+      char *ch = abi::__cxa_demangle(_codeInfo, nullptr, nullptr, &status);
       if(ch) {
          _str = ch;
          free(ch);

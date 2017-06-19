@@ -84,7 +84,7 @@ TFileSet::TFileSet(const TString &dirname,const Char_t *setname,Bool_t expand, I
       else SetName(name);
 
       // Check if "dirname" is a directory.
-      void *dir = 0;
+      void *dir = nullptr;
       if (flags & 2 ) {
          dir = gSystem->OpenDirectory(name);
          if (!dir) {

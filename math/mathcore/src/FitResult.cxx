@@ -49,21 +49,10 @@ FitResult::FitResult() :
    // Default constructor implementation.
 }
 
-FitResult::FitResult(const FitConfig & fconfig) :
-   fValid(false),
-   fNormalized(false),
-   fNFree(0),
-   fNdf(0),
-   fNCalls(0),
-   fStatus(gInitialResultStatus),
-   fCovStatus(0),
-   fVal(0),
-   fEdm(-1),
-   fChi2(-1),
-   fFitFunc(0),
-   fParams(std::vector<double>( fconfig.NPar() ) ),
-   fErrors(std::vector<double>( fconfig.NPar() ) ),
-   fParNames(std::vector<std::string> ( fconfig.NPar() ) )
+FitResult::FitResult(const FitConfig &fconfig)
+   : fValid(false), fNormalized(false), fNFree(0), fNdf(0), fNCalls(0), fStatus(gInitialResultStatus), fCovStatus(0),
+     fVal(0), fEdm(-1), fChi2(-1), fFitFunc(nullptr), fParams(std::vector<double>(fconfig.NPar())),
+     fErrors(std::vector<double>(fconfig.NPar())), fParNames(std::vector<std::string>(fconfig.NPar()))
 {
    // create a Fit result from a fit config (i.e. with initial parameter values
    // and errors equal to step values
@@ -186,7 +175,7 @@ void FitResult::FillResult(const std::shared_ptr<ROOT::Math::Minimizer> & min, c
 
    // if flag is binned compute a chi2 when a chi2 function is given
    if (binnedFit) {
-      if (chi2func == 0)
+      if (chi2func == nullptr)
          fChi2 = fVal;
       else {
          // compute chi2 equivalent for likelihood fits
@@ -197,7 +186,7 @@ void FitResult::FillResult(const std::shared_ptr<ROOT::Math::Minimizer> & min, c
 
    // fill error matrix
    // if minimizer provides error provides also error matrix
-   if (min->Errors() != 0) {
+   if (min->Errors() != nullptr) {
 
       fErrors = std::vector<double>(min->Errors(), min->Errors() + npar ) ;
 
@@ -238,8 +227,7 @@ FitResult::~FitResult() {
    //if (fFitFunc) delete fFitFunc;
 }
 
-FitResult::FitResult(const FitResult &rhs) :
-   fFitFunc(0)
+FitResult::FitResult(const FitResult &rhs) : fFitFunc(nullptr)
 {
    // Implementation of copy constructor
    (*this) = rhs;
@@ -299,7 +287,7 @@ bool FitResult::Update(const std::shared_ptr<ROOT::Math::Minimizer> & min, bool 
       MATH_ERROR_MSG("FitResult::Update","Wrong minimizer status ");
       return false;
    }
-   if (min->X() == 0 ) {
+   if (min->X() == nullptr) {
       MATH_ERROR_MSG("FitResult::Update","Invalid minimizer status ");
       return false;
    }
@@ -327,7 +315,7 @@ bool FitResult::Update(const std::shared_ptr<ROOT::Math::Minimizer> & min, bool 
    // set parameters  in fit model function
    if (fFitFunc) fFitFunc->SetParameters(&fParams.front());
 
-   if (min->Errors() != 0)  {
+   if (min->Errors() != nullptr) {
 
       if (fErrors.size() != npar) fErrors.resize(npar);
 

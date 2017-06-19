@@ -44,14 +44,9 @@
 #include "Riostream.h"
 #include "RConfigure.h"
 
-
-static const char *gFiletypes[] = { "All files",     "*",
-                                    "Text files",    "*.txt",
-                                    "ROOT macros",   "*.C",
-                                    0,               0 };
-static char *gPrinter      = 0;
-static char *gPrintCommand = 0;
-
+static const char *gFiletypes[] = {"All files", "*", "Text files", "*.txt", "ROOT macros", "*.C", nullptr, nullptr};
+static char *gPrinter = nullptr;
+static char *gPrintCommand = nullptr;
 
 TGGC *TGTextEdit::fgCursor0GC;
 TGGC *TGTextEdit::fgCursor1GC;
@@ -271,7 +266,7 @@ TGTextEdit::TGTextEdit(const TGWindow *parent, UInt_t w, UInt_t h,
 TGTextEdit::~TGTextEdit()
 {
    if (TGSearchDialog::SearchDialog()) {
-      TQObject::Disconnect(TGSearchDialog::SearchDialog(), 0, this);
+      TQObject::Disconnect(TGSearchDialog::SearchDialog(), nullptr, this);
    }
    delete fCurBlink;
    delete fMenu;
@@ -288,8 +283,8 @@ void TGTextEdit::Init()
    fCursorState = 1;
    fCurrent.fY  = fCurrent.fX = 0;
    fInsertMode  = kInsert;
-   fCurBlink    = 0;
-   fSearch      = 0;
+   fCurBlink = nullptr;
+   fSearch = nullptr;
    fEnableMenu  = kTRUE;
    fEnableCursorWithoutFocus = kTRUE;
 
@@ -429,7 +424,7 @@ Bool_t TGTextEdit::Copy()
       TGLongPosition pos;
       pos.fY = fClipText->RowCount();
       pos.fX = 0;
-      fClipText->InsText(pos, 0);
+      fClipText->InsText(pos, nullptr);
    }
 
    return kTRUE;
@@ -516,12 +511,10 @@ void TGTextEdit::Print(Option_t *) const
       msg.Form("Printed: %s\nLines: %ld\nUsing: %s -P%s",
                untitled ? "Untitled" : fText->GetFileName(),
                fText->RowCount() - 1, gPrintCommand, gPrinter);
-      new TGMsgBox(fClient->GetDefaultRoot(), this, "Editor", msg.Data(),
-                   kMBIconAsterisk, kMBOk, 0);
+      new TGMsgBox(fClient->GetDefaultRoot(), this, "Editor", msg.Data(), kMBIconAsterisk, kMBOk, nullptr);
    } else {
       msg.Form("Could not execute: %s -P%s\n", gPrintCommand, gPrinter);
-      new TGMsgBox(fClient->GetDefaultRoot(), this, "Editor", msg.Data(),
-                   kMBIconExclamation, kMBOk, 0);
+      new TGMsgBox(fClient->GetDefaultRoot(), this, "Editor", msg.Data(), kMBIconExclamation, kMBOk, nullptr);
    }
 }
 
@@ -650,8 +643,7 @@ Bool_t TGTextEdit::Search(const char *string, Bool_t direction,
          TString msg;
          msg.Form("Couldn't find \"%s\"", string);
          gVirtualX->Bell(20);
-         new TGMsgBox(fClient->GetDefaultRoot(), fCanvas, "TextEdit",
-                      msg.Data(), kMBIconExclamation, kMBOk, 0);
+         new TGMsgBox(fClient->GetDefaultRoot(), fCanvas, "TextEdit", msg.Data(), kMBIconExclamation, kMBOk, nullptr);
          return kFALSE;
       }
       return kTRUE;
@@ -1557,7 +1549,7 @@ Bool_t TGTextEdit::HandleFocusChange(Event_t *event)
 
 void TGTextEdit::Search(Bool_t close)
 {
-   static TGSearchType *srch = 0;
+   static TGSearchType *srch = nullptr;
    Int_t ret = 0;
 
    if (!srch) srch = new TGSearchType;
@@ -1608,8 +1600,7 @@ Bool_t TGTextEdit::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                         if (retval == kMBCancel)
                            return kTRUE;
                         if (retval == kMBYes)
-                           if (!SaveFile(0))
-                              return kTRUE;
+                           if (!SaveFile(nullptr)) return kTRUE;
                      }
                      Clear();
                      if (parm1 == kM_FILE_CLOSE) {
@@ -1630,14 +1621,14 @@ Bool_t TGTextEdit::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                      }
                      break;
                   case kM_FILE_SAVE:
-                     if (SaveFile(0)) {
+                     if (SaveFile(nullptr)) {
                         SendMessage(fMsgWindow, MK_MSG(kC_TEXTVIEW, kTXT_SAVE),
                                     fWidgetId, 0);
                         Saved();
                      }
                      break;
                   case kM_FILE_SAVEAS:
-                     if (SaveFile(0, kTRUE)) {
+                     if (SaveFile(nullptr, kTRUE)) {
                         SendMessage(fMsgWindow, MK_MSG(kC_TEXTVIEW, kTXT_SAVE),
                                     fWidgetId, 0);
                         SavedAs();
@@ -1682,8 +1673,8 @@ Bool_t TGTextEdit::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                      if (!Search(fSearch->fBuffer, fSearch->fDirection,
                                  fSearch->fCaseSensitive)) {
                         msg2.Form("Couldn't find \"%s\"", fSearch->fBuffer);
-                        new TGMsgBox(fClient->GetDefaultRoot(), this, "Editor",
-                                     msg2.Data(), kMBIconExclamation, kMBOk, 0);
+                        new TGMsgBox(fClient->GetDefaultRoot(), this, "Editor", msg2.Data(), kMBIconExclamation, kMBOk,
+                                     nullptr);
                      }
                      break;
                   case kM_SEARCH_GOTO:
@@ -1718,7 +1709,7 @@ void TGTextEdit::InsChar(char character)
 {
    if (fReadOnly) return;
 
-   char *charstring = 0;
+   char *charstring = nullptr;
    TGLongPosition pos;
 
    if (character == '\t') {

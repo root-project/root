@@ -384,7 +384,7 @@ TGColorSelect::TGColorSelect(const TGWindow *p, ULong_t color, Int_t id) :
    }
 
    fColor = color;
-   fColorPopup = 0;
+   fColorPopup = nullptr;
    fDrawGC = *fClient->GetResourcePool()->GetFrameGC();
 
    Enable();
@@ -479,7 +479,7 @@ Bool_t TGColorSelect::HandleButton(Event_t *event)
 #endif
          fColorPopup->PlacePopup(ax, ay, fColorPopup->GetDefaultWidth(),
                                          fColorPopup->GetDefaultHeight());
-         fColorPopup = 0;
+         fColorPopup = nullptr;
       }
    }
    return kTRUE;

@@ -65,11 +65,11 @@ TGeoPolygon::TGeoPolygon()
 {
    fNvert   = 0;
    fNconvex = 0;
-   fInd     = 0;
-   fIndc    = 0;
-   fX       = 0;
-   fY       = 0;
-   fDaughters = 0;
+   fInd = nullptr;
+   fIndc = nullptr;
+   fX = nullptr;
+   fY = nullptr;
+   fDaughters = nullptr;
    SetConvex(kFALSE);
    TObject::SetBit(kGeoFinishPolygon, kFALSE);
 }
@@ -86,10 +86,10 @@ TGeoPolygon::TGeoPolygon(Int_t nvert)
    fNvert   = nvert;
    fNconvex = 0;
    fInd     = new Int_t[nvert];
-   fIndc    = 0;
-   fX       = 0;
-   fY       = 0;
-   fDaughters = 0;
+   fIndc = nullptr;
+   fX = nullptr;
+   fY = nullptr;
+   fDaughters = nullptr;
    SetConvex(kFALSE);
    TObject::SetBit(kGeoFinishPolygon, kFALSE);
    SetNextIndex();
@@ -192,7 +192,7 @@ void TGeoPolygon::FinishPolygon()
    if (IsConvex()) return;
    // ... algorithm here
    if (!fDaughters) fDaughters = new TObjArray();
-   TGeoPolygon *poly = 0;
+   TGeoPolygon *poly = nullptr;
    Int_t indconv = 0;
    Int_t indnext, indback;
    Int_t nskip;

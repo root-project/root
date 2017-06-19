@@ -26,7 +26,7 @@ ClassImp(TPyDispatcher);
 
 
 //- constructors/destructor --------------------------------------------------
-TPyDispatcher::TPyDispatcher( PyObject* callable ) : fCallable( 0 )
+TPyDispatcher::TPyDispatcher(PyObject *callable) : fCallable(nullptr)
 {
 // Construct a TPyDispatcher from a callable python object. Applies python
 // object reference counting.
@@ -73,26 +73,26 @@ PyObject* TPyDispatcher::DispatchVA( const char* format, ... )
 // Dispatch the arguments to the held callable python object, using format to
 // interpret the types of the arguments. Note that format is in python style,
 // not in C printf style. See: https://docs.python.org/2/c-api/arg.html .
-   PyObject* args = 0;
+PyObject *args = nullptr;
 
-   if ( format ) {
-      va_list va;
-      va_start( va, format );
+if (format) {
+   va_list va;
+   va_start(va, format);
 
-      args = Py_VaBuildValue( (char*)format, va );
+   args = Py_VaBuildValue((char *)format, va);
 
-      va_end( va );
+   va_end(va);
 
-      if ( ! args ) {
-         PyErr_Print();
-         return 0;
-      }
+   if (!args) {
+      PyErr_Print();
+      return nullptr;
+   }
 
-      if ( ! PyTuple_Check( args ) ) {    // if only one arg ...
-         PyObject* t = PyTuple_New( 1 );
-         PyTuple_SET_ITEM( t, 0, args );
-         args = t;
-      }
+   if (!PyTuple_Check(args)) { // if only one arg ...
+      PyObject *t = PyTuple_New(1);
+      PyTuple_SET_ITEM(t, 0, args);
+      args = t;
+   }
 
    }
 
@@ -101,7 +101,7 @@ PyObject* TPyDispatcher::DispatchVA( const char* format, ... )
 
    if ( ! result ) {
       PyErr_Print();
-      return 0;
+      return nullptr;
    }
 
    return result;
@@ -114,10 +114,10 @@ PyObject* TPyDispatcher::DispatchVA1( const char* clname, void* obj, const char*
    PyObject* pyobj = PyROOT::BindCppObject( obj, Cppyy::GetScope( clname ), kFALSE /* isRef */ );
    if ( ! pyobj ) {
       PyErr_Print();
-      return 0;
+      return nullptr;
    }
 
-   PyObject* args = 0;
+   PyObject *args = nullptr;
 
    if ( format ) {
       va_list va;
@@ -129,7 +129,7 @@ PyObject* TPyDispatcher::DispatchVA1( const char* clname, void* obj, const char*
 
       if ( ! args ) {
          PyErr_Print();
-         return 0;
+         return nullptr;
       }
 
       if ( ! PyTuple_Check( args ) ) {    // if only one arg ...
@@ -158,7 +158,7 @@ PyObject* TPyDispatcher::DispatchVA1( const char* clname, void* obj, const char*
 
    if ( ! result ) {
       PyErr_Print();
-      return 0;
+      return nullptr;
    }
 
    return result;
@@ -178,7 +178,7 @@ PyObject* TPyDispatcher::Dispatch( TPad* selpad, TObject* selected, Int_t event 
 
    if ( ! result ) {
       PyErr_Print();
-      return 0;
+      return nullptr;
    }
 
    return result;
@@ -199,7 +199,7 @@ PyObject* TPyDispatcher::Dispatch( Int_t event, Int_t x, Int_t y, TObject* selec
 
    if ( ! result ) {
       PyErr_Print();
-      return 0;
+      return nullptr;
    }
 
    return result;
@@ -219,7 +219,7 @@ PyObject* TPyDispatcher::Dispatch( TVirtualPad* pad, TObject* obj, Int_t event )
 
    if ( ! result ) {
       PyErr_Print();
-      return 0;
+      return nullptr;
    }
 
    return result;
@@ -238,7 +238,7 @@ PyObject* TPyDispatcher::Dispatch( TGListTreeItem* item, TDNDData* data )
 
    if ( ! result ) {
       PyErr_Print();
-      return 0;
+      return nullptr;
    }
 
    return result;
@@ -257,7 +257,7 @@ PyObject* TPyDispatcher::Dispatch( const char* name, const TList* attr )
 
    if ( ! result ) {
       PyErr_Print();
-      return 0;
+      return nullptr;
    }
 
    return result;
@@ -276,7 +276,7 @@ PyObject* TPyDispatcher::Dispatch( TSlave* slave, TProofProgressInfo* pi )
 
    if ( ! result ) {
       PyErr_Print();
-      return 0;
+      return nullptr;
    }
 
    return result;

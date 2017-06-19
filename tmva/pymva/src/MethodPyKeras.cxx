@@ -354,13 +354,13 @@ std::vector<Double_t> MethodPyKeras::GetMvaValues(Long64_t firstEvt, Long64_t la
 
    npy_intp dimsData[2] = {(npy_intp)nEvents, (npy_intp)fNVars};
    PyArrayObject* pDataMvaValues = (PyArrayObject*)PyArray_SimpleNewFromData(2, dimsData, NPY_FLOAT, (void*)data);
-   if (pDataMvaValues==0) Log() << "Failed to load data to Python array" << Endl;
+   if (pDataMvaValues == nullptr) Log() << "Failed to load data to Python array" << Endl;
 
    // Get prediction for all events
    PyObject* pModel = PyDict_GetItemString(fLocalNS, "model");
-   if (pModel==0) Log() << kFATAL << "Failed to get model Python object" << Endl;
+   if (pModel == nullptr) Log() << kFATAL << "Failed to get model Python object" << Endl;
    PyArrayObject* pPredictions = (PyArrayObject*) PyObject_CallMethod(pModel, (char*)"predict", (char*)"O", pDataMvaValues);
-   if (pPredictions==0) Log() << kFATAL << "Failed to get predictions" << Endl;
+   if (pPredictions == nullptr) Log() << kFATAL << "Failed to get predictions" << Endl;
    delete[] data;
 
    // Load predictions to double vector

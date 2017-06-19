@@ -37,13 +37,12 @@ namespace PyROOT {
       virtual PyCallable* Clone() { return new TMethodHolder( *this ); }
 
    public:
-      virtual PyObject* Call(
-         ObjectProxy*& self, PyObject* args, PyObject* kwds, TCallContext* ctxt = 0 );
+      virtual PyObject *Call(ObjectProxy *&self, PyObject *args, PyObject *kwds, TCallContext *ctxt = nullptr);
 
-      virtual Bool_t Initialize( TCallContext* ctxt = 0 );
+      virtual Bool_t Initialize(TCallContext *ctxt = nullptr);
       virtual PyObject* PreProcessArgs( ObjectProxy*& self, PyObject* args, PyObject* kwds );
-      virtual Bool_t    ConvertAndSetArgs( PyObject* args, TCallContext* ctxt = 0 );
-      virtual PyObject* Execute( void* self, ptrdiff_t offset, TCallContext* ctxt = 0 );
+      virtual Bool_t ConvertAndSetArgs(PyObject *args, TCallContext *ctxt = nullptr);
+      virtual PyObject *Execute(void *self, ptrdiff_t offset, TCallContext *ctxt = nullptr);
 
    protected:
       Cppyy::TCppMethod_t GetMethod()   { return fMethod; }
@@ -52,7 +51,7 @@ namespace PyROOT {
       std::string         GetSignatureString();
       std::string         GetReturnTypeName();
 
-      virtual Bool_t InitExecutor_( TExecutor*&, TCallContext* ctxt = 0 );
+      virtual Bool_t InitExecutor_(TExecutor *&, TCallContext *ctxt = nullptr);
 
    private:
       void Copy_( const TMethodHolder& );

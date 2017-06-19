@@ -134,8 +134,8 @@ TF1NormSum::TF1NormSum(TF1* function1, TF1* function2, Double_t coeff1, Double_t
 {
    std::vector < std::shared_ptr < TF1 > > functions(2);
    std::vector < Double_t > coeffs(2);
-   TF1 * fnew1 = 0;
-   TF1 * fnew2 = 0;
+   TF1 *fnew1 = nullptr;
+   TF1 *fnew2 = nullptr;
    // need to use Copy because clone does not work for functor-based functions
    if (function1) { 
       fnew1 = (TF1*) function1->IsA()->New();
@@ -164,9 +164,9 @@ TF1NormSum::TF1NormSum(TF1* function1, TF1* function2, TF1* function3, Double_t 
 {
    std::vector < std::shared_ptr < TF1 > > functions(3);
    std::vector < Double_t > coeffs(3);
-   TF1 * fnew1 = 0;
-   TF1 * fnew2 = 0;
-   TF1 * fnew3 = 0;
+   TF1 *fnew1 = nullptr;
+   TF1 *fnew2 = nullptr;
+   TF1 *fnew3 = nullptr;
    if (function1) { 
       fnew1 = (TF1*) function1->IsA()->New();
       function1->Copy(*fnew1); 
@@ -276,12 +276,12 @@ TF1NormSum::TF1NormSum(const TString &formula, Double_t xmin, Double_t xmax)
 
 double TF1NormSum::operator()(double* x, double* p)
 {
-   if (p!=0)   TF1NormSum::SetParameters(p);                           // first refresh the parameters
-   
+   if (p != nullptr) TF1NormSum::SetParameters(p); // first refresh the parameters
+
    Double_t sum = 0.;
    for (unsigned int n=0; n<fNOfFunctions; n++)
    {
-      sum += fCoeffs[n]*(fFunctions[n] -> EvalPar(x,0));
+      sum += fCoeffs[n] * (fFunctions[n]->EvalPar(x, nullptr));
    }
    // normalize by a scale parameter (typically the bin width)
    return fScale * sum;

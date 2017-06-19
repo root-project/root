@@ -61,7 +61,7 @@ RooRealVarSharedProperties RooRealVar::_nullProp("00000000-0000-0000-0000-000000
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
-RooRealVar::RooRealVar()  :  _error(0), _asymErrLo(0), _asymErrHi(0), _binning(0), _sharedProp(0)
+RooRealVar::RooRealVar() : _error(0), _asymErrLo(0), _asymErrHi(0), _binning(nullptr), _sharedProp(nullptr)
 {
   _fast = kTRUE ;
   TRACE_CREATE
@@ -71,9 +71,8 @@ RooRealVar::RooRealVar()  :  _error(0), _asymErrLo(0), _asymErrHi(0), _binning(0
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor with value and unit
 
-RooRealVar::RooRealVar(const char *name, const char *title,
-		       Double_t value, const char *unit) :
-  RooAbsRealLValue(name, title, unit), _error(-1), _asymErrLo(1), _asymErrHi(-1), _sharedProp(0)
+RooRealVar::RooRealVar(const char *name, const char *title, Double_t value, const char *unit)
+   : RooAbsRealLValue(name, title, unit), _error(-1), _asymErrLo(1), _asymErrHi(-1), _sharedProp(nullptr)
 {
   // _instanceList.registerInstance(this) ;
   _binning = new RooUniformBinning(-1,1,100) ;
@@ -88,10 +87,8 @@ RooRealVar::RooRealVar(const char *name, const char *title,
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor with range and unit. Initial value is center of range
 
-RooRealVar::RooRealVar(const char *name, const char *title,
-		       Double_t minValue, Double_t maxValue,
-		       const char *unit) :
-  RooAbsRealLValue(name, title, unit), _error(-1), _asymErrLo(1), _asymErrHi(-1), _sharedProp(0)
+RooRealVar::RooRealVar(const char *name, const char *title, Double_t minValue, Double_t maxValue, const char *unit)
+   : RooAbsRealLValue(name, title, unit), _error(-1), _asymErrLo(1), _asymErrHi(-1), _sharedProp(nullptr)
 {
   _binning = new RooUniformBinning(minValue,maxValue,100) ;
   _fast = kTRUE ;
@@ -123,10 +120,9 @@ RooRealVar::RooRealVar(const char *name, const char *title,
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor with value, range and unit
 
-RooRealVar::RooRealVar(const char *name, const char *title,
-		       Double_t value, Double_t minValue, Double_t maxValue,
-		       const char *unit) :
-  RooAbsRealLValue(name, title, unit), _error(-1), _asymErrLo(1), _asymErrHi(-1), _sharedProp(0)
+RooRealVar::RooRealVar(const char *name, const char *title, Double_t value, Double_t minValue, Double_t maxValue,
+                       const char *unit)
+   : RooAbsRealLValue(name, title, unit), _error(-1), _asymErrLo(1), _asymErrHi(-1), _sharedProp(nullptr)
 {
   _value = value ;
   _fast = kTRUE ;
@@ -205,7 +201,7 @@ Double_t RooRealVar::getValV(const RooArgSet*) const
 void RooRealVar::setVal(Double_t value)
 {
   Double_t clipValue ;
-  inRange(value,0,&clipValue) ;
+  inRange(value, nullptr, &clipValue);
 
   if (clipValue != _value) {
     setValueDirty() ;
@@ -280,8 +276,8 @@ const RooAbsBinning& RooRealVar::getBinning(const char* name, Bool_t verbose, Bo
 RooAbsBinning& RooRealVar::getBinning(const char* name, Bool_t verbose, Bool_t createOnTheFly)
 {
   // Return default (normalization) binning and range if no name is specified
-  if (name==0) {
-    return *_binning ;
+  if (name == nullptr) {
+     return *_binning;
   }
 
   // Check if non-shared binning with this name has been created already
@@ -325,13 +321,13 @@ std::list<std::string> RooRealVar::getBinningNames() const
   }
 
   RooFIter iter = _altNonSharedBinning.fwdIterator();
-  const RooAbsArg* binning = 0;
+  const RooAbsArg *binning = nullptr;
   while((binning = iter.next())) {
     const char* name = binning->GetName();
     binningNames.push_back(string(name));
   }
   iter = sharedProp()->_altBinning.fwdIterator();
-  binning = 0;
+  binning = nullptr;
   while((binning = iter.next())) {
     const char* name = binning->GetName();
     binningNames.push_back(string(name));
@@ -402,8 +398,8 @@ void RooRealVar::setMin(const char* name, Double_t value)
   // Clip current value in window if it fell out
   if (!name) {
     Double_t clipValue ;
-    if (!inRange(_value,0,&clipValue)) {
-      setVal(clipValue) ;
+    if (!inRange(_value, nullptr, &clipValue)) {
+       setVal(clipValue);
     }
   }
 
@@ -432,8 +428,8 @@ void RooRealVar::setMax(const char* name, Double_t value)
   // Clip current value in window if it fell out
   if (!name) {
     Double_t clipValue ;
-    if (!inRange(_value,0,&clipValue)) {
-      setVal(clipValue) ;
+    if (!inRange(_value, nullptr, &clipValue)) {
+       setVal(clipValue);
     }
   }
 
@@ -796,7 +792,7 @@ TString* RooRealVar::format(const RooCmdArg& formatArg) const
   // Process & check varargs
   pc.process(tmp) ;
   if (!pc.ok(kTRUE)) {
-    return 0 ;
+     return nullptr;
   }
 
   // Extract values from named arguments
@@ -1168,7 +1164,7 @@ void RooRealVar::Streamer(TBuffer &R__b)
 	_sharedProp = (RooRealVarSharedProperties*) _sharedPropList.registerProperties(tmpSharedProp,kFALSE) ;
       } else {
 	delete tmpSharedProp ;
-	_sharedProp = 0 ;
+   _sharedProp = nullptr;
       }
     }
 
@@ -1201,7 +1197,7 @@ void RooRealVar::deleteSharedProperties()
 {
   if (_sharedProp) {
     _sharedPropList.unregisterProperties(_sharedProp) ;
-    _sharedProp = 0 ;
+    _sharedProp = nullptr;
   }
 }
 

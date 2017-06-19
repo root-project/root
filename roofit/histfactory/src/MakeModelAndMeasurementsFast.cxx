@@ -107,9 +107,9 @@ using namespace RooFit;
 RooWorkspace* RooStats::HistFactory::MakeModelAndMeasurementFast( RooStats::HistFactory::Measurement& measurement ) {
 
   // This will be returned
-  RooWorkspace* ws = NULL;
-  TFile* outFile = NULL;
-  FILE*  tableFile=NULL;
+  RooWorkspace *ws = nullptr;
+  TFile *outFile = nullptr;
+  FILE *tableFile = nullptr;
 
   try {
 
@@ -141,7 +141,7 @@ RooWorkspace* RooStats::HistFactory::MakeModelAndMeasurementFast( RooStats::Hist
     if (pos != std::string::npos) {
        std::string outputDir = prefix.substr(0,pos);
        std::cout << "Checking if output directory : " << outputDir << " -  exists" << std::endl;
-       if (gSystem->OpenDirectory( outputDir.c_str() )  == 0 ) { 
+       if (gSystem->OpenDirectory(outputDir.c_str()) == nullptr) {
           std::cout << "Output directory : " << outputDir << " - does not exist, try to create" << std::endl;
           int success = gSystem->MakeDirectory( outputDir.c_str() );    
           if( success != 0 ) {
@@ -251,9 +251,9 @@ RooWorkspace* RooStats::HistFactory::MakeModelAndMeasurementFast( RooStats::Hist
     ws->writeToFile( CombinedFileName.c_str() );
     std::cout << "Writing combined measurement to file: " << CombinedFileName << std::endl;
     TFile* combFile = TFile::Open( CombinedFileName.c_str(), "UPDATE" );
-    if( combFile == NULL ) {
-      std::cout << "Error: Failed to open file " << CombinedFileName << std::endl;
-      throw hf_exc();
+    if (combFile == nullptr) {
+       std::cout << "Error: Failed to open file " << CombinedFileName << std::endl;
+       throw hf_exc();
     }
     measurement.writeToFile( combFile );
     combFile->Close();
@@ -302,19 +302,19 @@ void RooStats::HistFactory::FitModelAndPlot(const std::string& MeasurementName,
 					    std::string data_name, 
 					    TFile* outFile, FILE* tableFile  ) {
 
-  if( outFile == NULL ) {
-    std::cout << "Error: Output File in FitModelAndPlot is NULL" << std::endl;
-    throw hf_exc();
+   if (outFile == nullptr) {
+      std::cout << "Error: Output File in FitModelAndPlot is NULL" << std::endl;
+      throw hf_exc();
   }
 
-  if( tableFile == NULL ) {
-    std::cout << "Error: tableFile in FitModelAndPlot is NULL" << std::endl;
-    throw hf_exc();
+  if (tableFile == nullptr) {
+     std::cout << "Error: tableFile in FitModelAndPlot is NULL" << std::endl;
+     throw hf_exc();
   }
 
-  if( combined == NULL ) {
-    std::cout << "Error: Supplied workspace in FitModelAndPlot is NULL" << std::endl;
-    throw hf_exc();
+  if (combined == nullptr) {
+     std::cout << "Error: Supplied workspace in FitModelAndPlot is NULL" << std::endl;
+     throw hf_exc();
   }
 
   ModelConfig* combined_config = (ModelConfig *) combined->obj("ModelConfig");
@@ -340,10 +340,9 @@ void RooStats::HistFactory::FitModelAndPlot(const std::string& MeasurementName,
   }
 
   RooAbsPdf* model = combined_config->GetPdf();
-  if( model==NULL ) {
-    std::cout << "Error: Failed to find pdf in ModelConfig: " << combined_config->GetName()
-	      << std::endl;
-    throw hf_exc();
+  if (model == nullptr) {
+     std::cout << "Error: Failed to find pdf in ModelConfig: " << combined_config->GetName() << std::endl;
+     throw hf_exc();
   }
 
   // Save a Snapshot
@@ -369,9 +368,9 @@ void RooStats::HistFactory::FitModelAndPlot(const std::string& MeasurementName,
   }
 
   // Loop over all POIs and print their fitted values
-  RooRealVar* poi = NULL; // (RooRealVar*) POIs->first();
+  RooRealVar *poi = nullptr; // (RooRealVar*) POIs->first();
   TIterator* params_itr = POIs->createIterator();
-  TObject* poi_obj=NULL;
+  TObject *poi_obj = nullptr;
   while( (poi_obj=params_itr->Next()) ) {
     //poi = (RooRealVar*) poi_obj;
     poi = dynamic_cast<RooRealVar*>(poi_obj);
@@ -391,18 +390,16 @@ void RooStats::HistFactory::FitModelAndPlot(const std::string& MeasurementName,
   // Make the Profile Likelihood Plot
   RooAbsReal* nll = model->createNLL(*simData);
   RooAbsReal* profile = nll->createProfile(*poi);
-  if( profile==NULL ) {
-    std::cout << "Error: Failed to make ProfileLikelihood for: " << poi->GetName() 
-	      << " using model: " << model->GetName()
-	      << " and data: " << simData->GetName()
-	      << std::endl;
-    throw hf_exc();
+  if (profile == nullptr) {
+     std::cout << "Error: Failed to make ProfileLikelihood for: " << poi->GetName()
+               << " using model: " << model->GetName() << " and data: " << simData->GetName() << std::endl;
+     throw hf_exc();
   }
 
   RooPlot* frame = poi->frame();
-  if( frame == NULL ) {
-    std::cout << "Error: Failed to create RooPlot frame for: " << poi->GetName() << std::endl;
-    throw hf_exc();
+  if (frame == nullptr) {
+     std::cout << "Error: Failed to create RooPlot frame for: " << poi->GetName() << std::endl;
+     throw hf_exc();
   }
 
   // Draw the likelihood curve
@@ -424,15 +421,14 @@ void RooStats::HistFactory::FitModelAndPlot(const std::string& MeasurementName,
 
   // Save to the output file
   TDirectory* channel_dir = outFile->mkdir(channel.c_str());
-  if( channel_dir == NULL ) {
-    std::cout << "Error: Failed to make channel directory: " << channel << std::endl;
-    throw hf_exc();
+  if (channel_dir == nullptr) {
+     std::cout << "Error: Failed to make channel directory: " << channel << std::endl;
+     throw hf_exc();
   }
   TDirectory* summary_dir = channel_dir->mkdir("Summary");
-  if( summary_dir == NULL ) {
-    std::cout << "Error: Failed to make Summary directory for channel: " 
-	      << channel << std::endl;
-    throw hf_exc();
+  if (summary_dir == nullptr) {
+     std::cout << "Error: Failed to make Summary directory for channel: " << channel << std::endl;
+     throw hf_exc();
   }
   summary_dir->cd();
 

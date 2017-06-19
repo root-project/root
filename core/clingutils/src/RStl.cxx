@@ -128,7 +128,7 @@ void ROOT::Internal::RStl::GenerateTClassFor(const char *requestedName, const cl
    // Force the generation of the TClass for the given class.
    const clang::ClassTemplateSpecializationDecl *templateCl = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl>(stlclass);
 
-   if (templateCl == 0) {
+   if (templateCl == nullptr) {
       ROOT::TMetaUtils::Error("RStl::GenerateTClassFor","%s not in a template",
             ROOT::TMetaUtils::GetQualifiedName(*stlclass).c_str());
    }
@@ -206,10 +206,8 @@ void ROOT::Internal::RStl::WriteClassInit(std::ostream &ostr,
          // We do not have a complete definition, we need to force the instantiation
          // and findScope can do that.
          const cling::LookupHelper& lh = interp.getLookupHelper();
-         result = llvm::dyn_cast_or_null<clang::CXXRecordDecl>(lh.findScope(iter->GetNormalizedName(),
-                                                                            cling::LookupHelper::NoDiagnostics,
-                                                                            0)
-                                                               );
+         result = llvm::dyn_cast_or_null<clang::CXXRecordDecl>(
+            lh.findScope(iter->GetNormalizedName(), cling::LookupHelper::NoDiagnostics, nullptr));
 
          if (!result || !iter->GetRecordDecl()->getDefinition()) {
             fprintf(stderr,"Error: incomplete definition for %s\n",iter->GetNormalizedName());

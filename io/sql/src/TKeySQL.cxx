@@ -52,13 +52,16 @@ TKeySQL::TKeySQL(TDirectory* mother, const TObject* obj, const char* name, const
     fKeyId(-1),
     fObjId(-1)
 {
-   if (name) SetName(name); else
-      if (obj!=0) {SetName(obj->GetName());  fClassName=obj->ClassName();}
-      else SetName("Noname");
+   if (name) SetName(name);
+   else if (obj != nullptr) {
+      SetName(obj->GetName());
+      fClassName = obj->ClassName();
+   } else
+      SetName("Noname");
 
    if (title) SetTitle(title);
 
-   StoreKeyObject((void*)obj, obj ? obj->IsA() : 0);
+   StoreKeyObject((void *)obj, obj ? obj->IsA() : nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -109,26 +112,26 @@ TKeySQL::~TKeySQL()
 
 Bool_t TKeySQL::IsKeyModified(const char* keyname, const char* keytitle, const char* keydatime, Int_t cycle, const char* classname)
 {
-   Int_t len1 = (GetName()==0) ? 0 : strlen(GetName());
-   Int_t len2 = (keyname==0) ? 0 : strlen(keyname);
+   Int_t len1 = (GetName() == nullptr) ? 0 : strlen(GetName());
+   Int_t len2 = (keyname == nullptr) ? 0 : strlen(keyname);
    if (len1!=len2) return kTRUE;
    if ((len1>0) && (strcmp(GetName(), keyname)!=0)) return kTRUE;
 
-   len1 = (GetTitle()==0) ? 0 : strlen(GetTitle());
-   len2 = (keytitle==0) ? 0 : strlen(keytitle);
+   len1 = (GetTitle() == nullptr) ? 0 : strlen(GetTitle());
+   len2 = (keytitle == nullptr) ? 0 : strlen(keytitle);
    if (len1!=len2) return kTRUE;
    if ((len1>0) && (strcmp(GetTitle(), keytitle)!=0)) return kTRUE;
 
    const char* tm = GetDatime().AsSQLString();
-   len1 = (tm==0) ? 0 : strlen(tm);
-   len2 = (keydatime==0) ? 0 : strlen(keydatime);
+   len1 = (tm == nullptr) ? 0 : strlen(tm);
+   len2 = (keydatime == nullptr) ? 0 : strlen(keydatime);
    if (len1!=len2) return kTRUE;
    if ((len1>0) && (strcmp(tm, keydatime)!=0)) return kTRUE;
 
    if (cycle!=GetCycle()) return kTRUE;
 
-   len1 = (GetClassName()==0) ? 0 : strlen(GetClassName());
-   len2 = (classname==0) ? 0 : strlen(classname);
+   len1 = (GetClassName() == nullptr) ? 0 : strlen(GetClassName());
+   len2 = (classname == nullptr) ? 0 : strlen(classname);
    if (len1!=len2) return kTRUE;
    if ((len1>0) && (strcmp(GetClassName(), classname)!=0)) return kTRUE;
 
@@ -143,8 +146,7 @@ void TKeySQL::Delete(Option_t * /*option*/)
 {
    TSQLFile* f = (TSQLFile*) GetFile();
 
-   if (f!=0)
-      f->DeleteKeyFromDB(GetDBKeyId());
+   if (f != nullptr) f->DeleteKeyFromDB(GetDBKeyId());
 
    fMotherDir->GetListOfKeys()->Remove(this);
 }
@@ -197,11 +199,11 @@ void TKeySQL::StoreKeyObject(const void* obj, const TClass* cl)
 
 Int_t TKeySQL::Read(TObject* tobj)
 {
-   if (tobj==0) return 0;
+   if (tobj == nullptr) return 0;
 
-   void* res = ReadKeyObject(tobj, 0);
+   void *res = ReadKeyObject(tobj, nullptr);
 
-   return res==0 ? 0 : 1;
+   return res == nullptr ? 0 : 1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -210,9 +212,9 @@ Int_t TKeySQL::Read(TObject* tobj)
 
 TObject* TKeySQL::ReadObj()
 {
-   TObject* tobj = (TObject*) ReadKeyObject(0, TObject::Class());
+   TObject *tobj = (TObject *)ReadKeyObject(nullptr, TObject::Class());
 
-   if (tobj!=0) {
+   if (tobj != nullptr) {
       if (gROOT->GetForceStyle()) tobj->UseCurrentStyle();
       if (tobj->IsA() == TDirectoryFile::Class()) {
          TDirectoryFile *dir = (TDirectoryFile*) tobj;
@@ -234,9 +236,9 @@ TObject* TKeySQL::ReadObj()
 
 TObject* TKeySQL::ReadObjWithBuffer(char * /*bufferRead*/)
 {
-   TObject* tobj = (TObject*) ReadKeyObject(0, TObject::Class());
+   TObject *tobj = (TObject *)ReadKeyObject(nullptr, TObject::Class());
 
-   if (tobj!=0) {
+   if (tobj != nullptr) {
       if (gROOT->GetForceStyle()) tobj->UseCurrentStyle();
       if (tobj->IsA() == TDirectoryFile::Class()) {
          TDirectoryFile *dir = (TDirectoryFile*) tobj;
@@ -257,7 +259,7 @@ TObject* TKeySQL::ReadObjWithBuffer(char * /*bufferRead*/)
 
 void* TKeySQL::ReadObjectAny(const TClass* expectedClass)
 {
-   return ReadKeyObject(0, expectedClass);
+   return ReadKeyObject(nullptr, expectedClass);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -267,23 +269,23 @@ void* TKeySQL::ReadKeyObject(void* obj, const TClass* expectedClass)
 {
    TSQLFile* f = (TSQLFile*) GetFile();
 
-   if ((GetDBKeyId()<=0) || (f==0)) return obj;
+   if ((GetDBKeyId() <= 0) || (f == nullptr)) return obj;
 
    TBufferSQL2 buffer(TBuffer::kRead, f);
 
-   TClass* cl = 0;
+   TClass *cl = nullptr;
 
    void* res = buffer.SqlReadAny(GetDBKeyId(), GetDBObjId(), &cl, obj);
 
-   if ((cl==0) || (res==0)) return 0;
+   if ((cl == nullptr) || (res == nullptr)) return nullptr;
 
    Int_t delta = 0;
 
-   if (expectedClass!=0) {
+   if (expectedClass != nullptr) {
       delta = cl->GetBaseClassOffset(expectedClass);
       if (delta<0) {
-         if (obj==0) cl->Destructor(res);
-         return 0;
+         if (obj == nullptr) cl->Destructor(res);
+         return nullptr;
       }
       if (cl->GetState() > TClass::kEmulated && expectedClass->GetState() <= TClass::kEmulated) {
          //we cannot mix a compiled class with an emulated class in the inheritance

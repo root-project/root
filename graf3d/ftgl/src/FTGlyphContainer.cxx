@@ -8,8 +8,8 @@ FTGlyphContainer::FTGlyphContainer( FTFace* f)
 :   face(f),
     err(0)
 {
-    glyphs.push_back( NULL);
-    charMap = new FTCharmap( face);
+   glyphs.push_back(nullptr);
+   charMap = new FTCharmap(face);
 }
 
 

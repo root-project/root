@@ -39,21 +39,15 @@ ClassImp(TEveTrackPropagatorSubEditor);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TEveTrackPropagatorSubEditor::TEveTrackPropagatorSubEditor(const TGWindow *p):
-   TGVerticalFrame(p),
-   fM (0),
+TEveTrackPropagatorSubEditor::TEveTrackPropagatorSubEditor(const TGWindow *p)
+   : TGVerticalFrame(p), fM(nullptr),
 
-   fMaxR(0),   fMaxZ(0),   fMaxOrbits(0),   fMaxAng(0),   fDelta(0),
+     fMaxR(nullptr), fMaxZ(nullptr), fMaxOrbits(nullptr), fMaxAng(nullptr), fDelta(nullptr),
 
-   fRefsCont(0),      fPMFrame(0),
-   fFitDaughters(0),  fFitReferences(0),
-   fFitDecay(0),
-   fFitCluster2Ds(0), fFitLineSegments(0),
-   fRnrDaughters(0),  fRnrReferences(0),
-   fRnrDecay(0),      fRnrCluster2Ds(0),
-   fRnrFV(0),
-   fPMAtt(0), fFVAtt(0),
-   fProjTrackBreaking(0), fRnrPTBMarkers(0), fPTBAtt(0)
+     fRefsCont(nullptr), fPMFrame(nullptr), fFitDaughters(nullptr), fFitReferences(nullptr), fFitDecay(nullptr),
+     fFitCluster2Ds(nullptr), fFitLineSegments(nullptr), fRnrDaughters(nullptr), fRnrReferences(nullptr),
+     fRnrDecay(nullptr), fRnrCluster2Ds(nullptr), fRnrFV(nullptr), fPMAtt(nullptr), fFVAtt(nullptr),
+     fProjTrackBreaking(nullptr), fRnrPTBMarkers(nullptr), fPTBAtt(nullptr)
 {
    Int_t labelW = 51;
 
@@ -432,12 +426,9 @@ ClassImp(TEveTrackPropagatorEditor);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TEveTrackPropagatorEditor::TEveTrackPropagatorEditor(const TGWindow *p,
-                                                     Int_t width, Int_t height,
-                                                     UInt_t options, Pixel_t back) :
-   TGedFrame(p, width, height, options | kVerticalFrame, back),
-   fM(0),
-   fRSSubEditor(0)
+TEveTrackPropagatorEditor::TEveTrackPropagatorEditor(const TGWindow *p, Int_t width, Int_t height, UInt_t options,
+                                                     Pixel_t back)
+   : TGedFrame(p, width, height, options | kVerticalFrame, back), fM(nullptr), fRSSubEditor(nullptr)
 {
    MakeTitle("RenderStyle");
 

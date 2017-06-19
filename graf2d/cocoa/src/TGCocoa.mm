@@ -95,8 +95,8 @@ void DisplayReconfigurationCallback(CGDirectDisplayID /*display*/, CGDisplayChan
       return;
 
    if (flags & kCGDisplayDesktopShapeChangedFlag) {
-      assert(dynamic_cast<TGCocoa *>(gVirtualX) != 0 && "DisplayReconfigurationCallback, gVirtualX"
-                                                        " is either null or has a wrong type");
+      assert(dynamic_cast<TGCocoa *>(gVirtualX) != nullptr && "DisplayReconfigurationCallback, gVirtualX"
+                                                              " is either null or has a wrong type");
       TGCocoa * const gCocoa = static_cast<TGCocoa *>(gVirtualX);
       gCocoa->ReconfigureDisplay();
    }
@@ -107,7 +107,7 @@ void DisplayReconfigurationCallback(CGDirectDisplayID /*display*/, CGDisplayChan
 //______________________________________________________________________________
 void SetStrokeForegroundColorFromX11Context(CGContextRef ctx, const GCValues_t &gcVals)
 {
-   assert(ctx != 0 && "SetStrokeForegroundColorFromX11Context, parameter 'ctx' is null");
+   assert(ctx != nullptr && "SetStrokeForegroundColorFromX11Context, parameter 'ctx' is null");
 
    CGFloat rgb[3] = {};
    if (gcVals.fMask & kGCForeground)
@@ -123,7 +123,7 @@ void SetStrokeForegroundColorFromX11Context(CGContextRef ctx, const GCValues_t &
 void SetStrokeDashFromX11Context(CGContextRef ctx, const GCValues_t &gcVals)
 {
    //Set line dash pattern (X11's LineOnOffDash line style).
-   assert(ctx != 0 && "SetStrokeDashFromX11Context, ctx parameter is null");
+   assert(ctx != nullptr && "SetStrokeDashFromX11Context, ctx parameter is null");
 
    SetStrokeForegroundColorFromX11Context(ctx, gcVals);
 
@@ -150,7 +150,7 @@ void SetStrokeParametersFromX11Context(CGContextRef ctx, const GCValues_t &gcVal
 {
    //Set line width and color from GCValues_t object.
    //(GUI rendering).
-   assert(ctx != 0 && "SetStrokeParametersFromX11Context, parameter 'ctx' is null");
+   assert(ctx != nullptr && "SetStrokeParametersFromX11Context, parameter 'ctx' is null");
 
    const Mask_t mask = gcVals.fMask;
    if ((mask & kGCLineWidth) && gcVals.fLineWidth > 1)
@@ -158,7 +158,7 @@ void SetStrokeParametersFromX11Context(CGContextRef ctx, const GCValues_t &gcVal
    else
       CGContextSetLineWidth(ctx, 1.);
 
-   CGContextSetLineDash(ctx, 0., 0, 0);
+   CGContextSetLineDash(ctx, 0., nullptr, 0);
 
    if (mask & kGCLineStyle) {
       if (gcVals.fLineStyle == kLineSolid)
@@ -181,7 +181,7 @@ void SetFilledAreaColorFromX11Context(CGContextRef ctx, const GCValues_t &gcVals
 {
    //Set fill color from "foreground" pixel color.
    //(GUI rendering).
-   assert(ctx != 0 && "SetFilledAreaColorFromX11Context, parameter 'ctx' is null");
+   assert(ctx != nullptr && "SetFilledAreaColorFromX11Context, parameter 'ctx' is null");
 
    CGFloat rgb[3] = {};
    if (gcVals.fMask & kGCForeground)
@@ -242,7 +242,7 @@ bool HasFillOpaqueStippledStyle(const GCValues_t &gcVals)
 void DrawTile(NSObject<X11Drawable> *patternImage, CGContextRef ctx)
 {
    assert(patternImage != nil && "DrawTile, parameter 'patternImage' is nil");
-   assert(ctx != 0 && "DrawTile, ctx parameter is null");
+   assert(ctx != nullptr && "DrawTile, ctx parameter is null");
 
    const CGRect patternRect = CGRectMake(0, 0, patternImage.fWidth, patternImage.fHeight);
    if ([patternImage isKindOfClass : [QuartzImage class]]) {
@@ -262,8 +262,8 @@ void DrawPattern(void *info, CGContextRef ctx)
    //color and stipple mask to draw a pattern, or use pixmap
    //as a pattern image.
    //(GUI rendering).
-   assert(info != 0 && "DrawPattern, parameter 'info' is null");
-   assert(ctx != 0 && "DrawPattern, parameter 'ctx' is null");
+   assert(info != nullptr && "DrawPattern, parameter 'info' is null");
+   assert(ctx != nullptr && "DrawPattern, parameter 'ctx' is null");
 
    const PatternContext * const patternContext = (PatternContext *)info;
    const Mask_t mask = patternContext->fMask;
@@ -311,11 +311,11 @@ void SetFillPattern(CGContextRef ctx, const PatternContext *patternContext)
    //Pattern is a QuartzImage object, it can be either a mask,
    //or pattern image itself.
    //(GUI-rendering).
-   assert(ctx != 0 && "SetFillPattern, parameter 'ctx' is null");
-   assert(patternContext != 0 && "SetFillPattern, parameter 'patternContext' is null");
+   assert(ctx != nullptr && "SetFillPattern, parameter 'ctx' is null");
+   assert(patternContext != nullptr && "SetFillPattern, parameter 'patternContext' is null");
    assert(patternContext->fImage != nil && "SetFillPattern, pattern image is nil");
 
-   const Util::CFScopeGuard<CGColorSpaceRef> patternColorSpace(CGColorSpaceCreatePattern(0));
+   const Util::CFScopeGuard<CGColorSpaceRef> patternColorSpace(CGColorSpaceCreatePattern(nullptr));
    CGContextSetFillColorSpace(ctx, patternColorSpace.Get());
 
    CGPatternCallbacks callbacks = {};
@@ -401,7 +401,7 @@ TGCocoa::TGCocoa()
    X11::InitWithPredefinedAtoms(fNameToAtom, fAtomToName);
    fgDeleteWindowAtom = FindAtom("WM_DELETE_WINDOW", true);
 
-   CGDisplayRegisterReconfigurationCallback (DisplayReconfigurationCallback, 0);
+   CGDisplayRegisterReconfigurationCallback(DisplayReconfigurationCallback, nullptr);
 }
 
 //______________________________________________________________________________
@@ -427,14 +427,14 @@ TGCocoa::TGCocoa(const char *name, const char *title)
    X11::InitWithPredefinedAtoms(fNameToAtom, fAtomToName);
    fgDeleteWindowAtom = FindAtom("WM_DELETE_WINDOW", true);
 
-   CGDisplayRegisterReconfigurationCallback (DisplayReconfigurationCallback, 0);
+   CGDisplayRegisterReconfigurationCallback(DisplayReconfigurationCallback, nullptr);
 }
 
 //______________________________________________________________________________
 TGCocoa::~TGCocoa()
 {
    //
-   CGDisplayRemoveReconfigurationCallback (DisplayReconfigurationCallback, 0);
+   CGDisplayRemoveReconfigurationCallback(DisplayReconfigurationCallback, nullptr);
 }
 
 //General part (empty, since it's not an X server.
@@ -529,7 +529,7 @@ void TGCocoa::Update(Int_t mode)
    R__LOCKGUARD(gROOTMutex);
 
    if (mode == 2) {
-      assert(gClient != 0 && "Update, gClient is null");
+      assert(gClient != nullptr && "Update, gClient is null");
       gClient->DoRedraw();//Call DoRedraw for all widgets, who need to be updated.
    } else if (mode > 0) {
       //Execute buffered commands.
@@ -607,7 +607,7 @@ Int_t TGCocoa::InitWindow(ULong_t parentID)
    else
       [fPimpl->GetWindow(parentID) getAttributes : &attr];
 
-   return CreateWindow(parentID, 0, 0, attr.fWidth, attr.fHeight, 0, attr.fDepth, attr.fClass, 0, 0, 0);
+   return CreateWindow(parentID, 0, 0, attr.fWidth, attr.fHeight, 0, attr.fDepth, attr.fClass, nullptr, nullptr, 0);
 }
 
 //______________________________________________________________________________
@@ -640,7 +640,7 @@ void TGCocoa::ClearWindow()
       //because of this. But there is no way how gVirtualX can
       //obtain real pad's color and check for its transparency.
       CGContextRef pixmapCtx = drawable.fContext;
-      assert(pixmapCtx != 0 && "ClearWindow, pixmap's context is null");
+      assert(pixmapCtx != nullptr && "ClearWindow, pixmap's context is null");
       //const Quartz::CGStateGuard ctxGuard(pixmapCtx);
       //CGContextSetRGBFillColor(pixmapCtx, 1., 1., 1., 1.);
       //CGContextFillRect(pixmapCtx, CGRectMake(0, 0, drawable.fWidth, drawable.fHeight));
@@ -962,7 +962,7 @@ void TGCocoa::ChangeWindowAttributes(Window_t wid, SetWindowAttributes_t *attr)
    const Util::AutoreleasePool pool;
 
    assert(!fPimpl->IsRootWindow(wid) && "ChangeWindowAttributes, called for root window");
-   assert(attr != 0 && "ChangeWindowAttributes, parameter 'attr' is null");
+   assert(attr != nullptr && "ChangeWindowAttributes, parameter 'attr' is null");
 
    [fPimpl->GetWindow(wid) setAttributes : attr];
 }
@@ -1650,7 +1650,7 @@ void TGCocoa::DrawLineAux(Drawable_t wid, const GCValues_t &gcVals, Int_t x1, In
 
    NSObject<X11Drawable> * const drawable = fPimpl->GetDrawable(wid);
    CGContextRef ctx = drawable.fContext;
-   assert(ctx != 0 && "DrawLineAux, context is null");
+   assert(ctx != nullptr && "DrawLineAux, context is null");
 
    const Quartz::CGStateGuard ctxGuard(ctx);//Will restore state back.
    //Draw a line.
@@ -1731,7 +1731,7 @@ void TGCocoa::DrawLine(Drawable_t wid, GContext_t gc, Int_t x1, Int_t y1, Int_t 
 void TGCocoa::DrawSegmentsAux(Drawable_t wid, const GCValues_t &gcVals, const Segment_t *segments, Int_t nSegments)
 {
    assert(!fPimpl->IsRootWindow(wid) && "DrawSegmentsAux, called for root window");
-   assert(segments != 0 && "DrawSegmentsAux, segments parameter is null");
+   assert(segments != nullptr && "DrawSegmentsAux, segments parameter is null");
    assert(nSegments > 0 && "DrawSegmentsAux, nSegments <= 0");
 
    for (Int_t i = 0; i < nSegments; ++i)
@@ -1749,7 +1749,7 @@ void TGCocoa::DrawSegments(Drawable_t wid, GContext_t gc, Segment_t *segments, I
 
    assert(!fPimpl->IsRootWindow(wid) && "DrawSegments, called for root window");
    assert(gc > 0 && gc <= fX11Contexts.size() && "DrawSegments, invalid context index");
-   assert(segments != 0 && "DrawSegments, parameter 'segments' is null");
+   assert(segments != nullptr && "DrawSegments, parameter 'segments' is null");
    assert(nSegments > 0 && "DrawSegments, number of segments <= 0");
 
    NSObject<X11Drawable> * const drawable = fPimpl->GetDrawable(wid);
@@ -1968,7 +1968,7 @@ void TGCocoa::FillPolygonAux(Window_t wid, const GCValues_t &gcVals, const Point
       return;
 
    assert(!fPimpl->IsRootWindow(wid) && "FillPolygonAux, called for root window");
-   assert(polygon != 0 && "FillPolygonAux, parameter 'polygon' is null");
+   assert(polygon != nullptr && "FillPolygonAux, parameter 'polygon' is null");
    assert(nPoints > 0 && "FillPolygonAux, number of points must be positive");
 
    NSObject<X11Drawable> * const drawable = fPimpl->GetDrawable(wid);
@@ -2049,7 +2049,7 @@ void TGCocoa::FillPolygon(Window_t wid, GContext_t gc, Point_t *polygon, Int_t n
    if (!wid)
       return;
 
-   assert(polygon != 0 && "FillPolygon, parameter 'polygon' is null");
+   assert(polygon != nullptr && "FillPolygon, parameter 'polygon' is null");
    assert(nPoints > 0 && "FillPolygon, number of points must be positive");
    assert(gc > 0 && gc <= fX11Contexts.size() && "FillPolygon, invalid context index");
 
@@ -2170,7 +2170,7 @@ void TGCocoa::DrawStringAux(Drawable_t wid, const GCValues_t &gcVals, Int_t x, I
 
    NSObject<X11Drawable> * const drawable = fPimpl->GetDrawable(wid);
    CGContextRef ctx = drawable.fContext;
-   assert(ctx != 0 && "DrawStringAux, context is null");
+   assert(ctx != nullptr && "DrawStringAux, context is null");
 
    const Quartz::CGStateGuard ctxGuard(ctx);//Will reset parameters back.
 
@@ -2259,7 +2259,7 @@ void TGCocoa::ClearAreaAux(Window_t windowID, Int_t x, Int_t y, UInt_t w, UInt_t
    assert(!fPimpl->IsRootWindow(windowID) && "ClearAreaAux, called for root window");
 
    QuartzView * const view = (QuartzView *)fPimpl->GetWindow(windowID).fContentView;
-   assert(view.fContext != 0 && "ClearAreaAux, view.fContext is null");
+   assert(view.fContext != nullptr && "ClearAreaAux, view.fContext is null");
 
    //w and h can be 0 (comment from TGX11) - clear the entire window.
    if (!w)
@@ -2442,7 +2442,7 @@ Pixmap_t TGCocoa::CreatePixmap(Drawable_t /*wid*/, const char *bitmap, UInt_t wi
    //Create QuartzImage, using bitmap and foregroundPixel/backgroundPixel,
    //if depth is one - create an image mask instead.
 
-   assert(bitmap != 0 && "CreatePixmap, parameter 'bitmap' is null");
+   assert(bitmap != nullptr && "CreatePixmap, parameter 'bitmap' is null");
    assert(width > 0 && "CreatePixmap, parameter 'width' is 0");
    assert(height > 0 && "CreatePixmap, parameter 'height' is 0");
 
@@ -2472,7 +2472,7 @@ Pixmap_t TGCocoa::CreatePixmap(Drawable_t /*wid*/, const char *bitmap, UInt_t wi
 Pixmap_t TGCocoa::CreatePixmapFromData(unsigned char *bits, UInt_t width, UInt_t height)
 {
    //Create QuartzImage, using "bits" (data in bgra format).
-   assert(bits != 0 && "CreatePixmapFromData, data parameter is null");
+   assert(bits != nullptr && "CreatePixmapFromData, data parameter is null");
    assert(width != 0 && "CreatePixmapFromData, width parameter is 0");
    assert(height != 0 && "CreatePixmapFromData, height parameter is 0");
 
@@ -2575,7 +2575,7 @@ unsigned char *TGCocoa::GetColorBits(Drawable_t wid, Int_t x, Int_t y, UInt_t w,
       return [fPimpl->GetDrawable(wid) readColorBits : area];//readColorBits can throw std::bad_alloc, no resource will leak.
    }
 
-   return 0;
+   return nullptr;
 }
 
 #pragma mark - XImage emulation.
@@ -2802,7 +2802,7 @@ void TGCocoa::LookupString(Event_t *event, char *buf, Int_t length, UInt_t &keys
    // buflen - the length of the buffer
    // keysym - returns the "keysym" computed from the event
    //          if this argument is not NULL
-   assert(buf != 0 && "LookupString, parameter 'buf' is null");
+   assert(buf != nullptr && "LookupString, parameter 'buf' is null");
    assert(length >= 2 && "LookupString, parameter 'length' - not enough memory to return null-terminated ASCII string");
 
    X11::MapUnicharToKeySym(event->fCode, buf, length, keysym);
@@ -2815,7 +2815,7 @@ FontStruct_t TGCocoa::LoadQueryFont(const char *fontName)
 {
    //fontName is in XLFD format:
    //-foundry-family- ..... etc., some components can be omitted and replaced by *.
-   assert(fontName != 0 && "LoadQueryFont, fontName is null");
+   assert(fontName != nullptr && "LoadQueryFont, fontName is null");
 
    X11::XLFDName xlfd;
    if (ParseXLFDName(fontName, xlfd)) {
@@ -2894,7 +2894,7 @@ char **TGCocoa::ListFonts(const char *fontName, Int_t maxNames, Int_t &count)
          return fPimpl->fFontManager.ListFonts(xlfd, maxNames, count);
    }
 
-   return 0;
+   return nullptr;
 }
 
 //______________________________________________________________________________
@@ -3018,7 +3018,7 @@ void TGCocoa::ChangeGC(GContext_t gc, GCValues_t *gval)
 {
    //
    assert(gc <= fX11Contexts.size() && gc > 0 && "ChangeGC, invalid context id");
-   assert(gval != 0 && "ChangeGC, gval parameter is null");
+   assert(gval != nullptr && "ChangeGC, gval parameter is null");
 
    GCValues_t &x11Context = fX11Contexts[gc - 1];
    const Mask_t &mask = gval->fMask;
@@ -3571,7 +3571,7 @@ Atom_t  TGCocoa::InternAtom(const char *name, Bool_t onlyIfExist)
 {
    //X11 properties emulation.
 
-   assert(name != 0 && "InternAtom, parameter 'name' is null");
+   assert(name != nullptr && "InternAtom, parameter 'name' is null");
    return FindAtom(name, !onlyIfExist);
 }
 
@@ -3726,15 +3726,15 @@ Int_t TGCocoa::GetProperty(Window_t windowID, Atom_t propertyID, Long_t, Long_t,
           "GetProperty, parameter 'windowID' is not a valid window id");
    assert(propertyID > 0 && propertyID <= fAtomToName.size() &&
           "GetProperty, parameter 'propertyID' is not a valid atom");
-   assert(actualType != 0 && "GetProperty, parameter 'actualType' is null");
-   assert(actualFormat != 0 && "GetProperty, parameter 'actualFormat' is null");
-   assert(bytesAfterReturn != 0 && "GetProperty, parameter 'bytesAfterReturn' is null");
-   assert(propertyReturn != 0 && "GetProperty, parameter 'propertyReturn' is null");
+   assert(actualType != nullptr && "GetProperty, parameter 'actualType' is null");
+   assert(actualFormat != nullptr && "GetProperty, parameter 'actualFormat' is null");
+   assert(bytesAfterReturn != nullptr && "GetProperty, parameter 'bytesAfterReturn' is null");
+   assert(propertyReturn != nullptr && "GetProperty, parameter 'propertyReturn' is null");
 
    const Util::AutoreleasePool pool;
 
    *bytesAfterReturn = 0;//In TGWin32 the value set to .. nItems?
-   *propertyReturn = 0;
+   *propertyReturn = nullptr;
    *nItems = 0;
 
    const std::string &atomName = fAtomToName[propertyID - 1];
@@ -4421,7 +4421,7 @@ void *TGCocoa::GetCurrentContext()
    if (!drawable.fIsPixmap) {
       Error("GetCurrentContext", "TCanvas/TPad's internal error,"
                                  " selected drawable is not a pixmap!");
-      return 0;
+      return nullptr;
    }
 
    return drawable.fContext;

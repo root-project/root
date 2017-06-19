@@ -103,8 +103,8 @@ Bool_t Test1()
    if (wrongentries2 >0)
       printf("\nsmall elist and big chain: number of wrong bins=%d\n", wrongentries2);
 
-   smallchain->SetEntryList(0);
-   bigchain->SetEntryList(0);
+   smallchain->SetEntryList(nullptr);
+   bigchain->SetEntryList(nullptr);
 
    //make an entry list for a big chain
    bigchain->Draw(">>elist_big", cut, "entrylist");
@@ -315,7 +315,7 @@ Bool_t Test3()
    chain->Draw("x>>h2", "", "goff");
    TH1F *h2 = (TH1F*)gDirectory->Get("h2");
 
-   chain->SetEventList(0);
+   chain->SetEventList(nullptr);
    chain->Draw(">>enlist", cut, "entrylist");
    TEntryList *enlist = (TEntryList*)gDirectory->Get("enlist");
    chain->SetEntryList(enlist);
@@ -365,7 +365,7 @@ Bool_t Test4()
    tree->Draw("x>>h2", "", "goff");
    TH1F *h2 = (TH1F*)gDirectory->Get("h2");
 
-   tree->SetEventList(0);
+   tree->SetEventList(nullptr);
    tree->Draw(">>enlist", cut, "entrylist");
    TEntryList *enlist = (TEntryList*)gDirectory->Get("enlist");
    tree->SetEntryList(enlist);

@@ -43,7 +43,7 @@ static Int_t gGeomLevel = 0;
 TVolume *gNode;
 #endif
 //R__EXTERN  Size3D gSize3D;
-static TRotMatrix *gIdentity = 0;
+static TRotMatrix *gIdentity = nullptr;
 
 ClassImp(TVolume);
 
@@ -68,8 +68,8 @@ ClassImp(TVolume);
 
 TVolume::TVolume()
 {
-   fShape        = 0;
-   fListOfShapes = 0;
+   fShape = nullptr;
+   fListOfShapes = nullptr;
    fVisibility   = kBothVisible;
    if (!gGeometry) new TGeometry;
 }
@@ -82,7 +82,7 @@ TVolume::TVolume()
 ////    shapename is the name of the referenced shape
 
 TVolume::TVolume(const char *name, const char *title, const char *shapename, Option_t *option)
-       :TObjectSet(name),TAttLine(), TAttFill(),fShape(0),fListOfShapes(0)
+   : TObjectSet(name), TAttLine(), TAttFill(), fShape(nullptr), fListOfShapes(nullptr)
 {
 #ifdef WIN32
 /// The color "1" - default produces a very bad 3D image with OpenGL
@@ -110,7 +110,7 @@ TVolume::TVolume(const char *name, const char *title, const char *shapename, Opt
 ////    shape   is the pointer to the shape definition
 
 TVolume::TVolume(const char *name, const char *title, TShape *shape, Option_t *option)
-                :TObjectSet(name),TAttLine(),TAttFill(),fShape(0),fListOfShapes(0)
+   : TObjectSet(name), TAttLine(), TAttFill(), fShape(nullptr), fListOfShapes(nullptr)
 {
 #ifdef WIN32
 /// The color "1" - default produces a very bad 3D image with OpenGL
@@ -155,7 +155,7 @@ Int_t TVolume::MapGEANT2StNodeVis(Int_t vis)
 ////////////////////////////////////////////////////////////////////////////////
 /// Convert a TNode object into a TVolume
 
-TVolume::TVolume(TNode &rootNode):fShape(0),fListOfShapes(0)
+TVolume::TVolume(TNode &rootNode) : fShape(nullptr), fListOfShapes(nullptr)
 {
    SetName(rootNode.GetName());
    SetTitle(rootNode.GetTitle());
@@ -172,7 +172,7 @@ TVolume::TVolume(TNode &rootNode):fShape(0),fListOfShapes(0)
    TList *nodes = rootNode.GetListOfNodes();
    if (nodes) {
       TIter next(nodes);
-      TNode *node = 0;
+      TNode *node = nullptr;
       while ( (node = (TNode *) next()) ){
          TVolume *nextNode = new TVolume(*node);
          Add(nextNode,node->GetX(),node->GetY(),node->GetZ(),node->GetMatrix());
@@ -199,7 +199,7 @@ TNode *TVolume::CreateTNode(const TVolumePosition *position)
    Double_t x=0;
    Double_t y=0;
    Double_t z=0;
-   const TRotMatrix* matrix = 0;
+   const TRotMatrix *matrix = nullptr;
    if (position) {
       x=position->GetX();
       y=position->GetY();
@@ -220,7 +220,7 @@ TNode *TVolume::CreateTNode(const TVolumePosition *position)
    TList *positions = GetListOfPositions();
    if (positions) {
       TIter next(positions);
-      TVolumePosition *pos = 0;
+      TVolumePosition *pos = nullptr;
       while ( (pos = (TVolumePosition *) next()) ){
          TVolume *node = pos->GetNode();
          if (node) {
@@ -264,7 +264,7 @@ void TVolume::Add(TVolumePosition *position)
 TVolumePosition *TVolume::Add(TVolume *node, TVolumePosition *nodePosition)
 {
    TVolumePosition *position = nodePosition;
-   if (!node) return 0;
+   if (!node) return nullptr;
    if (!position) position = new TVolumePosition(node);  // Create default position
    // The object must be placed at once. Check it:
    if (!(GetCollection() && GetCollection()->FindObject(node)) ) TDataSet::Add(node);
@@ -282,7 +282,7 @@ TVolumePosition *TVolume::Add(TVolume *node, TVolumePosition *nodePosition)
 TVolumePosition *TVolume::Add(TVolume *volume, Double_t x, Double_t y, Double_t z,
                               TRotMatrix *matrix,  UInt_t id, Option_t *)
 {
-   if (!volume) return 0;
+   if (!volume) return nullptr;
    TRotMatrix *rotation = matrix;
    if(!rotation) rotation = GetIdentity();
    TVolumePosition *position = new TVolumePosition(volume,x,y,z,rotation);
@@ -300,8 +300,8 @@ TVolumePosition *TVolume::Add(TVolume *volume, Double_t x, Double_t y, Double_t 
 TVolumePosition *TVolume::Add(TVolume *volume, Double_t x, Double_t y, Double_t z,
                               const char *matrixname,  UInt_t id, Option_t *)
 {
-   if (!volume) return 0;
-   TRotMatrix *rotation = 0;
+   if (!volume) return nullptr;
+   TRotMatrix *rotation = nullptr;
    if (matrixname && strlen(matrixname)) rotation = gGeometry->GetRotMatrix(matrixname);
    if (!rotation)                        rotation = GetIdentity();
    TVolumePosition *position = new TVolumePosition(volume,x,y,z,rotation);
@@ -315,7 +315,7 @@ TVolumePosition *TVolume::Add(TVolume *volume, Double_t x, Double_t y, Double_t 
 void TVolume::Browse(TBrowser *b)
 {
    if (GetListOfPositions()){
-      TVolumePosition *nodePosition = 0;
+      TVolumePosition *nodePosition = nullptr;
       TIter next(GetListOfPositions());
       Int_t posNumber = 0;
       while ( (nodePosition = (TVolumePosition *)next()) ) {
@@ -375,7 +375,7 @@ Int_t TVolume::DistancetoNodePrimitive(Int_t px, Int_t py,TVolumePosition *pos)
    if (pos) position->UpdatePosition();
    Int_t dist = big;
    if ( !(GetVisibility() & kThisUnvisible ) ) {
-      TShape  *shape = 0;
+      TShape *shape = nullptr;
       TIter nextShape(fListOfShapes);
       while ((shape = (TShape *)nextShape())) {
          ///- Distance to the next referenced shape  if visible
@@ -434,7 +434,7 @@ void TVolume::Draw(Option_t *option)
     // Check geometry level
 
    Int_t iopt = atoi(option);
-   TDataSet *parent = 0;
+   TDataSet *parent = nullptr;
    char buffer[12];
    if (iopt < 0) {
       // set the "positive option"
@@ -452,7 +452,7 @@ void TVolume::Draw(Option_t *option)
    // Create a 3-D view
    TView *view = gPad->GetView();
    if (!view) {
-      view = TView::CreateView(1,0,0);
+      view = TView::CreateView(1, nullptr, nullptr);
       // Set the view to perform a first autorange (frame) draw.
       // TViewer3DPad will revert view to normal painting after this
       view->SetAutoRange(kTRUE);
@@ -497,14 +497,14 @@ void TVolume::ExecuteEvent(Int_t, Int_t, Int_t)
 
 TRotMatrix *TVolume::GetIdentity()
 {
-   Double_t *identityMatrix = 0;
+   Double_t *identityMatrix = nullptr;
    if (!gIdentity) {
       gIdentity = gGeometry->GetRotMatrix("Identity");
       if (!gIdentity) {
          gIdentity  =  new TRotMatrix();
          gIdentity->SetName("Identity");
          gIdentity->SetTitle("Identity matrix");
-         gIdentity->SetMatrix((Double_t *)0);
+         gIdentity->SetMatrix((Double_t *)nullptr);
          identityMatrix = gIdentity->GetMatrix();
          memset(identityMatrix,0,9*sizeof(Double_t));
                                 *identityMatrix = 1;
@@ -521,7 +521,7 @@ TRotMatrix *TVolume::GetIdentity()
 
 char *TVolume::GetObjectInfo(Int_t px, Int_t py) const
 {
-   if (!gPad) return 0;
+   if (!gPad) return nullptr;
    static char info[512];
    snprintf(info,512,"%s/%s",GetName(),GetTitle());
    Double_t x[3];
@@ -531,7 +531,7 @@ char *TVolume::GetObjectInfo(Int_t px, Int_t py) const
    if (view) view->NDCtoWC(x, x);
 
    TIter nextShape(fListOfShapes);
-   TShape *shape = 0;
+   TShape *shape = nullptr;
    while( (shape = (TShape *)nextShape()) ) {
       Int_t nchi = strlen(info);
       snprintf(&info[nchi],512-nchi," %6.2f/%6.2f: shape=%s/%s",x[0],x[1],shape->GetName(),shape->ClassName());
@@ -640,7 +640,7 @@ void TVolume::PaintShape(Option_t *option)
    if ( (GetVisibility() & kThisUnvisible) ) return;
 
    TIter nextShape(fListOfShapes);
-   TShape *shape = 0;
+   TShape *shape = nullptr;
    while( (shape = (TShape *)nextShape()) ) {
       if (!rangeView) {
          shape->SetLineColor(GetLineColor());
@@ -721,7 +721,7 @@ void TVolume::GetLocalRange(Float_t *min, Float_t *max)
    //  Create a dummy TPad;
    TCanvas dummyPad("--Dumm--","dum",1,1);
    // Asking 3D TView
-   TView *view = TView::CreateView(1,0,0);
+   TView *view = TView::CreateView(1, nullptr, nullptr);
 
    gGeometry->SetGeomLevel();
    gGeometry->UpdateTempMatrix();
@@ -753,7 +753,7 @@ void TVolume::Sizeof3D() const
 {
    if (!(GetVisibility() & kThisUnvisible) ) {
       TIter nextShape(fListOfShapes);
-      TShape *shape = 0;
+      TShape *shape = nullptr;
       while( (shape = (TShape *)nextShape()) ) {
          if (shape->GetVisibility())  shape->Sizeof3D();
       }

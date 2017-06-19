@@ -34,21 +34,9 @@ ClassImp(TGeoMaterial);
 /// Default constructor
 
 TGeoMaterial::TGeoMaterial()
-             :TNamed(), TAttFill(),
-              fIndex(0),
-              fA(0.),
-              fZ(0.),
-              fDensity(0.),
-              fRadLen(0.),
-              fIntLen(0.),
-              fTemperature(0.),
-              fPressure(0.),
-              fState(kMatStateUndefined),
-              fShader(NULL),
-              fCerenkov(NULL),
-              fElement(NULL),
-              fUserExtension(0),
-              fFWExtension(0)
+   : TNamed(), TAttFill(), fIndex(0), fA(0.), fZ(0.), fDensity(0.), fRadLen(0.), fIntLen(0.), fTemperature(0.),
+     fPressure(0.), fState(kMatStateUndefined), fShader(nullptr), fCerenkov(nullptr), fElement(nullptr),
+     fUserExtension(nullptr), fFWExtension(nullptr)
 {
    SetUsed(kFALSE);
    fIndex    = -1;
@@ -61,21 +49,9 @@ TGeoMaterial::TGeoMaterial()
 /// constructor
 
 TGeoMaterial::TGeoMaterial(const char *name)
-             :TNamed(name, ""), TAttFill(),
-              fIndex(0),
-              fA(0.),
-              fZ(0.),
-              fDensity(0.),
-              fRadLen(0.),
-              fIntLen(0.),
-              fTemperature(0.),
-              fPressure(0.),
-              fState(kMatStateUndefined),
-              fShader(NULL),
-              fCerenkov(NULL),
-              fElement(NULL),
-              fUserExtension(0),
-              fFWExtension(0)
+   : TNamed(name, ""), TAttFill(), fIndex(0), fA(0.), fZ(0.), fDensity(0.), fRadLen(0.), fIntLen(0.), fTemperature(0.),
+     fPressure(0.), fState(kMatStateUndefined), fShader(nullptr), fCerenkov(nullptr), fElement(nullptr),
+     fUserExtension(nullptr), fFWExtension(nullptr)
 {
    fName = fName.Strip();
    SetUsed(kFALSE);
@@ -93,23 +69,10 @@ TGeoMaterial::TGeoMaterial(const char *name)
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor
 
-TGeoMaterial::TGeoMaterial(const char *name, Double_t a, Double_t z,
-                Double_t rho, Double_t radlen, Double_t intlen)
-             :TNamed(name, ""), TAttFill(),
-              fIndex(0),
-              fA(a),
-              fZ(z),
-              fDensity(rho),
-              fRadLen(0.),
-              fIntLen(0.),
-              fTemperature(0.),
-              fPressure(0.),
-              fState(kMatStateUndefined),
-              fShader(NULL),
-              fCerenkov(NULL),
-              fElement(NULL),
-              fUserExtension(0),
-              fFWExtension(0)
+TGeoMaterial::TGeoMaterial(const char *name, Double_t a, Double_t z, Double_t rho, Double_t radlen, Double_t intlen)
+   : TNamed(name, ""), TAttFill(), fIndex(0), fA(a), fZ(z), fDensity(rho), fRadLen(0.), fIntLen(0.), fTemperature(0.),
+     fPressure(0.), fState(kMatStateUndefined), fShader(nullptr), fCerenkov(nullptr), fElement(nullptr),
+     fUserExtension(nullptr), fFWExtension(nullptr)
 {
    fName = fName.Strip();
    SetUsed(kFALSE);
@@ -133,23 +96,11 @@ TGeoMaterial::TGeoMaterial(const char *name, Double_t a, Double_t z,
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor with state, temperature and pressure.
 
-TGeoMaterial::TGeoMaterial(const char *name, Double_t a, Double_t z, Double_t rho,
-                EGeoMaterialState state, Double_t temperature, Double_t pressure)
-             :TNamed(name, ""), TAttFill(),
-              fIndex(0),
-              fA(a),
-              fZ(z),
-              fDensity(rho),
-              fRadLen(0.),
-              fIntLen(0.),
-              fTemperature(temperature),
-              fPressure(pressure),
-              fState(state),
-              fShader(NULL),
-              fCerenkov(NULL),
-              fElement(NULL),
-              fUserExtension(0),
-              fFWExtension(0)
+TGeoMaterial::TGeoMaterial(const char *name, Double_t a, Double_t z, Double_t rho, EGeoMaterialState state,
+                           Double_t temperature, Double_t pressure)
+   : TNamed(name, ""), TAttFill(), fIndex(0), fA(a), fZ(z), fDensity(rho), fRadLen(0.), fIntLen(0.),
+     fTemperature(temperature), fPressure(pressure), fState(state), fShader(nullptr), fCerenkov(nullptr),
+     fElement(nullptr), fUserExtension(nullptr), fFWExtension(nullptr)
 {
    fName = fName.Strip();
    SetUsed(kFALSE);
@@ -168,21 +119,9 @@ TGeoMaterial::TGeoMaterial(const char *name, Double_t a, Double_t z, Double_t rh
 /// constructor
 
 TGeoMaterial::TGeoMaterial(const char *name, TGeoElement *elem, Double_t rho)
-             :TNamed(name, ""), TAttFill(),
-              fIndex(0),
-              fA(0.),
-              fZ(0.),
-              fDensity(rho),
-              fRadLen(0.),
-              fIntLen(0.),
-              fTemperature(0.),
-              fPressure(0.),
-              fState(kMatStateUndefined),
-              fShader(NULL),
-              fCerenkov(NULL),
-              fElement(elem),
-              fUserExtension(0),
-              fFWExtension(0)
+   : TNamed(name, ""), TAttFill(), fIndex(0), fA(0.), fZ(0.), fDensity(rho), fRadLen(0.), fIntLen(0.), fTemperature(0.),
+     fPressure(0.), fState(kMatStateUndefined), fShader(nullptr), fCerenkov(nullptr), fElement(elem),
+     fUserExtension(nullptr), fFWExtension(nullptr)
 {
    fName = fName.Strip();
    SetUsed(kFALSE);
@@ -257,8 +196,12 @@ TGeoMaterial& TGeoMaterial::operator=(const TGeoMaterial& gm)
 
 TGeoMaterial::~TGeoMaterial()
 {
-   if (fUserExtension) {fUserExtension->Release(); fUserExtension=0;}
-   if (fFWExtension) {fFWExtension->Release(); fFWExtension=0;}
+   if (fUserExtension) {fUserExtension->Release();
+      fUserExtension = nullptr;
+   }
+   if (fFWExtension) {fFWExtension->Release();
+      fFWExtension = nullptr;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -273,7 +216,7 @@ TGeoMaterial::~TGeoMaterial()
 void TGeoMaterial::SetUserExtension(TGeoExtension *ext)
 {
    if (fUserExtension) fUserExtension->Release();
-   fUserExtension = 0;
+   fUserExtension = nullptr;
    if (ext) fUserExtension = ext->Grab();
 }
 
@@ -289,7 +232,7 @@ void TGeoMaterial::SetUserExtension(TGeoExtension *ext)
 void TGeoMaterial::SetFWExtension(TGeoExtension *ext)
 {
    if (fFWExtension) fFWExtension->Release();
-   fFWExtension = 0;
+   fFWExtension = nullptr;
    if (ext) fFWExtension = ext->Grab();
 }
 
@@ -301,7 +244,7 @@ void TGeoMaterial::SetFWExtension(TGeoExtension *ext)
 TGeoExtension *TGeoMaterial::GrabUserExtension() const
 {
    if (fUserExtension) return fUserExtension->Grab();
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -312,7 +255,7 @@ TGeoExtension *TGeoMaterial::GrabUserExtension() const
 TGeoExtension *TGeoMaterial::GrabFWExtension() const
 {
    if (fFWExtension) return fFWExtension->Grab();
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -493,7 +436,7 @@ TGeoMaterial *TGeoMaterial::DecayMaterial(Double_t time, Double_t precision)
       amed += weight[i];
    }
    Double_t rho = fDensity*amed/fA;
-   TGeoMixture *mix = 0;
+   TGeoMixture *mix = nullptr;
    Int_t ncomp1 = ncomp;
    for (i=0; i<ncomp; i++) {
       if ((weight[i]/amed)<precision) {
@@ -506,7 +449,7 @@ TGeoMaterial *TGeoMaterial::DecayMaterial(Double_t time, Double_t precision)
       delete [] weight;
       delete pop;
       if (ncomp1==1) return new TGeoMaterial(TString::Format("%s-evol",GetName()), el, rho);
-      return NULL;
+      return nullptr;
    }
    mix = new TGeoMixture(TString::Format("%s-evol",GetName()), ncomp, rho);
    for (i=0; i<ncomp; i++) {
@@ -580,11 +523,11 @@ ClassImp(TGeoMixture);
 TGeoMixture::TGeoMixture()
 {
    fNelements = 0;
-   fZmixture  = 0;
-   fAmixture  = 0;
-   fWeights   = 0;
-   fNatoms    = 0;
-   fElements  = 0;
+   fZmixture = nullptr;
+   fAmixture = nullptr;
+   fWeights = nullptr;
+   fNatoms = nullptr;
+   fElements = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -593,13 +536,13 @@ TGeoMixture::TGeoMixture()
 TGeoMixture::TGeoMixture(const char *name, Int_t /*nel*/, Double_t rho)
             :TGeoMaterial(name)
 {
-   fZmixture   = 0;
-   fAmixture   = 0;
-   fWeights    = 0;
+   fZmixture = nullptr;
+   fAmixture = nullptr;
+   fWeights = nullptr;
    fNelements  = 0;
-   fNatoms     = 0;
+   fNatoms = nullptr;
    fDensity = rho;
-   fElements   = 0;
+   fElements = nullptr;
    if (fDensity < 0) fDensity = 0.001;
 }
 
@@ -893,9 +836,9 @@ TGeoElement *TGeoMixture::GetElement(Int_t i) const
 {
    if (i<0 || i>=fNelements) {
       Error("GetElement", "Mixture %s has only %d elements", GetName(), fNelements);
-      return 0;
+      return nullptr;
    }
-   TGeoElement *elem = 0;
+   TGeoElement *elem = nullptr;
    if (fElements) elem = (TGeoElement*)fElements->At(i);
    if (elem) return elem;
    TGeoElementTable *table = gGeoManager->GetElementTable();
@@ -1003,7 +946,7 @@ TGeoMaterial *TGeoMixture::DecayMaterial(Double_t time, Double_t precision)
       amed += weight[i];
    }
    Double_t rho = fDensity * fWeights[0] * amed/fAmixture[0];
-   TGeoMixture *mix = 0;
+   TGeoMixture *mix = nullptr;
    Int_t ncomp1 = ncomp;
    for (i=0; i<ncomp; i++) {
       if ((weight[i]/amed)<precision) {
@@ -1016,7 +959,7 @@ TGeoMaterial *TGeoMixture::DecayMaterial(Double_t time, Double_t precision)
       delete [] weight;
       delete pop;
       if (ncomp1==1) return new TGeoMaterial(TString::Format("%s-evol",GetName()), el, rho);
-      return NULL;
+      return nullptr;
    }
    mix = new TGeoMixture(TString::Format("%s-evol",GetName()), ncomp, rho);
    for (i=0; i<ncomp; i++) {

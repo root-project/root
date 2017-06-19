@@ -331,14 +331,14 @@ static void InsertEdgeInET(EdgeTable *ET, EdgeTableEntry *ETE, int scanline,
       if (*iSLLBlock > SLLSPERBLOCK-1) {
          tmpSLLBlock = new ScanLineListBlock;
          (*SLLBlock)->next = tmpSLLBlock;
-         tmpSLLBlock->next = (ScanLineListBlock *)0;
+         tmpSLLBlock->next = (ScanLineListBlock *)nullptr;
          *SLLBlock = tmpSLLBlock;
          *iSLLBlock = 0;
       }
       pSLL = &((*SLLBlock)->SLLs[(*iSLLBlock)++]);
 
       pSLL->next = pPrevSLL->next;
-      pSLL->edgelist = (EdgeTableEntry *)0;
+      pSLL->edgelist = (EdgeTableEntry *)nullptr;
       pPrevSLL->next = pSLL;
    }
    pSLL->scanline = scanline;
@@ -346,7 +346,7 @@ static void InsertEdgeInET(EdgeTable *ET, EdgeTableEntry *ETE, int scanline,
     /*
      * now insert the edge in the right bucket
      */
-   prev = (EdgeTableEntry *)0;
+   prev = (EdgeTableEntry *)nullptr;
    start = pSLL->edgelist;
    while (start && (start->bres.minor_axis < ETE->bres.minor_axis)) {
       prev = start;
@@ -395,18 +395,18 @@ static void CreateETandAET(int count, TPoint *pts, EdgeTable *ET, EdgeTableEntry
     /*
      *  initialize the Active Edge Table
      */
-   AET->next = (EdgeTableEntry *)0;
-   AET->back = (EdgeTableEntry *)0;
-   AET->nextWETE = (EdgeTableEntry *)0;
+   AET->next = (EdgeTableEntry *)nullptr;
+   AET->back = (EdgeTableEntry *)nullptr;
+   AET->nextWETE = (EdgeTableEntry *)nullptr;
    AET->bres.minor_axis = SMALL_COORDINATE;
 
     /*
      *  initialize the Edge Table.
      */
-   ET->scanlines.next = (ScanLineList *)0;
+   ET->scanlines.next = (ScanLineList *)nullptr;
    ET->ymax = SMALL_COORDINATE;
    ET->ymin = LARGE_COORDINATE;
-   pSLLBlock->next = (ScanLineListBlock *)0;
+   pSLLBlock->next = (ScanLineListBlock *)nullptr;
 
    PrevPt = &pts[count-1];
 

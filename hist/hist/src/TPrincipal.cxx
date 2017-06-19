@@ -236,7 +236,7 @@ TPrincipal::TPrincipal()
     fStoreData(kFALSE)
 {
    fTrace              = 0;
-   fHistograms         = 0;
+   fHistograms = nullptr;
    fIsNormalised       = kFALSE;
    fNumberOfDataPoints = 0;
    fNumberOfVariables  = 0;
@@ -267,7 +267,7 @@ TPrincipal::TPrincipal(Int_t nVariables, Option_t *opt)
    SetName("principal");
 
    fTrace              = 0;
-   fHistograms         = 0;
+   fHistograms = nullptr;
    fIsNormalised       = kFALSE;
    fNumberOfDataPoints = 0;
    fNumberOfVariables  = nVariables;
@@ -458,7 +458,7 @@ void TPrincipal::Browse(TBrowser *b)
 {
    if (fHistograms) {
       TIter next(fHistograms);
-      TH1* h = 0;
+      TH1 *h = nullptr;
       while ((h = (TH1*)next()))
          b->Add(h,h->GetName());
    }
@@ -506,11 +506,9 @@ void TPrincipal::Clear(Option_t *opt)
 
 const Double_t *TPrincipal::GetRow(Int_t row)
 {
-   if (row >= fNumberOfDataPoints)
-      return 0;
+   if (row >= fNumberOfDataPoints) return nullptr;
 
-   if (!fStoreData)
-      return 0;
+   if (!fStoreData) return nullptr;
 
    Int_t index   = row  * fNumberOfVariables;
    return &fUserData(index);
@@ -627,11 +625,11 @@ void TPrincipal::MakeHistograms(const char *name, Option_t *opt)
    if (makeS && fHistograms->FindObject(Form("%s_s",name)))
       makeS = kFALSE;
 
-   TH1F **hX  = 0;
-   TH2F **hD  = 0;
-   TH1F **hP  = 0;
-   TH1F *hE   = 0;
-   TH1F *hS   = 0;
+   TH1F **hX = nullptr;
+   TH2F **hD = nullptr;
+   TH1F **hP = nullptr;
+   TH1F *hE = nullptr;
+   TH1F *hS = nullptr;
 
    // Initialize the arrays of histograms needed
    if (makeX)
@@ -713,7 +711,7 @@ void TPrincipal::MakeHistograms(const char *name, Option_t *opt)
    if (!makeX && !makeP && !makeD && !makeS)
       return;
 
-   Double_t *x = 0;
+   Double_t *x = nullptr;
    Double_t *p = new Double_t[fNumberOfVariables];
    Double_t *d = new Double_t[fNumberOfVariables];
    for (i = 0; i < fNumberOfDataPoints; i++) {
@@ -1188,7 +1186,7 @@ void TPrincipal::Test(Option_t *)
    if (!fStoreData)
       return;
 
-   TH1 *pca_s = 0;
+   TH1 *pca_s = nullptr;
    if (fHistograms) pca_s = (TH1*)fHistograms->FindObject("pca_s");
    if (!pca_s) {
       Warning("Test", "Couldn't get histogram of square residuals");

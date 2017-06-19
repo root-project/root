@@ -43,7 +43,7 @@ TGeoNodeEditor::TGeoNodeEditor(const TGWindow *p, Int_t width,
                                Int_t height, UInt_t options, Pixel_t back)
    : TGeoGedFrame(p, width, height, options | kVerticalFrame, back)
 {
-   fNode   = 0;
+   fNode = nullptr;
    fIsEditable = kTRUE;
    Pixel_t color;
 
@@ -68,7 +68,7 @@ TGeoNodeEditor::TGeoNodeEditor(const TGWindow *p, Int_t width,
 // Mother volume selection
    MakeTitle("Mother volume");
    f1 = new TGCompositeFrame(this, 155, 30, kHorizontalFrame | kFixedWidth);
-   fSelectedMother = 0;
+   fSelectedMother = nullptr;
    fLSelMother = new TGLabel(f1, "Select mother");
    gClient->GetColorByName("#0000ff", color);
    fLSelMother->SetTextColor(color);
@@ -86,7 +86,7 @@ TGeoNodeEditor::TGeoNodeEditor(const TGWindow *p, Int_t width,
 // Volume selection
    MakeTitle("Volume");
    f1 = new TGCompositeFrame(this, 155, 30, kHorizontalFrame | kFixedWidth);
-   fSelectedVolume = 0;
+   fSelectedVolume = nullptr;
    fLSelVolume = new TGLabel(f1, "Select volume");
    gClient->GetColorByName("#0000ff", color);
    fLSelVolume->SetTextColor(color);
@@ -104,7 +104,7 @@ TGeoNodeEditor::TGeoNodeEditor(const TGWindow *p, Int_t width,
 // Matrix selection
    MakeTitle("Matrix");
    f1 = new TGCompositeFrame(this, 155, 30, kHorizontalFrame | kFixedWidth);
-   fSelectedMatrix = 0;
+   fSelectedMatrix = nullptr;
    fLSelMatrix = new TGLabel(f1, "Select matrix");
    gClient->GetColorByName("#0000ff", color);
    fLSelMatrix->SetTextColor(color);
@@ -168,7 +168,7 @@ void TGeoNodeEditor::ConnectSignals2Slots()
 
 void TGeoNodeEditor::SetModel(TObject* obj)
 {
-   if (obj == 0 || !obj->InheritsFrom(TGeoNode::Class())) {
+   if (obj == nullptr || !obj->InheritsFrom(TGeoNode::Class())) {
       SetActive(kFALSE);
       return;
    }

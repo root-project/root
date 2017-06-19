@@ -44,11 +44,9 @@ TMethodCall                            (method call environment)
 
 ClassImp(TDictionary);
 
-TDictionary::TDictionary(const TDictionary& dict):
-   TNamed(dict),
-   fAttributeMap(dict.fAttributeMap ?
-                 ((TDictAttributeMap*)dict.fAttributeMap->Clone()) : 0 ),
-   fUpdatingTransactionCount(0)
+TDictionary::TDictionary(const TDictionary &dict)
+   : TNamed(dict), fAttributeMap(dict.fAttributeMap ? ((TDictAttributeMap *)dict.fAttributeMap->Clone()) : nullptr),
+     fUpdatingTransactionCount(0)
 {
    // Copy constructor, cloning fAttributeMap.
 }
@@ -65,7 +63,7 @@ TDictionary &TDictionary::operator=(const TDictionary& dict)
   TNamed::operator=(dict);
 
   delete fAttributeMap;
-  fAttributeMap = 0;
+  fAttributeMap = nullptr;
   if (dict.fAttributeMap)
     fAttributeMap = ((TDictAttributeMap*)dict.fAttributeMap->Clone());
 

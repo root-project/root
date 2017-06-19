@@ -69,8 +69,7 @@ static std::string FullyQualifiedName(const Decl *decl) {
 }
 
 TClingClassInfo::TClingClassInfo(cling::Interpreter *interp, Bool_t all)
-   : fInterp(interp), fFirstTime(true), fDescend(false), fIterAll(all),
-     fDecl(0), fType(0), fOffsetCache(0)
+   : fInterp(interp), fFirstTime(true), fDescend(false), fIterAll(all), fDecl(nullptr), fType(nullptr), fOffsetCache(0)
 {
    TranslationUnitDecl *TU =
       interp->getCI()->getASTContext().getTranslationUnitDecl();
@@ -96,15 +95,15 @@ TClingClassInfo::TClingClassInfo(cling::Interpreter *interp, Bool_t all)
    // used to not work like 'asking' the filename on this will go 'further'
    // but oh well).
    fDecl = TU;
-   fType = 0;
+   fType = nullptr;
 }
 
 TClingClassInfo::TClingClassInfo(cling::Interpreter *interp, const char *name)
-   : fInterp(interp), fFirstTime(true), fDescend(false), fIterAll(kTRUE), fDecl(0),
-     fType(0), fTitle(""), fOffsetCache(0)
+   : fInterp(interp), fFirstTime(true), fDescend(false), fIterAll(kTRUE), fDecl(nullptr), fType(nullptr), fTitle(""),
+     fOffsetCache(0)
 {
    const cling::LookupHelper& lh = fInterp->getLookupHelper();
-   const Type *type = 0;
+   const Type *type = nullptr;
    const Decl *decl = lh.findScope(name,
                                    gDebug > 5 ? cling::LookupHelper::WithDiagnostics
                                    : cling::LookupHelper::NoDiagnostics,
@@ -133,10 +132,9 @@ TClingClassInfo::TClingClassInfo(cling::Interpreter *interp, const char *name)
    }
 }
 
-TClingClassInfo::TClingClassInfo(cling::Interpreter *interp,
-                                 const Type &tag)
-   : fInterp(interp), fFirstTime(true), fDescend(false), fIterAll(kTRUE),
-     fDecl(0), fType(0), fTitle(""), fOffsetCache(0)
+TClingClassInfo::TClingClassInfo(cling::Interpreter *interp, const Type &tag)
+   : fInterp(interp), fFirstTime(true), fDescend(false), fIterAll(kTRUE), fDecl(nullptr), fType(nullptr), fTitle(""),
+     fOffsetCache(0)
 {
    Init(tag);
 }
@@ -146,7 +144,7 @@ void TClingClassInfo::AddBaseOffsetValue(const clang::Decl* decl, ptrdiff_t offs
    // Add the offset value from this class to the non-virtual base class
    // determined by the parameter decl.
 
-   OffsetPtrFunc_t executableFunc = 0;
+   OffsetPtrFunc_t executableFunc = nullptr;
    fOffsetCache[decl] = std::make_pair(offset, executableFunc);
 }
 
@@ -256,7 +254,7 @@ const FunctionTemplateDecl *TClingClassInfo::GetFunctionTemplate(const char *fna
    // Return any method or function in this scope with the name 'fname'.
 
    if (!IsLoaded()) {
-      return 0;
+      return nullptr;
    }
 
    if (fType) {
@@ -278,7 +276,7 @@ const FunctionTemplateDecl *TClingClassInfo::GetFunctionTemplate(const char *fna
                                 gDebug > 5 ? cling::LookupHelper::WithDiagnostics
                                 : cling::LookupHelper::NoDiagnostics, false);
    if (fd) return fd->getCanonicalDecl();
-   return 0;
+   return nullptr;
 }
 
 const clang::ValueDecl *TClingClassInfo::GetDataMember(const char *name) const
@@ -292,7 +290,8 @@ const clang::ValueDecl *TClingClassInfo::GetDataMember(const char *name) const
                           gDebug > 5 ? cling::LookupHelper::WithDiagnostics
                           : cling::LookupHelper::NoDiagnostics);
    if (vd) return llvm::dyn_cast<ValueDecl>(vd->getCanonicalDecl());
-   else return 0;
+   else
+      return nullptr;
 }
 
 TClingMethodInfo TClingClassInfo::GetMethod(const char *fname) const
@@ -579,7 +578,7 @@ int TClingClassInfo::GetMethodNArg(const char *method, const char *proto,
 
    R__LOCKGUARD(gInterpreterMutex);
 
-   TClingMethodInfo mi = GetMethod(method, proto, objectIsConst, 0, mode);
+   TClingMethodInfo mi = GetMethod(method, proto, objectIsConst, nullptr, mode);
    int clang_val = -1;
    if (mi.IsValid()) {
       unsigned num_params = mi.GetMethodDecl()->getNumParams();
@@ -683,8 +682,8 @@ void TClingClassInfo::Init(const char *name)
    fFirstTime = true;
    fDescend = false;
    fIter = DeclContext::decl_iterator();
-   fDecl = 0;
-   fType = 0;
+   fDecl = nullptr;
+   fType = nullptr;
    fIterStack.clear();
    const cling::LookupHelper& lh = fInterp->getLookupHelper();
    fDecl = lh.findScope(name, gDebug > 5 ? cling::LookupHelper::WithDiagnostics
@@ -712,7 +711,7 @@ void TClingClassInfo::Init(const Decl* decl)
    fDescend = false;
    fIter = DeclContext::decl_iterator();
    fDecl = decl;
-   fType = 0;
+   fType = nullptr;
    fIterStack.clear();
 }
 
@@ -733,7 +732,7 @@ void TClingClassInfo::Init(const Type &tag)
       fDecl = tagtype->getDecl();
    }
    else {
-      fDecl = 0;
+      fDecl = nullptr;
    }
    if (!fDecl) {
       QualType qType(fType,0);
@@ -788,7 +787,7 @@ bool TClingClassInfo::IsLoaded() const
    if (!IsValid()) {
       return false;
    }
-   if (fDecl == 0) {
+   if (fDecl == nullptr) {
       return false;
    }
 
@@ -801,7 +800,7 @@ bool TClingClassInfo::IsLoaded() const
       }
    } else {
       const TagDecl *TD = llvm::dyn_cast<TagDecl>(fDecl);
-      if (TD && TD->getDefinition() == 0) {
+      if (TD && TD->getDefinition() == nullptr) {
          return false;
       }
    }
@@ -891,8 +890,8 @@ int TClingClassInfo::InternalNext()
          // Check for final termination.
          if (!*fIter) {
             // We have reached the end of the translation unit, all done.
-            fDecl = 0;
-            fType = 0;
+            fDecl = nullptr;
+            fType = nullptr;
             return 0;
          }
       }
@@ -926,7 +925,7 @@ int TClingClassInfo::InternalNext()
          }
          // Iterator is now valid.
          fDecl = *fIter;
-         fType = 0;
+         fType = nullptr;
          if (fDecl) {
             if (fDecl->isInvalidDecl()) {
                Warning("TClingClassInfo::Next()","Reached an invalid decl.");
@@ -952,12 +951,12 @@ void *TClingClassInfo::New(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) co
    // that takes no arguments to create an object of this class type.
    if (!IsValid()) {
       Error("TClingClassInfo::New()", "Called while invalid!");
-      return 0;
+      return nullptr;
    }
    if (!IsLoaded()) {
       Error("TClingClassInfo::New()", "Class is not loaded: %s",
             FullyQualifiedName(fDecl).c_str());
-      return 0;
+      return nullptr;
    }
    {
       R__LOCKGUARD(gInterpreterMutex);
@@ -965,23 +964,23 @@ void *TClingClassInfo::New(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) co
       if (!RD) {
          Error("TClingClassInfo::New()", "This is a namespace!: %s",
                FullyQualifiedName(fDecl).c_str());
-         return 0;
+         return nullptr;
       }
       if (!HasDefaultConstructor()) {
          // FIXME: We fail roottest root/io/newdelete if we issue this message!
          //Error("TClingClassInfo::New()", "Class has no default constructor: %s",
          //      FullyQualifiedName(fDecl).c_str());
-         return 0;
+         return nullptr;
       }
    } // End of Lock section.
-   void* obj = 0;
+   void *obj = nullptr;
    TClingCallFunc cf(fInterp,normCtxt);
-   obj = cf.ExecDefaultConstructor(this, /*address=*/0, /*nary=*/0);
+   obj = cf.ExecDefaultConstructor(this, /*address=*/nullptr, /*nary=*/0);
    if (!obj) {
       Error("TClingClassInfo::New()", "Call of default constructor "
             "failed to return an object for class: %s",
             FullyQualifiedName(fDecl).c_str());
-      return 0;
+      return nullptr;
    }
    return obj;
 }
@@ -993,12 +992,12 @@ void *TClingClassInfo::New(int n, const ROOT::TMetaUtils::TNormalizedCtxt &normC
    // of this class type.
    if (!IsValid()) {
       Error("TClingClassInfo::New(n)", "Called while invalid!");
-      return 0;
+      return nullptr;
    }
    if (!IsLoaded()) {
       Error("TClingClassInfo::New(n)", "Class is not loaded: %s",
             FullyQualifiedName(fDecl).c_str());
-      return 0;
+      return nullptr;
    }
 
    {
@@ -1008,25 +1007,25 @@ void *TClingClassInfo::New(int n, const ROOT::TMetaUtils::TNormalizedCtxt &normC
       if (!RD) {
          Error("TClingClassInfo::New(n)", "This is a namespace!: %s",
                FullyQualifiedName(fDecl).c_str());
-         return 0;
+         return nullptr;
       }
       if (!HasDefaultConstructor()) {
          // FIXME: We fail roottest root/io/newdelete if we issue this message!
          //Error("TClingClassInfo::New(n)",
          //      "Class has no default constructor: %s",
          //      FullyQualifiedName(fDecl).c_str());
-         return 0;
+         return nullptr;
       }
    } // End of Lock section.
-   void* obj = 0;
+   void *obj = nullptr;
    TClingCallFunc cf(fInterp,normCtxt);
-   obj = cf.ExecDefaultConstructor(this, /*address=*/0,
+   obj = cf.ExecDefaultConstructor(this, /*address=*/nullptr,
                                    /*nary=*/(unsigned long)n);
    if (!obj) {
       Error("TClingClassInfo::New(n)", "Call of default constructor "
             "failed to return an array of class: %s",
             FullyQualifiedName(fDecl).c_str());
-      return 0;
+      return nullptr;
    }
    return obj;
 }
@@ -1039,12 +1038,12 @@ void *TClingClassInfo::New(int n, void *arena, const ROOT::TMetaUtils::TNormaliz
    // memory arena.
    if (!IsValid()) {
       Error("TClingClassInfo::New(n, arena)", "Called while invalid!");
-      return 0;
+      return nullptr;
    }
    if (!IsLoaded()) {
       Error("TClingClassInfo::New(n, arena)", "Class is not loaded: %s",
             FullyQualifiedName(fDecl).c_str());
-      return 0;
+      return nullptr;
    }
    {
       R__LOCKGUARD(gInterpreterMutex);
@@ -1053,17 +1052,17 @@ void *TClingClassInfo::New(int n, void *arena, const ROOT::TMetaUtils::TNormaliz
       if (!RD) {
          Error("TClingClassInfo::New(n, arena)", "This is a namespace!: %s",
                FullyQualifiedName(fDecl).c_str());
-         return 0;
+         return nullptr;
       }
       if (!HasDefaultConstructor()) {
          // FIXME: We fail roottest root/io/newdelete if we issue this message!
          //Error("TClingClassInfo::New(n, arena)",
          //      "Class has no default constructor: %s",
          //      FullyQualifiedName(fDecl).c_str());
-         return 0;
+         return nullptr;
       }
    } // End of Lock section
-   void* obj = 0;
+   void *obj = nullptr;
    TClingCallFunc cf(fInterp,normCtxt);
    // Note: This will always return arena.
    obj = cf.ExecDefaultConstructor(this, /*address=*/arena,
@@ -1078,12 +1077,12 @@ void *TClingClassInfo::New(void *arena, const ROOT::TMetaUtils::TNormalizedCtxt 
    // object of this class type in the given memory arena.
    if (!IsValid()) {
       Error("TClingClassInfo::New(arena)", "Called while invalid!");
-      return 0;
+      return nullptr;
    }
    if (!IsLoaded()) {
       Error("TClingClassInfo::New(arena)", "Class is not loaded: %s",
             FullyQualifiedName(fDecl).c_str());
-      return 0;
+      return nullptr;
    }
    {
       R__LOCKGUARD(gInterpreterMutex);
@@ -1092,17 +1091,17 @@ void *TClingClassInfo::New(void *arena, const ROOT::TMetaUtils::TNormalizedCtxt 
       if (!RD) {
          Error("TClingClassInfo::New(arena)", "This is a namespace!: %s",
                FullyQualifiedName(fDecl).c_str());
-         return 0;
+         return nullptr;
       }
       if (!HasDefaultConstructor()) {
          // FIXME: We fail roottest root/io/newdelete if we issue this message!
          //Error("TClingClassInfo::New(arena)",
          //      "Class has no default constructor: %s",
          //      FullyQualifiedName(fDecl).c_str());
-         return 0;
+         return nullptr;
       }
    } // End of Locked section.
-   void* obj = 0;
+   void *obj = nullptr;
    TClingCallFunc cf(fInterp,normCtxt);
    // Note: This will always return arena.
    obj = cf.ExecDefaultConstructor(this, /*address=*/arena, /*nary=*/0);
@@ -1218,7 +1217,7 @@ long TClingClassInfo::Tagnum() const
 const char *TClingClassInfo::FileName()
 {
    if (!IsValid()) {
-      return 0;
+      return nullptr;
    }
    fDeclFileName = ROOT::TMetaUtils::GetFileName(*GetDecl(), *fInterp);
    return fDeclFileName.c_str();
@@ -1250,7 +1249,7 @@ const char *TClingClassInfo::Name() const
 {
    // Return unqualified name.
    if (!IsValid()) {
-      return 0;
+      return nullptr;
    }
    // Note: This *must* be static/thread_local because we are returning a pointer inside it!
    TTHREAD_TLS_DECL( std::string, buf);
@@ -1267,7 +1266,7 @@ const char *TClingClassInfo::Name() const
 const char *TClingClassInfo::Title()
 {
    if (!IsValid()) {
-      return 0;
+      return nullptr;
    }
    // NOTE: We cannot cache the result, since we are really an iterator.
    // Try to get the comment either from the annotation or the header
@@ -1299,7 +1298,7 @@ const char *TClingClassInfo::Title()
    const CXXRecordDecl *CRD =
       llvm::dyn_cast<CXXRecordDecl>(GetDecl());
    if (CRD && !CRD->isFromASTFile()) {
-      fTitle = ROOT::TMetaUtils::GetClassComment(*CRD,0,*fInterp).str();
+      fTitle = ROOT::TMetaUtils::GetClassComment(*CRD, nullptr, *fInterp).str();
    }
    return fTitle.c_str();
 }
@@ -1307,7 +1306,7 @@ const char *TClingClassInfo::Title()
 const char *TClingClassInfo::TmpltName() const
 {
    if (!IsValid()) {
-      return 0;
+      return nullptr;
    }
 
    R__LOCKGUARD(gInterpreterMutex);

@@ -63,12 +63,11 @@ extern "C" {
    void TCling__PrintStackTrace();
 }
 
-TClingCallbacks::TClingCallbacks(cling::Interpreter* interp)
-   : InterpreterCallbacks(interp),
-     fLastLookupCtx(0), fROOTSpecialNamespace(0),
-     fFirstRun(true), fIsAutoloading(false), fIsAutoloadingRecursively(false),
-     fPPOldFlag(false), fPPChanged(false) {
-   Transaction* T = 0;
+TClingCallbacks::TClingCallbacks(cling::Interpreter *interp)
+   : InterpreterCallbacks(interp), fLastLookupCtx(nullptr), fROOTSpecialNamespace(nullptr), fFirstRun(true),
+     fIsAutoloading(false), fIsAutoloadingRecursively(false), fPPOldFlag(false), fPPChanged(false)
+{
+   Transaction *T = nullptr;
    m_Interpreter->declare("namespace __ROOT_SpecialObjects{}", &T);
    fROOTSpecialNamespace = dyn_cast<NamespaceDecl>(T->getFirstDecl().getSingleDecl());
 }
@@ -323,7 +322,7 @@ bool TClingCallbacks::LookupObject(clang::TagDecl* Tag) {
 
       // Use the Normalized name for the autoload
       std::string Name;
-      const ROOT::TMetaUtils::TNormalizedCtxt* tNormCtxt = NULL;
+      const ROOT::TMetaUtils::TNormalizedCtxt *tNormCtxt = nullptr;
       TCling__GetNormalizedContext(tNormCtxt);
       ROOT::TMetaUtils::GetNormalizedName(Name,
                                           C.getTypeDeclType(RD),
@@ -507,9 +506,9 @@ bool TClingCallbacks::tryFindROOTSpecialInternal(LookupResult &R, Scope *S) {
          // We will declare the variable as pointer.
          QualType QT = C.getPointerType(C.getTypeDeclType(cast<TypeDecl>(TD)));
 
-         VD = VarDecl::Create(C, fROOTSpecialNamespace, SourceLocation(),
-                              SourceLocation(), Name.getAsIdentifierInfo(), QT,
-                              /*TypeSourceInfo*/0, SC_None);
+         VD = VarDecl::Create(C, fROOTSpecialNamespace, SourceLocation(), SourceLocation(), Name.getAsIdentifierInfo(),
+                              QT,
+                              /*TypeSourceInfo*/ nullptr, SC_None);
          // Build an initializer
          Expr* Init
            = utils::Synthesize::CStyleCastPtrExpr(&SemaR, QT, (uint64_t)obj);
@@ -574,8 +573,8 @@ bool TClingCallbacks::tryResolveAtRuntimeInternal(LookupResult &R, Scope *S) {
       return false;
    }
 
-   VarDecl* Result = VarDecl::Create(C, TU, Loc, Loc, II, C.DependentTy,
-                                     /*TypeSourceInfo*/0, SC_None);
+   VarDecl *Result = VarDecl::Create(C, TU, Loc, Loc, II, C.DependentTy,
+                                     /*TypeSourceInfo*/ nullptr, SC_None);
 
    if (!Result) {
       // We cannot handle the situation. Give up
@@ -694,11 +693,10 @@ bool TClingCallbacks::tryInjectImplicitAutoKeyword(LookupResult &R, Scope *S) {
    DeclarationName Name = R.getLookupName();
    IdentifierInfo* II = Name.getAsIdentifierInfo();
    SourceLocation Loc = R.getNameLoc();
-   VarDecl* Result = VarDecl::Create(C, DC, Loc, Loc, II,
-                                     C.getAutoType(QualType(),
-                                                   clang::AutoTypeKeyword::Auto,
-                                                   /*IsDependent*/false),
-                                     /*TypeSourceInfo*/0, SC_None);
+   VarDecl *Result = VarDecl::Create(C, DC, Loc, Loc, II,
+                                     C.getAutoType(QualType(), clang::AutoTypeKeyword::Auto,
+                                                   /*IsDependent*/ false),
+                                     /*TypeSourceInfo*/ nullptr, SC_None);
 
    if (!Result) {
       ROOT::TMetaUtils::Error("TClingCallbacks::tryInjectImplicitAutoKeyword",

@@ -36,9 +36,8 @@
 #include "TColor.h"
 #include "TClass.h"
 
-
-const TGFont *TGLabel::fgDefaultFont = 0;
-const TGGC   *TGLabel::fgDefaultGC = 0;
+const TGFont *TGLabel::fgDefaultFont = nullptr;
+const TGGC *TGLabel::fgDefaultGC = nullptr;
 
 ClassImp(TGLabel);
 
@@ -263,8 +262,8 @@ void TGLabel::DoRedraw()
       } else {
          fontH = gVirtualX->GetFontHandle(GetDefaultFontStruct());
       }
-      static TGGC *gc1 = 0;
-      static TGGC *gc2 = 0;
+      static TGGC *gc1 = nullptr;
+      static TGGC *gc2 = nullptr;
 
       if (!gc1) {
          gc1 = fClient->GetResourcePool()->GetGCPool()->FindGC(GetHilightGC()());

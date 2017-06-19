@@ -59,8 +59,7 @@ ClassImp(TClassTable);
 namespace ROOT {
    class TClassRec {
    public:
-      TClassRec(TClassRec *next) :
-        fName(0), fId(0), fDict(0), fInfo(0), fProto(0), fNext(next)
+      TClassRec(TClassRec *next) : fName(nullptr), fId(0), fDict(nullptr), fInfo(nullptr), fProto(nullptr), fNext(next)
       {}
 
       ~TClassRec() {
@@ -126,7 +125,7 @@ namespace ROOT {
       mapped_type Find(const key_type &key) const {
 
          IdMap_t::const_iterator iter = fMap.find(key);
-         mapped_type cl = 0;
+         mapped_type cl = nullptr;
          if (iter != fMap.end()) cl = iter->second;
          return cl;
       }
@@ -232,9 +231,12 @@ TClassTable::~TClassTable()
    for (UInt_t i = 0; i < fgSize; i++) {
       delete fgTable[i]; // Will delete all the elements in the chain.
    }
-   delete [] fgTable; fgTable = 0;
-   delete [] fgSortedTable; fgSortedTable = 0;
-   delete fgIdMap; fgIdMap = 0;
+   delete [] fgTable;
+   fgTable = nullptr;
+   delete [] fgSortedTable;
+   fgSortedTable = nullptr;
+   delete fgIdMap;
+   fgIdMap = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -291,7 +293,7 @@ char *TClassTable::At(UInt_t index)
       TClassRec *r = fgSortedTable[index];
       if (r) return r->fName;
    }
-   return 0;
+   return nullptr;
 }
 
 //______________________________________________________________________________
@@ -387,8 +389,8 @@ void TClassTable::Add(TProtoClass *proto)
    r->fName = StrDup(cname);
    r->fId   = 0;
    r->fBits = 0;
-   r->fDict = 0;
-   r->fInfo = 0;
+   r->fDict = nullptr;
+   r->fInfo = nullptr;
    r->fProto= proto;
 
    fgSorted = kFALSE;
@@ -451,7 +453,7 @@ void TClassTable::Remove(const char *cname)
    UInt_t slot = ROOT::ClassTableHash(cname,fgSize);
 
    TClassRec *r;
-   TClassRec *prev = 0;
+   TClassRec *prev = nullptr;
    for (r = fgTable[slot]; r; r = r->fNext) {
       if (!strcmp(r->fName, cname)) {
          if (prev)
@@ -459,7 +461,7 @@ void TClassTable::Remove(const char *cname)
          else
             fgTable[slot] = r->fNext;
          fgIdMap->Remove(r->fInfo->name());
-         r->fNext = 0; // Do not delete the others.
+         r->fNext = nullptr; // Do not delete the others.
          delete r;
          fgTally--;
          fgSorted = kFALSE;
@@ -481,7 +483,7 @@ TClassRec *TClassTable::FindElementImpl(const char *cname, Bool_t insert)
    for (TClassRec *r = fgTable[slot]; r; r = r->fNext)
       if (strcmp(cname,r->fName)==0) return r;
 
-   if (!insert) return 0;
+   if (!insert) return nullptr;
 
    fgTable[slot] = new TClassRec(fgTable[slot]);
 
@@ -498,7 +500,7 @@ TClassRec *TClassTable::FindElementImpl(const char *cname, Bool_t insert)
 
 TClassRec *TClassTable::FindElement(const char *cname, Bool_t insert)
 {
-   if (!fgTable) return 0;
+   if (!fgTable) return nullptr;
 
    // The recorded name is normalized, let's make sure we convert the
    // input accordingly.
@@ -541,7 +543,7 @@ DictFuncPtr_t TClassTable::GetDict(const char *cname)
 
    TClassRec *r = FindElement(cname);
    if (r) return r->fDict;
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -557,7 +559,7 @@ DictFuncPtr_t TClassTable::GetDict(const std::type_info& info)
 
    TClassRec *r = fgIdMap->Find(info.name());
    if (r) return r->fDict;
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -573,7 +575,7 @@ DictFuncPtr_t TClassTable::GetDictNorm(const char *cname)
 
    TClassRec *r = FindElementImpl(cname,kFALSE);
    if (r) return r->fDict;
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -589,7 +591,7 @@ TProtoClass *TClassTable::GetProto(const char *cname)
 
    TClassRec *r = FindElement(cname);
    if (r) return r->fProto;
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -605,7 +607,7 @@ TProtoClass *TClassTable::GetProtoNorm(const char *cname)
 
    TClassRec *r = FindElementImpl(cname,kFALSE);
    if (r) return r->fProto;
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -630,7 +632,7 @@ char *TClassTable::Next()
       TClassRec *r = fgSortedTable[fgCursor++];
       return r->fName;
    } else
-      return 0;
+      return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -694,9 +696,12 @@ void TClassTable::Terminate()
       for (UInt_t i = 0; i < fgSize; i++)
          delete fgTable[i]; // Will delete all the elements in the chain.
 
-      delete [] fgTable; fgTable = 0;
-      delete [] fgSortedTable; fgSortedTable = 0;
-      delete fgIdMap; fgIdMap = 0;
+      delete [] fgTable;
+      fgTable = nullptr;
+      delete [] fgSortedTable;
+      fgSortedTable = nullptr;
+      delete fgIdMap;
+      fgIdMap = nullptr;
       fgSize = 0;
       SafeDelete(gClassTable);
    }

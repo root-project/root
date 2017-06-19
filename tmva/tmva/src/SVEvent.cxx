@@ -41,75 +41,36 @@ Event class for Support Vector Machine
 ClassImp(TMVA::SVEvent);
 
 TMVA::SVEvent::SVEvent()
-: fDataVector(0),
-   fCweight(1.),
-   fAlpha(0),
-   fAlpha_p(0),
-   fErrorCache(0),
-   fNVar(0),
-   fTypeFlag(0),
-   fIdx(0),
-   fNs(0),
-   fIsShrinked(0),
-   fLine(0),
-   fTarget(0)
+   : fDataVector(0), fCweight(1.), fAlpha(0), fAlpha_p(0), fErrorCache(0), fNVar(0), fTypeFlag(0), fIdx(0), fNs(0),
+     fIsShrinked(0), fLine(nullptr), fTarget(0)
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor
 
-TMVA::SVEvent::SVEvent( const Event* event, Float_t C_par, Bool_t isSignal )
-   : fDataVector(event->GetValues()),
-     fCweight(C_par*event->GetWeight()),
-     fAlpha(0),
-     fAlpha_p(0),
-     fErrorCache(0),
-     fNVar    ( event->GetNVariables() ),
-     fTypeFlag( isSignal ? -1 : 1 ),
-     fIdx     ( isSignal ? -1 : 1 ),
-     fNs(0),
-     fIsShrinked(0),
-     fLine(0),
-     fTarget((event->GetNTargets() > 0 ? event->GetTarget(0) : 0))
+TMVA::SVEvent::SVEvent(const Event *event, Float_t C_par, Bool_t isSignal)
+   : fDataVector(event->GetValues()), fCweight(C_par * event->GetWeight()), fAlpha(0), fAlpha_p(0), fErrorCache(0),
+     fNVar(event->GetNVariables()), fTypeFlag(isSignal ? -1 : 1), fIdx(isSignal ? -1 : 1), fNs(0), fIsShrinked(0),
+     fLine(nullptr), fTarget((event->GetNTargets() > 0 ? event->GetTarget(0) : 0))
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor
 
-TMVA::SVEvent::SVEvent( const std::vector<Float_t>* svector, Float_t alpha, Int_t typeFlag, UInt_t ns )
-   : fDataVector(*svector),
-     fCweight(-1.),
-     fAlpha(alpha),
-     fAlpha_p(0),
-     fErrorCache(-1.),
-     fNVar(svector->size()),
-     fTypeFlag(typeFlag),
-     fIdx(-1),
-     fNs(ns),
-     fIsShrinked(0),
-     fLine(0),
-     fTarget(0)
+TMVA::SVEvent::SVEvent(const std::vector<Float_t> *svector, Float_t alpha, Int_t typeFlag, UInt_t ns)
+   : fDataVector(*svector), fCweight(-1.), fAlpha(alpha), fAlpha_p(0), fErrorCache(-1.), fNVar(svector->size()),
+     fTypeFlag(typeFlag), fIdx(-1), fNs(ns), fIsShrinked(0), fLine(nullptr), fTarget(0)
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor
 
-TMVA::SVEvent::SVEvent( const std::vector<Float_t>* svector, Float_t alpha, Float_t alpha_p,Int_t typeFlag)
-   : fDataVector(*svector),
-     fCweight(-1.),
-     fAlpha(alpha),
-     fAlpha_p(alpha_p),
-     fErrorCache(-1.),
-     fNVar(svector->size()),
-     fTypeFlag(typeFlag),
-     fIdx(-1),
-     fNs(0),
-     fIsShrinked(0),
-     fLine(0),
-     fTarget(0)
+TMVA::SVEvent::SVEvent(const std::vector<Float_t> *svector, Float_t alpha, Float_t alpha_p, Int_t typeFlag)
+   : fDataVector(*svector), fCweight(-1.), fAlpha(alpha), fAlpha_p(alpha_p), fErrorCache(-1.), fNVar(svector->size()),
+     fTypeFlag(typeFlag), fIdx(-1), fNs(0), fIsShrinked(0), fLine(nullptr), fTarget(0)
 {
 }
 
@@ -118,9 +79,9 @@ TMVA::SVEvent::SVEvent( const std::vector<Float_t>* svector, Float_t alpha, Floa
 
 TMVA::SVEvent::~SVEvent()
 {
-   if (fLine != 0) {
+   if (fLine != nullptr) {
       delete [] fLine;
-      fLine = 0;
+      fLine = nullptr;
    }
 }
 

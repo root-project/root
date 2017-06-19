@@ -24,23 +24,19 @@ ClassImp(ROOT::Detail::TBranchProxy);
 
 using namespace ROOT::Internal;
 
-ROOT::Detail::TBranchProxy::TBranchProxy() :
-   fDirector(0), fInitialized(false), fIsMember(false), fIsClone(false), fIsaPointer(false),
-   fHasLeafCount(false), fBranchName(""), fParent(0), fDataMember(""),
-   fClassName(""), fClass(0), fElement(0), fMemberOffset(0), fOffset(0), fArrayLength(1),
-   fBranch(0), fBranchCount(0),
-   fLastTree(0), fRead(-1), fWhere(0),fCollection(0), fCurrentTreeNumber(-1)
-{
-   // Constructor.
-};
+ROOT::Detail::TBranchProxy::TBranchProxy()
+   : fDirector(nullptr), fInitialized(false), fIsMember(false), fIsClone(false), fIsaPointer(false),
+     fHasLeafCount(false), fBranchName(""), fParent(nullptr), fDataMember(""), fClassName(""), fClass(nullptr),
+     fElement(nullptr), fMemberOffset(0), fOffset(0), fArrayLength(1), fBranch(nullptr), fBranchCount(nullptr),
+     fLastTree(nullptr), fRead(-1), fWhere(nullptr), fCollection(nullptr), fCurrentTreeNumber(-1){
+                                                                              // Constructor.
+                                                                           };
 
-ROOT::Detail::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, const char* top,
-                                 const char* name) :
-   fDirector(boss), fInitialized(false), fIsMember(false), fIsClone(false), fIsaPointer(false),
-   fHasLeafCount(false), fBranchName(top), fParent(0), fDataMember(""),
-   fClassName(""), fClass(0), fElement(0), fMemberOffset(0), fOffset(0), fArrayLength(1),
-   fBranch(0), fBranchCount(0),
-   fLastTree(0), fRead(-1),  fWhere(0),fCollection(0), fCurrentTreeNumber(-1)
+ROOT::Detail::TBranchProxy::TBranchProxy(TBranchProxyDirector *boss, const char *top, const char *name)
+   : fDirector(boss), fInitialized(false), fIsMember(false), fIsClone(false), fIsaPointer(false), fHasLeafCount(false),
+     fBranchName(top), fParent(nullptr), fDataMember(""), fClassName(""), fClass(nullptr), fElement(nullptr),
+     fMemberOffset(0), fOffset(0), fArrayLength(1), fBranch(nullptr), fBranchCount(nullptr), fLastTree(nullptr),
+     fRead(-1), fWhere(nullptr), fCollection(nullptr), fCurrentTreeNumber(-1)
 {
    // Constructor.
 
@@ -51,12 +47,12 @@ ROOT::Detail::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, const char*
    boss->Attach(this);
 }
 
-ROOT::Detail::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, const char *top, const char *name, const char *membername) :
-   fDirector(boss), fInitialized(false), fIsMember(true), fIsClone(false), fIsaPointer(false),
-   fHasLeafCount(false), fBranchName(top), fParent(0), fDataMember(membername),
-   fClassName(""), fClass(0), fElement(0), fMemberOffset(0), fOffset(0), fArrayLength(1),
-   fBranch(0), fBranchCount(0),
-   fLastTree(0), fRead(-1), fWhere(0),fCollection(0), fCurrentTreeNumber(-1)
+ROOT::Detail::TBranchProxy::TBranchProxy(TBranchProxyDirector *boss, const char *top, const char *name,
+                                         const char *membername)
+   : fDirector(boss), fInitialized(false), fIsMember(true), fIsClone(false), fIsaPointer(false), fHasLeafCount(false),
+     fBranchName(top), fParent(nullptr), fDataMember(membername), fClassName(""), fClass(nullptr), fElement(nullptr),
+     fMemberOffset(0), fOffset(0), fArrayLength(1), fBranch(nullptr), fBranchCount(nullptr), fLastTree(nullptr),
+     fRead(-1), fWhere(nullptr), fCollection(nullptr), fCurrentTreeNumber(-1)
 {
    // Constructor.
 
@@ -69,13 +65,12 @@ ROOT::Detail::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, const char 
    boss->Attach(this);
 }
 
-ROOT::Detail::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, Detail::TBranchProxy *parent, const char* membername, const char* top,
-                                 const char* name) :
-   fDirector(boss), fInitialized(false), fIsMember(true), fIsClone(false), fIsaPointer(false),
-   fHasLeafCount(false), fBranchName(top), fParent(parent), fDataMember(membername),
-   fClassName(""), fClass(0), fElement(0), fMemberOffset(0), fOffset(0), fArrayLength(1),
-   fBranch(0), fBranchCount(0),
-   fLastTree(0), fRead(-1), fWhere(0),fCollection(0), fCurrentTreeNumber(-1)
+ROOT::Detail::TBranchProxy::TBranchProxy(TBranchProxyDirector *boss, Detail::TBranchProxy *parent,
+                                         const char *membername, const char *top, const char *name)
+   : fDirector(boss), fInitialized(false), fIsMember(true), fIsClone(false), fIsaPointer(false), fHasLeafCount(false),
+     fBranchName(top), fParent(parent), fDataMember(membername), fClassName(""), fClass(nullptr), fElement(nullptr),
+     fMemberOffset(0), fOffset(0), fArrayLength(1), fBranch(nullptr), fBranchCount(nullptr), fLastTree(nullptr),
+     fRead(-1), fWhere(nullptr), fCollection(nullptr), fCurrentTreeNumber(-1)
 {
    // Constructor.
 
@@ -88,12 +83,12 @@ ROOT::Detail::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, Detail::TBr
    boss->Attach(this);
 }
 
-ROOT::Detail::TBranchProxy::TBranchProxy(TBranchProxyDirector* boss, TBranch* branch, const char* membername) :
-   fDirector(boss), fInitialized(false), fIsMember(membername != 0 && membername[0]), fIsClone(false), fIsaPointer(false),
-   fHasLeafCount(false), fBranchName(branch->GetName()), fParent(0), fDataMember(membername),
-   fClassName(""), fClass(0), fElement(0), fMemberOffset(0), fOffset(0), fArrayLength(1),
-   fBranch(0), fBranchCount(0),
-   fLastTree(0), fRead(-1), fWhere(0),fCollection(0), fCurrentTreeNumber(-1)
+ROOT::Detail::TBranchProxy::TBranchProxy(TBranchProxyDirector *boss, TBranch *branch, const char *membername)
+   : fDirector(boss), fInitialized(false), fIsMember(membername != nullptr && membername[0]), fIsClone(false),
+     fIsaPointer(false), fHasLeafCount(false), fBranchName(branch->GetName()), fParent(nullptr),
+     fDataMember(membername), fClassName(""), fClass(nullptr), fElement(nullptr), fMemberOffset(0), fOffset(0),
+     fArrayLength(1), fBranch(nullptr), fBranchCount(nullptr), fLastTree(nullptr), fRead(-1), fWhere(nullptr),
+     fCollection(nullptr), fCurrentTreeNumber(-1)
 {
    // Constructor.
 
@@ -109,21 +104,21 @@ void ROOT::Detail::TBranchProxy::Reset()
 {
    // Completely reset the object.
 
-   fWhere = 0;
-   fBranch = 0;
-   fBranchCount = 0;
+   fWhere = nullptr;
+   fBranch = nullptr;
+   fBranchCount = nullptr;
    fRead = -1;
-   fClass = 0;
-   fElement = 0;
+   fClass = nullptr;
+   fElement = nullptr;
    fMemberOffset = 0;
    fOffset = 0;
    fArrayLength = 1;
    fIsClone = false;
    fInitialized = false;
    fHasLeafCount = false;
-   fLastTree = 0;
+   fLastTree = nullptr;
    delete fCollection;
-   fCollection = 0;
+   fCollection = nullptr;
    fCurrentTreeNumber = -1;
 }
 
@@ -174,7 +169,7 @@ Bool_t ROOT::Detail::TBranchProxy::Setup()
          if (fCollection) delete fCollection;
          fCollection = pcl->GetCollectionProxy()->Generate();
          pcl = fCollection->GetValueClass();
-         if (pcl == 0) {
+         if (pcl == nullptr) {
             // coverity[dereference] fparent is checked jus a bit earlier and can not be null here
             Error("Setup","Not finding TClass for collecion for the data member %s seems no longer be in class %s",fDataMember.Data(),fParent->GetClass()->GetName());
             return false;
@@ -182,7 +177,7 @@ Bool_t ROOT::Detail::TBranchProxy::Setup()
       }
 
       fElement = (TStreamerElement*)pcl->GetStreamerInfo()->GetElements()->FindObject(fDataMember);
-      if (fElement == 0) {
+      if (fElement == nullptr) {
          Error("Setup","Data member %s seems no longer be in class %s",fDataMember.Data(),pcl->GetName());
          return false;
       }
@@ -235,7 +230,7 @@ Bool_t ROOT::Detail::TBranchProxy::Setup()
 
          TBranchElement* be = ((TBranchElement*)fBranch);
 
-         be->GetMother()->SetAddress(0);
+         be->GetMother()->SetAddress(nullptr);
          fWhere =  (double*)fBranch->GetAddress();
 
       }
@@ -258,7 +253,7 @@ Bool_t ROOT::Detail::TBranchProxy::Setup()
       }
 
       if (!fWhere) {
-         fBranch->SetAddress(0);
+         fBranch->SetAddress(nullptr);
          fWhere = (double*)fBranch->GetAddress();
       }
 
@@ -437,7 +432,7 @@ Bool_t ROOT::Detail::TBranchProxy::Setup()
       }
    }
    if (fClass==TClonesArray::Class()) fIsClone = true;
-   if (fWhere!=0) {
+   if (fWhere != nullptr) {
       fLastTree = fDirector->GetTree();
       fCurrentTreeNumber = fLastTree->GetTreeNumber();
       fInitialized = true;

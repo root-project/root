@@ -90,14 +90,9 @@ ClassImp(RooStats::HistFactory::HistoToWorkspaceFactory);
 namespace RooStats{
 namespace HistFactory{
 
-  HistoToWorkspaceFactory::HistoToWorkspaceFactory() :
-    fNomLumi(0),
-    fLumiError(0),
-    fLowBin(0),
-    fHighBin(0),   
-    fOut_f(0),
-    pFile(0)
-  {
+HistoToWorkspaceFactory::HistoToWorkspaceFactory()
+   : fNomLumi(0), fLumiError(0), fLowBin(0), fHighBin(0), fOut_f(nullptr), pFile(nullptr)
+{
   }
 
   HistoToWorkspaceFactory::~HistoToWorkspaceFactory(){
@@ -710,7 +705,7 @@ namespace HistFactory{
 
      if (summary.empty() ) {
         Error("MakeSingleChannelModel","vector of EstimateSummry is empty - return a nullptr");
-        return 0; 
+        return nullptr;
      }
     
     // to time the macro
@@ -738,7 +733,7 @@ namespace HistFactory{
       ProcessExpectedHisto(summary.at(0).nominal,proto,"obsN","","",0,100000,fLowBin,fHighBin);
     } else {
       cout << "Will use expected (\"Asimov\") data set" << endl;
-      ProcessExpectedHisto(NULL,proto,"obsN","","",0,100000,fLowBin,fHighBin);
+      ProcessExpectedHisto(nullptr, proto, "obsN", "", "", 0, 100000, fLowBin, fHighBin);
     }
 
 
@@ -787,7 +782,7 @@ namespace HistFactory{
       } else if(it->lowHists.size() != it->highHists.size()){
         cout << "problem in "+it->name+"_"+it->channel 
        << " number of low & high variation histograms don't match" << endl;
-        return 0;
+        return nullptr;
       } else {
         string constraintPrefix = it->name+"_"+it->channel+"_Hist_alpha"; // name of source for variation
         string syst_x_expectedPrefix = it->name+"_"+it->channel+"_overallSyst_x_HistSyst";
@@ -879,11 +874,11 @@ namespace HistFactory{
      // check inputs (see JIRA-6890)
      if (ch_names.empty() || chs.empty() ) {
         Error("MakeCombinedModel","Input vectors are empty - return a nullptr");
-        return 0;
+        return nullptr;
      }
      if (chs.size()  <  ch_names.size() ) {
         Error("MakeCombinedModel","Input vector of workspace has an invalid size - return a nullptr");
-        return 0;
+        return nullptr;
      }
      
     map<string, RooAbsPdf*> pdfMap;
@@ -1006,11 +1001,11 @@ namespace HistFactory{
 
     //
     // assuming there is only on poi
-    // 
-    RooRealVar* poi = 0; // (RooRealVar*) POIs->first();
+    //
+    RooRealVar *poi = nullptr; // (RooRealVar*) POIs->first();
     // for results tables
     TIterator* params_itr=POIs->createIterator();
-    TObject* params_obj=0;
+    TObject *params_obj = nullptr;
     while((params_obj=params_itr->Next())){
       poi = (RooRealVar*) params_obj;
       cout << "printing results for " << poi->GetName() << " at " << poi->getVal()<< " high " << poi->getErrorLo() << " low " << poi->getErrorHi()<<endl;
@@ -1125,7 +1120,7 @@ void HistoToWorkspaceFactory::FormatFrameForLikelihood(RooPlot* frame, string /*
   TDirectory * HistoToWorkspaceFactory::Makedirs( TDirectory * file, vector<string> names ){
     if(! file) return file;
     string path="";
-    TDirectory* ptr=0;
+    TDirectory *ptr = nullptr;
     for(vector<string>::iterator itr=names.begin(); itr != names.end(); ++itr){
       if( ! path.empty() ) path+="/";
       path+=(*itr);
@@ -1137,7 +1132,7 @@ void HistoToWorkspaceFactory::FormatFrameForLikelihood(RooPlot* frame, string /*
   }
   TDirectory * HistoToWorkspaceFactory::Mkdir( TDirectory * file, string name ){
     if(! file) return file;
-    TDirectory* ptr=0;
+    TDirectory *ptr = nullptr;
     ptr=file->GetDirectory(name.c_str());
     if( ! ptr )  ptr=file->mkdir(name.c_str());
     return ptr;

@@ -47,19 +47,16 @@ ClassImp(RooChebychev);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooChebychev::RooChebychev() : _refRangeName(0)
+RooChebychev::RooChebychev() : _refRangeName(nullptr)
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor
 
-RooChebychev::RooChebychev(const char* name, const char* title,
-                           RooAbsReal& x, const RooArgList& coefList):
-  RooAbsPdf(name, title),
-  _x("x", "Dependent", this, x),
-  _coefList("coefficients","List of coefficients",this),
-  _refRangeName(0)
+RooChebychev::RooChebychev(const char *name, const char *title, RooAbsReal &x, const RooArgList &coefList)
+   : RooAbsPdf(name, title), _x("x", "Dependent", this, x), _coefList("coefficients", "List of coefficients", this),
+     _refRangeName(nullptr)
 {
   TIterator* coefIter = coefList.createIterator() ;
   RooAbsArg* coef ;
@@ -100,7 +97,7 @@ void RooChebychev::selectNormalizationRange(const char* rangeName, Bool_t force)
     _refRangeName = (TNamed*) RooNameReg::instance().constPtr(rangeName) ;
   }
   if (!rangeName) {
-    _refRangeName = 0 ;
+     _refRangeName = nullptr;
   }
 }
 
@@ -108,22 +105,25 @@ void RooChebychev::selectNormalizationRange(const char* rangeName, Bool_t force)
 
 Double_t RooChebychev::evaluate() const
 {
-  Double_t xmin = _x.min(_refRangeName?_refRangeName->GetName():0) ; Double_t xmax = _x.max(_refRangeName?_refRangeName->GetName():0);
-  Double_t x(-1+2*(_x-xmin)/(xmax-xmin));
-  Double_t x2(x*x);
-  Double_t sum(0) ;
-  switch (_coefList.getSize()) {
-  case  7: sum+=((RooAbsReal&)_coefList[6]).getVal()*x*p3(x2,64,-112,56,-7);
-  case  6: sum+=((RooAbsReal&)_coefList[5]).getVal()*p3(x2,32,-48,18,-1);
-  case  5: sum+=((RooAbsReal&)_coefList[4]).getVal()*x*p2(x2,16,-20,5);
-  case  4: sum+=((RooAbsReal&)_coefList[3]).getVal()*p2(x2,8,-8,1);
-  case  3: sum+=((RooAbsReal&)_coefList[2]).getVal()*x*p1(x2,4,-3);
-  case  2: sum+=((RooAbsReal&)_coefList[1]).getVal()*p1(x2,2,-1);
-  case  1: sum+=((RooAbsReal&)_coefList[0]).getVal()*x;
-  case  0: sum+=1; break;
-  default: std::cerr << "In " << __my_func__ << " (" << __FILE__ << ", line " <<
-          __LINE__ << "): Higher order Chebychev polynomials currently "
-          "unimplemented." << std::endl;
+   Double_t xmin = _x.min(_refRangeName ? _refRangeName->GetName() : nullptr);
+   Double_t xmax = _x.max(_refRangeName ? _refRangeName->GetName() : nullptr);
+   Double_t x(-1 + 2 * (_x - xmin) / (xmax - xmin));
+   Double_t x2(x * x);
+   Double_t sum(0);
+   switch (_coefList.getSize()) {
+   case 7: sum += ((RooAbsReal &)_coefList[6]).getVal() * x * p3(x2, 64, -112, 56, -7);
+   case 6: sum += ((RooAbsReal &)_coefList[5]).getVal() * p3(x2, 32, -48, 18, -1);
+   case 5: sum += ((RooAbsReal &)_coefList[4]).getVal() * x * p2(x2, 16, -20, 5);
+   case 4: sum += ((RooAbsReal &)_coefList[3]).getVal() * p2(x2, 8, -8, 1);
+   case 3: sum += ((RooAbsReal &)_coefList[2]).getVal() * x * p1(x2, 4, -3);
+   case 2: sum += ((RooAbsReal &)_coefList[1]).getVal() * p1(x2, 2, -1);
+   case 1: sum += ((RooAbsReal &)_coefList[0]).getVal() * x;
+   case 0: sum += 1; break;
+   default:
+      std::cerr << "In " << __my_func__ << " (" << __FILE__ << ", line " << __LINE__
+                << "): Higher order Chebychev polynomials currently "
+                   "unimplemented."
+                << std::endl;
       R__ASSERT(false);
   }
   return sum;
@@ -145,8 +145,8 @@ Double_t RooChebychev::analyticalIntegral(Int_t code, const char* rangeName) con
 
   // the full range of the function is mapped to the normalised [-1, 1] range
 
-  const Double_t xminfull(_x.min(_refRangeName?_refRangeName->GetName():0)) ;
-  const Double_t xmaxfull(_x.max(_refRangeName?_refRangeName->GetName():0)) ;
+  const Double_t xminfull(_x.min(_refRangeName ? _refRangeName->GetName() : nullptr));
+  const Double_t xmaxfull(_x.max(_refRangeName ? _refRangeName->GetName() : nullptr));
 
   const Double_t fullRange = xmaxfull - xminfull;
 

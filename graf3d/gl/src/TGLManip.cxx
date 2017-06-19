@@ -36,11 +36,7 @@ ClassImp(TGLManip);
 /// Construct a manipulator object, bound to supplied viewer, and no
 /// physical shape.
 
-TGLManip::TGLManip() :
-   fShape(0),
-   fSelectedWidget(0), fActive(kFALSE),
-   fFirstMouse(0, 0),
-   fLastMouse(0, 0)
+TGLManip::TGLManip() : fShape(nullptr), fSelectedWidget(0), fActive(kFALSE), fFirstMouse(0, 0), fLastMouse(0, 0)
 {
 }
 

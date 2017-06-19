@@ -137,14 +137,14 @@ public:
    ~TClingCallFunc() = default;
 
    explicit TClingCallFunc(cling::Interpreter *interp, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt)
-      : fInterp(interp), fNormCtxt(normCtxt), fWrapper(0), fIgnoreExtraArgs(false), fReturnIsRecordType(false)
+      : fInterp(interp), fNormCtxt(normCtxt), fWrapper(nullptr), fIgnoreExtraArgs(false), fReturnIsRecordType(false)
    {
       fMethod = std::unique_ptr<TClingMethodInfo>(new TClingMethodInfo(interp));
    }
 
    explicit TClingCallFunc(const TClingMethodInfo &minfo, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt)
-   : fInterp(minfo.GetInterpreter()), fNormCtxt(normCtxt), fWrapper(0), fIgnoreExtraArgs(false),
-     fReturnIsRecordType(false)
+      : fInterp(minfo.GetInterpreter()), fNormCtxt(normCtxt), fWrapper(nullptr), fIgnoreExtraArgs(false),
+        fReturnIsRecordType(false)
 
    {
       fMethod = std::unique_ptr<TClingMethodInfo>(new TClingMethodInfo(minfo));
@@ -159,16 +159,12 @@ public:
 
    TClingCallFunc &operator=(const TClingCallFunc &rhs) = delete;
 
-   void* ExecDefaultConstructor(const TClingClassInfo* info, void* address = 0,
-                                unsigned long nary = 0UL);
-   void ExecDestructor(const TClingClassInfo* info, void* address = 0,
-                       unsigned long nary = 0UL, bool withFree = true);
-   void ExecWithReturn(void* address, void* ret = 0);
-   void ExecWithArgsAndReturn(void* address,
-                              const void* args[] = 0,
-                              int nargs = 0,
-                              void* ret = 0);
-   void Exec(void* address, TInterpreterValue* interpVal = 0);
+   void *ExecDefaultConstructor(const TClingClassInfo *info, void *address = nullptr, unsigned long nary = 0UL);
+   void ExecDestructor(const TClingClassInfo *info, void *address = nullptr, unsigned long nary = 0UL,
+                       bool withFree = true);
+   void ExecWithReturn(void *address, void *ret = nullptr);
+   void ExecWithArgsAndReturn(void *address, const void *args[] = nullptr, int nargs = 0, void *ret = nullptr);
+   void Exec(void *address, TInterpreterValue *interpVal = nullptr);
    long ExecInt(void* address);
    long long ExecInt64(void* address);
    double ExecDouble(void* address);
@@ -177,7 +173,7 @@ public:
    void Init();
    void Init(const TClingMethodInfo&);
    void Init(std::unique_ptr<TClingMethodInfo>);
-   void Invoke(cling::Value* result = 0) const;
+   void Invoke(cling::Value *result = nullptr) const;
    void* InterfaceMethod();
    bool IsValid() const;
    TInterpreter::CallFuncIFacePtr_t IFacePtr();

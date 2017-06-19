@@ -27,7 +27,7 @@ ClassImp(TGIdleHandler);
 ////////////////////////////////////////////////////////////////////////////////
 /// Create idle handler.
 
-TGIdleHandler::TGIdleHandler(TGWindow *w) : fWindow(0)
+TGIdleHandler::TGIdleHandler(TGWindow *w) : fWindow(nullptr)
 {
    if (w) {
       fWindow = w;

@@ -107,8 +107,8 @@ Bool_t RooQuasiRandomGenerator::generate(UInt_t dimension, Double_t vector[])
     else break;
   }
   if(r >= NBits) {
-    oocoutE((TObject*)0,Integration) << "RooQuasiRandomGenerator::generate: internal error!" << endl;
-    return kFALSE;
+     oocoutE((TObject *)nullptr, Integration) << "RooQuasiRandomGenerator::generate: internal error!" << endl;
+     return kFALSE;
   }
 
   /* Calculate the next state. */

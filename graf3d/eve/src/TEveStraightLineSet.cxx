@@ -24,18 +24,11 @@ ClassImp(TEveStraightLineSet);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TEveStraightLineSet::TEveStraightLineSet(const char* n, const char* t):
-   TEveElement (),
-   TNamed      (n, t),
+TEveStraightLineSet::TEveStraightLineSet(const char *n, const char *t)
+   : TEveElement(), TNamed(n, t),
 
-   fLinePlex      (sizeof(Line_t), 4),
-   fMarkerPlex    (sizeof(Marker_t), 8),
-   fOwnLinesIds   (kFALSE),
-   fOwnMarkersIds (kFALSE),
-   fRnrMarkers    (kTRUE),
-   fRnrLines      (kTRUE),
-   fDepthTest     (kTRUE),
-   fLastLine      (0)
+     fLinePlex(sizeof(Line_t), 4), fMarkerPlex(sizeof(Marker_t), 8), fOwnLinesIds(kFALSE), fOwnMarkersIds(kFALSE),
+     fRnrMarkers(kTRUE), fRnrLines(kTRUE), fDepthTest(kTRUE), fLastLine(nullptr)
 {
    InitMainTrans();
    fPickable = kTRUE;

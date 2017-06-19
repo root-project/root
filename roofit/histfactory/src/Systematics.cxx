@@ -132,12 +132,9 @@ void RooStats::HistFactory::HistoSys::writeToFile( const std::string& FileName,
   // changes the name of the local file and histograms
   
   TH1* histLow = GetHistoLow();
-  if( histLow==NULL ) {
-    std::cout << "Error: Cannot write " << GetName()
-	      << " to file: " << FileName
-	      << " HistoLow is NULL" 
-	      << std::endl;
-    throw hf_exc();
+  if (histLow == nullptr) {
+     std::cout << "Error: Cannot write " << GetName() << " to file: " << FileName << " HistoLow is NULL" << std::endl;
+     throw hf_exc();
   }
   histLow->Write();
   fInputFileLow = FileName;
@@ -145,12 +142,9 @@ void RooStats::HistFactory::HistoSys::writeToFile( const std::string& FileName,
   fHistoNameLow = histLow->GetName(); 
 
   TH1* histHigh = GetHistoHigh();
-  if( histHigh==NULL ) {
-    std::cout << "Error: Cannot write " << GetName()
-	      << " to file: " << FileName
-	      << " HistoHigh is NULL" 
-	      << std::endl;
-    throw hf_exc();
+  if (histHigh == nullptr) {
+     std::cout << "Error: Cannot write " << GetName() << " to file: " << FileName << " HistoHigh is NULL" << std::endl;
+     throw hf_exc();
   }
   histHigh->Write();
   fInputFileHigh = FileName;
@@ -193,12 +187,9 @@ void RooStats::HistFactory::ShapeSys::writeToFile( const std::string& FileName,
 						   const std::string& DirName ) {
 
   TH1* histError = GetErrorHist();
-  if( histError==NULL ) {
-    std::cout << "Error: Cannot write " << GetName()
-	      << " to file: " << FileName
-	      << " ErrorHist is NULL" 
-	      << std::endl;
-    throw hf_exc();
+  if (histError == nullptr) {
+     std::cout << "Error: Cannot write " << GetName() << " to file: " << FileName << " ErrorHist is NULL" << std::endl;
+     throw hf_exc();
   }
   histError->Write();
   fInputFile = FileName;
@@ -245,12 +236,9 @@ void RooStats::HistFactory::HistoFactor::writeToFile( const std::string& FileNam
   // changes the name of the local file and histograms
   
   TH1* histLow = GetHistoLow();
-  if( histLow==NULL ) {
-    std::cout << "Error: Cannot write " << GetName()
-	      << " to file: " << FileName
-	      << " HistoLow is NULL" 
-	      << std::endl;
-    throw hf_exc();
+  if (histLow == nullptr) {
+     std::cout << "Error: Cannot write " << GetName() << " to file: " << FileName << " HistoLow is NULL" << std::endl;
+     throw hf_exc();
   }
   histLow->Write();
   fInputFileLow = FileName;
@@ -258,12 +246,9 @@ void RooStats::HistFactory::HistoFactor::writeToFile( const std::string& FileNam
   fHistoNameLow = histLow->GetName(); 
 
   TH1* histHigh = GetHistoHigh();
-  if( histHigh==NULL ) {
-    std::cout << "Error: Cannot write " << GetName()
-	      << " to file: " << FileName
-	      << " HistoHigh is NULL" 
-	      << std::endl;
-    throw hf_exc();
+  if (histHigh == nullptr) {
+     std::cout << "Error: Cannot write " << GetName() << " to file: " << FileName << " HistoHigh is NULL" << std::endl;
+     throw hf_exc();
   }
   histHigh->Write();
   fInputFileHigh = FileName;
@@ -289,9 +274,10 @@ void RooStats::HistFactory::HistoFactor::PrintXML( std::ostream& xml ) {
 
 
 // Shape Factor
-RooStats::HistFactory::ShapeFactor::ShapeFactor() : fConstant(false), 
-						    fHasInitialShape(false),
-						    fhInitialShape(NULL) {;}
+RooStats::HistFactory::ShapeFactor::ShapeFactor() : fConstant(false), fHasInitialShape(false), fhInitialShape(nullptr)
+{
+   ;
+}
 
 void RooStats::HistFactory::ShapeFactor::Print( std::ostream& stream ) {
 
@@ -315,12 +301,10 @@ void RooStats::HistFactory::ShapeFactor::writeToFile( const std::string& FileNam
 
   if( HasInitialShape() ) {
     TH1* histInitialShape = GetInitialShape();
-    if( histInitialShape==NULL ) {
-      std::cout << "Error: Cannot write " << GetName()
-		<< " to file: " << FileName
-		<< " InitialShape is NULL" 
-		<< std::endl;
-      throw hf_exc();
+    if (histInitialShape == nullptr) {
+       std::cout << "Error: Cannot write " << GetName() << " to file: " << FileName << " InitialShape is NULL"
+                 << std::endl;
+       throw hf_exc();
     }
     histInitialShape->Write();
     fInputFile = FileName;
@@ -398,9 +382,9 @@ void RooStats::HistFactory::StatError::writeToFile( const std::string& OutputFil
     std::string statErrorHistName = "statisticalErrors";
     
     TH1* hStatError = GetErrorHist();
-    if( hStatError == NULL ) {
-      std::cout << "Error: Stat Error error hist is NULL" << std::endl;
-      throw hf_exc();
+    if (hStatError == nullptr) {
+       std::cout << "Error: Stat Error error hist is NULL" << std::endl;
+       throw hf_exc();
     }
     hStatError->Write(statErrorHistName.c_str());
     

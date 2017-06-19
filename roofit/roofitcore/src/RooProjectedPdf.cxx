@@ -45,8 +45,8 @@ using namespace std;
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
-RooProjectedPdf::RooProjectedPdf() : _curNormSet(0)
-{
+   RooProjectedPdf::RooProjectedPdf() : _curNormSet(nullptr)
+   {
 }
 
 
@@ -104,8 +104,8 @@ Double_t RooProjectedPdf::evaluate() const
 {
   // Calculate current unnormalized value of object
   int code ;
-  const RooAbsReal* proj = getProjection(&intobs,_curNormSet,0,code) ;
-  
+  const RooAbsReal *proj = getProjection(&intobs, _curNormSet, nullptr, code);
+
   return proj->getVal() ;
 }
 
@@ -133,7 +133,7 @@ const RooAbsReal* RooProjectedPdf::getProjection(const RooArgSet* iset, const Ro
   if (iset) {
     nset2->add(*iset) ;
   }
-  RooAbsReal* proj = intpdf.arg().createIntegral(iset?*iset:RooArgSet(),nset2,0,rangeName) ;
+  RooAbsReal *proj = intpdf.arg().createIntegral(iset ? *iset : RooArgSet(), nset2, nullptr, rangeName);
   delete nset2 ;
 
   cache = new CacheElem ;

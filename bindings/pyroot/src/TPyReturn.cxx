@@ -104,12 +104,12 @@ TPyReturn::operator char*() const
 TPyReturn::operator const char*() const
 {
    if ( fPyObject == Py_None )     // for void returns
-      return 0;
+      return nullptr;
 
    const char* s = PyROOT_PyUnicode_AsString( fPyObject );
    if ( PyErr_Occurred() ) {
       PyErr_Print();
-      return 0;
+      return nullptr;
    }
 
    return s;
@@ -173,8 +173,7 @@ TPyReturn::operator Double_t() const
 
 TPyReturn::operator void*() const
 {
-   if ( fPyObject == Py_None )
-      return 0;
+   if (fPyObject == Py_None) return nullptr;
 
    if ( PyROOT::ObjectProxy_Check( fPyObject ) ) {
       ((PyROOT::ObjectProxy*)fPyObject)->Release();
@@ -188,8 +187,7 @@ TPyReturn::operator void*() const
 
 TPyReturn::operator PyObject*() const
 {
-   if ( fPyObject == Py_None )
-      return 0;
+   if (fPyObject == Py_None) return nullptr;
 
    Py_INCREF( fPyObject );
    return fPyObject;

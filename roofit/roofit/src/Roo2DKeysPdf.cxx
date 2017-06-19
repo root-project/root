@@ -525,14 +525,13 @@ void Roo2DKeysPdf::writeToFile(char * outputFile, const char * name) const
 
 void Roo2DKeysPdf::writeHistToFile(char * outputFile, const char * histName) const
 {
-  TFile * file = 0;
-  cout << "Roo2DKeysPdf::writeHistToFile This member function is temporarily disabled" <<endl;
-  //make sure that any existing file is not over written
-  file = new TFile(outputFile, "UPDATE");
-  if (!file)
-  {
-    cout << "Roo2DKeysPdf::writeHistToFile unable to open file "<< outputFile <<endl;
-    return;
+   TFile *file = nullptr;
+   cout << "Roo2DKeysPdf::writeHistToFile This member function is temporarily disabled" << endl;
+   // make sure that any existing file is not over written
+   file = new TFile(outputFile, "UPDATE");
+   if (!file) {
+      cout << "Roo2DKeysPdf::writeHistToFile unable to open file " << outputFile << endl;
+      return;
   }
 
 
@@ -560,14 +559,13 @@ void Roo2DKeysPdf::writeHistToFile(char * outputFile, const char * histName) con
 
 void Roo2DKeysPdf::writeNTupleToFile(char * outputFile, const char * name) const
 {
-  TFile * file = 0;
+   TFile *file = nullptr;
 
-  //make sure that any existing file is not over written
-  file = new TFile(outputFile, "UPDATE");
-  if (!file)
-  {
-    cout << "Roo2DKeysPdf::writeNTupleToFile unable to open file "<< outputFile <<endl;
-    return;
+   // make sure that any existing file is not over written
+   file = new TFile(outputFile, "UPDATE");
+   if (!file) {
+      cout << "Roo2DKeysPdf::writeNTupleToFile unable to open file " << outputFile << endl;
+      return;
   }
   RooAbsReal & xArg = (RooAbsReal&)x.arg();
   RooAbsReal & yArg = (RooAbsReal&)y.arg();

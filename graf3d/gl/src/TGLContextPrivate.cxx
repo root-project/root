@@ -61,7 +61,7 @@ TGLContext *TGLContextPrivate::GetCurrentContext()
    }
 
    //Else part - error message was issued already by TGCocoa.
-   return 0;
+   return nullptr;
 }
 
 #else

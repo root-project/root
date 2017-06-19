@@ -265,7 +265,7 @@ void stressGeometry(const char *exp="*", Bool_t generate_ref=kFALSE, Bool_t vecg
       fname = TString::Format("%s.root", exps[i]);
       if (gGeoManager) {
          delete gGeoManager;
-         gGeoManager = 0;
+         gGeoManager = nullptr;
       }
       TGeoManager::Import(Form("http://root.cern.ch/files/%s",fname.Data()));
       if (!gGeoManager) return;
@@ -314,7 +314,7 @@ void stressGeometry(const char *exp="*", Bool_t generate_ref=kFALSE, Bool_t vecg
 
 void ReadRef(Int_t kexp) {
    TString fname;
-   TFile *f = 0;
+   TFile *f = nullptr;
    //use ref_[version[i]] files
    if (!gen_ref)
       fname = TString::Format("http://root.cern.ch/files/%s_ref_%d.root", exps[kexp],versions[kexp]);

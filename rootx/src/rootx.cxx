@@ -151,7 +151,7 @@ static int ReadUtmp()
    struct stat file_stats;
    size_t n_read, size;
 
-   gUtmpContents = 0;
+   gUtmpContents = nullptr;
 
    utmp = fopen(UTMP_FILE, "r");
    if (!utmp)
@@ -178,7 +178,7 @@ static int ReadUtmp()
       fclose(utmp);
 
    free(gUtmpContents);
-   gUtmpContents = 0;
+   gUtmpContents = nullptr;
    return 0;
 }
 
@@ -215,7 +215,7 @@ static STRUCT_UTMP *SearchEntry(int n, const char *tty)
         return ue;
       ue++;
    }
-   return 0;
+   return nullptr;
 }
 
 static const char *GetExePath()
@@ -594,10 +594,10 @@ int main(int argc, char **argv)
    // Continue with child...
 
    // Restore original signal actions
-   sigaction(SIGINT,  &saveintr, 0);
-   sigaction(SIGQUIT, &savequit, 0);
-   sigaction(SIGUSR1, &saveusr1, 0);
-   sigaction(SIGTERM, &saveterm, 0);
+   sigaction(SIGINT, &saveintr, nullptr);
+   sigaction(SIGQUIT, &savequit, nullptr);
+   sigaction(SIGUSR1, &saveusr1, nullptr);
+   sigaction(SIGTERM, &saveterm, nullptr);
 
    // Close X display connection
    CloseDisplay();
@@ -619,7 +619,7 @@ int main(int argc, char **argv)
 
    for (i = 1; i < argc; i++)
       argvv[1+i] = argv[i];
-   argvv[1+i] = 0;
+   argvv[1 + i] = nullptr;
 
    // Make sure library path is set
    SetLibraryPath();

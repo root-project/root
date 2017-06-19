@@ -35,7 +35,7 @@ private:
    TViewPubDataMembers& operator=(const TViewPubDataMembers&);   // not implemented
 
 public:
-   TViewPubDataMembers(TClass *cl = 0);
+   TViewPubDataMembers(TClass *cl = nullptr);
    virtual    ~TViewPubDataMembers();
 
    TObject   *FindObject(const char *name) const;
@@ -105,7 +105,11 @@ protected:
    Bool_t       fStarted;      //iteration started
    Bool_t       fDirection;    //iteration direction
 
-   TViewPubDataMembersIter() : fView(0), fClassIter((TCollection *)0), fIter((TCollection *)0), fStarted(kFALSE), fDirection(kIterForward) { }
+   TViewPubDataMembersIter()
+      : fView(nullptr), fClassIter((TCollection *)nullptr), fIter((TCollection *)nullptr), fStarted(kFALSE),
+        fDirection(kIterForward)
+   {
+   }
 
 public:
    TViewPubDataMembersIter(const TViewPubDataMembers *l, Bool_t dir = kIterForward);

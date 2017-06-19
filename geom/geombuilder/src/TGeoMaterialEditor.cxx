@@ -55,7 +55,7 @@ TGeoMaterialEditor::TGeoMaterialEditor(const TGWindow *p, Int_t width,
                                    Int_t height, UInt_t options, Pixel_t back)
    : TGeoGedFrame(p, width, height, options | kVerticalFrame, back)
 {
-   fMaterial   = 0;
+   fMaterial = nullptr;
    fAi = fZi = 0;
    fDensityi = 0.0;
    fNamei = "";
@@ -217,7 +217,7 @@ void TGeoMaterialEditor::ConnectSignals2Slots()
 
 void TGeoMaterialEditor::SetModel(TObject* obj)
 {
-   if (obj == 0 || !(obj->InheritsFrom(TGeoMaterial::Class()))) {
+   if (obj == nullptr || !(obj->InheritsFrom(TGeoMaterial::Class()))) {
       SetActive(kFALSE);
       return;
    }
@@ -393,8 +393,8 @@ TGeoMixtureEditor::TGeoMixtureEditor(const TGWindow *p, Int_t width,
                                    Int_t height, UInt_t options, Pixel_t back)
    : TGeoMaterialEditor(p, width, height, options | kVerticalFrame, back)
 {
-   fMixture = 0;
-   TGCompositeFrame *compxyz=0, *f1=0;
+   fMixture = nullptr;
+   TGCompositeFrame *compxyz = nullptr, *f1 = nullptr;
    TGTextEntry *nef;
    MakeTitle("Mixture settings");
    fNelem = new TGLabel(this, "Number of elements: 0");
@@ -500,7 +500,7 @@ void TGeoMixtureEditor::ConnectSignals2Slots()
 
 void TGeoMixtureEditor::SetModel(TObject* obj)
 {
-   if (obj == 0 || !(obj->InheritsFrom(TGeoMixture::Class()))) {
+   if (obj == nullptr || !(obj->InheritsFrom(TGeoMixture::Class()))) {
       SetActive(kFALSE);
       return;
    }

@@ -39,15 +39,10 @@ ClassImp(RooEffProd);
 /// Constructor of a a production of p.d.f inPdf with efficiency
 /// function inEff.
 
-RooEffProd::RooEffProd(const char *name, const char *title, 
-                             RooAbsPdf& inPdf, RooAbsReal& inEff) :
-  RooAbsPdf(name,title),
-  _cacheMgr(this,10),
-  _pdf("pdf","pre-efficiency pdf", this,inPdf),
-  _eff("eff","efficiency function",this,inEff),
-  _nset(0),
-  _fixedNset(0)
-{  
+  RooEffProd::RooEffProd(const char *name, const char *title, RooAbsPdf &inPdf, RooAbsReal &inEff)
+     : RooAbsPdf(name, title), _cacheMgr(this, 10), _pdf("pdf", "pre-efficiency pdf", this, inPdf),
+       _eff("eff", "efficiency function", this, inEff), _nset(nullptr), _fixedNset(nullptr)
+  {  
 }
 
 
@@ -56,13 +51,9 @@ RooEffProd::RooEffProd(const char *name, const char *title,
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-RooEffProd::RooEffProd(const RooEffProd& other, const char* name) : 
-  RooAbsPdf(other, name),
-  _cacheMgr(other._cacheMgr,this),
-  _pdf("pdf",this,other._pdf),
-  _eff("acc",this,other._eff),
-  _nset(0),
-  _fixedNset(0) 
+RooEffProd::RooEffProd(const RooEffProd &other, const char *name)
+   : RooAbsPdf(other, name), _cacheMgr(other._cacheMgr, this), _pdf("pdf", this, other._pdf),
+     _eff("acc", this, other._eff), _nset(nullptr), _fixedNset(nullptr)
 {
 }
 
@@ -107,9 +98,9 @@ Double_t RooEffProd::evaluate() const
 RooAbsGenContext* RooEffProd::genContext(const RooArgSet &vars, const RooDataSet *prototype,
                                             const RooArgSet* auxProto, Bool_t verbose) const
 {
-  assert(pdf()!=0);
-  assert(eff()!=0);
-  return new RooEffGenContext(*this,*pdf(),*eff(),vars,prototype,auxProto,verbose) ;
+   assert(pdf() != nullptr);
+   assert(eff() != nullptr);
+   return new RooEffGenContext(*this, *pdf(), *eff(), vars, prototype, auxProto, verbose);
 }
 
 

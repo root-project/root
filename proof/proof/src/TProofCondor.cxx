@@ -40,10 +40,9 @@ ClassImp(TProofCondor);
 ////////////////////////////////////////////////////////////////////////////////
 /// Start proof using condor
 
-TProofCondor::TProofCondor(const char *masterurl, const char *conffile,
-                           const char *confdir, Int_t loglevel,
+TProofCondor::TProofCondor(const char *masterurl, const char *conffile, const char *confdir, Int_t loglevel,
                            const char *, TProofMgr *mgr)
-  : fCondor(0), fTimer(0)
+   : fCondor(nullptr), fTimer(nullptr)
 {
    // Default initializations
    InitMembers();
@@ -141,15 +140,14 @@ Bool_t TProofCondor::StartSlaves(Bool_t)
          // Notify claim creation
          nSlavesDone++;
          TMessage m(kPROOF_SERVERSTARTED);
-         m << TString("Creating COD Claim") << workerList->GetSize()
-         << nSlavesDone << (csl != 0);
+         m << TString("Creating COD Claim") << workerList->GetSize() << nSlavesDone << (csl != nullptr);
          gProofServ->GetSocket()->Send(m);
 
       } // end while (worker loop)
 
       // Cleanup
       delete resources;
-      resources = 0;
+      resources = nullptr;
    } // end else (parse config file)
 
    Long_t delay = 500; // timer delay 0.5s
@@ -160,7 +158,7 @@ Bool_t TProofCondor::StartSlaves(Bool_t)
    int nClaims = claims.GetSize();
    int nClaimsDone = 0;
    while (claims.GetSize() > 0) {
-      TCondorSlave* c = 0;
+      TCondorSlave *c = nullptr;
 
       // Get Condor Slave
       if (trial == 1) {
@@ -179,7 +177,7 @@ Bool_t TProofCondor::StartSlaves(Bool_t)
       }
 
       // create slave
-      TSlave *slave = 0;
+      TSlave *slave = nullptr;
       if (c) slave = CreateSlave(Form("%s:%d", c->fHostname.Data(), c->fPort), c->fOrdinal,
                                                c->fPerfIdx, c->fImage, c->fWorkDir);
 
@@ -249,13 +247,13 @@ Bool_t TProofCondor::StartSlaves(Bool_t)
    // Here we finalize the server startup: in this way the bulk
    // of remote operations are almost parallelized
    TIter nxsl(fSlaves);
-   TSlave *sl = 0;
+   TSlave *sl = nullptr;
    int nSlavesDone = 0, nSlavesTotal = fSlaves->GetSize();
    while ((sl = (TSlave *) nxsl())) {
 
       // Finalize setup of the server
       if (sl->IsValid()) {
-         sl->SetupServ(TSlave::kSlave, 0);
+         sl->SetupServ(TSlave::kSlave, nullptr);
       }
 
       if (sl->IsValid()) {
@@ -281,7 +279,7 @@ Bool_t TProofCondor::StartSlaves(Bool_t)
 
 void TProofCondor::SetActive(Bool_t active)
 {
-   if (fTimer == 0) {
+   if (fTimer == nullptr) {
       fTimer = new TTimer();
    }
    if (active) {

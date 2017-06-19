@@ -80,28 +80,19 @@ ClassImp(TMVA::MethodHMatrix);
 ////////////////////////////////////////////////////////////////////////////////
 /// standard constructor for the H-Matrix method
 
-   TMVA::MethodHMatrix::MethodHMatrix( const TString& jobName,
-                                       const TString& methodTitle,
-                                       DataSetInfo& theData,
-                                       const TString& theOption )
-   : TMVA::MethodBase( jobName, Types::kHMatrix, methodTitle, theData, theOption)
-   ,fInvHMatrixS(0)
-   ,fInvHMatrixB(0)
-   ,fVecMeanS(0)
-   ,fVecMeanB(0)
+TMVA::MethodHMatrix::MethodHMatrix(const TString &jobName, const TString &methodTitle, DataSetInfo &theData,
+                                   const TString &theOption)
+   : TMVA::MethodBase(jobName, Types::kHMatrix, methodTitle, theData, theOption), fInvHMatrixS(nullptr),
+     fInvHMatrixB(nullptr), fVecMeanS(nullptr), fVecMeanB(nullptr)
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor from weight file
 
-TMVA::MethodHMatrix::MethodHMatrix( DataSetInfo& theData,
-                                    const TString& theWeightFile)
-   : TMVA::MethodBase( Types::kHMatrix, theData, theWeightFile)
-   ,fInvHMatrixS(0)
-   ,fInvHMatrixB(0)
-   ,fVecMeanS(0)
-   ,fVecMeanB(0)
+TMVA::MethodHMatrix::MethodHMatrix(DataSetInfo &theData, const TString &theWeightFile)
+   : TMVA::MethodBase(Types::kHMatrix, theData, theWeightFile), fInvHMatrixS(nullptr), fInvHMatrixB(nullptr),
+     fVecMeanS(nullptr), fVecMeanB(nullptr)
 {
 }
 
@@ -126,10 +117,10 @@ void TMVA::MethodHMatrix::Init( void )
 
 TMVA::MethodHMatrix::~MethodHMatrix( void )
 {
-   if (NULL != fInvHMatrixS) delete fInvHMatrixS;
-   if (NULL != fInvHMatrixB) delete fInvHMatrixB;
-   if (NULL != fVecMeanS   ) delete fVecMeanS;
-   if (NULL != fVecMeanB   ) delete fVecMeanB;
+   if (nullptr != fInvHMatrixS) delete fInvHMatrixS;
+   if (nullptr != fInvHMatrixB) delete fInvHMatrixB;
+   if (nullptr != fVecMeanS) delete fVecMeanS;
+   if (nullptr != fVecMeanB) delete fVecMeanB;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

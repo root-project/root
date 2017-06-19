@@ -43,9 +43,9 @@ extern Int_t gverbose;
 static const char *glabMet[] = { "#files", "size" };
 THashList gProtoPortMap;
 // Local functions
-int do_anadist_ds(TFileCollection *fc, const char *newsrvs = 0, const char *ignsrvs = 0,
-                  const char *excsrvs = 0, int met = 0, const char *fnout = 0,
-                  TList *distinfo = 0, const char *outfile = 0, const char *infile = 0);
+int do_anadist_ds(TFileCollection *fc, const char *newsrvs = nullptr, const char *ignsrvs = nullptr,
+                  const char *excsrvs = nullptr, int met = 0, const char *fnout = nullptr, TList *distinfo = nullptr,
+                  const char *outfile = nullptr, const char *infile = nullptr);
 void do_anadist_getkey(const char *p, TString &key);
 void do_anadist_getkey(TUrl *u, TString &key);
 
@@ -84,7 +84,7 @@ void do_ls_files_server(const char *ds, const char *server)
    const char *action = (server && strlen(server) > 0) ? "pq2-ls-files-server" : "pq2-ls-files";
 
    // We need to scan all the datasets to find the matching ones ...
-   TFileCollection *fc = 0;
+   TFileCollection *fc = nullptr;
    { redirguard rog(flog.Data(), "a", gverbose);
       if (server && strlen(server) > 0) {
          fc = GetDataSet(ds, server);
@@ -119,7 +119,7 @@ void do_ls_files_server(const char *ds, const char *server)
    const char *unit[4] = {"kB", "MB", "GB", "TB"};
    TString uu, meta, name;
    TIter nxf(fc->GetList());
-   TFileInfo *fi = 0;
+   TFileInfo *fi = nullptr;
    Int_t nf = 0;
    while ((fi = (TFileInfo *) nxf())) {
       nf++;
@@ -143,7 +143,7 @@ void do_ls_files_server(const char *ds, const char *server)
          meta.Form("  %d  ", fi->GetMetaDataList()->GetSize());
          Bool_t firstObj = kTRUE;
          TIter nxm(fi->GetMetaDataList());
-         TFileInfoMeta *fim = 0;
+         TFileInfoMeta *fim = nullptr;
          while ((fim = (TFileInfoMeta *) nxm())) {
             if (!firstObj) meta += ",";
             name = fim->GetObject();
@@ -187,7 +187,7 @@ void printDataSet(TFileCollection *fc, Int_t popt)
       Printf("+++ Files:");
       Int_t nf = 0;
       TIter nxfi(fc->GetList());
-      TFileInfo *fi = 0;
+      TFileInfo *fi = nullptr;
       while ((fi = (TFileInfo *)nxfi())) {
          if (u == 1)
             Printf("+++ %5d. %s", ++nf, fi->GetCurrentUrl()->GetUrl());
@@ -206,7 +206,7 @@ void do_info_server(const char *server)
    const char *action = "pq2-info-server";
 
    // We need to scan all the datasets to find the matching ones ...
-   TMap *dsmap = 0;
+   TMap *dsmap = nullptr;
    {  redirguard rog(flog.Data(), "a", gverbose);
       dsmap = GetDataSets("/*/*", server);
    }
@@ -220,8 +220,8 @@ void do_info_server(const char *server)
    redirguard rog(fres.Data(), "w", gverbose);
    Int_t popt = 0;
    TIter nxk(dsmap);
-   TObject *k = 0;
-   TFileCollection *fc = 0;
+   TObject *k = nullptr;
+   TFileCollection *fc = nullptr;
    while ((k = nxk()) && (fc = (TFileCollection *) dsmap->GetValue(k))) {
       printDataSet(fc, popt);
    }
@@ -344,7 +344,7 @@ void do_put(const char *files, const char *opt)
       // Loop over the entries
       TString file;
       TRegexp reg(base);
-      const char *ent = 0;
+      const char *ent = nullptr;
       while ((ent = gSystem->GetDirEntry(dirp))) {
          // Skip default entries
          if (!strcmp(ent, ".") || !strcmp(ent, "..")) continue;
@@ -405,7 +405,7 @@ void do_rm(const char *dsname)
       printerr = 0;
    } else {
       // We need to scan all the datasets to find the matching ones ...
-      TMap *dss = 0;
+      TMap *dss = nullptr;
       {  redirguard rog(flog.Data(), "a", gverbose);
          dss = GetDataSets();
       }
@@ -419,7 +419,7 @@ void do_rm(const char *dsname)
       // Iterate
       TRegexp reg(dsname, kTRUE);
       TIter nxd(dss);
-      TObjString *os = 0;
+      TObjString *os = nullptr;
       while ((os = dynamic_cast<TObjString*>(nxd()))) {
          ds = os->GetName();
          if (ds.Index(reg) != kNPOS) {
@@ -484,7 +484,7 @@ int do_verify(const char *dsname, const char *opt, const char *redir)
       // Iterate
       Int_t xrc = -1;
       TIter nxd(dss);
-      TObjString *os = 0;
+      TObjString *os = nullptr;
       while ((os = dynamic_cast<TObjString*>(nxd()))) {
          nd++;
          // Verify the dataset
@@ -535,8 +535,8 @@ void do_anadist(const char *ds, const char *servers, const char *ignsrvs,
    Bool_t plotonly_m = (plot_m && infile && strlen(infile)) ? kTRUE : kFALSE;
 
    // We need to scan all the datasets to find the matching ones ...
-   TMap *fcmap = 0;
-   TObject *k = 0;
+   TMap *fcmap = nullptr;
+   TObject *k = nullptr;
    if (!plotonly_m) {
       redirguard rog(flog.Data(), "a", gverbose);
       TString dss(ds), d;
@@ -578,7 +578,7 @@ void do_anadist(const char *ds, const char *servers, const char *ignsrvs,
    TList distinfo;
    if (plotonly_m) {
       // Get the dist info
-      if (do_anadist_ds(0, 0, 0, 0, optMet, 0, &distinfo, 0, infile) != 0) {
+      if (do_anadist_ds(nullptr, nullptr, nullptr, nullptr, optMet, nullptr, &distinfo, nullptr, infile) != 0) {
          Printf("%s: problems getting dist info from '%s'", action, infile);
       }
    } else {
@@ -590,9 +590,9 @@ void do_anadist(const char *ds, const char *servers, const char *ignsrvs,
       cname.ReplaceAll("/", "-");
       cname.ReplaceAll("*", "-star-");
       distinfo.SetName(cname);
-      TFileCollection *fc = 0;
+      TFileCollection *fc = nullptr;
       TIter nxd(fcmap);
-      TFileCollection *fctot = 0;
+      TFileCollection *fctot = nullptr;
       while ((k = nxd()) && (fc = (TFileCollection *) fcmap->GetValue(k))) {
          if (!fctot) {
             // The first one
@@ -633,11 +633,11 @@ void do_anadist(const char *ds, const char *servers, const char *ignsrvs,
          fileplot += gext;
       }
       // Create the histogram
-      TH1D *h1d = 0;
+      TH1D *h1d = nullptr;
       if (distinfo.GetSize() > 0) {
          h1d = new TH1D("DistInfoHist", distinfo.GetName(), distinfo.GetSize(), 0.5, distinfo.GetSize() + .5);
          TIter nxs(&distinfo);
-         TParameter<Double_t> *ent = 0;
+         TParameter<Double_t> *ent = nullptr;
          Double_t x = 0;
          while ((ent = (TParameter<Double_t> *) nxs())) {
             x += 1.;
@@ -659,7 +659,7 @@ void do_anadist(const char *ds, const char *servers, const char *ignsrvs,
          TFile *f = TFile::Open(filehist, "RECREATE");
          if (f) {
             f->cd();
-            h1d->Write(0,TObject::kOverwrite);
+            h1d->Write(nullptr, TObject::kOverwrite);
             SafeDelete(f);
             // Write the instruction for the plotting macro
             TString filetmp = TString::Format("%s/%s.tmp", gSystem->TempDirectory(), action);
@@ -695,7 +695,7 @@ int do_anadist_ds(TFileCollection *fc, const char *servers, const char *ignsrvs,
 
    // Check the inputs
    Bool_t distonly_m = (!fc && distinfo && infile && strlen(infile) > 0) ? kTRUE : kFALSE;
-   const char *dsname = 0;
+   const char *dsname = nullptr;
    if (!distonly_m) {
       if (!fc) {
          Printf("%s: dataset undefined!", action);
@@ -710,7 +710,7 @@ int do_anadist_ds(TFileCollection *fc, const char *servers, const char *ignsrvs,
       dsname = distinfo->GetName();
    }
 
-   THashList *ignore = 0, *targets = 0, *exclude = 0;
+   THashList *ignore = nullptr, *targets = nullptr, *exclude = nullptr;
    Bool_t addmode = kFALSE;
    if (!distonly_m) {
       TString ss, k, key;
@@ -759,8 +759,8 @@ int do_anadist_ds(TFileCollection *fc, const char *servers, const char *ignsrvs,
    }
    // List of sub-TFileCollection for each server, so that we automatically count
    // the sizes and totals
-   TNamed *fcsls_title = 0;
-   THashList *fcsls = 0;
+   TNamed *fcsls_title = nullptr;
+   THashList *fcsls = nullptr;
    Int_t targets_size = -1;
    if (infile && strlen(infile)) {
       TFile *flist = TFile::Open(infile);
@@ -806,7 +806,7 @@ int do_anadist_ds(TFileCollection *fc, const char *servers, const char *ignsrvs,
 
    // Set initial values for the counters, if needed
    Long64_t totsz = 0, totfiles = 0;
-   TFileCollection *fcs = 0;
+   TFileCollection *fcs = nullptr;
    TIter nxfc(fcsls);
    while ((fcs = (TFileCollection *) nxfc())) {
       fcs->Update();
@@ -815,7 +815,7 @@ int do_anadist_ds(TFileCollection *fc, const char *servers, const char *ignsrvs,
    }
 
    // Analyze the file collection content now
-   TFileInfo *fi = 0;
+   TFileInfo *fi = nullptr;
    if (fc) {
       TIter nxfi(fc->GetList());
       while ((fi = (TFileInfo *) nxfi())) {
@@ -963,7 +963,7 @@ int do_anadist_ds(TFileCollection *fc, const char *servers, const char *ignsrvs,
    }
 
    // Open output file, if requested
-   FILE *fout = 0;
+   FILE *fout = nullptr;
    if (fnout && strlen(fnout) > 0) {
       if (!(fout = fopen(fnout, "a"))) {
          Printf("%s: problems opening output file '%s' (errno: %d)", action, fnout, errno);
@@ -1124,7 +1124,7 @@ int do_anadist_plot(TH1D *h1d, const char */*fnout*/)
       TFile *f = TFile::Open("testhist.root", "RECREATE");
       if (f) {
          f->cd();
-         h1d->Write(0,TObject::kOverwrite);
+         h1d->Write(nullptr, TObject::kOverwrite);
          SafeDelete(f);
          return 0;
       }

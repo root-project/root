@@ -48,11 +48,11 @@ It has the following parameters:
 
 TPCON::TPCON()
 {
-   fRmin  = 0;
-   fRmax  = 0;
-   fDz    = 0;
-   fCoTab = 0;
-   fSiTab = 0;
+   fRmin = nullptr;
+   fRmax = nullptr;
+   fDz = nullptr;
+   fCoTab = nullptr;
+   fSiTab = nullptr;
    fPhi1  = 0.;
    fDphi1 = 0.;
    fNz    = 0;
@@ -79,8 +79,8 @@ TPCON::TPCON(const char *name, const char *title, const char *material, Float_t 
    fRmax  = new Float_t [nz+1];
    fDz    = new Float_t [nz+1];
 
-   fCoTab = 0;
-   fSiTab = 0;
+   fCoTab = nullptr;
+   fSiTab = nullptr;
 
    while (fDphi1 > 360) fDphi1 -= 360;
 
@@ -159,11 +159,11 @@ TPCON::~TPCON()
    if (fSiTab) delete [] fSiTab;
    if (fCoTab) delete [] fCoTab;
 
-   fRmin = 0;
-   fRmax = 0;
-   fDz   = 0;
-   fCoTab = 0;
-   fSiTab = 0;
+   fRmin = nullptr;
+   fRmax = nullptr;
+   fDz = nullptr;
+   fCoTab = nullptr;
+   fSiTab = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

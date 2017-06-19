@@ -53,7 +53,7 @@ TGeoTorusEditor::TGeoTorusEditor(const TGWindow *p, Int_t width,
                                    Int_t height, UInt_t options, Pixel_t back)
    : TGeoGedFrame(p, width, height, options | kVerticalFrame, back)
 {
-   fShape   = 0;
+   fShape = nullptr;
    fRi = fRmini = fRmaxi = fPhi1i = fDphii = 0.0;
    fNamei = "";
    fIsModified = kFALSE;
@@ -188,7 +188,7 @@ void TGeoTorusEditor::ConnectSignals2Slots()
 
 void TGeoTorusEditor::SetModel(TObject* obj)
 {
-   if (obj == 0 || (obj->IsA()!=TGeoTorus::Class())) {
+   if (obj == nullptr || (obj->IsA() != TGeoTorus::Class())) {
       SetActive(kFALSE);
       return;
    }

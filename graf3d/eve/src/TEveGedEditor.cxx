@@ -32,22 +32,20 @@ ClassImp(TEveGedEditor);
 Int_t   TEveGedEditor::fgMaxExtraEditors = 10;
 TList  *TEveGedEditor::fgExtraEditors    = new TList;
 
-TContextMenu *TEveGedEditor::fgContextMenu = 0;
+TContextMenu *TEveGedEditor::fgContextMenu = nullptr;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TEveGedEditor::TEveGedEditor(TCanvas* canvas, UInt_t width, UInt_t height) :
-   TGedEditor(canvas, width, height),
-   fElement  (0),
-   fObject   (0)
+TEveGedEditor::TEveGedEditor(TCanvas *canvas, UInt_t width, UInt_t height)
+   : TGedEditor(canvas, width, height), fElement(nullptr), fObject(nullptr)
 {
    // Remove old name-frame -- it is created in TGedEditor constructor
    // so virtuals are not active yet.
    fTabContainer->RemoveAll();
    TGedFrame* nf = CreateNameFrame(fTabContainer, "Style");
    nf->SetGedEditor(this);
-   nf->SetModelClass(0);
+   nf->SetModelClass(nullptr);
    fTabContainer->AddFrame(nf, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 2, 2, 2, 2));
 
    // Fix priority for TAttMarkerEditor.
@@ -65,7 +63,7 @@ TEveGedEditor::TEveGedEditor(TCanvas* canvas, UInt_t width, UInt_t height) :
       else
          * (Int_t*) (((char*)frame) + off) = 1;
    }
-   SetFrameCreator(0);
+   SetFrameCreator(nullptr);
    fClient->SetRoot(exroot);
    fFrameMap.Add(amClass, frame);
 }
@@ -90,11 +88,10 @@ void TEveGedEditor::CloseWindow()
 
    fgExtraEditors->Remove(this);
 
-   DisplayElement(0);
+   DisplayElement(nullptr);
 
    if (gDNDManager) {
-      if (gDNDManager->GetMainFrame() == this)
-         gDNDManager->SetMainFrame(0);
+      if (gDNDManager->GetMainFrame() == this) gDNDManager->SetMainFrame(nullptr);
    }
    DeleteWindow();
 }
@@ -112,7 +109,7 @@ TGedFrame* TEveGedEditor::CreateNameFrame(const TGWindow* parent, const char* /*
 
 TEveElement* TEveGedEditor::GetEveElement() const
 {
-   return (fModel == fObject) ? fElement : 0;
+   return (fModel == fObject) ? fElement : nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -123,7 +120,7 @@ void TEveGedEditor::DisplayElement(TEveElement* re)
    static const TEveException eh("TEveGedEditor::DisplayElement ");
 
    fElement = re;
-   fObject  = fElement ? fElement->GetEditorObject(eh) : 0;
+   fObject = fElement ? fElement->GetEditorObject(eh) : nullptr;
    TGedEditor::SetModel(fPad, fObject, kButton1Down, kTRUE);
 }
 
@@ -243,8 +240,7 @@ void TEveGedEditor::DestroyEditors()
 
 TContextMenu* TEveGedEditor::GetContextMenu()
 {
-   if (fgContextMenu == 0)
-      fgContextMenu = new TContextMenu("", "");
+   if (fgContextMenu == nullptr) fgContextMenu = new TContextMenu("", "");
    return fgContextMenu;
 }
 
@@ -260,10 +256,8 @@ ClassImp(TEveGedNameFrame);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TEveGedNameFrame::TEveGedNameFrame(const TGWindow *p, Int_t width, Int_t height,
-                                   UInt_t options) :
-   TGedFrame(p, width, height, options),
-   fNCButton(0)
+TEveGedNameFrame::TEveGedNameFrame(const TGWindow *p, Int_t width, Int_t height, UInt_t options)
+   : TGedFrame(p, width, height, options), fNCButton(nullptr)
 {
    fNCButton = new TEveGedNameTextButton(this);
    fNCButton->SetTextColor(0x0020a0);
@@ -292,7 +286,7 @@ void TEveGedNameFrame::SetModel(TObject* obj)
    else
    {
       fNCButton->SetText("No object selected.");
-      fNCButton->SetToolTipText(0);
+      fNCButton->SetToolTipText(nullptr);
       fNCButton->SetEnabled(kFALSE);
    }
 }

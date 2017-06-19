@@ -162,7 +162,7 @@ int main(int argc, char **argv)
    TFile *hfile;
    TTree *tree;
    TTreePerfStats *ioperf = nullptr;
-   Event *event = 0;
+   Event *event = nullptr;
 
    // Fill event, header and tracks with some random numbers
    //   Create a timer object to benchmark this loop
@@ -234,7 +234,7 @@ int main(int argc, char **argv)
       Float_t curtime = -0.5;
       Int_t ntime = nevent / printev;
       TH1F *htime = new TH1F("htime", "Real-Time to write versus time", ntime, 0, ntime);
-      HistogramManager *hm = 0;
+      HistogramManager *hm = nullptr;
       if (hfill) {
          TDirectory *hdir = new TDirectory("histograms", "all histograms");
          hm = new HistogramManager(hdir);
@@ -276,7 +276,8 @@ int main(int argc, char **argv)
       }
    }
    // We own the event (since we set the branch address explicitly), we need to delete it.
-   delete event;  event = 0;
+   delete event;
+   event = nullptr;
 
    //  Stop timer and print results
    timer.Stop();

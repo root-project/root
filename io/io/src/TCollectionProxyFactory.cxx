@@ -40,22 +40,18 @@ namespace {
             cl.replace(3,10,"::");
          if ( cl.find("__gnu_cxx::hash_") != std::string::npos )
             cl.replace(0,16,"std::");
-         TEmulatedCollectionProxy * result = 0;
+         TEmulatedCollectionProxy *result = nullptr;
          switch ( stl_type(cl) )  {
-            case ROOT::kNotSTL:
-               return 0;
-            case ROOT::kSTLmap:
-            case ROOT::kSTLmultimap:
-               result = new TEmulatedMapProxy(class_name,silent);
-               break;
-            default:
-               result = new TEmulatedCollectionProxy(class_name,silent);
+         case ROOT::kNotSTL: return nullptr;
+         case ROOT::kSTLmap:
+         case ROOT::kSTLmultimap: result = new TEmulatedMapProxy(class_name, silent); break;
+         default: result = new TEmulatedCollectionProxy(class_name, silent);
          }
          if ( result->IsValid() ) {
             return result;
          }
       }
-      return 0;
+      return nullptr;
    }
 }
 
@@ -124,17 +120,17 @@ void TCollectionStreamer::InvalidProxyError()   {
    Fatal("TCollectionStreamer>","No proxy available. Data streaming impossible.");
 }
 
-TCollectionStreamer::TCollectionStreamer() : fStreamer(0)
+TCollectionStreamer::TCollectionStreamer() : fStreamer(nullptr)
 {
    // Initializing constructor.
 }
 
-TCollectionStreamer::TCollectionStreamer(const TCollectionStreamer& c) : fStreamer(0)
+TCollectionStreamer::TCollectionStreamer(const TCollectionStreamer &c) : fStreamer(nullptr)
 {
    // Copy constructor.
    if ( c.fStreamer )  {
       fStreamer = dynamic_cast<TGenCollectionProxy*>(c.fStreamer->Generate());
-      R__ASSERT(fStreamer != 0);
+      R__ASSERT(fStreamer != nullptr);
       return;
    }
    InvalidProxyError();

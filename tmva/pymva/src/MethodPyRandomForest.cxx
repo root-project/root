@@ -354,7 +354,7 @@ void MethodPyRandomForest::Train()
 
    // Store classifier
    fClassifier = PyDict_GetItemString(fLocalNS, "classifier");
-   if(fClassifier == 0) {
+   if (fClassifier == nullptr) {
       Log() << kFATAL << "Can't create classifier object from RandomForestClassifier" << Endl;
       Log() << Endl;
    }
@@ -377,7 +377,7 @@ void MethodPyRandomForest::TestClassification()
 std::vector<Double_t> MethodPyRandomForest::GetMvaValues(Long64_t firstEvt, Long64_t lastEvt, Bool_t)
 {
    // Load model if not already done
-   if (fClassifier == 0) ReadModelFromFile();
+   if (fClassifier == nullptr) ReadModelFromFile();
 
    // Determine number of events
    Long64_t nEvents = Data()->GetNEvents();
@@ -423,7 +423,7 @@ Double_t MethodPyRandomForest::GetMvaValue(Double_t *errLower, Double_t *errUppe
    NoErrorCalc(errLower, errUpper);
 
    // Load model if not already done
-   if (fClassifier == 0) ReadModelFromFile();
+   if (fClassifier == nullptr) ReadModelFromFile();
 
    // Get current event and load to python array
    const TMVA::Event *e = Data()->GetEvent();
@@ -452,7 +452,7 @@ Double_t MethodPyRandomForest::GetMvaValue(Double_t *errLower, Double_t *errUppe
 std::vector<Float_t>& MethodPyRandomForest::GetMulticlassValues()
 {
    // Load model if not already done
-   if (fClassifier == 0) ReadModelFromFile();
+   if (fClassifier == nullptr) ReadModelFromFile();
 
    // Get current event and load to python array
    const TMVA::Event *e = Data()->GetEvent();
@@ -510,7 +510,7 @@ const Ranking* MethodPyRandomForest::CreateRanking()
    // Get feature importance from classifier as an array with length equal
    // number of variables, higher value signals a higher importance
    PyArrayObject* pRanking = (PyArrayObject*) PyObject_GetAttrString(fClassifier, "feature_importances_");
-   if(pRanking == 0) Log() << kFATAL << "Failed to get ranking from classifier" << Endl;
+   if (pRanking == nullptr) Log() << kFATAL << "Failed to get ranking from classifier" << Endl;
 
    // Fill ranking object and return it
    fRanking = new Ranking(GetName(), "Variable Importance");

@@ -50,8 +50,8 @@ public:
     if(s <= fSize) return;
     DeleteNames(); fSize=s; InitNames();
   }
-  HitNames() : fSize(0), fNames(0) {};
-  HitNames(Int_t s) : fSize(s), fNames(0) { InitNames(); };
+  HitNames() : fSize(0), fNames(nullptr){};
+  HitNames(Int_t s) : fSize(s), fNames(nullptr) { InitNames(); };
   virtual ~HitNames()                     { DeleteNames(); };
   const char *operator[](Int_t i)       { return fNames[i]; };
 };
@@ -71,7 +71,7 @@ void HitNames::DeleteNames() {      // Clean up
     delete[] fNames[i];
   }
   delete[] fNames;
-  fNames = 0;
+  fNames = nullptr;
 }
 
 HitNames names;   // We needs only one static object of this class
@@ -103,8 +103,7 @@ public:
   virtual const char* GetName() const
   { return fColl->ClassName(); }
 
-  Tester() :
-    fWhat(Other),fNobj(10),fNtimes(100000),fModa(0),fColl(0) {}
+  Tester() : fWhat(Other), fNobj(10), fNtimes(100000), fModa(0), fColl(nullptr) {}
   Tester(Int_t no,Int_t nt,Int_t m,TCollection *p) :
     fWhat(Other),fNobj(no),fNtimes(nt),fModa(m),fColl(p) {
       if(!strcmp(GetName(),"TClonesArray")) fWhat = Clones;

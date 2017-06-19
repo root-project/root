@@ -84,15 +84,8 @@ TMVA::VariableInfo::VariableInfo( const TString& expression, const TString& titl
 /// default constructor
 
 TMVA::VariableInfo::VariableInfo()
-   : TNamed(),
-     fExpression   (""),
-     fVarType      ('\0'),
-     fXmeanNorm    ( 0 ),
-     fXrmsNorm     ( 0 ),
-     fXvarianceNorm( 0 ),
-     fNormalized   ( kFALSE ),
-     fExternalData ( 0 ),
-     fVarCounter   ( 0 )
+   : TNamed(), fExpression(""), fVarType('\0'), fXmeanNorm(0), fXrmsNorm(0), fXvarianceNorm(0), fNormalized(kFALSE),
+     fExternalData(nullptr), fVarCounter(0)
 {
    fXminNorm     =  1e30;
    fXmaxNorm     = -1e30;

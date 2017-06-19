@@ -83,9 +83,9 @@ Bool_t TEnum::IsValid()
       if (newId) {
          Update(newId);
       }
-      return newId != 0;
+      return newId != nullptr;
    }
-   return fInfo != 0;
+   return fInfo != nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

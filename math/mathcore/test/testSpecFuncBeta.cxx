@@ -123,7 +123,7 @@ int main(int argc, char **argv)
      }
    }
 
-   TApplication* theApp = 0;
+   TApplication *theApp = nullptr;
    if ( showGraphics )
       theApp = new TApplication("App",&argc,argv);
 
@@ -133,7 +133,7 @@ int main(int argc, char **argv)
    {
       theApp->Run();
       delete theApp;
-      theApp = 0;
+      theApp = nullptr;
    }
 
    return status;

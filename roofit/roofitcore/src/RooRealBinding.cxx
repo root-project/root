@@ -54,24 +54,26 @@ ClassImp(RooRealBinding);
 /// defined range of the variables are clipped to fit in the defined
 /// range.
 
-RooRealBinding::RooRealBinding(const RooAbsReal& func, const RooArgSet &vars, const RooArgSet* nset, Bool_t clipInvalid, const TNamed* rangeName) :
-  RooAbsFunc(vars.getSize()), _func(&func), _vars(0), _nset(nset), _clipInvalid(clipInvalid), _xsave(0), _rangeName(rangeName), _funcSave(0)
+RooRealBinding::RooRealBinding(const RooAbsReal &func, const RooArgSet &vars, const RooArgSet *nset, Bool_t clipInvalid,
+                               const TNamed *rangeName)
+   : RooAbsFunc(vars.getSize()), _func(&func), _vars(nullptr), _nset(nset), _clipInvalid(clipInvalid), _xsave(nullptr),
+     _rangeName(rangeName), _funcSave(0)
 {
   // allocate memory
   _vars= new RooAbsRealLValue*[getDimension()];
-  if(0 == _vars) {
-    _valid= kFALSE;
-    return;
+  if (nullptr == _vars) {
+     _valid = kFALSE;
+     return;
   }
   // check that all of the arguments are real valued and store them
-  RooAbsArg *var = 0;
+  RooAbsArg *var = nullptr;
   TIterator* iter = vars.createIterator() ;
   Int_t index(0) ;
   while((var=(RooAbsArg*)iter->Next())) {
     _vars[index]= dynamic_cast<RooAbsRealLValue*>(var);
-    if(0 == _vars[index]) {
-      oocoutE((TObject*)0,InputArguments) << "RooRealBinding: cannot bind to " << var->GetName() << endl ;
-      _valid= kFALSE;
+    if (nullptr == _vars[index]) {
+       oocoutE((TObject *)nullptr, InputArguments) << "RooRealBinding: cannot bind to " << var->GetName() << endl;
+       _valid = kFALSE;
     }
     index++ ;
   }
@@ -90,9 +92,9 @@ RooRealBinding::RooRealBinding(const RooAbsReal& func, const RooArgSet &vars, co
 /// defined range of the variables are clipped to fit in the defined
 /// range.
 
-RooRealBinding::RooRealBinding(const RooRealBinding& other, const RooArgSet* nset) :
-  RooAbsFunc(other), _func(other._func), _nset(nset?nset:other._nset), _xvecValid(other._xvecValid),
-  _clipInvalid(other._clipInvalid), _xsave(0), _rangeName(other._rangeName), _funcSave(other._funcSave)
+RooRealBinding::RooRealBinding(const RooRealBinding &other, const RooArgSet *nset)
+   : RooAbsFunc(other), _func(other._func), _nset(nset ? nset : other._nset), _xvecValid(other._xvecValid),
+     _clipInvalid(other._clipInvalid), _xsave(nullptr), _rangeName(other._rangeName), _funcSave(other._funcSave)
 {
   // allocate memory
   _vars= new RooAbsRealLValue*[getDimension()];
@@ -108,8 +110,8 @@ RooRealBinding::RooRealBinding(const RooRealBinding& other, const RooArgSet* nse
 
 RooRealBinding::~RooRealBinding() 
 {
-  if(0 != _vars) delete[] _vars;
-  if (_xsave) delete[] _xsave ;
+   if (nullptr != _vars) delete[] _vars;
+   if (_xsave) delete[] _xsave;
 }
 
 

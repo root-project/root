@@ -129,7 +129,7 @@ Int_t    sizes[100];
 TString  gTmpfilename;
 TString  gRootSys;
 
-FILE    *sgref = 0;
+FILE *sgref = nullptr;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Application main entry point.
@@ -183,7 +183,7 @@ void stressGUI()
    else {
       // Read the reference file "stressGUI.ref"
       sgref = fopen("stressGUI.ref", "rt");
-      if (sgref == 0) {
+      if (sgref == nullptr) {
          printf("\nReference file \"stressGUI.ref\" not found!\n");
          printf("Please generate the reference file by executing\n");
          printf("stressGUI with the -ref flag, as shown below:\n");
@@ -433,7 +433,7 @@ void ProcessFrame(TGFrame *f, const char *title)
          gSystem->RedirectOutput(gTmpfilename.Data(), "w", &gRH);
          ((TGMainFrame *)f)->SaveSource(Form("sgui_%02d.C", gTestNum));
          gSystem->Unlink(Form("sgui_%02d.C", gTestNum));
-         gSystem->RedirectOutput(0, 0, &gRH);
+         gSystem->RedirectOutput(nullptr, nullptr, &gRH);
       }
    }
    VerifySize(outfile, title);
@@ -468,7 +468,7 @@ void ProcessMacro(const char *macro, const char *title)
 void CloseMainframes()
 {
    TClass* clGMainFrame = TClass::GetClass("TGMainFrame");
-   TGWindow* win = 0;
+   TGWindow *win = nullptr;
    TIter iWin(gClient->GetListOfWindows());
    while ((win = (TGWindow*)iWin())) {
       const TObject* winGetParent = win->GetParent();
@@ -1190,7 +1190,7 @@ ListTreeWindow::ListTreeWindow(const TGWindow *p, UInt_t w, UInt_t h) :
    fListTree = new TGListTree(fCanvas, kHorizontalFrame);
    fListTree->SetCheckMode(TGListTree::kRecursive);
 
-   fListTree->AddItem(0, "rootNode");
+   fListTree->AddItem(nullptr, "rootNode");
 
    fNamesList = new TList();
 
@@ -1241,12 +1241,12 @@ ListTreeWindow::ListTreeWindow(const TGWindow *p, UInt_t w, UInt_t h) :
 
 void ListTreeWindow::FillListTree()
 {
-   TString *listItem = 0;
-   TGListTreeItem *node = 0, *histoNode = 0;
+   TString *listItem = nullptr;
+   TGListTreeItem *node = nullptr, *histoNode = nullptr;
 
    TIter NextName(fNamesList);
    while ((listItem = (TString*)NextName())) {
-      TObject *nameItem = 0;
+      TObject *nameItem = nullptr;
       TObjArray *nameItems = listItem->Tokenize("/");
       TIter Next(nameItems);
       node = fListTree->GetFirstItem();
@@ -1263,7 +1263,7 @@ void ListTreeWindow::FillListTree()
             else
                fListTree->HighlightItem(node);
          }
-         node->SetUserData(0);
+         node->SetUserData(nullptr);
          if (nameItem == nameItems->At(nameItems->GetEntriesFast()-2)) {
             histoNode = fListTree->AddItem(node, nameItems->Last()->GetName());
             fListTree->SetCheckBox(histoNode, kTRUE);
@@ -1282,7 +1282,7 @@ void ListTreeWindow::FillListTree()
 
 void ListTreeWindow::SwitchState()
 {
-   TGListTreeItem *root = 0, *node = 0;
+   TGListTreeItem *root = nullptr, *node = nullptr;
    root = fListTree->GetFirstItem();
    node = fListTree->FindChildByName(root, "P1D");
    if (node) node = fListTree->FindChildByName(node, "pclhcb08_CC-PC_HSys");
@@ -1325,27 +1325,19 @@ struct shutterData_t {
    TGButton   *button;
 };
 
-shutterData_t histo_data[] = {
-{ "h1_s.xpm",        "TH1",      1001,  0 },
-{ "h2_s.xpm",        "TH2",      1002,  0 },
-{ "h3_s.xpm",        "TH3",      1003,  0 },
-{ "profile_s.xpm",   "TProfile", 1004,  0 },
-{ 0,                 0,          0,     0 }
-};
+shutterData_t histo_data[] = {{"h1_s.xpm", "TH1", 1001, nullptr},
+                              {"h2_s.xpm", "TH2", 1002, nullptr},
+                              {"h3_s.xpm", "TH3", 1003, nullptr},
+                              {"profile_s.xpm", "TProfile", 1004, nullptr},
+                              {nullptr, nullptr, 0, nullptr}};
 
 shutterData_t function_data[] = {
-{ "f1_s.xpm",        "TF1",      2001,  0 },
-{ "f2_s.xpm",        "TF2",      2002,  0 },
-{ 0,                 0,          0,     0 }
-};
+   {"f1_s.xpm", "TF1", 2001, nullptr}, {"f2_s.xpm", "TF2", 2002, nullptr}, {nullptr, nullptr, 0, nullptr}};
 
-shutterData_t tree_data[] = {
-{ "ntuple_s.xpm",    "TNtuple",  3001,  0 },
-{ "tree_s.xpm",      "TTree",    3002,  0 },
-{ "chain_s.xpm",     "TChain",   3003,  0 },
-{ 0,                 0,          0,     0 }
-};
-
+shutterData_t tree_data[] = {{"ntuple_s.xpm", "TNtuple", 3001, nullptr},
+                             {"tree_s.xpm", "TTree", 3002, nullptr},
+                             {"chain_s.xpm", "TChain", 3003, nullptr},
+                             {nullptr, nullptr, 0, nullptr}};
 
 class ShutterWindow : public TGMainFrame {
 
@@ -1405,7 +1397,7 @@ void ShutterWindow::AddShutterItem(const char *name, shutterData_t *data)
    item = new TGShutterItem(fShutter, new TGHotString(name), id++);
    container = (TGCompositeFrame *) item->GetContainer();
 
-   for (int i=0; data[i].pixmap_name != 0; i++) {
+   for (int i = 0; data[i].pixmap_name != nullptr; i++) {
       buttonpic = gClient->GetPicture(data[i].pixmap_name);
       if (!buttonpic) {
          printf("<ShutterWindow::AddShutterItem>: missing pixmap \"%s\", using default",
@@ -1823,8 +1815,8 @@ void testCanvas()
 class MyColorDialog : public TGColorDialog {
 
 public:
-   MyColorDialog(const TGWindow *p = 0, const TGWindow *m = 0, Int_t *retc = 0,
-                 Pixel_t *color = 0);
+   MyColorDialog(const TGWindow *p = nullptr, const TGWindow *m = nullptr, Int_t *retc = nullptr,
+                 Pixel_t *color = nullptr);
 
    void   Close() { CloseWindow(); }
    void   SwitchTab(Int_t pos);
@@ -1873,9 +1865,8 @@ void testColorDlg()
 void testFontDlg()
 {
    TGFontDialog::FontProp_t prop;
-   TGFontDialog *dlg = new TGFontDialog(gClient->GetDefaultRoot(),
-                                        gClient->GetDefaultRoot(),
-                                        &prop, "", 0, kFALSE);
+   TGFontDialog *dlg =
+      new TGFontDialog(gClient->GetDefaultRoot(), gClient->GetDefaultRoot(), &prop, "", nullptr, kFALSE);
    dlg->SetWMPosition(0, 0);
    dlg->MapWindow();
    gSystem->Sleep(250);
@@ -1985,11 +1976,11 @@ void testTableLayout()
 
 void testPack()
 {
-   TGPack *hp = 0;
-   TGPack *vp = 0;
-   TGTextButton* b = 0;
+   TGPack *hp = nullptr;
+   TGPack *vp = nullptr;
+   TGTextButton *b = nullptr;
 
-   TGMainFrame* mf = new TGMainFrame(0, 400, 300);
+   TGMainFrame *mf = new TGMainFrame(nullptr, 400, 300);
    mf->SetCleanup(kDeepCleanup);
    mf->SetWindowName("Foo");
 
@@ -1999,9 +1990,12 @@ void testPack()
    b = new TGTextButton(hp, "Ailaaha");  hp->AddFrame(b);
 
    vp = new TGPack(hp, hp->GetWidth(), hp->GetHeight());
-   b = new TGTextButton(vp, "Blaaaaa");  vp->AddFrameWithWeight(b, 0, 5);
-   b = new TGTextButton(vp, "Blooooo");  vp->AddFrameWithWeight(b, 0, 3);
-   b = new TGTextButton(vp, "Bleeeee");  vp->AddFrameWithWeight(b, 0, 5);
+   b = new TGTextButton(vp, "Blaaaaa");
+   vp->AddFrameWithWeight(b, nullptr, 5);
+   b = new TGTextButton(vp, "Blooooo");
+   vp->AddFrameWithWeight(b, nullptr, 3);
+   b = new TGTextButton(vp, "Bleeeee");
+   vp->AddFrameWithWeight(b, nullptr, 5);
    hp->AddFrame(vp, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY));
 
    b = new TGTextButton(hp, "Cilnouk");  hp->AddFrame(b);
@@ -2150,7 +2144,7 @@ void testBrowsers()
    gSystem->RedirectOutput(gTmpfilename.Data(), "w", &gRH);
    gEnv->SetValue("Browser.Name", "TRootBrowserLite");
    TBrowser *b = new TBrowser();
-   gSystem->RedirectOutput(0, 0, &gRH);
+   gSystem->RedirectOutput(nullptr, nullptr, &gRH);
    TGMainFrame *f = (TGMainFrame *)b->GetBrowserImp()->GetMainFrame();
    if (f) {
       ProcessFrame((TGMainFrame*)f, "Root Browser Lite");
@@ -2159,7 +2153,7 @@ void testBrowsers()
    gSystem->RedirectOutput(gTmpfilename.Data(), "w", &gRH);
    gEnv->SetValue("Browser.Name", "TRootBrowser");
    b = new TBrowser();
-   gSystem->RedirectOutput(0, 0, &gRH);
+   gSystem->RedirectOutput(nullptr, nullptr, &gRH);
    f = (TGMainFrame *)b->GetBrowserImp()->GetMainFrame();
    if (f) {
       ProcessFrame((TGMainFrame*)f, "Root Browser");
@@ -2255,7 +2249,7 @@ void testHelpDialog()
 void testPaletteEditor()
 {
    const char *fname = "galaxy.root";
-   TFile *gal = 0;
+   TFile *gal = nullptr;
    if (!gSystem->AccessPathName(fname)) {
       gal = TFile::Open(fname);
    } else {
@@ -2291,18 +2285,8 @@ void testHtmlBrowser()
 ////////////////////////////////////////////////////////////////////////////////
 
 // list of excluded macros
-const char *excluded[] = {
-   "_playback",
-   "QtFileDialog",
-   "QtMultiFileDialog",
-   "QtPrintDialog",
-   "calendar",
-   "customContextMenu.C",
-   "customTH1Fmenu",
-   "exec_macro",
-   "guitest0",
-   0
-};
+const char *excluded[] = {"_playback",           "QtFileDialog",   "QtMultiFileDialog", "QtPrintDialog", "calendar",
+                          "customContextMenu.C", "customTH1Fmenu", "exec_macro",        "guitest0",      nullptr};
 
 ////////////////////////////////////////////////////////////////////////////////
 /// start a new ROOT process for the execution of the macro.
@@ -2386,7 +2370,7 @@ Int_t file_size(const char *filename)
    Int_t c, wc = 0;
 
    lunin = fopen(filename, "rb");
-   if (lunin == 0) return -1;
+   if (lunin == nullptr) return -1;
    while (!feof(lunin)) {
       c = fgetc(lunin);
       if (c != 0x0d && c != 0x0a)
@@ -2429,7 +2413,7 @@ void guitest_playback()
       sw.Continue();
    }
 
-   gSystem->RedirectOutput(0, 0, &gRH);
+   gSystem->RedirectOutput(nullptr, nullptr, &gRH);
    if (ret) printf("... DONE\n");
    else printf(". FAILED\n");
    CloseMainframes();
@@ -2500,7 +2484,7 @@ void dnd_playback()
       }
       sw.Continue();
    }
-   gSystem->RedirectOutput(0, 0, &gRH);
+   gSystem->RedirectOutput(nullptr, nullptr, &gRH);
    if (ret) printf("... DONE\n");
    else printf(". FAILED\n");
    CloseMainframes();
@@ -2535,7 +2519,7 @@ void mditest_playback()
       }
       sw.Continue();
    }
-   gSystem->RedirectOutput(0, 0, &gRH);
+   gSystem->RedirectOutput(nullptr, nullptr, &gRH);
    if (ret) printf("... DONE\n");
    else printf(". FAILED\n");
    CloseMainframes();
@@ -2570,7 +2554,7 @@ void graph_edit_playback()
       }
       sw.Continue();
    }
-   gSystem->RedirectOutput(0, 0, &gRH);
+   gSystem->RedirectOutput(nullptr, nullptr, &gRH);
    if (ret) printf("... DONE\n");
    else printf(". FAILED\n");
    CloseMainframes();
@@ -2605,7 +2589,7 @@ void fitpanel_playback()
       }
       sw.Continue();
    }
-   gSystem->RedirectOutput(0, 0, &gRH);
+   gSystem->RedirectOutput(nullptr, nullptr, &gRH);
    if (ret) printf("... DONE\n");
    else printf(". FAILED\n");
    CloseMainframes();

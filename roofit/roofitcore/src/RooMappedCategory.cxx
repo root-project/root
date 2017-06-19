@@ -42,11 +42,9 @@ ClassImp(RooMappedCategory::Entry);
 
 class RooMappedCategoryCache : public RooAbsCache {
     public:
-        RooMappedCategoryCache(RooAbsArg* owner = 0) : RooAbsCache(owner)
-        { initialise(); }
-        RooMappedCategoryCache(const RooAbsCache& other, RooAbsArg* owner = 0) :
-            RooAbsCache(other, owner)
-        { initialise(); }
+       RooMappedCategoryCache(RooAbsArg *owner = nullptr) : RooAbsCache(owner) { initialise(); }
+       RooMappedCategoryCache(const RooAbsCache &other, RooAbsArg *owner = nullptr) : RooAbsCache(other, owner)
+       { initialise(); }
 
         // look up our parent's output based on our parent's input category index
         const RooCatType* lookup(Int_t idx) const
@@ -87,9 +85,9 @@ class RooMappedCategoryCache : public RooAbsCache {
         }
 };
 
-RooMappedCategory::RooMappedCategory(const char *name, const char *title, RooAbsCategory& inputCat, const char* defOut, Int_t defOutIdx) :
-  RooAbsCategory(name, title), _inputCat("input","Input category",this,inputCat),
-  _mapcache(0)
+RooMappedCategory::RooMappedCategory(const char *name, const char *title, RooAbsCategory &inputCat, const char *defOut,
+                                     Int_t defOutIdx)
+   : RooAbsCategory(name, title), _inputCat("input", "Input category", this, inputCat), _mapcache(nullptr)
 {
   // Constructor with input category and name of default output state, which is assigned
   // to all input category states that do not follow any mapping rule.
@@ -100,10 +98,9 @@ RooMappedCategory::RooMappedCategory(const char *name, const char *title, RooAbs
   }
 }
 
-
-RooMappedCategory::RooMappedCategory(const RooMappedCategory& other, const char *name) :
-  RooAbsCategory(other,name), _inputCat("input",this,other._inputCat), _mapArray(other._mapArray),
-  _mapcache(0)
+RooMappedCategory::RooMappedCategory(const RooMappedCategory &other, const char *name)
+   : RooAbsCategory(other, name), _inputCat("input", this, other._inputCat), _mapArray(other._mapArray),
+     _mapcache(nullptr)
 {
   _defCat = (RooCatType*) lookupType(other._defCat->GetName()) ;
 }
@@ -216,7 +213,7 @@ Bool_t RooMappedCategory::readFromStream(std::istream& is, Bool_t compact, Bool_
      TString defCatName(_defCat->GetName()) ;
      _mapArray.clear() ;
      delete _mapcache;
-     _mapcache = 0;
+     _mapcache = nullptr;
      clearTypes() ;
      _defCat = (RooCatType*) defineType(defCatName) ;
 

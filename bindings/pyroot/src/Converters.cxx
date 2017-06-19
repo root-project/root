@@ -136,7 +136,7 @@ PyObject* PyROOT::TConverter::FromMemory( void* )
 {
 // could happen if no derived class override
    PyErr_SetString( PyExc_TypeError, "C++ type can not be converted from memory" );
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -617,7 +617,7 @@ namespace {
    {
    // general case of loading a C array pointer (void* + type code) as function argument
       if ( pyobject == gNullPtrObject ) {
-         para.fValue.fVoidp = NULL;
+         para.fValue.fVoidp = nullptr;
       } else {
          int buflen = Utility::GetBuffer( pyobject, tc, size, para.fValue.fVoidp );
          if ( ! para.fValue.fVoidp || buflen == 0 )
@@ -674,7 +674,7 @@ Bool_t PyROOT::TNonConstUCStringConverter::SetArg(
 Bool_t PyROOT::TVoidArrayConverter::GetAddressSpecialCase( PyObject* pyobject, void*& address )
 {
    if ( pyobject == Py_None || pyobject == gNullPtrObject ) {
-      address = (void*)0;
+      address = (void *)nullptr;
       return kTRUE;
    }
 
@@ -691,7 +691,7 @@ Bool_t PyROOT::TVoidArrayConverter::GetAddressSpecialCase( PyObject* pyobject, v
 
 // (3): opaque PyCapsule (CObject in older pythons) from somewhere
    if ( PyROOT_PyCapsule_CheckExact( pyobject ) ) {
-      address = (void*)PyROOT_PyCapsule_GetPointer( pyobject, NULL );
+      address = (void *)PyROOT_PyCapsule_GetPointer(pyobject, nullptr);
       return kTRUE;
    }
 
@@ -762,14 +762,14 @@ Bool_t PyROOT::TVoidArrayConverter::ToMemory( PyObject* value, void* address )
    }
 
 // handle special cases
-   void* ptr = 0;
+   void *ptr = nullptr;
    if ( GetAddressSpecialCase( value, ptr ) ) {
       *(void**)address = ptr;
       return kTRUE;
    }
 
 // final try: attempt to get buffer
-   void* buf = 0;
+   void *buf = nullptr;
    int buflen = Utility::GetBuffer( value, '*', 1, buf, kFALSE );
    if ( ! buf || buflen == 0 )
       return kFALSE;
@@ -836,7 +836,7 @@ Bool_t PyROOT::TLongLongArrayConverter::SetArg(
       PyObject* pyobject, TParameter& para, TCallContext* ctxt )
 {
    PyObject* pytc = PyObject_GetAttr( pyobject, PyStrings::gTypeCode );
-   if ( pytc != 0 ) {              // iow, this array has a known type, but there's no
+   if (pytc != nullptr) {          // iow, this array has a known type, but there's no
       Py_DECREF( pytc );           // such thing for long long in module array
       return kFALSE;
    }
@@ -948,7 +948,7 @@ PyObject* PyROOT::TCppObjectConverter::FromMemory( void* address )
 Bool_t PyROOT::TCppObjectConverter::ToMemory( PyObject* value, void* address )
 {
    if ( ! ObjectProxy_Check( value ) ) {
-      void* ptr = 0;
+      void *ptr = nullptr;
       if ( GetAddressSpecialCase( value, ptr ) ) {
          *(void**)address = ptr;             // allow special cases such as NULL
          return kTRUE;
@@ -1391,7 +1391,7 @@ PyROOT::TConverter* PyROOT::CreateConverter( const std::string& fullType, Long_t
    Bool_t control = cpd == "&" || isConst;
 
 // converters for known/ROOT classes and default (void*)
-   TConverter* result = 0;
+   TConverter *result = nullptr;
    if ( Cppyy::TCppScope_t klass = Cppyy::GetScope( realType ) ) {
       if ( Cppyy::IsSmartPtr( realType ) ) {
          const std::vector< Cppyy::TCppMethod_t > methods = Cppyy::GetMethodsFromName( klass, "operator->" );

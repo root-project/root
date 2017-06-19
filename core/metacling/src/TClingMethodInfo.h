@@ -66,8 +66,9 @@ private:
 
 public:
    explicit TClingMethodInfo(cling::Interpreter *interp)
-      : fInterp(interp), fFirstTime(true), fContextIdx(0U), fTitle(""),
-        fTemplateSpecIter(0), fSingleDecl(0) {}
+      : fInterp(interp), fFirstTime(true), fContextIdx(0U), fTitle(""), fTemplateSpecIter(nullptr), fSingleDecl(nullptr)
+   {
+   }
 
    TClingMethodInfo(const TClingMethodInfo&);
 

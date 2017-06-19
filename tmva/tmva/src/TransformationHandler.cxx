@@ -66,11 +66,9 @@ Class that contains all the data information.
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor
 
-TMVA::TransformationHandler::TransformationHandler( DataSetInfo& dsi, const TString& callerName )
-   : fDataSetInfo(dsi),
-     fRootBaseDir(0),
-     fCallerName (callerName),
-     fLogger     ( new MsgLogger(TString("TFHandler_" + callerName).Data(), kINFO) )
+TMVA::TransformationHandler::TransformationHandler(DataSetInfo &dsi, const TString &callerName)
+   : fDataSetInfo(dsi), fRootBaseDir(nullptr), fCallerName(callerName),
+     fLogger(new MsgLogger(TString("TFHandler_" + callerName).Data(), kINFO))
 {
    // produce one entry for each class and one entry for all classes. If there is only one class,
    // produce only one entry
@@ -235,7 +233,7 @@ const std::vector<TMVA::Event*>* TMVA::TransformationHandler::CalcTransformation
       for ( UInt_t ievt = 0; ievt<transformedEvents->size(); ievt++)
          delete (*transformedEvents)[ievt];
       delete transformedEvents;
-      transformedEvents=NULL;
+      transformedEvents = nullptr;
    }
 
    return transformedEvents; // give back the newly created event collection (containing the transformed events)
@@ -449,15 +447,16 @@ TString TMVA::TransformationHandler::GetVariableAxisTitle( const VariableInfo& i
 
 void TMVA::TransformationHandler::PlotVariables (const std::vector<Event*>& events, TDirectory* theDirectory )
 {
-   if (fRootBaseDir==0 && theDirectory == 0) return;
+   if (fRootBaseDir == nullptr && theDirectory == nullptr) return;
 
    Log() << kDEBUG << "Plot event variables for ";
-   if (theDirectory !=0) Log()<< TString(theDirectory->GetName()) << Endl;
+   if (theDirectory != nullptr)
+      Log() << TString(theDirectory->GetName()) << Endl;
    else Log() << GetName() << Endl;
 
    // extension for transformation type
    TString transfType = "";
-   if (theDirectory == 0) {
+   if (theDirectory == nullptr) {
       transfType += "_";
       transfType += GetName();
    }else{ // you plot for the individual classifiers. Note, here the "statistics" still need to be calculated as you are in the testing phase
@@ -476,14 +475,14 @@ void TMVA::TransformationHandler::PlotVariables (const std::vector<Event*>& even
 
    for (Int_t cls = 0; cls < ncls; cls++) {
       hVars.at(cls).resize ( nvar+ntgt );
-      hVars.at(cls).assign ( nvar+ntgt, 0 ); // fill with zeros
+      hVars.at(cls).assign(nvar + ntgt, nullptr); // fill with zeros
       mycorr.at(cls).resize( nvar+ntgt );
       myprof.at(cls).resize( nvar+ntgt );
       for (UInt_t ivar=0; ivar < nvar+ntgt; ivar++) {
          mycorr.at(cls).at(ivar).resize( nvar+ntgt );
          myprof.at(cls).at(ivar).resize( nvar+ntgt );
-         mycorr.at(cls).at(ivar).assign( nvar+ntgt, 0 ); // fill with zeros
-         myprof.at(cls).at(ivar).assign( nvar+ntgt, 0 ); // fill with zeros
+         mycorr.at(cls).at(ivar).assign(nvar + ntgt, nullptr); // fill with zeros
+         myprof.at(cls).at(ivar).assign(nvar + ntgt, nullptr); // fill with zeros
       }
    }
 
@@ -534,7 +533,7 @@ void TMVA::TransformationHandler::PlotVariables (const std::vector<Event*>& even
             className += (ntgt == 1 && var_tgt == 1 ? "_target" : "");
 
             // choose reasonable histogram ranges, by removing outliers
-            TH1* h = 0;
+            TH1 *h = nullptr;
             if (info.GetVarType() == 'I') {
                // special treatment for integer variables
                Int_t xmin = TMath::Nint( GetMin( ( var_tgt*nvar )+ivar) );
@@ -712,10 +711,8 @@ void TMVA::TransformationHandler::PlotVariables (const std::vector<Event*>& even
    }
    // computes ranking of input variables
    // separation for 2-class classification
-   else if (fDataSetInfo.GetNClasses() == 2
-            && fDataSetInfo.GetClassInfo("Signal") != NULL
-            && fDataSetInfo.GetClassInfo("Background") != NULL
-            ) { // TODO: ugly hack.. adapt to new framework
+   else if (fDataSetInfo.GetNClasses() == 2 && fDataSetInfo.GetClassInfo("Signal") != nullptr &&
+            fDataSetInfo.GetClassInfo("Background") != nullptr) { // TODO: ugly hack.. adapt to new framework
       fRanking.push_back( new Ranking( GetName() + "Transformation", "Separation" ) );
       for (UInt_t i=0; i<nvar; i++) {
          Double_t sep = gTools().GetSeparation( hVars.at(fDataSetInfo.GetClassInfo("Signal")    ->GetNumber()).at(i),
@@ -730,7 +727,7 @@ void TMVA::TransformationHandler::PlotVariables (const std::vector<Event*>& even
    // write histograms
 
    TDirectory* localDir = theDirectory;
-   if (theDirectory == 0) {
+   if (theDirectory == nullptr) {
       // create directory in root dir
       fRootBaseDir->cd();
       TString outputDir = TString("InputVariables");
@@ -740,8 +737,8 @@ void TMVA::TransformationHandler::PlotVariables (const std::vector<Event*>& even
 
       TString uniqueOutputDir = outputDir;
       Int_t counter = 0;
-      TObject* o = NULL;
-      while( (o = fRootBaseDir->FindObject(uniqueOutputDir)) != 0 ){
+      TObject *o = nullptr;
+      while ((o = fRootBaseDir->FindObject(uniqueOutputDir)) != nullptr) {
          uniqueOutputDir = outputDir+Form("_%d",counter);
          Log() << kINFO << "A " << o->ClassName() << " with name " << o->GetName() << " already exists in "
                << fRootBaseDir->GetPath() << ", I will try with "<<uniqueOutputDir<<"." << Endl;
@@ -764,9 +761,9 @@ void TMVA::TransformationHandler::PlotVariables (const std::vector<Event*>& even
 
    for (UInt_t i=0; i<nvar+ntgt; i++) {
       for (Int_t cls = 0; cls < ncls; cls++) {
-         if (hVars.at(cls).at(i) != 0) {
+         if (hVars.at(cls).at(i) != nullptr) {
             hVars.at(cls).at(i)->Write();
-            hVars.at(cls).at(i)->SetDirectory(0);
+            hVars.at(cls).at(i)->SetDirectory(nullptr);
             delete hVars.at(cls).at(i);
          }
       }
@@ -784,21 +781,22 @@ void TMVA::TransformationHandler::PlotVariables (const std::vector<Event*>& even
       for (UInt_t i=0; i<nvar+ntgt; i++) {
          for (UInt_t j=i+1; j<nvar+ntgt; j++) {
             for (Int_t cls = 0; cls < ncls; cls++) {
-               if (mycorr.at(cls).at(i).at(j) != 0 ) {
+               if (mycorr.at(cls).at(i).at(j) != nullptr) {
                   mycorr.at(cls).at(i).at(j)->Write();
-                  mycorr.at(cls).at(i).at(j)->SetDirectory(0);
+                  mycorr.at(cls).at(i).at(j)->SetDirectory(nullptr);
                   delete mycorr.at(cls).at(i).at(j);
                }
-               if (myprof.at(cls).at(i).at(j) != 0) {
+               if (myprof.at(cls).at(i).at(j) != nullptr) {
                   myprof.at(cls).at(i).at(j)->Write();
-                  myprof.at(cls).at(i).at(j)->SetDirectory(0);
+                  myprof.at(cls).at(i).at(j)->SetDirectory(nullptr);
                   delete myprof.at(cls).at(i).at(j);
                }
             }
          }
       }
    }
-   if (theDirectory != 0 ) theDirectory->cd();
+   if (theDirectory != nullptr)
+      theDirectory->cd();
    else                    fRootBaseDir->cd();
 }
 
@@ -808,7 +806,8 @@ void TMVA::TransformationHandler::PlotVariables (const std::vector<Event*>& even
 std::vector<TString>* TMVA::TransformationHandler::GetTransformationStringsOfLastTransform() const
 {
    VariableTransformBase* trf = ((VariableTransformBase*)GetTransformationList().Last());
-   if (!trf) return 0;
+   if (!trf)
+      return nullptr;
    else      return trf->GetTransformationStrings( fTransformationsReferenceClasses.back() );
 }
 
@@ -818,7 +817,8 @@ std::vector<TString>* TMVA::TransformationHandler::GetTransformationStringsOfLas
 const char* TMVA::TransformationHandler::GetNameOfLastTransform() const
 {
    VariableTransformBase* trf = ((VariableTransformBase*)GetTransformationList().Last());
-   if (!trf) return 0;
+   if (!trf)
+      return nullptr;
    else      return trf->GetName();
 }
 
@@ -839,7 +839,8 @@ void TMVA::TransformationHandler::WriteToStream( std::ostream& o ) const
       trf->WriteTransformationToStream(o);
       ci = fDataSetInfo.GetClassInfo( (*rClsIt) );
       TString clsName;
-      if (ci == 0 ) clsName = "AllClasses";
+      if (ci == nullptr)
+         clsName = "AllClasses";
       else clsName = ci->GetName();
       o << "ReferenceClass " << clsName << std::endl;
       rClsIt++;
@@ -877,7 +878,7 @@ void TMVA::TransformationHandler::ReadFromXML( void* trfsnode )
       TString trfname;
       gTools().ReadAttr(ch, "Name", trfname);
 
-      VariableTransformBase* newtrf = 0;
+      VariableTransformBase *newtrf = nullptr;
 
       if (trfname == "Decorrelation" ) {
          newtrf = new VariableDecorrTransform(fDataSetInfo);

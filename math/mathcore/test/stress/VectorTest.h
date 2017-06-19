@@ -201,7 +201,7 @@ public:
       }
 
       TBranch *br = tree.Branch("Vector_branch", typeName.c_str(), &v1);
-      if (br == 0) {
+      if (br == nullptr) {
          std::cout << "Error creating branch for" << typeName << "\n\t typeid is " << typeid(*v1).name() << std::endl;
          return -1;
       }
@@ -234,12 +234,12 @@ public:
 
       // create tree
       TTree *tree = dynamic_cast<TTree *>(f1.Get("VectorTree"));
-      if (tree == 0) {
+      if (tree == nullptr) {
          std::cout << " Error reading file " << fname << std::endl;
          return -1;
       }
 
-      V *v1 = 0;
+      V *v1 = nullptr;
 
       // cast to void * to avoid a warning
       tree->SetBranchAddress("Vector_branch", (void *)&v1);

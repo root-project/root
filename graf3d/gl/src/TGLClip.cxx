@@ -333,15 +333,9 @@ ClassImp(TGLClipSet);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TGLClipSet::TGLClipSet() :
-   TGLOverlayElement(kViewer),
-   fClipPlane   (new TGLClipPlane),
-   fClipBox     (new TGLClipBox),
-   fCurrentClip (0),
-   fAutoUpdate  (kTRUE),
-   fShowClip    (kFALSE),
-   fShowManip   (kFALSE),
-   fManip       (new TGLManipSet)
+TGLClipSet::TGLClipSet()
+   : TGLOverlayElement(kViewer), fClipPlane(new TGLClipPlane), fClipBox(new TGLClipBox), fCurrentClip(nullptr),
+     fAutoUpdate(kTRUE), fShowClip(kFALSE), fShowManip(kFALSE), fManip(new TGLManipSet)
 {
 }
 
@@ -560,8 +554,8 @@ void TGLClipSet::SetClipState(TGLClip::EType type, const Double_t data[6])
 TGLClip::EType TGLClipSet::GetClipType() const
 {
   TGLClip::EType type;
-   if (fCurrentClip == 0) {
-      type = TGLClip::kClipNone;
+  if (fCurrentClip == nullptr) {
+     type = TGLClip::kClipNone;
    } else if (fCurrentClip == fClipPlane) {
       type = TGLClip::kClipPlane;
    } else if (fCurrentClip == fClipBox) {
@@ -581,7 +575,7 @@ void TGLClipSet::SetClipType(TGLClip::EType type)
 {
    switch (type) {
       case TGLClip::kClipNone: {
-         fCurrentClip = 0;
+         fCurrentClip = nullptr;
          break;
       }
       case TGLClip::kClipPlane: {

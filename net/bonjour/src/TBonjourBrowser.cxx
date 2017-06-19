@@ -43,7 +43,7 @@ ClassImp(TBonjourBrowser);
 ////////////////////////////////////////////////////////////////////////////////
 /// Default ctor.
 
-TBonjourBrowser::TBonjourBrowser() : fDNSRef(0), fBonjourSocketHandler(0)
+TBonjourBrowser::TBonjourBrowser() : fDNSRef(nullptr), fBonjourSocketHandler(nullptr)
 {
    fBonjourRecords = new TList;
    fBonjourRecords->SetOwner();
@@ -62,7 +62,7 @@ TBonjourBrowser::~TBonjourBrowser()
 
    if (fDNSRef) {
       DNSServiceRefDeallocate(fDNSRef);
-      fDNSRef = 0;
+      fDNSRef = nullptr;
    }
 }
 
@@ -72,10 +72,8 @@ TBonjourBrowser::~TBonjourBrowser()
 
 Int_t TBonjourBrowser::BrowseForServiceType(const char *serviceType)
 {
-   DNSServiceErrorType err = DNSServiceBrowse(&fDNSRef, 0,
-                                              0, serviceType, 0,
-                                              (DNSServiceBrowseReply)BonjourBrowseReply,
-                                              this);
+   DNSServiceErrorType err =
+      DNSServiceBrowse(&fDNSRef, 0, 0, serviceType, nullptr, (DNSServiceBrowseReply)BonjourBrowseReply, this);
    if (err != kDNSServiceErr_NoError) {
       Error("BrowseForServiceType", "error in DNSServiceBrowse (%d)", err);
       return -1;

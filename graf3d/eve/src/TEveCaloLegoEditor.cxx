@@ -29,25 +29,15 @@ ClassImp(TEveCaloLegoEditor);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TEveCaloLegoEditor::TEveCaloLegoEditor(const TGWindow *p, Int_t width, Int_t height,
-                                       UInt_t options, Pixel_t back) :
-   TGedFrame(p, width, height, options | kVerticalFrame, back),
-   fM(0),
-   fGridColor(0),
-   fFontColor(0),
-   fPlaneColor(0),
-   fTransparency(0),
+TEveCaloLegoEditor::TEveCaloLegoEditor(const TGWindow *p, Int_t width, Int_t height, UInt_t options, Pixel_t back)
+   : TGedFrame(p, width, height, options | kVerticalFrame, back), fM(nullptr), fGridColor(nullptr), fFontColor(nullptr),
+     fPlaneColor(nullptr), fTransparency(nullptr),
 
-   fProjection(0),
-   f2DMode(0),
-   fBoxMode(0),
+     fProjection(nullptr), f2DMode(nullptr), fBoxMode(nullptr),
 
-   fCell2DTextMin(0),
+     fCell2DTextMin(nullptr),
 
-   fRebinFrame(0),
-   fAutoRebin(0),
-   fPixelsPerBin(0),
-   fNormalizeRebin(0)
+     fRebinFrame(nullptr), fAutoRebin(nullptr), fPixelsPerBin(nullptr), fNormalizeRebin(nullptr)
 
 {
    MakeTitle("TEveCaloLego");

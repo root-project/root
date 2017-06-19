@@ -119,7 +119,7 @@ void TSessionLogView::CloseWindow()
             "LogMessage(const char*,Bool_t)", fViewer,
             "LogMessage(const char*,Bool_t)");
    }
-   fViewer->SetLogWindow(0);
+   fViewer->SetLogWindow(nullptr);
    delete fTextView;
    delete fClose;
    delete fL1;

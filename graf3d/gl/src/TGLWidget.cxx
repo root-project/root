@@ -74,7 +74,7 @@ TGLWidget* TGLWidget::CreateDummy()
 {
    TGLFormat format(Rgl::kNone);
 
-   return Create(format, gClient->GetDefaultRoot(), kFALSE, kFALSE, 0, 1, 1);
+   return Create(format, gClient->GetDefaultRoot(), kFALSE, kFALSE, nullptr, 1, 1);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -120,8 +120,8 @@ TGLWidget* TGLWidget::Create(const TGLFormat &format,
    try
    {
       glw->SetFormat();
-      glw->fGLContext = new TGLContext
-         (glw, shareDefault, shareDevice && !shareDefault ? shareDevice->GetContext() : 0);
+      glw->fGLContext =
+         new TGLContext(glw, shareDefault, shareDevice && !shareDefault ? shareDevice->GetContext() : nullptr);
    }
    catch (const std::exception &)
    {
@@ -137,13 +137,9 @@ TGLWidget* TGLWidget::Create(const TGLFormat &format,
 ////////////////////////////////////////////////////////////////////////////////
 /// Creates widget with default pixel format.
 
-TGLWidget::TGLWidget(Window_t glw, const TGWindow* p, Bool_t selectInput)
-   : TGFrame(gClient, glw, p),
-     fGLContext(0),
-     fWindowIndex(-1),
-     fGLFormat(Rgl::kNone),
-     fFromInit(kTRUE),
-     fEventHandler(0)
+TGLWidget::TGLWidget(Window_t glw, const TGWindow *p, Bool_t selectInput)
+   : TGFrame(gClient, glw, p), fGLContext(nullptr), fWindowIndex(-1), fGLFormat(Rgl::kNone), fFromInit(kTRUE),
+     fEventHandler(nullptr)
 {
    if (selectInput)
    {

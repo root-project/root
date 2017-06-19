@@ -18,19 +18,13 @@
 namespace ROOT {
 namespace Math {
 
-RichardsonDerivator::RichardsonDerivator(double h) :
-   fFunctionCopied(false),
-   fStepSize(h),
-   fLastError(0),
-   fFunction(0)
+RichardsonDerivator::RichardsonDerivator(double h)
+   : fFunctionCopied(false), fStepSize(h), fLastError(0), fFunction(nullptr)
 {
    // Default Constructor.
 }
-RichardsonDerivator::RichardsonDerivator(const ROOT::Math::IGenFunction & f, double h, bool copyFunc) :
-   fFunctionCopied(copyFunc),
-   fStepSize(h),
-   fLastError(0),
-   fFunction(0)
+RichardsonDerivator::RichardsonDerivator(const ROOT::Math::IGenFunction &f, double h, bool copyFunc)
+   : fFunctionCopied(copyFunc), fStepSize(h), fLastError(0), fFunction(nullptr)
 {
    // Constructor from a function and step size
    if (copyFunc) fFunction = f.Clone();
@@ -41,8 +35,7 @@ RichardsonDerivator::RichardsonDerivator(const ROOT::Math::IGenFunction & f, dou
 RichardsonDerivator::~RichardsonDerivator()
 {
    // destructor
-   if ( fFunction != 0 && fFunctionCopied )
-      delete fFunction;
+   if (fFunction != nullptr && fFunctionCopied) delete fFunction;
 }
 
 RichardsonDerivator::RichardsonDerivator(const RichardsonDerivator & rhs)

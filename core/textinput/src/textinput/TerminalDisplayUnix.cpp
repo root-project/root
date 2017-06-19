@@ -38,8 +38,8 @@ using std::strstr;
 
 namespace {
   textinput::TerminalDisplayUnix*& gTerminalDisplayUnix() {
-    static textinput::TerminalDisplayUnix* S = 0;
-    return S;
+     static textinput::TerminalDisplayUnix *S = nullptr;
+     return S;
   }
 
   void InitRGB256(unsigned char rgb256[][3]) {

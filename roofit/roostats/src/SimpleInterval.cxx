@@ -108,8 +108,7 @@ Bool_t SimpleInterval::IsInInterval(const RooArgSet &parameterPoint) const
       return false;
 
    RooAbsReal* point = dynamic_cast<RooAbsReal*> (parameterPoint.first());
-   if (point == 0)
-      return false;
+   if (point == nullptr) return false;
 
    if ( point->getVal() > fUpperLimit || point->getVal() < fLowerLimit)
       return false;

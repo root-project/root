@@ -1159,12 +1159,11 @@ void End()
 {
 }
 
-Tesselation_t *Tesselator::fVs = 0;
+Tesselation_t *Tesselator::fVs = nullptr;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Tesselator::Tesselator(Bool_t dump)
-               : fTess(0)
+Tesselator::Tesselator(Bool_t dump) : fTess(nullptr)
 {
    GLUtesselator *tess = gluNewTess();
    if (!tess)

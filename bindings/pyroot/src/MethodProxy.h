@@ -76,9 +76,9 @@ namespace PyROOT {
          const std::string& name, std::vector< PyCallable* >& methods )
    {
    // Create and initialize a new method proxy from the overloads.
-      MethodProxy* pymeth = (MethodProxy*)MethodProxy_Type.tp_new( &MethodProxy_Type, 0, 0 );
-      pymeth->Set( name, methods );
-      return pymeth;
+   MethodProxy *pymeth = (MethodProxy *)MethodProxy_Type.tp_new(&MethodProxy_Type, nullptr, nullptr);
+   pymeth->Set(name, methods);
+   return pymeth;
    }
 
    inline MethodProxy* MethodProxy_New( const std::string& name, PyCallable* method )

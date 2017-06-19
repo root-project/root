@@ -41,8 +41,7 @@ namespace textinput {
       kRREOF // end of file has been reached
     };
 
-    TextInput(Reader& reader, Display& display,
-              const char* histFile = 0);
+    TextInput(Reader &reader, Display &display, const char *histFile = nullptr);
     ~TextInput();
 
     // Getters

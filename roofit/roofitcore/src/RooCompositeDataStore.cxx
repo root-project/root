@@ -45,18 +45,16 @@ ClassImp(RooCompositeDataStore);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooCompositeDataStore::RooCompositeDataStore() : _indexCat(0), _curStore(0), _curIndex(0), _ownComps(kFALSE)
-{
-  TRACE_CREATE
-}
+RooCompositeDataStore::RooCompositeDataStore()
+   : _indexCat(nullptr), _curStore(nullptr), _curIndex(0), _ownComps(kFALSE){TRACE_CREATE}
 
+     ////////////////////////////////////////////////////////////////////////////////
+     /// Convert map by label to map by index for more efficient internal use
 
-
-////////////////////////////////////////////////////////////////////////////////
-/// Convert map by label to map by index for more efficient internal use
-
-RooCompositeDataStore::RooCompositeDataStore(const char* name, const char* title, const RooArgSet& vars, RooCategory& indexCat,map<std::string,RooAbsDataStore*> inputData) :
-  RooAbsDataStore(name,title,RooArgSet(vars,indexCat)), _indexCat(&indexCat), _curStore(0), _curIndex(0), _ownComps(kFALSE)
+     RooCompositeDataStore::RooCompositeDataStore(const char *name, const char *title, const RooArgSet &vars,
+                                                  RooCategory &indexCat, map<std::string, RooAbsDataStore *> inputData)
+   : RooAbsDataStore(name, title, RooArgSet(vars, indexCat)), _indexCat(&indexCat), _curStore(nullptr), _curIndex(0),
+     _ownComps(kFALSE)
 {
   for (map<string,RooAbsDataStore*>::iterator iter=inputData.begin() ; iter!=inputData.end() ; ++iter) {
     _dataMap[indexCat.lookupType(iter->first.c_str())->getVal()] = iter->second ;
@@ -217,7 +215,7 @@ const RooArgSet* RooCompositeDataStore::get(Int_t idx) const
     
     return &_vars ;
   }
-  return 0 ;
+  return nullptr;
 }
 
 
@@ -327,10 +325,10 @@ Bool_t RooCompositeDataStore::changeObservableName(const char* from, const char*
 
 RooAbsArg* RooCompositeDataStore::addColumn(RooAbsArg& newVar, Bool_t adjustRange)
 {
-  RooAbsArg* ret(0) ;
-  map<int,RooAbsDataStore*>::const_iterator iter ;
-  for (iter = _dataMap.begin() ; iter!=_dataMap.end() ; ++iter) {    
-    ret = iter->second->addColumn(newVar,adjustRange) ;
+   RooAbsArg *ret(nullptr);
+   map<int, RooAbsDataStore *>::const_iterator iter;
+   for (iter = _dataMap.begin(); iter != _dataMap.end(); ++iter) {
+      ret = iter->second->addColumn(newVar, adjustRange);
   }
   if (ret) {
     _vars.add(*ret) ;
@@ -346,10 +344,10 @@ RooAbsArg* RooCompositeDataStore::addColumn(RooAbsArg& newVar, Bool_t adjustRang
 
 RooArgSet* RooCompositeDataStore::addColumns(const RooArgList& varList)
 {
-  RooArgSet* ret(0) ;
-  map<int,RooAbsDataStore*>::const_iterator iter ;
-  for (iter = _dataMap.begin() ; iter!=_dataMap.end() ; ++iter) {    
-    ret = iter->second->addColumns(varList) ;
+   RooArgSet *ret(nullptr);
+   map<int, RooAbsDataStore *>::const_iterator iter;
+   for (iter = _dataMap.begin(); iter != _dataMap.end(); ++iter) {
+      ret = iter->second->addColumns(varList);
   }
   if (ret) {
     _vars.add(*ret) ;

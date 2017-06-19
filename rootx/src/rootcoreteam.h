@@ -13,28 +13,13 @@ namespace ROOTX {
 //(it has a definition here, not in rootxx.cxx or rootx-cocoa.mm files.
 //Please, do not modify this file.
 
-const char * gROOTCoreTeam[] = {
-	"Rene Brun",
-	"Fons Rademakers",
-	"Philippe Canal",
-	"Axel Naumann",
-	"Olivier Couet",
-	"Lorenzo Moneta",
-	"Vassil Vassilev",
-	"Gerardo Ganis",
-	"Bertrand Bellenot",
-	"Danilo Piparo",
-	"Wouter Verkerke",
-	"Timur Pocheptsov",
-	"Matevz Tadel",
-	"Pere Mato",
-	"Wim Lavrijsen",
-	"Ilka Antcheva",
-	"Paul Russo",
-	"Andrei Gheata",
-	"Anirudha Bose",
-	"Valeri Onuchine",
-        0};
+const char *gROOTCoreTeam[] = {"Rene Brun",       "Fons Rademakers", "Philippe Canal",
+                               "Axel Naumann",    "Olivier Couet",   "Lorenzo Moneta",
+                               "Vassil Vassilev", "Gerardo Ganis",   "Bertrand Bellenot",
+                               "Danilo Piparo",   "Wouter Verkerke", "Timur Pocheptsov",
+                               "Matevz Tadel",    "Pere Mato",       "Wim Lavrijsen",
+                               "Ilka Antcheva",   "Paul Russo",      "Andrei Gheata",
+                               "Anirudha Bose",   "Valeri Onuchine", nullptr};
 }
 }
 

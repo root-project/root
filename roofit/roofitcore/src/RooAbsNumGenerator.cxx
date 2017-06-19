@@ -55,96 +55,95 @@ ClassImp(RooAbsNumGenerator);
 /// variables to be generated, genVars. The function and its dependents are
 /// cloned and so will not be disturbed during the generation process.
 
-RooAbsNumGenerator::RooAbsNumGenerator(const RooAbsReal &func, const RooArgSet &genVars, Bool_t verbose, const RooAbsReal* maxFuncVal) :
-  TNamed(func), _cloneSet(0), _funcClone(0), _funcMaxVal(maxFuncVal), _verbose(verbose), _funcValStore(0), _funcValPtr(0), _cache(0)
-{
-  // Clone the function and all nodes that it depends on so that this generator
-  // is independent of any existing objects.
-  RooArgSet nodes(func,func.GetName());
-  _cloneSet= (RooArgSet*) nodes.snapshot(kTRUE);
-  if (!_cloneSet) {
-    coutE(Generation) << "RooAbsNumGenerator::RooAbsNumGenerator(" << GetName() << ") Couldn't deep-clone function, abort," << endl ;
-    RooErrorHandler::softAbort() ;
-  }
+  RooAbsNumGenerator::RooAbsNumGenerator(const RooAbsReal &func, const RooArgSet &genVars, Bool_t verbose,
+                                         const RooAbsReal *maxFuncVal)
+     : TNamed(func), _cloneSet(nullptr), _funcClone(nullptr), _funcMaxVal(maxFuncVal), _verbose(verbose),
+       _funcValStore(nullptr), _funcValPtr(nullptr), _cache(nullptr)
+  {
+     // Clone the function and all nodes that it depends on so that this generator
+     // is independent of any existing objects.
+     RooArgSet nodes(func, func.GetName());
+     _cloneSet = (RooArgSet *)nodes.snapshot(kTRUE);
+     if (!_cloneSet) {
+        coutE(Generation) << "RooAbsNumGenerator::RooAbsNumGenerator(" << GetName()
+                          << ") Couldn't deep-clone function, abort," << endl;
+        RooErrorHandler::softAbort();
+     }
 
-  // Find the clone in the snapshot list
-  _funcClone = (RooAbsReal*)_cloneSet->find(func.GetName());
+     // Find the clone in the snapshot list
+     _funcClone = (RooAbsReal *)_cloneSet->find(func.GetName());
 
+     // Check that each argument is fundamental, and separate them into
+     // sets of categories and reals. Check that the area of the generating
+     // space is finite.
+     _isValid = kTRUE;
+     TIterator *iterator = genVars.createIterator();
+     const RooAbsArg *found = nullptr;
+     const RooAbsArg *arg = nullptr;
+     while ((arg = (const RooAbsArg *)iterator->Next())) {
+        if (!arg->isFundamental()) {
+           coutE(Generation) << fName << "::" << ClassName() << ": cannot generate values for derived \""
+                             << arg->GetName() << "\"" << endl;
+           _isValid = kFALSE;
+           continue;
+        }
+        // look for this argument in the generating function's dependents
+        found = (const RooAbsArg *)_cloneSet->find(arg->GetName());
+        if (found) {
+           arg = found;
+        } else {
+           // clone any variables we generate that we haven't cloned already
+           arg = _cloneSet->addClone(*arg);
+        }
+        assert(nullptr != arg);
+        // is this argument a category or a real?
+        const RooCategory *catVar = dynamic_cast<const RooCategory *>(arg);
+        const RooRealVar *realVar = dynamic_cast<const RooRealVar *>(arg);
+        if (nullptr != catVar) {
+           _catVars.add(*catVar);
+        } else if (nullptr != realVar) {
+           if (realVar->hasMin() && realVar->hasMax()) {
+              _realVars.add(*realVar);
+           } else {
+              coutE(Generation) << fName << "::" << ClassName() << ": cannot generate values for \""
+                                << realVar->GetName() << "\" with unbound range" << endl;
+              _isValid = kFALSE;
+           }
+        } else {
+           coutE(Generation) << fName << "::" << ClassName() << ": cannot generate values for \"" << arg->GetName()
+                             << "\" with unexpected type" << endl;
+           _isValid = kFALSE;
+        }
+     }
+     delete iterator;
+     if (!_isValid) {
+        coutE(Generation) << fName << "::" << ClassName() << ": constructor failed with errors" << endl;
+        return;
+     }
 
-  // Check that each argument is fundamental, and separate them into
-  // sets of categories and reals. Check that the area of the generating
-  // space is finite.
-  _isValid= kTRUE;
-  TIterator *iterator= genVars.createIterator();
-  const RooAbsArg *found = 0;
-  const RooAbsArg *arg   = 0;
-  while((arg= (const RooAbsArg*)iterator->Next())) {
-    if(!arg->isFundamental()) {
-      coutE(Generation) << fName << "::" << ClassName() << ": cannot generate values for derived \""
-			<< arg->GetName() << "\"" << endl;
-      _isValid= kFALSE;
-      continue;
-    }
-    // look for this argument in the generating function's dependents
-    found= (const RooAbsArg*)_cloneSet->find(arg->GetName());
-    if(found) {
-      arg= found;
-    } else {
-      // clone any variables we generate that we haven't cloned already
-      arg= _cloneSet->addClone(*arg);
-    }
-    assert(0 != arg);
-    // is this argument a category or a real?
-    const RooCategory *catVar= dynamic_cast<const RooCategory*>(arg);
-    const RooRealVar *realVar= dynamic_cast<const RooRealVar*>(arg);
-    if(0 != catVar) {
-      _catVars.add(*catVar);
-    }
-    else if(0 != realVar) {
-      if(realVar->hasMin() && realVar->hasMax()) {
-	_realVars.add(*realVar);
-      }
-      else {
-	coutE(Generation) << fName << "::" << ClassName() << ": cannot generate values for \""
-			  << realVar->GetName() << "\" with unbound range" << endl;
-	_isValid= kFALSE;
-      }
-    }
-    else {
-      coutE(Generation) << fName << "::" << ClassName() << ": cannot generate values for \""
-			<< arg->GetName() << "\" with unexpected type" << endl;
-      _isValid= kFALSE;
-    }
-  }
-  delete iterator;
-  if(!_isValid) {
-    coutE(Generation) << fName << "::" << ClassName() << ": constructor failed with errors" << endl;
-    return;
-  }
+     // create a fundamental type for storing function values
+     _funcValStore = dynamic_cast<RooRealVar *>(_funcClone->createFundamental());
+     assert(nullptr != _funcValStore);
 
-  // create a fundamental type for storing function values
-  _funcValStore= dynamic_cast<RooRealVar*>(_funcClone->createFundamental());
-  assert(0 != _funcValStore);
+     // create a new dataset to cache trial events and function values
+     RooArgSet cacheArgs(_catVars);
+     cacheArgs.add(_realVars);
+     cacheArgs.add(*_funcValStore);
+     _cache = new RooDataSet("cache", "Accept-Reject Event Cache", cacheArgs);
+     assert(nullptr != _cache);
 
-  // create a new dataset to cache trial events and function values
-  RooArgSet cacheArgs(_catVars);
-  cacheArgs.add(_realVars);
-  cacheArgs.add(*_funcValStore);
-  _cache= new RooDataSet("cache","Accept-Reject Event Cache",cacheArgs);
-  assert(0 != _cache);
+     // attach our function clone to the cache dataset
+     const RooArgSet *cacheVars = _cache->get();
+     assert(nullptr != cacheVars);
+     _funcClone->recursiveRedirectServers(*cacheVars, kFALSE);
 
-  // attach our function clone to the cache dataset
-  const RooArgSet *cacheVars= _cache->get();
-  assert(0 != cacheVars);
-  _funcClone->recursiveRedirectServers(*cacheVars,kFALSE);
+     // update ours sets of category and real args to refer to the cache dataset
+     const RooArgSet *dataVars = _cache->get();
+     _catVars.replace(*dataVars);
+     _realVars.replace(*dataVars);
 
-  // update ours sets of category and real args to refer to the cache dataset
-  const RooArgSet *dataVars= _cache->get();
-  _catVars.replace(*dataVars);
-  _realVars.replace(*dataVars);
-
-  // find the function value in the dataset
-  _funcValPtr= (RooRealVar*)dataVars->find(_funcValStore->GetName());
+     // find the function value in the dataset
+     _funcValPtr = (RooRealVar *)dataVars->find(_funcValStore->GetName());
 
 }
 

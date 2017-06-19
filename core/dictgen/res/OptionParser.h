@@ -541,19 +541,13 @@ public:
    * }
    * @endcode
    */
-  int type() const
-  {
-    return desc == 0 ? 0 : desc->type;
-  }
+  int type() const { return desc == nullptr ? 0 : desc->type; }
 
   /**
    * @brief Returns Descriptor::index of this Option's Descriptor, or -1 if this Option
    * is invalid (unused).
    */
-  int index() const
-  {
-    return desc == 0 ? -1 : desc->index;
-  }
+  int index() const { return desc == nullptr ? -1 : desc->index; }
 
   /**
    * @brief Returns the number of times this Option (or others with the same Descriptor::index)
@@ -569,12 +563,11 @@ public:
    */
   int count()
   {
-    int c = (desc == 0 ? 0 : 1);
-    Option* p = first();
-    while (!p->isLast())
-    {
-      ++c;
-      p = p->next_;
+     int c = (desc == nullptr ? 0 : 1);
+     Option *p = first();
+     while (!p->isLast()) {
+        ++c;
+        p = p->next_;
     };
     return c;
   }
@@ -653,10 +646,7 @@ public:
    * option with the same Descriptor::index that precedes this option on the command
    * line.
    */
-  Option* prev()
-  {
-    return isFirst() ? 0 : prev_;
-  }
+  Option *prev() { return isFirst() ? nullptr : prev_; }
 
   /**
    * @brief Returns a pointer to the previous element of the linked list with wrap-around from
@@ -679,10 +669,7 @@ public:
    * option with the same Descriptor::index that follows this option on the command
    * line.
    */
-  Option* next()
-  {
-    return isLast() ? 0 : next_;
-  }
+  Option *next() { return isLast() ? nullptr : next_; }
 
   /**
    * @brief Returns a pointer to the next element of the linked list with wrap-around from
@@ -733,10 +720,7 @@ public:
    * @code for (Option* opt = options[FILE]; opt; opt = opt->next())
    *   fname = opt->arg; ... @endcode
    */
-  operator const Option*() const
-  {
-    return desc ? this : 0;
-  }
+  operator const Option *() const { return desc ? this : nullptr; }
 
   /**
    * @brief Casts from Option to Option* but only if this Option is valid.
@@ -754,17 +738,13 @@ public:
    * @code for (Option* opt = options[FILE]; opt; opt = opt->next())
    *   fname = opt->arg; ... @endcode
    */
-  operator Option*()
-  {
-    return desc ? this : 0;
-  }
+  operator Option *() { return desc ? this : nullptr; }
 
   /**
    * @brief Creates a new Option that is a one-element linked list and has NULL
    * @ref desc, @ref name, @ref arg and @ref namelen.
    */
-  Option() :
-      desc(0), name(0), arg(0), namelen(0)
+  Option() : desc(nullptr), name(nullptr), arg(nullptr), namelen(0)
   {
     prev_ = tag(this);
     next_ = tag(this);
@@ -822,8 +802,7 @@ private:
     prev_ = tag(this);
     next_ = tag(this);
     namelen = 0;
-    if (name == 0)
-      return;
+    if (name == nullptr) return;
     namelen = 1;
     if (name[0] != '-')
       return;
@@ -1069,42 +1048,39 @@ public:
   /**
    * @brief Creates a new Parser.
    */
-  Parser() :
-      op_count(0), nonop_count(0), nonop_args(0), err(false)
-  {
-  }
+   Parser() : op_count(0), nonop_count(0), nonop_args(nullptr), err(false) {}
 
-  /**
-   * @brief Creates a new Parser and immediately parses the given argument vector.
-   * @copydetails parse()
-   */
-  Parser(bool gnu, const Descriptor usage[], int argc, const char** argv, Option options[], Option buffer[],
-         int min_abbr_len = 0, bool single_minus_longopt = false, int bufmax = -1) :
-      op_count(0), nonop_count(0), nonop_args(0), err(false)
-  {
-    parse(gnu, usage, argc, argv, options, buffer, min_abbr_len, single_minus_longopt, bufmax);
+   /**
+    * @brief Creates a new Parser and immediately parses the given argument vector.
+    * @copydetails parse()
+    */
+   Parser(bool gnu, const Descriptor usage[], int argc, const char **argv, Option options[], Option buffer[],
+          int min_abbr_len = 0, bool single_minus_longopt = false, int bufmax = -1)
+      : op_count(0), nonop_count(0), nonop_args(nullptr), err(false)
+   {
+      parse(gnu, usage, argc, argv, options, buffer, min_abbr_len, single_minus_longopt, bufmax);
   }
 
   //! @brief Parser(...) with non-const argv.
-  Parser(bool gnu, const Descriptor usage[], int argc, char** argv, Option options[], Option buffer[],
-         int min_abbr_len = 0, bool single_minus_longopt = false, int bufmax = -1) :
-      op_count(0), nonop_count(0), nonop_args(0), err(false)
+  Parser(bool gnu, const Descriptor usage[], int argc, char **argv, Option options[], Option buffer[],
+         int min_abbr_len = 0, bool single_minus_longopt = false, int bufmax = -1)
+     : op_count(0), nonop_count(0), nonop_args(nullptr), err(false)
   {
     parse(gnu, usage, argc, const_cast<const char**>(argv), options, buffer, min_abbr_len, single_minus_longopt, bufmax);
   }
 
   //! @brief POSIX Parser(...) (gnu==false).
-  Parser(const Descriptor usage[], int argc, const char** argv, Option options[], Option buffer[], int min_abbr_len = 0,
-         bool single_minus_longopt = false, int bufmax = -1) :
-      op_count(0), nonop_count(0), nonop_args(0), err(false)
+  Parser(const Descriptor usage[], int argc, const char **argv, Option options[], Option buffer[], int min_abbr_len = 0,
+         bool single_minus_longopt = false, int bufmax = -1)
+     : op_count(0), nonop_count(0), nonop_args(nullptr), err(false)
   {
     parse(false, usage, argc, argv, options, buffer, min_abbr_len, single_minus_longopt, bufmax);
   }
 
   //! @brief POSIX Parser(...) (gnu==false) with non-const argv.
-  Parser(const Descriptor usage[], int argc, char** argv, Option options[], Option buffer[], int min_abbr_len = 0,
-         bool single_minus_longopt = false, int bufmax = -1) :
-      op_count(0), nonop_count(0), nonop_args(0), err(false)
+  Parser(const Descriptor usage[], int argc, char **argv, Option options[], Option buffer[], int min_abbr_len = 0,
+         bool single_minus_longopt = false, int bufmax = -1)
+     : op_count(0), nonop_count(0), nonop_args(nullptr), err(false)
   {
     parse(false, usage, argc, const_cast<const char**>(argv), options, buffer, min_abbr_len, single_minus_longopt, bufmax);
   }
@@ -1509,12 +1485,10 @@ inline void Stats::add(bool gnu, const Descriptor usage[], int argc, const char*
 {
   // determine size of options array. This is the greatest index used in the usage + 1
   int i = 0;
-  while (usage[i].shortopt != 0)
-  {
-    if (usage[i].index + 1 >= options_max)
-      options_max = (usage[i].index + 1) + 1; // 1 more than necessary as sentinel
+  while (usage[i].shortopt != nullptr) {
+     if (usage[i].index + 1 >= options_max) options_max = (usage[i].index + 1) + 1; // 1 more than necessary as sentinel
 
-    ++i;
+     ++i;
   }
 
   CountOptionsAction action(&buffer_max);
@@ -1525,178 +1499,149 @@ inline bool Parser::workhorse(bool gnu, const Descriptor usage[], int numargs, c
                               bool single_minus_longopt, bool print_errors, int min_abbr_len)
 {
   // protect against NULL pointer
-  if (args == 0)
-    numargs = 0;
+  if (args == nullptr) numargs = 0;
 
   int nonops = 0;
 
-  while (numargs != 0 && *args != 0)
-  {
-    const char* param = *args; // param can be --long-option, -srto or non-option argument
+  while (numargs != 0 && *args != nullptr) {
+     const char *param = *args; // param can be --long-option, -srto or non-option argument
 
-    // in POSIX mode the first non-option argument terminates the option list
-    // a lone minus character is a non-option argument
-    if (param[0] != '-' || param[1] == 0)
-    {
-      if (gnu)
-      {
-        ++nonops;
+     // in POSIX mode the first non-option argument terminates the option list
+     // a lone minus character is a non-option argument
+     if (param[0] != '-' || param[1] == 0) {
+        if (gnu) {
+           ++nonops;
+           ++args;
+           if (numargs > 0) --numargs;
+           continue;
+        } else
+           break;
+     }
+
+     // -- terminates the option list. The -- itself is skipped.
+     if (param[1] == '-' && param[2] == 0) {
+        shift(args, nonops);
         ++args;
-        if (numargs > 0)
-          --numargs;
-        continue;
-      }
-      else
+        if (numargs > 0) --numargs;
         break;
-    }
+     }
 
-    // -- terminates the option list. The -- itself is skipped.
-    if (param[1] == '-' && param[2] == 0)
-    {
-      shift(args, nonops);
-      ++args;
-      if (numargs > 0)
-        --numargs;
-      break;
-    }
+     bool handle_short_options;
+     const char *longopt_name;
+     if (param[1] == '-') // if --long-option
+     {
+        handle_short_options = false;
+        longopt_name = param + 2;
+     } else {
+        handle_short_options = true;
+        longopt_name = param + 1; // for testing a potential -long-option
+     }
 
-    bool handle_short_options;
-    const char* longopt_name;
-    if (param[1] == '-') // if --long-option
-    {
-      handle_short_options = false;
-      longopt_name = param + 2;
-    }
-    else
-    {
-      handle_short_options = true;
-      longopt_name = param + 1; //for testing a potential -long-option
-    }
+     bool try_single_minus_longopt = single_minus_longopt;
+     bool have_more_args = (numargs > 1 || numargs < 0); // is referencing argv[1] valid?
 
-    bool try_single_minus_longopt = single_minus_longopt;
-    bool have_more_args = (numargs > 1 || numargs < 0); // is referencing argv[1] valid?
+     do // loop over short options in group, for long options the body is executed only once
+     {
+        int idx = 0;
 
-    do // loop over short options in group, for long options the body is executed only once
-    {
-      int idx=0;
+        const char *optarg = nullptr;
 
-      const char* optarg=nullptr;
+        /******************** long option **********************/
+        if (handle_short_options == false || try_single_minus_longopt) {
+           idx = 0;
+           while (usage[idx].longopt != nullptr && !streq(usage[idx].longopt, longopt_name)) ++idx;
 
-      /******************** long option **********************/
-      if (handle_short_options == false || try_single_minus_longopt)
-      {
-        idx = 0;
-        while (usage[idx].longopt != 0 && !streq(usage[idx].longopt, longopt_name))
-          ++idx;
+           if (usage[idx].longopt == nullptr && min_abbr_len > 0) // if we should try to match abbreviated long options
+           {
+              int i1 = 0;
+              while (usage[i1].longopt != nullptr && !streqabbr(usage[i1].longopt, longopt_name, min_abbr_len)) ++i1;
+              if (usage[i1].longopt != nullptr) { // now test if the match is unambiguous by checking for another match
+                 int i2 = i1 + 1;
+                 while (usage[i2].longopt != nullptr && !streqabbr(usage[i2].longopt, longopt_name, min_abbr_len)) ++i2;
 
-        if (usage[idx].longopt == 0 && min_abbr_len > 0) // if we should try to match abbreviated long options
-        {
-          int i1 = 0;
-          while (usage[i1].longopt != 0 && !streqabbr(usage[i1].longopt, longopt_name, min_abbr_len))
-            ++i1;
-          if (usage[i1].longopt != 0)
-          { // now test if the match is unambiguous by checking for another match
-            int i2 = i1 + 1;
-            while (usage[i2].longopt != 0 && !streqabbr(usage[i2].longopt, longopt_name, min_abbr_len))
-              ++i2;
+                 if (usage[i2].longopt == nullptr) // if there was no second match it's unambiguous, so accept i1 as idx
+                    idx = i1;
+              }
+           }
 
-            if (usage[i2].longopt == 0) // if there was no second match it's unambiguous, so accept i1 as idx
-              idx = i1;
-          }
+           // if we found something, disable handle_short_options (only relevant if single_minus_longopt)
+           if (usage[idx].longopt != nullptr) handle_short_options = false;
+
+           try_single_minus_longopt = false; // prevent looking for longopt in the middle of shortopt group
+
+           optarg = longopt_name;
+           while (*optarg != 0 && *optarg != '=') ++optarg;
+           if (*optarg == '=') // attached argument
+              ++optarg;
+           else
+              // possibly detached argument
+              optarg = (have_more_args ? args[1] : nullptr);
         }
 
-        // if we found something, disable handle_short_options (only relevant if single_minus_longopt)
-        if (usage[idx].longopt != 0)
-          handle_short_options = false;
+        /************************ short option ***********************************/
+        if (handle_short_options) {
+           if (*++param == 0) // point at the 1st/next option character
+              break;          // end of short option group
 
-        try_single_minus_longopt = false; // prevent looking for longopt in the middle of shortopt group
+           idx = 0;
+           while (usage[idx].shortopt != nullptr && !instr(*param, usage[idx].shortopt)) ++idx;
 
-        optarg = longopt_name;
-        while (*optarg != 0 && *optarg != '=')
-          ++optarg;
-        if (*optarg == '=') // attached argument
-          ++optarg;
-        else
-          // possibly detached argument
-          optarg = (have_more_args ? args[1] : 0);
-      }
-
-      /************************ short option ***********************************/
-      if (handle_short_options)
-      {
-        if (*++param == 0) // point at the 1st/next option character
-          break; // end of short option group
-
-        idx = 0;
-        while (usage[idx].shortopt != 0 && !instr(*param, usage[idx].shortopt))
-          ++idx;
-
-        if (param[1] == 0) // if the potential argument is separate
-          optarg = (have_more_args ? args[1] : 0);
-        else
-          // if the potential argument is attached
-          optarg = param + 1;
-      }
-
-      const Descriptor* descriptor = &usage[idx];
-
-      if (descriptor->shortopt == 0) /**************  unknown option ********************/
-      {
-        // look for dummy entry (shortopt == "" and longopt == "") to use as Descriptor for unknown options
-        idx = 0;
-        while (usage[idx].shortopt != 0 && (usage[idx].shortopt[0] != 0 || usage[idx].longopt[0] != 0))
-          ++idx;
-        descriptor = (usage[idx].shortopt == 0 ? 0 : &usage[idx]);
-      }
-
-      if (descriptor != 0)
-      {
-        Option option(descriptor, param, optarg);
-        switch (descriptor->check_arg(option, print_errors))
-        {
-          case ARG_ILLEGAL:
-            return false; // fatal
-          case ARG_OK:
-            // skip one element of the argument vector, if it's a separated argument
-            if (optarg != 0 && have_more_args && optarg == args[1])
-            {
-              shift(args, nonops);
-              if (numargs > 0)
-                --numargs;
-              ++args;
-            }
-
-            // No further short options are possible after an argument
-            handle_short_options = false;
-
-            break;
-          case ARG_IGNORE:
-          case ARG_NONE:
-            option.arg = 0;
-            break;
+           if (param[1] == 0) // if the potential argument is separate
+              optarg = (have_more_args ? args[1] : nullptr);
+           else
+              // if the potential argument is attached
+              optarg = param + 1;
         }
 
-        if (!action.perform(option))
-          return false;
-      }
+        const Descriptor *descriptor = &usage[idx];
 
-    } while (handle_short_options);
+        if (descriptor->shortopt == nullptr) /**************  unknown option ********************/
+        {
+           // look for dummy entry (shortopt == "" and longopt == "") to use as Descriptor for unknown options
+           idx = 0;
+           while (usage[idx].shortopt != nullptr && (usage[idx].shortopt[0] != 0 || usage[idx].longopt[0] != 0)) ++idx;
+           descriptor = (usage[idx].shortopt == nullptr ? nullptr : &usage[idx]);
+        }
 
-    shift(args, nonops);
-    ++args;
-    if (numargs > 0)
-      --numargs;
+        if (descriptor != nullptr) {
+           Option option(descriptor, param, optarg);
+           switch (descriptor->check_arg(option, print_errors)) {
+           case ARG_ILLEGAL:
+              return false; // fatal
+           case ARG_OK:
+              // skip one element of the argument vector, if it's a separated argument
+              if (optarg != nullptr && have_more_args && optarg == args[1]) {
+                 shift(args, nonops);
+                 if (numargs > 0) --numargs;
+                 ++args;
+              }
+
+              // No further short options are possible after an argument
+              handle_short_options = false;
+
+              break;
+           case ARG_IGNORE:
+           case ARG_NONE: option.arg = nullptr; break;
+           }
+
+           if (!action.perform(option)) return false;
+        }
+
+     } while (handle_short_options);
+
+     shift(args, nonops);
+     ++args;
+     if (numargs > 0) --numargs;
 
   } // while
 
-  if (numargs > 0 && *args == 0) // It's a bug in the caller if numargs is greater than the actual number
-    numargs = 0; // of arguments, but as a service to the user we fix this if we spot it.
+  if (numargs > 0 && *args == nullptr) // It's a bug in the caller if numargs is greater than the actual number
+     numargs = 0;                      // of arguments, but as a service to the user we fix this if we spot it.
 
   if (numargs < 0) // if we don't know the number of remaining non-option arguments
   { // we need to count them
     numargs = 0;
-    while (args[numargs] != 0)
-      ++numargs;
+    while (args[numargs] != nullptr) ++numargs;
   }
 
   return action.finished(numargs + nonops, args - nonops);
@@ -1979,10 +1924,10 @@ struct PrintUsageImplementation
 
   public:
     //! @brief Creates an iterator for @c usage.
-    LinePartIterator(const Descriptor usage[]) :
-    tablestart(usage), rowdesc(0), rowstart(0), ptr(0), col(-1), len(0), screenlen(0), max_line_in_block(0), line_in_block(0),
-        target_line_in_block(0), hit_target_line(true)
-    {
+     LinePartIterator(const Descriptor usage[])
+        : tablestart(usage), rowdesc(nullptr), rowstart(nullptr), ptr(nullptr), col(-1), len(0), screenlen(0),
+          max_line_in_block(0), line_in_block(0), target_line_in_block(0), hit_target_line(true)
+     {
     }
 
     /**
@@ -1994,18 +1939,15 @@ struct PrintUsageImplementation
     {
       // If this is NOT the first time nextTable() is called after the constructor,
       // then skip to the next table break (i.e. a Descriptor with help == 0)
-      if (rowdesc != 0)
-      {
-        while (tablestart->help != 0 && tablestart->shortopt != 0)
-          ++tablestart;
+      if (rowdesc != nullptr) {
+         while (tablestart->help != nullptr && tablestart->shortopt != nullptr) ++tablestart;
       }
 
       // Find the next table after the break (if any)
-      while (tablestart->help == 0 && tablestart->shortopt != 0)
-        ++tablestart;
+      while (tablestart->help == nullptr && tablestart->shortopt != nullptr) ++tablestart;
 
       restartTable();
-      return rowstart != 0;
+      return rowstart != nullptr;
     }
 
     /**
@@ -2015,7 +1957,7 @@ struct PrintUsageImplementation
     {
       rowdesc = tablestart;
       rowstart = tablestart->help;
-      ptr = 0;
+      ptr = nullptr;
     }
 
     /**
@@ -2025,10 +1967,9 @@ struct PrintUsageImplementation
      */
     bool nextRow()
     {
-      if (ptr == 0)
-      {
-        restartRow();
-        return rowstart != 0;
+       if (ptr == nullptr) {
+          restartRow();
+          return rowstart != nullptr;
       }
 
       while (*ptr != 0 && *ptr != '\n')
@@ -2036,11 +1977,11 @@ struct PrintUsageImplementation
 
       if (*ptr == 0)
       {
-        if ((rowdesc + 1)->help == 0) // table break
-          return false;
+         if ((rowdesc + 1)->help == nullptr) // table break
+            return false;
 
-        ++rowdesc;
-        rowstart = rowdesc->help;
+         ++rowdesc;
+         rowstart = rowdesc->help;
       }
       else // if (*ptr == '\n')
       {
@@ -2075,14 +2016,12 @@ struct PrintUsageImplementation
      */
     bool next()
     {
-      if (ptr == 0)
-        return false;
+       if (ptr == nullptr) return false;
 
-      if (col == -1)
-      {
-        col = 0;
-        update_length();
-        return true;
+       if (col == -1) {
+          col = 0;
+          update_length();
+          return true;
       }
 
       ptr += len;
@@ -2852,8 +2791,7 @@ struct FullArg: public Arg
 
    static option::ArgStatus Required(const option::Option& option, bool msg)
    {
-      if (option.arg != 0)
-         return option::ARG_OK;
+      if (option.arg != nullptr) return option::ARG_OK;
 
       if (msg) printError("Option '", option, "' requires an argument\n");
       return option::ARG_ILLEGAL;
@@ -2861,8 +2799,7 @@ struct FullArg: public Arg
 
    static option::ArgStatus NonEmpty(const option::Option& option, bool msg)
    {
-      if (option.arg != 0 && option.arg[0] != 0)
-         return option::ARG_OK;
+      if (option.arg != nullptr && option.arg[0] != 0) return option::ARG_OK;
 
       if (msg) printError("Option '", option, "' requires a non-empty argument\n");
       return option::ARG_ILLEGAL;
@@ -2870,8 +2807,9 @@ struct FullArg: public Arg
 
    static option::ArgStatus Numeric(const option::Option& option, bool msg)
    {
-      char* endptr = 0;
-      if (option.arg != 0 && strtol(option.arg, &endptr, 10)){};
+      char *endptr = nullptr;
+      if (option.arg != nullptr && strtol(option.arg, &endptr, 10)) {
+      };
       if (endptr != option.arg && *endptr == 0)
          return option::ARG_OK;
 

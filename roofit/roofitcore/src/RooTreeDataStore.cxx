@@ -49,20 +49,10 @@ Int_t RooTreeDataStore::_defTreeBufSize = 4096 ;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooTreeDataStore::RooTreeDataStore() :
-  _tree(0),
-  _cacheTree(0),
-  _cacheOwner(0),
-  _defCtor(kTRUE),
-  _wgtVar(0),
-  _extWgtArray(0),
-  _extWgtErrLoArray(0),
-  _extWgtErrHiArray(0),
-  _extSumW2Array(0),
-  _curWgt(1),
-  _curWgtErrLo(0),
-  _curWgtErrHi(0),
-  _curWgtErr(0)
+RooTreeDataStore::RooTreeDataStore()
+   : _tree(nullptr), _cacheTree(nullptr), _cacheOwner(nullptr), _defCtor(kTRUE), _wgtVar(nullptr),
+     _extWgtArray(nullptr), _extWgtErrLoArray(nullptr), _extWgtErrHiArray(nullptr), _extSumW2Array(nullptr), _curWgt(1),
+     _curWgtErrLo(0), _curWgtErrHi(0), _curWgtErr(0)
 {
 }
 
@@ -71,19 +61,10 @@ RooTreeDataStore::RooTreeDataStore() :
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor to facilitate reading of legacy RooDataSets
 
-RooTreeDataStore::RooTreeDataStore(TTree* t, const RooArgSet& vars, const char* wgtVarName) :
-  RooAbsDataStore("blah","blah",varsNoWeight(vars,wgtVarName)),
-  _tree(t),
-  _cacheTree(0),
-  _cacheOwner(0),
-  _defCtor(kTRUE),
-  _varsww(vars),
-  _wgtVar(weightVar(vars,wgtVarName)),
-  _extWgtArray(0),
-  _extWgtErrLoArray(0),
-  _extWgtErrHiArray(0),
-  _extSumW2Array(0),
-  _curWgt(1)
+RooTreeDataStore::RooTreeDataStore(TTree *t, const RooArgSet &vars, const char *wgtVarName)
+   : RooAbsDataStore("blah", "blah", varsNoWeight(vars, wgtVarName)), _tree(t), _cacheTree(nullptr),
+     _cacheOwner(nullptr), _defCtor(kTRUE), _varsww(vars), _wgtVar(weightVar(vars, wgtVarName)), _extWgtArray(nullptr),
+     _extWgtErrLoArray(nullptr), _extWgtErrHiArray(nullptr), _extSumW2Array(nullptr), _curWgt(1)
 {
 }
 
@@ -92,22 +73,11 @@ RooTreeDataStore::RooTreeDataStore(TTree* t, const RooArgSet& vars, const char* 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooTreeDataStore::RooTreeDataStore(const char* name, const char* title, const RooArgSet& vars, const char* wgtVarName) :
-  RooAbsDataStore(name,title,varsNoWeight(vars,wgtVarName)),
-  _tree(0),
-  _cacheTree(0), 
-  _cacheOwner(0),
-  _defCtor(kFALSE),
-  _varsww(vars),
-  _wgtVar(weightVar(vars,wgtVarName)),
-  _extWgtArray(0),
-  _extWgtErrLoArray(0),
-  _extWgtErrHiArray(0),
-  _extSumW2Array(0),
-  _curWgt(1),
-  _curWgtErrLo(0),
-  _curWgtErrHi(0),
-  _curWgtErr(0)
+RooTreeDataStore::RooTreeDataStore(const char *name, const char *title, const RooArgSet &vars, const char *wgtVarName)
+   : RooAbsDataStore(name, title, varsNoWeight(vars, wgtVarName)), _tree(nullptr), _cacheTree(nullptr),
+     _cacheOwner(nullptr), _defCtor(kFALSE), _varsww(vars), _wgtVar(weightVar(vars, wgtVarName)), _extWgtArray(nullptr),
+     _extWgtErrLoArray(nullptr), _extWgtErrHiArray(nullptr), _extSumW2Array(nullptr), _curWgt(1), _curWgtErrLo(0),
+     _curWgtErrHi(0), _curWgtErr(0)
 {
   initialize() ;  
 }
@@ -117,22 +87,12 @@ RooTreeDataStore::RooTreeDataStore(const char* name, const char* title, const Ro
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooTreeDataStore::RooTreeDataStore(const char* name, const char* title, const RooArgSet& vars, TTree& t, const RooFormulaVar& select, const char* wgtVarName) :
-  RooAbsDataStore(name,title,varsNoWeight(vars,wgtVarName)),
-  _tree(0),
-  _cacheTree(0),
-  _cacheOwner(0),
-  _defCtor(kFALSE),
-  _varsww(vars),
-  _wgtVar(weightVar(vars,wgtVarName)),
-  _extWgtArray(0),
-  _extWgtErrLoArray(0),
-  _extWgtErrHiArray(0),
-  _extSumW2Array(0),
-  _curWgt(1),
-  _curWgtErrLo(0),
-  _curWgtErrHi(0),
-  _curWgtErr(0)
+RooTreeDataStore::RooTreeDataStore(const char *name, const char *title, const RooArgSet &vars, TTree &t,
+                                   const RooFormulaVar &select, const char *wgtVarName)
+   : RooAbsDataStore(name, title, varsNoWeight(vars, wgtVarName)), _tree(nullptr), _cacheTree(nullptr),
+     _cacheOwner(nullptr), _defCtor(kFALSE), _varsww(vars), _wgtVar(weightVar(vars, wgtVarName)), _extWgtArray(nullptr),
+     _extWgtErrLoArray(nullptr), _extWgtErrHiArray(nullptr), _extSumW2Array(nullptr), _curWgt(1), _curWgtErrLo(0),
+     _curWgtErrHi(0), _curWgtErr(0)
 {
   initialize() ;  
   loadValues(&t,&select) ;
@@ -142,22 +102,12 @@ RooTreeDataStore::RooTreeDataStore(const char* name, const char* title, const Ro
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooTreeDataStore::RooTreeDataStore(const char* name, const char* title, const RooArgSet& vars, TTree& t, const char* selExpr, const char* wgtVarName) :
-  RooAbsDataStore(name,title,varsNoWeight(vars,wgtVarName)),
-  _tree(0),
-  _cacheTree(0),
-  _cacheOwner(0),
-  _defCtor(kFALSE),
-  _varsww(vars),
-  _wgtVar(weightVar(vars,wgtVarName)),
-  _extWgtArray(0),
-  _extWgtErrLoArray(0),
-  _extWgtErrHiArray(0),
-  _extSumW2Array(0),
-  _curWgt(1),
-  _curWgtErrLo(0),
-  _curWgtErrHi(0),
-  _curWgtErr(0)
+RooTreeDataStore::RooTreeDataStore(const char *name, const char *title, const RooArgSet &vars, TTree &t,
+                                   const char *selExpr, const char *wgtVarName)
+   : RooAbsDataStore(name, title, varsNoWeight(vars, wgtVarName)), _tree(nullptr), _cacheTree(nullptr),
+     _cacheOwner(nullptr), _defCtor(kFALSE), _varsww(vars), _wgtVar(weightVar(vars, wgtVarName)), _extWgtArray(nullptr),
+     _extWgtErrLoArray(nullptr), _extWgtErrHiArray(nullptr), _extSumW2Array(nullptr), _curWgt(1), _curWgtErrLo(0),
+     _curWgtErrHi(0), _curWgtErr(0)
 {
   initialize() ;  
 
@@ -174,22 +124,12 @@ RooTreeDataStore::RooTreeDataStore(const char* name, const char* title, const Ro
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooTreeDataStore::RooTreeDataStore(const char* name, const char* title, const RooArgSet& vars, const RooAbsDataStore& tds, const RooFormulaVar& select, const char* wgtVarName) :
-  RooAbsDataStore(name,title,varsNoWeight(vars,wgtVarName)),
-  _tree(0),
-  _cacheTree(0),
-  _cacheOwner(0),
-  _defCtor(kFALSE),
-  _varsww(vars),
-  _wgtVar(weightVar(vars,wgtVarName)),
-  _extWgtArray(0),
-  _extWgtErrLoArray(0),
-  _extWgtErrHiArray(0),
-  _extSumW2Array(0),
-  _curWgt(1),
-  _curWgtErrLo(0),
-  _curWgtErrHi(0),
-  _curWgtErr(0)
+RooTreeDataStore::RooTreeDataStore(const char *name, const char *title, const RooArgSet &vars,
+                                   const RooAbsDataStore &tds, const RooFormulaVar &select, const char *wgtVarName)
+   : RooAbsDataStore(name, title, varsNoWeight(vars, wgtVarName)), _tree(nullptr), _cacheTree(nullptr),
+     _cacheOwner(nullptr), _defCtor(kFALSE), _varsww(vars), _wgtVar(weightVar(vars, wgtVarName)), _extWgtArray(nullptr),
+     _extWgtErrLoArray(nullptr), _extWgtErrHiArray(nullptr), _extSumW2Array(nullptr), _curWgt(1), _curWgtErrLo(0),
+     _curWgtErrHi(0), _curWgtErr(0)
 {
   initialize() ;  
   loadValues(&tds,&select) ;
@@ -199,22 +139,12 @@ RooTreeDataStore::RooTreeDataStore(const char* name, const char* title, const Ro
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooTreeDataStore::RooTreeDataStore(const char* name, const char* title, const RooArgSet& vars, const RooAbsDataStore& ads, const char* selExpr, const char* wgtVarName) :
-  RooAbsDataStore(name,title,varsNoWeight(vars,wgtVarName)),
-  _tree(0),
-  _cacheTree(0),
-  _cacheOwner(0),
-  _defCtor(kFALSE),
-  _varsww(vars),
-  _wgtVar(weightVar(vars,wgtVarName)),
-  _extWgtArray(0),
-  _extWgtErrLoArray(0),
-  _extWgtErrHiArray(0),
-  _extSumW2Array(0),
-  _curWgt(1),
-  _curWgtErrLo(0),
-  _curWgtErrHi(0),
-  _curWgtErr(0)
+RooTreeDataStore::RooTreeDataStore(const char *name, const char *title, const RooArgSet &vars,
+                                   const RooAbsDataStore &ads, const char *selExpr, const char *wgtVarName)
+   : RooAbsDataStore(name, title, varsNoWeight(vars, wgtVarName)), _tree(nullptr), _cacheTree(nullptr),
+     _cacheOwner(nullptr), _defCtor(kFALSE), _varsww(vars), _wgtVar(weightVar(vars, wgtVarName)), _extWgtArray(nullptr),
+     _extWgtErrLoArray(nullptr), _extWgtErrHiArray(nullptr), _extSumW2Array(nullptr), _curWgt(1), _curWgtErrLo(0),
+     _curWgtErrHi(0), _curWgtErr(0)
 {
   initialize() ;  
 
@@ -232,30 +162,22 @@ RooTreeDataStore::RooTreeDataStore(const char* name, const char* title, const Ro
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooTreeDataStore::RooTreeDataStore(const char *name, const char *title, RooAbsDataStore& tds, 
-			 const RooArgSet& vars, const RooFormulaVar* cutVar, const char* cutRange,
-			 Int_t nStart, Int_t nStop, Bool_t /*copyCache*/, const char* wgtVarName) :
-  RooAbsDataStore(name,title,varsNoWeight(vars,wgtVarName)), _defCtor(kFALSE),
-  _varsww(vars),
-  _wgtVar(weightVar(vars,wgtVarName)),
-  _extWgtArray(0),
-  _extWgtErrLoArray(0),
-  _extWgtErrHiArray(0),
-  _extSumW2Array(0),
-  _curWgt(1),
-  _curWgtErrLo(0),
-  _curWgtErrHi(0),
-  _curWgtErr(0)
+RooTreeDataStore::RooTreeDataStore(const char *name, const char *title, RooAbsDataStore &tds, const RooArgSet &vars,
+                                   const RooFormulaVar *cutVar, const char *cutRange, Int_t nStart, Int_t nStop,
+                                   Bool_t /*copyCache*/, const char *wgtVarName)
+   : RooAbsDataStore(name, title, varsNoWeight(vars, wgtVarName)), _defCtor(kFALSE), _varsww(vars),
+     _wgtVar(weightVar(vars, wgtVarName)), _extWgtArray(nullptr), _extWgtErrLoArray(nullptr),
+     _extWgtErrHiArray(nullptr), _extSumW2Array(nullptr), _curWgt(1), _curWgtErrLo(0), _curWgtErrHi(0), _curWgtErr(0)
 {
   // WVE NEED TO ADJUST THIS FOR WEIGHTS
 
   // Protected constructor for internal use only
-  _tree = 0 ;
-  _cacheTree = 0 ;
+  _tree = nullptr;
+  _cacheTree = nullptr;
   createTree(name,title) ;
 
   // Deep clone cutVar and attach clone to this dataset
-  RooFormulaVar* cloneVar = 0;
+  RooFormulaVar *cloneVar = nullptr;
   if (cutVar) {    
     cloneVar = (RooFormulaVar*) cutVar->cloneTree() ;
     cloneVar->attachDataStore(tds) ;
@@ -264,12 +186,12 @@ RooTreeDataStore::RooTreeDataStore(const char *name, const char *title, RooAbsDa
   // Constructor from existing data set with list of variables that preserves the cache
   initialize();
 
-  attachCache(0,((RooTreeDataStore&)tds)._cachedVars) ;
+  attachCache(nullptr, ((RooTreeDataStore &)tds)._cachedVars);
 
   // WVE copy values of cached variables here!!!
   _cacheTree->CopyEntries(((RooTreeDataStore&)tds)._cacheTree) ;
-  _cacheOwner = 0 ;
-  
+  _cacheOwner = nullptr;
+
   loadValues(&tds,cloneVar,cutRange,nStart,nStop);
 
   if (cloneVar) delete cloneVar ;
@@ -304,8 +226,8 @@ RooRealVar* RooTreeDataStore::weightVar(const RooArgSet& allVars, const char* wg
   if(wgtName) {
     RooRealVar* wgt = dynamic_cast<RooRealVar*>(allVars.find(wgtName)) ;
     return wgt ;
-  } 
-  return 0 ;
+  }
+  return nullptr;
 }
 
 
@@ -321,9 +243,9 @@ void RooTreeDataStore::attachCache(const RooAbsArg* newOwner, const RooArgSet& c
   _cachedVars.removeAll() ;
   TIterator* iter = cachedVarsIn.createIterator() ;
   RooAbsArg *var;
-  while((0 != (var= (RooAbsArg*)iter->Next()))) {    
-    var->attachToTree(*_cacheTree,_defTreeBufSize) ;
-    _cachedVars.add(*var) ;
+  while ((nullptr != (var = (RooAbsArg *)iter->Next()))) {
+     var->attachToTree(*_cacheTree, _defTreeBufSize);
+     _cachedVars.add(*var);
   }
   delete iter ;
   _cacheOwner = newOwner ;
@@ -337,21 +259,11 @@ void RooTreeDataStore::attachCache(const RooAbsArg* newOwner, const RooArgSet& c
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooTreeDataStore::RooTreeDataStore(const RooTreeDataStore& other, const char* newname) :
-  RooAbsDataStore(other,newname),
-  _tree(0),
-  _cacheTree(0),
-  _defCtor(kFALSE),
-  _varsww(other._varsww),
-  _wgtVar(other._wgtVar),
-  _extWgtArray(other._extWgtArray),
-  _extWgtErrLoArray(other._extWgtErrLoArray),
-  _extWgtErrHiArray(other._extWgtErrHiArray),
-  _extSumW2Array(other._extSumW2Array),
-  _curWgt(other._curWgt),
-  _curWgtErrLo(other._curWgtErrLo),
-  _curWgtErrHi(other._curWgtErrHi),
-  _curWgtErr(other._curWgtErr)
+RooTreeDataStore::RooTreeDataStore(const RooTreeDataStore &other, const char *newname)
+   : RooAbsDataStore(other, newname), _tree(nullptr), _cacheTree(nullptr), _defCtor(kFALSE), _varsww(other._varsww),
+     _wgtVar(other._wgtVar), _extWgtArray(other._extWgtArray), _extWgtErrLoArray(other._extWgtErrLoArray),
+     _extWgtErrHiArray(other._extWgtErrHiArray), _extSumW2Array(other._extSumW2Array), _curWgt(other._curWgt),
+     _curWgtErrLo(other._curWgtErrLo), _curWgtErrHi(other._curWgtErrHi), _curWgtErr(other._curWgtErr)
 {
   initialize() ;  
   loadValues(&other) ;
@@ -360,21 +272,13 @@ RooTreeDataStore::RooTreeDataStore(const RooTreeDataStore& other, const char* ne
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooTreeDataStore::RooTreeDataStore(const RooTreeDataStore& other, const RooArgSet& vars, const char* newname) :
-  RooAbsDataStore(other,varsNoWeight(vars,other._wgtVar?other._wgtVar->GetName():0),newname),
-  _tree(0),
-  _cacheTree(0),
-  _defCtor(kFALSE),
-  _varsww(vars),
-  _wgtVar(other._wgtVar?weightVar(vars,other._wgtVar->GetName()):0),
-  _extWgtArray(other._extWgtArray),
-  _extWgtErrLoArray(other._extWgtErrLoArray),
-  _extWgtErrHiArray(other._extWgtErrHiArray),
-  _extSumW2Array(other._extSumW2Array),
-  _curWgt(other._curWgt),
-  _curWgtErrLo(other._curWgtErrLo),
-  _curWgtErrHi(other._curWgtErrHi),
-  _curWgtErr(other._curWgtErr)
+RooTreeDataStore::RooTreeDataStore(const RooTreeDataStore &other, const RooArgSet &vars, const char *newname)
+   : RooAbsDataStore(other, varsNoWeight(vars, other._wgtVar ? other._wgtVar->GetName() : nullptr), newname),
+     _tree(nullptr), _cacheTree(nullptr), _defCtor(kFALSE), _varsww(vars),
+     _wgtVar(other._wgtVar ? weightVar(vars, other._wgtVar->GetName()) : nullptr), _extWgtArray(other._extWgtArray),
+     _extWgtErrLoArray(other._extWgtErrLoArray), _extWgtErrHiArray(other._extWgtErrHiArray),
+     _extSumW2Array(other._extSumW2Array), _curWgt(other._curWgt), _curWgtErrLo(other._curWgtErrLo),
+     _curWgtErrHi(other._curWgtErrHi), _curWgtErr(other._curWgtErr)
 {
   initialize() ;  
   loadValues(&other) ;
@@ -410,8 +314,8 @@ void RooTreeDataStore::initialize()
   // Attach each variable to the dataset
   TIterator* iter = _varsww.createIterator() ;
   RooAbsArg *var;
-  while((0 != (var= (RooAbsArg*)iter->Next()))) {
-    var->attachToTree(*_tree,_defTreeBufSize) ;
+  while ((nullptr != (var = (RooAbsArg *)iter->Next()))) {
+     var->attachToTree(*_tree, _defTreeBufSize);
   }
   delete iter ;
 }
@@ -439,12 +343,12 @@ void RooTreeDataStore::createTree(const char* name, const char* title)
 
   if (!_tree) {
     _tree = new TTree(name,title) ;
-    _tree->SetDirectory(0) ;
+    _tree->SetDirectory(nullptr);
     gDirectory->RecursiveRemove(_tree) ;
   }
   if (!_cacheTree) {
     _cacheTree = new TTree(name,title) ;
-    _cacheTree->SetDirectory(0) ;
+    _cacheTree->SetDirectory(nullptr);
     gDirectory->RecursiveRemove(_cacheTree) ;
   }
 
@@ -487,7 +391,7 @@ void RooTreeDataStore::loadValues(const TTree *t, const RooFormulaVar* select, c
   }
 
   // Change directory back to original directory
-  tClone->SetDirectory(0) ;
+  tClone->SetDirectory(nullptr);
 
   if (notInMemNow) {
     gDirectory->cd(pwd) ;
@@ -498,21 +402,21 @@ void RooTreeDataStore::loadValues(const TTree *t, const RooFormulaVar* select, c
   
   // Attach args in cloned list to cloned source tree
   TIterator* sourceIter =  sourceArgSet->createIterator() ;
-  RooAbsArg* sourceArg = 0;
+  RooAbsArg *sourceArg = nullptr;
   while ((sourceArg=(RooAbsArg*)sourceIter->Next())) {
     sourceArg->attachToTree(*tClone,_defTreeBufSize) ;
   }
 
   // Redirect formula servers to sourceArgSet
-  RooFormulaVar* selectClone(0) ;
+  RooFormulaVar *selectClone(nullptr);
   if (select) {
     selectClone = (RooFormulaVar*) select->cloneTree() ;
     selectClone->recursiveRedirectServers(*sourceArgSet) ;
     selectClone->setOperMode(RooAbsArg::ADirty,kTRUE) ;
   }
 
-  // Loop over events in source tree   
-  RooAbsArg* destArg = 0;
+  // Loop over events in source tree
+  RooAbsArg *destArg = nullptr;
   TIterator* destIter = _varsww.createIterator() ;
   Int_t numInvalid(0) ;
   Int_t nevent= (Int_t)tClone->GetEntries();
@@ -571,7 +475,7 @@ void RooTreeDataStore::loadValues(const RooAbsDataStore *ads, const RooFormulaVa
 				  const char* rangeName, Int_t nStart, Int_t nStop)  
 {
   // Redirect formula servers to source data row
-  RooFormulaVar* selectClone(0) ;
+  RooFormulaVar *selectClone(nullptr);
   if (select) {
     selectClone = (RooFormulaVar*) select->cloneTree() ;
     selectClone->recursiveRedirectServers(*ads->get()) ;
@@ -581,8 +485,8 @@ void RooTreeDataStore::loadValues(const RooAbsDataStore *ads, const RooFormulaVa
   // Force RDS internal initialization
   ads->get(0) ;
 
-  // Loop over events in source tree   
-  RooAbsArg* arg = 0;
+  // Loop over events in source tree
+  RooAbsArg *arg = nullptr;
   TIterator* destIter = _varsww.createIterator() ;
   Int_t nevent = nStop < ads->numEntries() ? nStop : ads->numEntries() ;
   Bool_t allValid ;
@@ -669,12 +573,12 @@ const RooArgSet* RooTreeDataStore::get(Int_t index) const
 
   Int_t ret = ((RooTreeDataStore*)this)->GetEntry(index, 1) ;
 
-  if(!ret) return 0;
+  if (!ret) return nullptr;
 
   if (_doDirtyProp) {
     // Raise all dirty flags 
     _iterator->Reset() ;
-    RooAbsArg* var = 0;
+    RooAbsArg *var = nullptr;
     while ((var=(RooAbsArg*)_iterator->Next())) {
       var->setValueDirty() ; // This triggers recalculation of all clients
     } 
@@ -917,7 +821,7 @@ RooAbsArg* RooTreeDataStore::addColumn(RooAbsArg& newVar, Bool_t adjustRange)
   if(!valHolder->isFundamental()) {
     coutE(InputArguments) << GetName() << "::addColumn: holder argument is not fundamental: \""
 	 << valHolder->GetName() << "\"" << endl;
-    return 0;
+    return nullptr;
   }
 
   // WVE need to reset TTRee buffers to original datamembers here
@@ -991,7 +895,7 @@ RooArgSet* RooTreeDataStore::addColumns(const RooArgList& varList)
     if(!valHolder->isFundamental()) {
       coutE(InputArguments) << GetName() << "::addColumn: holder argument is not fundamental: \""
 	   << valHolder->GetName() << "\"" << endl;
-      return 0;
+      return nullptr;
     }
     
     // Clone variable and attach to cloned tree 
@@ -999,7 +903,7 @@ RooArgSet* RooTreeDataStore::addColumns(const RooArgList& varList)
     if (!newVarCloneList) {
       coutE(InputArguments) << "RooTreeDataStore::RooTreeData(" << GetName() 
 			    << ") Couldn't deep-clone variable " << var->GetName() << ", abort." << endl ;
-      return 0 ;
+      return nullptr;
     }
     RooAbsArg* newVarClone = newVarCloneList->find(var->GetName()) ;   
     newVarClone->recursiveRedirectServers(_vars,kFALSE) ;
@@ -1244,7 +1148,7 @@ void RooTreeDataStore::resetCache()
 
   // Delete & recreate cache tree 
   delete _cacheTree ;
-  _cacheTree = 0 ;
+  _cacheTree = nullptr;
   createTree(GetName(),GetTitle()) ;
 
   return ;

@@ -40,7 +40,7 @@ A box has line attributes (see TAttLine) and fill area attributes (see TAttFill)
 
 TBox::TBox(): TObject(), TAttLine(), TAttFill()
 {
-   fTip = 0;
+   fTip = nullptr;
    fX1       = 0.;
    fY1       = 0.;
    fX2       = 0.;
@@ -59,7 +59,7 @@ TBox::TBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
    if (y2 >= y1) {fY1  =y1; fY2 = y2;}
    else          {fY1 = y2; fY2 = y1;}
    fResizing = kFALSE;
-   fTip = 0;
+   fTip = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -118,7 +118,7 @@ void TBox::Copy(TObject &obj) const
    ((TBox&)obj).fX2 = fX2;
    ((TBox&)obj).fY2 = fY2;
    ((TBox&)obj).fResizing = fResizing;
-   ((TBox&)obj).fTip = 0;   //FIXME
+   ((TBox &)obj).fTip = nullptr; // FIXME
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -685,7 +685,7 @@ void TBox::SetToolTipText(const char *text, Long_t delayms)
 
    if (fTip) {
       gPad->DeleteToolTip(fTip);
-      fTip = 0;
+      fTip = nullptr;
    }
 
    if (text && strlen(text))

@@ -23,8 +23,7 @@ ClassImp(TGLQuadric);
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct quadric
 
-TGLQuadric::TGLQuadric() :
-   fQuad(0)
+TGLQuadric::TGLQuadric() : fQuad(nullptr)
 {
 }
 

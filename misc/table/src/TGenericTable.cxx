@@ -103,22 +103,23 @@
    ClassImp(TGenericTable);
    TableClassStreamerImp(TGenericTable)
 
-// Create TGenericTable by TTableDescriptor pointer
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////
-///
-///   Create TGenericTable by TTableDescriptor pointer:
-///
-///   dsc   - Pointer to the table descriptor
-///   name  - The name of this object
-///
-////////////////////////////////////////////////////////////
+      // Create TGenericTable by TTableDescriptor pointer
+      ////////////////////////////////////////////////////////////////////////////////
+      ////////////////////////////////////////////////////////////
+      ///
+      ///   Create TGenericTable by TTableDescriptor pointer:
+      ///
+      ///   dsc   - Pointer to the table descriptor
+      ///   name  - The name of this object
+      ///
+      ////////////////////////////////////////////////////////////
 
-TGenericTable::TGenericTable(const TTableDescriptor &dsc, const char *name) : TTable(name,dsc.Sizeof()),fColDescriptors(0)
-{
-   // Create a private copy of the descriptor provided;
-   SetDescriptorPointer(new TTableDescriptor(dsc));
-   SetGenericType();
+      TGenericTable::TGenericTable(const TTableDescriptor &dsc, const char *name)
+      : TTable(name, dsc.Sizeof()), fColDescriptors(nullptr)
+   {
+      // Create a private copy of the descriptor provided;
+      SetDescriptorPointer(new TTableDescriptor(dsc));
+      SetGenericType();
 }
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////
@@ -131,7 +132,8 @@ TGenericTable::TGenericTable(const TTableDescriptor &dsc, const char *name) : TT
 ///
 ////////////////////////////////////////////////////////////
 
-TGenericTable::TGenericTable(const TTableDescriptor &dsc, Int_t n) : TTable("TGenericTable",n,dsc.Sizeof()),fColDescriptors(0)
+TGenericTable::TGenericTable(const TTableDescriptor &dsc, Int_t n)
+   : TTable("TGenericTable", n, dsc.Sizeof()), fColDescriptors(nullptr)
 {
   // Create a provate copy of the descriptor provided;
    SetDescriptorPointer(new TTableDescriptor(dsc));
@@ -149,7 +151,8 @@ TGenericTable::TGenericTable(const TTableDescriptor &dsc, Int_t n) : TTable("TGe
 ///
 ////////////////////////////////////////////////////////////
 
-TGenericTable::TGenericTable(const TTableDescriptor &dsc,const char *name,Int_t n) : TTable(name,n,dsc.Sizeof()),fColDescriptors(0)
+TGenericTable::TGenericTable(const TTableDescriptor &dsc, const char *name, Int_t n)
+   : TTable(name, n, dsc.Sizeof()), fColDescriptors(nullptr)
 {
   // Create a provate copy of the descriptor provided;
    SetDescriptorPointer(new TTableDescriptor(dsc));
@@ -168,7 +171,7 @@ TGenericTable::TGenericTable(const TTableDescriptor &dsc,const char *name,Int_t 
 ///
 ////////////////////////////////////////////////////////////
 
-TGenericTable::TGenericTable(const char *structName, const char *name) : TTable(name,-1),fColDescriptors(0)
+TGenericTable::TGenericTable(const char *structName, const char *name) : TTable(name, -1), fColDescriptors(nullptr)
 {
    TTableDescriptor *dsc = TTableDescriptor::MakeDescriptor(structName);
    if (dsc) {
@@ -189,7 +192,7 @@ TGenericTable::TGenericTable(const char *structName, const char *name) : TTable(
 ///
 ////////////////////////////////////////////////////////////
 
-TGenericTable::TGenericTable(const char *structName, Int_t n) : TTable("TGenericTable",-1),fColDescriptors(0)
+TGenericTable::TGenericTable(const char *structName, Int_t n) : TTable("TGenericTable", -1), fColDescriptors(nullptr)
 {
    TTableDescriptor *dsc = TTableDescriptor::MakeDescriptor(structName);
    if (dsc) {
@@ -211,7 +214,8 @@ TGenericTable::TGenericTable(const char *structName, Int_t n) : TTable("TGeneric
 ///
 ////////////////////////////////////////////////////////////
 
-TGenericTable::TGenericTable(const char *structName, const char *name,Int_t n) : TTable(name,-1),fColDescriptors(0)
+TGenericTable::TGenericTable(const char *structName, const char *name, Int_t n)
+   : TTable(name, -1), fColDescriptors(nullptr)
 {
    TTableDescriptor *dsc = TTableDescriptor::MakeDescriptor(structName);
    if (dsc) {

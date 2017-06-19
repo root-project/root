@@ -34,16 +34,16 @@ ClassImp(PyMethodBase);
 
 // NOTE: Introduce here nothing that breaks if multiple instances
 // of the same method share these objects, e.g., the local namespace.
-PyObject *PyMethodBase::fModuleBuiltin = NULL;
-PyObject *PyMethodBase::fEval = NULL;
-PyObject *PyMethodBase::fOpen = NULL;
+PyObject *PyMethodBase::fModuleBuiltin = nullptr;
+PyObject *PyMethodBase::fEval = nullptr;
+PyObject *PyMethodBase::fOpen = nullptr;
 
-PyObject *PyMethodBase::fModulePickle = NULL;
-PyObject *PyMethodBase::fPickleDumps = NULL;
-PyObject *PyMethodBase::fPickleLoads = NULL;
+PyObject *PyMethodBase::fModulePickle = nullptr;
+PyObject *PyMethodBase::fPickleDumps = nullptr;
+PyObject *PyMethodBase::fPickleLoads = nullptr;
 
-PyObject *PyMethodBase::fMain = NULL;
-PyObject *PyMethodBase::fGlobalNS = NULL;
+PyObject *PyMethodBase::fMain = nullptr;
+PyObject *PyMethodBase::fGlobalNS = nullptr;
 
 class PyGILRAII {
    PyGILState_STATE m_GILState;
@@ -54,12 +54,9 @@ public:
 
 ///////////////////////////////////////////////////////////////////////////////
 
-PyMethodBase::PyMethodBase(const TString &jobName,
-                           Types::EMVA methodType,
-                           const TString &methodTitle,
-                           DataSetInfo &dsi,
-                           const TString &theOption ): MethodBase(jobName, methodType, methodTitle, dsi, theOption),
-   fClassifier(NULL)
+PyMethodBase::PyMethodBase(const TString &jobName, Types::EMVA methodType, const TString &methodTitle, DataSetInfo &dsi,
+                           const TString &theOption)
+   : MethodBase(jobName, methodType, methodTitle, dsi, theOption), fClassifier(nullptr)
 {
    if (!PyIsInitialized()) {
       PyInitialize();
@@ -74,10 +71,8 @@ PyMethodBase::PyMethodBase(const TString &jobName,
 
 ///////////////////////////////////////////////////////////////////////////////
 
-PyMethodBase::PyMethodBase(Types::EMVA methodType,
-                           DataSetInfo &dsi,
-                           const TString &weightFile): MethodBase(methodType, dsi, weightFile),
-   fClassifier(NULL)
+PyMethodBase::PyMethodBase(Types::EMVA methodType, DataSetInfo &dsi, const TString &weightFile)
+   : MethodBase(methodType, dsi, weightFile), fClassifier(nullptr)
 {
    if (!PyIsInitialized()) {
       PyInitialize();

@@ -10,12 +10,11 @@ const FTLibrary&  FTLibrary::Instance()
 
 FTLibrary::~FTLibrary()
 {
-    if( library != 0)
-    {
-        FT_Done_FreeType( *library);
+   if (library != nullptr) {
+      FT_Done_FreeType(*library);
 
-        delete library;
-        library= 0;
+      delete library;
+      library = nullptr;
     }
 
 //  if( manager != 0)
@@ -27,10 +26,7 @@ FTLibrary::~FTLibrary()
 //  }
 }
 
-
-FTLibrary::FTLibrary()
-:   library(0),
-    err(0)
+FTLibrary::FTLibrary() : library(nullptr), err(0)
 {
     Initialise();
 }
@@ -38,17 +34,15 @@ FTLibrary::FTLibrary()
 
 bool FTLibrary::Initialise()
 {
-    if( library != 0)
-        return true;
+   if (library != nullptr) return true;
 
-    library = new FT_Library;
+   library = new FT_Library;
 
-    err = FT_Init_FreeType( library);
-    if( err)
-    {
-        delete library;
-        library = 0;
-        return false;
+   err = FT_Init_FreeType(library);
+   if (err) {
+      delete library;
+      library = nullptr;
+      return false;
     }
 
 //  FTC_Manager* manager;

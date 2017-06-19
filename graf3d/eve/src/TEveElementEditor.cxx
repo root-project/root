@@ -32,20 +32,11 @@ ClassImp(TEveElementEditor);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TEveElementEditor::TEveElementEditor(const TGWindow *p,
-                                     Int_t width, Int_t height,
-                                     UInt_t options, Pixel_t back) :
-   TGedFrame(p, width, height, options | kVerticalFrame, back),
+TEveElementEditor::TEveElementEditor(const TGWindow *p, Int_t width, Int_t height, UInt_t options, Pixel_t back)
+   : TGedFrame(p, width, height, options | kVerticalFrame, back),
 
-   fRE           (0),
-   fHFrame       (0),
-   fPreLabel     (0),
-   fRnrSelf      (0),
-   fRnrChildren  (0),
-   fRnrState     (0),
-   fMainColor    (0),
-   fTransparency (0),
-   fTrans        (0)
+     fRE(nullptr), fHFrame(nullptr), fPreLabel(nullptr), fRnrSelf(nullptr), fRnrChildren(nullptr), fRnrState(nullptr),
+     fMainColor(nullptr), fTransparency(nullptr), fTrans(nullptr)
 {
    MakeTitle("TEveElement");
    fPriority = 0;

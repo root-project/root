@@ -89,47 +89,29 @@ ClassImp(TMVA::MethodMLP);
 ////////////////////////////////////////////////////////////////////////////////
 /// standard constructor
 
-TMVA::MethodMLP::MethodMLP( const TString& jobName,
-                            const TString& methodTitle,
-                            DataSetInfo& theData,
-                            const TString& theOption)
-   : MethodANNBase( jobName, Types::kMLP, methodTitle, theData, theOption),
-     fUseRegulator(false), fCalculateErrors(false),
-     fPrior(0.0), fPriorDev(0), fUpdateLimit(0),
-     fTrainingMethod(kBFGS), fTrainMethodS("BFGS"),
-     fSamplingFraction(1.0), fSamplingEpoch(0.0), fSamplingWeight(0.0),
-     fSamplingTraining(false), fSamplingTesting(false),
-     fLastAlpha(0.0), fTau(0.),
-     fResetStep(0), fLearnRate(0.0), fDecayRate(0.0),
-     fBPMode(kSequential), fBpModeS("None"),
-     fBatchSize(0), fTestRate(0), fEpochMon(false),
-     fGA_nsteps(0), fGA_preCalc(0), fGA_SC_steps(0),
-     fGA_SC_rate(0), fGA_SC_factor(0.0),
-     fDeviationsFromTargets(0),
-     fWeightRange     (1.0)
-{
+   TMVA::MethodMLP::MethodMLP(const TString &jobName, const TString &methodTitle, DataSetInfo &theData,
+                              const TString &theOption)
+      : MethodANNBase(jobName, Types::kMLP, methodTitle, theData, theOption), fUseRegulator(false),
+        fCalculateErrors(false), fPrior(0.0), fPriorDev(0), fUpdateLimit(0), fTrainingMethod(kBFGS),
+        fTrainMethodS("BFGS"), fSamplingFraction(1.0), fSamplingEpoch(0.0), fSamplingWeight(0.0),
+        fSamplingTraining(false), fSamplingTesting(false), fLastAlpha(0.0), fTau(0.), fResetStep(0), fLearnRate(0.0),
+        fDecayRate(0.0), fBPMode(kSequential), fBpModeS("None"), fBatchSize(0), fTestRate(0), fEpochMon(false),
+        fGA_nsteps(0), fGA_preCalc(0), fGA_SC_steps(0), fGA_SC_rate(0), fGA_SC_factor(0.0),
+        fDeviationsFromTargets(nullptr), fWeightRange(1.0)
+   {
 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor from a weight file
 
-TMVA::MethodMLP::MethodMLP( DataSetInfo& theData,
-                            const TString& theWeightFile)
-   : MethodANNBase( Types::kMLP, theData, theWeightFile),
-     fUseRegulator(false), fCalculateErrors(false),
-     fPrior(0.0), fPriorDev(0), fUpdateLimit(0),
-     fTrainingMethod(kBFGS), fTrainMethodS("BFGS"),
-     fSamplingFraction(1.0), fSamplingEpoch(0.0), fSamplingWeight(0.0),
-     fSamplingTraining(false), fSamplingTesting(false),
-     fLastAlpha(0.0), fTau(0.),
-     fResetStep(0), fLearnRate(0.0), fDecayRate(0.0),
-     fBPMode(kSequential), fBpModeS("None"),
-     fBatchSize(0), fTestRate(0), fEpochMon(false),
-     fGA_nsteps(0), fGA_preCalc(0), fGA_SC_steps(0),
-     fGA_SC_rate(0), fGA_SC_factor(0.0),
-     fDeviationsFromTargets(0),
-     fWeightRange     (1.0)
+TMVA::MethodMLP::MethodMLP(DataSetInfo &theData, const TString &theWeightFile)
+   : MethodANNBase(Types::kMLP, theData, theWeightFile), fUseRegulator(false), fCalculateErrors(false), fPrior(0.0),
+     fPriorDev(0), fUpdateLimit(0), fTrainingMethod(kBFGS), fTrainMethodS("BFGS"), fSamplingFraction(1.0),
+     fSamplingEpoch(0.0), fSamplingWeight(0.0), fSamplingTraining(false), fSamplingTesting(false), fLastAlpha(0.0),
+     fTau(0.), fResetStep(0), fLearnRate(0.0), fDecayRate(0.0), fBPMode(kSequential), fBpModeS("None"), fBatchSize(0),
+     fTestRate(0), fEpochMon(false), fGA_nsteps(0), fGA_preCalc(0), fGA_SC_steps(0), fGA_SC_rate(0), fGA_SC_factor(0.0),
+     fDeviationsFromTargets(nullptr), fWeightRange(1.0)
 {
 }
 
@@ -308,8 +290,8 @@ Double_t TMVA::MethodMLP::CalculateEstimator( Types::ETreeType treeType, Int_t i
    TString nameS = name + "_S";
    Int_t   nbin  = 100;
    Float_t limit = 2;
-   TH1*    histS = 0;
-   TH1*    histB = 0;
+   TH1 *histS = nullptr;
+   TH1 *histB = nullptr;
    if (fEpochMon && iEpoch >= 0 && !DoRegression()) {
       histS = new TH1F( nameS, nameS, nbin, -limit, limit );
       histB = new TH1F( nameB, nameB, nbin, -limit, limit );
@@ -386,8 +368,10 @@ Double_t TMVA::MethodMLP::CalculateEstimator( Types::ETreeType treeType, Int_t i
 
 
       // fill monitoring histograms
-      if (DataInfo().IsSignal(ev) && histS != 0) histS->Fill( float(v), float(w) );
-      else if              (histB != 0) histB->Fill( float(v), float(w) );
+      if (DataInfo().IsSignal(ev) && histS != nullptr)
+         histS->Fill(float(v), float(w));
+      else if (histB != nullptr)
+         histB->Fill(float(v), float(w));
    }
 
 
@@ -412,8 +396,8 @@ Double_t TMVA::MethodMLP::CalculateEstimator( Types::ETreeType treeType, Int_t i
       delete fDeviationsFromTargets;
    }
 
-   if (histS != 0) fEpochMonHistS.push_back( histS );
-   if (histB != 0) fEpochMonHistB.push_back( histB );
+   if (histS != nullptr) fEpochMonHistS.push_back(histS);
+   if (histB != nullptr) fEpochMonHistB.push_back(histB);
 
    //if      (DoRegression()) estimator = TMath::Sqrt(estimator/Float_t(nEvents));
    //else if (DoMulticlass()) estimator = TMath::Sqrt(estimator/Float_t(nEvents));
@@ -439,7 +423,7 @@ Double_t TMVA::MethodMLP::CalculateEstimator( Types::ETreeType treeType, Int_t i
 
 void TMVA::MethodMLP::Train(Int_t nEpochs)
 {
-   if (fNetwork == 0) {
+   if (fNetwork == nullptr) {
       //Log() << kERROR <<"ANN Network is not initialized, doing it now!"<< Endl;
       Log() << kFATAL <<"ANN Network is not initialized, doing it now!"<< Endl;
       SetAnalysisType(GetAnalysisType());
@@ -1555,8 +1539,7 @@ Double_t TMVA::MethodMLP::GetMvaValue( Double_t* errLower, Double_t* errUpper )
    Double_t MvaValue = MethodANNBase::GetMvaValue();// contains back propagation
 
    // no hessian (old training file) or no error requested
-   if (!fCalculateErrors || errLower==0 || errUpper==0)
-      return MvaValue;
+   if (!fCalculateErrors || errLower == nullptr || errUpper == nullptr) return MvaValue;
 
    Double_t MvaUpper,MvaLower,median,variance;
    Int_t numSynapses=fSynapses->GetEntriesFast();

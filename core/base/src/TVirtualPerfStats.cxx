@@ -40,7 +40,7 @@ static const char *gEventTypeNames[] = {
 
 TVirtualPerfStats *&TVirtualPerfStats::CurrentPerfStats()
 {
-   static TVirtualPerfStats *currentPerfStats = 0;
+   static TVirtualPerfStats *currentPerfStats = nullptr;
    if (!gThreadTsd) {
       return currentPerfStats;
    } else {

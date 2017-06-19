@@ -74,65 +74,131 @@ static int nullptr_nonzero( PyObject* )
 }
 
 static PyNumberMethods nullptr_as_number = {
-   0, 0, 0,
+   nullptr,
+   nullptr,
+   nullptr,
 #if PY_VERSION_HEX < 0x03000000
-   0,
+   nullptr,
 #endif
-   0, 0, 0, 0, 0, 0,
-   (inquiry)nullptr_nonzero,          // tp_nonzero (nb_bool in p3)
-   0, 0, 0, 0, 0, 0,
+   nullptr,
+   nullptr,
+   nullptr,
+   nullptr,
+   nullptr,
+   nullptr,
+   (inquiry)nullptr_nonzero, // tp_nonzero (nb_bool in p3)
+   nullptr,
+   nullptr,
+   nullptr,
+   nullptr,
+   nullptr,
+   nullptr,
 #if PY_VERSION_HEX < 0x03000000
-   0,                                 // nb_coerce
+   nullptr, // nb_coerce
 #endif
-   0, 0, 0,
+   nullptr,
+   nullptr,
+   nullptr,
 #if PY_VERSION_HEX < 0x03000000
-   0, 0,
+   nullptr,
+   nullptr,
 #endif
-   0, 0, 0,
+   nullptr,
+   nullptr,
+   nullptr,
 #if PY_VERSION_HEX < 0x03000000
-   0,                                 // nb_inplace_divide
+   nullptr, // nb_inplace_divide
 #endif
-   0, 0, 0, 0, 0, 0, 0
+   nullptr,
+   nullptr,
+   nullptr,
+   nullptr,
+   nullptr,
+   nullptr,
+   nullptr
 #if PY_VERSION_HEX >= 0x02020000
-   , 0                                // nb_floor_divide
+   ,
+   nullptr // nb_floor_divide
 #if PY_VERSION_HEX < 0x03000000
-   , 0                                // nb_true_divide
+   ,
+   nullptr // nb_true_divide
 #else
-   , 0                                // nb_true_divide
+   ,
+   0 // nb_true_divide
 #endif
-   , 0, 0
+   ,
+   nullptr,
+   nullptr
 #endif
 #if PY_VERSION_HEX >= 0x02050000
-   , 0                                // nb_index
+   ,
+   nullptr // nb_index
 #endif
 #if PY_VERSION_HEX >= 0x03050000
-   , 0                                // nb_matrix_multiply
-   , 0                                // nb_inplace_matrix_multiply
+   ,
+   0 // nb_matrix_multiply
+   ,
+   0 // nb_inplace_matrix_multiply
 #endif
 
-   };
+};
 
 static PyTypeObject PyNullPtr_t_Type = {
-   PyVarObject_HEAD_INIT( &PyType_Type, 0 )
-   "nullptr_t",        // tp_name
-   sizeof(PyObject),   // tp_basicsize
-   0,                  // tp_itemsize
-   nullptr_dealloc,    // tp_dealloc (never called)
-   0, 0, 0, 0,
+   PyVarObject_HEAD_INIT(&PyType_Type, 0) "nullptr_t", // tp_name
+   sizeof(PyObject),                                   // tp_basicsize
+   0,                                                  // tp_itemsize
+   nullptr_dealloc,                                    // tp_dealloc (never called)
+   nullptr,
+   nullptr,
+   nullptr,
+   nullptr,
    nullptr_repr,       // tp_repr
    &nullptr_as_number, // tp_as_number
-   0, 0,
+   nullptr,
+   nullptr,
    (hashfunc)_Py_HashPointer, // tp_hash
-   0, 0, 0, 0, 0, Py_TPFLAGS_DEFAULT, 0, 0, 0, 0, 0, 0, 0,
-   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+   nullptr,
+   nullptr,
+   nullptr,
+   nullptr,
+   nullptr,
+   Py_TPFLAGS_DEFAULT,
+   nullptr,
+   nullptr,
+   nullptr,
+   nullptr,
+   0,
+   nullptr,
+   nullptr,
+   nullptr,
+   nullptr,
+   nullptr,
+   nullptr,
+   nullptr,
+   nullptr,
+   nullptr,
+   0,
+   nullptr,
+   nullptr,
+   nullptr,
+   nullptr,
+   nullptr,
+   nullptr,
+   nullptr,
+   nullptr,
+   nullptr,
+   nullptr
 #if PY_VERSION_HEX >= 0x02030000
-   , 0                 // tp_del
+   ,
+   nullptr // tp_del
 #endif
 #if PY_VERSION_HEX >= 0x02060000
-   , 0                 // tp_version_tag
+   ,
+   0 // tp_version_tag
 #endif
 #if PY_VERSION_HEX >= 0x03040000
-   , 0                        // tp_finalize
+   ,
+   0 // tp_finalize
 #endif
 };
 
@@ -142,10 +208,10 @@ PyObject _PyROOT_NullPtrStruct = {
 };
 
 namespace PyROOT {
-   PyObject* gRootModule = 0;
-   PyObject* gNullPtrObject = 0;
-   std::vector<std::pair<Cppyy::TCppType_t, Cppyy::TCppType_t> > gPinnedTypes;
-   std::vector<Cppyy::TCppType_t> gIgnorePinnings;
+PyObject *gRootModule = nullptr;
+PyObject *gNullPtrObject = nullptr;
+std::vector<std::pair<Cppyy::TCppType_t, Cppyy::TCppType_t>> gPinnedTypes;
+std::vector<Cppyy::TCppType_t> gIgnorePinnings;
 }
 
 
@@ -158,7 +224,7 @@ namespace {
 
    PyObject* RootModuleResetCallback( PyObject*, PyObject* )
    {
-      gRootModule = 0;   // reference was borrowed
+      gRootModule = nullptr; // reference was borrowed
       Py_INCREF( Py_None );
       return Py_None;
    }
@@ -168,16 +234,17 @@ namespace {
 
    PyObject* LookupCppEntity( PyObject* pyname, PyObject* args )
    {
-      const char* cname = 0; long macro_ok = 0;
+      const char *cname = nullptr;
+      long macro_ok = 0;
       if ( pyname && PyROOT_PyUnicode_CheckExact( pyname ) )
          cname = PyROOT_PyUnicode_AsString( pyname );
       else if ( ! ( args && PyArg_ParseTuple( args, const_cast< char* >( "s|l" ), &cname, &macro_ok ) ) )
-         return 0;
+         return nullptr;
 
    // we may have been destroyed if this code is called during shutdown
       if ( !gRootModule ) {
          PyErr_Format( PyExc_AttributeError, "%s", cname );
-         return 0;
+         return nullptr;
       }
 
       std::string name = cname;
@@ -186,28 +253,24 @@ namespace {
       if ( name.size() <= 2 || name.substr( 0, 2 ) != "__" ) {
       // 1st attempt: look in myself
          PyObject* attr = PyObject_GetAttrString( gRootModule, const_cast< char* >( cname ) );
-         if ( attr != 0 )
-            return attr;
+         if (attr != nullptr) return attr;
 
-      // 2nd attempt: construct name as a class
+         // 2nd attempt: construct name as a class
          PyErr_Clear();
-         attr = CreateScopeProxy( name, 0 /* parent */);
-         if ( attr != 0 )
-            return attr;
+         attr = CreateScopeProxy(name, nullptr /* parent */);
+         if (attr != nullptr) return attr;
 
-      // 3rd attempt: lookup name as global variable
+         // 3rd attempt: lookup name as global variable
          PyErr_Clear();
          attr = GetCppGlobal( name );
-         if ( attr != 0 )
-            return attr;
+         if (attr != nullptr) return attr;
 
-      // 4th attempt: find existing object (e.g. from file)
+         // 4th attempt: find existing object (e.g. from file)
          PyErr_Clear();
          TObject* object = gROOT->FindObject( name.c_str() );
-         if ( object != 0 )
-            return BindCppObject( object, object->IsA()->GetName() );
+         if (object != nullptr) return BindCppObject(object, object->IsA()->GetName());
 
-      // 5th attempt: global enum (pretend int, TODO: is fine for C++98, not in C++11)
+         // 5th attempt: global enum (pretend int, TODO: is fine for C++98, not in C++11)
          if ( Cppyy::IsEnum( name ) ) {
             Py_INCREF( &PyInt_Type );
             return (PyObject*)&PyInt_Type;
@@ -222,15 +285,14 @@ namespace {
             if ( gROOT->ProcessLine( ismacro.str().c_str() ) ) {
             // can now retrieve this as a global
                attr = GetCppGlobal( "_pyroot_"+name );
-               if ( attr != 0 )
-                  return attr;
+               if (attr != nullptr) return attr;
             }
          }
       }
 
    // still here? raise attribute error
       PyErr_Format( PyExc_AttributeError, "%s", name.c_str() );
-      return 0;
+      return nullptr;
    }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -265,7 +327,7 @@ namespace {
          return ep;
 
    // filter for builtins
-      if ( PyDict_GetItem( PyEval_GetBuiltins(), key ) != 0 ) {
+      if (PyDict_GetItem(PyEval_GetBuiltins(), key) != nullptr) {
          return ep;
       }
 
@@ -287,19 +349,19 @@ namespace {
       }
 
    // attempt to get ROOT enum/global/class
-      PyObject* val = LookupCppEntity( key, 0 );
+      PyObject *val = LookupCppEntity(key, nullptr);
 
-      if ( val != 0 ) {
-      // success ...
+      if (val != nullptr) {
+         // success ...
 
          if ( PropertyProxy_CheckExact( val ) ) {
          // don't want to add to dictionary (the proper place would be the
          // dictionary of the (meta)class), but modifying ep will be noticed no
          // matter what; just return the actual value and live with the copy in
          // the dictionary (mostly, this is correct)
-            PyObject* actual_val = Py_TYPE(val)->tp_descr_get( val, NULL, NULL );
-            Py_DECREF( val );
-            val = actual_val;
+         PyObject *actual_val = Py_TYPE(val)->tp_descr_get(val, nullptr, nullptr);
+         Py_DECREF(val);
+         val = actual_val;
          }
 
       // add reference to ROOT entity in the given dictionary
@@ -307,8 +369,8 @@ namespace {
          if ( PyDict_SetItem( (PyObject*)mp, key, val ) == 0 ) {
             ep = PYROOT_ORGDICT_LOOKUP( mp, key, hash, value_addr );
          } else {
-            ep->me_key   = 0;
-            ep->me_value = 0;
+            ep->me_key = nullptr;
+            ep->me_value = nullptr;
          }
          PYROOT_GET_DICT_LOOKUP( mp ) = RootLookDictString; // restore
 
@@ -360,16 +422,15 @@ namespace {
 
    PyObject* SetRootLazyLookup( PyObject*, PyObject* args )
    {
-      PyDictObject* dict = 0;
-      if ( ! PyArg_ParseTuple( args, const_cast< char* >( "O!" ), &PyDict_Type, &dict ) )
-         return 0;
+      PyDictObject *dict = nullptr;
+      if (!PyArg_ParseTuple(args, const_cast<char *>("O!"), &PyDict_Type, &dict)) return nullptr;
 
-   // Notwithstanding the code changes, the following does not work for p3.3 and
-   // later: once the dictionary is resized for anything other than an insert (see
-   // hack in RootLookDictString), its lookup function on its keys will revert to
-   // the default (lookdict_unicode_nodummy) and only if the resizing dictionary
-   // has the generic lookdict function as dk_lookup for its keys, will this be
-   // set on the new keys.
+      // Notwithstanding the code changes, the following does not work for p3.3 and
+      // later: once the dictionary is resized for anything other than an insert (see
+      // hack in RootLookDictString), its lookup function on its keys will revert to
+      // the default (lookdict_unicode_nodummy) and only if the resizing dictionary
+      // has the generic lookdict function as dk_lookup for its keys, will this be
+      // set on the new keys.
       PYROOT_GET_DICT_LOOKUP( dict ) = RootLookDictString;
 
       Py_INCREF( Py_None );
@@ -385,13 +446,12 @@ namespace {
       Py_ssize_t nArgs = PyTuple_GET_SIZE( args );
       if ( nArgs < 2 ) {
          PyErr_Format( PyExc_TypeError, "too few arguments for template instantiation" );
-         return 0;
+         return nullptr;
       }
 
    // build "< type, type, ... >" part of class name (modifies pyname)
       PyObject* pyname = Utility::BuildTemplateName( PyTuple_GET_ITEM( args, 0 ), args, 1 );
-      if ( ! pyname )
-         return 0;
+      if (!pyname) return nullptr;
 
       std::string name = PyROOT_PyUnicode_AsString( pyname );
       Py_DECREF( pyname );
@@ -404,15 +464,15 @@ namespace {
 
    void* GetObjectProxyAddress( PyObject*, PyObject* args )
    {
-      ObjectProxy* pyobj = 0;
-      PyObject* pyname = 0;
+      ObjectProxy *pyobj = nullptr;
+      PyObject *pyname = nullptr;
       if ( PyArg_ParseTuple( args, const_cast< char* >( "O|O!" ), &pyobj,
              &PyROOT_PyUnicode_Type, &pyname ) &&
            ObjectProxy_Check( pyobj ) && pyobj->fObject ) {
 
-         if ( pyname != 0 ) {
-         // locate property proxy for offset info
-            PropertyProxy* pyprop = 0;
+         if (pyname != nullptr) {
+            // locate property proxy for offset info
+            PropertyProxy *pyprop = nullptr;
 
             PyObject* pyclass = PyObject_GetAttr( (PyObject*)pyobj, PyStrings::gClass );
 
@@ -434,7 +494,7 @@ namespace {
 
             PyErr_Format( PyExc_TypeError,
                "%s is not a valid data member", PyROOT_PyUnicode_AsString( pyname ) );
-            return 0;
+            return nullptr;
          }
 
       // this is an address of an address (i.e. &myobj, with myobj of type MyObj*)
@@ -442,7 +502,7 @@ namespace {
       }
 
       PyErr_SetString( PyExc_ValueError, "invalid argument for AddressOf()" );
-      return 0;
+      return nullptr;
    }
 
    PyObject* _addressof_common( PyObject* dummy ) {
@@ -458,7 +518,7 @@ namespace {
             PyErr_Format( PyExc_ValueError, "unknown object at %p", (void*)dummy );
          Py_XDECREF( str );
       }
-      return 0;
+      return nullptr;
    }
 
    PyObject* AddressOf( PyObject* dummy, PyObject* args )
@@ -472,7 +532,7 @@ namespace {
          if ( addr )
             return BufFac_t::Instance()->PyBuffer_FromMemory( (Long_t*)&addr, sizeof(Long_t) );
       }
-      return 0;//_addressof_common( dummy );
+      return nullptr; //_addressof_common( dummy );
    }
 
    PyObject* addressof( PyObject* dummy, PyObject* args )
@@ -493,10 +553,9 @@ namespace {
    {
    // Return object proxy as an opaque CObject.
       void* addr = GetObjectProxyAddress( dummy, args );
-      if ( addr )
-         return PyROOT_PyCapsule_New( (void*)(*(Long_t*)addr), NULL, NULL );
+      if (addr) return PyROOT_PyCapsule_New((void *)(*(Long_t *)addr), nullptr, nullptr);
 
-      return 0;
+      return nullptr;
    }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -521,7 +580,7 @@ namespace {
       if ( ! klass ) {
          PyErr_SetString( PyExc_TypeError,
             "BindObject expects a valid class or class name as an argument" );
-         return 0;
+         return nullptr;
       }
 
       return BindCppObjectNoCast( addr, klass, kFALSE );
@@ -536,12 +595,12 @@ namespace {
       if ( argc != 2 ) {
          PyErr_Format( PyExc_TypeError,
            "BindObject takes exactly 2 argumenst (" PY_SSIZE_T_FORMAT " given)", argc );
-         return 0;
+         return nullptr;
       }
 
    // try to convert first argument: either PyCapsule/CObject or long integer
       PyObject* pyaddr = PyTuple_GET_ITEM( args, 0 );
-      void* addr = PyROOT_PyCapsule_GetPointer( pyaddr, NULL );
+      void *addr = PyROOT_PyCapsule_GetPointer(pyaddr, nullptr);
       if ( PyErr_Occurred() ) {
          PyErr_Clear();
 
@@ -554,7 +613,7 @@ namespace {
             if ( ! addr || ! buflen ) {
                PyErr_SetString( PyExc_TypeError,
                   "BindObject requires a CObject or long integer as first argument" );
-               return 0;
+               return nullptr;
             }
          }
       }
@@ -572,7 +631,7 @@ namespace {
       if ( argc != 0 && argc != 1 ) {
          PyErr_Format( PyExc_TypeError,
             "MakeNullPointer takes at most 1 argument (" PY_SSIZE_T_FORMAT " given)", argc );
-         return 0;
+         return nullptr;
       }
 
    // no class given, use None as generic
@@ -581,7 +640,7 @@ namespace {
          return Py_None;
       }
 
-      return BindObject_( 0, PyTuple_GET_ITEM( args, 0 ) );
+      return BindObject_(nullptr, PyTuple_GET_ITEM(args, 0));
    }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -589,10 +648,10 @@ namespace {
 
    PyObject* ObjectProxyExpand( PyObject*, PyObject* args )
    {
-      PyObject* pybuf = 0, *pyname = 0;
+      PyObject *pybuf = nullptr, *pyname = nullptr;
       if ( ! PyArg_ParseTuple( args, const_cast< char* >( "O!O!:__expand__" ),
                &PyBytes_Type, &pybuf, &PyBytes_Type, &pyname ) )
-         return 0;
+         return nullptr;
 
       const char* clname = PyBytes_AS_STRING(pyname);
 
@@ -606,7 +665,7 @@ namespace {
 
    // TBuffer and its derived classes can't write themselves, but can be created
    // directly from the buffer, so handle them in a special case
-      void* newObj = 0;
+      void *newObj = nullptr;
       if ( strcmp( clname, "TBufferFile" ) == 0 ) {
          TBufferFile* buf = new TBufferFile( TBuffer::kWrite );
          buf->WriteFastArray( PyBytes_AS_STRING(pybuf), PyBytes_GET_SIZE( pybuf ) );
@@ -616,7 +675,7 @@ namespace {
       // as the local TBufferFile can go out of scope (there is no copying)
          TBufferFile buf( TBuffer::kRead,
             PyBytes_GET_SIZE( pybuf ), PyBytes_AS_STRING( pybuf ), kFALSE );
-         newObj = buf.ReadObjectAny( 0 );
+         newObj = buf.ReadObjectAny(nullptr);
       }
 
       PyObject* result = BindCppObject( newObj, clname );
@@ -635,9 +694,8 @@ namespace {
 
    PyObject* SetMemoryPolicy( PyObject*, PyObject* args )
    {
-      PyObject* policy = 0;
-      if ( ! PyArg_ParseTuple( args, const_cast< char* >( "O!" ), &PyInt_Type, &policy ) )
-         return 0;
+      PyObject *policy = nullptr;
+      if (!PyArg_ParseTuple(args, const_cast<char *>("O!"), &PyInt_Type, &policy)) return nullptr;
 
       Long_t l = PyInt_AS_LONG( policy );
       if ( TCallContext::SetMemoryPolicy( (TCallContext::ECallFlags)l ) ) {
@@ -646,7 +704,7 @@ namespace {
       }
 
       PyErr_Format( PyExc_ValueError, "Unknown policy %ld", l );
-      return 0;
+      return nullptr;
    }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -655,9 +713,8 @@ namespace {
 
    PyObject* SetSignalPolicy( PyObject*, PyObject* args )
    {
-      PyObject* policy = 0;
-      if ( ! PyArg_ParseTuple( args, const_cast< char* >( "O!" ), &PyInt_Type, &policy ) )
-         return 0;
+      PyObject *policy = nullptr;
+      if (!PyArg_ParseTuple(args, const_cast<char *>("O!"), &PyInt_Type, &policy)) return nullptr;
 
       Long_t l = PyInt_AS_LONG( policy );
       if ( TCallContext::SetSignalPolicy( (TCallContext::ECallFlags)l ) ) {
@@ -666,7 +723,7 @@ namespace {
       }
 
       PyErr_Format( PyExc_ValueError, "Unknown policy %ld", l );
-      return 0;
+      return nullptr;
    }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -674,10 +731,11 @@ namespace {
 
    PyObject* SetOwnership( PyObject*, PyObject* args )
    {
-      ObjectProxy* pyobj = 0; PyObject* pykeep = 0;
+      ObjectProxy *pyobj = nullptr;
+      PyObject *pykeep = nullptr;
       if ( ! PyArg_ParseTuple( args, const_cast< char* >( "O!O!" ),
                 &ObjectProxy_Type, (void*)&pyobj, &PyInt_Type, &pykeep ) )
-         return 0;
+         return nullptr;
 
       (Bool_t)PyLong_AsLong( pykeep ) ? pyobj->HoldOn() : pyobj->Release();
 
@@ -752,53 +810,39 @@ namespace {
 
 //- data -----------------------------------------------------------------------
 static PyMethodDef gPyROOTMethods[] = {
-   { (char*) "CreateScopeProxy", (PyCFunction)PyROOT::CreateScopeProxy,
-     METH_VARARGS, (char*) "PyROOT internal function" },
-   { (char*) "GetCppGlobal", (PyCFunction)PyROOT::GetCppGlobal,
-     METH_VARARGS, (char*) "PyROOT internal function" },
-   { (char*) "LookupCppEntity", (PyCFunction)LookupCppEntity,
-     METH_VARARGS, (char*) "PyROOT internal function" },
-   { (char*) "SetRootLazyLookup", (PyCFunction)SetRootLazyLookup,
-     METH_VARARGS, (char*) "PyROOT internal function" },
-   { (char*) "MakeRootTemplateClass", (PyCFunction)MakeRootTemplateClass,
-     METH_VARARGS, (char*) "PyROOT internal function" },
-   { (char*) "_DestroyPyStrings", (PyCFunction)PyROOT::DestroyPyStrings,
-     METH_NOARGS, (char*) "PyROOT internal function" },
-   { (char*) "_ResetRootModule", (PyCFunction)RootModuleResetCallback,
-     METH_NOARGS, (char*) "PyROOT internal function" },
-   { (char*) "AddressOf", (PyCFunction)AddressOf,
-     METH_VARARGS, (char*) "Retrieve address of held object in a buffer" },
-   { (char*) "addressof", (PyCFunction)addressof,
-     METH_VARARGS, (char*) "Retrieve address of held object as a value" },
-   { (char*) "AsCObject", (PyCFunction)AsCObject,
-     METH_VARARGS, (char*) "Retrieve held object in a CObject" },
-   { (char*) "BindObject", (PyCFunction)BindObject,
-     METH_VARARGS, (char*) "Create an object of given type, from given address" },
-   { (char*) "MakeNullPointer", (PyCFunction)MakeNullPointer,
-     METH_VARARGS, (char*) "Create a NULL pointer of the given type" },
-   { (char*) "_ObjectProxy__expand__", (PyCFunction)ObjectProxyExpand,
-     METH_VARARGS, (char*) "Helper method for pickling" },
-   { (char*) "SetMemoryPolicy", (PyCFunction)SetMemoryPolicy,
-     METH_VARARGS, (char*) "Determines object ownership model" },
-   { (char*) "SetSignalPolicy", (PyCFunction)SetSignalPolicy,
-     METH_VARARGS, (char*) "Trap signals in safe mode to prevent interpreter abort" },
-   { (char*) "SetOwnership", (PyCFunction)SetOwnership,
-     METH_VARARGS, (char*) "Modify held C++ object ownership" },
-   { (char*) "AddSmartPtrType", (PyCFunction)AddSmartPtrType,
-     METH_VARARGS, (char*) "Add a smart pointer to the list of known smart pointer types" },
-   { (char*) "InstallGUIEventInputHook", (PyCFunction)PyROOT::Utility::InstallGUIEventInputHook,
-     METH_NOARGS, (char*) "Install input hook to sent GUI events" },
-   { (char*) "RemoveGUIEventInputHook", (PyCFunction)PyROOT::Utility::RemoveGUIEventInputHook,
-     METH_NOARGS, (char*) "Remove input hook to sent GUI events" },
-   { (char*) "SetTypePinning", (PyCFunction)SetTypePinning,
-     METH_VARARGS, (char*) "Install a type pinning" },
-   { (char*) "IgnoreTypePinning", (PyCFunction)IgnoreTypePinning,
-     METH_VARARGS, (char*) "Don't pin the given type" },
-   { (char*) "Cast", (PyCFunction)Cast,
-     METH_VARARGS, (char*) "Cast the given object to the given type" },
-   { NULL, NULL, 0, NULL }
-};
-
+   {(char *)"CreateScopeProxy", (PyCFunction)PyROOT::CreateScopeProxy, METH_VARARGS,
+    (char *)"PyROOT internal function"},
+   {(char *)"GetCppGlobal", (PyCFunction)PyROOT::GetCppGlobal, METH_VARARGS, (char *)"PyROOT internal function"},
+   {(char *)"LookupCppEntity", (PyCFunction)LookupCppEntity, METH_VARARGS, (char *)"PyROOT internal function"},
+   {(char *)"SetRootLazyLookup", (PyCFunction)SetRootLazyLookup, METH_VARARGS, (char *)"PyROOT internal function"},
+   {(char *)"MakeRootTemplateClass", (PyCFunction)MakeRootTemplateClass, METH_VARARGS,
+    (char *)"PyROOT internal function"},
+   {(char *)"_DestroyPyStrings", (PyCFunction)PyROOT::DestroyPyStrings, METH_NOARGS,
+    (char *)"PyROOT internal function"},
+   {(char *)"_ResetRootModule", (PyCFunction)RootModuleResetCallback, METH_NOARGS, (char *)"PyROOT internal function"},
+   {(char *)"AddressOf", (PyCFunction)AddressOf, METH_VARARGS, (char *)"Retrieve address of held object in a buffer"},
+   {(char *)"addressof", (PyCFunction)addressof, METH_VARARGS, (char *)"Retrieve address of held object as a value"},
+   {(char *)"AsCObject", (PyCFunction)AsCObject, METH_VARARGS, (char *)"Retrieve held object in a CObject"},
+   {(char *)"BindObject", (PyCFunction)BindObject, METH_VARARGS,
+    (char *)"Create an object of given type, from given address"},
+   {(char *)"MakeNullPointer", (PyCFunction)MakeNullPointer, METH_VARARGS,
+    (char *)"Create a NULL pointer of the given type"},
+   {(char *)"_ObjectProxy__expand__", (PyCFunction)ObjectProxyExpand, METH_VARARGS,
+    (char *)"Helper method for pickling"},
+   {(char *)"SetMemoryPolicy", (PyCFunction)SetMemoryPolicy, METH_VARARGS, (char *)"Determines object ownership model"},
+   {(char *)"SetSignalPolicy", (PyCFunction)SetSignalPolicy, METH_VARARGS,
+    (char *)"Trap signals in safe mode to prevent interpreter abort"},
+   {(char *)"SetOwnership", (PyCFunction)SetOwnership, METH_VARARGS, (char *)"Modify held C++ object ownership"},
+   {(char *)"AddSmartPtrType", (PyCFunction)AddSmartPtrType, METH_VARARGS,
+    (char *)"Add a smart pointer to the list of known smart pointer types"},
+   {(char *)"InstallGUIEventInputHook", (PyCFunction)PyROOT::Utility::InstallGUIEventInputHook, METH_NOARGS,
+    (char *)"Install input hook to sent GUI events"},
+   {(char *)"RemoveGUIEventInputHook", (PyCFunction)PyROOT::Utility::RemoveGUIEventInputHook, METH_NOARGS,
+    (char *)"Remove input hook to sent GUI events"},
+   {(char *)"SetTypePinning", (PyCFunction)SetTypePinning, METH_VARARGS, (char *)"Install a type pinning"},
+   {(char *)"IgnoreTypePinning", (PyCFunction)IgnoreTypePinning, METH_VARARGS, (char *)"Don't pin the given type"},
+   {(char *)"Cast", (PyCFunction)Cast, METH_VARARGS, (char *)"Cast the given object to the given type"},
+   {nullptr, nullptr, 0, nullptr}};
 
 #if PY_VERSION_HEX >= 0x03000000
 struct module_state {

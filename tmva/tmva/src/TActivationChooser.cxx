@@ -75,11 +75,9 @@ TMVA::TActivationChooser::CreateActivation(EActivationType type) const
    case kTanh:    return new TActivationTanh();
    case kReLU:    return new TActivationReLU();
    case kRadial:  return new TActivationRadial();
-   default:
-      Log() << kFATAL << "no Activation function of type " << type << " found" << Endl;
-      return 0;
+   default: Log() << kFATAL << "no Activation function of type " << type << " found" << Endl; return nullptr;
    }
-   return NULL;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -96,7 +94,7 @@ TMVA::TActivationChooser::CreateActivation(const TString& type) const
    else if (type == fRADIAL)  return CreateActivation(kRadial);
    else {
       Log() << kFATAL << "no Activation function of type " << type << " found" << Endl;
-      return 0;
+      return nullptr;
    }
 }
 

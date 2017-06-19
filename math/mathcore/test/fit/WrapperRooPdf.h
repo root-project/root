@@ -20,24 +20,21 @@ public:
    /**
       for pdf with only 1D observables using as default the name x
     */
-   WrapperRooPdf(RooAbsPdf * pdf, const std::string xvar = "x", bool norm = true) :
-      fNorm(norm),
-      fPdf(pdf),
-      fX(0),
-      fParams(0)
+   WrapperRooPdf(RooAbsPdf *pdf, const std::string xvar = "x", bool norm = true)
+      : fNorm(norm), fPdf(pdf), fX(nullptr), fParams(nullptr)
    {
-      assert(fPdf != 0);
+      assert(fPdf != nullptr);
 
       RooArgSet *vars = fPdf->getVariables();
       RooAbsArg * arg = vars->find(xvar.c_str());  // code should abort if not found
       if (!arg) std::cout <<"Error - observable " << xvar << "is not in the list of pdf variables" << std::endl;
-      assert(arg != 0);
+      assert(arg != nullptr);
       RooArgSet obsList(*arg);
       //arg.setDirtyInhibit(true); // do have faster setter of values
       fX = fPdf->getObservables(obsList);
       fParams = fPdf->getParameters(obsList);
-      assert(fX!=0);
-      assert(fParams!=0);
+      assert(fX != nullptr);
+      assert(fParams != nullptr);
       delete vars;
 #ifdef DEBUG
       fX->Print("v");
@@ -51,18 +48,15 @@ public:
    /**
       for pdf with multi-dim  observables specifying observables in the RooArgSet
     */
-   WrapperRooPdf(RooAbsPdf * pdf, const RooArgSet & obsList, bool norm = true ) :
-      fNorm(norm),
-      fPdf(pdf),
-      fX(0),
-      fParams(0)
+   WrapperRooPdf(RooAbsPdf *pdf, const RooArgSet &obsList, bool norm = true)
+      : fNorm(norm), fPdf(pdf), fX(nullptr), fParams(nullptr)
    {
-      assert(fPdf != 0);
+      assert(fPdf != nullptr);
 
       fX = fPdf->getObservables(obsList);
       fParams = fPdf->getParameters(obsList);
-      assert(fX!=0);
-      assert(fParams!=0);
+      assert(fX != nullptr);
+      assert(fParams != nullptr);
 #ifdef DEBUG
       fX->Print("v");
       fParams->Print("v");
@@ -111,9 +105,9 @@ public:
       TIterator* itr = fParams->createIterator() ;
       std::vector<double>::iterator vpitr = fParamValues.begin();
 
-      RooRealVar* var = 0;
+      RooRealVar *var = nullptr;
       while( ( var = dynamic_cast<RooRealVar*>(itr->Next() ) ) ) {
-         assert(var != 0);
+         assert(var != nullptr);
          *vpitr++ = var->getVal();
       }
       return &fParamValues.front();
@@ -122,10 +116,10 @@ public:
    std::string ParameterName(unsigned int i) const {
       // iterate on parameters and set values
       TIterator* itr = fParams->createIterator() ;
-      RooRealVar* var = 0;
+      RooRealVar *var = nullptr;
       unsigned int index = 0;
       while( ( var = dynamic_cast<RooRealVar*>(itr->Next() ) ) ) {
-         assert(var != 0);
+         assert(var != nullptr);
          if (index == i) return std::string(var->GetName() );
          index++;
       }
@@ -169,9 +163,9 @@ private:
 
       // iterate on observables
       TIterator* itr = fX->createIterator() ;
-      RooRealVar* var = 0;
+      RooRealVar *var = nullptr;
       while( ( var = dynamic_cast<RooRealVar*>(itr->Next() ) ) ) {
-         assert(var != 0);
+         assert(var != nullptr);
 #ifndef _WIN32
          var->setDirtyInhibit(true);
 #endif
@@ -191,9 +185,9 @@ private:
    void DoSetParameters(const double * p) const {
       // iterate on parameters and set values
       TIterator* itr = fParams->createIterator() ;
-      RooRealVar* var = 0;
+      RooRealVar *var = nullptr;
       while( ( var = dynamic_cast<RooRealVar*>(itr->Next() ) ) ) {
-         assert(var != 0);
+         assert(var != nullptr);
          var->setVal(*p++);
       }
       // debug

@@ -35,11 +35,9 @@ ClassImp(TStylePreview);
 ///  Thanks to that method, one can have a preview of any
 /// style with any object.
 
-TStylePreview::TStylePreview(const TGWindow *p, TStyle *style,
-                              TVirtualPad *currentPad)
-                     : TGTransientFrame(0, p)
+TStylePreview::TStylePreview(const TGWindow *p, TStyle *style, TVirtualPad *currentPad) : TGTransientFrame(nullptr, p)
 {
-   fPad = 0;
+   fPad = nullptr;
 
    // Create the main window.
    SetWindowName("Style Manager's Preview");

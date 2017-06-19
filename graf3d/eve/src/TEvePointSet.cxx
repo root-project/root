@@ -43,16 +43,10 @@ ClassImp(TEvePointSet);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TEvePointSet::TEvePointSet(Int_t n_points, ETreeVarType_e tv_type) :
-   TEveElement(),
-   TPointSet3D(n_points),
-   TEvePointSelectorConsumer(tv_type),
-   TEveProjectable(),
-   TQObject(),
+TEvePointSet::TEvePointSet(Int_t n_points, ETreeVarType_e tv_type)
+   : TEveElement(), TPointSet3D(n_points), TEvePointSelectorConsumer(tv_type), TEveProjectable(), TQObject(),
 
-   fTitle          (),
-   fIntIds         (0),
-   fIntIdsPerPoint (0)
+     fTitle(), fIntIds(nullptr), fIntIdsPerPoint(0)
 {
    fMarkerStyle = 20;
    SetMainColorPtr(&fMarkerColor);
@@ -64,16 +58,10 @@ TEvePointSet::TEvePointSet(Int_t n_points, ETreeVarType_e tv_type) :
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TEvePointSet::TEvePointSet(const char* name, Int_t n_points, ETreeVarType_e tv_type) :
-   TEveElement(),
-   TPointSet3D(n_points),
-   TEvePointSelectorConsumer(tv_type),
-   TEveProjectable(),
-   TQObject(),
+TEvePointSet::TEvePointSet(const char *name, Int_t n_points, ETreeVarType_e tv_type)
+   : TEveElement(), TPointSet3D(n_points), TEvePointSelectorConsumer(tv_type), TEveProjectable(), TQObject(),
 
-   fTitle          (),
-   fIntIds         (0),
-   fIntIdsPerPoint (0)
+     fTitle(), fIntIds(nullptr), fIntIdsPerPoint(0)
 {
    fMarkerStyle = 20;
    SetName(name);
@@ -86,16 +74,10 @@ TEvePointSet::TEvePointSet(const char* name, Int_t n_points, ETreeVarType_e tv_t
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor.
 
-TEvePointSet::TEvePointSet(const TEvePointSet& e) :
-   TEveElement(e),
-   TPointSet3D(e),
-   TEvePointSelectorConsumer(e),
-   TEveProjectable(),
-   TQObject(),
+TEvePointSet::TEvePointSet(const TEvePointSet &e)
+   : TEveElement(e), TPointSet3D(e), TEvePointSelectorConsumer(e), TEveProjectable(), TQObject(),
 
-   fTitle          (e.fTitle),
-   fIntIds         (e.fIntIds ? new TArrayI(*e.fIntIds) : 0),
-   fIntIdsPerPoint (e.fIntIdsPerPoint)
+     fTitle(e.fTitle), fIntIds(e.fIntIds ? new TArrayI(*e.fIntIds) : nullptr), fIntIdsPerPoint(e.fIntIdsPerPoint)
 {
 }
 
@@ -121,7 +103,7 @@ void TEvePointSet::ClonePoints(const TEvePointSet& e)
       fP = new Float_t [nn];
       for (Int_t i = 0; i < nn; i++) fP[i] = e.fP[i];
    } else {
-      fP = 0;
+      fP = nullptr;
    }
    fLastPoint = e.fLastPoint;
 
@@ -130,7 +112,7 @@ void TEvePointSet::ClonePoints(const TEvePointSet& e)
 
    // TEvePointSet
    delete fIntIds;
-   fIntIds         = e.fIntIds ? new TArrayI(*e.fIntIds) : 0;
+   fIntIds = e.fIntIds ? new TArrayI(*e.fIntIds) : nullptr;
    fIntIdsPerPoint = e.fIntIdsPerPoint;
 }
 
@@ -149,7 +131,8 @@ const TGPicture* TEvePointSet::GetListTreeIcon(Bool_t)
 
 void TEvePointSet::Reset(Int_t n_points, Int_t n_int_ids)
 {
-   delete [] fP; fP = 0;
+   delete [] fP;
+   fP = nullptr;
    fN = n_points;
    if (fN) {
       fP = new Float_t [3*fN];
@@ -157,7 +140,8 @@ void TEvePointSet::Reset(Int_t n_points, Int_t n_int_ids)
    }
    fLastPoint = -1;
    ClearIds();
-   delete fIntIds; fIntIds = 0;
+   delete fIntIds;
+   fIntIds = nullptr;
    fIntIdsPerPoint = n_int_ids;
    if (fIntIdsPerPoint > 0) fIntIds = new TArrayI(fIntIdsPerPoint*fN);
    ResetBBox();
@@ -200,7 +184,7 @@ Int_t* TEvePointSet::GetPointIntIds(Int_t p) const
 {
    if (fIntIds)
       return fIntIds->GetArray() + p*fIntIdsPerPoint;
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -301,7 +285,8 @@ void TEvePointSet::InitFill(Int_t subIdNum)
       else
          fIntIds->Set(fIntIdsPerPoint*GetN());
    } else {
-      delete fIntIds; fIntIds = 0;
+      delete fIntIds;
+      fIntIds = nullptr;
       fIntIdsPerPoint = 0;
    }
 }
@@ -315,8 +300,7 @@ void TEvePointSet::TakeAction(TEvePointSelector* sel)
 {
    static const TEveException eh("TEvePointSet::TakeAction ");
 
-   if(sel == 0)
-      throw(eh + "selector is <null>.");
+   if (sel == nullptr) throw(eh + "selector is <null>.");
 
    Int_t    n = sel->GetNfill();
    Int_t  beg = GrowFor(n);
@@ -350,8 +334,7 @@ void TEvePointSet::TakeAction(TEvePointSelector* sel)
       Double_t** subarr = new Double_t* [fIntIdsPerPoint];
       for (Int_t i=0; i<fIntIdsPerPoint; ++i) {
          subarr[i] = sel->GetVal(sel->GetDimension() - fIntIdsPerPoint + i);
-         if (subarr[i] == 0)
-            throw(eh + "sub-id array not available.");
+         if (subarr[i] == nullptr) throw(eh + "sub-id array not available.");
       }
       Int_t* ids = fIntIds->GetArray() + fIntIdsPerPoint*beg;
       n = sel->GetNfill();
@@ -434,15 +417,11 @@ ClassImp(TEvePointSetArray);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TEvePointSetArray::TEvePointSetArray(const char* name,
-                                     const char* title) :
-   TEveElement(),
-   TNamed(name, title),
+TEvePointSetArray::TEvePointSetArray(const char *name, const char *title)
+   : TEveElement(), TNamed(name, title),
 
-   fBins(0), fDefPointSetCapacity(128), fNBins(0), fLastBin(-1),
-   fMin(0), fCurMin(0), fMax(0), fCurMax(0),
-   fBinWidth(0),
-   fQuantName()
+     fBins(nullptr), fDefPointSetCapacity(128), fNBins(0), fLastBin(-1), fMin(0), fCurMin(0), fMax(0), fCurMax(0),
+     fBinWidth(0), fQuantName()
 {
 
    SetMainColorPtr(&fMarkerColor);
@@ -455,7 +434,8 @@ TEvePointSetArray::TEvePointSetArray(const char* name,
 TEvePointSetArray::~TEvePointSetArray()
 {
    // printf("TEvePointSetArray::~TEvePointSetArray()\n");
-   delete [] fBins; fBins = 0;
+   delete [] fBins;
+   fBins = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -465,7 +445,7 @@ void TEvePointSetArray::RemoveElementLocal(TEveElement* el)
 {
    for (Int_t i=0; i<fNBins; ++i) {
       if (fBins[i] == el) {
-         fBins[i] = 0;
+         fBins[i] = nullptr;
          break;
       }
    }
@@ -476,7 +456,9 @@ void TEvePointSetArray::RemoveElementLocal(TEveElement* el)
 
 void TEvePointSetArray::RemoveElementsLocal()
 {
-   delete [] fBins; fBins = 0; fLastBin = -1;
+   delete [] fBins;
+   fBins = nullptr;
+   fLastBin = -1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -533,8 +515,7 @@ void TEvePointSetArray::TakeAction(TEvePointSelector* sel)
 {
    static const TEveException eh("TEvePointSetArray::TakeAction ");
 
-   if (sel == 0)
-      throw eh + "selector is <null>.";
+   if (sel == nullptr) throw eh + "selector is <null>.";
 
    Int_t n = sel->GetNfill();
 
@@ -543,8 +524,7 @@ void TEvePointSetArray::TakeAction(TEvePointSelector* sel)
    Double_t *vx = sel->GetV1(), *vy = sel->GetV2(), *vz = sel->GetV3();
    Double_t *qq = sel->GetV4();
 
-   if (qq == 0)
-      throw eh + "requires 4-d varexp.";
+   if (qq == nullptr) throw eh + "requires 4-d varexp.";
 
    switch (fSourceCS)
    {
@@ -652,8 +632,7 @@ Bool_t TEvePointSetArray::Fill(Double_t x, Double_t y, Double_t z, Double_t quan
       fLastBin = fNBins - 1;
    }
 
-   if (fBins[fLastBin] != 0)
-   {
+   if (fBins[fLastBin] != nullptr) {
       fBins[fLastBin]->SetNextPoint(x, y, z);
       return kTRUE;
    }
@@ -681,8 +660,7 @@ void TEvePointSetArray::CloseBins()
 {
    for (Int_t i=0; i<fNBins; ++i)
    {
-      if (fBins[i] != 0)
-      {
+      if (fBins[i] != nullptr) {
          fBins[i]->SetTitle(Form("N=%d", fBins[i]->Size()));
          fBins[i]->ComputeBBox();
       }
@@ -697,8 +675,7 @@ void TEvePointSetArray::SetOwnIds(Bool_t o)
 {
    for (Int_t i=0; i<fNBins; ++i)
    {
-      if (fBins[i] != 0)
-         fBins[i]->SetOwnIds(o);
+      if (fBins[i] != nullptr) fBins[i]->SetOwnIds(o);
    }
 }
 
@@ -717,8 +694,7 @@ void TEvePointSetArray::SetRange(Double_t min, Double_t max)
 
    for (Int_t i = 1; i < fNBins - 1; ++i)
    {
-      if (fBins[i] != 0)
-         fBins[i]->SetRnrSelf(i>=low_b && i<=high_b);
+      if (fBins[i] != nullptr) fBins[i]->SetRnrSelf(i >= low_b && i <= high_b);
    }
 }
 

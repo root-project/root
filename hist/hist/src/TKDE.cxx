@@ -117,13 +117,13 @@ void TKDE::Instantiate(KernelFunction_Ptr kernfunc, UInt_t events, const Double_
    // Template's constructor surrogate
    fData = std::vector<Double_t>(events, 0.0);
    fEvents = std::vector<Double_t>(events, 0.0);
-   fPDF = 0;
-   fKernel = 0;
-   fKernelFunction = 0;
-   fUpperPDF = 0;
-   fLowerPDF = 0;
-   fApproximateBias = 0;
-   fGraph = 0;
+   fPDF = nullptr;
+   fKernel = nullptr;
+   fKernelFunction = nullptr;
+   fUpperPDF = nullptr;
+   fLowerPDF = nullptr;
+   fApproximateBias = nullptr;
+   fGraph = nullptr;
    fNewData = false;
    fUseMirroring = false; fMirrorLeft = false; fMirrorRight = false;
    fAsymLeft = false; fAsymRight = false; 
@@ -330,11 +330,11 @@ void TKDE::SetKernelType(EKernelType kern) {
    // Sets User option for the choice of kernel estimator
    if (fKernelFunction && fKernelType != kUserDefined) {
       delete fKernelFunction;
-      fKernelFunction = 0;
+      fKernelFunction = nullptr;
    }
    fKernelType = kern;
    CheckOptions();
-   SetKernelFunction(0);
+   SetKernelFunction(nullptr);
 }
 
 void TKDE::SetIteration(EIteration iter) {
@@ -555,7 +555,7 @@ void TKDE::SetKernel() {
 
 void TKDE::SetKernelFunction(KernelFunction_Ptr kernfunc) {
 
-   assert(fKernelFunction == 0);  // to avoid memory leaks
+   assert(fKernelFunction == nullptr); // to avoid memory leaks
    switch (fKernelType) {
       case kGaussian :
          fKernelFunction = new ROOT::Math::WrappedMemFunction<TKDE, Double_t (TKDE::*)(Double_t) const>(*this, &TKDE::GaussianKernel);
@@ -811,7 +811,7 @@ void TKDE::Draw(const Option_t* opt) {
       Double_t level = 0.95;
       const char * s = strstr(plotOpt.Data(),"interval@");
       // coverity [secure_coding : FALSE]
-      if (s != 0) sscanf(s,"interval@%lf",&level);
+      if (s != nullptr) sscanf(s, "interval@%lf", &level);
       if((level <= 0) || (level >= 1)) {
          Warning("Draw","given confidence level %.3lf is invalid - use default 0.95",level);
          level = 0.95;
@@ -886,7 +886,7 @@ const Double_t *  TKDE::GetAdaptiveWeights() const {
    // Returns the bandwidths for the adaptive KDE
    if (fIteration != TKDE::kAdaptive) {
       this->Warning("GetFixedWeight()", "Adaptive iteration option not enabled. Returning a NULL pointer<");
-      return 0;
+      return nullptr;
    }
    if (fNewData) (const_cast<TKDE*>(this))->InitFromNewData();
    return &(fKernel->GetAdaptiveWeights()).front();

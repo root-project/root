@@ -39,11 +39,8 @@ ClassImp(TEveTrackEditor);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TEveTrackEditor::TEveTrackEditor(const TGWindow *p, Int_t width, Int_t height,
-                                 UInt_t options, Pixel_t back) :
-   TGedFrame(p, width, height, options | kVerticalFrame, back),
-   fM(0),
-   fRSEditor(0)
+TEveTrackEditor::TEveTrackEditor(const TGWindow *p, Int_t width, Int_t height, UInt_t options, Pixel_t back)
+   : TGedFrame(p, width, height, options | kVerticalFrame, back), fM(nullptr), fRSEditor(nullptr)
 {
    MakeTitle("TEveTrack");
 
@@ -82,15 +79,10 @@ ClassImp(TEveTrackListEditor);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TEveTrackListEditor::TEveTrackListEditor(const TGWindow *p,
-                                         Int_t width, Int_t height,
-                                         UInt_t options, Pixel_t back) :
-   TGedFrame(p, width, height, options | kVerticalFrame, back),
+TEveTrackListEditor::TEveTrackListEditor(const TGWindow *p, Int_t width, Int_t height, UInt_t options, Pixel_t back)
+   : TGedFrame(p, width, height, options | kVerticalFrame, back),
 
-   fTC         (0),
-   fPtRange    (0),
-   fPRange     (0),
-   fRSSubEditor(0)
+     fTC(nullptr), fPtRange(nullptr), fPRange(nullptr), fRSSubEditor(nullptr)
 {
    {
       TGHorizontalFrame* f = new TGHorizontalFrame(this);

@@ -341,7 +341,7 @@ static void GetCurrentDirectory(std::string &output)
    char *result = currWorkDir;
 
    do {
-      if (result == 0) {
+      if (result == nullptr) {
          len = 2 * len;
          if (fixedLength != currWorkDir) {
             delete [] currWorkDir;
@@ -353,7 +353,7 @@ static void GetCurrentDirectory(std::string &output)
 #else
       result = getcwd(currWorkDir, len);
 #endif
-   } while (result == 0 && errno == ERANGE);
+   } while (result == nullptr && errno == ERANGE);
 
    output = currWorkDir;
    output += '/';
@@ -510,7 +510,7 @@ void AnnotateFieldDecl(clang::FieldDecl &decl,
             } else {
                userDefinedProperty = name + propNames::separator + value;
             }
-            ROOT::TMetaUtils::Info(0, "%s %s\n", varName.c_str(), userDefinedProperty.c_str());
+            ROOT::TMetaUtils::Info(nullptr, "%s %s\n", varName.c_str(), userDefinedProperty.c_str());
             decl.addAttr(new(C) clang::AnnotateAttr(commentRange, C, userDefinedProperty, 0));
 
          }
@@ -604,7 +604,7 @@ void AnnotateDecl(clang::CXXRecordDecl &CXXRD,
          }
          // Match decls with sel rules if we are in presence of a selection file
          // and the cast was successful
-         if (isGenreflex && thisClassSelectionRule != 0) {
+         if (isGenreflex && thisClassSelectionRule != nullptr) {
             const std::list<VariableSelectionRule> &fieldSelRules = thisClassSelectionRule->GetFieldSelectionRules();
 
             // This check is here to avoid asserts in debug mode (LLVMDEV env variable set)
@@ -633,8 +633,8 @@ size_t GetFullArrayLength(const clang::ConstantArrayType *arrayType)
 bool InheritsFromTObject(const clang::RecordDecl *cl,
                          const cling::Interpreter &interp)
 {
-   static const clang::CXXRecordDecl *TObject_decl
-      = ROOT::TMetaUtils::ScopeSearch("TObject", interp, true /*diag*/, 0);
+   static const clang::CXXRecordDecl *TObject_decl =
+      ROOT::TMetaUtils::ScopeSearch("TObject", interp, true /*diag*/, nullptr);
 
    const clang::CXXRecordDecl *clxx = llvm::dyn_cast<clang::CXXRecordDecl>(cl);
    return ROOT::TMetaUtils::IsBase(clxx, TObject_decl, nullptr, interp);
@@ -645,8 +645,8 @@ bool InheritsFromTObject(const clang::RecordDecl *cl,
 bool InheritsFromTSelector(const clang::RecordDecl *cl,
                            const cling::Interpreter &interp)
 {
-   static const clang::CXXRecordDecl *TObject_decl
-      = ROOT::TMetaUtils::ScopeSearch("TSelector", interp, false /*diag*/, 0);
+   static const clang::CXXRecordDecl *TObject_decl =
+      ROOT::TMetaUtils::ScopeSearch("TSelector", interp, false /*diag*/, nullptr);
 
    return ROOT::TMetaUtils::IsBase(llvm::dyn_cast<clang::CXXRecordDecl>(cl), TObject_decl, nullptr, interp);
 }
@@ -740,9 +740,7 @@ void SetRootSys()
 ////////////////////////////////////////////////////////////////////////////////
 /// Check whether the #pragma line contains expectedTokens (0-terminated array).
 
-bool ParsePragmaLine(const std::string &line,
-                     const char *expectedTokens[],
-                     size_t *end = 0)
+bool ParsePragmaLine(const std::string &line, const char *expectedTokens[], size_t *end = nullptr)
 {
    if (end) *end = 0;
    if (line[0] != '#') return false;
@@ -927,10 +925,9 @@ bool CheckInputOperator(const char *what,
                false /*diags*/);
    }
    bool has_input_error = false;
-   if (method != 0 && (method->getAccess() == clang::AS_public || method->getAccess() == clang::AS_none)) {
+   if (method != nullptr && (method->getAccess() == clang::AS_public || method->getAccess() == clang::AS_none)) {
       std::string filename = ROOT::TMetaUtils::GetFileName(*method, interp);
-      if (strstr(filename.c_str(), "TBuffer.h") != 0 ||
-            strstr(filename.c_str(), "Rtypes.h") != 0) {
+      if (strstr(filename.c_str(), "TBuffer.h") != nullptr || strstr(filename.c_str(), "Rtypes.h") != nullptr) {
 
          has_input_error = true;
       }
@@ -945,11 +942,12 @@ bool CheckInputOperator(const char *what,
          maybeconst = "const ";
          mayberef = "";
       }
-      ROOT::TMetaUtils::Error(0,
+      ROOT::TMetaUtils::Error(nullptr,
                               "in this version of ROOT, the option '!' used in a linkdef file\n"
                               "       implies the actual existence of customized operators.\n"
                               "       The following declaration is now required:\n"
-                              "   TBuffer &%s(TBuffer &,%s%s *%s);\n", what, maybeconst, fullname.c_str(), mayberef);
+                              "   TBuffer &%s(TBuffer &,%s%s *%s);\n",
+                              what, maybeconst, fullname.c_str(), mayberef);
    }
    return has_input_error;
 
@@ -967,8 +965,7 @@ bool CheckInputOperator(const clang::RecordDecl *cl, cling::Interpreter &interp)
    char *proto = new char[ncha];
    snprintf(proto, ncha, "TBuffer&,%s*&", fullname.c_str());
 
-   ROOT::TMetaUtils::Info(0, "Class %s: Do not generate operator>>()\n",
-                          fullname.c_str());
+   ROOT::TMetaUtils::Info(nullptr, "Class %s: Do not generate operator>>()\n", fullname.c_str());
 
    // We do want to call both CheckInputOperator all the times.
    bool has_input_error = CheckInputOperator("operator>>", proto, fullname, cl, interp);
@@ -1070,18 +1067,18 @@ int STLContainerStreamer(const clang::FieldDecl &m,
    stlName = ROOT::TMetaUtils::ShortTypeName(m.getName().str().c_str());
 
    string fulName1, fulName2;
-   const char *tcl1 = 0, *tcl2 = 0;
+   const char *tcl1 = nullptr, *tcl2 = nullptr;
    const clang::TemplateArgument &arg0(tmplt_specialization->getTemplateArgs().get(0));
    clang::QualType ti = arg0.getAsType();
 
-   if (ROOT::TMetaUtils::ElementStreamer(dictStream, m, ti, 0, rwmode, interp)) {
+   if (ROOT::TMetaUtils::ElementStreamer(dictStream, m, ti, nullptr, rwmode, interp)) {
       tcl1 = "R__tcl1";
       fulName1 = ti.getAsString(); // Should we be passing a context?
    }
    if (stltype == kSTLmap || stltype == kSTLmultimap) {
       const clang::TemplateArgument &arg1(tmplt_specialization->getTemplateArgs().get(1));
       clang::QualType tmplti = arg1.getAsType();
-      if (ROOT::TMetaUtils::ElementStreamer(dictStream, m, tmplti, 0, rwmode, interp)) {
+      if (ROOT::TMetaUtils::ElementStreamer(dictStream, m, tmplti, nullptr, rwmode, interp)) {
          tcl2 = "R__tcl2";
          fulName2 = tmplti.getAsString(); // Should we be passing a context?
       }
@@ -1564,11 +1561,12 @@ llvm::StringRef GrabIndex(const clang::FieldDecl &member, int printError)
       }
 
       if (where.size() == 0) {
-         ROOT::TMetaUtils::Error(0, "*** Datamember %s::%s: no size indication!\n",
+         ROOT::TMetaUtils::Error(nullptr, "*** Datamember %s::%s: no size indication!\n",
                                  member.getParent()->getName().str().c_str(), member.getName().str().c_str());
       } else {
-         ROOT::TMetaUtils::Error(0, "*** Datamember %s::%s: size of array (%s) %s!\n",
-                                 member.getParent()->getName().str().c_str(), member.getName().str().c_str(), where.str().c_str(), errorstring);
+         ROOT::TMetaUtils::Error(nullptr, "*** Datamember %s::%s: size of array (%s) %s!\n",
+                                 member.getParent()->getName().str().c_str(), member.getName().str().c_str(),
+                                 where.str().c_str(), errorstring);
       }
    }
    return index;
@@ -1582,7 +1580,7 @@ void WriteStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
                    std::ostream &dictStream)
 {
    const clang::CXXRecordDecl *clxx = llvm::dyn_cast<clang::CXXRecordDecl>(cl.GetRecordDecl());
-   if (clxx == 0) return;
+   if (clxx == nullptr) return;
 
    bool add_template_keyword = ROOT::TMetaUtils::NeedTemplateKeyword(clxx);
 
@@ -1720,7 +1718,10 @@ void WriteStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
                   }
                   dictStream << "      for (R__i = 0; R__i < " << s << "; R__i++)" << std::endl;
                   if (i == 0) {
-                     ROOT::TMetaUtils::Error(0, "*** Datamember %s::%s: array of pointers to fundamental type (need manual intervention)\n", fullname.c_str(), field_iter->getName().str().c_str());
+                     ROOT::TMetaUtils::Error(
+                        nullptr,
+                        "*** Datamember %s::%s: array of pointers to fundamental type (need manual intervention)\n",
+                        fullname.c_str(), field_iter->getName().str().c_str());
                      dictStream << "         ;//R__b.ReadArray(" << field_iter->getName().str() << ");" << std::endl;
                   } else {
                      dictStream << "         ;//R__b.WriteArray(" << field_iter->getName().str() << ", __COUNTER__);" << std::endl;
@@ -1729,7 +1730,9 @@ void WriteStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
                   llvm::StringRef indexvar = GrabIndex(**field_iter, i == 0);
                   if (indexvar.size() == 0) {
                      if (i == 0) {
-                        ROOT::TMetaUtils::Error(0, "*** Datamember %s::%s: pointer to fundamental type (need manual intervention)\n", fullname.c_str(), field_iter->getName().str().c_str());
+                        ROOT::TMetaUtils::Error(
+                           nullptr, "*** Datamember %s::%s: pointer to fundamental type (need manual intervention)\n",
+                           fullname.c_str(), field_iter->getName().str().c_str());
                         dictStream << "      //R__b.ReadArray(" << field_iter->getName().str() << ");" << std::endl;
                      } else {
                         dictStream << "      //R__b.WriteArray(" << field_iter->getName().str() << ", __COUNTER__);" << std::endl;
@@ -1889,7 +1892,9 @@ void WriteStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
                   // Optimize this with control statement in title.
                   if (isPointerToPointer(**field_iter)) {
                      if (i == 0) {
-                        ROOT::TMetaUtils::Error(0, "*** Datamember %s::%s: pointer to pointer (need manual intervention)\n", fullname.c_str(), field_iter->getName().str().c_str());
+                        ROOT::TMetaUtils::Error(
+                           nullptr, "*** Datamember %s::%s: pointer to pointer (need manual intervention)\n",
+                           fullname.c_str(), field_iter->getName().str().c_str());
                         dictStream << "      //R__b.ReadArray(" << field_iter->getName().str() << ");" << std::endl;
                      } else {
                         dictStream << "      //R__b.WriteArray(" << field_iter->getName().str() << ", __COUNTER__);";
@@ -1975,7 +1980,7 @@ void WriteAutoStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
    // Write Streamer() method suitable for automatic schema evolution.
 
    const clang::CXXRecordDecl *clxx = llvm::dyn_cast<clang::CXXRecordDecl>(cl.GetRecordDecl());
-   if (clxx == 0) return;
+   if (clxx == nullptr) return;
 
    bool add_template_keyword = ROOT::TMetaUtils::NeedTemplateKeyword(clxx);
 
@@ -2069,8 +2074,7 @@ void GenerateLinkdef(int *argc, char **argv, int firstInputFile,
       }
       if (bcnt) {
          strlcpy(trail, "+", 3);
-         if (nostr)
-            ROOT::TMetaUtils::Error(0, "option + mutual exclusive with -\n");
+         if (nostr) ROOT::TMetaUtils::Error(nullptr, "option + mutual exclusive with -\n");
       }
       char *cls = strrchr(argv[i], '/');
       if (!cls) cls = strrchr(argv[i], '\\');
@@ -2098,7 +2102,7 @@ void GenerateLinkdef(int *argc, char **argv, int firstInputFile,
 
 bool Which(cling::Interpreter &interp, const char *fname, string &pname)
 {
-   FILE *fp = 0;
+   FILE *fp = nullptr;
 
 #ifdef WIN32
    static const char *fopenopts = "rb";
@@ -2181,8 +2185,7 @@ static bool InjectModuleUtilHeader(const char *argv0,
    if (interp.declare(out.str()) != cling::Interpreter::kSuccess) {
       const std::string &hdrName
          = umbrella ? modGen.GetUmbrellaName() : modGen.GetContentName();
-      ROOT::TMetaUtils::Error(0, "%s: compilation failure (%s)\n", argv0,
-                              hdrName.c_str());
+      ROOT::TMetaUtils::Error(nullptr, "%s: compilation failure (%s)\n", argv0, hdrName.c_str());
       return false;
    }
    return true;
@@ -2527,8 +2530,7 @@ void AdjustRootMapNames(std::string &rootmapFileName,
       rootmapFileName = rootmapLibName.substr(0, libExtensionPos) + ".rootmap";
       size_t libCleanNamePos = rootmapLibName.find_last_of(gPathSeparator) + 1;
       rootmapLibName = rootmapLibName.substr(libCleanNamePos, std::string::npos);
-      ROOT::TMetaUtils::Info(0, "Rootmap file name %s built from rootmap lib name %s",
-                             rootmapLibName.c_str(),
+      ROOT::TMetaUtils::Info(nullptr, "Rootmap file name %s built from rootmap lib name %s", rootmapLibName.c_str(),
                              rootmapFileName.c_str());
    }
 }
@@ -2607,7 +2609,7 @@ int CreateNewRootMapFile(const std::string &rootmapFileName,
    // Create the rootmap file from the selected classes and namespaces
    std::ofstream rootmapFile(rootmapFileName.c_str());
    if (!rootmapFile) {
-      ROOT::TMetaUtils::Error(0, "Opening new rootmap file %s\n", rootmapFileName.c_str());
+      ROOT::TMetaUtils::Error(nullptr, "Opening new rootmap file %s\n", rootmapFileName.c_str());
       return 1;
    }
 
@@ -3043,7 +3045,8 @@ int GenerateFullDict(std::ostream &dictStream,
 
    for (auto const & selClass : scan.fSelectedClasses) {
       if (!selClass.GetRecordDecl()->isCompleteDefinition()) {
-         ROOT::TMetaUtils::Error(0, "A dictionary has been requested for %s but there is no declaration!\n", ROOT::TMetaUtils::GetQualifiedName(selClass).c_str());
+         ROOT::TMetaUtils::Error(nullptr, "A dictionary has been requested for %s but there is no declaration!\n",
+                                 ROOT::TMetaUtils::GetQualifiedName(selClass).c_str());
          continue;
       }
       if (selClass.RequestOnlyTClass()) {
@@ -3062,7 +3065,7 @@ int GenerateFullDict(std::ostream &dictStream,
       const clang::CXXRecordDecl *CRD = llvm::dyn_cast<clang::CXXRecordDecl>(selClass.GetRecordDecl());
 
       if (CRD) {
-         ROOT::TMetaUtils::Info(0, "Generating code for class %s\n", selClass.GetNormalizedName());
+         ROOT::TMetaUtils::Info(nullptr, "Generating code for class %s\n", selClass.GetNormalizedName());
          if (TMetaUtils::IsStdClass(*CRD) && 0 != TClassEdit::STLKind(CRD->getName().str().c_str() /* unqualified name without template arguement */)) {
             // Register the collections
             // coverity[fun_call_w_exception] - that's just fine.
@@ -3236,11 +3239,11 @@ public:
 
       m_names.push_back(nameStr);
       m_tempNames.push_back(tmpNameStr);
-      ROOT::TMetaUtils::Info(0, "File %s added to the tmp catalog.\n", name);
+      ROOT::TMetaUtils::Info(nullptr, "File %s added to the tmp catalog.\n", name);
 
       // This is to allow update of existing files
       if (0 == std::rename(name , tmpName)) {
-         ROOT::TMetaUtils::Info(0, "File %s existing. Preserved as %s.\n", name, tmpName);
+         ROOT::TMetaUtils::Info(nullptr, "File %s existing. Preserved as %s.\n", name, tmpName);
       }
 
       // To change the name to its tmp version
@@ -3259,11 +3262,10 @@ public:
          const char *tmpName = m_tempNames[i].c_str();
          // Check if the file exists
          std::ifstream ifile(tmpName);
-         if (!ifile)
-            ROOT::TMetaUtils::Error(0, "Cannot find %s!\n", tmpName);
+         if (!ifile) ROOT::TMetaUtils::Error(nullptr, "Cannot find %s!\n", tmpName);
 
          if (0 != std::remove(tmpName)) {
-            ROOT::TMetaUtils::Error(0, "Removing %s!\n", tmpName);
+            ROOT::TMetaUtils::Error(nullptr, "Removing %s!\n", tmpName);
             retval++;
          }
       }
@@ -3280,8 +3282,7 @@ public:
          const char *name = m_names[i].c_str();
          // Check if the file exists
          std::ifstream ifile(tmpName);
-         if (!ifile)
-            ROOT::TMetaUtils::Error(0, "Cannot find %s!\n", tmpName);
+         if (!ifile) ROOT::TMetaUtils::Error(nullptr, "Cannot find %s!\n", tmpName);
 #ifdef WIN32
          // Sometimes files cannot be renamed on Windows if they don't have
          // been released by the system. So just copy them and try to delete
@@ -3295,7 +3296,7 @@ public:
          }
 #else
          if (0 != std::rename(tmpName , name)) {
-            ROOT::TMetaUtils::Error(0, "Renaming %s into %s!\n", tmpName, name);
+            ROOT::TMetaUtils::Error(nullptr, "Renaming %s into %s!\n", tmpName, name);
             retval++;
          }
 #endif
@@ -3565,7 +3566,8 @@ void ExtractHeadersForDecls(const RScanner::ClassColl_t &annotatedRcds,
             headersDeclsMap[autoParseKey] = headers;
             headersDeclsMap[annotatedRcd.GetRequestedName()] = headers;
          } else {
-            ROOT::TMetaUtils::Info(0, "Class %s is not included in the set of autoparse keys.\n", autoParseKey.c_str());
+            ROOT::TMetaUtils::Info(nullptr, "Class %s is not included in the set of autoparse keys.\n",
+                                   autoParseKey.c_str());
          }
 
          // Propagate to the classes map only if this is not a template.
@@ -3932,8 +3934,8 @@ int RootClingMain(int argc,
 
          string filein = liblistPrefix + ".in";
          FILE *fp;
-         if ((fp = fopen(filein.c_str(), "r")) == 0) {
-            ROOT::TMetaUtils::Error(0, "%s: The input list file %s does not exist\n", argv[0], filein.c_str());
+         if ((fp = fopen(filein.c_str(), "r")) == nullptr) {
+            ROOT::TMetaUtils::Error(nullptr, "%s: The input list file %s does not exist\n", argv[0], filein.c_str());
             return 1;
          }
          fclose(fp);
@@ -3965,7 +3967,7 @@ int RootClingMain(int argc,
    }
 
    if (argc == ic) { // Something wrong here
-      ROOT::TMetaUtils::Error(0, "Insufficient number of arguments!\n");
+      ROOT::TMetaUtils::Error(nullptr, "Insufficient number of arguments!\n");
       fprintf(stderr, "%s\n", shortHelp);
       return 1;
    }
@@ -3990,17 +3992,17 @@ int RootClingMain(int argc,
 
    if (ic < argc && IsImplementationName(argv[ic])) {
       FILE *fp;
-      if (!ignoreExistingDict && (fp = fopen(argv[ic], "r")) != 0) {
+      if (!ignoreExistingDict && (fp = fopen(argv[ic], "r")) != nullptr) {
          fclose(fp);
          if (!force) {
-            ROOT::TMetaUtils::Error(0, "%s: output file %s already exists\n", argv[0], argv[ic]);
+            ROOT::TMetaUtils::Error(nullptr, "%s: output file %s already exists\n", argv[0], argv[ic]);
             return 1;
          }
       }
 
       // remove possible pathname to get the dictionary name
       if (strlen(argv[ic]) > (PATH_MAX - 1)) {
-         ROOT::TMetaUtils::Error(0, "rootcling: dictionary name too long (more than %d characters): %s\n",
+         ROOT::TMetaUtils::Error(nullptr, "rootcling: dictionary name too long (more than %d characters): %s\n",
                                  (PATH_MAX - 1), argv[ic]);
          return 1;
       }
@@ -4018,7 +4020,9 @@ int RootClingMain(int argc,
    }
 
    if (force && dictname.empty()) {
-      ROOT::TMetaUtils::Error(0, "Inconsistent set of arguments detected: overwrite of dictionary file forced but no filename specified.\n");
+      ROOT::TMetaUtils::Error(
+         nullptr,
+         "Inconsistent set of arguments detected: overwrite of dictionary file forced but no filename specified.\n");
       fprintf(stderr, "%s\n", shortHelp);
       return 1;
    }
@@ -4251,7 +4255,7 @@ int RootClingMain(int argc,
       // Pass the interpreter arguments to TCling's interpreter:
       clingArgsC.push_back("-resource-dir");
       clingArgsC.push_back(resourceDir.c_str());
-      clingArgsC.push_back(0); // signal end of array
+      clingArgsC.push_back(nullptr); // signal end of array
       const char ** &extraArgs = *gDriverConfig->fTROOT__GetExtraInterpreterArgs();
       extraArgs = &clingArgsC[1]; // skip binary name
       interpPtr = gDriverConfig->fTCling__GetInterpreter();
@@ -4267,26 +4271,26 @@ int RootClingMain(int argc,
    cling::Interpreter &interp = *interpPtr;
 
    if (ROOT::TMetaUtils::GetErrorIgnoreLevel() == ROOT::TMetaUtils::kInfo) {
-      ROOT::TMetaUtils::Info(0, "\n");
-      ROOT::TMetaUtils::Info(0, "==== INTERPRETER CONFIGURATION ====\n");
-      ROOT::TMetaUtils::Info(0, "== Include paths\n");
+      ROOT::TMetaUtils::Info(nullptr, "\n");
+      ROOT::TMetaUtils::Info(nullptr, "==== INTERPRETER CONFIGURATION ====\n");
+      ROOT::TMetaUtils::Info(nullptr, "== Include paths\n");
       interp.DumpIncludePath();
       printf("\n\n");
       fflush(stdout);
 
-      ROOT::TMetaUtils::Info(0, "== Included files\n");
+      ROOT::TMetaUtils::Info(nullptr, "== Included files\n");
       interp.printIncludedFiles(llvm::outs());
       llvm::outs() << "\n\n";
       llvm::outs().flush();
 
-      ROOT::TMetaUtils::Info(0, "== Language Options\n");
+      ROOT::TMetaUtils::Info(nullptr, "== Language Options\n");
       const clang::LangOptions& LangOpts
          = interp.getCI()->getASTContext().getLangOpts();
 #define LANGOPT(Name, Bits, Default, Description) \
       ROOT::TMetaUtils::Info(0, "%s = %d // %s\n", #Name, (int)LangOpts.Name, Description);
 #define ENUM_LANGOPT(Name, Type, Bits, Default, Description)
 #include "clang/Basic/LangOptions.def"
-      ROOT::TMetaUtils::Info(0, "==== END interpreter configuration ====\n\n");
+      ROOT::TMetaUtils::Info(nullptr, "==== END interpreter configuration ====\n\n");
    }
 
    interp.getOptions().ErrorOut = true;
@@ -4294,7 +4298,7 @@ int RootClingMain(int argc,
    if (isGenreflex) {
       if (interp.declare("namespace std {} using namespace std;") != cling::Interpreter::kSuccess) {
          // There was an error.
-         ROOT::TMetaUtils::Error(0, "Error loading the default header files.\n");
+         ROOT::TMetaUtils::Error(nullptr, "Error loading the default header files.\n");
          return 1;
       }
    } else {
@@ -4312,7 +4316,7 @@ int RootClingMain(int argc,
                              ) != cling::Interpreter::kSuccess
          ) {
          // There was an error.
-         ROOT::TMetaUtils::Error(0, "Error loading the default header files.\n");
+         ROOT::TMetaUtils::Error(nullptr, "Error loading the default header files.\n");
          return 1;
       }
    }
@@ -4322,7 +4326,7 @@ int RootClingMain(int argc,
 
    // We are now ready (enough is loaded) to init the list of opaque typedefs.
    ROOT::TMetaUtils::TNormalizedCtxt normCtxt(interp.getLookupHelper());
-   ROOT::TMetaUtils::TClingLookupHelper helper(interp, normCtxt, 0, 0);
+   ROOT::TMetaUtils::TClingLookupHelper helper(interp, normCtxt, nullptr, nullptr);
    TClassEdit::Init(&helper);
 
    // flags used only for the pragma parser:
@@ -4354,7 +4358,7 @@ int RootClingMain(int argc,
       if (IsSelectionFile(argv[i])) {
          linkdefLoc = i;
          if (i != argc - 1) {
-            ROOT::TMetaUtils::Error(0, "%s: %s must be last file on command line\n", argv[0], argv[i]);
+            ROOT::TMetaUtils::Error(nullptr, "%s: %s must be last file on command line\n", argv[0], argv[i]);
             return 1;
          }
       }
@@ -4407,7 +4411,7 @@ int RootClingMain(int argc,
    }
 
    if (!firstInputFile) {
-      ROOT::TMetaUtils::Error(0, "%s: no input files specified\n", argv[0]);
+      ROOT::TMetaUtils::Error(nullptr, "%s: no input files specified\n", argv[0]);
       return 1;
    }
 
@@ -4469,7 +4473,7 @@ int RootClingMain(int argc,
 
    if (!interpreterDeclarations.empty() &&
        interp.declare(interpreterDeclarations) != cling::Interpreter::kSuccess) {
-      ROOT::TMetaUtils::Error(0, "%s: Linkdef compilation failure\n", argv[0]);
+      ROOT::TMetaUtils::Error(nullptr, "%s: Linkdef compilation failure\n", argv[0]);
       return 1;
    }
 
@@ -4509,15 +4513,14 @@ int RootClingMain(int argc,
    // Check if code goes to stdout or rootcling file
    std::ofstream fileout;
    string main_dictname(dictpathname);
-   std::ostream *dictStreamPtr = NULL;
+   std::ostream *dictStreamPtr = nullptr;
    if (!ignoreExistingDict) {
       if (!dictpathname.empty()) {
          tmpCatalog.addFileName(dictpathname);
          fileout.open(dictpathname.c_str());
          dictStreamPtr = &fileout;
          if (!(*dictStreamPtr)) {
-            ROOT::TMetaUtils::Error(0, "rootcling: failed to open %s in main\n",
-                                    dictpathname.c_str());
+            ROOT::TMetaUtils::Error(nullptr, "rootcling: failed to open %s in main\n", dictpathname.c_str());
             return 1;
          }
       } else {
@@ -4555,7 +4558,7 @@ int RootClingMain(int argc,
    } else {
       bool found = Which(interp, argv[linkdefLoc], linkdefFilename);
       if (!found) {
-         ROOT::TMetaUtils::Error(0, "%s: cannot open linkdef file %s\n", argv[0], argv[linkdefLoc]);
+         ROOT::TMetaUtils::Error(nullptr, "%s: cannot open linkdef file %s\n", argv[0], argv[linkdefLoc]);
          return 1;
       }
    }
@@ -4594,13 +4597,13 @@ int RootClingMain(int argc,
 
       if (!ldefr.Parse(selectionRules, interpPragmaSource, clingArgs,
                        resourceDir.c_str())) {
-         ROOT::TMetaUtils::Error(0, "Parsing #pragma failed %s\n", linkdefFilename.c_str());
+         ROOT::TMetaUtils::Error(nullptr, "Parsing #pragma failed %s\n", linkdefFilename.c_str());
       } else {
-         ROOT::TMetaUtils::Info(0, "#pragma successfully parsed.\n");
+         ROOT::TMetaUtils::Info(nullptr, "#pragma successfully parsed.\n");
       }
 
       if (!ldefr.LoadIncludes(extraIncludes)) {
-         ROOT::TMetaUtils::Error(0, "Error loading the #pragma extra_include.\n");
+         ROOT::TMetaUtils::Error(nullptr, "Error loading the #pragma extra_include.\n");
          return 1;
       }
    } else if (isSelXML) {
@@ -4609,28 +4612,28 @@ int RootClingMain(int argc,
 
       std::ifstream file(linkdefFilename.c_str());
       if (file.is_open()) {
-         ROOT::TMetaUtils::Info(0, "Selection XML file\n");
+         ROOT::TMetaUtils::Info(nullptr, "Selection XML file\n");
 
          XMLReader xmlr(interp);
          if (!xmlr.Parse(linkdefFilename.c_str(), selectionRules)) {
-            ROOT::TMetaUtils::Error(0, "Parsing XML file %s\n", linkdefFilename.c_str());
+            ROOT::TMetaUtils::Error(nullptr, "Parsing XML file %s\n", linkdefFilename.c_str());
             return 1; // Return here to propagate the failure up to the build system
          } else {
-            ROOT::TMetaUtils::Info(0, "XML file successfully parsed\n");
+            ROOT::TMetaUtils::Info(nullptr, "XML file successfully parsed\n");
          }
          file.close();
       } else {
-         ROOT::TMetaUtils::Error(0, "XML file %s couldn't be opened!\n", linkdefFilename.c_str());
+         ROOT::TMetaUtils::Error(nullptr, "XML file %s couldn't be opened!\n", linkdefFilename.c_str());
       }
 
    } else if (ROOT::TMetaUtils::IsLinkdefFile(linkdefFilename.c_str())) {
 
       std::ifstream file(linkdefFilename.c_str());
       if (file.is_open()) {
-         ROOT::TMetaUtils::Info(0, "Using linkdef file: %s\n", linkdefFilename.c_str());
+         ROOT::TMetaUtils::Info(nullptr, "Using linkdef file: %s\n", linkdefFilename.c_str());
          file.close();
       } else {
-         ROOT::TMetaUtils::Error(0, "Linkdef file %s couldn't be opened!\n", linkdefFilename.c_str());
+         ROOT::TMetaUtils::Error(nullptr, "Linkdef file %s couldn't be opened!\n", linkdefFilename.c_str());
       }
 
       selectionRules.SetSelectionFileType(SelectionRules::kLinkdefFile);
@@ -4640,19 +4643,18 @@ int RootClingMain(int argc,
 
       if (!ldefr.Parse(selectionRules, interpPragmaSource, clingArgs,
                        resourceDir.c_str())) {
-         ROOT::TMetaUtils::Error(0, "Parsing Linkdef file %s\n", linkdefFilename.c_str());
+         ROOT::TMetaUtils::Error(nullptr, "Parsing Linkdef file %s\n", linkdefFilename.c_str());
       } else {
-         ROOT::TMetaUtils::Info(0, "Linkdef file successfully parsed.\n");
+         ROOT::TMetaUtils::Info(nullptr, "Linkdef file successfully parsed.\n");
       }
 
       if (! ldefr.LoadIncludes(extraIncludes)) {
-         ROOT::TMetaUtils::Error(0, "Error loading the #pragma extra_include.\n");
+         ROOT::TMetaUtils::Error(nullptr, "Error loading the #pragma extra_include.\n");
          return 1;
       }
    } else {
 
-      ROOT::TMetaUtils::Error(0, "Unrecognized selection file: %s\n", linkdefFilename.c_str());
-
+      ROOT::TMetaUtils::Error(nullptr, "Unrecognized selection file: %s\n", linkdefFilename.c_str());
    }
 
    // Speed up the operations with rules
@@ -4732,7 +4734,7 @@ int RootClingMain(int argc,
          !onepcm &&
          !dictSelRulesPresent &&
          !selectionRules.AreAllSelectionRulesUsed()) {
-      ROOT::TMetaUtils::Warning(0, "Not all selection rules are used!\n");
+      ROOT::TMetaUtils::Warning(nullptr, "Not all selection rules are used!\n");
    }
 
    int rootclingRetCode(0);
@@ -4877,8 +4879,7 @@ int RootClingMain(int argc,
 
       ofstream outputfile(liblist_filename.c_str(), ios::out);
       if (!outputfile) {
-         ROOT::TMetaUtils::Error(0, "%s: Unable to open output lib file %s\n",
-                                 argv[0], liblist_filename.c_str());
+         ROOT::TMetaUtils::Error(nullptr, "%s: Unable to open output lib file %s\n", argv[0], liblist_filename.c_str());
       } else {
          const size_t endStr = gLibsNeeded.find_last_not_of(" \t");
          outputfile << gLibsNeeded.substr(0, endStr + 1) << endl;
@@ -4940,8 +4941,7 @@ int RootClingMain(int argc,
       AdjustRootMapNames(rootmapFileName,
                          rootmapLibName);
 
-      ROOT::TMetaUtils::Info(0, "Rootmap file name %s and lib name(s) \"%s\"\n",
-                             rootmapFileName.c_str(),
+      ROOT::TMetaUtils::Info(nullptr, "Rootmap file name %s and lib name(s) \"%s\"\n", rootmapFileName.c_str(),
                              rootmapLibName.c_str());
 
       tmpCatalog.addFileName(rootmapFileName);
@@ -4997,9 +4997,9 @@ namespace genreflex {
          if (ROOT::TMetaUtils::IsHeaderName(headername)) {
             numberOfHeaders++;
          } else {
-            ROOT::TMetaUtils::Warning(0,
-                                      "*** genreflex: %s is not a valid header name (.h and .hpp extensions expected)!\n",
-                                      headername.c_str());
+            ROOT::TMetaUtils::Warning(
+               nullptr, "*** genreflex: %s is not a valid header name (.h and .hpp extensions expected)!\n",
+               headername.c_str());
          }
       }
       return numberOfHeaders;
@@ -5154,8 +5154,7 @@ namespace genreflex {
       std::string newRootmapLibName(rootmapLibName);
       if (!rootmapFileName.empty() && newRootmapLibName.empty()) {
          if (headersNames.size() != 1) {
-            ROOT::TMetaUtils::Warning(0,
-                                      "*** genreflex: No rootmap lib and several header specified!\n");
+            ROOT::TMetaUtils::Warning(nullptr, "*** genreflex: No rootmap lib and several header specified!\n");
          }
          std::string cleanHeaderName = ExtractFileName(headersNames[0]);
          newRootmapLibName = "lib";
@@ -5358,9 +5357,7 @@ void RiseWarningIfPresent(std::vector<ROOT::option::Option> &options,
                           const char *descriptor)
 {
    if (options[optionIndex]) {
-      ROOT::TMetaUtils::Warning(0,
-                                "*** genereflex: %s is not supported anymore.\n",
-                                descriptor);
+      ROOT::TMetaUtils::Warning(nullptr, "*** genereflex: %s is not supported anymore.\n", descriptor);
    }
 }
 
@@ -5541,223 +5538,78 @@ int GenReflexMain(int argc, char **argv)
 
    // The Descriptor
    const ROOT::option::Descriptor genreflexUsageDescriptor[] = {
-      {
-         UNKNOWN,
-         NOTYPE,
-         "", "",
-         ROOT::option::Arg::None,
-         genreflexUsage
-      },
+      {UNKNOWN, NOTYPE, "", "", ROOT::option::Arg::None, genreflexUsage},
 
-      {
-         OFILENAME,
-         STRING ,
-         "o" , "output" ,
-         ROOT::option::FullArg::Required,
-         outputFilenameUsage
-      },
+      {OFILENAME, STRING, "o", "output", ROOT::option::FullArg::Required, outputFilenameUsage},
 
-      {
-         TARGETLIB,
-         STRING ,
-         "l" , "library" ,
-         ROOT::option::FullArg::Required,
-         targetLib
-      },
+      {TARGETLIB, STRING, "l", "library", ROOT::option::FullArg::Required, targetLib},
 
-      {
-         MULTIDICT,
-         NOTYPE ,
-         "" , "multiDict" ,
-         ROOT::option::FullArg::None,
-         "--multiDict\tSupport for many dictionaries in one library\n"
-         "      Form correct pcm names if multiple dictionaries will be in the same\n"
-         "      library (needs target library switch. See its documentation).\n"
-      },
+      {MULTIDICT, NOTYPE, "", "multiDict", ROOT::option::FullArg::None,
+       "--multiDict\tSupport for many dictionaries in one library\n"
+       "      Form correct pcm names if multiple dictionaries will be in the same\n"
+       "      library (needs target library switch. See its documentation).\n"},
 
-      {
-         SELECTIONFILENAME,
-         STRING ,
-         "s" , "selection_file" ,
-         ROOT::option::FullArg::Required,
-         selectionFilenameUsage
-      },
+      {SELECTIONFILENAME, STRING, "s", "selection_file", ROOT::option::FullArg::Required, selectionFilenameUsage},
 
-      {
-         ROOTMAP,
-         STRING ,
-         "" , "rootmap" ,
-         ROOT::option::FullArg::Required,
-         rootmapUsage
-      },
+      {ROOTMAP, STRING, "", "rootmap", ROOT::option::FullArg::Required, rootmapUsage},
 
-      {
-         ROOTMAPLIB,
-         STRING ,
-         "" , "rootmap-lib" ,
-         ROOT::option::FullArg::Required,
-         rootmapLibUsage
-      },
+      {ROOTMAPLIB, STRING, "", "rootmap-lib", ROOT::option::FullArg::Required, rootmapLibUsage},
 
-      {
-         INTERPRETERONLY,
-         NOTYPE,
-         "" , "interpreteronly",
-         ROOT::option::Arg::None,
-         "--interpreteronly\tDo not generate I/O related information.\n"
-         "      Generate minimal dictionary required for interactivity.\n"
-      },
+      {INTERPRETERONLY, NOTYPE, "", "interpreteronly", ROOT::option::Arg::None,
+       "--interpreteronly\tDo not generate I/O related information.\n"
+       "      Generate minimal dictionary required for interactivity.\n"},
 
-      {
-         SPLIT,
-         NOTYPE,
-         "" , "split",
-         ROOT::option::Arg::None,
-         "--split\tSplit the dictionary\n"
-         "      Split in two the dictionary, isolating the part with\n"
-         "      ClassDef related functions in a separate file.\n"
-      },
+      {SPLIT, NOTYPE, "", "split", ROOT::option::Arg::None,
+       "--split\tSplit the dictionary\n"
+       "      Split in two the dictionary, isolating the part with\n"
+       "      ClassDef related functions in a separate file.\n"},
 
-      {
-         PCMFILENAME,
-         STRING ,
-         "m" , "" ,
-         ROOT::option::FullArg::Required,
-         "-m \tPcm file loaded before any header (option can be repeated).\n"
-      },
+      {PCMFILENAME, STRING, "m", "", ROOT::option::FullArg::Required,
+       "-m \tPcm file loaded before any header (option can be repeated).\n"},
 
-      {
-         DEEP,  // Not active. Will be removed for 6.2
-         NOTYPE ,
-         "" , "deep",
-         ROOT::option::Arg::None,
-         ""
-      },
+      {DEEP, // Not active. Will be removed for 6.2
+       NOTYPE, "", "deep", ROOT::option::Arg::None, ""},
       //"--deep\tGenerate dictionaries for all dependent classes (ignored).\n"
 
-      {
-         VERBOSE,
-         NOTYPE ,
-         "-v" , "verbose",
-         ROOT::option::Arg::None,
-         "-v, --verbose\tPrint some debug information.\n"
-      },
+      {VERBOSE, NOTYPE, "-v", "verbose", ROOT::option::Arg::None, "-v, --verbose\tPrint some debug information.\n"},
 
-      {
-         DEBUG,
-         NOTYPE ,
-         "" , "debug",
-         ROOT::option::Arg::None,
-         "--debug\tPrint all debug information.\n"
-      },
+      {DEBUG, NOTYPE, "", "debug", ROOT::option::Arg::None, "--debug\tPrint all debug information.\n"},
 
-      {
-         QUIET,
-         NOTYPE ,
-         "" , "quiet",
-         ROOT::option::Arg::None,
-         "--quiet\tPrint only warnings and errors (default).\n"
-      },
+      {QUIET, NOTYPE, "", "quiet", ROOT::option::Arg::None, "--quiet\tPrint only warnings and errors (default).\n"},
 
-      {
-         SILENT,
-         NOTYPE ,
-         "" , "silent",
-         ROOT::option::Arg::None,
-         "--silent\tPrint no information at all.\n"
-      },
+      {SILENT, NOTYPE, "", "silent", ROOT::option::Arg::None, "--silent\tPrint no information at all.\n"},
 
-      {
-         WRITEEMPTYROOTPCM,
-         NOTYPE ,
-         "" , "writeEmptyPCM",
-         ROOT::option::Arg::None,
-         "--writeEmptyPCM\tWrite an empty ROOT pcm.\n"
-      },
+      {WRITEEMPTYROOTPCM, NOTYPE, "", "writeEmptyPCM", ROOT::option::Arg::None,
+       "--writeEmptyPCM\tWrite an empty ROOT pcm.\n"},
 
-      {
-         HELP,
-         NOTYPE,
-         "h" , "help",
-         ROOT::option::Arg::None,
-         "--help\tPrint usage and exit.\n"
-      },
+      {HELP, NOTYPE, "h", "help", ROOT::option::Arg::None, "--help\tPrint usage and exit.\n"},
 
-      {
-         FAILONWARNINGS,
-         NOTYPE,
-         "", "fail_on_warnings",
-         ROOT::option::Arg::None,
-         "--fail_on_warnings\tFail on warnings and errors.\n"
-      },
+      {FAILONWARNINGS, NOTYPE, "", "fail_on_warnings", ROOT::option::Arg::None,
+       "--fail_on_warnings\tFail on warnings and errors.\n"},
 
-      {
-         SELSYNTAXONLY,
-         NOTYPE,
-         "", "selSyntaxOnly",
-         ROOT::option::Arg::None,
-         "--selSyntaxOnly\tValidate selection file w/o generating the dictionary.\n"
-      },
+      {SELSYNTAXONLY, NOTYPE, "", "selSyntaxOnly", ROOT::option::Arg::None,
+       "--selSyntaxOnly\tValidate selection file w/o generating the dictionary.\n"},
 
-      {
-         NOINCLUDEPATHS,
-         NOTYPE ,
-         "" , "noIncludePaths",
-         ROOT::option::Arg::None,
-         "--noIncludePaths\tDo not store the headers' directories in the dictionary. Instead, rely on the environment variable $ROOT_INCLUDE_PATH at runtime.\n"
-      },
+      {NOINCLUDEPATHS, NOTYPE, "", "noIncludePaths", ROOT::option::Arg::None,
+       "--noIncludePaths\tDo not store the headers' directories in the dictionary. Instead, rely on the environment "
+       "variable $ROOT_INCLUDE_PATH at runtime.\n"},
 
       // Left intentionally empty not to be shown in the help, like in the first genreflex
-      {
-         INCLUDE,
-         STRING ,
-         "I" , "" ,
-         ROOT::option::FullArg::Required,
-         ""
-      },
+      {INCLUDE, STRING, "I", "", ROOT::option::FullArg::Required, ""},
 
-      {
-         PREPROCDEFINE,
-         STRING ,
-         "D" , "" ,
-         ROOT::option::FullArg::Required,
-         ""
-      },
+      {PREPROCDEFINE, STRING, "D", "", ROOT::option::FullArg::Required, ""},
 
-      {
-         PREPROCUNDEFINE,
-         STRING ,
-         "U" , "" ,
-         ROOT::option::FullArg::Required,
-         ""
-      },
+      {PREPROCUNDEFINE, STRING, "U", "", ROOT::option::FullArg::Required, ""},
 
-      {
-         WARNING,
-         STRING ,
-         "W" , "" ,
-         ROOT::option::FullArg::Required,
-         ""
-      },
+      {WARNING, STRING, "W", "", ROOT::option::FullArg::Required, ""},
 
-      {
-         NOMEMBERTYPEDEFS, // Option which is not meant for the user: deprecated
-         STRING ,
-         "" , "no_membertypedefs" ,
-         ROOT::option::FullArg::None,
-         ""
-      },
+      {NOMEMBERTYPEDEFS, // Option which is not meant for the user: deprecated
+       STRING, "", "no_membertypedefs", ROOT::option::FullArg::None, ""},
 
-      {
-         NOTEMPLATETYPEDEFS, // Option which is not meant for the user: deprecated
-         STRING ,
-         "" , "no_templatetypedefs" ,
-         ROOT::option::FullArg::None,
-         ""
-      },
+      {NOTEMPLATETYPEDEFS, // Option which is not meant for the user: deprecated
+       STRING, "", "no_templatetypedefs", ROOT::option::FullArg::None, ""},
 
-      {0, 0, 0, 0, 0, 0}
-   };
+      {0, 0, nullptr, nullptr, nullptr, nullptr}};
 
    std::vector<std::string> headersNames;
    const int originalArgc = argc;
@@ -5778,7 +5630,7 @@ int GenReflexMain(int argc, char **argv)
    ROOT::option::Parser parse(genreflexUsageDescriptor, argc, argv, &options[0], &buffer[0], 5);
 
    if (parse.error()) {
-      ROOT::TMetaUtils::Error(0, "Argument parsing error!\n");
+      ROOT::TMetaUtils::Error(nullptr, "Argument parsing error!\n");
       return 1;
    }
 
@@ -5790,7 +5642,7 @@ int GenReflexMain(int argc, char **argv)
    // See if no header was provided
    int numberOfHeaders = checkHeadersNames(headersNames);
    if (0 == numberOfHeaders) {
-      ROOT::TMetaUtils::Error(0, "No valid header was provided!\n");
+      ROOT::TMetaUtils::Error(nullptr, "No valid header was provided!\n");
       return 1;
    }
 
@@ -5810,7 +5662,7 @@ int GenReflexMain(int argc, char **argv)
    if (options[SELECTIONFILENAME]) {
       selectionFileName = options[SELECTIONFILENAME].arg;
       if (!ROOT::TMetaUtils::EndsWith(selectionFileName, ".xml")) {
-         ROOT::TMetaUtils::Error(0,
+         ROOT::TMetaUtils::Error(nullptr,
                                  "Invalid selection file extension: filename is %s and extension .xml is expected!\n",
                                  selectionFileName.c_str());
          return 1;
@@ -6002,7 +5854,7 @@ int ROOT_rootcling_Driver(int argc, char **argv, const ROOT::Internal::RootCling
 
    auto nerrors = ROOT::TMetaUtils::GetNumberOfWarningsAndErrors();
    if (nerrors > 0){
-      ROOT::TMetaUtils::Info(0,"Problems have been detected during the generation of the dictionary.\n");
+      ROOT::TMetaUtils::Info(nullptr, "Problems have been detected during the generation of the dictionary.\n");
    }
 
    gDriverConfig = nullptr;

@@ -40,9 +40,8 @@ ClassImp(TGApplication);
 /// want to use the ROOT GUI and no other services. In all other cases
 /// use either TApplication or TRint.
 
-TGApplication::TGApplication(const char *appClassName,
-                             int *argc, char **argv, void*, int)
-   : TApplication(), fDisplay(0), fClient(0)
+TGApplication::TGApplication(const char *appClassName, int *argc, char **argv, void *, int)
+   : TApplication(), fDisplay(nullptr), fClient(nullptr)
 {
    if (gApplication) {
       Error("TGApplication", "only one instance of TGApplication allowed");
@@ -179,8 +178,8 @@ void TGApplication::GetOptions(Int_t *argc, char **argv)
       if (!strcmp(argv[i], "-display")) {
          if (argv[i+1] && strlen(argv[i+1]) && argv[i+1][0] != '-') {
             fDisplay = StrDup(argv[i+1]);
-            argv[i]   = 0;
-            argv[i+1] = 0;
+            argv[i] = nullptr;
+            argv[i + 1] = nullptr;
             i++;
          }
       }

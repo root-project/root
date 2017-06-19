@@ -73,9 +73,7 @@ using namespace std;
 ClassImp(RooResolutionModel); 
 ;
 
-RooFormulaVar* RooResolutionModel::_identity = 0;
-
-
+RooFormulaVar *RooResolutionModel::_identity = nullptr;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Cleanup hook for RooSentinel atexit handler
@@ -83,18 +81,16 @@ RooFormulaVar* RooResolutionModel::_identity = 0;
 void RooResolutionModel::cleanup()
 {
   delete _identity ;
-  _identity = 0 ;
+  _identity = nullptr;
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor with convolution variable 'x'
 
-RooResolutionModel::RooResolutionModel(const char *name, const char *title, RooRealVar& _x) : 
-  RooAbsPdf(name,title), 
-  x("x","Dependent or convolution variable",this,_x),
-  _basisCode(0), _basis(0), 
-  _ownBasis(kFALSE)
+RooResolutionModel::RooResolutionModel(const char *name, const char *title, RooRealVar &_x)
+   : RooAbsPdf(name, title), x("x", "Dependent or convolution variable", this, _x), _basisCode(0), _basis(nullptr),
+     _ownBasis(kFALSE)
 {
   if (!_identity) {
     _identity = identity() ; 
@@ -106,11 +102,8 @@ RooResolutionModel::RooResolutionModel(const char *name, const char *title, RooR
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-RooResolutionModel::RooResolutionModel(const RooResolutionModel& other, const char* name) : 
-  RooAbsPdf(other,name), 
-  x("x",this,other.x),
-  _basisCode(other._basisCode), _basis(0),
-  _ownBasis(kFALSE)
+RooResolutionModel::RooResolutionModel(const RooResolutionModel &other, const char *name)
+   : RooAbsPdf(other, name), x("x", this, other.x), _basisCode(other._basisCode), _basis(nullptr), _ownBasis(kFALSE)
 {
   if (other._basis) {
     _basis = (RooFormulaVar*) other._basis->Clone() ;
@@ -175,13 +168,13 @@ RooResolutionModel* RooResolutionModel::convolution(RooFormulaVar* inBasis, RooA
 			  << ") convolution parameter of basis function and PDF don't match" << endl 
 			  << "basis->findServer(0) = " << inBasis->findServer(0) << endl 
 			  << "x.absArg()           = " << x.absArg() << endl ;
-    return 0 ;
+    return nullptr;
   }
   
   if (basisCode(inBasis->GetTitle())==0) {
     coutE(InputArguments) << "RooResolutionModel::convolution(" << GetName() << "," << this  
 			  << ") basis function '" << inBasis->GetTitle() << "' is not supported." << endl ;
-    return 0 ;
+    return nullptr;
   }
 
   TString newName(GetName()) ;
@@ -300,8 +293,8 @@ Double_t RooResolutionModel::getValV(const RooArgSet* nset) const
 Bool_t RooResolutionModel::redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t /*isRecursive*/) 
 {
   if (!_basis) {
-    _norm = 0 ;
-    return kFALSE ; 
+     _norm = nullptr;
+     return kFALSE; 
   } 
 
   RooFormulaVar* newBasis = (RooFormulaVar*) newServerList.find(_basis->GetName()) ;

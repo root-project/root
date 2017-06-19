@@ -67,7 +67,7 @@ TObjectSpy::~TObjectSpy()
 void TObjectSpy::RecursiveRemove(TObject *obj)
 {
    if (obj == fObj) {
-      fObj = 0;
+      fObj = nullptr;
       fResetMustCleanupBit = kFALSE;
    }
 }
@@ -134,7 +134,7 @@ TObjectRefSpy::~TObjectRefSpy()
 void TObjectRefSpy::RecursiveRemove(TObject *obj)
 {
    if (obj == fObj) {
-      fObj = 0;
+      fObj = nullptr;
       fResetMustCleanupBit = kFALSE;
    }
 }

@@ -28,7 +28,7 @@ A graph node object which can be added in a TGraphStruct.
 
 TGraphNode::TGraphNode(): TNamed(), TAttText()
 {
-   fGVNode = 0;
+   fGVNode = nullptr;
    fX      = 0;
    fY      = 0;
    fW      = 0;
@@ -41,7 +41,7 @@ TGraphNode::TGraphNode(): TNamed(), TAttText()
 TGraphNode::TGraphNode(const char *name,const char *title)
            :TNamed(name,title), TAttText()
 {
-   fGVNode = 0;
+   fGVNode = nullptr;
    fX      = 0;
    fY      = 0;
    fW      = 0;

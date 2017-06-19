@@ -91,8 +91,8 @@ ClassImp(Event);
 ClassImp(Track);
 ClassImp(HistogramManager);
 
-TClonesArray *Event::fgTracks = 0;
-TH1F *Event::fgHist = 0;
+TClonesArray *Event::fgTracks = nullptr;
+TH1F *Event::fgHist = nullptr;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create an Event object.
@@ -106,7 +106,7 @@ Event::Event() : fIsValid(kFALSE)
    fHighPt = new TRefArray;
    fMuons  = new TRefArray;
    fNtrack = 0;
-   fH      = 0;
+   fH = nullptr;
    Int_t i0,i1;
    for (i0 = 0; i0 < 4; i0++) {
       for (i1 = 0; i1 < 4; i1++) {
@@ -115,8 +115,8 @@ Event::Event() : fIsValid(kFALSE)
    }
    for (i0 = 0; i0 <10; i0++) fMeasures[i0] = 0;
    for (i0 = 0; i0 <20; i0++) fType[i0] = 0;
-   fClosestDistance = 0;
-   fEventName = 0;
+   fClosestDistance = nullptr;
+   fEventName = nullptr;
    fWebHistogram.SetAction(this);
 }
 
@@ -125,10 +125,13 @@ Event::Event() : fIsValid(kFALSE)
 Event::~Event()
 {
    Clear();
-   if (fH == fgHist) fgHist = 0;
-   delete fH; fH = 0;
-   delete fHighPt; fHighPt = 0;
-   delete fMuons;  fMuons = 0;
+   if (fH == fgHist) fgHist = nullptr;
+   delete fH;
+   fH = nullptr;
+   delete fHighPt;
+   fHighPt = nullptr;
+   delete fMuons;
+   fMuons = nullptr;
    delete [] fClosestDistance;
    if (fEventName) delete [] fEventName;
 }
@@ -227,8 +230,9 @@ void Event::Clear(Option_t * /*option*/)
 
 void Event::Reset(Option_t * /*option*/)
 {
-   delete fgTracks; fgTracks = 0;
-   fgHist   = 0;
+   delete fgTracks;
+   fgTracks = nullptr;
+   fgHist = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -254,7 +258,7 @@ void Event::SetMeasure(UChar_t which, Int_t what) {
 void Event::SetRandomVertex() {
    if (fClosestDistance) delete [] fClosestDistance;
    if (!fNvertex) {
-      fClosestDistance = 0;
+      fClosestDistance = nullptr;
       return;
    }
    fClosestDistance = new Double32_t[fNvertex];
@@ -295,7 +299,7 @@ Track::Track(const Track &orig) : TObject(orig),fTriggerBits(orig.fTriggerBits)
          fPointValue[i] = orig.fPointValue[i];
       }
    } else {
-      fPointValue = 0;
+      fPointValue = nullptr;
    }
    fValid  = orig.fValid;
 }
@@ -347,7 +351,7 @@ Track::Track(Float_t random) : TObject(),fTriggerBits(64)
          fPointValue[i] = i+1;
       }
    } else {
-      fPointValue = 0;
+      fPointValue = nullptr;
    }
    fValid  = Int_t(0.6+gRandom->Rndm());
 }
@@ -382,7 +386,7 @@ Track &Track::operator=(const Track &orig)
       fNsp = orig.fNsp;
       if (fNsp == 0) {
          delete [] fPointValue;
-         fPointValue = 0;
+         fPointValue = nullptr;
       } else {
          for(int i=0; i<fNsp; i++) {
             fPointValue[i] = orig.fPointValue[i];
@@ -399,7 +403,7 @@ Track &Track::operator=(const Track &orig)
             fPointValue[i] = orig.fPointValue[i];
          }
       } else {
-         fPointValue = 0;
+         fPointValue = nullptr;
       }
    }
    fValid  = orig.fValid;
@@ -463,7 +467,7 @@ void Track::Set(Float_t random)
       fNsp = newNsp;
       if (fNsp == 0) {
          delete [] fPointValue;
-         fPointValue = 0;
+         fPointValue = nullptr;
       } else {
          for(int i=0; i<fNsp; i++) {
             fPointValue[i] = i+1;
@@ -481,7 +485,7 @@ void Track::Set(Float_t random)
             fPointValue[i] = i+1;
          }
       } else {
-         fPointValue = 0;
+         fPointValue = nullptr;
       }
    }
    fValid  = Int_t(0.6+gRandom->Rndm());

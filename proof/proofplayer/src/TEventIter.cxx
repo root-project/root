@@ -54,19 +54,19 @@ ClassImp(TEventIter);
 
 TEventIter::TEventIter()
 {
-   fDSet  = 0;
-   fElem  = 0;
-   fFile  = 0;
-   fDir   = 0;
-   fSel   = 0;
+   fDSet = nullptr;
+   fElem = nullptr;
+   fFile = nullptr;
+   fDir = nullptr;
+   fSel = nullptr;
    fFirst = 0;
    fCur   = -1;
    fNum   = 0;
    fStop  = kFALSE;
    fOldBytesRead = 0;
-   fEventList = 0;
+   fEventList = nullptr;
    fEventListPos = 0;
-   fEntryList = 0;
+   fEntryList = nullptr;
    fEntryListPos = 0;
    fElemFirst = 0;
    fElemNum = 0;
@@ -89,16 +89,16 @@ TEventIter::TEventIter()
 TEventIter::TEventIter(TDSet *dset, TSelector *sel, Long64_t first, Long64_t num)
    : fDSet(dset), fSel(sel)
 {
-   fElem  = 0;
-   fFile  = 0;
-   fDir   = 0;
+   fElem = nullptr;
+   fFile = nullptr;
+   fDir = nullptr;
    fFirst = first;
    fCur   = -1;
    fNum   = num;
    fStop  = kFALSE;
-   fEventList = 0;
+   fEventList = nullptr;
    fEventListPos = 0;
-   fEntryList = 0;
+   fEntryList = nullptr;
    fEntryListPos = 0;
    fOldBytesRead = 0;
    fElemFirst = 0;
@@ -166,9 +166,10 @@ Int_t TEventIter::LoadDir()
    Int_t ret = 0;
 
    // Check Filename
-   if ( fFile == 0 || fFilename != fElem->GetFileName() ) {
-      fDir = 0;
-      delete fFile; fFile = 0;
+   if (fFile == nullptr || fFilename != fElem->GetFileName()) {
+      fDir = nullptr;
+      delete fFile;
+      fFile = nullptr;
 
       fFilename = fElem->GetFileName();
 
@@ -208,7 +209,7 @@ Int_t TEventIter::LoadDir()
    }
 
    // Check Directory
-   if ( fDir == 0 || fPath != fElem->GetDirectory() ) {
+   if (fDir == nullptr || fPath != fElem->GetDirectory()) {
       TDirectory *dirsave = gDirectory;
 
       fPath = fElem->GetDirectory();
@@ -256,9 +257,9 @@ ClassImp(TEventIterUnit);
 
 TEventIterUnit::TEventIterUnit()
 {
-   fDSet = 0;
-   fElem = 0;
-   fSel = 0;
+   fDSet = nullptr;
+   fElem = nullptr;
+   fSel = nullptr;
    fNum = 0;
    fCurrent = 0;
    fStop = kFALSE;
@@ -271,7 +272,7 @@ TEventIterUnit::TEventIterUnit()
 TEventIterUnit::TEventIterUnit(TDSet* dset, TSelector *sel, Long64_t num)
 {
    fDSet = dset;
-   fElem = 0;
+   fElem = nullptr;
    fSel = sel;
    fNum = num;
    fCurrent = 0;
@@ -298,7 +299,7 @@ Int_t TEventIterUnit::GetNextPacket(Long64_t &fst, Long64_t &num)
             fPackets->Add(fElem);
             PDB(kLoop, 2)
                Info("GetNextEvent", "packet added to list (sz: %d)", fPackets->GetSize());
-            fElem = 0;
+               fElem = nullptr;
          } else {
             SafeDelete(fElem);
          }
@@ -312,7 +313,7 @@ Int_t TEventIterUnit::GetNextPacket(Long64_t &fst, Long64_t &num)
          fPackets->Add(fElem);
          PDB(kLoop, 2)
             Info("GetNextEvent", "packet added to list (sz: %d)", fPackets->GetSize());
-         fElem = 0;
+            fElem = nullptr;
       } else {
          SafeDelete(fElem);
       }
@@ -345,7 +346,7 @@ Long64_t TEventIterUnit::GetNextEvent()
 
    if (fElem) fElem->ResetBit(TDSetElement::kNewPacket);
 
-   while (fElem == 0 || fCurrent == 0) {
+   while (fElem == nullptr || fCurrent == 0) {
 
       if (gPerfStats) {
          Long64_t totBytesWritten = TFile::GetFileBytesWritten();
@@ -361,7 +362,7 @@ Long64_t TEventIterUnit::GetNextEvent()
                fPackets->Add(fElem);
                PDB(kLoop, 2)
                   Info("GetNextEvent", "packet added to list (sz: %d)", fPackets->GetSize());
-               fElem = 0;
+                  fElem = nullptr;
             } else {
                SafeDelete(fElem);
             }
@@ -375,7 +376,7 @@ Long64_t TEventIterUnit::GetNextEvent()
             fPackets->Add(fElem);
             PDB(kLoop, 2)
                Info("GetNextEvent", "packet added to list (sz: %d)", fPackets->GetSize());
-            fElem = 0;
+               fElem = nullptr;
          } else {
             SafeDelete(fElem);
          }
@@ -411,9 +412,9 @@ ClassImp(TEventIterObj);
 
 TEventIterObj::TEventIterObj()
 {
-   fKeys     = 0;
-   fNextKey  = 0;
-   fObj      = 0;
+   fKeys = nullptr;
+   fNextKey = nullptr;
+   fObj = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -423,9 +424,9 @@ TEventIterObj::TEventIterObj(TDSet *dset, TSelector *sel, Long64_t first, Long64
    : TEventIter(dset,sel,first,num)
 {
    fClassName = dset->GetType();
-   fKeys     = 0;
-   fNextKey  = 0;
-   fObj      = 0;
+   fKeys = nullptr;
+   fNextKey = nullptr;
+   fObj = nullptr;
 }
 
 
@@ -448,7 +449,7 @@ Int_t TEventIterObj::GetNextPacket(Long64_t &first, Long64_t &num)
 
    if (fStop || fNum == 0) return -1;
 
-   while (fElem == 0 || fCur < fFirst-1) {
+   while (fElem == nullptr || fCur < fFirst - 1) {
 
       if (gPerfStats && fFile) {
          Long64_t bytesRead = fFile->GetBytesRead();
@@ -460,7 +461,7 @@ Int_t TEventIterObj::GetNextPacket(Long64_t &first, Long64_t &num)
          // Save it to the list of processed packets
          if (fPackets) {
             fPackets->Add(fElem);
-            fElem = 0;
+            fElem = nullptr;
          } else {
             SafeDelete(fElem);
          }
@@ -471,7 +472,7 @@ Int_t TEventIterObj::GetNextPacket(Long64_t &first, Long64_t &num)
          return -1;
       }
 
-      if ( fElem == 0 ) {
+      if (fElem == nullptr) {
          fNum = 0;
          return -1;
       }
@@ -563,7 +564,7 @@ Long64_t TEventIterObj::GetNextEvent()
 
    if (fElem) fElem->ResetBit(TDSetElement::kNewPacket);
 
-   while ( fElem == 0 || fElemNum == 0 || fCur < fFirst-1 ) {
+   while (fElem == nullptr || fElemNum == 0 || fCur < fFirst - 1) {
 
       if (gPerfStats && fFile) {
          Long64_t bytesRead = fFile->GetBytesRead();
@@ -575,7 +576,7 @@ Long64_t TEventIterObj::GetNextEvent()
          // Save it to the list of processed packets
          if (fPackets) {
             fPackets->Add(fElem);
-            fElem = 0;
+            fElem = nullptr;
          } else {
             SafeDelete(fElem);
          }
@@ -586,7 +587,7 @@ Long64_t TEventIterObj::GetNextEvent()
          return -1;
       }
 
-      if ( fElem == 0 ) {
+      if (fElem == nullptr) {
          fNum = 0;
          return -1;
       }
@@ -676,7 +677,7 @@ TEventIterTree::TFileTree::~TFileTree()
    // Avoid destroying the cache; must be placed before deleting the trees
    TTree *tree = (TTree *)fTrees->First();
    while (tree) {
-      fFile->SetCacheRead(0, tree);
+      fFile->SetCacheRead(nullptr, tree);
       tree = (TTree *)fTrees->After(tree);
    }
    SafeDelete(fTrees);
@@ -690,12 +691,12 @@ ClassImp(TEventIterTree);
 
 TEventIterTree::TEventIterTree()
 {
-   fTree = 0;
-   fTreeCache = 0;
+   fTree = nullptr;
+   fTreeCache = nullptr;
    fUseTreeCache = 1;
    fCacheSize = -1;
    fTreeCacheIsLearning = kTRUE;
-   fFileTrees = 0;
+   fFileTrees = nullptr;
    fUseParallelUnzip = 0;
    fDontCacheFiles = kFALSE;
    SetBit(TEventIter::kData);
@@ -708,8 +709,8 @@ TEventIterTree::TEventIterTree(TDSet *dset, TSelector *sel, Long64_t first, Long
    : TEventIter(dset,sel,first,num)
 {
    fTreeName = dset->GetObjName();
-   fTree = 0;
-   fTreeCache = 0;
+   fTree = nullptr;
+   fTreeCache = nullptr;
    fTreeCacheIsLearning = kTRUE;
    fFileTrees = new TList;
    fFileTrees->SetOwner();
@@ -762,7 +763,7 @@ TTree* TEventIterTree::GetTrees(TDSetElement *elem)
 {
    // Reset used flags
    TIter nxft(fFileTrees);
-   TFileTree *ft = 0;
+   TFileTree *ft = nullptr;
    while ((ft = (TFileTree *)nxft()))
       ft->fUsed = kFALSE;
 
@@ -801,7 +802,7 @@ TTree* TEventIterTree::GetTrees(TDSetElement *elem)
    TList *friends = elem->GetListOfFriends();
    if (friends) {
       TIter nxf(friends);
-      TDSetElement *dse = 0;
+      TDSetElement *dse = nullptr;
       while ((dse = (TDSetElement *) nxf())) {
          // The alias, if any, is in the element name options ('friend_alias=<alias>|')
          TUrl uf(dse->GetName());
@@ -823,7 +824,7 @@ TTree* TEventIterTree::GetTrees(TDSetElement *elem)
             TList *frnds = main->GetListOfFriends();
             if (frnds) {
                TIter xnxf(frnds);
-               TFriendElement *fe = 0;
+               TFriendElement *fe = nullptr;
                while ((fe = (TFriendElement *) xnxf())) {
                   if (fe->GetTree() == friendTree) {
                      addfriend = kFALSE;
@@ -838,7 +839,7 @@ TTree* TEventIterTree::GetTrees(TDSetElement *elem)
                   main->AddFriend(friendTree, alias);
             }
          } else {
-            return 0;
+            return nullptr;
          }
       }
    }
@@ -863,12 +864,12 @@ TTree* TEventIterTree::Load(TDSetElement *e, Bool_t &localfile, const char *objn
 {
    if (!e) {
       Error("Load", "undefined element");
-      return (TTree *)0;
+      return (TTree *)nullptr;
    }
 
    const char *fn = e->GetFileName();
    const char *dn = e->GetDirectory();
-   const char *tn = 0;
+   const char *tn = nullptr;
    if (objname && strlen(objname) > 0) {
       tn = objname;
    } else {
@@ -879,19 +880,19 @@ TTree* TEventIterTree::Load(TDSetElement *e, Bool_t &localfile, const char *objn
    PDB(kLoop,2)
       Info("Load","loading: fn:'%s' dn:'%s' tn:'%s'", fn, dn, tn);
 
-   TFile *f = 0;
+      TFile *f = nullptr;
 
-   // Check if the file is already open
-   TString names(fn);
-   TString name;
-   Ssiz_t from = 0;
-   TFileTree *ft = 0;
-   while (names.Tokenize(name,from,"|")) {
-      TString key(TUrl(name).GetFileAndOptions());
-      if ((ft = (TFileTree *) fFileTrees->FindObject(key.Data()))) {
-         f = ft->fFile;
-         break;
-      }
+      // Check if the file is already open
+      TString names(fn);
+      TString name;
+      Ssiz_t from = 0;
+      TFileTree *ft = nullptr;
+      while (names.Tokenize(name, from, "|")) {
+         TString key(TUrl(name).GetFileAndOptions());
+         if ((ft = (TFileTree *)fFileTrees->FindObject(key.Data()))) {
+            f = ft->fFile;
+            break;
+         }
    }
 
    // Open the file, if needed
@@ -910,7 +911,7 @@ TTree* TEventIterTree::Load(TDSetElement *e, Bool_t &localfile, const char *objn
       f = TFile::Open(fname);
       if (!f) {
          Error("Load","file '%s' ('%s') could not be open", fn, fname.Data());
-         return (TTree *)0;
+         return (TTree *)nullptr;
       }
 
 #if defined(R__MACOSX)
@@ -932,7 +933,7 @@ TTree* TEventIterTree::Load(TDSetElement *e, Bool_t &localfile, const char *objn
 
    // Check if the tree is already loaded
    if (ft && ft->fTrees->GetSize() > 0) {
-      TTree *t = 0;
+      TTree *t = nullptr;
       if (!strcmp(tn, "*"))
          t = (TTree *) ft->fTrees->First();
       else
@@ -947,7 +948,7 @@ TTree* TEventIterTree::Load(TDSetElement *e, Bool_t &localfile, const char *objn
    // Change dir, if required
    if (dn && !(dd = f->GetDirectory(dn))) {
       Error("Load","Cannot get to: %s", dn);
-      return (TTree *)0;
+      return (TTree *)nullptr;
    }
    PDB(kLoop,2)
       Info("Load","got directory: %s", dn);
@@ -964,7 +965,7 @@ TTree* TEventIterTree::Load(TDSetElement *e, Bool_t &localfile, const char *objn
       TRegexp re(sreg);
       if (dd->GetListOfKeys()) {
          TIter nxk(dd->GetListOfKeys());
-         TKey *k = 0;
+         TKey *k = nullptr;
          while ((k = (TKey *) nxk())) {
             if (!strcmp(k->GetClassName(), "TTree")) {
                TString kn(k->GetName());
@@ -979,9 +980,9 @@ TTree* TEventIterTree::Load(TDSetElement *e, Bool_t &localfile, const char *objn
 
    // Point to the key
    TKey *key = dd->GetKey(gSystem->BaseName(on));
-   if (key == 0) {
+   if (key == nullptr) {
       Error("Load", "Cannot find tree \"%s\" in %s", tn, fn);
-      return (TTree*)0;
+      return (TTree *)nullptr;
    }
 
    PDB(kLoop,2) Info("Load", "Reading: %s", tn);
@@ -989,9 +990,9 @@ TTree* TEventIterTree::Load(TDSetElement *e, Bool_t &localfile, const char *objn
    TTree *tree = dynamic_cast<TTree*> (key->ReadObj());
    dd->cd();
 
-   if (tree == 0) {
+   if (tree == nullptr) {
       Error("Load", "Cannot <dynamic_cast> obj to tree \"%s\"", tn);
-      return (TTree*)0;
+      return (TTree *)nullptr;
    }
 
    // Add track in the cache
@@ -1027,7 +1028,7 @@ Int_t TEventIterTree::GetNextPacket(Long64_t &first, Long64_t &num)
 
    SafeDelete(fElem);
 
-   while (fElem == 0 || fElemNum == 0 || fCur < fFirst-1) {
+   while (fElem == nullptr || fElemNum == 0 || fCur < fFirst - 1) {
 
       if (gPerfStats && fTree) {
          Long64_t totBytesRead = fTree->GetCurrentFile()->GetBytesRead();
@@ -1040,7 +1041,7 @@ Int_t TEventIterTree::GetNextPacket(Long64_t &first, Long64_t &num)
          // Save it to the list of processed packets
          if (fPackets) {
             fPackets->Add(fElem);
-            fElem = 0;
+            fElem = nullptr;
          } else {
             SafeDelete(fElem);
          }
@@ -1081,15 +1082,15 @@ Int_t TEventIterTree::GetNextPacket(Long64_t &first, Long64_t &num)
             // Could not open this element: ask for another one
             SafeDelete(fElem);
             // The current tree, if any, is not valid anymore
-            fTree = 0;
+            fTree = nullptr;
          }
       }
 
       // Validate values for this element
       fElemFirst = fElem->GetFirst();
       fElemNum = fElem->GetNum();
-      fEntryList = 0;
-      fEventList = 0;
+      fEntryList = nullptr;
+      fEventList = nullptr;
       if (fElem->GetEntryList()) {
          if (!(fEntryList = dynamic_cast<TEntryList *>(fElem->GetEntryList())))
             fEventList = dynamic_cast<TEventList *>(fElem->GetEntryList());
@@ -1133,7 +1134,7 @@ Int_t TEventIterTree::GetNextPacket(Long64_t &first, Long64_t &num)
       fSel->Init(fTree);
       fSel->Notify();
       TIter next(fSel->GetOutputList());
-      TEntryList *elist=0;
+      TEntryList *elist = nullptr;
       while ((elist=(TEntryList*)next())){
          if (elist->InheritsFrom(TEntryList::Class()))
             elist->SetTree(fTree->GetName(), fElem->GetFileName());
@@ -1199,7 +1200,7 @@ Long64_t TEventIterTree::GetNextEvent()
 
    if (fElem) fElem->ResetBit(TDSetElement::kNewPacket);
 
-   while ( fElem == 0 || fElemNum == 0 || fCur < fFirst-1 || corrupted) {
+   while (fElem == nullptr || fElemNum == 0 || fCur < fFirst - 1 || corrupted) {
 
       if (gPerfStats && fTree) {
          Long64_t totBytesRead = fTree->GetCurrentFile()->GetBytesRead();
@@ -1215,7 +1216,7 @@ Long64_t TEventIterTree::GetNextEvent()
          // Save it to the list of processed packets
          if (fPackets) {
             fPackets->Add(fElem);
-            fElem = 0;
+            fElem = nullptr;
          } else {
             SafeDelete(fElem);
          }
@@ -1257,7 +1258,7 @@ Long64_t TEventIterTree::GetNextEvent()
             // Could not open this element: ask for another one
             SafeDelete(fElem);
             // The current tree, if any, is not valid anymore
-            fTree = 0;
+            fTree = nullptr;
          }
       }
 
@@ -1265,8 +1266,7 @@ Long64_t TEventIterTree::GetNextEvent()
       fElemFirst = fElem->GetFirst();
       fElemNum = fElem->GetNum();
       fEntryList = dynamic_cast<TEntryList *>(fElem->GetEntryList());
-      fEventList = (fEntryList) ? (TEventList *)0
-                                : dynamic_cast<TEventList *>(fElem->GetEntryList());
+      fEventList = (fEntryList) ? (TEventList *)nullptr : dynamic_cast<TEventList *>(fElem->GetEntryList());
       fEntryListPos = fElemFirst;
       fEventListPos = 0;
       if (fEntryList)
@@ -1306,7 +1306,7 @@ Long64_t TEventIterTree::GetNextEvent()
       fSel->Init(fTree);
       fSel->Notify();
       TIter next(fSel->GetOutputList());
-      TEntryList *elist=0;
+      TEntryList *elist = nullptr;
       while ((elist=(TEntryList*)next())){
          if (elist->InheritsFrom(TEntryList::Class()))
             elist->SetTree(fTree->GetName(), fElem->GetFileName());

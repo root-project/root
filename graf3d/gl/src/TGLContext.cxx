@@ -48,12 +48,8 @@ Bool_t TGLContext::fgGlewInitDone = kFALSE;
 /// null).
 /// Makes thread switching.
 
-TGLContext::TGLContext(TGLWidget *wid, Bool_t shareDefault,
-                       const TGLContext *shareList)
-   : fDevice(wid),
-     fFromCtor(kTRUE),
-     fValid(kFALSE),
-     fIdentity(0)
+TGLContext::TGLContext(TGLWidget *wid, Bool_t shareDefault, const TGLContext *shareList)
+   : fDevice(wid), fFromCtor(kTRUE), fValid(kFALSE), fIdentity(nullptr)
 {
    if (shareDefault)
       shareList = TGLContextIdentity::GetDefaultContextAny();
@@ -468,8 +464,7 @@ TGLContextIdentity* TGLContextIdentity::fgDefaultIdentity = new TGLContextIdenti
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TGLContextIdentity::TGLContextIdentity():
-fFontManager(0), fCnt(0), fClientCnt(0)
+TGLContextIdentity::TGLContextIdentity() : fFontManager(nullptr), fCnt(0), fClientCnt(0)
 {
 }
 
@@ -538,7 +533,7 @@ void TGLContextIdentity::DeleteGLResources()
 TGLContextIdentity* TGLContextIdentity::GetCurrent()
 {
    TGLContext* ctx = TGLContext::GetCurrent();
-   return ctx ? ctx->GetIdentity() : 0;
+   return ctx ? ctx->GetIdentity() : nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -546,8 +541,7 @@ TGLContextIdentity* TGLContextIdentity::GetCurrent()
 
 TGLContextIdentity* TGLContextIdentity::GetDefaultIdentity()
 {
-   if (fgDefaultIdentity == 0)
-      fgDefaultIdentity = new TGLContextIdentity;
+   if (fgDefaultIdentity == nullptr) fgDefaultIdentity = new TGLContextIdentity;
    return fgDefaultIdentity;
 }
 
@@ -557,8 +551,7 @@ TGLContextIdentity* TGLContextIdentity::GetDefaultIdentity()
 
 TGLContext* TGLContextIdentity::GetDefaultContextAny()
 {
-   if (fgDefaultIdentity == 0 || fgDefaultIdentity->fCtxs.empty())
-      return 0;
+   if (fgDefaultIdentity == nullptr || fgDefaultIdentity->fCtxs.empty()) return nullptr;
    return fgDefaultIdentity->fCtxs.front();
 }
 
@@ -578,8 +571,7 @@ void TGLContextIdentity::CheckDestroy()
 {
    if (fCnt <= 0 && fClientCnt <= 0)
    {
-      if (this == fgDefaultIdentity)
-         fgDefaultIdentity = 0;
+      if (this == fgDefaultIdentity) fgDefaultIdentity = nullptr;
       delete this;
    }
 }

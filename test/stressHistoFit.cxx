@@ -153,7 +153,7 @@ enum cmpOpts {
 struct RefValue {
    const double* pars;
    const double  chi;
-   RefValue(const double* p = 0, const double c = 0.0): pars(p), chi(c) {};
+   RefValue(const double *p = nullptr, const double c = 0.0) : pars(p), chi(c){};
 };
 
 // Class that keeps a reference structure and some tolerance values to
@@ -165,8 +165,8 @@ public:
    int opts;
    double tolPar;
    double tolChi2;
-   CompareResult(int _opts = cmpPars, double _tolPar = 3, double _tolChi2 = 0.01):
-      refValue(0), opts(_opts), tolPar(_tolPar), tolChi2(_tolChi2) {};
+   CompareResult(int _opts = cmpPars, double _tolPar = 3, double _tolChi2 = 0.01)
+      : refValue(nullptr), opts(_opts), tolPar(_tolPar), tolChi2(_tolChi2){};
 
    CompareResult(CompareResult const& copy):
       refValue(copy.refValue), opts(copy.opts),
@@ -231,7 +231,7 @@ public:
    const char* opts;
    CompareResult cmpResult;
 
-   algoType(): type(0), algo(0), opts(0), cmpResult(0) {}
+   algoType() : type(nullptr), algo(nullptr), opts(nullptr), cmpResult(0) {}
 
    algoType(const char* s1, const char* s2, const char* s3,
             CompareResult _cmpResult):
@@ -569,9 +569,9 @@ int testFit(const char* str1, const char* str2, const char* str3,
 
    if ( opts & testOptErr )
    {
-      assert(TVirtualFitter::GetFitter() != 0 );
+      assert(TVirtualFitter::GetFitter() != nullptr);
       TBackCompFitter* fitter = dynamic_cast<TBackCompFitter*>( TVirtualFitter::GetFitter() );
-      assert(fitter != 0);
+      assert(fitter != nullptr);
       const ROOT::Fit::FitResult& fitResult = fitter->GetFitResult();
       if ( debug )
          printf("err: ");
@@ -681,13 +681,13 @@ int test1DObjects(vector< vector<algoType> >& listH,
    // To control if an individual test failed
    int status = 0;
 
-   TF1* func = 0;
-   TH1D* h1 = 0;
-   TH1D* h2 = 0;
-   THnSparse* s1 = 0;
-   TGraph* g1 = 0;
-   TGraphErrors* ge1 = 0;
-   TCanvas *c0 = 0, *c1 = 0, *c2 = 0, *c3 = 0;
+   TF1 *func = nullptr;
+   TH1D *h1 = nullptr;
+   TH1D *h2 = nullptr;
+   THnSparse *s1 = nullptr;
+   TGraph *g1 = nullptr;
+   TGraphErrors *ge1 = nullptr;
+   TCanvas *c0 = nullptr, *c1 = nullptr, *c2 = nullptr, *c3 = nullptr;
    for ( unsigned int j = 0; j < listOfFunctions.size(); ++j )
    {
       if ( func ) delete func;
@@ -788,13 +788,13 @@ int test2DObjects(vector< vector<algoType> >& listH,
    // To control if an individual test failed
    int status = 0;
 
-   TF2* func = 0;
-   TH2D* h1 = 0;
-   TH2D* h2 = 0;
-   THnSparse* s1 = 0;
-   TGraph2D* g1 = 0;
-   TGraph2DErrors* ge1 = 0;
-   TCanvas *c0 = 0, *c1 = 0, *c2 = 0, *c3 = 0;
+   TF2 *func = nullptr;
+   TH2D *h1 = nullptr;
+   TH2D *h2 = nullptr;
+   THnSparse *s1 = nullptr;
+   TGraph2D *g1 = nullptr;
+   TGraph2DErrors *ge1 = nullptr;
+   TCanvas *c0 = nullptr, *c1 = nullptr, *c2 = nullptr, *c3 = nullptr;
    for ( unsigned int h = 0; h < listOfFunctions.size(); ++h )
    {
       if ( func ) delete func;
@@ -991,9 +991,9 @@ int testUnBinnedFit(int n = 10000)
    listAlgos[1] = simplexAlgos;
 
    TreeWrapper tw;
-   TF1 * f1 = 0;
-   TF2 * f2 = 0;
-   TF1 * f4 = 0;
+   TF1 *f1 = nullptr;
+   TF2 *f2 = nullptr;
+   TF1 *f4 = nullptr;
 
    gTestIndex++;
    if (gSelectedTest == 0 || gSelectedTest == gTestIndex) {
@@ -1237,9 +1237,7 @@ int stressHistoFit()
 int main(int argc, char** argv)
 {
 
-   TApplication* theApp = 0;
-
-
+   TApplication *theApp = nullptr;
 
    Int_t  verbose     =      0;
    Int_t testNumber   =      0;
@@ -1297,7 +1295,7 @@ int main(int argc, char** argv)
    if ( __DRAW__ ) {
       theApp->Run();
       delete theApp;
-      theApp = 0;
+      theApp = nullptr;
    }
 
    return ret;

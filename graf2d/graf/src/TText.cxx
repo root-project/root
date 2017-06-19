@@ -57,7 +57,7 @@ End_Macro
 ////////////////////////////////////////////////////////////////////////////////
 /// Text default constructor.
 
-TText::TText(): TNamed(), TAttText(), fWcsTitle(NULL)
+TText::TText() : TNamed(), TAttText(), fWcsTitle(nullptr)
 {
    fX = 0.;
    fY = 0.;
@@ -66,7 +66,7 @@ TText::TText(): TNamed(), TAttText(), fWcsTitle(NULL)
 ////////////////////////////////////////////////////////////////////////////////
 /// Text normal constructor.
 
-TText::TText(Double_t x, Double_t y, const char *text) : TNamed("",text), TAttText(), fWcsTitle(NULL)
+TText::TText(Double_t x, Double_t y, const char *text) : TNamed("", text), TAttText(), fWcsTitle(nullptr)
 {
    fX = x;
    fY = y;
@@ -89,13 +89,13 @@ TText::TText(Double_t x, Double_t y, const wchar_t *text) : TAttText()
 
 TText::~TText()
 {
-   if (fWcsTitle != NULL) delete reinterpret_cast<std::wstring *>(fWcsTitle);
+   if (fWcsTitle != nullptr) delete reinterpret_cast<std::wstring *>(fWcsTitle);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor.
 
-TText::TText(const TText &text) : TNamed(text), TAttText(text), TAttBBox2D(text), fWcsTitle(NULL)
+TText::TText(const TText &text) : TNamed(text), TAttText(text), TAttBBox2D(text), fWcsTitle(nullptr)
 {
    fX = 0.;
    fY = 0.;
@@ -111,15 +111,15 @@ void TText::Copy(TObject &obj) const
    ((TText&)obj).fY = fY;
    TNamed::Copy(obj);
    TAttText::Copy(((TText&)obj));
-   if (((TText&)obj).fWcsTitle != NULL) {
-      if (fWcsTitle != NULL) {
+   if (((TText &)obj).fWcsTitle != nullptr) {
+      if (fWcsTitle != nullptr) {
          *reinterpret_cast<std::wstring*>(&((TText&)obj).fWcsTitle) = *reinterpret_cast<const std::wstring*>(&fWcsTitle);
       } else {
         delete reinterpret_cast<std::wstring*>(&((TText&)obj).fWcsTitle);
-        ((TText&)obj).fWcsTitle = NULL;
+        ((TText &)obj).fWcsTitle = nullptr;
       }
    } else {
-      if (fWcsTitle != NULL) {
+      if (fWcsTitle != nullptr) {
          ((TText&)(obj)).fWcsTitle = new std::wstring(*reinterpret_cast<const std::wstring*>(fWcsTitle));
       }
    }
@@ -130,10 +130,10 @@ void TText::Copy(TObject &obj) const
 
 const void *TText::GetWcsTitle(void) const
 {
-   if (fWcsTitle != NULL) {
+   if (fWcsTitle != nullptr) {
       return reinterpret_cast<std::wstring *>(fWcsTitle)->c_str();
    } else {
-      return NULL;
+      return nullptr;
    }
 }
 

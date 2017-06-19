@@ -126,7 +126,7 @@ THelix::THelix()
    fW        = 1.5E7;   // roughly the cyclon frequency of proton in AMS
    fRange[0] = 0.0;
    fRange[1] = 1.0;
-   fRotMat   = 0;
+   fRotMat = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -144,8 +144,8 @@ THelix::THelix(Double_t x,  Double_t y,  Double_t z,
    v[0] = vx;
    v[1] = vy;
    v[2] = vz;
-   Double_t *range = 0;
-   fRotMat   = 0;
+   Double_t *range = nullptr;
+   fRotMat = nullptr;
 
    SetHelix(p, v, w, range, kHelixZ);
    fOption = "";
@@ -165,7 +165,7 @@ THelix::THelix(Double_t * p, Double_t * v, Double_t w,
       r[0] = 0.0;        r[1] = 1.0;
    }
 
-   fRotMat   = 0;
+   fRotMat = nullptr;
    if ( axis ) {                        // specify axis
       SetHelix(p, v, w, r, rType, axis);
    } else {                             // default axis
@@ -235,7 +235,7 @@ THelix::~THelix()
 
 THelix::THelix(const THelix &helix) : TPolyLine3D(helix)
 {
-   fRotMat=0;
+   fRotMat = nullptr;
    ((THelix&)helix).THelix::Copy(*this);
 }
 

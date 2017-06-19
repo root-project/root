@@ -64,7 +64,7 @@ int compareResult(double v1, double v2, std::string s = "", double tol = 0.01) {
 
 double chi2FromFit(const TF1 * func )  {
    // return last chi2 obtained from Fit method function
-   assert(TVirtualFitter::GetFitter() != 0 );
+   assert(TVirtualFitter::GetFitter() != nullptr);
    return (TVirtualFitter::GetFitter()->Chisquare(func->GetNpar(), func->GetParameters() ) );
 }
 

@@ -146,7 +146,7 @@
 #include <TSystem.h>
 #include <TVirtualPad.h>
 
-TStyleManager *TStyleManager::fgStyleManager = 0;
+TStyleManager *TStyleManager::fgStyleManager = nullptr;
 
 ClassImp(TStyleManager);
 
@@ -391,8 +391,7 @@ enum EStyleManagerWid {
    kPSPDFPaperSizeY
 };
 
-const char *kFiletypes[] = { "ROOT macros", "Style_*.C",
-                               0,             0 };
+const char *kFiletypes[] = {"ROOT macros", "Style_*.C", nullptr, nullptr};
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor. Create the main window of the style manager.
@@ -404,11 +403,11 @@ TStyleManager::TStyleManager(const TGWindow *p) : TGMainFrame(p)
 
    // Initialization: no selected style, no preview, no signal/slots,
    //                 no selected object, no current macro file.
-   fCurSelStyle = 0;
-   fCurMacro = 0;
-   fCurPad = 0;
-   fCurObj = 0;
-   fPreviewWindow = 0;
+   fCurSelStyle = nullptr;
+   fCurMacro = nullptr;
+   fCurPad = nullptr;
+   fCurObj = nullptr;
+   fPreviewWindow = nullptr;
    fRealTimePreview = kFALSE;
    fCurTabNum = 0;
    fCurTabAxisNum = 0;
@@ -748,7 +747,7 @@ TStyleManager::~TStyleManager()
    }
    delete fTrashListLayout;
 
-   fgStyleManager = 0;
+   fgStyleManager = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -808,7 +807,7 @@ void TStyleManager::Show()
 void TStyleManager::Terminate()
 {
    delete fgStyleManager;
-   fgStyleManager = 0;
+   fgStyleManager = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -863,7 +862,7 @@ void TStyleManager::AddMenus(TGCompositeFrame *p)
 void TStyleManager::DoNew()
 {
    // Open a message box to allow the user to create a new style.
-   new TStyleDialog(this, fCurSelStyle, 1, 0);
+   new TStyleDialog(this, fCurSelStyle, 1, nullptr);
 
    // Create the list of available styles, and select:
    //    - the new style, if it has been created (Ok).
@@ -886,7 +885,7 @@ void TStyleManager::DoDelete()
    }
 
    delete fCurSelStyle;
-   fCurSelStyle = 0;
+   fCurSelStyle = nullptr;
 
    BuildList(gStyle);
 }
@@ -896,7 +895,7 @@ void TStyleManager::DoDelete()
 
 void TStyleManager::DoRename()
 {
-   new TStyleDialog(this, fCurSelStyle, 2, 0);
+   new TStyleDialog(this, fCurSelStyle, 2, nullptr);
 
    // Create the list of styles and select the previous selected style.
    BuildList(fCurSelStyle);
@@ -924,11 +923,11 @@ void TStyleManager::DoExport()
       new TGFileDialog(gClient->GetRoot(), this, kFDSave, fCurMacro);
       tmpFileName = fCurMacro->fFilename;
       if (tmpFileName) tmpBaseName = gSystem->BaseName(tmpFileName);
-                  else tmpBaseName = 0;
-   } while (tmpBaseName && (strstr(tmpBaseName, "Style_") != tmpBaseName)
-                        && (strstr(tmpBaseName, " ") != 0));
+                  else
+                     tmpBaseName = nullptr;
+   } while (tmpBaseName && (strstr(tmpBaseName, "Style_") != tmpBaseName) && (strstr(tmpBaseName, " ") != nullptr));
 
-   if (tmpBaseName != 0) {
+   if (tmpBaseName != nullptr) {
       // Export the style.
       fCurSelStyle->SaveSource(gSystem->UnixPathName(tmpFileName));
       fCurMacro->fFilename = StrDup(tmpBaseName);
@@ -1030,7 +1029,7 @@ void TStyleManager::CreateMacro()
    TString dir(".");
    fCurMacro->fFileTypes = kFiletypes;
    fCurMacro->fIniDir    = StrDup(dir);
-   fCurMacro->fFilename  = 0;
+   fCurMacro->fFilename = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4339,7 +4338,7 @@ void TStyleManager::DoImportMacro(Bool_t create)
          fCurMacro->fFilename = StrDup(newName.Data());
       }
       new TGFileDialog(gClient->GetRoot(), this, kFDOpen, fCurMacro);
-      if (fCurMacro->fFilename != 0) {
+      if (fCurMacro->fFilename != nullptr) {
          gROOT->ProcessLine(Form(".x %s", fCurMacro->fFilename));
          fCurMacro->fFilename = StrDup(gSystem->BaseName(fCurMacro->fFilename));
       }
@@ -4576,8 +4575,8 @@ void TStyleManager::DoChangeAxisTab(Int_t i)
 
 void TStyleManager::DoSelectNoCanvas()
 {
-   fCurPad = 0;
-   fCurObj = 0;
+   fCurPad = nullptr;
+   fCurObj = nullptr;
 
    if (fPreviewWindow && fPreviewWindow->IsMapped())
       DoPreview(kFALSE);
@@ -4894,7 +4893,7 @@ void TStyleManager::ModCanvasDefH()
 void TStyleManager::ModCanvasBorderMode()
 {
    Int_t i = kCanvasBorderModeSunken;
-   TGButton *but = 0;
+   TGButton *but = nullptr;
    while ((but = fCanvasBorderMode->Find(i)) && !but->IsDown())
       i++;
    fCurSelStyle->SetCanvasBorderMode(i - 1 - kCanvasBorderModeSunken);
@@ -5072,7 +5071,7 @@ void TStyleManager::ModPadBottomMargin()
 void TStyleManager::ModPadBorderMode()
 {
    Int_t i = kPadBorderModeSunken;
-   TGButton *but = 0;
+   TGButton *but = nullptr;
    while ((but = fPadBorderMode->Find(i)) && !but->IsDown())
       i++;
    fCurSelStyle->SetPadBorderMode(i - 1 - kPadBorderModeSunken);
@@ -5319,7 +5318,7 @@ void TStyleManager::ModPaletteEdit()
 void TStyleManager::ModFrameBorderMode()
 {
    Int_t i = kFrameBorderModeSunken;
-   TGButton *but = 0;
+   TGButton *but = nullptr;
    while ((but = fFrameBorderMode->Find(i)) && !but->IsDown())
       i++;
    fCurSelStyle->SetFrameBorderMode(i - 1 - kFrameBorderModeSunken);
@@ -6365,7 +6364,7 @@ void TStyleManager::ModTitlePS()
 void TStyleManager::ModColorModelPS()
 {
    Int_t i = kPSPDFColorModelPSRGB;
-   TGButton *but = 0;
+   TGButton *but = nullptr;
    while ((but = fColorModelPS->Find(i)) && !but->IsDown()) i++;
    fCurSelStyle->SetColorModelPS(i - kPSPDFColorModelPSRGB);
    DoEditor();

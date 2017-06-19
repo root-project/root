@@ -519,7 +519,7 @@ When using the options 2 or 3 above, the labels are automatically
 ~~~
 */
 
-TF1 *gF1=0;  //left for back compatibility (use TVirtualFitter::GetUserFunc instead)
+TF1 *gF1 = nullptr; // left for back compatibility (use TVirtualFitter::GetUserFunc instead)
 
 Int_t  TH1::fgBufferSize   = 1000;
 Bool_t TH1::fgAddDirectory = kTRUE;
@@ -547,18 +547,18 @@ ClassImp(TH1);
 
 TH1::TH1(): TNamed(), TAttLine(), TAttFill(), TAttMarker()
 {
-   fDirectory     = 0;
+   fDirectory = nullptr;
    fFunctions     = new TList;
    fNcells        = 0;
-   fIntegral      = 0;
-   fPainter       = 0;
+   fIntegral = nullptr;
+   fPainter = nullptr;
    fEntries       = 0;
    fNormFactor    = 0;
    fTsumw         = fTsumw2=fTsumwx=fTsumwx2=0;
    fMaximum       = -1111;
    fMinimum       = -1111;
    fBufferSize    = 0;
-   fBuffer        = 0;
+   fBuffer = nullptr;
    fBinStatErrOpt = kNormal;
    fXaxis.SetName("xaxis");
    fYaxis.SetName("yaxis");
@@ -578,12 +578,12 @@ TH1::~TH1()
       return;
    }
    delete[] fIntegral;
-   fIntegral = 0;
+   fIntegral = nullptr;
    delete[] fBuffer;
-   fBuffer = 0;
+   fBuffer = nullptr;
    if (fFunctions) {
       fFunctions->SetBit(kInvalidObject);
-      TObject* obj = 0;
+      TObject *obj = nullptr;
       //special logic to support the case where the same object is
       //added multiple times in fFunctions.
       //This case happens when the same object is added with different
@@ -597,17 +597,17 @@ TH1::~TH1()
             break;
          }
          delete obj;
-         obj = 0;
+         obj = nullptr;
       }
       delete fFunctions;
-      fFunctions = 0;
+      fFunctions = nullptr;
    }
    if (fDirectory) {
       fDirectory->Remove(this);
-      fDirectory = 0;
+      fDirectory = nullptr;
    }
    delete fPainter;
-   fPainter = 0;
+   fPainter = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -716,16 +716,16 @@ void TH1::Browse(TBrowser *b)
 
 void TH1::Build()
 {
-   fDirectory     = 0;
-   fPainter       = 0;
-   fIntegral      = 0;
+   fDirectory = nullptr;
+   fPainter = nullptr;
+   fIntegral = nullptr;
    fEntries       = 0;
    fNormFactor    = 0;
    fTsumw         = fTsumw2=fTsumwx=fTsumwx2=0;
    fMaximum       = -1111;
    fMinimum       = -1111;
    fBufferSize    = 0;
-   fBuffer        = 0;
+   fBuffer = nullptr;
    fBinStatErrOpt = kNormal;
    fXaxis.SetName("xaxis");
    fYaxis.SetName("yaxis");
@@ -799,7 +799,7 @@ Bool_t TH1::Add(TF1 *f1, Double_t c1, Option_t *option)
    Int_t bin, binx, biny, binz;
    Double_t cu=0;
    Double_t xx[3];
-   Double_t *params = 0;
+   Double_t *params = nullptr;
    f1->InitArgs(xx,params);
    for (binz = 0; binz < ncellsz; ++binz) {
       xx[2] = fZaxis.GetBinCenter(binz);
@@ -1246,7 +1246,7 @@ Int_t TH1::BufferEmpty(Int_t action)
       // this will avoid infinite recursion
       if (action > 0) {
          delete [] fBuffer;
-         fBuffer = 0;
+         fBuffer = nullptr;
          fBufferSize = 0;
       }
       return 0;
@@ -1258,8 +1258,8 @@ Int_t TH1::BufferEmpty(Int_t action)
       nbentries  = -nbentries;
       //  a reset might call BufferEmpty() giving an infinite recursion
       // Protect it by setting fBuffer = 0
-      fBuffer=0;
-       //do not reset the list of functions
+      fBuffer = nullptr;
+      // do not reset the list of functions
       Reset("ICES");
       fBuffer = buffer;
    }
@@ -1275,7 +1275,7 @@ Int_t TH1::BufferEmpty(Int_t action)
       if (fXaxis.GetXmax() <= fXaxis.GetXmin()) {
          THLimitsFinder::GetLimitsFinder()->FindGoodLimits(this,xmin,xmax);
       } else {
-         fBuffer = 0;
+         fBuffer = nullptr;
          Int_t keep = fBufferSize; fBufferSize = 0;
          if (xmin <  fXaxis.GetXmin()) ExtendAxis(xmin,&fXaxis);
          if (xmax >= fXaxis.GetXmax()) ExtendAxis(xmax,&fXaxis);
@@ -1287,14 +1287,15 @@ Int_t TH1::BufferEmpty(Int_t action)
    // call DoFillN which will not put entries in the buffer as FillN does
    // set fBuffer to zero to avoid re-emptying the buffer from functions called
    // by DoFillN (e.g Sumw2)
-   buffer = fBuffer; fBuffer = 0;
+   buffer = fBuffer;
+   fBuffer = nullptr;
    DoFillN(nbentries,&buffer[2],&buffer[1],2);
    fBuffer = buffer;
 
    // if action == 1 - delete the buffer
    if (action > 0) {
       delete [] fBuffer;
-      fBuffer = 0;
+      fBuffer = nullptr;
       fBufferSize = 0;}
    else {
       // if number of entries is consistent with buffer - set it negative to avoid
@@ -1329,7 +1330,8 @@ Int_t TH1::BufferFill(Double_t x, Double_t w)
       fBuffer[0] =  nbentries;
       if (fEntries > 0) {
          // set fBuffer to zero to avoid calling BufferEmpty in Reset
-         Double_t *buffer = fBuffer; fBuffer=0;
+         Double_t *buffer = fBuffer;
+         fBuffer = nullptr;
          Reset("ICES");  // do not reset list of functions
          fBuffer = buffer;
       }
@@ -2470,7 +2472,7 @@ void TH1::Copy(TObject &obj) const
       // with TNamed::Copy, to keep things correct, we need to
       // clean up its existing entries.
       ((TH1&)obj).fDirectory->Remove(&obj);
-      ((TH1&)obj).fDirectory = 0;
+      ((TH1 &)obj).fDirectory = nullptr;
    }
    TNamed::Copy(obj);
    ((TH1&)obj).fDimension = fDimension;
@@ -2483,9 +2485,9 @@ void TH1::Copy(TObject &obj) const
    ((TH1&)obj).fBufferSize= fBufferSize;
    // copy the Buffer
    // delete first a previously existing buffer
-   if (((TH1&)obj).fBuffer != 0)  {
+   if (((TH1 &)obj).fBuffer != nullptr) {
       delete []  ((TH1&)obj).fBuffer;
-      ((TH1&)obj).fBuffer = 0;
+      ((TH1 &)obj).fBuffer = nullptr;
    }
    if (fBuffer) {
       Double_t *buf = new Double_t[fBufferSize];
@@ -2531,8 +2533,7 @@ void TH1::Copy(TObject &obj) const
       gDirectory->Append(&obj);
       ((TH1&)obj).fDirectory = gDirectory;
    } else
-      ((TH1&)obj).fDirectory = 0;
-
+      ((TH1 &)obj).fDirectory = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2541,7 +2542,7 @@ void TH1::Copy(TObject &obj) const
 
 TObject* TH1::Clone(const char* newname) const
 {
-   TH1* obj = (TH1*)IsA()->GetNew()(0);
+   TH1 *obj = (TH1 *)IsA()->GetNew()(nullptr);
    Copy(*obj);
 
    //Now handle the parts that Copy doesn't do
@@ -2625,7 +2626,7 @@ Bool_t TH1::Divide(TF1 *f1, Double_t c1)
    Int_t bin, binx, biny, binz;
    Double_t cu, w;
    Double_t xx[3];
-   Double_t *params = 0;
+   Double_t *params = nullptr;
    f1->InitArgs(xx,params);
    for (binz = 0; binz < nz; ++binz) {
       xx[2] = fZaxis.GetBinCenter(binz);
@@ -2900,7 +2901,7 @@ TH1 *TH1::DrawCopy(Option_t *option, const char * name_postfix) const
    if (gPad && !opt.Contains("same")) gPad->Clear();
    TString newName = (name_postfix) ?  TString::Format("%s%s",GetName(),name_postfix) : "";
    TH1 *newth1 = (TH1 *)Clone(newName);
-   newth1->SetDirectory(0);
+   newth1->SetDirectory(nullptr);
    newth1->SetBit(kCanDelete);
    newth1->AppendPad(option);
    return newth1;
@@ -2926,7 +2927,7 @@ TH1 *TH1::DrawNormalized(Option_t *option, Double_t norm) const
    Double_t sum = GetSumOfWeights();
    if (sum == 0) {
       Error("DrawNormalized","Sum of weights is null. Cannot normalize histogram: %s",GetName());
-      return 0;
+      return nullptr;
    }
    Bool_t addStatus = TH1::AddDirectoryStatus();
    TH1::AddDirectory(kFALSE);
@@ -3094,7 +3095,7 @@ TH1* TH1::FFT(TH1* h_output, Option_t *option)
       delete [] kind;
    }
 
-   if (!fft) return 0;
+   if (!fft) return nullptr;
    Int_t in=0;
    for (Int_t binx = 1; binx<=ndim[0]; binx++) {
       for (Int_t biny=1; biny<=ndim[1]; biny++) {
@@ -3236,8 +3237,7 @@ void TH1::FillN(Int_t ntimes, const Double_t *x, const Double_t *w, Int_t stride
          else BufferFill(x[i], 1.);
       }
       // fill the remaining entries if the buffer has been deleted
-      if (i < ntimes && fBuffer==0)
-         DoFillN((ntimes-i)/stride,&x[i],&w[i],stride);
+      if (i < ntimes && fBuffer == nullptr) DoFillN((ntimes - i) / stride, &x[i], &w[i], stride);
       return;
    }
    // call internal method
@@ -3535,7 +3535,7 @@ Int_t TH1::FindLastBinAbove(Double_t threshold, Int_t axis) const
 TObject *TH1::FindObject(const char *name) const
 {
    if (fFunctions) return fFunctions->FindObject(name);
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3544,7 +3544,7 @@ TObject *TH1::FindObject(const char *name) const
 TObject *TH1::FindObject(const TObject *obj) const
 {
    if (fFunctions) return fFunctions->FindObject(obj);
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3563,9 +3563,9 @@ TFitResultPtr TH1::Fit(const char *fname ,Option_t *option ,Option_t *goption, D
 {
    char *linear;
    linear= (char*)strstr(fname, "++");
-   TF1 *f1=0;
-   TF2 *f2=0;
-   TF3 *f3=0;
+   TF1 *f1 = nullptr;
+   TF2 *f2 = nullptr;
+   TF3 *f3 = nullptr;
    Int_t ndim=GetDimension();
    if (linear){
       if (ndim<2){
@@ -4200,7 +4200,7 @@ Int_t TH1::GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum)
    Int_t i, ibin;
    Double_t *prob = (Double_t*)probSum;
    Int_t nq = nprobSum;
-   if (probSum == 0) {
+   if (probSum == nullptr) {
       nq = nbins+1;
       prob = new Double_t[nq];
       prob[0] = 0;
@@ -4802,7 +4802,7 @@ Bool_t TH1::IsBinUnderflow(Int_t bin, Int_t iaxis) const
 void TH1::LabelsDeflate(Option_t *ax)
 {
    Int_t iaxis = AxisChoice(ax);
-   TAxis *axis = 0;
+   TAxis *axis = nullptr;
    if (iaxis == 1) axis = GetXaxis();
    if (iaxis == 2) axis = GetYaxis();
    if (iaxis == 3) axis = GetZaxis();
@@ -4829,7 +4829,7 @@ void TH1::LabelsDeflate(Option_t *ax)
 
    TH1 *hold = (TH1*)IsA()->New();
    R__ASSERT(hold);
-   hold->SetDirectory(0);
+   hold->SetDirectory(nullptr);
    Copy(*hold);
 
    Bool_t timedisp = axis->GetTimeDisplay();
@@ -4872,14 +4872,14 @@ void TH1::LabelsDeflate(Option_t *ax)
 void TH1::LabelsInflate(Option_t *ax)
 {
    Int_t iaxis = AxisChoice(ax);
-   TAxis *axis = 0;
+   TAxis *axis = nullptr;
    if (iaxis == 1) axis = GetXaxis();
    if (iaxis == 2) axis = GetYaxis();
    if (iaxis == 3) axis = GetZaxis();
    if (!axis) return;
 
    TH1 *hold = (TH1*)IsA()->New();;
-   hold->SetDirectory(0);
+   hold->SetDirectory(nullptr);
    Copy(*hold);
 
    Bool_t timedisp = axis->GetTimeDisplay();
@@ -4933,7 +4933,7 @@ void TH1::LabelsInflate(Option_t *ax)
 void TH1::LabelsOption(Option_t *option, Option_t *ax)
 {
    Int_t iaxis = AxisChoice(ax);
-   TAxis *axis = 0;
+   TAxis *axis = nullptr;
    if (iaxis == 1) axis = GetXaxis();
    if (iaxis == 2) axis = GetYaxis();
    if (iaxis == 3) axis = GetZaxis();
@@ -5058,7 +5058,7 @@ void TH1::LabelsOption(Option_t *option, Option_t *ax)
    } else {
       //---alphabetic sort
       const UInt_t kUsed = 1<<18;
-      TObject *objk=0;
+      TObject *objk = nullptr;
       a[0] = 0;
       a[n+1] = n+1;
       for (i=1;i<=n;i++) {
@@ -5381,7 +5381,7 @@ Bool_t TH1::Multiply(TF1 *f1, Double_t c1)
 
    //   - Loop on bins (including underflows/overflows)
    Double_t xx[3];
-   Double_t *params = 0;
+   Double_t *params = nullptr;
    f1->InitArgs(xx,params);
 
    for (Int_t binz = 0; binz < nz; ++binz) {
@@ -5607,16 +5607,16 @@ TH1 *TH1::Rebin(Int_t ngroup, const char*newname, const Double_t *xbins)
    Double_t xmax  = fXaxis.GetXmax();
    if ((ngroup <= 0) || (ngroup > nbins)) {
       Error("Rebin", "Illegal value of ngroup=%d",ngroup);
-      return 0;
+      return nullptr;
    }
 
    if (fDimension > 1 || InheritsFrom(TProfile::Class())) {
       Error("Rebin", "Operation valid on 1-D histograms only");
-      return 0;
+      return nullptr;
    }
    if (!newname && xbins) {
       Error("Rebin","if xbins is specified, newname must be given");
-      return 0;
+      return nullptr;
    }
 
    Int_t newbins = nbins/ngroup;
@@ -5640,7 +5640,7 @@ TH1 *TH1::Rebin(Int_t ngroup, const char*newname, const Double_t *xbins)
    Double_t *oldBins = new Double_t[nbins+2];
    Int_t bin, i;
    for (bin=0;bin<nbins+2;bin++) oldBins[bin] = RetrieveBinContent(bin);
-   Double_t *oldErrors = 0;
+   Double_t *oldErrors = nullptr;
    if (fSumw2.fN != 0) {
       oldErrors = new Double_t[nbins+2];
       for (bin=0;bin<nbins+2;bin++) oldErrors[bin] = GetBinError(bin);
@@ -5851,7 +5851,7 @@ void TH1::ExtendAxis(Double_t x, TAxis *axis)
 
    //save a copy of this histogram
    TH1 *hold = (TH1*)IsA()->New();
-   hold->SetDirectory(0);
+   hold->SetDirectory(nullptr);
    Copy(*hold);
    //set new axis limits
    axis->SetLimits(xmin,xmax);
@@ -6250,7 +6250,7 @@ void TH1::Streamer(TBuffer &b)
       UInt_t R__s, R__c;
       Version_t R__v = b.ReadVersion(&R__s, &R__c);
       if (fDirectory) fDirectory->Remove(this);
-      fDirectory = 0;
+      fDirectory = nullptr;
       if (R__v > 2) {
          b.ReadClassBuffer(TH1::Class(), this, R__v, R__s, R__c);
 
@@ -6286,7 +6286,7 @@ void TH1::Streamer(TBuffer &b)
       b >> fTsumwx2;
       if (R__v < 2) {
          Float_t maximum, minimum, norm;
-         Float_t *contour=0;
+         Float_t *contour = nullptr;
          b >> maximum; fMaximum = maximum;
          b >> minimum; fMinimum = minimum;
          b >> norm;    fNormFactor = norm;
@@ -6422,7 +6422,9 @@ void TH1::Reset(Option_t *option)
    TString opt = option;
    opt.ToUpper();
    fSumw2.Reset();
-   if (fIntegral) {delete [] fIntegral; fIntegral = 0;}
+   if (fIntegral) {delete [] fIntegral;
+      fIntegral = nullptr;
+   }
 
    if (opt.Contains("M")) {
       SetMinimum();
@@ -6630,7 +6632,7 @@ void TH1::SavePrimitiveHelp(std::ostream &out, const char *hname, Option_t *opti
    if (fEntries != 0) {
       out<<"   "<<hname<<"->SetEntries("<<fEntries<<");"<<std::endl;
    }
-   if (fDirectory == 0) {
+   if (fDirectory == nullptr) {
       out<<"   "<<hname<<"->SetDirectory(0);"<<std::endl;
    }
    if (TestBit(kNoStats)) {
@@ -7274,8 +7276,8 @@ Double_t TH1::AndersonDarlingTest(const TH1 *h2, Double_t & advalue) const
    ROOT::Fit::BinData data1;
    ROOT::Fit::BinData data2;
 
-   ROOT::Fit::FillData(data1, this, 0);
-   ROOT::Fit::FillData(data2, h2, 0);
+   ROOT::Fit::FillData(data1, this, nullptr);
+   ROOT::Fit::FillData(data2, h2, nullptr);
 
    double pvalue;
    ROOT::Math::GoFTest::AndersonDarling2SamplesTest(data1,data2, pvalue,advalue);
@@ -7364,7 +7366,7 @@ Double_t TH1::KolmogorovTest(const TH1 *h2, Option_t *option) const
 
    Double_t prob = 0;
    TH1 *h1 = (TH1*)this;
-   if (h2 == 0) return 0;
+   if (h2 == nullptr) return 0;
    const TAxis *axis1 = h1->GetXaxis();
    const TAxis *axis2 = h2->GetXaxis();
    Int_t ncx1   = axis1->GetNbins();
@@ -7582,7 +7584,7 @@ void TH1::SetBuffer(Int_t buffersize, Option_t * /*option*/)
    if (fBuffer) {
       BufferEmpty();
       delete [] fBuffer;
-      fBuffer = 0;
+      fBuffer = nullptr;
    }
    if (buffersize <= 0) {
       fBufferSize = 0;
@@ -8422,18 +8424,18 @@ TH1* TH1::TransformHisto(TVirtualFFT *fft, TH1* h_output,  Option_t *option)
 {
    if (!fft ||  !fft->GetN() ) {
       ::Error("TransformHisto","Invalid FFT transform class");
-      return 0;
+      return nullptr;
    }
 
    if (fft->GetNdim()>2){
       ::Error("TransformHisto","Only 1d and 2D transform are supported");
-      return 0;
+      return nullptr;
    }
    Int_t binx,biny;
    TString opt = option;
    opt.ToUpper();
    Int_t *n = fft->GetN();
-   TH1 *hout=0;
+   TH1 *hout = nullptr;
    if (h_output) {
       hout = h_output;
    }
@@ -8444,7 +8446,7 @@ TH1* TH1::TransformHisto(TVirtualFFT *fft, TH1* h_output,  Option_t *option)
       else if (fft->GetNdim()==2)
          hout = new TH2D(name, name, n[0], 0, n[0], n[1], 0, n[1]);
    }
-   R__ASSERT(hout != 0);
+   R__ASSERT(hout != nullptr);
    TString type=fft->GetType();
    Int_t ind[2];
    if (opt.Contains("RE")){
@@ -8478,7 +8480,7 @@ TH1* TH1::TransformHisto(TVirtualFFT *fft, TH1* h_output,  Option_t *option)
          }
       } else {
          ::Error("TransformHisto","No complex numbers in the output");
-         return 0;
+         return nullptr;
       }
    }
    if (opt.Contains("MA")) {
@@ -8527,7 +8529,7 @@ TH1* TH1::TransformHisto(TVirtualFFT *fft, TH1* h_output,  Option_t *option)
          }
       } else {
          printf("Pure real output, no phase");
-         return 0;
+         return nullptr;
       }
    }
 
@@ -8695,7 +8697,7 @@ TH1C operator*(Double_t c1, const TH1C &h1)
 {
    TH1C hnew = h1;
    hnew.Scale(c1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -8706,7 +8708,7 @@ TH1C operator+(const TH1C &h1, const TH1C &h2)
 {
    TH1C hnew = h1;
    hnew.Add(&h2,1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -8717,7 +8719,7 @@ TH1C operator-(const TH1C &h1, const TH1C &h2)
 {
    TH1C hnew = h1;
    hnew.Add(&h2,-1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -8728,7 +8730,7 @@ TH1C operator*(const TH1C &h1, const TH1C &h2)
 {
    TH1C hnew = h1;
    hnew.Multiply(&h2);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -8739,7 +8741,7 @@ TH1C operator/(const TH1C &h1, const TH1C &h2)
 {
    TH1C hnew = h1;
    hnew.Divide(&h2);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -8876,7 +8878,7 @@ TH1S operator*(Double_t c1, const TH1S &h1)
 {
    TH1S hnew = h1;
    hnew.Scale(c1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -8887,7 +8889,7 @@ TH1S operator+(const TH1S &h1, const TH1S &h2)
 {
    TH1S hnew = h1;
    hnew.Add(&h2,1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -8898,7 +8900,7 @@ TH1S operator-(const TH1S &h1, const TH1S &h2)
 {
    TH1S hnew = h1;
    hnew.Add(&h2,-1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -8909,7 +8911,7 @@ TH1S operator*(const TH1S &h1, const TH1S &h2)
 {
    TH1S hnew = h1;
    hnew.Multiply(&h2);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -8920,7 +8922,7 @@ TH1S operator/(const TH1S &h1, const TH1S &h2)
 {
    TH1S hnew = h1;
    hnew.Divide(&h2);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -9058,7 +9060,7 @@ TH1I operator*(Double_t c1, const TH1I &h1)
 {
    TH1I hnew = h1;
    hnew.Scale(c1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -9069,7 +9071,7 @@ TH1I operator+(const TH1I &h1, const TH1I &h2)
 {
    TH1I hnew = h1;
    hnew.Add(&h2,1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -9080,7 +9082,7 @@ TH1I operator-(const TH1I &h1, const TH1I &h2)
 {
    TH1I hnew = h1;
    hnew.Add(&h2,-1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -9091,7 +9093,7 @@ TH1I operator*(const TH1I &h1, const TH1I &h2)
 {
    TH1I hnew = h1;
    hnew.Multiply(&h2);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -9102,7 +9104,7 @@ TH1I operator/(const TH1I &h1, const TH1I &h2)
 {
    TH1I hnew = h1;
    hnew.Divide(&h2);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -9237,7 +9239,7 @@ TH1F operator*(Double_t c1, const TH1F &h1)
 {
    TH1F hnew = h1;
    hnew.Scale(c1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -9248,7 +9250,7 @@ TH1F operator+(const TH1F &h1, const TH1F &h2)
 {
    TH1F hnew = h1;
    hnew.Add(&h2,1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -9259,7 +9261,7 @@ TH1F operator-(const TH1F &h1, const TH1F &h2)
 {
    TH1F hnew = h1;
    hnew.Add(&h2,-1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -9270,7 +9272,7 @@ TH1F operator*(const TH1F &h1, const TH1F &h2)
 {
    TH1F hnew = h1;
    hnew.Multiply(&h2);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -9281,7 +9283,7 @@ TH1F operator/(const TH1F &h1, const TH1F &h2)
 {
    TH1F hnew = h1;
    hnew.Divide(&h2);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -9416,7 +9418,7 @@ TH1D operator*(Double_t c1, const TH1D &h1)
 {
    TH1D hnew = h1;
    hnew.Scale(c1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -9427,7 +9429,7 @@ TH1D operator+(const TH1D &h1, const TH1D &h2)
 {
    TH1D hnew = h1;
    hnew.Add(&h2,1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -9438,7 +9440,7 @@ TH1D operator-(const TH1D &h1, const TH1D &h2)
 {
    TH1D hnew = h1;
    hnew.Add(&h2,-1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -9449,7 +9451,7 @@ TH1D operator*(const TH1D &h1, const TH1D &h2)
 {
    TH1D hnew = h1;
    hnew.Multiply(&h2);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -9460,7 +9462,7 @@ TH1D operator/(const TH1D &h1, const TH1D &h2)
 {
    TH1D hnew = h1;
    hnew.Divide(&h2);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 

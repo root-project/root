@@ -535,7 +535,7 @@ void stress6()
    for (i=0;i<nplanes;i++) {
       snprintf(dirname,50,"plane%d",i);
       TDirectory *cdplane = f.mkdir(dirname);
-      if (cdplane == 0) continue;
+      if (cdplane == nullptr) continue;
       cdplane->cd();
       // create counter histograms
       for (j=0;j<ncounters;j++) {
@@ -568,7 +568,7 @@ void stress6()
          TH1S *hnorth; gDirectory->GetObject(hname,hnorth);
          snprintf(hname,20,"h%d_%dS",i,j);
          TH1S *hsouth; gDirectory->GetObject(hname,hsouth);
-         if (hnorth == 0 || hsouth == 0) continue;
+         if (hnorth == nullptr || hsouth == nullptr) continue;
          hsumPlanes->Add(hnorth);
          hsumPlanes->Add(hsouth);
          delete hnorth; delete hsouth;
@@ -659,7 +659,7 @@ void stress7()
    // Fill hist helist looping on the eventlist in TTree::Draw
    ntuple->SetEventList(elist);
    ntuple->Draw("px>>helist","","goff");
-   ntuple->SetEventList(0);
+   ntuple->SetEventList(nullptr);
    TH1F *hcut;   gDirectory->GetObject("hcut",hcut);
    TH1F *helist; gDirectory->GetObject("helist",helist);
    Int_t n1 = (Int_t)hcut->GetEntries();
@@ -749,7 +749,7 @@ Int_t stress8read(Int_t nevent)
 {
    TFile *hfile = new TFile("Event.root");
    TTree *tree; hfile->GetObject("T",tree);
-   Event *event = 0;
+   Event *event = nullptr;
    tree->SetBranchAddress("event",&event);
    Int_t nentries = (Int_t)tree->GetEntries();
    Int_t nev = TMath::Max(nevent,nentries);
@@ -897,7 +897,7 @@ Int_t HistCompare(TH1 *h1, TH1 *h2)
 
 void stress9tree(TTree *tree, Int_t realTestNum)
 {
-   Event *event = 0;
+   Event *event = nullptr;
    tree->SetBranchAddress("event",&event);
    gROOT->cd();
    TDirectory *hfile = gDirectory;
@@ -1194,14 +1194,14 @@ void stress10()
    Bprint(10,"Create 10 files starting from Event.root");
 
    TFile *hfile = new TFile("Event.root");
-   if (hfile==0 || hfile->IsZombie()) {
+   if (hfile == nullptr || hfile->IsZombie()) {
       delete hfile;
       printf("FAILED\n");
       return;
    }
    TTree *tree; hfile->GetObject("T",tree);
 
-   Event *event = 0;
+   Event *event = nullptr;
    tree->SetBranchAddress("event",&event);
 
    // Create 10 clones of this tree
@@ -1304,7 +1304,7 @@ void stress12(Int_t testid)
       if (strcmp(key->GetClassName(),"TH1F")) continue; //may be a TList of TStreamerInfo
       h9  = (TH1F*)f9.Get(key->GetName());
       h11 = (TH1F*)f11.Get(key->GetName());
-      if (h9 == 0 || h11 == 0) continue;
+      if (h9 == nullptr || h11 == nullptr) continue;
       comp = HistCompare(h9,h11);
       if (comp == 0) ngood++;
    }
@@ -1388,7 +1388,7 @@ void stress15()
       return;
    }
    TTree *oldtree; oldfile->GetObject("T",oldtree);
-   Event *event   = 0;
+   Event *event = nullptr;
    oldtree->SetBranchAddress("event",&event);
    oldtree->SetBranchStatus("*",0);
    oldtree->SetBranchStatus("event",1);

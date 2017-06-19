@@ -105,7 +105,7 @@ const char *TLDAPAttribute::GetValue() const
       return ((TObjString*)fValues->At(fNCount++))->GetName();
    } else {
       fNCount = 0;
-      return 0;
+      return nullptr;
    }
 }
 
@@ -140,7 +140,7 @@ LDAPMod *TLDAPAttribute::GetMod(Int_t op)
       strlcpy(values[i], ((TObjString*)fValues->At(i))->GetName(),nch);
    }
 
-   values[iCount] = 0;
+   values[iCount] = nullptr;
    strlcpy(type, GetName(),strlen(GetName())+1);
    tmpMod->mod_values = values;
    tmpMod->mod_type = type;

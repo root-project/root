@@ -35,36 +35,34 @@ PyObject* PyROOT::TConstructorHolder::GetDocString()
 PyObject* PyROOT::TConstructorHolder::Call(
       ObjectProxy*& self, PyObject* args, PyObject* kwds, TCallContext* ctxt )
 {
-   if ( kwds != 0 && PyDict_Size( kwds ) ) {
+   if (kwds != nullptr && PyDict_Size(kwds)) {
       PyErr_SetString( PyExc_TypeError, "keyword arguments are not yet supported" );
-      return 0;
+      return nullptr;
    }
 
 // do not allow instantiation of abstract classes
    if ( Cppyy::IsAbstract( this->GetScope() ) ) {
       PyErr_Format( PyExc_TypeError,
          "%s is abstract and can not be instantiated", Cppyy::GetFinalName( this->GetScope() ).c_str() );
-      return 0;
+      return nullptr;
    }
 
 // setup as necessary
-   if ( ! this->Initialize( ctxt ) )
-      return 0;                              // important: 0, not Py_None
+   if (!this->Initialize(ctxt)) return nullptr; // important: 0, not Py_None
 
-// fetch self, verify, and put the arguments in usable order
-   if ( ! ( args = this->PreProcessArgs( self, args, kwds ) ) )
-      return 0;
+   // fetch self, verify, and put the arguments in usable order
+   if (!(args = this->PreProcessArgs(self, args, kwds))) return nullptr;
 
-// translate the arguments
+   // translate the arguments
    if ( ! this->ConvertAndSetArgs( args, ctxt ) ) {
       Py_DECREF( args );
-      return 0;
+      return nullptr;
    }
 
 // perform the call, 0 makes the other side allocate the memory
-   Long_t address = (Long_t)this->Execute( 0, 0, ctxt );
+   Long_t address = (Long_t)this->Execute(nullptr, 0, ctxt);
 
-// done with filtered args
+   // done with filtered args
    Py_DECREF( args );
 
 // return object if successful, lament if not
@@ -97,5 +95,5 @@ PyObject* PyROOT::TConstructorHolder::Call(
 
 // do not throw an exception, '0' might trigger the overload handler to choose a
 // different constructor, which if all fails will throw an exception
-   return 0;
+   return nullptr;
 }

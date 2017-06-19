@@ -97,7 +97,7 @@ struct KeySymPair {
 //______________________________________________________________________________
 void MapUnicharToKeySym(unichar key, char *buf, Int_t /*len*/, UInt_t &rootKeySym)
 {
-   assert(buf != 0 && "MapUnicharToKeySym, parameter 'buf' is null");
+   assert(buf != nullptr && "MapUnicharToKeySym, parameter 'buf' is null");
 
    static const KeySymPair<unichar, EKeySym> keyMap[] = {
         {NSEnterCharacter, kKey_Enter},
@@ -345,7 +345,7 @@ void ConvertEventLocationToROOTXY(NSEvent *cocoaEvent, NSView<X11Window> *eventV
 
    assert(cocoaEvent != nil && "ConvertEventLocationToROOTXY, parameter 'cocoaEvent' is nil");
    assert(eventView != nil && "ConvertEventLocationToROOTXY, parameter 'eventView' is nil");
-   assert(rootEvent != 0 && "ConvertEventLocationToROOTXY, parameter 'rootEvent' is null");
+   assert(rootEvent != nullptr && "ConvertEventLocationToROOTXY, parameter 'rootEvent' is null");
 
    if (![cocoaEvent window])
       NSLog(@"Error in ConvertEventLocationToROOTXY, window property"
@@ -458,7 +458,7 @@ Ancestry FindLowestCommonAncestor(NSView<X11Window> *view1, NSView<X11Window> *v
 
    assert(view1 != nil && "FindLowestCommonAncestor, parameter 'view1' is nil");
    assert(view2 != nil && "findLowestCommonAncestor, parameter 'view2' is nil");
-   assert(lca != 0 && "FindLowestCommonAncestor, parameter 'lca' is null");
+   assert(lca != nullptr && "FindLowestCommonAncestor, parameter 'lca' is null");
 
    if (!view1.fParentView)
       return kAAncestorIsRoot;
@@ -481,7 +481,7 @@ Ancestry FindRelation(NSView<X11Window> *view1, NSView<X11Window> *view2, NSView
 {
    assert(view1 != nil && "FindRelation, view1 parameter is nil");
    assert(view2 != nil && "FindRelation, view2 parameter is nil");
-   assert(lca != 0 && "FindRelation, lca parameter is nil");
+   assert(lca != nullptr && "FindRelation, lca parameter is nil");
 
    if (IsParent(view1, view2))
       return kAView1IsParent;
@@ -1042,7 +1042,7 @@ void GenerateCrossingEvents(EventQueue_t &queue, NSView<X11Window> *fromView, NS
       SendLeaveEventClosedRange(queue, fromView, (NSView<X11Window> *)[[fromView window] contentView],
                                 theEvent, detail);
    } else {
-      NSView<X11Window> *ancestor = 0;
+      NSView<X11Window> *ancestor = nullptr;
       const Ancestry rel = FindRelation(fromView, toView, &ancestor);
       if (rel == kAView1IsParent) {
          //Case 1.
@@ -1116,7 +1116,7 @@ void GenerateCrossingEventForGrabView(EventQueue_t &queue, NSView<X11Window> *fr
       if (wantsLeave && IsParent(grabView, fromView))
          SendLeaveEvent(queue, grabView, theEvent, kNotifyNormal);
    } else {
-      NSView<X11Window> *ancestor = 0;
+      NSView<X11Window> *ancestor = nullptr;
       FindRelation(fromView, toView, &ancestor);
 
       if (IsInBranch(nil, fromView, grabView)) {
@@ -1162,7 +1162,7 @@ void EventTranslator::GenerateConfigureNotifyEvent(NSView<X11Window> *view, cons
    newEvent.fHeight = newFrame.size.height;
 
    TGWindow * const window = gClient->GetWindowById(view.fID);
-   assert(window != 0 && "GenerateConfigureNotifyEvent, window was not found");
+   assert(window != nullptr && "GenerateConfigureNotifyEvent, window was not found");
    window->HandleEvent(&newEvent);
 }
 
@@ -1186,7 +1186,7 @@ void EventTranslator::GenerateExposeEvent(NSView<X11Window> *view, const NSRect 
    exposeEvent.fHeight = exposedRect.size.height;
 
    TGWindow * const window = gClient->GetWindowById(view.fID);
-   assert(window != 0 && "GenerateExposeEvent, window was not found");
+   assert(window != nullptr && "GenerateExposeEvent, window was not found");
    window->HandleEvent(&exposeEvent);
 }
 
@@ -1805,8 +1805,8 @@ void EventTranslator::FindButtonGrab(NSView<X11Window> *fromView, NSEvent *theEv
 
    const unsigned keyModifiers = Detail::GetKeyboardModifiersFromCocoaEvent(theEvent);
 
-   NSView<X11Window> *grabView = 0;
-   NSView<X11Window> *buttonPressView = 0;
+   NSView<X11Window> *grabView = nullptr;
+   NSView<X11Window> *buttonPressView = nullptr;
 
    for (NSView<X11Window> *view = fromView; view != nil; view = view.fParentView) {
       //Top-first view to receive button press event.

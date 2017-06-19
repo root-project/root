@@ -46,8 +46,8 @@ using namespace std ;
 
 void RooProofDriverSelector::SlaveBegin(TTree * /*tree*/) 
 {  
-  // Retrieve study pack 
-  _pkg=0 ;
+  // Retrieve study pack
+  _pkg = nullptr;
   if (fInput) { 
     TIterator* iter = fInput->MakeIterator() ;
     TObject* obj ;
@@ -58,9 +58,9 @@ void RooProofDriverSelector::SlaveBegin(TTree * /*tree*/)
       }
      }
   }
-  if (_pkg==0) {
-    cout << "RooProofDriverSelector::SlaveBegin() no RooStudyPackage found, aborting process" << endl ;
-    fStatus = kAbortProcess ;
+  if (_pkg == nullptr) {
+     cout << "RooProofDriverSelector::SlaveBegin() no RooStudyPackage found, aborting process" << endl;
+     fStatus = kAbortProcess;
   } else {
     cout << "workspace contents = " << endl ;
     _pkg->wspace().Print() ;

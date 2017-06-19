@@ -125,14 +125,13 @@ namespace {
   Bool_t fullRange(const RooRealProxy& x, const char* range, Bool_t phi)
   {
     if (phi) {
-      return range == 0 || strlen(range) == 0
-          ? std::fabs(x.max() - x.min() - TMath::TwoPi()) < 1.e-8
-          : std::fabs(x.max(range) - x.min(range) - TMath::TwoPi()) < 1.e-8;
+       return range == nullptr || strlen(range) == 0 ? std::fabs(x.max() - x.min() - TMath::TwoPi()) < 1.e-8
+                                                     : std::fabs(x.max(range) - x.min(range) - TMath::TwoPi()) < 1.e-8;
     }
 
-    return range == 0 || strlen(range) == 0
-        ? std::fabs(x.min() + 1.) < 1.e-8 && std::fabs(x.max() - 1.) < 1.e-8
-        : std::fabs(x.min(range) + 1.) < 1.e-8 && std::fabs(x.max(range) - 1.) < 1.e-8;
+    return range == nullptr || strlen(range) == 0
+              ? std::fabs(x.min() + 1.) < 1.e-8 && std::fabs(x.max() - 1.) < 1.e-8
+              : std::fabs(x.min(range) + 1.) < 1.e-8 && std::fabs(x.max(range) - 1.) < 1.e-8;
   }
 }
 

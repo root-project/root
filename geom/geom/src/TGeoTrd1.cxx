@@ -439,44 +439,40 @@ TGeoVolume *TGeoTrd1::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
    Int_t id;
    Double_t end = start+ndiv*step;
    switch (iaxis) {
-      case 1:
-         Warning("Divide", "dividing a Trd1 on X not implemented");
-         return 0;
-      case 2:
-         finder = new TGeoPatternY(voldiv, ndiv, start, end);
-         voldiv->SetFinder(finder);
-         finder->SetDivIndex(voldiv->GetNdaughters());
-         shape = new TGeoTrd1(fDx1, fDx2, step/2, fDz);
+   case 1: Warning("Divide", "dividing a Trd1 on X not implemented"); return nullptr;
+   case 2:
+      finder = new TGeoPatternY(voldiv, ndiv, start, end);
+      voldiv->SetFinder(finder);
+      finder->SetDivIndex(voldiv->GetNdaughters());
+      shape = new TGeoTrd1(fDx1, fDx2, step / 2, fDz);
+      vol = new TGeoVolume(divname, shape, voldiv->GetMedium());
+      vmulti = gGeoManager->MakeVolumeMulti(divname, voldiv->GetMedium());
+      vmulti->AddVolume(vol);
+      opt = "Y";
+      for (id = 0; id < ndiv; id++) {
+         voldiv->AddNodeOffset(vol, id, start + step / 2 + id * step, opt.Data());
+         ((TGeoNodeOffset *)voldiv->GetNodes()->At(voldiv->GetNdaughters() - 1))->SetFinder(finder);
+      }
+      return vmulti;
+   case 3:
+      finder = new TGeoPatternZ(voldiv, ndiv, start, end);
+      voldiv->SetFinder(finder);
+      finder->SetDivIndex(voldiv->GetNdaughters());
+      vmulti = gGeoManager->MakeVolumeMulti(divname, voldiv->GetMedium());
+      for (id = 0; id < ndiv; id++) {
+         zmin = start + id * step;
+         zmax = start + (id + 1) * step;
+         dx1n = 0.5 * (fDx1 * (fDz - zmin) + fDx2 * (fDz + zmin)) / fDz;
+         dx2n = 0.5 * (fDx1 * (fDz - zmax) + fDx2 * (fDz + zmax)) / fDz;
+         shape = new TGeoTrd1(dx1n, dx2n, fDy, step / 2.);
          vol = new TGeoVolume(divname, shape, voldiv->GetMedium());
-         vmulti = gGeoManager->MakeVolumeMulti(divname, voldiv->GetMedium());
          vmulti->AddVolume(vol);
-         opt = "Y";
-         for (id=0; id<ndiv; id++) {
-            voldiv->AddNodeOffset(vol, id, start+step/2+id*step, opt.Data());
-            ((TGeoNodeOffset*)voldiv->GetNodes()->At(voldiv->GetNdaughters()-1))->SetFinder(finder);
-         }
-         return vmulti;
-      case 3:
-         finder = new TGeoPatternZ(voldiv, ndiv, start, end);
-         voldiv->SetFinder(finder);
-         finder->SetDivIndex(voldiv->GetNdaughters());
-         vmulti = gGeoManager->MakeVolumeMulti(divname, voldiv->GetMedium());
-         for (id=0; id<ndiv; id++) {
-            zmin = start+id*step;
-            zmax = start+(id+1)*step;
-            dx1n = 0.5*(fDx1*(fDz-zmin)+fDx2*(fDz+zmin))/fDz;
-            dx2n = 0.5*(fDx1*(fDz-zmax)+fDx2*(fDz+zmax))/fDz;
-            shape = new TGeoTrd1(dx1n, dx2n, fDy, step/2.);
-            vol = new TGeoVolume(divname, shape, voldiv->GetMedium());
-            vmulti->AddVolume(vol);
-            opt = "Z";
-            voldiv->AddNodeOffset(vol, id, start+step/2+id*step, opt.Data());
-            ((TGeoNodeOffset*)voldiv->GetNodes()->At(voldiv->GetNdaughters()-1))->SetFinder(finder);
-         }
-         return vmulti;
-      default:
-         Error("Divide", "Wrong axis type for division");
-         return 0;
+         opt = "Z";
+         voldiv->AddNodeOffset(vol, id, start + step / 2 + id * step, opt.Data());
+         ((TGeoNodeOffset *)voldiv->GetNodes()->At(voldiv->GetNdaughters() - 1))->SetFinder(finder);
+      }
+      return vmulti;
+   default: Error("Divide", "Wrong axis type for division"); return nullptr;
    }
 }
 
@@ -579,10 +575,10 @@ Int_t TGeoTrd1::GetFittingBox(const TGeoBBox *parambox, TGeoMatrix *mat, Double_
 
 TGeoShape *TGeoTrd1::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/) const
 {
-   if (!TestShapeBit(kGeoRunTimeShape)) return 0;
+   if (!TestShapeBit(kGeoRunTimeShape)) return nullptr;
    if (!mother->TestShapeBit(kGeoTrd1)) {
       Error("GetMakeRuntimeShape", "invalid mother");
-      return 0;
+      return nullptr;
    }
    Double_t dx1, dx2, dy, dz;
    if (fDx1<0) dx1=((TGeoTrd1*)mother)->GetDx1();

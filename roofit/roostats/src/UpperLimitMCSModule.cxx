@@ -45,10 +45,11 @@ using namespace RooStats ;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-UpperLimitMCSModule::UpperLimitMCSModule(const RooArgSet* poi, Double_t CL) :
-  RooAbsMCStudyModule(Form("UpperLimitMCSModule_%s",poi->first()->GetName()),Form("UpperLimitMCSModule_%s",poi->first()->GetName())),
-  _parName(poi->first()->GetName()),
-  _plc(0),_ul(0),_poi(0), _data(0),_cl(CL), _model(0)
+UpperLimitMCSModule::UpperLimitMCSModule(const RooArgSet *poi, Double_t CL)
+   : RooAbsMCStudyModule(Form("UpperLimitMCSModule_%s", poi->first()->GetName()),
+                         Form("UpperLimitMCSModule_%s", poi->first()->GetName())),
+     _parName(poi->first()->GetName()), _plc(nullptr), _ul(nullptr), _poi(nullptr), _data(nullptr), _cl(CL),
+     _model(nullptr)
 {
   std::cout<<"RooUpperLimitConstructor ParName:"<<_parName<<std::endl;
   std::cout<<"RooUpperLimitConstructor CL:"<<_cl<<std::endl;
@@ -61,10 +62,9 @@ UpperLimitMCSModule::UpperLimitMCSModule(const RooArgSet* poi, Double_t CL) :
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-UpperLimitMCSModule::UpperLimitMCSModule(const UpperLimitMCSModule& other) :
-  RooAbsMCStudyModule(other),
-  _parName(other._poi->first()->GetName()),
-  _plc(0),_ul(0),_poi(other._poi), _data(0), _cl(other._cl), _model(other._model)
+UpperLimitMCSModule::UpperLimitMCSModule(const UpperLimitMCSModule &other)
+   : RooAbsMCStudyModule(other), _parName(other._poi->first()->GetName()), _plc(nullptr), _ul(nullptr),
+     _poi(other._poi), _data(nullptr), _cl(other._cl), _model(other._model)
 {
 }
 

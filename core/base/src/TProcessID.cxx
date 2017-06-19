@@ -51,10 +51,10 @@ of TUUIDs.
 #include "TVirtualMutex.h"
 #include "TError.h"
 
-TObjArray  *TProcessID::fgPIDs   = 0; //pointer to the list of TProcessID
-TProcessID *TProcessID::fgPID    = 0; //pointer to the TProcessID of the current session
+TObjArray *TProcessID::fgPIDs = nullptr; // pointer to the list of TProcessID
+TProcessID *TProcessID::fgPID = nullptr; // pointer to the TProcessID of the current session
 UInt_t      TProcessID::fgNumber = 0; //Current referenced object instance count
-TExMap     *TProcessID::fgObjPIDs= 0; //Table (pointer,pids)
+TExMap *TProcessID::fgObjPIDs = nullptr; // Table (pointer,pids)
 ClassImp(TProcessID);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -192,7 +192,7 @@ void TProcessID::Cleanup()
    fgPIDs->Delete();
    gROOT->GetListOfCleanups()->Remove(fgPIDs);
    delete fgPIDs;
-   fgPIDs = 0;
+   fgPIDs = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -208,7 +208,7 @@ void TProcessID::Clear(Option_t *)
          if (obj) {
             ULong64_t hash = Void_Hash(obj);
             fgObjPIDs->Remove(hash,(Long64_t)obj);
-            (*fObjects)[i] = 0;
+            (*fObjects)[i] = nullptr;
          }
       }
    }
@@ -253,7 +253,7 @@ TProcessID *TProcessID::GetProcessWithUID(UInt_t uid, const void *obj)
    Int_t pid = (uid>>24)&0xff;
    if (pid==0xff) {
       // Look up the pid in the table (pointer,pid)
-      if (fgObjPIDs==0) return 0;
+      if (fgObjPIDs == nullptr) return nullptr;
       ULong_t hash = Void_Hash(obj);
       pid = fgObjPIDs->GetValue(hash,(Long_t)obj);
    }
@@ -303,7 +303,7 @@ TObject *TProcessID::GetObjectWithID(UInt_t uidd)
 {
    Int_t uid = uidd & 0xffffff;  //take only the 24 lower bits
 
-   if (fObjects==0 || uid >= fObjects->GetSize()) return 0;
+   if (fObjects == nullptr || uid >= fObjects->GetSize()) return nullptr;
    return fObjects->UncheckedAt(uid);
 }
 
@@ -331,7 +331,7 @@ Bool_t TProcessID::IsValid(TProcessID *pid)
 {
    R__LOCKGUARD(gROOTMutex);
 
-   if (fgPIDs==0) return kFALSE;
+   if (fgPIDs == nullptr) return kFALSE;
    if (fgPIDs->IndexOf(pid) >= 0) return kTRUE;
    if (pid == (TProcessID*)gROOT->GetUUIDs())  return kTRUE;
    return kFALSE;
@@ -355,7 +355,7 @@ void TProcessID::PutObjectWithID(TObject *obj, UInt_t uid)
       // We have more than 255 pids we need to store this
       // pointer in the table(pointer,pid) since there is no
       // more space in fUniqueID
-      if (fgObjPIDs==0) fgObjPIDs = new TExMap;
+      if (fgObjPIDs == nullptr) fgObjPIDs = new TExMap;
       ULong_t hash = Void_Hash(obj);
 
       // We use operator() rather than Add() because
@@ -380,7 +380,7 @@ void TProcessID::RecursiveRemove(TObject *obj)
          ULong64_t hash = Void_Hash(obj);
          fgObjPIDs->Remove(hash,(Long64_t)obj);
       }
-      (*fObjects)[uid] = 0; // Avoid recalculation of fLast (compared to ->RemoveAt(uid))
+      (*fObjects)[uid] = nullptr; // Avoid recalculation of fLast (compared to ->RemoveAt(uid))
    }
 }
 

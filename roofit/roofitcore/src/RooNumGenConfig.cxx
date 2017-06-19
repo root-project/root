@@ -42,8 +42,7 @@ using namespace std;
 ClassImp(RooNumGenConfig);
 ;
 
-RooNumGenConfig* RooNumGenConfig::_default = 0 ;
-
+RooNumGenConfig *RooNumGenConfig::_default = nullptr;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Function called by atexit() handler installed by RooSentinel to
@@ -53,7 +52,7 @@ void RooNumGenConfig::cleanup()
 {
   if (_default) {
     delete _default ;
-    _default = 0 ;
+    _default = nullptr;
   }
 }
 
@@ -65,9 +64,9 @@ void RooNumGenConfig::cleanup()
 RooNumGenConfig& RooNumGenConfig::defaultConfig() 
 {
   // Instantiate object if it doesn't exist yet
-  if (_default==0) {
-    _default = new RooNumGenConfig ;    
-    RooNumGenFactory::instance() ;
+  if (_default == nullptr) {
+     _default = new RooNumGenConfig;
+     RooNumGenFactory::instance();
   }
   return *_default ;
 }
@@ -318,8 +317,9 @@ const RooArgSet& RooNumGenConfig::getConfigSection(const char* name) const
   static RooArgSet dummy ;
   RooArgSet* config = (RooArgSet*) _configSets.FindObject(name) ;
   if (!config) {
-    oocoutE((TObject*)0,InputArguments) << "RooNumGenConfig::getIntegrator: ERROR: no configuration stored for integrator '" << name << "'" << endl ;
-    return dummy ;
+     oocoutE((TObject *)nullptr, InputArguments)
+        << "RooNumGenConfig::getIntegrator: ERROR: no configuration stored for integrator '" << name << "'" << endl;
+     return dummy;
   }
   return *config ;
 }

@@ -49,9 +49,8 @@ enum EStyleDialogWid {
 /// by 'cur' and the parameter 'mode' specify the mode:
 ///    1 = copy  |  2 = rename  |  3 = import from canvas.
 
-TStyleDialog::TStyleDialog(TStyleManager *sm, TStyle *cur, Int_t mode,
-                              TVirtualPad *currentPad)
-                     : TGTransientFrame(0, sm)
+TStyleDialog::TStyleDialog(TStyleManager *sm, TStyle *cur, Int_t mode, TVirtualPad *currentPad)
+   : TGTransientFrame(nullptr, sm)
 {
    fStyleManager = sm;
 
@@ -302,7 +301,7 @@ void TStyleDialog::DoUpdate()
       return;
    }
 
-   if (strstr(fName->GetText(), " ") != 0) {
+   if (strstr(fName->GetText(), " ") != nullptr) {
       fWarnLabel->SetText("That name contains some spaces");
       fOK->SetEnabled(kFALSE);
       return;

@@ -28,8 +28,7 @@ ClassImp(TEveJetConeGL);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TEveJetConeGL::TEveJetConeGL() :
-   TGLObject(), fC(0)
+TEveJetConeGL::TEveJetConeGL() : TGLObject(), fC(nullptr)
 {
    // fDLCache = kFALSE; // Disable display list.
 }
@@ -179,8 +178,7 @@ ClassImp(TEveJetConeProjectedGL);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TEveJetConeProjectedGL::TEveJetConeProjectedGL() :
-   TEveJetConeGL(), fM(0)
+TEveJetConeProjectedGL::TEveJetConeProjectedGL() : TEveJetConeGL(), fM(nullptr)
 {
    // fDLCache = kFALSE; // Disable display list.
 }
@@ -192,7 +190,7 @@ Bool_t TEveJetConeProjectedGL::SetModel(TObject* obj, const Option_t* /*opt*/)
 {
    fM = SetModelDynCast<TEveJetConeProjected>(obj);
    fC = dynamic_cast<TEveJetCone*>(fM->GetProjectable());
-   return fC != 0;
+   return fC != nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

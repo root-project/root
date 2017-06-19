@@ -38,7 +38,7 @@ errorhandler function. By default DefaultErrorHandler() is used.
 // Mutex for error and error format protection
 // (exported to be used for similar cases in other classes)
 
-TVirtualMutex *gErrorMutex = 0;
+TVirtualMutex *gErrorMutex = nullptr;
 
 Int_t  gErrorIgnoreLevel     = kUnset;
 Int_t  gErrorAbortLevel      = kSysError+1;
@@ -50,7 +50,7 @@ const char *kCheckMsg  = "%s not true at line %d of `%s'";
 // Integrate with crash reporter.
 #ifdef __APPLE__
 extern "C" {
-static const char *__crashreporter_info__ = 0;
+static const char *__crashreporter_info__ = nullptr;
 asm(".desc ___crashreporter_info__, 0x10");
 }
 #endif
@@ -64,7 +64,7 @@ static ErrorHandlerFunc_t gErrorHandler = DefaultErrorHandler;
 static void DebugPrint(const char *fmt, ...)
 {
    TTHREAD_TLS(Int_t) buf_size = 2048;
-   TTHREAD_TLS(char*) buf = 0;
+   TTHREAD_TLS(char *) buf = nullptr;
 
    va_list ap;
    va_start(ap, fmt);
@@ -82,7 +82,7 @@ again:
       else
          buf_size = n+1;
       delete [] buf;
-      buf = 0;
+      buf = nullptr;
       va_end(ap);
       va_start(ap, fmt);
       goto again;
@@ -150,7 +150,7 @@ void DefaultErrorHandler(Int_t level, Bool_t abort_bool, const char *location, c
    if (level < gErrorIgnoreLevel)
       return;
 
-   const char *type = 0;
+   const char *type = nullptr;
 
    if (level >= kInfo)
       type = "Info";
@@ -202,7 +202,7 @@ void DefaultErrorHandler(Int_t level, Bool_t abort_bool, const char *location, c
 void ErrorHandler(Int_t level, const char *location, const char *fmt, va_list ap)
 {
    TTHREAD_TLS(Int_t) buf_size(256);
-   TTHREAD_TLS(char*) buf_storage(0);
+   TTHREAD_TLS(char *) buf_storage(nullptr);
 
    char small_buf[256];
    char *buf = buf_storage ? buf_storage : small_buf;
@@ -228,7 +228,7 @@ again:
       else
          buf_size = n+1;
       if (buf != &(small_buf[0])) delete [] buf;
-      buf = 0;
+      buf = nullptr;
       va_end(ap);
       R__VA_COPY(ap, sap);
       vc = 1;

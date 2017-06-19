@@ -33,7 +33,7 @@ void TMVA::mvaweights( TString fin , Bool_t useTMVAStyle )
    const Int_t width = 500;   // size of canvas
 
    // this defines how many canvases we need
-   TCanvas *c = 0;
+   TCanvas *c = nullptr;
 
    // counter variables
    Int_t countCanvas = 0;

@@ -27,7 +27,7 @@ class Base {};
 class Klass: public Base {
 public:
    Klass() { fKlass = this; }
-   ~Klass() { fKlass = 0; }
+   ~Klass() { fKlass = nullptr; }
    Klass* get() const { return fKlass; }
    static const int first_klf = 30;
    static const int last_klf = 130;
@@ -151,7 +151,7 @@ public:
       fNames.push_back("NestedStatements");
    }
 
-   bool run(Int_t ntimes = 10, const char* runTests = 0);
+   bool run(Int_t ntimes = 10, const char *runTests = nullptr);
 
    bool stressFuncCall();
 
@@ -207,7 +207,7 @@ bool InterpreterStress::stressFuncCall() {
 void InterpreterStress::prepareSTLDict() {
    // Remove AutoDict
    void* dir = gSystem->OpenDirectory(gSystem->pwd());
-   const char* name = 0;
+   const char *name = nullptr;
    while ((name = gSystem->GetDirEntry(dir))) {
       if (!strncmp(name, "AutoDict_", 9)) {
          gSystem->Unlink(name);
@@ -434,7 +434,8 @@ bool InterpreterStress::run(Int_t ntimes /*= 10*/, const char* runTests /*= 0*/)
    return success;
 }
 
-bool stressInterpreter(Int_t ntimes = 10, const char* runTests = 0, const char* binary = "") {
+bool stressInterpreter(Int_t ntimes = 10, const char *runTests = nullptr, const char *binary = "")
+{
    // Since this routine can be called (almost) directly from the command line and is used
    // in automated test, it must return 0 in case of success
    InterpreterStress stress(binary);

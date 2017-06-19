@@ -80,10 +80,9 @@ Bool_t TVirtualBranchBrowsable::fgGeneratorsSet=kFALSE;
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor setting all members according to parameters.
 
-TVirtualBranchBrowsable::TVirtualBranchBrowsable(const TBranch* branch, TClass* type,
-                                                 Bool_t typeIsPointer,
-                                                 const TVirtualBranchBrowsable* parent /*=0*/):
-fBranch(branch), fParent(parent), fLeaves(0), fClass(type), fTypeIsPointer(typeIsPointer)
+TVirtualBranchBrowsable::TVirtualBranchBrowsable(const TBranch *branch, TClass *type, Bool_t typeIsPointer,
+                                                 const TVirtualBranchBrowsable *parent /*=0*/)
+   : fBranch(branch), fParent(parent), fLeaves(nullptr), fClass(type), fTypeIsPointer(typeIsPointer)
 {
    if (!fgGeneratorsSet) RegisterDefaultGenerators();
    if (!branch)
@@ -116,7 +115,7 @@ void TVirtualBranchBrowsable::Browse(TBrowser *b)
       name.ReplaceAll(".@","@.");
       name.ReplaceAll("->@","@->");
 
-      TTree* tree=0;
+      TTree *tree = nullptr;
       if (!fBranch) {
          Error("Browse", "branch not set - might access wrong tree!");
          return;
@@ -160,8 +159,8 @@ TClass* TVirtualBranchBrowsable::GetCollectionContainedType(const TBranch* branc
                                                             const TVirtualBranchBrowsable* parent,
                                                             TClass* &contained)
 {
-   contained=0;
-   TClass* type=0;
+   contained = nullptr;
+   TClass *type = nullptr;
    if (parent)
       type=parent->GetClassType();
    else if (branch) {
@@ -176,7 +175,7 @@ TClass* TVirtualBranchBrowsable::GetCollectionContainedType(const TBranch* branc
 
          // check if we're in a sub-branch of this class
          // we can only find out asking the streamer given our ID
-         TStreamerElement *element=0;
+         TStreamerElement *element = nullptr;
          if (be->GetID()>=0 && be->GetInfo()
             && (be->GetID() < be->GetInfo()->GetNelement())
             && be->GetInfo()->IsCompiled()
@@ -199,16 +198,16 @@ TClass* TVirtualBranchBrowsable::GetCollectionContainedType(const TBranch* branc
          // could be an unsplit TClonesArray
          TBranchObject* bo=(TBranchObject*)branch;
          const char* clonesname=bo->GetClassName();
-         contained=0;
-         if (!clonesname || !clonesname[0]) return 0;
+         contained = nullptr;
+         if (!clonesname || !clonesname[0]) return nullptr;
          type=TClass::GetClass(clonesname);
       }
    } else {
       ::Warning("TVirtualBranchBrowsable::GetCollectionContainedType", "Neither branch nor parent given!");
-      return 0;
+      return nullptr;
    }
 
-   if (!type) return 0;
+   if (!type) return nullptr;
 
    TBranch* branchNonCost=const_cast<TBranch*>(branch);
    if (type->InheritsFrom(TClonesArray::Class())
@@ -259,9 +258,9 @@ TClass* TVirtualBranchBrowsable::GetCollectionContainedType(const TBranch* branc
       return type;
    } else if (type->InheritsFrom(TRef::Class()))
       // we don't do TRefs, so return contained and container as 0
-      return 0;
+      return nullptr;
    else contained=type;
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -405,9 +404,8 @@ ClassImp(TMethodBrowsable);
 /// The c'tor sets the name for a method "Class::Method(params) const"
 /// to "Method(params)", title to TMethod::GetPrototype
 
-TMethodBrowsable::TMethodBrowsable(const TBranch* branch, TMethod* m,
-                                   const TVirtualBranchBrowsable* parent /* =0 */):
-   TVirtualBranchBrowsable(branch, 0, kFALSE, parent), fMethod(m)
+TMethodBrowsable::TMethodBrowsable(const TBranch *branch, TMethod *m, const TVirtualBranchBrowsable *parent /* =0 */)
+   : TVirtualBranchBrowsable(branch, nullptr, kFALSE, parent), fMethod(m)
 {
    TString name(m->GetName());
    name+="()";
@@ -474,7 +472,7 @@ void TMethodBrowsable::GetBrowsableMethodsForClass(TClass* cl, TList& li)
    while ((cl=(TClass*)iC())) {
       TList* methods=cl->GetListOfMethods();
       if (!methods) continue;
-      TMethod* method=0;
+      TMethod *method = nullptr;
       TIter iM(methods);
       while ((method=(TMethod*)iM()))
          if (method && !allMethods.FindObject(method->GetName()))
@@ -482,7 +480,7 @@ void TMethodBrowsable::GetBrowsableMethodsForClass(TClass* cl, TList& li)
    }
 
    TIter iM(&allMethods);
-   TMethod* m=0;
+   TMethod *m = nullptr;
    while ((m=(TMethod*)iM())) {
       if (TMethodBrowsable::IsMethodBrowsable(m)) {
          li.Add(m);
@@ -508,7 +506,7 @@ Int_t TMethodBrowsable::GetBrowsables(TList& li, const TBranch* branch,
 
    TList listMethods;
    GetBrowsableMethodsForClass(cl, listMethods);
-   TMethod* method=0;
+   TMethod *method = nullptr;
    TIter iMethods(&listMethods);
    while ((method=(TMethod*)iMethods())) {
       li.Add(new TMethodBrowsable(branch, method, parent));
@@ -566,7 +564,7 @@ Bool_t TMethodBrowsable::IsMethodBrowsable(const TMethod* m)
          baseName+=3;
       if (!baseName[0]) return kTRUE;
 
-      TObject* mem=0;
+      TObject *mem = nullptr;
       const char* arrMemberNames[3]={"f%s","_%s","m%s"};
       for (Int_t i=0; !mem && i<3; i++)
          mem=members->FindObject(TString::Format(arrMemberNames[i],baseName));
@@ -634,20 +632,17 @@ Int_t TNonSplitBrowsable::GetBrowsables(TList& li, const TBranch* branch,
                                         const TVirtualBranchBrowsable* parent /* =0 */)
 {
    // branch has to be unsplit, i.e. without sub-branches
-   if (parent==0
-       && (branch==0 ||
-           (const_cast<TBranch*>(branch)->GetListOfBranches()
-            && const_cast<TBranch*>(branch)->GetListOfBranches()->GetEntries()!=0)
-           )
-       ) {
+   if (parent == nullptr &&
+       (branch == nullptr || (const_cast<TBranch *>(branch)->GetListOfBranches() &&
+                              const_cast<TBranch *>(branch)->GetListOfBranches()->GetEntries() != 0))) {
       return 0;
    }
    // we only expand our own parents
    //if (parent && parent->IsA()!=TNonSplitBrowsable::Class()) return 0;
 
-   TClass* clContained=0;
+   TClass *clContained = nullptr;
    GetCollectionContainedType(branch, parent, clContained);
-   TVirtualStreamerInfo* streamerInfo= clContained?clContained->GetStreamerInfo():0;
+   TVirtualStreamerInfo *streamerInfo = clContained ? clContained->GetStreamerInfo() : nullptr;
    if (!streamerInfo
       || !streamerInfo->GetElements()
       || !streamerInfo->GetElements()->GetSize())  return 0;
@@ -659,7 +654,7 @@ Int_t TNonSplitBrowsable::GetBrowsables(TList& li, const TBranch* branch,
    myStreamerElementsToCheck.AddAll(streamerInfo->GetElements());
 
    Int_t numAdded=0;
-   TStreamerElement* streamerElement=0;
+   TStreamerElement *streamerElement = nullptr;
    for (TObjLink *link = myStreamerElementsToCheck.FirstLink();
         link;
         link = link->Next() ) {
@@ -676,7 +671,7 @@ Int_t TNonSplitBrowsable::GetBrowsables(TList& li, const TBranch* branch,
          TObjArray* baseElements=base->GetStreamerInfo()->GetElements();
          if (!baseElements) continue;
          TIter iBaseSE(baseElements);
-         TStreamerElement* baseSE=0;
+         TStreamerElement *baseSE = nullptr;
          while ((baseSE=(TStreamerElement*)iBaseSE()))
             // we should probably check whether we're replacing something here...
             myStreamerElementsToCheck.Add(baseSE);
@@ -685,15 +680,15 @@ Int_t TNonSplitBrowsable::GetBrowsables(TList& li, const TBranch* branch,
          // this is a collection of the real elements.
          // So get the class ptr for these elements...
          TClass* clElements=streamerElement->GetClassPointer();
-         TVirtualCollectionProxy* collProxy=clElements?clElements->GetCollectionProxy():0;
-         clElements=collProxy?collProxy->GetValueClass():0;
+         TVirtualCollectionProxy *collProxy = clElements ? clElements->GetCollectionProxy() : nullptr;
+         clElements = collProxy ? collProxy->GetValueClass() : nullptr;
          if (!clElements) continue;
 
          // now loop over the class's streamer elements
          streamerInfo = clElements->GetStreamerInfo();
          if (streamerInfo) {
             TIter iElem(streamerInfo->GetElements());
-            TStreamerElement* elem=0;
+            TStreamerElement *elem = nullptr;
             while ((elem=(TStreamerElement*)iElem())) {
                TNonSplitBrowsable* nsb=new TNonSplitBrowsable(elem, branch, parent);
                li.Add(nsb);
@@ -775,7 +770,7 @@ void TCollectionPropertyBrowsable::Browse(TBrowser *b)
 Int_t TCollectionPropertyBrowsable::GetBrowsables(TList& li, const TBranch* branch,
                                                   const TVirtualBranchBrowsable* parent /* =0 */)
 {
-   TClass* clContained=0;
+   TClass *clContained = nullptr;
    TClass* clCollection=GetCollectionContainedType(branch, parent, clContained);
    if (!clCollection || !clContained) return 0;
 
@@ -832,11 +827,10 @@ Int_t TCollectionPropertyBrowsable::GetBrowsables(TList& li, const TBranch* bran
    // the collection is one for which TTree::Draw supports @coll.size()
 
       TCollectionPropertyBrowsable* cpb;
-      if ( clCollection->GetCollectionProxy() &&
-           ( (clCollection->GetCollectionProxy()->GetValueClass()==0)
-           ||(clCollection->GetCollectionProxy()->GetValueClass()->GetCollectionProxy()!=0
-              && clCollection->GetCollectionProxy()->GetValueClass()->GetCollectionProxy()->GetValueClass()==0)
-            )) {
+      if (clCollection->GetCollectionProxy() &&
+          ((clCollection->GetCollectionProxy()->GetValueClass() == nullptr) ||
+           (clCollection->GetCollectionProxy()->GetValueClass()->GetCollectionProxy() != nullptr &&
+            clCollection->GetCollectionProxy()->GetValueClass()->GetCollectionProxy()->GetValueClass() == nullptr))) {
          // If the contained type is not a class, we need an explitcit handle to get to the data.
          cpb = new TCollectionPropertyBrowsable("values", "values in the container",
                                                 scope, branch, parent);
@@ -923,14 +917,14 @@ TMethodBrowsable(branch, m, parent)
 Int_t TCollectionMethodBrowsable::GetBrowsables(TList& li, const TBranch* branch,
                                                 const TVirtualBranchBrowsable* parent /*=0*/)
 {
-   TClass* clContained=0;
+   TClass *clContained = nullptr;
    // we don't care about the contained class, but only about the collections,
    TClass* clContainer=GetCollectionContainedType(branch, parent, clContained);
    if (!clContainer || !clContained) return 0;
 
    TList listMethods;
    GetBrowsableMethodsForClass(clContainer, listMethods);
-   TMethod* method=0;
+   TMethod *method = nullptr;
    TIter iMethods(&listMethods);
    while ((method=(TMethod*)iMethods()))
       li.Add(new TCollectionMethodBrowsable(branch, method, parent));

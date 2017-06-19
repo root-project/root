@@ -83,20 +83,20 @@ ClassImp(TTableSorter);
 
 //_____________________________________________________________________________
 //TTableSorter::TTableSorter() : fsimpleArray(0),fParentTable(*((const TTable *)0))
-TTableSorter::TTableSorter() : fsimpleArray(0),fParentTable(0)
+TTableSorter::TTableSorter() : fsimpleArray(nullptr), fParentTable(nullptr)
 {
    // default ctor for RootCint dictionary
    fLastFound    = -1;
    fFirstRow     =  0;
-   fSortIndex    =  0;
-   fSearchMethod =  0;
+   fSortIndex = nullptr;
+   fSearchMethod = nullptr;
    fNumberOfRows =  0;
    fColType      = TTable::kNAN;
-   fsimpleArray    = 0;
+   fsimpleArray = nullptr;
    fParentRowSize  = 0;
-   fFirstParentRow = 0;
-   fCompareMethod  = 0;
-   fIndexArray     = 0;
+   fFirstParentRow = nullptr;
+   fCompareMethod = nullptr;
+   fIndexArray = nullptr;
    fColDimensions  = 0;
    fColOffset      = 0;
    fColSize        = 0;
@@ -114,11 +114,11 @@ TTableSorter::TTableSorter() : fsimpleArray(0),fParentTable(0)
 ///                   = 0 means sort all rows from the "firstRow" by the end of table
 ///
 
-TTableSorter::TTableSorter(const TTable &table, TString &colName,Int_t firstRow
-                               ,Int_t numberRows):fsimpleArray(0),fParentTable(&table)
+TTableSorter::TTableSorter(const TTable &table, TString &colName, Int_t firstRow, Int_t numberRows)
+   : fsimpleArray(nullptr), fParentTable(&table)
 {
-   fCompareMethod =  0;
-   fSearchMethod  =  0;
+   fCompareMethod = nullptr;
+   fSearchMethod = nullptr;
 
    BuildSorter(colName, firstRow, numberRows);
 }
@@ -135,11 +135,11 @@ TTableSorter::TTableSorter(const TTable &table, TString &colName,Int_t firstRow
 ///                   = 0 means sort all rows from the "firstRow" by the end of table
 ///
 
-TTableSorter::TTableSorter(const TTable *table, TString &colName,Int_t firstRow
-                               ,Int_t numberRows):fsimpleArray(0),fParentTable(table)
+TTableSorter::TTableSorter(const TTable *table, TString &colName, Int_t firstRow, Int_t numberRows)
+   : fsimpleArray(nullptr), fParentTable(table)
 {
-   fCompareMethod =  0;
-   fSearchMethod  =  0;
+   fCompareMethod = nullptr;
+   fSearchMethod = nullptr;
 
    BuildSorter(colName, firstRow, numberRows);
 }
@@ -162,9 +162,9 @@ TTableSorter::TTableSorter(const TTable *table, TString &colName,Int_t firstRow
 ///         of the parameters.
 ///
 
-TTableSorter::TTableSorter(const TTable &table, SEARCHMETHOD search,
-                           COMPAREMETHOD compare, Int_t firstRow,Int_t numberRows)
-                          :fsimpleArray(0),fParentTable(&table)
+TTableSorter::TTableSorter(const TTable &table, SEARCHMETHOD search, COMPAREMETHOD compare, Int_t firstRow,
+                           Int_t numberRows)
+   : fsimpleArray(nullptr), fParentTable(&table)
 {
    fCompareMethod =  compare;
    fSearchMethod  =  search;
@@ -190,9 +190,9 @@ TTableSorter::TTableSorter(const TTable &table, SEARCHMETHOD search,
 ///         of the parameters.
 ///
 
-TTableSorter::TTableSorter(const TTable *table, SEARCHMETHOD search,
-                           COMPAREMETHOD compare, Int_t firstRow,Int_t numberRows)
-                          :fsimpleArray(0),fParentTable(table)
+TTableSorter::TTableSorter(const TTable *table, SEARCHMETHOD search, COMPAREMETHOD compare, Int_t firstRow,
+                           Int_t numberRows)
+   : fsimpleArray(nullptr), fParentTable(table)
 {
    fCompareMethod =  compare;
    fSearchMethod  =  search;
@@ -214,14 +214,14 @@ TTableSorter::TTableSorter(const TTable *table, SEARCHMETHOD search,
 
 void TTableSorter::BuildSorter(TString &colName, Int_t firstRow, Int_t numberRows)
 {
-   assert(fParentTable!=0);
+   assert(fParentTable != nullptr);
 
    fLastFound     = -1;
    fNumberOfRows  =  0;
    fColType       =  TTable::kNAN;
-   fsimpleArray   =  0;
+   fsimpleArray = nullptr;
    //yf  fCompareMethod =  0;
-   fSortIndex     =  0;
+   fSortIndex = nullptr;
    //yf fSearchMethod  =  0;
    fColDimensions =  0;
    fColOffset     =  0;
@@ -261,7 +261,7 @@ void TTableSorter::BuildSorter(TString &colName, Int_t firstRow, Int_t numberRow
    fColName = name;
    delete [] name;
 
-   fIndexArray = 0;
+   fIndexArray = nullptr;
    if (fColDimensions) {
       fIndexArray = new Int_t[fColDimensions];
       memset(fIndexArray,0,fColDimensions*sizeof(Int_t));
@@ -297,10 +297,8 @@ void TTableSorter::BuildSorter(TString &colName, Int_t firstRow, Int_t numberRow
 ///                   = 0 means sort all rows from the "firstRow" by the end of table
 ///
 
-TTableSorter::TTableSorter(const Float_t *simpleArray, Int_t arraySize, Int_t firstRow
-                               ,Int_t numberRows)
-                               :fsimpleArray((const Char_t*)simpleArray)
-                               ,fParentTable(0)
+TTableSorter::TTableSorter(const Float_t *simpleArray, Int_t arraySize, Int_t firstRow, Int_t numberRows)
+   : fsimpleArray((const Char_t *)simpleArray), fParentTable(nullptr)
 {
    fLastFound    = -1;
 
@@ -341,10 +339,8 @@ TTableSorter::TTableSorter(const Float_t *simpleArray, Int_t arraySize, Int_t fi
 ///                   = 0 means sort all rows from the "firstRow" by the end of table
 ///
 
-TTableSorter::TTableSorter(const Double_t *simpleArray, Int_t arraySize, Int_t firstRow
-                               ,Int_t numberRows)
-                               :fsimpleArray((const Char_t*)simpleArray)
-                               ,fParentTable(0)
+TTableSorter::TTableSorter(const Double_t *simpleArray, Int_t arraySize, Int_t firstRow, Int_t numberRows)
+   : fsimpleArray((const Char_t *)simpleArray), fParentTable(nullptr)
 {
    fLastFound    = -1;
 
@@ -385,10 +381,8 @@ TTableSorter::TTableSorter(const Double_t *simpleArray, Int_t arraySize, Int_t f
 ///                   = 0 means sort all rows from the "firstRow" by the end of table
 ///
 
-TTableSorter::TTableSorter(const Long_t *simpleArray, Int_t arraySize, Int_t firstRow
-                               ,Int_t numberRows)
-                               :fsimpleArray((const Char_t*)simpleArray)
-                               ,fParentTable(0)
+TTableSorter::TTableSorter(const Long_t *simpleArray, Int_t arraySize, Int_t firstRow, Int_t numberRows)
+   : fsimpleArray((const Char_t *)simpleArray), fParentTable(nullptr)
 {
    fLastFound    = -1;
 
@@ -426,11 +420,11 @@ void TTableSorter::SetSimpleArray(Int_t arraySize, Int_t firstRow,Int_t numberRo
 {
    SetName("Array");
 
-   fSortIndex     = 0;
-   fSearchMethod  = 0;
+   fSortIndex = nullptr;
+   fSearchMethod = nullptr;
    fColDimensions = 0;
    delete [] fIndexArray;
-   fIndexArray    = 0;
+   fIndexArray = nullptr;
    fColOffset     = 0;
 
    // check bounds:
@@ -450,7 +444,9 @@ void TTableSorter::SetSimpleArray(Int_t arraySize, Int_t firstRow,Int_t numberRo
 
 TTableSorter::~TTableSorter()
 {
-   delete [] fSortIndex; fSortIndex = 0; fNumberOfRows=0;
+   delete [] fSortIndex;
+   fSortIndex = nullptr;
+   fNumberOfRows = 0;
    delete [] fIndexArray;
 }
 
@@ -745,7 +741,7 @@ Int_t TTableSorter::CountKeys() const
 ///////////////////////////////////////////////////////////////
 
 Bool_t TTableSorter::FillIndexArray(){
-   assert(fSortIndex!=0);
+   assert(fSortIndex != nullptr);
    const char *row = At(fFirstRow) + fColOffset;
    Bool_t isPreSorted = kTRUE;
    const void  *sample = row;
@@ -910,7 +906,7 @@ void TTableSorter::LearnTable()
    Char_t *varname;
 
    TIter next(classPtr->GetListOfDataMembers());
-   TDataMember *member = 0;
+   TDataMember *member = nullptr;
    while ( (member = (TDataMember *) next()) ) {
       varname = (Char_t *) member->GetName();
 

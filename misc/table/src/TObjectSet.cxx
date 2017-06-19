@@ -48,7 +48,7 @@ TObjectSet::TObjectSet(TObject *obj,Bool_t makeOwner) : TDataSet("unknown","TObj
 TObjectSet::~TObjectSet()
 {
    if (fObj && IsOwner() && (TObject::TestBit(kNotDeleted))  ) delete fObj;
-   fObj = 0;
+   fObj = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -75,7 +75,7 @@ void TObjectSet::Delete(Option_t *opt)
 {
    if (opt) {/* no used */}
    if (fObj && IsOwner()) delete fObj;
-   fObj = 0;
+   fObj = nullptr;
    TDataSet::Delete();
 }
 ////////////////////////////////////////////////////////////////////////////////
@@ -108,7 +108,9 @@ TDataSet *TObjectSet::Instance() const
 TObject *TObjectSet::SetObject(TObject *obj,Bool_t makeOwner)
 {
    TObject *oldObject = fObj;
-   if (IsOwner()) { delete oldObject; oldObject = 0;} // the object has been killed
+   if (IsOwner()) { delete oldObject;
+      oldObject = nullptr;
+   } // the object has been killed
    fObj = obj;
    DoOwner(makeOwner);
    return oldObject;

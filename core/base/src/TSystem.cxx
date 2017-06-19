@@ -57,10 +57,10 @@ const char *gRootDir;
 const char *gProgName;
 const char *gProgPath;
 
-TSystem      *gSystem   = 0;
-TFileHandler *gXDisplay = 0;  // Display server event handler, set in TGClient
+TSystem *gSystem = nullptr;
+TFileHandler *gXDisplay = nullptr; // Display server event handler, set in TGClient
 
-static Int_t *gLibraryVersion    = 0;   // Set in TVersionCheck, used in Load()
+static Int_t *gLibraryVersion = nullptr; // Set in TVersionCheck, used in Load()
 static Int_t  gLibraryVersionIdx = 0;   // Set in TVersionCheck, used in Load()
 static Int_t  gLibraryVersionMax = 256;
 
@@ -99,7 +99,7 @@ Bool_t TProcessEventTimer::ProcessEvents()
 
 ClassImp(TSystem);
 
-TVirtualMutex* gSystemMutex = 0;
+TVirtualMutex *gSystemMutex = nullptr;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a new OS interface.
@@ -109,21 +109,21 @@ TSystem::TSystem(const char *name, const char *title) : TNamed(name, title), fAc
    if (gSystem && name[0] != '-' && strcmp(name, "Generic"))
       Error("TSystem", "only one instance of TSystem allowed");
 
-   fOnExitList          = 0;
-   fSignalHandler       = 0;
-   fFileHandler         = 0;
-   fStdExceptionHandler = 0;
-   fTimers              = 0;
-   fCompiled            = 0;
-   fHelpers             = 0;
+   fOnExitList = nullptr;
+   fSignalHandler = nullptr;
+   fFileHandler = nullptr;
+   fStdExceptionHandler = nullptr;
+   fTimers = nullptr;
+   fCompiled = nullptr;
+   fHelpers = nullptr;
    fInsideNotify        = kFALSE;
    fBeepDuration        = 0;
    fBeepFreq            = 0;
-   fReadmask            = 0;
-   fWritemask           = 0;
-   fReadready           = 0;
-   fWriteready          = 0;
-   fSignals             = 0;
+   fReadmask = nullptr;
+   fWritemask = nullptr;
+   fReadready = nullptr;
+   fWriteready = nullptr;
+   fSignals = nullptr;
    fDone                = kFALSE;
    fAclicMode           = kDefault;
    fInControl           = kFALSE;
@@ -179,8 +179,7 @@ TSystem::~TSystem()
       SafeDelete(fHelpers);
    }
 
-   if (gSystem == this)
-      gSystem = 0;
+   if (gSystem == this) gSystem = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -298,10 +297,8 @@ void TSystem::ResetErrno()
 
 void TSystem::RemoveOnExit(TObject *obj)
 {
-   if (fOnExitList == 0)
-      fOnExitList = new TOrdCollection;
-   if (fOnExitList->FindObject(obj) == 0)
-      fOnExitList->Add(obj);
+   if (fOnExitList == nullptr) fOnExitList = new TOrdCollection;
+   if (fOnExitList->FindObject(obj) == nullptr) fOnExitList->Add(obj);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -364,7 +361,7 @@ loop_entry:
    }
    catch (std::exception& exc) {
       TIter next(fStdExceptionHandler);
-      TStdExceptionHandler* eh = 0;
+      TStdExceptionHandler *eh = nullptr;
       while ((eh = (TStdExceptionHandler*) next())) {
          switch (eh->Handle(exc))
          {
@@ -477,8 +474,7 @@ TTime TSystem::Now()
 
 void TSystem::AddTimer(TTimer *ti)
 {
-   if (ti && fTimers && (fTimers->FindObject(ti) == 0))
-      fTimers->Add(ti);
+   if (ti && fTimers && (fTimers->FindObject(ti) == nullptr)) fTimers->Add(ti);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -491,7 +487,7 @@ TTimer *TSystem::RemoveTimer(TTimer *ti)
       TTimer *tr = (TTimer*) fTimers->Remove(ti);
       return tr;
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -503,7 +499,7 @@ Long_t TSystem::NextTimeOut(Bool_t mode)
    if (!fTimers) return -1;
 
    TOrdCollectionIter it((TOrdCollection*)fTimers);
-   TTimer *t, *to = 0;
+   TTimer *t, *to = nullptr;
    Long64_t tt, tnow = Now();
    Long_t   timeout = -1;
 
@@ -538,8 +534,7 @@ Long_t TSystem::NextTimeOut(Bool_t mode)
 
 void TSystem::AddSignalHandler(TSignalHandler *h)
 {
-   if (h && fSignalHandler && (fSignalHandler->FindObject(h) == 0))
-      fSignalHandler->Add(h);
+   if (h && fSignalHandler && (fSignalHandler->FindObject(h) == nullptr)) fSignalHandler->Add(h);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -551,7 +546,7 @@ TSignalHandler *TSystem::RemoveSignalHandler(TSignalHandler *h)
    if (fSignalHandler)
       return (TSignalHandler *)fSignalHandler->Remove(h);
 
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -560,8 +555,7 @@ TSignalHandler *TSystem::RemoveSignalHandler(TSignalHandler *h)
 
 void TSystem::AddFileHandler(TFileHandler *h)
 {
-   if (h && fFileHandler && (fFileHandler->FindObject(h) == 0))
-      fFileHandler->Add(h);
+   if (h && fFileHandler && (fFileHandler->FindObject(h) == nullptr)) fFileHandler->Add(h);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -573,7 +567,7 @@ TFileHandler *TSystem::RemoveFileHandler(TFileHandler *h)
    if (fFileHandler)
       return (TFileHandler *)fFileHandler->Remove(h);
 
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -617,8 +611,7 @@ void TSystem::IgnoreInterrupt(Bool_t ignore)
 
 void TSystem::AddStdExceptionHandler(TStdExceptionHandler *eh)
 {
-   if (eh && fStdExceptionHandler && (fStdExceptionHandler->FindObject(eh) == 0))
-      fStdExceptionHandler->Add(eh);
+   if (eh && fStdExceptionHandler && (fStdExceptionHandler->FindObject(eh) == nullptr)) fStdExceptionHandler->Add(eh);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -630,7 +623,7 @@ TStdExceptionHandler *TSystem::RemoveStdExceptionHandler(TStdExceptionHandler *e
    if (fStdExceptionHandler)
       return (TStdExceptionHandler *)fStdExceptionHandler->Remove(eh);
 
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -669,7 +662,7 @@ int TSystem::Exec(const char*)
 FILE *TSystem::OpenPipe(const char*, const char*)
 {
    AbstractMethod("OpenPipe");
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -754,12 +747,11 @@ TSystem *TSystem::FindHelper(const char *path, void *dirptr)
       fHelpers = new TOrdCollection;
 
    TPluginHandler *h;
-   TSystem *helper = 0;
+   TSystem *helper = nullptr;
    if (path) {
       if (!GetDirPtr()) {
          TUrl url(path, kTRUE);
-         if (!strcmp(url.GetProtocol(), "file"))
-            return 0;
+         if (!strcmp(url.GetProtocol(), "file")) return nullptr;
       }
    }
 
@@ -769,8 +761,7 @@ TSystem *TSystem::FindHelper(const char *path, void *dirptr)
       if (helper->ConsistentWith(path, dirptr))
          return helper;
 
-   if (!path)
-      return 0;
+   if (!path) return nullptr;
 
    // create new helper
    TRegexp re("^root.*:");  // also roots, rootk, etc
@@ -778,13 +769,11 @@ TSystem *TSystem::FindHelper(const char *path, void *dirptr)
    if (pname.BeginsWith("xroot:") || pname.Index(re) != kNPOS) {
       // (x)rootd daemon ...
       if ((h = gROOT->GetPluginManager()->FindHandler("TSystem", path))) {
-         if (h->LoadPlugin() == -1)
-            return 0;
+         if (h->LoadPlugin() == -1) return nullptr;
          helper = (TSystem*) h->ExecPlugin(2, path, kFALSE);
       }
    } else if ((h = gROOT->GetPluginManager()->FindHandler("TSystem", path))) {
-      if (h->LoadPlugin() == -1)
-         return 0;
+      if (h->LoadPlugin() == -1) return nullptr;
       helper = (TSystem*) h->ExecPlugin(0);
    }
 
@@ -833,7 +822,7 @@ int TSystem::MakeDirectory(const char*)
 void *TSystem::OpenDirectory(const char*)
 {
    AbstractMethod("OpenDirectory");
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -850,7 +839,7 @@ void TSystem::FreeDirectory(void*)
 const char *TSystem::GetDirEntry(void*)
 {
    AbstractMethod("GetDirEntry");
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -867,7 +856,7 @@ Bool_t TSystem::ChangeDirectory(const char*)
 
 const char *TSystem::WorkingDirectory()
 {
-   return 0;
+   return nullptr;
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -883,7 +872,7 @@ std::string TSystem::GetWorkingDirectory() const
 
 const char *TSystem::HomeDirectory(const char*)
 {
-   return 0;
+   return nullptr;
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -939,7 +928,7 @@ const char *TSystem::BaseName(const char *name)
       return name;
    }
    Error("BaseName", "name = 0");
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1006,7 +995,7 @@ const char *TSystem::DirName(const char *pathname)
       R__LOCKGUARD2(gSystemMutex);
 
       static int len = 0;
-      static char *buf = 0;
+      static char *buf = nullptr;
       int pathlen = strlen(pathname);
       if (pathlen > len) {
          delete [] buf;
@@ -1061,7 +1050,7 @@ char *TSystem::ConcatFileName(const char *dir, const char *name)
 const char *TSystem::PrependPathName(const char *, TString&)
 {
    AbstractMethod("PrependPathName");
-   return 0;
+   return nullptr;
 }
 
 
@@ -1127,7 +1116,8 @@ again:
    iter++; c = inp; ier = 0;
    x = out; x[0] = 0;
 
-   p = 0; e = 0;
+   p = nullptr;
+   e = nullptr;
    if (c[0] == '~' && c[1] == '/') { // ~/ case
       std::string hd = GetHomeDirectory();
       p = hd.c_str();
@@ -1160,7 +1150,8 @@ again:
 
    for ( ; c[0]; c++) {
 
-      p = 0; e = 0;
+      p = nullptr;
+      e = nullptr;
 
       if (c[0] == '.' && c[1] == '/' && c[-1] == ' ') { // $cwd
          std::string wd = GetWorkingDirectory();
@@ -1260,7 +1251,7 @@ Bool_t TSystem::ExpandPathName(TString&)
 
 char *TSystem::ExpandPathName(const char *)
 {
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1454,7 +1445,7 @@ int TSystem::GetFsInfo(const char *, Long_t *, Long_t *, Long_t *, Long_t *)
 const char *TSystem::TempDirectory() const
 {
    AbstractMethod("TempDirectory");
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1469,7 +1460,7 @@ const char *TSystem::TempDirectory() const
 FILE *TSystem::TempFileName(TString &, const char *)
 {
    AbstractMethod("TempFileName");
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1508,7 +1499,7 @@ int TSystem::Utime(const char *, Long_t, Long_t)
 const char *TSystem::FindFile(const char *, TString&, EAccessMode)
 {
    AbstractMethod("FindFile");
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1519,7 +1510,7 @@ char *TSystem::Which(const char *search, const char *wfil, EAccessMode mode)
 {
    TString wfilString(wfil);
    FindFile(search, wfilString, mode);
-   if (wfilString.IsNull()) return 0;
+   if (wfilString.IsNull()) return nullptr;
    return StrDup(wfilString.Data());
 }
 
@@ -1570,7 +1561,7 @@ Int_t TSystem::GetEffectiveGid()
 UserGroup_t *TSystem::GetUserInfo(Int_t /*uid*/)
 {
    AbstractMethod("GetUserInfo");
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1581,7 +1572,7 @@ UserGroup_t *TSystem::GetUserInfo(Int_t /*uid*/)
 UserGroup_t *TSystem::GetUserInfo(const char * /*user*/)
 {
    AbstractMethod("GetUserInfo");
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1594,7 +1585,7 @@ UserGroup_t *TSystem::GetUserInfo(const char * /*user*/)
 UserGroup_t *TSystem::GetGroupInfo(Int_t /*gid*/)
 {
    AbstractMethod("GetGroupInfo");
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1607,7 +1598,7 @@ UserGroup_t *TSystem::GetGroupInfo(Int_t /*gid*/)
 UserGroup_t *TSystem::GetGroupInfo(const char * /*group*/)
 {
    AbstractMethod("GetGroupInfo");
-   return 0;
+   return nullptr;
 }
 
 //---- environment manipulation ------------------------------------------------
@@ -1634,7 +1625,7 @@ void TSystem::Unsetenv(const char *name)
 const char *TSystem::Getenv(const char*)
 {
    AbstractMethod("Getenv");
-   return 0;
+   return nullptr;
 }
 
 //---- System Logging ----------------------------------------------------------
@@ -1706,7 +1697,7 @@ void TSystem::ShowOutput(RedirectHandle_t *h)
    }
 
    // Open the file
-   FILE *f = 0;
+   FILE *f = nullptr;
    if (!(f = fopen(h->fFile.Data(), "r"))) {
       Error("ShowOutput", "file '%s' cannot be open", h->fFile.Data());
       return;
@@ -1764,7 +1755,7 @@ void TSystem::AddDynamicPath(const char *)
 const char* TSystem::GetDynamicPath()
 {
    AbstractMethod("GetDynamicPath");
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1786,7 +1777,7 @@ static bool R__MatchFilename(const char *left, const char *right)
 {
    if (left == right) return kTRUE;
 
-   if (left==0 || right==0) return kFALSE;
+   if (left == nullptr || right == nullptr) return kFALSE;
 
    if ( (strcmp(right,left)==0) ) {
       return kTRUE;
@@ -1884,7 +1875,7 @@ int TSystem::Load(const char *module, const char *entry, Bool_t system)
             libmapfilename.Remove(idx);
          }
          libmapfilename += ".rootmap";
-         if (gSystem->GetPathInfo(libmapfilename, 0, (Long_t*)0, 0, 0) == 0) {
+         if (gSystem->GetPathInfo(libmapfilename, nullptr, (Long_t *)nullptr, nullptr, nullptr) == 0) {
             if (gDebug > 0) Info("Load", "loading %s", libmapfilename.Data());
             gInterpreter->LoadLibraryMap(libmapfilename);
             deplibs = gInterpreter->GetSharedLibDeps(moduleBasename);
@@ -1955,7 +1946,7 @@ char *TSystem::DynamicPathName(const char *lib, Bool_t quiet /*=kFALSE*/)
    TString sLib(lib);
    if (FindDynamicLibrary(sLib, quiet))
       return StrDup(sLib);
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1967,7 +1958,7 @@ char *TSystem::DynamicPathName(const char *lib, Bool_t quiet /*=kFALSE*/)
 const char *TSystem::FindDynamicLibrary(TString&, Bool_t)
 {
    AbstractMethod("FindDynamicLibrary");
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2060,7 +2051,7 @@ const TString &TSystem::GetLastErrorString() const
 
 const char *TSystem::GetLinkedLibraries()
 {
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2303,7 +2294,7 @@ int TSystem::GetServiceByName(const char *)
 char *TSystem::GetServiceByPort(int)
 {
    AbstractMethod("GetServiceByPort");
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2824,20 +2815,20 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    Bool_t verbose = kFALSE;
    Bool_t internalDebug = kFALSE;
    if (opt) {
-      keep = (strchr(opt,'k')!=0);
-      recompile = (strchr(opt,'f')!=0);
-      if (strchr(opt,'O')!=0) {
+      keep = (strchr(opt, 'k') != nullptr);
+      recompile = (strchr(opt, 'f') != nullptr);
+      if (strchr(opt, 'O') != nullptr) {
          mode = kOpt;
       }
-      if (strchr(opt,'g')!=0) {
+      if (strchr(opt, 'g') != nullptr) {
          mode = kDebug;
       }
-      if (strchr(opt,'c')!=0) {
+      if (strchr(opt, 'c') != nullptr) {
          loadLib = kFALSE;
       }
-      withInfo = strchr(opt, 's') == 0;
-      verbose = strchr(opt, 'v') != 0;
-      internalDebug = strchr(opt, 'd') != 0;
+      withInfo = strchr(opt, 's') == nullptr;
+      verbose = strchr(opt, 'v') != nullptr;
+      internalDebug = strchr(opt, 'd') != nullptr;
    }
    if (mode==kDefault) {
       TString rootbuild = ROOTBUILD;
@@ -2848,7 +2839,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       }
    }
    UInt_t verboseLevel = verbose ? 7 : gDebug;
-   Bool_t flatBuildDir = (fAclicProperties & kFlatBuildDir) || (strchr(opt,'-')!=0);
+   Bool_t flatBuildDir = (fAclicProperties & kFlatBuildDir) || (strchr(opt, '-') != nullptr);
 
    // if non-zero, build_loc indicates where to build the shared library.
    TString build_loc = ExpandFileName(GetBuildDir());
@@ -2916,7 +2907,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
 
    Ssiz_t dot_pos = library.Last('.');
    TString extension = library;
-   extension.Replace( 0, dot_pos+1, 0 , 0);
+   extension.Replace(0, dot_pos + 1, nullptr, 0);
    TString libname_noext = library;
    if (dot_pos>=0) libname_noext.Remove( dot_pos );
 
@@ -3099,9 +3090,9 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
 
       Long_t lib_time, file_time;
 
-      if ((gSystem->GetPathInfo( library, 0, (Long_t*)0, 0, &lib_time ) != 0) ||
-          (gSystem->GetPathInfo( expFileName, 0, (Long_t*)0, 0, &file_time ) == 0 &&
-          (lib_time < file_time))) {
+      if ((gSystem->GetPathInfo(library, nullptr, (Long_t *)nullptr, nullptr, &lib_time) != 0) ||
+          (gSystem->GetPathInfo(expFileName, nullptr, (Long_t *)nullptr, nullptr, &file_time) == 0 &&
+           (lib_time < file_time))) {
 
          // the library does not exist or is older than the script.
          recompile = kTRUE;
@@ -3109,7 +3100,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
 
       } else {
 
-         if ( gSystem->GetPathInfo( depfilename, 0,(Long_t*) 0, 0, &file_time ) != 0 ) {
+         if (gSystem->GetPathInfo(depfilename, nullptr, (Long_t *)nullptr, nullptr, &file_time) != 0) {
             if (!canWrite) {
                depdir = emergency_loc;
                AssignAndDelete( depfilename, ConcatFileName(depdir, BaseName(libname_noext)) );
@@ -3123,7 +3114,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
 
          // We need to check the dependencies
          FILE * depfile = fopen(depfilename.Data(),"r");
-         if (depfile==0) {
+         if (depfile == nullptr) {
             // there is no accessible dependency file, let's assume the library has been
             // modified
             modified = kTRUE;
@@ -3168,7 +3159,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
                         if (hasversion) {
                            modified |= strcmp(ROOT_RELEASE,line)!=0;
                            hasversion = kFALSE;
-                        } else if ( gSystem->GetPathInfo( line, 0, (Long_t*)0, 0, &filetime ) == 0 ) {
+                        } else if (gSystem->GetPathInfo(line, nullptr, (Long_t *)nullptr, nullptr, &filetime) == 0) {
                            modified |= ( lib_time <= filetime );
                         }
                      }
@@ -3208,8 +3199,8 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       if (libinfo) {
          Long_t load_time = libinfo->GetUniqueID();
          Long_t lib_time;
-         if ( gSystem->GetPathInfo( library, 0, (Long_t*)0, 0, &lib_time ) == 0
-              && (lib_time>load_time)) {
+         if (gSystem->GetPathInfo(library, nullptr, (Long_t *)nullptr, nullptr, &lib_time) == 0 &&
+             (lib_time > load_time)) {
             reload = kTRUE;
          }
       }
@@ -3227,11 +3218,11 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
          if (libinfo) {
             fCompiled->Remove(libinfo);
             delete libinfo;
-            libinfo = 0;
+            libinfo = nullptr;
          }
          TNamed *k = new TNamed(library,library);
          Long_t lib_time;
-         gSystem->GetPathInfo( library, 0, (Long_t*)0, 0, &lib_time );
+         gSystem->GetPathInfo(library, nullptr, (Long_t *)nullptr, nullptr, &lib_time);
          k->SetUniqueID(lib_time);
          if (!keep) k->SetBit(kMustCleanup);
          fCompiled->Add(k);
@@ -3257,7 +3248,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
          if (libinfo) {
             fCompiled->Remove(libinfo);
             delete libinfo;
-            libinfo = 0;
+            libinfo = nullptr;
          }
          Unlink(library);
       }
@@ -3290,12 +3281,12 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       if (loadLib) {
          TNamed *k = new TNamed(library,library);
          Long_t lib_time;
-         gSystem->GetPathInfo( library, 0, (Long_t*)0, 0, &lib_time );
+         gSystem->GetPathInfo(library, nullptr, (Long_t *)nullptr, nullptr, &lib_time);
          k->SetUniqueID(lib_time);
          if (!keep) k->SetBit(kMustCleanup);
          fCompiled->Add(k);
 
-         if (gInterpreter->GetSharedLibDeps(libname) == 0) {
+         if (gInterpreter->GetSharedLibDeps(libname) == nullptr) {
             gInterpreter->LoadLibraryMap(libmapfilename);
          }
 
@@ -3411,8 +3402,8 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    TString mapfileout = mapfile + ".out";
 
    Bool_t needLoadMap = kFALSE;
-   if (gInterpreter->GetSharedLibDeps(libname) !=0 ) {
-       gInterpreter->UnloadLibraryMap(libname);
+   if (gInterpreter->GetSharedLibDeps(libname) != nullptr) {
+      gInterpreter->UnloadLibraryMap(libname);
       needLoadMap = kTRUE;
    }
 
@@ -3655,7 +3646,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
 
       TNamed *k = new TNamed(library,library);
       Long_t lib_time;
-      gSystem->GetPathInfo( library, 0, (Long_t*)0, 0, &lib_time );
+      gSystem->GetPathInfo(library, nullptr, (Long_t *)nullptr, nullptr, &lib_time);
       k->SetUniqueID(lib_time);
       if (!keep) k->SetBit(kMustCleanup);
       fCompiled->Add(k);
@@ -4088,7 +4079,7 @@ TString TSystem::SplitAclicMode(const char* filename, TString &aclicMode,
 
    // strip off I/O redirect tokens from filename
    {
-      char *s2   = 0;
+      char *s2 = nullptr;
       char *s3;
       s2 = strstr(fname, ">>");
       if (!s2) s2 = strstr(fname, "2>");

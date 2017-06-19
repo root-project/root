@@ -203,15 +203,11 @@ static TString gPack1("/proof/packtest1.par");
 static TString gPack2("/proof/packtest2.par");
 static TString gPack3("/proof/packtest3.par");
 
-int stressProof(const char *url = 0,
-                const char *tests = 0, Int_t nwrks = -1,
-                const char *verbose = "1", const char *logfile = 0,
-                Bool_t dyn = kFALSE, Bool_t skipds = kTRUE, 
-                const char *h1src = 0, const char *eventsrc = 0,
-                Bool_t dryrun = kFALSE, Bool_t showcpu = kFALSE,
-                Bool_t clearcache = kFALSE, Bool_t useprogress = kTRUE,
-                const char *tutdir = 0, Bool_t cleanlog = kFALSE,
-                Bool_t keeplog = kTRUE, Bool_t catlog = kFALSE);
+int stressProof(const char *url = nullptr, const char *tests = nullptr, Int_t nwrks = -1, const char *verbose = "1",
+                const char *logfile = nullptr, Bool_t dyn = kFALSE, Bool_t skipds = kTRUE, const char *h1src = nullptr,
+                const char *eventsrc = nullptr, Bool_t dryrun = kFALSE, Bool_t showcpu = kFALSE,
+                Bool_t clearcache = kFALSE, Bool_t useprogress = kTRUE, const char *tutdir = nullptr,
+                Bool_t cleanlog = kFALSE, Bool_t keeplog = kTRUE, Bool_t catlog = kFALSE);
 
 //_____________________________batch only_____________________
 #ifndef __CINT__
@@ -290,7 +286,7 @@ int main(int argc,const char *argv[])
    }
 
    // Parse options
-   const char *url = 0;
+   const char *url = nullptr;
    Int_t nWrks = -1;
    const char *verbose = "1";
    Bool_t enablegraphics = kFALSE;
@@ -301,11 +297,11 @@ int main(int argc,const char *argv[])
    Bool_t cleanlog = kFALSE;
    Bool_t keeplog = kFALSE;
    Bool_t catlog = kFALSE;
-   const char *logfile = 0;
-   const char *h1src = 0;
-   const char *eventsrc = 0;
-   const char *tests = 0;
-   const char *tutdir = 0;
+   const char *logfile = nullptr;
+   const char *h1src = nullptr;
+   const char *eventsrc = nullptr;
+   const char *tests = nullptr;
+   const char *tutdir = nullptr;
    Int_t i = 1;
    while (i < argc) {
       if (!strcmp(argv[i],"-h")) {
@@ -413,7 +409,7 @@ int main(int argc,const char *argv[])
 
    // Enable graphics if required
    if (enablegraphics) {
-      new TApplication("stressProof", 0, 0);
+      new TApplication("stressProof", nullptr, nullptr);
    } else {
       gROOT->SetBatch(kTRUE);
    }
@@ -440,7 +436,7 @@ Int_t PutPoint()
 
 void PrintStressProgress(Long64_t total, Long64_t processed, Float_t, Long64_t)
 {
-   gSystem->RedirectOutput(0, 0, &gRH);
+   gSystem->RedirectOutput(nullptr, nullptr, &gRH);
 
    char pc[2] = { '.', ':'};
    static int lstpc = 1;
@@ -473,7 +469,7 @@ public:
          gProof->SetPrintProgress(&PrintEmptyProgress);
       }
    }
-   ~SwitchProgressGuard() { gProof->SetPrintProgress(0); }
+   ~SwitchProgressGuard() { gProof->SetPrintProgress(nullptr); }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -490,7 +486,7 @@ void CleanupSelector(const char *selpath)
    void *dirp = gSystem->OpenDirectory(dirpath);
    if (!dirp) return;
    TString fn;
-   const char *e = 0;
+   const char *e = nullptr;
    while ((e = gSystem->GetDirEntry(dirp))) {
       if (!strncmp(e, selname.Data(), selname.Length())) {
          // Cleanup this entry
@@ -575,12 +571,12 @@ private:
    static Double_t gRefReal[PT_NUMTEST]; // Reference Cpu times
 
 public:
-   ProofTest(const char *n, Int_t seq, ProofTestFun_t f, void *a = 0,
-             const char *d = "", const char *sel = "", Bool_t useForMarks = kFALSE)
-           : TNamed(n,""), fSeq(seq), fFun(f), fArgs(a),
-             fDeps(d), fSels(sel), fDepFrom(0), fSelFrom(0), fEnabled(kTRUE),
-             fCpuTime(-1.), fRealTime(-1.), fProofMarks(-1.), fUseForMarks(useForMarks)
-             { fRefReal = gRefReal[fSeq-1]; }
+   ProofTest(const char *n, Int_t seq, ProofTestFun_t f, void *a = nullptr, const char *d = "", const char *sel = "",
+             Bool_t useForMarks = kFALSE)
+      : TNamed(n, ""), fSeq(seq), fFun(f), fArgs(a), fDeps(d), fSels(sel), fDepFrom(0), fSelFrom(0), fEnabled(kTRUE),
+        fCpuTime(-1.), fRealTime(-1.), fProofMarks(-1.), fUseForMarks(useForMarks)
+   {
+      fRefReal = gRefReal[fSeq - 1]; }
    virtual ~ProofTest() { }
 
    void   Disable() { fEnabled = kFALSE; }
@@ -704,7 +700,7 @@ Int_t ProofTest::Run(Bool_t dryrun, Bool_t showcpu)
       // Proof marks
       if (fRefReal > 0)
          fProofMarks = (fRealTime > 0) ? 1000 * fRefReal / fRealTime : -1;
-      gSystem->RedirectOutput(0, 0, &gRH);
+      gSystem->RedirectOutput(nullptr, nullptr, &gRH);
       if (rc == 0) {
          Int_t np = totpoints - strlen(GetName()) - strlen(" OK *");
          while (np--) { printf("."); }
@@ -893,7 +889,7 @@ int stressProof(const char *url, const char *tests, Int_t nwrks,
 
    // Log file path
    Bool_t usedeflog = kTRUE;
-   FILE *flog = 0;
+   FILE *flog = nullptr;
    if (!logfile) logfile = getenv("STRESSPROOF_LOGFILE"); 
    if (logfile && strlen(logfile) > 0 && !dryrun) {
       usedeflog = kFALSE;
@@ -1016,69 +1012,78 @@ int stressProof(const char *url, const char *tests, Int_t nwrks,
    // Get logs
    testList->Add(new ProofTest("Get session logs", 2, &PT_GetLogs, (void *)&PToa, "1"));
    // Simple histogram generation
-   testList->Add(new ProofTest("Simple random number generation", 3, &PT_Simple, 0, "1", "ProofSimple", kTRUE));
+   testList->Add(new ProofTest("Simple random number generation", 3, &PT_Simple, nullptr, "1", "ProofSimple", kTRUE));
    // Test of data set handling with the H1 http files
-   testList->Add(new ProofTest("Dataset handling with H1 files", 4, &PT_DataSets, 0, "1"));
+   testList->Add(new ProofTest("Dataset handling with H1 files", 4, &PT_DataSets, nullptr, "1"));
    // H1 analysis over HTTP (chain)
-   testList->Add(new ProofTest("H1: chain processing", 5, &PT_H1Http, 0, "1", "h1analysis", kTRUE));
+   testList->Add(new ProofTest("H1: chain processing", 5, &PT_H1Http, nullptr, "1", "h1analysis", kTRUE));
    // H1 analysis over HTTP (file collection)
-   testList->Add(new ProofTest("H1: file collection processing", 6, &PT_H1FileCollection, 0, "1", "h1analysis", kTRUE));
+   testList->Add(
+      new ProofTest("H1: file collection processing", 6, &PT_H1FileCollection, nullptr, "1", "h1analysis", kTRUE));
    // H1 analysis over HTTP: adaptive packetizer
    testList->Add(new ProofTest("H1: file collection, TPacketizerAdaptive", 7,
                                &PT_H1FileCollection, (void *)&gStd_Old, "1", "h1analysis", kTRUE));
    // H1 analysis over HTTP by dataset name
-   testList->Add(new ProofTest("H1: by-name processing", 8, &PT_H1DataSet, 0, "1,4", "h1analysis", kTRUE));
+   testList->Add(new ProofTest("H1: by-name processing", 8, &PT_H1DataSet, nullptr, "1,4", "h1analysis", kTRUE));
    // H1 analysis over HTTP by dataset name split in two
-   testList->Add(new ProofTest("H1: multi dataset processing", 9, &PT_H1MultiDataSet, 0, "1,4", "h1analysis", kTRUE));
+   testList->Add(
+      new ProofTest("H1: multi dataset processing", 9, &PT_H1MultiDataSet, nullptr, "1,4", "h1analysis", kTRUE));
    // H1 analysis over HTTP by dataset name
-   testList->Add(new ProofTest("H1: multi dataset and entry list", 10, &PT_H1MultiDSetEntryList, 0, "1,4", "h1analysis", kTRUE));
+   testList->Add(new ProofTest("H1: multi dataset and entry list", 10, &PT_H1MultiDSetEntryList, nullptr, "1,4",
+                               "h1analysis", kTRUE));
    // Test package management with 'event'
-   testList->Add(new ProofTest("Package management with 'event'", 11, &PT_Packages, 0, "1"));
+   testList->Add(new ProofTest("Package management with 'event'", 11, &PT_Packages, nullptr, "1"));
    // Test package argument passing
-   testList->Add(new ProofTest("Package argument passing", 12, &PT_PackageArguments, 0, "1", "ProofTests"));
+   testList->Add(new ProofTest("Package argument passing", 12, &PT_PackageArguments, nullptr, "1", "ProofTests"));
    // Simple event analysis
-   testList->Add(new ProofTest("Simple 'event' generation", 13, &PT_Event, 0, "1,11", "ProofEvent", kTRUE));
+   testList->Add(new ProofTest("Simple 'event' generation", 13, &PT_Event, nullptr, "1,11", "ProofEvent", kTRUE));
    // Test input data propagation (it only works in the static startup mode)
-   testList->Add(new ProofTest("Input data propagation", 14, &PT_InputData, 0, "1", "ProofTests"));
+   testList->Add(new ProofTest("Input data propagation", 14, &PT_InputData, nullptr, "1", "ProofTests"));
    // Test asynchronous running
-   testList->Add(new ProofTest("H1, Simple: async mode", 15, &PT_H1SimpleAsync, 0, "1,3,5", "h1analysis,ProofSimple", kTRUE));
+   testList->Add(new ProofTest("H1, Simple: async mode", 15, &PT_H1SimpleAsync, nullptr, "1,3,5",
+                               "h1analysis,ProofSimple", kTRUE));
    // Test admin functionality
-   testList->Add(new ProofTest("Admin functionality", 16, &PT_AdminFunc, 0, "1"));
+   testList->Add(new ProofTest("Admin functionality", 16, &PT_AdminFunc, nullptr, "1"));
    // Test merging via submergers
    PT_Option_t pfoptm = {1, 0};
    testList->Add(new ProofTest("Dynamic sub-mergers functionality", 17,
                                 &PT_Simple, (void *)&pfoptm, "1", "ProofSimple", kTRUE));
    // Test range chain and dataset processing EventProc
-   testList->Add(new ProofTest("Event range processing", 18,
-                               &PT_EventRange, 0, "1,11", "ProofEventProc,ProcFileElements", kTRUE));
+   testList->Add(new ProofTest("Event range processing", 18, &PT_EventRange, nullptr, "1,11",
+                               "ProofEventProc,ProcFileElements", kTRUE));
    // Test range chain and dataset processing EventProc with TPacketizerAdaptive
    testList->Add(new ProofTest("Event range, TPacketizerAdaptive", 19,
                                &PT_EventRange, (void *)&gStd_Old, "1,11", "ProofEventProc,ProcFileElements", kTRUE));
    // Test TProofOutputFile technology for ntuple creation
-   testList->Add(new ProofTest("File-resident output: merge", 20, &PT_POFNtuple, 0, "1", "ProofNtuple", kTRUE));
+   testList->Add(new ProofTest("File-resident output: merge", 20, &PT_POFNtuple, nullptr, "1", "ProofNtuple", kTRUE));
    // Test TProofOutputFile technology for ntuple creation using submergers
    testList->Add(new ProofTest("File-resident output: merge w/ submergers", 21,
                                &PT_POFNtuple, (void *)&pfoptm, "1", "ProofNtuple", kTRUE));
    // Test TProofOutputFile technology for dataset creation (tests TProofDraw too)
-   testList->Add(new ProofTest("File-resident output: create dataset", 22, &PT_POFDataset, 0, "1", "ProofNtuple", kTRUE));
+   testList->Add(
+      new ProofTest("File-resident output: create dataset", 22, &PT_POFDataset, nullptr, "1", "ProofNtuple", kTRUE));
    // Test selecting different TTrees in same files
-   testList->Add(new ProofTest("File-resident output: multi trees", 23, &PT_MultiTrees, 0, "1,22", "ProofNtuple", kTRUE));
+   testList->Add(
+      new ProofTest("File-resident output: multi trees", 23, &PT_MultiTrees, nullptr, "1,22", "ProofNtuple", kTRUE));
    // Test TPacketizerFile and TTree friends in separate files
-   testList->Add(new ProofTest("TTree friends (and TPacketizerFile)", 24, &PT_Friends, 0, "1", "ProofFriends,ProofAux", kTRUE));
+   testList->Add(new ProofTest("TTree friends (and TPacketizerFile)", 24, &PT_Friends, nullptr, "1",
+                               "ProofFriends,ProofAux", kTRUE));
    // Test TPacketizerFile and TTree friends in same file
    Bool_t sameFile = kTRUE;
    testList->Add(new ProofTest("TTree friends, same file", 25,
                                &PT_Friends, (void *)&sameFile, "1", "ProofFriends,ProofAux", kTRUE));
 
    // Test handling output via file
-   testList->Add(new ProofTest("Handling output via file", 26,
-                                &PT_OutputHandlingViaFile, 0, "1", "ProofSimple", kTRUE));
+   testList->Add(
+      new ProofTest("Handling output via file", 26, &PT_OutputHandlingViaFile, nullptr, "1", "ProofSimple", kTRUE));
    // Simple histogram generation by TSelector object
-   testList->Add(new ProofTest("Simple: selector by object", 27, &PT_SimpleByObj, 0, "1", "ProofSimple", kTRUE));
+   testList->Add(new ProofTest("Simple: selector by object", 27, &PT_SimpleByObj, nullptr, "1", "ProofSimple", kTRUE));
    // H1 analysis over HTTP by TSeletor object
-   testList->Add(new ProofTest("H1 chain: selector by object", 28, &PT_H1ChainByObj, 0, "1", "h1analysis", kTRUE));
+   testList->Add(
+      new ProofTest("H1 chain: selector by object", 28, &PT_H1ChainByObj, nullptr, "1", "h1analysis", kTRUE));
    // Test TPacketizerFile and TTree friends in separate files
-   testList->Add(new ProofTest("Chain with TTree in subdirs", 29, &PT_TreeSubDirs, 0, "1", "ProofFriends,ProofAux", kTRUE));
+   testList->Add(
+      new ProofTest("Chain with TTree in subdirs", 29, &PT_TreeSubDirs, nullptr, "1", "ProofFriends,ProofAux", kTRUE));
    // The selectors
    if (PT_AssertTutorialDir(gTutDir) != 0) {
       printf("*  Some of the tutorial files are missing! Stop\n");
@@ -1102,7 +1107,7 @@ int stressProof(const char *url, const char *tests, Int_t nwrks,
    }
 
    // Check what to run
-   ProofTest *t = 0, *treq = 0;
+   ProofTest *t = nullptr, *treq = nullptr;
    TIter nxt(testList);
    Bool_t all = kTRUE;
    if (!tests) tests = getenv("STRESSPROOF_TESTS"); 
@@ -1209,7 +1214,7 @@ int stressProof(const char *url, const char *tests, Int_t nwrks,
       // Clean all the selectors
       TString tit;
       TIter nxs(&gSelectors);
-      TNamed *nm = 0;
+      TNamed *nm = nullptr;
       while ((nm = (TNamed *)nxs())) {
          if (!dryrun) CleanupSelector(nm->GetTitle());
          if (gverbose > 0) {
@@ -1272,17 +1277,17 @@ int stressProof(const char *url, const char *tests, Int_t nwrks,
    if (kept) {
       TString logfiles(glogfile);
       // Save also the logs from the workers
-      TProofMgr *mgr = gProof ? gProof->GetManager() : 0;
+      TProofMgr *mgr = gProof ? gProof->GetManager() : nullptr;
       if (mgr) {
          gSystem->RedirectOutput(glogfile, "a", &gRH);
          TProofLog *pl = mgr->GetSessionLogs();
          if (pl) {
             logfiles += ".nodes";
             pl->Retrieve("*",  TProofLog::kAll, logfiles);
-            gSystem->RedirectOutput(0, 0, &gRH);
+            gSystem->RedirectOutput(nullptr, nullptr, &gRH);
             SafeDelete(pl);
          } else {
-            gSystem->RedirectOutput(0, 0, &gRH);
+            gSystem->RedirectOutput(nullptr, nullptr, &gRH);
             printf("+++ Warning: could not get the session logs\n");
          }
       } else {
@@ -1449,7 +1454,7 @@ Int_t PT_H1AssertFiles(const char *h1src)
             printf("\n >>> Test failure: problems retrieving %s\n", src.Data());
             return -1;
          }
-         gSystem->RedirectOutput(0, 0, &gRH);
+         gSystem->RedirectOutput(nullptr, nullptr, &gRH);
          printf("%d\b", i);
          gSystem->RedirectOutput(glogfile, "a", &gRH);
       }
@@ -1472,7 +1477,7 @@ Int_t PT_H1AssertFiles(const char *h1src)
             return -1;
          }
          if (guseprogress) {
-            gSystem->RedirectOutput(0, 0, &gRH);
+            gSystem->RedirectOutput(nullptr, nullptr, &gRH);
             printf("%d\b", i);
             gSystem->RedirectOutput(glogfile, "a", &gRH);
          }
@@ -1489,7 +1494,7 @@ Int_t PT_H1AssertFiles(const char *h1src)
             return -1;
          }
          if (guseprogress) {
-            gSystem->RedirectOutput(0, 0, &gRH);
+            gSystem->RedirectOutput(nullptr, nullptr, &gRH);
             printf("%d\b", i);
             gSystem->RedirectOutput(glogfile, "a", &gRH);
          }
@@ -1577,7 +1582,7 @@ Int_t PT_EventAssertFiles(const char *eventsrc, Int_t nf = 10)
             return -1;
          }
          if (guseprogress) {
-            gSystem->RedirectOutput(0, 0, &gRH);
+            gSystem->RedirectOutput(nullptr, nullptr, &gRH);
             printf("%d\b", i);
             gSystem->RedirectOutput(glogfile, "a", &gRH);
          }
@@ -1597,7 +1602,7 @@ Int_t PT_EventAssertFiles(const char *eventsrc, Int_t nf = 10)
          return -1;
       }
       if (guseprogress) {
-         gSystem->RedirectOutput(0, 0, &gRH);
+         gSystem->RedirectOutput(nullptr, nullptr, &gRH);
          printf("%d\b", i);
          gSystem->RedirectOutput(glogfile, "a", &gRH);
       }
@@ -1988,7 +1993,7 @@ Int_t PT_CheckNtuple(TQueryResult *qr, Long64_t nevt)
    }
    
    // Check the ntuple content by filling some histos
-   TH1F *h1s[3] = {0};
+   TH1F *h1s[3] = {nullptr};
    h1s[0] = new TH1F("h1_1", "3*px+2 with px**2+py**2>1", 50, -15., 15.);
    h1s[1] = new TH1F("h1_2", "2*px+2 with pz>2", 50, -10., 10.);
    h1s[2] = new TH1F("h1_3", "1.3*px+2 with (px^2+py^2>4) && py>0", 50, 0., 8.);
@@ -2075,7 +2080,7 @@ Int_t PT_CheckDataset(TQueryResult *qr, Long64_t nevt)
    gProof->SetDataSetTreeName(dsname, "ntuple");
 
    // Create the histos
-   TH1F *h1s[3] = {0};
+   TH1F *h1s[3] = {nullptr};
    h1s[0] = new TH1F("h1s0", "3*px+2 with px**2+py**2>1", 50, -15., 15.);
    h1s[1] = new TH1F("h1s1", "2*px+2 with pz>2", 50, -10., 10.);
    h1s[2] = new TH1F("h1s2", "1.3*px+2 with (px^2+py^2>4) && py>0", 50, 0., 8.);
@@ -2161,7 +2166,7 @@ Int_t PT_CheckFriends(TQueryResult *qr, Long64_t nevt, bool withfriends)
    const char *hnam[4] = { "histo1", "histo2", "histo3", "histo4" };
    const char *hcls[4] = { "TH2F", "TH1F", "TH1F", "TH2F" };
    Float_t hent[4] = { 1., .227, .0260, .0260};
-   TObject *o = 0;
+   TObject *o = nullptr;
    Double_t ent = -1;
    Double_t prec = 1. / TMath::Sqrt(nevt);
    for (Int_t i = 0; i < nchk; i++) {
@@ -2293,11 +2298,11 @@ Int_t PT_Open(void *args, RunTimes &tt)
    p->ClearCache();
 
    // Get some useful info about the cluster (the sandbox dir ...)
-   gSystem->RedirectOutput(0, 0, &gRH);
+   gSystem->RedirectOutput(nullptr, nullptr, &gRH);
    TString testPrint(TString::Format("%s/testPrint.log", gtutdir.Data()));
    gSystem->RedirectOutput(testPrint, "w", &gRHAdmin);
    gProof->Print();
-   gSystem->RedirectOutput(0, 0, &gRHAdmin);
+   gSystem->RedirectOutput(nullptr, nullptr, &gRHAdmin);
    gSystem->RedirectOutput(glogfile, "a", &gRH);
    TMacro macroPrint(testPrint);
    TObjString *os = macroPrint.GetLineWith("Working directory:");
@@ -2523,7 +2528,7 @@ Int_t PT_H1Http(void *, RunTimes &tt)
    // Assert the files, if needed
    if (!gh1ok) {
       if (PT_H1AssertFiles(gh1src.Data()) != 0) {
-         gProof->SetPrintProgress(0);
+         gProof->SetPrintProgress(nullptr);
          printf("\n >>> Test failure: could not assert the H1 files\n");
          return -1;
       }
@@ -2535,7 +2540,7 @@ Int_t PT_H1Http(void *, RunTimes &tt)
 
    // Clear associated memory cache
    if (gClearCache && PT_H1ReleaseCache(gh1src.Data()) != 0) {
-      gProof->SetPrintProgress(0);
+      gProof->SetPrintProgress(nullptr);
       printf("\n >>> Test failure: could not clear memory cache for the H1 files\n");
       return -1;
    }
@@ -2610,7 +2615,7 @@ Int_t PT_H1FileCollection(void *arg, RunTimes &tt)
 
    // Clear associated memory cache
    if (gClearCache && PT_H1ReleaseCache(gh1src.Data()) != 0) {
-      gProof->SetPrintProgress(0);
+      gProof->SetPrintProgress(nullptr);
       printf("\n >>> Test failure: could not clear memory cache for the H1 files\n");
       return -1;
    }
@@ -2666,7 +2671,7 @@ Int_t PT_H1DataSet(void *, RunTimes &tt)
 
    // Clear associated memory cache
    if (gClearCache && PT_H1ReleaseCache(gh1src.Data()) != 0) {
-      gProof->SetPrintProgress(0);
+      gProof->SetPrintProgress(nullptr);
       printf("\n >>> Test failure: could not clear memory cache for the H1 files\n");
       return -1;
    }
@@ -2718,7 +2723,7 @@ Int_t PT_H1MultiDataSet(void *, RunTimes &tt)
 
    // Clear associated memory cache
    if (gClearCache && PT_H1ReleaseCache(gh1src.Data()) != 0) {
-      gProof->SetPrintProgress(0);
+      gProof->SetPrintProgress(nullptr);
       printf("\n >>> Test failure: could not clear memory cache for the H1 files\n");
       return -1;
    }
@@ -2771,7 +2776,7 @@ Int_t PT_H1MultiDSetEntryList(void *, RunTimes &tt)
 
    // Clear associated memory cache
    if (gClearCache && PT_H1ReleaseCache(gh1src.Data()) != 0) {
-      gProof->SetPrintProgress(0);
+      gProof->SetPrintProgress(nullptr);
       printf("\n >>> Test failure: could not clear memory cache for the H1 files\n");
       return -1;
    }
@@ -2789,7 +2794,7 @@ Int_t PT_H1MultiDSetEntryList(void *, RunTimes &tt)
    
    // Cleanup entry-list from the input list
    TIter nxi(gProof->GetInputList());
-   TObject *o = 0;
+   TObject *o = nullptr;
    while ((o = nxi())) {
       if (!strncmp(o->GetName(), "elist", 6) || !strcmp(o->GetName(), "fillList")) {
          gProof->GetInputList()->Remove(o);
@@ -2803,7 +2808,7 @@ Int_t PT_H1MultiDSetEntryList(void *, RunTimes &tt)
 
    // Clear associated memory cache
    if (gClearCache && PT_H1ReleaseCache(gh1src.Data()) != 0) {
-      gProof->SetPrintProgress(0);
+      gProof->SetPrintProgress(nullptr);
       printf("\n >>> Test failure: could not clear memory cache for the H1 files\n");
       return -1;
    }
@@ -2864,7 +2869,7 @@ Int_t PT_DataSets(void *, RunTimes &tt)
    if (dsm->GetSize() > 0) {
       // Remove the datasets already registered
       TIter nxd(dsm);
-      TObjString *os = 0;
+      TObjString *os = nullptr;
       while ((os = (TObjString *)nxd())) {
          gProof->RemoveDataSet(os->GetName());
       }
@@ -3092,7 +3097,7 @@ Int_t PT_Event(void *, RunTimes &tt)
 
    // Make sure the query result is there
    PutPoint();
-   TQueryResult *qr = 0;
+   TQueryResult *qr = nullptr;
    if (!(qr = gProof->GetQueryResult())) {
       printf("\n >>> Test failure: query result not found\n");
       return -1;
@@ -3166,7 +3171,7 @@ Int_t PT_InputData(void *, RunTimes &tt)
       return -1;
    }
    f->cd();
-   h1list->Write(0, TObject::kSingleKey, 0);
+   h1list->Write(nullptr, TObject::kSingleKey, 0);
    f->Close();
    gProof->SetInputDataFile(datafile.Data());
 
@@ -3208,7 +3213,7 @@ Int_t PT_InputData(void *, RunTimes &tt)
 
    // Make sure the query result is there
    PutPoint();
-   TQueryResult *qr = 0;
+   TQueryResult *qr = nullptr;
    if (!(qr = gProof->GetQueryResult())) {
       printf("\n >>> Test failure: query result not found\n");
       return -1;
@@ -3311,7 +3316,7 @@ Int_t PT_PackageArguments(void *, RunTimes &tt)
 
    // Make sure the query result is there
    PutPoint();
-   TQueryResult *qr = 0;
+   TQueryResult *qr = nullptr;
    if (!(qr = gProof->GetQueryResult())) {
       printf("\n >>> Test failure: query result not found\n");
       return -1;
@@ -3405,7 +3410,7 @@ Int_t PT_PackageArguments(void *, RunTimes &tt)
 
    // Make sure the query result is there
    PutPoint();
-   qr = 0;
+   qr = nullptr;
    if (!(qr = gProof->GetQueryResult())) {
       printf("\n >>> Test failure: query result not found\n");
       return -1;
@@ -3507,7 +3512,7 @@ Int_t PT_H1SimpleAsync(void *arg, RunTimes &tt)
 
    // Clear associated memory cache
    if (gClearCache && PT_H1ReleaseCache(gh1src.Data()) != 0) {
-      gProof->SetPrintProgress(0);
+      gProof->SetPrintProgress(nullptr);
       printf("\n >>> Test failure: could not clear memory cache for the H1 files\n");
       return -1;
    }
@@ -3562,7 +3567,7 @@ Int_t PT_H1SimpleAsync(void *arg, RunTimes &tt)
    TString ref;
    TIter nxq(ql, kIterBackward);
    Int_t nd = 2;
-   TQueryResult *qr = 0;
+   TQueryResult *qr = nullptr;
    while ((qr = (TQueryResult *)nxq()) && nd > 0) {
       ref.Form("%s:%s", qr->GetTitle(), qr->GetName());
       gProof->Retrieve(ref);
@@ -3677,11 +3682,11 @@ Int_t PT_AdminFunc(void *, RunTimes &tt)
    PutPoint();
 
    // Test 'ls'
-   gSystem->RedirectOutput(0, 0, &gRH);
+   gSystem->RedirectOutput(nullptr, nullptr, &gRH);
    TString testLs(TString::Format("%s/testLs.log", testDir.Data()));
    gSystem->RedirectOutput(testLs, "w", &gRHAdmin);
    mgr->Ls("~/testMacro.C");
-   gSystem->RedirectOutput(0, 0, &gRHAdmin);
+   gSystem->RedirectOutput(nullptr, nullptr, &gRHAdmin);
    gSystem->RedirectOutput(glogfile, "a", &gRH);
    TMacro macroLs(testLs);
    TString testLsLine = TString::Format("%s/testMacro.C", gsandbox.Data());
@@ -3704,11 +3709,11 @@ Int_t PT_AdminFunc(void *, RunTimes &tt)
    PutPoint();
 
    // Test 'more'
-   gSystem->RedirectOutput(0, 0, &gRH);
+   gSystem->RedirectOutput(nullptr, nullptr, &gRH);
    TString testMore(TString::Format("%s/testMore.log", testDir.Data()));
    gSystem->RedirectOutput(testMore, "w", &gRHAdmin);
    mgr->More("~/testMacro.C");
-   gSystem->RedirectOutput(0, 0, &gRHAdmin);
+   gSystem->RedirectOutput(nullptr, nullptr, &gRHAdmin);
    gSystem->RedirectOutput(glogfile, "a", &gRH);
    TMacro macroMore(testMore);
    if (macroMore.GetListOfLines()->GetSize() < 2) {
@@ -3812,7 +3817,7 @@ Int_t PT_EventRange(void *arg, RunTimes &tt)
    // Assert the files, if needed
    if (!geventok) {
       if (PT_EventAssertFiles(geventsrc.Data(), geventnf) != 0) {
-         gProof->SetPrintProgress(0);
+         gProof->SetPrintProgress(nullptr);
          printf("\n >>> Test failure: could not assert the event files\n");
          return -1;
       }
@@ -3824,7 +3829,7 @@ Int_t PT_EventRange(void *arg, RunTimes &tt)
 
    // Clear associated memory cache
    if (gClearCache && PT_EventReleaseCache(geventsrc.Data(), geventnf) != 0) {
-      gProof->SetPrintProgress(0);
+      gProof->SetPrintProgress(nullptr);
       printf("\n >>> Test failure: could not clear memory cache for the event files\n");
       return -1;
    }
@@ -3834,7 +3839,7 @@ Int_t PT_EventRange(void *arg, RunTimes &tt)
 
    // Load special class for event ranges checks
    if (gProof->Load(TString::Format("%s,%s", gProcFileElem.Data(), gEmptyInclude.Data())) != 0) {
-      gProof->SetPrintProgress(0);
+      gProof->SetPrintProgress(nullptr);
       printf("\n >>> Test failure: could not load auxilliary files %s and %s\n",
              gProcFileElem.Data(), gEmptyInclude.Data());
       return -1;
@@ -3903,7 +3908,7 @@ Int_t PT_EventRange(void *arg, RunTimes &tt)
 
    // Clear associated memory cache
    if (gClearCache && PT_EventReleaseCache(geventsrc.Data(), geventnf) != 0) {
-      gProof->SetPrintProgress(0);
+      gProof->SetPrintProgress(nullptr);
       printf("\n >>> Test failure: could not clear memory cache for the event files\n");
       return -1;
    }
@@ -3983,7 +3988,7 @@ Int_t PT_POFNtuple(void *opts, RunTimes &tt)
    gProof->DeleteParameters("PROOF_UseMergers");
    gProof->DeleteParameters("PROOF_NTUPLE_DONT_PLOT");
    gProof->DeleteParameters("PROOF_USE_NTP_RNDM");
-   gProof->SetInputDataFile(0);
+   gProof->SetInputDataFile(nullptr);
 
    // The runtimes
    PT_GetLastProofTimes(tt);
@@ -4039,7 +4044,7 @@ Int_t PT_POFDataset(void *, RunTimes &tt)
    gProof->DeleteParameters("PROOF_NTUPLE_DONT_PLOT");
    gProof->DeleteParameters("SimpleNtuple.root");
    gProof->DeleteParameters("PROOF_USE_NTP_RNDM");
-   gProof->SetInputDataFile(0);
+   gProof->SetInputDataFile(nullptr);
 
    // The runtimes
    PT_GetLastProofTimes(tt);
@@ -4080,7 +4085,7 @@ Int_t PT_MultiTrees(void *, RunTimes &tt)
    TChain *ch1 = new TChain("ntuple");
    TChain *ch2 = new TChain("ntuple2");
    TIter nxf(fc->GetList());
-   TFileInfo *fi = 0;
+   TFileInfo *fi = nullptr;
    while ((fi = (TFileInfo *) nxf())) {
       dset->Add(fi->GetCurrentUrl()->GetUrl());
       ch1->Add(fi->GetCurrentUrl()->GetUrl());
@@ -4088,7 +4093,7 @@ Int_t PT_MultiTrees(void *, RunTimes &tt)
    }
 
    // Check the ntuple content by filling some histos
-   TH1F *h1s[2] = {0};
+   TH1F *h1s[2] = {nullptr};
    h1s[0] = new TH1F("h1_1", "3*px+2 with px**2+py**2>1", 50, -15., 15.);
    h1s[1] = new TH1F("h1_2", "vx**2+vy**2 with abs(vz)<.1", 50, 0., 10.);
 
@@ -4204,7 +4209,7 @@ Int_t PT_Friends(void *sf, RunTimes &tt)
    TMap *files = new TMap;
    files->SetName("PROOF_FilesToProcess");
    TIter nxwi(wrks);
-   TSlaveInfo *wi = 0;
+   TSlaveInfo *wi = nullptr;
    while ((wi = (TSlaveInfo *) nxwi())) {
       fntree.Form("tree_%s.root", wi->GetOrdinal());
       THashList *wrklist = (THashList *) files->GetValue(wi->GetName());
@@ -4248,8 +4253,8 @@ Int_t PT_Friends(void *sf, RunTimes &tt)
    // Fill them with the information found in the output list
    Bool_t foundMain = kFALSE, foundFriend = kFALSE;
    TIter nxo(gProof->GetOutputList());
-   TObject *o = 0;
-   TObjString *os = 0;
+   TObject *o = nullptr;
+   TObjString *os = nullptr;
    while ((o = nxo())) {
       TList *l = dynamic_cast<TList *> (o);
       if (l && !strncmp(l->GetName(), "MainList-", 9)) {
@@ -4339,7 +4344,7 @@ Int_t PT_TreeSubDirs(void*, RunTimes &tt)
    TMap *files = new TMap;
    files->SetName("PROOF_FilesToProcess");
    TIter nxwi(wrks);
-   TSlaveInfo *wi = 0;
+   TSlaveInfo *wi = nullptr;
    while ((wi = (TSlaveInfo *) nxwi())) {
       fntree.Form("tree_%s.root", wi->GetOrdinal());
       THashList *wrklist = (THashList *) files->GetValue(wi->GetName());
@@ -4377,8 +4382,8 @@ Int_t PT_TreeSubDirs(void*, RunTimes &tt)
    // Fill them with the information found in the output list
    Bool_t foundMain = kFALSE;
    TIter nxo(gProof->GetOutputList());
-   TObject *o = 0;
-   TObjString *os = 0;
+   TObject *o = nullptr;
+   TObjString *os = nullptr;
    while ((o = nxo())) {
       TList *l = dynamic_cast<TList *> (o);
       if (l && !strncmp(l->GetName(), "MainList-", 9)) {
@@ -4537,7 +4542,7 @@ Int_t PT_H1ChainByObj(void *, RunTimes &tt)
    // Assert the files, if needed
    if (!gh1ok) {
       if (PT_H1AssertFiles(gh1src.Data()) != 0) {
-         gProof->SetPrintProgress(0);
+         gProof->SetPrintProgress(nullptr);
          printf("\n >>> Test failure: could not assert the H1 files\n");
          return -1;
       }
@@ -4549,7 +4554,7 @@ Int_t PT_H1ChainByObj(void *, RunTimes &tt)
 
    // Clear associated memory cache
    if (gClearCache && PT_H1ReleaseCache(gh1src.Data()) != 0) {
-      gProof->SetPrintProgress(0);
+      gProof->SetPrintProgress(nullptr);
       printf("\n >>> Test failure: could not clear memory cache for the H1 files\n");
       return -1;
    }

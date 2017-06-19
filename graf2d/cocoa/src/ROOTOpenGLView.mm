@@ -51,7 +51,7 @@ bool GLViewIsValidDrawable(ROOTOpenGLView *glView)
 //______________________________________________________________________________
 - (id) initWithFrame : (NSRect) frameRect pixelFormat : (NSOpenGLPixelFormat *) format
 {
-   if (self = [super initWithFrame : frameRect windowAttributes : 0]) {
+   if (self = [super initWithFrame:frameRect windowAttributes:nullptr]) {
       [self setHidden : YES];//Not sure.
       fIsOverlapped = NO;
       fPixelFormat = [format retain];
@@ -156,7 +156,7 @@ bool GLViewIsValidDrawable(ROOTOpenGLView *glView)
    [self setHidden : fIsOverlapped];
 
    if (!overlap) {
-      assert(dynamic_cast<TGCocoa *>(gVirtualX) != 0 &&
+      assert(dynamic_cast<TGCocoa *>(gVirtualX) != nullptr &&
              "setFrameSize:, gVirtualX is either null or has a type, different from TGCocoa");
       [fOpenGLContext update];
       //View becomes visible, geometry can be changed at this point,
@@ -198,7 +198,7 @@ bool GLViewIsValidDrawable(ROOTOpenGLView *glView)
       fUpdateContext = YES;
 
    if ((self.fEventMask & kStructureNotifyMask) && (self.fMapState == kIsViewable || fIsOverlapped == YES)) {
-      assert(dynamic_cast<TGCocoa *>(gVirtualX) != 0 &&
+      assert(dynamic_cast<TGCocoa *>(gVirtualX) != nullptr &&
              "setFrameSize:, gVirtualX is either null or has a type, different from TGCocoa");
       TGCocoa * const vx = static_cast<TGCocoa *>(gVirtualX);
       vx->GetEventTranslator()->GenerateConfigureNotifyEvent(self, self.frame);

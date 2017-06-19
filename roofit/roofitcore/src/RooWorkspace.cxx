@@ -145,7 +145,7 @@ void RooWorkspace::autoImportClassCode(Bool_t flag)
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
-RooWorkspace::RooWorkspace() : _classes(this), _dir(0), _factory(0), _doExport(kFALSE), _openTrans(kFALSE)
+RooWorkspace::RooWorkspace() : _classes(this), _dir(nullptr), _factory(nullptr), _doExport(kFALSE), _openTrans(kFALSE)
 {
 }
 
@@ -154,14 +154,14 @@ RooWorkspace::RooWorkspace() : _classes(this), _dir(0), _factory(0), _doExport(k
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct empty workspace with given name and title
 
-RooWorkspace::RooWorkspace(const char* name, const char* title) : 
-  TNamed(name,title?title:name), _classes(this), _dir(0), _factory(0), _doExport(kFALSE), _openTrans(kFALSE)
+RooWorkspace::RooWorkspace(const char *name, const char *title)
+   : TNamed(name, title ? title : name), _classes(this), _dir(nullptr), _factory(nullptr), _doExport(kFALSE),
+     _openTrans(kFALSE)
 {
 }
 
-
-RooWorkspace::RooWorkspace(const char* name, Bool_t doCINTExport)  : 
-  TNamed(name,name), _classes(this), _dir(0), _factory(0), _doExport(kFALSE), _openTrans(kFALSE)
+RooWorkspace::RooWorkspace(const char *name, Bool_t doCINTExport)
+   : TNamed(name, name), _classes(this), _dir(nullptr), _factory(nullptr), _doExport(kFALSE), _openTrans(kFALSE)
 {
   // Construct empty workspace with given name and option to export reference to all workspace contents to a CINT namespace with the same name
   if (doCINTExport) {
@@ -173,8 +173,9 @@ RooWorkspace::RooWorkspace(const char* name, Bool_t doCINTExport)  :
 ////////////////////////////////////////////////////////////////////////////////
 /// Workspace copy constructor
 
-RooWorkspace::RooWorkspace(const RooWorkspace& other) : 
-  TNamed(other), _uuid(other._uuid), _classes(other._classes,this), _dir(0), _factory(0), _doExport(kFALSE), _openTrans(kFALSE)
+RooWorkspace::RooWorkspace(const RooWorkspace &other)
+   : TNamed(other), _uuid(other._uuid), _classes(other._classes, this), _dir(nullptr), _factory(nullptr),
+     _doExport(kFALSE), _openTrans(kFALSE)
 {
   // Copy owned nodes
   other._allOwnedNodes.snapshot(_allOwnedNodes,kTRUE) ;
@@ -253,8 +254,8 @@ Bool_t RooWorkspace::import(const char* fileSpec,
   char buf[10240] ;
   strlcpy(buf,fileSpec,10240) ;
   char* filename = strtok(buf,":") ;
-  char* wsname = strtok(0,":") ;
-  char* objname = strtok(0,":") ;
+  char *wsname = strtok(nullptr, ":");
+  char *objname = strtok(nullptr, ":");
 
   // Check that parsing was successful
   if (!filename||!wsname||!objname) {
@@ -264,17 +265,17 @@ Bool_t RooWorkspace::import(const char* fileSpec,
 
   // Check that file can be opened
   TFile* f = TFile::Open(filename) ;
-  if (f==0) {
-    coutE(InputArguments) << "RooWorkspace(" << GetName() << ") ERROR opening file " << filename << endl ;
-    return 0 ;
+  if (f == nullptr) {
+     coutE(InputArguments) << "RooWorkspace(" << GetName() << ") ERROR opening file " << filename << endl;
+     return 0;
   }
 
   // That that file contains workspace
   RooWorkspace* w = dynamic_cast<RooWorkspace*>(f->Get(wsname)) ;
-  if (w==0) {
-    coutE(InputArguments) << "RooWorkspace(" << GetName() << ") ERROR: No object named " << wsname << " in file " << filename 
-			  << " or object is not a RooWorkspace" << endl ;
-    return 0 ;
+  if (w == nullptr) {
+     coutE(InputArguments) << "RooWorkspace(" << GetName() << ") ERROR: No object named " << wsname << " in file "
+                           << filename << " or object is not a RooWorkspace" << endl;
+     return 0;
   }
 
   // Check that workspace contains object and forward to appropriate import method
@@ -395,9 +396,9 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg,
   Int_t noRecursion = pc.getInt("noRecursion") ;
 
 
-  // Turn zero length strings into null pointers 
-  if (suffixC && strlen(suffixC)==0) suffixC = 0 ;
-  if (suffixA && strlen(suffixA)==0) suffixA = 0 ;
+  // Turn zero length strings into null pointers
+  if (suffixC && strlen(suffixC) == 0) suffixC = nullptr;
+  if (suffixA && strlen(suffixA) == 0) suffixA = nullptr;
 
   Bool_t conflictOnly = suffixA ? kFALSE : kTRUE ;
   const char* suffix = suffixA ? suffixA : suffixC ;
@@ -413,13 +414,13 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg,
     char* ptr = strtok(tmp,", ") ;
     while (ptr) {
       tmpIn.push_back(ptr) ;
-      ptr = strtok(0,", ") ;
+      ptr = strtok(nullptr, ", ");
     }
     strlcpy(tmp,varChangeOut,10240) ;
     ptr = strtok(tmp,", ") ;
     while (ptr) {
       tmpOut.push_back(ptr) ;
-      ptr = strtok(0,", ") ;
+      ptr = strtok(nullptr, ", ");
     }    
     list<string>::iterator iin = tmpIn.begin() ;
     list<string>::iterator iout = tmpOut.begin() ;
@@ -437,21 +438,21 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg,
     char* ptr = strtok(tmp,", ") ;
     while(ptr) {
       exceptVarNames.insert(ptr) ;
-      ptr = strtok(0,", ") ;
+      ptr = strtok(nullptr, ", ");
     }
   }
 
-  if (suffixV != 0 && strlen(suffixV)>0) {
-    RooArgSet* vars = inArg.getVariables() ;
-    TIterator* iter = vars->createIterator() ;
-    RooAbsArg* v ;
-    while((v=(RooAbsArg*)iter->Next())) {
-      if (exceptVarNames.find(v->GetName())==exceptVarNames.end()) {
-	varMap[v->GetName()] = Form("%s_%s",v->GetName(),suffixV) ;
-      }
-    }
-    delete iter ;
-    delete vars ;
+  if (suffixV != nullptr && strlen(suffixV) > 0) {
+     RooArgSet *vars = inArg.getVariables();
+     TIterator *iter = vars->createIterator();
+     RooAbsArg *v;
+     while ((v = (RooAbsArg *)iter->Next())) {
+        if (exceptVarNames.find(v->GetName()) == exceptVarNames.end()) {
+           varMap[v->GetName()] = Form("%s_%s", v->GetName(), suffixV);
+        }
+     }
+     delete iter;
+     delete vars;
   }
   
   // Scan for overlaps with current contents
@@ -459,7 +460,7 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg,
 
   // Check for factory specification match
   const char* tagIn = inArg.getStringAttribute("factory_tag") ;
-  const char* tagWs = wsarg ? wsarg->getStringAttribute("factory_tag") : 0 ;
+  const char *tagWs = wsarg ? wsarg->getStringAttribute("factory_tag") : nullptr;
   Bool_t factoryMatch = (tagIn && tagWs && !strcmp(tagIn,tagWs)) ;
   if (factoryMatch) {
     ((RooAbsArg&)inArg).setAttribute("RooWorkspace::Recycle") ;
@@ -797,7 +798,7 @@ Bool_t RooWorkspace::import(RooAbsData& inData,
 
   // Transform emtpy string into null pointer
   if (dsetName && strlen(dsetName)==0) {
-    dsetName=0 ;
+     dsetName = nullptr;
   }
   
   RooLinkedList& dataList = embedded ? _embeddedDataList : _dataList ;
@@ -832,13 +833,13 @@ Bool_t RooWorkspace::import(RooAbsData& inData,
     char* ptr = strtok(tmp,",") ;
     while (ptr) {
       tmpIn.push_back(ptr) ;
-      ptr = strtok(0,",") ;
+      ptr = strtok(nullptr, ",");
     }
     strlcpy(tmp,varChangeOut,10240) ;
     ptr = strtok(tmp,",") ;
     while (ptr) {
       tmpOut.push_back(ptr) ;
-      ptr = strtok(0,",") ;
+      ptr = strtok(nullptr, ",");
     }    
     list<string>::iterator iin = tmpIn.begin() ;
     list<string>::iterator iout = tmpOut.begin() ;
@@ -950,8 +951,8 @@ Bool_t RooWorkspace::defineSet(const char* name, const char* contentList)
 			    << "\" is not in workspace" << endl ;
       return kTRUE ;
     }
-    wsargs.add(*arg(token)) ;    
-    token = strtok(0,",") ;
+    wsargs.add(*arg(token)) ;
+    token = strtok(nullptr, ",");
   }
 
   // Install named set
@@ -983,8 +984,8 @@ Bool_t RooWorkspace::extendSet(const char* name, const char* newContents)
 			    << "\" is not in workspace" << endl ;
       return kTRUE ;
     }
-    wsargs.add(*arg(token)) ;    
-    token = strtok(0,",") ;
+    wsargs.add(*arg(token)) ;
+    token = strtok(nullptr, ",");
   }
 
   // Extend named set
@@ -1002,7 +1003,7 @@ Bool_t RooWorkspace::extendSet(const char* name, const char* newContents)
 const RooArgSet* RooWorkspace::set(const char* name) 
 {
   map<string,RooArgSet>::iterator i = _namedSets.find(name) ;
-  return (i!=_namedSets.end()) ? &(i->second) : 0 ;
+  return (i != _namedSets.end()) ? &(i->second) : nullptr;
 }
 
 
@@ -1260,7 +1261,7 @@ const RooArgSet* RooWorkspace::getSnapshot(const char* name) const
   RooArgSet* snap = (RooArgSet*) _snapshots.find(name) ;
   if (!snap) {
     coutE(ObjectHandling) << "RooWorkspace::loadSnapshot(" << GetName() << ") no snapshot with name " << name << " is available" << endl ;
-    return 0 ;
+    return nullptr;
   }
 
   return snap ;
@@ -1371,7 +1372,7 @@ RooArgSet RooWorkspace::argSet(const char* nameList) const
     } else {
       coutE(InputArguments) << " RooWorkspace::argSet(" << GetName() << ") no RooAbsArg named \"" << token << "\" in workspace" << endl ;
     }
-    token = strtok(0,",") ; 
+    token = strtok(nullptr, ",");
   }
   return ret ;
 }
@@ -1386,9 +1387,9 @@ RooAbsArg* RooWorkspace::fundArg(const char* name) const
 {
   RooAbsArg* tmp = arg(name) ;
   if (!tmp) {
-    return 0 ;
+     return nullptr;
   }
-  return tmp->isFundamental() ? tmp : 0 ;
+  return tmp->isFundamental() ? tmp : nullptr;
 }
 
 
@@ -1644,7 +1645,7 @@ Bool_t RooWorkspace::CodeRepo::autoImportClass(TClass* tc, Bool_t doReplace)
     oocxcoutD(_wspace,ObjectHandling) << "RooWorkspace::CodeRepo(" << _wspace->GetName() << ") code of class " << tc->GetName() << " is in ROOT distribution, skipping " << endl ;
     return kTRUE ;
   }
-  const char* implpath=0 ;
+  const char *implpath = nullptr;
 
   // Require that class meets technical criteria to be persistable (i.e it has a default ctor)
   // (We also need a default ctor of abstract classes, but cannot check that through is interface
@@ -1656,9 +1657,9 @@ Bool_t RooWorkspace::CodeRepo::autoImportClass(TClass* tc, Bool_t doReplace)
   }
 
 
-  // *** PHASE 2 *** Check if declaration and implementation files can be located 
+  // *** PHASE 2 *** Check if declaration and implementation files can be located
 
-  char* declpath = 0 ;
+  char *declpath = nullptr;
 
   // Check if header file can be found in specified location
   // If not, scan through list of 'class declaration' paths in RooWorkspace
@@ -1676,7 +1677,7 @@ Bool_t RooWorkspace::CodeRepo::autoImportClass(TClass* tc, Bool_t doReplace)
       }
       // cleanup and continue ;
       delete[] declpath ;
-      declpath=0 ;
+      declpath = nullptr;
 
       ++diter ;
     }
@@ -1722,7 +1723,7 @@ Bool_t RooWorkspace::CodeRepo::autoImportClass(TClass* tc, Bool_t doReplace)
       }
       // cleanup and continue ;
       delete[] implpath ;
-      implpath=0 ;
+      implpath = nullptr;
 
       ++iiter ;
     }
@@ -1797,8 +1798,8 @@ Bool_t RooWorkspace::CodeRepo::autoImportClass(TClass* tc, Bool_t doReplace)
       
       // Look for include state of self
       Bool_t processedInclude = kFALSE ;
-      char* extincfile = 0 ;
-      
+      char *extincfile = nullptr;
+
       // Look for include of declaration file corresponding to this implementation file
       if (strstr(buf,"#include")) {
 	// Process #include statements here
@@ -1806,9 +1807,9 @@ Bool_t RooWorkspace::CodeRepo::autoImportClass(TClass* tc, Bool_t doReplace)
 	strlcpy(tmp,buf,10240) ;
 	Bool_t stdinclude = strchr(buf,'<') ;
 	strtok(tmp," <\"") ;
-	char* incfile = strtok(0," <>\"") ;	
-	
-	if (!stdinclude) {
+   char *incfile = strtok(nullptr, " <>\"");
+
+   if (!stdinclude) {
 	  // check if it lives in $ROOTSYS/include
 	  TString hpath = gSystem->Getenv("ROOTSYS") ;
 	  hpath += "/include/" ;
@@ -1851,8 +1852,8 @@ Bool_t RooWorkspace::CodeRepo::autoImportClass(TClass* tc, Bool_t doReplace)
       // Look for include state of self
       Bool_t foundSelfInclude=kFALSE ;
       Bool_t processedInclude = kFALSE ;
-      char* extincfile = 0 ;
-      
+      char *extincfile = nullptr;
+
       // Look for include of declaration file corresponding to this implementation file
       if (strstr(buf,"#include")) {
 	// Process #include statements here
@@ -1860,9 +1861,9 @@ Bool_t RooWorkspace::CodeRepo::autoImportClass(TClass* tc, Bool_t doReplace)
 	strlcpy(tmp,buf,10240) ;
 	Bool_t stdinclude = strchr(buf,'<') ;
 	strtok(tmp," <\"") ;
-	char* incfile = strtok(0," <>\"") ;	
+   char *incfile = strtok(nullptr, " <>\"");
 
-	if (strstr(incfile,declfilename.c_str())) {
+   if (strstr(incfile,declfilename.c_str())) {
 	  foundSelfInclude=kTRUE ;
 	}
 
@@ -1921,9 +1922,9 @@ Bool_t RooWorkspace::CodeRepo::autoImportClass(TClass* tc, Bool_t doReplace)
 	    strlcpy(tmp,buf2,10240) ;
 	    Bool_t stdinclude = strchr(buf,'<') ;
 	    strtok(tmp," <\"") ;
-	    char* incfile = strtok(0," <>\"") ;	
+       char *incfile = strtok(nullptr, " <>\"");
 
-	    if (!stdinclude) {
+       if (!stdinclude) {
 	      // check if it lives in $ROOTSYS/include
 	      TString hpath = gSystem->Getenv("ROOTSYS") ;
 	      hpath += "/include/" ;
@@ -2048,7 +2049,7 @@ Bool_t RooWorkspace::import(TObject& object, Bool_t replaceExisting)
 
   // Grab the current state of the directory Auto-Add
   ROOT::DirAutoAdd_t func = object.IsA()->GetDirectoryAutoAdd();
-  object.IsA()->SetDirectoryAutoAdd(0);
+  object.IsA()->SetDirectoryAutoAdd(nullptr);
   Bool_t tmp = RooPlot::setAddDirectoryStatus(kFALSE) ;
 
   if (oldObj) {
@@ -2158,7 +2159,7 @@ TObject* RooWorkspace::genobj(const char* name)  const
   TObject* gobj = _genObjects.FindObject(name) ;
 
   // Exit here if not found
-  if (!gobj) return 0 ;
+  if (!gobj) return nullptr;
 
   // If found object is wrapper, return payload
   if (gobj->IsA()==RooTObjWrap::Class()) return ((RooTObjWrap*)gobj)->obj() ;

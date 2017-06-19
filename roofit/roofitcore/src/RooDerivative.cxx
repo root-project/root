@@ -53,7 +53,7 @@ ClassImp(RooDerivative);
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
-RooDerivative::RooDerivative() : _order(1), _eps(1e-7), _ftor(0), _rd(0)
+RooDerivative::RooDerivative() : _order(1), _eps(1e-7), _ftor(nullptr), _rd(nullptr)
 {
 }
 
@@ -61,15 +61,10 @@ RooDerivative::RooDerivative() : _order(1), _eps(1e-7), _ftor(0), _rd(0)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooDerivative::RooDerivative(const char* name, const char* title, RooAbsReal& func, RooRealVar& x, Int_t orderIn, Double_t epsIn) :
-  RooAbsReal(name, title),
-  _order(orderIn),
-  _eps(epsIn),
-  _nset("nset","nset",this,kFALSE,kFALSE),
-  _func("function","function",this,func),
-  _x("x","x",this,x),
-  _ftor(0),
-  _rd(0)
+RooDerivative::RooDerivative(const char *name, const char *title, RooAbsReal &func, RooRealVar &x, Int_t orderIn,
+                             Double_t epsIn)
+   : RooAbsReal(name, title), _order(orderIn), _eps(epsIn), _nset("nset", "nset", this, kFALSE, kFALSE),
+     _func("function", "function", this, func), _x("x", "x", this, x), _ftor(nullptr), _rd(nullptr)
 {
   if (_order<0 || _order>3 ) {
     throw std::string(Form("RooDerivative::ctor(%s) ERROR, derivation order must be 1,2 or 3",name)) ;
@@ -78,15 +73,10 @@ RooDerivative::RooDerivative(const char* name, const char* title, RooAbsReal& fu
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooDerivative::RooDerivative(const char* name, const char* title, RooAbsReal& func, RooRealVar& x, const RooArgSet& nset, Int_t orderIn, Double_t epsIn) :
-  RooAbsReal(name, title),
-  _order(orderIn),
-  _eps(epsIn),
-  _nset("nset","nset",this,kFALSE,kFALSE),
-  _func("function","function",this,func),
-  _x("x","x",this,x),
-  _ftor(0),
-  _rd(0)
+RooDerivative::RooDerivative(const char *name, const char *title, RooAbsReal &func, RooRealVar &x,
+                             const RooArgSet &nset, Int_t orderIn, Double_t epsIn)
+   : RooAbsReal(name, title), _order(orderIn), _eps(epsIn), _nset("nset", "nset", this, kFALSE, kFALSE),
+     _func("function", "function", this, func), _x("x", "x", this, x), _ftor(nullptr), _rd(nullptr)
 {
   if (_order<0 || _order>3) { 
     throw std::string(Form("RooDerivative::ctor(%s) ERROR, derivation order must be 1,2 or 3",name)) ;
@@ -98,15 +88,9 @@ RooDerivative::RooDerivative(const char* name, const char* title, RooAbsReal& fu
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooDerivative::RooDerivative(const RooDerivative& other, const char* name) :
-  RooAbsReal(other, name), 
-  _order(other._order),  
-  _eps(other._eps),
-  _nset("nset",this,other._nset),
-  _func("function",this,other._func),
-  _x("x",this,other._x),
-  _ftor(0),
-  _rd(0)
+RooDerivative::RooDerivative(const RooDerivative &other, const char *name)
+   : RooAbsReal(other, name), _order(other._order), _eps(other._eps), _nset("nset", this, other._nset),
+     _func("function", this, other._func), _x("x", this, other._x), _ftor(nullptr), _rd(nullptr)
 {
 }
 
@@ -150,8 +134,8 @@ Double_t RooDerivative::evaluate() const
 Bool_t RooDerivative::redirectServersHook(const RooAbsCollection& /*newServerList*/, Bool_t /*mustReplaceAll*/, Bool_t /*nameChange*/, Bool_t /*isRecursive*/) 
 {
   delete _ftor ;
-  delete _rd ; 
-  _ftor = 0 ;
-  _rd = 0 ;
+  delete _rd ;
+  _ftor = nullptr;
+  _rd = nullptr;
   return kFALSE ;
 }

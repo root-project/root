@@ -38,11 +38,11 @@ ClassImp(TTablePoints);
 
 TTablePoints::TTablePoints()
 {
-   fTableSorter =  0;
-   fKey         =  0;
+   fTableSorter = nullptr;
+   fKey = nullptr;
    fFirstRow    = -1;
    fSize        =  0;
-   fRows        =  0;
+   fRows = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -50,11 +50,11 @@ TTablePoints::TTablePoints()
 
 TTablePoints::TTablePoints(TTableSorter *sorter,const void *key,Option_t *opt)
 {
-   fTableSorter =  0;
-   fKey         =  0;
+   fTableSorter = nullptr;
+   fKey = nullptr;
    fFirstRow    = -1;
    fSize        =  0;
-   fRows        =  0;
+   fRows = nullptr;
    if (sorter) {
       fTableSorter = sorter;
       fKey         = key;
@@ -69,11 +69,11 @@ TTablePoints::TTablePoints(TTableSorter *sorter,const void *key,Option_t *opt)
 
 TTablePoints::TTablePoints(TTableSorter *sorter, Int_t keyIndex,Option_t *opt)
 {
-   fTableSorter =  0;
-   fKey         =  0;
+   fTableSorter = nullptr;
+   fKey = nullptr;
    fFirstRow    = -1;
    fSize        =  0;
-   fRows        =  0;
+   fRows = nullptr;
    if (sorter) {
       fTableSorter = sorter;
       fKey         = sorter->GetKeyAddress(keyIndex);

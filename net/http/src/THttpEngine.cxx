@@ -26,8 +26,7 @@ ClassImp(THttpEngine);
 ////////////////////////////////////////////////////////////////////////////////
 /// normal constructor
 
-THttpEngine::THttpEngine(const char *name, const char *title)
-   : TNamed(name, title), fServer(0)
+THttpEngine::THttpEngine(const char *name, const char *title) : TNamed(name, title), fServer(nullptr)
 {
 }
 
@@ -36,7 +35,7 @@ THttpEngine::THttpEngine(const char *name, const char *title)
 
 THttpEngine::~THttpEngine()
 {
-   fServer = 0;
+   fServer = nullptr;
 }
 
 ClassImp(THttpWSEngine);

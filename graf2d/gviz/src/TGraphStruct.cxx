@@ -60,10 +60,10 @@ A graph structure can be dumped into a "dot" file using DumpAsDotFile.
 
 TGraphStruct::TGraphStruct()
 {
-   fNodes   = 0;
-   fEdges   = 0;
-   fGVGraph = 0;
-   fGVC     = 0;
+   fNodes = nullptr;
+   fEdges = nullptr;
+   fGVGraph = nullptr;
+   fGVC = nullptr;
 
    SetMargin();
 }
@@ -215,7 +215,7 @@ Int_t TGraphStruct::Layout()
       agclose((Agraph_t*)fGVGraph);
    }
 #ifdef WITH_CGRAPH
-   fGVGraph = (GVizAgraph_t*)agopen((char*)"GVGraph", Agdirected, 0);
+   fGVGraph = (GVizAgraph_t *)agopen((char *)"GVGraph", Agdirected, nullptr);
 #else
    fGVGraph = (GVizAgraph_t*)agopen((char*)"GVGraph", AGDIGRAPH);
 #endif

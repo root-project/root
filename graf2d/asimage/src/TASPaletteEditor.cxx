@@ -51,12 +51,8 @@ extern "C" {
 #   include <bmp.h>
 }
 
-
-static const char *gFileTypes[] = {
-   "ROOT palette file",  "*.pal.root",
-   "ASCII palette file", "*.pal.txt",
-   0,                    0
-};
+static const char *gFileTypes[] = {"ROOT palette file", "*.pal.root", "ASCII palette file",
+                                   "*.pal.txt",         nullptr,      nullptr};
 
 static UShort_t gRedRainbow[12] = {
    0x0000, 0x7000, 0x0000, 0x0000, 0x0000,
@@ -79,12 +75,12 @@ ClassImp(TASPaletteEditor);
 /// The palette editor allows the editing of the color palette of the image.
 
 TASPaletteEditor::TASPaletteEditor(TAttImage *attImage, UInt_t w, UInt_t h)
-   : TPaletteEditor(attImage, w, h), TGMainFrame(0, w, h)
+   : TPaletteEditor(attImage, w, h), TGMainFrame(nullptr, w, h)
 {
    SetLayoutManager(new TGXYLayout(this));
-   fHisto        = 0;
-   fLimitLine[0] = 0;
-   fLimitLine[1] = 0;
+   fHisto = nullptr;
+   fLimitLine[0] = nullptr;
+   fLimitLine[1] = nullptr;
    fRampFactor   = 0;
    fImagePad     = gPad;
 
@@ -397,8 +393,7 @@ void TASPaletteEditor::InsertNewPalette(TImagePalette *newPalette)
    // first remove all palettes in the list which are behind the
    // current palette
    TObject *obj;
-   while ((obj = fPaletteList->After(fPalette)) != 0)
-      delete fPaletteList->Remove(obj);
+   while ((obj = fPaletteList->After(fPalette)) != nullptr) delete fPaletteList->Remove(obj);
 
    // add new palette and make it to the current palette
    fPaletteList->Add(newPalette);
@@ -425,8 +420,7 @@ void TASPaletteEditor::Save()
 
    new TGFileDialog(gClient->GetRoot(), this, kFDSave, &fi);
    overwr = fi.fOverwrite;
-   if (fi.fFilename == 0)
-      return;
+   if (fi.fFilename == nullptr) return;
 
    if (strcmp(".pal.txt", fi.fFilename + strlen(fi.fFilename) - 8) == 0) {
       // write into an ASCII file
@@ -463,8 +457,7 @@ void TASPaletteEditor::Open()
    fi.fFileTypes = gFileTypes;
 
    new TGFileDialog(gClient->GetRoot(), this, kFDOpen, &fi);
-   if (fi.fFilename == 0)
-      return;
+   if (fi.fFilename == nullptr) return;
 
    TImagePalette *newPalette;
 

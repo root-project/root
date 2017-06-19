@@ -190,7 +190,7 @@ namespace TStreamerInfoActions
       buf >> pidf;
       pidf += buf.GetPidOffset();
       TProcessID *pid = buf.ReadProcessID(pidf);
-      if (pid!=0) {
+      if (pid != nullptr) {
          TObject *obj = (TObject*)( ((char*)addr) + conf->fObjectOffset);
          UInt_t gpid = pid->GetUniqueID();
          UInt_t uid;
@@ -251,7 +251,7 @@ namespace TStreamerInfoActions
       TClass *cl                 = config->fCompInfo->fClass;
       TMemberStreamer *pstreamer = config->fCompInfo->fStreamer;
       TVirtualCollectionProxy *proxy = cl->GetCollectionProxy();
-      TClass* vClass = proxy ? proxy->GetValueClass() : 0;
+      TClass *vClass = proxy ? proxy->GetValueClass() : nullptr;
       UInt_t eoffset = 0; // extra parameter of TStreamerInfo::WriteBufferAux, 0 for all kind of objects writing
       UInt_t ioffset = eoffset + config->fOffset;
 
@@ -287,9 +287,8 @@ namespace TStreamerInfoActions
       UInt_t pos = buf.WriteVersion(config->fInfo->IsA(),kTRUE);
       if (kIsTextT) {
          // use same method which is used in kSTL
-         buf.WriteFastArray((void **)((char *) addr + ioffset), cl, config->fCompInfo->fLength, kFALSE, 0);
-      } else
-      if (pstreamer == 0) {
+         buf.WriteFastArray((void **)((char *)addr + ioffset), cl, config->fCompInfo->fLength, kFALSE, nullptr);
+      } else if (pstreamer == nullptr) {
          //for (int k = 0; k < narr; ++k) {
             char **contp = (char**)((char *) addr + ioffset);
             for(int j=0; j<config->fCompInfo->fLength; ++j) {
@@ -336,7 +335,7 @@ namespace TStreamerInfoActions
       // Get the class of the data member.
       TClass* cl = config->fCompInfo->fClass;
       // Which are we, an array of objects or an array of pointers to objects?
-      Bool_t isPtrPtr = (strstr(config->fCompInfo->fElem->GetTypeName(), "**") != 0);
+      Bool_t isPtrPtr = (strstr(config->fCompInfo->fElem->GetTypeName(), "**") != nullptr);
 
       // By default assume the file version is the newest.
       Int_t fileVersion = kMaxInt;
@@ -375,20 +374,20 @@ namespace TStreamerInfoActions
                      // -- We are a varying-length array of objects.
                      // Write the entire array of objects to the buffer.
                      // Note: Polymorphism is not allowed here.
-                     buf.WriteFastArray(pp[ndx], cl, vlen, 0);
+                     buf.WriteFastArray(pp[ndx], cl, vlen, nullptr);
                   }
                   else {
                      // -- We are a varying-length array of pointers to objects.
                      // Write the entire array of object pointers to the buffer.
                      // Note: The object pointers are allowed to be polymorphic.
-                     buf.WriteFastArray((void**) pp[ndx], cl, vlen, kFALSE, 0);
+                     buf.WriteFastArray((void **)pp[ndx], cl, vlen, kFALSE, nullptr);
                   } // isPtrPtr
                } // ndx
             } else // vlen
             if (kIsTextT) {
                // special handling for the text-based streamers
                for (Int_t ndx = 0; ndx < config->fCompInfo->fLength; ++ndx)
-                  buf.WriteFastArray((void *) 0, cl, -1, 0);
+                  buf.WriteFastArray((void *)nullptr, cl, -1, nullptr);
             }
          //} // k
       }
@@ -538,21 +537,41 @@ namespace TStreamerInfoActions
       TVirtualCollectionProxy::DeleteIterator_t     fDeleteIterator;
       TVirtualCollectionProxy::DeleteTwoIterators_t fDeleteTwoIterators;
 
-      TConfigSTL(TVirtualStreamerInfo *info, UInt_t id, TCompInfo_t *compinfo, Int_t offset, UInt_t length, TClass *oldClass, const char *type_name, Bool_t isbase) :
-         TConfiguration(info,id,compinfo,offset,length), fOldClass(oldClass), fNewClass(oldClass), fStreamer(0), fTypeName(type_name), fIsSTLBase(isbase),
-         fCreateIterators(0), fCopyIterator(0), fDeleteIterator(0), fDeleteTwoIterators(0) { Init(); }
+      TConfigSTL(TVirtualStreamerInfo *info, UInt_t id, TCompInfo_t *compinfo, Int_t offset, UInt_t length,
+                 TClass *oldClass, const char *type_name, Bool_t isbase)
+         : TConfiguration(info, id, compinfo, offset, length), fOldClass(oldClass), fNewClass(oldClass),
+           fStreamer(nullptr), fTypeName(type_name), fIsSTLBase(isbase), fCreateIterators(nullptr),
+           fCopyIterator(nullptr), fDeleteIterator(nullptr), fDeleteTwoIterators(nullptr)
+      {
+         Init();
+      }
 
-      TConfigSTL(TVirtualStreamerInfo *info, UInt_t id, TCompInfo_t *compinfo, Int_t offset, UInt_t length, TClass *oldClass, TClass *newClass, const char *type_name, Bool_t isbase) :
-         TConfiguration(info,id,compinfo,offset,length), fOldClass(oldClass), fNewClass(newClass), fStreamer(0), fTypeName(type_name), fIsSTLBase(isbase),
-         fCreateIterators(0), fCopyIterator(0), fDeleteIterator(0), fDeleteTwoIterators(0) { Init(); }
+      TConfigSTL(TVirtualStreamerInfo *info, UInt_t id, TCompInfo_t *compinfo, Int_t offset, UInt_t length,
+                 TClass *oldClass, TClass *newClass, const char *type_name, Bool_t isbase)
+         : TConfiguration(info, id, compinfo, offset, length), fOldClass(oldClass), fNewClass(newClass),
+           fStreamer(nullptr), fTypeName(type_name), fIsSTLBase(isbase), fCreateIterators(nullptr),
+           fCopyIterator(nullptr), fDeleteIterator(nullptr), fDeleteTwoIterators(nullptr)
+      {
+         Init();
+      }
 
-      TConfigSTL(TVirtualStreamerInfo *info, UInt_t id, TCompInfo_t *compinfo, Int_t offset, UInt_t length, TClass *oldClass, TMemberStreamer* streamer, const char *type_name, Bool_t isbase) :
-         TConfiguration(info,id,compinfo,offset,length), fOldClass(oldClass), fNewClass(oldClass), fStreamer(streamer), fTypeName(type_name), fIsSTLBase(isbase),
-         fCreateIterators(0), fCopyIterator(0), fDeleteIterator(0), fDeleteTwoIterators(0) { Init(); }
+      TConfigSTL(TVirtualStreamerInfo *info, UInt_t id, TCompInfo_t *compinfo, Int_t offset, UInt_t length,
+                 TClass *oldClass, TMemberStreamer *streamer, const char *type_name, Bool_t isbase)
+         : TConfiguration(info, id, compinfo, offset, length), fOldClass(oldClass), fNewClass(oldClass),
+           fStreamer(streamer), fTypeName(type_name), fIsSTLBase(isbase), fCreateIterators(nullptr),
+           fCopyIterator(nullptr), fDeleteIterator(nullptr), fDeleteTwoIterators(nullptr)
+      {
+         Init();
+      }
 
-      TConfigSTL(TVirtualStreamerInfo *info, UInt_t id, TCompInfo_t *compinfo, Int_t offset, UInt_t length, TClass *oldClass, TClass *newClass, TMemberStreamer* streamer, const char *type_name, Bool_t isbase) :
-         TConfiguration(info,id,compinfo,offset,length), fOldClass(oldClass), fNewClass(newClass), fStreamer(streamer), fTypeName(type_name), fIsSTLBase(isbase),
-         fCreateIterators(0), fCopyIterator(0), fDeleteIterator(0), fDeleteTwoIterators(0) { Init(); }
+      TConfigSTL(TVirtualStreamerInfo *info, UInt_t id, TCompInfo_t *compinfo, Int_t offset, UInt_t length,
+                 TClass *oldClass, TClass *newClass, TMemberStreamer *streamer, const char *type_name, Bool_t isbase)
+         : TConfiguration(info, id, compinfo, offset, length), fOldClass(oldClass), fNewClass(newClass),
+           fStreamer(streamer), fTypeName(type_name), fIsSTLBase(isbase), fCreateIterators(nullptr),
+           fCopyIterator(nullptr), fDeleteIterator(nullptr), fDeleteTwoIterators(nullptr)
+      {
+         Init();
+      }
 
       virtual TConfiguration *Copy() { return new TConfigSTL(*this); }
    };
@@ -650,7 +669,8 @@ namespace TStreamerInfoActions
       TVirtualCollectionProxy::CopyIterator_t       fCopyIterator;
       TVirtualCollectionProxy::DeleteIterator_t     fDeleteIterator;
 
-      TGenericLoopConfig(TVirtualCollectionProxy *proxy, Bool_t read) : fProxy(proxy), fNext(0), fCopyIterator(0), fDeleteIterator(0)
+      TGenericLoopConfig(TVirtualCollectionProxy *proxy, Bool_t read)
+         : fProxy(proxy), fNext(nullptr), fCopyIterator(nullptr), fDeleteIterator(nullptr)
       {
          Init(read);
       }
@@ -918,7 +938,7 @@ namespace TStreamerInfoActions
    {
       TConfigSTL *config = (TConfigSTL*)conf;
       // Idea: This needs to be unrolled, it currently calls the TGenCollectionStreamer ....
-      buf.ReadFastArray(addr,config->fNewClass,conf->fLength,(TMemberStreamer*)0,config->fOldClass);
+      buf.ReadFastArray(addr, config->fNewClass, conf->fLength, (TMemberStreamer *)nullptr, config->fOldClass);
    }
    INLINE_TEMPLATE_ARGS void ReadSTLObjectWiseStreamer(TBuffer &buf, void *addr, const TConfiguration *conf, Version_t /* vers */, UInt_t /* start */)
    {
@@ -936,7 +956,7 @@ namespace TStreamerInfoActions
          buf.SetBufferOffset(start);  //there is no byte count
       }
       // Idea: This needs to be unrolled, it currently calls the TGenCollectionStreamer ....
-      buf.ReadFastArray(addr,config->fNewClass,conf->fLength,(TMemberStreamer*)0,config->fOldClass);
+      buf.ReadFastArray(addr, config->fNewClass, conf->fLength, (TMemberStreamer *)nullptr, config->fOldClass);
    }
    INLINE_TEMPLATE_ARGS void ReadSTLObjectWiseStreamerV2(TBuffer &buf, void *addr, const TConfiguration *conf, Version_t vers, UInt_t start)
    {
@@ -1036,10 +1056,11 @@ namespace TStreamerInfoActions
             // Idea: We should print the name of the action function.
             TStreamerInfo *info = (TStreamerInfo*)fInfo;
             TStreamerElement *aElement = fCompInfo->fElem;
-            fprintf(stdout,"StreamerInfoAction, class:%s, name=%s, fType[%d]=%d,"
-                   " %s, bufpos=%d, arr=%p, eoffset=%d, Redirect=%p\n",
-                   info->GetClass()->GetName(),aElement->GetName(),fElemId,fCompInfo->fType,
-                   aElement->ClassName(),b.Length(),addr, 0,b.PeekDataCache() ? b.PeekDataCache()->GetObjectAt(0) : 0);
+            fprintf(stdout,
+                    "StreamerInfoAction, class:%s, name=%s, fType[%d]=%d,"
+                    " %s, bufpos=%d, arr=%p, eoffset=%d, Redirect=%p\n",
+                    info->GetClass()->GetName(), aElement->GetName(), fElemId, fCompInfo->fType, aElement->ClassName(),
+                    b.Length(), addr, 0, b.PeekDataCache() ? b.PeekDataCache()->GetObjectAt(0) : nullptr);
          }
 
       }
@@ -1058,7 +1079,7 @@ namespace TStreamerInfoActions
 
       Int_t bufpos = b.Length();
       TVirtualArray *cached = b.PeekDataCache();
-      if (cached==0) {
+      if (cached == nullptr) {
          TStreamerElement *aElement = conf->fCompInfo->fElem;
          TStreamerInfo *info = (TStreamerInfo*)conf->fInfo;
          Warning("ReadBuffer","Skipping %s::%s because the cache is missing.",info->GetName(),aElement->GetName());
@@ -1080,7 +1101,7 @@ namespace TStreamerInfoActions
       Int_t bufpos = b.Length();
 
       TVirtualArray *cached = b.PeekDataCache();
-      if (cached==0) {
+      if (cached == nullptr) {
          TStreamerElement *aElement = config->fCompInfo->fElem;
          TStreamerInfo *info = (TStreamerInfo*)config->fInfo;
          Warning("ReadBuffer","Skipping %s::%s because the cache is missing.",info->GetName(),aElement->GetName());
@@ -1106,7 +1127,7 @@ namespace TStreamerInfoActions
 
       Int_t bufpos = b.Length();
       TVirtualArray *cached = b.PeekDataCache();
-      if (cached==0) {
+      if (cached == nullptr) {
          TStreamerElement *aElement = config->fCompInfo->fElem;
          TStreamerInfo *info = (TStreamerInfo*)config->fInfo;
          Warning("ReadBuffer","Skipping %s::%s because the cache is missing.",info->GetName(),aElement->GetName());
@@ -1132,7 +1153,7 @@ namespace TStreamerInfoActions
 
       Int_t bufpos = b.Length();
       TVirtualArray *cached = b.PeekDataCache();
-      if (cached==0) {
+      if (cached == nullptr) {
          TStreamerElement *aElement = config->fCompInfo->fElem;
          TStreamerInfo *info = (TStreamerInfo*)config->fInfo;
 
@@ -2490,8 +2511,7 @@ void TStreamerInfo::Compile()
       }
    }
 
-   assert(fComp == 0 && fCompFull == 0 && fCompOpt == 0);
-
+   assert(fComp == nullptr && fCompFull == nullptr && fCompOpt == nullptr);
 
    Int_t ndata = fElements->GetEntries();
 
@@ -2542,7 +2562,7 @@ void TStreamerInfo::Compile()
    fCompOpt  = new TCompInfo*[ndata];
 
    TStreamerElement* element;
-   TStreamerElement* previous = 0;
+   TStreamerElement *previous = nullptr;
    Int_t keep = -1;
    Int_t i;
 
@@ -2801,7 +2821,8 @@ void TStreamerInfo::AddReadAction(TStreamerInfoActions::TActionSequence *readSeq
                   if (element->GetStreamer()) {
                      readSequence->AddAction(ReadSTL<ReadSTLMemberWiseChangedClass,ReadSTLObjectWiseStreamer>, new TConfigSTL(this,i,compinfo,compinfo->fOffset,1,oldClass,newClass,element->GetStreamer(),element->GetTypeName(),isSTLbase));
                   } else {
-                     if (oldClass->GetCollectionProxy() == 0 || oldClass->GetCollectionProxy()->GetValueClass() || oldClass->GetCollectionProxy()->HasPointers() ) {
+                     if (oldClass->GetCollectionProxy() == nullptr || oldClass->GetCollectionProxy()->GetValueClass() ||
+                         oldClass->GetCollectionProxy()->HasPointers()) {
                         readSequence->AddAction(ReadSTL<ReadSTLMemberWiseChangedClass,ReadSTLObjectWiseFastArray>, new TConfigSTL(this,i,compinfo,compinfo->fOffset,1,oldClass,newClass,element->GetTypeName(),isSTLbase));
                      } else {
                         switch (SelectLooper(*newClass->GetCollectionProxy())) {
@@ -2824,7 +2845,8 @@ void TStreamerInfo::AddReadAction(TStreamerInfoActions::TActionSequence *readSeq
                   if (element->GetStreamer()) {
                      readSequence->AddAction(ReadSTL<ReadSTLMemberWiseSameClass,ReadSTLObjectWiseStreamer>, new TConfigSTL(this,i,compinfo,compinfo->fOffset,1,oldClass,element->GetStreamer(),element->GetTypeName(),isSTLbase));
                   } else {
-                     if (oldClass->GetCollectionProxy() == 0 || oldClass->GetCollectionProxy()->GetValueClass() || oldClass->GetCollectionProxy()->HasPointers() ) {
+                     if (oldClass->GetCollectionProxy() == nullptr || oldClass->GetCollectionProxy()->GetValueClass() ||
+                         oldClass->GetCollectionProxy()->HasPointers()) {
                         readSequence->AddAction(ReadSTL<ReadSTLMemberWiseSameClass,ReadSTLObjectWiseFastArray>, new TConfigSTL(this,i,compinfo,compinfo->fOffset,1,oldClass,element->GetTypeName(),isSTLbase));
                      } else {
                         switch (SelectLooper(*oldClass->GetCollectionProxy())) {
@@ -3251,8 +3273,8 @@ void TStreamerInfo::AddWriteMemberWiseVecPtrAction(TStreamerInfoActions::TAction
 
 TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::CreateReadMemberWiseActions(TVirtualStreamerInfo *info, TVirtualCollectionProxy &proxy)
 {
-   if (info == 0) {
-      return new TStreamerInfoActions::TActionSequence(0,0);
+   if (info == nullptr) {
+      return new TStreamerInfoActions::TActionSequence(nullptr, 0);
    }
 
    TStreamerInfo *sinfo = static_cast<TStreamerInfo*>(info);
@@ -3367,8 +3389,8 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
 
 TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::CreateWriteMemberWiseActions(TVirtualStreamerInfo *info, TVirtualCollectionProxy &proxy)
 {
-      if (info == 0) {
-         return new TStreamerInfoActions::TActionSequence(0,0);
+   if (info == nullptr) {
+      return new TStreamerInfoActions::TActionSequence(nullptr, 0);
       }
 
       UInt_t ndata = info->GetElements()->GetEntries();
@@ -3521,7 +3543,9 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
             // as it does not create/use a TStaging as expected ... but then again it might
             // not be the right things to expect ...
             // sequence->AddAction( GetCollectionWriteAction<GenericLooper>(info,element,oldType,i,compinfo,offset) );
-            sequence->AddAction( GenericLooper::GenericWrite, new TConfigSTL(info,i,compinfo,0 /* the offset will be used from TStreamerInfo */,0,proxy.GetCollectionClass(),0,0) );
+            sequence->AddAction(GenericLooper::GenericWrite,
+                                new TConfigSTL(info, i, compinfo, 0 /* the offset will be used from TStreamerInfo */, 0,
+                                               proxy.GetCollectionClass(), nullptr, 0));
          }
 #endif
       }
@@ -3548,7 +3572,7 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
 
    TStreamerInfoActions::TActionSequence *sequence = new TStreamerInfoActions::TActionSequence(fStreamerInfo,fActions.size());
 
-   sequence->fLoopConfig = fLoopConfig ? fLoopConfig->Copy() : 0;
+   sequence->fLoopConfig = fLoopConfig ? fLoopConfig->Copy() : nullptr;
 
    TStreamerInfoActions::ActionContainer_t::iterator end = fActions.end();
    for(TStreamerInfoActions::ActionContainer_t::iterator iter = fActions.begin();
@@ -3568,7 +3592,7 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
 
    TStreamerInfoActions::TActionSequence *sequence = new TStreamerInfoActions::TActionSequence(fStreamerInfo,element_ids.size());
 
-   sequence->fLoopConfig = fLoopConfig ? fLoopConfig->Copy() : 0;
+   sequence->fLoopConfig = fLoopConfig ? fLoopConfig->Copy() : nullptr;
 
    for(UInt_t id = 0; id < element_ids.size(); ++id) {
       if ( element_ids[id] < 0 ) {

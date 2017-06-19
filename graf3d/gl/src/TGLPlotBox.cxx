@@ -60,17 +60,8 @@ const Int_t TGLPlotBox::fgFrontPairs[][2] =
 ///Front point is 0.
 
 TGLPlotBox::TGLPlotBox(Bool_t xoy, Bool_t xoz, Bool_t yoz)
-               : fFrameColor(0),
-                 fXOYSelectable(xoy),
-                 fXOZSelectable(xoz),
-                 fYOZSelectable(yoz),
-                 fSelectablePairs(),
-                 fFrontPoint(0),
-                 fRangeXU(1.),
-                 fRangeYU(1.),
-                 fRangeZU(1.),
-                 fDrawBack(kTRUE),
-                 fDrawFront(kTRUE)
+   : fFrameColor(nullptr), fXOYSelectable(xoy), fXOZSelectable(xoz), fYOZSelectable(yoz), fSelectablePairs(),
+     fFrontPoint(0), fRangeXU(1.), fRangeYU(1.), fRangeZU(1.), fDrawBack(kTRUE), fDrawFront(kTRUE)
 {
    fSelectablePairs[0][0] = xoz;
    fSelectablePairs[0][1] = yoz;

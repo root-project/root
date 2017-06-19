@@ -76,8 +76,7 @@ void RooIntegrator1D::registerIntegrator(RooNumIntFactory& fact)
 /// coverity[UNINIT_CTOR]
 /// Default constructor
 
-RooIntegrator1D::RooIntegrator1D() :
-  _h(0), _s(0), _c(0), _d(0), _x(0)
+RooIntegrator1D::RooIntegrator1D() : _h(nullptr), _s(nullptr), _c(nullptr), _d(nullptr), _x(nullptr)
 {
 }
 
@@ -139,8 +138,9 @@ RooIntegrator1D::RooIntegrator1D(const RooAbsFunc& function, const RooNumIntConf
   _doExtrap = (Bool_t) configSet.getCatIndex("extrapolation",1) ;
 
   if (_fixSteps>_maxSteps) {
-    oocoutE((TObject*)0,Integration) << "RooIntegrator1D::ctor() ERROR: fixSteps>maxSteps, fixSteps set to maxSteps" << endl ;
-    _fixSteps = _maxSteps ;
+     oocoutE((TObject *)nullptr, Integration)
+        << "RooIntegrator1D::ctor() ERROR: fixSteps>maxSteps, fixSteps set to maxSteps" << endl;
+     _fixSteps = _maxSteps;
   }
 
   _useIntegrandLimits= kTRUE;
@@ -200,8 +200,9 @@ Bool_t RooIntegrator1D::initialize()
 
   // check that the integrand is a valid function
   if(!isValid()) {
-    oocoutE((TObject*)0,Integration) << "RooIntegrator1D::initialize: cannot integrate invalid function" << endl;
-    return kFALSE;
+     oocoutE((TObject *)nullptr, Integration)
+        << "RooIntegrator1D::initialize: cannot integrate invalid function" << endl;
+     return kFALSE;
   }
 
   // Allocate coordinate buffer size after number of function dimensions
@@ -240,8 +241,9 @@ RooIntegrator1D::~RooIntegrator1D()
 Bool_t RooIntegrator1D::setLimits(Double_t *xmin, Double_t *xmax) 
 {
   if(_useIntegrandLimits) {
-    oocoutE((TObject*)0,Integration) << "RooIntegrator1D::setLimits: cannot override integrand's limits" << endl;
-    return kFALSE;
+     oocoutE((TObject *)nullptr, Integration)
+        << "RooIntegrator1D::setLimits: cannot override integrand's limits" << endl;
+     return kFALSE;
   }
   _xmin= *xmin;
   _xmax= *xmax;
@@ -256,14 +258,16 @@ Bool_t RooIntegrator1D::setLimits(Double_t *xmin, Double_t *xmax)
 Bool_t RooIntegrator1D::checkLimits() const 
 {
   if(_useIntegrandLimits) {
-    assert(0 != integrand() && integrand()->isValid());
-    _xmin= integrand()->getMinLimit(0);
-    _xmax= integrand()->getMaxLimit(0);
+     assert(nullptr != integrand() && integrand()->isValid());
+     _xmin = integrand()->getMinLimit(0);
+     _xmax = integrand()->getMaxLimit(0);
   }
   _range= _xmax - _xmin;
   if(_range < 0) {
-    oocoutE((TObject*)0,Integration) << "RooIntegrator1D::checkLimits: bad range with min >= max (_xmin = " << _xmin << " _xmax = " << _xmax << ")" << endl;
-    return kFALSE;
+     oocoutE((TObject *)nullptr, Integration)
+        << "RooIntegrator1D::checkLimits: bad range with min >= max (_xmin = " << _xmin << " _xmax = " << _xmax << ")"
+        << endl;
+     return kFALSE;
   }
   return (RooNumber::isInfinite(_xmin) || RooNumber::isInfinite(_xmax)) ? kFALSE : kTRUE;
 }
@@ -333,10 +337,11 @@ Double_t RooIntegrator1D::integral(const Double_t *yvec)
     _h[j+1]= (_rule == Trapezoid) ? _h[j]/4. : _h[j]/9.;
   }
 
-  oocoutW((TObject*)0,Integration) << "RooIntegrator1D::integral: integral of " << _function->getName() << " over range (" << _xmin << "," << _xmax << ") did not converge after " 
-				   << _maxSteps << " steps" << endl;
+  oocoutW((TObject *)nullptr, Integration)
+     << "RooIntegrator1D::integral: integral of " << _function->getName() << " over range (" << _xmin << "," << _xmax
+     << ") did not converge after " << _maxSteps << " steps" << endl;
   for(j= 1; j <= _maxSteps; j++) {
-    ooccoutW((TObject*)0,Integration) << "   [" << j << "] h = " << _h[j] << " , s = " << _s[j] << endl;
+     ooccoutW((TObject *)nullptr, Integration) << "   [" << j << "] h = " << _h[j] << " , s = " << _s[j] << endl;
   }
 
   return _s[_maxSteps] ;
@@ -432,7 +437,7 @@ void RooIntegrator1D::extrapolate(Int_t n)
       hp=xa[i+m];
       w=_c[i+1]-_d[i];
       if((den=ho-hp) == 0.0) {
-	oocoutE((TObject*)0,Integration) << "RooIntegrator1D::extrapolate: internal error" << endl;
+         oocoutE((TObject *)nullptr, Integration) << "RooIntegrator1D::extrapolate: internal error" << endl;
       }
       den=w/den;
       _d[i]=hp*den;

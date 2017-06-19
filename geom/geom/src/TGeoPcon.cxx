@@ -66,21 +66,8 @@ ClassImp(TGeoPcon);
 /// dummy ctor
 
 TGeoPcon::TGeoPcon()
-         :TGeoBBox(0, 0, 0),
-          fNz(0),
-          fPhi1(0.),
-          fDphi(0.),
-          fRmin(NULL),
-          fRmax(NULL),
-          fZ(NULL),
-          fFullPhi(kFALSE),
-          fC1(0.),
-          fS1(0.),
-          fC2(0.),
-          fS2(0.),
-          fCm(0.),
-          fSm(0.),
-          fCdphi(0.)
+   : TGeoBBox(0, 0, 0), fNz(0), fPhi1(0.), fDphi(0.), fRmin(nullptr), fRmax(nullptr), fZ(nullptr), fFullPhi(kFALSE),
+     fC1(0.), fS1(0.), fC2(0.), fS2(0.), fCm(0.), fSm(0.), fCdphi(0.)
 {
    SetShapeBit(TGeoShape::kGeoPcon);
 }
@@ -89,21 +76,8 @@ TGeoPcon::TGeoPcon()
 /// Default constructor
 
 TGeoPcon::TGeoPcon(Double_t phi, Double_t dphi, Int_t nz)
-         :TGeoBBox(0, 0, 0),
-          fNz(nz),
-          fPhi1(phi),
-          fDphi(dphi),
-          fRmin(NULL),
-          fRmax(NULL),
-          fZ(NULL),
-          fFullPhi(kFALSE),
-          fC1(0.),
-          fS1(0.),
-          fC2(0.),
-          fS2(0.),
-          fCm(0.),
-          fSm(0.),
-          fCdphi(0.)
+   : TGeoBBox(0, 0, 0), fNz(nz), fPhi1(phi), fDphi(dphi), fRmin(nullptr), fRmax(nullptr), fZ(nullptr), fFullPhi(kFALSE),
+     fC1(0.), fS1(0.), fC2(0.), fS2(0.), fCm(0.), fSm(0.), fCdphi(0.)
 {
    SetShapeBit(TGeoShape::kGeoPcon);
    while (fPhi1<0) fPhi1+=360.;
@@ -130,21 +104,8 @@ TGeoPcon::TGeoPcon(Double_t phi, Double_t dphi, Int_t nz)
 /// Default constructor
 
 TGeoPcon::TGeoPcon(const char *name, Double_t phi, Double_t dphi, Int_t nz)
-         :TGeoBBox(name, 0, 0, 0),
-          fNz(nz),
-          fPhi1(phi),
-          fDphi(dphi),
-          fRmin(NULL),
-          fRmax(NULL),
-          fZ(NULL),
-          fFullPhi(kFALSE),
-          fC1(0.),
-          fS1(0.),
-          fC2(0.),
-          fS2(0.),
-          fCm(0.),
-          fSm(0.),
-          fCdphi(0.)
+   : TGeoBBox(name, 0, 0, 0), fNz(nz), fPhi1(phi), fDphi(dphi), fRmin(nullptr), fRmax(nullptr), fZ(nullptr),
+     fFullPhi(kFALSE), fC1(0.), fS1(0.), fC2(0.), fS2(0.), fCm(0.), fSm(0.), fCdphi(0.)
 {
    SetShapeBit(TGeoShape::kGeoPcon);
    while (fPhi1<0) fPhi1+=360.;
@@ -178,21 +139,8 @@ TGeoPcon::TGeoPcon(const char *name, Double_t phi, Double_t dphi, Int_t nz)
 /// ...
 
 TGeoPcon::TGeoPcon(Double_t *param)
-         :TGeoBBox(0, 0, 0),
-          fNz(0),
-          fPhi1(0.),
-          fDphi(0.),
-          fRmin(0),
-          fRmax(0),
-          fZ(0),
-          fFullPhi(kFALSE),
-          fC1(0.),
-          fS1(0.),
-          fC2(0.),
-          fS2(0.),
-          fCm(0.),
-          fSm(0.),
-          fCdphi(0.)
+   : TGeoBBox(0, 0, 0), fNz(0), fPhi1(0.), fDphi(0.), fRmin(nullptr), fRmax(nullptr), fZ(nullptr), fFullPhi(kFALSE),
+     fC1(0.), fS1(0.), fC2(0.), fS2(0.), fCm(0.), fSm(0.), fCdphi(0.)
 {
    SetShapeBit(TGeoShape::kGeoPcon);
    SetDimensions(param);
@@ -202,22 +150,9 @@ TGeoPcon::TGeoPcon(Double_t *param)
 ////////////////////////////////////////////////////////////////////////////////
 ///copy constructor
 
-TGeoPcon::TGeoPcon(const TGeoPcon& pc) :
-  TGeoBBox(pc),
-  fNz(0),
-  fPhi1(0.),
-  fDphi(0.),
-  fRmin(0),
-  fRmax(0),
-  fZ(0),
-  fFullPhi(kFALSE),
-  fC1(0.),
-  fS1(0.),
-  fC2(0.),
-  fS2(0.),
-  fCm(0.),
-  fSm(0.),
-  fCdphi(0.)
+TGeoPcon::TGeoPcon(const TGeoPcon &pc)
+   : TGeoBBox(pc), fNz(0), fPhi1(0.), fDphi(0.), fRmin(nullptr), fRmax(nullptr), fZ(nullptr), fFullPhi(kFALSE), fC1(0.),
+     fS1(0.), fC2(0.), fS2(0.), fCm(0.), fSm(0.), fCdphi(0.)
 {
 }
 
@@ -231,9 +166,9 @@ TGeoPcon& TGeoPcon::operator=(const TGeoPcon& pc)
       fNz=0;
       fPhi1=0.;
       fDphi=0.;
-      fRmin=0;
-      fRmax=0;
-      fZ=0;
+      fRmin = nullptr;
+      fRmax = nullptr;
+      fZ = nullptr;
       fFullPhi=kFALSE;
       fC1=0;
       fS1=0;
@@ -251,9 +186,15 @@ TGeoPcon& TGeoPcon::operator=(const TGeoPcon& pc)
 
 TGeoPcon::~TGeoPcon()
 {
-   if (fRmin) {delete[] fRmin; fRmin = 0;}
-   if (fRmax) {delete[] fRmax; fRmax = 0;}
-   if (fZ)    {delete[] fZ; fZ = 0;}
+   if (fRmin) {delete[] fRmin;
+      fRmin = nullptr;
+   }
+   if (fRmax) {delete[] fRmax;
+      fRmax = nullptr;
+   }
+   if (fZ)    {delete[] fZ;
+      fZ = nullptr;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -678,7 +619,7 @@ TGeoVolume *TGeoPcon::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
    switch (iaxis) {
       case 1:  //---               R division
          Error("Divide", "Shape %s: cannot divide a pcon on radius", GetName());
-         return 0;
+         return nullptr;
       case 2:  //---               Phi division
          finder = new TGeoPatternCylPhi(voldiv, ndiv, start, start+ndiv*step);
          vmulti = gGeoManager->MakeVolumeMulti(divname, voldiv->GetMedium());
@@ -709,7 +650,7 @@ TGeoVolume *TGeoPcon::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
          }
          if (isect<0) {
             Error("Divide", "Shape %s: cannot divide pcon on Z if divided region is not between 2 planes", GetName());
-            return 0;
+            return nullptr;
          }
          finder = new TGeoPatternZ(voldiv, ndiv, start, start+ndiv*step);
          vmulti = gGeoManager->MakeVolumeMulti(divname, voldiv->GetMedium());
@@ -738,9 +679,7 @@ TGeoVolume *TGeoPcon::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
             ((TGeoNodeOffset*)voldiv->GetNodes()->At(voldiv->GetNdaughters()-1))->SetFinder(finder);
          }
          return vmulti;
-      default:
-         Error("Divide", "Shape %s: Wrong axis %d for division",GetName(), iaxis);
-         return 0;
+      default: Error("Divide", "Shape %s: Wrong axis %d for division", GetName(), iaxis); return nullptr;
    }
 }
 
@@ -866,9 +805,9 @@ TBuffer3D *TGeoPcon::MakeBuffer3D() const
 {
    const Int_t n = gGeoManager->GetNsegments()+1;
    Int_t nz = GetNz();
-   if (nz < 2) return 0;
+   if (nz < 2) return nullptr;
    Int_t nbPnts = nz*2*n;
-   if (nbPnts <= 0) return 0;
+   if (nbPnts <= 0) return nullptr;
    Double_t dphi = GetDphi();
 
    Bool_t specialCase = kFALSE;

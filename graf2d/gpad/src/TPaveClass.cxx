@@ -33,7 +33,7 @@ Using the context menu on can select additional options in the ClassTree:
 
 TPaveClass::TPaveClass(): TPaveLabel()
 {
-   fClassTree  = 0;
+   fClassTree = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

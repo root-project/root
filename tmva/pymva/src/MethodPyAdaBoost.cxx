@@ -233,7 +233,7 @@ void MethodPyAdaBoost::Train()
 
    // Store classifier
    fClassifier = PyDict_GetItemString(fLocalNS, "classifier");
-   if(fClassifier == 0) {
+   if (fClassifier == nullptr) {
       Log() << kFATAL << "Can't create classifier object from AdaBoostClassifier" << Endl;
       Log() << Endl;
    }
@@ -256,7 +256,7 @@ void MethodPyAdaBoost::TestClassification()
 std::vector<Double_t> MethodPyAdaBoost::GetMvaValues(Long64_t firstEvt, Long64_t lastEvt, Bool_t)
 {
    // Load model if not already done
-   if (fClassifier == 0) ReadModelFromFile();
+   if (fClassifier == nullptr) ReadModelFromFile();
 
    // Determine number of events
    Long64_t nEvents = Data()->GetNEvents();
@@ -302,7 +302,7 @@ Double_t MethodPyAdaBoost::GetMvaValue(Double_t *errLower, Double_t *errUpper)
    NoErrorCalc(errLower, errUpper);
 
    // Load model if not already done
-   if (fClassifier == 0) ReadModelFromFile();
+   if (fClassifier == nullptr) ReadModelFromFile();
 
    // Get current event and load to python array
    const TMVA::Event *e = Data()->GetEvent();
@@ -331,7 +331,7 @@ Double_t MethodPyAdaBoost::GetMvaValue(Double_t *errLower, Double_t *errUpper)
 std::vector<Float_t>& MethodPyAdaBoost::GetMulticlassValues()
 {
    // Load model if not already done
-   if (fClassifier == 0) ReadModelFromFile();
+   if (fClassifier == nullptr) ReadModelFromFile();
 
    // Get current event and load to python array
    const TMVA::Event *e = Data()->GetEvent();
@@ -388,7 +388,7 @@ const Ranking* MethodPyAdaBoost::CreateRanking()
    PyArrayObject* pRanking = (PyArrayObject*) PyObject_GetAttrString(fClassifier, "feature_importances_");
    // The python object is null if the base estimator does not support
    // variable ranking. Then, return NULL, which disables ranking.
-   if(pRanking == 0) return NULL;
+   if (pRanking == nullptr) return nullptr;
 
    // Fill ranking object and return it
    fRanking = new Ranking(GetName(), "Variable Importance");

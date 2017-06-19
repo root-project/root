@@ -107,14 +107,11 @@ TModuleGenerator::GetSourceFileKind(const char *filename) const
       // via the FileManager.
       clang::Preprocessor &PP = fCI->getPreprocessor();
       clang::HeaderSearch &HdrSearch = PP.getHeaderSearchInfo();
-      const clang::DirectoryLookup *CurDir = 0;
-      const clang::FileEntry *hdrFileEntry
-         =  HdrSearch.LookupFile(filename, clang::SourceLocation(),
-                                 true /*isAngled*/, 0 /*FromDir*/, CurDir,
-                                 clang::ArrayRef<std::pair<const clang::FileEntry*,
-                                                           const clang::DirectoryEntry*>>(),
-                                 0 /*IsMapped*/, 0 /*SearchPath*/, 0 /*RelativePath*/,
-                                 0 /*RequestingModule*/, 0/*SuggestedModule*/);
+      const clang::DirectoryLookup *CurDir = nullptr;
+      const clang::FileEntry *hdrFileEntry = HdrSearch.LookupFile(
+         filename, clang::SourceLocation(), true /*isAngled*/, nullptr /*FromDir*/, CurDir,
+         clang::ArrayRef<std::pair<const clang::FileEntry *, const clang::DirectoryEntry *>>(), nullptr /*IsMapped*/,
+         nullptr /*SearchPath*/, nullptr /*RelativePath*/, nullptr /*RequestingModule*/, nullptr /*SuggestedModule*/);
       if (hdrFileEntry) {
          return kSFKHeader;
       }
@@ -284,7 +281,7 @@ std::ostream &TModuleGenerator::WritePPIncludes(std::ostream &out) const
       if (fInlineInputHeaders){
          bool headerFound = FindHeader(incl,fullHeaderPath);
          if (!headerFound){
-            ROOT::TMetaUtils::Error(0, "Cannot find header %s: cannot inline it.\n", fullHeaderPath.c_str());
+            ROOT::TMetaUtils::Error(nullptr, "Cannot find header %s: cannot inline it.\n", fullHeaderPath.c_str());
             continue;
          }
 
@@ -388,7 +385,7 @@ void TModuleGenerator::WriteRegistrationSource(std::ostream &out,
    auto findAndAddToInlineHeaders = [&](const std::string& hdrName) {
       bool headerFound = FindHeader(hdrName,hdrFullPath);
       if (!headerFound) {
-         ROOT::TMetaUtils::Error(0, "Cannot find header %s: cannot inline it.\n", hdrName.c_str());
+         ROOT::TMetaUtils::Error(nullptr, "Cannot find header %s: cannot inline it.\n", hdrName.c_str());
       } else {
          std::ifstream headerFile(hdrFullPath.c_str());
          const std::string headerFileAsStr((std::istreambuf_iterator<char>(headerFile)),

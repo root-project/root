@@ -705,7 +705,7 @@ void TGraphPainter::ExecuteEventHelper(TGraph *theGraph, Int_t event, Int_t px, 
    static Int_t px1,px2,py1,py2;
    static Int_t pxold, pyold, px1old, py1old, px2old, py2old;
    static Int_t dpx, dpy;
-   static Int_t *x=0, *y=0;
+   static Int_t *x = nullptr, *y = nullptr;
    Bool_t opaque  = gPad->OpaqueMoving();
 
    if (!theGraph->IsEditable() || theGraph->InheritsFrom(TGraphPolar::Class())) {
@@ -916,8 +916,10 @@ void TGraphPainter::ExecuteEventHelper(TGraph *theGraph, Int_t event, Int_t px, 
 
       if (gROOT->IsEscaped()) {
          gROOT->SetEscape(kFALSE);
-         delete [] x; x = 0;
-         delete [] y; y = 0;
+         delete [] x;
+         x = nullptr;
+         delete [] y;
+         y = nullptr;
          break;
       }
 
@@ -962,8 +964,10 @@ void TGraphPainter::ExecuteEventHelper(TGraph *theGraph, Int_t event, Int_t px, 
          }
       }
       badcase = kFALSE;
-      delete [] x; x = 0;
-      delete [] y; y = 0;
+      delete [] x;
+      x = nullptr;
+      delete [] y;
+      y = nullptr;
       gPad->Modified(kTRUE);
       gVirtualX->SetLineColor(-1);
    }
@@ -1157,7 +1161,7 @@ void TGraphPainter::PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *
          theGraph->GetHistogram()->SetMaximum(rwymax);
          theGraph->GetHistogram()->GetYaxis()->SetLimits(rwymin,rwymax);
          theGraph->GetHistogram()->SetBit(TH1::kNoStats);
-         theGraph->GetHistogram()->SetDirectory(0);
+         theGraph->GetHistogram()->SetDirectory(nullptr);
          theGraph->GetHistogram()->Paint(chopth); // Draw histogram axis, title and grid
       } else {
          if (gPad->GetLogy()) {
@@ -1172,7 +1176,7 @@ void TGraphPainter::PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *
    // Set Clipping option
    gPad->SetBit(TGraph::kClipFrame, theGraph->TestBit(TGraph::kClipFrame));
 
-   TF1 *fit = 0;
+   TF1 *fit = nullptr;
    TList *functions = theGraph->GetListOfFunctions();
    TObject *f;
    if (functions) {
@@ -2175,8 +2179,8 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
 void TGraphPainter::PaintGraphAsymmErrors(TGraph *theGraph, Option_t *option)
 {
 
-   Double_t *xline = 0;
-   Double_t *yline = 0;
+   Double_t *xline = nullptr;
+   Double_t *yline = nullptr;
    Int_t if1 = 0;
    Int_t if2 = 0;
    Double_t xb[4], yb[4];
@@ -2204,7 +2208,7 @@ void TGraphPainter::PaintGraphAsymmErrors(TGraph *theGraph, Option_t *option)
    Bool_t endLines = kTRUE;
    if (strchr(option,'z')) endLines = kFALSE;
    if (strchr(option,'Z')) endLines = kFALSE;
-   const char *arrowOpt = 0;
+   const char *arrowOpt = nullptr;
    if (strchr(option,'>'))  arrowOpt = ">";
    if (strstr(option,"|>")) arrowOpt = "|>";
 
@@ -2422,8 +2426,8 @@ void TGraphPainter::PaintGraphAsymmErrors(TGraph *theGraph, Option_t *option)
 void TGraphPainter::PaintGraphBentErrors(TGraph *theGraph, Option_t *option)
 {
 
-   Double_t *xline = 0;
-   Double_t *yline = 0;
+   Double_t *xline = nullptr;
+   Double_t *yline = nullptr;
    Int_t if1 = 0;
    Int_t if2 = 0;
    Double_t xb[4], yb[4];
@@ -2456,7 +2460,7 @@ void TGraphPainter::PaintGraphBentErrors(TGraph *theGraph, Option_t *option)
    Bool_t endLines = kTRUE;
    if (strchr(option,'z')) endLines = kFALSE;
    if (strchr(option,'Z')) endLines = kFALSE;
-   const char *arrowOpt = 0;
+   const char *arrowOpt = nullptr;
    if (strchr(option,'>'))  arrowOpt = ">";
    if (strstr(option,"|>")) arrowOpt = "|>";
 
@@ -2678,8 +2682,8 @@ void TGraphPainter::PaintGraphBentErrors(TGraph *theGraph, Option_t *option)
 void TGraphPainter::PaintGraphErrors(TGraph *theGraph, Option_t *option)
 {
 
-   Double_t *xline = 0;
-   Double_t *yline = 0;
+   Double_t *xline = nullptr;
+   Double_t *yline = nullptr;
    Int_t if1 = 0;
    Int_t if2 = 0;
    Double_t xb[4], yb[4];
@@ -2705,7 +2709,7 @@ void TGraphPainter::PaintGraphErrors(TGraph *theGraph, Option_t *option)
    Bool_t endLines = kTRUE;
    if (strchr(option,'z')) endLines = kFALSE;
    if (strchr(option,'Z')) endLines = kFALSE;
-   const char *arrowOpt = 0;
+   const char *arrowOpt = nullptr;
    if (strchr(option,'>'))  arrowOpt = ">";
    if (strstr(option,"|>")) arrowOpt = "|>";
 
@@ -2951,7 +2955,8 @@ void TGraphPainter::PaintGraphPolar(TGraph *theGraph, Option_t* options)
    // Check for existing TGraphPolargram in the Pad
    if (gPad) {
       // Existing polargram
-      if (thePolargram) if (!gPad->FindObject(thePolargram->GetName())) thePolargram=0;
+      if (thePolargram)
+         if (!gPad->FindObject(thePolargram->GetName())) thePolargram = nullptr;
       if (!thePolargram) {
          // Find any other Polargram in the Pad
          TListIter padObjIter(gPad->GetListOfPrimitives());
@@ -3146,14 +3151,17 @@ void TGraphPainter::PaintGraphPolar(TGraph *theGraph, Option_t* options)
 
    if (TestBit(TH1::kNoTitle)) return;
    Int_t nt = strlen(theGraph->GetTitle());
-   TPaveText *title = 0;
+   TPaveText *title = nullptr;
    TObject *obj;
    TIter next(gPad->GetListOfPrimitives());
    while ((obj = next())) {
       if (!obj->InheritsFrom(TPaveText::Class())) continue;
       title = (TPaveText*)obj;
       if (title->GetName())
-         if (strcmp(title->GetName(),"title")) {title = 0; continue;}
+         if (strcmp(title->GetName(),"title")) {
+            title = nullptr;
+            continue;
+         }
       break;
    }
    if (nt == 0 || gStyle->GetOptTitle() <= 0) {
@@ -3658,7 +3666,7 @@ void TGraphPainter::PaintStats(TGraph *theGraph, TF1 *fit)
 {
 
    Int_t dofit;
-   TPaveStats *stats  = 0;
+   TPaveStats *stats = nullptr;
    TList *functions = theGraph->GetListOfFunctions();
    TIter next(functions);
    TObject *obj;
@@ -3672,7 +3680,7 @@ void TGraphPainter::PaintStats(TGraph *theGraph, TF1 *fit)
    if (stats) dofit  = stats->GetOptFit();
    else       dofit  = gStyle->GetOptFit();
 
-   if (!dofit) fit = 0;
+   if (!dofit) fit = nullptr;
    if (!fit) return;
    if (dofit  == 1) dofit  =  111;
    Int_t nlines = 0;

@@ -26,20 +26,20 @@ namespace textinput {
   // Abstract input interface.
   class Reader {
   public:
-    Reader(): fContext(0) {}
-    virtual ~Reader();
+     Reader() : fContext(nullptr) {}
+     virtual ~Reader();
 
-    TextInputContext* GetContext() const { return fContext; }
-    void SetContext(TextInputContext* C) { fContext = C; }
+     TextInputContext *GetContext() const { return fContext; }
+     void SetContext(TextInputContext *C) { fContext = C; }
 
-    virtual void GrabInputFocus() {}
-    virtual void ReleaseInputFocus() {}
+     virtual void GrabInputFocus() {}
+     virtual void ReleaseInputFocus() {}
 
-    virtual bool HavePendingInput(bool wait) = 0;
-    virtual bool HaveBufferedInput() const { return false; }
-    virtual bool ReadInput(size_t& nRead, InputData& in) = 0;
+     virtual bool HavePendingInput(bool wait) = 0;
+     virtual bool HaveBufferedInput() const { return false; }
+     virtual bool ReadInput(size_t &nRead, InputData &in) = 0;
 
-    virtual bool IsFromTTY() = 0;
+     virtual bool IsFromTTY() = 0;
   private:
     TextInputContext* fContext; // Context object
   };

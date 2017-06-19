@@ -59,8 +59,7 @@ MinimumError FumiliErrorUpdator::Update(const MinimumState& s0,
 
    // need to downcast to FumiliGradientCalculator
    FumiliGradientCalculator * fgc = dynamic_cast< FumiliGradientCalculator *>( const_cast<GradientCalculator *>(&gc) );
-   assert(fgc != 0);
-
+   assert(fgc != nullptr);
 
    // get Hessian from Gradient calculator
 

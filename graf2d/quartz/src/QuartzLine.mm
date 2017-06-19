@@ -28,7 +28,7 @@ namespace Quartz {
 //______________________________________________________________________________
 Bool_t SetLineColor(CGContextRef ctx, Color_t colorIndex)
 {
-   assert(ctx != 0 && "SetLineColor, ctx parameter is null");
+   assert(ctx != nullptr && "SetLineColor, ctx parameter is null");
 
    const TColor *color = gROOT->GetColor(colorIndex);
    //Do as TGX11 does.
@@ -58,7 +58,7 @@ void SetLineType(CGContextRef ctx, Int_t n, Int_t *dash)
    //                 with dash length 6 and a gap of 7 between dashes
    // dash(n) - dash segment lengths
 
-   assert(ctx != 0 && "SetLineType, ctx parameter is null");
+   assert(ctx != nullptr && "SetLineType, ctx parameter is null");
 
    if (n) {
       CGFloat lengths[n];
@@ -66,7 +66,7 @@ void SetLineType(CGContextRef ctx, Int_t n, Int_t *dash)
          lengths[i] = dash[i];
       CGContextSetLineDash(ctx, 0, lengths, n);
    } else {
-      CGContextSetLineDash(ctx, 0, NULL, 0);
+      CGContextSetLineDash(ctx, 0, nullptr, 0);
    }
 }
 
@@ -74,14 +74,14 @@ void SetLineType(CGContextRef ctx, Int_t n, Int_t *dash)
 void SetLineStyle(CGContextRef ctx, Int_t lstyle)
 {
    // Set current line style in the context ctx.
-   assert(ctx != 0 && "SetLineStyle, ctx parameter is null");
+   assert(ctx != nullptr && "SetLineStyle, ctx parameter is null");
 
    static Int_t dashed[2] = {3, 3};
    static Int_t dotted[2] = {1, 2};
    static Int_t dasheddotted[4] = {3, 4, 1, 4};
 
    if (lstyle <= 1 ) {
-      SetLineType(ctx, 0, 0);
+      SetLineType(ctx, 0, nullptr);
    } else if (lstyle == 2) {
       SetLineType(ctx, 2, dashed);
    } else if (lstyle == 3) {
@@ -110,8 +110,7 @@ void SetLineWidth(CGContextRef ctx, Int_t width)
    // Set the line width in the context ctx.
    //
    // width - the line width in pixels
-   assert(ctx != 0 && "SetLineWidth, ctx parameter is null");
-
+   assert(ctx != nullptr && "SetLineWidth, ctx parameter is null");
 
    if (width < 0)
       return;
@@ -122,7 +121,7 @@ void SetLineWidth(CGContextRef ctx, Int_t width)
 //______________________________________________________________________________
 void DrawLine(CGContextRef ctx, Int_t x1, Int_t y1, Int_t x2, Int_t y2)
 {
-   assert(ctx != 0 && "DrawLine, ctx parameter is null");
+   assert(ctx != nullptr && "DrawLine, ctx parameter is null");
 
    CGContextBeginPath(ctx);
    CGContextMoveToPoint(ctx, x1, y1);
@@ -138,8 +137,8 @@ void DrawPolyLine(CGContextRef ctx, Int_t n, TPoint * xy)
    // n         : number of points
    // xy        : list of points
 
-   assert(ctx != 0 && "DrawPolyLine, ctx parameter is null");
-   assert(xy != 0 && "DrawPolyLine, xy parameter is null");
+   assert(ctx != nullptr && "DrawPolyLine, ctx parameter is null");
+   assert(xy != nullptr && "DrawPolyLine, xy parameter is null");
 
    CGContextBeginPath(ctx);
    CGContextMoveToPoint(ctx, xy[0].fX, xy[0].fY);

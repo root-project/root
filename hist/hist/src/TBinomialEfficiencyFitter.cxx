@@ -98,14 +98,14 @@ ClassImp(TBinomialEfficiencyFitter);
 /// default constructor
 
 TBinomialEfficiencyFitter::TBinomialEfficiencyFitter() {
-   fNumerator   = 0;
-   fDenominator = 0;
-   fFunction    = 0;
+   fNumerator = nullptr;
+   fDenominator = nullptr;
+   fFunction = nullptr;
    fFitDone     = kFALSE;
    fAverage     = kFALSE;
    fRange       = kFALSE;
    fEpsilon     = kDefaultEpsilon;
-   fFitter      = 0;
+   fFitter = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -119,8 +119,8 @@ TBinomialEfficiencyFitter::TBinomialEfficiencyFitter() {
 
 TBinomialEfficiencyFitter::TBinomialEfficiencyFitter(const TH1 *numerator, const TH1 *denominator) {
    fEpsilon  = kDefaultEpsilon;
-   fFunction = 0;
-   fFitter   = 0;
+   fFunction = nullptr;
+   fFitter = nullptr;
    Set(numerator,denominator);
 }
 
@@ -129,7 +129,7 @@ TBinomialEfficiencyFitter::TBinomialEfficiencyFitter(const TH1 *numerator, const
 
 TBinomialEfficiencyFitter::~TBinomialEfficiencyFitter() {
    if (fFitter) delete fFitter;
-   fFitter = 0;
+   fFitter = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

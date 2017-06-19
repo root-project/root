@@ -32,13 +32,11 @@ TClass* TPyClassGenerator::GetClass( const char* name, Bool_t load, Bool_t silen
 // Class generator to make python classes available to Cling
 
 // called if all other class generators failed, attempt to build from python class
-   if ( PyROOT::gDictLookupActive == kTRUE )
-      return 0;                              // call originated from python
+if (PyROOT::gDictLookupActive == kTRUE) return nullptr; // call originated from python
 
-   if ( ! load || ! name )
-      return 0;
+if (!load || !name) return nullptr;
 
-   PyROOT::PyGILRAII thePyGILRAII;
+PyROOT::PyGILRAII thePyGILRAII;
    
 // first, check whether the name is of a module
    PyObject* modules = PySys_GetObject( const_cast<char*>("modules") );
@@ -76,8 +74,7 @@ TClass* TPyClassGenerator::GetClass( const char* name, Bool_t load, Bool_t silen
 
          // figure out number of variables required
             PyObject* func_code = PyObject_GetAttrString( attr, (char*)"func_code" );
-            PyObject* var_names =
-               func_code ? PyObject_GetAttrString( func_code, (char*)"co_varnames" ) : NULL;
+            PyObject *var_names = func_code ? PyObject_GetAttrString(func_code, (char *)"co_varnames") : nullptr;
             int nVars = var_names ? PyTuple_GET_SIZE( var_names ) : 0 /* TODO: probably large number, all default? */;
             if ( nVars < 0 ) nVars = 0;
             Py_XDECREF( var_names );
@@ -120,14 +117,13 @@ TClass* TPyClassGenerator::GetClass( const char* name, Bool_t load, Bool_t silen
    std::string clName = name;
    std::string::size_type pos = clName.rfind( '.' );
 
-   if ( pos == std::string::npos )
-      return 0;                              // this isn't a python style class
+   if (pos == std::string::npos) return nullptr; // this isn't a python style class
 
    std::string mdName = clName.substr( 0, pos );
    clName = clName.substr( pos+1, std::string::npos );
 
 // create class in namespace, if it exists (no load, silent)
-   Bool_t useNS = gROOT->GetListOfClasses()->FindObject( mdName.c_str() ) != 0;
+   Bool_t useNS = gROOT->GetListOfClasses()->FindObject(mdName.c_str()) != nullptr;
    if ( ! useNS ) {
    // the class itself may exist if we're using the global scope
       TClass* cl = (TClass*)gROOT->GetListOfClasses()->FindObject( clName.c_str() );
@@ -138,7 +134,7 @@ TClass* TPyClassGenerator::GetClass( const char* name, Bool_t load, Bool_t silen
    PyObject* mod = PyImport_AddModule( const_cast< char* >( mdName.c_str() ) );
    if ( ! mod ) {
       PyErr_Clear();
-      return 0;                              // module apparently disappeared
+      return nullptr; // module apparently disappeared
    }
 
    Py_INCREF( mod );
@@ -149,7 +145,7 @@ TClass* TPyClassGenerator::GetClass( const char* name, Bool_t load, Bool_t silen
 
    if ( ! pyclass ) {
       PyErr_Clear();                         // the class is no longer available?!
-      return 0;
+      return nullptr;
    }
 
 // get a listing of all python-side members
@@ -157,7 +153,7 @@ TClass* TPyClassGenerator::GetClass( const char* name, Bool_t load, Bool_t silen
    if ( ! attrs ) {
       PyErr_Clear();
       Py_DECREF( pyclass );
-      return 0;
+      return nullptr;
    }
 
 // pre-amble Cling proxy class
@@ -189,13 +185,11 @@ TClass* TPyClassGenerator::GetClass( const char* name, Bool_t load, Bool_t silen
       // figure out number of variables required
 #if PY_VERSION_HEX < 0x03000000
          PyObject* im_func = PyObject_GetAttrString( attr, (char*)"im_func" );
-         PyObject* func_code =
-            im_func ? PyObject_GetAttrString( im_func, (char*)"func_code" ) : NULL;
+         PyObject *func_code = im_func ? PyObject_GetAttrString(im_func, (char *)"func_code") : nullptr;
 #else
          PyObject* func_code = PyObject_GetAttrString( attr, "__code__" );
 #endif
-         PyObject* var_names =
-            func_code ? PyObject_GetAttrString( func_code, (char*)"co_varnames" ) : NULL;
+         PyObject *var_names = func_code ? PyObject_GetAttrString(func_code, (char *)"co_varnames") : nullptr;
          if (PyErr_Occurred()) PyErr_Clear(); // happens for slots; default to 0 arguments
 
          int nVars = var_names ? PyTuple_GET_SIZE( var_names ) - 1 /* self */ : 0 /* TODO: probably large number, all default? */;

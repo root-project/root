@@ -53,7 +53,7 @@ Counter hitCount("THit");
 ClassImp(THit);
 //-------------------------------------------------------------
 THit::THit() {
-   fPulses = 0;
+   fPulses = nullptr;
    fNpulses = 0;
    hitCount.count++;
 }
@@ -63,10 +63,10 @@ THit::THit(const THit &hit) {
    fY = hit.fY;
    fZ = hit.fZ;
    for (Int_t i=0;i<10;i++) fTime[i] = hit.fTime[i];
-   fPulses = 0;
+   fPulses = nullptr;
    fNpulses = hit.fNpulses;
    if (fNpulses == 0) return;
-   if (hit.fPulses == 0) return;
+   if (hit.fPulses == nullptr) return;
    fPulses = new int[fNpulses];
    for (int j=0;j<fNpulses;j++) fPulses[j] = hit.fPulses[j];
 }
@@ -76,10 +76,10 @@ THit& THit::operator=(const THit& hit)  {
    fY = hit.fY;
    fZ = hit.fZ;
    for (Int_t i=0;i<10;i++) fTime[i] = hit.fTime[i];
-   fPulses = 0;
+   fPulses = nullptr;
    fNpulses = hit.fNpulses;
    if (fNpulses == 0) return *this;
-   if (hit.fPulses == 0) return *this;
+   if (hit.fPulses == nullptr) return *this;
    if ( fPulses ) delete [] fPulses;
    fPulses = new int[fNpulses];
    for (int j=0;j<fNpulses;j++) fPulses[j] = hit.fPulses[j];
@@ -88,14 +88,14 @@ THit& THit::operator=(const THit& hit)  {
 
 THit::THit(int t) {
    hitCount.count++;
-   fPulses = 0;
+   fPulses = nullptr;
    Set(t);
 }
 
 THit::~THit() {
    hitCount.count--;
    if (fPulses) delete [] fPulses;
-   fPulses = 0;
+   fPulses = nullptr;
 }
 
 void THit::Set(int t) {
@@ -171,8 +171,8 @@ void TSTLhit::MakeEvent(int /*ievent*/)
 
 Int_t TSTLhit::MakeTree(int mode, int nevents, int compression, int split, float &cx)
 {
-   TFile *f=0;
-   TTree *T=0;
+   TFile *f = nullptr;
+   TTree *T = nullptr;
    TSTLhit *top = this;
    if (mode > 0) {
       f = new TFile(demofile_name("TSTLhit"),"recreate","STLhit",compression);
@@ -245,8 +245,8 @@ void TSTLhitList::MakeEvent(int /*ievent*/)
 
 Int_t TSTLhitList::MakeTree(int mode, int nevents, int compression, int split, float &cx)
 {
-   TFile *f=0;
-   TTree *T=0;
+   TFile *f = nullptr;
+   TTree *T = nullptr;
    TSTLhitList *top = this;
    if (mode > 0) {
       f = new TFile(demofile_name("TSTLhitList"),"recreate","STLhit",compression);
@@ -318,8 +318,8 @@ void TSTLhitDeque::MakeEvent(int /*ievent*/)
 
 Int_t TSTLhitDeque::MakeTree(int mode, int nevents, int compression, int split, float &cx)
 {
-   TFile *f=0;
-   TTree *T=0;
+   TFile *f = nullptr;
+   TTree *T = nullptr;
    TSTLhitDeque *top = this;
    if (mode > 0) {
       f = new TFile(demofile_name("TSTLhitDeque"),"recreate","STLhit",compression);
@@ -392,8 +392,8 @@ void TSTLhitSet::MakeEvent(int /*ievent*/)
 
 Int_t TSTLhitSet::MakeTree(int mode, int nevents, int compression, int split, float &cx)
 {
-   TFile *f=0;
-   TTree *T=0;
+   TFile *f = nullptr;
+   TTree *T = nullptr;
    TSTLhitSet *top = this;
    if (mode > 0) {
       f = new TFile(demofile_name("TSTLhitSet"),"recreate","STLhit",compression);
@@ -466,8 +466,8 @@ void TSTLhitMultiset::MakeEvent(int /*ievent*/)
 
 Int_t TSTLhitMultiset::MakeTree(int mode, int nevents, int compression, int split, float &cx)
 {
-   TFile *f=0;
-   TTree *T=0;
+   TFile *f = nullptr;
+   TTree *T = nullptr;
    TSTLhitMultiset *top = this;
    if (mode > 0) {
       f = new TFile(demofile_name("TSTLhitMultiset"),"recreate","STLhit",compression);
@@ -540,8 +540,8 @@ void TSTLhitMap::MakeEvent(int /*ievent*/)
 
 Int_t TSTLhitMap::MakeTree(int mode, int nevents, int compression, int split, float &cx)
 {
-   TFile *f=0;
-   TTree *T=0;
+   TFile *f = nullptr;
+   TTree *T = nullptr;
    TSTLhitMap *top = this;
    if (mode > 0) {
       f = new TFile(demofile_name("TSTLhitMap"),"recreate","STLhit",compression);
@@ -615,8 +615,8 @@ void TSTLhitMultiMap::MakeEvent(int /*ievent*/)
 
 Int_t TSTLhitMultiMap::MakeTree(int mode, int nevents, int compression, int split, float &cx)
 {
-   TFile *f=0;
-   TTree *T=0;
+   TFile *f = nullptr;
+   TTree *T = nullptr;
    TSTLhitMultiMap *top = this;
    if (mode > 0) {
       f = new TFile(demofile_name("TSTLhitMultiMap"),"recreate","STLhit",compression);
@@ -841,8 +841,8 @@ void TSTLhitStar::MakeEvent(int /*ievent*/)
 
 Int_t TSTLhitStar::MakeTree(int mode, int nevents, int compression, int split, float &cx)
 {
-   TFile *f=0;
-   TTree *T=0;
+   TFile *f = nullptr;
+   TTree *T = nullptr;
    TSTLhitStar *top = this;
    if (mode > 0) {
       f = new TFile(demofile_name("TSTLhitStar"),"recreate","STLhitStar",compression);
@@ -916,8 +916,8 @@ void TSTLhitStarList::MakeEvent(int /*ievent*/)
 
 Int_t TSTLhitStarList::MakeTree(int mode, int nevents, int compression, int split, float &cx)
 {
-   TFile *f=0;
-   TTree *T=0;
+   TFile *f = nullptr;
+   TTree *T = nullptr;
    TSTLhitStarList *top = this;
    if (mode > 0) {
       f = new TFile(demofile_name("TSTLhitStarList"),"recreate","STLhitStar",compression);
@@ -991,8 +991,8 @@ void TSTLhitStarDeque::MakeEvent(int /*ievent*/)
 
 Int_t TSTLhitStarDeque::MakeTree(int mode, int nevents, int compression, int split, float &cx)
 {
-   TFile *f=0;
-   TTree *T=0;
+   TFile *f = nullptr;
+   TTree *T = nullptr;
    TSTLhitStarDeque *top = this;
    if (mode > 0) {
       f = new TFile(demofile_name("TSTLhitStarDeque"),"recreate","STLhitStar",compression);
@@ -1067,8 +1067,8 @@ void TSTLhitStarSet::MakeEvent(int /*ievent*/)
 
 Int_t TSTLhitStarSet::MakeTree(int mode, int nevents, int compression, int split, float &cx)
 {
-   TFile *f=0;
-   TTree *T=0;
+   TFile *f = nullptr;
+   TTree *T = nullptr;
    TSTLhitStarSet *top = this;
    if (mode > 0) {
       f = new TFile(demofile_name("TSTLhitStarSet"),"recreate","STLhitStar",compression);
@@ -1142,8 +1142,8 @@ void TSTLhitStarMultiSet::MakeEvent(int /*ievent*/)
 
 Int_t TSTLhitStarMultiSet::MakeTree(int mode, int nevents, int compression, int split, float &cx)
 {
-   TFile *f=0;
-   TTree *T=0;
+   TFile *f = nullptr;
+   TTree *T = nullptr;
    TSTLhitStarMultiSet *top = this;
    if (mode > 0) {
       f = new TFile(demofile_name("TSTLhitStarMultiSet"),"recreate","STLhitStar",compression);
@@ -1218,8 +1218,8 @@ void TSTLhitStarMap::MakeEvent(int /*ievent*/)
 
 Int_t TSTLhitStarMap::MakeTree(int mode, int nevents, int compression, int split, float &cx)
 {
-   TFile *f=0;
-   TTree *T=0;
+   TFile *f = nullptr;
+   TTree *T = nullptr;
    TSTLhitStarMap *top = this;
    if (mode > 0) {
       f = new TFile(demofile_name("TSTLhitStarMap"),"recreate","STLhitStar",compression);
@@ -1294,8 +1294,8 @@ void TSTLhitStarMultiMap::MakeEvent(int /*ievent*/)
 
 Int_t TSTLhitStarMultiMap::MakeTree(int mode, int nevents, int compression, int split, float &cx)
 {
-   TFile *f=0;
-   TTree *T=0;
+   TFile *f = nullptr;
+   TTree *T = nullptr;
    TSTLhitStarMultiMap *top = this;
    if (mode > 0) {
       f = new TFile(demofile_name("TSTLhitStarMultiMap"),"recreate","STLhitStar",compression);
@@ -1370,8 +1370,8 @@ void TCloneshit::MakeEvent(int /*ievent*/)
 
 Int_t TCloneshit::MakeTree(int mode, int nevents, int compression, int split, float &cx)
 {
-   TFile *f=0;
-   TTree *T=0;
+   TFile *f = nullptr;
+   TTree *T = nullptr;
    TCloneshit *top = this;
    if (mode > 0) {
       f = new TFile(demofile,"recreate","Cloneshit",compression);

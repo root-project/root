@@ -214,8 +214,8 @@ Double_t TF3::FindMinMax(Double_t *x, Bool_t findmax) const
    Double_t xx[3]; 
    Double_t rsign = (findmax) ? -1. : 1.;
    TF3 & function = const_cast<TF3&>(*this); // needed since EvalPar is not const
-   Double_t xxmin = 0, yymin = 0, zzmin = 0, ttmin = 0; 
-   if (x == NULL || ( (x!= NULL) && ( !TMath::Finite(x[0]) || !TMath::Finite(x[1]) || !TMath::Finite(x[2]) ) ) ){ 
+   Double_t xxmin = 0, yymin = 0, zzmin = 0, ttmin = 0;
+   if (x == nullptr || ((x != nullptr) && (!TMath::Finite(x[0]) || !TMath::Finite(x[1]) || !TMath::Finite(x[2])))) {
       Double_t dx = (fXmax - fXmin)/fNpx;
       Double_t dy = (fYmax - fYmin)/fNpy;
       Double_t dz = (fZmax - fZmin)/fNpz;
@@ -484,7 +484,7 @@ TH1* TF3::CreateHistogram()
    TH1* h = new TH3F("R__TF3",(char*)GetTitle(),fNpx,fXmin,fXmax
                          ,fNpy,fYmin,fYmax
                          ,fNpz,fZmin,fZmax);
-   h->SetDirectory(0);
+   h->SetDirectory(nullptr);
    return h;
 }
 
@@ -502,7 +502,7 @@ void TF3::Paint(Option_t *option)
       fHistogram = new TH3F("R__TF3",(char*)GetTitle(),fNpx,fXmin,fXmax
                                                       ,fNpy,fYmin,fYmax
                                                       ,fNpz,fZmin,fZmax);
-      fHistogram->SetDirectory(0);
+      fHistogram->SetDirectory(nullptr);
    }
 
    fHistogram->GetPainter(option)->ProcessMessage("SetF3",this);
@@ -523,9 +523,9 @@ void TF3::SetClippingBoxOff()
       fHistogram = new TH3F("R__TF3",(char*)GetTitle(),fNpx,fXmin,fXmax
                                                     ,fNpy,fYmin,fYmax
                                                     ,fNpz,fZmin,fZmax);
-      fHistogram->SetDirectory(0);
+      fHistogram->SetDirectory(nullptr);
    }
-   fHistogram->GetPainter()->ProcessMessage("SetF3ClippingBoxOff",0);
+   fHistogram->GetPainter()->ProcessMessage("SetF3ClippingBoxOff", nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -643,7 +643,7 @@ void TF3::SetClippingBoxOn(Double_t xclip, Double_t yclip, Double_t zclip)
       fHistogram = new TH3F("R__TF3",(char*)GetTitle(),fNpx,fXmin,fXmax
                                                     ,fNpy,fYmin,fYmax
                                                     ,fNpz,fZmin,fZmax);
-      fHistogram->SetDirectory(0);
+      fHistogram->SetDirectory(nullptr);
    }
    
    TVectorD v(3);

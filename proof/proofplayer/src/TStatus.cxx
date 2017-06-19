@@ -69,9 +69,9 @@ Int_t TStatus::Merge(TCollection *li)
                     GetVirtMemMax()/1024., GetResMemMax()/1024.);
    while (TObject *obj = stats()) {
       TStatus *s = dynamic_cast<TStatus*>(obj);
-      if (s == 0) continue;
+      if (s == nullptr) continue;
 
-      TObjString *os = 0;
+      TObjString *os = nullptr;
       // Errors
       TIter nxem(&(s->fMsgs));
       while ((os = (TObjString *) nxem())) {
@@ -110,7 +110,7 @@ void TStatus::Print(Option_t * /*option*/) const
 {
    Printf("OBJ: %s\t%s\t%s", IsA()->GetName(), GetName(), (IsOk() ? "OK" : "ERROR"));
 
-   TObjString *os = 0;
+   TObjString *os = nullptr;
    // Errors first
    if (fMsgs.GetSize() > 0) {
       Printf("\n   Errors:");
@@ -150,7 +150,7 @@ const char *TStatus::NextMesg()
 {
    TObjString *os = (TObjString *) fIter();
    if (os) return os->GetName();
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
