@@ -91,7 +91,7 @@ Fitter & Fitter::operator = (const Fitter &rhs)
 //    fBinFit = rhs.fBinFit;
 //    fResult = rhs.fResult;
 //    fConfig = rhs.fConfig;
-//    // function is copied and managed by FitResult (maybe should use an auto_ptr)
+//    // function is copied and managed by FitResult (maybe should use an unique_ptr)
 //    fFunc = fResult.ModelFunction();
 //    if (rhs.fFunc != 0 && fResult.ModelFunction() == 0) { // case no fit has been done yet - then clone
 //       if (fFunc) delete fFunc;
@@ -801,7 +801,7 @@ bool Fitter::ApplyWeightCorrection(const ROOT::Math::IMultiGenFunction & loglw2,
       return false;
    }
    // need to re-init the minimizer and set w2
-   fObjFunction = std::auto_ptr<ROOT::Math::IMultiGenFunction> ( loglw2.Clone() );
+   fObjFunction = std::unique_ptr<ROOT::Math::IMultiGenFunction> ( loglw2.Clone() );
    // need to re-initialize the minimizer for the changes applied in the
    // objective functions
    if (!DoInitMinimizer()) return false;

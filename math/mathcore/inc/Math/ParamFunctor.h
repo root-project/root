@@ -262,7 +262,7 @@ public:
       fImpl(0)
    {
 //       if (rhs.fImpl.get() != 0)
-//          fImpl = std::auto_ptr<Impl>( (rhs.fImpl)->Clone() );
+//          fImpl = std::unique_ptr<Impl>( (rhs.fImpl)->Clone() );
       if (rhs.fImpl != 0)  fImpl = rhs.fImpl->Clone();
    }
 
@@ -271,7 +271,7 @@ public:
    */
    ParamFunctor & operator = (const ParamFunctor & rhs)  {
 //      ParamFunctor copy(rhs);
-      // swap auto_ptr by hand
+      // swap unique_ptr by hand
 //       Impl * p = fImpl.release();
 //       fImpl.reset(copy.fImpl.release());
 //       copy.fImpl.reset(p);
@@ -304,7 +304,7 @@ public:
 private :
 
 
-   //std::auto_ptr<Impl> fImpl;
+   //std::unique_ptr<Impl> fImpl;
    Impl * fImpl;
 
 
