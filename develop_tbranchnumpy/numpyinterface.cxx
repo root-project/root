@@ -28,7 +28,7 @@
 #include <TObjArray.h>
 #include <TTree.h>
 
-#define ALIGNMENT 8;    // if a pointer % ALIGNMENT == 0, declare it "aligned"
+#define ALIGNMENT 8    // if a pointer % ALIGNMENT == 0, declare it "aligned"
 
 /////////////////////////////////////////////////////// helper classes
 
@@ -54,13 +54,15 @@ private:
   Long64_t ex_entry_start;
   Long64_t ex_entry_end;
 
+  void copy_to_extra(Long64_t target_start, Long64_t target_end);
+
 public:
   ClusterBuffer(const TBranch* branch, const Long64_t itemsize) :
     branch(branch), itemsize(itemsize), bf(TBuffer::kWrite, 32*1024),
     bf_entry_start(0), bf_entry_end(0), ex_entry_start(0), ex_entry_end(0) { }
 
   bool readmore(Long64_t target_start, Long64_t target_end);
-  void* getbuffer(Long64_t &size, bool require_alignment, Long64_t entry_start, Long64_t entry_end);
+  void* getbuffer(Long64_t &numbytes, bool require_alignment, Long64_t entry_start, Long64_t entry_end);
 };
 
 class ClusterIterator {
@@ -83,29 +85,32 @@ public:
   PyObject* arrays(bool return_new_buffers, bool require_alignment);
 };    
 
+void ClusterBuffer::copy_to_extra(Long64_t target_start, Long64_t target_end) {
+  const Long64_t numbytes = (bf_entry_end - bf_entry_start) * itemsize;
+
+  // if the extra buffer has anything worth saving in it, append
+  if (ex_entry_end > target_start) {
+    const Long64_t oldsize = extra.size();
+    extra.resize(oldsize + numbytes);
+    memcpy(&extra.data()[oldsize], bf.GetCurrent(), numbytes);
+    ex_entry_end = bf_entry_end;
+  }
+  // otherwise, replace
+  else {
+    extra.resize(numbytes);
+    memcpy(extra.data(), bf.GetCurrent(), numbytes);
+    ex_entry_start = bf_entry_start;
+    ex_entry_end = bf_entry_end;
+  }
+}
+
 // readmore asks ROOT to read from the file until reaching entry target_end
 // and ClusterBuffer ensures that entries as old as target_start are preserved
 bool ClusterBuffer::readmore(Long64_t target_start, Long64_t target_end) {
   while (bf_entry_end < target_end) {
     // if the TBufferFile has anything worth saving in it, save it using the extra buffer
-    if (bf_entry_end > target_start) {
-      const Long64_t numbytes = (bf_entry_end - bf_entry_start) * itemsize;
-
-      // if the extra buffer has anything worth saving in it, merge it into the end
-      if (ex_entry_end > target_start) {
-        const Long64_t oldsize = extra.size();
-        extra.resize(oldsize + numbytes);
-        memcpy(&extra.data()[oldsize], bf.GetCurrent(), numbytes);
-        ex_entry_end = bf_entry_end;
-      }
-      // otherwise, overwrite it
-      else {
-        extra.resize(numbytes);
-        memcpy(extra.data(), bf.GetCurrent(), numbytes);
-        ex_entry_start = bf_entry_start;
-        ex_entry_end = bf_entry_end;
-      }
-    }
+    if (bf_entry_end > target_start)
+      copy_to_extra(target_start, target_end);
 
     // read in one more basket, starting at the old bf_entry_end
     Long64_t numentries = branch->GetBulkRead().GetEntriesSerialized(bf_entry_end, bf);
@@ -125,8 +130,19 @@ bool ClusterBuffer::readmore(Long64_t target_start, Long64_t target_end) {
 
 // getbuffer returns a pointer to contiguous data with its size
 // if you're lucky (and ask for it), this is performed without any copies
-void* ClusterBuffer::getbuffer(Long64_t &size, bool require_alignment, Long64_t entry_start, Long64_t entry_end) {
-  return nullptr;
+void* ClusterBuffer::getbuffer(Long64_t &numbytes, bool require_alignment, Long64_t entry_start, Long64_t entry_end) {
+  // if the TBufferFile is a perfect match to the request and we either don't care about alignment or it is aligned, return it directly
+  if (bf_entry_start == entry_start  &&  bf_entry_end == entry_end  &&  (!require_alignment  ||  (size_t)bf.GetCurrent() % ALIGNMENT == 0)) {
+    numbytes = (entry_end - entry_start) * itemsize;
+    return bf.GetCurrent();
+  }
+  // otherwise, move everything into the extra buffer and return it
+  else {
+    copy_to_extra(entry_start, entry_end);
+
+    numbytes = (entry_end - entry_start) * itemsize;
+    return &extra.data()[(entry_start - ex_entry_start) * itemsize];
+  }
 }
 
 // step all ClusterBuffers forward, for all branches
