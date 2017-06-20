@@ -3,6 +3,8 @@ import time
 
 import numpy
 import numba
+import ROOT
+import root_numpy
 
 import numpyinterface
 
@@ -47,6 +49,23 @@ def numba_momentum(reps, fileName, return_new_buffers, swap_bytes):
 
     return endTime - startTime
 
+def rootnumpy_momentum(reps, fileName):
+    file = ROOT.TFile(fileName)
+    tree = file.Get("twoMuon")
+
+    startTime = time.time()
+
+    for i in xrange(reps):
+        array = root_numpy.tree2array(tree, branches=["px", "py", "pz"])
+        px = array["px"]
+        py = array["py"]
+        pz = array["pz"]
+        total = numpy.sqrt(px**2 + py**2 + pz**2).sum()
+
+    endTime = time.time()
+
+    return endTime - startTime
+
 WARM_UP = 5
 REPS = 100
 
@@ -63,6 +82,10 @@ for fileName in "TrackResonanceNtuple_uncompressed.root", "TrackResonanceNtuple_
         print fileName, "numba little-endian", label,
         numba_momentum(WARM_UP, fileName, return_new_buffers, True)      # warm up
         print numba_momentum(REPS, fileName, return_new_buffers, True)   # real run
+
+    print fileName, "root_numpy",
+    rootnumpy_momentum(WARM_UP, fileName)                                # warm up
+    print rootnumpy_momentum(REPS, fileName)                             # real run
 
 print
 print numpyinterface.performance()
