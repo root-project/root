@@ -2,8 +2,6 @@
 # CMakeLists.txt file for building ROOT io/io package
 ############################################################################
 
-ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-deprecated-declarations) # auto_ptr...
-
 set(MATHCORE_HEADERS TRandom.h
   TRandom1.h TRandom2.h TRandom3.h TKDTree.h TKDTreeBinning.h TStatistic.h
   Math/Error.h Math/IParamFunction.h Math/IFunction.h Math/ParamFunctor.h Math/Functor.h
@@ -46,7 +44,3 @@ endif()
 ROOT_INSTALL_HEADERS()
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
-
-
-
-

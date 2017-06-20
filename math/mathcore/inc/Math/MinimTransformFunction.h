@@ -68,7 +68,7 @@ public:
 
    unsigned int NTot() const { return fFunc->NDim(); }
 
-   /// clone:  not supported (since auto_ptr used in the fVariables)
+   /// clone:  not supported (since unique_ptr used in the fVariables)
    IMultiGenFunction * Clone() const {
       return 0;
    }

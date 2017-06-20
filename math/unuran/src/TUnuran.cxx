@@ -94,7 +94,7 @@ bool TUnuran::Init(const TUnuranContDist & distr, const std::string  & method)
 {
    // initialization with a distribution and and generator
    // the distribution object is copied in and managed by this class
-   // use auto_ptr to manage previously existing distribution objects
+   // use std::unique_ptr to manage previously existing distribution objects
    TUnuranContDist * distNew = distr.Clone();
    fDist.reset(distNew);
 
@@ -110,7 +110,7 @@ bool TUnuran::Init(const TUnuranMultiContDist & distr, const std::string  & meth
 {
    //  initialization with a distribution and method
    // the distribution object is copied in and managed by this class
-   // use auto_ptr to manage previously existing distribution objects
+   // use std::unique_ptr to manage previously existing distribution objects
    TUnuranMultiContDist * distNew = distr.Clone();
    fDist.reset(distNew);
 
@@ -125,7 +125,7 @@ bool TUnuran::Init(const TUnuranMultiContDist & distr, const std::string  & meth
 bool TUnuran::Init(const TUnuranDiscrDist & distr, const std::string & method ) {
    //   initialization with a distribution and and generator
    // the distribution object is copied in and managed by this class
-   // use auto_ptr to manage previously existing distribution objects
+   // use std::unique_ptr to manage previously existing distribution objects
    TUnuranDiscrDist * distNew = distr.Clone();
    fDist.reset(distNew);
 
@@ -139,7 +139,7 @@ bool TUnuran::Init(const TUnuranDiscrDist & distr, const std::string & method ) 
 bool TUnuran::Init(const TUnuranEmpDist & distr, const std::string & method ) {
    //   initialization with a distribution and and generator
    // the distribution object is copied in and managed by this class
-   // use auto_ptr to manage previously existing distribution objects
+   // use std::unique_ptr to manage previously existing distribution objects
    TUnuranEmpDist * distNew = distr.Clone();
    fDist.reset(distNew);
 
