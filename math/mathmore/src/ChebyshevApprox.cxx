@@ -130,30 +130,24 @@ std::pair<double, double>  ChebyshevApprox::EvalErr( double x, size_t n) const {
    return std::make_pair( result, error);
 }
 
-
-
-ChebyshevApprox *   ChebyshevApprox::Deriv() {
-   // calculate derivative. Returna pointer to a new series
-   // used auto_ptr (supprseed since not good support on some compilers)
-   ChebyshevApprox * deriv = new ChebyshevApprox(fOrder);
+ChebyshevApprox *ChebyshevApprox::Deriv()
+{
+   // calculate derivative. Returns pointer to a new series
+   ChebyshevApprox *deriv = new ChebyshevApprox(fOrder);
 
    // check for errors ?
-   gsl_cheb_calc_deriv( (deriv->fSeries)->get(), fSeries->get() );
+   gsl_cheb_calc_deriv((deriv->fSeries)->get(), fSeries->get());
    return deriv;
-   // diable auto_ptr to fix AIX compilation
-   //   std::auto_ptr<Chebyshev> pDeriv(deriv);
-   //   return pDeriv;
 }
 
-ChebyshevApprox * ChebyshevApprox::Integral() {
+ChebyshevApprox *ChebyshevApprox::Integral()
+{
    // integral (return pointer)
-   ChebyshevApprox * integ = new ChebyshevApprox(fOrder);
+   ChebyshevApprox *integ = new ChebyshevApprox(fOrder);
 
    // check for errors ?
-   gsl_cheb_calc_integ( (integ->fSeries)->get(), fSeries->get() );
+   gsl_cheb_calc_integ((integ->fSeries)->get(), fSeries->get());
    return integ;
-   //   std::auto_ptr<Chebyshev> pInteg(integ);
-   //   return pInteg;
 }
 
 } // namespace Math

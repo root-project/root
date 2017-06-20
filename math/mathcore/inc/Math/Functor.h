@@ -435,7 +435,7 @@ public:
       ImplBase()
    {
       if (rhs.fImpl)
-         fImpl = std::unique_ptr<Impl>( (rhs.fImpl)->Copy() );
+         fImpl = std::unique_ptr<Impl>((rhs.fImpl)->Copy());
    }
    // need a specialization in order to call base classes and use  clone
 
@@ -445,12 +445,7 @@ public:
    */
    Functor & operator = (const Functor & rhs)  {
       Functor copy(rhs);
-      // swap the poiter 
-      fImpl.swap( copy.fImpl);
-      // // swap unique_ptr by hand
-      // Impl * p = fImpl.release();
-      // fImpl.reset(copy.fImpl.release());
-      // copy.fImpl.reset(p);
+      fImpl.swap(copy.fImpl);
       return *this;
    }
 
@@ -508,7 +503,7 @@ public:
     */
    template <typename Func>
    Functor1D(const Func & f) :
-      fImpl(new FunctorHandler<Functor1D,Func>(f) )
+      fImpl(new FunctorHandler<Functor1D,Func>(f))
    {}
 
 
@@ -544,18 +539,12 @@ public:
    */
    Functor1D & operator = (const Functor1D & rhs)  {
       Functor1D copy(rhs);
-      fImpl.swap( copy.fImpl);
-      // swap auto_ptr by hand
-      // Impl * p = fImpl.release();
-      // fImpl.reset(copy.fImpl.release());
-      // copy.fImpl.reset(p);
+      fImpl.swap(copy.fImpl);
       return *this;
    }
 
-
    // clone of the function handler (use copy-ctor)
    ImplBase * Clone() const { return new Functor1D(*this); }
-
 
 private :
 
@@ -563,10 +552,7 @@ private :
       return (*fImpl)(x);
    }
 
-
    std::unique_ptr<Impl> fImpl;   // pointer to base functor handler
-
-
 };
 
 /**
@@ -644,7 +630,7 @@ public:
       ImplBase()
    {
       if (rhs.fImpl)
-         fImpl = std::unique_ptr<Impl>( rhs.fImpl->Copy() );
+         fImpl = std::unique_ptr<Impl>(rhs.fImpl->Copy());
    }
 
    /**
@@ -653,10 +639,6 @@ public:
    GradFunctor & operator = (const GradFunctor & rhs)  {
       GradFunctor copy(rhs);
       fImpl.swap(copy.fImpl);
-      // swap auto_ptr by hand      
-      // Impl * p = fImpl.release();
-      // fImpl.reset(copy.fImpl.release());
-      // copy.fImpl.reset(p);
       return *this;
    }
 
@@ -773,10 +755,6 @@ public:
    GradFunctor1D & operator = (const GradFunctor1D & rhs)  {
       GradFunctor1D copy(rhs);
       fImpl.swap(copy.fImpl);
-      // swap auto_ptr by hand
-      // Impl * p = fImpl.release();
-      // fImpl.reset(copy.fImpl.release());
-      // copy.fImpl.reset(p);
       return *this;
    }
 
