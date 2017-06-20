@@ -154,6 +154,7 @@ TChain::TChain(const char* name, const char* title)
    fFiles = new TObjArray(fTreeOffsetLen);
    fStatus = new TList();
    fTreeOffset[0]  = 0;
+   gROOT->GetListOfSpecials()->Add(this);
    fFile = 0;
 
    // Reset PROOF-related bits
