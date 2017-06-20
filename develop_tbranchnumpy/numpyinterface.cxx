@@ -54,6 +54,7 @@ class ClusterBuffer {
 private:
   const TBranch* branch;
   const Long64_t itemsize;
+  const bool swap_bytes;
   TBufferFile bf;
   std::vector<char> extra;
   void* oldextra;
@@ -75,8 +76,8 @@ private:
   }
 
 public:
-  ClusterBuffer(const TBranch* branch, const Long64_t itemsize) :
-    branch(branch), itemsize(itemsize), bf(TBuffer::kWrite, 32*1024), oldextra(nullptr),
+  ClusterBuffer(const TBranch* branch, const Long64_t itemsize, const bool swap_bytes) :
+    branch(branch), itemsize(itemsize), swap_bytes(swap_bytes), bf(TBuffer::kWrite, 32*1024), oldextra(nullptr),
     bf_entry_start(0), bf_entry_end(0), ex_entry_start(0), ex_entry_end(0)
   {
     check_extra_allocations();
@@ -102,10 +103,10 @@ private:
   bool stepforward(const char* &error_string);
 
 public:
-  ClusterIterator(const std::vector<TBranch*> &requested_branches, const std::vector<TBranch*> &unrequested_counters, const std::vector<ArrayInfo> arrayinfo, Long64_t num_entries, bool return_new_buffers, bool require_alignment) :
+  ClusterIterator(const std::vector<TBranch*> &requested_branches, const std::vector<TBranch*> &unrequested_counters, const std::vector<ArrayInfo> arrayinfo, Long64_t num_entries, bool return_new_buffers, bool require_alignment, bool swap_bytes) :
     arrayinfo(arrayinfo), num_entries(num_entries), return_new_buffers(return_new_buffers), require_alignment(require_alignment), current_start(0), current_end(0) {
     for (unsigned int i = 0;  i < arrayinfo.size();  i++)
-      requested.push_back(std::unique_ptr<ClusterBuffer>(new ClusterBuffer(requested_branches[i], arrayinfo[i].dtype->elsize)));
+      requested.push_back(std::unique_ptr<ClusterBuffer>(new ClusterBuffer(requested_branches[i], arrayinfo[i].dtype->elsize, swap_bytes)));
   }
 
   PyObject* arrays();
@@ -171,6 +172,38 @@ void ClusterBuffer::readone(Long64_t keep_start, const char* &error_string) {
   Long64_t numentries = branch->GetBulkRead().GetEntriesSerialized(bf_entry_end, bf);
   perf_baskets_loaded++;
   perf_bytes_loaded += numentries * itemsize;
+
+  if (swap_bytes) {
+    switch (itemsize) {
+      case 8:
+        {
+          Long64_t* buffer64 = reinterpret_cast<Long64_t*>(bf.GetCurrent());
+          for (Long64_t i = 0;  i < numentries;  i++)
+            buffer64[i] = __builtin_bswap64(buffer64[i]);
+          break;
+        }
+
+      case 4:
+        {
+          Int_t* buffer32 = reinterpret_cast<Int_t*>(bf.GetCurrent());
+          for (Long64_t i = 0;  i < numentries;  i++)
+            buffer32[i] = __builtin_bswap32(buffer32[i]);
+          break;
+        }
+
+      case 2:
+        {
+          Short_t* buffer16 = reinterpret_cast<Short_t*>(bf.GetCurrent());
+          for (Long64_t i = 0;  i < numentries;  i++)
+            buffer16[i] = __builtin_bswap16(buffer16[i]);
+          break;
+        }
+
+      default:
+        error_string = "illegal itemsize";
+        return;
+    }
+  }
 
   // update the range
   bf_entry_start = bf_entry_end;
@@ -327,7 +360,7 @@ bool getbranch(TBranch* &branch, TTree* tree, const char* filePath, const char* 
     return true;
 }
 
-const char* leaftype(TLeaf* leaf) {
+const char* leaftype(TLeaf* leaf, bool swap_bytes) {
   if (leaf->IsA() == TLeafO::Class()) {
     return "bool";
   }
@@ -338,28 +371,28 @@ const char* leaftype(TLeaf* leaf) {
     return "i1";
   }
   else if (leaf->IsA() == TLeafS::Class()  &&  leaf->IsUnsigned()) {
-    return ">u2";
+    return swap_bytes ? "<u2" : ">u2";
   }
   else if (leaf->IsA() == TLeafS::Class()) {
-    return ">i2";
+    return swap_bytes ? "<i2" : ">i2";
   }
   else if (leaf->IsA() == TLeafI::Class()  &&  leaf->IsUnsigned()) {
-    return ">u4";
+    return swap_bytes ? "<u4" : ">u4";
   }
   else if (leaf->IsA() == TLeafI::Class()) {
-    return ">i4";
+    return swap_bytes ? "<i4" : ">i4";
   }
   else if (leaf->IsA() == TLeafL::Class()  &&  leaf->IsUnsigned()) {
-    return ">u8";
+    return swap_bytes ? "<u8" : ">u8";
   }
   else if (leaf->IsA() == TLeafL::Class()) {
-    return ">i8";
+    return swap_bytes ? "<i8" : ">i8";
   }
   else if (leaf->IsA() == TLeafF::Class()) {
-    return ">f4";
+    return swap_bytes ? "<f4" : ">f4";
   }
   else if (leaf->IsA() == TLeafD::Class()) {
-    return ">f8";
+    return swap_bytes ? "<f8" : ">f8";
   }
   else {
     TClass* expectedClass;
@@ -370,17 +403,17 @@ const char* leaftype(TLeaf* leaf) {
       case kUChar_t:    return "u1";
       case kchar:       return "i1";
       case kChar_t:     return "i1";
-      case kUShort_t:   return ">u2";
-      case kShort_t:    return ">i2";
-      case kUInt_t:     return ">u4";
-      case kInt_t:      return ">i4";
-      case kULong_t:    return ">u8";
-      case kLong_t:     return ">i8";
-      case kULong64_t:  return ">u8";
-      case kLong64_t:   return ">i8";
-      case kFloat_t:    return ">f4";
-      case kDouble32_t: return ">f4";
-      case kDouble_t:   return ">f8";
+      case kUShort_t:   return swap_bytes ? "<u2" : ">u2";
+      case kShort_t:    return swap_bytes ? "<i2" : ">i2";
+      case kUInt_t:     return swap_bytes ? "<u4" : ">u4";
+      case kInt_t:      return swap_bytes ? "<i4" : ">i4";
+      case kULong_t:    return swap_bytes ? "<u8" : ">u8";
+      case kLong_t:     return swap_bytes ? "<i8" : ">i8";
+      case kULong64_t:  return swap_bytes ? "<u8" : ">u8";
+      case kLong64_t:   return swap_bytes ? "<i8" : ">i8";
+      case kFloat_t:    return swap_bytes ? "<f4" : ">f4";
+      case kDouble32_t: return swap_bytes ? "<f4" : ">f4";
+      case kDouble_t:   return swap_bytes ? "<f8" : ">f8";
       default: return NULL;
     }
   }
@@ -417,10 +450,10 @@ void getdim(TLeaf* leaf, std::vector<int>& dims, std::vector<std::string>& count
   }
 }
 
-bool dtypedim(PyArray_Descr* &dtype, TLeaf* leaf) {
+bool dtypedim(PyArray_Descr* &dtype, TLeaf* leaf, bool swap_bytes) {
   dtype = PyArray_DescrFromType(0);
 
-  const char* asstring = leaftype(leaf);
+  const char* asstring = leaftype(leaf, swap_bytes);
   if (asstring == NULL) {
     PyErr_Format(PyExc_ValueError, "cannot convert type of TLeaf \"%s\" to Numpy", leaf->GetName());
     return false;
@@ -434,7 +467,7 @@ bool dtypedim(PyArray_Descr* &dtype, TLeaf* leaf) {
   return true;
 }
 
-bool dtypedim_unileaf(ArrayInfo &arrayinfo, TLeaf* leaf) {
+bool dtypedim_unileaf(ArrayInfo &arrayinfo, TLeaf* leaf, bool swap_bytes) {
   std::vector<std::string> counters;
   getdim(leaf, arrayinfo.dims, counters);
   arrayinfo.nd = 1 + arrayinfo.dims.size();    // first dimension is for the set of entries itself
@@ -445,16 +478,16 @@ bool dtypedim_unileaf(ArrayInfo &arrayinfo, TLeaf* leaf) {
     return false;
   }
 
-  return dtypedim(arrayinfo.dtype, leaf);
+  return dtypedim(arrayinfo.dtype, leaf, swap_bytes);
 }
 
-bool dtypedim_multileaf(ArrayInfo &arrayinfo, TObjArray* leaves) {
+bool dtypedim_multileaf(ArrayInfo &arrayinfo, TObjArray* leaves, bool swap_bytes) {
   // TODO: Numpy recarray dtype
   PyErr_SetString(PyExc_NotImplementedError, "multileaf");
   return false;
 }
 
-bool dtypedim_branch(ArrayInfo &arrayinfo, TBranch* branch) {
+bool dtypedim_branch(ArrayInfo &arrayinfo, TBranch* branch, bool swap_bytes) {
   TObjArray* subbranches = branch->GetListOfBranches();
   if (subbranches->GetEntries() != 0) {
     PyErr_Format(PyExc_ValueError, "TBranch \"%s\" has subbranches; only branches of TLeaves are allowed", branch->GetName());
@@ -463,9 +496,9 @@ bool dtypedim_branch(ArrayInfo &arrayinfo, TBranch* branch) {
 
   TObjArray* leaves = branch->GetListOfLeaves();
   if (leaves->GetEntries() == 1)
-    return dtypedim_unileaf(arrayinfo, dynamic_cast<TLeaf*>(leaves->First()));
+    return dtypedim_unileaf(arrayinfo, dynamic_cast<TLeaf*>(leaves->First()), swap_bytes);
   else
-    return dtypedim_multileaf(arrayinfo, leaves);
+    return dtypedim_multileaf(arrayinfo, leaves, swap_bytes);
 }
 
 const char* gettuplestring(PyObject* p, Py_ssize_t pos) {
@@ -527,7 +560,7 @@ static PyTypeObject PyClusterIteratorType = {
 };
 
 static PyMethodDef module_methods[] = {
-  {"iterate", (PyCFunction)iterate, METH_VARARGS | METH_KEYWORDS, "Get an iterator over a selected set of TTree branches, yielding a tuple of (entry_start, entry_end, *arrays) for each cluster.\n\nPositional arguments:\n\n    filePath (str): name of the TFile\n    treePath (str): name of the TTree\n    *branchNames (strs): name of requested branches\n\nAlternative positional arguments:\n\n    *branches (PyROOT TBranch objects): to avoid re-opening the file (FIXME: not implemented yet!).\n\nKeyword arguments:\n\n    return_new_buffers=False:\n        if True, new memory is allocated during iteration for the arrays, and it is safe to use the arrays after the iterator steps;\n        if False, arrays merely wrap internal memory buffers that may be reused or deleted after the iterator steps: provides higher performance during iteration, but may result in stale data or segmentation faults if array data are accessed after the iterator steps\n\n    require_alignment=False:\n        if True, guarantee that the data are aligned in memory, even if that means copying data internally;\n        if False, smaller chance of internal memory copy, but array data may start at any memory address, possibly thwarting vectorized processing of the array\n        (ignored if return_new_buffers is True because Numpy arrays do their own alignment)"},
+  {"iterate", (PyCFunction)iterate, METH_VARARGS | METH_KEYWORDS, "Get an iterator over a selected set of TTree branches, yielding a tuple of (entry_start, entry_end, *arrays) for each cluster.\n\nPositional arguments:\n\n    filePath (str): name of the TFile\n    treePath (str): name of the TTree\n    *branchNames (strs): name of requested branches\n\nAlternative positional arguments:\n\n    *branches (PyROOT TBranch objects): to avoid re-opening the file (FIXME: not implemented yet!).\n\nKeyword arguments:\n\n    return_new_buffers=False:\n        if True, new memory is allocated during iteration for the arrays, and it is safe to use the arrays after the iterator steps;\n        if False, arrays merely wrap internal memory buffers that may be reused or deleted after the iterator steps: provides higher performance during iteration, but may result in stale data or segmentation faults if array data are accessed after the iterator steps\n\n    require_alignment=False:\n        if True, guarantee that the data are aligned in memory, even if that means copying data internally;\n        if False, smaller chance of internal memory copy, but array data may start at any memory address, possibly thwarting vectorized processing of the array\n        (ignored if return_new_buffers is True because Numpy arrays do their own alignment)\n\n    swap_bytes=False:\n        if True, swap bytes while reading and produce a little-endian Numpy array;\n        if False, return data as-is and produce a big-endian Numpy array"},
   {"performance", (PyCFunction)performance, METH_NOARGS, "Get a dictionary of performance counters:\n\n    \"baskets-loaded\": number of baskets loaded from the ROOT file; merely indicates how much was read\n    \"bytes-loaded\": same, but counting bytes\n    \"baskets-copied-to-extra\": number of baskets that had to be copied to an internal buffer because branches do not align at cluster boundaries or pointer do not align in memory (and require_alignment is True); ideally zero, hard to achieve in practice\n    \"bytes-copied-to-extra\": same, but counting bytes\n    \"extra-allocations\": number of times the internal buffer had to be reallocated to allow for a new high water mark in internal memory use; this should not scale with the total data read, but should quickly reach some plateau\n    \"clusters-copied-to-arrays\": number of internal buffers copied to new arrays to satisfy the user's choice (return_new_buffers is True)\n    same, but counting bytes"},
   {NULL, NULL, 0, NULL}
 };
@@ -606,6 +639,7 @@ static PyObject* iterate(PyObject* self, PyObject* args, PyObject* kwds) {
   std::vector<TBranch*> requested_branches;
   bool return_new_buffers = false;
   bool require_alignment = false;
+  bool swap_bytes = false;
 
   if (PyTuple_GET_SIZE(args) < 1) {
     PyErr_SetString(PyExc_TypeError, "at least one argument is required");
@@ -658,6 +692,13 @@ static PyObject* iterate(PyObject* self, PyObject* args, PyObject* kwds) {
             require_alignment = false;
         }
 
+        else if (std::string(PyString_AsString(key)) == std::string("swap_bytes")) {
+          if (PyObject_IsTrue(value))
+            swap_bytes = true;
+          else
+            swap_bytes = false;
+        }
+
         else {
           PyErr_Format(PyExc_TypeError, "unrecognized option: %s", PyString_AsString(key));
           return NULL;
@@ -679,7 +720,7 @@ static PyObject* iterate(PyObject* self, PyObject* args, PyObject* kwds) {
 
   for (unsigned int i = 0;  i < requested_branches.size();  i++) {
     arrayinfo.push_back(ArrayInfo());
-    if (!dtypedim_branch(arrayinfo.back(), requested_branches[i]))
+    if (!dtypedim_branch(arrayinfo.back(), requested_branches[i], swap_bytes))
       return NULL;
   }
 
@@ -690,7 +731,7 @@ static PyObject* iterate(PyObject* self, PyObject* args, PyObject* kwds) {
     return NULL;
   }
 
-  out->iter = new ClusterIterator(requested_branches, unrequested_counters, arrayinfo, num_entries, return_new_buffers, require_alignment);
+  out->iter = new ClusterIterator(requested_branches, unrequested_counters, arrayinfo, num_entries, return_new_buffers, require_alignment, swap_bytes);
 
   return reinterpret_cast<PyObject*>(out);
 }
