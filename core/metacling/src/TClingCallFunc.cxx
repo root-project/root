@@ -1058,11 +1058,6 @@ void TClingCallFunc::make_narg_call_with_return(const unsigned N, const string &
          for (int i = 0; i < indent_level; ++i) {
             callbuf << kIndentString;
          }
-         if (isReference) {
-            type_name += "&";
-         } else if (isPointer) {
-            type_name += "*";
-         }
          make_narg_call(type_name, N, typedefbuf, callbuf, class_name, indent_level);
          callbuf << ";\n";
          for (int i = 0; i < indent_level; ++i) {
