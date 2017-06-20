@@ -913,7 +913,6 @@ void CommandBuffer::BuildClipRegion(const WidgetRect &rect)
    //a widget's rect, not hidden by any of fRectsToClip.
 
    typedef std::vector<WidgetRect>::const_iterator rect_const_iterator;
-   typedef std::vector<bool>::size_type size_type;
 
    assert(fRectsToClip.size() != 0 && "BuildClipRegion, nothing to clip");
 
