@@ -85,7 +85,8 @@ typedef float          Size_t;      //Attribute size (float)
 //---- constants ---------------------------------------------------------------
 
 #ifndef NULL
-#define NULL 0
+constexpr const auto R__DEPRECATED(6,12, "Please #include <cstddef> instead of relying on ROOT's NULL")
+   NULL = nullptr;
 #endif
 
 const Bool_t kTRUE  = true;
