@@ -98,6 +98,15 @@ public:
 void ClusterBuffer::copy_to_extra(Long64_t keep_start) {
   const Long64_t numbytes = (bf_entry_end - bf_entry_start) * itemsize;
 
+  // remove unnecessary data from the bottom of the extra buffer
+  if (ex_entry_start != ex_entry_end  &&  ex_entry_start < keep_start) {
+    const Long64_t byte_start = (keep_start - ex_entry_start) * itemsize;
+    const Long64_t byte_end = (ex_entry_end - ex_entry_start) * itemsize;
+    memmove(extra.data(), &extra.data()[byte_start], byte_end - byte_start);
+    extra.resize(byte_end - byte_start);
+    ex_entry_start = keep_start;
+  }
+
   // if the extra buffer has anything worth saving in it, append
   if (ex_entry_end > keep_start) {
     const Long64_t oldsize = extra.size();
@@ -216,7 +225,7 @@ PyObject* ClusterIterator::arrays() {
     const ArrayInfo &ai = arrayinfo[i];
 
     Long64_t numbytes;
-    void* ptr = buf.getbuffer(numbytes, require_alignment, current_start, current_end);
+    void* ptr = buf.getbuffer(numbytes, require_alignment  &&  !return_new_buffers, current_start, current_end);
 
     npy_intp dims[ai.nd];
     dims[0] = numbytes / ai.dtype->elsize;
