@@ -30,6 +30,16 @@
 
 #define ALIGNMENT 8    // if a pointer % ALIGNMENT == 0, declare it "aligned"
 
+// performance counters for diagnostics
+static Long64_t perf_baskets_loaded = 0;
+static Long64_t perf_bytes_loaded = 0;
+static Long64_t perf_baskets_copied_to_extra = 0;
+static Long64_t perf_bytes_copied_to_extra = 0;
+static Long64_t perf_bytes_moved_in_extra = 0;
+static Long64_t perf_extra_allocations = 0;
+static Long64_t perf_clusters_copied_to_arrays = 0;
+static Long64_t perf_bytes_copied_to_arrays = 0;
+
 /////////////////////////////////////////////////////// helper classes
 
 class ArrayInfo {
@@ -46,6 +56,7 @@ private:
   const Long64_t itemsize;
   TBufferFile bf;
   std::vector<char> extra;
+  void* oldextra;
 
   // always numbers of entries (not bytes) and always inclusive on start, exclusive on end (like Python)
   // also, the TBufferFile is always ahead of the extra buffer and there's no gap between them
@@ -56,10 +67,20 @@ private:
 
   void copy_to_extra(Long64_t keep_start);
 
+  inline void check_extra_allocations() {
+    if (oldextra != reinterpret_cast<void*>(extra.data())) {
+      oldextra = reinterpret_cast<void*>(extra.data());
+      perf_extra_allocations++;
+    }
+  }
+
 public:
   ClusterBuffer(const TBranch* branch, const Long64_t itemsize) :
-    branch(branch), itemsize(itemsize), bf(TBuffer::kWrite, 32*1024),
-    bf_entry_start(0), bf_entry_end(0), ex_entry_start(0), ex_entry_end(0) { }
+    branch(branch), itemsize(itemsize), bf(TBuffer::kWrite, 32*1024), oldextra(nullptr),
+    bf_entry_start(0), bf_entry_end(0), ex_entry_start(0), ex_entry_end(0)
+  {
+    check_extra_allocations();
+  }
 
   void readone(Long64_t keep_start, const char* &error_string);
   void* getbuffer(Long64_t &numbytes, bool require_alignment, Long64_t entry_start, Long64_t entry_end);
@@ -102,22 +123,38 @@ void ClusterBuffer::copy_to_extra(Long64_t keep_start) {
   if (ex_entry_start != ex_entry_end  &&  ex_entry_start < keep_start) {
     const Long64_t byte_start = (keep_start - ex_entry_start) * itemsize;
     const Long64_t byte_end = (ex_entry_end - ex_entry_start) * itemsize;
+
     memmove(extra.data(), &extra.data()[byte_start], byte_end - byte_start);
+    perf_bytes_moved_in_extra += byte_end - byte_start;
+
     extra.resize(byte_end - byte_start);
+    check_extra_allocations();
+
     ex_entry_start = keep_start;
   }
 
   // if the extra buffer has anything worth saving in it, append
   if (ex_entry_end > keep_start) {
     const Long64_t oldsize = extra.size();
+
     extra.resize(oldsize + numbytes);
+    check_extra_allocations();
+
     memcpy(&extra.data()[oldsize], bf.GetCurrent(), numbytes);
+    perf_baskets_copied_to_extra++;
+    perf_bytes_copied_to_extra += numbytes;
+
     ex_entry_end = bf_entry_end;
   }
   // otherwise, replace
   else {
     extra.resize(numbytes);
+    check_extra_allocations();
+
     memcpy(extra.data(), bf.GetCurrent(), numbytes);
+    perf_baskets_copied_to_extra++;
+    perf_bytes_copied_to_extra += numbytes;
+
     ex_entry_start = bf_entry_start;
     ex_entry_end = bf_entry_end;
   }
@@ -132,6 +169,8 @@ void ClusterBuffer::readone(Long64_t keep_start, const char* &error_string) {
 
   // read in one more basket, starting at the old bf_entry_end
   Long64_t numentries = branch->GetBulkRead().GetEntriesSerialized(bf_entry_end, bf);
+  perf_baskets_loaded++;
+  perf_bytes_loaded += numentries * itemsize;
 
   // update the range
   bf_entry_start = bf_entry_end;
@@ -147,15 +186,15 @@ void ClusterBuffer::readone(Long64_t keep_start, const char* &error_string) {
 // getbuffer returns a pointer to contiguous data with its size
 // if you're lucky (and ask for it), this is performed without any copies
 void* ClusterBuffer::getbuffer(Long64_t &numbytes, bool require_alignment, Long64_t entry_start, Long64_t entry_end) {
+  numbytes = (entry_end - entry_start) * itemsize;
+
   // if the TBufferFile is a perfect match to the request and we either don't care about alignment or it is aligned, return it directly
   if (bf_entry_start == entry_start  &&  bf_entry_end == entry_end  &&  (!require_alignment  ||  (size_t)bf.GetCurrent() % ALIGNMENT == 0)) {
-    numbytes = (entry_end - entry_start) * itemsize;
     return bf.GetCurrent();
   }
   // otherwise, move everything into the extra buffer and return it
   else {
     copy_to_extra(entry_start);
-    numbytes = (entry_end - entry_start) * itemsize;
     return &extra.data()[(entry_start - ex_entry_start) * itemsize];
   }
 }
@@ -239,6 +278,8 @@ PyObject* ClusterIterator::arrays() {
     if (return_new_buffers) {
       array = PyArray_Empty(ai.nd, dims, ai.dtype, false);
       memcpy(PyArray_DATA(array), ptr, numbytes);
+      perf_clusters_copied_to_arrays++;
+      perf_bytes_copied_to_arrays += numbytes;
     }
     else {
       int flags = NPY_ARRAY_C_CONTIGUOUS;
@@ -449,6 +490,7 @@ static PyObject* PyClusterIterator_next(PyObject* self);
 static void PyClusterIterator_del(PyClusterIterator* self);
 
 static PyObject* iterate(PyObject* self, PyObject* args, PyObject* kwds);
+static PyObject* performance(PyObject* self);
 
 #if PY_MAJOR_VERSION >= 3
 #define Py_TPFLAGS_HAVE_ITER 0
@@ -486,6 +528,7 @@ static PyTypeObject PyClusterIteratorType = {
 
 static PyMethodDef module_methods[] = {
   {"iterate", (PyCFunction)iterate, METH_VARARGS | METH_KEYWORDS, "Get an iterator over a selected set of TTree branches, yielding a tuple of (entry_start, entry_end, *arrays) for each cluster.\n\nPositional arguments:\n\n    filePath (str): name of the TFile\n    treePath (str): name of the TTree\n    *branchNames (strs): name of requested branches\n\nAlternative positional arguments:\n\n    *branches (PyROOT TBranch objects): to avoid re-opening the file (FIXME: not implemented yet!).\n\nKeyword arguments:\n\n    return_new_buffers=False:\n        if True, new memory is allocated during iteration for the arrays, and it is safe to use the arrays after the iterator steps;\n        if False, arrays merely wrap internal memory buffers that may be reused or deleted after the iterator steps: provides higher performance during iteration, but may result in stale data or segmentation faults if array data are accessed after the iterator steps\n\n    require_alignment=False:\n        if True, guarantee that the data are aligned in memory, even if that means copying data internally;\n        if False, smaller chance of internal memory copy, but array data may start at any memory address, possibly thwarting vectorized processing of the array\n        (ignored if return_new_buffers is True because Numpy arrays do their own alignment)"},
+  {"performance", (PyCFunction)performance, METH_NOARGS, "Get a dictionary of performance counters:\n\n    \"baskets-loaded\": number of baskets loaded from the ROOT file; merely indicates how much was read\n    \"bytes-loaded\": same, but counting bytes\n    \"baskets-copied-to-extra\": number of baskets that had to be copied to an internal buffer because branches do not align at cluster boundaries or pointer do not align in memory (and require_alignment is True); ideally zero, hard to achieve in practice\n    \"bytes-copied-to-extra\": same, but counting bytes\n    \"extra-allocations\": number of times the internal buffer had to be reallocated to allow for a new high water mark in internal memory use; this should not scale with the total data read, but should quickly reach some plateau\n    \"clusters-copied-to-arrays\": number of internal buffers copied to new arrays to satisfy the user's choice (return_new_buffers is True)\n    same, but counting bytes"},
   {NULL, NULL, 0, NULL}
 };
 
@@ -650,4 +693,17 @@ static PyObject* iterate(PyObject* self, PyObject* args, PyObject* kwds) {
   out->iter = new ClusterIterator(requested_branches, unrequested_counters, arrayinfo, num_entries, return_new_buffers, require_alignment);
 
   return reinterpret_cast<PyObject*>(out);
+}
+
+static PyObject* performance(PyObject* self) {
+  PyObject* out = PyDict_New();
+  PyDict_SetItemString(out, "baskets-loaded",            PyLong_FromLong(perf_baskets_loaded           ));
+  PyDict_SetItemString(out, "bytes-loaded",              PyLong_FromLong(perf_bytes_loaded             ));
+  PyDict_SetItemString(out, "baskets-copied-to-extra",   PyLong_FromLong(perf_baskets_copied_to_extra  ));
+  PyDict_SetItemString(out, "bytes-copied-to-extra",     PyLong_FromLong(perf_bytes_copied_to_extra    ));
+  PyDict_SetItemString(out, "bytes-moved-in-extra",      PyLong_FromLong(perf_bytes_moved_in_extra     ));
+  PyDict_SetItemString(out, "extra-allocations",         PyLong_FromLong(perf_extra_allocations        ));
+  PyDict_SetItemString(out, "clusters-copied-to-arrays", PyLong_FromLong(perf_clusters_copied_to_arrays));
+  PyDict_SetItemString(out, "bytes-copied-to-arrays",    PyLong_FromLong(perf_bytes_copied_to_arrays   ));
+  return out;
 }
