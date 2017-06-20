@@ -43,25 +43,25 @@ public:
 class ClusterBuffer {
 private:
   const TBranch* branch;
-  const TBufferFile bf;
-  const std::vector<char> extra;
   const Long64_t itemsize;
+  TBufferFile bf;
+  std::vector<char> extra;
+
+  // always numbers of entries (not bytes) and always inclusive on start, exclusive on end (like Python)
+  // also, the TBufferFile is always ahead of the extra buffer and there's no gap between them
   Long64_t bf_entry_start;
   Long64_t bf_entry_end;
   Long64_t ex_entry_start;
   Long64_t ex_entry_end;
-  bool spilled_to_extra;
 
 public:
   ClusterBuffer(const TBranch* branch, const Long64_t itemsize) :
-    branch(branch), bf(TBuffer::kWrite, 32*1024), itemsize(itemsize),
-    bf_entry_start(0), bf_entry_end(0), ex_entry_start(0), ex_entry_end(0), spilled_to_extra(false) { }
+    branch(branch), itemsize(itemsize), bf(TBuffer::kWrite, 32*1024),
+    bf_entry_start(0), bf_entry_end(0), ex_entry_start(0), ex_entry_end(0) { }
 
   bool readmore(Long64_t target_start, Long64_t target_end);
-  void* getbuffer(Long64_t &size, bool &iscopy);
+  void* getbuffer(Long64_t &size, bool require_alignment, Long64_t entry_start, Long64_t entry_end);
 };
-
-enum CopyMode {ALWAYS, IF_UNALIGNED, TRY_NOT_TO};
 
 class ClusterIterator {
 private:
@@ -80,18 +80,52 @@ public:
   }
 
   bool stepforward(const char* &error_string);
-  PyObject* arrays(CopyMode copy);
+  PyObject* arrays(bool return_new_buffers, bool require_alignment);
 };    
 
 // readmore asks ROOT to read from the file until reaching entry target_end
 // and ClusterBuffer ensures that entries as old as target_start are preserved
 bool ClusterBuffer::readmore(Long64_t target_start, Long64_t target_end) {
-  return false;
+  while (bf_entry_end < target_end) {
+    // if the TBufferFile has anything worth saving in it, save it using the extra buffer
+    if (bf_entry_end > target_start) {
+      const Long64_t numbytes = (bf_entry_end - bf_entry_start) * itemsize;
+
+      // if the extra buffer has anything worth saving in it, merge it into the end
+      if (ex_entry_end > target_start) {
+        const Long64_t oldsize = extra.size();
+        extra.resize(oldsize + numbytes);
+        memcpy(&extra.data()[oldsize], bf.GetCurrent(), numbytes);
+        ex_entry_end = bf_entry_end;
+      }
+      // otherwise, overwrite it
+      else {
+        extra.resize(numbytes);
+        memcpy(extra.data(), bf.GetCurrent(), numbytes);
+        ex_entry_start = bf_entry_start;
+        ex_entry_end = bf_entry_end;
+      }
+    }
+
+    // read in one more basket, starting at the old bf_entry_end
+    Long64_t numentries = branch->GetBulkRead().GetEntriesSerialized(bf_entry_end, bf);
+
+    // update the range
+    bf_entry_start = bf_entry_end;
+    bf_entry_end = bf_entry_start + numentries;
+
+    // check for errors
+    if (numentries <= 0) {
+      bf_entry_end = bf_entry_start;
+      return false;
+    }
+  }
+  return true;
 }
 
 // getbuffer returns a pointer to contiguous data with its size
-// if you're lucky, this is performed without any copies
-void* ClusterBuffer::getbuffer(Long64_t &size, bool &iscopy) {
+// if you're lucky (and ask for it), this is performed without any copies
+void* ClusterBuffer::getbuffer(Long64_t &size, bool require_alignment, Long64_t entry_start, Long64_t entry_end) {
   return nullptr;
 }
 
@@ -101,6 +135,6 @@ bool ClusterIterator::stepforward(const char* &error_string) {
 }
 
 // get a Python tuple of arrays for all buffers
-PyObject* ClusterIterator::arrays(CopyMode copy) {
+PyObject* ClusterIterator::arrays(bool return_new_buffers, bool require_alignment) {
   return nullptr;
 }
