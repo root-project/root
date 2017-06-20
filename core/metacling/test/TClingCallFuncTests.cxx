@@ -51,7 +51,10 @@ TEST(TClingCallFunc, FunctionWrapperPointer)
 
    ASSERT_TRUE(gInterpreter->Declare(wrapper.c_str()));
    // Test that we cast this function to the right function type.
-   ASSERT_TRUE(wrapper.find("((int* (&)(int, float))FunctionWrapperFuncPtr)") != wrapper.npos);
+   auto FirstCallPos = wrapper.find("((int* (&)(int, float))FunctionWrapperFuncPtr)");
+   ASSERT_TRUE(FirstCallPos != wrapper.npos);
+   auto SecondCallPos = wrapper.find("((int* (&)(int, float))FunctionWrapperFuncPtr)", FirstCallPos + 1);
+   ASSERT_TRUE(SecondCallPos != wrapper.npos);
 
    // Cleanup
    gInterpreter->CallFunc_Delete(mc);
@@ -73,7 +76,10 @@ TEST(TClingCallFunc, FunctionWrapperReference)
 
    ASSERT_TRUE(gInterpreter->Declare(wrapper.c_str()));
    // Test that we cast this function to the right function type.
-   ASSERT_TRUE(wrapper.find("((int& (&)(int*, float))FunctionWrapperFuncRef)") != wrapper.npos);
+   auto FirstCallPos = wrapper.find("((int& (&)(int*, float))FunctionWrapperFuncRef)");
+   ASSERT_TRUE(FirstCallPos != wrapper.npos);
+   auto SecondCallPos = wrapper.find("((int& (&)(int*, float))FunctionWrapperFuncRef)", FirstCallPos + 1);
+   ASSERT_TRUE(SecondCallPos != wrapper.npos);
 
    // Cleanup
    gInterpreter->CallFunc_Delete(mc);
