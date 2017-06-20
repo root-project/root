@@ -157,7 +157,7 @@ bool ClusterIterator::stepforward(const char* &error_string) {
     ClusterBuffer &buf = *requested[i];
     if (buf.entry_end() == current_start) {
       buf.readone(current_start, error_string);
-      if (error_string != NULL)
+      if (error_string != nullptr)
         return true;
     }
   }
@@ -175,7 +175,7 @@ bool ClusterIterator::stepforward(const char* &error_string) {
     ClusterBuffer &buf = *requested[i];
     while (buf.entry_end() < current_end) {
       buf.readone(current_start, error_string);
-      if (error_string != NULL)
+      if (error_string != nullptr)
         return true;
     }
   }
@@ -185,5 +185,52 @@ bool ClusterIterator::stepforward(const char* &error_string) {
 
 // get a Python tuple of arrays for all buffers
 PyObject* ClusterIterator::arrays(bool return_new_buffers, bool require_alignment) {
-  return nullptr;
+  // step forward, handling errors
+  const char* error_string = nullptr;
+  if (stepforward(error_string)) {
+    if (error_string == nullptr) {
+      PyErr_SetString(PyExc_IOError, error_string);
+      return NULL;
+    }
+    else {
+      PyErr_SetNone(PyExc_StopIteration);
+      return NULL;
+    }
+  }
+
+  // create a tuple of results
+  PyObject* out = PyTuple_New(2 + requested.size());
+  PyTuple_SET_ITEM(out, 0, PyLong_FromLong(current_start));
+  PyTuple_SET_ITEM(out, 1, PyLong_FromLong(current_end));
+
+  for (unsigned int i = 0;  i < requested.size();  i++) {
+    ClusterBuffer &buf = *requested[i];
+    const ArrayInfo &ai = arrayinfo[i];
+
+    Long64_t numbytes;
+    void* ptr = buf.getbuffer(numbytes, require_alignment, current_start, current_end);
+
+    npy_intp dims[ai.nd];
+    dims[0] = numbytes / ai.dtype->elsize;
+    for (unsigned int j = 0;  j < ai.dims.size();  j++) {
+      dims[j + 1] = ai.dims[j];
+    }
+
+    PyObject* array;
+    if (return_new_buffers) {
+      array = PyArray_Empty(ai.nd, dims, ai.dtype, false);
+      memcpy(PyArray_DATA(array), ptr, numbytes);
+    }
+    else {
+      int flags = NPY_ARRAY_C_CONTIGUOUS;
+      if ((size_t)ptr % ALIGNMENT == 0)
+        flags |= NPY_ARRAY_ALIGNED;
+
+      array = PyArray_NewFromDescr(&PyArray_Type, ai.dtype, ai.nd, dims, NULL, ptr, flags, NULL);
+    }
+
+    PyTuple_SET_ITEM(out, i + 2, array);
+  }
+
+  return out;
 }
