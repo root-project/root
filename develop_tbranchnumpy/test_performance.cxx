@@ -81,6 +81,75 @@ double ttreeDraw_momentum(TTree *tree, int reps) {
   return total.GetBinContent(1);
 }
 
+double setBranchAddress_energy(TTree *tree, int reps) {
+  double total = 0.0;
+
+  Float_t px;
+  Float_t py;
+  Float_t pz;
+  Float_t mass_mumu;
+  tree->SetBranchAddress("px", &px);
+  tree->SetBranchAddress("py", &py);
+  tree->SetBranchAddress("pz", &pz);
+  tree->SetBranchAddress("mass_mumu", &mass_mumu);
+
+  Long64_t numEntries = tree->GetEntries();
+
+  for (int i = 0;  i < reps;  i++) {
+    for (Long64_t entry = 0;  entry < numEntries;  entry++) {
+      tree->GetEntry(entry);
+      total += sqrt(px*px + py*py + pz*pz + mass_mumu*mass_mumu);
+    }
+  }
+
+  return total;
+}
+
+double ttreeReaderFast_energy(TTree *tree, int reps) {
+  double total = 0.0;
+
+  for (int i = 0;  i < 1;  i++) {
+    ROOT::Experimental::TTreeReaderFast reader(tree);
+    ROOT::Experimental::TTreeReaderValueFast<float> px(reader, "px");
+    ROOT::Experimental::TTreeReaderValueFast<float> py(reader, "py");
+    ROOT::Experimental::TTreeReaderValueFast<float> pz(reader, "pz");
+    ROOT::Experimental::TTreeReaderValueFast<float> mass_mumu(reader, "mass_mumu");
+
+    for (auto it = reader.begin();  it != reader.end();  ++it) {
+        total += sqrt((*px)*(*px) + (*py)*(*py) + (*pz)*(*pz) + (*mass_mumu)*(*mass_mumu));
+    }
+  }
+
+  return total;
+}
+
+double ttreeReader_energy(TTree *tree, int reps) {
+  double total = 0.0;
+
+  TTreeReader reader(tree);
+  TTreeReaderValue<float> px(reader, "px");
+  TTreeReaderValue<float> py(reader, "py");
+  TTreeReaderValue<float> pz(reader, "pz");
+  TTreeReaderValue<float> mass_mumu(reader, "mass_mumu");
+
+  for (int i = 0;  i < reps;  i++) {
+    reader.Restart();
+    while (reader.Next()) {
+      total += sqrt((*px)*(*px) + (*py)*(*py) + (*pz)*(*pz) + (*mass_mumu)*(*mass_mumu));
+    }
+  }
+
+  return total;
+}
+
+double ttreeDraw_energy(TTree *tree, int reps) {
+  TH1D total("total", "", 1, -10000.0, 10000.0);
+  for (int i = 0;  i < reps;  i++) {
+    tree->Draw("sqrt(px*px + py*py + pz*pz + mass_mumu*mass_mumu) >> total");
+  }
+  return total.GetBinContent(1);
+}
+
 void test_performance() {
   {
     TFile* file = TFile::Open("TrackResonanceNtuple_uncompressed.root");
@@ -98,7 +167,7 @@ void test_performance() {
     setBranchAddress_momentum(tree, REPS);
     gettimeofday(&endTime, 0);
 
-    std::cout << "TrackResonanceNtuple_uncompressed.root SetBranchAddress " << diff(endTime, startTime) << " sec" << std::endl;
+    std::cout << "TrackResonanceNtuple_uncompressed.root momentum SetBranchAddress " << diff(endTime, startTime) << " sec" << std::endl;
   }
 
   {
@@ -117,7 +186,7 @@ void test_performance() {
     setBranchAddress_momentum(tree, REPS);
     gettimeofday(&endTime, 0);
 
-    std::cout << "TrackResonanceNtuple_compressed.root SetBranchAddress " << diff(endTime, startTime) << " sec" << std::endl;
+    std::cout << "TrackResonanceNtuple_compressed.root momentum SetBranchAddress " << diff(endTime, startTime) << " sec" << std::endl;
   }
 
   {
@@ -136,7 +205,7 @@ void test_performance() {
     ttreeReader_momentum(tree, REPS);
     gettimeofday(&endTime, 0);
 
-    std::cout << "TrackResonanceNtuple_uncompressed.root TTreeReader " << diff(endTime, startTime) << " sec" << std::endl;
+    std::cout << "TrackResonanceNtuple_uncompressed.root momentum TTreeReader " << diff(endTime, startTime) << " sec" << std::endl;
   }
 
   {
@@ -155,7 +224,7 @@ void test_performance() {
     ttreeReader_momentum(tree, REPS);
     gettimeofday(&endTime, 0);
 
-    std::cout << "TrackResonanceNtuple_compressed.root TTreeReader " << diff(endTime, startTime) << " sec" << std::endl;
+    std::cout << "TrackResonanceNtuple_compressed.root momentum TTreeReader " << diff(endTime, startTime) << " sec" << std::endl;
   }
 
   {
@@ -174,7 +243,7 @@ void test_performance() {
     ttreeDraw_momentum(tree, REPS);
     gettimeofday(&endTime, 0);
 
-    std::cout << "TrackResonanceNtuple_uncompressed.root TTree::Draw " << diff(endTime, startTime) << " sec" << std::endl;
+    std::cout << "TrackResonanceNtuple_uncompressed.root momentum TTree::Draw " << diff(endTime, startTime) << " sec" << std::endl;
   }
 
   {
@@ -193,7 +262,7 @@ void test_performance() {
     ttreeDraw_momentum(tree, REPS);
     gettimeofday(&endTime, 0);
 
-    std::cout << "TrackResonanceNtuple_compressed.root TTree::Draw " << diff(endTime, startTime) << " sec" << std::endl;
+    std::cout << "TrackResonanceNtuple_compressed.root momentum TTree::Draw " << diff(endTime, startTime) << " sec" << std::endl;
   }
 
   // {
@@ -212,7 +281,7 @@ void test_performance() {
   //   ttreeReaderFast_momentum(tree, REPS);
   //   gettimeofday(&endTime, 0);
 
-  //   std::cout << "TrackResonanceNtuple_uncompressed.root TTreeReaderFast " << diff(endTime, startTime) << " sec" << std::endl;
+  //   std::cout << "TrackResonanceNtuple_uncompressed.root momentum TTreeReaderFast " << diff(endTime, startTime) << " sec" << std::endl;
   // }
 
   // {
@@ -231,7 +300,167 @@ void test_performance() {
   //   ttreeReaderFast_momentum(tree, REPS);
   //   gettimeofday(&endTime, 0);
 
-  //   std::cout << "TrackResonanceNtuple_compressed.root TTreeReaderFast " << diff(endTime, startTime) << " sec" << std::endl;
+  //   std::cout << "TrackResonanceNtuple_compressed.root momentum TTreeReaderFast " << diff(endTime, startTime) << " sec" << std::endl;
+  // }
+
+  {
+    TFile* file = TFile::Open("TrackResonanceNtuple_uncompressed.root");
+    TTree* tree;
+    file->GetObject("twoMuon", tree);
+    tree->SetBranchStatus("*", 0);
+    tree->SetBranchStatus("px", 1);
+    tree->SetBranchStatus("py", 1);
+    tree->SetBranchStatus("pz", 1);
+    tree->SetBranchStatus("mass_mumu", 1);
+
+    setBranchAddress_energy(tree, WARM_UP);
+
+    struct timeval startTime, endTime;
+    gettimeofday(&startTime, 0);
+    setBranchAddress_energy(tree, REPS);
+    gettimeofday(&endTime, 0);
+
+    std::cout << "TrackResonanceNtuple_uncompressed.root energy SetBranchAddress " << diff(endTime, startTime) << " sec" << std::endl;
+  }
+
+  {
+    TFile* file = TFile::Open("TrackResonanceNtuple_compressed.root");
+    TTree* tree;
+    file->GetObject("twoMuon", tree);
+    tree->SetBranchStatus("*", 0);
+    tree->SetBranchStatus("px", 1);
+    tree->SetBranchStatus("py", 1);
+    tree->SetBranchStatus("pz", 1);
+    tree->SetBranchStatus("mass_mumu", 1);
+
+    setBranchAddress_energy(tree, WARM_UP);
+
+    struct timeval startTime, endTime;
+    gettimeofday(&startTime, 0);
+    setBranchAddress_energy(tree, REPS);
+    gettimeofday(&endTime, 0);
+
+    std::cout << "TrackResonanceNtuple_compressed.root energy SetBranchAddress " << diff(endTime, startTime) << " sec" << std::endl;
+  }
+
+  {
+    TFile* file = TFile::Open("TrackResonanceNtuple_uncompressed.root");
+    TTree* tree;
+    file->GetObject("twoMuon", tree);
+    tree->SetBranchStatus("*", 0);
+    tree->SetBranchStatus("px", 1);
+    tree->SetBranchStatus("py", 1);
+    tree->SetBranchStatus("pz", 1);
+    tree->SetBranchStatus("mass_mumu", 1);
+
+    ttreeReader_energy(tree, WARM_UP);
+
+    struct timeval startTime, endTime;
+    gettimeofday(&startTime, 0);
+    ttreeReader_energy(tree, REPS);
+    gettimeofday(&endTime, 0);
+
+    std::cout << "TrackResonanceNtuple_uncompressed.root energy TTreeReader " << diff(endTime, startTime) << " sec" << std::endl;
+  }
+
+  {
+    TFile* file = TFile::Open("TrackResonanceNtuple_compressed.root");
+    TTree* tree;
+    file->GetObject("twoMuon", tree);
+    tree->SetBranchStatus("*", 0);
+    tree->SetBranchStatus("px", 1);
+    tree->SetBranchStatus("py", 1);
+    tree->SetBranchStatus("pz", 1);
+    tree->SetBranchStatus("mass_mumu", 1);
+
+    ttreeReader_energy(tree, WARM_UP);
+
+    struct timeval startTime, endTime;
+    gettimeofday(&startTime, 0);
+    ttreeReader_energy(tree, REPS);
+    gettimeofday(&endTime, 0);
+
+    std::cout << "TrackResonanceNtuple_compressed.root energy TTreeReader " << diff(endTime, startTime) << " sec" << std::endl;
+  }
+
+  {
+    TFile* file = TFile::Open("TrackResonanceNtuple_uncompressed.root");
+    TTree* tree;
+    file->GetObject("twoMuon", tree);
+    tree->SetBranchStatus("*", 0);
+    tree->SetBranchStatus("px", 1);
+    tree->SetBranchStatus("py", 1);
+    tree->SetBranchStatus("pz", 1);
+    tree->SetBranchStatus("mass_mumu", 1);
+
+    ttreeDraw_energy(tree, WARM_UP);
+
+    struct timeval startTime, endTime;
+    gettimeofday(&startTime, 0);
+    ttreeDraw_energy(tree, REPS);
+    gettimeofday(&endTime, 0);
+
+    std::cout << "TrackResonanceNtuple_uncompressed.root energy TTree::Draw " << diff(endTime, startTime) << " sec" << std::endl;
+  }
+
+  {
+    TFile* file = TFile::Open("TrackResonanceNtuple_compressed.root");
+    TTree* tree;
+    file->GetObject("twoMuon", tree);
+    tree->SetBranchStatus("*", 0);
+    tree->SetBranchStatus("px", 1);
+    tree->SetBranchStatus("py", 1);
+    tree->SetBranchStatus("pz", 1);
+    tree->SetBranchStatus("mass_mumu", 1);
+
+    ttreeDraw_energy(tree, WARM_UP);
+
+    struct timeval startTime, endTime;
+    gettimeofday(&startTime, 0);
+    ttreeDraw_energy(tree, REPS);
+    gettimeofday(&endTime, 0);
+
+    std::cout << "TrackResonanceNtuple_compressed.root energy TTree::Draw " << diff(endTime, startTime) << " sec" << std::endl;
+  }
+
+  // {
+  //   TFile* file = TFile::Open("TrackResonanceNtuple_uncompressed.root");
+  //   TTree* tree;
+  //   file->GetObject("twoMuon", tree);
+  //   tree->SetBranchStatus("*", 0);
+  //   tree->SetBranchStatus("px", 1);
+  //   tree->SetBranchStatus("py", 1);
+  //   tree->SetBranchStatus("pz", 1);
+  //   tree->SetBranchStatus("mass_mumu", 1);
+
+  //   ttreeReaderFast_energy(tree, WARM_UP);
+
+  //   struct timeval startTime, endTime;
+  //   gettimeofday(&startTime, 0);
+  //   ttreeReaderFast_energy(tree, REPS);
+  //   gettimeofday(&endTime, 0);
+
+  //   std::cout << "TrackResonanceNtuple_uncompressed.root energy TTreeReaderFast " << diff(endTime, startTime) << " sec" << std::endl;
+  // }
+
+  // {
+  //   TFile* file = TFile::Open("TrackResonanceNtuple_compressed.root");
+  //   TTree* tree;
+  //   file->GetObject("twoMuon", tree);
+  //   tree->SetBranchStatus("*", 0);
+  //   tree->SetBranchStatus("px", 1);
+  //   tree->SetBranchStatus("py", 1);
+  //   tree->SetBranchStatus("pz", 1);
+  //   tree->SetBranchStatus("mass_mumu", 1);
+
+  //   ttreeReaderFast_energy(tree, WARM_UP);
+
+  //   struct timeval startTime, endTime;
+  //   gettimeofday(&startTime, 0);
+  //   ttreeReaderFast_energy(tree, REPS);
+  //   gettimeofday(&endTime, 0);
+
+  //   std::cout << "TrackResonanceNtuple_compressed.root energy TTreeReaderFast " << diff(endTime, startTime) << " sec" << std::endl;
   // }
 
 }
