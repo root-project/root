@@ -437,7 +437,7 @@ def getExtraHeaders():
 def removeUnwantedHeaders(allHeadersContent):
    """ remove unwanted headers, e.g. the ones used for dictionaries but not desirable in the pch
    """
-   unwantedHeaders = ['ROOT/TDataFrame.hxx']
+   unwantedHeaders = []
    deprecatedHeaders = ['TSelectorCint.h']
    unwantedHeaders.extend(deprecatedHeaders)
    for unwantedHeader in unwantedHeaders:
