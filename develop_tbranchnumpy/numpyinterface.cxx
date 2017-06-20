@@ -86,7 +86,17 @@ public:
   void readone(Long64_t keep_start, const char* &error_string);
   void* getbuffer(Long64_t &numbytes, bool require_alignment, Long64_t entry_start, Long64_t entry_end);
 
-  Long64_t entry_end() { return bf_entry_end; }  // hide the distinction between bf and extra
+  Long64_t entry_end() {
+    return bf_entry_end;  // hide the distinction between bf and extra
+  }
+
+  void reset() {
+    extra.clear();
+    bf_entry_start = 0;
+    bf_entry_end = 0;
+    ex_entry_start = 0;
+    ex_entry_end = 0;
+  }
 };
 
 class ClusterIterator {
@@ -114,6 +124,12 @@ public:
   void reset() {
     current_start = 0;
     current_end = 0;
+    for (unsigned int i = 0;  i < requested.size();  i++) {
+      requested[i]->reset();
+    }
+    for (unsigned int i = 0;  i < extra_counters.size();  i++) {
+      extra_counters[i]->reset();
+    }
   }
 };    
 
