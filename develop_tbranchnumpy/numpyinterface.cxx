@@ -446,6 +446,7 @@ typedef struct {
 
 static PyObject* PyClusterIterator_iter(PyObject* self);
 static PyObject* PyClusterIterator_next(PyObject* self);
+static void PyClusterIterator_del(PyClusterIterator* self);
 
 static PyObject* iterate(PyObject* self, PyObject* args, PyObject* kwds);
 
@@ -458,7 +459,7 @@ static PyTypeObject PyClusterIteratorType = {
   "numpyinterface.ClusterIterator", /*tp_name*/
   sizeof(PyClusterIterator),  /*tp_basicsize*/
   0,                         /*tp_itemsize*/
-  0,                         /*tp_dealloc*/
+  (destructor)PyClusterIterator_del, /*tp_dealloc*/
   0,                         /*tp_print*/
   0,                         /*tp_getattr*/
   0,                         /*tp_setattr*/
@@ -551,6 +552,11 @@ static PyObject* PyClusterIterator_iter(PyObject* self) {
 static PyObject* PyClusterIterator_next(PyObject* self) {
   PyClusterIterator* thyself = reinterpret_cast<PyClusterIterator*>(self);
   return thyself->iter->arrays();
+}
+
+static void PyClusterIterator_del(PyClusterIterator* thyself) {
+  delete thyself->iter;
+  Py_TYPE(thyself)->tp_free(reinterpret_cast<PyObject*>(thyself));
 }
 
 static PyObject* iterate(PyObject* self, PyObject* args, PyObject* kwds) {
