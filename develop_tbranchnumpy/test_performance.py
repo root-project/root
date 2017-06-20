@@ -56,6 +56,26 @@ def numba_momentum(reps, fileName, return_new_buffers, swap_bytes):
 
     return endTime - startTime
 
+def purepy_momentum(reps, fileName, return_new_buffers, swap_bytes):
+    iterator = numpyinterface.iterate(
+        fileName, "twoMuon", "px", "py", "pz",
+        return_new_buffers = return_new_buffers,
+        swap_bytes = swap_bytes)
+
+    startTime = time.time()
+
+    for i in xrange(reps):
+        total = 0
+        for start, end, px, py, pz in iterator:
+            total2 = 0.0
+            for i in range(len(px)):
+                total2 += math.sqrt(px[i]**2 + py[i]**2 + pz[i]**2)
+            total = total2
+
+    endTime = time.time()
+
+    return endTime - startTime
+
 def rootnumpy_momentum(reps, fileName):
     file = ROOT.TFile(fileName)
     tree = file.Get("twoMuon")
@@ -107,6 +127,26 @@ def numba_energy(reps, fileName, return_new_buffers, swap_bytes):
 
     return endTime - startTime
 
+def purepy_energy(reps, fileName, return_new_buffers, swap_bytes):
+    iterator = numpyinterface.iterate(
+        fileName, "twoMuon", "px", "py", "pz", "mass_mumu",
+        return_new_buffers = return_new_buffers,
+        swap_bytes = swap_bytes)
+
+    startTime = time.time()
+
+    for i in xrange(reps):
+        total = 0
+        for start, end, px, py, pz, mass_mumu in iterator:
+            total2 = 0.0
+            for i in range(len(px)):
+                total2 += math.sqrt(px[i]**2 + py[i]**2 + pz[i]**2 + mass_mumu[i]**2)
+            total = total2
+
+    endTime = time.time()
+
+    return endTime - startTime
+
 def rootnumpy_energy(reps, fileName):
     file = ROOT.TFile(fileName)
     tree = file.Get("twoMuon")
@@ -128,7 +168,7 @@ def rootnumpy_energy(reps, fileName):
 WARM_UP = 5
 REPS = 100
 
-for fileName in "TrackResonanceNtuple_uncompressed.root", "TrackResonanceNtuple_compressed.root":
+for fileName in ("TrackResonanceNtuple_LZ4.root",):   # "TrackResonanceNtuple_uncompressed.root", "TrackResonanceNtuple_compressed.root":
     for label, return_new_buffers in ("new buffers", True), ("views", False):
         print fileName, "momentum numpy big-endian", label,
         numpy_momentum(WARM_UP, fileName, return_new_buffers, False)     # warm up
@@ -142,6 +182,10 @@ for fileName in "TrackResonanceNtuple_uncompressed.root", "TrackResonanceNtuple_
         numba_momentum(WARM_UP, fileName, return_new_buffers, True)      # warm up
         print numba_momentum(REPS, fileName, return_new_buffers, True)   # real run
 
+        # print fileName, "momentum purepy little-endian", label,
+        # purepy_momentum(WARM_UP, fileName, return_new_buffers, True)     # warm up
+        # print purepy_momentum(REPS, fileName, return_new_buffers, True)  # real run
+
     print fileName, "momentum root_numpy",
     rootnumpy_momentum(WARM_UP, fileName)                                # warm up
     print rootnumpy_momentum(REPS, fileName)                             # real run
@@ -150,7 +194,7 @@ print
 print numpyinterface.performance()
 print
 
-for fileName in "TrackResonanceNtuple_uncompressed.root", "TrackResonanceNtuple_compressed.root":
+for fileName in ("TrackResonanceNtuple_LZ4.root",):   # "TrackResonanceNtuple_uncompressed.root", "TrackResonanceNtuple_compressed.root":
     for label, return_new_buffers in ("new buffers", True), ("views", False):
         print fileName, "energy numpy big-endian", label,
         numpy_energy(WARM_UP, fileName, return_new_buffers, False)       # warm up
@@ -163,6 +207,10 @@ for fileName in "TrackResonanceNtuple_uncompressed.root", "TrackResonanceNtuple_
         print fileName, "energy numba little-endian", label,
         numba_energy(WARM_UP, fileName, return_new_buffers, True)        # warm up
         print numba_energy(REPS, fileName, return_new_buffers, True)     # real run
+
+        # print fileName, "energy purepy little-endian", label,
+        # purepy_energy(WARM_UP, fileName, return_new_buffers, True)       # warm up
+        # print purepy_energy(REPS, fileName, return_new_buffers, True)    # real run
 
     print fileName, "energy root_numpy",
     rootnumpy_energy(WARM_UP, fileName)                                  # warm up

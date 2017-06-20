@@ -38,20 +38,28 @@ double setBranchAddress_momentum(TTree *tree, int reps) {
   return total;
 }
 
-double ttreeReaderFast_momentum(TTree *tree, int reps) {
-  double total = 0.0;
-
-  for (int i = 0;  i < 1;  i++) {
-    ROOT::Experimental::TTreeReaderFast reader(tree);
-    ROOT::Experimental::TTreeReaderValueFast<float> px(reader, "px");
-    ROOT::Experimental::TTreeReaderValueFast<float> py(reader, "py");
-    ROOT::Experimental::TTreeReaderValueFast<float> pz(reader, "pz");
-
-    for (auto it = reader.begin();  it != reader.end();  ++it) {
-        total += sqrt((*px)*(*px) + (*py)*(*py) + (*pz)*(*pz));
-    }
+double ttreeReaderFast_momentum(TFile *file, int reps) {
+  ROOT::Experimental::TTreeReaderFast myReader("twoMuon", file);
+  ROOT::Experimental::TTreeReaderValueFast<float> px(myReader, "px");
+  ROOT::Experimental::TTreeReaderValueFast<float> py(myReader, "py");
+  ROOT::Experimental::TTreeReaderValueFast<float> pz(myReader, "pz");
+  myReader.SetEntry(0);
+  if (ROOT::Internal::TTreeReaderValueBase::kSetupMatch != px.GetSetupStatus()) {
+    printf("TTreeReaderValueFast<float> failed to initialize.  Status code: %d\n", px.GetSetupStatus());
+    return 1;
   }
-
+  if (myReader.GetEntryStatus() != TTreeReader::kEntryValid) {
+    printf("TTreeReaderFast failed to initialize.  Entry status: %d\n", myReader.GetEntryStatus());
+    return 1;
+  }
+  Long64_t events = myReader.GetTree()->GetEntries();
+  Long64_t idx = 0;
+  double total = 0;
+  for (auto it : myReader) {
+    if (R__unlikely(idx == events)) {break;}
+    total += sqrt((*px)*(*px) + (*py)*(*py) + (*pz)*(*pz));
+    idx++;
+  }
   return total;
 }
 
@@ -274,11 +282,11 @@ void test_performance() {
   //   tree->SetBranchStatus("py", 1);
   //   tree->SetBranchStatus("pz", 1);
 
-  //   ttreeReaderFast_momentum(tree, WARM_UP);
+  //   ttreeReaderFast_momentum(file, WARM_UP);
 
   //   struct timeval startTime, endTime;
   //   gettimeofday(&startTime, 0);
-  //   ttreeReaderFast_momentum(tree, REPS);
+  //   ttreeReaderFast_momentum(file, REPS);
   //   gettimeofday(&endTime, 0);
 
   //   std::cout << "TrackResonanceNtuple_uncompressed.root momentum TTreeReaderFast " << diff(endTime, startTime) << " sec" << std::endl;
@@ -293,11 +301,11 @@ void test_performance() {
   //   tree->SetBranchStatus("py", 1);
   //   tree->SetBranchStatus("pz", 1);
 
-  //   ttreeReaderFast_momentum(tree, WARM_UP);
+  //   ttreeReaderFast_momentum(file, WARM_UP);
 
   //   struct timeval startTime, endTime;
   //   gettimeofday(&startTime, 0);
-  //   ttreeReaderFast_momentum(tree, REPS);
+  //   ttreeReaderFast_momentum(file, REPS);
   //   gettimeofday(&endTime, 0);
 
   //   std::cout << "TrackResonanceNtuple_compressed.root momentum TTreeReaderFast " << diff(endTime, startTime) << " sec" << std::endl;
