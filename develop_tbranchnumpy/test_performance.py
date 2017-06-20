@@ -13,9 +13,9 @@ def momentumsum(px, py, pz):
         total += math.sqrt(px[i]**2 + py[i]**2 + pz[i]**2)
     return total
 
-def numpy_momentum(reps, return_new_buffers, swap_bytes):
+def numpy_momentum(reps, fileName, return_new_buffers, swap_bytes):
     iterator = numpyinterface.iterate(
-        "TrackResonanceNtuple.root", "TrackResonanceNtuple/twoMuon", "px", "py", "pz",
+        fileName, "twoMuon", "px", "py", "pz",
         return_new_buffers = return_new_buffers,
         swap_bytes = swap_bytes)
 
@@ -30,9 +30,9 @@ def numpy_momentum(reps, return_new_buffers, swap_bytes):
 
     return endTime - startTime
 
-def numba_momentum(reps, return_new_buffers, swap_bytes):
+def numba_momentum(reps, fileName, return_new_buffers, swap_bytes):
     iterator = numpyinterface.iterate(
-        "TrackResonanceNtuple.root", "TrackResonanceNtuple/twoMuon", "px", "py", "pz",
+        fileName, "twoMuon", "px", "py", "pz",
         return_new_buffers = return_new_buffers,
         swap_bytes = swap_bytes)
 
@@ -47,16 +47,22 @@ def numba_momentum(reps, return_new_buffers, swap_bytes):
 
     return endTime - startTime
 
-print "numpy big-endian:"
-numpy_momentum(5, False, False)          # warm up
-print numpy_momentum(100, False, False)  # real run
+WARM_UP = 5
+REPS = 100
 
-print "numpy little-endian:"
-numpy_momentum(5, False, True)           # warm up
-print numpy_momentum(100, False, True)   # real run
+for fileName in "TrackResonanceNtuple_uncompressed.root", "TrackResonanceNtuple_compressed.root":
+    for label, return_new_buffers in ("new buffers", True), ("views", False):
+        print fileName, "numpy big-endian", label,
+        numpy_momentum(WARM_UP, fileName, return_new_buffers, False)     # warm up
+        print numpy_momentum(REPS, fileName, return_new_buffers, False)  # real run
 
-print "numba little-endian:"
-numba_momentum(5, False, True)           # warm up
-print numba_momentum(100, False, True)   # real run
+        print fileName, "numpy little-endian", label,
+        numpy_momentum(WARM_UP, fileName, return_new_buffers, True)      # warm up
+        print numpy_momentum(REPS, fileName, return_new_buffers, True)   # real run
 
+        print fileName, "numba little-endian", label,
+        numba_momentum(WARM_UP, fileName, return_new_buffers, True)      # warm up
+        print numba_momentum(REPS, fileName, return_new_buffers, True)   # real run
+
+print
 print numpyinterface.performance()
