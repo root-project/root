@@ -539,6 +539,7 @@ static PyObject* PyClusterIterator_next(PyObject* self);
 static void PyClusterIterator_del(PyClusterIterator* self);
 
 static PyObject* iterate(PyObject* self, PyObject* args, PyObject* kwds);
+static PyObject* dtypeshape(PyObject* self, PyObject* args, PyObject* kwds);
 static PyObject* performance(PyObject* self);
 
 #if PY_MAJOR_VERSION >= 3
@@ -576,7 +577,8 @@ static PyTypeObject PyClusterIteratorType = {
 };
 
 static PyMethodDef module_methods[] = {
-  {"iterate", (PyCFunction)iterate, METH_VARARGS | METH_KEYWORDS, "Get an iterator over a selected set of TTree branches, yielding a tuple of (entry_start, entry_end, *arrays) for each cluster.\n\nPositional arguments:\n\n    filePath (str): name of the TFile\n    treePath (str): name of the TTree\n    *branchNames (strs): name of requested branches\n\nAlternative positional arguments:\n\n    *branches (PyROOT TBranch objects): to avoid re-opening the file (FIXME: not implemented yet!).\n\nKeyword arguments:\n\n    return_new_buffers=False:\n        if True, new memory is allocated during iteration for the arrays, and it is safe to use the arrays after the iterator steps;\n        if False, arrays merely wrap internal memory buffers that may be reused or deleted after the iterator steps: provides higher performance during iteration, but may result in stale data or segmentation faults if array data are accessed after the iterator steps\n\n    require_alignment=False:\n        if True, guarantee that the data are aligned in memory, even if that means copying data internally;\n        if False, smaller chance of internal memory copy, but array data may start at any memory address, possibly thwarting vectorized processing of the array\n        (ignored if return_new_buffers is True because Numpy arrays do their own alignment)\n\n    swap_bytes=False:\n        if True, swap bytes while reading and produce a little-endian Numpy array;\n        if False, return data as-is and produce a big-endian Numpy array"},
+  {"iterate", (PyCFunction)iterate, METH_VARARGS | METH_KEYWORDS, "Get an iterator over a selected set of TTree branches, yielding a tuple of (entry_start, entry_end, *arrays) for each cluster.\n\nPositional arguments:\n\n    filePath (str): name of the TFile\n    treePath (str): name of the TTree\n    *branchNames (strs): name of requested branches\n\nAlternative positional arguments:\n\n    *branches (PyROOT TBranch objects): to avoid re-opening the file (FIXME: not implemented yet!).\n\nKeyword arguments:\n\n    return_new_buffers=True:\n        if True, new memory is allocated during iteration for the arrays, and it is safe to use the arrays after the iterator steps;\n        if False, arrays merely wrap internal memory buffers that may be reused or deleted after the iterator steps: provides higher performance during iteration, but may result in stale data or segmentation faults if array data are accessed after the iterator steps\n\n    require_alignment=True:\n        if True, guarantee that the data are aligned in memory, even if that means copying data internally;\n        if False, smaller chance of internal memory copy, but array data may start at any memory address, possibly thwarting vectorized processing of the array\n        (ignored if return_new_buffers is True because Numpy arrays do their own alignment)\n\n    swap_bytes=True:\n        if True, swap bytes while reading and produce a little-endian Numpy array;\n        if False, return data as-is and produce a big-endian Numpy array"},
+  {"dtypeshape", (PyCFunction)dtypeshape, METH_VARARGS | METH_KEYWORDS, "Returns a tuple of (dtype, shape) for all provided TTree branches, where the first element of 'shape' is a slight overestimate of the array size (since it includes headers) and TLeaf dimensions are its subsequent elements.\n\nPositional arguments:\n\n    filePath (str): name of the TFile\n    treePath (str): name of the TTree\n    *branchNames (strs): name of requested branches\n\nAlternative positional arguments:\n\n    *branches (PyROOT TBranch objects): to avoid re-opening the file (FIXME: not implemented yet!).\n\nKeyword arguments:\n\n    swap_bytes=True:\n        if True, swap bytes while reading and produce a little-endian Numpy array;\n        if False, return data as-is and produce a big-endian Numpy array"},
   {"performance", (PyCFunction)performance, METH_NOARGS, "Get a dictionary of performance counters:\n\n    \"baskets-loaded\": number of baskets loaded from the ROOT file; merely indicates how much was read\n    \"bytes-loaded\": same, but counting bytes\n    \"baskets-copied-to-extra\": number of baskets that had to be copied to an internal buffer because branches do not align at cluster boundaries or pointer do not align in memory (and require_alignment is True); ideally zero, hard to achieve in practice\n    \"bytes-copied-to-extra\": same, but counting bytes\n    \"extra-allocations\": number of times the internal buffer had to be reallocated to allow for a new high water mark in internal memory use; this should not scale with the total data read, but should quickly reach some plateau\n    \"clusters-copied-to-arrays\": number of internal buffers copied to new arrays to satisfy the user's choice (return_new_buffers is True)\n    same, but counting bytes"},
   {NULL, NULL, 0, NULL}
 };
@@ -585,7 +587,7 @@ static PyMethodDef module_methods[] = {
 
 static struct PyModuleDef moduledef = {
   PyModuleDef_HEAD_INIT,
-  "numpyinterface",
+  "_numpyinterface",
   NULL,
   0,
   module_methods,
@@ -595,7 +597,7 @@ static struct PyModuleDef moduledef = {
   NULL
 };
 
-PyMODINIT_FUNC PyInit_numpyinterface(void) {
+PyMODINIT_FUNC PyInit__numpyinterface(void) {
   PyClusterIteratorType.tp_new = PyType_GenericNew;
   if (PyType_Ready(&PyClusterIteratorType) < 0)
     return NULL;
@@ -614,12 +616,12 @@ PyMODINIT_FUNC PyInit_numpyinterface(void) {
 
 #else // PY_MAJOR_VERSION <= 2
 
-PyMODINIT_FUNC initnumpyinterface(void) {
+PyMODINIT_FUNC init_numpyinterface(void) {
   PyClusterIteratorType.tp_new = PyType_GenericNew;
   if (PyType_Ready(&PyClusterIteratorType) < 0)
     return;
 
-  PyObject* module = Py_InitModule3("numpyinterface", module_methods, "");
+  PyObject* module = Py_InitModule3("_numpyinterface", module_methods, "");
   if (module == NULL)
     return;
 
@@ -651,15 +653,10 @@ static void PyClusterIterator_del(PyClusterIterator* thyself) {
   Py_TYPE(thyself)->tp_free(reinterpret_cast<PyObject*>(thyself));
 }
 
-static PyObject* iterate(PyObject* self, PyObject* args, PyObject* kwds) {
-  std::vector<TBranch*> requested_branches;
-  bool return_new_buffers = false;
-  bool require_alignment = false;
-  bool swap_bytes = false;
-
+bool getbranches(PyObject* args, std::vector<TBranch*> &requested_branches) {
   if (PyTuple_GET_SIZE(args) < 1) {
     PyErr_SetString(PyExc_TypeError, "at least one argument is required");
-    return NULL;
+    return false;
   }
 
   if (PyString_Check(PyTuple_GET_ITEM(args, 0))) {
@@ -668,58 +665,25 @@ static PyObject* iterate(PyObject* self, PyObject* args, PyObject* kwds) {
     // first two arguments are filePath and treePath, and then there must be at least one branchName
     if (PyTuple_GET_SIZE(args) < 3) {
       PyErr_SetString(PyExc_TypeError, "in the string-based signture, at least three arguments are required");
-      return NULL;
+      return false;
     }
 
     const char* filePath = gettuplestring(args, 0);
     const char* treePath = gettuplestring(args, 1);
     if (filePath == NULL  ||  treePath == NULL)
-      return NULL;
+      return false;
 
     TFile* file;
-    if (!getfile(file, filePath)) return NULL;
+    if (!getfile(file, filePath)) return false;
 
     TTree* tree;
-    if (!gettree(tree, file, filePath, treePath)) return NULL;
+    if (!gettree(tree, file, filePath, treePath)) return false;
 
     for (int i = 2;  i < PyTuple_GET_SIZE(args);  i++) {
       const char* branchName = gettuplestring(args, i);
       TBranch* branch;
-      if (!getbranch(branch, tree, filePath, treePath, branchName)) return NULL;
+      if (!getbranch(branch, tree, filePath, treePath, branchName)) return false;
       requested_branches.push_back(branch);
-    }
-
-    if (kwds != NULL) {
-      PyObject* key;
-      PyObject* value;
-      Py_ssize_t pos = 0;
-      while (PyDict_Next(kwds, &pos, &key, &value)) {
-        if (std::string(PyString_AsString(key)) == std::string("return_new_buffers")) {
-          if (PyObject_IsTrue(value))
-            return_new_buffers = true;
-          else
-            return_new_buffers = false;
-        }
-
-        else if (std::string(PyString_AsString(key)) == std::string("require_alignment")) {
-          if (PyObject_IsTrue(value))
-            require_alignment = true;
-          else
-            require_alignment = false;
-        }
-
-        else if (std::string(PyString_AsString(key)) == std::string("swap_bytes")) {
-          if (PyObject_IsTrue(value))
-            swap_bytes = true;
-          else
-            swap_bytes = false;
-        }
-
-        else {
-          PyErr_Format(PyExc_TypeError, "unrecognized option: %s", PyString_AsString(key));
-          return NULL;
-        }
-      }
     }
   }
 
@@ -727,12 +691,56 @@ static PyObject* iterate(PyObject* self, PyObject* args, PyObject* kwds) {
     // first argument is an object: TBranch, TBranch, TBranch... signature
     // TODO: insist that all branches come from the same TTree
     PyErr_SetString(PyExc_NotImplementedError, "FIXME: accept PyROOT TBranches");
+    return false;
+  }
+
+  return true;
+}
+
+static PyObject* iterate(PyObject* self, PyObject* args, PyObject* kwds) {
+  std::vector<TBranch*> requested_branches;
+  if (!getbranches(args, requested_branches))
     return NULL;
+
+  bool return_new_buffers = true;
+  bool require_alignment = true;
+  bool swap_bytes = true;
+
+  if (kwds != NULL) {
+    PyObject* key;
+    PyObject* value;
+    Py_ssize_t pos = 0;
+    while (PyDict_Next(kwds, &pos, &key, &value)) {
+      if (std::string(PyString_AsString(key)) == std::string("return_new_buffers")) {
+        if (PyObject_IsTrue(value))
+          return_new_buffers = true;
+        else
+          return_new_buffers = false;
+      }
+
+      else if (std::string(PyString_AsString(key)) == std::string("require_alignment")) {
+        if (PyObject_IsTrue(value))
+          require_alignment = true;
+        else
+          require_alignment = false;
+      }
+
+      else if (std::string(PyString_AsString(key)) == std::string("swap_bytes")) {
+        if (PyObject_IsTrue(value))
+          swap_bytes = true;
+        else
+          swap_bytes = false;
+      }
+
+      else {
+        PyErr_Format(PyExc_TypeError, "unrecognized option: %s", PyString_AsString(key));
+        return NULL;
+      }
+    }
   }
 
   std::vector<TBranch*> unrequested_counters;
   std::vector<ArrayInfo> arrayinfo;
-  Long64_t num_entries = requested_branches.back()->GetTree()->GetEntries();
 
   for (unsigned int i = 0;  i < requested_branches.size();  i++) {
     arrayinfo.push_back(ArrayInfo());
@@ -747,9 +755,62 @@ static PyObject* iterate(PyObject* self, PyObject* args, PyObject* kwds) {
     return NULL;
   }
 
+  Long64_t num_entries = requested_branches.back()->GetTree()->GetEntries();
   out->iter = new ClusterIterator(requested_branches, unrequested_counters, arrayinfo, num_entries, return_new_buffers, require_alignment, swap_bytes);
 
   return reinterpret_cast<PyObject*>(out);
+}
+
+static PyObject* dtypeshape(PyObject* self, PyObject* args, PyObject* kwds) {
+  std::vector<TBranch*> requested_branches;
+  if (!getbranches(args, requested_branches))
+    return NULL;
+
+  bool swap_bytes = true;
+
+  if (kwds != NULL) {
+    PyObject* key;
+    PyObject* value;
+    Py_ssize_t pos = 0;
+    while (PyDict_Next(kwds, &pos, &key, &value)) {
+      if (std::string(PyString_AsString(key)) == std::string("swap_bytes")) {
+        if (PyObject_IsTrue(value))
+          swap_bytes = true;
+        else
+          swap_bytes = false;
+      }
+
+      else {
+        PyErr_Format(PyExc_TypeError, "unrecognized option: %s", PyString_AsString(key));
+        return NULL;
+      }
+    }
+  }
+
+  PyObject* out = PyTuple_New(requested_branches.size());
+
+  for (unsigned int i = 0;  i < requested_branches.size();  i++) {
+    ArrayInfo arrayinfo;
+    if (!dtypedim_branch(arrayinfo, requested_branches[i], swap_bytes)) {
+      Py_DECREF(out);
+      return NULL;
+    }
+
+    PyObject* shape = PyTuple_New(arrayinfo.nd);
+    PyTuple_SET_ITEM(shape, 0, PyLong_FromLong((int)ceil(1.0 * requested_branches[i]->GetTotalSize() / arrayinfo.dtype->elsize)));
+
+    for (unsigned int j = 0;  j < arrayinfo.dims.size();  j++)
+      PyTuple_SET_ITEM(shape, j + 1, PyLong_FromLong(arrayinfo.dims[j]));
+
+    PyObject* pair = PyTuple_New(2);
+    Py_INCREF(arrayinfo.dtype);
+    PyTuple_SET_ITEM(pair, 0, reinterpret_cast<PyObject*>(arrayinfo.dtype));
+    PyTuple_SET_ITEM(pair, 1, shape);
+
+    PyTuple_SET_ITEM(out, i, pair);
+  }
+
+  return out;
 }
 
 static PyObject* performance(PyObject* self) {

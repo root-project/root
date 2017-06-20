@@ -1,7 +1,7 @@
 import os
 import subprocess
 
-from setuptools import setup, find_packages, Extension
+from setuptools import setup, Extension
 import numpy.distutils.misc_util
 
 ROOTBIN = "/scratch/pivarski/root-install/bin"
@@ -14,7 +14,7 @@ def rootconfig(arg, filter, drop):
 
 setup(name = "numpyinterface",
       version = "0.0.1",
-      packages = find_packages(),
+      packages = ["."],
       scripts = [],
       description = "",
       long_description = """""",
@@ -37,8 +37,8 @@ setup(name = "numpyinterface",
                      "Topic :: Scientific/Engineering :: Physics",
                      ],
       platforms = "Any",
-      ext_modules = [Extension("numpyinterface",
-                               [os.path.join("numpyinterface.cxx")],
+      ext_modules = [Extension("_numpyinterface",
+                               [os.path.join("_numpyinterface.cxx")],
                                include_dirs = rootconfig("--cflags", lambda x: x.startswith("-I"), 2) + numpy.distutils.misc_util.get_numpy_include_dirs(),
                                library_dirs = rootconfig("--libdir", lambda x: True, 0),
                                libraries = rootconfig("--libs", lambda x: x.startswith("-l"), 2),
