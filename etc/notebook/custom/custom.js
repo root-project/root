@@ -11,3 +11,8 @@ $(document).ready(function() {
     }
     $('div#header-container').append("<a href='" + terminalURL + "' class='btn btn-default btn-sm navbar-btn pull-right' style='margin-right: 4px; margin-left: 2px;'>Terminal</a>");
 });
+
+// Highlighting for %%cpp cells
+require(['notebook/js/codecell'], function(codecell) {
+    codecell.CodeCell.options_default.highlight_modes['magic_text/x-c++src'] = {'reg':[/^%%cpp/]};
+});
