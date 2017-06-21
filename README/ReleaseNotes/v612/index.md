@@ -57,6 +57,11 @@ auto h1 = key->ReadObject<TH1>
 after which h1 will either be null if the key contains something that is not a TH1 (or derived class)
 or will be set to the address of the histogram read from the file.
 
+## TTree Libraries
+
+- Resolved O(N^2) scaling problem in ```TTree::Draw()``` observed when a branch that contains a 
+large TClonesArray where each element contains another small vector container. 
+
 ## Histogram Libraries
 
 
@@ -64,9 +69,6 @@ or will be set to the address of the histogram read from the file.
 
 
 ## RooFit Libraries
-
-
-## TTree Libraries
 
 
 ## 2D Graphics Libraries
