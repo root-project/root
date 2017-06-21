@@ -1,11 +1,9 @@
-#include <iostream>
-
-#include <string>
-#include <vector>
-
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <Python.h>
 #include <numpy/arrayobject.h>
+
+#include <string>
+#include <vector>
 
 #include <ROOT/TBulkBranchRead.hxx>
 #include <TBranch.h>
