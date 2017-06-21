@@ -27,8 +27,6 @@
 #include <TObjArray.h>
 #include <TTree.h>
 
-#define ALIGNMENT 8    // if a pointer % ALIGNMENT == 0, declare it "aligned"
-
 // performance counters for diagnostics
 static Long64_t perf_baskets_loaded = 0;
 static Long64_t perf_bytes_loaded = 0;
@@ -83,7 +81,7 @@ public:
   }
 
   void readone(Long64_t keep_start, const char* &error_string);
-  void* getbuffer(Long64_t &numbytes, bool require_alignment, Long64_t entry_start, Long64_t entry_end);
+  void* getbuffer(Long64_t &numbytes, Long64_t entry_start, Long64_t entry_end);
 
   Long64_t entry_end() {
     return bf_entry_end;  // hide the distinction between bf and extra
@@ -105,15 +103,14 @@ private:
   const std::vector<ArrayInfo> arrayinfo;   // has the same length as requested
   const Long64_t num_entries;
   const bool return_new_buffers;
-  const bool require_alignment;
   Long64_t current_start;
   Long64_t current_end;
 
   bool stepforward(const char* &error_string);
 
 public:
-  ClusterIterator(const std::vector<TBranch*> &requested_branches, const std::vector<TBranch*> &unrequested_counters, const std::vector<ArrayInfo> arrayinfo, Long64_t num_entries, bool return_new_buffers, bool require_alignment, bool swap_bytes) :
-    arrayinfo(arrayinfo), num_entries(num_entries), return_new_buffers(return_new_buffers), require_alignment(require_alignment), current_start(0), current_end(0) {
+  ClusterIterator(const std::vector<TBranch*> &requested_branches, const std::vector<TBranch*> &unrequested_counters, const std::vector<ArrayInfo> arrayinfo, Long64_t num_entries, bool return_new_buffers, bool swap_bytes) :
+    arrayinfo(arrayinfo), num_entries(num_entries), return_new_buffers(return_new_buffers), current_start(0), current_end(0) {
     for (unsigned int i = 0;  i < arrayinfo.size();  i++)
       requested.push_back(std::unique_ptr<ClusterBuffer>(new ClusterBuffer(requested_branches[i], arrayinfo[i].dtype->elsize, swap_bytes)));
   }
@@ -221,7 +218,7 @@ void ClusterBuffer::readone(Long64_t keep_start, const char* &error_string) {
 
 // getbuffer returns a pointer to contiguous data with its size
 // if you're lucky (and ask for it), this is performed without any copies
-void* ClusterBuffer::getbuffer(Long64_t &numbytes, bool require_alignment, Long64_t entry_start, Long64_t entry_end) {
+void* ClusterBuffer::getbuffer(Long64_t &numbytes, Long64_t entry_start, Long64_t entry_end) {
   numbytes = (entry_end - entry_start) * itemsize;
 
   const Long64_t offset = (entry_start - ex_entry_start) * itemsize;
@@ -293,7 +290,7 @@ PyObject* ClusterIterator::arrays() {
     const ArrayInfo &ai = arrayinfo[i];
 
     Long64_t numbytes;
-    void* ptr = buf.getbuffer(numbytes, require_alignment  &&  !return_new_buffers, current_start, current_end);
+    void* ptr = buf.getbuffer(numbytes, current_start, current_end);
 
     npy_intp dims[ai.nd];
     dims[0] = numbytes / ai.dtype->elsize;
@@ -311,10 +308,7 @@ PyObject* ClusterIterator::arrays() {
       perf_bytes_copied_to_arrays += numbytes;
     }
     else {
-      int flags = NPY_ARRAY_C_CONTIGUOUS;
-      if ((size_t)ptr % ALIGNMENT == 0)
-        flags |= NPY_ARRAY_ALIGNED;
-
+      int flags = NPY_ARRAY_C_CONTIGUOUS | NPY_ARRAY_ALIGNED;
       array = PyArray_NewFromDescr(&PyArray_Type, ai.dtype, ai.nd, dims, NULL, ptr, flags, NULL);
     }
 
@@ -557,9 +551,9 @@ static PyTypeObject PyClusterIteratorType = {
 };
 
 static PyMethodDef module_methods[] = {
-  {"iterate", (PyCFunction)iterate, METH_VARARGS | METH_KEYWORDS, "Get an iterator over a selected set of TTree branches, yielding a tuple of (entry_start, entry_end, *arrays) for each cluster.\n\nPositional arguments:\n\n    filePath (str): name of the TFile\n    treePath (str): name of the TTree\n    *branchNames (strs): name of requested branches\n\nAlternative positional arguments:\n\n    *branches (PyROOT TBranch objects): to avoid re-opening the file (FIXME: not implemented yet!).\n\nKeyword arguments:\n\n    return_new_buffers=True:\n        if True, new memory is allocated during iteration for the arrays, and it is safe to use the arrays after the iterator steps;\n        if False, arrays merely wrap internal memory buffers that may be reused or deleted after the iterator steps: provides higher performance during iteration, but may result in stale data or segmentation faults if array data are accessed after the iterator steps\n\n    require_alignment=True:\n        if True, guarantee that the data are aligned in memory, even if that means copying data internally;\n        if False, smaller chance of internal memory copy, but array data may start at any memory address, possibly thwarting vectorized processing of the array\n        (ignored if return_new_buffers is True because Numpy arrays do their own alignment)\n\n    swap_bytes=True:\n        if True, swap bytes while reading and produce a little-endian Numpy array;\n        if False, return data as-is and produce a big-endian Numpy array"},
+  {"iterate", (PyCFunction)iterate, METH_VARARGS | METH_KEYWORDS, "Get an iterator over a selected set of TTree branches, yielding a tuple of (entry_start, entry_end, *arrays) for each cluster.\n\nPositional arguments:\n\n    filePath (str): name of the TFile\n    treePath (str): name of the TTree\n    *branchNames (strs): name of requested branches\n\nAlternative positional arguments:\n\n    *branches (PyROOT TBranch objects): to avoid re-opening the file (FIXME: not implemented yet!).\n\nKeyword arguments:\n\n    return_new_buffers=True:\n        if True, new memory is allocated during iteration for the arrays, and it is safe to use the arrays after the iterator steps;\n        if False, arrays merely wrap internal memory buffers that may be reused or deleted after the iterator steps: provides higher performance during iteration, but may result in stale data or segmentation faults if array data are accessed after the iterator steps\n\n    swap_bytes=True:\n        if True, swap bytes while reading and produce a little-endian Numpy array;\n        if False, return data as-is and produce a big-endian Numpy array"},
   {"dtypeshape", (PyCFunction)dtypeshape, METH_VARARGS | METH_KEYWORDS, "Returns a tuple of (name, dtype, shape) for all provided TTree branches, where the first element of 'shape' is a slight overestimate of the array size (since it includes headers) and TLeaf dimensions are its subsequent elements.\n\nPositional arguments:\n\n    filePath (str): name of the TFile\n    treePath (str): name of the TTree\n    *branchNames (strs): name of requested branches\n\nAlternative positional arguments:\n\n    *branches (PyROOT TBranch objects): to avoid re-opening the file (FIXME: not implemented yet!).\n\nKeyword arguments:\n\n    swap_bytes=True:\n        if True, swap bytes while reading and produce a little-endian Numpy array;\n        if False, return data as-is and produce a big-endian Numpy array"},
-  {"performance", (PyCFunction)performance, METH_NOARGS, "Get a dictionary of performance counters:\n\n    \"baskets-loaded\": number of baskets loaded from the ROOT file; merely indicates how much was read\n    \"bytes-loaded\": same, but counting bytes\n    \"baskets-copied-to-extra\": number of baskets that had to be copied to an internal buffer because branches do not align at cluster boundaries or pointer do not align in memory (and require_alignment is True); ideally zero, hard to achieve in practice\n    \"bytes-copied-to-extra\": same, but counting bytes\n    \"extra-allocations\": number of times the internal buffer had to be reallocated to allow for a new high water mark in internal memory use; this should not scale with the total data read, but should quickly reach some plateau\n    \"clusters-copied-to-arrays\": number of internal buffers copied to new arrays to satisfy the user's choice (return_new_buffers is True)\n    same, but counting bytes"},
+  {"performance", (PyCFunction)performance, METH_NOARGS, "Get a dictionary of performance counters:\n\n    \"baskets-loaded\": number of baskets loaded from the ROOT file; merely indicates how much was read\n    \"bytes-loaded\": same, but counting bytes\n    \"baskets-copied-to-extra\": number of baskets that had to be copied to an internal buffer; ideally zero, hard to achieve in practice\n    \"bytes-copied-to-extra\": same, but counting bytes\n    \"extra-allocations\": number of times the internal buffer had to be reallocated to allow for a new high water mark in internal memory use; this should not scale with the total data read, but should quickly reach some plateau\n    \"clusters-copied-to-arrays\": number of internal buffers copied to new arrays to satisfy the user's choice (return_new_buffers is True)\n    same, but counting bytes"},
   {NULL, NULL, 0, NULL}
 };
 
@@ -683,7 +677,6 @@ static PyObject* iterate(PyObject* self, PyObject* args, PyObject* kwds) {
     return NULL;
 
   bool return_new_buffers = true;
-  bool require_alignment = true;
   bool swap_bytes = true;
 
   if (kwds != NULL) {
@@ -696,13 +689,6 @@ static PyObject* iterate(PyObject* self, PyObject* args, PyObject* kwds) {
           return_new_buffers = true;
         else
           return_new_buffers = false;
-      }
-
-      else if (std::string(PyString_AsString(key)) == std::string("require_alignment")) {
-        if (PyObject_IsTrue(value))
-          require_alignment = true;
-        else
-          require_alignment = false;
       }
 
       else if (std::string(PyString_AsString(key)) == std::string("swap_bytes")) {
@@ -736,7 +722,7 @@ static PyObject* iterate(PyObject* self, PyObject* args, PyObject* kwds) {
   }
 
   Long64_t num_entries = requested_branches.back()->GetTree()->GetEntries();
-  out->iter = new ClusterIterator(requested_branches, unrequested_counters, arrayinfo, num_entries, return_new_buffers, require_alignment, swap_bytes);
+  out->iter = new ClusterIterator(requested_branches, unrequested_counters, arrayinfo, num_entries, return_new_buffers, swap_bytes);
 
   return reinterpret_cast<PyObject*>(out);
 }

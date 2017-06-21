@@ -16,7 +16,7 @@ def _xrange(x):
     else:
         return range(x)
 
-def arrays(*args, **kwds):
+def arraydict(*args, **kwds):
     if len(args) >= 2 and _isstr(args[0]) and _isstr(args[1]):
         preargs = args[0:2]
         first = 2
@@ -51,10 +51,8 @@ def arrays(*args, **kwds):
 
     # fill each one separately to avoid memcpys from cluster-alignment
     for name, array in out.items():
-        itr = _numpyinterface.iterate(*(preargs + (branchargs[name],)),
-                                      return_new_buffers=False,
-                                      require_alignment=False,
-                                      swap_bytes=True)
+        itr = _numpyinterface.iterate(*(preargs + (branchargs[name],)), return_new_buffers=False, swap_bytes=True)
+
         current = 0
         for start, end, subarray in itr:
             length = subarray.shape[0]
@@ -72,10 +70,7 @@ def iterate_pandas(*args):
     dts = _numpyinterface.dtypeshape(*args, swap_bytes=True)
     recdtype = [(bytes(n), d) for n, d, s in dts]
 
-    itr = _numpyinterface.iterate(*args,
-                                  return_new_buffers=False,
-                                  require_alignment=False,
-                                  swap_bytes=True)
+    itr = _numpyinterface.iterate(*args, return_new_buffers=False, swap_bytes=True)
 
     for cluster in itr:
         start, end = cluster[:2]
@@ -93,26 +88,12 @@ def pandas(*args):
 
     return out
 
-# import time
+import time
 
-# #startTime = time.time()
-# d = arrays("../../data/TrackResonanceNtuple_uncompressed.root", "twoMuon", "mass_mumu", "px")
-# #print time.time() - startTime
+startTime = time.time()
+d = arraydict("../../data/TrackResonanceNtuple_uncompressed.root", "twoMuon", "mass_mumu", "px")
+print time.time() - startTime
 
-# #startTime = time.time()
-# p = pandas("../../data/TrackResonanceNtuple_uncompressed.root", "twoMuon", "mass_mumu", "px")
-# #print time.time() - startTime
-
-# import pandas as pd
-
-# p2 = pd.DataFrame(numpy.column_stack((d["mass_mumu"], d["px"])).ravel().view([("mass_mumu", d["mass_mumu"].dtype), ("px", d["px"].dtype)]))
-
-# print p.merge(p2, left_index=True, right_index=True)[:15970]
-
-
-
-d = arrays("../../data/TrackResonanceNtuple_uncompressed.root", "twoMuon", "mass_mumu", "px")
-
-d2 = arrays("../../data/TrackResonanceNtuple_uncompressed.root", "twoMuon", "mass_mumu")
-
-print numpy.array_equal(d["mass_mumu"], d2["mass_mumu"])
+startTime = time.time()
+p = pandas("../../data/TrackResonanceNtuple_uncompressed.root", "twoMuon", "mass_mumu", "px")
+print time.time() - startTime
