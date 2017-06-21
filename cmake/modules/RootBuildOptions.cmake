@@ -257,6 +257,11 @@ if(cxx14 OR cxx17 OR cxx14_defval OR cxx17_defval)
   set(root7_defvalue ON)
 endif()
 
+#---roottest option implies testing
+if(roottest)
+  set(testing ON CACHE BOOL "" FORCE)
+endif()
+
 #---Define at moment the options with the selected default values-----------------------------
 ROOT_APPLY_OPTIONS()
 
