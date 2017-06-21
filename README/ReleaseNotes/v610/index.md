@@ -607,4 +607,9 @@ New tutorials have been added:
 ---
 ## HEAD of the v6-10-00-patches branch
 
-This changes will be part of the future 6.10/02
+These changes will be part of the future 6.10/02
+
+### TTree Libraries
+
+- Resolved O(N^2) scaling problem in ```TTree::Draw()``` observed when a branch that contains a
+large TClonesArray where each element contains another small vector container.
