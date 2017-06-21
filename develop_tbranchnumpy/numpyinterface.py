@@ -51,7 +51,7 @@ def arraydict(*args, **kwds):
 
     # fill each one separately to avoid memcpys from cluster-alignment
     for name, array in out.items():
-        itr = _numpyinterface.iterate(*(preargs + (branchargs[name],)), return_new_buffers=False, swap_bytes=True)
+        itr = _numpyinterface.iterate(*(preargs + (branchargs[name],)), return_new_buffers=False, swap_bytes=swap_bytes)
 
         current = 0
         for start, end, subarray in itr:
@@ -63,6 +63,47 @@ def arraydict(*args, **kwds):
         out[name] = trim(array, current)
 
     return out
+
+def recarray(*args, **kwds):
+    if len(args) >= 2 and _isstr(args[0]) and _isstr(args[1]):
+        preargs = args[0:2]
+        first = 2
+    else:
+        preargs = ()
+        first = 0
+    
+    swap_bytes = True
+    if "swap_bytes" in kwds:
+        swap_bytes = kwds["swap_bytes"]
+        del kwds["swap_bytes"]
+    if len(kwds) > 0:
+        raise TypeError("unrecognized options: " + " ".join(kwds))
+
+    # allocate all the arrays, using a slight overestimate in their lengths (due to headers in GetTotalSize)
+    dts = _numpyinterface.dtypeshape(*args, swap_bytes=swap_bytes)
+
+    out = numpy.empty(shape, dtype=[(bytes(n), d) for n, d, s in dts])
+
+    branchargs = {}
+    for i, (name, dtype, shape) in enumerate(dts):
+        branchargs[name] = args[first + i]
+
+    # fill each one separately to avoid memcpys from cluster-alignment
+    fulllength = 0
+    for name, arg in branchargs.items():
+        itr = _numpyinterface.iterate(*(preargs + (arg,)), return_new_buffers=False, swap_bytes=swap_bytes)
+
+        current = 0
+        for start, end, subarray in itr:
+            length = subarray.shape[0]
+            out[name][current : current + length] = subarray
+            current += length
+
+        if current > fulllength:
+            fulllength = current
+
+    # now that we know how big the array is, trim it and return a view
+    return out[:][:fulllength]
 
 def iterate_pandas(*args):
     import pandas as pd
