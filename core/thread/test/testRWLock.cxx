@@ -9,6 +9,7 @@
 
 #include "TSystem.h"
 #include "TROOT.h"
+#include "TError.h"
 
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
@@ -174,6 +175,15 @@ auto gReentrantRWMutex = new ROOT::TReentrantRWLock<TMutex>();
 auto gReentrantRWMutexSM = new ROOT::TReentrantRWLock<ROOT::TSpinMutex>();
 auto gSpinMutex = new ROOT::TSpinMutex();
 
+// Intentionally ignore the Fatal error due to the shread thread-local storage.
+// In this test we need to be 'careful' to not use all those mutex at the same time.
+int trigger1 = gErrorIgnoreLevel = kFatal+1;
+auto gReentrantRWMutexTL = new ROOT::TReentrantRWLock<TMutex, ROOT::Internal::UniqueLockRecurseCount>();
+auto gReentrantRWMutexSMTL = new ROOT::TReentrantRWLock<ROOT::TSpinMutex, ROOT::Internal::UniqueLockRecurseCount>();
+auto gRWMutexTL = new TRWMutexImp<TMutex, ROOT::Internal::UniqueLockRecurseCount>();
+auto gRWMutexTLSpin = new TRWMutexImp<ROOT::TSpinMutex, ROOT::Internal::UniqueLockRecurseCount>();
+int trigger2 = gErrorIgnoreLevel = 0;
+
 TEST(RWLock, MutexLockVirtual)
 {
    testWriteLockV(gMutex, gRepetition);
@@ -275,6 +285,53 @@ TEST(RWLock, ReadUnLockDirect)
 
 
 
+TEST(RWLock, WriteSpinTLDirectLock)
+{
+   testWriteLock(gReentrantRWMutexSMTL, gRepetition);
+}
+
+TEST(RWLock, WriteSpinTLsDirectUnLock)
+{
+   testWriteUnLock(gReentrantRWMutexSMTL, gRepetition);
+}
+
+
+TEST(RWLock, WriteTLDirectLock)
+{
+   testWriteLock(gReentrantRWMutexTL, gRepetition);
+}
+
+TEST(RWLock, WriteTLDirectUnLock)
+{
+   testWriteUnLock(gReentrantRWMutexTL, gRepetition);
+}
+
+
+TEST(RWLock, ReadLockSpinTLDirect)
+{
+   testReadLock(gReentrantRWMutexSMTL, gRepetition);
+}
+
+TEST(RWLock, ReadUnLockSpinTLDirect)
+{
+   testReadUnLock(gReentrantRWMutexSMTL, gRepetition);
+}
+
+
+TEST(RWLock, ReadLockTLDirect)
+{
+   testReadLock(gReentrantRWMutexTL, gRepetition);
+}
+
+TEST(RWLock, ReadUnLockTLDirect)
+{
+   testReadUnLock(gReentrantRWMutexTL, gRepetition);
+}
+
+
+
+
+
 TEST(RWLock, SpinMutexLockUnlock)
 {
    testNonReentrantLock(gSpinMutex, gRepetition);
@@ -308,6 +365,16 @@ TEST(RWLock, Reentrant)
    Reentrant(*gReentrantRWMutex);
 }
 
+TEST(RWLock, ReentrantTLSpin)
+{
+   Reentrant(*gReentrantRWMutexSMTL);
+}
+
+TEST(RWLock, ReentrantTL)
+{
+   Reentrant(*gReentrantRWMutexTL);
+}
+
 
 TEST(RWLock, Concurrent)
 {
@@ -328,3 +395,13 @@ TEST(RWLock, LargeConcurrent)
 // {
 //    concurrent(gRWMutexSpin,10,20,gRepetition / 1000);
 // }
+
+TEST(RWLock, ConcurrentTL)
+{
+   concurrent(gRWMutexTL,1,2,gRepetition / 10000);
+}
+
+TEST(RWLock, LargeConcurrentTL)
+{
+   concurrent(gRWMutexTL,10,20,gRepetition / 1000);
+}
