@@ -33,7 +33,7 @@ or
     $JAVA_HOME/jre/lib/amd64/server
 This file can only be used if hdfs support is compiled into ROOT.
 The HDFS URLs follow the Hadoop notation and should be of the form:
-   hdfs://[host:port]/absolute/path/to/file/in/HDFS.root
+    hdfs://[host:port]/absolute/path/to/file/in/HDFS.root
 Any host or port information will be ignored; this is taken from the
 node's HDFS configuration files.
 
@@ -550,4 +550,3 @@ Int_t THDFSSystem::Unlink(const char * path)
       return -1;
    }
 }
-
