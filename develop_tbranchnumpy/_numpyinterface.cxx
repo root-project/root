@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <Python.h>
 #include <numpy/arrayobject.h>
 
@@ -326,7 +327,7 @@ PyObject* ClusterIterator::arrays() {
     PyObject* array;
     if (return_new_buffers) {
       array = PyArray_Empty(ai.nd, dims, ai.dtype, false);
-      memcpy(PyArray_DATA(array), ptr, numbytes);
+      memcpy(PyArray_DATA(reinterpret_cast<PyArrayObject*>(array)), ptr, numbytes);
       perf_clusters_copied_to_arrays++;
       perf_bytes_copied_to_arrays += numbytes;
     }
@@ -578,7 +579,7 @@ static PyTypeObject PyClusterIteratorType = {
 
 static PyMethodDef module_methods[] = {
   {"iterate", (PyCFunction)iterate, METH_VARARGS | METH_KEYWORDS, "Get an iterator over a selected set of TTree branches, yielding a tuple of (entry_start, entry_end, *arrays) for each cluster.\n\nPositional arguments:\n\n    filePath (str): name of the TFile\n    treePath (str): name of the TTree\n    *branchNames (strs): name of requested branches\n\nAlternative positional arguments:\n\n    *branches (PyROOT TBranch objects): to avoid re-opening the file (FIXME: not implemented yet!).\n\nKeyword arguments:\n\n    return_new_buffers=True:\n        if True, new memory is allocated during iteration for the arrays, and it is safe to use the arrays after the iterator steps;\n        if False, arrays merely wrap internal memory buffers that may be reused or deleted after the iterator steps: provides higher performance during iteration, but may result in stale data or segmentation faults if array data are accessed after the iterator steps\n\n    require_alignment=True:\n        if True, guarantee that the data are aligned in memory, even if that means copying data internally;\n        if False, smaller chance of internal memory copy, but array data may start at any memory address, possibly thwarting vectorized processing of the array\n        (ignored if return_new_buffers is True because Numpy arrays do their own alignment)\n\n    swap_bytes=True:\n        if True, swap bytes while reading and produce a little-endian Numpy array;\n        if False, return data as-is and produce a big-endian Numpy array"},
-  {"dtypeshape", (PyCFunction)dtypeshape, METH_VARARGS | METH_KEYWORDS, "Returns a tuple of (dtype, shape) for all provided TTree branches, where the first element of 'shape' is a slight overestimate of the array size (since it includes headers) and TLeaf dimensions are its subsequent elements.\n\nPositional arguments:\n\n    filePath (str): name of the TFile\n    treePath (str): name of the TTree\n    *branchNames (strs): name of requested branches\n\nAlternative positional arguments:\n\n    *branches (PyROOT TBranch objects): to avoid re-opening the file (FIXME: not implemented yet!).\n\nKeyword arguments:\n\n    swap_bytes=True:\n        if True, swap bytes while reading and produce a little-endian Numpy array;\n        if False, return data as-is and produce a big-endian Numpy array"},
+  {"dtypeshape", (PyCFunction)dtypeshape, METH_VARARGS | METH_KEYWORDS, "Returns a tuple of (name, dtype, shape) for all provided TTree branches, where the first element of 'shape' is a slight overestimate of the array size (since it includes headers) and TLeaf dimensions are its subsequent elements.\n\nPositional arguments:\n\n    filePath (str): name of the TFile\n    treePath (str): name of the TTree\n    *branchNames (strs): name of requested branches\n\nAlternative positional arguments:\n\n    *branches (PyROOT TBranch objects): to avoid re-opening the file (FIXME: not implemented yet!).\n\nKeyword arguments:\n\n    swap_bytes=True:\n        if True, swap bytes while reading and produce a little-endian Numpy array;\n        if False, return data as-is and produce a big-endian Numpy array"},
   {"performance", (PyCFunction)performance, METH_NOARGS, "Get a dictionary of performance counters:\n\n    \"baskets-loaded\": number of baskets loaded from the ROOT file; merely indicates how much was read\n    \"bytes-loaded\": same, but counting bytes\n    \"baskets-copied-to-extra\": number of baskets that had to be copied to an internal buffer because branches do not align at cluster boundaries or pointer do not align in memory (and require_alignment is True); ideally zero, hard to achieve in practice\n    \"bytes-copied-to-extra\": same, but counting bytes\n    \"extra-allocations\": number of times the internal buffer had to be reallocated to allow for a new high water mark in internal memory use; this should not scale with the total data read, but should quickly reach some plateau\n    \"clusters-copied-to-arrays\": number of internal buffers copied to new arrays to satisfy the user's choice (return_new_buffers is True)\n    same, but counting bytes"},
   {NULL, NULL, 0, NULL}
 };
@@ -802,12 +803,13 @@ static PyObject* dtypeshape(PyObject* self, PyObject* args, PyObject* kwds) {
     for (unsigned int j = 0;  j < arrayinfo.dims.size();  j++)
       PyTuple_SET_ITEM(shape, j + 1, PyLong_FromLong(arrayinfo.dims[j]));
 
-    PyObject* pair = PyTuple_New(2);
+    PyObject* triple = PyTuple_New(3);
     Py_INCREF(arrayinfo.dtype);
-    PyTuple_SET_ITEM(pair, 0, reinterpret_cast<PyObject*>(arrayinfo.dtype));
-    PyTuple_SET_ITEM(pair, 1, shape);
+    PyTuple_SET_ITEM(triple, 0, PyUnicode_FromString(requested_branches[i]->GetName()));
+    PyTuple_SET_ITEM(triple, 1, reinterpret_cast<PyObject*>(arrayinfo.dtype));
+    PyTuple_SET_ITEM(triple, 2, shape);
 
-    PyTuple_SET_ITEM(out, i, pair);
+    PyTuple_SET_ITEM(out, i, triple);
   }
 
   return out;
