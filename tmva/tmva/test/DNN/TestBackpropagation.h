@@ -91,13 +91,13 @@ auto testBackpropagationWeightsLinear(typename Architecture::Scalar_t dx)
    net.Initialize(EInitialization::kGauss);
 
    // Random training data.
-   Matrix_t X(50, 50), Y(50, net.GetOutputWidth()), W(50,1);
+   Matrix_t X(50, 50), Y(50, net.GetOutputWidth()), weights(50,1);
    randomBatch(X);
    randomMatrix(Y);
-   fillMatrix(W,1.0);
+   fillMatrix(weights,1.0);
 
    net.Forward(X);
-   net.Backward(X,Y,W);
+   net.Backward(X,Y,weights);
 
    Scalar_t maximum_error = 0.0;
 
@@ -163,13 +163,13 @@ auto testBackpropagationL1Regularization(typename Architecture::Scalar_t dx)
    net.Initialize(EInitialization::kGauss);
 
    // Random training data.
-   Matrix_t X(50, 50), Y(50, net.GetOutputWidth()), W(50,1);
+   Matrix_t X(50, 50), Y(50, net.GetOutputWidth()), weights(50,1);
    randomBatch(X);
    randomMatrix(Y);
-   fillMatrix(W,1.0);
+   fillMatrix(weights,1.0);
 
    net.Forward(X);
-   net.Backward(X,Y,W);
+   net.Backward(X,Y,weights);
  
    Scalar_t maximum_error = 0.0;
 
@@ -237,13 +237,13 @@ auto testBackpropagationL2Regularization(typename Architecture::Scalar_t dx)
    net.Initialize(EInitialization::kGauss);
 
    // Random training data.
-   Matrix_t X(50, 50), Y(50, net.GetOutputWidth()), W(50,1);
+   Matrix_t X(50, 50), Y(50, net.GetOutputWidth()), weights(50,1);
    randomBatch(X);
    randomMatrix(Y);
-   fillMatrix(W,1.0);
+   fillMatrix(weights,1.0);
 
    net.Forward(X);
-   net.Backward(X,Y,W);
+   net.Backward(X,Y,weights);
 
    Scalar_t maximum_error = 0.0;
 

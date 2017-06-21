@@ -247,8 +247,8 @@ TBatch<AArchitecture> TDataLoader<Data_t, AArchitecture>::GetBatch()
    DeviceBuffer_t inputDeviceBuffer  = deviceBuffer.GetSubBuffer(0, inputMatrixSize);
    DeviceBuffer_t outputDeviceBuffer = deviceBuffer.GetSubBuffer(inputMatrixSize,
                                                                  outputMatrixSize);
-   DeviceBuffer_t weightDeviceBuffer = hostBuffer.GetSubBuffer(inputMatrixSize + outputMatrixSize,
-                                                               weightMatrixSize);
+   DeviceBuffer_t weightDeviceBuffer = deviceBuffer.GetSubBuffer(inputMatrixSize + outputMatrixSize,
+                                                                 weightMatrixSize);
 
    size_t sampleIndex = fBatchIndex * fBatchSize;
    IndexIterator_t sampleIndexIterator = fSampleIndices.begin() + sampleIndex;

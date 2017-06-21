@@ -214,9 +214,9 @@ inline T relativeError(const T &x, const T &y)
 *  by zero. */
 //______________________________________________________________________________
 template <typename Matrix1, typename Matrix2>
-auto maximumRelativeError(const Matrix1 &X, const Matrix2 &Y) -> decltype(X(0,0))
+auto maximumRelativeError(const Matrix1 &X, const Matrix2 &Y) -> Double_t
 {
-    decltype(X(0,0)) curError, maxError = 0.0;
+    Double_t curError, maxError = 0.0;
 
     Int_t m = X.GetNrows();
     Int_t n = X.GetNcols();
@@ -226,7 +226,7 @@ auto maximumRelativeError(const Matrix1 &X, const Matrix2 &Y) -> decltype(X(0,0)
 
     for (Int_t i = 0; i < m; i++) {
         for (Int_t j = 0; j < n; j++) {
-            curError = relativeError(X(i,j), Y(i,j));
+            curError = relativeError<Double_t>(X(i,j), Y(i,j));
             maxError = std::max(curError, maxError);
         }
     }
