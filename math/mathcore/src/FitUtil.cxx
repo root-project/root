@@ -1307,10 +1307,13 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction &func, const BinData &d
    //    // effective total weight is total sum of weight square / sum of weights
    //    //nloglike += (w2Tot/wTot) * nuTot;
    // }
-
+#ifdef R__USE_IMT
    auto redFunction = [](const std::vector<double> &objs) {
       return std::accumulate(objs.begin(), objs.end(), double{});
    };
+#else
+   (void)nChunks;
+#endif
 
    double res{};
    if (executionPolicy == ROOT::Fit::kSerial) {

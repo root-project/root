@@ -409,9 +409,13 @@ namespace FitUtil {
             return chi2;
          };
 
+#ifdef R__USE_IMT
          auto redFunction = [](const std::vector<T> &objs) {
             return std::accumulate(objs.begin(), objs.end(), T{});
          };
+#else
+         (void)nChunks;
+#endif
 
          T res{};
          if (executionPolicy == ROOT::Fit::kSerial) {
@@ -535,17 +539,20 @@ namespace FitUtil {
             return LikelihoodAux<T>(logval, W, W2);
          };
 
+#ifdef R__USE_IMT
          auto redFunction = [](const std::vector<LikelihoodAux<T>> &objs) {
             return std::accumulate(objs.begin(), objs.end(), LikelihoodAux<T>(),
             [](const LikelihoodAux<T> &l1, const LikelihoodAux<T> &l2) {
                return l1 + l2;
             });
          };
+#else
+         (void)nChunks;
+#endif
 
          T logl_v{};
          T sumW_v{};
          T sumW2_v{};
-
          if (executionPolicy == ROOT::Fit::kSerial) {
             for (unsigned int i = 0; i < n / vecSize; ++i) {
                auto resArray = mapFunction(i);
@@ -743,7 +750,11 @@ namespace FitUtil {
             return nloglike;
          };
 
+#ifdef R__USE_IMT
          auto redFunction = [](const std::vector<T> &objs) { return std::accumulate(objs.begin(), objs.end(), T{}); };
+#else
+         (void)nChunks;
+#endif
 
          T res{};
          if (executionPolicy == ROOT::Fit::kSerial) {
