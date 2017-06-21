@@ -63,7 +63,7 @@ ROOTTEST_ADD_TEST(processExecutorProcess
                   OUTREF tProcessExecutorProcessTest.ref
                   DEPENDS ${GENERATE_EXECUTABLE_TEST})
 
-ROOTTEST_GENERATE_EXECUTABLE(processExecutor tProcessExecutor.cpp LIBRARIES MultiProc Core Net TreePlayer RIO Hist)
+ROOTTEST_GENERATE_EXECUTABLE(processExecutor tProcessExecutor.cpp LIBRARIES MultiProc Core Net TreePlayer RIO Hist MathCore)
 
 ROOTTEST_ADD_TEST(processExecutor
                   EXEC processExecutor
@@ -71,7 +71,7 @@ ROOTTEST_ADD_TEST(processExecutor
 
 if(ROOT_imt_FOUND)
   include_directories(${TBB_INCLUDE_DIRS})
-  ROOTTEST_GENERATE_EXECUTABLE(threadExecutor tThreadExecutor.cpp LIBRARIES Core Imt Hist)
+  ROOTTEST_GENERATE_EXECUTABLE(threadExecutor tThreadExecutor.cpp LIBRARIES Core Imt Hist MathCore)
 
   ROOTTEST_ADD_TEST(threadExecutor
                     EXEC threadExecutor
@@ -184,7 +184,7 @@ if(ROOT_imt_FOUND)
    ROOTTEST_ADD_TEST(generate_imt_tree
                      MACRO generate_imt_tree.C+)
 
-   ROOTTEST_GENERATE_EXECUTABLE(ttree_read_imt ttree_read_imt.cpp LIBRARIES Core Thread Tree)
+   ROOTTEST_GENERATE_EXECUTABLE(ttree_read_imt ttree_read_imt.cpp LIBRARIES Core Thread Tree RIO Imt)
 
    ROOTTEST_ADD_TEST(ttree_read_imt
                      COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/ttree_read_imt.sh
@@ -202,7 +202,7 @@ if(ROOT_imt_FOUND)
 #                     OUTREF ttree_read_imt_allpar.ref
 #                     DEPENDS generate_imt_tree ${GENERATE_EXECUTABLE_TEST})
 
-   ROOTTEST_GENERATE_EXECUTABLE(ttree_write_imt ttree_write_imt.cpp LIBRARIES Core Thread Tree Hist)
+   ROOTTEST_GENERATE_EXECUTABLE(ttree_write_imt ttree_write_imt.cpp LIBRARIES Core Thread Tree Hist RIO Imt)
 
    ROOTTEST_ADD_TEST(ttree_write_imt
                      EXEC ttree_write_imt

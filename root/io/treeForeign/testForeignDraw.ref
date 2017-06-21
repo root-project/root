@@ -18,16 +18,16 @@ Warning in <TClass::Init>: no dictionary for class MyClass is available
 *Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 *Br    2 :arr.fUniqueID : UInt_t fUniqueID[arr_]                             *
-*Entries :        2 : Total  Size=        691 bytes  File Size  =        106 *
-*Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.03     *
+*Entries :        2 : Total  Size=        691 bytes  File Size  =        104 *
+*Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.05     *
 *............................................................................*
 *Br    3 :arr.fBits : UInt_t fBits[arr_]                                     *
-*Entries :        2 : Total  Size=        671 bytes  File Size  =        104 *
-*Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.01     *
+*Entries :        2 : Total  Size=        671 bytes  File Size  =        102 *
+*Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.03     *
 *............................................................................*
 *Br    4 :arr.chunk : MyClass* chunk[arr_]                                   *
-*Entries :        2 : Total  Size=        759 bytes  File Size  =        147 *
-*Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.31     *
+*Entries :        2 : Total  Size=        759 bytes  File Size  =        151 *
+*Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.28     *
 *............................................................................*
 ************************
 *    Row   *     myvar *
