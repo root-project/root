@@ -3435,7 +3435,7 @@ Int_t TTreeFormula::GetRealInstance(Int_t instance, Int_t codeindex) {
                      fRealInstanceCache.fVirtAccumCache = virt_accum - fManager->fCumulUsedVarDims->GetArray()[local_index];
                      fRealInstanceCache.fLocalIndexCache = local_index;
 
-		     if (local_index==(maxloop-1) && (instance >= virt_accum)) {
+                     if (local_index==(maxloop-1) && (instance >= virt_accum)) {
                         instance = fNdata[0]+1; // out of bounds.
                         if (check) return fNdata[0]+1;
                      } else {
