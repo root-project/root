@@ -93,19 +93,26 @@ def pandas(*args):
 
     return out
 
-import time
+# import time
 
-#startTime = time.time()
+# #startTime = time.time()
+# d = arrays("../../data/TrackResonanceNtuple_uncompressed.root", "twoMuon", "mass_mumu", "px")
+# #print time.time() - startTime
+
+# #startTime = time.time()
+# p = pandas("../../data/TrackResonanceNtuple_uncompressed.root", "twoMuon", "mass_mumu", "px")
+# #print time.time() - startTime
+
+# import pandas as pd
+
+# p2 = pd.DataFrame(numpy.column_stack((d["mass_mumu"], d["px"])).ravel().view([("mass_mumu", d["mass_mumu"].dtype), ("px", d["px"].dtype)]))
+
+# print p.merge(p2, left_index=True, right_index=True)[:15970]
+
+
+
 d = arrays("../../data/TrackResonanceNtuple_uncompressed.root", "twoMuon", "mass_mumu", "px")
-#print time.time() - startTime
 
-#startTime = time.time()
-p = pandas("../../data/TrackResonanceNtuple_uncompressed.root", "twoMuon", "mass_mumu", "px")
-#print time.time() - startTime
+d2 = arrays("../../data/TrackResonanceNtuple_uncompressed.root", "twoMuon", "mass_mumu")
 
-import pandas as pd
-
-p2 = pd.DataFrame(numpy.column_stack((d["mass_mumu"], d["px"])).ravel().view([("mass_mumu", d["mass_mumu"].dtype), ("px", d["px"].dtype)]))
-
-print p.merge(p2, left_index=True, right_index=True)[:15970]
-
+print numpy.array_equal(d["mass_mumu"], d2["mass_mumu"])

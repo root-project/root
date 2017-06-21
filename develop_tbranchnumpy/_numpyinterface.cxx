@@ -133,56 +133,41 @@ public:
 };    
 
 void ClusterBuffer::copy_to_extra(Long64_t keep_start) {
-  const Long64_t numbytes = (bf_entry_end - bf_entry_start) * itemsize;
+  // this is a safer algorithm than is necessary, and it could impact performance, but significantly less so than the other speed-ups
 
-  // remove unnecessary data from the bottom of the extra buffer
-  if (ex_entry_start != ex_entry_end  &&  ex_entry_start < keep_start) {
-    const Long64_t byte_start = (keep_start - ex_entry_start) * itemsize;
-    const Long64_t byte_end = (ex_entry_end - ex_entry_start) * itemsize;
+  // append the BufferFile at the end of the extra buffer
+  const Long64_t oldsize = extra.size();
+  const Long64_t addition = (bf_entry_end - bf_entry_start) * itemsize;
 
-    memmove(extra.data(), &extra.data()[byte_start], byte_end - byte_start);
-    perf_bytes_moved_in_extra += byte_end - byte_start;
+  if (addition > 0) {
+    extra.resize(oldsize + addition);
+    check_extra_allocations();
 
-    extra.resize(byte_end - byte_start);
+    memcpy(&extra.data()[oldsize], bf.GetCurrent(), addition);
+    perf_baskets_copied_to_extra++;
+    perf_bytes_copied_to_extra += addition;
+
+    ex_entry_end = bf_entry_end;
+  }
+
+  // now remove data from the start of the extra buffer, to keep it from growing too much
+  if (ex_entry_start < keep_start) {
+    const Long64_t offset = (keep_start - ex_entry_start) * itemsize;
+    const Long64_t newsize = (ex_entry_end - keep_start) * itemsize;
+
+    memmove(extra.data(), &extra.data()[offset], newsize);
+    perf_bytes_moved_in_extra += newsize;
+
+    extra.resize(newsize);
     check_extra_allocations();
 
     ex_entry_start = keep_start;
-  }
-
-  // if the extra buffer has anything worth saving in it, append
-  if (ex_entry_end > keep_start) {
-    const Long64_t oldsize = extra.size();
-
-    extra.resize(oldsize + numbytes);
-    check_extra_allocations();
-
-    memcpy(&extra.data()[oldsize], bf.GetCurrent(), numbytes);
-    perf_baskets_copied_to_extra++;
-    perf_bytes_copied_to_extra += numbytes;
-
-    ex_entry_end = bf_entry_end;
-  }
-  // otherwise, replace
-  else {
-    extra.resize(numbytes);
-    check_extra_allocations();
-
-    memcpy(extra.data(), bf.GetCurrent(), numbytes);
-    perf_baskets_copied_to_extra++;
-    perf_bytes_copied_to_extra += numbytes;
-
-    ex_entry_start = bf_entry_start;
-    ex_entry_end = bf_entry_end;
   }
 }
 
 // readone asks ROOT to read one basket from the file
 // and ClusterBuffer ensures that entries as old as keep_start are preserved
 void ClusterBuffer::readone(Long64_t keep_start, const char* &error_string) {
-  // if the TBufferFile has anything worth saving in it, save it using the extra buffer
-  if (bf_entry_end > keep_start)
-    copy_to_extra(keep_start);
-
   // read in one more basket, starting at the old bf_entry_end
   Long64_t numentries = branch->GetBulkRead().GetEntriesSerialized(bf_entry_end, bf);
   perf_baskets_loaded++;
@@ -229,6 +214,9 @@ void ClusterBuffer::readone(Long64_t keep_start, const char* &error_string) {
     bf_entry_end = bf_entry_start;
     error_string = "failed to read TBasket into TBufferFile (using GetBulkRead().GetEntriesSerialized)";
   }
+
+  // for now, always mirror to the extra buffer
+  copy_to_extra(keep_start);
 }
 
 // getbuffer returns a pointer to contiguous data with its size
@@ -236,15 +224,8 @@ void ClusterBuffer::readone(Long64_t keep_start, const char* &error_string) {
 void* ClusterBuffer::getbuffer(Long64_t &numbytes, bool require_alignment, Long64_t entry_start, Long64_t entry_end) {
   numbytes = (entry_end - entry_start) * itemsize;
 
-  // if the TBufferFile is a perfect match to the request and we either don't care about alignment or it is aligned, return it directly
-  if (bf_entry_start == entry_start  &&  bf_entry_end == entry_end  &&  (!require_alignment  ||  (size_t)bf.GetCurrent() % ALIGNMENT == 0)) {
-    return bf.GetCurrent();
-  }
-  // otherwise, move everything into the extra buffer and return it
-  else {
-    copy_to_extra(entry_start);
-    return &extra.data()[(entry_start - ex_entry_start) * itemsize];
-  }
+  const Long64_t offset = (entry_start - ex_entry_start) * itemsize;
+  return &extra.data()[offset];
 }
 
 // step all ClusterBuffers forward, for all branches, returning true when done and setting error_string on any errors
@@ -283,7 +264,7 @@ bool ClusterIterator::stepforward(const char* &error_string) {
         return true;
     }
   }
-
+  
   return false;
 }
 
