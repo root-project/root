@@ -24,7 +24,7 @@ private:
    Long64_t  fSize;      ///< File size
    Long64_t  fSysOffset; ///< Seek offset in file
    TUrl      fUrl;       ///< HDFS url
-   TString   fPath;	 ///< HDFS path
+   TString   fPath;      ///< HDFS path
 
    Int_t    SysOpen(const char *pathname, Int_t flags, UInt_t mode);
    Int_t    SysClose(Int_t fd);

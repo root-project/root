@@ -107,7 +107,7 @@ THDFSFile::THDFSFile(const char *path, Option_t *option,
    hdfsBuilderSetNameNode(bld, hdfs_default_host);
    hdfsBuilderSetNameNodePort(bld, hdfs_default_port);
    if (has_authn) {
-      UserGroup_t *ugi = gSystem->GetUserInfo((char*) 0);
+      UserGroup_t *ugi = gSystem->GetUserInfo((char *)0);
       const char *user = (ugi->fUser).Data();
       hdfsBuilderSetUserName(bld, user);
       delete ugi;
@@ -182,20 +182,18 @@ Int_t THDFSFile::SysRead(Int_t, void *buf, Int_t len)
    tSize num_read_total = 0;
 
    do {
-       tSize num_read = hdfsRead((hdfsFS) fFS, (hdfsFile) fHdfsFH, (char*) buf + num_read_total, len - num_read_total);
-       num_read_total += num_read;
-       if (num_read < 0) {
-          gSystem->SetErrorStr(strerror(errno));
-          break;
-       } else if (num_read == 0) {
-           break;
-       }
+      tSize num_read = hdfsRead((hdfsFS)fFS, (hdfsFile)fHdfsFH, (char *)buf + num_read_total, len - num_read_total);
+      num_read_total += num_read;
+      if (num_read < 0) {
+         gSystem->SetErrorStr(strerror(errno));
+         break;
+      } else if (num_read == 0) {
+         break;
+      }
    } while (num_read_total < len);
-
 
    fSysOffset += num_read_total;
    return num_read_total;
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -230,9 +228,9 @@ Long64_t THDFSFile::SysSeek(Int_t, Long64_t offset, Int_t whence)
       return -1;
    }
 
-   if (hdfsSeek((hdfsFS) fFS, (hdfsFile) fHdfsFH, fSysOffset) != 0) {
-	 SysError("THDFSFile", "Unable to seek to the given position");
-	 return -1;
+   if (hdfsSeek((hdfsFS)fFS, (hdfsFile)fHdfsFH, fSysOffset) != 0) {
+      SysError("THDFSFile", "Unable to seek to the given position");
+      return -1;
    }
 
    return fSysOffset;
@@ -252,7 +250,7 @@ Int_t THDFSFile::SysOpen(const char * pathname, Int_t flags, UInt_t)
       fPath.Insert(0, '/');
    }
 
-   if ((fHdfsFH = hdfsOpenFile((hdfsFS) fFS, fPath, flags, 0, 0, 0)) == 0) {
+   if ((fHdfsFH = hdfsOpenFile((hdfsFS)fFS, fPath, flags, 0, 0, 0)) == 0) {
       SysError("THDFSFile", "Unable to open file %s in HDFS", pathname);
       return -1;
    }
@@ -339,7 +337,6 @@ THDFSSystem::THDFSSystem() : TSystem("-hdfs", "HDFS Helper System")
 
    Bool_t has_authn = kTRUE;
 
-
    struct hdfsBuilder *bld = hdfsNewBuilder();
    if (!bld) {
       SysError("THDFSSystem", "Error creating hdfs builder");
@@ -349,7 +346,7 @@ THDFSSystem::THDFSSystem() : TSystem("-hdfs", "HDFS Helper System")
    hdfsBuilderSetNameNode(bld, hdfs_default_host);
    hdfsBuilderSetNameNodePort(bld, hdfs_default_port);
    if (has_authn) {
-      UserGroup_t *ugi = gSystem->GetUserInfo((char*) 0);
+      UserGroup_t *ugi = gSystem->GetUserInfo((char *)0);
       const char *user = (ugi->fUser).Data();
       hdfsBuilderSetUserName(bld, user);
       delete ugi;
@@ -385,7 +382,7 @@ Int_t THDFSSystem::MakeDirectory(const char * path)
    TUrl url(path);
 
    if (R__HDFS_ALLOW_CHANGES == kTRUE) {
-      return hdfsCreateDirectory((hdfsFS) fFH, url.GetFileAndOptions());
+      return hdfsCreateDirectory((hdfsFS)fFH, url.GetFileAndOptions());
    } else {
       return -1;
    }
@@ -412,14 +409,14 @@ void *THDFSSystem::OpenDirectory(const char * path)
 */
 
    hdfsFileInfo * dir = 0;
-   if ((dir = hdfsGetPathInfo((hdfsFS) fFH, url.GetFileAndOptions())) == 0) {
+   if ((dir = hdfsGetPathInfo((hdfsFS)fFH, url.GetFileAndOptions())) == 0) {
       return 0;
    }
    if (dir->mKind != kObjectKindDirectory) {
       return 0;
    }
 
-   fDirp = (void *)hdfsListDirectory((hdfsFS) fFH, url.GetFileAndOptions(), &fDirEntries);
+   fDirp = (void *)hdfsListDirectory((hdfsFS)fFH, url.GetFileAndOptions(), &fDirEntries);
    fDirCtr = 0;
 
    fUrlp = new TUrl[fDirEntries];
@@ -496,7 +493,7 @@ Int_t THDFSSystem::GetPathInfo(const char *path, FileStat_t &buf)
 
    TUrl url(path);
 
-   hdfsFileInfo *fileInfo = hdfsGetPathInfo((hdfsFS) fFH, url.GetFileAndOptions());
+   hdfsFileInfo *fileInfo = hdfsGetPathInfo((hdfsFS)fFH, url.GetFileAndOptions());
 
    if (fileInfo == 0)
       return 1;
@@ -530,7 +527,7 @@ Bool_t THDFSSystem::AccessPathName(const char *path, EAccessMode mode)
 
    TUrl url(path);
 
-   if (hdfsExists((hdfsFS) fFH, url.GetFileAndOptions()) == 0)
+   if (hdfsExists((hdfsFS)fFH, url.GetFileAndOptions()) == 0)
       return kFALSE;
    else
       return kTRUE;
