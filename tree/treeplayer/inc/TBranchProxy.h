@@ -340,6 +340,7 @@ namespace Internal {
       }
 
       using TBranchProxy::TBranchProxy;
+      TArrayCharProxy() = default; // work around bug in GCC < 7
       ~TArrayCharProxy() override = default;
 
       void *GetAddressOfElement(UInt_t i) final {
@@ -404,6 +405,7 @@ namespace Internal {
       }
 
       using TBranchProxy::TBranchProxy;
+      TClaProxy() = default; // work around bug in GCC < 7
       ~TClaProxy() override = default;
 
       const TClonesArray* GetPtr() {
@@ -445,6 +447,7 @@ namespace Internal {
       }
 
       using TBranchProxy::TBranchProxy;
+      TStlProxy() = default; // work around bug in GCC < 7
       ~TStlProxy() override = default;
 
       const TVirtualCollectionProxy* GetPtr() {
@@ -479,6 +482,7 @@ namespace Internal {
       }
 
       using TBranchProxy::TBranchProxy;
+      TImpProxy() = default; // work around bug in GCC < 7
       ~TImpProxy() override = default;
 
       operator T() {
@@ -521,6 +525,7 @@ namespace Internal {
    class TArrayProxy : public Detail::TBranchProxy {
    public:
       using TBranchProxy::TBranchProxy;
+      TArrayProxy() = default; // work around bug in GCC < 7
       ~TArrayProxy() override = default;
 
       typedef typename T::array_t array_t;
@@ -566,6 +571,7 @@ namespace Internal {
       // }
 
       using TClaProxy::TClaProxy;
+      TClaImpProxy() = default; // work around bug in GCC < 7
       ~TClaImpProxy() override = default;
 
       const T& At(UInt_t i) {
@@ -595,6 +601,7 @@ namespace Internal {
       // }
 
       using TStlProxy::TStlProxy;
+      TStlImpProxy() = default; // work around bug in GCC < 7
       ~TStlImpProxy() override = default;
 
       const T& At(UInt_t i) {
@@ -626,6 +633,7 @@ namespace Internal {
       // }
 
       using TClaProxy::TClaProxy;
+      TClaArrayProxy() = default; // work around bug in GCC < 7
       ~TClaArrayProxy() override = default;
 
       /* const */  array_t *At(UInt_t i) {
@@ -654,6 +662,7 @@ namespace Internal {
       // }
 
       using TStlProxy::TStlProxy;
+      TStlArrayProxy() = default; // work around bug in GCC < 7
       ~TStlArrayProxy() override = default;
 
       /* const */  array_t *At(UInt_t i) {
