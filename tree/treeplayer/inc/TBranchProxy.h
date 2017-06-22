@@ -209,6 +209,12 @@ namespace Detail {
 
       void* GetWhere() const { return fWhere; } // intentionally non-virtual
 
+      /// Return the address of the element number i. Returns `nullptr` for non-collections. It assumed that Setip() has
+      /// been called.
+      virtual void *GetAddressOfElement(UInt_t /*i*/) {
+         return nullptr;
+      }
+
       TVirtualCollectionProxy *GetCollection() { return fCollection; }
 
       // protected:
@@ -336,12 +342,19 @@ namespace Internal {
       using TBranchProxy::TBranchProxy;
       ~TArrayCharProxy() override = default;
 
-      unsigned char At(UInt_t i) {
-         static unsigned char default_val;
-         if (!Read()) return default_val;
-         // should add out-of bound test
+      void *GetAddressOfElement(UInt_t i) final {
+         if (!Read()) return nullptr;
          unsigned char* str = (unsigned char*)GetStart();
-         return str[i];
+         return str + i;
+      }
+
+      unsigned char At(UInt_t i) {
+         static unsigned char default_val = {};
+         if (unsigned char* elAddr = (unsigned char*)GetAddressOfElement(i)) {
+            // should add out-of bound test
+            return *elAddr;
+         }
+         return default_val;
       }
 
       unsigned char operator [](Int_t i) {
@@ -405,6 +418,12 @@ namespace Internal {
          return 0;
       }
 
+      void *GetAddressOfElement(UInt_t i) final {
+         if (!Read()) return nullptr;
+         if (fWhere==0) return nullptr;
+         return GetClaStart(i);
+      }
+
       const TClonesArray* operator->() { return GetPtr(); }
 
    };
@@ -436,6 +455,12 @@ namespace Internal {
       Int_t GetEntries() override {
          if (!ReadEntries()) return 0;
          return GetPtr()->Size();
+      }
+
+      void *GetAddressOfElement(UInt_t i) final {
+         if (!Read()) return nullptr;
+         if (fWhere==0) return nullptr;
+         return GetStlStart(i);
       }
 
       const TVirtualCollectionProxy* operator->() { return GetPtr(); }
@@ -511,14 +536,19 @@ namespace Internal {
          return T::gSize;
       }
 
+      void *GetAddressOfElement(UInt_t i) final {
+         if (!Read()) return nullptr;
+         if (array_t *arr = (array_t*)((type_t*)(GetStart())))
+            return &arr[i];
+         return nullptr;
+      }
+
       const array_t &At(UInt_t i) {
          static array_t default_val;
-         if (!Read()) return default_val;
          // should add out-of bound test
-         array_t *arr = 0;
-         arr = (array_t*)((type_t*)(GetStart()));
-         if (arr) return arr[i];
-         else return default_val;
+         if (array_t *arr = GetAddressOfElement(i))
+            return *arr;
+         return default_val;
       }
 
       const array_t &operator [](Int_t i) { return At(i); }
@@ -540,14 +570,9 @@ namespace Internal {
 
       const T& At(UInt_t i) {
          static T default_val;
-         if (!Read()) return default_val;
-         if (fWhere==0) return default_val;
-
-         T *temp = (T*)GetClaStart(i);
-
-         if (temp) return *temp;
-         else return default_val;
-
+         if (void* addr = GetAddressOfElement(i))
+            return *(T*)addr;
+         return default_val;
       }
 
       const T& operator [](Int_t i) { return At(i); }
@@ -574,13 +599,9 @@ namespace Internal {
 
       const T& At(UInt_t i) {
          static T default_val;
-         if (!Read()) return default_val;
-         if (fWhere==0) return default_val;
-
-         T *temp = (T*)GetStlStart(i);
-
-         if (temp) return *temp;
-         else return default_val;
+         if (void* addr = GetAddressOfElement(i))
+            return *(T*)addr;
+         return default_val;
       }
 
       const T& operator [](Int_t i) { return At(i); }
@@ -609,10 +630,10 @@ namespace Internal {
 
       /* const */  array_t *At(UInt_t i) {
          static array_t default_val;
-         if (!Read()) return &default_val;
-         if (fWhere==0) return &default_val;
+         if (array_t* ptr = (array_t*)GetAddressOfElement(i))
+            return ptr; // no de-ref!
 
-         return (array_t*)GetClaStart(i);
+         return &default_val;
       }
 
       /* const */ array_t *operator [](Int_t i) { return At(i); }
@@ -637,10 +658,9 @@ namespace Internal {
 
       /* const */  array_t *At(UInt_t i) {
          static array_t default_val;
-         if (!Read()) return &default_val;
-         if (fWhere==0) return &default_val;
-
-         return (array_t*)GetStlStart(i);
+         if (array_t* ptr = (array_t*)GetAddressOfElement(i))
+            return ptr; // no de-ref!
+         return &default_val;
       }
 
       /* const */ array_t *operator [](Int_t i) { return At(i); }
