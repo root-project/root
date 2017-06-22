@@ -634,3 +634,8 @@ Changes will be part of the future 6.08/08
 
 - Re-enabled support for TMapFile (and libNew). (ROOT-8454)
 
+### TTree Libraries
+
+- Resolved O(N^2) scaling problem in ```TTree::Draw()``` observed when a branch that contains a
+  large TClonesArray where each element contains another small vector container.
+
