@@ -107,7 +107,7 @@ public:
 
 template<typename Architecture_t>
 TRNNLayer<Architecture_t>::TRNNLayer(size_t batchSize, size_t stateSize, size_t inputSize,
-                                     DNN::EActivationFunction f = DNN::EActivationFunction::kTanh)
+                                     DNN::EActivationFunction f)
   : fBatchSize(batchSize), fStateSize(stateSize), fInputSize(inputSize), 
   fF(f), fState(batchSize, stateSize) 
 {
@@ -183,7 +183,7 @@ public:
 
 template<typename Architecture_t>
 TBasicRNNLayer<Architecture_t>::TBasicRNNLayer(size_t batchSize, size_t stateSize, size_t inputSize,
-                                               DNN::EActivationFunction f = EActivationFunction::kTanh)
+                                               DNN::EActivationFunction f)
   : TRNNLayer<Architecture_t>(batchSize, stateSize, inputSize, f), 
   fWeightsInput(stateSize, inputSize), fWeightsState(stateSize, stateSize), 
   fBiases(stateSize, 1)

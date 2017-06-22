@@ -105,7 +105,7 @@ private:
 
 protected:
 
-   void MakeClassSpecific( std::ostream&, const TString& ) const;
+   //void MakeClassSpecific( std::ostream&, const TString& ) const;
    void GetHelpMessage() const;
 
 public:
