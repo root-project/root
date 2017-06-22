@@ -5464,30 +5464,34 @@ TClass *TClass::LoadClassCustom(const char *requestedname, Bool_t silent)
 
 void TClass::LoadClassInfo() const
 {
-   R__LOCKGUARD(gInterpreterMutex);
-
-   // If another thread executed LoadClassInfo at about the same time
-   // as this thread return early since the work was done.
-   if (!fCanLoadClassInfo) return;
-
-   // If class info already loaded then do nothing.  This can happen if the
-   // class was registered by a dictionary, but the info came from reading
-   // the pch.
-   // Note: This check avoids using AutoParse for classes in the pch!
-   if (fClassInfo) {
+   // Return early if class info cannot be loaded or is already loaded
+   if (!fCanLoadClassInfo)
       return;
+
+   bool autoParse = !gInterpreter->IsAutoParsingSuspended();
+
+   {
+      R__LOCKGUARD(gInterpreterMutex);
+
+      // Return early if another thread loaded the class info
+      // while we were waiting for the lock
+      if (!fCanLoadClassInfo)
+         return;
+
+      if (autoParse) {
+         gInterpreter->AutoParse(GetName());
+         fCanLoadClassInfo = kFALSE;
+      }
+
+      if (!fClassInfo)
+         gInterpreter->SetClassInfo(const_cast<TClass*>(this));
    }
 
-   gInterpreter->AutoParse(GetName());
-   if (!fClassInfo) gInterpreter->SetClassInfo(const_cast<TClass*>(this));   // sets fClassInfo pointer
-   if (!gInterpreter->IsAutoParsingSuspended()) {
-      if (!fClassInfo) {
-         ::Error("TClass::LoadClassInfo",
-                 "no interpreter information for class %s is available even though it has a TClass initialization routine.",
-                 fName.Data());
-      }
-      fCanLoadClassInfo = kFALSE;
-   }
+   if (!fClassInfo && autoParse)
+      ::Error("TClass::LoadClassInfo",
+              "no interpreter information for class %s is available"
+              " even though it has a TClass initialization routine.",
+              fName.Data());
 }
 
 ////////////////////////////////////////////////////////////////////////////////

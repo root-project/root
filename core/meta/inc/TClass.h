@@ -218,7 +218,7 @@ private:
 
            // fHasRootPcmInfo needs to be atomic as long as GetListOfBases needs to modify it.
            std::atomic<Bool_t> fHasRootPcmInfo;      //!Whether info was loaded from a root pcm.
-   mutable std::atomic<Bool_t> fCanLoadClassInfo;    //!Indicates whether the ClassInfo is supposed to be available.
+   mutable std::atomic<Bool_t> fCanLoadClassInfo;    //!Indicates whether the ClassInfo is supposed to be available but was not yet loaded.
    mutable std::atomic<Bool_t> fIsOffsetStreamerSet; //!saved remember if fOffsetStreamer has been set.
    mutable std::atomic<Bool_t> fVersionUsed;         //!Indicates whether GetClassVersion has been called
 
