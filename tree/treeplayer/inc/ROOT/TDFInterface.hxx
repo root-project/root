@@ -178,15 +178,7 @@ public:
    /// Refer to the first overload of this method for the full documentation.
    TInterface<TFilterBase> Filter(std::string_view expression, std::string_view name = "")
    {
-      auto df = GetDataFrameChecked();
-      auto tree = df->GetTree();
-      auto branches = tree ? tree->GetListOfBranches() : nullptr;
-      auto tmpBranches = fProxiedPtr->GetTmpBranches();
-      auto tmpBookedBranches = df->GetBookedBranches();
-      const std::string expressionInt(expression);
-      const std::string nameInt(name);
-      auto retVal = TDFInternal::JitTransformation(this, "Filter", GetNodeTypeName(), nameInt, expressionInt, branches,
-                                                   tmpBranches, tmpBookedBranches, tree);
+      auto retVal = CallJitTransformation("Filter", name, expression);
       return *(TInterface<TFilterBase> *)retVal;
    }
 
@@ -239,14 +231,7 @@ public:
    /// Refer to the first overload of this method for the full documentation.
    TInterface<TCustomColumnBase> Define(std::string_view name, std::string_view expression)
    {
-      auto df = GetDataFrameChecked();
-      auto tree = df->GetTree();
-      auto branches = tree ? tree->GetListOfBranches() : nullptr;
-      auto tmpBranches = fProxiedPtr->GetTmpBranches();
-      auto tmpBookedBranches = df->GetBookedBranches();
-      const std::string expressionInt(expression);
-      const std::string nameInt(name);
-      auto retVal = TDFInternal::JitTransformation(this, "Define", GetNodeTypeName(), nameInt, expressionInt, branches,tmpBranches, tmpBookedBranches, tree);
+      auto retVal = CallJitTransformation("Define", name, expression);
       return *(TInterface<TCustomColumnBase> *)retVal;
    }
 
@@ -908,6 +893,20 @@ public:
    }
 
 private:
+   Long_t CallJitTransformation(std::string_view transformation, std::string_view nodeName, std::string_view expression)
+   {
+      auto df = GetDataFrameChecked();
+      auto tree = df->GetTree();
+      auto branches = tree ? tree->GetListOfBranches() : nullptr;
+      auto tmpBranches = fProxiedPtr->GetTmpBranches();
+      auto tmpBookedBranches = df->GetBookedBranches();
+      const std::string transformInt(transformation);
+      const std::string nameInt(nodeName);
+      const std::string expressionInt(expression);
+      return TDFInternal::JitTransformation(this, transformInt, GetNodeTypeName(), nameInt, expressionInt, branches,
+                                            tmpBranches, tmpBookedBranches, tree);
+   }
+
    inline const char *GetNodeTypeName() { return ""; };
 
    /// Returns the default branches if needed, takes care of the error handling.
