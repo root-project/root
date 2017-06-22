@@ -63,6 +63,10 @@ class TLoopManager : public std::enable_shared_from_this<TLoopManager> {
    unsigned int fNChildren{0};      ///< Number of nodes of the functional graph hanging from this object
    unsigned int fNStopsReceived{0}; ///< Number of times that a children node signaled to stop processing entries.
 
+   void RunEmptySourceMT();
+   void RunEmptySource();
+   void RunTreeProcessorMT();
+   void RunTreeReader();
    void RunAndCheckFilters(unsigned int slot, Long64_t entry);
 
 public:
