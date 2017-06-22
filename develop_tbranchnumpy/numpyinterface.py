@@ -91,7 +91,7 @@ def recarray(*args, **kwds):
     shape = None
     for n, d, s in dts:
         if len(s) != 1:
-            raise ValueError("branches for a recarray must be one-dimensional")
+            raise ValueError("branches must be one-dimensional to make a numpy.recarray")
         if shape is None:
             shape = s
         elif s[0] > shape[0]:
@@ -126,6 +126,15 @@ def iterate_pandas(*args):
     dts = _numpyinterface.dtypeshape(*args, swap_bytes=True)
     recdtype = [(bytes(n), d) for n, d, s in dts]
 
+    shape = None
+    for n, d, s in dts:
+        if len(s) != 1:
+            raise ValueError("branches must be one-dimensional to make a pandas.DataFrame")
+        if shape is None:
+            shape = s
+        elif s[0] > shape[0]:
+            shape = s
+
     itr = _numpyinterface.iterate(*args, return_new_buffers=False, swap_bytes=True)
 
     for cluster in itr:
@@ -143,25 +152,3 @@ def pandas(*args):
         out = out.append(df, ignore_index=True)
 
     return out
-
-import time
-
-arraydict("../../data/TrackResonanceNtuple_uncompressed.root", "twoMuon", "mass_mumu", "px")
-
-startTime = time.time()
-d = arraydict("../../data/TrackResonanceNtuple_uncompressed.root", "twoMuon", "mass_mumu", "px")
-print time.time() - startTime
-
-startTime = time.time()
-r = recarray("../../data/TrackResonanceNtuple_uncompressed.root", "twoMuon", "mass_mumu", "px")
-print time.time() - startTime
-
-startTime = time.time()
-p = pandas("../../data/TrackResonanceNtuple_uncompressed.root", "twoMuon", "mass_mumu", "px")
-print time.time() - startTime
-
-print numpy.array_equal(r["mass_mumu"], d["mass_mumu"])
-print numpy.array_equal(r["px"], d["px"])
-
-print numpy.array_equal(p["mass_mumu"], d["mass_mumu"])
-print numpy.array_equal(p["px"], d["px"])
