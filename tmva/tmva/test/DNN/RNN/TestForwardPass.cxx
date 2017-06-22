@@ -14,7 +14,7 @@
 ////////////////////////////////////////////////////////////////////
 
 #include <iostream>
-#include "TMVA/RNN/Architectures/Reference.h"
+#include "TMVA/DNN/Architectures/Reference.h"
 #include "TestForwardPass.h"
 
 using namespace TMVA::DNN;
