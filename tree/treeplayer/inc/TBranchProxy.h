@@ -551,7 +551,7 @@ namespace Internal {
       const array_t &At(UInt_t i) {
          static array_t default_val;
          // should add out-of bound test
-         if (array_t *arr = GetAddressOfElement(i))
+         if (array_t *arr = (array_t*)GetAddressOfElement(i))
             return *arr;
          return default_val;
       }
