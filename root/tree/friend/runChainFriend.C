@@ -18,10 +18,10 @@ bool testTreeByName() {
   tree->AddFriend("T2 = T","Event2.root");
 
   TLeaf* l = tree->GetLeaf("event");
-  if (!l) return TestError(tname,"retreving local leaf \"event\" ");
+  if (!l) return TestError(tname,"retrieving local leaf \"event\" ");
 
   l = tree->GetLeaf("T2.event");
-  if (!l) return TestError(tname,"retreving local leaf \"T2.event\" ");
+  if (!l) return TestError(tname,"retrieving local leaf \"T2.event\" ");
 
   delete file;
   return true;
@@ -43,10 +43,10 @@ bool testTreeByPointer() {
   tree->AddFriend(tree2,"T2");
 
   TLeaf* l = tree->GetLeaf("event");
-  if (!l) return TestError(tname,"retreving local leaf \"event\" ");
+  if (!l) return TestError(tname,"retrieving local leaf \"event\" ");
 
   l = tree->GetLeaf("T2.event");
-  if (!l) return TestError(tname,"retreving local leaf \"T2.event\" ");
+  if (!l) return TestError(tname,"retrieving local leaf \"T2.event\" ");
 
   delete file;
   delete file2;
@@ -67,10 +67,10 @@ bool testChainByName() {
   c1->AddFriend("T2");
 
   TLeaf* l = c1->GetLeaf("event");
-  if (!l) return TestError(tname,"retreving local leaf \"event\" ");
+  if (!l) return TestError(tname,"retrieving local leaf \"event\" ");
 
   l = c1->GetLeaf("T2.event");
-  if (!l) return TestError(tname,"retreving local leaf \"T2.event\" ");
+  if (!l) return TestError(tname,"retrieving local leaf \"T2.event\" ");
 
   c1->Draw("T2.event.fNtrack");
 
@@ -93,10 +93,10 @@ bool testChainDifferent() {
   c1->AddFriend("T2");
 
   TLeaf* l = c1->GetLeaf("event");
-  if (!l) return TestError(tname,"retreving local leaf \"event\" ");
+  if (!l) return TestError(tname,"retrieving local leaf \"event\" ");
 
   l = c1->GetLeaf("T2.event");
-  if (!l) return TestError(tname,"retreving local leaf \"T2.event\" ");
+  if (!l) return TestError(tname,"retrieving local leaf \"T2.event\" ");
 
   c1->Draw("T2.event.fNtrack");
 
@@ -118,13 +118,13 @@ bool testChainByPointer() {
   c1->AddFriend(c2,"T3");
 
   TLeaf* l = c1->GetLeaf("event");
-  if (!l) return TestError(tname,"retreving local leaf \"event\" ");
+  if (!l) return TestError(tname,"retrieving local leaf \"event\" ");
 
   l = c1->GetLeaf("T2.event");
-  if (!l) return TestError(tname,"retreving local leaf \"T2.event\" ");
+  if (!l) return TestError(tname,"retrieving local leaf \"T2.event\" ");
 
   l = c1->GetLeaf("T3.event");
-  if (!l) return TestError(tname,"retreving local leaf \"T3.event\" ");
+  if (!l) return TestError(tname,"retrieving local leaf \"T3.event\" ");
 
   delete c1;
   // do not delete .. it is already done by c1. delete c2;
