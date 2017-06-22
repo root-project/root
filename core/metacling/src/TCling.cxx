@@ -2982,6 +2982,12 @@ Bool_t TCling::HandleNewTransaction(const cling::Transaction &T)
 
 void TCling::RecursiveRemove(TObject* obj)
 {
+   // NOTE: When replacing the mutex by a ReadWrite mutex, we **must**
+   // put in place the Read/Write part here.  Keeping the write lock
+   // here is 'catasptrophic' for scaling as it means that ALL calls
+   // to RecursiveRemove will take the write lock and performance
+   // of many threads trying to access the write lock at the same
+   // time is relatively bad.
    R__LOCKGUARD(gInterpreterMutex);
    // Note that fgSetOfSpecials is supposed to be updated by TClingCallbacks::tryFindROOTSpecialInternal
    // (but isn't at the moment).
