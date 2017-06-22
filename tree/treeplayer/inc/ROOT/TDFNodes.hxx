@@ -58,7 +58,7 @@ class TLoopManager : public std::enable_shared_from_this<TLoopManager> {
    std::shared_ptr<TTree> fTree{nullptr};
    const ColumnNames_t fDefaultBranches;
    const Long64_t fNEmptyEntries{0};
-   const unsigned int fNSlots{0};
+   const unsigned int fNSlots{1};
    bool fHasRunAtLeastOnce{false};
    unsigned int fNChildren{0};      ///< Number of nodes of the functional graph hanging from this object
    unsigned int fNStopsReceived{0}; ///< Number of times that a children node signaled to stop processing entries.
