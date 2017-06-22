@@ -364,7 +364,6 @@ void TMVA::MethodBDT::DeclareOptions()
    }else{
       fBoostType = "AdaBoost";
    }
-   std::cout << "I LIVE HERE" << fBoostType << std::endl;
    DeclareOptionRef(fAdaBoostR2Loss="Quadratic", "AdaBoostR2Loss", "Type of Loss function in AdaBoostR2");
    AddPreDefVal(TString("Linear"));
    AddPreDefVal(TString("Quadratic"));
@@ -699,9 +698,7 @@ void TMVA::MethodBDT::Init( void )
          fMinNodeSize = 5.;
    } else {
       fMaxDepth = 50;
-      std::cout << "DOMULTITARGET" << fDoMultiTarget << std::endl;
       fBoostType      = fDoMultiTarget ? "Bagging" : "AdaBoostR2";
-      std::cout << "BTYPE" << fBoostType << std::endl;
       fAdaBoostR2Loss = "Quadratic";
       if(DataInfo().GetNClasses()!=0) //workaround for multiclass application
          fMinNodeSize  = .2;
@@ -1606,8 +1603,6 @@ Double_t TMVA::MethodBDT::TestTreeQuality( DecisionTree *dt )
 
 Double_t TMVA::MethodBDT::Boost( std::vector<const TMVA::Event*>& eventSample, DecisionTree *dt, UInt_t cls )
 {
-   std::cout << "RIGHT NOW MULTITARGET" << (fDoMultiTarget == kTRUE) << std::endl;
-   std::cout << "RIGHT NOW" << fBoostType << std::endl;
    Double_t returnVal=-1;
    if      (fBoostType=="AdaBoost")    returnVal = this->AdaBoost  (eventSample, dt);
    else if (fBoostType=="AdaCost")     returnVal = this->AdaCost   (eventSample, dt);
