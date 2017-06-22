@@ -1070,13 +1070,11 @@ protected:
    /// since there are no copies, the address of the value passed by reference
    /// is the address pointing to the storage of the read/created object in/by
    /// the TTreeReaderValue/TemporaryBranch
-   template <typename... Args, int... S>
+   template <typename... BranchTypes, int... S>
    TInterface<TLoopManager> SnapshotImpl(std::string_view treename, std::string_view filename,
                                          const ColumnNames_t &bnames, TDFInternal::TStaticSeq<S...> /*dummy*/)
    {
-      std::string treenameInt;
-      std::string dirnameInt;
-      const std::string filenameInt(filename);
+      // check for input sanity
       const auto templateParamsN = sizeof...(S);
       const auto bNamesN = bnames.size();
       if (templateParamsN != bNamesN) {
@@ -1088,7 +1086,7 @@ protected:
          throw std::runtime_error(err_msg.c_str());
       }
 
-      // splits name into directory and treename if needed
+      // split name into directory and treename if needed
       auto getDirTreeName = [](std::string_view treePath) {
          auto lastSlash = treePath.rfind('/');
          std::string_view treeDir, treeName;
@@ -1101,11 +1099,16 @@ protected:
          // need to convert to string for TTree and TDirectory ctors anyway
          return std::make_pair(std::string(treeDir), std::string(treeName));
       };
+      std::string treenameInt;
+      std::string dirnameInt;
+      std::tie(dirnameInt, treenameInt) = getDirTreeName(treename);
 
       auto df = GetDataFrameChecked();
+      const std::string filenameInt(filename);
+
       if (!ROOT::IsImplicitMTEnabled()) {
+         // single-thread snapshot
          std::unique_ptr<TFile> ofile(TFile::Open(filenameInt.c_str(), "RECREATE"));
-         std::tie(dirnameInt, treenameInt) = getDirTreeName(treename);
          if (!dirnameInt.empty()) {
             ofile->mkdir(dirnameInt.c_str());
             ofile->cd(dirnameInt.c_str());
@@ -1128,7 +1131,8 @@ protected:
             if(r) {
                // not an empty-source TDF
                auto tree = r->GetTree();
-               tree->AddClone(&t);
+               tree->AddClone(&t); // AddClone makes sure that if the input tree changes file it updates the branches of
+                                   // the output tree with the new value pointers
             }
          };
 
@@ -1139,13 +1143,14 @@ protected:
          df->Run();
          t.Write();
       } else {
+         // multi-thread snapshot
          unsigned int nSlots = df->GetNSlots();
          TBufferMerger merger(filenameInt.c_str(), "RECREATE");
          std::vector<std::shared_ptr<TBufferMergerFile>> files(nSlots);
-         std::vector<TTree *> trees(nSlots, nullptr); // ROOT owns/manages these TTrees
+         std::vector<TTree *> trees(nSlots, nullptr); // ROOT will own/manage these TTrees, do not delete
          std::vector<int> isFirstEvent(nSlots, 1); // vector<bool> is evil
 
-         auto fillTree = [&](unsigned int slot, Args &... args) {
+         auto fillTree = [&](unsigned int slot, BranchTypes &... args) {
             if (isFirstEvent[slot]) {
                // hack to call TTree::Branch on all variadic template arguments
                std::initializer_list<int> expander = {(trees[slot]->Branch(bnames[S].c_str(), &args), 0)..., 0};
@@ -1158,16 +1163,17 @@ protected:
             if ((autoflush > 0) && (entries % autoflush == 0)) files[slot]->Write();
          };
 
-         // called at the beginning of each task
-         auto initLambda = [&trees, &merger, &files, &treenameInt, &dirnameInt, &treename, &isFirstEvent, &getDirTreeName] (TTreeReader *r, unsigned int slot) {
+         // called at the beginning of each task -- multiple times per thread
+         auto initLambda = [&trees, &merger, &files, &treenameInt, &dirnameInt, &treename,
+                            &isFirstEvent](TTreeReader *r, unsigned int slot) {
             ::TDirectory::TContext c;
             if(!trees[slot]) {
                // first time this thread executes something, let's create a TBufferMerger output directory
                files[slot] = merger.GetFile();
             } else {
+               // this thread is now re-executing the task, let's flush the current contents of the TBufferMergerFile
                files[slot]->Write();
             }
-            std::tie(dirnameInt, treenameInt) = getDirTreeName(treename);
             if (!dirnameInt.empty()) {
                files[slot]->mkdir(dirnameInt.c_str());
                files[slot]->cd(dirnameInt.c_str());
@@ -1177,7 +1183,8 @@ protected:
             if(r) {
                // not an empty-source TDF
                auto tree = r->GetTree();
-               tree->AddClone(trees[slot]);
+               tree->AddClone(trees[slot]); // AddClone makes sure that if the input tree changes file it updates the
+                                            // branches of the output tree with the new value pointers
             }
             isFirstEvent[slot] = 1;
          };
@@ -1192,12 +1199,13 @@ protected:
          }
       }
 
+      // create new TDF
       ::TDirectory::TContext ctxt;
       std::string fullTreeNameInt(treename);
       // Now we mimic a constructor for the TDataFrame. We cannot invoke it here
       // since this would introduce a cyclic headers dependency.
       TInterface<TLoopManager> snapshotTDF(std::make_shared<TLoopManager>(nullptr, bnames));
-      auto chain = new TChain(fullTreeNameInt.c_str());
+      auto chain = new TChain(fullTreeNameInt.c_str()); // TODO comment on ownership of this TChain
       chain->Add(filenameInt.c_str());
       snapshotTDF.fProxiedPtr->SetTree(std::shared_ptr<TTree>(static_cast<TTree *>(chain)));
 
