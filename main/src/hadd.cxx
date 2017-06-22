@@ -124,7 +124,8 @@ int main( int argc, char **argv )
       std::cout << "If the option -experimental-io-features is used (and an argument provided), then\n"
                    "   the corresponding experimental feature will be enabled for output trees." << std::endl;
       std::cout << "When -the -f option is specified, one can also specify the compression level of\n"
-                   "   the target file.  By default the compression level is 1." <<std::endl;
+                   "   the target file.  By default the compression level is 4."
+                << std::endl;
       std::cout << "If \"-fk\" is specified, the target file contain the baskets with the same\n"
                    "   compression as in the input files unless -O is specified.  The meta data will\n"
                    "   be compressed using the compression level specified in the first input or the\n"
