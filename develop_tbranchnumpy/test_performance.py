@@ -168,8 +168,8 @@ def rootnumpy_energy(reps, fileName):
 WARM_UP = 5
 REPS = 100
 
-for fileName in "../../data/TrackResonanceNtuple_uncompressed.root", "../../data/TrackResonanceNtuple_compressed.root":
-    for label, return_new_buffers in ("new buffers", True), ("views", False):
+for fileName in "../../data/TrackResonanceNtuple_uncompressed.root", "../../data/TrackResonanceNtuple_compressed.root", "../../data/TrackResonanceNtuple_LZ4.root":
+    for label, return_new_buffers in ("copy", True), ("view", False):
         print fileName, "momentum numpy big-endian", label,
         numpy_momentum(WARM_UP, fileName, return_new_buffers, False)     # warm up
         print numpy_momentum(REPS, fileName, return_new_buffers, False)  # real run
@@ -194,8 +194,8 @@ print
 print _numpyinterface.performance()
 print
 
-for fileName in "../../data/TrackResonanceNtuple_uncompressed.root", "../../data/TrackResonanceNtuple_compressed.root":
-    for label, return_new_buffers in ("new buffers", True), ("views", False):
+for fileName in "../../data/TrackResonanceNtuple_uncompressed.root", "../../data/TrackResonanceNtuple_compressed.root", "../../data/TrackResonanceNtuple_LZ4.root":
+    for label, return_new_buffers in ("copy", True), ("view", False):
         print fileName, "energy numpy big-endian", label,
         numpy_energy(WARM_UP, fileName, return_new_buffers, False)       # warm up
         print numpy_energy(REPS, fileName, return_new_buffers, False)    # real run
