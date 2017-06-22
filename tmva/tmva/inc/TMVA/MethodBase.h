@@ -170,6 +170,12 @@ namespace TMVA {
                                        Double_t& mInf, Double_t& mInfT, // mutual information
                                        Double_t& corr,
                                        Types::ETreeType type );
+      virtual void     TestMultiRegression( std::vector<Double_t>* bias, std::vector<Double_t>* biasT,
+                                            std::vector<Double_t>* dev,  std::vector<Double_t>* devT,
+                                            std::vector<Double_t>* rms,  std::vector<Double_t>* rmsT,
+                                            std::vector<Double_t>* mInf, std::vector<Double_t>* mInfT,
+                                            std::vector<Double_t>* corr,
+                                            Types::ETreeType type );
 
       // options treatment
       virtual void     Init()           = 0;

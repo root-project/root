@@ -84,13 +84,55 @@ Double_t TMVA::RegressionVariance::GetSeparationGain(const Double_t nLeft,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Separation gain in case target has several dimension
+
+Double_t TMVA::RegressionVariance::GetSeparationGainMulti(const Double_t nLeft,
+                                                          const Double_t* targetLeft, const Double_t target2Left,
+                                                          const Double_t nTot,
+                                                          const Double_t* targetTot, const Double_t target2Tot,
+                                                          const UInt_t target_dimension)
+{
+   if  ( nTot==nLeft || nLeft==0 ) return 0.;
+
+   Double_t parentIndex = nTot * this->GetSeparationIndexMulti(nTot,targetTot,target2Tot, target_dimension);
+   Double_t* targetRight = new Double_t [target_dimension];
+   for (UInt_t t_index = 0; t_index < target_dimension; ++t_index) {
+      targetRight[t_index] = targetTot[t_index] - targetLeft[t_index];
+   }
+   Double_t leftIndex   = ( (nTot - nLeft) * this->GetSeparationIndexMulti(nTot-nLeft,targetRight,
+                                                                           target2Tot-target2Left,
+                                                                           target_dimension) );
+   Double_t rightIndex  =    nLeft * this->GetSeparationIndexMulti(nLeft,targetLeft,target2Left,
+                                                                   target_dimension);
+
+   delete[] targetRight;
+   //  return 1/ (leftIndex + rightIndex);
+   return (parentIndex - leftIndex - rightIndex)/(parentIndex);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Separation Index:  a simple Variance
 
 Double_t TMVA::RegressionVariance::GetSeparationIndex(const Double_t n,
-                                                      const Double_t target, const Double_t target2)
+                                                      const Double_t target,const Double_t target2)
 {
    //   return TMath::Sqrt(( target2 - target*target/n) / n);
    return ( target2 - target*target/n) / n;
+
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Separation Index:  Variance summed across dimensions of the target
+
+Double_t TMVA::RegressionVariance::GetSeparationIndexMulti(const Double_t n,
+                                                           const Double_t* target, const Double_t target2,
+                                                           const UInt_t target_dimension)
+{
+   Double_t squared_means_sum = 0.0;
+   for (UInt_t target_index = 0; target_index < target_dimension; ++target_index) {
+      squared_means_sum += target[target_index] * target[target_index];
+   }
+   return ( target2 - squared_means_sum/n ) / n;
 
 }
 

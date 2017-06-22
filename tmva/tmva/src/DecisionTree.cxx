@@ -133,6 +133,7 @@ TMVA::DecisionTree::DecisionTree():
    fRandomisedTree (kFALSE),
    fUseNvars       (0),
    fUsePoissonNvars(kFALSE),
+   fDoMultiTarget(kFALSE),
    fMyTrandom (NULL),
    fMaxDepth       (999999),
    fSigClass       (0),
@@ -170,6 +171,7 @@ TMVA::DecisionTree::DecisionTree( TMVA::SeparationBase *sepType, Float_t minSize
    fRandomisedTree (randomisedTree),
    fUseNvars       (useNvars),
    fUsePoissonNvars(usePoissonNvars),
+   fDoMultiTarget (dataInfo->GetNTargets() > 1),
    fMyTrandom      (new TRandom3(iSeed)),
    fMaxDepth       (nMaxDepth),
    fSigClass       (cls),
@@ -304,7 +306,7 @@ UInt_t TMVA::DecisionTree::BuildTree( const std::vector<const TMVA::Event*> & ev
       this->GetRoot()->SetDepth(0);
       this->GetRoot()->SetParentTree(this);
       fMinSize = fMinNodeSize/100. * eventSample.size();
-      if (GetTreeID()==0){
+      if (GetTreeID()==0) {
          Log() << kDEBUG << "\tThe minimal node size MinNodeSize=" << fMinNodeSize << " fMinNodeSize="<<fMinNodeSize<< "% is translated to an actual number of events = "<< fMinSize<< " for the training sample size of " << eventSample.size() << Endl;
          Log() << kDEBUG << "\tNote: This number will be taken as absolute minimum in the node, " << Endl;
          Log() << kDEBUG << "      \tin terms of 'weighted events' and unweighted ones !! " << Endl;
@@ -323,6 +325,7 @@ UInt_t TMVA::DecisionTree::BuildTree( const std::vector<const TMVA::Event*> & ev
    Double_t suw=0, buw=0;
    Double_t sub=0, bub=0; // unboosted!
    Double_t target=0, target2=0;
+   std::vector<Double_t> targets (eventSample[0]->GetNTargets(), 0);
    Float_t *xmin = new Float_t[fNvars];
    Float_t *xmax = new Float_t[fNvars];
    for (UInt_t ivar=0; ivar<fNvars; ivar++) {
@@ -336,18 +339,29 @@ UInt_t TMVA::DecisionTree::BuildTree( const std::vector<const TMVA::Event*> & ev
          s += weight;
          suw += 1;
          sub += orgWeight;
-      }
-      else {
+      } else {
          b += weight;
          buw += 1;
          bub += orgWeight;
       }
       if ( DoRegression() ) {
-         const Double_t tgt = evt->GetTarget(0);
-         target +=weight*tgt;
-         target2+=weight*tgt*tgt;
+         if (!fDoMultiTarget) {
+            const Double_t tgt = evt->GetTarget(0);
+            target +=weight*tgt;
+            target2+=weight*tgt*tgt;
+         } else {
+            auto& tgt = evt->GetTargets();
+            target2 += weight * std::accumulate(tgt.begin(),
+                                                tgt.end(), 0.0,
+                                                      [](const Double_t& first,
+                                                         const Double_t& second) {return first +
+                                                                                    second * second;
+                                                                                 });
+            for (uint32_t tgt_index = 0; tgt_index < tgt.size(); ++tgt_index) {
+               targets[tgt_index] += tgt[tgt_index] / (s+b);
+            }
+         }
       }
-
       for (UInt_t ivar=0; ivar<fNvars; ivar++) {
          const Double_t val = evt->GetValueFast(ivar);
          if (iev==0) xmin[ivar]=xmax[ivar]=val;
@@ -410,7 +424,7 @@ UInt_t TMVA::DecisionTree::BuildTree( const std::vector<const TMVA::Event*> & ev
    if ((eventSample.size() >= 2*fMinSize  && s+b >= 2*fMinSize) && node->GetDepth() < fMaxDepth
        && ( ( s!=0 && b !=0 && !DoRegression()) || ( (s+b)!=0 && DoRegression()) ) ) {
       Double_t separationGain;
-      if (fNCuts > 0){
+      if (fNCuts > 0) {
          separationGain = this->TrainNodeFast(eventSample, node);
       } else {
          separationGain = this->TrainNodeFull(eventSample, node);
@@ -420,17 +434,31 @@ UInt_t TMVA::DecisionTree::BuildTree( const std::vector<const TMVA::Event*> & ev
          // no cut can actually do anything to improve the node
          // hence, naturally, the current node is a leaf node
          if (DoRegression()) {
-            node->SetSeparationIndex(fRegType->GetSeparationIndex(s+b,target,target2));
-            node->SetResponse(target/(s+b));
-            if( almost_equal_double(target2/(s+b),target/(s+b)*target/(s+b)) ){
-               node->SetRMS(0);
-            }else{
-               node->SetRMS(TMath::Sqrt(target2/(s+b) - target/(s+b)*target/(s+b)));
+            if (!fDoMultiTarget) {
+               node->SetSeparationIndex(fRegType->GetSeparationIndex(s+b,target,target2));
+               node->SetResponse(target/(s+b));
+               if( almost_equal_double(target2/(s+b),target/(s+b)*target/(s+b)) ){
+                  node->SetRMS(0);
+               }else{
+                  node->SetRMS(TMath::Sqrt(target2/(s+b) - target/(s+b)*target/(s+b)));
+               }
+            } else {
+               node->SetSeparationIndex(fRegType->GetSeparationIndexMulti(s+b, &targets[0], target2,
+                                                                          targets.size()));
+               Double_t squared_means_sum = 0.0;
+               for (auto& t : targets) {
+                  t = t / (s+b);
+                  squared_means_sum += t * t;
+               }
+               node->SetMultiResponse(targets);
+               if( almost_equal_double(target2/(s+b), squared_means_sum) ) {
+                  node->SetRMS(0);
+               } else {
+                  node->SetRMS(TMath::Sqrt(target2/(s+b) - squared_means_sum));
+               }
             }
-         }
-         else {
+         } else {
             node->SetSeparationIndex(fSepType->GetSeparationIndex(s,b));
-
             if (node->GetPurity() > fNodePurityLimit) node->SetNodeType(1);
             else node->SetNodeType(-1);
          }
@@ -493,19 +521,33 @@ UInt_t TMVA::DecisionTree::BuildTree( const std::vector<const TMVA::Event*> & ev
          this->BuildTree(leftSample,  leftNode );
 
       }
-   }
-   else{ // it is a leaf node
+   } else { // it is a leaf node
       if (DoRegression()) {
-         node->SetSeparationIndex(fRegType->GetSeparationIndex(s+b,target,target2));
-         node->SetResponse(target/(s+b));
-         if( almost_equal_double(target2/(s+b), target/(s+b)*target/(s+b)) ) {
-            node->SetRMS(0);
-         }else{
-            node->SetRMS(TMath::Sqrt(target2/(s+b) - target/(s+b)*target/(s+b)));
+         if (!fDoMultiTarget) {
+            node->SetSeparationIndex(fRegType->GetSeparationIndex(s+b,target,target2));
+            node->SetResponse(target/(s+b));
+            if( almost_equal_double(target2/(s+b), target/(s+b)*target/(s+b)) ) {
+               node->SetRMS(0);
+            } else {
+               node->SetRMS(TMath::Sqrt(target2/(s+b) - target/(s+b)*target/(s+b)));
+            }
+         } else {
+            node->SetSeparationIndex(fRegType->GetSeparationIndexMulti(s+b, &targets[0], target2,
+                                                                       targets.size()));
+            Double_t squared_means_sum = 0.0;
+            for (auto& t : targets) {
+               t = t / (s+b);
+               squared_means_sum += t * t;
+            }
+            node->SetMultiResponse(targets);
+            if( almost_equal_double(target2/(s+b), squared_means_sum) ) {
+               node->SetRMS(0);
+            } else {
+               node->SetRMS(TMath::Sqrt(target2/(s+b) - squared_means_sum));
+            }   
          }
-      }
-      else {
-         node->SetSeparationIndex(fSepType->GetSeparationIndex(s,b));
+      } else {
+         //node->SetSeparationIndex(fSepType->GetSeparationIndex(s,b));
          if   (node->GetPurity() > fNodePurityLimit) node->SetNodeType(1);
          else node->SetNodeType(-1);
          // loop through the event sample ending up in this node and check for events with negative weight
@@ -514,7 +556,6 @@ UInt_t TMVA::DecisionTree::BuildTree( const std::vector<const TMVA::Event*> & ev
          // node as needed to get the same absolute number of weight, and mark them as
          // "not to be boosted" in order to make up for not boosting the negative weight event
       }
-
 
       if (node->GetDepth() > this->GetTotalTreeDepth()) this->SetTotalTreeDepth(node->GetDepth());
    }
@@ -1023,6 +1064,7 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
 
 
    UInt_t cNvars = fNvars;
+   UInt_t cNtargets = fDataSetInfo->GetNTargets();
    if (fUseFisherCuts && fisherOK) cNvars++;  // use the Fisher output simple as additional variable
 
    UInt_t*   nBins = new UInt_t [cNvars];
@@ -1049,7 +1091,8 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
       nSelB[ivar] = new Double_t [nBins[ivar]];
       nSelS_unWeighted[ivar] = new Double_t [nBins[ivar]];
       nSelB_unWeighted[ivar] = new Double_t [nBins[ivar]];
-      target[ivar] = new Double_t [nBins[ivar]];
+      if ( DoRegression() )
+         target[ivar] = new Double_t [nBins[ivar] * (fDoMultiTarget ? cNtargets : 1)];
       target2[ivar] = new Double_t [nBins[ivar]];
       cutValues[ivar] = new Double_t [nBins[ivar]];
 
@@ -1088,6 +1131,10 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
          nSelS_unWeighted[ivar][ibin]=0;
          nSelB_unWeighted[ivar][ibin]=0;
          target[ivar][ibin]=0;
+         if (fDoMultiTarget) {
+            for (uint32_t target_index = 0; target_index < cNtargets; ++target_index)
+               target[ivar][ibin * cNtargets + target_index] = 0;
+         }
          target2[ivar][ibin]=0;
          cutValues[ivar][ibin]=0;
       }
@@ -1141,7 +1188,7 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
       }
 
       Int_t iBin=-1;
-      for (UInt_t ivar=0; ivar < cNvars; ivar++) {
+      for (UInt_t ivar=0; ivar < cNvars; ivar++) { //incorrect vector traversal 
          // now scan trough the cuts for each variable and find which one gives
          // the best separationGain at the current stage.
          if ( useVariable[ivar] ) {
@@ -1164,9 +1211,22 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
                nSelB_unWeighted[ivar][iBin]++;
             }
             if (DoRegression()) {
-               target[ivar][iBin] +=eventWeight*eventSample[iev]->GetTarget(0);
-               target2[ivar][iBin]+=eventWeight*eventSample[iev]->GetTarget(0)*eventSample[iev]->GetTarget(0);
-            }
+               if (!fDoMultiTarget) {                 
+                  target[ivar][iBin] +=eventWeight*eventSample[iev]->GetTarget(0);
+                  target2[ivar][iBin]+=eventWeight*eventSample[iev]->GetTarget(0)*eventSample[iev]->GetTarget(0);
+               } else {
+                  auto& tgt = eventSample[iev]->GetTargets();
+                  target2[ivar][iBin] += eventWeight * std::accumulate(tgt.begin(),
+                                                                       tgt.end(), 0.0,
+                                                                        [](const Double_t& first,
+                                                                           const Double_t& second) {
+                                                                              return first +
+                                                                                     second * second;
+                                                                           });
+                  for (uint32_t target_index = 0; target_index < cNtargets; ++target_index)
+                     target[ivar][iBin * cNtargets + target_index] += eventWeight * tgt[target_index];   
+               }
+            } 
          }
       }
    }
@@ -1179,9 +1239,17 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
             nSelB[ivar][ibin]+=nSelB[ivar][ibin-1];
             nSelB_unWeighted[ivar][ibin]+=nSelB_unWeighted[ivar][ibin-1];
             if (DoRegression()) {
-               target[ivar][ibin] +=target[ivar][ibin-1] ;
-               target2[ivar][ibin]+=target2[ivar][ibin-1];
-            }
+               if (!fDoMultiTarget) {
+                  target[ivar][ibin] +=target[ivar][ibin-1];
+                  target2[ivar][ibin]+=target2[ivar][ibin-1];
+               } else {
+                  target2[ivar][ibin]+=target2[ivar][ibin-1];
+                  for (uint32_t target_index = 0; target_index < cNtargets; ++target_index) {
+                     target[ivar][ibin * cNtargets + target_index] +=
+                                 target[ivar][(ibin - 1) * cNtargets + target_index];
+                  }
+               }
+            } 
          }
          if (nSelS_unWeighted[ivar][nBins[ivar]-1] +nSelB_unWeighted[ivar][nBins[ivar]-1] != eventSample.size()) {
             Log() << kFATAL << "Helge, you have a bug ....nSelS_unw..+nSelB_unw..= "
@@ -1231,12 +1299,19 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
             if ( ((sl+bl)>=fMinSize && (sr+br)>=fMinSize)
                  && ((slW+blW)>=fMinSize && (srW+brW)>=fMinSize)
                  ) {
-
                if (DoRegression()) {
-                  sepTmp = fRegType->GetSeparationGain(nSelS[ivar][iBin]+nSelB[ivar][iBin],
-                                                       target[ivar][iBin],target2[ivar][iBin],
-                                                       nTotS+nTotB,
-                                                       target[ivar][nBins[ivar]-1],target2[ivar][nBins[ivar]-1]);
+                  if (!fDoMultiTarget)
+                     sepTmp = fRegType->GetSeparationGain(nSelS[ivar][iBin]+nSelB[ivar][iBin],
+                                                          target[ivar][iBin],target2[ivar][iBin],
+                                                          nTotS+nTotB,
+                                                          target[ivar][nBins[ivar]-1],target2[ivar][nBins[ivar]-1]);
+                  else 
+                     sepTmp = fRegType->GetSeparationGainMulti(nSelS[ivar][iBin]+nSelB[ivar][iBin],
+                                                               &target[ivar][iBin*cNtargets], target2[ivar][iBin],
+                                                               nTotS+nTotB,
+                                                               &target[ivar][(nBins[ivar]-1)*cNtargets],
+                                                               target2[ivar][nBins[ivar]-1],
+                                                               cNtargets);
                } else {
                   sepTmp = fSepType->GetSeparationGain(nSelS[ivar][iBin], nSelB[ivar][iBin], nTotS, nTotB);
                }
@@ -1245,7 +1320,7 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
                   cutIndex[ivar]       = iBin;
                }
             }
-         }
+         } 
       }
    }
 
@@ -1262,15 +1337,22 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
 
    if (mxVar >= 0) {
       if (DoRegression()) {
-         node->SetSeparationIndex(fRegType->GetSeparationIndex(nTotS+nTotB,target[0][nBins[mxVar]-1],target2[0][nBins[mxVar]-1]));
-         node->SetResponse(target[0][nBins[mxVar]-1]/(nTotS+nTotB));
-         if ( almost_equal_double(target2[0][nBins[mxVar]-1]/(nTotS+nTotB),  target[0][nBins[mxVar]-1]/(nTotS+nTotB)*target[0][nBins[mxVar]-1]/(nTotS+nTotB))) {
-            node->SetRMS(0);
-         }else{
-            node->SetRMS(TMath::Sqrt(target2[0][nBins[mxVar]-1]/(nTotS+nTotB) - target[0][nBins[mxVar]-1]/(nTotS+nTotB)*target[0][nBins[mxVar]-1]/(nTotS+nTotB)));
+         if (!fDoMultiTarget) {
+            node->SetSeparationIndex(fRegType->GetSeparationIndex(nTotS+nTotB,target[0][nBins[mxVar]-1],target2[0][nBins[mxVar]-1]));
+            node->SetResponse(target[0][nBins[mxVar]-1]/(nTotS+nTotB));
+            if ( almost_equal_double(target2[0][nBins[mxVar]-1]/(nTotS+nTotB),  target[0][nBins[mxVar]-1]/(nTotS+nTotB)*target[0][nBins[mxVar]-1]/(nTotS+nTotB))) {
+               node->SetRMS(0);
+            } else {
+               node->SetRMS(TMath::Sqrt(target2[0][nBins[mxVar]-1]/(nTotS+nTotB) - target[0][nBins[mxVar]-1]/(nTotS+nTotB)*target[0][nBins[mxVar]-1]/(nTotS+nTotB)));
+            }
+         } else {
+            std::vector<Double_t> response (cNtargets, 0);
+            for (UInt_t target_index = 0; target_index < cNtargets; ++target_index) {
+               response[target_index] = target[0][(nBins[mxVar] - 1)*cNtargets + target_index] / (nTotS+nTotB);
+            }
+            node->SetMultiResponse(response);
          }
-      }
-      else {
+      } else {
          node->SetSeparationIndex(fSepType->GetSeparationIndex(nTotS,nTotB));
          if (mxVar >=0){
             if (nSelS[mxVar][cutIndex[mxVar]]/nTotS > nSelB[mxVar][cutIndex[mxVar]]/nTotB) cutType=kTRUE;
@@ -1688,6 +1770,14 @@ TMVA::DecisionTreeNode* TMVA::DecisionTree::GetEventNode(const TMVA::Event & e) 
          (TMVA::DecisionTreeNode*)current->GetLeft();
    }
    return current;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// returns the prediction for multitask regression
+
+std::vector<Double_t> TMVA::DecisionTree::GetMultiResponse ( const TMVA::Event* e) const {
+   auto node = GetEventNode(*e);
+   return node->GetMultiResponse();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

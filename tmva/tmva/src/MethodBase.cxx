@@ -1059,6 +1059,135 @@ void TMVA::MethodBase::TestRegression( Double_t& bias, Double_t& biasT,
    delete [] rV;
    delete [] tV;
    delete [] wV;
+  
+   Data()->SetCurrentType(savedType);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Analogous test for multiregression returns the quantities for all targets
+/// Aggregates the information for each target in passed vectors
+
+void TMVA::MethodBase::TestMultiRegression( std::vector<Double_t>* bias, std::vector<Double_t>* biasT,
+                                            std::vector<Double_t>* dev,  std::vector<Double_t>* devT,
+                                            std::vector<Double_t>* rms,  std::vector<Double_t>* rmsT,
+                                            std::vector<Double_t>* mInf, std::vector<Double_t>* mInfT,
+                                            std::vector<Double_t>* corr,
+                                            Types::ETreeType type ) {
+   Types::ETreeType savedType = Data()->GetCurrentType();
+   Data()->SetCurrentType(type);
+
+   UInt_t target_dimension = Data()->GetNTargets();
+
+   bias->assign(target_dimension, 0); 
+   biasT->assign(target_dimension, 0);
+   dev->assign(target_dimension, 0);
+   devT->assign(target_dimension, 0);
+   rms->assign(target_dimension, 0);
+   rmsT->assign(target_dimension, 0);
+   Double_t sumw = 0;
+
+   //for computing the correlation
+   std::vector<Double_t> means_model (target_dimension, 0);
+   std::vector<Double_t> means_true (target_dimension, 0);
+   std::vector<Double_t> sum_squared_model (target_dimension, 0); 
+   std::vector<Double_t> sum_squared_true (target_dimension, 0);
+   std::vector<Double_t> sum_cross (target_dimension, 0);
+
+   const Int_t nevt = GetNEvents();
+   Float_t* rV = new Float_t[nevt * Data()->GetNTargets()];
+   Float_t* tV = new Float_t[nevt * Data()->GetNTargets()];
+   Float_t* wV = new Float_t[nevt];
+   Float_t  xmin = 1e30, xmax = -1e30;
+   
+   for (Long64_t ievt=0; ievt<nevt; ievt++) {
+
+      const Event* ev = Data()->GetEvent(ievt); // NOTE: need untransformed event here !
+      Float_t w = ev->GetWeight();
+
+      for (UInt_t target_index = 0; target_index < target_dimension; ++target_index) {     
+          
+          Float_t t = ev->GetTarget(target_index);
+          Float_t r = GetRegressionValues()[target_index];
+          Float_t d = (r-t);
+
+          // find min/max
+          xmin = TMath::Min(xmin, TMath::Min(t, r));
+          xmax = TMath::Max(xmax, TMath::Max(t, r));
+
+          // store for truncated RMS computation
+          rV[ievt * target_dimension + target_index] = r;
+          tV[ievt * target_dimension + target_index] = t;
+          wV[ievt] = w;
+
+          // compute deviation-squared
+          sumw += w;
+          bias->at(target_index) += w * d;
+          dev->at(target_index)  += w * TMath::Abs(d);
+          rms->at(target_index)  += w * d * d;
+
+          // compute correlation between target and regression estimate
+          means_true[target_index]  += t*w; sum_squared_true[target_index] += t*t*w;
+          means_model[target_index]  += r*w; sum_squared_model[target_index] += r*r*w;
+          sum_cross[target_index] += t*r;
+      }
+   }
+
+   for (UInt_t target_index = 0; target_index < target_dimension; ++target_index) {
+       // standard quantities
+       bias->at(target_index) /= sumw;
+       dev->at(target_index)  /= sumw;
+       rms->at(target_index)  /= sumw;
+       rms->at(target_index)  = TMath::Sqrt(rms->at(target_index) - bias->at(target_index)
+                                                                  * bias->at(target_index));
+
+       // correlation
+       means_true[target_index]   /= sumw;
+       means_model[target_index]   /= sumw;
+       corr->at(target_index)  = sum_cross[target_index] / sumw - means_model[target_index]
+                                                                * means_true[target_index];
+       corr->at(target_index) /= TMath::Sqrt( (sum_squared_model[target_index] / sumw - means_model[target_index]
+                                                                                      * means_model[target_index]) * 
+                                              (sum_squared_true[target_index] / sumw - means_true[target_index]
+                                                                                     * means_true[target_index]) );
+
+       // create histogram required for computation of mutual information
+       TH2F* hist  = new TH2F( "hist",  "hist",  150, xmin, xmax, 100, xmin, xmax );
+       TH2F* histT = new TH2F( "histT", "histT", 150, xmin, xmax, 100, xmin, xmax );
+
+       // compute truncated RMS and fill histogram
+       Double_t devMax = bias->at(target_index) + 2*rms->at(target_index);
+       Double_t devMin = bias->at(target_index) - 2*rms->at(target_index);
+       sumw = 0;
+       int ic=0;
+       for (Long64_t ievt=0; ievt<nevt; ievt++) {
+          UInt_t current_index = ievt * target_dimension + target_index;
+          Float_t d = (rV[current_index] - tV[current_index]);
+          hist->Fill( rV[current_index], tV[current_index], wV[ievt] );
+          if (d >= devMin && d <= devMax) {
+             sumw  += wV[ievt];
+             biasT->at(target_index) += wV[ievt] * d;
+             devT->at(target_index)  += wV[ievt] * TMath::Abs(d);
+             rmsT->at(target_index)  += wV[ievt] * d * d;
+             histT->Fill( rV[current_index], tV[current_index], wV[ievt] );
+             ic++;
+          }
+       }
+
+       biasT->at(target_index) /= sumw;
+       devT->at(target_index)  /= sumw;
+       rmsT->at(target_index)  /= sumw;
+       rmsT->at(target_index)  = TMath::Sqrt(rmsT->at(target_index) - biasT->at(target_index)
+                                                                    * biasT->at(target_index));
+       mInf->at(target_index)  = gTools().GetMutualInformation( *hist );
+       mInfT->at(target_index) = gTools().GetMutualInformation( *histT );
+
+       delete hist;
+       delete histT;
+   }
+
+   delete [] rV;
+   delete [] tV;
+   delete [] wV;
 
    Data()->SetCurrentType(savedType);
 }

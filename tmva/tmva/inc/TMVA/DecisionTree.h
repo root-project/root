@@ -119,6 +119,7 @@ namespace TMVA {
 
       Double_t CheckEvent( const TMVA::Event * , Bool_t UseYesNoLeaf = kFALSE ) const;     
       TMVA::DecisionTreeNode* GetEventNode(const TMVA::Event & e) const;
+      std::vector<Double_t> GetMultiResponse ( const TMVA::Event* ) const;
 
       // return the individual relative variable importance 
       std::vector< Double_t > GetVariableImportance();
@@ -221,7 +222,8 @@ namespace TMVA {
       Bool_t    fRandomisedTree; // choose at each node splitting a random set of variables 
       Int_t     fUseNvars;       // the number of variables used in randomised trees;
       Bool_t    fUsePoissonNvars; // use "fUseNvars" not as fixed number but as mean of a possion distr. in each split
-    
+      Bool_t    fDoMultiTarget;  //  used for doing multi-target regression
+
       TRandom3  *fMyTrandom;     // random number generator for randomised trees
     
       std::vector< Double_t > fVariableImportance; // the relative importance of the different variables 

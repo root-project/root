@@ -171,8 +171,14 @@ namespace TMVA {
       //set the response of the node (for regression)
       void SetResponse( Float_t r ) { fResponse = r;}
 
+      //set the response of the node (for multitask regression)
+      void SetMultiResponse( const std::vector<Double_t>& r ) { fMultiResponse = r;}
+
       //return the response of the node (for regression)
       Float_t GetResponse( void ) const { return fResponse;}
+
+      //return the response of the node (for multitaskregression)
+      std::vector<Double_t> GetMultiResponse( void ) const { return fMultiResponse;}
 
       //set the RMS of the response of the node (for regression)
       void SetRMS( Float_t r ) { fRMS = r;}
@@ -364,6 +370,7 @@ namespace TMVA {
       Short_t  fSelector;        // index of variable used in node selection (decision tree)
 
       Float_t  fResponse;        // response value in case of regression
+      std::vector<Double_t> fMultiResponse; // response in case of multitask regression
       Float_t  fRMS;             // response RMS of the regression node
       Int_t    fNodeType;        // Type of node: -1 == Bkg-leaf, 1 == Signal-leaf, 0 = internal
       Float_t  fPurity;          // the node purity
