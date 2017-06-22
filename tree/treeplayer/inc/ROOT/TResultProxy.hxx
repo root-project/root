@@ -83,10 +83,10 @@ class TResultProxy {
    template <typename W>
    friend TResultProxy<W> TDFDetail::MakeResultProxy(const std::shared_ptr<W> &, const SPTLM_t &);
 
-   ShrdPtrBool_t fReadiness =
+   const ShrdPtrBool_t fReadiness =
       std::make_shared<bool>(false); ///< State registered also in the TLoopManager until the event loop is executed
    WPTLM_t fImplWeakPtr;             ///< Points to the TLoopManager at the root of the functional graph
-   SPT_t fObjPtr;                    ///< Shared pointer encapsulating the wrapped result
+   const SPT_t fObjPtr;              ///< Shared pointer encapsulating the wrapped result
 
    /// Triggers the event loop in the TLoopManager instance to which it's associated via the fImplWeakPtr
    void TriggerRun();

@@ -52,7 +52,7 @@ public:
 };
 
 class CountHelper {
-   std::shared_ptr<unsigned int> fResultCount;
+   const std::shared_ptr<unsigned int> fResultCount;
    std::vector<Count_t> fCounts;
 
 public:
@@ -71,7 +71,7 @@ class FillHelper {
 
    std::vector<Buf_t> fBuffers;
    std::vector<Buf_t> fWBuffers;
-   std::shared_ptr<Hist_t> fResultHist;
+   const std::shared_ptr<Hist_t> fResultHist;
    unsigned int fNSlots;
    unsigned int fBufSize;
    Buf_t fMin;
@@ -318,7 +318,7 @@ public:
 template <typename F, typename T>
 class ReduceHelper {
    F fReduceFun;
-   std::shared_ptr<T> fReduceRes;
+   const std::shared_ptr<T> fReduceRes;
    std::vector<T> fReduceObjs;
 
 public:
@@ -339,7 +339,7 @@ public:
 };
 
 class MinHelper {
-   std::shared_ptr<double> fResultMin;
+   const std::shared_ptr<double> fResultMin;
    std::vector<double> fMins;
 
 public:
@@ -365,7 +365,7 @@ extern template void MinHelper::Exec(unsigned int, const std::vector<int> &);
 extern template void MinHelper::Exec(unsigned int, const std::vector<unsigned int> &);
 
 class MaxHelper {
-   std::shared_ptr<double> fResultMax;
+   const std::shared_ptr<double> fResultMax;
    std::vector<double> fMaxs;
 
 public:
@@ -389,7 +389,7 @@ extern template void MaxHelper::Exec(unsigned int, const std::vector<int> &);
 extern template void MaxHelper::Exec(unsigned int, const std::vector<unsigned int> &);
 
 class MeanHelper {
-   std::shared_ptr<double> fResultMean;
+   const std::shared_ptr<double> fResultMean;
    std::vector<Count_t> fCounts;
    std::vector<double> fSums;
 
