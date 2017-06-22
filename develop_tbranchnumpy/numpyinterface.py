@@ -128,13 +128,3 @@ def pandas(*args):
         out = out.append(df, ignore_index=True)
 
     return out
-
-import time
-
-startTime = time.time()
-d = arraydict("../../data/TrackResonanceNtuple_uncompressed.root", "twoMuon", "mass_mumu", "px")
-print time.time() - startTime
-
-startTime = time.time()
-p = pandas("../../data/TrackResonanceNtuple_uncompressed.root", "twoMuon", "mass_mumu", "px")
-print time.time() - startTime

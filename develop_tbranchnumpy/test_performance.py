@@ -6,7 +6,7 @@ import numba
 import ROOT
 import root_numpy
 
-import numpyinterface
+import _numpyinterface
 
 @numba.jit(nopython=True)
 def momentumsum(px, py, pz):
@@ -23,7 +23,7 @@ def energysum(px, py, pz, mass_mumu):
     return total
 
 def numpy_momentum(reps, fileName, return_new_buffers, swap_bytes):
-    iterator = numpyinterface.iterate(
+    iterator = _numpyinterface.iterate(
         fileName, "twoMuon", "px", "py", "pz",
         return_new_buffers = return_new_buffers,
         swap_bytes = swap_bytes)
@@ -40,7 +40,7 @@ def numpy_momentum(reps, fileName, return_new_buffers, swap_bytes):
     return endTime - startTime
 
 def numba_momentum(reps, fileName, return_new_buffers, swap_bytes):
-    iterator = numpyinterface.iterate(
+    iterator = _numpyinterface.iterate(
         fileName, "twoMuon", "px", "py", "pz",
         return_new_buffers = return_new_buffers,
         swap_bytes = swap_bytes)
@@ -57,7 +57,7 @@ def numba_momentum(reps, fileName, return_new_buffers, swap_bytes):
     return endTime - startTime
 
 def purepy_momentum(reps, fileName, return_new_buffers, swap_bytes):
-    iterator = numpyinterface.iterate(
+    iterator = _numpyinterface.iterate(
         fileName, "twoMuon", "px", "py", "pz",
         return_new_buffers = return_new_buffers,
         swap_bytes = swap_bytes)
@@ -94,7 +94,7 @@ def rootnumpy_momentum(reps, fileName):
     return endTime - startTime
 
 def numpy_energy(reps, fileName, return_new_buffers, swap_bytes):
-    iterator = numpyinterface.iterate(
+    iterator = _numpyinterface.iterate(
         fileName, "twoMuon", "px", "py", "pz", "mass_mumu",
         return_new_buffers = return_new_buffers,
         swap_bytes = swap_bytes)
@@ -111,7 +111,7 @@ def numpy_energy(reps, fileName, return_new_buffers, swap_bytes):
     return endTime - startTime
 
 def numba_energy(reps, fileName, return_new_buffers, swap_bytes):
-    iterator = numpyinterface.iterate(
+    iterator = _numpyinterface.iterate(
         fileName, "twoMuon", "px", "py", "pz", "mass_mumu",
         return_new_buffers = return_new_buffers,
         swap_bytes = swap_bytes)
@@ -128,7 +128,7 @@ def numba_energy(reps, fileName, return_new_buffers, swap_bytes):
     return endTime - startTime
 
 def purepy_energy(reps, fileName, return_new_buffers, swap_bytes):
-    iterator = numpyinterface.iterate(
+    iterator = _numpyinterface.iterate(
         fileName, "twoMuon", "px", "py", "pz", "mass_mumu",
         return_new_buffers = return_new_buffers,
         swap_bytes = swap_bytes)
@@ -168,7 +168,7 @@ def rootnumpy_energy(reps, fileName):
 WARM_UP = 5
 REPS = 100
 
-for fileName in ("TrackResonanceNtuple_LZ4.root",):   # "TrackResonanceNtuple_uncompressed.root", "TrackResonanceNtuple_compressed.root":
+for fileName in "../../data/TrackResonanceNtuple_uncompressed.root", "../../data/TrackResonanceNtuple_compressed.root":
     for label, return_new_buffers in ("new buffers", True), ("views", False):
         print fileName, "momentum numpy big-endian", label,
         numpy_momentum(WARM_UP, fileName, return_new_buffers, False)     # warm up
@@ -191,10 +191,10 @@ for fileName in ("TrackResonanceNtuple_LZ4.root",):   # "TrackResonanceNtuple_un
     print rootnumpy_momentum(REPS, fileName)                             # real run
 
 print
-print numpyinterface.performance()
+print _numpyinterface.performance()
 print
 
-for fileName in ("TrackResonanceNtuple_LZ4.root",):   # "TrackResonanceNtuple_uncompressed.root", "TrackResonanceNtuple_compressed.root":
+for fileName in "../../data/TrackResonanceNtuple_uncompressed.root", "../../data/TrackResonanceNtuple_compressed.root":
     for label, return_new_buffers in ("new buffers", True), ("views", False):
         print fileName, "energy numpy big-endian", label,
         numpy_energy(WARM_UP, fileName, return_new_buffers, False)       # warm up
@@ -217,6 +217,6 @@ for fileName in ("TrackResonanceNtuple_LZ4.root",):   # "TrackResonanceNtuple_un
     print rootnumpy_energy(REPS, fileName)                               # real run
 
 print
-print numpyinterface.performance()
+print _numpyinterface.performance()
 print
 
