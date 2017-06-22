@@ -61,7 +61,7 @@ public:
 };
 std::atomic_int FunctorForeach::fCounter(0);
 
-int main(int argc, char** argv) {
+int main() {
    auto fileName = "test_callables.root";
    auto treeName = "callablesTree";
    FillTree(fileName, treeName);
@@ -82,10 +82,10 @@ int main(int argc, char** argv) {
     .ForeachSlot(std::move(fff));
 
    // lambda
-   auto filt = [](double b) { return true; };
+   auto filt = [](double) { return true; };
    auto branch = []() { return 42; };
    std::atomic_int counter(0);
-   auto foreach = [&counter](double b) { ++counter; };
+   auto foreach = [&counter](double) { ++counter; };
    d.Filter(filt)
     .Define("d", std::move(branch), {})
     .Foreach(foreach);
