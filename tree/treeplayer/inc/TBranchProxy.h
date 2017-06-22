@@ -333,15 +333,8 @@ namespace Internal {
          if (fWhere) std::cout << "value? " << *(unsigned char*)GetStart() << std::endl;
       }
 
-      TArrayCharProxy() : TBranchProxy() {}
-      TArrayCharProxy(TBranchProxyDirector *director, const char *name) : TBranchProxy(director,name) {};
-      TArrayCharProxy(TBranchProxyDirector *director, const char *top, const char *name) :
-         TBranchProxy(director,top,name) {};
-      TArrayCharProxy(TBranchProxyDirector *director, const char *top, const char *name, const char *data) :
-         TBranchProxy(director,top,name,data) {};
-      TArrayCharProxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name, const char* top = 0, const char* mid = 0) :
-         TBranchProxy(director,parent, name, top, mid) {};
-      ~TArrayCharProxy() override {};
+      using TBranchProxy::TBranchProxy;
+      ~TArrayCharProxy() override = default;
 
       unsigned char At(UInt_t i) {
          static unsigned char default_val;
@@ -397,15 +390,8 @@ namespace Internal {
          }
       }
 
-      TClaProxy() : TBranchProxy() {}
-      TClaProxy(TBranchProxyDirector *director, const char *name) : TBranchProxy(director,name) {};
-      TClaProxy(TBranchProxyDirector *director, const char *top, const char *name) :
-         TBranchProxy(director,top,name) {};
-      TClaProxy(TBranchProxyDirector *director, const char *top, const char *name, const char *data) :
-         TBranchProxy(director,top,name,data) {};
-      TClaProxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name, const char* top = 0, const char* mid = 0) :
-         TBranchProxy(director,parent, name, top, mid) {};
-      ~TClaProxy() override {};
+      using TBranchProxy::TBranchProxy;
+      ~TClaProxy() override = default;
 
       const TClonesArray* GetPtr() {
          if (!Read()) return 0;
@@ -439,15 +425,8 @@ namespace Internal {
          }
       }
 
-      TStlProxy() : TBranchProxy() {}
-      TStlProxy(TBranchProxyDirector *director, const char *name) : TBranchProxy(director,name) {};
-      TStlProxy(TBranchProxyDirector *director, const char *top, const char *name) :
-         TBranchProxy(director,top,name) {};
-      TStlProxy(TBranchProxyDirector *director, const char *top, const char *name, const char *data) :
-         TBranchProxy(director,top,name,data) {};
-      TStlProxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name, const char* top = 0, const char* mid = 0) :
-         TBranchProxy(director,parent, name, top, mid) {};
-      ~TStlProxy() override {};
+      using TBranchProxy::TBranchProxy;
+      ~TStlProxy() override = default;
 
       const TVirtualCollectionProxy* GetPtr() {
          if (!Read()) return 0;
@@ -474,15 +453,8 @@ namespace Internal {
          if (fWhere) std::cout << "value? " << *(T*)GetStart() << std::endl;
       }
 
-      TImpProxy() : TBranchProxy() {};
-      TImpProxy(TBranchProxyDirector *director, const char *name) : TBranchProxy(director,name) {};
-      TImpProxy(TBranchProxyDirector *director, const char *top, const char *name) :
-         TBranchProxy(director,top,name) {};
-      TImpProxy(TBranchProxyDirector *director, const char *top, const char *name, const char *data) :
-         TBranchProxy(director,top,name,data) {};
-      TImpProxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name, const char* top = 0, const char* mid = 0) :
-         TBranchProxy(director,parent, name, top, mid) {};
-      ~TImpProxy() override {};
+      using TBranchProxy::TBranchProxy;
+      ~TImpProxy() override = default;
 
       operator T() {
          if (!Read()) return 0;
@@ -523,15 +495,8 @@ namespace Internal {
    template <class T>
    class TArrayProxy : public Detail::TBranchProxy {
    public:
-      TArrayProxy() : TBranchProxy() {}
-      TArrayProxy(TBranchProxyDirector *director, const char *name) : TBranchProxy(director,name) {};
-      TArrayProxy(TBranchProxyDirector *director, const char *top, const char *name) :
-         TBranchProxy(director,top,name) {};
-      TArrayProxy(TBranchProxyDirector *director, const char *top, const char *name, const char *data) :
-         TBranchProxy(director,top,name,data) {};
-      TArrayProxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name, const char* top = 0, const char* mid = 0) :
-         TBranchProxy(director,parent, name, top, mid) {};
-      ~TArrayProxy() override {};
+      using TBranchProxy::TBranchProxy;
+      ~TArrayProxy() override = default;
 
       typedef typename T::array_t array_t;
       typedef typename T::type_t type_t;
@@ -570,15 +535,8 @@ namespace Internal {
       //    TClaProxy::Print();
       // }
 
-      TClaImpProxy() : TClaProxy() {};
-      TClaImpProxy(TBranchProxyDirector *director, const char *name) : TClaProxy(director,name) {};
-      TClaImpProxy(TBranchProxyDirector *director,  const char *top, const char *name) :
-         TClaProxy(director,top,name) {};
-      TClaImpProxy(TBranchProxyDirector *director,  const char *top, const char *name, const char *data) :
-         TClaProxy(director,top,name,data) {};
-      TClaImpProxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name, const char* top = 0, const char* mid = 0) :
-         TClaProxy(director,parent, name, top, mid) {};
-      ~TClaImpProxy() override {};
+      using TClaProxy::TClaProxy;
+      ~TClaImpProxy() override = default;
 
       const T& At(UInt_t i) {
          static T default_val;
@@ -611,15 +569,8 @@ namespace Internal {
       //    TBranchProxy::Print();
       // }
 
-      TStlImpProxy() : TStlProxy() {};
-      TStlImpProxy(TBranchProxyDirector *director, const char *name) : TStlProxy(director,name) {};
-      TStlImpProxy(TBranchProxyDirector *director,  const char *top, const char *name) :
-         TStlProxy(director,top,name) {};
-      TStlImpProxy(TBranchProxyDirector *director,  const char *top, const char *name, const char *data) :
-         TStlProxy(director,top,name,data) {};
-      TStlImpProxy(TBranchProxyDirector *director, Detail::TBranchProxy *parent, const char *name, const char* top = 0, const char* mid = 0) :
-         TStlProxy(director,parent, name, top, mid) {};
-      ~TStlImpProxy() override {};
+      using TStlProxy::TStlProxy;
+      ~TStlImpProxy() override = default;
 
       const T& At(UInt_t i) {
          static T default_val;
@@ -653,15 +604,8 @@ namespace Internal {
       //    TClaProxy::Print();
       // }
 
-      TClaArrayProxy() : TClaProxy() {}
-      TClaArrayProxy(TBranchProxyDirector *director, const char *name) : TClaProxy(director,name) {};
-      TClaArrayProxy(TBranchProxyDirector *director, const char *top, const char *name) :
-         TClaProxy(director,top,name) {};
-      TClaArrayProxy(TBranchProxyDirector *director, const char *top, const char *name, const char *data) :
-         TClaProxy(director,top,name,data) {};
-      TClaArrayProxy(TBranchProxyDirector *director, Detail::TBranchProxy *parent, const char *name, const char* top = 0, const char* mid = 0) :
-         TClaProxy(director,parent, name, top, mid) {};
-      ~TClaArrayProxy() override {};
+      using TClaProxy::TClaProxy;
+      ~TClaArrayProxy() override = default;
 
       /* const */  array_t *At(UInt_t i) {
          static array_t default_val;
@@ -688,15 +632,8 @@ namespace Internal {
       //    TBranchProxy::Print();
       // }
 
-      TStlArrayProxy() : TStlProxy() {}
-      TStlArrayProxy(TBranchProxyDirector *director, const char *name) : TStlProxy(director,name) {};
-      TStlArrayProxy(TBranchProxyDirector *director, const char *top, const char *name) :
-         TStlProxy(director,top,name) {};
-      TStlArrayProxy(TBranchProxyDirector *director, const char *top, const char *name, const char *data) :
-         TStlProxy(director,top,name,data) {};
-      TStlArrayProxy(TBranchProxyDirector *director, Detail::TBranchProxy *parent, const char *name, const char* top = 0, const char* mid = 0) :
-         TStlProxy(director,parent, name, top, mid) {};
-      ~TStlArrayProxy() override {};
+      using TStlProxy::TStlProxy;
+      ~TStlArrayProxy() override = default;
 
       /* const */  array_t *At(UInt_t i) {
          static array_t default_val;
