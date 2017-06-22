@@ -1216,7 +1216,7 @@ protected:
    {
    }
 
-   std::shared_ptr<Proxied> fProxiedPtr;
+   const std::shared_ptr<Proxied> fProxiedPtr;
    std::weak_ptr<TLoopManager> fImplWeakPtr;
 };
 
