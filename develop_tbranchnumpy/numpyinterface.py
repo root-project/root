@@ -23,6 +23,9 @@ def arraydict(*args, **kwds):
     else:
         preargs = ()
         first = 0
+
+    if len(args) - first < 1:
+        raise TypeError("at least one branch is required (if the first arguments are strings, they are interpreted as TFile and TTree paths)")
     
     allocate = lambda shape, dtype: numpy.empty(shape, dtype=dtype)
     trim = lambda array, length: array[:length]
@@ -71,7 +74,10 @@ def recarray(*args, **kwds):
     else:
         preargs = ()
         first = 0
-    
+
+    if len(args) - first < 1:
+        raise TypeError("at least one branch is required (if the first arguments are strings, they are interpreted as TFile and TTree paths)")
+
     swap_bytes = True
     if "swap_bytes" in kwds:
         swap_bytes = kwds["swap_bytes"]
@@ -81,6 +87,15 @@ def recarray(*args, **kwds):
 
     # allocate all the arrays, using a slight overestimate in their lengths (due to headers in GetTotalSize)
     dts = _numpyinterface.dtypeshape(*args, swap_bytes=swap_bytes)
+
+    shape = None
+    for n, d, s in dts:
+        if len(s) != 1:
+            raise ValueError("branches for a recarray must be one-dimensional")
+        if shape is None:
+            shape = s
+        elif s[0] > shape[0]:
+            shape = s
 
     out = numpy.empty(shape, dtype=[(bytes(n), d) for n, d, s in dts])
 
@@ -128,3 +143,25 @@ def pandas(*args):
         out = out.append(df, ignore_index=True)
 
     return out
+
+import time
+
+arraydict("../../data/TrackResonanceNtuple_uncompressed.root", "twoMuon", "mass_mumu", "px")
+
+startTime = time.time()
+d = arraydict("../../data/TrackResonanceNtuple_uncompressed.root", "twoMuon", "mass_mumu", "px")
+print time.time() - startTime
+
+startTime = time.time()
+r = recarray("../../data/TrackResonanceNtuple_uncompressed.root", "twoMuon", "mass_mumu", "px")
+print time.time() - startTime
+
+startTime = time.time()
+p = pandas("../../data/TrackResonanceNtuple_uncompressed.root", "twoMuon", "mass_mumu", "px")
+print time.time() - startTime
+
+print numpy.array_equal(r["mass_mumu"], d["mass_mumu"])
+print numpy.array_equal(r["px"], d["px"])
+
+print numpy.array_equal(p["mass_mumu"], d["mass_mumu"])
+print numpy.array_equal(p["px"], d["px"])
