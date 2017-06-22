@@ -1890,6 +1890,7 @@ static int HandleInterpreterException(cling::MetaProcessor* metaProcessor,
    {
       Error("HandleInterpreterException", "%s.\n%s", ex.what(), "Execution of your code was aborted.");
       ex.diagnose();
+      compRes = cling::Interpreter::kFailure;
    }
    return 0;
 }
