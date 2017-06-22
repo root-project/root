@@ -241,7 +241,7 @@ public:
    {
       auto df = GetDataFrameChecked();
       auto tree = df->GetTree();
-      auto branches = tree->GetListOfBranches();
+      auto branches = tree ? tree->GetListOfBranches() : nullptr;
       auto tmpBranches = fProxiedPtr->GetTmpBranches();
       auto tmpBookedBranches = df->GetBookedBranches();
       const std::string expressionInt(expression);
