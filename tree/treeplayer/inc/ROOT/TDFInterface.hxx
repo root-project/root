@@ -1108,40 +1108,11 @@ protected:
 
       if (!ROOT::IsImplicitMTEnabled()) {
          // single-thread snapshot
-         std::unique_ptr<TFile> ofile(TFile::Open(filenameInt.c_str(), "RECREATE"));
-         if (!dirnameInt.empty()) {
-            ofile->mkdir(dirnameInt.c_str());
-            ofile->cd(dirnameInt.c_str());
-         }
-         TTree t(treenameInt.c_str(), treenameInt.c_str());
-
-         bool FirstEvent = true;
-         // TODO move fillTree and initLambda to SnapshotHelper's body
-         auto fillTree = [&t, &bnames, &FirstEvent](unsigned int /* slot */, Args &... args) {
-            if (FirstEvent) {
-               // hack to call TTree::Branch on all variadic template arguments
-               std::initializer_list<int> expander = {(t.Branch(bnames[S].c_str(), &args), 0)..., 0};
-               (void)expander; // avoid unused variable warnings for older compilers such as gcc 4.9
-               FirstEvent = false;
-            }
-            t.Fill();
-         };
-
-         auto initLambda = [&t] (TTreeReader *r, unsigned int /* slot */) {
-            if(r) {
-               // not an empty-source TDF
-               auto tree = r->GetTree();
-               tree->AddClone(&t); // AddClone makes sure that if the input tree changes file it updates the branches of
-                                   // the output tree with the new value pointers
-            }
-         };
-
-         using Op_t = TDFInternal::SnapshotHelper<decltype(initLambda), decltype(fillTree)>;
-         using DFA_t = TDFInternal::TAction<Op_t, Proxied>;
-         df->Book(std::make_shared<DFA_t>(Op_t(std::move(initLambda), std::move(fillTree)), bnames, *fProxiedPtr));
+         using Op_t = TDFInternal::SnapshotHelper<BranchTypes...>;
+         using DFA_t = TDFInternal::TAction<Op_t, Proxied, TDFInternal::TTypeList<BranchTypes...>>;
+         df->Book(std::make_shared<DFA_t>(Op_t(filenameInt, dirnameInt, treenameInt, bnames), bnames, *fProxiedPtr));
          fProxiedPtr->IncrChildrenCount();
          df->Run();
-         t.Write();
       } else {
          // multi-thread snapshot
          unsigned int nSlots = df->GetNSlots();
@@ -1189,7 +1160,7 @@ protected:
             isFirstEvent[slot] = 1;
          };
 
-         using Op_t = TDFInternal::SnapshotHelper<decltype(initLambda), decltype(fillTree)>;
+         using Op_t = TDFInternal::SnapshotHelperMT<decltype(initLambda), decltype(fillTree)>;
          using DFA_t = TDFInternal::TAction<Op_t, Proxied>;
          df->Book(std::make_shared<DFA_t>(Op_t(std::move(initLambda), std::move(fillTree)), bnames, *fProxiedPtr));
          fProxiedPtr->IncrChildrenCount();

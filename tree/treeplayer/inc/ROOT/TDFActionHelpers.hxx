@@ -14,6 +14,8 @@
 #include "ROOT/TDFUtils.hxx"
 #include "ROOT/TThreadedObject.hxx"
 #include "TH1.h"
+#include "TTreeReader.h" // for SnapshotHelper
+#include "TFile.h" // for SnapshotHelper
 
 #include <algorithm>
 #include <memory>
@@ -416,14 +418,69 @@ extern template void MeanHelper::Exec(unsigned int, const std::vector<char> &);
 extern template void MeanHelper::Exec(unsigned int, const std::vector<int> &);
 extern template void MeanHelper::Exec(unsigned int, const std::vector<unsigned int> &);
 
-template <typename F1, typename F2>
+/// Helper object for a single-thread Snapshot action
+template <typename... BranchTypes>
 class SnapshotHelper {
+   std::unique_ptr<TFile> fOutputFile;
+   std::unique_ptr<TTree> fOutputTree; // must be a ptr because TTrees are not copy/move constructible
+   bool fIsFirstEvent{true};
+   const ColumnNames_t fBranchNames;
+public:
+   SnapshotHelper(const std::string &filename, const std::string &dirname, const std::string &treename,
+                  const ColumnNames_t &bnames)
+      : fOutputFile(TFile::Open(filename.c_str(), "RECREATE")), fBranchNames(bnames)
+   {
+      if (!dirname.empty()) {
+         fOutputFile->mkdir(dirname.c_str());
+         fOutputFile->cd(dirname.c_str());
+      }
+      fOutputTree.reset(new TTree(treename.c_str(), treename.c_str(), /*splitlevel=*/99, /*dir=*/fOutputFile.get()));
+   }
+
+   SnapshotHelper(const SnapshotHelper &) = delete;
+   SnapshotHelper(SnapshotHelper &&) = default;
+   ~SnapshotHelper() = default;
+
+   void Init(TTreeReader *r, unsigned int /* slot */)
+   {
+      if (!r) // empty source, nothing to do
+         return;
+      auto tree = r->GetTree();
+      // AddClone guarantees that if the input file changes the branches of the output tree are updated with the new
+      // addresses of the branch values
+      tree->AddClone(fOutputTree.get());
+   }
+
+   void Exec(unsigned int /* slot */, BranchTypes &... values)
+   {
+      if (fIsFirstEvent) {
+         using ind_t = typename TGenStaticSeq<sizeof...(BranchTypes)>::Type_t;
+         SetBranches(&values..., ind_t());
+      }
+      fOutputTree->Fill();
+   }
+
+   template <int... S>
+   void SetBranches(BranchTypes *... branchAddresses, TStaticSeq<S...> /*dummy*/)
+   {
+      // hack to call TTree::Branch on all variadic template arguments
+      std::initializer_list<int> expander = {(fOutputTree->Branch(fBranchNames[S].c_str(), branchAddresses), 0)..., 0};
+      (void)expander; // avoid unused variable warnings for older compilers such as gcc 4.9
+      fIsFirstEvent = false;
+   }
+
+   void Finalize() { fOutputTree->Write(); }
+};
+
+/// Helper object for a multi-thread Snapshot action
+template <typename F1, typename F2>
+class SnapshotHelperMT {
    F1 fInitFunc;
    F2 fExecFunc;
 
 public:
    using BranchTypes_t = typename TRemoveFirst<typename TFunctionTraits<F2>::Args_t>::Types_t;
-   SnapshotHelper(F1 &&f1, F2 &&f2) : fInitFunc(f1), fExecFunc(f2) {}
+   SnapshotHelperMT(F1 &&f1, F2 &&f2) : fInitFunc(f1), fExecFunc(f2) {}
 
    void Init(TTreeReader *r, unsigned int slot) { fInitFunc(r, slot); }
 
