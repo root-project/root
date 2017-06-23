@@ -32,15 +32,17 @@
 #include "TError.h"
 #include "TSystem.h"
 
+// using parameter cache is not thread safe but needed for normalizing the functions
+#define USE_PARAMCACHE
+
 #ifdef R__HAS_VECCORE
 namespace vecCore{
-   //Auxiliar function. To be included in VecCore's new release
-   template <typename T> vecCore::Scalar<T> Reduce(const T &v)
-   {
-      vecCore::Scalar<T> sum{};
-      for (size_t i = 0; i < VectorSize<T>(); ++i)
-      sum += vecCore::Get<T>(v, i);
-      return sum;
+template <class T>
+vecCore::Mask_v<T> Int2Mask(unsigned i)
+{
+   T x;
+   for (unsigned j = 0; j < vecCore::VectorSize<T>(); j++) vecCore::Set<T>(x, i, i + 1);
+   return vecCore::Mask_v<T>(x < i);
    }
 }
 #endif
@@ -422,6 +424,7 @@ namespace FitUtil {
             for (unsigned int i = 0; i < (data.Size() / vecSize); i++) {
                res += mapFunction(i);
             }
+
 #ifdef R__USE_IMT
          } else if (executionPolicy == ROOT::Fit::kMultithread) {
             auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(data.Size() / vecSize);
@@ -436,11 +439,11 @@ namespace FitUtil {
          }
          nPoints = n;
 
-#ifdef DEBUG
-         std::cout << "chi2 = " << chi2 << " n = " << nPoints  /*<< " rejected = " << nRejected */ << std::endl;
-#endif
+         // Last SIMD vector of elements (if padding needed)
+         vecCore::MaskedAssign(res, vecCore::Int2Mask<T>(data.Size() % vecSize),
+                               res + mapFunction(data.Size() / vecSize));
 
-         return vecCore::Reduce(res);
+         return vecCore::ReduceAdd(res);
       }
 
       static double EvalLogL(const IModelFunctionTempl<T> &func, const UnBinData & data, const double * const p, int iWeight,
@@ -478,7 +481,7 @@ namespace FitUtil {
                T xmin_v, xmax_v;
                vecCore::Load<T>(xmin_v, xmin.data());
                vecCore::Load<T>(xmax_v, xmax.data());
-               if (vecCore::Reduce(func(&xmin_v, p)) != 0 || vecCore::Reduce(func(&xmax_v, p)) != 0) {
+               if (vecCore::ReduceAdd(func(&xmin_v, p)) != 0 || vecCore::ReduceAdd(func(&xmax_v, p)) != 0) {
                   MATH_ERROR_MSG("FitUtil::EvaluateLogLikelihood", "A range has not been set and the function is not zero at +/- inf");
                   return 0;
                }
@@ -498,7 +501,7 @@ namespace FitUtil {
             if(data.NDim() > 1) {
                std::vector<T> x(data.NDim());
                for (unsigned int j = 0; j < data.NDim(); ++j)
-                  vecCore::Load<T>(x[j], data.GetCoordComponent(i, j));
+                  vecCore::Load<T>(x[j], data.GetCoordComponent(i * vecSize, j));
 #ifdef USE_PARAMCACHE
                fval = func(x.data());
 #else
@@ -507,7 +510,7 @@ namespace FitUtil {
                // one -dim case
             } else {
                T x;
-               vecCore::Load<T>(x, data.GetCoordComponent(i, 0));
+               vecCore::Load<T>(x, data.GetCoordComponent(i * vecSize, 0));
 #ifdef USE_PARAMCACHE
                fval = func(&x);
 #else
@@ -612,7 +615,7 @@ namespace FitUtil {
                   T xmin_v, xmax_v;
                   vecCore::Load<T>(xmin_v, xmin.data());
                   vecCore::Load<T>(xmax_v, xmax.data());
-                  if (vecCore::Reduce(func(&xmin_v, p)) != 0 || vecCore::Reduce(func(&xmax_v, p)) != 0) {
+                  if (vecCore::ReduceAdd(func(&xmin_v, p)) != 0 || vecCore::ReduceAdd(func(&xmax_v, p)) != 0) {
                      MATH_ERROR_MSG("FitUtil::EvaluateLogLikelihood", "A range has not been set and the function is not zero at +/- inf");
                      return 0;
                   }
@@ -665,7 +668,7 @@ namespace FitUtil {
          //
 
 #ifdef USE_PARAMCACHE
-         (const_cast<IModelFunction &>(func)).SetParameters(p);
+         (const_cast<IModelFunctionTempl<T> &>(func)).SetParameters(p);
 #endif
          auto vecSize = vecCore::VectorSize<T>();
          // get fit option and check case of using integral of bins
@@ -683,7 +686,7 @@ namespace FitUtil {
             if (data.NDim() > 1) {
                std::vector<T> x(data.NDim());
                for (unsigned int j = 0; j < data.NDim(); ++j)
-                  vecCore::Load<T>(x[j], data.GetCoordComponent(i, j));
+                  vecCore::Load<T>(x[j], data.GetCoordComponent(i * vecSize, j));
 #ifdef USE_PARAMCACHE
                fval = func(x.data());
 #else
@@ -692,7 +695,7 @@ namespace FitUtil {
                // one -dim case
             } else {
                T x;
-               vecCore::Load<T>(x, data.GetCoordComponent(i, 0));
+               vecCore::Load<T>(x, data.GetCoordComponent(i * vecSize, 0));
 #ifdef USE_PARAMCACHE
                fval = func(&x);
 #else
@@ -767,7 +770,11 @@ namespace FitUtil {
                "Execution policy unknown. Avalaible choices:\n 0: Serial (default)\n 1: MultiThread (requires IMT)\n");
          }
 
-         return vecCore::Reduce(res);
+         // Last padded SIMD vector of elements
+         vecCore::MaskedAssign(res, vecCore::Int2Mask<T>(data.Size() % vecSize),
+                               res + mapFunction(data.Size() / vecSize));
+
+         return vecCore::ReduceAdd(res);
       }
 
       static double EvalChi2Effective(const IModelFunctionTempl<T> &, const BinData &, const double *, unsigned int &)
