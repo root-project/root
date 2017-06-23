@@ -39,7 +39,7 @@ namespace vecCore{
    {
       vecCore::Scalar<T> sum{};
       for (size_t i = 0; i < VectorSize<T>(); ++i)
-      sum += vecCore::Get(v, i);
+      sum += vecCore::Get<T>(v, i);
       return sum;
    }
 }
@@ -647,7 +647,7 @@ namespace FitUtil {
       }
 
       static double EvalPoissonLogL(const IModelFunctionTempl<T> &func, const BinData &data, const double *p, int iWeight, bool extended,
-                                    unsigned int &nPoints, const unsigned int &executionPolicy, unsigned nChunks = 0)
+                                    unsigned int, const unsigned int &executionPolicy, unsigned nChunks = 0)
       {
          // evaluate the Poisson Log Likelihood
          // for binned likelihood fits
@@ -663,8 +663,6 @@ namespace FitUtil {
          // case of iWeight==1 is actually identical to weight==0
          // iWeight = 2 ==> logL = Sum( w*w * f(x_i) )
          //
-
-         unsigned int n = data.Size();
 
 #ifdef USE_PARAMCACHE
          (const_cast<IModelFunction &>(func)).SetParameters(p);
@@ -704,8 +702,7 @@ namespace FitUtil {
 
             // EvalLog protects against 0 values of fval but don't want to add in the -log sum
             // negative values of fval
-            auto m = vecCore::Mask_v<T>(fval < 0.0);
-            vecCore::MaskedAssign<T>(fval, m, 0.0);
+            vecCore::MaskedAssign<T>(fval, fval < 0.0, 0.0);
 
             T nloglike{}; // negative loglikelihood
 
@@ -715,26 +712,20 @@ namespace FitUtil {
                // can apply correction only when y is not zero otherwise weight is undefined
                // (in case of weighted likelihood I don't care about the constant term due to
                // the saturated model)
-               if (y != 0) {
-                  T error{};
-                  auto pError = data.ErrorPtr(i * vecSize);
-                  std::vector<double> ones{1, 1, 1, 1};
-                  pError = (pError != nullptr) ? pError : &ones.front();
-                  vecCore::Load<T>(error, pError);
-
-                  T weight = (error * error) / y; // this is the bin effective weight
+               auto m = vecCore::Mask_v<T>(y != 0.0);
+               if (!vecCore::MaskFull(m)) {
+                  T error = 1;
+                  if (data.GetErrorType() != ROOT::Fit::BinData::ErrorType::kNoError)
+                     vecCore::Load<T>(error, data.ErrorPtr(i * vecSize));
+                  T weight;
+                  vecCore::MaskedAssign<T>(weight, y != 0, (error * error) / y);
                   if (extended) {
                      nloglike = fval * weight;
                      // wTot  += weight;
                      // w2Tot += weight*weight;
                   }
-                  nloglike -= weight * y * ROOT::Math::Util::EvalLog(fval);
+                  vecCore::MaskedAssign<T>(nloglike, y != 0, nloglike - weight * y * ROOT::Math::Util::EvalLog(fval));
                }
-
-               //  need to compute total weight and weight-square
-               // if (extended ) {
-               //    nuTot += fval;
-               // }
 
             } else {
                // standard case no weights or iWeight=1
@@ -795,6 +786,17 @@ namespace FitUtil {
          Error("FitUtil::Evaluate<T>::EvalChi2Residual", "The vectorized evaluation of the Chi2 with the ith residual is still not supported");
          return -1.;
       }
+
+      /// evaluate the pdf (Poisson) contribution to the logl (return actually log of pdf)
+      /// and its gradient
+static double EvalPoissonBinPdf(const IModelFunctionTempl<T> &, const BinData &, const double *, unsigned int , double * ) {
+         Error("FitUtil::Evaluate<T>::EvaluatePoissonBinPdf", "The vectorized evaluation of the BinnedLikelihood fit evaluated point by point is still not supported");
+         return -1.;
+      }
+
+static void EvalPoissonLogLGradient(const IModelFunctionTempl<T> &, const BinData &, const double *, double * ) {
+         Error("FitUtil::Evaluate<T>::EvaluatePoissonLogLGradient", "The vectorized evaluation of the BinnedLikelihood fit evaluated point by point is still not supported");
+      }
    };
 
    template<>
@@ -831,6 +833,16 @@ namespace FitUtil {
       static double EvalChi2Residual(const IModelFunctionTempl<double> &func, const BinData & data, const double * p, unsigned int i, double *g = 0)
       {
          return FitUtil::EvaluateChi2Residual(func, data, p, i, g);
+      }
+
+      /// evaluate the pdf (Poisson) contribution to the logl (return actually log of pdf)
+      /// and its gradient
+      static double EvalPoissonBinPdf(const IModelFunctionTempl<double> &func, const BinData & data, const double *p, unsigned int i, double *g ) {
+         return FitUtil::EvaluatePoissonBinPdf(func, data, p, i, g);
+      }
+
+static void EvalPoissonLogLGradient(const IModelFunctionTempl<double> &func, const BinData &data, const double *p, double *g) {
+         FitUtil::EvaluatePoissonLogLGradient(func, data, p, g);
       }
    };
 #endif

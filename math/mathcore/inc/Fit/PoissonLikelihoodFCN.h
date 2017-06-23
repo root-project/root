@@ -54,8 +54,8 @@ public:
    typedef  ::ROOT::Math::BasicFitMethodFunction<DerivFunType> BaseObjFunction;
    typedef typename  BaseObjFunction::BaseFunction BaseFunction;
 
-   typedef  ::ROOT::Math::IParamMultiFunction IModelFunction;
-
+   typedef ::ROOT::Math::IParamMultiFunctionTempl<T> IModelFunction;
+   typedef typename BaseObjFunction::Type_t Type_t;
 
    /**
       Constructor from unbin data set and model function (pdf)
@@ -122,13 +122,13 @@ public:
    /// i-th likelihood element and its gradient
    virtual double DataElement(const double * x, unsigned int i, double * g) const {
       if (i==0) this->UpdateNCalls();
-      return FitUtil::EvaluatePoissonBinPdf(BaseFCN::ModelFunction(), BaseFCN::Data(), x, i, g);
+      return FitUtil::Evaluate<typename BaseFCN::T>::EvalPoissonBinPdf(BaseFCN::ModelFunction(), BaseFCN::Data(), x, i, g);
    }
 
    /// evaluate gradient
    virtual void Gradient(const double *x, double *g) const {
       // evaluate the chi2 gradient
-      FitUtil::EvaluatePoissonLogLGradient(BaseFCN::ModelFunction(), BaseFCN::Data(), x, g );
+      FitUtil::Evaluate<typename BaseFCN::T>::EvalPoissonLogLGradient(BaseFCN::ModelFunction(), BaseFCN::Data(), x, g);
    }
 
    /// get type of fit method function

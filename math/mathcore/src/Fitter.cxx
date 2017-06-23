@@ -387,10 +387,11 @@ bool Fitter::DoBinnedLikelihoodFit(bool extended, ROOT::Fit::ExecutionPolicy exe
    bool  useWeight = fConfig.UseWeightCorrection();
 
    // check function
-   if (!fFunc) {
-      MATH_ERROR_MSG("Fitter::DoBinnedLikelihoodFit","model function is not set");
-      return false;
-   }
+   if (!fFunc)
+      if (!fFunc_v) {
+         MATH_ERROR_MSG("Fitter::DoBinnedLikelihoodFit", "model function is not set");
+         return false;
+      }
 
    // logl fit (error should be 0.5) set if different than default values (of 1)
    if (fConfig.MinimizerOptions().ErrorDef() == gDefaultErrorDef ) {
@@ -406,21 +407,39 @@ bool Fitter::DoBinnedLikelihoodFit(bool extended, ROOT::Fit::ExecutionPolicy exe
    fBinFit = true;
    fDataSize = data->Size();
 
-   // create a chi2 function to be used for the equivalent chi-square
-   Chi2FCN<BaseFunc> chi2(data,fFunc);
 
    if (!fUseGradient) {
       // do minimization without using the gradient
-      PoissonLikelihoodFCN<BaseFunc> logl(data, fFunc, useWeight, extended, executionPolicy);
-      fFitType = logl.Type();
-      // do minimization
-      if (!DoMinimization (logl, &chi2) ) return false;
-      if (useWeight) {
-         logl.UseSumOfWeightSquare();
-         if (!ApplyWeightCorrection(logl) ) return false;
+#ifdef R__HAS_VECCORE
+      if (fFunc_v) {
+         // create a chi2 function to be used for the equivalent chi-square
+         Chi2FCN<BaseFunc, IModelFunction_v> chi2(data, fFunc_v);
+         PoissonLikelihoodFCN<BaseFunc, IModelFunction_v> logl(data, fFunc_v, useWeight, extended, executionPolicy);
+         fFitType = logl.Type();
+         // do minimization
+         if (!DoMinimization(logl, &chi2)) return false;
+         if (useWeight) {
+            logl.UseSumOfWeightSquare();
+            if (!ApplyWeightCorrection(logl)) return false;
+         }
+      } else {
+         // create a chi2 function to be used for the equivalent chi-square
+         Chi2FCN<BaseFunc> chi2(data, fFunc);
+         PoissonLikelihoodFCN<BaseFunc> logl(data, fFunc, useWeight, extended, executionPolicy);
+         fFitType = logl.Type();
+         // do minimization
+         if (!DoMinimization(logl, &chi2)) return false;
+         if (useWeight) {
+            logl.UseSumOfWeightSquare();
+            if (!ApplyWeightCorrection(logl)) return false;
+         }
+#endif
+#ifdef R__HAS_VECCORE
       }
-   }
-   else {
+#endif
+   } else {
+      // create a chi2 function to be used for the equivalent chi-square
+      Chi2FCN<BaseFunc> chi2(data, fFunc);
       if (fConfig.MinimizerOptions().PrintLevel() > 0)
          MATH_INFO_MSG("Fitter::DoLikelihoodFit","use gradient from model function");
       // check if fFunc provides gradient
