@@ -4461,9 +4461,7 @@ clang::QualType ROOT::TMetaUtils::ReSubstTemplateArg(clang::QualType input, cons
       // Get the qualifiers.
       Qualifiers quals = QT.getQualifiers();
 
-      if (isa<ConstantArrayType>(QT.getTypePtr())) {
-         const ConstantArrayType *arr = dyn_cast<ConstantArrayType>(QT.getTypePtr());
-
+      if (const auto arr = dyn_cast<ConstantArrayType>(QT.getTypePtr())) {
          QualType newQT= ReSubstTemplateArg(arr->getElementType(),instance);
 
          if (newQT == arr->getElementType()) return QT;
@@ -4472,9 +4470,7 @@ clang::QualType ROOT::TMetaUtils::ReSubstTemplateArg(clang::QualType input, cons
                                         arr->getSizeModifier(),
                                         arr->getIndexTypeCVRQualifiers());
 
-      } else if (isa<DependentSizedArrayType>(QT.getTypePtr())) {
-         const DependentSizedArrayType *arr = dyn_cast<DependentSizedArrayType>(QT.getTypePtr());
-
+      } else if (const auto arr = dyn_cast<DependentSizedArrayType>(QT.getTypePtr())) {
          QualType newQT = ReSubstTemplateArg(arr->getElementType(),instance);
 
          if (newQT == QT) return QT;
@@ -4484,10 +4480,7 @@ clang::QualType ROOT::TMetaUtils::ReSubstTemplateArg(clang::QualType input, cons
                                               arr->getIndexTypeCVRQualifiers(),
                                               arr->getBracketsRange());
 
-      } else if (isa<IncompleteArrayType>(QT.getTypePtr())) {
-         const IncompleteArrayType *arr
-           = dyn_cast<IncompleteArrayType>(QT.getTypePtr());
-
+      } else if (const auto arr = dyn_cast<IncompleteArrayType>(QT.getTypePtr())) {
          QualType newQT = ReSubstTemplateArg(arr->getElementType(),instance);
 
          if (newQT == arr->getElementType()) return QT;
@@ -4495,10 +4488,7 @@ clang::QualType ROOT::TMetaUtils::ReSubstTemplateArg(clang::QualType input, cons
                                           arr->getSizeModifier(),
                                           arr->getIndexTypeCVRQualifiers());
 
-      } else if (isa<VariableArrayType>(QT.getTypePtr())) {
-         const VariableArrayType *arr
-            = dyn_cast<VariableArrayType>(QT.getTypePtr());
-
+      } else if (const auto arr = dyn_cast<VariableArrayType>(QT.getTypePtr())) {
          QualType newQT = ReSubstTemplateArg(arr->getElementType(),instance);
 
          if (newQT == arr->getElementType()) return QT;
@@ -5169,15 +5159,13 @@ static int TreatSingleTemplateArg(const clang::TemplateArgument& arg,
    }
 
    // Treat typedefs which are arguments
-   if (llvm::isa<clang::TypedefType>(argTypePtr)){
-      auto tdTypePtr = llvm::dyn_cast<clang::TypedefType>(argTypePtr);
+   if (auto tdTypePtr = llvm::dyn_cast<clang::TypedefType>(argTypePtr)) {
       FwdDeclFromTypeDefNameDecl(*tdTypePtr->getDecl(), interpreter, argFwdDecl);
       return 0;
    }
 
-   if (llvm::isa<clang::RecordType>(argQualType)){
+   if (auto argRecTypePtr = llvm::cast<clang::RecordType>(argTypePtr)){
       // Now we cannot but have a RecordType
-      auto argRecTypePtr = llvm::cast<clang::RecordType>(argTypePtr);
       if (auto argRecDeclPtr = argRecTypePtr->getDecl()){
          FwdDeclFromRcdDecl(*argRecDeclPtr,interpreter,argFwdDecl,acceptStl);
       }
