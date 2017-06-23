@@ -41,7 +41,7 @@ public:
 
    TVirtualRWMutex *Factory(Bool_t /*recursive*/ = kFALSE) override = 0;
 
-   ClassDefOverride(TVirtualRWMutex,0)  // Virtual mutex lock class
+   ClassDefOverride(TVirtualRWMutex, 0)  // Virtual mutex lock class
 };
 
 

@@ -81,7 +81,10 @@ public:
                           const char *function);
 
    public:
-      TErrorLock() : fWriteCurrent(), fWriteCurrentRecurse(0), fReadCurrentRecurse(0) { std::atomic_flag_clear(&fSpinLockFlag); }
+      TErrorLock() : fWriteCurrent(), fWriteCurrentRecurse(0), fReadCurrentRecurse(0)
+      {
+         std::atomic_flag_clear(&fSpinLockFlag);
+      }
 
       class WriteGuard {
          TErrorLock *fLock;
