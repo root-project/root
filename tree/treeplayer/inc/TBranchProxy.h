@@ -209,6 +209,12 @@ namespace Detail {
 
       void* GetWhere() const { return fWhere; } // intentionally non-virtual
 
+      /// Return the address of the element number i. Returns `nullptr` for non-collections. It assumed that Setip() has
+      /// been called.
+      virtual void *GetAddressOfElement(UInt_t /*i*/) {
+         return nullptr;
+      }
+
       TVirtualCollectionProxy *GetCollection() { return fCollection; }
 
       // protected:
@@ -333,22 +339,23 @@ namespace Internal {
          if (fWhere) std::cout << "value? " << *(unsigned char*)GetStart() << std::endl;
       }
 
-      TArrayCharProxy() : TBranchProxy() {}
-      TArrayCharProxy(TBranchProxyDirector *director, const char *name) : TBranchProxy(director,name) {};
-      TArrayCharProxy(TBranchProxyDirector *director, const char *top, const char *name) :
-         TBranchProxy(director,top,name) {};
-      TArrayCharProxy(TBranchProxyDirector *director, const char *top, const char *name, const char *data) :
-         TBranchProxy(director,top,name,data) {};
-      TArrayCharProxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name, const char* top = 0, const char* mid = 0) :
-         TBranchProxy(director,parent, name, top, mid) {};
-      ~TArrayCharProxy() override {};
+      using TBranchProxy::TBranchProxy;
+      TArrayCharProxy() = default; // work around bug in GCC < 7
+      ~TArrayCharProxy() override = default;
+
+      void *GetAddressOfElement(UInt_t i) final {
+         if (!Read()) return nullptr;
+         unsigned char* str = (unsigned char*)GetStart();
+         return str + i;
+      }
 
       unsigned char At(UInt_t i) {
-         static unsigned char default_val;
-         if (!Read()) return default_val;
-         // should add out-of bound test
-         unsigned char* str = (unsigned char*)GetStart();
-         return str[i];
+         static unsigned char default_val = {};
+         if (unsigned char* elAddr = (unsigned char*)GetAddressOfElement(i)) {
+            // should add out-of bound test
+            return *elAddr;
+         }
+         return default_val;
       }
 
       unsigned char operator [](Int_t i) {
@@ -397,15 +404,9 @@ namespace Internal {
          }
       }
 
-      TClaProxy() : TBranchProxy() {}
-      TClaProxy(TBranchProxyDirector *director, const char *name) : TBranchProxy(director,name) {};
-      TClaProxy(TBranchProxyDirector *director, const char *top, const char *name) :
-         TBranchProxy(director,top,name) {};
-      TClaProxy(TBranchProxyDirector *director, const char *top, const char *name, const char *data) :
-         TBranchProxy(director,top,name,data) {};
-      TClaProxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name, const char* top = 0, const char* mid = 0) :
-         TBranchProxy(director,parent, name, top, mid) {};
-      ~TClaProxy() override {};
+      using TBranchProxy::TBranchProxy;
+      TClaProxy() = default; // work around bug in GCC < 7
+      ~TClaProxy() override = default;
 
       const TClonesArray* GetPtr() {
          if (!Read()) return 0;
@@ -417,6 +418,12 @@ namespace Internal {
          TClonesArray *arr = (TClonesArray*)GetStart();
          if (arr) return arr->GetEntries();
          return 0;
+      }
+
+      void *GetAddressOfElement(UInt_t i) final {
+         if (!Read()) return nullptr;
+         if (fWhere==0) return nullptr;
+         return GetClaStart(i);
       }
 
       const TClonesArray* operator->() { return GetPtr(); }
@@ -439,15 +446,9 @@ namespace Internal {
          }
       }
 
-      TStlProxy() : TBranchProxy() {}
-      TStlProxy(TBranchProxyDirector *director, const char *name) : TBranchProxy(director,name) {};
-      TStlProxy(TBranchProxyDirector *director, const char *top, const char *name) :
-         TBranchProxy(director,top,name) {};
-      TStlProxy(TBranchProxyDirector *director, const char *top, const char *name, const char *data) :
-         TBranchProxy(director,top,name,data) {};
-      TStlProxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name, const char* top = 0, const char* mid = 0) :
-         TBranchProxy(director,parent, name, top, mid) {};
-      ~TStlProxy() override {};
+      using TBranchProxy::TBranchProxy;
+      TStlProxy() = default; // work around bug in GCC < 7
+      ~TStlProxy() override = default;
 
       const TVirtualCollectionProxy* GetPtr() {
          if (!Read()) return 0;
@@ -457,6 +458,12 @@ namespace Internal {
       Int_t GetEntries() override {
          if (!ReadEntries()) return 0;
          return GetPtr()->Size();
+      }
+
+      void *GetAddressOfElement(UInt_t i) final {
+         if (!Read()) return nullptr;
+         if (fWhere==0) return nullptr;
+         return GetStlStart(i);
       }
 
       const TVirtualCollectionProxy* operator->() { return GetPtr(); }
@@ -474,15 +481,9 @@ namespace Internal {
          if (fWhere) std::cout << "value? " << *(T*)GetStart() << std::endl;
       }
 
-      TImpProxy() : TBranchProxy() {};
-      TImpProxy(TBranchProxyDirector *director, const char *name) : TBranchProxy(director,name) {};
-      TImpProxy(TBranchProxyDirector *director, const char *top, const char *name) :
-         TBranchProxy(director,top,name) {};
-      TImpProxy(TBranchProxyDirector *director, const char *top, const char *name, const char *data) :
-         TBranchProxy(director,top,name,data) {};
-      TImpProxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name, const char* top = 0, const char* mid = 0) :
-         TBranchProxy(director,parent, name, top, mid) {};
-      ~TImpProxy() override {};
+      using TBranchProxy::TBranchProxy;
+      TImpProxy() = default; // work around bug in GCC < 7
+      ~TImpProxy() override = default;
 
       operator T() {
          if (!Read()) return 0;
@@ -523,15 +524,9 @@ namespace Internal {
    template <class T>
    class TArrayProxy : public Detail::TBranchProxy {
    public:
-      TArrayProxy() : TBranchProxy() {}
-      TArrayProxy(TBranchProxyDirector *director, const char *name) : TBranchProxy(director,name) {};
-      TArrayProxy(TBranchProxyDirector *director, const char *top, const char *name) :
-         TBranchProxy(director,top,name) {};
-      TArrayProxy(TBranchProxyDirector *director, const char *top, const char *name, const char *data) :
-         TBranchProxy(director,top,name,data) {};
-      TArrayProxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name, const char* top = 0, const char* mid = 0) :
-         TBranchProxy(director,parent, name, top, mid) {};
-      ~TArrayProxy() override {};
+      using TBranchProxy::TBranchProxy;
+      TArrayProxy() = default; // work around bug in GCC < 7
+      ~TArrayProxy() override = default;
 
       typedef typename T::array_t array_t;
       typedef typename T::type_t type_t;
@@ -546,14 +541,19 @@ namespace Internal {
          return T::gSize;
       }
 
+      void *GetAddressOfElement(UInt_t i) final {
+         if (!Read()) return nullptr;
+         if (array_t *arr = (array_t*)((type_t*)(GetStart())))
+            return &arr[i];
+         return nullptr;
+      }
+
       const array_t &At(UInt_t i) {
          static array_t default_val;
-         if (!Read()) return default_val;
          // should add out-of bound test
-         array_t *arr = 0;
-         arr = (array_t*)((type_t*)(GetStart()));
-         if (arr) return arr[i];
-         else return default_val;
+         if (array_t *arr = (array_t*)GetAddressOfElement(i))
+            return *arr;
+         return default_val;
       }
 
       const array_t &operator [](Int_t i) { return At(i); }
@@ -570,26 +570,15 @@ namespace Internal {
       //    TClaProxy::Print();
       // }
 
-      TClaImpProxy() : TClaProxy() {};
-      TClaImpProxy(TBranchProxyDirector *director, const char *name) : TClaProxy(director,name) {};
-      TClaImpProxy(TBranchProxyDirector *director,  const char *top, const char *name) :
-         TClaProxy(director,top,name) {};
-      TClaImpProxy(TBranchProxyDirector *director,  const char *top, const char *name, const char *data) :
-         TClaProxy(director,top,name,data) {};
-      TClaImpProxy(TBranchProxyDirector *director, TBranchProxy *parent, const char *name, const char* top = 0, const char* mid = 0) :
-         TClaProxy(director,parent, name, top, mid) {};
-      ~TClaImpProxy() override {};
+      using TClaProxy::TClaProxy;
+      TClaImpProxy() = default; // work around bug in GCC < 7
+      ~TClaImpProxy() override = default;
 
       const T& At(UInt_t i) {
          static T default_val;
-         if (!Read()) return default_val;
-         if (fWhere==0) return default_val;
-
-         T *temp = (T*)GetClaStart(i);
-
-         if (temp) return *temp;
-         else return default_val;
-
+         if (void* addr = GetAddressOfElement(i))
+            return *(T*)addr;
+         return default_val;
       }
 
       const T& operator [](Int_t i) { return At(i); }
@@ -611,25 +600,15 @@ namespace Internal {
       //    TBranchProxy::Print();
       // }
 
-      TStlImpProxy() : TStlProxy() {};
-      TStlImpProxy(TBranchProxyDirector *director, const char *name) : TStlProxy(director,name) {};
-      TStlImpProxy(TBranchProxyDirector *director,  const char *top, const char *name) :
-         TStlProxy(director,top,name) {};
-      TStlImpProxy(TBranchProxyDirector *director,  const char *top, const char *name, const char *data) :
-         TStlProxy(director,top,name,data) {};
-      TStlImpProxy(TBranchProxyDirector *director, Detail::TBranchProxy *parent, const char *name, const char* top = 0, const char* mid = 0) :
-         TStlProxy(director,parent, name, top, mid) {};
-      ~TStlImpProxy() override {};
+      using TStlProxy::TStlProxy;
+      TStlImpProxy() = default; // work around bug in GCC < 7
+      ~TStlImpProxy() override = default;
 
       const T& At(UInt_t i) {
          static T default_val;
-         if (!Read()) return default_val;
-         if (fWhere==0) return default_val;
-
-         T *temp = (T*)GetStlStart(i);
-
-         if (temp) return *temp;
-         else return default_val;
+         if (void* addr = GetAddressOfElement(i))
+            return *(T*)addr;
+         return default_val;
       }
 
       const T& operator [](Int_t i) { return At(i); }
@@ -653,22 +632,16 @@ namespace Internal {
       //    TClaProxy::Print();
       // }
 
-      TClaArrayProxy() : TClaProxy() {}
-      TClaArrayProxy(TBranchProxyDirector *director, const char *name) : TClaProxy(director,name) {};
-      TClaArrayProxy(TBranchProxyDirector *director, const char *top, const char *name) :
-         TClaProxy(director,top,name) {};
-      TClaArrayProxy(TBranchProxyDirector *director, const char *top, const char *name, const char *data) :
-         TClaProxy(director,top,name,data) {};
-      TClaArrayProxy(TBranchProxyDirector *director, Detail::TBranchProxy *parent, const char *name, const char* top = 0, const char* mid = 0) :
-         TClaProxy(director,parent, name, top, mid) {};
-      ~TClaArrayProxy() override {};
+      using TClaProxy::TClaProxy;
+      TClaArrayProxy() = default; // work around bug in GCC < 7
+      ~TClaArrayProxy() override = default;
 
       /* const */  array_t *At(UInt_t i) {
          static array_t default_val;
-         if (!Read()) return &default_val;
-         if (fWhere==0) return &default_val;
+         if (array_t* ptr = (array_t*)GetAddressOfElement(i))
+            return ptr; // no de-ref!
 
-         return (array_t*)GetClaStart(i);
+         return &default_val;
       }
 
       /* const */ array_t *operator [](Int_t i) { return At(i); }
@@ -688,22 +661,15 @@ namespace Internal {
       //    TBranchProxy::Print();
       // }
 
-      TStlArrayProxy() : TStlProxy() {}
-      TStlArrayProxy(TBranchProxyDirector *director, const char *name) : TStlProxy(director,name) {};
-      TStlArrayProxy(TBranchProxyDirector *director, const char *top, const char *name) :
-         TStlProxy(director,top,name) {};
-      TStlArrayProxy(TBranchProxyDirector *director, const char *top, const char *name, const char *data) :
-         TStlProxy(director,top,name,data) {};
-      TStlArrayProxy(TBranchProxyDirector *director, Detail::TBranchProxy *parent, const char *name, const char* top = 0, const char* mid = 0) :
-         TStlProxy(director,parent, name, top, mid) {};
-      ~TStlArrayProxy() override {};
+      using TStlProxy::TStlProxy;
+      TStlArrayProxy() = default; // work around bug in GCC < 7
+      ~TStlArrayProxy() override = default;
 
       /* const */  array_t *At(UInt_t i) {
          static array_t default_val;
-         if (!Read()) return &default_val;
-         if (fWhere==0) return &default_val;
-
-         return (array_t*)GetStlStart(i);
+         if (array_t* ptr = (array_t*)GetAddressOfElement(i))
+            return ptr; // no de-ref!
+         return &default_val;
       }
 
       /* const */ array_t *operator [](Int_t i) { return At(i); }

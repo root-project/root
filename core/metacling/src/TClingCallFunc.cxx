@@ -574,7 +574,7 @@ void TClingCallFunc::make_narg_ctor_with_return(const unsigned N, const string &
    buf << "}\n";
 }
 
-int TClingCallFunc::print_wrapper(std::string &wrapper_name, std::string &wrapper)
+int TClingCallFunc::get_wrapper_code(std::string &wrapper_name, std::string &wrapper)
 {
    const FunctionDecl *FD = GetDecl();
    assert(FD && "generate_wrapper called without a function decl!");
@@ -1058,11 +1058,6 @@ void TClingCallFunc::make_narg_call_with_return(const unsigned N, const string &
          for (int i = 0; i < indent_level; ++i) {
             callbuf << kIndentString;
          }
-         if (isReference) {
-            type_name += "&";
-         } else if (isPointer) {
-            type_name += "*";
-         }
          make_narg_call(type_name, N, typedefbuf, callbuf, class_name, indent_level);
          callbuf << ";\n";
          for (int i = 0; i < indent_level; ++i) {
@@ -1087,7 +1082,7 @@ tcling_callfunc_Wrapper_t TClingCallFunc::make_wrapper()
    string wrapper_name;
    string wrapper;
 
-   if (print_wrapper(wrapper_name, wrapper) == 0) return 0;
+   if (get_wrapper_code(wrapper_name, wrapper) == 0) return 0;
 
    //fprintf(stderr, "%s\n", wrapper.c_str());
    //

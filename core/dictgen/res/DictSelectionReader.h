@@ -28,6 +28,9 @@ namespace ROOT {
       class TNormalizedCtxt;
    }
 }
+namespace cling {
+class Interpreter;
+}
 
 namespace clang {
    class ASTContext;
@@ -236,7 +239,8 @@ class DictSelectionReader
 public:
    /// Take the selection rules as input (for consistency w/ other selector
    /// interfaces)
-   DictSelectionReader(SelectionRules &, const clang::ASTContext &, ROOT::TMetaUtils::TNormalizedCtxt &);
+   DictSelectionReader(cling::Interpreter &interp, SelectionRules &, const clang::ASTContext &,
+                       ROOT::TMetaUtils::TNormalizedCtxt &);
 
    /// Visit the entities that needs to be selected
    bool VisitRecordDecl(clang::RecordDecl *);

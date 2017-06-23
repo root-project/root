@@ -297,7 +297,7 @@ namespace {
 
     #if defined(__GLIBCXX__)
       // Avoid '__float128 is not supported on this target' errors
-      if (!opts.StdVersion)
+      if (!opts.Language && !opts.StdVersion)
         sArguments.addArgument("-std=c++11");
     #endif //__GLIBCXX__
   #endif // __APPLE__
@@ -528,6 +528,7 @@ static void stringifyPreprocSetting(PreprocessorOptions& PPOpts,
     PPOpts.addMacroDef("__CLING__clang__=" ClingStringify(__clang__));
 #elif defined(__GNUC__)
     PPOpts.addMacroDef("__CLING__GNUC__=" ClingStringify(__GNUC__));
+    PPOpts.addMacroDef("__CLING__GNUC_MINOR__=" ClingStringify(__GNUC_MINOR__));
 #elif defined(_MSC_VER)
     PPOpts.addMacroDef("__CLING__MSVC__=" ClingStringify(_MSC_VER));
 #endif

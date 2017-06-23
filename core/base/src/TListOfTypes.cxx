@@ -99,6 +99,8 @@ TDataType *TListOfTypes::FindType(const char *name) const
    // Look for a type, first in the hast table
    // then in the interpreter.
 
+   R__COLLECTION_READ_GUARD();
+
    TDataType *result = static_cast<TDataType*>(THashTable::FindObject(name));
    if (!result) {
 

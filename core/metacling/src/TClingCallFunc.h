@@ -187,7 +187,7 @@ public:
       return fDecl;
    }
 
-   int print_wrapper(std::string &wrapper_name, std::string &wrapper);
+   int get_wrapper_code(std::string &wrapper_name, std::string &wrapper);
 
    const clang::FunctionDecl* GetDecl() const {
       if (fDecl)

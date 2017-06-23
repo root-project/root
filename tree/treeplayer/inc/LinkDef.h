@@ -101,5 +101,11 @@
 #pragma link C++ class ROOT::Internal::TTreeReaderArrayBase+;
 #pragma link C++ class ROOT::Internal::TNamedBranchProxy+;
 
+// All these are there for the autoloading
+#pragma link C++ class ROOT::Experimental::TDataFrame-;
+#pragma link C++ class ROOT::Experimental::TDF::TInterface<ROOT::Detail::TDF::TFilterBase>-;
+#pragma link C++ class ROOT::Experimental::TDF::TInterface<ROOT::Detail::TDF::TCustomColumnBase>-;
+#pragma link C++ class ROOT::Detail::TDF::TLoopManager-;
+
 #endif
 
