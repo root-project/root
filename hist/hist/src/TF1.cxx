@@ -1259,7 +1259,7 @@ Double_t TF1::EvalPar(const Double_t *x, const Double_t *params)
    }
 
    if (fType == 3) {
-      if (fFunctor) {
+      if (fFunctor || fFunctp) {
          if (params) result =  EvalParVec(x, params);
          else result =  EvalParVec(x, (Double_t *) fParams->GetParameters());
       }
