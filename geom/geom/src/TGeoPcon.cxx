@@ -66,7 +66,7 @@ ClassImp(TGeoPcon);
 /// dummy ctor
 
 TGeoPcon::TGeoPcon()
-         :TGeoBBox(0, 0, 0),
+         :TGeoBBox(),
           fNz(0),
           fPhi1(0.),
           fDphi(0.),
