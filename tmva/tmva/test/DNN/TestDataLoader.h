@@ -23,8 +23,9 @@ namespace DNN
 {
 
 /** Test that the data loader loads all data in the data set by summing
- *  up all elements batch wise and comparing to the result over the complete
- *  data set. */
+ *  up all elements batch wise and comparing to the result obtained by summing
+ *  over the complete dataset.
+ */
 //______________________________________________________________________________
 template <typename Architecture_t>
 auto testSum()
@@ -49,17 +50,21 @@ auto testSum()
    for (auto b : loader) {
       Architecture_t::SumColumns(Sum, b.GetInput());
       sum += Sum(0, 0);
+      Architecture_t::SumColumns(Sum, b.GetOutput());
+      sum += Sum(0, 0);
+      Architecture_t::SumColumns(Sum, b.GetWeights());
+      sum += Sum(0, 0);
    }
 
    Architecture_t::SumColumns(SumTotal, XArch);
-   sumTotal = SumTotal(0,0);
+   sumTotal = 3.0 * SumTotal(0,0);
 
    return fabs(sumTotal - sum) / sumTotal;
 }
 
 /** Test the data loader by loading identical input and output data, running it
- *  through an identity neural network and computing the the mean squared error.
- *  Should obviously be zero. */
+ *  through an identity neural network and computing the the mean squared error,
+ *  should obviously be zero. */
 //______________________________________________________________________________
 template <typename Architecture_t>
 auto testIdentity()
@@ -71,7 +76,7 @@ auto testIdentity()
 
    TMatrixT<Double_t> X(2000, 100), W(2000, 1);
    randomMatrix(X);
-   fillMatrix(W, 1.0);
+   randomMatrix(W);
    MatrixInput_t input(X, X, W);
    DataLoader_t loader(input, 2000, 20, 100, 100);
 

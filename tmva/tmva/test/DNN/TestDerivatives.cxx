@@ -34,7 +34,7 @@ int main()
     std::cout << "Total    : ";
     std::cout << "Maximum Relative Error = " << print_error(error);
     std::cout << std::endl << std::endl;
-    if (error > 1e-5)
+    if (error > 1e-3)
         return 1;
 
     //
@@ -46,7 +46,7 @@ int main()
     std::cout << "Total    : ";
     std::cout << "Maximum Relative Error = " << print_error(error);
     std::cout << std::endl << std::endl;
-    if (error > 1e-5)
+    if (error > 1e-3)
         return 1;
 
     //
@@ -58,7 +58,7 @@ int main()
     std::cout << "Total    : ";
     std::cout << "Maximum Relative Error = " << print_error(error);
     std::cout << std::endl << std::endl;
-    if (error > 1e-5)
+    if (error > 1e-3)
         return 1;
 
     return 0;

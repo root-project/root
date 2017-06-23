@@ -31,12 +31,13 @@ AFloat TCpu<AFloat>::MeanSquaredError(const TCpuMatrix<AFloat> &Y,
    const AFloat  *dataOutput  = output.GetRawDataPointer();
    const AFloat  *dataWeights = weights.GetRawDataPointer();
    std::vector<AFloat> temp(Y.GetNElements());
+   size_t m = Y.GetNrows();
    AFloat norm = 1.0 / ((AFloat) Y.GetNrows() * Y.GetNcols());
 
-   auto f = [&dataY, &dataOutput, &dataWeights, &temp](UInt_t workerID)
+   auto f = [&dataY, &dataOutput, &dataWeights, &temp, m](UInt_t workerID)
    {
       AFloat dy = dataY[workerID] - dataOutput[workerID];
-      temp[workerID] = dataWeights[workerID] * dy * dy;
+      temp[workerID] = dataWeights[workerID % m] * dy * dy;
       return 0;
    };
 
@@ -63,12 +64,13 @@ void TCpu<AFloat>::MeanSquaredErrorGradients(
    const AFloat  *dataOutput = output.GetRawDataPointer();
    const AFloat  *dataWeights = weights.GetRawDataPointer();
 
+   size_t m    = Y.GetNrows();
    AFloat norm = 1.0 / ((AFloat) Y.GetNrows() * Y.GetNcols());
 
-   auto f = [&dataDY, &dataY, &dataOutput, &dataWeights, norm](UInt_t workerID)
+   auto f = [&dataDY, &dataY, &dataOutput, &dataWeights, m, norm](UInt_t workerID)
    {
       dataDY[workerID]  = - 2.0 * norm * (dataY[workerID] - dataOutput[workerID]);
-      dataDY[workerID] *= dataWeights[workerID];
+      dataDY[workerID] *= dataWeights[workerID % m];
       return 0;
    };
 
@@ -86,14 +88,15 @@ AFloat TCpu<AFloat>::CrossEntropy(const TCpuMatrix<AFloat> &Y,
    const AFloat  *dataWeights = weights.GetRawDataPointer();
    std::vector<AFloat> temp(Y.GetNElements());
 
+   size_t m    = Y.GetNrows();
    AFloat norm = 1.0 / ((AFloat) Y.GetNrows() * Y.GetNcols());
 
-   auto f = [&dataY, &dataOutput, &dataWeights, &temp](UInt_t workerID)
+   auto f = [&dataY, &dataOutput, &dataWeights, &temp, m](UInt_t workerID)
    {
       AFloat y   = dataY[workerID];
       AFloat sig = 1.0 / (1.0 + exp(- dataOutput[workerID]));
       temp[workerID] = - (y * log(sig) + (1.0 - y) * log(1.0 - sig));
-      temp[workerID] *= dataWeights[workerID];
+      temp[workerID] *= dataWeights[workerID % m];
       return 0;
    };
 
@@ -118,14 +121,15 @@ void TCpu<AFloat>::CrossEntropyGradients(TCpuMatrix<AFloat> & dY,
    const AFloat  *dataOutput = output.GetRawDataPointer();
    const AFloat  *dataWeights = weights.GetRawDataPointer();
 
+   size_t m    = Y.GetNrows();
    AFloat norm = 1.0 / ((AFloat) Y.GetNrows() * Y.GetNcols());
 
-   auto f = [&dataDY, &dataY, &dataOutput, &dataWeights, norm](UInt_t workerID)
+   auto f = [&dataDY, &dataY, &dataOutput, &dataWeights, m, norm](UInt_t workerID)
    {
       AFloat y   = dataY[workerID];
       AFloat sig = 1.0 / (1.0 + exp(- dataOutput[workerID]));
       dataDY[workerID]  = norm * (sig - y);
-      dataDY[workerID] *= dataWeights[workerID];
+      dataDY[workerID] *= dataWeights[workerID % m];
       return 0;
    };
 
