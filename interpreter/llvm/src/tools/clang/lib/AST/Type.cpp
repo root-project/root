@@ -2792,7 +2792,7 @@ FunctionProtoType::getNoexceptSpec(const ASTContext &ctx) const {
 
 CanThrowResult FunctionProtoType::canThrow(const ASTContext &Ctx) const {
   ExceptionSpecificationType EST = getExceptionSpecType();
-  //AXEL: assert(EST != EST_Unevaluated && EST != EST_Uninstantiated);
+  assert(EST != EST_Unevaluated && EST != EST_Uninstantiated);
   if (EST == EST_DynamicNone || EST == EST_BasicNoexcept)
     return CT_Cannot;
 
