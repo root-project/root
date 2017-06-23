@@ -18,11 +18,10 @@
 #include "TBuffer.h" // Needed by ClassDEfInlineOverride
 
 template <typename MutexT, typename RecurseCountsT = ROOT::Internal::RecurseCounts>
-class TRWMutexImp : public TVirtualRWMutex  {
+class TRWMutexImp : public TVirtualRWMutex {
    ROOT::TReentrantRWLock<MutexT, RecurseCountsT> fMutexImp;
 
 public:
-
    void ReadLock() override;
    void ReadUnLock() override;
    void WriteLock() override;
