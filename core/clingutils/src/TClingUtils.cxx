@@ -5164,7 +5164,7 @@ static int TreatSingleTemplateArg(const clang::TemplateArgument& arg,
       return 0;
    }
 
-   if (auto argRecTypePtr = llvm::cast<clang::RecordType>(argTypePtr)){
+   if (auto argRecTypePtr = llvm::dyn_cast<clang::RecordType>(argTypePtr)){
       // Now we cannot but have a RecordType
       if (auto argRecDeclPtr = argRecTypePtr->getDecl()){
          FwdDeclFromRcdDecl(*argRecDeclPtr,interpreter,argFwdDecl,acceptStl);
