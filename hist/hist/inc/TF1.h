@@ -29,7 +29,7 @@
 #include "TAttFill.h"
 #include "TAttMarker.h"
 #include "TMath.h"
-
+#include "Math/Math_vectypes.hxx"
 #include "Math/ParamFunctor.h"
 
 class TF1;
@@ -250,6 +250,7 @@ protected:
    Bool_t      fNormalized;  //Normalization option (false by default)
    Double_t    fNormIntegral;//Integral of the function before being normalized
    TF1FunctorPointer  *fFunctor = nullptr; //! Functor object to wrap any C++ callable object
+   TF1FunctionPointer *fFunctp = nullptr;  //! Pointer to vectorized function
    TFormula    *fFormula;    //Pointer to TFormula in case when user define formula
    TF1Parameters *fParams;   //Pointer to Function parameters object (exusts only for not-formula functions)
 
@@ -257,8 +258,8 @@ public:
 
    template<class T>
    struct TF1FunctionPointerImpl: TF1FunctionPointer {
-      TF1FunctionPointerImpl(const std::function<T(const T *f, const Double_t *param)> &&func): fimpl(func) {};
-      std::function<T(const T *f, const Double_t *param)> fimpl;
+      TF1FunctionPointerImpl(const std::function<T(const T *f, const Double_t *param)> &&func) : fImpl(func){};
+      std::function<T(const T *f, const Double_t *param)> fImpl;
    };
 
 
@@ -272,7 +273,6 @@ public:
 
 
 
-   TF1FunctionPointer *fFunctp = nullptr; //!Pointer to vectorized function
 
    static std::atomic<Bool_t> fgAbsValue;  //use absolute value of function when computing integral
    static Bool_t fgRejectPoint;  //True if point must be rejected in a fit
@@ -466,6 +466,9 @@ public:
    virtual Double_t EvalPar(const Double_t *x, const Double_t *params = 0);
    template<class T> T EvalPar(const T *x, const Double_t *params = 0);
    template<class T> T EvalParVec(const T *data, const Double_t *params = 0);
+#ifdef R__HAS_VECCORE
+   inline double EvalParVec(const Double_t *data, const Double_t *params);
+#endif
    virtual Double_t operator()(Double_t x, Double_t y = 0, Double_t z = 0, Double_t t = 0) const;
    virtual Double_t operator()(const Double_t *x, const Double_t *params = 0);
    template<class T> T operator()(const T *data, const Double_t *params);
@@ -814,19 +817,37 @@ T TF1::EvalPar(const T *x, const Double_t *params)
 template<class T>
 inline T TF1::EvalParVec(const T *data, const Double_t *params)
 {
-   // if (fType != 3) {
-   //    //This should throw an error
-   //    return TF1::EvalPar((double *) data, params);
-   // }
-   assert(fType == 3); 
-   if (fFunctor != nullptr)
+   assert(fType == 3);
+   if (fFunctor)
       return ((TF1FunctorPointerImpl<T> *)fFunctor)->fImpl(data, params);
+
+   if (fFunctp)
+      return ((TF1FunctionPointerImpl<T> *)fFunctp)->fImpl(data, params);
 
    // this should throw an error
    // we nned to implement a vectorized GetSave(x)
-   return TMath::SignalingNaN(); 
-
+   return TMath::SignalingNaN();
 }
+
+#ifdef R__HAS_VECCORE
+inline double TF1::EvalParVec(const Double_t *data, const Double_t *params)
+{
+   assert(fType == 3);
+   ROOT::Double_v d, res;
+
+   d = *data;
+
+   if (fFunctor) {
+      res = ((TF1FunctorPointerImpl<ROOT::Double_v> *)fFunctor)->fImpl(&d, params);
+   } else if (fFunctp) {
+      res = ((TF1FunctionPointerImpl<ROOT::Double_v> *)fFunctp)->fImpl(&d, params);
+   } else {
+      //    res = GetSave(x);
+      return TMath::SignalingNaN();
+   }
+   return vecCore::Get<ROOT::Double_v>(res, 0);
+}
+#endif
 
 inline void TF1::SetRange(Double_t xmin, Double_t,  Double_t xmax, Double_t)
 {
