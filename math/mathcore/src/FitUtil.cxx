@@ -39,9 +39,6 @@
 #include <iostream>
 #endif
 
-// using parameter cache is not thread safe but needed for normalizing the functions
-#define USE_PARAMCACHE
-
 //  need to implement integral option
 
 namespace ROOT {
