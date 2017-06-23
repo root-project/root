@@ -79,6 +79,8 @@ class Fitter {
 public:
 
    typedef ROOT::Math::IParamMultiFunction                 IModelFunction;
+   template <class T>
+   using IModelFunctionTempl =                             ROOT::Math::IParamMultiFunctionTempl<T>;
 #ifdef R__HAS_VECCORE
    typedef ROOT::Math::IParametricFunctionMultiDimTempl<ROOT::Double_v>  IModelFunction_v;
 #endif
@@ -452,9 +454,10 @@ protected:
       fData = std::shared_ptr<FitData>(const_cast<FitData*>(&data),DummyDeleter<FitData>());
    }
    // set data and function without cloning them
-   void SetFunctionAndData(const IModelFunction & func, const FitData & data) {
+   template <class T>
+   void SetFunctionAndData(const IModelFunctionTempl<T> & func, const FitData & data) {
       SetData(data);
-      fFunc = std::shared_ptr<IModelFunction>(const_cast<IModelFunction*>(&func),DummyDeleter<IModelFunction>());
+      fFunc = std::shared_ptr<IModelFunctionTempl<T>>(const_cast<IModelFunctionTempl<T>*>(&func),DummyDeleter<IModelFunctionTempl<T>>());
    }
 
    //set data for the fit using a shared ptr
