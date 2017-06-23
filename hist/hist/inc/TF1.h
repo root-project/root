@@ -32,6 +32,7 @@
 #include "Math/Math_vectypes.hxx"
 #include "Math/ParamFunctor.h"
 
+
 class TF1;
 class TH1;
 class TAxis;
@@ -818,6 +819,7 @@ template<class T>
 inline T TF1::EvalParVec(const T *data, const Double_t *params)
 {
    assert(fType == 3);
+   if (!params) params = (Double_t *)fParams->GetParameters();
    if (fFunctor)
       return ((TF1FunctorPointerImpl<T> *)fFunctor)->fImpl(data, params);
 
