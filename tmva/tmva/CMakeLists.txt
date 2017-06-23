@@ -94,6 +94,7 @@ if(NOT gnuinstall)
 endif()
 
 ROOT_ADD_TEST_SUBDIRECTORY(test/DNN)
+ROOT_ADD_TEST_SUBDIRECTORY(test/DecisionTree)
 
 
 

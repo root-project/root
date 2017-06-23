@@ -463,7 +463,6 @@ UInt_t TMVA::DecisionTree::BuildTree( const std::vector<const TMVA::Event*> & ev
             else node->SetNodeType(-1);
          }
          if (node->GetDepth() > this->GetTotalTreeDepth()) this->SetTotalTreeDepth(node->GetDepth());
-
       } else {
 
          std::vector<const TMVA::Event*> leftSample; leftSample.reserve(nevents);

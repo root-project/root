@@ -3,12 +3,7 @@
 
 #include "TMVA/RegressionVariance.h"
 
-
-bool almost_equal_double(double x, double y) {
-   // the machine epsilon has to be scaled to the magnitude of the values used
-   // and multiplied by the desired precision in ULPs (units in the last place)
-   return std::abs(x-y) < 0.001;
-}
+#include "Utility.h"
 
 TEST(MultiVariance, Simple) {
 	std::vector<UInt_t> dimensions {1, 2, 4, 8};
@@ -31,7 +26,7 @@ TEST(MultiVariance, Simple) {
 				var_truth += variance.GetSeparationIndex(100, means_vector[index], sum_squares[index]);
 			}
 			var_check = variance.GetSeparationIndexMulti(100, &means_vector[0], sum, dim);
-			ASSERT_TRUE(almost_equal_double(var_truth, var_check));
+			ASSERT_TRUE(almost_equal_trivial(var_truth, var_check));
 		}
 	}
 }

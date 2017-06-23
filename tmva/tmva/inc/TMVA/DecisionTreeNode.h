@@ -169,7 +169,7 @@ namespace TMVA {
       void SetPurity( void );
 
       //set the response of the node (for regression)
-      void SetResponse( Float_t r ) { fResponse = r;}
+      void SetResponse( Float_t r ) { fResponse = r; }
 
       //set the response of the node (for multitask regression)
       void SetMultiResponse( const std::vector<Double_t>& r ) { fMultiResponse = r;}
@@ -178,7 +178,7 @@ namespace TMVA {
       Float_t GetResponse( void ) const { return fResponse;}
 
       //return the response of the node (for multitaskregression)
-      std::vector<Double_t> GetMultiResponse( void ) const { return fMultiResponse;}
+      std::vector<Double_t> GetMultiResponse( void ) const { return fMultiResponse; }
 
       //set the RMS of the response of the node (for regression)
       void SetRMS( Float_t r ) { fRMS = r;}
