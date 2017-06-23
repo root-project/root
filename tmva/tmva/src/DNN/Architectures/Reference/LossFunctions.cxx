@@ -23,7 +23,8 @@ namespace DNN
 //______________________________________________________________________________
 template<typename AReal>
 AReal TReference<AReal>::MeanSquaredError(const TMatrixT<AReal> &Y,
-                                           const TMatrixT<AReal> &output)
+                                          const TMatrixT<AReal> &output,
+                                          const TMatrixT<AReal> &weights)
 {
    size_t m,n;
    m = Y.GetNrows();
@@ -33,7 +34,7 @@ AReal TReference<AReal>::MeanSquaredError(const TMatrixT<AReal> &Y,
    for (size_t i = 0; i < m; i++) {
       for (size_t j = 0; j < n; j++) {
          AReal dY = (Y(i,j) - output(i,j));
-         result += dY * dY;
+         result += weights(i,0) * dY * dY;
       }
    }
    result /= static_cast<AReal>(m * n);
@@ -44,7 +45,8 @@ AReal TReference<AReal>::MeanSquaredError(const TMatrixT<AReal> &Y,
 template<typename AReal>
 void TReference<AReal>::MeanSquaredErrorGradients(TMatrixT<AReal> & dY,
                                                   const TMatrixT<AReal> & Y,
-                                                  const TMatrixT<AReal> & output)
+                                                  const TMatrixT<AReal> &output,
+                                                  const TMatrixT<AReal> &weights)
 {
    size_t m,n;
    m = Y.GetNrows();
@@ -63,7 +65,8 @@ void TReference<AReal>::MeanSquaredErrorGradients(TMatrixT<AReal> & dY,
 //______________________________________________________________________________
 template<typename AReal>
 AReal TReference<AReal>::CrossEntropy(const TMatrixT<AReal> &Y,
-                                       const TMatrixT<AReal> &output)
+                                      const TMatrixT<AReal> &output,
+                                      const TMatrixT<AReal> &weights)
 {
    size_t m,n;
    m = Y.GetNrows();
@@ -71,10 +74,10 @@ AReal TReference<AReal>::CrossEntropy(const TMatrixT<AReal> &Y,
    AReal result = 0.0;
 
    for (size_t i = 0; i < m; i++) {
+      AReal w = weights(i,0);
       for (size_t j = 0; j < n; j++) {
          AReal sig = 1.0 / (1.0 + std::exp(-output(i,j)));
-         result      += Y(i,j) * std::log(sig)
-         + (1.0 - Y(i,j)) * std::log(1.0 - sig);
+         result += w * (Y(i,j) * std::log(sig) + (1.0 - Y(i,j)) * std::log(1.0 - sig));
       }
    }
    result /= - static_cast<AReal>(m * n);
@@ -85,7 +88,8 @@ AReal TReference<AReal>::CrossEntropy(const TMatrixT<AReal> &Y,
 template<typename AReal>
 void TReference<AReal>::CrossEntropyGradients(TMatrixT<AReal> & dY,
                                               const TMatrixT<AReal> & Y,
-                                              const TMatrixT<AReal> & output)
+                                              const TMatrixT<AReal> &output,
+                                              const TMatrixT<AReal> &weights)
 {
    size_t m,n;
    m = Y.GetNrows();
@@ -94,11 +98,12 @@ void TReference<AReal>::CrossEntropyGradients(TMatrixT<AReal> & dY,
    AReal norm = 1.0 / static_cast<AReal>(m * n);
    for (size_t i = 0; i < m; i++)
    {
+      AReal w = weights(i,0);
       for (size_t j = 0; j < n; j++)
       {
          AReal y   = Y(i,j);
          AReal sig = 1.0 / (1.0 + std::exp(-output(i,j)));
-         dY(i,j) = norm * (sig - y);
+         dY(i,j) = norm * w * (sig - y);
       }
    }
 }
@@ -106,7 +111,8 @@ void TReference<AReal>::CrossEntropyGradients(TMatrixT<AReal> & dY,
 //______________________________________________________________________________
 template<typename AReal>
 AReal TReference<AReal>::SoftmaxCrossEntropy(const TMatrixT<AReal> &Y,
-                                               const TMatrixT<AReal> &output)
+                                             const TMatrixT<AReal> &output,
+                                             const TMatrixT<AReal> &weights)
 {
    size_t m,n;
    m = Y.GetNrows();
@@ -115,11 +121,12 @@ AReal TReference<AReal>::SoftmaxCrossEntropy(const TMatrixT<AReal> &Y,
 
    for (size_t i = 0; i < m; i++) {
       AReal sum = 0.0;
+      AReal w = weights(i,0);
       for (size_t j = 0; j < n; j++) {
          sum += exp(output(i,j));
       }
       for (size_t j = 0; j < n; j++) {
-         result += Y(i,j) * log(exp(output(i,j)) / sum);
+         result += w * Y(i,j) * log(exp(output(i,j)) / sum);
       }
    }
    result /= - static_cast<AReal>(m);
@@ -129,8 +136,9 @@ AReal TReference<AReal>::SoftmaxCrossEntropy(const TMatrixT<AReal> &Y,
 //______________________________________________________________________________
 template<typename AReal>
 void TReference<AReal>::SoftmaxCrossEntropyGradients(TMatrixT<AReal> & dY,
-                                                      const TMatrixT<AReal> & Y,
-                                                      const TMatrixT<AReal> & output)
+                                                     const TMatrixT<AReal> & Y,
+                                                     const TMatrixT<AReal> &output,
+                                                     const TMatrixT<AReal> &weights)
 {
    size_t m,n;
    m = Y.GetNrows();
@@ -141,12 +149,13 @@ void TReference<AReal>::SoftmaxCrossEntropyGradients(TMatrixT<AReal> & dY,
    {
       AReal sum  = 0.0;
       AReal sumY = 0.0;
+      AReal w = weights(i,0);
       for (size_t j = 0; j < n; j++) {
          sum  += exp(output(i,j));
          sumY += Y(i,j);
       }
       for (size_t j = 0; j < n; j++) {
-         dY(i,j) = norm * (exp(output(i,j)) / sum * sumY - Y(i,j));
+         dY(i,j) = w * norm * (exp(output(i,j)) / sum * sumY - Y(i,j));
       }
    }
 }
