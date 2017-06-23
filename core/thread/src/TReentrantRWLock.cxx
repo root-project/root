@@ -42,7 +42,7 @@ Internal::UniqueLockRecurseCount::UniqueLockRecurseCount()
 {
    static bool singleton = false;
    if (singleton) {
-      ::Fatal("UniqueLockRecurseCount Ctor","Only one TReentrantRWLock using a UniqueLockRecurseCount is allowed.");
+      ::Fatal("UniqueLockRecurseCount Ctor", "Only one TReentrantRWLock using a UniqueLockRecurseCount is allowed.");
    }
    singleton = true;
 }
@@ -129,9 +129,9 @@ void TReentrantRWLock<MutexT, RecurseCountsT>::WriteLock()
    // Wait for other writers, if any
    if (fWriter && fRecurseCounts.IsNotCurrentWriter(local)) {
       if (readerCount && fReaders == 0) {
-          // we decrease fReaders to zero, let's wake up the
-          // other writer.
-          fCond.notify_all();
+         // we decrease fReaders to zero, let's wake up the
+         // other writer.
+         fCond.notify_all();
       }
       fCond.wait(lock, [this] { return !fWriter; });
    }

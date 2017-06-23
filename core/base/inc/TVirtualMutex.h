@@ -44,7 +44,7 @@ public:
 
    virtual TVirtualMutex *Factory(Bool_t /*recursive*/ = kFALSE) = 0;
 
-   ClassDef(TVirtualMutex,0)  // Virtual mutex lock class
+   ClassDef(TVirtualMutex, 0)  // Virtual mutex lock class
 };
 
 
