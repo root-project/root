@@ -23,15 +23,7 @@ namespace DNN  {
 
 //______________________________________________________________________________
 template<typename Scalar_t>
-void TReference<Scalar_t>::RecurrentNetBackward(std::vector<TMatrixT<Scalar_t>> & activation_gradient,
-                                                const std::vector<TMatrixT<Scalar_t>> & output)
-{
-     
-}
-  
-//______________________________________________________________________________
-template<typename Scalar_t>
- TReference<Scalar_t>::RecurrentLayerBackward(TMatrixT<Scalar_t> & state_gradients_backward, // BxH
+auto TReference<Scalar_t>::RecurrentLayerBackward(TMatrixT<Scalar_t> & state_gradients_backward, // BxH
                                               TMatrixT<Scalar_t> & input_weight_gradients,
                                               TMatrixT<Scalar_t> & state_weight_gradients,
                                               TMatrixT<Scalar_t> & bias_gradients,
@@ -41,11 +33,12 @@ template<typename Scalar_t>
                                               const TMatrixT<Scalar_t> & weights_state, // HxH
                                               const TMatrixT<Scalar_t> & input,  // BxD
                                               TMatrixT<Scalar_t> & input_gradient)
+-> Matrix_t &
 {
    // Compute element-wise product.
    for (size_t i = 0; i < (size_t) df.GetNrows(); i++) {
       for (size_t j = 0; j < (size_t) df.GetNcols(); j++) {
-         df(i,j) *= state_activation_gradients(i,j);    // B x H
+         df(i,j) *= state_gradients_backward(i,j);    // B x H
       }
    }
 
