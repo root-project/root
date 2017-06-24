@@ -25,14 +25,17 @@ namespace DNN
 {
   
 template<typename AFloat>
-void TCpu<AFloat>::RecurrentBackward(
-    TCpuMatrix<AFloat> & activationGradientsBackward,
-    TCpuMatrix<AFloat> & weightGradients,
-    TCpuMatrix<AFloat> & biasGradients,
-    TCpuMatrix<AFloat> & df,
-    const TCpuMatrix<AFloat> & activationGradients,
-    const TCpuMatrix<AFloat> & weights,
-    const TCpuMatrix<AFloat> & activationsBackward)
+auto RecurrentLayerBackward(TCpuMatrix<AFloat> & state_gradients_backward, // BxH
+                            TCpuMatrix<AFloat> & input_weight_gradients,
+                            TCpuMatrix<AFloat> & state_weight_gradients,
+                            TCpuMatrix<AFloat> & bias_gradients,
+                            TCpuMatrix<AFloat> & df, //DxH
+                            const TCpuMatrix<AFloat> & state, // BxH
+                            const TCpuMatrix<AFloat> & weights_input, // HxD 
+                            const TCpuMatrix<AFloat> & weights_state, // HxH
+                            const TCpuMatrix<AFloat> & input,  // BxD
+                            TCpuMatrix<AFloat> & input_gradient)
+-> TCpuMatrix<AFloat> &
 {
   // TODO
 }

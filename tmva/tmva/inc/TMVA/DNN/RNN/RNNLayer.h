@@ -190,8 +190,9 @@ public:
 
   /*! Must only be called directly
    *  a the corresponding call to Forward(...). */
-  inline Matrix_t Backward(Matrix_t & gradients_backward,
-                           const Matrix_t & activations_backward);
+  inline Matrix_t & Backward(Matrix_t & state_gradients_backward, 
+                             const Matrix_t & precStateActivations, const Matrix_t & currStateActivations,
+                             const Matrix_t & input, Matrix_t & input_gradient);
 
   /** Prints the info about the layer */
   //virtual void Print() const = 0;
@@ -233,7 +234,7 @@ TBasicRNNLayer<Architecture_t>::TBasicRNNLayer(size_t batchSize, size_t stateSiz
 template <typename Architecture_t>
 TBasicRNNLayer<Architecture_t>::TBasicRNNLayer(const TBasicRNNLayer &layer)
   : TRNNLayer<Architecture_t>(layer), fWeightsInput(layer.GetStateSize(), layer.GetInputSize()),
-  fWeightsState(layer.GetStateSize(), layer.GetStateSize()), fBiases(layer.GetStateSize(), 1)
+  fWeightsState(layer.GetStateSize(), layer.GetStateSize()), fBiases(layer.GetStateSize(), 1),
   fDerivatives(layer.GetStateSize(), layer.GetInputSize()), fWeightInputGradients(layer.GetStateSize(), 
       layer.GetInputSize()), fWeightStateGradients(layer.GetStateSize(), layer.GetStateSize()), 
   fBiasGradients(layer.GetStateSize(), 1)
@@ -282,11 +283,11 @@ auto inline TBasicRNNLayer<Architecture_t>::Forward(Matrix_t &input)
 //______________________________________________________________________________
 template <typename Architecture_t>
 auto inline TBasicRNNLayer<Architecture_t>::Backward(Matrix_t & state_gradients_backward, 
-                                      const Matrix_t & precStateActivations, const Matrix_t & currStateActivations
+                                      const Matrix_t & precStateActivations, const Matrix_t & currStateActivations,
                                       const Matrix_t & input, Matrix_t & input_gradient)
 -> Matrix_t & 
 {
-  DNN::evaluateDerivative<Architecture_t>(fDerivatives, tF, currStateActivations);  
+  DNN::evaluateDerivative<Architecture_t>(fDerivatives, this->GetActivationFunction(), currStateActivations);  
   return Architecture_t::Backward(state_gradients_backward, fWeightInputGradients, fWeightStateGradients,
                                   fBiasGradients, fDerivatives, precStateActivations, fWeightsInput,
                                   fWeightsState, input, input_gradient);

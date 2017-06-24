@@ -26,13 +26,17 @@ namespace DNN
 
 //____________________________________________________________________________
 template<typename AFloat>
-void TCuda<AFloat>::RecurrentBackward(TCudaMatrix<AFloat> & activation_gradients_backward,
-                             TCudaMatrix<AFloat> & weight_gradients,
-                             TCudaMatrix<AFloat> & bias_gradients,
-                             TCudaMatrix<AFloat> & df,
-                             const TCudaMatrix<AFloat> & activation_gradients,
-                             const TCudaMatrix<AFloat> & weights,
-                             const TCudaMatrix<AFloat> & activation_backward)
+auto RecurrentLayerBackward(TCudaMatrix<AFloat> & state_gradients_backward, // BxH
+                            TCudaMatrix<AFloat> & input_weight_gradients,
+                            TCudaMatrix<AFloat> & state_weight_gradients,
+                            TCudaMatrix<AFloat> & bias_gradients,
+                            TCudaMatrix<AFloat> & df, //DxH
+                            const TCudaMatrix<AFloat> & state, // BxH
+                            const TCudaMatrix<AFloat> & weights_input, // HxD 
+                            const TCudaMatrix<AFloat> & weights_state, // HxH
+                            const TCudaMatrix<AFloat> & input,  // BxD
+                            TCudaMatrix<AFloat> & input_gradient);
+-> Matrix_t &
 {
   //TODO
 }
