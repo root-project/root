@@ -215,7 +215,9 @@ void TReference<Real_t>::UpdateParamsLogReg(TMatrixT<Real_t> &input,
   }
 }
 //______________________________________________________________________________
-
+// Transform input from input dimensions to transformed dimensions
+//
+//______________________________________________________________________________
 template<typename Real_t>
 void TReference<Real_t>::Transform(TMatrixT<Real_t> &input,
                                    TMatrixT<Real_t> &transformed,

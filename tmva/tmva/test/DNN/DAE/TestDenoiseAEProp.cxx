@@ -11,7 +11,7 @@
 
 
 ////////////////////////////////////////////////////////////////////
-// Testing the Encode function                            //
+// Testing the Encode function                                    //
 ////////////////////////////////////////////////////////////////////
 
 #include <iostream>
@@ -140,8 +140,3 @@ int main()
   std::cout<< "Testing for propagation"<<std::endl;
   test1();
 }
-
-
-
-
-

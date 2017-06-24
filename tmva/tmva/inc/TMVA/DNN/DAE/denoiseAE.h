@@ -67,14 +67,18 @@ public:
   ~TDAE();
 
 
-  // to corrupt input
+  // This method corrupts the input. Currently it corrupts the random inputs
+  // according to the corruption Level.
   void inline Corruption(Matrix_t & input, Matrix_t &corruptedInput, size_t corruptionLevel);
 
-  // to encode values
+  // This encodes the input into a compressed form.
   void inline Encoding(Matrix_t &input, Matrix_t &compressedInput);
 
-  //to reconstruct Input
+  // This reconstructs the input from the compressed units. The reconstructed Input
+  // has same dimensions as that of the input.
   void inline Reconstruction(Matrix_t &compressedInput, Matrix_t &reconstructedInput);
+
+  // this updates the parameters after passing it to the network.
   void TrainLayer(Matrix_t &input, Double_t learningRate, Double_t corruptionLevel);
 
 
@@ -117,6 +121,7 @@ TDAE<Architecture_t>::~TDAE()
 }
 
 
+//______________________________________________________________________________
 
 
 //______________________________________________________________________________
@@ -125,7 +130,7 @@ template<typename Architecture_t>
 TDAE<Architecture_t>::Corruption(Matrix_t &input, Matrix_t &corruptedInput, Double_t corruptionLevel)
 -> void
 {
-      Architecture_t::CorruptInput(input, corruptedInput, corruptionLevel);
+  Architecture_t::CorruptInput(input, corruptedInput, corruptionLevel);
 }
 
 //______________________________________________________________________________
