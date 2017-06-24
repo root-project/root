@@ -132,7 +132,7 @@ void reader(TVirtualRWMutex *m, Globals *global, size_t repetition)
    }
 }
 
-void concurrent(TVirtualRWMutex *m, size_t nwriters, size_t nreaders, size_t repetition)
+void concurrentReadsAndWrites(TVirtualRWMutex *m, size_t nwriters, size_t nreaders, size_t repetition)
 {
    // ROOT::EnableThreadSafety();
 
@@ -367,32 +367,32 @@ TEST(RWLock, ReentrantTL)
    Reentrant(*gReentrantRWMutexTL);
 }
 
-TEST(RWLock, Concurrent)
+TEST(RWLock, concurrentReadsAndWrites)
 {
-   concurrent(gRWMutex, 1, 2, gRepetition / 10000);
+   concurrentReadsAndWrites(gRWMutex, 1, 2, gRepetition / 10000);
 }
 
-TEST(RWLock, ConcurrentSpin)
+TEST(RWLock, concurrentReadsAndWritesSpin)
 {
-   concurrent(gRWMutexSpin, 1, 2, gRepetition / 10000);
+   concurrentReadsAndWrites(gRWMutexSpin, 1, 2, gRepetition / 10000);
 }
 
-TEST(RWLock, LargeConcurrent)
+TEST(RWLock, LargeconcurrentReadsAndWrites)
 {
-   concurrent(gRWMutex, 10, 20, gRepetition / 1000);
+   concurrentReadsAndWrites(gRWMutex, 10, 20, gRepetition / 1000);
 }
 
-// TEST(RWLock, LargeConcurrentSpin)
+// TEST(RWLock, LargeconcurrentReadsAndWritesSpin)
 // {
-//    concurrent(gRWMutexSpin,10,20,gRepetition / 1000);
+//    concurrentReadsAndWrites(gRWMutexSpin,10,20,gRepetition / 1000);
 // }
 
-TEST(RWLock, ConcurrentTL)
+TEST(RWLock, concurrentReadsAndWritesTL)
 {
-   concurrent(gRWMutexTL, 1, 2, gRepetition / 10000);
+   concurrentReadsAndWrites(gRWMutexTL, 1, 2, gRepetition / 10000);
 }
 
-TEST(RWLock, LargeConcurrentTL)
+TEST(RWLock, LargeconcurrentReadsAndWritesTL)
 {
-   concurrent(gRWMutexTL, 10, 20, gRepetition / 1000);
+   concurrentReadsAndWrites(gRWMutexTL, 10, 20, gRepetition / 1000);
 }
