@@ -252,6 +252,54 @@ public:
    static void Dropout(TMatrixT<AReal> & A, AReal dropoutProbability);
 
    ///@}
+
+
+
+   //____________________________________________________________________________
+   //
+   // AutoEncoder Propagation
+   //____________________________________________________________________________
+
+   // Add Biases to the output
+   static void AddBiases(TMatrixT<AReal> &A,
+                         const TMatrixT<AReal> &biases);
+
+   // Updating parameters after every backward pass. Weights and biases are
+   // updated.
+   static void UpdateParams(TMatrixT<AReal> &x,
+                            TMatrixT<AReal> &z,
+                            TMatrixT<AReal> &fVBiases,
+                            TMatrixT<AReal> &fHBiases,
+                            TMatrixT<AReal> &fWeights,
+                            Double_t learningRate,
+                            Double_t corruptionLevel,
+                            size_t fBatchSize);
+
+
+   // Softmax functions redifined
+   static void SoftmaxAE(TMatrixT<AReal> & A);
+
+
+   // Corrupt the input values randomly on corruption Level.
+   //Basically inputs are masked currently.
+   static void CorruptInput(TMatrixT<AReal> & input,
+                            TMatrixT<AReal> & corruptedInput,
+                            AReal corruptionLevel);
+
+   //Encodes the input Values in the compressed form.
+   static void EncodeInput(TMatrixT<AReal> & input,
+                           TMatrixT<AReal> & compressedInput,
+                           TMatrixT<AReal> &fWeights);
+
+   // reconstructs the input. The reconstructed Input has same dimensions as that
+   // of the input.
+   static void ReconstructInput(TMatrixT<AReal> & compressedInput,
+                                TMatrixT<AReal> & reconstructedInput,
+                                TMatrixT<AReal> &fWeights);
+
+
+
+
 };
 
 } // namespace DNN

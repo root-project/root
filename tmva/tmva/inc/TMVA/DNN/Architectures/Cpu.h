@@ -289,6 +289,52 @@ public:
    /** Compute the sum of all elements in \p A */
    static Scalar_t Sum(const TCpuMatrix<Scalar_t> &A);
 
+
+   //____________________________________________________________________________
+   //
+   // AutoEncoder Propagation
+   //____________________________________________________________________________
+
+   // Add Biases to the output
+   static void AddBiases(TCpuMatrix<AReal> &A,
+                         const TCpuMatrix<AReal> &B);
+
+   // Updating parameters after every backward pass. Weights and biases are
+   // updated.
+   static void UpdateParams(TCpuMatrix<AReal> &x,
+                            TCpuMatrix<AReal> &z,
+                            TCpuMatrix<AReal> &fVBiases,
+                            TCpuMatrix<AReal> &fHBiases,
+                            TCpuMatrix<AReal> &fWeights,
+                            Double_t learningRate,
+                            Double_t corruptionLevel,
+                            size_t fBatchSize);
+
+
+
+
+   // Softmax functions redifined
+   static void SoftmaxAE(TMatrixT<AReal> & A);
+
+
+   // Corrupt the input values randomly on corruption Level.
+   //Basically inputs are masked currently.
+   static void CorruptInput(TCpuMatrix<AReal> & input,
+                            TCpuMatrix<AReal> & corruptedInput,
+                            AReal corruptionLevel);
+
+   //Encodes the input Values in the compressed form.
+   static void EncodeInput(TCpuMatrix<AReal> & input,
+                           TCpuMatrix<AReal> & compressedInput,
+                           TCpuMatrix<AReal> &fWeights);
+
+   // reconstructs the input. The reconstructed Input has same dimensions as that
+   // of the input.
+   static void ReconstructInput(TCpuMatrix<AReal> & compressedInput,
+                                TCpuMatrix<AReal> & reconstructedInput,
+                                TCpuMatrix<AReal> &fWeights);
+
+
 };
 
 } // namespace DNN
