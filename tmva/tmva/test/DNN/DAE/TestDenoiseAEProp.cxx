@@ -134,7 +134,7 @@ void test1()
     testReconstructInput<TReference<double>>(compressedInput[i], reconstructedInput[i], Weights);
   }
 
-
+}
 int main()
 {
   std::cout<< "Testing for propagation"<<std::endl;
@@ -144,4 +144,4 @@ int main()
 
 
 
-}
+
