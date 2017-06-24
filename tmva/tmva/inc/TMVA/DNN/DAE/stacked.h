@@ -176,15 +176,15 @@ TransformLayer<Architecture_t>::TransformLayer(size_t batchSize,
 //______________________________________________________________________________
 
 template<typename Architecture_t>
-TransformLayer<Architecture_t>::TransformLayer(const HiddenLayer &hid):
-                                        fBatchSize(hid.fBatchSize),
-                                        fInputUnits(hid.fInputUnits),
-                                        fOutputUnits(hid.fOutputUnits),
-                                        fWeights(hid.fOutputUnits,hid.fInputUnits),
-                                        fBiases(hid.fOutputUnits,1)
+TransformLayer<Architecture_t>::TransformLayer(const TransformLayer &trans):
+                                        fBatchSize(trans.fBatchSize),
+                                        fInputUnits(trans.fInputUnits),
+                                        fOutputUnits(trans.fOutputUnits),
+                                        fWeights(trans.fOutputUnits,trans.fInputUnits),
+                                        fBiases(trans.fOutputUnits,1)
 {
-  Architecture_t::Copy(fWeights,hid.GetWeights());
-  Architecture_t::Copy(fBiases,hid.GetBiases());
+  Architecture_t::Copy(fWeights,trans.GetWeights());
+  Architecture_t::Copy(fBiases,trans.GetBiases());
 }
 //______________________________________________________________________________
 
@@ -336,7 +336,7 @@ TSDAE<Architecture_t>::Pretrain(Matrix_t &input, Double_t learningRate, Double_t
             }
 
             layerInput(fNumHiddenUnitsPerLayer[l-1],1);
-            TransformLayer[l-1]->Transform(prevLayerInput,layerInput);
+            fTransLayer[l-1]->Transform(prevLayerInput,layerInput);
           }
 
         }
@@ -396,7 +396,7 @@ TSDAE<Architecture_t>::Finetune(Matrix_t &input, Matrix_t &outputLabel, Double_t
 
         }
         Matrix_t layerInput(fNumHiddenUnitsPerLayer[i],1);
-        TransformLayer[i]->Transform(prevLayerInput,layerInput);
+        fTransLayer[i]->Transform(prevLayerInput,layerInput);
 
 
       }
