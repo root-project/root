@@ -216,7 +216,26 @@ void TReference<Real_t>::UpdateParamsLogReg(TMatrixT<Real_t> &input,
 }
 //______________________________________________________________________________
 
+template<typename Real_t>
+void TReference<Real_t>::Transform(TMatrixT<Real_t> &input,
+                                   TMatrixT<Real_t> &transformed,
+                                   TMatrixT<Real_t> &fWeights,
+                                   TMatrixT<Real_t> &fBiases)
+{
+  size_t m,n;
+  m=fWeights.GetNrows();
+  n=fWeights.GetNcols();
 
+  for (size_t i = 0; i < m ; i++)
+  {
+    Double_t output = 0.0;
+    for(size_t j = 0; j < n; j++)
+      {
+        output += fWeights(i,j) * input(j,1)
+      }
+    output+=fBiases(i,1);
+    transformed(i,1)=output;
+  }
 
 
 }

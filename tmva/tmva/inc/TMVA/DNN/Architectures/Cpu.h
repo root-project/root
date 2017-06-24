@@ -334,6 +334,23 @@ public:
                                 TCpuMatrix<AReal> & reconstructedInput,
                                 TCpuMatrix<AReal> &fWeights);
 
+   static void ForwardLogReg(TCpuMatrix<AFloat> &input,
+                             TCpuMatrix<AFloat> &p,
+                             TCpuMatrix<AFloat> &fWeights);
+
+   static void UpdateParamsLogReg(TCpuMatrix<AFloat> &input,
+                                  TCpuMatrix<AFloat> &output,
+                                  TCpuMatrix<AFloat> &difference,
+                                  TCpuMatrix<AFloat> &p,
+                                  TCpuMatrix<AFloat> &fWeights,
+                                  TCpuMatrix<AFloat> &fBiases,
+                                  AFloat learningRate,
+                                  size_t fBatchSize);
+
+   static void Transform(TCpuMatrix<AFloat> &input,
+                         TCpuMatrix<AFloat> &transformed,
+                         TCpuMatrix<AFloat> &fWeights,
+                         TCpuMatrix<AFloat> &fBiases);
 
 };
 

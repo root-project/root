@@ -88,6 +88,44 @@ void TCuda<AFloat>::ReconstructInput(TCudaMatrix<AFloat> & compressedInput,
 
 }
 
+//______________________________________________________________________________
+// Logistic Regression Layer Methods
+//
+//______________________________________________________________________________
+
+template<typename AFloat>
+void TCuda<AFloat>::ForwardLogReg(TCudaMatrix<AFloat> &input,
+                                  TCudaMatrix<AFloat> &p,
+                                  TCudaMatrix<AFloat> &fWeights)
+{
+
+}
+
+//______________________________________________________________________________
+
+template<typename AFloat>
+void TCuda<AFloat>::UpdateParamsLogReg(TCudaMatrix<AFloat> &input,
+                                       TCudaMatrix<AFloat> &output,
+                                       TCudaMatrix<AFloat> &difference,
+                                       TCudaMatrix<AFloat> &p,
+                                       TCudaMatrix<AFloat> &fWeights,
+                                       TCudaMatrixT<AFloat> &fBiases,
+                                       AFloat learningRate,
+                                       size_t fBatchSize)
+{
+
+}
+//______________________________________________________________________________
+
+template<typename AFloat>
+void TCuda<AFloat>::Transform(TCudaMatrix<AFloat> &input,
+                              TCudaMatrix<AFloat> &transformed,
+                              TCudaMatrix<AFloat> &fWeights,
+                              TCudaMatrix<AFloat> &fBiases)
+{
+}
+//______________________________________________________________________________
+
 
 }
 }

@@ -87,6 +87,43 @@ void TCpu<AFloat>::ReconstructInput(TCpuMatrix<AFloat> & compressedInput,
 
 }
 
+//______________________________________________________________________________
+// Logistic Regression Layer Methods
+//
+//______________________________________________________________________________
+
+template<typename AFloat>
+void TCpu<AFloat>::ForwardLogReg(TCpuMatrix<AFloat> &input,
+                                 TCpuMatrix<AFloat> &p,
+                                 TCpuMatrix<AFloat> &fWeights)
+{
+
+}
+
+//______________________________________________________________________________
+
+template<typename AFloat>
+void TCpu<AFloat>::UpdateParamsLogReg(TCpuMatrix<AFloat> &input,
+                                      TCpuMatrix<AFloat> &output,
+                                      TCpuMatrix<AFloat> &difference,
+                                      TCpuMatrix<AFloat> &p,
+                                      TCpuMatrix<AFloat> &fWeights,
+                                      TCpuMatrix<AFloat> &fBiases,
+                                      AFloat learningRate,
+                                      size_t fBatchSize)
+{
+
+}
+//______________________________________________________________________________
+
+template<typename AFloat>
+void TCpu<AFloat>::Transform(TCpuMatrix<AFloat> &input,
+                              TCpuMatrix<AFloat> &transformed,
+                              TCpuMatrix<AFloat> &fWeights,
+                              TCpuMatrix<AFloat> &fBiases)
+{
+}
+//______________________________________________________________________________
 
 }
 }

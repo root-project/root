@@ -292,7 +292,7 @@ public:
    /** Compute the sum of all elements in \p A */
    static AFloat Sum(const TCudaMatrix<AFloat> &A);
 
-   
+
 
    //____________________________________________________________________________
    //
@@ -334,6 +334,24 @@ public:
    static void ReconstructInput(TCudaMatrix<AFloat & compressedInput,
                                 TCudaMatrix<AFloat> & reconstructedInput,
                                 TCudaMatrix<AFloat> &fWeights);
+
+   static void ForwardLogReg(TCudaMatrix<AFloat> &input,
+                             TCudaMatrix<AFloat> &p,
+                             TCudaMatrix<AFloat> &fWeights);
+
+   static void UpdateParamsLogReg(TCudaMatrix<AFloat> &input,
+                                  TCudaMatrix<AFloat> &output,
+                                  TCudaMatrix<AFloat> &difference,
+                                  TCudaMatrix<AFloat> &p,
+                                  TCudaMatrix<AFloat> &fWeights,
+                                  TCudaMatrix<AFloat> &fBiases,
+                                  AFloat learningRate,
+                                  size_t fBatchSize);
+
+   static void Transform(TCudaMatrix<AFloat> &input,
+                         TCudaMatrix<AFloat> &transformed,
+                         TCudaMatrix<AFloat> &fWeights,
+                         TCudaMatrix<AFloat> &fBiases);
 
 
 

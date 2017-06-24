@@ -298,6 +298,23 @@ public:
                                 TMatrixT<AReal> &fWeights);
 
 
+   static void ForwardLogReg(TMatrixT<AReal> &input,
+                             TMatrixT<AReal> &p,
+                             TMatrixT<AReal> &fWeights);
+
+   static void UpdateParamsLogReg(TMatrixT<AReal> &input,
+                                  TMatrixT<AReal> &output,
+                                  TMatrixT<AReal> &difference,
+                                  TMatrixT<AReal> &p,
+                                  TMatrixT<AReal> &fWeights,
+                                  TMatrixT<AReal> &fBiases,
+                                  AReal learningRate,
+                                  size_t fBatchSize);
+  
+   static void Transform(TMatrixT<AReal> &input,
+                         TMatrixT<AReal> &transformed,
+                         TMatrixT<AReal> &fWeights,
+                         TMatrixT<AReal> &fBiases);
 
 
 };
