@@ -73,13 +73,13 @@ void TCuda<AFloat>::Deflatten(std::vector<TCudaMatrix<AFloat>> A,
 
 //____________________________________________________________________________
 template<typename AFloat>
-void TCuda<AFloat>::ConvLayerBackward(std::vector<TCudaMatrix<AFloat>> activation_gradients_backward,
+void TCuda<AFloat>::ConvLayerBackward(std::vector<TCudaMatrix<AFloat>> & activation_gradients_backward,
                                       TCudaMatrix<AFloat> & weight_gradients,
                                       TCudaMatrix<AFloat> & bias_gradients,
-                                      std::vector<TCudaMatrix<AFloat>> df,
-                                      const std::vector<TCudaMatrix<AFloat>> activation_gradients,
+                                      std::vector<TCudaMatrix<AFloat>> & df,
+                                      const std::vector<TCudaMatrix<AFloat>> & activation_gradients,
                                       const TCudaMatrix<AFloat> & weights,
-                                      const std::vector<TCudaMatrix<AFloat>> activation_backward,
+                                      const std::vector<TCudaMatrix<AFloat>> & activation_backward,
                                       size_t batchSize,
                                       size_t inputHeight,
                                       size_t inputWidth,
@@ -98,8 +98,8 @@ void TCuda<AFloat>::ConvLayerBackward(std::vector<TCudaMatrix<AFloat>> activatio
 //____________________________________________________________________________
 template<typename AFloat>
 void TCuda<AFloat>::CalculateConvActivationGradients(
-                                    std::vector<TCudaMatrix<AFloat>> activation_gradients_backward,
-                                    std::vector<TCudaMatrix<AFloat>> df,
+                                    std::vector<TCudaMatrix<AFloat>> & activation_gradients_backward,
+                                    std::vector<TCudaMatrix<AFloat>> & df,
                                     const TCudaMatrix<AFloat> & weights,
                                     size_t batchSize,
                                     size_t inputHeight,
@@ -117,8 +117,8 @@ void TCuda<AFloat>::CalculateConvActivationGradients(
 //____________________________________________________________________________
 template<typename AFloat>
 void TCuda<AFloat>::CalculateConvWeightGradients(TCudaMatrix<AFloat> & weight_gradients,
-                                                 std::vector<TCudaMatrix<AFloat>> df,
-                                                 const TCudaMatrix<AFloat> *activations_backward,
+                                                 std::vector<TCudaMatrix<AFloat>> & df,
+                                                 const std::vector<TCudaMatrix<AFloat>> & activations_backward,
                                                  size_t batchSize,
                                                  size_t inputHeight,
                                                  size_t inputWidth,
@@ -136,7 +136,7 @@ void TCuda<AFloat>::CalculateConvWeightGradients(TCudaMatrix<AFloat> & weight_gr
 //____________________________________________________________________________
 template<typename AFloat>
 void TCuda<AFloat>::CalculateConvBiasGradients(TCudaMatrix<AFloat> & bias_gradients,
-                                               std::vector<TCudaMatrix<AFloat>> df,
+                                               std::vector<TCudaMatrix<AFloat>> & df,
                                                size_t batchSize,
                                                size_t depth,
                                                size_t nLocalViews)
@@ -170,9 +170,9 @@ void TCuda<AFloat>::Downsample(TCudaMatrix<AFloat> &A,
 
 /____________________________________________________________________________
 template<typename AFloat>
-void TCuda<AFloat>::PoolLayerBackward(std::vector<TCudaMatrix<AFloat>> activationGradientsBackward,
-                                      const std::vector<TCudaMatrix<AFloat>> activationGradients,
-                                      const std::vector<TCudaMatrix<AFloat>> indexMatrix,
+void TCuda<AFloat>::PoolLayerBackward(std::vector<TCudaMatrix<AFloat>> & activationGradientsBackward,
+                                      const std::vector<TCudaMatrix<AFloat>> & activationGradients,
+                                      const std::vector<TCudaMatrix<AFloat>> & indexMatrix,
                                       size_t batchSize,
                                       size_t depth,
                                       size_t nLocalViews)

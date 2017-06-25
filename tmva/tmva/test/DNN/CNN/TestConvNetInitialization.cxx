@@ -35,9 +35,7 @@ int main(){
    size_t imgHeight = 32;
    size_t imgWidth = 32;
     
-   TConvNet<TReference<double>> convNet =
-         testConvNetInstantiation<TReference<double>>(batchSize, imgDepth,
-                                                      imgHeight, imgWidth);
+   TConvNet<TReference<double>> convNet(batchSize, imgDepth, imgHeight, imgWidth, ELossFunction::kMeanSquaredError);
     std::cout << "Instantiation successful!" << std::endl;
     
     

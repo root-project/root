@@ -309,13 +309,13 @@ public:
      *  in \p df and thus produces only a valid result, if it is applied the
      *  first time after the corresponding forward propagation has been per-
      *  formed. */
-   static void ConvLayerBackward(std::vector<TCpuMatrix<Scalar_t>> activationGradientsBackward,
+   static void ConvLayerBackward(std::vector<TCpuMatrix<Scalar_t>> & activationGradientsBackward,
                                  TCpuMatrix<Scalar_t> & weightGradients,
                                  TCpuMatrix<Scalar_t> & biasGradients,
-                                 std::vector<TCpuMatrix<Scalar_t>> df,
-                                 const std::vector<TCpuMatrix<Scalar_t>> activationGradients,
+                                 std::vector<TCpuMatrix<Scalar_t>> & df,
+                                 const std::vector<TCpuMatrix<Scalar_t>> & activationGradients,
                                  const TCpuMatrix<Scalar_t> & weights,
-                                 const std::vector<TCpuMatrix<Scalar_t>> activationBackward,
+                                 const std::vector<TCpuMatrix<Scalar_t>> & activationBackward,
                                  size_t batchSize,
                                  size_t inputHeight,
                                  size_t inputWidth,
@@ -329,8 +329,8 @@ public:
     
    /** Utility function for calculating the activation gradients of the layer
     *  before the convolutional layer. */
-   static void CalculateConvActivationGradients(std::vector<TCpuMatrix<Scalar_t>> activationGradientsBackward,
-                                                std::vector<TCpuMatrix<Scalar_t>> df,
+   static void CalculateConvActivationGradients(std::vector<TCpuMatrix<Scalar_t>> & activationGradientsBackward,
+                                                std::vector<TCpuMatrix<Scalar_t>> & df,
                                                 const TCpuMatrix<Scalar_t> & weights,
                                                 size_t batchSize,
                                                 size_t inputHeight,
@@ -345,8 +345,8 @@ public:
    /** Utility function for calculating the weight gradients of the convolutional
     * layer. */
    static void CalculateConvWeightGradients(TCpuMatrix<Scalar_t> & weightGradients,
-                                            std::vector<TCpuMatrix<Scalar_t>> df,
-                                            const std::vector<TCpuMatrix<Scalar_t>> activations_backward,
+                                            std::vector<TCpuMatrix<Scalar_t>> & df,
+                                            const std::vector<TCpuMatrix<Scalar_t>> & activations_backward,
                                             size_t batchSize,
                                             size_t inputHeight,
                                             size_t inputWidth,
@@ -361,7 +361,7 @@ public:
    /** Utility function for calculating the bias gradients of the convolutional
     *  layer */
    static void CalculateConvBiasGradients(TCpuMatrix<Scalar_t> & biasGradients,
-                                          std::vector<TCpuMatrix<Scalar_t>> df,
+                                          std::vector<TCpuMatrix<Scalar_t>> & df,
                                           size_t batchSize,
                                           size_t depth,
                                           size_t nLocalViews);
@@ -387,9 +387,9 @@ public:
    /** Perform the complete backward propagation step in a Pooling Layer. Based on the
     *  winning idices stored in the index matrix, it just forwards the actiovation
     *  gradients to the previous layer. */
-   static void PoolLayerBackward(std::vector<TCpuMatrix<AReal>> activationGradientsBackward,
-                                 const std::vector<TCpuMatrix<AReal>> activationGradients,
-                                 const std::vector<TCpuMatrix<AReal>> indexMatrix,
+   static void PoolLayerBackward(std::vector<TCpuMatrix<AReal>> & activationGradientsBackward,
+                                 const std::vector<TCpuMatrix<AReal>> & activationGradients,
+                                 const std::vector<TCpuMatrix<AReal>> & indexMatrix,
                                  size_t batchSize,
                                  size_t depth,
                                  size_t nLocalViews);

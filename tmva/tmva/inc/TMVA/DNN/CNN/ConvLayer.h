@@ -56,25 +56,28 @@ private:
 public:
 
    /*! Constructor. */
-   TConvLayer(size_t BatchSize,
-              size_t InputDepth,
-              size_t InputHeight,
-              size_t InputWidth,
-              size_t FilterHeight,
-              size_t FilterWidth,
-              size_t Depth,
-              size_t Height,
-              size_t Width,
-              size_t WeightsNRows,
-              size_t WeightsNCols,
-              size_t BiasesNRows,
-              size_t BiasesNCols,
-              size_t StrideRows,
-              size_t StrideCols,
-              size_t ZeroPaddingHeight,
-              size_t ZeroPaddingWidth,
-              Scalar_t DropoutProbability,
-              EActivationFunction f);
+    TConvLayer(size_t BatchSize,
+               size_t InputDepth,
+               size_t InputHeight,
+               size_t InputWidth,
+               size_t Depth,
+               size_t Height,
+               size_t Width,
+               Scalar_t DropoutProbability,
+               size_t WeightsNRows,
+               size_t WeightsNCols,
+               size_t BiasesNRows,
+               size_t BiasesNCols,
+               size_t OutputNSlices,
+               size_t OutputNRows,
+               size_t OutputNCols,
+               size_t FilterHeight,
+               size_t FilterWidth,
+               size_t StrideRows,
+               size_t StrideCols,
+               size_t ZeroPaddingHeight,
+               size_t ZeroPaddingWidth,
+               EActivationFunction f);
 
    /*! Copy constructor. */
    TConvLayer(const TConvLayer &);
@@ -88,18 +91,18 @@ public:
     * different events in the batch. Computes activations as well as
     * the first partial derivative of the activation function at those
     * activations. */
-   void inline Forward(std::vector<Matrix_t> input,
-                       bool applyDropout);
+   void Forward(std::vector<Matrix_t> input,
+                bool applyDropout);
     
 
    /*! Compute weight, bias and activation gradients. Uses the precomputed
     *  first partial derviatives of the activation function computed during
     *  forward propagation and modifies them. Must only be called directly
     *  at the corresponding call to Forward(...). */
-   void inline Backward(std::vector<Matrix_t> gradients_backward,
-                        const std::vector<Matrix_t> activations_backward,
-                        ERegularization r,
-                        Scalar_t weightDecay);
+   void Backward(std::vector<Matrix_t> &gradients_backward,
+                 const std::vector<Matrix_t> &activations_backward,
+                 ERegularization r,
+                 Scalar_t weightDecay);
 
    /*! Prints the info about the layer. */
    void Print() const;
@@ -111,31 +114,34 @@ public:
 
 //______________________________________________________________________________
 template<typename Architecture_t>
-   TConvLayer<Architecture_t>::TConvLayer(size_t batchSize,
-                                          size_t inputDepth,
-                                          size_t inputHeight,
-                                          size_t inputWidth,
-                                          size_t filterHeight,
-                                          size_t filterWidth,
-                                          size_t depth,
-                                          size_t height,
-                                          size_t width,
-                                          size_t weightsNRows,
-                                          size_t weightsNCols,
-                                          size_t biasesNRows,
-                                          size_t biasesNCols,
-                                          size_t strideRows,
-                                          size_t strideCols,
-                                          size_t zeroPaddingHeight,
-                                          size_t zeroPaddingWidth,
-                                          Scalar_t dropoutProbability,
-                                          EActivationFunction f)
+    TConvLayer<Architecture_t>::TConvLayer(size_t batchSize,
+                                           size_t inputDepth,
+                                           size_t inputHeight,
+                                           size_t inputWidth,
+                                           size_t depth,
+                                           size_t height,
+                                           size_t width,
+                                           Scalar_t dropoutProbability,
+                                           size_t weightsNRows,
+                                           size_t weightsNCols,
+                                           size_t biasesNRows,
+                                           size_t biasesNCols,
+                                           size_t outputNSlices,
+                                           size_t outputNRows,
+                                           size_t outputNCols,
+                                           size_t filterHeight,
+                                           size_t filterWidth,
+                                           size_t strideRows,
+                                           size_t strideCols,
+                                           size_t zeroPaddingHeight,
+                                           size_t zeroPaddingWidth,
+                                           EActivationFunction f)
     
-   : VCNNLayer<Architecture_t>(batchSize, inputDepth, inputHeight, inputWidth, inputDepth,
-                               filterHeight, filterWidth, depth, height, width,
-                               weightsNRows, weightsNCols, biasesNRows, biasesNCols,
-                               strideRows, strideCols, zeroPaddingHeight, zeroPaddingWidth,
-                               dropoutProbability), fF(f)
+   : VCNNLayer<Architecture_t>(batchSize, inputDepth, inputHeight, inputWidth, depth,
+                               height, width, dropoutProbability, weightsNRows, weightsNCols,
+                               biasesNRows, biasesNCols, outputNSlices, outputNRows,
+                               outputNCols, inputDepth, filterHeight, filterWidth,
+                               strideRows, strideCols, zeroPaddingHeight, zeroPaddingWidth), fF(f)
 {
    // Nothing to do here.
 }
@@ -145,8 +151,7 @@ template<typename Architecture_t>
    TConvLayer<Architecture_t>::TConvLayer(const TConvLayer &convLayer)
    : VCNNLayer<Architecture_t>(convLayer), fF(convLayer.fF)
 {
-   Architecture_t::Copy(this -> GetBiases(), convLayer.fBiases);
-   Architecture_t::Copy(this -> GetWeights(), convLayer.fWeights);
+    
 }
 
 //______________________________________________________________________________
@@ -165,7 +170,7 @@ template<typename Architecture_t>
 {
    for(size_t i = 0; i < this -> GetBatchSize(); i++) {
        
-      if (applyDropout && (this -> fDropoutProbability != 1.0)) {
+      if (applyDropout && (this -> GetDropoutProbability() != 1.0)) {
          Architecture_t::Dropout(input[i], this -> GetDropoutProbability());
       }
       
@@ -176,9 +181,6 @@ template<typename Architecture_t>
                              this -> GetStrideCols(), this -> GetZeroPaddingHeight(),
                              this -> GetZeroPaddingWidth());
       
-       
-       
-       
       Architecture_t::MultiplyTranspose(this -> GetOutputAt(i), this -> GetWeights(),
                                         inputTr);
       Architecture_t::AddConvBiases(this -> GetOutputAt(i), this -> GetBiases());
@@ -190,13 +192,13 @@ template<typename Architecture_t>
 
 //______________________________________________________________________________
 template<typename Architecture_t>
-   auto TConvLayer<Architecture_t>::Backward(std::vector<Matrix_t> gradients_backward,
-                                             const std::vector<Matrix_t> activations_backward,
+   auto TConvLayer<Architecture_t>::Backward(std::vector<Matrix_t> &gradients_backward,
+                                             const std::vector<Matrix_t> &activations_backward,
                                              ERegularization r,
                                              Scalar_t weightDecay)
 -> void
 {
-    
+ 
    Architecture_t::ConvLayerBackward(gradients_backward, this -> GetWeightGradients(),
                                      this -> GetBiasGradients(), this -> GetDerivatives(),
                                      this -> GetActivationGradients(), this -> GetWeights(),

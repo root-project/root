@@ -188,21 +188,6 @@ auto testFlatten(std::vector<typename Architecture::Matrix_t> &A,
 
 
 
-
-/** Test the instantiation of a Conv Net */
-//______________________________________________________________________________
-template <typename Architecture>
-TConvNet<Architecture>& testConvNetInstantiation(size_t batchSize,
-                                                 size_t imgDepth,
-                                                 size_t imgHeight,
-                                                 size_t imgWidth)
-{
-   using Net_t    = TConvNet<Architecture>;
-   Net_t convNet(batchSize, imgDepth, imgHeight, imgWidth, ELossFunction::kMeanSquaredError);
-    
-   return convNet;
-}
-
 /** Test adding a Conv Layer to a Conv Net. */
 //______________________________________________________________________________
 template <typename Architecture>
@@ -359,6 +344,39 @@ auto testConvPrediction(size_t batchSize,
       }
       std::cout << "" << std::endl;
    }
+}
+    
+
+/*! Generate a conv net, test the backward pass, always with stride 1. */
+//______________________________________________________________________________
+template <typename Architecture>
+auto testConvBackwardPass(size_t batchSize,
+                          size_t imgDepth,
+                          size_t imgHeight,
+                          size_t imgWidth)
+-> void
+{
+   using Matrix_t = typename Architecture::Matrix_t;
+   using Net_t    = TConvNet<Architecture>;
+    
+   Net_t convNet(batchSize, imgDepth, imgHeight, imgWidth,
+                 ELossFunction::kMeanSquaredError);
+    
+   constructConvNet(convNet);
+   convNet.Initialize(EInitialization::kGauss);
+   convNet.InitializeGradients();
+    
+   std::vector<Matrix_t> X;
+   for(size_t i = 0; i < batchSize; i++) {
+      X.emplace_back(imgDepth, imgHeight * imgWidth);
+      randomMatrix(X[i]);
+   }
+
+   Matrix_t Y(batchSize, convNet.GetOutputWidth());
+   randomMatrix(Y);
+
+   convNet.Forward(X, false);
+   convNet.Backward(X, Y);
 }
 
 

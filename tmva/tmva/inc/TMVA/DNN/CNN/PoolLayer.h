@@ -61,21 +61,24 @@ private:
 public:
     
    /*! Constructor. */
-   TPoolLayer(size_t BatchSize,
-              size_t InputDepth,
-              size_t InputHeight,
-              size_t InputWidth,
-              size_t FilterHeight,
-              size_t FilterWidth,
-              size_t Height,
-              size_t Width,
-              size_t WeightsNRows,
-              size_t WeightsNCols,
-              size_t BiasesNRows,
-              size_t BiasesNCols,
-              size_t StrideRows,
-              size_t StrideCols,
-              Scalar_t DropoutProbability);
+    TPoolLayer(size_t BatchSize,
+               size_t InputDepth,
+               size_t InputHeight,
+               size_t InputWidth,
+               size_t Height,
+               size_t Width,
+               Scalar_t DropoutProbability,
+               size_t WeightsNRows,
+               size_t WeightsNCols,
+               size_t BiasesNRows,
+               size_t BiasesNCols,
+               size_t OutputNSlices,
+               size_t OutputNRows,
+               size_t OutputNCols,
+               size_t FilterHeight,
+               size_t FilterWidth,
+               size_t StrideRows,
+               size_t StrideCols);
     
    /*! Copy constructor. */
    TPoolLayer(const TPoolLayer &);
@@ -97,8 +100,8 @@ public:
     *  it only forwards the derivatives to the right units in the previous
     *  layer. Must only be called directly at the corresponding call
     *  to Forward(...). */
-   void inline Backward(std::vector<Matrix_t> gradients_backward,
-                        const std::vector<Matrix_t> activations_backward,
+   void inline Backward(std::vector<Matrix_t> &gradients_backward,
+                        const std::vector<Matrix_t> &activations_backward,
                         ERegularization r,
                         Scalar_t weightDecay);
     
@@ -115,25 +118,29 @@ public:
     
 //______________________________________________________________________________
 template<typename Architecture_t>
-   TPoolLayer<Architecture_t>::TPoolLayer(size_t batchSize,
-                                          size_t inputDepth,
-                                          size_t inputHeight,
-                                          size_t inputWidth,
-                                          size_t filterHeight,
-                                          size_t filterWidth,
-                                          size_t height,
-                                          size_t width,
-                                          size_t weightsNRows,
-                                          size_t weightsNCols,
-                                          size_t biasesNRows,
-                                          size_t biasesNCols,
-                                          size_t strideRows,
-                                          size_t strideCols,
-                                          Scalar_t dropoutProbability)
+    TPoolLayer<Architecture_t>::TPoolLayer(size_t batchSize,
+                                           size_t inputDepth,
+                                           size_t inputHeight,
+                                           size_t inputWidth,
+                                           size_t height,
+                                           size_t width,
+                                           Scalar_t dropoutProbability,
+                                           size_t weightsNRows,
+                                           size_t weightsNCols,
+                                           size_t biasesNRows,
+                                           size_t biasesNCols,
+                                           size_t outputNSlices,
+                                           size_t outputNRows,
+                                           size_t outputNCols,
+                                           size_t filterHeight,
+                                           size_t filterWidth,
+                                           size_t strideRows,
+                                           size_t strideCols)
    : VCNNLayer<Architecture_t>(batchSize, inputDepth, inputHeight, inputWidth, inputDepth,
-                               filterHeight, filterWidth, inputDepth, height, width,
-                               weightsNRows, weightsNCols, biasesNRows, biasesNCols,
-                               strideRows, strideCols, 0, 0, dropoutProbability), indexMatrix()
+                               height, width, dropoutProbability, weightsNRows, weightsNCols,
+                               biasesNRows, biasesNCols, outputNSlices, outputNRows,
+                               outputNCols, inputDepth, filterHeight, filterWidth, strideRows,
+                               strideCols, 0, 0), indexMatrix()
 {
    for(size_t i = 0; i < this -> GetBatchSize(); i++) {
       indexMatrix.emplace_back(this -> GetDepth(), this -> GetNLocalViews());
@@ -180,8 +187,8 @@ template<typename Architecture_t>
 
 //______________________________________________________________________________
 template<typename Architecture_t>
-   auto TPoolLayer<Architecture_t>::Backward(std::vector<Matrix_t> gradients_backward,
-                                             const std::vector<Matrix_t> activations_backward,
+   auto TPoolLayer<Architecture_t>::Backward(std::vector<Matrix_t> &gradients_backward,
+                                             const std::vector<Matrix_t> &activations_backward,
                                              ERegularization r,
                                              Scalar_t weightDecay)
 -> void

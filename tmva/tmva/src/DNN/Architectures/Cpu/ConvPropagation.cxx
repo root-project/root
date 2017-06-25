@@ -71,13 +71,13 @@ void TCpu<AFloat>::Deflatten(std::vector<TCpuMatrix<AFloat>> A,
 
 //____________________________________________________________________________
 template<typename AFloat>
-void TCpu<AFloat>::ConvLayerBackward(std::vector<TCpuMatrix<AFloat>> activationGradientsBackward,
+void TCpu<AFloat>::ConvLayerBackward(std::vector<TCpuMatrix<AFloat>> & activationGradientsBackward,
                                      TCpuMatrix<AFloat> & weightGradients,
                                      TCpuMatrix<AFloat> & biasGradients,
-                                     std::vector<TCpuMatrix<AFloat>> df,
-                                     const std::vector<TCpuMatrix<AFloat>> activationGradients,
+                                     std::vector<TCpuMatrix<AFloat>> & df,
+                                     const std::vector<TCpuMatrix<AFloat>> & activationGradients,
                                      const TCpuMatrix<AFloat> & weights,
-                                     const std::vector<TCpuMatrix<AFloat>> activationsBackward,
+                                     const std::vector<TCpuMatrix<AFloat>> & activationsBackward,
                                      size_t batchSize,
                                      size_t inputHeight,
                                      size_t inputWidth,
@@ -94,18 +94,19 @@ void TCpu<AFloat>::ConvLayerBackward(std::vector<TCpuMatrix<AFloat>> activationG
 
 //____________________________________________________________________________
 template<typename AFloat>
-void TCpu<AFloat>::CalculateConvActivationGradients(std::vector<TCpuMatrix<AFloat>> activationGradientsBackward,
-                                                    std::vector<TCpuMatrix<AFloat>> df,
-                                                    const TCpuMatrix<AFloat> & weights,
-                                                    size_t batchSize,
-                                                    size_t inputHeight,
-                                                    size_t inputWidth,
-                                                    size_t depth,
-                                                    size_t height,
-                                                    size_t width,
-                                                    size_t filterDepth,
-                                                    size_t filterHeight,
-                                                    size_t filterWidth)
+void TCpu<AFloat>::CalculateConvActivationGradients(
+                                    std::vector<TCpuMatrix<AFloat>> & activationGradientsBackward,
+                                    std::vector<TCpuMatrix<AFloat>> & df,
+                                    const TCpuMatrix<AFloat> & weights,
+                                    size_t batchSize,
+                                    size_t inputHeight,
+                                    size_t inputWidth,
+                                    size_t depth,
+                                    size_t height,
+                                    size_t width,
+                                    size_t filterDepth,
+                                    size_t filterHeight,
+                                    size_t filterWidth)
 {
         
 }
@@ -113,8 +114,8 @@ void TCpu<AFloat>::CalculateConvActivationGradients(std::vector<TCpuMatrix<AFloa
 //____________________________________________________________________________
 template<typename AFloat>
 void TCpu<AFloat>::CalculateConvWeightGradients(TCpuMatrix<AFloat> & weightGradients,
-                                                std::vector<TCpuMatrix<AFloat>> df,
-                                                const std::vector<TCpuMatrix<AFloat>> activations_backward,
+                                                std::vector<TCpuMatrix<AFloat>> & df,
+                                                const std::vector<TCpuMatrix<AFloat>> & activations_backward,
                                                 size_t batchSize,
                                                 size_t inputHeight,
                                                 size_t inputWidth,
@@ -132,7 +133,7 @@ void TCpu<AFloat>::CalculateConvWeightGradients(TCpuMatrix<AFloat> & weightGradi
 //____________________________________________________________________________
 template<typename AFloat>
 void TCpu<AFloat>::CalculateConvBiasGradients(TCpuMatrix<AFloat> & biasGradients,
-                                              std::vector<TCpuMatrix<AFloat>> df,
+                                              std::vector<TCpuMatrix<AFloat>> & df,
                                               size_t batchSize,
                                               size_t depth,
                                               size_t nLocalViews)
@@ -165,9 +166,9 @@ void TCpu<AFloat>::Downsample(TCpuMatrix<AFloat> &A,
 
 //____________________________________________________________________________
 template<typename AFloat>
-void TCpu<AFloat>::PoolLayerBackward(std::vector<TCpuMatrix<AFloat>> activationGradientsBackward,
-                                     const std::vector<TCpuMatrix<AFloat>> activationGradients,
-                                     const std::vector<TCpuMatrix<AFloat>> indexMatrix,
+void TCpu<AFloat>::PoolLayerBackward(std::vector<TCpuMatrix<AFloat>> & activationGradientsBackward,
+                                     const std::vector<TCpuMatrix<AFloat>> & activationGradients,
+                                     const std::vector<TCpuMatrix<AFloat>> & indexMatrix,
                                      size_t batchSize,
                                      size_t depth,
                                      size_t nLocalViews)

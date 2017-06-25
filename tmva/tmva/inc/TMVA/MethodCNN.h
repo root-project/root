@@ -25,8 +25,7 @@
 #include "TString.h"
 
 
-#include "TMVA/MethodBase.h"
-#include "TMVA/DNN/CNN/CNNLayer.h"
+#include "TMVA/MethodDL.h"
 #include "TMVA/DNN/CNN/ConvNet.h"
 
 #include "TMVA/DNN/Architectures/Reference.h"
@@ -49,7 +48,15 @@ using namespace TMVA::DNN;
 namespace TMVA
 {
 
-class MethodCNN: public MethodBase
+enum ECNNLayerType
+{
+   kConv = 1,
+   kPool = 2,
+   kFC =   3
+};
+    
+    
+class MethodCNN: public MethodDL
 {
 public:
     
@@ -58,49 +65,20 @@ public:
    using Matrix_t        = typename Architecture_t::Matrix_t;
 
 private:
-    
-   using LayoutVector_t   = std::vector<std::tuple<int, int, int, EActivationFunction>>;
-    
-   struct TTrainingSettings
-    {
-        size_t                batchSize;
-        size_t                testInterval;
-        size_t                convergenceSteps;
-        ERegularization       regularization;
-        Double_t              learningRate;
-        Double_t              momentum;
-        Double_t              weightDecay;
-        std::vector<Double_t> dropoutProbabilities;
-        bool                  multithreading;
-    };
-    
-   ConvNet_t         fConvNet;                 ///< The convolutional neural net to train
-   EInitialization   fWeightInitialization;    ///< The initialization method
-   EOutputFunction   fOutputFunction;          ///< The output function for making the predictions
+   // TYPE | DEPTH (WIDTH) | FLTH (0) | FLTW (0) | STRR (0) | STRC (0) | ZPADH (0) | ZPADW (0) |ACTFNC
+   using LayoutVector_t   = std::vector<std::tuple<ECNNLayerType, int, int,
+                                                   int, int, int, int, int, EActivationFunction>>;
     
    TString   fLayoutString;                    ///< The string defining the layout of the CNN
-   TString   fErrorStrategy;                   ///< The string defining the error strategy for training
-   TString   fTrainingStrategyString;          ///< The string defining the training strategy
-   TString   fWeightInitializationString;      ///< The string defining the weight initialization method
-   TString   fArchitectureString;              ///< The string defining the architecure: CPU or GPU
-   bool      fResume;
-   
-   LayoutVector_t                 fLayout;               ///< Dimensions and activation functions of each layer
-   std::vector<TTrainingSettings> fTrainingSettings;     ///< The vector defining each training strategy
-   
-    
-   void Init();
     
    // the option handling methods
    void DeclareOptions();
    void ProcessOptions();
-   
-
-   // Write and read weights from an XML file
-   static inline void WriteMatrixXML(void *parent, const char *name,
-                                     const TMatrixT<Double_t> &X);
-   static inline void ReadMatrixXML(void *xml, const char *name,
-                                    TMatrixT<Double_t> &X);
+    
+   void Init();
+    
+   ConvNet_t fConvNet;                 ///< The convolutional neural net to train
+   LayoutVector_t fLayout;             ///< Dimensions and activation functions of each layer in the CNN
     
    ClassDef(MethodCNN,0);
 
@@ -120,12 +98,15 @@ public:
     
    virtual ~MethodCNN();
     
+   // Check the type of analysis the CNN can do
    virtual Bool_t HasAnalysisType(Types::EAnalysisType type,
                                   UInt_t numberClasses,
                                   UInt_t numberTargets );
     
-   LayoutVector_t   ParseLayoutString(TString layerSpec);
+   // Method for parsing the layout specifications of the CNN
+   void ParseLayoutString(TString layerSpec);
     
+   // Methods for training the CNN
    void Train();
    void TrainGpu();
    void TrainCpu();
@@ -134,17 +115,20 @@ public:
    // virtual const std::vector<Float_t>& GetRegressionValues();
    // virtual const std::vector<Float_t>& GetMulticlassValues();
     
-   using MethodBase::ReadWeightsFromStream;
     
-   // write weights to stream
+   // Methods for writing and reading weights
    void AddWeightsXMLTo     ( void* parent ) const;
-    
-   // read weights from stream
    void ReadWeightsFromStream( std::istream & i );
    void ReadWeightsFromXML   ( void* wghtnode );
     
    // ranking of input variables
    const Ranking* CreateRanking();
+    
+   TString GetLayoutString()   {return fLayoutString;}
+    
+   void SetLayoutString(TString layoutString) {
+      fLayoutString = layoutString;
+   }
 
 };
 } // namespace TMVA

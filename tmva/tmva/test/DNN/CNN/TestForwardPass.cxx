@@ -22,7 +22,7 @@ using namespace TMVA::DNN;
 using namespace TMVA::DNN::CNN;
 
 
-void test1(){
+void test1() {
     
    size_t batchSizeTest1 = 50;
    size_t imgDepthTest1 = 3;
@@ -33,7 +33,7 @@ void test1(){
                                            imgHeightTest1, imgWidthTest1);
 }
 
-void test2(){
+void test2() {
     
    size_t batchSizeTest2 = 50;
    size_t imgDepthTest2 = 3;

@@ -315,13 +315,13 @@ public:
     *  in \p df and thus produces only a valid result, if it is applied the
     *  first time after the corresponding forward propagation has been per-
     *  formed. */
-   static void ConvLayerBackward(std::vector<TCudaMatrix<AFloat>> activationGradientsBackward,
+   static void ConvLayerBackward(std::vector<TCudaMatrix<AFloat>> & activationGradientsBackward,
                                  TCudaMatrix<AFloat> & weightGradients,
                                  TCudaMatrix<AFloat> & biasGradients,
-                                 std::vector<TCudaMatrix<AFloat>> df,
-                                 const std::vector<TCudaMatrix<AFloat>> activationGradients,
+                                 std::vector<TCudaMatrix<AFloat>> & df,
+                                 const std::vector<TCudaMatrix<AFloat>> & activationGradients,
                                  const TCudaMatrix<AFloat> & weights,
-                                 const std::vector<TCudaMatrix<AFloat>> activationBackward,
+                                 const std::vector<TCudaMatrix<AFloat>> & activationBackward,
                                  size_t batchSize,
                                  size_t inputHeight,
                                  size_t inputWidth,
@@ -335,8 +335,8 @@ public:
     
    /** Utility function for calculating the activation gradients of the layer
     *  before the convolutional layer. */
-   static void CalculateConvActivationGradients(std::vector<TCudaMatrix<AFloat>> activationGradientsBackward,
-                                                std::vector<TCudaMatrix<AFloat>> df,
+   static void CalculateConvActivationGradients(std::vector<TCudaMatrix<AFloat>> & activationGradientsBackward,
+                                                std::vector<TCudaMatrix<AFloat>> & df,
                                                 const TCudaMatrix<AFloat> & weights,
                                                 size_t batchSize,
                                                 size_t inputHeight,
@@ -351,8 +351,8 @@ public:
    /** Utility function for calculating the weight gradients of the convolutional
     * layer. */
    static void CalculateConvWeightGradients(TCudaMatrix<AFloat> & weightGradients,
-                                            std::vector<TCudaMatrix<AFloat>> df,
-                                            const std::vector<TCudaMatrix<AFloat>> activations_backward,
+                                            std::vector<TCudaMatrix<AFloat>> & df,
+                                            const std::vector<TCudaMatrix<AFloat>> & activations_backward,
                                             size_t batchSize,
                                             size_t inputHeight,
                                             size_t inputWidth,
@@ -367,7 +367,7 @@ public:
    /** Utility function for calculating the bias gradients of the convolutional
     *  layer */
    static void CalculateConvBiasGradients(TCudaMatrix<AFloat> & biasGradients,
-                                          std::vector<TCudaMatrix<AFloat>> df,
+                                          std::vector<TCudaMatrix<AFloat>> & df,
                                           size_t batchSize,
                                           size_t depth,
                                           size_t nLocalViews);
@@ -393,9 +393,9 @@ public:
    /** Perform the complete backward propagation step in a Pooling Layer. Based on the
     *  winning idices stored in the index matrix, it just forwards the actiovation
     *  gradients to the previous layer. */
-   static void PoolLayerBackward(std::vector<TCudaMatrix<AFloat>> activationGradientsBackward,
-                                 const std::vector<TCudaMatrix<AFloat>> activationGradients,
-                                 const std::vector<TCudaMatrix<AFloat>> indexMatrix,
+   static void PoolLayerBackward(std::vector<TCudaMatrix<AFloat>> & activationGradientsBackward,
+                                 const std::vector<TCudaMatrix<AFloat>> & activationGradients,
+                                 const std::vector<TCudaMatrix<AFloat>> & indexMatrix,
                                  size_t batchSize,
                                  size_t depth,
                                  size_t nLocalViews);

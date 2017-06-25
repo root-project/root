@@ -12,7 +12,7 @@
 //////////////////////////////////////////////////////////////////////
 // Implementation of the functions required for the forward and     //
 // backward propagation of activations through a neural network for //
-// the reference implementation.                                    //
+// the CPU implementation.                                    //
 //////////////////////////////////////////////////////////////////////
 
 #include "TMVA/DNN/Architectures/Cpu.h"

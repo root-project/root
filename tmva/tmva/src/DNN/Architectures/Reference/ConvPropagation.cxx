@@ -17,6 +17,7 @@
 
 #include "TMVA/DNN/Architectures/Reference.h"
 #include <limits>
+#include <math.h>
 
 namespace TMVA
 {
@@ -120,13 +121,13 @@ void TReference<Real_t>::Deflatten(std::vector<TMatrixT<Real_t>> A,
 
 //______________________________________________________________________________
 template<typename Scalar_t>
-void TReference<Scalar_t>::ConvLayerBackward(std::vector<TMatrixT<Scalar_t>> activation_gradients_backward,
+void TReference<Scalar_t>::ConvLayerBackward(std::vector<TMatrixT<Scalar_t>> &activation_gradients_backward,
                                              TMatrixT<Scalar_t> & weight_gradients,
                                              TMatrixT<Scalar_t> & bias_gradients,
-                                             std::vector<TMatrixT<Scalar_t>> df,
-                                             const std::vector<TMatrixT<Scalar_t>> activation_gradients,
+                                             std::vector<TMatrixT<Scalar_t>> &df,
+                                             const std::vector<TMatrixT<Scalar_t>> &activation_gradients,
                                              const TMatrixT<Scalar_t> & weights,
-                                             const std::vector<TMatrixT<Scalar_t>> activations_backward,
+                                             const std::vector<TMatrixT<Scalar_t>> &activations_backward,
                                              size_t batchSize,
                                              size_t inputHeight,
                                              size_t inputWidth,
@@ -140,7 +141,7 @@ void TReference<Scalar_t>::ConvLayerBackward(std::vector<TMatrixT<Scalar_t>> act
 {
         
    // Update derivatives
-   int m, n;
+   size_t m, n;
    m = activation_gradients[0].GetNrows();
    n = activation_gradients[0].GetNcols();
         
@@ -170,8 +171,8 @@ void TReference<Scalar_t>::ConvLayerBackward(std::vector<TMatrixT<Scalar_t>> act
 //______________________________________________________________________________
 template<typename Scalar_t>
 void TReference<Scalar_t>::CalculateConvActivationGradients(
-                                    std::vector<TMatrixT<Scalar_t>> activation_gradients_backward,
-                                    std::vector<TMatrixT<Scalar_t>> df,
+                                    std::vector<TMatrixT<Scalar_t>> &activation_gradients_backward,
+                                    std::vector<TMatrixT<Scalar_t>> &df,
                                     const TMatrixT<Scalar_t> & weights,
                                     size_t batchSize,
                                     size_t inputHeight,
@@ -189,8 +190,8 @@ void TReference<Scalar_t>::CalculateConvActivationGradients(
    RotateWeights(rotWeights, weights, filterDepth, filterHeight, filterWidth, weights.GetNrows());
         
    // Calculate the zero paddings
-   size_t tempZeroPaddingHeight = (inputHeight - height + filterHeight - 1) / 2;
-   size_t tempZeroPaddingWidth = (inputWidth - width + filterWidth - 1) / 2;
+   size_t tempZeroPaddingHeight = (size_t)(floor((inputHeight - height + filterHeight - 1) / 2));
+   size_t tempZeroPaddingWidth = (size_t)(floor((inputWidth - width + filterWidth - 1) / 2));
         
    // Calculate the number of local views and the number of pixles in each view
    size_t tempNLocalViews = inputHeight * inputWidth;
@@ -212,8 +213,8 @@ void TReference<Scalar_t>::CalculateConvActivationGradients(
 //______________________________________________________________________________
 template<typename Scalar_t>
 void TReference<Scalar_t>::CalculateConvWeightGradients(TMatrixT<Scalar_t> & weight_gradients,
-                                    std::vector<TMatrixT<Scalar_t>> df,
-                                    const std::vector<TMatrixT<Scalar_t>> activations_backward,
+                                    std::vector<TMatrixT<Scalar_t>> &df,
+                                    const std::vector<TMatrixT<Scalar_t>> &activations_backward,
                                     size_t batchSize,
                                     size_t inputHeight,
                                     size_t inputWidth,
@@ -272,7 +273,7 @@ void TReference<Scalar_t>::CalculateConvWeightGradients(TMatrixT<Scalar_t> & wei
 //______________________________________________________________________________
 template<typename Scalar_t>
 void TReference<Scalar_t>::CalculateConvBiasGradients(TMatrixT<Scalar_t> & bias_gradients,
-                                                      std::vector<TMatrixT<Scalar_t>> df,
+                                                      std::vector<TMatrixT<Scalar_t>> &df,
                                                       size_t batchSize,
                                                       size_t depth,
                                                       size_t nLocalViews)
@@ -342,9 +343,9 @@ void TReference<Real_t>::Downsample(TMatrixT<Real_t> &A,
 //______________________________________________________________________________
 template<typename Scalar_t>
 void TReference<Scalar_t>::PoolLayerBackward(
-                            std::vector<TMatrixT<Scalar_t>> activationGradientsBackward,
-                            const std::vector<TMatrixT<Scalar_t>> activationGradients,
-                            const std::vector<TMatrixT<Scalar_t>> indexMatrix,
+                            std::vector<TMatrixT<Scalar_t>> & activationGradientsBackward,
+                            const std::vector<TMatrixT<Scalar_t>> & activationGradients,
+                            const std::vector<TMatrixT<Scalar_t>> & indexMatrix,
                             size_t batchSize,
                             size_t depth,
                             size_t nLocalViews)
