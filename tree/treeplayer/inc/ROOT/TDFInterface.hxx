@@ -11,13 +11,11 @@
 #ifndef ROOT_TDF_TINTERFACE
 #define ROOT_TDF_TINTERFACE
 
-#include "ROOT/TBufferMerger.hxx"
 #include "ROOT/TResultProxy.hxx"
 #include "ROOT/TDFNodes.hxx"
 #include "ROOT/TDFActionHelpers.hxx"
 #include "ROOT/TDFUtils.hxx"
 #include "TChain.h"
-#include "TFile.h"
 #include "TH1.h" // For Histo actions
 #include "TH2.h" // For Histo actions
 #include "TH3.h" // For Histo actions
@@ -1105,70 +1103,23 @@ protected:
 
       auto df = GetDataFrameChecked();
       const std::string filenameInt(filename);
+      std::shared_ptr<TDFInternal::TActionBase> actionPtr;
 
       if (!ROOT::IsImplicitMTEnabled()) {
          // single-thread snapshot
          using Op_t = TDFInternal::SnapshotHelper<BranchTypes...>;
          using DFA_t = TDFInternal::TAction<Op_t, Proxied, TDFInternal::TTypeList<BranchTypes...>>;
-         df->Book(std::make_shared<DFA_t>(Op_t(filenameInt, dirnameInt, treenameInt, bnames), bnames, *fProxiedPtr));
-         fProxiedPtr->IncrChildrenCount();
-         df->Run();
+         actionPtr.reset(new DFA_t(Op_t(filenameInt, dirnameInt, treenameInt, bnames), bnames, *fProxiedPtr));
       } else {
          // multi-thread snapshot
-         unsigned int nSlots = df->GetNSlots();
-         TBufferMerger merger(filenameInt.c_str(), "RECREATE");
-         std::vector<std::shared_ptr<TBufferMergerFile>> files(nSlots);
-         std::vector<TTree *> trees(nSlots, nullptr); // ROOT will own/manage these TTrees, do not delete
-         std::vector<int> isFirstEvent(nSlots, 1); // vector<bool> is evil
-
-         auto fillTree = [&](unsigned int slot, BranchTypes &... args) {
-            if (isFirstEvent[slot]) {
-               // hack to call TTree::Branch on all variadic template arguments
-               std::initializer_list<int> expander = {(trees[slot]->Branch(bnames[S].c_str(), &args), 0)..., 0};
-               (void)expander; // avoid unused variable warnings for older compilers such as gcc 4.9
-               isFirstEvent[slot] = 0;
-            }
-            trees[slot]->Fill();
-            auto entries = trees[slot]->GetEntries();
-            auto autoflush = trees[slot]->GetAutoFlush();
-            if ((autoflush > 0) && (entries % autoflush == 0)) files[slot]->Write();
-         };
-
-         // called at the beginning of each task -- multiple times per thread
-         auto initLambda = [&trees, &merger, &files, &treenameInt, &dirnameInt, &treename,
-                            &isFirstEvent](TTreeReader *r, unsigned int slot) {
-            ::TDirectory::TContext c;
-            if(!trees[slot]) {
-               // first time this thread executes something, let's create a TBufferMerger output directory
-               files[slot] = merger.GetFile();
-            } else {
-               // this thread is now re-executing the task, let's flush the current contents of the TBufferMergerFile
-               files[slot]->Write();
-            }
-            if (!dirnameInt.empty()) {
-               files[slot]->mkdir(dirnameInt.c_str());
-               files[slot]->cd(dirnameInt.c_str());
-            }
-            trees[slot] = new TTree(treenameInt.c_str(), treenameInt.c_str());
-            trees[slot]->ResetBit(kMustCleanup);
-            if(r) {
-               // not an empty-source TDF
-               auto tree = r->GetTree();
-               tree->AddClone(trees[slot]); // AddClone makes sure that if the input tree changes file it updates the
-                                            // branches of the output tree with the new value pointers
-            }
-            isFirstEvent[slot] = 1;
-         };
-
-         using Op_t = TDFInternal::SnapshotHelperMT<decltype(initLambda), decltype(fillTree)>;
+         using Op_t = TDFInternal::SnapshotHelperMT<BranchTypes...>;
          using DFA_t = TDFInternal::TAction<Op_t, Proxied>;
-         df->Book(std::make_shared<DFA_t>(Op_t(std::move(initLambda), std::move(fillTree)), bnames, *fProxiedPtr));
-         fProxiedPtr->IncrChildrenCount();
-         df->Run();
-         for (auto &&file : files) {
-            if (file) file->Write();
-         }
+         actionPtr.reset(
+            new DFA_t(Op_t(df->GetNSlots(), filenameInt, dirnameInt, treenameInt, bnames), bnames, *fProxiedPtr));
       }
+      df->Book(std::move(actionPtr));
+      fProxiedPtr->IncrChildrenCount();
+      df->Run();
 
       // create new TDF
       ::TDirectory::TContext ctxt;
