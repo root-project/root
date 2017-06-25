@@ -11,6 +11,7 @@
 #ifndef ROOT_TDFOPERATIONS
 #define ROOT_TDFOPERATIONS
 
+#include "ROOT/TBufferMerger.hxx" // for SnapshotHelper
 #include "ROOT/TDFUtils.hxx"
 #include "ROOT/TThreadedObject.hxx"
 #include "TH1.h"
@@ -473,26 +474,83 @@ public:
 };
 
 /// Helper object for a multi-thread Snapshot action
-template <typename F1, typename F2>
+template <typename... BranchTypes>
 class SnapshotHelperMT {
-   F1 fInitFunc;
-   F2 fExecFunc;
-
+   const unsigned int fNSlots;
+   std::unique_ptr<ROOT::Experimental::TBufferMerger> fMerger; // must use a ptr because TBufferMerger is not movable
+   std::vector<std::shared_ptr<ROOT::Experimental::TBufferMergerFile>> fOutputFiles;
+   std::vector<TTree *> fOutputTrees; // ROOT will own/manage these TTrees, must not delete
+   std::vector<int> fIsFirstEvent; // vector<bool> is evil
+   const std::string fDirName; // name of TFile subdirectory in which output must be written (possibly empty)
+   const std::string fTreeName; // name of output tree
+   const ColumnNames_t fBranchNames;
 public:
-   using BranchTypes_t = typename TRemoveFirst<typename TFunctionTraits<F2>::Args_t>::Types_t;
-   SnapshotHelperMT(F1 &&f1, F2 &&f2) : fInitFunc(f1), fExecFunc(f2) {}
-
-   void Init(TTreeReader *r, unsigned int slot) { fInitFunc(r, slot); }
-
-   template <typename... Args>
-   void Exec(unsigned int slot, Args &&... args)
+   using BranchTypes_t = TTypeList<BranchTypes...>;
+   SnapshotHelperMT(unsigned int nSlots, const std::string &filename, const std::string &dirname,
+                    const std::string &treename, const ColumnNames_t &bnames)
+      : fNSlots(nSlots), fMerger(new ROOT::Experimental::TBufferMerger(filename.c_str(), "RECREATE")),
+        fOutputFiles(fNSlots), fOutputTrees(fNSlots, nullptr), fIsFirstEvent(fNSlots, 1), fDirName(dirname),
+        fTreeName(treename), fBranchNames(bnames)
    {
-      // check that the decayed types of Args are the same as the branch types
-      static_assert(std::is_same<TTypeList<typename std::decay<Args>::type...>, BranchTypes_t>::value, "");
-      fExecFunc(slot, std::forward<Args>(args)...);
+   }
+   SnapshotHelperMT(const SnapshotHelperMT &) = delete;
+   SnapshotHelperMT(SnapshotHelperMT &&) = default;
+   ~SnapshotHelperMT() = default;
+
+   void Init(TTreeReader *r, unsigned int slot)
+   {
+      ::TDirectory::TContext c; // do not let tasks change the thread-local gDirectory
+      if (!fOutputTrees[slot]) {
+         // first time this thread executes something, let's create a TBufferMerger output directory
+         fOutputFiles[slot] = fMerger->GetFile();
+      } else {
+         // this thread is now re-executing the task, let's flush the current contents of the TBufferMergerFile
+         fOutputFiles[slot]->Write();
+      }
+      if (!fDirName.empty()) {
+         fOutputFiles[slot]->mkdir(fDirName.c_str());
+         fOutputFiles[slot]->cd(fDirName.c_str());
+      }
+      fOutputTrees[slot] = new TTree(fTreeName.c_str(), fTreeName.c_str());
+      fOutputTrees[slot]->ResetBit(kMustCleanup); // do not mingle with the thread-unsafe gListOfCleanups
+      if (r) {
+         // not an empty-source TDF
+         auto inputTree = r->GetTree();
+         // AddClone guarantees that if the input file changes the branches of the output tree are updated with the new
+         // addresses of the branch values
+         inputTree->AddClone(fOutputTrees[slot]);
+      }
+      fIsFirstEvent[slot] = 1; // reset first event flag for this slot
    }
 
-   void Finalize() { /* noop */}
+   void Exec(unsigned int slot, BranchTypes &... values)
+   {
+      if (fIsFirstEvent[slot]) {
+         using ind_t = typename TGenStaticSeq<sizeof...(BranchTypes)>::Type_t;
+         SetBranches(slot, &values..., ind_t());
+         fIsFirstEvent[slot] = 0;
+      }
+      fOutputTrees[slot]->Fill();
+      auto entries = fOutputTrees[slot]->GetEntries();
+      auto autoflush = fOutputTrees[slot]->GetAutoFlush();
+      if ((autoflush > 0) && (entries % autoflush == 0)) fOutputFiles[slot]->Write();
+   }
+
+   template <int... S>
+   void SetBranches(unsigned int slot, BranchTypes *... branchAddresses, TStaticSeq<S...> /*dummy*/)
+   {
+      // hack to call TTree::Branch on all variadic template arguments
+      std::initializer_list<int> expander = {
+         (fOutputTrees[slot]->Branch(fBranchNames[S].c_str(), branchAddresses), 0)..., 0};
+      (void)expander; // avoid unused variable warnings for older compilers such as gcc 4.9
+   }
+
+   void Finalize()
+   {
+      for (auto &file : fOutputFiles) {
+         if (file) file->Write();
+      }
+   }
 };
 
 } // end of NS TDF
