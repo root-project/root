@@ -1,8 +1,8 @@
 // @(#)root/tmva/tmva/dnn:$Id$
-// Author: Simon Pfreundschuh 20/06/16
+// Author: Vladimir Ilievski 24/06/17
 
 /*************************************************************************
- * Copyright (C) 2016, Simon Pfreundschuh                                *
+ * Copyright (C) 2017, Vladimir Ilievski                                 *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *

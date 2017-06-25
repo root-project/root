@@ -36,9 +36,9 @@ namespace TMVA
 ////////////////////////////////////////////////////////////////////////////////
 /// standard constructor
 MethodCNN::MethodCNN(const TString& jobName,
-                           const TString&  methodTitle,
-                           DataSetInfo& theData,
-                           const TString& theOption)
+                     const TString&  methodTitle,
+                     DataSetInfo& theData,
+                     const TString& theOption)
    : MethodDL(jobName, Types::kCNN, methodTitle, theData, theOption),
     fLayoutString()
 {
@@ -49,7 +49,7 @@ MethodCNN::MethodCNN(const TString& jobName,
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor from a weight file
 MethodCNN::MethodCNN(DataSetInfo& theData,
-                           const TString& theWeightFile)
+                     const TString& theWeightFile)
    : MethodDL(Types::kCNN, theData, theWeightFile), fLayoutString()
 {
    // Nothing to do here
@@ -99,7 +99,7 @@ void MethodCNN::ProcessOptions()
       outputSize = DataInfo().GetNClasses();
    }
     
-   // Not clear why?
+   // Because the size of the batch will change
    fConvNet.SetBatchSize(1);
    fConvNet.SetInputDepth(inputDepth);
    fConvNet.SetInputHeight(inputHeight);
@@ -318,13 +318,35 @@ void MethodCNN::TrainGpu()
 ////////////////////////////////////////////////////////////////////////////////
 void MethodCNN::TrainCpu()
 {
-   // TO DO
+#ifdef DNNCPU // Included only if DNNCPU flag is set.
+    
+   // We have to find a way
+   size_t nTrainingSamples = GetEventCollection(Types::kTraining).size();
+   size_t nTestSamples     = GetEventCollection(Types::kTesting).size();
+    
+   Log() << kINFO << "Start of neural network training on CPU." << Endl << Endl;
+   
+   fConvNet.Initialize(this -> GetWeightInitialization());
+   size_t trainingPhase = 1;
+    
+   for (TTrainingSettings & settings : this -> GetTrainingSettings()) {
+      if (fInteractive){
+         fInteractive->ClearGraphs();
+      }
+       
+      Log() << "Training phase " << trainingPhase << " of "
+      << this -> GetTrainingSettings().size() << ":" << Endl;
+      trainingPhase++;
+       
+       
+       
+   }
 }
     
     
 ////////////////////////////////////////////////////////////////////////////////
 Double_t MethodCNN::GetMvaValue(Double_t* /*errLower*/,
-                                      Double_t* /*errUpper*/ )
+                                Double_t* /*errUpper*/ )
 {
    // TO DO
    return 0.0;
