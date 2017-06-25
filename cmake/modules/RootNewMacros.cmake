@@ -1225,6 +1225,30 @@ function(ROOT_PATH_TO_STRING resultvar path)
 endfunction(ROOT_PATH_TO_STRING)
 
 #----------------------------------------------------------------------------
+# function ROOT_ADD_GBENCHMARK(<benchmark> source1 source2... LIBRARIES)
+#----------------------------------------------------------------------------
+function(ROOT_ADD_GTEST benchmark)
+  CMAKE_PARSE_ARGUMENTS(ARG "" "" "LIBRARIES" ${ARGN})
+  include_directories(${CMAKE_CURRENT_BINARY_DIR} ${GBENCHMARK_INCLUDE_DIR})
+
+  ROOT_GET_SOURCES(source_files . ${ARG_UNPARSED_ARGUMENTS})
+  # Note we cannot use ROOT_EXECUTABLE without user-specified set of LIBRARIES to link with.
+  # The test suites should choose this in their specific CMakeLists.txt file.
+  # FIXME: For better coherence we could restrict the libraries the test suite could link
+  # against. For example, tests in Core should link only against libCore. This could be tricky
+  # to implement because some ROOT components create more than one library.
+  ROOT_EXECUTABLE(${benchmark} ${source_files} LIBRARIES ${ARG_LIBRARIES})
+  set_property(TARGET ${benchmark} PROPERTY RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+  target_link_libraries(${benchmark} gbenchmark)
+
+  ROOT_PATH_TO_STRING(mangled_name ${benchmark} PATH_SEPARATOR_REPLACEMENT "-")
+  ROOT_ADD_TEST(gbench${mangled_name}
+    COMMAND ${benchmark}
+    WORKING_DIR ${CMAKE_CURRENT_BINARY_DIR}
+    LABELS "benchmark")
+endfunction()
+
+#----------------------------------------------------------------------------
 # ROOT_ADD_UNITTEST_DIR(<libraries ...>)
 #----------------------------------------------------------------------------
 function(ROOT_ADD_UNITTEST_DIR)
