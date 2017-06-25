@@ -125,11 +125,12 @@ unsigned int TSlotStack::Pop()
 
 TLoopManager::TLoopManager(TTree *tree, const ColumnNames_t &defaultBranches)
    : fTree(std::shared_ptr<TTree>(tree, [](TTree *) {})), fDefaultBranches(defaultBranches),
-     fNSlots(TDFInternal::GetNSlots())
+     fNSlots(TDFInternal::GetNSlots()), fLoopType(ELoopType::kROOTFiles)
 {
 }
 
-TLoopManager::TLoopManager(Long64_t nEmptyEntries) : fNEmptyEntries(nEmptyEntries), fNSlots(TDFInternal::GetNSlots())
+TLoopManager::TLoopManager(Long64_t nEmptyEntries)
+   : fNEmptyEntries(nEmptyEntries), fNSlots(TDFInternal::GetNSlots()), fLoopType(ELoopType::kNoFiles)
 {
 }
 
@@ -229,17 +230,15 @@ void TLoopManager::Run()
 
 #ifdef R__USE_IMT
    if (ROOT::IsImplicitMTEnabled()) {
-      if (fNEmptyEntries > 0) {
-         RunEmptySourceMT();
-      } else {
-         RunTreeProcessorMT();
+      switch (fLoopType) {
+      case ELoopType::kNoFiles: RunEmptySourceMT(); break;
+      case ELoopType::kROOTFiles: RunTreeProcessorMT(); break;
       }
    } else {
 #endif // R__USE_IMT
-      if (fNEmptyEntries > 0) {
-         RunEmptySource();
-      } else {
-         RunTreeReader();
+      switch (fLoopType) {
+      case ELoopType::kNoFiles: RunEmptySource(); break;
+      case ELoopType::kROOTFiles: RunTreeReader(); break;
       }
 #ifdef R__USE_IMT
    }
