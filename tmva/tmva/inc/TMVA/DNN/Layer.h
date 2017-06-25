@@ -124,6 +124,8 @@ public:
    const Matrix_t & GetBiasGradients() const {return fBiasGradients;}
    Matrix_t       & GetWeightGradients()       {return fWeightGradients;}
    const Matrix_t & GetWeightGradients() const {return fWeightGradients;}
+   Matrix_t       & GetDerivatives()           {return fDerivatives;}
+   const Matrix_t & GetDerivatives()     const {return fDerivatives;}
 
 };
 

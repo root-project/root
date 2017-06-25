@@ -1,21 +1,77 @@
 #ifndef TMVA_TEST_DNN_UTILITY
 #define TMVA_TEST_DNN_UTILITY
 
-#include <cassert>
 #include <iostream>
 #include <sstream>
 #include <type_traits>
 #include "stdlib.h"
 #include "TRandom.h"
+
 #include "TMVA/DNN/Architectures/Reference.h"
 #include "TMVA/DNN/Functions.h"
 #include "TMVA/DNN/Net.h"
+#include "TMVA/DNN/CNN/ConvNet.h"
 
 namespace TMVA
 {
 namespace DNN
 {
 
+/** Construct a convolutional neural network with one convolutional layer,
+ *  one pooling layer and two fully connected layers. The dimensions are
+ *  predetermined. The activation functions are chosen randomly. */
+//______________________________________________________________________________
+template <typename AArchitecture>
+void constructConvNet(CNN::TConvNet<AArchitecture> &convNet,
+                      typename AArchitecture::Scalar_t dropoutProbability = 1.0)
+{
+    
+    std::vector<EActivationFunction> ActivationFunctions
+    = {EActivationFunction::kIdentity,
+        EActivationFunction::kRelu,
+        EActivationFunction::kSigmoid,
+        EActivationFunction::kTanh};
+    
+    int depth = 12;
+    int filterHeightConv = 2;
+    int filterWidthConv = 2;
+    int strideRowsConv = 1;
+    int strideColsConv = 1;
+    int zeroPaddingHeight = 1;
+    int zeroPaddingWidth = 1;
+    
+    
+    EActivationFunction fConv = ActivationFunctions[rand() % ActivationFunctions.size()];
+    
+    
+    convNet.AddConvLayer(depth, filterHeightConv, filterWidthConv,
+                         strideRowsConv, strideColsConv,
+                         zeroPaddingHeight, zeroPaddingWidth, fConv,
+                         dropoutProbability);
+    
+    int filterHeightPool = 6;
+    int filterWidthPool =  6;
+    
+    
+    int strideRowsPool = 1;
+    int strideColsPool = 1;
+    
+   
+    convNet.AddPoolLayer(filterHeightPool, filterWidthPool,
+                         strideRowsPool, strideColsPool,
+                         dropoutProbability);
+    
+    int widthFC = 20;
+    EActivationFunction fFC = ActivationFunctions[rand() % ActivationFunctions.size()];
+    convNet.AddFullyConnLayer(widthFC, fFC, dropoutProbability);
+    
+    int widthOutputLayer = 2;
+    EActivationFunction fOutputLayer = ActivationFunctions[rand() % ActivationFunctions.size()];
+    convNet.AddFullyConnLayer(widthOutputLayer, fOutputLayer, dropoutProbability);
+}
+    
+    
+    
 /** Construct a random linear neural network with up to five layers.*/
 //______________________________________________________________________________
 template <typename AArchitecture>
@@ -33,7 +89,8 @@ void constructRandomLinearNet(TNet<AArchitecture> & net)
         net.AddLayer(width, f);
     }
 }
-
+    
+    
 /*! Set matrix to the identity matrix */
 //______________________________________________________________________________
 template <typename AMatrix>
@@ -173,48 +230,64 @@ AFloat reduceMean(F f, AFloat start, const AMatrix &X)
     return result / (AFloat) (m * n);
 }
 
-/** Compute the relative error of x and y */
+/** Compute the relative error of x and y normalized by y. Specialized for
+ *  float and double to make sure both arguments are above expected machine
+ *  precision (1e-5 and 1e-10). */
 //______________________________________________________________________________
-template <typename T>
-inline T relativeError(const T &x, const T &y)
+template <typename AFloat>
+inline AFloat relativeError(const AFloat &x,
+                            const AFloat &y);
+
+
+//______________________________________________________________________________
+template <>
+inline Double_t relativeError(const Double_t &x,
+                              const Double_t &y)
 {
-  using std::abs;
+    if ((std::abs(x) > 1e-10) && (std::abs(y) > 1e-10)) {
+        return std::fabs((x - y) / y);
+    } else {
+        return std::fabs(x - y);
+    }
+}
 
-  if (x == y)
-    return T(0.0);
-
-  T diff = abs(x - y);
-
-  if (x * y == T(0.0) ||
-      diff < std::numeric_limits<T>::epsilon())
-    return diff;
-
-  return diff / (abs(x) + abs(y));
+//______________________________________________________________________________
+template <>
+inline Real_t relativeError(const Real_t &x,
+                            const Real_t &y)
+{
+    if ((std::abs(x) > 1e-5) && (std::abs(y) > 1e-5)) {
+        return std::fabs((x - y) / y);
+    } else {
+        return std::fabs(x - y);
+    }
 }
 
 /*! Compute the maximum, element-wise relative error of the matrices
 *  X and Y normalized by the element of Y. Protected against division
 *  by zero. */
 //______________________________________________________________________________
-template <typename Matrix1, typename Matrix2>
-auto maximumRelativeError(const Matrix1 &X, const Matrix2 &Y) -> decltype(X(0,0))
+template <typename AMatrix, typename BMatrix>
+auto maximumRelativeError(const AMatrix &X,
+                          const BMatrix &Y)
+-> decltype(X(0,0))
 {
-    decltype(X(0,0)) curError, maxError = 0.0;
 
-    Int_t m = X.GetNrows();
-    Int_t n = X.GetNcols();
+    using AFloat = decltype(X(0,0));
 
-    assert(m == Y.GetNrows());
-    assert(n == Y.GetNcols());
+    size_t m,n;
+    m = X.GetNrows();
+    n = X.GetNcols();
 
-    for (Int_t i = 0; i < m; i++) {
-        for (Int_t j = 0; j < n; j++) {
-            curError = relativeError(X(i,j), Y(i,j));
-            maxError = std::max(curError, maxError);
+    AFloat maximumError = 0.0;
+
+    for (size_t i = 0; i < m; i++) {
+        for (size_t j = 0; j < n; j++) {
+        AFloat error = relativeError(X(i,j), Y(i,j));
+        maximumError = std::max(error, maximumError);
         }
     }
-
-    return maxError;
+    return maximumError;
 }
 
 /*! Numerically compute the derivative of the functional f using finite

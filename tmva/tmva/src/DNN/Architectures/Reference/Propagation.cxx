@@ -22,6 +22,15 @@ namespace DNN
 {
 
 template<typename Scalar_t>
+void TReference<Scalar_t>::Multiply(TMatrixT<Scalar_t> &C,
+                                    const TMatrixT<Scalar_t> &A,
+                                    const TMatrixT<Scalar_t> &B)
+{
+   C.Mult(A, B);
+}
+    
+    
+template<typename Scalar_t>
 void TReference<Scalar_t>::MultiplyTranspose(TMatrixT<Scalar_t> &output,
                                             const TMatrixT<Scalar_t> &input,
                                             const TMatrixT<Scalar_t> &weights)
