@@ -1530,16 +1530,16 @@ endif()
 #---Download googletest--------------------------------------------------------------
 if (testing)
   # FIXME: Remove our version of gtest in roottest. We can reuse this one.
-  # Add gtest
+  # Add googletest
   # http://stackoverflow.com/questions/9689183/cmake-googletest
 
-  set(_byproduct_binary_dir
+  set(_gtest_byproduct_binary_dir
     ${CMAKE_CURRENT_BINARY_DIR}/googletest-prefix/src/googletest-build/googlemock/)
-  set(_byproducts
-    ${_byproduct_binary_dir}/gtest/libgtest.a
-    ${_byproduct_binary_dir}/gtest/libgtest_main.a
-    ${_byproduct_binary_dir}/libgmock.a
-    ${_byproduct_binary_dir}/libgmock_main.a
+  set(_gtest_byproducts
+    ${_gtest_byproduct_binary_dir}/gtest/libgtest.a
+    ${_gtest_byproduct_binary_dir}/gtest/libgtest_main.a
+    ${_gtest_byproduct_binary_dir}/libgmock.a
+    ${_gtest_byproduct_binary_dir}/libgmock_main.a
     )
 
   ExternalProject_Add(
@@ -1562,7 +1562,7 @@ if (testing)
                   -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
     # Disable install step
     INSTALL_COMMAND ""
-    BUILD_BYPRODUCTS ${_byproducts}
+    BUILD_BYPRODUCTS ${_gtest_byproducts}
     # Wrap download, configure and build steps in a script to log output
     LOG_DOWNLOAD ON
     LOG_CONFIGURE ON
@@ -1577,25 +1577,15 @@ if (testing)
   ExternalProject_Get_Property(googletest binary_dir)
   set(_G_LIBRARY_PATH ${binary_dir}/googlemock/)
 
-  # gtest
-  add_library(gtest IMPORTED STATIC GLOBAL)
+  # Register gtest, gtest_main, gmock, gmock_main
+  foreach (lib gtest gtest_main gmock gmock_main)
+    add_library(${lib} IMPORTED STATIC GLOBAL)
+    add_dependencies(${lib} googletest)
+  endforeach()
   set_property(TARGET gtest PROPERTY IMPORTED_LOCATION ${_G_LIBRARY_PATH}/gtest/libgtest.a)
-  add_dependencies(gtest googletest)
-
-  # gtest_main
-  add_library(gtest_main IMPORTED STATIC GLOBAL)
   set_property(TARGET gtest_main PROPERTY IMPORTED_LOCATION ${_G_LIBRARY_PATH}/gtest/libgtest_main.a)
-  add_dependencies(gtest_main googletest)
-
-  # gmock
-  add_library(gmock IMPORTED STATIC GLOBAL)
   set_property(TARGET gmock PROPERTY IMPORTED_LOCATION ${_G_LIBRARY_PATH}/libgmock.a)
-  add_dependencies(gmock googletest)
-
-  # gmock_main
-  add_library(gmock_main IMPORTED STATIC GLOBAL)
   set_property(TARGET gmock_main PROPERTY IMPORTED_LOCATION ${_G_LIBRARY_PATH}/libgmock_main.a)
-  add_dependencies(gmock_main googletest)
 
 endif()
 
