@@ -58,7 +58,7 @@ class TLoopManager : public std::enable_shared_from_this<TLoopManager> {
    std::map<std::string, TmpBranchBasePtr_t> fBookedBranches;
    RangeBaseVec_t fBookedRanges;
    std::vector<std::shared_ptr<bool>> fResProxyReadiness;
-   ::TDirectory *fDirPtr{nullptr};
+   ::TDirectory * const fDirPtr{nullptr};
    std::shared_ptr<TTree> fTree{nullptr};
    const ColumnNames_t fDefaultBranches;
    const Long64_t fNEmptyEntries{0};
