@@ -8,6 +8,7 @@ find_package(ROOT REQUIRED)
 
 set(Libraries Core MathCore Matrix TMVA)
 include_directories(${ROOT_INCLUDE_DIRS})
+ROOT_ADD_TEST_SUBDIRECTORY(DAE)
 
 #--- CUDA tests. ---------------------------
 if (CUDA_FOUND)

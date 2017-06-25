@@ -291,6 +291,71 @@ public:
 
    /** Compute the sum of all elements in \p A */
    static AFloat Sum(const TCudaMatrix<AFloat> &A);
+
+
+
+
+
+   //____________________________________________________________________________
+   //
+   // AutoEncoder Propagation
+   //____________________________________________________________________________
+
+   // Add Biases to the output
+   static void AddBiases(TCudaMatrix<AFloat> &A,
+                         const TCudaMatrix<AFloat> &B);
+
+   // Updating parameters after every backward pass. Weights and biases are
+   // updated.
+   static void UpdateParams(TCudaMatrix<AFloat> &x,
+                            TCudaMatrix<AFloat> &z,
+                            TCudaMatrix<AFloat> &fVBiases,
+                            TCudaMatrix<AFloat> &fHBiases,
+                            TCudaMatrix<AFloat> &fWeights,
+                            AFloat learningRate,
+                            AFloat corruptionLevel,
+                            size_t fBatchSize);
+
+   // Softmax functions redifined
+   static void SoftmaxAE(TCudaMatrix<AReal> & A);
+
+
+   // Corrupt the input values randomly on corruption Level.
+   //Basically inputs are masked currently.
+   static void CorruptInput(TCudaMatrix<AFloat> & input,
+                            TCudaMatrix<AFloat> & corruptedInput,
+                            AFloat corruptionLevel);
+
+   //Encodes the input Values in the compressed form.
+   static void EncodeInput(TCudaMatrix<AFloat> & input,
+                           TCudaMatrix<AFloat> & compressedInput,
+                           TCudaMatrix<AFloat> &fWeights);
+
+   // reconstructs the input. The reconstructed Input has same dimensions as that
+   // of the input.
+   static void ReconstructInput(TCudaMatrix<AFloat & compressedInput,
+                                TCudaMatrix<AFloat> & reconstructedInput,
+                                TCudaMatrix<AFloat> &fWeights);
+
+   static void ForwardLogReg(TCudaMatrix<AFloat> &input,
+                             TCudaMatrix<AFloat> &p,
+                             TCudaMatrix<AFloat> &fWeights);
+
+   static void UpdateParamsLogReg(TCudaMatrix<AFloat> &input,
+                                  TCudaMatrix<AFloat> &output,
+                                  TCudaMatrix<AFloat> &difference,
+                                  TCudaMatrix<AFloat> &p,
+                                  TCudaMatrix<AFloat> &fWeights,
+                                  TCudaMatrix<AFloat> &fBiases,
+                                  AFloat learningRate,
+                                  size_t fBatchSize);
+
+   static void Transform(TCudaMatrix<AFloat> &input,
+                         TCudaMatrix<AFloat> &transformed,
+                         TCudaMatrix<AFloat> &fWeights,
+                         TCudaMatrix<AFloat> &fBiases);
+
+
 };
 
 } // namespace DNN
