@@ -356,6 +356,9 @@ public:
    void UpdateHelper(unsigned int slot, Long64_t entry, TDFInternal::StaticSeq<S...>, TypeList<BranchTypes...>)
    {
       *fLastResultPtr[slot] = fExpression(std::get<S>(fValues[slot]).Get(entry)...);
+      // silence "unused parameter" warnings in gcc
+      (void)slot;
+      (void)entry;
    }
 
    // recursive chain of `Report`s
@@ -452,6 +455,9 @@ public:
    bool CheckFilterHelper(unsigned int slot, Long64_t entry, TDFInternal::StaticSeq<S...>)
    {
       return fFilter(std::get<S>(fValues[slot]).Get(entry)...);
+      // silence "unused parameter" warnings in gcc
+      (void)slot;
+      (void)entry;
    }
 
    void Init(TTreeReader *r, unsigned int slot) final
