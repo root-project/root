@@ -19,7 +19,7 @@ void FillTree(const char* filename, const char* treeName) {
    f.Close();
 }
 
-int main(int argc, char** argv) {
+int main() {
    auto fileName = "test_reports.root";
    auto treeName = "reportsTree";
    FillTree(fileName, treeName);
@@ -59,6 +59,6 @@ int main(int argc, char** argv) {
    return 0;
 }
 
-void test_reports(int argc = 1, char** argv = nullptr) {
-   main(argc, argv);
+void test_reports() {
+   main();
 }
