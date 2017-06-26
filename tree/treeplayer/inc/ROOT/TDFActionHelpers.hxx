@@ -509,11 +509,11 @@ public:
          // this thread is now re-executing the task, let's flush the current contents of the TBufferMergerFile
          fOutputFiles[slot]->Write();
       }
+      TDirectory *treeDirectory = fOutputFiles[slot].get();
       if (!fDirName.empty()) {
-         fOutputFiles[slot]->mkdir(fDirName.c_str());
-         fOutputFiles[slot]->cd(fDirName.c_str());
+         treeDirectory = fOutputFiles[slot]->mkdir(fDirName.c_str());
       }
-      fOutputTrees[slot] = new TTree(fTreeName.c_str(), fTreeName.c_str());
+      fOutputTrees[slot] = new TTree(fTreeName.c_str(), fTreeName.c_str(), /*splitlvl=*/99, /*dir=*/treeDirectory);
       fOutputTrees[slot]->ResetBit(kMustCleanup); // do not mingle with the thread-unsafe gListOfCleanups
       if (r) {
          // not an empty-source TDF
