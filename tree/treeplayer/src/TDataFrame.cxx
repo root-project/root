@@ -46,6 +46,7 @@ alt="DOI"></a>
 - [Transformations](#transformations)
 - [Actions](#actions)
 - [Parallel execution](#parallel-execution)
+- [Class reference](#reference)
 
 ## <a name="introduction"></a>Introduction
 A pipeline of operations is described to be performed on the data, the framework takes care
