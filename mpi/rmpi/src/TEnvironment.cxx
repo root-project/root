@@ -24,12 +24,17 @@ FILE *TEnvironment::fOutput = NULL;
 
 //______________________________________________________________________________
 /**
-Default constructor to start the environment, initializes the MPI execution environment
-THREAD_SINGLE: Only one thread will execute.
-THREAD_FUNNELED: The process may be multi-threaded, but only the main thread will make MPI calls (all MPI calls are ``funneled'' to the main thread).
-THREAD_SERIALIZED: The process may be multi-threaded, and multiple threads may make MPI calls, but only one at a time: MPI calls are not made concurrently from two distinct threads (all MPI calls are ``serialized'').
-THREAD_MULTIPLE: Multiple threads may call MPI, with no restrictions.
-\param level is an integer with the thread type, default value THREAD_SINGLE is equivalent to call the raw function MPI_Init
+ * Default constructor to start the environment, initializes the MPI execution
+environment
+ * THREAD_SINGLE: Only one thread will execute.
+ * THREAD_FUNNELED: The process may be multi-threaded, but only the main thread
+will make MPI calls (all MPI calls are ``funneled'' to the main thread).
+ * THREAD_SERIALIZED: The process may be multi-threaded, and multiple threads
+may make MPI calls, but only one at a time: MPI calls are not made concurrently
+from two distinct threads (all MPI calls are ``serialized'').
+ * THREAD_MULTIPLE: Multiple threads may call MPI, with no restrictions.
+\param level is an integer with the thread type, default value THREAD_SINGLE is
+equivalent to call the raw function MPI_Init
 */
 TEnvironment::TEnvironment(Int_t level)
 {
@@ -49,14 +54,19 @@ TEnvironment::TEnvironment(Int_t level)
 
 //______________________________________________________________________________
 /**
-Default constructor to start the environment, initializes the MPI execution environment
-THREAD_SINGLE: Only one thread will execute.
-THREAD_FUNNELED: The process may be multi-threaded, but only the main thread will make MPI calls (all MPI calls are ``funneled'' to the main thread).
-THREAD_SERIALIZED: The process may be multi-threaded, and multiple threads may make MPI calls, but only one at a time: MPI calls are not made concurrently from two distinct threads (all MPI calls are ``serialized'').
-THREAD_MULTIPLE: Multiple threads may call MPI, with no restrictions.
-\param argc integer with num of command line arguments
-\param argv list of command line arguments
-\param level is an integer with the thread type, default value THREAD_SINGLE is equivalent to call the raw function MPI_Init
+ * Default constructor to start the environment, initializes the MPI execution
+ * environment
+ * THREAD_SINGLE: Only one thread will execute.
+ * THREAD_FUNNELED: The process may be multi-threaded, but only the main thread
+ * will make MPI calls (all MPI calls are ``funneled'' to the main thread).
+ * THREAD_SERIALIZED: The process may be multi-threaded, and multiple threads
+ * may make MPI calls, but only one at a time: MPI calls are not made
+ * concurrently from two distinct threads (all MPI calls are ``serialized'').
+ * THREAD_MULTIPLE: Multiple threads may call MPI, with no restrictions.
+ * \param argc integer with num of command line arguments
+ * \param argv list of command line arguments
+ * \param level is an integer with the thread type, default value THREAD_SINGLE
+ * is equivalent to call the raw function MPI_Init
 */
 TEnvironment::TEnvironment(Int_t argc, Char_t **argv, Int_t level)
 {
@@ -73,6 +83,9 @@ TEnvironment::TEnvironment(Int_t argc, Char_t **argv, Int_t level)
 }
 
 //______________________________________________________________________________
+/**
+ * Initialization of signal ahnlders to flush StdOut/StdErr
+ */
 void TEnvironment::InitSignalHandlers()
 {
    fInterruptSignal = new TMpiSignalHandler(kSigInterrupt, *this);
@@ -264,7 +277,7 @@ void TEnvironment::Flush(TCommunicator *comm)
 
 //______________________________________________________________________________
 /**
- Method to clear buffers on StdErr and StdOut
+ *  Method to clear buffers on StdErr and StdOut
 */
 void TEnvironment::ClearBuffers()
 {
@@ -274,10 +287,11 @@ void TEnvironment::ClearBuffers()
 
 //______________________________________________________________________________
 /**
-Method to synchronize stdout/stderr output.
-\param status enable/disable output synchronization
-\param output FILE pointer to merge stdout and stderr
-by default is merged in stdout but if output pointer is NULL stdout will be printed asynchronous respect to stderr
+ * Method to synchronize stdout/stderr output.
+ * \param status enable/disable output synchronization
+ * \param output FILE pointer to merge stdout and stderr
+ * by default is merged in stdout but if output pointer is NULL stdout will be
+ * printed asynchronous respect to stderr
 */
 void TEnvironment::SyncOutput(Bool_t status, FILE *output)
 {

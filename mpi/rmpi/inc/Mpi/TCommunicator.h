@@ -211,18 +211,26 @@ namespace ROOT {
 
          static TInterCommunicator Join(const Int_t fd);
 
+         //______________________________________________________________________________
          /**
-          * static method to serialize objects. used in the multiple communication schemas.
-          * \param buffer double pointer to Char_t to save the serialized data
-          * \param size   reference to Int_t with the size of the buffer with serialized data
-          * \param vars   any selializable object
-          * \param count  number of elements to serialize in \p in_vars
-          * \param comm   communicator object
-          * \param dest   (optional) destination of the serialized information, must be the same unserializing
-          * \param source (optional) source of the serialized information, must be the same unserializing
-          * \param tag    (optional) tag of the serialized information, must be the same unserializing
-          * \param root   (optional) root of collective operation, must be the same unserializing
-          */
+                   * static method to serialize objects. used in the multiple
+          * communication schemas.
+                   * \param buffer double pointer to Char_t to save the
+          * serialized data
+                   * \param size   reference to Int_t with the size of the
+          * buffer with serialized data
+                   * \param vars   any selializable object
+                   * \param count  number of elements to serialize in \p in_vars
+                   * \param comm   communicator object
+                   * \param dest   (optional) destination of the serialized
+          * information, must be the same unserializing
+                   * \param source (optional) source of the serialized
+          * information, must be the same unserializing
+                   * \param tag    (optional) tag of the serialized information,
+          * must be the same unserializing
+                   * \param root   (optional) root of collective operation, must
+          * be the same unserializing
+                   */
          template<class T> static void Serialize(Char_t **buffer, Int_t &size, const T *vars, Int_t count, const TCommunicator *comm, Int_t dest = 0, Int_t source = 0, Int_t tag = 0, Int_t root = 0)
          {
             std::vector<TMpiMessageInfo> msgis(count);
@@ -270,18 +278,24 @@ namespace ROOT {
             memcpy(*buffer, ibuffer, size);
          }
 
+         //______________________________________________________________________________
          /**
-          * static method to unserialize objects. used in the multiple communication schemas.
-          * \param buffer pointer to Char_t to read the serialized data
-          * \param size   size of the buffer with serialized data
-          * \param vars   any selializable object
-          * \param count  number of elements to serialize in \p in_vars
-          * \param comm   communicator object
-          * \param dest   (optional) destination of the serialized information, must be the same serializing
-          * \param source (optional) source of the serialized information, must be the same serializing
-          * \param tag    (optional) tag of the serialized information, must be the same serializing
-          * \param root   (optional) root of collective operation, must be the same serializing
-          */
+                   * static method to unserialize objects. used in the multiple
+          * communication schemas.
+                   * \param buffer pointer to Char_t to read the serialized data
+                   * \param size   size of the buffer with serialized data
+                   * \param vars   any selializable object
+                   * \param count  number of elements to serialize in \p in_vars
+                   * \param comm   communicator object
+                   * \param dest   (optional) destination of the serialized
+          * information, must be the same serializing
+                   * \param source (optional) source of the serialized
+          * information, must be the same serializing
+                   * \param tag    (optional) tag of the serialized information,
+          * must be the same serializing
+                   * \param root   (optional) root of collective operation, must
+          * be the same serializing
+                   */
          template<class T> static  void Unserialize(Char_t *buffer, Int_t size, T *vars, Int_t count, const TCommunicator *comm, Int_t dest = 0, Int_t source = 0, Int_t tag = 0, Int_t root = 0)
          {
             TMpiMessage msg(buffer, size);
