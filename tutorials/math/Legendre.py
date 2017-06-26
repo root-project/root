@@ -17,7 +17,7 @@ Canvas.SetGrid()
 leg = ROOT.TLegend(0.5, 0.7, 0.4, 0.89)
 
 L = []
-for nu in xrange(5):
+for nu in range(5):
     f = ROOT.TF1("L_0", "ROOT::Math::legendre([0],x)", -1, 1)
     f.SetParameters(nu, 0.0)
     f.SetLineStyle(1)
