@@ -108,8 +108,8 @@ Graphs can be drawn with the following options:
 | "PFC"    | Palette Fill Color: graph's fill color is taken in the current palette. |
 | "PLC"    | Palette Line Color: graph's line color is taken in the current palette. |
 | "PMC"    | Palette Marker Color: graph's marker color is taken in the current palette. |
-| "RX"     | Reserve the X axis. |
-| "RY"     | Reserve the Y axis. |
+| "RX"     | Reverse the X axis. |
+| "RY"     | Reverse the Y axis. |
 
 Drawing options can be combined. In the following example the graph
 is drawn as a smooth curve (option "C") with markers (option "P") and
