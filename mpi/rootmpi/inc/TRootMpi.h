@@ -21,6 +21,7 @@ namespace ROOT {
          TString fMpirunParams;       //mpirun params like -np 2 etc..
          TString fCompiler;           //compiler for mpi ex. mpic++
          TString fCompilerParams;     //Compile Flags/Linking flags for mpic++
+         Bool_t fCompile;             // Compile Flags/Linking flags for mpic++
          TString fValgrind;           //path to valgrind command
          TString fValgrindParams;     //Valgrind params
          TString fHelpMsg;            //help message

@@ -18,8 +18,11 @@ TRootMpi::TRootMpi(Int_t argc, Char_t **argv)
    fMpirunParams = " ";
 
    fCompiler = ROOT_MPI_CXX;
-
+#if ROOT_MPI_VALGRINDFOUND
    fValgrind = ROOT_MPI_VALGRIND;
+#else
+   fValgrind = "";
+#endif
    fCallValgrind = kFALSE;
    fValgrindParams =  Form("--suppressions=%s/etc/valgrind-root.supp", fRootSys);
    fValgrindParams += " -v --leak-check=full --show-leak-kinds=all --track-origins=yes --show-reachable=yes  ";
@@ -27,6 +30,7 @@ TRootMpi::TRootMpi(Int_t argc, Char_t **argv)
    fArgc = argc;
    fArgv = argv;
 
+   fCompile = kFALSE;
    InitHelp();
 }
 
@@ -36,18 +40,18 @@ Int_t TRootMpi::Launch()
 
    if (fArgc == 1) {
       std::cerr << fHelpMsg;
-      return 0;
+      return 1;
    }
 
-   if (TString(fArgv[fArgc - 1]) == "-process_macro") {
-      Int_t status;
-      auto macroFile = fArgv[fArgc - 2];
-      gApplication->ProcessFile(macroFile, &status);
-      return status;
-   } else {
-      return ProcessArgs() ? 1 : 0;
+   Int_t status;
+   status = ProcessArgs() ? 1 : 0;
+   if (status != 1) {
+     if (fCompile)
+       status = Compile();
+     else
+       status = Execute();
    }
-   return 0;
+   return status;
 }
 
 //______________________________________________________________________________
@@ -87,14 +91,16 @@ Int_t TRootMpi::ProcessArgs()
       fCompilerParams += " -std=c++11 ";
       fCompilerParams += ROOT_MPI_LDFLAGS;
       fCompilerParams += " -lRMpi -lNet -lRIO -lCore -lThread -lHist ";
-      return Compile();
+      fCompile = kTRUE;
+      return 0;
    } else if (TString(fArgv[1]) == "-R") {
       for (int i = 2; i < fArgc; i++) {
          TString arg = fArgv[i];
          arg.ReplaceAll(" ", "");
          fMpirunParams += " " + arg;
       }
-      return Execute();
+      fCompile = kFALSE;
+      return 0;
    } else {
       TString sRootParams = " ";//added -l -q by default
 
@@ -104,8 +110,14 @@ Int_t TRootMpi::ProcessArgs()
          if ((arg == "-b") || (arg == "-n") || (arg == "-l") || (arg == "-q") || (arg == "-x") || (arg == "-memstat")) {
             sRootParams += " " + arg;
          } else {
-            if (arg == "-valgrind") fCallValgrind = kTRUE;
-            else fMpirunParams += " " + arg;
+#if ROOT_MPI_VALGRINDFOUND
+           if (arg == "-valgrind")
+             fCallValgrind = kTRUE;
+           else
+             fMpirunParams += " " + arg;
+#else
+           fMpirunParams += " " + arg;
+#endif
          }
       }
 
@@ -114,12 +126,12 @@ Int_t TRootMpi::ProcessArgs()
       }
       fMpirunParams += " ";
 //       fMpirunParams += Form("%s/bin/%s",fRootSys,fArgv[0]);
-      fMpirunParams += Form("%s/bin/root -l -q", fRootSys);
+      fMpirunParams += Form("%s/bin/root -l -x -q", fRootSys);
       fMpirunParams += " \"";
       fMpirunParams += fArgv[fArgc - 1];//macro file is the last
       fMpirunParams += " \"";
       fMpirunParams += sRootParams;
-      return Execute();
+      fCompile = kFALSE;
    }
    return 0;
 }
@@ -137,6 +149,8 @@ Int_t TRootMpi::Execute()
 {
    auto cmd = fMpirun + " " + fMpirunParams;
    auto status = gSystem->Exec(cmd.Data());
+
+   //    std::cout<<std::endl<<"Return code="<<status<<std::endl<<std::endl;
    if (fCallValgrind) std::cout << "\nValgrind files " << Form(" report-%s-pid.memcheck ", fArgv[fArgc - 1]) << "must be generated." << std::endl;
    return status;
 }

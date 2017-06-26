@@ -37,11 +37,15 @@ namespace ROOT {
          TMpiFileMerger *fMerger;  //!
          TString fDiskOpenMode;    //
       protected:
-         void CopyFrom(TDirectory *src, TMpiFile *file) ;
-         void CopyFrom(TDirectory *src) ;
+        void CopyFrom(TDirectory *src, TMpiFile *file);
+        void CopyFrom(TDirectory *src);
 
-         TMpiFile(const TIntraCommunicator &comm, const Char_t *name, Char_t *buffer, Long64_t size, Option_t *option = "", const Char_t *ftitle = "", Int_t compress = 1);
-         TMpiFile(const TIntraCommunicator &comm, const Char_t *name, Option_t *option = "", const Char_t *ftitle = "", Int_t compress = 1);
+        TMpiFile(const TIntraCommunicator &comm, const Char_t *name,
+                 Char_t *buffer, Long64_t size, Option_t *option = "",
+                 const Char_t *ftitle = "", Int_t compress = 1);
+        TMpiFile(const TIntraCommunicator &comm, const Char_t *name,
+                 Option_t *option = "", const Char_t *ftitle = "",
+                 Int_t compress = 1);
 
       public:
          TMpiFile(const TMpiFile &file);

@@ -29,9 +29,9 @@ void env(Int_t level = THREAD_SINGLE)
    assert(env.GetStdErr()==Form("CerrRank%d",COMM_WORLD.GetRank()));
 
    env.SyncOutput();
-   //testing with FILE pointer 
-   fprintf(stdout,"%s",Form("StdoutRank%d",COMM_WORLD.GetRank()));
-   fprintf(stderr,"%s",Form("StderrRank%d",COMM_WORLD.GetRank()));
+   //testing with FILE pointer
+   fprintf(stdout, "%s", Form("StdoutRank%d", COMM_WORLD.GetRank()));
+   fprintf(stderr, "%s", Form("StderrRank%d", COMM_WORLD.GetRank()));
 
    env.SyncOutput(kFALSE);
    

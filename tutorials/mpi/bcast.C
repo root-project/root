@@ -1,26 +1,26 @@
 #include<Mpi.h>
 #include<TMatrixD.h>
-
+using namespace ROOT::Mpi;
 void bcast()
 {
-  ROOT::Mpi::TEnvironment env;
-  
-  if(gComm->GetSize()==1) return; //need at least 2 process
+  TEnvironment env;
+
+  if (COMM_WORLD.GetSize() == 1)
+    return; // need at least 2 process
 
   //data to send/recv
   TMatrixD mymat(2,2);                     //ROOT object
-  
-  auto rank=gComm->GetRank();
-  auto root=gComm->GetMainProcess();
-    if(gComm->IsMainProcess())
-    {
-	mymat[0][0] = 0.1;
-	mymat[0][1] = 0.2;
-	mymat[1][0] = 0.3;
-	mymat[1][1] = 0.4;
+
+  auto rank = COMM_WORLD.GetRank();
+  auto root = COMM_WORLD.GetMainProcess();
+  if (COMM_WORLD.IsMainProcess()) {
+    mymat[0][0] = 0.1;
+    mymat[0][1] = 0.2;
+    mymat[1][0] = 0.3;
+    mymat[1][1] = 0.4;
     }
 
-    gComm->Bcast(mymat,root);
+    COMM_WORLD.Bcast(mymat, root);
     std::cout<<"Rank = "<<rank<<std::endl;
     mymat.Print();
     std::cout.flush();
