@@ -24,7 +24,7 @@ ROOT.gStyle.SetOptStat(False)
 
 h1 = ROOT.TH1F("h1","my histogram",100,-3,3)
 
-for i in xrange(10000) :
+for i in range(10000) :
     h1.Fill(ROOT.gRandom.Gaus(0,1))
 
 h1.Draw()
