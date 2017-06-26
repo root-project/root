@@ -7,69 +7,78 @@
 
 namespace ROOT {
    namespace Mpi {
-      class TErrorHandler: public TObject {
-         friend class TEnvironment;
-         MPI_Errhandler fErrorHandler;
-         static Bool_t fVerbose;
-         TErrorHandler();
-      public:
-         TErrorHandler(const TErrorHandler &err);
+   /**
+   \class TErrorHandler
+      Class manipulate errors in mpi environment, with this class you can to
+   handle error codes, display tracebacks
+      and get beautified output messages.
+      \ingroup Mpi
+    */
+   class TErrorHandler : public TObject {
+     friend class TEnvironment;
+     MPI_Errhandler fErrorHandler;
+     static Bool_t fVerbose;
+     TErrorHandler();
 
+   public:
+     TErrorHandler(const TErrorHandler &err);
 
-         virtual ~TErrorHandler() { }
+     virtual ~TErrorHandler() {}
 
-         static Int_t GetErrorClass(Int_t errcode);
-         static TString GetErrorString(Int_t errcode);
-         static void  SetErrorString(Int_t errcode, const TString msg);
-         static Int_t CreateErrorClass();
-         static Int_t CreateErrorCode(Int_t errclass);
+     static Int_t GetErrorClass(Int_t errcode);
+     static TString GetErrorString(Int_t errcode);
+     static void SetErrorString(Int_t errcode, const TString msg);
+     static Int_t CreateErrorClass();
+     static Int_t CreateErrorCode(Int_t errclass);
 
-         inline TErrorHandler &operator=(const TErrorHandler &errhanlder)
-         {
-            fErrorHandler = errhanlder.fErrorHandler;
-            return *this;
-         }
+     inline TErrorHandler &operator=(const TErrorHandler &errhanlder) {
+       fErrorHandler = errhanlder.fErrorHandler;
+       return *this;
+     }
 
-         // comparison
-         inline Bool_t operator==(const TErrorHandler &errhanlder)
-         {
-            return (Bool_t)(fErrorHandler == errhanlder.fErrorHandler);
-         }
+     // comparison
+     inline Bool_t operator==(const TErrorHandler &errhanlder) {
+       return (Bool_t)(fErrorHandler == errhanlder.fErrorHandler);
+     }
 
-         inline Bool_t operator!=(const TErrorHandler &errhanlder)
-         {
-            return (Bool_t)!(*this == errhanlder);
-         }
-         virtual void Free();
+     inline Bool_t operator!=(const TErrorHandler &errhanlder) {
+       return (Bool_t) !(*this == errhanlder);
+     }
+     virtual void Free();
 
-         static void SetVerbose(Bool_t status = kTRUE)
-         {
-            fVerbose = status;
-         }
+     static void SetVerbose(Bool_t status = kTRUE) { fVerbose = status; }
 
-         static Bool_t IsVerbose()
-         {
-            return fVerbose;
-         }
+     static Bool_t IsVerbose() { return fVerbose; }
 
-         template<class T> static void TraceBack(const T *comm, const Char_t *function, const Char_t *file, Int_t line, Int_t errcode, const Char_t *msg);
+     template <class T>
+     static void TraceBack(const T *comm, const Char_t *function,
+                           const Char_t *file, Int_t line, Int_t errcode,
+                           const Char_t *msg);
 
-      protected:
-         // inter-language operability
-         inline TErrorHandler &operator= (const MPI_Errhandler &errhanlder)
-         {
-            fErrorHandler = errhanlder;
-            return *this;
-         }
+   protected:
+     // inter-language operability
+     inline TErrorHandler &operator=(const MPI_Errhandler &errhanlder) {
+       fErrorHandler = errhanlder;
+       return *this;
+     }
 
-         inline operator MPI_Errhandler() const
-         {
-            return fErrorHandler;
-         }
+     inline operator MPI_Errhandler() const { return fErrorHandler; }
 
-         ClassDef(TErrorHandler, 0)
+     ClassDef(TErrorHandler, 0)
       };
 
+      //______________________________________________________________________________
+      /**
+       * Template method to show a traceback and abort MPI execution,
+       * The output has useful information for debug like rank, host, message
+       * etc..
+       * \param comm template argument tha must be a valid communicator
+       * \param function method/functions where the traceback was called.
+       * \param file file source
+       * \param line line number
+       * \param errcode MPI error code.
+       * \param _msg message with useful information.
+       */
       template<class T> void TErrorHandler::TraceBack(const T *comm, const Char_t *function, const Char_t *file, Int_t line, Int_t errcode, const Char_t *_msg)
       {
          TString msg;

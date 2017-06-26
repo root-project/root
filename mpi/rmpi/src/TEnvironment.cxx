@@ -263,6 +263,9 @@ void TEnvironment::Flush(TCommunicator *comm)
 }
 
 //______________________________________________________________________________
+/**
+ Method to clear buffers on StdErr and StdOut
+*/
 void TEnvironment::ClearBuffers()
 {
    fStdOut = "";

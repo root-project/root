@@ -13,7 +13,6 @@ namespace ROOT {
          \ingroup Mpi
        */
 
-      //TODO: added error handing callback to flush stderr/stdout in case premature exit by signals o Abort call
       class TErrorHandler;
       class TMpiSignalHandler;
       class TCommunicator;
