@@ -4442,46 +4442,49 @@ TVirtualStreamerInfo* TClass::GetStreamerInfo(Int_t version /* = 0 */) const
 
 TVirtualStreamerInfo* TClass::GetStreamerInfoAbstractEmulated(Int_t version /* = 0 */) const
 {
-   R__LOCKGUARD(gInterpreterMutex);
+   TVirtualStreamerInfo *sinfo = nullptr;
 
-   TString newname( GetName() );
+   TString newname(GetName());
    newname += "@@emulated";
+
+   R__LOCKGUARD(gInterpreterMutex);
 
    TClass *emulated = TClass::GetClass(newname);
 
-   TVirtualStreamerInfo* sinfo = 0;
-
-   if (emulated) {
+   if (emulated)
       sinfo = emulated->GetStreamerInfo(version);
-   }
+
    if (!sinfo) {
       // The emulated version of the streamerInfo is explicitly requested and has
       // not been built yet.
 
       sinfo = (TVirtualStreamerInfo*) fStreamerInfo->At(version);
+
       if (!sinfo && (version != fClassVersion)) {
          // When the requested version does not exist we return
          // the TVirtualStreamerInfo for the currently loaded class version.
          // FIXME: This arguably makes no sense, we should warn and return nothing instead.
          sinfo = (TVirtualStreamerInfo*) fStreamerInfo->At(fClassVersion);
       }
+
       if (!sinfo) {
          // Let's take the first available StreamerInfo as a start
          Int_t ninfos = fStreamerInfo->GetEntriesFast() - 1;
-         for (Int_t i = -1; sinfo == 0 && i < ninfos; ++i) {
-            sinfo =  (TVirtualStreamerInfo*) fStreamerInfo->UncheckedAt(i);
-         }
+         for (Int_t i = -1; sinfo == 0 && i < ninfos; ++i)
+            sinfo = (TVirtualStreamerInfo *)fStreamerInfo->UncheckedAt(i);
       }
+
       if (sinfo) {
-         sinfo = dynamic_cast<TVirtualStreamerInfo*>( sinfo->Clone() );
+         sinfo = dynamic_cast<TVirtualStreamerInfo *>(sinfo->Clone());
          if (sinfo) {
             sinfo->SetClass(0);
-            sinfo->SetName( newname );
+            sinfo->SetName(newname);
             sinfo->BuildCheck();
             sinfo->BuildOld();
             sinfo->GetClass()->AddRule(TString::Format("sourceClass=%s targetClass=%s",GetName(),newname.Data()));
-         } else
+         } else {
             Error("GetStreamerInfoAbstractEmulated", "could not create TVirtualStreamerInfo");
+         }
       }
    }
    return sinfo;
@@ -4502,36 +4505,38 @@ TVirtualStreamerInfo* TClass::GetStreamerInfoAbstractEmulated(Int_t version /* =
 
 TVirtualStreamerInfo* TClass::FindStreamerInfoAbstractEmulated(UInt_t checksum) const
 {
-   R__LOCKGUARD(gInterpreterMutex);
+   TVirtualStreamerInfo *sinfo = nullptr;
 
-   TString newname( GetName() );
+   TString newname(GetName());
    newname += "@@emulated";
+
+   R__LOCKGUARD(gInterpreterMutex);
 
    TClass *emulated = TClass::GetClass(newname);
 
-   TVirtualStreamerInfo* sinfo = 0;
-
-   if (emulated) {
+   if (emulated)
       sinfo = emulated->FindStreamerInfo(checksum);
-   }
+
    if (!sinfo) {
       // The emulated version of the streamerInfo is explicitly requested and has
       // not been built yet.
 
       sinfo = (TVirtualStreamerInfo*) FindStreamerInfo(checksum);
+
       if (!sinfo && (checksum != fCheckSum)) {
          // When the requested version does not exist we return
          // the TVirtualStreamerInfo for the currently loaded class version.
          // FIXME: This arguably makes no sense, we should warn and return nothing instead.
          sinfo = (TVirtualStreamerInfo*) fStreamerInfo->At(fClassVersion);
       }
+
       if (!sinfo) {
          // Let's take the first available StreamerInfo as a start
          Int_t ninfos = fStreamerInfo->GetEntriesFast() - 1;
-         for (Int_t i = -1; sinfo == 0 && i < ninfos; ++i) {
-            sinfo =  (TVirtualStreamerInfo*) fStreamerInfo->UncheckedAt(i);
-         }
+         for (Int_t i = -1; sinfo == 0 && i < ninfos; ++i)
+            sinfo = (TVirtualStreamerInfo *)fStreamerInfo->UncheckedAt(i);
       }
+
       if (sinfo) {
          sinfo = dynamic_cast<TVirtualStreamerInfo*>( sinfo->Clone() );
          if (sinfo) {
@@ -4540,8 +4545,9 @@ TVirtualStreamerInfo* TClass::FindStreamerInfoAbstractEmulated(UInt_t checksum) 
             sinfo->BuildCheck();
             sinfo->BuildOld();
             sinfo->GetClass()->AddRule(TString::Format("sourceClass=%s targetClass=%s",GetName(),newname.Data()));
-         } else
+         } else {
             Error("GetStreamerInfoAbstractEmulated", "could not create TVirtualStreamerInfo");
+         }
       }
    }
    return sinfo;
