@@ -340,7 +340,7 @@ TSDAE<Architecture_t>::Pretrain(Matrix_t &input, Double_t learningRate, Double_t
           }
 
         }
-        fDae[i]->train(layerInput, learningRate, corruptionLevel);
+        fDae[i]->TrainLayer(layerInput, learningRate, corruptionLevel);
 
       }
     }
@@ -400,7 +400,7 @@ TSDAE<Architecture_t>::Finetune(Matrix_t &input, Matrix_t &outputLabel, Double_t
 
 
       }
-      fLogReg->train(layerInput, trainingOutputLabel, learningRate);
+      fLogReg->TrainLogReg(layerInput, trainingOutputLabel, learningRate);
     }
   }
 
