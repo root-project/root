@@ -546,8 +546,7 @@ namespace ROOT {
    template <typename T> TClass* GetClass(const T* /* dummy */)        { return TClass::GetClass(typeid(T)); }
 
 #ifndef R__NO_CLASS_TEMPLATE_SPECIALIZATION
-   // This can only be used when the template overload resolution can distringuish between
-   // T* and T**
+   // This can only be used when the template overload resolution can distinguish between T* and T**
    template <typename T> TClass* GetClass(      T**       /* dummy */) { return GetClass((T*)0); }
    template <typename T> TClass* GetClass(const T**       /* dummy */) { return GetClass((T*)0); }
    template <typename T> TClass* GetClass(      T* const* /* dummy */) { return GetClass((T*)0); }
