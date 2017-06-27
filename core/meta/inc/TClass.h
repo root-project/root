@@ -249,7 +249,6 @@ private:
              ClassInfo_t *classInfo,
              Bool_t silent);
    void ForceReload (TClass* oldcl);
-   void LoadClassInfo() const;
 
    static TClass     *LoadClassDefault(const char *requestedname, Bool_t silent);
    static TClass     *LoadClassCustom(const char *requestedname, Bool_t silent);
@@ -308,6 +307,8 @@ private:
 private:
    TClass(const TClass& tc) = delete;
    TClass& operator=(const TClass&) = delete;
+
+   void LoadClassInfo() const;
 
 protected:
    TVirtualStreamerInfo     *FindStreamerInfo(TObjArray* arr, UInt_t checksum) const;
