@@ -40,25 +40,90 @@ namespace TDF {
 using namespace ROOT::Experimental::TDF;
 using namespace ROOT::Detail::TDF;
 
-using TmpBranchBasePtr_t = std::shared_ptr<TCustomColumnBase>;
+/****** BuildAndBook overloads *******/
+// BuildAndBook builds a TAction with the right operation and books it with the TLoopManager
 
-template <typename TDFNode, typename ActionType, typename... BranchTypes, typename ActionResultType>
-void CallBuildAndBook(TDFNode *node, const ColumnNames_t &bl, unsigned int nSlots,
+// Generic filling (covers Histo2D, Histo3D, Profile1D and Profile2D actions, with and without weights)
+template <typename... BranchTypes, typename ActionType, typename ActionResultType, typename PrevNodeType>
+void BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &h, unsigned int nSlots,
+                  TLoopManager &loopManager, PrevNodeType &prevNode, ActionType *)
+{
+   using Helper_t = FillTOHelper<ActionResultType>;
+   using Action_t = TAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchTypes...>>;
+   loopManager.Book(std::make_shared<Action_t>(Helper_t(h, nSlots), bl, prevNode));
+}
+
+// Histo1D filling (must handle the special case of distinguishing FillTOHelper and FillHelper
+template <typename... BranchTypes, typename PrevNodeType>
+void BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<::TH1D> &h, unsigned int nSlots,
+                  TLoopManager &loopManager, PrevNodeType &prevNode, ActionTypes::Histo1D *)
+{
+   auto hasAxisLimits = HistoUtils<::TH1D>::HasAxisLimits(*h);
+
+   if (hasAxisLimits) {
+      using Helper_t = FillTOHelper<::TH1D>;
+      using Action_t = TAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchTypes...>>;
+      loopManager.Book(std::make_shared<Action_t>(Helper_t(h, nSlots), bl, prevNode));
+   } else {
+      using Helper_t = FillHelper;
+      using Action_t = TAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchTypes...>>;
+      loopManager.Book(std::make_shared<Action_t>(Helper_t(h, nSlots), bl, prevNode));
+   }
+}
+
+// Min action
+template <typename BranchType, typename PrevNodeType>
+void BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<double> &minV, unsigned int nSlots,
+                  TLoopManager &loopManager, PrevNodeType &prevNode, ActionTypes::Min *)
+{
+   using Helper_t = MinHelper;
+   using Action_t = TAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchType>>;
+   loopManager.Book(std::make_shared<Action_t>(Helper_t(minV, nSlots), bl, prevNode));
+}
+
+// Max action
+template <typename BranchType, typename PrevNodeType>
+void BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<double> &maxV, unsigned int nSlots,
+                  TLoopManager &loopManager, PrevNodeType &prevNode, ActionTypes::Max *)
+{
+   using Helper_t = MaxHelper;
+   using Action_t = TAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchType>>;
+   loopManager.Book(std::make_shared<Action_t>(Helper_t(maxV, nSlots), bl, prevNode));
+}
+
+// Mean action
+template <typename BranchType, typename PrevNodeType>
+void BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<double> &meanV, unsigned int nSlots,
+                  TLoopManager &loopManager, PrevNodeType &prevNode, ActionTypes::Mean *)
+{
+   using Helper_t = MeanHelper;
+   using Action_t = TAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchType>>;
+   loopManager.Book(std::make_shared<Action_t>(Helper_t(meanV, nSlots), bl, prevNode));
+}
+/****** end BuildAndBook ******/
+/// \endcond
+
+template <typename ActionType, typename... BranchTypes, typename PrevNodeType, typename ActionResultType>
+void CallBuildAndBook(PrevNodeType &prevNode, const ColumnNames_t &bl, unsigned int nSlots,
                       const std::shared_ptr<ActionResultType> &r)
 {
-   node->template BuildAndBook<BranchTypes...>(bl, r, nSlots, (ActionType *)nullptr);
+   // if we are here it means we are jitting, if we are jitting the loop manager must be alive
+   auto &loopManager = *prevNode.GetImplPtr();
+   BuildAndBook<BranchTypes...>(bl, r, nSlots, loopManager, prevNode, (ActionType *)nullptr);
 }
 
 std::vector<std::string> GetUsedBranchesNames(const std::string, TObjArray *, const std::vector<std::string> &);
+
+using TmpBranchBasePtr_t = std::shared_ptr<TCustomColumnBase>;
 
 Long_t JitTransformation(void *thisPtr, const std::string &methodName, const std::string &nodeTypeName,
                          const std::string &name, const std::string &expression, TObjArray *branches,
                          const std::vector<std::string> &tmpBranches,
                          const std::map<std::string, TmpBranchBasePtr_t> &tmpBookedBranches, TTree *tree);
 
-void JitBuildAndBook(const ColumnNames_t &bl, const std::string &nodeTypename, void *thisPtr, const std::type_info &art,
-                     const std::type_info &at, const void *r, TTree *tree, unsigned int nSlots,
-                     const std::map<std::string, TmpBranchBasePtr_t> &tmpBranches);
+void JitBuildAndBook(const ColumnNames_t &bl, const std::string &prevNodeTypename, void *prevNode,
+                     const std::type_info &art, const std::type_info &at, const void *r, TTree *tree,
+                     unsigned int nSlots, const std::map<std::string, TmpBranchBasePtr_t> &tmpBranches);
 
 } // namespace TDF
 } // namespace Internal
@@ -98,10 +163,6 @@ class TInterface {
    friend std::string cling::printValue(ROOT::Experimental::TDataFrame *tdf); // For a nice printing at the prompt
    template <typename T>
    friend class TInterface;
-   template <typename TDFNode, typename ActionType, typename... BranchTypes, typename ActionResultType>
-   friend void TDFInternal::CallBuildAndBook(TDFNode *, const TDFDetail::ColumnNames_t &, unsigned int nSlots,
-                                             const std::shared_ptr<ActionResultType> &);
-
 public:
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Append a filter to the call graph.
@@ -929,76 +990,6 @@ private:
       return GetDefaultBranchNames(neededBranches, actionNameForErr);
    }
 
-   /// \cond HIDDEN_SYMBOLS
-
-   /****** BuildAndBook overloads *******/
-   // BuildAndBook builds a TAction with the right operation and book it with the TLoopManager
-
-   // Generic filling (covers Histo2D, Histo3D, Profile1D and Profile2D actions, with and without weights)
-   template <typename... BranchTypes, typename ActionType, typename ActionResultType>
-   void BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &h, unsigned int nSlots,
-                     ActionType *)
-   {
-      using Helper_t = TDFInternal::FillTOHelper<ActionResultType>;
-      using Action_t = TDFInternal::TAction<Helper_t, Proxied, TTraits::TypeList<BranchTypes...>>;
-      auto df = GetDataFrameChecked();
-      df->Book(std::make_shared<Action_t>(Helper_t(h, nSlots), bl, *fProxiedPtr));
-   }
-
-   // Histo1D filling (must handle the special case of distinguishing FillTOHelper and FillHelper
-   template <typename... BranchTypes>
-   void BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<::TH1D> &h, unsigned int nSlots,
-                     TDFInternal::ActionTypes::Histo1D *)
-   {
-      auto df = GetDataFrameChecked();
-      auto hasAxisLimits = TDFInternal::HistoUtils<::TH1D>::HasAxisLimits(*h);
-
-      if (hasAxisLimits) {
-         using Helper_t = TDFInternal::FillTOHelper<::TH1D>;
-         using Action_t = TDFInternal::TAction<Helper_t, Proxied, TTraits::TypeList<BranchTypes...>>;
-         df->Book(std::make_shared<Action_t>(Helper_t(h, nSlots), bl, *fProxiedPtr));
-      } else {
-         using Helper_t = TDFInternal::FillHelper;
-         using Action_t = TDFInternal::TAction<Helper_t, Proxied, TTraits::TypeList<BranchTypes...>>;
-         df->Book(std::make_shared<Action_t>(Helper_t(h, nSlots), bl, *fProxiedPtr));
-      }
-   }
-
-   // Min action
-   template <typename BranchType>
-   void BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<double> &minV, unsigned int nSlots,
-                     TDFInternal::ActionTypes::Min *)
-   {
-      using Helper_t = TDFInternal::MinHelper;
-      using Action_t = TDFInternal::TAction<Helper_t, Proxied, TTraits::TypeList<BranchType>>;
-      auto df = GetDataFrameChecked();
-      df->Book(std::make_shared<Action_t>(Helper_t(minV, nSlots), bl, *fProxiedPtr));
-   }
-
-   // Max action
-   template <typename BranchType>
-   void BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<double> &maxV, unsigned int nSlots,
-                     TDFInternal::ActionTypes::Max *)
-   {
-      using Helper_t = TDFInternal::MaxHelper;
-      using Action_t = TDFInternal::TAction<Helper_t, Proxied, TTraits::TypeList<BranchType>>;
-      auto df = GetDataFrameChecked();
-      df->Book(std::make_shared<Action_t>(Helper_t(maxV, nSlots), bl, *fProxiedPtr));
-   }
-
-   // Mean action
-   template <typename BranchType>
-   void BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<double> &meanV, unsigned int nSlots,
-                     TDFInternal::ActionTypes::Mean *)
-   {
-      using Helper_t = TDFInternal::MeanHelper;
-      using Action_t = TDFInternal::TAction<Helper_t, Proxied, TTraits::TypeList<BranchType>>;
-      auto df = GetDataFrameChecked();
-      df->Book(std::make_shared<Action_t>(Helper_t(meanV, nSlots), bl, *fProxiedPtr));
-   }
-   /****** end BuildAndBook ******/
-   /// \endcond
-
    // Type was specified by the user, no need to infer it
    template <typename ActionType, typename... BranchTypes, typename ActionResultType,
              typename std::enable_if<!TDFInternal::TNeedJitting<BranchTypes...>::value, int>::type = 0>
@@ -1006,7 +997,7 @@ private:
    {
       auto df = GetDataFrameChecked();
       unsigned int nSlots = df->GetNSlots();
-      BuildAndBook<BranchTypes...>(bl, r, nSlots, (ActionType *)nullptr);
+      TDFInternal::BuildAndBook<BranchTypes...>(bl, r, nSlots, *df, *fProxiedPtr, (ActionType *)nullptr);
       return MakeResultProxy(r, df);
    }
 
@@ -1019,8 +1010,7 @@ private:
       unsigned int nSlots = df->GetNSlots();
       const auto &tmpBranches = df->GetBookedBranches();
       auto tree = df->GetTree();
-      const auto thisTypeName = "ROOT::Experimental::TDF::TInterface<" + GetNodeTypeName() + ">";
-      TDFInternal::JitBuildAndBook(bl, thisTypeName, this, typeid(std::shared_ptr<ActionResultType>),
+      TDFInternal::JitBuildAndBook(bl, GetNodeTypeName(), fProxiedPtr.get(), typeid(std::shared_ptr<ActionResultType>),
                                    typeid(ActionType), &r, tree, nSlots, tmpBranches);
       return MakeResultProxy(r, df);
    }
