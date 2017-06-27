@@ -702,6 +702,10 @@ void TRootCanvas::ReallyDelete()
               this, "EventInfo(Int_t, Int_t, Int_t, TObject*)");
 
    fCanvas->SetCanvasImp(0);
+   fCanvas->Clear();
+   fCanvas->SetName("");
+   if (gPad && gPad->GetCanvas() == fCanvas)
+      gPad = 0;
    delete this;
 }
 
