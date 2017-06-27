@@ -127,6 +127,18 @@ std::string JitBuildAndBook(const ColumnNames_t &bl, const std::string &prevNode
                             const std::type_info &art, const std::type_info &at, const void *r, TTree *tree,
                             unsigned int nSlots, const std::map<std::string, TmpBranchBasePtr_t> &tmpBranches);
 
+// allocate a shared_ptr on the heap, return a reference to it. the user is responsible of deleting the shared_ptr*.
+// this function is meant to only be used by TInterface's action methods, and should be deprecated as soon as we find
+// a better way to make jitting work: the problem it solves is that we need to pass the same shared_ptr to the Helper
+// object of each action and to the TResultProxy returned by the action. While the former is only instantiated when
+// the event loop is about to start, the latter has to be returned to the user as soon as the action is booked.
+// a heap allocated shared_ptr will stay alive long enough that at jitting time its address is still valid.
+template<typename T, typename...Args>
+std::shared_ptr<T> &MakeSharedOnHeap(Args&&...args) {
+   auto sharedPtrPtr = new std::shared_ptr<T>(std::make_shared<T>(std::forward<Args>(args)...));
+   return *sharedPtrPtr;
+}
+
 } // namespace TDF
 } // namespace Internal
 
@@ -578,7 +590,7 @@ public:
    TResultProxy<::TH1D> Histo1D(::TH1D &&model = ::TH1D{"", "", 128u, 0., 0.}, std::string_view vName = "")
    {
       auto bl = GetBranchNames<V>({vName}, "fill the histogram");
-      auto h = std::make_shared<::TH1D>(std::move(model));
+      auto &h = TDFInternal::MakeSharedOnHeap<::TH1D>(std::move(model));
       if (h->GetXaxis()->GetXmax() == h->GetXaxis()->GetXmin())
          TDFInternal::HistoUtils<::TH1D>::SetCanExtendAllAxes(*h);
       return CreateAction<TDFInternal::ActionTypes::Histo1D, V>(bl, h);
@@ -609,7 +621,7 @@ public:
    TResultProxy<::TH1D> Histo1D(::TH1D &&model, std::string_view vName, std::string_view wName)
    {
       auto bl = GetBranchNames<V, W>({vName, wName}, "fill the histogram");
-      auto h = std::make_shared<::TH1D>(std::move(model));
+      auto &h = TDFInternal::MakeSharedOnHeap<::TH1D>(std::move(model));
       return CreateAction<TDFInternal::ActionTypes::Histo1D, V, W>(bl, h);
    }
 
@@ -639,7 +651,7 @@ public:
    template <typename V1 = TDFDetail::TInferType, typename V2 = TDFDetail::TInferType>
    TResultProxy<::TH2D> Histo2D(::TH2D &&model, std::string_view v1Name = "", std::string_view v2Name = "")
    {
-      auto h = std::make_shared<::TH2D>(std::move(model));
+      auto &h = TDFInternal::MakeSharedOnHeap<::TH2D>(std::move(model));
       if (!TDFInternal::HistoUtils<::TH2D>::HasAxisLimits(*h)) {
          throw std::runtime_error("2D histograms with no axes limits are not supported yet.");
       }
@@ -665,7 +677,7 @@ public:
    TResultProxy<::TH2D> Histo2D(::TH2D &&model, std::string_view v1Name, std::string_view v2Name,
                                 std::string_view wName)
    {
-      auto h = std::make_shared<::TH2D>(std::move(model));
+      auto &h = TDFInternal::MakeSharedOnHeap<::TH2D>(std::move(model));
       if (!TDFInternal::HistoUtils<::TH2D>::HasAxisLimits(*h)) {
          throw std::runtime_error("2D histograms with no axes limits are not supported yet.");
       }
@@ -697,7 +709,7 @@ public:
    TResultProxy<::TH3D> Histo3D(::TH3D &&model, std::string_view v1Name = "", std::string_view v2Name = "",
                                 std::string_view v3Name = "")
    {
-      auto h = std::make_shared<::TH3D>(std::move(model));
+      auto &h = TDFInternal::MakeSharedOnHeap<::TH3D>(std::move(model));
       if (!TDFInternal::HistoUtils<::TH3D>::HasAxisLimits(*h)) {
          throw std::runtime_error("3D histograms with no axes limits are not supported yet.");
       }
@@ -725,7 +737,7 @@ public:
    TResultProxy<::TH3D> Histo3D(::TH3D &&model, std::string_view v1Name, std::string_view v2Name,
                                 std::string_view v3Name, std::string_view wName)
    {
-      auto h = std::make_shared<::TH3D>(std::move(model));
+      auto &h = TDFInternal::MakeSharedOnHeap<::TH3D>(std::move(model));
       if (!TDFInternal::HistoUtils<::TH3D>::HasAxisLimits(*h)) {
          throw std::runtime_error("3D histograms with no axes limits are not supported yet.");
       }
@@ -753,7 +765,7 @@ public:
    template <typename V1 = TDFDetail::TInferType, typename V2 = TDFDetail::TInferType>
    TResultProxy<::TProfile> Profile1D(::TProfile &&model, std::string_view v1Name = "", std::string_view v2Name = "")
    {
-      auto h = std::make_shared<::TProfile>(std::move(model));
+      auto &h = TDFInternal::MakeSharedOnHeap<::TProfile>(std::move(model));
       if (!TDFInternal::HistoUtils<::TProfile>::HasAxisLimits(*h)) {
          throw std::runtime_error("Profiles with no axes limits are not supported yet.");
       }
@@ -779,7 +791,7 @@ public:
    TResultProxy<::TProfile> Profile1D(::TProfile &&model, std::string_view v1Name, std::string_view v2Name,
                                       std::string_view wName)
    {
-      auto h = std::make_shared<::TProfile>(std::move(model));
+      auto &h = TDFInternal::MakeSharedOnHeap<::TProfile>(std::move(model));
       if (!TDFInternal::HistoUtils<::TProfile>::HasAxisLimits(*h)) {
          throw std::runtime_error("Profile histograms with no axes limits are not supported yet.");
       }
@@ -811,7 +823,7 @@ public:
    TResultProxy<::TProfile2D> Profile2D(::TProfile2D &&model, std::string_view v1Name = "",
                                         std::string_view v2Name = "", std::string_view v3Name = "")
    {
-      auto h = std::make_shared<::TProfile2D>(std::move(model));
+      auto &h = TDFInternal::MakeSharedOnHeap<::TProfile2D>(std::move(model));
       if (!TDFInternal::HistoUtils<::TProfile2D>::HasAxisLimits(*h)) {
          throw std::runtime_error("2D profiles with no axes limits are not supported yet.");
       }
@@ -839,7 +851,7 @@ public:
    TResultProxy<::TProfile2D> Profile2D(::TProfile2D &&model, std::string_view v1Name, std::string_view v2Name,
                                         std::string_view v3Name, std::string_view wName)
    {
-      auto h = std::make_shared<::TProfile2D>(std::move(model));
+      auto &h = TDFInternal::MakeSharedOnHeap<::TProfile2D>(std::move(model));
       if (!TDFInternal::HistoUtils<::TProfile2D>::HasAxisLimits(*h)) {
          throw std::runtime_error("2D profiles with no axes limits are not supported yet.");
       }
@@ -867,7 +879,7 @@ public:
    template <typename FirstBranch, typename... OtherBranches, typename T> // need FirstBranch to disambiguate overloads
    TResultProxy<T> Fill(T &&model, const ColumnNames_t &bl)
    {
-      auto h = std::make_shared<T>(std::move(model));
+      auto &h = TDFInternal::MakeSharedOnHeap<T>(std::move(model));
       if (!TDFInternal::HistoUtils<T>::HasAxisLimits(*h)) {
          throw std::runtime_error("The absence of axes limits is not supported yet.");
       }
@@ -877,7 +889,7 @@ public:
    template <typename T>
    TResultProxy<T> Fill(T &&model, const ColumnNames_t &bl)
    {
-      auto h = std::make_shared<T>(std::move(model));
+      auto &h = TDFInternal::MakeSharedOnHeap<T>(std::move(model));
       if (!TDFInternal::HistoUtils<T>::HasAxisLimits(*h)) {
          throw std::runtime_error("The absence of axes limits is not supported yet.");
       }
@@ -897,7 +909,7 @@ public:
    TResultProxy<double> Min(std::string_view branchName = "")
    {
       auto bl = GetBranchNames<T>({branchName}, "calculate the minimum");
-      auto minV = std::make_shared<double>(std::numeric_limits<double>::max());
+      auto &minV = TDFInternal::MakeSharedOnHeap<double>(std::numeric_limits<double>::max());
       return CreateAction<TDFInternal::ActionTypes::Min, T>(bl, minV);
    }
 
@@ -914,7 +926,7 @@ public:
    TResultProxy<double> Max(std::string_view branchName = "")
    {
       auto bl = GetBranchNames<T>({branchName}, "calculate the maximum");
-      auto maxV = std::make_shared<double>(std::numeric_limits<double>::min());
+      auto &maxV = TDFInternal::MakeSharedOnHeap<double>(std::numeric_limits<double>::min());
       return CreateAction<TDFInternal::ActionTypes::Max, T>(bl, maxV);
    }
 
@@ -931,7 +943,7 @@ public:
    TResultProxy<double> Mean(std::string_view branchName = "")
    {
       auto bl = GetBranchNames<T>({branchName}, "calculate the mean");
-      auto meanV = std::make_shared<double>(0);
+      auto &meanV = TDFInternal::MakeSharedOnHeap<double>(0);
       return CreateAction<TDFInternal::ActionTypes::Mean, T>(bl, meanV);
    }
 
