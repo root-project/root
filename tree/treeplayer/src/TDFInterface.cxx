@@ -74,7 +74,6 @@ Long_t JitTransformation(void *thisPtr, const std::string &methodName, const std
    // Move to the preparation of the jitting
    // We put all of the jitted entities in a namespace called
    // __tdf_filter_N, where N is a monotonically increasing index.
-   TInterpreter::EErrorCode interpErrCode;
    std::vector<std::string> usedBranchesTypes;
    std::stringstream ss;
    static unsigned int iNs = 0U;
@@ -98,14 +97,12 @@ Long_t JitTransformation(void *thisPtr, const std::string &methodName, const std
       auto variableDeclarations = ss.str();
       ss.str("");
       // We need ProcessLine to trigger auto{parsing,loading} where needed
+      TInterpreter::EErrorCode interpErrCode;
       gInterpreter->ProcessLine(variableDeclarations.c_str(), &interpErrCode);
       if (TInterpreter::EErrorCode::kNoError != interpErrCode) {
-         std::string msg = "Cannot declare these variables ";
-         msg += " ";
+         std::string msg = "Cannot declare these variables:  ";
          msg += variableDeclarations;
-         if (TInterpreter::EErrorCode::kNoError != interpErrCode) {
-            msg += "\nInterpreter error code is " + std::to_string(interpErrCode) + ".";
-         }
+         msg += "\nInterpreter error code is " + std::to_string(interpErrCode) + ".";
          throw std::runtime_error(msg);
       }
    }
@@ -151,10 +148,10 @@ Long_t JitTransformation(void *thisPtr, const std::string &methodName, const std
 
    ss << ");";
 
+   TInterpreter::EErrorCode interpErrCode;
    auto retVal = gInterpreter->ProcessLine(ss.str().c_str(), &interpErrCode);
    if (TInterpreter::EErrorCode::kNoError != interpErrCode || !retVal) {
-      std::string msg = "Cannot interpret the invocation to " + methodName + ": ";
-      msg += " ";
+      std::string msg = "Cannot interpret the invocation to " + methodName + ":  ";
       msg += ss.str();
       if (TInterpreter::EErrorCode::kNoError != interpErrCode) {
          msg += "\nInterpreter error code is " + std::to_string(interpErrCode) + ".";
