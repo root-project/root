@@ -262,7 +262,9 @@ public:
       std::stringstream snapCall;
       // build a string equivalent to
       // "reinterpret_cast</nodetype/*>(this)->Snapshot<Ts...>(treename,filename,*reinterpret_cast<ColumnNames_t*>(&bnames))"
-      snapCall << "if (gROOTMutex) gROOTMutex->UnLock(); ((" << GetNodeTypeName() << "*)" << this << ")->Snapshot<";
+      snapCall << "if (gROOTMutex) gROOTMutex->UnLock();";
+      snapCall << "reinterpret_cast<ROOT::Experimental::TDF::TInterface<" << GetNodeTypeName() << ">*>(" << this
+               << ")->Snapshot<";
       bool first = true;
       for (auto &b : bnames) {
          if (!first) snapCall << ", ";
@@ -897,11 +899,12 @@ private:
       const std::string transformInt(transformation);
       const std::string nameInt(nodeName);
       const std::string expressionInt(expression);
-      return TDFInternal::JitTransformation(this, transformInt, GetNodeTypeName(), nameInt, expressionInt, branches,
+      const auto thisTypeName = "ROOT::Experimental::TDF::TInterface<" + GetNodeTypeName() + ">";
+      return TDFInternal::JitTransformation(this, transformInt, thisTypeName, nameInt, expressionInt, branches,
                                             tmpBranches, tmpBookedBranches, tree);
    }
 
-   inline const char *GetNodeTypeName() { return ""; };
+   inline std::string GetNodeTypeName();
 
    /// Returns the default branches if needed, takes care of the error handling.
    template <typename T1, typename T2 = void, typename T3 = void, typename T4 = void>
@@ -1016,7 +1019,8 @@ private:
       unsigned int nSlots = df->GetNSlots();
       const auto &tmpBranches = df->GetBookedBranches();
       auto tree = df->GetTree();
-      TDFInternal::JitBuildAndBook(bl, GetNodeTypeName(), this, typeid(std::shared_ptr<ActionResultType>),
+      const auto thisTypeName = "ROOT::Experimental::TDF::TInterface<" + GetNodeTypeName() + ">";
+      TDFInternal::JitBuildAndBook(bl, thisTypeName, this, typeid(std::shared_ptr<ActionResultType>),
                                    typeid(ActionType), &r, tree, nSlots, tmpBranches);
       return MakeResultProxy(r, df);
    }
@@ -1143,27 +1147,27 @@ protected:
 };
 
 template <>
-inline const char *TInterface<TDFDetail::TFilterBase>::GetNodeTypeName()
+inline std::string TInterface<TDFDetail::TFilterBase>::GetNodeTypeName()
 {
-   return "ROOT::Experimental::TDF::TInterface<ROOT::Detail::TDF::TFilterBase>";
+   return "ROOT::Detail::TDF::TFilterBase";
 }
 
 template <>
-inline const char *TInterface<TDFDetail::TCustomColumnBase>::GetNodeTypeName()
+inline std::string TInterface<TDFDetail::TCustomColumnBase>::GetNodeTypeName()
 {
-   return "ROOT::Experimental::TDF::TInterface<ROOT::Detail::TDF::TCustomColumnBase>";
+   return "ROOT::Detail::TDF::TCustomColumnBase";
 }
 
 template <>
-inline const char *TInterface<TDFDetail::TLoopManager>::GetNodeTypeName()
+inline std::string TInterface<TDFDetail::TLoopManager>::GetNodeTypeName()
 {
-   return "ROOT::Experimental::TDF::TInterface<ROOT::Detail::TDF::TLoopManager>";
+   return "ROOT::Detail::TDF::TLoopManager";
 }
 
 template <>
-inline const char *TInterface<TDFDetail::TRangeBase>::GetNodeTypeName()
+inline std::string TInterface<TDFDetail::TRangeBase>::GetNodeTypeName()
 {
-   return "ROOT::Experimental::TDF::TInterface<ROOT::Detail::TDF::TRangeBase>";
+   return "ROOT::Detail::TDF::TRangeBase";
 }
 
 } // end NS TDF
