@@ -169,14 +169,18 @@ void TMpiFile::CopyFrom(TDirectory *source)
 //______________________________________________________________________________
 /*! Method to merge of all  TMpiFiles in a  root process
 
-  \param root root process (rank)  to merge the content of all files in all process
+  \param root root process (rank)  to merge the content of all files in all
+  process
   \param save kTRUE if you want to save the merge procedure in the file now
   \param type type of merge is defined by the bit values in EPartialMergeType:
-    kRegular      : normal merge, overwritting the output file
-    kIncremental  : merge the input file with the content of the output file (if already exising) (default)
-    kAll          : merge all type of objects (default)
-    kResetable    : merge only the objects with a MergeAfterReset member function.
-    kNonResetable : merge only the objects without a MergeAfterReset member function.
+    - kRegular      : normal merge, overwritting the output file
+    - kIncremental  : merge the input file with the content of the output file
+  (if already exising) (default)
+    - kAll          : merge all type of objects (default)
+    - kResetable    : merge only the objects with a MergeAfterReset member
+  function.
+    - kNonResetable : merge only the objects without a MergeAfterReset member
+  function.
 */
 void TMpiFile::Merge(Int_t root, Bool_t save, Int_t type)
 {
@@ -221,14 +225,19 @@ void TMpiFile::Merge(Int_t root, Bool_t save, Int_t type)
 
 //______________________________________________________________________________
 /*!
-   Method to save the file from memory to disk merging all in the given process (root)
-  \param root root process (rank)  to merge the content of all files in all process
+   Method to save the file from memory to disk merging all in the given process
+  (root)
+  \param root root process (rank)  to merge the content of all files in all
+  process
   \param type type of merge is defined by the bit values in EPartialMergeType:
-    kRegular      : normal merge, overwritting the output file
-    kIncremental  : merge the input file with the content of the output file (if already exising) (default)
-    kAll          : merge all type of objects (default)
-    kResetable    : merge only the objects with a MergeAfterReset member function.
-    kNonResetable : merge only the objects without a MergeAfterReset member function.
+    - kRegular      : normal merge, overwritting the output file
+    - kIncremental  : merge the input file with the content of the output file
+  (if already exising) (default)
+    - kAll          : merge all type of objects (default)
+    - kResetable    : merge only the objects with a MergeAfterReset member
+  function.
+    - kNonResetable : merge only the objects without a MergeAfterReset member
+  function.
 
 */
 void TMpiFile::Save(Int_t root, Int_t type)
@@ -294,16 +303,22 @@ void TMpiFile::SyncSave(Int_t rank)
 
 //______________________________________________________________________________
 /*!
-    Pethod to synchronize all TMpiFile content in all process of current TIntraCommunicator.
-    All the data is synchronized merging all TMpiFiles in the given process (rank) and every TMpiFile is updated with
+    Pethod to synchronize all TMpiFile content in all process of current
+   TIntraCommunicator.
+    All the data is synchronized merging all TMpiFiles in the given process
+   (rank) and every TMpiFile is updated with
     a message using broadcast
     \param rank Process to merge the content of all files in all process
-    \param type type of merge for synchronization is defined by the bit values in EPartialMergeType:
-        kRegular      : normal merge, overwritting the output file
-        kIncremental  : merge the input file with the content of the output file (if already exising) (default)
-        kAll          : merge all type of objects (default)
-        kResetable    : merge only the objects with a MergeAfterReset member function.
-        kNonResetable : merge only the objects without a MergeAfterReset member function.
+    \param type type of merge for synchronization is defined by the bit values
+   in EPartialMergeType:
+    - kRegular      : normal merge, overwritting the output file
+    - kIncremental  : merge the input file with the content of the output file
+   (if already exising) (default)
+    - kAll          : merge all type of objects (default)
+    - kResetable    : merge only the objects with a MergeAfterReset member
+   function.
+    - kNonResetable : merge only the objects without a MergeAfterReset member
+   function.
 */
 void TMpiFile::Sync(Int_t rank, Int_t type)
 {

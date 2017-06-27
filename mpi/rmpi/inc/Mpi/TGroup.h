@@ -8,7 +8,7 @@ namespace ROOT {
 
    namespace Mpi {
    /**
-   \class Group
+   \class TGroup
       Class manipulate mpi groups, with this class you can perform communication
    in group of processes.
       \ingroup Mpi

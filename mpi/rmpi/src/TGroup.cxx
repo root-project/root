@@ -35,7 +35,8 @@ Int_t TGroup::GetRank() const
  *\param n  Number of ranks in ranks1 and ranks2 arrays (integer).
  *\param ranks1 Array of zero or more valid ranks in group1.
  *\param group2 Second group (handle).
- *\param ranks2 Output array of corresponding ranks in group2, MPI_UNDEFINED
+ *\param ranks2 Output array of corresponding ranks in group2,
+ *ROOT::Mpi::UNDEFINED
  *when no correspondence exists.
  */
 void TGroup::TranslateRanks(const TGroup &group1, Int_t n, const Int_t ranks1[], const TGroup &group2, Int_t ranks2[])
@@ -46,16 +47,17 @@ void TGroup::TranslateRanks(const TGroup &group1, Int_t n, const Int_t ranks1[],
 //______________________________________________________________________________
 /**
  * Compares two groups.
- * MPI_IDENT results if the group members and group order is exactly the same in
+ * ROOT::Mpi::IDENT results if the group members and group order is exactly the
+ * same in
  * both groups. This happens for instance if group1 and group2 are the same
  * handle.
- * MPI_SIMILAR results if the group members are the same but the order is
- * different. MPI_UNEQUAL results otherwise.
+ * ROOT::Mpi::SIMILAR results if the group members are the same but the order is
+ * different. ROOT::Mpi::UNEQUAL results otherwise.
  * \param group1 First group (handle).
  * \param group2 Second group (handle).
  * \return Integer  which  is  MPI_IDENT if the order and members of the two
- * groups are the same, MPI_SIMILAR if only the members are the same, and
- * MPI_UNEQUAL otherwise.
+ * groups are the same, ROOT::Mpi::SIMILAR if only the members are the same, and
+ * ROOT::Mpi::UNEQUAL otherwise.
  */
 Int_t TGroup::Compare(const TGroup &group1, const TGroup &group2)
 {
@@ -68,15 +70,17 @@ Int_t TGroup::Compare(const TGroup &group1, const TGroup &group2)
 //______________________________________________________________________________
 /**
  * Compares two groups.(Current group respect other)
- * MPI_IDENT results if the group members and group order is exactly the same in
+ * ROOT::Mpi::IDENT results if the group members and group order is exactly the
+ * same in
  * both groups. This happens for instance if group1 and group2 are the same
  * handle.
- * MPI_SIMILAR results if the group members are the same but the order is
- * different. MPI_UNEQUAL results otherwise.
+ * ROOT::Mpi::SIMILAR results if the group members are the same but the order is
+ * different. ROOT::Mpi::UNEQUAL results otherwise.
  * \param group2 Second group (handle).
- * \return Integer  which  is  MPI_IDENT if the order and members of the two
- * groups are the same, MPI_SIMILAR if only the members are the same, and
- * MPI_UNEQUAL otherwise.
+ * \return Integer  which  is  ROOT::Mpi::IDENT if the order and members of the
+ * two
+ * groups are the same, ROOT::Mpi::SIMILAR if only the members are the same, and
+ * ROOT::Mpi::UNEQUAL otherwise.
  */
 Int_t TGroup::Compare(const TGroup &group2)
 {
@@ -89,14 +93,14 @@ Int_t TGroup::Compare(const TGroup &group2)
 //______________________________________________________________________________
 /**
  * Produces a group by combining two groups.
- *       The set-like operations are defined as follows:
- *       o    union -- All elements of the first group (group1), followed by all
+ * The set-like operations are defined as follows:
+ * - union -- All elements of the first group (group1), followed by all
  * elements of second group (group2) not in first.
- *       o    intersect -- all elements of the first group that are also in the
+ * - intersect -- all elements of the first group that are also in the
  * second group, ordered as in first group.
- *       o    difference -- all elements of the first group that are not in the
+ * - difference -- all elements of the first group that are not in the
  * second group, ordered as in the first group.
- *       Note  that for these operations the order of processes in the output
+ * Note  that for these operations the order of processes in the output
  * group is determined primarily by order in the first group (if possible) and
  * then, if necessary, by order in the second group. Neither union nor
  * intersection are commutative, but both are associative.
@@ -115,14 +119,14 @@ TGroup TGroup::Union(const TGroup &group1, const TGroup &group2)
 //______________________________________________________________________________
 /**
  * Produces a group at the intersection of two existing groups.
- *       The set-like operations are defined as follows:
- *       o    union -- All elements of the first group (group1), followed by all
+ * The set-like operations are defined as follows:
+ * - union -- All elements of the first group (group1), followed by all
  * elements of second group (group2) not in first.
- *       o    intersect -- all elements of the first group that are also in the
+ * - intersect -- all elements of the first group that are also in the
  * second group, ordered as in first group.
- *       o    difference -- all elements of the first group that are not in the
+ * - difference -- all elements of the first group that are not in the
  * second group, ordered as in the first group.
- *       Note  that for these operations the order of processes in the output
+ * Note  that for these operations the order of processes in the output
  * group is determined primarily by order in the first group (if possible) and
  * then, if necessary, by order in the second group. Neither union nor
  * intersection are commutative, but both are associative.
@@ -142,19 +146,19 @@ TGroup TGroup::Intersect(const TGroup &group1, const TGroup &group2)
 
 //______________________________________________________________________________
 /**
- *  Makes a group from the difference of two groups.
- *       The set-like operations are defined as follows:
- *       o    union -- All elements of the first group (group1), followed by all
+ * Makes a group from the difference of two groups.
+ * The set-like operations are defined as follows:
+ * - union -- All elements of the first group (group1), followed by all
  * elements of second group (group2) not in first.
- *       o    intersect -- all elements of the first group that are also in the
+ * - intersect -- all elements of the first group that are also in the
  * second group, ordered as in first group.
- *       o    difference -- all elements of the first group that are not in the
+ * - difference -- all elements of the first group that are not in the
  * second group, ordered as in the first group.
- *       Note  that for these operations the order of processes in the output
+ * Note  that for these operations the order of processes in the output
  * group is determined primarily by order in the first group (if possible) and
  * then, if necessary, by order in the second group. Neither union nor
  * intersection are commutative, but both are associative.
- *       The new group can be empty, that is, equal to ROOT::Mpi::GROUP_EMPTY.
+ * The new group can be empty, that is, equal to ROOT::Mpi::GROUP_EMPTY.
  * \param group1 First group (handle).
  * \param group2 Second group (handle).
  * \return TGroup object with difference group (handle).
@@ -218,15 +222,15 @@ TGroup TGroup::Exclude(Int_t n, const Int_t ranks[]) const
  * Creates a new group from ranges of ranks in an existing group.
  * If ranges consist of the triplets
  *            (first1, last1, stride1), ..., (firstn, lastn, striden)
- * then new group consists of the sequence of processes in group with ranks
+ * then new group consists of the sequence of processes in group with ranks\n
+ * \f$
+ * first(1), first(1) + stride(1),..., first(1)
+ * +\frac{last(1)-first(1)}{stride(1)} stride(1),...\\
  *
- *                                                last(1)-first(1)
- * first(1), first(1) + stride(1),..., first(1) + ---------------- stride(1),...
- *                                                  stride(1)
- *
- *                                                last(n)-first(n)
- * first(n), first(n) + stride(n),..., first(n) + ---------------- stride(n).
- *                                                   stride(n)
+ * first(n), first(n) + stride(n),..., first(n)
+ * +\frac{last(n)-first(n)}{stride(n)} stride(n). \\
+ * \f$
+ * \n
  * Each computed rank must be a valid rank in group and all computed ranks must
  * be distinct, or else the program is erroneous. Note that we may have
  * first(i)  > last(i), and stride(i) may be negative, but cannot be zero.

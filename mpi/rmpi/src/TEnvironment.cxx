@@ -26,13 +26,16 @@ FILE *TEnvironment::fOutput = NULL;
 /**
  * Default constructor to start the environment, initializes the MPI execution
 environment
- * THREAD_SINGLE: Only one thread will execute.
- * THREAD_FUNNELED: The process may be multi-threaded, but only the main thread
+ * - ROOT::Mpi::THREAD_SINGLE: Only one thread will execute.
+ * - ROOT::Mpi::THREAD_FUNNELED: The process may be multi-threaded, but only the
+main thread
 will make MPI calls (all MPI calls are ``funneled'' to the main thread).
- * THREAD_SERIALIZED: The process may be multi-threaded, and multiple threads
+ * - ROOT::Mpi::THREAD_SERIALIZED: The process may be multi-threaded, and
+multiple threads
 may make MPI calls, but only one at a time: MPI calls are not made concurrently
 from two distinct threads (all MPI calls are ``serialized'').
- * THREAD_MULTIPLE: Multiple threads may call MPI, with no restrictions.
+ * - ROOT::Mpi::THREAD_MULTIPLE: Multiple threads may call MPI, with no
+restrictions.
 \param level is an integer with the thread type, default value THREAD_SINGLE is
 equivalent to call the raw function MPI_Init
 */
@@ -56,13 +59,16 @@ TEnvironment::TEnvironment(Int_t level)
 /**
  * Default constructor to start the environment, initializes the MPI execution
  * environment
- * THREAD_SINGLE: Only one thread will execute.
- * THREAD_FUNNELED: The process may be multi-threaded, but only the main thread
+ * - ROOT::Mpi::THREAD_SINGLE: Only one thread will execute.
+ * - ROOT::Mpi::THREAD_FUNNELED: The process may be multi-threaded, but only the
+ * main thread
  * will make MPI calls (all MPI calls are ``funneled'' to the main thread).
- * THREAD_SERIALIZED: The process may be multi-threaded, and multiple threads
+ * - ROOT::Mpi::THREAD_SERIALIZED: The process may be multi-threaded, and
+ * multiple threads
  * may make MPI calls, but only one at a time: MPI calls are not made
  * concurrently from two distinct threads (all MPI calls are ``serialized'').
- * THREAD_MULTIPLE: Multiple threads may call MPI, with no restrictions.
+ * - ROOT::Mpi::THREAD_MULTIPLE: Multiple threads may call MPI, with no
+ * restrictions.
  * \param argc integer with num of command line arguments
  * \param argv list of command line arguments
  * \param level is an integer with the thread type, default value THREAD_SINGLE
