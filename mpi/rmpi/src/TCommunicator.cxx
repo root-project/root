@@ -10,7 +10,6 @@ using namespace ROOT::Mpi;
 //______________________________________________________________________________
 /**
  * Default constructor for communicator that is a null communicator
- * \param comm other TCommunicator object
  */
 TCommunicator::TCommunicator(): TNullCommunicator() {}
 

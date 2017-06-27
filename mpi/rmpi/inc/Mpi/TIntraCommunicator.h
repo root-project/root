@@ -13,23 +13,22 @@ namespace ROOT {
 
       /**
        * \class TIntraCommunicator
-       * The processes communicate each other through communicators, the \class
-       TIntraCommunicator is for
+       * The processes communicate each other through communicators, the
+       ROOT::Mpi::TIntraCommunicator is for
        * proccesses that have communication in the sigle group and The class
-       \class TInterCommunicator is communication between two groups of
-       processes. Both classes are derived from an abstract base \class
-       TCommunicator.
+       ROOT::Mpi::TInterCommunicator is communication between two groups of
+       processes. Both classes are derived from an abstract base
+       ROOT::Mpi::TCommunicator.
        * This class allows to do communication in a same context using peer to
        peer or collective schemas like
        * Broadcast, Gather, Scatter etc..
        * A global object(instance) ROOT::Mpi::COMM_WORLD is the default global
        communicator.
+       \see TGroup TInterCommunicator TCommunicator
        \ingroup Mpi
     */
 
-      * \see TGroup TInterCommunicator TCommunicator * \ingroup Mpi * /
-
-          class TIntraCommunicator : public TCommunicator {
+      class TIntraCommunicator : public TCommunicator {
       public:
 
          TIntraCommunicator(): TCommunicator() {}
@@ -55,6 +54,8 @@ namespace ROOT {
          {
             return fComm;
          }
+
+         virtual TIntraCommunicator &Clone() const;
 
          TIntraCommunicator Dup() const;
 

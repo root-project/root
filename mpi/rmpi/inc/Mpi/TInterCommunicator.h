@@ -8,14 +8,15 @@ namespace ROOT {
 
    namespace Mpi {
    /**
-    * \class TIterCommunicator
-    * The processes communicate each other through communicators, the \class
-    TIntraCommunicator is for
-    * proccesses that have communication in the sigle group and The class \class
-    TInterCommunicator is communication between two groups of processes. Both
-    classes are derived from an abstract base \class TCommunicator.
+    * \class TInterCommunicator
+    * The processes communicate each other through communicators, the
+    * ROOT::Mpi::TIntraCommunicator is for proccesses that have communication in
+    the sigle group and The class ROOT::Mpi::TInterCommunicator is communication
+    between two groups of processes.
+    * Both classes are derived from an abstract base ROOT::Mpi::TCommunicator.
     * This class allows to do communication in a multiple different contexts
-    \class TIntraCommunicator
+    ROOT::Mpi::TIntraCommunicator
+    \see TGroup TIntraCommunicator TCommunicator
     \ingroup Mpi
  */
 
