@@ -5472,35 +5472,39 @@ TClass *TClass::LoadClassCustom(const char *requestedname, Bool_t silent)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Try to load the classInfo (it may require parsing the header file
-/// and/or loading data from the clang pcm).
+/// Try to load the ClassInfo if available. This function may require parsing
+/// the header file and/or loading data from the clang pcm. If further calls to
+/// this function cannot affect the value of fClassInfo, fCanLoadClassInfo is set
+/// to false.
 
 void TClass::LoadClassInfo() const
 {
-   R__LOCKGUARD(gInterpreterMutex);
+   bool autoParse = !gInterpreter->IsAutoParsingSuspended();
 
-   // If another thread executed LoadClassInfo at about the same time
-   // as this thread return early since the work was done.
-   if (!fCanLoadClassInfo) return;
+   {
+      R__LOCKGUARD(gInterpreterMutex);
 
-   // If class info already loaded then do nothing.  This can happen if the
-   // class was registered by a dictionary, but the info came from reading
-   // the pch.
-   // Note: This check avoids using AutoParse for classes in the pch!
-   if (fClassInfo) {
+      // Return if another thread already loaded the info
+      // while we were waiting for the lock
+      if (!fCanLoadClassInfo)
+         return;
+
+      if (autoParse)
+         gInterpreter->AutoParse(GetName());
+
+      if (!fClassInfo)
+         gInterpreter->SetClassInfo(const_cast<TClass*>(this));
+   }
+
+   if (autoParse && !fClassInfo) {
+      ::Error("TClass::LoadClassInfo",
+            "no interpreter information for class %s is available"
+            " even though it has a TClass initialization routine.",
+            fName.Data());
       return;
    }
 
-   gInterpreter->AutoParse(GetName());
-   if (!fClassInfo) gInterpreter->SetClassInfo(const_cast<TClass*>(this));   // sets fClassInfo pointer
-   if (!gInterpreter->IsAutoParsingSuspended()) {
-      if (!fClassInfo) {
-         ::Error("TClass::LoadClassInfo",
-                 "no interpreter information for class %s is available even though it has a TClass initialization routine.",
-                 fName.Data());
-      }
-      fCanLoadClassInfo = kFALSE;
-   }
+   fCanLoadClassInfo = false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
