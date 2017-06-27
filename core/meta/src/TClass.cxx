@@ -1399,10 +1399,12 @@ void TClass::Init(const char *name, Version_t cversion,
    }
 
    if (givenInfo) {
-      if (!gInterpreter->ClassInfo_IsValid(givenInfo) ||
-          !(gInterpreter->ClassInfo_Property(givenInfo) & (kIsClass | kIsStruct | kIsNamespace)) ||
-          (!gInterpreter->ClassInfo_IsLoaded(givenInfo) && (gInterpreter->ClassInfo_Property(givenInfo) & (kIsNamespace))) )
-      {
+      R__LOCKGUARD(gInterpreterMutex);
+      bool invalid   = !gInterpreter->ClassInfo_IsValid(givenInfo);
+      bool notloaded = !gInterpreter->ClassInfo_IsLoaded(givenInfo);
+      auto property  = gInterpreter->ClassInfo_Property(givenInfo);
+      if (invalid || (notloaded && (property & kIsNamespace))
+          || !(property & (kIsClass | kIsStruct | kIsNamespace))) {
          if (!TClassEdit::IsSTLCont(fName.Data())) {
             MakeZombie();
             fState = kNoInfo;
@@ -1411,6 +1413,7 @@ void TClass::Init(const char *name, Version_t cversion,
          }
       }
       fClassInfo = gInterpreter->ClassInfo_Factory(givenInfo);
+      fCanLoadClassInfo = false; // avoids calls to LoadClassInfo() if info is already loaded
    }
    // We need to check if the class it is not fwd declared for the cases where we
    // created a TClass directly in the kForwardDeclared state. Indeed in those cases
@@ -1438,7 +1441,10 @@ void TClass::Init(const char *name, Version_t cversion,
          }
       }
       if (!fHasRootPcmInfo && gInterpreter->CheckClassInfo(fName, /* autoload = */ kTRUE)) {
-         gInterpreter->SetClassInfo(this);   // sets fClassInfo pointer
+         {
+            R__LOCKGUARD(gInterpreterMutex);
+            gInterpreter->SetClassInfo(this);   // sets fClassInfo pointer
+         }
          if (fClassInfo) {
             // This should be moved out of GetCheckSum itself however the last time
             // we tried this cause problem, in particular in the end-of-process operation.
