@@ -163,9 +163,9 @@ Long_t JitTransformation(void *thisPtr, const std::string &methodName, const std
 
 // Jit and call something equivalent to "this->BuildAndBook<BranchTypes...>(params...)"
 // (see comments in the body for actual jitted code)
-void JitBuildAndBook(const ColumnNames_t &bl, const std::string &nodeTypename, void *thisPtr, const std::type_info &art,
-                     const std::type_info &at, const void *r, TTree *tree, unsigned int nSlots,
-                     const std::map<std::string, TmpBranchBasePtr_t> &tmpBranches)
+void JitBuildAndBook(const ColumnNames_t &bl, const std::string &prevNodeTypename, void *prevNode,
+                     const std::type_info &art, const std::type_info &at, const void *r, TTree *tree,
+                     unsigned int nSlots, const std::map<std::string, TmpBranchBasePtr_t> &tmpBranches)
 {
    gInterpreter->ProcessLine("#include \"ROOT/TDataFrame.hxx\"");
    auto nBranches = bl.size();
@@ -207,14 +207,15 @@ void JitBuildAndBook(const ColumnNames_t &bl, const std::string &nodeTypename, v
    const auto actionTypeName = actionTypeClass->GetName();
 
    // createAction_str will contain the following:
-   // ROOT::Internal::TDF::CallBuildAndBook<nodeType, actionType, branchType1, branchType2...>(
-   //    reinterpret_cast<nodeType*>(thisPtr), *reinterpret_cast<ROOT::ColumnNames_t*>(&bl),
+   // ROOT::Internal::TDF::CallBuildAndBook<PrevNodeType, actionType, branchType1, branchType2...>(
+   //    *reinterpret_cast<PrevNodeType*>(prevNode), *reinterpret_cast<ROOT::ColumnNames_t*>(&bl),
    //    *reinterpret_cast<actionResultType*>(r), reinterpret_cast<ActionType*>(nullptr))
    std::stringstream createAction_str;
-   createAction_str << "ROOT::Internal::TDF::CallBuildAndBook<" << nodeTypename << ", " << actionTypeName;
+   createAction_str << "ROOT::Internal::TDF::CallBuildAndBook"
+                    << "<" << actionTypeName;
    for (auto &branchTypeName : branchTypeNames) createAction_str << ", " << branchTypeName;
-   createAction_str << ">("
-                    << "reinterpret_cast<" << nodeTypename << "*>(" << thisPtr << "), "
+   createAction_str << ">"
+                    << "(*reinterpret_cast<" << prevNodeTypename << "*>(" << prevNode << "), "
                     << "*reinterpret_cast<ROOT::Detail::TDF::ColumnNames_t*>(" << &bl << "), " << nSlots
                     << ", *reinterpret_cast<" << actionResultTypeName << "*>(" << r << "));";
    auto error = TInterpreter::EErrorCode::kNoError;
