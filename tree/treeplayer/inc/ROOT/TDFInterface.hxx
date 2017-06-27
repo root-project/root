@@ -271,14 +271,19 @@ public:
          snapCall << TDFInternal::ColumnName2ColumnTypeName(b, tree, df->GetBookedBranch(b));
          first = false;
       };
-      // TODO is there a way to use ColumnNames_t instead of std::vector<std::string> without parsing the whole header?
       const std::string treeNameInt(treename);
       const std::string filenameInt(filename);
       snapCall << ">(\"" << treeNameInt << "\", \"" << filenameInt << "\", "
-               << "*reinterpret_cast<std::vector<std::string>*>(" << &bnames << ")"
-               << ");";
+               << "*reinterpret_cast<std::vector<std::string>*>(" // vector<string> should be ColumnNames_t
+               << &bnames << "));";
       // jit snapCall, return result
-      return *reinterpret_cast<TInterface<TLoopManager> *>(gInterpreter->ProcessLine(snapCall.str().c_str()));
+      TInterpreter::EErrorCode errorCode;
+      auto newTDFPtr = gInterpreter->ProcessLine(snapCall.str().c_str(), &errorCode);
+      if (TInterpreter::EErrorCode::kNoError != errorCode) {
+         std::string msg = "Cannot jit Snapshot call. Interpreter error code is " + std::to_string(errorCode) + ".";
+         throw std::runtime_error(msg);
+      }
+      return *reinterpret_cast<TInterface<TLoopManager> *>(newTDFPtr);
    }
 
    ////////////////////////////////////////////////////////////////////////////
