@@ -4358,29 +4358,33 @@ Int_t TClass::GetNmethods()
 
 TVirtualStreamerInfo* TClass::GetStreamerInfo(Int_t version /* = 0 */) const
 {
-   TVirtualStreamerInfo *guess = fLastReadInfo;
-   if (guess && guess->GetClassVersion() == version) {
-      // If the StreamerInfo is assigned to the fLastReadInfo, we are
-      // guaranteed it was built and compiled.
-      return guess;
-   }
+   TVirtualStreamerInfo *sinfo = fLastReadInfo;
+
+   // Version 0 is special, it means the currently loaded version.
+   // We need to set it at the beginning to be able to guess it correctly.
+
+   if (version == 0)
+      version = fClassVersion;
+
+   // If the StreamerInfo is assigned to the fLastReadInfo, we are
+   // guaranteed it was built and compiled.
+   if (sinfo && sinfo->GetClassVersion() == version)
+      return sinfo;
 
    R__LOCKGUARD(gInterpreterMutex);
 
-   // Handle special version, 0 means currently loaded version.
-   // Warning:  This may be -1 for an emulated class.
-   // If version == -2, the user is requested the emulated streamerInfo
-   // for an abstract base class even though we have a dictionary for it.
-   if (version == 0) {
-      version = fClassVersion;
-   }
-   Int_t ninfos = fStreamerInfo->GetSize();
-   if ((version < -1) || (version >= ninfos)) {
+   // Warning: version may be -1 for an emulated class, or -2 if the
+   //          user requested the emulated streamerInfo for an abstract
+   //          base class, even though we have a dictionary for it.
+
+   if ((version < -1) || (version >= fStreamerInfo->GetSize())) {
       Error("GetStreamerInfo", "class: %s, attempting to access a wrong version: %d", GetName(), version);
       // FIXME: Shouldn't we go to -1 here, or better just abort?
-      version = 0;
+      version = fClassVersion;
    }
-   TVirtualStreamerInfo* sinfo = (TVirtualStreamerInfo*) fStreamerInfo->At(version);
+
+   sinfo = (TVirtualStreamerInfo*) fStreamerInfo->At(version);
+
    if (!sinfo && (version != fClassVersion)) {
       // When the requested version does not exist we return
       // the TVirtualStreamerInfo for the currently loaded class version.
@@ -4390,6 +4394,7 @@ TVirtualStreamerInfo* TClass::GetStreamerInfo(Int_t version /* = 0 */) const
       // This is also the code path take for unversioned classes.
       sinfo = (TVirtualStreamerInfo*) fStreamerInfo->At(fClassVersion);
    }
+
    if (!sinfo) {
       // We just were not able to find a streamer info, we have to make a new one.
       TMmallocDescTemp setreset;
@@ -4401,7 +4406,6 @@ TVirtualStreamerInfo* TClass::GetStreamerInfo(Int_t version /* = 0 */) const
       if (HasDataMemberInfo() || fCollectionProxy) {
          // If we do not have a StreamerInfo for this version and we do not
          // have dictionary information nor a proxy, there is nothing to build!
-         //
          sinfo->Build();
       }
    } else {
@@ -4412,12 +4416,15 @@ TVirtualStreamerInfo* TClass::GetStreamerInfo(Int_t version /* = 0 */) const
          sinfo->BuildOld();
       }
    }
+
    // Cache the current info if we now have it.
-   if (version == fClassVersion) {
+   if (version == fClassVersion)
       fCurrentInfo = sinfo;
-   }
+
    // If the compilation succeeded, remember this StreamerInfo.
-   if (sinfo->IsCompiled()) fLastReadInfo = sinfo;
+   if (sinfo->IsCompiled())
+      fLastReadInfo = sinfo;
+
    return sinfo;
 }
 
