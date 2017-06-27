@@ -3451,38 +3451,31 @@ const char *TClass::GetSharedLibs()
 
 TList *TClass::GetListOfBases()
 {
-   if (!fBase) {
-      if (fCanLoadClassInfo) {
-         if (fState == kHasTClassInit) {
+   if (fBase)
+      return fBase;
 
-            R__LOCKGUARD(gInterpreterMutex);
-            // NOTE: Add test to prevent redo if another thread has already done the work.
-            // if (!fHasRootPcmInfo) {
-
-            // The bases are in our ProtoClass; we don't need the class info.
-            TProtoClass *proto = TClassTable::GetProtoNorm(GetName());
-            if (proto && proto->FillTClass(this)) {
-               // Not sure this code is still needed
-               // R__ASSERT(kFALSE);
-
-               fHasRootPcmInfo = kTRUE;
-            }
-         }
-         // We test again on fCanLoadClassInfo has another thread may have executed it.
-         if (!fHasRootPcmInfo && !fCanLoadClassInfo) {
-            LoadClassInfo();
-         }
-      }
-      if (!fClassInfo) return 0;
-
-      if (!gInterpreter)
-         Fatal("GetListOfBases", "gInterpreter not initialized");
-
+   if (fState == kHasTClassInit) {
       R__LOCKGUARD(gInterpreterMutex);
-      if(!fBase) {
-         gInterpreter->CreateListOfBaseClasses(this);
-      }
+
+      // The bases are in our ProtoClass; we don't need the class info.
+      TProtoClass *proto = TClassTable::GetProtoNorm(GetName());
+      if (proto && proto->FillTClass(this))
+         fHasRootPcmInfo = true;
    }
+
+   if (fCanLoadClassInfo) LoadClassInfo();
+
+   if (!fClassInfo)
+      return nullptr;
+
+   if (!gInterpreter)
+      Fatal("GetListOfBases", "gInterpreter not initialized");
+
+   if(!fBase) {
+      R__LOCKGUARD(gInterpreterMutex);
+      gInterpreter->CreateListOfBaseClasses(this);
+   }
+
    return fBase;
 }
 
