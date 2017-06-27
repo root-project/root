@@ -18,13 +18,7 @@ TREEPLAYERDS := $(call stripsrc,$(MODDIRS)/G__TreePlayer.cxx)
 TREEPLAYERDO := $(TREEPLAYERDS:.cxx=.o)
 TREEPLAYERDH := $(TREEPLAYERDS:.cxx=.h)
 
-TREEPLAYER2L  := $(MODDIRI)/DataFrameLinkDef.h
-TREEPLAYER2DS := $(call stripsrc,$(MODDIRS)/G__DataFrame.cxx)
-TREEPLAYER2DO := $(TREEPLAYER2DS:.cxx=.o)
-TREEPLAYER2DH := $(TREEPLAYER2DS:.cxx=.h)
-
 TREEPLAYERH  := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
-TREEPLAYERH  := $(filter-out $(MODDIRI)/DataFrameLinkDef.h,$(TREEPLAYERH))
 TREEPLAYERH  := $(filter-out $(MODDIRI)/TBranchProxyTemplate.h,$(TREEPLAYERH))
 TREEPLAYERS  := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 TREEPLAYERS  := $(filter-out $(MODDIRS)/TTreeProcessor%.cxx,$(TREEPLAYERS))
