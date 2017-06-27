@@ -160,6 +160,6 @@ struct RemoveFirstParameter<U<T, Rest...>> {
 template <typename T>
 using RemoveFirstParameter_t = typename RemoveFirstParameter<T>::type;
 
-} // ns ROOT
 } // ns TypeTraits
+} // ns ROOT
 #endif // ROOT_TTypeTraits
