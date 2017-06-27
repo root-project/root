@@ -407,7 +407,50 @@ TSDAE<Architecture_t>::Finetune(Matrix_t &input, Matrix_t &outputLabel, Double_t
 }
 
 //______________________________________________________________________________
+template<typename Architecture_t>
+TSDAE<Architecture_t>::Predict(Matrix_t &input, Matrix_t &output)
+{
 
+  Matrix_t prevLayerInput(fInputUnits,1);
+  for(size_t j=0;j<fInputUnits;j++)
+  {
+    prevLayerInput(j,1)=input(j,1);
+  }
+
+  for (size_t i = 0; i<fNumHiddenLayers; i++)
+  {
+
+    Matrix_t layerInput(TransformLayer[i]->fOutputUnits,1);
+    for(size_t k=0; k<TransformLayer[i]->fOutputUnits;k++)
+    {
+      output=0.0;
+      for(size_t j=0; j<TransformLayer[i]->fInputUnits;j++)
+      {
+        output+= TransformLayer[i]->fWeights(k,j) * prevLayerInput(j,1);
+
+      }
+      output += TransformLayer[i]->fBiases(k,1);
+      layerInput(k,1) = output;
+    }
+    Architecture_t::Sigmoid(layerInput);
+    if(i<fNumHiddenLayers-1)
+    {
+      Matrix_t prevLayerInput(TransformLayer[i]->fOutputUnits,1);
+    }
+  }
+
+  for(size_t i=0; i<LogisticRegressionLayer->fOutputUnits;i++)
+  {
+    output(i,1) = 0;
+    for(size_t j=0;j< LogisticRegressionLayer->fInputUnits;j++)
+    {
+      output(i,1)+=LogisticRegressionLayer->fWeights(i,j) * layerInput(j,1);
+    }
+    output(i,1) += LogisticRegressionLayer->fBiases(i,1);
+  }
+
+  Architecture_t::SoftmaxAE(output);
+}
 
 
 }// namespace DAE

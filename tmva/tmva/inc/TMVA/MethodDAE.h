@@ -1,14 +1,26 @@
 // @(#)root/tmva $Id$
-// Author: Akshay Vashistha (ajatgd)
+// Author: Akshay Vashistha
 
-
-/*************************************************************************
- * Copyright (C) 2017, ajatgd                                            *
- * All rights reserved.                                                  *
- *                                                                       *
- * For the licensing terms see $ROOTSYS/LICENSE.                         *
- * For the list of contributors see $ROOTSYS/README/CREDITS.             *
- *************************************************************************/
+/**********************************************************************************
+ * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
+ * Package: TMVA                                                                  *
+ * Class  : MethodDAE                                                             *
+ * Web    : http://tmva.sourceforge.net                                           *
+ *                                                                                *
+ * Description:                                                                   *
+ *      NeuralNetwork                                                             *
+ *                                                                                *
+ * Authors (alphabetical):                                                        *
+ *                                                                                *
+ *                                                                                *
+ *                                                                                *
+ * Copyright (c) 2005-2015:                                                       *
+ *                                                                                *
+ *                                                                                *
+ * Redistribution and use in source and binary forms, with or without             *
+ * modification, are permitted according to the terms listed in LICENSE           *
+ * (http://tmva.sourceforge.net/LICENSE)                                          *
+ **********************************************************************************/
 
 
 #ifndef ROOT_TMVA_MethodDAE
