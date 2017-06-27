@@ -3,55 +3,78 @@
 #define ROOT_Mpi_TOp
 namespace ROOT {
    namespace Mpi {
-      template<typename T> class Op {
-         T(*fOp)(const T &, const T &);
-      public:
-         Op(T(*op)(const T &, const T &)): fOp(op) {}
-         Op(const Op<T> &op): fOp(op.fOp) {}
+   /**
+    * \class TOp
+    * template class with helper functions to perform operations in a reduce
+    * schema.
+    * \see also ROOT::Mpi::SUM ROOT::Mpi::PROD ROOT::Mpi::MIN ROOT::Mpi::MAX
+    * \ingroup Mpi
+    */
 
-         Op<T> &operator=(Op<T> const &obj)
-         {
-            fOp = obj.fOp;
-            return *this;
-         }
+   template <typename T> class TOp {
+     T (*fOp)(const T &, const T &);
 
-         T Call(const T &a, const T &b) const
-         {
-            return fOp(a, b);
-         }
+   public:
+     TOp(T (*op)(const T &, const T &)) : fOp(op) {}
+     TOp(const TOp<T> &op) : fOp(op.fOp) {}
 
-         T operator()(const T &a, const T &b) const
-         {
-            return fOp(a, b);
-         }
+     TOp<T> &operator=(TOp<T> const &obj) {
+       fOp = obj.fOp;
+       return *this;
+     }
+
+     //______________________________________________________________________________
+     /**
+      * Method to call the encapsulate function with the operation.
+      * \param a object to perform the binary operation
+      * \param b object to perform the binary operation
+      * \return object with the result of the operation.
+      */
+     T Call(const T &a, const T &b) const { return fOp(a, b); }
+
+     T operator()(const T &a, const T &b) const { return fOp(a, b); }
       };
 
-      template<class T> Op<T> SUM()
-      {
-         return Op<T>([](const T & a, const T & b) {
-            return a + b;
-         });
+      //______________________________________________________________________________
+      /**
+       * template utility function to perform SUM operation,
+       * if a and b are objects then a and b must be overloaded the operator +
+       * \return object of TOp with the operation + saved like a function.
+       */
+      template <class T> TOp<T> SUM() {
+        return TOp<T>([](const T &a, const T &b) { return a + b; });
       }
 
-      template<class T> Op<T> PROD()
-      {
-         return Op<T>([](const T & a, const T & b) {
-            return a * b;
-         });
+      //______________________________________________________________________________
+      /**
+       * template utility function to perform PROD operation,
+       * if a and b are objects then a and b must be overloaded the operator *
+       * \return object of TOp with the operation * saved like a function.
+       */
+      template <class T> TOp<T> PROD() {
+        return TOp<T>([](const T &a, const T &b) { return a * b; });
       }
 
-      template<class T> Op<T> MIN()
-      {
-         return Op<T>([](const T & a, const T & b) {
-            return a < b ? a : b;
-         });
+      //______________________________________________________________________________
+      /**
+       * template utility function to perform MIN operation,
+       * if a and b are objects then a and b must be overloaded the operator <
+       * \return object of TOp with operation function that compute the min
+       * between two values.
+       */
+      template <class T> TOp<T> MIN() {
+        return TOp<T>([](const T &a, const T &b) { return a < b ? a : b; });
       }
 
-      template<class T> Op<T> MAX()
-      {
-         return Op<T>([](const T & a, const T & b) {
-            return a > b ? a : b;
-         });
+      //______________________________________________________________________________
+      /**
+       * template utility function to perform MAX operation,
+       * if a and b are objects then a and b must be overloaded the operator >
+       * \return object of TOp with operation function that compute the max
+       * between two values.
+       */
+      template <class T> TOp<T> MAX() {
+        return TOp<T>([](const T &a, const T &b) { return a > b ? a : b; });
       }
 
 

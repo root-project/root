@@ -7,14 +7,15 @@
 
 using namespace ROOT::Mpi;
 
-Op<TH1F> HSUM()//histogram sum(custom operation for reduce)
+TOp<TH1F> HSUM() // histogram sum(custom operation for reduce)
 {
-   //returning an  ROOT::Mpi::Op<TH1F>(arg) object where "arg" is a lambda function with histograms sum
-   return Op<TH1F>([](const TH1F & a, const TH1F & b) {
-      TH1F c(a);
-      c.Add(&b);
-      return  c;
-   });
+  // returning an  ROOT::Mpi::Op<TH1F>(arg) object where "arg" is a lambda
+  // function with histograms sum
+  return TOp<TH1F>([](const TH1F &a, const TH1F &b) {
+    TH1F c(a);
+    c.Add(&b);
+    return c;
+  });
 }
 
 

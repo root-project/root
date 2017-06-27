@@ -9,53 +9,61 @@ namespace ROOT {
 
    namespace Mpi {
 
-      class TPort : public TObject {
-      protected:
-         TString fPort;
-         TString fPublishName;
-         TInfo   fInfo;
-         TPort(const TInfo &info, TString port, TString pname);
-      public:
-         TPort(const TInfo &info = INFO_NULL);
-         TPort(const TPort &port);
-         virtual ~TPort();
+   /**
+    * \class TPort
+    * class to handle port information to establishes communication with a
+    * client.
+    * \see ROOT::Mpi::TIntraCommunicator::Connect TIntraCommunicator::Accept
+    * \ingroup Mpi
+    */
 
-         const TString GetPortName() const;
-         const TInfo   GetInfo() const;
-         const TString GetPublishName() const;
+   class TPort : public TObject {
+   protected:
+     TString fPort;        //
+     TString fPublishName; //
+     TInfo fInfo;          //
+     TPort(const TInfo &info, TString port, TString pname);
 
-         void Open(const TInfo &info = INFO_NULL);
-         void Close();
-         Bool_t IsOpen();
+   public:
+     TPort(const TInfo &info = INFO_NULL);
+     TPort(const TPort &port);
+     virtual ~TPort();
 
-         static TPort LookupName(const TString service_name, const TInfo &info = INFO_NULL);
-         void PublishName(const TString service_name);
-         void UnpublishName(const TString service_name);
+     const TString GetPortName() const;
+     const TInfo GetInfo() const;
+     const TString GetPublishName() const;
 
-         TPort &operator=(const TPort &port)
-         {
-            fPort = port.fPort;
-            fPublishName = port.fPublishName;
-            fInfo = port.fInfo;
-            return *this;
-         }
+     void Open(const TInfo &info = INFO_NULL);
+     void Close();
+     Bool_t IsOpen();
 
-         const Bool_t &operator==(const TPort &port) const
-         {
-            if (fPort == port.fPort && fPublishName == port.fPublishName && fInfo == port.fInfo) return kTRUE;
-            else return kFALSE;
-         }
+     static TPort LookupName(const TString service_name,
+                             const TInfo &info = INFO_NULL);
+     void PublishName(const TString service_name);
+     void UnPublishName(const TString service_name);
 
-         const Bool_t &operator!=(const TPort &port) const
-         {
-            return *this == port ? kFALSE :  kTRUE;
-         }
+     TPort &operator=(const TPort &port) {
+       fPort = port.fPort;
+       fPublishName = port.fPublishName;
+       fInfo = port.fInfo;
+       return *this;
+     }
 
-         void Print();
+     const Bool_t &operator==(const TPort &port) const {
+       if (fPort == port.fPort && fPublishName == port.fPublishName &&
+           fInfo == port.fInfo)
+         return kTRUE;
+       else
+         return kFALSE;
+     }
 
+     const Bool_t &operator!=(const TPort &port) const {
+       return *this == port ? kFALSE : kTRUE;
+     }
 
-         ClassDef(TPort, 1)
+     void Print();
 
+     ClassDef(TPort, 1)
       };
    }
 }

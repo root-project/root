@@ -9,36 +9,63 @@ using namespace ROOT::Mpi;
 TMpiTimer::TMpiTimer(MPI_Comm  comm): fComm(comm) {};
 
 //______________________________________________________________________________
+/**
+ * Method to start a time counter
+ */
 void TMpiTimer::Start()
 {
    fStarTime = MPI_Wtime();
 }
 
 //______________________________________________________________________________
+/**
+ * Method to restart the time counter on the calling processor.
+ */
 void TMpiTimer::ReStart()
 {
    Start();
 }
 
 //______________________________________________________________________________
+/**
+ * Returns an elapsed time on the calling processor.
+ * \return time elapse (double)
+ */
 Double_t TMpiTimer::GetElapsed() const
 {
    return MPI_Wtime() - fStarTime;
 }
 
 //______________________________________________________________________________
+/**
+ * Returns  the  resolution  of ROOT::Mpi::TMpiTimer::GetElapsed in seconds.
+ * That is, it returns, as a double-precision value, the number of seconds
+ * between successive clock ticks. For example, if the clock is implemented by
+ * the hardware as a counter that is incremented every millisecond, the value
+ * returned by MPI_Wtick should  be 10^-3.
+ * \return Time in seconds of resolution
+ */
 Double_t TMpiTimer::GetTick()
 {
    return  MPI_Wtick();
 }
 
 //______________________________________________________________________________
+/**
+ * Utility to sleep in miliseconds
+ */
 void TMpiTimer::Sleep(Double_t msec)
 {
    gSystem->Sleep(msec);
 }
 
 //______________________________________________________________________________
+/**
+ * Clock synchronization The value returned for ROOT::Mpi::WTIME_IS_GLOBAL is 1
+ * if clocks ROOT::Mpi::WTIME_IS_GLOBAL at all processes in
+ * ROOT::Mpi::COMM_WORLD are synchronized, 0 otherwise.
+ * \return boolean
+ */
 Bool_t TMpiTimer::IsGlobal() const
 {
    Int_t *global;
@@ -49,6 +76,9 @@ Bool_t TMpiTimer::IsGlobal() const
 }
 
 //______________________________________________________________________________
+/**
+ * Utility method to print time information.
+ */
 void TMpiTimer::Print() const
 {
    if (fComm != COMM_NULL) {
@@ -70,6 +100,11 @@ void TMpiTimer::Print() const
 }
 
 //______________________________________________________________________________
+/**
+ * Utility method to get time histogram, it only works if
+ * a valid communicator (non ROOT::Mpi::COMM_NULL) was provided.
+ * \return TH1F object with the histogram of times for every rank.
+ */
 TH1F *TMpiTimer::GetElapsedHist(Int_t root) const
 {
    if (fComm != COMM_NULL) {

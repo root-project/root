@@ -144,8 +144,9 @@ namespace ROOT {
 
          template<class Type> TRequest IBcast(Type &var, Int_t root) const;
 
-         template<class Type> void Reduce(const Type &in_var, Type &out_var, Op<Type> (*opf)(), Int_t root) const;
-
+         template <class Type>
+         void Reduce(const Type &in_var, Type &out_var, TOp<Type> (*opf)(),
+                     Int_t root) const;
 
          ////////////////////////////////
          //methods with arrar arguments//
@@ -171,8 +172,9 @@ namespace ROOT {
 
          template<class Type> void Bcast(Type *vars, Int_t count, Int_t root) const;
 
-         template<class Type> void Reduce(const Type *in_vars, Type *out_vars, Int_t count, Op<Type> (*opf)(), Int_t root) const;
-
+         template <class Type>
+         void Reduce(const Type *in_vars, Type *out_vars, Int_t count,
+                     TOp<Type> (*opf)(), Int_t root) const;
 
          template<class Type> void Scatter(const Type *in_vars, Int_t incount, Type *out_vars, Int_t outcount, Int_t root) const;
 
@@ -182,7 +184,9 @@ namespace ROOT {
          //methods with results in all ranks//
          /////////////////////////////////////
 
-         template<class Type> void AllReduce(const Type *in_vars, Type *out_vars, Int_t count, Op<Type> (*opf)()) const;
+         template <class Type>
+         void AllReduce(const Type *in_vars, Type *out_vars, Int_t count,
+                        TOp<Type> (*opf)()) const;
 
          template<class Type> void AllGather(const Type *in_vars, Int_t incount, Type *out_vars, Int_t outcount) const;
 
@@ -793,9 +797,10 @@ namespace ROOT {
         * \param opf function the perform operation
         * \param root id of the main process where the result was received
         */
-      template<class Type> void TCommunicator::Reduce(const Type &in_var, Type &out_var, Op<Type> (*opf)(), Int_t root) const
-      {
-         Reduce(&in_var, &out_var, 1, opf, root);
+      template <class Type>
+      void TCommunicator::Reduce(const Type &in_var, Type &out_var,
+                                 TOp<Type> (*opf)(), Int_t root) const {
+        Reduce(&in_var, &out_var, 1, opf, root);
       }
 
       //______________________________________________________________________________
@@ -807,50 +812,63 @@ namespace ROOT {
        * \param opf function the perform operation
        * \param root id of the main process where the result was received
        */
-      template<class Type> void TCommunicator::Reduce(const Type *in_var, Type *out_var, Int_t count, Op<Type> (*opf)(), Int_t root) const
-      {
-         auto op = opf();
+      template <class Type>
+      void TCommunicator::Reduce(const Type *in_var, Type *out_var, Int_t count,
+                                 TOp<Type> (*opf)(), Int_t root) const {
+        auto op = opf();
 
-         if (!std::is_class<Type>::value) memmove((void *)out_var, (void *)in_var, sizeof(Type)*count);
-         else {
-            for (auto i = 0; i < count; i++) {
-               TMpiMessage msgi;
-               msgi.WriteObject(in_var[i]);
-               Char_t *buffer = new Char_t[msgi.BufferSize()]; //this pointer can't be freed, it will be free when the object dies
-               memcpy((void *)buffer, (void *)msgi.Buffer(), sizeof(Char_t)*msgi.BufferSize());
-               TMpiMessage msgo(buffer, msgi.BufferSize()); //using serialization to copy memory without copy constructor
-               auto cl = gROOT->GetClass(typeid(Type));
-               auto obj_tmp = msgo.ReadObjectAny(cl);
-               memmove((void *)&out_var[i], obj_tmp, sizeof(Type));
-            }
-         }
+        if (!std::is_class<Type>::value)
+          memmove((void *)out_var, (void *)in_var, sizeof(Type) * count);
+        else {
+          for (auto i = 0; i < count; i++) {
+            TMpiMessage msgi;
+            msgi.WriteObject(in_var[i]);
+            Char_t *buffer =
+                new Char_t[msgi.BufferSize()]; // this pointer can't be freed,
+                                               // it will be free when the
+                                               // object dies
+            memcpy((void *)buffer, (void *)msgi.Buffer(),
+                   sizeof(Char_t) * msgi.BufferSize());
+            TMpiMessage msgo(buffer, msgi.BufferSize()); // using serialization
+                                                         // to copy memory
+                                                         // without copy
+                                                         // constructor
+            auto cl = gROOT->GetClass(typeid(Type));
+            auto obj_tmp = msgo.ReadObjectAny(cl);
+            memmove((void *)&out_var[i], obj_tmp, sizeof(Type));
+          }
+        }
 
-         auto size = GetSize();
-         auto lastpower = 1 << (Int_t)log2(size);
+        auto size = GetSize();
+        auto lastpower = 1 << (Int_t)log2(size);
 
-         for (Int_t i = lastpower; i < size; i++)
-            if (GetRank() == i)
-               Send(in_var, count, i - lastpower, GetInternalTag());
-         for (Int_t i = 0; i < size - lastpower; i++)
-            if (GetRank() == i) {
-               Type recvbuffer[count];
-               Recv(recvbuffer, count, i + lastpower, GetInternalTag());
-               for (Int_t j = 0; j < count; j++) out_var[j] = op(in_var[j], recvbuffer[j]);
-            }
+        for (Int_t i = lastpower; i < size; i++)
+          if (GetRank() == i)
+            Send(in_var, count, i - lastpower, GetInternalTag());
+        for (Int_t i = 0; i < size - lastpower; i++)
+          if (GetRank() == i) {
+            Type recvbuffer[count];
+            Recv(recvbuffer, count, i + lastpower, GetInternalTag());
+            for (Int_t j = 0; j < count; j++)
+              out_var[j] = op(in_var[j], recvbuffer[j]);
+          }
 
-         for (Int_t d = 0; d < (Int_t)log2(lastpower); d++)
-            for (Int_t k = 0; k < lastpower; k += 1 << (d + 1)) {
-               auto receiver = k;
-               auto sender = k + (1 << d);
-               if (GetRank() == receiver) {
-                  Type recvbuffer[count];
-                  Recv(recvbuffer, count, sender, GetInternalTag());
-                  for (Int_t j = 0; j < count; j++) out_var[j]  = op(out_var[j], recvbuffer[j]);
-               } else if (GetRank() == sender)
-                  Send(out_var, count, receiver, GetInternalTag());
-            }
-         if (root != 0 && GetRank() == 0) Send(out_var, count, root, GetInternalTag());
-         if (root == GetRank() && GetRank() != 0) Recv(out_var, count, 0, GetInternalTag());
+        for (Int_t d = 0; d < (Int_t)log2(lastpower); d++)
+          for (Int_t k = 0; k < lastpower; k += 1 << (d + 1)) {
+            auto receiver = k;
+            auto sender = k + (1 << d);
+            if (GetRank() == receiver) {
+              Type recvbuffer[count];
+              Recv(recvbuffer, count, sender, GetInternalTag());
+              for (Int_t j = 0; j < count; j++)
+                out_var[j] = op(out_var[j], recvbuffer[j]);
+            } else if (GetRank() == sender)
+              Send(out_var, count, receiver, GetInternalTag());
+          }
+        if (root != 0 && GetRank() == 0)
+          Send(out_var, count, root, GetInternalTag());
+        if (root == GetRank() && GetRank() != 0)
+          Recv(out_var, count, 0, GetInternalTag());
       }
 
       //______________________________________________________________________________
@@ -861,10 +879,11 @@ namespace ROOT {
        * \param count Number of elements to reduce in \p in_var and \p out_var
        * \param opf function the perform operation
        */
-      template<class Type> void TCommunicator::AllReduce(const Type *in_vars, Type *out_vars, Int_t count, Op<Type> (*opf)()) const
-      {
-         Reduce(in_vars, out_vars, count, opf, GetMainProcess());
-         Bcast(out_vars, count, GetMainProcess());
+      template <class Type>
+      void TCommunicator::AllReduce(const Type *in_vars, Type *out_vars,
+                                    Int_t count, TOp<Type> (*opf)()) const {
+        Reduce(in_vars, out_vars, count, opf, GetMainProcess());
+        Bcast(out_vars, count, GetMainProcess());
       }
       //______________________________________________________________________________
       /**
