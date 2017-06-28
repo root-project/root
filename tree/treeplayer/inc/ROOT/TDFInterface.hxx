@@ -1030,37 +1030,6 @@ private:
       return MakeResultProxy(r, df);
    }
 
-protected:
-   /// Get the TLoopManager if reachable. If not, throw.
-   std::shared_ptr<TLoopManager> GetDataFrameChecked()
-   {
-      auto df = fImplWeakPtr.lock();
-      if (!df) {
-         throw std::runtime_error("The main TDataFrame is not reachable: did it go out of scope?");
-      }
-      return df;
-   }
-
-   const ColumnNames_t GetDefaultBranchNames(unsigned int nExpectedBranches, std::string_view actionNameForErr)
-   {
-      auto df = GetDataFrameChecked();
-      const ColumnNames_t &defaultBranches = df->GetDefaultBranches();
-      const auto dBSize = defaultBranches.size();
-      if (nExpectedBranches > dBSize) {
-         std::string msg("Trying to deduce the branches from the default list in order to ");
-         msg += actionNameForErr;
-         msg += ". A set of branches of size ";
-         msg += std::to_string(dBSize);
-         msg += " was found. ";
-         msg += std::to_string(nExpectedBranches);
-         msg += 1 != nExpectedBranches ? " are" : " is";
-         msg += " needed. Please specify the branches explicitly.";
-         throw std::runtime_error(msg);
-      }
-      auto bnBegin = defaultBranches.begin();
-      return ColumnNames_t(bnBegin, bnBegin + nExpectedBranches);
-   }
-
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Implementation of snapshot
    /// \param[in] treename The name of the TTree
@@ -1135,6 +1104,37 @@ protected:
       snapshotTDF.fProxiedPtr->SetTree(std::shared_ptr<TTree>(static_cast<TTree *>(chain)));
 
       return snapshotTDF;
+   }
+
+protected:
+   /// Get the TLoopManager if reachable. If not, throw.
+   std::shared_ptr<TLoopManager> GetDataFrameChecked()
+   {
+      auto df = fImplWeakPtr.lock();
+      if (!df) {
+         throw std::runtime_error("The main TDataFrame is not reachable: did it go out of scope?");
+      }
+      return df;
+   }
+
+   const ColumnNames_t GetDefaultBranchNames(unsigned int nExpectedBranches, std::string_view actionNameForErr)
+   {
+      auto df = GetDataFrameChecked();
+      const ColumnNames_t &defaultBranches = df->GetDefaultBranches();
+      const auto dBSize = defaultBranches.size();
+      if (nExpectedBranches > dBSize) {
+         std::string msg("Trying to deduce the branches from the default list in order to ");
+         msg += actionNameForErr;
+         msg += ". A set of branches of size ";
+         msg += std::to_string(dBSize);
+         msg += " was found. ";
+         msg += std::to_string(nExpectedBranches);
+         msg += 1 != nExpectedBranches ? " are" : " is";
+         msg += " needed. Please specify the branches explicitly.";
+         throw std::runtime_error(msg);
+      }
+      auto bnBegin = defaultBranches.begin();
+      return ColumnNames_t(bnBegin, bnBegin + nExpectedBranches);
    }
 
    TInterface(const std::shared_ptr<Proxied> &proxied, const std::weak_ptr<TLoopManager> &impl)
