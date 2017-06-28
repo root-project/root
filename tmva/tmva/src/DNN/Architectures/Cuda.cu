@@ -23,6 +23,7 @@
 #include "Cuda/Regularization.cu"
 #include "Cuda/Initialization.cu"
 #include "Cuda/Dropout.cu"
+#include "Cuda/DenoisePropagation.cu"
 
 namespace TMVA {
 namespace DNN  {
