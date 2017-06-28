@@ -782,6 +782,8 @@ public:
             char *locbuff = new char[16384];
 
             Int_t loc = -1;
+            learning = cache->fIsLearning;
+            printf("learning = %d\n", learning);//##
             if (!nseek || learning ) {
                return nullptr;
             }
@@ -799,8 +801,9 @@ public:
             }
             readbuf = cache->ReadBufferExt(locbuff, rdoffs, rdlen, loc);
 //            printf("read buffer ext\n");//##
+            transferred = cache->fIsTransferred;
             printf("transferred = %d\n", transferred);//##
-/*
+
             if ( (myCycle != cycle) || !transferred )  {
                unziptasks[reqi] = nullptr; // Set it as not done
                unzipchunks[reqi] = 0;
@@ -814,7 +817,7 @@ public:
                unziplen[reqi] = 0;
                return nullptr;
             }
-*/
+
             cache->GetRecordHeader(locbuff, hlen, nbytes, objlen, keylen);
 //            Int_t len = (objlen > nbytes-keylen)? keylen+objlen : nbytes;
 
@@ -918,15 +921,15 @@ public:
          indices.push_back(ii);
          t = new(this->allocate_child()) UnzipTask(cache, indices, cycle, nseek, learning, transferred, seek, seeklen, unziplen, unzipchunks, unziptasks, nunzip);
          tl.push_back(*t);
-         if(unziptasks[ii]) printf("before, unziptask[%d] not null\n", ii);//##
+         if(cache->fUnzipTasks[ii]) printf("before, unziptask[%d] not null\n", ii);//##
          else printf("before, unziptask[%d] is null\n", ii);//##
 //         spawn(*t);
 //         for (size_t index = 0; index < indices.size(); ++index) {
 //            unziptasks[ii] = t;
 
 //         }
-         unziptasks[ii] = t;
-         if(unziptasks[ii]) printf("after, unziptask[%d] not null\n", ii);//##
+         cache->fUnzipTasks[ii] = t;
+         if(cache->fUnzipTasks[ii]) printf("after, unziptask[%d] not null\n", ii);//##
          else printf("after, unziptask[%d] is null\n", ii);//##
          indices.clear();
 //         accusz = 0;
@@ -945,6 +948,10 @@ Int_t TTreeCacheUnzip::UnzipCacheTBB()
    MappingTask* root = new(tbb::task::allocate_root()) MappingTask(this, fCycle, fNseek, fIsLearning, fIsTransferred, fSeek, fSeekLen, fUnzipLen, fUnzipChunks, fUnzipTasks, fNUnzip);
    tbb::task::spawn_root_and_wait(*root);
    printf("finish UnzipCacheTBB()\n");//##
+   for(int i = 0; i < fNseek; ++i) {
+      if(fUnzipTasks[i]) printf("in UnzipCacheTBB, fUnzipTasks[%d] is not null\n", i);//##
+      else printf("in UnzipCacheTBB, fUnzipTasks[%d] is null\n", i);//##
+   }
    return 0;
 }
 
@@ -959,8 +966,8 @@ Int_t TTreeCacheUnzip::UnzipCacheTBB()
 
 Int_t TTreeCacheUnzip::GetUnzipBuffer(char **buf, Long64_t pos, Int_t len, Bool_t *free)
 {
-//   {
-//   R__LOCKGUARD(fMutexList);
+   {
+   R__LOCKGUARD(fMutexList);
 
    Int_t res = 0;
    Int_t loc = -1;
@@ -1142,7 +1149,7 @@ Int_t TTreeCacheUnzip::GetUnzipBuffer(char **buf, Long64_t pos, Int_t len, Bool_
    }
    
    return res;
-//   } // end of lock scope
+   } // end of lock scope
 }
 
 ////////////////////////////////////////////////////////////////////////////////
