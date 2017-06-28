@@ -1,9 +1,9 @@
 #include "ROOT/TypeTraits.hxx"
 
-#include <functional>
 #include <memory>
 #include <type_traits>
 #include <vector>
+#include <functional>
 
 #include "gtest/gtest.h"
 
