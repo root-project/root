@@ -337,9 +337,9 @@ namespace FitUtil {
 
    unsigned setAutomaticChunking(unsigned nEvents);
 
-#ifdef R__HAS_VECCORE
    template<class T>
-   struct Evaluate{
+   struct Evaluate {
+#ifdef R__HAS_VECCORE
       static double EvalChi2(const IModelFunctionTempl<T> &func, const BinData & data, const double * p, unsigned int &nPoints, const unsigned int &executionPolicy, unsigned nChunks = 0)
       {
          // evaluate the chi2 given a  vectorized function reference  , the data and returns the value and also in nPoints
@@ -808,6 +808,8 @@ static void EvalPoissonLogLGradient(const IModelFunctionTempl<T> &, const BinDat
 
    template<>
    struct Evaluate<double>{
+#endif
+
       static double EvalChi2(const IModelFunction & func, const BinData & data, const double * p, unsigned int &nPoints, const unsigned int &executionPolicy, unsigned nChunks = 0)
       {
          // evaluate the chi2 given a  function reference, the data and returns the value and also in nPoints
@@ -816,7 +818,7 @@ static void EvalPoissonLogLGradient(const IModelFunctionTempl<T> &, const BinDat
          // optionally the integral of function in the bin is used
          return FitUtil::EvaluateChi2(func, data, p, nPoints, executionPolicy, nChunks);
       }
-      
+
       static double EvalLogL(const IModelFunctionTempl<double> &func, const UnBinData & data, const double * p, int iWeight,
       bool extended, unsigned int &nPoints, const unsigned int &executionPolicy, unsigned nChunks = 0)
       {
@@ -852,7 +854,6 @@ static void EvalPoissonLogLGradient(const IModelFunctionTempl<double> &func, con
          FitUtil::EvaluatePoissonLogLGradient(func, data, p, g);
       }
    };
-#endif
 
 } // end namespace FitUtil
 
