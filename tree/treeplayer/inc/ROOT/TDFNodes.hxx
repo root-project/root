@@ -294,6 +294,7 @@ public:
    virtual void Update(unsigned int slot, Long64_t entry) = 0;
    virtual void IncrChildrenCount() = 0;
    virtual void StopProcessing() = 0;
+   void ResetChildrenCount() { fNChildren = 0; fNStopsReceived = 0; }
 };
 
 template <typename F, typename PrevData>
@@ -410,6 +411,7 @@ public:
    void PrintReport() const;
    virtual void IncrChildrenCount() = 0;
    virtual void StopProcessing() = 0;
+   void ResetChildrenCount() { fNChildren = 0; fNStopsReceived = 0; }
 };
 
 template <typename FilterF, typename PrevDataFrame>
@@ -524,6 +526,7 @@ public:
    virtual void PartialReport() const = 0;
    virtual void IncrChildrenCount() = 0;
    virtual void StopProcessing() = 0;
+   void ResetChildrenCount() { fNChildren = 0; fNStopsReceived = 0; }
 };
 
 template <typename PrevData>
