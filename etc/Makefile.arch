@@ -38,13 +38,8 @@ ifeq (debug,$(findstring debug,$(ROOTBUILD)))
 OPT           = -g
 OPT2          = -g
 else
-ifneq ($(findstring debug, $(strip $(shell $(RC) --config))),)
-OPT           = -g
-OPT2          = -g
-else
 OPT           = -O
 OPT2          = -O2
-endif
 endif
 
 ROOTCFLAGS   := $(shell $(RC) --cflags)
@@ -338,13 +333,8 @@ ifeq (debug,$(findstring debug,$(ROOTBUILD)))
 CXXOPT        = -Z7
 LDOPT         = -debug
 else
-ifneq ($(findstring debug, $(strip $(shell $(RC) --config))),)
-CXXOPT        = -Z7
-LDOPT         = -debug
-else
 CXXOPT        = -O2
 LDOPT         = -opt:ref
-endif
 endif
 ROOTINCDIR   := -I$(shell cygpath -m `$(RC) --incdir`)
 CXXFLAGS      = $(CXXOPT) -nologo $(ROOTINCDIR) -FIw32pragma.h
