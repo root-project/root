@@ -21,7 +21,7 @@
 #include <vector>
 
 #include "ROOT/TDrawable.hxx"
-#include "ROOT/TTypeTraits.hxx"
+#include "ROOT/TypeTraits.hxx"
 #include "ROOT/TVirtualCanvasPainter.hxx"
 
 namespace ROOT {
