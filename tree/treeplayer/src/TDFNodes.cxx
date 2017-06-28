@@ -225,12 +225,20 @@ void TLoopManager::RunAndCheckFilters(unsigned int slot, Long64_t entry)
 /// Perform clean-up operations. To be called at the end of each event loop.
 void TLoopManager::CleanUp() {
    fHasRunAtLeastOnce = true;
+
    // forget TActions and detach TResultProxies
    fBookedActions.clear();
    for (auto readiness : fResProxyReadiness) {
       *readiness.get() = true;
    }
    fResProxyReadiness.clear();
+
+   // reset children counts  
+   fNChildren = 0;
+   fNStopsReceived = 0;
+   for (auto &ptr : fBookedFilters) ptr->ResetChildrenCount();
+   for (auto &ptr : fBookedRanges) ptr->ResetChildrenCount();
+   for (auto &pair : fBookedBranches) pair.second->ResetChildrenCount();
 }
 
 /// Start the event loop with a different mechanism depending on IMT/no IMT, data source/no data source.
