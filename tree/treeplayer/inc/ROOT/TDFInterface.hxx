@@ -132,7 +132,6 @@ public:
       const ColumnNames_t &actualBl = TDFInternal::PickBranchNames(nArgs, bn, defBl);
       using DFF_t = TDFDetail::TFilter<F, Proxied>;
       auto FilterPtr = std::make_shared<DFF_t>(std::move(f), actualBl, *fProxiedPtr, name);
-      fProxiedPtr->IncrChildrenCount();
       df->Book(FilterPtr);
       TInterface<TFilterBase> tdf_f(FilterPtr, fImplWeakPtr);
       return tdf_f;
@@ -213,7 +212,6 @@ public:
       using DFB_t = TDFDetail::TCustomColumn<F, Proxied>;
       const std::string nameInt(name);
       auto BranchPtr = std::make_shared<DFB_t>(nameInt, std::move(expression), actualBl, *fProxiedPtr);
-      fProxiedPtr->IncrChildrenCount();
       df->Book(BranchPtr);
       TInterface<TCustomColumnBase> tdf_b(BranchPtr, fImplWeakPtr);
       return tdf_b;
@@ -352,7 +350,6 @@ public:
       auto df = GetDataFrameChecked();
       using Range_t = TDFDetail::TRange<Proxied>;
       auto RangePtr = std::make_shared<Range_t>(start, stop, stride, *fProxiedPtr);
-      fProxiedPtr->IncrChildrenCount();
       df->Book(RangePtr);
       TInterface<TRangeBase> tdf_r(RangePtr, fImplWeakPtr);
       return tdf_r;
@@ -410,7 +407,6 @@ public:
       using Helper_t = TDFInternal::ForeachSlotHelper<F>;
       using Action_t = TDFInternal::TAction<Helper_t, Proxied>;
       df->Book(std::make_shared<Action_t>(Helper_t(std::move(f)), actualBl, *fProxiedPtr));
-      fProxiedPtr->IncrChildrenCount();
       df->Run();
    }
 
@@ -459,7 +455,6 @@ public:
       using Helper_t = TDFInternal::ReduceHelper<F, T>;
       using Action_t = typename TDFInternal::TAction<Helper_t, Proxied>;
       df->Book(std::make_shared<Action_t>(Helper_t(std::move(f), redObjPtr, nSlots), bl, *fProxiedPtr));
-      fProxiedPtr->IncrChildrenCount();
       return MakeResultProxy(redObjPtr, df);
    }
 
@@ -476,7 +471,6 @@ public:
       using Helper_t = TDFInternal::CountHelper;
       using Action_t = TDFInternal::TAction<Helper_t, Proxied>;
       df->Book(std::make_shared<Action_t>(Helper_t(cSPtr, nSlots), ColumnNames_t({}), *fProxiedPtr));
-      fProxiedPtr->IncrChildrenCount();
       return MakeResultProxy(cSPtr, df);
    }
 
@@ -498,7 +492,6 @@ public:
       using Helper_t = TDFInternal::TakeHelper<T, COLL>;
       using Action_t = TDFInternal::TAction<Helper_t, Proxied>;
       df->Book(std::make_shared<Action_t>(Helper_t(valuesPtr, nSlots), bl, *fProxiedPtr));
-      fProxiedPtr->IncrChildrenCount();
       return MakeResultProxy(valuesPtr, df);
    }
 
@@ -1011,7 +1004,6 @@ private:
       auto df = GetDataFrameChecked();
       unsigned int nSlots = df->GetNSlots();
       BuildAndBook<BranchTypes...>(bl, r, nSlots, (ActionType *)nullptr);
-      fProxiedPtr->IncrChildrenCount();
       return MakeResultProxy(r, df);
    }
 
@@ -1026,7 +1018,6 @@ private:
       auto tree = df->GetTree();
       TDFInternal::JitBuildAndBook(bl, GetNodeTypeName(), this, typeid(std::shared_ptr<ActionResultType>),
                                    typeid(ActionType), &r, tree, nSlots, tmpBranches);
-      fProxiedPtr->IncrChildrenCount();
       return MakeResultProxy(r, df);
    }
 
@@ -1090,7 +1081,6 @@ private:
                                       *fProxiedPtr));
       }
       df->Book(std::move(actionPtr));
-      fProxiedPtr->IncrChildrenCount();
       df->Run();
 
       // create new TDF
