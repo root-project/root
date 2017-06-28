@@ -660,8 +660,8 @@ void stress7()
    ntuple->SetEventList(elist);
    ntuple->Draw("px>>helist","","goff");
    ntuple->SetEventList(0);
-   TH1F *hcut;   gDirectory->GetObject("hcut",hcut);
-   TH1F *helist; gDirectory->GetObject("helist",helist);
+   TH1 *hcut;   gDirectory->GetObject("hcut",hcut);
+   TH1 *helist; gDirectory->GetObject("helist",helist);
    Int_t n1 = (Int_t)hcut->GetEntries();
    Int_t n2 = (Int_t)helist->GetEntries();
    htemp0->Write();
@@ -672,7 +672,7 @@ void stress7()
    // now loop on eventlist explicitly and fill helist again
    Float_t pxr;
    ntuple->SetBranchAddress("px",&pxr);
-   TH1F *helistc = (TH1F*)helist->Clone();
+   TH1 *helistc = (TH1*)helist->Clone();
    helistc->Reset();
    helistc->SetName("helistc");
    Int_t nlist = elist->GetN();
@@ -1301,7 +1301,7 @@ void stress12(Int_t testid)
    TH1F *h9, *h11;
    Int_t comp, ngood = 0;
    while ((key=(TKey*)next())) {
-      if (strcmp(key->GetClassName(),"TH1F")) continue; //may be a TList of TStreamerInfo
+      if (strcmp(key->GetClassName(),"TH1D")) continue; //may be a TList of TStreamerInfo
       h9  = (TH1F*)f9.Get(key->GetName());
       h11 = (TH1F*)f11.Get(key->GetName());
       if (h9 == 0 || h11 == 0) continue;
@@ -1429,8 +1429,8 @@ void stress15()
       printf("FAILED\n");
       return;
    }
-   TH1F *bNtrack; oldfile->GetObject("bNtrack",bNtrack);
-   TH1F *bHmean;  oldfile->GetObject("bHmean",bHmean);
+   TH1 *bNtrack; oldfile->GetObject("bNtrack",bNtrack);
+   TH1 *bHmean;  oldfile->GetObject("bHmean",bHmean);
    Int_t cNtrack = HistCompare(hNtrack,bNtrack);
    Int_t cHmean  = HistCompare(hHmean, bHmean);
    delete newfile;
