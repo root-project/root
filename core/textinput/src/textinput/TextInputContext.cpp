@@ -33,6 +33,10 @@ fTabCompletion(0), fFunKey(0), fCursor(0) {
 }
 
 textinput::TextInputContext::~TextInputContext() {
+  for (Display* D : fDisplays)
+    D->SetContext(nullptr);
+  for (Reader* R : fReaders)
+    R->SetContext(nullptr);
   delete fBind;
   delete fEdit;
   delete fSignal;
