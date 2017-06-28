@@ -1,6 +1,5 @@
 #include "ROOT/TDataFrame.hxx"
 #include "TFile.h"
-#include "TH1F.h"
 #include "TTree.h"
 #include "TTreeReaderArray.h"
 #include "ROOT/TSeq.hxx"

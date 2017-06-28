@@ -1,7 +1,7 @@
 #include "ROOT/TDataFrame.hxx"
 #include "TH1F.h"
 #include "TH2F.h"
-#include "TH3F.h"
+#include "TH3D.h"
 #include "TH1D.h"
 #include "TH1I.h"
 #include "TH2D.h"
@@ -23,7 +23,7 @@ int main() {
    std::cout << "histo1D, all calls must yield same results" << std::endl;
    ROOT::Experimental::TDataFrame d1(t, {"v1", "w"});
    // histogram w/o weights -- these calls are all equivalent
-   std::vector<ROOT::Experimental::TDF::TResultProxy<TH1F>> results1D;
+   std::vector<ROOT::Experimental::TDF::TResultProxy<TH1D>> results1D;
    results1D.emplace_back(d1.Histo1D());
    results1D.emplace_back(d1.Histo1D({"", "", 128u, 0., 4.}));
    results1D.emplace_back(d1.Histo1D<int>());
@@ -52,8 +52,8 @@ int main() {
    std::cout << "histo2D, all calls must yield same results" << std::endl;
    ROOT::Experimental::TDataFrame d2(t, {"v1", "v2", "w"});
    // histo2D w/o weights
-   std::vector<ROOT::Experimental::TDF::TResultProxy<TH2F>> results2D;
-   TH2F model2D{"h2", "h2", 128u, 0., 4., 128u, 0., 4.};
+   std::vector<ROOT::Experimental::TDF::TResultProxy<TH2D>> results2D;
+   TH2D model2D{"h2", "h2", 128u, 0., 4., 128u, 0., 4.};
    results2D.emplace_back(d2.Histo2D(std::move(model2D)));
    results2D.emplace_back(d2.Histo2D(std::move(model2D), "v1"));
    results2D.emplace_back(d2.Histo2D(std::move(model2D), "v1", "v2"));
@@ -78,8 +78,8 @@ int main() {
    std::cout << "histo3D, all calls must yield same results" << std::endl;
    ROOT::Experimental::TDataFrame d3(t, {"v1", "v2", "v3", "w"});
    // Histo3D w/o weights
-   std::vector<ROOT::Experimental::TDF::TResultProxy<TH3F>> results3D;
-   TH3F model3D{"h3", "h3", 128u, 0., 4., 128u, 0., 4., 128u, 0., 4.};
+   std::vector<ROOT::Experimental::TDF::TResultProxy<TH3D>> results3D;
+   TH3D model3D{"h3", "h3", 128u, 0., 4., 128u, 0., 4., 128u, 0., 4.};
    results3D.emplace_back(d3.Histo3D(std::move(model3D)));
    results3D.emplace_back(d3.Histo3D(std::move(model3D), "v1"));
    results3D.emplace_back(d3.Histo3D(std::move(model3D), "v1", "v2"));
@@ -170,12 +170,12 @@ int main() {
    std::cout << "Fill" << std::endl;
    // Fill
    ROOT::Experimental::TDataFrame d6(t);
-   auto fill1 = d6.Fill<int>(TH1D("", "", 64, 0, 128), {"v1"});
-   auto fill2 = d6.Fill(TH1D("", "", 64, 0, 128), {"v1"});
+   auto fill1 = d6.Fill<int>(TH1F("", "", 64, 0, 128), {"v1"});
+   auto fill2 = d6.Fill(TH1F("", "", 64, 0, 128), {"v1"});
    auto fill3 = d6.Fill<int,double>(TH1I("", "", 64, 0, 128), {"v1","w"});
    auto fill4 = d6.Fill(TH1I("", "", 64, 0, 128), {"v1","w"});
-   auto fill5 = d6.Fill<int, int>(TH2D("", "", 64, 0, 128, 64, 0, 1024), {"v1", "v2"});
-   auto fill6 = d6.Fill(TH2D("", "", 64, 0, 128, 64, 0, 1024), {"v1", "v2"});
+   auto fill5 = d6.Fill<int, int>(TH2F("", "", 64, 0, 128, 64, 0, 1024), {"v1", "v2"});
+   auto fill6 = d6.Fill(TH2F("", "", 64, 0, 128, 64, 0, 1024), {"v1", "v2"});
    std::cout << fill1->GetEntries() << " " << fill1->GetMean() << std::endl;
    std::cout << fill2->GetEntries() << " " << fill2->GetMean() << std::endl;
    std::cout << fill3->GetEntries() << " " << fill3->GetMean() << std::endl;

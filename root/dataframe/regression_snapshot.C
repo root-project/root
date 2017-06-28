@@ -1,5 +1,4 @@
 #include "TFile.h"
-#include "TH1F.h"
 #include "TTree.h"
 
 #include "ROOT/TDataFrame.hxx"
