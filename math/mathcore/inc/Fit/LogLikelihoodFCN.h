@@ -154,12 +154,7 @@ private:
     */
    virtual double DoEval (const double * x) const {
       this->UpdateNCalls();
-
-#ifdef R__HAS_VECCORE
       return FitUtil::Evaluate<T>::EvalLogL(BaseFCN::ModelFunction(), BaseFCN::Data(), x, fWeight, fIsExtended, fNEffPoints, fExecutionPolicy);
-#else
-      return FitUtil::EvaluateLogL(BaseFCN::ModelFunction(), BaseFCN::Data(), x, fWeight, fIsExtended, fNEffPoints, fExecutionPolicy);
-#endif
    }
 
    // for derivatives
