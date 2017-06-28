@@ -247,9 +247,11 @@ void TMVA::ResultsMulticlass::CreateMulticlassPerformanceHistos(TString prefix)
 
    std::vector<std::vector<Float_t>> *rawMvaRes = GetValueVector();
 
+   //
+   // 1-vs-rest ROC curves
+   //
    for (size_t iClass = 0; iClass < numClasses; ++iClass) {
       // Format data
-      // TODO: Replace with calls to GetMvaValuesPerClass
       std::vector<Float_t> mvaRes;
       std::vector<Bool_t> mvaResTypes;
       std::vector<Float_t> mvaResWeights;
@@ -284,6 +286,53 @@ void TMVA::ResultsMulticlass::CreateMulticlassPerformanceHistos(TString prefix)
 
       // Store ROC Curve
       Store(rocGraph);
+   }
+
+   //
+   // 1-vs-1 ROC curves
+   //
+   for (size_t iClass = 0; iClass < numClasses; ++iClass) {
+      for (size_t jClass = 0; jClass < numClasses; ++jClass) {
+         if (iClass == jClass) { continue; }
+
+         auto eventCollection = ds->GetEventCollection();
+
+         // Format data
+         std::vector<Float_t> mvaRes;
+         std::vector<Bool_t> mvaResTypes;
+         std::vector<Float_t> mvaResWeights;
+
+         mvaRes.reserve(rawMvaRes->size());
+         mvaResTypes.reserve(eventCollection.size());
+         mvaResWeights.reserve(eventCollection.size());
+
+         for (size_t iEvent = 0; iEvent < eventCollection.size(); ++iEvent) {
+            Event * ev = eventCollection[iEvent];
+
+            if (ev->GetClass() == iClass or ev->GetClass() == jClass) {
+               Float_t output_value = (*rawMvaRes)[iEvent][iClass];
+               mvaRes.push_back(output_value);
+               mvaResTypes.push_back(ev->GetClass() == iClass);
+               mvaResWeights.push_back(ev->GetWeight());
+            }
+         }
+
+         // Get ROC Curve
+         ROCCurve *roc = new ROCCurve(mvaRes, mvaResTypes, mvaResWeights);
+         TGraph *rocGraph = new TGraph(*(roc->GetROCCurve()));
+         delete roc;
+
+         // Style ROC Curve
+         TString iClassName = dsi->GetClassInfo(iClass)->GetName();
+         TString jClassName = dsi->GetClassInfo(jClass)->GetName();
+         TString name = Form("%s_1v1rejBvsS_%s_vs_%s", prefix.Data(), iClassName.Data(), jClassName.Data());
+         TString title = Form("%s_%s_vs_%s", prefix.Data(), iClassName.Data(), jClassName.Data());
+         rocGraph->SetName(name);
+         rocGraph->SetTitle(title);
+
+         // Store ROC Curve
+         Store(rocGraph);
+      }
    }
 }
 
