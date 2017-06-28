@@ -73,6 +73,8 @@ class TLoopManager : public std::enable_shared_from_this<TLoopManager> {
    void RunTreeProcessorMT();
    void RunTreeReader();
    void RunAndCheckFilters(unsigned int slot, Long64_t entry);
+   void InitAllNodes(TTreeReader *r, unsigned int slot);
+   void CreateSlots(unsigned int nSlots);
 
 public:
    TLoopManager(TTree *tree, const ColumnNames_t &defaultBranches);
@@ -80,8 +82,6 @@ public:
    TLoopManager(const TLoopManager &) = delete;
    ~TLoopManager(){};
    void Run();
-   void InitAllNodes(TTreeReader *r, unsigned int slot);
-   void CreateSlots(unsigned int nSlots);
    TLoopManager *GetImplPtr();
    std::shared_ptr<TLoopManager> GetSharedPtr() { return shared_from_this(); }
    const ColumnNames_t &GetDefaultBranches() const;
