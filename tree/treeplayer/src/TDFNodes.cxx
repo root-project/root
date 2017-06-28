@@ -222,6 +222,17 @@ void TLoopManager::RunAndCheckFilters(unsigned int slot, Long64_t entry)
    for (auto &namedFilterPtr : fBookedNamedFilters) namedFilterPtr->CheckFilters(slot, entry);
 }
 
+/// Perform clean-up operations. To be called at the end of each event loop.
+void TLoopManager::CleanUp() {
+   fHasRunAtLeastOnce = true;
+   // forget TActions and detach TResultProxies
+   fBookedActions.clear();
+   for (auto readiness : fResProxyReadiness) {
+      *readiness.get() = true;
+   }
+   fResProxyReadiness.clear();
+}
+
 /// Start the event loop with a different mechanism depending on IMT/no IMT, data source/no data source.
 /// Also perform a few setup and clean-up operations (CreateSlots before running, clear booked actions after, etc.).
 void TLoopManager::Run()
@@ -244,13 +255,7 @@ void TLoopManager::Run()
    }
 #endif // R__USE_IMT
 
-   fHasRunAtLeastOnce = true;
-   // forget TActions and detach TResultProxies
-   fBookedActions.clear();
-   for (auto readiness : fResProxyReadiness) {
-      *readiness.get() = true;
-   }
-   fResProxyReadiness.clear();
+   CleanUp();
 }
 
 /// Build TTreeReaderValues for all nodes
