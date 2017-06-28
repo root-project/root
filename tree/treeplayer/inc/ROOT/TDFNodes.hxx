@@ -495,6 +495,7 @@ protected:
    ULong64_t fNProcessedEntries{0};
    unsigned int fNChildren{0};      ///< Number of nodes of the functional graph hanging from this object
    unsigned int fNStopsReceived{0}; ///< Number of times that a children node signaled to stop processing entries.
+   bool fHasStopped{false}; ///< True if the end of the range has been reached
 
 public:
    TRangeBase(TLoopManager *implPtr, const ColumnNames_t &tmpBranches, unsigned int start, unsigned int stop,
@@ -524,7 +525,9 @@ public:
    /// Ranges act as filters when it comes to selecting entries that downstream nodes should process
    bool CheckFilters(unsigned int slot, Long64_t entry) final
    {
-      if (entry != fLastCheckedEntry) {
+      if (fHasStopped) {
+         return false;
+      } else if (entry != fLastCheckedEntry) {
          if (!fPrevData.CheckFilters(slot, entry)) {
             // a filter upstream returned false, cache the result
             fLastResult = false;
@@ -536,7 +539,10 @@ public:
                fLastResult = false;
             else
                fLastResult = true;
-            if (fNProcessedEntries == fStop) fPrevData.StopProcessing();
+            if (fNProcessedEntries == fStop) {
+               fHasStopped = true;
+               fPrevData.StopProcessing();
+            }
          }
          fLastCheckedEntry = entry;
       }
@@ -552,7 +558,7 @@ public:
    void StopProcessing()
    {
       ++fNStopsReceived;
-      if (fNStopsReceived == fNChildren) fPrevData.StopProcessing();
+      if (fNStopsReceived == fNChildren && !fHasStopped) fPrevData.StopProcessing();
    }
 };
 
