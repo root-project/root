@@ -234,6 +234,7 @@ public:
    TAction(Helper &&h, const ColumnNames_t &bl, PrevDataFrame &pd)
       : TActionBase(pd.GetImplPtr(), pd.GetTmpBranches()), fHelper(std::move(h)), fBranches(bl), fPrevData(pd)
    {
+      fPrevData.IncrChildrenCount();
    }
 
    TAction(const TAction &) = delete;
@@ -291,7 +292,7 @@ public:
    std::string GetName() const;
    ColumnNames_t GetTmpBranches() const;
    virtual void Update(unsigned int slot, Long64_t entry) = 0;
-   void IncrChildrenCount() { ++fNChildren; }
+   virtual void IncrChildrenCount() = 0;
    virtual void StopProcessing() = 0;
 };
 
@@ -373,6 +374,13 @@ public:
       ++fNStopsReceived;
       if (fNStopsReceived == fNChildren) fPrevData.StopProcessing();
    }
+
+   void IncrChildrenCount()
+   {
+      ++fNChildren;
+      // propagate "children activation" upstream
+      if (fNChildren == 1) fPrevData.IncrChildrenCount();
+   }
 };
 
 class TFilterBase {
@@ -400,7 +408,7 @@ public:
    bool HasName() const;
    virtual void CreateSlots(unsigned int nSlots) = 0;
    void PrintReport() const;
-   void IncrChildrenCount() { ++fNChildren; }
+   virtual void IncrChildrenCount() = 0;
    virtual void StopProcessing() = 0;
 };
 
@@ -481,6 +489,13 @@ public:
       ++fNStopsReceived;
       if (fNStopsReceived == fNChildren) fPrevData.StopProcessing();
    }
+
+   void IncrChildrenCount()
+   {
+      ++fNChildren;
+      // propagate "children activation" upstream
+      if (fNChildren == 1) fPrevData.IncrChildrenCount();
+   }
 };
 
 class TRangeBase {
@@ -507,7 +522,7 @@ public:
    virtual bool CheckFilters(unsigned int slot, Long64_t entry) = 0;
    virtual void Report() const = 0;
    virtual void PartialReport() const = 0;
-   void IncrChildrenCount() { ++fNChildren; }
+   virtual void IncrChildrenCount() = 0;
    virtual void StopProcessing() = 0;
 };
 
@@ -560,6 +575,13 @@ public:
    {
       ++fNStopsReceived;
       if (fNStopsReceived == fNChildren && !fHasStopped) fPrevData.StopProcessing();
+   }
+
+   void IncrChildrenCount()
+   {
+      ++fNChildren;
+      // propagate "children activation" upstream
+      if (fNChildren == 1) fPrevData.IncrChildrenCount();
    }
 };
 
