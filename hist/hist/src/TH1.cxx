@@ -3362,6 +3362,9 @@ void TH1::FillRandom(TH1 *h, Int_t ntimes)
    if (fDimension != h->GetDimension()) {
       Error("FillRandom", "Histograms with different dimensions"); return;
    }
+   if (std::isnan( h->ComputeIntegral(true) )) {
+      Error("FillRandom", "Histograms contains negative bins, does not represent probabilities"); return;
+   }
 
    //in case the target histogram has the same binning and ntimes much greater
    //than the number of bins we can use a fast method
