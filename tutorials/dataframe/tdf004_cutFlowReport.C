@@ -14,7 +14,6 @@
 #include "TMath.h"
 #include "TRandom3.h"
 #include "TFile.h"
-#include "TH1F.h"
 #include "TTree.h"
 
 #include "ROOT/TDataFrame.hxx"
