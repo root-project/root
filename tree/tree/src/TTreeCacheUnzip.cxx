@@ -231,9 +231,9 @@ Int_t TTreeCacheUnzip::AddBranch(const char *branch, Bool_t subbranches /*= kFAL
 Bool_t TTreeCacheUnzip::FillBuffer()
 {
    if (fNbranches <= 0) return kFALSE;
-   {
+//   {
       // Fill the cache buffer with the branches in the cache.
-      R__LOCKGUARD(fMutexList);
+//      R__LOCKGUARD(fMutexList);
       fIsTransferred = kFALSE;
 
       TTree *tree = ((TBranch*)fBranches->UncheckedAt(0))->GetTree();
@@ -309,10 +309,10 @@ Bool_t TTreeCacheUnzip::FillBuffer()
       // Now fix the size of the status arrays
       ResetCache();
       printf("before UnzipCacheTBB, fIsTransferred = %d\n", fIsTransferred);//##
-      UnzipCacheTBB();
       fIsLearning = kFALSE;
+      UnzipCacheTBB();
 
-   }
+//   }
 
    return kTRUE;
 }
@@ -966,8 +966,8 @@ Int_t TTreeCacheUnzip::UnzipCacheTBB()
 
 Int_t TTreeCacheUnzip::GetUnzipBuffer(char **buf, Long64_t pos, Int_t len, Bool_t *free)
 {
-   {
-   R__LOCKGUARD(fMutexList);
+//   {
+//   R__LOCKGUARD(fMutexList);
 
    Int_t res = 0;
    Int_t loc = -1;
@@ -1149,7 +1149,7 @@ Int_t TTreeCacheUnzip::GetUnzipBuffer(char **buf, Long64_t pos, Int_t len, Bool_
    }
    
    return res;
-   } // end of lock scope
+//   } // end of lock scope
 }
 
 ////////////////////////////////////////////////////////////////////////////////
