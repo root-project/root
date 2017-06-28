@@ -3209,10 +3209,10 @@ Int_t THistPainter::DistancetoPrimitive(Int_t px, Int_t py)
          Int_t pybinmax = gPad->YtoAbsPixel(gPad->YtoPad(binvalmin));
          if (py<pybinmax+kMaxDiff/2 && py>pybinmin-kMaxDiff/2) pybin = py;
       }
-      if (bin != binsup) { // Mouse on bin border border
-         Double_t binsupval = factor*fH->GetBinContent(binsup);
-         Int_t pybinsub     = gPad->YtoAbsPixel(gPad->YtoPad(binsupval));
-         if (py <= TMath::Max(pybinsub,pybin) && py >= TMath::Min(pybinsub,pybin)) return 0;
+      if (bin != binsup) { // Mouse on bin border
+        Double_t binsupval = factor*fH->GetBinContent(binsup);
+        Int_t pybinsub     = gPad->YtoAbsPixel(gPad->YtoPad(binsupval));
+        if (py <= TMath::Max(pybinsub,pybin) && py >= TMath::Min(pybinsub,pybin) && pybin != 10000) return 0;
       }
       if (TMath::Abs(py - pybin) <= kMaxDiff) return TMath::Abs(py - pybin);
    } else {
