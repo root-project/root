@@ -33,7 +33,7 @@ namespace TDF {
 using namespace ROOT::TypeTraits;
 
 using Count_t = unsigned long;
-using Hist_t = ::TH1F;
+using Hist_t = ::TH1D;
 
 template <typename F>
 class ForeachSlotHelper {

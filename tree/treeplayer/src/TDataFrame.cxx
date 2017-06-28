@@ -127,14 +127,14 @@ and [parallelism](#parallel-execution).
 ### Filling a histogram
 Let's start with a very common task: filling a histogram
 ~~~{.cpp}
-// Fill a TH1F with the "MET" branch
+// Fill a TH1D with the "MET" branch
 ROOT::Experimental::TDataFrame d("myTree", filePtr); // build a TDataFrame like you would build a TTreeReader
 auto h = d.Histo1D("MET");
 h->Draw();
 ~~~
 The first line creates a `TDataFrame` associated to the `TTree` "myTree". This tree has a branch named "MET".
 
-`Histo1D` is an action; it returns a smart pointer (a `TResultProxy` to be precise) to a `TH1F` histogram filled
+`Histo1D` is an action; it returns a smart pointer (a `TResultProxy` to be precise) to a `TH1D` histogram filled
 with the `MET` of all events.
 If the quantity stored in the branch is a collection, the histogram is filled with its elements.
 
