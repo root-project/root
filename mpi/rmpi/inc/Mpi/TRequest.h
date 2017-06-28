@@ -6,75 +6,92 @@
 
 namespace ROOT {
    namespace Mpi {
-      class TStatus;
-      class TRequest: public TObject {
-         friend class TCommunicator;
-         friend class TGrequest;
-         friend class TPrequest;
-      protected:
-         std::function<void(void)> fCallback; //function use to unserialize objects at wait or test of clear memory
-         MPI_Request fRequest;                //
-      public:
-         TRequest();
-         TRequest(const TRequest &obj);
-         virtual ~TRequest() {}
-         TRequest(MPI_Request r);
+   /**
+    * \class TRequest
+    * Class to maniputale request in non-blocking communication.
+    * \ingroup Mpi
+    */
 
-         TRequest &operator=(const TRequest &r);
+   class TStatus;
+   class TRequest : public TObject {
+     friend class TCommunicator;
+     friend class TGrequest;
+     friend class TPrequest;
 
-         Bool_t operator== (const TRequest &a);
-         Bool_t operator!= (const TRequest &a);
+   protected:
+     std::function<void(void)> fCallback; // function use to unserialize objects
+                                          // at wait or test of clear memory
+     MPI_Request fRequest; //
+   public:
+     TRequest();
+     TRequest(const TRequest &obj);
+     virtual ~TRequest() {}
+     TRequest(MPI_Request r);
 
-         TRequest &operator= (const MPI_Request &i);
+     TRequest &operator=(const TRequest &r);
 
-         operator MPI_Request() const
-         {
-            return fRequest;
-         }
+     Bool_t operator==(const TRequest &a);
+     Bool_t operator!=(const TRequest &a);
 
-         virtual void Wait(TStatus &status);
+     TRequest &operator=(const MPI_Request &i);
 
-         virtual void Wait();
+     operator MPI_Request() const { return fRequest; }
 
-         virtual Bool_t Test(TStatus &status);
+     virtual void Wait(TStatus &status);
 
-         virtual Bool_t Test();
+     virtual void Wait();
 
-         virtual void Free(void);
+     virtual Bool_t Test(TStatus &status);
 
-         static Int_t WaitAny(Int_t count, TRequest array[], TStatus &status);
+     virtual Bool_t Test();
 
-         static Int_t WaitAny(Int_t count, TRequest array[]);
+     virtual void Free(void);
 
-         static Bool_t TestAny(Int_t count, TRequest array[], Int_t &index, TStatus &status);
+     static Int_t WaitAny(Int_t count, TRequest array[], TStatus &status);
 
-         static Bool_t TestAny(Int_t count, TRequest array[], Int_t &index);
+     static Int_t WaitAny(Int_t count, TRequest array[]);
 
-         static void WaitAll(Int_t count, TRequest req_array[], TStatus stat_array[]);
+     static Bool_t TestAny(Int_t count, TRequest array[], Int_t &index,
+                           TStatus &status);
 
-         static void WaitAll(Int_t count, TRequest req_array[]);
+     static Bool_t TestAny(Int_t count, TRequest array[], Int_t &index);
 
-         static Bool_t TestAll(Int_t count, TRequest req_array[], TStatus stat_array[]);
+     static void WaitAll(Int_t count, TRequest req_array[],
+                         TStatus stat_array[]);
 
-         static Bool_t TestAll(Int_t count, TRequest req_array[]);
+     static void WaitAll(Int_t count, TRequest req_array[]);
 
-         static Int_t WaitSome(Int_t incount, TRequest req_array[], Int_t array_of_indices[], TStatus stat_array[]) ;
+     static Bool_t TestAll(Int_t count, TRequest req_array[],
+                           TStatus stat_array[]);
 
-         static Int_t WaitSome(Int_t incount, TRequest req_array[], Int_t array_of_indices[]);
+     static Bool_t TestAll(Int_t count, TRequest req_array[]);
 
-         static Int_t TestSome(Int_t incount, TRequest req_array[], Int_t array_of_indices[], TStatus stat_array[]);
+     static Int_t WaitSome(Int_t incount, TRequest req_array[],
+                           Int_t array_of_indices[], TStatus stat_array[]);
 
-         static Int_t TestSome(Int_t incount, TRequest req_array[], Int_t array_of_indices[]);
+     static Int_t WaitSome(Int_t incount, TRequest req_array[],
+                           Int_t array_of_indices[]);
 
-         virtual void Cancel(void) const;
+     static Int_t TestSome(Int_t incount, TRequest req_array[],
+                           Int_t array_of_indices[], TStatus stat_array[]);
 
-         virtual Bool_t GetStatus(TStatus &status) const;
+     static Int_t TestSome(Int_t incount, TRequest req_array[],
+                           Int_t array_of_indices[]);
 
-         virtual Bool_t GetStatus() const;
+     virtual void Cancel(void) const;
 
-         ClassDef(TRequest, 1)
+     virtual Bool_t GetStatus(TStatus &status) const;
+
+     virtual Bool_t GetStatus() const;
+
+     ClassDef(TRequest, 1)
       };
 
+      /**
+       * \class TPrequest
+       * Class to maniputale request in persistent/non-blocking communication.
+       * \ingroup Mpi
+       */
 
       class TPrequest: public TRequest {
       public:
@@ -100,6 +117,11 @@ namespace ROOT {
          ClassDef(TPrequest, 2)
       };
 
+      /**
+       * \class TGrequest
+       * Class to maniputale Gerneral request in non-blocking communication.
+       * \ingroup Mpi
+       */
       class TGrequest: public TRequest {
       public:
          typedef Int_t Query_function(void *, TStatus &);

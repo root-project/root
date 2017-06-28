@@ -12,6 +12,13 @@ TStatus::TStatus(const TStatus &data): TObject(data), fStatus(data.fStatus) {}
 //______________________________________________________________________________
 /**
  * Method to get if the current process was cancelled
+ * Returns  true  if  the communication associated with the status object was
+ * canceled successfully. In such a case, all other fields of status (such as
+ * count or tag) are undefined. Otherwise, returns false. If a receive operation
+ * might be canceled, one should call  ROOT::Mpi::TStatus::IsCancelled first,
+ * to  check whether the operation was canceled, before checking on the other
+ * fields of the return status.
+ *
  * \return integer with the status value
  */
 Bool_t TStatus::IsCancelled() const

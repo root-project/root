@@ -8,9 +8,9 @@
 namespace ROOT {
    namespace Mpi {
    /**
-   \class TStatus
-      Class to handle status in the ROOTMpi calls.
-      \ingroup Mpi
+    * \class TStatus
+    * Class to handle status in the ROOTMpi calls.
+    * \ingroup Mpi
     */
 
    class TStatus : public TObject {
