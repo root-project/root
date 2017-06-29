@@ -54,7 +54,7 @@ private:
 
   typedef std::list<WebConn> WebConnList;
 
-  typedef std::list<ROOT::Experimental::TMenuItem> MenuItemsList;
+  typedef std::vector<ROOT::Experimental::TMenuItem> MenuItemsVector;
 
   /// The canvas we are painting. It might go out of existence while painting.
   const ROOT::Experimental::TCanvas& fCanvas;
@@ -62,7 +62,7 @@ private:
    WebConnList     fWebConn;      ///<! connections list
    ROOT::Experimental::TPadDisplayItem  fDisplayList; ///!< full list of items to display
 
-   MenuItemsList   fMenuItems;    ///<! list of menu items
+   MenuItemsVector  fMenuItems;    ///<! list of menu items
 
    static std::string fAddr;
    static THttpServer *gServer;
@@ -288,7 +288,6 @@ void TCanvasPainter::AddChkMenuItem(const std::string &name, const std::string &
    fMenuItems.push_back(item);
 }
 
-
 void TCanvasPainter::CheckModifiedFlag()
 {
 
@@ -308,16 +307,15 @@ void TCanvasPainter::CheckModifiedFlag()
             fMenuItems.clear();
             drawable->FillMenu(*this);
 
-            TClass *cl = gROOT->GetClass("std::list<ROOT::Experimental::TMenuItem>");
+            TClass *cl = gROOT->GetClass("std::vector<ROOT::Experimental::TMenuItem>");
 
             printf("Got items %d class %p %s\n", (int) fMenuItems.size(), cl, cl->GetName());
 
-            for (auto &&item: fMenuItems) {
-               printf("Item %s\n", item.GetName().c_str());
-            }
-
+            // FIXME: got problem with std::list<TMenuItem>, can be generic TBufferJSON
             buf = "MENU";
             buf += TBufferJSON::ConvertToJSON(&fMenuItems, cl);
+
+            fMenuItems.clear();
          }
 
          conn.fGetMenu = "";
