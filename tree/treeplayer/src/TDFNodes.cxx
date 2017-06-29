@@ -223,7 +223,8 @@ void TLoopManager::RunAndCheckFilters(unsigned int slot, Long64_t entry)
 }
 
 /// Perform clean-up operations. To be called at the end of each event loop.
-void TLoopManager::CleanUp() {
+void TLoopManager::CleanUp()
+{
    fHasRunAtLeastOnce = true;
 
    // forget TActions and detach TResultProxies
@@ -233,7 +234,7 @@ void TLoopManager::CleanUp() {
    }
    fResProxyReadiness.clear();
 
-   // reset children counts  
+   // reset children counts
    fNChildren = 0;
    fNStopsReceived = 0;
    for (auto &ptr : fBookedFilters) ptr->ResetChildrenCount();
