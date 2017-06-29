@@ -35,6 +35,9 @@ project.xcworkspace
 # CLion
 .idea/*
 
+# QtCreator
+CMakeLists.txt.user
+
 # Vim
 *.swp
 
