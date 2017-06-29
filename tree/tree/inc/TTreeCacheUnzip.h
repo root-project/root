@@ -55,6 +55,7 @@ protected:
 
    friend class UnzipTask;
    friend class MappingTask;
+   tbb::task *root;
 
    // Members for paral. managing
    TThread    *fUnzipThread[10];
