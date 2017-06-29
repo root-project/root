@@ -35,6 +35,8 @@ public:
     fObj(obj), fOpts(opts) {}
   /// Paint the histogram
   void Paint(TVirtualCanvasPainter& canv) final;
+
+  void FillMenu(TVirtualCanvasPainter& onCanv) final;
 };
 } // namespace Internal
 } // namespace Experimental

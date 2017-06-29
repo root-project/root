@@ -17,6 +17,7 @@
 #include "ROOT/TCanvas.hxx"
 #include <ROOT/TLogger.hxx>
 #include <ROOT/TDisplayItem.hxx>
+#include <ROOT/TMenuItem.hxx>
 
 #include <memory>
 #include <string>
@@ -30,6 +31,7 @@
 #include "TRandom.h"
 #include "TPad.h"
 #include "TROOT.h"
+#include "TClass.h"
 #include "TBufferJSON.h"
 
 namespace {
@@ -52,11 +54,15 @@ private:
 
   typedef std::list<WebConn> WebConnList;
 
+  typedef std::list<ROOT::Experimental::TMenuItem> MenuItemsList;
+
   /// The canvas we are painting. It might go out of existence while painting.
   const ROOT::Experimental::TCanvas& fCanvas;
 
    WebConnList     fWebConn;      ///<! connections list
    ROOT::Experimental::TPadDisplayItem  fDisplayList; ///!< full list of items to display
+
+   MenuItemsList   fMenuItems;    ///<! list of menu items
 
    static std::string fAddr;
    static THttpServer *gServer;
@@ -100,7 +106,9 @@ public:
 
    virtual void AddDisplayItem(ROOT::Experimental::TDisplayItem *item) final;
 
+   virtual void AddMenuItem(const std::string &name, const std::string &title, const std::string &exec) final;
 
+   virtual void AddChkMenuItem(const std::string &name, const std::string &title, bool checked, const std::string &toggle) final;
 
   // void ReactToSocketNews(...) override { SendCanvas(); }
 
@@ -265,6 +273,22 @@ Bool_t TCanvasPainter::ProcessWS(THttpCallArg *arg)
    return kTRUE;
 }
 
+void TCanvasPainter::AddMenuItem(const std::string &name, const std::string &title, const std::string &exec)
+{
+    ROOT::Experimental::TMenuItem item(name, title);
+    item.SetExec(exec);
+    fMenuItems.push_back(item);
+}
+
+void TCanvasPainter::AddChkMenuItem(const std::string &name, const std::string &title, bool checked, const std::string &toggle)
+{
+   ROOT::Experimental::TMenuItem item(name, title);
+   item.SetChecked(checked);
+   item.SetExec(toggle);
+   fMenuItems.push_back(item);
+}
+
+
 void TCanvasPainter::CheckModifiedFlag()
 {
 
@@ -279,6 +303,22 @@ void TCanvasPainter::CheckModifiedFlag()
          ROOT::Experimental::Internal::TDrawable *drawable = FindDrawable(fCanvas, conn.fGetMenu);
 
          printf("Request menu for object %s found drawable %p\n", conn.fGetMenu.c_str(), drawable);
+
+         if (drawable) {
+            fMenuItems.clear();
+            drawable->FillMenu(*this);
+
+            TClass *cl = gROOT->GetClass("std::list<ROOT::Experimental::TMenuItem>");
+
+            printf("Got items %d class %p %s\n", (int) fMenuItems.size(), cl, cl->GetName());
+
+            for (auto &&item: fMenuItems) {
+               printf("Item %s\n", item.GetName().c_str());
+            }
+
+            buf = "MENU";
+            buf += TBufferJSON::ConvertToJSON(&fMenuItems, cl);
+         }
 
          conn.fGetMenu = "";
       } else

@@ -74,7 +74,10 @@ public:
    virtual ~THistDrawableBase();
 
    THistDrawableBase& operator=(THistDrawableBase&&);
-  
+
+    void FillMenu(TVirtualCanvasPainter &) final {
+       // here should be filling of context menu for the given object
+    }
 };
 
 template <int DIMENSIONS>
