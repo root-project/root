@@ -3362,8 +3362,9 @@ void TH1::FillRandom(TH1 *h, Int_t ntimes)
    if (fDimension != h->GetDimension()) {
       Error("FillRandom", "Histograms with different dimensions"); return;
    }
-   if (std::isnan( h->ComputeIntegral(true) )) {
-      Error("FillRandom", "Histograms contains negative bins, does not represent probabilities"); return;
+   if (std::isnan(h->ComputeIntegral(true))) {
+      Error("FillRandom", "Histograms contains negative bins, does not represent probabilities");
+      return;
    }
 
    //in case the target histogram has the same binning and ntimes much greater
@@ -7485,13 +7486,14 @@ Double_t TH1::KolmogorovTest(const TH1 *h2, Option_t *option) const
    const Int_t nEXPT = 1000;
    if (opt.Contains("X") && !(afunc1 || afunc2 ) ) {
       Double_t dSEXPT;
-      TH1 *h1_cpy = (TH1*)(gDirectory ? gDirectory->CloneObject(this,kFALSE) : gROOT->CloneObject(this,kFALSE));
+      TH1 *h1_cpy = (TH1 *)(gDirectory ? gDirectory->CloneObject(this, kFALSE) : gROOT->CloneObject(this, kFALSE));
       TH1 *hExpt = (TH1*)(gDirectory ? gDirectory->CloneObject(this,kFALSE) : gROOT->CloneObject(this,kFALSE));
 
       if (h1_cpy->GetMinimum() < 0.0) {
-        // With negative bins we can't draw random samples in a meaningful way.
-         Warning("KolmogorovTest", "Detected bins with negative weights, these have been ignored and output might be skewed. Reduce number of bins for histogram?");
-         while(h1_cpy->GetMinimum() < 0.0) {
+         // With negative bins we can't draw random samples in a meaningful way.
+         Warning("KolmogorovTest", "Detected bins with negative weights, these have been ignored and output might be "
+                                   "skewed. Reduce number of bins for histogram?");
+         while (h1_cpy->GetMinimum() < 0.0) {
             Int_t idx = h1_cpy->GetMinimumBin();
             h1_cpy->SetBinContent(idx, 0.0);
          }
@@ -7501,7 +7503,7 @@ Double_t TH1::KolmogorovTest(const TH1 *h2, Option_t *option) const
       prb3 = 0;
       for (Int_t i=0; i < nEXPT; i++) {
          hExpt->Reset();
-         hExpt->FillRandom(h1_cpy,(Int_t)esum2);
+         hExpt->FillRandom(h1_cpy, (Int_t)esum2);
          dSEXPT = KolmogorovTest(hExpt,"M");
          if (dSEXPT>dfmax) prb3 += 1.0;
       }
