@@ -668,7 +668,8 @@ std::map<TString,Double_t> TMVA::Factory::OptimizeAllMethods(TString fomType, TS
 /// \note You own the retured pointer.
 ///
 
-TMVA::ROCCurve *TMVA::Factory::GetROC(TMVA::DataLoader *loader, TString theMethodName, UInt_t iClass, Types::ETreeType type)
+TMVA::ROCCurve *TMVA::Factory::GetROC(TMVA::DataLoader *loader, TString theMethodName, UInt_t iClass,
+                                      Types::ETreeType type)
 {
    return GetROC((TString)loader->GetName(), theMethodName, iClass, type);
 }
@@ -1788,10 +1789,10 @@ void TMVA::Factory::EvaluateAllMethods( void )
 
          // --- 1 vs Rest ROC AUC, signal efficiency @ given background efficiency
          // --------------------------------------------------------------------
-         TString header1 =
-            Form("%-15s%-15s%-15s%-15s%-15s%-15s", "Dataset", "MVA Method", "ROC AUC", "Sig eff@B=0.01", "Sig eff@B=0.10", "Sig eff@B=0.30");
-         TString header2 =
-            Form("%-15s%-15s%-15s%-15s%-15s%-15s", "Name:", "/ Class:", "test  (train)", "test  (train)", "test  (train)", "test  (train)");
+         TString header1 = Form("%-15s%-15s%-15s%-15s%-15s%-15s", "Dataset", "MVA Method", "ROC AUC", "Sig eff@B=0.01",
+                                "Sig eff@B=0.10", "Sig eff@B=0.30");
+         TString header2 = Form("%-15s%-15s%-15s%-15s%-15s%-15s", "Name:", "/ Class:", "test  (train)", "test  (train)",
+                                "test  (train)", "test  (train)");
          Log() << kINFO << Endl;
          Log() << kINFO << "1-vs-rest performance metrics per class" << Endl;
          Log() << kINFO << hLine << Endl;
@@ -1826,24 +1827,24 @@ void TMVA::Factory::EvaluateAllMethods( void )
                UInt_t numClasses = theMethod->fDataSetInfo.GetNClasses();
                for (UInt_t iClass = 0; iClass < numClasses; ++iClass) {
 
-                  ROCCurve * rocCurveTrain = GetROC(datasetName, mvaName, iClass, Types::kTraining);
-                  ROCCurve * rocCurveTest  = GetROC(datasetName, mvaName, iClass, Types::kTesting);
+                  ROCCurve *rocCurveTrain = GetROC(datasetName, mvaName, iClass, Types::kTraining);
+                  ROCCurve *rocCurveTest = GetROC(datasetName, mvaName, iClass, Types::kTesting);
 
                   const TString className = theMethod->DataInfo().GetClassInfo(iClass)->GetName();
                   const Double_t rocaucTrain = rocCurveTrain->GetROCIntegral();
                   const Double_t effB01Train = rocCurveTrain->GetEffSForEffB(0.01);
                   const Double_t effB10Train = rocCurveTrain->GetEffSForEffB(0.10);
                   const Double_t effB30Train = rocCurveTrain->GetEffSForEffB(0.30);
-                  const Double_t rocaucTest  = rocCurveTest->GetROCIntegral();
-                  const Double_t effB01Test  = rocCurveTest->GetEffSForEffB(0.01);
-                  const Double_t effB10Test  = rocCurveTest->GetEffSForEffB(0.10);
-                  const Double_t effB30Test  = rocCurveTest->GetEffSForEffB(0.30);
+                  const Double_t rocaucTest = rocCurveTest->GetROCIntegral();
+                  const Double_t effB01Test = rocCurveTest->GetEffSForEffB(0.01);
+                  const Double_t effB10Test = rocCurveTest->GetEffSForEffB(0.10);
+                  const Double_t effB30Test = rocCurveTest->GetEffSForEffB(0.30);
                   const TString rocaucCmp = Form("%5.3f (%5.3f)", rocaucTest, rocaucTrain);
                   const TString effB01Cmp = Form("%5.3f (%5.3f)", effB01Test, effB01Train);
                   const TString effB10Cmp = Form("%5.3f (%5.3f)", effB10Test, effB10Train);
                   const TString effB30Cmp = Form("%5.3f (%5.3f)", effB30Test, effB30Train);
-                  row = Form("%-15s%-15s%-15s%-15s%-15s%-15s", "", className.Data(),
-                     rocaucCmp.Data(), effB01Cmp.Data(), effB10Cmp.Data(), effB30Cmp.Data());
+                  row = Form("%-15s%-15s%-15s%-15s%-15s%-15s", "", className.Data(), rocaucCmp.Data(), effB01Cmp.Data(),
+                             effB10Cmp.Data(), effB30Cmp.Data());
                   Log() << kINFO << row << Endl;
 
                   delete rocCurveTrain;
@@ -1857,20 +1858,21 @@ void TMVA::Factory::EvaluateAllMethods( void )
 
          // --- Confusion matrices
          // --------------------------------------------------------------------
-         auto printMatrix = [](TMatrixD const & matTraining, TMatrixD const & matTesting,
-            std::vector<TString> classnames, UInt_t numClasses, MsgLogger &stream) {
+         auto printMatrix = [](TMatrixD const &matTraining, TMatrixD const &matTesting, std::vector<TString> classnames,
+                               UInt_t numClasses, MsgLogger &stream) {
             // assert (classLabledWidth >= valueLabelWidth + 2)
             // if (...) {Log() << kWARN << "..." << Endl; }
 
             // TODO: Ensure matrices are same size.
 
-            TString header     = Form(" %-14s", " ");
-            TString headerInfo = Form(" %-14s", " ");;
+            TString header = Form(" %-14s", " ");
+            TString headerInfo = Form(" %-14s", " ");
+            ;
             for (UInt_t iCol = 0; iCol < numClasses; ++iCol) {
-               header     += Form(" %-14s", classnames[iCol].Data());
+               header += Form(" %-14s", classnames[iCol].Data());
                headerInfo += Form(" %-14s", " test (train)");
             }
-            stream << kINFO << header     << Endl;
+            stream << kINFO << header << Endl;
             stream << kINFO << headerInfo << Endl;
 
             for (UInt_t iRow = 0; iRow < numClasses; ++iRow) {
@@ -1881,8 +1883,8 @@ void TMVA::Factory::EvaluateAllMethods( void )
                      stream << kINFO << Form(" %-14s", "-");
                   } else {
                      Double_t trainValue = matTraining[iRow][iCol];
-                     Double_t testValue  = matTesting[iRow][iCol];
-                     TString  entry = Form("%-5.3f (%-5.3f)", testValue, trainValue);
+                     Double_t testValue = matTesting[iRow][iCol];
+                     TString entry = Form("%-5.3f (%-5.3f)", testValue, trainValue);
                      stream << kINFO << Form(" %-14s", entry.Data());
                   }
                }
@@ -1910,21 +1912,25 @@ void TMVA::Factory::EvaluateAllMethods( void )
             for (UInt_t iCls = 0; iCls < numClasses; ++iCls) {
                classnames.push_back(theMethod->fDataSetInfo.GetClassInfo(iCls)->GetName());
             }
-            Log() << kINFO << "=== Showing confusion matrix for method : " << Form("%-15s", (const char *)mname[0][iMethod])
+            Log() << kINFO
+                  << "=== Showing confusion matrix for method : " << Form("%-15s", (const char *)mname[0][iMethod])
                   << Endl;
             Log() << kINFO << "(Signal Efficiency for Background Efficiency 0.01%)" << Endl;
             Log() << kINFO << "---------------------------------------------------" << Endl;
-            printMatrix(multiclass_testConfusionEffB01[iMethod], multiclass_trainConfusionEffB01[iMethod], classnames, numClasses, Log());
+            printMatrix(multiclass_testConfusionEffB01[iMethod], multiclass_trainConfusionEffB01[iMethod], classnames,
+                        numClasses, Log());
             Log() << kINFO << Endl;
 
             Log() << kINFO << "(Signal Efficiency for Background Efficiency 0.10%)" << Endl;
             Log() << kINFO << "---------------------------------------------------" << Endl;
-            printMatrix(multiclass_testConfusionEffB10[iMethod], multiclass_trainConfusionEffB10[iMethod], classnames, numClasses, Log());
+            printMatrix(multiclass_testConfusionEffB10[iMethod], multiclass_trainConfusionEffB10[iMethod], classnames,
+                        numClasses, Log());
             Log() << kINFO << Endl;
 
             Log() << kINFO << "(Signal Efficiency for Background Efficiency 0.30%)" << Endl;
             Log() << kINFO << "---------------------------------------------------" << Endl;
-            printMatrix(multiclass_testConfusionEffB30[iMethod], multiclass_trainConfusionEffB30[iMethod], classnames, numClasses, Log());
+            printMatrix(multiclass_testConfusionEffB30[iMethod], multiclass_trainConfusionEffB30[iMethod], classnames,
+                        numClasses, Log());
             Log() << kINFO << Endl;
          }
          Log() << kINFO << hLine << Endl;

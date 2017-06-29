@@ -293,7 +293,9 @@ void TMVA::ResultsMulticlass::CreateMulticlassPerformanceHistos(TString prefix)
    //
    for (size_t iClass = 0; iClass < numClasses; ++iClass) {
       for (size_t jClass = 0; jClass < numClasses; ++jClass) {
-         if (iClass == jClass) { continue; }
+         if (iClass == jClass) {
+            continue;
+         }
 
          auto eventCollection = ds->GetEventCollection();
 
@@ -307,7 +309,7 @@ void TMVA::ResultsMulticlass::CreateMulticlassPerformanceHistos(TString prefix)
          mvaResWeights.reserve(eventCollection.size());
 
          for (size_t iEvent = 0; iEvent < eventCollection.size(); ++iEvent) {
-            Event * ev = eventCollection[iEvent];
+            Event *ev = eventCollection[iEvent];
 
             if (ev->GetClass() == iClass or ev->GetClass() == jClass) {
                Float_t output_value = (*rawMvaRes)[iEvent][iClass];
