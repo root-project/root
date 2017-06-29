@@ -339,12 +339,10 @@ bool Fitter::DoLeastSquareFit(ROOT::Fit::ExecutionPolicy executionPolicy) {
       if (!fFunc_v ) {
          MATH_ERROR_MSG("Fitter::DoLeastSquareFit","model function is not set");
          return false;
-#ifdef R__HAS_VECCORE
       } else{
          Chi2FCN<BaseFunc, IModelFunction_v> chi2(data, fFunc_v, executionPolicy);
          fFitType = chi2.Type();
          return DoMinimization (chi2);
-#endif
      }
    } else {
 
@@ -410,7 +408,6 @@ bool Fitter::DoBinnedLikelihoodFit(bool extended, ROOT::Fit::ExecutionPolicy exe
 
    if (!fUseGradient) {
       // do minimization without using the gradient
-#ifdef R__HAS_VECCORE
       if (fFunc_v) {
          // create a chi2 function to be used for the equivalent chi-square
          Chi2FCN<BaseFunc, IModelFunction_v> chi2(data, fFunc_v);
@@ -433,10 +430,7 @@ bool Fitter::DoBinnedLikelihoodFit(bool extended, ROOT::Fit::ExecutionPolicy exe
             logl.UseSumOfWeightSquare();
             if (!ApplyWeightCorrection(logl)) return false;
          }
-#endif
-#ifdef R__HAS_VECCORE
       }
-#endif
    } else {
       // create a chi2 function to be used for the equivalent chi-square
       Chi2FCN<BaseFunc> chi2(data, fFunc);
@@ -501,7 +495,6 @@ bool Fitter::DoUnbinnedLikelihoodFit(bool extended, ROOT::Fit::ExecutionPolicy e
 
    if (!fUseGradient) {
       // do minimization without using the gradient
-#ifdef R__HAS_VECCORE
      if (fFunc_v ){
        LogLikelihoodFCN<BaseFunc, IModelFunction_v> logl(data, fFunc_v, useWeight, extended, executionPolicy);
        fFitType = logl.Type();
@@ -511,10 +504,8 @@ bool Fitter::DoUnbinnedLikelihoodFit(bool extended, ROOT::Fit::ExecutionPolicy e
           if (!ApplyWeightCorrection(logl) ) return false;
         }
         return true;
-     }
-     else{         
-#endif
-       LogLikelihoodFCN<BaseFunc> logl(data, fFunc, useWeight, extended, executionPolicy);
+     } else {
+        LogLikelihoodFCN<BaseFunc> logl(data, fFunc, useWeight, extended, executionPolicy);
 
         fFitType = logl.Type();
         if (!DoMinimization (logl) ) return false;
@@ -523,9 +514,7 @@ bool Fitter::DoUnbinnedLikelihoodFit(bool extended, ROOT::Fit::ExecutionPolicy e
           if (!ApplyWeightCorrection(logl) ) return false;
         }
         return true;
-#ifdef R__HAS_VECCORE
      }
-#endif
    } else {
       // use gradient : check if fFunc provides gradient
       if (fConfig.MinimizerOptions().PrintLevel() > 0)

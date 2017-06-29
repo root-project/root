@@ -83,6 +83,8 @@ public:
    using IModelFunctionTempl =                             ROOT::Math::IParamMultiFunctionTempl<T>;
 #ifdef R__HAS_VECCORE
    typedef ROOT::Math::IParametricFunctionMultiDimTempl<ROOT::Double_v>  IModelFunction_v;
+#else
+   typedef ROOT::Math::IParamMultiFunction                 IModelFunction_v;
 #endif
    typedef ROOT::Math::IParamMultiGradFunction             IGradModelFunction;
    typedef ROOT::Math::IParamFunction                      IModel1DFunction;
@@ -171,7 +173,7 @@ public:
       SetData(data);
       return DoBinnedLikelihoodFit(extended, executionPolicy);
    }
-   
+
    bool LikelihoodFit(const std::shared_ptr<BinData> &data, bool extended = true,
                       ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::kSerial) {
       SetData(data);
@@ -490,11 +492,9 @@ private:
    int fDataSize;  // size of data sets (need for Fumili or LM fitters)
 
    FitConfig fConfig;       // fitter configuration (options and parameter settings)
-#ifdef R__HAS_VECCORE
+
    std::shared_ptr<IModelFunction_v> fFunc_v;  //! copy of the fitted  function containing on output the fit result
-#else
-    std::shared_ptr<IModelFunction> fFunc_v;   //dummy for when VecCore not available. Keeps the code cleaner.
-#endif
+
    std::shared_ptr<IModelFunction> fFunc;  //! copy of the fitted  function containing on output the fit result
 
    std::shared_ptr<ROOT::Fit::FitResult>  fResult;  //! pointer to the object containing the result of the fit
