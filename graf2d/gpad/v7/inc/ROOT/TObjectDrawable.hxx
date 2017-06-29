@@ -27,16 +27,22 @@ namespace Internal {
 /// \class ROOT::Experimental::Internal::TObjectDrawable
 /// Provides v7 drawing facilities for TObject types (TGraph etc).
 class TObjectDrawable: public TDrawable {
-  const std::shared_ptr<TObject> fObj; ///< The object to be painted
-  std::string fOpts; ///< The drawing options
+   const std::shared_ptr<TObject> fObj; ///< The object to be painted
+   std::string fOpts; ///< The drawing options
 
 public:
-  TObjectDrawable(const std::shared_ptr<TObject>& obj, std::string_view opts):
-    fObj(obj), fOpts(opts) {}
-  /// Paint the histogram
-  void Paint(TVirtualCanvasPainter& canv) final;
+   TObjectDrawable(const std::shared_ptr<TObject>& obj, std::string_view opts):
+     fObj(obj), fOpts(opts) {}
 
-  void FillMenu(TVirtualCanvasPainter& onCanv) final;
+   /// Paint the histogram
+   void Paint(TVirtualCanvasPainter& canv) final;
+
+   /// Fill menu items for the object
+   void FillMenu(TVirtualCanvasPainter& onCanv) final;
+
+   /// Executes menu item
+   void ExecMenu(const std::string &) final;
+
 };
 } // namespace Internal
 } // namespace Experimental

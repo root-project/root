@@ -16,6 +16,7 @@
 #define ROOT7_TDrawable
 
 #include <memory>
+#include <string>
 
 namespace ROOT {
 namespace Experimental {
@@ -37,6 +38,8 @@ public:
   virtual void Paint(TVirtualCanvasPainter &) = 0;
 
   virtual void FillMenu(TVirtualCanvasPainter &) = 0;
+
+  virtual void ExecMenu(const std::string &) = 0;
 };
 
 /// \class TAnyPtr
