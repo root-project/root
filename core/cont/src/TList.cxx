@@ -703,45 +703,45 @@ void TList::RecursiveRemove(TObject *obj)
 
    if (!obj) return;
 
-   // When fCache is set and has no previous and next node, it represents
-   // the node being cleared and/or deleted.
-   if (fCache && fCache->fNext == 0 && fCache->fPrev == 0) {
-      TObject *ob = fCache->GetObject();
-      if (ob && ob->TestBit(kNotDeleted)) {
-         ob->RecursiveRemove(obj);
-      }
-   }
-
-   TObjLink *lnk  = fFirst;
-   TObjLink *next = 0;
-   while (lnk) {
-      next = lnk->Next();
-      TObject *ob = lnk->GetObject();
-      if (ob->TestBit(kNotDeleted)) {
-         if (ob->IsEqual(obj)) {
-            if (lnk == fFirst) {
-               fFirst = next;
-               if (lnk == fLast)
-                  fLast = fFirst;
-               else
-                  fFirst->fPrev = 0;
-               DeleteLink(lnk);
-            } else if (lnk == fLast) {
-               fLast = lnk->Prev();
-               fLast->fNext = 0;
-               DeleteLink(lnk);
-            } else {
-               lnk->Prev()->fNext = next;
-               lnk->Next()->fPrev = lnk->Prev();
-               DeleteLink(lnk);
-            }
-            fSize--;
-            fCache = 0;
-            Changed();
-         } else
+   // When fCache is set and has no previous and next node,
+   // it represents the node being cleared and/or deleted.
+   if (fCache && fCache->fNext == 0 && fCache->fPrev == 0)
+      if (TObject *ob = fCache->GetObject())
+         if (ob->TestBit(kNotDeleted))
             ob->RecursiveRemove(obj);
+
+   for (TObjLink *lnk = fFirst; lnk; lnk = lnk->Next()) {
+      TObject *ob = lnk->GetObject();
+
+      // skip if deleted or being deleted
+      if (!ob || !ob->TestBit(kNotDeleted))
+         continue;
+
+      // not this object, but may contain this object
+      if (!ob->IsEqual(obj)) {
+         ob->RecursiveRemove(obj);
+         continue;
       }
-      lnk = next;
+
+      // object found, remove it from the list
+      if (lnk == fFirst) {
+         fFirst = fFirst->Next();
+         if (lnk == fLast)
+            fLast = fFirst;
+         else
+            fFirst->fPrev = 0;
+      } else if (lnk == fLast) {
+         fLast = lnk->Prev();
+         fLast->fNext = nullptr;
+      } else {
+         lnk->Prev()->fNext = lnk->Next();
+         lnk->Next()->fPrev = lnk->Prev();
+      }
+
+      fSize--;
+      DeleteLink(lnk);
+      fCache = nullptr;
+      Changed();
    }
 }
 
