@@ -25,6 +25,7 @@
 #include "TList.h"
 #include "TMethod.h"
 #include "TMethodCall.h"
+#include "TROOT.h"
 
 
 void ROOT::Experimental::Internal::TObjectDrawable::Paint(TVirtualCanvasPainter& canv) {
@@ -82,5 +83,17 @@ void ROOT::Experimental::Internal::TObjectDrawable::FillMenu(TVirtualCanvasPaint
          onCanv.AddMenuItem(m->GetName(), m->GetTitle(), Form("%s()", m->GetName()));
       }
    }
+
+}
+
+
+void ROOT::Experimental::Internal::TObjectDrawable::ExecMenu(const std::string &exec)
+{
+   TObject *obj = fObj.get();
+
+   TString cmd;
+   cmd.Form("((%s*) %p)->%s;", obj->ClassName(), obj, exec.c_str());
+   printf("TObjectDrawable::ExecMenu Obj %s Execute %s\n", obj->GetName(), cmd.Data());
+   gROOT->ProcessLine(cmd);
 
 }

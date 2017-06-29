@@ -78,6 +78,11 @@ public:
     void FillMenu(TVirtualCanvasPainter &) final {
        // here should be filling of context menu for the given object
     }
+
+    void ExecMenu(const std::string &) final {
+       // should execute menu item
+    }
+
 };
 
 template <int DIMENSIONS>
