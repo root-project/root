@@ -2,7 +2,7 @@
 #include <cassert>
 
 int main() {
-   auto fileName = "test_ranges.root";
+   auto fileName = "regression_ranges.root";
    auto treeName = "rangeTree";
 
    // write file
