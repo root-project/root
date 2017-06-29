@@ -561,7 +561,7 @@ TDataFrame::TDataFrame(TTree &tree, const ColumnNames_t &defaultBranches)
 /// An empty-source dataframe constructed with a number of entries will
 /// generate those entries on the fly when some action is triggered,
 /// and it will do so for all the previously-defined temporary branches.
-TDataFrame::TDataFrame(Long64_t numEntries)
+TDataFrame::TDataFrame(ULong64_t numEntries)
    : TInterface<TDFDetail::TLoopManager>(std::make_shared<TDFDetail::TLoopManager>(numEntries))
 {
 }

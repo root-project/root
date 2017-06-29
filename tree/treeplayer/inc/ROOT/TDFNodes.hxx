@@ -61,7 +61,7 @@ class TLoopManager : public std::enable_shared_from_this<TLoopManager> {
    ::TDirectory * const fDirPtr{nullptr};
    std::shared_ptr<TTree> fTree{nullptr};
    const ColumnNames_t fDefaultBranches;
-   const Long64_t fNEmptyEntries{0};
+   const ULong64_t fNEmptyEntries{0};
    const unsigned int fNSlots{1};
    bool fHasRunAtLeastOnce{false};
    unsigned int fNChildren{0};      ///< Number of nodes of the functional graph hanging from this object
@@ -80,7 +80,7 @@ class TLoopManager : public std::enable_shared_from_this<TLoopManager> {
 
 public:
    TLoopManager(TTree *tree, const ColumnNames_t &defaultBranches);
-   TLoopManager(Long64_t nEmptyEntries);
+   TLoopManager(ULong64_t nEmptyEntries);
    TLoopManager(const TLoopManager &) = delete;
    ~TLoopManager(){};
    void Run();
@@ -92,7 +92,7 @@ public:
    TCustomColumnBase *GetBookedBranch(const std::string &name) const;
    const std::map<std::string, TmpBranchBasePtr_t> &GetBookedBranches() const { return fBookedBranches; }
    ::TDirectory *GetDirectory() const;
-   Long64_t GetNEmptyEntries() const { return fNEmptyEntries; }
+   ULong64_t GetNEmptyEntries() const { return fNEmptyEntries; }
    void Book(const ActionBasePtr_t &actionPtr);
    void Book(const FilterBasePtr_t &filterPtr);
    void Book(const TmpBranchBasePtr_t &branchPtr);
