@@ -500,52 +500,6 @@
 }
 
 
-/* stylesheet for toolbar buttons */
-.jsroot .toolbar {
-    position: absolute;
-    bottom: 2px;
-    left: 2px;
-    z-index: 1001;
-    background: rgba(255, 255, 255, 0.7);
-}
-
-.jsroot .toolbar-group {
-    float: left;
-    display: inline-block;
-    box-sizing: border-box;
-    position: relative;
-    bottom: 23px;
-    vertical-align: middle;
-    white-space: nowrap;
-}
-
-.jsroot .toolbar-group:first-child {
-    margin-left: 2px;
-}
-
-.jsroot .toolbar-btn {
-    position: relative;
-    font-size: 16px;
-    padding: 3px 4px;
-    cursor: pointer;
-    line-height: normal;
-    box-sizing: border-box;
-}
-
-.jsroot .toolbar-btn svg {
-    position: relative;
-    top: 2px;
-}
-
-.jsroot .toolbar-btn path {
-    fill: rgba(0, 31, 95, 0.2);
-}
-
-.jsroot .toolbar-btn path .active,
-.jsroot .toolbar-btn path:hover {
-    fill: rgba(0, 22, 72, 0.5);
-}
-
 .jsroot [data-title]:before,
 .jsroot [data-title]:after {
     position: absolute;
@@ -582,6 +536,7 @@
 }
 
 /* stylesheet for embedded toolbar buttons */
+ 
 .jsroot .svg_toolbar_btn {
     fill: steelblue;
     cursor: pointer;
@@ -651,9 +606,8 @@
 }
 
 .jsroot_browser_hierarchy {
-	overflow:auto;
 	flex:1;
-	margin-top:5px;
+	margin-top:2px;
 }
 
 .jsroot_status_area {
@@ -731,4 +685,19 @@
    font-size: 14px;
    vertical-align: middle;
    white-space: nowrap;
+}
+
+.jsroot .canvas_menu {
+	 float: left;
+    display: block;
+    text-align: center;
+    padding: 0px 5px;
+    text-decoration: none;
+    font-size: 17px;
+    margin: 2px;
+}
+
+.jsroot .canvas_menu:hover {
+    background-color: #ddd;
+    color: black;
 }
