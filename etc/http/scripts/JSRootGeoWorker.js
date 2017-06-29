@@ -65,7 +65,7 @@ onmessage = function(e) {
             item.buf_pos = bufgeom.attributes.position.array;
             item.buf_norm = bufgeom.attributes.normal.array;
 
-            // use nice feature of HTML workers with transferables
+            // use nice feature of HTML workers with transferable
             // we allow to take ownership of buffer from local array
             // therefore buffer content not need to be copied
             transferables.push(item.buf_pos.buffer, item.buf_norm.buffer);
