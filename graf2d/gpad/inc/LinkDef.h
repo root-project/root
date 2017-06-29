@@ -39,6 +39,8 @@
 #pragma link C++ class ROOT::Experimental::TPadDisplayItem+;
 #pragma link C++ class ROOT::Experimental::TUniqueDisplayItem<TPad>+;
 #pragma link C++ class ROOT::Experimental::TOrdinaryDisplayItem<TH1>+;
+#pragma link C++ class ROOT::Experimental::TMenuItem+;
+#pragma link C++ class std::list<ROOT::Experimental::TMenuItem>+;
 #endif
 
 #endif
