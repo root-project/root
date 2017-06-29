@@ -34,7 +34,9 @@ class TDrawable {
 public:
   virtual ~TDrawable();
 
-  virtual void Paint(TVirtualCanvasPainter& onCanv) = 0;
+  virtual void Paint(TVirtualCanvasPainter &) = 0;
+
+  virtual void FillMenu(TVirtualCanvasPainter &) = 0;
 };
 
 /// \class TAnyPtr
