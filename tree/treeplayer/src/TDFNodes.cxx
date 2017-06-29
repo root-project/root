@@ -130,7 +130,7 @@ TLoopManager::TLoopManager(TTree *tree, const ColumnNames_t &defaultBranches)
 {
 }
 
-TLoopManager::TLoopManager(Long64_t nEmptyEntries)
+TLoopManager::TLoopManager(ULong64_t nEmptyEntries)
    : fNEmptyEntries(nEmptyEntries), fNSlots(TDFInternal::GetNSlots()), fLoopType(ELoopType::kNoFiles)
 {
 }
@@ -144,10 +144,10 @@ void TLoopManager::RunEmptySourceMT()
    // Evenly partition the entries according to fNSlots
    const auto nEntriesPerSlot = fNEmptyEntries / fNSlots;
    auto remainder = fNEmptyEntries % fNSlots;
-   std::vector<std::pair<Long64_t, Long64_t>> entryRanges;
-   Long64_t start = 0;
+   std::vector<std::pair<ULong64_t, ULong64_t>> entryRanges;
+   ULong64_t start = 0;
    while (start < fNEmptyEntries) {
-      Long64_t end = start + nEntriesPerSlot;
+      ULong64_t end = start + nEntriesPerSlot;
       if (remainder > 0) {
          ++end;
          --remainder;
@@ -157,7 +157,7 @@ void TLoopManager::RunEmptySourceMT()
    }
 
    // Each task will generate a subrange of entries
-   auto genFunction = [this, &slotStack](const std::pair<Long64_t, Long64_t> &range) {
+   auto genFunction = [this, &slotStack](const std::pair<ULong64_t, ULong64_t> &range) {
       auto slot = slotStack.Pop();
       InitAllNodes(nullptr, slot);
       for (auto currEntry = range.first; currEntry < range.second; ++currEntry) {
@@ -176,7 +176,7 @@ void TLoopManager::RunEmptySourceMT()
 void TLoopManager::RunEmptySource()
 {
    InitAllNodes(nullptr, 0);
-   for (Long64_t currEntry = 0; currEntry < fNEmptyEntries && fNStopsReceived < fNChildren; ++currEntry) {
+   for (ULong64_t currEntry = 0; currEntry < fNEmptyEntries && fNStopsReceived < fNChildren; ++currEntry) {
       RunAndCheckFilters(0, currEntry);
    }
 }
