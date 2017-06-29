@@ -268,6 +268,23 @@ Bool_t TCanvasPainter::ProcessWS(THttpCallArg *arg)
       conn->fReady = kTRUE;
       conn->fGetMenu = cdata+8;
       CheckModifiedFlag();
+   } else if (strncmp(cdata,"GEXE:",5)==0) {
+      // TODO: temporary solution, should be removed later
+      // used now to terminate ROOT session
+      gROOT->ProcessLine(cdata+5);
+   } else if (strncmp(cdata,"OBJEXEC:",8)==0) {
+      TString buf(cdata+8);
+      Int_t pos = buf.First(':');
+
+      if (pos>0) {
+         TString id = buf(0,pos);
+         buf.Remove(0, pos+1);
+         ROOT::Experimental::Internal::TDrawable *drawable = FindDrawable(fCanvas, id.Data());
+         if (drawable && (buf.Length()>0)) {
+            printf("Execute %s for drawable %p\n", buf.Data(), drawable);
+            drawable->ExecMenu(buf.Data());
+         }
+      }
    }
 
    return kTRUE;
