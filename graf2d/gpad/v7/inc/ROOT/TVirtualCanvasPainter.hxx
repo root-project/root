@@ -44,8 +44,12 @@ protected:
 public:
   /// Default destructor.
   virtual ~TVirtualCanvasPainter();
-  
+
   virtual void AddDisplayItem(TDisplayItem *item) = 0;
+
+  virtual void AddMenuItem(const std::string &name, const std::string &title, const std::string &exec) = 0;
+
+  virtual void AddChkMenuItem(const std::string &name, const std::string &title, bool checked, const std::string &toggle) = 0;
 
   /// Loads the plugin that implements this class.
   static std::unique_ptr<TVirtualCanvasPainter> Create(const TCanvas& canv);
