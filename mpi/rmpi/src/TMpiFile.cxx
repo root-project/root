@@ -1,19 +1,19 @@
-#include<Mpi/TMpiFile.h>
-#include<TKey.h>
-#include<TTree.h>
-#include<TThread.h>
+#include <Mpi/TMpiFile.h>
+#include <TKey.h>
+#include <TTree.h>
+#include <TThread.h>
 #include <iostream>
 #include <fstream>
-#include<vector>
+#include <vector>
 using namespace ROOT::Mpi;
 
 //______________________________________________________________________________
-//utility function to read all bytes from a file
-static std::vector<Char_t> ReadBytes(const Char_t  *name)
+// utility function to read all bytes from a file
+static std::vector<Char_t> ReadBytes(const Char_t *name)
 {
    std::ifstream file(name, std::ios::binary | std::ios::ate);
    std::ifstream::pos_type position = file.tellg();
-   std::vector<Char_t>  data(position);
+   std::vector<Char_t> data(position);
    file.seekg(0, std::ios::beg);
    file.read(&data[0], position);
    return data;
@@ -25,34 +25,38 @@ Bool_t TMpiFileMerger::OutputMemFile(const char *outputfile, const char *mode, I
    fExplicitCompLevel = kTRUE;
 
    TFile *oldfile = fOutputFile;
-   fOutputFile = 0; // This avoids the complaint from RecursiveRemove about the file being deleted which is here spurrious. (see RecursiveRemove).
+   fOutputFile = 0; // This avoids the complaint from RecursiveRemove about the file being deleted which is here
+                    // spurrious. (see RecursiveRemove).
    SafeDelete(oldfile);
 
    fOutputFilename = outputfile;
 
    // We want gDirectory untouched by anything going on here
    TDirectory::TContext ctxt;
-   fOutputFile = new  TMemFile(outputfile, mode, "", compressionLevel);
+   fOutputFile = new TMemFile(outputfile, mode, "", compressionLevel);
    if (!(fOutputFile) || fOutputFile->IsZombie()) {
       Error("OutputMemFile", "cannot open the sync files %s", fOutputFilename.Data());
       return kFALSE;
    }
    return kTRUE;
-
 }
 
 //______________________________________________________________________________
-TMpiFile::TMpiFile(const TIntraCommunicator &comm, const Char_t *name, Char_t *buffer, Long64_t size, Option_t *option, const Char_t *ftitle, Int_t compress): TMemFile(name, buffer, size, option, ftitle, compress), fComm(comm)
+TMpiFile::TMpiFile(const TIntraCommunicator &comm, const Char_t *name, Char_t *buffer, Long64_t size, Option_t *option,
+                   const Char_t *ftitle, Int_t compress)
+   : TMemFile(name, buffer, size, option, ftitle, compress), fComm(comm)
 {
 }
 
 //______________________________________________________________________________
-TMpiFile::TMpiFile(const TIntraCommunicator &comm, const Char_t *name, Option_t *option, const Char_t *ftitle, Int_t compress): TMemFile(name, option, ftitle, compress), fComm(comm)
+TMpiFile::TMpiFile(const TIntraCommunicator &comm, const Char_t *name, Option_t *option, const Char_t *ftitle,
+                   Int_t compress)
+   : TMemFile(name, option, ftitle, compress), fComm(comm)
 {
 }
 
 //______________________________________________________________________________
-TMpiFile::TMpiFile(const TMpiFile &file): TMemFile(file)
+TMpiFile::TMpiFile(const TMpiFile &file) : TMemFile(file)
 {
    fComm = file.fComm;
    fMerger = file.fMerger;
@@ -69,18 +73,19 @@ TMpiFile::TMpiFile(const TMpiFile &file): TMemFile(file)
    \param ftitle optional title for the file
    \param compress compression level
  */
-TMpiFile *TMpiFile::Open(const TIntraCommunicator &comm, const Char_t *name, Option_t *option, const Char_t *ftitle, Int_t compress)
+TMpiFile *TMpiFile::Open(const TIntraCommunicator &comm, const Char_t *name, Option_t *option, const Char_t *ftitle,
+                         Int_t compress)
 {
    TMpiFile *file = NULL;
 
    TString fOption = option;
    fOption.ToUpper();
-   Bool_t create   = (fOption == "CREATE") ? kTRUE : kFALSE;
+   Bool_t create = (fOption == "CREATE") ? kTRUE : kFALSE;
    Bool_t recreate = (fOption == "RECREATE") ? kTRUE : kFALSE;
-   Bool_t update   = (fOption == "UPDATE") ? kTRUE : kFALSE;
-   Bool_t read     = (fOption == "READ") ? kTRUE : kFALSE;
+   Bool_t update = (fOption == "UPDATE") ? kTRUE : kFALSE;
+   Bool_t read = (fOption == "READ") ? kTRUE : kFALSE;
    if (!create && !recreate && !update && !read) {
-      read    = kTRUE;
+      read = kTRUE;
       fOption = "READ";
    }
 
@@ -88,8 +93,10 @@ TMpiFile *TMpiFile::Open(const TIntraCommunicator &comm, const Char_t *name, Opt
       if (comm.IsMainProcess()) {
          auto tfile = TFile::Open(name, option, ftitle, compress);
          if (!tfile) {
-            if (create && !gSystem->AccessPathName(name, kFileExists)) comm.Abort(ERR_FILE_EXISTS);
-            else comm.Abort(ERR_FILE);
+            if (create && !gSystem->AccessPathName(name, kFileExists))
+               comm.Abort(ERR_FILE_EXISTS);
+            else
+               comm.Abort(ERR_FILE);
          }
          tfile->Close();
          delete tfile;
@@ -115,46 +122,45 @@ TMpiFile *TMpiFile::Open(const TIntraCommunicator &comm, const Char_t *name, Opt
    return file;
 }
 
-
 //______________________________________________________________________________
 /*! Method to copy the content one file to other.
   \param src Source file.
   \param file   Destination file.
 */
 
-void TMpiFile::CopyFrom(TDirectory *src, TMpiFile *file) {
-  TMpiFile *savdir = file;
-  TDirectory *adir = savdir;
-  adir->cd();
-  // loop on all entries of this directory
-  TKey *key;
-  TIter nextkey(src->GetListOfKeys());
-  while ((key = (TKey *)nextkey())) {
-    const Char_t *classname = key->GetClassName();
-    TClass *cl = gROOT->GetClass(classname);
-    if (!cl)
-      continue;
-    if (cl->InheritsFrom(TDirectory::Class())) {
-      src->cd(key->GetName());
-      TDirectory *subdir = file;
-      adir->cd();
-      CopyFrom(subdir, file);
-      adir->cd();
-    } else if (cl->InheritsFrom(TTree::Class())) {
-      TTree *T = (TTree *)src->Get(key->GetName());
-      adir->cd();
-      TTree *newT = T->CloneTree(-1, "fast");
-      newT->Write();
-    } else {
-      src->cd();
-      TObject *obj = key->ReadObj();
-      adir->cd();
-      obj->Write();
-      delete obj;
-    }
-  }
-  adir->SaveSelf(kTRUE);
-  savdir->cd();
+void TMpiFile::CopyFrom(TDirectory *src, TMpiFile *file)
+{
+   TMpiFile *savdir = file;
+   TDirectory *adir = savdir;
+   adir->cd();
+   // loop on all entries of this directory
+   TKey *key;
+   TIter nextkey(src->GetListOfKeys());
+   while ((key = (TKey *)nextkey())) {
+      const Char_t *classname = key->GetClassName();
+      TClass *cl = gROOT->GetClass(classname);
+      if (!cl) continue;
+      if (cl->InheritsFrom(TDirectory::Class())) {
+         src->cd(key->GetName());
+         TDirectory *subdir = file;
+         adir->cd();
+         CopyFrom(subdir, file);
+         adir->cd();
+      } else if (cl->InheritsFrom(TTree::Class())) {
+         TTree *T = (TTree *)src->Get(key->GetName());
+         adir->cd();
+         TTree *newT = T->CloneTree(-1, "fast");
+         newT->Write();
+      } else {
+         src->cd();
+         TObject *obj = key->ReadObj();
+         adir->cd();
+         obj->Write();
+         delete obj;
+      }
+   }
+   adir->SaveSelf(kTRUE);
+   savdir->cd();
 }
 
 //______________________________________________________________________________
@@ -199,8 +205,10 @@ void TMpiFile::Merge(Int_t root, Bool_t save, Int_t type)
    if (fComm.GetRank() == root) {
       fMerger = new TMpiFileMerger(kFALSE, kFALSE);
       fMerger->SetPrintLevel(0);
-      if (save) fMerger->OutputFile(GetName(), "RECREATE");
-      else fMerger->OutputMemFile(GetName(), "RECREATE");
+      if (save)
+         fMerger->OutputFile(GetName(), "RECREATE");
+      else
+         fMerger->OutputMemFile(GetName(), "RECREATE");
 
       TDirectory::TContext ctxt;
 
@@ -211,7 +219,7 @@ void TMpiFile::Merge(Int_t root, Bool_t save, Int_t type)
          msgs[i].Reset(kMESS_ANY);
          msgs[i].ReadTString(filename);
          msgs[i].ReadLong64(length);
-         TMemFile *memffile  = new TMemFile(filename, msgs[i].Buffer() + msgs[i].Length(), length, "UPDATE");
+         TMemFile *memffile = new TMemFile(filename, msgs[i].Buffer() + msgs[i].Length(), length, "UPDATE");
          msgs[i].SetBufferOffset(msgs[i].Length() + length);
          fMerger->AddAdoptFile(memffile);
          memffile = 0;
@@ -267,7 +275,7 @@ void TMpiFile::Save(Int_t root, Int_t type)
          msgs[i].Reset(kMESS_ANY);
          msgs[i].ReadTString(filename);
          msgs[i].ReadLong64(length);
-         TMemFile *memffile  = new TMemFile(filename, msgs[i].Buffer() + msgs[i].Length(), length, "UPDATE");
+         TMemFile *memffile = new TMemFile(filename, msgs[i].Buffer() + msgs[i].Length(), length, "UPDATE");
          msgs[i].SetBufferOffset(msgs[i].Length() + length);
          fMerger->AddAdoptFile(memffile);
          memffile = 0;
@@ -276,7 +284,6 @@ void TMpiFile::Save(Int_t root, Int_t type)
       delete fMerger;
    }
 }
-
 
 //______________________________________________________________________________
 /*!
@@ -345,7 +352,7 @@ void TMpiFile::Sync(Int_t rank, Int_t type)
          msgs[i].Reset(kMESS_ANY);
          msgs[i].ReadTString(filename);
          msgs[i].ReadLong64(length);
-         TMemFile *memffile  = new TMemFile(filename, msgs[i].Buffer() + msgs[i].Length(), length, "UPDATE");
+         TMemFile *memffile = new TMemFile(filename, msgs[i].Buffer() + msgs[i].Length(), length, "UPDATE");
          msgs[i].SetBufferOffset(msgs[i].Length() + length);
          fMerger->AddAdoptFile(memffile);
          memffile = 0;
@@ -359,7 +366,7 @@ void TMpiFile::Sync(Int_t rank, Int_t type)
       mfile->CopyTo(fMessage);
    }
 
-   fComm.Bcast(fMessage, rank); //sending the new data for all processes
+   fComm.Bcast(fMessage, rank); // sending the new data for all processes
 
    Long64_t length = 0;
    fMessage.SetReadMode();
@@ -368,7 +375,7 @@ void TMpiFile::Sync(Int_t rank, Int_t type)
 
    this->Delete("*;*");
 
-   TMemFile *mpifile  = new TMemFile(GetName(), fMessage.Buffer() + fMessage.Length(), length, "UPDATE");
+   TMemFile *mpifile = new TMemFile(GetName(), fMessage.Buffer() + fMessage.Length(), length, "UPDATE");
    fMessage.SetBufferOffset(fMessage.Length() + length);
    CopyFrom(mpifile);
 

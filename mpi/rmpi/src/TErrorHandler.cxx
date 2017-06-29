@@ -1,14 +1,18 @@
-#include<Mpi/TErrorHandler.h>
-#include<Mpi/TGroup.h>
-#include<Mpi/TIntraCommunicator.h>
+#include <Mpi/TErrorHandler.h>
+#include <Mpi/TGroup.h>
+#include <Mpi/TIntraCommunicator.h>
 
 using namespace ROOT::Mpi;
 Bool_t TErrorHandler::fVerbose = kFALSE;
 //______________________________________________________________________________
-TErrorHandler::TErrorHandler(): fErrorHandler(MPI_ERRORS_RETURN) {}
+TErrorHandler::TErrorHandler() : fErrorHandler(MPI_ERRORS_RETURN)
+{
+}
 
 //______________________________________________________________________________
-TErrorHandler::TErrorHandler(const TErrorHandler &err) : TObject(err), fErrorHandler(err.fErrorHandler) { }
+TErrorHandler::TErrorHandler(const TErrorHandler &err) : TObject(err), fErrorHandler(err.fErrorHandler)
+{
+}
 
 //______________________________________________________________________________
 /**
@@ -44,7 +48,7 @@ TString TErrorHandler::GetErrorString(Int_t errcode)
  * (integer).
  * \param msg Text that corresponds to the error code or class (string).
  */
-void  TErrorHandler::SetErrorString(Int_t errcode, const TString msg)
+void TErrorHandler::SetErrorString(Int_t errcode, const TString msg)
 {
    MPI_Add_error_string(errcode, const_cast<Char_t *>(msg.Data()));
 }
@@ -97,7 +101,9 @@ void TErrorHandler::Free()
 * \param _msg message with useful information.
 */
 
-template<> void TErrorHandler::TraceBack(const TGroup *group, const Char_t *function, const Char_t *file, Int_t line, Int_t errcode, const Char_t *_msg)
+template <>
+void TErrorHandler::TraceBack(const TGroup *group, const Char_t *function, const Char_t *file, Int_t line,
+                              Int_t errcode, const Char_t *_msg)
 {
    TString msg;
    if (TErrorHandler::IsVerbose()) {
@@ -129,7 +135,9 @@ template<> void TErrorHandler::TraceBack(const TGroup *group, const Char_t *func
 * \param errcode MPI error code.
 * \param _msg message with useful information.
 */
-template<> void TErrorHandler::TraceBack(const Char_t *class_name, const Char_t *function, const Char_t *file, Int_t line, Int_t errcode, const Char_t *_msg)
+template <>
+void TErrorHandler::TraceBack(const Char_t *class_name, const Char_t *function, const Char_t *file, Int_t line,
+                              Int_t errcode, const Char_t *_msg)
 {
    TString msg;
    if (TErrorHandler::IsVerbose()) {

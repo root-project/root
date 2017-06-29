@@ -1,13 +1,17 @@
 // @(#)root/mpi / Author: Omar.Zapata@cern.ch 2017 http://oproject.org
-#include<Mpi/TStatus.h>
-#include<Mpi/TErrorHandler.h>
+#include <Mpi/TStatus.h>
+#include <Mpi/TErrorHandler.h>
 using namespace ROOT::Mpi;
 
 //______________________________________________________________________________
-TStatus::TStatus(): fStatus() {}
+TStatus::TStatus() : fStatus()
+{
+}
 
 //______________________________________________________________________________
-TStatus::TStatus(const TStatus &data): TObject(data), fStatus(data.fStatus) {}
+TStatus::TStatus(const TStatus &data) : TObject(data), fStatus(data.fStatus)
+{
+}
 
 //______________________________________________________________________________
 /**
@@ -28,7 +32,6 @@ Bool_t TStatus::IsCancelled() const
    return (Bool_t)t;
 }
 
-
 //______________________________________________________________________________
 /**
  * Method to get the source of the process
@@ -36,7 +39,7 @@ Bool_t TStatus::IsCancelled() const
  */
 Int_t TStatus::GetSource() const
 {
-   return  fStatus.MPI_SOURCE;
+   return fStatus.MPI_SOURCE;
 }
 
 //______________________________________________________________________________
@@ -98,7 +101,7 @@ void TStatus::SetError(Int_t error)
 
 void TStatus::SetCancelled(Bool_t flag)
 {
-   ROOT_MPI_CHECK_CALL(MPI_Status_set_cancelled, (&fStatus, (Int_t) flag), TStatus::Class_Name());
+   ROOT_MPI_CHECK_CALL(MPI_Status_set_cancelled, (&fStatus, (Int_t)flag), TStatus::Class_Name());
 }
 
 //______________________________________________________________________________
@@ -119,4 +122,3 @@ void TStatus::SetMsgSize(Int_t size)
 {
    fMsgSize = size;
 }
-

@@ -1,5 +1,5 @@
-#include<Mpi/TInfo.h>
-#include<iostream>
+#include <Mpi/TInfo.h>
+#include <iostream>
 
 using namespace ROOT::Mpi;
 
@@ -22,7 +22,7 @@ TInfo TInfo::Create()
  * (key,value) pairs and the same ordering of keys.
  * \return Info object (handle).
  */
-TInfo  TInfo::Dup() const
+TInfo TInfo::Dup() const
 {
    MPI_Info ninfo;
    MPI_Info_dup(fInfo, &ninfo);
@@ -39,7 +39,6 @@ void TInfo::Delete(const TString key)
 {
    ROOT_MPI_CHECK_CALL(MPI_Info_delete, (fInfo, const_cast<Char_t *>(key.Data())), TInfo::Class_Name());
 }
-
 
 //______________________________________________________________________________
 /**
@@ -69,11 +68,12 @@ Bool_t TInfo::Get(const TString key, TString &value) const
    Int_t flag;
    Int_t len;
    if (!GetValueLength(key, len)) {
-      //TODO: error handling here
+      // TODO: error handling here
    }
 
    Char_t *rvalue = new Char_t[len];
-   ROOT_MPI_CHECK_CALL(MPI_Info_get, (fInfo, const_cast<Char_t *>(key.Data()), len, rvalue, &flag), TInfo::Class_Name());
+   ROOT_MPI_CHECK_CALL(MPI_Info_get, (fInfo, const_cast<Char_t *>(key.Data()), len, rvalue, &flag),
+                       TInfo::Class_Name());
    value.Resize(len);
    value = rvalue;
    return flag;
@@ -118,7 +118,8 @@ TString TInfo::GetNthKey(Int_t n) const
 Bool_t TInfo::GetValueLength(const TString key, Int_t &valuelen) const
 {
    Int_t flag;
-   ROOT_MPI_CHECK_CALL(MPI_Info_get_valuelen, (fInfo, const_cast<Char_t *>(key.Data()), &valuelen, &flag), TInfo::Class_Name());
+   ROOT_MPI_CHECK_CALL(MPI_Info_get_valuelen, (fInfo, const_cast<Char_t *>(key.Data()), &valuelen, &flag),
+                       TInfo::Class_Name());
    return (Bool_t)flag;
 }
 
@@ -134,7 +135,8 @@ Bool_t TInfo::GetValueLength(const TString key, Int_t &valuelen) const
  */
 void TInfo::Set(const TString key, const TString value)
 {
-   ROOT_MPI_CHECK_CALL(MPI_Info_set, (fInfo, const_cast<Char_t *>(key.Data()), const_cast<Char_t *>(value.Data())), TInfo::Class_Name());
+   ROOT_MPI_CHECK_CALL(MPI_Info_set, (fInfo, const_cast<Char_t *>(key.Data()), const_cast<Char_t *>(value.Data())),
+                       TInfo::Class_Name());
 }
 
 //______________________________________________________________________________
@@ -151,7 +153,7 @@ TString TInfo::GetValue(const TString key) const
 {
    TString value;
    if (!Get(key, value)) {
-      //TODO: added error handling here
+      // TODO: added error handling here
    }
    return value;
 }
@@ -163,8 +165,10 @@ TString TInfo::GetValue(const TString key) const
  */
 Bool_t TInfo::IsEmpty() const
 {
-   if (IsNull()) return kTRUE;
-   else return GetNKeys() == 0 ? kTRUE : kFALSE;
+   if (IsNull())
+      return kTRUE;
+   else
+      return GetNKeys() == 0 ? kTRUE : kFALSE;
 }
 
 //______________________________________________________________________________
@@ -204,9 +208,10 @@ Bool_t TInfo::HasKey(TString key)
  */
 void TInfo::Print() const
 {
-//TODO: if is null print something
+   // TODO: if is null print something
    for (auto i = 0; i < GetNKeys(); i++) {
-      std::cout << std::setw(MPI_MAX_INFO_KEY) << std::left << Form("[\"%s\"]", GetNthKey(i).Data()) << " = " << GetValue(GetNthKey(i)) << std::endl;
+      std::cout << std::setw(MPI_MAX_INFO_KEY) << std::left << Form("[\"%s\"]", GetNthKey(i).Data()) << " = "
+                << GetValue(GetNthKey(i)) << std::endl;
       std::cout.flush();
    }
 }
@@ -236,6 +241,5 @@ Bool_t TInfo::operator==(const TInfo &info) const
 //______________________________________________________________________________
 Bool_t TInfo::operator!=(const TInfo &info) const
 {
-   return *this == info ? kFALSE : kTRUE ;
+   return *this == info ? kFALSE : kTRUE;
 }
-

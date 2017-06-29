@@ -1,12 +1,12 @@
-#include<Mpi/TMpiTimer.h>
-#include<iostream>
-#include<Mpi/TIntraCommunicator.h>
-#include<Mpi/TEnvironment.h>
-#include<TColor.h>
-#include<TStyle.h>
+#include <Mpi/TMpiTimer.h>
+#include <iostream>
+#include <Mpi/TIntraCommunicator.h>
+#include <Mpi/TEnvironment.h>
+#include <TColor.h>
+#include <TStyle.h>
 using namespace ROOT::Mpi;
 //______________________________________________________________________________
-TMpiTimer::TMpiTimer(MPI_Comm  comm): fComm(comm) {};
+TMpiTimer::TMpiTimer(MPI_Comm comm) : fComm(comm){};
 
 //______________________________________________________________________________
 /**
@@ -47,7 +47,7 @@ Double_t TMpiTimer::GetElapsed() const
  */
 Double_t TMpiTimer::GetTick()
 {
-   return  MPI_Wtick();
+   return MPI_Wtick();
 }
 
 //______________________________________________________________________________
@@ -70,7 +70,7 @@ Bool_t TMpiTimer::IsGlobal() const
 {
    Int_t *global;
    Int_t flag = 0;
-   //TODO: not suppoted by OpenMPI, needs error handling here
+   // TODO: not suppoted by OpenMPI, needs error handling here
    MPI_Comm_get_attr(MPI_COMM_WORLD, MPI_WTIME_IS_GLOBAL, &global, &flag);
    return flag == false ? kFALSE : *global != 0;
 }
@@ -82,19 +82,17 @@ Bool_t TMpiTimer::IsGlobal() const
 void TMpiTimer::Print() const
 {
    if (fComm != COMM_NULL) {
-      std::cout << std::flush \
-                << "Comm    = " << fComm.GetCommName() << std::endl\
-                << "Rank    = " << fComm.GetRank() << std::endl\
-                << "Size    = " << fComm.GetSize() << std::endl\
-                << "Global  = " << IsGlobal() << std::endl\
-                << "Host    = " << TEnvironment::GetProcessorName() << std::endl\
-                << "Elapsed = " << GetElapsed() << std::endl \
+      std::cout << std::flush << "Comm    = " << fComm.GetCommName() << std::endl
+                << "Rank    = " << fComm.GetRank() << std::endl
+                << "Size    = " << fComm.GetSize() << std::endl
+                << "Global  = " << IsGlobal() << std::endl
+                << "Host    = " << TEnvironment::GetProcessorName() << std::endl
+                << "Elapsed = " << GetElapsed() << std::endl
                 << std::flush;
    } else {
-      std::cout << std::flush \
-                << "Global  = " << IsGlobal() << std::endl\
-                << "Host    = " << TEnvironment::GetProcessorName() << std::endl\
-                << "Elapsed = " << GetElapsed() << std::endl \
+      std::cout << std::flush << "Global  = " << IsGlobal() << std::endl
+                << "Host    = " << TEnvironment::GetProcessorName() << std::endl
+                << "Elapsed = " << GetElapsed() << std::endl
                 << std::flush;
    }
 }
@@ -144,7 +142,7 @@ TH1F *TMpiTimer::GetElapsedHist(Int_t root) const
       }
       return hist;
    } else {
-      //TODO: added error here
+      // TODO: added error here
       return nullptr;
    }
 }

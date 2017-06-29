@@ -1,5 +1,5 @@
-#include<Mpi/TGroup.h>
-#include<Mpi/TErrorHandler.h>
+#include <Mpi/TGroup.h>
+#include <Mpi/TErrorHandler.h>
 
 using namespace ROOT::Mpi;
 
@@ -41,7 +41,9 @@ Int_t TGroup::GetRank() const
  */
 void TGroup::TranslateRanks(const TGroup &group1, Int_t n, const Int_t ranks1[], const TGroup &group2, Int_t ranks2[])
 {
-   ROOT_MPI_CHECK_CALL(MPI_Group_translate_ranks, (group1.fGroup, n, const_cast<Int_t *>(ranks1), group2.fGroup, const_cast<Int_t *>(ranks2)), TGroup::Class_Name());
+   ROOT_MPI_CHECK_CALL(MPI_Group_translate_ranks,
+                       (group1.fGroup, n, const_cast<Int_t *>(ranks1), group2.fGroup, const_cast<Int_t *>(ranks2)),
+                       TGroup::Class_Name());
 }
 
 //______________________________________________________________________________
@@ -64,7 +66,6 @@ Int_t TGroup::Compare(const TGroup &group1, const TGroup &group2)
    Int_t result;
    ROOT_MPI_CHECK_CALL(MPI_Group_compare, (group1.fGroup, group2.fGroup, &result), TGroup::Class_Name());
    return result;
-
 }
 
 //______________________________________________________________________________
@@ -87,7 +88,6 @@ Int_t TGroup::Compare(const TGroup &group2)
    Int_t result;
    ROOT_MPI_CHECK_CALL(MPI_Group_compare, (fGroup, group2.fGroup, &result), this);
    return result;
-
 }
 
 //______________________________________________________________________________
@@ -138,9 +138,7 @@ TGroup TGroup::Union(const TGroup &group1, const TGroup &group2)
 TGroup TGroup::Intersect(const TGroup &group1, const TGroup &group2)
 {
    MPI_Group newgroup;
-   ROOT_MPI_CHECK_CALL(MPI_Group_intersection,
-                       (group1.fGroup, group2.fGroup, &newgroup),
-                       TGroup::Class_Name());
+   ROOT_MPI_CHECK_CALL(MPI_Group_intersection, (group1.fGroup, group2.fGroup, &newgroup), TGroup::Class_Name());
    return newgroup;
 }
 
@@ -191,7 +189,6 @@ TGroup TGroup::Include(Int_t n, const Int_t ranks[]) const
    MPI_Group newgroup;
    ROOT_MPI_CHECK_CALL(MPI_Group_incl, (fGroup, n, const_cast<Int_t *>(ranks), &newgroup), this);
    return newgroup;
-
 }
 
 //______________________________________________________________________________

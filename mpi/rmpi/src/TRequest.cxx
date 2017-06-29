@@ -1,29 +1,27 @@
 
-#include<Mpi/TRequest.h>
-#include<Mpi/TStatus.h>
-#include<Mpi/TErrorHandler.h>
+#include <Mpi/TRequest.h>
+#include <Mpi/TStatus.h>
+#include <Mpi/TErrorHandler.h>
 
 using namespace ROOT::Mpi;
 
 //______________________________________________________________________________
-TRequest::TRequest(): fRequest(MPI_REQUEST_NULL)
+TRequest::TRequest() : fRequest(MPI_REQUEST_NULL)
 {
    fCallback = []() {};
 }
 
 //______________________________________________________________________________
-TRequest::TRequest(const TRequest &obj): TObject(obj), fRequest(obj.fRequest)
+TRequest::TRequest(const TRequest &obj) : TObject(obj), fRequest(obj.fRequest)
 {
    fCallback = []() {};
 }
-
 
 //______________________________________________________________________________
 TRequest::TRequest(MPI_Request i) : fRequest(i)
 {
    fCallback = []() {};
 }
-
 
 //______________________________________________________________________________
 TRequest &TRequest::operator=(const TRequest &r)
@@ -34,19 +32,19 @@ TRequest &TRequest::operator=(const TRequest &r)
 }
 
 //______________________________________________________________________________
-Bool_t TRequest::operator== (const TRequest &a)
+Bool_t TRequest::operator==(const TRequest &a)
 {
    return (Bool_t)(fRequest == a.fRequest);
 }
 
 //______________________________________________________________________________
-Bool_t TRequest::operator!= (const TRequest &a)
+Bool_t TRequest::operator!=(const TRequest &a)
 {
    return (Bool_t)(fRequest != a.fRequest);
 }
 
 //______________________________________________________________________________
-TRequest &TRequest::operator= (const MPI_Request &i)
+TRequest &TRequest::operator=(const MPI_Request &i)
 {
    fRequest = i;
    fCallback = [] {};
@@ -80,9 +78,11 @@ TRequest &TRequest::operator= (const MPI_Request &i)
 void TRequest::Wait(TStatus &status)
 {
    ROOT_MPI_CHECK_CALL(MPI_Wait, (&fRequest, &status.fStatus), TRequest::Class_Name());
-   //TODO:error control here if status is wrong
-   if (fRequest == MPI_REQUEST_NULL) fCallback();
-   else Warning(__FUNCTION__, "Resquest still lingers");
+   // TODO:error control here if status is wrong
+   if (fRequest == MPI_REQUEST_NULL)
+      fCallback();
+   else
+      Warning(__FUNCTION__, "Resquest still lingers");
 }
 
 //______________________________________________________________________________
@@ -111,9 +111,11 @@ void TRequest::Wait(TStatus &status)
 void TRequest::Wait()
 {
    ROOT_MPI_CHECK_CALL(MPI_Wait, (&fRequest, MPI_STATUS_IGNORE), TRequest::Class_Name());
-   //TODO:error control here if status is wrong
-   if (fRequest == MPI_REQUEST_NULL) fCallback();
-   else Warning(__FUNCTION__, "Resquest still lingers");
+   // TODO:error control here if status is wrong
+   if (fRequest == MPI_REQUEST_NULL)
+      fCallback();
+   else
+      Warning(__FUNCTION__, "Resquest still lingers");
 }
 
 //______________________________________________________________________________
@@ -150,9 +152,11 @@ Bool_t TRequest::Test(TStatus &status)
    Int_t flag;
    ROOT_MPI_CHECK_CALL(MPI_Test, (&fRequest, &flag, &status.fStatus), TRequest::Class_Name());
 
-   //TODO:error control here if status is wrong
-   if (flag) fCallback();
-   else Warning(__FUNCTION__, "Resquest test is not ready.");
+   // TODO:error control here if status is wrong
+   if (flag)
+      fCallback();
+   else
+      Warning(__FUNCTION__, "Resquest test is not ready.");
 
    return (Bool_t)flag;
 }
@@ -190,9 +194,11 @@ Bool_t TRequest::Test()
    Int_t flag;
    ROOT_MPI_CHECK_CALL(MPI_Test, (&fRequest, &flag, MPI_STATUS_IGNORE), TRequest::Class_Name());
 
-   //TODO:error control here if status is wrong
-   if (flag) fCallback();
-   else Warning(__FUNCTION__, "Resquest test is not ready.");
+   // TODO:error control here if status is wrong
+   if (flag)
+      fCallback();
+   else
+      Warning(__FUNCTION__, "Resquest test is not ready.");
 
    return (Bool_t)flag;
 }
@@ -265,7 +271,7 @@ Int_t TRequest::WaitAny(Int_t count, TRequest array[], TStatus &status)
    for (i = 0; i < count; i++) {
       array[i] = array_of_requests[i];
    }
-   delete [] array_of_requests;
+   delete[] array_of_requests;
    return index;
 }
 
@@ -297,7 +303,7 @@ Int_t TRequest::WaitAny(Int_t count, TRequest array[])
    for (i = 0; i < count; i++) {
       array[i] = array_of_requests[i];
    }
-   delete [] array_of_requests;
+   delete[] array_of_requests;
    return index;
 }
 
@@ -338,7 +344,7 @@ Bool_t TRequest::TestAny(Int_t count, TRequest array[], Int_t &index, TStatus &s
    for (i = 0; i < count; i++) {
       array[i] = array_of_requests[i];
    }
-   delete [] array_of_requests;
+   delete[] array_of_requests;
    return (bool)(flag != 0 ? true : false);
 }
 
@@ -374,11 +380,12 @@ Bool_t TRequest::TestAny(Int_t count, TRequest array[], Int_t &index)
    for (i = 0; i < count; i++) {
       array_of_requests[i] = array[i].fRequest;
    }
-   ROOT_MPI_CHECK_CALL(MPI_Testany, (count, array_of_requests, &index, &flag, MPI_STATUS_IGNORE), TRequest::Class_Name());
+   ROOT_MPI_CHECK_CALL(MPI_Testany, (count, array_of_requests, &index, &flag, MPI_STATUS_IGNORE),
+                       TRequest::Class_Name());
    for (i = 0; i < count; i++) {
       array[i] = array_of_requests[i];
    }
-   delete [] array_of_requests;
+   delete[] array_of_requests;
    return Bool_t(flag);
 }
 
@@ -418,18 +425,16 @@ Bool_t TRequest::TestAny(Int_t count, TRequest array[], Int_t &index)
  */
 void TRequest::WaitAll(Int_t count, TRequest req_array[], TStatus stat_array[])
 {
-  Int_t i;
-  MPI_Request *array_of_requests = new MPI_Request[count];
-  MPI_Status *array_of_statuses = new MPI_Status[count];
-  for (i = 0; i < count; i++) {
-    array_of_requests[i] = req_array[i].fRequest;
-   }
-   ROOT_MPI_CHECK_CALL(MPI_Waitall,
-                       (count, array_of_requests, array_of_statuses),
-                       TRequest::Class_Name());
+   Int_t i;
+   MPI_Request *array_of_requests = new MPI_Request[count];
+   MPI_Status *array_of_statuses = new MPI_Status[count];
    for (i = 0; i < count; i++) {
-     req_array[i] = array_of_requests[i];
-     stat_array[i] = array_of_statuses[i];
+      array_of_requests[i] = req_array[i].fRequest;
+   }
+   ROOT_MPI_CHECK_CALL(MPI_Waitall, (count, array_of_requests, array_of_statuses), TRequest::Class_Name());
+   for (i = 0; i < count; i++) {
+      req_array[i] = array_of_requests[i];
+      stat_array[i] = array_of_statuses[i];
    }
    delete[] array_of_requests;
    delete[] array_of_statuses;
@@ -470,16 +475,14 @@ void TRequest::WaitAll(Int_t count, TRequest req_array[], TStatus stat_array[])
  */
 void TRequest::WaitAll(Int_t count, TRequest req_array[])
 {
-  Int_t i;
-  MPI_Request *array_of_requests = new MPI_Request[count];
-  for (i = 0; i < count; i++) {
-    array_of_requests[i] = req_array[i].fRequest;
-   }
-   ROOT_MPI_CHECK_CALL(MPI_Waitall,
-                       (count, array_of_requests, MPI_STATUSES_IGNORE),
-                       TRequest::Class_Name());
+   Int_t i;
+   MPI_Request *array_of_requests = new MPI_Request[count];
    for (i = 0; i < count; i++) {
-     req_array[i] = array_of_requests[i];
+      array_of_requests[i] = req_array[i].fRequest;
+   }
+   ROOT_MPI_CHECK_CALL(MPI_Waitall, (count, array_of_requests, MPI_STATUSES_IGNORE), TRequest::Class_Name());
+   for (i = 0; i < count; i++) {
+      req_array[i] = array_of_requests[i];
    }
    delete[] array_of_requests;
 }
@@ -528,11 +531,11 @@ Bool_t TRequest::TestAll(Int_t count, TRequest req_array[], TStatus stat_array[]
    for (i = 0; i < count; i++) {
       req_array[i] = array_of_requests[i];
       stat_array[i] = array_of_statuses[i];
-      //TODO: added error hanling with status object here
+      // TODO: added error hanling with status object here
       if (flag) req_array[i].fCallback();
    }
-   delete [] array_of_requests;
-   delete [] array_of_statuses;
+   delete[] array_of_requests;
+   delete[] array_of_statuses;
    return Bool_t(flag);
 }
 
@@ -580,10 +583,10 @@ Bool_t TRequest::TestAll(Int_t count, TRequest req_array[])
    for (i = 0; i < count; i++) {
       req_array[i] = array_of_requests[i];
 
-      //TODO: added error hanling with status object here
+      // TODO: added error hanling with status object here
       if (flag) req_array[i].fCallback();
    }
-   delete [] array_of_requests;
+   delete[] array_of_requests;
 
    return Bool_t(flag);
 }
@@ -597,14 +600,14 @@ Int_t TRequest::WaitSome(Int_t incount, TRequest req_array[], Int_t array_of_ind
    for (i = 0; i < incount; i++) {
       array_of_requests[i] = req_array[i].fRequest;
    }
-   ROOT_MPI_CHECK_CALL(MPI_Waitsome, (incount, array_of_requests, &outcount,
-                                      array_of_indices, array_of_statuses), TRequest::Class_Name());
+   ROOT_MPI_CHECK_CALL(MPI_Waitsome, (incount, array_of_requests, &outcount, array_of_indices, array_of_statuses),
+                       TRequest::Class_Name());
    for (i = 0; i < incount; i++) {
       req_array[i] = array_of_requests[i];
       stat_array[i] = array_of_statuses[i];
    }
-   delete [] array_of_requests;
-   delete [] array_of_statuses;
+   delete[] array_of_requests;
+   delete[] array_of_statuses;
    return outcount;
 }
 
@@ -617,12 +620,13 @@ Int_t TRequest::WaitSome(Int_t incount, TRequest req_array[], Int_t array_of_ind
    for (i = 0; i < incount; i++) {
       array_of_requests[i] = req_array[i];
    }
-   ROOT_MPI_CHECK_CALL(MPI_Waitsome, (incount, array_of_requests, &outcount, array_of_indices, MPI_STATUSES_IGNORE), TRequest::Class_Name());
+   ROOT_MPI_CHECK_CALL(MPI_Waitsome, (incount, array_of_requests, &outcount, array_of_indices, MPI_STATUSES_IGNORE),
+                       TRequest::Class_Name());
 
    for (i = 0; i < incount; i++) {
       req_array[i] = array_of_requests[i];
    }
-   delete [] array_of_requests;
+   delete[] array_of_requests;
 
    return outcount;
 }
@@ -636,13 +640,14 @@ Int_t TRequest::TestSome(Int_t incount, TRequest req_array[], Int_t array_of_ind
    for (i = 0; i < incount; i++) {
       array_of_requests[i] = req_array[i].fRequest;
    }
-   ROOT_MPI_CHECK_CALL(MPI_Testsome, (incount, array_of_requests, &outcount, array_of_indices, array_of_statuses), TRequest::Class_Name());
+   ROOT_MPI_CHECK_CALL(MPI_Testsome, (incount, array_of_requests, &outcount, array_of_indices, array_of_statuses),
+                       TRequest::Class_Name());
    for (i = 0; i < incount; i++) {
       req_array[i] = array_of_requests[i];
       stat_array[i] = array_of_statuses[i];
    }
-   delete [] array_of_requests;
-   delete [] array_of_statuses;
+   delete[] array_of_requests;
+   delete[] array_of_statuses;
    return outcount;
 }
 
@@ -655,12 +660,13 @@ Int_t TRequest::TestSome(Int_t incount, TRequest req_array[], Int_t array_of_ind
    for (i = 0; i < incount; i++) {
       array_of_requests[i] = req_array[i];
    }
-   ROOT_MPI_CHECK_CALL(MPI_Testsome, (incount, array_of_requests, &outcount, array_of_indices, MPI_STATUSES_IGNORE), TRequest::Class_Name());
+   ROOT_MPI_CHECK_CALL(MPI_Testsome, (incount, array_of_requests, &outcount, array_of_indices, MPI_STATUSES_IGNORE),
+                       TRequest::Class_Name());
 
    for (i = 0; i < incount; i++) {
       req_array[i] = array_of_requests[i];
    }
-   delete [] array_of_requests;
+   delete[] array_of_requests;
 
    return outcount;
 }
@@ -787,9 +793,9 @@ void TPrequest::Startall(int count, TPrequest array_of_requests[])
    }
    ROOT_MPI_CHECK_CALL(MPI_Startall, (count, mpi_requests), TPrequest::Class_Name());
    for (i = 0; i < count; i++) {
-      array_of_requests[i].fRequest = mpi_requests[i] ;
+      array_of_requests[i].fRequest = mpi_requests[i];
    }
-   delete [] mpi_requests;
+   delete[] mpi_requests;
 }
 
 //______________________________________________________________________________
@@ -871,7 +877,8 @@ void TPrequest::Startall(int count, TPrequest array_of_requests[])
  * \param extra Extra state.
  * \return Generalized request (handle).
  */
-TGrequest TGrequest::Start(Int_t(*query_fn)(void *, TStatus &), Int_t(*free_fn)(void *), Int_t(*cancel_fn)(void *, Bool_t), void *extra)
+TGrequest TGrequest::Start(Int_t (*query_fn)(void *, TStatus &), Int_t (*free_fn)(void *),
+                           Int_t (*cancel_fn)(void *, Bool_t), void *extra)
 {
    MPI_Request grequest = 0;
 
@@ -882,26 +889,24 @@ TGrequest TGrequest::Start(Int_t(*query_fn)(void *, TStatus &), Int_t(*free_fn)(
    new_extra->id_cxx_cancel_fn = cancel_fn;
    new_extra->id_extra = extra;
 
-   auto call_query_fn = [](void *extra_data, MPI_Status * status)->int {
+   auto call_query_fn = [](void *extra_data, MPI_Status *status) -> int {
       TGrequest::Intercept_data_t *data = (TGrequest::Intercept_data_t *)extra_data;
       TStatus stat;
       stat = *status;
       return data->id_cxx_query_fn(data->id_extra, stat);
    };
 
-   auto call_free_fn = [](void *extra_data)->int {
+   auto call_free_fn = [](void *extra_data) -> int {
       TGrequest::Intercept_data_t *data = (TGrequest::Intercept_data_t *)extra_data;
       return data->id_cxx_free_fn(data->id_extra);
    };
 
-   auto call_cancel_fn = [](void *extra_data, int completed)->int {
+   auto call_cancel_fn = [](void *extra_data, int completed) -> int {
       TGrequest::Intercept_data_t *data = (TGrequest::Intercept_data_t *)extra_data;
       return data->id_cxx_cancel_fn(data->id_extra, completed);
    };
-   ROOT_MPI_CHECK_CALL(MPI_Grequest_start, (call_query_fn,
-                       call_free_fn,
-                       call_cancel_fn,
-                       new_extra, &grequest), TGrequest::Class_Name());
+   ROOT_MPI_CHECK_CALL(MPI_Grequest_start, (call_query_fn, call_free_fn, call_cancel_fn, new_extra, &grequest),
+                       TGrequest::Class_Name());
    return grequest;
 }
 
@@ -934,4 +939,3 @@ void TGrequest::Complete()
 {
    ROOT_MPI_CHECK_CALL(MPI_Grequest_complete, (fRequest), TGrequest::Class_Name());
 }
-

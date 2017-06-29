@@ -1,26 +1,25 @@
-#include<Mpi/TEnvironment.h>
-#include<Mpi/TIntraCommunicator.h>
-#include<Mpi/TErrorHandler.h>
-#include<iostream>
+#include <Mpi/TEnvironment.h>
+#include <Mpi/TIntraCommunicator.h>
+#include <Mpi/TErrorHandler.h>
+#include <iostream>
 using namespace ROOT::Mpi;
 
 TErrorHandler TEnvironment::fErrorHandler = TErrorHandler();
-
 
 Int_t TEnvironment::fCompressionAlgorithm = 0;
 Int_t TEnvironment::fCompressionLevel = 0;
 
 TString TEnvironment::fStdOut = "";
 TString TEnvironment::fStdErr = "";
-Bool_t  TEnvironment::fSyncOutput = kFALSE;
-Int_t   TEnvironment::fStdOutPipe[2] = {-1, -1};
-Int_t   TEnvironment::fStdErrPipe[2] = {-1, -1};
-Int_t   TEnvironment::fSavedStdErr = -1;
-Int_t   TEnvironment::fSavedStdOut = -1;
+Bool_t TEnvironment::fSyncOutput = kFALSE;
+Int_t TEnvironment::fStdOutPipe[2] = {-1, -1};
+Int_t TEnvironment::fStdErrPipe[2] = {-1, -1};
+Int_t TEnvironment::fSavedStdErr = -1;
+Int_t TEnvironment::fSavedStdOut = -1;
 
 FILE *TEnvironment::fOutput = NULL;
 
-//TODO: enable thread level and thread-safe for ROOT
+// TODO: enable thread level and thread-safe for ROOT
 
 //______________________________________________________________________________
 /**
@@ -51,7 +50,7 @@ TEnvironment::TEnvironment(Int_t level)
       ROOT_MPI_CHECK_CALL(MPI_Comm_set_errhandler, (MPI_COMM_WORLD, (MPI_Errhandler)fErrorHandler), &COMM_WORLD);
       InitSignalHandlers();
    } else {
-      //TODO: added error handling here
+      // TODO: added error handling here
    }
 }
 
@@ -84,7 +83,7 @@ TEnvironment::TEnvironment(Int_t argc, Char_t **argv, Int_t level)
       ROOT_MPI_CHECK_CALL(MPI_Comm_set_errhandler, (MPI_COMM_WORLD, (MPI_Errhandler)fErrorHandler), &COMM_WORLD);
       InitSignalHandlers();
    } else {
-      //TODO: added error handling here
+      // TODO: added error handling here
    }
 }
 
@@ -100,13 +99,12 @@ void TEnvironment::InitSignalHandlers()
    gSystem->AddSignalHandler(fInterruptSignal);
    gSystem->AddSignalHandler(fTerminationSignal);
    gSystem->AddSignalHandler(fSigSegmentationViolationSignal);
-
 }
 
 //______________________________________________________________________________
 TEnvironment::~TEnvironment()
 {
-   //if mpi's environment is initialized then finalize it
+   // if mpi's environment is initialized then finalize it
    if (!IsFinalized()) {
       Finalize();
    }
@@ -121,16 +119,16 @@ void TEnvironment::InitCapture()
 {
    if (fSyncOutput) {
       std::ios::sync_with_stdio();
-      setvbuf(stdout, NULL, _IONBF, 0);  // absolutely needed(flush not needed ;))
-      setvbuf(stderr, NULL, _IONBF, 0);  // absolutely needed
+      setvbuf(stdout, NULL, _IONBF, 0); // absolutely needed(flush not needed ;))
+      setvbuf(stderr, NULL, _IONBF, 0); // absolutely needed
 
       /* save stdout/stderr for display later */
       fSavedStdOut = dup(STDOUT_FILENO);
       fSavedStdErr = dup(STDERR_FILENO);
-      if (pipe(fStdOutPipe) != 0) {           /* make a pipe for stdout*/
+      if (pipe(fStdOutPipe) != 0) { /* make a pipe for stdout*/
          return;
       }
-      if (pipe(fStdErrPipe) != 0) {           /* make a pipe for stdout*/
+      if (pipe(fStdErrPipe) != 0) { /* make a pipe for stdout*/
          return;
       }
 
@@ -142,10 +140,10 @@ void TEnvironment::InitCapture()
       flags |= O_NONBLOCK;
       fcntl(fStdErrPipe[0], F_SETFL, flags);
 
-      dup2(fStdOutPipe[1], STDOUT_FILENO);   /* redirect stdout to the pipe */
+      dup2(fStdOutPipe[1], STDOUT_FILENO); /* redirect stdout to the pipe */
       close(fStdOutPipe[1]);
 
-      dup2(fStdErrPipe[1], STDERR_FILENO);   /* redirect stderr to the pipe */
+      dup2(fStdErrPipe[1], STDERR_FILENO); /* redirect stderr to the pipe */
       close(fStdErrPipe[1]);
    }
    auto rank = -1;
@@ -168,20 +166,24 @@ void TEnvironment::EndCapture()
          fflush(stdout);
          std::cout.flush();
          buf_readed = read(fStdOutPipe[0], &ch, 1);
-         if (buf_readed == 1) fStdOut += ch;
-         else break;
+         if (buf_readed == 1)
+            fStdOut += ch;
+         else
+            break;
       }
 
       while (true) { /* read from pipe into buffer */
          fflush(stderr);
          std::cerr.flush();
          buf_readed = read(fStdErrPipe[0], &ch, 1);
-         if (buf_readed == 1) fStdErr += ch;
-         else break;
+         if (buf_readed == 1)
+            fStdErr += ch;
+         else
+            break;
       }
 
-      dup2(fSavedStdOut, STDOUT_FILENO);  /* reconnect stdout*/
-      dup2(fSavedStdErr, STDERR_FILENO);  /* reconnect stderr*/
+      dup2(fSavedStdOut, STDOUT_FILENO); /* reconnect stdout*/
+      dup2(fSavedStdErr, STDERR_FILENO); /* reconnect stderr*/
    }
 }
 
@@ -315,7 +317,6 @@ void TEnvironment::SyncOutput(Bool_t status, FILE *output)
          fOutput = output;
          fSyncOutput = status;
       }
-
    }
 }
 
@@ -340,7 +341,6 @@ Bool_t TEnvironment::IsInitialized()
    MPI_Initialized(&t);
    return (Bool_t)(t);
 }
-
 
 //______________________________________________________________________________
 /**

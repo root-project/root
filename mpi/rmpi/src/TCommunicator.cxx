@@ -1,31 +1,38 @@
-#include<Mpi/TCommunicator.h>
-#include<Mpi/TInterCommunicator.h>
-#include<Mpi/TIntraCommunicator.h>
+#include <Mpi/TCommunicator.h>
+#include <Mpi/TInterCommunicator.h>
+#include <Mpi/TIntraCommunicator.h>
 #include <Mpi/TMpiMessage.h>
-#include<iostream>
-#include<TSystem.h>
-#include<TROOT.h>
+#include <iostream>
+#include <TSystem.h>
+#include <TROOT.h>
 using namespace ROOT::Mpi;
 
 //______________________________________________________________________________
 /**
  * Default constructor for communicator that is a null communicator
  */
-TCommunicator::TCommunicator(): TNullCommunicator() {}
-
+TCommunicator::TCommunicator() : TNullCommunicator()
+{
+}
 
 //______________________________________________________________________________
 /**
  * Copy constructor for communicator
  * \param comm other TCommunicator object
  */
-TCommunicator::TCommunicator(const TCommunicator &comm): TNullCommunicator(comm) {}
+TCommunicator::TCommunicator(const TCommunicator &comm) : TNullCommunicator(comm)
+{
+}
 
 //______________________________________________________________________________
-TCommunicator::TCommunicator(const MPI_Comm &comm): TNullCommunicator(comm) {}
+TCommunicator::TCommunicator(const MPI_Comm &comm) : TNullCommunicator(comm)
+{
+}
 
 //______________________________________________________________________________
-TCommunicator::~TCommunicator() {}
+TCommunicator::~TCommunicator()
+{
+}
 
 //______________________________________________________________________________
 /**
@@ -114,8 +121,7 @@ Int_t TCommunicator::GetMaxTag() const
    ROOT_MPI_CHECK_CALL(MPI_Comm_get_attr, (MPI_COMM_WORLD, MPI_TAG_UB, &tag, &flag), this);
 
    ROOT_MPI_ASSERT(flag != 0, this);
-   return *tag - 1;//one tag is reserved for internal use
-
+   return *tag - 1; // one tag is reserved for internal use
 }
 
 //______________________________________________________________________________
@@ -132,7 +138,7 @@ Int_t TCommunicator::GetInternalTag() const
 /**
  * Method for synchronization between MPI processes in a communicator
  */
-void  TCommunicator::Barrier() const
+void TCommunicator::Barrier() const
 {
    ROOT_MPI_CHECK_CALL(MPI_Barrier, (fComm), this);
 }
@@ -142,7 +148,7 @@ void  TCommunicator::Barrier() const
  * Method for synchronization between MPI nonblocking processes in a communicator
  * \param req request object
  */
-void  TCommunicator::IBarrier(TRequest &req) const
+void TCommunicator::IBarrier(TRequest &req) const
 {
    ROOT_MPI_CHECK_CALL(MPI_Ibarrier, (fComm, &req.fRequest), this);
    if (req.fRequest == MPI_REQUEST_NULL) req.fCallback();
@@ -202,7 +208,6 @@ void TCommunicator::Probe(Int_t source, Int_t tag) const
    ROOT_MPI_CHECK_CALL(MPI_Probe, (source, tag, fComm, MPI_STATUS_IGNORE), this);
 }
 
-
 //______________________________________________________________________________
 /**
  * return a group from communicator
@@ -218,8 +223,10 @@ TGroup TCommunicator::GetGroup() const
 //______________________________________________________________________________
 /**
  * static method to compare two communicators,
- * ROOT::Mpi::IDENT results if and only if comm1 and comm2 are handles for the same object (identical groups and same contexts).
- * ROOT::Mpi::CONGRUENT results if the underlying  groups are identical in constituents and rank order; these communicators differ only by context.
+ * ROOT::Mpi::IDENT results if and only if comm1 and comm2 are handles for the same object (identical groups and same
+ * contexts).
+ * ROOT::Mpi::CONGRUENT results if the underlying  groups are identical in constituents and rank order; these
+ * communicators differ only by context.
  * ROOT::Mpi::SIMILAR results of the group members of  both  communica‐tors are the same but the rank order differs.
  * ROOT::Mpi::UNEQUAL results otherwise.
  * \param comm1 TCommunicator 1 object
@@ -235,8 +242,10 @@ Int_t TCommunicator::Compare(const TCommunicator &comm1, const TCommunicator &co
 //______________________________________________________________________________
 /**
  * compare the current communicator with other,
- * ROOT::Mpi::IDENT results if and only if comm1 and comm2 are handles for the same object (identical groups and same contexts).
- * ROOT::Mpi::CONGRUENT results if the underlying  groups are identical in constituents and rank order; these communicators differ only by context.
+ * ROOT::Mpi::IDENT results if and only if comm1 and comm2 are handles for the same object (identical groups and same
+ * contexts).
+ * ROOT::Mpi::CONGRUENT results if the underlying  groups are identical in constituents and rank order; these
+ * communicators differ only by context.
  * ROOT::Mpi::SIMILAR results of the group members of  both  communicators are the same but the rank order differs.
  * ROOT::Mpi::UNEQUAL results otherwise.
  * \param comm2 TCommunicator 2 object
@@ -283,7 +292,6 @@ void TCommunicator::Disconnect()
    ROOT_MPI_CHECK_CALL(MPI_Comm_disconnect, (&fComm), this);
 }
 
-
 //______________________________________________________________________________
 TInterCommunicator TCommunicator::GetParent()
 {
@@ -291,7 +299,6 @@ TInterCommunicator TCommunicator::GetParent()
    ROOT_MPI_CHECK_CALL(MPI_Comm_get_parent, (&parent), &COMM_WORLD);
    return parent;
 }
-
 
 //______________________________________________________________________________
 TInterCommunicator TCommunicator::Join(const Int_t fd)
@@ -302,12 +309,14 @@ TInterCommunicator TCommunicator::Join(const Int_t fd)
 }
 
 //______________________________________________________________________________
-template<> void TCommunicator::Serialize<TMpiMessage>(Char_t **buffer, Int_t &size, const TMpiMessage *vars, Int_t count, const TCommunicator *comm, Int_t dest, Int_t source, Int_t tag, Int_t root)
+template <>
+void TCommunicator::Serialize<TMpiMessage>(Char_t **buffer, Int_t &size, const TMpiMessage *vars, Int_t count,
+                                           const TCommunicator *comm, Int_t dest, Int_t source, Int_t tag, Int_t root)
 {
    std::vector<TMpiMessageInfo> msgis(count);
    for (auto i = 0; i < count; i++) {
       auto mbuffer = vars[i].Buffer();
-      auto msize   = vars[i].BufferSize();
+      auto msize = vars[i].BufferSize();
       if (mbuffer == NULL) {
          comm->Error(__FUNCTION__, "Error serializing object type %s \n", ROOT_MPI_TYPE_NAME(TMpiMessage));
          comm->Abort(ERR_BUFFER);
@@ -331,12 +340,12 @@ template<> void TCommunicator::Serialize<TMpiMessage>(Char_t **buffer, Int_t &si
       comm->Abort(ERR_BUFFER);
    }
    memcpy(*buffer, ibuffer, size);
-
 }
 
-
 //______________________________________________________________________________
-template<> void TCommunicator::Unserialize<TMpiMessage>(Char_t *ibuffer, Int_t isize, TMpiMessage *vars, Int_t count, const TCommunicator *comm, Int_t dest, Int_t source, Int_t tag, Int_t root)
+template <>
+void TCommunicator::Unserialize<TMpiMessage>(Char_t *ibuffer, Int_t isize, TMpiMessage *vars, Int_t count,
+                                             const TCommunicator *comm, Int_t dest, Int_t source, Int_t tag, Int_t root)
 {
    TMpiMessage msg(ibuffer, isize);
    auto cl = gROOT->GetClass(typeid(std::vector<TMpiMessageInfo>));
@@ -347,7 +356,8 @@ template<> void TCommunicator::Unserialize<TMpiMessage>(Char_t *ibuffer, Int_t i
    }
 
    if (msgis->data()->GetDataTypeName() != ROOT_MPI_TYPE_NAME(TMpiMessage)) {
-      comm->Error(__FUNCTION__, "Error unserializing objects type %s where objects are %s \n", ROOT_MPI_TYPE_NAME(TMpiMessage), msgis->data()->GetDataTypeName().Data());
+      comm->Error(__FUNCTION__, "Error unserializing objects type %s where objects are %s \n",
+                  ROOT_MPI_TYPE_NAME(TMpiMessage), msgis->data()->GetDataTypeName().Data());
       comm->Abort(ERR_TYPE);
    }
 
@@ -357,9 +367,9 @@ template<> void TCommunicator::Unserialize<TMpiMessage>(Char_t *ibuffer, Int_t i
    ROOT_MPI_ASSERT(msgis->data()->GetTag() == tag, comm)
 
    for (auto i = 0; i < count; i++) {
-      //passing information from TMpiMessageInfo to TMpiMessage
+      // passing information from TMpiMessageInfo to TMpiMessage
       auto size = msgis->data()[i].GetBufferSize();
-      Char_t *buffer = new Char_t[size];//this memory dies when the unserialized object dies
+      Char_t *buffer = new Char_t[size]; // this memory dies when the unserialized object dies
       memcpy(buffer, msgis->data()[i].GetBuffer(), size);
       vars[i].SetBuffer(buffer, size, kFALSE);
       vars[i].SetReadMode();
@@ -379,5 +389,3 @@ void TCommunicator::SetCommName(const TString name)
 {
    ROOT_MPI_CHECK_CALL(MPI_Comm_set_name, (fComm, name.Data()), this);
 }
-
-

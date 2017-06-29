@@ -1,5 +1,5 @@
-#include<Mpi/TIntraCommunicator.h>
-#include<Mpi/TInterCommunicator.h>
+#include <Mpi/TIntraCommunicator.h>
+#include <Mpi/TInterCommunicator.h>
 using namespace ROOT::Mpi;
 
 //______________________________________________________________________________
@@ -7,7 +7,9 @@ using namespace ROOT::Mpi;
  * Default constructor for inter-communicator that is a null communicator
  */
 
-TInterCommunicator::TInterCommunicator(): TCommunicator() {}
+TInterCommunicator::TInterCommunicator() : TCommunicator()
+{
+}
 
 //______________________________________________________________________________
 /**
@@ -15,10 +17,14 @@ TInterCommunicator::TInterCommunicator(): TCommunicator() {}
  * \param comm other TInterCommunicator object
  */
 
-TInterCommunicator::TInterCommunicator(const TInterCommunicator &comm): TCommunicator(comm) {}
+TInterCommunicator::TInterCommunicator(const TInterCommunicator &comm) : TCommunicator(comm)
+{
+}
 
 //______________________________________________________________________________
-TInterCommunicator::TInterCommunicator(const MPI_Comm &comm): TCommunicator(comm) {}
+TInterCommunicator::TInterCommunicator(const MPI_Comm &comm) : TCommunicator(comm)
+{
+}
 
 //______________________________________________________________________________
 TInterCommunicator &TInterCommunicator::Clone() const
@@ -26,7 +32,7 @@ TInterCommunicator &TInterCommunicator::Clone() const
    MPI_Comm dupcomm;
    ROOT_MPI_CHECK_CALL(MPI_Comm_dup, (fComm, &dupcomm), this);
    TInterCommunicator *icomm = new TInterCommunicator(dupcomm);
-   return  *icomm;
+   return *icomm;
 }
 
 //______________________________________________________________________________
@@ -86,7 +92,7 @@ TInterCommunicator TInterCommunicator::Dup() const
    MPI_Comm dupcomm;
    ROOT_MPI_CHECK_CALL(MPI_Comm_dup, (fComm, &dupcomm), this);
    ROOT_MPI_CHECK_COMM(dupcomm, this);
-   return  dupcomm;
+   return dupcomm;
 }
 
 //______________________________________________________________________________
@@ -111,7 +117,7 @@ TInterCommunicator TInterCommunicator::Create(const TGroup &group) const
    ROOT_MPI_CHECK_GROUP(group, this);
    ROOT_MPI_CHECK_CALL(MPI_Comm_create, (fComm, group, &ncomm), this);
    ROOT_MPI_CHECK_COMM(ncomm, this);
-   return  ncomm;
+   return ncomm;
 }
 
 //______________________________________________________________________________

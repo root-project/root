@@ -2,89 +2,91 @@
 #ifndef ROOT_Mpi_TEnvironment
 #define ROOT_Mpi_TEnvironment
 
-#include<Mpi/Globals.h>
+#include <Mpi/Globals.h>
 namespace ROOT {
 
-   namespace Mpi {
-      /**
-      \class TEnvironment
-         Class manipulate mpi environment, with this class you can to start/stop the communication system and
-         to hanlde some information about the communication environment.
-         \ingroup Mpi
-       */
+namespace Mpi {
+/**
+\class TEnvironment
+   Class manipulate mpi environment, with this class you can to start/stop the communication system and
+   to hanlde some information about the communication environment.
+   \ingroup Mpi
+ */
 
-      class TErrorHandler;
-      class TMpiSignalHandler;
-      class TCommunicator;
-      class TEnvironment: public TObject {
-         friend class TCommunicator;
-         friend class TMpiSignalHandler;
-         friend class TErrorHandler;
-      private:
-         static TString fStdOut;         //stding object for stdout
-         static TString fStdErr;
-         static Bool_t  fSyncOutput;
-         static Int_t   fStdOutPipe[2];
-         static Int_t   fStdErrPipe[2];
-         static Int_t   fSavedStdErr;
-         static Int_t   fSavedStdOut;
+class TErrorHandler;
+class TMpiSignalHandler;
+class TCommunicator;
+class TEnvironment : public TObject {
+   friend class TCommunicator;
+   friend class TMpiSignalHandler;
+   friend class TErrorHandler;
 
-         static TErrorHandler fErrorHandler;
-         static Int_t fCompressionAlgorithm;
-         static Int_t fCompressionLevel;
+private:
+   static TString fStdOut; // stding object for stdout
+   static TString fStdErr;
+   static Bool_t fSyncOutput;
+   static Int_t fStdOutPipe[2];
+   static Int_t fStdErrPipe[2];
+   static Int_t fSavedStdErr;
+   static Int_t fSavedStdOut;
 
-         static FILE *fOutput;
+   static TErrorHandler fErrorHandler;
+   static Int_t fCompressionAlgorithm;
+   static Int_t fCompressionLevel;
 
-         TMpiSignalHandler *fInterruptSignal;
-         TMpiSignalHandler *fTerminationSignal;
-         TMpiSignalHandler *fSigSegmentationViolationSignal;
-      protected:
-         void InitSignalHandlers();
-      public:
-         TEnvironment(Int_t level = ROOT::Mpi::THREAD_SINGLE);
-         TEnvironment(Int_t argc, Char_t **argv, Int_t level = ROOT::Mpi::THREAD_SINGLE);
-         ~TEnvironment();
+   static FILE *fOutput;
 
-         void Finalize();
+   TMpiSignalHandler *fInterruptSignal;
+   TMpiSignalHandler *fTerminationSignal;
+   TMpiSignalHandler *fSigSegmentationViolationSignal;
 
-         // static public functions TODO
-         static void SyncOutput(Bool_t status = kTRUE, FILE *output = stdout);
+protected:
+   void InitSignalHandlers();
 
-         static Bool_t IsFinalized();
+public:
+   TEnvironment(Int_t level = ROOT::Mpi::THREAD_SINGLE);
+   TEnvironment(Int_t argc, Char_t **argv, Int_t level = ROOT::Mpi::THREAD_SINGLE);
+   ~TEnvironment();
 
-         static Bool_t IsInitialized();
+   void Finalize();
 
-         static TString GetProcessorName();
+   // static public functions TODO
+   static void SyncOutput(Bool_t status = kTRUE, FILE *output = stdout);
 
-         static Int_t GetThreadLevel();
-         static Bool_t IsMainThread();
+   static Bool_t IsFinalized();
 
+   static Bool_t IsInitialized();
 
-         static void SetCompression(Int_t level, Int_t algorithm = 0);
+   static TString GetProcessorName();
 
-         static void InitCapture();
+   static Int_t GetThreadLevel();
+   static Bool_t IsMainThread();
 
-         static void EndCapture();
+   static void SetCompression(Int_t level, Int_t algorithm = 0);
 
-         static void Flush();
+   static void InitCapture();
 
-         static void Flush(TCommunicator *comm);
+   static void EndCapture();
 
-         static void ClearBuffers();
+   static void Flush();
 
-         static TString GetStdOut();
+   static void Flush(TCommunicator *comm);
 
-         static TString GetStdErr();
+   static void ClearBuffers();
 
-         static Bool_t IsSyncOutput();
+   static TString GetStdOut();
 
-         static Int_t GetCompressionAlgorithm();
+   static TString GetStdErr();
 
-         static Int_t GetCompressionLevel();
+   static Bool_t IsSyncOutput();
 
-         ClassDef(TEnvironment, 1)
-      };
-   }
+   static Int_t GetCompressionAlgorithm();
+
+   static Int_t GetCompressionLevel();
+
+   ClassDef(TEnvironment, 1)
+};
+}
 }
 
 #endif
