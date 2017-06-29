@@ -29,7 +29,7 @@ int main()
    f->SetParameters(1, 1000, 7.5, 1.5);
 
    // NBins not multiple of SIMD vector size, testing padding
-   TH1D h1f("h1f", "Test random numbers", 128001, 100, 200);
+   TH1D h1f("h1f", "Test random numbers", 12801, 100, 200);
    gRandom->SetSeed(1);
    h1f.FillRandom("fvCore", 1000000);
 
