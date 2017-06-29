@@ -65,7 +65,8 @@ extern "C" {
 
 TClingCallbacks::TClingCallbacks(cling::Interpreter* interp)
    : InterpreterCallbacks(interp),
-     fLastLookupCtx(0), fROOTSpecialNamespace(0),
+     fLastLookupCtx(0), fPreviousAutoAutoWrapper(nullptr),
+     fROOTSpecialNamespace(0),
      fFirstRun(true), fIsAutoloading(false), fIsAutoloadingRecursively(false),
      fPPOldFlag(false), fPPChanged(false) {
    Transaction* T = 0;
@@ -672,8 +673,12 @@ bool TClingCallbacks::tryInjectImplicitAutoKeyword(LookupResult &R, Scope *S) {
       if (!FnScope)
          return false;
       auto FD = dyn_cast_or_null<FunctionDecl>(FnScope->getEntity());
-      if (!FD || !utils::Analyze::IsWrapper(FD))
+      // fPreviousAutoAutoWrapper == FD checks whether the prompt has seen an auto-auto
+      // lookup before. We really only support "X = Y", not e.g. "int a; X = Y" nor
+      // (and that's ROOT-8828) "Y(X) = 1" - neither for Y nor for X.
+      if (!FD || fPreviousAutoAutoWrapper == FD || !utils::Analyze::IsWrapper(FD))
          return false;
+      fPreviousAutoAutoWrapper = FD;
    }
 
    Sema& SemaRef = R.getSema();
@@ -691,6 +696,7 @@ bool TClingCallbacks::tryInjectImplicitAutoKeyword(LookupResult &R, Scope *S) {
    }
    //PP.CommitBacktrackedTokens();
    //cleanupRAII.pop();
+
    DeclarationName Name = R.getLookupName();
    IdentifierInfo* II = Name.getAsIdentifierInfo();
    SourceLocation Loc = R.getNameLoc();

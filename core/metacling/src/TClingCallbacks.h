@@ -13,6 +13,7 @@
 
 namespace clang {
    class Decl;
+   class FunctionDecl;
    class LookupResult;
    class NamespaceDecl;
    class Scope;
@@ -36,6 +37,7 @@ namespace llvm {
 class TClingCallbacks : public cling::InterpreterCallbacks {
 private:
    void *fLastLookupCtx;
+   clang::FunctionDecl  *fPreviousAutoAutoWrapper;
    clang::NamespaceDecl *fROOTSpecialNamespace;
    bool fFirstRun;
    bool fIsAutoloading;
