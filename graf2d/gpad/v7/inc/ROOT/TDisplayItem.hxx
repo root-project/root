@@ -38,8 +38,8 @@ public:
    TDisplayItem(const TDisplayItem &rhs);
    virtual ~TDisplayItem();
 
-   void SetObjectIDAsPtr(void* ptr);
-   void SetObjectID(const char* id) { fObjectID = id; }
+   void SetObjectIDAsPtr(void *ptr);
+   void SetObjectID(const char *id) { fObjectID = id; }
    const char *GetObjectID() const { return fObjectID.c_str(); }
 
    void SetOption(const char* opt) { fOption = opt; }
@@ -47,6 +47,8 @@ public:
 
    void SetKind(int kind) { fKind = kind; }
    int GetKind() const { return fKind; }
+
+   static std::string MakeIDFromPtr(void *ptr);
 };
 
 
@@ -56,14 +58,14 @@ class TPadDisplayItem : public TDisplayItem {
 protected:
    std::vector<TDisplayItem*> fPrimitives;
 public:
-  TPadDisplayItem() : TDisplayItem(), fPrimitives() { SetKind(3); }
+   TPadDisplayItem() : TDisplayItem(), fPrimitives() { SetKind(3); }
    virtual ~TPadDisplayItem();
-   void Add(TDisplayItem* snap) { fPrimitives.push_back(snap); }
-   TDisplayItem* Last() const { return fPrimitives[fPrimitives.size()-1]; }
+   void Add(TDisplayItem *snap) { fPrimitives.push_back(snap); }
+   TDisplayItem *Last() const { return fPrimitives[fPrimitives.size()-1]; }
    void Clear();
 };
 
-// direct pointer to some object without ownership 
+// direct pointer to some object without ownership
 
 template<class T>
 class TOrdinaryDisplayItem : public TDisplayItem {
@@ -72,14 +74,14 @@ protected:
 
 public:
 
-  TOrdinaryDisplayItem(T *addr) : TDisplayItem(), fSnapshot(addr) { SetKind(1); }
+   TOrdinaryDisplayItem(T *addr) : TDisplayItem(), fSnapshot(addr) { SetKind(1); }
    TOrdinaryDisplayItem(const TOrdinaryDisplayItem<T> &&rhs) : TDisplayItem(rhs), fSnapshot(rhs.fSnapshot) {}
    virtual ~TOrdinaryDisplayItem() { fSnapshot = 0; }
 
    T *GetSnapshot() const { return fSnapshot; }
 };
 
-// unique pointer of specified class with ownership 
+// unique pointer of specified class with ownership
 
 template<class T>
 class TUniqueDisplayItem : public TDisplayItem {

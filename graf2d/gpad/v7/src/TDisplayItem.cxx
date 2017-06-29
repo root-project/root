@@ -25,10 +25,18 @@ ROOT::Experimental::TDisplayItem::TDisplayItem(const TDisplayItem &rhs) :
 // pin vtable
 ROOT::Experimental::TDisplayItem::~TDisplayItem() { }
 
-void ROOT::Experimental::TDisplayItem::SetObjectIDAsPtr(void* ptr)
+std::string ROOT::Experimental::TDisplayItem::MakeIDFromPtr(void *ptr)
 {
    UInt_t hash = TString::Hash(&ptr, sizeof(ptr));
-   SetObjectID(TString::UItoa(hash,10).Data());
+   TString res = TString::UItoa(hash,10);
+   return std::string(res.Data());
+}
+
+
+void ROOT::Experimental::TDisplayItem::SetObjectIDAsPtr(void* ptr)
+{
+   std::string id = MakeIDFromPtr(ptr);
+   SetObjectID(id.c_str());
 }
 
 

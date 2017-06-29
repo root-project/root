@@ -45,16 +45,16 @@ private:
    struct WebConn {
       THttpWSEngine  *fHandle;     ///<! websocket handle
       Bool_t          fReady;
-      UInt_t          fGetMenu;    ///<! object id for menu request
+      std::string     fGetMenu;    ///<! object id for menu request
       Bool_t          fModified;
-      WebConn() : fHandle(0), fReady(kFALSE), fGetMenu(0), fModified(kFALSE) {}
+      WebConn() : fHandle(0), fReady(kFALSE), fGetMenu(), fModified(kFALSE) {}
    };
 
   typedef std::list<WebConn> WebConnList;
-   
+
   /// The canvas we are painting. It might go out of existence while painting.
   const ROOT::Experimental::TCanvas& fCanvas;
-  
+
    WebConnList     fWebConn;      ///<! connections list
    ROOT::Experimental::TPadDisplayItem  fDisplayList; ///!< full list of items to display
 
@@ -70,6 +70,7 @@ private:
   /// Disable assignment.
   TCanvasPainter& operator=(const TCanvasPainter&) = delete;
 
+  ROOT::Experimental::Internal::TDrawable *FindDrawable(const ROOT::Experimental::TCanvas &can, const std::string &id);
 
   void CreateHttpServer();
   void PopupBrowser();
@@ -88,7 +89,7 @@ public:
   /// The painter observes it; it needs to know should the TCanvas be deleted.
   TCanvasPainter(const std::string &name, const ROOT::Experimental::TCanvas& canv):
      THttpWSHandler(name.c_str(), "title"),
-     fCanvas(canv), 
+     fCanvas(canv),
      fWebConn()
    {
       CreateHttpServer();
@@ -153,113 +154,116 @@ struct TCanvasPainterReg {
 } // unnamed namespace
 
 
-  void TCanvasPainter::CreateHttpServer()
-   {
-      if (gServer) return;
+void TCanvasPainter::CreateHttpServer()
+{
+   if (gServer) return;
 
-      // gServer = new THttpServer("http:8080?loopback&websocket_timeout=10000");
-	   const char *port = gSystem->Getenv("WEBGUI_PORT");
-      TString buf;
-	   if (!port) {
-        gRandom->SetSeed(0);
-        buf.Form("%d", (int) (8800 + 1000* gRandom->Rndm(1)));
-        port = buf.Data(); // "8181";
+   // gServer = new THttpServer("http:8080?loopback&websocket_timeout=10000");
+   const char *port = gSystem->Getenv("WEBGUI_PORT");
+   TString buf;
+   if (!port) {
+      gRandom->SetSeed(0);
+      buf.Form("%d", (int) (8800 + 1000* gRandom->Rndm(1)));
+      port = buf.Data(); // "8181";
+   }
+   fAddr = TString::Format("http://localhost:%s", port).Data();
+   gServer = new THttpServer(TString::Format("http:%s?websocket_timeout=10000", port).Data());
+}
+
+
+void TCanvasPainter::PopupBrowser()
+{
+   TString addr, exec;
+
+   addr.Form("%s/web7gui/%s/draw.htm?webcanvas", fAddr.c_str(), GetName());
+
+   if (gSystem->InheritsFrom("TMacOSXSystem"))
+      exec.Form("open %s", addr.Data());
+   else
+      exec.Form("xdg-open %s &", addr.Data());
+   printf("Exec %s\n", exec.Data());
+
+   gSystem->Exec(exec);
+}
+
+Bool_t TCanvasPainter::ProcessWS(THttpCallArg *arg)
+{
+   if (!arg) return kTRUE;
+
+   // try to identify connection for given WS request
+   WebConn* conn = 0;
+   WebConnList::iterator iter = fWebConn.begin();
+   while (iter != fWebConn.end()) {
+      if (iter->fHandle && (iter->fHandle->GetId() == arg->GetWSId()) && arg->GetWSId()) {
+         conn = &(*iter); break;
       }
-	   fAddr = TString::Format("http://localhost:%s", port).Data();
-      gServer = new THttpServer(TString::Format("http:%s?websocket_timeout=10000", port).Data());
+      ++iter;
    }
 
+   if (strcmp(arg->GetMethod(),"WS_CONNECT")==0) {
 
-   void TCanvasPainter::PopupBrowser()
-   {
-       TString addr, exec;
-
-       addr.Form("%s/web7gui/%s/draw.htm?webcanvas", fAddr.c_str(), GetName());
-
-      if (gSystem->InheritsFrom("TMacOSXSystem"))
-	      exec.Form("open %s", addr.Data());
-      else
-         exec.Form("xdg-open %s &", addr.Data());
-      printf("Exec %s\n", exec.Data());
-
-      gSystem->Exec(exec);
-   }
-
-   Bool_t TCanvasPainter::ProcessWS(THttpCallArg *arg)
-   {
-      if (!arg) return kTRUE;
-
-      // try to identify connection for given WS request
-      WebConn* conn = 0;
-      WebConnList::iterator iter = fWebConn.begin();
-      while (iter != fWebConn.end()) {
-         if (iter->fHandle && (iter->fHandle->GetId() == arg->GetWSId()) && arg->GetWSId()) {
-            conn = &(*iter); break;
-         }
-         ++iter;
-      }
-
-      if (strcmp(arg->GetMethod(),"WS_CONNECT")==0) {
-
-         // accept all requests, in future one could limit number of connections
-         // arg->Set404(); // refuse connection
-         return kTRUE;
-      } 
-
-      if (strcmp(arg->GetMethod(),"WS_READY")==0) {
-          THttpWSEngine* wshandle = dynamic_cast<THttpWSEngine*> (arg->TakeWSHandle());
-
-          if (conn != 0) Error("ProcessWSRequest","WSHandle with given websocket id exists!!!");
-
-          WebConn newconn;
-          newconn.fHandle = wshandle;
-          newconn.fModified = kTRUE;
-
-          fWebConn.push_back(newconn);
-          printf("socket is ready\n");
-
-          return kTRUE;
-      }
-
-      if (strcmp(arg->GetMethod(),"WS_CLOSE")==0) {
-      // connection is closed, one can remove handle
-
-         if (conn && conn->fHandle) {
-            conn->fHandle->ClearHandle();
-            delete conn->fHandle;
-            conn->fHandle = 0;
-         }
-
-         if (conn) fWebConn.erase(iter);
-         return kTRUE;
-      }
-
-      if (strcmp(arg->GetMethod(),"WS_DATA")!=0) {    
-         Error("ProcessWSRequest","WSHandle DATA request expected!");
-         return kFALSE;
-      }
-
-      
-      if (!conn) {
-         Error("ProcessWSRequest","Get websocket data without valid connection - ignore!!!");
-         return kFALSE;
-      }
-
-      if (conn->fHandle->PreviewData(arg)) return kTRUE;
-
-      const char* cdata = (arg->GetPostDataLength()<=0) ? "" : (const char*) arg->GetPostData();     
-
-      if (strncmp(cdata,"READY",5)==0) {
-         conn->fReady = kTRUE;
-         CheckModifiedFlag();
-      } else
-      if (strncmp(cdata, "RREADY:", 7)==0) {
-         conn->fReady = kTRUE;
-         CheckModifiedFlag();
-      } 
-      
+      // accept all requests, in future one could limit number of connections
+      // arg->Set404(); // refuse connection
       return kTRUE;
    }
+
+   if (strcmp(arg->GetMethod(),"WS_READY")==0) {
+      THttpWSEngine* wshandle = dynamic_cast<THttpWSEngine*> (arg->TakeWSHandle());
+
+      if (conn != 0) Error("ProcessWSRequest","WSHandle with given websocket id exists!!!");
+
+      WebConn newconn;
+      newconn.fHandle = wshandle;
+      newconn.fModified = kTRUE;
+
+      fWebConn.push_back(newconn);
+      printf("socket is ready\n");
+
+      return kTRUE;
+   }
+
+   if (strcmp(arg->GetMethod(),"WS_CLOSE")==0) {
+      // connection is closed, one can remove handle
+
+      if (conn && conn->fHandle) {
+         conn->fHandle->ClearHandle();
+         delete conn->fHandle;
+         conn->fHandle = 0;
+      }
+
+      if (conn) fWebConn.erase(iter);
+      return kTRUE;
+   }
+
+   if (strcmp(arg->GetMethod(),"WS_DATA")!=0) {
+      Error("ProcessWSRequest","WSHandle DATA request expected!");
+      return kFALSE;
+   }
+
+
+   if (!conn) {
+      Error("ProcessWSRequest","Get websocket data without valid connection - ignore!!!");
+      return kFALSE;
+   }
+
+   if (conn->fHandle->PreviewData(arg)) return kTRUE;
+
+   const char* cdata = (arg->GetPostDataLength()<=0) ? "" : (const char*) arg->GetPostData();
+
+   if (strncmp(cdata,"READY",5)==0) {
+      conn->fReady = kTRUE;
+      CheckModifiedFlag();
+   } else if (strncmp(cdata, "RREADY:", 7)==0) {
+      conn->fReady = kTRUE;
+      CheckModifiedFlag();
+   } else if (strncmp(cdata,"GETMENU:",8)==0) {
+      conn->fReady = kTRUE;
+      conn->fGetMenu = cdata+8;
+      CheckModifiedFlag();
+   }
+
+   return kTRUE;
+}
 
 void TCanvasPainter::CheckModifiedFlag()
 {
@@ -271,9 +275,12 @@ void TCanvasPainter::CheckModifiedFlag()
 
       TString buf;
 
-      if (conn.fGetMenu) {
+      if (!conn.fGetMenu.empty()) {
+         ROOT::Experimental::Internal::TDrawable *drawable = FindDrawable(fCanvas, conn.fGetMenu);
 
-         conn.fGetMenu = 0;
+         printf("Request menu for object %s found drawable %p\n", conn.fGetMenu.c_str(), drawable);
+
+         conn.fGetMenu = "";
       } else
        if (conn.fModified) {
          // buf = "JSON";
@@ -296,6 +303,20 @@ void TCanvasPainter::AddDisplayItem(ROOT::Experimental::TDisplayItem *item)
 {
    fDisplayList.Add(item);
 }
+
+ROOT::Experimental::Internal::TDrawable *TCanvasPainter::FindDrawable(const ROOT::Experimental::TCanvas &can, const std::string &id)
+{
+
+   for (auto &&drawable: can.GetPrimitives()) {
+
+      std::string subid = ROOT::Experimental::TDisplayItem::MakeIDFromPtr(&(*drawable));
+
+      if (subid == id) return &(*drawable);
+   }
+
+   return nullptr;
+}
+
 
 std::string TCanvasPainter::CreateSnapshot(const ROOT::Experimental::TCanvas& can)
 {
@@ -321,12 +342,12 @@ std::string TCanvasPainter::CreateSnapshot(const ROOT::Experimental::TCanvas& ca
       // sub->SetObjectIDAsPtr(&(*drawable));
       // lst.Add(sub);
     }
- 
+
    TString res = TBufferJSON::ConvertToJSON(&fDisplayList, gROOT->GetClass("ROOT::Experimental::TPadDisplayItem"));
-  
+
 
    fDisplayList.Clear();
-   
+
    // printf("JSON %s\n", res.Data());
 
    return std::string(res.Data());
