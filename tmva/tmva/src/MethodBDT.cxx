@@ -850,12 +850,12 @@ void TMVA::MethodBDT::InitEventSample( void )
       if (fPairNegWeightsGlobal) PreProcessNegativeEventWeights();
    }
 
-   if ( DoRegression() ) {
+   if (DoRegression()) {
       // Regression, no reweighting to do
-   } else if ( DoMulticlass() ) {
+   } else if (DoMulticlass()) {
       // Multiclass, only gradboost is supported. No reweighting.
-   } else if ( !fSkipNormalization ) {
-      //Binary classification.
+   } else if (!fSkipNormalization) {
+      // Binary classification.
       Log() << kDEBUG << "\t<InitEventSample> For classification trees, "<< Endl;
       Log() << kDEBUG << " \tthe effective number of backgrounds is scaled to match "<<Endl;
       Log() << kDEBUG << " \tthe signal. Otherwise the first boosting step would do 'just that'!"<<Endl;
@@ -1501,7 +1501,7 @@ Double_t TMVA::MethodBDT::GradBoost(std::vector<const TMVA::Event*>& eventSample
       auto &v = leaves[node];
       auto target = e->GetTarget(cls);
       v.sumWeightTarget += target * weight;
-      v.sum2 += fabs(target) * (1.0-fabs(target)) * weight;
+      v.sum2 += fabs(target) * (1.0 - fabs(target)) * weight;
    }
    for (auto &iLeave : leaves) {
       constexpr auto minValue = 1e-30;
@@ -1509,7 +1509,7 @@ Double_t TMVA::MethodBDT::GradBoost(std::vector<const TMVA::Event*>& eventSample
          iLeave.second.sum2 = minValue;
       }
       const Double_t K = DataInfo().GetNClasses();
-      iLeave.first->SetResponse(fShrinkage * (K-1) / K * iLeave.second.sumWeightTarget/iLeave.second.sum2);
+      iLeave.first->SetResponse(fShrinkage * (K - 1) / K * iLeave.second.sumWeightTarget / iLeave.second.sum2);
    }
 
    //call UpdateTargets before next tree is grown

@@ -1714,7 +1714,7 @@ Double_t TMVA::DecisionTree::CheckEvent( const TMVA::Event * e, Bool_t UseYesNoL
 
    }
 
-   if ( DoRegression() ) {
+   if (DoRegression()) {
       // Note: This path is also taken for MethodBDT with analysis type
       // kClassification and kMulticlass when using GradBoost.
       // See TMVA::MethodBDT::InitGradBoost
