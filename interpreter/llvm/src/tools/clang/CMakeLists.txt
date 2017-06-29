@@ -429,12 +429,7 @@ add_subdirectory(tools)
 add_subdirectory(runtime)
 
 option(CLANG_BUILD_EXAMPLES "Build CLANG example programs by default." OFF)
-if (CLANG_BUILD_EXAMPLES)
-  set(ENABLE_CLANG_EXAMPLES "1")
-  add_subdirectory(examples)
-else()
-  set(ENABLE_CLANG_EXAMPLES "0")
-endif()
+add_subdirectory(examples)
 
 if(APPLE)
   # this line is needed as a cleanup to ensure that any CMakeCaches with the old
