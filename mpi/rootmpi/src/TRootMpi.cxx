@@ -1,11 +1,11 @@
-#include<TRootMpi.h>
-#include<Math/Error.h>
-#include<stdlib.h>
-#include<iostream>
-#include<TStringLong.h>
+#include <Math/Error.h>
 #include <TApplication.h>
-#include<TROOT.h>
-#include<mpi.h>
+#include <TROOT.h>
+#include <TRootMpi.h>
+#include <TStringLong.h>
+#include <iostream>
+#include <mpi.h>
+#include <stdlib.h>
 using namespace ROOT::Mpi;
 //______________________________________________________________________________
 TRootMpi::TRootMpi(Int_t argc, Char_t **argv)
@@ -13,7 +13,7 @@ TRootMpi::TRootMpi(Int_t argc, Char_t **argv)
 
    fRootSys = TROOT::GetRootSys();
 
-   //TODO: added codes to check all defines and paths for executables
+   // TODO: added codes to check all defines and paths for executables
    fMpirun = ROOT_MPI_EXEC;
    fMpirunParams = " ";
 
@@ -24,7 +24,7 @@ TRootMpi::TRootMpi(Int_t argc, Char_t **argv)
    fValgrind = "";
 #endif
    fCallValgrind = kFALSE;
-   fValgrindParams =  Form("--suppressions=%s/etc/valgrind-root.supp", fRootSys);
+   fValgrindParams = Form("--suppressions=%s/etc/valgrind-root.supp", fRootSys);
    fValgrindParams += " -v --leak-check=full --show-leak-kinds=all --track-origins=yes --show-reachable=yes  ";
 
    fArgc = argc;
@@ -46,10 +46,21 @@ Int_t TRootMpi::Launch()
    Int_t status;
    status = ProcessArgs() ? 1 : 0;
    if (status != 1) {
-     if (fCompile)
-       status = Compile();
-     else
-       status = Execute();
+      if (fCompile) {
+         status = Compile();
+         if (status != 0) {
+            auto cmd = fCompiler + " " + fCompilerParams;
+            Error(Form("%s(...) %s[%d]", __FUNCTION__, __FILE__, __LINE__), "\nCompiling %s\nError code %d", cmd.Data(),
+                  status);
+         }
+      } else {
+         status = Execute();
+         if (status != 0) {
+            auto cmd = fMpirun + " " + fMpirunParams;
+            Error(Form("%s(...) %s[%d]", __FUNCTION__, __FILE__, __LINE__), "\nExecuting %s\nError code %d", cmd.Data(),
+                  status);
+         }
+      }
    }
    return status;
 }
@@ -76,7 +87,6 @@ Int_t TRootMpi::ProcessArgs()
       return gSystem->Exec(cmd_help.Data());
    }
 
-
    if (TString(fArgv[1]) == "-C") {
       for (int i = 2; i < fArgc; i++) {
          TString arg = fArgv[i];
@@ -102,7 +112,7 @@ Int_t TRootMpi::ProcessArgs()
       fCompile = kFALSE;
       return 0;
    } else {
-      TString sRootParams = " ";//added -l -q by default
+      TString sRootParams = " "; // added -l -q by default
 
       for (int i = 1; i < fArgc - 1; i++) {
          TString arg = fArgv[i];
@@ -111,24 +121,25 @@ Int_t TRootMpi::ProcessArgs()
             sRootParams += " " + arg;
          } else {
 #if ROOT_MPI_VALGRINDFOUND
-           if (arg == "-valgrind")
-             fCallValgrind = kTRUE;
-           else
-             fMpirunParams += " " + arg;
+            if (arg == "-valgrind")
+               fCallValgrind = kTRUE;
+            else
+               fMpirunParams += " " + arg;
 #else
-           fMpirunParams += " " + arg;
+            fMpirunParams += " " + arg;
 #endif
          }
       }
 
       if (fCallValgrind) {
-         fMpirunParams += " " + fValgrind + " " + fValgrindParams + Form(" --log-file=report-%s-%s.memcheck ", fArgv[fArgc - 1], "%p");
+         fMpirunParams += " " + fValgrind + " " + fValgrindParams +
+                          Form(" --log-file=report-%s-%s.memcheck ", fArgv[fArgc - 1], "%p");
       }
       fMpirunParams += " ";
-//       fMpirunParams += Form("%s/bin/%s",fRootSys,fArgv[0]);
+      //       fMpirunParams += Form("%s/bin/%s",fRootSys,fArgv[0]);
       fMpirunParams += Form("%s/bin/root -l -x -q", fRootSys);
       fMpirunParams += " \"";
-      fMpirunParams += fArgv[fArgc - 1];//macro file is the last
+      fMpirunParams += fArgv[fArgc - 1]; // macro file is the last
       fMpirunParams += " \"";
       fMpirunParams += sRootParams;
       fCompile = kFALSE;
@@ -140,7 +151,7 @@ Int_t TRootMpi::ProcessArgs()
 Int_t TRootMpi::Compile()
 {
    auto cmd = fCompiler + " " + fCompilerParams;
-   std::cout << cmd << std::endl;
+   //    std::cout << cmd << std::endl;
    return gSystem->Exec(cmd.Data());
 }
 
@@ -150,8 +161,10 @@ Int_t TRootMpi::Execute()
    auto cmd = fMpirun + " " + fMpirunParams;
    auto status = gSystem->Exec(cmd.Data());
 
-   //    std::cout<<std::endl<<"Return code="<<status<<std::endl<<std::endl;
-   if (fCallValgrind) std::cout << "\nValgrind files " << Form(" report-%s-pid.memcheck ", fArgv[fArgc - 1]) << "must be generated." << std::endl;
+   //       std::cout<<std::endl<<"Return code="<<status<<std::endl<<std::endl;
+   if (fCallValgrind)
+      std::cout << "\nValgrind files " << Form(" report-%s-pid.memcheck ", fArgv[fArgc - 1]) << "must be generated."
+                << std::endl;
    return status;
 }
 
@@ -174,4 +187,3 @@ void TRootMpi::InitHelp()
    fHelpMsg += " dir : if dir is a valid directory cd to it before executing\n";
    fHelpMsg += "-memstat : run with memory usage monitoring\n";
 }
-
