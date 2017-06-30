@@ -50,6 +50,11 @@
 #include "TMVA/RegressionVariance.h"
 #include "TMVA/DataSetInfo.h"
 
+#ifdef R__USE_IMT
+#include <ROOT/TThreadExecutor.hxx>
+#include "TSystem.h"
+#endif
+
 class TRandom3;
 
 namespace TMVA {
@@ -187,9 +192,35 @@ namespace TMVA {
       inline void SetUseExclusiveVars(Bool_t t=kTRUE){fUseExclusiveVars = t;}
       inline void SetNVars(Int_t n){fNvars = n;}
 
+      #ifdef R__USE_IMT
+      void InitThreadExecutor(UInt_t nthreads){
+          fPool.reset(new ROOT::TThreadExecutor(nthreads));
+          fNumCPUs = nthreads;
+      };
+      #endif
+
 
    private:
       // utility functions
+      
+      // Only include parallelizatiion if the multithreading compilation flag is turned on
+      #ifdef R__USE_IMT 
+      // number of CPUs available for parallelization
+      UInt_t fNumCPUs = 1;
+      UInt_t GetNumCPUs(){
+         SysInfo_t s;
+         gSystem->GetSysInfo(&s);
+         UInt_t ncpu  = s.fCpus;
+         return ncpu;
+      };
+
+      // #### root multithreading object
+      // #### had to define as pointer so that we can initialize the number of CPUs to use AFTER
+      // #### getting information from the user. Needed to do this to automate timing vs nCPUs during
+      // #### development.
+      std::unique_ptr<ROOT::TThreadExecutor> fPool = std::unique_ptr<ROOT::TThreadExecutor>(nullptr);
+
+      #endif
      
       // calculate the Purity out of the number of sig and bkg events collected
       // from individual samples.
@@ -234,7 +265,6 @@ namespace TMVA {
       Types::EAnalysisType  fAnalysisType;   // kClassification(=0=false) or kRegression(=1=true)
 
       DataSetInfo*  fDataSetInfo;
-
 
       ClassDef(DecisionTree,0);               // implementation of a Decision Tree
    };

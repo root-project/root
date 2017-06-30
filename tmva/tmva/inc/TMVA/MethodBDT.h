@@ -47,6 +47,13 @@
 #include "TMVA/Event.h"
 #include "TMVA/LossFunction.h"
 
+// Multithreading only if the compilation flag is turned on
+#ifdef R__USE_IMT
+#include <memory>
+#include <ROOT/TThreadExecutor.hxx>
+#include "TSystem.h"
+#endif
+
 namespace TMVA {
 
    class SeparationBase;
@@ -54,6 +61,7 @@ namespace TMVA {
    class MethodBDT : public MethodBase {
 
    public:
+
       // constructor for training and reading
       MethodBDT( const TString& jobName,
                  const TString& methodTitle,
@@ -101,6 +109,24 @@ namespace TMVA {
       // get the actual forest size (might be less than fNTrees, the requested one, if boosting is stopped early
       UInt_t   GetNTrees() const {return fForest.size();}
    private:
+
+      // #### Multithreading only if the compilation flag is turned on
+
+      #ifdef R__USE_IMT
+      // #### had to define this as a pointer so that we can set the number of CPUs to use AFTER getting
+      // #### information from the user. Needed to do this to automate timing vs nCPUs during development.
+      std::unique_ptr<ROOT::TThreadExecutor> fPool = std::unique_ptr<ROOT::TThreadExecutor>(nullptr);
+      // #### number of CPUs available for parallelization
+      UInt_t GetNumCPUs(){
+         SysInfo_t s;
+         gSystem->GetSysInfo(&s);
+         UInt_t ncpu  = s.fCpus;
+         return ncpu;
+      };
+      #endif
+
+      UInt_t fNumCPUs = 1;
+
       Double_t GetMvaValue( Double_t* err, Double_t* errUpper, UInt_t useNTrees );
       Double_t PrivateGetMvaValue( const TMVA::Event *ev, Double_t* err=0, Double_t* errUpper=0, UInt_t useNTrees=0 );
       void     BoostMonitor(Int_t iTree);

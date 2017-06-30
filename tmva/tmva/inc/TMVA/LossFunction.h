@@ -35,7 +35,13 @@
 #include <vector>
 #include <map>
 #include "TMVA/Event.h"
-#include "TMVA/Types.h"
+
+// multithreading only if the compilation flag is turned on
+#ifdef R__USE_IMT
+#include <ROOT/TThreadExecutor.hxx>
+#include <memory>
+#include "TSystem.h"
+#endif
 
 namespace TMVA {
 
@@ -74,7 +80,11 @@ namespace TMVA {
    public:
 
       // constructors
-      LossFunction(){};
+      LossFunction(){ 
+        #ifdef R__USE_IMT
+        fNumCPUs = GetNumCPUs(); 
+        #endif
+      };
       virtual ~LossFunction(){};
 
       // abstract methods that need to be implemented
@@ -84,6 +94,33 @@ namespace TMVA {
 
       virtual TString Name() = 0;
       virtual Int_t Id() = 0;
+
+      #ifdef R__USE_IMT
+      void InitThreadExecutor(UInt_t nthreads){
+          fPool.reset(new ROOT::TThreadExecutor(nthreads));
+          fNumCPUs = nthreads;
+      };
+      #endif
+
+   protected:
+      // #### only use multithreading if the compilation flag is turned on
+      #ifdef R__USE_IMT
+      UInt_t fNumCPUs = 1;
+
+      // #### ROOT multithreading object
+      // #### defined as a pointer so that we can define the number of CPUs to use AFTER getting
+      // #### the information from the user. Did this so that I could time the algorithm vs nCPUs
+      // #### during development. 
+      std::unique_ptr<ROOT::TThreadExecutor> fPool = std::unique_ptr<ROOT::TThreadExecutor>(nullptr);
+
+      // #### number of CPUs available for parallelization
+      UInt_t GetNumCPUs(){
+         SysInfo_t s;
+         gSystem->GetSysInfo(&s);
+         UInt_t ncpu  = s.fCpus;
+         return ncpu;
+      };
+      #endif
    };
 
    ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -132,6 +169,7 @@ namespace TMVA {
       virtual void SetTargets(std::vector<const TMVA::Event*>& evs, std::map< const TMVA::Event*, LossFunctionEventInfo >& evinfomap) = 0;
       virtual Double_t Target(LossFunctionEventInfo& e) = 0;
       virtual Double_t Fit(std::vector<LossFunctionEventInfo>& evs) = 0;
+
    };
 
    ///////////////////////////////////////////////////////////////////////////////////////////////
