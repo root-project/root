@@ -760,7 +760,7 @@ void TCanvas::Close(Option_t *option)
    TCanvas *cansave = 0;
    if (padsave) cansave = (TCanvas*)gPad->GetCanvas();
 
-   if (fCanvasID != -1 && fCanvasImp) {
+   if (fCanvasID != -1) {
 
       if ((!gROOT->IsLineProcessing()) && (!gVirtualX->IsCmdThread())) {
          gInterpreter->Execute(this, IsA(), "Close", option);
@@ -779,7 +779,8 @@ void TCanvas::Close(Option_t *option)
 
          DeleteCanvasPainter();
 
-         fCanvasImp->Close();
+         if (fCanvasImp)
+            fCanvasImp->Close();
       }
       fCanvasID = -1;
       fBatch    = kTRUE;
@@ -787,7 +788,8 @@ void TCanvas::Close(Option_t *option)
       gROOT->GetListOfCanvases()->Remove(this);
 
       // Close actual window on screen
-      SafeDelete(fCanvasImp);
+      if (fCanvasImp)
+         SafeDelete(fCanvasImp);
    }
 
    if (cansave == this) {
