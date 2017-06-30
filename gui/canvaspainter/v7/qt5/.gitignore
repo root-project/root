@@ -2,3 +2,4 @@ Makefile
 rootqt5
 moc_rootwebview.cpp
 .qmake.stash
+moc_predefs.h
