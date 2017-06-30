@@ -540,15 +540,18 @@ TObject *TList::FindObject(const char *name) const
 {
    R__COLLECTION_READ_GUARD();
 
-   if (!name) return 0;
-   TObjLink *lnk = FirstLink();
-   while (lnk) {
-      TObject *obj = lnk->GetObject();
-      const char *objname = obj->GetName();
-      if (objname && !strcmp(name, objname)) return obj;
-      lnk = lnk->Next();
+   if (!name)
+      return nullptr;
+
+   for (TObjLink *lnk = FirstLink(); lnk != nullptr; lnk = lnk->Next()) {
+      if (TObject *obj = lnk->GetObject()) {
+         const char *objname = obj->GetName();
+         if (objname && strcmp(name, objname) == 0)
+            return obj;
+      }
    }
-   return 0;
+
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
