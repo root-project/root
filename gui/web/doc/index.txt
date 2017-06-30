@@ -1,0 +1,10 @@
+This directory contains TWebGuiFactory class to provide the default
+implementation of the  TGuiFactory class for the web-based ROOT applications.
+BEGIN_HTML
+The ROOT design allows for the different custom  implementations
+of the various ROOT GUI components.
+
+This directory provides the
+default ROOT GUI based object factories for web-based application.
+<br>
+END_HTML
