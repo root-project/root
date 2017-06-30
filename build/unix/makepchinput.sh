@@ -14,6 +14,8 @@ shift
 modules=$1
 shift
 
+echo ECCOLO
+
 outdir=etc/dictpch
 allheaders=$outdir/allHeaders.h
 alllinkdefs=$outdir/allLinkDefs.h
@@ -66,6 +68,7 @@ done
 # Can not be put in a dictionary until they properly handle ROOT/*
 echo '#include "ROOT/TSeq.hxx"' >> $allheaders
 echo '#include "ROOT/StringConv.hxx"' >> $allheaders
+echo '#include "ROOT/TDataFrame.hxx"' >> $allheaders
 
 if [ "x$1" = "x--" ]; then
     shift
