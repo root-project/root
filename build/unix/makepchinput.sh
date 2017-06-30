@@ -14,8 +14,6 @@ shift
 modules=$1
 shift
 
-echo ECCOLO
-
 outdir=etc/dictpch
 allheaders=$outdir/allHeaders.h
 alllinkdefs=$outdir/allLinkDefs.h
