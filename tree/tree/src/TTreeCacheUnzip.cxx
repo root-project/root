@@ -60,7 +60,7 @@ where bufferSize must be passed in bytes.
 #ifdef R__USE_IMT
 #include "tbb/task.h"
 #include "tbb/task_group.h"
-#include "tbb/spin_rw_mutex.h"
+#include "tbb/queuing_rw_mutex.h"
 //#include "tbb/tbbmalloc_proxy.h"
 #include <thread>
 #include <string>
@@ -139,7 +139,7 @@ TTreeCacheUnzip::TTreeCacheUnzip(TTree *tree, Int_t buffersize) : TTreeCache(tre
 void TTreeCacheUnzip::Init()
 {
    root = nullptr;
-   fRWMutex          = new tbb::spin_rw_mutex();
+   fRWMutex          = new tbb::queuing_rw_mutex();
 //   fMutexList        = new TMutex(kTRUE);
    fIOMutex          = new TMutex(kTRUE);
 
@@ -211,7 +211,7 @@ TTreeCacheUnzip::~TTreeCacheUnzip()
 Int_t TTreeCacheUnzip::AddBranch(TBranch *b, Bool_t subbranches /*= kFALSE*/)
 {
 //   R__LOCKGUARD(fMutexList);
-
+//   tbb::queuing_rw_mutex::scoped_lock lock(*fRWMutex, true);
    return TTreeCache::AddBranch(b, subbranches);
 }
 
@@ -225,6 +225,7 @@ Int_t TTreeCacheUnzip::AddBranch(TBranch *b, Bool_t subbranches /*= kFALSE*/)
 Int_t TTreeCacheUnzip::AddBranch(const char *branch, Bool_t subbranches /*= kFALSE*/)
 {
 //   R__LOCKGUARD(fMutexList);
+//   tbb::queuing_rw_mutex::scoped_lock lock(*fRWMutex, true);
 
    return TTreeCache::AddBranch(branch, subbranches);
 }
@@ -240,9 +241,10 @@ Bool_t TTreeCacheUnzip::FillBuffer()
    }
 */
    if (fNbranches <= 0) return kFALSE;
-   {
+//   {
       // Fill the cache buffer with the branches in the cache.
 //      R__LOCKGUARD(fMutexList);
+      tbb::queuing_rw_mutex::scoped_lock lock(*fRWMutex, true);
       fIsTransferred = kFALSE;
 
       TTree *tree = ((TBranch*)fBranches->UncheckedAt(0))->GetTree();
@@ -320,7 +322,7 @@ Bool_t TTreeCacheUnzip::FillBuffer()
       fIsLearning = kFALSE;
       UnzipCacheTBB();
 
-   }
+//   }
 
    return kTRUE;
 }
@@ -335,6 +337,7 @@ Bool_t TTreeCacheUnzip::FillBuffer()
 Int_t TTreeCacheUnzip::SetBufferSize(Int_t buffersize)
 {
 //   R__LOCKGUARD(fMutexList);
+//   tbb::queuing_rw_mutex::scoped_lock lock(*fRWMutex, true);
 
    Int_t res = TTreeCache::SetBufferSize(buffersize);
    if (res < 0) {
@@ -353,6 +356,7 @@ Int_t TTreeCacheUnzip::SetBufferSize(Int_t buffersize)
 void TTreeCacheUnzip::SetEntryRange(Long64_t emin, Long64_t emax)
 {
 //   R__LOCKGUARD(fMutexList);
+//   tbb::queuing_rw_mutex::scoped_lock lock(*fRWMutex, true);
 
    TTreeCache::SetEntryRange(emin, emax);
 }
@@ -364,6 +368,7 @@ void TTreeCacheUnzip::SetEntryRange(Long64_t emin, Long64_t emax)
 void TTreeCacheUnzip::StopLearningPhase()
 {
 //   R__LOCKGUARD(fMutexList);
+//   tbb::queuing_rw_mutex::scoped_lock lock(*fRWMutex, true);
 
    TTreeCache::StopLearningPhase();
 
@@ -375,6 +380,7 @@ void TTreeCacheUnzip::StopLearningPhase()
 void TTreeCacheUnzip::UpdateBranches(TTree *tree)
 {
 //   R__LOCKGUARD(fMutexList);
+//   tbb::queuing_rw_mutex::scoped_lock lock(*fRWMutex, true);
 
    TTreeCache::UpdateBranches(tree);
 }
@@ -413,6 +419,7 @@ Bool_t TTreeCacheUnzip::IsParallelUnzip()
 Bool_t TTreeCacheUnzip::IsActiveThread()
 {
 //   R__LOCKGUARD(fMutexList);
+//   tbb::queuing_rw_mutex::scoped_lock lock(*fRWMutex, true);
 
    return fActiveThread;
 }
@@ -423,6 +430,7 @@ Bool_t TTreeCacheUnzip::IsActiveThread()
 Bool_t TTreeCacheUnzip::IsQueueEmpty()
 {
 //   R__LOCKGUARD(fMutexList);
+//   tbb::queuing_rw_mutex::scoped_lock lock(*fRWMutex, true);
 
    if ( fIsLearning )
       return kTRUE;
@@ -510,8 +518,8 @@ Int_t TTreeCacheUnzip::GetRecordHeader(char *buf, Int_t maxbytes, Int_t &nbytes,
 
 void TTreeCacheUnzip::ResetCache()
 {
-//   {
 //   R__LOCKGUARD(fMutexList);
+//   tbb::queuing_rw_mutex::scoped_lock lock(*fRWMutex, true);
 
    if(root) {
       printf("destroy dummy root\n");
@@ -572,7 +580,6 @@ void TTreeCacheUnzip::ResetCache()
    fLastReadPos = 0;
    fTotalUnzipBytes = 0;
    fBlocksToGo = fNseek;
-//   }
 
 //   SendUnzipStartSignal(kTRUE);
 
@@ -804,9 +811,7 @@ Int_t TTreeCacheUnzip::UnzipCacheTBB()
 
 Int_t TTreeCacheUnzip::GetUnzipBuffer(char **buf, Long64_t pos, Int_t len, Bool_t *free)
 {
-//   {
 //   R__LOCKGUARD(fMutexList);
-
    Int_t res = 0;
    Int_t loc = -1;
 
@@ -820,9 +825,11 @@ Int_t TTreeCacheUnzip::GetUnzipBuffer(char **buf, Long64_t pos, Int_t len, Bool_
    // better to be done in the main thread.
 
    // And now loc is the position of the chunk in the array of the sorted chunks
-   Int_t myCycleTBB = fCycle;
+   {
+      tbb::queuing_rw_mutex::scoped_lock lock (*fRWMutex, false);
+      Int_t myCycleTBB = fCycle;
 
-   if (fParallel && !fIsLearning) {
+      if (fParallel && !fIsLearning) {
 
 	   if(fNseekMax < fNseek){
 		   if (gDebug > 0)
@@ -950,11 +957,12 @@ Int_t TTreeCacheUnzip::GetUnzipBuffer(char **buf, Long64_t pos, Int_t len, Bool_
 		   fIsTransferred = kFALSE;
 	   }
 
-   } else {
-	   // We need to reset it for new transferences...
+      } else {
+  	   // We need to reset it for new transferences...
 	   //ResetCache();
 	   //TFileCacheRead::Prefetch(0,0);
-   }
+      }
+   } // end of lock scope
 
    if (len > fCompBufferSize) {
 	   delete [] fCompBuffer;
@@ -968,18 +976,22 @@ Int_t TTreeCacheUnzip::GetUnzipBuffer(char **buf, Long64_t pos, Int_t len, Bool_
 	   }
    }
 
-   res = 0;
-   if (!ReadBufferExt(fCompBuffer, pos, len, loc)) {
+   {
+      R__LOCKGUARD(fIOMutex);
+
+      res = 0;
+      if (!ReadBufferExt(fCompBuffer, pos, len, loc)) {
 	   //Info("GetUnzipBuffer", "++++++++++++++++++++ CacheMISS %d %d", loc, fNseek);
 	   fFile->Seek(pos);
 	   res = fFile->ReadBuffer(fCompBuffer, len);
-   }
+      }
 
-   if (res) res = -1;
+      if (res) res = -1;
+   } // end of lock scope
 
    if (!res) {
-	   res = UnzipBufferTBB(buf, fCompBuffer);
-	   *free = kTRUE;
+      res = UnzipBufferTBB(buf, fCompBuffer);
+      *free = kTRUE;
    }
 
    if (!fIsLearning) {
@@ -987,7 +999,6 @@ Int_t TTreeCacheUnzip::GetUnzipBuffer(char **buf, Long64_t pos, Int_t len, Bool_
    }
    
    return res;
-//   } // end of lock scope
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1005,7 +1016,7 @@ void TTreeCacheUnzip::SetUnzipRelBufferSize(Float_t relbufferSize)
 void TTreeCacheUnzip::SetUnzipBufferSize(Long64_t bufferSize)
 {
 //   R__LOCKGUARD(fMutexList);
-
+//   tbb::queuing_rw_mutex::scoped_lock lock(*fRWMutex, true);
    fUnzipBufferSize = bufferSize;
 }
 
