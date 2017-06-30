@@ -1,0 +1,4 @@
+Makefile
+rootqt5
+moc_rootwebview.cpp
+.qmake.stash
