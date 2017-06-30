@@ -63,31 +63,34 @@ namespace FitUtil {
   typedef  ROOT::Math::IParamMultiFunction IModelFunction;
   typedef  ROOT::Math::IParamMultiGradFunction IGradModelFunction;
 
-  template<class T>
+  template <class T>
+  using IGradModelFunctionTempl = ROOT::Math::IParamMultiGradFunctionTempl<T>;
+
+  template <class T>
   using IModelFunctionTempl = ROOT::Math::IParamMultiFunctionTempl<T>;
 
-   //internal class defining
-         template<class T>
-         class LikelihoodAux{
-          public:
+  // internal class defining
+  template <class T>
+  class LikelihoodAux {
+  public:
+     LikelihoodAux(T logv = {}, T w = {}, T w2 = {}) : logvalue(logv), weight(w), weight2(w2) {}
 
-          LikelihoodAux(T logv={}, T w={}, T w2={}): logvalue(logv), weight(w), weight2(w2){
-          }
+     LikelihoodAux operator+(const LikelihoodAux &l) const
+     {
+        return LikelihoodAux<T>(logvalue + l.logvalue, weight + l.weight, weight2 + l.weight2);
+     }
 
-           LikelihoodAux operator +( const LikelihoodAux & l) const{
-              return LikelihoodAux<T>(logvalue + l.logvalue, weight  + l.weight, weight2 + l.weight2);
-           }
+     LikelihoodAux &operator+=(const LikelihoodAux &l)
+     {
+        logvalue += l.logvalue;
+        weight += l.weight;
+        weight2 += l.weight2;
+        return *this;
+     }
 
-           LikelihoodAux &operator +=(const LikelihoodAux & l){
-              logvalue += l.logvalue;
-              weight  += l.weight;
-              weight2 += l.weight2;
-              return *this;
-           }
-
-            T logvalue;
-            T weight;
-            T weight2;
+     T logvalue;
+     T weight;
+     T weight2;
 
          };
 
@@ -274,7 +277,9 @@ namespace FitUtil {
        evaluate the Chi2 gradient given a model function and the data at the point x.
        return also nPoints as the effective number of used points in the Chi2 evaluation
    */
-   void EvaluateChi2Gradient(const IModelFunction & func, const BinData & data, const double * x, double * grad, unsigned int & nPoints);
+   void EvaluateChi2Gradient(const IModelFunction &func, const BinData &data, const double *x, double *grad,
+                             unsigned int &nPoints, const unsigned int &executionPolicy = ROOT::Fit::kSerial,
+                             unsigned nChunks = 0);
 
    /**
        evaluate the LogL given a model function and the data at the point x.
@@ -814,9 +819,11 @@ namespace FitUtil {
          return -1.;
       }
 
-      static void EvalChi2Gradient(const IModelFunctionTempl<T> &, const BinData &, const double *, double *, unsigned int)
+      static void
+      EvalChi2Gradient(const IModelFunctionTempl<T> &, const BinData &, const double *, double *, unsigned int &)
       {
-         Error("FitUtil::Evaluate<T>::EvalChi2Gradient", "The vectorized evaluation of the Chi2 with gradient is still not supported");
+         Error("FitUtil::Evaluate<T>::EvalChi2Gradient",
+               "The vectorized evaluation of the Chi2 with gradient is still not supported");
       }
 
       static double EvalChi2Residual(const IModelFunctionTempl<T> &, const BinData &, const double *, unsigned int, double *)
@@ -870,9 +877,11 @@ static void EvalPoissonLogLGradient(const IModelFunctionTempl<T> &, const BinDat
       {
          return FitUtil::EvaluateChi2Effective(func, data, p, nPoints);
       }
-      static void EvalChi2Gradient(const IModelFunctionTempl<double> &func, const BinData & data, const double * p, double * g, unsigned int &nPoints)
+      static void EvalChi2Gradient(const IModelFunctionTempl<double> &func, const BinData &data, const double *p,
+                                   double *g, unsigned int &nPoints,
+                                   const unsigned int &executionPolicy = ROOT::Fit::kSerial, unsigned nChunks = 0)
       {
-          FitUtil::EvaluateChi2Gradient(func, data, p, g, nPoints);
+         FitUtil::EvaluateChi2Gradient(func, data, p, g, nPoints, executionPolicy, nChunks);
       }
       static double EvalChi2Residual(const IModelFunctionTempl<double> &func, const BinData & data, const double * p, unsigned int i, double *g = 0)
       {
