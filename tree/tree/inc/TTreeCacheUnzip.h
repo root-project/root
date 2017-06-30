@@ -31,6 +31,7 @@
 
 #ifdef R__USE_IMT
 #include "tbb/task.h"
+#include "tbb/spin_rw_mutex.h"
 #include <vector>
 #endif
 
@@ -56,6 +57,7 @@ protected:
    friend class UnzipTask;
    friend class MappingTask;
    tbb::task *root;
+   tbb::spin_rw_mutex *fRWMutex;
 
    // Members for paral. managing
    TThread    *fUnzipThread[10];
