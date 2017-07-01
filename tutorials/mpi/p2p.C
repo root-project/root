@@ -1,15 +1,15 @@
-#include<Mpi.h>
+#include <Mpi.h>
 using namespace ROOT::Mpi;
 void p2p()
 {
-   TEnvironment env;          //environment to start communication system
+   TEnvironment env; // environment to start communication system
 
-   if (COMM_WORLD.GetSize() == 1) return; //need at least 2 process
+   if (COMM_WORLD.GetSize() == 1) return; // need at least 2 process
 
-   //data to send/recv
-   std::map<std::string, std::string> mymap; //std oebjct
-   TMatrixD mymat(2, 2);                    //ROOT object
-   Double_t a;                              //default datatype
+   // data to send/recv
+   std::map<std::string, std::string> mymap; // std oebjct
+   TMatrixD mymat(2, 2);                     // ROOT object
+   Double_t a;                               // default datatype
 
    if (COMM_WORLD.IsMainProcess()) {
       mymap["key"] = "hola";

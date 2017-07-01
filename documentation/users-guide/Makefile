@@ -6,7 +6,8 @@ MDFILES=ROOTUsersGuide.md Preface.md Introduction.md GettingStarted.md \
 	Trees.md MathLibraries.md LinearAlgebra.md AddingaClass.md \
 	CollectionClasses.md PhysicsVectors.md Geometry.md PythonRuby.md \
 	TutorialsandTests.md ExampleAnalysis.md Networking.md Threads.md \
-	PROOF.md WritingGUI.md ROOTandQt.md HTMLDoc.md InstallandBuild.md
+	PROOF.md WritingGUI.md ROOTandQt.md HTMLDoc.md InstallandBuild.md \
+	ROOTMpi.md
 
 HTMLFILES=$(addprefix $(OUTDIR)/,$(MDFILES:.md=.html))
 PDFFILES=$(addprefix $(OUTDIR)/,$(MDFILES:.md=.pdf))

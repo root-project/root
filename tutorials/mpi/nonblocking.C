@@ -1,4 +1,4 @@
-#include<Mpi.h>
+#include <Mpi.h>
 using namespace ROOT::Mpi;
 
 struct particle {
@@ -9,15 +9,14 @@ struct particle {
 
 void nonblocking()
 {
-   TEnvironment env;          //environment to start communication system
+   TEnvironment env; // environment to start communication system
 
-   if (COMM_WORLD.GetSize() == 1) return; //need at least 2 process
+   if (COMM_WORLD.GetSize() == 1) return; // need at least 2 process
 
-
-   //data to send/recv
-   std::map<std::string, std::string> mymap; //std oebjct
-   TMatrixD mymat(2, 2);                    //ROOT object
-   particle  p;                             //custom object
+   // data to send/recv
+   std::map<std::string, std::string> mymap; // std oebjct
+   TMatrixD mymat(2, 2);                     // ROOT object
+   particle p;                               // custom object
 
    if (COMM_WORLD.IsMainProcess()) {
       mymap["key"] = "hola";
@@ -43,7 +42,7 @@ void nonblocking()
       req.Wait();
 
    } else {
-      //you can Received the messages in other order(is nonblocking)
+      // you can Received the messages in other order(is nonblocking)
       auto req = COMM_WORLD.IRecv(mymap, 0, 1);
       req.Wait();
       std::cout << "Received map = " << mymap["key"] << std::endl;

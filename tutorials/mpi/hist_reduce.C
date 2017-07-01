@@ -1,23 +1,22 @@
-//Omar.Zapata@cern.ch http://oproject.org/ROOTMpi  2017
-//Example to generated random numbers to fill a TH1F histogram in every process
+// Omar.Zapata@cern.ch http://oproject.org/ROOTMpi  2017
+// Example to generated random numbers to fill a TH1F histogram in every process
 // and merging the result through a custom reduce operation
-//run it with: rootmpi -np 3 hist_reduce.C   where 3 is the number of processes
-#include<Mpi.h>
-#include<TH1F.h>
+// run it with: rootmpi -np 3 hist_reduce.C   where 3 is the number of processes
+#include <Mpi.h>
+#include <TH1F.h>
 
 using namespace ROOT::Mpi;
 
 TOp<TH1F> HSUM() // histogram sum(custom operation for reduce)
 {
-  // returning an  ROOT::Mpi::Op<TH1F>(arg) object where "arg" is a lambda
-  // function with histograms sum
-  return TOp<TH1F>([](const TH1F &a, const TH1F &b) {
-    TH1F c(a);
-    c.Add(&b);
-    return c;
-  });
+   // returning an  ROOT::Mpi::Op<TH1F>(arg) object where "arg" is a lambda
+   // function with histograms sum
+   return TOp<TH1F>([](const TH1F &a, const TH1F &b) {
+      TH1F c(a);
+      c.Add(&b);
+      return c;
+   });
 }
-
 
 void hist_reduce(Int_t points = 100000)
 {
@@ -26,7 +25,7 @@ void hist_reduce(Int_t points = 100000)
    auto root = 0;
    auto rank = COMM_WORLD.GetRank();
 
-   if (COMM_WORLD.GetSize() == 1) return; //need at least 2 process
+   if (COMM_WORLD.GetSize() == 1) return; // need at least 2 process
 
    auto form1 = new TFormula("form1", "abs(sin(x)/x)");
    auto sqroot = new TF1("sqroot", "x*gaus(0) + [3]*form1", 0, 10);
@@ -50,7 +49,4 @@ void hist_reduce(Int_t points = 100000)
 
    delete form1;
    delete sqroot;
-
 }
-
-

@@ -1,7 +1,7 @@
 #include "TMVA/Factory.h"
 #include "TMVA/DataLoader.h"
 #include "TMVA/Tools.h"
-#include<Mpi.h>
+#include <Mpi.h>
 
 using namespace ROOT::Mpi;
 
@@ -13,10 +13,8 @@ void classification()
 
    TEnvironment env;
 
-   
-   if(COMM_WORLD.GetSize()==1) return; //needed to run ROOT tutorials in tests
+   if (COMM_WORLD.GetSize() == 1) return; // needed to run ROOT tutorials in tests
 
-   
    auto rank = COMM_WORLD.GetRank();
    if (COMM_WORLD.GetSize() != 4) {
       Error("classification", "Please run wih 4 processors.");
@@ -32,45 +30,41 @@ void classification()
 
    if (COMM_WORLD.IsMainProcess()) {
 
-      if (gSystem->AccessPathName("./tmva_class_example.root"))    // file does not exist in local directory
+      if (gSystem->AccessPathName("./tmva_class_example.root")) // file does not exist in local directory
          gSystem->Exec("curl -O http://root.cern.ch/files/tmva_class_example.root");
 
       TFile *input = TFile::Open("./tmva_class_example.root");
 
-
-      TTree *signalTree     = (TTree *)input->Get("TreeS");
-      TTree *background     = (TTree *)input->Get("TreeB");
+      TTree *signalTree = (TTree *)input->Get("TreeS");
+      TTree *background = (TTree *)input->Get("TreeB");
 
       dataloader.AddVariable("myvar1 := var1+var2", 'F');
       dataloader.AddVariable("myvar2 := var1-var2", "Expression 2", "", 'F');
-      dataloader.AddVariable("var3",                "Variable 3", "units", 'F');
-      dataloader.AddVariable("var4",                "Variable 4", "units", 'F');
+      dataloader.AddVariable("var3", "Variable 3", "units", 'F');
+      dataloader.AddVariable("var4", "Variable 4", "units", 'F');
 
-
-      dataloader.AddSpectator("spec1 := var1*2",  "Spectator 1", "units", 'F');
-      dataloader.AddSpectator("spec2 := var1*3",  "Spectator 2", "units", 'F');
-
+      dataloader.AddSpectator("spec1 := var1*2", "Spectator 1", "units", 'F');
+      dataloader.AddSpectator("spec2 := var1*3", "Spectator 2", "units", 'F');
 
       // global event weights per tree (see below for setting event-wise weights)
-      Double_t signalWeight     = 1.0;
+      Double_t signalWeight = 1.0;
       Double_t backgroundWeight = 1.0;
 
       // You can add an arbitrary number of signal or background trees
-      dataloader.AddSignalTree(signalTree,     signalWeight);
+      dataloader.AddSignalTree(signalTree, signalWeight);
       dataloader.AddBackgroundTree(background, backgroundWeight);
 
       dataloader.SetBackgroundWeightExpression("weight");
 
-      dataloader.PrepareTrainingAndTestTree("", "",
-                                            "nTrain_Signal=4000:nTrain_Background=4000:SplitMode=Random:NormMode=NumEvents:!V");
-
+      dataloader.PrepareTrainingAndTestTree(
+         "", "", "nTrain_Signal=4000:nTrain_Background=4000:SplitMode=Random:NormMode=NumEvents:!V");
    }
 
    COMM_WORLD.Bcast(dataloader, COMM_WORLD.GetMainProcess());
 
    if (rank == 0) {
       factory.BookMethod(&dataloader, TMVA::Types::kMLP, "MLP",
-			 "H:!V:NeuronType=tanh:VarTransform=N:NCycles=600:HiddenLayers=N+5:TestRate=5:!UseRegulator");
+                         "H:!V:NeuronType=tanh:VarTransform=N:NCycles=600:HiddenLayers=N+5:TestRate=5:!UseRegulator");
    }
    if (rank == 1) {
       factory.BookMethod(&dataloader, TMVA::Types::kBDT, "BDT",
