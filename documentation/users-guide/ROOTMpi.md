@@ -4,8 +4,7 @@
 
 
 ## Description
-MPI is an standard of communication for HPC/Grid computing widely used in the scientific community. The idea is to do parallel computing with message passing in
-a standart way.
+MPI is an standard of communication for HPC/Grid computing widely used in the scientific community. The idea is to do parallel computing with message passing in a standart way.
 This standart has several implementations developed by the academia of computer companies like [OpenMPI](https://www.open-mpi.org/), [MPICH](https://www.mpich.org/), [IBM](https://www.ibm.com/developerworks/downloads/im/mpi/index.html), [Intel](https://software.intel.com/en-us/intel-mpi-library), [Microsft](https://msdn.microsoft.com/en-us/library/bb524831(v=vs.85).aspx) etc..
 It supports RMA (Remote Memory Access), shared memory,P2P(peer to perr) and collective communication and Checkpoint and Fault tolerance under develoment http://mpi-forum.org/mpi-40
 
@@ -68,8 +67,9 @@ Normally the mpi binaries are execute with the command mpirun or mpiexec, that l
 rootmpi(executable) is a command line tool that helps you run binary code, root macros or compiling source code to generate binary code.
 Internally to run a macro it launch mpirun with root interpreter, that allows to run the multiple processes in a distrubute system interpreting the code.
 
+
 <center>
-![Execution Diagram](pictures/rmpi2.png){:height="30%" width="90%"}
+![Execution Diagram](pictures/rmpi2.png)
 </center>
 
 <b>Usage for Macro:</b> rootmpi (mpirun options) (root/cling options) (macro file.C )
@@ -132,11 +132,22 @@ void hello()
 ```
 
 To execute it just use rootmpi command line tools
+the wn1 and wn2 are aliases for worker node.<br>
+-np number of processors <br>
+-H is a option to say which nodes <br>
+-b ROOT batch mode <br>
+-pernode one proccess per node <br>
+
 ``` {.sh}
-rootmpi -H wn0,wn1 -np 2 tutorials/mpi/hello.C
+rootmpi -np 2 -H wn6,wn7 -b -pernode hello.C
 ```
 the output mus be something like 
 ``` {.sh}
+Processing hello.C ...
+
+Processing hello.C ...
+Hello from process 0 of 2 in host wn6
+Hello from process 1 of 2 in host wn7
 ```
 
 
@@ -158,12 +169,185 @@ In the blocking communication the execution is "synchronous" and it stop while t
 
 #### Peer to Peer communication
 Peer to peer communication is the most basic communication operation,
+basically is send and receiv a message between two processes.
 
+<center>
+![Peer to Peer](pictures/rmpip2p.png)
+</center>
 
+<b>Example</b>
+``` {.cpp}
+using namespace ROOT::Mpi;
+void p2p()
+{
+   TEnvironment env; // environment to start communication system
+
+   if (COMM_WORLD.GetSize() != 2) return; // need 2 process
+
+   // data to send/recv
+   std::map<std::string, std::string> mymap; // std object
+   TMatrixD mymat(2, 2);                     // ROOT object
+   Double_t a;                               // default datatype
+
+   //sending messages in process 0
+   if (COMM_WORLD.GetRank()==0)
+   {
+      mymap["key"] = "hola";
+
+      mymat[0][0] = 0.1;
+      mymat[0][1] = 0.2;
+      mymat[1][0] = 0.3;
+      mymat[1][1] = 0.4;
+
+      a = 123.0;
+
+      std::cout << "Sending scalar = " << a << std::endl;
+      COMM_WORLD.Send(a, 1, 0);
+      std::cout << "Sending map = " << mymap["key"] << std::endl;
+      COMM_WORLD.Send(mymap, 1, 0);
+      std::cout << "Sending mat = ";
+      mymat.Print();
+      COMM_WORLD.Send(mymat, 1, 0);
+   }
+   //Receiving messages in process 1
+   if(COMM_WORLD.GetRank()==1){
+      COMM_WORLD.Recv(a, 0, 0);
+      std::cout << "Recieved scalar = " << a << std::endl;
+      COMM_WORLD.Recv(mymap, 0, 0);
+      std::cout << "Received map = " << mymap["key"] << std::endl;
+      COMM_WORLD.Recv(mymat, 0, 0);
+      std::cout << "Received mat = ";
+      mymat.Print();
+   }
+}
+```
+Execute with rootmpi command line tool
+``` {.sh}
+rootmpi  -np 2 p2p.C
+```
+The output is something like 
+``` {.sh}
+Processing p2p.C ...
+
+Processing p2p.C ...
+Sending scalar = 123
+Sending map = hola
+Recieved scalar = 123
+Sending mat = 
+2x2 matrix is as follows
+
+     |      0    |      1    |
+-------------------------------
+   0 |        0.1         0.2 
+   1 |        0.3         0.4 
+
+Received map = hola
+Received mat = 
+2x2 matrix is as follows
+
+     |      0    |      1    |
+-------------------------------
+   0 |        0.1         0.2 
+   1 |        0.3         0.4
+```
 
 #### Collective communication
+The collective operations basically is to send/receiv messages
+to multiple process at same time, using different schemas ilustrate below.
 
 #### Broadcast
+Broadcasts a message from the process with rank root to all processes of the group, itself included. It is called by all members of group using the same arguments for comm, root. On return, the contents of root's communication buffer has been copied to all processes.
+
+General, derived datatypes are allowed for datatype. The type signature of count, datatype on any process must be  equal  to  the  type  signature  of  count, datatype  at  the  root. This implies that the amount of data sent must be equal to the amount received, pairwise between each process and the root. ROOT::Mpi::Communicator::Bcast and all other data-movement collective routines make this restriction.
+Distinct type maps between sender and receiver are still allowed
+
+<center>
+![Broadcast](pictures/rmpibcast.png)
+</center>
+
+<b>Example</b>
+``` {.cpp}
+using namespace ROOT::Mpi;
+void bcast()
+{
+   TEnvironment env;
+
+   if (COMM_WORLD.GetSize() == 1) return; // need at least 2 process
+
+   // data to send/recv
+   TMatrixD mymat(2, 2); // ROOT object
+
+   auto rank = COMM_WORLD.GetRank();
+   auto root = COMM_WORLD.GetMainProcess();
+   if (COMM_WORLD.IsMainProcess()) {
+      mymat[0][0] = 0.1;
+      mymat[0][1] = 0.2;
+      mymat[1][0] = 0.3;
+      mymat[1][1] = 0.4;
+   }
+
+   COMM_WORLD.Bcast(mymat, root);
+   std::cout << "Rank = " << rank << std::endl;
+   mymat.Print();
+   std::cout.flush();
+}
+
+```
+Execute with rootmpi command line tool
+``` {.sh}
+rootmpi  -np 4 bcast.C
+```
+The output is something like 
+``` {.sh}
+Processing bcast.C ...
+
+Processing bcast.C ...
+
+Processing bcast.C ...
+
+Processing bcast.C ...
+Rank = 2
+
+2x2 matrix is as follows
+
+     |      0    |      1    |
+-------------------------------
+   0 |        0.1         0.2 
+   1 |        0.3         0.4 
+
+Rank = 1
+
+2x2 matrix is as follows
+
+     |      0    |      1    |
+-------------------------------
+   0 |        0.1         0.2 
+   1 |        0.3         0.4 
+
+Rank = 0
+
+2x2 matrix is as follows
+
+     |      0    |      1    |
+-------------------------------
+   0 |        0.1         0.2 
+   1 |        0.3         0.4 
+
+Rank = 3
+
+2x2 matrix is as follows
+
+     |      0    |      1    |
+-------------------------------
+   0 |        0.1         0.2 
+   1 |        0.3         0.4 
+```
+
 
 #### Gather
+
+
+## Advaced topics
+
+## Debugging and Profiling ROOT Mpi applications
 

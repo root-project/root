@@ -664,7 +664,15 @@ TRequest TCommunicator::IRecv(Type *vars, Int_t count, Int_t source, Int_t tag) 
 
 //______________________________________________________________________________
 /**
-*  Broadcasts a message from the process with rank root to all other processes of the group.
+*  Broadcasts a message from the process with rank root to all processes of the group, itself included. It is
+* called by all members of group using the same arguments for comm, root. On return, the contents of root's
+* communication buffer has been copied to all processes.
+*
+* General, derived datatypes are allowed for datatype. The type signature of count, datatype on any process must be
+* equal  to  the  type  signature  of  count, datatype  at  the  root. This implies that the amount of data sent must be
+* equal to the amount received, pairwise between each process and the root. ROOT::Mpi::Communicator::Bcast and all other
+* data-movement collective routines make this restriction.
+* Distinct type maps between sender and receiver are still allowed
 * \param var any selializable object reference to send/receive the message
 * \param root id of the main message where message was sent
 */
@@ -708,7 +716,15 @@ void TCommunicator::Bcast(Type *vars, Int_t count, Int_t root) const
 
 //______________________________________________________________________________
 /**
- *  Broadcasts a message from the process with rank root to all other processes of the group.
+ *  Broadcasts a message from the process with rank root to all processes of the group, itself included. It is
+ * called by all members of group using the same arguments for comm, root. On return, the contents of root's
+ * communication buffer has been copied to all processes.
+ *
+ * General, derived datatypes are allowed for datatype. The type signature of count, datatype on any process must be
+ * equal  to  the  type  signature  of  count, datatype  at  the  root. This implies that the amount of data sent must be
+ * equal to the amount received, pairwise between each process and the root. ROOT::Mpi::Communicator::Bcast and all other
+ * data-movement collective routines make this restriction.
+ * Distinct type maps between sender and receiver are still allowed
  * \param var any selializable object reference to send/receive the message
  * \param root id of the main message where message was sent
  * \return TGrequest obj

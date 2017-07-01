@@ -4,14 +4,15 @@ void p2p()
 {
    TEnvironment env; // environment to start communication system
 
-   if (COMM_WORLD.GetSize() == 1) return; // need at least 2 process
+   if (COMM_WORLD.GetSize() != 2) return; // need 2 process
 
    // data to send/recv
-   std::map<std::string, std::string> mymap; // std oebjct
+   std::map<std::string, std::string> mymap; // std object
    TMatrixD mymat(2, 2);                     // ROOT object
    Double_t a;                               // default datatype
 
-   if (COMM_WORLD.IsMainProcess()) {
+   // sending messages in process 0
+   if (COMM_WORLD.GetRank() == 0) {
       mymap["key"] = "hola";
 
       mymat[0][0] = 0.1;
@@ -28,7 +29,9 @@ void p2p()
       std::cout << "Sending mat = ";
       mymat.Print();
       COMM_WORLD.Send(mymat, 1, 0);
-   } else {
+   }
+   // Receiving messages in process 1
+   if (COMM_WORLD.GetRank() == 1) {
       COMM_WORLD.Recv(a, 0, 0);
       std::cout << "Recieved scalar = " << a << std::endl;
       COMM_WORLD.Recv(mymap, 0, 0);
