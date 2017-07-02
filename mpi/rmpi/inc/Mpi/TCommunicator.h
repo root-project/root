@@ -721,8 +721,10 @@ void TCommunicator::Bcast(Type *vars, Int_t count, Int_t root) const
  * communication buffer has been copied to all processes.
  *
  * General, derived datatypes are allowed for datatype. The type signature of count, datatype on any process must be
- * equal  to  the  type  signature  of  count, datatype  at  the  root. This implies that the amount of data sent must be
- * equal to the amount received, pairwise between each process and the root. ROOT::Mpi::Communicator::Bcast and all other
+ * equal  to  the  type  signature  of  count, datatype  at  the  root. This implies that the amount of data sent must
+ * be
+ * equal to the amount received, pairwise between each process and the root. ROOT::Mpi::Communicator::Bcast and all
+ * other
  * data-movement collective routines make this restriction.
  * Distinct type maps between sender and receiver are still allowed
  * \param var any selializable object reference to send/receive the message
@@ -774,7 +776,29 @@ TRequest TCommunicator::IBcast(Type *vars, Int_t count, Int_t root) const
 
 //______________________________________________________________________________
 /**
- *  Sends data from one task to all tasks in a group.
+ * Sends data from one task to all tasks in a group.
+ *
+ * This is the inverse operation to ROOT::Mpi::TCommunicator::Gather.
+ * An alternative description is that the root sends a message with ROOT::Mpi::TCommunicator::Send. This message is
+ * split into n equal segments, the ith segment is sent to the ith process in the group, and each process receives this
+ * message as above.
+ *
+ * The send buffer is ignored for all nonroot processes.
+ *
+ * The type signature associated with incount, sendtype at the root must be equal to the type signature associated with
+ * out_vars, recvtype  at  all  processes (however,  the  type  maps  may  be  different). This implies that the amount
+ * of data sent must be equal to the amount of data received, pairwise between each process and the root. Distinct type
+ * maps between sender and receiver are still allowed.
+ *
+ * All arguments to the function are significant on process root, while on other processes, only arguments out_vars,
+ * outcount, recvtype, root, comm are  significant. The arguments root and comm must have identical values on all
+ * processes.
+ *
+ * The specification of counts and types should not cause any location on the root to be read more than once.
+ *
+ * Rationale: Though not needed, the last restriction is imposed so as to achieve symmetry with
+ * ROOT::Mpi::TCommunicator::Gather, where the corresponding restriction (a multiple-write restriction) is necessary.
+ *
  * \param in_vars any selializable object vector reference to send the message
  * \param incount Number of elements in receive in \p in_vars
  * \param out_vars any selializable object vector reference to receive the message

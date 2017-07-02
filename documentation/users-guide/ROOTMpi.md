@@ -164,10 +164,11 @@ All the communication is made in the same context of communication using the
 the TIntraCommunicator object ROOT::Mpi::COMM_WORLD, this global object
 allows to use the multiple schemas of communication throw its methods.
 
-### Blocking communictaion
+## Blocking communictaion
+
 In the blocking communication the execution is "synchronous" and it stop while the message is received,if the tag id is wrong in the message the execution will be blocked forever.
 
-#### Peer to Peer communication
+### Peer to Peer communication
 Peer to peer communication is the most basic communication operation,
 basically is send and receiv a message between two processes.
 
@@ -251,11 +252,11 @@ Received mat =
    1 |        0.3         0.4
 ```
 
-#### Collective communication
+### Collective communication
 The collective operations basically is to send/receiv messages
 to multiple process at same time, using different schemas ilustrate below.
 
-#### Broadcast
+### Broadcast
 Broadcasts a message from the process with rank root to all processes of the group, itself included. It is called by all members of group using the same arguments for comm, root. On return, the contents of root's communication buffer has been copied to all processes.
 
 General, derived datatypes are allowed for datatype. The type signature of count, datatype on any process must be  equal  to  the  type  signature  of  count, datatype  at  the  root. This implies that the amount of data sent must be equal to the amount received, pairwise between each process and the root. ROOT::Mpi::Communicator::Bcast and all other data-movement collective routines make this restriction.
@@ -344,9 +345,207 @@ Rank = 3
 ```
 
 
-#### Gather
+### Gather
+Collect messages from a group of processes.
+Each process (root process included) sends the contents of its send buffer to the root process. The root process receives the messages and stores them in rank order. The outcome is as if each of the n processes in the group (including the root process) had executed a call to ROOT::Mpi:TCommunicator::Gather .
+
+<center>
+![Gather](pictures/rmpigather.png)
+</center>
+<b>Example</b>
+In this example we are sending two vector from each process 
+and we are receiving an array of vector(with 4 vectors for 2 processes) in root process,
+every vector has a values of the rank
+
+``` {.cpp}
+void gather()
+{
+   TEnvironment env;
+   if (COMM_WORLD.GetSize() == 1) return; //needed at least 2 process
+   auto rank = COMM_WORLD.GetRank();
+   auto size = COMM_WORLD.GetSize();
+
+   auto count=2;
+   auto root=COMM_WORLD.GetMainProcess();
+
+   //creating a vector to send and
+   //the array of vectors to receiv.
+   TVectorD send_vec[count];
+   TVectorD *recv_vec;
+   for (auto i = 0; i < count; i++) {
+      send_vec[i].ResizeTo(1);
+      send_vec[i][0] = rank;
+   }
+
+   if (rank == root) {
+      recv_vec = new TVectorD[size * count];
+   }
+
+   COMM_WORLD.Gather(send_vec, count, recv_vec, size * count, root); //testing custom object
 
 
+   if (rank == root) {
+      //just printing all infortaion
+      for (auto i = 0; i < size * count; i++) {
+         recv_vec[i].Print();
+      }
+
+      for (auto i = 0; i < COMM_WORLD.GetSize(); i++) {
+        
+         for (auto j = 0; j < count; j++) {
+            std::cout << "vec[" << i *count + j << "] = " << recv_vec[i * count + j][0] << " -- " << i << std::endl;
+         }
+      }
+      delete[] recv_vec;
+   }
+}
+```
+Execute with rootmpi command line tool
+``` {.sh}
+rootmpi  -np 2 gather.C
+```
+The output is something like 
+``` {.sh}
+Processing gather.C ...
+
+Processing gather.C ...
+
+Vector (1)  is as follows
+
+     |        1  |
+------------------
+   0 |0 
+
+
+Vector (1)  is as follows
+
+     |        1  |
+------------------
+   0 |0 
+
+
+Vector (1)  is as follows
+
+     |        1  |
+------------------
+   0 |1 
+
+
+Vector (1)  is as follows
+
+     |        1  |
+------------------
+   0 |1 
+
+vec[0] = 0 -- 0
+vec[1] = 0 -- 0
+vec[2] = 1 -- 1
+vec[3] = 1 -- 1
+```
+
+### Scatter
+Sends data from one task to all tasks in a group.
+
+This is the inverse operation to ROOT::Mpi::TCommunicator::Gather.
+An alternative description is that the root sends a message with ROOT::Mpi::TCommunicator::Send. This message is split into n equal segments, the ith segment is sent to the ith process in the group, and each process receives this message as above.
+
+The send buffer is ignored for all nonroot processes.
+
+The type signature associated with incount, sendtype at the root must be equal to the type signature associated with out_vars, recvtype  at  all  processes (however,  the  type  maps  may  be  different). This implies that the amount of data sent must be equal to the amount of data received, pairwise between each process and the root. Distinct type maps between sender and receiver are still allowed.
+
+All arguments to the function are significant on process root, while on other processes, only arguments out_vars, outcount, recvtype, root, comm are  significant. The arguments root and comm must have identical values on all processes.
+
+The specification of counts and types should not cause any location on the root to be read more than once.
+
+Rationale: Though not needed, the last restriction is imposed so as to achieve symmetry with ROOT::Mpi::TCommunicator::Gather, where the corresponding restriction (a multiple-write restriction) is necessary.
+
+<center>
+![Scatter](pictures/rmpiscatter.png)
+</center>
+
+<b>Example</b>
+In this example we are sending twi vector from each process 
+and we are receiving an array of vector in root process,
+every vector has a values of the rank
+
+``` {.cpp}
+using namespace ROOT::Mpi;
+
+void scatter()
+{
+   TEnvironment env;
+   env.SyncOutput();
+   if (COMM_WORLD.GetSize() == 1) return; //needed at least 2 process
+   auto rank = COMM_WORLD.GetRank();
+   auto size = COMM_WORLD.GetSize();
+   
+   auto count=2;
+   auto root=COMM_WORLD.GetMainProcess();
+
+   //creating a vector to send and
+   //the array of vectors to receiv.
+   TVectorD *send_vec;
+   if (root == rank) {
+      send_vec = new TVectorD[size * count];
+      for (auto i = 0; i < COMM_WORLD.GetSize() * count; i++) {
+         send_vec[i].ResizeTo(1);
+         send_vec[i][0] = i;
+      }
+   }
+   TVectorD recv_vec[count];
+
+   COMM_WORLD.Scatter(send_vec, size * count, recv_vec, count, root); //testing custom object
+
+   for (auto i = 0; i < count; i++) {
+      recv_vec[i].Print();
+      std::cout << recv_vec[i][0] << " -- " << (rank * count + i) << std::endl;
+      //assertions
+      assert(recv_vec[i][0] == (rank * count + i));
+   }
+
+   if (rank == root) delete[] send_vec;
+}
+```
+The output is something like 
+``` {.sh}
+Processing scatter.C ...
+
+Processing scatter.C ...
+-------  Rank 0 OutPut  -------
+
+Vector (1)  is as follows
+
+     |        1  |
+------------------
+   0 |0 
+
+0 -- 0
+
+Vector (1)  is as follows
+
+     |        1  |
+------------------
+   0 |1 
+
+1 -- 1
+-------  Rank 1 OutPut  -------
+
+Vector (1)  is as follows
+
+     |        1  |
+------------------
+   0 |2 
+
+2 -- 2
+
+Vector (1)  is as follows
+
+     |        1  |
+------------------
+   0 |3 
+
+3 -- 3
+```
 ## Advaced topics
 
 ## Debugging and Profiling ROOT Mpi applications
