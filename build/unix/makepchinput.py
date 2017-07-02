@@ -438,7 +438,7 @@ def removeUnwantedHeaders(allHeadersContent):
    """ remove unwanted headers, e.g. the ones used for dictionaries but not desirable in the pch
    """
    unwantedHeaders = []
-   deprecatedHeaders = ['TSelectorCint.h']
+   deprecatedHeaders = ['']
    unwantedHeaders.extend(deprecatedHeaders)
    for unwantedHeader in unwantedHeaders:
       allHeadersContent = allHeadersContent.replace('#include "%s"' %unwantedHeader,"")

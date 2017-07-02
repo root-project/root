@@ -143,9 +143,9 @@ done
 cat $cppflags.tmp | sort | uniq | grep -v $srcdir | grep -v `pwd` > $cppflags
 
 # Remove unwanted files
-sed -e "s/.*TSelectorCint.h.*//g" \
-    < $allheaders > $allheaders.tmp
-mv -f $allheaders.tmp $allheaders
+#sed -e "s/.*HEADER.h.*//g" \
+#    < $allheaders > $allheaders.tmp
+#mv -f $allheaders.tmp $allheaders
 
 echo
 echo Generating PCH for ${selmodules}
