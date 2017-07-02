@@ -292,9 +292,9 @@ void TLoopManager::InitAllNodes(TTreeReader *r, unsigned int slot)
 {
    // booked branches must be initialized first
    // because actions and filters might need to point to the values encapsulate
-   for (auto &bookedBranch : fBookedBranches) bookedBranch.second->Init(r, slot);
-   for (auto &ptr : fBookedActions) ptr->Init(r, slot);
-   for (auto &ptr : fBookedFilters) ptr->Init(r, slot);
+   for (auto &bookedBranch : fBookedBranches) bookedBranch.second->InitSlot(r, slot);
+   for (auto &ptr : fBookedActions) ptr->InitSlot(r, slot);
+   for (auto &ptr : fBookedFilters) ptr->InitSlot(r, slot);
 }
 
 /// Initialize all nodes of the functional graph before running the event loop

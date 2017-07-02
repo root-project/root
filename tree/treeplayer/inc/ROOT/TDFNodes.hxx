@@ -220,7 +220,7 @@ public:
    TActionBase(TLoopManager *implPtr, const ColumnNames_t &tmpBranches);
    virtual ~TActionBase() {}
    virtual void Run(unsigned int slot, Long64_t entry) = 0;
-   virtual void Init(TTreeReader *r, unsigned int slot) = 0;
+   virtual void InitSlot(TTreeReader *r, unsigned int slot) = 0;
    virtual void CreateSlots(unsigned int nSlots) = 0;
 };
 
@@ -244,10 +244,10 @@ public:
 
    void CreateSlots(unsigned int nSlots) final { fValues.resize(nSlots); }
 
-   void Init(TTreeReader *r, unsigned int slot) final
+   void InitSlot(TTreeReader *r, unsigned int slot) final
    {
       InitTDFValues(slot, fValues[slot], r, fBranches, fTmpBranches, fImplPtr->GetBookedBranches(), TypeInd_t());
-      fHelper.Init(r, slot);
+      fHelper.InitSlot(r, slot);
    }
 
    void Run(unsigned int slot, Long64_t entry) final
@@ -284,7 +284,7 @@ protected:
 public:
    TCustomColumnBase(TLoopManager *df, const ColumnNames_t &tmpBranches, std::string_view name);
    virtual ~TCustomColumnBase() {}
-   virtual void Init(TTreeReader *r, unsigned int slot) = 0;
+   virtual void InitSlot(TTreeReader *r, unsigned int slot) = 0;
    virtual void CreateSlots(unsigned int nSlots) = 0;
    virtual void *GetValuePtr(unsigned int slot) = 0;
    virtual const std::type_info &GetTypeId() const = 0;
@@ -324,7 +324,7 @@ public:
 
    TCustomColumn(const TCustomColumn &) = delete;
 
-   void Init(TTreeReader *r, unsigned int slot) final
+   void InitSlot(TTreeReader *r, unsigned int slot) final
    {
       TDFInternal::InitTDFValues(slot, fValues[slot], r, fBranches, fTmpBranches, fImplPtr->GetBookedBranches(),
                                  TypeInd_t());
@@ -403,7 +403,7 @@ protected:
 public:
    TFilterBase(TLoopManager *df, const ColumnNames_t &tmpBranches, std::string_view name);
    virtual ~TFilterBase() {}
-   virtual void Init(TTreeReader *r, unsigned int slot) = 0;
+   virtual void InitSlot(TTreeReader *r, unsigned int slot) = 0;
    virtual bool CheckFilters(unsigned int slot, Long64_t entry) = 0;
    virtual void Report() const = 0;
    virtual void PartialReport() const = 0;
@@ -474,7 +474,7 @@ public:
       (void)entry;
    }
 
-   void Init(TTreeReader *r, unsigned int slot) final
+   void InitSlot(TTreeReader *r, unsigned int slot) final
    {
       TDFInternal::InitTDFValues(slot, fValues[slot], r, fBranches, fTmpBranches, fImplPtr->GetBookedBranches(),
                                  TypeInd_t());
