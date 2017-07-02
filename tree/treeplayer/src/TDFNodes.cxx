@@ -223,6 +223,39 @@ void TLoopManager::RunAndCheckFilters(unsigned int slot, Long64_t entry)
    for (auto &namedFilterPtr : fBookedNamedFilters) namedFilterPtr->CheckFilters(slot, entry);
 }
 
+/// Build TTreeReaderValues for all nodes
+/// This method loops over all filters, actions and other booked objects and
+/// calls their `InitTDFValues` methods. It is called once per node per slot, before
+/// running the event loop. It also informs each node of the TTreeReader that
+/// a particular slot will be using.
+void TLoopManager::InitNodeSlots(TTreeReader *r, unsigned int slot)
+{
+   // booked branches must be initialized first
+   // because actions and filters might need to point to the values encapsulate
+   for (auto &bookedBranch : fBookedBranches) bookedBranch.second->InitSlot(r, slot);
+   for (auto &ptr : fBookedActions) ptr->InitSlot(r, slot);
+   for (auto &ptr : fBookedFilters) ptr->InitSlot(r, slot);
+}
+
+/// Initialize all nodes of the functional graph before running the event loop.
+/// This method is called once per event-loop and performs generic initialization
+/// operations that do not depend on the specific processing slot (i.e. operations
+/// that are common for all threads).
+void TLoopManager::InitNodes()
+{
+   CreateSlots(fNSlots);
+}
+
+/// This method loops over all filters, actions and other booked objects and calls their `CreateSlots` methods.
+/// It is called once per node before running the event loop. The main effect is to inform all nodes of the
+/// number of slots (i.e. workers) that will be used to perform the event loop.
+void TLoopManager::CreateSlots(unsigned int nSlots)
+{
+   for (auto &ptr : fBookedActions) ptr->CreateSlots(nSlots);
+   for (auto &ptr : fBookedFilters) ptr->CreateSlots(nSlots);
+   for (auto &bookedBranch : fBookedBranches) bookedBranch.second->CreateSlots(nSlots);
+}
+
 /// Perform clean-up operations. To be called at the end of each event loop.
 void TLoopManager::CleanUp()
 {
@@ -243,6 +276,7 @@ void TLoopManager::CleanUp()
    for (auto &pair : fBookedBranches) pair.second->ResetChildrenCount();
 }
 
+/// Jit all actions that required runtime column type inference, and clean the `fToJit` member variable.
 void TLoopManager::JitActions()
 {
    auto error = TInterpreter::EErrorCode::kNoError;
@@ -253,10 +287,6 @@ void TLoopManager::JitActions()
       throw std::runtime_error(exceptionText.c_str());
    }
    fToJit.clear();
-}
-
-void TLoopManager::InitNodes() {
-   CreateSlots(fNSlots);
 }
 
 /// Start the event loop with a different mechanism depending on IMT/no IMT, data source/no data source.
@@ -284,34 +314,6 @@ void TLoopManager::Run()
 #endif // R__USE_IMT
 
    CleanUp();
-}
-
-/// Build TTreeReaderValues for all nodes
-///
-/// This method loops over all filters, actions and other booked objects and
-/// calls their `BuildReaderValues` methods. It is called once per node per slot, before
-/// running the event loop. It also informs each node of the TTreeReader that
-/// a particular slot will be using.
-void TLoopManager::InitNodeSlots(TTreeReader *r, unsigned int slot)
-{
-   // booked branches must be initialized first
-   // because actions and filters might need to point to the values encapsulate
-   for (auto &bookedBranch : fBookedBranches) bookedBranch.second->InitSlot(r, slot);
-   for (auto &ptr : fBookedActions) ptr->InitSlot(r, slot);
-   for (auto &ptr : fBookedFilters) ptr->InitSlot(r, slot);
-}
-
-/// Initialize all nodes of the functional graph before running the event loop
-///
-/// This method loops over all filters, actions and other booked objects and
-/// calls their `CreateSlots` methods. It is called once per node before running the
-/// event loop. The main effect is to inform all nodes of the number of slots
-/// (i.e. workers) that will be used to perform the event loop.
-void TLoopManager::CreateSlots(unsigned int nSlots)
-{
-   for (auto &ptr : fBookedActions) ptr->CreateSlots(nSlots);
-   for (auto &ptr : fBookedFilters) ptr->CreateSlots(nSlots);
-   for (auto &bookedBranch : fBookedBranches) bookedBranch.second->CreateSlots(nSlots);
 }
 
 TLoopManager *TLoopManager::GetImplPtr()
