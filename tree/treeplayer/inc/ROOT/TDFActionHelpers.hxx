@@ -43,7 +43,7 @@ public:
    using BranchTypes_t = RemoveFirstParameter_t<typename CallableTraits<F>::arg_types>;
    ForeachSlotHelper(F &&f) : fCallable(f) {}
 
-   void Init(TTreeReader*, unsigned int) {}
+   void InitSlot(TTreeReader*, unsigned int) {}
 
    template <typename... Args>
    void Exec(unsigned int slot, Args &&... args)
@@ -63,7 +63,7 @@ class CountHelper {
 public:
    using BranchTypes_t = TypeList<>;
    CountHelper(const std::shared_ptr<unsigned int> &resultCount, unsigned int nSlots);
-   void Init(TTreeReader*, unsigned int) {}
+   void InitSlot(TTreeReader*, unsigned int) {}
    void Exec(unsigned int slot);
    void Finalize();
 };
@@ -86,7 +86,7 @@ class FillHelper {
 
 public:
    FillHelper(const std::shared_ptr<Hist_t> &h, unsigned int nSlots);
-   void Init(TTreeReader*, unsigned int) {}
+   void InitSlot(TTreeReader*, unsigned int) {}
    void Exec(unsigned int slot, double v);
    void Exec(unsigned int slot, double v, double w);
 
@@ -147,7 +147,7 @@ public:
       }
    }
 
-   void Init(TTreeReader*, unsigned int) {}
+   void InitSlot(TTreeReader*, unsigned int) {}
 
    void Exec(unsigned int slot, double x0) // 1D histos
    {
@@ -247,7 +247,7 @@ public:
       for (unsigned int i = 1; i < nSlots; ++i) fColls.emplace_back(std::make_shared<COLL>());
    }
 
-   void Init(TTreeReader*, unsigned int) {}
+   void InitSlot(TTreeReader*, unsigned int) {}
 
    void Exec(unsigned int slot, T v)
    {
@@ -284,7 +284,7 @@ public:
       }
    }
 
-   void Init(TTreeReader*, unsigned int) {}
+   void InitSlot(TTreeReader*, unsigned int) {}
 
    void Exec(unsigned int slot, T v)
    {
@@ -317,7 +317,7 @@ public:
    {
    }
 
-   void Init(TTreeReader*, unsigned int) {}
+   void InitSlot(TTreeReader*, unsigned int) {}
 
    void Exec(unsigned int slot, const T &value) { fReduceObjs[slot] = fReduceFun(fReduceObjs[slot], value); }
 
@@ -334,7 +334,7 @@ class MinHelper {
 public:
    MinHelper(const std::shared_ptr<double> &minVPtr, unsigned int nSlots);
 
-   void Init(TTreeReader*, unsigned int) {}
+   void InitSlot(TTreeReader*, unsigned int) {}
 
    void Exec(unsigned int slot, double v);
 
@@ -359,7 +359,7 @@ class MaxHelper {
 
 public:
    MaxHelper(const std::shared_ptr<double> &maxVPtr, unsigned int nSlots);
-   void Init(TTreeReader*, unsigned int) {}
+   void InitSlot(TTreeReader*, unsigned int) {}
    void Exec(unsigned int slot, double v);
 
    template <typename T, typename std::enable_if<IsContainer<T>::value, int>::type = 0>
@@ -384,7 +384,7 @@ class MeanHelper {
 
 public:
    MeanHelper(const std::shared_ptr<double> &meanVPtr, unsigned int nSlots);
-   void Init(TTreeReader*, unsigned int) {}
+   void InitSlot(TTreeReader*, unsigned int) {}
    void Exec(unsigned int slot, double v);
 
    template <typename T, typename std::enable_if<IsContainer<T>::value, int>::type = 0>
@@ -428,7 +428,7 @@ public:
    SnapshotHelper(SnapshotHelper &&) = default;
    ~SnapshotHelper() = default;
 
-   void Init(TTreeReader *r, unsigned int /* slot */)
+   void InitSlot(TTreeReader *r, unsigned int /* slot */)
    {
       if (!r) // empty source, nothing to do
          return;
@@ -483,7 +483,7 @@ public:
    SnapshotHelperMT(SnapshotHelperMT &&) = default;
    ~SnapshotHelperMT() = default;
 
-   void Init(TTreeReader *r, unsigned int slot)
+   void InitSlot(TTreeReader *r, unsigned int slot)
    {
       ::TDirectory::TContext c; // do not let tasks change the thread-local gDirectory
       if (!fOutputTrees[slot]) {
