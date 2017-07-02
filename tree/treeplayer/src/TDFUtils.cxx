@@ -29,11 +29,11 @@ namespace TDF {
 /// column created by Define.
 std::string ColumnName2ColumnTypeName(const std::string &colName, TTree *tree, TCustomColumnBase *tmpBranch)
 {
-   if (!tree and !tmpBranch) {
-      throw std::runtime_error("No tree and no tmp branch!");
-   }
    TBranch* branch = nullptr;
    if (tree) branch = tree->GetBranch(colName.c_str());
+   if (!branch and !tmpBranch) {
+      throw std::runtime_error("Column \"" + colName + "\" is not in a file and has not been defined.");
+   }
    if (branch) {
       // this must be a real TTree branch
       static const TClassRef tbranchelRef("TBranchElement");
