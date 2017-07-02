@@ -255,13 +255,17 @@ void TLoopManager::JitActions()
    fToJit.clear();
 }
 
+void TLoopManager::InitNodes() {
+   CreateSlots(fNSlots);
+}
+
 /// Start the event loop with a different mechanism depending on IMT/no IMT, data source/no data source.
 /// Also perform a few setup and clean-up operations (CreateSlots before running, clear booked actions after, etc.).
 void TLoopManager::Run()
 {
    if (!fToJit.empty()) JitActions();
 
-   CreateSlots(fNSlots);
+   InitNodes();
 
 #ifdef R__USE_IMT
    if (ROOT::IsImplicitMTEnabled()) {
