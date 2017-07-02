@@ -27,13 +27,14 @@ ROOT_EXECUTABLE(rootcling src/LinkdefReader.cxx src/DictSelectionReader.cxx
                           $<TARGET_OBJECTS:Cont>
                           $<TARGET_OBJECTS:Lzma>
                           $<TARGET_OBJECTS:Zip>
+                          $<TARGET_OBJECTS:Lz4>
                           $<TARGET_OBJECTS:Meta>
                           $<TARGET_OBJECTS:TextInput>
                           ${macosx_objects}
                           ${unix_objects}
                           ${winnt_objects}
                           LIBRARIES ${PCRE_LIBRARIES} ${LZMA_LIBRARIES} ${ZLIB_LIBRARIES}
-                                    ${CLING_LIBRARIES} ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT}
+                                    ${CLING_LIBRARIES} ${LZ4_LIBRARIES} ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT}
                                     ${corelinklibs})
 
 # The dependency on Cling was added to prevent Cling (libCling) and
