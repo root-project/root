@@ -5,7 +5,6 @@
 add_subdirectory(rint)
 add_subdirectory(thread)
 add_subdirectory(multiproc)
-add_subdirectory(lz4)
 if(NOT WIN32)
   add_subdirectory(newdelete)
 endif()
@@ -32,6 +31,7 @@ if(cocoa)
 endif()
 add_subdirectory(zip)
 add_subdirectory(lzma)
+add_subdirectory(lz4)
 add_subdirectory(base)
 
 set(objectlibs $<TARGET_OBJECTS:Base>
