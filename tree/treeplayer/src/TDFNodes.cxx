@@ -243,11 +243,8 @@ void TLoopManager::CleanUp()
    for (auto &pair : fBookedBranches) pair.second->ResetChildrenCount();
 }
 
-/// Start the event loop with a different mechanism depending on IMT/no IMT, data source/no data source.
-/// Also perform a few setup and clean-up operations (CreateSlots before running, clear booked actions after, etc.).
-void TLoopManager::Run()
+void TLoopManager::JitActions()
 {
-   // jit-compile required actions
    auto error = TInterpreter::EErrorCode::kNoError;
    gInterpreter->ProcessLine(fToJit.c_str(), &error);
    if (error) {
@@ -256,6 +253,13 @@ void TLoopManager::Run()
       throw std::runtime_error(exceptionText.c_str());
    }
    fToJit.clear();
+}
+
+/// Start the event loop with a different mechanism depending on IMT/no IMT, data source/no data source.
+/// Also perform a few setup and clean-up operations (CreateSlots before running, clear booked actions after, etc.).
+void TLoopManager::Run()
+{
+   if (!fToJit.empty()) JitActions();
 
    CreateSlots(fNSlots);
 

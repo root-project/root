@@ -77,6 +77,7 @@ class TLoopManager : public std::enable_shared_from_this<TLoopManager> {
    void InitAllNodes(TTreeReader *r, unsigned int slot);
    void CreateSlots(unsigned int nSlots);
    void CleanUp();
+   void JitActions();
 
 public:
    TLoopManager(TTree *tree, const ColumnNames_t &defaultBranches);
