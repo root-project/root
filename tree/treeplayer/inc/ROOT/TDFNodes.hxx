@@ -22,6 +22,7 @@
 #include <numeric> // std::iota for TSlotStack
 #include <string>
 #include <tuple>
+#include <cassert>
 
 namespace ROOT {
 
@@ -79,6 +80,7 @@ class TLoopManager : public std::enable_shared_from_this<TLoopManager> {
    void CreateSlots(unsigned int nSlots);
    void CleanUp();
    void JitActions();
+   void EvalChildrenCounts();
 
 public:
    TLoopManager(TTree *tree, const ColumnNames_t &defaultBranches);
@@ -223,6 +225,7 @@ public:
    virtual void Run(unsigned int slot, Long64_t entry) = 0;
    virtual void InitSlot(TTreeReader *r, unsigned int slot) = 0;
    virtual void CreateSlots(unsigned int nSlots) = 0;
+   virtual void TriggerChildrenCount() = 0;
 };
 
 template <typename Helper, typename PrevDataFrame, typename BranchTypes_t = typename Helper::BranchTypes_t>
@@ -238,7 +241,6 @@ public:
    TAction(Helper &&h, const ColumnNames_t &bl, PrevDataFrame &pd)
       : TActionBase(pd.GetImplPtr(), pd.GetTmpBranches()), fHelper(std::move(h)), fBranches(bl), fPrevData(pd)
    {
-      fPrevData.IncrChildrenCount();
    }
 
    TAction(const TAction &) = delete;
@@ -263,6 +265,8 @@ public:
       (void)entry; // avoid bogus 'unused parameter' warning in gcc4.9
       fHelper.Exec(slot, std::get<S>(fValues[slot]).Get(entry)...);
    }
+
+   void TriggerChildrenCount() final { fPrevData.IncrChildrenCount(); }
 
    ~TAction() { fHelper.Finalize(); }
 };
@@ -416,6 +420,7 @@ public:
    virtual void IncrChildrenCount() = 0;
    virtual void StopProcessing() = 0;
    void ResetChildrenCount() { fNChildren = 0; fNStopsReceived = 0; }
+   virtual void TriggerChildrenCount() = 0;
 };
 
 template <typename FilterF, typename PrevDataFrame>
@@ -499,8 +504,14 @@ public:
    void IncrChildrenCount()
    {
       ++fNChildren;
-      // propagate "children activation" upstream
-      if (fNChildren == 1) fPrevData.IncrChildrenCount();
+      // propagate "children activation" upstream. named filters do the propagation via `TriggerChildrenCount`.
+      if (fNChildren == 1 && fName.empty()) fPrevData.IncrChildrenCount();
+   }
+
+   void TriggerChildrenCount() final
+   {
+      assert(!fName.empty()); // this method is to only be called on named filters
+      fPrevData.IncrChildrenCount();
    }
 };
 

@@ -244,6 +244,7 @@ void TLoopManager::InitNodeSlots(TTreeReader *r, unsigned int slot)
 void TLoopManager::InitNodes()
 {
    CreateSlots(fNSlots);
+   EvalChildrenCounts();
 }
 
 /// This method loops over all filters, actions and other booked objects and calls their `CreateSlots` methods.
@@ -287,6 +288,18 @@ void TLoopManager::JitActions()
       throw std::runtime_error(exceptionText.c_str());
    }
    fToJit.clear();
+}
+
+/// Trigger counting of number of children nodes for each node of the functional graph.
+/// This is done once before starting the event loop. Each action sends an `increase children count` signal
+/// upstream, which is propagated until TLoopManager. Each time a node receives the signal, in increments its
+/// children counter. Each node only propagates the signal once, even if it receives it multiple times.
+/// Named filters also send an `increase children count` signal, just like actions, as they always execute during
+/// the event loop so the graph branch they belong to must count as active even if it does not end in an action.
+void TLoopManager::EvalChildrenCounts()
+{
+   for (auto &actionPtr : fBookedActions) actionPtr->TriggerChildrenCount();
+   for (auto &namedFilterPtr : fBookedNamedFilters) namedFilterPtr->TriggerChildrenCount();
 }
 
 /// Start the event loop with a different mechanism depending on IMT/no IMT, data source/no data source.
