@@ -159,7 +159,7 @@ void TLoopManager::RunEmptySourceMT()
    // Each task will generate a subrange of entries
    auto genFunction = [this, &slotStack](const std::pair<ULong64_t, ULong64_t> &range) {
       auto slot = slotStack.Pop();
-      InitAllNodes(nullptr, slot);
+      InitNodeSlots(nullptr, slot);
       for (auto currEntry = range.first; currEntry < range.second; ++currEntry) {
          RunAndCheckFilters(slot, currEntry);
       }
@@ -175,7 +175,7 @@ void TLoopManager::RunEmptySourceMT()
 /// Run event loop with no source files, in sequence.
 void TLoopManager::RunEmptySource()
 {
-   InitAllNodes(nullptr, 0);
+   InitNodeSlots(nullptr, 0);
    for (ULong64_t currEntry = 0; currEntry < fNEmptyEntries && fNStopsReceived < fNChildren; ++currEntry) {
       RunAndCheckFilters(0, currEntry);
    }
@@ -192,7 +192,7 @@ void TLoopManager::RunTreeProcessorMT()
 
    tp->Process([this, &slotStack](TTreeReader &r) -> void {
       auto slot = slotStack.Pop();
-      InitAllNodes(&r, slot);
+      InitNodeSlots(&r, slot);
       // recursive call to check filters and conditionally execute actions
       while (r.Next()) {
          RunAndCheckFilters(slot, r.GetCurrentEntry());
@@ -206,7 +206,7 @@ void TLoopManager::RunTreeProcessorMT()
 void TLoopManager::RunTreeReader()
 {
    TTreeReader r(fTree.get());
-   InitAllNodes(&r, 0);
+   InitNodeSlots(&r, 0);
 
    // recursive call to check filters and conditionally execute actions
    // in the non-MT case processing can be stopped early by ranges, hence the check on fNStopsReceived
@@ -288,7 +288,7 @@ void TLoopManager::Run()
 /// calls their `BuildReaderValues` methods. It is called once per node per slot, before
 /// running the event loop. It also informs each node of the TTreeReader that
 /// a particular slot will be using.
-void TLoopManager::InitAllNodes(TTreeReader *r, unsigned int slot)
+void TLoopManager::InitNodeSlots(TTreeReader *r, unsigned int slot)
 {
    // booked branches must be initialized first
    // because actions and filters might need to point to the values encapsulate
