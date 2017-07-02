@@ -9,7 +9,7 @@ namespace ROOT {
 namespace Mpi {
 /**
  * \class TStatus
- * Class to handle status in the ROOTMpi calls.
+ * Class to handle status in the ROOT Mpi calls.
  * \ingroup Mpi
  */
 

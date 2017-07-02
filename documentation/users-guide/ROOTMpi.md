@@ -43,6 +43,11 @@ TInterCommunicator|Class to perform communication between  different contexts.  
 TReuqest, TPrequest and TGrequest|Classes to handle non-blocking communication.|<span style="color:green">**DONE**</span>
 TEnvironment | Class initialize/finalize communication system.                                                                                     |<span style="color:green">**DONE**</span>
 TMpiMessage and TMpiMessageInfo|Classes for serialization in the communication                                                                     |<span style="color:green">**DONE**</span>
+TStatus|Class to handle status in the ROOT Mpi calls.|<span style="color:green">**DONE**</span>
+TMpiTimer| Class to measure times in the mpi environment.|<span style="color:green">**DONE**</span>
+TGroup|Class manipulate mpi groups, with this class you can perform communication in group of processes.|<span style="color:green">**DONE**</span>
+TPort|class to handle port information to establishes communication with a client.|<span style="color:green">**DONE**</span>
+TInfo|Many of the routines in MPI take an argument info. info is an opaque object with a handle of type MPI_Info in C and ROOT::Mpi::TInfo in C++. It stores an unordered set of ( key, value) pairs (both key and value are strings).With this class you can to manipulte MPI_Info object with  facilities in C++,that allow to use it like a map with overloaded  operators and template methods.|<span style="color:green">**DONE**</span>
 Error Handling                   | MPI errors are very hard to understant also for MPI experts, with the class TErrorHandler we improve the error handling with more beautiful and informative messages .|<span style="color:green">**DONE**</span>
 TMpiFile and TMpiFileMerger| Classes manage distribute files.        <span style="color:blue"> **(SPECIAL CASE)**</span> see important notes below.|<span style="color:green">**DONE**</span>
 TCartCommunicator|Cartesian Communicator (map processes in a mesh)                                                                                 |<span style="color:red">**TODO**</span>
@@ -506,6 +511,10 @@ void scatter()
    if (rank == root) delete[] send_vec;
 }
 ```
+Execute with rootmpi command line tool
+``` {.sh}
+rootmpi  -np 2 scatter.C
+```
 The output is something like 
 ``` {.sh}
 Processing scatter.C ...
@@ -546,7 +555,185 @@ Vector (1)  is as follows
 
 3 -- 3
 ```
-## Advaced topics
+### Reduce
+perform a global reduce operation (such as sum, max, logical AND, etc.) across all the members of a group. The reduction operation can be either one of a predefined  list  of  operations,  or  a  userdefined  operation.  The global reduction functions come in several flavors: a reduce that returns the result of the reduction at one node and all-reduce that returns this result at all nodes.
+
+<center>
+![Reduce](pictures/rmpireduce.png)
+</center>
+
+<b>Example</b>
+Example to generated random numbers to fill a TH1F histogram in every process and merging the result through a custom reduce operation.
+In this example we are creating our custom opration with sum the histogram
+called HSUM.
+Every process is creating 100000 random number into the histogram
+and mergin it the resuls is 100000*n where n is the number of processes(in this example 4).
+
+``` {.cpp}
+using namespace ROOT::Mpi;
+
+TOp<TH1F> HSUM() // histogram sum(custom operation for reduce)
+{
+   // returning an  ROOT::Mpi::Op<TH1F>(arg) object where "arg" is a lambda
+   // function with histograms sum
+   return TOp<TH1F>([](const TH1F &a, const TH1F &b) {
+      TH1F c(a);
+      c.Add(&b);
+      return c;
+   });
+}
+
+void hist_reduce(Int_t points = 100000)
+{
+   TEnvironment env;
+
+   auto root = 0;
+   auto rank = COMM_WORLD.GetRank();
+
+   if (COMM_WORLD.GetSize() == 1) return; // need at least 2 process
+
+   auto form1 = new TFormula("form1", "abs(sin(x)/x)");
+   auto sqroot = new TF1("sqroot", "x*gaus(0) + [3]*form1", 0, 10);
+   sqroot->SetParameters(10, 4, 1, 20);
+
+   TH1F h1f("h1f", "Test random numbers", 200, 0, 10);
+   h1f.SetFillColor(rank);
+   h1f.FillRandom("sqroot", points);
+
+   TH1F result;
+
+   COMM_WORLD.Reduce(h1f, result, HSUM, root);
+
+   if (rank == root) {
+      TCanvas *c1 = new TCanvas("c1", "The FillRandom example", 200, 10, 700, 900);
+      c1->SetFillColor(18);
+      result.Draw();
+      c1->SaveAs("hist.png");
+      delete c1;
+   }
+
+   delete form1;
+   delete sqroot;
+}
+```
+Execute with rootmpi command line tool
+``` {.sh}
+rootmpi  -np 4 hist_reduce.C
+```
+The output is something like 
+``` {.sh}
+Processing hist_reduce.C ...
+
+Processing hist_reduce.C ...
+
+Processing hist_reduce.C ...
+
+Processing hist_reduce.C ...
+Info in <TCanvas::Print>: file hist.png has been created
+```
+rmpihistreduce.png
+
+<center>
+![Histogram reduce](pictures/rmpihistreduce.png)
+</center>
 
 ## Debugging and Profiling ROOT Mpi applications
+
+To debug parallel applications is a hard work, to help in this task,
+rootmpi commandline tool will have a set of extra tools that can help in runtime to do debugging or profiling  of your application.
+At the moment it have valgrind integration that help to check the 
+application in every process launched.
+
+<center>
+![rootmpi valgrind](pictures/rmpivalgrind.png)
+</center>
+
+In ROOT Mpi, when you run an application every rank of process has a process id (PID) from the operating system, the a valgrind output will be a file for every process.
+
+<b>Example</b>
+
+In this example we will run the initial hello world code.
+
+``` {.sh}
+rootmpi  -np 2 -valgrind hello.C
+```
+the output mus be something like 
+``` {.sh}
+Processing hello.C ...
+
+Processing hello.C ...
+Hello from process 0 of 2 in host tuxito
+Hello from process 1 of 2 in host tuxito
+
+Valgrind files  report-hello.C-pid.memcheck must be generated.
+```
+
+Two files (nie for each process is created with the name report-hello.C-pid.memcheck) whehere pid is the PID is the process in your OS.
+The memcheck looks like
+
+<b>process 1</b>
+``` {.sh}
+==21192== Memcheck, a memory error detector
+==21192== Copyright (C) 2002-2015, and GNU GPL'd, by Julian Seward et al.
+==21192== Using Valgrind-3.12.0.SVN and LibVEX; rerun with -h for copyright info
+==21192== Command: /home/ozapatam/Projects/root/compile/bin/root -l -x -q hello.C\
+...
+...
+...
+==21192==     in use at exit: 46 bytes in 1 blocks
+==21192==   total heap usage: 4 allocs, 3 frees, 72,842 bytes allocated
+==21192==
+==21192== Searching for pointers to 1 not-freed blocks
+==21192== Checked 285,112 bytes
+==21192==
+==21192== 46 bytes in 1 blocks are still reachable in loss record 1 of 1
+==21192==    at 0x4C2C93F: operator new[](unsigned long) (vg_replace_malloc.c:423)
+==21192==    by 0x10B97F: SetRootSys (rootx.cxx:259)
+==21192==    by 0x10B97F: main (rootx.cxx:467)
+==21192==
+==21192== LEAK SUMMARY:
+==21192==    definitely lost: 0 bytes in 0 blocks
+==21192==    indirectly lost: 0 bytes in 0 blocks
+==21192==      possibly lost: 0 bytes in 0 blocks
+==21192==    still reachable: 46 bytes in 1 blocks
+==21192==         suppressed: 0 bytes in 0 blocks
+==21192==
+==21192== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+==21192== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+
+```
+<b>process 1</b>
+``` {.sh}
+==21193== Memcheck, a memory error detector
+==21193== Copyright (C) 2002-2015, and GNU GPL'd, by Julian Seward et al.
+==21193== Using Valgrind-3.12.0.SVN and LibVEX; rerun with -h for copyright info
+==21193== Command: /home/ozapatam/Projects/root/compile/bin/root -l -x -q hello.C\
+...
+...
+...
+==21193==     in use at exit: 46 bytes in 1 blocks
+==21193==   total heap usage: 4 allocs, 3 frees, 72,842 bytes allocated
+==21193==
+==21193== Searching for pointers to 1 not-freed blocks
+==21193== Checked 285,112 bytes
+==21193==
+==21193== 46 bytes in 1 blocks are still reachable in loss record 1 of 1
+==21193==    at 0x4C2C93F: operator new[](unsigned long) (vg_replace_malloc.c:423)
+==21193==    by 0x10B97F: SetRootSys (rootx.cxx:259)
+==21193==    by 0x10B97F: main (rootx.cxx:467)
+==21193==
+==21193== LEAK SUMMARY:
+==21193==    definitely lost: 0 bytes in 0 blocks
+==21193==    indirectly lost: 0 bytes in 0 blocks
+==21193==      possibly lost: 0 bytes in 0 blocks
+==21193==    still reachable: 46 bytes in 1 blocks
+==21193==         suppressed: 0 bytes in 0 blocks
+==21193==
+==21193== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+==21193== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+```
+In our case we dont have memory errors.
+
+
+
 
