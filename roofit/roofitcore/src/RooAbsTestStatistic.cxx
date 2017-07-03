@@ -720,10 +720,10 @@ void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
       // and omitting them reduces model complexity and associated handling/cloning times
       if (_splitRange && rangeName) {
 	_gofArray[n] = create(type->GetName(),type->GetName(),(binnedPdf?*binnedPdf:*pdf),*dset,*projDeps,
-			      Form("%s_%s",rangeName,type->GetName()),addCoefRangeName,_nCPU*(_mpinterl?-1:1),_mpinterl,_verbose,_splitRange,binnedL);
+			      Form("%s_%s",rangeName,type->GetName()),addCoefRangeName,_nCPU*(_mpinterl?-1:1),_mpinterl,_CPUAffinity,_verbose,_splitRange,binnedL);
       } else {
 	_gofArray[n] = create(type->GetName(),type->GetName(),(binnedPdf?*binnedPdf:*pdf),*dset,*projDeps,
-			      rangeName,addCoefRangeName,_nCPU,_mpinterl,_verbose,_splitRange,binnedL);
+			      rangeName,addCoefRangeName,_nCPU,_mpinterl,_CPUAffinity,_verbose,_splitRange,binnedL);
       }
       _gofArray[n]->setSimCount(_nGof);
       // *** END HERE
