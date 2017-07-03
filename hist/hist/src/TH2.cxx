@@ -31,15 +31,15 @@ ClassImp(TH2);
 /** \addtogroup Hist
 @{
 \class TH2C
-\brief tomato 2-D histogram with a byte per channel (see TH1 documentation)
+\brief 2-D histogram with a byte per channel (see TH1 documentation)
 \class TH2S
-\brief tomato 2-D histogram with a short per channel (see TH1 documentation)
+\brief 2-D histogram with a short per channel (see TH1 documentation)
 \class TH2I
-\brief tomato 2-D histogram with an int per channel (see TH1 documentation)}
+\brief 2-D histogram with an int per channel (see TH1 documentation)}
 \class TH2F
-\brief tomato 2-D histogram with a float per channel (see TH1 documentation)}
+\brief 2-D histogram with a float per channel (see TH1 documentation)}
 \class TH2D
-\brief tomato 2-D histogram with a double per channel (see TH1 documentation)}
+\brief 2-D histogram with a double per channel (see TH1 documentation)}
 @}
 */
 
