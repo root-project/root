@@ -280,6 +280,18 @@ int main() {
    std::cout << "h13d Histo entries: " << h13d->GetEntries() << std::endl;
    std::cout << "h23d Histo entries: " << h23d->GetEntries() << std::endl;
    std::cout << "h33d Histo entries: " << h33d->GetEntries() << " sum of weights: " << h33d->GetSumOfWeights() << std::endl;
+
+   // TEST 16: Take a collection of collections
+   ROOT::Experimental::TDataFrame d15(1);
+   auto vb = d15.Define("v", [](){std::vector<int> v {1,2,3}; return v;}).Take<std::vector<int>>("v");
+   int nentries = 0;
+   for (auto&& el : vb) {
+      std::cout << "Entry " << nentries++ << std::endl;
+      for (auto&& i: el) {
+         std::cout << i << std::endl;
+      }
+   }
+
    return 0;
 }
 
