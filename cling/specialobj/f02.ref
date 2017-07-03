@@ -3,3 +3,7 @@ Processing runf02.C...
 input_line_FILTERED:2:3: error: use of undeclared identifier 'UNKNOWN'
  (UNKNOWN(42))
   ^
+input_line_FILTERED:2:3: error: use of undeclared identifier 'ThisReallyDoesNotExist'
+ (ThisReallyDoesNotExist[42])
+  ^
+(int) 0
