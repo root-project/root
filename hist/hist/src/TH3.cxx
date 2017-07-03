@@ -29,15 +29,15 @@ ClassImp(TH3);
 /** \addtogroup Hist
 @{
 \class TH3C
-\brief tomato 3-D histogram with a byte per channel (see TH1 documentation)
+\brief 3-D histogram with a byte per channel (see TH1 documentation)
 \class TH3S
-\brief tomato 3-D histogram with a short per channel (see TH1 documentation)
+\brief 3-D histogram with a short per channel (see TH1 documentation)
 \class TH3I
-\brief tomato 3-D histogram with an int per channel (see TH1 documentation)}
+\brief 3-D histogram with an int per channel (see TH1 documentation)}
 \class TH3F
-\brief tomato 3-D histogram with a float per channel (see TH1 documentation)}
+\brief 3-D histogram with a float per channel (see TH1 documentation)}
 \class TH3D
-\brief tomato 3-D histogram with a double per channel (see TH1 documentation)}
+\brief 3-D histogram with a double per channel (see TH1 documentation)}
 @}
 */
 
