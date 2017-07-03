@@ -377,7 +377,7 @@ if(testing)
                     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
                     OUTPUT_VARIABLE GIT_BRANCH OUTPUT_STRIP_TRAILING_WHITESPACE)
     #---Is the roottest source directory around?
-    if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/roottest)
+    if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/roottest/CMakeLists.txt)
       set(roottestdir ${CMAKE_CURRENT_SOURCE_DIR}/roottest)
     elseif(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/../roottest)
       get_filename_component(roottestdir ${CMAKE_CURRENT_SOURCE_DIR}/../roottest ABSOLUTE)
@@ -387,7 +387,9 @@ if(testing)
       add_subdirectory(${roottestdir} roottest)
     else()
       message("-- Could not find roottest directory! Cloning from the repository...")
-      execute_process(COMMAND ${GIT_EXECUTABLE} clone -b ${GIT_BRANCH} http://root.cern.ch/git/roottest.git
+      execute_process(COMMAND ${GIT_EXECUTABLE} submodule init
+                      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+      execute_process(COMMAND ${GIT_EXECUTABLE} submodule update
                       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
       add_subdirectory(roottest)
     endif()

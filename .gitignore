@@ -62,7 +62,6 @@ CMakeLists.txt.user
 /semantic.cache
 /.gdb_history
 /buildtools
-/roottest
 /*.mk
 /.project
 /files
