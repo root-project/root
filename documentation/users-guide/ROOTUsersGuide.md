@@ -1,3 +1,3 @@
 % ![](pictures/rootlogo.png)
 % User's Guide
-% May 2014
+% June 2017
