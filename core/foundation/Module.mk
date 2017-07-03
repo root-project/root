@@ -23,6 +23,7 @@ FOUNDATIONTH     += $(MODDIRI)/root_std_complex.h
 FOUNDATIONTH     += $(MODDIRI)/libcpp_string_view.h
 FOUNDATIONTH     += $(MODDIRI)/RWrap_libcpp_string_view.h
 FOUNDATIONTH     += $(MODDIRI)/ROOT/RArrayView.hxx
+FOUNDATIONTH     += $(MODDIRI)/ROOT/TypeTraits.hxx
 FOUNDATIONTH     += $(MODDIRI)/ROOT/rhysd_array_view.hxx
 
 FOUNDATIONO     := $(call stripsrc,$(FOUNDATIONS:.cxx=.o))
