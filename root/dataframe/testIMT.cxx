@@ -169,7 +169,7 @@ void tests() {
       auto ad = d.Define("tracks_n", [](const FourVectors& tracks){return (int)tracks.size();})
                  .Filter([](int tracks_n){return tracks_n > 2;}, {"tracks_n"})
                  .Define("tracks_pts", getPt);
-      auto trN = ad.Histo1D(TH1F{"", "", 100, -.5, 99.5}, "tracks_n");
+      auto trN = ad.Histo1D(TH1D{"", "", 100, -.5, 99.5}, "tracks_n");
       auto trPts = ad.Histo1D("tracks_pts");
 
       std::cout << "Histo1D tracks number entries and mean " << trN->GetEntries()

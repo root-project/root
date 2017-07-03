@@ -136,7 +136,7 @@ int main() {
    ROOT::Experimental::TDataFrame d5(treeName, fileName, {"b2"});
    auto h1 = d5.Histo1D();
    auto h2 = d5.Histo1D("b1");
-   TH1F dvHisto("dvHisto","The DV histo", 64, -8, 8);
+   TH1D dvHisto("dvHisto","The DV histo", 64, -8, 8);
    auto h3 = d5.Histo1D(std::move(dvHisto),"dv");
    auto h4 = d5.Histo1D<std::list<int>>("sl");
    std::cout << "Histo1: nEntries " << h1->GetEntries() << std::endl;
@@ -263,20 +263,20 @@ int main() {
 
    // TEST 15: fill 2D histograms
    ROOT::Experimental::TDataFrame d13(treeName, fileName, {"b1","b2","b3"});
-   auto h12d = d13.Histo2D<double, int>(TH2F("h1","",64,0,1024,64,0,1024));
-   auto h22d = d13.Histo2D<std::vector<double>, std::list<int>>(TH2F("h2","",64,0,1024,64,0,1024),"dv","sl");
-   auto h32d = d13.Histo2D<double, int, float>(TH2F("h3","",64,0,1024,64,0,1024));
+   auto h12d = d13.Histo2D<double, int>(TH2D("h1","",64,0,1024,64,0,1024));
+   auto h22d = d13.Histo2D<std::vector<double>, std::list<int>>(TH2D("h2","",64,0,1024,64,0,1024),"dv","sl");
+   auto h32d = d13.Histo2D<double, int, float>(TH2D("h3","",64,0,1024,64,0,1024));
    std::cout << "h12d Histo entries: " << h12d->GetEntries() << std::endl;
    std::cout << "h22d Histo entries: " << h22d->GetEntries() << std::endl;
    std::cout << "h32d Histo entries: " << h32d->GetEntries() << " sum of weights: " << h32d->GetSumOfWeights() << std::endl;
 
    // TEST 15: fill 3D histograms
    ROOT::Experimental::TDataFrame d14(treeName, fileName, {"b1","b2","b3","b4"});
-   auto h13d = d14.Histo3D<double, int, float>(TH3F("h4","",64,0,1024,64,0,1024,64,0,1024));
+   auto h13d = d14.Histo3D<double, int, float>(TH3D("h4","",64,0,1024,64,0,1024,64,0,1024));
    auto h23d = d14.Histo3D<std::vector<double>,
                            std::list<int>,
-                           std::vector<float>>(TH3F("h5","",64,0,1024,64,0,1024,64,0,1024),"dv","sl","sv");
-   auto h33d = d14.Histo3D<double, int, float, float>(TH3F("h6","",64,0,1024,64,0,1024,64,0,1024));
+                           std::vector<float>>(TH3D("h5","",64,0,1024,64,0,1024,64,0,1024),"dv","sl","sv");
+   auto h33d = d14.Histo3D<double, int, float, float>(TH3D("h6","",64,0,1024,64,0,1024,64,0,1024));
    std::cout << "h13d Histo entries: " << h13d->GetEntries() << std::endl;
    std::cout << "h23d Histo entries: " << h23d->GetEntries() << std::endl;
    std::cout << "h33d Histo entries: " << h33d->GetEntries() << " sum of weights: " << h33d->GetSumOfWeights() << std::endl;
