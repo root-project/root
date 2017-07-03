@@ -1916,8 +1916,7 @@ void WriteStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
                         }
                      }
                   }
-               } else if (type.getTypePtr()->isArrayType()) {
-                  const clang::ConstantArrayType *arrayType = llvm::dyn_cast<clang::ConstantArrayType>(type.getTypePtr());
+               } else if (const clang::ConstantArrayType *arrayType = llvm::dyn_cast<clang::ConstantArrayType>(type.getTypePtr())) {
                   int s = GetFullArrayLength(arrayType);
 
                   if (!decli) {
