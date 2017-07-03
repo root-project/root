@@ -1,0 +1,4 @@
+Column "test1" is not in a file and has not been defined.
+Error in <TTreeReaderValueBase::CreateProxy()>: The tree does not have a branch called test2. You could check with TTree::Print() for available branches.
+Column "test3" is not in a file and has not been defined.
+Error in <TTreeReaderValueBase::CreateProxy()>: The tree does not have a branch called test4. You could check with TTree::Print() for available branches.

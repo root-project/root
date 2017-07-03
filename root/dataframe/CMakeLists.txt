@@ -7,6 +7,10 @@ endif()
 
 set(DFLIBRARIES Core TreePlayer Hist Tree RIO MathCore)
 
+ROOTTEST_ADD_TEST(missingBranches
+                  MACRO test_missingBranches.C
+                  ERRREF test_missingBranches.eref)
+
 ROOTTEST_GENERATE_EXECUTABLE(regression_ranges regression_ranges.cxx LIBRARIES ${DFLIBRARIES})
 ROOTTEST_ADD_TEST(regression_ranges
                   EXEC regression_ranges
