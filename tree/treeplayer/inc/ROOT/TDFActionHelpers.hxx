@@ -244,17 +244,9 @@ public:
 
    void Init(TTreeReader*, unsigned int) {}
 
-   template <typename V, typename std::enable_if<!TIsContainer<V>::fgValue, int>::type = 0>
-   void Exec(unsigned int slot, V v)
+   void Exec(unsigned int slot, T v)
    {
       fColls[slot]->emplace_back(v);
-   }
-
-   template <typename V, typename std::enable_if<TIsContainer<V>::fgValue, int>::type = 0>
-   void Exec(unsigned int slot, const V &vs)
-   {
-      auto thisColl = fColls[slot];
-      thisColl.insert(std::begin(thisColl), std::begin(vs), std::begin(vs));
    }
 
    void Finalize()
@@ -289,17 +281,9 @@ public:
 
    void Init(TTreeReader*, unsigned int) {}
 
-   template <typename V, typename std::enable_if<!TIsContainer<V>::fgValue, int>::type = 0>
-   void Exec(unsigned int slot, V v)
+   void Exec(unsigned int slot, T v)
    {
       fColls[slot]->emplace_back(v);
-   }
-
-   template <typename V, typename std::enable_if<TIsContainer<V>::fgValue, int>::type = 0>
-   void Exec(unsigned int slot, const V &vs)
-   {
-      auto thisColl = fColls[slot];
-      thisColl->insert(std::begin(thisColl), std::begin(vs), std::begin(vs));
    }
 
    void Finalize()
