@@ -1301,7 +1301,7 @@ void stress12(Int_t testid)
    TH1F *h9, *h11;
    Int_t comp, ngood = 0;
    while ((key=(TKey*)next())) {
-      if (strcmp(key->GetClassName(),"TH1D")) continue; //may be a TList of TStreamerInfo
+      if (strcmp(key->GetClassName(),"TH1F")) continue; //may be a TList of TStreamerInfo
       h9  = (TH1F*)f9.Get(key->GetName());
       h11 = (TH1F*)f11.Get(key->GetName());
       if (h9 == 0 || h11 == 0) continue;
