@@ -27,15 +27,6 @@ TInterCommunicator::TInterCommunicator(const MPI_Comm &comm) : TCommunicator(com
 }
 
 //______________________________________________________________________________
-TInterCommunicator &TInterCommunicator::Clone() const
-{
-   MPI_Comm dupcomm;
-   ROOT_MPI_CHECK_CALL(MPI_Comm_dup, (fComm, &dupcomm), this);
-   TInterCommunicator *icomm = new TInterCommunicator(dupcomm);
-   return *icomm;
-}
-
-//______________________________________________________________________________
 /**
  * This  function  creates  an  intracommunicator from the union of the two
  * groups that are associated with intercomm.
@@ -87,12 +78,25 @@ TGroup TInterCommunicator::GetRemoteGroup() const
 }
 
 //______________________________________________________________________________
-TInterCommunicator TInterCommunicator::Dup() const
+/*
+ * Duplicates an existing communicator with all its cached information.
+ * Duplicates  the  existing communicator comm with associated key values.
+ * For each key value, the respective copy callback function determines the
+ * attribute value associated with this key in the new communicator; one
+ * particular action that a copy callback may take is to delete the attribute
+ * from the  new communicator.
+ * \return Returns a new communicator with the same group, any copied cached
+ * information, but a new context (see Section 5.7.1 of the MPI-1 Standard,
+ * "Functionality").
+ */
+
+TInterCommunicator *TInterCommunicator::Dup() const
 {
    MPI_Comm dupcomm;
    ROOT_MPI_CHECK_CALL(MPI_Comm_dup, (fComm, &dupcomm), this);
    ROOT_MPI_CHECK_COMM(dupcomm, this);
-   return dupcomm;
+   auto fDupComm = new TInterCommunicator(dupcomm);
+   return fDupComm;
 }
 
 //______________________________________________________________________________

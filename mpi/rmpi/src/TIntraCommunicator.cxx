@@ -26,23 +26,16 @@ TIntraCommunicator::TIntraCommunicator(const TIntraCommunicator &comm) : TCommun
  * \return Returns a new communicator with the same group, any copied cached
  * information, but a new context (see Section 5.7.1 of the MPI-1 Standard,
  * "Functionality").
- * \
+ *
  */
-TIntraCommunicator TIntraCommunicator::Dup() const
+TIntraCommunicator *TIntraCommunicator::Dup() const
 {
    MPI_Comm dupcomm;
    ROOT_MPI_CHECK_CALL(MPI_Comm_dup, (fComm, &dupcomm), this);
-   return dupcomm;
+   auto fDupComm = new TIntraCommunicator(dupcomm);
+   return fDupComm;
 }
 
-//______________________________________________________________________________
-TIntraCommunicator &TIntraCommunicator::Clone() const
-{
-   MPI_Comm dupcomm;
-   ROOT_MPI_CHECK_CALL(MPI_Comm_dup, (fComm, &dupcomm), this);
-   TIntraCommunicator *icomm = new TIntraCommunicator(dupcomm);
-   return *icomm;
-}
 
 //______________________________________________________________________________
 /**

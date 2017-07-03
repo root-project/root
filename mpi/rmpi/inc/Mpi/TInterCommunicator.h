@@ -46,9 +46,7 @@ public:
 
    virtual TGroup GetRemoteGroup() const;
 
-   TInterCommunicator Dup() const;
-
-   virtual TInterCommunicator &Clone() const;
+   TInterCommunicator *Dup() const;
 
    virtual TIntraCommunicator Merge(Int_t high);
 

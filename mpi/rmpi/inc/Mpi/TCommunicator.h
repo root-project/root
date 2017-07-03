@@ -81,7 +81,7 @@ public:
    MPI_Comm &operator=(const TInterCommunicator &comm) const;
    MPI_Comm &operator=(const TIntraCommunicator &comm) const;
 
-   virtual TCommunicator &Clone() const = 0;
+   virtual TCommunicator *Dup() const = 0;
 
    Int_t GetRank() const;
 
