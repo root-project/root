@@ -21,7 +21,7 @@
 #include <vector>
 
 #include "ROOT/TDrawable.hxx"
-#include "ROOT/TTypeTraits.hxx"
+#include "ROOT/TypeTraits.hxx"
 #include "ROOT/TVirtualCanvasPainter.hxx"
 
 namespace ROOT {
@@ -102,17 +102,19 @@ public:
   }
 
    /// Add a copy of something to be painted.
-   template<class T, class = typename std::enable_if<!ROOT::IsSmartOrDumbPtr<T>::value>::type>
+   template<class T, class = typename std::enable_if<!ROOT::TypeTraits::IsSmartOrDumbPtr<T>::value>::type>
    void Draw(const T& what) {
      // Requires GetDrawable(what, options) to be known!
      fPrimitives.emplace_back(GetDrawable(std::make_unique<T>(what)));
    }
 
    /// Add a copy of something to be painted, with options.
-   template<class T, class OPTIONS, class = typename std::enable_if<!ROOT::IsSmartOrDumbPtr<T>::value>::type>
-   void Draw(const T& what, const OPTIONS &options) {
-     // Requires GetDrawable(what, options) to be known!
-     fPrimitives.emplace_back(GetDrawable(std::make_unique<T>(what), options));
+   template <class T, class OPTIONS,
+             class = typename std::enable_if<!ROOT::TypeTraits::IsSmartOrDumbPtr<T>::value>::type>
+   void Draw(const T &what, const OPTIONS &options)
+   {
+      // Requires GetDrawable(what, options) to be known!
+      fPrimitives.emplace_back(GetDrawable(std::make_unique<T>(what), options));
    }
 
   /// Remove an object from the list of primitives.

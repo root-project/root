@@ -16,6 +16,7 @@ The ROOT Data Frame allows to analyse data stored in TTrees with a high level in
 #ifndef ROOT_TDATAFRAME
 #define ROOT_TDATAFRAME
 
+#include "ROOT/TypeTraits.hxx"
 #include "ROOT/TDFInterface.hxx"
 #include "ROOT/TDFNodes.hxx"
 #include "ROOT/TDFUtils.hxx"
@@ -32,6 +33,7 @@ namespace ROOT {
 namespace Experimental {
 namespace TDFDetail = ROOT::Detail::TDF;
 namespace TDFInternal = ROOT::Internal::TDF;
+namespace TTraits = ROOT::TypeTraits;
 
 class TDataFrame : public TDF::TInterface<TDFDetail::TLoopManager> {
    using ColumnNames_t = TDFDetail::ColumnNames_t;
@@ -50,15 +52,14 @@ public:
    /// See TInterface for the documentation of the
    /// methods available.
    template <typename FILENAMESCOLL = std::vector<std::string>,
-             typename std::enable_if<TDFInternal::TIsContainer<FILENAMESCOLL>::fgValue, int>::type = 0>
-   TDataFrame(std::string_view treeName, const FILENAMESCOLL &filenamescoll,
-              const ColumnNames_t &defaultBranches = {});
+             typename std::enable_if<TTraits::IsContainer<FILENAMESCOLL>::value, int>::type = 0>
+   TDataFrame(std::string_view treeName, const FILENAMESCOLL &filenamescoll, const ColumnNames_t &defaultBranches = {});
    TDataFrame(std::string_view treeName, ::TDirectory *dirPtr, const ColumnNames_t &defaultBranches = {});
    TDataFrame(TTree &tree, const ColumnNames_t &defaultBranches = {});
    TDataFrame(Long64_t numEntries);
 };
 
-template <typename FILENAMESCOLL, typename std::enable_if<TDFInternal::TIsContainer<FILENAMESCOLL>::fgValue, int>::type>
+template <typename FILENAMESCOLL, typename std::enable_if<TTraits::IsContainer<FILENAMESCOLL>::value, int>::type>
 TDataFrame::TDataFrame(std::string_view treeName, const FILENAMESCOLL &filenamescoll,
                        const ColumnNames_t &defaultBranches)
    : TDF::TInterface<TDFDetail::TLoopManager>(std::make_shared<TDFDetail::TLoopManager>(nullptr, defaultBranches))

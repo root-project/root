@@ -60,7 +60,7 @@ R__EXTERN TVirtualMutex *gCollectionMutex;
 class TCollection : public TObject {
 
 #ifdef R__CHECK_COLLECTION_MULTI_ACCESS
-protected:
+public:
    class TErrorLock {
       // Warn when multiple thread try to acquire the same 'lock'
       std::atomic<std::thread::id> fWriteCurrent;
@@ -81,7 +81,10 @@ protected:
                           const char *function);
 
    public:
-      TErrorLock() : fWriteCurrentRecurse(0), fReadCurrentRecurse(0) { std::atomic_flag_clear(&fSpinLockFlag); }
+      TErrorLock() : fWriteCurrent(), fWriteCurrentRecurse(0), fReadCurrentRecurse(0)
+      {
+         std::atomic_flag_clear(&fSpinLockFlag);
+      }
 
       class WriteGuard {
          TErrorLock *fLock;

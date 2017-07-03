@@ -16,6 +16,7 @@
 #include "ROOT/TThreadExecutor.hxx"
 #endif
 #include "RtypesCore.h" // Long64_t
+#include "TInterpreter.h"
 #include "TROOT.h"      // IsImplicitMTEnabled
 #include "TTreeReader.h"
 
@@ -222,10 +223,40 @@ void TLoopManager::RunAndCheckFilters(unsigned int slot, Long64_t entry)
    for (auto &namedFilterPtr : fBookedNamedFilters) namedFilterPtr->CheckFilters(slot, entry);
 }
 
+/// Perform clean-up operations. To be called at the end of each event loop.
+void TLoopManager::CleanUp()
+{
+   fHasRunAtLeastOnce = true;
+
+   // forget TActions and detach TResultProxies
+   fBookedActions.clear();
+   for (auto readiness : fResProxyReadiness) {
+      *readiness.get() = true;
+   }
+   fResProxyReadiness.clear();
+
+   // reset children counts
+   fNChildren = 0;
+   fNStopsReceived = 0;
+   for (auto &ptr : fBookedFilters) ptr->ResetChildrenCount();
+   for (auto &ptr : fBookedRanges) ptr->ResetChildrenCount();
+   for (auto &pair : fBookedBranches) pair.second->ResetChildrenCount();
+}
+
 /// Start the event loop with a different mechanism depending on IMT/no IMT, data source/no data source.
 /// Also perform a few setup and clean-up operations (CreateSlots before running, clear booked actions after, etc.).
 void TLoopManager::Run()
 {
+   // jit-compile required actions
+   auto error = TInterpreter::EErrorCode::kNoError;
+   gInterpreter->ProcessLine(fToJit.c_str(), &error);
+   if (error) {
+      std::string exceptionText =
+         "An error occurred while jitting. The lines above might indicate the cause of the crash\n";
+      throw std::runtime_error(exceptionText.c_str());
+   }
+   fToJit.clear();
+
    CreateSlots(fNSlots);
 
 #ifdef R__USE_IMT
@@ -244,13 +275,7 @@ void TLoopManager::Run()
    }
 #endif // R__USE_IMT
 
-   fHasRunAtLeastOnce = true;
-   // forget TActions and detach TResultProxies
-   fBookedActions.clear();
-   for (auto readiness : fResProxyReadiness) {
-      *readiness.get() = true;
-   }
-   fResProxyReadiness.clear();
+   CleanUp();
 }
 
 /// Build TTreeReaderValues for all nodes

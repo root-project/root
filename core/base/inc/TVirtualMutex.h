@@ -29,7 +29,7 @@ class TVirtualMutex;
 // Global mutex set in TThread::Init
 R__EXTERN TVirtualMutex *gGlobalMutex;
 
-class TVirtualMutex : public TObject {
+class TVirtualMutex {
 
 public:
    TVirtualMutex(Bool_t /* recursive */ = kFALSE) { }
@@ -44,7 +44,7 @@ public:
 
    virtual TVirtualMutex *Factory(Bool_t /*recursive*/ = kFALSE) = 0;
 
-   ClassDef(TVirtualMutex,0)  // Virtual mutex lock class
+   ClassDef(TVirtualMutex, 0)  // Virtual mutex lock class
 };
 
 

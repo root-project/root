@@ -11,6 +11,7 @@
 #ifndef ROOT_TDFNODES
 #define ROOT_TDFNODES
 
+#include "ROOT/TypeTraits.hxx"
 #include "ROOT/TDFUtils.hxx"
 #include "ROOT/RArrayView.hxx"
 #include "ROOT/TSpinMutex.hxx"
@@ -32,6 +33,7 @@ class TActionBase;
 
 namespace Detail {
 namespace TDF {
+using namespace ROOT::TypeTraits;
 namespace TDFInternal = ROOT::Internal::TDF;
 
 // forward declarations for TLoopManager
@@ -56,7 +58,7 @@ class TLoopManager : public std::enable_shared_from_this<TLoopManager> {
    std::map<std::string, TmpBranchBasePtr_t> fBookedBranches;
    RangeBaseVec_t fBookedRanges;
    std::vector<std::shared_ptr<bool>> fResProxyReadiness;
-   ::TDirectory *fDirPtr{nullptr};
+   ::TDirectory * const fDirPtr{nullptr};
    std::shared_ptr<TTree> fTree{nullptr};
    const ColumnNames_t fDefaultBranches;
    const Long64_t fNEmptyEntries{0};
@@ -65,12 +67,16 @@ class TLoopManager : public std::enable_shared_from_this<TLoopManager> {
    unsigned int fNChildren{0};      ///< Number of nodes of the functional graph hanging from this object
    unsigned int fNStopsReceived{0}; ///< Number of times that a children node signaled to stop processing entries.
    const ELoopType fLoopType; ///< The kind of event loop that is going to be run (e.g. on ROOT files, on no files)
+   std::string fToJit; ///< string containing all `BuildAndBook` actions that should be jitted before running
 
    void RunEmptySourceMT();
    void RunEmptySource();
    void RunTreeProcessorMT();
    void RunTreeReader();
    void RunAndCheckFilters(unsigned int slot, Long64_t entry);
+   void InitAllNodes(TTreeReader *r, unsigned int slot);
+   void CreateSlots(unsigned int nSlots);
+   void CleanUp();
 
 public:
    TLoopManager(TTree *tree, const ColumnNames_t &defaultBranches);
@@ -78,8 +84,6 @@ public:
    TLoopManager(const TLoopManager &) = delete;
    ~TLoopManager(){};
    void Run();
-   void InitAllNodes(TTreeReader *r, unsigned int slot);
-   void CreateSlots(unsigned int nSlots);
    TLoopManager *GetImplPtr();
    std::shared_ptr<TLoopManager> GetSharedPtr() { return shared_from_this(); }
    const ColumnNames_t &GetDefaultBranches() const;
@@ -103,6 +107,7 @@ public:
    void SetTree(std::shared_ptr<TTree> tree) { fTree = tree; }
    void IncrChildrenCount() { ++fNChildren; }
    void StopProcessing() { ++fNStopsReceived; }
+   void Jit(const std::string& s) { fToJit.append(s); }
 };
 } // end ns TDF
 } // end ns Detail
@@ -137,7 +142,7 @@ class TColumnValue {
    // following line is equivalent to pseudo-code: ProxyParam_t == array_view<U> ? U : T
    // ReaderValueOrArray_t is a TTreeReaderValue<T> unless T is array_view<U>
    using ProxyParam_t = typename std::conditional<std::is_same<ReaderValueOrArray_t<T>, TTreeReaderValue<T>>::value, T,
-                                                  ExtractType_t<T>>::type;
+                                                  TakeFirstParameter_t<T>>::type;
    std::unique_ptr<TTreeReaderValue<T>> fReaderValue{nullptr}; //< Owning ptr to a TTreeReaderValue. Used for
                                                                /// non-temporary columns and T != std::array_view<U>
    std::unique_ptr<TTreeReaderArray<ProxyParam_t>> fReaderArray{nullptr}; //< Owning ptr to a TTreeReaderArray. Used for
@@ -196,7 +201,7 @@ struct TTDFValueTuple {
 };
 
 template <typename... BranchTypes>
-struct TTDFValueTuple<TTypeList<BranchTypes...>> {
+struct TTDFValueTuple<TypeList<BranchTypes...>> {
    using type = std::tuple<TColumnValue<BranchTypes>...>;
 };
 
@@ -220,7 +225,7 @@ public:
 
 template <typename Helper, typename PrevDataFrame, typename BranchTypes_t = typename Helper::BranchTypes_t>
 class TAction final : public TActionBase {
-   using TypeInd_t = typename TGenStaticSeq<BranchTypes_t::fgSize>::Type_t;
+   using TypeInd_t = TDFInternal::GenStaticSeq_t<BranchTypes_t::list_size>;
 
    Helper fHelper;
    const ColumnNames_t fBranches;
@@ -231,6 +236,7 @@ public:
    TAction(Helper &&h, const ColumnNames_t &bl, PrevDataFrame &pd)
       : TActionBase(pd.GetImplPtr(), pd.GetTmpBranches()), fHelper(std::move(h)), fBranches(bl), fPrevData(pd)
    {
+      fPrevData.IncrChildrenCount();
    }
 
    TAction(const TAction &) = delete;
@@ -250,7 +256,7 @@ public:
    }
 
    template <int... S>
-   void Exec(unsigned int slot, Long64_t entry, TStaticSeq<S...>)
+   void Exec(unsigned int slot, Long64_t entry, TDFInternal::StaticSeq<S...>)
    {
       (void)entry; // avoid bogus 'unused parameter' warning in gcc4.9
       fHelper.Exec(slot, std::get<S>(fValues[slot]).Get(entry)...);
@@ -288,19 +294,20 @@ public:
    std::string GetName() const;
    ColumnNames_t GetTmpBranches() const;
    virtual void Update(unsigned int slot, Long64_t entry) = 0;
-   void IncrChildrenCount() { ++fNChildren; }
+   virtual void IncrChildrenCount() = 0;
    virtual void StopProcessing() = 0;
+   void ResetChildrenCount() { fNChildren = 0; fNStopsReceived = 0; }
 };
 
 template <typename F, typename PrevData>
 class TCustomColumn final : public TCustomColumnBase {
-   using BranchTypes_t = typename TDFInternal::TFunctionTraits<F>::Args_t;
-   using TypeInd_t = typename TDFInternal::TGenStaticSeq<BranchTypes_t::fgSize>::Type_t;
-   using Ret_t = typename TDFInternal::TFunctionTraits<F>::Ret_t;
+   using BranchTypes_t = typename CallableTraits<F>::arg_types;
+   using TypeInd_t = TDFInternal::GenStaticSeq_t<BranchTypes_t::list_size>;
+   using ret_type = typename CallableTraits<F>::ret_type;
 
    F fExpression;
    const ColumnNames_t fBranches;
-   std::vector<std::unique_ptr<Ret_t>> fLastResultPtr;
+   std::vector<std::unique_ptr<ret_type>> fLastResultPtr;
    PrevData &fPrevData;
    std::vector<Long64_t> fLastCheckedEntry = {-1};
 
@@ -333,14 +340,15 @@ public:
       }
    }
 
-   const std::type_info &GetTypeId() const { return typeid(Ret_t); }
+   const std::type_info &GetTypeId() const { return typeid(ret_type); }
 
    void CreateSlots(unsigned int nSlots) final
    {
       fValues.resize(nSlots);
       fLastCheckedEntry.resize(nSlots, -1);
       fLastResultPtr.resize(nSlots);
-      std::generate(fLastResultPtr.begin(), fLastResultPtr.end(), []() { return std::unique_ptr<Ret_t>(new Ret_t()); });
+      std::generate(fLastResultPtr.begin(), fLastResultPtr.end(),
+                    []() { return std::unique_ptr<ret_type>(new ret_type()); });
    }
 
    bool CheckFilters(unsigned int slot, Long64_t entry) final
@@ -350,10 +358,12 @@ public:
    }
 
    template <int... S, typename... BranchTypes>
-   void UpdateHelper(unsigned int slot, Long64_t entry, TDFInternal::TStaticSeq<S...>,
-                     TDFInternal::TTypeList<BranchTypes...>)
+   void UpdateHelper(unsigned int slot, Long64_t entry, TDFInternal::StaticSeq<S...>, TypeList<BranchTypes...>)
    {
       *fLastResultPtr[slot] = fExpression(std::get<S>(fValues[slot]).Get(entry)...);
+      // silence "unused parameter" warnings in gcc
+      (void)slot;
+      (void)entry;
    }
 
    // recursive chain of `Report`s
@@ -366,6 +376,13 @@ public:
    {
       ++fNStopsReceived;
       if (fNStopsReceived == fNChildren) fPrevData.StopProcessing();
+   }
+
+   void IncrChildrenCount()
+   {
+      ++fNChildren;
+      // propagate "children activation" upstream
+      if (fNChildren == 1) fPrevData.IncrChildrenCount();
    }
 };
 
@@ -394,14 +411,15 @@ public:
    bool HasName() const;
    virtual void CreateSlots(unsigned int nSlots) = 0;
    void PrintReport() const;
-   void IncrChildrenCount() { ++fNChildren; }
+   virtual void IncrChildrenCount() = 0;
    virtual void StopProcessing() = 0;
+   void ResetChildrenCount() { fNChildren = 0; fNStopsReceived = 0; }
 };
 
 template <typename FilterF, typename PrevDataFrame>
 class TFilter final : public TFilterBase {
-   using BranchTypes_t = typename TDFInternal::TFunctionTraits<FilterF>::Args_t;
-   using TypeInd_t = typename TDFInternal::TGenStaticSeq<BranchTypes_t::fgSize>::Type_t;
+   using BranchTypes_t = typename CallableTraits<FilterF>::arg_types;
+   using TypeInd_t = TDFInternal::GenStaticSeq_t<BranchTypes_t::list_size>;
 
    FilterF fFilter;
    const ColumnNames_t fBranches;
@@ -447,9 +465,12 @@ public:
    }
 
    template <int... S>
-   bool CheckFilterHelper(unsigned int slot, Long64_t entry, TDFInternal::TStaticSeq<S...>)
+   bool CheckFilterHelper(unsigned int slot, Long64_t entry, TDFInternal::StaticSeq<S...>)
    {
       return fFilter(std::get<S>(fValues[slot]).Get(entry)...);
+      // silence "unused parameter" warnings in gcc
+      (void)slot;
+      (void)entry;
    }
 
    void Init(TTreeReader *r, unsigned int slot) final
@@ -472,6 +493,13 @@ public:
       ++fNStopsReceived;
       if (fNStopsReceived == fNChildren) fPrevData.StopProcessing();
    }
+
+   void IncrChildrenCount()
+   {
+      ++fNChildren;
+      // propagate "children activation" upstream
+      if (fNChildren == 1) fPrevData.IncrChildrenCount();
+   }
 };
 
 class TRangeBase {
@@ -487,6 +515,7 @@ protected:
    ULong64_t fNProcessedEntries{0};
    unsigned int fNChildren{0};      ///< Number of nodes of the functional graph hanging from this object
    unsigned int fNStopsReceived{0}; ///< Number of times that a children node signaled to stop processing entries.
+   bool fHasStopped{false}; ///< True if the end of the range has been reached
 
 public:
    TRangeBase(TLoopManager *implPtr, const ColumnNames_t &tmpBranches, unsigned int start, unsigned int stop,
@@ -497,8 +526,9 @@ public:
    virtual bool CheckFilters(unsigned int slot, Long64_t entry) = 0;
    virtual void Report() const = 0;
    virtual void PartialReport() const = 0;
-   void IncrChildrenCount() { ++fNChildren; }
+   virtual void IncrChildrenCount() = 0;
    virtual void StopProcessing() = 0;
+   void ResetChildrenCount() { fNChildren = 0; fNStopsReceived = 0; }
 };
 
 template <typename PrevData>
@@ -516,7 +546,9 @@ public:
    /// Ranges act as filters when it comes to selecting entries that downstream nodes should process
    bool CheckFilters(unsigned int slot, Long64_t entry) final
    {
-      if (entry != fLastCheckedEntry) {
+      if (fHasStopped) {
+         return false;
+      } else if (entry != fLastCheckedEntry) {
          if (!fPrevData.CheckFilters(slot, entry)) {
             // a filter upstream returned false, cache the result
             fLastResult = false;
@@ -528,7 +560,10 @@ public:
                fLastResult = false;
             else
                fLastResult = true;
-            if (fNProcessedEntries == fStop) fPrevData.StopProcessing();
+            if (fNProcessedEntries == fStop) {
+               fHasStopped = true;
+               fPrevData.StopProcessing();
+            }
          }
          fLastCheckedEntry = entry;
       }
@@ -544,7 +579,14 @@ public:
    void StopProcessing()
    {
       ++fNStopsReceived;
-      if (fNStopsReceived == fNChildren) fPrevData.StopProcessing();
+      if (fNStopsReceived == fNChildren && !fHasStopped) fPrevData.StopProcessing();
+   }
+
+   void IncrChildrenCount()
+   {
+      ++fNChildren;
+      // propagate "children activation" upstream
+      if (fNChildren == 1) fPrevData.IncrChildrenCount();
    }
 };
 

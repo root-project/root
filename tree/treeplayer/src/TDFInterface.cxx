@@ -74,7 +74,6 @@ Long_t JitTransformation(void *thisPtr, const std::string &methodName, const std
    // Move to the preparation of the jitting
    // We put all of the jitted entities in a namespace called
    // __tdf_filter_N, where N is a monotonically increasing index.
-   TInterpreter::EErrorCode interpErrCode;
    std::vector<std::string> usedBranchesTypes;
    std::stringstream ss;
    static unsigned int iNs = 0U;
@@ -98,14 +97,12 @@ Long_t JitTransformation(void *thisPtr, const std::string &methodName, const std
       auto variableDeclarations = ss.str();
       ss.str("");
       // We need ProcessLine to trigger auto{parsing,loading} where needed
+      TInterpreter::EErrorCode interpErrCode;
       gInterpreter->ProcessLine(variableDeclarations.c_str(), &interpErrCode);
       if (TInterpreter::EErrorCode::kNoError != interpErrCode) {
-         std::string msg = "Cannot declare these variables ";
-         msg += " ";
+         std::string msg = "Cannot declare these variables:  ";
          msg += variableDeclarations;
-         if (TInterpreter::EErrorCode::kNoError != interpErrCode) {
-            msg += "\nInterpreter error code is " + std::to_string(interpErrCode) + ".";
-         }
+         msg += "\nInterpreter error code is " + std::to_string(interpErrCode) + ".";
          throw std::runtime_error(msg);
       }
    }
@@ -151,10 +148,10 @@ Long_t JitTransformation(void *thisPtr, const std::string &methodName, const std
 
    ss << ");";
 
+   TInterpreter::EErrorCode interpErrCode;
    auto retVal = gInterpreter->ProcessLine(ss.str().c_str(), &interpErrCode);
    if (TInterpreter::EErrorCode::kNoError != interpErrCode || !retVal) {
-      std::string msg = "Cannot interpret the invocation to " + methodName + ": ";
-      msg += " ";
+      std::string msg = "Cannot interpret the invocation to " + methodName + ":  ";
       msg += ss.str();
       if (TInterpreter::EErrorCode::kNoError != interpErrCode) {
          msg += "\nInterpreter error code is " + std::to_string(interpErrCode) + ".";
@@ -166,9 +163,9 @@ Long_t JitTransformation(void *thisPtr, const std::string &methodName, const std
 
 // Jit and call something equivalent to "this->BuildAndBook<BranchTypes...>(params...)"
 // (see comments in the body for actual jitted code)
-void JitBuildAndBook(const ColumnNames_t &bl, const std::string &nodeTypename, void *thisPtr, const std::type_info &art,
-                     const std::type_info &at, const void *r, TTree *tree, unsigned int nSlots,
-                     const std::map<std::string, TmpBranchBasePtr_t> &tmpBranches)
+std::string JitBuildAndBook(const ColumnNames_t &bl, const std::string &prevNodeTypename, void *prevNode,
+                            const std::type_info &art, const std::type_info &at, const void *r, TTree *tree,
+                            unsigned int nSlots, const std::map<std::string, TmpBranchBasePtr_t> &tmpBranches)
 {
    gInterpreter->ProcessLine("#include \"ROOT/TDataFrame.hxx\"");
    auto nBranches = bl.size();
@@ -181,16 +178,16 @@ void JitBuildAndBook(const ColumnNames_t &bl, const std::string &nodeTypename, v
    }
 
    // retrieve branch type names as strings
-   std::vector<std::string> branchTypeNames(nBranches);
+   std::vector<std::string> columnTypeNames(nBranches);
    for (auto i = 0u; i < nBranches; ++i) {
-      const auto branchTypeName = ColumnName2ColumnTypeName(bl[i], tree, tmpBranchPtrs[i]);
-      if (branchTypeName.empty()) {
+      const auto columnTypeName = ColumnName2ColumnTypeName(bl[i], tree, tmpBranchPtrs[i]);
+      if (columnTypeName.empty()) {
          std::string exceptionText = "The type of column ";
          exceptionText += bl[i];
          exceptionText += " could not be guessed. Please specify one.";
          throw std::runtime_error(exceptionText.c_str());
       }
-      branchTypeNames[i] = branchTypeName;
+      columnTypeNames[i] = columnTypeName;
    }
 
    // retrieve type of result of the action as a string
@@ -210,23 +207,19 @@ void JitBuildAndBook(const ColumnNames_t &bl, const std::string &nodeTypename, v
    const auto actionTypeName = actionTypeClass->GetName();
 
    // createAction_str will contain the following:
-   // ROOT::Internal::TDF::CallBuildAndBook<nodeType, actionType, branchType1, branchType2...>(
-   //    reinterpret_cast<nodeType*>(thisPtr), *reinterpret_cast<ROOT::ColumnNames_t*>(&bl),
-   //    *reinterpret_cast<actionResultType*>(r), reinterpret_cast<ActionType*>(nullptr))
+   // ROOT::Internal::TDF::CallBuildAndBook<actionType, branchType1, branchType2...>(
+   //    *reinterpret_cast<PrevNodeType*>(prevNode), { bl[0], bl[1], ... }, *reinterpret_cast<actionResultType*>(r))
    std::stringstream createAction_str;
-   createAction_str << "ROOT::Internal::TDF::CallBuildAndBook<" << nodeTypename << ", " << actionTypeName;
-   for (auto &branchTypeName : branchTypeNames) createAction_str << ", " << branchTypeName;
-   createAction_str << ">("
-                    << "reinterpret_cast<" << nodeTypename << "*>(" << thisPtr << "), "
-                    << "*reinterpret_cast<ROOT::Detail::TDF::ColumnNames_t*>(" << &bl << "), " << nSlots
-                    << ", *reinterpret_cast<" << actionResultTypeName << "*>(" << r << "));";
-   auto error = TInterpreter::EErrorCode::kNoError;
-   gInterpreter->ProcessLine(createAction_str.str().c_str(), &error);
-   if (error) {
-      std::string exceptionText = "An error occurred while jitting this action:\n";
-      exceptionText += createAction_str.str();
-      throw std::runtime_error(exceptionText.c_str());
+   createAction_str << "ROOT::Internal::TDF::CallBuildAndBook"
+                    << "<" << actionTypeName;
+   for (auto &colType : columnTypeNames) createAction_str << ", " << colType;
+   createAction_str << ">(*reinterpret_cast<" << prevNodeTypename << "*>(" << prevNode << "), {";
+   for (auto i = 0u; i < bl.size(); ++i) {
+      if (i != 0u) createAction_str << ", ";
+      createAction_str << '"' << bl[i] << '"';
    }
+   createAction_str << "}, " << nSlots << ", *reinterpret_cast<" << actionResultTypeName << "*>(" << r << "));";
+   return createAction_str.str();
 }
 } // end ns TDF
 } // end ns Internal

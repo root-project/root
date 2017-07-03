@@ -59,8 +59,9 @@ or will be set to the address of the histogram read from the file.
 
 ## TTree Libraries
 
-- Resolved O(N^2) scaling problem in ```TTree::Draw()``` observed when a branch that contains a 
-large TClonesArray where each element contains another small vector container. 
+- Resolved O(N^2) scaling problem in ```TTree::Draw()``` observed when a branch that contains a
+large TClonesArray where each element contains another small vector container.
+- `TTree::Draw()` now creates double precision histograms (TH1D, TH2D, TH3D) by default (instead of TH1F etc); this can be configured in etc/system.rootrc / .rootrc as `Hist.Precision.1D` (or `2D` or `3D`).
 
 ## Histogram Libraries
 
@@ -80,6 +81,9 @@ large TClonesArray where each element contains another small vector container.
     -  LogZ for violins
     -  scaling of candles and violins with respect to each other
     -  static functions for WhiskerRange and BoxRange
+  - In some case it was not somme possible to zoom a 1D histogram using the mouse
+    on the X axis. This was described
+    [here](https://root-forum.cern.ch/t/axis-blocked-when-overlaying-two-histograms/25326)
 
 ## 3D Graphics Libraries
 

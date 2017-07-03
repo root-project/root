@@ -11,8 +11,8 @@
 #ifndef ROOT_TRESULTPROXY
 #define ROOT_TRESULTPROXY
 
+#include "ROOT/TypeTraits.hxx"
 #include "ROOT/TDFNodes.hxx"
-#include "ROOT/TDFUtils.hxx"
 
 #include <memory>
 
@@ -39,6 +39,7 @@ namespace Experimental {
 namespace TDF {
 namespace TDFInternal = ROOT::Internal::TDF;
 namespace TDFDetail = ROOT::Detail::TDF;
+namespace TTraits = ROOT::TypeTraits;
 
 /// Smart pointer for the return type of actions
 /**
@@ -62,7 +63,7 @@ If iteration is not supported by the type of the proxied object, a compilation e
 template <typename T>
 class TResultProxy {
    /// \cond HIDDEN_SYMBOLS
-   template <typename V, bool isCont = TDFInternal::TIsContainer<V>::fgValue>
+   template <typename V, bool isCont = TTraits::IsContainer<V>::value>
    struct TIterationHelper {
       using Iterator_t = void;
       void GetBegin(const V &) { static_assert(sizeof(V) == 0, "It does not make sense to ask begin for this class."); }
@@ -110,10 +111,7 @@ public:
 
    /// Get a const reference to the encapsulated object.
    /// Triggers event loop and execution of all actions booked in the associated TLoopManager.
-   const T &GetValue()
-   {
-      return *Get();
-   }
+   const T &GetValue() { return *Get(); }
 
    /// Get a pointer to the encapsulated object.
    /// Triggers event loop and execution of all actions booked in the associated TLoopManager.

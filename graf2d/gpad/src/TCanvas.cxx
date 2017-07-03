@@ -760,7 +760,7 @@ void TCanvas::Close(Option_t *option)
    TCanvas *cansave = 0;
    if (padsave) cansave = (TCanvas*)gPad->GetCanvas();
 
-   if (fCanvasID != -1 && fCanvasImp) {
+   if (fCanvasID != -1) {
 
       if ((!gROOT->IsLineProcessing()) && (!gVirtualX->IsCmdThread())) {
          gInterpreter->Execute(this, IsA(), "Close", option);
@@ -779,7 +779,8 @@ void TCanvas::Close(Option_t *option)
 
          DeleteCanvasPainter();
 
-         fCanvasImp->Close();
+         if (fCanvasImp)
+            fCanvasImp->Close();
       }
       fCanvasID = -1;
       fBatch    = kTRUE;
@@ -787,7 +788,8 @@ void TCanvas::Close(Option_t *option)
       gROOT->GetListOfCanvases()->Remove(this);
 
       // Close actual window on screen
-      SafeDelete(fCanvasImp);
+      if (fCanvasImp)
+         SafeDelete(fCanvasImp);
    }
 
    if (cansave == this) {
@@ -2249,14 +2251,17 @@ void TCanvas::Update()
 
    fUpdating = kTRUE;
 
-   if (!IsBatch()) FeedbackMode(kFALSE);      // Goto double buffer mode
+   if (!fCanvasImp->PerformUpdate()) {
 
-   if (!UseGL())
-      PaintModified();           // Repaint all modified pad's
+      if (!IsBatch()) FeedbackMode(kFALSE); // Goto double buffer mode
 
-   Flush();                   // Copy all pad pixmaps to the screen
+      if (!UseGL()) PaintModified(); // Repaint all modified pad's
 
-   SetCursor(kCross);
+      Flush(); // Copy all pad pixmaps to the screen
+
+      SetCursor(kCross);
+   }
+
    fUpdating = kFALSE;
 }
 
@@ -2299,9 +2304,11 @@ void TCanvas::CreatePainter()
 {
    //Even for batch mode painter is still required, just to delegate
    //some calls to batch "virtual X".
-   if (!UseGL() || fBatch)
-      fPainter = new TPadPainter;//Do not need plugin manager for this!
-   else {
+   if (!UseGL() || fBatch) {
+      fPainter = 0;
+      if (fCanvasImp) fPainter = fCanvasImp->CreatePadPainter();
+      if (!fPainter) fPainter = new TPadPainter; // Do not need plugin manager for this!
+   } else {
       fPainter = TVirtualPadPainter::PadPainter("gl");
       if (!fPainter) {
          Error("CreatePainter", "GL Painter creation failed! Will use default!");

@@ -201,6 +201,10 @@ install:
 
   if [ "$COMPILER" == "g++-6" ]; then
     export CLING_BUILD_FLAGS="-DCMAKE_CXX_STANDARD=17 -DCMAKE_CXX_STANDARD_REQUIRED=ON"
+    # On OS X force the test to reproduce __float128 issues with libstdc++.
+    if [ $TRAVIS_OS_NAME != 'osx' ]; then
+      export CLING_BUILD_FLAGS="$CLING_BUILD_FLAGS -DCXX_EXTENSIONS=OFF"
+    fi
     CMAKEREQ="3.8"
   else
     CMAKEREQ="3.6"
@@ -243,7 +247,7 @@ before_script:
       && [ "$TRAVIS_REPO_SLUG" == "vgvassilev/cling" ] ; then
       # Workaround for travis issue: travis-ci/travis-ci#6069
       git remote set-branches --add origin master
-      git fetch
+      git pull origin master
 
       echo "Syncing repository."
       git remote add alt http://root.cern.ch/git/cling.git
@@ -269,7 +273,7 @@ script:
       --skip-cleanup
   else
     tools/packaging/cpt.py \
-      --tarball-tag=$TRAVIS_TAG \
+      --tarball-tag=$([[ $TRAVIS_TAG = cling-nightlies ]] && echo "master" || echo "$TRAVIS_TAG") \
       --with-cling-url=https://github.com/$TRAVIS_REPO_SLUG \
       --with-clang-url=http://root.cern.ch/git/clang.git \
       --with-llvm-url=http://root.cern.ch/git/llvm.git \

@@ -166,6 +166,7 @@ set(extra_veto
   rootlogoff.C         # Helper macro
   rootmarks.C          # Instrumentation. Not a standalone tutorial
   memstat/memstatExample.C   # Instrumentation. Not a standalone tutorial
+  multicore/mp_H1_lambdas.C # not a tutorial; used by mp104_processH1.C et al.
   html/*.C
   net/*.C
   proof/*.C

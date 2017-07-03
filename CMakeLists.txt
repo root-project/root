@@ -63,6 +63,14 @@ if(coverage)
   set(CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS}")
 endif()
 
+#--- Enable build timing -----------------------------------------------------------------------
+if (build_timing)
+  # FIXME: This currently will override the use of ccache if -Dbuild_timing=On -Dccache=On is passed.
+  set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CMAKE_COMMAND} -E time")
+  set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK "${CMAKE_COMMAND} -E time")
+  #set_property(GLOBAL PROPERTY RULE_LAUNCH_CUSTOM "${CMAKE_COMMAND} -E time") 
+endif()
+
 #---Enable CTest package -----------------------------------------------------------------------
 #include(CTest)
 if(testing)
@@ -171,36 +179,42 @@ if(cxxmodules)
     # for glew.h to it its trick.
     set(ROOT_CXXMODULES_COMMONFLAGS "${ROOT_CXXMODULES_COMMONFLAGS} -isystem ${CMAKE_SOURCE_DIR}/graf3d/glew/isystem")
   endif()
+endif(cxxmodules)
 
-  add_custom_target(copymodulemap DEPENDS "${CMAKE_BINARY_DIR}/include/module.modulemap")
-  add_custom_command(
-                    OUTPUT "${CMAKE_BINARY_DIR}/include/module.modulemap"
-                    DEPENDS build/unix/module.modulemap "${CMAKE_BINARY_DIR}/include/module.modulemap.extra"
-                    COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/build/unix/module.modulemap" "${CMAKE_BINARY_DIR}/include/module.modulemap"
-                    COMMAND cat "${CMAKE_BINARY_DIR}/include/module.modulemap.extra" >> "${CMAKE_BINARY_DIR}/include/module.modulemap"
-  )
+add_custom_target(copymodulemap DEPENDS "${CMAKE_BINARY_DIR}/include/module.modulemap")
+add_custom_command(
+                  OUTPUT "${CMAKE_BINARY_DIR}/include/module.modulemap"
+                  DEPENDS build/unix/module.modulemap "${CMAKE_BINARY_DIR}/include/module.modulemap.extra"
+                  COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/build/unix/module.modulemap" "${CMAKE_BINARY_DIR}/include/module.modulemap"
+                  COMMAND cat "${CMAKE_BINARY_DIR}/include/module.modulemap.extra" >> "${CMAKE_BINARY_DIR}/include/module.modulemap"
+)
+install(FILES "${CMAKE_BINARY_DIR}/include/module.modulemap" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
 
-  add_dependencies(move_artifacts copymodulemap)
+add_dependencies(move_artifacts copymodulemap)
 
-  # Provide our own modulemap for implementations other than libcxx.
-  if (NOT libcxx)
-    # Write a empty overlay file to the output directory that CMake can run its compiler tests.
-    # We will create the actual overlay later in the configuration.
-    file(WRITE ${CMAKE_BINARY_DIR}/include/modulemap.overlay.yaml "{'version' : 0, 'roots' : []}")
-    set(__vfs_overlay "-ivfsoverlay ${CMAKE_BINARY_DIR}/include/modulemap.overlay.yaml")
+# Provide our own modulemap for implementations other than libcxx.
+if (NOT libcxx)
+  # Write a empty overlay file to the output directory that CMake can run its compiler tests.
+  # We will create the actual overlay later in the configuration.
+  file(WRITE ${CMAKE_BINARY_DIR}/include/modulemap.overlay.yaml "{'version' : 0, 'roots' : []}")
+  set(__vfs_overlay "-ivfsoverlay ${CMAKE_BINARY_DIR}/include/modulemap.overlay.yaml")
+
+  if (cxxmodules)
     set(ROOT_CXXMODULES_COMMONFLAGS "${ROOT_CXXMODULES_COMMONFLAGS} ${__vfs_overlay}")
+  endif(cxxmodules)
 
-    # Only use the first path from the HEADERS_LOCATION (which is separated by colons).
-    get_property(__libcpp_full_paths GLOBAL PROPERTY ROOT_CLING_CXX_HEADERS_LOCATION)
-    string(REGEX MATCHALL "[^:]+" __libcpp_full_paths_list "${__libcpp_full_paths}")
-    list(GET __libcpp_full_paths_list 0 __libcpp_full_path)
+  # Only use the first path from the HEADERS_LOCATION (which is separated by colons).
+  get_property(__libcpp_full_paths GLOBAL PROPERTY ROOT_CLING_CXX_HEADERS_LOCATION)
+  string(REGEX MATCHALL "[^:]+" __libcpp_full_paths_list "${__libcpp_full_paths}")
+  list(GET __libcpp_full_paths_list 0 __libcpp_full_path)
 
-    configure_file(${CMAKE_SOURCE_DIR}/build/unix/modulemap.overlay.yaml.in ${CMAKE_BINARY_DIR}/include/modulemap.overlay.yaml @ONLY)
+  configure_file(${CMAKE_SOURCE_DIR}/build/unix/modulemap.overlay.yaml.in ${CMAKE_BINARY_DIR}/include/modulemap.overlay.yaml @ONLY)
 
-    configure_file(${CMAKE_SOURCE_DIR}/build/unix/stl.cppmap ${CMAKE_BINARY_DIR}/include/stl.cppmap)
-    configure_file(${CMAKE_SOURCE_DIR}/build/unix/libc.modulemap ${CMAKE_BINARY_DIR}/include/libc.modulemap)
-  endif()
+  configure_file(${CMAKE_SOURCE_DIR}/build/unix/stl.cppmap ${CMAKE_BINARY_DIR}/include/stl.cppmap)
+  configure_file(${CMAKE_SOURCE_DIR}/build/unix/libc.modulemap ${CMAKE_BINARY_DIR}/include/libc.modulemap)
+endif()
 
+if (cxxmodules)
   # These vars are useful when we want to compile things without cxxmodules.
   set(ROOT_CXXMODULES_CXXFLAGS "${ROOT_CXXMODULES_COMMONFLAGS} -fcxx-modules" CACHE STRING "Useful to filter out the modules-related cxxflags.")
   if (NOT APPLE)
@@ -248,11 +262,10 @@ ROOT_ADD_TEST_SUBDIRECTORY(tutorials)
 # Take all the modulemap contents we collected from the packages and append them to our modulemap.
 # We have to delay this because the ROOT_CXXMODULES_EXTRA_MODULEMAP_CONTENT is filled in the
 # add_subdirectory calls above.
-if(cxxmodules)
-  get_property(__modulemap_extra_content GLOBAL PROPERTY ROOT_CXXMODULES_EXTRA_MODULEMAP_CONTENT)
-  string(REPLACE ";" "" __modulemap_extra_content "${__modulemap_extra_content}")
-  file(WRITE "${CMAKE_BINARY_DIR}/include/module.modulemap.extra" "${__modulemap_extra_content}")
-endif(cxxmodules)
+get_property(__modulemap_extra_content GLOBAL PROPERTY ROOT_CXXMODULES_EXTRA_MODULEMAP_CONTENT)
+string(REPLACE ";" "" __modulemap_extra_content "${__modulemap_extra_content}")
+file(WRITE "${CMAKE_BINARY_DIR}/include/module.modulemap.extra" "${__modulemap_extra_content}")
+
 
 get_property(__allHeaders GLOBAL PROPERTY ROOT_HEADER_TARGETS)
 add_custom_target(move_headers ALL DEPENDS ${__allHeaders})

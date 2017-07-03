@@ -19,7 +19,7 @@
 #include "TMath.h"
 #include "TRandom3.h"
 #include "TFile.h"
-#include "TH1F.h"
+#include "TH1D.h"
 #include "TTree.h"
 
 #include "ROOT/TDataFrame.hxx"
@@ -109,7 +109,7 @@ int tdf002_dataModel()
                          .Define("tracks_pts", getPt)
                          .Define("tracks_pts_weights", getPtWeights);
 
-   auto trN = augmented_d.Histo1D(TH1F{"", "", 40, -.5, 39.5}, "tracks_n");
+   auto trN = augmented_d.Histo1D(TH1D{"", "", 40, -.5, 39.5}, "tracks_n");
    auto trPts = augmented_d.Histo1D("tracks_pts");
    auto trWPts = augmented_d.Histo1D("tracks_pts", "tracks_pts_weights");
 
