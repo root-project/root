@@ -61,7 +61,7 @@ or will be set to the address of the histogram read from the file.
 
 - Resolved O(N^2) scaling problem in ```TTree::Draw()``` observed when a branch that contains a
 large TClonesArray where each element contains another small vector container.
-- `TTree::Draw()` now creates double precision histograms (TH1D, TH2D, TH3D) by default (instead of TH1F etc); this can be configured in etc/system.rootrc / .rootrc as `Hist.Precision.1D` (or `2D` or `3D`).
+- `TTree::Draw()` now creates double precision histograms by default; this can be configured in etc/system.rootrc / .rootrc as `Hist.Precision.1D` (or `2D` or `3D`).
 
 ## Histogram Libraries
 
