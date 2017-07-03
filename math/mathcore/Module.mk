@@ -192,3 +192,6 @@ $(MATHCOREDO): CXXFLAGS += -DUSE_ROOT_ERROR
 $(MATHCOREDO1) : NOOPT = $(OPT)
 $(MATHCOREDO2) : NOOPT = $(OPT)
 $(MATHCOREDO3) : NOOPT = $(OPT)
+
+# Avoid warnings from triangle.c in classic builds
+$(MATHCOREO): CFLAGS += -Wno-strict-overflow -Wno-maybe-uninitialized -Wno-parentheses-equality
