@@ -668,9 +668,9 @@ TH1::TH1(const char *name,const char *title,Int_t nbins,const Float_t *xbins)
 ///
 /// \param[in] name name of histogram (avoid blanks)
 /// \param[in] title histogram title.
-///        If title is of the form "stringt;stringx;stringy;stringz"
-///        the histogram title is set to stringt,
-///        the x axis title to stringy, the y axis title to stringy, etc.
+///        If title is of the form `stringt;stringx;stringy;stringz`
+///        the histogram title is set to `stringt`,
+///        the x axis title to `stringy`, the y axis title to `stringy`, etc.
 /// \param[in] nbins number of bins
 /// \param[in] xbins array of low-edges for each bin.
 ///        This is an array of size nbins+1
