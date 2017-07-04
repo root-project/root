@@ -462,14 +462,7 @@ TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, EA
 /// WARNING! A function created with this constructor cannot be Cloned.
 
 TF1::TF1(const char *name, Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim, EAddToList addToGlobList) :
-   TNamed(name, name), TAttLine(), TAttFill(), TAttMarker(),
-   fXmin(xmin), fXmax(xmax),
-   fNpar(npar), fNdim(ndim),
-   fType(2),
-   fParErrors(std::vector<Double_t>(npar)),
-   fParMin(std::vector<Double_t>(npar)),
-   fParMax(std::vector<Double_t>(npar)),
-   fParams(new TF1Parameters(npar))
+   TF1(2, name, xmin, xmax, npar, ndim, addToGlobList, new TF1Parameters(npar))   
 {
    if (fName == "*") {
       Info("TF1", "TF1 has name * - it is not well defined");
@@ -486,8 +479,6 @@ TF1::TF1(const char *name, Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim,
       Error("TF1", "No function found with the signature %s(Double_t*,Double_t*)", name);
       return;
    }
-
-   DoInitialize(addToGlobList);
 }
 
 
@@ -505,19 +496,8 @@ TF1::TF1(const char *name, Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim,
 /// WARNING! A function created with this constructor cannot be Cloned.
 
 TF1::TF1(const char *name, Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim, EAddToList addToGlobList) :
-   TNamed(name, name), TAttLine(), TAttFill(), TAttMarker(),
-   fXmin(xmin), fXmax(xmax),
-   fNpar(npar), fNdim(ndim),
-   fType(1),
-   fParErrors(std::vector<Double_t>(npar)),
-   fParMin(std::vector<Double_t>(npar)),
-   fParMax(std::vector<Double_t>(npar)),
-   fFunctor(new TF1FunctorPointerImpl<double>(ROOT::Math::ParamFunctor(fcn))),
-   fParams(new TF1Parameters(npar))
-
-{
-   DoInitialize(addToGlobList);
-}
+   TF1(1, name, xmin, xmax, npar, ndim, addToGlobList, new TF1Parameters(npar), new TF1FunctorPointerImpl<double>(ROOT::Math::ParamFunctor(fcn)))
+{}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor using a pointer to real function.
@@ -533,18 +513,8 @@ TF1::TF1(const char *name, Double_t (*fcn)(Double_t *, Double_t *), Double_t xmi
 /// WARNING! A function created with this constructor cannot be Cloned.
 
 TF1::TF1(const char *name, Double_t (*fcn)(const Double_t *, const Double_t *), Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim, EAddToList addToGlobList) :
-   TNamed(name, name), TAttLine(), TAttFill(), TAttMarker(),
-   fXmin(xmin), fXmax(xmax),
-   fNpar(npar), fNdim(ndim),
-   fType(1),
-   fParErrors(std::vector<Double_t>(npar)),
-   fParMin(std::vector<Double_t>(npar)),
-   fParMax(std::vector<Double_t>(npar)),
-   fFunctor(new TF1FunctorPointerImpl<double>(ROOT::Math::ParamFunctor(fcn))),
-   fParams(new TF1Parameters(npar))
-{
-   DoInitialize(addToGlobList);
-}
+   TF1(1, name, xmin, xmax, npar, ndim, addToGlobList, new TF1Parameters(npar), new TF1FunctorPointerImpl<double>(ROOT::Math::ParamFunctor(fcn)))
+{}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -559,19 +529,8 @@ TF1::TF1(const char *name, Double_t (*fcn)(const Double_t *, const Double_t *), 
 /// WARNING! A function created with this constructor cannot be Cloned.
 
 TF1::TF1(const char *name, ROOT::Math::ParamFunctor f, Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim, EAddToList addToGlobList) :
-   TNamed(name, name), TAttLine(), TAttFill(), TAttMarker(),
-   fXmin(xmin), fXmax(xmax),
-   fNpar(npar), fNdim(ndim),
-   fType(1),
-   fParErrors(std::vector<Double_t>(npar)),
-   fParMin(std::vector<Double_t>(npar)),
-   fParMax(std::vector<Double_t>(npar)),
-   fFunctor(new TF1FunctorPointerImpl<double>(ROOT::Math::ParamFunctor(f))),
-   fParams(new TF1Parameters(npar))
-
-{
-   DoInitialize(addToGlobList);
-}
+   TF1(1, name, xmin, xmax, npar, ndim, addToGlobList, new TF1Parameters(npar), new TF1FunctorPointerImpl<double>(ROOT::Math::ParamFunctor(f)))
+{}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Common initialization of the TF1. Add to the global list and
