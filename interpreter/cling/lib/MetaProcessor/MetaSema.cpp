@@ -136,9 +136,26 @@ namespace cling {
       if (!FuncName.empty()) {
         FuncName = normalizeDotXFuncName(FuncName);
         if (T->containsNamedDecl(FuncName)) {
-          expression = FuncName + args.str();
+          bool named = args[1] == '#' && args[args.size() - 2] == '#';
+
+          const std::string& actual_args = named
+              ? MetaProcessor::positionalizeArgs(
+                  &m_Interpreter,
+                  T,
+                  FuncName,
+                  llvm::StringRef{args.data() + 2, args.size() - 4})
+              : args.str();
+
+          if (actual_args.front() != '(') {
+            m_Interpreter.echo("#error " + actual_args, result);
+            return AR_Failure;
+          }
+
+          expression = FuncName + actual_args;
           // Give the user some context in case we have a problem invoking
-          expression += " /* invoking function corresponding to '.x' */";
+          expression += named
+              ? " /* invoking function corresponding to .x " + FuncName + actual_args + " */"
+              : " /* invoking function corresponding to '.x' */";
 
           // Above transaction might have set a different OptLevel; use that.
           int prevOptLevel = m_Interpreter.getDefaultOptLevel();

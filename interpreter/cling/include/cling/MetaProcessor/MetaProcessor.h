@@ -79,6 +79,17 @@ namespace cling {
       ~MaybeRedirectOutputRAII();
     };
 
+    static std::string positionalizeArgs(cling::Interpreter* Interpreter,
+                                         llvm::StringRef FuncName,
+                                         llvm::StringRef args);
+    static std::string positionalizeArgs(cling::Interpreter* Interpreter,
+                                         const Transaction* T,
+                                         llvm::StringRef FuncName,
+                                         llvm::StringRef args);
+    static std::string positionalizeArgs(cling::Interpreter* Interpreter,
+                                         const clang::FunctionDecl* fdecl,
+                                         llvm::StringRef args);
+
   public:
     MetaProcessor(Interpreter& interp, llvm::raw_ostream& outs);
     ~MetaProcessor();
