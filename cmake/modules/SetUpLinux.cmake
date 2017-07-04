@@ -69,9 +69,7 @@ if(CMAKE_COMPILER_IS_GNUCXX)
   set(CMAKE_C_FLAGS_PROFILE          "-g3 -fno-inline -ftest-coverage -fprofile-arcs")
 
   #Settings for cint
-  if (GCC_MAJOR EQUAL 6)
-    set(CPPPREP "${CXX} -std=c++98 -E -C")
-  elseif (GCC_MAJOR EQUAL 7)
+  if (GCC_MAJOR GREATER_EQUAL 6)
     set(CPPPREP "${CXX} -std=c++98 -E -C")
   else()
     set(CPPPREP "${CXX} -E -C")

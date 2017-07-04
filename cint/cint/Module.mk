@@ -410,10 +410,7 @@ endif
 ##### configcint.h
 ifeq ($(CPPPREP),)
 # cannot use "CPPPREP?=", as someone might set "CPPPREP="
-ifeq ($(GCC_MAJOR),7)
-  CPPPREP = $(CXX) -std=c++98 -E -C
-else
-ifeq ($(GCC_MAJOR),6)
+if ($(GCC_MAJOR) GREATER_EQUAL 6)
   CPPPREP = $(CXX) -std=c++98 -E -C
 else
   CPPPREP = $(CXX) -E -C
