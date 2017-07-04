@@ -207,7 +207,8 @@ public:
 
   void deregisterEHFrames() override {
 #ifdef LLVM_ON_WIN32
-    platform::DeRegisterEHFrames(Addr, Size);
+    // platform::DeRegisterEHFrames(Addr, Size);
+    llvm_unreachable("Not implemented yet");
 #else
     return getExeMM()->deregisterEHFrames();
 #endif
