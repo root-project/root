@@ -229,7 +229,7 @@ protected:
    Int_t       fNpar;        //Number of parameters
    Int_t       fNdim;        //Function dimension
    Int_t       fNpx = 100;   //Number of points used for the graphical representation
-   Int_t       fType = 3;    //(=0 for formula functions which can be stored, 1 if pointer to scalar free function,
+   Int_t       fType;        //(=0 for formula functions which can be stored, 1 if pointer to scalar free function,
                              // 2, interpreted functions constructed by name,
                              // 3 templated functors or vectorized free functions)
    Int_t       fNpfits{};      //Number of points used in the fit
@@ -253,7 +253,15 @@ protected:
    TF1FunctorPointer  *fFunctor = nullptr; //! Functor object to wrap any C++ callable object
    TF1FunctionPointer *fFunctp = nullptr;  //! Pointer to vectorized function
    TFormula    *fFormula = nullptr;        //Pointer to TFormula in case when user define formula
-   TF1Parameters *fParams = nullptr;   //Pointer to Function parameters object (exusts only for not-formula functions)
+   TF1Parameters *fParams = nullptr;   //Pointer to Function parameters object (exists only for not-formula functions)
+
+   /// General constructor for TF1. Most of the other constructors delegate on it
+   TF1(Int_t functionType, const char *name, Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim, EAddToList addToGlobList, TF1Parameters *params = nullptr, TF1FunctorPointer * functor = nullptr):
+      TNamed(name, name), TAttLine(), TAttFill(), TAttMarker(), fXmin(xmin), fXmax(xmax), fNpar(npar), fNdim(ndim),
+      fType(functionType), fParErrors(npar), fParMin(npar), fParMax(npar), fFunctor(functor), fParams(params)
+   {
+         DoInitialize(addToGlobList);
+   };
 
 public:
 
@@ -307,29 +315,15 @@ public:
 
    template<class T>
    TF1(const char *name, std::function<T(const T *data, const Double_t *param)> *fcn, Double_t xmin = 0, Double_t xmax = 1, Int_t npar = 0, Int_t ndim = 1, EAddToList addToGlobList = EAddToList::kDefault):
-      TNamed(name, name), TAttLine(), TAttFill(), TAttMarker(),
-      fXmin(xmin), fXmax(xmax),
-      fNpar(npar), fNdim(ndim),
-      fParErrors(std::vector<Double_t>(npar)),
-      fParMin(std::vector<Double_t>(npar)),
-      fParMax(std::vector<Double_t>(npar)),
-      fParams(new TF1Parameters(npar))
+      TF1( 3, name, xmin, xmax, npar, ndim, addToGlobList, new TF1Parameters(npar))
    {
-      DoInitialize(addToGlobList);
       fFunctp = new TF1FunctionPointerImpl<T>(fcn);
    }
 
    template<class T>
    TF1(const char *name, T(*fcn)(const T *, const Double_t *), Double_t xmin = 0, Double_t xmax = 1, Int_t npar = 0, Int_t ndim = 1, EAddToList addToGlobList = EAddToList::kDefault):
-      TNamed(name, name), TAttLine(), TAttFill(), TAttMarker(),
-      fXmin(xmin), fXmax(xmax),
-      fNpar(npar), fNdim(ndim),
-      fParErrors(std::vector<Double_t>(npar)),
-      fParMin(std::vector<Double_t>(npar)),
-      fParMax(std::vector<Double_t>(npar)),
-      fParams(new TF1Parameters(npar))
+      TF1(3, name, xmin, xmax, npar, ndim, addToGlobList, new TF1Parameters(npar))
    {
-      DoInitialize(addToGlobList);
       fFunctp = new TF1FunctionPointerImpl<T>(fcn);
    }
 
@@ -345,24 +339,20 @@ public:
    // xmin and xmax specify the plotting range,  npar is the number of parameters.
    // See the tutorial math/exampleFunctor.C for an example of using this constructor
    template <typename Func>
-   TF1(const char *name, Func f, Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim = 1, EAddToList addToGlobList = EAddToList::kDefault);
+   TF1(const char *name, Func f, Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim = 1, EAddToList addToGlobList = EAddToList::kDefault) :
+      TF1(3, name, xmin, xmax, npar, ndim, addToGlobList)
+   {
+      ROOT::Internal::TF1Builder<Func>::Build(this, f);
+   }
 
    // backward compatible interface
 
    template <typename Func>
    TF1(const char *name, Func f, Double_t xmin, Double_t xmax, Int_t npar, const char *, EAddToList addToGlobList = EAddToList::kDefault) :
-      TNamed(name, name), TAttLine(), TAttFill(), TAttMarker(),
-      fXmin(xmin), fXmax(xmax),
-      fNpar(npar), fNdim(1),
-      fParErrors(std::vector<Double_t>(npar)),
-      fParMin(std::vector<Double_t>(npar)),
-      fParMax(std::vector<Double_t>(npar)),
-      fParams(new TF1Parameters(npar))
+      TF1(3, name, xmin, xmax, npar, 1, addToGlobList, new TF1Parameters(npar))
    {
       using Fnc_t = typename ROOT::Internal::GetFunctorType<decltype(ROOT::Internal::GetTheRightOp(&Func::operator()))>::type;
-
-      fFunctor = new TF1FunctorPointerImpl<Fnc_t>(ROOT::Math::ParamFunctorTempl<Fnc_t>(f)),
-      DoInitialize(addToGlobList);
+      fFunctor = new TF1FunctorPointerImpl<Fnc_t>(ROOT::Math::ParamFunctorTempl<Fnc_t>(f));
    }
 
 
@@ -376,31 +366,14 @@ public:
    // See the tutorial math/exampleFunctor.C for an example of using this constructor
    template <class PtrObj, typename MemFn>
    TF1(const char *name, const  PtrObj &p, MemFn memFn, Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim = 1, EAddToList addToGlobList = EAddToList::kDefault) :
-      TNamed(name, name), TAttLine(), TAttFill(), TAttMarker(),
-      fXmin(xmin), fXmax(xmax),
-      fNpar(npar), fNdim(ndim),
-      fParErrors(std::vector<Double_t>(npar)),
-      fParMin(std::vector<Double_t>(npar)),
-      fParMax(std::vector<Double_t>(npar)),
-      fFunctor(new TF1FunctorPointerImpl<double>(ROOT::Math::ParamFunctor(p, memFn))),
-      fParams(new TF1Parameters(npar))
-   {
-      DoInitialize(addToGlobList);
-   }
+      TF1(3, name, xmin, xmax, npar, ndim, addToGlobList, new TF1Parameters(npar), new TF1FunctorPointerImpl<double>(ROOT::Math::ParamFunctor(p, memFn)))
+   {}
+
    // backward compatible interface
    template <class PtrObj, typename MemFn>
    TF1(const char *name, const  PtrObj &p, MemFn memFn, Double_t xmin, Double_t xmax, Int_t npar, const char *, const char *, EAddToList addToGlobList = EAddToList::kDefault) :
-      TNamed(name, name), TAttLine(), TAttFill(), TAttMarker(),
-      fXmin(xmin), fXmax(xmax),
-      fNpar(npar), fNdim(1),
-      fParErrors(std::vector<Double_t>(npar)),
-      fParMin(std::vector<Double_t>(npar)),
-      fParMax(std::vector<Double_t>(npar)),
-      fFunctor(new TF1FunctorPointerImpl<double>(ROOT::Math::ParamFunctor(p, memFn))),
-      fParams(new TF1Parameters(npar))
-   {
-      DoInitialize(addToGlobList);
-   }
+      TF1(3, name, xmin, xmax, npar, 1, addToGlobList, new TF1Parameters(npar), new TF1FunctorPointerImpl<double>(ROOT::Math::ParamFunctor(p, memFn)))
+   {}
 
    TF1(const TF1 &f1);
    TF1 &operator=(const TF1 &rhs);
@@ -689,20 +662,6 @@ public:
 
    ClassDef(TF1, 9) //The Parametric 1-D function
 };
-
-///ctor implementation
-template <typename Func>
-TF1::TF1(const char *name, Func f, Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim, EAddToList addToGlobList) :
-   TNamed(name, name), TAttLine(), TAttFill(), TAttMarker(),
-   fXmin(xmin), fXmax(xmax),
-   fNpar(npar), fNdim(ndim),
-   fParErrors(std::vector<Double_t>(npar)),
-   fParMin(std::vector<Double_t>(npar)),
-   fParMax(std::vector<Double_t>(npar))
-{
-   ROOT::Internal::TF1Builder<Func>::Build(this, f);
-   DoInitialize(addToGlobList);
-}
 
 namespace ROOT {
    namespace Internal {
