@@ -1,12 +1,11 @@
-#include<Mpi.h>
+#include <Mpi.h>
 #include <cassert>
 using namespace ROOT::Mpi;
 
 void info()
 {
-   TEnvironment env;          //environment to start communication system
-   TIntraCommunicator comm(COMM_WORLD);   //Communicator to send/recv messages
-
+   TEnvironment env;                    // environment to start communication system
+   TIntraCommunicator comm(COMM_WORLD); // Communicator to send/recv messages
 
    TInfo info;
 
@@ -35,7 +34,7 @@ void info()
    assert(info.GetNKeys() == 3);
    info.Set("string", "hostname");
 
-   //duplicated info
+   // duplicated info
    TInfo dupinfo = info.Dup();
 
    assert(dupinfo.GetNKeys() == 4);
@@ -49,8 +48,8 @@ void info()
    assert(str == "hostname");
 
    TInfo info1, info2;
-   //testing overloaded operators == and !=
-   assert(info1 == info2); //both empty the true
+   // testing overloaded operators == and !=
+   assert(info1 == info2); // both empty the true
    info1["test1"] = "1";
    info1["test2"] = "2";
    info1["test3"] = "3";
@@ -68,6 +67,4 @@ void info()
    assert(ninfo != info1);
    assert(ninfo.IsNull() == kTRUE);
    assert(ninfo.IsEmpty() == kTRUE);
-
 }
-

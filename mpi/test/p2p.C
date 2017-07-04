@@ -1,13 +1,13 @@
-#include<Mpi.h>
+#include <Mpi.h>
 #include <cassert>
 using namespace ROOT::Mpi;
 
 void p2p_scalar(Int_t size = 10)
 {
-   //data to send/recv
-   std::map<std::string, std::string> mymap; //std oebjct
-   TMatrixD mymat(size, size);                    //ROOT object
-   Double_t a;                              //default datatype
+   // data to send/recv
+   std::map<std::string, std::string> mymap; // std oebjct
+   TMatrixD mymat(size, size);               // ROOT object
+   Double_t a;                               // default datatype
 
    if (COMM_WORLD.IsMainProcess()) {
       mymap["key"] = "hola";
@@ -24,7 +24,7 @@ void p2p_scalar(Int_t size = 10)
       std::cout << "Sending map = " << mymap["key"] << std::endl;
       COMM_WORLD.Send(mymap, 1, 0);
       std::cout << "Sending mat = ";
-//       mymat.Print();
+      //       mymat.Print();
       COMM_WORLD.Send(mymat, 1, 0);
    } else if (COMM_WORLD.GetRank() == 1) {
       COMM_WORLD.Recv(a, 0, 0);
@@ -33,14 +33,14 @@ void p2p_scalar(Int_t size = 10)
       std::cout << "Received map = " << mymap["key"] << std::endl;
       COMM_WORLD.Recv(mymat, 0, 0);
       std::cout << "Received mat = ";
-//       mymat.Print();
-      TMatrixD req_mat(size, size); //required mat
+      //       mymat.Print();
+      TMatrixD req_mat(size, size); // required mat
       req_mat[0][0] = 0.1;
       req_mat[0][1] = 0.2;
       req_mat[1][0] = 0.3;
       req_mat[1][1] = 0.4;
 
-      //assertions
+      // assertions
       assert(a == 123.0);
       assert(mymap["key"] == "hola");
       assert(mymat == req_mat);
@@ -63,17 +63,16 @@ void p2p_array(Int_t count = 500)
       COMM_WORLD.Recv(vecs, count, 0, 1);
       COMM_WORLD.Recv(arr, count, 0, 1);
       for (auto i = 0; i < count; i++) {
-//          vecs[i].Print();
+         //          vecs[i].Print();
          assert(vecs[i][0] == 1.0);
          assert(arr[i] == i);
-
       }
    }
 }
 
 void p2p(Bool_t stressTest = kTRUE)
 {
-   TEnvironment env;          //environment to start communication system
+   TEnvironment env; // environment to start communication system
    if (!stressTest) {
       p2p_scalar();
       p2p_array();
@@ -84,4 +83,3 @@ void p2p(Bool_t stressTest = kTRUE)
       }
    }
 }
-

@@ -1,4 +1,4 @@
-#include<Mpi.h>
+#include <Mpi.h>
 #include <cassert>
 using namespace ROOT::Mpi;
 
@@ -12,13 +12,12 @@ void p2p_nonblocking_scalar()
 {
 
    auto size = COMM_WORLD.GetSize();
-   if (COMM_WORLD.GetSize() == 1) return; //need at least 2 process
+   if (COMM_WORLD.GetSize() == 1) return; // need at least 2 process
 
-
-   //data to send/recv
-   std::map<std::string, std::string> mymap; //std oebjct
-   TMatrixD mymat(2, 2);                    //ROOT object
-   particle  p;                             //custom object
+   // data to send/recv
+   std::map<std::string, std::string> mymap; // std oebjct
+   TMatrixD mymat(2, 2);                     // ROOT object
+   particle p;                               // custom object
 
    if (COMM_WORLD.IsMainProcess()) {
       mymap["key"] = "hola";
@@ -47,9 +46,8 @@ void p2p_nonblocking_scalar()
       req = COMM_WORLD.ISend(size, 1, 3);
       req.Wait();
 
-
    } else {
-      //you can Received the messages in other order(is nonblocking)
+      // you can Received the messages in other order(is nonblocking)
       auto req = COMM_WORLD.IRecv(mymap, 0, 1);
       req.Wait();
       std::cout << "Received map = " << mymap["key"] << std::endl;
@@ -73,8 +71,7 @@ void p2p_nonblocking_scalar()
       req_mat[1][0] = 0.3;
       req_mat[1][1] = 0.4;
 
-
-      //assertions
+      // assertions
       assert(mymat == req_mat);
       assert(mymap["key"] == "hola");
       assert(p.x == 1);
@@ -88,19 +85,17 @@ void p2p_nonblocking_array(Int_t count = 2)
    auto size = COMM_WORLD.GetSize();
    auto rank = COMM_WORLD.GetRank();
 
-   if (size == 1) return; //need at least 2 process
+   if (size == 1) return; // need at least 2 process
 
-
-   //data to send/recv
-   std::map<std::string, std::string> mymap[count]; //std oebjct
-   TMatrixD mymat[count];                    //ROOT object
-   particle  p[count];                             //custom object
+   // data to send/recv
+   std::map<std::string, std::string> mymap[count]; // std oebjct
+   TMatrixD mymat[count];                           // ROOT object
+   particle p[count];                               // custom object
 
    TMpiMessage msgs[count];
    TRequest req[4];
 
-
-   //Testing TMpiMessage
+   // Testing TMpiMessage
    if (rank == 0) {
       for (auto i = 0; i < count; i++) {
          mymap[i]["key"] = "hola";
@@ -129,7 +124,7 @@ void p2p_nonblocking_array(Int_t count = 2)
 
       TRequest::WaitAll(4, req);
    } else {
-      //you can Received the messages in other order(is nonblocking)
+      // you can Received the messages in other order(is nonblocking)
       req[0] = COMM_WORLD.IRecv(mymap, count, 0, 2);
       req[1] = COMM_WORLD.IRecv(msgs, count, 0, 3);
       req[2] = COMM_WORLD.IRecv(mymat, count, 0, 1);
@@ -143,7 +138,6 @@ void p2p_nonblocking_array(Int_t count = 2)
 
       std::cout << "Received map = " << mymap[0]["key"] << std::endl;
 
-
       TMatrixD req_mat(count, count);
       req_mat[0][0] = 0.1;
       req_mat[0][1] = 0.2;
@@ -151,9 +145,9 @@ void p2p_nonblocking_array(Int_t count = 2)
       req_mat[1][1] = 0.4;
 
       for (auto i = 0; i < count; i++) {
-//          particle &pp= *(particle*)msgs[i].ReadObjectAny(gROOT->GetClass(typeid(particle)));
+         //          particle &pp= *(particle*)msgs[i].ReadObjectAny(gROOT->GetClass(typeid(particle)));
 
-         //assertions
+         // assertions
          assert(mymat[i][0][0] == req_mat[0][0]);
          assert(mymat[i][0][1] == req_mat[0][1]);
          assert(mymat[i][1][0] == req_mat[1][0]);
@@ -166,10 +160,9 @@ void p2p_nonblocking_array(Int_t count = 2)
    }
 }
 
-
 void p2p_nonblocking()
 {
-   TEnvironment env;          //environment to start communication system
+   TEnvironment env; // environment to start communication system
 
    p2p_nonblocking_scalar();
    p2p_nonblocking_array();

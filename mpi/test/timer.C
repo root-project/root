@@ -1,11 +1,10 @@
-#include<Mpi.h>
+#include <Mpi.h>
 #include <cassert>
 using namespace ROOT::Mpi;
 
-
 void timer()
 {
-   TEnvironment env;          //environment to start communication system
+   TEnvironment env; // environment to start communication system
    TMpiTimer timer(COMM_WORLD);
 
    timer.Start();
@@ -22,4 +21,3 @@ void timer()
       timer.Sleep(30000);
    }
 }
-

@@ -1,5 +1,5 @@
-//https://root.cern.ch/root/html528/THistPainter.html
-//https://root.cern.ch/root/htmldoc/guides/users-guide/Histograms.html#the-bar-options
+// https://root.cern.ch/root/html528/THistPainter.html
+// https://root.cern.ch/root/htmldoc/guides/users-guide/Histograms.html#the-bar-options
 
 {
    TCanvas *cb = new TCanvas("cb", "cb", 600, 400);
@@ -37,5 +37,4 @@
    legend->Draw();
 
    return cb;
-
 }

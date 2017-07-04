@@ -1,4 +1,4 @@
-#include<Mpi.h>
+#include <Mpi.h>
 #include <cassert>
 using namespace ROOT::Mpi;
 
@@ -68,28 +68,28 @@ void clean(TString filename)
 
 void file(Int_t size = 10)
 {
-   TEnvironment env;          //environment to start communication system
-//    env.SyncOutput();
+   TEnvironment env; // environment to start communication system
+   //    env.SyncOutput();
 
    create();
-   //TODO: add some extra test here
+   // TODO: add some extra test here
    clean("mpicreate.root");
 
    recreate();
-   //TODO: add some extra test here
+   // TODO: add some extra test here
    clean("mpirecreate.root");
 
    create("mpiupdate.root");
    update();
-   //TODO: add some extra test here
+   // TODO: add some extra test here
    clean("mpiupdate.root");
 
    create("mpiread.root");
    read();
-   //TODO: add some extra test here
+   // TODO: add some extra test here
    clean("mpiread.root");
 
    test_sync();
-   //TODO: add some extra test here
+   // TODO: add some extra test here
    clean("mpisync.root");
 }

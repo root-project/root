@@ -36,7 +36,6 @@ TIntraCommunicator *TIntraCommunicator::Dup() const
    return fDupComm;
 }
 
-
 //______________________________________________________________________________
 /**
  * This  method creates a new communicator with communication group defined by

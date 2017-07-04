@@ -1,11 +1,10 @@
-#include<Mpi.h>
+#include <Mpi.h>
 #include <cassert>
 using namespace ROOT::Mpi;
 
-
 void port()
 {
-   TEnvironment env;          //environment to start communication system
+   TEnvironment env; // environment to start communication system
 
    TPort port;
    port.Print();
@@ -19,7 +18,7 @@ void port()
    TPort pp1, pp2;
    assert(pp1 != pp2);
 
-   //TODO: test Connect/Accept/Disconnect and COMM_SELF Publish/UnPublish/LookupName
+   // TODO: test Connect/Accept/Disconnect and COMM_SELF Publish/UnPublish/LookupName
 }
 
 Int_t main()
