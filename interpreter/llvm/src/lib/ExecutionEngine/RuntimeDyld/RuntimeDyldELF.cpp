@@ -349,7 +349,6 @@ void RuntimeDyldELF::resolveAArch64Relocation(const SectionEntry &Section,
     // Operation: S+A-P. Set Call or B immediate value to bits fff_fffc of the
     // calculation.
     uint64_t BranchImm = Value + Addend - FinalAddress;
-    uint32_t TargetValue = support::ulittle32_t::ref{TargetPtr};
 
     // "Check that -2^27 <= result < 2^27".
     assert(isInt<28>(BranchImm));
