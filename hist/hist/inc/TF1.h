@@ -224,17 +224,17 @@ protected:
    struct TF1FunctionPointer {};
    struct TF1FunctorPointer {};
 
-   Double_t    fXmin;        //Lower bounds for the range
-   Double_t    fXmax;        //Upper bounds for the range
+   Double_t    fXmin = -1111;        //Lower bounds for the range
+   Double_t    fXmax = -1111;        //Upper bounds for the range
    Int_t       fNpar;        //Number of parameters
    Int_t       fNdim;        //Function dimension
-   Int_t       fNpx;         //Number of points used for the graphical representation
-   Int_t       fType;        //(=0 for formula functions which can be stored, 1 if pointer to scalar free function,
+   Int_t       fNpx = 100;   //Number of points used for the graphical representation
+   Int_t       fType = 3;    //(=0 for formula functions which can be stored, 1 if pointer to scalar free function,
                              // 2, interpreted functions constructed by name,
                              // 3 templated functors or vectorized free functions)
-   Int_t       fNpfits;      //Number of points used in the fit
-   Int_t       fNDF;         //Number of degrees of freedom in the fit
-   Double_t    fChisquare;   //Function fit chisquare
+   Int_t       fNpfits{};      //Number of points used in the fit
+   Int_t       fNDF{};         //Number of degrees of freedom in the fit
+   Double_t    fChisquare{};   //Function fit chisquare
    Double_t    fMinimum;     //Minimum value for plotting
    Double_t    fMaximum;     //Maximum value for plotting
    std::vector<Double_t>    fParErrors;  //Array of errors of the fNpar parameters
@@ -245,15 +245,15 @@ protected:
    std::vector<Double_t>    fAlpha;      //!Array alpha. for each bin in x the deconvolution r of fIntegral
    std::vector<Double_t>    fBeta;       //!Array beta.  is approximated by x = alpha +beta*r *gamma*r**2
    std::vector<Double_t>    fGamma;      //!Array gamma.
-   TObject     *fParent;     //!Parent object hooking this function (if one)
-   TH1         *fHistogram;  //!Pointer to histogram used for visualisation
-   TMethodCall *fMethodCall; //!Pointer to MethodCall in case of interpreted function
-   Bool_t      fNormalized;  //Normalization option (false by default)
-   Double_t    fNormIntegral;//Integral of the function before being normalized
+   TObject     *fParent = nullptr;     //!Parent object hooking this function (if one)
+   TH1         *fHistogram = nullptr;  //!Pointer to histogram used for visualisation
+   TMethodCall *fMethodCall = nullptr; //!Pointer to MethodCall in case of interpreted function
+   Bool_t      fNormalized = false;    //Normalization option (false by default)
+   Double_t    fNormIntegral{};        //Integral of the function before being normalized
    TF1FunctorPointer  *fFunctor = nullptr; //! Functor object to wrap any C++ callable object
    TF1FunctionPointer *fFunctp = nullptr;  //! Pointer to vectorized function
-   TFormula    *fFormula;    //Pointer to TFormula in case when user define formula
-   TF1Parameters *fParams;   //Pointer to Function parameters object (exusts only for not-formula functions)
+   TFormula    *fFormula = nullptr;        //Pointer to TFormula in case when user define formula
+   TF1Parameters *fParams = nullptr;   //Pointer to Function parameters object (exusts only for not-formula functions)
 
 public:
 
@@ -307,20 +307,12 @@ public:
 
    template<class T>
    TF1(const char *name, std::function<T(const T *data, const Double_t *param)> *fcn, Double_t xmin = 0, Double_t xmax = 1, Int_t npar = 0, Int_t ndim = 1, EAddToList addToGlobList = EAddToList::kDefault):
-//  TF1(const char *name, (T(*)(const T*, Double_t * param)) * fcn, Double_t xmin=0, Double_t xmax=1, Int_t npar=0,Int_t ndim = 1):
       TNamed(name, name), TAttLine(), TAttFill(), TAttMarker(),
       fXmin(xmin), fXmax(xmax),
       fNpar(npar), fNdim(ndim),
-      fNpx(100), fType(3),
-      fNpfits(0), fNDF(0), fChisquare(0),
-      fMinimum(-1111), fMaximum(-1111),
       fParErrors(std::vector<Double_t>(npar)),
       fParMin(std::vector<Double_t>(npar)),
       fParMax(std::vector<Double_t>(npar)),
-      fParent(0), fHistogram(0),
-      fMethodCall(0),
-      fNormalized(false), fNormIntegral(0),
-      fFormula(0),
       fParams(new TF1Parameters(npar))
    {
       DoInitialize(addToGlobList);
@@ -329,20 +321,12 @@ public:
 
    template<class T>
    TF1(const char *name, T(*fcn)(const T *, const Double_t *), Double_t xmin = 0, Double_t xmax = 1, Int_t npar = 0, Int_t ndim = 1, EAddToList addToGlobList = EAddToList::kDefault):
-//  TF1(const char *name, (T(*)(const T*, Double_t * param)) * fcn, Double_t xmin=0, Double_t xmax=1, Int_t npar=0,Int_t ndim = 1):
       TNamed(name, name), TAttLine(), TAttFill(), TAttMarker(),
       fXmin(xmin), fXmax(xmax),
       fNpar(npar), fNdim(ndim),
-      fNpx(100), fType(3),
-      fNpfits(0), fNDF(0), fChisquare(0),
-      fMinimum(-1111), fMaximum(-1111),
       fParErrors(std::vector<Double_t>(npar)),
       fParMin(std::vector<Double_t>(npar)),
       fParMax(std::vector<Double_t>(npar)),
-      fParent(0), fHistogram(0),
-      fMethodCall(0),
-      fNormalized(false), fNormIntegral(0),
-      fFormula(0),
       fParams(new TF1Parameters(npar))
    {
       DoInitialize(addToGlobList);
@@ -370,16 +354,9 @@ public:
       TNamed(name, name), TAttLine(), TAttFill(), TAttMarker(),
       fXmin(xmin), fXmax(xmax),
       fNpar(npar), fNdim(1),
-      fNpx(100), fType(3),
-      fNpfits(0), fNDF(0), fChisquare(0),
-      fMinimum(-1111), fMaximum(-1111),
       fParErrors(std::vector<Double_t>(npar)),
       fParMin(std::vector<Double_t>(npar)),
       fParMax(std::vector<Double_t>(npar)),
-      fParent(0), fHistogram(0),
-      fMethodCall(0),
-      fNormalized(false), fNormIntegral(0),
-      fFormula(0),
       fParams(new TF1Parameters(npar))
    {
       using Fnc_t = typename ROOT::Internal::GetFunctorType<decltype(ROOT::Internal::GetTheRightOp(&Func::operator()))>::type;
@@ -402,17 +379,10 @@ public:
       TNamed(name, name), TAttLine(), TAttFill(), TAttMarker(),
       fXmin(xmin), fXmax(xmax),
       fNpar(npar), fNdim(ndim),
-      fNpx(100), fType(3),
-      fNpfits(0), fNDF(0), fChisquare(0),
-      fMinimum(-1111), fMaximum(-1111),
       fParErrors(std::vector<Double_t>(npar)),
       fParMin(std::vector<Double_t>(npar)),
       fParMax(std::vector<Double_t>(npar)),
-      fParent(0), fHistogram(0),
-      fMethodCall(0),
-      fNormalized(false), fNormIntegral(0),
       fFunctor(new TF1FunctorPointerImpl<double>(ROOT::Math::ParamFunctor(p, memFn))),
-      fFormula(0),
       fParams(new TF1Parameters(npar))
    {
       DoInitialize(addToGlobList);
@@ -423,17 +393,10 @@ public:
       TNamed(name, name), TAttLine(), TAttFill(), TAttMarker(),
       fXmin(xmin), fXmax(xmax),
       fNpar(npar), fNdim(1),
-      fNpx(100), fType(3),
-      fNpfits(0), fNDF(0), fChisquare(0),
-      fMinimum(-1111), fMaximum(-1111),
       fParErrors(std::vector<Double_t>(npar)),
       fParMin(std::vector<Double_t>(npar)),
       fParMax(std::vector<Double_t>(npar)),
-      fParent(0), fHistogram(0),
-      fMethodCall(0),
-      fNormalized(false), fNormIntegral(0),
       fFunctor(new TF1FunctorPointerImpl<double>(ROOT::Math::ParamFunctor(p, memFn))),
-      fFormula(0),
       fParams(new TF1Parameters(npar))
    {
       DoInitialize(addToGlobList);
@@ -733,18 +696,9 @@ TF1::TF1(const char *name, Func f, Double_t xmin, Double_t xmax, Int_t npar, Int
    TNamed(name, name), TAttLine(), TAttFill(), TAttMarker(),
    fXmin(xmin), fXmax(xmax),
    fNpar(npar), fNdim(ndim),
-   fNpx(100), fType(3),
-   fNpfits(0), fNDF(0), fChisquare(0),
-   fMinimum(-1111), fMaximum(-1111),
    fParErrors(std::vector<Double_t>(npar)),
    fParMin(std::vector<Double_t>(npar)),
-   fParMax(std::vector<Double_t>(npar)),
-   fParent(0), fHistogram(0),
-   fMethodCall(0),
-   fNormalized(false), fNormIntegral(0),
-   //fFunctor(ROOT::Math::ParamFunctor(f)),
-   fFormula(0),
-   fParams(0)
+   fParMax(std::vector<Double_t>(npar))
 {
    ROOT::Internal::TF1Builder<Func>::Build(this, f);
    DoInitialize(addToGlobList);

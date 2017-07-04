@@ -400,13 +400,7 @@ TF1 *TF1::fgCurrent = 0;
 
 TF1::TF1():
    TNamed(), TAttLine(), TAttFill(), TAttMarker(),
-   fXmin(0), fXmax(0), fNpar(0), fNdim(0),
-   fNpx(100), fType(0),
-   fNpfits(0), fNDF(0), fChisquare(0),
-   fMinimum(-1111), fMaximum(-1111),
-   fParent(0), fHistogram(0),
-   fMethodCall(0), fNormalized(false), fNormIntegral(0),
-   fFormula(0), fParams(0)
+   fXmin(0), fXmax(0), fNpar(0), fNdim(0), fType(0)
 {
    SetFillStyle(0);
 }
@@ -427,13 +421,7 @@ TF1::TF1():
 /// titles for the X and Y axis respectively.
 
 TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, EAddToList addToGlobList) :
-   TNamed(name, formula), TAttLine(), TAttFill(), TAttMarker(),
-   fNpx(100), fType(0),
-   fNpfits(0), fNDF(0), fChisquare(0),
-   fMinimum(-1111), fMaximum(-1111),
-   fParent(0), fHistogram(0),
-   fMethodCall(0), fNormalized(false), fNormIntegral(0),
-   fFormula(0), fParams(0)
+   TNamed(name, formula), TAttLine(), TAttFill(), TAttMarker(), fType(0)
 {
    if (xmin < xmax) {
       fXmin      = xmin;
@@ -477,15 +465,10 @@ TF1::TF1(const char *name, Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim,
    TNamed(name, name), TAttLine(), TAttFill(), TAttMarker(),
    fXmin(xmin), fXmax(xmax),
    fNpar(npar), fNdim(ndim),
-   fNpx(100), fType(2),
-   fNpfits(0), fNDF(0), fChisquare(0),
-   fMinimum(-1111), fMaximum(-1111),
+   fType(2),
    fParErrors(std::vector<Double_t>(npar)),
    fParMin(std::vector<Double_t>(npar)),
    fParMax(std::vector<Double_t>(npar)),
-   fParent(0), fHistogram(0),
-   fMethodCall(0), fNormalized(false), fNormIntegral(0),
-   fFormula(0),
    fParams(new TF1Parameters(npar))
 {
    if (fName == "*") {
@@ -525,17 +508,11 @@ TF1::TF1(const char *name, Double_t (*fcn)(Double_t *, Double_t *), Double_t xmi
    TNamed(name, name), TAttLine(), TAttFill(), TAttMarker(),
    fXmin(xmin), fXmax(xmax),
    fNpar(npar), fNdim(ndim),
-   fNpx(100), fType(1),
-   fNpfits(0), fNDF(0), fChisquare(0),
-   fMinimum(-1111), fMaximum(-1111),
+   fType(1),
    fParErrors(std::vector<Double_t>(npar)),
    fParMin(std::vector<Double_t>(npar)),
    fParMax(std::vector<Double_t>(npar)),
-   fParent(0), fHistogram(0),
-   fMethodCall(0),
-   fNormalized(false), fNormIntegral(0),
    fFunctor(new TF1FunctorPointerImpl<double>(ROOT::Math::ParamFunctor(fcn))),
-   fFormula(0),
    fParams(new TF1Parameters(npar))
 
 {
@@ -559,17 +536,11 @@ TF1::TF1(const char *name, Double_t (*fcn)(const Double_t *, const Double_t *), 
    TNamed(name, name), TAttLine(), TAttFill(), TAttMarker(),
    fXmin(xmin), fXmax(xmax),
    fNpar(npar), fNdim(ndim),
-   fNpx(100), fType(1),
-   fNpfits(0), fNDF(0), fChisquare(0),
-   fMinimum(-1111), fMaximum(-1111),
+   fType(1),
    fParErrors(std::vector<Double_t>(npar)),
    fParMin(std::vector<Double_t>(npar)),
    fParMax(std::vector<Double_t>(npar)),
-   fParent(0), fHistogram(0),
-   fMethodCall(0),
-   fNormalized(false), fNormIntegral(0),
    fFunctor(new TF1FunctorPointerImpl<double>(ROOT::Math::ParamFunctor(fcn))),
-   fFormula(0),
    fParams(new TF1Parameters(npar))
 {
    DoInitialize(addToGlobList);
@@ -591,17 +562,11 @@ TF1::TF1(const char *name, ROOT::Math::ParamFunctor f, Double_t xmin, Double_t x
    TNamed(name, name), TAttLine(), TAttFill(), TAttMarker(),
    fXmin(xmin), fXmax(xmax),
    fNpar(npar), fNdim(ndim),
-   fNpx(100), fType(1),
-   fNpfits(0), fNDF(0), fChisquare(0),
-   fMinimum(-1111), fMaximum(-1111),
+   fType(1),
    fParErrors(std::vector<Double_t>(npar)),
    fParMin(std::vector<Double_t>(npar)),
    fParMax(std::vector<Double_t>(npar)),
-   fParent(0), fHistogram(0),
-   fMethodCall(0),
-   fNormalized(false), fNormIntegral(0),
    fFunctor(new TF1FunctorPointerImpl<double>(ROOT::Math::ParamFunctor(f))),
-   fFormula(0),
    fParams(new TF1Parameters(npar))
 
 {
@@ -730,14 +695,7 @@ TF1::~TF1()
 
 TF1::TF1(const TF1 &f1) :
    TNamed(f1), TAttLine(f1), TAttFill(f1), TAttMarker(f1),
-   fXmin(0), fXmax(0), fNpar(0), fNdim(0),
-   fNpx(100), fType(0),
-   fNpfits(0), fNDF(0), fChisquare(0),
-   fMinimum(-1111), fMaximum(-1111),
-   fParent(0), fHistogram(0),
-   fMethodCall(0),
-   fNormalized(false), fNormIntegral(0),
-   fFormula(0), fParams(0)
+   fXmin(0), fXmax(0), fNpar(0), fNdim(0), fType(0)
 {
    ((TF1 &)f1).Copy(*this);
 }
