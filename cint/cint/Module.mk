@@ -153,19 +153,12 @@ CINTS2       := $(filter-out $(MODDIRSD)/libstrm.%,$(CINTS2))
  CINTS2       += $(MODDIRSD)/iccstrm.cxx
 endif
 endif
+GCCVERSIONGTEQ4 := $(shell expr `gcc -dumpversion | cut -f1 -d.` \>= 4)
 ifeq ($(GCC_MAJOR),3)
 CINTS2       := $(filter-out $(MODDIRSD)/libstrm.%,$(CINTS2))
 CINTS2       += $(MODDIRSD)/gcc3strm.cxx
 endif
-ifeq ($(GCC_MAJOR),4)
-CINTS2       := $(filter-out $(MODDIRSD)/libstrm.%,$(CINTS2))
-CINTS2       += $(MODDIRSD)/gcc4strm.cxx
-endif
-ifeq ($(GCC_MAJOR),5)
-CINTS2       := $(filter-out $(MODDIRSD)/libstrm.%,$(CINTS2))
-CINTS2       += $(MODDIRSD)/gcc4strm.cxx
-endif
-ifeq ($(GCC_MAJOR),6)
+ifeq ($(GCCVERSIONGTEQ4),1)
 CINTS2       := $(filter-out $(MODDIRSD)/libstrm.%,$(CINTS2))
 CINTS2       += $(MODDIRSD)/gcc4strm.cxx
 endif
@@ -211,21 +204,13 @@ IOSENUMC     := $(CINTDIRIOSEN)/iosenum.cxx
 ifneq ($(CLANG_MAJOR),)
 IOSENUMA     := $(CINTDIRIOSEN)/iosenum.$(ARCH)3
 else
-ifeq ($(GCC_MAJOR),6)
-IOSENUMA     := $(CINTDIRIOSEN)/iosenum.$(ARCH)3
-else
-ifeq ($(GCC_MAJOR),5)
-IOSENUMA     := $(CINTDIRIOSEN)/iosenum.$(ARCH)3
-else
-ifeq ($(GCC_MAJOR),4)
-IOSENUMA     := $(CINTDIRIOSEN)/iosenum.$(ARCH)3
-else
-ifeq ($(GCC_MAJOR),3)
-IOSENUMA     := $(CINTDIRIOSEN)/iosenum.$(ARCH)3
-else
+ifeq ($(GCC_MAJOR),1)
 IOSENUMA     := $(CINTDIRIOSEN)/iosenum.$(ARCH)
-endif
-endif
+else
+ifeq ($(GCC_MAJOR),2)
+IOSENUMA     := $(CINTDIRIOSEN)/iosenum.$(ARCH)
+else
+IOSENUMA     := $(CINTDIRIOSEN)/iosenum.$(ARCH)3
 endif
 endif
 endif
@@ -357,13 +342,9 @@ $(call stripsrc,$(CINTDIRSD)/libstrm.o):  CINTCXXFLAGS += -I$(CINTDIRL)/stream
 $(call stripsrc,$(CINTDIRSD)/sun5strm.o): CINTCXXFLAGS += -I$(CINTDIRL)/sunstrm
 $(call stripsrc,$(CINTDIRSD)/vcstrm.o):   CINTCXXFLAGS += -I$(CINTDIRL)/vcstream
 $(call stripsrc,$(CINTDIRSD)/%strm.o):    CINTCXXFLAGS += -I$(CINTDIRL)/$(notdir $(basename $@))
-ifeq ($(GCC_MAJOR),4)
-$(call stripsrc,$(CINTDIRSD)/gcc4strm.o): CINTCXXFLAGS += -Wno-strict-aliasing
-endif
-ifeq ($(GCC_MAJOR),5)
-$(call stripsrc,$(CINTDIRSD)/gcc4strm.o): CINTCXXFLAGS += -Wno-strict-aliasing
-endif
-ifeq ($(GCC_MAJOR),6)
+# flags for gcc starting at major release 4
+GCCVERSIONGTEQ4 := $(shell expr `gcc -dumpversion | cut -f1 -d.` \>= 4)
+ifeq ($(GCCVERSIONGTEQ4 ),1)
 $(call stripsrc,$(CINTDIRSD)/gcc4strm.o): CINTCXXFLAGS += -Wno-strict-aliasing
 endif
 
@@ -399,8 +380,9 @@ endif
 
 ##### configcint.h
 ifeq ($(CPPPREP),)
+GCCVERSIONGTEQ6 := $(shell expr `gcc -dumpversion | cut -f1 -d.` \>= 6)
 # cannot use "CPPPREP?=", as someone might set "CPPPREP="
-ifeq ($(GCC_MAJOR),6)
+ifeq ($(GCCVERSIONGTEQ6),1)
   CPPPREP = $(CXX) -std=c++98 -E -C
 else
   CPPPREP = $(CXX) -E -C
