@@ -124,6 +124,7 @@ BUILTINPCRE    := @builtinpcre@
 
 BUILTINUNURAN  := @builtinunuran@
 UNURANLIBDIR   := @unuranlibdir@
+UNURANLIBEXT   := @unuranlib@
 UNURANLIB      := @unuranlib@
 UNURANINCDIR   := $(filter-out /usr/include, @unuranincdir@)
 
