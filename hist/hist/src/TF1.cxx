@@ -400,7 +400,7 @@ TF1 *TF1::fgCurrent = 0;
 
 TF1::TF1():
    TNamed(), TAttLine(), TAttFill(), TAttMarker(),
-   fXmin(0), fXmax(0), fNpar(0), fNdim(0), fType(0)
+   fXmin(0), fXmax(0), fNpar(0), fNdim(0), fType(EFType::kFormula)
 {
    SetFillStyle(0);
 }
@@ -421,7 +421,7 @@ TF1::TF1():
 /// titles for the X and Y axis respectively.
 
 TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, EAddToList addToGlobList) :
-   TNamed(name, formula), TAttLine(), TAttFill(), TAttMarker(), fType(0)
+   TNamed(name, formula), TAttLine(), TAttFill(), TAttMarker(), fType(EFType::kFormula)
 {
    if (xmin < xmax) {
       fXmin      = xmin;
@@ -462,7 +462,7 @@ TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, EA
 /// WARNING! A function created with this constructor cannot be Cloned.
 
 TF1::TF1(const char *name, Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim, EAddToList addToGlobList) :
-   TF1(2, name, xmin, xmax, npar, ndim, addToGlobList, new TF1Parameters(npar))   
+   TF1(EFType::kInterpreted, name, xmin, xmax, npar, ndim, addToGlobList, new TF1Parameters(npar))
 {
    if (fName == "*") {
       Info("TF1", "TF1 has name * - it is not well defined");
@@ -496,7 +496,7 @@ TF1::TF1(const char *name, Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim,
 /// WARNING! A function created with this constructor cannot be Cloned.
 
 TF1::TF1(const char *name, Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim, EAddToList addToGlobList) :
-   TF1(1, name, xmin, xmax, npar, ndim, addToGlobList, new TF1Parameters(npar), new TF1FunctorPointerImpl<double>(ROOT::Math::ParamFunctor(fcn)))
+   TF1(EFType::kPtrScalarFreeFcn, name, xmin, xmax, npar, ndim, addToGlobList, new TF1Parameters(npar), new TF1FunctorPointerImpl<double>(ROOT::Math::ParamFunctor(fcn)))
 {}
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -513,7 +513,7 @@ TF1::TF1(const char *name, Double_t (*fcn)(Double_t *, Double_t *), Double_t xmi
 /// WARNING! A function created with this constructor cannot be Cloned.
 
 TF1::TF1(const char *name, Double_t (*fcn)(const Double_t *, const Double_t *), Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim, EAddToList addToGlobList) :
-   TF1(1, name, xmin, xmax, npar, ndim, addToGlobList, new TF1Parameters(npar), new TF1FunctorPointerImpl<double>(ROOT::Math::ParamFunctor(fcn)))
+   TF1(EFType::kPtrScalarFreeFcn, name, xmin, xmax, npar, ndim, addToGlobList, new TF1Parameters(npar), new TF1FunctorPointerImpl<double>(ROOT::Math::ParamFunctor(fcn)))
 {}
 
 
@@ -529,7 +529,7 @@ TF1::TF1(const char *name, Double_t (*fcn)(const Double_t *, const Double_t *), 
 /// WARNING! A function created with this constructor cannot be Cloned.
 
 TF1::TF1(const char *name, ROOT::Math::ParamFunctor f, Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim, EAddToList addToGlobList) :
-   TF1(1, name, xmin, xmax, npar, ndim, addToGlobList, new TF1Parameters(npar), new TF1FunctorPointerImpl<double>(ROOT::Math::ParamFunctor(f)))
+   TF1(EFType::kPtrScalarFreeFcn, name, xmin, xmax, npar, ndim, addToGlobList, new TF1Parameters(npar), new TF1FunctorPointerImpl<double>(ROOT::Math::ParamFunctor(f)))
 {}
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -654,7 +654,7 @@ TF1::~TF1()
 
 TF1::TF1(const TF1 &f1) :
    TNamed(f1), TAttLine(f1), TAttFill(f1), TAttMarker(f1),
-   fXmin(0), fXmax(0), fNpar(0), fNdim(0), fType(0)
+   fXmin(0), fXmax(0), fNpar(0), fNdim(0), fType(EFType::kFormula)
 {
    ((TF1 &)f1).Copy(*this);
 }
@@ -3301,7 +3301,7 @@ void TF1::Streamer(TBuffer &b)
          SetParameters(fold.GetParameters());
          // copy the other data members
          fNpx = fold.fNpx;
-         fType = fold.fType;
+         fType = (EFType) fold.fType;
          fNpfits = fold.fNpfits;
          fNDF = fold.fNDF;
          fChisquare = fold.fChisquare;
