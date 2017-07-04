@@ -3678,88 +3678,96 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw expression varexp for specified entries.
-/// Returns -1 in case of error or number of selected events in case of success.
 ///
-/// varexp is an expression of the general form
+/// \return -1 in case of error or number of selected events in case of success.
+///
+/// \param [in] varexp is an expression of the general form
 ///  - "e1"           produces a 1-d histogram (TH1F) of expression "e1"
 ///  - "e1:e2"        produces an unbinned 2-d scatter-plot (TGraph) of "e1"
 ///                   on the y-axis versus "e2" on the x-axis
 ///  - "e1:e2:e3"     produces an unbinned 3-d scatter-plot (TPolyMarker3D) of "e1"
-///                   versus "e2" versus "e3" on the x-, y-, z-axis, respectively.
+///                   vs "e2" vs "e3" on the x-, y-, z-axis, respectively.
 ///  - "e1:e2:e3:e4"  produces an unbinned 3-d scatter-plot (TPolyMarker3D) of "e1"
-///                   versus "e2" versus "e3" and "e4" mapped on the color number.
-/// (to create histograms in the 2, 3, and 4 dimensional case, see section "Saving
-/// the result of Draw to an histogram")
+///                   vs "e2" vs "e3" and "e4" mapped on the current color palette.
+///                   (to create histograms in the 2, 3, and 4 dimensional case,
+///                   see section "Saving the result of Draw to an histogram")
 ///
-/// Example:
-///  -  varexp = x     simplest case: draw a 1-Dim distribution of column named x
-///  -  varexp = sqrt(x)            : draw distribution of sqrt(x)
-///  -  varexp = x*y/z
-///  -  varexp = y:sqrt(x) 2-Dim distribution of y versus sqrt(x)
-///  -  varexp = px:py:pz:2.5*E  produces a 3-d scatter-plot of px vs py ps pz
-///             and the color number of each marker will be 2.5*E.
-///             If the color number is negative it is set to 0.
-///             If the color number is greater than the current number of colors
-///             it is set to the highest color number.The default number of
-///             colors is 50. see TStyle::SetPalette for setting a new color palette.
+///   Example:
+///    -  varexp = x     simplest case: draw a 1-Dim distribution of column named x
+///    -  varexp = sqrt(x)            : draw distribution of sqrt(x)
+///    -  varexp = x*y/z
+///    -  varexp = y:sqrt(x) 2-Dim distribution of y versus sqrt(x)
+///    -  varexp = px:py:pz:2.5*E  produces a 3-d scatter-plot of px vs py ps pz
+///               and the color number of each marker will be 2.5*E.
+///               If the color number is negative it is set to 0.
+///               If the color number is greater than the current number of colors
+///               it is set to the highest color number.The default number of
+///               colors is 50. see TStyle::SetPalette for setting a new color palette.
 ///
-/// Note that the variables e1, e2 or e3 may contain a selection.
-/// example, if e1= x*(y<0), the value histogrammed will be x if y<0
-/// and will be 0 otherwise.
+///   Note that the variables e1, e2 or e3 may contain a selection.
+///   example, if e1= x*(y<0), the value histogrammed will be x if y<0
+///   and will be 0 otherwise.
 ///
-/// The expressions can use all the operations and build-in functions
-/// supported by TFormula (See TFormula::Analyze), including free
-/// standing function taking numerical arguments (TMath::Bessel).
-/// In addition, you can call member functions taking numerical
-/// arguments. For example:
-/// ~~~ {.cpp}
-///     TMath::BreitWigner(fPx,3,2)
-///     event.GetHistogram().GetXaxis().GetXmax()
-/// ~~~
-/// Note: You can only pass expression that depend on the TTree's data
-/// to static functions and you can only call non-static member function
-/// with 'fixed' parameters.
+///   The expressions can use all the operations and build-in functions
+///   supported by TFormula (See TFormula::Analyze), including free
+///   standing function taking numerical arguments (TMath::Bessel).
+///   In addition, you can call member functions taking numerical
+///   arguments. For example:
+///   ~~~ {.cpp}
+///       TMath::BreitWigner(fPx,3,2)
+///       event.GetHistogram().GetXaxis().GetXmax()
+///   ~~~
+///   Note: You can only pass expression that depend on the TTree's data
+///   to static functions and you can only call non-static member function
+///   with 'fixed' parameters.
 ///
-/// selection is an expression with a combination of the columns.
-/// In a selection all the C++ operators are authorized.
-/// The value corresponding to the selection expression is used as a weight
-/// to fill the histogram.
-/// If the expression includes only boolean operations, the result
-/// is 0 or 1. If the result is 0, the histogram is not filled.
-/// In general, the expression may be of the form:
-/// ~~~ {.cpp}
-///     value*(boolean expression)
-/// ~~~
-/// if boolean expression is true, the histogram is filled with
-/// a `weight = value`.
+/// \param [in] selection is an expression with a combination of the columns.
+///   In a selection all the C++ operators are authorized.
+///   The value corresponding to the selection expression is used as a weight
+///   to fill the histogram.
+///   If the expression includes only boolean operations, the result
+///   is 0 or 1. If the result is 0, the histogram is not filled.
+///   In general, the expression may be of the form:
+///   ~~~ {.cpp}
+///       value*(boolean expression)
+///   ~~~
+///   if boolean expression is true, the histogram is filled with
+///   a `weight = value`.
+///   Examples:
+///    -  selection1 = "x<y && sqrt(z)>3.2"
+///    -  selection2 = "(x+y)*(sqrt(z)>3.2)"
+///    -  selection1 returns a weight = 0 or 1
+///    -  selection2 returns a weight = x+y if sqrt(z)>3.2
+///                  returns a weight = 0 otherwise.
 ///
-/// Examples:
-///  -  selection1 = "x<y && sqrt(z)>3.2"
-///  -  selection2 = "(x+y)*(sqrt(z)>3.2)"
+/// \param [in] option is the drawing option.
+///    - When an histogram is produced it can be any histogram drawing option
+///      listed in THistPainter.
+///    - when no option is specified:
+///        - the default histogram drawing option is used
+///          if the expression is of the form "e1".
+///        - if the expression is of the form "e1:e2"or "e1:e2:e3" a cloud of
+///           unbinned 2D or 3D points is drawn respectively.
+///        - if the expression  has four fields "e1:e2:e3:e4" a 2D scatter is
+///          produced with e1 vs e2 vs e3, and e4 is mapped on the current color
+///          palette.
+///    - If option COL is specified when varexp has three fields:
+///   ~~~ {.cpp}
+///        tree.Draw("e1:e2:e3","","col");
+///   ~~~
+///      a 2D scatter is produced with e1 vs e2, and e3 is mapped on the current
+///      color palette. The colors for e3 are evaluated once in linear scale before
+///      painting. Therefore changing the pad to log scale along Z as no effect
+///      on the colors.
+///    - if expression has more than four fields the option "PARA"or "CANDLE"
+///      can be used.
+///    - If option contains the string "goff", no graphics is generated.
 ///
-///  -  selection1 returns a weight = 0 or 1
-///  -  selection2 returns a weight = x+y if sqrt(z)>3.2
-///                returns a weight = 0 otherwise.
+/// \param [in] nentries is the number of entries to process (default is all)
 ///
-/// option is the drawing option.
-///  - See TH1::Draw for the list of all drawing options.
-///  - If option COL is specified when varexp has three fields:
-/// ~~~ {.cpp}
-///      tree.Draw("e1:e2:e3","","col");
-/// ~~~
-///    a 2D scatter is produced with e1 vs e2, and e3 is mapped on the color
-///    table. The colors for e3 are evaluated once in linear scale before
-///    painting. Therefore changing the pad to log scale along Z as no effect
-///    on the colors.
-///  - If option contains the string "goff", no graphics is generated.
+/// \param [in] firstentry is the first entry to process (default is 0)
 ///
-/// `nentries` is the number of entries to process (default is all)
-/// first is the first entry to process (default is 0)
-///
-/// This function returns the number of selected entries. It returns -1
-/// if an error occurs.
-///
-/// ## Drawing expressions using arrays and array elements
+/// ### Drawing expressions using arrays and array elements
 ///
 /// Let assumes, a leaf fMatrix, on the branch fEvent, which is a 3 by 3 array,
 /// or a TClonesArray.
@@ -3843,7 +3851,7 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 ///        }
 ///     }
 /// ~~~
-/// ## Retrieving the result of Draw
+/// ### Retrieving the result of Draw
 ///
 /// By default the temporary histogram created is called "htemp", but only in
 /// the one dimensional Draw("e1") it contains the TTree's data points. For
@@ -3863,7 +3871,7 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 ///     TH2F   *htemp = (TH2F*)gPad->GetPrimitive("htemp"); // empty, but has axes
 ///     TAxis  *xaxis = htemp->GetXaxis();
 /// ~~~
-/// ## Saving the result of Draw to an histogram
+/// ### Saving the result of Draw to an histogram
 ///
 /// If varexp0 contains >>hnew (following the variable(s) name(s),
 /// the new histogram created is called hnew and it is kept in the current
@@ -3916,7 +3924,7 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 /// will not reset `hsqrt`, but will continue filling. This works for 1-D, 2-D
 /// and 3-D histograms.
 ///
-/// ## Accessing collection objects
+/// ### Accessing collection objects
 ///
 /// TTree::Draw default's handling of collections is to assume that any
 /// request on a collection pertain to it content.  For example, if fTracks
@@ -3941,7 +3949,7 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 /// will plot the size of the collection referred to by `fTracks` (i.e the number
 /// of Track objects).
 ///
-/// ## Drawing 'objects'
+/// ### Drawing 'objects'
 ///
 /// When a class has a member function named AsDouble or AsString, requesting
 /// to directly draw the object will imply a call to one of the 2 functions.
@@ -3961,7 +3969,7 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 /// If the object is a TBits, the histogram will contain the index of the bit
 /// that are turned on.
 ///
-/// ## Retrieving  information about the tree itself.
+/// ### Retrieving  information about the tree itself.
 ///
 /// You can refer to the tree (or chain) containing the data by using the
 /// string 'This'.
@@ -3975,7 +3983,7 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 /// ~~~
 ///  will display the name of the first 'user info' object.
 ///
-/// ## Special functions and variables
+/// ### Special functions and variables
 ///
 /// `Entry$`:  A TTree::Draw formula can use the special variable `Entry$`
 /// to access the entry number being read. For example to draw every
@@ -4049,7 +4057,7 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 ///     tree->Draw("(var2<20)*99+(var2>=20)*var1","");
 /// ~~~
 ///
-/// ## Drawing a user function accessing the TTree data directly
+/// ### Drawing a user function accessing the TTree data directly
 ///
 /// If the formula contains  a file name, TTree::MakeProxy will be used
 /// to load and execute this file.   In particular it will draw the
@@ -4083,7 +4091,7 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 ///
 ///  See TTree::MakeProxy for more details.
 ///
-/// ## Making a Profile histogram
+/// ### Making a Profile histogram
 ///
 ///  In case of a 2-Dim expression, one can generate a TProfile histogram
 ///  instead of a TH2F histogram by specifying option=prof or option=profs
@@ -4093,7 +4101,7 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 ///  The option=prof is automatically selected in case of y:x>>pf
 ///  where pf is an existing TProfile histogram.
 ///
-/// ## Making a 2D Profile histogram
+/// ### Making a 2D Profile histogram
 ///
 /// In case of a 3-Dim expression, one can generate a TProfile2D histogram
 /// instead of a TH3F histogram by specifying option=prof or option=profs.
@@ -4103,30 +4111,30 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 /// The option=prof is automatically selected in case of z:y:x>>pf
 /// where pf is an existing TProfile2D histogram.
 ///
-/// ## Making a 5D plot using GL
+/// ### Making a 5D plot using GL
 ///
 /// If option GL5D is specified together with 5 variables, a 5D plot is drawn
 /// using OpenGL. See $ROOTSYS/tutorials/tree/staff.C as example.
 ///
-/// ## Making a parallel coordinates plot
+/// ### Making a parallel coordinates plot
 ///
 /// In case of a 2-Dim or more expression with the option=para, one can generate
 /// a parallel coordinates plot. With that option, the number of dimensions is
 /// arbitrary. Giving more than 4 variables without the option=para or
 /// option=candle or option=goff will produce an error.
 ///
-/// ## Making a candle sticks chart
+/// ### Making a candle sticks chart
 ///
 /// In case of a 2-Dim or more expression with the option=candle, one can generate
 /// a candle sticks chart. With that option, the number of dimensions is
 /// arbitrary. Giving more than 4 variables without the option=para or
 /// option=candle or option=goff will produce an error.
 ///
-/// ## Normalizing the output histogram to 1
+/// ### Normalizing the output histogram to 1
 ///
 /// When option contains "norm" the output histogram is normalized to 1.
 ///
-/// ## Saving the result of Draw to a TEventList, a TEntryList or a TEntryListArray
+/// ### Saving the result of Draw to a TEventList, a TEntryList or a TEntryListArray
 ///
 /// TTree::Draw can be used to fill a TEventList object (list of entry numbers)
 /// instead of histogramming one variable.
@@ -4166,7 +4174,7 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 /// will not reset yplus, but will enter the selected entries at the end
 /// of the existing list.
 ///
-/// ## Using a TEventList, TEntryList or TEntryListArray as Input
+/// ### Using a TEventList, TEntryList or TEntryListArray as Input
 ///
 /// Once a TEventList or a TEntryList object has been generated, it can be used as input
 /// for TTree::Draw. Use TTree::SetEventList or TTree::SetEntryList to set the
@@ -4229,7 +4237,7 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 ///
 ///  Note: Use tree->SetEventList(0) if you do not want use the list as input.
 ///
-/// ## How to obtain more info from TTree::Draw
+/// ### How to obtain more info from TTree::Draw
 ///
 ///  Once TTree::Draw has been called, it is possible to access useful
 ///  information still stored in the TTree object via the following functions:
@@ -4278,7 +4286,7 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 /// You can use the option "goff" to turn off the graphics output
 /// of TTree::Draw in the above example.
 ///
-/// ## Automatic interface to TTree::Draw via the TTreeViewer
+/// ### Automatic interface to TTree::Draw via the TTreeViewer
 ///
 /// A complete graphical interface to this function is implemented
 /// in the class TTreeViewer.
