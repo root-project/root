@@ -36,14 +36,15 @@
 #define USE_PARAMCACHE
 
 #ifdef R__HAS_VECCORE
-namespace vecCore{
+namespace vecCore {
 template <class T>
-vecCore::Mask_v<T> Int2Mask(unsigned i)
+vecCore::Mask<T> Int2Mask(unsigned i)
 {
-   T x;
-   for (unsigned j = 0; j < vecCore::VectorSize<T>(); j++) vecCore::Set<T>(x, i, i + 1);
-   return vecCore::Mask_v<T>(x < i);
-   }
+￼   T x;
+   for (unsigned j = 0; j < vecCore::VectorSize<T>(); j++)
+      vecCore::Set<T>(x, j, j);
+   return vecCore::Mask<T>(x < T(i));
+}
 }
 #endif
 
@@ -360,7 +361,7 @@ namespace FitUtil {
 
          // get fit option and check case if using integral of bins
          const DataOptions &fitOpt = data.Opt();
-         if (fitOpt.fExpErrors || fitOpt.fIntegral || fitOpt.fExpErrors)
+         if (fitOpt.fBinVolume || fitOpt.fIntegral || fitOpt.fExpErrors)
             Error("FitUtil::EvaluateChi2", "The vectorized implementation doesn't support Integrals, BinVolume or ExpErrors\n. Aborting operation.");
 
          (const_cast<IModelFunctionTempl<T> &>(func)).SetParameters(p);
