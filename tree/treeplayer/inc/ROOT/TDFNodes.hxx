@@ -77,7 +77,6 @@ class TLoopManager : public std::enable_shared_from_this<TLoopManager> {
    void RunAndCheckFilters(unsigned int slot, Long64_t entry);
    void InitNodeSlots(TTreeReader *r, unsigned int slot);
    void InitNodes();
-   void CreateSlots(unsigned int nSlots);
    void CleanUp();
    void JitActions();
    void EvalChildrenCounts();
@@ -103,7 +102,7 @@ public:
    void Book(const std::shared_ptr<bool> &branchPtr);
    void Book(const RangeBasePtr_t &rangePtr);
    bool CheckFilters(int, unsigned int);
-   unsigned int GetNSlots() const;
+   unsigned int GetNSlots() const { return fNSlots; }
    bool HasRunAtLeastOnce() const { return fHasRunAtLeastOnce; }
    void Report() const;
    /// End of recursive chain of calls, does nothing
@@ -218,14 +217,15 @@ protected:
                            /// graph. It is only guaranteed to contain a valid address during an
                            /// event loop.
    const ColumnNames_t fTmpBranches;
+   const unsigned int fNSlots; ///< Number of thread slots used by this node.
 
 public:
-   TActionBase(TLoopManager *implPtr, const ColumnNames_t &tmpBranches);
+   TActionBase(TLoopManager *implPtr, const ColumnNames_t &tmpBranches, unsigned int nSlots);
    virtual ~TActionBase() {}
    virtual void Run(unsigned int slot, Long64_t entry) = 0;
    virtual void InitSlot(TTreeReader *r, unsigned int slot) = 0;
-   virtual void CreateSlots(unsigned int nSlots) = 0;
    virtual void TriggerChildrenCount() = 0;
+   unsigned int GetNSlots() const { return fNSlots; }
 };
 
 template <typename Helper, typename PrevDataFrame, typename BranchTypes_t = typename Helper::BranchTypes_t>
@@ -239,13 +239,12 @@ class TAction final : public TActionBase {
 
 public:
    TAction(Helper &&h, const ColumnNames_t &bl, PrevDataFrame &pd)
-      : TActionBase(pd.GetImplPtr(), pd.GetTmpBranches()), fHelper(std::move(h)), fBranches(bl), fPrevData(pd)
+      : TActionBase(pd.GetImplPtr(), pd.GetTmpBranches(), pd.GetNSlots()), fHelper(std::move(h)), fBranches(bl),
+        fPrevData(pd), fValues(fNSlots)
    {
    }
 
    TAction(const TAction &) = delete;
-
-   void CreateSlots(unsigned int nSlots) final { fValues.resize(nSlots); }
 
    void InitSlot(TTreeReader *r, unsigned int slot) final
    {
@@ -285,12 +284,12 @@ protected:
    const std::string fName;
    unsigned int fNChildren{0};      ///< Number of nodes of the functional graph hanging from this object
    unsigned int fNStopsReceived{0}; ///< Number of times that a children node signaled to stop processing entries.
+   const unsigned int fNSlots; ///< Number of thread slots used by this node, inherited from parent node.
 
 public:
-   TCustomColumnBase(TLoopManager *df, const ColumnNames_t &tmpBranches, std::string_view name);
+   TCustomColumnBase(TLoopManager *df, const ColumnNames_t &tmpBranches, std::string_view name, unsigned int nSlots);
    virtual ~TCustomColumnBase() {}
    virtual void InitSlot(TTreeReader *r, unsigned int slot) = 0;
-   virtual void CreateSlots(unsigned int nSlots) = 0;
    virtual void *GetValuePtr(unsigned int slot) = 0;
    virtual const std::type_info &GetTypeId() const = 0;
    virtual bool CheckFilters(unsigned int slot, Long64_t entry) = 0;
@@ -303,6 +302,7 @@ public:
    virtual void IncrChildrenCount() = 0;
    virtual void StopProcessing() = 0;
    void ResetChildrenCount() { fNChildren = 0; fNStopsReceived = 0; }
+   unsigned int GetNSlots() const { return fNSlots; }
 };
 
 template <typename F, typename PrevData>
@@ -321,9 +321,12 @@ class TCustomColumn final : public TCustomColumnBase {
 
 public:
    TCustomColumn(std::string_view name, F &&expression, const ColumnNames_t &bl, PrevData &pd)
-      : TCustomColumnBase(pd.GetImplPtr(), pd.GetTmpBranches(), name), fExpression(std::move(expression)),
-        fBranches(bl), fPrevData(pd)
+      : TCustomColumnBase(pd.GetImplPtr(), pd.GetTmpBranches(), name, pd.GetNSlots()),
+        fExpression(std::move(expression)), fBranches(bl), fLastResultPtr(fNSlots), fPrevData(pd),
+        fLastCheckedEntry(fNSlots, -1), fValues(fNSlots)
    {
+      std::generate(fLastResultPtr.begin(), fLastResultPtr.end(),
+                    []() { return std::unique_ptr<ret_type>(new ret_type()); });
       fTmpBranches.emplace_back(name);
    }
 
@@ -347,15 +350,6 @@ public:
    }
 
    const std::type_info &GetTypeId() const { return typeid(ret_type); }
-
-   void CreateSlots(unsigned int nSlots) final
-   {
-      fValues.resize(nSlots);
-      fLastCheckedEntry.resize(nSlots, -1);
-      fLastResultPtr.resize(nSlots);
-      std::generate(fLastResultPtr.begin(), fLastResultPtr.end(),
-                    []() { return std::unique_ptr<ret_type>(new ret_type()); });
-   }
 
    bool CheckFilters(unsigned int slot, Long64_t entry) final
    {
@@ -404,9 +398,10 @@ protected:
    const std::string fName;
    unsigned int fNChildren{0};      ///< Number of nodes of the functional graph hanging from this object
    unsigned int fNStopsReceived{0}; ///< Number of times that a children node signaled to stop processing entries.
+   const unsigned int fNSlots; ///< Number of thread slots used by this node, inherited from parent node.
 
 public:
-   TFilterBase(TLoopManager *df, const ColumnNames_t &tmpBranches, std::string_view name);
+   TFilterBase(TLoopManager *df, const ColumnNames_t &tmpBranches, std::string_view name, unsigned int nSlots);
    virtual ~TFilterBase() {}
    virtual void InitSlot(TTreeReader *r, unsigned int slot) = 0;
    virtual bool CheckFilters(unsigned int slot, Long64_t entry) = 0;
@@ -415,12 +410,13 @@ public:
    TLoopManager *GetImplPtr() const;
    ColumnNames_t GetTmpBranches() const;
    bool HasName() const;
-   virtual void CreateSlots(unsigned int nSlots) = 0;
    void PrintReport() const;
    virtual void IncrChildrenCount() = 0;
    virtual void StopProcessing() = 0;
    void ResetChildrenCount() { fNChildren = 0; fNStopsReceived = 0; }
    virtual void TriggerChildrenCount() = 0;
+   unsigned int GetNSlots() const { return fNSlots; }
+   virtual void ResetReportCount() = 0;
 };
 
 template <typename FilterF, typename PrevDataFrame>
@@ -435,24 +431,12 @@ class TFilter final : public TFilterBase {
 
 public:
    TFilter(FilterF &&f, const ColumnNames_t &bl, PrevDataFrame &pd, std::string_view name = "")
-      : TFilterBase(pd.GetImplPtr(), pd.GetTmpBranches(), name), fFilter(std::move(f)), fBranches(bl), fPrevData(pd)
+      : TFilterBase(pd.GetImplPtr(), pd.GetTmpBranches(), name, pd.GetNSlots()), fFilter(std::move(f)), fBranches(bl),
+        fPrevData(pd), fValues(fNSlots)
    {
    }
 
    TFilter(const TFilter &) = delete;
-
-   void CreateSlots(unsigned int nSlots)
-   {
-      fValues.resize(nSlots);
-      fLastCheckedEntry.resize(nSlots, -1);
-      fLastResult.resize(nSlots);
-      fAccepted.resize(nSlots);
-      fRejected.resize(nSlots);
-      // fAccepted and fRejected could be different than 0 if this is not the
-      // first event-loop run using this filter
-      std::fill(fAccepted.begin(), fAccepted.end(), 0);
-      std::fill(fRejected.begin(), fRejected.end(), 0);
-   }
 
    bool CheckFilters(unsigned int slot, Long64_t entry) final
    {
@@ -513,6 +497,14 @@ public:
       assert(!fName.empty()); // this method is to only be called on named filters
       fPrevData.IncrChildrenCount();
    }
+
+   void ResetReportCount()
+   {
+      assert(!fName.empty()); // this method is to only be called on named filters
+      // fAccepted and fRejected could be different than 0 if this is not the first event-loop run using this filter
+      std::fill(fAccepted.begin(), fAccepted.end(), 0);
+      std::fill(fRejected.begin(), fRejected.end(), 0);
+   }
 };
 
 class TRangeBase {
@@ -529,10 +521,11 @@ protected:
    unsigned int fNChildren{0};      ///< Number of nodes of the functional graph hanging from this object
    unsigned int fNStopsReceived{0}; ///< Number of times that a children node signaled to stop processing entries.
    bool fHasStopped{false}; ///< True if the end of the range has been reached
+   const unsigned int fNSlots; ///< Number of thread slots used by this node, inherited from parent node.
 
 public:
    TRangeBase(TLoopManager *implPtr, const ColumnNames_t &tmpBranches, unsigned int start, unsigned int stop,
-              unsigned int stride);
+              unsigned int stride, unsigned int nSlots);
    virtual ~TRangeBase() {}
    TLoopManager *GetImplPtr() const;
    ColumnNames_t GetTmpBranches() const;
@@ -542,6 +535,7 @@ public:
    virtual void IncrChildrenCount() = 0;
    virtual void StopProcessing() = 0;
    void ResetChildrenCount() { fNChildren = 0; fNStopsReceived = 0; }
+   unsigned int GetNSlots() const { return fNSlots; }
 };
 
 template <typename PrevData>
@@ -550,7 +544,7 @@ class TRange final : public TRangeBase {
 
 public:
    TRange(unsigned int start, unsigned int stop, unsigned int stride, PrevData &pd)
-      : TRangeBase(pd.GetImplPtr(), pd.GetTmpBranches(), start, stop, stride), fPrevData(pd)
+      : TRangeBase(pd.GetImplPtr(), pd.GetTmpBranches(), start, stop, stride, pd.GetNSlots()), fPrevData(pd)
    {
    }
 
