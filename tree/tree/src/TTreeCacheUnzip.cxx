@@ -603,33 +603,11 @@ class UnzipTask: public tbb::task {
 private:
    TTreeCacheUnzip* cache;
    std::vector<int> indices;
-   Int_t cycle;
-   Int_t nseek;
-   Bool_t learning;
-   Bool_t transferred;
-   Long64_t* seek;
-   Int_t* seeklen;
-   Int_t* unziplen;
-   char** unzipchunks;
-   tbb::task** unziptasks;
-
-   Int_t nunzip;
-  
+ 
 public:
-   UnzipTask(TTreeCacheUnzip* c, std::vector<int> ins, Int_t cyc, Int_t ns, Bool_t l, Bool_t t,  Long64_t*& sk, Int_t*& sl, Int_t*& ul, char**& uc, tbb::task**& ut, Int_t& nup) {
+   UnzipTask(TTreeCacheUnzip* c, std::vector<int> ins) {
       cache = c;
       indices = ins;
-      cycle = cyc;
-      nseek = ns;
-      learning = l;
-      transferred = t;
-      seek = sk;
-      seeklen = sl;
-      unziplen = ul;
-      unzipchunks = uc;
-      unziptasks = ut;
-
-      nunzip = nup;
    }
 
    tbb::task* execute() {
@@ -643,18 +621,17 @@ public:
       Int_t rdlen = 0;
 
       // To synchronize with the 'paging'
-      myCycle = cycle;
+      myCycle = cache->fCycle;
       for(size_t i = 0; i < indices.size(); ++i) {
             Int_t reqi = indices[i];
-            rdoffs = seek[reqi];
-            rdlen = seeklen[reqi];
+            rdoffs = cache->fSeek[reqi];
+            rdlen = cache->fSeekLen[reqi];
 
             Int_t locbuffsz = 16384;
             char *locbuff = new char[16384];
 
             Int_t loc = -1;
-            learning = cache->fIsLearning;
-            if (!nseek || learning ) {
+            if (!cache->fNseek || cache->fIsLearning) {
                return nullptr;
             }
             // Prepare a static tmp buf of adequate size
@@ -670,19 +647,18 @@ public:
                //memset(locbuff, 0, locbuffsz);
             }
             readbuf = cache->ReadBufferExt(locbuff, rdoffs, rdlen, loc);
-            transferred = cache->fIsTransferred;
 
-            if ( (myCycle != cycle) || !transferred )  {
-               unziptasks[reqi] = nullptr; // Set it as not done
-               unzipchunks[reqi] = 0;
-               unziplen[reqi] = 0;
+            if ( (myCycle != cache->fCycle) || !cache->fIsTransferred )  {
+               cache->fUnzipTasks[reqi] = nullptr; // Set it as not done
+               cache->fUnzipChunks[reqi] = 0;
+               cache->fUnzipLen[reqi] = 0;
                return nullptr;
             }
 
             if (readbuf <= 0) {
-               unziptasks[reqi] = nullptr; // Set it as not done
-               unzipchunks[reqi] = 0;
-               unziplen[reqi] = 0;
+               cache->fUnzipTasks[reqi] = nullptr; // Set it as not done
+               cache->fUnzipChunks[reqi] = 0;
+               cache->fUnzipLen[reqi] = 0;
                return nullptr;
             }
 
@@ -694,108 +670,66 @@ public:
             Int_t loclen = 0;
             loclen = cache->UnzipBufferTBB(&ptr, locbuff);
             if ((loclen > 0) && (loclen == objlen+keylen)) {
-               if ( (myCycle != cycle)  || !transferred) {
+               if ( (myCycle != cache->fCycle)  || !cache->fIsTransferred) {
                   if(ptr) delete [] ptr; // Previously it deletes ptr without verifying ptr. It causes double free memory. Need more examination.
-                  unziptasks[reqi] = nullptr; // Set it as not done
-                  unzipchunks[reqi] = 0;
-                  unziplen[reqi] = 0;
+                  cache->fUnzipTasks[reqi] = nullptr; // Set it as not done
+                  cache->fUnzipChunks[reqi] = 0;
+                  cache->fUnzipLen[reqi] = 0;
 
                   return nullptr;
                }
 
-               unziptasks[reqi] = nullptr; // Set it as done
-               unzipchunks[reqi] = ptr;
-               unziplen[reqi] = loclen;
+               cache->fUnzipTasks[reqi] = nullptr; // Set it as done
+               cache->fUnzipChunks[reqi] = ptr;
+               cache->fUnzipLen[reqi] = loclen;
 
-               nunzip++;
+               cache->fNUnzip++;
             }
             else {
 //                Info("argh", "loclen:%d objlen:%d loc:%d readbuf:%d", loclen, objlen, loc, readbuf);
-               unziptasks[reqi] = nullptr; // Set it as done
-               unzipchunks[reqi] = 0;
-               unziplen[reqi] = 0;
+               cache->fUnzipTasks[reqi] = nullptr; // Set it as done
+               cache->fUnzipChunks[reqi] = 0;
+               cache->fUnzipLen[reqi] = 0;
             }
          }
-//      }
       return nullptr;
    }
 };
 
 class MappingTask: public tbb::task {
    TTreeCacheUnzip* cache;
-   Int_t cycle;
-   Int_t nseek;
-   Bool_t learning;
-   Bool_t transferred;
-   Long64_t* seek;
-   Int_t* seeklen;
-   Int_t* unziplen;
-   char** unzipchunks;
-   tbb::task** unziptasks;
 
    std::vector<Int_t> indices;
-   Int_t nunzip;
 
 public:
-   MappingTask(TTreeCacheUnzip* c, Int_t cyc, Int_t ns, Bool_t l, Bool_t t, Long64_t*& sk, Int_t*& sl, Int_t*& ul, char**& uc, tbb::task**& ut, Int_t& nup) {
+   MappingTask(TTreeCacheUnzip* c) {
       cache = c;
-      cycle = cyc;
-      nseek = ns;
-      learning = l;
-      transferred = t;
-      seek = sk;
-      seeklen = sl;
-      unziplen = ul;
-      unzipchunks = uc;
-      unziptasks = ut;
-
       indices.clear();
-      nunzip = nup;
    }
 
    tbb::task* execute() {
       Int_t accusz = 0;
       tbb::task_list tl;
-      this->set_ref_count(nseek+1);
-/*
-      set_ref_count(3);
-      indices.push_back(0);
-      indices.push_back(1);
-      UnzipTask* t = new(this->allocate_child()) UnzipTask(cache, indices, cycle, nseek, learning, transferred, seek, seeklen, unziplen, unzipchunks, unziptasks, nunzip);
-      tl.push_back(*t);
-      indices.clear();
-      indices.push_back(2);
-      indices.push_back(3);
-      t = new(this->allocate_child()) UnzipTask(cache, indices, cycle, nseek, learning, transferred, seek, seeklen, unziplen, unzipchunks, unziptasks, nunzip);
-      tl.push_back(*t);
-*/      
+      this->set_ref_count(cache->fNseek+1);
+
       UnzipTask* t = nullptr;
-      for (Int_t ii = 0; ii < nseek; ii++) {
-//         printf("ii = %d, seeklen = %d, seek = %lld\n", ii, seeklen[ii], seek[ii]);//##
-//         while (seeklen[ii] > 256 && accusz < 102400) {
+      for (Int_t ii = 0; ii < cache->fNseek; ii++) {
          while (accusz < 102400) {
-            accusz += seeklen[ii];
+            accusz += cache->fSeekLen[ii];
             indices.push_back(ii);
-//            printf("incides push back ii = %d\n", ii);//##
             ii++;
-            if (ii >= nseek) break;
+            if (ii >= cache->fNseek) break;
          }
-         if (ii < nseek) ii--;
-//         printf("accusz = %d\n", accusz);//##
-//         indices.push_back(ii);
-         t = new(this->allocate_child()) UnzipTask(cache, indices, cycle, nseek, learning, transferred, seek, seeklen, unziplen, unzipchunks, unziptasks, nunzip);
+         if (ii < cache->fNseek) ii--;
+         t = new(this->allocate_child()) UnzipTask(cache, indices);
          tl.push_back(*t);
-//         spawn(*t);
          for (size_t index = 0; index < indices.size(); ++index) {
             cache->fUnzipTasks[ii] = t;
          }
-//         cache->fUnzipTasks[ii] = t;
          indices.clear();
          accusz = 0;
       }
       this->spawn(tl);
-//      spawn(tl);
-//      this->wait_for_all();
       return nullptr;
    }
 };
@@ -804,11 +738,8 @@ Int_t TTreeCacheUnzip::UnzipCacheTBB()
 {
    root = new(tbb::task::allocate_root()) tbb::empty_task;
    root->set_ref_count(2);
-   MappingTask* t = new(root->allocate_child()) MappingTask(this, fCycle, fNseek, fIsLearning, fIsTransferred, fSeek, fSeekLen, fUnzipLen, fUnzipChunks, fUnzipTasks, fNUnzip);
-//   root->spawn_root_and_wait(*t);
+   MappingTask* t = new(root->allocate_child()) MappingTask(this);
    root->spawn(*t);
-//   if(root) printf("root is not null\n");
-//   else printf("root is null\n");
    return 0;
 }
 
