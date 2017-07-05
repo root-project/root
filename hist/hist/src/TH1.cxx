@@ -3236,8 +3236,10 @@ void TH1::FillN(Int_t ntimes, const Double_t *x, const Double_t *w, Int_t stride
          else BufferFill(x[i], 1.);
       }
       // fill the remaining entries if the buffer has been deleted
-      if (i < ntimes && fBuffer==0)
-         DoFillN((ntimes-i)/stride,&x[i],&w[i],stride);
+      if (i < ntimes && fBuffer==0) {
+         auto weights = w ? &w[i] : nullptr;
+         DoFillN((ntimes-i)/stride,&x[i],weights,stride);
+      }
       return;
    }
    // call internal method
