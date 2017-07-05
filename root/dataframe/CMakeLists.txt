@@ -7,6 +7,9 @@ endif()
 
 set(DFLIBRARIES Core TreePlayer Hist Tree RIO MathCore)
 
+ROOTTEST_ADD_TEST(templateRecursionLimit
+                  MACRO test_templateRecursionLimit.C)
+
 ROOTTEST_ADD_TEST(missingBranches
                   MACRO test_missingBranches.C
                   ERRREF test_missingBranches.eref)
