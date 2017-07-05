@@ -576,7 +576,7 @@ void RooAbsTestStatistic::initMPMode(RooAbsReal *real, RooAbsData *data, const R
   _mpfeArray = new pRooRealMPFE[_nCPU];
 
   // Create proto-goodness-of-fit
-  RooAbsTestStatistic* gof = create(GetName(),GetTitle(),*real,*data,*projDeps,rangeName,addCoefRangeName,1,_mpinterl,_verbose,_splitRange);
+  RooAbsTestStatistic* gof = create(GetName(),GetTitle(),*real,*data,*projDeps,rangeName,addCoefRangeName,1,_mpinterl,_CPUAffinity,_verbose,_splitRange);
   gof->recursiveRedirectServers(_paramSet);
 
   for (Int_t i = 0; i < _nCPU; ++i) {
