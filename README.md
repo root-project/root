@@ -27,15 +27,15 @@ an open system that can be dynamically extended by linking external
 libraries. This makes ROOT a premier platform on which to build data
 acquisition, simulation and data analysis systems.
 
-[![License: LGPL v2.1](https://img.shields.io/badge/License-LGPL%20v2.1-blue.svg)](http://www.gnu.org/licenses/lgpl-2.1) [![Test coverage](https://root.cern/files/img/coverage-badge.svg)](https://phsft-jenkins.cern.ch/job/root-nightly-master-coverage/cobertura) 
+[![License: LGPL v2.1](https://img.shields.io/badge/License-LGPL%20v2.1-blue.svg)](http://www.gnu.org/licenses/lgpl-2.1) [![Test coverage](https://root.cern/files/img/coverage-badge.svg)](https://epsft-jenkins.cern.ch/job/root-nightly-master-coverage/cobertura)
 
 ## Build Status
 | Branch | Continuous | Nightly |
 |--------|------------|---------|
-| master | [![Build Status](https://phsft-jenkins.cern.ch/buildStatus/icon?job=root-incremental-master)](https://phsft-jenkins.cern.ch/view/ROOT/job/root-incremental-master/) | [![Build Status](https://phsft-jenkins.cern.ch/buildStatus/icon?job=root-nightly-master)](https://phsft-jenkins.cern.ch/view/ROOT/job/root-nightly-master/) |
-| master-noimt | [![Build Status](https://phsft-jenkins.cern.ch/buildStatus/icon?job=root-incremental-master-noimt)](https://phsft-jenkins.cern.ch/view/ROOT/job/root-incremental-master-noimt/) | [![Build Status](https://phsft-jenkins.cern.ch/buildStatus/icon?job=root-nightly-master-noimt)](https://phsft-jenkins.cern.ch/view/ROOT/job/root-nightly-master-noimt/) |
-| v5-34-00-patches | [![Build Status](https://phsft-jenkins.cern.ch/buildStatus/icon?job=root-incremental-v5-34-00-patches)](https://phsft-jenkins.cern.ch/view/ROOT/job/root-incremental-v5-34-00-patches/) | [![Build Status](https://phsft-jenkins.cern.ch/buildStatus/icon?job=root-nightly-v5-34-00-patches)](https://phsft-jenkins.cern.ch/view/ROOT/job/root-nightly-v5-34-00-patches/) |
-| v6-08-00-patches |  [![Build Status](https://phsft-jenkins.cern.ch/buildStatus/icon?job=root-incremental-v6-08-00-patches)](https://phsft-jenkins.cern.ch/view/ROOT/job/root-incremental-v6-08-00-patches/) | [![Build Status](https://phsft-jenkins.cern.ch/buildStatus/icon?job=root-nightly-v6-08-00-patches)](https://phsft-jenkins.cern.ch/view/ROOT/job/root-nightly-v6-08-00-patches/) |
+| master | [![Build Status](https://epsft-jenkins.cern.ch/buildStatus/icon?job=root-incremental-master)](https://epsft-jenkins.cern.ch/view/ROOT/job/root-incremental-master/) | [![Build Status](https://epsft-jenkins.cern.ch/buildStatus/icon?job=root-nightly-master)](https://epsft-jenkins.cern.ch/view/ROOT/job/root-nightly-master/) |
+| master-noimt | [![Build Status](https://epsft-jenkins.cern.ch/buildStatus/icon?job=root-incremental-master-noimt)](https://epsft-jenkins.cern.ch/view/ROOT/job/root-incremental-master-noimt/) | [![Build Status](https://epsft-jenkins.cern.ch/buildStatus/icon?job=root-nightly-master-noimt)](https://epsft-jenkins.cern.ch/view/ROOT/job/root-nightly-master-noimt/) |
+| v5-34-00-patches | [![Build Status](https://epsft-jenkins.cern.ch/buildStatus/icon?job=root-incremental-v5-34-00-patches)](https://epsft-jenkins.cern.ch/view/ROOT/job/root-incremental-v5-34-00-patches/) | [![Build Status](https://epsft-jenkins.cern.ch/buildStatus/icon?job=root-nightly-v5-34-00-patches)](https://epsft-jenkins.cern.ch/view/ROOT/job/root-nightly-v5-34-00-patches/) |
+| v6-08-00-patches |  [![Build Status](https://epsft-jenkins.cern.ch/buildStatus/icon?job=root-incremental-v6-08-00-patches)](https://epsft-jenkins.cern.ch/view/ROOT/job/root-incremental-v6-08-00-patches/) | [![Build Status](https://epsft-jenkins.cern.ch/buildStatus/icon?job=root-nightly-v6-08-00-patches)](https://epsft-jenkins.cern.ch/view/ROOT/job/root-nightly-v6-08-00-patches/) |
 
 ## Live Demo
 [![](https://swanserver.web.cern.ch/swanserver/images/badge_swan_white_150.png)](http://cern.ch/swanserver/cgi-bin/go?projurl=https://github.com/cernphsft/rootbinder.git)
