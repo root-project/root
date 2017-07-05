@@ -16,15 +16,22 @@
 #include <iostream>
 #include "TMVA/DNN/Architectures/Reference.h"
 #include "TestForwardPass.h"
+//#include "gtest/gtest.h"
+//#include "gmock/gmock.h"
 
 using namespace TMVA::DNN;
 using namespace TMVA::DNN::RNN;
 
-int main() {
-  std::cout << "Testing RNN Forward pass" << std::endl;
+//TEST(RNNTest, ForwardPass)
+//{
+//  EXPECT_EQ(testForwardPass<TReference<double>>(3, 8, 100, 50), 0.0);
+//}
 
-  std::cout << "Test1" << std::endl;
-  
+int main() {
+  std::cout << "Testing RNN Forward pass\n";
+
+  std::cout << testForwardPass<TReference<double>>(1, 8, 100, 50)  << "\n";
+  std::cout << testForwardPass<TReference<double>>(5, 9, 128, 64)  << "\n";
 
   return 0;
 }

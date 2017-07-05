@@ -59,28 +59,23 @@ public:
 
   using Matrix_t = typename Architecture_t::Matrix_t;
   using Scalar_t = typename Architecture_t::Scalar_t;
-  using Layer_t  = TRNNLayer<Architecture_t>;
+  using Layer_t  = VRNNLayer<Architecture_t>;
+  using Tensor_t = std::vector<Matrix_t>;
 
 private:
   
-  size_t fBatchSize;  ///< Batch size
-  size_t fStateSize;  ///< Hidden state size vector
-  size_t fInputSize;  ///< Input Size
   size_t fTimeSteps;  ///< Timesteps to backprop
   bool isTraining;    ///< Training or not
 
-  DNN::EActivationFunction fF;  ///< Activation function of the hidden state
-
-  Layer_t  fRNNLayer; 
-  bool rememberState;            ///< Remember state for multiple runs
-  std::vector<Matrix_t> fOutput; ///< Output (fTimeSteps, fBatchSize, fStateSize)
+  Layer_t *fRNNLayer; ///< RNNLayer element for this network
+  bool rememberState; ///< Remember state for multiple runs
+  Tensor_t fOutput;   ///< Output (fTimeSteps, fBatchSize, fStateSize)
   
 public:
 
   /** Constructor */
-  TRecurrentNet(size_t batchSize, size_t stateSize, size_t inputSize,
-                size_t timeSteps, DNN::EActivationFunction f = DNN::EActivationFunction::kTanh,
-                bool training = true, bool _rememberState = false);
+  TRecurrentNet(Layer_t *rnnLayer, size_t timeSteps, bool training = true, 
+                bool _rememberState = false);
 
   /*! Initialize the weights according to the given initialization
    **  method. */
@@ -88,25 +83,24 @@ public:
 
   /*! Compute and return the next state with given input
   *  matrix, returns Matrix of output states */
-  inline Matrix_t& Forward(Matrix_t &input);
+  inline Tensor_t& Forward(Tensor_t &input);
 
   /*! Must only be called directly
    *  a the corresponding call to Forward(...). 
    *  returns gradients w.r.t input*/
-  inline Matrix_t& Backward(Matrix_t & gradients_backward,
-                           const Matrix_t & activations_backward);
+  inline Tensor_t Backward(const Matrix_t & input,
+                           const Tensor_t & gradients_output);
 
   /** Prints the info about the layer */
   //virtual void Print() const = 0;
 
   /** Getters */
-  inline bool   IsTraining()       const {return isTraining;}
-  inline size_t GetBatchSize()     const {return fBatchSize;}
-  inline size_t GetStateSize()     const {return fStateSize;}
-  inline size_t GetInputSize()     const {return fInputSize;}
-  inline DNN::EActivationFunction GetActivationFunction()  const {return fF;} 
-  Matrix_t       & GetState()        {return fState;}
-  const Matrix_t & GetState() const  {return fState;}
+  inline bool IsTraining()       const {return isTraining;}
+  inline bool IsRememberState()  const {return rememberState;} 
+  Tensor_t       & GetOutput()         {return fOutput;}
+  const Tensor_t & GetOutput()   const {return fOutput;}
+  Layer_t        & GetRNNLayer()       {return *fRNNLayer;}
+  const Layer_t  & GetRNNLayer() const {return *fRNNLayer;}
    
 };
 
@@ -116,11 +110,10 @@ public:
 //______________________________________________________________________________
 
 template<typename Architecture_t>
-TRecurrentNet<Architecture_t>::TRecurrentNet(size_t batchSize, size_t stateSize, size_t inputSize,
-                                             size_t timeSteps, DNN::EActivationFunction f, bool training,
+TRecurrentNet<Architecture_t>::TRecurrentNet(Layer_t *rnnLayer, size_t timeSteps, bool training,
                                              bool _rememberState)
-  : fRNNLayer(batchSize, stateSize, inputSize, f, training), fBatchSize(batchSize) , fStateSize(stateSize), 
-  fInputSize(inputSize), fTimeSteps(timeSteps), fF(f), rememberState(_rememberState), fOutput(timeSteps, Matrix_t(fBatchSize, fStateSize));
+  : fRNNLayer(rnnLayer), fTimeSteps(timeSteps), isTraining(training), rememberState(_rememberState), 
+  fOutput(timeSteps, Matrix_t(rnnLayer->GetBatchSize(), rnnLayer->GetStateSize()))
 {
   // TODO agree on output size, if output is vector of states then
 }
@@ -130,37 +123,38 @@ template <typename Architecture_t>
 auto TRecurrentNet<Architecture_t>::Initialize(DNN::EInitialization m)
 -> void
 {
-  this->fRNNLayer.Initialize(m);
+  fRNNLayer->Initialize(m);
 }
 
 //______________________________________________________________________________
 template <typename Architecture_t>
 // TODO decide format for input, one matrix or many
-auto inline TRecurrentNet<Architecture_t>::Forward(Matrix_t &input)
--> Matrix_t & 
+auto inline TRecurrentNet<Architecture_t>::Forward(Tensor_t &input)
+-> Tensor_t & 
 {
-  if (!this->rememberState) fRNNLayer.InitState(DNN::EInitialization::kZero);
-  for (size_t i = 0; i < timeSteps; ++i) {
-    Architecture_t::Copy(fOutput[i], fRNNLayer.Forward(input));
+  if (!this->rememberState) fRNNLayer->InitState(DNN::EInitialization::kZero);
+  for (size_t t = 0; t < fTimeSteps; ++t) {
+    Architecture_t::Copy(fOutput[t], fRNNLayer->Forward(input[t]));
   }
+  return fOutput;
 }
 
 //______________________________________________________________________________
 template <typename Architecture_t>
-auto inline TRecurrentNet<Architecture_t>::Backward(const Matrix_t & input, std::vector<Matrix_t> & gradients_output)
--> Matrix_t & 
+auto inline TRecurrentNet<Architecture_t>::Backward(const Matrix_t & input, const Tensor_t & gradients_output)
+-> Tensor_t  
 {
   // TODO output not available, getting fActivationGradients from layer before
   //evaluateGradients<Architecture_t>(fLayers.back().GetActivationGradients(),
   //                                   fJ, Y, fLayers.back().GetOutput());
   // see https://github.com/jcjohnson/torch-rnn/blob/master/VanillaRNN.lua
-  Matrix_t state_gradients_backward(fBatchSize, fStateSize);  // B x H
+  Matrix_t state_gradients_backward(fRNNLayer->GetBatchSize(), fRNNLayer->GetStateSize());  // B x H
   DNN::initialize<Architecture_t>(state_gradients_backward,  DNN::EInitialization::kZero);
   
   // send back to prev layer   T x B x D
-  std::vector<Matrix_t> input_gradients(fTimeSteps, Matrix_t(fBatchSize, fInputSize)); 
+  Tensor_t input_gradients(fTimeSteps, Matrix_t(fRNNLayer->GetBatchSize(), fRNNLayer->GetInputSize())); 
 
-  Matrix_t initState(fStateSize, 1);  // H x 1
+  Matrix_t initState(fRNNLayer->GetStateSize(), 1);  // H x 1
   DNN::initialize<Architecture_t>(initState,  DNN::EInitialization::kZero);
 
   for (size_t t = fTimeSteps - 1; t >= 0; t--) {
@@ -168,16 +162,16 @@ auto inline TRecurrentNet<Architecture_t>::Backward(const Matrix_t & input, std:
     Architecture_t::ScaleAdd(state_gradients_backward, gradients_output[t]);
     if (t > 0) {
       const Matrix_t & precStateActivations = fOutput[t - 1];
-      fRNNLayer.Backward(state_gradients_backward, precStateActivations, currStateActivations, input,
+      fRNNLayer->Backward(state_gradients_backward, precStateActivations, currStateActivations, input,
           input_gradients[t]);
     } else {
       const Matrix_t & precStateActivations = initState;
-      fRNNLayer.Backward(state_gradients_backward, precStateActivations, currStateActivations, input, 
+      fRNNLayer->Backward(state_gradients_backward, precStateActivations, currStateActivations, input, 
           input_gradients[t]);
     }
   }
   //FIXME fix data format and then this
-  return input_gradients[0];
+  return input_gradients;
 }
 
 } // namespace RNN
