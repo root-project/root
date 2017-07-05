@@ -32,8 +32,8 @@ namespace ROOT {
 namespace Internal {
 namespace TDF {
 
-TActionBase::TActionBase(TLoopManager *implPtr, const ColumnNames_t &tmpBranches)
-   : fImplPtr(implPtr), fTmpBranches(tmpBranches)
+TActionBase::TActionBase(TLoopManager *implPtr, const ColumnNames_t &tmpBranches, unsigned int nSlots)
+   : fImplPtr(implPtr), fTmpBranches(tmpBranches), fNSlots(nSlots)
 {
 }
 
@@ -41,8 +41,9 @@ TActionBase::TActionBase(TLoopManager *implPtr, const ColumnNames_t &tmpBranches
 } // end NS Internal
 } // end NS ROOT
 
-TCustomColumnBase::TCustomColumnBase(TLoopManager *implPtr, const ColumnNames_t &tmpBranches, std::string_view name)
-   : fImplPtr(implPtr), fTmpBranches(tmpBranches), fName(name){};
+TCustomColumnBase::TCustomColumnBase(TLoopManager *implPtr, const ColumnNames_t &tmpBranches, std::string_view name,
+                                     unsigned int nSlots)
+   : fImplPtr(implPtr), fTmpBranches(tmpBranches), fName(name), fNSlots(nSlots){};
 
 ColumnNames_t TCustomColumnBase::GetTmpBranches() const
 {
@@ -59,8 +60,12 @@ TLoopManager *TCustomColumnBase::GetImplPtr() const
    return fImplPtr;
 }
 
-TFilterBase::TFilterBase(TLoopManager *implPtr, const ColumnNames_t &tmpBranches, std::string_view name)
-   : fImplPtr(implPtr), fTmpBranches(tmpBranches), fName(name){};
+TFilterBase::TFilterBase(TLoopManager *implPtr, const ColumnNames_t &tmpBranches, std::string_view name,
+                         unsigned int nSlots)
+   : fImplPtr(implPtr), fTmpBranches(tmpBranches), fLastCheckedEntry(nSlots, -1), fLastResult(nSlots),
+     fAccepted(nSlots), fRejected(nSlots), fName(name), fNSlots(nSlots)
+{
+}
 
 TLoopManager *TFilterBase::GetImplPtr() const
 {
@@ -144,7 +149,7 @@ void TLoopManager::Run()
 #ifdef R__USE_IMT
    if (ROOT::IsImplicitMTEnabled()) {
       TSlotStack slotStack(fNSlots);
-      CreateSlots(fNSlots);
+      InitNodes();
 
       if (fNEmptyEntries > 0) {
          // Working with an empty tree.
@@ -192,7 +197,7 @@ void TLoopManager::Run()
       }
    } else {
 #endif // R__USE_IMT
-      CreateSlots(1);
+      InitNodes();
       if (fNEmptyEntries > 0) {
          InitAllNodes(nullptr, 0);
          for (Long64_t currEntry = 0; currEntry < fNEmptyEntries && fNStopsReceived < fNChildren; ++currEntry) {
@@ -238,17 +243,13 @@ void TLoopManager::InitAllNodes(TTreeReader *r, unsigned int slot)
    for (auto &ptr : fBookedFilters) ptr->Init(r, slot);
 }
 
-/// Initialize all nodes of the functional graph before running the event loop
-///
-/// This method loops over all filters, actions and other booked objects and
-/// calls their `CreateSlots` methods. It is called once per node before running the
-/// event loop. The main effect is to inform all nodes of the number of slots
-/// (i.e. workers) that will be used to perform the event loop.
-void TLoopManager::CreateSlots(unsigned int nSlots)
+/// Initialize all nodes of the functional graph before running the event loop.
+/// This method is called once per event-loop and performs generic initialization
+/// operations that do not depend on the specific processing slot (i.e. operations
+/// that are common for all threads).
+void TLoopManager::InitNodes()
 {
-   for (auto &ptr : fBookedActions) ptr->CreateSlots(nSlots);
-   for (auto &ptr : fBookedFilters) ptr->CreateSlots(nSlots);
-   for (auto &bookedBranch : fBookedBranches) bookedBranch.second->CreateSlots(nSlots);
+   for (auto &namedFilterPtr : fBookedNamedFilters) namedFilterPtr->ResetReportCount();
 }
 
 TLoopManager *TLoopManager::GetImplPtr()
@@ -311,11 +312,6 @@ bool TLoopManager::CheckFilters(int, unsigned int)
    return true;
 }
 
-unsigned int TLoopManager::GetNSlots() const
-{
-   return fNSlots;
-}
-
 /// Call `PrintReport` on all booked filters
 void TLoopManager::Report() const
 {
@@ -323,8 +319,8 @@ void TLoopManager::Report() const
 }
 
 TRangeBase::TRangeBase(TLoopManager *implPtr, const ColumnNames_t &tmpBranches, unsigned int start, unsigned int stop,
-                       unsigned int stride)
-   : fImplPtr(implPtr), fTmpBranches(tmpBranches), fStart(start), fStop(stop), fStride(stride)
+                       unsigned int stride, unsigned int nSlots)
+   : fImplPtr(implPtr), fTmpBranches(tmpBranches), fStart(start), fStop(stop), fStride(stride), fNSlots(nSlots)
 {
 }
 
