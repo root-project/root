@@ -203,7 +203,7 @@ public:
       auto df = GetDataFrameChecked();
       const ColumnNames_t &defBl = df->GetDefaultColumnNames();
       auto nArgs = TTraits::CallableTraits<F>::arg_types::list_size;
-      const ColumnNames_t &actualBl = TDFInternal::PickBranchNames(nArgs, bn, defBl);
+      const auto actualBl = TDFInternal::SelectColumns(nArgs, bn, defBl);
       using DFF_t = TDFDetail::TFilter<F, Proxied>;
       auto FilterPtr = std::make_shared<DFF_t>(std::move(f), actualBl, *fProxiedPtr, name);
       df->Book(FilterPtr);
@@ -282,7 +282,7 @@ public:
       TDFInternal::CheckTmpBranch(name, df->GetTree());
       const ColumnNames_t &defBl = df->GetDefaultColumnNames();
       auto nArgs = TTraits::CallableTraits<F>::arg_types::list_size;
-      const ColumnNames_t &actualBl = TDFInternal::PickBranchNames(nArgs, bl, defBl);
+      const auto actualBl = TDFInternal::SelectColumns(nArgs, bl, defBl);
       using DFB_t = TDFDetail::TCustomColumn<F, Proxied>;
       const std::string nameInt(name);
       auto BranchPtr = std::make_shared<DFB_t>(nameInt, std::move(expression), actualBl, *fProxiedPtr);
@@ -479,7 +479,7 @@ public:
       auto df = GetDataFrameChecked();
       const ColumnNames_t &defBl = df->GetDefaultColumnNames();
       auto nArgs = TTraits::CallableTraits<F>::arg_types::list_size;
-      const ColumnNames_t &actualBl = TDFInternal::PickBranchNames(nArgs - 1, bl, defBl);
+      const auto actualBl = TDFInternal::SelectColumns(nArgs - 1, bl, defBl);
       using Helper_t = TDFInternal::ForeachSlotHelper<F>;
       using Action_t = TDFInternal::TAction<Helper_t, Proxied>;
       df->Book(std::make_shared<Action_t>(Helper_t(std::move(f)), actualBl, *fProxiedPtr));
@@ -525,12 +525,13 @@ public:
       using arg_types = typename TTraits::CallableTraits<F>::arg_types;
       TDFInternal::CheckReduce(f, arg_types());
       auto df = GetDataFrameChecked();
-      unsigned int nSlots = df->GetNSlots();
-      auto bl = GetBranchNames<T>({columnName}, "reduce branch values");
+      const auto &defBl = df->GetDefaultColumnNames();
+      const ColumnNames_t userColumns = columnName.empty() ? ColumnNames_t() : ColumnNames_t({std::string(columnName)});
+      const auto actualBl = TDFInternal::SelectColumns(1, userColumns, defBl);
       auto redObjPtr = std::make_shared<T>(initValue);
       using Helper_t = TDFInternal::ReduceHelper<F, T>;
       using Action_t = typename TDFInternal::TAction<Helper_t, Proxied>;
-      df->Book(std::make_shared<Action_t>(Helper_t(std::move(f), redObjPtr, nSlots), bl, *fProxiedPtr));
+      df->Book(std::make_shared<Action_t>(Helper_t(std::move(f), redObjPtr, df->GetNSlots()), actualBl, *fProxiedPtr));
       return MakeResultProxy(redObjPtr, df);
    }
 
