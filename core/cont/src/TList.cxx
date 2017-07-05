@@ -713,30 +713,31 @@ void TList::RecursiveRemove(TObject *obj)
    TObjLink *next = 0;
    while (lnk) {
       next = lnk->Next();
-      TObject *ob = lnk->GetObject();
-      if (ob->TestBit(kNotDeleted)) {
-         if (ob->IsEqual(obj)) {
-            if (lnk == fFirst) {
-               fFirst = next;
-               if (lnk == fLast)
-                  fLast = fFirst;
-               else
-                  fFirst->fPrev = 0;
-               DeleteLink(lnk);
-            } else if (lnk == fLast) {
-               fLast = lnk->Prev();
-               fLast->fNext = 0;
-               DeleteLink(lnk);
-            } else {
-               lnk->Prev()->fNext = next;
-               lnk->Next()->fPrev = lnk->Prev();
-               DeleteLink(lnk);
-            }
-            fSize--;
-            fCache = 0;
-            Changed();
-         } else
-            ob->RecursiveRemove(obj);
+      if (TObject* ob = lnk->GetObject()) {
+         if (ob->TestBit(kNotDeleted)) {
+            if (ob->IsEqual(obj)) {
+               if (lnk == fFirst) {
+                  fFirst = next;
+                  if (lnk == fLast)
+                     fLast = fFirst;
+                  else
+                     fFirst->fPrev = 0;
+                  DeleteLink(lnk);
+               } else if (lnk == fLast) {
+                  fLast = lnk->Prev();
+                  fLast->fNext = 0;
+                  DeleteLink(lnk);
+               } else {
+                  lnk->Prev()->fNext = next;
+                  lnk->Next()->fPrev = lnk->Prev();
+                  DeleteLink(lnk);
+               }
+               fSize--;
+               fCache = 0;
+               Changed();
+            } else
+               ob->RecursiveRemove(obj);
+         }
       }
       lnk = next;
    }
