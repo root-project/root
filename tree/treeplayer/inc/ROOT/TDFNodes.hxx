@@ -61,7 +61,7 @@ class TLoopManager : public std::enable_shared_from_this<TLoopManager> {
    std::vector<std::shared_ptr<bool>> fResProxyReadiness;
    ::TDirectory * const fDirPtr{nullptr};
    std::shared_ptr<TTree> fTree{nullptr};
-   const ColumnNames_t fDefaultBranches;
+   const ColumnNames_t fDefaultColumns;
    const ULong64_t fNEmptyEntries{0};
    const unsigned int fNSlots{1};
    bool fHasRunAtLeastOnce{false};
@@ -89,7 +89,7 @@ public:
    void Run();
    TLoopManager *GetImplPtr();
    std::shared_ptr<TLoopManager> GetSharedPtr() { return shared_from_this(); }
-   const ColumnNames_t &GetDefaultBranches() const;
+   const ColumnNames_t &GetDefaultColumnNames() const;
    const ColumnNames_t GetTmpBranches() const { return {}; };
    TTree *GetTree() const;
    TCustomColumnBase *GetBookedBranch(const std::string &name) const;
