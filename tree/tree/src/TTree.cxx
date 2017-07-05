@@ -4406,14 +4406,14 @@ Int_t TTree::Fill()
       fBranchRef->Clear();
    }
 
+#ifdef R__USE_IMT
    ROOT::Internal::TBranchIMTHelper imtHelper;
-   #ifdef R__USE_IMT
    if (fIMTEnabled) {
       fIMTFlush = true;
       fIMTZipBytes.store(0);
       fIMTTotBytes.store(0);
    }
-   #endif
+#endif
 
    for (Int_t i = 0; i < nb; ++i) {
       // Loop over all branches, filling and accumulating bytes written and error counts.
@@ -4421,7 +4421,11 @@ Int_t TTree::Fill()
       if (branch->TestBit(kDoNotProcess)) {
          continue;
       }
+#ifndef R__USE_IMT
+      Int_t nwrite = branch->FillImpl(nullptr);
+#else
       Int_t nwrite = branch->FillImpl(fIMTEnabled ? &imtHelper : nullptr);
+#endif
       if (nwrite < 0)  {
          if (nerror < 2) {
             Error("Fill", "Failed filling branch:%s.%s, nbytes=%d, entry=%lld\n"
@@ -4441,7 +4445,8 @@ Int_t TTree::Fill()
          nbytes += nwrite;
       }
    }
-   #ifdef R__USE_IMT
+
+#ifdef R__USE_IMT
    if (fIMTFlush) {
       imtHelper.Wait();
       fIMTFlush = false;
@@ -4450,7 +4455,7 @@ Int_t TTree::Fill()
       nbytes += imtHelper.GetNbytes();
       nerror += imtHelper.GetNerrors();
    }
-   #endif
+#endif
 
    if (fBranchRef) {
       fBranchRef->Fill();
