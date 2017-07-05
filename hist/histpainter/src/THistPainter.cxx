@@ -7854,6 +7854,7 @@ void THistPainter::PaintLegoAxis(TGaxis *axis, Double_t ang)
    if (TMath::Abs(y1[0] - y2[0]) >= epsil || TMath::Abs(y1[1] - y2[1]) > epsil) {
       axis->ImportAxisAttributes(fYaxis);
       axis->SetLabelOffset(fYaxis->GetLabelOffset()+fYaxis->GetTickLength());
+      if (fYaxis->GetTitleOffset() == 0) axis->SetTitleOffset(1.5);
 
       if (fH->GetDimension() < 2) {
          strlcpy(chopay, "V=+UN",8);
