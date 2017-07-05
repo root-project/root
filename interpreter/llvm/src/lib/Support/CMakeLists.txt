@@ -131,7 +131,6 @@ add_llvm_library(LLVMSupport
   Process.cpp
   Program.cpp
   RWMutex.cpp
-  SearchForAddressOfSpecialSymbol.cpp
   Signals.cpp
   TargetRegistry.cpp
   ThreadLocal.cpp
