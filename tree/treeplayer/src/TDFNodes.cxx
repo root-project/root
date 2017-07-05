@@ -130,7 +130,7 @@ unsigned int TSlotStack::Pop()
 }
 
 TLoopManager::TLoopManager(TTree *tree, const ColumnNames_t &defaultBranches)
-   : fTree(std::shared_ptr<TTree>(tree, [](TTree *) {})), fDefaultBranches(defaultBranches),
+   : fTree(std::shared_ptr<TTree>(tree, [](TTree *) {})), fDefaultColumns(defaultBranches),
      fNSlots(TDFInternal::GetNSlots()), fLoopType(ELoopType::kROOTFiles)
 {
 }
@@ -329,9 +329,10 @@ TLoopManager *TLoopManager::GetImplPtr()
    return this;
 }
 
-const ColumnNames_t &TLoopManager::GetDefaultBranches() const
+/// Return the list of default columns -- empty if none was provided when constructing the TDataFrame
+const ColumnNames_t &TLoopManager::GetDefaultColumnNames() const
 {
-   return fDefaultBranches;
+   return fDefaultColumns;
 }
 
 TTree *TLoopManager::GetTree() const
