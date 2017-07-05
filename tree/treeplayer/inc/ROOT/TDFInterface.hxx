@@ -201,7 +201,7 @@ public:
    {
       TDFInternal::CheckFilter(f);
       auto df = GetDataFrameChecked();
-      const ColumnNames_t &defBl = df->GetDefaultBranches();
+      const ColumnNames_t &defBl = df->GetDefaultColumnNames();
       auto nArgs = TTraits::CallableTraits<F>::arg_types::list_size;
       const ColumnNames_t &actualBl = TDFInternal::PickBranchNames(nArgs, bn, defBl);
       using DFF_t = TDFDetail::TFilter<F, Proxied>;
@@ -280,7 +280,7 @@ public:
    {
       auto df = GetDataFrameChecked();
       TDFInternal::CheckTmpBranch(name, df->GetTree());
-      const ColumnNames_t &defBl = df->GetDefaultBranches();
+      const ColumnNames_t &defBl = df->GetDefaultColumnNames();
       auto nArgs = TTraits::CallableTraits<F>::arg_types::list_size;
       const ColumnNames_t &actualBl = TDFInternal::PickBranchNames(nArgs, bl, defBl);
       using DFB_t = TDFDetail::TCustomColumn<F, Proxied>;
@@ -477,7 +477,7 @@ public:
    void ForeachSlot(F f, const ColumnNames_t &bl = {})
    {
       auto df = GetDataFrameChecked();
-      const ColumnNames_t &defBl = df->GetDefaultBranches();
+      const ColumnNames_t &defBl = df->GetDefaultColumnNames();
       auto nArgs = TTraits::CallableTraits<F>::arg_types::list_size;
       const ColumnNames_t &actualBl = TDFInternal::PickBranchNames(nArgs - 1, bl, defBl);
       using Helper_t = TDFInternal::ForeachSlotHelper<F>;
@@ -1134,7 +1134,7 @@ protected:
    const ColumnNames_t GetDefaultBranchNames(unsigned int nExpectedBranches, std::string_view actionNameForErr)
    {
       auto df = GetDataFrameChecked();
-      const ColumnNames_t &defaultBranches = df->GetDefaultBranches();
+      const ColumnNames_t &defaultBranches = df->GetDefaultColumnNames();
       const auto dBSize = defaultBranches.size();
       if (nExpectedBranches > dBSize) {
          std::string msg("Trying to deduce the branches from the default list in order to ");
