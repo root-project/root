@@ -4395,53 +4395,56 @@ Int_t TTree::Fill()
 {
    Int_t nbytes = 0;
    Int_t nerror = 0;
-   Int_t nb = fBranches.GetEntriesFast();
-   if (nb == 1) {
-      // Case of one single super branch. Automatically update
-      // all the branch addresses if a new object was created.
-      TBranch* branch = (TBranch*) fBranches.UncheckedAt(0);
-      branch->UpdateAddress();
-   }
-   if (fBranchRef) {
-      fBranchRef->Clear();
-   }
+   Int_t nbranches = fBranches.GetEntriesFast();
 
+   // Case of one single super branch. Automatically update
+   // all the branch addresses if a new object was created.
+   if (nbranches == 1)
+      ((TBranch*)fBranches.UncheckedAt(0))->UpdateAddress();
+
+   if (fBranchRef)
+      fBranchRef->Clear();
+
+#ifdef R__USE_IMT
    ROOT::Internal::TBranchIMTHelper imtHelper;
-   #ifdef R__USE_IMT
+
    if (fIMTEnabled) {
       fIMTFlush = true;
       fIMTZipBytes.store(0);
       fIMTTotBytes.store(0);
    }
-   #endif
+#endif
 
-   for (Int_t i = 0; i < nb; ++i) {
+   for (Int_t i = 0; i < nbranches; ++i) {
       // Loop over all branches, filling and accumulating bytes written and error counts.
       TBranch* branch = (TBranch*) fBranches.UncheckedAt(i);
-      if (branch->TestBit(kDoNotProcess)) {
+
+      if (branch->TestBit(kDoNotProcess))
          continue;
-      }
+
+#ifndef R__USE_IMT
+      Int_t nwrite = branch->FillImpl(nullptr);
+#else
       Int_t nwrite = branch->FillImpl(fIMTEnabled ? &imtHelper : nullptr);
-      if (nwrite < 0)  {
-         if (nerror < 2) {
-            Error("Fill", "Failed filling branch:%s.%s, nbytes=%d, entry=%lld\n"
-                  " This error is symptomatic of a Tree created as a memory-resident Tree\n"
-                  " Instead of doing:\n"
-                  "    TTree *T = new TTree(...)\n"
-                  "    TFile *f = new TFile(...)\n"
-                  " you should do:\n"
-                  "    TFile *f = new TFile(...)\n"
-                  "    TTree *T = new TTree(...)",
-                  GetName(), branch->GetName(), nwrite,fEntries+1);
-         } else {
-            Error("Fill", "Failed filling branch:%s.%s, nbytes=%d, entry=%lld", GetName(), branch->GetName(), nwrite,fEntries+1);
-         }
-         ++nerror;
-      } else {
+#endif
+
+      if (nwrite > 0) {
          nbytes += nwrite;
+      } else {
+         ++nerror;
+         Error("Fill", "Failed filling branch:%s.%s, nbytes=%d, entry=%lld\n"
+               " This error is symptomatic of a Tree created as a memory-resident Tree\n"
+               " Instead of doing:\n"
+               "    TTree *T = new TTree(...)\n"
+               "    TFile *f = new TFile(...)\n"
+               " you should do:\n"
+               "    TFile *f = new TFile(...)\n"
+               "    TTree *T = new TTree(...)",
+               GetName(), branch->GetName(), nwrite,fEntries+1);
       }
    }
-   #ifdef R__USE_IMT
+
+#ifdef R__USE_IMT
    if (fIMTFlush) {
       imtHelper.Wait();
       fIMTFlush = false;
@@ -4450,99 +4453,88 @@ Int_t TTree::Fill()
       nbytes += imtHelper.GetNbytes();
       nerror += imtHelper.GetNerrors();
    }
-   #endif
+#endif
 
-   if (fBranchRef) {
+   if (fBranchRef)
       fBranchRef->Fill();
-   }
+
    ++fEntries;
-   if (fEntries > fMaxEntries) {
+
+   if (fEntries > fMaxEntries)
       KeepCircular();
-   }
-   if (gDebug > 0) Info("TTree::Fill", " - A:  %d %lld %lld %lld %lld %lld %lld \n",
-       nbytes, fEntries, fAutoFlush,fAutoSave,GetZipBytes(),fFlushedBytes,fSavedBytes);
 
-   if (fAutoFlush != 0 || fAutoSave != 0) {
-      // Is it time to flush or autosave baskets?
-      if (fFlushedBytes == 0) {
-         // Decision can be based initially either on the number of bytes
-         // or the number of entries written.
+   if (gDebug > 0)
+      Info("TTree::Fill", " - A:  %d %lld %lld %lld %lld %lld %lld \n",
+           nbytes, fEntries, fAutoFlush,fAutoSave,GetZipBytes(),fFlushedBytes,fSavedBytes);
+
+   bool autoFlush = fAutoFlush != 0;
+   bool autoSave  = fAutoSave  != 0;
+
+   if (autoFlush || autoSave) {
+      if (fFlushedBytes > 0) {
+         auto flushEntries = fNClusterRange == 0 ? fEntries : fEntries - fClusterRangeEnd[fNClusterRange-1];
+         autoFlush = flushEntries % fAutoFlush == 0;
+         autoSave  = fEntries % fAutoSave == 0;
+      } else {
          Long64_t zipBytes = GetZipBytes();
-         if ((fAutoFlush<0 && zipBytes > -fAutoFlush)  ||
-             (fAutoSave <0 && zipBytes > -fAutoSave )  ||
-             (fAutoFlush>0 && fEntries%TMath::Max((Long64_t)1,fAutoFlush) == 0) ||
-             (fAutoSave >0 && fEntries%TMath::Max((Long64_t)1,fAutoSave)  == 0) ) {
 
-            //First call FlushBasket to make sure that fTotBytes is up to date.
+         autoFlush = fAutoFlush > 0 ? fEntries == fAutoFlush : zipBytes > -fAutoFlush;
+         autoSave  = fAutoSave  > 0 ? fEntries == fAutoSave  : zipBytes > -fAutoSave;
+
+         // First time that AutoFlush/AutoSave are being called
+         if (autoFlush || autoSave) {
             FlushBaskets();
-            OptimizeBaskets(GetTotBytes(),1,"");
-            if (gDebug > 0) Info("TTree::Fill","OptimizeBaskets called at entry %lld, fZipBytes=%lld, fFlushedBytes=%lld\n",fEntries,GetZipBytes(),fFlushedBytes);
+            OptimizeBaskets(GetTotBytes(), 1, "");
+            autoFlush = false; // already flushed, do not flush again below
+
+            fAutoFlush = fEntries; // switch to test on number of entries
+
+            if (gDebug > 0)
+               Info("TTree::Fill", "OptimizeBaskets called at entry %lld, fZipBytes=%lld, fFlushedBytes=%lld\n",
+                    fEntries, GetZipBytes(), fFlushedBytes);
+
             fFlushedBytes = GetZipBytes();
-            fAutoFlush    = fEntries;  // Use test on entries rather than bytes
 
-            // subsequently in run
-            if (fAutoSave < 0) {
-               // Set fAutoSave to the largest integer multiple of
-               // fAutoFlush events such that fAutoSave*fFlushedBytes
-               // < (minus the input value of fAutoSave)
-               Long64_t totBytes = GetTotBytes();
-               if (zipBytes != 0) {
-                  fAutoSave =  TMath::Max( fAutoFlush, fEntries*((-fAutoSave/zipBytes)/fEntries));
-               } else if (totBytes != 0) {
-                  fAutoSave =  TMath::Max( fAutoFlush, fEntries*((-fAutoSave/totBytes)/fEntries));
-               } else {
-                  TBufferFile b(TBuffer::kWrite, 10000);
-                  TTree::Class()->WriteBuffer(b, (TTree*) this);
-                  Long64_t total = b.Length();
-                  fAutoSave =  TMath::Max( fAutoFlush, fEntries*((-fAutoSave/total)/fEntries));
-               }
-            } else if(fAutoSave > 0) {
-               fAutoSave = fAutoFlush*(fAutoSave/fAutoFlush);
-            }
-            if (fAutoSave!=0 && fEntries >= fAutoSave) AutoSave();    // FlushBaskets not called in AutoSave
-            if (gDebug > 0) Info("TTree::Fill","First AutoFlush.  fAutoFlush = %lld, fAutoSave = %lld\n", fAutoFlush, fAutoSave);
+            // recompute auto save as number of entries if expressed in bytes
+            if (fAutoSave < 0)
+               fAutoSave = -fAutoSave/(zipBytes > 0 ? zipBytes : GetTotBytes());
+
+            // make fAutoSave a multiple of fAutoFlush
+            fAutoSave = TMath::Max(fAutoFlush, fAutoFlush * (fAutoSave/fAutoFlush));
+
+            if (gDebug > 0)
+               Info("TTree::Fill", "First AutoFlush. fAutoFlush = %lld, fAutoSave = %lld\n", fAutoFlush, fAutoSave);
          }
-      } else if (fNClusterRange && fAutoFlush && ( (fEntries-fClusterRangeEnd[fNClusterRange-1]) % fAutoFlush == 0)  ) {
-         if (fAutoSave != 0 && fEntries%fAutoSave == 0) {
-            //We are at an AutoSave point. AutoSave flushes baskets and saves the Tree header
-            AutoSave("flushbaskets");
-            if (gDebug > 0) Info("TTree::Fill","AutoSave called at entry %lld, fZipBytes=%lld, fSavedBytes=%lld\n",fEntries,GetZipBytes(),fSavedBytes);
-         } else {
-            //We only FlushBaskets
-            FlushBaskets();
-            if (gDebug > 0) Info("TTree::Fill","FlushBasket called at entry %lld, fZipBytes=%lld, fFlushedBytes=%lld\n",fEntries,GetZipBytes(),fFlushedBytes);
-         }
-         fFlushedBytes = GetZipBytes();
-      } else if (fNClusterRange == 0 && fEntries > 1 && fAutoFlush && fEntries%fAutoFlush == 0) {
-         if (fAutoSave != 0 && fEntries%fAutoSave == 0) {
-            //We are at an AutoSave point. AutoSave flushes baskets and saves the Tree header
-            AutoSave("flushbaskets");
-            if (gDebug > 0) Info("TTree::Fill","AutoSave called at entry %lld, fZipBytes=%lld, fSavedBytes=%lld\n",fEntries,GetZipBytes(),fSavedBytes);
-         } else {
-            //We only FlushBaskets
-            FlushBaskets();
-            if (gDebug > 0) Info("TTree::Fill","FlushBasket called at entry %lld, fZipBytes=%lld, fFlushedBytes=%lld\n",fEntries,GetZipBytes(),fFlushedBytes);
-         }
-         fFlushedBytes = GetZipBytes();
       }
    }
+
+   if (autoFlush) {
+      FlushBaskets();
+      if (gDebug > 0)
+         Info("TTree::Fill", "FlushBasket called at entry %lld, fZipBytes=%lld, fFlushedBytes=%lld\n",
+              fEntries, GetZipBytes(), fFlushedBytes);
+      fFlushedBytes = GetZipBytes();
+   }
+
+   if (autoSave) {
+      AutoSave();
+      if (gDebug > 0)
+         Info("TTree::Fill", "AutoSave called at entry %lld, fZipBytes=%lld, fSavedBytes=%lld\n",
+              fEntries, GetZipBytes(), fSavedBytes);
+   }
+
    // Check that output file is still below the maximum size.
    // If above, close the current file and continue on a new file.
    // Currently, the automatic change of file is restricted
    // to the case where the tree is in the top level directory.
-   if (!fDirectory) {
-      return nbytes;
+   if (fDirectory) {
+      TFile* file = fDirectory->GetFile();
+      if (file && (file->GetEND() > fgMaxTreeSize))
+         if (fDirectory == (TDirectory*) file)
+            ChangeFile(file);
    }
-   TFile* file = fDirectory->GetFile();
-   if (file && (file->GetEND() > fgMaxTreeSize)) {
-      if (fDirectory == (TDirectory*) file) {
-         ChangeFile(file);
-      }
-   }
-   if (nerror) {
-      return -1;
-   }
-   return nbytes;
+
+   return nerror ? -1 : nbytes;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
