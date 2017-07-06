@@ -18,9 +18,7 @@
 #include <cassert>
 
 // pin vtable
-ROOT::Experimental::Internal::TDrawable::~TDrawable()
-{
-}
+ROOT::Experimental::Internal::TDrawable::~TDrawable() {}
 
 void ROOT::Experimental::Internal::TDrawable::Execute(const std::string &)
 {
