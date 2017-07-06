@@ -293,7 +293,7 @@ When using the options 2 or 3 above, the labels are automatically
  By default, the bin number is computed using the current axis ranges.
  If the automatic binning option has been set via
 ~~~ {.cpp}
-       h->SetCanExtend(kAllAxes);
+       h->SetCanExtend(TH1::kAllAxes);
 ~~~
  then, the Fill Function will automatically extend the axis range to
  accomodate the new value specified in the Fill argument. The method
