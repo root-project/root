@@ -1411,6 +1411,7 @@ void TClass::Init(const char *name, Version_t cversion,
          }
       }
       fClassInfo = gInterpreter->ClassInfo_Factory(givenInfo);
+      fCanLoadClassInfo = false; // avoids calls to LoadClassInfo() if info is already loaded
    }
    // We need to check if the class it is not fwd declared for the cases where we
    // created a TClass directly in the kForwardDeclared state. Indeed in those cases
