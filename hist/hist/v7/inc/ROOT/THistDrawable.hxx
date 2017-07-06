@@ -54,7 +54,8 @@ protected:
 public:
    static THistPainterBase<DIMENSION> *GetPainter()
    {
-      if (!fgPainter) LoadHistPainterLibrary();
+      if (!fgPainter)
+         LoadHistPainterLibrary();
       return fgPainter;
    }
 
@@ -102,19 +103,18 @@ public:
    template <class HIST>
    THistDrawable(const std::shared_ptr<HIST> &hist, THistDrawOptions<DIMENSIONS> opts)
       : fHistImpl(std::shared_ptr<HistImpl_t>(hist, hist->GetImpl())), fOpts(opts)
-   {
-   }
+   {}
 
    template <class HIST>
    THistDrawable(std::unique_ptr<HIST> &&hist, THistDrawOptions<DIMENSIONS> opts)
       : fHistImpl(std::unique_ptr<HistImpl_t>(std::move(hist->TakeImpl()))), fOpts(opts)
-   {
-   }
+   {}
 
    /// Paint the histogram
    void Paint(TVirtualCanvasPainter &canv) final
    {
-      if (UpdateOldHist()) THistPainterBase<DIMENSIONS>::GetPainter()->Paint(*this, fOpts, canv);
+      if (UpdateOldHist())
+         THistPainterBase<DIMENSIONS>::GetPainter()->Paint(*this, fOpts, canv);
    }
 };
 
