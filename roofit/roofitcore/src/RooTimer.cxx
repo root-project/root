@@ -42,5 +42,7 @@ void RooCPUTimer::start() {
 
 void RooCPUTimer::stop() {
   clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &_timing_end);
-  set_timing_s((_timing_end.tv_nsec - _timing_begin.tv_nsec) / 1.e9);
+  long long timing_end_nsec = _timing_end.tv_nsec + 1000000000 * _timing_end.tv_sec; // 1'000'000'000 in c++14
+  long long timing_begin_nsec = _timing_begin.tv_nsec + 1000000000 * _timing_begin.tv_sec; // 1'000'000'000 in c++14
+  set_timing_s((timing_end_nsec - timing_begin_nsec) / 1.e9);
 }
