@@ -37,7 +37,7 @@ class TDrawable {
 public:
    virtual ~TDrawable();
 
-   virtual void Paint(TVirtualCanvasPainter &) = 0;
+   virtual void Paint(TVirtualCanvasPainter &onCanv) = 0;
 
    /** Method can be used to provide menu items for the drawn object */
    virtual void PopulateMenu(TMenuItems &){};
@@ -68,7 +68,7 @@ public:
       bool fIsShared; ///< fRaw or fShared?
 
    public:
-      Accessor(const TUniWeakPtr &uniweak) : fIsShared(uniweak.fIsWeak)
+      Accessor(const TUniWeakPtr &uniweak): fIsShared(uniweak.fIsWeak)
       {
          if (fIsShared)
             new (&fShared) std::shared_ptr<T>(uniweak.fWeak.lock());
@@ -76,7 +76,7 @@ public:
             fRaw = uniweak.fUnique.get();
       }
 
-      Accessor(Accessor &&rhs) : fIsShared(rhs.fIsShared)
+      Accessor(Accessor &&rhs): fIsShared(rhs.fIsShared)
       {
          if (fIsShared)
             new (&fShared) std::shared_ptr<T>(std::move(rhs.fShared));
@@ -90,13 +90,14 @@ public:
 
       ~Accessor()
       {
-         if (fIsShared) fShared.~shared_ptr();
+         if (fIsShared)
+            fShared.~shared_ptr();
       }
    };
 
-   TUniWeakPtr(const std::shared_ptr<T> &ptr) : fWeak(ptr), fIsWeak(true) {}
-   TUniWeakPtr(std::unique_ptr<T> &&ptr) : fUnique(std::move(ptr)), fIsWeak(false) {}
-   TUniWeakPtr(TUniWeakPtr &&rhs) : fIsWeak(rhs.fIsWeak)
+   TUniWeakPtr(const std::shared_ptr<T> &ptr): fWeak(ptr), fIsWeak(true) {}
+   TUniWeakPtr(std::unique_ptr<T> &&ptr): fUnique(std::move(ptr)), fIsWeak(false) {}
+   TUniWeakPtr(TUniWeakPtr &&rhs): fIsWeak(rhs.fIsWeak)
    {
       if (fIsWeak) {
          fWeak.weak_ptr(std::move(rhs.fWeak));
