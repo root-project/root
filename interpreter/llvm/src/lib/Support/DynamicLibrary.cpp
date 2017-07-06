@@ -133,7 +133,7 @@ static llvm::ManagedStatic<llvm::sys::SmartMutex<true>> SymbolsMutex;
 
 char DynamicLibrary::Invalid;
 DynamicLibrary::SearchOrdering DynamicLibrary::SearchOrder =
-    DynamicLibrary::SO_Linker;
+    DynamicLibrary::SO_LoadedLast;
 
 namespace llvm {
 void *SearchForAddressOfSpecialSymbol(const char *SymbolName) {
