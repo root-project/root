@@ -32,7 +32,10 @@ private:
   std::chrono::time_point<std::chrono::high_resolution_clock> _timing_begin, _timing_end;
 };
 
-
+/// @class RooCPUTimer
+/// Measures the CPU time on the local process. Note that for multi-process runs,
+/// e.g. when using RooRealMPFE, the child process CPU times are not included!
+/// Use a separate timer in child processes to measure their CPU timing.
 class RooCPUTimer: public RooTimer {
 public:
   RooCPUTimer();
