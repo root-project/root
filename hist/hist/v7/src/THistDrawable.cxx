@@ -65,7 +65,8 @@ bool THistDrawable<DIMENSIONS>::UpdateOldHist()
    }
 
    std::array<TAxisView, DIMENSIONS> axes;
-   for (int i = 0; i < DIMENSIONS; ++i) axes[i] = implBase->GetAxis(i);
+   for (int i = 0; i < DIMENSIONS; ++i)
+      axes[i] = implBase->GetAxis(i);
 
    TH1 *old = nullptr;
 
@@ -112,7 +113,8 @@ bool THistDrawable<DIMENSIONS>::UpdateOldHist()
 
    int nBins = implBase->GetNBins();
    old->SetBinsLength(nBins);
-   if (implBase->HasBinUncertainty()) old->Sumw2();
+   if (implBase->HasBinUncertainty())
+      old->Sumw2();
 
    // Set the bin content + uncertainty.
    for (int binidx = 0; binidx < nBins; ++binidx) {
@@ -133,6 +135,6 @@ template class THistPainterBase<3>;
 template class THistDrawable<1>;
 template class THistDrawable<2>;
 template class THistDrawable<3>;
-}
-}
-}
+} // namespace Internal
+} // namespace Experimental
+} // namespace ROOT
