@@ -25,6 +25,7 @@
 //#ifndef __CINT__
 //#include <memory>
 
+#include <functional>
 #include <vector>
 #include <iostream>
 
@@ -313,6 +314,11 @@ public:
    {
    }
 
+   // specialization used in TF1
+   ParamFunctorTempl(const std::function<T(const T *f, const Double_t *param)> &func) :
+      fImpl(new ParamFunctorHandler<ParamFunctorTempl<T>, const std::function<T(const T *f, const Double_t *param)>>(func))
+   {
+   }
 
    /**
       Destructor (no operations)

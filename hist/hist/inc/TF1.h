@@ -221,7 +221,6 @@ public:
    };
 
 protected:
-   struct TF1FunctionPointer {};
    struct TF1FunctorPointer {};
    enum  EFType {     kFormula = 0,          // formula functions which can be stored
                       kPtrScalarFreeFcn, // pointer to scalar free function,
@@ -253,7 +252,6 @@ protected:
    Bool_t      fNormalized = false;    //Normalization option (false by default)
    Double_t    fNormIntegral{};        //Integral of the function before being normalized
    TF1FunctorPointer  *fFunctor = nullptr; //! Functor object to wrap any C++ callable object
-   TF1FunctionPointer *fFunctp = nullptr;  //! Pointer to vectorized function
    TFormula    *fFormula = nullptr;        //Pointer to TFormula in case when user define formula
    TF1Parameters *fParams = nullptr;   //Pointer to Function parameters object (exists only for not-formula functions)
 
@@ -268,16 +266,9 @@ protected:
 public:
 
    template <class T>
-   struct TF1FunctionPointerImpl: TF1FunctionPointer {
-      TF1FunctionPointerImpl(const std::function<T(const T *f, const Double_t *param)> &func) : fImpl(func){};
-      std::function<T(const T *f, const Double_t *param)> fImpl;
-   };
-
-
-
-   template <class T>
    struct TF1FunctorPointerImpl: TF1FunctorPointer {
       TF1FunctorPointerImpl(const ROOT::Math::ParamFunctorTempl<T> &func): fImpl(func) {};
+      TF1FunctorPointerImpl(const std::function<T(const T *f, const Double_t *param)> &func) : fImpl(func){};
       ROOT::Math::ParamFunctorTempl<T> fImpl;
    };
 
@@ -315,10 +306,8 @@ public:
 
    template <class T>
    TF1(const char *name, std::function<T(const T *data, const Double_t *param)> &fcn, Double_t xmin = 0, Double_t xmax = 1, Int_t npar = 0, Int_t ndim = 1, EAddToList addToGlobList = EAddToList::kDefault):
-      TF1(EFType::kTemplated, name, xmin, xmax, npar, ndim, addToGlobList, new TF1Parameters(npar))
-   {
-      fFunctp = new TF1FunctionPointerImpl<T>(fcn);
-   }
+      TF1(EFType::kTemplated, name, xmin, xmax, npar, ndim, addToGlobList, new TF1Parameters(npar), new TF1FunctorPointerImpl<T>(fcn))
+   {}
 
    ////////////////////////////////////////////////////////////////////////////////
    /// Constructor using a pointer to real function.
@@ -335,10 +324,8 @@ public:
 
    template <class T>
    TF1(const char *name, T(*fcn)(const T *, const Double_t *), Double_t xmin = 0, Double_t xmax = 1, Int_t npar = 0, Int_t ndim = 1, EAddToList addToGlobList = EAddToList::kDefault):
-      TF1(EFType::kTemplated, name, xmin, xmax, npar, ndim, addToGlobList, new TF1Parameters(npar))
-   {
-      fFunctp = new TF1FunctionPointerImpl<T>(fcn);
-   }
+      TF1(EFType::kTemplated, name, xmin, xmax, npar, ndim, addToGlobList, new TF1Parameters(npar), new TF1FunctorPointerImpl<T>(fcn))
+   {}
 
    // Constructors using functors (compiled mode only)
    TF1(const char *name, ROOT::Math::ParamFunctor f, Double_t xmin = 0, Double_t xmax = 1, Int_t npar = 0, Int_t ndim = 1, EAddToList addToGlobList = EAddToList::kDefault);
@@ -749,9 +736,6 @@ inline T TF1::EvalParVec(const T *data, const Double_t *params)
    if (fFunctor)
       return ((TF1FunctorPointerImpl<T> *)fFunctor)->fImpl(data, params);
 
-   if (fFunctp)
-      return ((TF1FunctionPointerImpl<T> *)fFunctp)->fImpl(data, params);
-
    // this should throw an error
    // we nned to implement a vectorized GetSave(x)
    return TMath::SignalingNaN();
@@ -767,8 +751,6 @@ inline double TF1::EvalParVec(const Double_t *data, const Double_t *params)
 
    if (fFunctor) {
       res = ((TF1FunctorPointerImpl<ROOT::Double_v> *)fFunctor)->fImpl(&d, params);
-   } else if (fFunctp) {
-      res = ((TF1FunctionPointerImpl<ROOT::Double_v> *)fFunctp)->fImpl(&d, params);
    } else {
       //    res = GetSave(x);
       return TMath::SignalingNaN();
