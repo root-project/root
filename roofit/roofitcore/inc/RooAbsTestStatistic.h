@@ -59,6 +59,9 @@ public:
   }
   
   Bool_t setData(RooAbsData& data, Bool_t cloneData=kTRUE) ;
+  //vinces accessors
+  Int_t numSimultaneous() const { return _nGof ; }
+  RooAbsTestStatistic** simComponents() { return _gofArray ; }
 
   void enableOffsetting(Bool_t flag) ;
   Bool_t isOffsetting() const { return _doOffset ; }
