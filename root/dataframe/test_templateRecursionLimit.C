@@ -17,7 +17,7 @@ int test_templateRecursionLimit()
 
     auto d_final = defineRecursive(d, 96); //66 limit with 1024 on linux
 
-    d_final.Snapshot("t", "f.root");
+    d_final.Snapshot("t", "test_templateRecursionLimit.root");
 
     return 0;
 

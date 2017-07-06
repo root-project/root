@@ -1,9 +1,10 @@
 int test_missingBranches() {
+   auto filename = "test_missingBranches.root";
    ROOT::Experimental::TDataFrame writer_d(1);
-   writer_d.Define("a", [] { return 42; }).Snapshot("t", "f.root");
+   writer_d.Define("a", [] { return 42; }).Snapshot("t", filename);
 
    // tdf with a file
-   ROOT::Experimental::TDataFrame d("t", "f.root");
+   ROOT::Experimental::TDataFrame d("t", filename);
    try {
       auto h = d.Histo1D("test1");
       *h;
