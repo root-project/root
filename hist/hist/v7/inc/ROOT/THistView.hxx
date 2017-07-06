@@ -2,7 +2,8 @@
 /// \ingroup Hist ROOT7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2015-08-06
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
+/// is welcome!
 
 /*************************************************************************
  * Copyright (C) 1995-2015, Rene Brun and Fons Rademakers.               *
@@ -38,56 +39,54 @@ namespace Experimental {
 
 template <class HISTVIEW>
 struct THistViewOutOfRange {
-  HISTVIEW& fHistView;
-  bool operator()(int idx) { return fHistView.IsBinOutOfRange(idx); }
+   HISTVIEW &fHistView;
+   bool operator()(int idx) { return fHistView.IsBinOutOfRange(idx); }
 };
 
 /**
  \class THistView
  A view on a histogram, selecting a range on a subset of dimensions.
  */
-template<int DIMENSIONS, class PRECISION,
-  template <int D_, class P_, template <class P__> class S_> class... STAT>
+template <int DIMENSIONS, class PRECISION, template <int D_, class P_, template <class P__> class S_> class... STAT>
 class THistView {
 public:
-  using Hist_t = THist<DIMENSIONS, PRECISION, STAT...>;
-  using AxisRange_t = typename Hist_t::AxisIterRange_t;
-  using HistViewOutOfRange_t = THistViewOutOfRange<THistView>;
+   using Hist_t = THist<DIMENSIONS, PRECISION, STAT...>;
+   using AxisRange_t = typename Hist_t::AxisIterRange_t;
+   using HistViewOutOfRange_t = THistViewOutOfRange<THistView>;
 
-  using const_iterator = Detail::THistBinIter<typename Hist_t::ImplBase_t>;
+   using const_iterator = Detail::THistBinIter<typename Hist_t::ImplBase_t>;
 
-  THistView(Hist_t& hist, int nbins, const AxisRange_t& range):
-     fHist(hist), fNBins(nbins), fRange(range) {}
+   THistView(Hist_t &hist, int nbins, const AxisRange_t &range): fHist(hist), fNBins(nbins), fRange(range) {}
 
-  bool IsBinOutOfRange(int idx) const noexcept {
-    // TODO: use fRange!
-    return idx < 0 || idx > fNBins;
-  }
+   bool IsBinOutOfRange(int idx) const noexcept
+   {
+      // TODO: use fRange!
+      return idx < 0 || idx > fNBins;
+   }
 
-  void SetRange(int axis, double from, double to) {
-    TAxisView axisView = fHist.GetImpl()->GetAxis(axis);
-    fRange[axis] = axisView.FindBin(from);
-    fRange[axis] = axisView.FindBin(to);
-  }
+   void SetRange(int axis, double from, double to)
+   {
+      TAxisView axisView = fHist.GetImpl()->GetAxis(axis);
+      fRange[axis] = axisView.FindBin(from);
+      fRange[axis] = axisView.FindBin(to);
+   }
 
-  const_iterator begin() const noexcept {
-    int beginidx = 0;
-    size_t nbins = fHist.GetNBins();
-    while (IsBinOutOfRange(beginidx) && beginidx < nbins)
-      ++beginidx;
-    return const_iterator(beginidx, HistViewOutOfRange_t(*this));
-  }
+   const_iterator begin() const noexcept
+   {
+      int beginidx = 0;
+      size_t nbins = fHist.GetNBins();
+      while (IsBinOutOfRange(beginidx) && beginidx < nbins)
+         ++beginidx;
+      return const_iterator(beginidx, HistViewOutOfRange_t(*this));
+   }
 
-  const_iterator end() const noexcept  {
-    return const_iterator(fHist.GetImpl(), fHist.GetImpl().GetNBins());
-  }
+   const_iterator end() const noexcept { return const_iterator(fHist.GetImpl(), fHist.GetImpl().GetNBins()); }
 
 private:
-  Hist_t& fHist;
-  int fNBins = 0;
-  AxisRange_t fRange;
+   Hist_t &fHist;
+   int fNBins = 0;
+   AxisRange_t fRange;
 };
-
 
 } // namespace Experimental
 } // namespace ROOT
