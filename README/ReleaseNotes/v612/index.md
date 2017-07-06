@@ -86,6 +86,10 @@ large TClonesArray where each element contains another small vector container.
   - When drawing an histogram with option "BOX" with log scale along the Z axis
     the bins were not visible in some case. This was described
     [here](https://root-forum.cern.ch/t/set-logscale-on-z-axis-in-2d-histo/25385).
+  - When a TGraph2D was plotted with the option "PCOLZ" with a log scale along the
+    Z axis, there was a mismatch between the markers' colors and the color palette
+    displayed. It is now fixed. It was reported
+    [here](https://sft.its.cern.ch/jira/browse/ROOT-8200).
 
 ## 3D Graphics Libraries
 
