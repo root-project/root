@@ -91,7 +91,6 @@ namespace FitUtil {
      T logvalue;
      T weight;
      T weight2;
-
          };
 
          template<>
