@@ -40,6 +40,11 @@ equivalent to call the raw function MPI_Init
 */
 TEnvironment::TEnvironment(Int_t level)
 {
+// export TMPDIR for OpenMPI at mac is required
+// https://www.open-mpi.org/faq/?category=osx#startup-errors-with-open-mpi-2.0.x
+#if defined(R__MACOSX) && defined(OPEN_MPI)
+   gSystem->Setenv("TMPDIR", "/tmp");
+#endif
    Int_t provided;
    MPI_Init_thread(NULL, NULL, level, &provided);
 
@@ -75,6 +80,11 @@ TEnvironment::TEnvironment(Int_t level)
 */
 TEnvironment::TEnvironment(Int_t argc, Char_t **argv, Int_t level)
 {
+// export TMPDIR for OpenMPI at mac is required
+// https://www.open-mpi.org/faq/?category=osx#startup-errors-with-open-mpi-2.0.x
+#if defined(R__MACOSX) && defined(OPEN_MPI)
+   gSystem->Setenv("TMPDIR", "/tmp");
+#endif
    Int_t provided;
    MPI_Init_thread(&argc, &argv, level, &provided);
    if (IsInitialized()) {

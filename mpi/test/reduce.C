@@ -1,11 +1,4 @@
-#include <Mpi.h>
-#include <TVectorT.h>
-#include <TVectorDfwd.h>
-#include <TVectorD.h>
-#include <TMatrixD.h>
-#include <TComplex.h>
 #include <cassert>
-#include <TSystem.h>
 using namespace ROOT::Mpi;
 
 // TODO:added test for other operators PROD MIN MAX etc..

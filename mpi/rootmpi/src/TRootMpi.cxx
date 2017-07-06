@@ -10,6 +10,11 @@ using namespace ROOT::Mpi;
 //______________________________________________________________________________
 TRootMpi::TRootMpi(Int_t argc, Char_t **argv)
 {
+// export TMPDIR for OpenMPI at mac is required
+// https://www.open-mpi.org/faq/?category=osx#startup-errors-with-open-mpi-2.0.x
+#if defined(R__MACOSX) && defined(OPEN_MPI)
+   gSystem->Setenv("TMPDIR", "/tmp");
+#endif
 
    fRootSys = TROOT::GetRootSys();
 

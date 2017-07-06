@@ -2,7 +2,7 @@
 // Example to generated random numbers to fill a TH1F histogram in every process
 // and merging the result through a custom reduce operation
 // run it with: rootmpi -np 3 hist_reduce.C   where 3 is the number of processes
-#include <Mpi.h>
+#include <TMpi.h>
 #include <TH1F.h>
 
 using namespace ROOT::Mpi;

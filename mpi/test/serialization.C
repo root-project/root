@@ -1,4 +1,4 @@
-#include <Mpi.h>
+#include <TMpi.h>
 #include <cassert>
 using namespace ROOT::Mpi;
 

@@ -1,6 +1,6 @@
 // @(#)root/mpi / Author: Omar.Zapata@cern.ch 2016-2017 http://oproject.org
-#ifndef ROOT_Mpi
-#define ROOT_Mpi
+#ifndef ROOT_TMpi
+#define ROOT_TMpi
 
 #include <Mpi/TEnvironment.h>
 #include <Mpi/Globals.h>

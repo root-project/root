@@ -1,7 +1,7 @@
+#include <TMpi.h>
 #include "TMVA/Factory.h"
 #include "TMVA/DataLoader.h"
 #include "TMVA/Tools.h"
-#include <Mpi.h>
 
 using namespace ROOT::Mpi;
 

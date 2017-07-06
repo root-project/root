@@ -1,5 +1,3 @@
-#include <Mpi.h>
-#include <TMatrixD.h>
 #include <cassert>
 using namespace ROOT::Mpi;
 

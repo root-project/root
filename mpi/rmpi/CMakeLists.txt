@@ -23,7 +23,7 @@ set(RMPI_HEADERS Mpi/TEnvironment.h
          Mpi/TMpiTimer.h
          Mpi/TMpiFile.h
          Mpi/TErrorHandler.h
-		 Mpi.h
+		 TMpi.h
 		 )
 
 ROOT_GENERATE_DICTIONARY(G__RMpi ${RMPI_HEADERS} MODULE ${libname} LINKDEF LinkDef.h)

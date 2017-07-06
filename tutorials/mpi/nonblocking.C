@@ -1,4 +1,3 @@
-#include <Mpi.h>
 using namespace ROOT::Mpi;
 
 struct particle {

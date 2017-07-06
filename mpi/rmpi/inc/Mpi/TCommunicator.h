@@ -273,7 +273,7 @@ public:
          msg.SetCompressionAlgorithm(algorithm);
       }
       msg.WriteObject(msgis);
-      Char_t *ibuffer;
+      Char_t *ibuffer = NULL;
       if (level > 0) {
          msg.Compress();
          ibuffer = msg.CompBuffer();
@@ -383,7 +383,7 @@ template <class Type>
 void TCommunicator::Send(const Type *vars, Int_t count, Int_t dest, Int_t tag) const
 {
    if (std::is_class<Type>::value) {
-      Char_t *buffer;
+      Char_t *buffer = NULL;
       Int_t size;
       Serialize(&buffer, size, vars, count, this, dest, GetRank(), tag);
       ROOT_MPI_CHECK_CALL(MPI_Send, (buffer, size, MPI_CHAR, dest, tag, fComm), this);
@@ -509,7 +509,7 @@ TRequest TCommunicator::ISend(const Type *vars, Int_t count, Int_t dest, Int_t t
 {
    TRequest req;
    if (std::is_class<Type>::value) {
-      Char_t *buffer;
+      Char_t *buffer = NULL;
       Int_t size;
       Serialize(&buffer, size, vars, count, this, dest, GetRank(), tag);
       ROOT_MPI_CHECK_CALL(MPI_Isend, (buffer, size, MPI_CHAR, dest, tag, fComm, &req.fRequest), this);
@@ -551,7 +551,7 @@ TRequest TCommunicator::ISsend(const Type *vars, Int_t count, Int_t dest, Int_t 
 {
    TRequest req;
    if (std::is_class<Type>::value) {
-      Char_t *buffer;
+      Char_t *buffer = NULL;
       Int_t size;
       Serialize(&buffer, size, vars, count, this, dest, GetRank(), tag);
       ROOT_MPI_CHECK_CALL(MPI_Issend, (buffer, size, MPI_CHAR, dest, tag, fComm, &req.fRequest), this);
@@ -694,7 +694,7 @@ void TCommunicator::Bcast(Type *vars, Int_t count, Int_t root) const
 {
    if (std::is_class<Type>::value) {
       Int_t size;
-      Char_t *buffer;
+      Char_t *buffer = NULL;
 
       if (GetRank() == root) Serialize(&buffer, size, vars, count, this, 0, 0, 0, root);
 
@@ -754,7 +754,7 @@ TRequest TCommunicator::IBcast(Type *vars, Int_t count, Int_t root) const
    if (std::is_class<Type>::value) {
       TRequest prereq;
       Int_t size;
-      Char_t *buffer;
+      Char_t *buffer = NULL;
 
       if (GetRank() == root) {
          Serialize(&buffer, size, vars, count, this, 0, 0, 0, root);
