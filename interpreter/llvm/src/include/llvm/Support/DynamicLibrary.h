@@ -65,8 +65,19 @@ namespace sys {
     ///
     /// It is safe to call this function multiple times for the same library.
     /// @brief Open a dynamic library permanently.
-    static DynamicLibrary getPermanentLibrary(const char *filename,
-                                              std::string *errMsg = nullptr);
+    /// @param Filename The path to the library.
+    /// @param ErrMsg Any error encountered will be stored here.
+    /// @param RTLocal Open with RTLD_LOCAL flag on platforms supporting dlopen,
+    /// otherwise ignored.
+    static DynamicLibrary getPermanentLibrary(const char *Filename,
+                                              std::string *ErrMsg = nullptr,
+                                              bool RTLocal = false);
+
+    /// @brief Convenience function for using RTLocal without error reporting.
+    static DynamicLibrary getPermanentLibrary(const char *Filename,
+                                              bool RTLocal) {
+      return getPermanentLibrary(Filename, nullptr, RTLocal);
+    }
 
     /// Registers an externally loaded library. The library will be unloaded
     /// when the program terminates.

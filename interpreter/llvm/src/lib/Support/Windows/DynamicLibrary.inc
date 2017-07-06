@@ -32,7 +32,8 @@ DynamicLibrary::HandleSet::~HandleSet() {
   DynamicLibrary::SearchOrder = DynamicLibrary::SO_Linker;
 }
 
-void *DynamicLibrary::HandleSet::DLOpen(const char *File, std::string *Err) {
+void *DynamicLibrary::HandleSet::DLOpen(const char *File, std::string *Err,
+                                        bool /*Local*/) {
   // Create the instance and return it to be the *Process* handle
   // simillar to dlopen(NULL, RTLD_LAZY|RTLD_GLOBAL)
   if (!File)
