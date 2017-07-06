@@ -32,15 +32,9 @@ using namespace TMVA::DNN;
  *  layer l. dx is added as an offset to the current value of the weight. */
 //______________________________________________________________________________
 template <typename Architecture>
-auto evaluate_net_weight(TNet<Architecture> &net,
-                               typename Architecture::Matrix_t &X,
-                         const typename Architecture::Matrix_t &Y,
-                         const typename Architecture::Matrix_t &W,
-                         size_t l,
-                         size_t i,
-                         size_t j,
-                         typename Architecture::Scalar_t dx)
-    -> typename Architecture::Scalar_t
+auto evaluate_net_weight(TNet<Architecture> &net, typename Architecture::Matrix_t &X,
+                         const typename Architecture::Matrix_t &Y, const typename Architecture::Matrix_t &W, size_t l,
+                         size_t i, size_t j, typename Architecture::Scalar_t dx) -> typename Architecture::Scalar_t
 {
     using Scalar_t = typename Architecture::Scalar_t;
 
@@ -54,14 +48,9 @@ auto evaluate_net_weight(TNet<Architecture> &net,
  *  layer l. dx is added as an offset to the current value of the weight. */
 //______________________________________________________________________________
 template <typename Architecture>
-auto evaluate_net_bias(TNet<Architecture> &net,
-                             typename Architecture::Matrix_t &X,
-                       const typename Architecture::Matrix_t &Y,
-                       const typename Architecture::Matrix_t &W,
-                       size_t l,
-                       size_t i,
-                       typename Architecture::Scalar_t dx)
-    -> typename Architecture::Scalar_t
+auto evaluate_net_bias(TNet<Architecture> &net, typename Architecture::Matrix_t &X,
+                       const typename Architecture::Matrix_t &Y, const typename Architecture::Matrix_t &W, size_t l,
+                       size_t i, typename Architecture::Scalar_t dx) -> typename Architecture::Scalar_t
 {
     using Scalar_t = typename Architecture::Scalar_t;
 
@@ -81,8 +70,7 @@ auto testBackpropagationWeightsLinear(typename Architecture::Scalar_t dx)
 {
    using Scalar_t = typename Architecture::Scalar_t;
    using Matrix_t = typename Architecture::Matrix_t;
-   using Net_t    = TNet<Architecture>;
-
+   using Net_t = TNet<Architecture>;
 
    Net_t net(50, 50, ELossFunction::kMeanSquaredError);
 
@@ -91,45 +79,37 @@ auto testBackpropagationWeightsLinear(typename Architecture::Scalar_t dx)
    net.Initialize(EInitialization::kGauss);
 
    // Random training data.
-   Matrix_t X(50, 50), Y(50, net.GetOutputWidth()), weights(50,1);
+   Matrix_t X(50, 50), Y(50, net.GetOutputWidth()), weights(50, 1);
    randomBatch(X);
    randomMatrix(Y);
-   fillMatrix(weights,1.0);
+   fillMatrix(weights, 1.0);
 
    net.Forward(X);
-   net.Backward(X,Y,weights);
+   net.Backward(X, Y, weights);
 
    Scalar_t maximum_error = 0.0;
 
    // Compute derivatives for all weights using finite differences and
    // compare to result obtained from backpropagation.
-   for (size_t l = 0; l < net.GetDepth(); l++)
-   {
-      std::cout << "\rTesting weight gradients:      layer: "
-                << l << " / " << net.GetDepth();
+   for (size_t l = 0; l < net.GetDepth(); l++) {
+      std::cout << "\rTesting weight gradients:      layer: " << l << " / " << net.GetDepth();
       std::cout << std::flush;
-      auto & layer = net.GetLayer(l);
-      auto & W     = layer.GetWeightGradients();
+      auto &layer = net.GetLayer(l);
+      auto &W = layer.GetWeightGradients();
 
-      for (size_t i = 0; i < layer.GetWidth(); i++)
-      {
-         for (size_t j = 0; j < layer.GetInputWidth(); j++)
-         {
-            auto f = [& net, &X, &Y, &weights, l, i, j](Scalar_t x)
-            {
+      for (size_t i = 0; i < layer.GetWidth(); i++) {
+         for (size_t j = 0; j < layer.GetInputWidth(); j++) {
+            auto f = [&net, &X, &Y, &weights, l, i, j](Scalar_t x) {
                return evaluate_net_weight(net, X, Y, weights, l, i, j, x);
             };
-            Scalar_t dy     = finiteDifference(f, dx) / (2.0 * dx);
-            Scalar_t dy_ref = W(i,j);
+            Scalar_t dy = finiteDifference(f, dx) / (2.0 * dx);
+            Scalar_t dy_ref = W(i, j);
 
             // Compute the relative error if dy != 0.
             Scalar_t error;
-            if (std::fabs(dy_ref) > 1e-15)
-            {
+            if (std::fabs(dy_ref) > 1e-15) {
                error = std::fabs((dy - dy_ref) / dy_ref);
-            }
-            else
-            {
+            } else {
                error = std::fabs(dy - dy_ref);
             }
 
@@ -163,14 +143,14 @@ auto testBackpropagationL1Regularization(typename Architecture::Scalar_t dx)
    net.Initialize(EInitialization::kGauss);
 
    // Random training data.
-   Matrix_t X(50, 50), Y(50, net.GetOutputWidth()), weights(50,1);
+   Matrix_t X(50, 50), Y(50, net.GetOutputWidth()), weights(50, 1);
    randomBatch(X);
    randomMatrix(Y);
-   fillMatrix(weights,1.0);
+   fillMatrix(weights, 1.0);
 
    net.Forward(X);
-   net.Backward(X,Y,weights);
- 
+   net.Backward(X, Y, weights);
+
    Scalar_t maximum_error = 0.0;
 
    // Compute derivatives for all weights using finite differences and
@@ -188,8 +168,7 @@ auto testBackpropagationL1Regularization(typename Architecture::Scalar_t dx)
          for (size_t j = 0; j < layer.GetInputWidth(); j++) {
             // Avoid running into the non-derivable point at 0.0.
             if (std::abs(W(i,j)) > dx) {
-               auto f = [& net, &X, &Y, &weights, l, i, j](Scalar_t x)
-               {
+               auto f = [&net, &X, &Y, &weights, l, i, j](Scalar_t x) {
                   return evaluate_net_weight(net, X, Y, weights, l, i, j, x);
                };
                Scalar_t dy     = finiteDifference(f, dx) / (2.0 * dx);
@@ -237,13 +216,13 @@ auto testBackpropagationL2Regularization(typename Architecture::Scalar_t dx)
    net.Initialize(EInitialization::kGauss);
 
    // Random training data.
-   Matrix_t X(50, 50), Y(50, net.GetOutputWidth()), weights(50,1);
+   Matrix_t X(50, 50), Y(50, net.GetOutputWidth()), weights(50, 1);
    randomBatch(X);
    randomMatrix(Y);
-   fillMatrix(weights,1.0);
+   fillMatrix(weights, 1.0);
 
    net.Forward(X);
-   net.Backward(X,Y,weights);
+   net.Backward(X, Y, weights);
 
    Scalar_t maximum_error = 0.0;
 
@@ -261,8 +240,7 @@ auto testBackpropagationL2Regularization(typename Architecture::Scalar_t dx)
       {
          for (size_t j = 0; j < layer.GetInputWidth(); j++)
          {
-            auto f = [& net, &X, &Y, &weights, &W, l, i, j](Scalar_t x)
-            {
+            auto f = [&net, &X, &Y, &weights, &W, l, i, j](Scalar_t x) {
                return evaluate_net_weight(net, X, Y, weights, l, i, j, x);
             };
             Scalar_t dy     = finiteDifference(f, dx) / (2.0 * dx);
@@ -309,13 +287,13 @@ auto testBackpropagationBiasesLinear(typename Architecture::Scalar_t dx)
    net.Initialize(EInitialization::kGauss);
 
    // Random training data.
-   Matrix_t X(50, 50), Y(50, net.GetOutputWidth()), weights(50,1);
+   Matrix_t X(50, 50), Y(50, net.GetOutputWidth()), weights(50, 1);
    randomBatch(X);
    randomMatrix(Y);
-   fillMatrix(weights,1.0);
+   fillMatrix(weights, 1.0);
 
    net.Forward(X);
-   net.Backward(X,Y,weights);
+   net.Backward(X, Y, weights);
 
    Scalar_t maximum_error = 0.0;
 
@@ -331,10 +309,7 @@ auto testBackpropagationBiasesLinear(typename Architecture::Scalar_t dx)
 
       for (size_t i = 0; i < layer.GetWidth(); i++)
       {
-         auto f = [&net, & X, &Y, &weights, l, i](Scalar_t x)
-         {
-            return evaluate_net_bias(net, X, Y, weights, l, i, x);
-         };
+         auto f = [&net, &X, &Y, &weights, l, i](Scalar_t x) { return evaluate_net_bias(net, X, Y, weights, l, i, x); };
          Scalar_t dy     = finiteDifference(f, dx);
          Scalar_t dy_ref = dtheta(i,0) * 2.0 * dx;
 

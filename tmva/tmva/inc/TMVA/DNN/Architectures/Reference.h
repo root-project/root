@@ -149,34 +149,24 @@ public:
     */
    ///@{
 
-   static AReal MeanSquaredError(const TMatrixT<AReal> &Y,
-                                 const TMatrixT<AReal> &output,
+   static AReal MeanSquaredError(const TMatrixT<AReal> &Y, const TMatrixT<AReal> &output,
                                  const TMatrixT<AReal> &weights);
-   static void MeanSquaredErrorGradients(TMatrixT<AReal> & dY,
-                                         const TMatrixT<AReal> &Y,
-                                         const TMatrixT<AReal> &output,
+   static void MeanSquaredErrorGradients(TMatrixT<AReal> &dY, const TMatrixT<AReal> &Y, const TMatrixT<AReal> &output,
                                          const TMatrixT<AReal> &weights);
 
-    /** Sigmoid transformation is implicitly applied, thus \p output should
-     *  hold the linear activations of the last layer in the net. */
-   static AReal CrossEntropy(const TMatrixT<AReal> &Y,
-                             const TMatrixT<AReal> &output,
-                             const TMatrixT<AReal> &weights);
+   /** Sigmoid transformation is implicitly applied, thus \p output should
+    *  hold the linear activations of the last layer in the net. */
+   static AReal CrossEntropy(const TMatrixT<AReal> &Y, const TMatrixT<AReal> &output, const TMatrixT<AReal> &weights);
 
-   static void CrossEntropyGradients(TMatrixT<AReal> & dY,
-                                     const TMatrixT<AReal> & Y,
-                                     const TMatrixT<AReal> & output,
+   static void CrossEntropyGradients(TMatrixT<AReal> &dY, const TMatrixT<AReal> &Y, const TMatrixT<AReal> &output,
                                      const TMatrixT<AReal> &weights);
 
-    /** Softmax transformation is implicitly applied, thus \p output should
-     *  hold the linear activations of the last layer in the net. */
-   static AReal SoftmaxCrossEntropy(const TMatrixT<AReal> &Y,
-                                    const TMatrixT<AReal> &output,
+   /** Softmax transformation is implicitly applied, thus \p output should
+    *  hold the linear activations of the last layer in the net. */
+   static AReal SoftmaxCrossEntropy(const TMatrixT<AReal> &Y, const TMatrixT<AReal> &output,
                                     const TMatrixT<AReal> &weights);
-   static void SoftmaxCrossEntropyGradients(TMatrixT<AReal> & dY,
-                                            const TMatrixT<AReal> & Y,
-                                            const TMatrixT<AReal> & output,
-                                            const TMatrixT<AReal> &weights);
+   static void SoftmaxCrossEntropyGradients(TMatrixT<AReal> &dY, const TMatrixT<AReal> &Y,
+                                            const TMatrixT<AReal> &output, const TMatrixT<AReal> &weights);
    ///@}
 
    //____________________________________________________________________________
@@ -268,8 +258,7 @@ public:
    /** Sum columns of (m x n) matrixx \p A and write the results into the first
     * m elements in \p A.
     */
-   static void SumColumns(TMatrixT<AReal> &B,
-                          const TMatrixT<AReal> &A);
+   static void SumColumns(TMatrixT<AReal> &B, const TMatrixT<AReal> &A);
 };
 
 } // namespace DNN

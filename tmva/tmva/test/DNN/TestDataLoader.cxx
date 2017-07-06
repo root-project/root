@@ -34,6 +34,6 @@ int main ()
    maximumError = std::max(error, maximumError);
 
    if (maximumError > 1e-3) {
-       return 1;
+      return 1;
    }
 }

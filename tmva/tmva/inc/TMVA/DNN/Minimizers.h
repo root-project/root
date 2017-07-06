@@ -324,12 +324,10 @@ auto TGradientDescent<Architecture_t>::TrainMomentum(const Data_t & trainingData
 }
 
 //______________________________________________________________________________
-template<typename Architecture_t>
-    template <typename Net_t>
-    void inline TGradientDescent<Architecture_t>::Step(Net_t & net,
-                                                       Matrix_t &input,
-                                                       const Matrix_t &output,
-                                                       const Matrix_t &weights)
+template <typename Architecture_t>
+template <typename Net_t>
+void inline TGradientDescent<Architecture_t>::Step(Net_t &net, Matrix_t &input, const Matrix_t &output,
+                                                   const Matrix_t &weights)
 {
    net.Forward(input, true);
    net.Backward(input, output, weights);
@@ -347,13 +345,10 @@ template<typename Architecture_t>
 }
 
 //______________________________________________________________________________
-template<typename Architecture_t>
+template <typename Architecture_t>
 template <typename Net_t>
-auto inline TGradientDescent<Architecture_t>::StepLoss(Net_t & net,
-                                                       Matrix_t &input,
-                                                       const Matrix_t &output,
-                                                       const Matrix_t &weights)
-   -> Scalar_t
+auto inline TGradientDescent<Architecture_t>::StepLoss(Net_t &net, Matrix_t &input, const Matrix_t &output,
+                                                       const Matrix_t &weights) -> Scalar_t
 {
    Scalar_t loss = net.Loss(input, output, weights);
    net.Backward(input, output);
@@ -395,12 +390,9 @@ template<typename Architecture_t>
    }
    // Gradients
    for (size_t j = 0; j < nets.size(); j++) {
-      evaluateGradients<Architecture_t>(
-          nets[j].GetLayer(depth-1).GetActivationGradients(),
-          nets[j].GetLossFunction(),
-          batches[j].GetOutput(),
-          nets[j].GetLayer(depth-1).GetOutput(),
-          batches[j].GetWeights());
+      evaluateGradients<Architecture_t>(nets[j].GetLayer(depth - 1).GetActivationGradients(), nets[j].GetLossFunction(),
+                                        batches[j].GetOutput(), nets[j].GetLayer(depth - 1).GetOutput(),
+                                        batches[j].GetWeights());
    }
    // Backward
    for (size_t i = depth - 1; i > 0; i--)
@@ -463,12 +455,9 @@ void inline TGradientDescent<Architecture_t>::StepMomentum(
    }
    // Gradients
    for (size_t j = 0; j < nets.size(); j++) {
-      evaluateGradients<Architecture_t>(
-          nets[j].GetLayer(depth-1).GetActivationGradients(),
-          nets[j].GetLossFunction(),
-          batches[j].GetOutput(),
-          nets[j].GetLayer(depth-1).GetOutput(),
-          batches[j].GetWeights());
+      evaluateGradients<Architecture_t>(nets[j].GetLayer(depth - 1).GetActivationGradients(), nets[j].GetLossFunction(),
+                                        batches[j].GetOutput(), nets[j].GetLayer(depth - 1).GetOutput(),
+                                        batches[j].GetWeights());
    }
    // Backward
    for (size_t i = depth - 1; i > 0; i--)
@@ -557,12 +546,9 @@ void inline TGradientDescent<Architecture_t>::StepNesterov(
 
    // Gradients
    for (size_t j = 0; j < nets.size(); j++) {
-      evaluateGradients<Architecture_t>(
-          nets[j].GetLayer(depth-1).GetActivationGradients(),
-          nets[j].GetLossFunction(),
-          batches[j].GetOutput(),
-          nets[j].GetLayer(depth-1).GetOutput(),
-          batches[j].GetWeights());
+      evaluateGradients<Architecture_t>(nets[j].GetLayer(depth - 1).GetActivationGradients(), nets[j].GetLossFunction(),
+                                        batches[j].GetOutput(), nets[j].GetLayer(depth - 1).GetOutput(),
+                                        batches[j].GetWeights());
    }
 
    // Backward
@@ -649,14 +635,11 @@ void inline TGradientDescent<Architecture_t>::StepReducedWeights(
 }
 
 //______________________________________________________________________________
-template<typename Architecture_t>
-    template <typename Net_t>
-    auto inline TGradientDescent<Architecture_t>::StepReducedWeightsLoss(
-        Net_t & net,
-        Matrix_t &input,
-        const Matrix_t &output,
-        const Matrix_t &weights)
-    -> Scalar_t
+template <typename Architecture_t>
+template <typename Net_t>
+auto inline TGradientDescent<Architecture_t>::StepReducedWeightsLoss(Net_t &net, Matrix_t &input,
+                                                                     const Matrix_t &output, const Matrix_t &weights)
+   -> Scalar_t
 {
    Scalar_t loss = net.Loss(input, output);
    fTrainingError = loss;

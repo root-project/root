@@ -38,11 +38,11 @@ int main()
        return 1;
    }
 
-    error = testMinimizationWeights<TCuda<Real_t>>();
-    std::cout << "Weighted Data:    Maximum relative error = " << error << std::endl;
-    if (error > 1e-3) {
-        return 1;
-    }
+   error = testMinimizationWeights<TCuda<Real_t>>();
+   std::cout << "Weighted Data:    Maximum relative error = " << error << std::endl;
+   if (error > 1e-3) {
+      return 1;
+   }
 
    std::cout << std::endl << "Testing minimization: (double precision)" << std::endl;
 
@@ -61,6 +61,6 @@ int main()
    error = testMinimizationWeights<TCuda<Double_t>>();
    std::cout << "Weighted Data:    Maximum relative error = " << error << std::endl;
    if (error > 1e-3) {
-       return 1;
+      return 1;
    }
 }

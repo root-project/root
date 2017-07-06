@@ -57,7 +57,7 @@ auto testSum()
    }
 
    Architecture_t::SumColumns(SumTotal, XArch);
-   sumTotal = 3.0 * SumTotal(0,0);
+   sumTotal = 3.0 * SumTotal(0, 0);
 
    return fabs(sumTotal - sum) / sumTotal;
 }

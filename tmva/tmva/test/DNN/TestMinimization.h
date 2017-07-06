@@ -42,7 +42,7 @@ template <typename Architecture>
    size_t batchSize = 256;
 
    TMatrixT<Double_t> XTrain(nSamples, nFeatures), YTrain(nSamples, 1), WTrain(nSamples, 1),
-       XTest(batchSize, nFeatures), YTest(batchSize, 1), WTest(nSamples, 1), K(nFeatures, 1);
+      XTest(batchSize, nFeatures), YTest(batchSize, 1), WTest(nSamples, 1), K(nFeatures, 1);
 
    // Use random K to generate linear mapping.
    randomMatrix(K);
@@ -51,8 +51,8 @@ template <typename Architecture>
    YTrain.Mult(XTrain, K);
    YTest.Mult(XTest, K);
 
-   fillMatrix(WTrain,1.0);
-   fillMatrix(WTest,1.0);
+   fillMatrix(WTrain, 1.0);
+   fillMatrix(WTest, 1.0);
 
    Net_t net(batchSize, nFeatures, ELossFunction::kMeanSquaredError);
    net.AddLayer(64, EActivationFunction::kIdentity);
@@ -86,21 +86,18 @@ template <typename Architecture>
  *  only ones to the 1x20 matrix used to generate the training data.
  */
 template <typename Architecture>
-   auto testMinimizationWeights()
-   -> typename Architecture::Scalar_t
+auto testMinimizationWeights() -> typename Architecture::Scalar_t
 {
    using Matrix_t = typename Architecture::Matrix_t;
-   using Net_t    = TNet<Architecture>;
+   using Net_t = TNet<Architecture>;
 
-   size_t nSamples  = 10000;
+   size_t nSamples = 10000;
    size_t nFeatures = 20;
    size_t batchSize = 256;
 
-   TMatrixT<Double_t> X1(nSamples, nFeatures), X2(nSamples, nFeatures),
-       XTrain(2 * nSamples, nFeatures), Y1(nSamples, 1), Y2(nSamples, 1),
-       YTrain(2 * nSamples, 1), W1(nSamples, 1), W2(nSamples, 1), W(2 * nSamples, 1),
-       XTest(batchSize, nFeatures), YTest(batchSize, 1), WTest(batchSize, 1),
-       K1(nFeatures, 1), K2(nFeatures, 1);
+   TMatrixT<Double_t> X1(nSamples, nFeatures), X2(nSamples, nFeatures), XTrain(2 * nSamples, nFeatures),
+      Y1(nSamples, 1), Y2(nSamples, 1), YTrain(2 * nSamples, 1), W1(nSamples, 1), W2(nSamples, 1), W(2 * nSamples, 1),
+      XTest(batchSize, nFeatures), YTest(batchSize, 1), WTest(batchSize, 1), K1(nFeatures, 1), K2(nFeatures, 1);
 
    // Training data from two different linear mappings.
    randomMatrix(K1);
@@ -109,15 +106,15 @@ template <typename Architecture>
    randomMatrix(X2);
    Y1.Mult(X1, K1);
    Y2.Mult(X2, K2);
-   XTrain.SetSub(0,0,X1);
-   XTrain.SetSub(nSamples,0,X2);
-   YTrain.SetSub(0,0,Y1);
-   YTrain.SetSub(nSamples,0,Y2);
+   XTrain.SetSub(0, 0, X1);
+   XTrain.SetSub(nSamples, 0, X2);
+   YTrain.SetSub(0, 0, Y1);
+   YTrain.SetSub(nSamples, 0, Y2);
 
    W1 = 0.0;
    W2 = 1.0;
-   W.SetSub(0,0,W1);
-   W.SetSub(nSamples,0,W2);
+   W.SetSub(0, 0, W1);
+   W.SetSub(nSamples, 0, W2);
 
    // Test data from only the first mapping;
    randomMatrix(XTest);
@@ -163,7 +160,7 @@ template <typename Architecture>
    size_t batchSize = 256;
 
    TMatrixT<Double_t> XTrain(nSamples, nFeatures), YTrain(nSamples, 1), WTrain(nSamples, 1),
-   XTest(batchSize, nFeatures), YTest(batchSize, 1), WTest(nSamples, 1), W(nFeatures, 1);
+      XTest(batchSize, nFeatures), YTest(batchSize, 1), WTest(nSamples, 1), W(nFeatures, 1);
 
    randomMatrix(W);
    randomMatrix(XTrain);
@@ -171,17 +168,16 @@ template <typename Architecture>
    YTrain.Mult(XTrain, W);
    YTest.Mult(XTest, W);
 
-   fillMatrix(WTrain,1.0);
-   fillMatrix(WTest,1.0);
+   fillMatrix(WTrain, 1.0);
+   fillMatrix(WTest, 1.0);
 
-   auto ur =  [](Scalar_t /*x*/)
-   {
+   auto ur = [](Scalar_t /*x*/) {
       TRandom rand(clock());
       return rand.Uniform();
    };
 
    applyMatrix(WTrain, ur);
-   applyMatrix(WTest,  ur);
+   applyMatrix(WTest, ur);
 
    Net_t net(batchSize, nFeatures, ELossFunction::kMeanSquaredError);
    net.AddLayer(64, EActivationFunction::kIdentity);

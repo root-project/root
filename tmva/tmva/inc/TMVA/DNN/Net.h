@@ -115,14 +115,13 @@ public:
 
    /*! Evaluate the loss function of the net using the activations
     *  that are currently stored in the output layer. */
-   inline Scalar_t Loss(const Matrix_t &Y, const Matrix_t &weights,
-                        bool includeRegularization = true) const;
+   inline Scalar_t Loss(const Matrix_t &Y, const Matrix_t &weights, bool includeRegularization = true) const;
 
    /*! Propagate the input batch X through the net and evaluate the
     *  error function for the resulting activations of the output
     *  layer */
-   inline Scalar_t Loss(Matrix_t &X, const Matrix_t &Y, const Matrix_t &weights,
-                        bool applyDropout = false, bool includeRegularization = true);
+   inline Scalar_t Loss(Matrix_t &X, const Matrix_t &Y, const Matrix_t &weights, bool applyDropout = false,
+                        bool includeRegularization = true);
 
    /*! Compute the neural network predictionion obtained from forwarding the
     *  batch X through the neural network and applying the output function
@@ -282,14 +281,12 @@ inline void TNet<Architecture_t, Layer_t>::Forward(Matrix_t &input,
 }
 
 //______________________________________________________________________________
-template<typename Architecture_t, typename Layer_t>
-   inline void TNet<Architecture_t, Layer_t>::Backward(const Matrix_t &X,
-                                                       const Matrix_t &Y,
-                                                       const Matrix_t &weights)
+template <typename Architecture_t, typename Layer_t>
+inline void TNet<Architecture_t, Layer_t>::Backward(const Matrix_t &X, const Matrix_t &Y, const Matrix_t &weights)
 {
 
-    evaluateGradients<Architecture_t>(fLayers.back().GetActivationGradients(),
-                                      fJ, Y, fLayers.back().GetOutput(), weights);
+   evaluateGradients<Architecture_t>(fLayers.back().GetActivationGradients(), fJ, Y, fLayers.back().GetOutput(),
+                                     weights);
 
    for (size_t i = fLayers.size()-1; i > 0; i--) {
       auto & activation_gradient_backward
@@ -304,11 +301,9 @@ template<typename Architecture_t, typename Layer_t>
 }
 
 //______________________________________________________________________________
-template<typename Architecture_t, typename Layer_t>
-   inline auto TNet<Architecture_t, Layer_t>::Loss(const Matrix_t &Y,
-                                                   const Matrix_t &weights,
-                                                   bool includeRegularization) const
-   -> Scalar_t
+template <typename Architecture_t, typename Layer_t>
+inline auto TNet<Architecture_t, Layer_t>::Loss(const Matrix_t &Y, const Matrix_t &weights,
+                                                bool includeRegularization) const -> Scalar_t
 {
    auto loss = evaluate<Architecture_t>(fJ, Y, fLayers.back().GetOutput(), weights);
    includeRegularization &= (fR != ERegularization::kNone);
@@ -321,13 +316,9 @@ template<typename Architecture_t, typename Layer_t>
 }
 
 //______________________________________________________________________________
-template<typename Architecture_t, typename Layer_t>
-   inline auto TNet<Architecture_t, Layer_t>::Loss(Matrix_t &X,
-                                                   const Matrix_t &Y,
-                                                   const Matrix_t &weights,
-                                                   bool applyDropout,
-                                                   bool includeRegularization)
-   -> Scalar_t
+template <typename Architecture_t, typename Layer_t>
+inline auto TNet<Architecture_t, Layer_t>::Loss(Matrix_t &X, const Matrix_t &Y, const Matrix_t &weights,
+                                                bool applyDropout, bool includeRegularization) -> Scalar_t
 {
    Forward(X, applyDropout);
    return Loss(Y, weights, includeRegularization);

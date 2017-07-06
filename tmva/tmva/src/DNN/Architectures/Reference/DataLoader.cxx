@@ -16,263 +16,244 @@
 
 #include "TMVA/DNN/Architectures/Reference.h"
 
-namespace TMVA
-{
-namespace DNN
-{
+namespace TMVA {
+namespace DNN {
 
 //______________________________________________________________________________
-template<>
-void TDataLoader<MatrixInput_t, TReference<Real_t>>::CopyInput(
-    TMatrixT<Real_t> & matrix,
-    IndexIterator_t sampleIterator)
+template <>
+void TDataLoader<MatrixInput_t, TReference<Real_t>>::CopyInput(TMatrixT<Real_t> &matrix, IndexIterator_t sampleIterator)
 {
-   const TMatrixT<Real_t> &input  = std::get<0>(fData);
+   const TMatrixT<Real_t> &input = std::get<0>(fData);
    Int_t m = matrix.GetNrows();
    Int_t n = input.GetNcols();
 
    for (Int_t i = 0; i < m; i++) {
       Int_t sampleIndex = *sampleIterator;
       for (Int_t j = 0; j < n; j++) {
-         matrix(i,j) = static_cast<Real_t>(input(sampleIndex, j));
+         matrix(i, j) = static_cast<Real_t>(input(sampleIndex, j));
       }
       sampleIterator++;
    }
 }
 
 //______________________________________________________________________________
-template<>
-void TDataLoader<MatrixInput_t, TReference<Real_t>>::CopyOutput(
-    TMatrixT<Real_t> & matrix,
-    IndexIterator_t sampleIterator)
+template <>
+void TDataLoader<MatrixInput_t, TReference<Real_t>>::CopyOutput(TMatrixT<Real_t> &matrix,
+                                                                IndexIterator_t sampleIterator)
 {
-   const TMatrixT<Real_t> &output  = std::get<1>(fData);
+   const TMatrixT<Real_t> &output = std::get<1>(fData);
    Int_t m = matrix.GetNrows();
    Int_t n = output.GetNcols();
 
    for (Int_t i = 0; i < m; i++) {
       Int_t sampleIndex = *sampleIterator;
       for (Int_t j = 0; j < n; j++) {
-         matrix(i,j) = static_cast<Real_t>(output(sampleIndex, j));
+         matrix(i, j) = static_cast<Real_t>(output(sampleIndex, j));
       }
       sampleIterator++;
    }
 }
 
 //______________________________________________________________________________
-template<>
-void TDataLoader<MatrixInput_t, TReference<Real_t>>::CopyWeights(
-    TMatrixT<Real_t> & matrix,
-    IndexIterator_t sampleIterator)
+template <>
+void TDataLoader<MatrixInput_t, TReference<Real_t>>::CopyWeights(TMatrixT<Real_t> &matrix,
+                                                                 IndexIterator_t sampleIterator)
 {
-   const TMatrixT<Real_t> &weights  = std::get<2>(fData);
+   const TMatrixT<Real_t> &weights = std::get<2>(fData);
    Int_t m = matrix.GetNrows();
 
    for (Int_t i = 0; i < m; i++) {
       Int_t sampleIndex = *sampleIterator;
-      matrix(i,0) = static_cast<Real_t>(weights(sampleIndex, 0));
+      matrix(i, 0) = static_cast<Real_t>(weights(sampleIndex, 0));
       sampleIterator++;
    }
 }
 
 //______________________________________________________________________________
-template<>
-void TDataLoader<MatrixInput_t, TReference<Double_t>>::CopyInput(
-    TMatrixT<Double_t> & matrix,
-    IndexIterator_t sampleIterator)
+template <>
+void TDataLoader<MatrixInput_t, TReference<Double_t>>::CopyInput(TMatrixT<Double_t> &matrix,
+                                                                 IndexIterator_t sampleIterator)
 {
-   const TMatrixT<Double_t> &input  = std::get<0>(fData);
+   const TMatrixT<Double_t> &input = std::get<0>(fData);
    Int_t m = matrix.GetNrows();
    Int_t n = input.GetNcols();
 
    for (Int_t i = 0; i < m; i++) {
       Int_t sampleIndex = *sampleIterator;
       for (Int_t j = 0; j < n; j++) {
-         matrix(i,j) = static_cast<Double_t>(input(sampleIndex, j));
+         matrix(i, j) = static_cast<Double_t>(input(sampleIndex, j));
       }
       sampleIterator++;
    }
 }
 
 //______________________________________________________________________________
-template<>
-void TDataLoader<MatrixInput_t, TReference<Double_t>>::CopyOutput(
-    TMatrixT<Double_t> & matrix,
-    IndexIterator_t sampleIterator)
+template <>
+void TDataLoader<MatrixInput_t, TReference<Double_t>>::CopyOutput(TMatrixT<Double_t> &matrix,
+                                                                  IndexIterator_t sampleIterator)
 {
-   const TMatrixT<Double_t> &output  = std::get<1>(fData);
+   const TMatrixT<Double_t> &output = std::get<1>(fData);
    Int_t m = matrix.GetNrows();
    Int_t n = output.GetNcols();
 
    for (Int_t i = 0; i < m; i++) {
       Int_t sampleIndex = *sampleIterator;
       for (Int_t j = 0; j < n; j++) {
-         matrix(i,j) = static_cast<Double_t>(output(sampleIndex, j));
+         matrix(i, j) = static_cast<Double_t>(output(sampleIndex, j));
       }
       sampleIterator++;
    }
 }
 
 //______________________________________________________________________________
-template<>
-void TDataLoader<MatrixInput_t, TReference<Double_t>>::CopyWeights(
-    TMatrixT<Double_t> & matrix,
-    IndexIterator_t sampleIterator)
+template <>
+void TDataLoader<MatrixInput_t, TReference<Double_t>>::CopyWeights(TMatrixT<Double_t> &matrix,
+                                                                   IndexIterator_t sampleIterator)
 {
-   const TMatrixT<Double_t> &output  = std::get<2>(fData);
+   const TMatrixT<Double_t> &output = std::get<2>(fData);
    Int_t m = matrix.GetNrows();
 
    for (Int_t i = 0; i < m; i++) {
       Int_t sampleIndex = *sampleIterator;
-      matrix(i,0) = static_cast<Double_t>(output(sampleIndex, 0));
+      matrix(i, 0) = static_cast<Double_t>(output(sampleIndex, 0));
       sampleIterator++;
    }
 }
 
 //______________________________________________________________________________
-template<>
-void TDataLoader<TMVAInput_t, TReference<Real_t>>::CopyInput(
-    TMatrixT<Real_t> & matrix,
-    IndexIterator_t sampleIterator)
+template <>
+void TDataLoader<TMVAInput_t, TReference<Real_t>>::CopyInput(TMatrixT<Real_t> &matrix, IndexIterator_t sampleIterator)
 {
-   Event * event  = fData.front();
-   Int_t m  = matrix.GetNrows();
-   Int_t n  = event->GetNVariables();
+   Event *event = fData.front();
+   Int_t m = matrix.GetNrows();
+   Int_t n = event->GetNVariables();
 
    // Copy input variables.
 
    for (Int_t i = 0; i < m; i++) {
-      Int_t sampleIndex = * sampleIterator++;
+      Int_t sampleIndex = *sampleIterator++;
       event = fData[sampleIndex];
       for (Int_t j = 0; j < n; j++) {
-         matrix(i,j) = event->GetValue(j);
+         matrix(i, j) = event->GetValue(j);
       }
    }
 }
 
 //______________________________________________________________________________
-template<>
-void TDataLoader<TMVAInput_t, TReference<Real_t>>::CopyOutput(
-    TMatrixT<Real_t> & matrix,
-    IndexIterator_t sampleIterator)
+template <>
+void TDataLoader<TMVAInput_t, TReference<Real_t>>::CopyOutput(TMatrixT<Real_t> &matrix, IndexIterator_t sampleIterator)
 {
-   Event * event  = fData.front();
-   Int_t m       = matrix.GetNrows();
-   Int_t n       = matrix.GetNcols();
+   Event *event = fData.front();
+   Int_t m = matrix.GetNrows();
+   Int_t n = matrix.GetNcols();
 
    for (Int_t i = 0; i < m; i++) {
-      Int_t sampleIndex = * sampleIterator++;
+      Int_t sampleIndex = *sampleIterator++;
       event = fData[sampleIndex];
       for (Int_t j = 0; j < n; j++) {
          // Classification
          if (event->GetNTargets() == 0) {
             if (n == 1) {
                // Binary.
-               matrix(i,j) = (event->GetClass() == 0) ? 1.0 : 0.0;
+               matrix(i, j) = (event->GetClass() == 0) ? 1.0 : 0.0;
             } else {
                // Multiclass.
-               matrix(i,j) = 0.0;
+               matrix(i, j) = 0.0;
                if (j == static_cast<Int_t>(event->GetClass())) {
-                  matrix(i,j) = 1.0;
+                  matrix(i, j) = 1.0;
                }
             }
          } else {
-            matrix(i,j) = static_cast<Real_t>(event->GetTarget(j));
+            matrix(i, j) = static_cast<Real_t>(event->GetTarget(j));
          }
       }
    }
 }
 
 //______________________________________________________________________________
-template<>
-void TDataLoader<TMVAInput_t, TReference<Real_t>>::CopyWeights(
-    TMatrixT<Real_t> & matrix,
-    IndexIterator_t sampleIterator)
+template <>
+void TDataLoader<TMVAInput_t, TReference<Real_t>>::CopyWeights(TMatrixT<Real_t> &matrix, IndexIterator_t sampleIterator)
 {
-   Event * event  = fData.front();
+   Event *event = fData.front();
 
    for (Int_t i = 0; i < matrix.GetNrows(); i++) {
-       Int_t sampleIndex = * sampleIterator++;
-       event = fData[sampleIndex];
-       matrix(i,0) = event->GetWeight();
+      Int_t sampleIndex = *sampleIterator++;
+      event = fData[sampleIndex];
+      matrix(i, 0) = event->GetWeight();
    }
 }
 
 //______________________________________________________________________________
-template<>
-void TDataLoader<TMVAInput_t, TReference<Double_t>>::CopyInput(
-    TMatrixT<Double_t> & matrix,
-    IndexIterator_t sampleIterator)
+template <>
+void TDataLoader<TMVAInput_t, TReference<Double_t>>::CopyInput(TMatrixT<Double_t> &matrix,
+                                                               IndexIterator_t sampleIterator)
 {
-   Event * event  = fData.front();
-   Int_t m  = matrix.GetNrows();
-   Int_t n  = event->GetNVariables();
+   Event *event = fData.front();
+   Int_t m = matrix.GetNrows();
+   Int_t n = event->GetNVariables();
 
    // Copy input variables.
 
    for (Int_t i = 0; i < m; i++) {
-      Int_t sampleIndex = * sampleIterator++;
+      Int_t sampleIndex = *sampleIterator++;
       event = fData[sampleIndex];
       for (Int_t j = 0; j < n; j++) {
-         matrix(i,j) = event->GetValue(j);
+         matrix(i, j) = event->GetValue(j);
       }
    }
 }
 
 //______________________________________________________________________________
-template<>
-void TDataLoader<TMVAInput_t, TReference<Double_t>>::CopyOutput(
-    TMatrixT<Double_t> & matrix,
-    IndexIterator_t sampleIterator)
+template <>
+void TDataLoader<TMVAInput_t, TReference<Double_t>>::CopyOutput(TMatrixT<Double_t> &matrix,
+                                                                IndexIterator_t sampleIterator)
 {
-   Event * event  = fData.front();
-   Int_t m       = matrix.GetNrows();
-   Int_t n       = matrix.GetNcols();
+   Event *event = fData.front();
+   Int_t m = matrix.GetNrows();
+   Int_t n = matrix.GetNcols();
 
    for (Int_t i = 0; i < m; i++) {
-      Int_t sampleIndex = * sampleIterator++;
+      Int_t sampleIndex = *sampleIterator++;
       event = fData[sampleIndex];
       for (Int_t j = 0; j < n; j++) {
          // Classification
          if (event->GetNTargets() == 0) {
             if (n == 1) {
                // Binary.
-               matrix(i,j) = (event->GetClass() == 0) ? 1.0 : 0.0;
+               matrix(i, j) = (event->GetClass() == 0) ? 1.0 : 0.0;
             } else {
                // Multiclass.
-               matrix(i,j) = 0.0;
+               matrix(i, j) = 0.0;
                if (j == static_cast<Int_t>(event->GetClass())) {
-                  matrix(i,j) = 1.0;
+                  matrix(i, j) = 1.0;
                }
             }
          } else {
-            matrix(i,j) = static_cast<Real_t>(event->GetTarget(j));
+            matrix(i, j) = static_cast<Real_t>(event->GetTarget(j));
          }
       }
    }
 }
 
 //______________________________________________________________________________
-template<>
-void TDataLoader<TMVAInput_t, TReference<Double_t>>::CopyWeights(
-    TMatrixT<Double_t> & matrix,
-    IndexIterator_t sampleIterator)
+template <>
+void TDataLoader<TMVAInput_t, TReference<Double_t>>::CopyWeights(TMatrixT<Double_t> &matrix,
+                                                                 IndexIterator_t sampleIterator)
 {
-   Event * event  = fData.front();
+   Event *event = fData.front();
 
    for (Int_t i = 0; i < matrix.GetNrows(); i++) {
-       Int_t sampleIndex = * sampleIterator++;
-       event = fData[sampleIndex];
-       matrix(i,0) = event->GetWeight();
+      Int_t sampleIndex = *sampleIterator++;
+      event = fData[sampleIndex];
+      matrix(i, 0) = event->GetWeight();
    }
 }
 
 // Explicit instantiations.
 template class TDataLoader<MatrixInput_t, TReference<Real_t>>;
-template class TDataLoader<TMVAInput_t,   TReference<Real_t>>;
+template class TDataLoader<TMVAInput_t, TReference<Real_t>>;
 template class TDataLoader<MatrixInput_t, TReference<Double_t>>;
-template class TDataLoader<TMVAInput_t,   TReference<Double_t>>;
+template class TDataLoader<TMVAInput_t, TReference<Double_t>>;
 
 } // namespace DNN
 } // namespace TMVA
-

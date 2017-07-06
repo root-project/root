@@ -65,12 +65,10 @@ int main()
     error = testSoftmaxCrossEntropy<TReference<double>>(10);
     std::cout << "Testing softmax cross entropy loss:     ";
     std::cout << "maximum relative error = " << print_error(error) << std::endl;
-    if (error > 1e-3)
-        return 1;
+    if (error > 1e-3) return 1;
 
     error = testSoftmaxCrossEntropyGradients<TReference<double>>(10);
     std::cout << "Testing softmax cross entropy gradient: ";
     std::cout << "maximum relative error = " << print_error(error) << std::endl;
-    if (error > 1e-3)
-        return 1;
+    if (error > 1e-3) return 1;
 }

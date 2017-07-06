@@ -63,10 +63,9 @@ void fillMatrix(AMatrix &X, AReal x)
    m = X.GetNrows();
    n = X.GetNcols();
 
-
    for (size_t i = 0; i < m; i++) {
       for (size_t j = 0; j < n; j++) {
-         X(i,j) = x;
+         X(i, j) = x;
       }
    }
 }
@@ -216,19 +215,19 @@ inline T relativeError(const T &x, const T &y)
 template <typename Matrix1, typename Matrix2>
 auto maximumRelativeError(const Matrix1 &X, const Matrix2 &Y) -> Double_t
 {
-    Double_t curError, maxError = 0.0;
+   Double_t curError, maxError = 0.0;
 
-    Int_t m = X.GetNrows();
-    Int_t n = X.GetNcols();
+   Int_t m = X.GetNrows();
+   Int_t n = X.GetNcols();
 
-    assert(m == Y.GetNrows());
-    assert(n == Y.GetNcols());
+   assert(m == Y.GetNrows());
+   assert(n == Y.GetNcols());
 
-    for (Int_t i = 0; i < m; i++) {
-        for (Int_t j = 0; j < n; j++) {
-            curError = relativeError<Double_t>(X(i,j), Y(i,j));
-            maxError = std::max(curError, maxError);
-        }
+   for (Int_t i = 0; i < m; i++) {
+      for (Int_t j = 0; j < n; j++) {
+         curError = relativeError<Double_t>(X(i, j), Y(i, j));
+         maxError = std::max(curError, maxError);
+      }
     }
 
     return maxError;

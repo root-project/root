@@ -31,9 +31,7 @@ namespace DNN  {
 //
 // Input Data Types
 //______________________________________________________________________________
-using MatrixInput_t    = std::tuple<const TMatrixT<Double_t> &,
-                                   const TMatrixT<Double_t> &,
-                                   const TMatrixT<Double_t> &>;
+using MatrixInput_t = std::tuple<const TMatrixT<Double_t> &, const TMatrixT<Double_t> &, const TMatrixT<Double_t> &>;
 using TMVAInput_t      = std::vector<Event*>;
 
 using IndexIterator_t = typename std::vector<size_t>::iterator;
@@ -59,7 +57,6 @@ private:
    Matrix_t fWeightMatrix;
 
 public:
-
    TBatch(Matrix_t &, Matrix_t &, Matrix_t &);
    TBatch(const TBatch  &) = default;
    TBatch(      TBatch &&) = default;
@@ -67,12 +64,11 @@ public:
    TBatch & operator=(      TBatch &&) = default;
 
    /** Return the matrix representing the input data. */
-   Matrix_t & GetInput()   {return fInputMatrix;}
+   Matrix_t &GetInput() { return fInputMatrix; }
    /** Return the matrix representing the output data. */
-   Matrix_t & GetOutput()  {return fOutputMatrix;}
+   Matrix_t &GetOutput() { return fOutputMatrix; }
    /** Return the matrix holding the event weights. */
-   Matrix_t & GetWeights() {return fWeightMatrix;}
-
+   Matrix_t &GetWeights() { return fWeightMatrix; }
 };
 
 template<typename Data_t, typename AArchitecture> class TDataLoader;
@@ -187,10 +183,9 @@ public:
 //
 // TBatch Class.
 //______________________________________________________________________________
-template<typename AArchitecture>
-    TBatch<AArchitecture>::TBatch(Matrix_t & inputMatrix, Matrix_t & outputMatrix,
-                                  Matrix_t & weightMatrix)
-    : fInputMatrix(inputMatrix), fOutputMatrix(outputMatrix), fWeightMatrix(weightMatrix)
+template <typename AArchitecture>
+TBatch<AArchitecture>::TBatch(Matrix_t &inputMatrix, Matrix_t &outputMatrix, Matrix_t &weightMatrix)
+   : fInputMatrix(inputMatrix), fOutputMatrix(outputMatrix), fWeightMatrix(weightMatrix)
 {
     // Nothing to do here.
 }
@@ -241,14 +236,12 @@ TBatch<AArchitecture> TDataLoader<Data_t, AArchitecture>::GetBatch()
    HostBuffer_t inputHostBuffer  = hostBuffer.GetSubBuffer(0, inputMatrixSize);
    HostBuffer_t outputHostBuffer = hostBuffer.GetSubBuffer(inputMatrixSize,
                                                            outputMatrixSize);
-   HostBuffer_t weightHostBuffer = hostBuffer.GetSubBuffer(inputMatrixSize + outputMatrixSize,
-                                                           weightMatrixSize);
+   HostBuffer_t weightHostBuffer = hostBuffer.GetSubBuffer(inputMatrixSize + outputMatrixSize, weightMatrixSize);
 
    DeviceBuffer_t inputDeviceBuffer  = deviceBuffer.GetSubBuffer(0, inputMatrixSize);
    DeviceBuffer_t outputDeviceBuffer = deviceBuffer.GetSubBuffer(inputMatrixSize,
                                                                  outputMatrixSize);
-   DeviceBuffer_t weightDeviceBuffer = deviceBuffer.GetSubBuffer(inputMatrixSize + outputMatrixSize,
-                                                                 weightMatrixSize);
+   DeviceBuffer_t weightDeviceBuffer = deviceBuffer.GetSubBuffer(inputMatrixSize + outputMatrixSize, weightMatrixSize);
 
    size_t sampleIndex = fBatchIndex * fBatchSize;
    IndexIterator_t sampleIndexIterator = fSampleIndices.begin() + sampleIndex;

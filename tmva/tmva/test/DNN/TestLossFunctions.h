@@ -55,8 +55,7 @@ auto testMeanSquaredError(size_t ntests)
       Matrix_t XArch(X);
       Matrix_t YArch(Y);
 
-      Scalar_t mse = evaluate<Architecture>(ELossFunction::kMeanSquaredError,
-                                            YArch, XArch, WArch);
+      Scalar_t mse = evaluate<Architecture>(ELossFunction::kMeanSquaredError, YArch, XArch, WArch);
       zipWithMatrix(Z, [](Scalar_t x, Scalar_t y){return x - y;}, X, Y);
       auto squaredSum = [](Scalar_t x, Scalar_t y){return x + y * y;};
       Scalar_t mseReference = reduceMean(squaredSum, 0.0, Z);
@@ -98,8 +97,7 @@ auto testMeanSquaredErrorGradients(size_t ntests)
       Matrix_t YArch(Y);
       Matrix_t ZArch(Y);
 
-      evaluateGradients<Architecture>(ZArch, ELossFunction::kMeanSquaredError,
-                                      XArch, YArch, WArch);
+      evaluateGradients<Architecture>(ZArch, ELossFunction::kMeanSquaredError, XArch, YArch, WArch);
       auto normedDifference = [m, n](Scalar_t x, Scalar_t y) {
          return 2.0 * (y - x) / (m * n);
       };
@@ -107,7 +105,7 @@ auto testMeanSquaredErrorGradients(size_t ntests)
 
       for (size_t j = 0; j < m; j++) {
          for (size_t k = 0; k < n; k++) {
-            ZRef(j,k) *= W(j,0);
+            ZRef(j, k) *= W(j, 0);
          }
       }
 
@@ -149,8 +147,7 @@ auto testCrossEntropy(size_t ntests)
       Matrix_t XArch(X);
       Matrix_t YArch(Y);
 
-      Scalar_t ce = evaluate<Architecture>(ELossFunction::kCrossEntropy,
-                                           YArch, XArch, WArch);
+      Scalar_t ce = evaluate<Architecture>(ELossFunction::kCrossEntropy, YArch, XArch, WArch);
 
       auto crossCorrelation = [](Scalar_t x, Scalar_t y) {
          Scalar_t sig = 1.0 / (1.0 + std::exp(-x));
@@ -159,7 +156,7 @@ auto testCrossEntropy(size_t ntests)
       zipWithMatrix(Z, crossCorrelation, X, Y);
       for (size_t j = 0; j < m; j++) {
          for (size_t k = 0; k < n; k++) {
-            Z(j,k) *= W(j,0);
+            Z(j, k) *= W(j, 0);
          }
       }
 
@@ -203,8 +200,7 @@ auto testCrossEntropyGradients(size_t ntests)
       Matrix_t YArch(Y);
       Matrix_t ZArch(Y);
 
-      evaluateGradients<Architecture>(ZArch, ELossFunction::kCrossEntropy,
-                                      YArch, XArch, WArch);
+      evaluateGradients<Architecture>(ZArch, ELossFunction::kCrossEntropy, YArch, XArch, WArch);
       auto crossCorrelationGradient = [m, n](Scalar_t x, Scalar_t y) {
          Scalar_t sig  = 1.0 / (1.0 + std::exp(-x));
          Scalar_t norm = 1.0 / ((Scalar_t) m * n);
@@ -213,7 +209,7 @@ auto testCrossEntropyGradients(size_t ntests)
 
       for (size_t j = 0; j < m; j++) {
          for (size_t k = 0; k < n; k++) {
-            ZRef(j,k) *= W(j,0);
+            ZRef(j, k) *= W(j, 0);
          }
       }
 
@@ -254,8 +250,7 @@ auto testSoftmaxCrossEntropy(size_t ntests)
       Matrix_t XArch(X);
       Matrix_t YArch(Y);
 
-      Scalar_t ce = evaluate<Architecture>(ELossFunction::kSoftmaxCrossEntropy,
-                                           YArch, XArch, WArch);
+      Scalar_t ce = evaluate<Architecture>(ELossFunction::kSoftmaxCrossEntropy, YArch, XArch, WArch);
 
       Scalar_t ceReference = 0.0;
       for (size_t j = 0; j < m; j++) {
@@ -306,8 +301,7 @@ auto testSoftmaxCrossEntropyGradients(size_t ntests)
       Matrix_t YArch(Y);
       Matrix_t ZArch(Y);
 
-      evaluateGradients<Architecture>(ZArch, ELossFunction::kSoftmaxCrossEntropy,
-                                      YArch, XArch, WArch);
+      evaluateGradients<Architecture>(ZArch, ELossFunction::kSoftmaxCrossEntropy, YArch, XArch, WArch);
 
       for (size_t j = 0; j < m; j++) {
          Scalar_t sum  = 0.0;
@@ -324,7 +318,7 @@ auto testSoftmaxCrossEntropyGradients(size_t ntests)
 
       for (size_t j = 0; j < m; j++) {
          for (size_t k = 0; k < n; k++) {
-            ZRef(j,k) *= W(j,0);
+            ZRef(j, k) *= W(j, 0);
          }
       }
 
