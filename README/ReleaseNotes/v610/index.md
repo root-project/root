@@ -605,11 +605,41 @@ New tutorials have been added:
 *   [[ROOT-8815](https://sft.its.cern.ch/jira/browse/ROOT-8815)] - Memory hoarding in TTree
 
 ---
-## HEAD of the v6-10-00-patches branch
+## Version 6.10/02 
 
-These changes will be part of the future 6.10/02
+ROOT version 6.10/02 has been released on 13 June 2017
 
 ### TTree Libraries
 
 - Resolved O(N^2) scaling problem in ```TTree::Draw()``` observed when a branch that contains a
 large TClonesArray where each element contains another small vector container.
+
+### TDataFrame
+
+- Allow to snapshot datasets with hundreds of columns without incurring in errors related to maximum template recursion depth
+- Better handling of missing branches when selected by the user
+- Allow to extract columns of the dataset even when their type is a stl collection
+- Improved logic of ranges
+- Properly report error in case the jitting of the call to Snapshot encounters problems
+- Fix bug which prevented to initialise the TDF from a collection of strings
+- Fix jitting when defining columns attached to an empty TDF
+- Include all headers of the TDF to the pch and remove dedicated dictionary
+- Properly preserve gDirectory value when snapshotting dataset
+- Fix snapshot when specifying the name of the tree inside a TDirectory
+- Avoid dereferencing null ptrs when snapshotting in parallel with less clusters than workers
+
+### Build system
+
+- Delay the resolution of ${CMAKE_INSTALL_PREFIX} when installing in a different location than the configured one
+- Propagate Intel compiler setup to newer versions
+- Remove several unused variable warnings also coming from LLVM
+
+### Graphics
+
+- Adjust Y axis title offset default for 3D axis.
+
+
+---
+## HEAD of the v6-10-00-patches branch
+
+These changes will be part of the future 6.10/04
