@@ -6,7 +6,7 @@ set(libname GX11)
 
 include_directories(${X11_INCLUDE_DIR})
 
-ROOT_GENERATE_DICTIONARY(G__${libname} T*.h MODULE ${libname} LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM")
+ROOT_GENERATE_DICTIONARY(G__${libname} T*.h MODULE ${libname} LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM" DEPENDENCIES Core)
 
 ROOT_LINKER_LIBRARY(${libname} *.cxx  *.c G__${libname}.cxx LIBRARIES Core ${X11_LIBRARIES} ${X11_Xpm_LIB} ${CMAKE_THREAD_LIBS_INIT})
 

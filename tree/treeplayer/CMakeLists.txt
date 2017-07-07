@@ -20,7 +20,7 @@ else()
   include_directories(SYSTEM ${TBB_INCLUDE_DIRS})
 endif()
 
-ROOT_GENERATE_DICTIONARY(G__${libname} ${dictHeaders} MODULE ${libname} LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM")
+ROOT_GENERATE_DICTIONARY(G__${libname} ${dictHeaders} MODULE ${libname} LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM" DEPENDENCIES Tree Graf3d Graf Hist Gpad RIO MathCore MultiProc Imt)
 
 ROOT_LINKER_LIBRARY(${libname} ${sources} G__${libname}.cxx LIBRARIES ${TBB_LIBRARIES} DEPENDENCIES Tree Graf3d Graf Hist Gpad RIO MathCore MultiProc Imt)
 ROOT_INSTALL_HEADERS()

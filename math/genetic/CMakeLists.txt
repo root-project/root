@@ -3,7 +3,7 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-ROOT_GENERATE_DICTIONARY(G__Genetic Math/GeneticMinimizer.h MODULE Genetic LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM")
+ROOT_GENERATE_DICTIONARY(G__Genetic Math/GeneticMinimizer.h MODULE Genetic LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM" DEPENDENCIES Core MathCore TMVA)
 
 ROOT_LINKER_LIBRARY(Genetic *.cxx G__Genetic.cxx LIBRARIES Core DEPENDENCIES MathCore TMVA)
 

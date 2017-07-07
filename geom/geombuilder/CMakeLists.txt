@@ -13,7 +13,7 @@ set(headers TGeoVolumeEditor.h TGeoBBoxEditor.h TGeoMediumEditor.h
             TGeoTorusEditor.h TGeoEltuEditor.h TGeoHypeEditor.h
             TGeoPgonEditor.h TGeoTrapEditor.h TGeoGedFrame.h )
 
-ROOT_GENERATE_DICTIONARY(G__${libname} ${headers} MODULE ${libname} LINKDEF LinkDef.h)
+ROOT_GENERATE_DICTIONARY(G__${libname} ${headers} MODULE ${libname} LINKDEF LinkDef.h DEPENDENCIES Geom Graf3d Gpad Graf Gui Ged)
 
 
 ROOT_LINKER_LIBRARY(${libname} *.cxx G__${libname}.cxx DEPENDENCIES Geom Graf3d Gpad Graf Gui Ged)

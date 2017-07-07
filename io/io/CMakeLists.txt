@@ -6,7 +6,7 @@ set(libname RIO)
 
 include_directories(${CMAKE_SOURCE_DIR}/core/clib/res)
 
-ROOT_GENERATE_DICTIONARY(G__IO *.h ROOT/*.hxx STAGE1 MODULE ${libname} LINKDEF LinkDef.h)
+ROOT_GENERATE_DICTIONARY(G__IO *.h ROOT/*.hxx STAGE1 MODULE ${libname} LINKDEF LinkDef.h DEPENDENCIES Core Thread)
 
 if(root7)
     ROOT_GLOB_SOURCES(root7src RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} v7/src/*.cxx)

@@ -85,7 +85,7 @@ set_target_properties(GDKLIB PROPERTIES FOLDER Builtins)
 # ROOT Dicts for the win32gdk library
 #
 
-ROOT_GENERATE_DICTIONARY(G__Win32gdk TGWin32.h TGWin32GL.h MODULE Win32gdk LINKDEF LinkDef.h)
+ROOT_GENERATE_DICTIONARY(G__Win32gdk TGWin32.h TGWin32GL.h MODULE Win32gdk LINKDEF LinkDef.h DEPENDENCIES  Core Graf)
 
 
 #

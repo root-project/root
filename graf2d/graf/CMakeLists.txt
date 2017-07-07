@@ -3,7 +3,7 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-ROOT_GENERATE_DICTIONARY(G__Graf MODULE Graf *.h LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM")
+ROOT_GENERATE_DICTIONARY(G__Graf MODULE Graf *.h LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM" DEPENDENCIES Hist Matrix MathCore RIO)
 
 
 include_directories(${FREETYPE_INCLUDE_DIRS})

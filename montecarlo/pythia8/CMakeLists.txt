@@ -5,7 +5,7 @@
 
 include_directories(${PYTHIA8_INCLUDE_DIR})
 
-ROOT_GENERATE_DICTIONARY(G__Pythia8 *.h MODULE EGPythia8 LINKDEF LinkDef.h)
+ROOT_GENERATE_DICTIONARY(G__Pythia8 *.h MODULE EGPythia8 LINKDEF LinkDef.h DEPENDENCIES EG Graf VMC Physics)
 
 ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-overloaded-virtual)
 ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-misleading-indentation)
