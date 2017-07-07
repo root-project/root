@@ -108,11 +108,23 @@ void TDataLoader<MatrixInput_t, TCpu<Real_t>>::CopyOutput(
 }
 
 //______________________________________________________________________________
-template<>
-void TDataLoader<MatrixInput_t, TCpu<Double_t>>::CopyInput(
-    TCpuBuffer<Double_t> & buffer,
-    IndexIterator_t sampleIterator,
-    size_t batchSize)
+template <>
+void TDataLoader<MatrixInput_t, TCpu<Real_t>>::CopyWeights(TCpuBuffer<Real_t> &buffer, IndexIterator_t sampleIterator,
+                                                           size_t batchSize)
+{
+   const TMatrixT<Real_t> &outputMatrix = std::get<2>(fData);
+
+   for (size_t i = 0; i < batchSize; i++) {
+      size_t sampleIndex = *sampleIterator;
+      buffer[i] = static_cast<Real_t>(outputMatrix(sampleIndex, 0));
+      sampleIterator++;
+   }
+}
+
+//______________________________________________________________________________
+template <>
+void TDataLoader<MatrixInput_t, TCpu<Double_t>>::CopyInput(TCpuBuffer<Double_t> &buffer, IndexIterator_t sampleIterator,
+                                                           size_t batchSize)
 {
    const TMatrixT<Double_t> &inputMatrix  = std::get<0>(fData);
    size_t n = inputMatrix.GetNcols();
@@ -148,11 +160,23 @@ void TDataLoader<MatrixInput_t, TCpu<Double_t>>::CopyOutput(
 }
 
 //______________________________________________________________________________
-template<>
-void TDataLoader<TMVAInput_t, TCpu<Double_t>>::CopyInput(
-    TCpuBuffer<Double_t> & buffer,
-    IndexIterator_t sampleIterator,
-    size_t batchSize)
+template <>
+void TDataLoader<MatrixInput_t, TCpu<Double_t>>::CopyWeights(TCpuBuffer<Double_t> &buffer,
+                                                             IndexIterator_t sampleIterator, size_t batchSize)
+{
+   const TMatrixT<Double_t> &outputMatrix = std::get<2>(fData);
+
+   for (size_t i = 0; i < batchSize; i++) {
+      size_t sampleIndex = *sampleIterator;
+      buffer[i] = static_cast<Double_t>(outputMatrix(sampleIndex, 0));
+      sampleIterator++;
+   }
+}
+
+//______________________________________________________________________________
+template <>
+void TDataLoader<TMVAInput_t, TCpu<Double_t>>::CopyInput(TCpuBuffer<Double_t> &buffer, IndexIterator_t sampleIterator,
+                                                         size_t batchSize)
 {
    Event * event  = fData.front();
    size_t n  = event->GetNVariables();
@@ -207,11 +231,23 @@ void TDataLoader<TMVAInput_t, TCpu<Double_t>>::CopyOutput(
 }
 
 //______________________________________________________________________________
-template<>
-void TDataLoader<TMVAInput_t, TCpu<Real_t>>::CopyInput(
-    TCpuBuffer<Real_t> & buffer,
-    IndexIterator_t sampleIterator,
-    size_t batchSize)
+template <>
+void TDataLoader<TMVAInput_t, TCpu<Double_t>>::CopyWeights(TCpuBuffer<Double_t> &buffer, IndexIterator_t sampleIterator,
+                                                           size_t batchSize)
+{
+   Event *event = fData.front();
+
+   for (size_t i = 0; i < batchSize; i++) {
+      size_t sampleIndex = *sampleIterator++;
+      event = fData[sampleIndex];
+      buffer[i] = event->GetWeight();
+   }
+}
+
+//______________________________________________________________________________
+template <>
+void TDataLoader<TMVAInput_t, TCpu<Real_t>>::CopyInput(TCpuBuffer<Real_t> &buffer, IndexIterator_t sampleIterator,
+                                                       size_t batchSize)
 {
    Event * event  = fData.front();
    size_t n  = event->GetNVariables();
@@ -262,6 +298,20 @@ void TDataLoader<TMVAInput_t, TCpu<Real_t>>::CopyOutput(
             buffer[bufferIndex] = static_cast<Real_t>(event->GetTarget(j));
          }
       }
+   }
+}
+
+//______________________________________________________________________________
+template <>
+void TDataLoader<TMVAInput_t, TCpu<Real_t>>::CopyWeights(TCpuBuffer<Real_t> &buffer, IndexIterator_t sampleIterator,
+                                                         size_t batchSize)
+{
+   Event *event = fData.front();
+
+   for (size_t i = 0; i < batchSize; i++) {
+      size_t sampleIndex = *sampleIterator++;
+      event = fData[sampleIndex];
+      buffer[i] = static_cast<Real_t>(event->GetWeight());
    }
 }
 

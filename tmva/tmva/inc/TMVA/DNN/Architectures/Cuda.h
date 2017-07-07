@@ -153,28 +153,25 @@ public:
     */
    ///@{
 
-   static AFloat MeanSquaredError(const TCudaMatrix<AFloat> &Y,
-                                  const TCudaMatrix<AFloat> &output);
-   static void MeanSquaredErrorGradients(TCudaMatrix<AFloat> & dY,
-                                         const TCudaMatrix<AFloat> &Y,
-                                         const TCudaMatrix<AFloat> &output);
+   static AFloat MeanSquaredError(const TCudaMatrix<AFloat> &Y, const TCudaMatrix<AFloat> &output,
+                                  const TCudaMatrix<AFloat> &weights);
+   static void MeanSquaredErrorGradients(TCudaMatrix<AFloat> &dY, const TCudaMatrix<AFloat> &Y,
+                                         const TCudaMatrix<AFloat> &output, const TCudaMatrix<AFloat> &weights);
 
-    /** Sigmoid transformation is implicitly applied, thus \p output should
-     *  hold the linear activations of the last layer in the net. */
-   static AFloat CrossEntropy(const TCudaMatrix<AFloat> &Y,
-                              const TCudaMatrix<AFloat> &output);
+   /** Sigmoid transformation is implicitly applied, thus \p output should
+    *  hold the linear activations of the last layer in the net. */
+   static AFloat CrossEntropy(const TCudaMatrix<AFloat> &Y, const TCudaMatrix<AFloat> &output,
+                              const TCudaMatrix<AFloat> &weights);
 
-   static void CrossEntropyGradients(TCudaMatrix<AFloat> & dY,
-                                     const TCudaMatrix<AFloat> & Y,
-                                     const TCudaMatrix<AFloat> & output);
+   static void CrossEntropyGradients(TCudaMatrix<AFloat> &dY, const TCudaMatrix<AFloat> &Y,
+                                     const TCudaMatrix<AFloat> &output, const TCudaMatrix<AFloat> &weights);
 
-    /** Softmax transformation is implicitly applied, thus \p output should
-     *  hold the linear activations of the last layer in the net. */
-   static AFloat SoftmaxCrossEntropy(const TCudaMatrix<AFloat> &Y,
-                                     const TCudaMatrix<AFloat> &output);
-   static void SoftmaxCrossEntropyGradients(TCudaMatrix<AFloat> & dY,
-                                            const TCudaMatrix<AFloat> & Y,
-                                            const TCudaMatrix<AFloat> & output);
+   /** Softmax transformation is implicitly applied, thus \p output should
+    *  hold the linear activations of the last layer in the net. */
+   static AFloat SoftmaxCrossEntropy(const TCudaMatrix<AFloat> &Y, const TCudaMatrix<AFloat> &output,
+                                     const TCudaMatrix<AFloat> &weights);
+   static void SoftmaxCrossEntropyGradients(TCudaMatrix<AFloat> &dY, const TCudaMatrix<AFloat> &Y,
+                                            const TCudaMatrix<AFloat> &output, const TCudaMatrix<AFloat> &weights);
    ///@}
 
    //____________________________________________________________________________
