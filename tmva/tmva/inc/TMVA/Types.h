@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id$   
+// @(#)root/tmva $Id$
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
@@ -17,9 +17,9 @@
  *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland                                                         * 
- *      U. of Victoria, Canada                                                    * 
- *      MPI-K Heidelberg, Germany                                                 * 
+ *      CERN, Switzerland                                                         *
+ *      U. of Victoria, Canada                                                    *
+ *      MPI-K Heidelberg, Germany                                                 *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -69,7 +69,7 @@ namespace TMVA {
 
    //Variable Importance type
    enum VIType {kShort=0,kAll=1,kRandom=2};
-   
+
    class Types {
 
    public:
@@ -98,6 +98,7 @@ namespace TMVA {
          kPlugins        ,
          kCategory       ,
          kDNN            ,
+         kDAE            ,
          kPyRandomForest ,
          kPyAdaBoost     ,
          kPyGTB          ,
@@ -141,9 +142,9 @@ namespace TMVA {
       enum ETreeType {
          kTraining = 0,
          kTesting,
-         kMaxTreeType,  // also used as temporary storage for trees not yet assigned for testing;training... 
+         kMaxTreeType,  // also used as temporary storage for trees not yet assigned for testing;training...
          kValidation,   // these are placeholders... currently not used, but could be moved "forward" if
-         kTrainingOriginal     // ever needed 
+         kTrainingOriginal     // ever needed
       };
 
       enum EBoostStage {
