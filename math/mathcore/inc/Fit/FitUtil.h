@@ -224,16 +224,15 @@ namespace FitUtil {
 
 #ifdef R__HAS_VECCORE
             inline double ExecFunc(const IModelFunctionTempl<ROOT::Double_v> *f, const double *x, const double *p) const{
-               if (fDim == 1) { 
+               if (fDim == 1) {
                   ROOT::Double_v xx;
                   vecCore::Load<ROOT::Double_v>(xx, x);
                   const double *p0 = p;
                   auto res =  (*f)( &xx, (const double *)p0);
                   return vecCore::Get<ROOT::Double_v>(res, 0);
-               }
-               else { 
-                  std::vector<ROOT::Double_v> xx(fDim); 
-                  for (unsigned int i = 0; i  < fDim; ++i) { 
+               } else {
+                  std::vector<ROOT::Double_v> xx(fDim);
+                  for (unsigned int i = 0; i < fDim; ++i) {
                      vecCore::Load<ROOT::Double_v>(xx[i], x+i);
                   }
                   auto res =  (*f)( xx.data(), p);
@@ -818,11 +817,196 @@ namespace FitUtil {
          return -1.;
       }
 
-      static void
-      EvalChi2Gradient(const IModelFunctionTempl<T> &, const BinData &, const double *, double *, unsigned int &)
+      static vecCore::Mask<T> CheckVectorValue(T &rval)
       {
-         Error("FitUtil::Evaluate<T>::EvalChi2Gradient",
-               "The vectorized evaluation of the Chi2 with gradient is still not supported");
+         auto mask = rval > -vecCore::NumericLimits<T>::Max() && rval < vecCore::NumericLimits<T>::Max();
+
+         // Case -inf
+         vecCore::MaskedAssign(rval, !mask && rval < 0, -vecCore::NumericLimits<T>::Max());
+
+         // Case +inf or nan
+         vecCore::MaskedAssign(rval, !mask && rval >= 0, +vecCore::NumericLimits<T>::Max());
+
+         return mask;
+      }
+
+      static void EvalChi2Gradient(const IModelFunctionTempl<T> &f, const BinData &data, const double *p, double *grad,
+                                   unsigned int &nPoints, const unsigned int &executionPolicy = ROOT::Fit::kSerial,
+                                   unsigned nChunks = 0)
+      {
+         // evaluate the gradient of the chi2 function
+         // this function is used when the model function knows how to calculate the derivative and we can
+         // avoid that the minimizer re-computes them
+         //
+         // case of chi2 effective (errors on coordinate) is not supported
+
+         if (data.HaveCoordErrors()) {
+            MATH_ERROR_MSG("FitUtil::EvaluateChi2Gradient",
+                           "Error on the coordinates are not used in calculating Chi2 gradient");
+            return; // it will assert otherwise later in GetPoint
+         }
+
+         const IGradModelFunctionTempl<T> *fg = dynamic_cast<const IGradModelFunctionTempl<T> *>(&f);
+         assert(fg != 0); // must be called by a gradient function
+
+         const IGradModelFunctionTempl<T> &func = *fg;
+
+#ifdef DEBUG
+         std::cout << "\n\nFit data size = " << n << std::endl;
+         std::cout << "evaluate chi2 using function gradient " << &func << "  " << p << std::endl;
+#endif
+
+         const DataOptions &fitOpt = data.Opt();
+         if (fitOpt.fBinVolume || fitOpt.fIntegral || fitOpt.fExpErrors)
+            Error("FitUtil::EvaluateChi2Gradient", "The vectorized implementation doesn't support Integrals,"
+                                                   "BinVolume or ExpErrors\n. Aborting operation.");
+
+         unsigned int npar = func.NPar();
+         auto vecSize = vecCore::VectorSize<T>();
+         unsigned numVectors = data.Size() / vecSize;
+
+         std::vector<vecCore::Mask<T>> validPointsMasks(numVectors);
+
+         auto mapFunction = [&](const unsigned int i) {
+            // set all vector values to zero
+            std::vector<T> gradFunc(npar);
+            std::vector<T> pointContributionVec(npar);
+
+            T x1, y, invError;
+
+            vecCore::Load<T>(x1, data.GetCoordComponent(i * vecSize, 0));
+            vecCore::Load<T>(y, data.ValuePtr(i * vecSize));
+            const auto invErrorPtr = data.ErrorPtr(i * vecSize);
+
+            if (invErrorPtr == nullptr)
+               invError = 1;
+            else
+               vecCore::Load<T>(invError, invErrorPtr);
+
+            // TODO: Check error options and invert if needed
+            // invError = (invError != 0.0) ? 1.0 / invError : 1;
+
+            T fval = 0;
+
+            const T *x = nullptr;
+
+            unsigned int ndim = data.NDim();
+            if (ndim > 1) {
+               std::vector<T> xc(ndim);
+               xc[0] = x1;
+               for (unsigned int j = 1; j < ndim; ++j)
+                  vecCore::Load<T>(xc[j], data.GetCoordComponent(i * vecSize, j));
+               x = xc.data();
+            } else {
+               x = &x1;
+            }
+
+            fval = func(x, p);
+            func.ParameterGradient(x, p, &gradFunc[0]);
+
+#ifdef DEBUG
+            std::cout << x[0] << "  " << y << "  " << 1. / invError << " params : ";
+            for (unsigned int ipar = 0; ipar < npar; ++ipar)
+               std::cout << p[ipar] << "\t";
+            std::cout << "\tfval = " << fval << std::endl;
+#endif
+
+            validPointsMasks[i] = CheckVectorValue(fval);
+            if (vecCore::MaskEmpty(validPointsMasks[i])) {
+               // Return a zero contribution to all partial derivatives on behalf of the current points
+               return pointContributionVec;
+            }
+
+            // loop on the parameters
+            unsigned int ipar = 0;
+            for (; ipar < npar; ++ipar) {
+               // avoid singularity in the function (infinity and nan ) in the chi2 sum
+               // eventually add possibility of excluding some points (like singularity)
+               validPointsMasks[i] = CheckVectorValue(gradFunc[ipar]);
+
+               if (vecCore::MaskEmpty(validPointsMasks[i])) {
+                  break; // exit loop on parameters
+               }
+
+               // calculate derivative point contribution (only for valid points)
+               vecCore::MaskedAssign(pointContributionVec[ipar], validPointsMasks[i],
+                                     -2.0 * (y - fval) * invError * invError * gradFunc[ipar]);
+            }
+
+            return pointContributionVec;
+         };
+
+         // correct the number of points
+         int n = data.Size();
+         nPoints = n;
+
+         if (std::any_of(validPointsMasks.begin(), validPointsMasks.end(),
+                         [](vecCore::Mask<T> validPoints) { return !vecCore::MaskFull(validPoints); })) {
+            int nRejected = 0;
+
+            for (const auto &mask : validPointsMasks) {
+               for (unsigned int i = 0; i < vecSize; i++) {
+                  nRejected += !vecCore::Get(mask, i);
+               }
+            }
+
+            assert(nRejected <= n);
+            nPoints = n - nRejected;
+
+            if (nPoints < npar)
+               MATH_ERROR_MSG("FitUtil::EvaluateChi2Gradient",
+                              "Error - too many points rejected for overflow in gradient calculation");
+         }
+
+         // Reduce the set of vectors by summing its equally-indexed components
+         auto redFunction = [&](const std::vector<std::vector<T>> &partialResults) {
+            std::vector<T> result(npar);
+
+            for (auto const &pointContributionVec : partialResults) {
+               for (unsigned int parameterIndex = 0; parameterIndex < npar; parameterIndex++)
+                  result[parameterIndex] += pointContributionVec[parameterIndex];
+            }
+
+            return result;
+         };
+
+         std::vector<T> gVec(npar);
+         std::vector<double> g(npar);
+
+         if (executionPolicy == ROOT::Fit::kSerial) {
+            std::vector<std::vector<T>> allGradients(numVectors);
+            for (unsigned int i = 0; i < numVectors; ++i) {
+               allGradients[i] = mapFunction(i);
+            }
+
+            gVec = redFunction(allGradients);
+         }
+#ifdef R__USE_IMT
+         else if (executionPolicy == ROOT::Fit::kMultithread) {
+            auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(numVectors);
+            ROOT::TThreadExecutor pool;
+            gVec = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, numVectors), redFunction, chunks);
+         }
+#endif
+         // else if(executionPolicy == ROOT::Fit::kMultiprocess){
+         //    ROOT::TProcessExecutor pool;
+         //    g = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction);
+         // }
+         else {
+            Error(
+               "FitUtil::EvaluateChi2Gradient",
+               "Execution policy unknown. Avalaible choices:\n 0: Serial (default)\n 1: MultiThread (requires IMT)\n");
+         }
+
+         // Compute the contribution from the remaining points
+         auto remainingPointsContribution = mapFunction(n / vecSize);
+
+         // Add the contribution from the valid remaining points and store the result in the output variable
+         auto remainingMask = vecCore::Int2Mask<T>(data.Size() % vecSize);
+         for (unsigned int param = 0; param < npar; param++) {
+            vecCore::MaskedAssign(gVec[param], remainingMask, gVec[param] + remainingPointsContribution[param]);
+            grad[param] = vecCore::ReduceAdd(gVec[param]);
+         }
       }
 
       static double EvalChi2Residual(const IModelFunctionTempl<T> &, const BinData &, const double *, unsigned int, double *)
