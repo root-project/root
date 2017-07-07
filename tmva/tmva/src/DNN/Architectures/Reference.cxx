@@ -24,6 +24,7 @@
 #include "Reference/Regularization.cxx"
 #include "Reference/Initialization.cxx"
 #include "Reference/Dropout.cxx"
+#include "Reference/ConvPropagation.cxx"
 
 namespace TMVA {
 namespace DNN  {

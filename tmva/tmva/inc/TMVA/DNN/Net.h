@@ -143,6 +143,7 @@ public:
    size_t              GetOutputWidth() const    {return fLayers.back().GetWidth();}
    ERegularization     GetRegularization() const {return fR;}
    Scalar_t            GetWeightDecay() const    {return fWeightDecay;}
+       
 
    void SetBatchSize(size_t batchSize)       {fBatchSize = batchSize;}
    void SetInputWidth(size_t inputWidth)     {fInputWidth = inputWidth;}
@@ -168,7 +169,7 @@ template<typename Architecture_t, typename Layer_t>
 template<typename Architecture_t, typename Layer_t>
    TNet<Architecture_t, Layer_t>::TNet(const TNet & other)
    : fBatchSize(other.fBatchSize), fInputWidth(other.fInputWidth),
-    fLayers(other.fLayers), fDummy(0,0), fJ(other.fJ), fR(other.fR),
+    fLayers(other.fLayers), fDummy(fBatchSize, fInputWidth), fJ(other.fJ), fR(other.fR),
     fWeightDecay(other.fWeightDecay)
 {
    // Nothing to do here.
@@ -180,7 +181,7 @@ template<typename OtherArchitecture_t>
 TNet<Architecture_t, Layer_t>::TNet(size_t batchSize,
                                     const TNet<OtherArchitecture_t> & other)
     : fBatchSize(batchSize), fInputWidth(other.GetInputWidth()), fLayers(),
-    fDummy(0,0), fJ(other.GetLossFunction()), fR(other.GetRegularization()),
+    fDummy(batchSize,fInputWidth), fJ(other.GetLossFunction()), fR(other.GetRegularization()),
     fWeightDecay(other.GetWeightDecay())
 {
    fLayers.reserve(other.GetDepth());
@@ -200,8 +201,8 @@ template<typename Architecture_t, typename Layer_t>
                                        ELossFunction J,
                                        ERegularization R,
                                        Scalar_t weightDecay)
-    : fBatchSize(batchSize), fInputWidth(inputWidth), fLayers(), fDummy(0,0),
-    fJ(J), fR(R), fWeightDecay(weightDecay)
+    : fBatchSize(batchSize), fInputWidth(inputWidth), fLayers(),
+      fDummy(batchSize, inputWidth), fJ(J), fR(R), fWeightDecay(weightDecay)
 {
    // Nothing to do here.
 }
@@ -285,6 +286,7 @@ template<typename Architecture_t, typename Layer_t>
                                                        const Matrix_t &Y)
 {
 
+    std::cout << "FC Backward call" << std::endl;
     evaluateGradients<Architecture_t>(fLayers.back().GetActivationGradients(),
                                       fJ, Y, fLayers.back().GetOutput());
 
@@ -297,7 +299,6 @@ template<typename Architecture_t, typename Layer_t>
                           activations_backward, fR, fWeightDecay);
    }
    fLayers[0].Backward(fDummy, X, fR, fWeightDecay);
-
 }
 
 //______________________________________________________________________________
