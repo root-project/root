@@ -31,14 +31,14 @@ int main()
     //
 
     error = testMeanSquaredError<TReference<double>>(10);
-    std::cout << "Testing mean squared error loss:     ";
-    std::cout << "maximum relative error = " << error << std::endl;
+    std::cout << "Testing mean squared error loss:        ";
+    std::cout << "maximum relative error = " << print_error(error) << std::endl;
     if (error > 1e-10)
         return 1;
 
     error = testMeanSquaredErrorGradients<TReference<double>>(10);
-    std::cout << "Testing mean squared error gradient: ";
-    std::cout << "maximum relative error = " << error << std::endl;
+    std::cout << "Testing mean squared error gradient:    ";
+    std::cout << "maximum relative error = " << print_error(error) << std::endl;
     if (error > 1e-10)
         return 1;
 
@@ -47,14 +47,28 @@ int main()
     //
 
     error = testCrossEntropy<TReference<double>>(10);
-    std::cout << "Testing cross entropy loss:          ";
-    std::cout << "maximum relative error = " << error << std::endl;
+    std::cout << "Testing cross entropy loss:             ";
+    std::cout << "maximum relative error = " << print_error(error) << std::endl;
     if (error > 1e-10)
         return 1;
 
     error = testCrossEntropyGradients<TReference<double>>(10);
-    std::cout << "Testing cross entropy gradient:      ";
-    std::cout << "maximum relative error = " << error << std::endl;
+    std::cout << "Testing cross entropy gradient:         ";
+    std::cout << "maximum relative error = " << print_error(error) << std::endl;
     if (error > 1e-10)
         return 1;
+
+    //
+    // Softmax Cross Entropy.
+    //
+
+    error = testSoftmaxCrossEntropy<TReference<double>>(10);
+    std::cout << "Testing softmax cross entropy loss:     ";
+    std::cout << "maximum relative error = " << print_error(error) << std::endl;
+    if (error > 1e-3) return 1;
+
+    error = testSoftmaxCrossEntropyGradients<TReference<double>>(10);
+    std::cout << "Testing softmax cross entropy gradient: ";
+    std::cout << "maximum relative error = " << print_error(error) << std::endl;
+    if (error > 1e-3) return 1;
 }

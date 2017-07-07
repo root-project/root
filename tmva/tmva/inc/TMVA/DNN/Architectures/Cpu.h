@@ -148,28 +148,25 @@ public:
     */
    ///@{
 
-   static Scalar_t MeanSquaredError(const TCpuMatrix<Scalar_t> &Y,
-                                        const TCpuMatrix<Scalar_t> &output);
-   static void MeanSquaredErrorGradients(TCpuMatrix<Scalar_t> & dY,
-                                         const TCpuMatrix<Scalar_t> &Y,
-                                         const TCpuMatrix<Scalar_t> &output);
+   static Scalar_t MeanSquaredError(const TCpuMatrix<Scalar_t> &Y, const TCpuMatrix<Scalar_t> &output,
+                                    const TCpuMatrix<Scalar_t> &weights);
+   static void MeanSquaredErrorGradients(TCpuMatrix<Scalar_t> &dY, const TCpuMatrix<Scalar_t> &Y,
+                                         const TCpuMatrix<Scalar_t> &output, const TCpuMatrix<Scalar_t> &weights);
 
-    /** Sigmoid transformation is implicitly applied, thus \p output should
-     *  hold the linear activations of the last layer in the net. */
-   static Scalar_t CrossEntropy(const TCpuMatrix<Scalar_t> &Y,
-                              const TCpuMatrix<Scalar_t> &output);
+   /** Sigmoid transformation is implicitly applied, thus \p output should
+    *  hold the linear activations of the last layer in the net. */
+   static Scalar_t CrossEntropy(const TCpuMatrix<Scalar_t> &Y, const TCpuMatrix<Scalar_t> &output,
+                                const TCpuMatrix<Scalar_t> &weights);
 
-   static void CrossEntropyGradients(TCpuMatrix<Scalar_t> & dY,
-                                     const TCpuMatrix<Scalar_t> & Y,
-                                     const TCpuMatrix<Scalar_t> & output);
+   static void CrossEntropyGradients(TCpuMatrix<Scalar_t> &dY, const TCpuMatrix<Scalar_t> &Y,
+                                     const TCpuMatrix<Scalar_t> &output, const TCpuMatrix<Scalar_t> &weights);
 
-    /** Softmax transformation is implicitly applied, thus \p output should
-     *  hold the linear activations of the last layer in the net. */
-   static Scalar_t SoftmaxCrossEntropy(const TCpuMatrix<Scalar_t> &Y,
-                                     const TCpuMatrix<Scalar_t> &output);
-   static void SoftmaxCrossEntropyGradients(TCpuMatrix<Scalar_t> & dY,
-                                            const TCpuMatrix<Scalar_t> & Y,
-                                            const TCpuMatrix<Scalar_t> & output);
+   /** Softmax transformation is implicitly applied, thus \p output should
+    *  hold the linear activations of the last layer in the net. */
+   static Scalar_t SoftmaxCrossEntropy(const TCpuMatrix<Scalar_t> &Y, const TCpuMatrix<Scalar_t> &output,
+                                       const TCpuMatrix<Scalar_t> &weights);
+   static void SoftmaxCrossEntropyGradients(TCpuMatrix<Scalar_t> &dY, const TCpuMatrix<Scalar_t> &Y,
+                                            const TCpuMatrix<Scalar_t> &output, const TCpuMatrix<Scalar_t> &weights);
    ///@}
 
    //____________________________________________________________________________

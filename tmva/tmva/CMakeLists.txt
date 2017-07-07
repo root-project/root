@@ -46,7 +46,8 @@ foreach(hs headers1 headers2 headers3 headers4 headers5)
 endforeach()
 
 #---Assign source files to the implementations -----------------
-SET(DNN_FILES      src/DNN/Architectures/Reference.cxx)
+SET(DNN_FILES      src/DNN/Architectures/Reference.cxx
+                   src/DNN/Architectures/Reference/DataLoader.cxx)
 SET(DNN_CUDA_FILES src/DNN/Architectures/Cuda.cu
                    src/DNN/Architectures/Cuda/CudaBuffers.cxx
                    src/DNN/Architectures/Cuda/CudaMatrix.cu)

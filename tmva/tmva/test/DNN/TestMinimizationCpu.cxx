@@ -38,6 +38,13 @@ int main()
    if (error > 1e-3) {
        return 1;
    }
+
+   error = testMinimizationWeights<TCpu<Real_t>>();
+   std::cout << "Weighted Data:    Maximum relative error = " << error << std::endl;
+   if (error > 1e-3) {
+      return 1;
+   }
+
    std::cout << std::endl << "Testing minimization: (double precision)" << std::endl;
 
    error = testMinimization<TCpu<Double_t>>();
@@ -51,5 +58,12 @@ int main()
    if (error > 1e-5) {
        return 1;
    }
+
+   error = testMinimizationWeights<TCpu<Double_t>>();
+   std::cout << "Weighted Data:    Maximum relative error = " << error << std::endl;
+   if (error > 1e-3) {
+      return 1;
+   }
+
    return 0;
 }
