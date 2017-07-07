@@ -23,7 +23,7 @@ if(MACOSX_GLU_DEPRECATED)
   add_definitions(-Wno-deprecated-declarations)
 endif()
 
-ROOT_GENERATE_DICTIONARY(G__Eve ${headers1} ${headers2} MODULE Eve LINKDEF LinkDef.h)
+ROOT_GENERATE_DICTIONARY(G__Eve ${headers1} ${headers2} MODULE Eve LINKDEF LinkDef.h DEPENDENCIES Geom Ged RGL Physics EG)
 
 ROOT_LINKER_LIBRARY(Eve *.cxx G__Eve.cxx LIBRARIES ${OPENGL_LIBRARIES} GLEW ${FTGL_LIBRARIES} Core DEPENDENCIES Geom Ged RGL Physics EG)
 
