@@ -713,8 +713,8 @@ void TGraph2DPainter::PaintLevels(Int_t *t,Double_t *x, Double_t *y,
    Double_t x0 = x[0]  , x2 = x[0];
    Double_t y0 = y[0]  , y2 = y[0];
    Double_t z0 = fZ[p[0]], z2 = fZ[p[0]];
-   Double_t zmin = gCurrentHist->GetMinimum();
-   Double_t zmax = gCurrentHist->GetMaximum();
+   Double_t zmin = fGraph2D->GetMinimum();
+   Double_t zmax = fGraph2D->GetMaximum();
    if (zmin==-1111 && zmax==-1111) {
       zmin = TMath::Min(fZmin, 0.);
       if (Hoption.Logz && zmin <= 0) zmin = TMath::Min((Double_t)1, (Double_t)0.001*fGraph2D->GetZmax());
