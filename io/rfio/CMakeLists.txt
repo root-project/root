@@ -2,7 +2,7 @@
 # CMakeLists.txt file for building ROOT io/rfio package
 ############################################################################
 
-ROOT_GENERATE_DICTIONARY(G__RFIO *.h MODULE RFIO  LINKDEF LinkDef.h)
+ROOT_GENERATE_DICTIONARY(G__RFIO *.h MODULE RFIO  LINKDEF LinkDef.h DEPENDENCIES Net RIO)
 
 ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-shadow)
 

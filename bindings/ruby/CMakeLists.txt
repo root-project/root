@@ -3,7 +3,7 @@
 ############################################################################
 include_directories(${RUBY_INCLUDE_DIRS})
 
-ROOT_GENERATE_DICTIONARY(G__Ruby *.h MODULE Ruby LINKDEF LinkDef.h)
+ROOT_GENERATE_DICTIONARY(G__Ruby *.h MODULE Ruby LINKDEF LinkDef.h DEPENDENCIES Hist MathCore)
 
 
 ROOT_LINKER_LIBRARY(Ruby *.cxx G__Ruby.cxx LIBRARIES ${RUBY_LIBRARY} ${CMAKE_DL_LIBS} DEPENDENCIES Hist MathCore)

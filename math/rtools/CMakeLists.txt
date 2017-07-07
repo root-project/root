@@ -7,7 +7,7 @@ include_directories(SYSTEM ${R_INCLUDE_DIRS})
 
 ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-overloaded-virtual)
 
-ROOT_GENERATE_DICTIONARY(G__Rtools Math/RMinimizer.h MODULE Rtools LINKDEF LinkDef.h)
+ROOT_GENERATE_DICTIONARY(G__Rtools Math/RMinimizer.h MODULE Rtools LINKDEF LinkDef.h DEPENDENCIES MathCore RInterface)
 ROOT_LINKER_LIBRARY(Rtools *.cxx G__Rtools.cxx LIBRARIES Core ${R_LIBRARIES} DEPENDENCIES MathCore RInterface)
 ROOT_INSTALL_HEADERS()
 

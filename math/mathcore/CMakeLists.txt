@@ -17,7 +17,7 @@ set(MATHCORE_HEADERS TRandom.h
   Math/MersenneTwisterEngine.h Math/MixMaxEngine.h   TRandomGen.h Math/LCGEngine.h
 )
 
-ROOT_GENERATE_DICTIONARY(G__MathCore   TComplex.h TMath.h ${MATHCORE_HEADERS} Fit/*.h MODULE MathCore LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM")
+ROOT_GENERATE_DICTIONARY(G__MathCore   TComplex.h TMath.h ${MATHCORE_HEADERS} Fit/*.h MODULE MathCore LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM" DEPENDENCIES Core Imt)
 
 add_definitions(-DUSE_ROOT_ERROR)
 ROOT_ADD_C_FLAG(_flags -Wno-strict-overflow)  # Avoid what it seems a compiler false positive warning

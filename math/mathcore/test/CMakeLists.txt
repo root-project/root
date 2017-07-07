@@ -68,7 +68,7 @@ foreach(file ${TestSource})
 endforeach()
 
 
-ROOT_GENERATE_DICTIONARY(TrackMathCoreUnitDictionary ${CMAKE_CURRENT_SOURCE_DIR}/stress/TrackMathCore.h MODULE TrackMathCoreUnitDict LINKDEF stress/TrackMathCoreLinkDef.h)
+ROOT_GENERATE_DICTIONARY(TrackMathCoreUnitDictionary ${CMAKE_CURRENT_SOURCE_DIR}/stress/TrackMathCore.h MODULE TrackMathCoreUnitDict LINKDEF stress/TrackMathCoreLinkDef.h DEPENDENCIES Core MathCore RIO GenVector)
 ROOT_LINKER_LIBRARY(TrackMathCoreUnitDict TrackMathCoreUnitDictionary.cxx LIBRARIES Core MathCore RIO GenVector)
 
 ROOT_ADD_GTEST(stressMathCoreUnit stress/testSMatrix.cxx stress/testGenVector.cxx

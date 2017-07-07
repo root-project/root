@@ -45,7 +45,7 @@ foreach(dict ${stldicts})
   string(REPLACE "2" "" header ${dict})
   string(REPLACE "complex" "root_std_complex.h" header ${header})
   string(REPLACE "multi" "" header ${header})
-  ROOT_GENERATE_DICTIONARY(G__std_${dict} ${header} STAGE1 MODULE ${dict}Dict LINKDEF src/${dict}Linkdef.h)
+  ROOT_GENERATE_DICTIONARY(G__std_${dict} ${header} STAGE1 MODULE ${dict}Dict LINKDEF src/${dict}Linkdef.h DEPENDENCIES  Core)
   ROOT_LINKER_LIBRARY(${dict}Dict G__std_${dict}.cxx DEPENDENCIES  Core)
 endforeach()
 

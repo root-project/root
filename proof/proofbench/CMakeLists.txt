@@ -6,7 +6,7 @@ ROOT_GLOB_HEADERS(headers inc/TProof*.h)
 ROOT_GLOB_SOURCES(sources src/TProof*.cxx)
 
 
-ROOT_GENERATE_DICTIONARY(G__ProofBench ${headers} MODULE ProofBench LINKDEF LinkDef.h)
+ROOT_GENERATE_DICTIONARY(G__ProofBench ${headers} MODULE ProofBench LINKDEF LinkDef.h DEPENDENCIES Hist Gpad ProofPlayer)
 
 ROOT_LINKER_LIBRARY(ProofBench ${sources} G__ProofBench.cxx LIBRARIES Core  DEPENDENCIES Hist Gpad ProofPlayer)
 ROOT_INSTALL_HEADERS(FILTER "TSel")

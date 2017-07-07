@@ -77,7 +77,7 @@ else()
   set(installoptions ${installoptions} FILTER "Cpu")
 endif()
 
-ROOT_GENERATE_DICTIONARY(G__TMVA ${theaders1} ${theaders2} ${theaders3} ${theaders4} ${theaders5}  MODULE TMVA LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM")
+ROOT_GENERATE_DICTIONARY(G__TMVA ${theaders1} ${theaders2} ${theaders3} ${theaders4} ${theaders5}  MODULE TMVA LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM" DEPENDENCIES RIO Hist Tree TreePlayer MLP Minuit XMLIO)
 
 ROOT_LINKER_LIBRARY(TMVA *.cxx G__TMVA.cxx ${DNN_FILES} ${DNN_CPU_FILES}
                     LIBRARIES Core ${DNN_CUDA_LIBRARIES} ${DNN_CPU_LIBRARIES}

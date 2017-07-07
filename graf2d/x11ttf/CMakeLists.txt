@@ -6,7 +6,7 @@ set(libname GX11TTF)
 
 include_directories(${FREETYPE_INCLUDE_DIRS} ${X11_INCLUDE_DIR})
 
-ROOT_GENERATE_DICTIONARY(G__${libname} *.h MODULE ${libname} LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM")
+ROOT_GENERATE_DICTIONARY(G__${libname} *.h MODULE ${libname} LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM" DEPENDENCIES GX11 Graf)
 
 
 ROOT_LINKER_LIBRARY(${libname} *.cxx G__${libname}.cxx

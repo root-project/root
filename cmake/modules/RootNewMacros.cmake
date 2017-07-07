@@ -384,7 +384,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
                      COMMAND ${command} ${genverbosity} -f  ${dictionary}.cxx ${newargs} ${excludepathsargs} ${rootmapargs}
                                         ${ARG_OPTIONS} ${definitions} ${includedirs} ${headerfiles} ${_linkdef}
                      IMPLICIT_DEPENDS ${_implicitdeps}
-                     DEPENDS ${_list_of_header_dependencies} ${_linkdef} ${ROOTCINTDEP})
+                     DEPENDS ${_list_of_header_dependencies} ${_linkdef} ${ROOTCINTDEP} ${ARG_DEPENDENCIES})
   get_filename_component(dictname ${dictionary} NAME)
 
   #---roottest compability
