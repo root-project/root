@@ -30,8 +30,8 @@
 
 #if defined(R__HAS_VC) && !defined(VECCORE_ENABLE_VC)
 #define VECCORE_ENABLE_VC
-#endif
 #include <VecCore/VecCore>
+#endif
 
 namespace ROOT {
 
@@ -312,5 +312,4 @@ void Cartesian3D<T>::SetEta(Scalar eta) {
 
 #endif
 
-//#endif // R__HAS_VECCORE
 #endif /* ROOT_Math_GenVector_Cartesian3D  */
