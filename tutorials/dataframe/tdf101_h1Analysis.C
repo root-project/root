@@ -22,21 +22,19 @@ auto Select = [](ROOT::Experimental::TDataFrame &dataFrame) {
    using Iarrayiew_t = std::array_view<int>;
 
    auto ret =
-      dataFrame.Filter([](float md0_d) { return TMath::Abs(md0_d - 1.8646) < 0.04; }, {"md0_d"})
-         .Filter([](float ptds_d) { return ptds_d > 2.5; }, {"ptds_d"})
-         .Filter([](float etads_d) { return TMath::Abs(etads_d) < 1.5; }, {"etads_d"})
-         .Filter([](int ik, int ipi, std::array_view<int> nhitrp) { return nhitrp[ik - 1] * nhitrp[ipi - 1] > 1; },
+      dataFrame.Filter("TMath::Abs(md0_d - 1.8646) < 0.04")
+         .Filter("ptds_d > 2.5")
+         .Filter("TMath::Abs(etads_d) < 1.5")
+         .Filter([](int ik, int ipi, Iarrayiew_t nhitrp) { return nhitrp[ik - 1] * nhitrp[ipi - 1] > 1; },
                  {"ik", "ipi", "nhitrp"})
-         .Filter([](int ik, std::array_view<float> rstart,
-                    std::array_view<float> rend) { return rend[ik - 1] - rstart[ik - 1] > 22; },
-                 {"ik", "rstart", "rend"})
-         .Filter([](int ipi, std::array_view<float> rstart,
-                    std::array_view<float> rend) { return rend[ipi - 1] - rstart[ipi - 1] > 22; },
-                 {"ipi", "rstart", "rend"})
-         .Filter([](int ik, std::array_view<float> nlhk) { return nlhk[ik - 1] > 0.1; }, {"ik", "nlhk"})
-         .Filter([](int ipi, std::array_view<float> nlhpi) { return nlhpi[ipi - 1] > 0.1; }, {"ipi", "nlhpi"})
-         .Filter([](int ipis, std::array_view<float> nlhpi) { return nlhpi[ipis - 1] > 0.1; }, {"ipis", "nlhpi"})
-         .Filter([](int njets) { return njets >= 1; }, {"njets"});
+         .Filter([](int ik, Farrayiew_t rstart,
+                    Farrayiew_t rend) { return rend[ik - 1] - rstart[ik - 1] > 22; }, {"ik", "rstart", "rend"})
+         .Filter([](int ipi, Farrayiew_t rstart,
+                    Farrayiew_t rend) { return rend[ipi - 1] - rstart[ipi - 1] > 22; }, {"ipi", "rstart", "rend"})
+         .Filter([](int ik, Farrayiew_t nlhk) { return nlhk[ik - 1] > 0.1; }, {"ik", "nlhk"})
+         .Filter([](int ipi, Farrayiew_t nlhpi) { return nlhpi[ipi - 1] > 0.1; }, {"ipi", "nlhpi"})
+         .Filter([](int ipis, Farrayiew_t nlhpi) { return nlhpi[ipis - 1] > 0.1; }, {"ipis", "nlhpi"})
+         .Filter("njets >= 1");
 
    return ret;
 };
