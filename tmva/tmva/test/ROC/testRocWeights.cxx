@@ -1,3 +1,19 @@
+// @(#)root/tmva $Id$
+// Author: Kim Albertsson
+
+/*************************************************************************
+ * Copyright (C) 2017, Kim Albertsson                                    *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
+//////////////////////////////////////////////////////////////////////
+//  Collection of tests to verify that roc curves and integrals are //
+//  calculated correctly.                                           //
+//////////////////////////////////////////////////////////////////////
+
 #include "gtest/gtest.h"
 
 #include "TMVA/ROCCurve.h"
@@ -71,6 +87,9 @@ protected:
       }
    }
 
+   /**
+    * Generates four fixed samples regardless of num_samples input.
+    */
    static void gen_4samples(fvec_t &a, fvec_t &b, fvec_t &aw, fvec_t &bw, size_t)
    {
       a.push_back(0.5);
