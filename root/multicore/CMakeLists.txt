@@ -6,6 +6,14 @@ if(ROOTTEST_OS_ID MATCHES Ubuntu)
 endif()
 
 if(ROOT_imt_FOUND)
+# ROOT-8850
+ROOTTEST_GENERATE_EXECUTABLE(loadImt loadImt.cpp LIBRARIES Core RIO)
+
+ROOTTEST_ADD_TEST(loadImt
+                  EXEC loadImt
+                  DEPENDS ${GENERATE_EXECUTABLE_TEST})
+
+
 # ROOT-8787
 ROOTTEST_GENERATE_EXECUTABLE(tthrobj_ttreeview_regression tthrobj_ttreeview_regression.cpp LIBRARIES Core RIO Tree Imt)
 
