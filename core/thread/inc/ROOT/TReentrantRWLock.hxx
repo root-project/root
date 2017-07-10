@@ -13,6 +13,7 @@
 #ifndef ROOT_TRWSpinLock
 #define ROOT_TRWSpinLock
 
+#include "ThreadLocalStorage.h"
 #include "TSpinMutex.hxx"
 
 #include <atomic>
@@ -34,7 +35,7 @@ struct UniqueLockRecurseCount {
    using local_t = LocalCounts*;
 
    local_t GetLocal() {
-      static thread_local LocalCounts gLocal;
+      TTHREAD_TLS_DECL(LocalCounts, gLocal);
       return &gLocal;
    }
 
