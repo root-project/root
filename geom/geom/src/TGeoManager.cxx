@@ -806,7 +806,7 @@ Int_t TGeoManager::AddVolume(TGeoVolume *volume)
 
 TGeoNavigator *TGeoManager::AddNavigator()
 {
-   if (fMultiThread) fgMutex.lock();
+   if (fMultiThread) { TGeoManager::ThreadId(); fgMutex.lock(); }
    std::thread::id threadId = std::this_thread::get_id();
    NavigatorsMap_t::const_iterator it = fNavigators.find(threadId);
    TGeoNavigatorArray *array = 0;
