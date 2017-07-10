@@ -1,4 +1,7 @@
-set(LIBS_TO_LINK GenVector rt)
+set(LIBS_TO_LINK GenVector)
+if(UNIX AND NOT APPLE)
+  set(LIBS_TO_LINK ${LIBS_TO_LINK} rt)
+endif()
 if (veccore)
   set(LIBS_TO_LINK ${LIBS_TO_LINK} ${VecCore_LIBRARIES})
 endif()
