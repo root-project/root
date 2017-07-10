@@ -1616,7 +1616,7 @@ if (testing)
                   -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
     # Disable install step
     INSTALL_COMMAND ""
-    BUILD_BYPRODUCTS "${CMAKE_CURRENT_BINARY_DIR}/googletest-prefix/src/libbenchmark.a"
+    BUILD_BYPRODUCTS "${CMAKE_CURRENT_BINARY_DIR}/googlebenchmark-prefix/src/googlebenchmark-build/src/libbenchmark.a"
     # Wrap download, configure and build steps in a script to log output
     LOG_DOWNLOAD ON
     LOG_CONFIGURE ON
