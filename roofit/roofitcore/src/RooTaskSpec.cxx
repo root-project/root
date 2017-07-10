@@ -48,38 +48,75 @@ ToDo: Simple use demonstration.
 #include "RooAddition.h"
 #include "RooAbsTestStatistic.h"
 #include "RooTaskSpec.h"
-
+#include "RooAbsData.h"
 
 using namespace std;
 using namespace RooFit;
 
-ClassImp(RooTaskSpec);
+//ClassImp(RooTaskSpec);
 
 //RooTaskSpec::RooTaskSpec(const Int_t case, const pdfName name,const Bool_t binned);
-RooTaskSpec::RooTaskSpec(RooAbsPdf* nll){
-  _initialise(nll);
+RooTaskSpec::RooTaskSpec(RooAbsOptTestStatistic* nll){
+  RooAbsOptTestStatistic* rats = dynamic_cast<RooAbsOptTestStatistic*>(nll) ;
+  if (rats) {
+    cout << " NLL is a RooAbsOptTestStatistic (Case 1)" << endl ;
+    _fit_case = 1;
+    _initialise(rats);
+  } else {
+    _fit_case = 0;
+  }
+}
+
+RooTaskSpec::RooTaskSpec(RooAbsReal* nll){
+  RooAddition* ra = dynamic_cast<RooAddition*>(nll) ;
+  if (ra) {
+    RooAbsOptTestStatistic* rats = dynamic_cast<RooAbsOptTestStatistic*>(ra->_set.at(0)) ;
+    if (!rats) {
+      cout << "ERROR: NLL is a RooAddition, but first element of addition is not a RooAbsOptTestStatistic!" << endl ;
+      _fit_case = 0;
+      cout << "It is a "<<ra->_set.at(0)<<endl;
+    } else {
+      _fit_case = 1;
+      cout << "NLL is a RooAddition (Case 2), first element is a RooAbsOptTestStatistic" << endl ;
+      _initialise(rats);
+    }
+  }
 }
 
 
-void RooTaskSpec::_initialise (RooAbsPdf* nll){
+void RooTaskSpec::_initialise (RooAbsOptTestStatistic* rats){
   // Check if nll is a AbsTestStatistic
-  RooAbsOptTestStatistic* rats = dynamic_cast<RooAbsOptTestStatistic*>(nll) ;
-  if (rats) {
-    cout << " NLL is a RooAbsOptTestStatistic (Case 0)" << endl ;
-    _fit_case = 0;
-  } else {
-    RooAddition* ra = dynamic_cast<RooAddition*>(nll) ;
-    if (ra) {
-      _fit_case = 1;
-      rats = dynamic_cast<RooAbsOptTestStatistic*>(ra->_ownedList.at(0)) ;
-      if (!rats) {
-	cout << "ERROR: NLL is a RooAddition, but first element of addition is not a RooAbsOptTestStatistic!" << endl ;
-      }
-      cout << "NLL is a RooAddition (Case 1), first element is a RooAbsOptTestStatistic" << endl ;
+  if (rats->numSimultaneous()==0){
+    cout << "RooAbsOptTestStatistic consists of a single component"<<endl;
+    cout << "probability model named " << rats->function().GetName();
+    Bool_t binned = rats->function().getAttribute("BinnedLikelihood") ;
+    cout << "binned variable retrieved as "<<binned<<endl;
+    _binned = binned;
+    if (binned) {
+      cout << "Binned Likelihood has probability model named " << rats->function().GetName()
+	   << " and a binned dataset with " << rats->data().numEntries()
+	   << " bins with a total event count of " << rats->data().sumEntries() << endl ;
     } else {
-      cout << "ERROR: NLL is neither a RooAbsStatistic nor a RooAddition" << endl ;
+      cout << "Unbinned likelihood has probability density model named " << rats->function().GetName()
+	   << " and an dataset with " << rats->data().numEntries() << " events with a weight of " << rats->data().sumEntries() << endl ;
+    } return ;
+  }  
+  for (int i=0 ; i < rats->numSimultaneous() ; i++) {
+    cout << "SimComponent #" << i << " = " ; 
+    rats->simComponents()[i]->Print() ;
+    RooAbsOptTestStatistic* comp = (RooAbsOptTestStatistic*) rats->simComponents()[i] ;
+    Bool_t binned = comp->function().getAttribute("BinnedLikelihood") ;
+    _binned = binned;
+    if (binned) {
+      // In a dataset numEntries() will return the number of coordinates stored and sumEntries() will store the
+      // sum of the (user-defined) weights assumed to each of those coordinates
+      cout << "Binned Likelihood has probability model named " << comp->function().GetName()
+	   << " and a binned dataset with " << comp->data().numEntries()
+	   << " bins with a total event count of " << comp->data().sumEntries() << endl ;
+    } else {
+      cout << "Unbinned likelihood has probability density model named " << comp->function().GetName()
+	   << " and an dataset with " << comp->data().numEntries() << " events with a weight of " << comp->data().sumEntries() << endl ;
     }
   }
-
 }
  
