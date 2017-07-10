@@ -18,6 +18,9 @@
 #include "TStyle.h"
 
 auto Select = [](ROOT::Experimental::TDataFrame &dataFrame) {
+   using Farrayiew_t = std::array_view<float>;
+   using Iarrayiew_t = std::array_view<int>;
+
    auto ret =
       dataFrame.Filter([](float md0_d) { return TMath::Abs(md0_d - 1.8646) < 0.04; }, {"md0_d"})
          .Filter([](float ptds_d) { return ptds_d > 2.5; }, {"ptds_d"})
@@ -64,30 +67,24 @@ void FitAndPlotHdmd(TH1 &hdmd)
 {
    // create the canvas for the h1analysis fit
    gStyle->SetOptFit();
-   TCanvas *c1 = new TCanvas("c1", "h1analysis analysis", 10, 10, 800, 600);
-   c1->SetBottomMargin(0.15);
+   auto c1 = new TCanvas("c1", "h1analysis analysis", 10, 10, 800, 600);
    hdmd.GetXaxis()->SetTitle("m_{K#pi#pi} - m_{K#pi}[GeV/c^{2}]");
    hdmd.GetXaxis()->SetTitleOffset(1.4);
 
    // fit histogram hdmd with function f5 using the loglikelihood option
-   if (gROOT->GetListOfFunctions()->FindObject("f5")) delete gROOT->GetFunction("f5");
-   TF1 *f5 = new TF1("f5", fdm5, 0.139, 0.17, 5);
+   auto f5 = new TF1("f5", fdm5, 0.139, 0.17, 5);
    f5->SetParameters(1000000, .25, 2000, .1454, .001);
    hdmd.Fit("f5", "lr");
 
-   // Have the number of entries on the first histogram (to cross check when running
-   // with entry lists)
-   TPaveStats *psdmd = (TPaveStats *)hdmd.GetListOfFunctions()->FindObject("stats");
-   if (psdmd) psdmd->SetOptStat(1110);
-   c1->Modified();
+   hdmd.DrawClone();
+
 }
 
 void FitAndPlotH2(TH2 &h2)
 {
    // create the canvas for tau d0
-   gStyle->SetOptFit(0);
-   gStyle->SetOptStat(1100);
-   TCanvas *c2 = new TCanvas("c2", "tauD0", 100, 100, 800, 600);
+   auto c2 = new TCanvas("c2", "tauD0", 100, 100, 800, 600);
+
    c2->SetGrid();
    c2->SetBottomMargin(0.15);
 
@@ -95,17 +92,18 @@ void FitAndPlotH2(TH2 &h2)
    // with function f2 and make a histogram for each fit parameter
    // Note that the generated histograms are added to the list of objects
    // in the current directory.
-   if (gROOT->GetListOfFunctions()->FindObject("f2")) delete gROOT->GetFunction("f2");
-   TF1 *f2 = new TF1("f2", fdm2, 0.139, 0.17, 2);
+   auto f2 = new TF1("f2", fdm2, 0.139, 0.17, 2);
    f2->SetParameters(10000, 10);
    h2.FitSlicesX(f2, 0, -1, 1, "qln");
 
-   TH1D *h2_1 = (TH1D *)gDirectory->Get("h2_1");
-   h2_1->GetXaxis()->SetTitle("#tau[ps]");
+   // See TH2::FitSlicesX documentation
+   auto h2_1 = (TH1D *)gDirectory->Get("h2_1");
+   h2_1->GetXaxis()->SetTitle("#tau [ps]");
    h2_1->SetMarkerStyle(21);
-   h2_1->Draw();
+   h2_1->DrawClone();
    c2->Update();
-   TLine *line = new TLine(0, 0, 0, c2->GetUymax());
+
+   auto line = new TLine(0, 0, 0, c2->GetUymax());
    line->Draw();
 }
 
@@ -117,14 +115,13 @@ void tdf101_h1Analysis()
    chain.Add("http://root.cern.ch/files/h1/dstarp1b.root");
    chain.Add("http://root.cern.ch/files/h1/dstarp2.root");
 
+   ROOT::EnableImplicitMT(4);
+
    ROOT::Experimental::TDataFrame dataFrame(chain);
    auto selected = Select(dataFrame);
-
    auto hdmdARP = selected.Histo1D(TH1D("hdmd", "Dm_d", 40, 0.13, 0.17), "dm_d");
-   auto selectedAddedBranch = selected.Define(
-      "h2_y", [](float rpd0_t, float ptd0_d) { return rpd0_t / 0.029979f * 1.8646f / ptd0_d; }, {"rpd0_t", "ptd0_d"});
-   auto h2ARP = selectedAddedBranch.Histo2D<float, float>(TH2D("h2", "ptD0 vs Dm_d", 30, 0.135, 0.165, 30, -3, 6),
-                                                          "dm_d", "h2_y");
+   auto selectedAddedBranch = selected.Define("h2_y", "rpd0_t / 0.029979f * 1.8646f / ptd0_d");
+   auto h2ARP = selectedAddedBranch.Histo2D(TH2D("h2", "ptD0 vs Dm_d", 30, 0.135, 0.165, 30, -3, 6), "dm_d", "h2_y");
 
    FitAndPlotHdmd(*hdmdARP);
    FitAndPlotH2(*h2ARP);
