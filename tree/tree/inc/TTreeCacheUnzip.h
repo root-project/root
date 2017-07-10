@@ -58,7 +58,6 @@ public:
 protected:
 
    friend class UnzipTask;
-   friend class MappingTask;
    tbb::task *root;
 //   tbb::queuing_rw_mutex *fRWMutex;
 //   std::shared_mutex *fRWMutex;
@@ -83,7 +82,6 @@ protected:
    Int_t      *fUnzipLen;         ///<! [fNseek] Length of the unzipped buffers
    char      **fUnzipChunks;      ///<! [fNseek] Individual unzipped chunks. Their summed size is kept under control.
    Byte_t     *fUnzipStatus;      ///<! [fNSeek] 
-   tbb::task **fUnzipTasks;       ///<! [fNSeek]  
    Long64_t    fTotalUnzipBytes;  ///<! The total sum of the currently unzipped blks
 
    Int_t       fNseekMax;         ///<!  fNseek can change so we need to know its max size
