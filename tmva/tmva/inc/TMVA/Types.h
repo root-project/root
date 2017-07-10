@@ -2,28 +2,28 @@
 // Author: Andreas Hoecker, Joerg Stelzer, Helge Voss
 
 /**********************************************************************************
- * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
- * Package: TMVA                                                                  *
- * Class  : Types                                                                 *
- * Web    : http://tmva.sourceforge.net                                           *
+ * Project: TMVA - a Root-integrated toolkit for multivariate data analysis *
+ * Package: TMVA *
+ * Class  : Types *
+ * Web    : http://tmva.sourceforge.net *
  *                                                                                *
- * Description:                                                                   *
- *      GLobal types (singleton class)                                            *
+ * Description: *
+ *      GLobal types (singleton class) *
  *                                                                                *
- * Authors (alphabetical):                                                        *
- *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
- *      Peter Speckmayer <Peter.Speckmayer@cern.ch>  - CERN, Switzerland          *
- *      Joerg Stelzer   <Joerg.Stelzer@cern.ch>  - CERN, Switzerland              *
- *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
+ * Authors (alphabetical): *
+ *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland *
+ *      Peter Speckmayer <Peter.Speckmayer@cern.ch>  - CERN, Switzerland *
+ *      Joerg Stelzer   <Joerg.Stelzer@cern.ch>  - CERN, Switzerland *
+ *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany *
  *                                                                                *
- * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland                                                         *
- *      U. of Victoria, Canada                                                    *
- *      MPI-K Heidelberg, Germany                                                 *
+ * Copyright (c) 2005: *
+ *      CERN, Switzerland *
+ *      U. of Victoria, Canada *
+ *      MPI-K Heidelberg, Germany *
  *                                                                                *
- * Redistribution and use in source and binary forms, with or without             *
- * modification, are permitted according to the terms listed in LICENSE           *
- * (http://mva.sourceforge.net/license.txt)                                       *
+ * Redistribution and use in source and binary forms, with or without *
+ * modification, are permitted according to the terms listed in LICENSE *
+ * (http://mva.sourceforge.net/license.txt) *
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_Types
@@ -75,85 +75,88 @@ namespace TMVA {
    public:
 
       // available MVA methods
-      enum EMVA {
-         kVariable    = 0,
-         kCuts           ,
-         kLikelihood     ,
-         kPDERS          ,
-         kHMatrix        ,
-         kFisher         ,
-         kKNN            ,
-         kCFMlpANN       ,
-         kTMlpANN        ,
-         kBDT            ,
-         kDT             ,
-         kRuleFit        ,
-         kSVM            ,
-         kMLP            ,
-         kBayesClassifier,
-         kFDA            ,
-         kBoost          ,
-         kPDEFoam        ,
-         kLD             ,
-         kPlugins        ,
-         kCategory       ,
-         kDNN            ,
-         kDAE            ,
-         kPyRandomForest ,
-         kPyAdaBoost     ,
-         kPyGTB          ,
-         kPyKeras        ,
-         kC50            ,
-         kRSNNS          ,
-         kRSVM           ,
-         kRXGB           ,
-         kMaxMethod
-      };
+     enum EMVA {
+       kVariable = 0,
+       kCuts,
+       kLikelihood,
+       kPDERS,
+       kHMatrix,
+       kFisher,
+       kKNN,
+       kCFMlpANN,
+       kTMlpANN,
+       kBDT,
+       kDT,
+       kRuleFit,
+       kSVM,
+       kMLP,
+       kBayesClassifier,
+       kFDA,
+       kBoost,
+       kPDEFoam,
+       kLD,
+       kPlugins,
+       kCategory,
+       kDNN,
+       kDAE,
+       kPyRandomForest,
+       kPyAdaBoost,
+       kPyGTB,
+       kPyKeras,
+       kC50,
+       kRSNNS,
+       kRSVM,
+       kRXGB,
+       kMaxMethod
+     };
 
-      // available variable transformations
-      enum EVariableTransform {
-         kIdentity = 0,
-         kDecorrelated,
-         kNormalized,
-         kPCA,
-         kRearranged,
-         kGauss,
-         kUniform,
-         kMaxVariableTransform
-      };
+     // available variable transformations
+     enum EVariableTransform {
+       kIdentity = 0,
+       kDecorrelated,
+       kNormalized,
+       kPCA,
+       kRearranged,
+       kGauss,
+       kUniform,
+       kMaxVariableTransform
+     };
 
-      // type of analysis
-      enum EAnalysisType {
-         kClassification = 0,
-         kRegression,
-         kMulticlass,
-         kNoAnalysisType,
-         kMaxAnalysisType
-      };
+     // type of analysis
+     enum EAnalysisType {
+       kClassification = 0,
+       kRegression,
+       kMulticlass,
+       kNoAnalysisType,
+       kMaxAnalysisType
+     };
 
-      enum ESBType {
-         kSignal = 0,  // Never change this number - it is elsewhere assumed to be zero !
-         kBackground,
-         kSBBoth,
-         kMaxSBType,
-         kTrueType
-      };
+     enum ESBType {
+       kSignal =
+           0, // Never change this number - it is elsewhere assumed to be zero !
+       kBackground,
+       kSBBoth,
+       kMaxSBType,
+       kTrueType
+     };
 
-      enum ETreeType {
-         kTraining = 0,
-         kTesting,
-         kMaxTreeType,  // also used as temporary storage for trees not yet assigned for testing;training...
-         kValidation,   // these are placeholders... currently not used, but could be moved "forward" if
-         kTrainingOriginal     // ever needed
-      };
+     enum ETreeType {
+       kTraining = 0,
+       kTesting,
+       kMaxTreeType, // also used as temporary storage for trees not yet
+                     // assigned for testing;training...
+       kValidation,  // these are placeholders... currently not used, but could
+                     // be moved "forward" if
+       kTrainingOriginal // ever needed
+     };
 
-      enum EBoostStage {
-         kBoostProcBegin=0,
-         kBeforeTraining,
-         kBeforeBoosting,
-         kAfterBoosting,
-         kBoostProcEnd
-      };
+     enum EBoostStage {
+       kBoostProcBegin = 0,
+       kBeforeTraining,
+       kBeforeBoosting,
+       kAfterBoosting,
+       kBoostProcEnd
+     };
 
    public:
 

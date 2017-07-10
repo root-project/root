@@ -352,7 +352,6 @@ public:
                          TCudaMatrix<AFloat> &fWeights,
                          TCudaMatrix<AFloat> &fBiases);
 
-
 };
 
 } // namespace DNN

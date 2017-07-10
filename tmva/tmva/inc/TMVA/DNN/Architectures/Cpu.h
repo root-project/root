@@ -289,70 +289,60 @@ public:
    /** Compute the sum of all elements in \p A */
    static Scalar_t Sum(const TCpuMatrix<Scalar_t> &A);
 
-
    //____________________________________________________________________________
    //
    // AutoEncoder Propagation
    //____________________________________________________________________________
 
    // Add Biases to the output
-   static void AddBiases(TCpuMatrix<AReal> &A,
-                         const TCpuMatrix<AReal> &B);
+   static void AddBiases(TCpuMatrix<Scalar_t> &A,
+                         const TCpuMatrix<Scalar_t> &B);
 
    // Updating parameters after every backward pass. Weights and biases are
    // updated.
-   static void UpdateParams(TCpuMatrix<AReal> &x,
-                            TCpuMatrix<AReal> &z,
-                            TCpuMatrix<AReal> &fVBiases,
-                            TCpuMatrix<AReal> &fHBiases,
-                            TCpuMatrix<AReal> &fWeights,
-                            Double_t learningRate,
-                            Double_t corruptionLevel,
+   static void UpdateParams(TCpuMatrix<Scalar_t> &x, TCpuMatrix<Scalar_t> &z,
+                            TCpuMatrix<Scalar_t> &fVBiases,
+                            TCpuMatrix<Scalar_t> &fHBiases,
+                            TCpuMatrix<Scalar_t> &fWeights,
+                            Scalar_t learningRate, Scalar_t corruptionLevel,
                             size_t fBatchSize);
 
-
-
-
    // Softmax functions redifined
-   static void SoftmaxAE(TMatrixT<AReal> & A);
-
+   static void SoftmaxAE(TMatrixT<Scalar_t> &A);
 
    // Corrupt the input values randomly on corruption Level.
    //Basically inputs are masked currently.
-   static void CorruptInput(TCpuMatrix<AReal> & input,
-                            TCpuMatrix<AReal> & corruptedInput,
+   static void CorruptInput(TCpuMatrix<Scalar_t> &input,
+                            TCpuMatrix<Scalar_t> &corruptedInput,
                             AReal corruptionLevel);
 
    //Encodes the input Values in the compressed form.
-   static void EncodeInput(TCpuMatrix<AReal> & input,
-                           TCpuMatrix<AReal> & compressedInput,
-                           TCpuMatrix<AReal> &fWeights);
+   static void EncodeInput(TCpuMatrix<Scalar_t> &input,
+                           TCpuMatrix<Scalar_t> &compressedInput,
+                           TCpuMatrix<Scalar_t> &fWeights);
 
    // reconstructs the input. The reconstructed Input has same dimensions as that
    // of the input.
-   static void ReconstructInput(TCpuMatrix<AReal> & compressedInput,
-                                TCpuMatrix<AReal> & reconstructedInput,
-                                TCpuMatrix<AReal> &fWeights);
+   static void ReconstructInput(TCpuMatrix<Scalar_t> &compressedInput,
+                                TCpuMatrix<Scalar_t> &reconstructedInput,
+                                TCpuMatrix<Scalar_t> &fWeights);
 
-   static void ForwardLogReg(TCpuMatrix<AFloat> &input,
-                             TCpuMatrix<AFloat> &p,
-                             TCpuMatrix<AFloat> &fWeights);
+   static void ForwardLogReg(TCpuMatrix<Scalar_t> &input,
+                             TCpuMatrix<Scalar_t> &p,
+                             TCpuMatrix<Scalar_t> &fWeights);
 
-   static void UpdateParamsLogReg(TCpuMatrix<AFloat> &input,
-                                  TCpuMatrix<AFloat> &output,
-                                  TCpuMatrix<AFloat> &difference,
-                                  TCpuMatrix<AFloat> &p,
-                                  TCpuMatrix<AFloat> &fWeights,
-                                  TCpuMatrix<AFloat> &fBiases,
-                                  AFloat learningRate,
-                                  size_t fBatchSize);
+   static void UpdateParamsLogReg(TCpuMatrix<Scalar_t> &input,
+                                  TCpuMatrix<Scalar_t> &output,
+                                  TCpuMatrix<Scalar_t> &difference,
+                                  TCpuMatrix<Scalar_t> &p,
+                                  TCpuMatrix<Scalar_t> &fWeights,
+                                  TCpuMatrix<Scalar_t> &fBiases,
+                                  Scalar_t learningRate, size_t fBatchSize);
 
-   static void Transform(TCpuMatrix<AFloat> &input,
-                         TCpuMatrix<AFloat> &transformed,
-                         TCpuMatrix<AFloat> &fWeights,
-                         TCpuMatrix<AFloat> &fBiases);
-
-
+   static void Transform(TCpuMatrix<Scalar_t> &input,
+                         TCpuMatrix<Scalar_t> &transformed,
+                         TCpuMatrix<Scalar_t> &fWeights,
+                         TCpuMatrix<Scalar_t> &fBiases);
 };
 
 } // namespace DNN

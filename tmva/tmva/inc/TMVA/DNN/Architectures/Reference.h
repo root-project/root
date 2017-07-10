@@ -252,7 +252,6 @@ public:
    static void Dropout(TMatrixT<AReal> & A, AReal dropoutProbability);
 
    ///@}
-
    //____________________________________________________________________________
    //
    // AutoEncoder Propagation
@@ -264,15 +263,12 @@ public:
 
    // Updating parameters after every backward pass. Weights and biases are
    // updated.
-   static void UpdateParams(TMatrixT<AReal> &x,
-                            TMatrixT<AReal> &z,
-                            TMatrixT<AReal> &fVBiases,
-                            TMatrixT<AReal> &fHBiases,
-                            TMatrixT<AReal> &fWeights,
-                            Double_t learningRate,
-                            Double_t corruptionLevel,
-                            size_t fBatchSize);
-
+   static void
+   UpdateParams(TMatrixT<AReal> &x, TMatrixT<AReal> &tildeX, TMatrixT<AReal> &y,
+                TMatrixT<AReal> &z, TMatrixT<AReal> &fVBiases,
+                TMatrixT<AReal> &fHBiases, TMatrixT<AReal> &fWeights,
+                TMatrixT<AReal> &VBiasError, TMatrixT<AReal> &HBiasError,
+                AReal learningRate, size_t fBatchSize);
 
    // Softmax functions redifined
    static void SoftmaxAE(TMatrixT<AReal> & A);
@@ -285,9 +281,9 @@ public:
                             AReal corruptionLevel);
 
    //Encodes the input Values in the compressed form.
-   static void EncodeInput(TMatrixT<AReal> & input,
-                           TMatrixT<AReal> & compressedInput,
-                           TMatrixT<AReal> &fWeights);
+   static void EncodeInput(TMatrixT<AReal> &input,
+                           TMatrixT<AReal> &compressedInput,
+                           TMatrixT<AReal> &Weights);
 
    // reconstructs the input. The reconstructed Input has same dimensions as that
    // of the input.
@@ -308,13 +304,12 @@ public:
                                   TMatrixT<AReal> &fBiases,
                                   AReal learningRate,
                                   size_t fBatchSize);
-  
+
    static void Transform(TMatrixT<AReal> &input,
                          TMatrixT<AReal> &transformed,
                          TMatrixT<AReal> &fWeights,
                          TMatrixT<AReal> &fBiases);
 
-   
 };
 
 } // namespace DNN

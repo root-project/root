@@ -18,9 +18,10 @@
 #ifndef TMVA_SDAE_H
 #define TMVA_SDAE_H
 
-#include "TMatrix.h"
-#include "TMVA/DNN/Functions.h"
+#include "AE.h"
 #include "DenoiseAE.h"
+#include "TMVA/DNN/Functions.h"
+#include "TMatrix.h"
 
 #include <cmath>
 #include <iostream>
@@ -41,10 +42,12 @@ namespace DAE
 
 template<typename Architecture_t>
 class LogisticRegressionLayer
-
 {
 
 public:
+  using Matrix_t = typename Architecture_t::Matrix_t;
+  using Scalar_t = typename Architecture_t::Scalar_t;
+
   size_t fBatchSize;
   size_t fInputUnits;
   size_t fOutputUnits;
@@ -59,53 +62,45 @@ public:
   Matrix_t & GetWeights() {return fWeights;}
   const Matrix_t & GetBiases() const {return fBiases;}
   Matrix_t & GetBiases() {return fBiases;}
+  void Initialize(EInitialization m);
   void TrainLogReg(Matrix_t &input, Matrix_t &output, Double_t learningRate);
-  void PredictLogReg(Matrix_t &input, Matrix_t &output);
-
+  void PredictLogReg(Matrix_t &input, Matrix_t &outputLabel,
+                     Double_t learningRate);
 };
 
-
-template<Architecture_t>
-LogisticRegressionLayer<Architecture_t>::LogisticRegressionLayer(size_t batchSize,
-                                                       size_t inputUnits,
-                                                       size_t outputUnits):
-                                                       fBatchSize(batchSize),
-                                                       fInputUnits(inputUnits),
-                                                       fOutputUnits(outputUnits),
-                                                       fWeights(outputUnits, inputUnits),
-                                                       fBiases(outputUnits,1)
-{
-
+template <typename Architecture_t>
+LogisticRegressionLayer<Architecture_t>::LogisticRegressionLayer(
+    size_t batchSize, size_t inputUnits, size_t outputUnits)
+    : fBatchSize(batchSize), fInputUnits(inputUnits), fOutputUnits(outputUnits),
+      fWeights(outputUnits, inputUnits), fBiases(outputUnits, 1) {}
+//______________________________________________________________________________
+template <typename Architecture_t>
+LogisticRegressionLayer<Architecture_t>::LogisticRegressionLayer(
+    const LogisticRegressionLayer &logistic)
+    : fBatchSize(logistic.fBatchSize), fInputUnits(logistic.fInputUnits),
+      fOutputUnits(logistic.fOutputUnits),
+      fWeights(logistic.fOutputUnits, logistic.fInputUnits),
+      fBiases(logistic.fOutputUnits, 1) {
+  Architecture_t::Copy(fWeights, logistic.GetWeights());
+  Architecture_t::Copy(fBiases, logistic.GetBiases());
 }
 //______________________________________________________________________________
-template<Architecture_t>
-LogisticRegressionLayer<Architecture_t>::LogisticRegressionLayer(const LogisticRegression &log)
-                                    :fBatchSize(log.fBatchSize),
-                                    fInputUnits(log.fInputUnits),
-                                    fOutputUnits(log.fOutputUnits),
-                                    fWeights(log.fOutputUnits,log.fInputUnits),
-                                    fBiases(log.fOutputUnits,1)
-{
-  Architecture_t::Copy(fWeights, layer.GetWeights());
-  Architecture_t::Copy(fBiases, layer.GetBiases());
-}
-//______________________________________________________________________________
-template<typename Architecture_t>
-LogisticRegressionLayer<Architecture_t>::Initialize(EInitialization m)
--> void
-{
-   initialize<Architecture_t>(fWeights, EInitialization::kZero);
-   initialize<Architecture_t>(fBiases,  EInitialization::kZero);
+template <typename Architecture_t>
+auto LogisticRegressionLayer<Architecture_t>::Initialize(EInitialization m)
+    -> void {
+  initialize<Architecture_t>(fWeights, EInitialization::kZero);
+  initialize<Architecture_t>(fBiases, EInitialization::kZero);
 }
 
 //______________________________________________________________________________
 
 //______________________________________________________________________________
 
-template<typename Architecture_t>
-LogisticRegressionLayer<Architecture_t>::TrainLogReg(Matrix_t &input, Matrix_t &output,Double_t learningRate)
--> void
-{
+template <typename Architecture_t>
+auto LogisticRegressionLayer<Architecture_t>::TrainLogReg(Matrix_t &input,
+                                                          Matrix_t &output,
+                                                          Double_t learningRate)
+    -> void {
   Matrix_t p(fOutputUnits,1);
   Matrix_t difference(fOutputUnits,1);
 
@@ -118,10 +113,9 @@ LogisticRegressionLayer<Architecture_t>::TrainLogReg(Matrix_t &input, Matrix_t &
 
 //______________________________________________________________________________
 
-template<typename Architecture_t>
-LogisticRegressionLayer<Architecture_t>::PredictLogReg(Matrix_t &input, Matrix_t &outputLabel,Double_t learningRate)
--> void
-{
+template <typename Architecture_t>
+auto LogisticRegressionLayer<Architecture_t>::PredictLogReg(
+    Matrix_t &input, Matrix_t &output, Double_t learningRate) -> void {
   Architecture_t::ForwardLogReg(input,output,fWeights);
   Architecture_t::SoftmaxAE(output);
 }
@@ -143,6 +137,9 @@ template<typename Architecture_t>
 class TransformLayer
 {
 public:
+  using Matrix_t = typename Architecture_t::Matrix_t;
+  using Scalar_t = typename Architecture_t::Scalar_t;
+
   size_t fBatchSize;
   size_t fInputUnits;
   size_t fOutputUnits;
@@ -150,7 +147,7 @@ public:
   Matrix_t fBiases;
   TransformLayer(size_t BatchSize, size_t InputUnits, size_t OutputUnits);
   TransformLayer(const TransformLayer &);
-  void Transform(Matrix_t &input, Matrix_t &fWeights, Matrix_t fBiases);
+  void Transform(Matrix_t &input, Matrix_t &transformed);
   size_t GetBatchSize()                       const {return fBatchSize;}
   size_t GetInputUnits()                      const {return fInputUnits;}
   size_t GetOutputUnits()                     const {return fOutputUnits;}
@@ -193,10 +190,9 @@ TransformLayer<Architecture_t>::TransformLayer(const TransformLayer &trans):
 
 //_____________________________________________________________________________
 
-template<typename Architecture_t>
-TransformLayer<Architecture_t>::Transform(Matrix_t &input, Matrix_t &transformed)
--> void
-{
+template <typename Architecture_t>
+auto TransformLayer<Architecture_t>::Transform(Matrix_t &input,
+                                               Matrix_t &transformed) -> void {
   Architecture_t::Transform(input,transformed,fWeights,fBiases);
   Architecture_t::Sigmoid(transformed);
 }
@@ -213,13 +209,16 @@ template<typename Architecture_t>
 class TSDAE
 {
 public:
+  using Matrix_t = typename Architecture_t::Matrix_t;
+  using Scalar_t = typename Architecture_t::Scalar_t;
+
   size_t fBatchSize;
   size_t fInputUnits;
   size_t fOutputUnits;
   size_t fNumHiddenLayers;
-  std::vector<TDAE> fDae;
-  std::vector<TransformLayer> fTransLayer;
-  std::vector<LogisticRegressionLayer>fLogReg;
+  std::vector<DAE<Architecture_t>> fDae;
+  std::vector<TransformLayer<Architecture_t>> fTransLayer;
+  std::vector<LogisticRegressionLayer<Architecture_t>> fLogReg;
   std::vector<size_t> fNumHiddenUnitsPerLayer;
 
 
@@ -228,7 +227,9 @@ public:
 
   TSDAE(const TSDAE &);
   void Pretrain(Matrix_t &input, Double_t learningRate, Double_t corruptionLevel, size_t epochs);
-  void Finetune(Matrix_t &input, Matrix_t &outputLabel, Double_t learningRate, Int_t epochs);
+  void Finetune(Matrix_t &input, Matrix_t &outputLabel, Double_t learningRate,
+                size_t epochs);
+  void Predict(Matrix_t &input, Matrix_t &output);
 };
 
 //______________________________________________________________________________
@@ -243,31 +244,28 @@ TSDAE<Architecture_t>::TSDAE(size_t batchSize, size_t inputUnits,
                              fNumHiddenUnitsPerLayer(numHiddenUnitsPerLayer)
 {
 
-std::vector<TDAE>fDae(fNumHiddenLayers);
+  std::vector<DAE<Architecture_t>> fDae(fNumHiddenLayers);
 
-std::vector<TransformLayer>fTransLayer(fNumHiddenLayers);
+  std::vector<TransformLayer<Architecture_t>> fTransLayer(fNumHiddenLayers);
 
-std::vector<LogisticRegression>fLogReg;
-//constructing multiple layers
-size_t inputSize;
-for(size_t i=0; i<fNumHiddenLayers;i++)
-{
-  if(i==0)
-  {
-    inputSize = fInputUnits;
-  }
-  else
-  {
-    inputSize = fNumHiddenUnitsPerLayer[i-1];
-  }
+  std::vector<LogisticRegressionLayer<Architecture_t>> fLogReg;
+  // constructing multiple layers
+  size_t inputSize;
+  for (size_t i = 0; i < fNumHiddenLayers; i++) {
+    if (i == 0) {
+      inputSize = fInputUnits;
+    } else {
+      inputSize = fNumHiddenUnitsPerLayer[i - 1];
+    }
 
-  //construct a transform layer and a denoise layer
-  fTransLayer[i] = new TransLayer(fBatchSize, inputSize,numHiddenUnitsPerLayer[i]);
-  fDae[i] = new TDAE(fBatchSize, inputSize, numHiddenUnitsPerLayer[i]);
-
+    // construct a transform layer and a denoise layer
+    fTransLayer[i] = new TransformLayer<Architecture_t>(
+        fBatchSize, inputSize, numHiddenUnitsPerLayer[i]);
+    fDae[i] = new DAE<Architecture_t>(fBatchSize, inputSize,
+                                      numHiddenUnitsPerLayer[i]);
 }
-fLogReg = new LogisticRegression(fBatchSize, fNumHiddenUnitsPerLayer[fNumHiddenLayers -1], fOutputUnits);
-
+fLogReg = new LogisticRegressionLayer<Architecture_t>(
+    fBatchSize, fNumHiddenUnitsPerLayer[fNumHiddenLayers - 1], fOutputUnits);
 }
 
 template<typename Architecture_t>
@@ -288,10 +286,10 @@ TSDAE<Architecture_t>::TSDAE(const TSDAE &sdae):
 // all inputs.
 //______________________________________________________________________________
 
-template<typename Architecture_t>
-TSDAE<Architecture_t>::Pretrain(Matrix_t &input, Double_t learningRate, Double_t corruptionLevel, size_t epochs)
--> void
-{
+template <typename Architecture_t>
+auto TSDAE<Architecture_t>::Pretrain(Matrix_t &input, Double_t learningRate,
+                                     Double_t corruptionLevel, size_t epochs)
+    -> void {
   size_t prevLayerSize;
   Matrix_t trainingInput(fInputUnits,1);
 
@@ -332,14 +330,21 @@ TSDAE<Architecture_t>::Pretrain(Matrix_t &input, Double_t learningRate, Double_t
             Matrix_t prevLayerInput(prevLayerSize,1);
             for(size_t j = 0; j<prevLayerSize; j++)
             {
+              Matrix_t
+                  layerInput; //**************************************************************************
               prevLayerInput(j,1)= layerInput(j,1);
             }
-
-            layerInput(fNumHiddenUnitsPerLayer[l-1],1);
+            // Matrix_t
+            // prevLayerInput;//**********************************************************************
+            Matrix_t layerInput(
+                fNumHiddenUnitsPerLayer[l - 1],
+                1); //************************************************
             fTransLayer[l-1]->Transform(prevLayerInput,layerInput);
           }
 
         }
+        Matrix_t
+            layerInput; //*******************************************************************************
         fDae[i]->TrainLayer(layerInput, learningRate, corruptionLevel);
       }
     }
@@ -353,9 +358,10 @@ TSDAE<Architecture_t>::Pretrain(Matrix_t &input, Double_t learningRate, Double_t
 // transform layer is passed as an input to Logistic Regression Layer for
 // supervised traing of network.
 //______________________________________________________________________________
-template<typename Architecture_t>
-TSDAE<Architecture_t>::Finetune(Matrix_t &input, Matrix_t &outputLabel, Double_t learningRate, Int_t epochs)
-{
+template <typename Architecture_t>
+auto TSDAE<Architecture_t>::Finetune(Matrix_t &input, Matrix_t &outputLabel,
+                                     Double_t learningRate, size_t epochs)
+    -> void {
 
   size_t prevLayerSize;
   Matrix_t trainingInput(fInputUnits,1);
@@ -390,15 +396,21 @@ TSDAE<Architecture_t>::Finetune(Matrix_t &input, Matrix_t &outputLabel, Double_t
           Matrix_t prevLayerInput(fNumHiddenUnitsPerLayer[i-1],1);
           for(size_t k=0; k<fNumHiddenUnitsPerLayer[i-1];k++)
           {
+            Matrix_t
+                layerInput; //*****************************************************************************************
             prevLayerInput(k,1)=layerInput(k,1);
           }
 
         }
+        Matrix_t
+            prevLayerInput; //******************************************************************************************
         Matrix_t layerInput(fNumHiddenUnitsPerLayer[i],1);
         fTransLayer[i]->Transform(prevLayerInput,layerInput);
 
 
       }
+      Matrix_t
+          layerInput; //**********************************************************************************************
       fLogReg->TrainLogReg(layerInput, trainingOutputLabel, learningRate);
     }
   }
@@ -406,9 +418,8 @@ TSDAE<Architecture_t>::Finetune(Matrix_t &input, Matrix_t &outputLabel, Double_t
 }
 
 //______________________________________________________________________________
-template<typename Architecture_t>
-TSDAE<Architecture_t>::Predict(Matrix_t &input, Matrix_t &output)
-{
+template <typename Architecture_t>
+auto TSDAE<Architecture_t>::Predict(Matrix_t &input, Matrix_t &output) -> void {
 
   Matrix_t prevLayerInput(fInputUnits,1);
   for(size_t j=0;j<fInputUnits;j++)
@@ -419,33 +430,30 @@ TSDAE<Architecture_t>::Predict(Matrix_t &input, Matrix_t &output)
   for (size_t i = 0; i<fNumHiddenLayers; i++)
   {
 
-    Matrix_t layerInput(TransformLayer[i]->fOutputUnits,1);
-    for(size_t k=0; k<TransformLayer[i]->fOutputUnits;k++)
-    {
+    Matrix_t layerInput(fTransLayer[i]->fOutputUnits, 1);
+    for (size_t k = 0; k < fTransLayer[i]->fOutputUnits; k++) {
       output=0.0;
-      for(size_t j=0; j<TransformLayer[i]->fInputUnits;j++)
-      {
-        output+= TransformLayer[i]->fWeights(k,j) * prevLayerInput(j,1);
-
+      for (size_t j = 0; j < fTransLayer[i]->fInputUnits; j++) {
+        output += fTransLayer[i]->fWeights(k, j) * prevLayerInput(j, 1);
       }
-      output += TransformLayer[i]->fBiases(k,1);
+      output += fTransLayer[i]->fBiases(k, 1);
       layerInput(k,1) = output;
     }
     Architecture_t::Sigmoid(layerInput);
     if(i<fNumHiddenLayers-1)
     {
-      Matrix_t prevLayerInput(TransformLayer[i]->fOutputUnits,1);
+      Matrix_t prevLayerInput(fTransLayer[i]->fOutputUnits, 1);
     }
   }
 
-  for(size_t i=0; i<LogisticRegressionLayer->fOutputUnits;i++)
-  {
+  for (size_t i = 0; i < fLogReg->fOutputUnits; i++) {
     output(i,1) = 0;
-    for(size_t j=0;j< LogisticRegressionLayer->fInputUnits;j++)
-    {
-      output(i,1)+=LogisticRegressionLayer->fWeights(i,j) * layerInput(j,1);
+    for (size_t j = 0; j < fLogReg->fInputUnits; j++) {
+      Matrix_t
+          layerInput; //**********************************************************************************************************
+      output(i, 1) += fLogReg->fWeights(i, j) * layerInput(j, 1);
     }
-    output(i,1) += LogisticRegressionLayer->fBiases(i,1);
+    output(i, 1) += fLogReg->fBiases(i, 1);
   }
 
   Architecture_t::SoftmaxAE(output);
