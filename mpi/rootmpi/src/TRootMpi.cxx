@@ -35,6 +35,10 @@ TRootMpi::TRootMpi(Int_t argc, Char_t **argv)
    fArgc = argc;
    fArgv = argv;
 
+#if PYTHONINTERP_FOUND
+   fPython = PYTHON_EXECUTABLE;
+#endif
+
    fCompile = kFALSE;
    InitHelp();
 }
@@ -140,13 +144,19 @@ Int_t TRootMpi::ProcessArgs()
          fMpirunParams += " " + fValgrind + " " + fValgrindParams +
                           Form(" --log-file=report-%s-%s.memcheck ", fArgv[fArgc - 1], "%p");
       }
+
       fMpirunParams += " ";
-      //       fMpirunParams += Form("%s/bin/%s",fRootSys,fArgv[0]);
-      fMpirunParams += Form("%s/bin/root -l -x -q", fRootSys);
-      fMpirunParams += " \"";
-      fMpirunParams += fArgv[fArgc - 1]; // macro file is the last
-      fMpirunParams += " \"";
-      fMpirunParams += sRootParams;
+      if (TString(fArgv[fArgc - 1]).EndsWith(".py")) {
+         fMpirunParams += fPython + " ";
+         fMpirunParams += fArgv[fArgc - 1]; // macro file is the last
+      } else {
+         fMpirunParams += Form("%s/bin/root -l -x -q", fRootSys);
+         fMpirunParams += " \"";
+         fMpirunParams += fArgv[fArgc - 1]; // macro file is the last
+         fMpirunParams += " \"";
+         fMpirunParams += sRootParams;
+      }
+
       fCompile = kFALSE;
    }
    return 0;
@@ -156,7 +166,6 @@ Int_t TRootMpi::ProcessArgs()
 Int_t TRootMpi::Compile()
 {
    auto cmd = fCompiler + " " + fCompilerParams;
-   //    std::cout << cmd << std::endl;
    return gSystem->Exec(cmd.Data());
 }
 
@@ -166,7 +175,6 @@ Int_t TRootMpi::Execute()
    auto cmd = fMpirun + " " + fMpirunParams;
    auto status = gSystem->Exec(cmd.Data());
 
-   //       std::cout<<std::endl<<"Return code="<<status<<std::endl<<std::endl;
    if (fCallValgrind)
       std::cout << "\nValgrind files " << Form(" report-%s-pid.memcheck ", fArgv[fArgc - 1]) << "must be generated."
                 << std::endl;
