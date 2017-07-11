@@ -4,9 +4,9 @@
 
 set(libname SpectrumPainter)
 
-ROOT_GENERATE_DICTIONARY(G__Spectrum2Painter *.h MODULE ${libname} LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM" DEPENDENCIES Graf Hist)
+ROOT_GENERATE_DICTIONARY(G__SpectrumPainter *.h MODULE ${libname} LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM" DEPENDENCIES Graf Hist)
 
 
-ROOT_LINKER_LIBRARY(${libname} *.cxx G__Spectrum2Painter.cxx DEPENDENCIES Graf Hist )
+ROOT_LINKER_LIBRARY(${libname} *.cxx G__SpectrumPainter.cxx DEPENDENCIES Graf Hist )
 ROOT_INSTALL_HEADERS()
 
