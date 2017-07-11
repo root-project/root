@@ -207,10 +207,11 @@ endmacro()
 
 #---------------------------------------------------------------------------------------------------
 #---ROOT_GENERATE_DICTIONARY( dictionary headerfiles MODULE module DEPENDENCIES dep1 dep2
+#                                                    BUILTINS dep1 dep2
 #                                                    STAGE1 LINKDEF linkdef OPTIONS opt1 opt2 ...)
 #---------------------------------------------------------------------------------------------------
 function(ROOT_GENERATE_DICTIONARY dictionary)
-  CMAKE_PARSE_ARGUMENTS(ARG "STAGE1;MULTIDICT;NOINSTALL" "MODULE" "LINKDEF;OPTIONS;DEPENDENCIES" ${ARGN})
+  CMAKE_PARSE_ARGUMENTS(ARG "STAGE1;MULTIDICT;NOINSTALL" "MODULE" "LINKDEF;OPTIONS;DEPENDENCIES;BUILTINS" ${ARGN})
 
   # Check if OPTIONS start with a dash.
   if (ARG_OPTIONS)
@@ -403,6 +404,14 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
       install(FILES ${pcm_name} ${rootmap_name}
                     DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries)
     endif()
+  endif()
+
+  if(ARG_BUILTINS)
+    foreach(arg1 ${ARG_BUILTINS})
+      if(${arg1}_TARGET)
+        add_dependencies(${dictname} ${${arg1}_TARGET})
+      endif()
+    endforeach()
   endif()
   # FIXME: Support mulptiple dictionaries. In some cases (libSMatrix and
   # libGenVector) we have to have two or more dictionaries (eg. for math,

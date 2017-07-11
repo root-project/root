@@ -3,7 +3,7 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-ROOT_GENERATE_DICTIONARY(G__HistFactory RooStats/HistFactory/*.h MODULE HistFactory LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM")
+ROOT_GENERATE_DICTIONARY(G__HistFactory RooStats/HistFactory/*.h MODULE HistFactory LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM" BUILTINS GSL)
 
 
 ROOT_GLOB_SOURCES(sources src/*.cxx)
