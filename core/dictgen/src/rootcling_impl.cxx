@@ -3218,7 +3218,7 @@ public:
    tempFileNamesCatalog(): m_size(0), m_emptyString("") {};
 
    std::string getTmpFileName(const std::string &filename) {
-      return filename + "_tmp";
+      return filename + "_tmp_" + std::to_string(getpid());
    }
    /////////////////////////////////////////////////////////////////////////////
    /// Adds the name and the associated temp name to the catalog.
