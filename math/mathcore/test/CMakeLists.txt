@@ -78,3 +78,6 @@ ROOT_ADD_GTEST(stressMathCoreUnit stress/testSMatrix.cxx stress/testGenVector.cx
         stress/testStat.cxx stress/testSVector.cxx stress/testVector.cxx stress/testVector34.cxx
         stress/TestHelper.cxx
         LIBRARIES Core MathCore Hist RIO Tree GenVector)
+
+ROOT_ADD_GTEST(TemplatedGradientUnit testTemplatedGradient.cxx
+       LIBRARIES Core MathCore Hist RIO Tree GenVector)
