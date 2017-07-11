@@ -413,51 +413,44 @@ if(builtin_afterimage)
 endif()
 
 #---Check for GSL library---------------------------------------------------------------
-if(builtin_gsl)
-  message(STATUS "Using builtin GSL")
-  unset(GSL_FOUND)
-  unset(GSL_FOUND CACHE)
-  set(gsl ON CACHE BOOL "" FORCE)
-elseif(mathmore)
+if(mathmore OR builtin_gsl)
   message(STATUS "Looking for GSL")
-  if(fail-on-missing)
-    find_package(GSL 1.10 REQUIRED)
-    if(NOT GSL_FOUND)
-      message(FATAL_ERROR "Could not find GSL.")
-    endif()
-  else()
+  if(NOT builtin_gsl)
     find_package(GSL 1.10)
     if(NOT GSL_FOUND)
-      message(STATUS "GSL not found, but mathmore support is enabled.")
-      message(STATUS "Using builtin GSL, since mathmore depends on it.")
-      set(gsl ON CACHE BOOL "" FORCE)
-      set(builtin_gsl ON CACHE BOOL "" FORCE)
+      if(fail-on-missing)
+        message(FATAL_ERROR "GSL package not found and 'mathmore' component if required ('fail-on-missing' enabled). "
+                            "Alternatively, you can enable the option 'builtin_gsl' to build the GSL libraries internally.")
+      else()
+        message(STATUS "GSL not found. Set variable GSL_DIR to point to your GSL installation")
+        message(STATUS "               Alternatively, you can also enable the option 'builtin_gsl' to build the GSL libraries internally'")
+        message(STATUS "               For the time being switching OFF 'mathmore' option")
+        set(mathmore OFF CACHE BOOL "" FORCE)
+      endif()
     endif()
+  else()
+    set(gsl_version 2.1)
+    message(STATUS "Downloading and building GSL version ${gsl_version}")
+    foreach(l gsl gslcblas)
+      list(APPEND GSL_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}${l}${CMAKE_STATIC_LIBRARY_SUFFIX})
+    endforeach()
+    ExternalProject_Add(
+      GSL
+      # http://mirror.switch.ch/ftp/mirror/gnu/gsl/gsl-${gsl_version}.tar.gz
+      URL ${lcgpackages}/gsl-${gsl_version}.tar.gz
+      INSTALL_DIR ${CMAKE_BINARY_DIR}
+      CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR>
+                        --libdir=<INSTALL_DIR>/lib
+                        --enable-shared=no
+                        CC=${CMAKE_C_COMPILER} CFLAGS=${CMAKE_C_FLAGS}
+      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
+      BUILD_BYPRODUCTS ${GSL_LIBRARIES}
+    )
+    set(GSL_TARGET GSL)
+    set(mathmore ON CACHE BOOL "" FORCE)
   endif()
 endif()
 
-if(gsl AND NOT GSL_FOUND)
-  set(gsl_version 2.1)
-  message(STATUS "Downloading and building GSL version ${gsl_version}")
-  foreach(l gsl gslcblas)
-    set(LIBNAME "${CMAKE_STATIC_LIBRARY_PREFIX}${l}${CMAKE_STATIC_LIBRARY_SUFFIX}")
-    list(APPEND GSL_LIBRARIES "${CMAKE_BINARY_DIR}/lib/${LIBNAME}")
-    unset(LIBNAME)
-  endforeach()
-  ExternalProject_Add(
-    GSL
-    # http://mirror.switch.ch/ftp/mirror/gnu/gsl/gsl-${gsl_version}.tar.gz
-    URL ${lcgpackages}/gsl-${gsl_version}.tar.gz
-    INSTALL_DIR ${CMAKE_BINARY_DIR}
-    CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR>
-                      CC=${CMAKE_C_COMPILER} CFLAGS=${CMAKE_C_FLAGS}
-                      --libdir=<INSTALL_DIR>/lib --enable-shared=no
-    LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
-    BUILD_BYPRODUCTS ${GSL_LIBRARIES}
-    )
-  set(GSL_TARGET GSL)
-  set(mathmore ON CACHE BOOL "" FORCE)
-endif()
 
 #---Check for Python installation-------------------------------------------------------
 if(python OR python3)
