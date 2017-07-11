@@ -240,7 +240,7 @@ auto testBackpropagationL2Regularization(typename Architecture::Scalar_t dx)
       {
          for (size_t j = 0; j < layer.GetInputWidth(); j++)
          {
-            auto f = [&net, &X, &Y, &weights, &W, l, i, j](Scalar_t x) {
+            auto f = [&net, &X, &Y, &weights, l, i, j](Scalar_t x) {
                return evaluate_net_weight(net, X, Y, weights, l, i, j, x);
             };
             Scalar_t dy     = finiteDifference(f, dx) / (2.0 * dx);
