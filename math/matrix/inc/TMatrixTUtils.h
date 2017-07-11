@@ -35,6 +35,8 @@
 
 #include "TMatrixTBase.h"
 
+#include <initializer_list>
+
 template<class Element> class TVectorT;
 template<class Element> class TMatrixT;
 template<class Element> class TMatrixTSym;
