@@ -578,7 +578,9 @@ public:
    {
       auto df = GetDataFrameChecked();
       unsigned int nSlots = df->GetNSlots();
-      auto bl = GetBranchNames<T>({branchName}, "get the values of the branch");
+      const ColumnNames_t &defBl = df->GetDefaultColumnNames();
+      const ColumnNames_t userColumns = branchName.empty() ? ColumnNames_t() : ColumnNames_t({std::string(branchName)});
+      const auto bl = TDFInternal::SelectColumns(1, userColumns, defBl);
       auto valuesPtr = std::make_shared<COLL>();
       using Helper_t = TDFInternal::TakeHelper<T, COLL>;
       using Action_t = TDFInternal::TAction<Helper_t, Proxied>;
