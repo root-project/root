@@ -13,6 +13,7 @@ namespace Mpi {
  */
 
 class TStatus;
+class TMpiMessage;
 class TRequest : public TObject {
    friend class TCommunicator;
    friend class TGrequest;
@@ -22,10 +23,16 @@ protected:
    std::function<void(void)> fCallback; // function use to unserialize objects
                                         // at wait or test of clear memory
    MPI_Request fRequest;                //
+
+#if PYTHON_FOUND
+   TMpiMessage *fPyMsg;
+   void SetMsg(TMpiMessage *msg);
+#endif
+
 public:
    TRequest();
    TRequest(const TRequest &obj);
-   virtual ~TRequest() {}
+   virtual ~TRequest();
    TRequest(MPI_Request r);
 
    TRequest &operator=(const TRequest &r);
@@ -77,6 +84,9 @@ public:
 
    virtual Bool_t GetStatus() const;
 
+#if PYTHON_FOUND
+   PyObject *GetMsg();
+#endif
    ClassDef(TRequest, 1)
 };
 

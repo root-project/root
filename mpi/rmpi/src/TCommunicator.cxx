@@ -5,6 +5,7 @@
 #include <iostream>
 #include <TSystem.h>
 #include <TROOT.h>
+
 using namespace ROOT::Mpi;
 
 //______________________________________________________________________________
@@ -417,6 +418,20 @@ PyObject *TCommunicator::Bcast(PyObject *obj, Int_t root)
    }
    Bcast(msg, root);
    return PyPickleLoads(msg);
+}
+
+TRequest TCommunicator::ISend(PyObject *obj, Int_t dest, Int_t tag)
+{
+   TMpiMessage msg(obj);
+   return ISend(msg, dest, tag);
+}
+
+TRequest TCommunicator::IRecv(Int_t source, Int_t tag)
+{
+   auto msg = new TMpiMessage();
+   auto req = IRecv(*msg, source, tag);
+   req.SetMsg(msg);
+   return req;
 }
 
 #endif
