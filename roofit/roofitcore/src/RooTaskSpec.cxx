@@ -90,13 +90,13 @@ void RooTaskSpec::_initialise (RooAbsOptTestStatistic* rats){
   // Check if nll is a AbsTestStatistic
   if (rats->numSimultaneous()==0){
     //    _set.add(_fill_task(0, rats));
-    Task thisTask = _fill_task(0, rats);
+    tasks.push_back(_fill_task(0, rats));
   }  else {
     for (Int_t i=0 ; i < rats->numSimultaneous() ; i++) {
       cout << "SimComponent #" << i << " = " ; 
       rats->simComponents()[i]->Print() ;
       RooAbsOptTestStatistic* comp = (RooAbsOptTestStatistic*) rats->simComponents()[i] ;
-      Task thisTask = _fill_task(i, comp);
+      tasks.push_back(_fill_task(i, comp));
     }
   }
 }

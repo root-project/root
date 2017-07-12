@@ -18,6 +18,7 @@
 
 #include "RooFit.h"
 #include <cstdlib>
+#include <list>
 #include <sstream>
 #include "RooMsgService.h"
 #include "RooNLLVar.h"
@@ -38,12 +39,7 @@ class RooTaskSpec {
     const char* name;
     Int_t entries;
   };
-  Task firsttask;
-  const RooArgList& list() const { return _set ; }
- protected:
-  RooListProxy _set ;
-  mutable TIterator* _setIter ;
-
+  std::list<Task> tasks;
  private:
   void _initialise(RooAbsOptTestStatistic* rats);
   Task _fill_task(const Int_t n, RooAbsOptTestStatistic* rats);
