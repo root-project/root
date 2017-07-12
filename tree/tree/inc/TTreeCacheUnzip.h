@@ -32,6 +32,7 @@
 #ifdef R__USE_IMT
 #include "tbb/task.h"
 #include "tbb/queuing_rw_mutex.h"
+#include <atomic>
 #include <mutex>
 //#include <shared_mutex>
 #include <thread>
@@ -81,7 +82,7 @@ protected:
    // Unzipping related members
    Int_t      *fUnzipLen;         ///<! [fNseek] Length of the unzipped buffers
    char      **fUnzipChunks;      ///<! [fNseek] Individual unzipped chunks. Their summed size is kept under control.
-   Byte_t     *fUnzipStatus;      ///<! [fNSeek] 
+   std::atomic<Byte_t>     *fUnzipStatus;      ///<! [fNSeek] 
    Long64_t    fTotalUnzipBytes;  ///<! The total sum of the currently unzipped blks
 
    Int_t       fNseekMax;         ///<!  fNseek can change so we need to know its max size
@@ -139,10 +140,9 @@ public:
    virtual Int_t  SetBufferSize(Int_t buffersize);
    void           SetUnzipBufferSize(Long64_t bufferSize);
    static void    SetUnzipRelBufferSize(Float_t relbufferSize);
-   Int_t          UnzipBufferTBB(char **dest, char *src);
    Int_t          UnzipBuffer(char **dest, char *src);
-   Int_t          UnzipCache(Int_t &startindex, Int_t &locbuffsz, char *&locbuff);
-   Int_t          UnzipCacheTBB();
+   Int_t          UnzipCache(Int_t index, Int_t &locbuffsz, char *&locbuff);
+   Int_t          CreateTasks();
 
    // Methods to get stats
    Int_t  GetNUnzip() { return fNUnzip; }

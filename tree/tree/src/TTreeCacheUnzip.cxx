@@ -324,7 +324,7 @@ Bool_t TTreeCacheUnzip::FillBuffer()
       // Now fix the size of the status arrays
       ResetCache();
       fIsLearning = kFALSE;
-      UnzipCacheTBB();
+      CreateTasks();
 
 //   }
 
@@ -561,11 +561,8 @@ void TTreeCacheUnzip::ResetCache()
       if (gDebug > 0)
          Info("ResetCache", "Changing fNseekMax from:%d to:%d", fNseekMax, fNseek);
 
-      Byte_t *aUnzipStatus = new Byte_t[fNseek];
-      memset(aUnzipStatus, 0, fNseek*sizeof(Byte_t));
-
-      tbb::task **aUnzipTasks = new tbb::task *[fNseek];
-      memset(aUnzipTasks, 0, fNseek*sizeof(tbb::task*));
+      std::atomic<Byte_t> *aUnzipStatus = new std::atomic<Byte_t>[fNseek];
+      memset(aUnzipStatus, 0, fNseek*sizeof(std::atomic<Byte_t>));
 
       Int_t *aUnzipLen = new Int_t[fNseek];
       memset(aUnzipLen, 0, fNseek*sizeof(Int_t));
@@ -605,77 +602,17 @@ public:
    }
 
    tbb::task* execute() {
-      Int_t myCycle;
-      const Int_t hlen=128;
-      Int_t objlen=0, keylen=0;
-      Int_t nbytes=0;
-      Int_t readbuf = 0;
+      Byte_t oldV = 0;
+      Byte_t newV = 1;
+      if(cache->fUnzipStatus[reqi].compare_exchange_weak(oldV, newV, std::memory_order_release, std::memory_order_relaxed)) {
+         Int_t locbuffsz = 16384;
+         char *locbuff = new char[16384];
+         Int_t res = cache->UnzipCache(reqi, locbuffsz, locbuff);
+         if(res)
+            if (gDebug > 0)
+               Info("UnzipCache", "Unzipping failed or cache is in learning state");
 
-      Long64_t rdoffs = 0;
-      Int_t rdlen = 0;
 
-      // To synchronize with the 'paging'
-      myCycle = cache->fCycle;
-      rdoffs = cache->fSeek[reqi];
-      rdlen = cache->fSeekLen[reqi];
-
-      Int_t locbuffsz = 16384;
-      char *locbuff = new char[16384];
-
-      Int_t loc = -1;
-      if (!cache->fNseek || cache->fIsLearning) {
-         return nullptr;
-      }
-      // Prepare a static tmp buf of adequate size
-      if(locbuffsz < rdlen) {
-         if (locbuff) delete [] locbuff;
-         locbuffsz = rdlen;
-         locbuff = new char[locbuffsz];
-         //memset(locbuff, 0, locbuffsz);
-      } else if(locbuffsz > rdlen*3) {
-         if (locbuff) delete [] locbuff;
-         locbuffsz = rdlen*2;
-         locbuff = new char[locbuffsz];
-         //memset(locbuff, 0, locbuffsz);
-      }
-      readbuf = cache->ReadBufferExt(locbuff, rdoffs, rdlen, loc);
-
-      if ( (myCycle != cache->fCycle) || !cache->fIsTransferred )  {
-         cache->fUnzipChunks[reqi] = 0;
-         cache->fUnzipLen[reqi] = 0;
-         return nullptr;
-      }
-
-      if (readbuf <= 0) {
-         cache->fUnzipChunks[reqi] = 0;
-         cache->fUnzipLen[reqi] = 0;
-         return nullptr;
-      }
-
-      cache->GetRecordHeader(locbuff, hlen, nbytes, objlen, keylen);
-//            Int_t len = (objlen > nbytes-keylen)? keylen+objlen : nbytes;
-
-      // Unzip it into a new blk
-      char *ptr = 0;
-      Int_t loclen = 0;
-      loclen = cache->UnzipBufferTBB(&ptr, locbuff);
-      if ((loclen > 0) && (loclen == objlen+keylen)) {
-         if ( (myCycle != cache->fCycle)  || !cache->fIsTransferred) {
-            if(ptr) delete [] ptr; // Previously it deletes ptr without verifying ptr. It causes double free memory. Need more examination.
-            cache->fUnzipChunks[reqi] = 0;
-            cache->fUnzipLen[reqi] = 0;
-
-            return nullptr;
-         }
-
-         cache->fUnzipChunks[reqi] = ptr;
-         cache->fUnzipLen[reqi] = loclen;
-
-         cache->fNUnzip++;
-      }
-      else {
-         cache->fUnzipChunks[reqi] = 0;
-         cache->fUnzipLen[reqi] = 0;
       }
       return nullptr;
    }
@@ -719,7 +656,104 @@ public:
    }
 };
 */
-Int_t TTreeCacheUnzip::UnzipCacheTBB()
+
+Int_t TTreeCacheUnzip::UnzipCache(Int_t reqi, Int_t &locbuffsz, char *&locbuff)
+{
+   Int_t myCycle;
+   const Int_t hlen=128;
+   Int_t objlen=0, keylen=0;
+   Int_t nbytes=0;
+   Int_t readbuf = 0;
+
+   Long64_t rdoffs = 0;
+   Int_t rdlen = 0;
+
+   // To synchronize with the 'paging'
+   myCycle = fCycle;
+   rdoffs = fSeek[reqi];
+   rdlen = fSeekLen[reqi];
+
+   Int_t loc = -1;
+   if (!fNseek || fIsLearning) {
+      return 1;
+   }
+   // Prepare a static tmp buf of adequate size
+   if(locbuffsz < rdlen) {
+           if (locbuff) delete [] locbuff;
+           locbuffsz = rdlen;
+           locbuff = new char[locbuffsz];
+           //memset(locbuff, 0, locbuffsz);
+   } else if(locbuffsz > rdlen*3) {
+           if (locbuff) delete [] locbuff;
+           locbuffsz = rdlen*2;
+           locbuff = new char[locbuffsz];
+           //memset(locbuff, 0, locbuffsz);
+   }
+   readbuf = ReadBufferExt(locbuff, rdoffs, rdlen, loc);
+
+   if ( (myCycle != fCycle) || !fIsTransferred )  {
+           fUnzipStatus[reqi] = 2; // Set it as not done
+           fUnzipChunks[reqi] = 0;
+           fUnzipLen[reqi] = 0;
+           return 1;
+   }
+
+   if (readbuf <= 0) {
+           fUnzipStatus[reqi] = 2; // Set it as not done
+           fUnzipChunks[reqi] = 0;
+           fUnzipLen[reqi] = 0;
+           return -1;
+   }
+
+   GetRecordHeader(locbuff, hlen, nbytes, objlen, keylen);
+
+   Int_t len = (objlen > nbytes-keylen)? keylen+objlen : nbytes;
+   // If the single unzipped chunk is really too big, reset it to not processable
+   // I.e. mark it as done but set the pointer to 0
+   // This block will be unzipped synchronously in the main thread
+   if (len > 4*fUnzipBufferSize) {
+
+           if (gDebug > 0)
+                   Info("UnzipCache", "Block %d is too big, skipping.", reqi);
+
+           fUnzipStatus[reqi] = 2; // Set it as done
+           fUnzipChunks[reqi] = 0;
+           fUnzipLen[reqi] = 0;
+
+           return 0;
+   }
+
+   // Unzip it into a new blk
+
+   char *ptr = 0;
+   Int_t loclen = UnzipBuffer(&ptr, locbuff);
+   if ((loclen > 0) && (loclen == objlen+keylen)) {
+           if ( (myCycle != fCycle)  || !fIsTransferred) {
+                   if(ptr) delete [] ptr; // Previously it deletes ptr without verifying ptr. It causes double free memory. Need more examination.
+
+                   fUnzipStatus[reqi] = 2; // Set it as not done
+                   fUnzipChunks[reqi] = 0;
+                   fUnzipLen[reqi] = 0;
+
+                   return 1;
+           }
+
+           fUnzipStatus[reqi] = 2;
+           fUnzipChunks[reqi] = ptr;
+           fUnzipLen[reqi] = loclen;
+
+           fNUnzip++;
+   }
+   else {
+           fUnzipStatus[reqi] = 2;
+           fUnzipChunks[reqi] = 0;
+           fUnzipLen[reqi] = 0;
+   }
+
+   return 0;
+}
+
+Int_t TTreeCacheUnzip::CreateTasks()
 {
    root = new(tbb::task::allocate_root()) tbb::empty_task;
 /*
@@ -766,131 +800,149 @@ Int_t TTreeCacheUnzip::GetUnzipBuffer(char **buf, Long64_t pos, Int_t len, Bool_
    {
 //      tbb::queuing_rw_mutex::scoped_lock lock (*fRWMutex, false);
 //      std::shared_lock<std::shared_mutex> lock(*fRWMutex);
-      Int_t myCycleTBB = fCycle;
+      Int_t myCycle = fCycle;
 
       if (fParallel && !fIsLearning) {
 
-	   if(fNseekMax < fNseek){
-		   if (gDebug > 0)
-			   Info("GetUnzipBuffer", "Changing fNseekMax from:%d to:%d", fNseekMax, fNseek);
+         if(fNseekMax < fNseek){
+            if (gDebug > 0)
+               Info("GetUnzipBuffer", "Changing fNseekMax from:%d to:%d", fNseekMax, fNseek);
 
-		   Byte_t *aUnzipStatus = new Byte_t[fNseek];
-		   memset(aUnzipStatus, 0, fNseek*sizeof(Byte_t));
+            std::atomic<Byte_t> *aUnzipStatus = new std::atomic<Byte_t>[fNseek];
+            memset(aUnzipStatus, 0, fNseek*sizeof(std::atomic<Byte_t>));
 
-		   tbb::task **aUnzipTasks = new tbb::task *[fNseek];
-		   memset(aUnzipTasks, 0, fNseek*sizeof(tbb::task));
+            Int_t *aUnzipLen = new Int_t[fNseek];
+            memset(aUnzipLen, 0, fNseek*sizeof(Int_t));
 
-		   Int_t *aUnzipLen = new Int_t[fNseek];
-		   memset(aUnzipLen, 0, fNseek*sizeof(Int_t));
+            char **aUnzipChunks = new char *[fNseek];
+            memset(aUnzipChunks, 0, fNseek*sizeof(char *));
 
-		   char **aUnzipChunks = new char *[fNseek];
-		   memset(aUnzipChunks, 0, fNseek*sizeof(char *));
+            for (Int_t i = 0; i < fNseekMax; i++) {
+               Byte_t tmp = fUnzipStatus[i];
+               aUnzipStatus[i] = tmp;
+               aUnzipLen[i] = fUnzipLen[i];
+               aUnzipChunks[i] = fUnzipChunks[i];
+            }
 
-		   for (Int_t i = 0; i < fNseekMax; i++) {
-			   aUnzipStatus[i] = fUnzipStatus[i];
-			   aUnzipLen[i] = fUnzipLen[i];
-			   aUnzipChunks[i] = fUnzipChunks[i];
-		   }
+            if (fUnzipStatus) delete [] fUnzipStatus;
+            if (fUnzipLen) delete [] fUnzipLen;
+            if (fUnzipChunks) delete [] fUnzipChunks;
 
-		   if (fUnzipStatus) delete [] fUnzipStatus;
-		   if (fUnzipLen) delete [] fUnzipLen;
-		   if (fUnzipChunks) delete [] fUnzipChunks;
+            fUnzipStatus = aUnzipStatus;
+            fUnzipLen  = aUnzipLen;
+            fUnzipChunks = aUnzipChunks;
 
-		   fUnzipStatus  = aUnzipStatus;
-		   fUnzipLen  = aUnzipLen;
-		   fUnzipChunks = aUnzipChunks;
+            fNseekMax  = fNseek;
+         }
 
-		   fNseekMax  = fNseek;
-	   }
+         loc = (Int_t)TMath::BinarySearch(fNseek,fSeekSort,pos);
+         if ( (fCycle == myCycle) && (loc >= 0) && (loc < fNseek) && (pos == fSeekSort[loc]) ) {
 
-	   loc = (Int_t)TMath::BinarySearch(fNseek,fSeekSort,pos);
-	   if ( (fCycle == myCycleTBB) && (loc >= 0) && (loc < fNseek) && (pos == fSeekSort[loc]) ) {
+            // The buffer is, at minimum, in the file cache. We must know its index in the requests list
+            // In order to get its info
+            Int_t seekidx = fSeekIndex[loc];
 
-		   // The buffer is, at minimum, in the file cache. We must know its index in the requests list
-		   // In order to get its info
-		   Int_t seekidx = fSeekIndex[loc];
+            fLastReadPos = seekidx;
 
-		   fLastReadPos = seekidx;
+            do {
 
+               // If the block is ready we get it immediately.
+               // And also we don't have to alloc the blks. This is supposed to be
+               // the main thread of the app.
+               if ((fUnzipStatus[seekidx] == 2) && (fUnzipChunks[seekidx]) && (fUnzipLen[seekidx] > 0)) {
 
-		   // If the block is ready we get it immediately.
-		   // And also we don't have to alloc the blks. This is supposed to be
-		   // the main thread of the app.
-		   if ((fUnzipChunks[seekidx]) && (fUnzipLen[seekidx] > 0)) {
+                  //if (gDebug > 0)
+                  //   Info("GetUnzipBuffer", "++++++++++++++++++++ CacheHIT Block wanted: %d  len:%d req_len:%d fNseek:%d", seekidx, fUnzipLen[seekidx], len,  fNseek);
 
-			   //if (gDebug > 0)
-			   //   Info("GetUnzipBuffer", "++++++++++++++++++++ CacheHIT Block wanted: %d  len:%d req_len:%d fNseek:%d", seekidx, fUnzipLen[seekidx], len,  fNseek);
+                  if(!(*buf)) {
+                     *buf = fUnzipChunks[seekidx];
+                     fUnzipChunks[seekidx] = 0;
+                     fTotalUnzipBytes -= fUnzipLen[seekidx];
+                     *free = kTRUE;
+                  }
+                  else {
+                     memcpy(*buf, fUnzipChunks[seekidx], fUnzipLen[seekidx]);
+                     delete fUnzipChunks[seekidx];
+                     fTotalUnzipBytes -= fUnzipLen[seekidx];
+                     fUnzipChunks[seekidx] = 0;
+                     *free = kFALSE;
+                  }
 
-			   if(!(*buf)) {
-				   *buf = fUnzipChunks[seekidx];
-				   fUnzipChunks[seekidx] = 0;
-				   fTotalUnzipBytes -= fUnzipLen[seekidx];
-				   *free = kTRUE;
-			   }
-			   else {
-				   memcpy(*buf, fUnzipChunks[seekidx], fUnzipLen[seekidx]);
-				   delete fUnzipChunks[seekidx];
-				   fTotalUnzipBytes -= fUnzipLen[seekidx];
-				   fUnzipChunks[seekidx] = 0;
-				   *free = kFALSE;
-			   }
+                  fNFound++;
 
-			   fNFound++;
+                  return fUnzipLen[seekidx];
+               }
+               Int_t reqi = -1;
+               if (fUnzipStatus[seekidx] == 1) {
+                  for (Int_t i = 0; i < fNseek; ++i) {
+                     if (!fUnzipStatus[i]) {
+                        Byte_t oldV = 0;
+                        Byte_t newV = 1;
+                        if(fUnzipStatus[i].compare_exchange_weak(oldV, newV, std::memory_order_release, std::memory_order_relaxed)) {
+                           reqi = i;
+                           break;
+                        }
+                     }
+                  }
+                  if ( myCycle != fCycle ) {
+                     if (gDebug > 0)
+                        Info("GetUnzipBuffer", "Sudden paging Break!!! IsActiveThread(): %d, fNseek: %d, fIsLearning:%d",
+                             IsActiveThread(), fNseek, fIsLearning);
 
-			   return fUnzipLen[seekidx];
-		   }
-		   else {
-			   // This is a complete miss. We want to avoid the threads
-			   // to try unzipping this block in the future.
-			   //			   fUnzipStatus[seekidx] = 2;
-			   //			   fUnzipChunks[seekidx] = 0;
+                     fLastReadPos = 0;
 
-//			   res = UnzipCacheTBB();//##
-			   // Here the block is not pending. It could be done or aborted or not yet being processed.
-			   if ( (seekidx >= 0) && (fUnzipChunks[seekidx]) && (fUnzipLen[seekidx] > 0) ) {
+                     seekidx = -1;
+                     break;
+                  }
+               }
 
-				   //if (gDebug > 0)
-				   //   Info("GetUnzipBuffer", "++++++++++++++++++++ CacheLateHIT Block wanted: %d  len:%d fNseek:%d", seekidx, fUnzipLen[seekidx], fNseek);
+               Int_t locbuffsz = 16384;
+               char *locbuff = new char[16384];
 
-				   if(!(*buf)) {
-					   *buf = fUnzipChunks[seekidx];
-					   fUnzipChunks[seekidx] = 0;
-					   fTotalUnzipBytes -= fUnzipLen[seekidx];
-					   *free = kTRUE;
-				   }
-				   else {
-					   memcpy(*buf, fUnzipChunks[seekidx], fUnzipLen[seekidx]);
-					   delete fUnzipChunks[seekidx];
-					   fTotalUnzipBytes -= fUnzipLen[seekidx];
-					   fUnzipChunks[seekidx] = 0;
-					   *free = kFALSE;
-				   }
+               if (reqi >= 0)
+                  UnzipCache(reqi, locbuffsz, locbuff);
 
-				   fNStalls++;
+            } while (fUnzipStatus[seekidx] == 1);
 
-				   return fUnzipLen[seekidx];
-			   }
-			   else {
-				   // This is a complete miss. We want to avoid the threads
-				   // to try unzipping this block in the future.
-				   fUnzipChunks[seekidx] = 0;
+            //if (gDebug > 0)
+            //   Info("GetUnzipBuffer", "------- Block wanted: %d  status: %d len: %d chunk: %llx ", seekidx, fUnzipStatus[seekidx], fUnzipLen[seekidx], fUnzipChunks[seekidx]);
 
-//				   if ((fTotalUnzipBytes < fUnzipBufferSize) && fBlocksToGo)
-//					   SendUnzipStartSignal(kFALSE);
+            // Here the block is not pending. It could be done or aborted or not yet being processed.
+            if ( (seekidx >= 0) && (fUnzipStatus[seekidx] == 2) && (fUnzipChunks[seekidx]) && (fUnzipLen[seekidx] > 0) ) {
 
-				   //if (gDebug > 0)
-				   //   Info("GetUnzipBuffer", "++++++++++++++++++++ CacheMISS Block wanted: %d  len:%d fNseek:%d", seekidx, len, fNseek);
-			   }
+               //if (gDebug > 0)
+               //   Info("GetUnzipBuffer", "++++++++++++++++++++ CacheLateHIT Block wanted: %d  len:%d fNseek:%d", seekidx, fUnzipLen[seekidx], fNseek);
 
-			   //if (gDebug > 0)
-			   //   Info("GetUnzipBuffer", "++++++++++++++++++++ CacheMISS Block wanted: %d  len:%d fNseek:%d", seekidx, len, fNseek);
-		   }
+               if(!(*buf)) {
+                  *buf = fUnzipChunks[seekidx];
+                  fUnzipChunks[seekidx] = 0;
+                  fTotalUnzipBytes -= fUnzipLen[seekidx];
+                  *free = kTRUE;
+               }
+               else {
+                  memcpy(*buf, fUnzipChunks[seekidx], fUnzipLen[seekidx]);
+                  delete fUnzipChunks[seekidx];
+                  fTotalUnzipBytes -= fUnzipLen[seekidx];
+                  fUnzipChunks[seekidx] = 0;
+                  *free = kFALSE;
+               }
 
-	   } else {
-		   loc = -1;
-		   //fLastReadPos = 0;
-		   fIsTransferred = kFALSE;
-	   }
+               fNStalls++;
+
+               return fUnzipLen[seekidx];
+            }
+            else {
+               // This is a complete miss. We want to avoid the threads
+               // to try unzipping this block in the future.
+               fUnzipStatus[seekidx] = 2;
+               fUnzipChunks[seekidx] = 0;               
+            }
+
+         } else {
+            loc = -1;
+            //fLastReadPos = 0;
+            fIsTransferred = kFALSE;
+         }
 
       } else {
   	   // We need to reset it for new transferences...
@@ -900,15 +952,15 @@ Int_t TTreeCacheUnzip::GetUnzipBuffer(char **buf, Long64_t pos, Int_t len, Bool_
    } // end of lock scope
 
    if (len > fCompBufferSize) {
-	   delete [] fCompBuffer;
-	   fCompBuffer = new char[len];
-	   fCompBufferSize = len;
+      delete [] fCompBuffer;
+      fCompBuffer = new char[len];
+      fCompBufferSize = len;
    } else {
-	   if (fCompBufferSize > len*4) {
-		   delete [] fCompBuffer;
-		   fCompBuffer = new char[len*2];
-		   fCompBufferSize = len*2;
-	   }
+      if (fCompBufferSize > len*4) {
+         delete [] fCompBuffer;
+         fCompBuffer = new char[len*2];
+         fCompBufferSize = len*2;
+      }
    }
 
    {
@@ -925,7 +977,7 @@ Int_t TTreeCacheUnzip::GetUnzipBuffer(char **buf, Long64_t pos, Int_t len, Bool_
    } // end of lock scope
 
    if (!res) {
-      res = UnzipBufferTBB(buf, fCompBuffer);
+      res = UnzipBuffer(buf, fCompBuffer);
       *free = kTRUE;
    }
 
@@ -956,7 +1008,7 @@ void TTreeCacheUnzip::SetUnzipBufferSize(Long64_t bufferSize)
    fUnzipBufferSize = bufferSize;
 }
 
-Int_t TTreeCacheUnzip::UnzipBufferTBB(char **dest, char *src)
+Int_t TTreeCacheUnzip::UnzipBuffer(char **dest, char *src)
 {
    Int_t  uzlen = 0;
    Bool_t alloc = kFALSE;
