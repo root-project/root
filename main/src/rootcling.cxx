@@ -19,14 +19,12 @@ extern "C" {
    R__DLLEXPORT void usedToIdentifyRootClingByDlSym() {}
 }
 
+// force compiler to emit symbol for function above
+static void (*dlsymaddr)() = &usedToIdentifyRootClingByDlSym;
+
 int main(int argc, char **argv)
 {
-   // Force the emission of the symbol - the compiler cannot know that argv
-   // is always set.
-   if (!argv) {
-      auto dummyVal =  (int)(long)&usedToIdentifyRootClingByDlSym;
-      return dummyVal;
-   }
+   (void) dlsymaddr; // avoid unused variable warning
 
    ROOT::Internal::RootCling::DriverConfig config{};
 
