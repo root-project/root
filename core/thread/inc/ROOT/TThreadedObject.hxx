@@ -26,6 +26,8 @@
 #include "ROOT/TSpinMutex.hxx"
 #include "TROOT.h"
 
+class TH1;
+
 namespace ROOT {
 
    namespace Internal {
@@ -64,6 +66,29 @@ namespace ROOT {
                   clone = (T*)obj->Clone();
                }
                return clone;
+            }
+         };
+
+         template<class T, bool ISHISTO = std::is_base_of<TH1,T>::value>
+         struct DirCreator{
+            static std::vector<TDirectory*> Create(unsigned maxSlots) {
+               std::string dirName = "__TThreaded_dir_";
+               dirName += std::to_string(ROOT::Internal::TThreadedObjectUtils::GetTThreadedObjectIndex()) + "_";
+               std::vector<TDirectory*> dirs;
+               dirs.reserve(maxSlots);
+               for (unsigned i=0; i< maxSlots;++i) {
+                  auto dir = gROOT->mkdir((dirName+std::to_string(i)).c_str());
+                  dirs.emplace_back(dir);
+               }
+               return dirs;
+            }
+         };
+
+         template<class T>
+         struct DirCreator<T, true>{
+            static std::vector<TDirectory*> Create(unsigned maxSlots) {
+               std::vector<TDirectory*> dirs(maxSlots, nullptr);
+               return dirs;
             }
          };
 
@@ -114,13 +139,7 @@ namespace ROOT {
       template<class ...ARGS>
       TThreadedObject(ARGS&&... args): fObjPointers(fgMaxSlots, nullptr)
       {
-         fDirectories.reserve(fgMaxSlots);
-
-         std::string dirName = "__TThreaded_dir_";
-         dirName += std::to_string(ROOT::Internal::TThreadedObjectUtils::GetTThreadedObjectIndex()) + "_";
-         for (unsigned i=0; i< fgMaxSlots;++i) {
-            fDirectories.emplace_back(gROOT->mkdir((dirName+std::to_string(i)).c_str()));
-         }
+         fDirectories = Internal::TThreadedObjectUtils::DirCreator<T>::Create(fgMaxSlots);
 
          TDirectory::TContext ctxt(fDirectories[0]);
          fModel.reset(new T(std::forward<ARGS>(args)...));
