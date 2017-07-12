@@ -26,19 +26,28 @@
 #include "RooAddition.h"
 #include "RooAbsTestStatistic.h"
 
+class RooArgList;
+
 class RooTaskSpec {
  public:
-  //  RooTaskSpec(const Int_t _fit_case, const pdfName name,const Bool_t binned);
- RooTaskSpec(RooAbsOptTestStatistic* nll);
- RooTaskSpec(RooAbsReal* nll);
- // virtual TObject* clone(const char* newname) const { return new RooTaskSpec(*this,newname); }
- // virtual ~RooTaskSpec();
+  RooTaskSpec(RooAbsOptTestStatistic* nll);
+  RooTaskSpec(RooAbsReal* nll);
+  struct Task {
+    Int_t id;
+    Bool_t binned;
+    const char* name;
+    Int_t entries;
+  };
+  Task firsttask;
+  const RooArgList& list() const { return _set ; }
+ protected:
+  RooListProxy _set ;
+  mutable TIterator* _setIter ;
 
  private:
- void _initialise(RooAbsOptTestStatistic* rats);
- Int_t _fit_case;
- Bool_t _binned;
- // ClassDef(RooTaskSpec,0)
-};
+  void _initialise(RooAbsOptTestStatistic* rats);
+  Task _fill_task(const Int_t n, RooAbsOptTestStatistic* rats);
+  Int_t _fit_case;
 
+};
 #endif

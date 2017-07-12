@@ -60,6 +60,7 @@ RooTaskSpec::RooTaskSpec(RooAbsOptTestStatistic* nll){
   RooAbsOptTestStatistic* rats = dynamic_cast<RooAbsOptTestStatistic*>(nll) ;
   if (rats) {
     cout << " NLL is a RooAbsOptTestStatistic (Case 1)" << endl ;
+    rats->Print();
     _fit_case = 1;
     _initialise(rats);
   } else {
@@ -69,12 +70,13 @@ RooTaskSpec::RooTaskSpec(RooAbsOptTestStatistic* nll){
 
 RooTaskSpec::RooTaskSpec(RooAbsReal* nll){
   RooAddition* ra = dynamic_cast<RooAddition*>(nll) ;
+  ra->Print();
   if (ra) {
-    RooAbsOptTestStatistic* rats = dynamic_cast<RooAbsOptTestStatistic*>(ra->_set.at(0)) ;
+    RooAbsOptTestStatistic* rats = dynamic_cast<RooAbsOptTestStatistic*>(ra->list().at(0)) ;
     if (!rats) {
       cout << "ERROR: NLL is a RooAddition, but first element of addition is not a RooAbsOptTestStatistic!" << endl ;
       _fit_case = 0;
-      cout << "It is a "<<ra->_set.at(0)<<endl;
+      cout << "It is a "<<ra->list().at(0)<<endl;
     } else {
       _fit_case = 1;
       cout << "NLL is a RooAddition (Case 2), first element is a RooAbsOptTestStatistic" << endl ;
@@ -87,36 +89,36 @@ RooTaskSpec::RooTaskSpec(RooAbsReal* nll){
 void RooTaskSpec::_initialise (RooAbsOptTestStatistic* rats){
   // Check if nll is a AbsTestStatistic
   if (rats->numSimultaneous()==0){
-    cout << "RooAbsOptTestStatistic consists of a single component"<<endl;
-    cout << "probability model named " << rats->function().GetName();
-    Bool_t binned = rats->function().getAttribute("BinnedLikelihood") ;
-    cout << "binned variable retrieved as "<<binned<<endl;
-    _binned = binned;
-    if (binned) {
-      cout << "Binned Likelihood has probability model named " << rats->function().GetName()
-	   << " and a binned dataset with " << rats->data().numEntries()
-	   << " bins with a total event count of " << rats->data().sumEntries() << endl ;
-    } else {
-      cout << "Unbinned likelihood has probability density model named " << rats->function().GetName()
-	   << " and an dataset with " << rats->data().numEntries() << " events with a weight of " << rats->data().sumEntries() << endl ;
-    } return ;
-  }  
-  for (int i=0 ; i < rats->numSimultaneous() ; i++) {
-    cout << "SimComponent #" << i << " = " ; 
-    rats->simComponents()[i]->Print() ;
-    RooAbsOptTestStatistic* comp = (RooAbsOptTestStatistic*) rats->simComponents()[i] ;
-    Bool_t binned = comp->function().getAttribute("BinnedLikelihood") ;
-    _binned = binned;
-    if (binned) {
-      // In a dataset numEntries() will return the number of coordinates stored and sumEntries() will store the
-      // sum of the (user-defined) weights assumed to each of those coordinates
-      cout << "Binned Likelihood has probability model named " << comp->function().GetName()
-	   << " and a binned dataset with " << comp->data().numEntries()
-	   << " bins with a total event count of " << comp->data().sumEntries() << endl ;
-    } else {
-      cout << "Unbinned likelihood has probability density model named " << comp->function().GetName()
-	   << " and an dataset with " << comp->data().numEntries() << " events with a weight of " << comp->data().sumEntries() << endl ;
+    //    _set.add(_fill_task(0, rats));
+    Task thisTask = _fill_task(0, rats);
+  }  else {
+    for (Int_t i=0 ; i < rats->numSimultaneous() ; i++) {
+      cout << "SimComponent #" << i << " = " ; 
+      rats->simComponents()[i]->Print() ;
+      RooAbsOptTestStatistic* comp = (RooAbsOptTestStatistic*) rats->simComponents()[i] ;
+      Task thisTask = _fill_task(i, comp);
     }
   }
 }
- 
+
+RooTaskSpec::Task RooTaskSpec::_fill_task(Int_t n, RooAbsOptTestStatistic* rats){
+  Bool_t b = rats->function().getAttribute("BinnedLikelihood") ;
+  Task t;
+  t.id = n;
+  t.binned = b;
+  if (b) {
+    t.name = rats->function().GetName();
+    t.entries = rats->data().numEntries();
+    //   cout << "Binned Likelihood has probability model named " << rats->function().GetName()
+    //	 << " and a binned dataset with " << rats->data().numEntries()
+    //   << " bins with a total event count of " << rats->data().sumEntries() << endl ;
+  } else {
+    t.name = rats->function().GetName();
+    t.entries = rats->data().numEntries();
+
+    //    cout << "Unbinned likelihood has probability density model named " << rats->function().GetName()
+    //    << " and an dataset with " << rats->data().numEntries() 
+    //    << " events with a weight of " << rats->data().sumEntries() << endl ;
+  } return t;
+} 
+
