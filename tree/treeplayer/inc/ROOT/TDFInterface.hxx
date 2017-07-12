@@ -487,46 +487,46 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Execute a user-defined reduce operation on the values of a branch
+   /// \brief Execute a user-defined reduce operation on the values of a column.
    /// \tparam F The type of the reduce callable. Automatically deduced.
-   /// \tparam T The type of the branch to apply the reduction to. Automatically deduced.
+   /// \tparam T The type of the column to apply the reduction to. Automatically deduced.
    /// \param[in] f A callable with signature `T(T,T)`
-   /// \param[in] branchName The branch to be reduced. If omitted, the default branch is used instead.
+   /// \param[in] columnName The column to be reduced. If omitted, the first default column is used instead.
    ///
-   /// A reduction takes two values of a branch and merges them into one (e.g.
+   /// A reduction takes two values of a column and merges them into one (e.g.
    /// by summing them, taking the maximum, etc). This action performs the
-   /// specified reduction operation on all branch values, returning
+   /// specified reduction operation on all processed column values, returning
    /// a single value of the same type. The callable f must satisfy the general
    /// requirements of a *processing function* besides having signature `T(T,T)`
-   /// where `T` is the type of branch.
+   /// where `T` is the type of column columnName.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
    template <typename F, typename T = typename TTraits::CallableTraits<F>::ret_type>
-   TResultProxy<T> Reduce(F f, std::string_view branchName = {})
+   TResultProxy<T> Reduce(F f, std::string_view columnName = "")
    {
       static_assert(std::is_default_constructible<T>::value,
                     "reduce object cannot be default-constructed. Please provide an initialisation value (initValue)");
-      return Reduce(std::move(f), branchName, T());
+      return Reduce(std::move(f), columnName, T());
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Execute a user-defined reduce operation on the values of a branch
+   /// \brief Execute a user-defined reduce operation on the values of a column.
    /// \tparam F The type of the reduce callable. Automatically deduced.
-   /// \tparam T The type of the branch to apply the reduction to. Automatically deduced.
+   /// \tparam T The type of the column to apply the reduction to. Automatically deduced.
    /// \param[in] f A callable with signature `T(T,T)`
-   /// \param[in] branchName The branch to be reduced. If omitted, the default branch is used instead.
-   /// \param[in] initValue The reduced object is initialised to this value rather than being default-constructed
+   /// \param[in] columnName The column to be reduced. If omitted, the first default column is used instead.
+   /// \param[in] initValue The reduced object is initialised to this value rather than being default-constructed.
    ///
-   /// See the description of the other Reduce overload for more information.
+   /// See the description of the first Reduce overload for more information.
    template <typename F, typename T = typename TTraits::CallableTraits<F>::ret_type>
-   TResultProxy<T> Reduce(F f, std::string_view branchName, const T &initValue)
+   TResultProxy<T> Reduce(F f, std::string_view columnName, const T &initValue)
    {
       using arg_types = typename TTraits::CallableTraits<F>::arg_types;
       TDFInternal::CheckReduce(f, arg_types());
       auto df = GetDataFrameChecked();
       unsigned int nSlots = df->GetNSlots();
-      auto bl = GetBranchNames<T>({branchName}, "reduce branch values");
+      auto bl = GetBranchNames<T>({columnName}, "reduce branch values");
       auto redObjPtr = std::make_shared<T>(initValue);
       using Helper_t = TDFInternal::ReduceHelper<F, T>;
       using Action_t = typename TDFInternal::TAction<Helper_t, Proxied>;
