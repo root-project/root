@@ -72,6 +72,11 @@ namespace ROOT {
       /// The number of threads will be able to change calling the factory function again after the last
       /// remaining shared_ptr owning the object is destroyed or reasigned, which will trigger the destructor of the manager.
       std::shared_ptr<TPoolManager> GetPoolManager(UInt_t nThreads = 0);
+
+
+      /// Get the maximum number of logical CPUs available.
+      /// In case of having an affinity mask (TBB), return the logical CPU available to the current process in accordance with it.
+      Int_t GetMaxNThreadsAvailable();
    }
 }
 

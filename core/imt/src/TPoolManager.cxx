@@ -51,9 +51,13 @@ namespace ROOT {
          if (GetWP().expired()) {
             std::shared_ptr<TPoolManager> shared(new TPoolManager(nThreads));
             GetWP() = shared;
-            return GetWP().lock();
          }
          return GetWP().lock();
+      }
+
+      Int_t GetMaxNThreadsAvailable()
+      {
+         return tbb::task_scheduler_init::default_num_threads();
       }
    }
 }

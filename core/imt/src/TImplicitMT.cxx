@@ -80,6 +80,10 @@ extern "C" UInt_t ROOT_TImplicitMT_GetImplicitMTPoolSize()
    return ROOT::Internal::TPoolManager::GetPoolSize();
 };
 
+extern "C" UInt_t ROOT_TImplicitMT_GetAvailableThreads()
+{
+   return ROOT::Internal::GetMaxNThreadsAvailable();
+};
 
 extern "C" void ROOT_TImplicitMT_EnableParBranchProcessing()
 {

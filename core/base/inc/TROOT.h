@@ -73,7 +73,7 @@ namespace Internal {
       TParBranchProcessingRAII()  { EnableParBranchProcessing();  }
       ~TParBranchProcessingRAII() { DisableParBranchProcessing(); }
    };
-      
+
    // Manage parallel tree processing
    void EnableParTreeProcessing();
    void DisableParTreeProcessing();
@@ -95,6 +95,7 @@ namespace ROOT {
    void DisableImplicitMT();
    Bool_t IsImplicitMTEnabled();
    UInt_t GetImplicitMTPoolSize();
+   UInt_t GetAvailableThreads();
 }
 
 class TROOT : public TDirectory {

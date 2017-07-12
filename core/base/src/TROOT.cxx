@@ -577,6 +577,22 @@ namespace Internal {
 #endif
    }
 
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Returns the maximum number of threads the user can instantiate.
+   UInt_t GetAvailableThreads()
+   {
+#ifdef R__USE_IMT
+      static UInt_t (*sym)() = (UInt_t(*)())Internal::GetSymInLibImt("ROOT_TImplicitMT_GetAvailableThreads");
+      if (sym)
+         return sym();
+      else
+         return 0;
+#else
+      SysInfo_t s;
+      gSystem->GetSysInfo(&s);
+      return s.fCpus;
+#endif
+   }
 }
 
 TROOT *ROOT::Internal::gROOTLocal = ROOT::GetROOT();
