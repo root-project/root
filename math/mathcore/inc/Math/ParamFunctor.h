@@ -25,6 +25,7 @@
 //#ifndef __CINT__
 //#include <memory>
 
+#include "Rtypes.h"
 #include <functional>
 #include <vector>
 #include <iostream>
@@ -230,7 +231,7 @@ private:
 
    //    inline static T EvalConst(PObj & pobj,  F * f, const T *x, const double * p) {
    //       return ((*pobj).*f)((T*)x, (double*)p);
-         
+
    //    }
    // };
 
@@ -244,8 +245,6 @@ private:
    //    }
    // };
 
-
-   
 private :
    ParamMemFunHandler(const ParamMemFunHandler&); // Not implemented
    ParamMemFunHandler& operator=(const ParamMemFunHandler&); // Not implemented
