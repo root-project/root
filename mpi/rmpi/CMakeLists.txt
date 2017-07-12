@@ -8,6 +8,15 @@
 set(libname RMpi)
 include_directories(inc/)
 
+if(python OR python2 OR python3)
+    if(PYTHONLIBS_FOUND)
+        include_directories(${PYTHON_INCLUDE_DIRS})
+        ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -DPYTHON_FOUND)
+        add_definitions("-DPYTHON_FOUND" )
+    endif()
+endif()
+
+
 set(RMPI_HEADERS Mpi/TEnvironment.h
 		 Mpi/TMpiMessage.h
 		 Mpi/TCommunicator.h
@@ -28,10 +37,10 @@ set(RMPI_HEADERS Mpi/TEnvironment.h
 
 ROOT_GENERATE_DICTIONARY(G__RMpi ${RMPI_HEADERS} MODULE ${libname} LINKDEF LinkDef.h)
 
-if(${MPI_CXX_FOUND})
-ROOT_LINKER_LIBRARY(RMpi *.cxx G__RMpi.cxx LIBRARIES ${MPI_CXX_LIBRARIES} DEPENDENCIES Core Thread RIO Net Hist Tree)
+if(python OR python2 OR python3)
+    ROOT_LINKER_LIBRARY(RMpi *.cxx G__RMpi.cxx LIBRARIES ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES} ${PYTHON_LIBRARIES}  DEPENDENCIES Core Thread RIO Net Hist Tree)
 else()
-ROOT_LINKER_LIBRARY(RMpi *.cxx G__RMpi.cxx LIBRARIES ${MPI_C_LIBRARIES} DEPENDENCIES Core Thread RIO Net Hist Tree)
+    ROOT_LINKER_LIBRARY(RMpi *.cxx G__RMpi.cxx LIBRARIES ${MPI_C_LIBRARIES} ${MPI_CXX_LIBRARIES} DEPENDENCIES Core Thread RIO Net Hist Tree)
 endif()
 ROOT_INSTALL_HEADERS()
 

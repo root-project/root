@@ -57,6 +57,9 @@ TEnvironment::TEnvironment(Int_t level)
    } else {
       // TODO: added error handling here
    }
+#if PYTHON_FOUND
+   PyInit();
+#endif
 }
 
 //______________________________________________________________________________
@@ -95,6 +98,9 @@ TEnvironment::TEnvironment(Int_t argc, Char_t **argv, Int_t level)
    } else {
       // TODO: added error handling here
    }
+#if PYTHON_FOUND
+   PyInit();
+#endif
 }
 
 //______________________________________________________________________________
@@ -118,6 +124,9 @@ TEnvironment::~TEnvironment()
    if (!IsFinalized()) {
       Finalize();
    }
+#if PYTHON_FOUND
+   PyFinalize();
+#endif
 }
 
 //______________________________________________________________________________

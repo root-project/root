@@ -2,6 +2,10 @@
 #ifndef ROOT_Mpi_Globals
 #define ROOT_Mpi_Globals
 
+#if PYTHON_FOUND
+#include <Python.h> // Needs to support ROOTMpi on  PyROOT
+#endif
+
 #include <Rtypes.h>
 #include <TError.h>
 #include <TObject.h>
@@ -262,6 +266,13 @@ public:
    TMpiSignalHandler(ESignals signal, TEnvironment &env) : TSignalHandler(signal, kTRUE), fEnv(env) {}
    Bool_t Notify();
 };
+
+#if PYTHON_FOUND
+Bool_t PyInit();
+void PyFinalize();
+TString PyPickleDumps(const PyObject *obj);
+PyObject *PyPickleLoads(TString msg);
+#endif
 }
 }
 

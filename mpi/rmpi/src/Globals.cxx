@@ -168,5 +168,99 @@ Bool_t TMpiSignalHandler::Notify()
    }
    return kTRUE;
 }
+
+#if PYTHON_FOUND
+static PyObject *fModulePickle = NULL;
+static PyObject *fPickleDumps = NULL;
+static PyObject *fPickleLoads = NULL;
+static PyObject *fEval = NULL;
+
+Bool_t PyInit()
+{
+   Bool_t pyIsInitialized = Py_IsInitialized();
+   if (!pyIsInitialized) {
+      Py_Initialize();
+   }
+
+   auto fMain = PyImport_AddModule("__main__");
+   if (!fMain) {
+      // TODO:error handling here
+   }
+
+   auto fGlobalNS = PyModule_GetDict(fMain);
+   if (!fGlobalNS) {
+      // TODO:error handling here
+   }
+
+#if PY_MAJOR_VERSION < 3
+   // preparing objects for eval
+   auto bName = PyUnicode_FromString("__builtin__");
+   // Import the file as a Python module.
+   auto fModuleBuiltin = PyImport_Import(bName);
+   if (!fModuleBuiltin) {
+      // TODO:error handling here
+   }
+#else
+   // preparing objects for eval
+   auto bName = PyUnicode_FromString("builtins");
+   // Import the file as a Python module.
+   auto fModuleBuiltin = PyImport_Import(bName);
+   if (!fModuleBuiltin) {
+      // TODO:error handling here
+   }
+#endif
+
+   auto mDict = PyModule_GetDict(fModuleBuiltin);
+   fEval = PyDict_GetItemString(mDict, "eval");
+
+   Py_DECREF(bName);
+   Py_DECREF(mDict);
+   // preparing objects for pickle
+   auto pName = PyUnicode_FromString("pickle");
+   // Import the file as a Python module.
+   fModulePickle = PyImport_Import(pName);
+   if (!fModulePickle) {
+      // TODO:error handling here
+   }
+   auto pDict = PyModule_GetDict(fModulePickle);
+   fPickleDumps = PyDict_GetItemString(pDict, "dumps");
+   fPickleLoads = PyDict_GetItemString(pDict, "loads");
+
+   Py_DECREF(pName);
+   Py_DECREF(pDict);
+
+   return Py_IsInitialized();
+}
+
+void PyFinalize()
+{
+   Py_Finalize();
+   if (fEval) Py_DECREF(fEval);
+   if (fPickleDumps) Py_DECREF(fPickleDumps);
+   if (fPickleLoads) Py_DECREF(fPickleLoads);
+}
+
+TString PyPickleDumps(const PyObject *obj)
+{
+   PyObject *fPyObj = Py_BuildValue("(O)", obj);
+   PyObject *fPySerialString = PyObject_CallObject(fPickleDumps, fPyObj);
+
+   Long_t size = 0;
+   Char_t *fBuffer = NULL;
+#if PY_MAJOR_VERSION < 3
+   PyString_AsStringAndSize(fPySerialString, &fBuffer, &size);
+#else
+   PyBytes_AsStringAndSize(fPySerialString, &fBuffer, &size)
+#endif
+   return TString(fBuffer, size);
+}
+
+PyObject *PyPickleLoads(TString msg)
+{
+
+   auto fPyObj = Py_BuildValue("(s)", msg.Data());
+   return PyObject_CallObject(fPickleLoads, fPyObj);
+}
+#endif
 }
 }
