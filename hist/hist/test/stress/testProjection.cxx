@@ -205,16 +205,6 @@ private:
       p1Z.reset(new TProfile("p1Z", "pe1Z", binsizeZ, lower_limitZ, upper_limitZ));
    }
 
-   void DeleteHistograms()
-   {
-      // delete all histogram in gROOT
-      /*TList *l = gROOT->GetList();
-      TIter next(l);
-      TObject *obj = 0;
-      while ((obj = next()))
-         if (obj->InheritsFrom(TH1::Class())) delete obj;*/
-   }
-
 public:
    ProjectionTester()
    {
@@ -223,9 +213,6 @@ public:
    }
 
    void BuildWithWeights() { buildWithWeights = true; }
-
-
-   virtual ~ProjectionTester() { DeleteHistograms(); }
 
    void buildHistograms()
    {
