@@ -536,6 +536,20 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
+   /// \brief Execute a user-defined reduce operation on the values of the default branch.
+   /// \tparam F The type of the reduce callable. Automatically deduced.
+   /// \tparam T The type of the branch to apply the reduction to. Automatically deduced.
+   /// \param[in] f A callable with signature `T(T,T)`
+   /// \param[in] initValue The reduced object is initialised to this value rather than being default-constructed
+   ///
+   /// See the description of the first Reduce overload for more information.
+   template <typename F, typename T = typename TTraits::CallableTraits<F>::ret_type>
+   TResultProxy<T> Reduce(F f, const T &initValue)
+   {
+      return Reduce(std::move(f), "", initValue);
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
    /// \brief Return the number of entries processed (*lazy action*)
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
