@@ -272,19 +272,8 @@ $(PROOFEXECVO): CXXFLAGS += $(AUTHFLAGS) -I$(ROOT_SRCDIR)/net/rpdutils/res
 $(XPDO): $(XROOTDMAKE) $(XRDHDRS)
 $(XPDO): CXXFLAGS += $(XPDINCEXTRA) $(EXTRA_XRDFLAGS) -I$(ROOT_SRCDIR)/net/rpdutils/res
 
-ifneq ($(ICC_GE_9),)
-# remove when xrootd has moved from strstream.h -> sstream.
-$(XPDO): CXXFLAGS += -Wno-deprecated
-
-else
-
-ifneq ($(GCC_MAJOR),)
-ifneq ($(GCC_MAJOR),2)
-# remove when xrootd has moved from strstream.h -> sstream.
-$(XPDO): CXXFLAGS += -Wno-deprecated
-endif
-endif
-
+ifeq ($(ICC_MAJOR),)
+$(XPDO): CXXFLAGS += -Wno-nonnull-compare
 endif
 
 ifeq ($(PLATFORM),macosx)
