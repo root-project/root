@@ -30,3 +30,34 @@ TMpiMessage::TMpiMessage(Char_t *buffer, Int_t size) : TMessage(buffer, size)
 TMpiMessage::TMpiMessage(UInt_t what, Int_t bufsiz) : TMessage(what, bufsiz)
 {
 }
+
+#if PYTHON_FOUND
+
+//______________________________________________________________________________
+TMpiMessage::TMpiMessage(PyObject *obj)
+{
+   auto msg = PyPickleDumps(obj);
+   WriteObject(msg);
+   SetReadMode();
+   Reset();
+}
+
+//______________________________________________________________________________
+PyObject *TMpiMessage::ReadPyObject()
+{
+   auto msg = (TString *)ReadObjectAny(TString::Class());
+   auto PyObj = PyPickleLoads(*msg);
+   delete msg;
+   return PyObj;
+}
+
+//______________________________________________________________________________
+template <>
+void TMpiMessage::WriteObject<PyObject>(PyObject *obj)
+{
+   auto msg = PyPickleDumps(obj);
+   WriteObject(msg);
+   SetReadMode();
+   Reset();
+}
+#endif
