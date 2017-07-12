@@ -60,25 +60,32 @@ extern TRandom2 r;
 // set to zero if want to run different every time
 
 // Methods for histogram comparisions (later implemented)
-// TODO: avoid duplicating with unique_ptr/pass by reference
-void PrintResult(const char *msg, bool status);
 void FillVariableRange(Double_t v[numberOfBins + 1]);
 void FillHistograms(TH1D &h1, TH1D &h2, Double_t c1 = 1.0, Double_t c2 = 1.0);
 void FillProfiles(TProfile &p1, TProfile &p2, Double_t c1 = 1.0, Double_t c2 = 1.0);
 int Equals(const char *msg, TH1D &h1, TH1D &h2, int options = 0, double ERRORLIMIT = defaultErrorLimit);
-int Equals(const char *msg, std::unique_ptr<TH1D> &h1, std::unique_ptr<TH1D> &h2, int options = 0, double ERRORLIMIT = defaultErrorLimit);
 int Equals(const char *msg, TH2D &h1, TH2D &h2, int options = 0, double ERRORLIMIT = defaultErrorLimit);
-int Equals(const char *msg, std::unique_ptr<TH2D> &h1, std::unique_ptr<TH2D> &h2, int options = 0, double ERRORLIMIT = defaultErrorLimit);
 int Equals(const char *msg, TH3D &h1, TH3D &h2, int options = 0, double ERRORLIMIT = defaultErrorLimit);
-int Equals(const char *msg, std::unique_ptr<TH3D> &h1, std::unique_ptr<TH3D> &h2, int options = 0, double ERRORLIMIT = defaultErrorLimit);
 int Equals(const char *msg, THnBase &h1, THnBase &h2, int options = 0, double ERRORLIMIT = defaultErrorLimit);
-int Equals(const char *msg, std::unique_ptr<THnBase> &h1, std::unique_ptr<THnBase> &h2, int options = 0, double ERRORLIMIT = defaultErrorLimit);
 int Equals(const char *msg, THnBase &h1, TH1 &h2, int options = 0, double ERRORLIMIT = defaultErrorLimit);
-int Equals(const char *msg, std::unique_ptr<THnBase> &h1, std::unique_ptr<TH1> &h2, int options = 0, double ERRORLIMIT = defaultErrorLimit);
-int Equals(const char *msg, std::unique_ptr<TProfile2D> &h1, std::unique_ptr<TProfile2D> &h2, int options = 0, double ERRORLIMIT = defaultErrorLimit);
-int Equals(const char *msg, std::unique_ptr<TProfile> &h1, std::unique_ptr<TH1D> &h2, int options = 0, double ERRORLIMIT = defaultErrorLimit);
-int Equals(const char *msg, std::unique_ptr<TProfile> &h1, std::unique_ptr<TProfile> &h2, int options = 0, double ERRORLIMIT = defaultErrorLimit);
-int Equals(const char *msg, std::unique_ptr<TProfile2D> &h1, std::unique_ptr<TH2D> &h2, int options = 0, double ERRORLIMIT = defaultErrorLimit);
+
+template<typename T, typename U>
+int Equals(const char *msg, std::unique_ptr<T> &h1, std::unique_ptr<U> &h2, int options = 0, double ERRORLIMIT = defaultErrorLimit)
+{
+   return Equals(msg, *h1.get(), *h2.get(), options, ERRORLIMIT);
+};
+
+template<typename T, typename U>
+::testing::AssertionResult HistogramsEquals(T &h1, U &h2, int options = 0, double ERRORLIMIT = defaultErrorLimit)
+{
+   int differences = Equals("", h1, h2, options, ERRORLIMIT);
+   if (differences > 0) {
+      return ::testing::AssertionFailure() << "Histograms has " << differences << " differences";
+   } else {
+      return ::testing::AssertionSuccess();
+   }
+}
+
 int Equals(Double_t n1, Double_t n2, double ERRORLIMIT = defaultErrorLimit);
 int CompareStatistics(TH1 &h1, TH1 &h2, bool debug, double ERRORLIMIT = defaultErrorLimit);
 std::ostream &operator<<(std::ostream &out, TH1D &h);
@@ -91,14 +98,5 @@ double gaus3d(const double *x, const double *p);
 
 bool operator==(ROOT::Fit::BinData &bd1, ROOT::Fit::BinData &bd2);
 bool operator==(ROOT::Fit::SparseData &sd1, ROOT::Fit::SparseData &sd2);
-
-// TODO: Generalize this
-::testing::AssertionResult HistogramsEquals(TH2D &h1, TH2D &h2, int options = 0, double ERRORLIMIT = defaultErrorLimit);
-::testing::AssertionResult HistogramsEquals(TH1D &h1, TH1D &h2, int options = 0, double ERRORLIMIT = defaultErrorLimit);
-::testing::AssertionResult HistogramsEquals(TH3D &h1, TH3D &h2, int options = 0, double ERRORLIMIT = defaultErrorLimit);
-::testing::AssertionResult HistogramsEquals(THnBase &h1, THnBase &h2, int options = 0,
-                                            double ERRORLIMIT = defaultErrorLimit);
-::testing::AssertionResult HistogramsEquals(THnBase &h1, TH1 &h2, int options = 0,
-                                            double ERRORLIMIT = defaultErrorLimit);
 
 #endif // ROOT_STRESSHISTOGRAMGLOBAL_H

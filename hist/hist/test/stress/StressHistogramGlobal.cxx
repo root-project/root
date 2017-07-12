@@ -221,56 +221,6 @@ int Equals(const char *msg, TH3D &h1, TH3D &h2, int options, double ERRORLIMIT)
    return differents;
 }
 
-::testing::AssertionResult HistogramsEquals(TH2D &h1, TH2D &h2, int options, double ERRORLIMIT)
-{
-   int differences = Equals("", h1, h2, options, ERRORLIMIT);
-   if (differences > 0) {
-      return ::testing::AssertionFailure() << "Histograms has " << differences << " differences";
-   } else {
-      return ::testing::AssertionSuccess();
-   }
-}
-
-::testing::AssertionResult HistogramsEquals(TH1D &h1, TH1D &h2, int options, double ERRORLIMIT)
-{
-   int differences = Equals("", h1, h2, options, ERRORLIMIT);
-   if (differences > 0) {
-      return ::testing::AssertionFailure() << "Histograms has " << differences << " differences";
-   } else {
-      return ::testing::AssertionSuccess();
-   }
-}
-
-::testing::AssertionResult HistogramsEquals(TH3D &h1, TH3D &h2, int options, double ERRORLIMIT)
-{
-   int differences = Equals("", h1, h2, options, ERRORLIMIT);
-   if (differences > 0) {
-      return ::testing::AssertionFailure() << "Histograms has " << differences << " differences";
-   } else {
-      return ::testing::AssertionSuccess();
-   }
-}
-
-::testing::AssertionResult HistogramsEquals(THnBase &h1, THnBase &h2, int options, double ERRORLIMIT)
-{
-   int differences = Equals("", h1, h2, options, ERRORLIMIT);
-   if (differences > 0) {
-      return ::testing::AssertionFailure() << "Histograms has " << differences << " differences";
-   } else {
-      return ::testing::AssertionSuccess();
-   }
-}
-
-::testing::AssertionResult HistogramsEquals(THnBase &h1, TH1 &h2, int options, double ERRORLIMIT)
-{
-   int differences = Equals("", h1, h2, options, ERRORLIMIT);
-   if (differences > 0) {
-      return ::testing::AssertionFailure() << "Histograms has " << differences << " differences";
-   } else {
-      return ::testing::AssertionSuccess();
-   }
-}
-
 int Equals(const char *msg, TH2D &h1, TH2D &h2, int options, double ERRORLIMIT)
 {
    options = options | defaultEqualOptions;
@@ -578,49 +528,4 @@ bool operator==(ROOT::Fit::SparseData &sd1, ROOT::Fit::SparseData &sd2)
    }
 
    return equals;
-}
-
-int Equals(const char *msg, std::unique_ptr<TH1D> &h1, std::unique_ptr<TH1D> &h2, int options, double ERRORLIMIT)
-{
-   return Equals(msg, *h1.get(), *h2.get(), options, ERRORLIMIT);
-}
-
-int Equals(const char *msg, std::unique_ptr<TH2D> &h1, std::unique_ptr<TH2D> &h2, int options, double ERRORLIMIT)
-{
-   return Equals(msg, *h1.get(), *h2.get(), options, ERRORLIMIT);
-}
-
-int Equals(const char *msg, std::unique_ptr<TH3D> &h1, std::unique_ptr<TH3D> &h2, int options, double ERRORLIMIT)
-{
-   return Equals(msg, *h1.get(), *h2.get(), options, ERRORLIMIT);
-}
-
-int Equals(const char *msg, std::unique_ptr<THnBase> &h1, std::unique_ptr<THnBase> &h2, int options, double ERRORLIMIT)
-{
-   return Equals(msg, *h1.get(), *h2.get(), options, ERRORLIMIT);
-}
-
-int Equals(const char *msg, std::unique_ptr<THnBase> &h1, std::unique_ptr<TH1> &h2, int options, double ERRORLIMIT)
-{
-   return Equals(msg, *h1.get(), *h2.get(), options, ERRORLIMIT);
-}
-
-int Equals(const char *msg, std::unique_ptr<TProfile2D> &h1, std::unique_ptr<TProfile2D> &h2, int options, double ERRORLIMIT)
-{
-   return Equals(msg, *h1.get(), *h2.get(), options, ERRORLIMIT);
-}
-
-int Equals(const char *msg, std::unique_ptr<TProfile> &h1, std::unique_ptr<TH1D> &h2, int options, double ERRORLIMIT)
-{
-   return Equals(msg, *h1.get(), *h2.get(), options, ERRORLIMIT);
-}
-
-int Equals(const char *msg, std::unique_ptr<TProfile> &h1, std::unique_ptr<TProfile> &h2, int options, double ERRORLIMIT)
-{
-   return Equals(msg, *h1.get(), *h2.get(), options, ERRORLIMIT);
-}
-
-int Equals(const char *msg, std::unique_ptr<TProfile2D> &h1, std::unique_ptr<TH2D> &h2, int options, double ERRORLIMIT)
-{
-   return Equals(msg, *h1.get(), *h2.get(), options, ERRORLIMIT);
 }
