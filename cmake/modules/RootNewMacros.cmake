@@ -380,6 +380,16 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   if (cxxmodules)
       set(genverbosity "-v2")
   endif(cxxmodules)
+
+  set(module_dependencies "")
+  foreach(dep ${ARG_DEPENDENCIES})
+    if(TARGET ROOTCLING_${dep})
+      set(module_dependencies ${module_dependencies} ROOTCLING_${dep})
+    else()
+      set(module_dependencies ${module_dependencies} ${dep})
+    endif()
+  endforeach()
+
   #---call rootcint------------------------------------------
   add_custom_command(OUTPUT ${dictionary}.cxx ${pcm_name} ${rootmap_name}
                      COMMAND ${command} ${genverbosity} -f  ${dictionary}.cxx ${newargs} ${excludepathsargs} ${rootmapargs}
@@ -403,6 +413,20 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     else()
       install(FILES ${pcm_name} ${rootmap_name}
                     DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries)
+    endif()
+  endif()
+  # Create a target for this rootcling invocation based on the module name.
+  # We can use this in other ROOT_GENERATE_DICTIONARY that only care about
+  # the generation of PCMs without waiting on the whole module.
+  if(ARG_MODULE)
+    # If we have multiple modules with the same name, let's just attach the
+    # generation of this dictionary to the ROOTCLING_X target of the existing
+    # module. This happens for example with ROOTCLING_Smatrix which also comes
+    # in a "Smatrix32" version.
+    if (TARGET ROOTCLING_${ARG_MODULE})
+      add_dependencies(ROOTCLING_${ARG_MODULE} ${dictname})
+    else()
+      add_custom_target(ROOTCLING_${ARG_MODULE} DEPENDS ${dictname})
     endif()
   endif()
 
