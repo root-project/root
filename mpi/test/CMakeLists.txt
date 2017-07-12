@@ -40,3 +40,15 @@ ROOT_ADD_TEST_MPI(reduce 4)
 ROOT_ADD_TEST_MPI(file 4)
 ROOT_ADD_TEST_MPI(communicators 4)
 ROOT_ADD_TEST_MPI_ARG(commspawn 4 "\\\"${CMAKE_CURRENT_SOURCE_DIR}/commspawnproc.C\\\"")
+
+if(python OR python2 OR python3)
+    if(PYTHONLIBS_FOUND)
+        function(ROOT_ADD_TEST_MPI_PY name nprocs)
+        set(test_parameters -np ${nprocs} -b "${CMAKE_CURRENT_SOURCE_DIR}/${name}.py")
+        ROOT_ADD_TEST("test-rootmpi-${name}-py" COMMAND ${ROOTMPIEXEC} ${test_parameters})
+        endfunction(ROOT_ADD_TEST_MPI_PY)
+    
+    ROOT_ADD_TEST_MPI_PY(p2p 2)
+
+    endif(PYTHONLIBS_FOUND)    
+endif()

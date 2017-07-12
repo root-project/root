@@ -377,6 +377,7 @@ void TCommunicator::Unserialize<TMpiMessage>(Char_t *ibuffer, Int_t isize, TMpiM
    }
 }
 
+//______________________________________________________________________________
 TString TCommunicator::GetCommName() const
 {
    Char_t name[MPI_MAX_PROCESSOR_NAME];
@@ -385,7 +386,37 @@ TString TCommunicator::GetCommName() const
    return TString(name, size);
 }
 
+//______________________________________________________________________________
 void TCommunicator::SetCommName(const TString name)
 {
    ROOT_MPI_CHECK_CALL(MPI_Comm_set_name, (fComm, name.Data()), this);
 }
+
+#if PYTHON_FOUND
+//______________________________________________________________________________
+void TCommunicator::Send(PyObject *var, Int_t dest, Int_t tag)
+{
+   auto msg = PyPickleDumps(var);
+   Send(msg, dest, tag);
+}
+
+//______________________________________________________________________________
+PyObject *TCommunicator::Recv(Int_t source, Int_t tag)
+{
+   TString msg;
+   Recv(msg, source, tag);
+   return PyPickleLoads(msg);
+}
+
+//______________________________________________________________________________
+PyObject *TCommunicator::Bcast(PyObject *obj, Int_t root)
+{
+   TString msg;
+   if (GetRank() == root) {
+      msg = PyPickleDumps(obj);
+   }
+   Bcast(msg, root);
+   return PyPickleLoads(msg);
+}
+
+#endif

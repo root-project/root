@@ -355,6 +355,14 @@ public:
          memmove((void *)&vars[i], vobj_tmp, sizeof(T));
       }
    }
+
+#if PYTHON_FOUND
+   void Send(PyObject *obj, Int_t dest, Int_t tag);
+   PyObject *Recv(Int_t source, Int_t tag);
+   PyObject *Bcast(PyObject *obj, Int_t root);
+
+#endif
+
    ClassDef(TCommunicator, 2)
 };
 
