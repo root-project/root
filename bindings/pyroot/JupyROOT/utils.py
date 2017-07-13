@@ -394,6 +394,11 @@ class NotebookDrawer(object):
         return True
 
     def _removeTColors(self,object_json):
+	'''
+	This function trims the json by trimming the list of TColors that are not used in JS rendering, and hence can
+	be safety removed, reducing the size of notebooks with TCanvases markedly
+	'''
+	
 	"""Test JSON that isn't a TCanvas
 	>>> self._removeTColors({"_typename": "NotTCanvas"})
 	{'_typename': 'NotTCanvas'}
