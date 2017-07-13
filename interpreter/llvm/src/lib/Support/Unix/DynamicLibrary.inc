@@ -19,12 +19,17 @@ DynamicLibrary::HandleSet::~HandleSet() {
     ::dlclose(Handle);
   if (Process)
     ::dlclose(Process);
+
+  // llvm_shutdown called, Return to default
+  DynamicLibrary::SearchOrder = DynamicLibrary::SO_Linker;
 }
 
-void *DynamicLibrary::HandleSet::DLOpen(const char *File, std::string *Err) {
-  void *Handle = ::dlopen(File, RTLD_LAZY|RTLD_GLOBAL);
+void *DynamicLibrary::HandleSet::DLOpen(const char *File, std::string *Err,
+                                        bool Local) {
+  void *Handle = ::dlopen(File, RTLD_LAZY | (Local ? RTLD_LOCAL : RTLD_GLOBAL));
   if (!Handle) {
-    if (Err) *Err = ::dlerror();
+    if (Err)
+      *Err = ::dlerror();
     return &DynamicLibrary::Invalid;
   }
 

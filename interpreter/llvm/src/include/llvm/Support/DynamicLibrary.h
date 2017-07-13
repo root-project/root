@@ -58,20 +58,32 @@ namespace sys {
     void *getAddressOfSymbol(const char *symbolName);
 
     /// This function permanently loads the dynamic library at the given path.
-    /// The library will only be unloaded when the program terminates.
+    /// The library will only be unloaded when llvm_shutdown() is called.
     /// This returns a valid DynamicLibrary instance on success and an invalid
     /// instance on failure (see isValid()). \p *errMsg will only be modified
     /// if the library fails to load.
     ///
     /// It is safe to call this function multiple times for the same library.
     /// @brief Open a dynamic library permanently.
-    static DynamicLibrary getPermanentLibrary(const char *filename,
-                                              std::string *errMsg = nullptr);
+    /// @param Filename The path to the library.
+    /// @param ErrMsg Any error encountered will be stored here.
+    /// @param RTLocal Open with RTLD_LOCAL flag on platforms supporting dlopen,
+    /// otherwise ignored.
+    static DynamicLibrary getPermanentLibrary(const char *Filename,
+                                              std::string *ErrMsg = nullptr,
+                                              bool RTLocal = false);
+
+    /// @brief Convenience function for using RTLocal without error reporting.
+    static DynamicLibrary getPermanentLibrary(const char *Filename,
+                                              bool RTLocal) {
+      return getPermanentLibrary(Filename, nullptr, RTLocal);
+    }
 
     /// Registers an externally loaded library. The library will be unloaded
     /// when the program terminates.
     ///
-    /// It is safe to call this function multiple times for the same library.
+    /// It is safe to call this function multiple times for the same library,
+    /// though ownership is only taken if there was no error.
     ///
     /// \returns An empty \p DynamicLibrary if the library was already loaded.
     static DynamicLibrary addPermanentLibrary(void *handle,
@@ -86,6 +98,22 @@ namespace sys {
                                        std::string *ErrMsg = nullptr) {
       return !getPermanentLibrary(Filename, ErrMsg).isValid();
     }
+
+    enum SearchOrdering {
+      /// SO_Linker - Search as a call to dlsym(dlopen(NULL)) would when
+      /// DynamicLibrary::getPermanentLibrary(NULL) has been called or
+      /// search the list of explcitly loaded symbols if not.
+      SO_Linker,
+      /// SO_LoadedFirst - Search all loaded libraries, then as SO_Linker would.
+      SO_LoadedFirst,
+      /// SO_LoadedLast - Search as SO_Linker would, then loaded libraries.
+      /// Only usefull to search libraries with RTLD_LOCAL have been added.
+      SO_LoadedLast,
+      /// SO_LoadOrder - Or this to search loaded libraries as they loaded.
+      /// The default bahaviour is to search loaded libraries in reverse.
+      SO_LoadOrder
+    };
+    static SearchOrdering SearchOrder; // = SO_Linker
 
     /// This function will search through all previously loaded dynamic
     /// libraries for the symbol \p symbolName. If it is found, the address of
@@ -106,6 +134,8 @@ namespace sys {
     /// libraries.
     /// @brief Add searchable symbol/value pair.
     static void AddSymbol(StringRef symbolName, void *symbolValue);
+
+    class HandleSet;
   };
 
 } // End sys namespace
