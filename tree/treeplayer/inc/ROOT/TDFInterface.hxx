@@ -962,9 +962,9 @@ public:
    template <typename T = TDFDetail::TInferType>
    TResultProxy<double> Min(std::string_view branchName = "")
    {
-      auto bl = GetBranchNames<T>({branchName}, "calculate the minimum");
+      const auto userColumns = branchName.empty() ? ColumnNames_t() : ColumnNames_t({std::string(branchName)});
       auto minV = std::make_shared<double>(std::numeric_limits<double>::max());
-      return CreateAction<TDFInternal::ActionTypes::Min, T>(bl, minV);
+      return CreateAction<TDFInternal::ActionTypes::Min, T>(userColumns, minV);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -979,9 +979,9 @@ public:
    template <typename T = TDFDetail::TInferType>
    TResultProxy<double> Max(std::string_view branchName = "")
    {
-      auto bl = GetBranchNames<T>({branchName}, "calculate the maximum");
+      const auto userColumns = branchName.empty() ? ColumnNames_t() : ColumnNames_t({std::string(branchName)});
       auto maxV = std::make_shared<double>(std::numeric_limits<double>::min());
-      return CreateAction<TDFInternal::ActionTypes::Max, T>(bl, maxV);
+      return CreateAction<TDFInternal::ActionTypes::Max, T>(userColumns, maxV);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -996,9 +996,9 @@ public:
    template <typename T = TDFDetail::TInferType>
    TResultProxy<double> Mean(std::string_view branchName = "")
    {
-      auto bl = GetBranchNames<T>({branchName}, "calculate the mean");
+      const auto userColumns = branchName.empty() ? ColumnNames_t() : ColumnNames_t({std::string(branchName)});
       auto meanV = std::make_shared<double>(0);
-      return CreateAction<TDFInternal::ActionTypes::Mean, T>(bl, meanV);
+      return CreateAction<TDFInternal::ActionTypes::Mean, T>(userColumns, meanV);
    }
 
    ////////////////////////////////////////////////////////////////////////////
