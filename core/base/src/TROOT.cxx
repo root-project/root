@@ -577,6 +577,21 @@ namespace Internal {
 #endif
    }
 
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Returns the number of concurrent threads supported by the implementation.
+   /// In the IMT case returns the number of logical CPUs available to the current process in accordance with its TBB affinity mask.
+   UInt_t GetNThreadsAvailable()
+   {
+#ifdef R__USE_IMT
+      static UInt_t (*sym)() = (UInt_t(*)())Internal::GetSymInLibImt("ROOT_TImplicitMT_GetNThreadsAvailable");
+      if (sym)
+         return sym();
+      else
+         return 0;
+#else
+      return std::thread::hardware_concurrency();
+#endif
+   }
 }
 
 TROOT *ROOT::Internal::gROOTLocal = ROOT::GetROOT();
