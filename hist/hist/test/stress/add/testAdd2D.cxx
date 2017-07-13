@@ -21,7 +21,7 @@
 
 using namespace std;
 
-TEST(StressHistorgram, TestAdd2D1)
+TEST(StressHistogram, TestAdd2D1)
 {
    // Tests the first Add method for 2D Histograms
 
@@ -55,7 +55,7 @@ TEST(StressHistorgram, TestAdd2D1)
    EXPECT_TRUE(HistogramsEquals(h3, h4, cmpOptStats, 1E-10));
 }
 
-TEST(StressHistorgram, TestAdd2D2)
+TEST(StressHistogram, TestAdd2D2)
 {
    // Tests the second Add method for 2D Histograms
 
@@ -87,7 +87,7 @@ TEST(StressHistorgram, TestAdd2D2)
    EXPECT_TRUE(HistogramsEquals(h3, h1, cmpOptStats, 1E-10));
 }
 
-TEST(StressHistorgram, TestAdd2D3)
+TEST(StressHistogram, TestAdd2D3)
 {
    // Tests the first add method to do scale of 2D Histograms
 

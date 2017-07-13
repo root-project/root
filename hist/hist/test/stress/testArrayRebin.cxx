@@ -25,7 +25,7 @@
 
 using namespace std;
 
-TEST(StressHistorgram, TestArrayRebin)
+TEST(StressHistogram, TestArrayRebin)
 {
    TH1::StatOverflows(kTRUE);
 
@@ -62,7 +62,7 @@ TEST(StressHistorgram, TestArrayRebin)
    EXPECT_TRUE(HistogramsEquals(*h2.get(), h3, cmpOptStats));
 }
 
-TEST(StressHistorgram, TestArrayRebinProfile)
+TEST(StressHistogram, TestArrayRebinProfile)
 {
    TH1::StatOverflows(kTRUE);
 

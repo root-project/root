@@ -21,7 +21,7 @@
 
 using namespace std;
 
-TEST(StressHistorgram, TestCopyConstructor1D)
+TEST(StressHistogram, TestCopyConstructor1D)
 {
    // Tests the copy constructor for 1D Histograms
 
@@ -39,7 +39,7 @@ TEST(StressHistorgram, TestCopyConstructor1D)
    EXPECT_TRUE(HistogramsEquals(h1, h2, cmpOptStats));
 }
 
-TEST(StressHistorgram, TestCopyConstructor2D)
+TEST(StressHistogram, TestCopyConstructor2D)
 {
    // Tests the copy constructor for 2D Histograms
 
@@ -58,7 +58,7 @@ TEST(StressHistorgram, TestCopyConstructor2D)
    EXPECT_TRUE(HistogramsEquals(h1, h2, cmpOptStats));
 }
 
-TEST(StressHistorgram, TestCopyConstructor3D)
+TEST(StressHistogram, TestCopyConstructor3D)
 {
    // Tests the copy constructor for 3D Histograms
 
@@ -79,7 +79,7 @@ TEST(StressHistorgram, TestCopyConstructor3D)
    EXPECT_TRUE(HistogramsEquals(h1, h2, cmpOptStats));
 }
 
-TEST(StressHistorgram, TestCopyConstructorVar1D)
+TEST(StressHistogram, TestCopyConstructorVar1D)
 {
    // Tests the copy constructor for 1D Histograms with variable bin size
 

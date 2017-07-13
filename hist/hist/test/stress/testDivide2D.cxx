@@ -22,7 +22,7 @@
 
 using namespace std;
 
-TEST(StressHistorgram, TestDivide2D1)
+TEST(StressHistogram, TestDivide2D1)
 {
    // Tests the first Divide method for 2D Histograms
 
@@ -71,7 +71,7 @@ TEST(StressHistorgram, TestDivide2D1)
    EXPECT_TRUE(HistogramsEquals(h1, h4, cmpOptStats));
 }
 
-TEST(StressHistorgram, TestDivide2D2)
+TEST(StressHistogram, TestDivide2D2)
 {
    // Tests the second Divide method for 2D Histograms
 

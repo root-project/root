@@ -23,7 +23,7 @@
 
 using namespace std;
 
-TEST(StressHistorgram, TestCopyConstructorProfile1D)
+TEST(StressHistogram, TestCopyConstructorProfile1D)
 {
    // Tests the copy constructor for 1D Profiles
 
@@ -40,7 +40,7 @@ TEST(StressHistorgram, TestCopyConstructorProfile1D)
    EXPECT_TRUE(HistogramsEquals(p1, p2, cmpOptStats));
 }
 
-TEST(StressHistorgram, TestCopyConstructorProfile2D)
+TEST(StressHistogram, TestCopyConstructorProfile2D)
 {
    // Tests the copy constructor for 2D Profiles
 
@@ -58,7 +58,7 @@ TEST(StressHistorgram, TestCopyConstructorProfile2D)
    EXPECT_TRUE(HistogramsEquals(p1, p2, cmpOptStats));
 }
 
-TEST(StressHistorgram, TestCopyConstructorProfile3D)
+TEST(StressHistogram, TestCopyConstructorProfile3D)
 {
    // Tests the copy constructor for 3D Profiles
 
@@ -78,7 +78,7 @@ TEST(StressHistorgram, TestCopyConstructorProfile3D)
    EXPECT_TRUE(HistogramsEquals(p1, p2));
 }
 
-TEST(StressHistorgram, TestCopyConstructorProfileVar1D)
+TEST(StressHistogram, TestCopyConstructorProfileVar1D)
 {
    // Tests the copy constructor for 1D Profiles with variable bin size
 

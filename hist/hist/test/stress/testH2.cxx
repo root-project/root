@@ -25,7 +25,7 @@
 
 using namespace std;
 
-TEST(StressHistorgram, TestH2Buffer)
+TEST(StressHistogram, TestH2Buffer)
 {
    TH2D h1("h1", "h1", 10, -5, 5, 10, -5, 5);
    TH2D h2("h2", "h2", 10, -5, 5, 10, -5, 5);
@@ -57,7 +57,7 @@ TEST(StressHistorgram, TestH2Buffer)
    EXPECT_TRUE(HistogramsEquals(h1, h2, cmpOptStats, 1.E-15));
 }
 
-TEST(StressHistorgram, TestH2Extend)
+TEST(StressHistogram, TestH2Extend)
 {
    TH2D h1("h1", "h1", 10, 0, 10, 10, 0, 10);
    TH2D h2("h2", "h0", 10, 0, 10, 10, 0, 20);
@@ -73,7 +73,7 @@ TEST(StressHistorgram, TestH2Extend)
    EXPECT_TRUE(HistogramsEquals(h1, h2, cmpOptStats, 1E-10));
 }
 
-TEST(StressHistorgram, TestH2Integral)
+TEST(StressHistogram, TestH2Integral)
 {
    int ix1 = 1;
    int ix2 = 50;

@@ -25,7 +25,7 @@
 
 using namespace std;
 
-TEST(StressHistorgram, TestH3Buffer)
+TEST(StressHistogram, TestH3Buffer)
 {
    TH3D h1("h1", "h1", 4, -5, 5, 4, -5, 5, 4, -5, 5);
    TH3D h2("h2", "h2", 4, -5, 5, 4, -5, 5, 4, -5, 5);
@@ -61,7 +61,7 @@ TEST(StressHistorgram, TestH3Buffer)
    EXPECT_TRUE(HistogramsEquals(h1, h2, cmpOptStats, 1.E-15));
 }
 
-TEST(StressHistorgram, TestH3Integral)
+TEST(StressHistogram, TestH3Integral)
 {
    int ix1 = 1;
    int ix2 = 50;

@@ -22,7 +22,7 @@
 
 using namespace std;
 
-TEST(StressHistorgram, TestDivideVar1)
+TEST(StressHistogram, TestDivideVar1)
 {
    // Tests the first Divide method for 1D Histograms with variable bin size
 
@@ -69,7 +69,7 @@ TEST(StressHistorgram, TestDivideVar1)
    EXPECT_TRUE(HistogramsEquals(h1, h4, cmpOptStats));
 }
 
-TEST(StressHistorgram, TestDivideVar2)
+TEST(StressHistogram, TestDivideVar2)
 {
    // Tests the second Divide method for 1D Histograms with variable bin size
 

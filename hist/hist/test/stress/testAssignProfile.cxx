@@ -23,7 +23,7 @@
 
 using namespace std;
 
-TEST(StressHistorgram, TestAssignProfile1D)
+TEST(StressHistogram, TestAssignProfile1D)
 {
    // Tests the operator=() method for 1D Profiles
 
@@ -41,7 +41,7 @@ TEST(StressHistorgram, TestAssignProfile1D)
    EXPECT_TRUE(HistogramsEquals(p1, p2, cmpOptStats));
 }
 
-TEST(StressHistorgram, TestAssignProfile2D)
+TEST(StressHistogram, TestAssignProfile2D)
 {
    // Tests the operator=() method for 2D Profiles
 
@@ -60,7 +60,7 @@ TEST(StressHistorgram, TestAssignProfile2D)
    EXPECT_TRUE(HistogramsEquals(p1, p2, cmpOptStats));
 }
 
-TEST(StressHistorgram, TestAssignProfile3D)
+TEST(StressHistogram, TestAssignProfile3D)
 {
    // Tests the operator=() method for 3D Profiles
 
@@ -82,7 +82,7 @@ TEST(StressHistorgram, TestAssignProfile3D)
    EXPECT_TRUE(HistogramsEquals(p1, p2));
 }
 
-TEST(StressHistorgram, TestAssignProfileVar1D)
+TEST(StressHistogram, TestAssignProfileVar1D)
 {
    // Tests the operator=() method for 1D Profiles with variable bin size
 

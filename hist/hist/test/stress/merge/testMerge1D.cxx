@@ -22,7 +22,7 @@
 
 using namespace std;
 
-TEST(StressHistorgram, TestMerge1D)
+TEST(StressHistogram, TestMerge1D)
 {
    // Tests the merge method for 1D Histograms
    // simple merge with histogram with same limits
@@ -49,7 +49,7 @@ TEST(StressHistorgram, TestMerge1D)
    EXPECT_TRUE(HistogramsEquals(h1, h4, cmpOptStats, 1E-10));
 }
 
-TEST(StressHistorgram, TestMerge1DWithBuffer)
+TEST(StressHistogram, TestMerge1DWithBuffer)
 {
    bool allNoLimits = true;
    // Tests the merge method for different 1D Histograms

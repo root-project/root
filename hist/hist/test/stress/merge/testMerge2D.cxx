@@ -23,7 +23,7 @@
 
 using namespace std;
 
-TEST(StressHistorgram, TestMerge2D)
+TEST(StressHistogram, TestMerge2D)
 {
    // Tests the merge method for 2D Histograms
 

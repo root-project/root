@@ -27,7 +27,7 @@
 
 using namespace std;
 
-TEST(StressHistorgram, TestBinDataData1D)
+TEST(StressHistogram, TestBinDataData1D)
 {
    TF1 func("GAUS", gaus1d, minRange, maxRange, 3);
    func.SetParameters(0., 3., 200.);
@@ -56,7 +56,7 @@ TEST(StressHistorgram, TestBinDataData1D)
    EXPECT_TRUE(bdSparse == bdTH1);
 }
 
-TEST(StressHistorgram, TestBinDataData1DInt)
+TEST(StressHistogram, TestBinDataData1DInt)
 {
    TF1 func("GAUS", gaus1d, minRange, maxRange, 3);
    func.SetParameters(0., 3., 200.);
@@ -89,7 +89,7 @@ TEST(StressHistorgram, TestBinDataData1DInt)
    EXPECT_TRUE(bdSparse == bdTH1);
 }
 
-TEST(StressHistorgram, TestBinDataData2D)
+TEST(StressHistogram, TestBinDataData2D)
 {
    TF1 func("GAUS", gaus2d, minRange, maxRange, 3);
    func.SetParameters(0., 3., 200.);
@@ -119,7 +119,7 @@ TEST(StressHistorgram, TestBinDataData2D)
    EXPECT_TRUE(bdSparse == bdTH2);
 }
 
-TEST(StressHistorgram, TestBinDataData2DInt)
+TEST(StressHistogram, TestBinDataData2DInt)
 {
    TF1 func("GAUS", gaus2d, minRange, maxRange, 3);
    func.SetParameters(0., 3., 200.);
@@ -153,7 +153,7 @@ TEST(StressHistorgram, TestBinDataData2DInt)
    EXPECT_TRUE(bdSparse == bdTH2);
 }
 
-TEST(StressHistorgram, TestBinDataData3D)
+TEST(StressHistogram, TestBinDataData3D)
 {
    TF1 func("GAUS", gaus3d, minRange, maxRange, 3);
    func.SetParameters(0., 3., 200.);
@@ -185,7 +185,7 @@ TEST(StressHistorgram, TestBinDataData3D)
    EXPECT_TRUE(bdSparse == bdTH3);
 }
 
-TEST(StressHistorgram, TestBinDataData3DInt)
+TEST(StressHistogram, TestBinDataData3DInt)
 {
    TF1 func("GAUS", gaus3d, minRange, maxRange, 3);
    func.SetParameters(0., 3., 200.);

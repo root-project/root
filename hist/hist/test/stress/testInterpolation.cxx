@@ -24,7 +24,7 @@
 
 using namespace std;
 
-TEST(StressHistorgram, TestInterpolation1D)
+TEST(StressHistogram, TestInterpolation1D)
 {
    // Tests interpolation method for 1D Histogram
 
@@ -55,7 +55,7 @@ Double_t function2D(Double_t x, Double_t y)
    return a * x + b * y;
 }
 
-TEST(StressHistorgram, TestInterpolation2D)
+TEST(StressHistogram, TestInterpolation2D)
 {
    // Tests interpolation method for 2D Histogram
 
@@ -91,7 +91,7 @@ Double_t function3D(Double_t x, Double_t y, Double_t z)
    return a * x + b * y + c * z;
 }
 
-TEST(StressHistorgram, TestInterpolation3D)
+TEST(StressHistogram, TestInterpolation3D)
 {
    // Tests interpolation method for 3D Histogram
 
@@ -120,7 +120,7 @@ TEST(StressHistorgram, TestInterpolation3D)
    }
 }
 
-TEST(StressHistorgram, TestInterpolationVar1D)
+TEST(StressHistogram, TestInterpolationVar1D)
 {
    // Tests interpolation method for 1D Histogram with variable bin size
 

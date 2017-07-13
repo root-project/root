@@ -23,7 +23,7 @@
 
 using namespace std;
 
-TEST(StressHistorgram, TestScale1DProf)
+TEST(StressHistogram, TestScale1DProf)
 {
    TProfile p1("scD1-p1", "p1-Title", numberOfBins, minRange, maxRange);
    TProfile p2("scD1-p2", "p2=c1*p1", numberOfBins, minRange, maxRange);
@@ -42,7 +42,7 @@ TEST(StressHistorgram, TestScale1DProf)
    EXPECT_TRUE(HistogramsEquals(p1, p2, cmpOptStats));
 }
 
-TEST(StressHistorgram, TestScale2DProf)
+TEST(StressHistogram, TestScale2DProf)
 {
    TProfile2D p1("scD2-p1", "p1", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange, maxRange);
    TProfile2D p2("scD2-p2", "p2=c1*p1", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange, maxRange);
@@ -61,7 +61,7 @@ TEST(StressHistorgram, TestScale2DProf)
    EXPECT_TRUE(HistogramsEquals(p1, p2, cmpOptStats));
 }
 
-TEST(StressHistorgram, TestScale3DProf)
+TEST(StressHistogram, TestScale3DProf)
 {
    TProfile3D p1("scD3-p1", "p1", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange,
                                    maxRange, numberOfBins + 2, minRange, maxRange);

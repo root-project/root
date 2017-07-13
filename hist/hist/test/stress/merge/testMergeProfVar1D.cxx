@@ -24,7 +24,7 @@
 
 using namespace std;
 
-TEST(StressHistorgram, TestMergeProfVar1D)
+TEST(StressHistogram, TestMergeProfVar1D)
 {
    // Tests the merge method for 1D Profiles with variable bin size
 

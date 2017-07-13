@@ -24,7 +24,7 @@
 
 using namespace std;
 
-TEST(StressHistorgram, TestMerge1DLabelAll)
+TEST(StressHistogram, TestMerge1DLabelAll)
 {
    // Tests the merge method with fully equally labelled 1D Histograms
 
@@ -78,7 +78,7 @@ TEST(StressHistorgram, TestMerge1DLabelAll)
    EXPECT_TRUE(HistogramsEquals(h1, h4, cmpOptNone, 1E-10));
 }
 
-TEST(StressHistorgram, TestMerge1DLabelAllDiff)
+TEST(StressHistogram, TestMerge1DLabelAllDiff)
 {
    // LM: Dec 2010 : rmeake this test as
    // a test of histogram with some different labels not all filled
@@ -129,7 +129,7 @@ TEST(StressHistorgram, TestMerge1DLabelAllDiff)
    EXPECT_TRUE(HistogramsEquals(h1, h4, cmpOptStats, 1E-10));
 }
 
-TEST(StressHistorgram, TestMerge1DLabelDiff)
+TEST(StressHistogram, TestMerge1DLabelDiff)
 {
    // Tests the merge with some different labels  for 1D Histograms
 
@@ -188,7 +188,7 @@ TEST(StressHistorgram, TestMerge1DLabelDiff)
    EXPECT_TRUE(HistogramsEquals(h1, h4, cmpOptStats, 1E-10));
 }
 
-TEST(StressHistorgram, TestMerge1DLabelSame)
+TEST(StressHistogram, TestMerge1DLabelSame)
 {
    // Tests the merge with some equal labels method for 1D Histograms
    // number of labels used = number of bins

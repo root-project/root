@@ -21,7 +21,7 @@
 
 using namespace std;
 
-TEST(StressHistorgram, TestAddVar1)
+TEST(StressHistogram, TestAddVar1)
 {
    // Tests the second Add method for 1D Histograms with variable bin size
 
@@ -48,7 +48,7 @@ TEST(StressHistorgram, TestAddVar1)
    EXPECT_TRUE(HistogramsEquals(h3, h4, cmpOptStats, 1E-13));
 }
 
-TEST(StressHistorgram, TestAddVar2)
+TEST(StressHistogram, TestAddVar2)
 {
    // Tests the second Add method for 1D Histograms with variable bin size
 
@@ -73,7 +73,7 @@ TEST(StressHistorgram, TestAddVar2)
    EXPECT_TRUE(HistogramsEquals(h5, h6, cmpOptStats, 1E-13));
 }
 
-TEST(StressHistorgram, TestAddVar3)
+TEST(StressHistogram, TestAddVar3)
 {
    // Tests the first add method to do scale of 1D Histograms with variable bin width
 

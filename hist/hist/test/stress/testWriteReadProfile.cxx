@@ -26,7 +26,7 @@
 
 using namespace std;
 
-TEST(StressHistorgram, TestWriteReadProfile1D)
+TEST(StressHistogram, TestWriteReadProfile1D)
 {
    // Tests the write and read methods for 1D Profiles
 
@@ -48,7 +48,7 @@ TEST(StressHistorgram, TestWriteReadProfile1D)
    EXPECT_TRUE(HistogramsEquals(p1, *p2.get(), cmpOptStats));
 }
 
-TEST(StressHistorgram, TestWriteReadProfile2D)
+TEST(StressHistogram, TestWriteReadProfile2D)
 {
    // Tests the write and read methods for 2D Profiles
 
@@ -71,7 +71,7 @@ TEST(StressHistorgram, TestWriteReadProfile2D)
    EXPECT_TRUE(HistogramsEquals(p1, *p2.get(), cmpOptStats));
 }
 
-TEST(StressHistorgram, TestWriteReadProfile3D)
+TEST(StressHistogram, TestWriteReadProfile3D)
 {
    // Tests the write and read methods for 3D Profile
 
@@ -100,7 +100,7 @@ TEST(StressHistorgram, TestWriteReadProfile3D)
    EXPECT_TRUE(HistogramsEquals(p1, *p2.get()));
 }
 
-TEST(StressHistorgram, TestWriteReadProfileVar1D)
+TEST(StressHistogram, TestWriteReadProfileVar1D)
 {
    // Tests the write and read methods for 1D Profiles with variable bin size
 

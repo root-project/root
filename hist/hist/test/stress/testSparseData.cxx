@@ -27,7 +27,7 @@
 
 using namespace std;
 
-TEST(StressHistorgram, TestSparseData1DFull)
+TEST(StressHistogram, TestSparseData1DFull)
 {
    TF1 func("GAUS", gaus1d, minRange, maxRange, 3);
    func.SetParameters(0., 3., 200.);
@@ -54,7 +54,7 @@ TEST(StressHistorgram, TestSparseData1DFull)
    EXPECT_TRUE(spSparse == spTH1);
 }
 
-TEST(StressHistorgram, TestSparseData1DSparse)
+TEST(StressHistogram, TestSparseData1DSparse)
 {
    TF1 func("GAUS", gaus1d, minRange, maxRange, 3);
    func.SetParameters(0., 3., 200.);
@@ -81,7 +81,7 @@ TEST(StressHistorgram, TestSparseData1DSparse)
    EXPECT_TRUE(spSparse == spTH1);
 }
 
-TEST(StressHistorgram, TestSparseData2DFull)
+TEST(StressHistogram, TestSparseData2DFull)
 {
    TF2 func("GAUS2D", gaus2d, minRange, maxRange, 3);
    func.SetParameters(500., +.5, 1.5, -.5, 2.0);
@@ -108,7 +108,7 @@ TEST(StressHistorgram, TestSparseData2DFull)
    EXPECT_TRUE(spSparse == spTH2);
 }
 
-TEST(StressHistorgram, TestSparseData2DSparse)
+TEST(StressHistogram, TestSparseData2DSparse)
 {
    TF2 func("GAUS2D", gaus2d, minRange, maxRange, 3);
    func.SetParameters(500., +.5, 1.5, -.5, 2.0);
@@ -135,7 +135,7 @@ TEST(StressHistorgram, TestSparseData2DSparse)
    EXPECT_TRUE(spSparse == spTH2);
 }
 
-TEST(StressHistorgram, TestSparseData3DFull)
+TEST(StressHistogram, TestSparseData3DFull)
 {
    TF2 func("GAUS3D", gaus3d, minRange, maxRange, 3);
    func.SetParameters(500., +.5, 1.5, -.5, 2.0);
@@ -164,7 +164,7 @@ TEST(StressHistorgram, TestSparseData3DFull)
    EXPECT_TRUE(spSparse == spTH3);
 }
 
-TEST(StressHistorgram, TestSparseData3DSparse)
+TEST(StressHistogram, TestSparseData3DSparse)
 {
    TF2 func("GAUS3D", gaus3d, minRange, maxRange, 3);
    func.SetParameters(500., +.5, 1.5, -.5, 2.0);

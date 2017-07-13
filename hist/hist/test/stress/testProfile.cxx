@@ -23,7 +23,7 @@
 
 using namespace std;
 
-TEST(StressHistorgram, TestProfile2Extend)
+TEST(StressHistogram, TestProfile2Extend)
 {
    TProfile2D::Approximate(true);
    TProfile2D h1("h1", "h1", 10, 0, 10, 10, 0, 10);
@@ -41,7 +41,7 @@ TEST(StressHistorgram, TestProfile2Extend)
    TProfile2D::Approximate(false);
 }
 
-TEST(StressHistorgram, TestProfileExtend)
+TEST(StressHistogram, TestProfileExtend)
 {
    TProfile::Approximate(true);
    TProfile h1("h1", "h1", 10, 0, 10);

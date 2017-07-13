@@ -25,7 +25,7 @@
 
 using namespace std;
 
-TEST(StressHistorgram, TestWriteRead1D)
+TEST(StressHistogram, TestWriteRead1D)
 {
    // Tests the write and read methods for 1D Histograms
 
@@ -48,7 +48,7 @@ TEST(StressHistorgram, TestWriteRead1D)
    EXPECT_TRUE(HistogramsEquals(h1, *h2.get(), cmpOptStats));
 }
 
-TEST(StressHistorgram, TestWriteRead2D)
+TEST(StressHistogram, TestWriteRead2D)
 {
    // Tests the write and read methods for 2D Histograms
 
@@ -72,7 +72,7 @@ TEST(StressHistorgram, TestWriteRead2D)
    EXPECT_TRUE(HistogramsEquals(h1, *h2.get(), cmpOptStats));
 }
 
-TEST(StressHistorgram, TestWriteRead3D)
+TEST(StressHistogram, TestWriteRead3D)
 {
    // Tests the write and read methods for 3D Histograms
 
@@ -130,7 +130,7 @@ TYPED_TEST(HistTest, TestWriteReadHn)
    EXPECT_TRUE(HistogramsEquals(*s1.get(), *s2.get(), cmpOptStats));
 }
 
-TEST(StressHistorgram, TestWriteReadVar1D)
+TEST(StressHistogram, TestWriteReadVar1D)
 {
    // Tests the write and read methods for 1D Histograms with variable bin size
 

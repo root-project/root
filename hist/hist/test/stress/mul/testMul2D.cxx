@@ -21,7 +21,7 @@
 
 using namespace std;
 
-TEST(StressHistorgram, TestMul2D1)
+TEST(StressHistogram, TestMul2D1)
 {
    // Tests the first Multiply method for 2D Histograms
 
@@ -73,7 +73,7 @@ TEST(StressHistorgram, TestMul2D1)
    EXPECT_TRUE(HistogramsEquals(h3, h4, cmpOptStats, 1E-12));
 }
 
-TEST(StressHistorgram, TestMul2D2)
+TEST(StressHistogram, TestMul2D2)
 {
    // Tests the second Multiply method for 2D Histograms
 

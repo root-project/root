@@ -23,7 +23,7 @@
 
 using namespace std;
 
-TEST(StressHistorgram, TestMerge1DExtend)
+TEST(StressHistogram, TestMerge1DExtend)
 {
    // Tests the merge method for diferent 1D Histograms
    // when axis can rebin (e.g. for time histograms)
@@ -58,7 +58,7 @@ TEST(StressHistorgram, TestMerge1DExtend)
    EXPECT_TRUE(HistogramsEquals(h1, h4, cmpOptStats, 1E-10));
 }
 
-TEST(StressHistorgram, TestMerge1DExtendProf)
+TEST(StressHistogram, TestMerge1DExtendProf)
 {
    // Tests the merge method for diferent 1D Histograms
    // when axis can rebin (e.g. for time histograms)

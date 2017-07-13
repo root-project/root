@@ -21,7 +21,7 @@
 
 using namespace std;
 
-TEST(StressHistorgram, TestClone1D)
+TEST(StressHistogram, TestClone1D)
 {
    // Tests the clone method for 1D Histograms
 
@@ -39,7 +39,7 @@ TEST(StressHistorgram, TestClone1D)
    EXPECT_TRUE(HistogramsEquals(h1, *h2.get(), cmpOptStats));
 }
 
-TEST(StressHistorgram, TestClone2D)
+TEST(StressHistogram, TestClone2D)
 {
    // Tests the clone method for 2D Histograms
 
@@ -58,7 +58,7 @@ TEST(StressHistorgram, TestClone2D)
    EXPECT_TRUE(HistogramsEquals(h1, *h2.get(), cmpOptStats));
 }
 
-TEST(StressHistorgram, TestClone3D)
+TEST(StressHistogram, TestClone3D)
 {
    // Tests the clone method for 3D Histograms
 
@@ -79,7 +79,7 @@ TEST(StressHistorgram, TestClone3D)
    EXPECT_TRUE(HistogramsEquals(h1, *h2.get(), cmpOptStats));
 }
 
-TEST(StressHistorgram, TestCloneProfile1D)
+TEST(StressHistogram, TestCloneProfile1D)
 {
    // Tests the clone method for 1D Profiles
 
@@ -96,7 +96,7 @@ TEST(StressHistorgram, TestCloneProfile1D)
    EXPECT_TRUE(HistogramsEquals(p1, *p2.get(), cmpOptStats));
 }
 
-TEST(StressHistorgram, TestCloneProfile2D)
+TEST(StressHistogram, TestCloneProfile2D)
 {
    // Tests the clone method for 2D Profiles
 
@@ -114,7 +114,7 @@ TEST(StressHistorgram, TestCloneProfile2D)
    EXPECT_TRUE(HistogramsEquals(p1, *p2.get(), cmpOptStats));
 }
 
-TEST(StressHistorgram, TestCloneProfile3D)
+TEST(StressHistogram, TestCloneProfile3D)
 {
    // Tests the clone method for 3D Profiles
 
@@ -134,7 +134,7 @@ TEST(StressHistorgram, TestCloneProfile3D)
    EXPECT_TRUE(HistogramsEquals(p1, *p2.get()));
 }
 
-TEST(StressHistorgram, TestCloneProfileVar1D)
+TEST(StressHistogram, TestCloneProfileVar1D)
 {
    // Tests the clone method for 1D Profiles with variable bin size
 
@@ -154,7 +154,7 @@ TEST(StressHistorgram, TestCloneProfileVar1D)
    EXPECT_TRUE(HistogramsEquals(p1, *p2.get(), cmpOptStats));
 }
 
-TEST(StressHistorgram, TestCloneVar1D)
+TEST(StressHistogram, TestCloneVar1D)
 {
    // Tests the clone method for 1D Histograms with variable bin size
 

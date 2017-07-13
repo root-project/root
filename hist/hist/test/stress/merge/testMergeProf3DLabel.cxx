@@ -26,7 +26,7 @@
 
 using namespace std;
 
-TEST(StressHistorgram, TestMergeProf3DLabelAll)
+TEST(StressHistogram, TestMergeProf3DLabelAll)
 {
    // Tests the merge method with fully equally labelled 3D Profiles
 
@@ -84,7 +84,7 @@ TEST(StressHistorgram, TestMergeProf3DLabelAll)
    EXPECT_TRUE(HistogramsEquals(p1, p4, cmpOptStats, 1E-10));
 }
 
-TEST(StressHistorgram, TestMergeProf3DLabelAllDiff)
+TEST(StressHistogram, TestMergeProf3DLabelAllDiff)
 {
    // Tests the merge method with fully differently labelled 3D Profiles
 
@@ -156,7 +156,7 @@ TEST(StressHistorgram, TestMergeProf3DLabelAllDiff)
    EXPECT_TRUE(HistogramsEquals(p1, p4, cmpOptStats, 1E-10));
 }
 
-TEST(StressHistorgram, TestMergeProf3DLabelDiff)
+TEST(StressHistogram, TestMergeProf3DLabelDiff)
 {
    // Tests the merge with some different labels method for 3D Profiles
 
@@ -213,7 +213,7 @@ TEST(StressHistorgram, TestMergeProf3DLabelDiff)
    EXPECT_TRUE(HistogramsEquals(p1, p4, cmpOptStats, 1E-10));
 }
 
-TEST(StressHistorgram, TestMergeProf3DLabelSame)
+TEST(StressHistogram, TestMergeProf3DLabelSame)
 {
    // Tests the merge with some equal labels method for 3D Profiles
 

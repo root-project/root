@@ -21,7 +21,7 @@
 
 using namespace std;
 
-TEST(StressHistorgram, TestIntegerRebin)
+TEST(StressHistogram, TestIntegerRebin)
 {
    // Tests rebin method with an integer as input for 1D Histogram
 
@@ -42,7 +42,7 @@ TEST(StressHistorgram, TestIntegerRebin)
    EXPECT_TRUE(HistogramsEquals(*h2.get(), h3, cmpOptStats));
 }
 
-TEST(StressHistorgram, TestIntegerRebinNoName)
+TEST(StressHistogram, TestIntegerRebinNoName)
 {
    // Tests rebin method with an integer as input and without name for 1D Histogram
 
@@ -63,7 +63,7 @@ TEST(StressHistorgram, TestIntegerRebinNoName)
    EXPECT_TRUE(HistogramsEquals(*h2.get(), h3, cmpOptStats));
 }
 
-TEST(StressHistorgram, TestIntegerRebinNoNameProfile)
+TEST(StressHistogram, TestIntegerRebinNoNameProfile)
 {
    // Tests rebin method with an integer as input and without name for 1D Profile
 
@@ -83,7 +83,7 @@ TEST(StressHistorgram, TestIntegerRebinNoNameProfile)
    EXPECT_TRUE(HistogramsEquals(*p2.get(), p3, cmpOptStats));
 }
 
-TEST(StressHistorgram, TestIntegerRebinProfile)
+TEST(StressHistogram, TestIntegerRebinProfile)
 {
    // Tests rebin method with an integer as input for 1D Profile
 

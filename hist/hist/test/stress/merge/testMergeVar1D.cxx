@@ -22,7 +22,7 @@
 
 using namespace std;
 
-TEST(StressHistorgram, TestMergeVar1D)
+TEST(StressHistogram, TestMergeVar1D)
 {
    // Tests the merge method for 1D Histograms with variable bin size
 

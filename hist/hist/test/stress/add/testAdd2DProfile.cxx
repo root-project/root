@@ -23,7 +23,7 @@
 
 using namespace std;
 
-TEST(StressHistorgram, TestAdd2DProfile1)
+TEST(StressHistogram, TestAdd2DProfile1)
 {
    TH1::SetDefaultSumw2();
    // Tests the first Add method for 1D Profiles
@@ -58,7 +58,7 @@ TEST(StressHistorgram, TestAdd2DProfile1)
    EXPECT_TRUE(HistogramsEquals(p3, p4, cmpOptStats, 1E-10));
 }
 
-TEST(StressHistorgram, TestAdd2DProfile2)
+TEST(StressHistogram, TestAdd2DProfile2)
 {
    TH1::SetDefaultSumw2();
    // Tests the second Add method for 2D Profiles

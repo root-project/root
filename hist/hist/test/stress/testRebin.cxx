@@ -19,7 +19,7 @@
 
 using namespace std;
 
-TEST(StressHistorgram, Test2DRebin)
+TEST(StressHistogram, Test2DRebin)
 {
    r.SetSeed(10);
 
@@ -52,7 +52,7 @@ TEST(StressHistorgram, Test2DRebin)
    EXPECT_TRUE(HistogramsEquals(*h2d2.get(), h3, cmpOptStats));
 }
 
-TEST(StressHistorgram, Test2DRebinProfile)
+TEST(StressHistogram, Test2DRebinProfile)
 {
    // Tests rebin method for 2D Profile Histogram
    TProfile2D::Approximate();
@@ -79,7 +79,7 @@ TEST(StressHistorgram, Test2DRebinProfile)
    EXPECT_TRUE(HistogramsEquals(*h2d2.get(), h3, cmpOptStats));
 }
 
-TEST(StressHistorgram, Test3DRebin)
+TEST(StressHistogram, Test3DRebin)
 {
    // Tests rebin method for 2D Histogram
 

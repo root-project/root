@@ -20,7 +20,7 @@
 
 using namespace std;
 
-TEST(StressHistorgram, TestAdd1)
+TEST(StressHistogram, TestAdd1)
 {
    // Tests the first Add method for 1D Histograms
 
@@ -44,7 +44,7 @@ TEST(StressHistorgram, TestAdd1)
    EXPECT_TRUE(HistogramsEquals(h3, h4, cmpOptStats, 1E-13));
 }
 
-TEST(StressHistorgram, TestAdd2)
+TEST(StressHistogram, TestAdd2)
 {
    // Tests the second Add method for 1D Histograms
 
@@ -66,7 +66,7 @@ TEST(StressHistorgram, TestAdd2)
    EXPECT_TRUE(HistogramsEquals(h5, h6, cmpOptStats, 1E-13));
 }
 
-TEST(StressHistorgram, TestAdd3)
+TEST(StressHistogram, TestAdd3)
 {
    // Tests the first add method to do scalation of 1D Histograms
 

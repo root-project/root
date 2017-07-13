@@ -23,7 +23,7 @@
 
 using namespace std;
 
-TEST(StressHistorgram, TestAddVarProf1)
+TEST(StressHistogram, TestAddVarProf1)
 {
    TH1::SetDefaultSumw2();
    // Tests the first Add method for 1D Profiles with variable bin size
@@ -47,7 +47,7 @@ TEST(StressHistorgram, TestAddVarProf1)
    EXPECT_TRUE(HistogramsEquals(p3, p4, cmpOptStats, 1E-13));
 }
 
-TEST(StressHistorgram, TestAddVarProf2)
+TEST(StressHistogram, TestAddVarProf2)
 {
    // Tests the second Add method for 1D Profiles with variable bin size
 

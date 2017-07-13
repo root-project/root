@@ -21,7 +21,7 @@
 
 using namespace std;
 
-TEST(StressHistorgram, TestMulVar1)
+TEST(StressHistogram, TestMulVar1)
 {
    // Tests the first Multiply method for 1D Histograms with variable bin size
 
@@ -71,7 +71,7 @@ TEST(StressHistorgram, TestMulVar1)
    EXPECT_TRUE(HistogramsEquals(h3, h4, cmpOptStats, 1E-14));
 }
 
-TEST(StressHistorgram, TestMulVar2)
+TEST(StressHistogram, TestMulVar2)
 {
    // Tests the second Multiply method for 1D Histograms with variable bin size
 

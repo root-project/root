@@ -23,7 +23,7 @@
 
 using namespace std;
 
-TEST(StressHistorgram, TestMerge3D)
+TEST(StressHistogram, TestMerge3D)
 {
    // Tests the merge method for 3D Histograms
 
@@ -73,7 +73,7 @@ TEST(StressHistorgram, TestMerge3D)
    EXPECT_TRUE(HistogramsEquals(h1, h4, cmpOptStats, 1E-10));
 }
 
-TEST(StressHistorgram, TestMerge3DExtend)
+TEST(StressHistogram, TestMerge3DExtend)
 {
    UInt_t extendType = TH1::kAllAxes;
    // Tests the merge method for diferent 1D Histograms

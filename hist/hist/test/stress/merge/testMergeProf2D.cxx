@@ -25,7 +25,7 @@
 
 using namespace std;
 
-TEST(StressHistorgram, TestMergeProf2D)
+TEST(StressHistogram, TestMergeProf2D)
 {
    // Tests the merge method for 2D Profiles
 
@@ -67,7 +67,7 @@ TEST(StressHistorgram, TestMergeProf2D)
    EXPECT_TRUE(HistogramsEquals(p1, p4, cmpOptStats, 1E-10));
 }
 
-TEST(StressHistorgram, TestMergeProf2DDiff)
+TEST(StressHistogram, TestMergeProf2DDiff)
 {
    // Tests the merge method with different binned 2D Profile
 

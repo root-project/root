@@ -23,7 +23,7 @@
 
 using namespace std;
 
-TEST(StressHistorgram, TestMulF1D)
+TEST(StressHistogram, TestMulF1D)
 {
    Double_t c1 = r.Rndm();
 
@@ -50,7 +50,7 @@ TEST(StressHistorgram, TestMulF1D)
    EXPECT_TRUE(HistogramsEquals(h1, h2));
 }
 
-TEST(StressHistorgram, TestMulF1D2)
+TEST(StressHistogram, TestMulF1D2)
 {
    Double_t c1 = r.Rndm();
 

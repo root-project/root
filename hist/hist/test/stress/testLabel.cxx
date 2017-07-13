@@ -25,7 +25,7 @@
 
 using namespace std;
 
-TEST(StressHistorgram, TestLabel)
+TEST(StressHistogram, TestLabel)
 {
    // Tests labelling a 1D Histogram
 
@@ -60,7 +60,7 @@ TEST(StressHistorgram, TestLabel)
    EXPECT_TRUE(HistogramsEquals(h1, h2, cmpOptStats, 1E-13));
 }
 
-TEST(StressHistorgram, TestLabel2DX)
+TEST(StressHistogram, TestLabel2DX)
 {
    // Tests labelling a 1D Histogram
 
@@ -97,7 +97,7 @@ TEST(StressHistorgram, TestLabel2DX)
    EXPECT_TRUE(HistogramsEquals(h1, h2, cmpOptStats, 1E-13));
 }
 
-TEST(StressHistorgram, TestLabel2DY)
+TEST(StressHistogram, TestLabel2DY)
 {
    // Tests labelling a 1D Histogram
 
@@ -134,7 +134,7 @@ TEST(StressHistorgram, TestLabel2DY)
    EXPECT_TRUE(HistogramsEquals(h1, h2, cmpOptStats, 1E-13));
 }
 
-TEST(StressHistorgram, TestLabelsInflateProf1D)
+TEST(StressHistogram, TestLabelsInflateProf1D)
 {
    // Tests labelling a 1D Profile
 

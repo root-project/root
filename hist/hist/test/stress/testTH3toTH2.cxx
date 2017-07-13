@@ -23,7 +23,7 @@
 
 using namespace std;
 
-TEST(StressHistorgram, TestTH3toTH2)
+TEST(StressHistogram, TestTH3toTH2)
 {
    const unsigned int binsizeX = 10;
    const unsigned int binsizeY = 11;

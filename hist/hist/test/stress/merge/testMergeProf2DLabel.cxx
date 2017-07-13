@@ -26,7 +26,7 @@
 
 using namespace std;
 
-TEST(StressHistorgram, TestMergeProf2DLabelAll)
+TEST(StressHistogram, TestMergeProf2DLabelAll)
 {
    // Tests the merge method with fully equally labelled 2D Profiles
 
@@ -81,7 +81,7 @@ TEST(StressHistorgram, TestMergeProf2DLabelAll)
    EXPECT_TRUE(HistogramsEquals(p1, p4, cmpOptStats, 1E-10));
 }
 
-TEST(StressHistorgram, TestMergeProf2DLabelAllDiff)
+TEST(StressHistogram, TestMergeProf2DLabelAllDiff)
 {
    // Tests the merge method with fully differently labelled 2D Profiles
 
@@ -146,7 +146,7 @@ TEST(StressHistorgram, TestMergeProf2DLabelAllDiff)
    EXPECT_TRUE(HistogramsEquals(p1, p4, cmpOptStats, 1E-10));
 }
 
-TEST(StressHistorgram, TestMergeProf2DLabelDiff)
+TEST(StressHistogram, TestMergeProf2DLabelDiff)
 {
    // Tests the merge with some different labels method for 2D Profiles
 
@@ -200,7 +200,7 @@ TEST(StressHistorgram, TestMergeProf2DLabelDiff)
    EXPECT_TRUE(HistogramsEquals(p1, p4, cmpOptStats, 1E-10));
 }
 
-TEST(StressHistorgram, TestMergeProf2DLabelSame)
+TEST(StressHistogram, TestMergeProf2DLabelSame)
 {
    // Tests the merge with some equal labels method for 2D Profiles
 

@@ -23,7 +23,7 @@
 
 using namespace std;
 
-TEST(StressHistorgram, TestConversion1D)
+TEST(StressHistogram, TestConversion1D)
 {
    const int nbins[3] = {50, 11, 12};
    const double minRangeArray[3] = {2., 4., 4.};
@@ -78,7 +78,7 @@ TEST(StressHistorgram, TestConversion1D)
 
 }
 
-TEST(StressHistorgram, TestConversion2D)
+TEST(StressHistogram, TestConversion2D)
 {
    const int nbins[3] = {50, 11, 12};
    const double minRangeArray[3] = {2., 4., 4.};
@@ -132,7 +132,7 @@ TEST(StressHistorgram, TestConversion2D)
    EXPECT_TRUE(HistogramsEquals(*n2d.get(), *h2dn.get()));
 }
 
-TEST(StressHistorgram, TestConversion3D)
+TEST(StressHistogram, TestConversion3D)
 {
    const int nbins[3] = {50, 11, 12};
    const double minRangeArray[3] = {2., 4., 4.};

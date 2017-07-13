@@ -21,7 +21,7 @@
 
 using namespace std;
 
-TEST(StressHistorgram, TestAssign1D)
+TEST(StressHistogram, TestAssign1D)
 {
    // Tests the operator=() method for 1D Histograms
 
@@ -40,7 +40,7 @@ TEST(StressHistorgram, TestAssign1D)
    EXPECT_TRUE(HistogramsEquals(h1, h2, cmpOptStats));
 }
 
-TEST(StressHistorgram, TestAssign2D)
+TEST(StressHistogram, TestAssign2D)
 {
    // Tests the operator=() method for 2D Histograms
 
@@ -60,7 +60,7 @@ TEST(StressHistorgram, TestAssign2D)
    EXPECT_TRUE(HistogramsEquals(h1, h2, cmpOptStats));
 }
 
-TEST(StressHistorgram, TestAssign3D)
+TEST(StressHistogram, TestAssign3D)
 {
    // Tests the operator=() method for 3D Histograms
 
@@ -83,7 +83,7 @@ TEST(StressHistorgram, TestAssign3D)
    EXPECT_TRUE(HistogramsEquals(h1, h2, cmpOptStats));
 }
 
-TEST(StressHistorgram, TestAssignVar1D)
+TEST(StressHistogram, TestAssignVar1D)
 {
    // Tests the operator=() method for 1D Histograms with variable bin size
 
