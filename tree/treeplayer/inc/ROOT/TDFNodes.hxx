@@ -183,7 +183,7 @@ public:
          exceptionText += fReaderArray->GetBranchName();
          exceptionText += " hangs from a non-split branch. For this reason, it cannot be accessed via an array_view."
                           " Please read the top level branch instead.";
-         throw std::runtime_error(exceptionText.c_str());
+         throw std::runtime_error(exceptionText);
       }
 
       return std::array_view<ProxyParam_t>(fReaderArray->begin(), fReaderArray->end());

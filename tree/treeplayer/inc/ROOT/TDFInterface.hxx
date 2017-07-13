@@ -1114,7 +1114,7 @@ private:
          err_msg += " while ";
          err_msg += std::to_string(bNamesN);
          err_msg += " branches have been specified.";
-         throw std::runtime_error(err_msg.c_str());
+         throw std::runtime_error(err_msg);
       }
 
       // split name into directory and treename if needed
