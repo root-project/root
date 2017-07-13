@@ -394,22 +394,17 @@ class NotebookDrawer(object):
         return True
 
     def _removeTColors(self,object_json):
-	'''
-	This function trims the json by trimming the list of TColors that are not used in JS rendering, and hence can
-	be safety removed, reducing the size of notebooks with TCanvases markedly
-	'''
-      
 	"""Test JSON that isn't a TCanvas
 	>>> self._removeTColors({"_typename": "NotTCanvas"})
 	{'_typename': 'NotTCanvas'}
 
 	Test TCanvas with TColorArray is deleted successfully
 	>>> self._removeTColors({"_typename": "TCanvas", "fPrimitives" : { "arr": [ {"arr":[{"_typename": "TColor"}],"_typename":"TObjArray","name":"ListOfColors", } ]}})
-	{'_typename': 'TCanvas', 'fPrimitives': {'arr': [{'_typename': 'TObjArray', 'name': 'ListOfColors'}]}}
+	{'_typename': 'TCanvas', 'fPrimitives': {'arr': [{}]}}
 
 	Test TCanvas with No TColorArray is not changed
-	>>> self._removeTColors({"_typename": "TCanvas", "fPrimitives" : { "arr": [ {"arr":[{"_typename": "NotTColor"}],"_typename":"NotObjArray","name":"ListOfColors", } ]}})
-	{'_typename': 'TCanvas', 'fPrimitives': {'arr': [{'arr': [{'_typename': 'NotTColor'}], '_typename': 'NotObjArray', 'name': 'ListOfColors'}]}}
+	>>> self._removeTColors({"_typename": "TCanvas", "fPrimitives" : { "arr": [ {"arr":[{"_typename": "NotTColor"}],"_typename":"NotObjArray","name":"ListOfOthers", } ]}})
+	{'_typename': 'TCanvas', 'fPrimitives': {'arr': [{'arr': [{'_typename': 'NotTColor'}], '_typename': 'NotObjArray', 'name': 'ListOfOthers'}]}}
 	"""
 	
 	#Only TCanvas JSON objects have TColors to remove in the first place
@@ -421,8 +416,9 @@ class NotebookDrawer(object):
 	if "fPrimitives" in object_json:
 	    fPrimitives_array = object_json["fPrimitives"]["arr"]
 	    for element in fPrimitives_array:
-		if element["_typename"] == "TObjArray" and "arr" in element:
-		    del element["arr"]
+		if element["_typename"] == "TObjArray" and element["name"] == "ListOfColors":
+		    element.clear()
+
 
 	return object_json
   
