@@ -17,7 +17,6 @@
 
 #pragma link C++ class TMPClient+;
 #pragma link C++ class TMPWorker+;
-#pragma link C++ class TMPInterruptHandler+;
 #pragma link C++ class ROOT::TProcessExecutor+;
 #pragma link C++ class TProcPool;  // Deprecated but still needed for backward compatibility
 
