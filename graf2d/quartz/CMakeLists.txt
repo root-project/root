@@ -14,8 +14,8 @@ if(cxxmodules)
   string(REPLACE "${ROOT_CXXMODULES_CFLAGS}" "" CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
 endif(cxxmodules)
 
-ROOT_GENERATE_DICTIONARY(G__Quartz "" MODULE GQuartz LINKDEF LinkDef.h DEPENDENCIES Core)
+ROOT_GENERATE_DICTIONARY(G__GQuartz "" MODULE GQuartz LINKDEF LinkDef.h DEPENDENCIES Core)
 
-ROOT_LINKER_LIBRARY(GQuartz *.mm  G__Quartz.cxx LIBRARIES  "-framework Cocoa" DEPENDENCIES Core)
+ROOT_LINKER_LIBRARY(GQuartz *.mm  G__GQuartz.cxx LIBRARIES  "-framework Cocoa" DEPENDENCIES Core)
 ROOT_INSTALL_HEADERS()
 
