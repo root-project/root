@@ -33,8 +33,8 @@ namespace Internal {
 namespace TDF {
 // Match expression against names of branches passed as parameter
 // Return vector of names of the branches used in the expression
-std::vector<std::string> GetUsedBranchesNames(const std::string expression, TObjArray *branches,
-                                              const std::vector<std::string> &tmpBranches)
+std::vector<std::string> FindUsedColumnNames(const std::string expression, TObjArray *branches,
+                                             const std::vector<std::string> &tmpBranches)
 {
    // Check what branches and temporary branches are used in the expression
    // To help matching the regex
@@ -68,7 +68,7 @@ Long_t JitTransformation(void *thisPtr, const std::string &methodName, const std
                          const std::vector<std::string> &tmpBranches,
                          const std::map<std::string, TmpBranchBasePtr_t> &tmpBookedBranches, TTree *tree)
 {
-   auto usedBranches = GetUsedBranchesNames(expression, branches, tmpBranches);
+   auto usedBranches = FindUsedColumnNames(expression, branches, tmpBranches);
    auto exprNeedsVariables = !usedBranches.empty();
 
    // Move to the preparation of the jitting
