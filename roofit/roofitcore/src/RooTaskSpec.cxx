@@ -54,8 +54,8 @@ using namespace std;
 using namespace RooFit;
 
 //ClassImp(RooTaskSpec);
+RooTaskSpec::RooTaskSpec(){};
 
-//RooTaskSpec::RooTaskSpec(const Int_t case, const pdfName name,const Bool_t binned);
 RooTaskSpec::RooTaskSpec(RooAbsOptTestStatistic* nll){
   RooAbsOptTestStatistic* rats = dynamic_cast<RooAbsOptTestStatistic*>(nll) ;
   if (rats) {

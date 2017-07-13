@@ -64,6 +64,7 @@ For general multiprocessing in ROOT, please refer to the TProcessExecutor class.
 #include "RooTrace.h"
 #include "RooConstVar.h"
 #include "RooRealIntegral.h"
+#include "RooTaskSpec.h"
 
 #include "TSystem.h"
 
@@ -103,6 +104,7 @@ RooRealMPFE::RooRealMPFE(const char *name, const char *title, RooAbsReal& arg, I
   _arg("arg","arg",this,arg),
   _vars("vars","vars",this),
   _calcInProgress(kFALSE),
+  _useTaskSpec(kTRUE),
   _verboseClient(kFALSE),
   _verboseServer(kFALSE),
   _inlineMode(calcInline),
@@ -134,6 +136,7 @@ RooRealMPFE::RooRealMPFE(const RooRealMPFE& other, const char* name) :
   _arg("arg",this,other._arg),
   _vars("vars",this,other._vars),
   _calcInProgress(kFALSE),
+  _useTaskSpec(kTRUE),
   _verboseClient(other._verboseClient),
   _verboseServer(other._verboseServer),
   _inlineMode(other._inlineMode),
@@ -220,6 +223,12 @@ void RooRealMPFE::initialize()
   // Clear eval error log prior to forking
   // to avoid confusions...
   clearEvalErrorLog() ;
+  if (_useTaskSpec){
+    cout<<"sending arg"<<endl;
+    setTaskSpec();
+  } else {
+    cout<<"UseTaskSpec not set true!"<<endl;
+  }
   // Fork server process and setup IPC
   _pipe = new BidirMMapPipe();
 //  if (RooTrace::timing_flag > 0) {
@@ -366,6 +375,17 @@ void RooRealMPFE::_initTiming() {
 void RooRealMPFE::setCpuAffinity(int cpu) {
   Message msg = SetCpuAffinity;
   *_pipe << msg << cpu;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set use of RooTaskSpec.
+
+void RooRealMPFE::setTaskSpec() {
+  cout<<"Setting TaskSpec!"<<endl;
+  RooAbsTestStatistic* tmp = dynamic_cast<RooAbsTestStatistic*>(_arg.absArg());
+  RooTaskSpec taskspecification = RooTaskSpec(tmp);
+  Message msg = TaskSpec;
+  *_pipe << msg << taskspecification;
 }
 
 
@@ -616,6 +636,14 @@ void RooRealMPFE::serverLoop() {
         }
         #endif
 
+        break;
+      }
+
+      case TaskSpec: {
+        RooTaskSpec taskspecification;
+        *_pipe >> taskspecification;
+
+	std::cout << "EEEEEE TaskSpec'd"<<endl;
         break;
       }
 

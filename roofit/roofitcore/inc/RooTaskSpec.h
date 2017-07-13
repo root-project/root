@@ -31,6 +31,7 @@ class RooArgList;
 
 class RooTaskSpec {
  public:
+  RooTaskSpec();
   RooTaskSpec(RooAbsOptTestStatistic* nll);
   RooTaskSpec(RooAbsReal* nll);
   struct Task {

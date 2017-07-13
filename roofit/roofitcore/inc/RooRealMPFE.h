@@ -22,6 +22,7 @@
 #include "RooArgList.h"
 #include "RooMPSentinel.h"
 #include "TStopwatch.h"
+#include "RooTaskSpec.h"
 #include <vector>
 #include <iostream>
 #include <string>
@@ -51,7 +52,7 @@ public:
   void enableOffsetting(Bool_t flag) ;
 
   void followAsSlave(RooRealMPFE& master) { _updateMaster = &master ; }
-  
+
   protected:
 
   // Function evaluation
@@ -66,7 +67,7 @@ public:
 
   enum Message { SendReal=0, SendCat, Calculate, Retrieve, ReturnValue, Terminate, 
     ConstOpt, Verbose, LogEvalError, ApplyNLLW2, EnableOffset, CalculateNoOffset,
-    SetCpuAffinity,
+    SetCpuAffinity, TaskSpec,
     EnableTimingNumInts, DisableTimingNumInts,
     MeasureCommunicationTime,
     RetrieveTimings,
@@ -85,6 +86,8 @@ public:
   RooListProxy _vars ;   // Variables
   RooArgList _saveVars ;  // Copy of variables
   mutable Bool_t _calcInProgress ;
+  //  RooTaskSpec _taskspecification;
+  Bool_t _useTaskSpec ;
   Bool_t _verboseClient ;
   Bool_t _verboseServer ;
   Bool_t _inlineMode ;
@@ -102,6 +105,7 @@ public:
   static RooMPSentinel _sentinel ;
 
   void setCpuAffinity(int cpu);
+  void setTaskSpec();
   pid_t getPIDFromServer() const;
   void setMPSet(Int_t inSetNum, Int_t inNumSets);
 
@@ -115,7 +119,7 @@ private:
   std::map<std::string, double> collectTimingsFromServer(Bool_t clear_timings = kTRUE) const;
 
   void _initTiming();
-
+  //  RooTaskSpec _taskspecification;
   Int_t       _setNum ;           //! Partition number of this instance in parallel calculation mode
   Int_t       _numSets ;          //! Total number of partitions in parallel calculation mode
 
