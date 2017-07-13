@@ -113,7 +113,7 @@ void CallBuildAndBook(PrevNodeType &prevNode, const ColumnNames_t &bl, unsigned 
    delete rOnHeap;
 }
 
-std::vector<std::string> GetUsedBranchesNames(const std::string, TObjArray *, const std::vector<std::string> &);
+std::vector<std::string> FindUsedColumnNames(const std::string, TObjArray *, const std::vector<std::string> &);
 
 using TmpBranchBasePtr_t = std::shared_ptr<TCustomColumnBase>;
 
