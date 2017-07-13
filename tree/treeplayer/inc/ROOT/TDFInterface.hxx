@@ -138,6 +138,8 @@ std::shared_ptr<T> *MakeSharedOnHeap(const std::shared_ptr<T> &shPtr)
    return new std::shared_ptr<T>(shPtr);
 }
 
+bool AtLeastOneEmptyString(const std::vector<std::string_view> strings);
+
 } // namespace TDF
 } // namespace Internal
 
@@ -605,11 +607,11 @@ public:
    template <typename V = TDFDetail::TInferType>
    TResultProxy<::TH1D> Histo1D(::TH1D &&model = ::TH1D{"", "", 128u, 0., 0.}, std::string_view vName = "")
    {
-      auto bl = GetBranchNames<V>({vName}, "fill the histogram");
+      const auto userColumns = vName.empty() ? ColumnNames_t() : ColumnNames_t({std::string(vName)});
       auto h = std::make_shared<::TH1D>(std::move(model));
       if (h->GetXaxis()->GetXmax() == h->GetXaxis()->GetXmin())
          TDFInternal::HistoUtils<::TH1D>::SetCanExtendAllAxes(*h);
-      return CreateAction<TDFInternal::ActionTypes::Histo1D, V>(bl, h);
+      return CreateAction<TDFInternal::ActionTypes::Histo1D, V>(userColumns, h);
    }
 
    template <typename V = TDFDetail::TInferType>
@@ -636,9 +638,12 @@ public:
    template <typename V = TDFDetail::TInferType, typename W = TDFDetail::TInferType>
    TResultProxy<::TH1D> Histo1D(::TH1D &&model, std::string_view vName, std::string_view wName)
    {
-      auto bl = GetBranchNames<V, W>({vName, wName}, "fill the histogram");
+      auto columnViews = { vName, wName };
+      const auto userColumns = TDFInternal::AtLeastOneEmptyString(columnViews)
+                                  ? ColumnNames_t()
+                                  : ColumnNames_t(columnViews.begin(), columnViews.end());
       auto h = std::make_shared<::TH1D>(std::move(model));
-      return CreateAction<TDFInternal::ActionTypes::Histo1D, V, W>(bl, h);
+      return CreateAction<TDFInternal::ActionTypes::Histo1D, V, W>(userColumns, h);
    }
 
    template <typename V = TDFDetail::TInferType, typename W = TDFDetail::TInferType>
@@ -671,8 +676,11 @@ public:
       if (!TDFInternal::HistoUtils<::TH2D>::HasAxisLimits(*h)) {
          throw std::runtime_error("2D histograms with no axes limits are not supported yet.");
       }
-      auto bl = GetBranchNames<V1, V2>({v1Name, v2Name}, "fill the histogram");
-      return CreateAction<TDFInternal::ActionTypes::Histo2D, V1, V2>(bl, h);
+      auto columnViews = {v1Name, v2Name};
+      const auto userColumns = TDFInternal::AtLeastOneEmptyString(columnViews)
+                                  ? ColumnNames_t()
+                                  : ColumnNames_t(columnViews.begin(), columnViews.end());
+      return CreateAction<TDFInternal::ActionTypes::Histo2D, V1, V2>(userColumns, h);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -697,8 +705,11 @@ public:
       if (!TDFInternal::HistoUtils<::TH2D>::HasAxisLimits(*h)) {
          throw std::runtime_error("2D histograms with no axes limits are not supported yet.");
       }
-      auto bl = GetBranchNames<V1, V2, W>({v1Name, v2Name, wName}, "fill the histogram");
-      return CreateAction<TDFInternal::ActionTypes::Histo2D, V1, V2, W>(bl, h);
+      auto columnViews = {v1Name, v2Name, wName};
+      const auto userColumns = TDFInternal::AtLeastOneEmptyString(columnViews)
+                                  ? ColumnNames_t()
+                                  : ColumnNames_t(columnViews.begin(), columnViews.end());
+      return CreateAction<TDFInternal::ActionTypes::Histo2D, V1, V2, W>(userColumns, h);
    }
 
    template <typename V1, typename V2, typename W>
@@ -729,8 +740,11 @@ public:
       if (!TDFInternal::HistoUtils<::TH3D>::HasAxisLimits(*h)) {
          throw std::runtime_error("3D histograms with no axes limits are not supported yet.");
       }
-      auto bl = GetBranchNames<V1, V2, V3>({v1Name, v2Name, v3Name}, "fill the histogram");
-      return CreateAction<TDFInternal::ActionTypes::Histo3D, V1, V2, V3>(bl, h);
+      auto columnViews = {v1Name, v2Name, v3Name};
+      const auto userColumns = TDFInternal::AtLeastOneEmptyString(columnViews)
+                                  ? ColumnNames_t()
+                                  : ColumnNames_t(columnViews.begin(), columnViews.end());
+      return CreateAction<TDFInternal::ActionTypes::Histo3D, V1, V2, V3>(userColumns, h);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -757,8 +771,11 @@ public:
       if (!TDFInternal::HistoUtils<::TH3D>::HasAxisLimits(*h)) {
          throw std::runtime_error("3D histograms with no axes limits are not supported yet.");
       }
-      auto bl = GetBranchNames<V1, V2, V3, W>({v1Name, v2Name, v3Name, wName}, "fill the histogram");
-      return CreateAction<TDFInternal::ActionTypes::Histo3D, V1, V2, V3, W>(bl, h);
+      auto columnViews = {v1Name, v2Name, v3Name, wName};
+      const auto userColumns = TDFInternal::AtLeastOneEmptyString(columnViews)
+                                  ? ColumnNames_t()
+                                  : ColumnNames_t(columnViews.begin(), columnViews.end());
+      return CreateAction<TDFInternal::ActionTypes::Histo3D, V1, V2, V3, W>(userColumns, h);
    }
 
    template <typename V1, typename V2, typename V3, typename W>
@@ -785,8 +802,11 @@ public:
       if (!TDFInternal::HistoUtils<::TProfile>::HasAxisLimits(*h)) {
          throw std::runtime_error("Profiles with no axes limits are not supported yet.");
       }
-      auto bl = GetBranchNames<V1, V2>({v1Name, v2Name}, "fill the 1D Profile");
-      return CreateAction<TDFInternal::ActionTypes::Profile1D, V1, V2>(bl, h);
+      auto columnViews = {v1Name, v2Name};
+      const auto userColumns = TDFInternal::AtLeastOneEmptyString(columnViews)
+                                  ? ColumnNames_t()
+                                  : ColumnNames_t(columnViews.begin(), columnViews.end());
+      return CreateAction<TDFInternal::ActionTypes::Profile1D, V1, V2>(userColumns, h);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -811,8 +831,11 @@ public:
       if (!TDFInternal::HistoUtils<::TProfile>::HasAxisLimits(*h)) {
          throw std::runtime_error("Profile histograms with no axes limits are not supported yet.");
       }
-      auto bl = GetBranchNames<V1, V2, W>({v1Name, v2Name, wName}, "fill the 1D profile");
-      return CreateAction<TDFInternal::ActionTypes::Profile1D, V1, V2, W>(bl, h);
+      auto columnViews = {v1Name, v2Name, wName};
+      const auto userColumns = TDFInternal::AtLeastOneEmptyString(columnViews)
+                                  ? ColumnNames_t()
+                                  : ColumnNames_t(columnViews.begin(), columnViews.end());
+      return CreateAction<TDFInternal::ActionTypes::Profile1D, V1, V2, W>(userColumns, h);
    }
 
    template <typename V1, typename V2, typename W>
@@ -843,8 +866,11 @@ public:
       if (!TDFInternal::HistoUtils<::TProfile2D>::HasAxisLimits(*h)) {
          throw std::runtime_error("2D profiles with no axes limits are not supported yet.");
       }
-      auto bl = GetBranchNames<V1, V2, V3>({v1Name, v2Name, v3Name}, "fill the 2D profile");
-      return CreateAction<TDFInternal::ActionTypes::Profile2D, V1, V2, V3>(bl, h);
+      auto columnViews = {v1Name, v2Name, v3Name};
+      const auto userColumns = TDFInternal::AtLeastOneEmptyString(columnViews)
+                                  ? ColumnNames_t()
+                                  : ColumnNames_t(columnViews.begin(), columnViews.end());
+      return CreateAction<TDFInternal::ActionTypes::Profile2D, V1, V2, V3>(userColumns, h);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -871,8 +897,11 @@ public:
       if (!TDFInternal::HistoUtils<::TProfile2D>::HasAxisLimits(*h)) {
          throw std::runtime_error("2D profiles with no axes limits are not supported yet.");
       }
-      auto bl = GetBranchNames<V1, V2, V3, W>({v1Name, v2Name, v3Name, wName}, "fill the histogram");
-      return CreateAction<TDFInternal::ActionTypes::Profile2D, V1, V2, V3, W>(bl, h);
+      auto columnViews = {v1Name, v2Name, v3Name, wName};
+      const auto userColumns = TDFInternal::AtLeastOneEmptyString(columnViews)
+                                  ? ColumnNames_t()
+                                  : ColumnNames_t(columnViews.begin(), columnViews.end());
+      return CreateAction<TDFInternal::ActionTypes::Profile2D, V1, V2, V3, W>(userColumns, h);
    }
 
    template <typename V1, typename V2, typename V3, typename W>
@@ -883,15 +912,16 @@ public:
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Fill and return any entity with a Fill method (*lazy action*)
-   /// \tparam BranchTypes The types of the branches the values of which are used to fill the object.
+   /// \tparam FirstBranch The first type of the branches the values of which are used to fill the object.
+   /// \tparam OtherBranches A list of the other types of the branches the values of which are used to fill the object.
+   /// \tparam T The type of the object to fill. Automatically deduced.
    /// \param[in] model The model to be considered to build the new return value.
    /// \param[in] bl The name of the branches read to fill the object.
    ///
-   /// The returned object is independent of the input one.
-   /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See TResultProxy documentation.
    /// The user gives up ownership of the model object.
-   /// It is compulsory to express the branches to be considered.
+   /// The list of column names to be used for filling must always be specified.
+   /// This action is *lazy*: upon invocation of this method the calculation is booked but not executed.
+   /// See TResultProxy documentation.
    template <typename FirstBranch, typename... OtherBranches, typename T> // need FirstBranch to disambiguate overloads
    TResultProxy<T> Fill(T &&model, const ColumnNames_t &bl)
    {
@@ -902,6 +932,14 @@ public:
       return CreateAction<TDFInternal::ActionTypes::Fill, FirstBranch, OtherBranches...>(bl, h);
    }
 
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Fill and return any entity with a Fill method
+   /// \tparam T The type of the object to fill. Automatically deduced.
+   /// \param[in] model The model to be considered to build the new return value.
+   /// \param[in] bl The name of the branches read to fill the object.
+   ///
+   /// This overload of `Fill` infers the type of the specified columns at runtime and just-in-time compiles the
+   /// previous overload. Check the previous overload for more details on `Fill`.
    template <typename T>
    TResultProxy<T> Fill(T &&model, const ColumnNames_t &bl)
    {
@@ -909,7 +947,7 @@ public:
       if (!TDFInternal::HistoUtils<T>::HasAxisLimits(*h)) {
          throw std::runtime_error("The absence of axes limits is not supported yet.");
       }
-      return CreateAction<TDFInternal::ActionTypes::Fill, TDFDetail::TInferType>(bl, h);
+      return CreateAction<TDFInternal::ActionTypes::Fill, TDFDetail::TInferType>(bl, h, bl.size());
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -1026,22 +1064,30 @@ private:
    TResultProxy<ActionResultType> CreateAction(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &r)
    {
       auto df = GetDataFrameChecked();
+      const ColumnNames_t &defBl = df->GetDefaultColumnNames();
+      auto nColumns = sizeof...(BranchTypes);
+      const auto actualBl = TDFInternal::SelectColumns(nColumns, bl, defBl);
       unsigned int nSlots = df->GetNSlots();
-      TDFInternal::BuildAndBook<BranchTypes...>(bl, r, nSlots, *df, *fProxiedPtr, (ActionType *)nullptr);
+      TDFInternal::BuildAndBook<BranchTypes...>(actualBl, r, nSlots, *df, *fProxiedPtr, (ActionType *)nullptr);
       return MakeResultProxy(r, df);
    }
 
    // User did not specify type, do type inference
+   // This version of CreateAction has a `nColumns` optional argument. If present, the number of required columns for
+   // this action is taken equal to nColumns, otherwise it is assumed to be sizeof...(BranchTypes)
    template <typename ActionType, typename... BranchTypes, typename ActionResultType,
              typename std::enable_if<TDFInternal::TNeedJitting<BranchTypes...>::value, int>::type = 0>
-   TResultProxy<ActionResultType> CreateAction(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &r)
+   TResultProxy<ActionResultType> CreateAction(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &r,
+                                               const int nColumns = -1)
    {
       auto df = GetDataFrameChecked();
+      const ColumnNames_t &defBl = df->GetDefaultColumnNames();
+      const auto actualBl = TDFInternal::SelectColumns((nColumns > -1 ? nColumns : sizeof...(BranchTypes)), bl, defBl);
       unsigned int nSlots = df->GetNSlots();
       const auto &tmpBranches = df->GetBookedBranches();
       auto tree = df->GetTree();
       auto rOnHeap = TDFInternal::MakeSharedOnHeap(r);
-      auto toJit = TDFInternal::JitBuildAndBook(bl, GetNodeTypeName(), fProxiedPtr.get(),
+      auto toJit = TDFInternal::JitBuildAndBook(actualBl, GetNodeTypeName(), fProxiedPtr.get(),
                                                 typeid(std::shared_ptr<ActionResultType>), typeid(ActionType), rOnHeap,
                                                 tree, nSlots, tmpBranches);
       df->Jit(toJit);
