@@ -1035,29 +1035,6 @@ private:
 
    inline std::string GetNodeTypeName();
 
-   /// Returns the default branches if needed, takes care of the error handling.
-   template <typename T1, typename T2 = void, typename T3 = void, typename T4 = void>
-   ColumnNames_t GetBranchNames(const std::vector<std::string_view> &bl, std::string_view actionNameForErr)
-   {
-      constexpr auto isT2Void = std::is_same<T2, void>::value;
-      constexpr auto isT3Void = std::is_same<T3, void>::value;
-      constexpr auto isT4Void = std::is_same<T4, void>::value;
-
-      unsigned int neededBranches = 1 + !isT2Void + !isT3Void + !isT4Void;
-
-      unsigned int providedBranches = 0;
-      std::for_each(bl.begin(), bl.end(), [&providedBranches](std::string_view s) {
-         if (!s.empty()) providedBranches++;
-      });
-
-      if (neededBranches == providedBranches) {
-         ColumnNames_t bl2(bl.begin(), bl.end());
-         return bl2;
-      }
-
-      return GetDefaultBranchNames(neededBranches, actionNameForErr);
-   }
-
    // Type was specified by the user, no need to infer it
    template <typename ActionType, typename... BranchTypes, typename ActionResultType,
              typename std::enable_if<!TDFInternal::TNeedJitting<BranchTypes...>::value, int>::type = 0>
