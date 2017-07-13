@@ -356,15 +356,6 @@ public:
       }
    }
 
-#if PYTHON_FOUND
-   void Send(PyObject *obj, Int_t dest, Int_t tag);
-   PyObject *Recv(Int_t source, Int_t tag);
-   PyObject *Bcast(PyObject *obj, Int_t root);
-
-   TRequest ISend(PyObject *obj, Int_t dest, Int_t tag);
-   TRequest IRecv(Int_t source, Int_t tag);
-#endif
-
    ClassDef(TCommunicator, 2)
 };
 

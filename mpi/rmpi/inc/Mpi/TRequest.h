@@ -24,11 +24,6 @@ protected:
                                         // at wait or test of clear memory
    MPI_Request fRequest;                //
 
-#if PYTHON_FOUND
-   TMpiMessage *fPyMsg;
-   void SetMsg(TMpiMessage *msg);
-#endif
-
 public:
    TRequest();
    TRequest(const TRequest &obj);
@@ -84,9 +79,6 @@ public:
 
    virtual Bool_t GetStatus() const;
 
-#if PYTHON_FOUND
-   PyObject *GetMsg();
-#endif
    ClassDef(TRequest, 1)
 };
 

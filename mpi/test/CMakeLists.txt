@@ -51,6 +51,7 @@ if(python OR python2 OR python3)
     ROOT_ADD_TEST_MPI_PY(p2p 2)
     ROOT_ADD_TEST_MPI_PY(p2p_nonblocking 2)
     ROOT_ADD_TEST_MPI_PY(bcast 4)
+    ROOT_ADD_TEST_MPI_PY(scatter 4)
 
     endif(PYTHONLIBS_FOUND)    
 endif()

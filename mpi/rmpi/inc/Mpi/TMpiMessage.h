@@ -80,11 +80,6 @@ public:
    template <class ClassType>
    void WriteObject(ClassType &obj);
 
-#if PYTHON_FOUND
-   TMpiMessage(PyObject *obj);
-   PyObject *ReadPyObject();
-#endif
-
    ClassDef(TMpiMessage, 1);
 };
 
@@ -113,10 +108,6 @@ void TMpiMessage::WriteObject(ClassType &obj)
    WriteObject<ClassType>(&obj);
 }
 
-#if PYTHON_FOUND
-template <>
-void TMpiMessage::WriteObject<PyObject>(PyObject *obj);
-#endif
 }
 }
 

@@ -9,35 +9,23 @@ using namespace ROOT::Mpi;
 TRequest::TRequest() : fRequest(MPI_REQUEST_NULL)
 {
    fCallback = []() {};
-#if PYTHON_FOUND
-   fPyMsg = NULL;
-#endif
 }
 
 //______________________________________________________________________________
 TRequest::TRequest(const TRequest &obj) : TObject(obj), fRequest(obj.fRequest)
 {
    fCallback = []() {};
-#if PYTHON_FOUND
-   fPyMsg = NULL;
-#endif
 }
 
 //______________________________________________________________________________
 TRequest::TRequest(MPI_Request i) : fRequest(i)
 {
    fCallback = []() {};
-#if PYTHON_FOUND
-   fPyMsg = NULL;
-#endif
 }
 
 //______________________________________________________________________________
 TRequest::~TRequest()
 {
-#if PYTHON_FOUND
-   if (fPyMsg) delete fPyMsg;
-#endif
 }
 
 //______________________________________________________________________________
@@ -45,9 +33,6 @@ TRequest &TRequest::operator=(const TRequest &r)
 {
    fRequest = r.fRequest;
    fCallback = r.fCallback;
-#if PYTHON_FOUND
-   fPyMsg = r.fPyMsg;
-#endif
    return *this;
 }
 
@@ -68,9 +53,6 @@ TRequest &TRequest::operator=(const MPI_Request &i)
 {
    fRequest = i;
    fCallback = [] {};
-#if PYTHON_FOUND
-   fPyMsg = NULL;
-#endif
    return *this;
 }
 
@@ -961,16 +943,4 @@ TGrequest TGrequest::Start(Int_t (*query_fn)(void *, TStatus &), Int_t (*free_fn
 void TGrequest::Complete()
 {
    ROOT_MPI_CHECK_CALL(MPI_Grequest_complete, (fRequest), TGrequest::Class_Name());
-}
-
-//______________________________________________________________________________
-void TRequest::SetMsg(TMpiMessage *msg)
-{
-   fPyMsg = msg;
-}
-
-//______________________________________________________________________________
-PyObject *TRequest::GetMsg()
-{
-   return fPyMsg->ReadPyObject();
 }
