@@ -528,7 +528,7 @@ public:
       auto redObjPtr = std::make_shared<T>(initValue);
       using Helper_t = TDFInternal::ReduceHelper<F, T>;
       using Action_t = typename TDFInternal::TAction<Helper_t, Proxied>;
-      loopManager->Book(std::make_shared<Action_t>(Helper_t(std::move(f), redObjPtr, loopManager->GetNSlots()),
+      loopManager->Book(std::make_shared<Action_t>(Helper_t(std::move(f), redObjPtr, fProxiedPtr->GetNSlots()),
                                                    validColumnNames, *fProxiedPtr));
       return MakeResultProxy(redObjPtr, loopManager);
    }
@@ -556,7 +556,7 @@ public:
    TResultProxy<unsigned int> Count()
    {
       auto df = GetDataFrameChecked();
-      unsigned int nSlots = df->GetNSlots();
+      const auto nSlots = fProxiedPtr->GetNSlots();
       auto cSPtr = std::make_shared<unsigned int>(0);
       using Helper_t = TDFInternal::CountHelper;
       using Action_t = TDFInternal::TAction<Helper_t, Proxied>;
@@ -581,7 +581,7 @@ public:
       using Helper_t = TDFInternal::TakeHelper<T, COLL>;
       using Action_t = TDFInternal::TAction<Helper_t, Proxied>;
       auto valuesPtr = std::make_shared<COLL>();
-      const auto nSlots = loopManager->GetNSlots();
+      const auto nSlots = fProxiedPtr->GetNSlots();
       loopManager->Book(std::make_shared<Action_t>(Helper_t(valuesPtr, nSlots), validColumnNames, *fProxiedPtr));
       return MakeResultProxy(valuesPtr, loopManager);
    }
@@ -1080,7 +1080,7 @@ private:
       auto loopManager = GetDataFrameChecked();
       auto realNColumns = (nColumns > -1 ? nColumns : sizeof...(BranchTypes));
       const auto validColumnNames = GetValidatedColumnNames(*loopManager, realNColumns, columns);
-      unsigned int nSlots = loopManager->GetNSlots();
+      unsigned int nSlots = fProxiedPtr->GetNSlots();
       const auto &tmpBranches = loopManager->GetBookedBranches();
       auto tree = loopManager->GetTree();
       auto rOnHeap = TDFInternal::MakeSharedOnHeap(r);
@@ -1147,8 +1147,8 @@ private:
          // multi-thread snapshot
          using Helper_t = TDFInternal::SnapshotHelperMT<BranchTypes...>;
          using Action_t = TDFInternal::TAction<Helper_t, Proxied>;
-         actionPtr.reset(new Action_t(Helper_t(df->GetNSlots(), filenameInt, dirnameInt, treenameInt, bnames), bnames,
-                                      *fProxiedPtr));
+         actionPtr.reset(new Action_t(Helper_t(fProxiedPtr->GetNSlots(), filenameInt, dirnameInt, treenameInt, bnames),
+                                      bnames, *fProxiedPtr));
       }
       df->Book(std::move(actionPtr));
       df->Run();
