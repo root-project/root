@@ -221,6 +221,15 @@ std::string JitBuildAndBook(const ColumnNames_t &bl, const std::string &prevNode
    createAction_str << "}, " << nSlots << ", reinterpret_cast<" << actionResultTypeName << "*>(" << rOnHeap << "));";
    return createAction_str.str();
 }
+
+bool AtLeastOneEmptyString(const std::vector<std::string_view> strings)
+{
+   for(const auto &s : strings) {
+      if (s.empty())
+         return true;
+   }
+   return false;
+}
 } // end ns TDF
 } // end ns Internal
 } // end ns ROOT
