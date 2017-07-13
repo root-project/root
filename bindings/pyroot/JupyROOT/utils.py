@@ -409,15 +409,16 @@ class NotebookDrawer(object):
 	"""
 	
 	#Only TCanvas JSON objects have TColors to remove in the first place
-	if object_json["_typename"]!="TCanvas":
+	if "_typename" in object_json and object_json["_typename"]!="TCanvas":
 	    return object_json
 
 	#TColor objects are known to have this fixed nested structure in the TCanvas as follows:
 	#TCanvas -> fPrimitives-> arr-> TObjArray (an element in arr)
-	nest = object_json["fPrimitives"]["arr"]
-	for element in nest:
-	    if element["_typename"] == "TObjArray":
-		del element["arr"]
+	if "fPrimitives" in object_json:
+	    fPrimitives_array = object_json["fPrimitives"]["arr"]
+	    for element in fPrimitives_array:
+		if element["_typename"] == "TObjArray" and "arr" in element:
+		    del element["arr"]
 
 	return object_json
   
@@ -434,7 +435,7 @@ class NotebookDrawer(object):
         object_json = ROOT.TBufferJSON.ConvertToJSON(self.drawableObject,3)
         parsed_json = json.loads(str(object_json))
         final_json = self._trimJSONForGraphics(parsed_json)
-	
+        	
         # Here we could optimise the string manipulation
         divId = 'root_plot_' + str(self._getUID())
  
