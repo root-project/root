@@ -7,14 +7,13 @@ __author__  = 'Omar Zapata (Omar.Zapata@cern.ch)'
 
 from ROOT import Mpi, TString
 from ROOT.Mpi import COMM_WORLD, TEnvironment, TCommunicator, TRequest, TMpiMessage
-from ROOT.Mpi import PyPickleDumps as __PyPickleDumps
-from ROOT.Mpi import PyPickleLoads as __PyPickleLoads
-
+import pickle, codecs
 #########################
 ##TMpiMessage attributes#
 #########################
 def __WritePyObject(self,obj):
-    msg=__PyPickleDumps(obj)
+    data=codecs.encode(pickle.dumps(obj), "base64").decode()
+    msg=TString(data)
     self.WriteTString(msg)
     self.SetReadMode();
     self.Reset();
@@ -22,7 +21,7 @@ def __WritePyObject(self,obj):
 def __ReadPyObject(self):
     msg=TString()
     self.ReadTString(msg)
-    return __PyPickleLoads(msg);
+    return pickle.loads(codecs.decode(msg.Data().encode(), "base64"))
 
 setattr(TMpiMessage,"WritePyObject",__WritePyObject)
 setattr(TMpiMessage,"ReadPyObject",__ReadPyObject)
