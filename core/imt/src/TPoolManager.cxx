@@ -51,6 +51,7 @@ namespace ROOT {
          if (GetWP().expired()) {
             std::shared_ptr<TPoolManager> shared(new TPoolManager(nThreads));
             GetWP() = shared;
+            return GetWP().lock();
          }
          return GetWP().lock();
       }
