@@ -74,9 +74,9 @@ namespace ROOT {
       std::shared_ptr<TPoolManager> GetPoolManager(UInt_t nThreads = 0);
 
 
-      /// Get the maximum number of logical CPUs available.
-      /// In case of having an affinity mask (TBB), return the logical CPU available to the current process in accordance with it.
-      Int_t GetMaxNThreadsAvailable();
+      /// Get the number of logical CPUs in the system.
+      /// In case of having an affinity mask (TBB), return the number of logical CPUs available to the current process in accordance with it.
+      Int_t GetNThreadsAvailable();
    }
 }
 

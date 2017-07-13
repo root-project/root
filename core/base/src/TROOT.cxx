@@ -578,19 +578,18 @@ namespace Internal {
    }
 
    ////////////////////////////////////////////////////////////////////////////////
-   /// Returns the maximum number of threads the user can instantiate.
-   UInt_t GetAvailableThreads()
+   /// Returns the number of concurrent threads supported by the implementation.
+   /// In the IMT case returns the number of logical CPUs available to the current process in accordance with its TBB affinity mask.
+   UInt_t GetNThreadsAvailable()
    {
 #ifdef R__USE_IMT
-      static UInt_t (*sym)() = (UInt_t(*)())Internal::GetSymInLibImt("ROOT_TImplicitMT_GetAvailableThreads");
+      static UInt_t (*sym)() = (UInt_t(*)())Internal::GetSymInLibImt("ROOT_TImplicitMT_GetNThreadsAvailable");
       if (sym)
          return sym();
       else
          return 0;
 #else
-      SysInfo_t s;
-      gSystem->GetSysInfo(&s);
-      return s.fCpus;
+      return std::thread::hardware_concurrency();
 #endif
    }
 }

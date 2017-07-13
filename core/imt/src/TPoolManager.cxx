@@ -55,7 +55,7 @@ namespace ROOT {
          return GetWP().lock();
       }
 
-      Int_t GetMaxNThreadsAvailable()
+      Int_t GetNThreadsAvailable()
       {
          return tbb::task_scheduler_init::default_num_threads();
       }
