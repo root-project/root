@@ -1157,26 +1157,6 @@ protected:
       return df;
    }
 
-   const ColumnNames_t GetDefaultBranchNames(unsigned int nExpectedBranches, std::string_view actionNameForErr)
-   {
-      auto df = GetDataFrameChecked();
-      const ColumnNames_t &defaultBranches = df->GetDefaultColumnNames();
-      const auto dBSize = defaultBranches.size();
-      if (nExpectedBranches > dBSize) {
-         std::string msg("Trying to deduce the branches from the default list in order to ");
-         msg += actionNameForErr;
-         msg += ". A set of branches of size ";
-         msg += std::to_string(dBSize);
-         msg += " was found. ";
-         msg += std::to_string(nExpectedBranches);
-         msg += 1 != nExpectedBranches ? " are" : " is";
-         msg += " needed. Please specify the branches explicitly.";
-         throw std::runtime_error(msg);
-      }
-      auto bnBegin = defaultBranches.begin();
-      return ColumnNames_t(bnBegin, bnBegin + nExpectedBranches);
-   }
-
    TInterface(const std::shared_ptr<Proxied> &proxied, const std::weak_ptr<TLoopManager> &impl)
       : fProxiedPtr(proxied), fImplWeakPtr(impl)
    {
