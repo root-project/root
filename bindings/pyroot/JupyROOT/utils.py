@@ -25,6 +25,10 @@ import IPython.display
 import ROOT
 from JupyROOT import handlers
 
+#Notebook-trimming imports
+import json
+import pprint 
+
 # We want iPython to take over the graphics
 ROOT.gROOT.SetBatch()
 
@@ -390,14 +394,50 @@ class NotebookDrawer(object):
                     return False
         return True
 
+    def _removeTColors(self,object_json):
+	"""Test JSON that isn't a TCanvas
+	>>> _removeTColors({"_typename": "NotTCanvas"})
+	{'_typename': 'NotTCanvas'}
 
+	Test TCanvas with TColorArray is deleted successfully
+	>>> _removeTColors({"_typename": "TCanvas", "fPrimitives" : { "arr": [ {"arr":[{"_typename": "TColor"}],"_typename":"TObjArray","name":"ListOfColors", } ]}})
+	{'_typename': 'TCanvas', 'fPrimitives': {'arr': [{'_typename': 'TObjArray', 'name': 'ListOfColors'}]}}
+
+	Test TCanvas with No TColorArray is not changed
+	>>> _removeTColors({"_typename": "TCanvas", "fPrimitives" : { "arr": [ {"arr":[{"_typename": "NotTColor"}],"_typename":"NotObjArray","name":"ListOfColors", } ]}})
+	{'_typename': 'TCanvas', 'fPrimitives': {'arr': [{'arr': [{'_typename': 'NotTColor'}], '_typename': 'NotObjArray', 'name': 'ListOfColors'}]}}
+	"""
+	
+	#Only TCanvas JSON objects have TColors to remove in the first place
+	if object_json["_typename"]!="TCanvas":
+	    return object_json
+
+	#TColor objects are known to have this fixed nested structure in the TCanvas as follows:
+	#TCanvas -> fPrimitives-> arr-> TObjArray (an element in arr)
+	nest = object_json["fPrimitives"]["arr"]
+	for element in nest:
+	    if element["_typename"] == "TObjArray":
+		del element["arr"]
+
+	return object_json
+  
+    def _trimJSONForGraphics(self,object_json):
+	'''
+	Function that calls helper functions to trim redundant information in JSON graphics files to reduce size
+	'''
+	final_json =self._removeTColors(object_json)
+	return final_json 
+
+      
     def _getJsCode(self):
         # Workaround to have ConvertToJSON work
-        json = ROOT.TBufferJSON.ConvertToJSON(self.drawableObject, 3)
-
+        object_json = ROOT.TBufferJSON.ConvertToJSON(self.drawableObject,3)
+        parsed_json = json.loads(str(object_json))
+        final_json = self._trimJSONForGraphics(parsed_json)
+	
         # Here we could optimise the string manipulation
         divId = 'root_plot_' + str(self._getUID())
-
+ 
         height = _jsCanvasHeight
         width = _jsCanvasHeight
         options = "all"
@@ -410,7 +450,7 @@ class NotebookDrawer(object):
         thisJsCode = _jsCode.format(jsCanvasWidth = height,
                                     jsCanvasHeight = width,
                                     jsROOTSourceDir = _jsROOTSourceDir,
-                                    jsonContent = json.Data(),
+                                    jsonContent = json.dumps(final_json),
                                     jsDrawOptions = options,
                                     jsDivId = divId)
         return thisJsCode
