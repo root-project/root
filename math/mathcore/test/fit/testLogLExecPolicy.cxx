@@ -10,13 +10,13 @@
 
 constexpr int paramSize = 6;
 
-int compareResult(double v1, double v2, std::string s = "", double tol = 0.01)
+bool compareResult(double v1, double v2, std::string s = "", double tol = 0.01)
 {
    // compare v1 with reference v2
    //  // give 1% tolerance
-   if (std::abs(v1 - v2) < tol * std::abs(v2)) return 0;
+   if (std::abs(v1 - v2) < tol * std::abs(v2)) return true;
    std::cerr << s << " Failed comparison of fit results \t logl = " << v1 << "   it should be = " << v2 << std::endl;
-   return -1;
+   return false;
 }
 
 //Functor for a Higgs Fit normalized with analytical integral
@@ -220,6 +220,7 @@ private:
 int main()
 {
 
+   bool correctness;
    TestVector test(200000);
 
    //Sequential
@@ -231,15 +232,17 @@ int main()
    auto seq = test.GetFitter().Result().MinFcnValue();
 #endif
 
-// #ifdef R__USE_IMT
-//    //Multithreaded
-//    if (!test.testMTFit()) {
-//       Error("testLogLExecPolicy", "Multithreaded Fit failed!");
-//       return -1;
-//    }
-//    auto seqMT = test.GetFitter().Result().MinFcnValue();
-//    compareResult(seqMT, seq, "Mutithreaded LogL Fit: ");
-// #endif
+#ifdef R__USE_IMT
+   //Multithreaded
+   if (!test.testMTFit()) {
+      Error("testLogLExecPolicy", "Multithreaded Fit failed!");
+      return -1;
+   }
+   auto seqMT = test.GetFitter().Result().MinFcnValue();
+   correctness = compareResult(seqMT, seq, "Mutithreaded LogL Fit: ");
+   if(!correctness)
+         return 1;
+#endif
 
 #ifdef R__HAS_VECCORE
    //Vectorized
@@ -248,17 +251,21 @@ int main()
       return -1;
    }
    auto vec = test.GetFitter().Result().MinFcnValue();
-   compareResult(vec, seq, "vectorized LogL Fit: ");
+   correctness = compareResult(vec, seq, "vectorized LogL Fit: ");
+   if(!correctness)
+         return 2;
 
-// #ifdef R__USE_IMT
-//    //Multithreaded and vectorized
-//    if (!test.testMTFitVec()) {
-//       Error("testLogLExecPolicy", "Multithreaded + vectorized Fit failed!");
-//       return -1;
-//    }
-//    auto vecMT = test.GetFitter().Result().MinFcnValue();
-//    compareResult(vecMT, seq, "Mutithreaded + vectorized LogL Fit: ");
-// #endif
+#ifdef R__USE_IMT
+   //Multithreaded and vectorized
+   if (!test.testMTFitVec()) {
+      Error("testLogLExecPolicy", "Multithreaded + vectorized Fit failed!");
+      return -1;
+   }
+   auto vecMT = test.GetFitter().Result().MinFcnValue();
+   correctness = compareResult(vecMT, seq, "Mutithreaded + vectorized LogL Fit: ");
+   if(!correctness)
+         return 3;
+#endif
 #endif
 
 //    //Multiprocessed
