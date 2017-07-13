@@ -147,6 +147,7 @@ void CheckTmpBranch(std::string_view branchName, TTree *treePtr)
 const ColumnNames_t SelectColumns(unsigned int nRequiredNames, const ColumnNames_t &names,
                                   const ColumnNames_t &defaultNames)
 {
+   // TODO fix grammar in case nRequiredNames == 1 or names.size() == 1
    if (names.empty()) {
       // use default column names
       if (defaultNames.size() < nRequiredNames)
