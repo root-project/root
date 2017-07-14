@@ -74,6 +74,7 @@ namespace ROOT {
             static T *Clone(const T *obj, TDirectory* d = nullptr) {
                auto clone = (T*)obj->Clone();
                clone->SetDirectory(nullptr);
+               clone->ResetBit(kMustCleanup);
                return clone;
             }
          };
