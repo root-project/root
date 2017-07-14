@@ -15,8 +15,8 @@ drop_from_path()
       return 1
    fi
 
-   p=$1
-   drop=$2
+   local p=$1
+   local drop=$2
 
    newpath=`echo $p | sed -e "s;:${drop}:;:;g" \
                           -e "s;:${drop}\$;;g"   \
