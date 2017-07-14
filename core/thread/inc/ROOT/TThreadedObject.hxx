@@ -158,7 +158,7 @@ namespace ROOT {
          fDirectories = Internal::TThreadedObjectUtils::DirCreator<T>::Create(fgMaxSlots);
 
          TDirectory::TContext ctxt(fDirectories[0]);
-         fModel.reset(new T(std::forward<ARGS>(args)...));
+         fModel.reset(Internal::TThreadedObjectUtils::Detacher<T>::Detach(new T(std::forward<ARGS>(args)...)));
       }
 
       /// Access a particular processing slot. This
