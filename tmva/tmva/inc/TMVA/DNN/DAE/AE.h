@@ -28,8 +28,7 @@ namespace TMVA
 {
 namespace DNN
 {
-namespace DAE
-{
+namespace DAE {
 
 //______________________________________________________________________________
 //
@@ -54,6 +53,7 @@ class AELayer
 public:
   using Matrix_t = typename Architecture_t::Matrix_t;
   using Scalar_t = typename Architecture_t::Scalar_t;
+
 protected:
   size_t fBatchSize; ///< Batch size used for training and evaluation.
 
@@ -74,18 +74,18 @@ public:
 
   /*! Initialize fWeights according to the given initialization
     *  method. */
-  //void Initialize(EInitialization m);
+  // void Initialize(EInitialization m);
 
   /* This takes the input and encodes it into the number of hidden units.
    * i.e the network is forced to learn a ”compressed” representation of the
    * input.  */
-  virtual void Encoding(Matrix_t &input, Matrix_t &compressedInput )=0;
+  virtual void Encoding(Matrix_t &input, Matrix_t &compressedInput) = 0;
 
   /* This reconstructs the compressed inputs to output with same dimension as
   *  that of output.
   */
   virtual void Reconstruction(Matrix_t &compressedInput,
-                              Matrix_t &reconstructedInput)=0;
+                              Matrix_t &reconstructedInput) = 0;
 
   /* To print the weights and biases.
   */
@@ -107,32 +107,31 @@ public:
 //
 //______________________________________________________________________________
 
-template<typename Architecture_t>
-AELayer<Architecture_t>::AELayer(size_t batchSize,
-                                 size_t visibleUnits,
+template <typename Architecture_t>
+AELayer<Architecture_t>::AELayer(size_t batchSize, size_t visibleUnits,
                                  size_t hiddenUnits)
-: fBatchSize(batchSize), fVisibleUnits(visibleUnits),
-  fHiddenUnits(hiddenUnits)/*,fWeights(hiddenUnits,fVisibleUnits),
-  fHBiases(hiddenUnits,1), fVBiases(visibleUnits,1)*/
+    : fBatchSize(batchSize), fVisibleUnits(visibleUnits),
+      fHiddenUnits(hiddenUnits) /*,fWeights(hiddenUnits,fVisibleUnits),
+       fHBiases(hiddenUnits,1), fVBiases(visibleUnits,1)*/
 
 {
-  //std::cout<<"default constructor ae"<<std::endl;
+  // std::cout<<"default constructor ae"<<std::endl;
 }
 
 //______________________________________________________________________________
 
-template<typename Architecture_t>
+template <typename Architecture_t>
 AELayer<Architecture_t>::AELayer(const AELayer &ae)
-: fBatchSize(ae.fBatchSize), fVisibleUnits(ae.fVisibleUnits),
-  fHiddenUnits(ae.fHiddenUnits)/*, fWeights(ae.fHiddenUnits, ae.fVisibleUnits),
-   fHBiases(ae.fHiddenUnits,1), fVBiases(ae.fVisibleUnits,1)*/
+    : fBatchSize(ae.fBatchSize), fVisibleUnits(ae.fVisibleUnits),
+      fHiddenUnits(
+          ae.fHiddenUnits) /*, fWeights(ae.fHiddenUnits, ae.fVisibleUnits),
+fHBiases(ae.fHiddenUnits,1), fVBiases(ae.fVisibleUnits,1)*/
 
 {
-  //std::cout<<"constructor ae"<<std::endl;
-  //Architecture_t::Copy(fWeights, ae.GetWeights());
-  //Architecture_t::Copy(fHBiases, ae.GetHBiases());
-  //Architecture_t::Copy(fVBiases, ae.GetVBiases());
-
+  // std::cout<<"constructor ae"<<std::endl;
+  // Architecture_t::Copy(fWeights, ae.GetWeights());
+  // Architecture_t::Copy(fHBiases, ae.GetHBiases());
+  // Architecture_t::Copy(fVBiases, ae.GetVBiases());
 }
 
 //______________________________________________________________________________
@@ -146,8 +145,6 @@ AELayer<Architecture_t>::~AELayer()
 //______________________________________________________________________________
 
 //______________________________________________________________________________
-
-
 
 /*template<typename Architecture_t>
 auto AELayer<Architecture_t>::Print() const
@@ -184,8 +181,7 @@ auto AELayer<Architecture_t>::Print() const
    }
 }*/
 
-
-}// namespace DAE
+} // namespace DAE
 }// namespace DNN
 }// namespace TMVA
 #endif /* AELAYER_H_ */

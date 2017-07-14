@@ -9,21 +9,21 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
- #include <iostream>
- #include "TMVA/DNN/Architectures/Reference.h"
- #include "TestLogistic.h"
+#include "TestLogistic.h"
+#include "TMVA/DNN/Architectures/Reference.h"
+#include <iostream>
 
- using namespace TMVA::DNN;
- using namespace TMVA::DNN::DAE;
+using namespace TMVA::DNN;
+using namespace TMVA::DNN::DAE;
 
- int main()
+int main()
 
- {
-   std::cout<<"Testing started"<<std::endl;
+{
+  std::cout << "Testing started" << std::endl;
 
-   testLogistic<TReference<double>>();
-   std::cout<<"Transform Layer"<<std::endl;
+  testLogistic<TReference<double>>();
+  std::cout << "Transform Layer" << std::endl;
   // testTransform<TReference<double>>();
 
-   return 0;
- }
+  return 0;
+}

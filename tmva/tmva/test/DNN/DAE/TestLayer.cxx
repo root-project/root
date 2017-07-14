@@ -9,21 +9,21 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
- #include <iostream>
- #include "TMVA/DNN/Architectures/Reference.h"
- #include "TestLayer.h"
+#include "TestLayer.h"
+#include "TMVA/DNN/Architectures/Reference.h"
+#include <iostream>
 
- using namespace TMVA::DNN;
- using namespace TMVA::DNN::DAE;
+using namespace TMVA::DNN;
+using namespace TMVA::DNN::DAE;
 
- int main()
+int main()
 
- {
-   std::cout<<"Testing started"<<std::endl;
+{
+  std::cout << "Testing started" << std::endl;
 
-   testLayer<TReference<double>>();
+  testLayer<TReference<double>>();
 
-   std::cout<<"Testing for parameter updation"<<std::endl;
-   testTraining<TReference<double>>();
-   return 0;
- }
+  std::cout << "Testing for parameter updation" << std::endl;
+  testTraining<TReference<double>>();
+  return 0;
+}

@@ -13,15 +13,14 @@
 // Test the reference data loader implementation. //
 ////////////////////////////////////////////////////
 
-#include "TMVA/DNN/Architectures/Reference.h"
 #include "TestDataLoader.h"
+#include "TMVA/DNN/Architectures/Reference.h"
 
 using namespace TMVA::DNN;
 using namespace TMVA::DNN::DAE;
 
-int main ()
-{
-   testDataLoader<TReference<Double_t>>();
-   std::cout << "Testing reference data loader: Mex. rel. error = ";
-   std::cout << std::endl;
+int main() {
+  testDataLoader<TReference<Double_t>>();
+  std::cout << "Testing reference data loader: Mex. rel. error = ";
+  std::cout << std::endl;
 }

@@ -9,9 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <iostream>
-#include "TMVA/DNN/Architectures/Reference.h"
 #include "TestStackedLayers.h"
+#include "TMVA/DNN/Architectures/Reference.h"
+#include <iostream>
 
 using namespace TMVA::DNN;
 using namespace TMVA::DNN::DAE;
@@ -19,11 +19,11 @@ using namespace TMVA::DNN::DAE;
 int main()
 
 {
-  std::cout<<"Testing started"<<std::endl;
+  std::cout << "Testing started" << std::endl;
 
   testStacked<TReference<double>>();
-   //std::cout<<"Transform Layer"<<std::endl;
+  // std::cout<<"Transform Layer"<<std::endl;
   // testTransform<TReference<double>>();
 
- return 0;
+  return 0;
 }
