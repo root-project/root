@@ -10,7 +10,8 @@ from ROOT.Mpi import COMM_WORLD, TEnvironment, TPort, TMpiMessage, TStatus
 from ROOT.Mpi import TCommunicator, TInterCommunicator, TIntraCommunicator, TNullCommunicator 
 from ROOT.Mpi import TRequest, TGrequest, TPrequest, TInfo, TMpiFile, TOp
 from ROOT.Mpi import TMpiTimer, TGroup, TErrorHandler
-import pickle, codecs
+import pickle, codecs, math
+
 #########################
 ##TMpiMessage attributes#
 #########################
@@ -59,9 +60,9 @@ def __Send(self,obj,dest,tag):
     @param dest id with the destination(Rank/Process) of the message
     @param tag id of the message
     """
-        msg=TMpiMessage()
-        msg.WritePyObject(obj)
-        self.__PySend("TMpiMessage")(msg,dest,tag)
+    msg=TMpiMessage()
+    msg.WritePyObject(obj)
+    self.__PySend("TMpiMessage")(msg,dest,tag)
         
 def __Recv(self,dest,tag):
     """ Method to receive a message for p2p communication
@@ -69,9 +70,9 @@ def __Recv(self,dest,tag):
     @param source id with the origin(Rank/Process) of the message
     @param tag id of the message
     """
-        msg=TMpiMessage()
-        self.__PyRecv("TMpiMessage")(msg,dest,tag)
-        return msg.ReadPyObject()
+    msg=TMpiMessage()
+    self.__PyRecv("TMpiMessage")(msg,dest,tag)
+    return msg.ReadPyObject()
 
 setattr(TCommunicator,"Send",__Send)
 setattr(TCommunicator,"Recv",__Recv)
@@ -156,3 +157,45 @@ def __Gather(self,obj, incount, outcount, root):
       self.Send(obj[0:incount], root, self.GetMaxTag()+1)
 
 setattr(TCommunicator,"Gather",__Gather)
+
+
+
+def __Reduce(self,obj, op, root):
+    """Method to apply reduce operation over and array of elements using binary tree reduction.
+    @param in_var variable to eval in the reduce operation
+    @param op function the perform operation
+    @param root id of the main process where the result was received
+    @return out_var variable to receive the value with reduced operation
+    """
+    out_var=obj
+    size = self.GetSize()
+    lastpower = 1 << int(math.log(size,2))
+    for i  in range(lastpower,size,1):
+      if self.GetRank() == i : 
+          self.Send(obj,i - lastpower, self.GetMaxTag()+1)
+    for i in range(0, size - lastpower, 1):
+      if self.GetRank() == i:
+         recvbuffer=self.Recv(i + lastpower, self.GetMaxTag()+1)
+         out_var=op(obj, recvbuffer)
+    for d in range(0,int(math.log(lastpower,2)),1):
+      k=0
+      while True :
+         if k == lastpower:
+             if self.GetRank() == root and d == int(math.log(lastpower,2))-1:
+                return out_var
+             break
+         receiver = k;
+         sender = k + (1 << d)
+         if self.GetRank() == receiver:
+            recvbuffer=self.Recv(sender, self.GetMaxTag()+1)
+            out_var = op(out_var, recvbuffer)
+         elif self.GetRank() == sender:
+            self.Send(out_var, receiver, self.GetMaxTag()+1)
+         k += 1 << (d + 1)  
+            
+    if root != 0 and self.GetRank() == 0: 
+        self.Send(out_var, root, self.GetMaxTag()+1)
+    if root == self.GetRank() and self.GetRank() != 0: 
+        out_var=self.Recv(0, self.GetMaxTag()+1)
+
+setattr(TCommunicator,"Reduce",__Reduce)
