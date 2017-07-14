@@ -28,7 +28,7 @@ set(headers3 RooRandomizeParamMCSModule.h RooRangeBinning.h RooRealAnalytic.h Ro
              RooSegmentedIntegrator1D.h RooSegmentedIntegrator2D.h RooSetPair.h RooSetProxy.h RooSharedProperties.h
              RooSharedPropertiesList.h RooSimGenContext.h RooSimSplitGenContext.h RooStreamParser.h RooStringVar.h RooSuperCategory.h
              RooTable.h RooThreshEntry.h RooThresholdCategory.h RooTObjWrap.h RooTrace.h RooUniformBinning.h
-             RooSimultaneous.h RooRealSumPdf.h RooResolutionModel.h RooProdPdf.h RooMCStudy.h RooSimPdfBuilder.h RooTruthModel.h RooMsgService.h
+             RooSimultaneous.h RooRealSumPdf.h RooRealSumFunc.h RooResolutionModel.h RooProdPdf.h RooMCStudy.h RooSimPdfBuilder.h RooTruthModel.h RooMsgService.h
              RooProjectedPdf.h RooWorkspace.h RooProfileLL.h RooAbsCachedPdf.h RooAbsSelfCachedPdf.h
              RooHistPdf.h RooCachedPdf.h RooFFTConvPdf.h RooDataHistSliceIter.h RooCacheManager.h
              RooAbsCache.h RooAbsCacheElement.h RooObjCacheManager.h RooExtendedTerm.h RooSentinel.h
