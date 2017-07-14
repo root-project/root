@@ -74,6 +74,7 @@ namespace ROOT {
             static T *Clone(const T *obj, TDirectory* d = nullptr) {
                T* clone;
                if (d){
+                  TDirectory::TContext ctxt(d);
                   clone = (T*)obj->Clone();
                } else {
                   clone = (T*)obj->Clone();
