@@ -117,7 +117,31 @@ setattr(TCommunicator,"IRecv",__IRecv)
 ##TCommunicator Scatter#
 ########################
 def __Scatter(self,in_vars,incount, outcount,root):
-    """ """
+    """ Sends data from one task to all tasks in a group.
+    This is the inverse operation to ROOT::Mpi::TCommunicator::Gather.
+    An alternative description is that the root sends a message with ROOT::Mpi::TCommunicator::Send. This message is
+    split into n equal segments, the ith segment is sent to the ith process in the group, and each process receives this
+    message as above.
+    The send buffer is ignored for all nonroot processes.
+    The type signature associated with incount, sendtype at the root must be equal to the type signature associated with
+    out_vars, recvtype  at  all  processes (however,  the  type  maps  may  be  different). This implies that the amount
+    of data sent must be equal to the amount of data received, pairwise between each process and the root. Distinct type
+    maps between sender and receiver are still allowed.
+    
+    All arguments to the function are significant on process root, while on other processes, only arguments out_vars,
+    outcount, recvtype, root, comm are  significant. The arguments root and comm must have identical values on all
+    processes.
+
+    The specification of counts and types should not cause any location on the root to be read more than once.
+
+    Rationale: Though not needed, the last restriction is imposed so as to achieve symmetry with
+    ROOT.Mpi.TCommunicator.Gather, where the corresponding restriction (a multiple-write restriction) is necessary.
+    @param in_vars any selializable object vector reference to send the message
+    @param incount Number of elements in receive in \p in_vars
+    @param outcount Number of elements in receive in \p out_vars
+    @param root id of the main message where message was sent
+    @return out_vars any selializable object vector reference to receive the message
+    """
     if self.GetRank() == root:
         osize = self.GetSize() * outcount
         if incount % osize != 0 :
@@ -142,6 +166,19 @@ setattr(TCommunicator,"Scatter",__Scatter)
 setattr(TCommunicator,"__PyBcast",TCommunicator.Bcast)
 
 def __Bcast(self,obj, root):
+    """Broadcasts a message from the process with rank root to all processes of the group, itself included. It is
+    called by all members of group using the same arguments for comm, root. On return, the contents of root's
+    communication buffer has been copied to all processes.
+
+    General, derived datatypes are allowed for datatype. The type signature of count, datatype on any process must be
+    equal  to  the  type  signature  of  count, datatype  at  the  root. This implies that the amount of data sent must be
+    equal to the amount received, pairwise between each process and the root. ROOT::Mpi::Communicator::Bcast and all other
+    data-movement collective routines make this restriction.
+    Distinct type maps between sender and receiver are still allowed
+    @param var any selializable object reference to send/receive the message
+    @param root id of the main message where message was sent
+    @return object message
+    """
     msg=TMpiMessage()
     if self.GetRank() == root:
        msg.WritePyObject(obj)
@@ -181,6 +218,11 @@ def __Gather(self,obj, incount, outcount, root):
 
 setattr(TCommunicator,"Gather",__Gather)
 
+def __AllGather(self,obj, incount, outcount):
+   out_vars=self.Gather(obj, incount,  outcount, self.GetMainProcess());
+   return self.Bcast(out_vars, self.GetMainProcess());
+
+setattr(TCommunicator,"AllGather",__AllGather)
 
 
 #######################

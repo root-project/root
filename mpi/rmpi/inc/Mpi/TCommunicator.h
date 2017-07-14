@@ -805,7 +805,6 @@ TRequest TCommunicator::IBcast(Type *vars, Int_t count, Int_t root) const
  * \param out_vars any selializable object vector reference to receive the message
  * \param outcount Number of elements in receive in \p out_vars
  * \param root id of the main message where message was sent
- * \return TGrequest obj
  */
 
 template <class Type>

@@ -17,6 +17,10 @@ def gather():
             data.extend([i,i])
         assert(obj==data)
 
+    msg=[COMM_WORLD.GetRank()];
+    obj=COMM_WORLD.AllGather(msg,1,COMM_WORLD.GetSize())
+    print(obj)
+    assert(obj==range(0,COMM_WORLD.GetSize(),1))
     
 if __name__ == "__main__":
     gather()
