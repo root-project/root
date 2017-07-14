@@ -40,8 +40,24 @@ namespace ROOT {
             return fgTThreadedObjectIndex++;
          }
 
+         template<typename T, bool ISHISTO = std::is_base_of<TH1,T>::value>
+         struct Detacher{
+            static T* Detach(T* obj) {
+               return obj;
+            }
+         };
+
+         template<typename T>
+         struct Detacher<T, true>{
+            static T* Detach(T* obj) {
+               obj->SetDirectory(nullptr);
+               obj->ResetBit(kMustCleanup);
+               return obj;
+            }
+         };
+
          /// Return a copy of the object or a "Clone" if the copy constructor is not implemented.
-         template<class T, bool isCopyConstructible = std::is_copy_constructible<T>::value, bool ISHISTO = std::is_base_of<TH1,T>::value>
+         template<class T, bool isCopyConstructible = std::is_copy_constructible<T>::value>
          struct Cloner {
             static T *Clone(const T *obj, TDirectory* d = nullptr) {
                T* clone;
@@ -51,12 +67,12 @@ namespace ROOT {
                } else {
                   clone = new T(*obj);
                }
-               return clone;
+               return Detacher<T>::Detach(clone);
             }
          };
 
          template<class T>
-         struct Cloner<T, false, false> {
+         struct Cloner<T, false> {
             static T *Clone(const T *obj, TDirectory* d = nullptr) {
                T* clone;
                if (d){
@@ -65,16 +81,6 @@ namespace ROOT {
                } else {
                   clone = (T*)obj->Clone();
                }
-               return clone;
-            }
-         };
-
-         template<class T>
-         struct Cloner<T, true, true> {
-            static T *Clone(const T *obj, TDirectory* d = nullptr) {
-               auto clone = (T*)obj->Clone();
-               clone->SetDirectory(nullptr);
-               clone->ResetBit(kMustCleanup);
                return clone;
             }
          };
