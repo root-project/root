@@ -72,13 +72,7 @@ namespace ROOT {
          template<class T>
          struct Cloner<T, true, true> {
             static T *Clone(const T *obj, TDirectory* d = nullptr) {
-               T* clone;
-               if (d){
-                  TDirectory::TContext ctxt(d);
-                  clone = (T*)obj->Clone();
-               } else {
-                  clone = (T*)obj->Clone();
-               }
+               auto clone = (T*)obj->Clone();
                clone->SetDirectory(nullptr);
                return clone;
             }
