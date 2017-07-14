@@ -1394,15 +1394,16 @@ void TClass::Init(const char *name, Version_t cversion,
 
    Bool_t isStl = TClassEdit::IsSTLCont(fName);
 
-   if (!gInterpreter) {
+   if (!gInterpreter)
       ::Fatal("TClass::Init", "gInterpreter not initialized");
-   }
 
    if (givenInfo) {
-      if (!gInterpreter->ClassInfo_IsValid(givenInfo) ||
-          !(gInterpreter->ClassInfo_Property(givenInfo) & (kIsClass | kIsStruct | kIsNamespace)) ||
-          (!gInterpreter->ClassInfo_IsLoaded(givenInfo) && (gInterpreter->ClassInfo_Property(givenInfo) & (kIsNamespace))) )
-      {
+      bool invalid = !gInterpreter->ClassInfo_IsValid(givenInfo);
+      bool notloaded = !gInterpreter->ClassInfo_IsLoaded(givenInfo);
+      auto property = gInterpreter->ClassInfo_Property(givenInfo);
+
+      if (invalid || (notloaded && (property & kIsNamespace)) ||
+          !(property & (kIsClass | kIsStruct | kIsNamespace))) {
          if (!TClassEdit::IsSTLCont(fName.Data())) {
             MakeZombie();
             fState = kNoInfo;
@@ -1410,9 +1411,11 @@ void TClass::Init(const char *name, Version_t cversion,
             return;
          }
       }
+
       fClassInfo = gInterpreter->ClassInfo_Factory(givenInfo);
       fCanLoadClassInfo = false; // avoids calls to LoadClassInfo() if info is already loaded
    }
+
    // We need to check if the class it is not fwd declared for the cases where we
    // created a TClass directly in the kForwardDeclared state. Indeed in those cases
    // fClassInfo will always be nullptr.
