@@ -41,7 +41,7 @@ namespace ROOT {
          }
 
          /// Return a copy of the object or a "Clone" if the copy constructor is not implemented.
-         template<class T, bool isCopyConstructible = std::is_copy_constructible<T>::value>
+         template<class T, bool isCopyConstructible = std::is_copy_constructible<T>::value, bool ISHISTO = std::is_base_of<TH1,T>::value>
          struct Cloner {
             static T *Clone(const T *obj, TDirectory* d = nullptr) {
                T* clone;
@@ -56,7 +56,7 @@ namespace ROOT {
          };
 
          template<class T>
-         struct Cloner<T, false> {
+         struct Cloner<T, false, false> {
             static T *Clone(const T *obj, TDirectory* d = nullptr) {
                T* clone;
                if (d){
@@ -65,6 +65,20 @@ namespace ROOT {
                } else {
                   clone = (T*)obj->Clone();
                }
+               return clone;
+            }
+         };
+
+         template<class T>
+         struct Cloner<T, true, true> {
+            static T *Clone(const T *obj, TDirectory* d = nullptr) {
+               T* clone;
+               if (d){
+                  clone = (T*)obj->Clone();
+               } else {
+                  clone = (T*)obj->Clone();
+               }
+               clone->SetDirectory(nullptr);
                return clone;
             }
          };
