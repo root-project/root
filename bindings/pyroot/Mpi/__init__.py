@@ -225,3 +225,10 @@ def __Reduce(self,obj, op, root):
         out_var=self.Recv(0, self.GetMaxTag()+1)
 
 setattr(TCommunicator,"Reduce",__Reduce)
+
+def __AllReduce(self,obj, op):
+    robj=self.Reduce(obj,op, self.GetMainProcess())
+    return self.Bcast(robj, self.GetMainProcess())
+   
+setattr(TCommunicator,"AllReduce",__AllReduce)
+   

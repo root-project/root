@@ -25,6 +25,11 @@ def mreduce():
         rvalue=reduce(op,range(0,COMM_WORLD.GetSize()))
         assert(out[0]==rvalue)
         assert(out[1]==rvalue)
+
+    msg=COMM_WORLD.GetRank()
+    out=COMM_WORLD.AllReduce(msg,op)#return the reduce operation to all ranks
+    print("result=%s"%out)
+    assert(out==reduce(op,range(0,COMM_WORLD.GetSize())))
     
 if __name__ == "__main__":
     mreduce()
