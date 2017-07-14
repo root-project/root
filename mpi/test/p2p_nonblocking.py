@@ -20,7 +20,7 @@ def ip2p():
       print("Sending second list = ")
       l=[1,2,3]
       print(l)
-      req = COMM_WORLD.ISend(l, 1, 3);
+      req = COMM_WORLD.ISsend(l, 1, 3);
       req.Wait();
 
    else:

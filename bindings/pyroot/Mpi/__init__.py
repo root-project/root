@@ -51,6 +51,10 @@ setattr(TRequest,"GetMsg",__GetMsg)
 ##TCommunicator attributes#
 ###########################
 
+
+####################
+##TCommunicator p2p#
+####################
 setattr(TCommunicator,"__PySend",TCommunicator.Send)
 setattr(TCommunicator,"__PyRecv",TCommunicator.Recv)
 
@@ -77,9 +81,41 @@ def __Recv(self,dest,tag):
 setattr(TCommunicator,"Send",__Send)
 setattr(TCommunicator,"Recv",__Recv)
 
-###########################
-##TCommunicator attributes#
-###########################
+#################################
+##TCommunicator p2p non-blocking#
+#################################
+
+setattr(TCommunicator,"__PyISend",TCommunicator.ISend)
+setattr(TCommunicator,"__PyISsend",TCommunicator.ISsend)
+setattr(TCommunicator,"__PyIRecv",TCommunicator.IRecv)
+
+
+def __ISend(self,obj, dest, tag):
+    msg=TMpiMessage()
+    msg.WritePyObject(obj)
+    return self.__PyISend("TMpiMessage")(msg, dest, tag)
+
+def __ISsend(self,obj, dest, tag):
+    msg=TMpiMessage()
+    msg.WritePyObject(obj)
+    return self.__PyISsend("TMpiMessage")(msg, dest, tag)
+    
+
+def __IRecv(self,source, tag):
+    msg = TMpiMessage();
+    req = self.__PyIRecv("TMpiMessage")(msg, source, tag)
+    req.SetMsg(msg)
+    return req;
+
+setattr(TCommunicator,"ISend",__ISend)
+setattr(TCommunicator,"ISsend",__ISsend)
+setattr(TCommunicator,"IRecv",__IRecv)
+
+
+
+########################
+##TCommunicator Scatter#
+########################
 def __Scatter(self,in_vars,incount, outcount,root):
     """ """
     if self.GetRank() == root:
@@ -100,6 +136,9 @@ def __Scatter(self,in_vars,incount, outcount,root):
 setattr(TCommunicator,"Scatter",__Scatter)
 
 
+######################
+##TCommunicator Bcast#
+######################
 setattr(TCommunicator,"__PyBcast",TCommunicator.Bcast)
 
 def __Bcast(self,obj, root):
@@ -113,25 +152,9 @@ def __Bcast(self,obj, root):
 setattr(TCommunicator,"Bcast",__Bcast)
 
 
-setattr(TCommunicator,"__PyISend",TCommunicator.ISend)
-setattr(TCommunicator,"__PyIRecv",TCommunicator.IRecv)
-
-
-#non-bloking p2p        
-def __ISend(self,obj, dest, tag):
-    msg=TMpiMessage()
-    msg.WritePyObject(obj)
-    return self.__PyISend("TMpiMessage")(msg, dest, tag)
-
-def __IRecv(self,source, tag):
-    msg = TMpiMessage();
-    req = self.__PyIRecv("TMpiMessage")(msg, source, tag)
-    req.SetMsg(msg)
-    return req;
-
-setattr(TCommunicator,"ISend",__ISend)
-setattr(TCommunicator,"IRecv",__IRecv)
-
+#######################
+##TCommunicator Gather#
+#######################
 def __Gather(self,obj, incount, outcount, root):
     """ Each process (root process included) sends the contents of its send buffer to the root process.
     The root process receives the messages and stores them in rank order.
@@ -160,6 +183,9 @@ setattr(TCommunicator,"Gather",__Gather)
 
 
 
+#######################
+##TCommunicator Reduce#
+#######################
 def __Reduce(self,obj, op, root):
     """Method to apply reduce operation over and array of elements using binary tree reduction.
     @param in_var variable to eval in the reduce operation
