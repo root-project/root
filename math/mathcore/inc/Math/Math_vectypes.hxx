@@ -4,12 +4,17 @@
 #include "RConfigure.h"
 
 #ifdef R__HAS_VECCORE
- 
+
 #if defined(R__HAS_VC) && !defined(VECCORE_ENABLE_VC)
 #define VECCORE_ENABLE_VC
 #endif
- 
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wall"
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#pragma GCC diagnostic ignored "-Wconditional-uninitialized"
 #include <VecCore/VecCore>
+#pragma GCC diagnostic pop
 
 namespace ROOT {
 
