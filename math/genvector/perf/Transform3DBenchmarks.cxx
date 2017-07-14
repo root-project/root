@@ -28,10 +28,10 @@ static void BM_Transform3D(benchmark::State &state)
       st.Translation();
    }
 }
-// BENCHMARK_TEMPLATE(BM_Transform3D, double)->Range(8, 8<<10)->Complexity(benchmark::o1);
-// BENCHMARK_TEMPLATE(BM_Transform3D, float)->Range(8, 8<<10)->Complexity(benchmark::o1);
-// BENCHMARK_TEMPLATE(BM_Transform3D, ROOT::Double_v)->Range(8, 8<<10)->Complexity(benchmark::o1);
-// BENCHMARK_TEMPLATE(BM_Transform3D, ROOT::Float_v)->Range(8, 8<<10)->Complexity(benchmark::o1);
+BENCHMARK_TEMPLATE(BM_Transform3D, double)->Range(8, 8 << 10)->Complexity(benchmark::o1);
+BENCHMARK_TEMPLATE(BM_Transform3D, float)->Range(8, 8 << 10)->Complexity(benchmark::o1);
+BENCHMARK_TEMPLATE(BM_Transform3D, ROOT::Double_v)->Range(8, 8 << 10)->Complexity(benchmark::o1);
+BENCHMARK_TEMPLATE(BM_Transform3D, ROOT::Float_v)->Range(8, 8 << 10)->Complexity(benchmark::o1);
 
 template <typename T>
 using Point = ROOT::Math::PositionVector3D<ROOT::Math::Cartesian3D<T>, ROOT::Math::DefaultCoordinateSystemTag>;
