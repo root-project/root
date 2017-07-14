@@ -38,6 +38,8 @@
 #include <string.h>
 #include <locale.h>
 
+#include <fstream>
+
 #include "Compression.h"
 
 #include "TArrayI.h"
@@ -342,6 +344,18 @@ TBufferJSON::~TBufferJSON()
    if (fNumericLocale.Length()>0)
       setlocale(LC_NUMERIC, fNumericLocale.Data());
 }
+
+TString TBufferJSON::ConvertToJSONGraphics(const TObject *obj, Int_t compact, const char *member_name)
+{
+	TString initialJSONString = TBufferJSON::ConvertToJSON(obj,compact); 
+    std::ofstream ofs;
+    ofs.open ("HarryTest.txt");
+    ofs << initialJSONString;
+    ofs.close();
+	return initialJSONString;
+
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Converts object, inherited from TObject class, to JSON string
