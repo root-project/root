@@ -839,7 +839,6 @@ void TCommunicator::Scatter(const Type *in_vars, Int_t incount, Type *out_vars, 
  * \param out_vars any selializable object vector reference to receive the message
  * \param outcount Number of elements in receive in \p out_vars
  * \param root id of the main message where message was sent
- * \return TGrequest obj
  */
 template <class Type>
 void TCommunicator::Gather(const Type *in_vars, Int_t incount, Type *out_vars, Int_t outcount, Int_t root) const
