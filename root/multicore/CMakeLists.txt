@@ -5,6 +5,9 @@ if(ROOTTEST_OS_ID MATCHES Ubuntu)
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--no-as-needed")
 endif()
 
+ROOTTEST_ADD_TEST(TThreadedObjectAutoMemManagement
+                 MACRO  testTThreadedObjectAutoMemManagement.C)
+
 if(ROOT_imt_FOUND)
 # ROOT-8850
 ROOTTEST_GENERATE_EXECUTABLE(loadImt loadImt.cpp LIBRARIES Core RIO)
