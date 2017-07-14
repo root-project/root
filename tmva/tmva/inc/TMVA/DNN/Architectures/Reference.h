@@ -263,12 +263,17 @@ public:
 
    // Updating parameters after every backward pass. Weights and biases are
    // updated.
-   static void
-   UpdateParams(TMatrixT<AReal> &x, TMatrixT<AReal> &tildeX, TMatrixT<AReal> &y,
-                TMatrixT<AReal> &z, TMatrixT<AReal> &fVBiases,
-                TMatrixT<AReal> &fHBiases, TMatrixT<AReal> &fWeights,
-                TMatrixT<AReal> &VBiasError, TMatrixT<AReal> &HBiasError,
-                AReal learningRate, size_t fBatchSize);
+   static void UpdateParams(TMatrixT<AReal> &x,
+                            TMatrixT<AReal> &tildeX,
+                            TMatrixT<AReal> &y,
+                            TMatrixT<AReal> &z,
+                            TMatrixT<AReal> &fVBiases,
+                            TMatrixT<AReal> &fHBiases,  
+                            TMatrixT<AReal> &fWeights,
+                            TMatrixT<AReal> &VBiasError,
+                            TMatrixT<AReal> &HBiasError,
+                            AReal learningRate,
+                            size_t fBatchSize);
 
    // Softmax functions redifined
    static void SoftmaxAE(TMatrixT<AReal> & A);

@@ -22,6 +22,17 @@ ROOT_ADD_TEST(TMVA-DNN-DAE-LogisticRegressionLayer COMMAND testLogisticRegressio
 ROOT_EXECUTABLE(testTransformLayer TestTransformLayer.cxx LIBRARIES ${Libraries})
 ROOT_ADD_TEST(TMVA-DNN-DAE-TransformLayer COMMAND testTransformLayer)
 
+ROOT_EXECUTABLE(testLayer TestLayer.cxx LIBRARIES ${Libraries})
+ROOT_ADD_TEST(TMVA-DNN-DAE-Layer COMMAND testLayer)
+
+ROOT_EXECUTABLE(testLogistic TestLogistic.cxx LIBRARIES ${Libraries})
+ROOT_ADD_TEST(TMVA-DNN-DAE-Logistic COMMAND testLogistic)
+
+ROOT_EXECUTABLE(testStackedLayers TestStackedLayers.cxx LIBRARIES ${Libraries})
+ROOT_ADD_TEST(TMVA-DNN-DAE-StackedLayers COMMAND testStackedLayers)
+
+
+
 
 
 

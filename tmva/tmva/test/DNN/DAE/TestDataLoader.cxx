@@ -1,29 +1,27 @@
-// @(#)root/tmva $Id$
+// @(#)root/tmva/tmva/dnn:$Id$
 // Author: Akshay Vashistha (ajatgd)
 
 /*************************************************************************
- * Copyright (C) 2017, ajatgd
+ * Copyright (C) 2016, ajatgd                                            *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <iostream>
+////////////////////////////////////////////////////
+// Test the reference data loader implementation. //
+////////////////////////////////////////////////////
+
 #include "TMVA/DNN/Architectures/Reference.h"
-#include "TestStackedLayers.h"
+#include "TestDataLoader.h"
 
 using namespace TMVA::DNN;
 using namespace TMVA::DNN::DAE;
 
-int main()
-
+int main ()
 {
-  std::cout<<"Testing started"<<std::endl;
-
-  testStacked<TReference<double>>();
-   //std::cout<<"Transform Layer"<<std::endl;
-  // testTransform<TReference<double>>();
-
- return 0;
+   testDataLoader<TReference<Double_t>>();
+   std::cout << "Testing reference data loader: Mex. rel. error = ";
+   std::cout << std::endl;
 }
