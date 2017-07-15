@@ -55,9 +55,7 @@ static void BM_TBufferFile_GetFile(benchmark::State &state)
 }
 BENCHMARK(BM_TBufferFile_GetFile);
 BENCHMARK(BM_TBufferFile_GetFile)->UseRealTime()->ThreadPerCpu();
-BENCHMARK(BM_TBufferFile_GetFile)->ThreadPerCpu();
 BENCHMARK(BM_TBufferFile_GetFile)->UseRealTime()->ThreadRange(1, 64);
-BENCHMARK(BM_TBufferFile_GetFile)->ThreadRange(1, 64);
 
 /// Creates a TMemFile, fills a TTree with random numbers. The data is written if it exceeds 32MB.
 inline void FillTreeWithRandomData(TBufferMerger &merger, size_t nEntriesPerWorker = 24 * 1024)
@@ -109,9 +107,7 @@ static void BM_TBufferFile_FillTreeWithRandomData(benchmark::State &state)
 }
 BENCHMARK(BM_TBufferFile_FillTreeWithRandomData);
 BENCHMARK(BM_TBufferFile_FillTreeWithRandomData)->UseRealTime()->ThreadPerCpu();
-BENCHMARK(BM_TBufferFile_FillTreeWithRandomData)->ThreadPerCpu();
 BENCHMARK(BM_TBufferFile_FillTreeWithRandomData)->UseRealTime()->ThreadRange(1, 64);
-BENCHMARK(BM_TBufferFile_FillTreeWithRandomData)->ThreadRange(1, 64);
 
 // Define our main.
 BENCHMARK_MAIN();
