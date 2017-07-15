@@ -6,10 +6,11 @@ __version__ = '0.0.1'
 __author__  = 'Omar Zapata (Omar.Zapata@cern.ch)'
 
 from ROOT import Mpi, TString
-from ROOT.Mpi import COMM_WORLD, TEnvironment, TPort, TMpiMessage, TStatus
+from ROOT.Mpi import TEnvironment, TPort, TMpiMessage, TStatus
 from ROOT.Mpi import TCommunicator, TInterCommunicator, TIntraCommunicator, TNullCommunicator 
-from ROOT.Mpi import TRequest, TGrequest, TPrequest, TInfo, TMpiFile, TOp
+from ROOT.Mpi import TRequest, TGrequest, TPrequest, TInfo, TMpiFile
 from ROOT.Mpi import TMpiTimer, TGroup, TErrorHandler
+from ROOT.Mpi import GROUP_NULL, INFO_NULL, COMM_NULL, GROUP_EMPTY, COMM_WORLD, COMM_SELF
 import pickle, codecs, math
 
 #########################
@@ -164,6 +165,7 @@ setattr(TCommunicator,"Scatter",__Scatter)
 ##TCommunicator Bcast#
 ######################
 setattr(TCommunicator,"__PyBcast",TCommunicator.Bcast)
+setattr(TCommunicator,"__PyIBcast",TCommunicator.IBcast)
 
 def __Bcast(self,obj, root):
     """Broadcasts a message from the process with rank root to all processes of the group, itself included. It is
@@ -186,7 +188,17 @@ def __Bcast(self,obj, root):
     self.__PyBcast("TMpiMessage")(msg, root)
     return msg.ReadPyObject()
 
+def __IBcast(self,obj,root):
+    msg=TMpiMessage()
+    if self.GetRank() == root:
+       msg.WritePyObject(obj)
+    req=self.__PyIBcast("TMpiMessage")(msg,root);
+    req.SetMsg(msg)
+    return req;
+
+
 setattr(TCommunicator,"Bcast",__Bcast)
+setattr(TCommunicator,"IBcast",__IBcast)
 
 
 #######################

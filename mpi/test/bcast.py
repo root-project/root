@@ -78,6 +78,22 @@ def bcast():
     assert(msg[0].value==1)
     assert(msg[1]==1)
     assert(msg[2]=="Hola")
+    
+    
+    ##nonblocking send/recv ibcast in any order
+    msg1=COMM_WORLD.IBcast(123,0)
+    msg2=COMM_WORLD.IBcast(321,0)
+    msg3=COMM_WORLD.IBcast(0,0)
+    
+    msg1.Wait()
+    assert(msg1.GetMsg()==123)
+
+    msg3.Wait()
+    assert(msg3.GetMsg()==0)
+
+    msg2.Wait()
+    assert(msg2.GetMsg()==321)
+
         
 if __name__ == "__main__":
     bcast()
