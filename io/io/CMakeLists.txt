@@ -20,6 +20,7 @@ ROOT_INSTALL_HEADERS()
 
 if(testing)
   add_subdirectory(test)
+  add_subdirectory(perf)
 endif()
 
 #--- Extra rules ----------------------------------------------------------
