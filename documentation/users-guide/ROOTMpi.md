@@ -11,6 +11,9 @@ It supports RMA (Remote Memory Access), shared memory,P2P(peer to perr) and coll
 ROOT Mpi is the integration of MPI and ROOT technologies in a framework for parallel computing. The <b>motivation</b> was to communicate ROOT objects through processes using serialization, to implement MPI with a better design for ROOT and create an interface that uses the new C++ features to write parallel code.
 But the most important is to implement ROOT algorithms in parallel for HPC/Grid systems.
 
+ROOT Mpi has support for python2 and python3 using PyROOT with small changes in the way to receive the messages and it has support to serialize ROOT and Ptyhon objects
+using pickle and ROOT I/O serialization together.
+To use it is just to enable PyROOT in the compilation time, not extra dependencies are needed.
 
 ## Installation
 To install ROOT MPI please read first.
@@ -32,6 +35,8 @@ cd compile
 cmake -Dmpi=ON ..
 make -j 5
 ```
+
+To support python just write the additional flag -Dpython=ON .
 
 ## ROOT Mpi Features
 
@@ -55,6 +60,7 @@ TGraphComminicator|Graph communicator (map processes in a general graph topology
 Checkpointing| Feature to save the state of the execution and restore it.                                                                          |<span style="color:red">**TODO**</span>
 Fault Tolerance | Feature to continue execution in case of fault.                                                                                  |<span style="color:red">**TODO**</span>
 Memory Window|Class to shared regions of memory with Remote Access Memory using one site communication|<span style="color:red">**NOT SUPPORTED**</span>
+Python support|Support for python2 and python3 using PyROOT and allow PyObjects serialization|<span style="color:green">**DONE**</span>
 
 
 
@@ -78,6 +84,14 @@ Internally to run a macro it launch mpirun with root interpreter, that allows to
 </center>
 
 <b>Usage for Macro:</b> rootmpi (mpirun options) (root/cling options) (macro file.C )
+
+
+### rootmpi (command line tool) with Python
+In the case of python, rootmpi allows to run python scripts in a similar way that ROOT macros.
+
+<center>
+![Execution Diagram](pictures/rmpi3.png)
+</center>
 
 <b>Options:</b>
 
@@ -122,7 +136,7 @@ node.example.com slots=4 max-slots=4
  * -x : exit on exception
  * -memstat : run with memory usage monitoring
 
-## Hello world
+## Hello world C++
 This is a basic example that just print the host name and the rank id.
 save it like hello.C
 ``` {.cpp}
@@ -154,7 +168,29 @@ Processing hello.C ...
 Hello from process 0 of 2 in host wn6
 Hello from process 1 of 2 in host wn7
 ```
+## Hello world Python
+This is a basic example that just print the host name and the rank id.
+save it like hello.py
+``` {.py}
+from ROOT import Mpi
+from ROOT.Mpi import TEnvironment, COMM_WORLD
 
+env = TEnvironment() # environment to start communication system
+def  hello():
+    print("Hello from process %i of %i in host %s"%(COMM_WORLD.GetRank(),COMM_WORLD.GetSize(),env.GetProcessorName()))
+
+if __name__ == "__main__":
+    hello()
+```
+To execute it just use rootmpi command line tools.
+``` {.sh}
+rootmpi -np 2 -H wn6,wn7 -b -pernode hello.py
+```
+the output mus be something like 
+``` {.sh}
+Hello from process 0 of 2 in host wn6
+Hello from process 1 of 2 in host wn7
+``` 
 
 ## ROOT Mpi Basics
 ROOT Mpi can to communicate processes between multiple nodes using messages,
@@ -181,7 +217,7 @@ basically is send and receiv a message between two processes.
 ![Peer to Peer](pictures/rmpip2p.png)
 </center>
 
-<b>Example</b>
+<b>Example C++</b>
 ``` {.cpp}
 using namespace ROOT::Mpi;
 void p2p()
