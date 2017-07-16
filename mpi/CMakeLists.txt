@@ -15,12 +15,30 @@ if(NOT CMAKE_PROJECT_NAME STREQUAL ROOT)
   include(CheckCompiler)
   include(MacroEnsureVersion)
   include(StandaloneBuild)
+  #---Check for Python installation-------------------------------------------------------
+  if(python OR python2 OR python3)
+  message(STATUS "Looking for Python")
+  #---First look for the python interpreter and fix the version of it for the libraries--
+  if(python3)
+    find_package(PythonInterp 3.5)
+  else()
+    find_package(PythonInterp)
+  endif()
+  if(PYTHONINTERP_FOUND)
+    execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "import sys;sys.stdout.write(sys.version[:3])"
+                    OUTPUT_VARIABLE PYTHON_VERSION)
+    message(STATUS "Found Python interpreter version ${PYTHON_VERSION}")
+  endif()
+  set(Python_ADDITIONAL_VERSIONS ${PYTHON_VERSION})
+  endif()
+
   if(testing)  
     configure_file(${CMAKE_SOURCE_DIR}/../cmake/modules/CTestCustom.cmake ${CMAKE_BINARY_DIR} COPYONLY)
     enable_testing()
     include(RootCTest)
     add_subdirectory(test)
   endif()
+  
   string(REPLACE "/bin/mpiexec" "" MPI_PATH "${MPIEXEC}")
   file( WRITE  "${CMAKE_BINARY_DIR}/env.sh" "export PATH=${MPI_PATH}/bin:$PATH\n")
   file( APPEND "${CMAKE_BINARY_DIR}/env.sh" "export PATH=$PATH:${CMAKE_BINARY_DIR}/rootmpi\n")
@@ -45,7 +63,7 @@ if(NOT CMAKE_PROJECT_NAME STREQUAL ROOT)
 
   get_property(__allHeaders GLOBAL PROPERTY ROOT_HEADER_TARGETS)
   add_custom_target(move_headers ALL DEPENDS ${__allHeaders})  
-  endif()
+endif()
 
 
 

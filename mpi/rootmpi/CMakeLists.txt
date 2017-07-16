@@ -10,11 +10,11 @@ if(VALGRIND)
     add_definitions("-DROOT_MPI_VALGRINDFOUND" )
 endif()
 
-if(python)
+if(python OR python2 OR python3)
     if(PYTHONINTERP_FOUND)
         add_definitions("-DPYTHONINTERP_FOUND" )
         add_definitions("-DPYTHON_EXECUTABLE=\"${PYTHON_EXECUTABLE}\"" )
-    endif()
+    endif(PYTHONINTERP_FOUND)
 endif()
 
 add_definitions("-DROOT_MPI_EXEC=\"${MPIEXEC}\"" "-DROOT_MPI_CXX=\"${CXX}\"" "-DROOT_MPI_ROOTSYS=\"$ENV{ROOTSYS}\"")
