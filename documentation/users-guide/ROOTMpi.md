@@ -521,7 +521,7 @@ Each process (root process included) sends the contents of its send buffer to th
 <center>
 ![Gather](pictures/rmpigather.png)
 </center>
-<b>Example</b>
+<b>Example C++</b>
 In this example we are sending two vector from each process 
 and we are receiving an array of vector(with 4 vectors for 2 processes) in root process,
 every vector has a values of the rank
@@ -612,6 +612,87 @@ vec[2] = 1 -- 1
 vec[3] = 1 -- 1
 ```
 
+<b>Example Python</b>
+In this example we are sending two vector from each process 
+and we are receiving an array of vector(with 4 vectors for 2 processes) in root process, every vector has a values of the rank
+
+``` {.py}
+from ROOT import Mpi, TVectorD
+from ROOT.Mpi import TEnvironment, COMM_WORLD
+
+def gather():
+    
+   env=TEnvironment()
+   if COMM_WORLD.GetSize() == 1 :   return; # needed at least 2 process
+   rank = COMM_WORLD.GetRank()
+   size = COMM_WORLD.GetSize()
+
+   count = 2;
+   root = COMM_WORLD.GetMainProcess();
+
+   #creating a vector to send 
+   send_vec=[]
+   for i in range(0,count,1):
+      vec=TVectorD(1)
+      vec[0]=rank
+      send_vec.append(vec)
+
+
+   recv_vec = COMM_WORLD.Gather(send_vec, count, size * count, root) 
+
+   if rank == root :
+      # just printing all infortaion
+      for i in range(0,size * count,1):
+         recv_vec[i].Print()
+
+      for i in range(0,COMM_WORLD.GetSize(),1):
+         for j in range(0,count,1):
+            print("vec[%i] = %f -- %i"%(i * count + j ,recv_vec[i * count + j][0] ,i ))
+
+if __name__ == "__main__":
+    gather()
+
+```
+Execute with rootmpi command line tool
+``` {.sh}
+rootmpi  -np 2 gather.py
+```
+The output is something like 
+``` {.sh}
+Vector (1)  is as follows
+
+     |        1  |
+------------------
+   0 |0 
+
+
+Vector (1)  is as follows
+
+     |        1  |
+------------------
+   0 |0 
+
+
+Vector (1)  is as follows
+
+     |        1  |
+------------------
+   0 |1 
+
+
+Vector (1)  is as follows
+
+     |        1  |
+------------------
+   0 |1 
+
+vec[0] = 0.000000 -- 0
+vec[1] = 0.000000 -- 0
+vec[2] = 1.000000 -- 1
+vec[3] = 1.000000 -- 1
+```
+
+
 ### Scatter
 Sends data from one task to all tasks in a group.
 
@@ -632,8 +713,8 @@ Rationale: Though not needed, the last restriction is imposed so as to achieve s
 ![Scatter](pictures/rmpiscatter.png)
 </center>
 
-<b>Example</b>
-In this example we are sending twi vector from each process 
+<b>Example C++</b>
+In this example we are sending two vector from each process 
 and we are receiving an array of vector in root process,
 every vector has a values of the rank
 
@@ -719,6 +800,86 @@ Vector (1)  is as follows
 
 3 -- 3
 ```
+<b>Example Python</b>
+The same example that c++ but in python
+read description above
+``` {.py}
+from ROOT import Mpi, TVectorD
+from ROOT.Mpi import TEnvironment, COMM_WORLD
+
+def scatter():
+    
+   env=TEnvironment()
+   env.SyncOutput()
+   if COMM_WORLD.GetSize() == 1:    return # needed at least 2 process
+   rank = COMM_WORLD.GetRank()
+   size = COMM_WORLD.GetSize()
+
+   count = 2;
+   root = COMM_WORLD.GetMainProcess()
+
+   #creating a vector to send 
+   send_vec=[]
+   if root == rank:
+      #send_vec = new TVectorD[size * count];
+      for i in range(0,size * count,1):
+         vec=TVectorD(1)
+         vec[0]=i;
+         send_vec.append(vec)
+         
+
+   recv_vec=COMM_WORLD.Scatter(send_vec, size * count, count, root) 
+
+   for i in range(0,count,1):
+      recv_vec[i].Print();
+      print("%f -- %i"%(recv_vec[i][0] , (rank * count + i) ))
+
+if __name__ == "__main__":
+    scatter()
+```
+Execute with rootmpi command line tool
+``` {.sh}
+rootmpi  -np 2 scatter.py
+```
+The output is something like 
+``` {.sh}
+-------  Rank 0 OutPut  -------
+
+Vector (1)  is as follows
+
+     |        1  |
+------------------
+   0 |0 
+
+0.000000 -- 0
+
+Vector (1)  is as follows
+
+     |        1  |
+------------------
+   0 |1 
+
+1.000000 -- 1
+-------  Rank 1 OutPut  -------
+
+Vector (1)  is as follows
+
+     |        1  |
+------------------
+   0 |2 
+
+2.000000 -- 2
+
+Vector (1)  is as follows
+
+     |        1  |
+------------------
+   0 |3 
+
+3.000000 -- 3
+```
+
+
 ### Reduce
 perform a global reduce operation (such as sum, max, logical AND, etc.) across all the members of a group. The reduction operation can be either one of a predefined  list  of  operations,  or  a  userdefined  operation.  The global reduction functions come in several flavors: a reduce that returns the result of the reduction at one node and all-reduce that returns this result at all nodes.
 
@@ -726,7 +887,7 @@ perform a global reduce operation (such as sum, max, logical AND, etc.) across a
 ![Reduce](pictures/rmpireduce.png)
 </center>
 
-<b>Example</b>
+<b>Example C++</b>
 Example to generated random numbers to fill a TH1F histogram in every process and merging the result through a custom reduce operation.
 In this example we are creating our custom opration with sum the histogram
 called HSUM.
@@ -800,6 +961,63 @@ rmpihistreduce.png
 <center>
 ![Histogram reduce](pictures/rmpihistreduce.png)
 </center>
+
+<b>Example Python</b>
+The same example that c++ but in python
+read description above
+
+``` {.py}
+from ROOT import Mpi, TH1F, TF1, TFormula, TCanvas
+from ROOT.Mpi import TEnvironment, COMM_WORLD
+
+def HSUM(a,b): # histogram sum(custom operation for reduce)
+    #returning an object that is a 
+    #histograms sum
+    c=TH1F(a)
+    c.Add(b)
+    return c
+
+def hist_reduce(points = 100000):
+   env=TEnvironment()
+
+   root = 0
+   rank = COMM_WORLD.GetRank()
+
+   if COMM_WORLD.GetSize() == 1:    return # need at least 2 process
+
+   form1 = TFormula("form1", "abs(sin(x)/x)")
+   sqroot = TF1("sqroot", "x*gaus(0) + [3]*form1", 0, 10)
+   sqroot.SetParameters(10, 4, 1, 20);
+
+   h1f=TH1F("h1f", "Test random numbers", 200, 0, 10)
+   h1f.SetFillColor(rank);
+   h1f.FillRandom("sqroot", points)
+
+   
+
+   result=COMM_WORLD.Reduce(h1f, HSUM, root)
+
+   if rank == root:
+      c1 = TCanvas("c1", "The FillRandom example", 200, 10, 700, 900)
+      c1.SetFillColor(18)
+      result.Draw()
+      c1.SaveAs("hist.png")
+
+if __name__ == "__main__":
+    hist_reduce()
+```
+Execute with rootmpi command line tool
+``` {.sh}
+rootmpi  -np 4 hist_reduce.C
+```
+The output is something like 
+``` {.sh}
+Info in <TCanvas::Print>: file hist.png has been created
+```
+<center>
+![Histogram reduce](pictures/rmpihistreduce.png)
+</center>
+
 
 ## Debugging and Profiling ROOT Mpi applications
 
