@@ -293,6 +293,80 @@ Received mat =
    1 |        0.3         0.4
 ```
 
+<b>Example Python</b>
+``` {.py}
+from ROOT import Mpi, TMatrixD
+from ROOT.Mpi import TEnvironment, COMM_WORLD
+
+def p2p():
+   env=TEnvironment() # environment to start communication system
+
+   if COMM_WORLD.GetSize() != 2 :   return # need 2 process
+
+
+   # sending messages in process 0
+   if COMM_WORLD.GetRank() == 0:
+      # data to send
+      mydict={"key":"hola"}                    # dict object
+      mymat=TMatrixD (2, 2)                    # ROOT object
+      a=0.0                                    # default datatype
+      
+      mymat[0][0] = 0.1
+      mymat[0][1] = 0.2
+      mymat[1][0] = 0.3
+      mymat[1][1] = 0.4
+
+      a = 123.0
+
+      print("Sending scalar = %f"% a )
+      COMM_WORLD.Send(a, 1, 0)
+      print("Sending dict = %s"%mydict["key"] )
+      COMM_WORLD.Send(mydict, 1, 0)
+      print("Sending mat = ")
+      mymat.Print()
+      COMM_WORLD.Send(mymat, 1, 0)
+      
+   # Receiving messages in process 1
+   if COMM_WORLD.GetRank() == 1 :
+      scalar=COMM_WORLD.Recv( 0, 0)
+      print("Recieved scalar = %f"%scalar)
+      mydict=COMM_WORLD.Recv( 0, 0)
+      print("Received map = %s"%mydict["key"])
+      mymat=COMM_WORLD.Recv( 0, 0)
+      print("Received mat = ")
+      mymat.Print();
+
+if __name__ == "__main__":
+    p2p()
+```
+Execute with rootmpi command line tool
+``` {.sh}
+rootmpi  -np 2 p2p.py
+```
+The output is something like 
+``` {.sh}
+Sending scalar = 123.000000
+Sending dict = hola
+Sending mat = 
+
+2x2 matrix is as follows
+
+     |      0    |      1    |
+-------------------------------
+   0 |        0.1         0.2 
+   1 |        0.3         0.4 
+
+Recieved scalar = 123.000000
+Received map = hola
+Received mat = 
+
+2x2 matrix is as follows
+
+     |      0    |      1    |
+-------------------------------
+   0 |        0.1         0.2 
+   1 |        0.3         0.4
+```
 ### Collective communication
 The collective operations basically is to send/receiv messages
 to multiple process at same time, using different schemas ilustrate below.
@@ -307,7 +381,7 @@ Distinct type maps between sender and receiver are still allowed
 ![Broadcast](pictures/rmpibcast.png)
 </center>
 
-<b>Example</b>
+<b>Example C++</b>
 ``` {.cpp}
 using namespace ROOT::Mpi;
 void bcast()
@@ -384,7 +458,61 @@ Rank = 3
    0 |        0.1         0.2 
    1 |        0.3         0.4 
 ```
+<b>Example Python</b>
+``` {.py}
+from ROOT import Mpi, TMatrixD
+from ROOT.Mpi import TEnvironment, COMM_WORLD
+def bcast():
+   env=TEnvironment()
+   env.SyncOutput()
 
+   if COMM_WORLD.GetSize() == 1:    return; # need at least 2 process
+
+
+   rank = COMM_WORLD.GetRank();
+   root = COMM_WORLD.GetMainProcess();
+   # data to send/recv
+   mymat=TMatrixD(2, 2); # ROOT object
+   if COMM_WORLD.IsMainProcess() :
+       
+      mymat[0][0] = 0.1;
+      mymat[0][1] = 0.2;
+      mymat[1][0] = 0.3;
+      mymat[1][1] = 0.4;
+ 
+   mat=COMM_WORLD.Bcast(mymat,root)
+   print("Rank = %i"%rank)
+   mat.Print()
+
+if __name__ == "__main__":
+    bcast()
+```
+Execute with rootmpi command line tool
+``` {.sh}
+rootmpi  -np 2 bcast.py
+```
+The output is something like 
+``` {.sh}
+-------  Rank 0 OutPut  -------
+Rank = 0
+
+2x2 matrix is as follows
+
+     |      0    |      1    |
+-------------------------------
+   0 |        0.1         0.2 
+   1 |        0.3         0.4 
+
+-------  Rank 1 OutPut  -------
+Rank = 1
+
+2x2 matrix is as follows
+
+     |      0    |      1    |
+-------------------------------
+   0 |        0.1         0.2 
+   1 |        0.3         0.4 
+```
 
 ### Gather
 Collect messages from a group of processes.
