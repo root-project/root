@@ -183,7 +183,7 @@ public:
    /// \brief Append a filter to the call graph.
    /// \param[in] f Function, lambda expression, functor class or any other callable object. It must return a `bool`
    /// signalling whether the event has passed the selection (true) or not (false).
-   /// \param[in] columns Names of the branches in input to the filter function.
+   /// \param[in] columns Names of the columns/branches in input to the filter function.
    /// \param[in] name Optional name of this filter. See `Report`.
    ///
    /// Append a filter node at the point of the call graph corresponding to the
@@ -230,13 +230,13 @@ public:
    /// \brief Append a filter to the call graph.
    /// \param[in] f Function, lambda expression, functor class or any other callable object. It must return a `bool`
    /// signalling whether the event has passed the selection (true) or not (false).
-   /// \param[in] bn Names of the branches in input to the filter function.
+   /// \param[in] columns Names of the columns/branches in input to the filter function.
    ///
    /// Refer to the first overload of this method for the full documentation.
    template <typename F>
-   TInterface<TFilterBase> Filter(F f, const std::initializer_list<std::string> &bn)
+   TInterface<TFilterBase> Filter(F f, const std::initializer_list<std::string> &columns)
    {
-      return Filter(f, ColumnNames_t{bn});
+      return Filter(f, ColumnNames_t{columns});
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -244,10 +244,11 @@ public:
    /// \param[in] expression The filter expression in C++
    /// \param[in] name Optional name of this filter. See `Report`.
    ///
-   /// The expression is just in time compiled and used to filter entries. The
-   /// variable names to be used inside are the names of the branches. Only
-   /// valid C++ is accepted.
-   /// Refer to the first overload of this method for the full documentation.
+   /// The expression is just-in-time compiled and used to filter entries. It must
+   /// be valid C++ syntax in which variable names are substituted with the names
+   /// of branches/columns.
+   ///
+   ///Refer to the first overload of this method for the full documentation.
    TInterface<TFilterBase> Filter(std::string_view expression, std::string_view name = "")
    {
       auto retVal = CallJitTransformation("Filter", name, expression);
@@ -255,13 +256,13 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Creates a temporary branch
-   /// \param[in] name The name of the temporary branch.
+   /// \brief Creates a custom column
+   /// \param[in] name The name of the custom column.
    /// \param[in] expression Function, lambda expression, functor class or any other callable object producing the
-   /// temporary value. Returns the value that will be assigned to the temporary branch.
-   /// \param[in] columns Names of the branches in input to the producer function.
+   /// temporary value. Returns the value that will be assigned to the custom column.
+   /// \param[in] columns Names of the columns/branches in input to the producer function.
    ///
-   /// Create a temporary branch that will be visible from all subsequent nodes
+   /// Create a custom column that will be visible from all subsequent nodes
    /// of the functional chain. The `expression` is only evaluated for entries that pass
    /// all the preceding filters.
    /// A new variable is created called `name`, accessible as if it was contained
@@ -271,10 +272,9 @@ public:
    ///
    /// * caching the results of complex calculations for easy and efficient multiple access
    /// * extraction of quantities of interest from complex objects
-   /// * branch aliasing, i.e. changing the name of a branch
+   /// * column aliasing, i.e. changing the name of a branch/column
    ///
-   /// An exception is thrown if the name of the new branch is already in use
-   /// for another branch in the TTree.
+   /// An exception is thrown if the name of the new column is already in use.
    template <typename F, typename std::enable_if<!std::is_convertible<F, std::string>::value, int>::type = 0>
    TInterface<TCustomColumnBase> Define(std::string_view name, F expression, const ColumnNames_t &columns = {})
    {
@@ -290,13 +290,14 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Creates a temporary branch
-   /// \param[in] name The name of the temporary branch.
+   /// \brief Creates a custom column
+   /// \param[in] name The name of the custom column.
    /// \param[in] expression An expression in C++ which represents the temporary value
    ///
-   /// The expression is just in time compiled and used to produce new values. The
-   /// variable names to be used inside are the names of the branches. Only
-   /// valid C++ is accepted.
+   /// The expression is just-in-time compiled and used to produce the column entries. The
+   /// It must be valid C++ syntax in which variable names are substituted with the names
+   /// of branches/columns.
+   ///
    /// Refer to the first overload of this method for the full documentation.
    TInterface<TCustomColumnBase> Define(std::string_view name, std::string_view expression)
    {
@@ -309,7 +310,7 @@ public:
    /// \tparam BranchTypes variadic list of branch/column types
    /// \param[in] treename The name of the output TTree
    /// \param[in] filename The name of the output TFile
-   /// \param[in] bnames The list of names of the branches to be written
+   /// \param[in] bnames The list of names of the columns/branches to be written
    ///
    /// This function returns a `TDataFrame` built with the output tree as a source.
    template <typename... BranchTypes>
@@ -323,10 +324,10 @@ public:
    /// \brief Create a snapshot of the dataset on disk in the form of a TTree
    /// \param[in] treename The name of the output TTree
    /// \param[in] filename The name of the output TFile
-   /// \param[in] bnames The list of names of the branches to be written
+   /// \param[in] bnames The list of names of the columns/branches to be written
    ///
    /// This function returns a `TDataFrame` built with the output tree as a source.
-   /// The types of the branches are automatically inferred and do not need to be specified.
+   /// The types of the columns are automatically inferred and do not need to be specified.
    TInterface<TLoopManager> Snapshot(std::string_view treename, std::string_view filename, const ColumnNames_t &bnames)
    {
       auto df = GetDataFrameChecked();
@@ -365,7 +366,7 @@ public:
    /// \param[in] columnNameRegexp The regular expression to match the column names to be selected. The presence of a '^' and a '$' at the end of the string is implicitly assumed if they are not specified. See the documentation of TRegexp for more details. An empty string signals the selection of all columns.
    ///
    /// This function returns a `TDataFrame` built with the output tree as a source.
-   /// The types of the branches are automatically inferred and do not need to be specified.
+   /// The types of the columns are automatically inferred and do not need to be specified.
    TInterface<TLoopManager> Snapshot(std::string_view treename, std::string_view filename,
                                      std::string_view columnNameRegexp = "")
    {
@@ -440,7 +441,7 @@ public:
    /// \brief Execute a user-defined function on each entry (*instant action*)
    /// \param[in] f Function, lambda expression, functor class or any other callable object performing user defined
    /// calculations.
-   /// \param[in] bl Names of the branches in input to the user function.
+   /// \param[in] columns Names of the columns/branches in input to the user function.
    ///
    /// The callable `f` is invoked once per entry. This is an *instant action*:
    /// upon invocation, an event loop as well as execution of all scheduled actions
@@ -448,18 +449,18 @@ public:
    /// Users are responsible for the thread-safety of this callable when executing
    /// with implicit multi-threading enabled (i.e. ROOT::EnableImplicitMT).
    template <typename F>
-   void Foreach(F f, const ColumnNames_t &bl = {})
+   void Foreach(F f, const ColumnNames_t &columns = {})
    {
       using arg_types = typename TTraits::CallableTraits<decltype(f)>::arg_types_nodecay;
       using ret_type = typename TTraits::CallableTraits<decltype(f)>::ret_type;
-      ForeachSlot(TDFInternal::AddSlotParameter<ret_type>(f, arg_types()), bl);
+      ForeachSlot(TDFInternal::AddSlotParameter<ret_type>(f, arg_types()), columns);
    }
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Execute a user-defined function requiring a processing slot index on each entry (*instant action*)
    /// \param[in] f Function, lambda expression, functor class or any other callable object performing user defined
    /// calculations.
-   /// \param[in] columns Names of the branches in input to the user function.
+   /// \param[in] columns Names of the columns/branches in input to the user function.
    ///
    /// Same as `Foreach`, but the user-defined function takes an extra
    /// `unsigned int` as its first parameter, the *processing slot index*.
@@ -533,9 +534,9 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Execute a user-defined reduce operation on the values of the default branch.
+   /// \brief Execute a user-defined reduce operation on the values of the first default column.
    /// \tparam F The type of the reduce callable. Automatically deduced.
-   /// \tparam T The type of the branch to apply the reduction to. Automatically deduced.
+   /// \tparam T The type of the column to apply the reduction to. Automatically deduced.
    /// \param[in] f A callable with signature `T(T,T)`
    /// \param[in] initValue The reduced object is initialised to this value rather than being default-constructed
    ///
@@ -549,6 +550,7 @@ public:
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Return the number of entries processed (*lazy action*)
    ///
+   /// Useful e.g. for counting the number of entries passing a certain filter (see also `Report`).
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
    TResultProxy<unsigned int> Count()
@@ -563,10 +565,10 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Return a collection of values of a branch (*lazy action*)
-   /// \tparam T The type of the branch.
+   /// \brief Return a collection of values of a column (*lazy action*, returns a std::vector by default)
+   /// \tparam T The type of the column.
    /// \tparam COLL The type of collection used to store the values.
-   /// \param[in] column The name of the branch of which the values are to be collected
+   /// \param[in] column The name of the column to collect the values of.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
@@ -585,14 +587,13 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Fill and return a one-dimensional histogram with the values of a branch (*lazy action*)
-   /// \tparam V The type of the branch used to fill the histogram.
+   /// \brief Fill and return a one-dimensional histogram with the values of a column (*lazy action*)
+   /// \tparam V The type of the column used to fill the histogram.
    /// \param[in] model The returned histogram will be constructed using this as a model.
-   /// \param[in] vName The name of the branch that will fill the histogram.
+   /// \param[in] vName The name of the column that will fill the histogram.
    ///
-   /// The default branches, if available, will be used instead of branches whose names are left empty.
-   /// Branches can be of a container type (e.g. std::vector<double>), in which case the histogram
-   /// is filled with each one of the elements of the container. In case multiple branches of container type
+   /// Columns can be of a container type (e.g. std::vector<double>), in which case the histogram
+   /// is filled with each one of the elements of the container. In case multiple columns of container type
    /// are provided (e.g. values and weights) they must have the same length for each one of the events (but
    /// possibly different lengths between events).
    /// This action is *lazy*: upon invocation of this method the calculation is
@@ -615,20 +616,14 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Fill and return a one-dimensional histogram with the values of a branch (*lazy action*)
-   /// \tparam V The type of the branch used to fill the histogram.
+   /// \brief Fill and return a one-dimensional histogram with the weighted values of a column (*lazy action*)
+   /// \tparam V The type of the column used to fill the histogram.
+   /// \tparam W The type of the column used as weights.
    /// \param[in] model The returned histogram will be constructed using this as a model.
-   /// \param[in] vName The name of the branch that will fill the histogram.
-   /// \param[in] wName The name of the branch that will provide the weights.
+   /// \param[in] vName The name of the column that will fill the histogram.
+   /// \param[in] wName The name of the column that will provide the weights.
    ///
-   /// The default branches, if available, will be used instead of branches whose names are left empty.
-   /// Branches can be of a container type (e.g. std::vector<double>), in which case the histogram
-   /// is filled with each one of the elements of the container. In case multiple branches of container type
-   /// are provided (e.g. values and weights) they must have the same length for each one of the events (but
-   /// possibly different lengths between events).
-   /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See TResultProxy documentation.
-   /// The user gives up ownership of the model histogram.
+   /// See the description of the first Histo1D overload for more details.
    template <typename V = TDFDetail::TInferType, typename W = TDFDetail::TInferType>
    TResultProxy<::TH1D> Histo1D(::TH1D &&model, std::string_view vName, std::string_view wName)
    {
@@ -640,12 +635,29 @@ public:
       return CreateAction<TDFInternal::ActionTypes::Histo1D, V, W>(userColumns, h);
    }
 
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Fill and return a one-dimensional histogram with the weighted values of a column (*lazy action*)
+   /// \tparam V The type of the column used to fill the histogram.
+   /// \tparam W The type of the column used as weights.
+   /// \param[in] vName The name of the column that will fill the histogram.
+   /// \param[in] wName The name of the column that will provide the weights.
+   ///
+   /// This overload uses a default model histogram TH1D("", "", 128u, 0., 0.).
+   /// See the description of the first Histo1D overload for more details.
    template <typename V = TDFDetail::TInferType, typename W = TDFDetail::TInferType>
    TResultProxy<::TH1D> Histo1D(std::string_view vName, std::string_view wName)
    {
       return Histo1D<V, W>(::TH1D{"", "", 128u, 0., 0.}, vName, wName);
    }
 
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Fill and return a one-dimensional histogram with the weighted values of a column (*lazy action*)
+   /// \tparam V The type of the column used to fill the histogram.
+   /// \tparam W The type of the column used as weights.
+   /// \param[in] model The returned histogram will be constructed using this as a model.
+   ///
+   /// This overload will use the first two default columns as column names.
+   /// See the description of the first Histo1D overload for more details.
    template <typename V, typename W>
    TResultProxy<::TH1D> Histo1D(::TH1D &&model = ::TH1D{"", "", 128u, 0., 0.})
    {
@@ -654,12 +666,16 @@ public:
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Fill and return a two-dimensional histogram (*lazy action*)
-   /// \tparam V1 The type of the branch used to fill the x axis of the histogram.
-   /// \tparam V2 The type of the branch used to fill the y axis of the histogram.
+   /// \tparam V1 The type of the column used to fill the x axis of the histogram.
+   /// \tparam V2 The type of the column used to fill the y axis of the histogram.
    /// \param[in] model The returned histogram will be constructed using this as a model.
-   /// \param[in] v1Name The name of the branch that will fill the x axis.
-   /// \param[in] v2Name The name of the branch that will fill the y axis.
+   /// \param[in] v1Name The name of the column that will fill the x axis.
+   /// \param[in] v2Name The name of the column that will fill the y axis.
    ///
+   /// Columns can be of a container type (e.g. std::vector<double>), in which case the histogram
+   /// is filled with each one of the elements of the container. In case multiple columns of container type
+   /// are provided (e.g. values and weights) they must have the same length for each one of the events (but
+   /// possibly different lengths between events).
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
    /// The user gives up ownership of the model histogram.
@@ -678,14 +694,14 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Fill and return a two-dimensional histogram (*lazy action*)
-   /// \tparam V1 The type of the branch used to fill the x axis of the histogram.
-   /// \tparam V2 The type of the branch used to fill the y axis of the histogram.
-   /// \tparam W The type of the branch used for the weights of the histogram.
+   /// \brief Fill and return a weighted two-dimensional histogram (*lazy action*)
+   /// \tparam V1 The type of the column used to fill the x axis of the histogram.
+   /// \tparam V2 The type of the column used to fill the y axis of the histogram.
+   /// \tparam W The type of the column used for the weights of the histogram.
    /// \param[in] model The returned histogram will be constructed using this as a model.
-   /// \param[in] v1Name The name of the branch that will fill the x axis.
-   /// \param[in] v2Name The name of the branch that will fill the y axis.
-   /// \param[in] wName The name of the branch that will provide the weights.
+   /// \param[in] v1Name The name of the column that will fill the x axis.
+   /// \param[in] v2Name The name of the column that will fill the y axis.
+   /// \param[in] wName The name of the column that will provide the weights.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
@@ -714,13 +730,13 @@ public:
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Fill and return a three-dimensional histogram (*lazy action*)
-   /// \tparam V1 The type of the branch used to fill the x axis of the histogram.
-   /// \tparam V2 The type of the branch used to fill the y axis of the histogram.
-   /// \tparam V3 The type of the branch used to fill the z axis of the histogram.
+   /// \tparam V1 The type of the column used to fill the x axis of the histogram. Inferred if not present.
+   /// \tparam V2 The type of the column used to fill the y axis of the histogram. Inferred if not present.
+   /// \tparam V3 The type of the column used to fill the z axis of the histogram. Inferred if not present.
    /// \param[in] model The returned histogram will be constructed using this as a model.
-   /// \param[in] v1Name The name of the branch that will fill the x axis.
-   /// \param[in] v2Name The name of the branch that will fill the y axis.
-   /// \param[in] v3Name The name of the branch that will fill the z axis.
+   /// \param[in] v1Name The name of the column that will fill the x axis.
+   /// \param[in] v2Name The name of the column that will fill the y axis.
+   /// \param[in] v3Name The name of the column that will fill the z axis.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
@@ -743,15 +759,15 @@ public:
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Fill and return a three-dimensional histogram (*lazy action*)
-   /// \tparam V1 The type of the branch used to fill the x axis of the histogram.
-   /// \tparam V2 The type of the branch used to fill the y axis of the histogram.
-   /// \tparam V3 The type of the branch used to fill the z axis of the histogram.
-   /// \tparam W The type of the branch used for the weights of the histogram.
+   /// \tparam V1 The type of the column used to fill the x axis of the histogram. Inferred if not present.
+   /// \tparam V2 The type of the column used to fill the y axis of the histogram. Inferred if not present.
+   /// \tparam V3 The type of the column used to fill the z axis of the histogram. Inferred if not present.
+   /// \tparam W The type of the column used for the weights of the histogram. Inferred if not present.
    /// \param[in] model The returned histogram will be constructed using this as a model.
-   /// \param[in] v1Name The name of the branch that will fill the x axis.
-   /// \param[in] v2Name The name of the branch that will fill the y axis.
-   /// \param[in] v3Name The name of the branch that will fill the z axis.
-   /// \param[in] wName The name of the branch that will provide the weights.
+   /// \param[in] v1Name The name of the column that will fill the x axis.
+   /// \param[in] v2Name The name of the column that will fill the y axis.
+   /// \param[in] v3Name The name of the column that will fill the z axis.
+   /// \param[in] wName The name of the column that will provide the weights.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
@@ -780,11 +796,11 @@ public:
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Fill and return a one-dimensional profile (*lazy action*)
-   /// \tparam V1 The type of the branch the values of which are used to fill the profile.
-   /// \tparam V2 The type of the branch the values of which are used to fill the profile.
+   /// \tparam V1 The type of the column the values of which are used to fill the profile. Inferred if not present.
+   /// \tparam V2 The type of the column the values of which are used to fill the profile. Inferred if not present.
    /// \param[in] model The model to be considered to build the new return value.
-   /// \param[in] v1Name The name of the branch that will fill the x axis.
-   /// \param[in] v2Name The name of the branch that will fill the y axis.
+   /// \param[in] v1Name The name of the column that will fill the x axis.
+   /// \param[in] v2Name The name of the column that will fill the y axis.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
@@ -805,13 +821,13 @@ public:
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Fill and return a one-dimensional profile (*lazy action*)
-   /// \tparam V1 The type of the branch the values of which are used to fill the profile.
-   /// \tparam V2 The type of the branch the values of which are used to fill the profile.
-   /// \tparam W The type of the branch the weights of which are used to fill the profile.
+   /// \tparam V1 The type of the column the values of which are used to fill the profile. Inferred if not present.
+   /// \tparam V2 The type of the column the values of which are used to fill the profile. Inferred if not present.
+   /// \tparam W The type of the column the weights of which are used to fill the profile. Inferred if not present.
    /// \param[in] model The model to be considered to build the new return value.
-   /// \param[in] v1Name The name of the branch that will fill the x axis.
-   /// \param[in] v2Name The name of the branch that will fill the y axis.
-   /// \param[in] wName The name of the branch that will provide the weights.
+   /// \param[in] v1Name The name of the column that will fill the x axis.
+   /// \param[in] v2Name The name of the column that will fill the y axis.
+   /// \param[in] wName The name of the column that will provide the weights.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
@@ -840,13 +856,13 @@ public:
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Fill and return a two-dimensional profile (*lazy action*)
-   /// \tparam V1 The type of the branch used to fill the x axis of the histogram.
-   /// \tparam V2 The type of the branch used to fill the y axis of the histogram.
-   /// \tparam V2 The type of the branch used to fill the z axis of the histogram.
+   /// \tparam V1 The type of the column used to fill the x axis of the histogram. Inferred if not present.
+   /// \tparam V2 The type of the column used to fill the y axis of the histogram. Inferred if not present.
+   /// \tparam V2 The type of the column used to fill the z axis of the histogram. Inferred if not present.
    /// \param[in] model The returned profile will be constructed using this as a model.
-   /// \param[in] v1Name The name of the branch that will fill the x axis.
-   /// \param[in] v2Name The name of the branch that will fill the y axis.
-   /// \param[in] v3Name The name of the branch that will fill the z axis.
+   /// \param[in] v1Name The name of the column that will fill the x axis.
+   /// \param[in] v2Name The name of the column that will fill the y axis.
+   /// \param[in] v3Name The name of the column that will fill the z axis.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
@@ -869,15 +885,15 @@ public:
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Fill and return a two-dimensional profile (*lazy action*)
-   /// \tparam V1 The type of the branch used to fill the x axis of the histogram.
-   /// \tparam V2 The type of the branch used to fill the y axis of the histogram.
-   /// \tparam V3 The type of the branch used to fill the z axis of the histogram.
-   /// \tparam W The type of the branch used for the weights of the histogram.
+   /// \tparam V1 The type of the column used to fill the x axis of the histogram. Inferred if not present.
+   /// \tparam V2 The type of the column used to fill the y axis of the histogram. Inferred if not present.
+   /// \tparam V3 The type of the column used to fill the z axis of the histogram. Inferred if not present.
+   /// \tparam W The type of the column used for the weights of the histogram. Inferred if not present.
    /// \param[in] model The returned histogram will be constructed using this as a model.
-   /// \param[in] v1Name The name of the branch that will fill the x axis.
-   /// \param[in] v2Name The name of the branch that will fill the y axis.
-   /// \param[in] v3Name The name of the branch that will fill the z axis.
-   /// \param[in] wName The name of the branch that will provide the weights.
+   /// \param[in] v1Name The name of the column that will fill the x axis.
+   /// \param[in] v2Name The name of the column that will fill the y axis.
+   /// \param[in] v3Name The name of the column that will fill the z axis.
+   /// \param[in] wName The name of the column that will provide the weights.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
@@ -905,32 +921,39 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Fill and return any entity with a Fill method (*lazy action*)
-   /// \tparam FirstBranch The first type of the branches the values of which are used to fill the object.
-   /// \tparam OtherBranches A list of the other types of the branches the values of which are used to fill the object.
+   /// \brief Return an object of type T on which `T::Fill` will be called once per event (*lazy action*)
+   ///
+   /// T must be a type that provides a copy- or move-constructor and a `T::Fill` method that takes as many arguments
+   /// as the column names pass as columnList. The arguments of `T::Fill` must have type equal to the one of the
+   /// specified columns (these types are passed as template parameters to this method).
+   /// \tparam FirstColumn The first type of the column the values of which are used to fill the object.
+   /// \tparam OtherColumns A list of the other types of the columns the values of which are used to fill the object.
    /// \tparam T The type of the object to fill. Automatically deduced.
    /// \param[in] model The model to be considered to build the new return value.
-   /// \param[in] bl The name of the branches read to fill the object.
+   /// \param[in] columnList A list containing the names of the columns that will be passed when calling `Fill`
    ///
    /// The user gives up ownership of the model object.
    /// The list of column names to be used for filling must always be specified.
    /// This action is *lazy*: upon invocation of this method the calculation is booked but not executed.
    /// See TResultProxy documentation.
-   template <typename FirstBranch, typename... OtherBranches, typename T> // need FirstBranch to disambiguate overloads
-   TResultProxy<T> Fill(T &&model, const ColumnNames_t &bl)
+   template <typename FirstColumn, typename... OtherColumns, typename T> // need FirstColumn to disambiguate overloads
+   TResultProxy<T> Fill(T &&model, const ColumnNames_t &columnList)
    {
       auto h = std::make_shared<T>(std::move(model));
       if (!TDFInternal::HistoUtils<T>::HasAxisLimits(*h)) {
          throw std::runtime_error("The absence of axes limits is not supported yet.");
       }
-      return CreateAction<TDFInternal::ActionTypes::Fill, FirstBranch, OtherBranches...>(bl, h);
+      return CreateAction<TDFInternal::ActionTypes::Fill, FirstColumn, OtherColumns...>(columnList, h);
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Fill and return any entity with a Fill method
+   /// \brief Return an object of type T on which `T::Fill` will be called once per event (*lazy action*)
+   ///
+   /// This overload infers the types of the columns specified in columnList at runtime and just-in-time compiles the
+   /// method with these types. See previous overload for more information.
    /// \tparam T The type of the object to fill. Automatically deduced.
    /// \param[in] model The model to be considered to build the new return value.
-   /// \param[in] bl The name of the branches read to fill the object.
+   /// \param[in] columnList The name of the columns read to fill the object.
    ///
    /// This overload of `Fill` infers the type of the specified columns at runtime and just-in-time compiles the
    /// previous overload. Check the previous overload for more details on `Fill`.
@@ -945,52 +968,55 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Return the minimum of processed branch values (*lazy action*)
-   /// \tparam T The type of the branch.
-   /// \param[in] branchName The name of the branch to be treated.
+   /// \brief Return the minimum of processed column values (*lazy action*)
+   /// \tparam T The type of the branch/column.
+   /// \param[in] columnName The name of the branch/column to be treated.
    ///
-   /// If no branch type is specified, the implementation will try to guess one.
+   /// If T is not specified, TDataFrame will infer it from the data and just-in-time compile the correct
+   /// template specialization of this method.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
    template <typename T = TDFDetail::TInferType>
-   TResultProxy<double> Min(std::string_view branchName = "")
+   TResultProxy<double> Min(std::string_view columnName = "")
    {
-      const auto userColumns = branchName.empty() ? ColumnNames_t() : ColumnNames_t({std::string(branchName)});
+      const auto userColumns = columnName.empty() ? ColumnNames_t() : ColumnNames_t({std::string(columnName)});
       auto minV = std::make_shared<double>(std::numeric_limits<double>::max());
       return CreateAction<TDFInternal::ActionTypes::Min, T>(userColumns, minV);
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Return the maximum of processed branch values (*lazy action*)
-   /// \tparam T The type of the branch.
-   /// \param[in] branchName The name of the branch to be treated.
+   /// \brief Return the maximum of processed column values (*lazy action*)
+   /// \tparam T The type of the branch/column.
+   /// \param[in] columnName The name of the branch/column to be treated.
    ///
-   /// If no branch type is specified, the implementation will try to guess one.
+   /// If T is not specified, TDataFrame will infer it from the data and just-in-time compile the correct
+   /// template specialization of this method.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
    template <typename T = TDFDetail::TInferType>
-   TResultProxy<double> Max(std::string_view branchName = "")
+   TResultProxy<double> Max(std::string_view columnName = "")
    {
-      const auto userColumns = branchName.empty() ? ColumnNames_t() : ColumnNames_t({std::string(branchName)});
+      const auto userColumns = columnName.empty() ? ColumnNames_t() : ColumnNames_t({std::string(columnName)});
       auto maxV = std::make_shared<double>(std::numeric_limits<double>::min());
       return CreateAction<TDFInternal::ActionTypes::Max, T>(userColumns, maxV);
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Return the mean of processed branch values (*lazy action*)
-   /// \tparam T The type of the branch.
-   /// \param[in] branchName The name of the branch to be treated.
+   /// \brief Return the mean of processed column values (*lazy action*)
+   /// \tparam T The type of the branch/column.
+   /// \param[in] columnName The name of the branch/column to be treated.
    ///
-   /// If no branch type is specified, the implementation will try to guess one.
+   /// If T is not specified, TDataFrame will infer it from the data and just-in-time compile the correct
+   /// template specialization of this method.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
    template <typename T = TDFDetail::TInferType>
-   TResultProxy<double> Mean(std::string_view branchName = "")
+   TResultProxy<double> Mean(std::string_view columnName = "")
    {
-      const auto userColumns = branchName.empty() ? ColumnNames_t() : ColumnNames_t({std::string(branchName)});
+      const auto userColumns = columnName.empty() ? ColumnNames_t() : ColumnNames_t({std::string(columnName)});
       auto meanV = std::make_shared<double>(0);
       return CreateAction<TDFInternal::ActionTypes::Mean, T>(userColumns, meanV);
    }
