@@ -259,7 +259,7 @@ public:
    /// \param[in] name The name of the temporary branch.
    /// \param[in] expression Function, lambda expression, functor class or any other callable object producing the
    /// temporary value. Returns the value that will be assigned to the temporary branch.
-   /// \param[in] bl Names of the branches in input to the producer function.
+   /// \param[in] columns Names of the branches in input to the producer function.
    ///
    /// Create a temporary branch that will be visible from all subsequent nodes
    /// of the functional chain. The `expression` is only evaluated for entries that pass
@@ -276,19 +276,17 @@ public:
    /// An exception is thrown if the name of the new branch is already in use
    /// for another branch in the TTree.
    template <typename F, typename std::enable_if<!std::is_convertible<F, std::string>::value, int>::type = 0>
-   TInterface<TCustomColumnBase> Define(std::string_view name, F expression, const ColumnNames_t &bl = {})
+   TInterface<TCustomColumnBase> Define(std::string_view name, F expression, const ColumnNames_t &columns = {})
    {
-      auto df = GetDataFrameChecked();
-      TDFInternal::CheckTmpBranch(name, df->GetTree());
-      const ColumnNames_t &defBl = df->GetDefaultColumnNames();
-      auto nArgs = TTraits::CallableTraits<F>::arg_types::list_size;
-      const auto actualBl = TDFInternal::SelectColumns(nArgs, bl, defBl);
-      using DFB_t = TDFDetail::TCustomColumn<F, Proxied>;
+      auto loopManager = GetDataFrameChecked();
+      TDFInternal::CheckTmpBranch(name, loopManager->GetTree());
+      auto nColumns = TTraits::CallableTraits<F>::arg_types::list_size;
+      const auto validColumnNames = GetValidatedColumnNames(*loopManager, nColumns, columns);
+      using loopManagerB_t = TDFDetail::TCustomColumn<F, Proxied>;
       const std::string nameInt(name);
-      auto BranchPtr = std::make_shared<DFB_t>(nameInt, std::move(expression), actualBl, *fProxiedPtr);
-      df->Book(BranchPtr);
-      TInterface<TCustomColumnBase> tdf_b(BranchPtr, fImplWeakPtr);
-      return tdf_b;
+      auto BranchPtr = std::make_shared<loopManagerB_t>(nameInt, std::move(expression), validColumnNames, *fProxiedPtr);
+      loopManager->Book(BranchPtr);
+      return TInterface<TCustomColumnBase>(BranchPtr, fImplWeakPtr);
    }
 
    ////////////////////////////////////////////////////////////////////////////
