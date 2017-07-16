@@ -43,6 +43,8 @@ using ColumnNames_t = std::vector<std::string>;
 
 // fwd decl for ColumnName2ColumnTypeName
 class TCustomColumnBase;
+// fwd decl for FindUnknownColumns
+class TLoopManager;
 
 // type used for tag dispatching
 struct TInferType {
@@ -181,8 +183,11 @@ void CheckReduce(F &, T)
    static_assert(sizeof(F) == 0, "reduce function must take exactly two arguments of the same type");
 }
 
-/// Returns local BranchNames or default BranchNames according to which one should be used
+/// Return local BranchNames or default BranchNames according to which one should be used
 const ColumnNames_t SelectColumns(unsigned int nArgs, const ColumnNames_t &bl, const ColumnNames_t &defBl);
+
+/// Check whether column names refer to a valid branch of a TTree or have been `Define`d. Return invalid column names.
+ColumnNames_t FindUnknownColumns(const ColumnNames_t &columns, const TLoopManager &lm);
 
 namespace ActionTypes {
 struct Histo1D {

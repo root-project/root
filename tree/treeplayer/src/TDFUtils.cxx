@@ -9,7 +9,7 @@
  *************************************************************************/
 
 #include "RConfigure.h"      // R__USE_IMT
-#include "ROOT/TDFNodes.hxx" // ColumnName2ColumnTypeName requires TCustomColumnBase
+#include "ROOT/TDFNodes.hxx" // ColumnName2ColumnTypeName -> TCustomColumnBase, FindUnknownColumns -> TLoopManager
 #include "ROOT/TDFUtils.hxx"
 #include "TBranch.h"
 #include "TBranchElement.h"
@@ -163,6 +163,21 @@ const ColumnNames_t SelectColumns(unsigned int nRequiredNames, const ColumnNames
                                   std::to_string(names.size()) + " were provided.");
       return names;
    }
+}
+
+ColumnNames_t FindUnknownColumns(const ColumnNames_t &columns, const TLoopManager &lm)
+{
+   const auto customColumns = lm.GetBookedBranches();
+   auto *const tree = lm.GetTree();
+   ColumnNames_t unknownColumns;
+   for (auto &column : columns) {
+      const auto isTreeBranch = (tree != nullptr && tree->GetBranch(column.c_str()) != nullptr);
+      if (isTreeBranch) continue;
+      const auto isCustomColumn = (customColumns.find(column) != customColumns.end());
+      if (isCustomColumn) continue;
+      unknownColumns.emplace_back(column);
+   }
+   return unknownColumns;
 }
 
 } // end NS TDF
