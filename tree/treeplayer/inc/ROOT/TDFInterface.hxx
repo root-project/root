@@ -183,7 +183,7 @@ public:
    /// \brief Append a filter to the call graph.
    /// \param[in] f Function, lambda expression, functor class or any other callable object. It must return a `bool`
    /// signalling whether the event has passed the selection (true) or not (false).
-   /// \param[in] bn Names of the branches in input to the filter function.
+   /// \param[in] columns Names of the branches in input to the filter function.
    /// \param[in] name Optional name of this filter. See `Report`.
    ///
    /// Append a filter node at the point of the call graph corresponding to the
@@ -199,18 +199,16 @@ public:
    /// it is executed once per entry. If its result is requested more than
    /// once, the cached result is served.
    template <typename F, typename std::enable_if<!std::is_convertible<F, std::string>::value, int>::type = 0>
-   TInterface<TFilterBase> Filter(F f, const ColumnNames_t &bn = {}, std::string_view name = "")
+   TInterface<TFilterBase> Filter(F f, const ColumnNames_t &columns = {}, std::string_view name = "")
    {
       TDFInternal::CheckFilter(f);
-      auto df = GetDataFrameChecked();
-      const ColumnNames_t &defBl = df->GetDefaultColumnNames();
-      auto nArgs = TTraits::CallableTraits<F>::arg_types::list_size;
-      const auto actualBl = TDFInternal::SelectColumns(nArgs, bn, defBl);
-      using DFF_t = TDFDetail::TFilter<F, Proxied>;
-      auto FilterPtr = std::make_shared<DFF_t>(std::move(f), actualBl, *fProxiedPtr, name);
-      df->Book(FilterPtr);
-      TInterface<TFilterBase> tdf_f(FilterPtr, fImplWeakPtr);
-      return tdf_f;
+      auto loopManager = GetDataFrameChecked();
+      const auto nColumns = TTraits::CallableTraits<F>::arg_types::list_size;
+      const auto validColumnNames = GetValidatedColumnNames(*loopManager, nColumns, columns);
+      using loopManagerF_t = TDFDetail::TFilter<F, Proxied>;
+      auto FilterPtr = std::make_shared<loopManagerF_t>(std::move(f), validColumnNames, *fProxiedPtr, name);
+      loopManager->Book(FilterPtr);
+      return TInterface<TFilterBase>(FilterPtr, fImplWeakPtr);
    }
 
    ////////////////////////////////////////////////////////////////////////////
