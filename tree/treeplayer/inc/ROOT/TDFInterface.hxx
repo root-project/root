@@ -1038,15 +1038,15 @@ private:
    // Type was specified by the user, no need to infer it
    template <typename ActionType, typename... BranchTypes, typename ActionResultType,
              typename std::enable_if<!TDFInternal::TNeedJitting<BranchTypes...>::value, int>::type = 0>
-   TResultProxy<ActionResultType> CreateAction(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &r)
+   TResultProxy<ActionResultType> CreateAction(const ColumnNames_t &columns, const std::shared_ptr<ActionResultType> &r)
    {
-      auto df = GetDataFrameChecked();
-      const ColumnNames_t &defBl = df->GetDefaultColumnNames();
-      auto nColumns = sizeof...(BranchTypes);
-      const auto actualBl = TDFInternal::SelectColumns(nColumns, bl, defBl);
-      unsigned int nSlots = df->GetNSlots();
-      TDFInternal::BuildAndBook<BranchTypes...>(actualBl, r, nSlots, *df, *fProxiedPtr, (ActionType *)nullptr);
-      return MakeResultProxy(r, df);
+      auto loopManager = GetDataFrameChecked();
+      const auto nColumns = sizeof...(BranchTypes);
+      const auto validColumnNames = GetValidatedColumnNames(*loopManager, nColumns, columns);
+      const auto nSlots = fProxiedPtr->GetNSlots();
+      TDFInternal::BuildAndBook<BranchTypes...>(validColumnNames, r, nSlots, *loopManager, *fProxiedPtr,
+                                                (ActionType *)nullptr);
+      return MakeResultProxy(r, loopManager);
    }
 
    // User did not specify type, do type inference
@@ -1054,21 +1054,21 @@ private:
    // this action is taken equal to nColumns, otherwise it is assumed to be sizeof...(BranchTypes)
    template <typename ActionType, typename... BranchTypes, typename ActionResultType,
              typename std::enable_if<TDFInternal::TNeedJitting<BranchTypes...>::value, int>::type = 0>
-   TResultProxy<ActionResultType> CreateAction(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &r,
+   TResultProxy<ActionResultType> CreateAction(const ColumnNames_t &columns, const std::shared_ptr<ActionResultType> &r,
                                                const int nColumns = -1)
    {
-      auto df = GetDataFrameChecked();
-      const ColumnNames_t &defBl = df->GetDefaultColumnNames();
-      const auto actualBl = TDFInternal::SelectColumns((nColumns > -1 ? nColumns : sizeof...(BranchTypes)), bl, defBl);
-      unsigned int nSlots = df->GetNSlots();
-      const auto &tmpBranches = df->GetBookedBranches();
-      auto tree = df->GetTree();
+      auto loopManager = GetDataFrameChecked();
+      auto realNColumns = (nColumns > -1 ? nColumns : sizeof...(BranchTypes));
+      const auto validColumnNames = GetValidatedColumnNames(*loopManager, realNColumns, columns);
+      unsigned int nSlots = loopManager->GetNSlots();
+      const auto &tmpBranches = loopManager->GetBookedBranches();
+      auto tree = loopManager->GetTree();
       auto rOnHeap = TDFInternal::MakeSharedOnHeap(r);
-      auto toJit = TDFInternal::JitBuildAndBook(actualBl, GetNodeTypeName(), fProxiedPtr.get(),
+      auto toJit = TDFInternal::JitBuildAndBook(validColumnNames, GetNodeTypeName(), fProxiedPtr.get(),
                                                 typeid(std::shared_ptr<ActionResultType>), typeid(ActionType), rOnHeap,
                                                 tree, nSlots, tmpBranches);
-      df->Jit(toJit);
-      return MakeResultProxy(r, df);
+      loopManager->Jit(toJit);
+      return MakeResultProxy(r, loopManager);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -1144,6 +1144,27 @@ private:
       snapshotTDF.fProxiedPtr->SetTree(std::shared_ptr<TTree>(static_cast<TTree *>(chain)));
 
       return snapshotTDF;
+   }
+
+   ColumnNames_t GetValidatedColumnNames(TLoopManager &lm, const unsigned int nColumns,
+                                                             const ColumnNames_t &userColumns)
+   {
+      const auto &defaultColumns = lm.GetDefaultColumnNames();
+      const auto trueColumns = TDFInternal::SelectColumns(nColumns, userColumns, defaultColumns);
+      const auto unknownColumns = TDFInternal::FindUnknownColumns(trueColumns, lm);
+
+      if (!unknownColumns.empty()) {
+         // throw
+         std::stringstream unknowns;
+         std::string delim = unknownColumns.size() > 1 ? "s: " : ": "; // singular/plural
+         for (auto &unknown : unknownColumns) {
+            unknowns << delim << unknown;
+            delim = ',';
+         }
+         throw std::runtime_error("Unknown column" + unknowns.str());
+      }
+
+      return trueColumns;
    }
 
 protected:
