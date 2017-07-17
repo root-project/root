@@ -188,6 +188,134 @@ void MethodDL::DeclareOptions()
 ////////////////////////////////////////////////////////////////////////////////
 void MethodDL::ProcessOptions()
 {
+   if (IgnoreEventsWithNegWeightsInTraining()) {
+      Log() << kINFO << "Will ignore negative events in training!" << Endl;
+   }
+
+   if (fArchitectureString == "STANDARD") {
+      Log() << kERROR << "The STANDARD architecture has been deprecated. "
+                         "Please use Architecture=CPU or Architecture=CPU."
+                         "See the TMVA Users' Guide for instructions if you "
+                         "encounter problems."
+            << Endl;
+      Log() << kFATAL << "The STANDARD architecture has been deprecated. "
+                         "Please use Architecture=CPU or Architecture=CPU."
+                         "See the TMVA Users' Guide for instructions if you "
+                         "encounter problems."
+            << Endl;
+   }
+
+   if (fArchitectureString == "OPENCL") {
+      Log() << kERROR << "The OPENCL architecture has not been implemented yet. "
+                         "Please use Architecture=CPU or Architecture=CPU for the "
+                         "time being. See the TMVA Users' Guide for instructions "
+                         "if you encounter problems."
+            << Endl;
+      Log() << kFATAL << "The OPENCL architecture has not been implemented yet. "
+                         "Please use Architecture=CPU or Architecture=CPU for the "
+                         "time being. See the TMVA Users' Guide for instructions "
+                         "if you encounter problems."
+            << Endl;
+   }
+
+   if (fArchitectureString == "GPU") {
+#ifndef DNNCUDA // Included only if DNNCUDA flag is _not_ set.
+      Log() << kERROR << "CUDA backend not enabled. Please make sure "
+                         "you have CUDA installed and it was successfully "
+                         "detected by CMAKE."
+            << Endl;
+      Log() << kFATAL << "CUDA backend not enabled. Please make sure "
+                         "you have CUDA installed and it was successfully "
+                         "detected by CMAKE."
+            << Endl;
+#endif // DNNCUDA
+   }
+
+   if (fArchitectureString == "CPU") {
+#ifndef DNNCPU // Included only if DNNCPU flag is _not_ set.
+      Log() << kERROR << "Multi-core CPU backend not enabled. Please make sure "
+                         "you have a BLAS implementation and it was successfully "
+                         "detected by CMake as well that the imt CMake flag is set."
+            << Endl;
+      Log() << kFATAL << "Multi-core CPU backend not enabled. Please make sure "
+                         "you have a BLAS implementation and it was successfully "
+                         "detected by CMake as well that the imt CMake flag is set."
+            << Endl;
+#endif // DNNCPU
+   }
+
+   // Loss function and output.
+   fOutputFunction = EOutputFunction::kSigmoid;
+   if (fAnalysisType == Types::kClassification) {
+      if (fErrorStrategy == "SUMOFSQUARES") {
+         fLossFunction = ELossFunction::kMeanSquaredError;
+      }
+      if (fErrorStrategy == "CROSSENTROPY") {
+         fLossFunction = ELossFunction::kCrossEntropy;
+      }
+      fOutputFunction = EOutputFunction::kSigmoid;
+   } else if (fAnalysisType == Types::kRegression) {
+      if (fErrorStrategy != "SUMOFSQUARES") {
+         Log() << kWARNING << "For regression only SUMOFSQUARES is a valid "
+               << " neural net error function. Setting error function to "
+               << " SUMOFSQUARES now." << Endl;
+      }
+
+      fLossFunction = ELossFunction::kMeanSquaredError;
+      fOutputFunction = EOutputFunction::kIdentity;
+   } else if (fAnalysisType == Types::kMulticlass) {
+      if (fErrorStrategy == "SUMOFSQUARES") {
+         fLossFunction = ELossFunction::kMeanSquaredError;
+      }
+      if (fErrorStrategy == "CROSSENTROPY") {
+         fLossFunction = ELossFunction::kCrossEntropy;
+      }
+      if (fErrorStrategy == "MUTUALEXCLUSIVE") {
+         fLossFunction = ELossFunction::kSoftmaxCrossEntropy;
+      }
+      fOutputFunction = EOutputFunction::kSoftmax;
+   }
+
+   // Initialization
+   if (fWeightInitializationString == "XAVIER") {
+      fWeightInitialization = DNN::EInitialization::kGauss;
+   } else if (fWeightInitializationString == "XAVIERUNIFORM") {
+      fWeightInitialization = DNN::EInitialization::kUniform;
+   } else {
+      fWeightInitialization = DNN::EInitialization::kGauss;
+   }
+
+   // Training settings.
+
+   KeyValueVector_t strategyKeyValues = ParseKeyValueString(fTrainingStrategyString, TString("|"), TString(","));
+   for (auto &block : strategyKeyValues) {
+      TTrainingSettings settings;
+
+      settings.convergenceSteps = fetchValueTmp(block, "ConvergenceSteps", 100);
+      settings.batchSize = fetchValueTmp(block, "BatchSize", 30);
+      settings.testInterval = fetchValueTmp(block, "TestRepetitions", 7);
+      settings.weightDecay = fetchValueTmp(block, "WeightDecay", 0.0);
+      settings.learningRate = fetchValueTmp(block, "LearningRate", 1e-5);
+      settings.momentum = fetchValueTmp(block, "Momentum", 0.3);
+      settings.dropoutProbabilities = fetchValueTmp(block, "DropConfig", std::vector<Double_t>());
+
+      TString regularization = fetchValueTmp(block, "Regularization", TString("NONE"));
+      if (regularization == "L1") {
+         settings.regularization = DNN::ERegularization::kL1;
+      } else if (regularization == "L2") {
+         settings.regularization = DNN::ERegularization::kL2;
+      }
+
+      TString strMultithreading = fetchValueTmp(block, "Multithreading", TString("True"));
+
+      if (strMultithreading.BeginsWith("T")) {
+         settings.multithreading = true;
+      } else {
+         settings.multithreading = false;
+      }
+
+      fTrainingSettings.push_back(settings);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
