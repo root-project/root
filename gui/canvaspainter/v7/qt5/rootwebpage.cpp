@@ -1,4 +1,4 @@
-/// \file rootwebview.h
+/// \file rootwebpage.cpp
 /// \ingroup CanvasPainter ROOT7
 /// \author Sergey Linev <S.Linev@gsi.de>
 /// \date 2017-06-29
@@ -12,19 +12,16 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_RootWebView
-#define ROOT_RootWebView
 
-#include <QWebEngineView>
+#include "rootwebpage.h"
 
-class RootWebView : public QWebEngineView {
-   Q_OBJECT
-protected:
+#include <stdio.h>
 
-public:
-   RootWebView(QWidget* parent = 0);
-   virtual ~RootWebView();
+void RootWebPage::javaScriptConsoleMessage(JavaScriptConsoleMessageLevel,
+                      const QString &message, int lineNumber, const QString &sourceID)
+{
+   QByteArray ba = message.toLatin1();
+   QByteArray src = sourceID.toLatin1();
 
-};
-
-#endif
+   printf("CONSOLE %s:%d: %s\n", src.data(), lineNumber, ba.data());
+}
