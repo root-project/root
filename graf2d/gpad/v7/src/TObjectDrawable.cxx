@@ -19,13 +19,13 @@
 #include <ROOT/TLogger.hxx>
 #include <ROOT/TVirtualCanvasPainter.hxx>
 
-#include <exception>
-
 #include "TClass.h"
 #include "TList.h"
 #include "TMethod.h"
 #include "TMethodCall.h"
 #include "TROOT.h"
+
+#include <exception>
 
 
 void ROOT::Experimental::Internal::TObjectDrawable::Paint(TVirtualCanvasPainter& canv) {
@@ -54,16 +54,16 @@ void ROOT::Experimental::Internal::TObjectDrawable::FillMenu(TVirtualCanvasPaint
          TString getter;
          if (m->Getter() && strlen(m->Getter()) > 0) {
             getter = m->Getter();
-         } else
-            if (strncmp(m->GetName(),"Set",3)==0) {
-               getter = TString(m->GetName())(3, strlen(m->GetName())-3);
-               if (cl->GetMethodAllAny(TString("Has") + getter)) getter = TString("Has") + getter;
-               else if (cl->GetMethodAllAny(TString("Get") + getter)) getter = TString("Get") + getter;
-               else if (cl->GetMethodAllAny(TString("Is") + getter)) getter = TString("Is") + getter;
-               else getter = "";
-            }
+         } else if (strncmp(m->GetName(),"Set",3)==0) {
+            getter = TString(m->GetName())(3, strlen(m->GetName())-3);
+            if (cl->GetMethodAllAny(TString("Has") + getter)) getter = TString("Has") + getter;
+            else if (cl->GetMethodAllAny(TString("Get") + getter)) getter = TString("Get") + getter;
+            else if (cl->GetMethodAllAny(TString("Is") + getter)) getter = TString("Is") + getter;
+            else getter = "";
+         }
 
          if ((getter.Length()>0) && cl->GetMethodAllAny(getter)) {
+            // execute getter method to get current state of toggle item
 
             TMethodCall* call = new TMethodCall(cl, getter, "");
 
