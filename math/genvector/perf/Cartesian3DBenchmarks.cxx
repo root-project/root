@@ -31,12 +31,11 @@ static void BM_Cartesian3D_Theta(benchmark::State &state)
    ROOT::Math::Cartesian3D<T> c(1., 2., 3.);
    // std::cout << is_aligned(&c, 16) << std::endl;
    while (state.KeepRunning()) c.Theta();
-   state.SetComplexityN(state.range(0));
 }
-BENCHMARK_TEMPLATE(BM_Cartesian3D_Theta, double)->Range(8, 8 << 10)->Complexity(benchmark::o1);
-BENCHMARK_TEMPLATE(BM_Cartesian3D_Theta, ROOT::Double_v)->Range(8, 8 << 10)->Complexity(benchmark::o1);
-BENCHMARK_TEMPLATE(BM_Cartesian3D_Theta, float)->Range(8, 8 << 10)->Complexity(benchmark::o1);
-BENCHMARK_TEMPLATE(BM_Cartesian3D_Theta, ROOT::Float_v)->Range(8, 8 << 10)->Complexity(benchmark::o1);
+BENCHMARK_TEMPLATE(BM_Cartesian3D_Theta, double);
+BENCHMARK_TEMPLATE(BM_Cartesian3D_Theta, ROOT::Double_v);
+BENCHMARK_TEMPLATE(BM_Cartesian3D_Theta, float);
+BENCHMARK_TEMPLATE(BM_Cartesian3D_Theta, ROOT::Float_v);
 
 template <typename T>
 static void BM_Cartesian3D_Phi(benchmark::State &state)
@@ -44,12 +43,11 @@ static void BM_Cartesian3D_Phi(benchmark::State &state)
    ROOT::Math::Cartesian3D<T> c(1., 2., 3.);
    // std::cout << is_aligned(&c, 16) << std::endl;
    while (state.KeepRunning()) c.Phi();
-   state.SetComplexityN(state.range(0));
 }
-BENCHMARK_TEMPLATE(BM_Cartesian3D_Phi, double)->Range(8, 8 << 10)->Complexity(benchmark::o1);
-BENCHMARK_TEMPLATE(BM_Cartesian3D_Phi, ROOT::Double_v)->Range(8, 8 << 10)->Complexity(benchmark::o1);
-BENCHMARK_TEMPLATE(BM_Cartesian3D_Phi, float)->Range(8, 8 << 10)->Complexity(benchmark::o1);
-BENCHMARK_TEMPLATE(BM_Cartesian3D_Phi, ROOT::Float_v)->Range(8, 8 << 10)->Complexity(benchmark::o1);
+BENCHMARK_TEMPLATE(BM_Cartesian3D_Phi, double);
+BENCHMARK_TEMPLATE(BM_Cartesian3D_Phi, ROOT::Double_v);
+BENCHMARK_TEMPLATE(BM_Cartesian3D_Phi, float);
+BENCHMARK_TEMPLATE(BM_Cartesian3D_Phi, ROOT::Float_v);
 
 template <typename T>
 static void BM_Cartesian3D_Mag2(benchmark::State &state)
@@ -57,10 +55,9 @@ static void BM_Cartesian3D_Mag2(benchmark::State &state)
    ROOT::Math::Cartesian3D<T> c(1., 2., 3.);
    // std::cout << is_aligned(&c, 16) << std::endl;
    while (state.KeepRunning()) c.Mag2();
-   state.SetComplexityN(state.range(0));
 }
-BENCHMARK_TEMPLATE(BM_Cartesian3D_Mag2, double)->Range(8, 8 << 10)->Complexity(benchmark::o1);
-BENCHMARK_TEMPLATE(BM_Cartesian3D_Mag2, ROOT::Double_v)->Range(8, 8 << 10)->Complexity(benchmark::o1);
+BENCHMARK_TEMPLATE(BM_Cartesian3D_Mag2, double);
+BENCHMARK_TEMPLATE(BM_Cartesian3D_Mag2, ROOT::Double_v);
 
 // Define our main.
 BENCHMARK_MAIN();
