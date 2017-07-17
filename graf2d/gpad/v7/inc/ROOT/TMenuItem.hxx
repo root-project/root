@@ -16,10 +16,10 @@
 #define ROOT7_TMenuItem
 
 #include <string>
-#include <vector>
 
 namespace ROOT {
 namespace Experimental {
+namespace Detail {
 
 /** \class TMenuItem
   Class contains info for producing menu item on the JS side.
@@ -27,13 +27,13 @@ namespace Experimental {
 
 class TMenuItem {
 protected:
-   std::string  fName;     //  name of the menu item
-   std::string  fTitle;    //  title of menu item
-   int          fChecked;  // -1 not exists, 0 - off, 1 - on
-   std::string  fExec;     // execute when item is activated
+   std::string  fName;          //  name of the menu item
+   std::string  fTitle;         //  title of menu item
+   int          fChecked = -1;  // -1 not exists, 0 - off, 1 - on
+   std::string  fExec;          // execute when item is activated
 public:
 
-   TMenuItem() : fName(), fTitle(), fChecked(-1), fExec() {}
+   TMenuItem() = default;
    TMenuItem(const std::string &name, const std::string &title) : fName(name), fTitle(title), fChecked(-1), fExec() {}
    TMenuItem(const TMenuItem &rhs) : fName(rhs.fName), fTitle(rhs.fTitle), fChecked(rhs.fChecked), fExec(rhs.fExec) {}
    virtual ~TMenuItem() {}
@@ -46,6 +46,7 @@ public:
 };
 
 
+} // namespace Detail
 } // namespace Experimental
 } // namespace ROOT
 
