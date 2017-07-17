@@ -27,18 +27,25 @@ namespace Detail {
 
 class TMenuItem {
 protected:
-   std::string  fName;          //  name of the menu item
-   std::string  fTitle;         //  title of menu item
-   int          fChecked = -1;  // -1 not exists, 0 - off, 1 - on
-   std::string  fExec;          // execute when item is activated
+
+   enum ECheckedState {
+      kNotDefined = -1,
+      kOff = 0,
+      kOn = 1
+   };
+
+   std::string   fName;          ///<  name of the menu item
+   std::string   fTitle;         ///<  title of menu item
+   ECheckedState fChecked = kNotDefined;  ///< -1 not exists, 0 - off, 1 - on
+   std::string   fExec;          ///< execute when item is activated
 public:
 
    TMenuItem() = default;
-   TMenuItem(const std::string &name, const std::string &title) : fName(name), fTitle(title), fChecked(-1), fExec() {}
+   TMenuItem(const std::string &name, const std::string &title) : fName(name), fTitle(title), fChecked(kNotDefined), fExec() {}
    TMenuItem(const TMenuItem &rhs) : fName(rhs.fName), fTitle(rhs.fTitle), fChecked(rhs.fChecked), fExec(rhs.fExec) {}
    virtual ~TMenuItem() {}
 
-   void SetChecked(bool on = true) { fChecked = on ? 1 : 0; }
+   void SetChecked(bool on = true) { fChecked = on ? kOff : kOn; }
    void SetExec(const std::string &exec) { fExec = exec; }
 
    std::string GetName() const { return fName; }
