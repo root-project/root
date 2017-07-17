@@ -250,6 +250,104 @@ public:
 
    ///@}
 
+
+   //____________________________________________________________________________
+   //
+   //  Convolutional Layer Propagation
+   //____________________________________________________________________________
+
+   /** @name Forward Propagation in Convolutional Layer
+    */
+   ///@{
+
+   /** Transform the matrix \p B in local view format, suitable for
+    *  convolution, and store it in matrix \p A. */
+   static void Im2col(TMatrixT<AReal> &A, TMatrixT<AReal> &B, size_t imgHeight, size_t imgWidth, size_t fltHeight,
+                      size_t fltWidth, size_t strideRows, size_t strideCols, size_t zeroPaddingHeight,
+                      size_t zeroPaddingWidth);
+
+   /** Rotates the matrix \p B, which is representing a weights,
+    *  and stores them in the matrix \p A. */
+   static void RotateWeights(TMatrixT<AReal> &A, const TMatrixT<AReal> &B, size_t filterDepth, size_t filterHeight,
+                             size_t filterWidth, size_t numFilters);
+
+   /** Add the biases in the Convolutional Layer.  */
+   static void AddConvBiases(TMatrixT<AReal> &output, const TMatrixT<AReal> &biases);
+   ///@}
+
+   /** @name Backward Propagation in Convolutional Layer
+    */
+   ///@{
+
+   /** Perform the complete backward propagation step in a Convolutional Layer.
+    *  If the provided \p activationGradientsBackward matrix is not empty, compute the
+    *  gradients of the objective function with respect to the activations
+    *  of the previous layer (backward direction).
+    *  Also compute the weight and the bias gradients. Modifies the values
+    *  in \p df and thus produces only a valid result, if it is applied the
+    *  first time after the corresponding forward propagation has been per-
+    *  formed. */
+   static void ConvLayerBackward(std::vector<TMatrixT<AReal>> &activationGradientsBackward,
+                                 TMatrixT<AReal> &weightGradients, TMatrixT<AReal> &biasGradients,
+                                 std::vector<TMatrixT<AReal>> &df,
+                                 const std::vector<TMatrixT<AReal>> &activationGradients,
+                                 const TMatrixT<AReal> &weights, const std::vector<TMatrixT<AReal>> &activationBackward,
+                                 size_t batchSize, size_t inputHeight, size_t inputWidth, size_t depth, size_t height,
+                                 size_t width, size_t filterDepth, size_t filterHeight, size_t filterWidth,
+                                 size_t nLocalViews);
+
+   /** Utility function for calculating the activation gradients of the layer
+    *  before the convolutional layer. */
+   static void CalculateConvActivationGradients(std::vector<TMatrixT<AReal>> &activationGradientsBackward,
+                                                std::vector<TMatrixT<AReal>> &df, const TMatrixT<Scalar_t> &weights,
+                                                size_t batchSize, size_t inputHeight, size_t inputWidth, size_t depth,
+                                                size_t height, size_t width, size_t filterDepth, size_t filterHeight,
+                                                size_t filterWidth);
+
+   /** Utility function for calculating the weight gradients of the convolutional
+    *  layer. */
+   static void CalculateConvWeightGradients(TMatrixT<AReal> &weightGradients, std::vector<TMatrixT<AReal>> &df,
+                                            const std::vector<TMatrixT<AReal>> &activationBackward, size_t batchSize,
+                                            size_t inputHeight, size_t inputWidth, size_t depth, size_t height,
+                                            size_t width, size_t filterDepth, size_t filterHeight, size_t filterWidth,
+                                            size_t nLocalViews);
+
+   /** Utility function for calculating the bias gradients of the convolutional
+    *  layer. */
+   static void CalculateConvBiasGradients(TMatrixT<AReal> &biasGradients, std::vector<TMatrixT<AReal>> &df,
+                                          size_t batchSize, size_t depth, size_t nLocalViews);
+   ///@}
+
+
+   //____________________________________________________________________________
+   //
+   //  Max Pooling Layer Propagation
+   //____________________________________________________________________________
+   /** @name Forward Propagation in Max Pooling Layer
+    */
+   ///@{
+
+  /** Downsample the matrix \p C to the matrix \p A, using max
+    *  operation, such that the winning indices are stored in matrix
+    *  \p B. */
+   static void Downsample(TMatrixT<AReal> &A, TMatrixT<AReal> &B, const TMatrixT<AReal> &C, size_t imgHeight,
+                          size_t imgWidth, size_t fltHeight, size_t fltWidth, size_t strideRows, size_t strideCols);
+
+   ///@}
+
+   /** @name Backward Propagation in Max Pooling Layer
+    */
+   ///@{
+
+   /** Perform the complete backward propagation step in a Max Pooling Layer. Based on the
+    *  winning idices stored in the index matrix, it just forwards the actiovation
+    *  gradients to the previous layer. */
+   static void MaxPoolLayerBackward(std::vector<TMatrixT<AReal>> &activationGradientsBackward,
+                                    const std::vector<TMatrixT<AReal>> &activationGradients,
+                                    const std::vector<TMatrixT<AReal>> &indexMatrix, size_t batchSize, size_t depth,
+                                    size_t nLocalViews);
+   ///@}   
+
    //____________________________________________________________________________
    //
    // Additional Arithmetic Functions
