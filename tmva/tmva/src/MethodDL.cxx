@@ -24,6 +24,9 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
+#include "TFormula.h"
+#include "TString.h"
+
 #include "TMVA/ClassifierFactory.h"
 #include "TMVA/MethodDL.h"
 #include "TMVA/Types.h"
@@ -33,6 +36,9 @@
 
 REGISTER_METHOD(DL)
 ClassImp(TMVA::MethodDL);
+
+using namespace TMVA::DNN::CNN;
+using namespace TMVA::DNN;
 
 namespace TMVA {
 
@@ -51,6 +57,346 @@ void MethodDL::ProcessOptions()
 void MethodDL::Init()
 {
    // Nothing to do here
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Create a deep net based on the layout string
+template <typename Architecture_t, typename Layer_t>
+void MethodDL::CreateDeepNet(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
+                             std::vector<DNN::TDeepNet<Architecture_t, Layer_t>> &nets)
+{
+   // Layer specification, layer details
+   const TString layerDelimiter(",");
+   const TString subDelimiter("|");
+
+   TString layoutString = this->GetLayoutString();
+
+   // Split layers
+   TObjArray *layerStrings = layoutString.Tokenize(layerDelimiter);
+   TIter nextLayer(layerStrings);
+   TObjString *layerString = (TObjString *)nextLayer();
+
+   for (; layerString != nullptr; layerString = (TObjString *)nextLayer()) {
+      // Split layer details
+      TObjArray *subStrings = layerString->GetString().Tokenize(subDelimiter);
+      TIter nextToken(subStrings);
+      TObjString *token = (TObjString *)nextToken();
+
+      // Determine the type of the layer
+      TString strLayerType = token->GetString();
+
+      if (strLayerType == "DENSE") {
+         ParseDenseLayer(deepNet, nets, layerString->GetString(), subDelimiter);
+      } else if (strLayerType == "CONV") {
+         ParseConvLayer(deepNet, nets, layerString->GetString(), subDelimiter);
+      } else if (strLayerType == "MAXPOOL") {
+         ParseMaxPoolLayer(deepNet, nets, layerString->GetString(), subDelimiter);
+      } else if (strLayerType == "RESHAPE") {
+         ParseReshapeLayer(deepNet, nets, layerString->GetString(), subDelimiter);
+      } else if (strLayerType == "RNN") {
+         ParseRnnLayer(deepNet, nets, layerString->GetString(), subDelimiter);
+      } else if (strLayerType == "LSTM") {
+         ParseLstmLayer(deepNet, nets, layerString->GetString(), subDelimiter);
+      }
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Pases the layer string and creates the appropriate dense layer
+template <typename Architecture_t, typename Layer_t>
+void MethodDL::ParseDenseLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
+                               std::vector<DNN::TDeepNet<Architecture_t, Layer_t>> &nets, TString layerString,
+                               TString delim)
+{
+   int width = 0;
+   EActivationFunction activationFunction = EActivationFunction::kTanh;
+
+   // not sure about this
+   const size_t inputSize = GetNvar();
+
+   // Split layer details
+   TObjArray *subStrings = layerString.Tokenize(delim);
+   TIter nextToken(subStrings);
+   TObjString *token = (TObjString *)nextToken();
+   int idxToken = 0;
+
+   // jump the first token
+   for (; token != nullptr; token = (TObjString *)nextToken()) {
+      switch (idxToken) {
+      case 1: // number of nodes
+      {
+         // not sure
+         TString strNumNodes(token->GetString());
+         TString strN("x");
+         strNumNodes.ReplaceAll("N", strN);
+         strNumNodes.ReplaceAll("n", strN);
+         TFormula fml("tmp", strNumNodes);
+         width = fml.Eval(inputSize);
+      } break;
+      case 2: // actiovation function
+      {
+         TString strActFnc(token->GetString());
+         if (strActFnc == "RELU") {
+            activationFunction = DNN::EActivationFunction::kRelu;
+         } else if (strActFnc == "TANH") {
+            activationFunction = DNN::EActivationFunction::kTanh;
+         } else if (strActFnc == "SYMMRELU") {
+            activationFunction = DNN::EActivationFunction::kSymmRelu;
+         } else if (strActFnc == "SOFTSIGN") {
+            activationFunction = DNN::EActivationFunction::kSoftSign;
+         } else if (strActFnc == "SIGMOID") {
+            activationFunction = DNN::EActivationFunction::kSigmoid;
+         } else if (strActFnc == "LINEAR") {
+            activationFunction = DNN::EActivationFunction::kIdentity;
+         } else if (strActFnc == "GAUSS") {
+            activationFunction = DNN::EActivationFunction::kGauss;
+         }
+      } break;
+      }
+      ++idxToken;
+   }
+
+   // Add the dense layer, initialize the weights and biases and copy
+   TDenseLayer<Architecture_t> *denseLayer = deepNet.AddDenseLayer(width, activationFunction);
+   denseLayer->Initialize();
+   TDenseLayer<Architecture_t> *copyDenseLayer = new TDenseLayer<Architecture_t>(*denseLayer);
+
+   // add the copy to all slave nets
+   for (size_t i = 0; i < nets.size(); i++) {
+      nets[i].AddDenseLayer(copyDenseLayer);
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Pases the layer string and creates the appropriate convolutional layer
+template <typename Architecture_t, typename Layer_t>
+void MethodDL::ParseConvLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
+                              std::vector<DNN::TDeepNet<Architecture_t, Layer_t>> &nets, TString layerString,
+                              TString delim)
+{
+   int depth = 0;
+   int fltHeight = 0;
+   int fltWidth = 0;
+   int strideRows = 0;
+   int strideCols = 0;
+   int zeroPadHeight = 0;
+   int zeroPadWidth = 0;
+   EActivationFunction activationFunction = EActivationFunction::kTanh;
+
+   // Split layer details
+   TObjArray *subStrings = layerString.Tokenize(delim);
+   TIter nextToken(subStrings);
+   TObjString *token = (TObjString *)nextToken();
+   int idxToken = 0;
+
+   for (; token != nullptr; token = (TObjString *)nextToken()) {
+      switch (idxToken) {
+      case 1: // depth or width
+      {
+         TString strDepth(token->GetString());
+         depth = strDepth.Atoi();
+      } break;
+      case 2: // filter height
+      {
+         TString strFltHeight(token->GetString());
+         fltHeight = strFltHeight.Atoi();
+      } break;
+      case 3: // filter width
+      {
+         TString strFltWidth(token->GetString());
+         fltWidth = strFltWidth.Atoi();
+      } break;
+      case 4: // stride in rows
+      {
+         TString strStrideRows(token->GetString());
+         strideRows = strStrideRows.Atoi();
+      } break;
+      case 5: // stride in cols
+      {
+         TString strStrideCols(token->GetString());
+         strideCols = strStrideCols.Atoi();
+      } break;
+      case 6: // zero padding height
+      {
+         TString strZeroPadHeight(token->GetString());
+         zeroPadHeight = strZeroPadHeight.Atoi();
+      } break;
+      case 7: // zero padding width
+      {
+         TString strZeroPadWidth(token->GetString());
+         zeroPadWidth = strZeroPadWidth.Atoi();
+      } break;
+      case 8: // activation function
+      {
+         TString strActFnc(token->GetString());
+         if (strActFnc == "RELU") {
+            activationFunction = DNN::EActivationFunction::kRelu;
+         } else if (strActFnc == "TANH") {
+            activationFunction = DNN::EActivationFunction::kTanh;
+         } else if (strActFnc == "SYMMRELU") {
+            activationFunction = DNN::EActivationFunction::kSymmRelu;
+         } else if (strActFnc == "SOFTSIGN") {
+            activationFunction = DNN::EActivationFunction::kSoftSign;
+         } else if (strActFnc == "SIGMOID") {
+            activationFunction = DNN::EActivationFunction::kSigmoid;
+         } else if (strActFnc == "LINEAR") {
+            activationFunction = DNN::EActivationFunction::kIdentity;
+         } else if (strActFnc == "GAUSS") {
+            activationFunction = DNN::EActivationFunction::kGauss;
+         }
+      } break;
+      }
+      ++idxToken;
+   }
+
+   // Add the convolutional layer, initialize the weights and biases and copy
+   TConvLayer<Architecture_t> *convLayer = deepNet.AddConvLayer(depth, fltHeight, fltWidth, strideRows, strideCols,
+                                                                zeroPadHeight, zeroPadWidth, activationFunction);
+   convLayer->Initialize();
+   TConvLayer<Architecture_t> *copyConvLayer = new TConvLayer<Architecture_t>(*convLayer);
+
+   // add the copy to all slave nets
+   for (size_t i = 0; i < nets.size(); i++) {
+      nets[i].AddConvLayer(copyConvLayer);
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Pases the layer string and creates the appropriate max pool layer
+template <typename Architecture_t, typename Layer_t>
+void MethodDL::ParseMaxPoolLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
+                                 std::vector<DNN::TDeepNet<Architecture_t, Layer_t>> &nets, TString layerString,
+                                 TString delim)
+{
+
+   int frameHeight = 0;
+   int frameWidth = 0;
+   int strideRows = 0;
+   int strideCols = 0;
+
+   // Split layer details
+   TObjArray *subStrings = layerString.Tokenize(delim);
+   TIter nextToken(subStrings);
+   TObjString *token = (TObjString *)nextToken();
+   int idxToken = 0;
+
+   for (; token != nullptr; token = (TObjString *)nextToken()) {
+      switch (idxToken) {
+      case 1: // frame height
+      {
+         TString strFrmHeight(token->GetString());
+         frameHeight = strFrmHeight.Atoi();
+      } break;
+      case 2: // frame width
+      {
+         TString strFrmWidth(token->GetString());
+         frameWidth = strFrmWidth.Atoi();
+      } break;
+      case 3: // stride in rows
+      {
+         TString strStrideRows(token->GetString());
+         strideRows = strStrideRows.Atoi();
+      } break;
+      case 4: // stride in cols
+      {
+         TString strStrideCols(token->GetString());
+         strideCols = strStrideCols.Atoi();
+      } break;
+      }
+      ++idxToken;
+   }
+
+   // Add the Max pooling layer
+   TMaxPoolLayer<Architecture_t> *maxPoolLayer =
+      deepNet.AddMaxPoolLayer(frameHeight, frameWidth, strideRows, strideCols);
+   TMaxPoolLayer<Architecture_t> *copyMaxPoolLayer = new TMaxPoolLayer<Architecture_t>(*maxPoolLayer);
+
+   // add the copy to all slave nets
+   for (size_t i = 0; i < nets.size(); i++) {
+      nets[i].AddMaxPoolLayer(copyMaxPoolLayer);
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Pases the layer string and creates the appropriate reshape layer
+template <typename Architecture_t, typename Layer_t>
+void MethodDL::ParseReshapeLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
+                                 std::vector<DNN::TDeepNet<Architecture_t, Layer_t>> &nets, TString layerString,
+                                 TString delim)
+{
+   int height = 0;
+   int width = 0;
+
+   // Split layer details
+   TObjArray *subStrings = layerString.Tokenize(delim);
+   TIter nextToken(subStrings);
+   TObjString *token = (TObjString *)nextToken();
+   int idxToken = 0;
+
+   for (; token != nullptr; token = (TObjString *)nextToken()) {
+      switch (idxToken) {
+      case 1: // height
+      {
+         TString strHeight(token->GetString());
+         height = strHeight.Atoi();
+      } break;
+      case 2: // width
+      {
+         TString strWidth(token->GetString());
+         width = strWidth.Atoi();
+      } break;
+      }
+      ++idxToken;
+   }
+
+   // Add the reshape layer
+   TReshapeLayer<Architecture_t> *reshapeLayer = deepNet.AddReshapeLayer(height, width);
+   TReshapeLayer<Architecture_t> *copyReshapeLayer = new TReshapeLayer<Architecture_t>(*reshapeLayer);
+
+   // add the copy to all slave nets
+   for (size_t i = 0; i < nets.size(); i++) {
+      nets[i].AddReshapeLayer(copyReshapeLayer);
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Pases the layer string and creates the appropriate rnn layer
+template <typename Architecture_t, typename Layer_t>
+void MethodDL::ParseRnnLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
+                             std::vector<DNN::TDeepNet<Architecture_t, Layer_t>> &nets, TString layerString,
+                             TString delim)
+{
+   // Split layer details
+   TObjArray *subStrings = layerString.Tokenize(delim);
+   TIter nextToken(subStrings);
+   TObjString *token = (TObjString *)nextToken();
+   int idxToken = 0;
+
+   for (; token != nullptr; token = (TObjString *)nextToken()) {
+      switch (idxToken) {
+      }
+      ++idxToken;
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Pases the layer string and creates the appropriate lstm layer
+template <typename Architecture_t, typename Layer_t>
+void MethodDL::ParseLstmLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
+                              std::vector<DNN::TDeepNet<Architecture_t, Layer_t>> &nets, TString layerString,
+                              TString delim)
+{
+   // Split layer details
+   TObjArray *subStrings = layerString.Tokenize(delim);
+   TIter nextToken(subStrings);
+   TObjString *token = (TObjString *)nextToken();
+   int idxToken = 0;
+
+   for (; token != nullptr; token = (TObjString *)nextToken()) {
+      switch (idxToken) {
+      }
+      ++idxToken;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
