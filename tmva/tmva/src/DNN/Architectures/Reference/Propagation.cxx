@@ -16,24 +16,22 @@
 
 #include "TMVA/DNN/Architectures/Reference.h"
 
-namespace TMVA
-{
-namespace DNN
-{
+namespace TMVA {
+namespace DNN {
 
 template <typename AReal>
 void TReference<AReal>::MultiplyTranspose(TMatrixT<AReal> &output, const TMatrixT<AReal> &input,
                                           const TMatrixT<AReal> &weights)
 {
-    output.MultT(input, weights);
+   output.MultT(input, weights);
 }
 
 template <typename AReal>
 void TReference<AReal>::AddRowWise(TMatrixT<AReal> &output, const TMatrixT<AReal> &biases)
 {
-   for (size_t i = 0; i < (size_t) output.GetNrows(); i++) {
-      for (size_t j = 0; j < (size_t) output.GetNcols(); j++) {
-         output(i,j) += biases(j,0);
+   for (size_t i = 0; i < (size_t)output.GetNrows(); i++) {
+      for (size_t j = 0; j < (size_t)output.GetNcols(); j++) {
+         output(i, j) += biases(j, 0);
       }
    }
 }
@@ -46,15 +44,15 @@ void TReference<AReal>::Backward(TMatrixT<AReal> &activation_gradients_backward,
 {
 
    // Compute element-wise product.
-   for (size_t i = 0; i < (size_t) df.GetNrows(); i++) {
-      for (size_t j = 0; j < (size_t) df.GetNcols(); j++) {
-         df(i,j) *= activation_gradients(i,j);
+   for (size_t i = 0; i < (size_t)df.GetNrows(); i++) {
+      for (size_t j = 0; j < (size_t)df.GetNcols(); j++) {
+         df(i, j) *= activation_gradients(i, j);
       }
    }
 
    // Activation gradients.
    if (activation_gradients_backward.GetNoElements() > 0) {
-       activation_gradients_backward.Mult(df, weights);
+      activation_gradients_backward.Mult(df, weights);
    }
 
    // Weights gradients.
@@ -64,12 +62,12 @@ void TReference<AReal>::Backward(TMatrixT<AReal> &activation_gradients_backward,
 
    // Bias gradients.
    if (bias_gradients.GetNoElements() > 0) {
-      for (size_t j = 0; j < (size_t) df.GetNcols(); j++) {
+      for (size_t j = 0; j < (size_t)df.GetNcols(); j++) {
          AReal sum = 0.0;
-         for (size_t i = 0; i < (size_t) df.GetNrows(); i++) {
-            sum += df(i,j);
+         for (size_t i = 0; i < (size_t)df.GetNrows(); i++) {
+            sum += df(i, j);
          }
-         bias_gradients(j,0) = sum;
+         bias_gradients(j, 0) = sum;
       }
    }
 }
@@ -77,9 +75,9 @@ void TReference<AReal>::Backward(TMatrixT<AReal> &activation_gradients_backward,
 template <typename AReal>
 void TReference<AReal>::ScaleAdd(TMatrixT<AReal> &A, const TMatrixT<AReal> &B, AReal beta)
 {
-   for (size_t i = 0; i < (size_t) A.GetNrows(); i++) {
-      for (size_t j = 0; j < (size_t) A.GetNcols(); j++) {
-         A(i,j) += beta * B(i,j);
+   for (size_t i = 0; i < (size_t)A.GetNrows(); i++) {
+      for (size_t j = 0; j < (size_t)A.GetNcols(); j++) {
+         A(i, j) += beta * B(i, j);
       }
    }
 }
@@ -97,6 +95,267 @@ void TReference<AReal>::SumColumns(TMatrixT<AReal> &B, const TMatrixT<AReal> &A)
    for (Int_t i = 0; i < A.GetNrows(); i++) {
       for (Int_t j = 0; j < A.GetNcols(); j++) {
          B(0, j) += A(i, j);
+      }
+   }
+}
+
+//______________________________________________________________________________
+template <typename AReal>
+void TReference<AReal>::Im2col(TMatrixT<AReal> &A, TMatrixT<AReal> &B, size_t imgHeight, size_t imgWidth,
+                               size_t fltHeight, size_t fltWidth, size_t strideRows, size_t strideCols,
+                               size_t zeroPaddingHeight, size_t zeroPaddingWidth)
+{
+   // image boudaries
+   int imgHeightBound = imgHeight + zeroPaddingHeight - (fltHeight - 1) / 2 - 1;
+   int imgWidthBound = imgWidth + zeroPaddingWidth - (fltWidth - 1) / 2 - 1;
+   size_t currLocalView = 0;
+
+   // convolution centers
+   for (int i = -zeroPaddingHeight + fltHeight / 2; i <= imgHeightBound; i += strideRows) {
+      for (int j = -zeroPaddingWidth + fltWidth / 2; j <= imgWidthBound; j += strideCols) {
+         size_t currLocalViewPixel = 0;
+
+         // within the local view
+         for (size_t m = 0; m < (size_t)B.GetNrows(); m++) {
+            for (size_t k = i - fltHeight / 2; k <= i + (fltHeight - 1) / 2; k++) {
+               for (size_t l = j - fltWidth / 2; l <= j + (fltWidth - 1) / 2; l++) {
+
+                  // Check the boundaries
+                  if (k < 0 || k >= imgHeight || l < 0 || l >= imgWidth)
+                     A(currLocalView, currLocalViewPixel++) = 0;
+                  else
+                     A(currLocalView, currLocalViewPixel++) = B(m, k * imgWidth + l);
+               }
+            }
+         }
+
+         currLocalView++;
+      }
+   }
+}
+
+//______________________________________________________________________________
+template <typename AReal>
+void TReference<AReal>::RotateWeights(TMatrixT<AReal> &A, const TMatrixT<AReal> &B, size_t filterDepth,
+                                      size_t filterHeight, size_t filterWidth, size_t numFilters)
+{
+   size_t jump = filterHeight * filterWidth;
+   for (size_t j = 0; j < filterDepth; j++) {
+      for (size_t k = 0; k < numFilters; k++) {
+         for (size_t i = 0; i < jump; i++) {
+            A(j, k * jump + i) = B(k, ((j + 1) * jump - 1) - i);
+         }
+      }
+   }
+}
+
+//______________________________________________________________________________
+template <typename AReal>
+void TReference<AReal>::AddConvBiases(TMatrixT<AReal> &output, const TMatrixT<AReal> &biases)
+{
+   for (size_t i = 0; i < (size_t)output.GetNrows(); i++) {
+      for (size_t j = 0; j < (size_t)output.GetNcols(); j++) {
+         output(i, j) += biases(i, 0);
+      }
+   }
+}
+
+//______________________________________________________________________________
+template <typename AReal>
+void TReference<AReal>::ConvLayerBackward(std::vector<TMatrixT<AReal>> &activation_gradients_backward,
+                                          TMatrixT<AReal> &weight_gradients, TMatrixT<AReal> &bias_gradients,
+                                          std::vector<TMatrixT<AReal>> &df,
+                                          const std::vector<TMatrixT<AReal>> &activation_gradients,
+                                          const TMatrixT<AReal> &weights,
+                                          const std::vector<TMatrixT<AReal>> &activations_backward, size_t batchSize,
+                                          size_t inputHeight, size_t inputWidth, size_t depth, size_t height,
+                                          size_t width, size_t filterDepth, size_t filterHeight, size_t filterWidth,
+                                          size_t nLocalViews)
+{
+
+   // Update derivatives
+   size_t m, n;
+   m = activation_gradients[0].GetNrows();
+   n = activation_gradients[0].GetNcols();
+
+   for (size_t i = 0; i < batchSize; i++) {
+      for (size_t j = 0; j < (size_t)m; j++) {
+         for (size_t k = 0; k < (size_t)n; k++) {
+            df[i](j, k) *= activation_gradients[i](j, k);
+         }
+      }
+   }
+
+   // Calculate the activation gradients of the previous layer
+   CalculateConvActivationGradients(activation_gradients_backward, df, weights, batchSize, inputHeight, inputWidth,
+                                    depth, height, width, filterDepth, filterHeight, filterWidth);
+
+   // Calculate the weight gradients
+   CalculateConvWeightGradients(weight_gradients, df, activations_backward, batchSize, inputHeight, inputWidth, depth,
+                                height, width, filterDepth, filterHeight, filterWidth, nLocalViews);
+
+   // Calculate the bias gradients
+   CalculateConvBiasGradients(bias_gradients, df, batchSize, depth, nLocalViews);
+}
+
+//______________________________________________________________________________
+template <typename AReal>
+void TReference<AReal>::CalculateConvActivationGradients(std::vector<TMatrixT<AReal>> &activation_gradients_backward,
+                                                         std::vector<TMatrixT<AReal>> &df,
+                                                         const TMatrixT<AReal> &weights, size_t batchSize,
+                                                         size_t inputHeight, size_t inputWidth, size_t depth,
+                                                         size_t height, size_t width, size_t filterDepth,
+                                                         size_t filterHeight, size_t filterWidth)
+{
+
+   // Transform the weights
+   TMatrixT<AReal> rotWeights(filterDepth, depth * filterHeight * filterWidth);
+   RotateWeights(rotWeights, weights, filterDepth, filterHeight, filterWidth, weights.GetNrows());
+
+   // Calculate the zero paddings
+   size_t tempZeroPaddingHeight = (size_t)(floor((inputHeight - height + filterHeight - 1) / 2));
+   size_t tempZeroPaddingWidth = (size_t)(floor((inputWidth - width + filterWidth - 1) / 2));
+
+   // Calculate the number of local views and the number of pixles in each view
+   size_t tempNLocalViews = inputHeight * inputWidth;
+   size_t tempNLocalViewPixels = depth * filterHeight * filterWidth;
+
+   size_t tempStrideRows = 1;
+   size_t tempStrideCols = 1;
+
+   // An entire convolution follows
+   for (size_t i = 0; i < batchSize; i++) {
+      TMatrixT<AReal> dfTr(tempNLocalViews, tempNLocalViewPixels);
+      Im2col(dfTr, df[i], inputHeight, inputWidth, filterHeight, filterWidth, tempStrideRows, tempStrideCols,
+             tempZeroPaddingHeight, tempZeroPaddingWidth);
+
+      activation_gradients_backward[i].MultT(rotWeights, dfTr);
+   }
+}
+
+//______________________________________________________________________________
+template <typename AReal>
+void TReference<AReal>::CalculateConvWeightGradients(TMatrixT<AReal> &weight_gradients,
+                                                     std::vector<TMatrixT<AReal>> &df,
+                                                     const std::vector<TMatrixT<AReal>> &activations_backward,
+                                                     size_t batchSize, size_t inputHeight, size_t inputWidth,
+                                                     size_t depth, size_t height, size_t width, size_t filterDepth,
+                                                     size_t filterHeight, size_t filterWidth, size_t nLocalViews)
+{
+   // reinitialize the weight gradients to 0
+   for (size_t i = 0; i < depth; i++) {
+      for (size_t j = 0; j < nLocalViews; j++) {
+         weight_gradients(i, j) = 0;
+      }
+   }
+
+   for (size_t i = 0; i < batchSize; i++) {
+      // Calculate the zero paddings
+      size_t tempZeroPaddingHeight = (filterHeight - height + inputHeight - 1) / 2;
+      size_t tempZeroPaddingWidth = (filterWidth - width + inputWidth - 1) / 2;
+
+      size_t tempNLocalViews = filterHeight * filterWidth;
+      size_t tempNLocalViewPixels = inputHeight * inputWidth;
+
+      size_t tempStrideRows = 1;
+      size_t tempStrideCols = 1;
+
+      for (size_t j = 0; j < depth; j++) {
+
+         // row matrix
+         TMatrixT<AReal> rowDelta(1, nLocalViews);
+         for (size_t k = 0; k < nLocalViews; k++) {
+            rowDelta(0, k) = df[i](j, k);
+         }
+
+         // convolution
+         TMatrixT<AReal> res(filterDepth, filterHeight * filterWidth);
+
+         TMatrixT<AReal> rowDeltaTr(tempNLocalViews, tempNLocalViewPixels);
+         Im2col(rowDeltaTr, rowDelta, height, width, inputHeight, inputWidth, tempStrideRows, tempStrideCols,
+                tempZeroPaddingHeight, tempZeroPaddingWidth);
+
+         res.MultT(activations_backward[i], rowDeltaTr);
+
+         for (size_t k = 0; k < filterDepth; k++) {
+            for (size_t l = 0; l < filterHeight * filterWidth; l++) {
+               weight_gradients(j, k * filterDepth + l) += res(k, (tempNLocalViews - 1) - l);
+            }
+         }
+      }
+   }
+}
+
+//______________________________________________________________________________
+template <typename AReal>
+void TReference<AReal>::CalculateConvBiasGradients(TMatrixT<AReal> &bias_gradients, std::vector<TMatrixT<AReal>> &df,
+                                                   size_t batchSize, size_t depth, size_t nLocalViews)
+{
+   for (size_t i = 0; i < depth; i++) {
+      AReal sum = 0;
+      for (size_t j = 0; j < nLocalViews; j++) {
+         for (size_t k = 0; k < batchSize; k++) {
+            sum += df[k](i, j);
+         }
+      }
+      bias_gradients(i, 0) = sum;
+   }
+}
+
+//______________________________________________________________________________
+template <typename AReal>
+void TReference<AReal>::Downsample(TMatrixT<AReal> &A, TMatrixT<AReal> &B, const TMatrixT<AReal> &C, size_t imgHeight,
+                                   size_t imgWidth, size_t fltHeight, size_t fltWidth, size_t strideRows,
+                                   size_t strideCols)
+{
+   // image boudaries
+   int imgHeightBound = imgHeight - (fltHeight - 1) / 2 - 1;
+   int imgWidthBound = imgWidth - (fltWidth - 1) / 2 - 1;
+   size_t currLocalView = 0;
+
+   // centers
+   for (int i = fltHeight / 2; i <= imgHeightBound; i += strideRows) {
+      for (int j = fltWidth / 2; j <= imgWidthBound; j += strideCols) {
+         // within local views
+         for (size_t m = 0; m < (size_t)C.GetNrows(); m++) {
+            AReal value = -std::numeric_limits<AReal>::max();
+
+            for (size_t k = i - fltHeight / 2; k <= i + (fltHeight - 1) / 2; k++) {
+               for (size_t l = j - fltWidth / 2; l <= j + (fltWidth - 1) / 2; l++) {
+                  if (C(m, k * imgWidth + l) > value) {
+                     value = C(m, k * imgWidth + l);
+                     B(m, currLocalView) = k * imgWidth + l;
+                  }
+               }
+            }
+            A(m, currLocalView) = value;
+         }
+         currLocalView++;
+      }
+   }
+}
+
+//______________________________________________________________________________
+template <typename AReal>
+void TReference<AReal>::MaxPoolLayerBackward(std::vector<TMatrixT<AReal>> &activationGradientsBackward,
+                                             const std::vector<TMatrixT<AReal>> &activationGradients,
+                                             const std::vector<TMatrixT<AReal>> &indexMatrix, size_t batchSize,
+                                             size_t depth, size_t nLocalViews)
+{
+   for (size_t i = 0; i < batchSize; i++) {
+      for (size_t j = 0; j < depth; j++) {
+
+         // initialize to zeros
+         for (size_t t = 0; t < (size_t)activationGradientsBackward[i].GetNcols(); t++) {
+            activationGradientsBackward[i][j][t] = 0;
+         }
+
+         // set values
+         for (size_t k = 0; k < nLocalViews; k++) {
+            AReal grad = activationGradients[i][j][k];
+            size_t winningIdx = indexMatrix[i][j][k];
+            activationGradientsBackward[i][j][winningIdx] = grad;
+         }
       }
    }
 }
