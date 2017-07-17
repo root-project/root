@@ -234,11 +234,11 @@ VGeneralLayer<Architecture_t>::~VGeneralLayer()
 template <typename Architecture_t>
 auto VGeneralLayer<Architecture_t>::Initialize() -> void
 {
-   initialize<Architecture_t>(fWeights, this->GetInitialization());
-   initialize<Architecture_t>(fBiases, this->GetInitialization());
+   initialize<Architecture_t>(this->GetWeights(), this->GetInitialization());
+   initialize<Architecture_t>(this->GetBiases(), this->GetInitialization());
 
-   initialize<Architecture_t>(fWeightGradients, EInitialization::kZero);
-   initialize<Architecture_t>(fBiasGradients, EInitialization::kZero);
+   initialize<Architecture_t>(this->GetWeightGradients(), EInitialization::kZero);
+   initialize<Architecture_t>(this->GetBiasGradients(), EInitialization::kZero);
 }
 
 //_________________________________________________________________________________________________
