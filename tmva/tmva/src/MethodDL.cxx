@@ -142,6 +142,47 @@ std::vector<double> fetchValueTmp(const std::map<TString, TString> &keyValueMap,
 ////////////////////////////////////////////////////////////////////////////////
 void MethodDL::DeclareOptions()
 {
+   // Set default values for all option strings
+
+   DeclareOptionRef(fLayoutString = "DENSE|(N+100)*2|SOFTSIGN,LINEAR", "Layout", "Layout of the network.");
+
+   DeclareOptionRef(fErrorStrategy = "CROSSENTROPY", "ErrorStrategy", "Loss function: Mean squared error (regression)"
+                                                                      " or cross entropy (binary classification).");
+   AddPreDefVal(TString("CROSSENTROPY"));
+   AddPreDefVal(TString("SUMOFSQUARES"));
+   AddPreDefVal(TString("MUTUALEXCLUSIVE"));
+
+   DeclareOptionRef(fWeightInitializationString = "XAVIER", "WeightInitialization", "Weight initialization strategy");
+   AddPreDefVal(TString("XAVIER"));
+   AddPreDefVal(TString("XAVIERUNIFORM"));
+
+   DeclareOptionRef(fArchitectureString = "CPU", "Architecture", "Which architecture to perform the training on.");
+   AddPreDefVal(TString("STANDARD"));
+   AddPreDefVal(TString("CPU"));
+   AddPreDefVal(TString("GPU"));
+   AddPreDefVal(TString("OPENCL"));
+
+   DeclareOptionRef(fTrainingStrategyString = "LearningRate=1e-1,"
+                                              "Momentum=0.3,"
+                                              "Repetitions=3,"
+                                              "ConvergenceSteps=50,"
+                                              "BatchSize=30,"
+                                              "TestRepetitions=7,"
+                                              "WeightDecay=0.0,"
+                                              "Renormalize=L2,"
+                                              "DropConfig=0.0,"
+                                              "DropRepetitions=5|LearningRate=1e-4,"
+                                              "Momentum=0.3,"
+                                              "Repetitions=3,"
+                                              "ConvergenceSteps=50,"
+                                              "BatchSize=20,"
+                                              "TestRepetitions=7,"
+                                              "WeightDecay=0.001,"
+                                              "Renormalize=L2,"
+                                              "DropConfig=0.0+0.5+0.5,"
+                                              "DropRepetitions=5,"
+                                              "Multithreading=True",
+                    "TrainingStrategy", "Defines the training strategies.");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -527,6 +568,37 @@ MethodDL::~MethodDL()
 /// Parse key value pairs in blocks -> return vector of blocks with map of key value pairs.
 auto MethodDL::ParseKeyValueString(TString parseString, TString blockDelim, TString tokenDelim) -> KeyValueVector_t
 {
+   KeyValueVector_t blockKeyValues;
+   const TString keyValueDelim("=");
+
+   TObjArray *blockStrings = parseString.Tokenize(blockDelim);
+   TIter nextBlock(blockStrings);
+   TObjString *blockString = (TObjString *)nextBlock();
+
+   for (; blockString != nullptr; blockString = (TObjString *)nextBlock()) {
+      blockKeyValues.push_back(std::map<TString, TString>());
+      std::map<TString, TString> &currentBlock = blockKeyValues.back();
+
+      TObjArray *subStrings = blockString->GetString().Tokenize(tokenDelim);
+      TIter nextToken(subStrings);
+      TObjString *token = (TObjString *)nextToken();
+
+      for (; token != nullptr; token = (TObjString *)nextToken()) {
+         TString strKeyValue(token->GetString());
+         int delimPos = strKeyValue.First(keyValueDelim.Data());
+         if (delimPos <= 0) continue;
+
+         TString strKey = TString(strKeyValue(0, delimPos));
+         strKey.ToUpper();
+         TString strValue = TString(strKeyValue(delimPos + 1, strKeyValue.Length()));
+
+         strKey.Strip(TString::kBoth, ' ');
+         strValue.Strip(TString::kBoth, ' ');
+
+         currentBlock.insert(std::make_pair(strKey, strValue));
+      }
+   }
+   return blockKeyValues;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
