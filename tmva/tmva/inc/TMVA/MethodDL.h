@@ -72,6 +72,40 @@ private:
 
    void Init();
 
+   /*! After calling the ProcesOptions(), all of the options are parsed,
+    *  so using the parsed options, and given the architecture and the
+    *  type of the layers, we build the Deep Network passed as
+    *  a reference in the function. */
+   template <typename Architecture_t, typename Layer_t>
+   void CreateDeepNet(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
+                      std::vector<DNN::TDeepNet<Architecture_t, Layer_t>> &nets);
+
+   template <typename Architecture_t, typename Layer_t>
+   void ParseDenseLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
+                        std::vector<DNN::TDeepNet<Architecture_t, Layer_t>> &nets, TString layerString, TString delim);
+
+   template <typename Architecture_t, typename Layer_t>
+   void ParseConvLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
+                       std::vector<DNN::TDeepNet<Architecture_t, Layer_t>> &nets, TString layerString, TString delim);
+
+   template <typename Architecture_t, typename Layer_t>
+   void ParseMaxPoolLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
+                          std::vector<DNN::TDeepNet<Architecture_t, Layer_t>> &nets, TString layerString,
+                          TString delim);
+
+   template <typename Architecture_t, typename Layer_t>
+   void ParseReshapeLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
+                          std::vector<DNN::TDeepNet<Architecture_t, Layer_t>> &nets, TString layerString,
+                          TString delim);
+
+   template <typename Architecture_t, typename Layer_t>
+   void ParseRnnLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
+                      std::vector<DNN::TDeepNet<Architecture_t, Layer_t>> &nets, TString layerString, TString delim);
+
+   template <typename Architecture_t, typename Layer_t>
+   void ParseLstmLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
+                       std::vector<DNN::TDeepNet<Architecture_t, Layer_t>> &nets, TString layerString, TString delim);
+
    DNN::EInitialization fWeightInitialization; ///< The initialization method
    DNN::EOutputFunction fOutputFunction;       ///< The output function for making the predictions
    DNN::ELossFunction fLossFunction;           ///< The loss function
