@@ -74,7 +74,7 @@ public:
                  size_t Width, size_t OutputNSlices, size_t OutputNRows, size_t OutputNCols, size_t FrameHeight,
                  size_t FrameWidth, size_t StrideRows, size_t StrideCols, Scalar_t DropoutProbability);
 
-   /*! Copy the conv layer provided as a pointer */
+   /*! Copy the max pooling layer provided as a pointer */
    TMaxPoolLayer(TMaxPoolLayer<Architecture_t> *layer);
 
    /*! Copy constructor. */
@@ -134,7 +134,7 @@ TMaxPoolLayer<Architecture_t>::TMaxPoolLayer(size_t batchSize, size_t inputDepth
 //______________________________________________________________________________
 template <typename Architecture_t>
 TMaxPoolLayer<Architecture_t>::TMaxPoolLayer(TMaxPoolLayer<Architecture_t> *layer)
-   : VGeneralLayer<Architecture_t>(*layer), indexMatrix(), fFrameHeight(layer->GetFrameHeight()),
+   : VGeneralLayer<Architecture_t>(layer), indexMatrix(), fFrameHeight(layer->GetFrameHeight()),
      fFrameWidth(layer->GetFrameWidth()), fStrideRows(layer->GetStrideRows()), fStrideCols(layer->GetStrideCols()),
      fNLocalViewPixels(layer->GetNLocalViewPixels()), fNLocalViews(layer->GetNLocalViews()),
      fDropoutProbability(layer->GetDropoutProbability())
