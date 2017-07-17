@@ -40,16 +40,29 @@ protected:
    std::string   fExec;          ///< execute when item is activated
 public:
 
+   /** Default constructor */
    TMenuItem() = default;
-   TMenuItem(const std::string &name, const std::string &title) : fName(name), fTitle(title), fChecked(kNotDefined), fExec() {}
-   TMenuItem(const TMenuItem &rhs) : fName(rhs.fName), fTitle(rhs.fTitle), fChecked(rhs.fChecked), fExec(rhs.fExec) {}
-   virtual ~TMenuItem() {}
 
+   /** Create menu item with the name and title
+    *  name used to display item in the object context menu,
+    *  title shown as hint info for that item  */
+   TMenuItem(const std::string &name, const std::string &title) : fName(name), fTitle(title), fChecked(kNotDefined), fExec() {}
+
+   /** Set checked state for the item, default is none */
    void SetChecked(bool on = true) { fChecked = on ? kOff : kOn; }
+
+   /** Disable checked state of the menu item */
+   void DisableChecked() { fChecked = kNotDefined; }
+
+   /** Set execution string with all required arguments,
+    * which will be executed when manu item is selected  */
    void SetExec(const std::string &exec) { fExec = exec; }
 
-   std::string GetName() const { return fName; }
-   std::string GetExec() const { return fExec; }
+   /** Returns menu item name */
+   const std::string &GetName() const { return fName; }
+
+   /** Returns execution string for the menu item */
+   const std::string &GetExec() const { return fExec; }
 };
 
 
