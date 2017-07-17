@@ -30,6 +30,7 @@
 #include "TString.h"
 
 #include "TMVA/DNN/GeneralLayer.h"
+#include "TMVA/DNN/DenseLayer.h"
 
 namespace TMVA {
 namespace DNN {
