@@ -29,6 +29,7 @@
 #include "TMVA/Types.h"
 
 #include "TMVA/DNN/TensorDataLoader.h"
+#include "TMVA/DNN/DLMinimizers.h"
 
 REGISTER_METHOD(DL)
 ClassImp(TMVA::MethodDL);
