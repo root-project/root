@@ -2,9 +2,12 @@ TEMPLATE = app
 
 QT += webengine webenginewidgets
 
-HEADERS += rootwebview.h
+HEADERS += rootwebpage.h \
+           rootwebview.h
 
-SOURCES += rootwebview.cpp rootqt5.cpp
+SOURCES += rootwebpage.cpp \
+           rootwebview.cpp \
+           rootqt5.cpp
 
 target.path = .
 
