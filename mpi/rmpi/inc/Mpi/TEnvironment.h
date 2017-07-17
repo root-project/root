@@ -51,7 +51,7 @@ public:
    void Finalize();
 
    // static public functions TODO
-   static void SyncOutput(Bool_t status = kTRUE, FILE *output = stdout);
+   static void SyncOutput(Bool_t status = kTRUE, FILE *output = NULL);
 
    static Bool_t IsFinalized();
 

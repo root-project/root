@@ -156,11 +156,6 @@ void TEnvironment::InitCapture()
       dup2(fStdErrPipe[1], STDERR_FILENO); /* redirect stderr to the pipe */
       close(fStdErrPipe[1]);
    }
-   auto rank = -1;
-   if (!IsFinalized()) {
-      rank = COMM_WORLD.GetRank();
-   }
-   fStdOut += Form("-------  Rank %d OutPut  -------\n", rank);
 }
 
 //______________________________________________________________________________
@@ -318,12 +313,12 @@ void TEnvironment::SyncOutput(Bool_t status, FILE *output)
       if (status) {
          fOutput = output;
          fSyncOutput = status;
+         ClearBuffers();
          InitCapture();
       }
    } else {
       if (!status) {
          EndCapture();
-         Flush();
          fOutput = output;
          fSyncOutput = status;
       }
