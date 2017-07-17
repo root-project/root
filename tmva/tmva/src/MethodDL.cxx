@@ -733,16 +733,195 @@ auto MethodDL::ParseKeyValueString(TString parseString, TString blockDelim, TStr
 /// What kind of analysis type can handle the CNN
 Bool_t MethodDL::HasAnalysisType(Types::EAnalysisType type, UInt_t numberClasses, UInt_t /*numberTargets*/)
 {
+   if (type == Types::kClassification && numberClasses == 2) return kTRUE;
+   if (type == Types::kMulticlass) return kTRUE;
+   if (type == Types::kRegression) return kTRUE;
+
+   return kFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 void MethodDL::Train()
 {
+   if (fInteractive) {
+      Log() << kFATAL << "Not implemented yet" << Endl;
+      return;
+   }
+
+   if (this->GetArchitectureString() == "GPU") {
+      TrainGpu();
+      return;
+   } else if (this->GetArchitectureString() == "OpenCL") {
+      Log() << kFATAL << "OpenCL backend not yet supported." << Endl;
+      return;
+   } else if (this->GetArchitectureString() == "CPU") {
+      TrainCpu();
+      return;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 void MethodDL::TrainGpu()
 {
+#ifdef DNNCUDA // Included only if DNNCUDA flag is set.
+
+   using Architecture_t = DNN::TCuda<Double_t>;
+   using Scalar_t = Architecture_t::Scalar_t;
+   using Matrix_t = typename Architecture_t::Matrix_t;
+   using DeepNet_t = DNN::TMVA::TDeepNet<Architecture_t>;
+   using TensorDataLoader_t = TTensorDataLoader<TMVAInput_t, Architecture_t>;
+
+   Log() << kINFO << "Start of deep neural network training on GPU." << Endl << Endl;
+
+   // Determine the number of training and testing examples
+   size_t nTrainingSamples = GetEventCollection(Types::kTraining).size();
+   size_t nTestSamples = GetEventCollection(Types::kTesting).size();
+
+   // Determine the number of outputs
+   size_t outputSize = 1;
+   if (fAnalysisType == Types::kRegression && GetNTargets() != 0) {
+      outputSize = GetNTargets();
+   } else if (fAnalysisType == Types::kMulticlass && DataInfo().GetNClasses() >= 2) {
+      outputSize = DataInfo().GetNClasses();
+   }
+
+   size_t trainingPhase = 1;
+   for (TTrainingSettings &settings : this->GetTrainingSettings()) {
+
+      size_t nThreads = 1;
+
+      Log() << "Training phase " << trainingPhase << " of " << this->GetTrainingSettings().size() << ":" << Endl;
+      trainingPhase++;
+
+      // After the processing of the options, initialize the master deep net
+      size_t batchSize = settings.batchSize;
+      // Should be replaced by actual implementation. No support for this now.
+      size_t inputDepth = 0;
+      size_t inputHeight = 0;
+      size_t inputWidth = 0;
+      size_t batchDepth = settings.batchSize;
+      size_t batchHeight = inputDepth;
+      size_t batchWidth = inputHeight * inputWidth;
+      ELossFunction J = this->GetLossFunction();
+      EInitialization I = this->GetWeightInitialization();
+      ERegularization R = settings.regularization;
+      Scalar_t weightDecay = settings.weightDecay;
+      DeepNet_t deepNet(batchSize, inputDepth, inputHeight, inputWidth, batchDepth, batchHeight, batchWidth, J, I, R,
+                        weightDecay);
+
+      // Initialize the vector of slave nets
+      std::vector<DeepNet_t> nets{};
+      nets.reserve(nThreads);
+      for (size_t i = 0; i < nThreads; i++) {
+         // create a copies of the master deep net
+         nets.push_back(deepNet);
+      }
+
+      // Add all appropriate layers
+      CreateDeepNet(deepNet, nets);
+
+      // Loading the training and testing datasets
+      TensorDataLoader_t trainingData(GetEventCollection(Types::kTraining), nTrainingSamples, deepNet.GetBatchSize(),
+                                      deepNet.GetBatchDepth(), deepNet.GetBatchHeight(), deepNet.GetBatchWidth(),
+                                      deepNet.GetOutputWidth(), nThreads);
+
+      TensorDataLoader_t testingData(GetEventCollection(Types::kTesting), nTestSamples, deepNet.GetBatchSize(),
+                                     deepNet.GetBatchDepth(), deepNet.GetBatchHeight(), deepNet.GetBatchWidth(),
+                                     deepNet.GetOutputWidth(), nThreads);
+
+      // Initialize the minimizer
+      DNN::TDLGradientDescent<Architecture_t> minimizer(settings.learningRate, settings.convergenceSteps,
+                                                        settings.testInterval);
+
+      // Initialize the vector of batches, one batch for one slave network
+      std::vector<TTensorBatch<Architecture_t>> batches{};
+
+      bool converged = false;
+      // count the steps until the convergence
+      size_t stepCount = 0;
+      size_t batchesInEpoch = nTrainingSamples / deepNet.GetBatchSize();
+
+      // start measuring
+      std::chrono::time_point<std::chrono::system_clock> start, end;
+      start = std::chrono::system_clock::now();
+
+      if (!fInteractive) {
+         Log() << std::setw(10) << "Epoch"
+               << " | " << std::setw(12) << "Train Err." << std::setw(12) << "Test  Err." << std::setw(12) << "GFLOP/s"
+               << std::setw(12) << "Conv. Steps" << Endl;
+         std::string separator(62, '-');
+         Log() << separator << Endl;
+      }
+
+      while (!converged) {
+         stepCount++;
+         trainingData.Shuffle();
+
+         // execute all epochs
+         for (size_t i = 0; i < batchesInEpoch; i += nThreads) {
+            // Clean and load new batches, one batch for one slave net
+            batches.clear();
+            batches.reserve(nThreads);
+            for (size_t j = 0; j < nThreads; j++) {
+               batches.push_back(trainingData.GetTensorBatch());
+            }
+
+            // execute one minimization step
+            if (settings.momentum > 0.0) {
+               minimizer.StepMomentum(deepNet, nets, batches, settings.momentum);
+            } else {
+               minimizer.Step(deepNet, nets, batches);
+            }
+         }
+
+         if ((stepCount % minimizer.GetTestInterval()) == 0) {
+            // Compute test error.
+            Double_t testError = 0.0;
+            for (auto batch : testData) {
+               auto inputTensor = batch.GetInput();
+               auto outputMatrix = batch.GetOutput();
+               testError += deepNet.Loss(inputMatrix, outputMatrix);
+            }
+
+            testError /= (Double_t)(nTestSamples / settings.batchSize);
+
+            // stop measuring
+            end = std::chrono::system_clock::now();
+
+            // Compute training error.
+            Double_t trainingError = 0.0;
+            for (auto batch : trainingData) {
+               auto inputTensor = batch.GetInput();
+               auto outputMatrix = batch.GetOutput();
+               trainingError += deepNet.Loss(inputMatrix, outputMatrix);
+            }
+            trainingError /= (Double_t)(nTrainingSamples / settings.batchSize);
+
+            // Compute numerical throughput.
+            std::chrono::duration<double> elapsed_seconds = end - start;
+            double seconds = elapsed_seconds.count();
+            double nFlops = (double)(settings.testInterval * batchesInEpoch);
+            // nFlops *= deepNet.GetNFlops() * 1e-9;
+
+            converged = minimizer.HasConverged(testError);
+
+            Log() << std::setw(10) << stepCount << " | " << std::setw(12) << trainingError << std::setw(12) << testError
+                  << std::setw(12) << nFlops / seconds << std::setw(12) << minimizer.GetConvergenceCount() << Endl;
+
+            if (converged) {
+               Log() << Endl;
+            }
+         }
+      }
+   }
+
+#else  // DNNCUDA flag not set.
+
+   Log() << kFATAL << "CUDA backend not enabled. Please make sure "
+                      "you have CUDA installed and it was successfully "
+                      "detected by CMAKE."
+         << Endl;
+#endif // DNNCUDA
 }
 
 ////////////////////////////////////////////////////////////////////////////////
