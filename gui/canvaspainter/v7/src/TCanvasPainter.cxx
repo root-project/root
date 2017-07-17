@@ -364,9 +364,9 @@ ROOT::Experimental::Internal::TDrawable *TCanvasPainter::FindDrawable(const ROOT
 
    for (auto &&drawable: can.GetPrimitives()) {
 
-      std::string subid = ROOT::Experimental::TDisplayItem::MakeIDFromPtr(&(*drawable));
+      if (id == ROOT::Experimental::TDisplayItem::MakeIDFromPtr(&(*drawable)))
+         return &(*drawable);
 
-      if (subid == id) return &(*drawable);
    }
 
    return nullptr;
