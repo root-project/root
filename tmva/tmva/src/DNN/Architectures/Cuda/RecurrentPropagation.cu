@@ -2,7 +2,7 @@
 // Author: Saurav Shekhar 23/06/17 
 
 /*************************************************************************
- * Copyright (C) 2017, Saurav Shekhar
+ * Copyright (C) 2017, Saurav Shekhar                                    *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -38,7 +38,7 @@ auto RecurrentLayerBackward(TCudaMatrix<AFloat> & state_gradients_backward, // B
                             TCudaMatrix<AFloat> & input_gradient);
 -> Matrix_t &
 {
-  //TODO
+   //TODO
 }
 
 } // namespace DNN
