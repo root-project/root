@@ -40,7 +40,104 @@ ClassImp(TMVA::MethodDL);
 using namespace TMVA::DNN::CNN;
 using namespace TMVA::DNN;
 
+using TMVA::DNN::EActivationFunction;
+using TMVA::DNN::ELossFunction;
+using TMVA::DNN::EInitialization;
+using TMVA::DNN::EOutputFunction;
+
 namespace TMVA {
+
+////////////////////////////////////////////////////////////////////////////////
+TString fetchValueTmp(const std::map<TString, TString> &keyValueMap, TString key)
+{
+   key.ToUpper();
+   std::map<TString, TString>::const_iterator it = keyValueMap.find(key);
+   if (it == keyValueMap.end()) {
+      return TString("");
+   }
+   return it->second;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+template <typename T>
+T fetchValueTmp(const std::map<TString, TString> &keyValueMap, TString key, T defaultValue);
+
+////////////////////////////////////////////////////////////////////////////////
+template <>
+int fetchValueTmp(const std::map<TString, TString> &keyValueMap, TString key, int defaultValue)
+{
+   TString value(fetchValueTmp(keyValueMap, key));
+   if (value == "") {
+      return defaultValue;
+   }
+   return value.Atoi();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+template <>
+double fetchValueTmp(const std::map<TString, TString> &keyValueMap, TString key, double defaultValue)
+{
+   TString value(fetchValueTmp(keyValueMap, key));
+   if (value == "") {
+      return defaultValue;
+   }
+   return value.Atof();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+template <>
+TString fetchValueTmp(const std::map<TString, TString> &keyValueMap, TString key, TString defaultValue)
+{
+   TString value(fetchValueTmp(keyValueMap, key));
+   if (value == "") {
+      return defaultValue;
+   }
+   return value;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+template <>
+bool fetchValueTmp(const std::map<TString, TString> &keyValueMap, TString key, bool defaultValue)
+{
+   TString value(fetchValueTmp(keyValueMap, key));
+   if (value == "") {
+      return defaultValue;
+   }
+
+   value.ToUpper();
+   if (value == "TRUE" || value == "T" || value == "1") {
+      return true;
+   }
+
+   return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+template <>
+std::vector<double> fetchValueTmp(const std::map<TString, TString> &keyValueMap, TString key,
+                                  std::vector<double> defaultValue)
+{
+   TString parseString(fetchValueTmp(keyValueMap, key));
+   if (parseString == "") {
+      return defaultValue;
+   }
+
+   parseString.ToUpper();
+   std::vector<double> values;
+
+   const TString tokenDelim("+");
+   TObjArray *tokenStrings = parseString.Tokenize(tokenDelim);
+   TIter nextToken(tokenStrings);
+   TObjString *tokenString = (TObjString *)nextToken();
+   for (; tokenString != NULL; tokenString = (TObjString *)nextToken()) {
+      std::stringstream sstr;
+      double currentValue;
+      sstr << tokenString->GetString().Data();
+      sstr >> currentValue;
+      values.push_back(currentValue);
+   }
+   return values;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 void MethodDL::DeclareOptions()
