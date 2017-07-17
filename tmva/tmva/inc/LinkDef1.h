@@ -66,5 +66,6 @@
 #pragma link C++ class TMVA::MethodCategory+;
 #pragma link C++ class TMVA::MethodDNN+;
 #pragma link C++ class TMVA::MethodCrossValidation+;
+#pragma link C++ class TMVA::MethodDL+;
 
 #endif
