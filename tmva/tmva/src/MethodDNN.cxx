@@ -841,12 +841,12 @@ void TMVA::MethodDNN::TrainGpu()
       using DataLoader_t = TDataLoader<TMVAInput_t, TCuda<>>;
 
       size_t nThreads = 1;
-      DataLoader_t trainingData(GetEventCollection(Types::kTraining),
+      DataLoader_t trainingData(std::tie(GetEventCollection(Types::kTraining), DataInfo()),
                                 nTrainingSamples,
                                 net.GetBatchSize(),
                                 net.GetInputWidth(),
                                 net.GetOutputWidth(), nThreads);
-      DataLoader_t testData(GetEventCollection(Types::kTesting),
+      DataLoader_t testData(std::tie(GetEventCollection(Types::kTesting), DataInfo()),
                             nTestSamples,
                             testNet.GetBatchSize(),
                             net.GetInputWidth(),
@@ -1011,12 +1011,12 @@ void TMVA::MethodDNN::TrainCpu()
       using DataLoader_t = TDataLoader<TMVAInput_t, TCpu<>>;
 
       size_t nThreads = 1;
-      DataLoader_t trainingData(GetEventCollection(Types::kTraining),
+      DataLoader_t trainingData(std::tie(GetEventCollection(Types::kTraining), DataInfo()),
                                 nTrainingSamples,
                                 net.GetBatchSize(),
                                 net.GetInputWidth(),
                                 net.GetOutputWidth(), nThreads);
-      DataLoader_t testData(GetEventCollection(Types::kTesting),
+      DataLoader_t testData(std::tie(GetEventCollection(Types::kTesting), DataInfo()),
                             nTestSamples,
                             testNet.GetBatchSize(),
                             net.GetInputWidth(),
