@@ -11,6 +11,14 @@ static bool is_aligned(const void *__restrict__ ptr, size_t align)
    return (uintptr_t)ptr % align == 0;
 }
 
+static void BM_Cartesian3D_Sanity(benchmark::State &state)
+{
+   // Report if we forgot to turn on the explicit vectorisation in ROOT.
+   if (sizeof(double) == sizeof(ROOT::Double_v) || sizeof(float) == sizeof(ROOT::Float_v))
+      state.SkipWithError("Explicit vectorisation is disabled!");
+}
+BENCHMARK(BM_Cartesian3D_Sanity);
+
 static void BM_Cartesian3D_CreateEmpty(benchmark::State &state)
 {
    while (state.KeepRunning()) ROOT::Math::Cartesian3D<ROOT::Double_v> c;
