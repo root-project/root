@@ -299,7 +299,7 @@ public:
    /** Utility function for calculating the activation gradients of the layer
     *  before the convolutional layer. */
    static void CalculateConvActivationGradients(std::vector<TMatrixT<AReal>> &activationGradientsBackward,
-                                                std::vector<TMatrixT<AReal>> &df, const TMatrixT<Scalar_t> &weights,
+                                                std::vector<TMatrixT<AReal>> &df, const TMatrixT<AReal> &weights,
                                                 size_t batchSize, size_t inputHeight, size_t inputWidth, size_t depth,
                                                 size_t height, size_t width, size_t filterDepth, size_t filterHeight,
                                                 size_t filterWidth);
