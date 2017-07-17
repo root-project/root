@@ -354,7 +354,6 @@
 #pragma link C++ class ROOT::Experimental::TAxisEquidistant+;
 #pragma link C++ class ROOT::Experimental::TAxisIrregular+;
 #pragma link C++ class ROOT::Experimental::TAxisBase+;
-#pragma link C++ class ROOT::Experimental::TOrdinarySnapshot<TH1>+;
 #endif
 
 #endif
