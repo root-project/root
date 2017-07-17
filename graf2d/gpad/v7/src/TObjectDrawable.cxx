@@ -35,7 +35,7 @@ void ROOT::Experimental::Internal::TObjectDrawable::Paint(TVirtualCanvasPainter&
    canv.AddDisplayItem(res);
 }
 
-void ROOT::Experimental::Internal::TObjectDrawable::FillMenu(TVirtualCanvasPainter& onCanv) {
+void ROOT::Experimental::Internal::TObjectDrawable::PopulateMenu(TVirtualCanvasPainter& onCanv) {
    TObject *obj = fObj.get();
 
    // fill context menu items for the ROOT class
@@ -87,13 +87,13 @@ void ROOT::Experimental::Internal::TObjectDrawable::FillMenu(TVirtualCanvasPaint
 }
 
 
-void ROOT::Experimental::Internal::TObjectDrawable::ExecMenu(const std::string &exec)
+void ROOT::Experimental::Internal::TObjectDrawable::Execute(const std::string &exec)
 {
    TObject *obj = fObj.get();
 
    TString cmd;
    cmd.Form("((%s*) %p)->%s;", obj->ClassName(), obj, exec.c_str());
-   printf("TObjectDrawable::ExecMenu Obj %s Execute %s\n", obj->GetName(), cmd.Data());
+   printf("TObjectDrawable::Execute Obj %s Cmd %s\n", obj->GetName(), cmd.Data());
    gROOT->ProcessLine(cmd);
 
 }
