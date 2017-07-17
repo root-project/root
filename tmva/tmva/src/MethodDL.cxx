@@ -28,6 +28,8 @@
 #include "TMVA/MethodDL.h"
 #include "TMVA/Types.h"
 
+#include "TMVA/DNN/TensorDataLoader.h"
+
 REGISTER_METHOD(DL)
 ClassImp(TMVA::MethodDL);
 
