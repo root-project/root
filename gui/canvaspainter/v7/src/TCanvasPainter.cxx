@@ -54,7 +54,7 @@ private:
 
   typedef std::list<WebConn> WebConnList;
 
-  typedef std::vector<ROOT::Experimental::TMenuItem> MenuItemsVector;
+  typedef std::vector<ROOT::Experimental::Detail::TMenuItem> MenuItemsVector;
 
   /// The canvas we are painting. It might go out of existence while painting.
   const ROOT::Experimental::TCanvas& fCanvas;
@@ -292,14 +292,14 @@ Bool_t TCanvasPainter::ProcessWS(THttpCallArg *arg)
 
 void TCanvasPainter::AddMenuItem(const std::string &name, const std::string &title, const std::string &exec)
 {
-    ROOT::Experimental::TMenuItem item(name, title);
+    ROOT::Experimental::Detail::TMenuItem item(name, title);
     item.SetExec(exec);
     fMenuItems.push_back(item);
 }
 
 void TCanvasPainter::AddChkMenuItem(const std::string &name, const std::string &title, bool checked, const std::string &toggle)
 {
-   ROOT::Experimental::TMenuItem item(name, title);
+   ROOT::Experimental::Detail::TMenuItem item(name, title);
    item.SetChecked(checked);
    item.SetExec(toggle);
    fMenuItems.push_back(item);
@@ -324,9 +324,9 @@ void TCanvasPainter::CheckModifiedFlag()
             fMenuItems.clear();
             drawable->FillMenu(*this);
 
-            TClass *cl = gROOT->GetClass("std::vector<ROOT::Experimental::TMenuItem>");
+            TClass *cl = gROOT->GetClass("std::vector<ROOT::Experimental::Detail::TMenuItem>");
 
-            printf("Got items %d class %p %s\n", (int) fMenuItems.size(), cl, cl->GetName());
+            // printf("Got items %d class %p %s\n", (int) fMenuItems.size(), cl, cl->GetName());
 
             // FIXME: got problem with std::list<TMenuItem>, can be generic TBufferJSON
             buf = "MENU";
