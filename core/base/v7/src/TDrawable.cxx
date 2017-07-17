@@ -14,5 +14,12 @@
 
 #include "ROOT/TDrawable.hxx"
 
+#include <cassert>
+
 // pin vtable
 ROOT::Experimental::Internal::TDrawable::~TDrawable() { }
+
+void ROOT::Experimental::Internal::TDrawable::Execute(const std::string &)
+{
+   assert(false && "Did not expect a menu item to be invoked!");
+}

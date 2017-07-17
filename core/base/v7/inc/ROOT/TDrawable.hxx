@@ -37,9 +37,10 @@ public:
 
   virtual void Paint(TVirtualCanvasPainter &) = 0;
 
-  virtual void FillMenu(TVirtualCanvasPainter &) = 0;
+  /** Method can be used to provide menu items for the drawn object */
+  virtual void PopulateMenu(TVirtualCanvasPainter &) { };
 
-  virtual void ExecMenu(const std::string &) = 0;
+  virtual void Execute(const std::string &);
 };
 
 /// \class TAnyPtr

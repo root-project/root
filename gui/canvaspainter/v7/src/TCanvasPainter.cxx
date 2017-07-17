@@ -282,7 +282,7 @@ Bool_t TCanvasPainter::ProcessWS(THttpCallArg *arg)
          ROOT::Experimental::Internal::TDrawable *drawable = FindDrawable(fCanvas, id.Data());
          if (drawable && (buf.Length()>0)) {
             printf("Execute %s for drawable %p\n", buf.Data(), drawable);
-            drawable->ExecMenu(buf.Data());
+            drawable->Execute(buf.Data());
          }
       }
    }
@@ -322,7 +322,7 @@ void TCanvasPainter::CheckModifiedFlag()
 
          if (drawable) {
             fMenuItems.clear();
-            drawable->FillMenu(*this);
+            drawable->PopulateMenu(*this);
 
             TClass *cl = gROOT->GetClass("std::vector<ROOT::Experimental::Detail::TMenuItem>");
 

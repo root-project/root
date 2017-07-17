@@ -75,11 +75,11 @@ public:
 
    THistDrawableBase& operator=(THistDrawableBase&&);
 
-    void FillMenu(TVirtualCanvasPainter &) final {
+    void PopulateMenu(TVirtualCanvasPainter &) final {
        // here should be filling of context menu for the given object
     }
 
-    void ExecMenu(const std::string &) final {
+    void Execute(const std::string &) final {
        // should execute menu item
     }
 

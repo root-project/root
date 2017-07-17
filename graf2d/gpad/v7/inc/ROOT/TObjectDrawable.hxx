@@ -38,10 +38,10 @@ public:
    void Paint(TVirtualCanvasPainter& canv) final;
 
    /// Fill menu items for the object
-   void FillMenu(TVirtualCanvasPainter& onCanv) final;
+   void PopulateMenu(TVirtualCanvasPainter& onCanv) final;
 
    /// Executes menu item
-   void ExecMenu(const std::string &) final;
+   void Execute(const std::string &) final;
 
 };
 } // namespace Internal
