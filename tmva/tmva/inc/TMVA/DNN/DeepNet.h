@@ -31,6 +31,7 @@
 
 #include "TMVA/DNN/GeneralLayer.h"
 #include "TMVA/DNN/DenseLayer.h"
+#include "TMVA/DNN/CNN/ConvLayer.h"
 
 namespace TMVA {
 namespace DNN {
