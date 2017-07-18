@@ -7,6 +7,13 @@ include(cmake/modules/CaptureCommandLine.cmake)
 project(ROOT)
 set(IntegratedBuild ON)
 
+#---Set the locale to default C to prevent issued due to localization of commands---------------
+# This is necessary as we for example call `clang -v` and parse its output. But on a localized
+# program, the output parsing is much more error prone as certrain strings we're looking for
+# could be missing or be in a different order. To prevent those errors, let's just force all
+# output to use the default C locale which is more or less identical on all systems.
+set(ENV{LANG} C)
+
 #---Set pathes where to put the libraries, executables and headers------------------------------
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
