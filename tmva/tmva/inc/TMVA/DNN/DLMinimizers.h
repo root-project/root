@@ -98,20 +98,22 @@ public:
        backward through the net. The computed gradients are scaled by the learning
        rate \f$\alpha\f$ and subtracted from the weights and bias values of each
        layer. */
-   void Step(DeepNet_t &deepNet, std::vector<Matrix_t> &input, const Matrix_t &output);
+   void Step(DeepNet_t &deepNet, std::vector<Matrix_t> &input, const Matrix_t &output, const Matrix_t &weights);
 
    /** Does not evaluate the loss and therefore not trigger a possible synchronization
     *  with the device. Trains the weights of each layer, but only the bias terms of
     *  the first layer for compatibility with the previous implementation. */
-   void StepReducedWeights(DeepNet_t &deepNet, std::vector<Matrix_t> &input, const Matrix_t &output);
+   void StepReducedWeights(DeepNet_t &deepNet, std::vector<Matrix_t> &input, const Matrix_t &output,
+                           const Matrix_t &weights);
 
    /** Same as Step(...) but also evaluate the loss on the given training data.
     *  Note that this requires synchronization between host and device. */
-   Scalar_t StepLoss(DeepNet_t &deepNet, std::vector<Matrix_t> &input, const Matrix_t &output);
+   Scalar_t StepLoss(DeepNet_t &deepNet, std::vector<Matrix_t> &input, const Matrix_t &output, const Matrix_t &weights);
 
    /** Similar to StepReducedWeights(...) but also evaluates the loss. May trigger
      * synchronization with the device. */
-   Scalar_t StepReducedWeightsLoss(DeepNet_t &deepNet, std::vector<Matrix_t> &input, const Matrix_t &output);
+   Scalar_t StepReducedWeightsLoss(DeepNet_t &deepNet, std::vector<Matrix_t> &input, const Matrix_t &output,
+                                   const Matrix_t &weights);
 
    /** Perform multiple optimization steps simultaneously. Performs the
     *  backprop algorithm on the input batches given in \p batches on
@@ -177,22 +179,23 @@ TDLGradientDescent<Architecture_t>::TDLGradientDescent(Scalar_t learningRate, si
 
 //______________________________________________________________________________
 template <typename Architecture_t>
-void TDLGradientDescent<Architecture_t>::Step(DeepNet_t &deepNet, std::vector<Matrix_t> &input, const Matrix_t &output)
+void TDLGradientDescent<Architecture_t>::Step(DeepNet_t &deepNet, std::vector<Matrix_t> &input, const Matrix_t &output,
+                                              const Matrix_t &weights)
 {
    // Make forward and backward pass and update the net afterwards
    deepNet.Forward(input, true);
-   deepNet.Backward(input, output);
+   deepNet.Backward(input, output, weights);
    deepNet.Update(fLearningRate);
 }
 
 //______________________________________________________________________________
 template <typename Architecture_t>
 void TDLGradientDescent<Architecture_t>::StepReducedWeights(DeepNet_t &deepNet, std::vector<Matrix_t> &input,
-                                                            const Matrix_t &output)
+                                                            const Matrix_t &output, const Matrix_t &weights)
 {
    // Make forward and backward pass and update the net afterwards
    deepNet.Forward(input, true);
-   deepNet.Backward(input, output);
+   deepNet.Backward(input, output, weights);
 
    for (size_t i = 0; i < deepNet.GetDepth(); i++) {
       auto *layer = deepNet.GetLayerAt(i);
@@ -207,10 +210,10 @@ void TDLGradientDescent<Architecture_t>::StepReducedWeights(DeepNet_t &deepNet, 
 //______________________________________________________________________________
 template <typename Architecture_t>
 auto TDLGradientDescent<Architecture_t>::StepLoss(DeepNet_t &deepNet, std::vector<Matrix_t> &input,
-                                                      const Matrix_t &output) -> Scalar_t
+                                                  const Matrix_t &output, const Matrix_t &weights) -> Scalar_t
 {
    Scalar_t loss = deepNet.Loss(input, output);
-   deepNet.Backward(input, output);
+   deepNet.Backward(input, output, weights);
    deepNet.Update(fLearningRate);
 
    return loss;
@@ -219,11 +222,12 @@ auto TDLGradientDescent<Architecture_t>::StepLoss(DeepNet_t &deepNet, std::vecto
 //______________________________________________________________________________
 template <typename Architecture_t>
 auto TDLGradientDescent<Architecture_t>::StepReducedWeightsLoss(DeepNet_t &deepNet, std::vector<Matrix_t> &input,
-                                                                    const Matrix_t &output) -> Scalar_t
+                                                                const Matrix_t &output, const Matrix_t &weights)
+   -> Scalar_t
 {
    Scalar_t loss = deepNet.Loss(input, output);
    fTrainingError = loss;
-   deepNet.Backward(input, output);
+   deepNet.Backward(input, output, weights);
 
    for (size_t i = 0; i < deepNet.GetDepth(); i++) {
       auto *layer = deepNet.GetLayerAt(i);
