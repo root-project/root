@@ -43,6 +43,9 @@ public:
     *  title shown as hint info for that item  */
    TMenuItem(const std::string &name, const std::string &title) : fName(name), fTitle(title), fExec() {}
 
+   /** virtual destructor need for vtable, used when vector of TMenuItem* is stored */
+   virtual ~TMenuItem() {}
+
    /** Set execution string with all required arguments,
     * which will be executed when menu item is selected  */
    void SetExec(const std::string &exec) { fExec = exec; }
@@ -67,6 +70,9 @@ public:
    {
    }
 
+   /** virtual destructor need for vtable, used when vector of TMenuItem* is stored */
+   virtual ~TCheckedMenuItem() {}
+
    /** Set checked state for the item, default is none */
    void SetChecked(bool on = true) { fChecked = on; }
 
@@ -83,10 +89,13 @@ public:
    /** Default constructor */
    TMenuArgument() = default;
 
-   TMenuArgument(const std::string &name, const std::string &title, const std::string &typname, const std::string &dflt)
+   TMenuArgument(const std::string &name, const std::string &title, const std::string &typname,
+                 const std::string &dflt = "")
       : fName(name), fTitle(title), fTypeName(typname), fDefault(dflt)
    {
    }
+
+   void SetDefault(const std::string &dflt) { fDefault = dflt; }
 };
 
 class TArgsMenuItem : public TMenuItem {
@@ -94,9 +103,13 @@ protected:
    std::vector<TMenuArgument> fArgs;
 
 public:
+   /** Default constructor */
    TArgsMenuItem() = default;
 
    TArgsMenuItem(const std::string &name, const std::string &title) : TMenuItem(name, title) {}
+
+   /** virtual destructor need for vtable, used when vector of TMenuItem* is stored */
+   virtual ~TArgsMenuItem() {}
 
    void AddArg(const TMenuArgument &arg) { fArgs.push_back(arg); }
 };
@@ -123,20 +136,14 @@ public:
       Add(item);
    }
 
-   Detail::TArgsMenuItem *AddArgsMenuItem(const std::string &name, const std::string &title, const std::string &exec)
-   {
-      Detail::TArgsMenuItem *item = new Detail::TArgsMenuItem(name, title);
-      item->SetExec(exec);
-      Add(item);
-      return item;
-   }
-
    void AddChkMenuItem(const std::string &name, const std::string &title, bool checked, const std::string &toggle)
    {
       Detail::TCheckedMenuItem *item = new Detail::TCheckedMenuItem(name, title, checked);
       item->SetExec(toggle);
       Add(item);
    }
+
+   unsigned Size() const { return fItems.size(); }
 
    void Cleanup();
 
