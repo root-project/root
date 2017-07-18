@@ -76,7 +76,7 @@ public:
 
    THistDrawableBase &operator=(THistDrawableBase &&);
 
-   void PopulateMenu(TVirtualCanvasPainter &) final
+   void PopulateMenu(TMenuItems &) final
    {
       // here should be filling of context menu for the given object
    }

@@ -40,7 +40,8 @@
 #pragma link C++ class ROOT::Experimental::TUniqueDisplayItem<TPad>+;
 #pragma link C++ class ROOT::Experimental::TOrdinaryDisplayItem<TH1>+;
 #pragma link C++ class ROOT::Experimental::Detail::TMenuItem+;
-#pragma link C++ class std::vector<ROOT::Experimental::Detail::TMenuItem>+;
+#pragma link C++ class std::vector<ROOT::Experimental::Detail::TMenuItem*>+;
+#pragma link C++ class ROOT::Experimental::TMenuItems+;
 #endif
 
 #endif

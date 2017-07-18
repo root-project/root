@@ -23,6 +23,7 @@ namespace ROOT {
 namespace Experimental {
 
 class TCanvas;
+class TMenuItems;
 
 namespace Internal {
 
@@ -39,7 +40,7 @@ public:
    virtual void Paint(TVirtualCanvasPainter &) = 0;
 
    /** Method can be used to provide menu items for the drawn object */
-   virtual void PopulateMenu(TVirtualCanvasPainter &){};
+   virtual void PopulateMenu(TMenuItems &){};
 
    virtual void Execute(const std::string &);
 };

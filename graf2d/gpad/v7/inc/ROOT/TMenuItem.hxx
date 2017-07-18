@@ -17,6 +17,7 @@
 #define ROOT7_TMenuItem
 
 #include <string>
+#include <vector>
 
 namespace ROOT {
 namespace Experimental {
@@ -53,7 +54,7 @@ public:
    void DisableChecked() { fChecked = kNotDefined; }
 
    /** Set execution string with all required arguments,
-    * which will be executed when manu item is selected  */
+    * which will be executed when menu item is selected  */
    void SetExec(const std::string &exec) { fExec = exec; }
 
    /** Returns menu item name */
@@ -64,6 +65,40 @@ public:
 };
 
 } // namespace Detail
+
+///////////////////////////////////////////////////////////////////////
+
+class TMenuItems {
+protected:
+   std::vector<Detail::TMenuItem *> fItems; ///< list of items in the menu
+public:
+   /** Default constructor */
+   TMenuItems() = default;
+
+   ~TMenuItems() { Cleanup(); }
+
+   void Add(Detail::TMenuItem *item) { fItems.push_back(item); }
+
+   void AddMenuItem(const std::string &name, const std::string &title, const std::string &exec)
+   {
+      Detail::TMenuItem *item = new Detail::TMenuItem(name, title);
+      item->SetExec(exec);
+      Add(item);
+   }
+
+   void AddChkMenuItem(const std::string &name, const std::string &title, bool checked, const std::string &toggle)
+   {
+      Detail::TMenuItem *item = new Detail::TMenuItem(name, title);
+      item->SetChecked(checked);
+      item->SetExec(toggle);
+      Add(item);
+   }
+
+   void Cleanup();
+
+   std::string ProduceJSON();
+};
+
 } // namespace Experimental
 } // namespace ROOT
 
