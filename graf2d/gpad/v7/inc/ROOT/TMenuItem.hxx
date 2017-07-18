@@ -2,7 +2,8 @@
 /// \ingroup Base ROOT7
 /// \author Sergey Linev
 /// \date 2017-06-29
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
+/// is welcome!
 
 /*************************************************************************
  * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
@@ -27,26 +28,23 @@ namespace Detail {
 
 class TMenuItem {
 protected:
+   enum ECheckedState { kNotDefined = -1, kOff = 0, kOn = 1 };
 
-   enum ECheckedState {
-      kNotDefined = -1,
-      kOff = 0,
-      kOn = 1
-   };
-
-   std::string   fName;          ///<  name of the menu item
-   std::string   fTitle;         ///<  title of menu item
-   ECheckedState fChecked = kNotDefined;  ///< -1 not exists, 0 - off, 1 - on
-   std::string   fExec;          ///< execute when item is activated
+   std::string fName;                    ///<  name of the menu item
+   std::string fTitle;                   ///<  title of menu item
+   ECheckedState fChecked = kNotDefined; ///< -1 not exists, 0 - off, 1 - on
+   std::string fExec;                    ///< execute when item is activated
 public:
-
    /** Default constructor */
    TMenuItem() = default;
 
    /** Create menu item with the name and title
     *  name used to display item in the object context menu,
     *  title shown as hint info for that item  */
-   TMenuItem(const std::string &name, const std::string &title) : fName(name), fTitle(title), fChecked(kNotDefined), fExec() {}
+   TMenuItem(const std::string &name, const std::string &title)
+      : fName(name), fTitle(title), fChecked(kNotDefined), fExec()
+   {
+   }
 
    /** Set checked state for the item, default is none */
    void SetChecked(bool on = true) { fChecked = on ? kOff : kOn; }
@@ -64,7 +62,6 @@ public:
    /** Returns execution string for the menu item */
    const std::string &GetExec() const { return fExec; }
 };
-
 
 } // namespace Detail
 } // namespace Experimental
