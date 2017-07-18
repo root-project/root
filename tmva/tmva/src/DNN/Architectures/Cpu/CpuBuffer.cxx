@@ -332,6 +332,20 @@ void TTensorDataLoader<MatrixInput_t, TCpu<Real_t>>::CopyTensorOutput(TCpuBuffer
 
 //______________________________________________________________________________
 template <>
+void TTensorDataLoader<MatrixInput_t, TCpu<Real_t>>::CopyTensorWeights(TCpuBuffer<Real_t> &buffer,
+                                                                       IndexIterator_t sampleIterator, size_t batchSize)
+{
+   const TMatrixT<Real_t> &outputMatrix = std::get<2>(fData);
+
+   for (size_t i = 0; i < batchSize; i++) {
+      size_t sampleIndex = *sampleIterator;
+      buffer[i] = static_cast<Real_t>(outputMatrix(sampleIndex, 0));
+      sampleIterator++;
+   }
+}
+
+//______________________________________________________________________________
+template <>
 void TTensorDataLoader<MatrixInput_t, TCpu<Double_t>>::CopyTensorInput(TCpuBuffer<Double_t> &buffer,
                                                                        IndexIterator_t sampleIterator, size_t batchSize)
 {
@@ -363,6 +377,21 @@ void TTensorDataLoader<MatrixInput_t, TCpu<Double_t>>::CopyTensorOutput(TCpuBuff
          size_t bufferIndex = j * batchSize + i;
          buffer[bufferIndex] = outputMatrix(sampleIndex, j);
       }
+      sampleIterator++;
+   }
+}
+
+//______________________________________________________________________________
+template <>
+void TTensorDataLoader<MatrixInput_t, TCpu<Double_t>>::CopyTensorWeights(TCpuBuffer<Double_t> &buffer,
+                                                                         IndexIterator_t sampleIterator,
+                                                                         size_t batchSize)
+{
+   const TMatrixT<Double_t> &outputMatrix = std::get<2>(fData);
+
+   for (size_t i = 0; i < batchSize; i++) {
+      size_t sampleIndex = *sampleIterator;
+      buffer[i] = static_cast<Double_t>(outputMatrix(sampleIndex, 0));
       sampleIterator++;
    }
 }
@@ -424,6 +453,20 @@ void TTensorDataLoader<TMVAInput_t, TCpu<Double_t>>::CopyTensorOutput(TCpuBuffer
 
 //______________________________________________________________________________
 template <>
+void TTensorDataLoader<TMVAInput_t, TCpu<Double_t>>::CopyTensorWeights(TCpuBuffer<Double_t> &buffer,
+                                                                       IndexIterator_t sampleIterator, size_t batchSize)
+{
+   Event *event = fData.front();
+
+   for (size_t i = 0; i < batchSize; i++) {
+      size_t sampleIndex = *sampleIterator++;
+      event = fData[sampleIndex];
+      buffer[i] = event->GetWeight();
+   }
+}
+
+//______________________________________________________________________________
+template <>
 void TTensorDataLoader<TMVAInput_t, TCpu<Real_t>>::CopyTensorInput(TCpuBuffer<Real_t> &buffer,
                                                                    IndexIterator_t sampleIterator, size_t batchSize)
 {
@@ -474,6 +517,20 @@ void TTensorDataLoader<TMVAInput_t, TCpu<Real_t>>::CopyTensorOutput(TCpuBuffer<R
             buffer[bufferIndex] = static_cast<Real_t>(event->GetTarget(j));
          }
       }
+   }
+}
+
+//______________________________________________________________________________
+template <>
+void TTensorDataLoader<TMVAInput_t, TCpu<Real_t>>::CopyTensorWeights(TCpuBuffer<Real_t> &buffer,
+                                                                     IndexIterator_t sampleIterator, size_t batchSize)
+{
+   Event *event = fData.front();
+
+   for (size_t i = 0; i < batchSize; i++) {
+      size_t sampleIndex = *sampleIterator++;
+      event = fData[sampleIndex];
+      buffer[i] = static_cast<Real_t>(event->GetWeight());
    }
 }
 
