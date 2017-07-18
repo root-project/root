@@ -185,8 +185,8 @@ auto TMaxPoolLayer<Architecture_t>::Backward(std::vector<Matrix_t> &gradients_ba
                                              const std::vector<Matrix_t> &activations_backward) -> void
 {
 
-   Architecture_t::PoolLayerBackward(gradients_backward, this->GetActivationGradients(), indexMatrix,
-                                     this->GetBatchSize(), this->GetDepth(), this->GetNLocalViews());
+   Architecture_t::MaxPoolLayerBackward(gradients_backward, this->GetActivationGradients(), indexMatrix,
+                                        this->GetBatchSize(), this->GetDepth(), this->GetNLocalViews());
 }
 
 //______________________________________________________________________________
@@ -198,8 +198,8 @@ auto TMaxPoolLayer<Architecture_t>::Print() const -> void
    std::cout << "\t\t\t Height = " << this->GetHeight() << std::endl;
    std::cout << "\t\t\t Depth = " << this->GetDepth() << std::endl;
 
-   std::cout << "\t\t\t Frame Width = " << this->GetFilterWidth() << std::endl;
-   std::cout << "\t\t\t Frame Height = " << this->GetFilterHeight() << std::endl;
+   std::cout << "\t\t\t Frame Width = " << this->GetFrameWidth() << std::endl;
+   std::cout << "\t\t\t Frame Height = " << this->GetFrameHeight() << std::endl;
 }
 
 } // namespace CNN
