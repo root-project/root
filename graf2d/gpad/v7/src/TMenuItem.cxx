@@ -19,6 +19,7 @@
 #include "TClass.h"
 #include "TList.h"
 #include "TMethod.h"
+#include "TMethodArg.h"
 #include "TMethodCall.h"
 #include "TBufferJSON.h"
 
@@ -66,8 +67,7 @@ void ROOT::Experimental::TMenuItems::PopulateObjectMenu(void *obj, TClass *cl)
                Long_t l(0);
                call->Execute(obj, l);
 
-               AddChkMenuItem(m->GetName(), m->GetTitle(), l != 0,
-                                     Form("%s(%s)", m->GetName(), (l != 0) ? "0" : "1"));
+               AddChkMenuItem(m->GetName(), m->GetTitle(), l != 0, Form("%s(%s)", m->GetName(), (l != 0) ? "0" : "1"));
 
             } else {
                // Error("CheckModifiedFlag", "Cannot get toggle value with getter %s", getter.Data());
@@ -76,13 +76,30 @@ void ROOT::Experimental::TMenuItems::PopulateObjectMenu(void *obj, TClass *cl)
             delete call;
          }
       } else {
-         AddMenuItem(m->GetName(), m->GetTitle(), Form("%s()", m->GetName()));
+         TList *args = m->GetListOfMethodArgs();
+
+         if (!args || (args->GetSize() == 0)) {
+            AddMenuItem(m->GetName(), m->GetTitle(), Form("%s()", m->GetName()));
+         } else {
+            Detail::TArgsMenuItem *item = new Detail::TArgsMenuItem(m->GetName(), m->GetTitle());
+            item->SetExec(Form("%s()", m->GetName()));
+
+            TIter args_iter(args);
+            TMethodArg *arg = 0;
+
+            while ((arg = dynamic_cast<TMethodArg *>(args_iter())) != 0) {
+               Detail::TMenuArgument menu_arg(arg->GetName(), arg->GetTitle(), arg->GetFullTypeName());
+               if (arg->GetDefault()) menu_arg.SetDefault(arg->GetDefault());
+               item->AddArg(menu_arg);
+            }
+
+            Add(item);
+         }
       }
    }
 
-   delete lst;
+   // delete lst;
 }
-
 
 std::string ROOT::Experimental::TMenuItems::ProduceJSON()
 {
