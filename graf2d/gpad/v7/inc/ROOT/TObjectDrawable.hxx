@@ -38,7 +38,7 @@ public:
    void Paint(TVirtualCanvasPainter &canv) final;
 
    /// Fill menu items for the object
-   void PopulateMenu(TVirtualCanvasPainter &onCanv) final;
+   void PopulateMenu(TMenuItems &) final;
 
    /// Executes menu item
    void Execute(const std::string &) final;

@@ -61,8 +61,6 @@ private:
    WebConnList fWebConn;                             ///<! connections list
    ROOT::Experimental::TPadDisplayItem fDisplayList; ///!< full list of items to display
 
-   MenuItemsVector fMenuItems; ///<! list of menu items
-
    static std::string fAddr;
    static THttpServer *gServer;
 
@@ -96,11 +94,6 @@ public:
    }
 
    virtual void AddDisplayItem(ROOT::Experimental::TDisplayItem *item) final;
-
-   virtual void AddMenuItem(const std::string &name, const std::string &title, const std::string &exec) final;
-
-   virtual void AddChkMenuItem(const std::string &name, const std::string &title, bool checked,
-                               const std::string &toggle) final;
 
    // void ReactToSocketNews(...) override { SendCanvas(); }
 
@@ -274,22 +267,6 @@ Bool_t TCanvasPainter::ProcessWS(THttpCallArg *arg)
    return kTRUE;
 }
 
-void TCanvasPainter::AddMenuItem(const std::string &name, const std::string &title, const std::string &exec)
-{
-   ROOT::Experimental::Detail::TMenuItem item(name, title);
-   item.SetExec(exec);
-   fMenuItems.push_back(item);
-}
-
-void TCanvasPainter::AddChkMenuItem(const std::string &name, const std::string &title, bool checked,
-                                    const std::string &toggle)
-{
-   ROOT::Experimental::Detail::TMenuItem item(name, title);
-   item.SetChecked(checked);
-   item.SetExec(toggle);
-   fMenuItems.push_back(item);
-}
-
 void TCanvasPainter::CheckModifiedFlag()
 {
 
@@ -306,18 +283,14 @@ void TCanvasPainter::CheckModifiedFlag()
          printf("Request menu for object %s found drawable %p\n", conn.fGetMenu.c_str(), drawable);
 
          if (drawable) {
-            fMenuItems.clear();
-            drawable->PopulateMenu(*this);
 
-            TClass *cl = gROOT->GetClass("std::vector<ROOT::Experimental::Detail::TMenuItem>");
+            ROOT::Experimental::TMenuItems items;
 
-            // printf("Got items %d class %p %s\n", (int) fMenuItems.size(), cl, cl->GetName());
+            drawable->PopulateMenu(items);
 
             // FIXME: got problem with std::list<TMenuItem>, can be generic TBufferJSON
             buf = "MENU";
-            buf += TBufferJSON::ConvertToJSON(&fMenuItems, cl);
-
-            fMenuItems.clear();
+            buf.Append(items.ProduceJSON());
          }
 
          conn.fGetMenu = "";
