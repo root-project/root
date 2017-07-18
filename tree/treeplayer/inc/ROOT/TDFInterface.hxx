@@ -1080,8 +1080,6 @@ protected:
    TInterface<TLoopManager> SnapshotImpl(std::string_view treename, std::string_view filename,
                                          const ColumnNames_t &bnames, TDFInternal::TStaticSeq<S...> /*dummy*/)
    {
-      std::string treenameInt;
-      std::string dirnameInt;
       const std::string filenameInt(filename);
       const auto templateParamsN = sizeof...(S);
       const auto bNamesN = bnames.size();
@@ -1110,6 +1108,8 @@ protected:
 
       auto df = GetDataFrameChecked();
       if (!ROOT::IsImplicitMTEnabled()) {
+         std::string treenameInt;
+         std::string dirnameInt;
          std::unique_ptr<TFile> ofile(TFile::Open(filenameInt.c_str(), "RECREATE"));
          std::tie(dirnameInt, treenameInt) = getDirTreeName(treename);
          if (!dirnameInt.empty()) {
@@ -1165,7 +1165,10 @@ protected:
          };
 
          // called at the beginning of each task
-         auto initLambda = [&trees, &merger, &files, &treenameInt, &dirnameInt, &treename, &isFirstEvent, &getDirTreeName] (TTreeReader *r, unsigned int slot) {
+         auto initLambda = [&trees, &merger, &files, &treename, &isFirstEvent, &getDirTreeName](TTreeReader *r,
+                                                                                                unsigned int slot) {
+            std::string treenameInt;
+            std::string dirnameInt;
             ::TDirectory::TContext c;
             if(!trees[slot]) {
                // first time this thread executes something, let's create a TBufferMerger output directory
