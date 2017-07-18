@@ -470,6 +470,7 @@ class SnapshotHelperMT {
    const std::string fDirName; // name of TFile subdirectory in which output must be written (possibly empty)
    const std::string fTreeName; // name of output tree
    const ColumnNames_t fBranchNames;
+   ROOT::TSpinMutex fMutex;
 public:
    using BranchTypes_t = TypeList<BranchTypes...>;
    SnapshotHelperMT(unsigned int nSlots, const std::string &filename, const std::string &dirname,
@@ -504,6 +505,7 @@ public:
          auto inputTree = r->GetTree();
          // AddClone guarantees that if the input file changes the branches of the output tree are updated with the new
          // addresses of the branch values
+         std::lock_guard<ROOT::TSpinMutex> guard(fMutex);
          inputTree->AddClone(fOutputTrees[slot]);
       }
       fIsFirstEvent[slot] = 1; // reset first event flag for this slot
