@@ -2,8 +2,8 @@
 /// \ingroup CanvasPainter ROOT7
 /// \author Sergey Linev <S.Linev@gsi.de>
 /// \date 2017-06-29
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
-
+/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
+/// is welcome!
 
 /*************************************************************************
  * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
@@ -18,7 +18,6 @@
 #include <qwebengineview.h>
 #include <qtwebengineglobal.h>
 #include <QThread>
-
 
 #include <QWebEngineUrlSchemeHandler>
 #include <QWebEngineProfile>
@@ -60,19 +59,21 @@ public:
 
 THttpServer *server = 0;
 
-
 // TODO: memory cleanup of these arguments
 class TWebGuiCallArg : public THttpCallArg {
 protected:
-
    QWebEngineUrlRequestJob *fRequest;
-   int  fDD;
+   int fDD;
 
 public:
-   TWebGuiCallArg(QWebEngineUrlRequestJob *req) : THttpCallArg(), fRequest(req), fDD(0) {  }
-   virtual ~TWebGuiCallArg() { if (fDD!=1) printf("FAAAAAAAAAAAAAIL %d\n", fDD); }
+   TWebGuiCallArg(QWebEngineUrlRequestJob *req) : THttpCallArg(), fRequest(req), fDD(0) {}
+   virtual ~TWebGuiCallArg()
+   {
+      if (fDD != 1) printf("FAAAAAAAAAAAAAIL %d\n", fDD);
+   }
 
-   void SendFile(const char *fname) {
+   void SendFile(const char *fname)
+   {
       const char *mime = THttpServer::GetMimeType(fname);
 
       printf("Sending file %s\n", fname);
@@ -89,15 +90,18 @@ public:
       file.close();
       buffer->close();
 
-      fRequest->reply(mime, buffer); fDD++;
+      fRequest->reply(mime, buffer);
+      fDD++;
    }
 
-   virtual void HttpReplied() {
+   virtual void HttpReplied()
+   {
 
       if (Is404()) {
          printf("Request MISS %s %s\n", GetPathName(), GetFileName());
 
-         fRequest->fail(QWebEngineUrlRequestJob::UrlNotFound); fDD++;
+         fRequest->fail(QWebEngineUrlRequestJob::UrlNotFound);
+         fDD++;
          // abort request
       } else if (IsFile()) {
          // send file
@@ -110,19 +114,20 @@ public:
          QBuffer *buffer = new QBuffer;
          fRequest->connect(fRequest, SIGNAL(destroyed()), buffer, SLOT(deleteLater()));
 
-         buffer->setData((const char *) GetContent(), GetContentLength());
+         buffer->setData((const char *)GetContent(), GetContentLength());
 
-         fRequest->reply(GetContentType(), buffer); fDD++;
+         fRequest->reply(GetContentType(), buffer);
+         fDD++;
       }
    }
-
 };
 
 class ROOTSchemeHandler : public QWebEngineUrlSchemeHandler {
 public:
    ROOTSchemeHandler(QObject *p = Q_NULLPTR) : QWebEngineUrlSchemeHandler(p) {}
 
-   virtual void requestStarted(QWebEngineUrlRequestJob *request) {
+   virtual void requestStarted(QWebEngineUrlRequestJob *request)
+   {
 
       QUrl url = request->requestUrl();
 
@@ -130,8 +135,8 @@ public:
 
       // printf("[%ld] Request started %s\n", TThread::SelfId(), ba.data());
 
-      if (server==0) {
-         server = (THttpServer*) gROOT->ProcessLine("TWebGuiFactory::GetHttpServer()");
+      if (server == 0) {
+         server = (THttpServer *)gROOT->ProcessLine("TWebGuiFactory::GetHttpServer()");
          printf("Get HTTP server %p\n", server);
          if (!server) {
             printf("FAIL to get server\n");
@@ -139,7 +144,7 @@ public:
          }
       }
 
-      TWebGuiCallArg* arg = new TWebGuiCallArg(request);
+      TWebGuiCallArg *arg = new TWebGuiCallArg(request);
 
       QString inp_path = url.path();
       QString inp_query = url.query();
@@ -170,16 +175,16 @@ public:
 
 class ROOTRequestInterceptor : public QWebEngineUrlRequestInterceptor {
 public:
-    ROOTRequestInterceptor(QObject *p = Q_NULLPTR) : QWebEngineUrlRequestInterceptor(p) {}
-    virtual void interceptRequest(QWebEngineUrlRequestInfo &info) {
+   ROOTRequestInterceptor(QObject *p = Q_NULLPTR) : QWebEngineUrlRequestInterceptor(p) {}
+   virtual void interceptRequest(QWebEngineUrlRequestInfo &info)
+   {
 
-       QUrl url = info.requestUrl();
+      QUrl url = info.requestUrl();
 
-       QByteArray ba = url.toString().toLatin1();
+      QByteArray ba = url.toString().toLatin1();
 
-       printf("[%ld] Request intercepted %s\n", TThread::SelfId(), ba.data());
-
-    }
+      printf("[%ld] Request intercepted %s\n", TThread::SelfId(), ba.data());
+   }
 };
 
 extern "C" void webgui_start_browser_new(const char *url)
@@ -194,57 +199,53 @@ extern "C" void webgui_start_browser_new(const char *url)
    view->show();
 }
 
-
-
 int main(int argc, char *argv[])
 {
-    QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+   QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 
-    int argc2 = 1;
-    char *argv2[10];
-    argv2[0] = argv[0];
+   int argc2 = 1;
+   char *argv2[10];
+   argv2[0] = argv[0];
 
-    // printf("[%ld] Start minimal app\n", TThread::SelfId());
+   // printf("[%ld] Start minimal app\n", TThread::SelfId());
 
-    QApplication app(argc2, argv2);
+   QApplication app(argc2, argv2);
 
+   QtWebEngine::initialize();
 
-    QtWebEngine::initialize();
+   // QQmlApplicationEngine engine;
+   // engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
+   // engine.load(QUrl("http://jsroot.gsi.de/dev/examples.htm"));
 
-    //QQmlApplicationEngine engine;
-    //engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
-    //engine.load(QUrl("http://jsroot.gsi.de/dev/examples.htm"));
+   TRint *d = new TRint("Rint", &argc, argv);
+   TQt5Timer *timer = new TQt5Timer(10, kTRUE);
+   timer->TurnOn();
 
-    TRint* d = new TRint("Rint", &argc, argv);
-    TQt5Timer *timer = new TQt5Timer(10, kTRUE);
-    timer->TurnOn();
+   // use only for debugging or may be for redirection
+   // QWebEngineProfile::defaultProfile()->setRequestInterceptor(new ROOTRequestInterceptor());
 
+   const QByteArray EXAMPLE_SCHEMA_HANDLER = QByteArray("example");
 
-    // use only for debugging or may be for redirection
-    //QWebEngineProfile::defaultProfile()->setRequestInterceptor(new ROOTRequestInterceptor());
+   ROOTSchemeHandler *handler = new ROOTSchemeHandler();
 
-    const QByteArray EXAMPLE_SCHEMA_HANDLER = QByteArray("example");
+   QWebEngineProfile::defaultProfile()->installUrlSchemeHandler(EXAMPLE_SCHEMA_HANDLER, handler);
 
-    ROOTSchemeHandler* handler = new ROOTSchemeHandler();
+   // const QWebEngineUrlSchemeHandler* installed =
+   // QWebEngineProfile::defaultProfile()->urlSchemeHandler(EXAMPLE_SCHEMA_HANDLER);
 
-    QWebEngineProfile::defaultProfile()->installUrlSchemeHandler(EXAMPLE_SCHEMA_HANDLER, handler);
+   // QWebEngineView *view = new QWebEngineView();
+   // view->load(QUrl("http://jsroot.gsi.de/dev/examples.htm"));
+   // view->show();
 
-    // const QWebEngineUrlSchemeHandler* installed = QWebEngineProfile::defaultProfile()->urlSchemeHandler(EXAMPLE_SCHEMA_HANDLER);
+   d->Run();
 
-    //QWebEngineView *view = new QWebEngineView();
-    //view->load(QUrl("http://jsroot.gsi.de/dev/examples.htm"));
-    //view->show();
+   // while (true) {
+   //   QApplication::processEvents();
+   //   QApplication::sendPostedEvents();
+   //   QThread::msleep(10);
+   // }
 
-    d->Run();
+   return 0;
 
-    //while (true) {
-    //   QApplication::processEvents();
-    //   QApplication::sendPostedEvents();
-    //   QThread::msleep(10);
-    // }
-
-    return 0;
-
-    // return app.exec();
+   // return app.exec();
 }
-
