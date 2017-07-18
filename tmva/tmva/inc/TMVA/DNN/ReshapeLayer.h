@@ -36,7 +36,7 @@ namespace TMVA {
 namespace DNN {
 
 template <typename Architecture_t>
-class TReshapeLayer : VGeneralLayer<Architecture_t> {
+class TReshapeLayer : public VGeneralLayer<Architecture_t> {
 public:
    using Matrix_t = typename Architecture_t::Matrix_t;
    using Scalar_t = typename Architecture_t::Scalar_t;
