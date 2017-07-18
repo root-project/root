@@ -2,7 +2,8 @@
 /// \ingroup Gpad ROOT7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2017-05-31
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
+/// is welcome!
 
 /*************************************************************************
  * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
@@ -31,28 +32,29 @@ namespace Internal {
 
 class TVirtualCanvasPainter {
 protected:
-  class Generator {
-    public:
-    /// Abstract interface to create a TVirtualCanvasPainter implementation.
-    virtual std::unique_ptr<TVirtualCanvasPainter> Create(const TCanvas& canv) const = 0;
-    /// Default destructor.
-    virtual ~Generator();
-  };
-  /// The generator for implementations.
-  static std::unique_ptr<Generator> fgGenerator;
+   class Generator {
+   public:
+      /// Abstract interface to create a TVirtualCanvasPainter implementation.
+      virtual std::unique_ptr<TVirtualCanvasPainter> Create(const TCanvas &canv) const = 0;
+      /// Default destructor.
+      virtual ~Generator();
+   };
+   /// The generator for implementations.
+   static std::unique_ptr<Generator> fgGenerator;
 
 public:
-  /// Default destructor.
-  virtual ~TVirtualCanvasPainter();
+   /// Default destructor.
+   virtual ~TVirtualCanvasPainter();
 
-  virtual void AddDisplayItem(TDisplayItem *item) = 0;
+   virtual void AddDisplayItem(TDisplayItem *item) = 0;
 
-  virtual void AddMenuItem(const std::string &name, const std::string &title, const std::string &exec) = 0;
+   virtual void AddMenuItem(const std::string &name, const std::string &title, const std::string &exec) = 0;
 
-  virtual void AddChkMenuItem(const std::string &name, const std::string &title, bool checked, const std::string &toggle) = 0;
+   virtual void AddChkMenuItem(const std::string &name, const std::string &title, bool checked,
+                               const std::string &toggle) = 0;
 
-  /// Loads the plugin that implements this class.
-  static std::unique_ptr<TVirtualCanvasPainter> Create(const TCanvas& canv);
+   /// Loads the plugin that implements this class.
+   static std::unique_ptr<TVirtualCanvasPainter> Create(const TCanvas &canv);
 };
 } // namespace Internal
 } // namespace Experimental

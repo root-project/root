@@ -2,7 +2,8 @@
 /// \ingroup Base ROOT7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2015-07-08
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
+/// is welcome!
 
 /*************************************************************************
  * Copyright (C) 1995-2015, Rene Brun and Fons Rademakers.               *
@@ -17,7 +18,9 @@
 #include <cassert>
 
 // pin vtable
-ROOT::Experimental::Internal::TDrawable::~TDrawable() { }
+ROOT::Experimental::Internal::TDrawable::~TDrawable()
+{
+}
 
 void ROOT::Experimental::Internal::TDrawable::Execute(const std::string &)
 {
