@@ -118,6 +118,7 @@ protected:
    void     Init(const char *name, const char *leaflist, Int_t compress);
 
    TBasket *GetFreshBasket();
+   TBasket *GetFreshCluster();
    Int_t    WriteBasket(TBasket* basket, Int_t where) { return WriteBasketImpl(basket, where, nullptr); }
 
    TString  GetRealFileName() const;
@@ -224,7 +225,7 @@ public:
 
    static  void      ResetCount();
 
-   ClassDef(TBranch,12);  //Branch descriptor
+   ClassDef(TBranch,13);  //Branch descriptor
 };
 
 //______________________________________________________________________________

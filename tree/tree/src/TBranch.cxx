@@ -1128,7 +1128,7 @@ TBasket* TBranch::GetBasket(Int_t basketnumber)
    if (file == 0) {
       return 0;
    }
-   basket = GetFreshBasket();
+   basket = (fTree->GetMaxVirtualSize() < 0) ? GetFreshCluster() : GetFreshBasket();
 
    // fSkipZip is old stuff still maintained for CDF
    if (fSkipZip) basket->SetBit(TBufferFile::kNotDecompressed);
@@ -1278,6 +1278,14 @@ Int_t TBranch::GetEntry(Long64_t entry, Int_t getall)
             fFirstBasketEntry = -1;
             fNextBasketEntry = -1;
             return -1;
+         }
+         if (fTree->GetMaxVirtualSize() < 0) {
+             TTree::TClusterIterator clusterIterator = fTree->GetClusterIterator(entry);
+             clusterIterator.Next();
+             Int_t nextClusterEntry = clusterIterator.GetNextEntry();
+             for (Int_t i = fReadBasket; i < fMaxBaskets && fBasketEntry[i] < nextClusterEntry; i++) {
+	         GetBasket(i);
+	     }
          }
       }
       fCurrentBasket = basket;
@@ -1443,6 +1451,55 @@ TFile* TBranch::GetFile(Int_t mode)
    if (file->IsZombie()) {delete file; return 0;}
    fDirectory = (TDirectory*)file;
    return file;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Drops the cluster two behind the current cluster and returns a fresh basket
+/// by either reusing or creating a new one
+
+TBasket* TBranch::GetFreshCluster()
+{
+   // If GetClusterIterator is called with a negative entry then GetStartEntry will be 0
+   // So we need to check if we reach the zero before we have gone back two clusters
+   // if this is the case, we want to keep everything in memory so we return a new basket
+   TTree::TClusterIterator iter = fTree->GetClusterIterator(fBasketEntry[fReadBasket]);
+   if (iter.GetStartEntry() == 0) return fTree->CreateBasket(this);
+   TTree::TClusterIterator prevIter = fTree->GetClusterIterator(iter.GetStartEntry() - 1);
+   if (prevIter.GetStartEntry() == 0) return fTree->CreateBasket(this);
+   Int_t entryToFlush = fTree->GetClusterIterator(prevIter.GetStartEntry() - 1).GetStartEntry();
+
+   // Finds the basket to flush. Since the basket should be close to current basket in
+   // memory, just iterate backwards until the correct basket is reached. This should
+   // be fast as long as the number of baskets per cluster is small
+   Int_t basketToFlush = fReadBasket;
+   while (fBasketEntry[basketToFlush] != entryToFlush) {
+      basketToFlush--;
+      if (basketToFlush < 0) {
+         return fTree->CreateBasket(this);
+      }
+   }
+
+   // Retrieves the basket that is going to be flushed. If the basket did not exist
+   // create a new one
+   TBasket *basket = (TBasket*)fBaskets.UncheckedAt(basketToFlush);
+   if (basket) {
+      fBaskets.AddAt(0,basketToFlush);
+      --fNBaskets;
+   } else {
+      basket = fTree->CreateBasket(this);
+   }
+
+   // Clear the rest of the baskets. While it would be ideal to reuse these baskets
+   // for other baskets in the new cluster. It would require the function to go
+   // beyond its current scope. In the ideal case when each cluster only has 1 basket
+   // this will perform well
+   while (fBasketEntry[basketToFlush] < prevIter.GetNextEntry()) {
+      fBaskets.AddAt(0, basketToFlush);
+      --fNBaskets;
+      ++basketToFlush;
+   }
+   fBaskets.SetLast(-1);
+   return basket;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
