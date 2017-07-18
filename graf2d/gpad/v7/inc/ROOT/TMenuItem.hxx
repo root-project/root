@@ -19,6 +19,8 @@
 #include <string>
 #include <vector>
 
+class TClass;
+
 namespace ROOT {
 namespace Experimental {
 namespace Detail {
@@ -59,9 +61,7 @@ public:
    /** Default constructor */
    TCheckedMenuItem() = default;
 
-   /** Create menu item with the name and title
-    *  name used to display item in the object context menu,
-    *  title shown as hint info for that item  */
+   /** Create checked menu item  */
    TCheckedMenuItem(const std::string &name, const std::string &title, bool checked = false)
       : TMenuItem(name, title), fChecked(checked)
    {
@@ -71,6 +71,34 @@ public:
    void SetChecked(bool on = true) { fChecked = on; }
 
    bool IsChecked() const { return fChecked; }
+};
+
+class TMenuArgument {
+protected:
+   std::string fName;     ///<  name of call argument
+   std::string fTitle;    ///<  title of call argument
+   std::string fTypeName; ///<  typename
+   std::string fDefault;  ///<  default value
+public:
+   /** Default constructor */
+   TMenuArgument() = default;
+
+   TMenuArgument(const std::string &name, const std::string &title, const std::string &typname, const std::string &dflt)
+      : fName(name), fTitle(title), fTypeName(typname), fDefault(dflt)
+   {
+   }
+};
+
+class TArgsMenuItem : public TMenuItem {
+protected:
+   std::vector<TMenuArgument> fArgs;
+
+public:
+   TArgsMenuItem() = default;
+
+   TArgsMenuItem(const std::string &name, const std::string &title) : TMenuItem(name, title) {}
+
+   void AddArg(const TMenuArgument &arg) { fArgs.push_back(arg); }
 };
 
 } // namespace Detail
@@ -95,6 +123,14 @@ public:
       Add(item);
    }
 
+   Detail::TArgsMenuItem *AddArgsMenuItem(const std::string &name, const std::string &title, const std::string &exec)
+   {
+      Detail::TArgsMenuItem *item = new Detail::TArgsMenuItem(name, title);
+      item->SetExec(exec);
+      Add(item);
+      return item;
+   }
+
    void AddChkMenuItem(const std::string &name, const std::string &title, bool checked, const std::string &toggle)
    {
       Detail::TCheckedMenuItem *item = new Detail::TCheckedMenuItem(name, title, checked);
@@ -103,6 +139,8 @@ public:
    }
 
    void Cleanup();
+
+   void PopulateObjectMenu(void *obj, TClass *cl);
 
    std::string ProduceJSON();
 };

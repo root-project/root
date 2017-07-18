@@ -20,6 +20,9 @@
 #include "ROOT/THistDrawOptions.hxx"
 #include "ROOT/TLogger.hxx"
 
+// TODO: from Sergey Linev: should libHist depend from libGpad?
+//#include "ROOT/TMenuItem.hxx"
+
 #include <memory>
 
 class TH1;
@@ -76,10 +79,7 @@ public:
 
    THistDrawableBase &operator=(THistDrawableBase &&);
 
-   void PopulateMenu(TMenuItems &) final
-   {
-      // here should be filling of context menu for the given object
-   }
+   void PopulateMenu(TMenuItems &) final;
 
    void Execute(const std::string &) final
    {
