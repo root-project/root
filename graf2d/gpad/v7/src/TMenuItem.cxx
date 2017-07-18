@@ -35,7 +35,7 @@ std::string ROOT::Experimental::TMenuItems::ProduceJSON()
    // FIXME: got problem with std::list<TMenuItem>, can be generic TBufferJSON
    TString res = TBufferJSON::ConvertToJSON(&fItems, cl);
 
-   // printf("Got JSON %s\n", res.Data());
+   printf("Got JSON %s\n", res.Data());
 
    return res.Data();
 }

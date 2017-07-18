@@ -29,12 +29,9 @@ namespace Detail {
 
 class TMenuItem {
 protected:
-   enum ECheckedState { kNotDefined = -1, kOff = 0, kOn = 1 };
-
-   std::string fName;                    ///<  name of the menu item
-   std::string fTitle;                   ///<  title of menu item
-   ECheckedState fChecked = kNotDefined; ///< -1 not exists, 0 - off, 1 - on
-   std::string fExec;                    ///< execute when item is activated
+   std::string fName;  ///<  name of the menu item
+   std::string fTitle; ///<  title of menu item
+   std::string fExec;  ///< execute when item is activated
 public:
    /** Default constructor */
    TMenuItem() = default;
@@ -42,16 +39,7 @@ public:
    /** Create menu item with the name and title
     *  name used to display item in the object context menu,
     *  title shown as hint info for that item  */
-   TMenuItem(const std::string &name, const std::string &title)
-      : fName(name), fTitle(title), fChecked(kNotDefined), fExec()
-   {
-   }
-
-   /** Set checked state for the item, default is none */
-   void SetChecked(bool on = true) { fChecked = on ? kOff : kOn; }
-
-   /** Disable checked state of the menu item */
-   void DisableChecked() { fChecked = kNotDefined; }
+   TMenuItem(const std::string &name, const std::string &title) : fName(name), fTitle(title), fExec() {}
 
    /** Set execution string with all required arguments,
     * which will be executed when menu item is selected  */
@@ -62,6 +50,27 @@ public:
 
    /** Returns execution string for the menu item */
    const std::string &GetExec() const { return fExec; }
+};
+
+class TCheckedMenuItem : public TMenuItem {
+protected:
+   bool fChecked = false; ///< -1 not exists, 0 - off, 1 - on
+public:
+   /** Default constructor */
+   TCheckedMenuItem() = default;
+
+   /** Create menu item with the name and title
+    *  name used to display item in the object context menu,
+    *  title shown as hint info for that item  */
+   TCheckedMenuItem(const std::string &name, const std::string &title, bool checked = false)
+      : TMenuItem(name, title), fChecked(checked)
+   {
+   }
+
+   /** Set checked state for the item, default is none */
+   void SetChecked(bool on = true) { fChecked = on; }
+
+   bool IsChecked() const { return fChecked; }
 };
 
 } // namespace Detail
@@ -88,8 +97,7 @@ public:
 
    void AddChkMenuItem(const std::string &name, const std::string &title, bool checked, const std::string &toggle)
    {
-      Detail::TMenuItem *item = new Detail::TMenuItem(name, title);
-      item->SetChecked(checked);
+      Detail::TCheckedMenuItem *item = new Detail::TCheckedMenuItem(name, title, checked);
       item->SetExec(toggle);
       Add(item);
    }
