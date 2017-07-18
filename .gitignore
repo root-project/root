@@ -38,6 +38,9 @@ project.xcworkspace
 # QtCreator
 CMakeLists.txt.user
 
+# Eclipse
+.settings/*
+
 # Vim
 *.swp
 
