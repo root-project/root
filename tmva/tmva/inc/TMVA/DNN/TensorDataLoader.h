@@ -59,18 +59,21 @@ public:
 private:
    std::vector<Matrix_t> fInputTensor; ///< The input tensor batch, one matrix one input.
    Matrix_t fOutputMatrix;             ///< The output matrix representing the ground truth.
+   Matrix_t fWeightMatrix;
 
 public:
-   TTensorBatch(std::vector<Matrix_t> &, Matrix_t &);
+   TTensorBatch(std::vector<Matrix_t> &, Matrix_t &, Matrix_t &);
    TTensorBatch(const TTensorBatch &) = default;
    TTensorBatch(TTensorBatch &&) = default;
    TTensorBatch &operator=(const TTensorBatch &) = default;
-   TTensorBatch *operator=(TTensorBatch &&) = default;
+   TTensorBatch &operator=(TTensorBatch &&) = default;
 
    /** Return the tensor representing the input data */
    std::vector<Matrix_t> &GetInput() { return fInputTensor; }
    /** Return the matrix representing the output data. */
    Matrix_t &GetOutput() { return fOutputMatrix; }
+   /** Return the matrix holding the event weights. */
+   Matrix_t &GetWeights() { return fWeightMatrix; }
 };
 
 template <typename Data_t, typename Architecture_t>
@@ -97,7 +100,7 @@ public:
       // Nothing to do here.
    }
 
-   TTensorBatch<Architecture_t> operator*() { return fTensorDataLoader.GetBatch(); }
+   TTensorBatch<Architecture_t> operator*() { return fTensorDataLoader.GetTensorBatch(); }
    TTensorBatchIterator operator++()
    {
       fBatchIndex++;
@@ -161,6 +164,9 @@ public:
    /** Copy output matrix into the given host buffer. Function to be specialized
     * by the architecture-spcific backend. */
    void CopyTensorOutput(HostBuffer_t &buffer, IndexIterator_t begin, size_t batchSize);
+   /** Copy weight matrix into the given host buffer. Function to be specialized
+    * by the architecture-spcific backend. */
+   void CopyTensorWeights(HostBuffer_t &buffer, IndexIterator_t begin, size_t batchSize);
 
    BatchIterator_t begin() { return TTensorBatchIterator<Data_t, Architecture_t>(*this); }
    BatchIterator_t end() { return TTensorBatchIterator<Data_t, Architecture_t>(*this, fNSamples / fBatchSize); }
@@ -180,8 +186,9 @@ public:
 // TTensorBatch Class.
 //______________________________________________________________________________
 template <typename Architecture_t>
-TTensorBatch<Architecture_t>::TTensorBatch(std::vector<Matrix_t> &inputTensor, Matrix_t &outputMatrix)
-   : fInputTensor(inputTensor), fOutputMatrix(outputMatrix)
+TTensorBatch<Architecture_t>::TTensorBatch(std::vector<Matrix_t> &inputTensor, Matrix_t &outputMatrix,
+                                           Matrix_t &weightMatrix)
+   : fInputTensor(inputTensor), fOutputMatrix(outputMatrix), fWeightMatrix(weightMatrix)
 {
    // Nothing to do here.
 }
@@ -219,6 +226,7 @@ TTensorBatch<Architecture_t> TTensorDataLoader<Data_t, Architecture_t>::GetTenso
 
    size_t inputTensorSize = fBatchDepth * fBatchHeight * fBatchWidth;
    size_t outputMatrixSize = fBatchSize * fNOutputFeatures;
+   size_t weightMatrixSize = fBatchSize;
 
    size_t streamIndex = fBatchIndex % fNStreams;
    HostBuffer_t &hostBuffer = fHostBuffers[streamIndex];
@@ -226,15 +234,18 @@ TTensorBatch<Architecture_t> TTensorDataLoader<Data_t, Architecture_t>::GetTenso
 
    HostBuffer_t inputHostBuffer = hostBuffer.GetSubBuffer(0, inputTensorSize);
    HostBuffer_t outputHostBuffer = hostBuffer.GetSubBuffer(inputTensorSize, outputMatrixSize);
+   HostBuffer_t weightHostBuffer = hostBuffer.GetSubBuffer(inputTensorSize + outputMatrixSize, weightMatrixSize);
 
    DeviceBuffer_t inputDeviceBuffer = deviceBuffer.GetSubBuffer(0, inputTensorSize);
    DeviceBuffer_t outputDeviceBuffer = deviceBuffer.GetSubBuffer(inputTensorSize, outputMatrixSize);
+   DeviceBuffer_t weightDeviceBuffer = deviceBuffer.GetSubBuffer(inputTensorSize + outputMatrixSize, weightMatrixSize);
 
    size_t sampleIndex = fBatchIndex * fBatchSize;
    IndexIterator_t sampleIndexIterator = fSampleIndices.begin() + sampleIndex;
 
    CopyTensorInput(inputHostBuffer, sampleIndexIterator, fBatchSize);
    CopyTensorOutput(outputHostBuffer, sampleIndexIterator, fBatchSize);
+   CopyTensorWeights(weightHostBuffer, sampleIndexIterator, fBatchSize);
 
    deviceBuffer.CopyFrom(hostBuffer);
 
@@ -245,9 +256,10 @@ TTensorBatch<Architecture_t> TTensorDataLoader<Data_t, Architecture_t>::GetTenso
       inputTensor.emplace_back(subInputDeviceBuffer, fBatchHeight, fBatchWidth);
    }
    Matrix_t outputMatrix(outputDeviceBuffer, fBatchSize, fNOutputFeatures);
+   Matrix_t weightMatrix(weightDeviceBuffer, fBatchSize, fNOutputFeatures);
 
    fBatchIndex++;
-   return TTensorBatch<Architecture_t>(inputTensor, outputMatrix);
+   return TTensorBatch<Architecture_t>(inputTensor, outputMatrix, weightMatrix);
 }
 
 //______________________________________________________________________________
