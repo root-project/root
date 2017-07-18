@@ -35,7 +35,7 @@ namespace DNN  {
 // Input Data Types
 //______________________________________________________________________________
 using MatrixInput_t = std::tuple<const TMatrixT<Double_t> &, const TMatrixT<Double_t> &, const TMatrixT<Double_t> &>;
-using TMVAInput_t      = std::tuple<std::vector<Event*>, DataSetInfo&>;
+using TMVAInput_t = std::tuple<std::vector<Event *>, DataSetInfo &>;
 
 using IndexIterator_t = typename std::vector<size_t>::iterator;
 

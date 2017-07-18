@@ -279,7 +279,7 @@ void TDataLoader<TMVAInput_t, TCpu<Real_t>>::CopyOutput(
          if (event->GetNTargets() == 0) {
             if (n == 1) {
                // Binary.
-                buffer[bufferIndex] = (info.IsSignal(event)) ? 1.0 : 0.0;
+               buffer[bufferIndex] = (info.IsSignal(event)) ? 1.0 : 0.0;
             } else {
                // Multiclass.
                buffer[bufferIndex] = 0.0;
@@ -296,10 +296,8 @@ void TDataLoader<TMVAInput_t, TCpu<Real_t>>::CopyOutput(
 
 //______________________________________________________________________________
 template <>
-void TDataLoader<TMVAInput_t, TCpu<Real_t>>::CopyWeights(
-    TCpuBuffer<Real_t> &buffer,
-    IndexIterator_t sampleIterator,
-    size_t batchSize)
+void TDataLoader<TMVAInput_t, TCpu<Real_t>>::CopyWeights(TCpuBuffer<Real_t> &buffer, IndexIterator_t sampleIterator,
+                                                         size_t batchSize)
 {
    for (size_t i = 0; i < batchSize; i++) {
       size_t sampleIndex = *sampleIterator++;

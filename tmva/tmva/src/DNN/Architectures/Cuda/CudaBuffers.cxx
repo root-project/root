@@ -225,7 +225,7 @@ void TDataLoader<TMVAInput_t, TCuda<float>>::CopyOutput(
    // Copy target(s).
 
    for (size_t i = 0; i < batchSize; i++) {
-      size_t sampleIndex = * sampleIterator++;
+      size_t sampleIndex = *sampleIterator++;
       Event *event = std::get<0>(fData)[sampleIndex];
       for (size_t j = 0; j < n; j++) {
          // Copy output matrices.
@@ -234,7 +234,7 @@ void TDataLoader<TMVAInput_t, TCuda<float>>::CopyOutput(
          if (event->GetNTargets() == 0) {
             if (n == 1) {
                // Binary.
-                buffer[bufferIndex] = (info.IsSignal(event)) ? 1.0 : 0.0;
+               buffer[bufferIndex] = (info.IsSignal(event)) ? 1.0 : 0.0;
             } else {
                // Multiclass.
                buffer[bufferIndex] = 0.0;
@@ -341,7 +341,7 @@ void TDataLoader<TMVAInput_t, TCuda<double>>::CopyOutput(
    // Copy target(s).
 
    for (size_t i = 0; i < batchSize; i++) {
-      size_t sampleIndex = * sampleIterator++;
+      size_t sampleIndex = *sampleIterator++;
       Event *event = std::get<0>(fData)[sampleIndex];
       for (size_t j = 0; j < n; j++) {
          // Copy output matrices.
@@ -350,7 +350,7 @@ void TDataLoader<TMVAInput_t, TCuda<double>>::CopyOutput(
          if (event->GetNTargets() == 0) {
                // Binary.
             if (n == 1) {
-                buffer[bufferIndex] = (info.IsSignal(event)) ? 1.0 : 0.0;
+               buffer[bufferIndex] = (info.IsSignal(event)) ? 1.0 : 0.0;
             } else {
                // Multiclass.
                buffer[bufferIndex] = 0.0;
