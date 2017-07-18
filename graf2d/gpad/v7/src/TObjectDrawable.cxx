@@ -17,6 +17,7 @@
 
 #include <ROOT/TDisplayItem.hxx>
 #include <ROOT/TLogger.hxx>
+#include <ROOT/TMenuItem.hxx>
 #include <ROOT/TVirtualCanvasPainter.hxx>
 
 #include "TClass.h"
@@ -35,7 +36,7 @@ void ROOT::Experimental::Internal::TObjectDrawable::Paint(TVirtualCanvasPainter 
    canv.AddDisplayItem(res);
 }
 
-void ROOT::Experimental::Internal::TObjectDrawable::PopulateMenu(TVirtualCanvasPainter &onCanv)
+void ROOT::Experimental::Internal::TObjectDrawable::PopulateMenu(TMenuItems &items)
 {
    TObject *obj = fObj.get();
 
@@ -76,7 +77,7 @@ void ROOT::Experimental::Internal::TObjectDrawable::PopulateMenu(TVirtualCanvasP
                Long_t l(0);
                call->Execute(obj, l);
 
-               onCanv.AddChkMenuItem(m->GetName(), m->GetTitle(), l != 0,
+               items.AddChkMenuItem(m->GetName(), m->GetTitle(), l != 0,
                                      Form("%s(%s)", m->GetName(), (l != 0) ? "0" : "1"));
 
             } else {
@@ -86,7 +87,7 @@ void ROOT::Experimental::Internal::TObjectDrawable::PopulateMenu(TVirtualCanvasP
             delete call;
          }
       } else {
-         onCanv.AddMenuItem(m->GetName(), m->GetTitle(), Form("%s()", m->GetName()));
+         items.AddMenuItem(m->GetName(), m->GetTitle(), Form("%s()", m->GetName()));
       }
    }
 }
