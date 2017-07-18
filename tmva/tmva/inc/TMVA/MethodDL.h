@@ -40,6 +40,16 @@
 #include "TMVA/MethodBase.h"
 #include "TMVA/Types.h"
 
+#include "TMVA/DNN/Architectures/Reference.h"
+
+#ifdef DNNCPU
+#include "TMVA/DNN/Architectures/Cpu.h"
+#endif
+
+#ifdef DNNCUDA
+#include "TMVA/DNN/Architectures/Cuda.h"
+#endif
+
 #include "TMVA/DNN/Functions.h"
 #include "TMVA/DNN/DeepNet.h"
 
