@@ -200,6 +200,7 @@ TMVA::MethodBDT::MethodBDT( const TString& jobName,
    , fPairNegWeightsGlobal(kFALSE)
    , fTrainWithNegWeights(kFALSE)
    , fDoBoostMonitor(kFALSE)
+   , fDoMultiTarget(theData.GetNTargets() > 1)
    , fITree(0)
    , fBoostWeight(0)
    , fErrorFraction(0)
@@ -255,6 +256,7 @@ TMVA::MethodBDT::MethodBDT( DataSetInfo& theData,
    , fPairNegWeightsGlobal(kFALSE)
    , fTrainWithNegWeights(kFALSE)
    , fDoBoostMonitor(kFALSE)
+   , fDoMultiTarget(theData.GetNTargets() > 1)
    , fITree(0)
    , fBoostWeight(0)
    , fErrorFraction(0)
@@ -282,7 +284,7 @@ Bool_t TMVA::MethodBDT::HasAnalysisType( Types::EAnalysisType type, UInt_t numbe
 {
    if (type == Types::kClassification && numberClasses == 2) return kTRUE;
    if (type == Types::kMulticlass ) return kTRUE;
-   if( type == Types::kRegression && numberTargets == 1 ) return kTRUE;
+   if (type == Types::kRegression ) return kTRUE;
    return kFALSE;
 }
 
@@ -355,7 +357,10 @@ void TMVA::MethodBDT::DeclareOptions()
    AddPreDefVal(TString("AdaBoostR2"));
    AddPreDefVal(TString("Grad"));
    if (DoRegression()) {
-      fBoostType = "AdaBoostR2";
+      if (fDoMultiTarget)
+         fBoostType = "Bagging";
+      else 
+         fBoostType = "AdaBoostR2";
    }else{
       fBoostType = "AdaBoost";
    }
@@ -691,9 +696,9 @@ void TMVA::MethodBDT::Init( void )
       fBoostType      = "AdaBoost";
       if(DataInfo().GetNClasses()!=0) //workaround for multiclass application
          fMinNodeSize = 5.;
-   }else {
+   } else {
       fMaxDepth = 50;
-      fBoostType      = "AdaBoostR2";
+      fBoostType      = fDoMultiTarget ? "Bagging" : "AdaBoostR2";
       fAdaBoostR2Loss = "Quadratic";
       if(DataInfo().GetNClasses()!=0) //workaround for multiclass application
          fMinNodeSize  = .2;
@@ -1296,6 +1301,7 @@ void TMVA::MethodBDT::Train()
                                                  fRandomisedTrees, fUseNvars, fUsePoissonNvars, fMaxDepth,
                                                  itree*nClasses+i, fNodePurityLimit, itree*nClasses+1));
             fForest.back()->SetNVars(GetNvar());
+            fForest.back()->SetAnalysisType(fAnalysisType);
             if (fUseFisherCuts) {
                fForest.back()->SetUseFisherCuts();
                fForest.back()->SetMinLinCorrForFisher(fMinLinCorrForFisher);
@@ -1608,7 +1614,6 @@ Double_t TMVA::MethodBDT::TestTreeQuality( DecisionTree *dt )
 Double_t TMVA::MethodBDT::Boost( std::vector<const TMVA::Event*>& eventSample, DecisionTree *dt, UInt_t cls )
 {
    Double_t returnVal=-1;
-
    if      (fBoostType=="AdaBoost")    returnVal = this->AdaBoost  (eventSample, dt);
    else if (fBoostType=="AdaCost")     returnVal = this->AdaCost   (eventSample, dt);
    else if (fBoostType=="Bagging")     returnVal = this->Bagging   ( );
@@ -2420,7 +2425,6 @@ const std::vector<Float_t>& TMVA::MethodBDT::GetMulticlassValues()
 
 const std::vector<Float_t> & TMVA::MethodBDT::GetRegressionValues()
 {
-
    if (fRegressionReturnVal == NULL) fRegressionReturnVal = new std::vector<Float_t>();
    fRegressionReturnVal->clear();
 
@@ -2429,6 +2433,8 @@ const std::vector<Float_t> & TMVA::MethodBDT::GetRegressionValues()
 
    Double_t myMVA = 0;
    Double_t norm  = 0;
+   std::vector<Double_t> myMVAs (ev->GetNTargets(), 0.0);
+
    if (fBoostType=="AdaBoostR2") {
       // rather than using the weighted average of the tree respones in the forest
       // H.Decker(1997) proposed to use the "weighted median"
@@ -2482,17 +2488,32 @@ const std::vector<Float_t> & TMVA::MethodBDT::GetRegressionValues()
    else{
       for (UInt_t itree=0; itree<fForest.size(); itree++) {
          //
-         myMVA += fBoostWeights[itree] * fForest[itree]->CheckEvent(ev,kFALSE);
+         if (fDoMultiTarget) {
+            auto response = fForest[itree]->GetMultiResponse(ev);
+            for (UInt_t response_index = 0; response_index < response.size(); ++response_index) {
+               myMVAs[response_index] += fBoostWeights[itree] * response[response_index];
+            }
+         } else {
+            myMVA += fBoostWeights[itree] * fForest[itree]->CheckEvent(ev,kFALSE);
+         }
          norm  += fBoostWeights[itree];
       }
       //      fRegressionReturnVal->push_back( ( norm > std::numeric_limits<double>::epsilon() ) ? myMVA /= norm : 0 );
-      evT->SetTarget(0, ( norm > std::numeric_limits<double>::epsilon() ) ? myMVA /= norm : 0 );
+      if (fDoMultiTarget) {
+         for (UInt_t target_index = 0; target_index < myMVAs.size(); ++target_index)
+            evT->SetTarget(target_index, ( norm > std::numeric_limits<double>::epsilon() ) ? 
+                                                            myMVAs[target_index] /= norm : 0);
+      } else {
+         evT->SetTarget(0, ( norm > std::numeric_limits<double>::epsilon() ) ? myMVA /= norm : 0 );
+      }
    }
 
-
-
    const Event* evT2 = GetTransformationHandler().InverseTransform( evT );
-   fRegressionReturnVal->push_back( evT2->GetTarget(0) );
+   
+   if (fDoMultiTarget)
+      *fRegressionReturnVal = evT2->GetTargets();
+   else 
+      fRegressionReturnVal->push_back( evT2->GetTarget(0) );
 
    delete evT;
 

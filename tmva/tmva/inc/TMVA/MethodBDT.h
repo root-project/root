@@ -247,7 +247,7 @@ namespace TMVA {
       Bool_t                           fPairNegWeightsGlobal;   // pair ev. with neg. and pos. weights in traning sample and "annihilate" them 
       Bool_t                           fTrainWithNegWeights; // yes there are negative event weights and we don't ignore them
       Bool_t                           fDoBoostMonitor; //create control plot with ROC integral vs tree number
-
+      Bool_t                           fDoMultiTarget;
 
       //some histograms for monitoring
       TTree*                           fMonitorNtuple;   // monitoring ntuple
