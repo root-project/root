@@ -10,28 +10,68 @@
 #include "TMVA/DNN/Architectures/Reference.h"
 #include "TMVA/DNN/Functions.h"
 #include "TMVA/DNN/Net.h"
+#include "TMVA/DNN/DeepNet.h"
 
-namespace TMVA
+namespace TMVA {
+namespace DNN {
+
+/** Construct a convolutional neural network with one convolutional layer,
+ *  one pooling layer and two fully connected layers. The dimensions are
+ *  predetermined. The activation functions are chosen randomly. */
+//______________________________________________________________________________
+template <typename AArchitecture>
+void constructConvNet(TDeepNet<AArchitecture> &net)
 {
-namespace DNN
-{
+   /* For random selection */
+   std::vector<EActivationFunction> ActivationFunctions = {EActivationFunction::kIdentity, EActivationFunction::kRelu,
+                                                           EActivationFunction::kSigmoid, EActivationFunction::kTanh};
+
+   size_t depth = 12;
+   size_t filterHeightConv = 2;
+   size_t filterWidthConv = 2;
+   size_t strideRowsConv = 1;
+   size_t strideColsConv = 1;
+   size_t zeroPaddingHeight = 1;
+   size_t zeroPaddingWidth = 1;
+
+   EActivationFunction fConv = ActivationFunctions[rand() % ActivationFunctions.size()];
+
+   net.AddConvLayer(depth, filterHeightConv, filterWidthConv, strideRowsConv, strideColsConv, zeroPaddingHeight,
+                    zeroPaddingWidth, fConv);
+
+   size_t filterHeightPool = 6;
+   size_t filterWidthPool = 6;
+   size_t strideRowsPool = 1;
+   size_t strideColsPool = 1;
+
+   net.AddMaxPoolLayer(filterHeightPool, filterWidthPool, strideRowsPool, strideColsPool);
+
+   size_t depthReshape = 1;
+   size_t heightReshape = 1;
+   size_t widthReshape = net.GetLayerAt(net.GetDepth() - 1).GetDepth() *
+                         net.GetLayerAt(net.GetDepth() - 1).GetHeight() * net.GetLayerAt(net.GetDepth() - 1).GetWidth();
+
+   net.AddReshapeLayer(depthReshape, heightReshape, widthReshape);
+
+   size_t widthFC = 20;
+   EActivationFunction fFC = ActivationFunctions[rand() % ActivationFunctions.size()];
+   net.AddDenseLayer(widthFC, fFC);
+}
 
 /** Construct a random linear neural network with up to five layers.*/
 //______________________________________________________________________________
 template <typename AArchitecture>
-void constructRandomLinearNet(TNet<AArchitecture> & net)
+void constructRandomLinearNet(TNet<AArchitecture> &net)
 {
-    int nlayers = rand() % 5 + 1;
+   int nlayers = rand() % 5 + 1;
 
-    std::vector<EActivationFunction> ActivationFunctions
-    = {EActivationFunction::kIdentity};
+   std::vector<EActivationFunction> ActivationFunctions = {EActivationFunction::kIdentity};
 
-    for (int i = 0; i < nlayers; i++) {
-        int width = rand() % 20 + 1;
-        EActivationFunction f =
-        ActivationFunctions[rand() % ActivationFunctions.size()];
-        net.AddLayer(width, f);
-    }
+   for (int i = 0; i < nlayers; i++) {
+      int width = rand() % 20 + 1;
+      EActivationFunction f = ActivationFunctions[rand() % ActivationFunctions.size()];
+      net.AddLayer(width, f);
+   }
 }
 
 /*! Set matrix to the identity matrix */
@@ -39,19 +79,18 @@ void constructRandomLinearNet(TNet<AArchitecture> & net)
 template <typename AMatrix>
 void identityMatrix(AMatrix &X)
 {
-    size_t m, n;
-    m = X.GetNrows();
-    n = X.GetNcols();
+   size_t m, n;
+   m = X.GetNrows();
+   n = X.GetNcols();
 
-
-    for (size_t i = 0; i < m; i++) {
-        for (size_t j = 0; j < n; j++) {
-        X(i,j) = 0.0;
-        }
-        if (i < n) {
-        X(i,i) = 1.0;
-        }
-    }
+   for (size_t i = 0; i < m; i++) {
+      for (size_t j = 0; j < n; j++) {
+         X(i, j) = 0.0;
+      }
+      if (i < n) {
+         X(i, i) = 1.0;
+      }
+   }
 }
 
 /*! Fill matrix with given value.*/
@@ -75,19 +114,19 @@ void fillMatrix(AMatrix &X, AReal x)
 template <typename AMatrix>
 void randomMatrix(AMatrix &X)
 {
-    size_t m,n;
-    m = X.GetNrows();
-    n = X.GetNcols();
+   size_t m, n;
+   m = X.GetNrows();
+   n = X.GetNcols();
 
-    TRandom rand(clock());
+   TRandom rand(clock());
 
-    Double_t sigma = sqrt(10.0);
+   Double_t sigma = sqrt(10.0);
 
-    for (size_t i = 0; i < m; i++) {
-        for (size_t j = 0; j < n; j++) {
-        X(i,j) = rand.Gaus(0.0, sigma);
-        }
-    }
+   for (size_t i = 0; i < m; i++) {
+      for (size_t j = 0; j < n; j++) {
+         X(i, j) = rand.Gaus(0.0, sigma);
+      }
+   }
 }
 
 /*! Generate a random batch as input for a neural net. */
@@ -95,7 +134,7 @@ void randomMatrix(AMatrix &X)
 template <typename AMatrix>
 void randomBatch(AMatrix &X)
 {
-    randomMatrix(X);
+   randomMatrix(X);
 }
 
 /*! Generate a random batch as input for a neural net. */
@@ -103,15 +142,15 @@ void randomBatch(AMatrix &X)
 template <typename AMatrix>
 void copyMatrix(AMatrix &X, const AMatrix &Y)
 {
-    size_t m,n;
-    m = X.GetNrows();
-    n = X.GetNcols();
+   size_t m, n;
+   m = X.GetNrows();
+   n = X.GetNcols();
 
-    for (size_t i = 0; i < m; i++) {
-        for (size_t j = 0; j < n; j++) {
-        X(i,j) = Y(i,j);
-        }
-    }
+   for (size_t i = 0; i < m; i++) {
+      for (size_t j = 0; j < n; j++) {
+         X(i, j) = Y(i, j);
+      }
+   }
 }
 
 /*! Apply functional to each element in the matrix. */
@@ -119,35 +158,32 @@ void copyMatrix(AMatrix &X, const AMatrix &Y)
 template <typename AMatrix, typename F>
 void applyMatrix(AMatrix &X, F f)
 {
-    size_t m,n;
-    m = X.GetNrows();
-    n = X.GetNcols();
+   size_t m, n;
+   m = X.GetNrows();
+   n = X.GetNcols();
 
-    for (size_t i = 0; i < m; i++) {
-        for (size_t j = 0; j < n; j++) {
-        X(i,j) = f(X(i,j));
-        }
-    }
+   for (size_t i = 0; i < m; i++) {
+      for (size_t j = 0; j < n; j++) {
+         X(i, j) = f(X(i, j));
+      }
+   }
 }
 
 /*! Combine elements of two given matrices into a single matrix using
  *  the given function f. */
 //______________________________________________________________________________
 template <typename AMatrix, typename F>
-void zipWithMatrix(AMatrix &Z,
-                    F f,
-                    const AMatrix &X,
-                    const AMatrix &Y)
+void zipWithMatrix(AMatrix &Z, F f, const AMatrix &X, const AMatrix &Y)
 {
-    size_t m,n;
-    m = X.GetNrows();
-    n = X.GetNcols();
+   size_t m, n;
+   m = X.GetNrows();
+   n = X.GetNcols();
 
-    for (size_t i = 0; i < m; i++) {
-        for (size_t j = 0; j < n; j++) {
-        Z(i,j) = f(X(i,j), Y(i,j));
-        }
-    }
+   for (size_t i = 0; i < m; i++) {
+      for (size_t j = 0; j < n; j++) {
+         Z(i, j) = f(X(i, j), Y(i, j));
+      }
+   }
 }
 
 /** Generate a random batch as input for a neural net. */
@@ -155,18 +191,18 @@ void zipWithMatrix(AMatrix &Z,
 template <typename AMatrix, typename AFloat, typename F>
 AFloat reduce(F f, AFloat start, const AMatrix &X)
 {
-    size_t m,n;
-    m = X.GetNrows();
-    n = X.GetNcols();
+   size_t m, n;
+   m = X.GetNrows();
+   n = X.GetNcols();
 
-    AFloat result = start;
+   AFloat result = start;
 
-    for (size_t i = 0; i < m; i++) {
-        for (size_t j = 0; j < n; j++) {
-        result = f(result, X(i,j));
-        }
-    }
-    return result;
+   for (size_t i = 0; i < m; i++) {
+      for (size_t j = 0; j < n; j++) {
+         result = f(result, X(i, j));
+      }
+   }
+   return result;
 }
 
 /** Apply function to matrix element-wise and compute the mean of the resulting
@@ -175,18 +211,18 @@ AFloat reduce(F f, AFloat start, const AMatrix &X)
 template <typename AMatrix, typename AFloat, typename F>
 AFloat reduceMean(F f, AFloat start, const AMatrix &X)
 {
-    size_t m,n;
-    m = X.GetNrows();
-    n = X.GetNcols();
+   size_t m, n;
+   m = X.GetNrows();
+   n = X.GetNcols();
 
-    AFloat result = start;
+   AFloat result = start;
 
-    for (size_t i = 0; i < m; i++) {
-        for (size_t j = 0; j < n; j++) {
-        result = f(result, X(i,j));
-        }
-    }
-    return result / (AFloat) (m * n);
+   for (size_t i = 0; i < m; i++) {
+      for (size_t j = 0; j < n; j++) {
+         result = f(result, X(i, j));
+      }
+   }
+   return result / (AFloat)(m * n);
 }
 
 /** Compute the relative error of x and y */
@@ -194,18 +230,15 @@ AFloat reduceMean(F f, AFloat start, const AMatrix &X)
 template <typename T>
 inline T relativeError(const T &x, const T &y)
 {
-  using std::abs;
+   using std::abs;
 
-  if (x == y)
-    return T(0.0);
+   if (x == y) return T(0.0);
 
-  T diff = abs(x - y);
+   T diff = abs(x - y);
 
-  if (x * y == T(0.0) ||
-      diff < std::numeric_limits<T>::epsilon())
-    return diff;
+   if (x * y == T(0.0) || diff < std::numeric_limits<T>::epsilon()) return diff;
 
-  return diff / (abs(x) + abs(y));
+   return diff / (abs(x) + abs(y));
 }
 
 /*! Compute the maximum, element-wise relative error of the matrices
@@ -228,9 +261,9 @@ auto maximumRelativeError(const Matrix1 &X, const Matrix2 &Y) -> Double_t
          curError = relativeError<Double_t>(X(i, j), Y(i, j));
          maxError = std::max(curError, maxError);
       }
-    }
+   }
 
-    return maxError;
+   return maxError;
 }
 
 /*! Numerically compute the derivative of the functional f using finite
@@ -239,7 +272,7 @@ auto maximumRelativeError(const Matrix1 &X, const Matrix2 &Y) -> Double_t
 template <typename F, typename AFloat>
 inline AFloat finiteDifference(F f, AFloat dx)
 {
-    return f(dx) - f(0.0 - dx);
+   return f(dx) - f(0.0 - dx);
 }
 
 /*! Color code error. */
@@ -247,23 +280,22 @@ inline AFloat finiteDifference(F f, AFloat dx)
 template <typename AFloat>
 std::string print_error(AFloat &e)
 {
-    std::ostringstream out{};
+   std::ostringstream out{};
 
-    out << ("\e[");
+   out << ("\e[");
 
-    if (e > 1e-5)
-        out << "31m";
-    else if (e > 1e-9)
-        out << "33m";
-    else
-        out << "32m";
+   if (e > 1e-5)
+      out << "31m";
+   else if (e > 1e-9)
+      out << "33m";
+   else
+      out << "32m";
 
-    out << e;
-    out << "\e[39m";
+   out << e;
+   out << "\e[39m";
 
-    return out.str();
+   return out.str();
 }
-
 }
 }
 
