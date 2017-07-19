@@ -1381,7 +1381,7 @@ Double_t TF1::EvalPar(const Double_t *x, const Double_t *params)
       if (fNormalized && fNormIntegral != 0)
          result = result / fNormIntegral;
 
-      return result; 
+      return result;
    }
 #endif
    return result;
@@ -2306,11 +2306,18 @@ Double_t TF1::GradientPar(Int_t ipar, const Double_t *x, Double_t eps)
       eps = 0.01;
    }
    Double_t h;
-   Double_t *parameters = GetParameters();
    TF1 *func = (TF1 *)this;
-   //save original parameters
-   Double_t par0 = parameters[ipar];
+   Double_t *parameters = GetParameters();
 
+   // If we are in a multi-threading scenario, make this function thread-safe
+   // using a copy of the parameters vector.
+   // TODO: Check that GetImplicitMTPoolSize is the best method to check that we
+   // have more than one thread accesing the resources.
+   if (ROOT::GetImplicitMTPoolSize() != 0) {
+      std::vector<Double_t> parametersCopy(GetNpar());
+      std::copy(parameters, parameters + GetNpar(), parametersCopy.begin());
+      parameters = parametersCopy.data();
+   }
 
    func->InitArgs(x, parameters);
 
@@ -2319,7 +2326,7 @@ Double_t TF1::GradientPar(Int_t ipar, const Double_t *x, Double_t eps)
 
    ((TF1 *)this)->GetParLimits(ipar, al, bl);
    if (al * bl != 0 && al >= bl) {
-      //this parameter is fixed
+      // this parameter is fixed
       return 0;
    }
 
@@ -2329,7 +2336,8 @@ Double_t TF1::GradientPar(Int_t ipar, const Double_t *x, Double_t eps)
    else
       h = eps;
 
-
+   // save original parameters
+   Double_t par0 = parameters[ipar];
 
    parameters[ipar] = par0 + h;
    f1 = func->EvalPar(x, parameters);
@@ -2340,15 +2348,15 @@ Double_t TF1::GradientPar(Int_t ipar, const Double_t *x, Double_t eps)
    parameters[ipar] = par0 - h / 2;
    g2 = func->EvalPar(x, parameters);
 
-   //compute the central differences
-   h2    = 1 / (2.*h);
-   d0    = f1 - f2;
-   d2    = 2 * (g1 - g2);
-
-   Double_t  grad = h2 * (4 * d2 - d0) / 3.;
-
    // restore original value
    parameters[ipar] = par0;
+
+   // compute the central differences
+   h2 = 1 / (2. * h);
+   d0 = f1 - f2;
+   d2 = 2 * (g1 - g2);
+
+   Double_t grad = h2 * (4 * d2 - d0) / 3.;
 
    return grad;
 }

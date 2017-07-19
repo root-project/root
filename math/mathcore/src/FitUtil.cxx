@@ -173,7 +173,11 @@ namespace ROOT {
                // case + inf or nan
                return  + std::numeric_limits<double>::max();
          }
-         bool CheckValue(double & rval) {
+
+         // Check if the value is a finite number. The argument rval is updated if it is infinite or NaN,
+         // setting it to the maximum finite value (preserving the sign).
+         bool CheckInfNaNValue(double &rval)
+         {
             if (rval > - std::numeric_limits<double>::max() && rval < std::numeric_limits<double>::max() )
                return true;
             else if (rval < 0) {
@@ -623,7 +627,7 @@ void FitUtil::EvaluateChi2Gradient(const IModelFunction &f, const BinData &data,
    }
 
    const IGradModelFunction *fg = dynamic_cast<const IGradModelFunction *>(&f);
-   assert(fg != 0); // must be called by a gradient function
+   assert(fg != nullptr); // must be called by a gradient function
 
    const IGradModelFunction &func = *fg;
 
@@ -644,9 +648,9 @@ void FitUtil::EvaluateChi2Gradient(const IModelFunction &f, const BinData &data,
    IntegralEvaluator<> igEval(func, p, useBinIntegral);
 
    unsigned int npar = func.NPar();
-   unsigned initalNPoints = data.Size();
+   unsigned initialNPoints = data.Size();
 
-   std::vector<bool> isPointRejected(initalNPoints);
+   std::vector<bool> isPointRejected(initialNPoints);
 
    auto mapFunction = [&](const unsigned int i) {
       // set all vector values to zero
@@ -709,7 +713,7 @@ void FitUtil::EvaluateChi2Gradient(const IModelFunction &f, const BinData &data,
          std::cout << p[ipar] << "\t";
       std::cout << "\tfval = " << fval << std::endl;
 #endif
-      if (!CheckValue(fval)) {
+      if (!CheckInfNaNValue(fval)) {
          isPointRejected[i] = true;
          // Return a zero contribution to all partial derivatives on behalf of the current point
          return pointContribution;
@@ -726,7 +730,7 @@ void FitUtil::EvaluateChi2Gradient(const IModelFunction &f, const BinData &data,
          // avoid singularity in the function (infinity and nan ) in the chi2 sum
          // eventually add possibility of excluding some points (like singularity)
          double dfval = gradFunc[ipar];
-         if (!CheckValue(dfval)) {
+         if (!CheckInfNaNValue(dfval)) {
             break; // exit loop on parameters
          }
 
@@ -757,17 +761,17 @@ void FitUtil::EvaluateChi2Gradient(const IModelFunction &f, const BinData &data,
    std::vector<double> g(npar);
 
    if (executionPolicy == ROOT::Fit::kSerial) {
-      std::vector<std::vector<double>> allGradients(initalNPoints);
-      for (unsigned int i = 0; i < initalNPoints; ++i) {
+      std::vector<std::vector<double>> allGradients(initialNPoints);
+      for (unsigned int i = 0; i < initialNPoints; ++i) {
          allGradients[i] = mapFunction(i);
       }
       g = redFunction(allGradients);
    }
 #ifdef R__USE_IMT
    else if (executionPolicy == ROOT::Fit::kMultithread) {
-      auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(initalNPoints);
+      auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(initialNPoints);
       ROOT::TThreadExecutor pool;
-      g = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, initalNPoints), redFunction, chunks);
+      g = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, initialNPoints), redFunction, chunks);
    }
 #endif
    // else if(executionPolicy == ROOT::Fit::kMultiprocess){
@@ -780,12 +784,12 @@ void FitUtil::EvaluateChi2Gradient(const IModelFunction &f, const BinData &data,
    }
 
    // correct the number of points
-   nPoints = initalNPoints;
+   nPoints = initialNPoints;
 
    if (std::any_of(isPointRejected.begin(), isPointRejected.end(), [](bool point) { return point; })) {
-      int nRejected = std::accumulate(isPointRejected.begin(), isPointRejected.end(), 0);
-      assert(nRejected <= initalNPoints);
-      nPoints = initalNPoints - nRejected;
+      unsigned nRejected = std::accumulate(isPointRejected.begin(), isPointRejected.end(), 0);
+      assert(nRejected <= initialNPoints);
+      nPoints = initialNPoints - nRejected;
 
       if (nPoints < npar)
          MATH_ERROR_MSG("FitUtil::EvaluateChi2Gradient",

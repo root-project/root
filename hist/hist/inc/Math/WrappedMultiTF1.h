@@ -181,7 +181,7 @@ namespace ROOT {
        * WrappedMultiTF1Templ::DoParameterDerivation calls TFormula::EvalPar in the case of a general linear function
        * built with TFormula using ++; as EvalPar is not vectorized, in order to generalize  DoParameterDerivative with
        * a general type T, we use this auxiliar class to branch the code in compile time with the double
-       * spectialization (that can call EvalPar) and the general implementation (that throws an error in the case of
+       * specialization (that can call EvalPar) and the general implementation (that throws an error in the case of
        * general linear function).
        */
       template <class T>

@@ -91,205 +91,210 @@ namespace FitUtil {
      T logvalue;
      T weight;
      T weight2;
-         };
+  };
 
-         template<>
-         class LikelihoodAux<double>{
-          public:
+  template <>
+  class LikelihoodAux<double> {
+  public:
+     LikelihoodAux(double logv = 0.0, double w = 0.0, double w2 = 0.0) : logvalue(logv), weight(w), weight2(w2){};
 
-          LikelihoodAux(double logv = 0.0, double w = 0.0, double w2 = 0.0):logvalue(logv), weight(w), weight2(w2){};
+     LikelihoodAux operator+(const LikelihoodAux &l) const
+     {
+        return LikelihoodAux<double>(logvalue + l.logvalue, weight + l.weight, weight2 + l.weight2);
+     }
 
-           LikelihoodAux operator +( const LikelihoodAux & l) const{
-              return LikelihoodAux<double>(logvalue + l.logvalue, weight  + l.weight, weight2 + l.weight2);
-           }
+     LikelihoodAux &operator+=(const LikelihoodAux &l)
+     {
+        logvalue += l.logvalue;
+        weight += l.weight;
+        weight2 += l.weight2;
+        return *this;
+     }
 
-           LikelihoodAux &operator +=(const LikelihoodAux & l){
-              logvalue += l.logvalue;
-              weight  += l.weight;
-              weight2 += l.weight2;
-              return *this;
-           }
+     double logvalue;
+     double weight;
+     double weight2;
+  };
 
-            double logvalue;
-            double weight;
-            double weight2;
-         };
+  // internal class to evaluate the function or the integral
+  // and cached internal integration details
+  // if useIntegral is false no allocation is done
+  // and this is a dummy class
+  // class is templated on any parametric functor implementing operator()(x,p) and NDim()
+  // contains a constant pointer to the function
 
-         // internal class to evaluate the function or the integral
-         // and cached internal integration details
-         // if useIntegral is false no allocation is done
-         // and this is a dummy class
-         // class is templated on any parametric functor implementing operator()(x,p) and NDim()
-         // contains a constant pointer to the function
+  template <class ParamFunc = ROOT::Math::IParamMultiFunctionTempl<double>>
+  class IntegralEvaluator {
 
-         template <class ParamFunc = ROOT::Math::IParamMultiFunctionTempl<double>>
-         class IntegralEvaluator {
+  public:
+     IntegralEvaluator(const ParamFunc &func, const double *p, bool useIntegral = true)
+        : fDim(0), fParams(0), fFunc(0), fIg1Dim(0), fIgNDim(0), fFunc1Dim(0), fFuncNDim(0)
+     {
+        if (useIntegral) {
+           SetFunction(func, p);
+        }
+     }
 
-         public:
+     void SetFunction(const ParamFunc &func, const double *p = 0)
+     {
+        // set the integrand function and create required wrapper
+        // to perform integral in (x) of a generic  f(x,p)
+        fParams = p;
+        fDim = func.NDim();
+        // copy the function object to be able to modify the parameters
+        // fFunc = dynamic_cast<ROOT::Math::IParamMultiFunction *>( func.Clone() );
+        fFunc = &func;
+        assert(fFunc != 0);
+        // set parameters in function
+        // fFunc->SetParameters(p);
+        if (fDim == 1) {
+           fFunc1Dim =
+              new ROOT::Math::WrappedMemFunction<IntegralEvaluator, double (IntegralEvaluator::*)(double) const>(
+                 *this, &IntegralEvaluator::F1);
+           fIg1Dim = new ROOT::Math::IntegratorOneDim();
+           // fIg1Dim->SetFunction( static_cast<const ROOT::Math::IMultiGenFunction & >(*fFunc),false);
+           fIg1Dim->SetFunction(static_cast<const ROOT::Math::IGenFunction &>(*fFunc1Dim));
+        } else if (fDim > 1) {
+           fFuncNDim =
+              new ROOT::Math::WrappedMemMultiFunction<IntegralEvaluator, double (IntegralEvaluator::*)(const double *)
+                                                                            const>(*this, &IntegralEvaluator::FN, fDim);
+           fIgNDim = new ROOT::Math::IntegratorMultiDim();
+           fIgNDim->SetFunction(*fFuncNDim);
+        } else
+           assert(fDim > 0);
+     }
 
-            IntegralEvaluator(const ParamFunc & func, const double * p, bool useIntegral = true) :
-               fDim(0),
-               fParams(0),
-               fFunc(0),
-               fIg1Dim(0),
-               fIgNDim(0),
-               fFunc1Dim(0),
-               fFuncNDim(0)
-            {
-               if (useIntegral) {
-                  SetFunction(func, p);
-               }
-            }
+     void SetParameters(const double *p)
+     {
+        // copy just the pointer
+        fParams = p;
+     }
 
-            void SetFunction(const ParamFunc & func, const double * p = 0) {
-               // set the integrand function and create required wrapper
-               // to perform integral in (x) of a generic  f(x,p)
-               fParams = p;
-               fDim = func.NDim();
-               // copy the function object to be able to modify the parameters
-               //fFunc = dynamic_cast<ROOT::Math::IParamMultiFunction *>( func.Clone() );
-               fFunc = &func;
-               assert(fFunc != 0);
-               // set parameters in function
-               //fFunc->SetParameters(p);
-               if (fDim == 1) {
-                  fFunc1Dim = new ROOT::Math::WrappedMemFunction< IntegralEvaluator, double (IntegralEvaluator::*)(double ) const > (*this, &IntegralEvaluator::F1);
-                  fIg1Dim = new ROOT::Math::IntegratorOneDim();
-                  //fIg1Dim->SetFunction( static_cast<const ROOT::Math::IMultiGenFunction & >(*fFunc),false);
-                  fIg1Dim->SetFunction( static_cast<const ROOT::Math::IGenFunction &>(*fFunc1Dim) );
-               }
-               else if (fDim > 1) {
-                  fFuncNDim = new ROOT::Math::WrappedMemMultiFunction< IntegralEvaluator, double (IntegralEvaluator::*)(const double *) const >  (*this, &IntegralEvaluator::FN, fDim);
-                  fIgNDim = new ROOT::Math::IntegratorMultiDim();
-                  fIgNDim->SetFunction(*fFuncNDim);
-               }
-               else
-                  assert(fDim > 0);
-            }
+     ~IntegralEvaluator()
+     {
+        if (fIg1Dim)
+           delete fIg1Dim;
+        if (fIgNDim)
+           delete fIgNDim;
+        if (fFunc1Dim)
+           delete fFunc1Dim;
+        if (fFuncNDim)
+           delete fFuncNDim;
+        // if (fFunc) delete fFunc;
+     }
 
+     // evaluation of integrand function (one-dim)
+     double F1(double x) const
+     {
+        double xx = x;
+        return ExecFunc(fFunc, &xx, fParams);
+     }
+     // evaluation of integrand function (multi-dim)
+     double FN(const double *x) const { return ExecFunc(fFunc, x, fParams); }
 
-            void SetParameters(const double *p) {
-               // copy just the pointer
-               fParams = p;
-            }
+     double Integral(const double *x1, const double *x2)
+     {
+        // return unormalized integral
+        return (fIg1Dim) ? fIg1Dim->Integral(*x1, *x2) : fIgNDim->Integral(x1, x2);
+     }
 
-            ~IntegralEvaluator() {
-               if (fIg1Dim) delete fIg1Dim;
-               if (fIgNDim) delete fIgNDim;
-               if (fFunc1Dim) delete fFunc1Dim;
-               if (fFuncNDim) delete fFuncNDim;
-               //if (fFunc) delete fFunc;
-            }
+     double operator()(const double *x1, const double *x2)
+     {
+        // return normalized integral, divided by bin volume (dx1*dx...*dxn)
+        if (fIg1Dim) {
+           double dV = *x2 - *x1;
+           return fIg1Dim->Integral(*x1, *x2) / dV;
+        } else if (fIgNDim) {
+           double dV = 1;
+           for (unsigned int i = 0; i < fDim; ++i)
+              dV *= (x2[i] - x1[i]);
+           return fIgNDim->Integral(x1, x2) / dV;
+           //                   std::cout << " do integral btw x " << x1[0] << "  " << x2[0] << " y " << x1[1] << "  "
+           //                   << x2[1] << " dV = " << dV << " result = " << result << std::endl; return result;
+        } else
+           assert(1.); // should never be here
+        return 0;
+     }
 
-            // evaluation of integrand function (one-dim)
-            double F1 (double x) const {
-               double xx= x;
-               return ExecFunc(fFunc, &xx, fParams);
-            }
-            // evaluation of integrand function (multi-dim)
-            double FN(const double * x) const {
-               return ExecFunc(fFunc, x, fParams);
-            }
-
-            double Integral(const double *x1, const double * x2) {
-               // return unormalized integral
-               return (fIg1Dim) ? fIg1Dim->Integral( *x1, *x2) : fIgNDim->Integral( x1, x2);
-            }
-
-            double operator()(const double *x1, const double * x2) {
-               // return normalized integral, divided by bin volume (dx1*dx...*dxn)
-               if (fIg1Dim) {
-                  double dV = *x2 - *x1;
-                  return fIg1Dim->Integral( *x1, *x2)/dV;
-               }
-               else if (fIgNDim) {
-                  double dV = 1;
-                  for (unsigned int i = 0; i < fDim; ++i)
-                     dV *= ( x2[i] - x1[i] );
-                  return fIgNDim->Integral( x1, x2)/dV;
-//                   std::cout << " do integral btw x " << x1[0] << "  " << x2[0] << " y " << x1[1] << "  " << x2[1] << " dV = " << dV << " result = " << result << std::endl;
-//                   return result;
-               }
-               else
-                  assert(1.); // should never be here
-               return 0;
-            }
-
-         private:
-
-            template<class T>
-            inline double ExecFunc(T *f, const double *x, const double *p) const{
-                return (*f)(x, p);
-            }
+  private:
+     template <class T>
+     inline double ExecFunc(T *f, const double *x, const double *p) const
+     {
+        return (*f)(x, p);
+     }
 
 #ifdef R__HAS_VECCORE
-            inline double ExecFunc(const IModelFunctionTempl<ROOT::Double_v> *f, const double *x, const double *p) const{
-               if (fDim == 1) {
-                  ROOT::Double_v xx;
-                  vecCore::Load<ROOT::Double_v>(xx, x);
-                  const double *p0 = p;
-                  auto res =  (*f)( &xx, (const double *)p0);
-                  return vecCore::Get<ROOT::Double_v>(res, 0);
-               } else {
-                  std::vector<ROOT::Double_v> xx(fDim);
-                  for (unsigned int i = 0; i < fDim; ++i) {
-                     vecCore::Load<ROOT::Double_v>(xx[i], x+i);
-                  }
-                  auto res =  (*f)( xx.data(), p);
-                  return vecCore::Get<ROOT::Double_v>(res, 0);
-               }
-            }
+     inline double ExecFunc(const IModelFunctionTempl<ROOT::Double_v> *f, const double *x, const double *p) const
+     {
+        if (fDim == 1) {
+           ROOT::Double_v xx;
+           vecCore::Load<ROOT::Double_v>(xx, x);
+           const double *p0 = p;
+           auto res = (*f)(&xx, (const double *)p0);
+           return vecCore::Get<ROOT::Double_v>(res, 0);
+        } else {
+           std::vector<ROOT::Double_v> xx(fDim);
+           for (unsigned int i = 0; i < fDim; ++i) {
+              vecCore::Load<ROOT::Double_v>(xx[i], x + i);
+           }
+           auto res = (*f)(xx.data(), p);
+           return vecCore::Get<ROOT::Double_v>(res, 0);
+        }
+     }
 #endif
 
-            // objects of this class are not meant to be copied / assigned
-            IntegralEvaluator(const IntegralEvaluator& rhs);
-            IntegralEvaluator& operator=(const IntegralEvaluator& rhs);
+     // objects of this class are not meant to be copied / assigned
+     IntegralEvaluator(const IntegralEvaluator &rhs);
+     IntegralEvaluator &operator=(const IntegralEvaluator &rhs);
 
-            unsigned int fDim;
-            const double * fParams;
-            //ROOT::Math::IParamMultiFunction * fFunc;  // copy of function in order to be able to change parameters
-            // const ParamFunc * fFunc;       //  reference to a generic parametric function
-            const ParamFunc * fFunc;
-            ROOT::Math::IntegratorOneDim * fIg1Dim;
-            ROOT::Math::IntegratorMultiDim * fIgNDim;
-            ROOT::Math::IGenFunction * fFunc1Dim;
-            ROOT::Math::IMultiGenFunction * fFuncNDim;
-         };
+     unsigned int fDim;
+     const double *fParams;
+     // ROOT::Math::IParamMultiFunction * fFunc;  // copy of function in order to be able to change parameters
+     // const ParamFunc * fFunc;       //  reference to a generic parametric function
+     const ParamFunc *fFunc;
+     ROOT::Math::IntegratorOneDim *fIg1Dim;
+     ROOT::Math::IntegratorMultiDim *fIgNDim;
+     ROOT::Math::IGenFunction *fFunc1Dim;
+     ROOT::Math::IMultiGenFunction *fFuncNDim;
+  };
 
-   /** Chi2 Functions */
+  /** Chi2 Functions */
 
-   /**
-       evaluate the Chi2 given a model function and the data at the point x.
-       return also nPoints as the effective number of used points in the Chi2 evaluation
-   */
-   double EvaluateChi2(const IModelFunction & func, const BinData & data, const double * x, unsigned int & nPoints, const ROOT::Fit::ExecutionPolicy &executionPolicy, unsigned nChunks = 0);
+  /**
+      evaluate the Chi2 given a model function and the data at the point x.
+      return also nPoints as the effective number of used points in the Chi2 evaluation
+  */
+  double EvaluateChi2(const IModelFunction &func, const BinData &data, const double *x, unsigned int &nPoints,
+                      const ROOT::Fit::ExecutionPolicy &executionPolicy, unsigned nChunks = 0);
 
-   /**
-       evaluate the effective Chi2 given a model function and the data at the point x.
-       The effective chi2 uses the errors on the coordinates : W = 1/(sigma_y**2 + ( sigma_x_i * df/dx_i )**2 )
-       return also nPoints as the effective number of used points in the Chi2 evaluation
-   */
-   double EvaluateChi2Effective(const IModelFunction & func, const BinData & data, const double * x, unsigned int & nPoints);
+  /**
+      evaluate the effective Chi2 given a model function and the data at the point x.
+      The effective chi2 uses the errors on the coordinates : W = 1/(sigma_y**2 + ( sigma_x_i * df/dx_i )**2 )
+      return also nPoints as the effective number of used points in the Chi2 evaluation
+  */
+  double EvaluateChi2Effective(const IModelFunction &func, const BinData &data, const double *x, unsigned int &nPoints);
 
-   /**
-       evaluate the Chi2 gradient given a model function and the data at the point x.
-       return also nPoints as the effective number of used points in the Chi2 evaluation
-   */
-   void EvaluateChi2Gradient(const IModelFunction &func, const BinData &data, const double *x, double *grad,
-                             unsigned int &nPoints, const unsigned int &executionPolicy = ROOT::Fit::kSerial,
-                             unsigned nChunks = 0);
+  /**
+      evaluate the Chi2 gradient given a model function and the data at the point x.
+      return also nPoints as the effective number of used points in the Chi2 evaluation
+  */
+  void EvaluateChi2Gradient(const IModelFunction &func, const BinData &data, const double *x, double *grad,
+                            unsigned int &nPoints, const unsigned int &executionPolicy = ROOT::Fit::kSerial,
+                            unsigned nChunks = 0);
 
-   /**
-       evaluate the LogL given a model function and the data at the point x.
-       return also nPoints as the effective number of used points in the LogL evaluation
-   */
-   double EvaluateLogL(const IModelFunction & func, const UnBinData & data, const double * p, int iWeight, bool extended, unsigned int & nPoints, const ROOT::Fit::ExecutionPolicy &executionPolicy, unsigned nChunks = 0);
+  /**
+      evaluate the LogL given a model function and the data at the point x.
+      return also nPoints as the effective number of used points in the LogL evaluation
+  */
+  double EvaluateLogL(const IModelFunction &func, const UnBinData &data, const double *p, int iWeight, bool extended,
+                      unsigned int &nPoints, const ROOT::Fit::ExecutionPolicy &executionPolicy, unsigned nChunks = 0);
 
-   /**
-       evaluate the LogL gradient given a model function and the data at the point x.
-       return also nPoints as the effective number of used points in the LogL evaluation
-   */
-   void EvaluateLogLGradient(const IModelFunction & func, const UnBinData & data, const double * x, double * grad, unsigned int & nPoints);
+  /**
+      evaluate the LogL gradient given a model function and the data at the point x.
+      return also nPoints as the effective number of used points in the LogL evaluation
+  */
+  void EvaluateLogLGradient(const IModelFunction &func, const UnBinData &data, const double *x, double *grad,
+                            unsigned int &nPoints);
 
 #ifdef R__HAS_VECCORE
    template <class NotCompileIfScalarBackend = std::enable_if<!(std::is_same<double, ROOT::Double_v>::value)>>
@@ -817,15 +822,18 @@ namespace FitUtil {
          return -1.;
       }
 
-      static vecCore::Mask<T> CheckVectorValue(T &rval)
+      // Compute a mask to filter out infinite numbers and NaN values.
+      // The argument rval is updated so infinite numbers and NaN values are replaced by
+      // maximum finite values (preserving the original sign).
+      static vecCore::Mask<T> CheckInfNaNValues(T &rval)
       {
          auto mask = rval > -vecCore::NumericLimits<T>::Max() && rval < vecCore::NumericLimits<T>::Max();
 
+         // Case +inf or nan
+         vecCore::MaskedAssign(rval, !mask, +vecCore::NumericLimits<T>::Max());
+
          // Case -inf
          vecCore::MaskedAssign(rval, !mask && rval < 0, -vecCore::NumericLimits<T>::Max());
-
-         // Case +inf or nan
-         vecCore::MaskedAssign(rval, !mask && rval >= 0, +vecCore::NumericLimits<T>::Max());
 
          return mask;
       }
@@ -847,7 +855,7 @@ namespace FitUtil {
          }
 
          const IGradModelFunctionTempl<T> *fg = dynamic_cast<const IGradModelFunctionTempl<T> *>(&f);
-         assert(fg != 0); // must be called by a gradient function
+         assert(fg != nullptr); // must be called by a gradient function
 
          const IGradModelFunctionTempl<T> &func = *fg;
 
@@ -863,8 +871,8 @@ namespace FitUtil {
 
          unsigned int npar = func.NPar();
          auto vecSize = vecCore::VectorSize<T>();
-         unsigned initalNPoints = data.Size();
-         unsigned numVectors = initalNPoints / vecSize;
+         unsigned initialNPoints = data.Size();
+         unsigned numVectors = initialNPoints / vecSize;
 
          // numVectors + 1 because of the padded data (call to mapFunction with i = numVectors after the main loop)
          std::vector<vecCore::Mask<T>> validPointsMasks(numVectors + 1);
@@ -912,7 +920,7 @@ namespace FitUtil {
             std::cout << "\tfval = " << fval << std::endl;
 #endif
 
-            validPointsMasks[i] = CheckVectorValue(fval);
+            validPointsMasks[i] = CheckInfNaNValues(fval);
             if (vecCore::MaskEmpty(validPointsMasks[i])) {
                // Return a zero contribution to all partial derivatives on behalf of the current points
                return pointContributionVec;
@@ -922,7 +930,7 @@ namespace FitUtil {
             for (unsigned int ipar = 0; ipar < npar; ++ipar) {
                // avoid singularity in the function (infinity and nan ) in the chi2 sum
                // eventually add possibility of excluding some points (like singularity)
-               validPointsMasks[i] = CheckVectorValue(gradFunc[ipar]);
+               validPointsMasks[i] = CheckInfNaNValues(gradFunc[ipar]);
 
                if (vecCore::MaskEmpty(validPointsMasks[i])) {
                   break; // exit loop on parameters
@@ -980,18 +988,18 @@ namespace FitUtil {
          auto remainingPointsContribution = mapFunction(numVectors);
 
          // Add the contribution from the valid remaining points and store the result in the output variable
-         auto remainingMask = vecCore::Int2Mask<T>(initalNPoints % vecSize);
+         auto remainingMask = vecCore::Int2Mask<T>(initialNPoints % vecSize);
          for (unsigned int param = 0; param < npar; param++) {
             vecCore::MaskedAssign(gVec[param], remainingMask, gVec[param] + remainingPointsContribution[param]);
             grad[param] = vecCore::ReduceAdd(gVec[param]);
          }
 
          // correct the number of points
-         nPoints = initalNPoints;
+         nPoints = initialNPoints;
 
          if (std::any_of(validPointsMasks.begin(), validPointsMasks.end(),
                          [](vecCore::Mask<T> validPoints) { return !vecCore::MaskFull(validPoints); })) {
-            int nRejected = 0;
+            unsigned nRejected = 0;
 
             for (const auto &mask : validPointsMasks) {
                for (unsigned int i = 0; i < vecSize; i++) {
@@ -999,8 +1007,8 @@ namespace FitUtil {
                }
             }
 
-            assert(nRejected <= initalNPoints);
-            nPoints = initalNPoints - nRejected;
+            assert(nRejected <= initialNPoints);
+            nPoints = initialNPoints - nRejected;
 
             if (nPoints < npar) {
                MATH_ERROR_MSG("FitUtil::EvaluateChi2Gradient",
