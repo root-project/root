@@ -346,7 +346,20 @@ public:
                                     const std::vector<TMatrixT<AReal>> &activationGradients,
                                     const std::vector<TMatrixT<AReal>> &indexMatrix, size_t batchSize, size_t depth,
                                     size_t nLocalViews);
-   ///@}   
+   ///@}
+
+   //____________________________________________________________________________
+   //
+   //  Max Pooling Layer Propagation
+   //____________________________________________________________________________
+   /** @name Forward and Backward Propagation in Reshape Layer
+    */
+   ///@{
+
+   /** Transform the matrix \p B to a matrix with different dimensions \p A */
+   static void Reshape(TMatrixT<AReal> &A, const TMatrixT<AReal> &B);
+
+   ///@}
 
    //____________________________________________________________________________
    //
