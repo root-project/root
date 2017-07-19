@@ -9,7 +9,7 @@ SOURCES += rootwebpage.cpp \
            rootwebview.cpp \
            rootqt5.cpp
 
-target.path = .
+DESTDIR = $$system(root-config --bindir)
 
 INCLUDEPATH += $$system(root-config --incdir)
 
