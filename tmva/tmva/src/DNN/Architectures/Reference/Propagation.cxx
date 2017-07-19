@@ -360,5 +360,20 @@ void TReference<AReal>::MaxPoolLayerBackward(std::vector<TMatrixT<AReal>> &activ
    }
 }
 
+//______________________________________________________________________________
+template <typename AReal>
+void TReference<AReal>::Reshape(TMatrixT<AReal> &A, const TMatrixT<AReal> &B)
+{
+   size_t nColsA = A.GetNcols();
+   size_t nColsB = B.GetNcols();
+
+   for (size_t i = 0; i < A.GetNrows(); i++) {
+      for (size_t j = 0; j < A.GetNcols(); j++) {
+         size_t nElem = i * nColsA + j;
+         A(i, j) = B(nElem / nColsB, (nElem - 1) % nColsB);
+      }
+   }
+}
+
 } // namespace DNN
 } // namespace TMVA
