@@ -131,9 +131,6 @@ public:
    TRequest ISsend(const Type &var, Int_t dest, Int_t tag);
 
    template <class Type>
-   TRequest IRsend(const Type &var, Int_t dest, Int_t tag);
-
-   template <class Type>
    TRequest IRecv(Type &var, Int_t source, Int_t tag) const;
 
    template <class Type>
@@ -165,9 +162,6 @@ public:
 
    template <class Type>
    TRequest ISsend(const Type *vars, Int_t count, Int_t dest, Int_t tag);
-
-   template <class Type>
-   TRequest IRsend(const Type *vars, Int_t count, Int_t dest, Int_t tag);
 
    template <class Type>
    TRequest IRecv(Type *vars, Int_t count, Int_t source, Int_t tag) const;
@@ -568,44 +562,6 @@ TRequest TCommunicator::ISsend(const Type *vars, Int_t count, Int_t dest, Int_t 
    return req;
 }
 
-//______________________________________________________________________________
-/**
- * Starts a ready-mode nonblocking send.
- * \param var any selializable object
- * \param dest id with the destination(Rank/Process) of the message
- * \param tag id of the message
- */
-
-template <class Type>
-TRequest TCommunicator::IRsend(const Type &var, Int_t dest, Int_t tag)
-{
-   return IRsend(&var, 1, dest, tag);
-}
-
-//______________________________________________________________________________
-/**
- * Starts a ready-mode nonblocking send.
- * \param vars any selializable object
- * \param count number of elements in array \p vars
- * \param dest id with the destination(Rank/Process) of the message
- * \param tag id of the message
- */
-template <class Type>
-TRequest TCommunicator::IRsend(const Type *vars, Int_t count, Int_t dest, Int_t tag)
-{
-   TRequest req;
-   if (std::is_class<Type>::value) {
-      // TODO: objects is not sopported for ready mode,
-      // because you need to call firts the IRecv method and the size of serialized buffer is unknow then
-      // ADDED A GOOD ERROR HANDLING HERE!
-      //
-   } else {
-      ROOT_MPI_CHECK_DATATYPE(Type, this);
-      ROOT_MPI_CHECK_CALL(MPI_Irsend, ((void *)vars, count, GetDataType<Type>(), dest, tag, fComm, &req.fRequest),
-                          this);
-   }
-   return req;
-}
 
 //______________________________________________________________________________
 /**

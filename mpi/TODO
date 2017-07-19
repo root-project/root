@@ -1,9 +1,6 @@
 TODO:
-TCommunicator:
- * improve Dup/Clone methods for the design
 TMpiFile: 
  * improve message error with more detailed information 
  * check that ranks are not major that the size of the communicator and to integrate that to ROOTMpi error handling
- * overload Open method with an option to select the rank to READ/(RE)CREATE/UPDATE the initial file from disk
  * improve tests
  * measure of perfomance for I/O 
