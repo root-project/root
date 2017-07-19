@@ -34,7 +34,6 @@
 #include "tbb/queuing_rw_mutex.h"
 #include <atomic>
 #include <mutex>
-//#include <shared_mutex>
 #include <thread>
 #include <vector>
 #endif
@@ -46,8 +45,8 @@ class TCondition;
 class TBasket;
 class TMutex;
 
-class UnzipTask;
 class MappingTask;
+class UnzipTask;
 
 class TTreeCacheUnzip : public TTreeCache {
 
@@ -58,16 +57,13 @@ public:
 
 protected:
 
+   friend class MappingTask;
    friend class UnzipTask;
    tbb::task *root;
 //   tbb::queuing_rw_mutex *fRWMutex;
 //   std::shared_mutex *fRWMutex;
 
    // Members for paral. managing
-   TThread    *fUnzipThread[10];
-   Bool_t      fActiveThread;          ///< Used to terminate gracefully the unzippers
-   TCondition *fUnzipStartCondition;   ///< Used to signal the threads to start.
-   TCondition *fUnzipDoneCondition;    ///< Used to wait for an unzip tour to finish. Gives the Async feel.
    Bool_t      fParallel;              ///< Indicate if we want to activate the parallelism (for this instance)
    Bool_t      fAsyncReading;
    TMutex     *fMutexList;             ///< Mutex to protect the various lists. Used by the condvars.
@@ -76,14 +72,10 @@ protected:
    Int_t       fCycle;
    static TTreeCacheUnzip::EParUnzipMode fgParallel;  ///< Indicate if we want to activate the parallelism
 
-   Int_t       fLastReadPos;
-   Int_t       fBlocksToGo;
-
    // Unzipping related members
    Int_t      *fUnzipLen;         ///<! [fNseek] Length of the unzipped buffers
    char      **fUnzipChunks;      ///<! [fNseek] Individual unzipped chunks. Their summed size is kept under control.
    std::atomic<Byte_t>     *fUnzipStatus;      ///<! [fNSeek] 
-   Long64_t    fTotalUnzipBytes;  ///<! The total sum of the currently unzipped blks
 
    Int_t       fNseekMax;         ///<!  fNseek can change so we need to know its max size
    Long64_t    fUnzipBufferSize;  ///<!  Max Size for the ready unzipped blocks (default is 2*fBufferSize)
@@ -96,8 +88,6 @@ protected:
    Int_t       fNStalls;          ///<! number of hits which caused a stall
    Int_t       fNMissed;          ///<! number of blocks that were not found in the cache and were unzipped
 
-   std::queue<Int_t>       fActiveBlks; ///< The blocks which are active now
-
 private:
    TTreeCacheUnzip(const TTreeCacheUnzip &);            //this class cannot be copied
    TTreeCacheUnzip& operator=(const TTreeCacheUnzip &);
@@ -107,8 +97,6 @@ private:
 
    // Private methods
    void  Init();
-   Int_t StartThreadUnzip(Int_t nthreads);
-   Int_t StopThreadUnzip();
 
 public:
    TTreeCacheUnzip();
@@ -127,11 +115,7 @@ public:
    static Bool_t        IsParallelUnzip();
    static Int_t         SetParallelUnzip(TTreeCacheUnzip::EParUnzipMode option = TTreeCacheUnzip::kEnable);
 
-   Bool_t               IsActiveThread();
    Bool_t               IsQueueEmpty();
-
-   void                 WaitUnzipStartSignal();
-   void                 SendUnzipStartSignal(Bool_t broadcast);
 
    // Unzipping related methods
    Int_t          GetRecordHeader(char *buf, Int_t maxbytes, Int_t &nbytes, Int_t &objlen, Int_t &keylen);
@@ -152,7 +136,6 @@ public:
    void Print(Option_t* option = "") const;
 
    // static members
-   static void* UnzipLoop(void *arg);
    ClassDef(TTreeCacheUnzip,0)  //Specialization of TTreeCache for parallel unzipping
 };
 
