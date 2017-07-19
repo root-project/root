@@ -335,25 +335,30 @@ Int_t TRequest::WaitAny(Int_t count, TRequest req_array[])
  * special  value for the status argument.
  *
  * \param count  Array length (integer).
- * \param array Array of requests (array of handles).
+ * \param req_array Array of requests (array of handles).
  * \param index Index of operation that completed, or ROOT::Mpi::UNDEFINED if
  * none completed (integer).
  * \param status Status object (status).
  * \return True if one of the operations is complete (logical).
  */
-Bool_t TRequest::TestAny(Int_t count, TRequest array[], Int_t &index, TStatus &status)
+Bool_t TRequest::TestAny(Int_t count, TRequest req_array[], Int_t &index, TStatus &status)
 {
    Int_t i, flag;
    MPI_Request *array_of_requests = new MPI_Request[count];
    for (i = 0; i < count; i++) {
-      array_of_requests[i] = array[i].fRequest;
+      array_of_requests[i] = req_array[i].fRequest;
    }
    ROOT_MPI_CHECK_CALL(MPI_Testany, (count, array_of_requests, &index, &flag, &status.fStatus), TRequest::Class_Name());
    for (i = 0; i < count; i++) {
-      array[i] = array_of_requests[i];
+      req_array[i] = array_of_requests[i];
    }
+   if (flag)
+      req_array[index].fCallback();
+   else
+      req_array[0].Warning(__FUNCTION__, "Resquest test is not ready.");
+
    delete[] array_of_requests;
-   return (bool)(flag != 0 ? true : false);
+   return (Bool_t)(flag != 0 ? true : false);
 }
 
 //______________________________________________________________________________
@@ -376,23 +381,28 @@ Bool_t TRequest::TestAny(Int_t count, TRequest array[], Int_t &index, TStatus &s
  * special  value for the status argument.
  *
  * \param count  Array length (integer).
- * \param array Array of requests (array of handles).
+ * \param req_array Array of requests (array of handles).
  * \param index Index of operation that completed, or ROOT::Mpi::UNDEFINED if
  * none completed (integer).
  * \return True if one of the operations is complete (logical).
  */
-Bool_t TRequest::TestAny(Int_t count, TRequest array[], Int_t &index)
+Bool_t TRequest::TestAny(Int_t count, TRequest req_array[], Int_t &index)
 {
    Int_t i, flag;
    MPI_Request *array_of_requests = new MPI_Request[count];
    for (i = 0; i < count; i++) {
-      array_of_requests[i] = array[i].fRequest;
+      array_of_requests[i] = req_array[i].fRequest;
    }
    ROOT_MPI_CHECK_CALL(MPI_Testany, (count, array_of_requests, &index, &flag, MPI_STATUS_IGNORE),
                        TRequest::Class_Name());
    for (i = 0; i < count; i++) {
-      array[i] = array_of_requests[i];
+      req_array[i] = array_of_requests[i];
    }
+   if (flag)
+      req_array[index].fCallback();
+   else
+      req_array[0].Warning(__FUNCTION__, "Resquest test is not ready.");
+
    delete[] array_of_requests;
    return Bool_t(flag);
 }
@@ -658,7 +668,7 @@ Int_t TRequest::WaitSome(Int_t incount, TRequest req_array[], Int_t array_of_ind
 //______________________________________________________________________________
 Int_t TRequest::TestSome(Int_t incount, TRequest req_array[], Int_t array_of_indices[], TStatus stat_array[])
 {
-   int i, outcount;
+   Int_t i, outcount;
    MPI_Request *array_of_requests = new MPI_Request[incount];
    MPI_Status *array_of_statuses = new MPI_Status[incount];
    for (i = 0; i < incount; i++) {
@@ -669,6 +679,10 @@ Int_t TRequest::TestSome(Int_t incount, TRequest req_array[], Int_t array_of_ind
    for (i = 0; i < incount; i++) {
       req_array[i] = array_of_requests[i];
       stat_array[i] = array_of_statuses[i];
+   }
+
+   for (i = 0; i < outcount; i++) {
+      req_array[array_of_indices[i]].fCallback();
    }
    delete[] array_of_requests;
    delete[] array_of_statuses;
@@ -689,6 +703,9 @@ Int_t TRequest::TestSome(Int_t incount, TRequest req_array[], Int_t array_of_ind
 
    for (i = 0; i < incount; i++) {
       req_array[i] = array_of_requests[i];
+   }
+   for (i = 0; i < outcount; i++) {
+      req_array[array_of_indices[i]].fCallback();
    }
    delete[] array_of_requests;
 
