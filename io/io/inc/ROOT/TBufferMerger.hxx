@@ -22,6 +22,7 @@
 #include <thread>
 
 class TBufferFile;
+class TFile;
 
 namespace ROOT {
 namespace Experimental {
@@ -49,6 +50,11 @@ public:
     * @param compression Output file compression level
     */
    TBufferMerger(const char *name, Option_t *option = "RECREATE", Int_t compress = 1);
+
+   /** Constructor
+    * @param output Output \c TFile
+    */
+   TBufferMerger(std::unique_ptr<TFile> output);
 
    /** Destructor */
    virtual ~TBufferMerger();
@@ -100,12 +106,12 @@ private:
    /** TBufferMerger has no copy operator */
    TBufferMerger &operator=(const TBufferMerger &);
 
+   void Init(std::unique_ptr<TFile>);
+
    void Push(TBufferFile *buffer);
    void WriteOutputFile();
 
-   const std::string fName;
-   const std::string fOption;
-   const Int_t fCompress;
+   TFile* fFile;                                                 //< Output file.
    size_t fAutoSave;                                             //< AutoSave only every fAutoSave bytes
    std::mutex fQueueMutex;                                       //< Mutex used to lock fQueue
    std::condition_variable fDataAvailable;                       //< Condition variable used to wait for data
@@ -114,7 +120,7 @@ private:
    std::vector<std::weak_ptr<TBufferMergerFile>> fAttachedFiles; //< Attached files
    std::function<void(void)> fCallback;                          //< Callback for when data is removed from queue
 
-   ClassDef(TBufferMerger, 0);
+   ClassDef(TBufferMerger, 1);
 };
 
 /**

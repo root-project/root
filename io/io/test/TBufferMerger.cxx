@@ -196,6 +196,7 @@ TEST(TBufferMerger, CheckTreeFillResults)
    { // sum of all branch values in parallel mode
       TFile f("tbuffermerger_parallel.root");
       auto t = (TTree *)f.Get("mytree");
+      ASSERT_TRUE(t != nullptr);
 
       int n, sum = 0;
       int nentries = (int)t->GetEntries();
