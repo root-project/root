@@ -188,4 +188,35 @@ auto testConvLossFunction(size_t batchSize, size_t imgDepth, size_t imgHeight, s
    std::cout << "The loss is: " << loss << std::endl;
 }
 
+/*! Generate a conv net, get the predictios */
+//______________________________________________________________________________
+template <typename Architecture>
+auto testConvPrediction(size_t batchSize, size_t imgDepth, size_t imgHeight, size_t imgWidth, size_t batchDepth,
+                        size_t batchHeight, size_t batchWidth, EOutputFunction f) -> void
+{
+   using Matrix_t = typename Architecture::Matrix_t;
+   using Net_t = TDeepNet<Architecture>;
+
+   Net_t convNet(batchSize, imgDepth, imgHeight, imgWidth, batchDepth, batchHeight, batchWidth,
+                 ELossFunction::kMeanSquaredError, EInitialization::kGauss);
+   constructConvNet(convNet);
+   convNet.Initialize();
+
+   std::vector<Matrix_t> X;
+   for (size_t i = 0; i < batchSize; i++) {
+      X.emplace_back(imgDepth, imgHeight * imgWidth);
+      randomMatrix(X[i]);
+   }
+
+   Matrix_t Predictions(batchSize, convNet.GetOutputWidth());
+   convNet.Prediction(Predictions, X, f);
+
+   for (size_t i = 0; i < batchSize; i++) {
+      for (size_t j = 0; j < convNet.GetOutputWidth(); j++) {
+         std::cout << Predictions(i, j) << " ";
+      }
+      std::cout << "" << std::endl;
+   }
+}
+
 #endif
