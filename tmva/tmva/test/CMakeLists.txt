@@ -11,9 +11,15 @@ ROOT_ADD_GTEST(TestRandomGenerator
                TestRandomGenerator.cxx
                LIBRARIES ${Libraries})
 
+project(tmva-tests)
+find_package(ROOT REQUIRED)
+
 # Subdirectories
 ROOT_ADD_TEST_SUBDIRECTORY(test/crossvalidation)
 ROOT_ADD_TEST_SUBDIRECTORY(test/DNN)
 ROOT_ADD_TEST_SUBDIRECTORY(test/Method)
 ROOT_ADD_TEST_SUBDIRECTORY(test/ROC)
 ROOT_ADD_TEST_SUBDIRECTORY(test/envelope)
+ROOT_ADD_TEST_SUBDIRECTORY(test/DNN/CNN)
+
+
