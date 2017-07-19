@@ -162,6 +162,7 @@ public:
                                void (*histaddFunc)(const char* line)) = 0;
    virtual void     Reset() = 0;
    virtual void     ResetAll() = 0;
+   virtual void     SetupModules() = 0;
    virtual void     ResetGlobals() = 0;
    virtual void     ResetGlobalVar(void *obj) = 0;
    virtual void     RewindDictionary() = 0;

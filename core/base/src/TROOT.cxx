@@ -2004,6 +2004,8 @@ void TROOT::InitInterpreter()
 
    // Enable autoloading
    fInterpreter->EnableAutoLoading();
+   if (getenv("ROOT_MODULES"))
+     fInterpreter->SetupModules();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
