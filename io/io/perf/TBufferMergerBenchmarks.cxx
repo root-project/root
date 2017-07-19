@@ -10,24 +10,14 @@
 #include <string>
 #include <sys/stat.h>
 
-static inline bool FileExists(const std::string &name)
-{
-   struct stat buffer;
-   return (stat(name.c_str(), &buffer) == 0);
-}
-
 using namespace ROOT::Experimental;
 
 static void BM_TBufferFile_CreateEmpty(benchmark::State &state)
 {
    const char *filename = "empty.root";
    while (state.KeepRunning()) {
-      TBufferMerger m(filename);
+      TBufferMerger m(std::unique_ptr<TMemFile>(new TMemFile(filename)));
    }
-
-   // FIXME: Should we be writing to disk an empty file?
-   assert(FileExists(filename));
-   std::remove(filename);
 }
 BENCHMARK(BM_TBufferFile_CreateEmpty);
 
@@ -38,7 +28,10 @@ static void BM_TBufferFile_GetFile(benchmark::State &state)
    using namespace ROOT::Experimental;
    if (state.thread_index == 0) {
       // Setup code here.
-      Merger = new TBufferMerger("single_file_on_disk.root");
+      // FIXME: We should have a way to pass an externally constructed file or stream to
+      // TFile*, this would allow us to create in-memory files and avoid killing disks
+      // when we benchmark IO.
+      Merger = new TBufferMerger(std::unique_ptr<TMemFile>(new TMemFile("virtual_file.root", "RECREATE")));
    }
    while (state.KeepRunning()) {
       // Run the test as normal.
@@ -47,10 +40,6 @@ static void BM_TBufferFile_GetFile(benchmark::State &state)
    if (state.thread_index == 0) {
       // Teardown code here.
       delete Merger;
-      // FIXME: Should we be writing to disk an empty file?
-      const char *filename = "single_file_on_disk.root";
-      assert(FileExists(filename));
-      std::remove(filename);
    }
 }
 BENCHMARK(BM_TBufferFile_GetFile)->Unit(benchmark::kMicrosecond);
@@ -92,17 +81,13 @@ static void BM_TBufferFile_FillTreeWithRandomData(benchmark::State &state)
    using namespace ROOT::Experimental;
    if (state.thread_index == 0) {
       // Setup code here.
-      Merger = new TBufferMerger("single_file_on_disk.root");
+      Merger = new TBufferMerger(std::unique_ptr<TMemFile>(new TMemFile("virtual_file.root", "RECREATE")));
    }
    while (state.KeepRunning()) FillTreeWithRandomData(*Merger);
 
    if (state.thread_index == 0) {
       // Teardown code here.
       delete Merger;
-      // FIXME: Should we be writing to disk an empty file?
-      const char *filename = "single_file_on_disk.root";
-      assert(FileExists(filename));
-      std::remove(filename);
    }
 }
 BENCHMARK(BM_TBufferFile_FillTreeWithRandomData)->Unit(benchmark::kMicrosecond);
