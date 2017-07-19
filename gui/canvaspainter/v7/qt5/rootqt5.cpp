@@ -96,7 +96,6 @@ public:
 
    virtual void HttpReplied()
    {
-
       if (Is404()) {
          printf("Request MISS %s %s\n", GetPathName(), GetFileName());
 
@@ -135,13 +134,9 @@ public:
 
       // printf("[%ld] Request started %s\n", TThread::SelfId(), ba.data());
 
-      if (server == 0) {
-         server = (THttpServer *)gROOT->ProcessLine("TWebGuiFactory::GetHttpServer()");
-         printf("Get HTTP server %p\n", server);
-         if (!server) {
-            printf("FAIL to get server\n");
-            return;
-         }
+      if (!server) {
+         printf("HttpServer is not specified\n");
+         return;
       }
 
       TWebGuiCallArg *arg = new TWebGuiCallArg(request);
@@ -187,12 +182,14 @@ public:
    }
 };
 
-extern "C" void webgui_start_browser_new(const char *url)
+extern "C" void webgui_start_browser_in_qt5(const char *url, void *http_serv)
 {
 
    // webgui_initapp();
 
-   printf("Start %s\n", url);
+   printf("Start %s server %p\n", url, http_serv);
+
+   server = (THttpServer *) http_serv;
 
    RootWebView *view = new RootWebView();
    view->load(QUrl(url));
