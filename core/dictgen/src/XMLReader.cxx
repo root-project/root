@@ -924,6 +924,25 @@ bool XMLReader::Parse(const std::string &fileName, SelectionRules& out)
                for (int i = 0, n = attrs.size(); i < n; ++i) {
                   iAttrName=attrs[i].fName;
                   iAttrValue=attrs[i].fValue;
+
+                  if (tagKind == kClass && csr && "modifier" == iAttrName){
+                   switch (iAttrValue.at(0)) {
+                      case '+':
+                         csr->SetRequestStreamerInfo(true);
+                         break;
+                      case '!':
+                         csr->SetRequestNoInputOperator(true);
+                         break;
+                      case '-':
+                         csr->SetRequestNoStreamer(true);
+                         break;
+                      default:
+                      ROOT::TMetaUtils::Error(0,
+                         "XML at line %s: class attribute modifier must be one of +/-/! (it was %s)\n",
+                         lineNumCharp, iAttrValue.c_str());
+                   }
+                   continue;
+                  }
                   // Set the class version
                   if (tagKind == kClass &&
                       csr &&
