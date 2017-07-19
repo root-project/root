@@ -31,11 +31,7 @@
 
 #ifdef R__USE_IMT
 #include "tbb/task.h"
-#include "tbb/queuing_rw_mutex.h"
 #include <atomic>
-#include <mutex>
-#include <thread>
-#include <vector>
 #endif
 
 class TTree;
@@ -60,17 +56,16 @@ protected:
    friend class MappingTask;
    friend class UnzipTask;
    tbb::task *root;
-//   tbb::queuing_rw_mutex *fRWMutex;
-//   std::shared_mutex *fRWMutex;
 
    // Members for paral. managing
    Bool_t      fParallel;              ///< Indicate if we want to activate the parallelism (for this instance)
    Bool_t      fAsyncReading;
-   TMutex     *fMutexList;             ///< Mutex to protect the various lists. Used by the condvars.
    TMutex     *fIOMutex;
 
    Int_t       fCycle;
    static TTreeCacheUnzip::EParUnzipMode fgParallel;  ///< Indicate if we want to activate the parallelism
+
+   Int_t       fBlocksToGo;
 
    // Unzipping related members
    Int_t      *fUnzipLen;         ///<! [fNseek] Length of the unzipped buffers

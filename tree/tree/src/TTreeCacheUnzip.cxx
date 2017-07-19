@@ -55,18 +55,9 @@ where bufferSize must be passed in bytes.
 #include "TROOT.h"
 #include "TEnv.h"
 
-#include "jemalloc/jemalloc.h"
-
 #ifdef R__USE_IMT
 #include "tbb/task.h"
-#include "tbb/task_group.h"
-#include "tbb/queuing_rw_mutex.h"
-#include <mutex>
-#include <thread>
-#include <thread>
-#include <string>
 #include <vector>
-#include <sstream>
 #endif
 
 extern "C" void R__unzip(Int_t *nin, UChar_t *bufin, Int_t *lout, char *bufout, Int_t *nout);
@@ -87,6 +78,7 @@ TTreeCacheUnzip::TTreeCacheUnzip() : TTreeCache(),
 
    fAsyncReading(kFALSE),
    fCycle(0),
+   fBlocksToGo(0),
    fUnzipLen(0),
    fUnzipChunks(0),
    fUnzipStatus(0),
@@ -109,6 +101,7 @@ TTreeCacheUnzip::TTreeCacheUnzip() : TTreeCache(),
 TTreeCacheUnzip::TTreeCacheUnzip(TTree *tree, Int_t buffersize) : TTreeCache(tree,buffersize),
    fAsyncReading(kFALSE),
    fCycle(0),
+   fBlocksToGo(0),
    fUnzipLen(0),
    fUnzipChunks(0),
    fUnzipStatus(0),
@@ -128,9 +121,6 @@ TTreeCacheUnzip::TTreeCacheUnzip(TTree *tree, Int_t buffersize) : TTreeCache(tre
 void TTreeCacheUnzip::Init()
 {
    root = nullptr;
-//   fRWMutex          = new tbb::queuing_rw_mutex();
-//   fMutexList        = new TMutex(kTRUE);
-//   fRWMutex          = new mutable std::shared_mutex();
    fIOMutex          = new TMutex(kTRUE);
 
    fCompBuffer = new char[16384];
@@ -172,7 +162,6 @@ TTreeCacheUnzip::~TTreeCacheUnzip()
 
    delete [] fUnzipLen;
 
-//   delete fMutexList;
    delete fIOMutex;
 
    delete [] fUnzipStatus;
@@ -188,9 +177,6 @@ TTreeCacheUnzip::~TTreeCacheUnzip()
 
 Int_t TTreeCacheUnzip::AddBranch(TBranch *b, Bool_t subbranches /*= kFALSE*/)
 {
-//   R__LOCKGUARD(fMutexList);
-//   tbb::queuing_rw_mutex::scoped_lock lock(*fRWMutex, true);
-//   std::unique_lock<std::shared_mutex> lock(*fRWMutex);
    return TTreeCache::AddBranch(b, subbranches);
 }
 
@@ -203,10 +189,6 @@ Int_t TTreeCacheUnzip::AddBranch(TBranch *b, Bool_t subbranches /*= kFALSE*/)
 
 Int_t TTreeCacheUnzip::AddBranch(const char *branch, Bool_t subbranches /*= kFALSE*/)
 {
-//   R__LOCKGUARD(fMutexList);
-//   tbb::queuing_rw_mutex::scoped_lock lock(*fRWMutex, true);
-
-//   std::unique_lock<std::shared_mutex> lock(*fRWMutex);
    return TTreeCache::AddBranch(branch, subbranches);
 }
 
@@ -216,89 +198,84 @@ Bool_t TTreeCacheUnzip::FillBuffer()
 {
 
    if (fNbranches <= 0) return kFALSE;
-//   {
-      // Fill the cache buffer with the branches in the cache.
-//      R__LOCKGUARD(fMutexList);
-//      tbb::queuing_rw_mutex::scoped_lock lock(*fRWMutex, true);
-//      std::unique_lock<std::shared_mutex> lock(*fRWMutex);
-      fIsTransferred = kFALSE;
 
-      TTree *tree = ((TBranch*)fBranches->UncheckedAt(0))->GetTree();
-      Long64_t entry = tree->GetReadEntry();
+   // Fill the cache buffer with the branches in the cache.
+   fIsTransferred = kFALSE;
 
-      // If the entry is in the range we previously prefetched, there is
-      // no point in retrying.   Note that this will also return false
-      // during the training phase (fEntryNext is then set intentional to
-      // the end of the training phase).
-      if (fEntryCurrent <= entry  && entry < fEntryNext) return kFALSE;
+   TTree *tree = ((TBranch*)fBranches->UncheckedAt(0))->GetTree();
+   Long64_t entry = tree->GetReadEntry();
 
-      // Triggered by the user, not the learning phase
-      if (entry == -1)  entry=0;
+   // If the entry is in the range we previously prefetched, there is
+   // no point in retrying.   Note that this will also return false
+   // during the training phase (fEntryNext is then set intentional to
+   // the end of the training phase).
+   if (fEntryCurrent <= entry  && entry < fEntryNext) return kFALSE;
 
-      TTree::TClusterIterator clusterIter = tree->GetClusterIterator(entry);
-      fEntryCurrent = clusterIter();
-      fEntryNext = clusterIter.GetNextEntry();
+   // Triggered by the user, not the learning phase
+   if (entry == -1)  entry=0;
 
-      if (fEntryCurrent < fEntryMin) fEntryCurrent = fEntryMin;
-      if (fEntryMax <= 0) fEntryMax = tree->GetEntries();
-      if (fEntryNext > fEntryMax) fEntryNext = fEntryMax;
+   TTree::TClusterIterator clusterIter = tree->GetClusterIterator(entry);
+   fEntryCurrent = clusterIter();
+   fEntryNext = clusterIter.GetNextEntry();
 
-      // Check if owner has a TEventList set. If yes we optimize for this
-      // Special case reading only the baskets containing entries in the
-      // list.
-      TEventList *elist = fTree->GetEventList();
-      Long64_t chainOffset = 0;
-      if (elist) {
-         if (fTree->IsA() ==TChain::Class()) {
-            TChain *chain = (TChain*)fTree;
-            Int_t t = chain->GetTreeNumber();
-            chainOffset = chain->GetTreeOffset()[t];
-         }
+   if (fEntryCurrent < fEntryMin) fEntryCurrent = fEntryMin;
+   if (fEntryMax <= 0) fEntryMax = tree->GetEntries();
+   if (fEntryNext > fEntryMax) fEntryNext = fEntryMax;
+
+   // Check if owner has a TEventList set. If yes we optimize for this
+   // Special case reading only the baskets containing entries in the
+   // list.
+   TEventList *elist = fTree->GetEventList();
+   Long64_t chainOffset = 0;
+   if (elist) {
+      if (fTree->IsA() ==TChain::Class()) {
+         TChain *chain = (TChain*)fTree;
+         Int_t t = chain->GetTreeNumber();
+         chainOffset = chain->GetTreeOffset()[t];
       }
+   }
 
-      //clear cache buffer
-      TFileCacheRead::Prefetch(0,0);
+   //clear cache buffer
+   TFileCacheRead::Prefetch(0,0);
 
-      //store baskets
-      for (Int_t i=0;i<fNbranches;i++) {
-         TBranch *b = (TBranch*)fBranches->UncheckedAt(i);
-         if (b->GetDirectory()==0) continue;
-         if (b->GetDirectory()->GetFile() != fFile) continue;
-         Int_t nb = b->GetMaxBaskets();
-         Int_t *lbaskets   = b->GetBasketBytes();
-         Long64_t *entries = b->GetBasketEntry();
-         if (!lbaskets || !entries) continue;
-         //we have found the branch. We now register all its baskets
-         //from the requested offset to the basket below fEntrymax
-         Int_t blistsize = b->GetListOfBaskets()->GetSize();
-         for (Int_t j=0;j<nb;j++) {
-            // This basket has already been read, skip it
-            if (j<blistsize && b->GetListOfBaskets()->UncheckedAt(j)) continue;
+   //store baskets
+   for (Int_t i=0;i<fNbranches;i++) {
+      TBranch *b = (TBranch*)fBranches->UncheckedAt(i);
+      if (b->GetDirectory()==0) continue;
+      if (b->GetDirectory()->GetFile() != fFile) continue;
+      Int_t nb = b->GetMaxBaskets();
+      Int_t *lbaskets   = b->GetBasketBytes();
+      Long64_t *entries = b->GetBasketEntry();
+      if (!lbaskets || !entries) continue;
+      //we have found the branch. We now register all its baskets
+      //from the requested offset to the basket below fEntrymax
+      Int_t blistsize = b->GetListOfBaskets()->GetSize();
+      for (Int_t j=0;j<nb;j++) {
+         // This basket has already been read, skip it
+         if (j<blistsize && b->GetListOfBaskets()->UncheckedAt(j)) continue;
 
-            Long64_t pos = b->GetBasketSeek(j);
-            Int_t len = lbaskets[j];
-            if (pos <= 0 || len <= 0) continue;
-            //important: do not try to read fEntryNext, otherwise you jump to the next autoflush
-            if (entries[j] >= fEntryNext) continue;
-            if (entries[j] < entry && (j<nb-1 && entries[j+1] <= entry)) continue;
-            if (elist) {
-               Long64_t emax = fEntryMax;
-               if (j<nb-1) emax = entries[j+1]-1;
-               if (!elist->ContainsRange(entries[j]+chainOffset,emax+chainOffset)) continue;
-            }
-            fNReadPref++;
-
-            TFileCacheRead::Prefetch(pos,len);
+         Long64_t pos = b->GetBasketSeek(j);
+         Int_t len = lbaskets[j];
+         if (pos <= 0 || len <= 0) continue;
+         //important: do not try to read fEntryNext, otherwise you jump to the next autoflush
+         if (entries[j] >= fEntryNext) continue;
+         if (entries[j] < entry && (j<nb-1 && entries[j+1] <= entry)) continue;
+         if (elist) {
+            Long64_t emax = fEntryMax;
+            if (j<nb-1) emax = entries[j+1]-1;
+            if (!elist->ContainsRange(entries[j]+chainOffset,emax+chainOffset)) continue;
          }
-         if (gDebug > 0) printf("Entry: %lld, registering baskets branch %s, fEntryNext=%lld, fNseek=%d, fNtot=%d\n",entry,((TBranch*)fBranches->UncheckedAt(i))->GetName(),fEntryNext,fNseek,fNtot);
+         fNReadPref++;
+
+         TFileCacheRead::Prefetch(pos,len);
       }
+      if (gDebug > 0) printf("Entry: %lld, registering baskets branch %s, fEntryNext=%lld, fNseek=%d, fNtot=%d\n",entry,((TBranch*)fBranches->UncheckedAt(i))->GetName(),fEntryNext,fNseek,fNtot);
+   }
 
-      // Now fix the size of the status arrays
-      ResetCache();
-      fIsLearning = kFALSE;
-      CreateTasks();
-
-//   }
+   // Now fix the size of the status arrays
+   ResetCache();
+   fIsLearning = kFALSE;
+   CreateTasks();
 
    return kTRUE;
 }
@@ -312,10 +289,6 @@ Bool_t TTreeCacheUnzip::FillBuffer()
 
 Int_t TTreeCacheUnzip::SetBufferSize(Int_t buffersize)
 {
-//   R__LOCKGUARD(fMutexList);
-//   tbb::queuing_rw_mutex::scoped_lock lock(*fRWMutex, true);
-//   std::unique_lock<std::shared_mutex> lock(*fRWMutex);
-
    Int_t res = TTreeCache::SetBufferSize(buffersize);
    if (res < 0) {
       return res;
@@ -332,10 +305,6 @@ Int_t TTreeCacheUnzip::SetBufferSize(Int_t buffersize)
 
 void TTreeCacheUnzip::SetEntryRange(Long64_t emin, Long64_t emax)
 {
-//   R__LOCKGUARD(fMutexList);
-//   tbb::queuing_rw_mutex::scoped_lock lock(*fRWMutex, true);
-//   std::unique_lock<std::shared_mutex> lock(*fRWMutex);
-
    TTreeCache::SetEntryRange(emin, emax);
 }
 
@@ -345,12 +314,7 @@ void TTreeCacheUnzip::SetEntryRange(Long64_t emin, Long64_t emax)
 
 void TTreeCacheUnzip::StopLearningPhase()
 {
-//   R__LOCKGUARD(fMutexList);
-//   tbb::queuing_rw_mutex::scoped_lock lock(*fRWMutex, true);
-//   std::unique_lock<std::shared_mutex> lock(*fRWMutex);
-
    TTreeCache::StopLearningPhase();
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -358,10 +322,6 @@ void TTreeCacheUnzip::StopLearningPhase()
 
 void TTreeCacheUnzip::UpdateBranches(TTree *tree)
 {
-//   R__LOCKGUARD(fMutexList);
-//   tbb::queuing_rw_mutex::scoped_lock lock(*fRWMutex, true);
-//   std::unique_lock<std::shared_mutex> lock(*fRWMutex);
-
    TTreeCache::UpdateBranches(tree);
 }
 
@@ -396,10 +356,6 @@ Bool_t TTreeCacheUnzip::IsParallelUnzip()
 
 Bool_t TTreeCacheUnzip::IsQueueEmpty()
 {
-//   R__LOCKGUARD(fMutexList);
-//   tbb::queuing_rw_mutex::scoped_lock lock(*fRWMutex, true);
-//   std::unique_lock<std::shared_mutex> lock(*fRWMutex);
-
    if ( fIsLearning )
       return kTRUE;
 
@@ -526,11 +482,12 @@ void TTreeCacheUnzip::ResetCache()
       if (fUnzipLen) delete [] fUnzipLen;
       if (fUnzipChunks) delete [] fUnzipChunks;
 
-      fUnzipStatus  = aUnzipStatus;
-      fUnzipLen  = aUnzipLen;
+      fUnzipStatus = aUnzipStatus;
+      fUnzipLen    = aUnzipLen;
       fUnzipChunks = aUnzipChunks;
 
-      fNseekMax  = fNseek;
+      fNseekMax   = fNseek;
+      fBlocksToGo = fNseek;
    }
 }
 
@@ -823,20 +780,30 @@ Int_t TTreeCacheUnzip::GetUnzipBuffer(char **buf, Long64_t pos, Int_t len, Bool_
                return fUnzipLen[seekidx];
             }
 
+            // If the requested basket is being unzipped by a background task, we try to steal a blk to unzip.
             Int_t reqi = -1;
-
-            // If the requested basket is being unzipped by a background task, we steal a new basket to start unzipping it.
+            
             if (fUnzipStatus[seekidx] == 1) {
-               for (Int_t i = 0; i < fNseek; ++i) {
-                  if (!fUnzipStatus[i]) {
-                     Byte_t oldV = 0;
-                     Byte_t newV = 1;
-                     if(fUnzipStatus[i].compare_exchange_weak(oldV, newV, std::memory_order_release, std::memory_order_relaxed)) {
-                        reqi = i;
-                        break;
+               if (fBlocksToGo > 0) {
+                  for (Int_t ii = 0; ii < fNseek; ++ii) {
+                     if (!fUnzipStatus[ii]) {
+                        Byte_t oldV = 0;
+                        Byte_t newV = 1;
+                        if(fUnzipStatus[ii].compare_exchange_weak(oldV, newV, std::memory_order_release, std::memory_order_relaxed)) {
+                           reqi = ii;
+                           break;
+                        }
                      }
                   }
+                  if (reqi < 0) {
+                     fBlocksToGo = 0;
+                  } else {
+                     Int_t locbuffsz = 16384;
+                     char *locbuff = new char[16384];
+                     UnzipCache(reqi, locbuffsz, locbuff);
+                  }
                }
+
                if ( myCycle != fCycle ) {
                   if (gDebug > 0)
                      Info("GetUnzipBuffer", "Sudden paging Break!!! fNseek: %d, fIsLearning:%d",
@@ -846,12 +813,6 @@ Int_t TTreeCacheUnzip::GetUnzipBuffer(char **buf, Long64_t pos, Int_t len, Bool_
                   break;
                }
             }
-
-            Int_t locbuffsz = 16384;
-            char *locbuff = new char[16384];
-
-            if (reqi >= 0)
-               UnzipCache(reqi, locbuffsz, locbuff);
 
          } while (fUnzipStatus[seekidx] == 1);
 
@@ -949,9 +910,6 @@ void TTreeCacheUnzip::SetUnzipRelBufferSize(Float_t relbufferSize)
 
 void TTreeCacheUnzip::SetUnzipBufferSize(Long64_t bufferSize)
 {
-//   R__LOCKGUARD(fMutexList);
-//   tbb::queuing_rw_mutex::scoped_lock lock(*fRWMutex, true);
-//   std::unique_lock<std::shared_mutex> lock(*fRWMutex);
    fUnzipBufferSize = bufferSize;
 }
 
@@ -1064,5 +1022,4 @@ void  TTreeCacheUnzip::Print(Option_t* option) const {
 Int_t TTreeCacheUnzip::ReadBufferExt(char *buf, Long64_t pos, Int_t len, Int_t &loc) {
    R__LOCKGUARD(fIOMutex);
    return TTreeCache::ReadBufferExt(buf, pos, len, loc);
-
 }
