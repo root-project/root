@@ -33,7 +33,7 @@
 
 //#include <iosfwd>
 #include <vector>
-#include <map>
+#include <unordered_map>
 #include "TMVA/Event.h"
 #include "TMVA/Types.h"
 
@@ -128,8 +128,8 @@ namespace TMVA {
       virtual ~LossFunctionBDT(){};
 
       // abstract methods that need to be implemented
-      virtual void Init(std::map<const TMVA::Event*, LossFunctionEventInfo>& evinfomap, std::vector<double>& boostWeights) = 0;
-      virtual void SetTargets(std::vector<const TMVA::Event*>& evs, std::map< const TMVA::Event*, LossFunctionEventInfo >& evinfomap) = 0;
+      virtual void Init(std::unordered_map<const TMVA::Event*, LossFunctionEventInfo>& evinfomap, std::vector<double>& boostWeights) = 0;
+      virtual void SetTargets(std::vector<const TMVA::Event*>& evs, std::unordered_map< const TMVA::Event*, LossFunctionEventInfo >& evinfomap) = 0;
       virtual Double_t Target(LossFunctionEventInfo& e) = 0;
       virtual Double_t Fit(std::vector<LossFunctionEventInfo>& evs) = 0;
    };
@@ -181,8 +181,8 @@ namespace TMVA {
       ~HuberLossFunctionBDT(){};
 
       // The LossFunctionBDT methods
-      void Init(std::map<const TMVA::Event*, LossFunctionEventInfo>& evinfomap, std::vector<double>& boostWeights);
-      void SetTargets(std::vector<const TMVA::Event*>& evs, std::map< const TMVA::Event*, LossFunctionEventInfo >& evinfomap);
+      void Init(std::unordered_map<const TMVA::Event*, LossFunctionEventInfo>& evinfomap, std::vector<double>& boostWeights);
+      void SetTargets(std::vector<const TMVA::Event*>& evs, std::unordered_map< const TMVA::Event*, LossFunctionEventInfo >& evinfomap);
       Double_t Target(LossFunctionEventInfo& e);
       Double_t Fit(std::vector<LossFunctionEventInfo>& evs);
 
@@ -223,8 +223,8 @@ namespace TMVA {
       ~LeastSquaresLossFunctionBDT(){};
 
       // The LossFunctionBDT methods
-      void Init(std::map<const TMVA::Event*, LossFunctionEventInfo>& evinfomap, std::vector<double>& boostWeights);
-      void SetTargets(std::vector<const TMVA::Event*>& evs, std::map< const TMVA::Event*, LossFunctionEventInfo >& evinfomap);
+      void Init(std::unordered_map<const TMVA::Event*, LossFunctionEventInfo>& evinfomap, std::vector<double>& boostWeights);
+      void SetTargets(std::vector<const TMVA::Event*>& evs, std::unordered_map< const TMVA::Event*, LossFunctionEventInfo >& evinfomap);
       Double_t Target(LossFunctionEventInfo& e);
       Double_t Fit(std::vector<LossFunctionEventInfo>& evs);
    };
@@ -262,8 +262,8 @@ namespace TMVA {
       ~AbsoluteDeviationLossFunctionBDT(){};
 
       // The LossFunctionBDT methods
-      void Init(std::map<const TMVA::Event*, LossFunctionEventInfo>& evinfomap, std::vector<double>& boostWeights);
-      void SetTargets(std::vector<const TMVA::Event*>& evs, std::map< const TMVA::Event*, LossFunctionEventInfo >& evinfomap);
+      void Init(std::unordered_map<const TMVA::Event*, LossFunctionEventInfo>& evinfomap, std::vector<double>& boostWeights);
+      void SetTargets(std::vector<const TMVA::Event*>& evs, std::unordered_map< const TMVA::Event*, LossFunctionEventInfo >& evinfomap);
       Double_t Target(LossFunctionEventInfo& e);
       Double_t Fit(std::vector<LossFunctionEventInfo>& evs);
    };

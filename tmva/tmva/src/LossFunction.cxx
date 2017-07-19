@@ -225,7 +225,7 @@ TMVA::HuberLossFunctionBDT::HuberLossFunctionBDT(){
 ////////////////////////////////////////////////////////////////////////////////
 /// huber BDT, initialize the targets and prepare for the regression
 
-void TMVA::HuberLossFunctionBDT::Init(std::map<const TMVA::Event*, LossFunctionEventInfo>& evinfomap, std::vector<double>& boostWeights){
+void TMVA::HuberLossFunctionBDT::Init(std::unordered_map<const TMVA::Event*, LossFunctionEventInfo>& evinfomap, std::vector<double>& boostWeights){
 // Run this once before building the forest. Set initial prediction to weightedMedian.
 
    std::vector<LossFunctionEventInfo> evinfovec;
@@ -248,7 +248,7 @@ void TMVA::HuberLossFunctionBDT::Init(std::map<const TMVA::Event*, LossFunctionE
 ////////////////////////////////////////////////////////////////////////////////
 /// huber BDT, set the targets for a collection of events
 
-void TMVA::HuberLossFunctionBDT::SetTargets(std::vector<const TMVA::Event*>& evs, std::map< const TMVA::Event*, LossFunctionEventInfo >& evinfomap){
+void TMVA::HuberLossFunctionBDT::SetTargets(std::vector<const TMVA::Event*>& evs, std::unordered_map< const TMVA::Event*, LossFunctionEventInfo >& evinfomap){
 
    std::vector<LossFunctionEventInfo> eventvec;
    for (std::vector<const TMVA::Event*>::const_iterator e=evs.begin(); e!=evs.end();++e){
@@ -359,7 +359,7 @@ Least Squares BDT Loss Function.
 ////////////////////////////////////////////////////////////////////////////////
 /// least squares BDT, initialize the targets and prepare for the regression
 
-void TMVA::LeastSquaresLossFunctionBDT::Init(std::map<const TMVA::Event*, LossFunctionEventInfo>& evinfomap, std::vector<double>& boostWeights){
+void TMVA::LeastSquaresLossFunctionBDT::Init(std::unordered_map<const TMVA::Event*, LossFunctionEventInfo>& evinfomap, std::vector<double>& boostWeights){
 // Run this once before building the forest. Set initial prediction to the weightedMean
 
    std::vector<LossFunctionEventInfo> evinfovec;
@@ -381,9 +381,10 @@ void TMVA::LeastSquaresLossFunctionBDT::Init(std::map<const TMVA::Event*, LossFu
 ////////////////////////////////////////////////////////////////////////////////
 /// least squares BDT, set the targets for a collection of events
 
-void TMVA::LeastSquaresLossFunctionBDT::SetTargets(std::vector<const TMVA::Event*>& evs, std::map< const TMVA::Event*, LossFunctionEventInfo >& evinfomap){
+void TMVA::LeastSquaresLossFunctionBDT::SetTargets(std::vector<const TMVA::Event*>& evs, std::unordered_map< const TMVA::Event*, LossFunctionEventInfo >& evinfomap){
 
    std::vector<LossFunctionEventInfo> eventvec;
+   eventvec.reserve(evs.size());
    for (std::vector<const TMVA::Event*>::const_iterator e=evs.begin(); e!=evs.end();++e){
       eventvec.push_back(LossFunctionEventInfo(evinfomap[*e].trueValue, evinfomap[*e].predictedValue, (*e)->GetWeight()));
    }
@@ -473,7 +474,7 @@ Absolute Deviation BDT Loss Function.
 ////////////////////////////////////////////////////////////////////////////////
 /// absolute deviation BDT, initialize the targets and prepare for the regression
 
-void TMVA::AbsoluteDeviationLossFunctionBDT::Init(std::map<const TMVA::Event*, LossFunctionEventInfo>& evinfomap, std::vector<double>& boostWeights){
+void TMVA::AbsoluteDeviationLossFunctionBDT::Init(std::unordered_map<const TMVA::Event*, LossFunctionEventInfo>& evinfomap, std::vector<double>& boostWeights){
 // Run this once before building the forest. Set initial prediction to weightedMedian.
 
    std::vector<LossFunctionEventInfo> evinfovec;
@@ -494,7 +495,7 @@ void TMVA::AbsoluteDeviationLossFunctionBDT::Init(std::map<const TMVA::Event*, L
 ////////////////////////////////////////////////////////////////////////////////
 /// absolute deviation BDT, set the targets for a collection of events
 
-void TMVA::AbsoluteDeviationLossFunctionBDT::SetTargets(std::vector<const TMVA::Event*>& evs, std::map< const TMVA::Event*, LossFunctionEventInfo >& evinfomap){
+void TMVA::AbsoluteDeviationLossFunctionBDT::SetTargets(std::vector<const TMVA::Event*>& evs, std::unordered_map< const TMVA::Event*, LossFunctionEventInfo >& evinfomap){
 
    std::vector<LossFunctionEventInfo> eventvec;
    for (std::vector<const TMVA::Event*>::const_iterator e=evs.begin(); e!=evs.end();++e){

@@ -210,9 +210,9 @@ namespace TMVA {
       Bool_t                          fBaggedGradBoost; // turn bagging in combination with grad boost on/off
       //Double_t                        fSumOfWeights;    // sum of all event weights
       //std::map< const TMVA::Event*, std::pair<Double_t, Double_t> >       fWeightedResiduals;  // weighted regression residuals
-      std::map< const TMVA::Event*, LossFunctionEventInfo>                fLossFunctionEventInfo;  // map event to true value, predicted value, and weight
+      std::unordered_map< const TMVA::Event*, LossFunctionEventInfo>                fLossFunctionEventInfo;  // map event to true value, predicted value, and weight
                                                                                                    // used by different loss functions for BDT regression
-      std::map< const TMVA::Event*,std::vector<double> > fResiduals; // individual event residuals for gradient boost
+      std::unordered_map< const TMVA::Event*,std::vector<double> > fResiduals; // individual event residuals for gradient boost
 
       //options for the decision Tree
       SeparationBase                 *fSepType;         // the separation used in node splitting
