@@ -60,6 +60,9 @@
 
 #include <string>
 #include <vector>
+#include <fstream>
+#include <iostream>
+#include <sstream>
 
 using namespace clang;
 
@@ -1471,6 +1474,78 @@ namespace cling {
 
     // Enable it *after* parsing the headers.
     m_DynamicLookupEnabled = value;
+  }
+
+  bool Interpreter::setupModules() {
+    clang::CompilerInstance* CI = getCI();
+    std::stringstream declarations;
+    if (CI->getLangOpts().Modules && CI->getLangOpts().CurrentModule.empty()) {
+
+       clang::HeaderSearch &headerSearch = CI->getPreprocessor().getHeaderSearchInfo();
+       clang::ModuleMap &moduleMap = headerSearch.getModuleMap();
+
+       llvm::SetVector<clang::Module *> modules;
+       auto& PP = getParser().getPreprocessor();
+
+       for (auto MI = moduleMap.module_begin(), end = moduleMap.module_end(); MI != end; MI++) {
+          clang::Module* Module = MI->second;
+          HeaderSearchOptions &HSOpts =
+              PP.getHeaderSearchInfo().getHeaderSearchOpts();
+
+          std::string ModuleFileName;
+          bool LoadFromPrebuiltModulePath = false;
+          // We try to load the module from the prebuilt module paths. If not
+          // successful, we then try to find it in the module cache.
+          if (!HSOpts.PrebuiltModulePaths.empty()) {
+            // Load the module from the prebuilt module path.
+            ModuleFileName = PP.getHeaderSearchInfo().getModuleFileName(
+                Module->Name, "", /*UsePrebuiltPath*/ true);
+            if (!ModuleFileName.empty())
+              LoadFromPrebuiltModulePath = true;
+          }
+          if (!LoadFromPrebuiltModulePath && Module) {
+            // Load the module from the module cache.
+            ModuleFileName = PP.getHeaderSearchInfo().getModuleFileName(Module);
+          }
+          bool Exists = false;
+          {
+            std::ifstream f(ModuleFileName);
+            Exists = f.good();
+          }
+          if (Exists)
+            modules.insert(Module);
+       }
+
+       for (size_t i = 0; i < modules.size(); ++i) {
+          clang::Module *M = modules[i];
+          for (clang::Module *subModule : M->submodules()) modules.insert(subModule);
+       }
+
+       // Now we collect all header files from the previously collected modules.
+       std::set<StringRef> moduleHeaders;
+       for (clang::Module *module : modules) {
+          for (int i = 0; i < 4; i++) {
+             auto &headerList = module->Headers[i];
+             for (const clang::Module::Header &moduleHeader : headerList) {
+                moduleHeaders.insert(moduleHeader.NameAsWritten);
+             }
+          }
+       }
+
+       for (StringRef H : moduleHeaders) {
+          if (H == "GL/glew.h")
+             continue;
+          if (H == "GL/glxew.h")
+             continue;
+          if (H.endswith(".inc"))
+             continue;
+          if (H == "TException.h")
+              continue;
+          declarations << "#include \"" << H.str() << "\"\n";
+       }
+    }
+
+    return declare(declarations.str()) == CompilationResult::kSuccess;
   }
 
   Interpreter::ExecutionResult
