@@ -85,8 +85,8 @@ private:
    WebConnList fWebConn;                             ///<! connections list
    ROOT::Experimental::TPadDisplayItem fDisplayList; ///!< full list of items to display
 
-   static std::string fAddr;
-   static THttpServer *gServer;
+   static std::string fAddr;            ///<! real http address (when assigned)
+   static THttpServer *gServer;         ///<! server
 
    /// Disable copy construction.
    TCanvasPainter(const TCanvasPainter &) = delete;
@@ -96,7 +96,7 @@ private:
 
    ROOT::Experimental::Internal::TDrawable *FindDrawable(const ROOT::Experimental::TCanvas &can, const std::string &id);
 
-   void CreateHttpServer();
+   void CreateHttpServer(Bool_t with_http = kFALSE);
    void PopupBrowser();
    void CheckModifiedFlag();
    std::string CreateSnapshot(const ROOT::Experimental::TCanvas &can);
@@ -164,9 +164,11 @@ struct TCanvasPainterReg {
 
 } // unnamed namespace
 
-void TCanvasPainter::CreateHttpServer()
+void TCanvasPainter::CreateHttpServer(Bool_t with_http)
 {
-   if (gServer) return;
+   if (!gServer) gServer = new THttpServer("dummy");
+
+   if (!with_http || !fAddr.empty()) return;
 
    // gServer = new THttpServer("http:8080?loopback&websocket_timeout=10000");
    const char *port = gSystem->Getenv("WEBGUI_PORT");
@@ -177,7 +179,7 @@ void TCanvasPainter::CreateHttpServer()
       port = buf.Data(); // "8181";
    }
    fAddr = TString::Format("http://localhost:%s", port).Data();
-   gServer = new THttpServer(TString::Format("http:%s?websocket_timeout=10000", port).Data());
+   gServer->CreateEngine(TString::Format("http:%s?websocket_timeout=10000", port).Data());
 }
 
 void TCanvasPainter::PopupBrowser()
@@ -265,6 +267,8 @@ void TCanvasPainter::PopupBrowser()
       return;
    }
 #endif
+
+   CreateHttpServer(kTRUE); // ensure that http port is available
 
    addr.Form("%s/web7gui/%s/draw.htm?webcanvas", fAddr.c_str(), GetName());
 
