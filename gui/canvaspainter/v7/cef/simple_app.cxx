@@ -8,9 +8,104 @@
 
 #include "simple_handler.h"
 #include "include/cef_browser.h"
+#include "include/cef_scheme.h"
 #include "include/views/cef_browser_view.h"
 #include "include/views/cef_window.h"
 #include "include/wrapper/cef_helpers.h"
+#include "include/wrapper/cef_stream_resource_handler.h"
+
+#include "THttpServer.h"
+#include "THttpCallArg.h"
+#include "TUrl.h"
+
+THttpServer *gHandlingServer = 0;
+
+// TODO: memory cleanup of these arguments
+class TCEFCallArg : public THttpCallArg, public CefResourceHandler {
+protected:
+   // QWebEngineUrlRequestJob *fRequest;
+   int fDD;
+
+   CefRefPtr<CefCallback> callback_;
+
+   int offset_;
+
+public:
+   TCEFCallArg() : THttpCallArg(), CefResourceHandler(), fDD(0), callback_(), offset_(0) {}
+
+   virtual ~TCEFCallArg()
+   {
+      if (fDD != 1) printf("FAAAAAAAAAAAAAIL %d\n", fDD);
+      fDD = -1;
+   }
+
+   // this is callback from HTTP server
+   virtual void HttpReplied()
+   {
+      fDD++;
+
+      if (IsFile()) {
+         // send file
+         Int_t content_len;
+         char *file_content = THttpServer::ReadFileContent((const char *)GetContent(), content_len);
+         SetBinData(file_content, content_len);
+      }
+
+      offset_ = 0;           // used for reading
+      callback_->Continue(); // we have result and can continue with processing
+   }
+
+   void Cancel() OVERRIDE { CEF_REQUIRE_IO_THREAD(); }
+
+   bool ProcessRequest(CefRefPtr<CefRequest> request, CefRefPtr<CefCallback> callback) OVERRIDE
+   {
+      CEF_REQUIRE_IO_THREAD();
+
+      callback_ = callback;
+
+      gHandlingServer->SubmitHttp(this);
+
+      return true;
+   }
+
+   void GetResponseHeaders(CefRefPtr<CefResponse> response, int64 &response_length, CefString &redirectUrl) OVERRIDE
+   {
+      CEF_REQUIRE_IO_THREAD();
+
+      DCHECK(!Is404());
+
+      response->SetMimeType(GetContentType());
+      response->SetStatus(200);
+
+      // Set the resulting response length.
+      response_length = GetContentLength();
+   }
+
+   bool ReadResponse(void *data_out, int bytes_to_read, int &bytes_read, CefRefPtr<CefCallback> callback) OVERRIDE
+   {
+      CEF_REQUIRE_IO_THREAD();
+
+      bool has_data = false;
+      bytes_read = 0;
+
+      if (offset_ < GetContentLength()) {
+         char *data_ = (char *)GetContent();
+         // Copy the next block of data into the buffer.
+         int transfer_size = GetContentLength() - offset_;
+         if (transfer_size > bytes_to_read) transfer_size = bytes_to_read;
+         memcpy(data_out, data_ + offset_, transfer_size);
+         offset_ += transfer_size;
+
+         bytes_read = transfer_size;
+         has_data = true;
+      }
+
+      return has_data;
+   }
+
+   IMPLEMENT_REFCOUNTING(TCEFCallArg);
+   DISALLOW_COPY_AND_ASSIGN(TCEFCallArg);
+};
 
 namespace {
 
@@ -47,10 +142,75 @@ private:
    DISALLOW_COPY_AND_ASSIGN(SimpleWindowDelegate);
 };
 
+class ROOTSchemeHandlerFactory : public CefSchemeHandlerFactory {
+protected:
+public:
+   explicit ROOTSchemeHandlerFactory() : CefSchemeHandlerFactory() {}
+
+   virtual CefRefPtr<CefResourceHandler> Create(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame,
+                                                const CefString &scheme_name, CefRefPtr<CefRequest> request)
+   {
+      std::string addr = request->GetURL().ToString();
+
+      printf("Request %s server %p\n", addr.c_str(), gHandlingServer);
+
+      TUrl url(addr.c_str());
+
+      const char *inp_path = url.GetFile();
+      const char *inp_query = url.GetOptions();
+      const char *inp_method = "GET";
+
+      TString fname;
+
+      if (gHandlingServer->IsFileRequested(inp_path, fname)) {
+         // process file - no need for special requests handling
+
+         printf("Send file %s\n", fname.Data());
+
+         const char *mime = THttpServer::GetMimeType(fname.Data());
+
+         Int_t content_len;
+
+         char *content = THttpServer::ReadFileContent(fname.Data(), content_len);
+
+         std::string str_content;
+         str_content.append(content, content_len);
+
+         free(content);
+
+         // Create a stream reader for |html_content|.
+         CefRefPtr<CefStreamReader> stream = CefStreamReader::CreateForData(
+            static_cast<void *>(const_cast<char *>(str_content.c_str())), str_content.size());
+
+         // Constructor for HTTP status code 200 and no custom response headers.
+         // There’s also a version of the constructor for custom status code and response headers.
+         return new CefStreamResourceHandler(mime, stream);
+      }
+
+      TCEFCallArg *arg = new TCEFCallArg();
+      arg->SetPathAndFileName(inp_path);
+      arg->SetQuery(inp_query);
+      arg->SetMethod(inp_method);
+      arg->SetTopName("webgui");
+
+      // gHandlingServer->SubmitHttp(arg);
+
+      // just return handler
+      return arg;
+   }
+
+   IMPLEMENT_REFCOUNTING(ROOTSchemeHandlerFactory);
+};
+
 } // namespace
 
-SimpleApp::SimpleApp(const std::string &url, const std::string &cef_main) : fUrl(url), fCefMain(cef_main)
+SimpleApp::SimpleApp(const std::string &url, const std::string &cef_main, THttpServer *serv)
+   : fUrl(), fCefMain(cef_main)
 {
+   fUrl = "http://rootserver";
+   fUrl.append(url);
+   gHandlingServer = serv;
+   printf("Assign url %s\n", fUrl.c_str());
 }
 
 SimpleApp::~SimpleApp()
@@ -90,6 +250,8 @@ void SimpleApp::OnContextInitialized()
 #else
    const bool use_views = false;
 #endif
+
+   CefRegisterSchemeHandlerFactory("http", "rootserver", new ROOTSchemeHandlerFactory());
 
    // SimpleHandler implements browser-level callbacks.
    CefRefPtr<SimpleHandler> handler(new SimpleHandler(use_views));

@@ -7,13 +7,15 @@
 
 #include "include/cef_app.h"
 
+class THttpServer;
+
 // Implement application-level callbacks for the browser process.
 class SimpleApp : public CefApp, public CefBrowserProcessHandler {
 protected:
    std::string fUrl;     ///<! first URL to open
    std::string fCefMain; ///!< executable used for extra processed
 public:
-   SimpleApp(const std::string &url, const std::string &cef_main);
+   SimpleApp(const std::string &url, const std::string &cef_main, THttpServer *server = 0);
    virtual ~SimpleApp();
 
    // CefApp methods:
