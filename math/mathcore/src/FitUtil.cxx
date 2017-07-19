@@ -626,7 +626,6 @@ void FitUtil::EvaluateChi2Gradient(const IModelFunction &f, const BinData &data,
    assert(fg != 0); // must be called by a gradient function
 
    const IGradModelFunction &func = *fg;
-   unsigned int n = data.Size();
 
 #ifdef DEBUG
    std::cout << "\n\nFit data size = " << n << std::endl;
@@ -645,8 +644,9 @@ void FitUtil::EvaluateChi2Gradient(const IModelFunction &f, const BinData &data,
    IntegralEvaluator<> igEval(func, p, useBinIntegral);
 
    unsigned int npar = func.NPar();
+   unsigned initalNPoints = data.Size();
 
-   std::vector<bool> isPointRejected(n);
+   std::vector<bool> isPointRejected(initalNPoints);
 
    auto mapFunction = [&](const unsigned int i) {
       // set all vector values to zero
@@ -742,18 +742,6 @@ void FitUtil::EvaluateChi2Gradient(const IModelFunction &f, const BinData &data,
       return pointContribution;
    };
 
-   // correct the number of points
-   nPoints = n;
-   if (std::any_of(isPointRejected.begin(), isPointRejected.end(), [](bool point) { return point; })) {
-      int nRejected = std::accumulate(isPointRejected.begin(), isPointRejected.end(), 0);
-      assert(nRejected <= n);
-      nPoints = n - nRejected;
-
-      if (nPoints < npar)
-         MATH_ERROR_MSG("FitUtil::EvaluateChi2Gradient",
-                        "Error - too many points rejected for overflow in gradient calculation");
-   }
-
    // Vertically reduce the set of vectors by summing its equally-indexed components
    auto redFunction = [&](const std::vector<std::vector<double>> &pointContributions) {
       std::vector<double> result(npar);
@@ -769,17 +757,17 @@ void FitUtil::EvaluateChi2Gradient(const IModelFunction &f, const BinData &data,
    std::vector<double> g(npar);
 
    if (executionPolicy == ROOT::Fit::kSerial) {
-      std::vector<std::vector<double>> allGradients(n);
-      for (unsigned int i = 0; i < n; ++i) {
+      std::vector<std::vector<double>> allGradients(initalNPoints);
+      for (unsigned int i = 0; i < initalNPoints; ++i) {
          allGradients[i] = mapFunction(i);
       }
       g = redFunction(allGradients);
    }
 #ifdef R__USE_IMT
    else if (executionPolicy == ROOT::Fit::kMultithread) {
-      auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(data.Size());
+      auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(initalNPoints);
       ROOT::TThreadExecutor pool;
-      g = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction, chunks);
+      g = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, initalNPoints), redFunction, chunks);
    }
 #endif
    // else if(executionPolicy == ROOT::Fit::kMultiprocess){
@@ -789,6 +777,19 @@ void FitUtil::EvaluateChi2Gradient(const IModelFunction &f, const BinData &data,
    else {
       Error("FitUtil::EvaluateChi2Gradient",
             "Execution policy unknown. Avalaible choices:\n 0: Serial (default)\n 1: MultiThread (requires IMT)\n");
+   }
+
+   // correct the number of points
+   nPoints = initalNPoints;
+
+   if (std::any_of(isPointRejected.begin(), isPointRejected.end(), [](bool point) { return point; })) {
+      int nRejected = std::accumulate(isPointRejected.begin(), isPointRejected.end(), 0);
+      assert(nRejected <= initalNPoints);
+      nPoints = initalNPoints - nRejected;
+
+      if (nPoints < npar)
+         MATH_ERROR_MSG("FitUtil::EvaluateChi2Gradient",
+                        "Error - too many points rejected for overflow in gradient calculation");
    }
 
    // copy result

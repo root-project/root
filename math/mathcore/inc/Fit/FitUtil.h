@@ -863,9 +863,11 @@ namespace FitUtil {
 
          unsigned int npar = func.NPar();
          auto vecSize = vecCore::VectorSize<T>();
-         unsigned numVectors = data.Size() / vecSize;
+         unsigned initalNPoints = data.Size();
+         unsigned numVectors = initalNPoints / vecSize;
 
-         std::vector<vecCore::Mask<T>> validPointsMasks(numVectors);
+         // numVectors + 1 because of the padded data (call to mapFunction with i = numVectors after the main loop)
+         std::vector<vecCore::Mask<T>> validPointsMasks(numVectors + 1);
 
          auto mapFunction = [&](const unsigned int i) {
             // set all vector values to zero
@@ -884,7 +886,6 @@ namespace FitUtil {
                vecCore::Load<T>(invError, invErrorPtr);
 
             // TODO: Check error options and invert if needed
-            // invError = (invError != 0.0) ? 1.0 / invError : 1;
 
             T fval = 0;
 
@@ -918,8 +919,7 @@ namespace FitUtil {
             }
 
             // loop on the parameters
-            unsigned int ipar = 0;
-            for (; ipar < npar; ++ipar) {
+            for (unsigned int ipar = 0; ipar < npar; ++ipar) {
                // avoid singularity in the function (infinity and nan ) in the chi2 sum
                // eventually add possibility of excluding some points (like singularity)
                validPointsMasks[i] = CheckVectorValue(gradFunc[ipar]);
@@ -935,28 +935,6 @@ namespace FitUtil {
 
             return pointContributionVec;
          };
-
-         // correct the number of points
-         int n = data.Size();
-         nPoints = n;
-
-         if (std::any_of(validPointsMasks.begin(), validPointsMasks.end(),
-                         [](vecCore::Mask<T> validPoints) { return !vecCore::MaskFull(validPoints); })) {
-            int nRejected = 0;
-
-            for (const auto &mask : validPointsMasks) {
-               for (unsigned int i = 0; i < vecSize; i++) {
-                  nRejected += !vecCore::Get(mask, i);
-               }
-            }
-
-            assert(nRejected <= n);
-            nPoints = n - nRejected;
-
-            if (nPoints < npar)
-               MATH_ERROR_MSG("FitUtil::EvaluateChi2Gradient",
-                              "Error - too many points rejected for overflow in gradient calculation");
-         }
 
          // Reduce the set of vectors by summing its equally-indexed components
          auto redFunction = [&](const std::vector<std::vector<T>> &partialResults) {
@@ -999,13 +977,35 @@ namespace FitUtil {
          }
 
          // Compute the contribution from the remaining points
-         auto remainingPointsContribution = mapFunction(n / vecSize);
+         auto remainingPointsContribution = mapFunction(numVectors);
 
          // Add the contribution from the valid remaining points and store the result in the output variable
-         auto remainingMask = vecCore::Int2Mask<T>(data.Size() % vecSize);
+         auto remainingMask = vecCore::Int2Mask<T>(initalNPoints % vecSize);
          for (unsigned int param = 0; param < npar; param++) {
             vecCore::MaskedAssign(gVec[param], remainingMask, gVec[param] + remainingPointsContribution[param]);
             grad[param] = vecCore::ReduceAdd(gVec[param]);
+         }
+
+         // correct the number of points
+         nPoints = initalNPoints;
+
+         if (std::any_of(validPointsMasks.begin(), validPointsMasks.end(),
+                         [](vecCore::Mask<T> validPoints) { return !vecCore::MaskFull(validPoints); })) {
+            int nRejected = 0;
+
+            for (const auto &mask : validPointsMasks) {
+               for (unsigned int i = 0; i < vecSize; i++) {
+                  nRejected += !vecCore::Get(mask, i);
+               }
+            }
+
+            assert(nRejected <= initalNPoints);
+            nPoints = initalNPoints - nRejected;
+
+            if (nPoints < npar) {
+               MATH_ERROR_MSG("FitUtil::EvaluateChi2Gradient",
+                              "Too many points rejected for overflow in gradient calculation");
+            }
          }
       }
 
