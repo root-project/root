@@ -766,7 +766,7 @@ template <typename Architecture_t, typename Layer_t>
 auto TDeepNet<Architecture_t, Layer_t>::Prediction(Matrix_t &predictions, EOutputFunction f) const -> void
 {
    // Last layer should not be deep
-   evaluate<Architecture_t>(predictions, f, fLayers.back().GetOutputAt(0));
+   evaluate<Architecture_t>(predictions, f, fLayers.back()->GetOutputAt(0));
 }
 
 //______________________________________________________________________________
@@ -776,7 +776,7 @@ auto TDeepNet<Architecture_t, Layer_t>::Prediction(Matrix_t &predictions, std::v
 {
    Forward(input, false);
    // Last layer should not be deep
-   evaluate<Architecture_t>(predictions, f, fLayers.back().GetOutputAt(0));
+   evaluate<Architecture_t>(predictions, f, fLayers.back()->GetOutputAt(0));
 }
 
 //______________________________________________________________________________
