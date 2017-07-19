@@ -207,7 +207,7 @@ public:
 SimpleApp::SimpleApp(const std::string &url, const std::string &cef_main, THttpServer *serv)
    : fUrl(), fCefMain(cef_main)
 {
-   fUrl = "http://rootserver";
+   fUrl = "rootscheme://rootserver";
    fUrl.append(url);
    gHandlingServer = serv;
    printf("Assign url %s\n", fUrl.c_str());
@@ -215,6 +215,11 @@ SimpleApp::SimpleApp(const std::string &url, const std::string &cef_main, THttpS
 
 SimpleApp::~SimpleApp()
 {
+}
+
+void SimpleApp::OnRegisterCustomSchemes(CefRawPtr<CefSchemeRegistrar> registrar)
+{
+   registrar->AddCustomScheme("rootscheme", true, false, false, true, false, false);
 }
 
 void SimpleApp::OnBeforeCommandLineProcessing(const CefString &process_type, CefRefPtr<CefCommandLine> command_line)
@@ -251,7 +256,7 @@ void SimpleApp::OnContextInitialized()
    const bool use_views = false;
 #endif
 
-   CefRegisterSchemeHandlerFactory("http", "rootserver", new ROOTSchemeHandlerFactory());
+   CefRegisterSchemeHandlerFactory("rootscheme", "rootserver", new ROOTSchemeHandlerFactory());
 
    // SimpleHandler implements browser-level callbacks.
    CefRefPtr<SimpleHandler> handler(new SimpleHandler(use_views));
