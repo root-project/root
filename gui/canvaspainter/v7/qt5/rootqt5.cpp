@@ -61,7 +61,8 @@ public:
 
 // THttpServer *server = 0;
 
-int nhandler = 0; // counter how many handler was created
+int nhandler = 0;           // counter how many handler was created
+void *last_http_server = 0; // remember which server was specified last time
 
 // TODO: memory cleanup of these arguments
 class TWebGuiCallArg : public THttpCallArg {
@@ -129,7 +130,10 @@ class ROOTSchemeHandler : public QWebEngineUrlSchemeHandler {
 protected:
    THttpServer *fServer; ///< server instance which should handle requests
 public:
-   ROOTSchemeHandler(QObject *p = Q_NULLPTR, THttpServer *server = Q_NULLPTR) : QWebEngineUrlSchemeHandler(p), fServer(server) {}
+   ROOTSchemeHandler(QObject *p = Q_NULLPTR, THttpServer *server = Q_NULLPTR)
+      : QWebEngineUrlSchemeHandler(p), fServer(server)
+   {
+   }
 
    virtual void requestStarted(QWebEngineUrlRequestJob *request)
    {
@@ -189,14 +193,24 @@ extern "C" void webgui_start_browser_in_qt5(const char *url, void *http_serv)
    // webgui_initapp();
 
    char protocol[100], fullurl[2000];
-   snprintf(protocol, sizeof(protocol), "roothandler%d", nhandler++);
+   bool create_handler = false;
+
+   if (last_http_server != http_serv) {
+      last_http_server = http_serv;
+      create_handler = true;
+      nhandler++;
+   }
+
+   snprintf(protocol, sizeof(protocol), "roothandler%d", nhandler);
    snprintf(fullurl, sizeof(fullurl), "%s%s", protocol, url);
 
    printf("Start %s\n", fullurl);
 
-   const QByteArray protocol_name = QByteArray(protocol);
-   ROOTSchemeHandler *handler = new ROOTSchemeHandler(Q_NULLPTR, (THttpServer *)http_serv);
-   QWebEngineProfile::defaultProfile()->installUrlSchemeHandler(protocol_name, handler);
+   if (create_handler) {
+      const QByteArray protocol_name = QByteArray(protocol);
+      ROOTSchemeHandler *handler = new ROOTSchemeHandler(Q_NULLPTR, (THttpServer *)http_serv);
+      QWebEngineProfile::defaultProfile()->installUrlSchemeHandler(protocol_name, handler);
+   }
 
    RootWebView *view = new RootWebView();
    view->load(QUrl(fullurl));
