@@ -48,8 +48,9 @@ void constructConvNet(TDeepNet<AArchitecture> &net)
 
    size_t depthReshape = 1;
    size_t heightReshape = 1;
-   size_t widthReshape = net.GetLayerAt(net.GetDepth() - 1).GetDepth() *
-                         net.GetLayerAt(net.GetDepth() - 1).GetHeight() * net.GetLayerAt(net.GetDepth() - 1).GetWidth();
+   size_t widthReshape = net.GetLayerAt(net.GetDepth() - 1)->GetDepth() *
+                         net.GetLayerAt(net.GetDepth() - 1)->GetHeight() *
+                         net.GetLayerAt(net.GetDepth() - 1)->GetWidth();
 
    net.AddReshapeLayer(depthReshape, heightReshape, widthReshape);
 

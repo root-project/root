@@ -17,3 +17,6 @@ ROOT_ADD_TEST(TMVA-DNN-CNN-Downsample COMMAND testDownsample)
 
 ROOT_EXECUTABLE(testRotWeights TestRotateWeights.cxx LIBRARIES ${Libraries})
 ROOT_ADD_TEST(TMVA-DNN-CNN-rotWeights COMMAND testrotWeights)
+
+ROOT_EXECUTABLE(testForwardPass TestForwardPass.cxx LIBRARIES ${Libraries})
+ROOT_ADD_TEST(TMVA-DNN-CNN-Forward COMMAND testForwardPass)

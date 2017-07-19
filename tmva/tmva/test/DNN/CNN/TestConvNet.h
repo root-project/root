@@ -146,6 +146,7 @@ auto testConvForwardPass(size_t batchSize, size_t imgDepth, size_t imgHeight, si
 
    Net_t convNet(batchSize, imgDepth, imgHeight, imgWidth, batchDepth, batchHeight, batchWidth,
                  ELossFunction::kMeanSquaredError, EInitialization::kGauss);
+   constructConvNet(convNet);
    convNet.Initialize();
 
    std::vector<Matrix_t> X;
