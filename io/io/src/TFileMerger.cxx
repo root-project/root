@@ -311,20 +311,37 @@ Bool_t TFileMerger::OutputFile(const char *outputfile, Bool_t force)
 
 Bool_t TFileMerger::OutputFile(const char *outputfile, const char *mode, Int_t compressionLevel)
 {
+   // We want gDirectory untouched by anything going on here
+   TDirectory::TContext ctxt;
+   if (TFile *outputFile = TFile::Open(outputfile, mode, "", compressionLevel))
+      return OutputFile(std::unique_ptr<TFile>(outputFile));
+
+   Error("OutputFile", "cannot open the MERGER output file %s", fOutputFilename.Data());
+   return kFALSE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set an output file opened externally by the users
+
+Bool_t TFileMerger::OutputFile(std::unique_ptr<TFile> outputfile)
+{
+   if (!outputfile || outputfile->IsZombie()) {
+      Error("OutputFile", "cannot open the MERGER output file %s", (outputfile) ? outputfile->GetName() : "");
+      return kFALSE;
+   }
+
    fExplicitCompLevel = kTRUE;
 
    TFile *oldfile = fOutputFile;
-   fOutputFile = 0; // This avoids the complaint from RecursiveRemove about the file being deleted which is here spurrious. (see RecursiveRemove).
+   fOutputFile = 0; // This avoids the complaint from RecursiveRemove about the file being deleted which is here
+                    // spurrious. (see RecursiveRemove).
    SafeDelete(oldfile);
 
-   fOutputFilename = outputfile;
-
+   fOutputFilename = outputfile->GetName();
    // We want gDirectory untouched by anything going on here
    TDirectory::TContext ctxt;
-   if (!(fOutputFile = TFile::Open(outputfile, mode, "", compressionLevel)) || fOutputFile->IsZombie()) {
-      Error("OutputFile", "cannot open the MERGER output file %s", fOutputFilename.Data());
-      return kFALSE;
-   }
+   fOutputFile = outputfile.release(); // Transfer the ownership of the file.
+
    return kTRUE;
 }
 

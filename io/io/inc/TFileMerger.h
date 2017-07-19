@@ -16,6 +16,8 @@
 #include "TString.h"
 #include "TStopwatch.h"
 
+#include <memory>
+
 class TList;
 class TFile;
 class TDirectory;
@@ -97,6 +99,7 @@ public:
    virtual Bool_t OutputFile(const char *url, Bool_t force, Int_t compressionLevel);
    virtual Bool_t OutputFile(const char *url, const char *mode = "RECREATE");
    virtual Bool_t OutputFile(const char *url, const char *mode, Int_t compressionLevel);
+   virtual Bool_t OutputFile(std::unique_ptr<TFile> file);
    virtual void   PrintFiles(Option_t *options);
    virtual Bool_t Merge(Bool_t = kTRUE);
    virtual Bool_t PartialMerge(Int_t type = kAll | kIncremental);

@@ -18,7 +18,7 @@ namespace ROOT {
 namespace Experimental {
 
 TBufferMergerFile::TBufferMergerFile(TBufferMerger &m)
-   : TMemFile(m.fName.c_str(), "recreate", "", m.fCompress), fMerger(m)
+   : TMemFile(m.fFile->GetName(), "recreate", "", m.fFile->GetCompressionSettings()), fMerger(m)
 {
 }
 
