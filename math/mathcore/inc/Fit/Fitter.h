@@ -133,7 +133,7 @@ public:
        it must implement the 1D or multidimensional parametric function interface
    */
    template < class Data , class Function, class cond = typename std::enable_if<!(std::is_same<Function, int>::value), Function>::type>
-   bool Fit( const Data & data, const Function & func, ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::kSerial) {
+   bool Fit( const Data & data, const Function & func, ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial) {
       SetFunction(func);
       return Fit(data, executionPolicy);
    }
@@ -141,11 +141,11 @@ public:
    /**
        Fit a binned data set using a least square fit (default method)
    */
-   bool Fit(const BinData & data, ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::kSerial) {
+   bool Fit(const BinData & data, ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial) {
       SetData(data);
       return DoLeastSquareFit(executionPolicy);
    }
-   bool Fit(const std::shared_ptr<BinData> & data, ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::kSerial) {
+   bool Fit(const std::shared_ptr<BinData> & data, ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial) {
       SetData(data);
       return DoLeastSquareFit(executionPolicy);
    }
@@ -160,7 +160,7 @@ public:
    /**
        fit an unbinned data set using loglikelihood method
    */
-   bool Fit(const UnBinData & data, bool extended = false, ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::kSerial) {
+   bool Fit(const UnBinData & data, bool extended = false, ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial) {
       SetData(data);
       return DoUnbinnedLikelihoodFit(extended, executionPolicy);
    }
@@ -169,24 +169,24 @@ public:
       Binned Likelihood fit. Default is extended
     */
    bool LikelihoodFit(const BinData &data, bool extended = true,
-                      ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::kSerial) {
+                      ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial) {
       SetData(data);
       return DoBinnedLikelihoodFit(extended, executionPolicy);
    }
 
    bool LikelihoodFit(const std::shared_ptr<BinData> &data, bool extended = true,
-                      ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::kSerial) {
+                      ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial) {
       SetData(data);
       return DoBinnedLikelihoodFit(extended, executionPolicy);
    }
    /**
       Unbinned Likelihood fit. Default is not extended
     */
-   bool LikelihoodFit(const UnBinData & data, bool extended = false, ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::kSerial) {
+   bool LikelihoodFit(const UnBinData & data, bool extended = false, ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial) {
       SetData(data);
       return DoUnbinnedLikelihoodFit(extended, executionPolicy);
    }
-   bool LikelihoodFit(const std::shared_ptr<UnBinData> & data, bool extended = false, ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::kSerial) {
+   bool LikelihoodFit(const std::shared_ptr<UnBinData> & data, bool extended = false, ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial) {
       SetData(data);
       return DoUnbinnedLikelihoodFit(extended, executionPolicy);
    }
@@ -431,11 +431,11 @@ protected:
 
 
    /// least square fit
-   bool DoLeastSquareFit(ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::kSerial);
+   bool DoLeastSquareFit(ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial);
    /// binned likelihood fit
-   bool DoBinnedLikelihoodFit(bool extended = true, ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::kSerial);
+   bool DoBinnedLikelihoodFit(bool extended = true, ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial);
    /// un-binned likelihood fit
-   bool DoUnbinnedLikelihoodFit( bool extended = false, ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::kSerial);
+   bool DoUnbinnedLikelihoodFit( bool extended = false, ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial);
    /// linear least square fit
    bool DoLinearFit();
 
