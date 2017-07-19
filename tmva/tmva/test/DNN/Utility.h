@@ -54,9 +54,13 @@ void constructConvNet(TDeepNet<AArchitecture> &net)
 
    net.AddReshapeLayer(depthReshape, heightReshape, widthReshape);
 
-   size_t widthFC = 20;
-   EActivationFunction fFC = ActivationFunctions[rand() % ActivationFunctions.size()];
-   net.AddDenseLayer(widthFC, fFC);
+   size_t widthFC1 = 20;
+   EActivationFunction fFC1 = ActivationFunctions[rand() % ActivationFunctions.size()];
+   net.AddDenseLayer(widthFC1, fFC1);
+
+   size_t widthFC2 = 5;
+   EActivationFunction fFC2 = EActivationFunction::kIdentity;
+   net.AddDenseLayer(widthFC2, fFC2);
 }
 
 /** Construct a random linear neural network with up to five layers.*/
