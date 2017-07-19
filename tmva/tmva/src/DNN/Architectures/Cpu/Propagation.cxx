@@ -170,5 +170,11 @@ void TCpu<AFloat>::MaxPoolLayerBackward(std::vector<TCpuMatrix<AFloat>> &activat
 {
 }
 
+//____________________________________________________________________________
+template <typename AFloat>
+void TCpu<AFloat>::Reshape(TCpuMatrix<AFloat> &A, const TCpuMatrix<AFloat> &B)
+{
+}
+
 } // namespace DNN
 } // namespace TMVA

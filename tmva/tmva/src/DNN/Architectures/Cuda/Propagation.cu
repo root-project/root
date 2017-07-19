@@ -267,5 +267,12 @@ void TCuda<AFloat>::MaxPoolLayerBackward(std::vector<TCudaMatrix<AFloat>> & acti
 
 }
 
+//____________________________________________________________________________
+template<typename AFloat>
+void TCuda<AFloat>::Reshape(TCudaMatrix<AFloat> &A, const TCudaMatrix<AFloat> &B)
+{
+    
+}
+
 } // namespace DNN
 } // namespace TMVA
