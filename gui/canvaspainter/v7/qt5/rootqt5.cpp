@@ -35,6 +35,8 @@
 #include "THttpServer.h"
 #include "THttpCallArg.h"
 
+#include <stdio.h>
+
 #include "rootwebview.h"
 
 class TQt5Timer : public TTimer {
@@ -57,7 +59,9 @@ public:
    }
 };
 
-THttpServer *server = 0;
+// THttpServer *server = 0;
+
+int nhandler = 0; // counter how many handler was created
 
 // TODO: memory cleanup of these arguments
 class TWebGuiCallArg : public THttpCallArg {
@@ -122,8 +126,10 @@ public:
 };
 
 class ROOTSchemeHandler : public QWebEngineUrlSchemeHandler {
+protected:
+   THttpServer *fServer; ///< server instance which should handle requests
 public:
-   ROOTSchemeHandler(QObject *p = Q_NULLPTR) : QWebEngineUrlSchemeHandler(p) {}
+   ROOTSchemeHandler(QObject *p = Q_NULLPTR, THttpServer *server = Q_NULLPTR) : QWebEngineUrlSchemeHandler(p), fServer(server) {}
 
    virtual void requestStarted(QWebEngineUrlRequestJob *request)
    {
@@ -134,7 +140,7 @@ public:
 
       // printf("[%ld] Request started %s\n", TThread::SelfId(), ba.data());
 
-      if (!server) {
+      if (!fServer) {
          printf("HttpServer is not specified\n");
          return;
       }
@@ -147,7 +153,7 @@ public:
 
       TString fname;
 
-      if (server->IsFileRequested(inp_path.toLatin1().data(), fname)) {
+      if (fServer->IsFileRequested(inp_path.toLatin1().data(), fname)) {
 
          arg->SendFile(fname.Data());
          delete arg;
@@ -160,11 +166,7 @@ public:
       arg->SetMethod(inp_method.toLatin1().data());
       arg->SetTopName("webgui");
 
-      // TODO: POST buffer
-
-      // printf("SUBMIT %s %s\n", arg->GetPathName(), arg->GetFileName());
-
-      server->SubmitHttp(arg);
+      fServer->SubmitHttp(arg);
    }
 };
 
@@ -184,15 +186,20 @@ public:
 
 extern "C" void webgui_start_browser_in_qt5(const char *url, void *http_serv)
 {
-
    // webgui_initapp();
 
-   printf("Start %s server %p\n", url, http_serv);
+   char protocol[100], fullurl[2000];
+   snprintf(protocol, sizeof(protocol), "roothandler%d", nhandler++);
+   snprintf(fullurl, sizeof(fullurl), "%s%s", protocol, url);
 
-   server = (THttpServer *) http_serv;
+   printf("Start %s\n", fullurl);
+
+   const QByteArray protocol_name = QByteArray(protocol);
+   ROOTSchemeHandler *handler = new ROOTSchemeHandler(Q_NULLPTR, (THttpServer *)http_serv);
+   QWebEngineProfile::defaultProfile()->installUrlSchemeHandler(protocol_name, handler);
 
    RootWebView *view = new RootWebView();
-   view->load(QUrl(url));
+   view->load(QUrl(fullurl));
    view->show();
 }
 
@@ -220,12 +227,6 @@ int main(int argc, char *argv[])
 
    // use only for debugging or may be for redirection
    // QWebEngineProfile::defaultProfile()->setRequestInterceptor(new ROOTRequestInterceptor());
-
-   const QByteArray EXAMPLE_SCHEMA_HANDLER = QByteArray("example");
-
-   ROOTSchemeHandler *handler = new ROOTSchemeHandler();
-
-   QWebEngineProfile::defaultProfile()->installUrlSchemeHandler(EXAMPLE_SCHEMA_HANDLER, handler);
 
    // const QWebEngineUrlSchemeHandler* installed =
    // QWebEngineProfile::defaultProfile()->urlSchemeHandler(EXAMPLE_SCHEMA_HANDLER);
