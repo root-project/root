@@ -347,6 +347,19 @@ public:
 
    //____________________________________________________________________________
    //
+   //  Max Pooling Layer Propagation
+   //____________________________________________________________________________
+   /** @name Forward and Backward Propagation in Reshape Layer
+    */
+   ///@{
+
+   /** Transform the matrix \p B to a matrix with different dimensions \p A */
+   static void Reshape(TCpuMatrix<AReal> &A, const TCpuMatrix<AReal> &B);
+
+   ///@}
+
+   //____________________________________________________________________________
+   //
    // Additional Arithmetic Functions
    //____________________________________________________________________________
 
