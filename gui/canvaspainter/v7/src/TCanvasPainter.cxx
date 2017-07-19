@@ -188,7 +188,7 @@ void TCanvasPainter::PopupBrowser()
    if (symbol) {
       typedef void (*FunctionFunc)(const char *, void *);
 
-      addr.Form("example://dummy:8080/web7gui/%s/draw.htm?longpollcanvas", GetName());
+      addr.Form("://dummy:8080/web7gui/%s/draw.htm?longpollcanvas", GetName());
       // addr.Form("example://localhost:8080/Canvases/%s/draw.htm", Canvas()->GetName());
 
       Info("PopupBrowser", "Show canvas in Qt5 window:  %s", addr.Data());
