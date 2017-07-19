@@ -592,6 +592,7 @@ void MethodDL::ParseReshapeLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet
                                  std::vector<DNN::TDeepNet<Architecture_t, Layer_t>> &nets, TString layerString,
                                  TString delim)
 {
+   int depth = 0;
    int height = 0;
    int width = 0;
 
@@ -603,12 +604,16 @@ void MethodDL::ParseReshapeLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet
 
    for (; token != nullptr; token = (TObjString *)nextToken()) {
       switch (idxToken) {
-      case 1: // height
+      case 1: {
+         TString strDepth(token->GetString());
+         depth = strDepth.Atoi();
+      } break;
+      case 2: // height
       {
          TString strHeight(token->GetString());
          height = strHeight.Atoi();
       } break;
-      case 2: // width
+      case 3: // width
       {
          TString strWidth(token->GetString());
          width = strWidth.Atoi();
@@ -618,7 +623,7 @@ void MethodDL::ParseReshapeLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet
    }
 
    // Add the reshape layer
-   TReshapeLayer<Architecture_t> *reshapeLayer = deepNet.AddReshapeLayer(height, width);
+   TReshapeLayer<Architecture_t> *reshapeLayer = deepNet.AddReshapeLayer(depth, height, width);
    TReshapeLayer<Architecture_t> *copyReshapeLayer = new TReshapeLayer<Architecture_t>(*reshapeLayer);
 
    // add the copy to all slave nets
