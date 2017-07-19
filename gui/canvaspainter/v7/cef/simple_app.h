@@ -21,6 +21,8 @@ public:
    // CefApp methods:
    virtual CefRefPtr<CefBrowserProcessHandler> GetBrowserProcessHandler() OVERRIDE { return this; }
 
+   void OnRegisterCustomSchemes(CefRawPtr<CefSchemeRegistrar> registrar) OVERRIDE;
+
    // CefBrowserProcessHandler methods:
    virtual void OnContextInitialized() OVERRIDE;
 
