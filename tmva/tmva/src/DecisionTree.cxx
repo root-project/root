@@ -561,9 +561,9 @@ void TMVA::DecisionTree::FillEvent( const TMVA::Event & event,
 
    if (node->GetNodeType() == 0) { //intermediate node --> go down
       if (node->GoesRight(event))
-         this->FillEvent(event,static_cast<TMVA::DecisionTreeNode*>(node->GetRight())) ;
+         this->FillEvent(event, node->GetRight());
       else
-         this->FillEvent(event,static_cast<TMVA::DecisionTreeNode*>(node->GetLeft())) ;
+         this->FillEvent(event, node->GetLeft());
    }
 }
 
