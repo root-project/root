@@ -198,11 +198,11 @@ void TCanvasPainter::PopupBrowser()
       return;
    }
 
-   addr.Form("%s/web7gui/%s/draw.htm?webcanvas", fAddr.c_str(), GetName());
-
 #ifdef WEBGUI_WITH_CEF
    const char *cef = gSystem->Getenv("CEF_PATH");
    if (cef && !gSystem->AccessPathName(cef)) {
+
+      addr.Form("/web7gui/%s/draw.htm?longpollcanvas", GetName());
 
       TApplication *root_app = gROOT->GetApplication();
 
@@ -250,7 +250,7 @@ void TCanvasPainter::PopupBrowser()
       // SimpleApp implements application-level callbacks for the browser process.
       // It will create the first browser instance in OnContextInitialized() after
       // CEF has initialized.
-      CefRefPtr<SimpleApp> *app = new CefRefPtr<SimpleApp>(new SimpleApp(addr.Data(), cef_main.Data()));
+      CefRefPtr<SimpleApp> *app = new CefRefPtr<SimpleApp>(new SimpleApp(addr.Data(), cef_main.Data(), gServer));
 
       // Initialize CEF for the browser process.
       CefInitialize(main_args, settings, app->get(), NULL);
@@ -265,6 +265,8 @@ void TCanvasPainter::PopupBrowser()
       return;
    }
 #endif
+
+   addr.Form("%s/web7gui/%s/draw.htm?webcanvas", fAddr.c_str(), GetName());
 
    TString exec;
 
