@@ -848,13 +848,11 @@ RooDataSet::RooDataSet(const char *name, const char *title, RooDataSet *dset,
 {
   _dstore = (defaultStorageType==Tree) ? 
     ((RooAbsDataStore*) new RooTreeDataStore(name,title,*dset->_dstore,_vars,cutVar,cutRange,nStart,nStop,copyCache,wgtVarName)) :
-    (
-//     ( dset->_dstore->IsA()==RooCompositeDataStore::Class() )? 
-//      ((RooAbsDataStore*) new RooCompositeDataStore(name,title,(RooCompositeDataStore&)(*dset->_dstore),_vars,cutVar,cutRange,nStart,nStop,copyCache,wgtVarName)) 
-//      : 
-     ((RooAbsDataStore*) new RooVectorDataStore(name,title,*dset->_dstore,_vars,cutVar,cutRange,nStart,nStop,copyCache,wgtVarName)) 
-     )
-    ;
+    ( ( dset->_dstore->IsA()==RooCompositeDataStore::Class() )? 
+      ((RooAbsDataStore*) new RooCompositeDataStore(name,title,(RooCompositeDataStore&)(*dset->_dstore),_vars,cutVar,cutRange,nStart,nStop,copyCache,wgtVarName)) 
+      : 
+      ((RooAbsDataStore*) new RooVectorDataStore(name,title,*dset->_dstore,_vars,cutVar,cutRange,nStart,nStop,copyCache,wgtVarName)) 
+      ) ;
 
   _cachedVars.add(_dstore->cachedVars()) ;
 
