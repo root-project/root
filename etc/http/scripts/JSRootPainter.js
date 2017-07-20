@@ -137,7 +137,7 @@
    JSROOT.Painter.createMenu = function(painter, maincallback) {
       // dummy functions, forward call to the jquery function
       document.body.style.cursor = 'wait';
-      JSROOT.AssertPrerequisites('hierarchy;jq2d', function() {
+      JSROOT.AssertPrerequisites('hierarchy;jq2d;openui5;', function() {
          document.body.style.cursor = 'auto';
          JSROOT.Painter.createMenu(painter, maincallback);
       });
@@ -2530,31 +2530,31 @@
       var pthis = this, sum1 = 0, sum2 = 0, cnt = 0;
 
       function retry_open(first_time) {
-    	 console.log("try again");
 
-    	 if (pthis._websocket_opened) return;
-    	 if (pthis._websocket) pthis._websocket.close();
-    	 delete pthis._websocket;
+      if (pthis._websocket_opened) return;
+      console.log("try open wensocket again");
+      if (pthis._websocket) pthis._websocket.close();
+      delete pthis._websocket;
 
-         var path = window.location.href, conn = null;
+      var path = window.location.href, conn = null;
 
-         if (!pthis._use_longpoll && first_time) {
-            path = path.replace("http://", "ws://");
-            path = path.replace("https://", "wss://");
-            var pos = path.indexOf("draw.htm");
-            if (pos < 0) return;
-            path = path.substr(0,pos) + "root.websocket";
-            console.log('configure websocket ' + path);
-            conn = new WebSocket(path);
-         } else {
-            var pos = path.indexOf("draw.htm");
-            if (pos < 0) return;
-            path = path.substr(0,pos) + "root.longpoll";
-            console.log('configure longpoll ' + path);
-            conn = JSROOT.LongPollSocket(path);
-         }
+      if (!pthis._use_longpoll && first_time) {
+         path = path.replace("http://", "ws://");
+         path = path.replace("https://", "wss://");
+         var pos = path.indexOf("draw.htm");
+         if (pos < 0) return;
+         path = path.substr(0,pos) + "root.websocket";
+         console.log('configure websocket ' + path);
+         conn = new WebSocket(path);
+      } else {
+         var pos = path.indexOf("draw.htm");
+         if (pos < 0) return;
+         path = path.substr(0,pos) + "root.longpoll";
+         console.log('configure longpoll ' + path);
+         conn = JSROOT.LongPollSocket(path);
+      }
 
-    	 pthis._websocket = conn;
+      pthis._websocket = conn;
 
       conn.onopen = function() {
          console.log('websocket initialized');
@@ -2572,8 +2572,8 @@
             if (typeof pthis.RedrawPadSnap === 'function') {
                pthis.RedrawPadSnap(snap, function() {
                   var reply = pthis.GetAllRanges();
-                  console.log("ranges", reply);
-                  conn.send(reply ? 'RREADY:' + reply : "READY" ); // send ready message back
+                  if (reply) console.log("ranges: " + reply);
+                  conn.send(reply ? "RREADY:" + reply : "RREADY:" ); // send ready message back when drawing completed
                });
             } else {
                conn.send('READY'); // send ready message back
@@ -2600,6 +2600,18 @@
             conn.send('READY'); // send ready message back
             if (typeof pthis._getmenu_callback == 'function')
                pthis._getmenu_callback(lst);
+         } else
+         if (d.substr(0,4)=='SVG:') {
+            var fname = d.substr(4);
+            console.log('get request for SVG image ' + fname);
+
+            var res = "<svg>anything_else</svg>";
+
+            if (pthis.CreateSvg) res = pthis.CreateSvg();
+
+            console.log('SVG size = ' + res.length);
+
+            conn.send("DONEIMG:" + fname + ":" + res);
          } else
          if (d.substr(0,7)=='GETIMG:') {
 
@@ -2629,8 +2641,8 @@
          console.log('websocket closed');
          delete pthis._websocket;
          if (pthis._websocket_opened) {
-        	 pthis._websocket_opened = false;
-        	 window.close(); // close window when socked disapper
+            pthis._websocket_opened = false;
+            window.close(); // close window when socked disapper
          }
       }
 
@@ -2676,10 +2688,10 @@
 
             for (var n=0;n<items.length;++n) {
                var item = items[n];
-               if (item.fChecked < 0)
+               if ((item.fChecked === undefined) || (item.fChecked < 0))
                   _menu.add(item.fName, item.fExec, DoExecMenu);
                else
-                  _menu.addchk(item.fChecked > 0, item.fName, item.fExec, DoExecMenu);
+                  _menu.addchk(item.fChecked, item.fName, item.fExec, DoExecMenu);
             }
 
             _menu.add("endsub:");
@@ -3908,8 +3920,11 @@
       this.pad = pad;
       this.iscan = iscan; // indicate if working with canvas
       this.this_pad_name = "";
-      if (!this.iscan && (pad !== null) && ('fName' in pad))
+      if (!this.iscan && (pad !== null) && ('fName' in pad)) {
          this.this_pad_name = pad.fName.replace(" ", "_"); // avoid empty symbol in pad name
+         var regexp = new RegExp("^[A-Za-z][A-Za-z0-9_]*$");
+         if (!regexp.test(this.this_pad_name)) this.this_pad_name = 'jsroot_pad_' + JSROOT.id_counter++;
+      }
       this.painters = []; // complete list of all painters in the pad
       this.has_canvas = true;
    }
@@ -4174,6 +4189,8 @@
            .style("right", 0)
            .style("bottom", 0);
       }
+
+      console.log('CANVAS SVG width = ' + rect.width + " height= " + rect.height);
 
       svg.attr("viewBox", "0 0 " + rect.width + " " + rect.height)
          .attr("preserveAspectRatio", "none")  // we do not preserve relative ratio
@@ -4866,6 +4883,26 @@
 
    }
 
+   TPadPainter.prototype.CreateSvg = function() {
+      var main = this.svg_canvas();
+
+      var svg = main.html();
+
+      svg = svg.replace(/url\(\&quot\;\#(\w+)\&quot\;\)/g,"url(#$1)")        // decode all URL
+               .replace(/ class=\"\w*\"/g,"")                                // remove all classes
+               .replace(/<g transform=\"translate\(\d+\,\d+\)\"><\/g>/g,"")  // remove all empty groups with transform
+               .replace(/<g><\/g>/g,"");                                     // remove all empty groups
+
+
+
+      svg = '<svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none"' +
+            ' viewBox="0 0 ' + main.property('draw_width') + ' ' + main.property('draw_height') + '"' +
+            ' width="' + main.property('draw_width') + '"' +
+            ' height="' + main.property('draw_height') + '">' + svg + '</svg>';
+
+       return svg;
+   }
+
    TPadPainter.prototype.SaveAsPng = function(full_canvas, filename, call_back) {
       if (!filename) {
          filename = this.this_pad_name;
@@ -5311,6 +5348,7 @@
    JSROOT.addDrawFunc({ name: "TGraph2D", icon:"img_graph", prereq: "hist3d", func: "JSROOT.Painter.drawGraph2D", opt:";P;PCOL"});
    JSROOT.addDrawFunc({ name: "TGraph2DErrors", icon:"img_graph", prereq: "hist3d", func: "JSROOT.Painter.drawGraph2D", opt:";P;PCOL;ERR"});
    JSROOT.addDrawFunc({ name: /^TGraph/, icon:"img_graph", prereq: "more2d", func: "JSROOT.Painter.drawGraph", opt:";L;P"});
+   JSROOT.addDrawFunc({ name: "TEfficiency", icon:"img_graph", prereq: "more2d", func: "JSROOT.Painter.drawEfficiency", opt:";AP"});
    JSROOT.addDrawFunc({ name: "TCutG", sameas: "TGraph" });
    JSROOT.addDrawFunc({ name: /^RooHist/, sameas: "TGraph" });
    JSROOT.addDrawFunc({ name: /^RooCurve/, sameas: "TGraph" });

@@ -283,3 +283,13 @@
 .jsroot .toolbar-btn-bright path:hover {
     fill: rgba(255, 233, 183, 0.5);
 }
+
+.geo_info {
+	position: absolute; 
+	text-align: center;
+	vertical-align: middle;
+	top: 45%;
+	left: 40%;
+	color: red;
+	font-size: 150%;
+}
