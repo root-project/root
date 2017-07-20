@@ -35,7 +35,7 @@ protected:
    class Generator {
    public:
       /// Abstract interface to create a TVirtualCanvasPainter implementation.
-      virtual std::unique_ptr<TVirtualCanvasPainter> Create(const TCanvas &canv) const = 0;
+      virtual std::unique_ptr<TVirtualCanvasPainter> Create(const TCanvas &canv, bool batch_mode) const = 0;
       /// Default destructor.
       virtual ~Generator();
    };
@@ -48,8 +48,11 @@ public:
 
    virtual void AddDisplayItem(TDisplayItem *item) = 0;
 
+   /// returns true is canvas used in batch mode
+   virtual bool IsBatchMode() const { return true; }
+
    /// Loads the plugin that implements this class.
-   static std::unique_ptr<TVirtualCanvasPainter> Create(const TCanvas &canv);
+   static std::unique_ptr<TVirtualCanvasPainter> Create(const TCanvas &canv, bool batch_mode = false);
 };
 } // namespace Internal
 } // namespace Experimental
