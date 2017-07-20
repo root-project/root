@@ -182,8 +182,10 @@ namespace TMVA {
       TH1F* GetImportance(const int nbits,std::vector<Double_t> importances,std::vector<TString> varNames);
 
       // Helpers for public facing ROC methods
-      ROCCurve *GetROC(DataLoader *loader, TString theMethodName, UInt_t iClass = 0);
-      ROCCurve *GetROC(TString datasetname, TString theMethodName, UInt_t iClass = 0);
+      ROCCurve *GetROC(DataLoader *loader, TString theMethodName, UInt_t iClass = 0,
+                       Types::ETreeType type = Types::kTesting);
+      ROCCurve *GetROC(TString datasetname, TString theMethodName, UInt_t iClass = 0,
+                       Types::ETreeType type = Types::kTesting);
 
       void WriteDataInformation(DataSetInfo&     fDataSetInfo);
 
