@@ -7,13 +7,21 @@
 
 #include "include/cef_client.h"
 
+#include "include/wrapper/cef_message_router.h"
+
 #include <list>
 
 class OsrHandler : public CefClient,
                    public CefDisplayHandler,
                    public CefLifeSpanHandler,
                    public CefLoadHandler,
-                   public CefRenderHandler {
+                   public CefRenderHandler,
+                   public CefRequestHandler {
+protected:
+   // Handles the browser side of query routing.
+   CefRefPtr<CefMessageRouterBrowserSide> message_router_;
+   scoped_ptr<CefMessageRouterBrowserSide::Handler> message_handler_;
+
 public:
    explicit OsrHandler();
    ~OsrHandler();
@@ -26,6 +34,10 @@ public:
    virtual CefRefPtr<CefLifeSpanHandler> GetLifeSpanHandler() OVERRIDE { return this; }
    virtual CefRefPtr<CefLoadHandler> GetLoadHandler() OVERRIDE { return this; }
    virtual CefRefPtr<CefRenderHandler> GetRenderHandler() OVERRIDE { return this; }
+   virtual CefRefPtr<CefRequestHandler> GetRequestHandler() OVERRIDE { return this; }
+
+   virtual bool OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProcessId source_process,
+                                         CefRefPtr<CefProcessMessage> message) OVERRIDE;
 
    // CefDisplayHandler methods:
    virtual void OnTitleChange(CefRefPtr<CefBrowser> browser, const CefString &title) OVERRIDE;
@@ -41,6 +53,11 @@ public:
 
    virtual bool OnConsoleMessage(CefRefPtr<CefBrowser> browser, const CefString &message, const CefString &source,
                                  int line) OVERRIDE;
+
+   // CefRequestHandler methods:
+   virtual bool OnBeforeBrowse(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefRequest> request,
+                               bool is_redirect) OVERRIDE;
+   virtual void OnRenderProcessTerminated(CefRefPtr<CefBrowser> browser, TerminationStatus status) OVERRIDE;
 
    // CefRenderHandler methods.
    virtual bool GetRootScreenRect(CefRefPtr<CefBrowser> browser, CefRect &rect) OVERRIDE;

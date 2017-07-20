@@ -16,6 +16,27 @@
 
 namespace {
 
+// Handle messages in the browser process.
+class MessageHandler : public CefMessageRouterBrowserSide::Handler {
+public:
+   explicit MessageHandler() {}
+
+   // Called due to cefQuery execution in message_router.html.
+   bool OnQuery(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, int64 query_id, const CefString &request,
+                bool persistent, CefRefPtr<Callback> callback) OVERRIDE
+   {
+      const std::string &message_name = request;
+      printf("Get message %s\n", message_name.c_str());
+
+      std::string result = "confirm from ROOT";
+      callback->Success(result);
+      return true; // processed
+   }
+
+private:
+   DISALLOW_COPY_AND_ASSIGN(MessageHandler);
+};
+
 OsrHandler *g_instance = NULL;
 
 } // namespace
@@ -37,6 +58,14 @@ OsrHandler *OsrHandler::GetInstance()
    return g_instance;
 }
 
+bool OsrHandler::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProcessId source_process,
+                                          CefRefPtr<CefProcessMessage> message)
+{
+   CEF_REQUIRE_UI_THREAD();
+
+   return message_router_->OnProcessMessageReceived(browser, source_process, message);
+}
+
 void OsrHandler::OnTitleChange(CefRefPtr<CefBrowser> browser, const CefString &title)
 {
    CEF_REQUIRE_UI_THREAD();
@@ -53,8 +82,34 @@ void OsrHandler::OnAfterCreated(CefRefPtr<CefBrowser> browser)
 {
    CEF_REQUIRE_UI_THREAD();
 
+   if (!message_router_) {
+      // Create the browser-side router for query handling.
+      CefMessageRouterConfig config;
+      message_router_ = CefMessageRouterBrowserSide::Create(config);
+
+      // Register handlers with the router.
+      message_handler_.reset(new MessageHandler());
+      message_router_->AddHandler(message_handler_.get(), false);
+   }
+
    // Add to the list of existing browsers.
    browser_list_.push_back(browser);
+}
+
+bool OsrHandler::OnBeforeBrowse(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefRequest> request,
+                                bool is_redirect)
+{
+   CEF_REQUIRE_UI_THREAD();
+
+   message_router_->OnBeforeBrowse(browser, frame);
+   return false;
+}
+
+void OsrHandler::OnRenderProcessTerminated(CefRefPtr<CefBrowser> browser, TerminationStatus status)
+{
+   CEF_REQUIRE_UI_THREAD();
+
+   message_router_->OnRenderProcessTerminated(browser);
 }
 
 bool OsrHandler::DoClose(CefRefPtr<CefBrowser> browser)
@@ -88,7 +143,13 @@ void OsrHandler::OnBeforeClose(CefRefPtr<CefBrowser> browser)
    }
 
    if (browser_list_.empty()) {
+
+      message_router_->RemoveHandler(message_handler_.get());
+      message_handler_.reset();
+      message_router_ = NULL;
+
       // All browser windows have closed. Quit the application message loop.
+
       CefQuitMessageLoop();
    }
 }
@@ -220,4 +281,3 @@ void OsrHandler::OnImeCompositionRangeChanged(CefRefPtr<CefBrowser> browser, con
    // if (!osr_delegate_) return;
    // osr_delegate_->OnImeCompositionRangeChanged(browser, selection_range, character_bounds);
 }
-
