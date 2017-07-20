@@ -1,15 +1,16 @@
 ## Compilation with CEF support (https://bitbucket.org/chromiumembedded/cef)     
 
-1. Download binary code from http://opensource.spotify.com/cefbuilds/index.html
+1. Current code developed with CEF3 3071.
 
-2. Unpack it in directory without spaces and special symbols like
+2  Download binary code from http://opensource.spotify.com/cefbuilds/index.html and 
+   unpack it in directory without spaces and special symbols: 
   
      [shell] mkdir /d/cef
      [shell] cd /d/cef/
      [shell] wget http://opensource.spotify.com/cefbuilds/cef_binary_3.3071.1649.g98725e6_linux64.tar.bz2 
      [shell] tar xjf cef_binary_3.3071.1649.g98725e6_linux64.tar.bz2
 
-3. Set shell variable to unpacked directory
+3. Set `CEF_PATH` shell variable to unpacked directory:
   
      [shell] export CEF_PATH=/d/cef/cef_binary_3.3071.1649.g98725e6_linux64
      
