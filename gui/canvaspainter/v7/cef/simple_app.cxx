@@ -209,7 +209,7 @@ public:
 } // namespace
 
 SimpleApp::SimpleApp(const std::string &url, const std::string &cef_main, THttpServer *serv, bool isbatch)
-   : fUrl(), fCefMain(cef_main), fBatch(isbatch)
+   : CefApp(), CefBrowserProcessHandler(), CefRenderProcessHandler(), fUrl(), fCefMain(cef_main), fBatch(isbatch)
 {
    fUrl = "rootscheme://rootserver";
    fUrl.append(url);
@@ -245,6 +245,31 @@ void SimpleApp::OnBeforeChildProcessLaunch(CefRefPtr<CefCommandLine> command_lin
 
    printf("OnBeforeChildProcessLaunch %s\n", prog.c_str());
 }
+
+void SimpleApp::OnContextCreated(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame,
+                                 CefRefPtr<CefV8Context> context)
+{
+   printf("$$$$$$$$$ SimpleApp::OnContextCreated\n");
+
+   if (!fBatch) return;
+
+   // Retrieve the context's window object.
+   CefRefPtr<CefV8Value> object = context->GetGlobal();
+
+   // Create a new V8 string value. See the "Basic JS Types" section below.
+   CefRefPtr<CefV8Value> str = CefV8Value::CreateString("My Value!");
+
+   // Add the string to the window object as "window.myval". See the "JS Objects" section below.
+   object->SetValue("ROOT_BATCH_FLAG", str, V8_PROPERTY_ATTRIBUTE_NONE);
+
+   printf("ADD BATCH FALG\n");
+}
+
+void SimpleApp::OnBrowserCreated(CefRefPtr<CefBrowser> browser)
+{
+   printf("$$$$$$$$$ SimpleApp::OnBrowserCreated\n");
+}
+
 
 void SimpleApp::OnContextInitialized()
 {
@@ -306,7 +331,6 @@ void SimpleApp::OnContextInitialized()
    }
 }
 
-
 class TCefTimer : public TTimer {
 public:
    TCefTimer(Long_t milliSec, Bool_t mode) : TTimer(milliSec, mode)
@@ -324,7 +348,8 @@ public:
    }
 };
 
-extern "C" void webgui_start_browser_in_cef3(const char *url, void *http_serv, const char *rootsys, const char *cef_path)
+extern "C" void webgui_start_browser_in_cef3(const char *url, void *http_serv, const char *rootsys,
+                                             const char *cef_path)
 {
    TApplication *root_app = gROOT->GetApplication();
 
@@ -363,13 +388,13 @@ extern "C" void webgui_start_browser_in_cef3(const char *url, void *http_serv, c
 
    settings.windowless_rendering_enabled = true;
 
-
    bool batch = gROOT->IsBatch();
 
    // SimpleApp implements application-level callbacks for the browser process.
    // It will create the first browser instance in OnContextInitialized() after
    // CEF has initialized.
-   CefRefPtr<SimpleApp> *app = new CefRefPtr<SimpleApp>(new SimpleApp(url, cef_main.Data(), (THttpServer *) http_serv, batch));
+   CefRefPtr<SimpleApp> *app =
+      new CefRefPtr<SimpleApp>(new SimpleApp(url, cef_main.Data(), (THttpServer *)http_serv, batch));
 
    // Initialize CEF for the browser process.
    CefInitialize(main_args, settings, app->get(), NULL);
@@ -380,6 +405,4 @@ extern "C" void webgui_start_browser_in_cef3(const char *url, void *http_serv, c
 
    // Shut down CEF.
    // CefShutdown();
-
 }
-
