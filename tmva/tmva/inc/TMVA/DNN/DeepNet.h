@@ -39,10 +39,13 @@
 #include "TMVA/DNN/CNN/ConvLayer.h"
 #include "TMVA/DNN/CNN/MaxPoolLayer.h"
 
+#include "TMVA/DNN/RNN/RNNLayer.h"
+
 #include <vector>
 #include <cmath>
 
 using namespace TMVA::DNN::CNN;
+using namespace TMVA::DNN::RNN;
 
 namespace TMVA {
 namespace DNN {
@@ -78,6 +81,8 @@ private:
    size_t fBatchHeight; ///< The height of the batch used for training/testing.
    size_t fBatchWidth;  ///< The width of the batch used for training/testing.
 
+   bool fIsTraining;     ///< Is the network training?
+
    ELossFunction fJ;      ///< The loss function of the network.
    EInitialization fI;    ///< The initialization method of the network.
    ERegularization fR;    ///< The regularization used for the network.
@@ -90,7 +95,7 @@ public:
    /*! Constructor */
    TDeepNet(size_t BatchSize, size_t InputDepth, size_t InputHeight, size_t InputWidth, size_t BatchDepth,
             size_t BatchHeight, size_t BatchWidth, ELossFunction fJ, EInitialization fI = EInitialization::kZero,
-            ERegularization fR = ERegularization::kNone, Scalar_t fWeightDecay = 0.0);
+            ERegularization fR = ERegularization::kNone, Scalar_t fWeightDecay = 0.0, bool isTraining=false);
 
    /*! Copy-constructor */
    TDeepNet(const TDeepNet &);
@@ -121,6 +126,15 @@ public:
    /*! Function for adding Max Pooling layer in the Deep Neural Network,
     *  when the layer is already created. */
    void AddMaxPoolLayer(TMaxPoolLayer<Architecture_t> *maxPoolLayer);
+
+   /*! Function for adding Recurrent Layer in the Deep Neural Network,
+    * with given parameters */
+   TBasicRNNLayer<Architecture_t> *AddBasicRNNLayer(size_t batchSize, size_t stateSize, size_t inputSize,
+                                                    size_t timeSteps, bool rememberState = false);
+
+   /*! Function for adding Vanilla RNN when the layer is already created
+    */
+   void AddBasicRNNLayer(TBasicRNNLayer<Architecture_t> *basicRNNLayer);
 
    /*! Function for adding Dense Connected Layer in the Deep Neural Network,
     *  with a given width, activation function and dropout probability.
@@ -221,6 +235,8 @@ public:
    inline size_t GetBatchHeight() const { return fBatchHeight; }
    inline size_t GetBatchWidth() const { return fBatchWidth; }
 
+   inline bool   IsTraining() const {return fIsTraining;}
+
    inline ELossFunction GetLossFunction() const { return fJ; }
    inline EInitialization GetInitialization() const { return fI; }
    inline ERegularization GetRegularization() const { return fR; }
@@ -248,7 +264,7 @@ template <typename Architecture_t, typename Layer_t>
 TDeepNet<Architecture_t, Layer_t>::TDeepNet()
    : fLayers(), fBatchSize(0), fInputDepth(0), fInputHeight(0), fInputWidth(0), fBatchDepth(0), fBatchHeight(0),
      fBatchWidth(0), fJ(ELossFunction::kMeanSquaredError), fI(EInitialization::kZero), fR(ERegularization::kNone),
-     fWeightDecay(0.0)
+     fWeightDecay(0.0), fIsTraining(true)
 {
    // Nothing to do here.
 }
@@ -257,10 +273,10 @@ TDeepNet<Architecture_t, Layer_t>::TDeepNet()
 template <typename Architecture_t, typename Layer_t>
 TDeepNet<Architecture_t, Layer_t>::TDeepNet(size_t batchSize, size_t inputDepth, size_t inputHeight, size_t inputWidth,
                                             size_t batchDepth, size_t batchHeight, size_t batchWidth, ELossFunction J,
-                                            EInitialization I, ERegularization R, Scalar_t weightDecay)
+                                            EInitialization I, ERegularization R, Scalar_t weightDecay, bool isTraining)
    : fLayers(), fBatchSize(batchSize), fInputDepth(inputDepth), fInputHeight(inputHeight), fBatchDepth(batchDepth),
      fBatchHeight(batchHeight), fBatchWidth(batchWidth), fInputWidth(inputWidth), fJ(J), fI(I), fR(R),
-     fWeightDecay(weightDecay)
+     fWeightDecay(weightDecay), fIsTraining(isTraining)
 {
    // Nothing to do here.
 }
@@ -271,7 +287,7 @@ TDeepNet<Architecture_t, Layer_t>::TDeepNet(const TDeepNet &deepNet)
    : fLayers(), fBatchSize(deepNet.fBatchSize), fInputDepth(deepNet.fInputDepth), fInputHeight(deepNet.fInputHeight),
      fInputWidth(deepNet.fInputWidth), fBatchDepth(deepNet.fBatchDepth), fBatchHeight(deepNet.fBatchHeight),
      fBatchWidth(deepNet.fBatchWidth), fJ(deepNet.fJ), fI(deepNet.fI), fR(deepNet.fR),
-     fWeightDecay(deepNet.fWeightDecay)
+     fWeightDecay(deepNet.fWeightDecay), fIsTraining(deepNet.fIsTraining)
 {
    // Nothing to do here.
 }
@@ -407,6 +423,24 @@ template <typename Architecture_t, typename Layer_t>
 void TDeepNet<Architecture_t, Layer_t>::AddMaxPoolLayer(TMaxPoolLayer<Architecture_t> *maxPoolLayer)
 {
    fLayers.push_back(maxPoolLayer);
+}
+
+//______________________________________________________________________________
+template <typename Architecture_t, typename Layer_t>
+TBasicRNNLayer<Architecture_t> *TDeepNet<Architecture_t, Layer_t>::AddBasicRNNLayer(size_t batchSize, size_t stateSize, size_t inputSize,
+                                                                                    size_t timeSteps, bool rememberState)
+{
+   TBasicRNNLayer<Architecture_t> *basicRNNLayer = new TBasicRNNLayer<Architecture_t>(batchSize, stateSize, inputSize, 
+                                                                                      timeSteps, rememberState, fIsTraining);
+   fLayers.push_back(basicRNNLayer);
+   return basicRNNLayer;
+}
+
+//______________________________________________________________________________
+template <typename Architecture_t, typename Layer_t>
+void TDeepNet<Architecture_t, Layer_t>::AddBasicRNNLayer(TBasicRNNLayer<Architecture_t> *basicRNNLayer)
+{
+   fLayers.push_back(basicRNNLayer);
 }
 
 //______________________________________________________________________________
