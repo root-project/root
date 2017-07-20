@@ -579,8 +579,7 @@ void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
       }
 
       // Servers may have been redirected between instantiation and (deferred) initialization
-      
-      RooArgSet* actualParams = binnedPdf ? binnedPdf->getParameters(dset) : pdf->getParameters(dset);
+      RooArgSet* actualParams = pdf->getParameters(dset);
       RooArgSet* selTargetParams = (RooArgSet*) _paramSet.selectCommon(*actualParams);
 
       _gofArray[n]->recursiveRedirectServers(*selTargetParams);

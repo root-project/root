@@ -28,13 +28,7 @@ public:
   Roo1DMomentMorphFunction() ;
 
   Roo1DMomentMorphFunction(const char *name, const char *title, RooAbsReal& _m, const RooArgList& varList,
-<<<<<<< HEAD
             const TVectorD& mrefpoints, const Setting& setting = Linear );
-=======
-			   const TVectorD& mrefpoints, const Setting& setting = Linear );
-  Roo1DMomentMorphFunction(const char *name, const char *title, RooAbsReal& _m, 
-			   const TMatrixD& mrefM, const Setting& setting = Linear );
->>>>>>> fba357f... added first bunch of fixes from the HComb ROOT branch
   Roo1DMomentMorphFunction(const Roo1DMomentMorphFunction& other, const char* name=0) ;
 
   virtual TObject* clone(const char* newname) const { return new Roo1DMomentMorphFunction(*this,newname); }
@@ -57,20 +51,14 @@ protected:
   RooRealProxy m ;
   RooSetProxy  _varList ;
   mutable TVectorD* _mref;
-<<<<<<< HEAD
   mutable TVectorD* _frac;
-=======
-  mutable TMatrixD* _mrefM;
-
-  mutable TVectorD* _frac; 
->>>>>>> fba357f... added first bunch of fixes from the HComb ROOT branch
 
   TIterator* _varItr ;   //! do not persist
   mutable TMatrixD* _M;
 
   Setting _setting;
 
-  ClassDef(Roo1DMomentMorphFunction,2) // Your description goes here...
+  ClassDef(Roo1DMomentMorphFunction,1) // Your description goes here...
 };
 
 #endif

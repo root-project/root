@@ -2633,28 +2633,17 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
 ///       Corr(a,a') = the correlation matrix from the fit result
 ///
 
-Double_t RooAbsReal::getPropagatedError(const RooFitResult& fr, const RooArgSet& nset_in)
+Double_t RooAbsReal::getPropagatedError(const RooFitResult& fr)
 {
-
-  // Strip out parameters with zero error
-  RooArgList fpf_stripped ;
-  RooFIter fi = fr.floatParsFinal().fwdIterator() ;
-  RooRealVar* frv ;
-  while ((frv=(RooRealVar*)fi.next())) {
-    if (frv->getError()>1e-20) {
-      fpf_stripped.add(*frv) ;
-    }
-  }
 
   // Clone self for internal use
   RooAbsReal* cloneFunc = (RooAbsReal*) cloneTree() ;
-  RooArgSet* errorParams = cloneFunc->getObservables(fpf_stripped) ;
-
-  RooArgSet* nset = nset_in.getSize()==0 ? cloneFunc->getParameters(*errorParams) : cloneFunc->getObservables(nset_in) ;
+  RooArgSet* errorParams = cloneFunc->getObservables(fr.floatParsFinal()) ;
+  RooArgSet* nset = cloneFunc->getParameters(*errorParams) ;
 
   // Make list of parameter instances of cloneFunc in order of error matrix
   RooArgList paramList ;
-  const RooArgList& fpf = fpf_stripped ;
+  const RooArgList& fpf = fr.floatParsFinal() ;
   vector<int> fpf_idx ;
   for (Int_t i=0 ; i<fpf.getSize() ; i++) {
     RooAbsArg* par = errorParams->find(fpf[i].GetName()) ;
@@ -2832,19 +2821,9 @@ RooPlot* RooAbsReal::plotOnWithErrorBand(RooPlot* frame,const RooFitResult& fr, 
     //   Where F(a) = (f(x,a+da) - f(x,a-da))/2
     //   and C_aa' is the correlation matrix
 
-    // Strip out parameters with zero error
-    RooArgList fpf_stripped ;
-    RooFIter fi = fr.floatParsFinal().fwdIterator() ;
-    RooRealVar* frv ;
-    while ((frv=(RooRealVar*)fi.next())) {
-      if (frv->getError()>1e-20) {
-	fpf_stripped.add(*frv) ;
-      }
-    }
-
     // Clone self for internal use
     RooAbsReal* cloneFunc = (RooAbsReal*) cloneTree() ;
-    RooArgSet* cloneParams = cloneFunc->getObservables(fpf_stripped) ;
+    RooArgSet* cloneParams = cloneFunc->getObservables(fr.floatParsFinal()) ;
     RooArgSet* errorParams = params?((RooArgSet*)cloneParams->selectCommon(*params)):cloneParams ;
 
 

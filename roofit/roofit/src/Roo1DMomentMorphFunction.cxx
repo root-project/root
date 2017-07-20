@@ -15,20 +15,13 @@ Morphing can be set to be linear, non-linear or a mixture of the two.
 
 #include "Riostream.h"
 
-<<<<<<< HEAD
 #include "Roo1DMomentMorphFunction.h"
 #include "RooAbsCategory.h"
-=======
-#include "RooGlobalFunc.h"
-#include "Roo1DMomentMorphFunction.h" 
-#include "RooAbsCategory.h" 
->>>>>>> fba357f... added first bunch of fixes from the HComb ROOT branch
 #include "RooRealIntegral.h"
 #include "RooRealConstant.h"
 #include "RooRealVar.h"
 #include "RooFormulaVar.h"
 #include "RooCustomizer.h"
-#include "RooConstVar.h"
 #include "RooAddPdf.h"
 #include "RooAddition.h"
 #include "RooMoment.h"
@@ -44,7 +37,7 @@ ClassImp(Roo1DMomentMorphFunction);
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
 
-Roo1DMomentMorphFunction::Roo1DMomentMorphFunction() : _mref(0), _mrefM(0), _frac(0), _M(0), _setting(Linear)
+  Roo1DMomentMorphFunction::Roo1DMomentMorphFunction() : _mref(0), _frac(0), _M(0), _setting(Linear)
 {
   _varItr    = _varList.createIterator() ;
 }
@@ -73,8 +66,7 @@ Roo1DMomentMorphFunction::Roo1DMomentMorphFunction(const char *name, const char 
   RooAbsArg* var ;
   for (Int_t i=0; (var = (RooAbsArg*)varItr->Next()); ++i) {
     if (!dynamic_cast<RooAbsReal*>(var)) {
-      coutE(InputArguments) << "Roo1DMomentMorphFunction::ctor(" << GetName() 
-			    << ") ERROR: variable " << var->GetName() << " is not of type RooAbsReal" << endl ;
+      coutE(InputArguments) << "Roo1DMomentMorphFunction::ctor(" << GetName() << ") ERROR: variable " << var->GetName() << " is not of type RooAbsReal" << endl ;
       throw string("RooPolyMorh::ctor() ERROR variable is not of type RooAbsReal") ;
     }
     _varList.add(*var) ;
@@ -82,44 +74,12 @@ Roo1DMomentMorphFunction::Roo1DMomentMorphFunction(const char *name, const char 
   delete varItr ;
 
   _mref      = new TVectorD(mrefpoints);
-  _mrefM     = 0; 
+  _frac      = 0 ;
   _varItr    = _varList.createIterator() ;
 
   // initialization
   initialize();
-<<<<<<< HEAD
 }
-=======
-} 
-
-
-//_____________________________________________________________________________
-Roo1DMomentMorphFunction::Roo1DMomentMorphFunction(const char *name, const char *title, 
-						   RooAbsReal& _m,
-						   const TMatrixD& mrefM,
-						   const Setting& setting) :
-  RooAbsReal(name,title), 
-  m("m","m",this,_m),
-  _varList("varList","List of variables",this),
-  _setting(setting)
-{ 
-  // CTOR
-  _mref      = new TVectorD(mrefM.GetNrows());
-
-  // observables
-  for (Int_t i=0; i<mrefM.GetNrows(); ++i) {
-    (*_mref)(i) = mrefM(i,0);
-  }
-
-  _mrefM   = new TMatrixD(mrefM);
-
-  _varItr  = _varList.createIterator() ;
-
-  // initialization
-  initialize();
-} 
-
->>>>>>> fba357f... added first bunch of fixes from the HComb ROOT branch
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
@@ -133,8 +93,8 @@ Roo1DMomentMorphFunction::Roo1DMomentMorphFunction(const Roo1DMomentMorphFunctio
   _setting(other._setting)
 {
   _mref = new TVectorD(*other._mref) ;
-  _mrefM = ( other._mrefM != NULL ? new TMatrixD(*other._mrefM) : NULL ) ;
-  _varItr = _varList.createIterator() ;
+  _frac = 0 ;
+  _varItr    = _varList.createIterator() ;
 
   // initialization
   initialize();
@@ -146,7 +106,6 @@ Roo1DMomentMorphFunction::Roo1DMomentMorphFunction(const Roo1DMomentMorphFunctio
 Roo1DMomentMorphFunction::~Roo1DMomentMorphFunction()
 {
   if (_mref)   delete _mref;
-  if (_mrefM)  delete _mrefM;
   if (_frac)   delete _frac;
   if (_varItr) delete _varItr;
   if (_M)      delete _M;
@@ -156,16 +115,12 @@ Roo1DMomentMorphFunction::~Roo1DMomentMorphFunction()
 
 void Roo1DMomentMorphFunction::initialize()
 {
-  Int_t nVar = _mref->GetNrows(); //_varList.getSize();
-
-  //_mrefM->Print();
-  //cout << _mrefM << " " <<  nVar << " " << _mref->GetNrows() << endl;
+  Int_t nVar = _varList.getSize();
 
   // other quantities needed
-  if ( _mrefM==0 && (nVar!=_mref->GetNrows()) ) {
-    coutE(InputArguments) << "Roo1DMomentMorphFunction::initialize(" << GetName() 
-			  << ") ERROR: nVar != nRefPoints" << endl ;
-    assert(0);
+  if (nVar!=_mref->GetNrows()) {
+    coutE(InputArguments) << "Roo1DMomentMorphFunction::initialize(" << GetName() << ") ERROR: nVar != nRefPoints" << endl ;
+    assert(0) ;
   }
 
   _frac = new TVectorD(nVar);
@@ -173,21 +128,19 @@ void Roo1DMomentMorphFunction::initialize()
   TVectorD* dm = new TVectorD(nVar);
   _M = new TMatrixD(nVar,nVar);
 
-  if (_setting == NonLinear) {
-    // transformation matrix for non-linear extrapolation, needed in evaluate()
-    TMatrixD M(nVar,nVar);
-    for (Int_t i=0; i<_mref->GetNrows(); ++i) {
-      (*dm)[i] = (*_mref)[i]-(*_mref)[0];
-      M(i,0) = 1.;
-      if (i>0) M(0,i) = 0.;
-    }
-    for (Int_t i=1; i<_mref->GetNrows(); ++i) {
-      for (Int_t j=1; j<_mref->GetNrows(); ++j) {
-        M(i,j) = TMath::Power((*dm)[i],(double)j);
-      }
-    }
-    (*_M) = M.Invert();
+  // transformation matrix for non-linear extrapolation, needed in evaluate()
+  TMatrixD M(nVar,nVar);
+  for (Int_t i=0; i<_mref->GetNrows(); ++i) {
+    (*dm)[i] = (*_mref)[i]-(*_mref)[0];
+    M(i,0) = 1.;
+    if (i>0) M(0,i) = 0.;
   }
+  for (Int_t i=1; i<_mref->GetNrows(); ++i) {
+    for (Int_t j=1; j<_mref->GetNrows(); ++j) {
+      M(i,j) = TMath::Power((*dm)[i],(double)j);
+    }
+  }
+  (*_M) = M.Invert();
 
   delete dm ;
 }
@@ -202,15 +155,8 @@ Double_t Roo1DMomentMorphFunction::evaluate() const
 
   Double_t ret(0);
   RooAbsReal* var(0) ;
-
-  if ( _mrefM==0 ) {
-    for (Int_t i=0; (var = (RooAbsReal*)_varItr->Next()); ++i) {
-      ret += (*_frac)(i) * var->getVal();
-    }
-  } else {
-    for (Int_t i=0; i<_mrefM->GetNrows(); ++i) {
-      ret += (*_frac)(i) * (*_mrefM)(i,1) ; //var->getVal();
-    }
+  for (Int_t i=0; (var = (RooAbsReal*)_varItr->Next()); ++i) {
+    ret += (*_frac)(i) * var->getVal();
   }
 
   return ret ;
@@ -220,52 +166,34 @@ Double_t Roo1DMomentMorphFunction::evaluate() const
 
 void Roo1DMomentMorphFunction::calculateFractions() const
 {
-  Int_t nVar = _mref->GetNrows(); //_varList.getSize();
-  //Int_t nVar = _varList.getSize();
+  Int_t nVar = _varList.getSize();
 
   Double_t dm = m - (*_mref)[0];
 
+  // fully non-linear
   double sumposfrac=0.;
+  for (Int_t i=0; i<nVar; ++i) {
+    double ffrac=0.;
+    for (Int_t j=0; j<nVar; ++j) { ffrac += (*_M)(j,i) * (j==0?1.:TMath::Power(dm,(double)j)); }
+    if (ffrac>=0) sumposfrac+=ffrac;
+    (*_frac)(i) = ffrac;
+  }
 
   // various mode settings
   int imin = idxmin(m);
   int imax = idxmax(m);
-
-  //double mmin = ( (*_mref)[imin]<(*_mref)[imax] ? (*_mref)[imin] : (*_mref)[imax] );
-  //double mmax = ( (*_mref)[imin]>(*_mref)[imax] ? (*_mref)[imin] : (*_mref)[imax] );
-
   double mfrac = (m-(*_mref)[imin])/((*_mref)[imax]-(*_mref)[imin]);
-  if (mfrac>1) { mfrac=1.0; }
-  if (mfrac<0) { mfrac=0.0; }
-
   switch (_setting) {
     case NonLinear:
-      // fully non-linear
-      for (Int_t i=0; i<nVar; ++i) {
-	double ffrac=0.;
-	for (Int_t j=0; j<nVar; ++j) { ffrac += (*_M)(j,i) * (j==0?1.:TMath::Power(dm,(double)j)); }
-	if (ffrac>=0) sumposfrac+=ffrac;
-	(*_frac)(i) = ffrac;
-      }
+      // default already set above
     break;
     case Linear:
       for (Int_t i=0; i<nVar; ++i)
-<<<<<<< HEAD
         (*_frac)(i) = 0.;
       if (imax>imin) { // m in between mmin and mmax
         (*_frac)(imin) = (1.-mfrac);
         (*_frac)(imax) = (mfrac);
       } else if (imax==imin) { // m outside mmin and mmax
-=======
-        (*_frac)(i) = 0.;      
-      //if (imax>imin) { // m in between mmin and mmax
-      //  (*_frac)(imin) = (1.-mfrac); 
-      //  (*_frac)(imax) = (mfrac);
-      (*_frac)(imin) = (1.-mfrac);
-      (*_frac)(imax) = (mfrac);
-
-      if (imax==imin) { // m outside mmin and mmax
->>>>>>> fba357f... added first bunch of fixes from the HComb ROOT branch
         (*_frac)(imin) = (1.);
       }
     break;
@@ -293,8 +221,7 @@ void Roo1DMomentMorphFunction::calculateFractions() const
 int Roo1DMomentMorphFunction::idxmin(const double& mval) const
 {
   int imin(0);
-  Int_t nVar = _mref->GetNrows(); //_varList.getSize();
-  //Int_t nVar = _varList.getSize();
+  Int_t nVar = _varList.getSize();
   double mmin=-DBL_MAX;
   for (Int_t i=0; i<nVar; ++i)
     if ( (*_mref)[i]>mmin && (*_mref)[i]<=mval ) { mmin=(*_mref)[i]; imin=i; }
@@ -306,8 +233,7 @@ int Roo1DMomentMorphFunction::idxmin(const double& mval) const
 int Roo1DMomentMorphFunction::idxmax(const double& mval) const
 {
   int imax(0);
-  Int_t nVar = _mref->GetNrows(); //_varList.getSize();
-  //Int_t nVar = _varList.getSize();
+  Int_t nVar = _varList.getSize();
   double mmax=DBL_MAX;
   for (Int_t i=0; i<nVar; ++i)
     if ( (*_mref)[i]<mmax && (*_mref)[i]>=mval ) { mmax=(*_mref)[i]; imax=i; }

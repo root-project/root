@@ -239,10 +239,6 @@ public:
 
  private:
 
-  friend class RooAbsArg ;
-  friend class RooAbsPdf ;
-  Bool_t defineSetInternal(const char* name, const RooArgSet& aset) ;
-
   Bool_t isValidCPPID(const char* name) ;
   void exportObj(TObject* obj) ;
   void unExport() ;

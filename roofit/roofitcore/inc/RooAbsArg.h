@@ -415,8 +415,6 @@ public:
   
   void setProhibitServerRedirect(Bool_t flag) { _prohibitServerRedirect = flag ; }
 
-  void setWorkspace(RooWorkspace& ws) { _myws = &ws ; }
-
   protected:
 
   void graphVizAddConnections(std::set<std::pair<RooAbsArg*,RooAbsArg*> >&) ;
@@ -498,7 +496,7 @@ public:
   RooExpensiveObjectCache& expensiveObjectCache() const ;
   virtual void setExpensiveObjectCache(RooExpensiveObjectCache& cache) { _eocache = &cache ; }  
 
-  virtual Bool_t importWorkspaceHook(RooWorkspace& ws) { _myws = &ws ; return kFALSE ; } ;
+  virtual Bool_t importWorkspaceHook(RooWorkspace&) { return kFALSE ; } ;
 
  protected:
 
@@ -586,8 +584,6 @@ public:
 
 /*   RooArgSet _leafNodeCache ; //! Cached leaf nodes */
 /*   RooArgSet _branchNodeCache //! Cached branch nodes     */
-
-  mutable RooWorkspace* _myws ; //! In which workspace do I live, if any
 
  public:  
   virtual void ioStreamerPass2() ;
