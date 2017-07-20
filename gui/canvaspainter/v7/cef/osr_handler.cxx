@@ -42,6 +42,13 @@ void OsrHandler::OnTitleChange(CefRefPtr<CefBrowser> browser, const CefString &t
    CEF_REQUIRE_UI_THREAD();
 }
 
+bool OsrHandler::OnConsoleMessage(CefRefPtr<CefBrowser> browser, const CefString &message, const CefString &source,
+                                  int line)
+{
+   printf("CONSOLE: %s\n", message.ToString().c_str());
+   return true;
+}
+
 void OsrHandler::OnAfterCreated(CefRefPtr<CefBrowser> browser)
 {
    CEF_REQUIRE_UI_THREAD();

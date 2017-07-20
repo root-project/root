@@ -9,10 +9,7 @@
 
 #include <list>
 
-class SimpleHandler : public CefClient,
-                      public CefDisplayHandler,
-                      public CefLifeSpanHandler,
-                      public CefLoadHandler {
+class SimpleHandler : public CefClient, public CefDisplayHandler, public CefLifeSpanHandler, public CefLoadHandler {
 public:
    explicit SimpleHandler(bool use_views);
    ~SimpleHandler();
@@ -36,6 +33,9 @@ public:
    // CefLoadHandler methods:
    virtual void OnLoadError(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, ErrorCode errorCode,
                             const CefString &errorText, const CefString &failedUrl) OVERRIDE;
+
+   virtual bool OnConsoleMessage(CefRefPtr<CefBrowser> browser, const CefString &message, const CefString &source,
+                                 int line) OVERRIDE;
 
    // Request that all existing browser windows close.
    void CloseAllBrowsers(bool force_close);

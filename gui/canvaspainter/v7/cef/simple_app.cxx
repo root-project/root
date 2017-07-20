@@ -364,7 +364,7 @@ extern "C" void webgui_start_browser_in_cef3(const char *url, void *http_serv, c
    settings.windowless_rendering_enabled = true;
 
 
-   bool batch = false;
+   bool batch = gROOT->IsBatch();
 
    // SimpleApp implements application-level callbacks for the browser process.
    // It will create the first browser instance in OnContextInitialized() after
