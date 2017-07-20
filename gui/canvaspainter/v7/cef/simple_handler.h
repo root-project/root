@@ -2,14 +2,17 @@
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 
-#ifndef CEF_TESTS_CEFSIMPLE_SIMPLE_HANDLER_H_
-#define CEF_TESTS_CEFSIMPLE_SIMPLE_HANDLER_H_
+#ifndef ROOT_cef_simple_handler
+#define ROOT_cef_simple_handler
 
 #include "include/cef_client.h"
 
 #include <list>
 
-class SimpleHandler : public CefClient, public CefDisplayHandler, public CefLifeSpanHandler, public CefLoadHandler {
+class SimpleHandler : public CefClient,
+                      public CefDisplayHandler,
+                      public CefLifeSpanHandler,
+                      public CefLoadHandler {
 public:
    explicit SimpleHandler(bool use_views);
    ~SimpleHandler();
@@ -54,6 +57,7 @@ private:
 
    // Include the default reference counting implementation.
    IMPLEMENT_REFCOUNTING(SimpleHandler);
+   DISALLOW_COPY_AND_ASSIGN(SimpleHandler);
 };
 
 #endif // CEF_TESTS_CEFSIMPLE_SIMPLE_HANDLER_H_
