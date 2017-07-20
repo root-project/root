@@ -33,13 +33,11 @@ BENCHMARK(BM_Cartesian3D_CreateEmpty);
 
 // template <> class Cartesian3D<double[2]> { double[2] x = 1.; double[2] y = 2.; double[2] z = 3.; /*...*/ };
 
-static void ComputeProcessedEntities(benchmark::State &state, size_t VecSize)
+static void ComputeProcessedEntities(benchmark::State &state, size_t Size)
 {
    const size_t items_processed = state.iterations() * state.range(0);
    state.SetItemsProcessed(items_processed);
-   // FIXME: This is not an accurate byte computation. We need to get the sizeof
-   // the underlying type of T.
-   state.SetBytesProcessed(items_processed * VecSize);
+   state.SetBytesProcessed(items_processed * Size);
 }
 
 template <typename T>
@@ -55,7 +53,7 @@ static void BM_Cartesian3D_Theta(benchmark::State &state)
          c.SetCoordinates(Points[i].X, Points[i].Y, Points[i].Z);
          c.Theta();
       }
-   ComputeProcessedEntities(state, VecSize);
+   ComputeProcessedEntities(state, sizeof(T));
 }
 BENCHMARK_TEMPLATE(BM_Cartesian3D_Theta, double)->Range(1 << 0, 1 << 10);
 BENCHMARK_TEMPLATE(BM_Cartesian3D_Theta, ROOT::Double_v)->Range(1 << 0, 1 << 10);
@@ -75,7 +73,7 @@ static void BM_Cartesian3D_Phi(benchmark::State &state)
          c.SetCoordinates(Points[i].X, Points[i].Y, Points[i].Z);
          c.Phi();
       }
-   ComputeProcessedEntities(state, VecSize);
+   ComputeProcessedEntities(state, sizeof(T));
 }
 BENCHMARK_TEMPLATE(BM_Cartesian3D_Phi, double)->Range(1 << 0, 1 << 10);
 BENCHMARK_TEMPLATE(BM_Cartesian3D_Phi, ROOT::Double_v)->Range(1 << 0, 1 << 10);
@@ -95,7 +93,7 @@ static void BM_Cartesian3D_Mag2(benchmark::State &state)
          c.SetCoordinates(Points[i].X, Points[i].Y, Points[i].Z);
          c.Mag2();
       }
-   ComputeProcessedEntities(state, VecSize);
+   ComputeProcessedEntities(state, sizeof(T));
 }
 BENCHMARK_TEMPLATE(BM_Cartesian3D_Mag2, double)->Range(1 << 0, 1 << 10);
 BENCHMARK_TEMPLATE(BM_Cartesian3D_Mag2, ROOT::Double_v)->Range(1 << 0, 1 << 10);
