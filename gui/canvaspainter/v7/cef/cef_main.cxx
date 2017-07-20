@@ -12,6 +12,8 @@
 
 // #include "include/cef_process_message.h"
 
+bool gBatchMode = false;
+
 class ROOTV8Handler : public CefV8Handler {
 public:
    ROOTV8Handler() {}
@@ -41,7 +43,7 @@ private:
    CefRefPtr<CefMessageRouterRendererSide> message_router_;
 
 public:
-   MyRendererProcessApp() {}
+   MyRendererProcessApp() : CefApp(), CefRenderProcessHandler(), message_router_(0) {}
    virtual ~MyRendererProcessApp() {}
 
    // CefApp methods:
@@ -50,9 +52,11 @@ public:
    // CefRenderProcessHandler methods:
    void OnWebKitInitialized() OVERRIDE
    {
-      // Create the renderer-side router for query handling.
-      CefMessageRouterConfig config;
-      message_router_ = CefMessageRouterRendererSide::Create(config);
+      if (gBatchMode) {
+         // Create the renderer-side router for query handling.
+         CefMessageRouterConfig config;
+         message_router_ = CefMessageRouterRendererSide::Create(config);
+      }
    }
 
    // CefRenderProcessHandler methods
@@ -61,9 +65,8 @@ public:
    {
       printf("MyRendererProcessApp::OnContextCreated\n");
 
-      message_router_->OnContextCreated(browser, frame, context);
+      if (gBatchMode) message_router_->OnContextCreated(browser, frame, context);
 
-      return;
 /*
       // Retrieve the context's window object.
       CefRefPtr<CefV8Value> object = context->GetGlobal();
@@ -103,13 +106,15 @@ public:
    void OnContextReleased(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame,
                           CefRefPtr<CefV8Context> context) OVERRIDE
    {
-      message_router_->OnContextReleased(browser, frame, context);
+      if (gBatchMode) message_router_->OnContextReleased(browser, frame, context);
    }
 
    bool OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProcessId source_process,
                                  CefRefPtr<CefProcessMessage> message) OVERRIDE
    {
-      return message_router_->OnProcessMessageReceived(browser, source_process, message);
+      if (gBatchMode) return message_router_->OnProcessMessageReceived(browser, source_process, message);
+
+      return false;
    }
 
    /*   virtual bool OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProcessId source_process,
@@ -130,11 +135,17 @@ private:
 // Entry point function for all processes.
 int main(int argc, char *argv[])
 {
+   printf("Starting CEF_MAIN ARGC %d\n", argc);
+   for (int n = 1; n < argc; n++) printf("ARGV[%d] = %s\n", n, argv[n]);
+
+   if ((argc>1) && !strcmp(argv[argc-1],"--root-batch")) {
+      argc--;
+      gBatchMode = true;
+   }
+
    // Provide CEF with command-line arguments.
    CefMainArgs main_args(argc, argv);
 
-   printf("Starting CEF_MAIN ARGC %d\n", argc);
-   for (int n = 1; n < argc; n++) printf("ARGV[%d] = %s\n", n, argv[n]);
 
    CefRefPtr<CefApp> app = new MyRendererProcessApp();
 

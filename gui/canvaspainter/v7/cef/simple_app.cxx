@@ -243,6 +243,8 @@ void SimpleApp::OnBeforeChildProcessLaunch(CefRefPtr<CefCommandLine> command_lin
 
    std::string prog = command_line->GetProgram().ToString();
 
+   if (fBatch) command_line->AppendArgument("--root-batch");
+
    printf("OnBeforeChildProcessLaunch %s\n", prog.c_str());
 }
 
