@@ -219,4 +219,33 @@ auto testConvPrediction(size_t batchSize, size_t imgDepth, size_t imgHeight, siz
    }
 }
 
+/*! Generate a conv net, test the backward pass, always with stride 1. */
+//______________________________________________________________________________
+template <typename Architecture>
+auto testConvBackwardPass(size_t batchSize, size_t imgDepth, size_t imgHeight, size_t imgWidth, size_t batchDepth,
+                          size_t batchHeight, size_t batchWidth) -> void
+{
+   using Matrix_t = typename Architecture::Matrix_t;
+   using Net_t = TDeepNet<Architecture>;
+
+   Net_t convNet(batchSize, imgDepth, imgHeight, imgWidth, batchDepth, batchHeight, batchWidth,
+                 ELossFunction::kMeanSquaredError, EInitialization::kGauss);
+   constructConvNet(convNet);
+   convNet.Initialize();
+
+   std::vector<Matrix_t> X;
+   for (size_t i = 0; i < batchSize; i++) {
+      X.emplace_back(imgDepth, imgHeight * imgWidth);
+      randomMatrix(X[i]);
+   }
+
+   Matrix_t Y(batchSize, convNet.GetOutputWidth());
+   Matrix_t W(batchSize, 1);
+   randomMatrix(Y);
+   randomMatrix(W);
+
+   convNet.Forward(X);
+   convNet.Backward(X, Y, W);
+}
+
 #endif

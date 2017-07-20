@@ -37,7 +37,8 @@ namespace DNN {
 //
 // Input Data Types
 //______________________________________________________________________________
-using TensorInput = std::pair<const std::vector<TMatrixT<Double_t>> &, const std::vector<TMatrixT<Double_t>> &>;
+using TensorInput =
+   std::tuple<const std::vector<TMatrixT<Double_t>> &, const TMatrixT<Double_t> &, const TMatrixT<Double_t> &>;
 
 using TMVAInput_t = std::vector<Event *>;
 using IndexIterator_t = typename std::vector<size_t>::iterator;
