@@ -58,6 +58,13 @@ bool SimpleHandler::OnConsoleMessage(CefRefPtr<CefBrowser> browser, const CefStr
                                      int line)
 {
    printf("CONSOLE: %s\n", message.ToString().c_str());
+
+
+   //CefRefPtr<CefProcessMessage> msg = CefProcessMessage::Create("PING");
+   // Send the process message to the render process.
+   // Use PID_BROWSER instead when sending a message to the browser process.
+   //browser->SendProcessMessage(PID_RENDERER, msg);
+
    return true;
 }
 
@@ -134,4 +141,14 @@ void SimpleHandler::CloseAllBrowsers(bool force_close)
 
    BrowserList::const_iterator it = browser_list_.begin();
    for (; it != browser_list_.end(); ++it) (*it)->GetHost()->CloseBrowser(force_close);
+}
+
+bool SimpleHandler::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProcessId source_process,
+                                             CefRefPtr<CefProcessMessage> message)
+{
+   const std::string& message_name = message->GetName();
+
+   printf("SimpleHandler::OnProcessMessageReceived %s\n", message_name.c_str());
+
+   return true;
 }
