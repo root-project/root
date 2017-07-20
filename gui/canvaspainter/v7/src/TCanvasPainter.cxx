@@ -23,6 +23,7 @@
 #include <string>
 #include <vector>
 #include <list>
+#include <fstream>
 
 #include "THttpEngine.h"
 #include "THttpServer.h"
@@ -45,10 +46,11 @@ class TCanvasPainter : public THttpWSHandler,
 private:
    struct WebConn {
       THttpWSEngine *fHandle; ///<! websocket handle
-      Bool_t fReady;
-      std::string fGetMenu; ///<! object id for menu request
-      Bool_t fModified;
-      WebConn() : fHandle(0), fReady(kFALSE), fGetMenu(), fModified(kFALSE) {}
+      Bool_t fReady;          ///!< when connection ready to send new data
+      Bool_t fDrawReady;      ///!< when first drawing is performed
+      std::string fGetMenu;   ///<! object id for menu request
+      Bool_t fModified;       ///<! indicates if canvas was modified for that connection
+      WebConn() : fHandle(0), fReady(kFALSE), fDrawReady(kFALSE), fGetMenu(), fModified(kFALSE) {}
    };
 
    typedef std::list<WebConn> WebConnList;
@@ -62,6 +64,7 @@ private:
 
    WebConnList fWebConn;                             ///<! connections list
    ROOT::Experimental::TPadDisplayItem fDisplayList; ///!< full list of items to display
+   std::string fNextCmd;                             ///!< command which will be executed next
 
    static std::string fAddr;    ///<! real http address (when assigned)
    static THttpServer *gServer; ///<! server
@@ -98,6 +101,9 @@ public:
    virtual bool IsBatchMode() const { return fBatchMode; }
 
    virtual void AddDisplayItem(ROOT::Experimental::TDisplayItem *item) final;
+
+   /// perform special action when drawing is ready
+   virtual void DoWhenReady(const std::string &cmd, const std::string &arg) final;
 
    // void ReactToSocketNews(...) override { SendCanvas(); }
 
@@ -215,6 +221,12 @@ void TCanvasPainter::PopupBrowser()
    gSystem->Exec(exec);
 }
 
+void TCanvasPainter::DoWhenReady(const std::string &cmd, const std::string &arg)
+{
+   fNextCmd = cmd + ":" + arg;
+   CheckModifiedFlag();
+}
+
 Bool_t TCanvasPainter::ProcessWS(THttpCallArg *arg)
 {
    if (!arg) return kTRUE;
@@ -284,6 +296,7 @@ Bool_t TCanvasPainter::ProcessWS(THttpCallArg *arg)
       CheckModifiedFlag();
    } else if (strncmp(cdata, "RREADY:", 7) == 0) {
       conn->fReady = kTRUE;
+      conn->fDrawReady = kTRUE; // at least first drawing is performed
       CheckModifiedFlag();
    } else if (strncmp(cdata, "GETMENU:", 8) == 0) {
       conn->fReady = kTRUE;
@@ -293,6 +306,19 @@ Bool_t TCanvasPainter::ProcessWS(THttpCallArg *arg)
       // TODO: temporary solution, should be removed later
       // used now to terminate ROOT session
       gROOT->ProcessLine(cdata + 5);
+   } else if (strncmp(cdata, "DONEIMG:", 8) == 0) {
+      TString buf(cdata + 8);
+      Int_t pos = buf.First(':');
+      if (pos > 0) {
+         TString fname = buf(0, pos);
+         buf.Remove(0, pos + 1);
+         std::ofstream ofs(fname.Data());
+         ofs.write(buf.Data(), buf.Length());
+         ofs.close();
+         printf("Create file %s len %d\n", fname.Data(), buf.Length());
+      }
+      conn->fReady = kTRUE;
+      CheckModifiedFlag();
    } else if (strncmp(cdata, "OBJEXEC:", 8) == 0) {
       TString buf(cdata + 8);
       Int_t pos = buf.First(':');
@@ -321,7 +347,10 @@ void TCanvasPainter::CheckModifiedFlag()
 
       TString buf;
 
-      if (!conn.fGetMenu.empty()) {
+      if (conn.fDrawReady && !fNextCmd.empty()) {
+         buf = fNextCmd;
+         fNextCmd.clear();
+      } else if (!conn.fGetMenu.empty()) {
          ROOT::Experimental::Internal::TDrawable *drawable = FindDrawable(fCanvas, conn.fGetMenu);
 
          printf("Request menu for object %s found drawable %p\n", conn.fGetMenu.c_str(), drawable);

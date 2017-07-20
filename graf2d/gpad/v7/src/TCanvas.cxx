@@ -67,9 +67,10 @@ void ROOT::Experimental::TCanvas::Show()
    fPainter = Internal::TVirtualCanvasPainter::Create(*this, batch_mode);
 }
 
-void ROOT::Experimental::TCanvas::SaveAs(const std::string &)
+void ROOT::Experimental::TCanvas::SaveAs(const std::string &filename)
 {
    if (!fPainter) fPainter = Internal::TVirtualCanvasPainter::Create(*this, true);
+   fPainter->DoWhenReady("SVG", filename);
 }
 
 // TODO: removal from GetHeldCanvases().
