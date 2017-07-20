@@ -14,8 +14,9 @@ class SimpleApp : public CefApp, public CefBrowserProcessHandler {
 protected:
    std::string fUrl;     ///<! first URL to open
    std::string fCefMain; ///!< executable used for extra processed
+   bool        fBatch;   ///!< indicate batch mode
 public:
-   SimpleApp(const std::string &url, const std::string &cef_main, THttpServer *server = 0);
+   SimpleApp(const std::string &url, const std::string &cef_main, THttpServer *server = 0, bool isbatch = false);
    virtual ~SimpleApp();
 
    // CefApp methods:

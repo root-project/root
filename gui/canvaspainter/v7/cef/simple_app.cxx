@@ -7,6 +7,7 @@
 #include <string>
 
 #include "simple_handler.h"
+#include "osr_handler.h"
 #include "include/cef_browser.h"
 #include "include/cef_scheme.h"
 #include "include/views/cef_browser_view.h"
@@ -207,8 +208,8 @@ public:
 
 } // namespace
 
-SimpleApp::SimpleApp(const std::string &url, const std::string &cef_main, THttpServer *serv)
-   : fUrl(), fCefMain(cef_main)
+SimpleApp::SimpleApp(const std::string &url, const std::string &cef_main, THttpServer *serv, bool isbatch)
+   : fUrl(), fCefMain(cef_main), fBatch(isbatch)
 {
    fUrl = "rootscheme://rootserver";
    fUrl.append(url);
@@ -249,6 +250,27 @@ void SimpleApp::OnContextInitialized()
 {
    CEF_REQUIRE_UI_THREAD();
 
+   CefRegisterSchemeHandlerFactory("rootscheme", "rootserver", new ROOTSchemeHandlerFactory());
+
+   // Specify CEF browser settings here.
+   CefBrowserSettings browser_settings;
+
+   if (fBatch) {
+
+      CefRefPtr<OsrHandler> handler(new OsrHandler());
+
+      CefWindowInfo window_info;
+
+      window_info.SetAsWindowless(0);
+
+      printf("Create OSR browser %s\n", fUrl.c_str());
+
+      // Create the first browser window.
+      CefBrowserHost::CreateBrowser(window_info, handler, fUrl, browser_settings, NULL);
+
+      return;
+   }
+
 #if defined(OS_WIN) || defined(OS_LINUX)
    // Create the browser using the Views framework if "--use-views" is specified
    // via the command-line. Otherwise, create the browser using the native
@@ -259,16 +281,8 @@ void SimpleApp::OnContextInitialized()
    bool use_views = false;
 #endif
 
-   bool use_batch = false;
-   if (use_batch) use_views = false;
-
-   CefRegisterSchemeHandlerFactory("rootscheme", "rootserver", new ROOTSchemeHandlerFactory());
-
    // SimpleHandler implements browser-level callbacks.
    CefRefPtr<SimpleHandler> handler(new SimpleHandler(use_views));
-
-   // Specify CEF browser settings here.
-   CefBrowserSettings browser_settings;
 
    if (use_views) {
       // Create the BrowserView.
@@ -286,10 +300,6 @@ void SimpleApp::OnContextInitialized()
       // CreateWindowEx().
       window_info.SetAsPopup(NULL, "cefsimple");
 #endif
-
-      if (use_batch) window_info.SetAsWindowless(0);
-
-      printf("CreateBrowser %s\n", fUrl.c_str());
 
       // Create the first browser window.
       CefBrowserHost::CreateBrowser(window_info, handler, fUrl, browser_settings, NULL);
@@ -353,10 +363,13 @@ extern "C" void webgui_start_browser_in_cef3(const char *url, void *http_serv, c
 
    settings.windowless_rendering_enabled = true;
 
+
+   bool batch = false;
+
    // SimpleApp implements application-level callbacks for the browser process.
    // It will create the first browser instance in OnContextInitialized() after
    // CEF has initialized.
-   CefRefPtr<SimpleApp> *app = new CefRefPtr<SimpleApp>(new SimpleApp(url, cef_main.Data(), (THttpServer *) http_serv));
+   CefRefPtr<SimpleApp> *app = new CefRefPtr<SimpleApp>(new SimpleApp(url, cef_main.Data(), (THttpServer *) http_serv, batch));
 
    // Initialize CEF for the browser process.
    CefInitialize(main_args, settings, app->get(), NULL);
