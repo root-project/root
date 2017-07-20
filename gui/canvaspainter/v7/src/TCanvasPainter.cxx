@@ -34,7 +34,6 @@
 #include "TClass.h"
 #include "TBufferJSON.h"
 
-
 namespace {
 
 /** \class TCanvasPainter
@@ -59,11 +58,13 @@ private:
    /// The canvas we are painting. It might go out of existence while painting.
    const ROOT::Experimental::TCanvas &fCanvas;
 
+   Bool_t fBatchMode; ///<! indicate if canvas works in batch mode (can be independent from gROOT->isBatch())
+
    WebConnList fWebConn;                             ///<! connections list
    ROOT::Experimental::TPadDisplayItem fDisplayList; ///!< full list of items to display
 
-   static std::string fAddr;            ///<! real http address (when assigned)
-   static THttpServer *gServer;         ///<! server
+   static std::string fAddr;    ///<! real http address (when assigned)
+   static THttpServer *gServer; ///<! server
 
    /// Disable copy construction.
    TCanvasPainter(const TCanvasPainter &) = delete;
@@ -86,13 +87,15 @@ private:
 public:
    /// Create a TVirtualCanvasPainter for the given canvas.
    /// The painter observes it; it needs to know should the TCanvas be deleted.
-   TCanvasPainter(const std::string &name, const ROOT::Experimental::TCanvas &canv)
-      : THttpWSHandler(name.c_str(), "title"), fCanvas(canv), fWebConn()
+   TCanvasPainter(const std::string &name, const ROOT::Experimental::TCanvas &canv, bool batch_mode)
+      : THttpWSHandler(name.c_str(), "title"), fCanvas(canv), fBatchMode(batch_mode), fWebConn()
    {
       CreateHttpServer();
       gServer->Register("/web7gui", this);
       PopupBrowser();
    }
+
+   virtual bool IsBatchMode() const { return fBatchMode; }
 
    virtual void AddDisplayItem(ROOT::Experimental::TDisplayItem *item) final;
 
@@ -105,9 +108,10 @@ public:
    class GeneratorImpl : public Generator {
    public:
       /// Create a new TCanvasPainter to paint the given TCanvas.
-      std::unique_ptr<TVirtualCanvasPainter> Create(const ROOT::Experimental::TCanvas &canv) const override
+      std::unique_ptr<TVirtualCanvasPainter> Create(const ROOT::Experimental::TCanvas &canv,
+                                                    bool batch_mode) const override
       {
-         return std::make_unique<TCanvasPainter>("name", canv);
+         return std::make_unique<TCanvasPainter>("name", canv, batch_mode);
       }
       ~GeneratorImpl() = default;
 
@@ -163,6 +167,8 @@ void TCanvasPainter::PopupBrowser()
 {
    TString addr;
 
+   Bool_t is_batch = gROOT->IsBatch();
+
    Func_t symbol_qt5 = gSystem->DynFindSymbol("*", "webgui_start_browser_in_qt5");
    if (symbol_qt5) {
       typedef void (*FunctionQt5)(const char *, void *);
@@ -181,14 +187,14 @@ void TCanvasPainter::PopupBrowser()
    const char *cef_path = gSystem->Getenv("CEF_PATH");
    const char *rootsys = gSystem->Getenv("ROOTSYS");
    if (symbol_cef && cef_path && !gSystem->AccessPathName(cef_path) && rootsys) {
-      typedef void (*FunctionCef3)(const char *, void *, const char *, const char *);
+      typedef void (*FunctionCef3)(const char *, void *, bool, const char *, const char *);
 
-      addr.Form("/web7gui/%s/draw.htm?longpollcanvas", GetName());
+      addr.Form("/web7gui/%s/draw.htm?longpollcanvas%s", GetName(), (IsBatchMode() ? "&batch_mode" : ""));
 
       Info("PopupBrowser", "Show canvas in CEF window:  %s", addr.Data());
 
       FunctionCef3 func = (FunctionCef3)symbol_cef;
-      func(addr.Data(), gServer, rootsys, cef_path);
+      func(addr.Data(), gServer, is_batch, rootsys, cef_path);
 
       return;
    }
