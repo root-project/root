@@ -43,8 +43,6 @@ setting/clearing/testing named attributes.
 // #include "TGraphStruct.h"
 
 #include "RooSecondMoment.h"
-#include "RooNameSet.h"
-#include "RooWorkspace.h" 
 
 #include "RooMsgService.h"
 #include "RooAbsArg.h"
@@ -102,8 +100,7 @@ RooAbsArg::RooAbsArg() :
   _eocache(0),
   _namePtr(0),
   _isConstant(kFALSE),
-  _localNoInhibitDirty(kFALSE),
-  _myws(0)
+  _localNoInhibitDirty(kFALSE)
 {
   _clientShapeIter = _clientListShape.MakeIterator() ;
   _clientValueIter = _clientListValue.MakeIterator() ;
@@ -129,8 +126,7 @@ RooAbsArg::RooAbsArg(const char *name, const char *title) :
   _eocache(0),
   _namePtr(0),
   _isConstant(kFALSE),
-  _localNoInhibitDirty(kFALSE),
-  _myws(0)
+  _localNoInhibitDirty(kFALSE)
 {
   _namePtr = (TNamed*) RooNameReg::instance().constPtr(GetName()) ;
 
@@ -156,8 +152,7 @@ RooAbsArg::RooAbsArg(const RooAbsArg& other, const char* name)
     _eocache(other._eocache),
     _namePtr(other._namePtr),
     _isConstant(other._isConstant),
-    _localNoInhibitDirty(other._localNoInhibitDirty),
-    _myws(0)
+    _localNoInhibitDirty(other._localNoInhibitDirty)
 {
   // Use name in argument, if supplied
   if (name) {
@@ -615,29 +610,11 @@ void RooAbsArg::addParameters(RooArgSet& params, const RooArgSet* nset,Bool_t st
 RooArgSet* RooAbsArg::getParameters(const RooArgSet* nset, Bool_t stripDisconnected) const
 {
 
-  // Check for cached parameter set
-  if (_myws) {
-    RooNameSet nsetObs(nset?*nset:RooArgSet()) ;
-    const RooArgSet* paramSet = _myws->set(Form("CACHE_PARAMS_OF_PDF_%s_FOR_OBS_%s",GetName(),nsetObs.content())) ;
-    if (paramSet)  {
-      //cout << " restoring parameter cache from workspace for pdf " << IsA()->GetName() << "::" << GetName() << endl ;
-      return new RooArgSet(*paramSet);
-    }
-  }
-
   RooArgSet* parList = new RooArgSet("parameters");
 
   addParameters(*parList, nset, stripDisconnected);
 
   parList->sort();
-
-  // Cache parameter set
-  if (_myws && parList->getSize()>10) {
-    RooNameSet nsetObs(nset?*nset:RooArgSet()) ;
-    _myws->defineSetInternal(Form("CACHE_PARAMS_OF_PDF_%s_FOR_OBS_%s",GetName(),nsetObs.content()),*parList) ;
-    //cout << " caching parameters in workspace for pdf " << IsA()->GetName() << "::" << GetName() << endl ;
-  }
-
   return parList;
 }
 
@@ -1289,7 +1266,7 @@ RooAbsProxy* RooAbsArg::getProxy(Int_t index) const
 
 Int_t RooAbsArg::numProxies() const
 {
-  return _proxyList.GetEntriesFast() ;
+  return _proxyList.GetEntries() ;
 }
 
 
@@ -2473,9 +2450,7 @@ void RooAbsArg::ioStreamerPass2()
   if (iter != _ioEvoList.end()) {
 
     // Transfer contents of saved TRefArray to RooRefArray now
-    if (!_proxyList.GetEntriesFast())
-      _proxyList.Expand(iter->second->GetEntriesFast());
-    for (int i=0 ; i < iter->second->GetEntriesFast() ; i++) {
+    for (int i=0 ; i < iter->second->GetEntries() ; i++) {
       _proxyList.Add(iter->second->At(i)) ;
     }
     // Delete TRefArray and remove from list
@@ -2503,9 +2478,7 @@ void RooAbsArg::ioStreamerPass2Finalize()
   while (iter != _ioEvoList.end()) {
     
     // Transfer contents of saved TRefArray to RooRefArray now
-    if (!iter->first->_proxyList.GetEntriesFast())
-      iter->first->_proxyList.Expand(iter->second->GetEntriesFast());
-    for (int i=0 ; i < iter->second->GetEntriesFast() ; i++) {
+    for (int i=0 ; i < iter->second->GetEntries() ; i++) {
       iter->first->_proxyList.Add(iter->second->At(i)) ;
     }
 
@@ -2546,7 +2519,7 @@ void RooRefArray::Streamer(TBuffer &R__b)
      R__c = R__b.WriteVersion(RooRefArray::IsA(), kTRUE);
 
      // Make a temporary refArray and write that to the streamer
-     TRefArray refArray(GetEntriesFast());
+     TRefArray refArray ;
      TIterator* iter = MakeIterator() ; 
      TObject* tmpObj ; while ((tmpObj = iter->Next())) { 
        refArray.Add(tmpObj) ; 
