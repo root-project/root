@@ -34,29 +34,6 @@
 #include "TClass.h"
 #include "TBufferJSON.h"
 
-#ifdef WEBGUI_WITH_CEF
-#include "../cef/simple_app.h"
-#include "TApplication.h"
-#include "TTimer.h"
-
-class TCefTimer : public TTimer {
-public:
-   TCefTimer(Long_t milliSec, Bool_t mode) : TTimer(milliSec, mode)
-   {
-      // construtor
-   }
-   virtual ~TCefTimer()
-   {
-      // destructor
-   }
-   virtual void Timeout()
-   {
-      // just dummy workaround
-      CefDoMessageLoopWork();
-   }
-};
-
-#endif
 
 namespace {
 
@@ -186,87 +163,35 @@ void TCanvasPainter::PopupBrowser()
 {
    TString addr;
 
-   Func_t symbol = gSystem->DynFindSymbol("*", "webgui_start_browser_in_qt5");
-   if (symbol) {
-      typedef void (*FunctionFunc)(const char *, void *);
+   Func_t symbol_qt5 = gSystem->DynFindSymbol("*", "webgui_start_browser_in_qt5");
+   if (symbol_qt5) {
+      typedef void (*FunctionQt5)(const char *, void *);
 
       addr.Form("://dummy:8080/web7gui/%s/draw.htm?longpollcanvas", GetName());
       // addr.Form("example://localhost:8080/Canvases/%s/draw.htm", Canvas()->GetName());
 
       Info("PopupBrowser", "Show canvas in Qt5 window:  %s", addr.Data());
 
-      FunctionFunc func = (FunctionFunc)symbol;
+      FunctionQt5 func = (FunctionQt5)symbol_qt5;
       func(addr.Data(), gServer);
       return;
    }
 
-#ifdef WEBGUI_WITH_CEF
-   const char *cef = gSystem->Getenv("CEF_PATH");
-   if (cef && !gSystem->AccessPathName(cef)) {
+   Func_t symbol_cef = gSystem->DynFindSymbol("*", "webgui_start_browser_in_cef3");
+   const char *cef_path = gSystem->Getenv("CEF_PATH");
+   const char *rootsys = gSystem->Getenv("ROOTSYS");
+   if (symbol_cef && cef_path && !gSystem->AccessPathName(cef_path) && rootsys) {
+      typedef void (*FunctionCef3)(const char *, void *, const char *, const char *);
 
       addr.Form("/web7gui/%s/draw.htm?longpollcanvas", GetName());
 
-      TApplication *root_app = gROOT->GetApplication();
-
       Info("PopupBrowser", "Show canvas in CEF window:  %s", addr.Data());
 
-      CefMainArgs main_args(root_app->Argc(), root_app->Argv());
-
-      // CEF applications have multiple sub-processes (render, plugin, GPU, etc)
-      // that share the same executable. This function checks the command-line and,
-      // if this is a sub-process, executes the appropriate logic.
-
-      /*         int exit_code = CefExecuteProcess(main_args, NULL, NULL);
-              if (exit_code >= 0) {
-                // The sub-process has completed so return here.
-                return exit_code;
-              }
-      */
-
-      // Install xlib error handlers so that the application won't be terminated
-      // on non-fatal errors.
-      //         XSetErrorHandler(XErrorHandlerImpl);
-      //         XSetIOErrorHandler(XIOErrorHandlerImpl);
-
-      // Specify CEF global settings here.
-      CefSettings settings;
-
-      //  settings.multi_threaded_message_loop = false; // not supported
-      //  settings.external_message_pump = false;
-      const char *rootsys = gSystem->Getenv("ROOTSYS");
-
-      printf("Get build dir %s\n", rootsys);
-
-      TString path, path2, cef_main;
-      path.Form("%s/Resources/", cef);
-      path2.Form("%s/Resources/locales/", cef);
-      cef_main.Form("%s/bin/cef_main", rootsys);
-
-      cef_string_ascii_to_utf16(path.Data(), path.Length(), &settings.resources_dir_path);
-
-      cef_string_ascii_to_utf16(path2.Data(), path2.Length(), &settings.locales_dir_path);
-
-      settings.no_sandbox = true;
-      // settings.single_process = true;
-
-      // SimpleApp implements application-level callbacks for the browser process.
-      // It will create the first browser instance in OnContextInitialized() after
-      // CEF has initialized.
-      CefRefPtr<SimpleApp> *app = new CefRefPtr<SimpleApp>(new SimpleApp(addr.Data(), cef_main.Data(), gServer));
-
-      // Initialize CEF for the browser process.
-      CefInitialize(main_args, settings, app->get(), NULL);
-
-      // let run CEF message loop, should be improved later
-      TCefTimer *timer = new TCefTimer(10, kTRUE);
-      timer->TurnOn();
-
-      // Shut down CEF.
-      // CefShutdown();
+      FunctionCef3 func = (FunctionCef3)symbol_cef;
+      func(addr.Data(), gServer, rootsys, cef_path);
 
       return;
    }
-#endif
 
    CreateHttpServer(kTRUE); // ensure that http port is available
 
