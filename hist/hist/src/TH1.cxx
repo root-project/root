@@ -935,7 +935,7 @@ Bool_t TH1::Add(const TH1 *h1, Double_t c1)
          Double_t w1 = 1., w2 = 1.;
 
          // consider all special cases  when bin errors are zero
-         // see http://root.cern.ch/phpBB3//viewtopic.php?f=3&t=13299
+         // see http://root-forum.cern.ch/viewtopic.php?f=3&t=13299
          if (e1sq) w1 = 1. / e1sq;
          else if (h1->fSumw2.fN) {
             w1 = 1.E200; // use an arbitrary huge value
@@ -1137,7 +1137,7 @@ Bool_t TH1::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
          Double_t w1 = 1., w2 = 1.;
 
          // consider all special cases  when bin errors are zero
-         // see http://root.cern.ch/phpBB3//viewtopic.php?f=3&t=13299
+         // see http://root-forum.cern.ch/viewtopic.php?f=3&t=13299
          if (e1sq) w1 = 1./ e1sq;
          else if (h1->fSumw2.fN) {
             w1 = 1.E200; // use an arbitrary huge value
@@ -2796,7 +2796,7 @@ Bool_t TH1::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Optio
                // c1 and c2 are ignored
                //fSumw2.fArray[bin] = TMath::Abs(w*(1-w)/(c2*b2));//this is the formula in Hbook/Hoper1
                //fSumw2.fArray[bin] = TMath::Abs(w*(1-w)/b2);     // old formula from G. Flucke
-               // formula which works also for weighted histogram (see http://root.cern.ch/phpBB2/viewtopic.php?t=3753 )
+               // formula which works also for weighted histogram (see http://root-forum.cern.ch/viewtopic.php?t=3753 )
                fSumw2.fArray[i] = TMath::Abs( ( (1. - 2.* b1 / b2) * e1sq  + b1sq * e2sq / b2sq ) / b2sq );
             } else {
                //in case b1=b2 error is zero
