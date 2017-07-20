@@ -54,6 +54,13 @@ void SimpleHandler::OnTitleChange(CefRefPtr<CefBrowser> browser, const CefString
    }
 }
 
+bool SimpleHandler::OnConsoleMessage(CefRefPtr<CefBrowser> browser, const CefString &message, const CefString &source,
+                                     int line)
+{
+   printf("CONSOLE: %s\n", message.ToString().c_str());
+   return true;
+}
+
 void SimpleHandler::OnAfterCreated(CefRefPtr<CefBrowser> browser)
 {
    CEF_REQUIRE_UI_THREAD();
