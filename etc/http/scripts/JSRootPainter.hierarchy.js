@@ -2155,7 +2155,6 @@
 
       myDiv.style('position',"absolute").style('left',0).style('top',0).style('bottom',0).style('right',0).style('padding',1);
 
-
       if (drawing && ((JSROOT.GetUrlOption("webcanvas")!==null) || (JSROOT.GetUrlOption("longpollcanvas")!==null))) {
 
          console.log('Start web painter directly');
@@ -2166,7 +2165,10 @@
 
          painter.OpenWebsocket(JSROOT.GetUrlOption("longpollcanvas")!==null); // when connection activated, ROOT must send new instance of the canvas
 
-         JSROOT.RegisterForResize(painter);
+         painter.batch_mode = JSROOT.GetUrlOption("batch_mode") !== null;
+
+         if (!painter.batch_mode) JSROOT.RegisterForResize(painter);
+                             else console.log('draw web canvas in batch mode');
 
          return;
       }
