@@ -156,7 +156,7 @@ public:
    {
       std::string addr = request->GetURL().ToString();
 
-      printf("Request %s server %p\n", addr.c_str(), gHandlingServer);
+      // printf("Request %s server %p\n", addr.c_str(), gHandlingServer);
 
       TUrl url(addr.c_str());
 
