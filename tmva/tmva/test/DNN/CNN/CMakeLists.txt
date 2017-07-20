@@ -26,3 +26,6 @@ ROOT_ADD_TEST(TMVA-DNN-CNN-Loss COMMAND testConvNetLoss)
 
 ROOT_EXECUTABLE(testConvNetPred TestConvNetPrediction.cxx LIBRARIES ${Libraries})
 ROOT_ADD_TEST(TMVA-DNN-CNN-Pred COMMAND testConvNetPred)
+
+ROOT_EXECUTABLE(testConvBackpropagation TestConvBackpropagation.cxx LIBRARIES ${Libraries})
+ROOT_ADD_TEST(TMVA-DNN-CNN-Backpropagation COMMAND testConvBackpropagation)
