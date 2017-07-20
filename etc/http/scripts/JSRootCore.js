@@ -7,7 +7,7 @@
 (function( factory ) {
    if ( typeof define === "function" && define.amd ) {
 
-      var jsroot = factory({})
+      var jsroot = factory({}),
           dir = jsroot.source_dir + "scripts/",
           ext = jsroot.source_min ? ".min" : "",
           norjs = (typeof requirejs=='undefined'),
@@ -33,6 +33,7 @@
             'JSRootPainter.more'   : dir+'JSRootPainter.more'+ext,
             'JSRootPainter.hierarchy' : dir+'JSRootPainter.hierarchy'+ext,
             'JSRootPainter.jquery' : dir+'JSRootPainter.jquery'+ext,
+            'JSRootPainter.openui5': dir+'JSRootPainter.openui5'+ext,
             'JSRoot3DPainter'      : dir+'JSRoot3DPainter'+ext,
             'ThreeCSG'             : dir+'ThreeCSG'+ext,
             'JSRootGeoBase'        : dir+'JSRootGeoBase'+ext,
@@ -92,7 +93,7 @@
    }
 } (function(JSROOT) {
 
-   JSROOT.version = "dev 29/06/2017";
+   JSROOT.version = "dev 20/07/2017";
 
    JSROOT.source_dir = "";
    JSROOT.source_min = false;
@@ -102,6 +103,17 @@
 
    JSROOT.id_counter = 0;
    JSROOT.BatchMode = false; // when true, disables all kind of interactive features
+
+   if (window && ('cefQuery' in window)) {
+      console.log('DETECT cefQuery!!!');
+      window.cefQuery({ request: 'init_jsroot_done',
+                        persistent: false,
+                        onSuccess: function(response) { console.log("CEF: " + response); },
+                        onFailure: function(error_code, error_message) { console.log("CEF_ERR: " + error_code); } });
+
+      JSROOT.BatchMode = true;
+   }
+
 
    // JSROOT.use_full_libs = true;
 
@@ -774,6 +786,9 @@
       // <script type="text/javascript" src="scripts/JSRootCore.js"></script>
 
       function completeLoad() {
+
+         JSROOT.complete_script_load = null;
+
          if (debugout)
             document.getElementById(debugout).innerHTML = "";
          else
@@ -868,17 +883,19 @@
          element.setAttribute('src', filename);
       }
 
+      JSROOT.complete_script_load = completeLoad;
+
       if (element.readyState) { // Internet Explorer specific
          element.onreadystatechange = function() {
             if (element.readyState == "loaded" || element.readyState == "complete") {
                element.onreadystatechange = null;
-               completeLoad();
+               if (JSROOT.complete_script_load) completeLoad();
             }
          }
       } else { // Other browsers
          element.onload = function() {
             element.onload = null;
-            completeLoad();
+            if (JSROOT.complete_script_load) completeLoad();
          }
       }
 
@@ -898,6 +915,7 @@
       //     'jq'  jQuery and jQuery-ui
       // 'hierarchy' hierarchy browser
       //   'jq2d'  jQuery-dependent part of hierarchy
+      // 'openui5'  OpenUI5 and related functionality
       //   'geom'  TGeo support
       // 'simple'  for basic user interface
       //  'load:'  list of user-specific scripts at the end of kind string
@@ -1004,15 +1022,20 @@
          modules.push('JSRootPainter.more');
       }
 
-      if (((kind.indexOf('hierarchy;')>=0) || (kind.indexOf('jq2d;')>=0)) && (jsroot.sources.indexOf("hierarchy")<0)) {
+      if (((kind.indexOf('hierarchy;')>=0) || (kind.indexOf('jq2d;')>=0) || (kind.indexOf('openui5;')>=0)) && (jsroot.sources.indexOf("hierarchy")<0)) {
          mainfiles += '$$$scripts/JSRootPainter.hierarchy' + ext + ".js;";
          modules.push('JSRootPainter.hierarchy');
       }
 
-      if ((kind.indexOf('jq2d;')>=0) && (jsroot.sources.indexOf("jq2d")<0)) {
+      if (((kind.indexOf('jq2d;')>=0) || (kind.indexOf('openui5;')>=0)) && (jsroot.sources.indexOf("jq2d")<0)) {
          mainfiles += '$$$scripts/JSRootPainter.jquery' + ext + ".js;";
          modules.push('JSRootPainter.jquery');
          need_jquery = true;
+      }
+
+      if ((kind.indexOf('openui5;')>=0) && (jsroot.sources.indexOf("openui5")<0)) {
+         mainfiles += '$$$scripts/JSRootPainter.openui5' + ext + ".js;";
+         modules.push('JSRootPainter.openui5');
       }
 
       if (((kind.indexOf("3d;")>=0) || (kind.indexOf("geom;")>=0)) && (jsroot.sources.indexOf("3d")<0)) {
@@ -1326,7 +1349,11 @@
             JSROOT.Create("TAttFill", obj);
             JSROOT.Create("TAttMarker", obj);
             JSROOT.extend(obj, { fFunctions: JSROOT.Create("TList"), fHistogram: null,
-                                 fMaxSize: 0, fMaximum:-1111, fMinimum:-1111, fNpoints: 0, fX: [], fY: [] });
+                                 fMaxSize: 0, fMaximum: -1111, fMinimum: -1111, fNpoints: 0, fX: [], fY: [] });
+            break;
+         case 'TGraphAsymmErrors':
+            JSROOT.Create("TGraph", obj);
+            JSROOT.extend(obj, { fEXlow: [], fEXhigh: [], fEYlow: [], fEYhigh: []});
             break;
          case 'TMultiGraph':
             JSROOT.Create("TNamed", obj);
@@ -1588,6 +1615,12 @@
                     _func = this.fFormula.fFormula;
                     pprefix = "[p";
                  }
+                 if (this.fFormula.fClingParameters && this.fFormula.fParams) {
+                    for (var i=0;i<this.fFormula.fParams.length;++i) {
+                       var regex = new RegExp('(\\[' + this.fFormula.fParams[i].first + '\\])', 'g');
+                       _func = _func.replace(regex, this.fFormula.fClingParameters[this.fFormula.fParams[i].second]);
+                    }
+                 }
               }
 
               if ('formulas' in this)
@@ -1810,6 +1843,11 @@
             if (this.fNbins <= 0) return 0;
             if ((this.fXbins.length > 0) && (bin > 0) && (bin <= this.fNbins)) return this.fXbins[bin-1];
             return this.fXmin + (bin-1) * (this.fXmax - this.fXmin) / this.fNbins;
+         }
+         m.GetBinCenter = function(bin) {
+            if (this.fNbins <= 0) return 0;
+            if ((this.fXbins.length > 0) && (bin > 0) && (bin < this.fNbins)) return (this.fXbins[bin-1] + this.fXbins[bin])/2;
+            return this.fXmin + (bin-0.5) * (this.fXmax - this.fXmin) / this.fNbins;
          }
       }
 
