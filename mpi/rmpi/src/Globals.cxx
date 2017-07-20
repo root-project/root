@@ -68,6 +68,7 @@ const Int_t ERR_LASTCODE = MPI_ERR_LASTCODE;
 
 // topologies
 const Int_t GRAPH = MPI_GRAPH;
+const Int_t DIST_GRAPH = MPI_DIST_GRAPH;
 const Int_t CART = MPI_CART;
 
 // maximum sizes for strings

@@ -13,6 +13,7 @@ set(RMPI_HEADERS Mpi/TEnvironment.h
 		 Mpi/TCommunicator.h
 		 Mpi/TIntraCommunicator.h
 		 Mpi/TInterCommunicator.h
+		 Mpi/TCartCommunicator.h
 		 Mpi/TStatus.h
 		 Mpi/TRequest.h
          Mpi/Globals.h

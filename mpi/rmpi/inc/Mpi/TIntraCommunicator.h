@@ -51,7 +51,7 @@ public:
 
    inline operator MPI_Comm() const { return fComm; }
 
-   TIntraCommunicator *Dup() const;
+   virtual TIntraCommunicator *Dup() const;
 
    virtual TIntraCommunicator Create(const TGroup &group) const;
 

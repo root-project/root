@@ -205,6 +205,12 @@ public:
 
    virtual Bool_t IsInter() const;
 
+   //////////////
+   // Topology //
+   //////////////
+
+   virtual Int_t GetTopology() const;
+
    //////////////////////
    // Process Creation //
    //////////////////////

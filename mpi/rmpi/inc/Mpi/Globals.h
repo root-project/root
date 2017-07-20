@@ -144,6 +144,7 @@ R__EXTERN const Int_t ERR_LASTCODE;
 
 // topologies
 R__EXTERN const Int_t GRAPH;
+R__EXTERN const Int_t DIST_GRAPH;
 R__EXTERN const Int_t CART;
 
 // maximum sizes for strings

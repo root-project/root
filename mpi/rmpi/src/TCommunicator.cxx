@@ -283,6 +283,26 @@ Bool_t TCommunicator::IsInter() const
    return Bool_t(t);
 }
 
+//______________________________________________________________________________
+/**
+* Determines the type of topology (if any) associated with a communicator.
+* returns the type of topology that is assigned to a communicator.
+*
+* The output value top_type is one of the following:
+*
+* ROOT::Mpi::GRAPH       graph topology
+* ROOT::Mpi::CART        Cartesian topology
+* ROOT::Mpi::DIST_GRAPH  distributed graph topology
+* ROOT::Mpi::UNDEFINED   no topology
+* \return Topology type of communicator.
+*/
+Int_t TCommunicator::GetTopology() const
+{
+   Int_t status;
+   ROOT_MPI_CHECK_CALL(MPI_Topo_test, (fComm, &status), this);
+   return status;
+}
+
 //
 // Process Creation and Managemnt
 //
