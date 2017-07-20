@@ -22,6 +22,7 @@
 
 namespace ROOT {
 namespace Experimental {
+
 class TCanvas;
 
 namespace Internal {
@@ -46,10 +47,14 @@ public:
    /// Default destructor.
    virtual ~TVirtualCanvasPainter();
 
-   virtual void AddDisplayItem(TDisplayItem *item) = 0;
-
    /// returns true is canvas used in batch mode
    virtual bool IsBatchMode() const { return true; }
+
+   /// add display item to the canvas
+   virtual void AddDisplayItem(TDisplayItem *item) = 0;
+
+   /// perform special action when drawing is ready
+   virtual void DoWhenReady(const std::string &, const std::string &) = 0;
 
    /// Loads the plugin that implements this class.
    static std::unique_ptr<TVirtualCanvasPainter> Create(const TCanvas &canv, bool batch_mode = false);
