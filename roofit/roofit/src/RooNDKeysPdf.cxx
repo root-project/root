@@ -782,13 +782,6 @@ void RooNDKeysPdf::loadDataSet(Bool_t firstCall) const
 		  << endl; 
 }
 
-
-  coutI(Contents) << "RooNDKeysPdf::loadDataSet(" << this << ")"
-        << "\n Number of events in dataset: " << _nEvents
-        << "\n Weighted number of events in dataset: " << _nEventsW
-        << endl;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 /// determine mirror dataset.
 /// mirror points are added around the physical boundaries of the dataset
