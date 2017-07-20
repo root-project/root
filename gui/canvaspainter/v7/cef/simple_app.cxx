@@ -17,6 +17,9 @@
 #include "THttpServer.h"
 #include "THttpCallArg.h"
 #include "TUrl.h"
+#include "TTimer.h"
+#include "TApplication.h"
+#include "TROOT.h"
 
 THttpServer *gHandlingServer = 0;
 
@@ -251,10 +254,13 @@ void SimpleApp::OnContextInitialized()
    // via the command-line. Otherwise, create the browser using the native
    // platform framework. The Views framework is currently only supported on
    // Windows and Linux.
-   const bool use_views = false;
+   bool use_views = false;
 #else
-   const bool use_views = false;
+   bool use_views = false;
 #endif
+
+   bool use_batch = false;
+   if (use_batch) use_views = false;
 
    CefRegisterSchemeHandlerFactory("rootscheme", "rootserver", new ROOTSchemeHandlerFactory());
 
@@ -281,7 +287,86 @@ void SimpleApp::OnContextInitialized()
       window_info.SetAsPopup(NULL, "cefsimple");
 #endif
 
+      if (use_batch) window_info.SetAsWindowless(0);
+
+      printf("CreateBrowser %s\n", fUrl.c_str());
+
       // Create the first browser window.
       CefBrowserHost::CreateBrowser(window_info, handler, fUrl, browser_settings, NULL);
    }
 }
+
+
+class TCefTimer : public TTimer {
+public:
+   TCefTimer(Long_t milliSec, Bool_t mode) : TTimer(milliSec, mode)
+   {
+      // construtor
+   }
+   virtual ~TCefTimer()
+   {
+      // destructor
+   }
+   virtual void Timeout()
+   {
+      // just dummy workaround
+      CefDoMessageLoopWork();
+   }
+};
+
+extern "C" void webgui_start_browser_in_cef3(const char *url, void *http_serv, const char *rootsys, const char *cef_path)
+{
+   TApplication *root_app = gROOT->GetApplication();
+
+   CefMainArgs main_args(root_app->Argc(), root_app->Argv());
+
+   // CEF applications have multiple sub-processes (render, plugin, GPU, etc)
+   // that share the same executable. This function checks the command-line and,
+   // if this is a sub-process, executes the appropriate logic.
+
+   /*         int exit_code = CefExecuteProcess(main_args, NULL, NULL);
+           if (exit_code >= 0) {
+             // The sub-process has completed so return here.
+             return exit_code;
+           }
+   */
+
+   // Install xlib error handlers so that the application won't be terminated
+   // on non-fatal errors.
+   //         XSetErrorHandler(XErrorHandlerImpl);
+   //         XSetIOErrorHandler(XIOErrorHandlerImpl);
+
+   // Specify CEF global settings here.
+   CefSettings settings;
+
+   TString path, path2, cef_main;
+   path.Form("%s/Resources/", cef_path);
+   path2.Form("%s/Resources/locales/", cef_path);
+   cef_main.Form("%s/bin/cef_main", rootsys);
+
+   cef_string_ascii_to_utf16(path.Data(), path.Length(), &settings.resources_dir_path);
+
+   cef_string_ascii_to_utf16(path2.Data(), path2.Length(), &settings.locales_dir_path);
+
+   settings.no_sandbox = true;
+   // settings.single_process = true;
+
+   settings.windowless_rendering_enabled = true;
+
+   // SimpleApp implements application-level callbacks for the browser process.
+   // It will create the first browser instance in OnContextInitialized() after
+   // CEF has initialized.
+   CefRefPtr<SimpleApp> *app = new CefRefPtr<SimpleApp>(new SimpleApp(url, cef_main.Data(), (THttpServer *) http_serv));
+
+   // Initialize CEF for the browser process.
+   CefInitialize(main_args, settings, app->get(), NULL);
+
+   // let run CEF message loop, should be improved later
+   TCefTimer *timer = new TCefTimer(10, kTRUE);
+   timer->TurnOn();
+
+   // Shut down CEF.
+   // CefShutdown();
+
+}
+
