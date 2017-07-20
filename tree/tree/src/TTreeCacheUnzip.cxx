@@ -667,7 +667,7 @@ public:
          accusz = 0;
       }
       this->set_ref_count(taskcnt+1);
-      this->spawn(tl);
+      this->spawn_and_wait_for_all(tl);
       return nullptr;
    }
 };
