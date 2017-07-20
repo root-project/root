@@ -10,7 +10,7 @@
 class THttpServer;
 
 // Implement application-level callbacks for the browser process.
-class SimpleApp : public CefApp, public CefBrowserProcessHandler, public CefRenderProcessHandler {
+class SimpleApp : public CefApp, public CefBrowserProcessHandler /*, public CefRenderProcessHandler */ {
 protected:
    std::string fUrl;     ///<! first URL to open
    std::string fCefMain; ///!< executable used for extra processed
@@ -21,7 +21,7 @@ public:
 
    // CefApp methods:
    virtual CefRefPtr<CefBrowserProcessHandler> GetBrowserProcessHandler() OVERRIDE { return this; }
-   virtual CefRefPtr<CefRenderProcessHandler> GetRenderProcessHandler() OVERRIDE { return this; }
+   // virtual CefRefPtr<CefRenderProcessHandler> GetRenderProcessHandler() OVERRIDE { return this; }
 
    virtual void OnRegisterCustomSchemes(CefRawPtr<CefSchemeRegistrar> registrar) OVERRIDE;
 
@@ -34,10 +34,8 @@ public:
    virtual void OnBeforeChildProcessLaunch(CefRefPtr<CefCommandLine> command_line) OVERRIDE;
 
    // CefRenderProcessHandler methods
-   virtual void OnContextCreated(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame,
-                                 CefRefPtr<CefV8Context> context) OVERRIDE;
-
-   virtual void OnBrowserCreated(CefRefPtr<CefBrowser> browser) OVERRIDE;
+   //virtual void OnContextCreated(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame,
+   //                              CefRefPtr<CefV8Context> context) OVERRIDE;
 
 private:
    // Include the default reference counting implementation.

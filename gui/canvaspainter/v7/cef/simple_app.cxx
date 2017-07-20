@@ -209,7 +209,7 @@ public:
 } // namespace
 
 SimpleApp::SimpleApp(const std::string &url, const std::string &cef_main, THttpServer *serv, bool isbatch)
-   : CefApp(), CefBrowserProcessHandler(), CefRenderProcessHandler(), fUrl(), fCefMain(cef_main), fBatch(isbatch)
+   : CefApp(), CefBrowserProcessHandler(), /*CefRenderProcessHandler(),*/ fUrl(), fCefMain(cef_main), fBatch(isbatch)
 {
    fUrl = "rootscheme://rootserver";
    fUrl.append(url);
@@ -246,6 +246,7 @@ void SimpleApp::OnBeforeChildProcessLaunch(CefRefPtr<CefCommandLine> command_lin
    printf("OnBeforeChildProcessLaunch %s\n", prog.c_str());
 }
 
+/*
 void SimpleApp::OnContextCreated(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame,
                                  CefRefPtr<CefV8Context> context)
 {
@@ -269,6 +270,7 @@ void SimpleApp::OnBrowserCreated(CefRefPtr<CefBrowser> browser)
 {
    printf("$$$$$$$$$ SimpleApp::OnBrowserCreated\n");
 }
+*/
 
 
 void SimpleApp::OnContextInitialized()

@@ -8,6 +8,9 @@
 
 #include "include/base/cef_logging.h"
 
+#include "include/wrapper/cef_message_router.h"
+
+// #include "include/cef_process_message.h"
 
 class ROOTV8Handler : public CefV8Handler {
 public:
@@ -31,12 +34,12 @@ public:
    IMPLEMENT_REFCOUNTING(ROOTV8Handler);
 };
 
-
-
-
 // Implement application-level callbacks for the browser process.
 class MyRendererProcessApp : public CefApp, public CefRenderProcessHandler {
-protected:
+private:
+   // Handles the renderer side of query routing.
+   CefRefPtr<CefMessageRouterRendererSide> message_router_;
+
 public:
    MyRendererProcessApp() {}
    virtual ~MyRendererProcessApp() {}
@@ -44,12 +47,24 @@ public:
    // CefApp methods:
    virtual CefRefPtr<CefRenderProcessHandler> GetRenderProcessHandler() OVERRIDE { return this; }
 
+   // CefRenderProcessHandler methods:
+   void OnWebKitInitialized() OVERRIDE
+   {
+      // Create the renderer-side router for query handling.
+      CefMessageRouterConfig config;
+      message_router_ = CefMessageRouterRendererSide::Create(config);
+   }
+
    // CefRenderProcessHandler methods
    virtual void OnContextCreated(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame,
                                  CefRefPtr<CefV8Context> context) OVERRIDE
    {
       printf("MyRendererProcessApp::OnContextCreated\n");
 
+      message_router_->OnContextCreated(browser, frame, context);
+
+      return;
+/*
       // Retrieve the context's window object.
       CefRefPtr<CefV8Value> object = context->GetGlobal();
 
@@ -68,7 +83,43 @@ public:
       object->SetValue("ROOT_BATCH_FUNC", func, V8_PROPERTY_ATTRIBUTE_NONE);
 
       printf("ADD BATCH FUNC\n");
+
+      CefRefPtr<CefProcessMessage> msg = CefProcessMessage::Create("my_message");
+
+      // Retrieve the argument list object.
+      CefRefPtr<CefListValue> args = msg->GetArgumentList();
+
+      // Populate the argument values.
+      args->SetString(0, "my string");
+      args->SetInt(1, 10);
+
+      // Send the process message to the render process.
+      // Use PID_BROWSER instead when sending a message to the browser process.
+      browser->SendProcessMessage(PID_BROWSER, msg);
+*/
+
    }
+
+   void OnContextReleased(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame,
+                          CefRefPtr<CefV8Context> context) OVERRIDE
+   {
+      message_router_->OnContextReleased(browser, frame, context);
+   }
+
+   bool OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProcessId source_process,
+                                 CefRefPtr<CefProcessMessage> message) OVERRIDE
+   {
+      return message_router_->OnProcessMessageReceived(browser, source_process, message);
+   }
+
+   /*   virtual bool OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProcessId source_process,
+                                            CefRefPtr<CefProcessMessage> message) OVERRIDE
+      {
+         const std::string &message_name = message->GetName();
+         printf("MyRendererProcessApp::OnProcessMessageReceived %s\n", message_name.c_str());
+         return true;
+      }
+      */
 
 private:
    // Include the default reference counting implementation.
@@ -76,15 +127,14 @@ private:
    DISALLOW_COPY_AND_ASSIGN(MyRendererProcessApp);
 };
 
-
-
 // Entry point function for all processes.
 int main(int argc, char *argv[])
 {
    // Provide CEF with command-line arguments.
    CefMainArgs main_args(argc, argv);
 
-   printf("Starting CEF_MAIN\n");
+   printf("Starting CEF_MAIN ARGC %d\n", argc);
+   for (int n = 1; n < argc; n++) printf("ARGV[%d] = %s\n", n, argv[n]);
 
    CefRefPtr<CefApp> app = new MyRendererProcessApp();
 

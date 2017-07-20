@@ -37,6 +37,9 @@ public:
    virtual bool OnConsoleMessage(CefRefPtr<CefBrowser> browser, const CefString &message, const CefString &source,
                                  int line) OVERRIDE;
 
+   virtual bool OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProcessId source_process,
+                                         CefRefPtr<CefProcessMessage> message) OVERRIDE;
+
    // Request that all existing browser windows close.
    void CloseAllBrowsers(bool force_close);
 
