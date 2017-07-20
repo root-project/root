@@ -274,7 +274,6 @@ void SimpleApp::OnBrowserCreated(CefRefPtr<CefBrowser> browser)
 }
 */
 
-
 void SimpleApp::OnContextInitialized()
 {
    CEF_REQUIRE_UI_THREAD();
@@ -352,7 +351,7 @@ public:
    }
 };
 
-extern "C" void webgui_start_browser_in_cef3(const char *url, void *http_serv, const char *rootsys,
+extern "C" void webgui_start_browser_in_cef3(const char *url, void *http_serv, bool batch_mode, const char *rootsys,
                                              const char *cef_path)
 {
    TApplication *root_app = gROOT->GetApplication();
@@ -390,15 +389,13 @@ extern "C" void webgui_start_browser_in_cef3(const char *url, void *http_serv, c
    settings.no_sandbox = true;
    // settings.single_process = true;
 
-   settings.windowless_rendering_enabled = true;
-
-   bool batch = gROOT->IsBatch();
+   if (batch_mode) settings.windowless_rendering_enabled = true;
 
    // SimpleApp implements application-level callbacks for the browser process.
    // It will create the first browser instance in OnContextInitialized() after
    // CEF has initialized.
    CefRefPtr<SimpleApp> *app =
-      new CefRefPtr<SimpleApp>(new SimpleApp(url, cef_main.Data(), (THttpServer *)http_serv, batch));
+      new CefRefPtr<SimpleApp>(new SimpleApp(url, cef_main.Data(), (THttpServer *)http_serv, batch_mode));
 
    // Initialize CEF for the browser process.
    CefInitialize(main_args, settings, app->get(), NULL);

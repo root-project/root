@@ -189,7 +189,11 @@ bool OsrHandler::GetRootScreenRect(CefRefPtr<CefBrowser> browser, CefRect &rect)
 {
    CEF_REQUIRE_UI_THREAD();
 
-   return false;
+   rect.x = rect.y = 0;
+   rect.width = 800;
+   rect.height = 600;
+
+   return true;
 
    // if (!osr_delegate_) return false;
    // return osr_delegate_->GetRootScreenRect(browser, rect);
@@ -199,7 +203,11 @@ bool OsrHandler::GetViewRect(CefRefPtr<CefBrowser> browser, CefRect &rect)
 {
    CEF_REQUIRE_UI_THREAD();
 
-   return false;
+   rect.x = rect.y = 0;
+   rect.width = 800;
+   rect.height = 600;
+
+   return true;
 
    // if (!osr_delegate_) return false;
    // return osr_delegate_->GetViewRect(browser, rect);
@@ -209,7 +217,10 @@ bool OsrHandler::GetScreenPoint(CefRefPtr<CefBrowser> browser, int viewX, int vi
 {
    CEF_REQUIRE_UI_THREAD();
 
-   return false;
+   screenX = viewX;
+   screenY = viewY;
+
+   return true;
    // if (!osr_delegate_) return false;
    // return osr_delegate_->GetScreenPoint(browser, viewX, viewY, screenX, screenY);
 }
@@ -218,7 +229,16 @@ bool OsrHandler::GetScreenInfo(CefRefPtr<CefBrowser> browser, CefScreenInfo &scr
 {
    CEF_REQUIRE_UI_THREAD();
 
-   return false;
+   CefRect view_rect;
+   GetViewRect(browser, view_rect);
+
+   screen_info.device_scale_factor = 1.;
+
+   // The screen info rectangles are used by the renderer to create and position
+   // popups. Keep popups inside the view rectangle.
+   screen_info.rect = view_rect;
+   screen_info.available_rect = view_rect;
+   return true;
 
    // if (!osr_delegate_) return false;
    // return osr_delegate_->GetScreenInfo(browser, screen_info);
@@ -227,6 +247,8 @@ bool OsrHandler::GetScreenInfo(CefRefPtr<CefBrowser> browser, CefScreenInfo &scr
 void OsrHandler::OnPopupShow(CefRefPtr<CefBrowser> browser, bool show)
 {
    CEF_REQUIRE_UI_THREAD();
+
+   // do nothing
 
    // if (!osr_delegate_) return;
    // return osr_delegate_->OnPopupShow(browser, show);
@@ -243,6 +265,9 @@ void OsrHandler::OnPaint(CefRefPtr<CefBrowser> browser, PaintElementType type, c
                          const void *buffer, int width, int height)
 {
    CEF_REQUIRE_UI_THREAD();
+
+   // REQUIRE_MAIN_THREAD(); // we can request to run code in main thread?
+
    // if (!osr_delegate_) return;
    // osr_delegate_->OnPaint(browser, type, dirtyRects, buffer, width, height);
 }
