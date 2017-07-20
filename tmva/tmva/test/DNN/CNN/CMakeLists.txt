@@ -12,7 +12,7 @@ include_directories(${ROOT_INCLUDE_DIRS})
 ROOT_EXECUTABLE(testIm2Col TestIm2Col.cxx LIBRARIES ${Libraries})
 ROOT_ADD_TEST(TMVA-DNN-CNN-Im2Col COMMAND testIm2Col)
 
-ROOT_EXECUTABLE(testDownsample TestDownSample.cxx LIBRARIES ${Libraries})
+ROOT_EXECUTABLE(testDownsample TestDownsample.cxx LIBRARIES ${Libraries})
 ROOT_ADD_TEST(TMVA-DNN-CNN-Downsample COMMAND testDownsample)
 
 ROOT_EXECUTABLE(testRotWeights TestRotateWeights.cxx LIBRARIES ${Libraries})
