@@ -1430,6 +1430,110 @@
 
    // =============================================================
 
+   function TEfficiencyPainter(eff) {
+      JSROOT.TObjectPainter.call(this, eff);
+      this.fBoundary = 'Normal';
+   }
+
+   TEfficiencyPainter.prototype = Object.create(JSROOT.TObjectPainter.prototype);
+
+   TEfficiencyPainter.prototype.GetEfficiency = function(bin) {
+      var obj = this.GetObject(),
+          total = obj.fTotalHistogram.getBinContent(bin),
+          passed = obj.fPassedHistogram.getBinContent(bin);
+
+      return total ? passed/total : 0;
+   }
+
+/**  implementing of  beta_quantile requires huge number of functions in JSRootMath.js
+
+   TEfficiencyPainter.prototype.ClopperPearson = function(total,passed,level,bUpper) {
+      var alpha = (1.0 - level) / 2;
+      if(bUpper)
+         return ((passed == total) ? 1.0 : JSROOT.Math.beta_quantile(1 - alpha,passed + 1,total-passed));
+      else
+         return ((passed == 0) ? 0.0 : JSROOT.Math.beta_quantile(alpha,passed,total-passed+1.0));
+   }
+*/
+
+   TEfficiencyPainter.prototype.Normal = function(total,passed,level,bUpper) {
+      if (total == 0) return bUpper ? 1 : 0;
+
+      var alpha = (1.0 - level)/2,
+          average = passed / total,
+          sigma = Math.sqrt(average * (1 - average) / total),
+         delta = JSROOT.Math.normal_quantile(1 - alpha,sigma);
+
+      if(bUpper)
+         return ((average + delta) > 1) ? 1.0 : (average + delta);
+
+      return ((average - delta) < 0) ? 0.0 : (average - delta);
+   }
+
+   TEfficiencyPainter.prototype.GetEfficiencyErrorLow = function(bin) {
+      var obj = this.GetObject(),
+          total = obj.fTotalHistogram.getBinContent(bin),
+          passed = obj.fPassedHistogram.getBinContent(bin),
+          eff = this.GetEfficiency(bin);
+
+      return eff - this[this.fBoundary](total,passed, obj.fConfLevel, false);
+   }
+
+   TEfficiencyPainter.prototype.GetEfficiencyErrorUp = function(bin) {
+      var obj = this.GetObject(),
+          total = obj.fTotalHistogram.getBinContent(bin),
+          passed = obj.fPassedHistogram.getBinContent(bin),
+          eff = this.GetEfficiency(bin);
+
+      return this[this.fBoundary]( total, passed, obj.fConfLevel, true) - eff;
+   }
+
+   TEfficiencyPainter.prototype.CreateGraph = function() {
+      var gr = JSROOT.Create('TGraphAsymmErrors');
+      gr.fName = "eff_graph";
+      return gr;
+   }
+
+   TEfficiencyPainter.prototype.FillGraph = function(gr, opt) {
+      var eff = this.GetObject(),
+          npoints = eff.fTotalHistogram.fXaxis.fNbins,
+          option = opt.toLowerCase(),
+          plot0Bins = false, j = 0;
+      if (option.indexOf("e0")>=0) plot0Bins = true;
+      for (var n=0;n<npoints;++n) {
+         if (!plot0Bins && eff.fTotalHistogram.getBinContent(n+1) === 0) continue;
+         gr.fX[j] = eff.fTotalHistogram.fXaxis.GetBinCenter(n+1);
+         gr.fY[j] = this.GetEfficiency(n+1);
+         gr.fEXlow[j] = eff.fTotalHistogram.fXaxis.GetBinCenter(n+1) - eff.fTotalHistogram.fXaxis.GetBinLowEdge(n+1);
+         gr.fEXhigh[j] = eff.fTotalHistogram.fXaxis.GetBinLowEdge(n+2) - eff.fTotalHistogram.fXaxis.GetBinCenter(n+1);
+         gr.fEYlow[j] = this.GetEfficiencyErrorLow(n+1);
+         gr.fEYhigh[j] = this.GetEfficiencyErrorUp(n+1);
+         ++j;
+      }
+      gr.fNpoints = j;
+   }
+
+   JSROOT.Painter.drawEfficiency = function(divid, eff, opt) {
+
+      if (!eff || !eff.fTotalHistogram || (eff.fTotalHistogram._typename.indexOf("TH1")!=0)) return null;
+
+      var painter = new TEfficiencyPainter(eff);
+      painter.options = opt;
+
+      var gr = painter.CreateGraph();
+      painter.FillGraph(gr, opt);
+
+      JSROOT.draw(divid, gr, opt, function() {
+         painter.SetDivId(divid);
+         painter.DrawingReady();
+      });
+
+      return painter;
+   }
+
+
+   // =============================================================
+
    function TMultiGraphPainter(mgraph) {
       JSROOT.TObjectPainter.call(this, mgraph);
       this.firstpainter = null;

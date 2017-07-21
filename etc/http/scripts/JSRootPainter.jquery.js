@@ -2113,7 +2113,7 @@
       return JSROOT.hpainter.CreateStatusLine(height);
    }
 
-   return JSROOT.Painter;
+   return JSROOT;
 
 }));
 

@@ -263,6 +263,10 @@
       return( x );
    };
 
+   JSROOT.Math.normal_quantile = function(z, sigma) {
+      return  sigma * JSROOT.Math.ndtri(z);
+   };
+
    /** @memberOf JSROOT.Math */
    JSROOT.Math.igam = function(a,x) {
       var kMACHEP = 1.11022302462515654042363166809e-16;
