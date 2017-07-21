@@ -448,7 +448,7 @@ Bool_t TCanvasPainter::ProcessWS(THttpCallArg *arg)
          std::ofstream ofs(fname.Data());
          ofs.write(png.c_str(), png.length());
          ofs.close();
-         printf("Create PNG file %s len %d\n", fname.Data(), (int) png.length());
+         printf("Create PNG file %s len %d\n", fname.Data(), (int)png.length());
       } else {
          printf("Error when producing PNG image %s\n", buf.Data());
       }
