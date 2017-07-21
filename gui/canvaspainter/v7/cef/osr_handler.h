@@ -11,6 +11,8 @@
 
 #include <list>
 
+class THttpServer;
+
 class OsrHandler : public CefClient,
                    public CefDisplayHandler,
                    public CefLifeSpanHandler,
@@ -18,12 +20,15 @@ class OsrHandler : public CefClient,
                    public CefRenderHandler,
                    public CefRequestHandler {
 protected:
+
+   THttpServer *fServer;
+
    // Handles the browser side of query routing.
    CefRefPtr<CefMessageRouterBrowserSide> message_router_;
    scoped_ptr<CefMessageRouterBrowserSide::Handler> message_handler_;
 
 public:
-   explicit OsrHandler();
+   explicit OsrHandler(THttpServer *serv = 0);
    ~OsrHandler();
 
    // Provide access to the single global instance of this object.
