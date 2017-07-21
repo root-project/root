@@ -1,5 +1,6 @@
 #include <Mpi/TIntraCommunicator.h>
 #include <Mpi/TInterCommunicator.h>
+#include <Mpi/TCartCommunicator.h>
 #include <Mpi/TInfo.h>
 #include <Mpi/TPort.h>
 
@@ -133,6 +134,36 @@ TInterCommunicator TIntraCommunicator::CreateIntercomm(Int_t local_leader, const
    MPI_Comm ncomm;
    ROOT_MPI_CHECK_CALL(MPI_Intercomm_create, (fComm, local_leader, peer_comm.fComm, remote_leader, tag, &ncomm), this);
    ROOT_MPI_CHECK_COMM(ncomm, this);
+   return ncomm;
+}
+
+//______________________________________________________________________________
+/**
+ * Makes a new communicator to which Cartesian topology information has been attached.
+ *
+ * Returns  a  handle  to  a  new communicator to which the Cartesian topology information is attached. If reorder =
+ * false then the rank of each process in the new group is identical to its rank in the old group. Otherwise, the
+ * function may reorder the processes (possibly so as to choose a good  embedding of the virtual topology onto the
+ * physical machine). If the total size of the Cartesian grid is smaller than the size of the group of comm, then some
+ * processes are returned ROOT::Mpi::COMM_NULL, in analogy to ROOT::Mpi::TIntraCommunicator::Spli. The call is erroneous
+ * if it specifies a grid that is larger than the group size.
+ * \param ndims Number of dimensions of Cartesian grid (integer).
+ * \param dims Integer array of size ndims specifying the number of processes in each dimension.
+ * \param periods Logical array of size ndims specifying whether the grid is periodic (true) or not (false) in each
+ * dimension.
+ * \param reorder Ranking may be reordered (true) or not (false) (logical).
+ * \return TcartCommunicator object with new Cartesian topology (handle).
+ */
+TCartCommunicator TIntraCommunicator::CreateCartcomm(Int_t ndims, const Int_t dims[], const Bool_t periods[],
+                                                     Bool_t reorder) const
+{
+   Int_t *int_periods = new Int_t[ndims];
+   for (Int_t i = 0; i < ndims; i++) int_periods[i] = (Int_t)periods[i];
+
+   MPI_Comm ncomm;
+   ROOT_MPI_CHECK_CALL(MPI_Cart_create, (fComm, ndims, const_cast<Int_t *>(dims), int_periods, (Int_t)reorder, &ncomm),
+                       this);
+   delete[] int_periods;
    return ncomm;
 }
 

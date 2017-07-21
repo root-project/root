@@ -10,6 +10,7 @@ namespace Mpi {
 class TInfo;
 class TPort;
 class TInterCommunicator;
+class TCartCommunicator;
 
 /**
  * \class TIntraCommunicator
@@ -60,7 +61,9 @@ public:
    virtual TInterCommunicator CreateIntercomm(Int_t local_leader, const TIntraCommunicator &peer_comm,
                                               Int_t remote_leader, Int_t tag) const;
 
-   //
+   virtual TCartCommunicator CreateCartcomm(Int_t ndims, const Int_t dims[], const Bool_t periods[],
+                                            Bool_t reorder) const;
+
    // Process Creation and Management
    //
 

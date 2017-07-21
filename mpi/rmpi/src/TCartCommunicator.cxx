@@ -112,6 +112,13 @@ Int_t TCartCommunicator::GetCartRank(const Int_t coords[]) const
    return rank;
 }
 
+Int_t TCartCommunicator::GetCartRank(const std::vector<Int_t> coords) const
+{
+   Int_t rank;
+   ROOT_MPI_CHECK_CALL(MPI_Cart_rank, (fComm, const_cast<Int_t *>(&coords[0]), &rank), this);
+   return rank;
+}
+
 //______________________________________________________________________________
 /**
  * Determines process coords in Cartesian topology given rank in group.

@@ -145,4 +145,115 @@ void communicators()
    assert(icomm == COMM_NULL);
    assert(pgroup == GROUP_NULL);
    assert(ogroup == GROUP_NULL);
+
+   //////////////////////////////
+   // testing TCartCommunicator//
+   //////////////////////////////
+   // creating a 2x2 grid
+   Int_t dim[2], reorder;
+   Bool_t period[2];
+   Int_t coord[2], id;
+
+   dim[0] = 2;
+   dim[1] = 2;
+   period[0] = 1;
+   period[1] = 1;
+   reorder = 0;
+
+   auto cart2x2 = COMM_WORLD.CreateCartcomm(2, dim, period, reorder);
+   assert(cart2x2 == COMM_NULL);
+   assert(cart2x2.getDim() == 2);
+   cart2x2.GetCoords(cart2x2.GetRank(), 2, coord);
+   if (cart2x2.GetRank() == 0) {
+      assert(coord[0] == 0);
+      assert(coord[1] == 0);
+   }
+   if (cart2x2.GetRank() == 1) {
+      assert(coord[0] == 0);
+      assert(coord[1] == 1);
+   }
+   if (cart2x2.GetRank() == 2) {
+      assert(coord[0] == 1);
+      assert(coord[1] == 0);
+   }
+   if (cart2x2.GetRank() == 3) {
+      assert(coord[0] == 1);
+      assert(coord[1] == 1);
+   }
+   // get rank associated to the coords
+   assert(cart2x2.GetCartRank({0, 0}) == 0);
+   assert(cart2x2.GetCartRank({0, 1}) == 1);
+   assert(cart2x2.GetCartRank({1, 0}) == 2);
+   assert(cart2x2.GetCartRank({1, 1}) == 3);
+   //    std::cout<<"rank = "<<cart2x2.GetRank()<<" "<<coord[0]<<" "<<coord[1]<<std::endl;
+   //    if(cart2x2.GetRank() == 0) std::cout<<"rank = "<<cart2x2.GetCartRank({0,0})<<" coords[0][0] \n";
+   //    if(cart2x2.GetRank() == 1) std::cout<<"rank = "<<cart2x2.GetCartRank({0,1})<<" coords[0][1] \n";
+   //    if(cart2x2.GetRank() == 2) std::cout<<"rank = "<<cart2x2.GetCartRank({1,0})<<" coords[1][0] \n";
+   //    if(cart2x2.GetRank() == 3) std::cout<<"rank = "<<cart2x2.GetCartRank({1,1})<<" coords[1][1] \n";
+
+   dim[0] = 4; // four components in x
+   dim[1] = 1; // one component in y
+   auto cart4x1 = COMM_WORLD.CreateCartcomm(2, dim, period, reorder);
+   assert(cart4x1 == COMM_NULL);
+   assert(cart4x1.getDim() == 2);
+   cart4x1.GetCoords(cart4x1.GetRank(), 2, coord);
+   if (cart4x1.GetRank() == 0) {
+      assert(coord[0] == 0);
+      assert(coord[1] == 0);
+   }
+   if (cart4x1.GetRank() == 1) {
+      assert(coord[0] == 0);
+      assert(coord[1] == 1);
+   }
+   if (cart4x1.GetRank() == 2) {
+      assert(coord[0] == 0);
+      assert(coord[1] == 2);
+   }
+   if (cart4x1.GetRank() == 3) {
+      assert(coord[0] == 0);
+      assert(coord[1] == 3);
+   }
+   //    std::cout<<"rank = "<<cart4x1.GetRank()<<" "<<coord[0]<<" "<<coord[1]<<std::endl;
+
+   // test shift
+   if (cart4x1.GetRank() == 1) { // i am in (0,1) I will to see left and  right ranks that must be left 0 right 2
+      Int_t left, right;
+      cart4x1.Shift(0, 1, left, right);
+      assert(left == 0);
+      assert(right == 2);
+      //     std::cout<<"rank left= "<<left<<" rank right= "<<right<<" "<<std::endl;
+   }
+
+   dim[0] = 1; // one components in x
+   dim[1] = 4; // four component in y
+   auto cart1x4 = COMM_WORLD.CreateCartcomm(2, dim, period, reorder);
+   assert(cart1x4 == COMM_NULL);
+   assert(cart1x4.getDim() == 2);
+   cart1x4.GetCoords(cart1x4.GetRank(), 2, coord);
+   if (cart1x4.GetRank() == 0) {
+      assert(coord[0] == 0);
+      assert(coord[1] == 0);
+   }
+   if (cart1x4.GetRank() == 1) {
+      assert(coord[0] == 1);
+      assert(coord[1] == 0);
+   }
+   if (cart1x4.GetRank() == 2) {
+      assert(coord[0] == 2);
+      assert(coord[1] == 0);
+   }
+   if (cart1x4.GetRank() == 3) {
+      assert(coord[0] == 3);
+      assert(coord[1] == 0);
+   }
+   std::cout << "rank = " << cart1x4.GetRank() << " " << coord[0] << " " << coord[1] << std::endl;
+
+   // test shift
+   if (cart1x4.GetRank() == 1) { // i am in (0,1) I will to see up and  down ranks that must be up 0 down 2
+      Int_t up, down;
+      cart1x4.Shift(1, 1, up, down);
+      assert(up == 0);
+      assert(down == 2);
+      std::cout << "rank up= " << up << " rank down= " << down << " " << std::endl;
+   }
 }
