@@ -47,7 +47,6 @@ int main()
       return -1;
    }
 
-   int correctness = 0;
 #ifdef R__USE_IMT
    std::cout << "\n **FIT: Multithreaded Chi2 **\n\n";
    f->SetParameters(1, 1000, 7.5, 1.5);
@@ -56,9 +55,8 @@ int main()
       Error("testBinnedFitExecPolicy", "Multithreaded Chi2 Fit failed!");
       return -1;
    } else {
-     correctness = compareResult(r2->MinFcnValue(), r1->MinFcnValue(), "Mutithreaded Chi2 Fit: ");
-     if(!correctness)
-      return 1;
+      if (!compareResult(r2->MinFcnValue(), r1->MinFcnValue(), "Mutithreaded Chi2 Fit: "))
+         return 1;
    }
 
    std::cout << "\n **FIT: Multithreaded Binned Likelihood **\n\n";
@@ -68,8 +66,7 @@ int main()
       Error("testBinnedFitExecPolicy", "Multithreaded Binned Likelihood Fit failed!");
       return -1;
    } else {
-      correctness = compareResult(rL2->MinFcnValue(), rL1->MinFcnValue(), "Mutithreaded Binned Likelihood Fit (PoissonLogL): ");
-      if(!correctness)
+      if (!compareResult(rL2->MinFcnValue(), rL1->MinFcnValue(), "Mutithreaded Binned Likelihood Fit (PoissonLogL): "))
          return 2;
    }
 #endif
@@ -84,8 +81,7 @@ int main()
       Error("testBinnedFitExecPolicy", "Vectorized Chi2 Fit failed!");
       return -1;
    } else {
-      correctness = compareResult(r3->MinFcnValue(), r1->MinFcnValue(), "Vectorized Chi2 Fit: ");
-      if(!correctness)
+      if (!compareResult(r3->MinFcnValue(), r1->MinFcnValue(), "Vectorized Chi2 Fit: "))
          return 3;
    }
 
@@ -96,8 +92,8 @@ int main()
       Error("testBinnedFitExecPolicy", "Vectorized Binned Likelihood Fit failed!");
       return -1;
    } else {
-      correctness = compareResult(rL3->MinFcnValue(), rL1->MinFcnValue(), "Vectorized Binned Likelihood Fit (PoissonLogL) Fit: ");
-      if(!correctness)
+      if (!compareResult(rL3->MinFcnValue(), rL1->MinFcnValue(),
+                         "Vectorized Binned Likelihood Fit (PoissonLogL) Fit: "))
          return 4;
    }
 
@@ -108,8 +104,7 @@ int main()
       Error("testBinnedFitExecPolicy", "Mutithreaded vectorized Chi2 Fit failed!");
       return -1;
    } else {
-      correctness = compareResult(r4->MinFcnValue(), r1->MinFcnValue(), "Mutithreaded vectorized Chi2 Fit: ");
-      if(!correctness)
+      if (!compareResult(r4->MinFcnValue(), r1->MinFcnValue(), "Mutithreaded vectorized Chi2 Fit: "))
          return 5;
    }
 
@@ -120,9 +115,8 @@ int main()
       Error("testBinnedFitExecPolicy", "Multithreaded Binned Likelihood vectorized Fit failed!");
       return -1;
    } else {
-      correctness = compareResult(rL4->MinFcnValue(), rL1->MinFcnValue(),
-                    "Mutithreaded vectorized Binned Likelihood Fit (PoissonLogL) Fit: ");
-      if(!correctness)
+      if (!compareResult(rL4->MinFcnValue(), rL1->MinFcnValue(),
+                         "Mutithreaded vectorized Binned Likelihood Fit (PoissonLogL) Fit: "))
          return 6;
    }
 
