@@ -20,6 +20,7 @@
 
 #include "TMatrix.h"
 #include "TMVA/DNN/Architectures/Reference/DataLoader.h"
+#include <vector>
 
 namespace TMVA
 {
@@ -91,6 +92,15 @@ public:
 
    static void Copy(TMatrixT<Scalar_t> & A,
                     const TMatrixT<Scalar_t> & B);
+
+   /** Above functions extended to vectors */
+   static void ScaleAdd(std::vector<TMatrixT<Scalar_t>*> & A,
+                        const std::vector<TMatrixT<Scalar_t>*> & B,
+                        Scalar_t beta = 1.0);
+
+   static void Copy(std::vector<TMatrixT<Scalar_t>*> & A,
+                    const std::vector<TMatrixT<Scalar_t>*> & B);
+
    ///@}
 
    //____________________________________________________________________________
