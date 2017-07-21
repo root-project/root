@@ -1493,14 +1493,20 @@ TBasket* TBranch::GetFreshCluster()
    } else {
       basket = fTree->CreateBasket(this);
    }
+   ++basketToFlush;
 
    // Clear the rest of the baskets. While it would be ideal to reuse these baskets
    // for other baskets in the new cluster. It would require the function to go
    // beyond its current scope. In the ideal case when each cluster only has 1 basket
    // this will perform well
    while (fBasketEntry[basketToFlush] < iter.GetStartEntry()) {
-      fBaskets.AddAt(0, basketToFlush);
-      --fNBaskets;
+      TBasket* oldbasket = (TBasket*)fBaskets.UncheckedAt(basketToFlush);
+      if (oldbasket) {
+         oldbasket->DropBuffers();
+         delete oldbasket;
+         fBaskets.AddAt(0, basketToFlush);
+         --fNBaskets;
+      }
       ++basketToFlush;
    }
    fBaskets.SetLast(-1);
