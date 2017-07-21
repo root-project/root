@@ -18,12 +18,9 @@
 
 #include "base_handler.h"
 
-
 /// Class used to handle off-screen application and should emulate some render requests
 
-class OsrHandler : public BaseHandler,
-                   public CefDisplayHandler,
-                   public CefRenderHandler {
+class OsrHandler : public BaseHandler, public CefDisplayHandler, public CefRenderHandler {
 public:
    explicit OsrHandler(THttpServer *serv = 0);
    ~OsrHandler();
@@ -58,7 +55,6 @@ public:
                                              const CefRenderHandler::RectList &character_bounds) OVERRIDE;
 
 private:
-
    // Include the default reference counting implementation.
    IMPLEMENT_REFCOUNTING(OsrHandler);
    DISALLOW_COPY_AND_ASSIGN(OsrHandler);
