@@ -64,7 +64,7 @@ public:
 
    virtual void SendCharStar(const char *buf)
    {
-      printf("CEF sends message to client %s\n", buf);
+      // printf("CEF sends message to client %s\n", buf);
       fCallback->Success(buf); // send next message to JS
    }
 
@@ -80,7 +80,7 @@ public:
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TCefCallArg                                                          //
+// TCefWsCallArg                                                        //
 //                                                                      //
 // HTTp call argument provided to http server from CEF messaging        //
 // Allows immediately reply to JS client                                //
@@ -88,12 +88,12 @@ public:
 //////////////////////////////////////////////////////////////////////////
 
 
-class TCefCallArg : public THttpCallArg {
+class TCefWsCallArg : public THttpCallArg {
 protected:
    CefRefPtr<CefMessageRouterBrowserSide::Callback> fCallback;
 
 public:
-   TCefCallArg(CefRefPtr<CefMessageRouterBrowserSide::Callback> callback) : fCallback(callback) {}
+   TCefWsCallArg(CefRefPtr<CefMessageRouterBrowserSide::Callback> callback) : fCallback(callback) {}
 
    virtual void HttpReplied()
    {
@@ -143,7 +143,7 @@ public:
       std::string url = message.substr(0, pos);
       message.erase(0, pos + 2);
 
-      TCefCallArg *arg = new TCefCallArg(callback);
+      TCefWsCallArg *arg = new TCefWsCallArg(callback);
       arg->SetPathName(url.c_str());
       arg->SetFileName("root.ws_emulation");
 
