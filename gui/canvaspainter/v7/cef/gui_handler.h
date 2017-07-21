@@ -18,10 +18,10 @@
 
 #include "base_handler.h"
 
-class SimpleHandler : public BaseHandler, public CefDisplayHandler {
+class GuiHandler : public BaseHandler, public CefDisplayHandler {
 public:
-   explicit SimpleHandler(THttpServer *serv = 0, bool use_views = false);
-   ~SimpleHandler();
+   explicit GuiHandler(THttpServer *serv = 0, bool use_views = false);
+   ~GuiHandler();
 
    // CefClient methods:
    virtual CefRefPtr<CefDisplayHandler> GetDisplayHandler() OVERRIDE { return this; }
@@ -40,8 +40,8 @@ private:
    const bool use_views_;
 
    // Include the default reference counting implementation.
-   IMPLEMENT_REFCOUNTING(SimpleHandler);
-   DISALLOW_COPY_AND_ASSIGN(SimpleHandler);
+   IMPLEMENT_REFCOUNTING(GuiHandler);
+   DISALLOW_COPY_AND_ASSIGN(GuiHandler);
 };
 
 #endif // ROOT_cef_simple_handler
