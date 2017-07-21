@@ -345,6 +345,10 @@ if(ROOT_python_FOUND)
              histfactory/makeQuickModel.py # not a tutorial
              eve/lineset.py         # requires GUI
              )
+  if(NOT ROOT_mathmore_FOUND)
+    list(APPEND pyveto math/Legendre.py)
+  endif()
+  
   list(REMOVE_ITEM pytutorials ${pyveto})
   if(ROOT_CLASSIC_BUILD)
     set(classic_veto_py dataframe/tdf*.py)
