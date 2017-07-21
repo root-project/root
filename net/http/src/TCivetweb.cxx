@@ -111,9 +111,7 @@ int websocket_data_handler(struct mg_connection *conn, int, char *data, size_t l
    arg.SetWSId(TString::Hash((void *)conn, sizeof(void *)));
    arg.SetMethod("WS_DATA");
 
-   void *buf = malloc(len + 1); // one byte more for null-termination
-   memcpy(buf, data, len);
-   arg.SetPostData(buf, len);
+   arg.SetPostData(data, len, kTRUE); // make copy of original data
 
    serv->ExecuteHttp(&arg);
 
@@ -444,7 +442,7 @@ Bool_t TCivetweb::Create(const char *args)
    if (ssl_cert.Length() > 0) {
       options[op++] = "ssl_certificate";
       options[op++] = ssl_cert.Data();
-   } 
+   }
 
    options[op++] = 0;
 

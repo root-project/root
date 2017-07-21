@@ -26,10 +26,10 @@
 
 ClassImp(THttpCallArg);
 
-   ////////////////////////////////////////////////////////////////////////////////
-   /// constructor
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
 
-   THttpCallArg::THttpCallArg()
+THttpCallArg::THttpCallArg()
    : TObject(), fTopName(), fMethod(), fPathName(), fFileName(), fUserName(), fQuery(), fPostData(0),
      fPostDataLength(0), fWSHandle(0), fWSId(0), fContentType(), fRequestHeader(), fHeader(), fContent(), fZipping(0),
      fBinData(0), fBinDataLength(0), fNotifyFlag(kFALSE)
@@ -137,9 +137,15 @@ TString THttpCallArg::CountHeader(const TString &buf, Int_t number) const
 /// while last byte will be set to 0
 /// Than one could use post data as null-terminated string
 
-void THttpCallArg::SetPostData(void *data, Long_t length)
+void THttpCallArg::SetPostData(void *data, Long_t length, Bool_t make_copy)
 {
    if (fPostData) free(fPostData);
+   if (make_copy && data && length) {
+      void *newdata = malloc(length + 1);
+      memcpy(newdata, data, length);
+      data = newdata;
+   }
+
    if (data != 0) *(((char *)data) + length) = 0;
    fPostData = data;
    fPostDataLength = length;
