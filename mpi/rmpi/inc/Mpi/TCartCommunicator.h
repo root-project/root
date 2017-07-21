@@ -48,6 +48,8 @@ public:
 
    virtual void GetCoords(Int_t rank, Int_t maxdims, Int_t coords[]) const;
 
+   virtual void GetCoords(Int_t rank, Int_t maxdims, std::vector<Int_t> &coords) const;
+
    virtual void Shift(Int_t direction, Int_t disp, Int_t &rank_source, Int_t &rank_dest) const;
 
    virtual TCartCommunicator Sub(const Bool_t remain_dims[]) const;

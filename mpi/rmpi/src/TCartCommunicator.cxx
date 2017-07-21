@@ -112,6 +112,18 @@ Int_t TCartCommunicator::GetCartRank(const Int_t coords[]) const
    return rank;
 }
 
+//______________________________________________________________________________
+/**
+ * Determines process rank in communicator given Cartesian location.
+ * For  a  process group with Cartesian structure, the function ROOT::Mpi::TCartCommunicator::GetCartRank translates the
+ * logical process coordinates to process ranks as they are used by the point-to-point routines.  For dimension i with
+ * periods(i) = true, if the coordinate, coords(i), is out of range, that is,  coords(i)  <  0  or   coords(i)  >=
+ * dims(i), it is shifted back to the interval  0 =< coords(i) < dims(i) automatically. Out-of-range coordinates are
+ * erroneous for nonperiodic dimensions.
+ * \param coords Integer array (of size ndims, which was defined by MPI_Cart_create call) specifying the Cartesian
+ * coordinates of a process.
+ * \return Rank of specified process (integer).
+ */
 Int_t TCartCommunicator::GetCartRank(const std::vector<Int_t> coords) const
 {
    Int_t rank;
@@ -136,8 +148,19 @@ void TCartCommunicator::GetCoords(Int_t rank, Int_t maxdims, Int_t coords[]) con
 //______________________________________________________________________________
 /**
  * Returns the shifted source and destination ranks, given a shift direction and amount.
- * TODO:
  *
+ * The direction argument indicates the dimension of the shift, i.e., the coordinate whose value is modified by the
+ * shift. The coordinates are numbered from 0 to ndims-1, where ndims is the number of dimensions.
+ *
+ * Note:  The direction argument is in the range [0, n-1] for an n-dimensional Cartesian mesh.
+ * Depending  on  the periodicity of the Cartesian group in the specified coordinate direction,
+ * ROOT::Mpi::TCartCommunicator::Shift provides the identifiers for a circular or an end-off shift. In the case of an
+ * end-off shift, the value ROOT::Mpi::PROC_NULL may be returned in rank_source or rank_dest, indicating that the source
+ * or the destination for the shift is out of range.
+ * \param direction Coordinate dimension of shift (integer).
+ * \param disp Displacement ( > 0: upward shift, < 0: downward shift) (integer).
+ * \param rank_source Rank of source process (output integer).
+ * \param rank_dest Rank of destination process (output integer).
  */
 void TCartCommunicator::Shift(Int_t direction, Int_t disp, Int_t &rank_source, Int_t &rank_dest) const
 {
@@ -145,6 +168,17 @@ void TCartCommunicator::Shift(Int_t direction, Int_t disp, Int_t &rank_source, I
 }
 
 //______________________________________________________________________________
+/**
+ * Partitions a communicator into subgroups, which form lower-dimensional Cartesian subgrids.
+ *
+ * If  a Cartesian topology has been created with ROOT::Mpi::TIntraCommunicator::CreateCartcomm, the function
+ * ROOT::Mpi::TCartCommunicator::Sub can be used to partition the communicator group into subgroups that form
+ * lower-dimensional Cartesian subgrids, and to build for each subgroup a communicator with the associated subgrid
+ * Cartesian  topology.  (This  function  is closely related to ROOT::Mpi::TIntraCommunicator::Split.)
+ * \param remain_dims The ith entry of remain_dims specifies whether the ith dimension is kept in the subgrid (true) or
+ * is dropped (false) (logical vector).
+ * \return Communicator containing the subgrid that includes the calling process (handle).
+ */
 TCartCommunicator TCartCommunicator::Sub(const Bool_t remain_dims[]) const
 {
    Int_t ndims = GetDim();
@@ -159,6 +193,21 @@ TCartCommunicator TCartCommunicator::Sub(const Bool_t remain_dims[]) const
 }
 
 //______________________________________________________________________________
+/**
+ * Maps process to Cartesian topology information.
+ * ROOT::Mpi::TCartCommunicator::Map can be used to implement all other topology functions. In general they will not be
+ * called by the user directly, unless he or she is creating additional virtual topology capability other than that
+ * provided by MPI.
+ *
+ * ROOT::Mpi::TCartCommunicator::Map computes an "optimal" placement for the calling process on the physical machine. A
+ * possible implementation of this function is to  always  return the rank of the calling process, that is, not to
+ * perform any reordering.
+ * \param ndims Number of dimensions of Cartesian structure (integer).
+ * \param dims Integer array of size ndims specifying the number of processes in each coordinate direction.
+ * \param periods Logical array of size ndims specifying the periodicity specification in each coordinate direction.
+ * \return Reordered rank of the calling process; ROOT::Mpi::UNDEFINED if calling process does not belong to grid
+ * (integer).
+ */
 Int_t TCartCommunicator::Map(Int_t ndims, const Int_t dims[], const Bool_t periods[]) const
 {
    Int_t *int_periods = new Int_t[ndims];
