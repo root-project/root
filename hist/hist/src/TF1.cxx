@@ -2299,66 +2299,7 @@ TAxis *TF1::GetZaxis() const
 
 Double_t TF1::GradientPar(Int_t ipar, const Double_t *x, Double_t eps)
 {
-   if (GetNpar() == 0) return 0;
-
-   if (eps < 1e-10 || eps > 1) {
-      Warning("Derivative", "parameter esp=%g out of allowed range[1e-10,1], reset to 0.01", eps);
-      eps = 0.01;
-   }
-   Double_t h;
-   TF1 *func = (TF1 *)this;
-   Double_t *parameters = GetParameters();
-
-   // If we are in a multi-threading scenario, make this function thread-safe
-   // using a copy of the parameters vector.
-   // TODO: Check that GetImplicitMTPoolSize is the best method to check that we
-   // have more than one thread accesing the resources.
-   if (ROOT::GetImplicitMTPoolSize() != 0) {
-      std::vector<Double_t> parametersCopy(GetNpar());
-      std::copy(parameters, parameters + GetNpar(), parametersCopy.begin());
-      parameters = parametersCopy.data();
-   }
-
-   func->InitArgs(x, parameters);
-
-   Double_t al, bl;
-   Double_t f1, f2, g1, g2, h2, d0, d2;
-
-   ((TF1 *)this)->GetParLimits(ipar, al, bl);
-   if (al * bl != 0 && al >= bl) {
-      // this parameter is fixed
-      return 0;
-   }
-
-   // check if error has been computer (is not zero)
-   if (func->GetParError(ipar) != 0)
-      h = eps * func->GetParError(ipar);
-   else
-      h = eps;
-
-   // save original parameters
-   Double_t par0 = parameters[ipar];
-
-   parameters[ipar] = par0 + h;
-   f1 = func->EvalPar(x, parameters);
-   parameters[ipar] = par0 - h;
-   f2 = func->EvalPar(x, parameters);
-   parameters[ipar] = par0 + h / 2;
-   g1 = func->EvalPar(x, parameters);
-   parameters[ipar] = par0 - h / 2;
-   g2 = func->EvalPar(x, parameters);
-
-   // restore original value
-   parameters[ipar] = par0;
-
-   // compute the central differences
-   h2 = 1 / (2. * h);
-   d0 = f1 - f2;
-   d2 = 2 * (g1 - g2);
-
-   Double_t grad = h2 * (4 * d2 - d0) / 3.;
-
-   return grad;
+   return GradientParTempl<Double_t>(ipar, x, eps);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2377,14 +2318,7 @@ Double_t TF1::GradientPar(Int_t ipar, const Double_t *x, Double_t eps)
 
 void TF1::GradientPar(const Double_t *x, Double_t *grad, Double_t eps)
 {
-   if (eps < 1e-10 || eps > 1) {
-      Warning("Derivative", "parameter esp=%g out of allowed range[1e-10,1], reset to 0.01", eps);
-      eps = 0.01;
-   }
-
-   for (Int_t ipar = 0; ipar < GetNpar(); ipar++) {
-      grad[ipar] = GradientPar(ipar, x, eps);
-   }
+   GradientParTempl<Double_t>(x, grad, eps);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

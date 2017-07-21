@@ -554,13 +554,13 @@ public:
    template <class T>
    T GradientPar(Int_t ipar, const T *x, Double_t eps = 0.01);
    template <class T>
-   T GradientParVec(Int_t ipar, const T *x, Double_t eps = 0.01);
+   T GradientParTempl(Int_t ipar, const T *x, Double_t eps = 0.01);
 
    virtual void     GradientPar(const Double_t *x, Double_t *grad, Double_t eps = 0.01);
    template <class T>
    void GradientPar(const T *x, T *grad, Double_t eps = 0.01);
    template <class T>
-   void GradientParVec(const T *x, T *grad, Double_t eps = 0.01);
+   void GradientParTempl(const T *x, T *grad, Double_t eps = 0.01);
 
    virtual void     InitArgs(const Double_t *x, const Double_t *params);
    static  void     InitStandardFunctions();
@@ -814,13 +814,13 @@ template <class T>
 inline T TF1::GradientPar(Int_t ipar, const T *x, Double_t eps)
 {
    if (fType == EFType::kTemplated) {
-      return GradientParVec<T>(ipar, x, eps);
+      return GradientParTempl<T>(ipar, x, eps);
    } else
-      return TF1::GradientPar(ipar, (const Double_t *)x, eps);
+      return GradientParTempl<Double_t>(ipar, (const Double_t *)x, eps);
 }
 
 template <class T>
-inline T TF1::GradientParVec(Int_t ipar, const T *x, Double_t eps)
+inline T TF1::GradientParTempl(Int_t ipar, const T *x, Double_t eps)
 {
    if (GetNpar() == 0)
       return 0;
@@ -843,13 +843,8 @@ inline T TF1::GradientParVec(Int_t ipar, const T *x, Double_t eps)
       parameters = parametersCopy.data();
    }
 
-   // func->InitArgs(x, parameters);
-   if (fMethodCall) {
-      Error("TF1::GradientParVec<T>", "Vectorized implementation does not support interpreted functions");
-   }
-
-   Double_t al, bl;
-   T f1, f2, g1, g2, h2, d0, d2;
+   Double_t al, bl, h2;
+   T f1, f2, g1, g2, d0, d2;
 
    ((TF1 *)this)->GetParLimits(ipar, al, bl);
    if (al * bl != 0 && al >= bl) {
@@ -892,13 +887,13 @@ template <class T>
 inline void TF1::GradientPar(const T *x, T *grad, Double_t eps)
 {
    if (fType == EFType::kTemplated) {
-      GradientParVec<T>(x, grad, eps);
+      GradientParTempl<T>(x, grad, eps);
    } else
-      TF1::GradientPar((const Double_t *)x, (Double_t *)grad, eps);
+      GradientParTempl<Double_t>((const Double_t *)x, (Double_t *)grad, eps);
 }
 
 template <class T>
-inline void TF1::GradientParVec(const T *x, T *grad, Double_t eps)
+inline void TF1::GradientParTempl(const T *x, T *grad, Double_t eps)
 {
    if (eps < 1e-10 || eps > 1) {
       Warning("Derivative", "parameter esp=%g out of allowed range[1e-10,1], reset to 0.01", eps);
@@ -906,7 +901,7 @@ inline void TF1::GradientParVec(const T *x, T *grad, Double_t eps)
    }
 
    for (Int_t ipar = 0; ipar < GetNpar(); ipar++) {
-      grad[ipar] = GradientParVec<T>(ipar, x, eps);
+      grad[ipar] = GradientParTempl<T>(ipar, x, eps);
    }
 }
 
