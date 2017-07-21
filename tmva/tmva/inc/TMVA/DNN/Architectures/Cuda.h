@@ -23,6 +23,7 @@
 #include "Cuda/CudaMatrix.h"
 #include "TMVA/DNN/DataLoader.h"
 #include <utility>
+#include <vector>
 
 namespace TMVA
 {
@@ -96,6 +97,15 @@ public:
    /** Copy the elements of matrix A into matrix B. */
    static void Copy(TCudaMatrix<AFloat> & B,
                     const TCudaMatrix<AFloat> & A);
+
+   /** Above functions extended to vectors */
+   static void ScaleAdd(std::vector<TCudaMatrix<Scalar_t>*> & A,
+                        const std::vector<TCudaMatrix<Scalar_t>*> & B,
+                        Scalar_t beta = 1.0);
+
+   static void Copy(std::vector<TCudaMatrix<Scalar_t>*> & A,
+                    const std::vector<TCudaMatrix<Scalar_t>*> & B);
+
    ///@}
 
    //____________________________________________________________________________

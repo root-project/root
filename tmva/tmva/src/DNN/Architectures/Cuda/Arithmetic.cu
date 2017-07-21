@@ -234,5 +234,27 @@ void TCuda<double>::ScaleAdd(TCudaMatrix<double> & B,
                B.GetDataPointer(), 1);
 }
 
+//____________________________________________________________________________
+template<>
+void TCuda<float>::ScaleAdd(std::vector<TCudaMatrix<float>*> & B,
+                            const std::vector<TCudaMatrix<float>*> & A,
+                            float alpha)
+{
+   for (size_t i = 0; i < A.size(); ++i) {
+      ScaleAdd(*B[i], *A[i], alpha);
+   }
+}
+
+//____________________________________________________________________________
+template<>
+void TCuda<double>::ScaleAdd(std::vector<TCudaMatrix<double>*> & B,
+                            const std::vector<TCudaMatrix<double>*> & A,
+                            double alpha)
+{
+   for (size_t i = 0; i < A.size(); ++i) {
+      ScaleAdd(*B[i], *A[i], alpha);
+   }
+}
+
 } // DNN
 } // TMVA

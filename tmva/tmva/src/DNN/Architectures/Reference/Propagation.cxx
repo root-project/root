@@ -88,6 +88,23 @@ void TReference<AReal>::Copy(TMatrixT<AReal> &A, const TMatrixT<AReal> &B)
    A = B;
 }
 
+
+template <typename AReal>
+void TReference<AReal>::ScaleAdd(std::vector<TMatrixT<AReal>*> &A, const std::vector<TMatrixT<AReal>*> &B, AReal beta)
+{
+   for (size_t i = 0; i < A.size(); ++i) {
+      ScaleAdd(*A[i], *B[i], beta);
+   }
+}
+
+template <typename AReal>
+void TReference<AReal>::Copy(std::vector<TMatrixT<AReal>*> &A, const std::vector<TMatrixT<AReal>*> &B)
+{
+   for (size_t i = 0; i < A.size(); ++i) {
+      Copy(*A[i], *B[i]);
+   }
+}
+
 template <typename AReal>
 void TReference<AReal>::SumColumns(TMatrixT<AReal> &B, const TMatrixT<AReal> &A)
 {
