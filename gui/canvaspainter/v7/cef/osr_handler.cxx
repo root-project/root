@@ -4,6 +4,12 @@
 
 #include "osr_handler.h"
 
+#include "THttpServer.h"
+#include "THttpEngine.h"
+#include "THttpCallArg.h"
+#include "TRootSniffer.h"
+#include "TString.h"
+
 #include <sstream>
 #include <string>
 
@@ -16,21 +22,143 @@
 
 namespace {
 
+//////////////////////////////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TCefWSEngine                                                         //
+//                                                                      //
+// Emulation of websocket with CEF messages                             //
+// Allows to send data from ROOT server to JS client without            //
+// involving special HTTP requests                                      //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+
+class TCefWSEngine : public THttpWSEngine {
+protected:
+   CefRefPtr<CefMessageRouterBrowserSide::Callback> fCallback;
+
+public:
+   TCefWSEngine(const char *name, const char *title, CefRefPtr<CefMessageRouterBrowserSide::Callback> callback)
+      : THttpWSEngine(name, title), fCallback(callback)
+   {
+   }
+
+   virtual ~TCefWSEngine() {}
+
+   virtual UInt_t GetId() const
+   {
+      const void *ptr = (const void *)this;
+      return TString::Hash((void *)&ptr, sizeof(void *));
+   }
+
+   virtual void ClearHandle() { fCallback->Failure(0, "close"); }
+
+   virtual void Send(const void * /*buf*/, int /*len*/)
+   {
+      Error("TLongPollEngine::Send", "Should never be called, only text is supported");
+   }
+
+   virtual void SendCharStar(const char *buf)
+   {
+      printf("CEF sends message to client %s\n", buf);
+      fCallback->Success(buf); // send next message to JS
+   }
+
+   virtual Bool_t PreviewData(THttpCallArg *arg)
+   {
+      // function called in the user code before processing correspondent websocket data
+      // returns kTRUE when user should ignore such http request - it is for internal use
+
+      // this is normal request, deliver and process it as any other
+      return kFALSE;
+   }
+};
+
+class TCefCallArg : public THttpCallArg {
+protected:
+   CefRefPtr<CefMessageRouterBrowserSide::Callback> fCallback;
+
+public:
+   TCefCallArg(CefRefPtr<CefMessageRouterBrowserSide::Callback> callback) : fCallback(callback) {}
+
+   virtual void HttpReplied()
+   {
+      if (fCallback == NULL) return;
+
+      if (Is404()) {
+         fCallback->Failure(0, "error");
+      } else {
+         std::string reply;
+         if (GetContentLength() > 0) reply.append((const char *)GetContent(), GetContentLength());
+         fCallback->Success(reply);
+      }
+      fCallback = NULL;
+   }
+};
+
 // Handle messages in the browser process.
 class MessageHandler : public CefMessageRouterBrowserSide::Handler {
+protected:
+   THttpServer *fServer;
+
 public:
-   explicit MessageHandler() {}
+   explicit MessageHandler(THttpServer *serv = 0) : fServer(serv) {}
 
    // Called due to cefQuery execution in message_router.html.
    bool OnQuery(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, int64 query_id, const CefString &request,
                 bool persistent, CefRefPtr<Callback> callback) OVERRIDE
    {
-      const std::string &message_name = request;
-      printf("Get message %s\n", message_name.c_str());
+      std::string message = request;
 
-      std::string result = "confirm from ROOT";
-      callback->Success(result);
-      return true; // processed
+      if (message == "init_jsroot_done") {
+         printf("Get message %s\n", message.c_str());
+         std::string result = "confirm from ROOT";
+         callback->Success(result);
+         return true; // processed
+      }
+
+      if (!fServer) return false;
+
+      // message format
+      // <path>::connect, replied with ws handler id
+      // <path>::<connid>::post::<data> or <path>::<connid>::close
+
+      int pos = message.find("::");
+      if (pos == std::string::npos) return false;
+
+      std::string url = message.substr(0, pos);
+      message.erase(0, pos + 2);
+
+      TCefCallArg *arg = new TCefCallArg(callback);
+      arg->SetPathName(url.c_str());
+      arg->SetFileName("root.ws_emulation");
+
+      if (message == "connect") {
+         TCefWSEngine *ws = new TCefWSEngine("name", "title", callback);
+         arg->SetMethod("WS_CONNECT");
+         arg->SetWSHandle(ws);
+         arg->SetWSId(ws->GetId());
+         printf("Create CEF WS engine with id %u\n", ws->GetId());
+      } else {
+         pos = message.find("::");
+         if (pos == std::string::npos) return false;
+         std::string sid = message.substr(0, pos);
+         message.erase(0, pos + 2);
+         unsigned wsid = 0;
+         sscanf(sid.c_str(), "%u", &wsid);
+         arg->SetWSId(wsid);
+         if (message == "close") {
+            arg->SetMethod("WS_CLOSE");
+         } else {
+            arg->SetMethod("WS_DATA");
+            if (message.length() > 6) arg->SetPostData((void *)(message.c_str() + 6), message.length() - 6, kTRUE);
+         }
+      }
+
+      if (fServer->SubmitHttp(arg, kTRUE)) arg->HttpReplied(); // message processed and can be replied
+
+      return true;
    }
 
 private:
@@ -41,7 +169,7 @@ OsrHandler *g_instance = NULL;
 
 } // namespace
 
-OsrHandler::OsrHandler() : is_closing_(false)
+OsrHandler::OsrHandler(THttpServer *serv) : fServer(serv), is_closing_(false)
 {
    DCHECK(!g_instance);
    g_instance = this;
@@ -88,7 +216,7 @@ void OsrHandler::OnAfterCreated(CefRefPtr<CefBrowser> browser)
       message_router_ = CefMessageRouterBrowserSide::Create(config);
 
       // Register handlers with the router.
-      message_handler_.reset(new MessageHandler());
+      message_handler_.reset(new MessageHandler(fServer));
       message_router_->AddHandler(message_handler_.get(), false);
    }
 
