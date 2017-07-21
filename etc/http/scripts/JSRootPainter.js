@@ -2611,9 +2611,26 @@
 
             console.log('SVG size = ' + res.length);
 
-            conn.send("DONEIMG:" + fname + ":" + res);
+            conn.send("DONESVG:" + fname + ":" + res);
          } else
+         if (d.substr(0,4)=='PNG:') {
+            var fname = d.substr(4);
+            console.log('get request for PNG image ' + fname);
+
+            pthis.ProduceImage(true, 'any.png', function(can) {
+               var res = can.toDataURL('image/png');
+               console.log('PNG size = ' + res.length);
+               var separ = res.indexOf("base64,");
+               if (separ>0)
+                  conn.send("DONEPNG:" + fname + ":" + res.substr(separ+7));
+               else
+                  conn.send("DONEPNG:" + fname);
+            });
+
+         } else
+
          if (d.substr(0,7)=='GETIMG:') {
+            // obsolete, can be removed
 
             console.log('d',d);
 
@@ -2626,11 +2643,7 @@
             console.log('GET REQUEST FOR SVG FILE', fname, id);
 
             var painter = pthis.FindSnap(id);
-            if (painter)
-               painter.SaveAsPng(painter.iscan, "image.svg", function(res) {
-                  console.log('SVG IMAGE CREATED', res ? res.length : "<error>");
-                  if (res) conn.send("GETIMG:" + fname + ":" + res);
-               });
+            if (!painter) console.log('not find snap ' + id);
 
          } else {
             if (d) console.log("unrecognized msg",d);
@@ -4190,7 +4203,7 @@
            .style("bottom", 0);
       }
 
-      console.log('CANVAS SVG width = ' + rect.width + " height= " + rect.height);
+      console.log('CANVAS SVG width = ' + rect.width + " height = " + rect.height);
 
       svg.attr("viewBox", "0 0 " + rect.width + " " + rect.height)
          .attr("preserveAspectRatio", "none")  // we do not preserve relative ratio
@@ -4884,16 +4897,13 @@
    }
 
    TPadPainter.prototype.CreateSvg = function() {
-      var main = this.svg_canvas();
-
-      var svg = main.html();
+      var main = this.svg_canvas(),
+          svg = main.html();
 
       svg = svg.replace(/url\(\&quot\;\#(\w+)\&quot\;\)/g,"url(#$1)")        // decode all URL
                .replace(/ class=\"\w*\"/g,"")                                // remove all classes
                .replace(/<g transform=\"translate\(\d+\,\d+\)\"><\/g>/g,"")  // remove all empty groups with transform
                .replace(/<g><\/g>/g,"");                                     // remove all empty groups
-
-
 
       svg = '<svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none"' +
             ' viewBox="0 0 ' + main.property('draw_width') + ' ' + main.property('draw_height') + '"' +
@@ -4903,12 +4913,17 @@
        return svg;
    }
 
-   TPadPainter.prototype.SaveAsPng = function(full_canvas, filename, call_back) {
+
+   TPadPainter.prototype.SaveAsPng = function(full_canvas, filename) {
       if (!filename) {
          filename = this.this_pad_name;
          if (filename.length === 0) filename = this.iscan ? "canvas" : "pad";
          filename += ".png";
       }
+      this.ProduceImage(full_canvas, filename)
+   }
+
+   TPadPainter.prototype.ProduceImage = function(full_canvas, filename, call_back) {
 
       var elem = full_canvas ? this.svg_canvas() : this.svg_pad(this.this_pad_name);
 
@@ -4961,9 +4976,9 @@
 
 
       var options = { name: filename, removeClass: "btns_layer" };
-      if (call_back) options.result = "svg";
+      if (call_back) options.result = "canvas";
 
-      JSROOT.saveSvgAsPng(elem.node(), options , function(res) {
+      JSROOT.saveSvgAsPng(elem.node(), options, function(res) {
 
          if (res===null) console.warn('problem when produce image');
 
