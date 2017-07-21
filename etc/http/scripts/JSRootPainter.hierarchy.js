@@ -2155,15 +2155,18 @@
 
       myDiv.style('position',"absolute").style('left',0).style('top',0).style('bottom',0).style('right',0).style('padding',1);
 
-      if (drawing && ((JSROOT.GetUrlOption("webcanvas")!==null) || (JSROOT.GetUrlOption("longpollcanvas")!==null))) {
+      var socket_kind = null;
+      if (JSROOT.GetUrlOption("webcanvas")!==null) socket_kind = "websocket"; else
+      if (JSROOT.GetUrlOption("longpollcanvas")!==null) socket_kind = "longpoll"; else
+      if (JSROOT.GetUrlOption("cef_canvas")!==null) socket_kind = "cefquery";
 
-         console.log('Start web painter directly');
+      if (drawing && socket_kind) {
 
          var painter = new JSROOT.TPadPainter(null, true);
 
          painter.SetDivId(myDiv.attr("id"), -1); // just assign id, nothing else is happens
 
-         painter.OpenWebsocket(JSROOT.GetUrlOption("longpollcanvas")!==null); // when connection activated, ROOT must send new instance of the canvas
+         painter.OpenWebsocket(socket_kind); // when connection activated, ROOT must send new instance of the canvas
 
          painter.batch_mode = JSROOT.GetUrlOption("batch_mode") !== null;
 
