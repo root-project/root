@@ -37,6 +37,8 @@
 
 // =================================================================
 
+// found on https://github.com/ReneNyffenegger/cpp-base64
+
 #include <ctype.h>
 
 /*
@@ -309,7 +311,8 @@ void TCanvasPainter::PopupBrowser()
    if (symbol_cef && cef_path && !gSystem->AccessPathName(cef_path) && rootsys) {
       typedef void (*FunctionCef3)(const char *, void *, bool, const char *, const char *);
 
-      addr.Form("/web7gui/%s/draw.htm?longpollcanvas%s", GetName(), (IsBatchMode() ? "&batch_mode" : ""));
+      // addr.Form("/web7gui/%s/draw.htm?cef_canvas%s", GetName(), (IsBatchMode() ? "&batch_mode" : ""));
+      addr.Form("/web7gui/%s/draw.htm?cef_canvas%s", GetName(), (IsBatchMode() ? "&batch_mode" : ""));
 
       Info("PopupBrowser", "Show canvas in CEF window:  %s", addr.Data());
 

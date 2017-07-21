@@ -285,7 +285,7 @@ void SimpleApp::OnContextInitialized()
 
    if (fBatch) {
 
-      CefRefPtr<OsrHandler> handler(new OsrHandler());
+      CefRefPtr<OsrHandler> handler(new OsrHandler(gHandlingServer));
 
       CefWindowInfo window_info;
 
