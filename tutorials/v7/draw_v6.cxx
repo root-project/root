@@ -37,5 +37,5 @@ void draw_v6()
 
    canvas->Show();
 
-   canvas->SaveAs("draw.svg"); // only SVG supported for the moment
+   canvas->SaveAs("draw.png"); // only .svg and .png are supported for the moment, asynchron
 }
