@@ -39,6 +39,14 @@ namespace TMVA {
 namespace DNN {
 namespace DAE {
 
+/** \class TDAE
+     Denoising Layer for Deep AutoEncoders. This Layer performs both forward
+     and backward propagation. It is the unsupervised learning step for Deep
+     AutoEncoders. It corrupts the input according to the given Corruption
+     Level. Encodes the input to extract features. Reconstructs the output from
+     features.
+*/
+
 template <typename Architecture_t>
 class TDAE : public VGeneralLayer<Architecture_t> {
 public:
@@ -264,7 +272,7 @@ auto TDAE<Architecture_t>::TrainLayer(Tensor_t &input, Double_t learningRate,
   Corruption(input,corruptedInput,p);
   Encoding(corruptedInput,compressedInput);
   Reconstruction(compressedInput,reconstructedInput);
-  
+
   for (size_t i = 0; i < this->GetBatchSize(); i++)
   {
     Architecture_t::UpdateParams(input, corruptedInput, compressedInput,
@@ -289,4 +297,4 @@ auto TDAE<Architecture_t>::Print() const
 }// namespace DAE
 }//namespace DNN
 }//namespace TMVA
-#endif /* TMVA_TDAE */
+#endif /* TMVA_DAE_DENOISELAYER */
