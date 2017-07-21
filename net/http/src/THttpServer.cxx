@@ -161,68 +161,67 @@ public:
 
 ClassImp(THttpServer)
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// THttpServer                                                          //
-//                                                                      //
-// Online http server for arbitrary ROOT application                    //
-//                                                                      //
-// Idea of THttpServer - provide remote http access to running          //
-// ROOT application and enable HTML/JavaScript user interface.          //
-// Any registered object can be requested and displayed in the browser. //
-// There are many benefits of such approach:                            //
-//     * standard http interface to ROOT application                    //
-//     * no any temporary ROOT files when access data                   //
-//     * user interface running in all browsers                         //
-//                                                                      //
-// Starting HTTP server                                                 //
-//                                                                      //
-// To start http server, at any time  create instance                   //
-// of the THttpServer class like:                                       //
-//    serv = new THttpServer("http:8080");                              //
-//                                                                      //
-// This will starts civetweb-based http server with http port 8080.     //
-// Than one should be able to open address "http://localhost:8080"      //
-// in any modern browser (IE, Firefox, Chrome) and browse objects,      //
-// created in application. By default, server can access files,         //
-// canvases and histograms via gROOT pointer. All such objects          //
-// can be displayed with JSROOT graphics.                               //
-//                                                                      //
-// At any time one could register other objects with the command:       //
-//                                                                      //
-// TGraph* gr = new TGraph(10);                                         //
-// gr->SetName("gr1");                                                  //
-// serv->Register("graphs/subfolder", gr);                              //
-//                                                                      //
-// If objects content is changing in the application, one could         //
-// enable monitoring flag in the browser - than objects view            //
-// will be regularly updated.                                           //
-//                                                                      //
-// More information: https://root.cern/root/htmldoc/guides/HttpServer/HttpServer.html  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+   //////////////////////////////////////////////////////////////////////////
+   //                                                                      //
+   // THttpServer                                                          //
+   //                                                                      //
+   // Online http server for arbitrary ROOT application                    //
+   //                                                                      //
+   // Idea of THttpServer - provide remote http access to running          //
+   // ROOT application and enable HTML/JavaScript user interface.          //
+   // Any registered object can be requested and displayed in the browser. //
+   // There are many benefits of such approach:                            //
+   //     * standard http interface to ROOT application                    //
+   //     * no any temporary ROOT files when access data                   //
+   //     * user interface running in all browsers                         //
+   //                                                                      //
+   // Starting HTTP server                                                 //
+   //                                                                      //
+   // To start http server, at any time  create instance                   //
+   // of the THttpServer class like:                                       //
+   //    serv = new THttpServer("http:8080");                              //
+   //                                                                      //
+   // This will starts civetweb-based http server with http port 8080.     //
+   // Than one should be able to open address "http://localhost:8080"      //
+   // in any modern browser (IE, Firefox, Chrome) and browse objects,      //
+   // created in application. By default, server can access files,         //
+   // canvases and histograms via gROOT pointer. All such objects          //
+   // can be displayed with JSROOT graphics.                               //
+   //                                                                      //
+   // At any time one could register other objects with the command:       //
+   //                                                                      //
+   // TGraph* gr = new TGraph(10);                                         //
+   // gr->SetName("gr1");                                                  //
+   // serv->Register("graphs/subfolder", gr);                              //
+   //                                                                      //
+   // If objects content is changing in the application, one could         //
+   // enable monitoring flag in the browser - than objects view            //
+   // will be regularly updated.                                           //
+   //                                                                      //
+   // More information: https://root.cern/root/htmldoc/guides/HttpServer/HttpServer.html  //
+   //                                                                      //
+   //////////////////////////////////////////////////////////////////////////
 
+   ////////////////////////////////////////////////////////////////////////////////
+   /// constructor
+   ///
+   /// As argument, one specifies engine kind which should be
+   /// created like "http:8080". One could specify several engines
+   /// at once, separating them with ; like "http:8080;fastcgi:9000"
+   /// One also can configure readonly flag for sniffer like
+   /// "http:8080;readonly" or "http:8080;readwrite"
+   /// CORS (cross-origine resource sharing) for response of ProcessRequest()
+   /// can be set in the options like "http:8088s?cors" for all origins ("*")
+   /// or like "http:8088s?cors=domain" for a specific domain.
+   ///
+   /// Also searches for JavaScript ROOT sources, which are used in web clients
+   /// Typically JSROOT sources located in $ROOTSYS/etc/http directory,
+   /// but one could set JSROOTSYS shell variable to specify alternative location
 
-////////////////////////////////////////////////////////////////////////////////
-/// constructor
-///
-/// As argument, one specifies engine kind which should be
-/// created like "http:8080". One could specify several engines
-/// at once, separating them with ; like "http:8080;fastcgi:9000"
-/// One also can configure readonly flag for sniffer like
-/// "http:8080;readonly" or "http:8080;readwrite"
-/// CORS (cross-origine resource sharing) for response of ProcessRequest()
-/// can be set in the options like "http:8088s?cors" for all origins ("*")
-/// or like "http:8088s?cors=domain" for a specific domain.
-///
-/// Also searches for JavaScript ROOT sources, which are used in web clients
-/// Typically JSROOT sources located in $ROOTSYS/etc/http directory,
-/// but one could set JSROOTSYS shell variable to specify alternative location
-
-THttpServer::THttpServer(const char *engine) : TNamed("http", "ROOT http server"),
-   fEngines(), fTimer(0), fSniffer(0), fMainThrdId(0), fJSROOTSYS(),
-   fTopName("ROOT"), fJSROOT(), fLocations(), fDefaultPage(), fDefaultPageCont(),
-   fDrawPage(), fDrawPageCont(), fCallArgs()
+   THttpServer::THttpServer(const char *engine)
+   : TNamed("http", "ROOT http server"), fEngines(), fTimer(0), fSniffer(0), fMainThrdId(0), fJSROOTSYS(),
+     fTopName("ROOT"), fJSROOT(), fLocations(), fDefaultPage(), fDefaultPageCont(), fDrawPage(), fDrawPageCont(),
+     fCallArgs()
 {
    fLocations.SetOwner(kTRUE);
 
@@ -843,6 +842,23 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
       }
       return;
 
+   } else if (filename == "root.ws_emulation") {
+      // ROOT emulation of websocket
+      THttpWSHandler *handler = dynamic_cast<THttpWSHandler *>(fSniffer->FindTObjectInHierarchy(arg->fPathName.Data()));
+
+      if (!handler || !handler->ProcessWS(arg)) arg->Set404();
+      if (!arg->Is404() && (arg->fMethod == "WS_CONNECT") && arg->fWSHandle) {
+         arg->SetMethod("WS_READY");
+         if (handler->ProcessWS(arg)) {
+            arg->SetContent(TString::Format("%u", arg->GetWSId()));
+            arg->SetContentType("text/plain");
+         } else {
+            arg->Set404();
+         }
+      }
+
+      return;
+
    } else if (fSniffer->Produce(arg->fPathName.Data(), filename.Data(), arg->fQuery.Data(), bindata, bindatalen,
                                 arg->fContent)) {
       if (bindata != 0) arg->SetBinData(bindata, bindatalen);
@@ -871,7 +887,6 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
 
    // potentially add cors header
    if (IsCors()) arg->AddHeader("Access-Control-Allow-Origin", GetCors());
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
