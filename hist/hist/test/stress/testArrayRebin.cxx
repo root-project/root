@@ -27,6 +27,7 @@ using namespace std;
 
 TEST(StressHistogram, TestArrayRebin)
 {
+   TRandom2 r(initialRandomSeed);
    TH1::StatOverflows(kTRUE);
 
    // Tests rebin method with an array as input for 1D Histogram
@@ -64,6 +65,7 @@ TEST(StressHistogram, TestArrayRebin)
 
 TEST(StressHistogram, TestArrayRebinProfile)
 {
+   TRandom2 r(initialRandomSeed);
    TH1::StatOverflows(kTRUE);
 
    // Tests rebin method with an array as input for 1D Profile

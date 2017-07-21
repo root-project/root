@@ -25,6 +25,7 @@ using namespace std;
 
 TEST(StressHistogram, TestProfile2Extend)
 {
+   TRandom2 r;
    TProfile2D::Approximate(true);
    TProfile2D h1("h1", "h1", 10, 0, 10, 10, 0, 10);
    TProfile2D h2("h2", "h0", 10, 0, 10, 10, 0, 20);
@@ -43,6 +44,7 @@ TEST(StressHistogram, TestProfile2Extend)
 
 TEST(StressHistogram, TestProfileExtend)
 {
+   TRandom2 r(initialRandomSeed);
    TProfile::Approximate(true);
    TProfile h1("h1", "h1", 10, 0, 10);
    TProfile h0("h0", "h0", 10, 0, 20);

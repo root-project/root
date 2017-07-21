@@ -26,6 +26,7 @@ using namespace std;
 
 TEST(StressHistogram, TestMerge2DLabelAll)
 {
+   TRandom2 r(initialRandomSeed);
    // Tests the merge method with fully equally labelled 2D Histograms
 
    TH2D h1("merge2DLabelAll-h1", "h1-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange, maxRange);
@@ -74,6 +75,7 @@ TEST(StressHistogram, TestMerge2DLabelAll)
 
 TEST(StressHistogram, TestMerge2DLabelAllDiff)
 {
+   TRandom2 r(initialRandomSeed);
    // Tests the merge method with fully differently labelled 2D Histograms
 
    // It does not work properly! Look, the bins with the same labels
@@ -136,6 +138,7 @@ TEST(StressHistogram, TestMerge2DLabelAllDiff)
 
 TEST(StressHistogram, TestMerge2DLabelDiff)
 {
+   TRandom2 r(initialRandomSeed);
    // Tests the merge with some different labels method for 2D Histograms
 
    // It does not work properly! Look, the bins with the same labels
@@ -184,6 +187,7 @@ TEST(StressHistogram, TestMerge2DLabelDiff)
 
 TEST(StressHistogram, TestMerge2DLabelSame)
 {
+   TRandom2 r(initialRandomSeed);
    // Tests the merge with some equal labels method for 2D Histograms
    // Note by LM (Dec 2010)
    // In reality in 2D histograms the Merge does not support

@@ -28,6 +28,7 @@ using namespace std;
 
 TEST(StressHistogram, TestMergeProf3DLabelAll)
 {
+   TRandom2 r(initialRandomSeed);
    // Tests the merge method with fully equally labelled 3D Profiles
 
    TProfile3D p1("merge3DLabelAll-p1", "p1-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange,
@@ -86,6 +87,7 @@ TEST(StressHistogram, TestMergeProf3DLabelAll)
 
 TEST(StressHistogram, TestMergeProf3DLabelAllDiff)
 {
+   TRandom2 r(initialRandomSeed);
    // Tests the merge method with fully differently labelled 3D Profiles
 
    TProfile3D p1("merge3DLabelAllDiff-p1", "p1-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange,
@@ -158,6 +160,7 @@ TEST(StressHistogram, TestMergeProf3DLabelAllDiff)
 
 TEST(StressHistogram, TestMergeProf3DLabelDiff)
 {
+   TRandom2 r(initialRandomSeed);
    // Tests the merge with some different labels method for 3D Profiles
 
    TProfile3D p1("merge3DLabelDiff-p1", "p1-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange,
@@ -215,6 +218,7 @@ TEST(StressHistogram, TestMergeProf3DLabelDiff)
 
 TEST(StressHistogram, TestMergeProf3DLabelSame)
 {
+   TRandom2 r(initialRandomSeed);
    // Tests the merge with some equal labels method for 3D Profiles
 
    TProfile3D p1("merge3DLabelSame-p1", "p1-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange,

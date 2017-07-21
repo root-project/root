@@ -23,6 +23,7 @@ using namespace std;
 
 TEST(StressHistogram, TestCopyConstructor1D)
 {
+   TRandom2 r(initialRandomSeed);
    // Tests the copy constructor for 1D Histograms
 
    TH1D h1("cc1D-h1", "h1-Title", numberOfBins, minRange, maxRange);
@@ -41,6 +42,7 @@ TEST(StressHistogram, TestCopyConstructor1D)
 
 TEST(StressHistogram, TestCopyConstructor2D)
 {
+   TRandom2 r(initialRandomSeed);
    // Tests the copy constructor for 2D Histograms
 
    TH2D h1("cc2D-h1", "h1-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange, maxRange);
@@ -60,6 +62,7 @@ TEST(StressHistogram, TestCopyConstructor2D)
 
 TEST(StressHistogram, TestCopyConstructor3D)
 {
+   TRandom2 r(initialRandomSeed);
    // Tests the copy constructor for 3D Histograms
 
    TH3D h1("cc3D-h1", "h1-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
@@ -81,6 +84,7 @@ TEST(StressHistogram, TestCopyConstructor3D)
 
 TEST(StressHistogram, TestCopyConstructorVar1D)
 {
+   TRandom2 r(initialRandomSeed);
    // Tests the copy constructor for 1D Histograms with variable bin size
 
    Double_t v[numberOfBins + 1];

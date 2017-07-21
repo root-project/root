@@ -24,6 +24,7 @@ using namespace std;
 
 TEST(StressHistogram, TestDivideVar1)
 {
+   TRandom2 r(initialRandomSeed);
    // Tests the first Divide method for 1D Histograms with variable bin size
 
    Double_t v[numberOfBins + 1];
@@ -71,6 +72,7 @@ TEST(StressHistogram, TestDivideVar1)
 
 TEST(StressHistogram, TestDivideVar2)
 {
+   TRandom2 r(initialRandomSeed);
    // Tests the second Divide method for 1D Histograms with variable bin size
 
    Double_t v[numberOfBins + 1];

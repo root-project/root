@@ -23,6 +23,7 @@ using namespace std;
 
 TEST(StressHistogram, TestAdd3D1)
 {
+   TRandom2 r(initialRandomSeed);
    // Tests the first Add method for 3D Histograms
 
    Double_t c1 = r.Rndm();
@@ -63,6 +64,7 @@ TEST(StressHistogram, TestAdd3D1)
 
 TEST(StressHistogram, TestAdd3D2)
 {
+   TRandom2 r(initialRandomSeed);
    // Tests the second Add method for 3D Histograms
 
    Double_t c2 = r.Rndm();
@@ -100,6 +102,7 @@ TEST(StressHistogram, TestAdd3D2)
 
 TEST(StressHistogram, TestAdd3D3)
 {
+   TRandom2 r(initialRandomSeed);
    // Tests the first add method to do scalation of 3D Histograms
 
    Double_t c1 = r.Rndm();

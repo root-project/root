@@ -25,6 +25,7 @@ using namespace std;
 
 TEST(StressHistogram, TestScale1DProf)
 {
+   TRandom2 r(initialRandomSeed);
    TProfile p1("scD1-p1", "p1-Title", numberOfBins, minRange, maxRange);
    TProfile p2("scD1-p2", "p2=c1*p1", numberOfBins, minRange, maxRange);
 
@@ -44,6 +45,7 @@ TEST(StressHistogram, TestScale1DProf)
 
 TEST(StressHistogram, TestScale2DProf)
 {
+   TRandom2 r(initialRandomSeed);
    TProfile2D p1("scD2-p1", "p1", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange, maxRange);
    TProfile2D p2("scD2-p2", "p2=c1*p1", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange, maxRange);
    Double_t c1 = r.Rndm();
@@ -63,6 +65,7 @@ TEST(StressHistogram, TestScale2DProf)
 
 TEST(StressHistogram, TestScale3DProf)
 {
+   TRandom2 r(initialRandomSeed);
    TProfile3D p1("scD3-p1", "p1", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
                  numberOfBins + 2, minRange, maxRange);
    TProfile3D p2("scD3-p2", "p2=c1*p1", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,

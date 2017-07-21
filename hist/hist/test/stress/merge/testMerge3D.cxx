@@ -25,6 +25,7 @@ using namespace std;
 
 TEST(StressHistogram, TestMerge3D)
 {
+   TRandom2 r(initialRandomSeed);
    // Tests the merge method for 3D Histograms
 
    TH3D h1("merge3D-h1", "h1-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
@@ -75,6 +76,7 @@ TEST(StressHistogram, TestMerge3D)
 
 TEST(StressHistogram, TestMerge3DExtend)
 {
+   TRandom2 r(initialRandomSeed);
    UInt_t extendType = TH1::kAllAxes;
    // Tests the merge method for diferent 1D Histograms
    // when axis can be extended (e.g. for time histograms)

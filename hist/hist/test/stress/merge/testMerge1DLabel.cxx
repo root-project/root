@@ -26,6 +26,7 @@ using namespace std;
 
 TEST(StressHistogram, TestMerge1DLabelAll)
 {
+   TRandom2 r(initialRandomSeed);
    // Tests the merge method with fully equally labelled 1D Histograms
 
    TH1D h1("h1", "h1-Title", numberOfBins, minRange, maxRange);
@@ -80,6 +81,7 @@ TEST(StressHistogram, TestMerge1DLabelAll)
 
 TEST(StressHistogram, TestMerge1DLabelAllDiff)
 {
+   TRandom2 r(initialRandomSeed);
    // LM: Dec 2010 : rmeake this test as
    // a test of histogram with some different labels not all filled
 
@@ -131,6 +133,7 @@ TEST(StressHistogram, TestMerge1DLabelAllDiff)
 
 TEST(StressHistogram, TestMerge1DLabelDiff)
 {
+   TRandom2 r(initialRandomSeed);
    // Tests the merge with some different labels  for 1D Histograms
 
    TH1D h1("merge1DLabelDiff-h1", "h1-Title", numberOfBins, minRange, maxRange);
@@ -190,6 +193,7 @@ TEST(StressHistogram, TestMerge1DLabelDiff)
 
 TEST(StressHistogram, TestMerge1DLabelSame)
 {
+   TRandom2 r(initialRandomSeed);
    // Tests the merge with some equal labels method for 1D Histograms
    // number of labels used = number of bins
 

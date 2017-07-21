@@ -27,6 +27,7 @@ using namespace std;
 
 TEST(StressHistogram, TestLabel)
 {
+   TRandom2 r(initialRandomSeed);
    // Tests labelling a 1D Histogram
 
    TH1D h1("lD1-h1", "h1-Title", 2 * numberOfBins, minRange, maxRange);
@@ -61,6 +62,7 @@ TEST(StressHistogram, TestLabel)
 
 TEST(StressHistogram, TestLabel2DX)
 {
+   TRandom2 r(initialRandomSeed);
    // Tests labelling a 1D Histogram
 
    TH2D h1("lD2-h1", "h1-Title", 2 * numberOfBins, minRange, maxRange, numberOfBins, minRange, maxRange);
@@ -98,6 +100,7 @@ TEST(StressHistogram, TestLabel2DX)
 
 TEST(StressHistogram, TestLabel2DY)
 {
+   TRandom2 r(initialRandomSeed);
    // Tests labelling a 1D Histogram
 
    TH2D h1("lD2-h1", "h1-Title", numberOfBins, minRange, maxRange, 2 * numberOfBins, minRange, maxRange);
@@ -135,6 +138,7 @@ TEST(StressHistogram, TestLabel2DY)
 
 TEST(StressHistogram, TestLabelsInflateProf1D)
 {
+   TRandom2 r(initialRandomSeed);
    // Tests labelling a 1D Profile
 
    Int_t numberOfInflates = 4;

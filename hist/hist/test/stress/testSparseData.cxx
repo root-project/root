@@ -29,6 +29,7 @@ using namespace std;
 
 TEST(StressHistogram, TestSparseData1DFull)
 {
+   TRandom2 r(initialRandomSeed);
    TF1 func("GAUS", gaus1d, minRange, maxRange, 3);
    func.SetParameters(0., 3., 200.);
    func.SetParLimits(1, 0, 5);
@@ -56,6 +57,7 @@ TEST(StressHistogram, TestSparseData1DFull)
 
 TEST(StressHistogram, TestSparseData1DSparse)
 {
+   TRandom2 r(initialRandomSeed);
    TF1 func("GAUS", gaus1d, minRange, maxRange, 3);
    func.SetParameters(0., 3., 200.);
    func.SetParLimits(1, 0, 5);
@@ -83,6 +85,7 @@ TEST(StressHistogram, TestSparseData1DSparse)
 
 TEST(StressHistogram, TestSparseData2DFull)
 {
+   TRandom2 r(initialRandomSeed);
    TF2 func("GAUS2D", gaus2d, minRange, maxRange, 3);
    func.SetParameters(500., +.5, 1.5, -.5, 2.0);
 
@@ -110,6 +113,7 @@ TEST(StressHistogram, TestSparseData2DFull)
 
 TEST(StressHistogram, TestSparseData2DSparse)
 {
+   TRandom2 r(initialRandomSeed);
    TF2 func("GAUS2D", gaus2d, minRange, maxRange, 3);
    func.SetParameters(500., +.5, 1.5, -.5, 2.0);
 
@@ -137,6 +141,7 @@ TEST(StressHistogram, TestSparseData2DSparse)
 
 TEST(StressHistogram, TestSparseData3DFull)
 {
+   TRandom2 r(initialRandomSeed);
    TF2 func("GAUS3D", gaus3d, minRange, maxRange, 3);
    func.SetParameters(500., +.5, 1.5, -.5, 2.0);
 
@@ -166,6 +171,7 @@ TEST(StressHistogram, TestSparseData3DFull)
 
 TEST(StressHistogram, TestSparseData3DSparse)
 {
+   TRandom2 r(initialRandomSeed);
    TF2 func("GAUS3D", gaus3d, minRange, maxRange, 3);
    func.SetParameters(500., +.5, 1.5, -.5, 2.0);
 

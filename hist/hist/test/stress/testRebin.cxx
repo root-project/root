@@ -21,6 +21,7 @@ using namespace std;
 
 TEST(StressHistogram, Test2DRebin)
 {
+   TRandom2 r(initialRandomSeed);
    r.SetSeed(10);
 
    // Tests rebin method for 2D Histogram
@@ -54,6 +55,7 @@ TEST(StressHistogram, Test2DRebin)
 
 TEST(StressHistogram, Test2DRebinProfile)
 {
+   TRandom2 r(initialRandomSeed);
    // Tests rebin method for 2D Profile Histogram
    TProfile2D::Approximate();
 
@@ -81,6 +83,7 @@ TEST(StressHistogram, Test2DRebinProfile)
 
 TEST(StressHistogram, Test3DRebin)
 {
+   TRandom2 r(initialRandomSeed);
    // Tests rebin method for 2D Histogram
 
    Int_t xrebin = TMath::Nint(r.Uniform(minRebin, maxRebin));

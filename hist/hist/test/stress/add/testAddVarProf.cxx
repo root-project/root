@@ -25,6 +25,7 @@ using namespace std;
 
 TEST(StressHistogram, TestAddVarProf1)
 {
+   TRandom2 r(initialRandomSeed);
    TH1::SetDefaultSumw2();
    // Tests the first Add method for 1D Profiles with variable bin size
 
@@ -49,6 +50,7 @@ TEST(StressHistogram, TestAddVarProf1)
 
 TEST(StressHistogram, TestAddVarProf2)
 {
+   TRandom2 r(initialRandomSeed);
    // Tests the second Add method for 1D Profiles with variable bin size
 
    Double_t v[numberOfBins + 1];

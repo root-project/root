@@ -33,6 +33,7 @@ class MergeTest : public ::testing::TestWithParam<bool> {
 
 TEST_P(MergeTest, TestMerge1D_Diff)
 {
+   TRandom2 r(initialRandomSeed);
    bool testEmpty = GetParam();
    // Tests the merge method with different binned 1D Histograms
    // test also case when the first histogram is empty (bug Savannah 95190)
@@ -81,6 +82,7 @@ TEST_P(MergeTest, TestMerge1D_Diff)
 
 TEST_P(MergeTest, TestMergeProf1D_Diff)
 {
+   TRandom2 r(initialRandomSeed);
    bool testEmpty = GetParam();
    // Tests the merge method with different binned 1D Profile
 
@@ -125,6 +127,7 @@ TEST_P(MergeTest, TestMergeProf1D_Diff)
 
 TEST_P(MergeTest, TestMerge3DDiff)
 {
+   TRandom2 r(initialRandomSeed);
    bool testEmpty = GetParam();
    // Tests the merge method with different binned 3D Histograms
 
@@ -175,6 +178,7 @@ TEST_P(MergeTest, TestMerge3DDiff)
 
 TEST_P(MergeTest, TestMerge2D_Diff)
 {
+   TRandom2 r(initialRandomSeed);
    bool testEmpty = GetParam();
    // Tests the merge method with different binned 2D Histograms
 

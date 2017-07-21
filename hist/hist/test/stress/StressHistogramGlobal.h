@@ -44,7 +44,7 @@
 #define defaultErrorLimit 1.E-10
 #define refFileOption 1
 //#define refFileName "http://root.cern.ch/files/stressHistogram.5.18.00.root"
-#define initialSeed 0
+#define initialRandomSeed 0
 
 // In case of deviation, the profiles' content will not work anymore
 // try only for testing the statistics
@@ -55,9 +55,6 @@ enum compareOptions { cmpOptNone = 0, cmpOptPrint = 1, cmpOptDebug = 2, cmpOptNo
 extern int defaultEqualOptions;
 
 enum RefFileEnum { refFileRead = 1, refFileWrite = 2 };
-
-extern TRandom2 r;
-// set to zero if want to run different every time
 
 // Methods for histogram comparisions (later implemented)
 void FillVariableRange(Double_t v[numberOfBins + 1]);

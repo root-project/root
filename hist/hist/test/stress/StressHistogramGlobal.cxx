@@ -27,8 +27,6 @@ using namespace std;
 
 int defaultEqualOptions = 0;
 
-TRandom2 r;
-
 std::ostream &operator<<(std::ostream &out, TH1D &h)
 {
    out << h.GetName() << ": [" << h.GetBinContent(1);
@@ -40,7 +38,7 @@ std::ostream &operator<<(std::ostream &out, TH1D &h)
 
 void FillVariableRange(Double_t v[numberOfBins + 1])
 {
-   r.SetSeed(initialSeed);
+   TRandom2 r(initialRandomSeed);
    // Double_t v[numberOfBins+1];
    Double_t minLimit = (maxRange - minRange) / (numberOfBins * 2);
    Double_t maxLimit = (maxRange - minRange) * 4 / (numberOfBins);
@@ -58,6 +56,8 @@ void FillVariableRange(Double_t v[numberOfBins + 1])
 
 void FillHistograms(TH1D &h1, TH1D &h2, Double_t c1, Double_t c2)
 {
+   TRandom2 r;
+
    for (Int_t e = 0; e < nEvents; ++e) {
       Double_t value = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       h1.Fill(value, c1);
@@ -67,6 +67,8 @@ void FillHistograms(TH1D &h1, TH1D &h2, Double_t c1, Double_t c2)
 
 void FillProfiles(TProfile &p1, TProfile &p2, Double_t c1, Double_t c2)
 {
+   TRandom2 r;
+
    for (Int_t e = 0; e < nEvents; ++e) {
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);

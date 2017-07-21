@@ -31,6 +31,7 @@ class Merge2DExtendTest : public ::testing::TestWithParam<UInt_t> {
 
 TEST_P(Merge2DExtendTest, TestMerge2DExtend)
 {
+   TRandom2 r(initialRandomSeed);
    UInt_t extendType = GetParam();
    // Tests the merge method for diferent 1D Histograms
    // when axis can be extended (e.g. for time histograms)

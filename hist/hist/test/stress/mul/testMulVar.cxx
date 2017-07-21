@@ -23,6 +23,7 @@ using namespace std;
 
 TEST(StressHistogram, TestMulVar1)
 {
+   TRandom2 r;
    // Tests the first Multiply method for 1D Histograms with variable bin size
 
    Double_t v[numberOfBins + 1];
@@ -73,6 +74,7 @@ TEST(StressHistogram, TestMulVar1)
 
 TEST(StressHistogram, TestMulVar2)
 {
+   TRandom2 r(initialRandomSeed);
    // Tests the second Multiply method for 1D Histograms with variable bin size
 
    Double_t v[numberOfBins + 1];

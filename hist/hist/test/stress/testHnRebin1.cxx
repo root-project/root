@@ -29,6 +29,7 @@ TYPED_TEST_CASE(HistTest, HistTestTypes_t);
 
 TYPED_TEST(HistTest, TestHnRebin1)
 {
+   TRandom2 r(initialRandomSeed);
    // Tests rebin method for n-dim Histogram
 
    const int rebin = TMath::Nint(r.Uniform(minRebin, maxRebin));

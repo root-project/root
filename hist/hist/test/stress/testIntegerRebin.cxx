@@ -23,6 +23,7 @@ using namespace std;
 
 TEST(StressHistogram, TestIntegerRebin)
 {
+   TRandom2 r(initialRandomSeed);
    // Tests rebin method with an integer as input for 1D Histogram
 
    const int rebin = TMath::Nint(r.Uniform(minRebin, maxRebin));
@@ -44,6 +45,7 @@ TEST(StressHistogram, TestIntegerRebin)
 
 TEST(StressHistogram, TestIntegerRebinNoName)
 {
+   TRandom2 r(initialRandomSeed);
    // Tests rebin method with an integer as input and without name for 1D Histogram
 
    const int rebin = TMath::Nint(r.Uniform(minRebin, maxRebin));
@@ -64,6 +66,7 @@ TEST(StressHistogram, TestIntegerRebinNoName)
 
 TEST(StressHistogram, TestIntegerRebinNoNameProfile)
 {
+   TRandom2 r(initialRandomSeed);
    // Tests rebin method with an integer as input and without name for 1D Profile
 
    const int rebin = TMath::Nint(r.Uniform(minRebin, maxRebin));
@@ -84,6 +87,7 @@ TEST(StressHistogram, TestIntegerRebinNoNameProfile)
 
 TEST(StressHistogram, TestIntegerRebinProfile)
 {
+   TRandom2 r(initialRandomSeed);
    // Tests rebin method with an integer as input for 1D Profile
 
    const int rebin = TMath::Nint(r.Uniform(minRebin, maxRebin));

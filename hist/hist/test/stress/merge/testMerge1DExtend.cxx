@@ -25,6 +25,7 @@ using namespace std;
 
 TEST(StressHistogram, TestMerge1DExtend)
 {
+   TRandom2 r(initialRandomSeed);
    // Tests the merge method for diferent 1D Histograms
    // when axis can rebin (e.g. for time histograms)
 
@@ -60,6 +61,7 @@ TEST(StressHistogram, TestMerge1DExtend)
 
 TEST(StressHistogram, TestMerge1DExtendProf)
 {
+   TRandom2 r(initialRandomSeed);
    // Tests the merge method for diferent 1D Histograms
    // when axis can rebin (e.g. for time histograms)
 

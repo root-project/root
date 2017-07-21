@@ -24,6 +24,7 @@ using namespace std;
 
 TEST(StressHistogram, TestMerge1D)
 {
+   TRandom2 r(initialRandomSeed);
    // Tests the merge method for 1D Histograms
    // simple merge with histogram with same limits
 
@@ -51,6 +52,7 @@ TEST(StressHistogram, TestMerge1D)
 
 TEST(StressHistogram, TestMerge1DWithBuffer)
 {
+   TRandom2 r(initialRandomSeed);
    bool allNoLimits = true;
    // Tests the merge method for different 1D Histograms
    // where different axis are used, BUT the largest bin width must be

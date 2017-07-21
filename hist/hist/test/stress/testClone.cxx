@@ -23,6 +23,7 @@ using namespace std;
 
 TEST(StressHistogram, TestClone1D)
 {
+   TRandom2 r(initialRandomSeed);
    // Tests the clone method for 1D Histograms
 
    TH1D h1("cl1D-h1", "h1-Title", numberOfBins, minRange, maxRange);
@@ -41,6 +42,7 @@ TEST(StressHistogram, TestClone1D)
 
 TEST(StressHistogram, TestClone2D)
 {
+   TRandom2 r(initialRandomSeed);
    // Tests the clone method for 2D Histograms
 
    TH2D h1("cl2D-h1", "h1-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange, maxRange);
@@ -60,6 +62,7 @@ TEST(StressHistogram, TestClone2D)
 
 TEST(StressHistogram, TestClone3D)
 {
+   TRandom2 r(initialRandomSeed);
    // Tests the clone method for 3D Histograms
 
    TH3D h1("cl3D-h1", "h1-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
@@ -81,6 +84,7 @@ TEST(StressHistogram, TestClone3D)
 
 TEST(StressHistogram, TestCloneProfile1D)
 {
+   TRandom2 r(initialRandomSeed);
    // Tests the clone method for 1D Profiles
 
    TProfile p1("cl1D-p1", "p1-Title", numberOfBins, minRange, maxRange);
@@ -98,6 +102,7 @@ TEST(StressHistogram, TestCloneProfile1D)
 
 TEST(StressHistogram, TestCloneProfile2D)
 {
+   TRandom2 r(initialRandomSeed);
    // Tests the clone method for 2D Profiles
 
    TProfile2D p1("cl2D-p1", "p1-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange, maxRange);
@@ -116,6 +121,7 @@ TEST(StressHistogram, TestCloneProfile2D)
 
 TEST(StressHistogram, TestCloneProfile3D)
 {
+   TRandom2 r(initialRandomSeed);
    // Tests the clone method for 3D Profiles
 
    TProfile3D p1("cl3D-p1", "p1-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
@@ -136,6 +142,7 @@ TEST(StressHistogram, TestCloneProfile3D)
 
 TEST(StressHistogram, TestCloneProfileVar1D)
 {
+   TRandom2 r(initialRandomSeed);
    // Tests the clone method for 1D Profiles with variable bin size
 
    Double_t v[numberOfBins + 1];
@@ -156,6 +163,7 @@ TEST(StressHistogram, TestCloneProfileVar1D)
 
 TEST(StressHistogram, TestCloneVar1D)
 {
+   TRandom2 r(initialRandomSeed);
    // Tests the clone method for 1D Histograms with variable bin size
 
    Double_t v[numberOfBins + 1];

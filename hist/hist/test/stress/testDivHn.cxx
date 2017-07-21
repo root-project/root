@@ -29,6 +29,7 @@ TYPED_TEST_CASE(HistTest, HistTestTypes_t);
 
 TYPED_TEST(HistTest, TestDivHn1)
 {
+   TRandom2 r(initialRandomSeed);
    // Tests the first Divide method for 3D Histograms
 
    Int_t bsize[] = {TMath::Nint(r.Uniform(1, 5)), TMath::Nint(r.Uniform(1, 5)), TMath::Nint(r.Uniform(1, 5))};
@@ -86,6 +87,7 @@ TYPED_TEST(HistTest, TestDivHn1)
 
 TYPED_TEST(HistTest, TestDivHn2)
 {
+   TRandom2 r(initialRandomSeed);
    // Tests the second Divide method for 3D Histograms
 
    Int_t bsize[] = {TMath::Nint(r.Uniform(1, 5)), TMath::Nint(r.Uniform(1, 5)), TMath::Nint(r.Uniform(1, 5))};

@@ -23,6 +23,7 @@ using namespace std;
 
 TEST(StressHistogram, TestAssign1D)
 {
+   TRandom2 r(initialRandomSeed);
    // Tests the operator=() method for 1D Histograms
 
    TH1D h1("=1D-h1", "h1-Title", numberOfBins, minRange, maxRange);
@@ -42,6 +43,7 @@ TEST(StressHistogram, TestAssign1D)
 
 TEST(StressHistogram, TestAssign2D)
 {
+   TRandom2 r(initialRandomSeed);
    // Tests the operator=() method for 2D Histograms
 
    TH2D h1("=2D-h1", "h1-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange, maxRange);
@@ -62,6 +64,7 @@ TEST(StressHistogram, TestAssign2D)
 
 TEST(StressHistogram, TestAssign3D)
 {
+   TRandom2 r(initialRandomSeed);
    // Tests the operator=() method for 3D Histograms
 
    TH3D h1("=3D-h1", "h1-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
@@ -85,6 +88,7 @@ TEST(StressHistogram, TestAssign3D)
 
 TEST(StressHistogram, TestAssignVar1D)
 {
+   TRandom2 r(initialRandomSeed);
    // Tests the operator=() method for 1D Histograms with variable bin size
 
    Double_t v[numberOfBins + 1];

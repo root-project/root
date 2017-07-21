@@ -23,6 +23,7 @@ using namespace std;
 
 TEST(StressHistogram, TestMul2D1)
 {
+   TRandom2 r(initialRandomSeed);
    // Tests the first Multiply method for 2D Histograms
 
    Double_t c1 = r.Rndm();
@@ -75,6 +76,7 @@ TEST(StressHistogram, TestMul2D1)
 
 TEST(StressHistogram, TestMul2D2)
 {
+   TRandom2 r(initialRandomSeed);
    // Tests the second Multiply method for 2D Histograms
 
    TH2D h1("m2D2-h1", "h1-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange, maxRange);

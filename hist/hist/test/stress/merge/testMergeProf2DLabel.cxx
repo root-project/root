@@ -28,6 +28,7 @@ using namespace std;
 
 TEST(StressHistogram, TestMergeProf2DLabelAll)
 {
+   TRandom2 r(initialRandomSeed);
    // Tests the merge method with fully equally labelled 2D Profiles
 
    TProfile2D p1("merge2DLabelAll-p1", "p1-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange,
@@ -83,6 +84,7 @@ TEST(StressHistogram, TestMergeProf2DLabelAll)
 
 TEST(StressHistogram, TestMergeProf2DLabelAllDiff)
 {
+   TRandom2 r(initialRandomSeed);
    // Tests the merge method with fully differently labelled 2D Profiles
 
    TProfile2D p1("merge2DLabelAllDiff-p1", "p1-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange,
@@ -148,6 +150,7 @@ TEST(StressHistogram, TestMergeProf2DLabelAllDiff)
 
 TEST(StressHistogram, TestMergeProf2DLabelDiff)
 {
+   TRandom2 r(initialRandomSeed);
    // Tests the merge with some different labels method for 2D Profiles
 
    TProfile2D p1("merge2DLabelDiff-p1", "p1-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange,
@@ -202,6 +205,7 @@ TEST(StressHistogram, TestMergeProf2DLabelDiff)
 
 TEST(StressHistogram, TestMergeProf2DLabelSame)
 {
+   TRandom2 r(initialRandomSeed);
    // Tests the merge with some equal labels method for 2D Profiles
 
    TProfile2D p1("merge2DLabelSame-p1", "p1-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange,

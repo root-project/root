@@ -28,6 +28,7 @@ TYPED_TEST_CASE(HistTest, HistTestTypes_t);
 
 TYPED_TEST(HistTest, TestAddHn)
 {
+   TRandom2 r(initialRandomSeed);
    // Tests the Add method for n-dimensional Histograms
 
    Double_t c = r.Rndm();

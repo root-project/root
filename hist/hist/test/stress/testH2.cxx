@@ -27,6 +27,7 @@ using namespace std;
 
 TEST(StressHistogram, TestH2Buffer)
 {
+   TRandom2 r(initialRandomSeed);
    TH2D h1("h1", "h1", 10, -5, 5, 10, -5, 5);
    TH2D h2("h2", "h2", 10, -5, 5, 10, -5, 5);
 
@@ -59,6 +60,7 @@ TEST(StressHistogram, TestH2Buffer)
 
 TEST(StressHistogram, TestH2Extend)
 {
+   TRandom2 r(initialRandomSeed);
    TH2D h1("h1", "h1", 10, 0, 10, 10, 0, 10);
    TH2D h2("h2", "h0", 10, 0, 10, 10, 0, 20);
    h1.SetCanExtend(TH1::kYaxis);
@@ -75,6 +77,7 @@ TEST(StressHistogram, TestH2Extend)
 
 TEST(StressHistogram, TestH2Integral)
 {
+   TRandom2 r(initialRandomSeed);
    int ix1 = 1;
    int ix2 = 50;
    int iy1 = 1;
