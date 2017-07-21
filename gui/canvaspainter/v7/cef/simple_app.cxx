@@ -301,7 +301,10 @@ void SimpleApp::OnContextInitialized()
    // via the command-line. Otherwise, create the browser using the native
    // platform framework. The Views framework is currently only supported on
    // Windows and Linux.
-   bool use_views = false;
+
+   CefRefPtr<CefCommandLine> command_line = CefCommandLine::GetGlobalCommandLine();
+
+   bool use_views = command_line->HasSwitch("use-views");
 #else
    bool use_views = false;
 #endif
