@@ -1,8 +1,19 @@
-// Copyright (c) 2014 The Chromium Embedded Framework Authors. All rights
-// reserved. Use of this source code is governed by a BSD-style license that
-// can be found in the LICENSE file.
+/// \file gui_handler_linux.cxx
+/// \ingroup CanvasPainter ROOT7
+/// \author Sergey Linev <S.Linev@gsi.de>
+/// \date 2017-06-29
+/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
+/// is welcome!
 
-#include "simple_handler.h"
+/*************************************************************************
+ * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
+#include "gui_handler.h"
 
 #include <X11/Xatom.h>
 #include <X11/Xlib.h>
@@ -11,7 +22,7 @@
 #include "include/base/cef_logging.h"
 #include "include/cef_browser.h"
 
-void SimpleHandler::PlatformTitleChange(CefRefPtr<CefBrowser> browser, const CefString &title)
+void GuiHandler::PlatformTitleChange(CefRefPtr<CefBrowser> browser, const CefString &title)
 {
    std::string titleStr(title);
 
