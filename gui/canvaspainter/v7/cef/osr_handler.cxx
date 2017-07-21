@@ -37,7 +37,6 @@ bool OsrHandler::OnConsoleMessage(CefRefPtr<CefBrowser> browser, const CefString
    return true;
 }
 
-
 bool OsrHandler::GetRootScreenRect(CefRefPtr<CefBrowser> browser, CefRect &rect)
 {
    CEF_REQUIRE_UI_THREAD();
