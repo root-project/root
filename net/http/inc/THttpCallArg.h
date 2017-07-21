@@ -84,7 +84,7 @@ public:
    /** set request query */
    void SetQuery(const char *q) { fQuery = q; }
 
-   void SetPostData(void *data, Long_t length);
+   void SetPostData(void *data, Long_t length, Bool_t make_copy = kFALSE);
 
    void SetWSHandle(TNamed *handle);
 
