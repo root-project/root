@@ -38,7 +38,13 @@
 #include <string.h>
 #include <locale.h>
 
+//Added for graphics compression
 #include <fstream>
+#include "rapidjson/document.h"
+#include "rapidjson/writer.h"
+#include "rapidjson/stringbuffer.h"
+#include <iostream>
+using namespace rapidjson;
 
 #include "Compression.h"
 
@@ -345,16 +351,51 @@ TBufferJSON::~TBufferJSON()
       setlocale(LC_NUMERIC, fNumericLocale.Data());
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// For graphics compression, unneccessary components of the JSON data are trimmed 
+/// to reduce the resulting size of the notebooks.
+////////////////////////////////////////////////////////////////////////////////
 TString TBufferJSON::ConvertToJSONGraphics(const TObject *obj, Int_t compact, const char *member_name)
 {
+	//Get the JSON string using the regular convert to JSON method
 	TString initialJSONString = TBufferJSON::ConvertToJSON(obj,compact); 
-    std::ofstream ofs;
-    ofs.open ("HarryTest.txt");
-    ofs << initialJSONString;
-    ofs.close();
-	return initialJSONString;
+	StringBuffer trimmedJSONString;
+	
+	//Parse the json using the rapidjson parser
+	const char* json = initialJSONString;
+	rapidjson::Document d;
+	d.Parse(json);
+	
+	//Only TCanvas JSON objects have TColors to remove in the first place
+	if (d.HasMember("_typename") && d["_typename"]!="TCanvas"){
+		return initialJSONString;
+	}
+	// If the object doesn't have fPrimitives, return
+	if (!d.HasMember("fPrimitives")){
+		return initialJSONString;
+	}
+	rapidjson::Value& fPrimitives_array = d["fPrimitives"]["arr"];		
+	std::ofstream ofs;
+	ofs.open ("HarryTest.txt");
+	
+	//	TColor objects are known to have this fixed nested structure in the TCanvas as follows:
+	//	TCanvas -> fPrimitives-> arr-> TObjArray (an element in arr)
+	for (SizeType i = 0; i < fPrimitives_array.Size(); i++){
+		if (fPrimitives_array[i]["_typename"] == "TObjArray" && fPrimitives_array[i]["name"] == "ListOfColors"){
+			//Delete the ListOfColors JSON object
+			fPrimitives_array[i] = NULL;
+		}
+		
+	}
+	//Serialise the JSON back into a string to return
+	Writer<StringBuffer> writer(trimmedJSONString);
+	d.Accept(writer);
+	
+	return trimmedJSONString.GetString();
 
-}
+	}
+		
+
 
 
 ////////////////////////////////////////////////////////////////////////////////
