@@ -340,6 +340,8 @@
 
 
 #ifdef ROOT7_THist
+
+#if 0 // disable autoload of unsupported variadic THist templates
 #pragma link C++ class ROOT::Experimental::TH1F+;
 #pragma link C++ class ROOT::Experimental::TH1D+;
 #pragma link C++ class ROOT::Experimental::TH2F+;
@@ -350,6 +352,8 @@
 #pragma link C++ class ROOT::Experimental::Detail::THistImplBase<ROOT::Experimental::Detail::THistData<2,double,ROOT::Experimental::Detail::THistDataDefaultStorage,ROOT::Experimental::THistStatContent,ROOT::Experimental::THistStatUncertainty> >+;
 #pragma link C++ class ROOT::Experimental::Detail::THistData<2,double,ROOT::Experimental::Detail::THistDataDefaultStorage,ROOT::Experimental::THistStatContent,ROOT::Experimental::THistStatUncertainty>+;
 #pragma link C++ class ROOT::Experimental::Detail::THistImpl<ROOT::Experimental::Detail::THistData<2, double, ROOT::Experimental::Detail::THistDataDefaultStorage, ROOT::Experimental::THistStatContent, ROOT::Experimental::THistStatUncertainty>, ROOT::Experimental::TAxisEquidistant, ROOT::Experimental::TAxisIrregular>+;
+#endif
+
 #pragma link C++ class tuple<ROOT::Experimental::TAxisEquidistant,ROOT::Experimental::TAxisIrregular>+;
 #pragma link C++ class ROOT::Experimental::TAxisEquidistant+;
 #pragma link C++ class ROOT::Experimental::TAxisIrregular+;
