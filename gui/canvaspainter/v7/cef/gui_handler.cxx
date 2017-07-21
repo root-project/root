@@ -13,7 +13,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "simple_handler.h"
+#include "gui_handler.h"
 
 #include <sstream>
 #include <string>
@@ -25,21 +25,15 @@
 #include "include/wrapper/cef_closure_task.h"
 #include "include/wrapper/cef_helpers.h"
 
-namespace {
-
-SimpleHandler *g_instance = NULL;
-
-} // namespace
-
-SimpleHandler::SimpleHandler(THttpServer *serv, bool use_views) : BaseHandler(serv), use_views_(use_views)
+GuiHandler::GuiHandler(THttpServer *serv, bool use_views) : BaseHandler(serv), use_views_(use_views)
 {
 }
 
-SimpleHandler::~SimpleHandler()
+GuiHandler::~GuiHandler()
 {
 }
 
-void SimpleHandler::OnTitleChange(CefRefPtr<CefBrowser> browser, const CefString &title)
+void GuiHandler::OnTitleChange(CefRefPtr<CefBrowser> browser, const CefString &title)
 {
    CEF_REQUIRE_UI_THREAD();
 
@@ -56,15 +50,15 @@ void SimpleHandler::OnTitleChange(CefRefPtr<CefBrowser> browser, const CefString
    }
 }
 
-bool SimpleHandler::OnConsoleMessage(CefRefPtr<CefBrowser> browser, const CefString &message, const CefString &source,
-                                     int line)
+bool GuiHandler::OnConsoleMessage(CefRefPtr<CefBrowser> browser, const CefString &message, const CefString &source,
+                                  int line)
 {
    printf("CONSOLE: %s\n", message.ToString().c_str());
 
-   //CefRefPtr<CefProcessMessage> msg = CefProcessMessage::Create("PING");
+   // CefRefPtr<CefProcessMessage> msg = CefProcessMessage::Create("PING");
    // Send the process message to the render process.
    // Use PID_BROWSER instead when sending a message to the browser process.
-   //browser->SendProcessMessage(PID_RENDERER, msg);
+   // browser->SendProcessMessage(PID_RENDERER, msg);
 
    return true;
 }

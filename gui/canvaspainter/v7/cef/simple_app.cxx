@@ -6,7 +6,7 @@
 
 #include <string>
 
-#include "simple_handler.h"
+#include "gui_handler.h"
 #include "osr_handler.h"
 #include "include/cef_browser.h"
 #include "include/cef_scheme.h"
@@ -307,7 +307,7 @@ void SimpleApp::OnContextInitialized()
 #endif
 
    // SimpleHandler implements browser-level callbacks.
-   CefRefPtr<SimpleHandler> handler(new SimpleHandler(gHandlingServer, use_views));
+   CefRefPtr<GuiHandler> handler(new GuiHandler(gHandlingServer, use_views));
 
    if (use_views) {
       // Create the BrowserView.
