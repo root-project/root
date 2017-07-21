@@ -87,7 +87,6 @@ public:
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-
 class TCefWsCallArg : public THttpCallArg {
 protected:
    CefRefPtr<CefMessageRouterBrowserSide::Callback> fCallback;
