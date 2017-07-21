@@ -34,7 +34,7 @@ public:
    virtual void OnBeforeChildProcessLaunch(CefRefPtr<CefCommandLine> command_line) OVERRIDE;
 
    // CefRenderProcessHandler methods
-   //virtual void OnContextCreated(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame,
+   // virtual void OnContextCreated(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame,
    //                              CefRefPtr<CefV8Context> context) OVERRIDE;
 
 private:
@@ -42,6 +42,5 @@ private:
    IMPLEMENT_REFCOUNTING(SimpleApp);
    DISALLOW_COPY_AND_ASSIGN(SimpleApp);
 };
-
 
 #endif // CEF_TESTS_CEFSIMPLE_SIMPLE_APP_H_
