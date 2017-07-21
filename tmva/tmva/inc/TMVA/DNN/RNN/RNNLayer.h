@@ -130,6 +130,18 @@ public:
                               const Matrix_t & precStateActivations, const Matrix_t & currStateActivations,
                               const Matrix_t & input, Matrix_t & input_gradient);
 
+   /*! Return a vector of all learnable weights */
+   std::vector<Matrix_t*> GetWeights() const;
+
+   /*! Return a vector of all learnable weights' gradients */
+   std::vector<Matrix_t*> GetWeightGradients() const;
+
+   /*! Return a vector of all learnable biases */
+   //std::vector<Matrix_t*> GetBiases();
+
+   /*! Return a vector of all learnable bias' gradients */
+   //std::vector<Matrix_t*> GetBiasGradients();
+
    /** Prints the info about the layer */
    void Print() const; 
 
@@ -215,6 +227,48 @@ auto TBasicRNNLayer<Architecture_t>::Print() const
              << "Input Size: " << this->GetInputSize() << "\n"
              << "Hidden State Size: " << this->GetStateSize() << "\n";  
 }
+
+//______________________________________________________________________________
+template<typename Architecture_t>
+auto TBasicRNNLayer<Architecture_t>::GetWeights() const
+->   std::vector<Matrix_t*> 
+{
+  std::vector<Matrix_t*> weights;
+  weights.emplace_back(&fWeightsInput);
+  weights.emplace_back(&fWeightsState);
+  return weights;
+}
+
+//______________________________________________________________________________
+template<typename Architecture_t>
+auto TBasicRNNLayer<Architecture_t>::GetWeightGradients() const
+->   std::vector<Matrix_t*> 
+{
+  std::vector<Matrix_t*> weightGradients;
+  weightGradients.emplace_back(&fWeightInputGradients);
+  weightGradients.emplace_back(&fWeightStateGradients);
+  return weightGradients;
+}
+
+//______________________________________________________________________________
+//template<typename Architecture_t>
+//auto TBasicRNNLayer<Architecture_t>::GetBiases() const
+//->   std::vector<Matrix_t*> 
+//{
+//  std::vector<Matrix_t*> biases;
+//  biases.emplace_back(&fBiases);
+//  return biases;
+//}
+
+//______________________________________________________________________________
+//template<typename Architecture_t>
+//auto TBasicRNNLayer<Architecture_t>::GetBiasGradients() const
+//->   std::vector<Matrix_t*>
+//{
+//  std::vector<Matrix_t*> biasGradients;
+//  biasGradients.emplace_back(&fBiasGradients);
+//  return biasGradients;
+//}
 
 //______________________________________________________________________________
 template <typename Architecture_t>

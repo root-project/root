@@ -20,6 +20,7 @@
 
 #include "Cpu/CpuBuffer.h"
 #include "Cpu/CpuMatrix.h"
+#include <vector>
 
 namespace TMVA
 {
@@ -92,6 +93,15 @@ public:
 
    static void Copy(TCpuMatrix<Scalar_t> & B,
                     const TCpuMatrix<Scalar_t> & A);
+
+   /** Above functions extended to vectors */
+   static void ScaleAdd(std::vector<TCpuMatrix<Scalar_t>*> & A,
+                        const std::vector<TCpuMatrix<Scalar_t>*> & B,
+                        Scalar_t beta = 1.0);
+
+   static void Copy(std::vector<TCpuMatrix<Scalar_t>*> & A,
+                    const std::vector<TCpuMatrix<Scalar_t>*> & B);
+
    ///@}
 
    //____________________________________________________________________________
