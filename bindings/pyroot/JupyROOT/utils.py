@@ -27,6 +27,7 @@ from JupyROOT import handlers
 
 #Notebook-trimming imports
 import json
+import webbrowser
 
 # We want iPython to take over the graphics
 ROOT.gROOT.SetBatch()
@@ -63,7 +64,7 @@ _jsCode = """
        Core.draw("{jsDivId}", obj, "{jsDrawOptions}");
      }}
  );
-</script>
+</script> 
 """
 
 TBufferJSONErrorMessage="The TBufferJSON class is necessary for JS visualisation to work and cannot be found. Did you enable the http module (-D http=ON for CMake)?"
@@ -396,7 +397,7 @@ class NotebookDrawer(object):
     def _removeTColors(self,object_json):
 	'''
 	This function trims the json by trimming the list of TColors that are not used in JS rendering, and hence can
-	be safety removed, reducing the size of notebooks with TCanvases markedly
+	be safely removed, reducing the size of notebooks with TCanvases markedly
 	'''
 	
 	"""Test JSON that isn't a TCanvas
@@ -439,11 +440,13 @@ class NotebookDrawer(object):
         # Workaround to have ConvertToJSON work
         
         #<class 'ROOT.TString'>
-        object_json = ROOT.TBufferJSON.ConvertToJSON(self.drawableObject,3)
+        object_json = ROOT.TBufferJSON.ConvertToJSONGraphics(self.drawableObject,3)
+	webbrowser.open("https://root.cern/js/latest/", new=1, autoraise=True);
+
         #<type 'dict'>
-        parsed_json = json.loads(str(object_json))
+        #parsed_json = json.loads(str(object_json))
         #<type 'dict'>
-        trimmed_json = self._trimJSONForGraphics(parsed_json)
+        #trimmed_json = self._trimJSONForGraphics(parsed_json)
 
         	
         # Here we could optimise the string manipulation
@@ -461,7 +464,7 @@ class NotebookDrawer(object):
         thisJsCode = _jsCode.format(jsCanvasWidth = height,
                                     jsCanvasHeight = width,
                                     jsROOTSourceDir = _jsROOTSourceDir,
-                                    jsonContent = json.dumps(trimmed_json),
+                                    jsonContent = object_json.Data(),#json.dumps(trimmed_json),
                                     jsDrawOptions = options,
                                     jsDivId = divId)
         return thisJsCode
