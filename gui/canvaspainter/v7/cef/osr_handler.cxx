@@ -7,12 +7,6 @@
 
 #include "osr_handler.h"
 
-//#include "THttpServer.h"
-//#include "THttpEngine.h"
-//#include "THttpCallArg.h"
-//#include "TRootSniffer.h"
-//#include "TString.h"
-
 #include <sstream>
 #include <string>
 

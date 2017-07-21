@@ -12,8 +12,6 @@
 
 // #include "include/cef_process_message.h"
 
-bool gBatchMode = false;
-
 class ROOTV8Handler : public CefV8Handler {
 public:
    ROOTV8Handler() {}
@@ -52,11 +50,9 @@ public:
    // CefRenderProcessHandler methods:
    void OnWebKitInitialized() OVERRIDE
    {
-      if (gBatchMode) {
-         // Create the renderer-side router for query handling.
-         CefMessageRouterConfig config;
-         message_router_ = CefMessageRouterRendererSide::Create(config);
-      }
+      // Create the renderer-side router for query handling.
+      CefMessageRouterConfig config;
+      message_router_ = CefMessageRouterRendererSide::Create(config);
    }
 
    // CefRenderProcessHandler methods
@@ -65,56 +61,53 @@ public:
    {
       printf("MyRendererProcessApp::OnContextCreated\n");
 
-      if (gBatchMode) message_router_->OnContextCreated(browser, frame, context);
+      message_router_->OnContextCreated(browser, frame, context);
 
-/*
-      // Retrieve the context's window object.
-      CefRefPtr<CefV8Value> object = context->GetGlobal();
+      /*
+            // Retrieve the context's window object.
+            CefRefPtr<CefV8Value> object = context->GetGlobal();
 
-      // Create a new V8 string value. See the "Basic JS Types" section below.
-      CefRefPtr<CefV8Value> str = CefV8Value::CreateString("My Value!");
+            // Create a new V8 string value. See the "Basic JS Types" section below.
+            CefRefPtr<CefV8Value> str = CefV8Value::CreateString("My Value!");
 
-      // Add the string to the window object as "window.myval". See the "JS Objects" section below.
-      object->SetValue("ROOT_BATCH_FLAG", str, V8_PROPERTY_ATTRIBUTE_NONE);
+            // Add the string to the window object as "window.myval". See the "JS Objects" section below.
+            object->SetValue("ROOT_BATCH_FLAG", str, V8_PROPERTY_ATTRIBUTE_NONE);
 
-      printf("ADD BATCH FALG\n");
+            printf("ADD BATCH FALG\n");
 
-      CefRefPtr<CefV8Handler> handler = new ROOTV8Handler;
-      CefRefPtr<CefV8Value> func = CefV8Value::CreateFunction("ROOT_BATCH_FUNC", handler);
+            CefRefPtr<CefV8Handler> handler = new ROOTV8Handler;
+            CefRefPtr<CefV8Value> func = CefV8Value::CreateFunction("ROOT_BATCH_FUNC", handler);
 
-      // Add the string to the window object as "window.myval". See the "JS Objects" section below.
-      object->SetValue("ROOT_BATCH_FUNC", func, V8_PROPERTY_ATTRIBUTE_NONE);
+            // Add the string to the window object as "window.myval". See the "JS Objects" section below.
+            object->SetValue("ROOT_BATCH_FUNC", func, V8_PROPERTY_ATTRIBUTE_NONE);
 
-      printf("ADD BATCH FUNC\n");
+            printf("ADD BATCH FUNC\n");
 
-      CefRefPtr<CefProcessMessage> msg = CefProcessMessage::Create("my_message");
+            CefRefPtr<CefProcessMessage> msg = CefProcessMessage::Create("my_message");
 
-      // Retrieve the argument list object.
-      CefRefPtr<CefListValue> args = msg->GetArgumentList();
+            // Retrieve the argument list object.
+            CefRefPtr<CefListValue> args = msg->GetArgumentList();
 
-      // Populate the argument values.
-      args->SetString(0, "my string");
-      args->SetInt(1, 10);
+            // Populate the argument values.
+            args->SetString(0, "my string");
+            args->SetInt(1, 10);
 
-      // Send the process message to the render process.
-      // Use PID_BROWSER instead when sending a message to the browser process.
-      browser->SendProcessMessage(PID_BROWSER, msg);
-*/
-
+            // Send the process message to the render process.
+            // Use PID_BROWSER instead when sending a message to the browser process.
+            browser->SendProcessMessage(PID_BROWSER, msg);
+      */
    }
 
    void OnContextReleased(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame,
                           CefRefPtr<CefV8Context> context) OVERRIDE
    {
-      if (gBatchMode) message_router_->OnContextReleased(browser, frame, context);
+      message_router_->OnContextReleased(browser, frame, context);
    }
 
    bool OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProcessId source_process,
                                  CefRefPtr<CefProcessMessage> message) OVERRIDE
    {
-      if (gBatchMode) return message_router_->OnProcessMessageReceived(browser, source_process, message);
-
-      return false;
+      return message_router_->OnProcessMessageReceived(browser, source_process, message);
    }
 
    /*   virtual bool OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProcessId source_process,
@@ -135,17 +128,11 @@ private:
 // Entry point function for all processes.
 int main(int argc, char *argv[])
 {
-   printf("Starting CEF_MAIN ARGC %d\n", argc);
-   for (int n = 1; n < argc; n++) printf("ARGV[%d] = %s\n", n, argv[n]);
-
-   if ((argc>1) && !strcmp(argv[argc-1],"--root-batch")) {
-      argc--;
-      gBatchMode = true;
-   }
+   // printf("Starting CEF_MAIN ARGC %d\n", argc);
+   // for (int n = 1; n < argc; n++) printf("ARGV[%d] = %s\n", n, argv[n]);
 
    // Provide CEF with command-line arguments.
    CefMainArgs main_args(argc, argv);
-
 
    CefRefPtr<CefApp> app = new MyRendererProcessApp();
 
