@@ -1468,8 +1468,8 @@ TBasket* TBranch::GetFreshCluster()
    if (iter.GetStartEntry() == 0) return fTree->CreateBasket(this);
 
    for (Int_t j = 0; j < (fTree->GetMaxVirtualSize() * (-1)); j++) {
-       iter = fTree->GetClusterIterator(iter.GetStartEntry() - 1);
-       if (iter.GetStartEntry() == 0) return fTree->CreateBasket(this);
+      iter = fTree->GetClusterIterator(iter.GetStartEntry() - 1);
+      if (iter.GetStartEntry() == 0) return fTree->CreateBasket(this);
    }
 
    Int_t entryToFlush = fTree->GetClusterIterator(iter.GetStartEntry() - 1).GetStartEntry();
@@ -1488,7 +1488,7 @@ TBasket* TBranch::GetFreshCluster()
    // create a new one
    basket = (TBasket*)fBaskets.UncheckedAt(basketToFlush);
    if (basket) {
-      fBaskets.AddAt(0,basketToFlush);
+      fBaskets.AddAt(0, basketToFlush);
       --fNBaskets;
    } else {
       basket = fTree->CreateBasket(this);
