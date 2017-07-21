@@ -1459,15 +1459,20 @@ TFile* TBranch::GetFile(Int_t mode)
 
 TBasket* TBranch::GetFreshCluster()
 {
+   TBasket *basket = 0;
+
    // If GetClusterIterator is called with a negative entry then GetStartEntry will be 0
    // So we need to check if we reach the zero before we have gone back two clusters
    // if this is the case, we want to keep everything in memory so we return a new basket
    TTree::TClusterIterator iter = fTree->GetClusterIterator(fBasketEntry[fReadBasket]);
    if (iter.GetStartEntry() == 0) return fTree->CreateBasket(this);
-   TTree::TClusterIterator prevIter = fTree->GetClusterIterator(iter.GetStartEntry() - 1);
-   if (prevIter.GetStartEntry() == 0) return fTree->CreateBasket(this);
-   Int_t entryToFlush = fTree->GetClusterIterator(prevIter.GetStartEntry() - 1).GetStartEntry();
 
+   for (Int_t j = 0; j < (fTree->GetMaxVirtualSize() * (-1)); j++) {
+       iter = fTree->GetClusterIterator(iter.GetStartEntry() - 1);
+       if (iter.GetStartEntry() == 0) return fTree->CreateBasket(this);
+   }
+
+   Int_t entryToFlush = fTree->GetClusterIterator(iter.GetStartEntry() - 1).GetStartEntry();
    // Finds the basket to flush. Since the basket should be close to current basket in
    // memory, just iterate backwards until the correct basket is reached. This should
    // be fast as long as the number of baskets per cluster is small
@@ -1481,7 +1486,7 @@ TBasket* TBranch::GetFreshCluster()
 
    // Retrieves the basket that is going to be flushed. If the basket did not exist
    // create a new one
-   TBasket *basket = (TBasket*)fBaskets.UncheckedAt(basketToFlush);
+   basket = (TBasket*)fBaskets.UncheckedAt(basketToFlush);
    if (basket) {
       fBaskets.AddAt(0,basketToFlush);
       --fNBaskets;
@@ -1493,7 +1498,7 @@ TBasket* TBranch::GetFreshCluster()
    // for other baskets in the new cluster. It would require the function to go
    // beyond its current scope. In the ideal case when each cluster only has 1 basket
    // this will perform well
-   while (fBasketEntry[basketToFlush] < prevIter.GetNextEntry()) {
+   while (fBasketEntry[basketToFlush] < iter.GetStartEntry()) {
       fBaskets.AddAt(0, basketToFlush);
       --fNBaskets;
       ++basketToFlush;
