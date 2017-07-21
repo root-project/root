@@ -25,7 +25,7 @@
 THttpServer *gHandlingServer = 0;
 
 // TODO: memory cleanup of these arguments
-class TCEFCallArg : public THttpCallArg, public CefResourceHandler {
+class TCefHttpCallArg : public THttpCallArg, public CefResourceHandler {
 protected:
    // QWebEngineUrlRequestJob *fRequest;
    int fDD;
@@ -35,9 +35,9 @@ protected:
    int offset_;
 
 public:
-   TCEFCallArg() : THttpCallArg(), CefResourceHandler(), fDD(0), callback_(), offset_(0) {}
+   TCefHttpCallArg() : THttpCallArg(), CefResourceHandler(), fDD(0), callback_(), offset_(0) {}
 
-   virtual ~TCEFCallArg()
+   virtual ~TCefHttpCallArg()
    {
       if (fDD != 1) printf("FAAAAAAAAAAAAAIL %d\n", fDD);
       fDD = -1;
@@ -107,8 +107,8 @@ public:
       return has_data;
    }
 
-   IMPLEMENT_REFCOUNTING(TCEFCallArg);
-   DISALLOW_COPY_AND_ASSIGN(TCEFCallArg);
+   IMPLEMENT_REFCOUNTING(TCefHttpCallArg);
+   DISALLOW_COPY_AND_ASSIGN(TCefHttpCallArg);
 };
 
 namespace {
@@ -191,7 +191,7 @@ public:
          return new CefStreamResourceHandler(mime, stream);
       }
 
-      TCEFCallArg *arg = new TCEFCallArg();
+      TCefHttpCallArg *arg = new TCefHttpCallArg();
       arg->SetPathAndFileName(inp_path);
       arg->SetQuery(inp_query);
       arg->SetMethod(inp_method);
@@ -238,14 +238,11 @@ void SimpleApp::OnBeforeChildProcessLaunch(CefRefPtr<CefCommandLine> command_lin
 {
 
    std::string newprog = fCefMain;
-
    command_line->SetProgram(newprog);
-
    std::string prog = command_line->GetProgram().ToString();
 
-   if (fBatch) command_line->AppendArgument("--root-batch");
-
-   printf("OnBeforeChildProcessLaunch %s\n", prog.c_str());
+   // if (fBatch) command_line->AppendArgument("--root-batch");
+   // printf("OnBeforeChildProcessLaunch %s\n", prog.c_str());
 }
 
 /*
@@ -310,7 +307,7 @@ void SimpleApp::OnContextInitialized()
 #endif
 
    // SimpleHandler implements browser-level callbacks.
-   CefRefPtr<SimpleHandler> handler(new SimpleHandler(use_views));
+   CefRefPtr<SimpleHandler> handler(new SimpleHandler(gHandlingServer, use_views));
 
    if (use_views) {
       // Create the BrowserView.
