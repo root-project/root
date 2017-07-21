@@ -927,7 +927,7 @@ Int_t TTreeCacheUnzip::UnzipBuffer(char **dest, char *src)
       /* early consistency check */
       UChar_t *bufcur = (UChar_t *) (src + keylen);
       Int_t nin, nbuf;
-      if(R__unzip_header(&nin, bufcur, &nbuf)!=0) {
+      if(objlen > nbytes-keylen && R__unzip_header(&nin, bufcur, &nbuf)!=0) {
          Error("UnzipBuffer", "Inconsistency found in header (nin=%d, nbuf=%d)", nin, nbuf);
          uzlen = -1;
          return uzlen;
