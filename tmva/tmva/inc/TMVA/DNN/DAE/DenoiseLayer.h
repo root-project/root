@@ -322,7 +322,7 @@ auto TConvLayer<Architecture_t>::Forward(Tensor_t input, bool applyDropout)
     {
       Architecture_t::Dropout(input[i], this->GetDropoutProbability());
     }
-    Encoding(corruptedInput,compressedInput);
+    Encoding(input,compressedInput);
     Reconstruction(compressedInput,reconstructedInput);
 
 }
