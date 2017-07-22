@@ -181,6 +181,23 @@ void TCartCommunicator::Shift(Int_t direction, Int_t disp, Int_t &rank_source, I
  */
 TCartCommunicator TCartCommunicator::Sub(const Bool_t remain_dims[]) const
 {
+   return Sub(std::vector<Bool_t>(GetDim(), remain_dims));
+}
+
+//______________________________________________________________________________
+/**
+ * Partitions a communicator into subgroups, which form lower-dimensional Cartesian subgrids.
+ *
+ * If  a Cartesian topology has been created with ROOT::Mpi::TIntraCommunicator::CreateCartcomm, the function
+ * ROOT::Mpi::TCartCommunicator::Sub can be used to partition the communicator group into subgroups that form
+ * lower-dimensional Cartesian subgrids, and to build for each subgroup a communicator with the associated subgrid
+ * Cartesian  topology.  (This  function  is closely related to ROOT::Mpi::TIntraCommunicator::Split.)
+ * \param remain_dims The ith entry of remain_dims specifies whether the ith dimension is kept in the subgrid (true) or
+ * is dropped (false) (logical vector).
+ * \return Communicator containing the subgrid that includes the calling process (handle).
+ */
+TCartCommunicator TCartCommunicator::Sub(const std::vector<Bool_t> remain_dims) const
+{
    Int_t ndims = GetDim();
    Int_t *int_remain_dims = new Int_t[ndims];
    for (Int_t i = 0; i < ndims; i++) {

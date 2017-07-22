@@ -9,7 +9,8 @@ namespace ROOT {
 namespace Mpi {
 /**
  * \class TCartCommunicator
- * TODO:
+ * Class to map ranks(processes) into multidimentional mesh, according
+ * to the coordinates you can get the rank or with the rank you can get the coordinates.
  \see TGroup TIntraCommunicator TCommunicator TInterCommunicator
  \ingroup Mpi
 */
@@ -48,11 +49,11 @@ public:
 
    virtual void GetCoords(Int_t rank, Int_t maxdims, Int_t coords[]) const;
 
-   virtual void GetCoords(Int_t rank, Int_t maxdims, std::vector<Int_t> &coords) const;
-
    virtual void Shift(Int_t direction, Int_t disp, Int_t &rank_source, Int_t &rank_dest) const;
 
    virtual TCartCommunicator Sub(const Bool_t remain_dims[]) const;
+
+   virtual TCartCommunicator Sub(const std::vector<Bool_t> remain_dims) const;
 
    virtual Int_t Map(Int_t ndims, const Int_t dims[], const Bool_t periods[]) const;
 
