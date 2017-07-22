@@ -1,3 +1,18 @@
+/// \file
+/// \ingroup tutorial_mpi
+///
+///  Example for asynchronous communication using nonblocking messages.
+///
+/// ~~~{.cpp}
+///  rootmpi -np 2 nonblocking.C
+/// ~~~
+///
+///
+/// \macro_output
+/// \macro_code
+///
+/// \author Omar Zapata
+
 using namespace ROOT::Mpi;
 
 struct particle {

@@ -1,3 +1,19 @@
+/// \file
+/// \ingroup tutorial_mpi
+///
+///  Peer to peer communication is the most basic communication operation, basically is send and receiv a message
+///  between two processes.
+///
+/// ~~~{.cpp}
+///  rootmpi -np 2 hello.C
+/// ~~~
+///
+///
+/// \macro_output
+/// \macro_code
+///
+/// \author Omar Zapata
+
 using namespace ROOT::Mpi;
 void p2p()
 {

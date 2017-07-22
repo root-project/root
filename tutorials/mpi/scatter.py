@@ -1,3 +1,23 @@
+## \file
+## \ingroup tutorial_mpi
+##
+## Sends data from one task to all tasks in a group.
+## This is the inverse operation to ROOT::Mpi::TCommunicator::Gather. 
+## An alternative description is that the root sends a message with ROOT::Mpi::TCommunicator::Send. 
+## This message is split into n equal segments, the ith segment is sent to the ith process in the group, and each process receives this message as above.
+## The send buffer is ignored for all nonroot processes.
+## to execute this example with 4 processors, do:
+##
+## ~~~{.cpp}
+##  rootmpi -np 4 scatter.py
+## ~~~
+##
+##
+## \macro_output
+## \macro_code
+##
+## \author Omar Zapata
+
 from ROOT import Mpi, TVectorD
 from ROOT.Mpi import TEnvironment, COMM_WORLD
 

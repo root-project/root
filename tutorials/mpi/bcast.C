@@ -1,3 +1,21 @@
+/// \file
+/// \ingroup tutorial_mpi
+///
+/// Broadcasts a message from the process with rank root to all processes of the group, itself included.
+/// It is called by all members of group using the same arguments for comm, root.
+/// On return, the contents of root’s communication buffer has been copied to all processes.
+/// to execute this example with 4 processors, do:
+///
+/// ~~~{.cpp}
+///  rootmpi -np 4 bcast.C
+/// ~~~
+///
+///
+/// \macro_output
+/// \macro_code
+///
+/// \author Omar Zapata
+
 #include <TMpi.h>
 using namespace ROOT::Mpi;
 void bcast()

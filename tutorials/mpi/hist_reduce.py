@@ -1,7 +1,19 @@
-# Omar.Zapata@cern.ch http://oproject.org/ROOTMpi  2017
-# Example to generated random numbers to fill a TH1F histogram in every process
-# and merging the result through a custom reduce operation
-# run it with: rootmpi -np 3 hist_reduce.C   where 3 is the number of processes
+## \file
+## \ingroup tutorial_mpi
+##
+## Example to generated random numbers to fill a TH1F histogram in every process
+## and merging the result through a custom reduce operation.
+## to execute this example with 4 processors, do:
+##
+## ~~~{.cpp}
+##  rootmpi -np 4 hist_reduce.py
+## ~~~
+##
+##
+## \macro_output
+## \macro_code
+##
+## \author Omar Zapata
 
 from ROOT import Mpi, TH1F, TF1, TFormula, TCanvas
 from ROOT.Mpi import TEnvironment, COMM_WORLD
