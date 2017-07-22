@@ -2,7 +2,6 @@
 #ifndef ROOT_Mpi_Globals
 #define ROOT_Mpi_Globals
 
-
 #include <Rtypes.h>
 #include <TError.h>
 #include <TObject.h>
@@ -235,20 +234,34 @@ R__EXTERN TIntraCommunicator COMM_SELF;
 template <class T>
 MPI_Datatype GetDataType()
 {
-   if (typeid(T) == typeid(int) || typeid(T) == typeid(Int_t)) return MPI_INT;
-   if (typeid(T) == typeid(float) || typeid(T) == typeid(Float_t)) return MPI_FLOAT;
-   if (typeid(T) == typeid(double) || typeid(T) == typeid(Double_t)) return MPI_DOUBLE;
-   if (typeid(T) == typeid(bool) || typeid(T) == typeid(Bool_t)) return MPI_BYTE;
-   if (typeid(T) == typeid(char) || typeid(T) == typeid(Char_t)) return MPI_CHAR;
-   if (typeid(T) == typeid(short) || typeid(T) == typeid(Short_t)) return MPI_SHORT;
-   if (typeid(T) == typeid(long) || typeid(T) == typeid(Long_t)) return MPI_LONG;
-   if (typeid(T) == typeid(long long)) return MPI_LONG_LONG;
-   if (typeid(T) == typeid(unsigned char) || typeid(T) == typeid(UChar_t)) return MPI_UNSIGNED_CHAR;
-   if (typeid(T) == typeid(unsigned short) || typeid(T) == typeid(UShort_t)) return MPI_UNSIGNED_SHORT;
-   if (typeid(T) == typeid(unsigned long int) || typeid(T) == typeid(ULong_t)) return MPI_UNSIGNED_LONG;
-   if (typeid(T) == typeid(unsigned long long) || typeid(T) == typeid(ULong64_t)) return MPI_UNSIGNED_LONG_LONG;
-   if (typeid(T) == typeid(long double) || typeid(T) == typeid(LongDouble_t)) return MPI_LONG_DOUBLE;
-   if (typeid(T) == typeid(wchar_t)) return MPI_WCHAR;
+   if (typeid(T) == typeid(int) || typeid(T) == typeid(Int_t))
+      return MPI_INT;
+   if (typeid(T) == typeid(float) || typeid(T) == typeid(Float_t))
+      return MPI_FLOAT;
+   if (typeid(T) == typeid(double) || typeid(T) == typeid(Double_t))
+      return MPI_DOUBLE;
+   if (typeid(T) == typeid(bool) || typeid(T) == typeid(Bool_t))
+      return MPI_BYTE;
+   if (typeid(T) == typeid(char) || typeid(T) == typeid(Char_t))
+      return MPI_CHAR;
+   if (typeid(T) == typeid(short) || typeid(T) == typeid(Short_t))
+      return MPI_SHORT;
+   if (typeid(T) == typeid(long) || typeid(T) == typeid(Long_t))
+      return MPI_LONG;
+   if (typeid(T) == typeid(long long))
+      return MPI_LONG_LONG;
+   if (typeid(T) == typeid(unsigned char) || typeid(T) == typeid(UChar_t))
+      return MPI_UNSIGNED_CHAR;
+   if (typeid(T) == typeid(unsigned short) || typeid(T) == typeid(UShort_t))
+      return MPI_UNSIGNED_SHORT;
+   if (typeid(T) == typeid(unsigned long int) || typeid(T) == typeid(ULong_t))
+      return MPI_UNSIGNED_LONG;
+   if (typeid(T) == typeid(unsigned long long) || typeid(T) == typeid(ULong64_t))
+      return MPI_UNSIGNED_LONG_LONG;
+   if (typeid(T) == typeid(long double) || typeid(T) == typeid(LongDouble_t))
+      return MPI_LONG_DOUBLE;
+   if (typeid(T) == typeid(wchar_t))
+      return MPI_WCHAR;
 
    // TODO: better error control here if type is not supported
    Warning("GetDataType", "Unknown raw datatype <%s>, returning null datatype", ROOT_MPI_TYPE_NAME(T));
@@ -264,7 +277,6 @@ public:
    TMpiSignalHandler(ESignals signal, TEnvironment &env) : TSignalHandler(signal, kTRUE), fEnv(env) {}
    Bool_t Notify();
 };
-
 }
 }
 

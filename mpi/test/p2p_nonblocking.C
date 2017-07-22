@@ -11,7 +11,8 @@ void p2p_nonblocking_scalar()
 {
 
    auto size = COMM_WORLD.GetSize();
-   if (COMM_WORLD.GetSize() == 1) return; // need at least 2 process
+   if (COMM_WORLD.GetSize() == 1)
+      return; // need at least 2 process
 
    // data to send/recv
    std::map<std::string, std::string> mymap; // std oebjct
@@ -84,7 +85,8 @@ void p2p_nonblocking_array(Int_t count = 2)
    auto size = COMM_WORLD.GetSize();
    auto rank = COMM_WORLD.GetRank();
 
-   if (size == 1) return; // need at least 2 process
+   if (size == 1)
+      return; // need at least 2 process
 
    // data to send/recv
    std::map<std::string, std::string> mymap[count]; // std oebjct

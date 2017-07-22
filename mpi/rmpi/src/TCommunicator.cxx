@@ -152,7 +152,8 @@ void TCommunicator::Barrier() const
 void TCommunicator::IBarrier(TRequest &req) const
 {
    ROOT_MPI_CHECK_CALL(MPI_Ibarrier, (fComm, &req.fRequest), this);
-   if (req.fRequest == MPI_REQUEST_NULL) req.fCallback();
+   if (req.fRequest == MPI_REQUEST_NULL)
+      req.fCallback();
 }
 
 //______________________________________________________________________________
@@ -412,4 +413,3 @@ void TCommunicator::SetCommName(const TString name)
 {
    ROOT_MPI_CHECK_CALL(MPI_Comm_set_name, (fComm, name.Data()), this);
 }
-

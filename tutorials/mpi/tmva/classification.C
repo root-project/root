@@ -13,7 +13,8 @@ void classification()
 
    TEnvironment env;
 
-   if (COMM_WORLD.GetSize() == 1) return; // needed to run ROOT tutorials in tests
+   if (COMM_WORLD.GetSize() == 1)
+      return; // needed to run ROOT tutorials in tests
 
    auto rank = COMM_WORLD.GetRank();
    if (COMM_WORLD.GetSize() != 4) {

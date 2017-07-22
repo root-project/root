@@ -6,7 +6,8 @@ void group()
    TEnvironment env;                    // environment to start communication system
    TIntraCommunicator comm(COMM_WORLD); // Communicator to send/recv messages
 
-   if (comm.GetSize() != 4) comm.Abort(1); // requires a least 4 process
+   if (comm.GetSize() != 4)
+      comm.Abort(1); // requires a least 4 process
 
    TGroup group = comm.GetGroup();
 
@@ -61,7 +62,8 @@ void group()
       //           std::cout<<"gsize = "<<icomm.GetSize()<<std::endl;
       //           std::cout<<"grank = "<<icomm.GetRank()<<std::endl;
       //           std::cout<<"rsult = "<<result<<std::endl;
-      if (grank == 0) assert(result == 1);
+      if (grank == 0)
+         assert(result == 1);
    }
 
    TGroup g;

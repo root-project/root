@@ -118,7 +118,8 @@ TMpiFile *TMpiFile::Open(const TIntraCommunicator &comm, const Char_t *name, Opt
       file = new TMpiFile(comm, name, &buffer[0], buffer.size(), option, ftitle, compress);
    }
 
-   if (file) file->fDiskOpenMode = fOption;
+   if (file)
+      file->fDiskOpenMode = fOption;
    return file;
 }
 
@@ -139,7 +140,8 @@ void TMpiFile::CopyFrom(TDirectory *src, TMpiFile *file)
    while ((key = (TKey *)nextkey())) {
       const Char_t *classname = key->GetClassName();
       TClass *cl = gROOT->GetClass(classname);
-      if (!cl) continue;
+      if (!cl)
+         continue;
       if (cl->InheritsFrom(TDirectory::Class())) {
          src->cd(key->GetName());
          TDirectory *subdir = file;

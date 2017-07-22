@@ -96,7 +96,8 @@ void communicators()
 
       assert(icomm.GetRemoteSize() == 2);
 
-      if (icomm.GetRank() == 0) icomm.Send(comm.GetSize(), 1, 12); // sending value to the second gruop
+      if (icomm.GetRank() == 0)
+         icomm.Send(comm.GetSize(), 1, 12); // sending value to the second gruop
 
    } else { // odd ranks
       assert(icomm.GetRank() == 0 || icomm.GetRank() == 1);

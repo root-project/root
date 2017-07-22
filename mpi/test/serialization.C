@@ -54,7 +54,8 @@ void serialization(Bool_t stressTest = kTRUE)
    TCommunicator::Unserialize(buffer, size, umsgs, count, &comm, dest, source, tag, root); //
    for (auto i = 0; i < count; i++) {
       auto mat = (TMatrixD *)umsgs[i].ReadObjectAny(gROOT->GetClass(typeid(TMatrixD)));
-      if (mat == NULL) comm.Abort(ERR_BUFFER);
+      if (mat == NULL)
+         comm.Abort(ERR_BUFFER);
       assert((*mat)[0][0] == smat[i][0][0]);
       assert((*mat)[0][1] == smat[i][0][1]);
       assert((*mat)[1][0] == smat[i][1][0]);

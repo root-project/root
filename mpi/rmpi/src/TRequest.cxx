@@ -152,7 +152,8 @@ void TRequest::Wait()
  */
 Bool_t TRequest::Test(TStatus &status)
 {
-   if (fRequest == MPI_REQUEST_NULL) Error(__FUNCTION__, "Calling Test on NULL resquest.");
+   if (fRequest == MPI_REQUEST_NULL)
+      Error(__FUNCTION__, "Calling Test on NULL resquest.");
    Int_t flag;
    ROOT_MPI_CHECK_CALL(MPI_Test, (&fRequest, &flag, &status.fStatus), TRequest::Class_Name());
 
@@ -194,7 +195,8 @@ Bool_t TRequest::Test(TStatus &status)
  */
 Bool_t TRequest::Test()
 {
-   if (fRequest == MPI_REQUEST_NULL) Error(__FUNCTION__, "Calling Test on NULL resquest.");
+   if (fRequest == MPI_REQUEST_NULL)
+      Error(__FUNCTION__, "Calling Test on NULL resquest.");
    Int_t flag;
    ROOT_MPI_CHECK_CALL(MPI_Test, (&fRequest, &flag, MPI_STATUS_IGNORE), TRequest::Class_Name());
 
@@ -558,7 +560,8 @@ Bool_t TRequest::TestAll(Int_t count, TRequest req_array[], TStatus stat_array[]
       req_array[i] = array_of_requests[i];
       stat_array[i] = array_of_statuses[i];
       // TODO: added error hanling with status object here
-      if (flag) req_array[i].fCallback();
+      if (flag)
+         req_array[i].fCallback();
    }
    delete[] array_of_requests;
    delete[] array_of_statuses;
@@ -610,7 +613,8 @@ Bool_t TRequest::TestAll(Int_t count, TRequest req_array[])
       req_array[i] = array_of_requests[i];
 
       // TODO: added error hanling with status object here
-      if (flag) req_array[i].fCallback();
+      if (flag)
+         req_array[i].fCallback();
    }
    delete[] array_of_requests;
 

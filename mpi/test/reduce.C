@@ -146,7 +146,8 @@ void reduce_test_array(Int_t root = 0, Int_t count = 2)
 void reduce(Bool_t stressTest = kTRUE)
 {
    TEnvironment env;
-   if (COMM_WORLD.GetSize() == 1) return; // needed at least 2 process
+   if (COMM_WORLD.GetSize() == 1)
+      return; // needed at least 2 process
    if (!stressTest) {
       reduce_test_scalar(0);
       reduce_test_array(0);

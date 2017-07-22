@@ -107,7 +107,6 @@ void TMpiMessage::WriteObject(ClassType &obj)
 {
    WriteObject<ClassType>(&obj);
 }
-
 }
 }
 

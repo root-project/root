@@ -25,7 +25,8 @@ void scatter()
 {
    TEnvironment env;
    env.SyncOutput();
-   if (COMM_WORLD.GetSize() == 1) return; // needed at least 2 process
+   if (COMM_WORLD.GetSize() == 1)
+      return; // needed at least 2 process
    auto rank = COMM_WORLD.GetRank();
    auto size = COMM_WORLD.GetSize();
 
@@ -53,5 +54,6 @@ void scatter()
       assert(recv_vec[i][0] == (rank * count + i));
    }
 
-   if (rank == root) delete[] send_vec;
+   if (rank == root)
+      delete[] send_vec;
 }

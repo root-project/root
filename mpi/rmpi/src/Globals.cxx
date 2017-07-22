@@ -169,6 +169,5 @@ Bool_t TMpiSignalHandler::Notify()
    }
    return kTRUE;
 }
-
 }
 }

@@ -23,7 +23,8 @@ using namespace ROOT::Mpi;
 void gather()
 {
    TEnvironment env;
-   if (COMM_WORLD.GetSize() == 1) return; // needed at least 2 process
+   if (COMM_WORLD.GetSize() == 1)
+      return; // needed at least 2 process
    auto rank = COMM_WORLD.GetRank();
    auto size = COMM_WORLD.GetSize();
 

@@ -22,7 +22,8 @@ void bcast()
 {
    TEnvironment env;
 
-   if (COMM_WORLD.GetSize() == 1) return; // need at least 2 process
+   if (COMM_WORLD.GetSize() == 1)
+      return; // need at least 2 process
 
    // data to send/recv
    TMatrixD mymat(2, 2); // ROOT object

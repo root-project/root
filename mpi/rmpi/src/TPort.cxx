@@ -28,7 +28,8 @@ TPort::TPort(const TPort &port) : TObject(port), fPort(port.fPort), fPublishName
 //______________________________________________________________________________
 TPort::~TPort()
 {
-   if (!IsOpen()) Close();
+   if (!IsOpen())
+      Close();
 }
 
 //______________________________________________________________________________

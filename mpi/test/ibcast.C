@@ -91,7 +91,8 @@ void bcast_test_array(Int_t root = 0, Int_t size = 2, Int_t count = 4)
 void ibcast(Bool_t stressTest = kFALSE)
 {
    TEnvironment env;
-   if (COMM_WORLD.GetSize() == 1) return; // needed at least 2 process
+   if (COMM_WORLD.GetSize() == 1)
+      return; // needed at least 2 process
    bcast_test_scalar();
    if (!stressTest) {
       bcast_test_scalar(0, 2, kFALSE);

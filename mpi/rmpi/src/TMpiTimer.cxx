@@ -112,7 +112,8 @@ TH1F *TMpiTimer::GetElapsedHist(Int_t root) const
       Double_t max;
       auto size = fComm.GetSize();
       auto rank = fComm.GetRank();
-      if (rank == root) vtimes = new Double_t[size];
+      if (rank == root)
+         vtimes = new Double_t[size];
       fComm.Gather(&elapsed, 1, vtimes, size, root);
       fComm.Reduce(elapsed, max, MAX, root);
       if (rank == root) {

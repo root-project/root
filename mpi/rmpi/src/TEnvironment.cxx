@@ -51,7 +51,8 @@ TEnvironment::TEnvironment(Int_t level)
    if (IsInitialized()) {
       Int_t result;
       MPI_Comm_compare((MPI_Comm)COMM_WORLD, MPI_COMM_WORLD, &result);
-      if (result == IDENT) COMM_WORLD.SetCommName("ROOT::Mpi::COMM_WORLD");
+      if (result == IDENT)
+         COMM_WORLD.SetCommName("ROOT::Mpi::COMM_WORLD");
       ROOT_MPI_CHECK_CALL(MPI_Comm_set_errhandler, (MPI_COMM_WORLD, (MPI_Errhandler)fErrorHandler), &COMM_WORLD);
       InitSignalHandlers();
    } else {

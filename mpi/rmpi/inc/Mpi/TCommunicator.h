@@ -515,7 +515,8 @@ TRequest TCommunicator::ISend(const Type *vars, Int_t count, Int_t dest, Int_t t
       Serialize(&buffer, size, vars, count, this, dest, GetRank(), tag);
       ROOT_MPI_CHECK_CALL(MPI_Isend, (buffer, size, MPI_CHAR, dest, tag, fComm, &req.fRequest), this);
       req.fCallback = [buffer]() mutable { // use to clean memory after wait
-         if (buffer) delete buffer;
+         if (buffer)
+            delete buffer;
          buffer = NULL;
       };
    } else {
@@ -557,7 +558,8 @@ TRequest TCommunicator::ISsend(const Type *vars, Int_t count, Int_t dest, Int_t 
       Serialize(&buffer, size, vars, count, this, dest, GetRank(), tag);
       ROOT_MPI_CHECK_CALL(MPI_Issend, (buffer, size, MPI_CHAR, dest, tag, fComm, &req.fRequest), this);
       req.fCallback = [buffer]() mutable { // use to clean memory after wait
-         if (buffer) delete buffer;
+         if (buffer)
+            delete buffer;
          buffer = NULL;
       };
    } else {
@@ -567,7 +569,6 @@ TRequest TCommunicator::ISsend(const Type *vars, Int_t count, Int_t dest, Int_t 
    }
    return req;
 }
-
 
 //______________________________________________________________________________
 /**
@@ -659,7 +660,8 @@ void TCommunicator::Bcast(Type *vars, Int_t count, Int_t root) const
       Int_t size;
       Char_t *buffer = NULL;
 
-      if (GetRank() == root) Serialize(&buffer, size, vars, count, this, 0, 0, 0, root);
+      if (GetRank() == root)
+         Serialize(&buffer, size, vars, count, this, 0, 0, 0, root);
 
       Bcast(size, root);
 
@@ -726,7 +728,8 @@ TRequest TCommunicator::IBcast(Type *vars, Int_t count, Int_t root) const
       prereq = IBcast(size, root);
       prereq.Wait();
 
-      if (GetRank() != root) buffer = new Char_t[size];
+      if (GetRank() != root)
+         buffer = new Char_t[size];
       req = IBcast(buffer, size, root);
       req.fCallback = std::bind(Unserialize<Type>, buffer, size, vars, count, this, 0, 0, 0, root);
 
@@ -779,7 +782,8 @@ void TCommunicator::Scatter(const Type *in_vars, Int_t incount, Type *out_vars, 
          Abort(ERR_COUNT);
       }
       for (auto i = 0; i < GetSize(); i++) {
-         if (i == root) continue;
+         if (i == root)
+            continue;
          auto stride = outcount * i;
          Send(&in_vars[stride], outcount, i, GetInternalTag());
       }
@@ -811,7 +815,8 @@ void TCommunicator::Gather(const Type *in_vars, Int_t incount, Type *out_vars, I
          Abort(ERR_COUNT);
       }
       for (auto i = 0; i < GetSize(); i++) {
-         if (i == root) continue;
+         if (i == root)
+            continue;
          auto stride = incount * i;
          Recv(&out_vars[stride], incount, i, GetInternalTag());
       }
@@ -877,7 +882,8 @@ void TCommunicator::Reduce(const Type *in_var, Type *out_var, Int_t count, TOp<T
    auto lastpower = 1 << (Int_t)log2(size);
 
    for (Int_t i = lastpower; i < size; i++)
-      if (GetRank() == i) Send(in_var, count, i - lastpower, GetInternalTag());
+      if (GetRank() == i)
+         Send(in_var, count, i - lastpower, GetInternalTag());
    for (Int_t i = 0; i < size - lastpower; i++)
       if (GetRank() == i) {
          Type recvbuffer[count];
@@ -896,8 +902,10 @@ void TCommunicator::Reduce(const Type *in_var, Type *out_var, Int_t count, TOp<T
          } else if (GetRank() == sender)
             Send(out_var, count, receiver, GetInternalTag());
       }
-   if (root != 0 && GetRank() == 0) Send(out_var, count, root, GetInternalTag());
-   if (root == GetRank() && GetRank() != 0) Recv(out_var, count, 0, GetInternalTag());
+   if (root != 0 && GetRank() == 0)
+      Send(out_var, count, root, GetInternalTag());
+   if (root == GetRank() && GetRank() != 0)
+      Recv(out_var, count, 0, GetInternalTag());
 }
 
 //______________________________________________________________________________

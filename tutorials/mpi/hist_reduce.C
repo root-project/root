@@ -37,7 +37,8 @@ void hist_reduce(Int_t points = 100000)
    auto root = 0;
    auto rank = COMM_WORLD.GetRank();
 
-   if (COMM_WORLD.GetSize() == 1) return; // need at least 2 process
+   if (COMM_WORLD.GetSize() == 1)
+      return; // need at least 2 process
 
    auto form1 = new TFormula("form1", "abs(sin(x)/x)");
    auto sqroot = new TF1("sqroot", "x*gaus(0) + [3]*form1", 0, 10);

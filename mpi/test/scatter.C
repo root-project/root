@@ -32,13 +32,15 @@ void scatter_test(Int_t root = 0, Int_t count = 2)
    std::cout << "--------- Rank = " << rank << std::endl;
    std::cout.flush();
 
-   if (rank == root) delete[] send_vec;
+   if (rank == root)
+      delete[] send_vec;
 }
 
 void scatter(Bool_t stressTest = kTRUE)
 {
    TEnvironment env;
-   if (COMM_WORLD.GetSize() == 1) return; // needed at least 2 process
+   if (COMM_WORLD.GetSize() == 1)
+      return; // needed at least 2 process
    if (!stressTest)
       scatter_test();
    else {

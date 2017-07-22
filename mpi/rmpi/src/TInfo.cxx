@@ -188,8 +188,10 @@ Bool_t TInfo::IsNull() const
  */
 Bool_t TInfo::HasKey(TString key)
 {
-   if (IsNull()) return kFALSE;
-   if (IsEmpty()) return kFALSE;
+   if (IsNull())
+      return kFALSE;
+   if (IsEmpty())
+      return kFALSE;
    Bool_t status = kFALSE;
    auto i = 0;
    while (i < GetNKeys()) {
@@ -219,12 +221,17 @@ void TInfo::Print() const
 //______________________________________________________________________________
 Bool_t TInfo::operator==(const TInfo &info) const
 {
-   if (IsNull() && info.IsNull()) return kTRUE;
-   if (IsNull() != info.IsNull()) return kFALSE;
+   if (IsNull() && info.IsNull())
+      return kTRUE;
+   if (IsNull() != info.IsNull())
+      return kFALSE;
 
-   if (GetNKeys() != info.GetNKeys()) return kFALSE;
-   if (IsEmpty() == info.IsEmpty()) return kTRUE;
-   if (IsEmpty() != info.IsEmpty()) return kFALSE;
+   if (GetNKeys() != info.GetNKeys())
+      return kFALSE;
+   if (IsEmpty() == info.IsEmpty())
+      return kTRUE;
+   if (IsEmpty() != info.IsEmpty())
+      return kFALSE;
 
    Bool_t status = kTRUE;
    Int_t i = 0;

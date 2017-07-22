@@ -43,7 +43,8 @@ void gather_test(Int_t root = 0, Int_t count = 2)
 void gather(Bool_t stressTest = kTRUE)
 {
    TEnvironment env;
-   if (COMM_WORLD.GetSize() == 1) return; // needed at least 2 process
+   if (COMM_WORLD.GetSize() == 1)
+      return; // needed at least 2 process
    if (!stressTest)
       gather_test();
    else {
