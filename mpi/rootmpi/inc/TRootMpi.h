@@ -20,8 +20,8 @@ private:
    TString fMpirun;         // path to mpirun command
    TString fMpirunParams;   // mpirun params like -np 2 etc..
    TString fCompiler;       // compiler for mpi ex. mpic++
-   TString fCompilerParams; // Compile Flags/Linking flags for mpic++
-   Bool_t fCompile;         // Compile Flags/Linking flags for mpic++
+   TString fCompilerParams; // Compile Flags/Linking
+   Bool_t fCompile;         // is compiling?
    TString fValgrind;       // path to valgrind command
    TString fValgrindParams; // Valgrind params
    TString fHelpMsg;        // help message

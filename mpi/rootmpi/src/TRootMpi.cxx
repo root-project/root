@@ -113,11 +113,25 @@ Int_t TRootMpi::ProcessArgs()
       fCompile = kTRUE;
       return 0;
    } else if (TString(fArgv[1]) == "-R") {
-      for (int i = 2; i < fArgc; i++) {
+      for (int i = 2; i < fArgc - 1; i++) {
          TString arg = fArgv[i];
          arg.ReplaceAll(" ", "");
+
+#if ROOT_MPI_VALGRINDFOUND
+         if (arg == "-valgrind")
+            fCallValgrind = kTRUE;
+         else
+            fMpirunParams += " " + arg;
+#else
          fMpirunParams += " " + arg;
+#endif
       }
+      if (fCallValgrind) {
+         fMpirunParams +=
+            " " + fValgrind + " " + fValgrindParams +
+            Form(" --log-file=report-%s-%s.memcheck ", TString(fArgv[fArgc - 1]).ReplaceAll("./", "").Data(), "%p");
+      }
+      fMpirunParams += fArgv[fArgc - 1];
       fCompile = kFALSE;
       return 0;
    } else {
@@ -141,8 +155,9 @@ Int_t TRootMpi::ProcessArgs()
       }
 
       if (fCallValgrind) {
-         fMpirunParams += " " + fValgrind + " " + fValgrindParams +
-                          Form(" --log-file=report-%s-%s.memcheck ", fArgv[fArgc - 1], "%p");
+         fMpirunParams +=
+            " " + fValgrind + " " + fValgrindParams +
+            Form(" --log-file=report-%s-%s.memcheck ", TString(fArgv[fArgc - 1]).ReplaceAll("./", "").Data(), "%p");
       }
 
       fMpirunParams += " ";
@@ -173,6 +188,7 @@ Int_t TRootMpi::Compile()
 Int_t TRootMpi::Execute()
 {
    auto cmd = fMpirun + " " + fMpirunParams;
+   std::cout << cmd << std::endl;
    auto status = gSystem->Exec(cmd.Data());
 
    if (fCallValgrind)
