@@ -380,6 +380,65 @@ public:
     * m elements in \p A.
     */
    static void SumColumns(TMatrixT<AReal> &B, const TMatrixT<AReal> &A);
+
+      //____________________________________________________________________________
+   //
+   // AutoEncoder Propagation
+   //____________________________________________________________________________
+
+   // Add Biases to the output
+   static void AddBiases(TMatrixT<AReal> &A,
+                         const TMatrixT<AReal> &biases);
+
+   // Updating parameters after every backward pass. Weights and biases are
+   // updated.
+   static void
+   UpdateParams(TMatrixT<AReal> &x, TMatrixT<AReal> &tildeX, TMatrixT<AReal> &y,
+                TMatrixT<AReal> &z, TMatrixT<AReal> &fVBiases,
+                TMatrixT<AReal> &fHBiases, TMatrixT<AReal> &fWeights,
+                TMatrixT<AReal> &VBiasError, TMatrixT<AReal> &HBiasError,
+                AReal learningRate, size_t fBatchSize);
+
+   // Softmax functions redifined
+   static void SoftmaxAE(TMatrixT<AReal> & A);
+
+
+   // Corrupt the input values randomly on corruption Level.
+   //Basically inputs are masked currently.
+   static void CorruptInput(TMatrixT<AReal> & input,
+                            TMatrixT<AReal> & corruptedInput,
+                            AReal corruptionLevel);
+
+   //Encodes the input Values in the compressed form.
+   static void EncodeInput(TMatrixT<AReal> &input,
+                           TMatrixT<AReal> &compressedInput,
+                           TMatrixT<AReal> &Weights);
+
+   // reconstructs the input. The reconstructed Input has same dimensions as that
+   // of the input.
+   static void ReconstructInput(TMatrixT<AReal> & compressedInput,
+                                TMatrixT<AReal> & reconstructedInput,
+                                TMatrixT<AReal> &fWeights);
+
+
+   static void ForwardLogReg(TMatrixT<AReal> &input,
+                             TMatrixT<AReal> &p,
+                             TMatrixT<AReal> &fWeights);
+
+   static void UpdateParamsLogReg(TMatrixT<AReal> &input,
+                                  TMatrixT<AReal> &output,
+                                  TMatrixT<AReal> &difference,
+                                  TMatrixT<AReal> &p,
+                                  TMatrixT<AReal> &fWeights,
+                                  TMatrixT<AReal> &fBiases,
+                                  AReal learningRate,
+                                  size_t fBatchSize);
+
+   static void Transform(TMatrixT<AReal> &input,
+                         TMatrixT<AReal> &transformed,
+                         TMatrixT<AReal> &fWeights,
+                         TMatrixT<AReal> &fBiases);
+
 };
 
 } // namespace DNN
