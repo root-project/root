@@ -4,7 +4,7 @@
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
- * Class  : TDAE                                                                  *
+ * Class  : TDAELayer                                                                  *
  * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
@@ -33,13 +33,14 @@
 #include "TMVA/DNN/GeneralLayer.h"
 #include "TMVA/DNN/Functions.h"
 
+#include <iostream>
 #include <vector>
 
 namespace TMVA {
 namespace DNN {
 namespace DAE {
 
-/** \class TDAE
+/** \class TDAELayer
      Denoising Layer for Deep AutoEncoders. This Layer performs both forward
      and backward propagation. It is the unsupervised learning step for Deep
      AutoEncoders. It corrupts the input according to the given Corruption
@@ -48,11 +49,10 @@ namespace DAE {
 */
 
 template <typename Architecture_t>
-class TDAE : public VGeneralLayer<Architecture_t> {
+class TDAELayer : public VGeneralLayer<Architecture_t> {
 public:
   using Matrix_t = typename Architecture_t::Matrix_t;
   using Scalar_t = typename Architecture_t::Scalar_t;
-  using Tensor_t = std::vector<Matrix_t>
 
   Matrix_t fWeights; ///< the weights associated
 
@@ -60,13 +60,15 @@ public:
 
   Matrix_t fHBiases; ///< bias associated with hidden layer
 
-  Tensor_t fCorruptedInput; ///< corrupted Input Units
+  std::vector<Matrix_t> fCorruptedInput; ///< corrupted Input Units
 
-  Tensor_t fCompressedInput; ///< compressed Input Units
+  std::vector<Matrix_t> fCompressedInput; ///< compressed Input Units
 
-  Tensor_t fReconstructedInput; ///<reconstructed Input Units
+  std::vector<Matrix_t> fReconstructedInput; ///<reconstructed Input Units
 
-  size_t fVisibleUnits ///< total number of visible units
+  //size_t fBatchSize;
+  
+  size_t fVisibleUnits; ///< total number of visible units
 
   size_t fHiddenUnits; ///< Number of compressed inputs
 
@@ -79,18 +81,18 @@ public:
   EActivationFunction fF; ///< Activation function of the layer.
 
   /*! Constructor. */
-  TDAE(size_t BatchSize, size_t InputDepth,
-       size_t InputHeight, size_t InputWidth,
-       size_t HiddenUnits,Scalar_t DropoutProbability, EActivationFunction f);
+  TDAELayer(size_t BatchSize, size_t VisibleUnits,
+            size_t HiddenUnits,Scalar_t DropoutProbability,
+            EActivationFunction f);
 
   /*! Copy the denoise layer provided as a pointer */
-  TDAE(TDAE<Architecture_t> *layer);
+  TDAELayer(TDAELayer<Architecture_t> *layer);
 
   /*! Copy constructor. */
-  TDAE(const TDAE &);
+  TDAELayer(const TDAELayer &);
 
    /*! Destructor. */
-  ~TDAE();
+  ~TDAELayer();
 
   /*! Initializes the weights, biases associated with visible units and
    *  and biases associated with hidden units. These weights and biases are
@@ -102,35 +104,44 @@ public:
    *  The level of corruption is specified by 'corruptionLevel'.
    *  The input is in the form of Matrix.
    *  */
-  void inline Corruption(Tensor_t &input, Scalar_t corruptionLevel);
+  std::vector<Matrix_t> inline Corruption(std::vector<Matrix_t> &input, Scalar_t corruptionLevel);
 
   /*! Encodes the input matrix in compressed format. 'compressedInput' stores
    *  the compressed version. This compressed input is the feature generated
    *  from given inputs. */
-  void inline Encoding(Tensor_t &input);
+  std::vector<Matrix_t> inline Encoding(std::vector<Matrix_t> &input);
 
   /*! Reconstructs the input from the compressed version of inputs.
    *  'reconstructedInput' holds this reconstructed input in the form of matrix.
    *  The reconstructed input has same dimensions as original input.
+   *  Should be called after Encoding. 
    */
-  void inline Reconstruction();
+  std::vector<Matrix_t> inline Reconstruction();
 
 
-  void Forward(Tensor_t input, bool applyDropout = false);
+  void Forward(std::vector<Matrix_t> input, bool applyDropout = false);
+
+  void Backward(std::vector<Matrix_t> &gradients_backward,
+const std::vector<Matrix_t> &activations_backward);
+
 
   /*! This method is used by the deep network of autoencoders. This trains the
    *  inputs, updates the parameters. The updated parameters are passed on to
    *  Transform Layer in AutoEncoder's DeepNet.
   */
-  void TrainLayer(Tensor_t &input,
-                  Double_t learningRate,
-                  Double_t corruptionLevel, bool applyDropout);
+  void TrainLayer(std::vector<Matrix_t> &input,
+                  Scalar_t learningRate,
+                  Scalar_t corruptionLevel, bool applyDropout);
 
-  void Print();
+  void Print() const;
 
   /* Getters */
+  //size_t GetBatchSize() const { return fBatchSize;}
   size_t GetVisibleUnits() const { return fVisibleUnits; }
   size_t GetHiddenUnits() const { return fHiddenUnits; }
+
+  Scalar_t GetDropoutProbability() const { return fDropoutProbability; }
+  EActivationFunction GetActivationFunction() const { return fF; }
 
   const Matrix_t &GetWeights() const { return fWeights; }
   Matrix_t &GetWeights() { return fWeights; }
@@ -147,23 +158,23 @@ public:
   const Matrix_t &GetHBiasError() const { return fHBiasError; }
   Matrix_t &GetHBiasError() { return fHBiasError; }
 
-  const Tensor_t &GetCorruptedInput() const { return fCorruptedInput; }
-  Tensor_t &GetCorruptedInput() { return fCorruptedInput; }
+  const std::vector<Matrix_t> &GetCorruptedInput() const { return fCorruptedInput; }
+  std::vector<Matrix_t> &GetCorruptedInput() { return fCorruptedInput; }
 
   Matrix_t &GetCorruptedInputAt(size_t i) { return fCorruptedInput[i]; }
   const Matrix_t &GetCorruptedInputAt(size_t i) const { return fCorruptedInput[i]; }
 
-  const Tensor_t &GetCompressedInput() const { return fCompressedInput; }
-  Tensor_t &GetCompressedInput() { return fCompressedInput; }
+  const std::vector<Matrix_t> &GetCompressedInput() const { return fCompressedInput; }
+  std::vector<Matrix_t> &GetCompressedInput() { return fCompressedInput; }
 
   Matrix_t &GetCompressedInputAt(size_t i) { return fCompressedInput[i]; }
   const Matrix_t &GetCompressedInputAt(size_t i) const { return fCompressedInput[i]; }
 
-  const Tensor_t &GetReconstruedInput() const { return fReconstructedInput; }
-  Tensor_t &GetReconstruedInputedInput() { return fReconstructedInput; }
+  const std::vector<Matrix_t> &GetReconstructedInput() const { return fReconstructedInput; }
+  std::vector<Matrix_t> &GetReconstructedInput() { return fReconstructedInput; }
 
-  Matrix_t &GetReconstruedInputAt(size_t i) { return fReconstructedInput[i]; }
-  const Matrix_t &GetReconstrucedInputAt(size_t i) const { return fReconstructedInput[i]; }
+  Matrix_t &GetReconstructedInputAt(size_t i) { return fReconstructedInput[i]; }
+  const Matrix_t &GetReconstructedInputAt(size_t i) const { return fReconstructedInput[i]; }
 
 
 };
@@ -174,32 +185,31 @@ public:
 //______________________________________________________________________________
 
 template <typename Architecture_t>
-TDAE<Architecture_t>::TDAE(size_t batchSize, size_t inputDepth,
-                           size_t inputHeight, size_t inputWidth,
+TDAELayer<Architecture_t>::TDAELayer(size_t batchSize, size_t visibleUnits,
                            size_t hiddenUnits, Scalar_t dropoutProbability,
                            EActivationFunction f)
-          : VGeneralLayer<Architecture_t>(batchSize),
-            fVisibleUnits(inputDepth * inputHeight * inputWidth),
-            fHiddenUnits(hiddenUnits)
-            fWeights(hiddenUnits, inputDepth * inputHeight * inputWidth),
-            fVBiases(inputDepth * inputHeight * inputWidth, 1),
+          : VGeneralLayer<Architecture_t>(batchSize, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, EInitialization::kZero),
+            fVisibleUnits(visibleUnits),
+            fHiddenUnits(hiddenUnits),
+            fWeights(hiddenUnits, visibleUnits),
+            fVBiases(visibleUnits, 1),
+            fVBiasError(visibleUnits, 1),
+            fHBiasError(hiddenUnits, 1),
             fHBiases(hiddenUnits, 1), fDropoutProbability(dropoutProbability),
-            fF(f), fCorruptedInput(), fCompressedInput(), fReconstructedInput(),
-            VBiasError(inputDepth * inputHeight * inputWidth, 1),
-            HBiasError(hiddenUnits, 1)
+            fF(f), fCorruptedInput(), fCompressedInput(), fReconstructedInput()
 
 {
   for (size_t i = 0; i < batchSize; i++)
   {
-    fCorruptedInput.emplace_back(inputDepth * inputHeight * inputWidth, 1);
+    fCorruptedInput.emplace_back(visibleUnits, 1);
     fCompressedInput.emplace_back(hiddenUnits, 1);
-    fReconstructedInput.emplace_back(inputDepth * inputHeight * inputWidth, 1);
+    fReconstructedInput.emplace_back(visibleUnits, 1);
   }
 }
 
 //______________________________________________________________________________
 template <typename Architecture_t>
-TDAE<Architecture_t>::TDAE(TDAE<Architecture_t> *layer)
+TDAELayer<Architecture_t>::TDAELayer(TDAELayer<Architecture_t> *layer)
                   : VGeneralLayer<Architecture_t>(layer),
                     fVisibleUnits(layer->GetVisibleUnits()),
                     fHiddenUnits(layer->GetHiddenUnits()),
@@ -208,8 +218,8 @@ TDAE<Architecture_t>::TDAE(TDAE<Architecture_t> *layer)
                     fHBiases(layer->GetHiddenUnits(), 1),
                     fDropoutProbability(layer->GetDropoutProbability()),
                     fF(layer->GetActivationFunction()),
-                    HBiasError(layer->GetHiddenUnits(), 1),
-                    VBiasError(layer->GetVisibleUnits(), 1)
+                    fHBiasError(layer->GetHiddenUnits(), 1),
+                    fVBiasError(layer->GetVisibleUnits(), 1)
 
 {
   size_t batchSize = layer->GetBatchSize();
@@ -224,7 +234,7 @@ TDAE<Architecture_t>::TDAE(TDAE<Architecture_t> *layer)
 //______________________________________________________________________________
 
 template <typename Architecture_t>
-TDAE<Architecture_t>::TDAE(const TDAE &dae)
+TDAELayer<Architecture_t>::TDAELayer(const TDAELayer &dae)
                     : VGeneralLayer<Architecture_t>(dae),
                       fVisibleUnits(dae.GetVisibleUnits()),
                       fHiddenUnits(dae.GetHiddenUnits()),
@@ -232,8 +242,8 @@ TDAE<Architecture_t>::TDAE(const TDAE &dae)
                       fVBiases(dae.GetHiddenUnits(), 1),
                       fHBiases(dae.GetVisibleUnits(), 1),
                       fDropoutProbability(dae.fDropoutProbability),
-                      fF(dae.fF),HBiasError(dae.GetHiddenUnits(), 1),
-                      VBiasError(dae.GetVisibleUnits(),1)
+                      fF(dae.fF),fHBiasError(dae.GetHiddenUnits(), 1),
+                      fVBiasError(dae.GetVisibleUnits(),1)
 
 {
   size_t batchSize = dae.GetBatchSize();
@@ -243,16 +253,15 @@ TDAE<Architecture_t>::TDAE(const TDAE &dae)
     fCompressedInput.emplace_back(dae.GetHiddenUnits(), 1);
     fReconstructedInput.emplace_back(dae.GetVisibleUnits(), 1);
   }
-
 }
 //______________________________________________________________________________
 
-template <typename Architecture_t> TDAE<Architecture_t>::~TDAE() {}
+template <typename Architecture_t> TDAELayer<Architecture_t>::~TDAELayer() {}
 
 //______________________________________________________________________________
 
 template <typename Architecture_t>
-auto TDAE<Architecture_t>::Initialize(DNN::EInitialization m)
+auto TDAELayer<Architecture_t>::Initialize(DNN::EInitialization m)
 -> void
 
 {
@@ -266,29 +275,30 @@ auto TDAE<Architecture_t>::Initialize(DNN::EInitialization m)
 //______________________________________________________________________________
 
 template <typename Architecture_t>
-auto TDAE<Architecture_t>::Corruption(Tensor_t &input,
+auto TDAELayer<Architecture_t>::Corruption(std::vector<Matrix_t> &input,
                                       Scalar_t corruptionLevel)
--> void
+-> std::vector<Matrix_t> 
 {
    for (size_t i = 0; i < this->GetBatchSize(); i++)
    {
      Architecture_t::CorruptInput(input[i], this->GetCorruptedInputAt(i), corruptionLevel);
    }
+   return this->GetCorruptedInput();
 }
 
 //______________________________________________________________________________
 
 template <typename Architecture_t>
-auto TDAE<Architecture_t>::Encoding(Tensor_t &input)
--> void
+auto TDAELayer<Architecture_t>::Encoding(std::vector<Matrix_t> &input)
+-> std::vector<Matrix_t>
 {
-  for (size_t i = 0; i < this->GetBatchSize(); i++)
-  {
-    Architecture_t::EncodeInput(input[i], this->GetCompressedInputAt(i), this->GetWeights());
-    Architecture_t::AddBiases(this->GetCompressedInputAt(i), this->GetHBiases());
-    evaluate<Architecture_t>(this->GetCompressedInputAt(i), fF);
-  }
-
+   for (size_t i = 0; i < this->GetBatchSize(); i++)
+   {
+     Architecture_t::EncodeInput(input[i], this->GetCompressedInputAt(i), this->GetWeights());
+     Architecture_t::AddBiases(this->GetCompressedInputAt(i), this->GetHBiases());
+     evaluate<Architecture_t>(this->GetCompressedInputAt(i), fF);
+   }
+   return this->GetCompressedInput();
 }
 //______________________________________________________________________________
 //
@@ -297,8 +307,8 @@ auto TDAE<Architecture_t>::Encoding(Tensor_t &input)
 //______________________________________________________________________________
 
 template <typename Architecture_t>
-auto TDAE<Architecture_t>::Reconstruction()
--> void
+auto TDAELayer<Architecture_t>::Reconstruction()
+-> std::vector<Matrix_t>
 {
   for (size_t i = 0; i < this->GetBatchSize(); i++)
   {
@@ -308,40 +318,48 @@ auto TDAE<Architecture_t>::Reconstruction()
     Architecture_t::AddBiases(this->GetReconstructedInputAt(i), this->GetVBiases());
     evaluate<Architecture_t>(this->GetReconstructedInputAt(i), fF);
   }
+return this->GetReconstructedInput();
 }
 
 //______________________________________________________________________________
-
 template <typename Architecture_t>
-auto TConvLayer<Architecture_t>::Forward(Tensor_t input, bool applyDropout)
+auto inline TDAELayer<Architecture_t>::Backward(std::vector<Matrix_t> &gradients_backward,           
+                                                     const std::vector<Matrix_t> &activations_backward)   
 -> void
 {
+}
+
+//______________________________________________________________________________
+template <typename Architecture_t>
+auto TDAELayer<Architecture_t>::Forward(std::vector<Matrix_t> input, bool applyDropout) 
+-> void
+{
+
   for (size_t i = 0; i < this->GetBatchSize(); i++)
   {
     if (applyDropout && (this->GetDropoutProbability() != 1.0))
     {
       Architecture_t::Dropout(input[i], this->GetDropoutProbability());
     }
-    Encoding(input,compressedInput);
-    Reconstruction(compressedInput,reconstructedInput);
-
-}
+    Encoding(input);
+    Reconstruction();    
+    
+  }
 }
 //______________________________________________________________________________
 
 template <typename Architecture_t>
-auto TDAE<Architecture_t>::TrainLayer(Tensor_t &input, Double_t learningRate,
-                                      Double_t corruptionLevel, bool applyDropout)
+auto TDAELayer<Architecture_t>::TrainLayer(std::vector<Matrix_t> &input, Scalar_t learningRate,
+                                      Scalar_t corruptionLevel, bool applyDropout)
 -> void
 {
-
-  Double_t p = 1 - corruptionLevel;
-  Corruption(input,corruptedInput,p);
-  Forward(corruptedInput,applyDropout)
+  Scalar_t p = 1 - corruptionLevel;
+  Corruption(input,p);
+  Forward(this->GetCorruptedInput(),applyDropout);
 
   for (size_t i = 0; i < this->GetBatchSize(); i++)
   {
-    Architecture_t::UpdateParams(input, this->GetCorruptedInputAt(i),
+    Architecture_t::UpdateParams(input[i], this->GetCorruptedInputAt(i),
                                 this->GetCompressedInputAt(i),
                                 this->GetReconstructedInputAt(i),
                                 this->GetVBiases(),
@@ -349,11 +367,13 @@ auto TDAE<Architecture_t>::TrainLayer(Tensor_t &input, Double_t learningRate,
                                 this->GetVBiasError(), this->GetHBiasError(),
                                 learningRate, this->GetBatchSize());
   }
+
+
 }
 
 //______________________________________________________________________________
 template<typename Architecture_t>
-auto TDAE<Architecture_t>::Print() const
+auto TDAELayer<Architecture_t>::Print() const
 -> void
 {
    std::cout << "Batch Size: " << this->GetBatchSize() << "\n"
