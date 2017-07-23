@@ -191,7 +191,7 @@ auto testLossFunctionGradients()
           evaluateGradients<Architecture>(X, lf, Y, Z, W);
        };
 
-       error = testGradients<Architecture>(f, df, 5e-6);
+       error = testGradients<Architecture>(f, df, 1.0e-4);
 
        std::cout << "Testing " << static_cast<char>(lf) << ": ";
        std::cout << "Maximum Relative Error = " << error << std::endl;
