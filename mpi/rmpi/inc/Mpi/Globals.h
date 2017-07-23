@@ -73,12 +73,29 @@ static const Int_t SEEK_END = rmpi_stdio_seek_end;
                                Form("The TAG value can not be greater that %d.", GetMaxTag())); \
    }
 
-#define ROOT_MPI_CHECK_CALL(MPI_FUNCTION, ARGS, _comm)                                   \
-   {                                                                                     \
-      Int_t _errcode = MPI_FUNCTION ARGS;                                                \
-      if (_errcode != MPI_SUCCESS)                                                       \
-         TErrorHandler::TraceBack(_comm, __FUNCTION__, __FILENAME__, __LINE__, _errcode, \
-                                  Form("Calling function %s%s", #MPI_FUNCTION, #ARGS));  \
+// NOTE: MPI defines a mechanism to profiling in C++
+// http://mpi-forum.org/docs/mpi-2.1/mpi21-report-bw/node334.htm
+// The way is to create a new namespace but the C++ interface
+// in the standard is deprecated. All functions in C for profiling
+// starts with P ex: PMPI_Send and normally is MPI_Send.
+// For ROOT Mpi the design allows to start profiling interface
+// enabling an option in the class TEnvironment with the function MPI_Pcontrol
+
+#define ROOT_MPI_FUNCNAME(MPI_FUNCTION) #MPI_FUNCTION
+
+#define ROOT_MPI_CHECK_CALL(MPI_FUNCTION, ARGS, _comm)                                                     \
+   {                                                                                                       \
+      Int_t _errcode = 0;                                                                                  \
+      auto _pstatus = ROOT::Mpi::TEnvironment::IsProfiling();                                              \
+      if (_pstatus)                                                                                        \
+         _errcode = P##MPI_FUNCTION ARGS;                                                                  \
+      else                                                                                                 \
+         _errcode = MPI_FUNCTION ARGS;                                                                     \
+      if (_errcode != MPI_SUCCESS)                                                                         \
+         TErrorHandler::TraceBack(                                                                         \
+            _comm, __FUNCTION__, __FILENAME__, __LINE__, _errcode,                                         \
+            Form("Calling function %s%s",                                                                  \
+                 _pstatus ? ROOT_MPI_FUNCNAME(P##MPI_FUNCTION) : ROOT_MPI_FUNCNAME(MPI_FUNCTION), #ARGS)); \
    }
 
 namespace ROOT {

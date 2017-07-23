@@ -17,6 +17,8 @@ Int_t TEnvironment::fStdErrPipe[2] = {-1, -1};
 Int_t TEnvironment::fSavedStdErr = -1;
 Int_t TEnvironment::fSavedStdOut = -1;
 
+Int_t TEnvironment::fProfiling = 0;
+
 FILE *TEnvironment::fOutput = NULL;
 
 // TODO: enable thread level and thread-safe for ROOT
@@ -423,4 +425,17 @@ void TEnvironment::SetCompression(Int_t level, Int_t algorithm)
 {
    fCompressionAlgorithm = algorithm;
    fCompressionLevel = level;
+}
+
+//______________________________________________________________________________
+void TEnvironment::SetProfiling(Int_t value)
+{
+   fProfiling = value;
+   MPI_Pcontrol(value);
+}
+
+//______________________________________________________________________________
+Int_t TEnvironment::IsProfiling()
+{
+   return fProfiling;
 }

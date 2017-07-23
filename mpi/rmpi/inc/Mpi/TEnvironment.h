@@ -29,6 +29,7 @@ private:
    static Int_t fStdErrPipe[2];
    static Int_t fSavedStdErr;
    static Int_t fSavedStdOut;
+   static Int_t fProfiling;
 
    static TErrorHandler fErrorHandler;
    static Int_t fCompressionAlgorithm;
@@ -39,7 +40,6 @@ private:
    TMpiSignalHandler *fInterruptSignal;
    TMpiSignalHandler *fTerminationSignal;
    TMpiSignalHandler *fSigSegmentationViolationSignal;
-
 protected:
    void InitSignalHandlers();
 
@@ -83,6 +83,10 @@ public:
    static Int_t GetCompressionAlgorithm();
 
    static Int_t GetCompressionLevel();
+
+   static void SetProfiling(Int_t value);
+
+   static Int_t IsProfiling();
 
    ClassDef(TEnvironment, 1)
 };
