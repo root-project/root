@@ -208,6 +208,28 @@ inline T relativeError(const T &x, const T &y)
   return diff / (abs(x) + abs(y));
 }
 
+//______________________________________________________________________________
+template <>
+inline Double_t relativeError(const Double_t &x, const Double_t &y)
+{
+   if ((std::abs(x) > 1e-8) && (std::abs(y) > 1e-8)) {
+      return std::fabs((x - y) / y);
+   } else {
+      return std::fabs(x - y);
+   }
+}
+
+//______________________________________________________________________________
+template <>
+inline Float_t relativeError(const Float_t &x, const Float_t &y)
+{
+   if ((std::abs(x) > 1e-8) && (std::abs(y) > 1e-8)) {
+      return std::fabs((x - y) / y);
+   } else {
+      return std::fabs(x - y);
+   }
+}
+
 /*! Compute the maximum, element-wise relative error of the matrices
 *  X and Y normalized by the element of Y. Protected against division
 *  by zero. */
