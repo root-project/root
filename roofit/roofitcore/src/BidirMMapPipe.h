@@ -16,6 +16,7 @@
 #include <cstring>
 #include <unistd.h>
 #include <chrono>
+#include "RooTaskSpec.h"
 
 #define BEGIN_NAMESPACE_ROOFIT namespace RooFit {
 #define END_NAMESPACE_ROOFIT }
@@ -791,6 +792,9 @@ class BidirMMapPipe {
          */
         BidirMMapPipe& operator>>(char* (&str));
 
+
+	BidirMMapPipe& operator<<(const RooTaskSpec& TaskSpec);
+	BidirMMapPipe& operator>>(const RooTaskSpec::Task& (&taskspec));
         /** @brief write a std::string object
          *
          * @param str string to write
