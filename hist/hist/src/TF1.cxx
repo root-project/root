@@ -633,22 +633,6 @@ TF1::TF1(const char *name, Double_t (*fcn)(Double_t *, Double_t *), Double_t xmi
    TF1(EFType::kPtrScalarFreeFcn, name, xmin, xmax, npar, ndim, addToGlobList, new TF1Parameters(npar), new TF1FunctorPointerImpl<double>(ROOT::Math::ParamFunctor(fcn)))
 {}
 
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor using a pointer to real function.
-///
-/// \param npar is the number of free parameters used by the function
-///
-/// This constructor creates a function of type C when invoked
-/// with the normal C++ compiler.
-///
-/// see test program test/stress.cxx (function stress1) for an example.
-/// note the interface with an intermediate pointer.
-///
-/// WARNING! A function created with this constructor cannot be Cloned.
-
-TF1::TF1(const char *name, Double_t (*fcn)(const Double_t *, const Double_t *), Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim, EAddToList addToGlobList) :
-   TF1(EFType::kPtrScalarFreeFcn, name, xmin, xmax, npar, ndim, addToGlobList, new TF1Parameters(npar), new TF1FunctorPointerImpl<double>(ROOT::Math::ParamFunctor(fcn)))
-{}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor using the Functor class.
