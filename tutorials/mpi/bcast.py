@@ -3,7 +3,7 @@
 ##
 ## Broadcasts a message from the process with rank root to all processes of the group, itself included.
 ## It is called by all members of group using the same arguments for comm, root.
-## On return, the contents of root’s communication buffer has been copied to all processes.
+## On return, the contents of root's communication buffer has been copied to all processes.
 ## to execute this example with 4 processors, do:
 ##
 ## ~~~{.cpp}
@@ -24,7 +24,6 @@ def bcast():
    env.SyncOutput()
 
    if COMM_WORLD.GetSize() == 1:    return; # need at least 2 process
-
 
    rank = COMM_WORLD.GetRank();
    root = COMM_WORLD.GetMainProcess();

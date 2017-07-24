@@ -121,6 +121,12 @@ TEnvironment::~TEnvironment()
    if (!IsFinalized()) {
       Finalize();
    }
+   if (fInterruptSignal)
+      delete fInterruptSignal;
+   if (fTerminationSignal)
+      delete fTerminationSignal;
+   if (fSigSegmentationViolationSignal)
+      delete fSigSegmentationViolationSignal;
 }
 
 //______________________________________________________________________________

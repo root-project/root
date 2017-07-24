@@ -354,6 +354,7 @@ public:
          }
          memmove((void *)&vars[i], vobj_tmp, sizeof(T));
       }
+      delete msgis;
    }
 
    ClassDef(TCommunicator, 2)

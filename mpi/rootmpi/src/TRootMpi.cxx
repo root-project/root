@@ -192,8 +192,9 @@ Int_t TRootMpi::Execute()
    auto status = gSystem->Exec(cmd.Data());
 
    if (fCallValgrind)
-      std::cout << "\nValgrind files " << Form(" report-%s-pid.memcheck ", fArgv[fArgc - 1]) << "must be generated."
-                << std::endl;
+      std::cout << "\nValgrind files "
+                << Form(" report-%s-pid.memcheck ", TString(fArgv[fArgc - 1]).ReplaceAll("./", "").Data())
+                << "must be generated." << std::endl;
    return status;
 }
 
