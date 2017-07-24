@@ -293,7 +293,7 @@ void TCanvasPainter::PopupBrowser()
 
    Func_t symbol_qt5 = gSystem->DynFindSymbol("*", "webgui_start_browser_in_qt5");
    if (symbol_qt5) {
-      typedef void (*FunctionQt5)(const char *, void *);
+      typedef void (*FunctionQt5)(const char *, void *, bool);
 
       addr.Form("://dummy:8080/web7gui/%s/draw.htm?longpollcanvas", GetName());
       // addr.Form("example://localhost:8080/Canvases/%s/draw.htm", Canvas()->GetName());
@@ -301,7 +301,7 @@ void TCanvasPainter::PopupBrowser()
       Info("PopupBrowser", "Show canvas in Qt5 window:  %s", addr.Data());
 
       FunctionQt5 func = (FunctionQt5)symbol_qt5;
-      func(addr.Data(), gServer);
+      func(addr.Data(), gServer, is_batch);
       return;
    }
 

@@ -38,6 +38,7 @@
 #include <stdio.h>
 
 #include "rootwebview.h"
+#include "rootwebpage.h"
 
 class TQt5Timer : public TTimer {
 public:
@@ -188,7 +189,7 @@ public:
    }
 };
 
-extern "C" void webgui_start_browser_in_qt5(const char *url, void *http_serv)
+extern "C" void webgui_start_browser_in_qt5(const char *url, void *http_serv, bool is_batch)
 {
    // webgui_initapp();
 
@@ -212,9 +213,14 @@ extern "C" void webgui_start_browser_in_qt5(const char *url, void *http_serv)
       QWebEngineProfile::defaultProfile()->installUrlSchemeHandler(protocol_name, handler);
    }
 
-   RootWebView *view = new RootWebView();
-   view->load(QUrl(fullurl));
-   view->show();
+   if (is_batch) {
+      RootWebPage *page = new RootWebPage();
+      page->load(QUrl(fullurl));
+   } else {
+      RootWebView *view = new RootWebView();
+      view->load(QUrl(fullurl));
+      view->show();
+   }
 }
 
 int main(int argc, char *argv[])
