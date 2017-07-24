@@ -24,7 +24,6 @@
 #include "RConfigure.h"
 #include <functional>
 #include <cassert>
-#include <memory> // for shared_ptr
 #include "TFormula.h"
 #include "TAttLine.h"
 #include "TAttFill.h"
@@ -260,8 +259,8 @@ protected:
    TF1Parameters *fParams = nullptr;   //Pointer to Function parameters object (exists only for not-formula functions)
 
    /// General constructor for TF1. Most of the other constructors delegate on it
- TF1(EFType functionType, const char *name, Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim, EAddToList addToGlobList, TF1Parameters *params = nullptr, TF1FunctorPointer * functor = nullptr):
-   TNamed(name, name), TAttLine(), TAttFill(), TAttMarker(), fXmin(xmin), fXmax(xmax), fNpar(npar), fNdim(ndim),
+   TF1(EFType functionType, const char *name, Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim, EAddToList addToGlobList, TF1Parameters *params = nullptr, TF1FunctorPointer * functor = nullptr):
+      TNamed(name, name), TAttLine(), TAttFill(), TAttMarker(), fXmin(xmin), fXmax(xmax), fNpar(npar), fNdim(ndim),
       fType(functionType), fParErrors(npar), fParMin(npar), fParMax(npar), fFunctor(functor), fParams(params)
    {
       DoInitialize(addToGlobList);
@@ -316,6 +315,7 @@ public:
    TF1(const char *name, const char *formula, Double_t xmin = 0, Double_t xmax = 1, EAddToList addToGlobList = EAddToList::kDefault);
    TF1(const char *name, Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim = 1, EAddToList addToGlobList = EAddToList::kDefault);
    TF1(const char *name, Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin = 0, Double_t xmax = 1, Int_t npar = 0, Int_t ndim = 1, EAddToList addToGlobList = EAddToList::kDefault);
+   TF1(const char *name, Double_t (*fcn)(const Double_t *, const Double_t *), Double_t xmin = 0, Double_t xmax = 1, Int_t npar = 0, Int_t ndim = 1, EAddToList addToGlobList = EAddToList::kDefault);
 
    template <class T>
    TF1(const char *name, std::function<T(const T *data, const Double_t *param)> &fcn, Double_t xmin = 0, Double_t xmax = 1, Int_t npar = 0, Int_t ndim = 1, EAddToList addToGlobList = EAddToList::kDefault):
@@ -326,17 +326,16 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////////
-   /// Constructor using a pointer to real function.
+   /// Constructor using a pointer to function.
    ///
    /// \param npar is the number of free parameters used by the function
    ///
    /// This constructor creates a function of type C when invoked
    /// with the normal C++ compiler.
    ///
-   /// see test program test/stress.cxx (function stress1) for an example.
-   /// note the interface with an intermediate pointer.
    ///
    /// WARNING! A function created with this constructor cannot be Cloned
+
 
    template <class T>
    TF1(const char *name, T(*fcn)(const T *, const Double_t *), Double_t xmin = 0, Double_t xmax = 1, Int_t npar = 0, Int_t ndim = 1, EAddToList addToGlobList = EAddToList::kDefault):
