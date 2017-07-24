@@ -4199,19 +4199,15 @@ TMethod *TClass::GetMethod(const char *method, const char *params,
 /// Find a method with decl id in this class or its bases.
 
 TMethod* TClass::FindClassOrBaseMethodWithId(DeclId_t declId) {
-   TFunction *f = GetMethodList()->Get(declId);
-   if (f) return (TMethod*)f;
+   if (TFunction* method = GetMethodList()->Get(declId))
+      return reinterpret_cast<TMethod *>(method);
 
-   TBaseClass *base;
-   TIter       next(GetListOfBases());
-   while ((base = (TBaseClass *) next())) {
-      TClass *clBase = base->GetClassPointer();
-      if (clBase) {
-         f = clBase->FindClassOrBaseMethodWithId(declId);
-         if (f) return (TMethod*)f;
-      }
-   }
-   return 0;
+   for (auto item : *GetListOfBases())
+      if (auto base = reinterpret_cast<TBaseClass *>(item)->GetClassPointer())
+         if (TFunction* method = base->FindClassOrBaseMethodWithId(declId))
+            return reinterpret_cast<TMethod *>(method);
+
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
