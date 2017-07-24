@@ -1183,6 +1183,7 @@ protected:
             }
             trees[slot] = new TTree(treenameInt.c_str(), treenameInt.c_str());
             trees[slot]->ResetBit(kMustCleanup);
+            trees[slot]->SetImplicitMT(false);
             if(r) {
                // not an empty-source TDF
                auto tree = r->GetTree();
