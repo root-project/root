@@ -24,7 +24,7 @@
 template <typename U, ROOT::Fit::ExecutionPolicy V>
 struct GradientTestTraits {
    using DataType = U;
-   static constexpr int ExecutionPolicyType = V;
+   static constexpr ROOT::Fit::ExecutionPolicy ExecutionPolicyType = V;
 };
 
 using ScalarSerial = GradientTestTraits<Double_t, ROOT::Fit::kSerial>;
@@ -45,6 +45,12 @@ static T modelFunction(const T *data, const double *params)
 // Helper class used to encapsulate the calls to the gradient interfaces, templated with a GradientTestTraits type
 template <class T>
 struct GradientTestEvaluation {
+   // Types to instantiate Chi2FCN: the gradient function interface handles the parameters, so its base typedef
+   // has to be always a double; the parametric function interface is templated to test both serial and vectorial
+   // cases.
+   using GradFunctionType = ROOT::Math::IGradientFunctionMultiDimTempl<double>;
+   using BaseFunctionType = ROOT::Math::IParamMultiFunctionTempl<typename T::DataType>;
+
    GradientTestEvaluation()
    {
       // Create unique names for TF1 and TH1. This prevents possible memory leaks when multiple tests are instantiated.
@@ -73,6 +79,10 @@ struct GradientTestEvaluation {
       fNumPoints = fData.NPoints();
 
       fFitFunction = new ROOT::Math::WrappedMultiTF1Templ<typename T::DataType>(*f, f->GetNdim());
+
+      // Instantiate the Chi2FCN object, responsible for evaluating the gradient.
+      fFitter =
+         new ROOT::Fit::Chi2FCN<GradFunctionType, BaseFunctionType>(fData, *fFitFunction, T::ExecutionPolicyType);
    }
 
    Double_t BenchmarkSolution(Double_t *solution)
@@ -81,8 +91,7 @@ struct GradientTestEvaluation {
 
       start = std::chrono::system_clock::now();
       for (int i = 0; i < fNumRepetitions; i++)
-         ROOT::Fit::FitUtil::Evaluate<typename T::DataType>::EvalChi2Gradient(*fFitFunction, fData, fParams, solution,
-                                                                              fNumPoints, T::ExecutionPolicyType);
+         fFitter->Gradient(fParams, solution);
       end = std::chrono::system_clock::now();
 
       std::chrono::duration<Double_t> timeElapsed = end - start;
@@ -98,6 +107,7 @@ struct GradientTestEvaluation {
 
    ROOT::Math::WrappedMultiTF1Templ<typename T::DataType> *fFitFunction;
    ROOT::Fit::BinData fData;
+   ROOT::Fit::Chi2FCN<GradFunctionType, BaseFunctionType> *fFitter;
 };
 
 // Test class: creates a reference solution (computing the gradient with scalar values in a serial scenario), and
