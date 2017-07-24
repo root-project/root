@@ -499,6 +499,7 @@ public:
       }
       fOutputTrees[slot] = new TTree(fTreeName.c_str(), fTreeName.c_str(), /*splitlvl=*/99, /*dir=*/treeDirectory);
       fOutputTrees[slot]->ResetBit(kMustCleanup); // do not mingle with the thread-unsafe gListOfCleanups
+      fOutputTrees[slot]->SetImplicitMT(false);
       if (r) {
          // not an empty-source TDF
          auto inputTree = r->GetTree();
