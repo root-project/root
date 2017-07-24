@@ -104,7 +104,9 @@ auto testActivationFunctionDerivatives()
       {
          evaluateDerivative<Architecture>(X, af, Y);
       };
-      error = testDerivatives<Architecture>(f, df, 1.0e-04);
+
+      auto h = std::sqrt(std::numeric_limits<Scalar_t>::epsilon());
+      error = testDerivatives<Architecture>(f, df, h);
 
       std::cout << "Testing " << static_cast<int>(af) << ": ";
       std::cout << "Maximum Relative Error = " << error << std::endl;
@@ -150,14 +152,8 @@ template<typename Architecture, typename F, typename dF>
        Scalar_t y0 = f(Y, X, W);
        Scalar_t dy_num = (y1 - y0) / (2.0 * dx);
 
-       Scalar_t error = 0.0;
-       if (std::fabs(dy) > 0) {
-          error = std::fabs((dy_num - dy) / dy);
-        }
-        else
-            error = dy_num - dy;
-
-        maximum_error = std::max(maximum_error, error);
+       Scalar_t error = relativeError(dy_num, dy);
+       maximum_error = std::max(maximum_error, error);
     }
 
     return maximum_error;
@@ -191,7 +187,8 @@ auto testLossFunctionGradients()
           evaluateGradients<Architecture>(X, lf, Y, Z, W);
        };
 
-       error = testGradients<Architecture>(f, df, 5e-6);
+       auto h = 100.0 * std::sqrt(std::numeric_limits<Scalar_t>::epsilon());
+       error = testGradients<Architecture>(f, df, h);
 
        std::cout << "Testing " << static_cast<char>(lf) << ": ";
        std::cout << "Maximum Relative Error = " << error << std::endl;
