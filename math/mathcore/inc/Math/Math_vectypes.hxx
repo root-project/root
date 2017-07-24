@@ -11,11 +11,7 @@
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wall"
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-parameter"
-#pragma clang diagnostic ignored "-Wconditional-uninitialized"
 #include <VecCore/VecCore>
-#pragma clang diagnostic pop
 #pragma GCC diagnostic pop
 
 namespace ROOT {
