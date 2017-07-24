@@ -57,6 +57,7 @@ using namespace RooFit;
 RooTaskSpec::RooTaskSpec(){};
 
 RooTaskSpec::RooTaskSpec(RooAbsOptTestStatistic* nll){
+  cout <<"starting case1"<<endl;
   RooAbsOptTestStatistic* rats = dynamic_cast<RooAbsOptTestStatistic*>(nll) ;
   if (rats) {
     cout << " NLL is a RooAbsOptTestStatistic (Case 1)" << endl ;
@@ -69,8 +70,11 @@ RooTaskSpec::RooTaskSpec(RooAbsOptTestStatistic* nll){
 }
 
 RooTaskSpec::RooTaskSpec(RooAbsReal* nll){
+  cout <<"starting case2"<<endl;
   RooAddition* ra = dynamic_cast<RooAddition*>(nll) ;
+  cout <<"printing RooAddition"<<endl;
   ra->Print();
+  cout <<"printed"<<endl;
   if (ra) {
     RooAbsOptTestStatistic* rats = dynamic_cast<RooAbsOptTestStatistic*>(ra->list().at(0)) ;
     if (!rats) {
@@ -82,6 +86,9 @@ RooTaskSpec::RooTaskSpec(RooAbsReal* nll){
       cout << "NLL is a RooAddition (Case 2), first element is a RooAbsOptTestStatistic" << endl ;
       _initialise(rats);
     }
+  }
+  else {
+    cout<<"not ra"<<endl;
   }
 }
 

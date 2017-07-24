@@ -174,6 +174,8 @@ RooRealMPFE::~RooRealMPFE()
 
 void RooRealMPFE::initVars()
 {
+  std::cout <<"initialising variables of a RooMPFE"<<endl;
+
   // Empty current lists
   _vars.removeAll() ;
   _saveVars.removeAll() ;
@@ -384,7 +386,17 @@ void RooRealMPFE::setTaskSpec() {
   cout<<"Setting TaskSpec!"<<endl;
   RooAbsTestStatistic* tmp = dynamic_cast<RooAbsTestStatistic*>(_arg.absArg());
   RooTaskSpec taskspecification = RooTaskSpec(tmp);
+<<<<<<< HEAD
   //  *_pipe << taskspecification;
+=======
+  cout<<"Got task spec "<< endl;
+  tmp->Print();
+  //  *_pipe << taskspecification;
+  //for (std::list<RooTaskSpec::Task>::const_iterator task = taskspecification.tasks.begin(), end = taskspecification.tasks.end(); task != end; ++task){
+  //  cout << "This task is " << task->name <<endl;
+  //  }
+
+>>>>>>> 4f65c32824
 }
 
 
@@ -400,6 +412,14 @@ namespace RooFit {
     write(&ns, sizeof(ns));
     return *this;
   }
+  BidirMMapPipe& BidirMMapPipe::operator<< (const RooTaskSpec& TaskSpec) {
+    for (std::list<RooTaskSpec::Task>::const_iterator task = TaskSpec.tasks.begin(), end = TaskSpec.tasks.end(); task != end; ++task){
+      const char *name = task->name;
+      write(&name, sizeof(name));
+      return *this;
+    }
+
+  }
 
   BidirMMapPipe& BidirMMapPipe::operator<< (const RooTaskSpec& TaskSpec) {
     for (std::list<RooTaskSpec::Task>::const_iterator task = TaskSpec.tasks.begin(), end = TaskSpec.tasks.end(); task != end; ++task){
@@ -413,16 +433,22 @@ namespace RooFit {
   BidirMMapPipe& BidirMMapPipe::operator>> (TimePoint& wall) {
     Duration::rep ns;
     read(&ns, sizeof(ns));
-
     Duration const d(ns);
     wall = TimePoint(d);
 
     return *this;
   }
+<<<<<<< HEAD
   BidirMMapPipe& BidirMMapPipe::operator>> (RooTaskSpec::Task& Task) {
     const char *name;
     read(&name, sizeof(name));
     Task.name = name;
+=======
+
+  BidirMMapPipe& BidirMMapPipe::operator>> (const RooTaskSpec::Task& Task) {
+    const char *name = Task.name;
+    read(&name, sizeof(name));
+>>>>>>> 4f65c32824
     return *this;
   }
 }
@@ -654,8 +680,14 @@ void RooRealMPFE::serverLoop() {
       }
 
       case TaskSpec: {
+<<<<<<< HEAD
         RooTaskSpec::Task taskspecification;
 	cout << *_pipe << endl;
+=======
+        RooTaskSpec taskspecification;
+	//        *_pipe >> taskspecification;
+
+>>>>>>> 4f65c32824
 	std::cout << "EEEEEE TaskSpec'd"<<endl;
         break;
       }

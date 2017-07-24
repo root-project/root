@@ -793,8 +793,13 @@ class BidirMMapPipe {
         BidirMMapPipe& operator>>(char* (&str));
 
 
+<<<<<<< HEAD
         BidirMMapPipe& operator<<(const RooTaskSpec& TaskSpec);
         BidirMMapPipe& operator>>(RooTaskSpec::Task& (&taskspec));
+=======
+	BidirMMapPipe& operator<<(const RooTaskSpec& TaskSpec);
+	BidirMMapPipe& operator>>(const RooTaskSpec::Task& (&taskspec));
+>>>>>>> 4f65c32824
         /** @brief write a std::string object
          *
          * @param str string to write
