@@ -210,8 +210,7 @@ inline T relativeError(const T &x, const T &y)
 
 //______________________________________________________________________________
 template <>
-inline Double_t relativeError(const Double_t &x,
-                              const Double_t &y)
+inline Double_t relativeError(const Double_t &x, const Double_t &y)
 {
    if ((std::abs(x) > 1e-8) && (std::abs(y) > 1e-8)) {
       return std::fabs((x - y) / y);
@@ -222,8 +221,7 @@ inline Double_t relativeError(const Double_t &x,
 
 //______________________________________________________________________________
 template <>
-inline Float_t relativeError(const Float_t &x,
-                             const Float_t &y)
+inline Float_t relativeError(const Float_t &x, const Float_t &y)
 {
    if ((std::abs(x) > 1e-8) && (std::abs(y) > 1e-8)) {
       return std::fabs((x - y) / y);
