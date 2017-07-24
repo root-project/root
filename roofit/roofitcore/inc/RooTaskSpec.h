@@ -39,12 +39,15 @@ class RooTaskSpec {
     Bool_t binned;
     const char* name;
     Int_t entries;
+    Bool_t is_done;
   };
   std::list<Task> tasks;
  private:
   void _initialise(RooAbsOptTestStatistic* rats);
   Task _fill_task(const Int_t n, RooAbsOptTestStatistic* rats);
   Int_t _fit_case;
+  Int_t n_tasks = tasks.size();
+
 
 };
 #endif

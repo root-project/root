@@ -384,13 +384,12 @@ void RooRealMPFE::setTaskSpec() {
   cout<<"Setting TaskSpec!"<<endl;
   RooAbsTestStatistic* tmp = dynamic_cast<RooAbsTestStatistic*>(_arg.absArg());
   RooTaskSpec taskspecification = RooTaskSpec(tmp);
-  Message msg = TaskSpec;
-  *_pipe << msg << taskspecification;
+  //  *_pipe << taskspecification;
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Pipe stream operators for timing type.
+/// Pipe stream operators for timing type and TaskSpec.
 namespace RooFit {
   using WallClock = std::chrono::system_clock;
   using TimePoint = WallClock::time_point;
@@ -402,6 +401,15 @@ namespace RooFit {
     return *this;
   }
 
+  BidirMMapPipe& BidirMMapPipe::operator<< (const RooTaskSpec& TaskSpec) {
+    for (std::list<RooTaskSpec::Task>::const_iterator task = TaskSpec.tasks.begin(), end = TaskSpec.tasks.end(); task != end; ++task){
+      const char *name = task->name;
+      write(&name, sizeof(name));
+      return *this;
+    }
+  }
+
+
   BidirMMapPipe& BidirMMapPipe::operator>> (TimePoint& wall) {
     Duration::rep ns;
     read(&ns, sizeof(ns));
@@ -409,6 +417,12 @@ namespace RooFit {
     Duration const d(ns);
     wall = TimePoint(d);
 
+    return *this;
+  }
+  BidirMMapPipe& BidirMMapPipe::operator>> (RooTaskSpec::Task& Task) {
+    const char *name;
+    read(&name, sizeof(name));
+    Task.name = name;
     return *this;
   }
 }
@@ -640,9 +654,8 @@ void RooRealMPFE::serverLoop() {
       }
 
       case TaskSpec: {
-        RooTaskSpec taskspecification;
-        *_pipe >> taskspecification;
-
+        RooTaskSpec::Task taskspecification;
+	cout << *_pipe << endl;
 	std::cout << "EEEEEE TaskSpec'd"<<endl;
         break;
       }
