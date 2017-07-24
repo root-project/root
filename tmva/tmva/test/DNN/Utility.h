@@ -189,7 +189,8 @@ AFloat reduceMean(F f, AFloat start, const AMatrix &X)
     return result / (AFloat) (m * n);
 }
 
-/** Compute the relative error of x and y */
+/** Compute the relative error of x and y. If their difference is too small,
+ *  compute the absolute error instead. */
 //______________________________________________________________________________
 template <typename T>
 inline T relativeError(const T &x, const T &y)
@@ -201,8 +202,7 @@ inline T relativeError(const T &x, const T &y)
 
   T diff = abs(x - y);
 
-  if (x * y == T(0.0) ||
-      diff < std::numeric_limits<T>::epsilon())
+  if (x * y == T(0.0) || diff * diff < std::numeric_limits<T>::epsilon())
     return diff;
 
   return diff / (abs(x) + abs(y));
