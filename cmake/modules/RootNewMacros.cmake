@@ -384,15 +384,13 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
                      COMMAND ${command} -v2 -f  ${dictionary}.cxx ${newargs} ${excludepathsargs} ${rootmapargs}
                                         ${ARG_OPTIONS} ${definitions} ${includedirs} ${headerfiles} ${_linkdef}
                      IMPLICIT_DEPENDS ${_implicitdeps}
-                     DEPENDS ${_list_of_header_dependencies} ${_linkdef} ${ROOTCINTDEP} ${ARG_DEPENDENCIES})
+                     DEPENDS ${_list_of_header_dependencies} ${_linkdef} ${ROOTCINTDEP} ${module_dependencies})
   get_filename_component(dictname ${dictionary} NAME)
 
   #---roottest compability
+  add_custom_target(${dictname} DEPENDS ${dictionary}.cxx ${pcm_name} ${rootmap_name})
   if(ARG_NOINSTALL OR CMAKE_ROOTTEST_DICT OR (NOT DEFINED CMAKE_LIBRARY_OUTPUT_DIRECTORY))
-    add_custom_target(${dictname} DEPENDS ${dictionary}.cxx)
   else()
-    add_custom_target(${dictname} DEPENDS ${dictionary}.cxx)
-
     set_property(GLOBAL APPEND PROPERTY ROOT_DICTIONARY_TARGETS ${dictname})
     set_property(GLOBAL APPEND PROPERTY ROOT_DICTIONARY_FILES ${CMAKE_CURRENT_BINARY_DIR}/${dictionary}.cxx)
 
@@ -407,15 +405,15 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   # Create a target for this rootcling invocation based on the module name.
   # We can use this in other ROOT_GENERATE_DICTIONARY that only care about
   # the generation of PCMs without waiting on the whole module.
-  if(ARG_MODULE)
+  if(ARG_MODULE AND NOT ARG_MULTIDICT)
     # If we have multiple modules with the same name, let's just attach the
     # generation of this dictionary to the ROOTCLING_X target of the existing
     # module. This happens for example with ROOTCLING_Smatrix which also comes
     # in a "Smatrix32" version.
     if (TARGET ROOTCLING_${ARG_MODULE})
-      add_dependencies(ROOTCLING_${ARG_MODULE} ${dictname})
+      add_dependencies(ROOTCLING_${ARG_MODULE} ${dictname} ${dictionary}.cxx ${rootmap_name})
     else()
-      add_custom_target(ROOTCLING_${ARG_MODULE} DEPENDS ${dictname})
+      add_custom_target(ROOTCLING_${ARG_MODULE} DEPENDS ${dictname} ${dictionary}.cxx ${rootmap_name})
     endif()
   endif()
 
@@ -434,7 +432,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   # all rest of the first dict is in the PCH but this file is not and it
   # cannot be present in the original dictionary.
   if(NOT ARG_MULTIDICT)
-    ROOT_CXXMODULES_APPEND_TO_MODULEMAP("${library_name}" "${headerfiles}")
+    ROOT_CXXMODULES_APPEND_TO_MODULEMAP("${ARG_MODULE}" "${headerfiles}")
   endif()
 endfunction()
 
@@ -463,7 +461,7 @@ function (ROOT_CXXMODULES_APPEND_TO_MODULEMAP library library_headers)
     # FIXME: Krb5Auth.h triggers "declaration of '__mb_cur_max' has a different language linkage"
     # problem.
     # FIXME: error: declaration of 'NSObject' must be imported from module 'ROOT.libBonjour.so.TBonjourBrowser.h' before it is required
-    if (${library} MATCHES "libKrb5Auth.so" OR ${library} MATCHES "(libGCocoa|libGQuartz)\\..*")
+    if (${library} MATCHES "Krb5Auth" OR ${library} MATCHES "(GCocoa|libGQuartz)")
       return()
     endif()
   endif(APPLE)
@@ -484,7 +482,7 @@ function (ROOT_CXXMODULES_APPEND_TO_MODULEMAP library library_headers)
 
   set(modulemap_entry "module \"${library}\" {")
   # For modules GCocoa and GQuartz we need objc context.
-  if (${library} MATCHES "(libGCocoa|libGQuartz)\\..*")
+  if (${library} MATCHES "(libGCocoa|libGQuartz)")
     set (modulemap_entry "${modulemap_entry}\n  requires objc\n")
   else()
     set (modulemap_entry "${modulemap_entry}\n  requires cplusplus\n")
@@ -820,7 +818,7 @@ endfunction()
 #---------------------------------------------------------------------------------------------------
 function(ROOT_STANDARD_LIBRARY_PACKAGE libname)
   CMAKE_PARSE_ARGUMENTS(ARG "" "" "DEPENDENCIES;DICTIONARY_OPTIONS" ${ARGN})
-  ROOT_GENERATE_DICTIONARY(G__${libname} *.h MODULE ${libname} LINKDEF LinkDef.h OPTIONS ${ARG_DICTIONARY_OPTIONS})
+  ROOT_GENERATE_DICTIONARY(G__${libname} *.h MODULE ${libname} LINKDEF LinkDef.h OPTIONS ${ARG_DICTIONARY_OPTIONS} DEPENDENCIES ${ARG_DEPENDENCIES})
   ROOT_LINKER_LIBRARY(${libname} *.cxx G__${libname}.cxx DEPENDENCIES ${ARG_DEPENDENCIES})
   ROOT_INSTALL_HEADERS()
 endfunction()
