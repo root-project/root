@@ -154,6 +154,8 @@ but also in Dump() and Inspect() methods and by the THtml class.
 #include "TROOT.h"
 #include "TVirtualMutex.h"
 
+#include <cassert>
+#include <cctype>
 #include <stdlib.h>
 
 
@@ -402,6 +404,17 @@ void TDataMember::Init(bool afterReading)
             Long_t l=0;
             Int_t  *value;
             TGlobal *enumval = gROOT->GetGlobal(ptr1,kTRUE);
+
+            bool isdigit = true;
+            const char* c = ptr1;
+            while(*c) {
+              if (!std::isdigit(*c)) {
+                isdigit = false;
+                break;
+              }
+              c++;
+            }
+
             if (enumval){
                value = (Int_t*)(enumval->GetAddress());
                l     = (Long_t)(*value);
@@ -409,10 +422,16 @@ void TDataMember::Init(bool afterReading)
                TObject *obj = fClass->GetListOfDataMembers(false)->FindObject(ptr1);
                if (obj)
                   l = ((TEnumConstant*)obj)->GetValue();
-               else
+               else if (isdigit)
+                  l = atol(ptr1);
+               else {
                   l = gInterpreter->Calc(Form("%s;",ptr1));
-            } else
+               }
+            } else if (isdigit) {
                l = atol(ptr1);
+            } else {
+               assert(false && "");
+            }
 
             it1 = new TOptionListItem(this,l,0,0,ptr3,ptr1);
             fOptions->Add(it1);
