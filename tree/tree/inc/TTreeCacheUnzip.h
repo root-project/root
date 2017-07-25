@@ -69,7 +69,7 @@ protected:
    // Unzipping related members
    Int_t      *fUnzipLen;         ///<! [fNseek] Length of the unzipped buffers
    char      **fUnzipChunks;      ///<! [fNseek] Individual unzipped chunks. Their summed size is kept under control.
-   std::atomic<Byte_t> *fUnzipStatus;      ///<! [fNSeek] 
+   std::atomic<Byte_t> *fUnzipStatus; ///<! [fNSeek]
 
    Int_t       fNseekMax;         ///<!  fNseek can change so we need to know its max size
    Long64_t    fUnzipBufferSize;  ///<!  Max Size for the ready unzipped blocks (default is 2*fBufferSize)
