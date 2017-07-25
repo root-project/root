@@ -5362,8 +5362,79 @@ Int_t TTree::GetEntry(Long64_t entry, Int_t getall)
       }
    };
 
-   seqprocessing();
+#ifdef R__USE_IMT
+   if (!TTreeCacheUnzip::IsParallelUnzip() && ROOT::IsImplicitMTEnabled() && fIMTEnabled) {
+      if (fSortedBranches.empty()) InitializeBranchLists(true);
 
+      // Count branches are processed first and sequentially
+      for (auto branch : fSeqBranches) {
+         nb = branch->GetEntry(entry, getall);
+         if (nb < 0) break;
+         nbytes += nb;
+      }
+      if (nb < 0) return nb;
+
+      // Enable this IMT use case (activate its locks)
+      ROOT::Internal::TParBranchProcessingRAII pbpRAII;
+
+      Int_t errnb = 0;
+      std::atomic<Int_t> pos(0);
+      std::atomic<Int_t> nbpar(0);
+
+      auto mapFunction = [&]() {
+            // The branch to process is obtained when the task starts to run.
+            // This way, since branches are sorted, we make sure that branches
+            // leading to big tasks are processed first. If we assigned the
+            // branch at task creation time, the scheduler would not necessarily
+            // respect our sorting.
+            Int_t j = pos.fetch_add(1);
+
+            Int_t nbtask = 0;
+            auto branch = fSortedBranches[j].second;
+
+            if (gDebug > 0) {
+               std::stringstream ss;
+               ss << std::this_thread::get_id();
+               Info("GetEntry", "[IMT] Thread %s", ss.str().c_str());
+               Info("GetEntry", "[IMT] Running task for branch #%d: %s", j, branch->GetName());
+            }
+
+            std::chrono::time_point<std::chrono::system_clock> start, end;
+
+            start = std::chrono::system_clock::now();
+            nbtask = branch->GetEntry(entry, getall);
+            end = std::chrono::system_clock::now();
+
+            Long64_t tasktime = (Long64_t)std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
+            fSortedBranches[j].first += tasktime;
+
+            if (nbtask < 0) errnb = nbtask;
+            else            nbpar += nbtask;
+         };
+
+      ROOT::TThreadExecutor pool;
+      pool.Foreach(mapFunction, nbranches - fSeqBranches.size());
+
+      if (errnb < 0) {
+         nb = errnb;
+      }
+      else {
+         // Save the number of bytes read by the tasks
+         nbytes += nbpar;
+
+         // Re-sort branches if necessary
+         if (++fNEntriesSinceSorting == kNEntriesResort) {
+            SortBranchesByTime();
+            fNEntriesSinceSorting = 0;
+         }
+      }
+   }
+   else {
+      seqprocessing();
+   }
+#else
+   seqprocessing();
+#endif
    if (nb < 0) return nb;
 
    // GetEntry in list of friends
