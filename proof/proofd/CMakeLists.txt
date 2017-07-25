@@ -26,7 +26,7 @@ else()
   endif ()
   ROOT_LINKER_LIBRARY(XrdProofd X*.cxx ${CMAKE_SOURCE_DIR}/net/rpdutils/src/rpdconn.cxx
                          LIBRARIES ${XROOTD_LIBRARIES} rpdutil ${CMAKE_THREAD_LIBS_INIT} ${CMAKE_DL_LIBS} BUILTINS XROOTD)
-  set_target_properties(XrdProofd PROPERTIES LINK_INTERFACE_LIBRARIES "")
+  set_target_properties(XrdProofd PROPERTIES INTERFACE_LINK_LIBRARIES "")
   ROOT_EXECUTABLE(proofexecv proofexecv.cxx ${CMAKE_SOURCE_DIR}/net/rpdutils/src/rpdconn.cxx ${CMAKE_SOURCE_DIR}/net/rpdutils/src/rpdpriv.cxx
                          LIBRARIES ${SYSLIBS})
 endif()
