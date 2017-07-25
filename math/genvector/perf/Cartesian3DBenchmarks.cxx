@@ -110,5 +110,30 @@ BENCHMARK_TEMPLATE(BM_Cartesian3D_Mag2, ROOT::Double_v)->Range(8 << 10, 8 << 20)
 // BENCHMARK_TEMPLATE(BM_Cartesian3D_Mag2, float)->Range(8 << 10, 8 << 20);
 // BENCHMARK_TEMPLATE(BM_Cartesian3D_Mag2, ROOT::Float_v)->Range(8 << 10, 8 << 20);
 
+template <typename T>
+static void BM_Cartesian3D_Scale(benchmark::State &state)
+{
+   using namespace ROOT::Benchmark;
+   // We want the same random numbers for a benchmark family.
+   SetSeed(4);
+   // Allocate N points
+   constexpr size_t VecSize = TypeSize<T>::Get();
+   typename Data<T>::Vector Points(state.range(0) / VecSize);
+   ROOT::Math::Cartesian3D<T> c;
+   T checksum = T();
+   while (state.KeepRunning()) {
+      checksum = T();
+      for (auto &p : Points) {
+         c.SetCoordinates(p.X, p.Y, p.Z);
+         c.Scale(p.X);
+         checksum += c.x() + c.y() + c.z();
+      }
+   }
+
+   ComputeProcessedEntities(state, sizeof(T), VecTraits<T>::Sum(checksum));
+}
+BENCHMARK_TEMPLATE(BM_Cartesian3D_Scale, double)->Range(8 << 10, 8 << 20);
+BENCHMARK_TEMPLATE(BM_Cartesian3D_Scale, ROOT::Double_v)->Range(8 << 10, 8 << 20);
+
 // Define our main.
 BENCHMARK_MAIN();
