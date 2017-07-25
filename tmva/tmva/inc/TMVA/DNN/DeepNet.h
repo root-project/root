@@ -42,6 +42,7 @@
 #include "TMVA/DNN/RNN/RNNLayer.h"
 
 #include "TMVA/DNN/DAE/DenoiseLayer.h"
+#include "TMVA/DNN/DAE/LogisticRegressionLayer.h"
 
 #include <vector>
 #include <cmath>
@@ -163,7 +164,7 @@ public:
     *  activation function and the dropout probability.
     */
    std::vector<TDAELayer<Architecture_t>> *AddDAELayers(size_t inputUnits, std::vector<size_t> numHiddenUnitsPerLayer,
-                                                        Scalar_t dropoutProbability = 1.0, 
+                                                        Scalar_t dropoutProbability = 1.0,
                                                         EActivationFunction f = EActivationFunction::kSigmoid);
 
    /*! Function for adding Denoise Layer in the Deep Neural Network,
@@ -171,16 +172,15 @@ public:
    void AddDAELayers(std::vector<TDAELayer<Architecture_t>> *daeLayers);
 
    /*! Function for adding Logistic Regression layer in the Deep Neural Network,
-    *  with given given number of visibleUnits and hiddenUnits as well as the
-    *  activation function and the dropout probability.
+    *  with given given number of inputUnits , outputUnits and
+    *  number of testDataBatchSize.
     */
-  // TLogisticRegressionLayer<Architecture_t> *AddLogisticRegressionLayer(size_t visibleUnits, size_t hiddenUnits,
-      //                    EActivationFunction f = EActivationFunction::kSigmoid,
-      //                    Scalar_t dropoutProbability = 1.0  );
+   TLogisticRegressionLayer<Architecture_t> *AddLogisticRegressionLayer(size_t inputUnits, size_t outputUnits,
+                                                                        size_t testDataBatchSize);
 
    /*! Function for adding Denoise Layer in the Deep Neural Network,
     *  when the layer is already created.  */
-//   void AddLogisticRegressionLayer(TLogisticRegressionLayer<Architecture_t> *logisticLayer);
+   void AddLogisticRegressionLayer(TLogisticRegressionLayer<Architecture_t> *logisticRegressionLayer);
 
    /*! Function for initialization of the Neural Net. */
    void Initialize();
@@ -472,7 +472,7 @@ void TDeepNet<Architecture_t, Layer_t>::AddBasicRNNLayer(TBasicRNNLayer<Architec
 
 //______________________________________________________________________________
 template <typename Architecture_t, typename Layer_t>
-std::vector<TDAELayer<Architecture_t>> *TDeepNet<Architecture_t, Layer_t>::AddDAELayers(size_t inputUnits, 
+std::vector<TDAELayer<Architecture_t>> *TDeepNet<Architecture_t, Layer_t>::AddDAELayers(size_t inputUnits,
 						               std::vector<size_t> numHiddenUnitsPerLayer,
                           			       Scalar_t dropoutProbability, EActivationFunction f)
 {
@@ -492,34 +492,53 @@ std::vector<TDAELayer<Architecture_t>> *TDeepNet<Architecture_t, Layer_t>::AddDA
       }
       if(i == 0 && (fLayers.size() != 0))
       {
-         inputDepth = this->GetInputDepth();
-         inputHeight = this->GetInputHeight();
-         inputWidth = this->GetInputWidth();
-         inputSize = inputDepth * inputHeight * inputWidth; 
-      }  
+        Layer_t *lastLayer = fLayers.back();
+        inputDepth = lastLayer->GetDepth();
+        inputHeight = lastLayer->GetHeight();
+        inputWidth = lastLayer->GetWidth();;
+        inputSize = inputDepth * inputHeight * inputWidth;
+      }
       else
       {
-	 inputSize = numHiddenUnitsPerLayer[i - 1];
+	      inputSize = numHiddenUnitsPerLayer[i - 1];
       }
       // construct a denoise layer
-      TDAELayer<Architecture_t> *daeLayer = new TDAELayer<Architecture_t>(batchSize, inputSize, numHiddenUnitsPerLayer[i],
+      TDAELayer<Architecture_t> *daeLayers = new TDAELayer<Architecture_t>(batchSize, inputSize, numHiddenUnitsPerLayer[i],
                                                                           dropoutProbability, f);
-      fLayers.push_back(daeLayer);
-      TempLayerKeeper.push_back(daeLayer);
+      fLayers.push_back(daeLayers);
+      TempLayerKeeper.push_back(daeLayers);
     }
 
 return TempLayerKeeper;
- 
+
 }
 //______________________________________________________________________________
 template <typename Architecture_t, typename Layer_t>
 void TDeepNet<Architecture_t, Layer_t>::AddDAELayers(std::vector<TDAELayer<Architecture_t>> *daeLayers)
-{ 
+{
    for(size_t i=0; i<(size_t)daeLayers->size(); i++)
    {
       fLayers.push_back(daeLayers[i]);
    }
 }
+//______________________________________________________________________________
+template <typename Architecture_t, typename Layer_t>
+TLogisticRegressionLayer<Architecture_t> *TDeepNet<Architecture_t, Layer_t>::AddLogisticRegressionLayer(size_t inputUnits,
+						                                                                   size_t outputUnits, size_t testDataBatchSize)
+{
+  size_t batchSize = this->GetBatchSize();
+  TLogisticRegressionLayer<Architecture_t> *logisticRegressionLayer = new TLogisticRegressionLayer<Architecture_t>(batchSize,
+                                                                         inputUnits, outputUnits, testDataBatchSize);
+  fLayers.push_back(logisticRegressionLayer);
+  return logisticRegressionLayer;
+}
+//______________________________________________________________________________
+template <typename Architecture_t, typename Layer_t>
+void TDeepNet<Architecture_t, Layer_t>::AddLogisticRegressionLayer(TLogisticRegressionLayer<Architecture_t> *logisticRegressionLayer)
+{
+   fLayers.push_back(logisticRegressionLayer);
+}
+
 //______________________________________________________________________________
 template <typename Architecture_t, typename Layer_t>
 TDenseLayer<Architecture_t> *TDeepNet<Architecture_t, Layer_t>::AddDenseLayer(size_t width, EActivationFunction f,
