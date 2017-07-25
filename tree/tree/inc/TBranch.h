@@ -225,7 +225,7 @@ public:
 
    static  void      ResetCount();
 
-   ClassDef(TBranch, 13); // Branch descriptor
+   ClassDef(TBranch,12);  //Branch descriptor
 };
 
 //______________________________________________________________________________
