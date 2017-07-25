@@ -1394,15 +1394,16 @@ void TClass::Init(const char *name, Version_t cversion,
 
    Bool_t isStl = TClassEdit::IsSTLCont(fName);
 
-   if (!gInterpreter) {
+   if (!gInterpreter)
       ::Fatal("TClass::Init", "gInterpreter not initialized");
-   }
 
    if (givenInfo) {
-      if (!gInterpreter->ClassInfo_IsValid(givenInfo) ||
-          !(gInterpreter->ClassInfo_Property(givenInfo) & (kIsClass | kIsStruct | kIsNamespace)) ||
-          (!gInterpreter->ClassInfo_IsLoaded(givenInfo) && (gInterpreter->ClassInfo_Property(givenInfo) & (kIsNamespace))) )
-      {
+      bool invalid = !gInterpreter->ClassInfo_IsValid(givenInfo);
+      bool notloaded = !gInterpreter->ClassInfo_IsLoaded(givenInfo);
+      auto property = gInterpreter->ClassInfo_Property(givenInfo);
+
+      if (invalid || (notloaded && (property & kIsNamespace)) ||
+          !(property & (kIsClass | kIsStruct | kIsNamespace))) {
          if (!TClassEdit::IsSTLCont(fName.Data())) {
             MakeZombie();
             fState = kNoInfo;
@@ -1410,8 +1411,11 @@ void TClass::Init(const char *name, Version_t cversion,
             return;
          }
       }
+
       fClassInfo = gInterpreter->ClassInfo_Factory(givenInfo);
+      fCanLoadClassInfo = false; // avoids calls to LoadClassInfo() if info is already loaded
    }
+
    // We need to check if the class it is not fwd declared for the cases where we
    // created a TClass directly in the kForwardDeclared state. Indeed in those cases
    // fClassInfo will always be nullptr.
@@ -4441,46 +4445,49 @@ TVirtualStreamerInfo* TClass::GetStreamerInfo(Int_t version /* = 0 */) const
 
 TVirtualStreamerInfo* TClass::GetStreamerInfoAbstractEmulated(Int_t version /* = 0 */) const
 {
-   R__LOCKGUARD(gInterpreterMutex);
+   TVirtualStreamerInfo *sinfo = nullptr;
 
-   TString newname( GetName() );
+   TString newname(GetName());
    newname += "@@emulated";
+
+   R__LOCKGUARD(gInterpreterMutex);
 
    TClass *emulated = TClass::GetClass(newname);
 
-   TVirtualStreamerInfo* sinfo = 0;
-
-   if (emulated) {
+   if (emulated)
       sinfo = emulated->GetStreamerInfo(version);
-   }
+
    if (!sinfo) {
       // The emulated version of the streamerInfo is explicitly requested and has
       // not been built yet.
 
       sinfo = (TVirtualStreamerInfo*) fStreamerInfo->At(version);
+
       if (!sinfo && (version != fClassVersion)) {
          // When the requested version does not exist we return
          // the TVirtualStreamerInfo for the currently loaded class version.
          // FIXME: This arguably makes no sense, we should warn and return nothing instead.
          sinfo = (TVirtualStreamerInfo*) fStreamerInfo->At(fClassVersion);
       }
+
       if (!sinfo) {
          // Let's take the first available StreamerInfo as a start
          Int_t ninfos = fStreamerInfo->GetEntriesFast() - 1;
-         for (Int_t i = -1; sinfo == 0 && i < ninfos; ++i) {
-            sinfo =  (TVirtualStreamerInfo*) fStreamerInfo->UncheckedAt(i);
-         }
+         for (Int_t i = -1; sinfo == 0 && i < ninfos; ++i)
+            sinfo = (TVirtualStreamerInfo *)fStreamerInfo->UncheckedAt(i);
       }
+
       if (sinfo) {
-         sinfo = dynamic_cast<TVirtualStreamerInfo*>( sinfo->Clone() );
+         sinfo = dynamic_cast<TVirtualStreamerInfo *>(sinfo->Clone());
          if (sinfo) {
             sinfo->SetClass(0);
-            sinfo->SetName( newname );
+            sinfo->SetName(newname);
             sinfo->BuildCheck();
             sinfo->BuildOld();
             sinfo->GetClass()->AddRule(TString::Format("sourceClass=%s targetClass=%s",GetName(),newname.Data()));
-         } else
+         } else {
             Error("GetStreamerInfoAbstractEmulated", "could not create TVirtualStreamerInfo");
+         }
       }
    }
    return sinfo;
@@ -4501,36 +4508,38 @@ TVirtualStreamerInfo* TClass::GetStreamerInfoAbstractEmulated(Int_t version /* =
 
 TVirtualStreamerInfo* TClass::FindStreamerInfoAbstractEmulated(UInt_t checksum) const
 {
-   R__LOCKGUARD(gInterpreterMutex);
+   TVirtualStreamerInfo *sinfo = nullptr;
 
-   TString newname( GetName() );
+   TString newname(GetName());
    newname += "@@emulated";
+
+   R__LOCKGUARD(gInterpreterMutex);
 
    TClass *emulated = TClass::GetClass(newname);
 
-   TVirtualStreamerInfo* sinfo = 0;
-
-   if (emulated) {
+   if (emulated)
       sinfo = emulated->FindStreamerInfo(checksum);
-   }
+
    if (!sinfo) {
       // The emulated version of the streamerInfo is explicitly requested and has
       // not been built yet.
 
       sinfo = (TVirtualStreamerInfo*) FindStreamerInfo(checksum);
+
       if (!sinfo && (checksum != fCheckSum)) {
          // When the requested version does not exist we return
          // the TVirtualStreamerInfo for the currently loaded class version.
          // FIXME: This arguably makes no sense, we should warn and return nothing instead.
          sinfo = (TVirtualStreamerInfo*) fStreamerInfo->At(fClassVersion);
       }
+
       if (!sinfo) {
          // Let's take the first available StreamerInfo as a start
          Int_t ninfos = fStreamerInfo->GetEntriesFast() - 1;
-         for (Int_t i = -1; sinfo == 0 && i < ninfos; ++i) {
-            sinfo =  (TVirtualStreamerInfo*) fStreamerInfo->UncheckedAt(i);
-         }
+         for (Int_t i = -1; sinfo == 0 && i < ninfos; ++i)
+            sinfo = (TVirtualStreamerInfo *)fStreamerInfo->UncheckedAt(i);
       }
+
       if (sinfo) {
          sinfo = dynamic_cast<TVirtualStreamerInfo*>( sinfo->Clone() );
          if (sinfo) {
@@ -4539,8 +4548,9 @@ TVirtualStreamerInfo* TClass::FindStreamerInfoAbstractEmulated(UInt_t checksum) 
             sinfo->BuildCheck();
             sinfo->BuildOld();
             sinfo->GetClass()->AddRule(TString::Format("sourceClass=%s targetClass=%s",GetName(),newname.Data()));
-         } else
+         } else {
             Error("GetStreamerInfoAbstractEmulated", "could not create TVirtualStreamerInfo");
+         }
       }
    }
    return sinfo;
@@ -5326,9 +5336,9 @@ void TClass::SetClassVersion(Version_t version)
 
 TVirtualStreamerInfo* TClass::DetermineCurrentStreamerInfo()
 {
-   R__LOCKGUARD(gInterpreterMutex);
    if(!fCurrentInfo.load()) {
-     fCurrentInfo=(TVirtualStreamerInfo*)(fStreamerInfo->At(fClassVersion));
+      R__LOCKGUARD(gInterpreterMutex);
+      fCurrentInfo = (TVirtualStreamerInfo *)(fStreamerInfo->At(fClassVersion));
    }
    return fCurrentInfo;
 }
@@ -5459,35 +5469,36 @@ TClass *TClass::LoadClassCustom(const char *requestedname, Bool_t silent)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Try to load the classInfo (it may require parsing the header file
-/// and/or loading data from the clang pcm).
+/// Try to load the ClassInfo if available. This function may require parsing
+/// the header file and/or loading data from the clang pcm. If further calls to
+/// this function cannot affect the value of fClassInfo, fCanLoadClassInfo is set
+/// to false.
 
 void TClass::LoadClassInfo() const
 {
    R__LOCKGUARD(gInterpreterMutex);
 
-   // If another thread executed LoadClassInfo at about the same time
-   // as this thread return early since the work was done.
-   if (!fCanLoadClassInfo) return;
+   // Return if another thread already loaded the info
+   // while we were waiting for the lock
+   if (!fCanLoadClassInfo)
+      return;
 
-   // If class info already loaded then do nothing.  This can happen if the
-   // class was registered by a dictionary, but the info came from reading
-   // the pch.
-   // Note: This check avoids using AutoParse for classes in the pch!
-   if (fClassInfo) {
+   bool autoParse = !gInterpreter->IsAutoParsingSuspended();
+
+   if (autoParse)
+      gInterpreter->AutoParse(GetName());
+
+   if (!fClassInfo)
+      gInterpreter->SetClassInfo(const_cast<TClass *>(this));
+
+   if (autoParse && !fClassInfo) {
+      ::Error("TClass::LoadClassInfo", "no interpreter information for class %s is available"
+                                       " even though it has a TClass initialization routine.",
+              fName.Data());
       return;
    }
 
-   gInterpreter->AutoParse(GetName());
-   if (!fClassInfo) gInterpreter->SetClassInfo(const_cast<TClass*>(this));   // sets fClassInfo pointer
-   if (!gInterpreter->IsAutoParsingSuspended()) {
-      if (!fClassInfo) {
-         ::Error("TClass::LoadClassInfo",
-                 "no interpreter information for class %s is available even though it has a TClass initialization routine.",
-                 fName.Data());
-      }
-      fCanLoadClassInfo = kFALSE;
-   }
+   fCanLoadClassInfo = false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
