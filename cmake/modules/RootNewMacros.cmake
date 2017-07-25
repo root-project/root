@@ -4,10 +4,6 @@
 cmake_policy(SET CMP0003 NEW) # See "cmake --help-policy CMP0003" for more details
 cmake_policy(SET CMP0011 NEW) # See "cmake --help-policy CMP0011" for more details
 cmake_policy(SET CMP0009 NEW) # See "cmake --help-policy CMP0009" for more details
-if(CMAKE_VERSION VERSION_GREATER 2.8.12)
-  cmake_policy(SET CMP0022 OLD) # See "cmake --help-policy CMP0022" for more details
-endif()
-
 
 set(THISDIR ${CMAKE_CURRENT_LIST_DIR})
 
@@ -564,7 +560,7 @@ function(ROOT_LINKER_LIBRARY library)
   add_dependencies(${library} move_headers)
   set_property(GLOBAL APPEND PROPERTY ROOT_EXPORTED_TARGETS ${library})
   set_target_properties(${library} PROPERTIES OUTPUT_NAME ${library_name})
-  set_target_properties(${library} PROPERTIES LINK_INTERFACE_LIBRARIES "${ARG_DEPENDENCIES}")
+  set_target_properties(${library} PROPERTIES INTERFACE_LINK_LIBRARIES "${ARG_DEPENDENCIES}")
   # Do not add -Dname_EXPORTS to the command-line when building files in this
   # target. Doing so is actively harmful for the modules build because it
   # creates extra module variants, and not useful because we don't use these
