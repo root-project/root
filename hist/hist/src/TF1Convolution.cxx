@@ -165,10 +165,11 @@ TF1Convolution::TF1Convolution(TString formula,  Double_t xmin, Double_t xmax, B
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor from two function names where f1 and f2 are two functions known
-/// to ROOT if the function names are not known to ROOT then a corresponding
-/// TFormula is used.
-
+/// constructor from 2 function names where f1 and f2 are two functions known to
+/// ROOT
+///
+/// if the function names are not known to ROOT, tries to interpret them as
+/// TFormula
 TF1Convolution::TF1Convolution(TString formula1, TString formula2,  Double_t xmin, Double_t xmax, Bool_t useFFT)
 {
    TF1::InitStandardFunctions();

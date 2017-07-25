@@ -26,6 +26,7 @@
 #include "TMethodCall.h"
 #include "TF1Helper.h"
 #include "TF1NormSum.h"
+#include "TF1Convolution.h"
 #include "TVirtualMutex.h"
 #include "Math/WrappedFunction.h"
 #include "Math/WrappedTF1.h"
@@ -431,10 +432,52 @@ TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, EA
       fXmin = xmax; //when called from TF2,TF3
       fXmax = xmin;
    }
-   // create rep formula (no need to add to gROOT list since we will add the TF1 object)
-   // First check if we need NSUM syntax:
-   if (TString(formula, 5) == "NSUM(" && formula[strlen(formula)-1] == ')') {
-            // using comma as delimiter
+   // Create rep formula (no need to add to gROOT list since we will add the TF1 object)
+   
+   
+   // First check if we are making a convolution
+   if (TString(formula, 5) == "CONV(" && formula[strlen(formula)-1] == ')') {
+      // Look for single ',' delimiter
+      int delimPosition = -1;
+      int parenCount = 0;
+      for (uint i = 5; i < strlen(formula) - 1; i++) {
+	 if (formula[i] == '(')
+	    parenCount++;
+	 else if (formula[i] == ')')
+	    parenCount--;
+	 else if (formula[i] == ',' && parenCount == 0) {
+	    if (delimPosition == -1)
+	       delimPosition = i;
+	    else
+	       Error("TF1", "CONV takes 2 arguments. Too many arguments found in : %s", formula);
+	 }
+      }
+      if (delimPosition == -1)
+	 Error("TF1", "CONV takes 2 arguments. Only one argument found in : %s", formula);
+
+      // Having found the delimiter, define the first and second formulas
+      TString formula1 = TString(TString(formula)(5, delimPosition-5));
+      TString formula2 = TString(TString(formula)(delimPosition+1,
+						  strlen(formula)-1-(delimPosition+1)));
+      // remove spaces from these formulas
+      formula1.ReplaceAll(' ', "");
+      formula2.ReplaceAll(' ', "");
+      
+      TF1Convolution *conv = new TF1Convolution(formula1, formula2, xmin, xmax);
+      // (note: currently ignoring `useFFT` option)
+      fNpar = conv->GetNpar();
+      fNdim = 1; // (note: may want to extend this in the future?)
+      fType = EFType::kPtrScalarFreeFcn; // (note: may want to add new fType for this case)
+      using Fnc_t = typename ROOT::Internal::GetFunctorType<decltype(ROOT::Internal::GetTheRightOp(&TF1Convolution::operator()))>::type;
+      fFunctor = new TF1::TF1FunctorPointerImpl<Fnc_t>(ROOT::Math::ParamFunctorTempl<Fnc_t>(conv));
+      fParams = new TF1Parameters(fNpar); // default to zeros (TF1Convolution has no GetParameters())
+      // set parameter names
+      for (int i = 0; i < fNpar; i++)
+	 this->SetParName(i, conv->GetParName(i));
+	    
+      // Then check if we need NSUM syntax:
+   } else if (TString(formula, 5) == "NSUM(" && formula[strlen(formula)-1] == ')') {
+      // using comma as delimiter
       char delimiter = ',';
       // first, remove "NSUM(" and ")" and spaces
       TString formDense = TString(formula)(5,strlen(formula)-5-1);
