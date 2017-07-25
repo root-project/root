@@ -52,7 +52,6 @@ public:
    enum EParUnzipMode { kEnable, kDisable, kForce };
 
 protected:
-
    friend class MappingTask;
    friend class UnzipTask;
    tbb::task *root;
@@ -70,7 +69,7 @@ protected:
    // Unzipping related members
    Int_t      *fUnzipLen;         ///<! [fNseek] Length of the unzipped buffers
    char      **fUnzipChunks;      ///<! [fNseek] Individual unzipped chunks. Their summed size is kept under control.
-   std::atomic<Byte_t>     *fUnzipStatus;      ///<! [fNSeek] 
+   std::atomic<Byte_t> *fUnzipStatus;      ///<! [fNSeek] 
 
    Int_t       fNseekMax;         ///<!  fNseek can change so we need to know its max size
    Long64_t    fUnzipBufferSize;  ///<!  Max Size for the ready unzipped blocks (default is 2*fBufferSize)
@@ -120,8 +119,8 @@ public:
    void           SetUnzipBufferSize(Long64_t bufferSize);
    static void    SetUnzipRelBufferSize(Float_t relbufferSize);
    Int_t          UnzipBuffer(char **dest, char *src);
-   Int_t          UnzipCache(Int_t index, Int_t &locbuffsz, char *&locbuff);
-   Int_t          CreateTasks();
+   Int_t UnzipCache(Int_t index, Int_t &locbuffsz, char *&locbuff);
+   Int_t CreateTasks();
 
    // Methods to get stats
    Int_t  GetNUnzip() { return fNUnzip; }
