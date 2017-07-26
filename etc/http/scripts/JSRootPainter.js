@@ -4286,7 +4286,7 @@
            .style("bottom", 0);
       }
 
-      console.log('CANVAS SVG width = ' + rect.width + " height = " + rect.height);
+      // console.log('CANVAS SVG width = ' + rect.width + " height = " + rect.height);
 
       svg.attr("viewBox", "0 0 " + rect.width + " " + rect.height)
          .attr("preserveAspectRatio", "none")  // we do not preserve relative ratio
@@ -4819,6 +4819,9 @@
          this.draw_object = first;
          this.pad = first;
          this._fixed_size = true;
+
+         // if canvas size not specified in batch mode, temporary use 900x700 size
+         if (this.batch_mode && (!first.fCw || !first.fCh)) { first.fCw = 900; first.fCh = 700; }
 
          // case of ROOT7 with always dummy TPad as first entry
          if (!first.fCw || !first.fCh) this._fixed_size = false;
