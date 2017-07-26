@@ -12,12 +12,11 @@
 TString pythonSrc = "\
 from keras.models import Sequential\n\
 from keras.layers.core import Dense, Activation\n\
-from keras import initializations\n\
 from keras.optimizers import SGD\n\
 \n\
 model = Sequential()\n\
-model.add(Dense(64, init=\"normal\", activation=\"tanh\", input_dim=2))\n\
-model.add(Dense(1, init=\"normal\", activation=\"linear\"))\n\
+model.add(Dense(64, activation=\"tanh\", input_dim=2))\n\
+model.add(Dense(1, activation=\"linear\"))\n\
 model.compile(loss=\"mean_squared_error\", optimizer=SGD(lr=0.01))\n\
 model.save(\"kerasModelRegression.h5\")\n";
 
