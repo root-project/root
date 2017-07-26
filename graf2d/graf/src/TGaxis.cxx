@@ -2086,7 +2086,7 @@ L200:
       }
       if (x1 == x0) {
          if (autotoff) {
-            if (toffset) ylabel = 1.6*toffset;
+            if (toffset) ylabel = xlside*charheight+toffset;
             else         ylabel = xlside*1.6*charheight;
          } else {
             ylabel = xlside*1.6*charheight*toffset;
