@@ -2170,8 +2170,8 @@
 
          painter.batch_mode = JSROOT.GetUrlOption("batch_mode") !== null;
 
-         if (!painter.batch_mode) JSROOT.RegisterForResize(painter);
-                             else console.log('draw web canvas in batch mode');
+         if (painter.batch_mode) JSROOT.BatchMode = true;
+                            else JSROOT.RegisterForResize(painter);
 
          return;
       }
