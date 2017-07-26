@@ -219,9 +219,7 @@ macro(ROOTTEST_COMPILE_MACRO filename)
                                     --target ${compile_target}${fast}
                                     -- ${always-make})
   set_property(TEST ${COMPILE_MACRO_TEST} PROPERTY FAIL_REGULAR_EXPRESSION "Warning in")
-  if (gnuinstall)
-    set_property(TEST ${COMPILE_MACRO_TEST} PROPERTY ENVIRONMENT ROOTIGNOREPREFIX=1)
-  endif()
+  set_property(TEST ${COMPILE_MACRO_TEST} PROPERTY ENVIRONMENT ${ROOTTEST_ENVIRONMENT})
   if(CMAKE_GENERATOR MATCHES Ninja)
     set_property(TEST ${COMPILE_MACRO_TEST} PROPERTY RUN_SERIAL true)
   endif()
@@ -279,9 +277,8 @@ macro(ROOTTEST_GENERATE_DICTIONARY dictname)
            COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR}
                                     --target  ${targetname_libgen}${fast}
                                     -- ${always-make})
-  if (gnuinstall)
-    set_property(TEST ${GENERATE_DICTIONARY_TEST} PROPERTY ENVIRONMENT ROOTIGNOREPREFIX=1)
-  endif()
+
+  set_property(TEST ${GENERATE_DICTIONARY_TEST} PROPERTY ENVIRONMENT ${ROOTTEST_ENVIRONMENT})
   if(CMAKE_GENERATOR MATCHES Ninja)
     set_property(TEST ${GENERATE_DICTIONARY_TEST} PROPERTY RUN_SERIAL true)
   endif()
@@ -358,9 +355,8 @@ macro(ROOTTEST_GENERATE_REFLEX_DICTIONARY dictionary)
            COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR}
                                     --target ${targetname_libgen}${fast}
                                     -- ${always-make})
-  if (gnuinstall)
-    set_property(TEST ${GENERATE_REFLEX_TEST} PROPERTY ENVIRONMENT ROOTIGNOREPREFIX=1)
-  endif()
+
+  set_property(TEST ${GENERATE_REFLEX_TEST} PROPERTY ENVIRONMENT ${ROOTTEST_ENVIRONMENT})
   if(CMAKE_GENERATOR MATCHES Ninja)
     set_property(TEST ${GENERATE_REFLEX_TEST} PROPERTY RUN_SERIAL true)
   endif()
@@ -414,9 +410,7 @@ macro(ROOTTEST_GENERATE_EXECUTABLE executable)
            COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR}
                                     --target ${executable}${fast}
                                     -- ${always-make})
-  if (gnuinstall)
-    set_property(TEST ${GENERATE_EXECUTABLE_TEST} PROPERTY ENVIRONMENT ROOTIGNOREPREFIX=1)
-  endif()
+  set_property(TEST ${GENERATE_EXECUTABLE_TEST} PROPERTY ENVIRONMENT ${ROOTTEST_ENVIRONMENT})
   if(CMAKE_GENERATOR MATCHES Ninja)
     set_property(TEST ${GENERATE_EXECUTABLE_TEST} PROPERTY RUN_SERIAL true)
   endif()
