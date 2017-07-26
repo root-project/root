@@ -203,6 +203,9 @@ private:
    void CreateHttpServer(Bool_t with_http = kFALSE);
    void PopupBrowser();
    void CheckDataToSend();
+
+   bool WaitWhenCanvasPainted(uint64_t ver);
+
    std::string CreateSnapshot(const ROOT::Experimental::TCanvas &can);
 
    /// Send the canvas primitives to the THttpServer.
@@ -226,7 +229,7 @@ public:
 
    virtual void AddDisplayItem(ROOT::Experimental::TDisplayItem *item) final;
 
-   virtual void CanvasUpdated(uint64_t) override;
+   virtual void CanvasUpdated(uint64_t, bool) override;
 
    virtual bool IsCanvasModified(uint64_t) const override;
 
@@ -350,14 +353,33 @@ void TCanvasPainter::PopupBrowser()
    gSystem->Exec(exec);
 }
 
-void TCanvasPainter::CanvasUpdated(uint64_t ver)
+void TCanvasPainter::CanvasUpdated(uint64_t ver, bool async)
 {
    fSnapshotVersion = ver;
    fSnapshot = CreateSnapshot(fCanvas);
 
-   printf("Created snapshot %lu len %d\n", ver, (int)fSnapshot.length());
-
    CheckDataToSend();
+
+   if (!async) WaitWhenCanvasPainted(ver);
+}
+
+bool TCanvasPainter::WaitWhenCanvasPainted(uint64_t ver)
+{
+   // simple polling loop until specified version delivered to the clients
+
+   uint64_t cnt = 0;
+   bool had_connection = false;
+
+   while (true) {
+      if (fWebConn.size() > 0) had_connection = true;
+      if ((fWebConn.size()==0) && (had_connection || (cnt>1000))) return false; // wait ~1 min if no new connection established
+      if (fSnapshotDelivered >= ver) { printf("PAINT READY!!!\n"); return true; }
+      gSystem->ProcessEvents();
+      gSystem->Sleep((++cnt<500) ? 1 : 100); // increase sleep interval when do very often
+   }
+
+   return false;
+
 }
 
 void TCanvasPainter::DoWhenReady(const std::string &cmd, const std::string &arg)
@@ -399,7 +421,7 @@ Bool_t TCanvasPainter::ProcessWS(THttpCallArg *arg)
       newconn.fHandle = wshandle;
 
       fWebConn.push_back(newconn);
-      printf("socket is ready %d\n", fWebConn.back().fReady);
+      // printf("socket is ready %d\n", fWebConn.back().fReady);
 
       CheckDataToSend();
 

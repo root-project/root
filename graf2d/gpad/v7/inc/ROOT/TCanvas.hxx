@@ -135,7 +135,7 @@ public:
    bool IsModified() const;
 
    /// update drawing
-   void Update();
+   void Update(bool async = false);
 
    /// Save canvas in image file
    void SaveAs(const std::string &filename);
