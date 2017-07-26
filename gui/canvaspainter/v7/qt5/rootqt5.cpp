@@ -75,7 +75,8 @@ public:
    TWebGuiCallArg(QWebEngineUrlRequestJob *req) : THttpCallArg(), fRequest(req), fDD(0) {}
    virtual ~TWebGuiCallArg()
    {
-      if (fDD != 1) printf("FAAAAAAAAAAAAAIL %d\n", fDD);
+      if (fDD != 1)
+         printf("FAAAAAAAAAAAAAIL %d\n", fDD);
    }
 
    void SendFile(const char *fname)

@@ -271,9 +271,11 @@ struct TCanvasPainterReg {
 
 void TCanvasPainter::CreateHttpServer(Bool_t with_http)
 {
-   if (!gServer) gServer = new THttpServer("dummy");
+   if (!gServer)
+      gServer = new THttpServer("dummy");
 
-   if (!with_http || !fAddr.empty()) return;
+   if (!with_http || !fAddr.empty())
+      return;
 
    // gServer = new THttpServer("http:8080?loopback&websocket_timeout=10000");
    const char *port = gSystem->Getenv("WEBGUI_PORT");
@@ -346,7 +348,8 @@ void TCanvasPainter::DoWhenReady(const std::string &cmd, const std::string &arg)
 
 Bool_t TCanvasPainter::ProcessWS(THttpCallArg *arg)
 {
-   if (!arg) return kTRUE;
+   if (!arg)
+      return kTRUE;
 
    // try to identify connection for given WS request
    WebConn *conn = 0;
@@ -369,7 +372,8 @@ Bool_t TCanvasPainter::ProcessWS(THttpCallArg *arg)
    if (strcmp(arg->GetMethod(), "WS_READY") == 0) {
       THttpWSEngine *wshandle = dynamic_cast<THttpWSEngine *>(arg->TakeWSHandle());
 
-      if (conn != 0) Error("ProcessWSRequest", "WSHandle with given websocket id exists!!!");
+      if (conn != 0)
+         Error("ProcessWSRequest", "WSHandle with given websocket id exists!!!");
 
       WebConn newconn;
       newconn.fHandle = wshandle;
@@ -390,7 +394,8 @@ Bool_t TCanvasPainter::ProcessWS(THttpCallArg *arg)
          conn->fHandle = 0;
       }
 
-      if (conn) fWebConn.erase(iter);
+      if (conn)
+         fWebConn.erase(iter);
       return kTRUE;
    }
 
@@ -404,7 +409,8 @@ Bool_t TCanvasPainter::ProcessWS(THttpCallArg *arg)
       return kFALSE;
    }
 
-   if (conn->fHandle->PreviewData(arg)) return kTRUE;
+   if (conn->fHandle->PreviewData(arg))
+      return kTRUE;
 
    const char *cdata = (arg->GetPostDataLength() <= 0) ? "" : (const char *)arg->GetPostData();
 
@@ -478,7 +484,8 @@ void TCanvasPainter::CheckModifiedFlag()
    for (WebConnList::iterator citer = fWebConn.begin(); citer != fWebConn.end(); ++citer) {
       WebConn &conn = *citer;
 
-      if (!conn.fReady || !conn.fHandle) continue;
+      if (!conn.fReady || !conn.fHandle)
+         continue;
 
       TString buf;
 
@@ -530,7 +537,8 @@ ROOT::Experimental::Internal::TDrawable *TCanvasPainter::FindDrawable(const ROOT
 
    for (auto &&drawable : can.GetPrimitives()) {
 
-      if (id == ROOT::Experimental::TDisplayItem::MakeIDFromPtr(&(*drawable))) return &(*drawable);
+      if (id == ROOT::Experimental::TDisplayItem::MakeIDFromPtr(&(*drawable)))
+         return &(*drawable);
    }
 
    return nullptr;
