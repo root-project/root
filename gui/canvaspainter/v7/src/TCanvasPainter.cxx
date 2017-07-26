@@ -303,12 +303,29 @@ void TCanvasPainter::CreateHttpServer(Bool_t with_http)
    gServer->CreateEngine(TString::Format("http:%s?websocket_timeout=10000", port).Data());
 }
 
+//////////////////////////////////////////////////////////////////////////
+/// Create new display for the canvas
+/// Parameter \par where specified  which program could be used for display creation
+/// Possible values:
+///
+///      cef - Chromium Embeded Framework, local display, local communication
+///      qt5 - Qt5 WebEngine (when running via rootqt5), local display, local communication
+///  browser - default system web-browser, communication via random http port from range 8800 - 9800
+///  <prog> - any program name which will be started instead of default browser, like firefox or /usr/bin/opera
+///           one could also specify $url in program name, which will be replaced with canvas URL
+///  native - either any available local display or default browser
+///
+///  Canvas can be displayed in several different places
+
 void TCanvasPainter::NewDisplay(const std::string &where)
 {
    TString addr;
 
+   bool is_native = where.empty() || (where == "native"), is_qt5 = (where == "qt5"), ic_cef = (where == "cef");
+
    Func_t symbol_qt5 = gSystem->DynFindSymbol("*", "webgui_start_browser_in_qt5");
-   if (symbol_qt5 && (where.empty() || (where == "qt5") || (where == "native"))) {
+
+   if (symbol_qt5 && (is_native || is_qt5)) {
       typedef void (*FunctionQt5)(const char *, void *, bool);
 
       addr.Form("://dummy:8080/web7gui/%s/draw.htm?longpollcanvas%s", GetName(), (IsBatchMode() ? "&batch_mode" : ""));
@@ -321,11 +338,12 @@ void TCanvasPainter::NewDisplay(const std::string &where)
       return;
    }
 
+   // TODO: one should try to load CEF libraries only when really needed
+   // probably, one should create separate DLL with CEF-related code
    Func_t symbol_cef = gSystem->DynFindSymbol("*", "webgui_start_browser_in_cef3");
    const char *cef_path = gSystem->Getenv("CEF_PATH");
    const char *rootsys = gSystem->Getenv("ROOTSYS");
-   if (symbol_cef && cef_path && !gSystem->AccessPathName(cef_path) && rootsys &&
-       (where.empty() || (where == "cef") || (where == "native"))) {
+   if (symbol_cef && cef_path && !gSystem->AccessPathName(cef_path) && rootsys && (is_native || ic_cef)) {
       typedef void (*FunctionCef3)(const char *, void *, bool, const char *, const char *);
 
       // addr.Form("/web7gui/%s/draw.htm?cef_canvas%s", GetName(), (IsBatchMode() ? "&batch_mode" : ""));
@@ -345,9 +363,14 @@ void TCanvasPainter::NewDisplay(const std::string &where)
 
    TString exec;
 
-   if (!where.empty() && (where != "native"))
-      exec.Form("%s %s", where.c_str(), addr.Data());
-   else if (gSystem->InheritsFrom("TMacOSXSystem"))
+   if (!is_native && !ic_cef && !is_qt5 && (where!="browser")) {
+      if (where.find("$url")!=std::string::npos) {
+         exec = where.c_str();
+         exec.ReplaceAll("$url", addr);
+      } else {
+         exec.Form("%s %s", where.c_str(), addr.Data());
+      }
+   } else if (gSystem->InheritsFrom("TMacOSXSystem"))
       exec.Form("open %s", addr.Data());
    else
       exec.Form("xdg-open %s &", addr.Data());
