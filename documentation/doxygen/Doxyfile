@@ -933,6 +933,7 @@ EXCLUDE_SYMLINKS       = NO
 # exclude all test directories for example use the pattern */test/*
 
 EXCLUDE_PATTERNS       =  */G__* \
+                          */test/* \
                           */src/unuran-* \
                           */libAfterImage/* \
                           */doc/v6* */doc/v5* \
