@@ -48,8 +48,7 @@ private:
    /// Title of the canvas.
    std::string fTitle;
 
-   /// If canvas modified.
-   bool fModified;
+   uint64_t  fModified;  //<! increment counter when canvas modified.
 
    /// The painter of this canvas, bootstrapping the graphics connection.
    /// Unmapped canvases (those that never had `Draw()` invoked) might not have
@@ -126,16 +125,20 @@ public:
    /// Remove an object from the list of primitives.
    // TODO: void Wipe();
 
-   void Modified() { fModified = true; }
-
    /// Actually display the canvas.
    void Show();
 
-   /// Save canvas in image file
-   void SaveAs(const std::string &filename);
+   // Indicates that any object was modified
+   void Modified();
+
+   // Return if canvas was modified and not yet updated
+   bool IsModified() const;
 
    /// update drawing
    void Update();
+
+   /// Save canvas in image file
+   void SaveAs(const std::string &filename);
 
    /// Get the canvas's title.
    const std::string &GetTitle() const { return fTitle; }

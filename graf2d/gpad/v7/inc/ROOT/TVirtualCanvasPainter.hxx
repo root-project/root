@@ -53,6 +53,12 @@ public:
    /// add display item to the canvas
    virtual void AddDisplayItem(TDisplayItem *item) = 0;
 
+   /// indicate that canvas changed, provides current version of the canvas
+   virtual void CanvasUpdated(uint64_t) = 0;
+
+   /// return true if canvas modified since last painting
+   virtual bool IsCanvasModified(uint64_t) const = 0;
+
    /// perform special action when drawing is ready
    virtual void DoWhenReady(const std::string &, const std::string &) = 0;
 

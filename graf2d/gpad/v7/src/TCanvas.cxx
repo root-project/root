@@ -43,8 +43,21 @@ const std::vector<std::shared_ptr<ROOT::Experimental::TCanvas>> &ROOT::Experimen
 //  }
 // }
 
+void ROOT::Experimental::TCanvas::Modified()
+{
+   fModified++;
+}
+
+bool ROOT::Experimental::TCanvas::IsModified() const
+{
+   return fPainter ? fPainter->IsCanvasModified(fModified) : fModified;
+}
+
 void ROOT::Experimental::TCanvas::Update()
 {
+   if (fPainter)
+      fPainter->CanvasUpdated(fModified);
+
    // SnapshotList_t lst;
    // for (auto&& drw: fPrimitives) {
    //   TSnapshot *snap = drw->CreateSnapshot(*this);
@@ -62,14 +75,21 @@ std::shared_ptr<ROOT::Experimental::TCanvas> ROOT::Experimental::TCanvas::Create
 
 void ROOT::Experimental::TCanvas::Show()
 {
-   if (fPainter) return;
+   if (fPainter)
+      return;
    bool batch_mode = gROOT->IsBatch();
+   if (!fModified)
+      fModified = 1; // 0 is special value, means no changes and no drawings
+
    fPainter = Internal::TVirtualCanvasPainter::Create(*this, batch_mode);
+   if (fPainter)
+      fPainter->CanvasUpdated(fModified);
 }
 
 void ROOT::Experimental::TCanvas::SaveAs(const std::string &filename)
 {
-   if (!fPainter) fPainter = Internal::TVirtualCanvasPainter::Create(*this, true);
+   if (!fPainter)
+      fPainter = Internal::TVirtualCanvasPainter::Create(*this, true);
    if (filename.find(".svg") != std::string::npos)
       fPainter->DoWhenReady("SVG", filename);
    else if (filename.find(".png") != std::string::npos)

@@ -164,11 +164,12 @@ class TCanvasPainter : public THttpWSHandler,
 private:
    struct WebConn {
       THttpWSEngine *fHandle; ///<! websocket handle
-      Bool_t fReady;          ///!< when connection ready to send new data
-      Bool_t fDrawReady;      ///!< when first drawing is performed
+      bool fReady;            ///!< when connection ready to send new data
+      bool fDrawReady;        ///!< when first drawing is performed
       std::string fGetMenu;   ///<! object id for menu request
-      Bool_t fModified;       ///<! indicates if canvas was modified for that connection
-      WebConn() : fHandle(0), fReady(kFALSE), fDrawReady(kFALSE), fGetMenu(), fModified(kFALSE) {}
+      uint64_t fSend;         ///<! indicates version send to connection
+      uint64_t fDelivered;    ///<! indicates version confirmed from canvas
+      WebConn() : fHandle(0), fReady(false), fDrawReady(false), fGetMenu(), fSend(0), fDelivered(0) {}
    };
 
    typedef std::list<WebConn> WebConnList;
@@ -184,6 +185,10 @@ private:
    ROOT::Experimental::TPadDisplayItem fDisplayList; ///!< full list of items to display
    std::string fNextCmd;                             ///!< command which will be executed next
 
+   uint64_t fSnapshotVersion;   ///!< version of snapshot
+   std::string fSnapshot;       ///!< last produced snapshot
+   uint64_t fSnapshotDelivered; ///!< minimal version delivered to all connections
+
    static std::string fAddr;    ///<! real http address (when assigned)
    static THttpServer *gServer; ///<! server
 
@@ -197,7 +202,7 @@ private:
 
    void CreateHttpServer(Bool_t with_http = kFALSE);
    void PopupBrowser();
-   void CheckModifiedFlag();
+   void CheckDataToSend();
    std::string CreateSnapshot(const ROOT::Experimental::TCanvas &can);
 
    /// Send the canvas primitives to the THttpServer.
@@ -209,7 +214,8 @@ public:
    /// Create a TVirtualCanvasPainter for the given canvas.
    /// The painter observes it; it needs to know should the TCanvas be deleted.
    TCanvasPainter(const std::string &name, const ROOT::Experimental::TCanvas &canv, bool batch_mode)
-      : THttpWSHandler(name.c_str(), "title"), fCanvas(canv), fBatchMode(batch_mode), fWebConn()
+      : THttpWSHandler(name.c_str(), "title"), fCanvas(canv), fBatchMode(batch_mode), fWebConn(), fDisplayList(),
+        fNextCmd(), fSnapshotVersion(0), fSnapshot(), fSnapshotDelivered(0)
    {
       CreateHttpServer();
       gServer->Register("/web7gui", this);
@@ -219,6 +225,10 @@ public:
    virtual bool IsBatchMode() const { return fBatchMode; }
 
    virtual void AddDisplayItem(ROOT::Experimental::TDisplayItem *item) final;
+
+   virtual void CanvasUpdated(uint64_t) override;
+
+   virtual bool IsCanvasModified(uint64_t) const override;
 
    /// perform special action when drawing is ready
    virtual void DoWhenReady(const std::string &cmd, const std::string &arg) final;
@@ -340,10 +350,20 @@ void TCanvasPainter::PopupBrowser()
    gSystem->Exec(exec);
 }
 
+void TCanvasPainter::CanvasUpdated(uint64_t ver)
+{
+   fSnapshotVersion = ver;
+   fSnapshot = CreateSnapshot(fCanvas);
+
+   printf("Created snapshot %lu len %d\n", ver, (int)fSnapshot.length());
+
+   CheckDataToSend();
+}
+
 void TCanvasPainter::DoWhenReady(const std::string &cmd, const std::string &arg)
 {
    fNextCmd = cmd + ":" + arg;
-   CheckModifiedFlag();
+   CheckDataToSend();
 }
 
 Bool_t TCanvasPainter::ProcessWS(THttpCallArg *arg)
@@ -377,10 +397,11 @@ Bool_t TCanvasPainter::ProcessWS(THttpCallArg *arg)
 
       WebConn newconn;
       newconn.fHandle = wshandle;
-      newconn.fModified = kTRUE;
 
       fWebConn.push_back(newconn);
-      printf("socket is ready\n");
+      printf("socket is ready %d\n", fWebConn.back().fReady);
+
+      CheckDataToSend();
 
       return kTRUE;
    }
@@ -416,15 +437,20 @@ Bool_t TCanvasPainter::ProcessWS(THttpCallArg *arg)
 
    if (strncmp(cdata, "READY", 5) == 0) {
       conn->fReady = kTRUE;
-      CheckModifiedFlag();
+      CheckDataToSend();
+   } else if (strncmp(cdata, "SNAPDONE:", 9) == 0) {
+      conn->fReady = kTRUE;
+      conn->fDrawReady = kTRUE;                                // at least first drawing is performed
+      conn->fDelivered = (uint64_t)TString(cdata + 9).Atoll(); // delivered version of the snapshot
+      CheckDataToSend();
    } else if (strncmp(cdata, "RREADY:", 7) == 0) {
       conn->fReady = kTRUE;
       conn->fDrawReady = kTRUE; // at least first drawing is performed
-      CheckModifiedFlag();
+      CheckDataToSend();
    } else if (strncmp(cdata, "GETMENU:", 8) == 0) {
       conn->fReady = kTRUE;
       conn->fGetMenu = cdata + 8;
-      CheckModifiedFlag();
+      CheckDataToSend();
    } else if (strncmp(cdata, "GEXE:", 5) == 0) {
       // TODO: temporary solution, should be removed later
       // used now to terminate ROOT session
@@ -441,7 +467,7 @@ Bool_t TCanvasPainter::ProcessWS(THttpCallArg *arg)
          printf("Create SVG file %s len %d\n", fname.Data(), buf.Length());
       }
       conn->fReady = kTRUE;
-      CheckModifiedFlag();
+      CheckDataToSend();
    } else if (strncmp(cdata, "DONEPNG:", 8) == 0) {
       TString buf(cdata + 8);
       Int_t pos = buf.First(':');
@@ -459,7 +485,7 @@ Bool_t TCanvasPainter::ProcessWS(THttpCallArg *arg)
          printf("Error when producing PNG image %s\n", buf.Data());
       }
       conn->fReady = kTRUE;
-      CheckModifiedFlag();
+      CheckDataToSend();
    } else if (strncmp(cdata, "OBJEXEC:", 8) == 0) {
       TString buf(cdata + 8);
       Int_t pos = buf.First(':');
@@ -478,11 +504,16 @@ Bool_t TCanvasPainter::ProcessWS(THttpCallArg *arg)
    return kTRUE;
 }
 
-void TCanvasPainter::CheckModifiedFlag()
+void TCanvasPainter::CheckDataToSend()
 {
+
+   uint64_t min_delivered = 0;
 
    for (WebConnList::iterator citer = fWebConn.begin(); citer != fWebConn.end(); ++citer) {
       WebConn &conn = *citer;
+
+      if (conn.fDelivered && (!min_delivered || (min_delivered < conn.fDelivered)))
+         min_delivered = conn.fDelivered;
 
       if (!conn.fReady || !conn.fHandle)
          continue;
@@ -509,13 +540,15 @@ void TCanvasPainter::CheckModifiedFlag()
          }
 
          conn.fGetMenu = "";
-      } else if (conn.fModified) {
+      } else if (conn.fSend != fSnapshotVersion) {
          // buf = "JSON";
          // buf  += TBufferJSON::ConvertToJSON(Canvas(), 3);
 
-         buf = "SNAP";
-         buf += CreateSnapshot(fCanvas);
-         conn.fModified = kFALSE;
+         conn.fSend = fSnapshotVersion;
+         buf = "SNAP:";
+         buf += TString::ULLtoa(fSnapshotVersion, 10);
+         buf += ":";
+         buf += fSnapshot;
       }
 
       if (buf.Length() > 0) {
@@ -524,6 +557,16 @@ void TCanvasPainter::CheckModifiedFlag()
          conn.fHandle->SendCharStar(buf.Data());
       }
    }
+
+   if (fSnapshotDelivered != min_delivered) {
+      fSnapshotDelivered = min_delivered;
+      // one could call-back canvas methods here
+   }
+}
+
+bool TCanvasPainter::IsCanvasModified(uint64_t id) const
+{
+   return fSnapshotDelivered != id;
 }
 
 void TCanvasPainter::AddDisplayItem(ROOT::Experimental::TDisplayItem *item)
@@ -551,7 +594,7 @@ std::string TCanvasPainter::CreateSnapshot(const ROOT::Experimental::TCanvas &ca
 
    fDisplayList.SetObjectIDAsPtr((void *)&can);
 
-   TPad *dummy = new TPad(); // just to keep information we need for different ranges now
+   TPad *dummy = new TPad(); // just provide old class where all kind of info (size, ranges) already provided
 
    auto *snap = new ROOT::Experimental::TUniqueDisplayItem<TPad>(dummy);
    snap->SetObjectIDAsPtr((void *)&can);
