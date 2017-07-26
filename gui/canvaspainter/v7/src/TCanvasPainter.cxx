@@ -75,6 +75,7 @@ static inline bool is_base64(unsigned char c)
    return (isalnum(c) || (c == '+') || (c == '/'));
 }
 
+/*
 std::string base64_encode(unsigned char const *bytes_to_encode, unsigned int in_len)
 {
    std::string ret;
@@ -110,6 +111,7 @@ std::string base64_encode(unsigned char const *bytes_to_encode, unsigned int in_
 
    return ret;
 }
+*/
 
 std::string base64_decode(std::string const &encoded_string)
 {
@@ -289,19 +291,17 @@ void TCanvasPainter::PopupBrowser()
 {
    TString addr;
 
-   Bool_t is_batch = gROOT->IsBatch();
-
    Func_t symbol_qt5 = gSystem->DynFindSymbol("*", "webgui_start_browser_in_qt5");
    if (symbol_qt5) {
       typedef void (*FunctionQt5)(const char *, void *, bool);
 
-      addr.Form("://dummy:8080/web7gui/%s/draw.htm?longpollcanvas", GetName());
+      addr.Form("://dummy:8080/web7gui/%s/draw.htm?longpollcanvas%s", GetName(), (IsBatchMode() ? "&batch_mode" : ""));
       // addr.Form("example://localhost:8080/Canvases/%s/draw.htm", Canvas()->GetName());
 
       Info("PopupBrowser", "Show canvas in Qt5 window:  %s", addr.Data());
 
       FunctionQt5 func = (FunctionQt5)symbol_qt5;
-      func(addr.Data(), gServer, is_batch);
+      func(addr.Data(), gServer, IsBatchMode());
       return;
    }
 
@@ -317,7 +317,7 @@ void TCanvasPainter::PopupBrowser()
       Info("PopupBrowser", "Show canvas in CEF window:  %s", addr.Data());
 
       FunctionCef3 func = (FunctionCef3)symbol_cef;
-      func(addr.Data(), gServer, is_batch, rootsys, cef_path);
+      func(addr.Data(), gServer, IsBatchMode(), rootsys, cef_path);
 
       return;
    }
