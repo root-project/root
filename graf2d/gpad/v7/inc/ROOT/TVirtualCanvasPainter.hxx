@@ -54,7 +54,7 @@ public:
    virtual void AddDisplayItem(TDisplayItem *item) = 0;
 
    /// indicate that canvas changed, provides current version of the canvas
-   virtual void CanvasUpdated(uint64_t) = 0;
+   virtual void CanvasUpdated(uint64_t, bool) = 0;
 
    /// return true if canvas modified since last painting
    virtual bool IsCanvasModified(uint64_t) const = 0;
