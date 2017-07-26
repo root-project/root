@@ -17,14 +17,7 @@
 #define ROO_TASK_SPEC
 
 #include "RooFit.h"
-#include <cstdlib>
 #include <list>
-#include <sstream>
-#include "RooMsgService.h"
-#include "RooNLLVar.h"
-#include "RooAbsTestStatistic.h"
-#include "RooAbsOptTestStatistic.h"
-#include "RooAddition.h"
 #include "RooAbsTestStatistic.h"
 
 class RooArgList;
@@ -32,7 +25,7 @@ class RooArgList;
 class RooTaskSpec {
  public:
   RooTaskSpec();
-  RooTaskSpec(RooAbsOptTestStatistic* nll);
+  RooTaskSpec(RooAbsTestStatistic* rats_nll);
   RooTaskSpec(RooAbsReal* nll);
   struct Task {
     Int_t id;
@@ -43,8 +36,8 @@ class RooTaskSpec {
   };
   std::list<Task> tasks;
  private:
-  void _initialise(RooAbsOptTestStatistic* rats);
-  Task _fill_task(const Int_t n, RooAbsOptTestStatistic* rats);
+  void _initialise(RooAbsTestStatistic* rats);
+  Task _fill_task(const Int_t n, RooAbsTestStatistic* rats);
   Int_t _fit_case;
   Int_t n_tasks = tasks.size();
 
