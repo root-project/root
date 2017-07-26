@@ -106,6 +106,28 @@ TEST(TClingCallFunc, FunctionWrapperVoid)
    gInterpreter->ClassInfo_Delete(GlobalNamespace);
 }
 
+TEST(TClingCallFunc, FunctionWrapperVariadic)
+{
+   gInterpreter->Declare(R"cpp(
+                           void FunctionWrapperFuncVariadic(int j, ...) {}
+                           )cpp");
+
+   ClassInfo_t *GlobalNamespace = gInterpreter->ClassInfo_Factory("");
+   CallFunc_t *mc = gInterpreter->CallFunc_Factory();
+   long offset = 0;
+
+   gInterpreter->CallFunc_SetFuncProto(mc, GlobalNamespace, "FunctionWrapperFuncVariadic", "int", &offset);
+   std::string wrapper = gInterpreter->CallFunc_GetWrapperCode(mc);
+
+   ASSERT_TRUE(gInterpreter->Declare(wrapper.c_str()));
+   // Make sure we didn't forget the ... in the variadic function signature.
+   ASSERT_TRUE(wrapper.find("((void (&)(int, ...))FunctionWrapperFuncVariadic)") != wrapper.npos);
+
+   // Cleanup
+   gInterpreter->CallFunc_Delete(mc);
+   gInterpreter->ClassInfo_Delete(GlobalNamespace);
+}
+
 TEST(TClingCallFunc, FunctionWrapperDefaultArg)
 {
    gInterpreter->Declare(R"cpp(

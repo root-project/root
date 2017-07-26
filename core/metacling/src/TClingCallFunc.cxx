@@ -433,6 +433,8 @@ void TClingCallFunc::make_narg_call(const std::string &return_type, const unsign
             ROOT::TMetaUtils::GetNormalizedName(arg_type, QT, *fInterp, fNormCtxt);
             callbuf << arg_type;
          }
+         if (FD->isVariadic())
+            callbuf << ", ...";
          callbuf << ")";
       }
 
