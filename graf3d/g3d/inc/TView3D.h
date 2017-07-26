@@ -140,7 +140,7 @@ public:
    virtual void      MoveViewCommand(Char_t chCode, Int_t count=1);
    virtual void      MoveWindow(Char_t option);
 
-   virtual void      AdjustScales(TVirtualPad *pad=0); // *MENU*
+   virtual void      AdjustScales(TVirtualPad *pad=0);
    virtual void      Centered3DImages(TVirtualPad *pad=0);
    virtual void      Centered();                       // *MENU*
    virtual void      FrontView(TVirtualPad *pad=0);
