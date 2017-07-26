@@ -125,8 +125,8 @@ public:
    /// Remove an object from the list of primitives.
    // TODO: void Wipe();
 
-   /// Actually display the canvas.
-   void Show();
+   /// Display the canvas.
+   void Show(const std::string &where = "");
 
    // Indicates that any object was modified
    void Modified();

@@ -35,7 +35,9 @@ void draw_v6()
    auto canvas = Experimental::TCanvas::Create("v7 TCanvas showing a v6 TGraph");
    canvas->Draw(gr);
 
-   canvas->Show();
+   canvas->Show(); // one could use canvas->Show("/usr/bin/opera"); or canvas->Show("firefox");
+
+   canvas->Update(); // wait until painting is finished
 
    canvas->SaveAs("draw.png"); // only .svg and .png are supported for the moment, asynchron
 }
