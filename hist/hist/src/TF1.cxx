@@ -458,12 +458,22 @@ TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, EA
       // Having found the delimiter, define the first and second formulas
       TString formula1 = TString(TString(formula)(5, delimPosition-5));
       TString formula2 = TString(TString(formula)(delimPosition+1,
-						  strlen(formula)-1-(delimPosition+1)));
+      						  strlen(formula)-1-(delimPosition+1)));
       // remove spaces from these formulas
       formula1.ReplaceAll(' ', "");
       formula2.ReplaceAll(' ', "");
+
+      TF1 *function1 = (TF1 *)(gROOT->GetListOfFunctions()->FindObject(formula1));
+      if (function1 == nullptr)
+	 function1 = new TF1((const char *)formula1, (const char *)formula1, xmin, xmax);
+      TF1 *function2 = (TF1 *)(gROOT->GetListOfFunctions()->FindObject(formula2));
+      if (function2 == nullptr)
+	 function2 = new TF1((const char *)formula2, (const char *)formula2, xmin, xmax);
       
-      TF1Convolution *conv = new TF1Convolution(formula1, formula2, xmin, xmax);
+      // std::cout << "functions have been defined" << std::endl;
+      
+      TF1Convolution *conv = new TF1Convolution(function1, function2);
+
       // (note: currently ignoring `useFFT` option)
       fNpar = conv->GetNpar();
       fNdim = 1; // (note: may want to extend this in the future?)
@@ -473,8 +483,10 @@ TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, EA
       fParams = new TF1Parameters(fNpar); // default to zeros (TF1Convolution has no GetParameters())
       // set parameter names
       for (int i = 0; i < fNpar; i++)
-	 this->SetParName(i, conv->GetParName(i));
-	    
+      	 this->SetParName(i, conv->GetParName(i));
+      // TODO: set parameters to default values
+
+      
       // Then check if we need NSUM syntax:
    } else if (TString(formula, 5) == "NSUM(" && formula[strlen(formula)-1] == ')') {
       // using comma as delimiter
