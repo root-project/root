@@ -126,10 +126,11 @@ ROOTTEST_ADD_TEST(regression_invalidref
 
 
 
-ROOTTEST_GENERATE_EXECUTABLE(regression_zeroentries regression_zeroentries.cxx LIBRARIES ${DFLIBRARIES})
-ROOTTEST_ADD_TEST(regression_zeroentries
-                  EXEC regression_zeroentries
-                  DEPENDS ${GENERATE_EXECUTABLE_TEST})
+# TODO uncomment (or delete forever) after ROOT-8924 is resolved
+#ROOTTEST_GENERATE_EXECUTABLE(regression_zeroentries regression_zeroentries.cxx LIBRARIES ${DFLIBRARIES})
+#ROOTTEST_ADD_TEST(regression_zeroentries
+#                  EXEC regression_zeroentries
+#                  DEPENDS ${GENERATE_EXECUTABLE_TEST})
 
 
 ROOTTEST_GENERATE_EXECUTABLE(foreach test_foreach.cxx LIBRARIES ${DFLIBRARIES})
