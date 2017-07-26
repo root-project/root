@@ -12,12 +12,11 @@
 TString pythonSrc = "\
 from keras.models import Sequential\n\
 from keras.layers.core import Dense, Activation\n\
-from keras import initializations\n\
 from keras.optimizers import SGD\n\
 \n\
 model = Sequential()\n\
-model.add(Dense(64, init=\"normal\", activation=\"relu\", input_dim=4))\n\
-model.add(Dense(2, init=\"normal\", activation=\"softmax\"))\n\
+model.add(Dense(64, activation=\"relu\", input_dim=4))\n\
+model.add(Dense(2, activation=\"softmax\"))\n\
 model.compile(loss=\"categorical_crossentropy\", optimizer=SGD(lr=0.01), metrics=[\"accuracy\",])\n\
 model.save(\"kerasModelClassification.h5\")\n";
 

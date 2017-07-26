@@ -13,12 +13,11 @@
 TString pythonSrc = "\
 from keras.models import Sequential\n\
 from keras.layers.core import Dense, Activation\n\
-from keras import initializations\n\
 from keras.optimizers import Adam\n\
 \n\
 model = Sequential()\n\
-model.add(Dense(64, init=\"glorot_normal\", activation=\"relu\", input_dim=4))\n\
-model.add(Dense(4, init=\"glorot_normal\", activation=\"softmax\"))\n\
+model.add(Dense(64, activation=\"relu\", input_dim=4))\n\
+model.add(Dense(4, activation=\"softmax\"))\n\
 model.compile(loss=\"categorical_crossentropy\", optimizer=Adam(), metrics=[\"accuracy\",])\n\
 model.save(\"kerasModelMulticlass.h5\")\n";
 
