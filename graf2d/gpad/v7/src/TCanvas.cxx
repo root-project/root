@@ -73,17 +73,22 @@ std::shared_ptr<ROOT::Experimental::TCanvas> ROOT::Experimental::TCanvas::Create
    return pCanvas;
 }
 
-void ROOT::Experimental::TCanvas::Show()
+void ROOT::Experimental::TCanvas::Show(const std::string &where)
 {
-   if (fPainter)
+   if (fPainter) {
+      if (!where.empty()) fPainter->NewDisplay(where);
       return;
+   }
+
    bool batch_mode = gROOT->IsBatch();
    if (!fModified)
       fModified = 1; // 0 is special value, means no changes and no drawings
 
    fPainter = Internal::TVirtualCanvasPainter::Create(*this, batch_mode);
-   if (fPainter)
-      fPainter->CanvasUpdated(fModified, false);
+   if (fPainter) {
+      fPainter->NewDisplay(where);
+      fPainter->CanvasUpdated(fModified, true); // trigger async display
+   }
 }
 
 void ROOT::Experimental::TCanvas::SaveAs(const std::string &filename)

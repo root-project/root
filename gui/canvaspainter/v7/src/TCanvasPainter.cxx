@@ -201,7 +201,6 @@ private:
    ROOT::Experimental::Internal::TDrawable *FindDrawable(const ROOT::Experimental::TCanvas &can, const std::string &id);
 
    void CreateHttpServer(Bool_t with_http = kFALSE);
-   void PopupBrowser();
    void CheckDataToSend();
 
    bool WaitWhenCanvasPainted(uint64_t ver);
@@ -222,7 +221,6 @@ public:
    {
       CreateHttpServer();
       gServer->Register("/web7gui", this);
-      PopupBrowser();
    }
 
    virtual bool IsBatchMode() const { return fBatchMode; }
@@ -235,6 +233,9 @@ public:
 
    /// perform special action when drawing is ready
    virtual void DoWhenReady(const std::string &cmd, const std::string &arg) final;
+
+   // open new display for the canvas
+   virtual void NewDisplay(const std::string &where) override;
 
    // void ReactToSocketNews(...) override { SendCanvas(); }
 
@@ -302,18 +303,18 @@ void TCanvasPainter::CreateHttpServer(Bool_t with_http)
    gServer->CreateEngine(TString::Format("http:%s?websocket_timeout=10000", port).Data());
 }
 
-void TCanvasPainter::PopupBrowser()
+void TCanvasPainter::NewDisplay(const std::string &where)
 {
    TString addr;
 
    Func_t symbol_qt5 = gSystem->DynFindSymbol("*", "webgui_start_browser_in_qt5");
-   if (symbol_qt5) {
+   if (symbol_qt5 && (where.empty() || (where == "qt5") || (where == "native"))) {
       typedef void (*FunctionQt5)(const char *, void *, bool);
 
       addr.Form("://dummy:8080/web7gui/%s/draw.htm?longpollcanvas%s", GetName(), (IsBatchMode() ? "&batch_mode" : ""));
       // addr.Form("example://localhost:8080/Canvases/%s/draw.htm", Canvas()->GetName());
 
-      Info("PopupBrowser", "Show canvas in Qt5 window:  %s", addr.Data());
+      Info("NewDisplay", "Show canvas in Qt5 window:  %s", addr.Data());
 
       FunctionQt5 func = (FunctionQt5)symbol_qt5;
       func(addr.Data(), gServer, IsBatchMode());
@@ -323,13 +324,14 @@ void TCanvasPainter::PopupBrowser()
    Func_t symbol_cef = gSystem->DynFindSymbol("*", "webgui_start_browser_in_cef3");
    const char *cef_path = gSystem->Getenv("CEF_PATH");
    const char *rootsys = gSystem->Getenv("ROOTSYS");
-   if (symbol_cef && cef_path && !gSystem->AccessPathName(cef_path) && rootsys) {
+   if (symbol_cef && cef_path && !gSystem->AccessPathName(cef_path) && rootsys &&
+       (where.empty() || (where == "cef") || (where == "native"))) {
       typedef void (*FunctionCef3)(const char *, void *, bool, const char *, const char *);
 
       // addr.Form("/web7gui/%s/draw.htm?cef_canvas%s", GetName(), (IsBatchMode() ? "&batch_mode" : ""));
       addr.Form("/web7gui/%s/draw.htm?cef_canvas%s", GetName(), (IsBatchMode() ? "&batch_mode" : ""));
 
-      Info("PopupBrowser", "Show canvas in CEF window:  %s", addr.Data());
+      Info("NewDisplay", "Show canvas in CEF window:  %s", addr.Data());
 
       FunctionCef3 func = (FunctionCef3)symbol_cef;
       func(addr.Data(), gServer, IsBatchMode(), rootsys, cef_path);
@@ -343,12 +345,14 @@ void TCanvasPainter::PopupBrowser()
 
    TString exec;
 
-   if (gSystem->InheritsFrom("TMacOSXSystem"))
+   if (!where.empty() && (where != "native"))
+      exec.Form("%s %s", where.c_str(), addr.Data());
+   else if (gSystem->InheritsFrom("TMacOSXSystem"))
       exec.Form("open %s", addr.Data());
    else
       exec.Form("xdg-open %s &", addr.Data());
 
-   Info("PopupBrowser", "Show canvas in browser with cmd:  %s", exec.Data());
+   Info("NewDisplay", "Show canvas in browser with cmd:  %s", exec.Data());
 
    gSystem->Exec(exec);
 }
@@ -360,7 +364,8 @@ void TCanvasPainter::CanvasUpdated(uint64_t ver, bool async)
 
    CheckDataToSend();
 
-   if (!async) WaitWhenCanvasPainted(ver);
+   if (!async)
+      WaitWhenCanvasPainted(ver);
 }
 
 bool TCanvasPainter::WaitWhenCanvasPainted(uint64_t ver)
@@ -371,15 +376,19 @@ bool TCanvasPainter::WaitWhenCanvasPainted(uint64_t ver)
    bool had_connection = false;
 
    while (true) {
-      if (fWebConn.size() > 0) had_connection = true;
-      if ((fWebConn.size()==0) && (had_connection || (cnt>1000))) return false; // wait ~1 min if no new connection established
-      if (fSnapshotDelivered >= ver) { printf("PAINT READY!!!\n"); return true; }
+      if (fWebConn.size() > 0)
+         had_connection = true;
+      if ((fWebConn.size() == 0) && (had_connection || (cnt > 1000)))
+         return false; // wait ~1 min if no new connection established
+      if (fSnapshotDelivered >= ver) {
+         printf("PAINT READY!!!\n");
+         return true;
+      }
       gSystem->ProcessEvents();
-      gSystem->Sleep((++cnt<500) ? 1 : 100); // increase sleep interval when do very often
+      gSystem->Sleep((++cnt < 500) ? 1 : 100); // increase sleep interval when do very often
    }
 
    return false;
-
 }
 
 void TCanvasPainter::DoWhenReady(const std::string &cmd, const std::string &arg)
