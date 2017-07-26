@@ -73,6 +73,20 @@ std::shared_ptr<ROOT::Experimental::TCanvas> ROOT::Experimental::TCanvas::Create
    return pCanvas;
 }
 
+//////////////////////////////////////////////////////////////////////////
+/// Create new display for the canvas
+/// Parameter \par where specified  which program could be used for display creation
+/// Possible values:
+///
+///      cef - Chromium Embeded Framework, local display, local communication
+///      qt5 - Qt5 WebEngine (when running via rootqt5), local display, local communication
+///  browser - default system web-browser, communication via random http port from range 8800 - 9800
+///  <prog> - any program name which will be started instead of default browser, like firefox or /usr/bin/opera
+///           one could also specify $url in program name, which will be replaced with canvas URL
+///  native - either any available local display or default browser
+///
+///  Canvas can be displayed in several different places
+
 void ROOT::Experimental::TCanvas::Show(const std::string &where)
 {
    if (fPainter) {
