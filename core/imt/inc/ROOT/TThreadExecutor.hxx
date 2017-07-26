@@ -261,7 +261,7 @@ namespace ROOT {
       }
 
       using retType = decltype(func(start));
-      std::vector<retType> reslist(nChunks);
+      std::vector<retType> reslist(actualChunks);
       auto lambda = [&](unsigned int i)
       {
          std::vector<retType> partialResults(std::min(end-i, step));
@@ -287,18 +287,16 @@ namespace ROOT {
       {
          return Map(func, args);
       }
-      // //check whether func is callable
-      using retType = decltype(func(args.front()));
 
       unsigned int nToProcess = args.size();
-      std::vector<retType> reslist(nChunks);
       unsigned step = (nToProcess + nChunks - 1) / nChunks; //ceiling the division
       // Avoid empty chunks
       unsigned actualChunks = (nToProcess + step - 1) / step;
       if(actualChunks != nChunks){
           Warning("ROOT::TThreadExecutor::Map", "The number of chunks has been reduced to %d to avoid empty chunks", actualChunks);
       }
-
+      using retType = decltype(func(args.front()));
+      std::vector<retType> reslist(actualChunks);
       auto lambda = [&](unsigned int i)
       {
          std::vector<T> partialResults(step);
