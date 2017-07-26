@@ -9,8 +9,8 @@
  *************************************************************************/
 
 /**
-  \defgroup dataframe Data Frame
-The ROOT Data Frame allows to analyse data stored in TTrees with a high level interface.
+  \defgroup dataframe DataFrame
+ROOT's TDataFrame allows to analyse data stored in TTrees with a high level interface.
 */
 
 #ifndef ROOT_TDATAFRAME
