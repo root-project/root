@@ -130,11 +130,11 @@ void TCuda<AFloat>::Copy(TCudaMatrix<AFloat> & B,
 
 //____________________________________________________________________________
 template<typename AFloat>
-void TCuda<AFloat>::Copy(std::vector<TCudaMatrix<AFloat>*> & B,
-                             const std::vector<TCudaMatrix<AFloat>*> & A)
+void TCuda<AFloat>::Copy(std::vector<TCudaMatrix<AFloat>> & B,
+                             const std::vector<TCudaMatrix<AFloat>> & A)
 {
    for (size_t i = 0; i < B.size(); ++i) {
-      Copy(*B[i], *A[i]);
+      Copy(B[i], A[i]);
    }
 }
 
