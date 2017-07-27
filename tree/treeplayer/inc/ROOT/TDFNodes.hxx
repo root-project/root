@@ -19,7 +19,6 @@
 #include "TTreeReaderValue.h"
 
 #include <map>
-#include <numeric> // std::iota for TSlotStack
 #include <string>
 #include <tuple>
 #include <cassert>
