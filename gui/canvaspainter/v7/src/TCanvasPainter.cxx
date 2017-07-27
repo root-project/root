@@ -537,6 +537,8 @@ void TCanvasPainter::CancelCommands(bool cancel_all, UInt_t connid)
       auto next = iter;
       next++;
       if (cancel_all || (iter->fConnId == connid)) {
+         if (fWaitingCmdId == iter->fId)
+            fWaitingCmdId.clear();
          iter->fCallback(false);
          fCmds.erase(iter);
       }
