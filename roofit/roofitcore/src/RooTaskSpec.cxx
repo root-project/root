@@ -43,6 +43,7 @@ ToDo: Simple use demonstration.
 // #include <sstream>
 #include "RooAbsTestStatistic.h"
 #include "RooAddition.h"
+#include "RooAbsData.h"
 
 using namespace std;
 using namespace RooFit;
