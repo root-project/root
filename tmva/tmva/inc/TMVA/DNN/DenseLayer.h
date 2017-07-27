@@ -116,8 +116,8 @@ template <typename Architecture_t>
 TDenseLayer<Architecture_t>::TDenseLayer(size_t batchSize, size_t inputWidth, size_t width, EInitialization init,
                                          Scalar_t dropoutProbability, EActivationFunction f, ERegularization reg,
                                          Scalar_t weightDecay)
-   : VGeneralLayer<Architecture_t>(batchSize, 1, 1, inputWidth, 1, 1, width, width, inputWidth, width, 1, 1, batchSize,
-                                   width, init),
+   : VGeneralLayer<Architecture_t>(batchSize, 1, 1, inputWidth, 1, 1, width, 1, width, inputWidth, 1, width, 1, 1,
+                                   batchSize, width, init),
      fDerivatives(), fDropoutProbability(dropoutProbability), fF(f), fReg(reg), fWeightDecay(weightDecay)
 {
    fDerivatives.emplace_back(batchSize, width);
@@ -156,8 +156,8 @@ auto TDenseLayer<Architecture_t>::Forward(std::vector<Matrix_t> input, bool appl
       Architecture_t::Dropout(input[0], this->GetDropoutProbability());
    }
 
-   Architecture_t::MultiplyTranspose(this->GetOutputAt(0), input[0], this->GetWeights());
-   Architecture_t::AddRowWise(this->GetOutputAt(0), this->GetBiases());
+   Architecture_t::MultiplyTranspose(this->GetOutputAt(0), input[0], this->GetWeightsAt(0));
+   Architecture_t::AddRowWise(this->GetOutputAt(0), this->GetBiasesAt(0));
    evaluateDerivative<Architecture_t>(this->GetDerivativesAt(0), this->GetActivationFunction(), this->GetOutputAt(0));
    evaluate<Architecture_t>(this->GetOutputAt(0), this->GetActivationFunction());
 }
@@ -167,19 +167,19 @@ template <typename Architecture_t>
 auto TDenseLayer<Architecture_t>::Backward(std::vector<Matrix_t> &gradients_backward,
                                            const std::vector<Matrix_t> &activations_backward) -> void
 {
-   Architecture_t::Backward(gradients_backward[0], this->GetWeightGradients(), this->GetBiasGradients(),
-                            this->GetDerivativesAt(0), this->GetActivationGradientsAt(0), this->GetWeights(),
+   Architecture_t::Backward(gradients_backward[0], this->GetWeightGradientsAt(0), this->GetBiasGradientsAt(0),
+                            this->GetDerivativesAt(0), this->GetActivationGradientsAt(0), this->GetWeightsAt(0),
                             activations_backward[0]);
 
-   addRegularizationGradients<Architecture_t>(this->GetWeightGradients(), this->GetWeights(), this->GetWeightDecay(),
-                                              this->GetRegularization());
+   addRegularizationGradients<Architecture_t>(this->GetWeightGradientsAt(0), this->GetWeightsAt(0),
+                                              this->GetWeightDecay(), this->GetRegularization());
 }
 
 //______________________________________________________________________________
 template <typename Architecture_t>
 void TDenseLayer<Architecture_t>::Print() const
 {
-   std::cout << "Width = " << this->GetWeights().GetNrows();
+   std::cout << "Width = " << this->GetWeightsAt(0).GetNrows();
    std::cout << ", Activation Function = ";
    std::cout << static_cast<int>(fF) << std::endl;
 }

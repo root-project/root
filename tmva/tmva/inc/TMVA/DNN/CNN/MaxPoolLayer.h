@@ -121,7 +121,7 @@ TMaxPoolLayer<Architecture_t>::TMaxPoolLayer(size_t batchSize, size_t inputDepth
                                              size_t outputNCols, size_t frameHeight, size_t frameWidth,
                                              size_t strideRows, size_t strideCols, Scalar_t dropoutProbability)
    : VGeneralLayer<Architecture_t>(batchSize, inputDepth, inputHeight, inputWidth, inputDepth, height, width, 0, 0, 0,
-                                   0, outputNSlices, outputNRows, outputNCols, EInitialization::kZero),
+                                   0, 0, 0, outputNSlices, outputNRows, outputNCols, EInitialization::kZero),
      indexMatrix(), fFrameHeight(frameHeight), fFrameWidth(frameWidth), fStrideRows(strideRows),
      fStrideCols(strideCols), fNLocalViewPixels(inputDepth * frameHeight * frameWidth), fNLocalViews(height * width),
      fDropoutProbability(dropoutProbability)
