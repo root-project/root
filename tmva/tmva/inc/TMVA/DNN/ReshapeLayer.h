@@ -73,8 +73,8 @@ template <typename Architecture_t>
 TReshapeLayer<Architecture_t>::TReshapeLayer(size_t batchSize, size_t inputDepth, size_t inputHeight, size_t inputWidth,
                                              size_t depth, size_t height, size_t width, size_t outputNSlices,
                                              size_t outputNRows, size_t outputNCols)
-   : VGeneralLayer<Architecture_t>(batchSize, inputDepth, inputHeight, inputWidth, depth, height, width, 0, 0, 0, 0,
-                                   outputNSlices, outputNRows, outputNCols, EInitialization::kZero)
+   : VGeneralLayer<Architecture_t>(batchSize, inputDepth, inputHeight, inputWidth, depth, height, width, 0, 0, 0, 0, 0,
+                                   0, outputNSlices, outputNRows, outputNCols, EInitialization::kZero)
 {
    if (this->GetInputDepth() * this->GetInputHeight() * this->GetInputWidth() !=
        this->GetDepth() * this->GetHeight() * this->GetWidth()) {

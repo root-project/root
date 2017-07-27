@@ -140,9 +140,9 @@ TConvLayer<Architecture_t>::TConvLayer(size_t batchSize, size_t inputDepth, size
                                        size_t filterWidth, size_t strideRows, size_t strideCols, size_t paddingHeight,
                                        size_t paddingWidth, Scalar_t dropoutProbability, EActivationFunction f,
                                        ERegularization reg, Scalar_t weightDecay)
-   : VGeneralLayer<Architecture_t>(batchSize, inputDepth, inputHeight, inputWidth, depth, height, width, weightsNRows,
-                                   weightsNCols, biasesNRows, biasesNCols, outputNSlices, outputNRows, outputNCols,
-                                   init),
+   : VGeneralLayer<Architecture_t>(batchSize, inputDepth, inputHeight, inputWidth, depth, height, width, 1,
+                                   weightsNRows, weightsNCols, 1, biasesNRows, biasesNCols, outputNSlices, outputNRows,
+                                   outputNCols, init),
      fFilterDepth(filterDepth), fFilterHeight(filterHeight), fFilterWidth(filterWidth), fStrideRows(strideRows),
      fStrideCols(strideCols), fPaddingHeight(paddingHeight), fPaddingWidth(paddingWidth),
      fNLocalViewPixels(filterDepth * filterHeight * filterWidth), fNLocalViews(height * width),
@@ -165,10 +165,13 @@ TConvLayer<Architecture_t>::TConvLayer(TConvLayer<Architecture_t> *layer)
      fReg(layer->GetRegularization()), fWeightDecay(layer->GetWeightDecay())
 {
    size_t outputNSlices = (layer->GetDerivatives()).size();
-   size_t outputNRows = (layer->GetDerivativesAt(0)).GetNrows();
-   size_t outputNCols = (layer->GetDerivativesAt(0)).GetNcols();
+   size_t outputNRows = 0;
+   size_t outputNCols = 0;
 
    for (size_t i = 0; i < outputNSlices; i++) {
+      outputNRows = (layer->GetDerivativesAt(i)).GetNrows();
+      outputNCols = (layer->GetDerivativesAt(i)).GetNcols();
+
       fDerivatives.emplace_back(outputNRows, outputNCols);
    }
 }
@@ -212,8 +215,8 @@ auto TConvLayer<Architecture_t>::Forward(std::vector<Matrix_t> input, bool apply
                              this->GetFilterWidth(), this->GetStrideRows(), this->GetStrideCols(),
                              this->GetPaddingHeight(), this->GetPaddingWidth());
 
-      Architecture_t::MultiplyTranspose(this->GetOutputAt(i), this->GetWeights(), inputTr);
-      Architecture_t::AddConvBiases(this->GetOutputAt(i), this->GetBiases());
+      Architecture_t::MultiplyTranspose(this->GetOutputAt(i), this->GetWeightsAt(0), inputTr);
+      Architecture_t::AddConvBiases(this->GetOutputAt(i), this->GetBiasesAt(0));
 
       evaluateDerivative<Architecture_t>(this->GetDerivativesAt(i), fF, this->GetOutputAt(i));
       evaluate<Architecture_t>(this->GetOutputAt(i), fF);
@@ -227,13 +230,13 @@ auto TConvLayer<Architecture_t>::Backward(std::vector<Matrix_t> &gradients_backw
 {
 
    Architecture_t::ConvLayerBackward(
-      gradients_backward, this->GetWeightGradients(), this->GetBiasGradients(), this->GetDerivatives(),
-      this->GetActivationGradients(), this->GetWeights(), activations_backward, this->GetBatchSize(),
+      gradients_backward, this->GetWeightGradientsAt(0), this->GetBiasGradientsAt(0), this->GetDerivatives(),
+      this->GetActivationGradients(), this->GetWeightsAt(0), activations_backward, this->GetBatchSize(),
       this->GetInputHeight(), this->GetInputWidth(), this->GetDepth(), this->GetHeight(), this->GetWidth(),
       this->GetFilterDepth(), this->GetFilterHeight(), this->GetFilterWidth(), this->GetNLocalViews());
 
-   addRegularizationGradients<Architecture_t>(this->GetWeightGradients(), this->GetWeights(), this->GetWeightDecay(),
-                                              this->GetRegularization());
+   addRegularizationGradients<Architecture_t>(this->GetWeightGradientsAt(0), this->GetWeightsAt(0),
+                                              this->GetWeightDecay(), this->GetRegularization());
 }
 
 //______________________________________________________________________________

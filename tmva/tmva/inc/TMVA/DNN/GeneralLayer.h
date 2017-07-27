@@ -54,11 +54,11 @@ protected:
 
    bool fIsTraining; ///< Flag indicatig the mode
 
-   Matrix_t fWeights; ///< The weights associated to the layer.
-   Matrix_t fBiases;  ///< The biases associated to the layer.
+   std::vector<Matrix_t> fWeights; ///< The weights associated to the layer.
+   std::vector<Matrix_t> fBiases;  ///< The biases associated to the layer.
 
-   Matrix_t fWeightGradients; ///< Gradients w.r.t. the weights of the layer.
-   Matrix_t fBiasGradients;   ///< Gradients w.r.t. the bias values of the layer.
+   std::vector<Matrix_t> fWeightGradients; ///< Gradients w.r.t. the weights of the layer.
+   std::vector<Matrix_t> fBiasGradients;   ///< Gradients w.r.t. the bias values of the layer.
 
    std::vector<Matrix_t> fOutput;              ///< Activations of this layer.
    std::vector<Matrix_t> fActivationGradients; ///< Gradients w.r.t. the activations of this layer.
@@ -68,9 +68,15 @@ protected:
 public:
    /*! Constructor */
    VGeneralLayer(size_t BatchSize, size_t InputDepth, size_t InputHeight, size_t InputWidth, size_t Depth,
-                 size_t Height, size_t Width, size_t WeightsNRows, size_t WeightsNCols, size_t BiasesNRows,
-                 size_t BiasesNCols, size_t OutputNSlices, size_t OutputNRows, size_t OutputNCols,
-                 EInitialization Init);
+                 size_t Height, size_t Width, size_t WeightsNSlices, size_t WeightsNRows, size_t WeightsNCols,
+                 size_t BiasesNSlices, size_t BiasesNRows, size_t BiasesNCols, size_t OutputNSlices, size_t OutputNRows,
+                 size_t OutputNCols, EInitialization Init);
+
+   /*! General Constructor with different weights dimension */
+   VGeneralLayer(size_t BatchSize, size_t InputDepth, size_t InputHeight, size_t InputWidth, size_t Depth,
+                 size_t Height, size_t Width, size_t WeightsNSlices, std::vector<size_t> WeightsNRows, std::vector<size_t> WeightsNCols,
+                 size_t BiasesNSlices, std::vector<size_t> BiasesNRows, std::vector<size_t> BiasesNCols, size_t OutputNSlices, size_t OutputNRows,
+                 size_t OutputNCols, EInitialization Init);
 
    /*! Copy the layer provided as a pointer */
    VGeneralLayer(VGeneralLayer<Architecture_t> *layer);
@@ -98,10 +104,22 @@ public:
    void Update(const Scalar_t learningRate);
 
    /*! Updates the weights, given the gradients and the learning rate, */
-   void UpdateWeights(const Matrix_t &weightGradients, const Scalar_t learningRate);
+   void UpdateWeights(const std::vector<Matrix_t> &weightGradients, const Scalar_t learningRate);
 
    /*! Updates the biases, given the gradients and the learning rate. */
-   void UpdateBiases(const Matrix_t &biasGradients, const Scalar_t learningRate);
+   void UpdateBiases(const std::vector<Matrix_t> &biasGradients, const Scalar_t learningRate);
+
+   /*! Updates the weight gradients, given some other weight gradients and learning rate. */
+   void UpdateWeightGradients(const std::vector<Matrix_t> &weightGradients, const Scalar_t learningRate);
+
+   /*! Updates the bias gradients, given some other weight gradients and learning rate. */
+   void UpdateBiasGradients(const std::vector<Matrix_t> &biasGradients, const Scalar_t learningRate);
+
+   /*! Copies the weights provided as an input.  */
+   void CopyWeights(const std::vector<Matrix_t> &otherWeights);
+
+   /*! Copies the biases provided as an input. */
+   void CopyBiases(const std::vector<Matrix_t> &otherBiases);
 
    /*! Prints the info about the layer. */
    virtual void Print() const = 0;
@@ -116,17 +134,29 @@ public:
    size_t GetWidth() const { return fWidth; }
    bool IsTraining() const { return fIsTraining; }
 
-   const Matrix_t &GetWeights() const { return fWeights; }
-   Matrix_t &GetWeights() { return fWeights; }
+   const std::vector<Matrix_t> &GetWeights() const { return fWeights; }
+   std::vector<Matrix_t> &GetWeights() { return fWeights; }
 
-   const Matrix_t &GetBiases() const { return fBiases; }
-   Matrix_t &GetBiases() { return fBiases; }
+   const Matrix_t &GetWeightsAt(size_t i) const { return fWeights[i]; }
+   Matrix_t &GetWeightsAt(size_t i) { return fWeights[i]; }
 
-   const Matrix_t &GetWeightGradients() const { return fWeightGradients; }
-   Matrix_t &GetWeightGradients() { return fWeightGradients; }
+   const std::vector<Matrix_t> &GetBiases() const { return fBiases; }
+   std::vector<Matrix_t> &GetBiases() { return fBiases; }
 
-   const Matrix_t &GetBiasGradients() const { return fBiasGradients; }
-   Matrix_t &GetBiasGradients() { return fBiasGradients; }
+   const Matrix_t &GetBiasesAt(size_t i) const { return fBiases[i]; }
+   Matrix_t &GetBiasesAt(size_t i) { return fBiases[i]; }
+
+   const std::vector<Matrix_t> &GetWeightGradients() const { return fWeightGradients; }
+   std::vector<Matrix_t> &GetWeightGradients() { return fWeightGradients; }
+
+   const Matrix_t &GetWeightGradientsAt(size_t i) const { return fWeightGradients[i]; }
+   Matrix_t &GetWeightGradientsAt(size_t i) { return fWeightGradients[i]; }
+
+   const std::vector<Matrix_t> &GetBiasGradients() const { return fBiasGradients; }
+   std::vector<Matrix_t> &GetBiasGradients() { return fBiasGradients; }
+
+   const Matrix_t &GetBiasGradientsAt(size_t i) const { return fBiasGradients[i]; }
+   Matrix_t &GetBiasGradientsAt(size_t i) { return fBiasGradients[i]; }
 
    const std::vector<Matrix_t> &GetOutput() const { return fOutput; }
    std::vector<Matrix_t> &GetOutput() { return fOutput; }
@@ -159,15 +189,54 @@ public:
 //_________________________________________________________________________________________________
 template <typename Architecture_t>
 VGeneralLayer<Architecture_t>::VGeneralLayer(size_t batchSize, size_t inputDepth, size_t inputHeight, size_t inputWidth,
-                                             size_t depth, size_t height, size_t width, size_t weightsNRows,
-                                             size_t weightsNCols, size_t biasesNRows, size_t biasesNCols,
-                                             size_t outputNSlices, size_t outputNRows, size_t outputNCols,
-                                             EInitialization init)
+                                             size_t depth, size_t height, size_t width, size_t weightsNSlices,
+                                             size_t weightsNRows, size_t weightsNCols, size_t biasesNSlices,
+                                             size_t biasesNRows, size_t biasesNCols, size_t outputNSlices,
+                                             size_t outputNRows, size_t outputNCols, EInitialization init)
    : fBatchSize(batchSize), fInputDepth(inputDepth), fInputHeight(inputHeight), fInputWidth(inputWidth), fDepth(depth),
-     fHeight(height), fWidth(width), fIsTraining(true), fWeights(weightsNRows, weightsNCols),
-     fBiases(biasesNRows, biasesNCols), fWeightGradients(weightsNRows, weightsNCols),
-     fBiasGradients(biasesNRows, biasesNCols), fOutput(), fActivationGradients(), fInit(init)
+     fHeight(height), fWidth(width), fIsTraining(true), fWeights(), fBiases(), fWeightGradients(), fBiasGradients(),
+     fOutput(), fActivationGradients(), fInit(init)
 {
+
+   for (size_t i = 0; i < weightsNSlices; i++) {
+      fWeights.emplace_back(weightsNRows, weightsNCols);
+      fWeightGradients.emplace_back(weightsNRows, weightsNCols);
+   }
+
+   for (size_t i = 0; i < biasesNSlices; i++) {
+      fBiases.emplace_back(biasesNRows, biasesNCols);
+      fBiasGradients.emplace_back(biasesNRows, biasesNCols);
+   }
+
+   for (size_t i = 0; i < outputNSlices; i++) {
+      fOutput.emplace_back(outputNRows, outputNCols);
+      fActivationGradients.emplace_back(outputNRows, outputNCols);
+   }
+}
+
+
+//_________________________________________________________________________________________________
+template <typename Architecture_t>
+VGeneralLayer<Architecture_t>::VGeneralLayer(size_t batchSize, size_t inputDepth, size_t inputHeight, size_t inputWidth,
+                                             size_t depth, size_t height, size_t width, size_t weightsNSlices,
+                                             std::vector<size_t> weightsNRows, std::vector<size_t> weightsNCols, 
+                                             size_t biasesNSlices, std::vector<size_t> biasesNRows, std::vector<size_t> biasesNCols, 
+                                             size_t outputNSlices, size_t outputNRows, size_t outputNCols, EInitialization init)
+   : fBatchSize(batchSize), fInputDepth(inputDepth), fInputHeight(inputHeight), fInputWidth(inputWidth), fDepth(depth),
+     fHeight(height), fWidth(width), fIsTraining(true), fWeights(), fBiases(), fWeightGradients(), fBiasGradients(),
+     fOutput(), fActivationGradients(), fInit(init)
+{
+
+   for (size_t i = 0; i < weightsNSlices; i++) {
+      fWeights.emplace_back(weightsNRows[i], weightsNCols[i]);
+      fWeightGradients.emplace_back(weightsNRows[i], weightsNCols[i]);
+   }
+
+   for (size_t i = 0; i < biasesNSlices; i++) {
+      fBiases.emplace_back(biasesNRows[i], biasesNCols[i]);
+      fBiasGradients.emplace_back(biasesNRows[i], biasesNCols[i]);
+   }
+
    for (size_t i = 0; i < outputNSlices; i++) {
       fOutput.emplace_back(outputNRows, outputNCols);
       fActivationGradients.emplace_back(outputNRows, outputNCols);
@@ -179,21 +248,45 @@ template <typename Architecture_t>
 VGeneralLayer<Architecture_t>::VGeneralLayer(VGeneralLayer<Architecture_t> *layer)
    : fBatchSize(layer->GetBatchSize()), fInputDepth(layer->GetInputDepth()), fInputHeight(layer->GetInputHeight()),
      fInputWidth(layer->GetInputWidth()), fDepth(layer->GetDepth()), fHeight(layer->GetHeight()),
-     fWidth(layer->GetWidth()), fIsTraining(layer->IsTraining()),
-     fWeights((layer->GetWeights()).GetNrows(), (layer->GetWeights()).GetNcols()),
-     fBiases((layer->GetBiases()).GetNrows(), (layer->GetBiases()).GetNcols()),
-     fWeightGradients((layer->GetWeightGradients()).GetNrows(), (layer->GetWeightGradients()).GetNcols()),
-     fBiasGradients((layer->GetBiasGradients()).GetNrows(), (layer->GetBiasGradients()).GetNcols()), fOutput(),
-     fActivationGradients(), fInit(layer->GetInitialization())
+     fWidth(layer->GetWidth()), fIsTraining(layer->IsTraining()), fWeights(), fBiases(), fWeightGradients(),
+     fBiasGradients(), fOutput(), fActivationGradients(), fInit(layer->GetInitialization())
 {
-   Architecture_t::Copy(fWeights, layer->GetWeights());
-   Architecture_t::Copy(fBiases, layer->GetBiases());
+   size_t weightsNSlices = (layer->GetWeights()).size();
+   size_t weightsNRows = 0;
+   size_t weightsNCols = 0;
+
+   for (size_t i = 0; i < weightsNSlices; i++) {
+      weightsNRows = (layer->GetWeightsAt(i)).GetNrows();
+      weightsNCols = (layer->GetWeightsAt(i)).GetNcols();
+
+      fWeights.emplace_back(weightsNRows, weightsNCols);
+      fWeightGradients.emplace_back(weightsNRows, weightsNCols);
+
+      Architecture_t::Copy(fWeights[i], layer->GetWeightsAt(i));
+   }
+
+   size_t biasesNSlices = (layer->GetBiases()).size();
+   size_t biasesNRows = 0;
+   size_t biasesNCols = 0;
+
+   for (size_t i = 0; i < biasesNSlices; i++) {
+      biasesNRows = (layer->GetBiasesAt(i)).GetNrows();
+      biasesNCols = (layer->GetBiasesAt(i)).GetNcols();
+
+      fBiases.emplace_back(biasesNRows, biasesNCols);
+      fBiasGradients.emplace_back(biasesNRows, biasesNCols);
+
+      Architecture_t::Copy(fBiases[i], layer->GetBiasesAt(i));
+   }
 
    size_t outputNSlices = (layer->GetOutput()).size();
-   size_t outputNRows = (layer->GetOutputAt(0)).GetNrows();
-   size_t outputNCols = (layer->GetOutputAt(0)).GetNcols();
+   size_t outputNRows = 0;
+   size_t outputNCols = 0;
 
    for (size_t i = 0; i < outputNSlices; i++) {
+      outputNRows = (layer->GetOutputAt(i)).GetNrows();
+      outputNCols = (layer->GetOutputAt(i)).GetNcols();
+
       fOutput.emplace_back(outputNRows, outputNCols);
       fActivationGradients.emplace_back(outputNRows, outputNCols);
    }
@@ -204,20 +297,45 @@ template <typename Architecture_t>
 VGeneralLayer<Architecture_t>::VGeneralLayer(const VGeneralLayer &layer)
    : fBatchSize(layer.fBatchSize), fInputDepth(layer.fInputDepth), fInputHeight(layer.fInputHeight),
      fInputWidth(layer.fInputWidth), fDepth(layer.fDepth), fHeight(layer.fHeight), fWidth(layer.fWidth),
-     fIsTraining(layer.fIsTraining), fWeights(layer.fWeights.GetNrows(), layer.fWeights.GetNcols()),
-     fBiases(layer.fBiases.GetNrows(), layer.fBiases.GetNcols()),
-     fWeightGradients(layer.fWeightGradients.GetNrows(), layer.fWeightGradients.GetNcols()),
-     fBiasGradients(layer.fBiasGradients.GetNrows(), layer.fBiasGradients.GetNcols()), fOutput(),
+     fIsTraining(layer.fIsTraining), fWeights(), fBiases(), fWeightGradients(), fBiasGradients(), fOutput(),
      fActivationGradients(), fInit(layer.fInit)
 {
-   Architecture_t::Copy(fWeights, layer.fWeights);
-   Architecture_t::Copy(fBiases, layer.fBiases);
+   size_t weightsNSlices = layer.fWeights.size();
+   size_t weightsNRows = 0;
+   size_t weightsNCols = 0;
+
+   for (size_t i = 0; i < weightsNSlices; i++) {
+      weightsNRows = (layer.fWeights[i]).GetNrows();
+      weightsNCols = (layer.fWeights[i]).GetNcols();
+
+      fWeights.emplace_back(weightsNRows, weightsNCols);
+      fWeightGradients.emplace_back(weightsNRows, weightsNCols);
+
+      Architecture_t::Copy(fWeights[i], layer.fWeights[i]);
+   }
+
+   size_t biasesNSlices = layer.fBiases.size();
+   size_t biasesNRows = 0;
+   size_t biasesNCols = 0;
+
+   for (size_t i = 0; i < biasesNSlices; i++) {
+      biasesNRows = (layer.fBiases[i]).GetNrows();
+      biasesNCols = (layer.fBiases[i]).GetNcols();
+
+      fBiases.emplace_back(biasesNRows, biasesNCols);
+      fBiasGradients.emplace_back(biasesNRows, biasesNCols);
+
+      Architecture_t::Copy(fBiases[i], layer.fBiases[i]);
+   }
 
    size_t outputNSlices = layer.fOutput.size();
-   size_t outputNRows = layer.GetOutputAt(0).GetNrows();
-   size_t outputNCols = layer.GetOutputAt(0).GetNcols();
+   size_t outputNRows = 0;
+   size_t outputNCols = 0;
 
    for (size_t i = 0; i < outputNSlices; i++) {
+      outputNRows = (layer.fOutput[i]).GetNrows();
+      outputNCols = (layer.fOutput[i]).GetNcols();
+
       fOutput.emplace_back(outputNRows, outputNCols);
       fActivationGradients.emplace_back(outputNRows, outputNCols);
    }
@@ -234,33 +352,82 @@ VGeneralLayer<Architecture_t>::~VGeneralLayer()
 template <typename Architecture_t>
 auto VGeneralLayer<Architecture_t>::Initialize() -> void
 {
-   initialize<Architecture_t>(this->GetWeights(), this->GetInitialization());
-   initialize<Architecture_t>(this->GetBiases(), this->GetInitialization());
+   for (size_t i = 0; i < fWeights.size(); i++) {
+      initialize<Architecture_t>(fWeights[i], this->GetInitialization());
+      initialize<Architecture_t>(fWeightGradients[i], EInitialization::kZero);
+   }
 
-   initialize<Architecture_t>(this->GetWeightGradients(), EInitialization::kZero);
-   initialize<Architecture_t>(this->GetBiasGradients(), EInitialization::kZero);
+   for (size_t i = 0; i < fBiases.size(); i++) {
+      initialize<Architecture_t>(fBiases[i], this->GetInitialization());
+      initialize<Architecture_t>(fBiasGradients[i], EInitialization::kZero);
+   }
 }
 
 //_________________________________________________________________________________________________
 template <typename Architecture_t>
 auto VGeneralLayer<Architecture_t>::Update(const Scalar_t learningRate) -> void
 {
-   this->UpdateWeights(this->GetWeightGradients(), learningRate);
-   this->UpdateBiases(this->GetBiasGradients(), learningRate);
+   this->UpdateWeights(fWeightGradients, learningRate);
+   this->UpdateBiases(fBiasGradients, learningRate);
 }
 
 //_________________________________________________________________________________________________
 template <typename Architecture_t>
-auto VGeneralLayer<Architecture_t>::UpdateWeights(const Matrix_t &weightGradients, const Scalar_t learningRate) -> void
+auto VGeneralLayer<Architecture_t>::UpdateWeights(const std::vector<Matrix_t> &weightGradients,
+                                                  const Scalar_t learningRate) -> void
 {
-   Architecture_t::ScaleAdd(this->GetWeights(), weightGradients, -learningRate);
+   for (size_t i = 0; i < fWeights.size(); i++) {
+      Architecture_t::ScaleAdd(fWeights[i], weightGradients[i], -learningRate);
+   }
 }
 
 //_________________________________________________________________________________________________
 template <typename Architecture_t>
-auto VGeneralLayer<Architecture_t>::UpdateBiases(const Matrix_t &biasGradients, const Scalar_t learningRate) -> void
+auto VGeneralLayer<Architecture_t>::UpdateBiases(const std::vector<Matrix_t> &biasGradients,
+                                                 const Scalar_t learningRate) -> void
 {
-   Architecture_t::ScaleAdd(this->GetBiases(), biasGradients, -learningRate);
+
+   for (size_t i = 0; i < fBiases.size(); i++) {
+      Architecture_t::ScaleAdd(fBiases[i], biasGradients[i], -learningRate);
+   }
+}
+
+//_________________________________________________________________________________________________
+template <typename Architecture_t>
+auto VGeneralLayer<Architecture_t>::UpdateWeightGradients(const std::vector<Matrix_t> &weightGradients,
+                                                          const Scalar_t learningRate) -> void
+{
+   for (size_t i = 0; i < fWeightGradients.size(); i++) {
+      Architecture_t::ScaleAdd(fWeightGradients[i], weightGradients[i], -learningRate);
+   }
+}
+
+//_________________________________________________________________________________________________
+template <typename Architecture_t>
+auto VGeneralLayer<Architecture_t>::UpdateBiasGradients(const std::vector<Matrix_t> &biasGradients,
+                                                        const Scalar_t learningRate) -> void
+{
+   for (size_t i = 0; i < fBiasGradients.size(); i++) {
+      Architecture_t::ScaleAdd(fBiasGradients[i], biasGradients[i], -learningRate);
+   }
+}
+
+//_________________________________________________________________________________________________
+template <typename Architecture_t>
+auto VGeneralLayer<Architecture_t>::CopyWeights(const std::vector<Matrix_t> &otherWeights) -> void
+{
+   for (size_t i = 0; i < fWeights.size(); i++) {
+      Architecture_t::Copy(fWeights[i], otherWeights[i]);
+   }
+}
+
+//_________________________________________________________________________________________________
+template <typename Architecture_t>
+auto VGeneralLayer<Architecture_t>::CopyBiases(const std::vector<Matrix_t> &otherBiases) -> void
+{
+   for (size_t i = 0; i < fBiases.size(); i++) {
+      Architecture_t::Copy(fBiases[i], otherBiases[i]);
+   }
 }
 
 } // namespace DNN
