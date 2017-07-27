@@ -48,10 +48,10 @@ bool ROOT::Experimental::TCanvas::IsModified() const
    return fPainter ? fPainter->IsCanvasModified(fModified) : fModified;
 }
 
-void ROOT::Experimental::TCanvas::Update(bool async)
+void ROOT::Experimental::TCanvas::Update(bool async, CanvasCallback_t callback)
 {
    if (fPainter)
-      fPainter->CanvasUpdated(fModified, async);
+      fPainter->CanvasUpdated(fModified, async, callback);
 
    // SnapshotList_t lst;
    // for (auto&& drw: fPrimitives) {
@@ -97,7 +97,7 @@ void ROOT::Experimental::TCanvas::Show(const std::string &where)
    fPainter = Internal::TVirtualCanvasPainter::Create(*this, batch_mode);
    if (fPainter) {
       fPainter->NewDisplay(where);
-      fPainter->CanvasUpdated(fModified, true); // trigger async display
+      fPainter->CanvasUpdated(fModified, true, nullptr); // trigger async display
    }
 }
 
