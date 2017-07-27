@@ -47,6 +47,8 @@ public:
 
    virtual void GetNeighbors(Int_t rank, Int_t maxneighbors, Int_t neighbors[]) const;
 
+   virtual Int_t Map(Int_t nnodes, const Int_t index[], const Int_t edges[]) const;
+
    ClassDef(TGraphCommunicator, 4)
 };
 }

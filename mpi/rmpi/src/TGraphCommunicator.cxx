@@ -143,3 +143,25 @@ void TGraphCommunicator::GetNeighbors(Int_t rank, Int_t maxneighbors, Int_t neig
 {
    ROOT_MPI_CHECK_CALL(MPI_Graph_neighbors, (fComm, rank, maxneighbors, neighbors), this);
 }
+
+//______________________________________________________________________________
+/**
+ * Maps process to graph topology information.
+ *
+ * ROOT::Mpi::TCartCommunicator::Map  and  ROOT::Mpi::TGraphCommunicator::Map can be used to implement all other
+ * topology functions. In general they will not be called by the user directly, unless he or she is creating additional
+ * virtual topology capability other than that provided by MPI.
+ *
+ * \param nnodes Number of graph nodes (integer).
+ * \param index Integer array specifying the graph structure, see  ROOT::Mpi::TIntraCommunicator::CreateGraphcomm.
+ * \param edges Integer array specifying the graph structure.
+ * \return Reordered rank of the calling process; ROOT::Mpi::UNDEFINED if the calling process does not belong to graph
+ * (integer).
+ */
+Int_t TGraphCommunicator::Map(Int_t nnodes, const Int_t index[], const Int_t edges[]) const
+{
+   Int_t nrank;
+   ROOT_MPI_CHECK_CALL(MPI_Graph_map, (fComm, nnodes, const_cast<Int_t *>(index), const_cast<Int_t *>(edges), &nrank),
+                       this);
+   return nrank;
+}
