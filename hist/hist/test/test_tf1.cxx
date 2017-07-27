@@ -20,7 +20,7 @@ void coeffNamesGeneric(TString *formula, TObjArray *coeffNames) {
    }
 }
 
-void test_coeffNames() {
+void test_nsumCoeffNames() {
    // cout << "About to start" << endl;
    
    TObjArray *coeffNames = new TObjArray();
@@ -62,8 +62,8 @@ void test_normalization() {
    EXPECT_NEAR(n2->Integral(xmin, xmax), -.5, delta);
 }
 
-TEST(TF1, CoeffNames) {
-   test_coeffNames();
+TEST(TF1, NsumCoeffNames) {
+   test_nsumCoeffNames();
 }
 
 TEST(TF1, Normalization) {

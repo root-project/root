@@ -484,8 +484,13 @@ TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, EA
       // set parameter names
       for (int i = 0; i < fNpar; i++)
       	 this->SetParName(i, conv->GetParName(i));
-      // TODO: set parameters to default values
-
+      //  set parameters to default values
+      int f1Npar = function1->GetNpar();
+      for (int i = 0; i < f1Npar; i++)
+	 this->SetParameter(i, function1->GetParameter(i));
+      for (int i = 0; i < function2->GetNpar(); i++)
+	 this->SetParameter(i + f1Npar, function2->GetParameter(i));
+      // TODO: currently one less parameter than expecting! Need to resolve!
       
       // Then check if we need NSUM syntax:
    } else if (TString(formula, 5) == "NSUM(" && formula[strlen(formula)-1] == ')') {
