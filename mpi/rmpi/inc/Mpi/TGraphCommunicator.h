@@ -39,9 +39,13 @@ public:
 
    inline operator MPI_Comm() const { return fComm; }
 
-   void GetDims(Int_t nnodes[], Int_t nedges[]) const;
+   virtual void GetDims(Int_t nnodes[], Int_t nedges[]) const;
 
-   void GetTopo(Int_t maxindex, Int_t maxedges, Int_t index[], Int_t edges[]) const;
+   virtual void GetTopo(Int_t maxindex, Int_t maxedges, Int_t index[], Int_t edges[]) const;
+
+   virtual Int_t GetNeighborsCount(Int_t rank) const;
+
+   virtual void GetNeighbors(Int_t rank, Int_t maxneighbors, Int_t neighbors[]) const;
 
    ClassDef(TGraphCommunicator, 4)
 };

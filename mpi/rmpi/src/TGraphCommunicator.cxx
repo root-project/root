@@ -95,3 +95,51 @@ void TGraphCommunicator::GetTopo(Int_t maxindex, Int_t maxedges, Int_t index[], 
 {
    ROOT_MPI_CHECK_CALL(MPI_Graph_get, (fComm, maxindex, maxedges, index, edges), this);
 }
+
+//______________________________________________________________________________
+/**
+ * Returns the number of neighbors of a node associated with a graph topology.
+ *
+ * ROOT::Mpi::TGraphCommunicator::GetNeighborsCount and ROOT::Mpi::TGraphCommunicator::GetNeighbors provide adjacency
+ * information for a general, graph topology. ROOT::Mpi::TGraphCommunicator::GetNeighborsCount returns the number of
+ * neighbors for the process signified by rank.
+ *
+ * \param rank Rank of process in group of comm (integer).
+ * \return Number of neighbors of specified process (integer).
+ */
+Int_t TGraphCommunicator::GetNeighborsCount(Int_t rank) const
+{
+   Int_t nneighbors;
+   ROOT_MPI_CHECK_CALL(MPI_Graph_neighbors_count, (fComm, rank, &nneighbors), this);
+   return nneighbors;
+}
+
+//______________________________________________________________________________
+/**
+ * Returns the neighbors of a node associated with a graph topology.
+ *
+ * Example:  Suppose that comm is a communicator with a shuffle-exchange topology.
+ * The group has 2n members. Each process is labeled by a(1), ..., a(n) with a(i)
+ * E{0,1}, and has three neighbors: exchange (a(1), ..., a(n) = a(1), ..., a(n-1), a(n) (a = 1 - a), shuffle (a(1), ...,
+ * a(n))  =  a(2), ...,  a(n),  a(1),  and unshuffle (a(1), ..., a(n)) = a(n), a(1), ..., a(n-1). The graph adjacency
+ * list is illustrated below for n=3.
+ *
+ *                      exchange       shuffle        unshuffle
+ *          node       neighbors(1)   neighbors(2)   neighbors(3)
+ *          0(000)         1              0              0
+ *          1(001)         0              2              4
+ *          2(010)         3              4              1
+ *          3(011)         2              6              5
+ *          4(100)         5              1              2
+ *          5(101)         4              3              6
+ *          6(110)         7              5              3
+ *          7(111)         6              7              7
+ *
+ * \param rank Rank of process in group of comm (input integer).
+ * \param maxneighbors Size of array neighbors (input integer).
+ * \param neighbors Ranks of processes that are neighbors to specified process (output array of integers).
+ */
+void TGraphCommunicator::GetNeighbors(Int_t rank, Int_t maxneighbors, Int_t neighbors[]) const
+{
+   ROOT_MPI_CHECK_CALL(MPI_Graph_neighbors, (fComm, rank, maxneighbors, neighbors), this);
+}
