@@ -100,6 +100,9 @@ int websocket_data_handler(struct mg_connection *conn, int, char *data, size_t l
 {
    const struct mg_request_info *request_info = mg_get_request_info(conn);
 
+   // do not handle empty data
+   if (len == 0) return 1;
+
    TCivetweb *engine = (TCivetweb *)request_info->user_data;
    if (engine == 0) return 1;
    THttpServer *serv = engine->GetServer();
