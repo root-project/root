@@ -178,7 +178,8 @@ private:
       std::string fArg;                               ///<! command arg
       bool fRunning;                                  ///<! true when command submitted
       ROOT::Experimental::CanvasCallback_t fCallback; ///<! callback function associated with command
-      WebCommand() : fId(), fName(), fArg(), fRunning(false), fCallback() {}
+      UInt_t fConnId;                                 ///<! connection id was used to send command
+      WebCommand() : fId(), fName(), fArg(), fRunning(false), fCallback(), fConnId(0) {}
    };
 
    struct WebUpdate {
@@ -238,6 +239,10 @@ private:
 
    virtual Bool_t ProcessWS(THttpCallArg *arg);
 
+   void CancelCommands(bool cancel_all, UInt_t connid = 0);
+
+   void CancelUpdates();
+
 public:
    /// Create a TVirtualCanvasPainter for the given canvas.
    /// The painter observes it; it needs to know should the TCanvas be deleted.
@@ -247,6 +252,12 @@ public:
    {
       CreateHttpServer();
       gServer->Register("/web7gui", this);
+   }
+
+   virtual ~TCanvasPainter()
+   {
+      CancelCommands(true);
+      CancelUpdates();
    }
 
    virtual bool IsBatchMode() const { return fBatchMode; }
@@ -411,7 +422,8 @@ void TCanvasPainter::CanvasUpdated(uint64_t ver, bool async, ROOT::Experimental:
 {
    if (ver && fSnapshotDelivered && (ver <= fSnapshotDelivered)) {
       // if given canvas version was already delivered to clients, can return immediately
-      if (callback) callback(true);
+      if (callback)
+         callback(true);
       return;
    }
 
@@ -515,6 +527,38 @@ void TCanvasPainter::PopFrontCommand(bool result)
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////
+/// Cancel commands for given connection ID
+/// Invoke all callbacks
+
+void TCanvasPainter::CancelCommands(bool cancel_all, UInt_t connid)
+{
+   auto iter = fCmds.begin();
+   while (iter != fCmds.end()) {
+      auto next = iter;
+      next++;
+      if (cancel_all || (iter->fConnId == connid)) {
+         iter->fCallback(false);
+         fCmds.erase(iter);
+      }
+   }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+/// Cancel all pending Canvas::Update()
+
+void TCanvasPainter::CancelUpdates()
+{
+   fSnapshotDelivered = 0;
+   auto iter = fUpdatesLst.begin();
+   while (iter != fUpdatesLst.end()) {
+      auto curr = iter;
+      iter++;
+      curr->fCallback(false);
+      fUpdatesLst.erase(curr);
+   }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////
 /// Process reply of first command in the queue
 /// For the moment commands use to create image files
 
@@ -599,7 +643,10 @@ Bool_t TCanvasPainter::ProcessWS(THttpCallArg *arg)
 
       printf("Connection closed\n");
 
+      UInt_t connid = 0;
+
       if (conn && conn->fHandle) {
+         connid = conn->fHandle->GetId();
          conn->fHandle->ClearHandle();
          delete conn->fHandle;
          conn->fHandle = 0;
@@ -607,6 +654,12 @@ Bool_t TCanvasPainter::ProcessWS(THttpCallArg *arg)
 
       if (conn)
          fWebConn.erase(iter);
+
+      // if there are no other connections - cancel all submitted commands
+      CancelCommands((fWebConn.size() == 0), connid);
+
+      CheckDataToSend(); // check if data should be send via other connections
+
       return kTRUE;
    }
 
@@ -704,6 +757,7 @@ void TCanvasPainter::CheckDataToSend()
          buf.Append(cmd.fId);
          buf.Append(":");
          buf.Append(cmd.fName);
+         cmd.fConnId = conn.fHandle->GetId();
       } else if (!conn.fGetMenu.empty()) {
          ROOT::Experimental::Internal::TDrawable *drawable = FindDrawable(fCanvas, conn.fGetMenu);
 
@@ -739,19 +793,22 @@ void TCanvasPainter::CheckDataToSend()
       }
    }
 
+   // if there are updates submitted, but all connections disappeared - cancel all updates
+   if ((fWebConn.size() == 0) && fSnapshotDelivered)
+      return CancelUpdates();
+
    if (fSnapshotDelivered != min_delivered) {
       fSnapshotDelivered = min_delivered;
 
       auto iter = fUpdatesLst.begin();
       while (iter != fUpdatesLst.end()) {
-         auto curr = iter; iter++;
+         auto curr = iter;
+         iter++;
          if (curr->fVersion <= fSnapshotDelivered) {
             curr->fCallback(true);
             fUpdatesLst.erase(curr);
          }
       }
-
-      // one could call-back canvas methods here
    }
 }
 
