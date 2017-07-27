@@ -2159,6 +2159,7 @@
       if (JSROOT.GetUrlOption("webcanvas")!==null) socket_kind = "websocket"; else
       if (JSROOT.GetUrlOption("longpollcanvas")!==null) socket_kind = "longpoll"; else
       if (JSROOT.GetUrlOption("cef_canvas")!==null) socket_kind = "cefquery";
+      if (JSROOT.GetUrlOption("qt5")!==null) JSROOT.browser.qt5 = true;
 
       if (drawing && socket_kind) {
 
@@ -2173,7 +2174,10 @@
          if (painter.batch_mode) JSROOT.BatchMode = true;
                             else JSROOT.RegisterForResize(painter);
 
-         if (window) window.onbeforeunload = painter.WindowBeforeUnloadHanlder.bind(painter);
+         if (window) {
+            window.onbeforeunload = painter.WindowBeforeUnloadHanlder.bind(painter);
+            if (JSROOT.browser.qt5) window.onqt5unload = window.onbeforeunload;
+         }
 
          return;
       }
