@@ -49,7 +49,8 @@ public:
 
    virtual ~TCefWSEngine()
    {
-      if (fCallback) fCallback->Failure(0, "close");
+      if (fCallback)
+         fCallback->Failure(0, "close");
    }
 
    virtual UInt_t GetId() const
@@ -68,7 +69,8 @@ public:
    virtual void SendCharStar(const char *buf)
    {
       // printf("CEF sends message to client %d\n", strlen(buf));
-      if (fCallback) fCallback->Success(buf); // send next message to JS
+      if (fCallback)
+         fCallback->Success(buf); // send next message to JS
    }
 
    virtual Bool_t PreviewData(THttpCallArg *arg)
