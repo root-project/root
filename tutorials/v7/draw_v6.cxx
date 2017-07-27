@@ -40,7 +40,9 @@ void draw_v6()
    // canvas->Show("/usr/bin/opera");  // one could specify program name which should show canvas
    // canvas->Show("firefox");         // it could be firefox, opera, chromium; canvas can be shown several times
 
-   canvas->Update(); // wait until painting is finished
+   canvas->Update(); // synchronous, wait until painting is finished
 
-   canvas->SaveAs("draw.png"); // only .svg and .png are supported for the moment, asynchron
+   canvas->SaveAs("draw.png"); // asynchronous
+
+   canvas->SaveAs("draw.svg"); // asynchronous
 }
