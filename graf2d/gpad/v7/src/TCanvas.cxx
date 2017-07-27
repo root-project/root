@@ -101,14 +101,14 @@ void ROOT::Experimental::TCanvas::Show(const std::string &where)
    }
 }
 
-void ROOT::Experimental::TCanvas::SaveAs(const std::string &filename)
+void ROOT::Experimental::TCanvas::SaveAs(const std::string &filename, bool async)
 {
    if (!fPainter)
       fPainter = Internal::TVirtualCanvasPainter::Create(*this, true);
    if (filename.find(".svg") != std::string::npos)
-      fPainter->DoWhenReady("SVG", filename);
+      fPainter->DoWhenReady("SVG", filename, async);
    else if (filename.find(".png") != std::string::npos)
-      fPainter->DoWhenReady("PNG", filename);
+      fPainter->DoWhenReady("PNG", filename, async);
 }
 
 // TODO: removal from GetHeldCanvases().

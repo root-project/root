@@ -139,7 +139,7 @@ public:
    void Update(bool async = false);
 
    /// Save canvas in image file
-   void SaveAs(const std::string &filename);
+   void SaveAs(const std::string &filename, bool async = false);
 
    /// Get the canvas's title.
    const std::string &GetTitle() const { return fTitle; }
