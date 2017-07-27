@@ -173,17 +173,25 @@ private:
    };
 
    struct WebCommand {
-      std::string fId;       ///<! command identifier
-      std::string fName;     ///<! command name
-      std::string fArg;      ///<! command arg
-      bool fRunning;         ///<! true when command submitted
+      std::string fId;                                ///<! command identifier
+      std::string fName;                              ///<! command name
+      std::string fArg;                               ///<! command arg
+      bool fRunning;                                  ///<! true when command submitted
       ROOT::Experimental::CanvasCallback_t fCallback; ///<! callback function associated with command
       WebCommand() : fId(), fName(), fArg(), fRunning(false), fCallback() {}
+   };
+
+   struct WebUpdate {
+      uint64_t fVersion;                              ///<! canvas version
+      ROOT::Experimental::CanvasCallback_t fCallback; ///<! callback function associated with command
+      WebUpdate() : fVersion(0), fCallback() {}
    };
 
    typedef std::list<WebConn> WebConnList;
 
    typedef std::list<WebCommand> WebCommandsList;
+
+   typedef std::list<WebUpdate> WebUpdatesList;
 
    typedef std::vector<ROOT::Experimental::Detail::TMenuItem> MenuItemsVector;
 
@@ -201,6 +209,7 @@ private:
    uint64_t fSnapshotVersion;   ///!< version of snapshot
    std::string fSnapshot;       ///!< last produced snapshot
    uint64_t fSnapshotDelivered; ///!< minimal version delivered to all connections
+   WebUpdatesList fUpdatesLst;  ///!< list of callbacks for canvas update
 
    static std::string fAddr;    ///<! real http address (when assigned)
    static THttpServer *gServer; ///<! server
@@ -234,7 +243,7 @@ public:
    /// The painter observes it; it needs to know should the TCanvas be deleted.
    TCanvasPainter(const std::string &name, const ROOT::Experimental::TCanvas &canv, bool batch_mode)
       : THttpWSHandler(name.c_str(), "title"), fCanvas(canv), fBatchMode(batch_mode), fWebConn(), fDisplayList(),
-        fCmds(), fCmdsCnt(0), fWaitingCmdId(), fSnapshotVersion(0), fSnapshot(), fSnapshotDelivered(0)
+        fCmds(), fCmdsCnt(0), fWaitingCmdId(), fSnapshotVersion(0), fSnapshot(), fSnapshotDelivered(0), fUpdatesLst()
    {
       CreateHttpServer();
       gServer->Register("/web7gui", this);
@@ -244,12 +253,13 @@ public:
 
    virtual void AddDisplayItem(ROOT::Experimental::TDisplayItem *item) final;
 
-   virtual void CanvasUpdated(uint64_t, bool) override;
+   virtual void CanvasUpdated(uint64_t, bool, ROOT::Experimental::CanvasCallback_t) override;
 
    virtual bool IsCanvasModified(uint64_t) const override;
 
    /// perform special action when drawing is ready
-   virtual void DoWhenReady(const std::string &cmd, const std::string &arg, bool async, ROOT::Experimental::CanvasCallback_t callback) final;
+   virtual void DoWhenReady(const std::string &cmd, const std::string &arg, bool async,
+                            ROOT::Experimental::CanvasCallback_t callback) final;
 
    // open new display for the canvas
    virtual void NewDisplay(const std::string &where) override;
@@ -380,8 +390,8 @@ void TCanvasPainter::NewDisplay(const std::string &where)
 
    TString exec;
 
-   if (!is_native && !ic_cef && !is_qt5 && (where!="browser")) {
-      if (where.find("$url")!=std::string::npos) {
+   if (!is_native && !ic_cef && !is_qt5 && (where != "browser")) {
+      if (where.find("$url") != std::string::npos) {
          exec = where.c_str();
          exec.ReplaceAll("$url", addr);
       } else {
@@ -397,12 +407,25 @@ void TCanvasPainter::NewDisplay(const std::string &where)
    gSystem->Exec(exec);
 }
 
-void TCanvasPainter::CanvasUpdated(uint64_t ver, bool async)
+void TCanvasPainter::CanvasUpdated(uint64_t ver, bool async, ROOT::Experimental::CanvasCallback_t callback)
 {
+   if (ver && fSnapshotDelivered && (ver <= fSnapshotDelivered)) {
+      // if given canvas version was already delivered to clients, can return immediately
+      if (callback) callback(true);
+      return;
+   }
+
    fSnapshotVersion = ver;
    fSnapshot = CreateSnapshot(fCanvas);
 
    CheckDataToSend();
+
+   if (callback) {
+      WebUpdate item;
+      item.fVersion = ver;
+      item.fCallback = callback;
+      fUpdatesLst.push_back(item);
+   }
 
    if (!async)
       WaitWhenCanvasPainted(ver);
@@ -431,7 +454,8 @@ bool TCanvasPainter::WaitWhenCanvasPainted(uint64_t ver)
    return false;
 }
 
-void TCanvasPainter::DoWhenReady(const std::string &name, const std::string &arg, bool async, ROOT::Experimental::CanvasCallback_t callback)
+void TCanvasPainter::DoWhenReady(const std::string &name, const std::string &arg, bool async,
+                                 ROOT::Experimental::CanvasCallback_t callback)
 {
    if (!async && !fWaitingCmdId.empty()) {
       Error("DoWhenReady", "Fail to submit sync command when previous is still awaited - use async");
@@ -446,11 +470,13 @@ void TCanvasPainter::DoWhenReady(const std::string &name, const std::string &arg
    cmd.fCallback = callback;
    fCmds.push_back(cmd);
 
-   if (!async) fWaitingCmdId = cmd.fId;
+   if (!async)
+      fWaitingCmdId = cmd.fId;
 
    CheckDataToSend();
 
-   if (async) return;
+   if (async)
+      return;
 
    uint64_t cnt = 0;
    bool had_connection = false;
@@ -467,7 +493,6 @@ void TCanvasPainter::DoWhenReady(const std::string &name, const std::string &arg
       gSystem->ProcessEvents();
       gSystem->Sleep((++cnt < 500) ? 1 : 100); // increase sleep interval when do very often
    }
-
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -476,12 +501,15 @@ void TCanvasPainter::DoWhenReady(const std::string &name, const std::string &arg
 
 void TCanvasPainter::PopFrontCommand(bool result)
 {
-   if (fCmds.size() == 0) return;
+   if (fCmds.size() == 0)
+      return;
 
    // simple condition, which will be checked in waiting loop
-   if (!fWaitingCmdId.empty() && (fWaitingCmdId == fCmds.front().fId)) fWaitingCmdId.clear();
+   if (!fWaitingCmdId.empty() && (fWaitingCmdId == fCmds.front().fId))
+      fWaitingCmdId.clear();
 
-   if (fCmds.front().fCallback) fCmds.front().fCallback(result);
+   if (fCmds.front().fCallback)
+      fCmds.front().fCallback(result);
 
    fCmds.pop_front();
 }
@@ -619,7 +647,8 @@ Bool_t TCanvasPainter::ProcessWS(THttpCallArg *arg)
       const char *sid = cdata + 6;
       const char *separ = strchr(sid, ':');
       std::string id;
-      if (separ) id.append(sid, separ - sid);
+      if (separ)
+         id.append(sid, separ - sid);
       if (fCmds.size() == 0) {
          Error("ProcessWS", "Get REPLY without command");
       } else if (!fCmds.front().fRunning) {
@@ -627,7 +656,7 @@ Bool_t TCanvasPainter::ProcessWS(THttpCallArg *arg)
       } else if (fCmds.front().fId != id) {
          Error("ProcessWS", "Mismatch with front command and ID in REPLY");
       } else {
-         bool res = FrontCommandReplied(separ+1);
+         bool res = FrontCommandReplied(separ + 1);
          PopFrontCommand(res);
       }
       conn->fReady = kTRUE;
@@ -666,7 +695,7 @@ void TCanvasPainter::CheckDataToSend()
 
       TString buf;
 
-      if (conn.fDrawReady && (fCmds.size()>0) && !fCmds.front().fRunning) {
+      if (conn.fDrawReady && (fCmds.size() > 0) && !fCmds.front().fRunning) {
          WebCommand &cmd = fCmds.front();
          cmd.fRunning = true;
          buf = "CMD:";
@@ -710,6 +739,16 @@ void TCanvasPainter::CheckDataToSend()
 
    if (fSnapshotDelivered != min_delivered) {
       fSnapshotDelivered = min_delivered;
+
+      auto iter = fUpdatesLst.begin();
+      while (iter != fUpdatesLst.end()) {
+         auto curr = iter; iter++;
+         if (curr->fVersion <= fSnapshotDelivered) {
+            curr->fCallback(true);
+            fUpdatesLst.erase(curr);
+         }
+      }
+
       // one could call-back canvas methods here
    }
 }
