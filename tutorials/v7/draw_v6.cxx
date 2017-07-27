@@ -40,7 +40,11 @@ void draw_v6()
    // canvas->Show("/usr/bin/opera");  // one could specify program name which should show canvas
    // canvas->Show("firefox");         // it could be firefox, opera, chromium; canvas can be shown several times
 
-   canvas->Update(); // synchronous, wait until painting is finished
+   // synchronous, wait until painting is finished
+   canvas->Update(false, [](bool res) { std::cout << "First Update done = " << (res ? "true" : "false") << std::endl; });
+
+   // call again, should return immediately
+   canvas->Update(false, [](bool res) { std::cout << "Second Update done = " << (res ? "true" : "false") << std::endl; });
 
    // request to create PNG file in asynchronous mode and specify lambda function as callback
    // when request processed by the client, callback called with result value
