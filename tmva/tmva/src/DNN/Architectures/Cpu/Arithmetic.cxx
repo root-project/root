@@ -136,22 +136,22 @@ void TCpu<Real_t>::Copy(TCpuMatrix<Real_t> &B,
 
 //____________________________________________________________________________
 template<typename Real_t>
-void TCpu<Real_t>::ScaleAdd(std::vector<TCpuMatrix<Real_t>*> &B,
-                            const std::vector<TCpuMatrix<Real_t>*> &A,
+void TCpu<Real_t>::ScaleAdd(std::vector<TCpuMatrix<Real_t>> &B,
+                            const std::vector<TCpuMatrix<Real_t>> &A,
                             Real_t alpha)
 {
    for (size_t i = 0; i < B.size(); ++i) {
-      ScaleAdd(*B[i], *A[i], alpha);
+      ScaleAdd(B[i], A[i], alpha);
    }
 }
 
 //____________________________________________________________________________
 template<typename Real_t>
-void TCpu<Real_t>::Copy(std::vector<TCpuMatrix<Real_t>*> &B,
-                            const std::vector<TCpuMatrix<Real_t>*> &A)
+void TCpu<Real_t>::Copy(std::vector<TCpuMatrix<Real_t>> &B,
+                            const std::vector<TCpuMatrix<Real_t>> &A)
 {
    for (size_t i = 0; i < B.size(); ++i) {
-      Copy(*B[i], *A[i]);
+      Copy(B[i], A[i]);
    }
 }
 

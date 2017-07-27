@@ -94,12 +94,12 @@ public:
                     const TMatrixT<Scalar_t> & B);
 
    /** Above functions extended to vectors */
-   static void ScaleAdd(std::vector<TMatrixT<Scalar_t>*> & A,
-                        const std::vector<TMatrixT<Scalar_t>*> & B,
+   static void ScaleAdd(std::vector<TMatrixT<Scalar_t>> & A,
+                        const std::vector<TMatrixT<Scalar_t>> & B,
                         Scalar_t beta = 1.0);
 
-   static void Copy(std::vector<TMatrixT<Scalar_t>*> & A,
-                    const std::vector<TMatrixT<Scalar_t>*> & B);
+   static void Copy(std::vector<TMatrixT<Scalar_t>> & A,
+                    const std::vector<TMatrixT<Scalar_t>> & B);
 
    ///@}
 
