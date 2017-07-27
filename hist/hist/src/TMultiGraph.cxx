@@ -93,6 +93,8 @@ Begin_Macro(source)
    mg->Add(gr2); gr2->SetTitle("Cos(x)")    ; gr2->SetLineWidth(3);
    mg->Add(gr1); gr1->SetTitle("2*Sin(x)")  ; gr1->SetLineWidth(3);
 
+   mg->SetTitle("Multi-graph Title; X-axis Title; Y-axis Title");
+
    mg->Draw("a fb l3d");
 }
 End_Macro
@@ -1332,6 +1334,10 @@ void TMultiGraph::PaintPolyLine3D(Option_t *option)
       npt = g->GetN();
    }
 
+   if (!fHistogram) {
+      fHistogram = new TH1F(GetName(),GetTitle(),npt,rwxmin,rwxmax);
+   }
+
    while ((g = (TGraph*) next())) {
       Double_t rx1,ry1,rx2,ry2;
       g->ComputeRange(rx1, ry1, rx2, ry2);
@@ -1344,6 +1350,11 @@ void TMultiGraph::PaintPolyLine3D(Option_t *option)
 
    Int_t ndiv = fGraphs->GetSize();
    TH2F* frame = new TH2F("frame","", ndiv, 0., (Double_t)(ndiv), 1, rwxmin, rwxmax);
+   if (fHistogram) {
+      frame->SetTitle(fHistogram->GetTitle());
+      frame->GetYaxis()->SetTitle(fHistogram->GetXaxis()->GetTitle());
+      frame->GetZaxis()->SetTitle(fHistogram->GetYaxis()->GetTitle());
+   }
 
    TAxis *Xaxis = frame->GetXaxis();
    Xaxis->SetNdivisions(-ndiv);

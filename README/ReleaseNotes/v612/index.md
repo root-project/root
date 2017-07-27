@@ -94,6 +94,7 @@ large TClonesArray where each element contains another small vector container.
     Z axis, there was a mismatch between the markers' colors and the color palette
     displayed. It is now fixed. It was reported
     [here](https://sft.its.cern.ch/jira/browse/ROOT-8200).
+  - It is now possible to set the titles of a TMultiGraph drawn as 3D lines.
 
 ## 3D Graphics Libraries
 
