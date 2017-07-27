@@ -71,8 +71,7 @@ private:
     * fOutputDepth = 1
     * fOutputHeight = 1
     * fOutputWidth = stateSize 
-    * fOutput = timeSteps x batchSize x stateSize 
-    * Weights, biases, their corresponding gradients and initialization from GeneralLayer not used as of now*/
+    * fOutput = timeSteps x batchSize x stateSize */
 
    size_t fTimeSteps;              ///< Timesteps for RNN
    size_t fStateSize;              ///< Hidden state size of RNN
@@ -81,14 +80,14 @@ private:
    DNN::EActivationFunction fF;  ///< Activation function of the hidden state
 
    Matrix_t fState;                ///< Hidden State
-   Matrix_t fWeightsInput;         ///< Input weights 
-   Matrix_t fWeightsState;         ///< Prev state weights
-   Matrix_t fBiases;               ///< Biases 
+   Matrix_t &fWeightsInput;         ///< Input weights, fWeights[0]
+   Matrix_t &fWeightsState;         ///< Prev state weights, fWeights[1]
+   Matrix_t &fBiases;               ///< Biases 
 
    Matrix_t fDerivatives;          ///< First fDerivatives of the activations 
-   Matrix_t fWeightInputGradients; ///< Gradients w.r.t. the input weights 
-   Matrix_t fWeightStateGradients; ///< Gradients w.r.t. the recurring weights 
-   Matrix_t fBiasGradients;        ///< Gradients w.r.t. the bias values 
+   Matrix_t &fWeightInputGradients; ///< Gradients w.r.t. the input weights 
+   Matrix_t &fWeightStateGradients; ///< Gradients w.r.t. the recurring weights 
+   Matrix_t &fBiasGradients;        ///< Gradients w.r.t. the bias values 
 
 public:
 
@@ -131,10 +130,10 @@ public:
                               const Matrix_t & input, Matrix_t & input_gradient);
 
    /*! Return a vector of all learnable weights */
-   std::vector<Matrix_t*> GetWeights() const;
+   //std::vector<Matrix_t*> GetWeights() const;
 
-   /*! Return a vector of all learnable weights' gradients */
-   std::vector<Matrix_t*> GetWeightGradients() const;
+   ///*! Return a vector of all learnable weights' gradients */
+   //std::vector<Matrix_t*> GetWeightGradients() const;
 
    /*! Return a vector of all learnable biases */
    //std::vector<Matrix_t*> GetBiases();
@@ -176,10 +175,11 @@ TBasicRNNLayer<Architecture_t>::TBasicRNNLayer(size_t batchSize, size_t stateSiz
                                               size_t timeSteps, bool rememberState,  
                                               DNN::EActivationFunction f,
                                               bool training)
-   : VGeneralLayer<Architecture_t>(batchSize, 1, 1, inputSize, 0, 0, 0, 0, 0, 0, 0, timeSteps, batchSize, stateSize, DNN::EInitialization::kZero), 
-   fTimeSteps(timeSteps), fStateSize(stateSize), fRememberState(rememberState), fWeightsInput(stateSize, inputSize), fF(f),
-   fState(batchSize, stateSize), fWeightsState(stateSize, stateSize), fBiases(stateSize, 1), fDerivatives(stateSize, inputSize), 
-   fWeightInputGradients(stateSize, inputSize), fWeightStateGradients(stateSize, stateSize), fBiasGradients(stateSize, 1)
+   : VGeneralLayer<Architecture_t>(batchSize, 1, 1, inputSize, 0, 0, 0, 2, {stateSize, stateSize}, {inputSize, stateSize},
+   1, {stateSize}, {1}, timeSteps, batchSize, stateSize, DNN::EInitialization::kZero), 
+   fTimeSteps(timeSteps), fStateSize(stateSize), fRememberState(rememberState), fWeightsInput(this->GetWeightsAt(0)), fF(f),
+   fState(batchSize, stateSize), fWeightsState(this->GetWeightsAt(1)), fBiases(this->GetBiasesAt(0)), fDerivatives(stateSize, inputSize), 
+   fWeightInputGradients(this->GetWeightGradientsAt(0)), fWeightStateGradients(this->GetWeightGradientsAt(1)), fBiasGradients(this->GetBiasGradientsAt(0))
 {
    // Nothing
 }
@@ -188,16 +188,15 @@ TBasicRNNLayer<Architecture_t>::TBasicRNNLayer(size_t batchSize, size_t stateSiz
 template <typename Architecture_t>
 TBasicRNNLayer<Architecture_t>::TBasicRNNLayer(const TBasicRNNLayer &layer)
    : VGeneralLayer<Architecture_t>(layer), fTimeSteps(layer.fTimeSteps), fStateSize(layer.fStateSize),
-   fRememberState(layer.fRememberState), fWeightsInput(layer.GetStateSize(), layer.GetInputSize()),
-   fState(layer.GetBatchSize(), layer.GetStateSize()), fWeightsState(layer.GetStateSize(), layer.GetStateSize()), 
-   fBiases(layer.GetStateSize(), 1), fDerivatives(layer.GetStateSize(), layer.GetInputSize()), 
-   fWeightInputGradients(layer.GetStateSize(), layer.GetInputSize()), fF(layer.GetActivationFunction()),
-   fWeightStateGradients(layer.GetStateSize(), layer.GetStateSize()), fBiasGradients(layer.GetStateSize(), 1)
+   fRememberState(layer.fRememberState), fWeightsInput(this->GetWeightsAt(0)),
+   fState(layer.GetBatchSize(), layer.GetStateSize()), fWeightsState(this->GetWeightsAt(1)), 
+   fBiases(this->GetBiasesAt(0)), fDerivatives(layer.GetStateSize(), layer.GetInputSize()), 
+   fWeightInputGradients(this->GetWeightGradientsAt(0)), fF(layer.GetActivationFunction()),
+   fWeightStateGradients(this->GetWeightGradientsAt(1)), fBiasGradients(this->GetBiasGradientsAt(0))
 {
    // Gradient matrices not copied
-   Architecture_t::Copy(fWeightsInput, layer.GetWeightsInput());
-   Architecture_t::Copy(fWeightsState, layer.GetWeightsState());
-   Architecture_t::Copy(fBiases, layer.GetBiases());
+   Architecture_t::Copy(fState, layer.GetState());
+   Architecture_t::Copy(fDerivatives, layer.GetDerivatives());
 }
 
 //______________________________________________________________________________
@@ -228,28 +227,28 @@ auto TBasicRNNLayer<Architecture_t>::Print() const
              << "Hidden State Size: " << this->GetStateSize() << "\n";  
 }
 
-//______________________________________________________________________________
-template<typename Architecture_t>
-auto TBasicRNNLayer<Architecture_t>::GetWeights() const
-->   std::vector<Matrix_t*> 
-{
-  std::vector<Matrix_t*> weights;
-  weights.emplace_back(&fWeightsInput);
-  weights.emplace_back(&fWeightsState);
-  return weights;
-}
-
-//______________________________________________________________________________
-template<typename Architecture_t>
-auto TBasicRNNLayer<Architecture_t>::GetWeightGradients() const
-->   std::vector<Matrix_t*> 
-{
-  std::vector<Matrix_t*> weightGradients;
-  weightGradients.emplace_back(&fWeightInputGradients);
-  weightGradients.emplace_back(&fWeightStateGradients);
-  return weightGradients;
-}
-
+////______________________________________________________________________________
+//template<typename Architecture_t>
+//auto TBasicRNNLayer<Architecture_t>::GetWeights() const
+//->   std::vector<Matrix_t*> 
+//{
+//  std::vector<Matrix_t*> weights;
+//  weights.emplace_back(&fWeightsInput);
+//  weights.emplace_back(&fWeightsState);
+//  return weights;
+//}
+//
+////______________________________________________________________________________
+//template<typename Architecture_t>
+//auto TBasicRNNLayer<Architecture_t>::GetWeightGradients() const
+//->   std::vector<Matrix_t*> 
+//{
+//  std::vector<Matrix_t*> weightGradients;
+//  weightGradients.emplace_back(&fWeightInputGradients);
+//  weightGradients.emplace_back(&fWeightStateGradients);
+//  return weightGradients;
+//}
+//
 //______________________________________________________________________________
 //template<typename Architecture_t>
 //auto TBasicRNNLayer<Architecture_t>::GetBiases() const

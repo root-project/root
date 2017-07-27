@@ -719,10 +719,10 @@ auto TDeepNet<Architecture_t, Layer_t>::ParallelBackward(std::vector<TDeepNet<Ar
          Layer_t *layer = nets[i].GetLayerAt(j);
 
          masterLayer->UpdateWeights(layer->GetWeightGradients(), learningRate);
-         Architecture_t::Copy(layer->GetWeights(), masterLayer->GetWeights());
+         layer->CopyWeights(masterLayer->GetWeights());
 
          masterLayer->UpdateBiases(layer->GetBiasGradients(), learningRate);
-         Architecture_t::Copy(layer->GetBiases(), masterLayer->GetBiases());
+         layer->CopyBiases(masterLayer->GetBiases());
       }
    }
 }
@@ -744,20 +744,29 @@ auto TDeepNet<Architecture_t, Layer_t>::ParallelBackwardMomentum(std::vector<TDe
 
    // Backpropagate the error in i'th layer of each deep net
    for (size_t i = depth - 1; i > 0; i--) {
-      for (size_t j = 0; j < nets.size(); j++) {
-         nets[j].GetLayerAt(i)->Backward(nets[j].GetLayerAt(i - 1)->GetActivationGradients(),
-                                         nets[j].GetLayerAt(i - 1)->GetOutput());
+      Layer_t *masterLayer = this->GetLayerAt(i);
 
-         Architecture_t::ScaleAdd(this->GetLayerAt(i)->GetWeightGradients(),
-                                  nets[j].GetLayerAt(i)->GetWeightGradients(), -learningRate / momentum);
-         Architecture_t::ScaleAdd(this->GetLayerAt(i)->GetBiasGradients(), nets[j].GetLayerAt(i)->GetBiasGradients(),
-                                  -learningRate / momentum);
+      for (size_t j = 0; j < nets.size(); j++) {
+         Layer_t *layer = nets[j].GetLayerAt(i);
+
+         layer->Backward(nets[j].GetLayerAt(i - 1)->GetActivationGradients(), nets[j].GetLayerAt(i - 1)->GetOutput());
+         masterLayer->UpdateWeightGradients(layer->GetWeightGradients(), learningRate / momentum);
+         masterLayer->UpdateBiasGradients(layer->GetBiasGradients(), learningRate / momentum);
+
+         //  Architecture_t::ScaleAdd(this->GetLayerAt(i)->GetWeightGradients(),
+         //                           nets[j].GetLayerAt(i)->GetWeightGradients(), -learningRate / momentum);
+         //  Architecture_t::ScaleAdd(this->GetLayerAt(i)->GetBiasGradients(),
+         //  nets[j].GetLayerAt(i)->GetBiasGradients(),
+         //                           -learningRate / momentum);
       }
 
-      Architecture_t::ScaleAdd(this->GetLayerAt(i)->GetWeightGradients(), this->GetLayerAt(i)->GetWeightGradients(),
-                               momentum - 1.0);
-      Architecture_t::ScaleAdd(this->GetLayerAt(i)->GetBiasGradients(), this->GetLayerAt(i)->GetBiasGradients(),
-                               momentum - 1.0);
+      masterLayer->UpdateWeightGradients(masterLayer->GetWeightGradients(), 1.0 - momentum);
+      masterLayer->UpdateBiasGradients(masterLayer->GetBiasGradients(), 1.0 - momentum);
+
+      // Architecture_t::ScaleAdd(this->GetLayerAt(i)->GetWeightGradients(), this->GetLayerAt(i)->GetWeightGradients(),
+      //                          momentum - 1.0);
+      // Architecture_t::ScaleAdd(this->GetLayerAt(i)->GetBiasGradients(), this->GetLayerAt(i)->GetBiasGradients(),
+      //                          momentum - 1.0);
    }
 
    std::vector<Matrix_t> dummy;
@@ -767,19 +776,29 @@ auto TDeepNet<Architecture_t, Layer_t>::ParallelBackwardMomentum(std::vector<TDe
    }
 
    // First layer of each deep net
+   Layer_t *masterFirstLayer = this->GetLayerAt(0);
    for (size_t i = 0; i < nets.size(); i++) {
-      nets[i].GetLayerAt(0)->Backward(dummy, batches[i].GetInput());
+      Layer_t *layer = nets[i].GetLayerAt(0);
 
-      Architecture_t::ScaleAdd(this->GetLayerAt(0)->GetWeightGradients(), nets[i].GetLayerAt(0)->GetWeightGradients(),
-                               -learningRate / momentum);
-      Architecture_t::ScaleAdd(this->GetLayerAt(0)->GetBiasGradients(), nets[i].GetLayerAt(0)->GetBiasGradients(),
-                               -learningRate / momentum);
+      layer->Backward(dummy, batches[i].GetInput());
+
+      masterFirstLayer->UpdateWeightGradients(layer->GetWeightGradients(), learningRate / momentum);
+      masterFirstLayer->UpdateBiasGradients(layer->GetBiasGradients(), learningRate / momentum);
+
+      // Architecture_t::ScaleAdd(this->GetLayerAt(0)->GetWeightGradients(),
+      // nets[i].GetLayerAt(0)->GetWeightGradients(),
+      //                          -learningRate / momentum);
+      // Architecture_t::ScaleAdd(this->GetLayerAt(0)->GetBiasGradients(), nets[i].GetLayerAt(0)->GetBiasGradients(),
+      //                          -learningRate / momentum);
    }
 
-   Architecture_t::ScaleAdd(this->GetLayerAt(0)->GetWeightGradients(), this->GetLayerAt(0)->GetWeightGradients(),
-                            momentum - 1.0);
-   Architecture_t::ScaleAdd(this->GetLayerAt(0)->GetBiasGradients(), this->GetLayerAt(0)->GetBiasGradients(),
-                            momentum - 1.0);
+   masterFirstLayer->UpdateWeightGradients(masterFirstLayer->GetWeightGradients(), 1.0 - momentum);
+   masterFirstLayer->UpdateBiasGradients(masterFirstLayer->GetBiasGradients(), 1.0 - momentum);
+
+   //  Architecture_t::ScaleAdd(this->GetLayerAt(0)->GetWeightGradients(), this->GetLayerAt(0)->GetWeightGradients(),
+   //                           momentum - 1.0);
+   //  Architecture_t::ScaleAdd(this->GetLayerAt(0)->GetBiasGradients(), this->GetLayerAt(0)->GetBiasGradients(),
+   //                           momentum - 1.0);
 
    for (size_t i = 0; i < depth; i++) {
       Layer_t *masterLayer = this->GetLayerAt(i);
@@ -787,8 +806,12 @@ auto TDeepNet<Architecture_t, Layer_t>::ParallelBackwardMomentum(std::vector<TDe
 
       for (size_t j = 0; j < nets.size(); j++) {
          Layer_t *layer = nets[j].GetLayerAt(i);
-         Architecture_t::Copy(layer->GetWeights(), masterLayer->GetWeights());
-         Architecture_t::Copy(layer->GetBiases(), masterLayer->GetBiases());
+
+         layer->CopyWeights(masterLayer->GetWeights());
+         layer->CopyBiases(masterLayer->GetBiases());
+
+         //  Architecture_t::Copy(layer->GetWeights(), masterLayer->GetWeights());
+         //  Architecture_t::Copy(layer->GetBiases(), masterLayer->GetBiases());
       }
    }
 }
@@ -811,8 +834,9 @@ auto TDeepNet<Architecture_t, Layer_t>::ParallelBackwardNestorov(std::vector<TDe
    // Backpropagate the error in i'th layer of each deep net
    for (size_t i = depth - 1; i > 0; i--) {
       for (size_t j = 0; j < nets.size(); j++) {
-         nets[j].GetLayerAt(i)->Backward(nets[j].GetLayerAt(i - 1)->GetActivationGradients(),
-                                         nets[j].GetLayerAt(i - 1)->GetOutput());
+         Layer_t *layer = nets[j].GetLayerAt(i);
+
+         layer->Backward(nets[j].GetLayerAt(i - 1)->GetActivationGradients(), nets[j].GetLayerAt(i - 1)->GetOutput());
       }
    }
 
@@ -824,7 +848,8 @@ auto TDeepNet<Architecture_t, Layer_t>::ParallelBackwardNestorov(std::vector<TDe
 
    // First layer of each deep net
    for (size_t i = 0; i < nets.size(); i++) {
-      nets[i].GetLayerAt(0)->Backward(dummy, batches[i].GetInput());
+      Layer_t *layer = nets[i].GetLayerAt(0);
+      layer->Backward(dummy, batches[i].GetInput());
    }
 
    for (size_t i = 0; i < depth; i++) {
@@ -832,8 +857,11 @@ auto TDeepNet<Architecture_t, Layer_t>::ParallelBackwardNestorov(std::vector<TDe
       for (size_t j = 0; j < nets.size(); j++) {
          Layer_t *layer = nets[j].GetLayerAt(i);
 
-         Architecture_t::Copy(layer->GetWeights(), masterLayer->GetWeights());
-         Architecture_t::Copy(layer->GetBiases(), masterLayer->GetBiases());
+         layer->CopyWeights(masterLayer->GetWeights());
+         layer->CopyBiases(masterLayer->GetBiases());
+
+         //  Architecture_t::Copy(layer->GetWeights(), masterLayer->GetWeights());
+         //  Architecture_t::Copy(layer->GetBiases(), masterLayer->GetBiases());
 
          layer->UpdateWeights(masterLayer->GetWeightGradients(), 1.0);
          layer->UpdateBiases(masterLayer->GetBiasGradients(), 1.0);
@@ -841,13 +869,21 @@ auto TDeepNet<Architecture_t, Layer_t>::ParallelBackwardNestorov(std::vector<TDe
 
       for (size_t j = 0; j < nets.size(); j++) {
          Layer_t *layer = nets[j].GetLayerAt(i);
-         Architecture_t::ScaleAdd(masterLayer->GetWeightGradients(), layer->GetWeightGradients(),
-                                  -learningRate / momentum);
-         Architecture_t::ScaleAdd(masterLayer->GetBiasGradients(), layer->GetBiasGradients(), -learningRate / momentum);
+
+         masterLayer->UpdateWeightGradients(layer->GetWeightGradients(), learningRate / momentum);
+         masterLayer->UpdateBiasGradients(layer->GetBiasGradients(), learningRate / momentum);
+
+         //  Architecture_t::ScaleAdd(masterLayer->GetWeightGradients(), layer->GetWeightGradients(),
+         //                           -learningRate / momentum);
+         //  Architecture_t::ScaleAdd(masterLayer->GetBiasGradients(), layer->GetBiasGradients(), -learningRate /
+         //  momentum);
       }
 
-      Architecture_t::ScaleAdd(masterLayer->GetWeightGradients(), masterLayer->GetWeightGradients(), momentum - 1.0);
-      Architecture_t::ScaleAdd(masterLayer->GetBiasGradients(), masterLayer->GetBiasGradients(), momentum - 1.0);
+      masterLayer->UpdateWeightGradients(masterLayer->GetWeightGradients(), 1.0 - momentum);
+      masterLayer->UpdateBiasGradients(masterLayer->GetBiasGradients(), 1.0 - momentum);
+
+      // Architecture_t::ScaleAdd(masterLayer->GetWeightGradients(), masterLayer->GetWeightGradients(), momentum - 1.0);
+      // Architecture_t::ScaleAdd(masterLayer->GetBiasGradients(), masterLayer->GetBiasGradients(), momentum - 1.0);
 
       masterLayer->Update(1.0);
    }
@@ -873,8 +909,10 @@ auto TDeepNet<Architecture_t, Layer_t>::Loss(const Matrix_t &groundTruth, const 
 
    if (includeRegularization) {
       for (size_t i = 0; i < fLayers.size(); i++) {
-         loss += this->GetWeightDecay() *
-                 regularization<Architecture_t>(fLayers[i]->GetWeights(), this->GetRegularization());
+         for (size_t j = 0; j < (fLayers[i]->GetWeights()).size(); j++) {
+            loss += this->GetWeightDecay() *
+                    regularization<Architecture_t>(fLayers[i]->GetWeightsAt(j), this->GetRegularization());
+         }
       }
    }
 
