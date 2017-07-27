@@ -597,6 +597,8 @@ Bool_t TCanvasPainter::ProcessWS(THttpCallArg *arg)
    if (strcmp(arg->GetMethod(), "WS_CLOSE") == 0) {
       // connection is closed, one can remove handle
 
+      printf("Connection closed\n");
+
       if (conn && conn->fHandle) {
          conn->fHandle->ClearHandle();
          delete conn->fHandle;

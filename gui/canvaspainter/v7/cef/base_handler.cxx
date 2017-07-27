@@ -47,7 +47,10 @@ public:
    {
    }
 
-   virtual ~TCefWSEngine() {}
+   virtual ~TCefWSEngine()
+   {
+      if (fCallback) fCallback->Failure(0, "close");
+   }
 
    virtual UInt_t GetId() const
    {
@@ -55,7 +58,7 @@ public:
       return TString::Hash((void *)&ptr, sizeof(void *));
    }
 
-   virtual void ClearHandle() { fCallback->Failure(0, "close"); }
+   virtual void ClearHandle() { fCallback = NULL; }
 
    virtual void Send(const void * /*buf*/, int /*len*/)
    {
@@ -64,8 +67,8 @@ public:
 
    virtual void SendCharStar(const char *buf)
    {
-      // printf("CEF sends message to client %s\n", buf);
-      fCallback->Success(buf); // send next message to JS
+      // printf("CEF sends message to client %d\n", strlen(buf));
+      if (fCallback) fCallback->Success(buf); // send next message to JS
    }
 
    virtual Bool_t PreviewData(THttpCallArg *arg)
@@ -96,17 +99,21 @@ public:
 
    virtual void HttpReplied()
    {
-      if (fCallback == NULL) return;
+      if (!fCallback)
+         return;
 
       if (Is404()) {
          fCallback->Failure(0, "error");
       } else {
          std::string reply;
-         if (GetContentLength() > 0) reply.append((const char *)GetContent(), GetContentLength());
+         if (GetContentLength() > 0)
+            reply.append((const char *)GetContent(), GetContentLength());
          fCallback->Success(reply);
       }
       fCallback = NULL;
    }
+
+   void ClearCallBack() { fCallback = NULL; }
 };
 
 // Handle messages in the browser process.
@@ -117,27 +124,22 @@ protected:
 public:
    explicit RootMessageHandler(THttpServer *serv = 0) : fServer(serv) {}
 
-   // Called due to cefQuery execution in message_router.html.
+   // Called due to cefQuery execution
    bool OnQuery(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, int64 query_id, const CefString &request,
                 bool persistent, CefRefPtr<Callback> callback) OVERRIDE
    {
       std::string message = request;
 
-      if (message == "init_jsroot_done") {
-         printf("Get message %s\n", message.c_str());
-         std::string result = "confirm from ROOT";
-         callback->Success(result);
-         return true; // processed
-      }
-
-      if (!fServer) return false;
+      if (!fServer)
+         return false;
 
       // message format
       // <path>::connect, replied with ws handler id
       // <path>::<connid>::post::<data> or <path>::<connid>::close
 
       int pos = message.find("::");
-      if (pos == std::string::npos) return false;
+      if (pos == std::string::npos)
+         return false;
 
       std::string url = message.substr(0, pos);
       message.erase(0, pos + 2);
@@ -154,7 +156,8 @@ public:
          printf("Create CEF WS engine with id %u\n", ws->GetId());
       } else {
          pos = message.find("::");
-         if (pos == std::string::npos) return false;
+         if (pos == std::string::npos)
+            return false;
          std::string sid = message.substr(0, pos);
          message.erase(0, pos + 2);
          unsigned wsid = 0;
@@ -162,13 +165,16 @@ public:
          arg->SetWSId(wsid);
          if (message == "close") {
             arg->SetMethod("WS_CLOSE");
+            arg->ClearCallBack();
          } else {
             arg->SetMethod("WS_DATA");
-            if (message.length() > 6) arg->SetPostData((void *)(message.c_str() + 6), message.length() - 6, kTRUE);
+            if (message.length() > 6)
+               arg->SetPostData((void *)(message.c_str() + 6), message.length() - 6, kTRUE);
          }
       }
 
-      if (fServer->SubmitHttp(arg, kTRUE)) arg->HttpReplied(); // message processed and can be replied
+      if (fServer->SubmitHttp(arg, kTRUE))
+         arg->HttpReplied(); // message processed and can be replied
 
       return true;
    }
@@ -288,7 +294,8 @@ void BaseHandler::OnLoadError(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame>
    CEF_REQUIRE_UI_THREAD();
 
    // Don't display an error for downloaded files.
-   if (errorCode == ERR_ABORTED) return;
+   if (errorCode == ERR_ABORTED)
+      return;
 
    // Display a load error message.
    std::stringstream ss;
@@ -307,7 +314,8 @@ void BaseHandler::CloseAllBrowsers(bool force_close)
       return;
    }
 
-   if (browser_list_.empty()) return;
+   if (browser_list_.empty())
+      return;
 
    BrowserList::const_iterator it = browser_list_.begin();
    for (; it != browser_list_.end(); ++it) (*it)->GetHost()->CloseBrowser(force_close);
