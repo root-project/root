@@ -172,7 +172,17 @@ private:
       WebConn() : fHandle(0), fReady(false), fDrawReady(false), fGetMenu(), fSend(0), fDelivered(0) {}
    };
 
+   struct WebCommand {
+      std::string fId;       ///<! command identifier
+      std::string fName;     ///<! command name
+      std::string fArg;      ///<! command arg
+      bool fRunning;         ///<! true when command submitted
+      WebCommand() : fId(), fName(), fArg(), fRunning(false) {}
+   };
+
    typedef std::list<WebConn> WebConnList;
+
+   typedef std::list<WebCommand> WebCommandsList;
 
    typedef std::vector<ROOT::Experimental::Detail::TMenuItem> MenuItemsVector;
 
@@ -183,7 +193,8 @@ private:
 
    WebConnList fWebConn;                             ///<! connections list
    ROOT::Experimental::TPadDisplayItem fDisplayList; ///!< full list of items to display
-   std::string fNextCmd;                             ///!< command which will be executed next
+   WebCommandsList fCmds;                            ///!< list of submitted commands
+   uint64_t fCmdsCnt;                                ///!< commands counter
 
    uint64_t fSnapshotVersion;   ///!< version of snapshot
    std::string fSnapshot;       ///!< last produced snapshot
@@ -210,6 +221,10 @@ private:
    /// Send the canvas primitives to the THttpServer.
    // void SendCanvas();
 
+   bool FrontCommandReplied(const std::string &reply);
+
+   void PopFrontCommand(bool res = false);
+
    virtual Bool_t ProcessWS(THttpCallArg *arg);
 
 public:
@@ -217,7 +232,7 @@ public:
    /// The painter observes it; it needs to know should the TCanvas be deleted.
    TCanvasPainter(const std::string &name, const ROOT::Experimental::TCanvas &canv, bool batch_mode)
       : THttpWSHandler(name.c_str(), "title"), fCanvas(canv), fBatchMode(batch_mode), fWebConn(), fDisplayList(),
-        fNextCmd(), fSnapshotVersion(0), fSnapshot(), fSnapshotDelivered(0)
+        fCmds(), fCmdsCnt(0), fSnapshotVersion(0), fSnapshot(), fSnapshotDelivered(0)
    {
       CreateHttpServer();
       gServer->Register("/web7gui", this);
@@ -414,10 +429,66 @@ bool TCanvasPainter::WaitWhenCanvasPainted(uint64_t ver)
    return false;
 }
 
-void TCanvasPainter::DoWhenReady(const std::string &cmd, const std::string &arg)
+void TCanvasPainter::DoWhenReady(const std::string &name, const std::string &arg)
 {
-   fNextCmd = cmd + ":" + arg;
+   WebCommand cmd;
+   cmd.fId = TString::ULLtoa(fCmdsCnt++, 10);
+   cmd.fName = name;
+   cmd.fArg = arg;
+   cmd.fRunning = false;
+   fCmds.push_back(cmd);
    CheckDataToSend();
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+/// Remove front command from the command queue
+/// If necessary, configured call-back will be invoked
+
+void TCanvasPainter::PopFrontCommand(bool)
+{
+   if (fCmds.size() == 0) return;
+
+   fCmds.pop_front();
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+/// Process reply of first command in the queue
+/// For the moment commands use to create image files
+
+bool TCanvasPainter::FrontCommandReplied(const std::string &reply)
+{
+   WebCommand &cmd = fCmds.front();
+
+   cmd.fRunning = false;
+
+   bool result = false;
+
+   if (cmd.fName == "SVG") {
+      if (reply.length() == 0) {
+         Error("FrontCommandReplied", "Fail to produce SVG image %s", cmd.fArg.c_str());
+      } else {
+         std::ofstream ofs(cmd.fArg);
+         ofs.write(reply.c_str(), reply.length());
+         ofs.close();
+         Info("FrontCommandReplied", "Create SVG file %s len %d", cmd.fArg.c_str(), (int)reply.length());
+         result = true;
+      }
+   } else if (cmd.fName == "PNG") {
+      if (reply.length() == 0) {
+         Error("FrontCommandReplied", "Fail to produce PNG image %s", cmd.fArg.c_str());
+      } else {
+         std::string png = base64_decode(reply);
+         std::ofstream ofs(cmd.fArg);
+         ofs.write(png.c_str(), png.length());
+         ofs.close();
+         Info("FrontCommandReplied", "Create PNG file %s len %d", cmd.fArg.c_str(), (int)png.length());
+         result = true;
+      }
+   } else {
+      Error("FrontCommandReplied", "Unknown command %s", cmd.fName.c_str());
+   }
+
+   return result;
 }
 
 Bool_t TCanvasPainter::ProcessWS(THttpCallArg *arg)
@@ -509,34 +580,20 @@ Bool_t TCanvasPainter::ProcessWS(THttpCallArg *arg)
       // TODO: temporary solution, should be removed later
       // used now to terminate ROOT session
       gROOT->ProcessLine(cdata + 5);
-   } else if (strncmp(cdata, "DONESVG:", 8) == 0) {
-      TString buf(cdata + 8);
-      Int_t pos = buf.First(':');
-      if (pos > 0) {
-         TString fname = buf(0, pos);
-         buf.Remove(0, pos + 1);
-         std::ofstream ofs(fname.Data());
-         ofs.write(buf.Data(), buf.Length());
-         ofs.close();
-         printf("Create SVG file %s len %d\n", fname.Data(), buf.Length());
-      }
-      conn->fReady = kTRUE;
-      CheckDataToSend();
-   } else if (strncmp(cdata, "DONEPNG:", 8) == 0) {
-      TString buf(cdata + 8);
-      Int_t pos = buf.First(':');
-      if (pos > 0) {
-         TString fname = buf(0, pos);
-         buf.Remove(0, pos + 1);
-
-         std::string png = base64_decode(buf.Data());
-
-         std::ofstream ofs(fname.Data());
-         ofs.write(png.c_str(), png.length());
-         ofs.close();
-         printf("Create PNG file %s len %d\n", fname.Data(), (int)png.length());
+   } else if (strncmp(cdata, "REPLY:", 6) == 0) {
+      const char *sid = cdata + 6;
+      const char *separ = strchr(sid, ':');
+      std::string id;
+      if (separ) id.append(sid, separ - sid);
+      if (fCmds.size() == 0) {
+         Error("ProcessWS", "Get REPLY without command");
+      } else if (!fCmds.front().fRunning) {
+         Error("ProcessWS", "Front command is not running when get reply");
+      } else if (fCmds.front().fId != id) {
+         Error("ProcessWS", "Mismatch with front command and ID in REPLY");
       } else {
-         printf("Error when producing PNG image %s\n", buf.Data());
+         bool res = FrontCommandReplied(separ+1);
+         PopFrontCommand(res);
       }
       conn->fReady = kTRUE;
       CheckDataToSend();
@@ -574,9 +631,13 @@ void TCanvasPainter::CheckDataToSend()
 
       TString buf;
 
-      if (conn.fDrawReady && !fNextCmd.empty()) {
-         buf = fNextCmd;
-         fNextCmd.clear();
+      if (conn.fDrawReady && (fCmds.size()>0) && !fCmds.front().fRunning) {
+         WebCommand &cmd = fCmds.front();
+         cmd.fRunning = true;
+         buf = "CMD:";
+         buf.Append(cmd.fId);
+         buf.Append(":");
+         buf.Append(cmd.fName);
       } else if (!conn.fGetMenu.empty()) {
          ROOT::Experimental::Internal::TDrawable *drawable = FindDrawable(fCanvas, conn.fGetMenu);
 
