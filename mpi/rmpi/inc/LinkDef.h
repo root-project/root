@@ -45,6 +45,7 @@
 #pragma link C++ class ROOT::Mpi::TIntraCommunicator;
 #pragma link C++ class ROOT::Mpi::TInterCommunicator;
 #pragma link C++ class ROOT::Mpi::TCartCommunicator;
+#pragma link C++ class ROOT::Mpi::TGraphCommunicator;
 #pragma link C++ class ROOT::Mpi::TGroup;
 #pragma link C++ class ROOT::Mpi::TErrorHandler;
 

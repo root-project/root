@@ -11,6 +11,7 @@ class TInfo;
 class TPort;
 class TInterCommunicator;
 class TCartCommunicator;
+class TGraphCommunicator;
 
 /**
  * \class TIntraCommunicator
@@ -63,6 +64,9 @@ public:
 
    virtual TCartCommunicator CreateCartcomm(Int_t ndims, const Int_t dims[], const Bool_t periods[],
                                             Bool_t reorder) const;
+
+   virtual TGraphCommunicator CreateGraphcomm(Int_t nnodes, const Int_t index[], const Int_t edges[],
+                                              Bool_t reorder) const;
 
    // Process Creation and Management
    //

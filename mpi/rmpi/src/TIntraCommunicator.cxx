@@ -1,6 +1,7 @@
 #include <Mpi/TIntraCommunicator.h>
 #include <Mpi/TInterCommunicator.h>
 #include <Mpi/TCartCommunicator.h>
+#include <Mpi/TGraphCommunicator.h>
 #include <Mpi/TInfo.h>
 #include <Mpi/TPort.h>
 
@@ -152,7 +153,7 @@ TInterCommunicator TIntraCommunicator::CreateIntercomm(Int_t local_leader, const
  * \param periods Logical array of size ndims specifying whether the grid is periodic (true) or not (false) in each
  * dimension.
  * \param reorder Ranking may be reordered (true) or not (false) (logical).
- * \return TcartCommunicator object with new Cartesian topology (handle).
+ * \return ROOT::Mpi::TCartCommunicator object with new Cartesian topology (handle).
  */
 TCartCommunicator TIntraCommunicator::CreateCartcomm(Int_t ndims, const Int_t dims[], const Bool_t periods[],
                                                      Bool_t reorder) const
@@ -164,6 +165,60 @@ TCartCommunicator TIntraCommunicator::CreateCartcomm(Int_t ndims, const Int_t di
    ROOT_MPI_CHECK_CALL(MPI_Cart_create, (fComm, ndims, const_cast<Int_t *>(dims), int_periods, (Int_t)reorder, &ncomm),
                        this);
    delete[] int_periods;
+   return ncomm;
+}
+
+//______________________________________________________________________________
+/**
+ * Makes a new communicator to which topology information has been attached.
+ *
+ * Returns a handle to a new communicator to which the graph topology information is attached. If reorder = false then
+ * the rank of each process in the new group is identical to its rank in the old group. Otherwise, the function may
+ * reorder the processes. If the size, nnodes, of the  graph  is  smaller than  the  size  of the group of comm_old,
+ * then some processes are returned ROOT::Mpi::COMM_NULL, in analogy to ROOT::Mpi::TIntraCommunicator::CreateCartcomm
+ * and ROOT::Mpi::TIntraCommunicator::Split. The call is erroneous if it specifies a graph that is larger than the
+ * group size of the input communicator.
+ *
+ * The three parameters nnodes, index, and edges define the graph structure. nnodes is the number of nodes of the
+ * graph.  The  nodes  are  numbered  from  0  to nnodes-1.  The  ith  entry of array index stores the total number of
+ * neighbors of the first i graph nodes. The lists of neighbors of nodes 0, 1, ..., nnodes-1 are stored in consecutive
+ * locations in array edges. The array edges is a flattened representation of the edge lists. The total number of
+ * entries in  index  is nnodes and the total number of entries in edges is equal to the number of graph edges.
+ *
+ * The definitions of the arguments nnodes, index, and edges are illustrated with the following simple example.
+ *
+ * Example: Assume there are four processes 0, 1, 2, 3 with the following adjacency matrix:
+ *
+ *
+ *          Process    Neighbors
+ *             0          1, 3
+ *             1          0
+ *             2          3
+ *             3          0, 2
+ *
+ *      Then, the input arguments are:
+ *          nnodes = 4
+ *          index  = 2, 3, 4, 6
+ *          edges  = 1, 3, 0, 3, 0, 2
+ *
+ * Thus, in C++, index[0] is the degree of node zero, and index[i] - index[i-1] is the degree of node i, i=1, . . . ,
+ * nnodes-1;  the list of neighbors of node zero is stored in edges[j], for 0 <= j <= index[0] - 1 and the list of
+ * neighbors of node i, i > 0 ,  is stored in edges[j], index[i-1] <= j <= index[i] - 1.
+ *
+ *
+ * \param nnodes Number of nodes in graph (integer).
+ * \param index Array of integers describing node degrees (see above).
+ * \param edges Array of integers describing graph edges (see above).
+ * \param reorder  Ranking may be reordered (true) or not (false) (logical).
+ * \return ROOT::Mpi::TGraphCommunicator object with new Graph topology (handle).
+ **/
+TGraphCommunicator TIntraCommunicator::CreateGraphcomm(Int_t nnodes, const Int_t index[], const Int_t edges[],
+                                                       Bool_t reorder) const
+{
+   MPI_Comm ncomm;
+   ROOT_MPI_CHECK_CALL(MPI_Graph_create,
+                       (fComm, nnodes, const_cast<Int_t *>(index), const_cast<Int_t *>(edges), (Int_t)reorder, &ncomm),
+                       this);
    return ncomm;
 }
 
