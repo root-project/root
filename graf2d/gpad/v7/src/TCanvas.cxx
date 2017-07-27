@@ -43,11 +43,6 @@ const std::vector<std::shared_ptr<ROOT::Experimental::TCanvas>> &ROOT::Experimen
 //  }
 // }
 
-void ROOT::Experimental::TCanvas::Modified()
-{
-   fModified++;
-}
-
 bool ROOT::Experimental::TCanvas::IsModified() const
 {
    return fPainter ? fPainter->IsCanvasModified(fModified) : fModified;
@@ -90,7 +85,8 @@ std::shared_ptr<ROOT::Experimental::TCanvas> ROOT::Experimental::TCanvas::Create
 void ROOT::Experimental::TCanvas::Show(const std::string &where)
 {
    if (fPainter) {
-      if (!where.empty()) fPainter->NewDisplay(where);
+      if (!where.empty())
+         fPainter->NewDisplay(where);
       return;
    }
 
