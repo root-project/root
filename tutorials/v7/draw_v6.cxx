@@ -35,10 +35,10 @@ void draw_v6()
    auto canvas = Experimental::TCanvas::Create("v7 TCanvas showing a v6 TGraph");
    canvas->Draw(gr);
 
-   canvas->Show(); // one could use canvas->Show("/usr/bin/opera"); or canvas->Show("firefox");
+   canvas->Show(); // new window should popup and async update will be triggered
 
    // canvas->Show("/usr/bin/opera");  // one could specify program name which should show canvas
-   // canvas->Show("firefox");         // it could be firefox, opera, chromium
+   // canvas->Show("firefox");         // it could be firefox, opera, chromium; canvas can be shown several times
 
    canvas->Update(); // wait until painting is finished
 

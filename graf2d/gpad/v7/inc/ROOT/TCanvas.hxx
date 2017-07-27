@@ -48,7 +48,7 @@ private:
    /// Title of the canvas.
    std::string fTitle;
 
-   uint64_t  fModified;  //<! increment counter when canvas modified.
+   uint64_t fModified; //<! increment counter when canvas modified.
 
    /// The painter of this canvas, bootstrapping the graphics connection.
    /// Unmapped canvases (those that never had `Draw()` invoked) might not have
@@ -120,6 +120,7 @@ public:
    {
       // Requires GetDrawable(what, options) to be known!
       fPrimitives.emplace_back(GetDrawable(std::make_unique<T>(what), options));
+      Modified();
    }
 
    /// Remove an object from the list of primitives.
@@ -128,8 +129,8 @@ public:
    /// Display the canvas.
    void Show(const std::string &where = "");
 
-   // Indicates that any object was modified
-   void Modified();
+   // Indicates that primitives list was changed or any primitive was modified
+   void Modified() { fModified++; }
 
    // Return if canvas was modified and not yet updated
    bool IsModified() const;
