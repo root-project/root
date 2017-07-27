@@ -195,6 +195,7 @@ private:
    ROOT::Experimental::TPadDisplayItem fDisplayList; ///!< full list of items to display
    WebCommandsList fCmds;                            ///!< list of submitted commands
    uint64_t fCmdsCnt;                                ///!< commands counter
+   std::string fWaitingCmdId;                        ///!< command id waited for complition
 
    uint64_t fSnapshotVersion;   ///!< version of snapshot
    std::string fSnapshot;       ///!< last produced snapshot
@@ -232,7 +233,7 @@ public:
    /// The painter observes it; it needs to know should the TCanvas be deleted.
    TCanvasPainter(const std::string &name, const ROOT::Experimental::TCanvas &canv, bool batch_mode)
       : THttpWSHandler(name.c_str(), "title"), fCanvas(canv), fBatchMode(batch_mode), fWebConn(), fDisplayList(),
-        fCmds(), fCmdsCnt(0), fSnapshotVersion(0), fSnapshot(), fSnapshotDelivered(0)
+        fCmds(), fCmdsCnt(0), fWaitingCmdId(), fSnapshotVersion(0), fSnapshot(), fSnapshotDelivered(0)
    {
       CreateHttpServer();
       gServer->Register("/web7gui", this);
@@ -247,7 +248,7 @@ public:
    virtual bool IsCanvasModified(uint64_t) const override;
 
    /// perform special action when drawing is ready
-   virtual void DoWhenReady(const std::string &cmd, const std::string &arg) final;
+   virtual void DoWhenReady(const std::string &cmd, const std::string &arg, bool async) final;
 
    // open new display for the canvas
    virtual void NewDisplay(const std::string &where) override;
@@ -429,15 +430,42 @@ bool TCanvasPainter::WaitWhenCanvasPainted(uint64_t ver)
    return false;
 }
 
-void TCanvasPainter::DoWhenReady(const std::string &name, const std::string &arg)
+void TCanvasPainter::DoWhenReady(const std::string &name, const std::string &arg, bool async)
 {
+   if (!async && !fWaitingCmdId.empty()) {
+      Error("DoWhenReady", "Fail to submit sync command when previous is still awaited - use async");
+      async = true;
+   }
+
    WebCommand cmd;
-   cmd.fId = TString::ULLtoa(fCmdsCnt++, 10);
+   cmd.fId = TString::ULLtoa(++fCmdsCnt, 10);
    cmd.fName = name;
    cmd.fArg = arg;
    cmd.fRunning = false;
    fCmds.push_back(cmd);
+
+   if (!async) fWaitingCmdId = cmd.fId;
+
    CheckDataToSend();
+
+   if (async) return;
+
+   uint64_t cnt = 0;
+   bool had_connection = false;
+
+   while (true) {
+      if (fWebConn.size() > 0)
+         had_connection = true;
+      if ((fWebConn.size() == 0) && (had_connection || (cnt > 1000)))
+         return; // wait ~1 min if no new connection established
+      if (fWaitingCmdId.empty()) {
+         printf("Command %s waiting READY!!!\n", name.c_str());
+         return;
+      }
+      gSystem->ProcessEvents();
+      gSystem->Sleep((++cnt < 500) ? 1 : 100); // increase sleep interval when do very often
+   }
+
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -447,6 +475,9 @@ void TCanvasPainter::DoWhenReady(const std::string &name, const std::string &arg
 void TCanvasPainter::PopFrontCommand(bool)
 {
    if (fCmds.size() == 0) return;
+
+   // simple condition, which will be checked in waiting loop
+   if (!fWaitingCmdId.empty() && (fWaitingCmdId == fCmds.front().fId)) fWaitingCmdId.clear();
 
    fCmds.pop_front();
 }
