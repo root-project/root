@@ -8,6 +8,9 @@
 4. Refactor JSROOT scripts structure - extract histograms and hierarchy painters into separate scripts 
 5. Use latest three.js r86 with improved Projector and CanvasRenderer
    Still use own SVGRenderer which supported direct text dump
+6. Provide text info when geometry drawing takes too long 
+7. Preliminary support of TEfficiency
+8. Automatic title positioning of vertical axis when fTitleOffset==0
 
 
 ## Changes in 5.2.0

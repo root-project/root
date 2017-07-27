@@ -1315,7 +1315,7 @@
 
             shift_y = Math.round(center ? h/2 : (reverse ? h : 0));
 
-            this.DrawText((center ? "middle" : (myxor ? "begin" : "end" ))+ ";middle",
+            this.DrawText((center ? "middle" : (myxor ? "begin" : "end" )) + ";middle",
                            0, 0, 0, (rotate<0 ? -90 : -270),
                            axis.fTitle, title_color, 1, title_g);
          } else {
@@ -1328,11 +1328,22 @@
                           axis.fTitle, title_color, 1, title_g);
          }
 
-         this.FinishTextDrawing(title_g);
+         var axis_rect = null;
+         if (vertical && (axis.fTitleOffset == 0) && ('getBoundingClientRect' in axis_g.node()))
+            axis_rect = axis_g.node().getBoundingClientRect();
 
-         title_g.attr('transform', 'translate(' + shift_x + ',' + shift_y +  ')')
-                .property('shift_x',shift_x)
-                .property('shift_y',shift_y);
+         this.FinishTextDrawing(title_g, function() {
+            if (axis_rect) {
+               var title_rect = title_g.node().getBoundingClientRect();
+               shift_x = (side>0) ? Math.round(axis_rect.left - title_rect.right - title_fontsize*0.3) :
+                                    Math.round(axis_rect.right - title_rect.left + title_fontsize*0.3);
+            }
+
+            title_g.attr('transform', 'translate(' + shift_x + ',' + shift_y +  ')')
+                   .property('shift_x', shift_x)
+                   .property('shift_y', shift_y);
+         });
+
 
          this.AddTitleDrag(title_g, vertical, title_offest_k, reverse, vertical ? h : w);
       }
