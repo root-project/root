@@ -56,11 +56,12 @@ TInfo|Many of the routines in MPI take an argument info. info is an opaque objec
 Error Handling                   | MPI errors are very hard to understant also for MPI experts, with the class TErrorHandler we improve the error handling with more beautiful and informative messages .|<span style="color:green">**DONE**</span>
 TMpiFile and TMpiFileMerger| Classes manage distribute files.        <span style="color:blue"> **(SPECIAL CASE)**</span> see important notes below.|<span style="color:green">**DONE**</span>
 TCartCommunicator|Cartesian Communicator (map processes in a mesh)                                                                                 |<span style="color:green">**DONE**</span>
-TGraphComminicator|Graph communicator (map processes in a general graph topology)|<span style="color:red">**TODO**</span>
+TGraphComminicator|Graph communicator (map processes in a general graph topology)|<span style="color:green">**DONE**</span>
+Profiling Functions|Support to call MPI profiling functions just enabling a flag. It is a better design because you dont need to rewrite code to call PMPI_* functions or call a different namespace. http://mpi-forum.org/docs/mpi-2.1/mpi21-report-bw/node334.htm|<span style="color:green">**DONE**</span>
+Python support|Support for python2 and python3 using PyROOT and allow PyObjects serialization|<span style="color:green">**DONE**</span>
 Checkpointing| Feature to save the state of the execution and restore it.                                                                          |<span style="color:red">**TODO**</span>
 Fault Tolerance | Feature to continue execution in case of fault.                                                                                  |<span style="color:red">**TODO**</span>
-Memory Window|Class to shared regions of memory with Remote Access Memory using one site communication|<span style="color:red">**NOT SUPPORTED**</span>
-Python support|Support for python2 and python3 using PyROOT and allow PyObjects serialization|<span style="color:green">**DONE**</span>
+Memory Window|Class to shared regions of memory with Remote Access Memory using one-sided communication|<span style="color:red">**NOT SUPPORTED**</span>
 
 
 
