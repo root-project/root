@@ -30,3 +30,11 @@ RootWebView::RootWebView(QWidget *parent) : QWebEngineView(parent)
 RootWebView::~RootWebView()
 {
 }
+
+void RootWebView::closeEvent(QCloseEvent *)
+{
+   page()->runJavaScript("if (window && window.onqt5unload) window.onqt5unload();");
+
+   //printf("run javascript done\n");
+}
+

@@ -366,7 +366,7 @@ void TCanvasPainter::NewDisplay(const std::string &where)
    if (symbol_qt5 && (is_native || is_qt5)) {
       typedef void (*FunctionQt5)(const char *, void *, bool);
 
-      addr.Form("://dummy:8080/web7gui/%s/draw.htm?longpollcanvas%s", GetName(), (IsBatchMode() ? "&batch_mode" : ""));
+      addr.Form("://dummy:8080/web7gui/%s/draw.htm?longpollcanvas%s&qt5", GetName(), (IsBatchMode() ? "&batch_mode" : ""));
       // addr.Form("example://localhost:8080/Canvases/%s/draw.htm", Canvas()->GetName());
 
       Info("NewDisplay", "Show canvas in Qt5 window:  %s", addr.Data());
