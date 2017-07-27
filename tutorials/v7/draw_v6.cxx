@@ -42,7 +42,11 @@ void draw_v6()
 
    canvas->Update(); // synchronous, wait until painting is finished
 
-   canvas->SaveAs("draw.png"); // asynchronous
+   // request to create PNG file in asynchronous mode and specify lambda function as callback
+   // when request processed by the client, callback called with result value
+   canvas->SaveAs("draw.png", true, [](bool res) { std::cout << "Producing PNG done res = " << (res ? "true" : "false") << std::endl; }); // asynchronous
 
+   // this function executed in synchronous mode (async = false is default),
+   // mean previous file saving will be completed as well at this point
    canvas->SaveAs("draw.svg"); // asynchronous
 }
