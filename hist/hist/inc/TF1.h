@@ -837,8 +837,9 @@ inline T TF1::GradientParTempl(Int_t ipar, const T *x, Double_t eps)
    // using a copy of the parameters vector.
    // TODO: Check that GetImplicitMTPoolSize is the best method to check that we
    // have more than one thread accesing the resources.
+   std::vector<Double_t> parametersCopy;
    if (ROOT::GetImplicitMTPoolSize() != 0) {
-      std::vector<Double_t> parametersCopy(GetNpar());
+      parametersCopy.resize(GetNpar());
       std::copy(parameters, parameters + GetNpar(), parametersCopy.begin());
       parameters = parametersCopy.data();
    }

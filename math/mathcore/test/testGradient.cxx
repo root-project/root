@@ -17,6 +17,7 @@
 
 #include <iostream>
 #include <chrono>
+#include <string>
 
 // Class to encapsulate the types that define how the gradient test is performed
 //    DataType defines how to instantiate the gradient evaluation: Double_t, Double_v.
@@ -25,13 +26,45 @@ template <typename U, ROOT::Fit::ExecutionPolicy V>
 struct GradientTestTraits {
    using DataType = U;
    static constexpr ROOT::Fit::ExecutionPolicy ExecutionPolicyType = V;
+
+   static void PrintTypeInfo()
+   {
+      std::cout << "------------ TEST INFO -----------" << std::endl;
+      std::cout << "- Data type:        " << dataTypeStr << std::endl;
+      std::cout << "- Execution policy: " << execPolicyStr << std::endl;
+      std::cout << "----------------------------------" << std::endl;
+   }
+
+   static std::string dataTypeStr;
+   static std::string execPolicyStr;
 };
 
 using ScalarSerial = GradientTestTraits<Double_t, ROOT::Fit::kSerial>;
 using ScalarMultithread = GradientTestTraits<Double_t, ROOT::Fit::kMultithread>;
+
+template <>
+std::string ScalarSerial::dataTypeStr = "Scalar";
+template <>
+std::string ScalarSerial::execPolicyStr = "Serial";
+
+template <>
+std::string ScalarMultithread::dataTypeStr = "Scalar";
+template <>
+std::string ScalarMultithread::execPolicyStr = "Multithread";
+
 #ifdef R__HAS_VECCORE
 using VectorialSerial = GradientTestTraits<ROOT::Double_v, ROOT::Fit::kSerial>;
 using VectorialMultithread = GradientTestTraits<ROOT::Double_v, ROOT::Fit::kMultithread>;
+
+template <>
+std::string VectorialSerial::dataTypeStr = "Vectorial";
+template <>
+std::string VectorialSerial::execPolicyStr = "Serial";
+
+template <>
+std::string VectorialMultithread::dataTypeStr = "Vectorial";
+template <>
+std::string VectorialMultithread::execPolicyStr = "Multithread";
 #endif
 
 // Model function to test the gradient evaluation
@@ -118,6 +151,7 @@ class GradientTest : public ::testing::Test, public GradientTestEvaluation<T> {
 protected:
    virtual void SetUp()
    {
+      T::PrintTypeInfo();
       GradientTestEvaluation<ScalarSerial> reference;
       fReferenceSolution.resize(this->fNumParams);
       fReferenceTime = reference.BenchmarkSolution(fReferenceSolution.data());
