@@ -16,12 +16,15 @@
 #ifndef ROOT7_TVirtualCanvasPainter
 #define ROOT7_TVirtualCanvasPainter
 
-#include <memory>
-
 #include "ROOT/TDisplayItem.hxx"
+
+#include <memory>
+#include <functional>
 
 namespace ROOT {
 namespace Experimental {
+
+using CanvasCallback_t = std::function<void(bool)>;
 
 class TCanvas;
 
@@ -60,7 +63,7 @@ public:
    virtual bool IsCanvasModified(uint64_t) const = 0;
 
    /// perform special action when drawing is ready
-   virtual void DoWhenReady(const std::string &, const std::string &, bool) = 0;
+   virtual void DoWhenReady(const std::string &, const std::string &, bool, CanvasCallback_t) = 0;
 
    virtual void NewDisplay(const std::string &where) = 0;
 

@@ -16,14 +16,14 @@
 #ifndef ROOT7_TCanvas
 #define ROOT7_TCanvas
 
+#include "ROOT/TDrawable.hxx"
+#include "ROOT/TypeTraits.hxx"
+#include "ROOT/TVirtualCanvasPainter.hxx"
+
 #include <experimental/string_view>
 #include <memory>
 #include <string>
 #include <vector>
-
-#include "ROOT/TDrawable.hxx"
-#include "ROOT/TypeTraits.hxx"
-#include "ROOT/TVirtualCanvasPainter.hxx"
 
 namespace ROOT {
 namespace Experimental {
@@ -139,7 +139,7 @@ public:
    void Update(bool async = false);
 
    /// Save canvas in image file
-   void SaveAs(const std::string &filename, bool async = false);
+   void SaveAs(const std::string &filename, bool async = false, CanvasCallback_t callback = nullptr);
 
    /// Get the canvas's title.
    const std::string &GetTitle() const { return fTitle; }

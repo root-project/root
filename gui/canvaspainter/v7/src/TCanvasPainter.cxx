@@ -177,7 +177,8 @@ private:
       std::string fName;     ///<! command name
       std::string fArg;      ///<! command arg
       bool fRunning;         ///<! true when command submitted
-      WebCommand() : fId(), fName(), fArg(), fRunning(false) {}
+      ROOT::Experimental::CanvasCallback_t fCallback; ///<! callback function associated with command
+      WebCommand() : fId(), fName(), fArg(), fRunning(false), fCallback() {}
    };
 
    typedef std::list<WebConn> WebConnList;
@@ -248,7 +249,7 @@ public:
    virtual bool IsCanvasModified(uint64_t) const override;
 
    /// perform special action when drawing is ready
-   virtual void DoWhenReady(const std::string &cmd, const std::string &arg, bool async) final;
+   virtual void DoWhenReady(const std::string &cmd, const std::string &arg, bool async, ROOT::Experimental::CanvasCallback_t callback) final;
 
    // open new display for the canvas
    virtual void NewDisplay(const std::string &where) override;
@@ -430,7 +431,7 @@ bool TCanvasPainter::WaitWhenCanvasPainted(uint64_t ver)
    return false;
 }
 
-void TCanvasPainter::DoWhenReady(const std::string &name, const std::string &arg, bool async)
+void TCanvasPainter::DoWhenReady(const std::string &name, const std::string &arg, bool async, ROOT::Experimental::CanvasCallback_t callback)
 {
    if (!async && !fWaitingCmdId.empty()) {
       Error("DoWhenReady", "Fail to submit sync command when previous is still awaited - use async");
@@ -442,6 +443,7 @@ void TCanvasPainter::DoWhenReady(const std::string &name, const std::string &arg
    cmd.fName = name;
    cmd.fArg = arg;
    cmd.fRunning = false;
+   cmd.fCallback = callback;
    fCmds.push_back(cmd);
 
    if (!async) fWaitingCmdId = cmd.fId;
@@ -472,12 +474,14 @@ void TCanvasPainter::DoWhenReady(const std::string &name, const std::string &arg
 /// Remove front command from the command queue
 /// If necessary, configured call-back will be invoked
 
-void TCanvasPainter::PopFrontCommand(bool)
+void TCanvasPainter::PopFrontCommand(bool result)
 {
    if (fCmds.size() == 0) return;
 
    // simple condition, which will be checked in waiting loop
    if (!fWaitingCmdId.empty() && (fWaitingCmdId == fCmds.front().fId)) fWaitingCmdId.clear();
+
+   if (fCmds.front().fCallback) fCmds.front().fCallback(result);
 
    fCmds.pop_front();
 }
