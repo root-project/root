@@ -56,3 +56,42 @@ TGraphCommunicator *TGraphCommunicator::Dup() const
    auto fDupComm = new TGraphCommunicator(dupcomm);
    return fDupComm;
 }
+
+//______________________________________________________________________________
+/**
+ * Retrieves graph topology information associated with a communicator.
+ *
+ * Functions ROOT::Mpi::TGraphCommunicator::GetDims and ROOT::Mpi::TGraphCommunicator::GetTopo retrieve the
+ * graph-topology information that was associated with a communicator by ROOT::Mpi::TIntraCommunicator::CreateGraphcomm.
+ *
+ * The information provided by ROOT::Mpi::TGraphCommunicator::GetDims can be used to dimension the vectors index and
+ * edges correctly for a call to ROOT::Mpi::TGraphCommunicator::GetTopo.
+ *
+ * \param nnodes Number of nodes in graph (output integer).
+ * \param nedges Number of edges in graph (output integer).
+ */
+void TGraphCommunicator::GetDims(Int_t nnodes[], Int_t nedges[]) const
+{
+   ROOT_MPI_CHECK_CALL(MPI_Graphdims_get, (fComm, nnodes, nedges), this);
+}
+
+//______________________________________________________________________________
+/**
+ * Retrieves graph topology information associated with a communicator.
+ *
+ * Functions ROOT::Mpi::TGraphCommunicator::GetDims and ROOT::Mpi::TGraphCommunicator::GetTopo retrieve the
+ * graph-topology information that was associated with a communicator by ROOT::Mpi::TIntraCommunicator::CreateGraphcomm.
+ *
+ * The information provided by ROOT::Mpi::TGraphCommunicator::GetDims can be used to dimension the vectors index and
+ * edges correctly for a call to ROOT::Mpi::TGraphCommunicator::GetTopo.
+ *
+ * \param maxindex Length of vector index in the calling program (integer).
+ * \param maxedges Length of vector edges in the calling program (integer).
+ * \param index Array of integers containing the graph structure (for details see the definition of
+ * ROOT::Mpi::TIntraCommunicator::CreateGraphcomm)(output).
+ * \param edges Array of integers containing the graph structure.(output)
+ */
+void TGraphCommunicator::GetTopo(Int_t maxindex, Int_t maxedges, Int_t index[], Int_t edges[]) const
+{
+   ROOT_MPI_CHECK_CALL(MPI_Graph_get, (fComm, maxindex, maxedges, index, edges), this);
+}
