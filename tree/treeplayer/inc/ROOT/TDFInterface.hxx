@@ -1159,9 +1159,9 @@ private:
       // Now we mimic a constructor for the TDataFrame. We cannot invoke it here
       // since this would introduce a cyclic headers dependency.
       TInterface<TLoopManager> snapshotTDF(std::make_shared<TLoopManager>(nullptr, bnames));
-      auto chain = new TChain(fullTreeNameInt.c_str()); // TODO comment on ownership of this TChain
+      auto chain = std::make_shared<TChain>(fullTreeNameInt.c_str());
       chain->Add(filenameInt.c_str());
-      snapshotTDF.fProxiedPtr->SetTree(std::shared_ptr<TTree>(static_cast<TTree *>(chain)));
+      snapshotTDF.fProxiedPtr->SetTree(chain);
 
       return snapshotTDF;
    }

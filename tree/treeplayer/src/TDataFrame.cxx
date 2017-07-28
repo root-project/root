@@ -587,9 +587,9 @@ TDataFrame::TDataFrame(std::string_view treeName, std::string_view filenameglob,
 {
    const std::string treeNameInt(treeName);
    const std::string filenameglobInt(filenameglob);
-   auto chain = new TChain(treeNameInt.c_str());
+   auto chain = std::make_shared<TChain>(treeNameInt.c_str());
    chain->Add(filenameglobInt.c_str());
-   fProxiedPtr->SetTree(std::shared_ptr<TTree>(static_cast<TTree *>(chain)));
+   fProxiedPtr->SetTree(chain);
 }
 
 ////////////////////////////////////////////////////////////////////////////

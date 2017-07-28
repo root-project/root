@@ -106,7 +106,7 @@ public:
    void Report() const;
    /// End of recursive chain of calls, does nothing
    void PartialReport() const {}
-   void SetTree(std::shared_ptr<TTree> tree) { fTree = tree; }
+   void SetTree(const std::shared_ptr<TTree>& tree) { fTree = tree; }
    void IncrChildrenCount() { ++fNChildren; }
    void StopProcessing() { ++fNStopsReceived; }
    void Jit(const std::string& s) { fToJit.append(s); }
