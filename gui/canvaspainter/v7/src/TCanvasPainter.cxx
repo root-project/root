@@ -212,7 +212,7 @@ private:
    uint64_t fSnapshotDelivered; ///!< minimal version delivered to all connections
    WebUpdatesList fUpdatesLst;  ///!< list of callbacks for canvas update
 
-   static std::string fAddr;    ///<! real http address (when assigned)
+   static TString fAddr;        ///<! real http address (when assigned)
    static THttpServer *gServer; ///<! server
 
    /// Disable copy construction.
@@ -223,7 +223,7 @@ private:
 
    ROOT::Experimental::Internal::TDrawable *FindDrawable(const ROOT::Experimental::TCanvas &can, const std::string &id);
 
-   void CreateHttpServer(Bool_t with_http = kFALSE);
+   bool CreateHttpServer(bool with_http = false);
    void CheckDataToSend();
 
    bool WaitWhenCanvasPainted(uint64_t ver);
@@ -313,7 +313,7 @@ public:
    };
 };
 
-std::string TCanvasPainter::fAddr = "";
+TString TCanvasPainter::fAddr = "";
 THttpServer *TCanvasPainter::gServer = 0;
 
 /** \class TCanvasPainterReg
@@ -328,25 +328,37 @@ struct TCanvasPainterReg {
 
 } // unnamed namespace
 
-void TCanvasPainter::CreateHttpServer(Bool_t with_http)
+bool TCanvasPainter::CreateHttpServer(bool with_http)
 {
    if (!gServer)
       gServer = new THttpServer("dummy");
 
-   if (!with_http || !fAddr.empty())
-      return;
+   if (!with_http || (fAddr.Length() > 0))
+      return true;
 
    // gServer = new THttpServer("http:8080?loopback&websocket_timeout=10000");
-   const char *port = gSystem->Getenv("WEBGUI_PORT");
-   TString buf;
-   if (!port) {
+
+   int http_port = 0;
+   const char *ports = gSystem->Getenv("WEBGUI_PORT");
+   if (ports)
+      http_port = TString(ports).Atoi();
+   if (!http_port)
       gRandom->SetSeed(0);
-      buf.Form("%d", (int)(8800 + 1000 * gRandom->Rndm(1)));
-      port = buf.Data(); // "8181";
+
+   for (int ntry = 0; ntry < 100; ++ntry) {
+      if (!http_port)
+         http_port = (int)(8800 + 1000 * gRandom->Rndm(1));
+
+      // TODO: ensure that port can be used
+      if (gServer->CreateEngine(TString::Format("http:%d?websocket_timeout=10000", http_port))) {
+         fAddr.Form("http://localhost:%d", http_port);
+         return true;
+      }
+
+      http_port = 0;
    }
-   fAddr = TString::Format("http://localhost:%s", port).Data();
-   // TODO: ensure that port can be used
-   gServer->CreateEngine(TString::Format("http:%s?websocket_timeout=10000", port).Data());
+
+   return false;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -404,9 +416,12 @@ void TCanvasPainter::NewDisplay(const std::string &where)
       return;
    }
 
-   CreateHttpServer(kTRUE); // ensure that http port is available
+   if (!CreateHttpServer(true)) {
+      Error("NewDisplay", "Fail to start HTTP server");
+      return;
+   }
 
-   addr.Form("%s/web7gui/%s/draw.htm?webcanvas", fAddr.c_str(), GetName());
+   addr.Form("%s/web7gui/%s/draw.htm?webcanvas", fAddr.Data(), GetName());
 
    TString exec;
 
