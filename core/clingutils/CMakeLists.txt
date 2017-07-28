@@ -45,8 +45,12 @@ foreach(dict ${stldicts})
   string(REPLACE "2" "" header ${dict})
   string(REPLACE "complex" "root_std_complex.h" header ${header})
   string(REPLACE "multi" "" header ${header})
-  ROOT_GENERATE_DICTIONARY(G__${dict}Dict ${header} STAGE1 MODULE ${dict}Dict LINKDEF src/${dict}Linkdef.h DEPENDENCIES  Core)
-  ROOT_LINKER_LIBRARY(${dict}Dict G__${dict}Dict.cxx DEPENDENCIES  Core)
+  ROOT_STANDARD_LIBRARY_PACKAGE(${dict}Dict
+                                NO_SOURCES NO_INSTALL_HEADERS
+                                STAGE1
+                                HEADERS ${header}
+                                LINKDEF src/${dict}Linkdef.h
+                                DEPENDENCIES Core)
 endforeach()
 
 #---Deal with LLVM resource here----------------------------------------------

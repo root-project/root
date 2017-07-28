@@ -75,7 +75,7 @@ set(unrconfig)
 
 endif()
 
-ROOT_GENERATE_DICTIONARY(G__Unuran *.h MODULE Unuran LINKDEF LinkDef.h DEPENDENCIES Hist MathCore)
-
-ROOT_LINKER_LIBRARY(Unuran *.cxx ${unrsources} G__Unuran.cxx ${unrconfig} LIBRARIES Core ${UNURAN_LIBRARIES} DEPENDENCIES Hist MathCore)
-ROOT_INSTALL_HEADERS()
+ROOT_STANDARD_LIBRARY_PACKAGE(Unuran
+                              SOURCES *.cxx ${unrsources} ${unrconfig}
+                              LIBRARIES ${UNURAN_LIBRARIES}
+                              DEPENDENCIES Core Hist MathCore)

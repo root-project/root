@@ -15,7 +15,8 @@ set(R_HEADERS ${CMAKE_SOURCE_DIR}/tmva/rmva/inc/TMVA/RMethodBase.h
               )
 
 ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-overloaded-virtual)
-ROOT_GENERATE_DICTIONARY(G__RMVA ${R_HEADERS} MODULE ${libname} LINKDEF LinkDef.h DEPENDENCIES Core Matrix Thread RIO RInterface TMVA)
-ROOT_LINKER_LIBRARY(RMVA *.cxx G__RMVA.cxx LIBRARIES ${R_LIBRARIES}  DEPENDENCIES Core Matrix Thread RIO RInterface TMVA)
 
-ROOT_INSTALL_HEADERS()
+ROOT_STANDARD_LIBRARY_PACKAGE(RMVA
+                              HEADERS ${R_HEADERS}
+                              LIBRARIES ${R_LIBRARIES}
+                              DEPENDENCIES Core Matrix Thread RIO RInterface TMVA)

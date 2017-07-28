@@ -5,10 +5,7 @@
 
 include_directories(${BONJOUR_INCLUDE_DIR})
 
-ROOT_GENERATE_DICTIONARY(G__Bonjour *.h MODULE Bonjour LINKDEF LinkDef.h DEPENDENCIES Core)
-
-ROOT_LINKER_LIBRARY(Bonjour *.cxx G__Bonjour.cxx LIBRARIES ${BONJOUR_LIBRARIES} DEPENDENCIES Core)
-
-ROOT_INSTALL_HEADERS()
-
+ROOT_STANDARD_LIBRARY_PACKAGE(Bonjour
+                              LIBRARIES ${BONJOUR_LIBRARIES}
+                              DEPENDENCIES Core)
 
