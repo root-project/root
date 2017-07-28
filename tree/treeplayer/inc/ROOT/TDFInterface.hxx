@@ -1107,17 +1107,7 @@ private:
    TInterface<TLoopManager> SnapshotImpl(std::string_view treename, std::string_view filename,
                                          const ColumnNames_t &columnList, TDFInternal::StaticSeq<S...> /*dummy*/)
    {
-      // check for input sanity
-      const auto templateParamsN = sizeof...(S);
-      const auto bNamesN = bnames.size();
-      if (templateParamsN != bNamesN) {
-         std::string err_msg = "The number of template parameters specified for the snapshot is ";
-         err_msg += std::to_string(templateParamsN);
-         err_msg += " while ";
-         err_msg += std::to_string(bNamesN);
-         err_msg += " branches have been specified.";
-         throw std::runtime_error(err_msg);
-      }
+      TDFInternal::CheckSnapshot(sizeof...(S), columnList.size());
 
       // split name into directory and treename if needed
       auto getDirTreeName = [](std::string_view treePath) {
