@@ -257,4 +257,49 @@ void communicators()
       assert(down == 2);
       std::cout << "rank up= " << up << " rank down= " << down << " " << std::endl;
    }
+
+   // architecture of the graph
+   //   0   3
+   //  /     \
+   // 1  <->  2
+   // node     nneighbors    index      adges
+   //  0          1            1          1
+   //  1          2            3          0,2
+   //  2          2            5          1,3
+   //  3          1            6          2
+   Int_t nnodes = 4;                    /* number of nodes */
+   Int_t index[4] = {1, 3, 5, 6};       /* index definition */
+   Int_t edges[6] = {1, 0, 2, 1, 3, 2}; /* edges definition */
+   reorder = 1;                         /* allows processes reordered for efficiency */
+   auto graph = COMM_WORLD.CreateGraphcomm(nnodes, index, edges, reorder);
+
+   rank = graph.GetRank();
+   Int_t maxneighbors = 2;
+   Int_t neighbors[maxneighbors];
+   if (rank == 0) {
+      assert(graph.GetNeighborsCount(rank) == 1);
+      graph.GetNeighbors(rank, maxneighbors, neighbors);
+      assert(neighbors[0] == 1);
+      std::cout << "neighbor rank 0 = " << neighbors[0] << std::endl;
+   }
+   if (rank == 1) {
+      assert(graph.GetNeighborsCount(1) == 2);
+      graph.GetNeighbors(rank, maxneighbors, neighbors);
+      assert(neighbors[0] == 0);
+      assert(neighbors[1] == 2);
+      std::cout << "neighbors rank 1 = " << neighbors[0] << " - " << neighbors[1] << std::endl;
+   }
+   if (rank == 2) {
+      assert(graph.GetNeighborsCount(2) == 2);
+      graph.GetNeighbors(rank, maxneighbors, neighbors);
+      assert(neighbors[0] == 1);
+      assert(neighbors[1] == 3);
+      std::cout << "neighbors rank 2 = " << neighbors[0] << " - " << neighbors[1] << std::endl;
+   }
+   if (graph.GetRank() == 3) {
+      assert(graph.GetNeighborsCount(3) == 1);
+      graph.GetNeighbors(rank, maxneighbors, neighbors);
+      assert(neighbors[0] == 2);
+      std::cout << "neighbor rank 3 = " << neighbors[0] << std::endl;
+   }
 }
