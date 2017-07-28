@@ -833,6 +833,8 @@ Int_t TTreeCacheUnzip::GetUnzipBuffer(char **buf, Long64_t pos, Int_t len, Bool_
                      char *locbuff = new char[16384];
                      UnzipCache(reqi, locbuffsz, locbuff);
                   }
+               } else {
+                  sleep(0.2);
                }
 
                if (myCycle != fCycle) {
