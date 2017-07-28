@@ -12,8 +12,7 @@ if ( Vc_FOUND )
    endif()
 endif()
    
-ROOT_GENERATE_DICTIONARY(G__ConverterVG TGeoVGConverter.h TGeoVGShape.h MODULE ConverterVG LINKDEF LinkDef.h DEPENDENCIES Geom)
-
-ROOT_LINKER_LIBRARY(ConverterVG *.cxx G__ConverterVG.cxx LIBRARIES ${VECGEOM_LIBRARIES} -ldl DEPENDENCIES Geom)
-
-ROOT_INSTALL_HEADERS()
+ROOT_STANDARD_LIBRARY_PACKAGE(ConverterVG
+                              HEADERS TGeoVGConverter.h TGeoVGShape.h
+                              DEPENDENCIES Geom
+                              LIBRARIES ${VECGEOM_LIBRARIES} -ldl)

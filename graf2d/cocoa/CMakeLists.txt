@@ -16,8 +16,8 @@ endif(cxxmodules)
 
 include_directories(${FREETYPE_INCLUDE_DIRS})
 
-ROOT_GENERATE_DICTIONARY(G__GCocoa T*.h MODULE GCocoa LINKDEF LinkDef.h DEPENDENCIES Gui GQuartz)
-
-ROOT_LINKER_LIBRARY(GCocoa *.mm  G__GCocoa.cxx LIBRARIES  "-framework Cocoa" "-framework OpenGL" ${FREETYPE_LIBRARIES} DEPENDENCIES Gui GQuartz )
-ROOT_INSTALL_HEADERS()
-
+ROOT_STANDARD_LIBRARY_PACKAGE(GCocoa
+                              HEADERS T*.h
+                              SOURCES *.mm
+                              DEPENDENCIES Gui GQuartz
+                              LIBRARIES  "-framework Cocoa" "-framework OpenGL" ${FREETYPE_LIBRARIES})

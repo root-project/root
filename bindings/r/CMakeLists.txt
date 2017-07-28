@@ -17,7 +17,7 @@ set(R_HEADERS ${CMAKE_SOURCE_DIR}/bindings/r/inc/TRInterface.h
               ${CMAKE_SOURCE_DIR}/bindings/r/inc/TRDataFrame.h
               ${CMAKE_SOURCE_DIR}/bindings/r/inc/RExports.h)
 
-ROOT_GENERATE_DICTIONARY(G__RInterface ${R_HEADERS} MODULE ${libname} LINKDEF LinkDef.h DEPENDENCIES Core Matrix Thread RIO)
-ROOT_LINKER_LIBRARY(RInterface *.cxx G__RInterface.cxx LIBRARIES ${R_LIBRARIES} DEPENDENCIES Core Matrix Thread RIO readline)
-
-ROOT_INSTALL_HEADERS()
+ROOT_STANDARD_LIBRARY_PACKAGE(RInterface
+                              HEADERS ${R_HEADERS}
+                              LIBRARIES ${R_LIBRARIES} readline
+                              DEPENDENCIES Core Matrix Thread RIO)

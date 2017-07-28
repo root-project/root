@@ -77,13 +77,12 @@ else()
   set(installoptions ${installoptions} FILTER "Cpu")
 endif()
 
-ROOT_GENERATE_DICTIONARY(G__TMVA ${theaders1} ${theaders2} ${theaders3} ${theaders4} ${theaders5}  MODULE TMVA LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM" DEPENDENCIES RIO Hist Tree TreePlayer MLP Minuit XMLIO)
-
-ROOT_LINKER_LIBRARY(TMVA *.cxx G__TMVA.cxx ${DNN_FILES} ${DNN_CPU_FILES}
-                    LIBRARIES Core ${DNN_CUDA_LIBRARIES} ${DNN_CPU_LIBRARIES}
-                    DEPENDENCIES RIO Hist Tree TreePlayer MLP Minuit XMLIO)
-
-ROOT_INSTALL_HEADERS(${installoptions})
+ROOT_STANDARD_LIBRARY_PACKAGE(TMVA
+                              HEADERS ${theaders1} ${theaders2} ${theaders3} ${theaders4} ${theaders5}
+                              SOURCES *.cxx ${DNN_FILES} ${DNN_CPU_FILES} DICTIONARY_OPTIONS "-writeEmptyRootPCM"
+                              LIBRARIES ${DNN_CUDA_LIBRARIES} ${DNN_CPU_LIBRARIES}
+                              DEPENDENCIES Core RIO Hist Tree TreePlayer MLP Minuit XMLIO
+                              INSTALL_OPTIONS ${installoptions})
 
 if(NOT gnuinstall)
   install(DIRECTORY test DESTINATION tmva 

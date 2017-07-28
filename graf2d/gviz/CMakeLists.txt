@@ -5,9 +5,7 @@
 
 include_directories(${GRAPHVIZ_INCLUDE_DIR}/graphviz)
 
-ROOT_GENERATE_DICTIONARY(G__Gviz *.h MODULE Gviz LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM" DEPENDENCIES Hist Graf)
-
-ROOT_LINKER_LIBRARY(Gviz *.cxx G__Gviz.cxx
-                    LIBRARIES ${GRAPHVIZ_LIBRARIES}
-                    DEPENDENCIES Hist Graf)
-ROOT_INSTALL_HEADERS()
+ROOT_STANDARD_LIBRARY_PACKAGE(Gviz
+                              DICTIONARY_OPTIONS "-writeEmptyRootPCM"
+                              DEPENDENCIES Hist Graf
+                              LIBRARIES ${GRAPHVIZ_LIBRARIES})

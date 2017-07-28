@@ -11,16 +11,17 @@ list(REMOVE_ITEM headers ${CMAKE_CURRENT_SOURCE_DIR}/inc/TProofDraw.h
 ROOT_GLOB_SOURCES(sources src/*.cxx)
 list(REMOVE_ITEM sources ${CMAKE_CURRENT_SOURCE_DIR}/src/TProofDraw.cxx)
 
+ROOT_STANDARD_LIBRARY_PACKAGE(ProofPlayer
+                              NO_INSTALL_HEADERS
+                              HEADERS ${headers}
+                              SOURCES ${sources}
+                              DEPENDENCIES Proof Hist RIO Tree Net Thread MathCore)
 
-ROOT_GENERATE_DICTIONARY(G__ProofPlayer ${headers} MODULE ProofPlayer LINKDEF LinkDef.h DEPENDENCIES Proof Hist RIO Tree Net Thread MathCore)
-
-ROOT_LINKER_LIBRARY(ProofPlayer ${sources} G__ProofPlayer.cxx DEPENDENCIES Proof Hist RIO Tree Net Thread MathCore)
-
-ROOT_GENERATE_DICTIONARY(G__ProofDraw TProofDraw.h MODULE ProofDraw LINKDEF LinkDefDraw.h DEPENDENCIES ProofPlayer TreePlayer)
-
-ROOT_LINKER_LIBRARY(ProofDraw TProofDraw.cxx G__ProofDraw.cxx DEPENDENCIES ProofPlayer TreePlayer)
+ROOT_STANDARD_LIBRARY_PACKAGE(ProofDraw
+                              NO_INSTALL_HEADERS
+                              HEADERS TProofDraw.h
+                              LINKDEF LinkDefDraw.h
+                              SOURCES TProofDraw.cxx
+                              DEPENDENCIES ProofPlayer TreePlayer)
 
 ROOT_INSTALL_HEADERS()
-
-
-

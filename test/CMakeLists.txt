@@ -35,8 +35,11 @@ ROOT_ADD_TEST(show-environment COMMAND ${CMAKE_COMMAND} -E environment)
 ROOT_EXECUTABLE(hworld hworld.cxx LIBRARIES Gpad)
 
 #---event-------------------------------------------------------------------------------------
-ROOT_GENERATE_DICTIONARY(G__Event ${CMAKE_CURRENT_SOURCE_DIR}/Event.h MODULE Event LINKDEF EventLinkDef.h DEPENDENCIES Hist MathCore)
-ROOT_LINKER_LIBRARY(Event Event.cxx G__Event.cxx LIBRARIES Hist MathCore)
+ROOT_STANDARD_LIBRARY_PACKAGE(Event
+                              NO_INSTALL_HEADERS
+                              HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/Event.h
+                              SOURCES Event.cxx LINKDEF EventLinkDef.h
+                              DEPENDENCIES Hist MathCore)
 
 ROOT_EXECUTABLE(eventexe MainEvent.cxx LIBRARIES Event RIO Tree TreePlayer Hist Net)
 ROOT_ADD_TEST(test-event COMMAND eventexe)
@@ -168,8 +171,12 @@ if(ROOT_mathmore_FOUND)
 endif()
 
 #--stressMathCore----------------------------------------------------------------------------------
-ROOT_GENERATE_DICTIONARY(G__TrackMathCoreDict ${CMAKE_CURRENT_SOURCE_DIR}/TrackMathCore.h MODULE TrackMathCoreDict LINKDEF TrackMathCoreLinkDef.h)
-ROOT_LINKER_LIBRARY(TrackMathCoreDict G__TrackMathCoreDict.cxx LIBRARIES Core MathCore RIO GenVector)
+ROOT_STANDARD_LIBRARY_PACKAGE(TrackMathCoreDict
+                              NO_SOURCES
+                              NO_INSTALL_HEADERS
+                              HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/TrackMathCore.h
+                              LINKDEF TrackMathCoreLinkDef.h
+                              DEPENDENCIES Core MathCore RIO GenVector)
 ROOT_EXECUTABLE(stressMathCore stressMathCore.cxx LIBRARIES MathCore Hist RIO Tree GenVector)
 ROOT_ADD_TEST(test-stressmathcore COMMAND stressMathCore FAILREGEX "FAILED|Error in")
 ROOT_ADD_TEST(test-stressmathcore-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressMathCore.cxx

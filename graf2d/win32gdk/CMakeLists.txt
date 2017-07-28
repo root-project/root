@@ -81,19 +81,12 @@ add_custom_command( OUTPUT ${gdklib} ${gdkdll}
 add_custom_target(GDKLIB DEPENDS ${gdklib})
 set_target_properties(GDKLIB PROPERTIES FOLDER Builtins)
 
-#
-# ROOT Dicts for the win32gdk library
-#
-
-ROOT_GENERATE_DICTIONARY(G__Win32gdk TGWin32.h TGWin32GL.h MODULE Win32gdk LINKDEF LinkDef.h DEPENDENCIES  Core Graf)
-
-
-#
-# The library itself
-#
-
-ROOT_LINKER_LIBRARY(Win32gdk *.cxx *.c G__Win32gdk.cxx LIBRARIES Cling Core Graf ${FREETYPE_LIBRARIES} 
-					${gdklib} ${gliblib} Glu32.lib Opengl32.lib BUILTINS FREETYPE)
+ROOT_STANDARD_LIBRARY_PACKAGE(Win32gdk
+                              HEADERS TGWin32.h TGWin32GL.h
+                              DEPENDENCIES Cling Core Graf
+                              SOURCES *.cxx *.c
+                              LIBRARIES ${FREETYPE_LIBRARIES} ${gdklib} ${gliblib} Glu32.lib Opengl32.lib
+                              BUILTINS FREETYPE)
 
 add_dependencies(Win32gdk GDKLIB glib)
 
@@ -102,4 +95,3 @@ install(FILES  ${gdkdlla}
 			   ${iconvdlla}
 			   DESTINATION ${CMAKE_INSTALL_BINDIR})
 
-ROOT_INSTALL_HEADERS()

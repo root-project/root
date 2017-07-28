@@ -3,8 +3,6 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-ROOT_GENERATE_DICTIONARY(G__Pythia6 *.h  MODULE EGPythia6 LINKDEF LinkDef.h DEPENDENCIES EG Graf VMC Physics)
-
 if(pythia6_nolink)
   set(PYTHIA6_LIBRARIES)
   if(ROOT_PLATFORM STREQUAL linux)
@@ -19,5 +17,6 @@ else()
   endif()
 endif()
 
-ROOT_LINKER_LIBRARY(EGPythia6 *.cxx G__Pythia6.cxx LIBRARIES Core ${PYTHIA6_LIBRARIES} DEPENDENCIES EG Graf VMC Physics)
-ROOT_INSTALL_HEADERS()
+ROOT_STANDARD_LIBRARY_PACKAGE(EGPythia6
+                              LIBRARIES ${PYTHIA6_LIBRARIES}
+                              DEPENDENCIES Core EG Graf VMC Physics)

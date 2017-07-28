@@ -18,9 +18,9 @@ if($ENV{USE_PARALLEL_MINUIT2})
   endif()
 endif()
 
-ROOT_GENERATE_DICTIONARY(G__Minuit2 *.h  Minuit2/*.h MODULE Minuit2 LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM" DEPENDENCIES MathCore Hist)
-
-ROOT_LINKER_LIBRARY(Minuit2 *.cxx G__Minuit2.cxx DEPENDENCIES MathCore Hist)
-ROOT_INSTALL_HEADERS()
+ROOT_STANDARD_LIBRARY_PACKAGE(Minuit2
+                              HEADERS *.h Minuit2/*.h
+                              DICTIONARY_OPTIONS "-writeEmptyRootPCM"
+                              DEPENDENCIES MathCore Hist)
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)

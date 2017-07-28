@@ -2,14 +2,11 @@
 # CMakeLists.txt file for building ROOT graf3d/g3d package
 ############################################################################
 
-set(libname Graf3d)
-
 ROOT_GLOB_HEADERS(headers1 ${CMAKE_CURRENT_SOURCE_DIR}/inc/*.h)
 list(REMOVE_ITEM headers1 ${CMAKE_CURRENT_SOURCE_DIR}/inc/X3DBuffer.h)
 set(headers2 X3DBuffer.h )
 
-ROOT_GENERATE_DICTIONARY(G__${libname} ${headers1} MODULE ${libname} LINKDEF LinkDef.h DEPENDENCIES Graf Hist Gpad MathCore)
-
-ROOT_LINKER_LIBRARY(${libname} *.cxx *.c G__${libname}.cxx DEPENDENCIES Graf Hist Gpad MathCore)
-ROOT_INSTALL_HEADERS()
-
+ROOT_STANDARD_LIBRARY_PACKAGE(Graf3d
+                              HEADERS ${headers1}
+                              SOURCES *.cxx *.c
+                              DEPENDENCIES Graf Hist Gpad MathCore)

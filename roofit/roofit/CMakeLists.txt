@@ -3,8 +3,8 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-ROOT_GENERATE_DICTIONARY(G__RooFit *.h MODULE RooFit LINKDEF LinkDef1.h OPTIONS "-writeEmptyRootPCM" DEPENDENCIES RooFitCore Tree RIO Matrix MathCore)
-
-ROOT_LINKER_LIBRARY(RooFit  *.cxx G__RooFit.cxx LIBRARIES Core 
-                           DEPENDENCIES RooFitCore Tree RIO Matrix MathCore ${ROOT_MATHMORE_LIBRARY} )
-ROOT_INSTALL_HEADERS()
+ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
+                              DICTIONARY_OPTIONS "-writeEmptyRootPCM"
+                              LINKDEF LinkDef1.h
+                              LIBRARIES ${ROOT_MATHMORE_LIBRARY}
+                              DEPENDENCIES Core RooFitCore Tree RIO Matrix MathCore)
