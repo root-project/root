@@ -2887,7 +2887,7 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
                if (ArgType.getArgument().isNull()
                    || ArgType.getArgument().getKind() != clang::TemplateArgument::Type) {
                   ROOT::TMetaUtils::Error("ROOT::TMetaUtils::AddDefaultParameters",
-                                          "Template parameter substitution failed for %s around %s",
+                                          "Template parameter substitution failed for %s around %s\n",
                                           instanceType.getAsString().c_str(),
                                           SubTy.getAsString().c_str()
                                           );
