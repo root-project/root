@@ -310,36 +310,38 @@ public:
    /// \tparam BranchTypes variadic list of branch/column types
    /// \param[in] treename The name of the output TTree
    /// \param[in] filename The name of the output TFile
-   /// \param[in] bnames The list of names of the columns/branches to be written
+   /// \param[in] columnList The list of names of the columns/branches to be written
    ///
    /// This function returns a `TDataFrame` built with the output tree as a source.
    template <typename... BranchTypes>
-   TInterface<TLoopManager> Snapshot(std::string_view treename, std::string_view filename, const ColumnNames_t &bnames)
+   TInterface<TLoopManager> Snapshot(std::string_view treename, std::string_view filename,
+                                     const ColumnNames_t &columnList)
    {
       using TypeInd_t = TDFInternal::GenStaticSeq_t<sizeof...(BranchTypes)>;
-      return SnapshotImpl<BranchTypes...>(treename, filename, bnames, TypeInd_t());
+      return SnapshotImpl<BranchTypes...>(treename, filename, columnList, TypeInd_t());
    }
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Create a snapshot of the dataset on disk in the form of a TTree
    /// \param[in] treename The name of the output TTree
    /// \param[in] filename The name of the output TFile
-   /// \param[in] bnames The list of names of the columns/branches to be written
+   /// \param[in] columnList The list of names of the columns/branches to be written
    ///
    /// This function returns a `TDataFrame` built with the output tree as a source.
    /// The types of the columns are automatically inferred and do not need to be specified.
-   TInterface<TLoopManager> Snapshot(std::string_view treename, std::string_view filename, const ColumnNames_t &bnames)
+   TInterface<TLoopManager> Snapshot(std::string_view treename, std::string_view filename,
+                                     const ColumnNames_t &columnList)
    {
       auto df = GetDataFrameChecked();
       auto tree = df->GetTree();
       std::stringstream snapCall;
       // build a string equivalent to
-      // "reinterpret_cast</nodetype/*>(this)->Snapshot<Ts...>(treename,filename,*reinterpret_cast<ColumnNames_t*>(&bnames))"
+      // "reinterpret_cast</nodetype/*>(this)->Snapshot<Ts...>(treename,filename,*reinterpret_cast<ColumnNames_t*>(&columnList))"
       snapCall << "if (gROOTMutex) gROOTMutex->UnLock();";
       snapCall << "reinterpret_cast<ROOT::Experimental::TDF::TInterface<" << GetNodeTypeName() << ">*>(" << this
                << ")->Snapshot<";
       bool first = true;
-      for (auto &b : bnames) {
+      for (auto &b : columnList) {
          if (!first) snapCall << ", ";
          snapCall << TDFInternal::ColumnName2ColumnTypeName(b, tree, df->GetBookedBranch(b));
          first = false;
@@ -348,7 +350,7 @@ public:
       const std::string filenameInt(filename);
       snapCall << ">(\"" << treeNameInt << "\", \"" << filenameInt << "\", "
                << "*reinterpret_cast<std::vector<std::string>*>(" // vector<string> should be ColumnNames_t
-               << &bnames << "));";
+               << &columnList << "));";
       // jit snapCall, return result
       TInterpreter::EErrorCode errorCode;
       auto newTDFPtr = gInterpreter->ProcessLine(snapCall.str().c_str(), &errorCode);
@@ -1095,7 +1097,7 @@ private:
    /// \brief Implementation of snapshot
    /// \param[in] treename The name of the TTree
    /// \param[in] filename The name of the TFile
-   /// \param[in] bnames The list of names of the branches to be written
+   /// \param[in] columnList The list of names of the branches to be written
    /// The implementation exploits Foreach. The association of the addresses to
    /// the branches takes place at the first event. This is possible because
    /// since there are no copies, the address of the value passed by reference
@@ -1103,7 +1105,7 @@ private:
    /// the TTreeReaderValue/TemporaryBranch
    template <typename... BranchTypes, int... S>
    TInterface<TLoopManager> SnapshotImpl(std::string_view treename, std::string_view filename,
-                                         const ColumnNames_t &bnames, TDFInternal::StaticSeq<S...> /*dummy*/)
+                                         const ColumnNames_t &columnList, TDFInternal::StaticSeq<S...> /*dummy*/)
    {
       // check for input sanity
       const auto templateParamsN = sizeof...(S);
@@ -1142,13 +1144,15 @@ private:
          // single-thread snapshot
          using Helper_t = TDFInternal::SnapshotHelper<BranchTypes...>;
          using Action_t = TDFInternal::TAction<Helper_t, Proxied, TTraits::TypeList<BranchTypes...>>;
-         actionPtr.reset(new Action_t(Helper_t(filenameInt, dirnameInt, treenameInt, bnames), bnames, *fProxiedPtr));
+         actionPtr.reset(
+            new Action_t(Helper_t(filenameInt, dirnameInt, treenameInt, columnList), columnList, *fProxiedPtr));
       } else {
          // multi-thread snapshot
          using Helper_t = TDFInternal::SnapshotHelperMT<BranchTypes...>;
          using Action_t = TDFInternal::TAction<Helper_t, Proxied>;
-         actionPtr.reset(new Action_t(Helper_t(fProxiedPtr->GetNSlots(), filenameInt, dirnameInt, treenameInt, bnames),
-                                      bnames, *fProxiedPtr));
+         actionPtr.reset(
+            new Action_t(Helper_t(fProxiedPtr->GetNSlots(), filenameInt, dirnameInt, treenameInt, columnList),
+                         columnList, *fProxiedPtr));
       }
       df->Book(std::move(actionPtr));
       df->Run();
@@ -1158,7 +1162,7 @@ private:
       std::string fullTreeNameInt(treename);
       // Now we mimic a constructor for the TDataFrame. We cannot invoke it here
       // since this would introduce a cyclic headers dependency.
-      TInterface<TLoopManager> snapshotTDF(std::make_shared<TLoopManager>(nullptr, bnames));
+      TInterface<TLoopManager> snapshotTDF(std::make_shared<TLoopManager>(nullptr, columnList));
       auto chain = std::make_shared<TChain>(fullTreeNameInt.c_str());
       chain->Add(filenameInt.c_str());
       snapshotTDF.fProxiedPtr->SetTree(chain);
