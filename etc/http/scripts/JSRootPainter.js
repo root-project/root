@@ -4826,8 +4826,10 @@
 
    TPadPainter.prototype.OnWebsocketMsg = function(conn, msg) {
 
-      if (msg.substr(0,5)=='SNAP:') {
-
+      if (msg == "CLOSE") {
+         this.OnWebsocketClosed();
+         this.CloseWebsocket(true);
+      } else if (msg.substr(0,5)=='SNAP:') {
          msg = msg.substr(5);
          var p1 = msg.indexOf(":"),
              snapid = msg.substr(0,p1),
@@ -4885,16 +4887,12 @@
          if (cmd == "SVG") {
             var res = "";
             if (this.CreateSvg) res = this.CreateSvg();
-            console.log('SVG size = ' + res.length);
             conn.send(reply + res);
          } else if (cmd == "PNG") {
             this.ProduceImage(true, 'any.png', function(can) {
                var res = can.toDataURL('image/png'),
                    separ = res.indexOf("base64,");
-               if (separ>0)
-                  conn.send(reply + res.substr(separ+7));
-               else
-                  conn.send(reply);
+               conn.send(reply + ((separ>0) ? res.substr(separ+7) : ""));
             });
          } else {
             console.log('Urecognized command ' + cmd);
