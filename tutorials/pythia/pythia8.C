@@ -17,6 +17,14 @@
 ///
 /// \author Andreas Morsch
 
+#include "TSystem.h"
+#include "TH1F.h"
+#include "TClonesArray.h"
+#include "TPythia8.h"
+#include "TParticle.h"
+#include "TDatabasePDG.h"
+#include "TCanvas.h"
+
 void pythia8(Int_t nev  = 100, Int_t ndeb = 1)
 {
    const char *p8dataenv = gSystem->Getenv("PYTHIA8DATA");
