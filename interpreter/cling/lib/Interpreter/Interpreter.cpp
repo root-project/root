@@ -674,6 +674,7 @@ namespace cling {
 
   Interpreter::CompilationResult
   Interpreter::loadModuleForHeader(const std::string& headerFile) {
+    return Interpreter::kSuccess;
     Preprocessor& PP = getCI()->getPreprocessor();
     //Copied from clang's PPDirectives.cpp
     bool isAngled = false;
@@ -1464,8 +1465,8 @@ namespace cling {
     if (!m_DynamicLookupDeclared && value) {
       // No dynlookup for the dynlookup header!
       m_DynamicLookupEnabled = false;
-      if (loadModuleForHeader("cling/Interpreter/DynamicLookupRuntimeUniverse.h")
-          != kSuccess)
+      //if (loadModuleForHeader("cling/Interpreter/DynamicLookupRuntimeUniverse.h")
+      //    != kSuccess)
       declare("#include \"cling/Interpreter/DynamicLookupRuntimeUniverse.h\"");
     }
     m_DynamicLookupDeclared = true;
@@ -1661,6 +1662,8 @@ namespace cling {
                                    bool enableMacros /*=false*/,
                                    llvm::raw_ostream* logs /*=0*/,
                                    IgnoreFilesFunc_t ignoreFiles /*= return always false*/) const {
+    if (P.getLangOpts().Modules)
+      return;
     llvm::raw_null_ostream null;
     if (!logs)
       logs = &null;

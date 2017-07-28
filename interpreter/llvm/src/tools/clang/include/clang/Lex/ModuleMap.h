@@ -92,8 +92,6 @@ class ModuleMap {
   // named LangOpts::CurrentModule, if we've loaded it).
   Module *SourceModule;
 
-  /// \brief The top-level modules that are known.
-  llvm::StringMap<Module *> Modules;
 
   /// \brief The number of modules we have created in total.
   unsigned NumCreatedModules;
@@ -115,6 +113,10 @@ public:
     // Adjust the HeaderFileInfoTrait::EmitData streaming.
     // Adjust ModuleMap::addHeader.
   };
+
+
+  /// \brief The top-level modules that are known.
+  llvm::StringMap<Module *> Modules;
 
   /// \brief A header that is known to reside within a given module,
   /// whether it was included or excluded.

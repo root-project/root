@@ -9,6 +9,8 @@
 
 #include "DeclCollector.h"
 
+#include "llvm/Support/Signals.h"
+
 #include "IncrementalParser.h"
 #include "cling/Interpreter/Transaction.h"
 #include "cling/Utils/AST.h"
@@ -20,6 +22,10 @@
 #include "clang/Lex/MacroInfo.h"
 #include "clang/Lex/Preprocessor.h"
 #include "clang/Lex/Token.h"
+#include "clang/Frontend/CompilerInstance.h"
+#include "clang/Serialization/ASTReader.h"
+
+#include <iostream>
 
 using namespace clang;
 
@@ -202,6 +208,7 @@ namespace cling {
         //
         // This will be fixed with the clang::Modules. Make sure we remember.
         // assert(!getCI()->getLangOpts().Modules && "Please revisit!");
+
         if (NamespaceDecl* ND = dyn_cast<NamespaceDecl>(*DI)) {
           for (NamespaceDecl::decl_iterator NDI = ND->decls_begin(),
                EN = ND->decls_end(); NDI != EN; ++NDI) {
@@ -222,9 +229,14 @@ namespace cling {
   }
 
   void DeclCollector::HandleInterestingDecl(DeclGroupRef DGR) {
-    assert(m_CurTransaction && "Missing transction");
+
+    if (m_CurTransaction == nullptr) {
+      llvm::sys::PrintStackTrace(llvm::errs());
+    }
+    assert(m_CurTransaction && "Missing transaction");
     Transaction::DelayCallInfo DCI(DGR, Transaction::kCCIHandleInterestingDecl);
     m_CurTransaction->append(DCI);
+
     if (m_Consumer
         && (!comesFromASTReader(DGR) || !shouldIgnore(*DGR.begin())))
       m_Consumer->HandleTopLevelDecl(DGR);

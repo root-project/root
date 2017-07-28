@@ -501,6 +501,10 @@ typedef void *DestroyInterpreter_t(TInterpreter*);
 #define gInterpreter (TInterpreter::Instance())
 R__EXTERN TInterpreter* (*gPtr2Interpreter)();
 R__EXTERN TInterpreter* gCling;
+#else
+R__EXTERN TInterpreter* (*gPtr2Interpreter)();
+R__EXTERN TInterpreter* gCling;
+R__EXTERN TInterpreter* gInterpreter;
 #endif
 
 #endif

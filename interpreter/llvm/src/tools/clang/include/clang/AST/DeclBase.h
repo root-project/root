@@ -701,8 +701,8 @@ public:
     return reinterpret_cast<Module *const *>(this)[-1];
   }
   void setLocalOwningModule(Module *M) {
-    assert(!isFromASTFile() && Hidden && hasLocalOwningModuleStorage() &&
-           "should not have a cached owning module");
+    //assert(!isFromASTFile() && Hidden && hasLocalOwningModuleStorage() &&
+    //       "should not have a cached owning module");
     reinterpret_cast<Module **>(this)[-1] = M;
   }
 

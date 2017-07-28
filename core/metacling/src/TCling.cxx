@@ -1100,6 +1100,10 @@ TCling::TCling(const char *name, const char *title)
            eArg = clingArgsStorage.end(); iArg != eArg; ++iArg)
       interpArgs.push_back(iArg->c_str());
 
+   if (!fromRootCling && getenv("ROOT_MODULES")) {
+     interpArgs.push_back("-fmodules");
+   }
+
 #ifdef R__EXTERN_LLVMDIR
    TString llvmResourceDir = R__EXTERN_LLVMDIR;
 #else
@@ -1192,7 +1196,6 @@ TCling::TCling(const char *name, const char *title)
    fClingCallbacks = clingCallbacks.get();
    fClingCallbacks->SetAutoParsingSuspended(fIsAutoParsingSuspended);
    fInterpreter->setCallbacks(std::move(clingCallbacks));
-
 }
 
 
@@ -1508,6 +1511,9 @@ void TCling::RegisterModule(const char* modulename,
                             const char** classesHeaders,
                             Bool_t lateRegistration /*=false*/)
 {
+   if (!fInterpreter || fInterpreter->getOptions().CompilerOpts.CxxModules)
+     return;
+
    // rootcling also uses TCling for generating the dictionary ROOT files.
    static const bool fromRootCling = dlsym(RTLD_DEFAULT, "usedToIdentifyRootClingByDlSym");
    // We need the dictionary initialization but we don't want to inject the

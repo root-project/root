@@ -430,7 +430,7 @@ void TDataMember::Init(bool afterReading)
             } else if (isdigit) {
                l = atol(ptr1);
             } else {
-               assert(false && "");
+               assert(false && "Expected a number as an option.");
             }
 
             it1 = new TOptionListItem(this,l,0,0,ptr3,ptr1);
