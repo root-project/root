@@ -486,11 +486,30 @@ TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, EA
       	 this->SetParName(i, conv->GetParName(i));
       //  set parameters to default values
       int f1Npar = function1->GetNpar();
+      int f2Npar = function2->GetNpar();
+      // first, copy parameters from function1
       for (int i = 0; i < f1Npar; i++)
 	 this->SetParameter(i, function1->GetParameter(i));
-      for (int i = 0; i < function2->GetNpar(); i++)
-	 this->SetParameter(i + f1Npar, function2->GetParameter(i));
-      // TODO: currently one less parameter than expecting! Need to resolve!
+      // then, check if the "Constant" parameters were combined
+      // (this code assumes function2 has at most one parameter named "Constant")
+      std::cout << "Numbers of parameters: " << f1Npar << " + " << f2Npar << " and our conv has " << conv->GetNpar() << std::endl;
+      if (conv->GetNpar() == f1Npar + f2Npar - 1) {
+	 int cst1 = function1->GetParNumber("Constant");
+	 int cst2 = function2->GetParNumber("Constant");
+	 std::cout << "multiplying parameters " << cst1 << " from f1 and "
+		   << cst2 << " from f2" << std::endl;
+	 this->SetParameter(cst1, function1->GetParameter(cst1) * function2->GetParameter(cst2));
+	 // and copy parameters from function2
+	 for(int i=0; i < f2Npar; i++)
+	    if (i < cst2)
+	       this->SetParameter(f1Npar + i, function2->GetParameter(i));
+	    else if (i > cst2)
+	       this->SetParameter(f1Npar + i - 1, function2->GetParameter(i));
+      } else {
+	 // or if no constant, simply copy parameters from function2
+	 for (int i=0; i < f2Npar; i++)
+	    this->SetParameter(i + f1Npar, function2->GetParameter(i));
+      }
       
       // Then check if we need NSUM syntax:
    } else if (TString(formula, 5) == "NSUM(" && formula[strlen(formula)-1] == ')') {
