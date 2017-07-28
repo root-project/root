@@ -434,7 +434,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   # files which for some reason (temporarily?) cannot be put in the PCH. Eg.
   # all rest of the first dict is in the PCH but this file is not and it
   # cannot be present in the original dictionary.
-  if(NOT ARG_MULTIDICT)
+  if(NOT ARG_MULTIDICT AND ARG_MODULE)
     ROOT_CXXMODULES_APPEND_TO_MODULEMAP("${ARG_MODULE}" "${headerfiles}")
   endif()
 endfunction()
