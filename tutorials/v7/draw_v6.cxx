@@ -57,4 +57,8 @@ void draw_v6()
    // this function executed in synchronous mode (async = false is default),
    // mean previous file saving will be completed as well at this point
    canvas->SaveAs("draw.svg"); // asynchronous
+
+   // hide canvas after 10 seconds - close all connections and close all opened windows
+   // gSystem->Sleep(10000);
+   // canvas->Hide();
 }
