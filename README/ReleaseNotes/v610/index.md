@@ -656,7 +656,6 @@ Released on July 28, 2017
 *   [[ROOT-8927](https://sft.its.cern.ch/jira/browse/ROOT-8927)] - Title drawn on top of axis
 *   [[ROOT-8928](https://sft.its.cern.ch/jira/browse/ROOT-8928)] - Error with "argv" in testKeras* Programs
 
-s
 ## HEAD of the v6-10-00-patches branch
 
 These changes will be part of the future 6.10/06
