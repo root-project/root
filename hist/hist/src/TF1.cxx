@@ -492,12 +492,9 @@ TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, EA
 	 this->SetParameter(i, function1->GetParameter(i));
       // then, check if the "Constant" parameters were combined
       // (this code assumes function2 has at most one parameter named "Constant")
-      std::cout << "Numbers of parameters: " << f1Npar << " + " << f2Npar << " and our conv has " << conv->GetNpar() << std::endl;
       if (conv->GetNpar() == f1Npar + f2Npar - 1) {
 	 int cst1 = function1->GetParNumber("Constant");
 	 int cst2 = function2->GetParNumber("Constant");
-	 std::cout << "multiplying parameters " << cst1 << " from f1 and "
-		   << cst2 << " from f2" << std::endl;
 	 this->SetParameter(cst1, function1->GetParameter(cst1) * function2->GetParameter(cst2));
 	 // and copy parameters from function2
 	 for(int i=0; i < f2Npar; i++)
