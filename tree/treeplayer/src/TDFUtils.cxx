@@ -143,6 +143,18 @@ void CheckTmpBranch(std::string_view branchName, TTree *treePtr)
    }
 }
 
+void CheckSnapshot(unsigned int nTemplateParams, unsigned int nColumnNames)
+{
+   if (nTemplateParams != nColumnNames) {
+      std::string err_msg = "The number of template parameters specified for the snapshot is ";
+      err_msg += std::to_string(nTemplateParams);
+      err_msg += " while ";
+      err_msg += std::to_string(nColumnNames);
+      err_msg += " columns have been specified.";
+      throw std::runtime_error(err_msg);
+   }
+}
+
 /// Choose between local column names or default column names, throw in case of errors.
 const ColumnNames_t SelectColumns(unsigned int nRequiredNames, const ColumnNames_t &names,
                                   const ColumnNames_t &defaultNames)
