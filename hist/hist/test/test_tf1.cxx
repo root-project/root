@@ -20,9 +20,8 @@ void coeffNamesGeneric(TString *formula, TObjArray *coeffNames) {
    }
 }
 
+// Test that the NSUM names are copied correctly
 void test_nsumCoeffNames() {
-   // cout << "About to start" << endl;
-   
    TObjArray *coeffNames = new TObjArray();
    coeffNames->SetOwner(kTRUE);
    coeffNames->Add(new TObjString("sg"));
@@ -31,12 +30,11 @@ void test_nsumCoeffNames() {
    coeffNames->Add(new TObjString("Sigma"));
    coeffNames->Add(new TObjString("Slope"));
    TString *formula = new TString("NSUM([sg] * gaus, [bg] * expo)");
-
-   // cout << "Almost done" << endl;
    
    coeffNamesGeneric(formula, coeffNames);
 }
 
+// Test that the NSUM is normalized as we'd expect
 void test_normalization() {
    double xmin = -5;
    double xmax = 5;
@@ -62,10 +60,38 @@ void test_normalization() {
    EXPECT_NEAR(n2->Integral(xmin, xmax), -.5, delta);
 }
 
+void voigtHelper(double sigma, double lg) {
+   TF1 *lor = new TF1("lor", "breitwigner", -20, 20);
+   lor->SetParameters(1,0,lg);
+   TF1 *mygausn = new TF1("mygausn", "gausn", -20, 20);
+   mygausn->SetParameters(1,0,sigma);
+   
+   TF1 *conv = new TF1("conv", "CONV(lor, mygausn)", -20, 20);
+
+   // Voigt should just be the convolution of the gaussian and lorentzian
+   TF1 *myvoigt = new TF1("myvoigt", "TMath::Voigt(x, [0], [1])", -20, 20);
+   myvoigt->SetParameters(sigma, lg);
+
+   for (double x = -19.5; x < 20; x += .5)
+      EXPECT_NEAR(conv->Eval(x), myvoigt->Eval(x), .01 * conv->Eval(x));
+}
+
+// Test that the voigt can be expressed as a convolution of a gaussian and lorentzian
+// Check that the values match to within 1%
+void test_convVoigt() {
+   voigtHelper(.1,1);
+   voigtHelper(1,.1);
+   voigtHelper(1,1);
+}
+
 TEST(TF1, NsumCoeffNames) {
    test_nsumCoeffNames();
 }
 
 TEST(TF1, Normalization) {
    test_normalization();
+}
+
+TEST(TF1, ConvVoigt) {
+   test_convVoigt();
 }
