@@ -23,6 +23,9 @@ class RootWebView : public QWebEngineView {
 protected:
    virtual void closeEvent(QCloseEvent *);
 
+public slots:
+   void onWindowCloseRequested();
+
 public:
    RootWebView(QWidget *parent = 0);
    virtual ~RootWebView();

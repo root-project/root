@@ -243,6 +243,8 @@ private:
 
    void CancelUpdates();
 
+   void CloseConnections();
+
 public:
    /// Create a TVirtualCanvasPainter for the given canvas.
    /// The painter observes it; it needs to know should the TCanvas be deleted.
@@ -258,6 +260,11 @@ public:
    {
       CancelCommands(true);
       CancelUpdates();
+      CloseConnections();
+
+      if (gServer)
+         gServer->Unregister(this);
+      // TODO: should we close server when all canvases are closed?
    }
 
    virtual bool IsBatchMode() const { return fBatchMode; }
@@ -338,6 +345,7 @@ void TCanvasPainter::CreateHttpServer(Bool_t with_http)
       port = buf.Data(); // "8181";
    }
    fAddr = TString::Format("http://localhost:%s", port).Data();
+   // TODO: ensure that port can be used
    gServer->CreateEngine(TString::Format("http:%s?websocket_timeout=10000", port).Data());
 }
 
@@ -366,7 +374,8 @@ void TCanvasPainter::NewDisplay(const std::string &where)
    if (symbol_qt5 && (is_native || is_qt5)) {
       typedef void (*FunctionQt5)(const char *, void *, bool);
 
-      addr.Form("://dummy:8080/web7gui/%s/draw.htm?longpollcanvas%s&qt5", GetName(), (IsBatchMode() ? "&batch_mode" : ""));
+      addr.Form("://dummy:8080/web7gui/%s/draw.htm?longpollcanvas%s&qt5", GetName(),
+                (IsBatchMode() ? "&batch_mode" : ""));
       // addr.Form("example://localhost:8080/Canvases/%s/draw.htm", Canvas()->GetName());
 
       Info("NewDisplay", "Show canvas in Qt5 window:  %s", addr.Data());
@@ -561,6 +570,26 @@ void TCanvasPainter::CancelUpdates()
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////
+/// Close all web connections - will lead to close
+
+void TCanvasPainter::CloseConnections()
+{
+   for (auto &&conn : fWebConn) {
+
+      if (!conn.fHandle)
+         continue;
+
+      conn.fReady = kFALSE;
+      conn.fHandle->SendCharStar("CLOSE");
+      conn.fHandle->ClearHandle();
+      delete conn.fHandle;
+      conn.fHandle = nullptr;
+   }
+
+   fWebConn.clear();
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////
 /// Process reply of first command in the queue
 /// For the moment commands use to create image files
 
@@ -741,8 +770,7 @@ void TCanvasPainter::CheckDataToSend()
 
    uint64_t min_delivered = 0;
 
-   for (WebConnList::iterator citer = fWebConn.begin(); citer != fWebConn.end(); ++citer) {
-      WebConn &conn = *citer;
+   for (auto &&conn : fWebConn) {
 
       if (conn.fDelivered && (!min_delivered || (min_delivered < conn.fDelivered)))
          min_delivered = conn.fDelivered;
