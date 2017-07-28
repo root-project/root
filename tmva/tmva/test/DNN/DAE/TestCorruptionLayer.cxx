@@ -8,7 +8,7 @@
  * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
- *      Testing the Logistic Regression Layer                                     *
+ *      Testing the Corruption Layer                                                 *
  *                                                                                *
  * Authors (alphabetical):                                                        *
  *      Akshay Vashistha    <akshayvashistha1995@gmail.com>  - CERN, Switzerland  *
@@ -23,7 +23,8 @@
  * modification, are permitted according to the terms listed in LICENSE           *
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
-#include "TestLogisticRegressionLayer.h"
+
+#include "TestCorruptionLayer.h"
 #include "TMVA/DNN/Architectures/Reference.h"
 
 using namespace TMVA::DNN;
@@ -32,9 +33,9 @@ using namespace TMVA::DNN::DAE;
 int main()
 
 {
-   std::cout << "Testing for Logistic Regression Layer started" << std::endl;
+   std::cout << "Testing for Corruption Layer started" << std::endl;
 
-   testLayer1<TReference<double>>();
+   testLayer<TReference<double>>(5, 4);
 
    return 0;
 }
