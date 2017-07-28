@@ -70,7 +70,7 @@ std::shared_ptr<ROOT::Experimental::TCanvas> ROOT::Experimental::TCanvas::Create
 
 //////////////////////////////////////////////////////////////////////////
 /// Create new display for the canvas
-/// Parameter \par where specified  which program could be used for display creation
+/// Parameter \par where specifies which program could be used for display creation
 /// Possible values:
 ///
 ///      cef - Chromium Embeded Framework, local display, local communication
@@ -99,6 +99,15 @@ void ROOT::Experimental::TCanvas::Show(const std::string &where)
       fPainter->NewDisplay(where);
       fPainter->CanvasUpdated(fModified, true, nullptr); // trigger async display
    }
+}
+
+//////////////////////////////////////////////////////////////////////////
+/// Close all canvas displays
+
+void ROOT::Experimental::TCanvas::Hide()
+{
+   if (fPainter)
+      delete fPainter.release();
 }
 
 void ROOT::Experimental::TCanvas::SaveAs(const std::string &filename, bool async, CanvasCallback_t callback)

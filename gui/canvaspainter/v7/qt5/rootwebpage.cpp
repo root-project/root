@@ -25,3 +25,4 @@ void RootWebPage::javaScriptConsoleMessage(JavaScriptConsoleMessageLevel, const 
 
    printf("CONSOLE %s:%d: %s\n", src.data(), lineNumber, ba.data());
 }
+
