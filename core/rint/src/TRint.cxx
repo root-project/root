@@ -174,7 +174,7 @@ TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
    // You can set it to 2 to load in addition <vector> and <utility>
    // We strongly recommend setting the variable to 2 if your scripts include <vector>
    // and you execute your scripts multiple times.
-   if (includes > 0) {
+   if (!getenv("ROOT_MODULES") && includes > 0) {
       TString code;
       code = "#include <iostream>\n"
              "#include <string>\n" // for std::string std::iostream.

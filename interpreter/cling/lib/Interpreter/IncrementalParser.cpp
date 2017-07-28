@@ -23,6 +23,7 @@
 #include "ValueExtractionSynthesizer.h"
 #include "ValuePrinterSynthesizer.h"
 #include "cling/Interpreter/CIFactory.h"
+#include "cling/Interpreter/DynamicLibraryManager.h"
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Interpreter/InterpreterCallbacks.h"
 #include "cling/Interpreter/Transaction.h"
@@ -38,6 +39,8 @@
 #include "clang/Basic/FileManager.h"
 #include "clang/CodeGen/ModuleBuilder.h"
 #include "clang/Frontend/CompilerInstance.h"
+#include "clang/Frontend/MultiplexConsumer.h"
+#include "clang/Lex/HeaderSearch.h"
 #include "clang/Lex/Preprocessor.h"
 #include "clang/Lex/PreprocessorOptions.h"
 #include "clang/Parse/Parser.h"
@@ -50,9 +53,65 @@
 #include "llvm/Support/CrashRecoveryContext.h"
 #include "llvm/Support/MemoryBuffer.h"
 
+#include <iostream>
+#include <fstream>
 #include <stdio.h>
 
 using namespace clang;
+
+namespace cling {
+  class LibListener : public ASTConsumer {
+    cling::Interpreter* interp;
+    std::set<clang::Module*> Mods;
+  public:
+
+    LibListener(cling::Interpreter* interp) : interp(interp) {}
+
+    std::vector<std::string> ToLoad;
+
+    virtual bool HandleTopLevelDecl(DeclGroupRef DGR) override {
+      for (Decl* D : DGR) {
+        if (isa<ImportDecl>(D))
+            continue;
+      // if (shouldIgnore(D))
+      //      continue;
+
+        /*if (const FunctionDecl* FD = dyn_cast<FunctionDecl>(D)) {
+          if (FD->isInlined() || FD->isTemplateInstantiation())
+            continue;
+        }
+        if (const VarDecl* VD = dyn_cast<VarDecl>(D)) {
+          if (!VD->hasExternalStorage())
+            continue;
+        }*/
+
+        clang::Module* M = D->getImportedOwningModule();
+        if (M == nullptr)
+          continue;
+        while (M && M->Parent) {
+            M = M->Parent;
+        }
+        auto OldSize = Mods.size();
+        Mods.insert(M);
+        if (Mods.size() != OldSize) {
+          if (M->Name != "Core")
+            ToLoad.push_back(M->Name);
+        }
+      }
+      return true;
+    }
+  };
+
+  class DeclCollectorDeactivator : public ASTConsumer {
+    cling::DeclCollector *DC;
+  public:
+
+    DeclCollectorDeactivator(cling::DeclCollector *DC) : DC(DC) {}
+
+    virtual void HandleTranslationUnit(ASTContext &Ctx) override {
+    }
+  };
+}
 
 namespace {
 
@@ -165,10 +224,26 @@ namespace {
 namespace cling {
   IncrementalParser::IncrementalParser(Interpreter* interp, const char* llvmdir)
       : m_Interpreter(interp),
-        m_CI(CIFactory::createCI("", interp->getOptions(), llvmdir,
-                                 m_Consumer = new cling::DeclCollector())),
         m_ModuleNo(0) {
 
+    std::vector<std::unique_ptr<ASTConsumer>> Consumers;
+
+    m_LibListener = new LibListener(interp);
+    std::unique_ptr<LibListener> LibListenerUnique(m_LibListener);
+    Consumers.push_back(std::move(LibListenerUnique));
+
+    m_Consumer = new cling::DeclCollector();
+
+    std::unique_ptr<cling::DeclCollectorDeactivator> Deactivator(new cling::DeclCollectorDeactivator(m_Consumer));
+    Consumers.push_back(std::move(Deactivator));
+
+    std::unique_ptr<cling::DeclCollector> DeclCollectorUnique(m_Consumer);
+    Consumers.push_back(std::move(DeclCollectorUnique));
+
+    clang::MultiplexConsumer *multiConsumer = new clang::MultiplexConsumer(std::move(Consumers));
+
+    m_CI.reset(CIFactory::createCI("", interp->getOptions(), llvmdir,
+                             multiConsumer));
     if (!m_CI) {
       cling::errs() << "Compiler instance could not be created.\n";
       return;
@@ -256,6 +331,10 @@ namespace cling {
       // We need to include it to determine the version number of the standard
       // library implementation.
       ParseInternal("#include <new>");
+      if (!getenv("ROOT_MODULES")) {
+        ParseInternal("#include <RtypesCore.h>");
+      }
+
       // That's really C++ ABI compatibility. C has other problems ;-)
       CheckABICompatibility(*m_Interpreter);
     }
@@ -337,6 +416,12 @@ namespace cling {
     }
 #endif
 
+    for (auto Lib : m_LibListener->ToLoad) {
+       auto result = m_Interpreter->getDynamicLibraryManager()->loadLibrary(Lib, true, false);
+       //std::cerr << "Lresult " << Lib << result << std::endl;
+    }
+    m_LibListener->ToLoad.clear();
+
     T->setState(Transaction::kCompleted);
 
     DiagnosticsEngine& Diag = getCI()->getSema().getDiagnostics();
@@ -380,6 +465,7 @@ namespace cling {
   }
 
   llvm::Module* IncrementalParser::StartModule() {
+
     return getCodeGenerator()->StartModule(makeModuleName(),
                                            *m_Interpreter->getLLVMContext(),
                                            getCI()->getCodeGenOpts());
@@ -507,7 +593,7 @@ namespace cling {
 
   void IncrementalParser::emitTransaction(Transaction* T) {
     for (auto DI = T->decls_begin(), DE = T->decls_end(); DI != DE; ++DI)
-      m_Consumer->HandleTopLevelDecl(DI->m_DGR);
+      this->getCI()->getASTConsumer().HandleTopLevelDecl(DI->m_DGR);
   }
 
   void IncrementalParser::codeGenTransaction(Transaction* T) {
@@ -643,15 +729,16 @@ namespace cling {
   IncrementalParser::EParseResult
   IncrementalParser::ParseInternal(llvm::StringRef input) {
     if (input.empty()) return IncrementalParser::kSuccess;
+    //std::cout << "P:" << input.str() << std::endl;
 
     Sema& S = getCI()->getSema();
 
     const CompilationOptions& CO
        = m_Consumer->getTransaction()->getCompilationOpts();
 
-    assert(!(S.getLangOpts().Modules
-             && CO.CodeGenerationForModule)
-           && "CodeGenerationForModule to be removed once PCMs are available!");
+//    assert(!(S.getLangOpts().Modules
+//             && CO.CodeGenerationForModule)
+//           && "CodeGenerationForModule to be removed once PCMs are available!");
 
     // Recover resources if we crash before exiting this method.
     llvm::CrashRecoveryContextCleanupRegistrar<Sema> CleanupSema(&S);
@@ -722,7 +809,7 @@ namespace cling {
       if (Trap.hasErrorOccurred())
         m_Consumer->getTransaction()->setIssuedDiags(Transaction::kErrors);
       if (ADecl)
-        m_Consumer->HandleTopLevelDecl(ADecl.get());
+        this->getCI()->getASTConsumer().HandleTopLevelDecl(ADecl.get());
     };
     // If never entered the while block, there's a chance an error occured
     if (Trap.hasErrorOccurred())
@@ -761,7 +848,7 @@ namespace cling {
     // Process any TopLevelDecls generated by #pragma weak.
     for (llvm::SmallVector<Decl*,2>::iterator I = S.WeakTopLevelDecls().begin(),
          E = S.WeakTopLevelDecls().end(); I != E; ++I) {
-      m_Consumer->HandleTopLevelDecl(DeclGroupRef(*I));
+      this->getCI()->getASTConsumer().HandleTopLevelDecl(DeclGroupRef(*I));
     }
 
     if (m_Consumer->getTransaction()->getIssuedDiags() == Transaction::kErrors)

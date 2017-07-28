@@ -332,6 +332,8 @@ namespace cling {
     ///
     bool isValid() const;
 
+    bool ActuallyValid = false;
+
     const InvocationOptions& getOptions() const { return m_Opts; }
     InvocationOptions& getOptions() { return m_Opts; }
 

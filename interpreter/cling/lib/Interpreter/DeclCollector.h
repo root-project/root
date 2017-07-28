@@ -55,6 +55,7 @@ namespace cling {
     IncrementalParser* m_IncrParser;
     clang::ASTConsumer* m_Consumer;
     Transaction* m_CurTransaction;
+    bool m_IsShuttingDown = false;
 
     /// Whether Transform() is active; prevents recursion.
     bool m_Transforming = false;

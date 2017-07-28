@@ -14,6 +14,7 @@
 #include "clang/AST/ASTContext.h"
 #include "clang/Sema/CodeCompleteConsumer.h"
 #include "clang/Frontend/CompilerInstance.h"
+#include "clang/Frontend/MultiplexConsumer.h"
 #include "clang/Lex/Preprocessor.h"
 #include "clang/Sema/Sema.h"
 #include "clang/Serialization/ASTReader.h"
@@ -187,11 +188,19 @@ namespace cling {
     }
 
     if (enableDeserializationListenerCallbacks && Reader) {
-      // FIXME: need to create a multiplexer if a DeserializationListener is
-      // alreday present.
+      std::vector<clang::ASTDeserializationListener *> Listeners;
+
       m_DeserializationListener.
         reset(new InterpreterDeserializationListener(this));
-      Reader->setDeserializationListener(m_DeserializationListener.get());
+      Listeners.push_back(m_DeserializationListener.get());
+
+      auto ExistingListener = SemaRef.getASTConsumer().GetASTDeserializationListener();
+      if (ExistingListener) {
+        Listeners.push_back(ExistingListener);
+      }
+
+      auto MultiPlex = new clang::MultiplexASTDeserializationListener(Listeners);
+      Reader->setDeserializationListener(MultiPlex, true);
     }
 
     if (enablePPCallbacks) {

@@ -613,8 +613,10 @@ std::string TClingMethodInfo::GetMangledName() const
      GD = GlobalDecl(Dtor, Dtor_Deleting);
    else
      GD = GlobalDecl(D);
-
-   cling::utils::Analyze::maybeMangleDeclName(GD, mangled_name);
+   {
+     cling::Interpreter::PushTransactionRAII RAII(fInterp);
+     cling::utils::Analyze::maybeMangleDeclName(GD, mangled_name);
+   }
    return mangled_name;
 }
 
