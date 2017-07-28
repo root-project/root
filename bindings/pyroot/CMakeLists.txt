@@ -3,8 +3,6 @@
 ############################################################################
 include_directories(${PYTHON_INCLUDE_DIRS})
 
-ROOT_GENERATE_DICTIONARY(G__PyROOT *.h MODULE PyROOT LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM" DEPENDENCIES Core MathCore)
-
 ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -fno-strict-aliasing)
 ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-parentheses-equality)
 
@@ -15,8 +13,12 @@ if(WIN32)
                 -include:_G__cpp_setupG__Thread
                 -include:_G__cpp_setupG__MathCore)
 endif()
-ROOT_LINKER_LIBRARY(PyROOT *.cxx G__PyROOT.cxx LIBRARIES Core Net Tree MathCore Rint ${PYTHON_LIBRARIES})
-ROOT_LINKER_LIBRARY(JupyROOT ../JupyROOT/src/*.cxx LIBRARIES Core)
+ROOT_STANDARD_LIBRARY_PACKAGE(PyROOT
+                              NO_INSTALL_HEADERS
+                              DICTIONARY_OPTIONS "-writeEmptyRootPCM"
+                              LIBRARIES ${PYTHON_LIBRARIES}
+                              DEPENDENCIES Core MathCore Net Tree Rint)
+ROOT_LINKER_LIBRARY(JupyROOT ../JupyROOT/src/*.cxx DEPENDENCIES Core)
 
 
 if(MSVC)
