@@ -36,6 +36,7 @@ namespace clang {
 }
 
 namespace cling {
+  class LibListener;
   class CompilationOptions;
   class DeclCollector;
   class ExecutionContext;
@@ -55,6 +56,8 @@ namespace cling {
     // our interpreter context
     // FIXME: Get rid of that back reference to the interpreter.
     Interpreter* m_Interpreter;
+
+    LibListener* m_LibListener;
 
     // compiler instance.
     std::unique_ptr<clang::CompilerInstance> m_CI;

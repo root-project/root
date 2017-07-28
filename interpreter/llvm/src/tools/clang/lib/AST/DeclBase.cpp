@@ -276,8 +276,8 @@ void Decl::setLexicalDeclContext(DeclContext *DC) {
   }
   Hidden = cast<Decl>(DC)->Hidden;
   if (Hidden && !isFromASTFile()) {
-    assert(hasLocalOwningModuleStorage() &&
-           "hidden local declaration without local submodule visibility?");
+    //assert(hasLocalOwningModuleStorage() &&
+    //       "hidden local declaration without local submodule visibility?");
     setLocalOwningModule(cast<Decl>(DC)->getOwningModule());
   }
 }
@@ -1323,8 +1323,8 @@ void DeclContext::removeDecl(Decl *D) {
   if (isa<NamedDecl>(D)) {
     NamedDecl *ND = cast<NamedDecl>(D);
 
-    // Remove only decls that have a name or registered in the lookup.
-    if (!ND->getDeclName() || ND->isHidden()) return;
+    // Remove only decls that have a name
+    if (!ND->getDeclName()) return;
 
     auto *DC = D->getDeclContext();
     do {

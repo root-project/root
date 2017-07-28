@@ -25,6 +25,7 @@
 #include "clang/Driver/Job.h"
 #include "clang/Driver/Tool.h"
 #include "clang/Frontend/FrontendDiagnostic.h"
+#include "clang/Frontend/MultiplexConsumer.h"
 #include "clang/Frontend/TextDiagnosticPrinter.h"
 #include "clang/Frontend/VerifyDiagnosticConsumer.h"
 #include "clang/Serialization/SerializationDiagnostic.h"
@@ -33,6 +34,7 @@
 #include "clang/Sema/Sema.h"
 #include "clang/Sema/SemaDiagnostic.h"
 #include "clang/Serialization/ASTReader.h"
+#include "clang/Serialization/ASTWriter.h"
 
 #include "llvm/Config/llvm-config.h"
 #include "llvm/IR/LLVMContext.h"
@@ -169,6 +171,30 @@ namespace {
 
 #endif
   
+  static std::string getResourceDir(const char* llvmdir) {
+    if (!llvmdir) {
+      // FIXME: The first arg really does need to be argv[0] on FreeBSD.
+      //
+      // Note: The second arg is not used for Apple, FreeBSD, Linux,
+      //       or cygwin, and can only be used on systems which support
+      //       the use of dladdr().
+      //
+      // Note: On linux and cygwin this uses /proc/self/exe to find the path
+      // Note: On Apple it uses _NSGetExecutablePath().
+      // Note: On FreeBSD it uses getprogpath().
+      // Note: Otherwise it uses dladdr().
+      //
+      return CompilerInvocation::GetResourcesPath("cling",
+                                        (void*)intptr_t(GetExecutablePath));
+    } else {
+      std::string resourcePath;
+      llvm::SmallString<512> tmp(llvmdir);
+      llvm::sys::path::append(tmp, "lib", "clang", CLANG_VERSION_STRING);
+      resourcePath.assign(&tmp[0], tmp.size());
+      return resourcePath;
+    }
+  }
+
   ///\brief Adds standard library -I used by whatever compiler is found in PATH.
   static void AddHostArguments(llvm::StringRef clingBin,
                                std::vector<const char*>& args,
@@ -315,27 +341,7 @@ namespace {
 #endif // _MSC_VER
 
       if (!opts.ResourceDir && !opts.NoBuiltinInc) {
-        std::string resourcePath;
-        if (!llvmdir) {
-          // FIXME: The first arg really does need to be argv[0] on FreeBSD.
-          //
-          // Note: The second arg is not used for Apple, FreeBSD, Linux,
-          //       or cygwin, and can only be used on systems which support
-          //       the use of dladdr().
-          //
-          // Note: On linux and cygwin this uses /proc/self/exe to find the path
-          // Note: On Apple it uses _NSGetExecutablePath().
-          // Note: On FreeBSD it uses getprogpath().
-          // Note: Otherwise it uses dladdr().
-          //
-          resourcePath
-            = CompilerInvocation::GetResourcesPath("cling",
-                                            (void*)intptr_t(GetExecutablePath));
-        } else {
-          llvm::SmallString<512> tmp(llvmdir);
-          llvm::sys::path::append(tmp, "lib", "clang", CLANG_VERSION_STRING);
-          resourcePath.assign(&tmp[0], tmp.size());
-        }
+        std::string resourcePath = getResourceDir(llvmdir);
 
         // FIXME: Handle cases, where the cling is part of a library/framework.
         // There we can't rely on the find executable logic.
@@ -506,6 +512,35 @@ namespace {
     return &Cmd->getArguments();
   }
 
+static void addPaths(clang::HeaderSearchOptions& Opts, const char *EnvVar) {
+  if (!EnvVar)
+    return;
+  StringRef EnvVarRef(EnvVar);
+  SmallVector<StringRef, 4> Paths;
+  EnvVarRef.split(Paths, ':', -1, false);
+  for (StringRef Path : Paths) {
+    Opts.AddPrebuiltModulePath(Path);
+  }
+}
+
+static std::string getOverlayArg() {
+  using namespace llvm::sys;
+  std::vector<const char*> RawPaths = { getenv("LD_LIBRARY_PATH") };
+  for (StringRef RefPaths : RawPaths) {
+    if (RefPaths.empty())
+      continue;
+    SmallVector<StringRef, 4> Paths;
+    RefPaths.split(Paths, ':', -1, false);
+    for (StringRef Path : Paths) {
+      std::string OverlayPath = Path.str() + "/modulemap.overlay.yaml";
+      if (!fs::access(OverlayPath, fs::AccessMode::Exist)) {
+        return "-ivfsoverlay" + OverlayPath;
+      }
+    }
+  }
+  return "";
+}
+  
 #if defined(_MSC_VER) || defined(NDEBUG)
 static void stringifyPreprocSetting(PreprocessorOptions& PPOpts,
                                     const char* Name, int Val) {
@@ -620,7 +655,7 @@ static void stringifyPreprocSetting(PreprocessorOptions& PPOpts,
 
     return Diags;
   }
-
+  
   static bool
   SetupCompiler(CompilerInstance* CI, const CompilerOptions& CompilerOpts,
                 bool Lang = true, bool Targ = true) {
@@ -728,6 +763,33 @@ static void stringifyPreprocSetting(PreprocessorOptions& PPOpts,
     std::vector<const char*> argvCompile(argv, argv+1);
     argvCompile.reserve(argc+5);
 
+    // Just for temporal storage
+    std::string overlayArg;
+    std::string cacheArg;
+    std::string moduleNameArg;
+
+    if (COpts.CxxModules && !OnlyLex) {
+      argvCompile.push_back("-fmodules");
+      argvCompile.push_back("-Xclang");
+      argvCompile.push_back("-fmodules-local-submodule-visibility");
+      argvCompile.push_back("-fcolor-diagnostics");
+      overlayArg = getOverlayArg();
+      if (!overlayArg.empty())
+        argvCompile.push_back(overlayArg.c_str());
+      if (!COpts.CachePath.empty()) {
+        cacheArg = std::string("-fmodules-cache-path=") + COpts.CachePath;
+        argvCompile.push_back(cacheArg.c_str());
+      }
+      argvCompile.push_back("-Xclang");
+      argvCompile.push_back("-fdisable-module-hash");
+      argvCompile.push_back("-Wno-module-import-in-extern-c");
+      argvCompile.push_back("-fPIC");
+
+      if (llvm::StringRef(getenv("ROOT_MODULES")) == "DEBUG") {
+          argvCompile.push_back("-Rmodule-build");
+      }
+    }
+
     if (!COpts.Language) {
       // We do C++ by default; append right after argv[0] if no "-x" given
       argvCompile.push_back("-x");
@@ -812,6 +874,8 @@ static void stringifyPreprocSetting(PreprocessorOptions& PPOpts,
     // But in general we'll happily go on.
     Diags->Reset();
 
+
+
     // Create and setup a compiler instance.
     std::unique_ptr<CompilerInstance> CI(new CompilerInstance());
     CI->setInvocation(InvocationPtr);
@@ -842,8 +906,14 @@ static void stringifyPreprocSetting(PreprocessorOptions& PPOpts,
       return CI.release();
     }
 
-    CI->createFileManager();
     clang::CompilerInvocation& Invocation = CI->getInvocation();
+    // Ensure we use the supplied VFS overlay to mount system modulemaps.
+    // FIXME: This maybe will be fixed in clang at some point...
+    if (COpts.CxxModules) {
+      CI->setVirtualFileSystem(clang::createVFSFromCompilerInvocation(Invocation, *Diags));
+    }
+
+    CI->createFileManager();
     std::string& PCHFile = Invocation.getPreprocessorOpts().ImplicitPCHInclude;
     bool InitLang = true, InitTarget = true;
     if (!PCHFile.empty()) {
@@ -913,6 +983,11 @@ static void stringifyPreprocSetting(PreprocessorOptions& PPOpts,
 
     Invocation.getFrontendOpts().DisableFree = true;
 
+    if (COpts.CxxModules && COpts.ModuleName.empty() && !OnlyLex) {
+      addPaths(CI->getHeaderSearchOpts(), getenv("LD_LIBRARY_PATH"));
+      addPaths(CI->getHeaderSearchOpts(), getenv("DYLD_LIBRARY_PATH"));
+    }
+
     // Set up compiler language and target
     if (!SetupCompiler(CI.get(), COpts, InitLang, InitTarget))
       return nullptr;
@@ -959,21 +1034,62 @@ static void stringifyPreprocSetting(PreprocessorOptions& PPOpts,
     // Set up the ASTContext
     CI->createASTContext();
 
-    if (OnlyLex) {
-      assert(customConsumer == nullptr && "Can't specify a custom consumer"
-                                          " when in OnlyLex mode");
-      class IgnoreConsumer: public clang::ASTConsumer {};
-      CI->setASTConsumer(
-          std::unique_ptr<clang::ASTConsumer>(new IgnoreConsumer()));
-    } else {
+    std::vector<std::unique_ptr<ASTConsumer>> Consumers;
+
+
+    if (!OnlyLex) {
       assert(customConsumer != nullptr && "Need to specify a custom consumer"
                                           " when not in OnlyLex mode");
-      CI->setASTConsumer(std::unique_ptr<clang::ASTConsumer>(customConsumer));
+      std::unique_ptr<clang::ASTConsumer> UniqueConsumer(customConsumer);
+      Consumers.push_back(std::move(UniqueConsumer));
+
     }
+
+    if (COpts.CxxModules) {
+        llvm::StringRef ModuleOutputFile(COpts.CachePath);
+        llvm::SmallVector<char, 256> Output;
+        llvm::sys::path::append(Output, ModuleOutputFile, COpts.ModuleName + ".pcm");
+        ModuleOutputFile = StringRef(Output.data(), Output.size());
+
+        std::unique_ptr<raw_pwrite_stream> OS
+            = CI->createOutputFile(ModuleOutputFile, /*Binary=*/true,
+                                  /*RemoveFileOnSignal=*/false, "",
+                                  /*Extension=*/"", /*useTemporary=*/true,
+                                  /*CreateMissingDirectories=*/true);
+        assert(OS);
+
+        std::string Sysroot;
+
+        auto Buffer = std::make_shared<PCHBuffer>();
+
+        Consumers.push_back(llvm::make_unique<PCHGenerator>(
+                              CI->getPreprocessor(), ModuleOutputFile, Sysroot,
+                              Buffer, CI->getFrontendOpts().ModuleFileExtensions,
+                              /*AllowASTWithErrors=*/false,
+                              /*IncludeTimestamps=*/
+                                +CI->getFrontendOpts().BuildingImplicitModule));
+        Consumers.push_back(CI->getPCHContainerWriter().CreatePCHContainerGenerator(
+            *CI, "", ModuleOutputFile, std::move(OS), Buffer));
+
+        CI->getLangOpts().CurrentModule = COpts.ModuleName;
+        CI->getLangOpts().setCompilingModule(LangOptions::CMK_ModuleMap);
+
+        // If we're being run from the command-line, the module build stack will not
+        // have been filled in yet, so complete it now in order to allow us to detect
+        // module cycles.
+        SourceManager &SourceMgr = CI->getSourceManager();
+        if (SourceMgr.getModuleBuildStack().empty())
+          SourceMgr.pushModuleBuildStack(CI->getLangOpts().CurrentModule,
+                                         FullSourceLoc(SourceLocation(), SourceMgr));
+    }
+
+    std::unique_ptr<clang::MultiplexConsumer> multiConsumer(new clang::MultiplexConsumer(std::move(Consumers)));
+    CI->setASTConsumer(std::move(multiConsumer));
 
     // Set up Sema
     CodeCompleteConsumer* CCC = 0;
-    CI->createSema(TU_Complete, CCC);
+    // Make sure we inform Sema we compile a Module.
+    CI->createSema(COpts.ModuleName.empty() ? TU_Complete : TU_Module, CCC);
 
     // Set CodeGen options.
     CodeGenOptions& CGOpts = CI->getCodeGenOpts();

@@ -3,12 +3,12 @@
 // FIXME: This should be separated because it introduces header dependency
 // libThread->libCore->libThread. We should figure out a way to implement it in
 // a more reasonable way.
-module ThreadLocalStorage {
+module ThreadLocalStorage [system] {
   header "ThreadLocalStorage.h"
   export *
 }
 // These can be used in C mode.
-module ROOT_Types {
+module ROOT_Types [system] {
   module "RtypesCore.h" { header "RtypesCore.h" export * }
   module "ESTLType.h" { header "ESTLType.h" export * }
   // FIXME: This module should contain only header files with types.
@@ -26,7 +26,7 @@ module ROOT_Types {
   export *
 }
 
-module ROOT_IsAProxy {
+module ROOT_IsAProxy [system] {
  module "TIsAProxy.h" { header "TIsAProxy.h" export * }
  module "TVirtualIsAProxy.h" { header "TVirtualIsAProxy.h" export * }
  export *
@@ -40,7 +40,7 @@ module ROOT_IsAProxy {
 // Rtypes.h however has an optional dependency on rtti unless one defines
 // R__NO_INLINE_CLASSDEF. We therefore keep two versions of this module: One
 // with rtti and one without rtti.
-module ROOT_Core_Config_C {
+module ROOT_Core_Config_C [system] {
  //requires cplusplus
  
  exclude header "RtypesImp.h"

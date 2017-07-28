@@ -162,6 +162,7 @@ public:
                                void (*histaddFunc)(const char* line)) = 0;
    virtual void     Reset() = 0;
    virtual void     ResetAll() = 0;
+   virtual void     SetupModules() = 0;
    virtual void     ResetGlobals() = 0;
    virtual void     ResetGlobalVar(void *obj) = 0;
    virtual void     RewindDictionary() = 0;
@@ -500,6 +501,10 @@ typedef void *DestroyInterpreter_t(TInterpreter*);
 #define gInterpreter (TInterpreter::Instance())
 R__EXTERN TInterpreter* (*gPtr2Interpreter)();
 R__EXTERN TInterpreter* gCling;
+#else
+R__EXTERN TInterpreter* (*gPtr2Interpreter)();
+R__EXTERN TInterpreter* gCling;
+R__EXTERN TInterpreter* gInterpreter;
 #endif
 
 #endif

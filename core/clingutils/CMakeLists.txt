@@ -47,6 +47,10 @@ foreach(dict ${stldicts})
   string(REPLACE "multi" "" header ${header})
   ROOT_GENERATE_DICTIONARY(G__${dict}Dict ${header} STAGE1 MODULE ${dict}Dict LINKDEF src/${dict}Linkdef.h DEPENDENCIES  Core)
   ROOT_LINKER_LIBRARY(${dict}Dict G__${dict}Dict.cxx DEPENDENCIES  Core)
+  # All those dicts depend on complex, so we need fix this dependency here...
+  if (NOT "${dict}" STREQUAL "complex")
+    add_dependencies(ROOTCLING_${dict}Dict ROOTCLING_complexDict)
+  endif()
 endforeach()
 
 #---Deal with LLVM resource here----------------------------------------------

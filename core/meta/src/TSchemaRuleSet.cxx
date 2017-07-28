@@ -119,6 +119,9 @@ Bool_t TSchemaRuleSet::AddRule( TSchemaRule* rule, EConsistencyCheck checkConsis
       TObject* obj;
       while( (obj = titer.Next()) ) {
          TObjString* str = (TObjString*)obj;
+         // GetDataMember requires that the class is loaded, to we request the list of data members
+         // to implicitily load it by that.
+         fClass->GetListOfDataMembers();
          if( !fClass->GetDataMember( str->GetString() ) && !fClass->GetBaseClass( str->GetString() ) ) {
             if (checkConsistency == kCheckAll) {
                if (errmsg) {

@@ -1149,6 +1149,10 @@ static bool compileModuleImpl(CompilerInstance &ImportingInstance,
     SourceMgr.overrideFileContents(ModuleMapFile, std::move(ModuleMapBuffer));
   }
 
+  if (!Module->IsSystem) {
+    llvm::errs() << "[WARNING!] Trying to build non-system module " << Module->Name << " in " << ModuleFileName.str() << "\n";
+  }
+
   ImportingInstance.getDiagnostics().Report(ImportLoc,
                                             diag::remark_module_build)
     << Module->Name << ModuleFileName;

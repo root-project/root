@@ -234,6 +234,7 @@ public: // Public Interface
    void    CreateListOfMethodArgs(TFunction* m) const;
    void    UpdateListOfMethods(TClass* cl) const;
    void    UpdateListOfDataMembers(TClass* cl) const;
+   virtual void SetupModules();
 
    virtual DeclId_t GetDataMember(ClassInfo_t *cl, const char *name) const;
    virtual DeclId_t GetDataMemberAtAddr(const void *addr) const;

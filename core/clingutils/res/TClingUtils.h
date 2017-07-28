@@ -737,10 +737,8 @@ inline void LevelPrint(bool prefix, int level, const char *location, const char 
 
    fflush(stderr);
 
-   if (GetErrorIgnoreLevel() == ROOT::TMetaUtils::kThrowOnWarning ||
-      GetErrorIgnoreLevel() > ROOT::TMetaUtils::kError){
+   if (level >= ROOT::TMetaUtils::kThrowOnWarning)
       ++GetNumberOfWarningsAndErrors();
-      }
 
 }
 

@@ -138,6 +138,7 @@ namespace cling {
     bool checkForWrapper = !m_WrapperFD;
 
 #ifndef NDEBUG
+    if (false)
     // Check for duplicates
     for (size_t i = 0, e = m_DeclQueue.size(); i < e; ++i) {
       DelayCallInfo &oldDCI (m_DeclQueue[i]);

@@ -1,4 +1,4 @@
-module "libc" {
+module "libc" [system] {
   export *
   module "assert.h" {
     export *

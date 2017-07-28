@@ -332,6 +332,8 @@ namespace cling {
     ///
     bool isValid() const;
 
+    bool ActuallyValid = false;
+
     const InvocationOptions& getOptions() const { return m_Opts; }
     InvocationOptions& getOptions() { return m_Opts; }
 
@@ -647,6 +649,8 @@ namespace cling {
 
     int getDefaultOptLevel() const { return m_OptLevel; }
     void setDefaultOptLevel(int optLevel) { m_OptLevel = optLevel; }
+
+    void setupModules();
 
     clang::CompilerInstance* getCI() const;
     clang::CompilerInstance* getCIOrNull() const;
