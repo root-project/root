@@ -638,8 +638,32 @@ large TClonesArray where each element contains another small vector container.
 
 - Adjust Y axis title offset default for 3D axis.
 
+---
+## Release 6.10/02
+
+Released on July 6, 2017
+
+### Bugs and Issues fixed in this release
+
+*   [[ROOT-8877](https://sft.its.cern.ch/jira/browse/ROOT-8877)] - Defer jitting operations aiming to infer columns types
+*   [[ROOT-8892](https://sft.its.cern.ch/jira/browse/ROOT-8892)] - ROOT classical build cannot use external Unuran
+*   [[ROOT-8836](https://sft.its.cern.ch/jira/browse/ROOT-8836)] - rootcmdlineutils.py module not correctly installed
 
 ---
+## Release 6.10/04
+
+Released on July 28, 2017
+
+### Bugs and Issues fixed in this release
+
+*   [[ROOT-8840](https://sft.its.cern.ch/jira/browse/ROOT-8840)] - CMake 3.9-rc3 complains
+*   [[ROOT-8850](https://sft.its.cern.ch/jira/browse/ROOT-8850)] - Loading libImt and executing the ROOT_TImplicitMT_EnableImplicitMT function crashes root on osx
+*   [[ROOT-8918](https://sft.its.cern.ch/jira/browse/ROOT-8918)] - Race condition in roottest/root/dataframe/test_snapshotNFiles.C
+*   [[ROOT-8927](https://sft.its.cern.ch/jira/browse/ROOT-8927)] - Title drawn on top of axis
+*   [[ROOT-8928](https://sft.its.cern.ch/jira/browse/ROOT-8928)] - Error with "argv" in testKeras* Programs
+
+---
+
 ## HEAD of the v6-10-00-patches branch
 
-These changes will be part of the future 6.10/04
+These changes will be part of the future 6.10/06
