@@ -46,6 +46,8 @@ class ClassSelectionRule;
 class RScanner: public clang::RecursiveASTVisitor<RScanner>
 {
 
+  bool canVisitDecl(clang::NamedDecl *D);
+
 public:
    class AnnotatedNamespaceDecl {
    public:
