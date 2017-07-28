@@ -26,12 +26,10 @@ foreach(hs headers1)
   endforeach()
 endforeach()
 
-ROOT_GENERATE_DICTIONARY(G__TMVAGui ${theaders1}   MODULE TMVAGui LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM" DEPENDENCIES RIO Hist Tree TreeViewer  MLP Minuit XMLIO TMVA Gui)
-
-ROOT_LINKER_LIBRARY(TMVAGui *.cxx G__TMVAGui.cxx LIBRARIES Core
-                    DEPENDENCIES RIO Hist Tree TreeViewer  MLP Minuit XMLIO TMVA Gui)
-
-ROOT_INSTALL_HEADERS()
+ROOT_STANDARD_LIBRARY_PACKAGE(TMVAGui
+                              HEADERS ${theaders1}
+                              DICTIONARY_OPTIONS "-writeEmptyRootPCM"
+                              DEPENDENCIES RIO Hist Tree TreeViewer MLP Minuit XMLIO TMVA Gui Core)
 
 if(NOT gnuinstall)
   install(DIRECTORY test DESTINATION tmva 
