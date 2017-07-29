@@ -1489,6 +1489,32 @@ namespace {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// List of dicts that have the PCM information already in the PCH.
+static const std::unordered_set<std::string> gIgnoredPCMNames = {"libCore",
+                                                                 "libRint",
+                                                                 "libThread",
+                                                                 "libRIO",
+                                                                 "libImt",
+                                                                 "libcomplexDict",
+                                                                 "libdequeDict",
+                                                                 "liblistDict",
+                                                                 "libforward_listDict",
+                                                                 "libvectorDict",
+                                                                 "libmapDict",
+                                                                 "libmultimap2Dict",
+                                                                 "libmap2Dict",
+                                                                 "libmultimapDict",
+                                                                 "libsetDict",
+                                                                 "libmultisetDict",
+                                                                 "libunordered_setDict",
+                                                                 "libunordered_multisetDict",
+                                                                 "libunordered_mapDict",
+                                                                 "libunordered_multimapDict",
+                                                                 "libvalarrayDict",
+                                                                 "G__GenVector32",
+                                                                 "G__Smatrix32"};
+
+////////////////////////////////////////////////////////////////////////////////
 /// Inject the module named "modulename" into cling; load all headers.
 /// headers is a 0-terminated array of header files to #include after
 /// loading the module. The module is searched for in all $LD_LIBRARY_PATH
@@ -1734,23 +1760,7 @@ void TCling::RegisterModule(const char* modulename,
       }
    }
 
-
-   if (strcmp(modulename,"libCore")!=0 && strcmp(modulename,"libRint")!=0
-       && strcmp(modulename,"libThread")!=0 && strcmp(modulename,"libRIO")!=0
-       && strcmp(modulename,"libImt")!=0
-       && strcmp(modulename,"libcomplexDict")!=0 && strcmp(modulename,"libdequeDict")!=0
-       && strcmp(modulename,"liblistDict")!=0 && strcmp(modulename,"libforward_listDict")!=0
-       && strcmp(modulename,"libvectorDict")!=0
-       && strcmp(modulename,"libmapDict")!=0 && strcmp(modulename,"libmultimap2Dict")!=0
-       && strcmp(modulename,"libmap2Dict")!=0 && strcmp(modulename,"libmultimapDict")!=0
-       && strcmp(modulename,"libsetDict")!=0 && strcmp(modulename,"libmultisetDict")!=0
-       && strcmp(modulename,"libunordered_setDict")!=0 && strcmp(modulename,"libunordered_multisetDict")!=0
-       && strcmp(modulename,"libunordered_mapDict")!=0 && strcmp(modulename,"libunordered_multimapDict")!=0
-       && strcmp(modulename,"libvalarrayDict")!=0
-       && strcmp(modulename,"G__GenVector32")!=0 && strcmp(modulename,"G__Smatrix32")!=0
-
-       ) {
-      // No pcm for now for libCore or libRint, the info is in the pch.
+   if (gIgnoredPCMNames.find(modulename) == gIgnoredPCMNames.end()) {
       if (!LoadPCM(pcmFileName, headers, triggerFunc)) {
          ::Error("TCling::RegisterModule", "cannot find dictionary module %s",
                  ROOT::TMetaUtils::GetModuleFileName(modulename).c_str());
