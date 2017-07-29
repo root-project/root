@@ -42,6 +42,8 @@ public:
 
    inline Bool_t operator==(const TNullCommunicator &comm) const { return (Bool_t)(fComm == comm.fComm); }
 
+   inline Bool_t operator==(const MPI_Comm comm) const { return (Bool_t)(fComm == comm && comm == MPI_COMM_NULL); }
+
    inline Bool_t operator!=(const TNullCommunicator &comm) const { return (Bool_t) !(*this == comm); }
 
    inline operator MPI_Comm() const { return fComm; }

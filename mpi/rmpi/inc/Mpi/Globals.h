@@ -98,10 +98,10 @@ static const Int_t SEEK_END = rmpi_stdio_seek_end;
  * \param T any ROOTMpi or Raw MPI_Comm communicator object (not pointer)
  * \param _comm any valid communicator pointer
  */
-#define ROOT_MPI_CHECK_COMM(T, _comm)                                                 \
-   if (T == MPI_COMM_NULL) {                                                          \
-      TErrorHandler::TraceBack(_comm, __FUNCTION__, __FILENAME__, __LINE__, ERR_COMM, \
-                               "Communicator is a null object.");                     \
+#define ROOT_MPI_CHECK_COMM(T, _comm)                                                            \
+   if (T == MPI_COMM_NULL) {                                                                     \
+      ROOT::Mpi::TErrorHandler::TraceBack(_comm, __FUNCTION__, __FILENAME__, __LINE__, ERR_COMM, \
+                                          "Communicator is a null object.");                     \
    }
 
 /**

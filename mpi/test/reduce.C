@@ -1,4 +1,4 @@
-#include <cassert>
+#include <TMpi.h>
 using namespace ROOT::Mpi;
 
 // TODO:added test for other operators PROD MIN MAX etc..
@@ -75,14 +75,14 @@ void reduce_test_scalar(Int_t root = 0)
       }
 
       // assertions
-      assert(value == sum);
-      assert(recv_vec == req_vec);
-      assert(recv_mat == req_mat);
-      assert(prod_value == prod);
-      assert(min_value == 0);
-      assert(max_value == (size - 1));
-      assert(c_value.Im() == cplx_r.Im());
-      assert(c_value.Re() == cplx_r.Re());
+      ROOT_MPI_ASSERT(value == sum);
+      ROOT_MPI_ASSERT(recv_vec == req_vec);
+      ROOT_MPI_ASSERT(recv_mat == req_mat);
+      ROOT_MPI_ASSERT(prod_value == prod);
+      ROOT_MPI_ASSERT(min_value == 0);
+      ROOT_MPI_ASSERT(max_value == (size - 1));
+      ROOT_MPI_ASSERT(c_value.Im() == cplx_r.Im());
+      ROOT_MPI_ASSERT(c_value.Re() == cplx_r.Re());
    }
 }
 
@@ -136,9 +136,9 @@ void reduce_test_array(Int_t root = 0, Int_t count = 2)
       std::cout << std::endl;
       for (auto i = 0; i < count; i++) {
          // assertions
-         assert(values[i] == sum);
-         assert(recv_mat[i] == req_mat);
-         assert(recv_vec[i] == req_vec);
+         ROOT_MPI_ASSERT(values[i] == sum);
+         ROOT_MPI_ASSERT(recv_mat[i] == req_mat);
+         ROOT_MPI_ASSERT(recv_vec[i] == req_vec);
       }
    }
 }

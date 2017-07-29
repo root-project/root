@@ -60,6 +60,7 @@ public:
    static TString GetProcessorName();
 
    static Int_t GetThreadLevel();
+
    static Bool_t IsMainThread();
 
    static void SetCompression(Int_t level, Int_t algorithm = 0);
@@ -87,6 +88,8 @@ public:
    static void SetProfiling(Int_t value);
 
    static Int_t IsProfiling();
+
+   static void SetVerbose(Bool_t status = kTRUE);
 
    ClassDef(TEnvironment, 1)
 };

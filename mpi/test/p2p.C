@@ -1,4 +1,4 @@
-#include <cassert>
+#include <TMpi.h>
 using namespace ROOT::Mpi;
 
 void p2p_scalar(Int_t size = 10)
@@ -40,9 +40,9 @@ void p2p_scalar(Int_t size = 10)
       req_mat[1][1] = 0.4;
 
       // assertions
-      assert(a == 123.0);
-      assert(mymap["key"] == "hola");
-      assert(mymat == req_mat);
+      ROOT_MPI_ASSERT(a == 123.0);
+      ROOT_MPI_ASSERT(mymap["key"] == "hola");
+      ROOT_MPI_ASSERT(mymat == req_mat);
    }
 }
 
@@ -63,8 +63,8 @@ void p2p_array(Int_t count = 500)
       COMM_WORLD.Recv(arr, count, 0, 1);
       for (auto i = 0; i < count; i++) {
          //          vecs[i].Print();
-         assert(vecs[i][0] == 1.0);
-         assert(arr[i] == i);
+         ROOT_MPI_ASSERT(vecs[i][0] == 1.0);
+         ROOT_MPI_ASSERT(arr[i] == i);
       }
    }
 }

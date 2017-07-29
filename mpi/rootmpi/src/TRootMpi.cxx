@@ -188,7 +188,7 @@ Int_t TRootMpi::Compile()
 Int_t TRootMpi::Execute()
 {
    auto cmd = fMpirun + " " + fMpirunParams;
-   std::cout << cmd << std::endl;
+   //    std::cout << cmd << std::endl;
    auto status = gSystem->Exec(cmd.Data());
 
    if (fCallValgrind)

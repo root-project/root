@@ -72,11 +72,11 @@ void p2p_nonblocking_scalar()
       req_mat[1][1] = 0.4;
 
       // assertions
-      assert(mymat == req_mat);
-      assert(mymap["key"] == "hola");
-      assert(p.x == 1);
-      assert(p.y == 2);
-      assert(p.z == 3);
+      ROOT_MPI_ASSERT(mymat == req_mat);
+      ROOT_MPI_ASSERT(mymap["key"] == "hola");
+      ROOT_MPI_ASSERT(p.x == 1);
+      ROOT_MPI_ASSERT(p.y == 2);
+      ROOT_MPI_ASSERT(p.z == 3);
    }
 }
 
@@ -149,14 +149,14 @@ void p2p_nonblocking_array(Int_t count = 2)
          //          particle &pp= *(particle*)msgs[i].ReadObjectAny(gROOT->GetClass(typeid(particle)));
 
          // assertions
-         assert(mymat[i][0][0] == req_mat[0][0]);
-         assert(mymat[i][0][1] == req_mat[0][1]);
-         assert(mymat[i][1][0] == req_mat[1][0]);
-         assert(mymat[i][1][1] == req_mat[1][1]);
-         assert(mymap[i]["key"] == "hola");
-         assert(p[i].x == 1);
-         assert(p[i].y == 2);
-         assert(p[i].z == 3);
+         ROOT_MPI_ASSERT(mymat[i][0][0] == req_mat[0][0]);
+         ROOT_MPI_ASSERT(mymat[i][0][1] == req_mat[0][1]);
+         ROOT_MPI_ASSERT(mymat[i][1][0] == req_mat[1][0]);
+         ROOT_MPI_ASSERT(mymat[i][1][1] == req_mat[1][1]);
+         ROOT_MPI_ASSERT(mymap[i]["key"] == "hola");
+         ROOT_MPI_ASSERT(p[i].x == 1);
+         ROOT_MPI_ASSERT(p[i].y == 2);
+         ROOT_MPI_ASSERT(p[i].z == 3);
       }
    }
 }

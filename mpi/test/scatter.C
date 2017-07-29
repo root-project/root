@@ -27,7 +27,7 @@ void scatter_test(Int_t root = 0, Int_t count = 2)
       recv_vec[i].Print();
       std::cout << recv_vec[i][0] << " -- " << (rank * count + i) << std::endl;
       // assertions
-      assert(recv_vec[i][0] == (rank * count + i));
+      ROOT_MPI_ASSERT(recv_vec[i][0] == (rank * count + i));
    }
    std::cout << "--------- Rank = " << rank << std::endl;
    std::cout.flush();

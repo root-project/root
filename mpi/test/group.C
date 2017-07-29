@@ -1,4 +1,4 @@
-#include <cassert>
+#include <TMpi.h>
 using namespace ROOT::Mpi;
 
 void group()
@@ -14,7 +14,7 @@ void group()
    Int_t n = 2;
    const Int_t ranks[2] = {0, 2};
 
-   assert(group.GetSize() == comm.GetSize()); // is the global group
+   ROOT_MPI_ASSERT(group.GetSize() == comm.GetSize()); // is the global group
 
    // pair ranks
    auto pgroup = group.Include(2, ranks);
@@ -22,28 +22,28 @@ void group()
    // non-pair ranks
    auto igroup = group.Exclude(2, ranks);
 
-   assert(pgroup.Compare(igroup) == ROOT::Mpi::UNEQUAL);
+   ROOT_MPI_ASSERT(pgroup.Compare(igroup) == ROOT::Mpi::UNEQUAL);
 
    if (comm.GetRank() % 2 == 0) { // if rank is pair the I can to use the pgroup
-      assert(pgroup.GetSize() == 2);
-      assert(pgroup.GetRank() == 0 || pgroup.GetRank() == 1);
+      ROOT_MPI_ASSERT(pgroup.GetSize() == 2);
+      ROOT_MPI_ASSERT(pgroup.GetRank() == 0 || pgroup.GetRank() == 1);
 
-      assert(igroup.GetSize() == 2);
-      assert(igroup.GetRank() != 0 && igroup.GetRank() != 1);
+      ROOT_MPI_ASSERT(igroup.GetSize() == 2);
+      ROOT_MPI_ASSERT(igroup.GetRank() != 0 && igroup.GetRank() != 1);
 
    } else {
-      assert(pgroup.GetSize() == 2);
-      assert(pgroup.GetRank() != 0 && pgroup.GetRank() != 1);
+      ROOT_MPI_ASSERT(pgroup.GetSize() == 2);
+      ROOT_MPI_ASSERT(pgroup.GetRank() != 0 && pgroup.GetRank() != 1);
 
-      assert(igroup.GetSize() == 2);
-      assert(igroup.GetRank() == 0 || igroup.GetRank() == 1);
+      ROOT_MPI_ASSERT(igroup.GetSize() == 2);
+      ROOT_MPI_ASSERT(igroup.GetRank() == 0 || igroup.GetRank() == 1);
    }
 
    // putting all ranks toguether,
    auto allgroup = TGroup::Union(pgroup, igroup);
-   assert(allgroup.GetSize() == comm.GetSize());
+   ROOT_MPI_ASSERT(allgroup.GetSize() == comm.GetSize());
 
-   assert(allgroup.Compare(group) == ROOT::Mpi::SIMILAR);
+   ROOT_MPI_ASSERT(allgroup.Compare(group) == ROOT::Mpi::SIMILAR);
 
    if (comm.GetRank() % 2 == 0) {       // if rank is pair the I can to use the pgroup
       auto pcomm = comm.Create(pgroup); // Intracomm for pair ranks
@@ -51,7 +51,7 @@ void group()
       auto result = 0;
       pcomm.Reduce(grank, result, SUM, 0);
       if (grank == 0) {
-         assert(result == 1);
+         ROOT_MPI_ASSERT(result == 1);
       }
 
    } else {
@@ -63,9 +63,9 @@ void group()
       //           std::cout<<"grank = "<<icomm.GetRank()<<std::endl;
       //           std::cout<<"rsult = "<<result<<std::endl;
       if (grank == 0)
-         assert(result == 1);
+         ROOT_MPI_ASSERT(result == 1);
    }
 
    TGroup g;
-   assert(g == GROUP_NULL);
+   ROOT_MPI_ASSERT(g == GROUP_NULL);
 }

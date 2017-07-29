@@ -1,5 +1,4 @@
 #include <TMpi.h>
-#include <cassert>
 using namespace ROOT::Mpi;
 
 #define count 10
@@ -34,10 +33,10 @@ void serialization(Bool_t stressTest = kTRUE)
 
    TCommunicator::Unserialize(buffer, size, umat, count, &comm, dest, source, tag, root); //
    for (auto i = 0; i < count; i++) {
-      assert(umat[i][0][0] == smat[i][0][0]);
-      assert(umat[i][0][1] == smat[i][0][1]);
-      assert(umat[i][1][0] == smat[i][1][0]);
-      assert(umat[i][1][1] == smat[i][1][1]);
+      ROOT_MPI_ASSERT(umat[i][0][0] == smat[i][0][0]);
+      ROOT_MPI_ASSERT(umat[i][0][1] == smat[i][0][1]);
+      ROOT_MPI_ASSERT(umat[i][1][0] == smat[i][1][0]);
+      ROOT_MPI_ASSERT(umat[i][1][1] == smat[i][1][1]);
    }
 
    ///
@@ -45,7 +44,7 @@ void serialization(Bool_t stressTest = kTRUE)
    std::map<std::string, std::string> umap[count];                                        // std oebjct
    TCommunicator::Unserialize(buffer, size, umap, count, &comm, dest, source, tag, root); //
    for (auto i = 0; i < count; i++) {
-      assert(umap[i]["key"] == smap[i]["key"]);
+      ROOT_MPI_ASSERT(umap[i]["key"] == smap[i]["key"]);
    }
 
    ///
@@ -56,9 +55,9 @@ void serialization(Bool_t stressTest = kTRUE)
       auto mat = (TMatrixD *)umsgs[i].ReadObjectAny(gROOT->GetClass(typeid(TMatrixD)));
       if (mat == NULL)
          comm.Abort(ERR_BUFFER);
-      assert((*mat)[0][0] == smat[i][0][0]);
-      assert((*mat)[0][1] == smat[i][0][1]);
-      assert((*mat)[1][0] == smat[i][1][0]);
-      assert((*mat)[1][1] == smat[i][1][1]);
+      ROOT_MPI_ASSERT((*mat)[0][0] == smat[i][0][0]);
+      ROOT_MPI_ASSERT((*mat)[0][1] == smat[i][0][1]);
+      ROOT_MPI_ASSERT((*mat)[1][0] == smat[i][1][0]);
+      ROOT_MPI_ASSERT((*mat)[1][1] == smat[i][1][1]);
    }
 }

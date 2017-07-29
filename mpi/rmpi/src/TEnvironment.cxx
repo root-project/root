@@ -445,3 +445,13 @@ Int_t TEnvironment::IsProfiling()
 {
    return fProfiling;
 }
+
+//______________________________________________________________________________
+/**
+ * Method to set error handling messages verbose.
+ * \param status boolean to enable or disable.
+ */
+void TEnvironment::SetVerbose(Bool_t status)
+{
+   TErrorHandler::SetVerbose(status);
+}

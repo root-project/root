@@ -1,4 +1,4 @@
-#include <cassert>
+#include <TMpi.h>
 using namespace ROOT::Mpi;
 
 void port()
@@ -7,15 +7,15 @@ void port()
 
    TPort port;
    port.Print();
-   assert(port.IsOpen() == kTRUE);
+   ROOT_MPI_ASSERT(port.IsOpen() == kTRUE);
    port.Close();
    port.Print();
-   assert(port.IsOpen() == kFALSE);
+   ROOT_MPI_ASSERT(port.IsOpen() == kFALSE);
    port.Open();
-   assert(port.IsOpen() == kTRUE);
+   ROOT_MPI_ASSERT(port.IsOpen() == kTRUE);
    port.Print();
    TPort pp1, pp2;
-   assert(pp1 != pp2);
+   ROOT_MPI_ASSERT(pp1 != pp2);
 
    // TODO: test Connect/Accept/Disconnect and COMM_SELF Publish/UnPublish/LookupName
 }

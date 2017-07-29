@@ -1,6 +1,5 @@
-#include <cassert>
+#include <TMpi.h>
 using namespace ROOT::Mpi;
-#define debug std::cout << __LINE__ << std::endl;
 
 void commspawn(const Char_t *macropath = "./commspawnproc.C")
 {
@@ -15,15 +14,15 @@ void commspawn(const Char_t *macropath = "./commspawnproc.C")
    TInterCommunicator itcomm;            // default must be null
    TIntraCommunicator gcomm(COMM_WORLD); // default
 
-   assert(ncomm == comm);
-   assert(ncomm == COMM_NULL);
-   assert(comm == COMM_NULL);
-   assert(gcomm == COMM_WORLD);
-   assert(itcomm == COMM_NULL);
+   ROOT_MPI_ASSERT(ncomm == comm);
+   ROOT_MPI_ASSERT(ncomm == COMM_NULL);
+   ROOT_MPI_ASSERT(comm == COMM_NULL);
+   ROOT_MPI_ASSERT(gcomm == COMM_WORLD);
+   ROOT_MPI_ASSERT(itcomm == COMM_NULL);
 
    comm = gcomm;
-   assert(comm == COMM_WORLD);
-   assert(comm.IsInter() == kFALSE); // is an intra comm not an inter comm
+   ROOT_MPI_ASSERT(comm == COMM_WORLD);
+   ROOT_MPI_ASSERT(comm.IsInter() == kFALSE); // is an intra comm not an inter comm
 
    TGroup group = comm.GetGroup();
 
@@ -32,11 +31,11 @@ void commspawn(const Char_t *macropath = "./commspawnproc.C")
 
    // pair ranks
    auto pgroup = group.Include(n, ranks);
-   assert(pgroup != GROUP_NULL);
+   ROOT_MPI_ASSERT(pgroup != GROUP_NULL);
 
    // odd ranks
    auto ogroup = group.Exclude(n, ranks);
-   assert(ogroup != GROUP_NULL);
+   ROOT_MPI_ASSERT(ogroup != GROUP_NULL);
 
    auto rank = comm.GetRank();
 
@@ -44,25 +43,25 @@ void commspawn(const Char_t *macropath = "./commspawnproc.C")
    if (rank % 2 == 0) {
       auto pcomm = comm.Create(pgroup); // Internal inter comm that only works in pair ranks
 
-      assert(pcomm != COMM_NULL);
-      assert(pcomm.IsInter() == kFALSE); // is an intra comm not an inter comm
+      ROOT_MPI_ASSERT(pcomm != COMM_NULL);
+      ROOT_MPI_ASSERT(pcomm.IsInter() == kFALSE); // is an intra comm not an inter comm
 
       TInfo info;
       const Char_t *argv[] = {"-l", "-q", macropath, NULL}; // running an extarnal MPI macro
       auto icomm = pcomm.Spawn("root", argv, 2, info, root);
       Int_t value = 0;
       icomm.Recv(value, icomm.GetRank(), 0);
-      assert(value == 2);
+      ROOT_MPI_ASSERT(value == 2);
    } else {
       auto ocomm = comm.Create(ogroup);
-      assert(ocomm != COMM_NULL);
-      assert(ocomm.IsInter() == kFALSE); // is an intra comm not an inter comm
+      ROOT_MPI_ASSERT(ocomm != COMM_NULL);
+      ROOT_MPI_ASSERT(ocomm.IsInter() == kFALSE); // is an intra comm not an inter comm
 
       TInfo info;
       const Char_t *argv[] = {"-l", "-q", macropath, NULL}; // running an extarnal MPI macro
       auto icomm = ocomm.Spawn("root", argv, 2, info, root);
       Int_t value = 0;
       icomm.Recv(value, ocomm.GetRank(), 0);
-      assert(value == 2);
+      ROOT_MPI_ASSERT(value == 2);
    }
 }

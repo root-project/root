@@ -1,4 +1,4 @@
-#include <cassert>
+#include <TMpi.h>
 using namespace ROOT::Mpi;
 
 void gather_test(Int_t root = 0, Int_t count = 2)
@@ -33,7 +33,7 @@ void gather_test(Int_t root = 0, Int_t count = 2)
          for (auto j = 0; j < count; j++) {
             // assertions
             std::cout << "vec[" << i * count + j << "] = " << recv_vec[i * count + j][0] << " -- " << i << std::endl;
-            assert(recv_vec[i * count + j][0] == i);
+            ROOT_MPI_ASSERT(recv_vec[i * count + j][0] == i);
          }
       }
       delete[] recv_vec;

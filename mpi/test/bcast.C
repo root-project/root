@@ -1,5 +1,4 @@
 #include <TMpi.h>
-#include <cassert>
 #include "particle.h"
 using namespace ROOT::Mpi;
 
@@ -44,12 +43,12 @@ void bcast_test_scalar(Int_t root = 0, Int_t size = 2)
    // p.Print();
 
    // assertions
-   assert((*mat)[0][0] == req_mat[0][0]);
-   assert((*mat)[0][1] == req_mat[0][1]);
-   assert((*mat)[1][0] == req_mat[1][0]);
-   assert((*mat)[1][1] == req_mat[1][1]);
-   assert(p.GetX() == 1);
-   assert(p.GetY() == 2);
+   ROOT_MPI_ASSERT((*mat)[0][0] == req_mat[0][0]);
+   ROOT_MPI_ASSERT((*mat)[0][1] == req_mat[0][1]);
+   ROOT_MPI_ASSERT((*mat)[1][0] == req_mat[1][0]);
+   ROOT_MPI_ASSERT((*mat)[1][1] == req_mat[1][1]);
+   ROOT_MPI_ASSERT(p.GetX() == 1);
+   ROOT_MPI_ASSERT(p.GetY() == 2);
 }
 
 void bcast_test_array(Int_t root = 0, Int_t size = 2, Int_t count = 4)
@@ -69,8 +68,8 @@ void bcast_test_array(Int_t root = 0, Int_t size = 2, Int_t count = 4)
    COMM_WORLD.Bcast(arr, count, root);
    for (auto i = 0; i < count; i++) {
       vecs[i].Print();
-      assert(vecs[i][0] == 1.0);
-      assert(arr[i] == i);
+      ROOT_MPI_ASSERT(vecs[i][0] == 1.0);
+      ROOT_MPI_ASSERT(arr[i] == i);
    }
 }
 
