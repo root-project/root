@@ -20,6 +20,7 @@ endif()
 
 ROOT_STANDARD_LIBRARY_PACKAGE(TreePlayer
                               HEADERS ${dictHeaders}
+                              SOURCES ${sources}
                               DICTIONARY_OPTIONS "-writeEmptyRootPCM"
                               LIBRARIES ${TBB_LIBRARIES}
                               DEPENDENCIES Tree Graf3d Graf Hist Gpad RIO MathCore MultiProc Imt)
