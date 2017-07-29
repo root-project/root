@@ -28,6 +28,7 @@ private:
    Bool_t fCallValgrind;    // flag to indicate that valgrind must be called
    const Char_t *fRootSys;  // path to ROOT system, I will be exported with mpirun
    TString fPython;         // Python interpreter path to executo ROOT Mpi in python
+   Bool_t fVerbose;
 
 protected:
    Int_t ProcessArgs();

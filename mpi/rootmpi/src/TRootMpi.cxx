@@ -39,6 +39,12 @@ TRootMpi::TRootMpi(Int_t argc, Char_t **argv)
    fPython = PYTHON_EXECUTABLE;
 #endif
 
+   auto env = gSystem->Getenv("ROOT_MPI_VERBOSE");
+   if (env)
+      fVerbose = atoi(env);
+   else
+      fVerbose = false;
+
    fCompile = kFALSE;
    InitHelp();
 }
@@ -181,6 +187,8 @@ Int_t TRootMpi::ProcessArgs()
 Int_t TRootMpi::Compile()
 {
    auto cmd = fCompiler + " " + fCompilerParams;
+   if (fVerbose)
+      printf("\nCOMPILING %s\n", cmd.Data());
    return gSystem->Exec(cmd.Data());
 }
 
@@ -188,7 +196,8 @@ Int_t TRootMpi::Compile()
 Int_t TRootMpi::Execute()
 {
    auto cmd = fMpirun + " " + fMpirunParams;
-   //    std::cout << cmd << std::endl;
+   if (fVerbose)
+      printf("\nEXECUTING %s\n", cmd.Data());
    auto status = gSystem->Exec(cmd.Data());
 
    if (fCallValgrind)
