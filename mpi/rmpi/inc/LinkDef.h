@@ -18,14 +18,6 @@
 #pragma link C++ nestedtypedef;
 
 /*
- * Some raw MPI datatypes
- */
-#pragma link C++ class MPI_Status+;
-#pragma link C++ class MPI_Request+;
-#pragma link C++ class MPI_Info+;
-
-
-/*
  * ROOTMpi datatypes
  */
 #pragma link C++ class ROOT::Mpi::TMpiMessage+;

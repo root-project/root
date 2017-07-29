@@ -18,8 +18,7 @@ if(python OR python2 OR python3)
 endif()
 
 add_definitions("-DROOT_MPI_EXEC=\"${MPIEXEC}\"" "-DROOT_MPI_CXX=\"${CXX}\"" "-DROOT_MPI_ROOTSYS=\"$ENV{ROOTSYS}\"")
-
-add_definitions( "-DROOT_MPI_CFLAGS=\"${MPI_CXX_COMPILE_FLAGS} ${MPI_C_COMPILE_FLAGS}\""  "-DROOT_MPI_LDFLAGS=\"${MPI_CXX_LINK_FLAGS} ${MPI_C_LINK_FLAGS} ${MPI_C_LIBRARIES}\"")
+add_definitions( "-DROOT_MPI_CFLAGS=\"${MPI_CXX_COMPILE_FLAGS} ${MPI_C_COMPILE_FLAGS}\""  "-DROOT_MPI_LDFLAGS=\"${MPI_CXX_LINK_FLAGS} ${MPI_C_LINK_FLAGS}\"")
 
 SET(ROOTMPI_SOURCES src/main.cxx src/TRootMpi.cxx)
 add_executable(rootmpi ${ROOTMPI_SOURCES})
