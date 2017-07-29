@@ -16,6 +16,7 @@
 
 #include <mpi.h>
 #include <typeinfo>
+#include <type_traits>
 #include <string>
 #include <functional>
 #include <memory>
@@ -43,12 +44,48 @@ static const Int_t SEEK_END = rmpi_stdio_seek_end;
 
 // NOTE: the macros to check the errors can be changed by exceptions if is wanted.
 
-#define ROOT_MPI_ASSERT(EXPRESSION, _comm)                                                  \
-   if (!(EXPRESSION)) {                                                                     \
-      TErrorHandler::TraceBack(_comm, __FUNCTION__, __FILENAME__, __LINE__, MPI_ERR_ASSERT, \
-                               Form("assertion expression was %s", #EXPRESSION));           \
+/**
+ * Macro define to launch MPI assertion with a given communicator
+ * \param EXPRESSION expression that return a bool value
+ * \param _comm any valid communicator
+ */
+
+#define ROOT_MPI_ASSERT2(EXPRESSION, _comm)                                                            \
+   if (!(EXPRESSION)) {                                                                                \
+      ROOT::Mpi::TErrorHandler::TraceBack(_comm, __FUNCTION__, __FILENAME__, __LINE__, MPI_ERR_ASSERT, \
+                                          Form("assertion expression was %s", #EXPRESSION));           \
    }
 
+/**
+ * Macro define to launch MPI assertion using default COMM_WORLD
+ */
+#define ROOT_MPI_ASSERT1(EXPRESSION)                                                                         \
+   if (!(EXPRESSION)) {                                                                                      \
+      ROOT::Mpi::TErrorHandler::TraceBack(&ROOT::Mpi::COMM_WORLD, __FUNCTION__, __FILENAME__, __LINE__,      \
+                                          MPI_ERR_ASSERT, Form("assertion expression was %s", #EXPRESSION)); \
+   }
+
+// utility macros to expand ROOT_MPI_ASSERT with one or two arguments
+#define __ROOT_MPI_ASSERT_ARG2(_0, _1, _2, ...) _2
+#define __ROOT_MPI_ASSERT_NARG2(...) __ROOT_MPI_ASSERT_ARG2(__VA_ARGS__, 2, 1, 0)
+#define __ROOT_MPI_ASSERT_ONE_OR_TWO_ARGS_1(a) ROOT_MPI_ASSERT1(a)
+#define __ROOT_MPI_ASSERT_ONE_OR_TWO_ARGS_2(a, b) ROOT_MPI_ASSERT2(a, b)
+#define __ROOT_MPI_ASSERT__ONE_OR_TWO_ARGS(N, ...) __ROOT_MPI_ASSERT_ONE_OR_TWO_ARGS_##N(__VA_ARGS__)
+#define __ROOT_MPI_ASSERT_ONE_OR_TWO_ARGS(N, ...) __ROOT_MPI_ASSERT__ONE_OR_TWO_ARGS(N, __VA_ARGS__)
+
+/**
+ * Macro define to launch MPI assertion  with one or two arguments.
+ * The firts arguments is the expression for evaluate in assertion,
+ * the second is a optional communicator.
+ * If the second is not given it will to take the default COMM_WORLD
+ */
+#define ROOT_MPI_ASSERT(...) __ROOT_MPI_ASSERT_ONE_OR_TWO_ARGS(__ROOT_MPI_ASSERT_NARG2(__VA_ARGS__), __VA_ARGS__)
+
+/**
+ * Macro define to check is the MPI raw datatype is NULL
+ * \param T MPI_Datatype object
+ * \param _comm any valid communicator pointer
+ */
 #define ROOT_MPI_CHECK_DATATYPE(T, _comm)                                                              \
    if (GetDataType<T>() == DATATYPE_NULL) {                                                            \
       TErrorHandler::TraceBack(                                                                        \
@@ -56,19 +93,34 @@ static const Int_t SEEK_END = rmpi_stdio_seek_end;
          Form("Unknown datatype, returned null datatype   GetDataType<%s>()", ROOT_MPI_TYPE_NAME(T))); \
    }
 
+/**
+ * Macro define to check is the MPI communicator is NULL
+ * \param T any ROOTMpi or Raw MPI_Comm communicator object (not pointer)
+ * \param _comm any valid communicator pointer
+ */
 #define ROOT_MPI_CHECK_COMM(T, _comm)                                                 \
    if (T == MPI_COMM_NULL) {                                                          \
       TErrorHandler::TraceBack(_comm, __FUNCTION__, __FILENAME__, __LINE__, ERR_COMM, \
                                "Communicator is a null object.");                     \
    }
 
+/**
+ * Macro define to check is the MPI group is NULL
+ * \param T any ROOTMpi or Raw MPI_Group object (not pointer)
+ * \param _comm any valid communicator pointer
+ */
 #define ROOT_MPI_CHECK_GROUP(T, _comm)                                                                                \
    if (T == MPI_GROUP_NULL) {                                                                                         \
       TErrorHandler::TraceBack(_comm, __FUNCTION__, __FILENAME__, __LINE__, MPI_ERR_GROUP, "Group is a null group."); \
    }
 
+/**
+ * Macro define to check is the tag used like id in the communications is valid.
+ * \param T integer with tag id
+ * \param _comm any valid communicator pointer
+ */
 #define ROOT_MPI_CHECK_TAG(T, _comm)                                                            \
-   if (T == GetInternalTag()) {                                                                 \
+   if (T >= GetInternalTag()) {                                                                 \
       TErrorHandler::TraceBack(_comm, __FUNCTION__, __FILENAME__, __LINE__, MPI_ERR_TAG,        \
                                Form("The TAG value can not be greater that %d.", GetMaxTag())); \
    }
@@ -80,9 +132,20 @@ static const Int_t SEEK_END = rmpi_stdio_seek_end;
 // starts with P ex: PMPI_Send and normally is MPI_Send.
 // For ROOT Mpi the design allows to start profiling interface
 // enabling an option in the class TEnvironment with the function MPI_Pcontrol
+// you dont need to rewrite code or call different namespace.
 
 #define ROOT_MPI_FUNCNAME(MPI_FUNCTION) #MPI_FUNCTION
 
+/**
+ * Macro define to check every function that is called from raw MPI in C.
+ * if something is wrong with the return in the MPI function, the ROOT Mpi
+ * error handler is called to display an informative trace back.
+ * if the profiling is enabled in the environment then the MPI function is called with the
+ * prefix PMPI_* according to the MPI standard for profiling.
+ * \param MPI_FUNCTION Any MPI raw function
+ * \param ARGS arguments for the function.
+ * \param _comm any valid communicator pointer
+ */
 #define ROOT_MPI_CHECK_CALL(MPI_FUNCTION, ARGS, _comm)                                                     \
    {                                                                                                       \
       Int_t _errcode = 0;                                                                                  \
