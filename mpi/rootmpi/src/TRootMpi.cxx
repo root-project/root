@@ -30,7 +30,6 @@ TRootMpi::TRootMpi(Int_t argc, Char_t **argv)
 #endif
    fCallValgrind = kFALSE;
    fValgrindParams = Form("--suppressions=%s/etc/valgrind-root.supp", fRootSys);
-   fValgrindParams += " -v --leak-check=full --show-leak-kinds=all --track-origins=yes --show-reachable=yes  ";
 
    fArgc = argc;
    fArgv = argv;
@@ -39,7 +38,27 @@ TRootMpi::TRootMpi(Int_t argc, Char_t **argv)
    fPython = PYTHON_EXECUTABLE;
 #endif
 
-   auto env = gSystem->Getenv("ROOT_MPI_VERBOSE");
+   auto env = gSystem->Getenv("ROOT_MPI_VALGRIND_OPTIONS");
+   if (env)
+      fValgrindParams += Form(" %s ", env);
+   else
+      fValgrindParams += " -v --leak-check=full --show-leak-kinds=all --track-origins=yes --show-reachable=yes  ";
+
+   env = gSystem->Getenv("ROOT_MPI_VALGRIND_TOOL");
+
+   if (env) {
+      // memcheck, cachegrind, callgrind, helgrind, drd, massif, lackey, none, exp-sgcheck, exp-bbv, exp-dhat
+      fValgrindTool = env;
+   } else // using by default memcheck
+   {
+      fValgrindTool = "memcheck";
+   }
+
+   env = gSystem->Getenv("ROOT_MPI_PYTHON");
+   if (env)
+      fPython = env;
+
+   env = gSystem->Getenv("ROOT_MPI_VERBOSE");
    if (env)
       fVerbose = atoi(env);
    else
@@ -133,9 +152,9 @@ Int_t TRootMpi::ProcessArgs()
 #endif
       }
       if (fCallValgrind) {
-         fMpirunParams +=
-            " " + fValgrind + " " + fValgrindParams +
-            Form(" --log-file=report-%s-%s.memcheck ", TString(fArgv[fArgc - 1]).ReplaceAll("./", "").Data(), "%p");
+         fMpirunParams += Form(" %s --tool=%s ", fValgrind.Data(), fValgrindTool.Data());
+         fMpirunParams += Form(" --log-file=report-%s-%s.%s ", TString(fArgv[fArgc - 1]).ReplaceAll("./", "").Data(),
+                               "%p", fValgrindTool.Data());
       }
       fMpirunParams += fArgv[fArgc - 1];
       fCompile = kFALSE;
@@ -161,9 +180,9 @@ Int_t TRootMpi::ProcessArgs()
       }
 
       if (fCallValgrind) {
-         fMpirunParams +=
-            " " + fValgrind + " " + fValgrindParams +
-            Form(" --log-file=report-%s-%s.memcheck ", TString(fArgv[fArgc - 1]).ReplaceAll("./", "").Data(), "%p");
+         fMpirunParams += Form(" %s --tool=%s ", fValgrind.Data(), fValgrindTool.Data());
+         fMpirunParams += Form(" --log-file=report-%s-%s.%s ", TString(fArgv[fArgc - 1]).ReplaceAll("./", "").Data(),
+                               "%p", fValgrindTool.Data());
       }
 
       fMpirunParams += " ";
@@ -202,7 +221,8 @@ Int_t TRootMpi::Execute()
 
    if (fCallValgrind)
       std::cout << "\nValgrind files "
-                << Form(" report-%s-pid.memcheck ", TString(fArgv[fArgc - 1]).ReplaceAll("./", "").Data())
+                << Form("report-%s-%s.%s ", TString(fArgv[fArgc - 1]).ReplaceAll("./", "").Data(), "%p",
+                        fValgrindTool.Data())
                 << "must be generated." << std::endl;
    return status;
 }
@@ -225,4 +245,9 @@ void TRootMpi::InitHelp()
    fHelpMsg += " -x : exit on exception\n";
    fHelpMsg += " dir : if dir is a valid directory cd to it before executing\n";
    fHelpMsg += "-memstat : run with memory usage monitoring\n";
+   fHelpMsg += "Environment variables:\n";
+   fHelpMsg += "ROOT_MPI_VERBOSE: boolean to enable/disable verbose execution.\n";
+   fHelpMsg += "ROOT_MPI_VALGRIND_TOOL: string with valgrind tool, memcheck, cachegrind, callgrind, helgrind, drd, "
+               "massif etc..\n";
+   fHelpMsg += "ROOT_MPI_VALGRIND_OPTIONS: string with valgrind options for a given tool\n";
 }

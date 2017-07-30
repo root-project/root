@@ -40,6 +40,7 @@ private:
    TMpiSignalHandler *fInterruptSignal;
    TMpiSignalHandler *fTerminationSignal;
    TMpiSignalHandler *fSigSegmentationViolationSignal;
+
 protected:
    void InitSignalHandlers();
 

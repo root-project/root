@@ -24,6 +24,8 @@ private:
    Bool_t fCompile;         // is compiling?
    TString fValgrind;       // path to valgrind command
    TString fValgrindParams; // Valgrind params
+   TString fValgrindTool;   // Valgrind params
+   TString fRootParams;     // ROOT params
    TString fHelpMsg;        // help message
    Bool_t fCallValgrind;    // flag to indicate that valgrind must be called
    const Char_t *fRootSys;  // path to ROOT system, I will be exported with mpirun
