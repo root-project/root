@@ -68,6 +68,12 @@ public:
   virtual Double_t offset() const { return _offset ; }
   virtual Double_t offsetCarry() const { return _offsetCarry; }
 
+  virtual RooAbsReal& function() { return *_func ; }
+  virtual const RooAbsReal& function() const { return *_func ; }
+
+  virtual RooAbsData& data() { return *_data ; }
+  virtual const RooAbsData& data() const { return *_data ; }
+
 protected:
 
   virtual void printCompactTreeHook(std::ostream& os, const char* indent="") ;

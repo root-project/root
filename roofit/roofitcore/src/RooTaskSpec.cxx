@@ -37,17 +37,12 @@ ToDo: Simple use demonstration.
 **/
 
 
-#include "Riostream.h"
-#include "RooFit.h"
-#include <cstdlib>
-#include <sstream>
-#include "RooMsgService.h"
-#include "RooNLLVar.h"
-#include "RooAbsTestStatistic.h"
-#include "RooAbsOptTestStatistic.h"
-#include "RooAddition.h"
-#include "RooAbsTestStatistic.h"
 #include "RooTaskSpec.h"
+// #include "Riostream.h"
+// #include "RooFit.h"
+// #include <sstream>
+#include "RooAbsTestStatistic.h"
+#include "RooAddition.h"
 #include "RooAbsData.h"
 
 using namespace std;
@@ -56,17 +51,11 @@ using namespace RooFit;
 //ClassImp(RooTaskSpec);
 RooTaskSpec::RooTaskSpec(){};
 
-RooTaskSpec::RooTaskSpec(RooAbsOptTestStatistic* nll){
-  cout <<"starting case1"<<endl;
-  RooAbsOptTestStatistic* rats = dynamic_cast<RooAbsOptTestStatistic*>(nll) ;
-  if (rats) {
-    cout << " NLL is a RooAbsOptTestStatistic (Case 1)" << endl ;
-    rats->Print();
-    _fit_case = 1;
-    _initialise(rats);
-  } else {
-    _fit_case = 0;
-  }
+RooTaskSpec::RooTaskSpec(RooAbsTestStatistic* rats_nll){
+  cout << " NLL is a RooAbsTestStatistic (Case 1)" << endl ;
+  rats_nll->Print();
+  _fit_case = 1;
+  _initialise(rats_nll);
 }
 
 RooTaskSpec::RooTaskSpec(RooAbsReal* nll){
@@ -79,12 +68,12 @@ RooTaskSpec::RooTaskSpec(RooAbsReal* nll){
 
     RooAbsOptTestStatistic* rats = dynamic_cast<RooAbsOptTestStatistic*>(ra->list().at(0)) ;
     if (!rats) {
-      cout << "ERROR: NLL is a RooAddition, but first element of addition is not a RooAbsOptTestStatistic!" << endl ;
+      cout << "ERROR: NLL is a RooAddition, but first element of addition is not a RooAbsTestStatistic!" << endl ;
       _fit_case = 0;
       cout << "It is a "<<ra->list().at(0)<<endl;
     } else {
       _fit_case = 1;
-      cout << "NLL is a RooAddition (Case 2), first element is a RooAbsOptTestStatistic" << endl ;
+      cout << "NLL is a RooAddition (Case 2), first element is a RooAbsTestStatistic" << endl ;
       _initialise(rats);
     }
   }
@@ -95,7 +84,7 @@ RooTaskSpec::RooTaskSpec(RooAbsReal* nll){
 }
 
 
-void RooTaskSpec::_initialise (RooAbsOptTestStatistic* rats){
+void RooTaskSpec::_initialise (RooAbsTestStatistic* rats){
   // Check if nll is a AbsTestStatistic
   if (rats->numSimultaneous()==0){
     //    _set.add(_fill_task(0, rats));
@@ -104,13 +93,13 @@ void RooTaskSpec::_initialise (RooAbsOptTestStatistic* rats){
     for (Int_t i=0 ; i < rats->numSimultaneous() ; i++) {
       cout << "SimComponent #" << i << " = " ; 
       rats->simComponents()[i]->Print() ;
-      RooAbsOptTestStatistic* comp = (RooAbsOptTestStatistic*) rats->simComponents()[i] ;
+      RooAbsTestStatistic* comp = (RooAbsTestStatistic*) rats->simComponents()[i] ;
       tasks.push_back(_fill_task(i, comp));
     }
   }
 }
 
-RooTaskSpec::Task RooTaskSpec::_fill_task(Int_t n, RooAbsOptTestStatistic* rats){
+RooTaskSpec::Task RooTaskSpec::_fill_task(Int_t n, RooAbsTestStatistic* rats){
   Bool_t b = rats->function().getAttribute("BinnedLikelihood") ;
   Task t;
   t.id = n;
