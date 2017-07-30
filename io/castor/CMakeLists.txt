@@ -10,7 +10,7 @@ endif()
 
 ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-shadow)
 
-ROOT_STANDARD_LIBRARY_PACKAGE(RCASTOR
+ROOT_STANDARD_LIBRARY_PACKAGE(RCastor
                               LIBRARIES ${CASTOR_LIBRARIES} ${CASTOR_rfio_LIBRARY}
                                         ${CASTOR_ns_LIBRARY} ${CASTOR_common_LIBRARY}
                                         ${CASTOR_client_LIBRARY}
