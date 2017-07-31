@@ -1,7 +1,7 @@
 // @(#)root/pyroot:$Id$
 // Author: Jim Pivarski, Jul 2017
 
-// Python/Numpy must be first
+// Python/Numpy includes must be first
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <Python.h>
 #include <numpy/arrayobject.h>
@@ -33,6 +33,14 @@
 #include <string>
 #include <vector>
 
+#ifndef NPY_ARRAY_C_CONTIGUOUS
+#define NPY_ARRAY_C_CONTIGUOUS NPY_C_CONTIGUOUS
+#endif // NPY_ARRAY_C_CONTIGUOUS
+
+#ifndef NPY_ARRAY_ALIGNED
+#define NPY_ARRAY_ALIGNED NPY_ALIGNED
+#endif // NPY_ARRAY_ALIGNED
+
 #define IS_ALIGNED(ptr) ((size_t)ptr % 8 == 0)     // FIXME: is there a better way to check for alignment?
 
 /////////////////////////////////////////////////////// helper classes
@@ -47,133 +55,129 @@ public:
 
 class ClusterBuffer {
 private:
-  const TBranch* branch;
-  const Long64_t itemsize;
-  const bool swap_bytes;
-  TBufferFile bf;
-  std::vector<char> extra;
-  void* oldextra;
-  bool usingextra;
+  const TBranch* fBranch;
+  const Long64_t fItemSize;
+  const bool fSwapBytes;
+  TBufferFile fBufferFile;
+  std::vector<char> fExtra;
+  void* fOldExtra;
+  bool fUsingExtra;
 
   // always numbers of entries (not bytes) and always inclusive on start, exclusive on end (like Python)
   // also, the TBufferFile is always ahead of the extra buffer and there's no gap between them
-  Long64_t bf_entry_start;
-  Long64_t bf_entry_end;
-  Long64_t ex_entry_start;
-  Long64_t ex_entry_end;
+  Long64_t bfEntryStart;
+  Long64_t bfEntryEnd;
+  Long64_t exEntryStart;
+  Long64_t exEntryEnd;
 
-  void copy_to_extra(Long64_t keep_start);
+  void CopyToExtra(Long64_t keep_start);
 
-  inline void check_extra_allocations() {
-    if (oldextra != reinterpret_cast<void*>(extra.data())) {
-      oldextra = reinterpret_cast<void*>(extra.data());
+  inline void CheckExtraAllocations() {
+    if (fOldExtra != reinterpret_cast<void*>(fExtra.data())) {
+      fOldExtra = reinterpret_cast<void*>(fExtra.data());
     }
   }
 
 public:
   ClusterBuffer(const TBranch* branch, const Long64_t itemsize, const bool swap_bytes) :
-    branch(branch), itemsize(itemsize), swap_bytes(swap_bytes), bf(TBuffer::kWrite, 32*1024), oldextra(nullptr), usingextra(false),
-    bf_entry_start(0), bf_entry_end(0), ex_entry_start(0), ex_entry_end(0)
+    fBranch(branch), fItemSize(itemsize), fSwapBytes(swap_bytes), fBufferFile(TBuffer::kWrite, 32*1024), fOldExtra(nullptr), fUsingExtra(false),
+    bfEntryStart(0), bfEntryEnd(0), exEntryStart(0), exEntryEnd(0)
   {
-    check_extra_allocations();
+    CheckExtraAllocations();
   }
 
-  void readone(Long64_t keep_start, const char* &error_string);
-  void* getbuffer(Long64_t &numbytes, Long64_t entry_start, Long64_t entry_end);
+  void ReadOne(Long64_t keep_start, const char* &error_string);
+  void* GetBuffer(Long64_t &numbytes, Long64_t entry_start, Long64_t entry_end);
 
-  Long64_t entry_end() {
-    return bf_entry_end;  // hide the distinction between bf and extra
+  Long64_t EntryEnd() {
+    return bfEntryEnd;  // hide the distinction between bf and extra
   }
 
-  void reset() {
-    extra.clear();
-    bf_entry_start = 0;
-    bf_entry_end = 0;
-    ex_entry_start = 0;
-    ex_entry_end = 0;
+  void Reset() {
+    fExtra.clear();
+    bfEntryStart = 0;
+    bfEntryEnd = 0;
+    exEntryStart = 0;
+    exEntryEnd = 0;
   }
 };
 
 class NumpyIterator {
 private:
-  std::vector<std::unique_ptr<ClusterBuffer>> requested;
-  std::vector<std::unique_ptr<ClusterBuffer>> extra_counters;
-  const std::vector<ArrayInfo> arrayinfo;   // has the same length as requested
-  const Long64_t num_entries;
-  const bool return_new_buffers;
-  Long64_t current_start;
-  Long64_t current_end;
+  std::vector<std::unique_ptr<ClusterBuffer>> fRequested;
+  const std::vector<ArrayInfo> fArrayInfo;   // has the same length as fRequested
+  const Long64_t fNumEntries;
+  const bool fReturnNewBuffers;
+  Long64_t fCurrentStart;
+  Long64_t fCurrentEnd;
 
-  bool stepforward(const char* &error_string);
+  bool StepForward(const char* &error_string);
 
 public:
-  NumpyIterator(const std::vector<TBranch*> &requested_branches, const std::vector<TBranch*> &unrequested_counters, const std::vector<ArrayInfo> arrayinfo, Long64_t num_entries, bool return_new_buffers, bool swap_bytes) :
-    arrayinfo(arrayinfo), num_entries(num_entries), return_new_buffers(return_new_buffers), current_start(0), current_end(0) {
-    for (unsigned int i = 0;  i < arrayinfo.size();  i++)
-      requested.push_back(std::unique_ptr<ClusterBuffer>(new ClusterBuffer(requested_branches[i], arrayinfo[i].dtype->elsize, swap_bytes)));
+  NumpyIterator(const std::vector<TBranch*> &requested_branches, const std::vector<ArrayInfo> arrayinfo, Long64_t num_entries, bool return_new_buffers, bool swap_bytes) :
+    fArrayInfo(arrayinfo), fNumEntries(num_entries), fReturnNewBuffers(return_new_buffers), fCurrentStart(0), fCurrentEnd(0) {
+    for (unsigned int i = 0;  i < fArrayInfo.size();  i++)
+      fRequested.push_back(std::unique_ptr<ClusterBuffer>(new ClusterBuffer(requested_branches[i], fArrayInfo[i].dtype->elsize, swap_bytes)));
   }
 
   PyObject* arrays();
 
-  void reset() {
-    current_start = 0;
-    current_end = 0;
-    for (unsigned int i = 0;  i < requested.size();  i++) {
-      requested[i]->reset();
-    }
-    for (unsigned int i = 0;  i < extra_counters.size();  i++) {
-      extra_counters[i]->reset();
+  void Reset() {
+    fCurrentStart = 0;
+    fCurrentEnd = 0;
+    for (unsigned int i = 0;  i < fRequested.size();  i++) {
+      fRequested[i]->Reset();
     }
   }
 };    
 
-void ClusterBuffer::copy_to_extra(Long64_t keep_start) {
+void ClusterBuffer::CopyToExtra(Long64_t keep_start) {
   // this is a safer algorithm than is necessary, and it could impact performance, but significantly less so than the other speed-ups
 
   // remove data from the start of the extra buffer to keep it from growing too much
-  if (ex_entry_start < keep_start) {
-    const Long64_t offset = (keep_start - ex_entry_start) * itemsize;
-    const Long64_t newsize = (ex_entry_end - keep_start) * itemsize;
+  if (exEntryStart < keep_start) {
+    const Long64_t offset = (keep_start - exEntryStart) * fItemSize;
+    const Long64_t newsize = (exEntryEnd - keep_start) * fItemSize;
 
-    memmove(extra.data(), &extra.data()[offset], newsize);
+    memmove(fExtra.data(), &fExtra.data()[offset], newsize);
 
-    extra.resize(newsize);
-    check_extra_allocations();
+    fExtra.resize(newsize);
+    CheckExtraAllocations();
 
-    ex_entry_start = keep_start;
+    exEntryStart = keep_start;
   }
 
   // append the BufferFile at the end of the extra buffer
-  const Long64_t oldsize = extra.size();
-  const Long64_t additional = (bf_entry_end - bf_entry_start) * itemsize;
+  const Long64_t oldsize = fExtra.size();
+  const Long64_t additional = (bfEntryEnd - bfEntryStart) * fItemSize;
 
   if (additional > 0) {
-    extra.resize(oldsize + additional);
-    check_extra_allocations();
+    fExtra.resize(oldsize + additional);
+    CheckExtraAllocations();
 
-    memcpy(&extra.data()[oldsize], bf.GetCurrent(), additional);
+    memcpy(&fExtra.data()[oldsize], fBufferFile.GetCurrent(), additional);
 
-    ex_entry_end = bf_entry_end;
+    exEntryEnd = bfEntryEnd;
   }
 }
 
-// readone asks ROOT to read one basket from the file
+// ReadOne asks ROOT to read one basket from the file
 // and ClusterBuffer ensures that entries as old as keep_start are preserved
-void ClusterBuffer::readone(Long64_t keep_start, const char* &error_string) {
-  if (!usingextra  &&  bf_entry_end > keep_start) {
+void ClusterBuffer::ReadOne(Long64_t keep_start, const char* &error_string) {
+  if (!fUsingExtra  &&  bfEntryEnd > keep_start) {
     // need to overwrite the TBufferFile before we're done with it, so we need to start using extra now
-    copy_to_extra(0);
-    usingextra = true;
+    CopyToExtra(0);
+    fUsingExtra = true;
   }
 
-  // read in one more basket, starting at the old bf_entry_end
-  Long64_t numentries = branch->GetBulkRead().GetEntriesSerialized(bf_entry_end, bf);
+  // read in one more basket, starting at the old bfEntryEnd
+  Long64_t numentries = fBranch->GetBulkRead().GetEntriesSerialized(bfEntryEnd, fBufferFile);
 
-  if (swap_bytes) {
-    switch (itemsize) {
+  if (fSwapBytes) {
+    switch (fItemSize) {
       case 8:
         {
-          Long64_t* buffer64 = reinterpret_cast<Long64_t*>(bf.GetCurrent());
+          Long64_t* buffer64 = reinterpret_cast<Long64_t*>(fBufferFile.GetCurrent());
           for (Long64_t i = 0;  i < numentries;  i++)
             buffer64[i] = __builtin_bswap64(buffer64[i]);
           break;
@@ -181,7 +185,7 @@ void ClusterBuffer::readone(Long64_t keep_start, const char* &error_string) {
 
       case 4:
         {
-          Int_t* buffer32 = reinterpret_cast<Int_t*>(bf.GetCurrent());
+          Int_t* buffer32 = reinterpret_cast<Int_t*>(fBufferFile.GetCurrent());
           for (Long64_t i = 0;  i < numentries;  i++)
             buffer32[i] = __builtin_bswap32(buffer32[i]);
           break;
@@ -189,80 +193,80 @@ void ClusterBuffer::readone(Long64_t keep_start, const char* &error_string) {
 
       case 2:
         {
-          Short_t* buffer16 = reinterpret_cast<Short_t*>(bf.GetCurrent());
+          Short_t* buffer16 = reinterpret_cast<Short_t*>(fBufferFile.GetCurrent());
           for (Long64_t i = 0;  i < numentries;  i++)
             buffer16[i] = __builtin_bswap16(buffer16[i]);
           break;
         }
 
       default:
-        error_string = "illegal itemsize";
+        error_string = "illegal fItemSize";
         return;
     }
   }
 
   // update the range
-  bf_entry_start = bf_entry_end;
-  bf_entry_end = bf_entry_start + numentries;
+  bfEntryStart = bfEntryEnd;
+  bfEntryEnd = bfEntryStart + numentries;
 
   // check for errors
   if (numentries <= 0) {
-    bf_entry_end = bf_entry_start;
+    bfEntryEnd = bfEntryStart;
     error_string = "failed to read TBasket into TBufferFile (using GetBulkRead().GetEntriesSerialized)";
   }
 
   // for now, always mirror to the extra buffer
-  if (usingextra)
-    copy_to_extra(keep_start);
+  if (fUsingExtra)
+    CopyToExtra(keep_start);
 }
 
-// getbuffer returns a pointer to contiguous data with its size
+// GetBuffer returns a pointer to contiguous data with its size
 // if you're lucky (and ask for it), this is performed without any copies
-void* ClusterBuffer::getbuffer(Long64_t &numbytes, Long64_t entry_start, Long64_t entry_end) {
-  numbytes = (entry_end - entry_start) * itemsize;
+void* ClusterBuffer::GetBuffer(Long64_t &numbytes, Long64_t entry_start, Long64_t EntryEnd) {
+  numbytes = (EntryEnd - entry_start) * fItemSize;
 
-  if (usingextra) {
-    const Long64_t offset = (entry_start - ex_entry_start) * itemsize;
-    return &extra.data()[offset];
+  if (fUsingExtra) {
+    const Long64_t offset = (entry_start - exEntryStart) * fItemSize;
+    return &fExtra.data()[offset];
   }
   else {
-    const Long64_t offset = (entry_start - bf_entry_start) * itemsize;
-    return &bf.GetCurrent()[offset];
+    const Long64_t offset = (entry_start - bfEntryStart) * fItemSize;
+    return &fBufferFile.GetCurrent()[offset];
   }
 }
 
 // step all ClusterBuffers forward, for all branches, returning true when done and setting error_string on any errors
-bool NumpyIterator::stepforward(const char* &error_string) {
+bool NumpyIterator::StepForward(const char* &error_string) {
   // put your feet together for the next step
-  current_start = current_end;
+  fCurrentStart = fCurrentEnd;
 
   // check for done
-  if (current_end >= num_entries)
+  if (fCurrentEnd >= fNumEntries)
     return true;
 
   // increment the branches that are at the forefront
-  for (unsigned int i = 0;  i < requested.size();  i++) {
-    ClusterBuffer &buf = *requested[i];
-    if (buf.entry_end() == current_start) {
-      buf.readone(current_start, error_string);
+  for (unsigned int i = 0;  i < fRequested.size();  i++) {
+    ClusterBuffer &buf = *fRequested[i];
+    if (buf.EntryEnd() == fCurrentStart) {
+      buf.ReadOne(fCurrentStart, error_string);
       if (error_string != nullptr)
         return true;
     }
   }
 
-  // find the maximum entry_end
-  current_end = -1;
-  for (unsigned int i = 0;  i < requested.size();  i++) {
-    ClusterBuffer &buf = *requested[i];
-    if (buf.entry_end() > current_end)
-      current_end = buf.entry_end();
+  // find the maximum EntryEnd
+  fCurrentEnd = -1;
+  for (unsigned int i = 0;  i < fRequested.size();  i++) {
+    ClusterBuffer &buf = *fRequested[i];
+    if (buf.EntryEnd() > fCurrentEnd)
+      fCurrentEnd = buf.EntryEnd();
   }
 
-  // bring all others up to at least current_end
-  for (unsigned int i = 0;  i < requested.size();  i++) {
-    ClusterBuffer &buf = *requested[i];
-    while (buf.entry_end() < current_end) {
-      buf.readone(current_start, error_string);
+  // bring all others up to at least fCurrentEnd
+  for (unsigned int i = 0;  i < fRequested.size();  i++) {
+    ClusterBuffer &buf = *fRequested[i];
+    while (buf.EntryEnd() < fCurrentEnd) {
+      buf.ReadOne(fCurrentStart, error_string);
       if (error_string != nullptr)
         return true;
     }
@@ -275,7 +279,7 @@ bool NumpyIterator::stepforward(const char* &error_string) {
 PyObject* NumpyIterator::arrays() {
   // step forward, handling errors
   const char* error_string = nullptr;
-  if (stepforward(error_string)) {
+  if (StepForward(error_string)) {
     if (error_string != nullptr) {
       PyErr_SetString(PyExc_IOError, error_string);
       return NULL;
@@ -287,16 +291,16 @@ PyObject* NumpyIterator::arrays() {
   }
 
   // create a tuple of results
-  PyObject* out = PyTuple_New(2 + requested.size());
-  PyTuple_SET_ITEM(out, 0, PyLong_FromLong(current_start));
-  PyTuple_SET_ITEM(out, 1, PyLong_FromLong(current_end));
+  PyObject* out = PyTuple_New(2 + fRequested.size());
+  PyTuple_SET_ITEM(out, 0, PyLong_FromLong(fCurrentStart));
+  PyTuple_SET_ITEM(out, 1, PyLong_FromLong(fCurrentEnd));
 
-  for (unsigned int i = 0;  i < requested.size();  i++) {
-    ClusterBuffer &buf = *requested[i];
-    const ArrayInfo &ai = arrayinfo[i];
+  for (unsigned int i = 0;  i < fRequested.size();  i++) {
+    ClusterBuffer &buf = *fRequested[i];
+    const ArrayInfo &ai = fArrayInfo[i];
 
     Long64_t numbytes;
-    void* ptr = buf.getbuffer(numbytes, current_start, current_end);
+    void* ptr = buf.GetBuffer(numbytes, fCurrentStart, fCurrentEnd);
 
     npy_intp dims[ai.nd];
     dims[0] = numbytes / ai.dtype->elsize;
@@ -307,7 +311,7 @@ PyObject* NumpyIterator::arrays() {
     Py_INCREF(ai.dtype);
 
     PyObject* array;
-    if (return_new_buffers) {
+    if (fReturnNewBuffers) {
       array = PyArray_Empty(ai.nd, dims, ai.dtype, false);
       memcpy(PyArray_DATA(reinterpret_cast<PyArrayObject*>(array)), ptr, numbytes);
     }
@@ -552,14 +556,26 @@ static PyTypeObject PyNumpyIteratorType = {
   0,                         /* tp_richcompare */
   0,                         /* tp_weaklistoffset */
   PyNumpyIterator_iter, /* tp_iter: __iter__() method */
-  PyNumpyIterator_next  /* tp_iternext: __next__() method */
+  PyNumpyIterator_next, /* tp_iternext: __next__() method */
+
+      0,                         // tp_methods
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+#if PY_VERSION_HEX >= 0x02030000
+      , 0                        // tp_del
+#endif
+#if PY_VERSION_HEX >= 0x02060000
+      , 0                        // tp_version_tag
+#endif
+#if PY_VERSION_HEX >= 0x03040000
+      , 0                        // tp_finalize
+#endif
 };
 
 /////////////////////////////////////////////////////// Python functions
 
 static PyObject* PyNumpyIterator_iter(PyObject* self) {
   PyNumpyIterator* thyself = reinterpret_cast<PyNumpyIterator*>(self);
-  thyself->iter->reset();
+  thyself->iter->Reset();
   Py_INCREF(self);
   return self;
 }
@@ -652,7 +668,6 @@ static PyObject* iterate(PyObject* self, PyObject* args, PyObject* kwds) {
     }
   }
 
-  std::vector<TBranch*> unrequested_counters;
   std::vector<ArrayInfo> arrayinfo;
 
   for (unsigned int i = 0;  i < requested_branches.size();  i++) {
@@ -669,7 +684,7 @@ static PyObject* iterate(PyObject* self, PyObject* args, PyObject* kwds) {
   }
 
   Long64_t num_entries = requested_branches.back()->GetTree()->GetEntries();
-  out->iter = new NumpyIterator(requested_branches, unrequested_counters, arrayinfo, num_entries, return_new_buffers, swap_bytes);
+  out->iter = new NumpyIterator(requested_branches, arrayinfo, num_entries, return_new_buffers, swap_bytes);
 
   return reinterpret_cast<PyObject*>(out);
 }
