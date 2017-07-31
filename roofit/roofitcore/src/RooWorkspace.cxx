@@ -1822,23 +1822,23 @@ Bool_t RooWorkspace::CodeRepo::autoImportClass(TClass* tc, Bool_t doReplace)
 	// Process #include statements here
    char tmp[64000];
    strlcpy(tmp, buf, 64000);
-   Bool_t stdinclude = strchr(buf,'<') ;
-	strtok(tmp," <\"") ;
-	char* incfile = strtok(0," <>\"") ;	
-	
-	if (!stdinclude) {
-	  // check if it lives in $ROOTSYS/include
-	  TString hpath = gSystem->Getenv("ROOTSYS") ;
-	  hpath += "/include/" ;
-	  hpath += incfile ;
-	  if (gSystem->AccessPathName(hpath.Data())) {
-	    oocoutI(_wspace,ObjectHandling)  << "RooWorkspace::autoImportClass(" << _wspace->GetName() << ") scheduling include file " << incfile << " for import" << endl ;
-	    extraHeaders.push_back(incfile) ;
-	    extincfile = incfile ;
-	    processedInclude = kTRUE ;
-	  }
-	  
-	}
+   Bool_t stdinclude = strchr(buf, '<');
+   strtok(tmp, " <\"");
+   char *incfile = strtok(0, " <>\"");
+
+   if (!stdinclude) {
+      // check if it lives in $ROOTSYS/include
+      TString hpath = gSystem->Getenv("ROOTSYS");
+      hpath += "/include/";
+      hpath += incfile;
+      if (gSystem->AccessPathName(hpath.Data())) {
+         oocoutI(_wspace, ObjectHandling) << "RooWorkspace::autoImportClass(" << _wspace->GetName()
+                                          << ") scheduling include file " << incfile << " for import" << endl;
+         extraHeaders.push_back(incfile);
+         extincfile = incfile;
+         processedInclude = kTRUE;
+      }
+   }
       }
       
       if (processedInclude) {
@@ -1876,28 +1876,28 @@ Bool_t RooWorkspace::CodeRepo::autoImportClass(TClass* tc, Bool_t doReplace)
 	// Process #include statements here
    char tmp[64000];
    strlcpy(tmp, buf, 64000);
-   Bool_t stdinclude = strchr(buf,'<') ;
-	strtok(tmp," <\"") ;
-	char* incfile = strtok(0," <>\"") ;	
+   Bool_t stdinclude = strchr(buf, '<');
+   strtok(tmp, " <\"");
+   char *incfile = strtok(0, " <>\"");
 
-	if (strstr(incfile,declfilename.c_str())) {
-	  foundSelfInclude=kTRUE ;
-	}
+   if (strstr(incfile, declfilename.c_str())) {
+      foundSelfInclude = kTRUE;
+   }
 
-	if (!stdinclude && !foundSelfInclude) {
-	  // check if it lives in $ROOTSYS/include
-	  TString hpath = gSystem->Getenv("ROOTSYS") ;
-	  hpath += "/include/" ;
-	  hpath += incfile ;
-	  
-	  if (gSystem->AccessPathName(hpath.Data())) {
-	    oocoutI(_wspace,ObjectHandling)  << "RooWorkspace::autoImportClass(" << _wspace->GetName() << ") scheduling include file " << incfile << " for import" << endl ;
-	    extraHeaders.push_back(incfile) ;
-	    extincfile = incfile ;
-	    processedInclude = kTRUE ;
-	  }
-	  
-	}
+   if (!stdinclude && !foundSelfInclude) {
+      // check if it lives in $ROOTSYS/include
+      TString hpath = gSystem->Getenv("ROOTSYS");
+      hpath += "/include/";
+      hpath += incfile;
+
+      if (gSystem->AccessPathName(hpath.Data())) {
+         oocoutI(_wspace, ObjectHandling) << "RooWorkspace::autoImportClass(" << _wspace->GetName()
+                                          << ") scheduling include file " << incfile << " for import" << endl;
+         extraHeaders.push_back(incfile);
+         extincfile = incfile;
+         processedInclude = kTRUE;
+      }
+   }
       }
       
       // Explicitly rewrite include of own declaration file to string
@@ -1937,28 +1937,30 @@ Bool_t RooWorkspace::CodeRepo::autoImportClass(TClass* tc, Bool_t doReplace)
 	    // Process #include statements here
        char tmp[64000];
        strlcpy(tmp, buf2, 64000);
-       Bool_t stdinclude = strchr(buf,'<') ;
-	    strtok(tmp," <\"") ;
-	    char* incfile = strtok(0," <>\"") ;	
+       Bool_t stdinclude = strchr(buf, '<');
+       strtok(tmp, " <\"");
+       char *incfile = strtok(0, " <>\"");
 
-	    if (!stdinclude) {
-	      // check if it lives in $ROOTSYS/include
-	      TString hpath = gSystem->Getenv("ROOTSYS") ;
-	      hpath += "/include/" ;
-	      hpath += incfile ;
-	      if (gSystem->AccessPathName(hpath.Data())) {
-		oocoutI(_wspace,ObjectHandling)  << "RooWorkspace::autoImportClass(" << _wspace->GetName() << ") scheduling recursive include file " << incfile << " for import" << endl ;
-		extraHeaders.push_back(incfile) ;
-	      }	      
-	    }
-	  }
-      
-	  ehimpl += buf2 ;
-	  ehimpl += '\n' ;
-	}
-	eh._hfile = ehimpl.c_str() ;
+       if (!stdinclude) {
+          // check if it lives in $ROOTSYS/include
+          TString hpath = gSystem->Getenv("ROOTSYS");
+          hpath += "/include/";
+          hpath += incfile;
+          if (gSystem->AccessPathName(hpath.Data())) {
+             oocoutI(_wspace, ObjectHandling)
+                << "RooWorkspace::autoImportClass(" << _wspace->GetName() << ") scheduling recursive include file "
+                << incfile << " for import" << endl;
+             extraHeaders.push_back(incfile);
+          }
+       }
+     }
 
-	_ehmap[ehiter->c_str()] = eh  ;
+     ehimpl += buf2;
+     ehimpl += '\n';
+   }
+   eh._hfile = ehimpl.c_str();
+
+   _ehmap[ehiter->c_str()] = eh;
       }
     }
 
@@ -2656,11 +2658,12 @@ void RooWorkspace::Streamer(TBuffer &R__b)
 	node->setExpensiveObjectCache(_eocache) ;
    node->setWorkspace(*this);
    if (node->IsA()->InheritsFrom(RooAbsOptTestStatistic::Class())) {
-	  RooAbsOptTestStatistic* tmp = (RooAbsOptTestStatistic*) node ;
-	  if (tmp->isSealed() && tmp->sealNotice() && strlen(tmp->sealNotice())>0) {
-	    cout << "RooWorkspace::Streamer(" << GetName() << ") " << node->IsA()->GetName() << "::" << node->GetName() << " : " << tmp->sealNotice() << endl ;
-	  }
-	}
+      RooAbsOptTestStatistic *tmp = (RooAbsOptTestStatistic *)node;
+      if (tmp->isSealed() && tmp->sealNotice() && strlen(tmp->sealNotice()) > 0) {
+         cout << "RooWorkspace::Streamer(" << GetName() << ") " << node->IsA()->GetName() << "::" << node->GetName()
+              << " : " << tmp->sealNotice() << endl;
+      }
+   }
       }
       delete iter ;
 
@@ -2840,29 +2843,30 @@ Bool_t RooWorkspace::CodeRepo::compileClasses()
      while (ifdecl.getline(buf, 64000)) {
         contents += buf;
         contents += "\n";
-	  }      
-	  UInt_t crcFile = RooAbsArg::crc32(contents.Data()) ;
-	  UInt_t crcWS   = RooAbsArg::crc32(eiter->second._hfile.Data()) ;
-	  needEHWrite = (crcFile!=crcWS) ;
-	}
-	
-	// Write declaration file if required 
-	if (needEHWrite) {
-	  oocoutI(_wspace,ObjectHandling) << "RooWorkspace::CodeRepo::compileClasses() Extracting extra header file " << fdname << endl ;
-	  
-	  // Extra headers may contain non-existing path - create first to be sure
-	  gSystem->MakeDirectory(gSystem->DirName(fdname.c_str())) ;	  
+     }
+     UInt_t crcFile = RooAbsArg::crc32(contents.Data());
+     UInt_t crcWS = RooAbsArg::crc32(eiter->second._hfile.Data());
+     needEHWrite = (crcFile != crcWS);
+   }
 
-	  ofstream fdecl(fdname.c_str()) ;
-	  if (!fdecl) {
-	    oocoutE(_wspace,ObjectHandling) << "RooWorkspace::CodeRepo::compileClasses() ERROR opening file " 
-					    << fdname << " for writing" << endl ;
-	    return kFALSE ;
-	  }
-	  fdecl << eiter->second._hfile.Data() ;
-	  fdecl.close() ;
-	}	       
-	eiter++ ;
+   // Write declaration file if required
+   if (needEHWrite) {
+      oocoutI(_wspace, ObjectHandling) << "RooWorkspace::CodeRepo::compileClasses() Extracting extra header file "
+                                       << fdname << endl;
+
+      // Extra headers may contain non-existing path - create first to be sure
+      gSystem->MakeDirectory(gSystem->DirName(fdname.c_str()));
+
+      ofstream fdecl(fdname.c_str());
+      if (!fdecl) {
+         oocoutE(_wspace, ObjectHandling)
+            << "RooWorkspace::CodeRepo::compileClasses() ERROR opening file " << fdname << " for writing" << endl;
+         return kFALSE;
+      }
+      fdecl << eiter->second._hfile.Data();
+      fdecl.close();
+   }
+   eiter++;
       }
     }
     
