@@ -279,7 +279,6 @@ public:
     RooArgSet _sandboxNodes; //! Sandbox for incoming objects in a transaction
 
     ClassDef(RooWorkspace, 8) // Persistable project container for (composite) pdfs, functions, variables and datasets
-  
 } ;
 
 #endif
