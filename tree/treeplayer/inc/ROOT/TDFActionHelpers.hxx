@@ -42,6 +42,7 @@ class ForeachSlotHelper {
 public:
    using BranchTypes_t = RemoveFirstParameter_t<typename CallableTraits<F>::arg_types>;
    ForeachSlotHelper(F &&f) : fCallable(f) {}
+   ForeachSlotHelper(ForeachSlotHelper &&) = default;
 
    void InitSlot(TTreeReader*, unsigned int) {}
 
@@ -63,6 +64,7 @@ class CountHelper {
 public:
    using BranchTypes_t = TypeList<>;
    CountHelper(const std::shared_ptr<unsigned int> &resultCount, const unsigned int nSlots);
+   CountHelper(CountHelper &&) = default;
    void InitSlot(TTreeReader*, unsigned int) {}
    void Exec(unsigned int slot);
    void Finalize();
@@ -86,6 +88,7 @@ class FillHelper {
 
 public:
    FillHelper(const std::shared_ptr<Hist_t> &h, const unsigned int nSlots);
+   FillHelper(FillHelper &&) = default;
    void InitSlot(TTreeReader*, unsigned int) {}
    void Exec(unsigned int slot, double v);
    void Exec(unsigned int slot, double v, double w);
@@ -246,6 +249,7 @@ public:
       fColls.emplace_back(resultColl);
       for (unsigned int i = 1; i < nSlots; ++i) fColls.emplace_back(std::make_shared<COLL>());
    }
+   TakeHelper(TakeHelper &&) = default;
 
    void InitSlot(TTreeReader*, unsigned int) {}
 
@@ -283,6 +287,7 @@ public:
          fColls.emplace_back(v);
       }
    }
+   TakeHelper(TakeHelper &&) = default;
 
    void InitSlot(TTreeReader*, unsigned int) {}
 
@@ -316,6 +321,7 @@ public:
       : fReduceFun(std::move(f)), fReduceRes(reduceRes), fReduceObjs(nSlots, *reduceRes)
    {
    }
+   ReduceHelper(ReduceHelper &&) = default;
 
    void InitSlot(TTreeReader*, unsigned int) {}
 
@@ -333,6 +339,7 @@ class MinHelper {
 
 public:
    MinHelper(const std::shared_ptr<double> &minVPtr, const unsigned int nSlots);
+   MinHelper(MinHelper &&) = default;
 
    void InitSlot(TTreeReader*, unsigned int) {}
 
@@ -359,6 +366,7 @@ class MaxHelper {
 
 public:
    MaxHelper(const std::shared_ptr<double> &maxVPtr, const unsigned int nSlots);
+   MaxHelper(MaxHelper &&) = default;
    void InitSlot(TTreeReader*, unsigned int) {}
    void Exec(unsigned int slot, double v);
 
@@ -384,6 +392,7 @@ class MeanHelper {
 
 public:
    MeanHelper(const std::shared_ptr<double> &meanVPtr, const unsigned int nSlots);
+   MeanHelper(MeanHelper &&) = default;
    void InitSlot(TTreeReader*, unsigned int) {}
    void Exec(unsigned int slot, double v);
 
