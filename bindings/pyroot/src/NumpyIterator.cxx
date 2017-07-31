@@ -4,14 +4,8 @@
 // Forwards and Python include
 #include "NumpyIterator.h"
 
-// Numpy include must be first
-#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
-#include <numpy/arrayobject.h>
-
 // ROOT
 #include <ROOT/TBulkBranchRead.hxx>
-#include <TBranch.h>
-#include <TBufferFile.h>
 #include <TBuffer.h>
 #include <TClass.h>
 #include <TDataType.h>
@@ -33,7 +27,6 @@
 
 // Standard
 #include <string>
-#include <vector>
 
 #ifndef NPY_ARRAY_C_CONTIGUOUS
 #define NPY_ARRAY_C_CONTIGUOUS NPY_C_CONTIGUOUS
@@ -45,93 +38,9 @@
 
 #define IS_ALIGNED(ptr) ((size_t)ptr % 8 == 0)     // FIXME: is there a better way to check for alignment?
 
-/////////////////////////////////////////////////////// helper classes
+namespace PyROOT {
 
-class ArrayInfo {
-public:
-  PyArray_Descr* dtype;
-  int nd;
-  std::vector<int> dims;
-  bool varlen;
-};
-
-class ClusterBuffer {
-private:
-  const TBranch* fBranch;
-  const Long64_t fItemSize;
-  const bool fSwapBytes;
-  TBufferFile fBufferFile;
-  std::vector<char> fExtra;
-  void* fOldExtra;
-  bool fUsingExtra;
-
-  // always numbers of entries (not bytes) and always inclusive on start, exclusive on end (like Python)
-  // also, the TBufferFile is always ahead of the extra buffer and there's no gap between them
-  Long64_t bfEntryStart;
-  Long64_t bfEntryEnd;
-  Long64_t exEntryStart;
-  Long64_t exEntryEnd;
-
-  void CopyToExtra(Long64_t keep_start);
-
-  inline void CheckExtraAllocations() {
-    if (fOldExtra != reinterpret_cast<void*>(fExtra.data())) {
-      fOldExtra = reinterpret_cast<void*>(fExtra.data());
-    }
-  }
-
-public:
-  ClusterBuffer(const TBranch* branch, const Long64_t itemsize, const bool swap_bytes) :
-    fBranch(branch), fItemSize(itemsize), fSwapBytes(swap_bytes), fBufferFile(TBuffer::kWrite, 32*1024), fOldExtra(nullptr), fUsingExtra(false),
-    bfEntryStart(0), bfEntryEnd(0), exEntryStart(0), exEntryEnd(0)
-  {
-    CheckExtraAllocations();
-  }
-
-  void ReadOne(Long64_t keep_start, const char* &error_string);
-  void* GetBuffer(Long64_t &numbytes, Long64_t entry_start, Long64_t entry_end);
-
-  Long64_t EntryEnd() {
-    return bfEntryEnd;  // hide the distinction between bf and extra
-  }
-
-  void Reset() {
-    fExtra.clear();
-    bfEntryStart = 0;
-    bfEntryEnd = 0;
-    exEntryStart = 0;
-    exEntryEnd = 0;
-  }
-};
-
-class NumpyIterator {
-private:
-  std::vector<std::unique_ptr<ClusterBuffer>> fRequested;
-  const std::vector<ArrayInfo> fArrayInfo;   // has the same length as fRequested
-  const Long64_t fNumEntries;
-  const bool fReturnNewBuffers;
-  Long64_t fCurrentStart;
-  Long64_t fCurrentEnd;
-
-  bool StepForward(const char* &error_string);
-
-public:
-  NumpyIterator(const std::vector<TBranch*> &requested_branches, const std::vector<ArrayInfo> arrayinfo, Long64_t num_entries, bool return_new_buffers, bool swap_bytes) :
-    fArrayInfo(arrayinfo), fNumEntries(num_entries), fReturnNewBuffers(return_new_buffers), fCurrentStart(0), fCurrentEnd(0) {
-    for (unsigned int i = 0;  i < fArrayInfo.size();  i++)
-      fRequested.push_back(std::unique_ptr<ClusterBuffer>(new ClusterBuffer(requested_branches[i], fArrayInfo[i].dtype->elsize, swap_bytes)));
-  }
-
-  PyObject* arrays();
-
-  void Reset() {
-    fCurrentStart = 0;
-    fCurrentEnd = 0;
-    for (unsigned int i = 0;  i < fRequested.size();  i++) {
-      fRequested[i]->Reset();
-    }
-  }
-};    
+/////////////////////////////////////////////////////// class methods
 
 void ClusterBuffer::CopyToExtra(Long64_t keep_start) {
   // this is a safer algorithm than is necessary, and it could impact performance, but significantly less so than the other speed-ups
@@ -160,6 +69,12 @@ void ClusterBuffer::CopyToExtra(Long64_t keep_start) {
     memcpy(&fExtra.data()[oldsize], fBufferFile.GetCurrent(), additional);
 
     exEntryEnd = bfEntryEnd;
+  }
+}
+
+void ClusterBuffer::CheckExtraAllocations() {
+  if (fOldExtra != reinterpret_cast<void*>(fExtra.data())) {
+    fOldExtra = reinterpret_cast<void*>(fExtra.data());
   }
 }
 
@@ -235,6 +150,18 @@ void* ClusterBuffer::GetBuffer(Long64_t &numbytes, Long64_t entry_start, Long64_
     const Long64_t offset = (entry_start - bfEntryStart) * fItemSize;
     return &fBufferFile.GetCurrent()[offset];
   }
+}
+
+Long64_t ClusterBuffer::EntryEnd() {
+  return bfEntryEnd;  // hide the distinction between bf and extra
+}
+
+void ClusterBuffer::Reset() {
+  fExtra.clear();
+  bfEntryStart = 0;
+  bfEntryEnd = 0;
+  exEntryStart = 0;
+  exEntryEnd = 0;
 }
 
 // step all ClusterBuffers forward, for all branches, returning true when done and setting error_string on any errors
@@ -330,7 +257,15 @@ PyObject* NumpyIterator::arrays() {
   return out;
 }
 
-/////////////////////////////////////////////////////// utility functions
+void NumpyIterator::Reset() {
+  fCurrentStart = 0;
+  fCurrentEnd = 0;
+  for (unsigned int i = 0;  i < fRequested.size();  i++) {
+    fRequested[i]->Reset();
+  }
+}
+
+/////////////////////////////////////////////////////// helper functions
 
 bool getfile(TFile* &file, const char* filePath) {
   file = TFile::Open(filePath);
@@ -515,21 +450,8 @@ const char* gettuplestring(PyObject* p, Py_ssize_t pos) {
 
 /////////////////////////////////////////////////////// Python functions
 
-static PyObject* PyNumpyIterator_iter(PyObject* self) {
-  PyNumpyIterator* thyself = reinterpret_cast<PyNumpyIterator*>(self);
-  thyself->iter->Reset();
-  Py_INCREF(self);
-  return self;
-}
-
-static PyObject* PyNumpyIterator_next(PyObject* self) {
-  PyNumpyIterator* thyself = reinterpret_cast<PyNumpyIterator*>(self);
-  return thyself->iter->arrays();
-}
-
-static void PyNumpyIterator_del(PyNumpyIterator* thyself) {
-  delete thyself->iter;
-  Py_TYPE(thyself)->tp_free(reinterpret_cast<PyObject*>(thyself));
+void InitializeNumpy() {
+  import_array();
 }
 
 bool getbranches(PyObject* args, std::vector<TBranch*> &requested_branches) {
@@ -576,7 +498,7 @@ bool getbranches(PyObject* args, std::vector<TBranch*> &requested_branches) {
   return true;
 }
 
-static PyObject* GetNumpyIterator(PyObject* self, PyObject* args, PyObject* kwds) {
+PyObject* GetNumpyIterator(PyObject* self, PyObject* args, PyObject* kwds) {
   std::vector<TBranch*> requested_branches;
   if (!getbranches(args, requested_branches))
     return NULL;
@@ -631,7 +553,7 @@ static PyObject* GetNumpyIterator(PyObject* self, PyObject* args, PyObject* kwds
   return reinterpret_cast<PyObject*>(out);
 }
 
-static PyObject* GetNumpyTypeAndSize(PyObject* self, PyObject* args, PyObject* kwds) {
+PyObject* GetNumpyTypeAndSize(PyObject* self, PyObject* args, PyObject* kwds) {
   std::vector<TBranch*> requested_branches;
   if (!getbranches(args, requested_branches))
     return NULL;
@@ -683,3 +605,5 @@ static PyObject* GetNumpyTypeAndSize(PyObject* self, PyObject* args, PyObject* k
 
   return out;
 }
+
+} // namespace PyROOT

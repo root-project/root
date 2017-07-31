@@ -14,6 +14,7 @@
 #include "TTupleOfInstances.h"
 #include "RootWrapper.h"
 #include "TCallContext.h"
+#include "NumpyIterator.h"
 #include "Utility.h"
 
 // ROOT
@@ -924,6 +925,13 @@ extern "C" void initlibPyROOT()
    gNullPtrObject = (PyObject*)&_PyROOT_NullPtrStruct;
    Py_INCREF( gNullPtrObject );
    PyModule_AddObject( gRootModule, (char*)"nullptr", gNullPtrObject );
+
+// inject PyNumpyIteratorType
+   Py_INCREF( &PyNumpyIteratorType );
+   PyModule_AddObject( gRootModule, (char*)"NumpyIterator", reinterpret_cast<PyObject*>(&PyNumpyIteratorType));
+
+// initialize Numpy if it isn't already
+   InitializeNumpy();
 
 // policy labels
    PyModule_AddObject( gRootModule, (char*)"kMemoryHeuristics",
