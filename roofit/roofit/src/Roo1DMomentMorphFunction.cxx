@@ -36,11 +36,10 @@ using namespace std;
 
 ClassImp(Roo1DMomentMorphFunction);
 
-   ////////////////////////////////////////////////////////////////////////////////
-   /// Default constructor.
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor.
 
-   Roo1DMomentMorphFunction::Roo1DMomentMorphFunction()
-   : _mref(0), _mrefM(0), _frac(0), _M(0), _setting(Linear)
+Roo1DMomentMorphFunction::Roo1DMomentMorphFunction() : _mref(0), _mrefM(0), _frac(0), _M(0), _setting(Linear)
 {
   _varItr    = _varList.createIterator() ;
 }
@@ -131,7 +130,8 @@ Roo1DMomentMorphFunction::Roo1DMomentMorphFunction(const Roo1DMomentMorphFunctio
 Roo1DMomentMorphFunction::~Roo1DMomentMorphFunction()
 {
   if (_mref)   delete _mref;
-  if (_mrefM) delete _mrefM;
+  if (_mrefM)
+     delete _mrefM;
   if (_frac)   delete _frac;
   if (_varItr) delete _varItr;
   if (_M)      delete _M;
@@ -164,7 +164,8 @@ void Roo1DMomentMorphFunction::initialize()
      for (Int_t i = 0; i < _mref->GetNrows(); ++i) {
         (*dm)[i] = (*_mref)[i] - (*_mref)[0];
         M(i, 0) = 1.;
-        if (i > 0) M(0, i) = 0.;
+        if (i > 0)
+           M(0, i) = 0.;
      }
      for (Int_t i = 1; i < _mref->GetNrows(); ++i) {
         for (Int_t j = 1; j < _mref->GetNrows(); ++j) {
@@ -235,7 +236,8 @@ void Roo1DMomentMorphFunction::calculateFractions() const
          for (Int_t j = 0; j < nVar; ++j) {
             ffrac += (*_M)(j, i) * (j == 0 ? 1. : TMath::Power(dm, (double)j));
          }
-         if (ffrac >= 0) sumposfrac += ffrac;
+         if (ffrac >= 0)
+            sumposfrac += ffrac;
          (*_frac)(i) = ffrac;
       }
       break;

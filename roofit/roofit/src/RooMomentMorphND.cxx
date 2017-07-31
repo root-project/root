@@ -172,10 +172,14 @@ RooMomentMorphND::RooMomentMorphND(const RooMomentMorphND &other, const char *na
 //_____________________________________________________________________________
 RooMomentMorphND::~RooMomentMorphND()
 {
-   if (_parItr) delete _parItr;
-   if (_obsItr) delete _obsItr;
-   if (_M) delete _M;
-   if (_MSqr) delete _MSqr;
+   if (_parItr)
+      delete _parItr;
+   if (_obsItr)
+      delete _obsItr;
+   if (_M)
+      delete _M;
+   if (_MSqr)
+      delete _MSqr;
 
    TRACE_DESTROY
 }
@@ -731,7 +735,8 @@ void RooMomentMorphND::CacheElem::calculateFractions(const RooMomentMorphND &sel
 
       if (self._setting == NonLinearPosFractions) {
          for (int i = 0; i < nPdf; ++i) {
-            if (((RooRealVar *)frac(i))->getVal() < 0) ((RooRealVar *)frac(i))->setVal(0.);
+            if (((RooRealVar *)frac(i))->getVal() < 0)
+               ((RooRealVar *)frac(i))->setVal(0.);
             ((RooRealVar *)frac(i))->setVal(((RooRealVar *)frac(i))->getVal() / sumposfrac);
          }
       }
@@ -818,8 +823,10 @@ void RooMomentMorphND::findShape(const vector<double> &x) const
    // Find hypercube enclosing the location to morph to
    bool isEnclosed = true;
    for (int i = 0; i < nPar; i++) {
-      if (x[i] < _referenceGrid._grid[i]->lowBound()) isEnclosed = false;
-      if (x[i] > _referenceGrid._grid[i]->highBound()) isEnclosed = false;
+      if (x[i] < _referenceGrid._grid[i]->lowBound())
+         isEnclosed = false;
+      if (x[i] > _referenceGrid._grid[i]->highBound())
+         isEnclosed = false;
    }
 
    // cout << "isEnclosed = " << isEnclosed << endl;
