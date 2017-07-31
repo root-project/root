@@ -496,7 +496,7 @@ public:
   RooAbsArg *findNewServer(const RooAbsCollection &newSet, Bool_t nameChange) const;
 
   RooExpensiveObjectCache& expensiveObjectCache() const ;
-  virtual void setExpensiveObjectCache(RooExpensiveObjectCache& cache) { _eocache = &cache ; }
+  virtual void setExpensiveObjectCache(RooExpensiveObjectCache &cache) { _eocache = &cache; }
 
   virtual Bool_t importWorkspaceHook(RooWorkspace &ws)
   {
@@ -505,7 +505,6 @@ public:
   };
 
   protected:
-
   // Proxy management
   friend class RooAddModel ;
   friend class RooArgProxy ;
@@ -593,7 +592,7 @@ public:
 
   mutable RooWorkspace *_myws; //! In which workspace do I live, if any
 
-  public:  
+  public:
   virtual void ioStreamerPass2() ;
   static void ioStreamerPass2Finalize() ;
   static std::map<RooAbsArg*,TRefArray*> _ioEvoList ; // temporary holding list for proxies needed in schema evolution  

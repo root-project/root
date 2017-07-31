@@ -354,52 +354,53 @@ RooNDKeysPdf::RooNDKeysPdf(const RooNDKeysPdf &other, const char *name)
    _weights0 = other._weights0;
    _weights1 = other._weights1;
    if (_options.Contains("a")) {
-      _weights = &_weights1; }
-  //_sortIdcs    = other._sortIdcs;
-  _sortTVIdcs  = other._sortTVIdcs;
-  _varName     = other._varName;
-  _rho         = other._rho;
-  _x           = other._x;
-  _x0          = other._x0 ;
-  _x1          = other._x1 ;
-  _x2          = other._x2 ;
-  _xDatLo      = other._xDatLo;
-  _xDatHi      = other._xDatHi;
-  _xDatLo3s    = other._xDatLo3s;
-  _xDatHi3s    = other._xDatHi3s;
-  _mean        = other._mean;
-  _sigma       = other._sigma;
+      _weights = &_weights1;
+   }
+   //_sortIdcs    = other._sortIdcs;
+   _sortTVIdcs = other._sortTVIdcs;
+   _varName = other._varName;
+   _rho = other._rho;
+   _x = other._x;
+   _x0 = other._x0;
+   _x1 = other._x1;
+   _x2 = other._x2;
+   _xDatLo = other._xDatLo;
+   _xDatHi = other._xDatHi;
+   _xDatLo3s = other._xDatLo3s;
+   _xDatHi3s = other._xDatHi3s;
+   _mean = other._mean;
+   _sigma = other._sigma;
 
-  // BoxInfo
-  _netFluxZ    = other._netFluxZ;
-  _nEventsBW   = other._nEventsBW;
-  _nEventsBMSW = other._nEventsBMSW;
-  _xVarLo      = other._xVarLo;
-  _xVarHi      = other._xVarHi;
-  _xVarLoM3s   = other._xVarLoM3s;
-  _xVarLoP3s   = other._xVarLoP3s;
-  _xVarHiM3s   = other._xVarHiM3s;
-  _xVarHiP3s   = other._xVarHiP3s;
-  _bpsIdcs     = other._bpsIdcs;
-  _ibNoSort = other._ibNoSort;
-  _sIdcs       = other._sIdcs;
-  _bIdcs       = other._bIdcs;
-  _bmsIdcs     = other._bmsIdcs;
+   // BoxInfo
+   _netFluxZ = other._netFluxZ;
+   _nEventsBW = other._nEventsBW;
+   _nEventsBMSW = other._nEventsBMSW;
+   _xVarLo = other._xVarLo;
+   _xVarHi = other._xVarHi;
+   _xVarLoM3s = other._xVarLoM3s;
+   _xVarLoP3s = other._xVarLoP3s;
+   _xVarHiM3s = other._xVarHiM3s;
+   _xVarHiP3s = other._xVarHiP3s;
+   _bpsIdcs = other._bpsIdcs;
+   _ibNoSort = other._ibNoSort;
+   _sIdcs = other._sIdcs;
+   _bIdcs = other._bIdcs;
+   _bmsIdcs = other._bmsIdcs;
 
-  _rangeBoxInfo= other._rangeBoxInfo ;
-  _fullBoxInfo = other._fullBoxInfo ;
+   _rangeBoxInfo = other._rangeBoxInfo;
+   _fullBoxInfo = other._fullBoxInfo;
 
-  _idx         = other._idx;
-  _minWeight   = other._minWeight;
-  _maxWeight   = other._maxWeight;
-  _wMap        = other._wMap;
+   _idx = other._idx;
+   _minWeight = other._minWeight;
+   _maxWeight = other._maxWeight;
+   _wMap = other._wMap;
 
-  _covMat      = new TMatrixDSym(*other._covMat);
-  _corrMat     = new TMatrixDSym(*other._corrMat);
-  _rotMat      = new TMatrixD(*other._rotMat);
-  _sigmaR      = new TVectorD(*other._sigmaR);
-  _dx          = new TVectorD(*other._dx);
-  _sigmaAvgR   = other._sigmaAvgR;
+   _covMat = new TMatrixDSym(*other._covMat);
+   _corrMat = new TMatrixDSym(*other._corrMat);
+   _rotMat = new TMatrixD(*other._rotMat);
+   _sigmaR = new TVectorD(*other._sigmaR);
+   _dx = new TVectorD(*other._dx);
+   _sigmaAvgR = other._sigmaAvgR;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1074,7 +1075,8 @@ void RooNDKeysPdf::loopRange(vector<Double_t>& x, map<Int_t,Bool_t>& ibMap) cons
    TVectorD xRp(_nDim);
 
    for (Int_t j = 0; j < _nDim; j++) {
-      xRm[j] = xRp[j] = x[j]; }
+      xRm[j] = xRp[j] = x[j];
+   }
 
    if (_nDim > 1 && _rotate) {
       xRm *= *_rotMat;
