@@ -204,7 +204,6 @@ if(all)
  set(unuran_defvalue ON)
  set(vc_defvalue ON)
  set(vdt_defvalue ON)
- set(veccore_defvalue ON)
 endif()
 
 #--- The 'builtin_all' option swithes ON old the built in options-------------------------------
