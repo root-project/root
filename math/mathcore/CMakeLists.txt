@@ -33,15 +33,15 @@ if(imt)
   set(MATHCORE_DEPENDENCIES Imt)
 endif()
 
-if(veccore)
-  target_compile_definitions(MathCore INTERFACE ${VecCore_DEFINITIONS})
-endif()
-
 ROOT_STANDARD_LIBRARY_PACKAGE(MathCore HEADERS TComplex.h TMath.h ${MATHCORE_HEADERS} Fit/*.h
                               SOURCES *.cxx *.c
                               DICTIONARY_OPTIONS "-writeEmptyRootPCM"
                               LIBRARIES ${CMAKE_THREAD_LIBS_INIT} ${MATHCORE_LIBRARIES}
                               DEPENDENCIES Core ${MATHCORE_DEPENDENCIES}
                               BUILTINS ${MATHCORE_BUILTINS})
+
+if(veccore)
+  target_compile_definitions(MathCore INTERFACE ${VecCore_DEFINITIONS})
+endif()
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
