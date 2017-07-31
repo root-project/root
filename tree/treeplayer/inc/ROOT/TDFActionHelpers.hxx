@@ -62,7 +62,7 @@ class CountHelper {
 
 public:
    using BranchTypes_t = TypeList<>;
-   CountHelper(const std::shared_ptr<unsigned int> &resultCount, unsigned int nSlots);
+   CountHelper(const std::shared_ptr<unsigned int> &resultCount, const unsigned int nSlots);
    void InitSlot(TTreeReader*, unsigned int) {}
    void Exec(unsigned int slot);
    void Finalize();
@@ -85,7 +85,7 @@ class FillHelper {
    void UpdateMinMax(unsigned int slot, double v);
 
 public:
-   FillHelper(const std::shared_ptr<Hist_t> &h, unsigned int nSlots);
+   FillHelper(const std::shared_ptr<Hist_t> &h, const unsigned int nSlots);
    void InitSlot(TTreeReader*, unsigned int) {}
    void Exec(unsigned int slot, double v);
    void Exec(unsigned int slot, double v, double w);
@@ -138,7 +138,7 @@ class FillTOHelper {
 public:
    FillTOHelper(FillTOHelper &&) = default;
 
-   FillTOHelper(const std::shared_ptr<HIST> &h, unsigned int nSlots) : fTo(new TThreadedObject<HIST>(*h))
+   FillTOHelper(const std::shared_ptr<HIST> &h, const unsigned int nSlots) : fTo(new TThreadedObject<HIST>(*h))
    {
       fTo->SetAtSlot(0, h);
       // Initialise all other slots
@@ -241,7 +241,7 @@ class TakeHelper {
 
 public:
    using BranchTypes_t = TypeList<T>;
-   TakeHelper(const std::shared_ptr<COLL> &resultColl, unsigned int nSlots)
+   TakeHelper(const std::shared_ptr<COLL> &resultColl, const unsigned int nSlots)
    {
       fColls.emplace_back(resultColl);
       for (unsigned int i = 1; i < nSlots; ++i) fColls.emplace_back(std::make_shared<COLL>());
@@ -274,7 +274,7 @@ class TakeHelper<T, std::vector<T>> {
 
 public:
    using BranchTypes_t = TypeList<T>;
-   TakeHelper(const std::shared_ptr<std::vector<T>> &resultColl, unsigned int nSlots)
+   TakeHelper(const std::shared_ptr<std::vector<T>> &resultColl, const unsigned int nSlots)
    {
       fColls.emplace_back(resultColl);
       for (unsigned int i = 1; i < nSlots; ++i) {
@@ -312,7 +312,7 @@ class ReduceHelper {
 
 public:
    using BranchTypes_t = TypeList<T>;
-   ReduceHelper(F &&f, const std::shared_ptr<T> &reduceRes, unsigned int nSlots)
+   ReduceHelper(F &&f, const std::shared_ptr<T> &reduceRes, const unsigned int nSlots)
       : fReduceFun(std::move(f)), fReduceRes(reduceRes), fReduceObjs(nSlots, *reduceRes)
    {
    }
@@ -332,7 +332,7 @@ class MinHelper {
    std::vector<double> fMins;
 
 public:
-   MinHelper(const std::shared_ptr<double> &minVPtr, unsigned int nSlots);
+   MinHelper(const std::shared_ptr<double> &minVPtr, const unsigned int nSlots);
 
    void InitSlot(TTreeReader*, unsigned int) {}
 
@@ -358,7 +358,7 @@ class MaxHelper {
    std::vector<double> fMaxs;
 
 public:
-   MaxHelper(const std::shared_ptr<double> &maxVPtr, unsigned int nSlots);
+   MaxHelper(const std::shared_ptr<double> &maxVPtr, const unsigned int nSlots);
    void InitSlot(TTreeReader*, unsigned int) {}
    void Exec(unsigned int slot, double v);
 
@@ -383,7 +383,7 @@ class MeanHelper {
    std::vector<double> fSums;
 
 public:
-   MeanHelper(const std::shared_ptr<double> &meanVPtr, unsigned int nSlots);
+   MeanHelper(const std::shared_ptr<double> &meanVPtr, const unsigned int nSlots);
    void InitSlot(TTreeReader*, unsigned int) {}
    void Exec(unsigned int slot, double v);
 
@@ -472,7 +472,7 @@ class SnapshotHelperMT {
    const ColumnNames_t fBranchNames;
 public:
    using BranchTypes_t = TypeList<BranchTypes...>;
-   SnapshotHelperMT(unsigned int nSlots, const std::string &filename, const std::string &dirname,
+   SnapshotHelperMT(const unsigned int nSlots, const std::string &filename, const std::string &dirname,
                     const std::string &treename, const ColumnNames_t &bnames)
       : fNSlots(nSlots), fMerger(new ROOT::Experimental::TBufferMerger(filename.c_str(), "RECREATE")),
         fOutputFiles(fNSlots), fOutputTrees(fNSlots, nullptr), fIsFirstEvent(fNSlots, 1), fDirName(dirname),
