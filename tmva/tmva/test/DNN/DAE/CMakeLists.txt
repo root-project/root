@@ -20,3 +20,6 @@ ROOT_ADD_TEST(TMVA-DNN-DAE-ReconstructionLayer COMMAND testReconstructionLayer)
 
 ROOT_EXECUTABLE(testLogisticRegressionLayer TestLogisticRegressionLayer.cxx LIBRARIES ${Libraries})
 ROOT_ADD_TEST(TMVA-DNN-DAE-LogisticRegressionLayer COMMAND testLogisticRegressionLayer)
+
+ROOT_EXECUTABLE(testNetPreTrain TestNetPreTrain.cxx LIBRARIES ${Libraries})
+ROOT_ADD_TEST(TMVA-DNN-DAE-NetPreTrain COMMAND testNetPreTrain)

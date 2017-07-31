@@ -97,18 +97,23 @@ template <typename Architecture_t>
 TCompressionLayer<Architecture_t>::TCompressionLayer(size_t batchSize, size_t visibleUnits,
                            size_t hiddenUnits, Scalar_t dropoutProbability, EActivationFunction f,
                            std::vector<Matrix_t> weights, std::vector<Matrix_t> biases)
-   : VGeneralLayer<Architecture_t>(batchSize, 1, 1, 0, 0, 0, 0, 1, hiddenUnits, visibleUnits,1,hiddenUnits,
-   1, batchSize, hiddenUnits, 1, EInitialization::kZero),
+   : VGeneralLayer<Architecture_t>(batchSize, 1, 1, 0, 0, 0, 0, 1, {hiddenUnits}, {visibleUnits},2,{hiddenUnits,visibleUnits},
+   {1,1}, batchSize, hiddenUnits, 1, EInitialization::kZero),
    fVisibleUnits(visibleUnits), fDropoutProbability(dropoutProbability),
    fType(2), fHiddenUnits(hiddenUnits), fF(f)//,
    //fWeights(hiddenUnits,visibleUnits),  fBiases(hiddenUnits,1)
 
  {
-   for(size_t i=0; i<1; i++){
-
-      Architecture_t::Copy(this->GetWeightsAt(i),weights[i]);
-      Architecture_t::Copy(this->GetBiasesAt(i),biases[i]);
-   }
+   Architecture_t::Copy(this->GetWeightsAt(0),weights[0]);
+   Architecture_t::Copy(this->GetBiasesAt(0),biases[0]);
+   
+   std::cout<<"Compression default constructor"<<std::endl;
+   std::cout<<"No of visibleUnits "<<visibleUnits<<std::endl;
+   std::cout<<"no of hiddenUnits "<<hiddenUnits<<std::endl;
+   std::cout<<"weights rows: "<<this->GetWeightsAt(0).GetNrows()<<std::endl;
+   std::cout<<"weights cols: "<<this->GetWeightsAt(0).GetNcols()<<std::endl;
+   std::cout<<"Bias 0 rows "<<this->GetBiasesAt(0).GetNrows()<<std::endl;
+   std::cout<<"Bias 1 rows "<<this->GetBiasesAt(1).GetNrows()<<std::endl<<std::endl;
  }
 //______________________________________________________________________________
 template <typename Architecture_t>
@@ -120,11 +125,8 @@ TCompressionLayer<Architecture_t>::TCompressionLayer(TCompressionLayer<Architect
    //  fWeights(layer->GetHiddenUnits(), layer->GetVisibleUnits()),
    //  fBiases(layer->GetHiddenUnits(),1)
 {
-   for(size_t i=0; i<1; i++)
-   {
-      Architecture_t::Copy(this->GetWeightsAt(i), layer->weights[i]);
-      Architecture_t::Copy(this->GetBiasesAt(i), layer->biases[i]);
-   }
+   Architecture_t::Copy(this->GetWeightsAt(0), layer->weights[0]);
+   Architecture_t::Copy(this->GetBiasesAt(0), layer->biases[0]);
    // Output Tensor will be created in General Layer
 }
 //______________________________________________________________________________
@@ -139,23 +141,21 @@ TCompressionLayer<Architecture_t>::TCompressionLayer(const TCompressionLayer &co
 
 
 {
-   for(size_t i=0; i<1; i++)
-   {
-      Architecture_t::Copy(this->GetWeightsAt(i), compress.weights[i]);
-      Architecture_t::Copy(this->GetBiasesAt(i), compress.biases[i]);
-   }
+   Architecture_t::Copy(this->GetWeightsAt(0), compress.weights[0]);
+   Architecture_t::Copy(this->GetBiasesAt(0), compress.biases[0]);
    // Output Tensor will be created in General Layer
 }
 //______________________________________________________________________________
 template <typename Architecture_t>
 auto TCompressionLayer<Architecture_t>::Forward(std::vector<Matrix_t> input, bool applyDropout) -> void {
-
+   std::cout<<"in forward compressionLayer "<<std::endl;
    for (size_t i = 0; i < this->GetBatchSize(); i++) {
 
       Architecture_t::EncodeInput(input[i], this->GetOutputAt(i), this->GetWeightsAt(0));
       Architecture_t::AddBiases(this->GetOutputAt(i), this->GetBiasesAt(0));
       evaluate<Architecture_t>(this->GetOutputAt(i), fF);
-  }
+   }
+   std::cout<<"Forward done compressionLayer"<<std::endl<<std::endl;
 }
 //______________________________________________________________________________
 template <typename Architecture_t>
@@ -171,8 +171,7 @@ auto TCompressionLayer<Architecture_t>::Print() const
 {
    std::cout << "Batch Size: " << this->GetBatchSize() << "\n"
                << "Input Units: " << this->GetVisibleUnits() << "\n"
-               << "Hidden units " << this->GetHiddenUnits() << "\n"
-               << "Weights " << "\n";
+               << "Hidden units " << this->GetHiddenUnits() << "\n";
 
       for(size_t j=0; j<this->GetWeightsAt(0).GetNrows(); j++)
       {

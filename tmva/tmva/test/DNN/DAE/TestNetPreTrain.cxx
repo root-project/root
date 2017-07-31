@@ -8,7 +8,7 @@
  * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
- *      Testing the Corruption Layer.                                                              *
+ *      Testing the DeepNet                                                       *
  *                                                                                *
  * Authors (alphabetical):                                                        *
  *      Akshay Vashistha    <akshayvashistha1995@gmail.com>  - CERN, Switzerland  *
@@ -18,69 +18,24 @@
  *      U. of Victoria, Canada                                                    *
  *      MPI-K Heidelberg, Germany                                                 *
  *      U. of Bonn, Germany                                                       *
- *                                                                                *
+ *                                                                                *`
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-#ifndef TMVA_TEST_DNN_TEST_CORRUPTION_LAYER_H
-#define TMVA_TEST_DNN_TEST_CORRUPTION_LAYER_H
-
-#include "../Utility.h"
-
-#include "TMVA/DNN/Functions.h"
-#include "TMVA/DNN/DAE/CorruptionLayer.h"
-
-#include "TMVA/DNN/Functions.h"
-#include <iostream>
+#include "TestNetPreTrain.h"
+#include "TMVA/DNN/Architectures/Reference.h"
 
 using namespace TMVA::DNN;
 using namespace TMVA::DNN::DAE;
 
-template <typename Architecture> auto testLayer(size_t batchSize, size_t visibleUnits)
--> void
+int main()
+
 {
-   //using Scalar_t = typename Architecture::Scalar_t;
-   using Matrix_t = typename Architecture::Matrix_t;
+   std::cout << "Testing for DeepNet started" << std::endl;
 
-   using TCorruptionLayer = TCorruptionLayer<Architecture>;
+   testNet<TReference<double>>();
 
-   TCorruptionLayer dae(batchSize, visibleUnits,2, 1, 0.3);
-
-   std::vector<Matrix_t> input, corruptedInput;
-   for(size_t i=0; i<batchSize; i++)
-   {
-      input.emplace_back(visibleUnits,1);
-      corruptedInput.emplace_back(visibleUnits,1);
-   }
-   Matrix_t inputMatrix(visibleUnits, 1);
-
-   for(size_t i=0; i<batchSize; i++)
-   {
-      randomMatrix(inputMatrix);
-      Architecture::Copy(input[i],inputMatrix);
-   }
-   std::cout<<"Input Batch: "<<std::endl;
-   for(size_t i=0; i<batchSize; i++)
-   {
-      for(size_t j=0; j<(size_t)input[i].GetNrows(); j++)
-      {
-         for(size_t k=0; k<(size_t)input[i].GetNcols();k++)
-         {
-            std::cout<<input[i](j,k)<<"\t";
-         }
-         std::cout<<std::endl;
-      }
-   }
-   std::cout<<std::endl;
-
-   dae.Forward(input,false);
-
-   std::cout<<std::endl;
-   std::cout<<std::endl;
-   dae.Print();
-
-
+   return 0;
 }
-#endif

@@ -2,29 +2,27 @@
 // Author: Vladimir Ilievski
 
 /**********************************************************************************
- * Project: TMVA - a Root-integrated toolkit for multivariate data analysis *
- * Package: TMVA *
- * Class  : TDeepNet *
- * Web    : http://tmva.sourceforge.net *
+ * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
+ * Package: TMVA                                                                  *
+ * Class  : TDeepNet                                                              *
+ * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
- * Description: *
- *      Deep Neural Network *
+ * Description:                                                                   *
+ *      Deep Neural Network                                                       *
  *                                                                                *
- * Authors (alphabetical): *
- *      Akshay Vashistha     <akshayvashistha1995@gmail.com> - CERN, Switzerland
- **                                                  *
- *      Vladimir Ilievski      <ilievski.vladimir@live.com>  - CERN, Switzerland
- **
+ * Authors (alphabetical):                                                        *
+ *      Akshay Vashistha     <akshayvashistha1995@gmail.com> - CERN, Switzerland  *                                                                                *
+ *      Vladimir Ilievski      <ilievski.vladimir@live.com>  - CERN, Switzerland  *
+ *                                                                                *                                                                                *
+ * Copyright (c) 2005-2015:                                                       *
+ *      CERN, Switzerland                                                         *
+ *      U. of Victoria, Canada                                                    *
+ *      MPI-K Heidelberg, Germany                                                 *
+ *      U. of Bonn, Germany                                                       *
  *                                                                                *
- * Copyright (c) 2005-2015: *
- *      CERN, Switzerland *
- *      U. of Victoria, Canada *
- *      MPI-K Heidelberg, Germany *
- *      U. of Bonn, Germany *
- *                                                                                *
- * Redistribution and use in source and binary forms, with or without *
- * modification, are permitted according to the terms listed in LICENSE *
- * (http://tmva.sourceforge.net/LICENSE) *
+ * Redistribution and use in source and binary forms, with or without             *
+ * modification, are permitted according to the terms listed in LICENSE           *
+ * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
 #ifndef TMVA_DNN_DEEPNET
@@ -47,7 +45,7 @@
 #include "TMVA/DNN/DAE/CompressionLayer.h"
 #include "TMVA/DNN/DAE/CorruptionLayer.h"
 #include "TMVA/DNN/DAE/ReconstructionLayer.h"
-//#include "TMVA/DNN/DAE/LogisticRegressionLayer.h"
+#include "TMVA/DNN/DAE/LogisticRegressionLayer.h"
 
 #include <vector>
 #include <cmath>
@@ -164,9 +162,8 @@ public:
     *  the layer is already created. */
    void AddReshapeLayer(TReshapeLayer<Architecture_t> *reshapeLayer);
 
-   TCorruptionLayer<Architecture_t> *
-   AddCorruptionLayer(size_t visibleUnits, Scalar_t dropoutProbability,
-                      Scalar_t corruptionLevel);
+   TCorruptionLayer<Architecture_t> * AddCorruptionLayer(size_t visibleUnits,size_t hiddenUnits, Scalar_t dropoutProbability,
+                                                         Scalar_t corruptionLevel);
 
    void AddCorruptionLayer(TCorruptionLayer<Architecture_t> *corruptionLayer);
 
@@ -176,17 +173,22 @@ public:
                        std::vector<Matrix_t> weights,
                        std::vector<Matrix_t> biases);
 
-   void
-   AddCompressionLayer(TCompressionLayer<Architecture_t> *compressionLayer);
+   void AddCompressionLayer(TCompressionLayer<Architecture_t> *compressionLayer);
 
    TReconstructionLayer<Architecture_t> *AddReconstructionLayer(
-       size_t visibleUnits, size_t hiddenUnits, Scalar_t learningRate,
-       EActivationFunction f, std::vector<Matrix_t> weights,
-       std::vector<Matrix_t> biases, Scalar_t corruptionLevel,
-       Scalar_t dropoutProbability, size_t epochs);
+         size_t visibleUnits, size_t hiddenUnits, Scalar_t learningRate,
+         EActivationFunction f, std::vector<Matrix_t> weights,
+         std::vector<Matrix_t> biases, Scalar_t corruptionLevel,
+         Scalar_t dropoutProbability);
 
-   void AddReconstructionLayer(
-       TReconstructionLayer<Architecture_t> *reconstructionLayer);
+   void AddReconstructionLayer(TReconstructionLayer<Architecture_t> *reconstructionLayer);
+
+   TLogisticRegressionLayer<Architecture_t> *
+   AddLogisticRegressionLayer(size_t inputUnits, size_t outputUnits,
+                              size_t testDataBatchSize, Scalar_t learningRate,
+                              size_t epochs);
+
+   void AddLogisticRegressionLayer(TLogisticRegressionLayer<Architecture_t> *logisticRegressionLayer);
 
    /*! Function for adding Denoise layers in the Deep Neural Network,
     *  with given given number of inputUnits, hiddenUnits for every layer,
@@ -238,6 +240,9 @@ public:
                  Scalar_t learningRate, Scalar_t corruptionLevel,
                  Scalar_t dropoutProbability, size_t epochs,
                  EActivationFunction f, bool applyDropout = false);
+
+   void FineTune(std::vector<Matrix_t> &input, std::vector<Matrix_t> &outputLabel,
+                 size_t outputUnits,size_t testDataBatchSize, Scalar_t learningRate, size_t epochs);
 
    /*! Function for parallel backward in the vector of deep nets, where the master
     *  net is the net calling this function and getting the updates from the other nets.
@@ -515,12 +520,12 @@ void TDeepNet<Architecture_t, Layer_t>::AddBasicRNNLayer(TBasicRNNLayer<Architec
 //______________________________________________________________________________
 template <typename Architecture_t, typename Layer_t>
 TCorruptionLayer<Architecture_t> *
-TDeepNet<Architecture_t, Layer_t>::AddCorruptionLayer(size_t visibleUnits, Scalar_t dropoutProbability,
+TDeepNet<Architecture_t, Layer_t>::AddCorruptionLayer(size_t visibleUnits,size_t hiddenUnits, Scalar_t dropoutProbability,
                                                       Scalar_t corruptionLevel)
 {
    size_t batchSize = this->GetBatchSize();
 
-   TCorruptionLayer<Architecture_t> *corruptionLayer = new TCorruptionLayer<Architecture_t>(batchSize, visibleUnits,
+   TCorruptionLayer<Architecture_t> *corruptionLayer = new TCorruptionLayer<Architecture_t>(batchSize, visibleUnits, hiddenUnits,
                                                                                             dropoutProbability, corruptionLevel);
    fLayers.push_back(corruptionLayer);
    return corruptionLayer;
@@ -561,13 +566,14 @@ TReconstructionLayer<Architecture_t> *
 TDeepNet<Architecture_t, Layer_t>::AddReconstructionLayer(size_t visibleUnits, size_t hiddenUnits, Scalar_t learningRate,
                                                           EActivationFunction f, std::vector<Matrix_t> weights,
                                                           std::vector<Matrix_t> biases, Scalar_t corruptionLevel,
-                                                          Scalar_t dropoutProbability, size_t epochs)
+                                                          Scalar_t dropoutProbability)
 {
    size_t batchSize = this->GetBatchSize();
 
-   TReconstructionLayer<Architecture_t> *reconstructionLayer = new TReconstructionLayer<Architecture_t>(batchSize, visibleUnits, hiddenUnits, learningRate,
+   TReconstructionLayer<Architecture_t> *reconstructionLayer = new TReconstructionLayer<Architecture_t>(batchSize, visibleUnits, hiddenUnits,
+                                                                                                        learningRate,
                                                                                                         f, weights,biases, corruptionLevel,
-                                                                                                        dropoutProbability, epochs);
+                                                                                                        dropoutProbability);
    fLayers.push_back(reconstructionLayer);
    return reconstructionLayer;
 }
@@ -578,88 +584,28 @@ void TDeepNet<Architecture_t, Layer_t>::AddReconstructionLayer(TReconstructionLa
 {
    fLayers.push_back(reconstructionLayer);
 }
-/*
+
 //______________________________________________________________________________
 template <typename Architecture_t, typename Layer_t>
-std::vector<TDAELayer<Architecture_t>> *TDeepNet<Architecture_t,
-Layer_t>::AddDAELayers(size_t inputUnits,
-                                                               std::vector<size_t>
-numHiddenUnitsPerLayer,
-                                                       Scalar_t
-dropoutProbability, EActivationFunction f)
+TLogisticRegressionLayer<Architecture_t> *
+TDeepNet<Architecture_t, Layer_t>::AddLogisticRegressionLayer(size_t inputUnits, size_t outputUnits, size_t testDataBatchSize,
+                                                              Scalar_t learningRate, size_t epochs)
 {
    size_t batchSize = this->GetBatchSize();
-   size_t inputHeight;
-   size_t inputWidth;
-   size_t inputDepth;
-   size_t inputSize;
-   size_t numOfHiddenLayers =
-sizeof(numHiddenUnitsPerLayer)/sizeof(numHiddenUnitsPerLayer[0]);
-   std::vector<TDAELayer<Architecture_t> *> TempLayerKeeper;
 
-   for(size_t i = 0; i < numOfHiddenLayers; i++)
-   {
-      if(i == 0 && (fLayers.size() == 0))
-      {
-         inputSize = inputUnits;
-      }
-      if(i == 0 && (fLayers.size() != 0))
-      {
-        Layer_t *lastLayer = fLayers.back();
-        inputDepth = lastLayer->GetDepth();
-        inputHeight = lastLayer->GetHeight();
-        inputWidth = lastLayer->GetWidth();;
-        inputSize = inputDepth * inputHeight * inputWidth;
-      }
-      else
-      {
-              inputSize = numHiddenUnitsPerLayer[i - 1];
-      }
-      // construct a denoise layer
-      TDAELayer<Architecture_t> *daeLayers = new
-TDAELayer<Architecture_t>(batchSize, inputSize, numHiddenUnitsPerLayer[i],
-                                                                          dropoutProbability,
-f);
-      fLayers.push_back(daeLayers);
-      TempLayerKeeper.push_back(daeLayers);
-    }
-
-return TempLayerKeeper;
-
+   TLogisticRegressionLayer<Architecture_t> *logisticRegressionLayer = new TLogisticRegressionLayer<Architecture_t>(batchSize, inputUnits,
+                                                                                                                    outputUnits, testDataBatchSize,
+                                                                                                                    learningRate, epochs);
+   fLayers.push_back(logisticRegressionLayer);
+   return logisticRegressionLayer;
 }
 //______________________________________________________________________________
 template <typename Architecture_t, typename Layer_t>
-void TDeepNet<Architecture_t,
-Layer_t>::AddDAELayers(std::vector<TDAELayer<Architecture_t>> *daeLayers)
-{
-   for(size_t i=0; i<(size_t)daeLayers->size(); i++)
-   {
-      fLayers.push_back(daeLayers[i]);
-   }
-}
-//______________________________________________________________________________
-template <typename Architecture_t, typename Layer_t>
-TLogisticRegressionLayer<Architecture_t> *TDeepNet<Architecture_t,
-Layer_t>::AddLogisticRegressionLayer(size_t inputUnits,
-                                                                                                                   size_t outputUnits, size_t testDataBatchSize)
-{
-  size_t batchSize = this->GetBatchSize();
-  TLogisticRegressionLayer<Architecture_t> *logisticRegressionLayer = new
-TLogisticRegressionLayer<Architecture_t>(batchSize,
-                                                                         inputUnits,
-outputUnits, testDataBatchSize);
-  fLayers.push_back(logisticRegressionLayer);
-  return logisticRegressionLayer;
-}
-//______________________________________________________________________________
-template <typename Architecture_t, typename Layer_t>
-void TDeepNet<Architecture_t,
-Layer_t>::AddLogisticRegressionLayer(TLogisticRegressionLayer<Architecture_t>
-*logisticRegressionLayer)
+void TDeepNet<Architecture_t, Layer_t>::AddLogisticRegressionLayer(TLogisticRegressionLayer<Architecture_t> *logisticRegressionLayer)
 {
    fLayers.push_back(logisticRegressionLayer);
 }
-*/
+
 //______________________________________________________________________________
 template <typename Architecture_t, typename Layer_t>
 TDenseLayer<Architecture_t> *TDeepNet<Architecture_t, Layer_t>::AddDenseLayer(size_t width, EActivationFunction f,
@@ -787,9 +733,10 @@ auto TDeepNet<Architecture_t, Layer_t>::PreTrain(std::vector<Matrix_t> &input, s
    size_t batchSize = this->GetBatchSize();
    size_t visibleUnits = (size_t)input[0].GetNrows();
 
-   AddCorruptionLayer(visibleUnits, dropoutProbability, corruptionLevel);
+   AddCorruptionLayer(visibleUnits,numHiddenUnitsPerLayer[0], dropoutProbability, corruptionLevel);
    fLayers.back()->Initialize();
    fLayers.back()->Forward(input, applyDropout);
+   //fLayers.back()->Print();
 
    AddCompressionLayer(visibleUnits, numHiddenUnitsPerLayer[0],
                        dropoutProbability, f, fLayers.back()->GetWeights(),
@@ -799,23 +746,42 @@ auto TDeepNet<Architecture_t, Layer_t>::PreTrain(std::vector<Matrix_t> &input, s
                            applyDropout); // as we have to pass corrupt input
 
    AddReconstructionLayer(visibleUnits, numHiddenUnitsPerLayer[0], learningRate,
-                          f, fLayers.back()->GetWeights,
+                          f, fLayers.back()->GetWeights(),
                           fLayers.back()->GetBiases(), corruptionLevel,
-                          dropoutProbability, epochs);
+                          dropoutProbability);
    fLayers.back()->Initialize();
    fLayers.back()->Forward(fLayers[fLayers.size() - 2]->GetOutput(),
                            applyDropout); // as we have to pass compressed Input
    fLayers.back()->Backward(fLayers[fLayers.size() - 2]->GetOutput(), input);
+   // three layers are added, now pointer is on third layer
+   size_t weightsSize = fLayers.back()->GetWeights().size();
+   size_t biasesSize = fLayers.back()->GetBiases().size();
+   for(size_t epoch=0; epoch<epochs-1; epoch++)
+   {
+      //fLayers[fLayers.size() - 3]->Forward(input,applyDropout);
+      for(size_t j=0; j< weightsSize; j++)
+      {
+         Architecture_t::Copy(fLayers[fLayers.size() - 2]->GetWeightsAt(j), fLayers.back()->GetWeightsAt(j));
+      }
+      for(size_t j=0; j< biasesSize; j++)
+      {
+         Architecture_t::Copy(fLayers[fLayers.size() - 2]->GetBiasesAt(j), fLayers.back()->GetBiasesAt(j));
+      }
+      fLayers[fLayers.size() - 2]->Forward(fLayers[fLayers.size() - 3]->GetOutput(), applyDropout);
+      fLayers[fLayers.size() - 1]->Forward(fLayers[fLayers.size() - 2]->GetOutput(), applyDropout);
+      fLayers[fLayers.size() - 1]->Backward(fLayers[fLayers.size() - 2]->GetOutput(), input);
+   }
 
    for (size_t i = 1; i < numOfHiddenLayers; i++) {
-      AddCorruptionLayer(numHiddenUnitsPerLayer[i - 1], dropoutProbability,
+
+      AddCorruptionLayer(numHiddenUnitsPerLayer[i - 1],numHiddenUnitsPerLayer[i], dropoutProbability,
                          corruptionLevel);
       fLayers.back()->Initialize();
       fLayers.back()->Forward(fLayers[fLayers.size() - 3]->GetOutput(), applyDropout); // as we have to pass compressed Input
 
       AddCompressionLayer(numHiddenUnitsPerLayer[i - 1],
                           numHiddenUnitsPerLayer[i], dropoutProbability, f,
-                          fLayers.back()->Getweights(),
+                          fLayers.back()->GetWeights(),
                           fLayers.back()->GetBiases());
       fLayers.back()->Initialize();
       fLayers.back()->Forward(fLayers[fLayers.size() - 2]->GetOutput(),
@@ -823,11 +789,46 @@ auto TDeepNet<Architecture_t, Layer_t>::PreTrain(std::vector<Matrix_t> &input, s
 
       AddReconstructionLayer(numHiddenUnitsPerLayer[i - 1], numHiddenUnitsPerLayer[i], learningRate,
                              f, fLayers.back()->GetWeights(), fLayers.back()->GetBiases(),
-                             corruptionLevel, dropoutProbability, epochs);
+                             corruptionLevel, dropoutProbability);
       fLayers.back()->Initialize();
       fLayers.back()->Forward(fLayers[fLayers.size() - 2]->GetOutput(), applyDropout); // as we have to pass compressed Input
       fLayers.back()->Backward(fLayers[fLayers.size() - 2]->GetOutput(), input);
+
+      // three layers are added, now pointer is on third layer
+      size_t weightsSize = fLayers.back()->GetWeights().size();
+      size_t biasesSize = fLayers.back()->GetBiases().size();
+      for(size_t epoch=0; epoch<epochs-1; epoch++)
+      {
+         //fLayers[fLayers.size() - 3]->Forward(input,applyDropout);
+         for(size_t j=0; j< weightsSize; j++)
+         {
+            Architecture_t::Copy(fLayers[fLayers.size() - 2]->GetWeightsAt(j), fLayers.back()->GetWeightsAt(j));
+         }
+         for(size_t j=0; j< biasesSize; j++)
+         {
+            Architecture_t::Copy(fLayers[fLayers.size() - 2]->GetBiasesAt(j), fLayers.back()->GetBiasesAt(j));
+         }
+         fLayers[fLayers.size() - 2]->Forward(fLayers[fLayers.size() - 3]->GetOutput(), applyDropout);
+         fLayers[fLayers.size() - 1]->Forward(fLayers[fLayers.size() - 2]->GetOutput(), applyDropout);
+         fLayers[fLayers.size() - 1]->Backward(fLayers[fLayers.size() - 2]->GetOutput(), fLayers[fLayers.size() - 3]->GetOutput());
+      }
+
    }
+}
+//______________________________________________________________________________
+template <typename Architecture_t, typename Layer_t>
+auto TDeepNet<Architecture_t, Layer_t>::FineTune(std::vector<Matrix_t> &input, std::vector<Matrix_t> &inputLabel,
+                                                 size_t outputUnits,size_t testDataBatchSize, Scalar_t learningRate, size_t epochs)
+-> void
+{
+   size_t inputUnits = input[0].GetNrows();
+
+   AddLogisticRegressionLayer(inputUnits, outputUnits, testDataBatchSize,
+                              learningRate, epochs);
+   //have to add
+   fLayers.back()->Initialize();
+   fLayers.back()->Backward();
+   fLayers.back()->Forward();
 }
 //______________________________________________________________________________
 template <typename Architecture_t, typename Layer_t>

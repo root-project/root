@@ -8,7 +8,7 @@
  * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
- *      Testing the Corruption Layer.                                                              *
+ *      Testing the AutoEncoder DeepNet .                                         *
  *                                                                                *
  * Authors (alphabetical):                                                        *
  *      Akshay Vashistha    <akshayvashistha1995@gmail.com>  - CERN, Switzerland  *
@@ -24,13 +24,13 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-#ifndef TMVA_TEST_DNN_TEST_CORRUPTION_LAYER_H
-#define TMVA_TEST_DNN_TEST_CORRUPTION_LAYER_H
+#ifndef TMVA_TEST_DNN_TEST_DEEPNET_AE_H
+#define TMVA_TEST_DNN_TEST_DEEPNET_AE_H
 
 #include "../Utility.h"
 
 #include "TMVA/DNN/Functions.h"
-#include "TMVA/DNN/DAE/CorruptionLayer.h"
+#include "TMVA/DNN/DeepNet.h"
 
 #include "TMVA/DNN/Functions.h"
 #include <iostream>
@@ -38,49 +38,48 @@
 using namespace TMVA::DNN;
 using namespace TMVA::DNN::DAE;
 
-template <typename Architecture> auto testLayer(size_t batchSize, size_t visibleUnits)
+template <typename Architecture> auto constructDeepAutoEncoderNet(TDeepNet<Architecture> &net)
 -> void
 {
-   //using Scalar_t = typename Architecture::Scalar_t;
+   using Scalar_t = typename Architecture::Scalar_t;
    using Matrix_t = typename Architecture::Matrix_t;
 
-   using TCorruptionLayer = TCorruptionLayer<Architecture>;
+   std::vector<Matrix_t> input;
+   size_t batchSize=10;
+   size_t visibleUnits=6;
+   std::vector<size_t> numHiddenUnitsPerLayer = {4,3};
+   Scalar_t learningRate =0.1;
+   Scalar_t corruptionLevel = 0.3;
+   Scalar_t dropoutProbability = 1;
+   size_t epochs=5;
 
-   TCorruptionLayer dae(batchSize, visibleUnits,2, 1, 0.3);
-
-   std::vector<Matrix_t> input, corruptedInput;
+   Matrix_t inputMatrix(visibleUnits,1);
    for(size_t i=0; i<batchSize; i++)
    {
       input.emplace_back(visibleUnits,1);
-      corruptedInput.emplace_back(visibleUnits,1);
    }
-   Matrix_t inputMatrix(visibleUnits, 1);
-
    for(size_t i=0; i<batchSize; i++)
    {
       randomMatrix(inputMatrix);
-      Architecture::Copy(input[i],inputMatrix);
+      Architecture::Copy(input[i],inputMatrix );
    }
-   std::cout<<"Input Batch: "<<std::endl;
-   for(size_t i=0; i<batchSize; i++)
-   {
-      for(size_t j=0; j<(size_t)input[i].GetNrows(); j++)
-      {
-         for(size_t k=0; k<(size_t)input[i].GetNcols();k++)
-         {
-            std::cout<<input[i](j,k)<<"\t";
-         }
-         std::cout<<std::endl;
-      }
-   }
-   std::cout<<std::endl;
-
-   dae.Forward(input,false);
-
-   std::cout<<std::endl;
-   std::cout<<std::endl;
-   dae.Print();
-
-
+   net.PreTrain(input,
+                numHiddenUnitsPerLayer,
+                learningRate, corruptionLevel,
+                dropoutProbability, epochs,
+                EActivationFunction::kSigmoid, false);
 }
+
+template <typename Architecture> auto testNet()
+-> void
+{
+   using Scalar_t = typename Architecture::Scalar_t;
+   using Matrix_t = typename Architecture::Matrix_t;
+   using Net_t = TDeepNet<Architecture>;
+   size_t batchSize = 10;
+   Net_t convNet(batchSize, 1, 1, 1, 1, 1, 1,
+                 ELossFunction::kMeanSquaredError, EInitialization::kGauss);
+
+   constructDeepAutoEncoderNet(convNet);
+ }
 #endif

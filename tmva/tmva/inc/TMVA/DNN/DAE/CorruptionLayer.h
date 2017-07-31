@@ -53,6 +53,8 @@ public:
 
    size_t fVisibleUnits; ///< total number of visible units
 
+   size_t fHiddenUnits;
+
    Scalar_t fDropoutProbability; ///< Probability that an input is active.
 
    size_t fType; ///< Type of layer
@@ -60,7 +62,7 @@ public:
    Scalar_t  fCorruptionLevel; ///<Corruption level for layer
 
    /*! Constructor. */
-   TCorruptionLayer(size_t BatchSize, size_t VisibleUnits,Scalar_t DropoutProbability,
+   TCorruptionLayer(size_t BatchSize, size_t VisibleUnits, size_t HiddenUnits, Scalar_t DropoutProbability,
                     Scalar_t CorruptionLevel);
 
    /*! Copy the denoise layer provided as a pointer */
@@ -77,6 +79,7 @@ public:
    void Print() const;
 
    size_t GetVisibleUnits() const { return fVisibleUnits; }
+   size_t GetHiddenUnits() const {return fHiddenUnits;}
    size_t GetType() const {return fType;}
    Scalar_t GetDropoutProbability() const { return fDropoutProbability; }
    Scalar_t GetCorruptionLevel() const {return fCorruptionLevel;}
@@ -86,13 +89,21 @@ public:
 //______________________________________________________________________________
 template <typename Architecture_t>
 TCorruptionLayer<Architecture_t>::TCorruptionLayer(size_t batchSize, size_t visibleUnits,
+                           size_t hiddenUnits,
                            Scalar_t dropoutProbability, Scalar_t corruptionLevel)
-   : VGeneralLayer<Architecture_t>(batchSize, 1, 1, 0, 0, 0, 0, 0, 0, 0,
-   0,0,0, batchSize, visibleUnits, 1, EInitialization::kUniform),
+   : VGeneralLayer<Architecture_t>(batchSize, 1, 1, 0, 0, 0, 0, 1, {hiddenUnits}, {visibleUnits},
+   2, {hiddenUnits,visibleUnits}, {1,1}, batchSize, visibleUnits, 1, EInitialization::kUniform),
    fVisibleUnits(visibleUnits), fDropoutProbability(dropoutProbability),
-   fType(1), fCorruptionLevel(corruptionLevel)
+   fType(1), fCorruptionLevel(corruptionLevel), fHiddenUnits(hiddenUnits)
 
 {
+   std::cout<<"Default constructor corruption: "<<std::endl;
+   std::cout<<"No of visibleUnits: "<<fVisibleUnits<<std::endl;
+   std::cout<<"No of Hidden Units: "<<fHiddenUnits<<std::endl;
+   std::cout<<"weights rows: "<<this->GetWeightsAt(0).GetNrows()<<std::endl;
+   std::cout<<"weights cols: "<<this->GetWeightsAt(0).GetNcols()<<std::endl;
+   std::cout<<"Bias 0 rows "<<this->GetBiasesAt(0).GetNrows()<<std::endl;
+   std::cout<<"Bias 1 rows "<<this->GetBiasesAt(1).GetNrows()<<std::endl<<std::endl;
 
 }
 //______________________________________________________________________________
@@ -100,6 +111,7 @@ template <typename Architecture_t>
 TCorruptionLayer<Architecture_t>::TCorruptionLayer(TCorruptionLayer<Architecture_t> *layer)
    : VGeneralLayer<Architecture_t>(layer),
    fVisibleUnits(layer->GetVisibleUnits()),fType(1),
+   fHiddenUnits(layer->GetHiddenUnits()),
    fDropoutProbability(layer->GetDropoutProbability()),
    fCorruptionLevel(layer->GetCorruptionLevel())
 {
@@ -110,6 +122,7 @@ template <typename Architecture_t>
 TCorruptionLayer<Architecture_t>::TCorruptionLayer(const TCorruptionLayer &corrupt)
    : VGeneralLayer<Architecture_t>(corrupt),
    fVisibleUnits(corrupt.fVisibleUnits),fType(1),
+   fHiddenUnits(corrupt.fHiddenUnits),
    fDropoutProbability(corrupt.fDropoutProbability),
    fCorruptionLevel(corrupt.fCorruptionLevel)
 
@@ -123,6 +136,7 @@ template <typename Architecture_t>
 auto TCorruptionLayer<Architecture_t>::Forward(std::vector<Matrix_t> input, bool applyDropout)
 -> void
 {
+   std::cout<<"Forward corruption "<<std::endl;
    for (size_t i = 0; i < this->GetBatchSize(); i++)
    {
       if (applyDropout && (this->GetDropoutProbability() != 1.0))
@@ -131,6 +145,7 @@ auto TCorruptionLayer<Architecture_t>::Forward(std::vector<Matrix_t> input, bool
       }
       Architecture_t::CorruptInput(input[i], this->GetOutputAt(i), this->GetCorruptionLevel());
    }
+   std::cout<<"Forward corruption done "<<std::endl<<std::endl;
 }
 //______________________________________________________________________________
 template <typename Architecture_t>
@@ -145,7 +160,8 @@ auto TCorruptionLayer<Architecture_t>::Print() const
 -> void
 {
    std::cout << "Batch Size: " << this->GetBatchSize() << "\n"
-            << "Input Units: " << this->GetVisibleUnits() << "\n";
+            << "Input Units: " << this->GetVisibleUnits() << "\n"
+            << "Hidden units: "<< this->GetHiddenUnits() <<"\n";
 
    for(size_t i=0; i<this->GetBatchSize(); i++)
    {
