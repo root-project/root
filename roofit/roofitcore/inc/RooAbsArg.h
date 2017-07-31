@@ -415,7 +415,7 @@ public:
   
   void setProhibitServerRedirect(Bool_t flag) { _prohibitServerRedirect = flag ; }
 
-  void setWorkspace(RooWorkspace& ws) { _myws = &ws ; }
+  void setWorkspace(RooWorkspace &ws) { _myws = &ws; }
 
   protected:
 
@@ -496,11 +496,15 @@ public:
   RooAbsArg *findNewServer(const RooAbsCollection &newSet, Bool_t nameChange) const;
 
   RooExpensiveObjectCache& expensiveObjectCache() const ;
-  virtual void setExpensiveObjectCache(RooExpensiveObjectCache& cache) { _eocache = &cache ; }  
+  virtual void setExpensiveObjectCache(RooExpensiveObjectCache& cache) { _eocache = &cache ; }
 
-  virtual Bool_t importWorkspaceHook(RooWorkspace& ws) { _myws = &ws ; return kFALSE ; } ;
+  virtual Bool_t importWorkspaceHook(RooWorkspace &ws)
+  {
+     _myws = &ws;
+     return kFALSE;
+  };
 
- protected:
+  protected:
 
   // Proxy management
   friend class RooAddModel ;
@@ -587,9 +591,9 @@ public:
 /*   RooArgSet _leafNodeCache ; //! Cached leaf nodes */
 /*   RooArgSet _branchNodeCache //! Cached branch nodes     */
 
-  mutable RooWorkspace* _myws ; //! In which workspace do I live, if any
+  mutable RooWorkspace *_myws; //! In which workspace do I live, if any
 
- public:  
+  public:  
   virtual void ioStreamerPass2() ;
   static void ioStreamerPass2Finalize() ;
   static std::map<RooAbsArg*,TRefArray*> _ioEvoList ; // temporary holding list for proxies needed in schema evolution  
