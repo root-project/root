@@ -1947,9 +1947,9 @@ Bool_t RooWorkspace::CodeRepo::autoImportClass(TClass* tc, Bool_t doReplace)
           hpath += "/include/";
           hpath += incfile;
           if (gSystem->AccessPathName(hpath.Data())) {
-             oocoutI(_wspace, ObjectHandling)
-                << "RooWorkspace::autoImportClass(" << _wspace->GetName() << ") scheduling recursive include file "
-                << incfile << " for import" << endl;
+             oocoutI(_wspace, ObjectHandling) << "RooWorkspace::autoImportClass(" << _wspace->GetName()
+                                              << ") scheduling recursive include file " << incfile << " for import"
+                                              << endl;
              extraHeaders.push_back(incfile);
           }
        }
@@ -2859,8 +2859,8 @@ Bool_t RooWorkspace::CodeRepo::compileClasses()
 
       ofstream fdecl(fdname.c_str());
       if (!fdecl) {
-         oocoutE(_wspace, ObjectHandling)
-            << "RooWorkspace::CodeRepo::compileClasses() ERROR opening file " << fdname << " for writing" << endl;
+         oocoutE(_wspace, ObjectHandling) << "RooWorkspace::CodeRepo::compileClasses() ERROR opening file " << fdname
+                                          << " for writing" << endl;
          return kFALSE;
       }
       fdecl << eiter->second._hfile.Data();

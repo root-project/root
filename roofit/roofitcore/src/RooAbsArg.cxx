@@ -2446,7 +2446,8 @@ void RooAbsArg::ioStreamerPass2()
   if (iter != _ioEvoList.end()) {
 
     // Transfer contents of saved TRefArray to RooRefArray now
-    if (!_proxyList.GetEntriesFast()) _proxyList.Expand(iter->second->GetEntriesFast());
+    if (!_proxyList.GetEntriesFast())
+       _proxyList.Expand(iter->second->GetEntriesFast());
     for (int i = 0; i < iter->second->GetEntriesFast(); i++) {
        _proxyList.Add(iter->second->At(i));
     }
@@ -2475,7 +2476,8 @@ void RooAbsArg::ioStreamerPass2Finalize()
   while (iter != _ioEvoList.end()) {
     
     // Transfer contents of saved TRefArray to RooRefArray now
-    if (!iter->first->_proxyList.GetEntriesFast()) iter->first->_proxyList.Expand(iter->second->GetEntriesFast());
+    if (!iter->first->_proxyList.GetEntriesFast())
+       iter->first->_proxyList.Expand(iter->second->GetEntriesFast());
     for (int i = 0; i < iter->second->GetEntriesFast(); i++) {
        iter->first->_proxyList.Add(iter->second->At(i));
     }

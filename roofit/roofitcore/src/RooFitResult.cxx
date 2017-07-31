@@ -771,9 +771,12 @@ void RooFitResult::fillPrefitCorrMatrix()
 {
 
    // Delete eventual prevous correlation data holders
-   if (_CM) delete _CM;
-   if (_VM) delete _VM;
-   if (_GC) delete _GC;
+   if (_CM)
+      delete _CM;
+   if (_VM)
+      delete _VM;
+   if (_GC)
+      delete _GC;
 
    // Build holding arrays for correlation coefficients
    _CM = new TMatrixDSym(_initPars->getSize());

@@ -157,10 +157,14 @@ RooMomentMorphFunc::RooMomentMorphFunc(const RooMomentMorphFunc &other, const ch
 //_____________________________________________________________________________
 RooMomentMorphFunc::~RooMomentMorphFunc()
 {
-   if (_mref) delete _mref;
-   if (_varItr) delete _varItr;
-   if (_pdfItr) delete _pdfItr;
-   if (_M) delete _M;
+   if (_mref)
+      delete _mref;
+   if (_varItr)
+      delete _varItr;
+   if (_pdfItr)
+      delete _pdfItr;
+   if (_M)
+      delete _M;
 }
 
 //_____________________________________________________________________________
@@ -183,7 +187,8 @@ void RooMomentMorphFunc::initialize()
    for (Int_t i = 0; i < _mref->GetNrows(); ++i) {
       (*dm)[i] = (*_mref)[i] - (*_mref)[0];
       M(i, 0) = 1.;
-      if (i > 0) M(0, i) = 0.;
+      if (i > 0)
+         M(0, i) = 0.;
    }
    for (Int_t i = 1; i < _mref->GetNrows(); ++i) {
       for (Int_t j = 1; j < _mref->GetNrows(); ++j) {
@@ -422,7 +427,8 @@ void RooMomentMorphFunc::CacheElem::calculateFractions(const RooMomentMorphFunc 
       for (Int_t j = 0; j < nPdf; ++j) {
          ffrac += (*self._M)(j, i) * (j == 0 ? 1. : TMath::Power(dm, (double)j));
       }
-      if (ffrac >= 0) sumposfrac += ffrac;
+      if (ffrac >= 0)
+         sumposfrac += ffrac;
       // fractions for pdf
       ((RooRealVar *)frac(i))->setVal(ffrac);
       // fractions for rms and mean
@@ -470,7 +476,8 @@ void RooMomentMorphFunc::CacheElem::calculateFractions(const RooMomentMorphFunc 
       break;
    case NonLinearPosFractions:
       for (Int_t i = 0; i < nPdf; ++i) {
-         if (((RooRealVar *)frac(i))->getVal() < 0) ((RooRealVar *)frac(i))->setVal(0.);
+         if (((RooRealVar *)frac(i))->getVal() < 0)
+            ((RooRealVar *)frac(i))->setVal(0.);
          ((RooRealVar *)frac(i))->setVal(((RooRealVar *)frac(i))->getVal() / sumposfrac);
       }
       break;
