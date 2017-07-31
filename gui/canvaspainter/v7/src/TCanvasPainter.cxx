@@ -237,7 +237,7 @@ private:
 
    void PopFrontCommand(bool res = false);
 
-   virtual Bool_t ProcessWS(THttpCallArg *arg);
+   virtual Bool_t ProcessWS(THttpCallArg *arg) override;
 
    void CancelCommands(bool cancel_all, UInt_t connid = 0);
 
@@ -267,7 +267,7 @@ public:
       // TODO: should we close server when all canvases are closed?
    }
 
-   virtual bool IsBatchMode() const { return fBatchMode; }
+   virtual bool IsBatchMode() const override { return fBatchMode; }
 
    virtual void AddDisplayItem(ROOT::Experimental::TDisplayItem *item) final;
 
