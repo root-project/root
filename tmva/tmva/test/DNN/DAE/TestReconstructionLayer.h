@@ -61,7 +61,7 @@ template <typename Architecture> auto testLayer(size_t batchSize, size_t visible
    Biases.emplace_back(biases2);
 
 
-   TReconstructionLayer dae(batchSize, visibleUnits, hiddenUnits,0.1, EActivationFunction::kSigmoid,Weights,Biases,0.3,1,1);
+   TReconstructionLayer dae(batchSize, visibleUnits, hiddenUnits,0.1, EActivationFunction::kSigmoid,Weights,Biases,0.3,1);
 
 
    std::vector<Matrix_t> input, compressedInput;
