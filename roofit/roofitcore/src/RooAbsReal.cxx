@@ -2633,35 +2633,36 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
 ///       Corr(a,a') = the correlation matrix from the fit result
 ///
 
-Double_t RooAbsReal::getPropagatedError(const RooFitResult& fr, const RooArgSet& nset_in)
+Double_t RooAbsReal::getPropagatedError(const RooFitResult &fr, const RooArgSet &nset_in)
 {
 
-  // Strip out parameters with zero error
-  RooArgList fpf_stripped ;
-  RooFIter fi = fr.floatParsFinal().fwdIterator() ;
-  RooRealVar* frv ;
-  while ((frv=(RooRealVar*)fi.next())) {
-    if (frv->getError()>1e-20) {
-      fpf_stripped.add(*frv) ;
-    }
-  }
+   // Strip out parameters with zero error
+   RooArgList fpf_stripped;
+   RooFIter fi = fr.floatParsFinal().fwdIterator();
+   RooRealVar *frv;
+   while ((frv = (RooRealVar *)fi.next())) {
+      if (frv->getError() > 1e-20) {
+         fpf_stripped.add(*frv);
+      }
+   }
 
-  // Clone self for internal use
-  RooAbsReal* cloneFunc = (RooAbsReal*) cloneTree() ;
-  RooArgSet* errorParams = cloneFunc->getObservables(fpf_stripped) ;
+   // Clone self for internal use
+   RooAbsReal *cloneFunc = (RooAbsReal *)cloneTree();
+   RooArgSet *errorParams = cloneFunc->getObservables(fpf_stripped);
 
-  RooArgSet* nset = nset_in.getSize()==0 ? cloneFunc->getParameters(*errorParams) : cloneFunc->getObservables(nset_in) ;
+   RooArgSet *nset =
+      nset_in.getSize() == 0 ? cloneFunc->getParameters(*errorParams) : cloneFunc->getObservables(nset_in);
 
-  // Make list of parameter instances of cloneFunc in order of error matrix
-  RooArgList paramList ;
-  const RooArgList& fpf = fpf_stripped ;
-  vector<int> fpf_idx ;
-  for (Int_t i=0 ; i<fpf.getSize() ; i++) {
-    RooAbsArg* par = errorParams->find(fpf[i].GetName()) ;
-    if (par) {
-      paramList.add(*par) ;
-      fpf_idx.push_back(i) ;
-    }
+   // Make list of parameter instances of cloneFunc in order of error matrix
+   RooArgList paramList;
+   const RooArgList &fpf = fpf_stripped;
+   vector<int> fpf_idx;
+   for (Int_t i = 0; i < fpf.getSize(); i++) {
+      RooAbsArg *par = errorParams->find(fpf[i].GetName());
+      if (par) {
+         paramList.add(*par);
+         fpf_idx.push_back(i);
+      }
   }
 
   vector<Double_t> plusVar, minusVar ;
@@ -2833,18 +2834,18 @@ RooPlot* RooAbsReal::plotOnWithErrorBand(RooPlot* frame,const RooFitResult& fr, 
     //   and C_aa' is the correlation matrix
 
     // Strip out parameters with zero error
-    RooArgList fpf_stripped ;
-    RooFIter fi = fr.floatParsFinal().fwdIterator() ;
-    RooRealVar* frv ;
-    while ((frv=(RooRealVar*)fi.next())) {
-      if (frv->getError()>1e-20) {
-	fpf_stripped.add(*frv) ;
-      }
+    RooArgList fpf_stripped;
+    RooFIter fi = fr.floatParsFinal().fwdIterator();
+    RooRealVar *frv;
+    while ((frv = (RooRealVar *)fi.next())) {
+       if (frv->getError() > 1e-20) {
+          fpf_stripped.add(*frv);
+       }
     }
 
     // Clone self for internal use
     RooAbsReal* cloneFunc = (RooAbsReal*) cloneTree() ;
-    RooArgSet* cloneParams = cloneFunc->getObservables(fpf_stripped) ;
+    RooArgSet *cloneParams = cloneFunc->getObservables(fpf_stripped);
     RooArgSet* errorParams = params?((RooArgSet*)cloneParams->selectCommon(*params)):cloneParams ;
 
 

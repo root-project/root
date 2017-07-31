@@ -922,32 +922,36 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   // Collect internal and external constraint specifications
   RooArgSet allConstraints ;
 
+  if (_myws && _myws->set(Form("CACHE_CONSTR_OF_PDF_%s_FOR_OBS_%s", GetName(), RooNameSet(*data.get()).content()))) {
 
-  if (_myws && _myws->set(Form("CACHE_CONSTR_OF_PDF_%s_FOR_OBS_%s",GetName(),RooNameSet(*data.get()).content()))) {
-
-    // retrieve from cache
-    const RooArgSet* constr = _myws->set(Form("CACHE_CONSTR_OF_PDF_%s_FOR_OBS_%s",GetName(),RooNameSet(*data.get()).content())) ;
-    coutI(Minimization) << "createNLL picked up cached consraints from workspace with " << constr->getSize() << " entries" << endl ;
-    allConstraints.add(*constr) ;
+     // retrieve from cache
+     const RooArgSet *constr =
+        _myws->set(Form("CACHE_CONSTR_OF_PDF_%s_FOR_OBS_%s", GetName(), RooNameSet(*data.get()).content()));
+     coutI(Minimization) << "createNLL picked up cached consraints from workspace with " << constr->getSize()
+                         << " entries" << endl;
+     allConstraints.add(*constr);
 
   } else {
 
-    if (cPars && cPars->getSize()>0) {
-      RooArgSet* constraints = getAllConstraints(*data.get(),*cPars,doStripDisconnected) ;
-      allConstraints.add(*constraints) ;
-      delete constraints ;      
-    }
-    if (extCons) {
-      allConstraints.add(*extCons) ;
-    }
+     if (cPars && cPars->getSize() > 0) {
+        RooArgSet *constraints = getAllConstraints(*data.get(), *cPars, doStripDisconnected);
+        allConstraints.add(*constraints);
+        delete constraints;
+     }
+     if (extCons) {
+        allConstraints.add(*extCons);
+     }
 
-    // write to cache
-    if (_myws) {
-      //cout << "createNLL: creating cache for allconstraints=" << allConstraints << endl ;
-      coutI(Minimization) << "createNLL: caching constraint set under name " << Form("CONSTR_OF_PDF_%s_FOR_OBS_%s",GetName(),RooNameSet(*data.get()).content()) << " with " << allConstraints.getSize() << " entries" << endl ;
-      _myws->defineSetInternal(Form("CACHE_CONSTR_OF_PDF_%s_FOR_OBS_%s",GetName(),RooNameSet(*data.get()).content()),allConstraints) ;
-    }
-  }    
+     // write to cache
+     if (_myws) {
+        // cout << "createNLL: creating cache for allconstraints=" << allConstraints << endl ;
+        coutI(Minimization) << "createNLL: caching constraint set under name "
+                            << Form("CONSTR_OF_PDF_%s_FOR_OBS_%s", GetName(), RooNameSet(*data.get()).content())
+                            << " with " << allConstraints.getSize() << " entries" << endl;
+        _myws->defineSetInternal(
+           Form("CACHE_CONSTR_OF_PDF_%s_FOR_OBS_%s", GetName(), RooNameSet(*data.get()).content()), allConstraints);
+     }
+  }
 
   // Include constraints, if any, in likelihood
   RooAbsReal* nllCons(0) ;

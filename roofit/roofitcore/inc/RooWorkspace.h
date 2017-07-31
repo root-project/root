@@ -238,48 +238,47 @@ public:
 
 
  private:
+    friend class RooAbsArg;
+    friend class RooAbsPdf;
+    Bool_t defineSetInternal(const char *name, const RooArgSet &aset);
 
-  friend class RooAbsArg ;
-  friend class RooAbsPdf ;
-  Bool_t defineSetInternal(const char* name, const RooArgSet& aset) ;
+    Bool_t isValidCPPID(const char *name);
+    void exportObj(TObject *obj);
+    void unExport();
 
-  Bool_t isValidCPPID(const char* name) ;
-  void exportObj(TObject* obj) ;
-  void unExport() ;
+    friend class CodeRepo;
+    static std::list<std::string> _classDeclDirList;
+    static std::list<std::string> _classImplDirList;
+    static std::string _classFileExportDir;
 
-  friend class CodeRepo ;
-  static std::list<std::string> _classDeclDirList ;
-  static std::list<std::string> _classImplDirList ;
-  static std::string            _classFileExportDir ;
+    TUUID _uuid; // Unique workspace ID
 
-  TUUID       _uuid ;  // Unique workspace ID
+    static Bool_t _autoClass; // Automatic import of non-distribution class code
 
-  static Bool_t _autoClass ; // Automatic import of non-distribution class code
-  
-  CodeRepo _classes ; // Repository of embedded class code. This data member _must_ be first
+    CodeRepo _classes; // Repository of embedded class code. This data member _must_ be first
 
-  RooArgSet _allOwnedNodes ; // List of owned pdfs and components
-  RooLinkedList _dataList ; // List of owned datasets
-  RooLinkedList _embeddedDataList ; // List of owned datasets that are embedded in pdfs
-  RooLinkedList _views ; // List of model views  
-  RooLinkedList _snapshots ; // List of parameter snapshots
-  RooLinkedList _genObjects ; // List of generic objects
-  RooLinkedList _studyMods ; // List if StudyManager modules
-  std::map<std::string,RooArgSet> _namedSets ; // Map of named RooArgSets
+    RooArgSet _allOwnedNodes;                    // List of owned pdfs and components
+    RooLinkedList _dataList;                     // List of owned datasets
+    RooLinkedList _embeddedDataList;             // List of owned datasets that are embedded in pdfs
+    RooLinkedList _views;                        // List of model views
+    RooLinkedList _snapshots;                    // List of parameter snapshots
+    RooLinkedList _genObjects;                   // List of generic objects
+    RooLinkedList _studyMods;                    // List if StudyManager modules
+    std::map<std::string, RooArgSet> _namedSets; // Map of named RooArgSets
 
-  WSDir* _dir ; //! Transient ROOT directory representation of workspace
+    WSDir *_dir; //! Transient ROOT directory representation of workspace
 
-  RooExpensiveObjectCache _eocache ; // Cache for expensive objects  
+    RooExpensiveObjectCache _eocache; // Cache for expensive objects
 
-  RooFactoryWSTool* _factory ; //! Factory tool associated with workspace
+    RooFactoryWSTool *_factory; //! Factory tool associated with workspace
 
-  Bool_t      _doExport ;     //! Export contents of workspace to CINT?
-  std::string _exportNSName ; //! Name of CINT namespace to which contents are exported
+    Bool_t _doExport;          //! Export contents of workspace to CINT?
+    std::string _exportNSName; //! Name of CINT namespace to which contents are exported
 
-  Bool_t      _openTrans ;    //! Is there a transaction open?
-  RooArgSet   _sandboxNodes ; //! Sandbox for incoming objects in a transaction
+    Bool_t _openTrans;       //! Is there a transaction open?
+    RooArgSet _sandboxNodes; //! Sandbox for incoming objects in a transaction
 
-  ClassDef(RooWorkspace,8)  // Persistable project container for (composite) pdfs, functions, variables and datasets
+    ClassDef(RooWorkspace, 8) // Persistable project container for (composite) pdfs, functions, variables and datasets
   
 } ;
 
