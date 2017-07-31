@@ -31,7 +31,11 @@
 
 using namespace std;
 
-ClassImp(RooMomentMorphFuncND) ClassImp(RooMomentMorphFuncND::Grid2)
+// ClassImp for RooMomentMorphFuncND
+ClassImp(RooMomentMorphFuncND)
+
+   // ClassImp for RooMomentMorphFuncND
+   ClassImp(RooMomentMorphFuncND::Grid2)
 
    //_____________________________________________________________________________
    RooMomentMorphFuncND::RooMomentMorphFuncND()
