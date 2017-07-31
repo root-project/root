@@ -165,7 +165,7 @@ Long_t JitTransformation(void *thisPtr, const std::string &methodName, const std
 // (see comments in the body for actual jitted code)
 std::string JitBuildAndBook(const ColumnNames_t &bl, const std::string &prevNodeTypename, void *prevNode,
                             const std::type_info &art, const std::type_info &at, const void *rOnHeap, TTree *tree,
-                            unsigned int nSlots, const std::map<std::string, TmpBranchBasePtr_t> &tmpBranches)
+                            const unsigned int nSlots, const std::map<std::string, TmpBranchBasePtr_t> &tmpBranches)
 {
    gInterpreter->ProcessLine("#include \"ROOT/TDataFrame.hxx\"");
    auto nBranches = bl.size();
