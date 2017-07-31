@@ -1378,7 +1378,8 @@ Double_t RooDataHist::interpolateDim(RooRealVar& dim, const RooAbsBinning* binni
 	Int_t idx = calcTreeIndex() ;      
 	xarr[i-fbinLo] = 2*dim.getMax()-dim.getVal() ;
    yarr[i - fbinLo] = get_wgt(idx);
-   if (correctForBinSize) yarr[i - fbinLo] /= _binv[idx];
+   if (correctForBinSize)
+      yarr[i - fbinLo] /= _binv[idx];
       }
     } else {
       // Underflow: mirror
@@ -1392,7 +1393,8 @@ Double_t RooDataHist::interpolateDim(RooRealVar& dim, const RooAbsBinning* binni
 	Int_t idx = calcTreeIndex() ;      
 	xarr[i-fbinLo] = 2*dim.getMin()-dim.getVal() ;
    yarr[i - fbinLo] = get_wgt(idx);
-   if (correctForBinSize) yarr[i - fbinLo] /= _binv[idx];
+   if (correctForBinSize)
+      yarr[i - fbinLo] /= _binv[idx];
       }
     }
     //cout << "ibin = " << ibin << endl ;
