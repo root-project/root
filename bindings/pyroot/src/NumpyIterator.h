@@ -115,9 +115,9 @@ static void PyNumpyIterator_del(PyNumpyIterator* thyself) {
 #endif
 
 static PyTypeObject PyNumpyIteratorType = {
-  PyVarObject_HEAD_INIT(NULL, 0)
-  "numpyinterface.NumpyIterator", /*tp_name*/
-  sizeof(PyNumpyIterator),  /*tp_basicsize*/
+  PyVarObject_HEAD_INIT( &PyType_Type, 0 )
+  "ROOT.NumpyIterator",      /*tp_name*/
+  sizeof(PyNumpyIterator),   /*tp_basicsize*/
   0,                         /*tp_itemsize*/
   (destructor)PyNumpyIterator_del, /*tp_dealloc*/
   0,                         /*tp_print*/
