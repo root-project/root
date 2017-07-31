@@ -1721,6 +1721,29 @@ namespace PyROOT {      // workaround for Intel icc on Linux
       }
    };
 
+   static PyObject* GetNumpyIterator(PyObject* self, PyObject* args, PyObject* kwds) {
+      if (!ObjectProxy_Check(self))
+      {
+         PyErr_SetString( PyExc_TypeError,
+            "TTree::GetNumpyIterator must be called with a TTree instance as first argument" );
+         return 0;
+      }
+
+      PyROOT::ObjectProxy* pyobj = reinterpret_cast<PyROOT::ObjectProxy*>(self);
+
+      TTree* tree =
+        (TTree*)OP2TCLASS(pyobj)->DynamicCast( TTree::Class(), pyobj->GetObject() );
+
+      if ( ! tree ) {
+        PyErr_SetString( PyExc_TypeError,
+           "TTree::GetNumpyIterator must be called with a TTree instance as first argument" );
+        return 0;
+      }
+
+      tree->Print();
+
+      return Py_BuildValue("OOO", Py_None, Py_None, Py_None);
+   }
 
 // TChain overrides TTree's SetBranchAddress, so set it again (the python method only forwards
 //   onto a TTree*, so the C++ virtual function call will make sure the right method is used)
@@ -2567,6 +2590,8 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
          pyclass, const_cast< char* >( method->GetName().c_str() ), (PyObject*)method );
       Py_DECREF( method ); method = 0;
 
+   // add Python-only GetNumpyIterator method
+      Utility::AddToClass( pyclass, "GetNumpyIterator", (PyCFunction) GetNumpyIterator, METH_VARARGS | METH_KEYWORDS );
    }
 
    else if ( name == "TChain" ) {
