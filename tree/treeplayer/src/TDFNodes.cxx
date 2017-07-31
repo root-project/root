@@ -33,7 +33,7 @@ namespace ROOT {
 namespace Internal {
 namespace TDF {
 
-TActionBase::TActionBase(TLoopManager *implPtr, const ColumnNames_t &tmpBranches, unsigned int nSlots)
+TActionBase::TActionBase(TLoopManager *implPtr, const ColumnNames_t &tmpBranches, const unsigned int nSlots)
    : fImplPtr(implPtr), fTmpBranches(tmpBranches), fNSlots(nSlots)
 {
 }
@@ -43,7 +43,7 @@ TActionBase::TActionBase(TLoopManager *implPtr, const ColumnNames_t &tmpBranches
 } // end NS ROOT
 
 TCustomColumnBase::TCustomColumnBase(TLoopManager *implPtr, const ColumnNames_t &tmpBranches, std::string_view name,
-                                     unsigned int nSlots)
+                                     const unsigned int nSlots)
    : fImplPtr(implPtr), fTmpBranches(tmpBranches), fName(name), fNSlots(nSlots){};
 
 ColumnNames_t TCustomColumnBase::GetTmpBranches() const
@@ -62,7 +62,7 @@ TLoopManager *TCustomColumnBase::GetImplPtr() const
 }
 
 TFilterBase::TFilterBase(TLoopManager *implPtr, const ColumnNames_t &tmpBranches, std::string_view name,
-                         unsigned int nSlots)
+                         const unsigned int nSlots)
    : fImplPtr(implPtr), fTmpBranches(tmpBranches), fLastCheckedEntry(nSlots, -1), fLastResult(nSlots),
      fAccepted(nSlots), fRejected(nSlots), fName(name), fNSlots(nSlots)
 {
@@ -392,7 +392,7 @@ void TLoopManager::Report() const
 }
 
 TRangeBase::TRangeBase(TLoopManager *implPtr, const ColumnNames_t &tmpBranches, unsigned int start, unsigned int stop,
-                       unsigned int stride, unsigned int nSlots)
+                       unsigned int stride, const unsigned int nSlots)
    : fImplPtr(implPtr), fTmpBranches(tmpBranches), fStart(start), fStop(stop), fStride(stride), fNSlots(nSlots)
 {
 }

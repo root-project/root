@@ -366,7 +366,7 @@ number indicating which thread (0, 1, 2 , ..., poolSize - 1) the function is bei
 ~~~{.cpp}
 // Thread-safe evaluation of RMS of branch "b" using ForeachSlot
 ROOT::EnableImplicitMT();
-unsigned int nSlots = ROOT::GetImplicitMTPoolSize();
+const unsigned int nSlots = ROOT::GetImplicitMTPoolSize();
 std::vector<double> sumSqs(nSlots, 0.);
 std::vector<unsigned int> ns(nSlots, 0);
 

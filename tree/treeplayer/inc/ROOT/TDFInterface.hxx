@@ -45,7 +45,7 @@ using namespace ROOT::Detail::TDF;
 
 // Generic filling (covers Histo2D, Histo3D, Profile1D and Profile2D actions, with and without weights)
 template <typename... BranchTypes, typename ActionType, typename ActionResultType, typename PrevNodeType>
-void BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &h, unsigned int nSlots,
+void BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &h, const unsigned int nSlots,
                   TLoopManager &loopManager, PrevNodeType &prevNode, ActionType *)
 {
    using Helper_t = FillTOHelper<ActionResultType>;
@@ -55,7 +55,7 @@ void BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<ActionResultTyp
 
 // Histo1D filling (must handle the special case of distinguishing FillTOHelper and FillHelper
 template <typename... BranchTypes, typename PrevNodeType>
-void BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<::TH1D> &h, unsigned int nSlots,
+void BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<::TH1D> &h, const unsigned int nSlots,
                   TLoopManager &loopManager, PrevNodeType &prevNode, ActionTypes::Histo1D *)
 {
    auto hasAxisLimits = HistoUtils<::TH1D>::HasAxisLimits(*h);
@@ -73,7 +73,7 @@ void BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<::TH1D> &h, uns
 
 // Min action
 template <typename BranchType, typename PrevNodeType>
-void BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<double> &minV, unsigned int nSlots,
+void BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<double> &minV, const unsigned int nSlots,
                   TLoopManager &loopManager, PrevNodeType &prevNode, ActionTypes::Min *)
 {
    using Helper_t = MinHelper;
@@ -83,7 +83,7 @@ void BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<double> &minV, 
 
 // Max action
 template <typename BranchType, typename PrevNodeType>
-void BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<double> &maxV, unsigned int nSlots,
+void BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<double> &maxV, const unsigned int nSlots,
                   TLoopManager &loopManager, PrevNodeType &prevNode, ActionTypes::Max *)
 {
    using Helper_t = MaxHelper;
@@ -93,7 +93,7 @@ void BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<double> &maxV, 
 
 // Mean action
 template <typename BranchType, typename PrevNodeType>
-void BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<double> &meanV, unsigned int nSlots,
+void BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<double> &meanV, const unsigned int nSlots,
                   TLoopManager &loopManager, PrevNodeType &prevNode, ActionTypes::Mean *)
 {
    using Helper_t = MeanHelper;
@@ -104,7 +104,7 @@ void BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<double> &meanV,
 /// \endcond
 
 template <typename ActionType, typename... BranchTypes, typename PrevNodeType, typename ActionResultType>
-void CallBuildAndBook(PrevNodeType &prevNode, const ColumnNames_t &bl, unsigned int nSlots,
+void CallBuildAndBook(PrevNodeType &prevNode, const ColumnNames_t &bl, const unsigned int nSlots,
                       const std::shared_ptr<ActionResultType> *rOnHeap)
 {
    // if we are here it means we are jitting, if we are jitting the loop manager must be alive
@@ -124,7 +124,7 @@ Long_t JitTransformation(void *thisPtr, const std::string &methodName, const std
 
 std::string JitBuildAndBook(const ColumnNames_t &bl, const std::string &prevNodeTypename, void *prevNode,
                             const std::type_info &art, const std::type_info &at, const void *r, TTree *tree,
-                            unsigned int nSlots, const std::map<std::string, TmpBranchBasePtr_t> &tmpBranches);
+                            const unsigned int nSlots, const std::map<std::string, TmpBranchBasePtr_t> &tmpBranches);
 
 // allocate a shared_ptr on the heap, return a reference to it. the user is responsible of deleting the shared_ptr*.
 // this function is meant to only be used by TInterface's action methods, and should be deprecated as soon as we find
@@ -1082,7 +1082,7 @@ private:
       auto loopManager = GetDataFrameChecked();
       auto realNColumns = (nColumns > -1 ? nColumns : sizeof...(BranchTypes));
       const auto validColumnNames = GetValidatedColumnNames(*loopManager, realNColumns, columns);
-      unsigned int nSlots = fProxiedPtr->GetNSlots();
+      const unsigned int nSlots = fProxiedPtr->GetNSlots();
       const auto &tmpBranches = loopManager->GetBookedBranches();
       auto tree = loopManager->GetTree();
       auto rOnHeap = TDFInternal::MakeSharedOnHeap(r);
