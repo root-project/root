@@ -1110,21 +1110,16 @@ private:
       TDFInternal::CheckSnapshot(sizeof...(S), columnList.size());
 
       // split name into directory and treename if needed
-      auto getDirTreeName = [](std::string_view treePath) {
-         auto lastSlash = treePath.rfind('/');
-         std::string_view treeDir, treeName;
-         if (std::string_view::npos != lastSlash) {
-            treeDir = treePath.substr(0,lastSlash);
-            treeName = treePath.substr(lastSlash+1,treePath.size());
-         } else {
-            treeName = treePath;
-         }
-         // need to convert to string for TTree and TDirectory ctors anyway
-         return std::make_pair(std::string(treeDir), std::string(treeName));
-      };
-      std::string treenameInt;
-      std::string dirnameInt;
-      std::tie(dirnameInt, treenameInt) = getDirTreeName(treename);
+      const auto lastSlash = treename.rfind('/');
+      std::string_view dirNameView, treeNameView;
+      if (std::string_view::npos != lastSlash) {
+         dirNameView = treename.substr(0, lastSlash);
+         treeNameView = treename.substr(lastSlash + 1, treename.size());
+      } else {
+         treeNameView = treename;
+      }
+      const std::string dirName(dirNameView);
+      const std::string treeName(treeNameView);
 
       auto df = GetDataFrameChecked();
       const std::string filenameInt(filename);
@@ -1135,13 +1130,13 @@ private:
          using Helper_t = TDFInternal::SnapshotHelper<BranchTypes...>;
          using Action_t = TDFInternal::TAction<Helper_t, Proxied, TTraits::TypeList<BranchTypes...>>;
          actionPtr.reset(
-            new Action_t(Helper_t(filenameInt, dirnameInt, treenameInt, columnList), columnList, *fProxiedPtr));
+            new Action_t(Helper_t(filenameInt, dirName, treeName, columnList), columnList, *fProxiedPtr));
       } else {
          // multi-thread snapshot
          using Helper_t = TDFInternal::SnapshotHelperMT<BranchTypes...>;
          using Action_t = TDFInternal::TAction<Helper_t, Proxied>;
          actionPtr.reset(
-            new Action_t(Helper_t(fProxiedPtr->GetNSlots(), filenameInt, dirnameInt, treenameInt, columnList),
+            new Action_t(Helper_t(fProxiedPtr->GetNSlots(), filenameInt, dirName, treeName, columnList),
                          columnList, *fProxiedPtr));
       }
       df->Book(std::move(actionPtr));
