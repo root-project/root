@@ -47,29 +47,29 @@ using namespace std;
 
 ClassImp(RooNDKeysPdf);
 
-   ////////////////////////////////////////////////////////////////////////////////
-   /// Construct N-dimensional kernel estimation p.d.f. in observables 'varList'
-   /// from dataset 'data'. Options can be
-   ///
-   ///  - 'a' = Use adaptive kernels (width varies with local event density)
-   ///  - 'm' = Mirror data points over observable boundaries. Improves modeling
-   ///         behavior at edges for distributions that are not close to zero
-   ///         at edge
-   ///  - 'd' = Debug flag
-   ///  - 'v' = Verbose flag
-   ///
-   /// The parameter rho (default = 1) provides an overall scale factor that can
-   /// be applied to the bandwith calculated for each kernel. The nSigma parameter
-   /// determines the size of the box that is used to search for contributing kernels
-   /// around a given point in observable space. The nSigma parameters is used
-   /// in case of non-adaptive bandwidths and for the 1st non-adaptive pass for
-   /// the calculation of adaptive keys p.d.f.s.
-   ///
-   /// The optional weight arguments allows to specify an observable or function
-   /// expression in observables that specifies the weight of each event.
+////////////////////////////////////////////////////////////////////////////////
+/// Construct N-dimensional kernel estimation p.d.f. in observables 'varList'
+/// from dataset 'data'. Options can be
+///
+///  - 'a' = Use adaptive kernels (width varies with local event density)
+///  - 'm' = Mirror data points over observable boundaries. Improves modeling
+///         behavior at edges for distributions that are not close to zero
+///         at edge
+///  - 'd' = Debug flag
+///  - 'v' = Verbose flag
+///
+/// The parameter rho (default = 1) provides an overall scale factor that can
+/// be applied to the bandwith calculated for each kernel. The nSigma parameter
+/// determines the size of the box that is used to search for contributing kernels
+/// around a given point in observable space. The nSigma parameters is used
+/// in case of non-adaptive bandwidths and for the 1st non-adaptive pass for
+/// the calculation of adaptive keys p.d.f.s.
+///
+/// The optional weight arguments allows to specify an observable or function
+/// expression in observables that specifies the weight of each event.
 
-   RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, const RooArgList &varList, const RooAbsData &data,
-                              TString options, Double_t rho, Double_t nSigma, Bool_t rotate, Bool_t sortInput)
+RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, const RooArgList &varList, const RooAbsData &data,
+                           TString options, Double_t rho, Double_t nSigma, Bool_t rotate, Bool_t sortInput)
    : RooAbsPdf(name, title), _varList("varList", "List of variables", this),
      _rhoList("rhoList", "List of rho parameters", this), _dataP(0), _data(data), _options(options), _widthFactor(rho),
      _nSigma(nSigma), _weights(&_weights0), _rotate(rotate), _sortInput(sortInput), _nAdpt(1), _tracker(0)
@@ -408,14 +408,17 @@ RooNDKeysPdf::RooNDKeysPdf(const RooNDKeysPdf &other, const char *name)
 RooNDKeysPdf::~RooNDKeysPdf()
 {
   if (_varItr)    delete _varItr;
-  if (_rhoItr) delete _rhoItr;
+  if (_rhoItr)
+     delete _rhoItr;
   if (_covMat)    delete _covMat;
   if (_corrMat)   delete _corrMat;
   if (_rotMat)    delete _rotMat;
   if (_sigmaR)    delete _sigmaR;
   if (_dx)        delete _dx;
-  if (_dataP) delete _dataP;
-  if (_tracker) delete _tracker;
+  if (_dataP)
+     delete _dataP;
+  if (_tracker)
+     delete _tracker;
 
   // delete all the boxinfos map
   while ( !_rangeBoxInfo.empty() ) {

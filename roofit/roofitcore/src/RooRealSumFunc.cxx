@@ -281,8 +281,10 @@ Int_t RooRealSumFunc::getAnalyticalIntegralWN(RooArgSet &allVars, RooArgSet &ana
    // Advertise that all integrals can be handled internally.
 
    // Handle trivial no-integration scenario
-   if (allVars.getSize() == 0) return 0;
-   if (_forceNumInt) return 0;
+   if (allVars.getSize() == 0)
+      return 0;
+   if (_forceNumInt)
+      return 0;
 
    // Select subset of allVars that are actual dependents
    analVars.add(allVars);
@@ -336,7 +338,8 @@ Double_t RooRealSumFunc::analyticalIntegralWN(Int_t code, const RooArgSet *normS
    // functions to integrators of components
 
    // Handle trivial passthrough scenario
-   if (code == 0) return getVal(normSet2);
+   if (code == 0)
+      return getVal(normSet2);
 
    // WVE needs adaptation for rangeName feature
    CacheElem *cache = (CacheElem *)_normIntMgr.getObjByIndex(code - 1);

@@ -313,19 +313,22 @@ TString RooStreamParser::readLine()
    char c, buffer[64000];
    Int_t nfree(63999);
 
-   if (_is->peek() == '\n') _is->get(c);
+   if (_is->peek() == '\n')
+      _is->get(c);
 
    // Read till end of line
    _is->getline(buffer, nfree, '\n');
 
    // Look for eventual continuation line sequence
    char *pcontseq = strstr(buffer, "\\\\");
-   if (pcontseq) nfree -= (pcontseq - buffer);
+   if (pcontseq)
+      nfree -= (pcontseq - buffer);
    while (pcontseq) {
       _is->getline(pcontseq, nfree, '\n');
 
       char *nextpcontseq = strstr(pcontseq, "\\\\");
-      if (nextpcontseq) nfree -= (nextpcontseq - pcontseq);
+      if (nextpcontseq)
+         nfree -= (nextpcontseq - pcontseq);
       pcontseq = nextpcontseq;
   }
 
@@ -371,12 +374,14 @@ void RooStreamParser::zapToEnd(Bool_t inclContLines)
      if (inclContLines) {
         // Look for eventual continuation line sequence
         char *pcontseq = strstr(buffer, "\\\\");
-        if (pcontseq) nfree -= (pcontseq - buffer);
+        if (pcontseq)
+           nfree -= (pcontseq - buffer);
         while (pcontseq) {
            _is->getline(pcontseq, nfree, '\n');
 
            char *nextpcontseq = strstr(pcontseq, "\\\\");
-           if (nextpcontseq) nfree -= (nextpcontseq - pcontseq);
+           if (nextpcontseq)
+              nfree -= (nextpcontseq - pcontseq);
            pcontseq = nextpcontseq;
         }
     }
@@ -502,8 +507,8 @@ Bool_t RooStreamParser::convertToString(const TString& token, TString& string)
    char buffer[64000], *ptr;
    strncpy(buffer, token.Data(), 63999);
    if (token.Length() >= 63999) {
-      oocoutW((TObject *)0, InputArguments)
-         << "RooStreamParser::convertToString: token length exceeds 63999, truncated" << endl;
+      oocoutW((TObject *)0, InputArguments) << "RooStreamParser::convertToString: token length exceeds 63999, truncated"
+                                            << endl;
       buffer[63999] = 0;
   }
   int len = strlen(buffer) ;
