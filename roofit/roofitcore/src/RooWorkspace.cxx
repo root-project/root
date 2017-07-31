@@ -250,8 +250,8 @@ Bool_t RooWorkspace::import(const char* fileSpec,
 			    const RooCmdArg& arg7, const RooCmdArg& arg8, const RooCmdArg& arg9) 
 {
   // Parse file/workspace/objectname specification
-  char buf[64000] ;
-  strlcpy(buf,fileSpec,64000) ;
+  char buf[64000];
+  strlcpy(buf, fileSpec, 64000);
   char* filename = strtok(buf,":") ;
   char* wsname = strtok(0,":") ;
   char* objname = strtok(0,":") ;
@@ -407,15 +407,15 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg,
   if (strlen(varChangeIn)>0) {
     
     // Parse comma separated lists into map<string,string>
-    char tmp[64000] ;
-    strlcpy(tmp,varChangeIn,64000) ;
+    char tmp[64000];
+    strlcpy(tmp, varChangeIn, 64000);
     list<string> tmpIn,tmpOut ;
     char* ptr = strtok(tmp,", ") ;
     while (ptr) {
       tmpIn.push_back(ptr) ;
       ptr = strtok(0,", ") ;
     }
-    strlcpy(tmp,varChangeOut,64000) ;
+    strlcpy(tmp, varChangeOut, 64000);
     ptr = strtok(tmp,", ") ;
     while (ptr) {
       tmpOut.push_back(ptr) ;
@@ -431,13 +431,13 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg,
   // Process RenameAllVariables argument if specified  
   // First convert exception list if provided
   std::set<string> exceptVarNames ;
-  char tmp[64000] ;
+  char tmp[64000];
   if (exceptVars && strlen(exceptVars)) {
-    strlcpy(tmp,exceptVars,64000) ;
-    char* ptr = strtok(tmp,", ") ;
-    while(ptr) {
-      exceptVarNames.insert(ptr) ;
-      ptr = strtok(0,", ") ;
+     strlcpy(tmp, exceptVars, 64000);
+     char *ptr = strtok(tmp, ", ");
+     while (ptr) {
+        exceptVarNames.insert(ptr);
+        ptr = strtok(0, ", ");
     }
   }
 
@@ -826,15 +826,15 @@ Bool_t RooWorkspace::import(RooAbsData& inData,
   if (strlen(varChangeIn)>0) {
     
     // Parse comma separated lists of variable name changes
-    char tmp[64000] ;
-    strlcpy(tmp,varChangeIn,64000) ;
+    char tmp[64000];
+    strlcpy(tmp, varChangeIn, 64000);
     list<string> tmpIn,tmpOut ;
     char* ptr = strtok(tmp,",") ;
     while (ptr) {
       tmpIn.push_back(ptr) ;
       ptr = strtok(0,",") ;
     }
-    strlcpy(tmp,varChangeOut,64000) ;
+    strlcpy(tmp, varChangeOut, 64000);
     ptr = strtok(tmp,",") ;
     while (ptr) {
       tmpOut.push_back(ptr) ;
@@ -922,30 +922,26 @@ Bool_t RooWorkspace::defineSet(const char* name, const RooArgSet& aset, Bool_t i
   return kFALSE ;
 }
 
-
-
 //_____________________________________________________________________________
-Bool_t RooWorkspace::defineSetInternal(const char* name, const RooArgSet& aset) 
+Bool_t RooWorkspace::defineSetInternal(const char *name, const RooArgSet &aset)
 {
-  // Define a named RooArgSet with given constituents. If importMissing is true, any constituents
-  // of aset that are not in the workspace will be imported, otherwise an error is returned
-  // for missing components
+   // Define a named RooArgSet with given constituents. If importMissing is true, any constituents
+   // of aset that are not in the workspace will be imported, otherwise an error is returned
+   // for missing components
 
-  // Check if set was previously defined, if so print warning
-  map<string,RooArgSet>::iterator i = _namedSets.find(name) ;
-  if (i!=_namedSets.end()) {
-    coutW(InputArguments) << "RooWorkspace::defineSet(" << GetName() << ") WARNING redefining previously defined named set " << name << endl ;
-  }
+   // Check if set was previously defined, if so print warning
+   map<string, RooArgSet>::iterator i = _namedSets.find(name);
+   if (i != _namedSets.end()) {
+      coutW(InputArguments) << "RooWorkspace::defineSet(" << GetName()
+                            << ") WARNING redefining previously defined named set " << name << endl;
+   }
 
-  // Install named set
-  _namedSets[name].removeAll() ;
-  _namedSets[name].add(aset) ;
-   
-  return kFALSE ;
+   // Install named set
+   _namedSets[name].removeAll();
+   _namedSets[name].add(aset);
+
+   return kFALSE;
 }
-
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Define a named set in the work space through a comma separated list of
@@ -962,8 +958,8 @@ Bool_t RooWorkspace::defineSet(const char* name, const char* contentList)
   RooArgSet wsargs ;
 
   // Check all constituents of provided set
-  char buf[64000] ;
-  strlcpy(buf,contentList,64000) ;
+  char buf[64000];
+  strlcpy(buf, contentList, 64000);
   char* token = strtok(buf,",") ;
   while(token) {
     // If missing, either import or report error
@@ -995,8 +991,8 @@ Bool_t RooWorkspace::extendSet(const char* name, const char* newContents)
   RooArgSet wsargs ;
 
   // Check all constituents of provided set
-  char buf[64000] ;
-  strlcpy(buf,newContents,64000) ;
+  char buf[64000];
+  strlcpy(buf, newContents, 64000);
   char* token = strtok(buf,",") ;
   while(token) {
     // If missing, either import or report error
@@ -1383,8 +1379,8 @@ RooArgSet RooWorkspace::argSet(const char* nameList) const
 {
   RooArgSet ret ;
 
-  char tmp[64000] ;
-  strlcpy(tmp,nameList,64000) ;
+  char tmp[64000];
+  strlcpy(tmp, nameList, 64000);
   char* token = strtok(tmp,",") ;
   while(token) {
     RooAbsArg* oneArg = arg(token) ;
@@ -1771,8 +1767,8 @@ Bool_t RooWorkspace::CodeRepo::autoImportClass(TClass* tc, Bool_t doReplace)
       return kFALSE ;
     }
   }
-  
-  char buf[64000] ;
+
+  char buf[64000];
 
   // *** Phase 3 *** Prepare to import code from files into STL string buffer
   //
@@ -1824,9 +1820,9 @@ Bool_t RooWorkspace::CodeRepo::autoImportClass(TClass* tc, Bool_t doReplace)
       // Look for include of declaration file corresponding to this implementation file
       if (strstr(buf,"#include")) {
 	// Process #include statements here
-	char tmp[64000] ;
-	strlcpy(tmp,buf,64000) ;
-	Bool_t stdinclude = strchr(buf,'<') ;
+   char tmp[64000];
+   strlcpy(tmp, buf, 64000);
+   Bool_t stdinclude = strchr(buf,'<') ;
 	strtok(tmp," <\"") ;
 	char* incfile = strtok(0," <>\"") ;	
 	
@@ -1878,9 +1874,9 @@ Bool_t RooWorkspace::CodeRepo::autoImportClass(TClass* tc, Bool_t doReplace)
       // Look for include of declaration file corresponding to this implementation file
       if (strstr(buf,"#include")) {
 	// Process #include statements here
-	char tmp[64000] ;
-	strlcpy(tmp,buf,64000) ;
-	Bool_t stdinclude = strchr(buf,'<') ;
+   char tmp[64000];
+   strlcpy(tmp, buf, 64000);
+   Bool_t stdinclude = strchr(buf,'<') ;
 	strtok(tmp," <\"") ;
 	char* incfile = strtok(0," <>\"") ;	
 
@@ -1939,9 +1935,9 @@ Bool_t RooWorkspace::CodeRepo::autoImportClass(TClass* tc, Bool_t doReplace)
 	  // Look for include of declaration file corresponding to this implementation file
 	  if (strstr(buf2,"#include")) {
 	    // Process #include statements here
-	    char tmp[64000] ;
-	    strlcpy(tmp,buf2,64000) ;
-	    Bool_t stdinclude = strchr(buf,'<') ;
+       char tmp[64000];
+       strlcpy(tmp, buf2, 64000);
+       Bool_t stdinclude = strchr(buf,'<') ;
 	    strtok(tmp," <\"") ;
 	    char* incfile = strtok(0," <>\"") ;	
 
@@ -2245,12 +2241,12 @@ RooAbsArg* RooWorkspace::factory(const char* expr)
 void RooWorkspace::Print(Option_t* opts) const 
 {
   Bool_t treeMode(kFALSE) ;
-  Bool_t verbose(kFALSE) ;
+  Bool_t verbose(kFALSE);
   if (TString(opts).Contains("t")) {
     treeMode=kTRUE ;
   }
   if (TString(opts).Contains("v")) {
-    verbose=kTRUE ;
+     verbose = kTRUE;
   }
 
   cout << endl << "RooWorkspace(" << GetName() << ") " << GetTitle() << " contents" << endl << endl  ;
@@ -2470,9 +2466,9 @@ void RooWorkspace::Print(Option_t* opts) const
     cout << "named sets" << endl ;
     cout << "----------" << endl ;
     for (map<string,RooArgSet>::const_iterator it = _namedSets.begin() ; it != _namedSets.end() ; it++) {
-      if (verbose || !TString(it->first.c_str()).BeginsWith("CACHE_")) {
-	cout << it->first << ":" << it->second << endl ;
-      }
+       if (verbose || !TString(it->first.c_str()).BeginsWith("CACHE_")) {
+          cout << it->first << ":" << it->second << endl;
+       }
     }
     
     cout << endl ;
@@ -2658,8 +2654,8 @@ void RooWorkspace::Streamer(TBuffer &R__b)
       TIterator* iter = _allOwnedNodes.createIterator() ;
       while((node=(RooAbsArg*)iter->Next())) {
 	node->setExpensiveObjectCache(_eocache) ;
-	node->setWorkspace(*this) ;
-	if (node->IsA()->InheritsFrom(RooAbsOptTestStatistic::Class())) {
+   node->setWorkspace(*this);
+   if (node->IsA()->InheritsFrom(RooAbsOptTestStatistic::Class())) {
 	  RooAbsOptTestStatistic* tmp = (RooAbsOptTestStatistic*) node ;
 	  if (tmp->isSealed() && tmp->sealNotice() && strlen(tmp->sealNotice())>0) {
 	    cout << "RooWorkspace::Streamer(" << GetName() << ") " << node->IsA()->GetName() << "::" << node->GetName() << " : " << tmp->sealNotice() << endl ;
@@ -2840,10 +2836,10 @@ Bool_t RooWorkspace::CodeRepo::compileClasses()
 	ifstream ifdecl(fdname.c_str()) ;
 	if (ifdecl) {
 	  TString contents ;
-	  char buf[64000] ;
-	  while(ifdecl.getline(buf,64000)) {
-	    contents += buf ;
-	    contents += "\n" ;
+     char buf[64000];
+     while (ifdecl.getline(buf, 64000)) {
+        contents += buf;
+        contents += "\n";
 	  }      
 	  UInt_t crcFile = RooAbsArg::crc32(contents.Data()) ;
 	  UInt_t crcWS   = RooAbsArg::crc32(eiter->second._hfile.Data()) ;
@@ -2889,10 +2885,10 @@ Bool_t RooWorkspace::CodeRepo::compileClasses()
     ifstream ifdecl(fdname.c_str()) ;
     if (ifdecl) {
       TString contents ;
-      char buf[64000] ;
-      while(ifdecl.getline(buf,64000)) {
-	contents += buf ;
-	contents += "\n" ;
+      char buf[64000];
+      while (ifdecl.getline(buf, 64000)) {
+         contents += buf;
+         contents += "\n";
       }      
       UInt_t crcFile = RooAbsArg::crc32(contents.Data()) ;
       UInt_t crcWS   = RooAbsArg::crc32(cfinfo._hfile.Data()) ;
@@ -2918,10 +2914,10 @@ Bool_t RooWorkspace::CodeRepo::compileClasses()
     ifstream ifimpl(finame.c_str()) ;
     if (ifimpl) {
       TString contents ;
-      char buf[64000] ;
-      while(ifimpl.getline(buf,64000)) {
-	contents += buf ;
-	contents += "\n" ;
+      char buf[64000];
+      while (ifimpl.getline(buf, 64000)) {
+         contents += buf;
+         contents += "\n";
       }      
       UInt_t crcFile = RooAbsArg::crc32(contents.Data()) ;
       UInt_t crcWS   = RooAbsArg::crc32(cfinfo._cxxfile.Data()) ;
@@ -3107,14 +3103,14 @@ Bool_t RooWorkspace::isValidCPPID(const char* name)
 
 void RooWorkspace::unExport()
 {
-  char buf[64000] ;
-  TIterator* iter = _allOwnedNodes.createIterator() ;
-  TObject* wobj ;
-  while((wobj=iter->Next())) {
-    if (isValidCPPID(wobj->GetName())) {
-      strlcpy(buf,Form("%s::%s",_exportNSName.c_str(),wobj->GetName()),64000) ;
-      gInterpreter->DeleteVariable(buf);
-    }
+   char buf[64000];
+   TIterator *iter = _allOwnedNodes.createIterator();
+   TObject *wobj;
+   while ((wobj = iter->Next())) {
+      if (isValidCPPID(wobj->GetName())) {
+         strlcpy(buf, Form("%s::%s", _exportNSName.c_str(), wobj->GetName()), 64000);
+         gInterpreter->DeleteVariable(buf);
+      }
   }
   delete iter ;
 }

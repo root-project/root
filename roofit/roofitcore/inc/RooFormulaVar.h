@@ -65,8 +65,7 @@ public:
   virtual Double_t evaluate() const ;
   RooFormula& formula() const ;
 
-protected:
-
+  protected:
   // Post-processing of server redirection
   virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) ;
 

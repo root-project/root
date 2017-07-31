@@ -763,31 +763,29 @@ void RooFitResult::fillCorrMatrix()
       (*_VM)(ii,jj) = (*_CM)(ii,jj) * ((RooRealVar*)_finalPars->at(ii))->getError() * ((RooRealVar*)_finalPars->at(jj))->getError() ;
     }
   }
-} 
-
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooFitResult::fillPrefitCorrMatrix() 
+void RooFitResult::fillPrefitCorrMatrix()
 {
 
-  // Delete eventual prevous correlation data holders
-  if (_CM) delete _CM ;
-  if (_VM) delete _VM ;
-  if (_GC) delete _GC ;
+   // Delete eventual prevous correlation data holders
+   if (_CM) delete _CM;
+   if (_VM) delete _VM;
+   if (_GC) delete _GC;
 
-  // Build holding arrays for correlation coefficients
-  _CM = new TMatrixDSym(_initPars->getSize()) ;
-  _VM = new TMatrixDSym(_initPars->getSize()) ;
-  _GC = new TVectorD(_initPars->getSize()) ;
+   // Build holding arrays for correlation coefficients
+   _CM = new TMatrixDSym(_initPars->getSize());
+   _VM = new TMatrixDSym(_initPars->getSize());
+   _GC = new TVectorD(_initPars->getSize());
 
-  for (int ii=0 ; ii<_finalPars->getSize() ; ii++) {
-    (*_CM)(ii,ii) = 1 ;
-    (*_VM)(ii,ii) = ((RooRealVar*)_finalPars->at(ii))->getError() * ((RooRealVar*)_finalPars->at(ii))->getError() ;
-    (*_GC)(ii) = 0 ;
-  }
+   for (int ii = 0; ii < _finalPars->getSize(); ii++) {
+      (*_CM)(ii, ii) = 1;
+      (*_VM)(ii, ii) = ((RooRealVar *)_finalPars->at(ii))->getError() * ((RooRealVar *)_finalPars->at(ii))->getError();
+      (*_GC)(ii) = 0;
+   }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return true if this fit result is identical to other within tolerance 'tol' on fitted values
@@ -980,47 +978,47 @@ RooFitResult* RooFitResult::lastMinuitFit(const RooArgList& varList)
 /// Import the results of the last fit performed by gMinuit, interpreting
 /// the fit parameters as the given varList of parameters.
 
-RooFitResult* RooFitResult::prefitResult(const RooArgList& paramList) 
+RooFitResult *RooFitResult::prefitResult(const RooArgList &paramList)
 {
-  // Verify that all members of varList are of type RooRealVar
-  TIterator* iter = paramList.createIterator() ;
-  RooAbsArg* arg  ;
-  while((arg=(RooAbsArg*)iter->Next())) {
-    if (!dynamic_cast<RooRealVar*>(arg)) {
-      oocoutE((TObject*)0,InputArguments) << "RooFitResult::lastMinuitFit: ERROR: variable '" << arg->GetName() << "' is not of type RooRealVar" << endl ;
-      return 0 ;
-    }
-  }
+   // Verify that all members of varList are of type RooRealVar
+   TIterator *iter = paramList.createIterator();
+   RooAbsArg *arg;
+   while ((arg = (RooAbsArg *)iter->Next())) {
+      if (!dynamic_cast<RooRealVar *>(arg)) {
+         oocoutE((TObject *)0, InputArguments) << "RooFitResult::lastMinuitFit: ERROR: variable '" << arg->GetName()
+                                               << "' is not of type RooRealVar" << endl;
+         return 0;
+      }
+   }
 
-  RooFitResult* r = new RooFitResult("lastMinuitFit","Last MINUIT fit") ;
-  
-  // Extract names of fit parameters from MINUIT 
-  // and construct corresponding RooRealVars
-  RooArgList constPars("constPars") ;
-  RooArgList floatPars("floatPars") ;
+   RooFitResult *r = new RooFitResult("lastMinuitFit", "Last MINUIT fit");
 
-  iter->Reset() ;
-  while((arg=(RooAbsArg*)iter->Next())) {
-    if (arg->isConstant()) {
-      constPars.addClone(*arg) ;
-    } else {
-      floatPars.addClone(*arg) ;
-    }
-  }
-  delete iter ;
-  
-  r->setConstParList(constPars) ;
-  r->setInitParList(floatPars) ;
-  r->setFinalParList(floatPars) ;
-  r->setMinNLL(0) ;
-  r->setEDM(0) ; 
-  r->setCovQual(0) ;
-  r->setStatus(0) ;
-  r->fillPrefitCorrMatrix() ;
+   // Extract names of fit parameters from MINUIT
+   // and construct corresponding RooRealVars
+   RooArgList constPars("constPars");
+   RooArgList floatPars("floatPars");
 
-  return r ;  
+   iter->Reset();
+   while ((arg = (RooAbsArg *)iter->Next())) {
+      if (arg->isConstant()) {
+         constPars.addClone(*arg);
+      } else {
+         floatPars.addClone(*arg);
+      }
+   }
+   delete iter;
+
+   r->setConstParList(constPars);
+   r->setInitParList(floatPars);
+   r->setFinalParList(floatPars);
+   r->setMinNLL(0);
+   r->setEDM(0);
+   r->setCovQual(0);
+   r->setStatus(0);
+   r->fillPrefitCorrMatrix();
+
+   return r;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Store externally provided correlation matrix in this RooFitResult ;
