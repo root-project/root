@@ -23,7 +23,7 @@ namespace PyROOT {
 void InitializeNumpy();
 PyObject* GetNumpyIterator(PyObject* self, PyObject* args, PyObject* kwds);
 PyObject* GetNumpyIteratorInfo(PyObject* self, PyObject* args, PyObject* kwds);
-PyObject* FillNumpyWithLeaf(PyObject* self, PyObject* args);
+PyObject* FillNumpy(PyObject* self, PyObject* args);
 
 class ArrayInfo {
 public:

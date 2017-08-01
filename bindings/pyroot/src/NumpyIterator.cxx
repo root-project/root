@@ -441,7 +441,7 @@ void InitializeNumpy() {
 
 bool gettree(PyObject* self, TTree* &tree) {
   if (!ObjectProxy_Check(self)) {
-    PyErr_SetString(PyExc_TypeError, "TTree::GetNumpyIterator must be called with a TTree instance as first argument");
+    PyErr_SetString(PyExc_TypeError, "TTree::GetNumpyIterator must be called with a TTree instance as its implicit argument");
     return false;
   }
   PyROOT::ObjectProxy* pyobj = reinterpret_cast<PyROOT::ObjectProxy*>(self);
@@ -449,7 +449,24 @@ bool gettree(PyObject* self, TTree* &tree) {
   tree = (TTree*)TClass::GetClass(Cppyy::GetFinalName(pyobj->ObjectIsA()).c_str())->DynamicCast(TTree::Class(), pyobj->GetObject());
 
   if (!tree) {
-    PyErr_SetString(PyExc_TypeError, "TTree::GetNumpyIterator must be called with a TTree instance as first argument");
+    PyErr_SetString(PyExc_TypeError, "TTree::GetNumpyIterator must be called with a TTree instance as its implicit argument");
+    return false;
+  }
+
+  return true;
+}
+
+bool getleaf(PyObject* self, TLeaf* &leaf) {
+  if (!ObjectProxy_Check(self)) {
+    PyErr_SetString(PyExc_TypeError, "TLeaf::FillNumpy must be called with a TLeaf instance as its implicit argument");
+    return false;
+  }
+  PyROOT::ObjectProxy* pyobj = reinterpret_cast<PyROOT::ObjectProxy*>(self);
+
+  leaf = (TLeaf*)TClass::GetClass(Cppyy::GetFinalName(pyobj->ObjectIsA()).c_str())->DynamicCast(TLeaf::Class(), pyobj->GetObject());
+
+  if (!leaf) {
+    PyErr_SetString(PyExc_TypeError, "TLeaf::FillNumpy must be called with a TLeaf instance as its implicit argument");
     return false;
   }
 
@@ -595,27 +612,23 @@ PyObject* GetNumpyIteratorInfo(PyObject* self, PyObject* args, PyObject* kwds) {
   return out;
 }
 
-PyObject* FillNumpyWithLeaf(PyObject* self, PyObject* args) {
-  TTree* tree;
-  if (!gettree(self, tree))
+PyObject* FillNumpy(PyObject* self, PyObject* args) {
+  TLeaf* leaf;
+  if (!getleaf(self, leaf))
     return 0;
 
-  char* leafName;
+  TBranch* branch = leaf->GetBranch();
+  TTree* tree = branch->GetTree();
+
   PyObject* array;
   Long64_t entry_start = 0;
-  if (!PyArg_ParseTuple(args, "sO|l", &leafName, &array, &entry_start))
+  if (!PyArg_ParseTuple(args, "O|l", &array, &entry_start))
     return 0;
 
   Long64_t entry_end = tree->GetEntries();
 
-  TLeaf* leaf = tree->GetLeaf(leafName);
-  if (leaf == 0) {
-    PyErr_Format(PyExc_IOError, "could not read leaf \"%s\" from tree \"%s\"", leafName, tree->GetName());
-    return 0;
-  }
-  
   if (!PyArray_Check(array)) {
-    PyErr_SetString(PyExc_TypeError, "second argument must be a Numpy array");
+    PyErr_SetString(PyExc_TypeError, "first argument must be a Numpy array");
     return 0;
   }
 
@@ -633,7 +646,6 @@ PyObject* FillNumpyWithLeaf(PyObject* self, PyObject* args) {
   int makeclass_mode = tree->GetMakeClass();
   tree->SetMakeClass(1);
 
-  TBranch* branch = leaf->GetBranch();
   int leaflength = leaf->GetLenType();
   char branchdata[leaflength];
   branch->SetAddress(branchdata);
