@@ -411,10 +411,6 @@ public:
    virtual Double_t Eval(Double_t x, Double_t y = 0, Double_t z = 0, Double_t t = 0) const;
    virtual Double_t EvalPar(const Double_t *x, const Double_t *params = 0);
    template <class T> T EvalPar(const T *x, const Double_t *params = 0);
-   template <class T> T EvalParTempl(const T *data, const Double_t *params = 0);
-#ifdef R__HAS_VECCORE
-   inline double EvalParVec(const Double_t *data, const Double_t *params);
-#endif
    virtual Double_t operator()(Double_t x, Double_t y = 0, Double_t z = 0, Double_t t = 0) const;
    virtual Double_t operator()(const Double_t *x, const Double_t *params = 0);
    template <class T> T operator()(const T *data, const Double_t *params);
@@ -670,6 +666,12 @@ public:
    static  void     CalcGaussLegendreSamplingPoints(Int_t num, Double_t *x, Double_t *w, Double_t eps = 3.0e-11);
 
    ClassDef(TF1, 9) //The Parametric 1-D function
+
+private:
+   template <class T> T EvalParTempl(const T *data, const Double_t *params = 0);
+#ifdef R__HAS_VECCORE
+   inline double EvalParVec(const Double_t *data, const Double_t *params);
+#endif
 };
 
 namespace ROOT {

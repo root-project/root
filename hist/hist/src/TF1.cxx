@@ -1173,6 +1173,7 @@ Double_t TF1::EvalPar(const Double_t *x, const Double_t *params)
       return result;
    }
 
+#ifdef R__HAS_VECCORE
    if (fType == EFType::kTemplVec) {
       if (fFunctor) {
          if (params) result =  EvalParVec(x, params);
@@ -1187,6 +1188,7 @@ Double_t TF1::EvalPar(const Double_t *x, const Double_t *params)
 
       return result; 
    }
+#endif
    return result;
 }
 
