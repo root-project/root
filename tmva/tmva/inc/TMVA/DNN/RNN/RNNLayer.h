@@ -149,7 +149,8 @@ public:
    /** Getters */
    const size_t GetTimeSteps()   const {return fTimeSteps;}
    const size_t GetStateSize()   const {return fStateSize;}
-   inline bool IsRememberState()  const {return fRememberState;}
+   const size_t GetInputSize()   const {return this->GetInputWidth();}
+   inline bool IsRememberState()  const {return fRememberState;} 
    inline DNN::EActivationFunction GetActivationFunction()  const {return fF;}
    Matrix_t        & GetState()            {return fState;}
    const Matrix_t & GetState()       const  {return fState;}
@@ -321,11 +322,11 @@ auto inline TBasicRNNLayer<Architecture_t>::Backward(Tensor_t &gradients_backwar
       Architecture_t::ScaleAdd(state_gradients_backward, this->GetActivationGradientsAt(t - 1));
       if (t > 1) {
          const Matrix_t & precStateActivations = this->GetOutputAt(t - 2);
-         CellBackward(state_gradients_backward, precStateActivations, currStateActivations, activations_backward,
+         CellBackward(state_gradients_backward, precStateActivations, currStateActivations, activations_backward[t - 1],
                gradients_backward[t - 1]);
       } else {
          const Matrix_t & precStateActivations = initState;
-         CellBackward(state_gradients_backward, precStateActivations, currStateActivations, activations_backward,
+         CellBackward(state_gradients_backward, precStateActivations, currStateActivations, activations_backward[t - 1], 
                gradients_backward[t - 1]);
       }
    }

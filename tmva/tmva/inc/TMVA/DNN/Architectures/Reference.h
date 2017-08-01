@@ -83,6 +83,17 @@ public:
                         const TMatrixT<Scalar_t> & activationGradients,
                         const TMatrixT<Scalar_t> & weights,
                         const TMatrixT<Scalar_t> & activationBackward);
+   /** Backpropagation step for a Recurrent Neural Network */
+   static Matrix_t & RecurrentLayerBackward(TMatrixT<Scalar_t> & state_gradients_backward, // BxH
+                                            TMatrixT<Scalar_t> & input_weight_gradients,
+                                            TMatrixT<Scalar_t> & state_weight_gradients,
+                                            TMatrixT<Scalar_t> & bias_gradients,
+                                            TMatrixT<Scalar_t> & df, //DxH
+                                            const TMatrixT<Scalar_t> & state, // BxH
+                                            const TMatrixT<Scalar_t> & weights_input, // HxD 
+                                            const TMatrixT<Scalar_t> & weights_state, // HxH
+                                            const TMatrixT<Scalar_t> & input,  // BxD
+                                            TMatrixT<Scalar_t> & input_gradient);
    /** Adds a the elements in matrix B scaled by c to the elements in
     *  the matrix A. This is required for the weight update in the gradient
     *  descent step.*/
