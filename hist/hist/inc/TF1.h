@@ -264,12 +264,6 @@ protected:
       DoInitialize(addToGlobList);
    };
 
-   template<class Func>
-   EFType templScalarOrVectorized(Func &)
-   {
-      using Fnc_t = typename ROOT::Internal::GetFunctorType<decltype(ROOT::Internal::GetTheRightOp(&Func::operator()))>::type;
-      return std::is_same<Fnc_t, double>::value? TF1::EFType::kTemplScalar : TF1::EFType::kTemplVec;
-   }
 
 public:
 
@@ -315,8 +309,11 @@ public:
 
    template <class T>
    TF1(const char *name, std::function<T(const T *data, const Double_t *param)> &fcn, Double_t xmin = 0, Double_t xmax = 1, Int_t npar = 0, Int_t ndim = 1, EAddToList addToGlobList = EAddToList::kDefault):
-      TF1(templScalarOrVectorized(fcn), name, xmin, xmax, npar, ndim, addToGlobList, new TF1Parameters(npar), new TF1FunctorPointerImpl<T>(fcn))
-   {}
+      TF1(EFType::kTemplScalar, name, xmin, xmax, npar, ndim, addToGlobList, new TF1Parameters(npar), new TF1FunctorPointerImpl<T>(fcn))
+   {
+      using Fnc_t = typename ROOT::Internal::GetFunctorType<decltype(fcn)>::type;
+      fType = std::is_same<Fnc_t, double>::value? TF1::EFType::kTemplScalar : TF1::EFType::kTemplVec;
+   }
 
    ////////////////////////////////////////////////////////////////////////////////
    /// Constructor using a pointer to function.
@@ -332,7 +329,7 @@ public:
 
    template <class T>
    TF1(const char *name, T(*fcn)(const T *, const Double_t *), Double_t xmin = 0, Double_t xmax = 1, Int_t npar = 0, Int_t ndim = 1, EAddToList addToGlobList = EAddToList::kDefault):
-      TF1(templScalarOrVectorized(fcn), name, xmin, xmax, npar, ndim, addToGlobList, new TF1Parameters(npar), new TF1FunctorPointerImpl<T>(fcn))
+      TF1(EFType::kTemplVec, name, xmin, xmax, npar, ndim, addToGlobList, new TF1Parameters(npar), new TF1FunctorPointerImpl<T>(fcn))
    {}
 
    // Constructors using functors (compiled mode only)
@@ -358,9 +355,10 @@ public:
 
    template <typename Func>
    TF1(const char *name, Func f, Double_t xmin, Double_t xmax, Int_t npar, const char *, EAddToList addToGlobList = EAddToList::kDefault) :
-      TF1(templScalarOrVectorized(f), name, xmin, xmax, npar, 1, addToGlobList, new TF1Parameters(npar))
+      TF1(EFType::kTemplScalar, name, xmin, xmax, npar, 1, addToGlobList, new TF1Parameters(npar))
    {
       using Fnc_t = typename ROOT::Internal::GetFunctorType<decltype(ROOT::Internal::GetTheRightOp(&Func::operator()))>::type;
+      fType = std::is_same<Fnc_t, double>::value? TF1::EFType::kTemplScalar : TF1::EFType::kTemplVec;
       fFunctor = new TF1FunctorPointerImpl<Fnc_t>(ROOT::Math::ParamFunctorTempl<Fnc_t>(f));
    }
 
