@@ -17,7 +17,7 @@
 #endif
 #include "RtypesCore.h" // Long64_t
 #include "TInterpreter.h"
-#include "TROOT.h"      // IsImplicitMTEnabled
+#include "TROOT.h" // IsImplicitMTEnabled
 #include "TTreeReader.h"
 
 #include <cassert>
@@ -90,7 +90,8 @@ void TFilterBase::PrintReport() const
    const auto accepted = std::accumulate(fAccepted.begin(), fAccepted.end(), 0ULL);
    const auto all = accepted + std::accumulate(fRejected.begin(), fRejected.end(), 0ULL);
    double perc = accepted;
-   if (all > 0) perc /= all;
+   if (all > 0)
+      perc /= all;
    perc *= 100.;
    Printf("%-10s: pass=%-10lld all=%-10lld -- %8.3f %%", fName.c_str(), accepted, all, perc);
 }
@@ -301,7 +302,8 @@ void TLoopManager::EvalChildrenCounts()
 /// Also perform a few setup and clean-up operations (jit actions if necessary, clear booked actions after the loop...).
 void TLoopManager::Run()
 {
-   if (!fToJit.empty()) JitActions();
+   if (!fToJit.empty())
+      JitActions();
 
    InitNodes();
 
