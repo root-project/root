@@ -59,7 +59,9 @@ class TLoopManager : public std::enable_shared_from_this<TLoopManager> {
    RangeBaseVec_t fBookedRanges;
    std::vector<std::shared_ptr<bool>> fResProxyReadiness;
    ::TDirectory * const fDirPtr{nullptr};
-   std::shared_ptr<TTree> fTree{nullptr};
+   std::shared_ptr<TTree> fTree{nullptr}; //< Shared pointer to the input TTree/TChain. It does not own the pointee if
+                                          //the TTree/TChain was passed directly as an argument to TDataFrame's ctor (in
+                                          //which case we let users retain ownership).
    const ColumnNames_t fDefaultColumns;
    const ULong64_t fNEmptyEntries{0};
    const unsigned int fNSlots{1};
