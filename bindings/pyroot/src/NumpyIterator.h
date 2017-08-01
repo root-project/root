@@ -106,8 +106,9 @@ static PyObject* PyNumpyIterator_next(PyObject* self) {
 }
 
 static void PyNumpyIterator_del(PyNumpyIterator* thyself) {
-  delete thyself->iter;
-  Py_TYPE(thyself)->tp_free(reinterpret_cast<PyObject*>(thyself));
+  if (thyself->iter != NULL)
+    delete thyself->iter;
+  PyObject_Del(reinterpret_cast<PyObject*>(thyself));   // because NumpyIterator is not subclassable
 }
 
 #if PY_MAJOR_VERSION >= 3

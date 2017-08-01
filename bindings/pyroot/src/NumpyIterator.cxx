@@ -25,6 +25,10 @@
 #include <TObjArray.h>
 #include <TTree.h>
 
+// Bindings
+#include "PyROOT.h"
+#include "ObjectProxy.h"
+
 // Standard
 #include <string>
 
@@ -267,30 +271,10 @@ void NumpyIterator::Reset() {
 
 /////////////////////////////////////////////////////// helper functions
 
-bool getfile(TFile* &file, const char* filePath) {
-  file = TFile::Open(filePath);
-  if (file == NULL  ||  !file->IsOpen()) {
-    PyErr_Format(PyExc_IOError, "could not open file \"%s\"", filePath);
-    return false;
-  }
-  else
-    return true;
-}
-
-bool gettree(TTree* &tree, TFile* file, const char* filePath, const char* treePath) {
-  file->GetObject(treePath, tree);
-  if (tree == NULL) {
-    PyErr_Format(PyExc_IOError, "could not read tree \"%s\" from file \"%s\"", treePath, filePath);
-    return false;
-  }
-  else
-    return true;
-}
-
-bool getbranch(TBranch* &branch, TTree* tree, const char* filePath, const char* treePath, const char* branchName) {
+bool getbranch(TBranch* &branch, TTree* tree, const char* branchName) {
   branch = tree->GetBranch(branchName);
   if (branch == NULL) {
-    PyErr_Format(PyExc_IOError, "could not read branch \"%s\" from tree \"%s\" from file \"%s\"", branchName, treePath, filePath);
+    PyErr_Format(PyExc_IOError, "could not read branch \"%s\" from tree \"%s\"", branchName, tree->GetName());
     return false;
   }
   else
@@ -454,45 +438,35 @@ void InitializeNumpy() {
   import_array();
 }
 
-bool getbranches(PyObject* args, std::vector<TBranch*> &requested_branches) {
+bool getbranches(PyObject* self, PyObject* args, std::vector<TBranch*> &requested_branches) {
+  if (!ObjectProxy_Check(self)) {
+    PyErr_SetString(PyExc_TypeError, "TTree::GetNumpyIterator must be called with a TTree instance as first argument");
+    return false;
+  }
+  PyROOT::ObjectProxy* pyobj = reinterpret_cast<PyROOT::ObjectProxy*>(self);
+
+  TTree* tree = (TTree*)TClass::GetClass(Cppyy::GetFinalName(pyobj->ObjectIsA()).c_str())->DynamicCast(TTree::Class(), pyobj->GetObject());
+
+  if (!tree) {
+    PyErr_SetString(PyExc_TypeError, "TTree::GetNumpyIterator must be called with a TTree instance as first argument");
+    return false;
+  }
+
   if (PyTuple_GET_SIZE(args) < 1) {
     PyErr_SetString(PyExc_TypeError, "at least one argument is required");
     return false;
   }
 
-  if (PyString_Check(PyTuple_GET_ITEM(args, 0))) {
-    // first argument is a string: filePath, treePath, branchNames... signature
-
-    // first two arguments are filePath and treePath, and then there must be at least one branchName
-    if (PyTuple_GET_SIZE(args) < 3) {
-      PyErr_SetString(PyExc_TypeError, "in the string-based signture, at least three arguments are required");
+  for (int i = 0;  i < PyTuple_GET_SIZE(args);  i++) {
+    const char* branchName = gettuplestring(args, i);
+    if (branchName == NULL) {
+      PyErr_SetString(PyExc_TypeError, "all arguments must be strings (branch names)");
       return false;
     }
 
-    const char* filePath = gettuplestring(args, 0);
-    const char* treePath = gettuplestring(args, 1);
-    if (filePath == NULL  ||  treePath == NULL)
-      return false;
-
-    TFile* file;
-    if (!getfile(file, filePath)) return false;
-
-    TTree* tree;
-    if (!gettree(tree, file, filePath, treePath)) return false;
-
-    for (int i = 2;  i < PyTuple_GET_SIZE(args);  i++) {
-      const char* branchName = gettuplestring(args, i);
-      TBranch* branch;
-      if (!getbranch(branch, tree, filePath, treePath, branchName)) return false;
-      requested_branches.push_back(branch);
-    }
-  }
-
-  else {
-    // first argument is an object: TBranch, TBranch, TBranch... signature
-    // TODO: insist that all branches come from the same TTree
-    PyErr_SetString(PyExc_NotImplementedError, "FIXME: accept PyROOT TBranches");
-    return false;
+    TBranch* branch;
+    if (!getbranch(branch, tree, branchName)) return false;
+    requested_branches.push_back(branch);
   }
 
   return true;
@@ -500,7 +474,7 @@ bool getbranches(PyObject* args, std::vector<TBranch*> &requested_branches) {
 
 PyObject* GetNumpyIterator(PyObject* self, PyObject* args, PyObject* kwds) {
   std::vector<TBranch*> requested_branches;
-  if (!getbranches(args, requested_branches))
+  if (!getbranches(self, args, requested_branches))
     return NULL;
 
   bool return_new_buffers = true;
@@ -541,6 +515,7 @@ PyObject* GetNumpyIterator(PyObject* self, PyObject* args, PyObject* kwds) {
   }
 
   PyNumpyIterator* out = PyObject_New(PyNumpyIterator, &PyNumpyIteratorType);
+  out->iter = NULL;
 
   if (!PyObject_Init(reinterpret_cast<PyObject*>(out), &PyNumpyIteratorType)) {
     Py_DECREF(out);
@@ -555,7 +530,7 @@ PyObject* GetNumpyIterator(PyObject* self, PyObject* args, PyObject* kwds) {
 
 PyObject* GetNumpyTypeAndSize(PyObject* self, PyObject* args, PyObject* kwds) {
   std::vector<TBranch*> requested_branches;
-  if (!getbranches(args, requested_branches))
+  if (!getbranches(self, args, requested_branches))
     return NULL;
 
   bool swap_bytes = true;
