@@ -84,7 +84,8 @@ public:
    TLoopManager(TTree *tree, const ColumnNames_t &defaultBranches);
    TLoopManager(ULong64_t nEmptyEntries);
    TLoopManager(const TLoopManager &) = delete;
-   ~TLoopManager(){};
+   TLoopManager &operator=(const TLoopManager &) = delete;
+
    void Run();
    TLoopManager *GetImplPtr();
    std::shared_ptr<TLoopManager> GetSharedPtr() { return shared_from_this(); }
@@ -220,7 +221,10 @@ protected:
 
 public:
    TActionBase(TLoopManager *implPtr, const ColumnNames_t &tmpBranches, const unsigned int nSlots);
-   virtual ~TActionBase() {}
+   TActionBase(const TActionBase &) = delete;
+   TActionBase &operator=(const TActionBase &) = delete;
+   virtual ~TActionBase() = default;
+
    virtual void Run(unsigned int slot, Long64_t entry) = 0;
    virtual void InitSlot(TTreeReader *r, unsigned int slot) = 0;
    virtual void TriggerChildrenCount() = 0;
@@ -244,6 +248,7 @@ public:
    }
 
    TAction(const TAction &) = delete;
+   TActionBase &operator=(const TActionBase &) = delete;
 
    void InitSlot(TTreeReader *r, unsigned int slot) final
    {
@@ -287,7 +292,9 @@ protected:
 
 public:
    TCustomColumnBase(TLoopManager *df, const ColumnNames_t &tmpBranches, std::string_view name, const unsigned int nSlots);
-   virtual ~TCustomColumnBase() {}
+   TCustomColumnBase &operator=(const TCustomColumnBase &) = delete;
+   virtual ~TCustomColumnBase() = default;
+
    virtual void InitSlot(TTreeReader *r, unsigned int slot) = 0;
    virtual void *GetValuePtr(unsigned int slot) = 0;
    virtual const std::type_info &GetTypeId() const = 0;
@@ -330,6 +337,7 @@ public:
    }
 
    TCustomColumn(const TCustomColumn &) = delete;
+   TCustomColumn &operator=(const TCustomColumn &) = delete;
 
    void InitSlot(TTreeReader *r, unsigned int slot) final
    {
@@ -401,7 +409,9 @@ protected:
 
 public:
    TFilterBase(TLoopManager *df, const ColumnNames_t &tmpBranches, std::string_view name, const unsigned int nSlots);
-   virtual ~TFilterBase() {}
+   TFilterBase &operator=(const TFilterBase &) = delete;
+   virtual ~TFilterBase() = default;
+
    virtual void InitSlot(TTreeReader *r, unsigned int slot) = 0;
    virtual bool CheckFilters(unsigned int slot, Long64_t entry) = 0;
    virtual void Report() const = 0;
@@ -436,6 +446,7 @@ public:
    }
 
    TFilter(const TFilter &) = delete;
+   TFilter &operator=(const TFilter &) = delete;
 
    bool CheckFilters(unsigned int slot, Long64_t entry) final
    {
@@ -525,7 +536,9 @@ protected:
 public:
    TRangeBase(TLoopManager *implPtr, const ColumnNames_t &tmpBranches, unsigned int start, unsigned int stop,
               unsigned int stride, const unsigned int nSlots);
-   virtual ~TRangeBase() {}
+   TRangeBase &operator=(const TRangeBase &) = delete;
+   virtual ~TRangeBase() = default;
+
    TLoopManager *GetImplPtr() const;
    ColumnNames_t GetTmpBranches() const;
    virtual bool CheckFilters(unsigned int slot, Long64_t entry) = 0;
@@ -548,6 +561,7 @@ public:
    }
 
    TRange(const TRange &) = delete;
+   TRange &operator=(const TRange &) = delete;
 
    /// Ranges act as filters when it comes to selecting entries that downstream nodes should process
    bool CheckFilters(unsigned int slot, Long64_t entry) final
