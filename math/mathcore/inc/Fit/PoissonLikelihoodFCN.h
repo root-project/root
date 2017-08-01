@@ -126,9 +126,11 @@ public:
    }
 
    /// evaluate gradient
-   virtual void Gradient(const double *x, double *g) const {
-      // evaluate the chi2 gradient
-      FitUtil::Evaluate<typename BaseFCN::T>::EvalPoissonLogLGradient(BaseFCN::ModelFunction(), BaseFCN::Data(), x, g);
+   virtual void Gradient(const double *x, double *g) const
+   {
+      // evaluate the Poisson gradient
+      FitUtil::Evaluate<typename BaseFCN::T>::EvalPoissonLogLGradient(BaseFCN::ModelFunction(), BaseFCN::Data(), x, g,
+                                                                      fNEffPoints, fExecutionPolicy);
    }
 
    /// get type of fit method function

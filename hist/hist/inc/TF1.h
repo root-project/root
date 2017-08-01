@@ -813,7 +813,7 @@ void TF1::SetFunction(PtrObj &p, MemFn memFn)
 template <class T>
 inline T TF1::GradientPar(Int_t ipar, const T *x, Double_t eps)
 {
-   if (fType == EFType::kTemplated) {
+   if (fType == EFType::kTemplVec || fType == EFType::kTemplScalar) {
       return GradientParTempl<T>(ipar, x, eps);
    } else
       return GradientParTempl<Double_t>(ipar, (const Double_t *)x, eps);
@@ -887,7 +887,7 @@ inline T TF1::GradientParTempl(Int_t ipar, const T *x, Double_t eps)
 template <class T>
 inline void TF1::GradientPar(const T *x, T *grad, Double_t eps)
 {
-   if (fType == EFType::kTemplated) {
+   if (fType == EFType::kTemplVec || fType == EFType::kTemplScalar) {
       GradientParTempl<T>(x, grad, eps);
    } else
       GradientParTempl<Double_t>((const Double_t *)x, (Double_t *)grad, eps);

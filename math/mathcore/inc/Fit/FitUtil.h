@@ -295,44 +295,54 @@ namespace FitUtil {
       return also nPoints as the effective number of used points in the LogL evaluation
   */
   void EvaluateLogLGradient(const IModelFunction &func, const UnBinData &data, const double *x, double *grad,
-                            unsigned int &nPoints);
+                            unsigned int &nPoints,
+                            const ROOT::Fit::ExecutionPolicy &executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial,
+                            unsigned nChunks = 0);
 
-#ifdef R__HAS_VECCORE
-   template <class NotCompileIfScalarBackend = std::enable_if<!(std::is_same<double, ROOT::Double_v>::value)>>
-   void EvaluateLogLGradient(const IModelFunctionTempl<ROOT::Double_v> &, const UnBinData &, const double *, double *, unsigned int & ) {}
-#endif
+  // #ifdef R__HAS_VECCORE
+  //    template <class NotCompileIfScalarBackend = std::enable_if<!(std::is_same<double, ROOT::Double_v>::value)>>
+  //    void EvaluateLogLGradient(const IModelFunctionTempl<ROOT::Double_v> &, const UnBinData &, const double *, double
+  //    *, unsigned int & ) {}
+  // #endif
 
-   /**
-       evaluate the Poisson LogL given a model function and the data at the point x.
-       return also nPoints as the effective number of used points in the LogL evaluation
-       By default is extended, pass extedend to false if want to be not extended (MultiNomial)
-   */
-   double EvaluatePoissonLogL(const IModelFunction &func, const BinData &data, const double *x, int iWeight, bool extended,
-                              unsigned int &nPoints, const ROOT::Fit::ExecutionPolicy &executionPolicy, unsigned nChunks = 0);
+  /**
+      evaluate the Poisson LogL given a model function and the data at the point x.
+      return also nPoints as the effective number of used points in the LogL evaluation
+      By default is extended, pass extedend to false if want to be not extended (MultiNomial)
+  */
+  double EvaluatePoissonLogL(const IModelFunction &func, const BinData &data, const double *x, int iWeight,
+                             bool extended, unsigned int &nPoints, const ROOT::Fit::ExecutionPolicy &executionPolicy,
+                             unsigned nChunks = 0);
 
-   /**
-       evaluate the Poisson LogL given a model function and the data at the point x.
-       return also nPoints as the effective number of used points in the LogL evaluation
-   */
-   void EvaluatePoissonLogLGradient(const IModelFunction & func, const BinData & data, const double * x, double * grad);
+  /**
+      evaluate the Poisson LogL given a model function and the data at the point x.
+      return also nPoints as the effective number of used points in the LogL evaluation
+  */
+  void
+  EvaluatePoissonLogLGradient(const IModelFunction &func, const BinData &data, const double *x, double *grad,
+                              unsigned int &nPoints,
+                              const ROOT::Fit::ExecutionPolicy &executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial,
+                              unsigned nChunks = 0);
 
-   // methods required by dedicate minimizer like Fumili
+  // methods required by dedicate minimizer like Fumili
 
-   /**
-       evaluate the residual contribution to the Chi2 given a model function and the BinPoint data
-       and if the pointer g is not null evaluate also the gradient of the residual.
-       If the function provides parameter derivatives they are used otherwise a simple derivative calculation
-       is used
-   */
-   double EvaluateChi2Residual(const IModelFunction & func, const BinData & data, const double * x, unsigned int ipoint, double *g = 0);
+  /**
+      evaluate the residual contribution to the Chi2 given a model function and the BinPoint data
+      and if the pointer g is not null evaluate also the gradient of the residual.
+      If the function provides parameter derivatives they are used otherwise a simple derivative calculation
+      is used
+  */
+  double EvaluateChi2Residual(const IModelFunction &func, const BinData &data, const double *x, unsigned int ipoint,
+                              double *g = 0);
 
-   /**
-       evaluate the pdf contribution to the LogL given a model function and the BinPoint data.
-       If the pointer g is not null evaluate also the gradient of the pdf.
-       If the function provides parameter derivatives they are used otherwise a simple derivative calculation
-       is used
-   */
-   double EvaluatePdf(const IModelFunction & func, const UnBinData & data, const double * x, unsigned int ipoint, double * g = 0);
+  /**
+      evaluate the pdf contribution to the LogL given a model function and the BinPoint data.
+      If the pointer g is not null evaluate also the gradient of the pdf.
+      If the function provides parameter derivatives they are used otherwise a simple derivative calculation
+      is used
+  */
+  double
+  EvaluatePdf(const IModelFunction &func, const UnBinData &data, const double *x, unsigned int ipoint, double *g = 0);
 
 #ifdef R__HAS_VECCORE
    template <class NotCompileIfScalarBackend = std::enable_if<!(std::is_same<double, ROOT::Double_v>::value)>>
@@ -1033,8 +1043,239 @@ static double EvalPoissonBinPdf(const IModelFunctionTempl<T> &, const BinData &,
          return -1.;
       }
 
-static void EvalPoissonLogLGradient(const IModelFunctionTempl<T> &, const BinData &, const double *, double * ) {
-         Error("FitUtil::Evaluate<T>::EvaluatePoissonLogLGradient", "The vectorized evaluation of the BinnedLikelihood fit evaluated point by point is still not supported");
+      static void
+      EvalPoissonLogLGradient(const IModelFunctionTempl<T> &f, const BinData &data, const double *p, double *grad,
+                              unsigned int &,
+                              const ROOT::Fit::ExecutionPolicy &executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial,
+                              unsigned nChunks = 0)
+      {
+         // evaluate the gradient of the Poisson log likelihood function
+
+         const IGradModelFunctionTempl<T> *fg = dynamic_cast<const IGradModelFunctionTempl<T> *>(&f);
+         assert(fg != nullptr); // must be called by a grad function
+
+         const IGradModelFunctionTempl<T> &func = *fg;
+
+         const DataOptions &fitOpt = data.Opt();
+         if (fitOpt.fBinVolume || fitOpt.fIntegral || fitOpt.fExpErrors)
+            Error("FitUtil::EvaluatePoissonLogLGradient", "The vectorized implementation doesn't support Integrals,"
+                                                          "BinVolume or ExpErrors\n. Aborting operation.");
+
+         unsigned int npar = func.NPar();
+         auto vecSize = vecCore::VectorSize<T>();
+         unsigned initialNPoints = data.Size();
+         unsigned numVectors = initialNPoints / vecSize;
+
+         auto mapFunction = [&](const unsigned int i) {
+            // set all vector values to zero
+            std::vector<T> gradFunc(npar);
+            std::vector<T> pointContributionVec(npar);
+
+            T x1, y;
+
+            vecCore::Load<T>(x1, data.GetCoordComponent(i * vecSize, 0));
+            vecCore::Load<T>(y, data.ValuePtr(i * vecSize));
+
+            T fval = 0;
+
+            const T *x = nullptr;
+
+            unsigned ndim = data.NDim();
+            if (ndim > 1) {
+               std::vector<T> xc(ndim);
+               xc[0] = x1;
+               for (unsigned int j = 1; j < ndim; ++j)
+                  vecCore::Load<T>(xc[j], data.GetCoordComponent(i * vecSize, j));
+               x = xc.data();
+            } else {
+               x = &x1;
+            }
+
+            fval = func(x, p);
+            func.ParameterGradient(x, p, &gradFunc[0]);
+
+            // correct the gradient
+            for (unsigned int ipar = 0; ipar < npar; ++ipar) {
+               vecCore::Mask<T> positiveValuesMask = fval > 0;
+
+               // df/dp * (1.  - y/f )
+               vecCore::MaskedAssign(pointContributionVec[ipar], positiveValuesMask, gradFunc[ipar] * (1. - y / fval));
+
+               vecCore::Mask<T> validNegativeValuesMask = !positiveValuesMask && gradFunc[ipar] != 0;
+
+               if (!vecCore::MaskEmpty(validNegativeValuesMask)) {
+                  const T kdmax1 = vecCore::math::Sqrt(vecCore::NumericLimits<T>::Max());
+                  const T kdmax2 = vecCore::NumericLimits<T>::Max() / (4 * initialNPoints);
+                  T gg = kdmax1 * gradFunc[ipar];
+                  pointContributionVec[ipar] =
+                     -vecCore::Blend(gg > 0, vecCore::math::Min(gg, kdmax2), vecCore::math::Max(gg, -kdmax2));
+               }
+            }
+
+            return pointContributionVec;
+         };
+
+         // Vertically reduce the set of vectors by summing its equally-indexed components
+         auto redFunction = [&](const std::vector<std::vector<T>> &partialResults) {
+            std::vector<T> result(npar);
+
+            for (auto const &pointContributionVec : partialResults) {
+               for (unsigned int parameterIndex = 0; parameterIndex < npar; parameterIndex++)
+                  result[parameterIndex] += pointContributionVec[parameterIndex];
+            }
+
+            return result;
+         };
+
+         std::vector<T> gVec(npar);
+
+         if (executionPolicy == ROOT::Fit::ExecutionPolicy::kSerial) {
+            std::vector<std::vector<T>> allGradients(numVectors);
+            for (unsigned int i = 0; i < numVectors; ++i) {
+               allGradients[i] = mapFunction(i);
+            }
+
+            gVec = redFunction(allGradients);
+         }
+#ifdef R__USE_IMT
+         else if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
+            auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(numVectors);
+            ROOT::TThreadExecutor pool;
+            gVec = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, numVectors), redFunction, chunks);
+         }
+#endif
+         // else if(executionPolicy == ROOT::Fit::ExecutionPolicy::kMultiprocess){
+         //    ROOT::TProcessExecutor pool;
+         //    g = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction);
+         // }
+         else {
+            Error("FitUtil::EvaluatePoissonLogLGradient", "Execution policy unknown. Avalaible choices:\n "
+                                                          "ROOT::Fit::ExecutionPolicy::kSerial (default)\n "
+                                                          "ROOT::Fit::ExecutionPolicy::kMultithread (requires IMT)\n");
+         }
+
+         // Compute the contribution from the remaining points
+         auto remainingPointsContribution = mapFunction(numVectors);
+
+         // Add the contribution from the valid remaining points and store the result in the output variable
+         auto remainingMask = vecCore::Int2Mask<T>(initialNPoints % vecSize);
+         for (unsigned int param = 0; param < npar; param++) {
+            vecCore::MaskedAssign(gVec[param], remainingMask, gVec[param] + remainingPointsContribution[param]);
+            grad[param] = vecCore::ReduceAdd(gVec[param]);
+         }
+      }
+
+      static void
+      EvalLogLGradient(const IModelFunctionTempl<T> &f, const UnBinData &data, const double *p, double *grad,
+                       unsigned int &,
+                       const ROOT::Fit::ExecutionPolicy &executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial,
+                       unsigned nChunks = 0)
+      {
+         // evaluate the gradient of the log likelihood function
+
+         const IGradModelFunctionTempl<T> *fg = dynamic_cast<const IGradModelFunctionTempl<T> *>(&f);
+         assert(fg != nullptr); // must be called by a grad function
+
+         const IGradModelFunctionTempl<T> &func = *fg;
+
+         unsigned int npar = func.NPar();
+         auto vecSize = vecCore::VectorSize<T>();
+         unsigned initialNPoints = data.Size();
+         unsigned numVectors = initialNPoints / vecSize;
+
+         const T kdmax1 = vecCore::math::Sqrt(vecCore::NumericLimits<T>::Max());
+         const T kdmax2 = vecCore::NumericLimits<T>::Max() / (4 * initialNPoints);
+
+         auto mapFunction = [&](const unsigned int i) {
+            std::vector<T> gradFunc(npar);
+            std::vector<T> pointContributionVec(npar);
+
+            T x1;
+            vecCore::Load<T>(x1, data.GetCoordComponent(i * vecSize, 0));
+
+            const T *x = nullptr;
+
+            unsigned int ndim = data.NDim();
+            if (ndim > 1) {
+               std::vector<T> xc(ndim);
+               xc[0] = x1;
+               for (unsigned int j = 1; j < ndim; ++j)
+                  vecCore::Load<T>(xc[j], data.GetCoordComponent(i * vecSize, j));
+               x = xc.data();
+            } else {
+               x = &x1;
+            }
+
+            T fval = func(x, p);
+            func.ParameterGradient(x, p, &gradFunc[0]);
+
+            vecCore::Mask<T> positiveValues = fval > 0;
+
+            for (unsigned int kpar = 0; kpar < npar; ++kpar) {
+               if (!vecCore::MaskEmpty(positiveValues))
+                  vecCore::MaskedAssign<T>(pointContributionVec[kpar], positiveValues, -1. / fval * gradFunc[kpar]);
+
+               vecCore::Mask<T> nonZeroGradientValues = !positiveValues && gradFunc[kpar] != 0;
+               if (!vecCore::MaskEmpty(nonZeroGradientValues)) {
+                  T gg = kdmax1 * gradFunc[kpar];
+                  pointContributionVec[kpar] =
+                     vecCore::Blend(nonZeroGradientValues && gg > 0, -vecCore::math::Min(gg, kdmax2),
+                                    -vecCore::math::Max(gg, -kdmax2));
+               }
+               // if func derivative is zero term is also zero so do not add in g[kpar]
+            }
+
+            return pointContributionVec;
+         };
+
+         // Vertically reduce the set of vectors by summing its equally-indexed components
+         auto redFunction = [&](const std::vector<std::vector<T>> &pointContributions) {
+            std::vector<T> result(npar);
+
+            for (auto const &pointContributionVec : pointContributions) {
+               for (unsigned int parameterIndex = 0; parameterIndex < npar; parameterIndex++)
+                  result[parameterIndex] += pointContributionVec[parameterIndex];
+            }
+
+            return result;
+         };
+
+         std::vector<T> gVec(npar);
+         std::vector<double> g(npar);
+
+         if (executionPolicy == ROOT::Fit::ExecutionPolicy::kSerial) {
+            std::vector<std::vector<T>> allGradients(numVectors);
+            for (unsigned int i = 0; i < numVectors; ++i) {
+               allGradients[i] = mapFunction(i);
+            }
+            gVec = redFunction(allGradients);
+         }
+#ifdef R__USE_IMT
+         else if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
+            auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(numVectors);
+            ROOT::TThreadExecutor pool;
+            gVec = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, numVectors), redFunction, chunks);
+         }
+#endif
+         // else if(executionPolicy == ROOT::Fit::ExecutionPolicy::kMultiprocess){
+         //    ROOT::TProcessExecutor pool;
+         //    g = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction);
+         // }
+         else {
+            Error("FitUtil::EvaluateLogLGradient", "Execution policy unknown. Avalaible choices:\n "
+                                                   "ROOT::Fit::ExecutionPolicy::kSerial (default)\n "
+                                                   "ROOT::Fit::ExecutionPolicy::kMultithread (requires IMT)\n");
+         }
+
+         // Compute the contribution from the remaining points
+         auto remainingPointsContribution = mapFunction(numVectors);
+
+         // Add the contribution from the valid remaining points and store the result in the output variable
+         auto remainingMask = vecCore::Int2Mask<T>(initialNPoints % vecSize);
+         for (unsigned int param = 0; param < npar; param++) {
+            vecCore::MaskedAssign(gVec[param], remainingMask, gVec[param] + remainingPointsContribution[param]);
+            grad[param] = vecCore::ReduceAdd(gVec[param]);
+         }
       }
    };
 
@@ -1090,8 +1331,22 @@ static void EvalPoissonLogLGradient(const IModelFunctionTempl<T> &, const BinDat
          return FitUtil::EvaluatePoissonBinPdf(func, data, p, i, g);
       }
 
-static void EvalPoissonLogLGradient(const IModelFunctionTempl<double> &func, const BinData &data, const double *p, double *g) {
-         FitUtil::EvaluatePoissonLogLGradient(func, data, p, g);
+      static void
+      EvalPoissonLogLGradient(const IModelFunctionTempl<double> &func, const BinData &data, const double *p, double *g,
+                              unsigned int &nPoints,
+                              const ROOT::Fit::ExecutionPolicy &executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial,
+                              unsigned nChunks = 0)
+      {
+         FitUtil::EvaluatePoissonLogLGradient(func, data, p, g, nPoints, executionPolicy, nChunks);
+      }
+
+      static void
+      EvalLogLGradient(const IModelFunctionTempl<double> &func, const UnBinData &data, const double *p, double *g,
+                       unsigned int &nPoints,
+                       const ROOT::Fit::ExecutionPolicy &executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial,
+                       unsigned nChunks = 0)
+      {
+         FitUtil::EvaluateLogLGradient(func, data, p, g, nPoints, executionPolicy, nChunks);
       }
    };
 
