@@ -88,6 +88,17 @@ public:
                         const TCudaMatrix<AFloat> & activationGradients,
                         const TCudaMatrix<AFloat> & weights,
                         const TCudaMatrix<AFloat> & activationBackward);
+   /** Backward pass for Recurrent Networks */
+  static Matrix_t & RecurrentLayerBackward(TCudaMatrix<AFloat> & state_gradients_backward, // BxH
+                                           TCudaMatrix<AFloat> & input_weight_gradients,
+                                           TCudaMatrix<AFloat> & state_weight_gradients,
+                                           TCudaMatrix<AFloat> & bias_gradients,
+                                           TCudaMatrix<AFloat> & df, //DxH
+                                           const TCudaMatrix<AFloat> & state, // BxH
+                                           const TCudaMatrix<AFloat> & weights_input, // HxD 
+                                           const TCudaMatrix<AFloat> & weights_state, // HxH
+                                           const TCudaMatrix<AFloat> & input,  // BxD
+                                           TCudaMatrix<AFloat> & input_gradient);
    /** Adds a the elements in matrix B scaled by c to the elements in
     *  the matrix A. This is required for the weight update in the gradient
     *  descent step.*/

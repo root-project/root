@@ -23,6 +23,7 @@
 #include "Cpu/OutputFunctions.cxx"
 #include "Cpu/Propagation.cxx"
 #include "Cpu/Regularization.cxx"
+#include "Cpu/RecurrentPropagation.cxx"
 
 namespace TMVA {
 namespace DNN  {
