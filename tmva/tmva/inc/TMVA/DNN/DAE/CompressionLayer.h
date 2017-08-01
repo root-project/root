@@ -75,7 +75,9 @@ public:
    void Forward(std::vector<Matrix_t> input, bool applyDropout = false);
 
    void Backward(std::vector<Matrix_t> &gradients_backward,
-                 const std::vector<Matrix_t> &activations_backward);
+                 const std::vector<Matrix_t> &activations_backward,
+                 std::vector<Matrix_t> &inp1,
+                 std::vector<Matrix_t> &inp2);
 
    void Print() const;
 
@@ -106,7 +108,7 @@ TCompressionLayer<Architecture_t>::TCompressionLayer(size_t batchSize, size_t vi
  {
    Architecture_t::Copy(this->GetWeightsAt(0),weights[0]);
    Architecture_t::Copy(this->GetBiasesAt(0),biases[0]);
-   
+
    std::cout<<"Compression default constructor"<<std::endl;
    std::cout<<"No of visibleUnits "<<visibleUnits<<std::endl;
    std::cout<<"no of hiddenUnits "<<hiddenUnits<<std::endl;
@@ -160,7 +162,9 @@ auto TCompressionLayer<Architecture_t>::Forward(std::vector<Matrix_t> input, boo
 //______________________________________________________________________________
 template <typename Architecture_t>
 auto inline TCompressionLayer<Architecture_t>::Backward(std::vector<Matrix_t> &gradients_backward,
-                                                     const std::vector<Matrix_t> &activations_backward) -> void
+                                                        const std::vector<Matrix_t> &activations_backward,
+                                                        std::vector<Matrix_t> &inp1,
+                                                        std::vector<Matrix_t> &inp2) -> void
 
 {
 }

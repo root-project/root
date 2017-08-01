@@ -98,7 +98,9 @@ public:
    void Forward(std::vector<Matrix_t> input, bool applyDropout = false);
 
    void Backward(std::vector<Matrix_t> &compressedInput,
-                 const std::vector<Matrix_t> &input);
+                 const std::vector<Matrix_t> &input,
+                 std::vector<Matrix_t> &inp1,
+                 std::vector<Matrix_t> &inp2);
 
 
 
@@ -313,7 +315,9 @@ auto TReconstructionLayer<Architecture_t>::Forward(std::vector<Matrix_t> input, 
 //______________________________________________________________________________
 template <typename Architecture_t>
 auto inline TReconstructionLayer<Architecture_t>::Backward(std::vector<Matrix_t> &compressedInput,
-                                                     const std::vector<Matrix_t> &input)
+                                                     const std::vector<Matrix_t> &input,
+                                                     std::vector<Matrix_t> &inp1,
+                                                     std::vector<Matrix_t> &inp2)
 -> void
 {
    std::cout<<"Reconstruction BackWard starts "<<std::endl;

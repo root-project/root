@@ -59,7 +59,9 @@ public:
     *  input matrices. */
    void Forward(std::vector<Matrix_t> input, bool applyDropout = false);
 
-   void Backward(std::vector<Matrix_t> &gradients_backward, const std::vector<Matrix_t> &activations_backward);
+   void Backward(std::vector<Matrix_t> &gradients_backward, const std::vector<Matrix_t> &activations_backward,
+                 std::vector<Matrix_t> &inp1,
+                 std::vector<Matrix_t> &inp2);
 
    /*! Prints the info about the layer. */
    void Print() const;
@@ -116,7 +118,9 @@ auto TReshapeLayer<Architecture_t>::Forward(std::vector<Matrix_t> input, bool ap
 //_________________________________________________________________________________________________
 template <typename Architecture_t>
 auto TReshapeLayer<Architecture_t>::Backward(std::vector<Matrix_t> &gradients_backward,
-                                             const std::vector<Matrix_t> &activations_backward) -> void
+                                             const std::vector<Matrix_t> &activations_backward,
+                                             std::vector<Matrix_t> &inp1,
+                                             std::vector<Matrix_t> &inp2) -> void
 {
    for (size_t i = 0; i < this->GetBatchSize(); i++) {
       Architecture_t::Reshape(gradients_backward[i], this->GetActivationGradientsAt(i));

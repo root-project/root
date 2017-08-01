@@ -118,7 +118,7 @@ template <typename Architecture> auto testLayer1()
    }
    
    
-   logistic.Backward(inputLabel,input);
+   logistic.Backward(inputLabel,input,inputLabel,input);
    
    logistic.Forward(testInput, false);
    std::cout<<std::endl;
