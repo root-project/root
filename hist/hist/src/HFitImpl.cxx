@@ -709,7 +709,7 @@ void ROOT::Fit::FitOptionsMake(EFitObjectType type, const char *option, Foption_
       // }
 
       if (opt.Contains("MULTITHREAD")) {
-         fitOption.ExecPolicy = ROOT::Fit::kMultithread;
+         fitOption.ExecPolicy = ROOT::Fit::ExecutionPolicy::kMultithread;
          opt.ReplaceAll("MULTITHREAD","");
       }
 
