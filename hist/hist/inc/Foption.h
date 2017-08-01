@@ -75,7 +75,7 @@ struct Foption_t {
       StoreResult  (0),
       BinVolume    (0),
       hRobust      (0),
-      ExecPolicy   (ROOT::Fit::kSerial)
+      ExecPolicy   (ROOT::Fit::ExecutionPolicy::kSerial)
    {}
 };
 

@@ -217,7 +217,7 @@ namespace ROOT {
 // for chi2 functions
 //___________________________________________________________________________________________________________________________
 
-double FitUtil::EvaluateChi2(const IModelFunction & func, const BinData & data, const double * p, unsigned int &, const unsigned int & executionPolicy, unsigned nChunks) {
+double FitUtil::EvaluateChi2(const IModelFunction & func, const BinData & data, const double * p, unsigned int &, const ROOT::Fit::ExecutionPolicy & executionPolicy, unsigned nChunks) {
    // evaluate the chi2 given a  function reference  , the data and returns the value and also in nPoints
    // the actual number of used points
    // normal chi2 using only error on values (from fitting histogram)
@@ -358,12 +358,12 @@ double FitUtil::EvaluateChi2(const IModelFunction & func, const BinData & data, 
 #endif
 
   double res{};
-  if(executionPolicy == ROOT::Fit::kSerial){
+  if(executionPolicy == ROOT::Fit::ExecutionPolicy::kSerial){
     for (unsigned int i=0; i<n; ++i) {
       res += mapFunction(i);
     }
 #ifdef R__USE_IMT
-  } else if(executionPolicy == ROOT::Fit::kMultithread) {
+  } else if(executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
     auto chunks = nChunks !=0? nChunks: setAutomaticChunking(data.Size());
     ROOT::TThreadExecutor pool;
     res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction, chunks);
@@ -372,7 +372,7 @@ double FitUtil::EvaluateChi2(const IModelFunction & func, const BinData & data, 
     // ROOT::TProcessExecutor pool;
     // res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction);
   } else{
-    Error("FitUtil::EvaluateChi2","Execution policy unknown. Avalaible choices:\n 0: Serial (default)\n 1: MultiThread (requires IMT)\n");
+    Error("FitUtil::EvaluateChi2","Execution policy unknown. Avalaible choices:\n ROOT::Fit::ExecutionPolicy::kSerial (default)\n ROOT::Fit::ExecutionPolicy::kMultithread (requires IMT)\n");
   }
 
    return res;
@@ -801,7 +801,7 @@ double FitUtil::EvaluatePdf(const IModelFunction & func, const UnBinData & data,
 }
 
 double FitUtil::EvaluateLogL(const IModelFunctionTempl<double>  & func, const UnBinData & data, const double * p,
-                                   int iWeight,  bool extended, unsigned int &nPoints, const unsigned int &executionPolicy, unsigned nChunks) {
+                                   int iWeight,  bool extended, unsigned int &nPoints, const ROOT::Fit::ExecutionPolicy &executionPolicy, unsigned nChunks) {
    // evaluate the LogLikelihood
 
    unsigned int n = data.Size();
@@ -902,7 +902,7 @@ double FitUtil::EvaluateLogL(const IModelFunctionTempl<double>  & func, const Un
   double logl{};
   double sumW{};
   double sumW2{};
-  if(executionPolicy == ROOT::Fit::kSerial){
+  if(executionPolicy == ROOT::Fit::ExecutionPolicy::kSerial){
     for (unsigned int i=0; i<n; ++i) {
       auto resArray = mapFunction(i);
       logl+=resArray.logvalue;
@@ -910,7 +910,7 @@ double FitUtil::EvaluateLogL(const IModelFunctionTempl<double>  & func, const Un
       sumW2+=resArray.weight2;
     }
 #ifdef R__USE_IMT
-  } else if(executionPolicy == ROOT::Fit::kMultithread) {
+  } else if(executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
     auto chunks = nChunks !=0? nChunks: setAutomaticChunking(data.Size());
     ROOT::TThreadExecutor pool;
     auto resArray = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction, chunks);
@@ -922,7 +922,7 @@ double FitUtil::EvaluateLogL(const IModelFunctionTempl<double>  & func, const Un
     // ROOT::TProcessExecutor pool;
     // res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction);
   } else{
-    Error("FitUtil::EvaluateLogL","Execution policy unknown. Avalaible choices:\n 0: Serial (default)\n 1: MultiThread (requires IMT)\n");
+    Error("FitUtil::EvaluateLogL","Execution policy unknown. Avalaible choices:\n ROOT::Fit::ExecutionPolicy::kSerial (default)\n ROOT::Fit::ExecutionPolicy::kMultithread (requires IMT)\n");
   }
 
   if (extended) {
@@ -1128,7 +1128,7 @@ double FitUtil::EvaluatePoissonBinPdf(const IModelFunction & func, const BinData
 }
 
 double FitUtil::EvaluatePoissonLogL(const IModelFunction &func, const BinData &data, const double *p, int iWeight, bool extended,
-                                    unsigned int &nPoints, const unsigned int &executionPolicy, unsigned nChunks) {
+                                    unsigned int &nPoints, const ROOT::Fit::ExecutionPolicy &executionPolicy, unsigned nChunks) {
    // evaluate the Poisson Log Likelihood
    // for binned likelihood fits
    // this is Sum ( f(x_i)  -  y_i * log( f (x_i) ) )
@@ -1313,12 +1313,12 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction &func, const BinData &d
 #endif
 
    double res{};
-   if (executionPolicy == ROOT::Fit::kSerial) {
+   if (executionPolicy == ROOT::Fit::ExecutionPolicy::kSerial) {
       for (unsigned int i = 0; i < n; ++i) {
          res += mapFunction(i);
       }
 #ifdef R__USE_IMT
-   } else if (executionPolicy == ROOT::Fit::kMultithread) {
+   } else if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
       auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(data.Size());
       ROOT::TThreadExecutor pool;
       res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction, chunks);
@@ -1328,7 +1328,7 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction &func, const BinData &d
       // res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction);
    } else {
       Error("FitUtil::EvaluatePoissonLogL",
-            "Execution policy unknown. Avalaible choices:\n 0: Serial (default)\n 1: MultiThread (requires IMT)\n");
+            "Execution policy unknown. Avalaible choices:\n ROOT::Fit::ExecutionPolicy::kSerial (default)\n ROOT::Fit::ExecutionPolicy::kMultithread (requires IMT)\n");
    }
 
 #ifdef DEBUG
