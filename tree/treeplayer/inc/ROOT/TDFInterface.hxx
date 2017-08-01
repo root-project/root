@@ -307,7 +307,7 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Create a snapshot of the dataset on disk in the form of a TTree
+   /// \brief Save selected columns to disk, in a new TTree `treename` in file `filename`.
    /// \tparam BranchTypes variadic list of branch/column types
    /// \param[in] treename The name of the output TTree
    /// \param[in] filename The name of the output TFile
@@ -323,7 +323,7 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Create a snapshot of the dataset on disk in the form of a TTree
+   /// \brief Save selected columns to disk, in a new TTree `treename` in file `filename`.
    /// \param[in] treename The name of the output TTree
    /// \param[in] filename The name of the output TFile
    /// \param[in] columnList The list of names of the columns/branches to be written
@@ -364,7 +364,7 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Create a snapshot of the dataset on disk in the form of a TTree
+   /// \brief Save selected columns to disk, in a new TTree `treename` in file `filename`.
    /// \param[in] treename The name of the output TTree
    /// \param[in] filename The name of the output TFile
    /// \param[in] columnNameRegexp The regular expression to match the column names to be selected. The presence of a '^' and a '$' at the end of the string is implicitly assumed if they are not specified. See the documentation of TRegexp for more details. An empty string signals the selection of all columns.
