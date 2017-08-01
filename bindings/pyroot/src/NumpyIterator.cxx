@@ -23,7 +23,6 @@
 #include <TLeafS.h>
 #include <TLeafS.h>
 #include <TObjArray.h>
-#include <TTree.h>
 
 // Bindings
 #include "PyROOT.h"
@@ -55,10 +54,7 @@ void ClusterBuffer::CopyToExtra(Long64_t keep_start) {
     const Long64_t newsize = (exEntryEnd - keep_start) * fItemSize;
 
     memmove(fExtra.data(), &fExtra.data()[offset], newsize);
-
     fExtra.resize(newsize);
-    CheckExtraAllocations();
-
     exEntryStart = keep_start;
   }
 
@@ -68,17 +64,8 @@ void ClusterBuffer::CopyToExtra(Long64_t keep_start) {
 
   if (additional > 0) {
     fExtra.resize(oldsize + additional);
-    CheckExtraAllocations();
-
     memcpy(&fExtra.data()[oldsize], fBufferFile.GetCurrent(), additional);
-
     exEntryEnd = bfEntryEnd;
-  }
-}
-
-void ClusterBuffer::CheckExtraAllocations() {
-  if (fOldExtra != reinterpret_cast<void*>(fExtra.data())) {
-    fOldExtra = reinterpret_cast<void*>(fExtra.data());
   }
 }
 
@@ -267,43 +254,17 @@ void NumpyIterator::Reset() {
   for (unsigned int i = 0;  i < fClusterBuffers.size();  i++) {
     fClusterBuffers[i]->Reset();
   }
+  fTree->Refresh();
 }
 
 /////////////////////////////////////////////////////// helper functions
 
 bool getrequest(Request &request, TTree* tree, const char* branchName) {
-  if (branchName[0] == '#') {
-    request.branch = tree->GetBranch(&branchName[1]);
-    if (request.branch == 0) {
-      PyErr_Format(PyExc_IOError, "could not read branch \"%s\" from tree \"%s\"", &branchName[1], tree->GetName());
-      return false;
-    }
-
-    TObjArray* leaves = request.branch->GetListOfLeaves();
-    if (leaves == 0) {
-      PyErr_Format(PyExc_IOError, "branch \"%s\" from tree \"%s\" has no leaves", &branchName[1], tree->GetName());
-      return false;
-    }
-
-    TLeaf* counter = ((TLeaf*)(leaves->First()))->GetLeafCount();
-    if (counter == 0) {
-      PyErr_Format(PyExc_IOError, "branch \"%s\" from tree \"%s\" has no counter leaf", &branchName[1], tree->GetName());
-      return false;
-    }
-
-    request.wantcounter = true;
+  request.branch = tree->GetBranch(branchName);
+  if (request.branch == 0) {
+    PyErr_Format(PyExc_IOError, "could not read branch \"%s\" from tree \"%s\"", branchName, tree->GetName());
+    return false;
   }
-
-  else {
-    request.branch = tree->GetBranch(branchName);
-    if (request.branch == 0) {
-      PyErr_Format(PyExc_IOError, "could not read branch \"%s\" from tree \"%s\"", branchName, tree->GetName());
-      return false;
-    }
-
-    request.wantcounter = false;
-  }
-
   return true;
 }
 
@@ -418,12 +379,10 @@ bool dtypedim_unileaf(ArrayInfo &arrayinfo, TLeaf* leaf, bool swap_bytes) {
   std::vector<std::string> counters;
   getdim(leaf, arrayinfo.dims, counters);
   arrayinfo.nd = 1 + arrayinfo.dims.size();    // first dimension is for the set of entries itself
-  arrayinfo.varlen = !counters.empty();
-
-  if (arrayinfo.nd > 1  &&  arrayinfo.varlen) {
-    PyErr_Format(PyExc_ValueError, "TLeaf \"%s\" has both fixed-length dimensions and variable-length dimensions", leaf->GetTitle());
-    return false;
-  }
+  if (counters.empty())
+    arrayinfo.counter = std::string("");
+  else
+    arrayinfo.counter = counters[0];
 
   return dtypedim(arrayinfo.dtype, leaf, swap_bytes);
 }
@@ -480,19 +439,26 @@ void InitializeNumpy() {
   import_array();
 }
 
-bool getrequests(PyObject* self, PyObject* args, std::vector<Request> &requests) {
+bool gettree(PyObject* self, TTree* &tree) {
   if (!ObjectProxy_Check(self)) {
     PyErr_SetString(PyExc_TypeError, "TTree::GetNumpyIterator must be called with a TTree instance as first argument");
     return false;
   }
   PyROOT::ObjectProxy* pyobj = reinterpret_cast<PyROOT::ObjectProxy*>(self);
 
-  TTree* tree = (TTree*)TClass::GetClass(Cppyy::GetFinalName(pyobj->ObjectIsA()).c_str())->DynamicCast(TTree::Class(), pyobj->GetObject());
+  tree = (TTree*)TClass::GetClass(Cppyy::GetFinalName(pyobj->ObjectIsA()).c_str())->DynamicCast(TTree::Class(), pyobj->GetObject());
 
   if (!tree) {
     PyErr_SetString(PyExc_TypeError, "TTree::GetNumpyIterator must be called with a TTree instance as first argument");
     return false;
   }
+
+  return true;
+}
+
+bool getrequests(PyObject* self, PyObject* args, TTree* &tree, std::vector<Request> &requests) {
+  if (!gettree(self, tree))
+    return false;
 
   if (PyTuple_GET_SIZE(args) < 1) {
     PyErr_SetString(PyExc_TypeError, "at least one argument is required");
@@ -515,8 +481,9 @@ bool getrequests(PyObject* self, PyObject* args, std::vector<Request> &requests)
 }
 
 PyObject* GetNumpyIterator(PyObject* self, PyObject* args, PyObject* kwds) {
+  TTree *tree;
   std::vector<Request> requests;
-  if (!getrequests(self, args, requests))
+  if (!getrequests(self, args, tree, requests))
     return 0;
 
   bool return_new_buffers = true;
@@ -565,14 +532,15 @@ PyObject* GetNumpyIterator(PyObject* self, PyObject* args, PyObject* kwds) {
   }
 
   Long64_t num_entries = requests.back().branch->GetTree()->GetEntries();
-  out->iter = new NumpyIterator(requests, arrayinfo, num_entries, return_new_buffers, swap_bytes);
+  out->iter = new NumpyIterator(tree, requests, arrayinfo, num_entries, return_new_buffers, swap_bytes);
 
   return reinterpret_cast<PyObject*>(out);
 }
 
-PyObject* GetNumpyTypeAndSize(PyObject* self, PyObject* args, PyObject* kwds) {
+PyObject* GetNumpyIteratorInfo(PyObject* self, PyObject* args, PyObject* kwds) {
+  TTree* tree;
   std::vector<Request> requests;
-  if (!getrequests(self, args, requests))
+  if (!getrequests(self, args, tree, requests))
     return 0;
 
   bool swap_bytes = true;
@@ -611,16 +579,75 @@ PyObject* GetNumpyTypeAndSize(PyObject* self, PyObject* args, PyObject* kwds) {
     for (unsigned int j = 0;  j < arrayinfo.dims.size();  j++)
       PyTuple_SET_ITEM(shape, j + 1, PyLong_FromLong(arrayinfo.dims[j]));
 
-    PyObject* triple = PyTuple_New(3);
+    PyObject* tupleitem = PyTuple_New(4);
     Py_INCREF(arrayinfo.dtype);
-    PyTuple_SET_ITEM(triple, 0, PyUnicode_FromString(requests[i].branch->GetName()));
-    PyTuple_SET_ITEM(triple, 1, reinterpret_cast<PyObject*>(arrayinfo.dtype));
-    PyTuple_SET_ITEM(triple, 2, shape);
+    PyTuple_SET_ITEM(tupleitem, 0, PyUnicode_FromString(requests[i].branch->GetName()));
+    PyTuple_SET_ITEM(tupleitem, 1, reinterpret_cast<PyObject*>(arrayinfo.dtype));
+    PyTuple_SET_ITEM(tupleitem, 2, shape);
+    if (arrayinfo.counter == std::string(""))
+      PyTuple_SET_ITEM(tupleitem, 3, Py_BuildValue("O", Py_None));
+    else
+      PyTuple_SET_ITEM(tupleitem, 3, Py_BuildValue("s", arrayinfo.counter.c_str()));
 
-    PyTuple_SET_ITEM(out, i, triple);
+    PyTuple_SET_ITEM(out, i, tupleitem);
   }
 
   return out;
+}
+
+PyObject* FillNumpyWithLeaf(PyObject* self, PyObject* args) {
+  TTree* tree;
+  if (!gettree(self, tree))
+    return 0;
+
+  char* leafName;
+  PyObject* array;
+  Long64_t entry_start = 0;
+  if (!PyArg_ParseTuple(args, "sO|l", &leafName, &array, &entry_start))
+    return 0;
+
+  Long64_t entry_end = tree->GetEntries();
+
+  TLeaf* leaf = tree->GetLeaf(leafName);
+  if (leaf == 0) {
+    PyErr_Format(PyExc_IOError, "could not read leaf \"%s\" from tree \"%s\"", leafName, tree->GetName());
+    return 0;
+  }
+  
+  if (!PyArray_Check(array)) {
+    PyErr_SetString(PyExc_TypeError, "second argument must be a Numpy array");
+    return 0;
+  }
+
+  Long64_t arraylength = 1;
+  for (int i = 0;  i < PyArray_NDIM(array);  i++)
+    arraylength *= PyArray_DIM(array, i);
+
+  char* arraydata = PyArray_BYTES(array);
+
+  if (PyArray_DESCR(array)->elsize != leaf->GetLenType()) {
+    PyErr_Format(PyExc_TypeError, "array expects %d-byte elements but leaf provides %d-byte elements", PyArray_DESCR(array)->elsize, leaf->GetLenType());
+    return 0;
+  }
+
+  int makeclass_mode = tree->GetMakeClass();
+  tree->SetMakeClass(1);
+
+  TBranch* branch = leaf->GetBranch();
+  int leaflength = leaf->GetLenType();
+  char branchdata[leaflength];
+  branch->SetAddress(branchdata);
+
+  Long64_t i, j;
+  for (i = 0;  i < arraylength  &&  i < entry_end - entry_start;  i++) {
+    branch->GetEntry(entry_start + i);
+    for (j = 0;  j < leaflength;  j++)
+      arraydata[i*leaflength + j] = branchdata[j];
+  }
+  
+  tree->SetMakeClass(makeclass_mode);
+
+  return Py_BuildValue("i", i);
 }
 
 } // namespace PyROOT

@@ -2569,7 +2569,8 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
 
    // add Python-only GetNumpyIterator method
       Utility::AddToClass( pyclass, "GetNumpyIterator", (PyCFunction) GetNumpyIterator, METH_VARARGS | METH_KEYWORDS );
-      Utility::AddToClass( pyclass, "GetNumpyTypeAndSize", (PyCFunction) GetNumpyTypeAndSize, METH_VARARGS | METH_KEYWORDS );
+      Utility::AddToClass( pyclass, "GetNumpyIteratorInfo", (PyCFunction) GetNumpyIteratorInfo, METH_VARARGS | METH_KEYWORDS );
+      Utility::AddToClass( pyclass, "FillNumpyWithLeaf", (PyCFunction) FillNumpyWithLeaf, METH_VARARGS );
    }
 
    else if ( name == "TChain" ) {
