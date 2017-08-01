@@ -98,7 +98,9 @@ public:
    /*! Backpropagates the error. Must only be called directly at the corresponding
     *  call to Forward(...). */
    virtual void Backward(std::vector<Matrix_t> &gradients_backward,
-                         const std::vector<Matrix_t> &activations_backward) = 0;
+                         const std::vector<Matrix_t> &activations_backward,
+                         std::vector<Matrix_t> &inp1,
+                         std::vector<Matrix_t> &inp2) = 0;
 
    /*! Updates the weights and biases, given the learning rate */
    void Update(const Scalar_t learningRate);
@@ -219,8 +221,8 @@ VGeneralLayer<Architecture_t>::VGeneralLayer(size_t batchSize, size_t inputDepth
 template <typename Architecture_t>
 VGeneralLayer<Architecture_t>::VGeneralLayer(size_t batchSize, size_t inputDepth, size_t inputHeight, size_t inputWidth,
                                              size_t depth, size_t height, size_t width, size_t weightsNSlices,
-                                             std::vector<size_t> weightsNRows, std::vector<size_t> weightsNCols, 
-                                             size_t biasesNSlices, std::vector<size_t> biasesNRows, std::vector<size_t> biasesNCols, 
+                                             std::vector<size_t> weightsNRows, std::vector<size_t> weightsNCols,
+                                             size_t biasesNSlices, std::vector<size_t> biasesNRows, std::vector<size_t> biasesNCols,
                                              size_t outputNSlices, size_t outputNRows, size_t outputNCols, EInitialization init)
    : fBatchSize(batchSize), fInputDepth(inputDepth), fInputHeight(inputHeight), fInputWidth(inputWidth), fDepth(depth),
      fHeight(height), fWidth(width), fIsTraining(true), fWeights(), fBiases(), fWeightGradients(), fBiasGradients(),

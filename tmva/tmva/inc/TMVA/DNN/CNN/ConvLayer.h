@@ -95,7 +95,9 @@ public:
     *  first partial derviatives of the activation function computed during
     *  forward propagation and modifies them. Must only be called directly
     *  at the corresponding call to Forward(...). */
-   void Backward(std::vector<Matrix_t> &gradients_backward, const std::vector<Matrix_t> &activations_backward);
+   void Backward(std::vector<Matrix_t> &gradients_backward, const std::vector<Matrix_t> &activations_backward,
+                 std::vector<Matrix_t> &inp1,
+                 std::vector<Matrix_t> &inp2);
 
    /*! Prints the info about the layer. */
    void Print() const;
@@ -226,7 +228,9 @@ auto TConvLayer<Architecture_t>::Forward(std::vector<Matrix_t> input, bool apply
 //______________________________________________________________________________
 template <typename Architecture_t>
 auto TConvLayer<Architecture_t>::Backward(std::vector<Matrix_t> &gradients_backward,
-                                          const std::vector<Matrix_t> &activations_backward) -> void
+                                          const std::vector<Matrix_t> &activations_backward,
+                                          std::vector<Matrix_t> &inp1,
+                                          std::vector<Matrix_t> &inp2) -> void
 {
 
    Architecture_t::ConvLayerBackward(

@@ -729,6 +729,8 @@ auto TDeepNet<Architecture_t, Layer_t>::PreTrain(std::vector<Matrix_t> &input, s
                                                  bool applyDropout)
 -> void
 {
+   std::vector<Matrix_t> inp1;
+   std::vector<Matrix_t> inp2;
    size_t numOfHiddenLayers = sizeof(numHiddenUnitsPerLayer) / sizeof(numHiddenUnitsPerLayer[0]);
    size_t batchSize = this->GetBatchSize();
    size_t visibleUnits = (size_t)input[0].GetNrows();
@@ -752,7 +754,7 @@ auto TDeepNet<Architecture_t, Layer_t>::PreTrain(std::vector<Matrix_t> &input, s
    fLayers.back()->Initialize();
    fLayers.back()->Forward(fLayers[fLayers.size() - 2]->GetOutput(),
                            applyDropout); // as we have to pass compressed Input
-   fLayers.back()->Backward(fLayers[fLayers.size() - 2]->GetOutput(), input);
+   fLayers.back()->Backward(fLayers[fLayers.size() - 2]->GetOutput(), input, inp1, inp2);
    // three layers are added, now pointer is on third layer
    size_t weightsSize = fLayers.back()->GetWeights().size();
    size_t biasesSize = fLayers.back()->GetBiases().size();
@@ -769,7 +771,7 @@ auto TDeepNet<Architecture_t, Layer_t>::PreTrain(std::vector<Matrix_t> &input, s
       }
       fLayers[fLayers.size() - 2]->Forward(fLayers[fLayers.size() - 3]->GetOutput(), applyDropout);
       fLayers[fLayers.size() - 1]->Forward(fLayers[fLayers.size() - 2]->GetOutput(), applyDropout);
-      fLayers[fLayers.size() - 1]->Backward(fLayers[fLayers.size() - 2]->GetOutput(), input);
+      fLayers[fLayers.size() - 1]->Backward(fLayers[fLayers.size() - 2]->GetOutput(), input, inp1, inp2);
    }
 
    for (size_t i = 1; i < numOfHiddenLayers; i++) {
@@ -792,7 +794,7 @@ auto TDeepNet<Architecture_t, Layer_t>::PreTrain(std::vector<Matrix_t> &input, s
                              corruptionLevel, dropoutProbability);
       fLayers.back()->Initialize();
       fLayers.back()->Forward(fLayers[fLayers.size() - 2]->GetOutput(), applyDropout); // as we have to pass compressed Input
-      fLayers.back()->Backward(fLayers[fLayers.size() - 2]->GetOutput(), input);
+      fLayers.back()->Backward(fLayers[fLayers.size() - 2]->GetOutput(), input, inp1, inp2);
 
       // three layers are added, now pointer is on third layer
       size_t weightsSize = fLayers.back()->GetWeights().size();
@@ -810,7 +812,8 @@ auto TDeepNet<Architecture_t, Layer_t>::PreTrain(std::vector<Matrix_t> &input, s
          }
          fLayers[fLayers.size() - 2]->Forward(fLayers[fLayers.size() - 3]->GetOutput(), applyDropout);
          fLayers[fLayers.size() - 1]->Forward(fLayers[fLayers.size() - 2]->GetOutput(), applyDropout);
-         fLayers[fLayers.size() - 1]->Backward(fLayers[fLayers.size() - 2]->GetOutput(), fLayers[fLayers.size() - 3]->GetOutput());
+         fLayers[fLayers.size() - 1]->Backward(fLayers[fLayers.size() - 2]->GetOutput(),
+                                               fLayers[fLayers.size() - 3]->GetOutput(), inp1, inp2);
       }
 
    }
@@ -835,13 +838,15 @@ template <typename Architecture_t, typename Layer_t>
 auto TDeepNet<Architecture_t, Layer_t>::Backward(std::vector<Matrix_t> input, const Matrix_t &groundTruth,
                                                  const Matrix_t &weights) -> void
 {
+   std::vector<Matrix_t> inp1;
+   std::vector<Matrix_t> inp2;
    // Last layer should not be deep
    evaluateGradients<Architecture_t>(fLayers.back()->GetActivationGradientsAt(0), this->GetLossFunction(), groundTruth,
                                      fLayers.back()->GetOutputAt(0), weights);
    for (size_t i = fLayers.size() - 1; i > 0; i--) {
       std::vector<Matrix_t> activation_gradient_backward = fLayers[i - 1]->GetActivationGradients();
       std::vector<Matrix_t> activations_backward = fLayers[i - 1]->GetOutput();
-      fLayers[i]->Backward(activation_gradient_backward, activations_backward);
+      fLayers[i]->Backward(activation_gradient_backward, activations_backward, inp1, inp2);
    }
 
    std::vector<Matrix_t> dummy;
@@ -850,7 +855,7 @@ auto TDeepNet<Architecture_t, Layer_t>::Backward(std::vector<Matrix_t> input, co
       dummy.emplace_back(0, 0);
    }
 
-   fLayers[0]->Backward(dummy, input);
+   fLayers[0]->Backward(dummy, input, inp1, inp2);
 }
 
 //______________________________________________________________________________
@@ -859,6 +864,8 @@ auto TDeepNet<Architecture_t, Layer_t>::ParallelBackward(std::vector<TDeepNet<Ar
                                                          std::vector<TTensorBatch<Architecture_t>> &batches,
                                                          Scalar_t learningRate) -> void
 {
+   std::vector<Matrix_t> inp1;
+   std::vector<Matrix_t> inp2;
    size_t depth = this->GetDepth();
 
    // Evaluate the gradients of the last layers in each deep net
@@ -872,7 +879,7 @@ auto TDeepNet<Architecture_t, Layer_t>::ParallelBackward(std::vector<TDeepNet<Ar
    for (size_t i = depth - 1; i > 0; i--) {
       for (size_t j = 0; j < nets.size(); j++) {
          nets[j].GetLayerAt(i)->Backward(nets[j].GetLayerAt(i - 1)->GetActivationGradients(),
-                                         nets[j].GetLayerAt(i - 1)->GetOutput());
+                                         nets[j].GetLayerAt(i - 1)->GetOutput(), inp1, inp2);
       }
    }
 
@@ -884,7 +891,7 @@ auto TDeepNet<Architecture_t, Layer_t>::ParallelBackward(std::vector<TDeepNet<Ar
 
    // First layer of each deep net
    for (size_t i = 0; i < nets.size(); i++) {
-      nets[i].GetLayerAt(0)->Backward(dummy, batches[i].GetInput());
+      nets[i].GetLayerAt(0)->Backward(dummy, batches[i].GetInput(), inp1, inp2);
    }
 
    // Update and copy
@@ -908,6 +915,8 @@ auto TDeepNet<Architecture_t, Layer_t>::ParallelBackwardMomentum(std::vector<TDe
                                                                  std::vector<TTensorBatch<Architecture_t>> &batches,
                                                                  Scalar_t learningRate, Scalar_t momentum) -> void
 {
+   std::vector<Matrix_t> inp1;
+   std::vector<Matrix_t> inp2;
    size_t depth = this->GetDepth();
 
    // Evaluate the gradients of the last layers in each deep net
@@ -925,7 +934,7 @@ auto TDeepNet<Architecture_t, Layer_t>::ParallelBackwardMomentum(std::vector<TDe
        Layer_t *layer = nets[j].GetLayerAt(i);
 
        layer->Backward(nets[j].GetLayerAt(i - 1)->GetActivationGradients(),
-                       nets[j].GetLayerAt(i - 1)->GetOutput());
+                       nets[j].GetLayerAt(i - 1)->GetOutput(), inp1, inp2);
        masterLayer->UpdateWeightGradients(layer->GetWeightGradients(),
                                           learningRate / momentum);
        masterLayer->UpdateBiasGradients(layer->GetBiasGradients(),
@@ -963,7 +972,7 @@ auto TDeepNet<Architecture_t, Layer_t>::ParallelBackwardMomentum(std::vector<TDe
    for (size_t i = 0; i < nets.size(); i++) {
      Layer_t *layer = nets[i].GetLayerAt(0);
 
-     layer->Backward(dummy, batches[i].GetInput());
+     layer->Backward(dummy, batches[i].GetInput(), inp1, inp2);
 
      masterFirstLayer->UpdateWeightGradients(layer->GetWeightGradients(),
                                              learningRate / momentum);
@@ -1013,6 +1022,8 @@ auto TDeepNet<Architecture_t, Layer_t>::ParallelBackwardNestorov(std::vector<TDe
                                                                  std::vector<TTensorBatch<Architecture_t>> &batches,
                                                                  Scalar_t learningRate, Scalar_t momentum) -> void
 {
+   std::vector<Matrix_t> inp1;
+   std::vector<Matrix_t> inp2;
    size_t depth = this->GetDepth();
 
    // Evaluate the gradients of the last layers in each deep net
@@ -1028,7 +1039,7 @@ auto TDeepNet<Architecture_t, Layer_t>::ParallelBackwardNestorov(std::vector<TDe
         Layer_t *layer = nets[j].GetLayerAt(i);
 
         layer->Backward(nets[j].GetLayerAt(i - 1)->GetActivationGradients(),
-                        nets[j].GetLayerAt(i - 1)->GetOutput());
+                        nets[j].GetLayerAt(i - 1)->GetOutput(), inp1, inp2);
       }
    }
 
@@ -1041,7 +1052,7 @@ auto TDeepNet<Architecture_t, Layer_t>::ParallelBackwardNestorov(std::vector<TDe
    // First layer of each deep net
    for (size_t i = 0; i < nets.size(); i++) {
      Layer_t *layer = nets[i].GetLayerAt(0);
-     layer->Backward(dummy, batches[i].GetInput());
+     layer->Backward(dummy, batches[i].GetInput(), inp1, inp2);
    }
 
    for (size_t i = 0; i < depth; i++) {

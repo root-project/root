@@ -80,7 +80,9 @@ public:
    void Forward(std::vector<Matrix_t> input, bool applyDropout = false);
 
    void Backward(std::vector<Matrix_t> &gradients_backward,
-                 const std::vector<Matrix_t> &activations_backward);
+                 const std::vector<Matrix_t> &activations_backward,
+                 std::vector<Matrix_t> &inp1,
+                 std::vector<Matrix_t> &inp2);
 
    /*  Getters */
    size_t GetInputUnits()         const {return fInputUnits;}
@@ -161,7 +163,9 @@ TLogisticRegressionLayer<Architecture_t>::TLogisticRegressionLayer(const TLogist
 //______________________________________________________________________________
 template <typename Architecture_t>
 auto inline TLogisticRegressionLayer<Architecture_t>::Backward(std::vector<Matrix_t> &outputLabel,
-                                                     const std::vector<Matrix_t> &input)
+                                                     const std::vector<Matrix_t> &input,
+                                                     std::vector<Matrix_t> &inp1,
+                                                     std::vector<Matrix_t> &inp2)
 -> void
 {
    for(size_t i=0; i<this->GetBatchSize(); i++)

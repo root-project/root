@@ -114,7 +114,7 @@ template <typename Architecture> auto testLayer(size_t batchSize, size_t visible
 
 
    dae.Forward(compressedInput,false);
-   dae.Backward(compressedInput,input);
+   dae.Backward(compressedInput,input, compressedInput,input);
 
 
    std::cout<<std::endl;

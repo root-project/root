@@ -89,7 +89,9 @@ public:
     *  first partial derviatives of the activation function computed during
     *  forward propagation and modifies them. Must only be called directly
     *  a the corresponding call to Forward(...). */
-   void Backward(std::vector<Matrix_t> &gradients_backward, const std::vector<Matrix_t> &activations_backward);
+   void Backward(std::vector<Matrix_t> &gradients_backward, const std::vector<Matrix_t> &activations_backward,
+                 std::vector<Matrix_t> &inp1,
+                 std::vector<Matrix_t> &inp2);
 
    /*! Printing the layer info. */
    void Print() const;
@@ -165,7 +167,9 @@ auto TDenseLayer<Architecture_t>::Forward(std::vector<Matrix_t> input, bool appl
 //______________________________________________________________________________
 template <typename Architecture_t>
 auto TDenseLayer<Architecture_t>::Backward(std::vector<Matrix_t> &gradients_backward,
-                                           const std::vector<Matrix_t> &activations_backward) -> void
+                                           const std::vector<Matrix_t> &activations_backward,
+                                           std::vector<Matrix_t> &inp1,
+                                           std::vector<Matrix_t> &inp2) -> void
 {
    Architecture_t::Backward(gradients_backward[0], this->GetWeightGradientsAt(0), this->GetBiasGradientsAt(0),
                             this->GetDerivativesAt(0), this->GetActivationGradientsAt(0), this->GetWeightsAt(0),
