@@ -215,11 +215,11 @@ PyObject* NumpyIterator::arrays() {
   if (StepForward(error_string)) {
     if (error_string != nullptr) {
       PyErr_SetString(PyExc_IOError, error_string);
-      return NULL;
+      return 0;
     }
     else {
       PyErr_SetNone(PyExc_StopIteration);
-      return NULL;
+      return 0;
     }
   }
 
@@ -252,7 +252,7 @@ PyObject* NumpyIterator::arrays() {
       int flags = NPY_ARRAY_C_CONTIGUOUS;
       if (!IS_ALIGNED(ptr))
         flags |= NPY_ARRAY_ALIGNED;
-      array = PyArray_NewFromDescr(&PyArray_Type, ai.dtype, ai.nd, dims, NULL, ptr, flags, NULL);
+      array = PyArray_NewFromDescr(&PyArray_Type, ai.dtype, ai.nd, dims, 0, ptr, flags, 0);
     }
 
     PyTuple_SET_ITEM(out, i + 2, array);
@@ -273,7 +273,7 @@ void NumpyIterator::Reset() {
 
 bool getbranch(TBranch* &branch, TTree* tree, const char* branchName) {
   branch = tree->GetBranch(branchName);
-  if (branch == NULL) {
+  if (branch == 0) {
     PyErr_Format(PyExc_IOError, "could not read branch \"%s\" from tree \"%s\"", branchName, tree->GetName());
     return false;
   }
@@ -335,10 +335,10 @@ const char* leaftype(TLeaf* leaf, bool swap_bytes) {
       case kFloat_t:    return swap_bytes ? "<f4" : ">f4";
       case kDouble32_t: return swap_bytes ? "<f4" : ">f4";
       case kDouble_t:   return swap_bytes ? "<f8" : ">f8";
-      default: return NULL;
+      default: return 0;
     }
   }
-  return NULL;
+  return 0;
 }
 
 void getdim(TLeaf* leaf, std::vector<int>& dims, std::vector<std::string>& counters) {
@@ -375,14 +375,14 @@ bool dtypedim(PyArray_Descr* &dtype, TLeaf* leaf, bool swap_bytes) {
   dtype = PyArray_DescrFromType(0);
 
   const char* asstring = leaftype(leaf, swap_bytes);
-  if (asstring == NULL) {
+  if (asstring == 0) {
     PyErr_Format(PyExc_ValueError, "cannot convert type of TLeaf \"%s\" to Numpy", leaf->GetName());
     return false;
   }
 
   if (!PyArray_DescrConverter(PyUnicode_FromString(asstring), &dtype)) {
     PyErr_SetString(PyExc_ValueError, "cannot create a dtype");
-    return NULL;
+    return 0;
   }
 
   return true;
@@ -428,7 +428,7 @@ const char* gettuplestring(PyObject* p, Py_ssize_t pos) {
     return PyString_AsString(obj);
   else {
     PyErr_Format(PyExc_TypeError, "expected a string in argument %ld", pos);
-    return NULL;
+    return 0;
   }
 }
 
@@ -459,7 +459,7 @@ bool getbranches(PyObject* self, PyObject* args, std::vector<TBranch*> &requeste
 
   for (int i = 0;  i < PyTuple_GET_SIZE(args);  i++) {
     const char* branchName = gettuplestring(args, i);
-    if (branchName == NULL) {
+    if (branchName == 0) {
       PyErr_SetString(PyExc_TypeError, "all arguments must be strings (branch names)");
       return false;
     }
@@ -475,12 +475,12 @@ bool getbranches(PyObject* self, PyObject* args, std::vector<TBranch*> &requeste
 PyObject* GetNumpyIterator(PyObject* self, PyObject* args, PyObject* kwds) {
   std::vector<TBranch*> requested_branches;
   if (!getbranches(self, args, requested_branches))
-    return NULL;
+    return 0;
 
   bool return_new_buffers = true;
   bool swap_bytes = true;
 
-  if (kwds != NULL) {
+  if (kwds != 0) {
     PyObject* key;
     PyObject* value;
     Py_ssize_t pos = 0;
@@ -501,7 +501,7 @@ PyObject* GetNumpyIterator(PyObject* self, PyObject* args, PyObject* kwds) {
 
       else {
         PyErr_Format(PyExc_TypeError, "unrecognized option: %s", PyString_AsString(key));
-        return NULL;
+        return 0;
       }
     }
   }
@@ -511,15 +511,15 @@ PyObject* GetNumpyIterator(PyObject* self, PyObject* args, PyObject* kwds) {
   for (unsigned int i = 0;  i < requested_branches.size();  i++) {
     arrayinfo.push_back(ArrayInfo());
     if (!dtypedim_branch(arrayinfo.back(), requested_branches[i], swap_bytes))
-      return NULL;
+      return 0;
   }
 
   PyNumpyIterator* out = PyObject_New(PyNumpyIterator, &PyNumpyIteratorType);
-  out->iter = NULL;
+  out->iter = 0;
 
   if (!PyObject_Init(reinterpret_cast<PyObject*>(out), &PyNumpyIteratorType)) {
     Py_DECREF(out);
-    return NULL;
+    return 0;
   }
 
   Long64_t num_entries = requested_branches.back()->GetTree()->GetEntries();
@@ -531,11 +531,11 @@ PyObject* GetNumpyIterator(PyObject* self, PyObject* args, PyObject* kwds) {
 PyObject* GetNumpyTypeAndSize(PyObject* self, PyObject* args, PyObject* kwds) {
   std::vector<TBranch*> requested_branches;
   if (!getbranches(self, args, requested_branches))
-    return NULL;
+    return 0;
 
   bool swap_bytes = true;
 
-  if (kwds != NULL) {
+  if (kwds != 0) {
     PyObject* key;
     PyObject* value;
     Py_ssize_t pos = 0;
@@ -549,7 +549,7 @@ PyObject* GetNumpyTypeAndSize(PyObject* self, PyObject* args, PyObject* kwds) {
 
       else {
         PyErr_Format(PyExc_TypeError, "unrecognized option: %s", PyString_AsString(key));
-        return NULL;
+        return 0;
       }
     }
   }
@@ -560,7 +560,7 @@ PyObject* GetNumpyTypeAndSize(PyObject* self, PyObject* args, PyObject* kwds) {
     ArrayInfo arrayinfo;
     if (!dtypedim_branch(arrayinfo, requested_branches[i], swap_bytes)) {
       Py_DECREF(out);
-      return NULL;
+      return 0;
     }
 
     PyObject* shape = PyTuple_New(arrayinfo.nd);
