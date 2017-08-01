@@ -43,6 +43,7 @@ public:
    using BranchTypes_t = RemoveFirstParameter_t<typename CallableTraits<F>::arg_types>;
    ForeachSlotHelper(F &&f) : fCallable(f) {}
    ForeachSlotHelper(ForeachSlotHelper &&) = default;
+   ForeachSlotHelper(const ForeachSlotHelper &) = delete;
 
    void InitSlot(TTreeReader*, unsigned int) {}
 
@@ -65,6 +66,7 @@ public:
    using BranchTypes_t = TypeList<>;
    CountHelper(const std::shared_ptr<unsigned int> &resultCount, const unsigned int nSlots);
    CountHelper(CountHelper &&) = default;
+   CountHelper(const CountHelper &) = delete;
    void InitSlot(TTreeReader*, unsigned int) {}
    void Exec(unsigned int slot);
    void Finalize();
@@ -89,6 +91,7 @@ class FillHelper {
 public:
    FillHelper(const std::shared_ptr<Hist_t> &h, const unsigned int nSlots);
    FillHelper(FillHelper &&) = default;
+   FillHelper(const FillHelper &) = delete;
    void InitSlot(TTreeReader*, unsigned int) {}
    void Exec(unsigned int slot, double v);
    void Exec(unsigned int slot, double v, double w);
@@ -140,6 +143,7 @@ class FillTOHelper {
 
 public:
    FillTOHelper(FillTOHelper &&) = default;
+   FillTOHelper(const FillTOHelper &) = delete;
 
    FillTOHelper(const std::shared_ptr<HIST> &h, const unsigned int nSlots) : fTo(new TThreadedObject<HIST>(*h))
    {
@@ -250,6 +254,7 @@ public:
       for (unsigned int i = 1; i < nSlots; ++i) fColls.emplace_back(std::make_shared<COLL>());
    }
    TakeHelper(TakeHelper &&) = default;
+   TakeHelper(const TakeHelper &) = delete;
 
    void InitSlot(TTreeReader*, unsigned int) {}
 
@@ -288,6 +293,7 @@ public:
       }
    }
    TakeHelper(TakeHelper &&) = default;
+   TakeHelper(const TakeHelper &) = delete;
 
    void InitSlot(TTreeReader*, unsigned int) {}
 
@@ -322,6 +328,7 @@ public:
    {
    }
    ReduceHelper(ReduceHelper &&) = default;
+   ReduceHelper(const ReduceHelper &) = delete;
 
    void InitSlot(TTreeReader*, unsigned int) {}
 
@@ -367,6 +374,7 @@ class MaxHelper {
 public:
    MaxHelper(const std::shared_ptr<double> &maxVPtr, const unsigned int nSlots);
    MaxHelper(MaxHelper &&) = default;
+   MaxHelper(const MaxHelper &) = delete;
    void InitSlot(TTreeReader*, unsigned int) {}
    void Exec(unsigned int slot, double v);
 
@@ -393,6 +401,7 @@ class MeanHelper {
 public:
    MeanHelper(const std::shared_ptr<double> &meanVPtr, const unsigned int nSlots);
    MeanHelper(MeanHelper &&) = default;
+   MeanHelper(const MeanHelper &) = delete;
    void InitSlot(TTreeReader*, unsigned int) {}
    void Exec(unsigned int slot, double v);
 
@@ -435,7 +444,6 @@ public:
 
    SnapshotHelper(const SnapshotHelper &) = delete;
    SnapshotHelper(SnapshotHelper &&) = default;
-   ~SnapshotHelper() = default;
 
    void InitSlot(TTreeReader *r, unsigned int /* slot */)
    {
@@ -490,7 +498,6 @@ public:
    }
    SnapshotHelperMT(const SnapshotHelperMT &) = delete;
    SnapshotHelperMT(SnapshotHelperMT &&) = default;
-   ~SnapshotHelperMT() = default;
 
    void InitSlot(TTreeReader *r, unsigned int slot)
    {
