@@ -92,7 +92,7 @@ void ClusterBuffer::ReadOne(Long64_t keep_start, const char* &error_string) {
   }
 
   // read in one more basket, starting at the old bfEntryEnd
-  Long64_t numentries = fBranch->GetBulkRead().GetEntriesSerialized(bfEntryEnd, fBufferFile);
+  Long64_t numentries = fRequest.branch->GetBulkRead().GetEntriesSerialized(bfEntryEnd, fBufferFile);
 
   if (fSwapBytes) {
     switch (fItemSize) {
@@ -178,8 +178,8 @@ bool NumpyIterator::StepForward(const char* &error_string) {
     return true;
 
   // increment the branches that are at the forefront
-  for (unsigned int i = 0;  i < fRequested.size();  i++) {
-    ClusterBuffer &buf = *fRequested[i];
+  for (unsigned int i = 0;  i < fClusterBuffers.size();  i++) {
+    ClusterBuffer &buf = *fClusterBuffers[i];
     if (buf.EntryEnd() == fCurrentStart) {
       buf.ReadOne(fCurrentStart, error_string);
       if (error_string != nullptr)
@@ -189,15 +189,15 @@ bool NumpyIterator::StepForward(const char* &error_string) {
 
   // find the maximum EntryEnd
   fCurrentEnd = -1;
-  for (unsigned int i = 0;  i < fRequested.size();  i++) {
-    ClusterBuffer &buf = *fRequested[i];
+  for (unsigned int i = 0;  i < fClusterBuffers.size();  i++) {
+    ClusterBuffer &buf = *fClusterBuffers[i];
     if (buf.EntryEnd() > fCurrentEnd)
       fCurrentEnd = buf.EntryEnd();
   }
 
   // bring all others up to at least fCurrentEnd
-  for (unsigned int i = 0;  i < fRequested.size();  i++) {
-    ClusterBuffer &buf = *fRequested[i];
+  for (unsigned int i = 0;  i < fClusterBuffers.size();  i++) {
+    ClusterBuffer &buf = *fClusterBuffers[i];
     while (buf.EntryEnd() < fCurrentEnd) {
       buf.ReadOne(fCurrentStart, error_string);
       if (error_string != nullptr)
@@ -224,12 +224,12 @@ PyObject* NumpyIterator::arrays() {
   }
 
   // create a tuple of results
-  PyObject* out = PyTuple_New(2 + fRequested.size());
+  PyObject* out = PyTuple_New(2 + fClusterBuffers.size());
   PyTuple_SET_ITEM(out, 0, PyLong_FromLong(fCurrentStart));
   PyTuple_SET_ITEM(out, 1, PyLong_FromLong(fCurrentEnd));
 
-  for (unsigned int i = 0;  i < fRequested.size();  i++) {
-    ClusterBuffer &buf = *fRequested[i];
+  for (unsigned int i = 0;  i < fClusterBuffers.size();  i++) {
+    ClusterBuffer &buf = *fClusterBuffers[i];
     const ArrayInfo &ai = fArrayInfo[i];
 
     Long64_t numbytes;
@@ -264,21 +264,47 @@ PyObject* NumpyIterator::arrays() {
 void NumpyIterator::Reset() {
   fCurrentStart = 0;
   fCurrentEnd = 0;
-  for (unsigned int i = 0;  i < fRequested.size();  i++) {
-    fRequested[i]->Reset();
+  for (unsigned int i = 0;  i < fClusterBuffers.size();  i++) {
+    fClusterBuffers[i]->Reset();
   }
 }
 
 /////////////////////////////////////////////////////// helper functions
 
-bool getbranch(TBranch* &branch, TTree* tree, const char* branchName) {
-  branch = tree->GetBranch(branchName);
-  if (branch == 0) {
-    PyErr_Format(PyExc_IOError, "could not read branch \"%s\" from tree \"%s\"", branchName, tree->GetName());
-    return false;
+bool getrequest(Request &request, TTree* tree, const char* branchName) {
+  if (branchName[0] == '#') {
+    request.branch = tree->GetBranch(&branchName[1]);
+    if (request.branch == 0) {
+      PyErr_Format(PyExc_IOError, "could not read branch \"%s\" from tree \"%s\"", &branchName[1], tree->GetName());
+      return false;
+    }
+
+    TObjArray* leaves = request.branch->GetListOfLeaves();
+    if (leaves == 0) {
+      PyErr_Format(PyExc_IOError, "branch \"%s\" from tree \"%s\" has no leaves", &branchName[1], tree->GetName());
+      return false;
+    }
+
+    TLeaf* counter = ((TLeaf*)(leaves->First()))->GetLeafCount();
+    if (counter == 0) {
+      PyErr_Format(PyExc_IOError, "branch \"%s\" from tree \"%s\" has no counter leaf", &branchName[1], tree->GetName());
+      return false;
+    }
+
+    request.wantcounter = true;
   }
-  else
-    return true;
+
+  else {
+    request.branch = tree->GetBranch(branchName);
+    if (request.branch == 0) {
+      PyErr_Format(PyExc_IOError, "could not read branch \"%s\" from tree \"%s\"", branchName, tree->GetName());
+      return false;
+    }
+
+    request.wantcounter = false;
+  }
+
+  return true;
 }
 
 const char* leaftype(TLeaf* leaf, bool swap_bytes) {
@@ -403,23 +429,39 @@ bool dtypedim_unileaf(ArrayInfo &arrayinfo, TLeaf* leaf, bool swap_bytes) {
 }
 
 bool dtypedim_multileaf(ArrayInfo &arrayinfo, TObjArray* leaves, bool swap_bytes) {
+  // silence warnings until this placeholder is implemented
+  (void)(arrayinfo);
+  (void)(leaves);
+  (void)(swap_bytes);
   // TODO: Numpy recarray dtype
   PyErr_SetString(PyExc_NotImplementedError, "multileaf");
   return false;
 }
 
-bool dtypedim_branch(ArrayInfo &arrayinfo, TBranch* branch, bool swap_bytes) {
-  TObjArray* subbranches = branch->GetListOfBranches();
-  if (subbranches->GetEntries() != 0) {
-    PyErr_Format(PyExc_ValueError, "TBranch \"%s\" has subbranches; only branches of TLeaves are allowed", branch->GetName());
-    return false;
-  }
+bool dtypedim_multibranch(ArrayInfo &arrayinfo, TObjArray* branches, bool swap_bytes) {
+  // silence warnings until this placeholder is implemented
+  (void)(arrayinfo);
+  (void)(branches);
+  (void)(swap_bytes);
+  // TODO: dict of Numpy arrays (nested when this function is called recursively)
+  PyErr_SetString(PyExc_NotImplementedError, "multibranch");
+  return false;
+}
 
+bool dtypedim_branch(ArrayInfo &arrayinfo, TBranch* branch, bool swap_bytes) {
   TObjArray* leaves = branch->GetListOfLeaves();
   if (leaves->GetEntries() == 1)
     return dtypedim_unileaf(arrayinfo, dynamic_cast<TLeaf*>(leaves->First()), swap_bytes);
   else
     return dtypedim_multileaf(arrayinfo, leaves, swap_bytes);
+}
+
+bool dtypedim_request(ArrayInfo &arrayinfo, Request request, bool swap_bytes) {
+  TObjArray* subbranches = request.branch->GetListOfBranches();
+  if (subbranches->GetEntries() != 0)
+    return dtypedim_multibranch(arrayinfo, subbranches, swap_bytes);
+  else
+    return dtypedim_branch(arrayinfo, request.branch, swap_bytes);
 }
 
 const char* gettuplestring(PyObject* p, Py_ssize_t pos) {
@@ -438,7 +480,7 @@ void InitializeNumpy() {
   import_array();
 }
 
-bool getbranches(PyObject* self, PyObject* args, std::vector<TBranch*> &requested_branches) {
+bool getrequests(PyObject* self, PyObject* args, std::vector<Request> &requests) {
   if (!ObjectProxy_Check(self)) {
     PyErr_SetString(PyExc_TypeError, "TTree::GetNumpyIterator must be called with a TTree instance as first argument");
     return false;
@@ -464,17 +506,17 @@ bool getbranches(PyObject* self, PyObject* args, std::vector<TBranch*> &requeste
       return false;
     }
 
-    TBranch* branch;
-    if (!getbranch(branch, tree, branchName)) return false;
-    requested_branches.push_back(branch);
+    Request request;
+    if (!getrequest(request, tree, branchName)) return false;
+    requests.push_back(request);
   }
 
   return true;
 }
 
 PyObject* GetNumpyIterator(PyObject* self, PyObject* args, PyObject* kwds) {
-  std::vector<TBranch*> requested_branches;
-  if (!getbranches(self, args, requested_branches))
+  std::vector<Request> requests;
+  if (!getrequests(self, args, requests))
     return 0;
 
   bool return_new_buffers = true;
@@ -508,9 +550,9 @@ PyObject* GetNumpyIterator(PyObject* self, PyObject* args, PyObject* kwds) {
 
   std::vector<ArrayInfo> arrayinfo;
 
-  for (unsigned int i = 0;  i < requested_branches.size();  i++) {
+  for (unsigned int i = 0;  i < requests.size();  i++) {
     arrayinfo.push_back(ArrayInfo());
-    if (!dtypedim_branch(arrayinfo.back(), requested_branches[i], swap_bytes))
+    if (!dtypedim_request(arrayinfo.back(), requests[i], swap_bytes))
       return 0;
   }
 
@@ -522,15 +564,15 @@ PyObject* GetNumpyIterator(PyObject* self, PyObject* args, PyObject* kwds) {
     return 0;
   }
 
-  Long64_t num_entries = requested_branches.back()->GetTree()->GetEntries();
-  out->iter = new NumpyIterator(requested_branches, arrayinfo, num_entries, return_new_buffers, swap_bytes);
+  Long64_t num_entries = requests.back().branch->GetTree()->GetEntries();
+  out->iter = new NumpyIterator(requests, arrayinfo, num_entries, return_new_buffers, swap_bytes);
 
   return reinterpret_cast<PyObject*>(out);
 }
 
 PyObject* GetNumpyTypeAndSize(PyObject* self, PyObject* args, PyObject* kwds) {
-  std::vector<TBranch*> requested_branches;
-  if (!getbranches(self, args, requested_branches))
+  std::vector<Request> requests;
+  if (!getrequests(self, args, requests))
     return 0;
 
   bool swap_bytes = true;
@@ -554,24 +596,24 @@ PyObject* GetNumpyTypeAndSize(PyObject* self, PyObject* args, PyObject* kwds) {
     }
   }
 
-  PyObject* out = PyTuple_New(requested_branches.size());
+  PyObject* out = PyTuple_New(requests.size());
 
-  for (unsigned int i = 0;  i < requested_branches.size();  i++) {
+  for (unsigned int i = 0;  i < requests.size();  i++) {
     ArrayInfo arrayinfo;
-    if (!dtypedim_branch(arrayinfo, requested_branches[i], swap_bytes)) {
+    if (!dtypedim_request(arrayinfo, requests[i], swap_bytes)) {
       Py_DECREF(out);
       return 0;
     }
 
     PyObject* shape = PyTuple_New(arrayinfo.nd);
-    PyTuple_SET_ITEM(shape, 0, PyLong_FromLong((int)ceil(1.0 * requested_branches[i]->GetTotalSize() / arrayinfo.dtype->elsize)));
+    PyTuple_SET_ITEM(shape, 0, PyLong_FromLong((int)ceil(1.0 * requests[i].branch->GetTotalSize() / arrayinfo.dtype->elsize)));
 
     for (unsigned int j = 0;  j < arrayinfo.dims.size();  j++)
       PyTuple_SET_ITEM(shape, j + 1, PyLong_FromLong(arrayinfo.dims[j]));
 
     PyObject* triple = PyTuple_New(3);
     Py_INCREF(arrayinfo.dtype);
-    PyTuple_SET_ITEM(triple, 0, PyUnicode_FromString(requested_branches[i]->GetName()));
+    PyTuple_SET_ITEM(triple, 0, PyUnicode_FromString(requests[i].branch->GetName()));
     PyTuple_SET_ITEM(triple, 1, reinterpret_cast<PyObject*>(arrayinfo.dtype));
     PyTuple_SET_ITEM(triple, 2, shape);
 

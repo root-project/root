@@ -31,9 +31,15 @@ public:
   bool varlen;
 };
 
+class Request {
+public:
+  TBranch* branch;
+  bool wantcounter;
+};
+
 class ClusterBuffer {
 private:
-  const TBranch* fBranch;
+  const Request fRequest;
   const Long64_t fItemSize;
   const bool fSwapBytes;
   TBufferFile fBufferFile;
@@ -52,8 +58,8 @@ private:
   void CheckExtraAllocations();
 
 public:
-  ClusterBuffer(const TBranch* branch, const Long64_t itemsize, const bool swap_bytes) :
-    fBranch(branch), fItemSize(itemsize), fSwapBytes(swap_bytes), fBufferFile(TBuffer::kWrite, 32*1024), fOldExtra(nullptr), fUsingExtra(false),
+  ClusterBuffer(const Request request, const Long64_t itemsize, const bool swap_bytes) :
+    fRequest(request), fItemSize(itemsize), fSwapBytes(swap_bytes), fBufferFile(TBuffer::kWrite, 32*1024), fOldExtra(nullptr), fUsingExtra(false),
     bfEntryStart(0), bfEntryEnd(0), exEntryStart(0), exEntryEnd(0)
   {
     CheckExtraAllocations();
@@ -67,8 +73,8 @@ public:
 
 class NumpyIterator {
 private:
-  std::vector<std::unique_ptr<ClusterBuffer>> fRequested;
-  const std::vector<ArrayInfo> fArrayInfo;   // has the same length as fRequested
+  std::vector<std::unique_ptr<ClusterBuffer>> fClusterBuffers;
+  const std::vector<ArrayInfo> fArrayInfo;   // has the same length as fClusterBuffers
   const Long64_t fNumEntries;
   const bool fReturnNewBuffers;
   Long64_t fCurrentStart;
@@ -77,11 +83,11 @@ private:
   bool StepForward(const char* &error_string);
 
 public:
-  NumpyIterator(const std::vector<TBranch*> &requested_branches, const std::vector<ArrayInfo> arrayinfo, Long64_t num_entries, bool return_new_buffers, bool swap_bytes) :
+  NumpyIterator(const std::vector<Request> &requests, const std::vector<ArrayInfo> arrayinfo, Long64_t num_entries, bool return_new_buffers, bool swap_bytes) :
     fArrayInfo(arrayinfo), fNumEntries(num_entries), fReturnNewBuffers(return_new_buffers), fCurrentStart(0), fCurrentEnd(0)
   {
     for (unsigned int i = 0;  i < fArrayInfo.size();  i++)
-      fRequested.push_back(std::unique_ptr<ClusterBuffer>(new ClusterBuffer(requested_branches[i], fArrayInfo[i].dtype->elsize, swap_bytes)));
+      fClusterBuffers.push_back(std::unique_ptr<ClusterBuffer>(new ClusterBuffer(requests[i], fArrayInfo[i].dtype->elsize, swap_bytes)));
   }
 
   PyObject* arrays();
