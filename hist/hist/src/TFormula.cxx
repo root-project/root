@@ -775,7 +775,7 @@ void TFormula::FillDefaults()
       fFunctionsShortcuts[fun.first] = fun.second;
    }
 
-/*** - old code tu support C++03
+/*** - old code to support C++03
 #else
 
    TString  defvarsNames[] = {"x","y","z","t"};
@@ -992,7 +992,7 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
 
 
 
-      //std::cout << formula << " ---- " << funName << "  " << funPos << std::endl;
+      std::cout << formula << " ---- " << funName << "  " << funPos << std::endl;
       while(funPos != kNPOS && !IsAParameterName(formula,funPos))
       {
 
@@ -1001,11 +1001,11 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
 
          // check that first and last character is not alphanumeric
          Int_t iposBefore = funPos - 1;
-         //std::cout << "looping on  funpos is " << funPos << " formula is " << formula << " function " << funName << std::endl;
+         std::cout << "looping on  funpos is " << funPos << " formula is " << formula << " function " << funName << std::endl;
          if (iposBefore >= 0) {
             assert( iposBefore < formula.Length() );
             if (isalpha(formula[iposBefore] ) ) {
-               //std::cout << "previous character for function " << funName << " is " << formula[iposBefore] << "- skip " << std::endl;
+               std::cout << "previous character for function " << funName << " is " << formula[iposBefore] << "- skip " << std::endl;
                funPos = formula.Index(funName,lastFunPos);
                continue;
             }
@@ -1021,7 +1021,7 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
                // check if also last character is not alphanumeric or is not an operator and not a parenthesis ( or [.
                // Parenthesis [] are used to express the variables
                if ( isalnum(c ) || ( ! IsOperator(c ) && c != '(' && c != ')' && c != '[' && c != ']' ) ) {
-                  //std::cout << "last character for function " << funName << " is " << c << " skip .." <<  std::endl;
+                  std::cout << "last character for function " << funName << " is " << c << " skip .." <<  std::endl;
                   funPos = formula.Index(funName,lastFunPos);
                   continue;
                }
@@ -1076,7 +1076,7 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
             }
          }
          // chech if dimension obtained from [...] is compatible with what is defined in existing pre-defined functions
-         //std::cout << " Found dim = " << dim  << " and function dimension is " << funDim << std::endl;
+         std::cout << " Found dim = " << dim  << " and function dimension is " << funDim << std::endl;
          if(dim != funDim)
          {
             pair<TString,Int_t> key = make_pair(funName,dim);
@@ -1106,7 +1106,7 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
          {
             counter = TString(formula(openingParenthesisPos+1,formula.Index(')',funPos) - openingParenthesisPos -1)).Atoi();
          }
-         //std::cout << "openingParenthesisPos  " << openingParenthesisPos << " counter is " << counter <<  std::endl;
+         std::cout << "openingParenthesisPos  " << openingParenthesisPos << " counter is " << counter <<  std::endl;
 
          TString body = (isNormalized ? it->second.second : it->second.first);
          if(isNormalized && body == "")
@@ -1179,16 +1179,55 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
             fNumber = functionsNumbers[funName] + 10*(dim-1);
          }
 
-         //std::cout << " replace " << pattern << " with " << replacement << std::endl;
+         std::cout << " replace " << pattern << " with " << replacement << std::endl;
 
          formula.Replace(funPos,pattern.Length(),replacement,replacement.Length());
 
          funPos = formula.Index(funName);
       }
-      //std::cout << " End loop of " << funName << " formula is now " << formula << std::endl;
+      std::cout << " End loop of " << funName << " formula is now " << formula << std::endl;
    }
 
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+///   Handling user functions (and possibly more)
+///   to take variables and optionally parameters as arguments
+void TFormula::HandleUserFunctions(TString &formula) {
+   // TODO: detect user function (like what ExtractFunctors does?)
+
+   std::cout << "HandleUserFunctions on " << formula << " (Work in Progress)" << std::endl;
+
+   // loop through characters (mostly copied from `TFormula::ExtractFunctors`)
+   for(Int_t i = 0 ; i < formula.Length() ; ++i) {
+      std::cout << "loop on character " << i << formula[i] << std::endl;
+
+      // ignore things that start with square brackets
+      if (formula[i] == '[') {
+	 while(formula[i] != ']')
+	    i++;
+	 continue;
+      }
+      // ignore strings
+      if (formula[i] == '\"') {
+	 do
+	    i++;
+	 while(formula[i] != '\"');
+	 continue;
+      }
+      // ignore numbers (scientific notation)
+      if (IsScientificNotation(formula, i))
+	 continue;
+      // if (IsHexadecimal(formula, i)) {
+      // 	 while ()
+      // }
+      // TODO finish
+      
+      
+   }
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 ///    Handling exponentiation
@@ -1354,6 +1393,7 @@ void TFormula::PreProcessFormula(TString &formula)
    formula.ReplaceAll(" ","");
    HandlePolN(formula);
    HandleParametrizedFunctions(formula);
+   HandleUserFunctions(formula);
    HandleExponentiation(formula);
    // "++" wil be dealt with Handle Linear
    HandleLinear(formula);
@@ -1617,7 +1657,7 @@ void TFormula::ExtractFunctors(TString &formula)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///    Iterates through funtors in fFuncs and performs the appropriate action.
+///    Iterates through functors in fFuncs and performs the appropriate action.
 ///    If functor has 0 arguments (has only name) can be:
 ///     - variable
 ///       * will be replaced with x[num], where x is an array containing value of this variable under num.
@@ -1637,13 +1677,13 @@ void TFormula::ExtractFunctors(TString &formula)
 
 void TFormula::ProcessFormula(TString &formula)
 {
-   std::cout << "Begin: formula is " << formula << " list of functors " << fFuncs.size() << std::endl;
+   //std::cout << "Begin: formula is " << formula << " list of functors " << fFuncs.size() << std::endl;
 
    for(list<TFormulaFunction>::iterator funcsIt = fFuncs.begin(); funcsIt != fFuncs.end(); ++funcsIt)
    {
       TFormulaFunction & fun = *funcsIt;
 
-      std::cout << "fun is " << fun.GetName() << std::endl;
+      //std::cout << "fun is " << fun.GetName() << std::endl;
 
       if(fun.fFound)
          continue;
@@ -1654,12 +1694,12 @@ void TFormula::ProcessFormula(TString &formula)
          {
             TString shortcut = it->first;
             TString full = it->second;
-            std::cout << " functor " << fun.GetName() << " found - replace " <<  shortcut << " with " << full << " in " << formula << std::endl;
+            //std::cout << " functor " << fun.GetName() << " found - replace " <<  shortcut << " with " << full << " in " << formula << std::endl;
             // replace all functors
             Ssiz_t index = formula.Index(shortcut,0);
             while ( index != kNPOS) {
                // check that function is not in a namespace and is not in other characters
-               std::cout << "analyzing " << shortcut << " in " << formula << std::endl;
+               //std::cout << "analyzing " << shortcut << " in " << formula << std::endl;
                Ssiz_t i2 = index + shortcut.Length();
                if ( (index > 0) && (isalpha( formula[index-1] )  || formula[index-1] == ':' )) {
                   index = formula.Index(shortcut,i2);
@@ -1687,7 +1727,7 @@ void TFormula::ProcessFormula(TString &formula)
 
             Bool_t silent = true;
             TClass *tclass = TClass::GetClass(className,silent);
-            std::cout << "looking for class " << className << std::endl;
+            //std::cout << "looking for class " << className << std::endl;
             const TList *methodList = tclass->GetListOfAllPublicMethods();
             TIter next(methodList);
             TMethod *p;
@@ -1777,7 +1817,7 @@ void TFormula::ProcessFormula(TString &formula)
             TString replacement = TString::Format("x[%d]",(*varsIt).second.fArrayPos);
             formula.ReplaceAll(pattern,replacement);
 
-            std::cout << "Found an observable for " << fun.GetName()  << std::endl;
+            //std::cout << "Found an observable for " << fun.GetName()  << std::endl;
 
             fun.fFound = true;
             continue;
@@ -1801,7 +1841,7 @@ void TFormula::ProcessFormula(TString &formula)
                      }
                }
             }
-            std::cout << "Found matching observable for " << funname  << std::endl;
+            //std::cout << "Found matching observable for " << funname  << std::endl;
             fun.fFound = true;
             // remove the "{.. }" added around the variable
             TString pattern = TString::Format("{%s}",funname.Data());
@@ -1815,12 +1855,12 @@ void TFormula::ProcessFormula(TString &formula)
          {
             //TString name = (*paramsIt).second.GetName();
             TString pattern = TString::Format("{[%s]}",fun.GetName());
-            std::cout << "pattern is " << pattern << std::endl;
+            //std::cout << "pattern is " << pattern << std::endl;
             if(formula.Index(pattern) != kNPOS)
             {
                //TString replacement = TString::Format("p[%d]",(*paramsIt).second.fArrayPos);
                TString replacement = TString::Format("p[%d]",(*paramsIt).second);
-               std::cout << "replace pattern  " << pattern << " with " << replacement << std::endl;
+               //std::cout << "replace pattern  " << pattern << " with " << replacement << std::endl;
                formula.ReplaceAll(pattern,replacement);
 
             }
@@ -1828,7 +1868,7 @@ void TFormula::ProcessFormula(TString &formula)
             continue;
          }
          else {
-            std::cout << "functor  " << fun.GetName() << " is not a parameter " << std::endl;
+            //std::cout << "functor  " << fun.GetName() << " is not a parameter " << std::endl;
          }
 
          // looking for constants (needs to be done after looking at the parameters)
@@ -1839,7 +1879,7 @@ void TFormula::ProcessFormula(TString &formula)
             TString value = TString::Format("%lf",(*constIt).second);
             formula.ReplaceAll(pattern,value);
             fun.fFound = true;
-            std::cout << "constant with name " << fun.GetName() << " is found " << std::endl;
+            //std::cout << "constant with name " << fun.GetName() << " is found " << std::endl;
             continue;
          }
 
@@ -1847,7 +1887,7 @@ void TFormula::ProcessFormula(TString &formula)
          fun.fFound = false;
       }
    }
-   std::cout << "End: formula is " << formula << std::endl;
+   //std::cout << "End: formula is " << formula << std::endl;
 
    // ignore case of functors have been matched - try to pass it to Cling
    if(!fReadyToExecute)
@@ -1955,7 +1995,7 @@ void TFormula::ProcessFormula(TString &formula)
       do
       {
          if ( ! itvar->second.fFound ) {
-            std::cout << "Erase variable " << itvar->first << std::endl;
+            //std::cout << "Erase variable " << itvar->first << std::endl;
             itvar = fVars.erase(itvar);
          }
          else
