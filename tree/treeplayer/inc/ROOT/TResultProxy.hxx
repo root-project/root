@@ -97,7 +97,8 @@ class TResultProxy {
    /// Triggers event loop and execution of all actions booked in the associated TLoopManager.
    T *Get()
    {
-      if (!*fReadiness) TriggerRun();
+      if (!*fReadiness)
+         TriggerRun();
       return fObjPtr.get();
    }
 
@@ -126,7 +127,8 @@ public:
    /// sense, throw a compilation error otherwise
    typename TIterationHelper<T>::Iterator_t begin()
    {
-      if (!*fReadiness) TriggerRun();
+      if (!*fReadiness)
+         TriggerRun();
       return TIterationHelper<T>::GetBegin(*fObjPtr);
    }
 
@@ -134,7 +136,8 @@ public:
    /// sense, throw a compilation error otherwise
    typename TIterationHelper<T>::Iterator_t end()
    {
-      if (!*fReadiness) TriggerRun();
+      if (!*fReadiness)
+         TriggerRun();
       return TIterationHelper<T>::GetEnd(*fObjPtr);
    }
 };
