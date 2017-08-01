@@ -178,6 +178,7 @@ class TInterface {
    friend std::string cling::printValue(ROOT::Experimental::TDataFrame *tdf); // For a nice printing at the prompt
    template <typename T>
    friend class TInterface;
+
 public:
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Append a filter to the call graph.
@@ -248,7 +249,7 @@ public:
    /// be valid C++ syntax in which variable names are substituted with the names
    /// of branches/columns.
    ///
-   ///Refer to the first overload of this method for the full documentation.
+   /// Refer to the first overload of this method for the full documentation.
    TInterface<TFilterBase> Filter(std::string_view expression, std::string_view name = "")
    {
       auto retVal = CallJitTransformation("Filter", name, expression);
@@ -342,7 +343,8 @@ public:
                << ")->Snapshot<";
       bool first = true;
       for (auto &b : columnList) {
-         if (!first) snapCall << ", ";
+         if (!first)
+            snapCall << ", ";
          snapCall << TDFInternal::ColumnName2ColumnTypeName(b, tree, df->GetBookedBranch(b));
          first = false;
       };
@@ -377,8 +379,10 @@ public:
 
       const auto isEmptyRegex = 0 == theRegexSize;
       // This is to avoid cases where branches called b1, b2, b3 are all matched by expression "b"
-      if (theRegexSize > 0 && theRegex[0] != '^') theRegex = "^" + theRegex;
-      if (theRegexSize > 0 && theRegex[theRegexSize - 1] != '$') theRegex = theRegex + "$";
+      if (theRegexSize > 0 && theRegex[0] != '^')
+         theRegex = "^" + theRegex;
+      if (theRegexSize > 0 && theRegex[theRegexSize - 1] != '$')
+         theRegex = theRegex + "$";
 
       ColumnNames_t selectedColumns;
       selectedColumns.reserve(32);
@@ -629,7 +633,7 @@ public:
    template <typename V = TDFDetail::TInferType, typename W = TDFDetail::TInferType>
    TResultProxy<::TH1D> Histo1D(::TH1D &&model, std::string_view vName, std::string_view wName)
    {
-      auto columnViews = { vName, wName };
+      auto columnViews = {vName, wName};
       const auto userColumns = TDFInternal::AtLeastOneEmptyString(columnViews)
                                   ? ColumnNames_t()
                                   : ColumnNames_t(columnViews.begin(), columnViews.end());
@@ -1035,7 +1039,8 @@ public:
    void Report()
    {
       auto df = GetDataFrameChecked();
-      if (!df->HasRunAtLeastOnce()) df->Run();
+      if (!df->HasRunAtLeastOnce())
+         df->Run();
       fProxiedPtr->Report();
    }
 
@@ -1129,15 +1134,13 @@ private:
          // single-thread snapshot
          using Helper_t = TDFInternal::SnapshotHelper<BranchTypes...>;
          using Action_t = TDFInternal::TAction<Helper_t, Proxied, TTraits::TypeList<BranchTypes...>>;
-         actionPtr.reset(
-            new Action_t(Helper_t(filenameInt, dirName, treeName, columnList), columnList, *fProxiedPtr));
+         actionPtr.reset(new Action_t(Helper_t(filenameInt, dirName, treeName, columnList), columnList, *fProxiedPtr));
       } else {
          // multi-thread snapshot
          using Helper_t = TDFInternal::SnapshotHelperMT<BranchTypes...>;
          using Action_t = TDFInternal::TAction<Helper_t, Proxied>;
-         actionPtr.reset(
-            new Action_t(Helper_t(fProxiedPtr->GetNSlots(), filenameInt, dirName, treeName, columnList),
-                         columnList, *fProxiedPtr));
+         actionPtr.reset(new Action_t(Helper_t(fProxiedPtr->GetNSlots(), filenameInt, dirName, treeName, columnList),
+                                      columnList, *fProxiedPtr));
       }
       df->Book(std::move(actionPtr));
       df->Run();
@@ -1156,7 +1159,7 @@ private:
    }
 
    ColumnNames_t GetValidatedColumnNames(TLoopManager &lm, const unsigned int nColumns,
-                                                             const ColumnNames_t &userColumns)
+                                         const ColumnNames_t &userColumns)
    {
       const auto &defaultColumns = lm.GetDefaultColumnNames();
       const auto trueColumns = TDFInternal::SelectColumns(nColumns, userColumns, defaultColumns);

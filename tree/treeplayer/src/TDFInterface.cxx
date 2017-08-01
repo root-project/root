@@ -49,7 +49,8 @@ std::vector<std::string> FindUsedColumnNames(const std::string expression, TObjA
          usedBranches.emplace_back(brName.c_str());
       }
    }
-   if (!branches) return usedBranches;
+   if (!branches)
+      return usedBranches;
    for (auto bro : *branches) {
       auto brName = bro->GetName();
       std::string bNameRegexContent = regexBit + brName + regexBit;
@@ -125,7 +126,8 @@ Long_t JitTransformation(void *thisPtr, const std::string &methodName, const std
       // We pass by reference to avoid expensive copies
       ss << usedBranchesTypes[i] << "& " << usedBranches[i] << ", ";
    }
-   if (!usedBranchesTypes.empty()) ss.seekp(-2, ss.cur);
+   if (!usedBranchesTypes.empty())
+      ss.seekp(-2, ss.cur);
    ss << "){ return " << expression << ";}";
    auto filterLambda = ss.str();
 
@@ -139,7 +141,8 @@ Long_t JitTransformation(void *thisPtr, const std::string &methodName, const std
    for (auto brName : usedBranches) {
       ss << "\"" << brName << "\", ";
    }
-   if (exprNeedsVariables) ss.seekp(-2, ss.cur); // remove the last ",
+   if (exprNeedsVariables)
+      ss.seekp(-2, ss.cur); // remove the last ",
    ss << "}";
 
    if (methodName == "Filter") {
@@ -174,7 +177,8 @@ std::string JitBuildAndBook(const ColumnNames_t &bl, const std::string &prevNode
    std::vector<TCustomColumnBase *> tmpBranchPtrs(nBranches, nullptr);
    for (auto i = 0u; i < nBranches; ++i) {
       auto tmpBranchIt = tmpBranches.find(bl[i]);
-      if (tmpBranchIt != tmpBranches.end()) tmpBranchPtrs[i] = tmpBranchIt->second.get();
+      if (tmpBranchIt != tmpBranches.end())
+         tmpBranchPtrs[i] = tmpBranchIt->second.get();
    }
 
    // retrieve branch type names as strings
@@ -215,7 +219,8 @@ std::string JitBuildAndBook(const ColumnNames_t &bl, const std::string &prevNode
    for (auto &colType : columnTypeNames) createAction_str << ", " << colType;
    createAction_str << ">(*reinterpret_cast<" << prevNodeTypename << "*>(" << prevNode << "), {";
    for (auto i = 0u; i < bl.size(); ++i) {
-      if (i != 0u) createAction_str << ", ";
+      if (i != 0u)
+         createAction_str << ", ";
       createAction_str << '"' << bl[i] << '"';
    }
    createAction_str << "}, " << nSlots << ", reinterpret_cast<" << actionResultTypeName << "*>(" << rOnHeap << "));";
@@ -224,7 +229,7 @@ std::string JitBuildAndBook(const ColumnNames_t &bl, const std::string &prevNode
 
 bool AtLeastOneEmptyString(const std::vector<std::string_view> strings)
 {
-   for(const auto &s : strings) {
+   for (const auto &s : strings) {
       if (s.empty())
          return true;
    }
