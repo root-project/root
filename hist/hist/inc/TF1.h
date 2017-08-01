@@ -745,12 +745,15 @@ inline T TF1::EvalParVec(const T *data, const Double_t *params)
 inline double TF1::EvalParVec(const Double_t *data, const Double_t *params)
 {
    assert(fType == EFType::kTemplated);
-   ROOT::Double_v d, res;
+   std::vector<ROOT::Double_v> d(fNdim);
+   ROOT::Double_v res;
 
-   d = *data;
+   for(auto i=0; i<fNdim; i++) {
+      d[i] = ROOT::Double_v(data[i]);
+   }
 
    if (fFunctor) {
-      res = ((TF1FunctorPointerImpl<ROOT::Double_v> *)fFunctor)->fImpl(&d, params);
+      res = ((TF1FunctorPointerImpl<ROOT::Double_v> *) fFunctor)->fImpl(d.data(), params);
    } else {
       //    res = GetSave(x);
       return TMath::SignalingNaN();
