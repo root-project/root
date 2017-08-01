@@ -222,17 +222,18 @@ public:
 
 protected:
    struct TF1FunctorPointer {};
-   enum  EFType {     kFormula = 0,          // formula functions which can be stored
+   enum  EFType {     kFormula = 0,      // formula functions which can be stored,
                       kPtrScalarFreeFcn, // pointer to scalar free function,
                       kInterpreted,      // interpreted functions constructed by name,
-                      kTemplated};       // 3 templated functors or vectorized free functions)
+                      kTemplVec,         // vectorized free functions or TemplScalar functors evaluating on vectorized parameters,
+                      kTemplScalar};     // TemplScalar functors evaluating on scalar parameters
 
    Double_t    fXmin = -1111;        //Lower bounds for the range
    Double_t    fXmax = -1111;        //Upper bounds for the range
    Int_t       fNpar;        //Number of parameters
    Int_t       fNdim;        //Function dimension
    Int_t       fNpx = 100;   //Number of points used for the graphical representation
-   EFType      fType = EFType::kTemplated;
+   EFType      fType = EFType::kTemplScalar;
    Int_t       fNpfits{};      //Number of points used in the fit
    Int_t       fNDF{};         //Number of degrees of freedom in the fit
    Double_t    fChisquare{};   //Function fit chisquare
@@ -262,6 +263,13 @@ protected:
    {
       DoInitialize(addToGlobList);
    };
+
+   template<class Func>
+   EFType templScalarOrVectorized(Func &)
+   {
+      using Fnc_t = typename ROOT::Internal::GetFunctorType<decltype(ROOT::Internal::GetTheRightOp(&Func::operator()))>::type;
+      return std::is_same<Fnc_t, double>::value? TF1::EFType::kTemplScalar : TF1::EFType::kTemplVec;
+   }
 
 public:
 
@@ -307,7 +315,7 @@ public:
 
    template <class T>
    TF1(const char *name, std::function<T(const T *data, const Double_t *param)> &fcn, Double_t xmin = 0, Double_t xmax = 1, Int_t npar = 0, Int_t ndim = 1, EAddToList addToGlobList = EAddToList::kDefault):
-      TF1(EFType::kTemplated, name, xmin, xmax, npar, ndim, addToGlobList, new TF1Parameters(npar), new TF1FunctorPointerImpl<T>(fcn))
+      TF1(templScalarOrVectorized(fcn), name, xmin, xmax, npar, ndim, addToGlobList, new TF1Parameters(npar), new TF1FunctorPointerImpl<T>(fcn))
    {}
 
    ////////////////////////////////////////////////////////////////////////////////
@@ -324,7 +332,7 @@ public:
 
    template <class T>
    TF1(const char *name, T(*fcn)(const T *, const Double_t *), Double_t xmin = 0, Double_t xmax = 1, Int_t npar = 0, Int_t ndim = 1, EAddToList addToGlobList = EAddToList::kDefault):
-      TF1(EFType::kTemplated, name, xmin, xmax, npar, ndim, addToGlobList, new TF1Parameters(npar), new TF1FunctorPointerImpl<T>(fcn))
+      TF1(templScalarOrVectorized(fcn), name, xmin, xmax, npar, ndim, addToGlobList, new TF1Parameters(npar), new TF1FunctorPointerImpl<T>(fcn))
    {}
 
    // Constructors using functors (compiled mode only)
@@ -340,8 +348,9 @@ public:
    // See the tutorial math/exampleFunctor.C for an example of using this constructor
    template <typename Func>
    TF1(const char *name, Func f, Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim = 1, EAddToList addToGlobList = EAddToList::kDefault) :
-      TF1(EFType::kTemplated, name, xmin, xmax, npar, ndim, addToGlobList)
+      TF1(EFType::kTemplScalar, name, xmin, xmax, npar, ndim, addToGlobList)
    {
+      //actual fType set in TF1Builder
       ROOT::Internal::TF1Builder<Func>::Build(this, f);
    }
 
@@ -349,7 +358,7 @@ public:
 
    template <typename Func>
    TF1(const char *name, Func f, Double_t xmin, Double_t xmax, Int_t npar, const char *, EAddToList addToGlobList = EAddToList::kDefault) :
-      TF1(EFType::kTemplated, name, xmin, xmax, npar, 1, addToGlobList, new TF1Parameters(npar))
+      TF1(templScalarOrVectorized(f), name, xmin, xmax, npar, 1, addToGlobList, new TF1Parameters(npar))
    {
       using Fnc_t = typename ROOT::Internal::GetFunctorType<decltype(ROOT::Internal::GetTheRightOp(&Func::operator()))>::type;
       fFunctor = new TF1FunctorPointerImpl<Fnc_t>(ROOT::Math::ParamFunctorTempl<Fnc_t>(f));
@@ -366,13 +375,13 @@ public:
    // See the tutorial math/exampleFunctor.C for an example of using this constructor
    template <class PtrObj, typename MemFn>
    TF1(const char *name, const  PtrObj &p, MemFn memFn, Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim = 1, EAddToList addToGlobList = EAddToList::kDefault) :
-      TF1(EFType::kTemplated, name, xmin, xmax, npar, ndim, addToGlobList, new TF1Parameters(npar), new TF1FunctorPointerImpl<double>(ROOT::Math::ParamFunctor(p, memFn)))
+      TF1(EFType::kTemplScalar, name, xmin, xmax, npar, ndim, addToGlobList, new TF1Parameters(npar), new TF1FunctorPointerImpl<double>(ROOT::Math::ParamFunctor(p, memFn)))
    {}
 
    // backward compatible interface
    template <class PtrObj, typename MemFn>
    TF1(const char *name, const  PtrObj &p, MemFn memFn, Double_t xmin, Double_t xmax, Int_t npar, const char *, const char *, EAddToList addToGlobList = EAddToList::kDefault) :
-      TF1(EFType::kTemplated, name, xmin, xmax, npar, 1, addToGlobList, new TF1Parameters(npar), new TF1FunctorPointerImpl<double>(ROOT::Math::ParamFunctor(p, memFn)))
+      TF1(EFType::kTemplScalar, name, xmin, xmax, npar, 1, addToGlobList, new TF1Parameters(npar), new TF1FunctorPointerImpl<double>(ROOT::Math::ParamFunctor(p, memFn)))
    {}
 
    TF1(const TF1 &f1);
@@ -402,7 +411,7 @@ public:
    virtual Double_t Eval(Double_t x, Double_t y = 0, Double_t z = 0, Double_t t = 0) const;
    virtual Double_t EvalPar(const Double_t *x, const Double_t *params = 0);
    template <class T> T EvalPar(const T *x, const Double_t *params = 0);
-   template <class T> T EvalParVec(const T *data, const Double_t *params = 0);
+   template <class T> T EvalParTempl(const T *data, const Double_t *params = 0);
 #ifdef R__HAS_VECCORE
    inline double EvalParVec(const Double_t *data, const Double_t *params);
 #endif
@@ -411,9 +420,9 @@ public:
    template <class T> T operator()(const T *data, const Double_t *params);
    virtual void     ExecuteEvent(Int_t event, Int_t px, Int_t py);
    virtual void     FixParameter(Int_t ipar, Double_t value);
-   bool      IsTemplated()
+   bool      IsVectorized()
    {
-      return fType == EFType::kTemplated;
+      return fType == EFType::kTemplVec;
    }
    Double_t     GetChisquare() const
    {
@@ -670,7 +679,7 @@ namespace ROOT {
       void TF1Builder<Func>::Build(TF1 *f, Func func)
       {
          using Fnc_t = typename ROOT::Internal::GetFunctorType<decltype(ROOT::Internal::GetTheRightOp(&Func::operator()))>::type;
-         f->fType = TF1::EFType::kTemplated;
+         f->fType = std::is_same<Fnc_t, double>::value? TF1::EFType::kTemplScalar : TF1::EFType::kTemplVec;
          f->fFunctor = new TF1::TF1FunctorPointerImpl<Fnc_t>(ROOT::Math::ParamFunctorTempl<Fnc_t>(func));
          f->fParams = new TF1Parameters(f->fNpar);
       }
@@ -679,7 +688,7 @@ namespace ROOT {
       void TF1Builder<Func *>::Build(TF1 *f, Func *func)
       {
          using Fnc_t = typename ROOT::Internal::GetFunctorType<decltype(ROOT::Internal::GetTheRightOp(&Func::operator()))>::type;
-         f->fType = TF1::EFType::kTemplated;
+         f->fType = std::is_same<Fnc_t, double>::value? TF1::EFType::kTemplScalar : TF1::EFType::kTemplVec;
          f->fFunctor = new TF1::TF1FunctorPointerImpl<Fnc_t>(ROOT::Math::ParamFunctorTempl<Fnc_t>(func));
          f->fParams = new TF1Parameters(f->fNpar);
       }
@@ -722,16 +731,17 @@ inline T TF1::operator()(const T *data, const Double_t *params)
 template <class T>
 T TF1::EvalPar(const T *x, const Double_t *params)
 {
-   if (fType == EFType::kTemplated) {
-      return EvalParVec(x, params);
+   if (fType == EFType::kTemplVec || EFType::kTemplScalar) {
+      return EvalParTempl(x, params);
    } else
       return TF1::EvalPar((double *) x, params);
 }
 
+// Internal to TF1. Evaluates Templated interfaces
 template <class T>
-inline T TF1::EvalParVec(const T *data, const Double_t *params)
+inline T TF1::EvalParTempl(const T *data, const Double_t *params)
 {
-   assert(fType == EFType::kTemplated);
+   assert(fType == EFType::kTemplScalar || EFType::kTemplVec);
    if (!params) params = (Double_t *)fParams->GetParameters();
    if (fFunctor)
       return ((TF1FunctorPointerImpl<T> *)fFunctor)->fImpl(data, params);
@@ -742,9 +752,10 @@ inline T TF1::EvalParVec(const T *data, const Double_t *params)
 }
 
 #ifdef R__HAS_VECCORE
+// Internal to TF1. Evaluates Vectorized TF1 on data of type Double_v
 inline double TF1::EvalParVec(const Double_t *data, const Double_t *params)
 {
-   assert(fType == EFType::kTemplated);
+   assert(fType == EFType::kTemplVec);
    std::vector<ROOT::Double_v> d(fNdim);
    ROOT::Double_v res;
 

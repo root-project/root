@@ -1114,7 +1114,7 @@ Double_t TF1::Eval(Double_t x, Double_t y, Double_t z, Double_t t) const
 
    Double_t xx[4] = {x, y, z, t};
    Double_t *pp = (Double_t *)fParams->GetParameters();
-   if (fType == EFType::KInterpreted)((TF1 *)this)->InitArgs(xx, pp);
+   if (fType == EFType::kInterpreted)((TF1 *)this)->InitArgs(xx, pp);
    return ((TF1 *)this)->EvalPar(xx, pp);
 }
 
@@ -1150,7 +1150,7 @@ Double_t TF1::EvalPar(const Double_t *x, const Double_t *params)
          return fFormula->EvalPar(x, params);
    }
    Double_t result = 0;
-   if (fType == EFType::kPtrScalarFreeFcn)  {
+   if (fType == EFType::kPtrScalarFreeFcn || fType == EFType::kTemplScalar)  {
       if (fFunctor) {
          assert(fParams);
          if (params) result = ((TF1FunctorPointerImpl<Double_t> *)fFunctor)->fImpl((Double_t *)x, (Double_t *)params);
@@ -1163,7 +1163,7 @@ Double_t TF1::EvalPar(const Double_t *x, const Double_t *params)
 
       return result;
    }
-   if (fType == EFType::KInterpreted) {
+   if (fType == EFType::kInterpreted) {
       if (fMethodCall) fMethodCall->Execute(result);
       else             result = GetSave(x);
 
@@ -1173,7 +1173,7 @@ Double_t TF1::EvalPar(const Double_t *x, const Double_t *params)
       return result;
    }
 
-   if (fType == EFType::kTemplated) {
+   if (fType == EFType::kTemplVec) {
       if (fFunctor) {
          if (params) result =  EvalParVec(x, params);
          else result =  EvalParVec(x, (Double_t *) fParams->GetParameters());
