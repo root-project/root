@@ -28,11 +28,12 @@ from JupyROOT import handlers
 #Notebook-trimming imports
 import json
 import webbrowser
+i = 0;
+import time
+import threading
 
 # We want iPython to take over the graphics
 ROOT.gROOT.SetBatch()
-
-
 cppMIME = 'text/x-c++src'
 
 _jsMagicHighlight = """
@@ -100,6 +101,18 @@ def disableJSVisDebug():
     global _enableJSVisDebug
     _enableJSVis = False
     _enableJSVisDebug = False
+    
+def processEventLoopServer():
+    thttp_server = ROOT.THttpServer("http:8088?top=ROOT;readwrite")
+    while True:
+      ROOT.gSystem.ProcessEvents()
+      time.sleep(0.02)
+	  
+def browse():
+    webbrowser.open("http://localhost:8088",new=1)
+    thread = threading.Thread(target = processEventLoopServer)
+    thread.daemon = True;
+    thread.start()
 
 def _getPlatform():
     return sys.platform
@@ -154,11 +167,10 @@ def commentRemover( text ):
 
    return re.sub(pattern, replacer, text)
 
-
 # Here functions are defined to process C++ code
 def processCppCodeImpl(code):
     #code = commentRemover(code)
-    ROOT.gInterpreter.ProcessLine(code)
+    ROOT.gInterpreter.ProcessLine(code)    
 
 def processMagicCppCodeImpl(code):
     err = ROOT.ProcessLineWrapper(code)
@@ -345,6 +357,8 @@ class CaptureDrawnPrimitives(object):
 
     def register(self):
         self.shell.events.register('post_execute', self._post_execute)
+        
+       	   
 
 class NotebookDrawer(object):
     '''
@@ -427,7 +441,12 @@ class NotebookDrawer(object):
 
 
 	return object_json
-  
+      
+    
+      
+    
+    
+
     def _trimJSONForGraphics(self,object_json):
 	'''
 	Function that calls helper functions to trim redundant information in JSON graphics files to reduce size
@@ -441,14 +460,7 @@ class NotebookDrawer(object):
         
         #<class 'ROOT.TString'>
         object_json = ROOT.TBufferJSON.ConvertToJSONGraphics(self.drawableObject,3)
-	webbrowser.open("https://root.cern/js/latest/", new=1, autoraise=True);
-
-        #<type 'dict'>
-        #parsed_json = json.loads(str(object_json))
-        #<type 'dict'>
-        #trimmed_json = self._trimJSONForGraphics(parsed_json)
-
-        	
+	  
         # Here we could optimise the string manipulation
         divId = 'root_plot_' + str(self._getUID())
  
@@ -464,7 +476,7 @@ class NotebookDrawer(object):
         thisJsCode = _jsCode.format(jsCanvasWidth = height,
                                     jsCanvasHeight = width,
                                     jsROOTSourceDir = _jsROOTSourceDir,
-                                    jsonContent = object_json.Data(),#json.dumps(trimmed_json),
+                                    jsonContent = object_json.Data(),
                                     jsDrawOptions = options,
                                     jsDivId = divId)
         return thisJsCode
@@ -545,6 +557,8 @@ def enhanceROOTModule():
     ROOT.disableJSVis = disableJSVis
     ROOT.enableJSVisDebug = enableJSVisDebug
     ROOT.disableJSVisDebug = disableJSVisDebug
+    #Add notebook browser
+    ROOT.Jowser = browse
 
 def enableCppHighlighting():
     ipDispJs = IPython.display.display_javascript
@@ -558,4 +572,5 @@ def iPythonize():
     #enableCppHighlighting()
     enhanceROOTModule()
     welcomeMsg()
+    
 
