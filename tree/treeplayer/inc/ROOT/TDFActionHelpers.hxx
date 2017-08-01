@@ -17,7 +17,7 @@
 #include "ROOT/TThreadedObject.hxx"
 #include "TH1.h"
 #include "TTreeReader.h" // for SnapshotHelper
-#include "TFile.h" // for SnapshotHelper
+#include "TFile.h"       // for SnapshotHelper
 
 #include <algorithm>
 #include <memory>
@@ -45,7 +45,7 @@ public:
    ForeachSlotHelper(ForeachSlotHelper &&) = default;
    ForeachSlotHelper(const ForeachSlotHelper &) = delete;
 
-   void InitSlot(TTreeReader*, unsigned int) {}
+   void InitSlot(TTreeReader *, unsigned int) {}
 
    template <typename... Args>
    void Exec(unsigned int slot, Args &&... args)
@@ -67,7 +67,7 @@ public:
    CountHelper(const std::shared_ptr<unsigned int> &resultCount, const unsigned int nSlots);
    CountHelper(CountHelper &&) = default;
    CountHelper(const CountHelper &) = delete;
-   void InitSlot(TTreeReader*, unsigned int) {}
+   void InitSlot(TTreeReader *, unsigned int) {}
    void Exec(unsigned int slot);
    void Finalize();
 };
@@ -92,7 +92,7 @@ public:
    FillHelper(const std::shared_ptr<Hist_t> &h, const unsigned int nSlots);
    FillHelper(FillHelper &&) = default;
    FillHelper(const FillHelper &) = delete;
-   void InitSlot(TTreeReader*, unsigned int) {}
+   void InitSlot(TTreeReader *, unsigned int) {}
    void Exec(unsigned int slot, double v);
    void Exec(unsigned int slot, double v, double w);
 
@@ -154,7 +154,7 @@ public:
       }
    }
 
-   void InitSlot(TTreeReader*, unsigned int) {}
+   void InitSlot(TTreeReader *, unsigned int) {}
 
    void Exec(unsigned int slot, double x0) // 1D histos
    {
@@ -256,12 +256,9 @@ public:
    TakeHelper(TakeHelper &&) = default;
    TakeHelper(const TakeHelper &) = delete;
 
-   void InitSlot(TTreeReader*, unsigned int) {}
+   void InitSlot(TTreeReader *, unsigned int) {}
 
-   void Exec(unsigned int slot, T v)
-   {
-      fColls[slot]->emplace_back(v);
-   }
+   void Exec(unsigned int slot, T v) { fColls[slot]->emplace_back(v); }
 
    void Finalize()
    {
@@ -295,12 +292,9 @@ public:
    TakeHelper(TakeHelper &&) = default;
    TakeHelper(const TakeHelper &) = delete;
 
-   void InitSlot(TTreeReader*, unsigned int) {}
+   void InitSlot(TTreeReader *, unsigned int) {}
 
-   void Exec(unsigned int slot, T v)
-   {
-      fColls[slot]->emplace_back(v);
-   }
+   void Exec(unsigned int slot, T v) { fColls[slot]->emplace_back(v); }
 
    void Finalize()
    {
@@ -330,7 +324,7 @@ public:
    ReduceHelper(ReduceHelper &&) = default;
    ReduceHelper(const ReduceHelper &) = delete;
 
-   void InitSlot(TTreeReader*, unsigned int) {}
+   void InitSlot(TTreeReader *, unsigned int) {}
 
    void Exec(unsigned int slot, const T &value) { fReduceObjs[slot] = fReduceFun(fReduceObjs[slot], value); }
 
@@ -348,7 +342,7 @@ public:
    MinHelper(const std::shared_ptr<double> &minVPtr, const unsigned int nSlots);
    MinHelper(MinHelper &&) = default;
 
-   void InitSlot(TTreeReader*, unsigned int) {}
+   void InitSlot(TTreeReader *, unsigned int) {}
 
    void Exec(unsigned int slot, double v);
 
@@ -375,7 +369,7 @@ public:
    MaxHelper(const std::shared_ptr<double> &maxVPtr, const unsigned int nSlots);
    MaxHelper(MaxHelper &&) = default;
    MaxHelper(const MaxHelper &) = delete;
-   void InitSlot(TTreeReader*, unsigned int) {}
+   void InitSlot(TTreeReader *, unsigned int) {}
    void Exec(unsigned int slot, double v);
 
    template <typename T, typename std::enable_if<IsContainer<T>::value, int>::type = 0>
@@ -402,7 +396,7 @@ public:
    MeanHelper(const std::shared_ptr<double> &meanVPtr, const unsigned int nSlots);
    MeanHelper(MeanHelper &&) = default;
    MeanHelper(const MeanHelper &) = delete;
-   void InitSlot(TTreeReader*, unsigned int) {}
+   void InitSlot(TTreeReader *, unsigned int) {}
    void Exec(unsigned int slot, double v);
 
    template <typename T, typename std::enable_if<IsContainer<T>::value, int>::type = 0>
@@ -430,6 +424,7 @@ class SnapshotHelper {
    std::unique_ptr<TTree> fOutputTree; // must be a ptr because TTrees are not copy/move constructible
    bool fIsFirstEvent{true};
    const ColumnNames_t fBranchNames;
+
 public:
    SnapshotHelper(const std::string &filename, const std::string &dirname, const std::string &treename,
                   const ColumnNames_t &bnames)
@@ -483,10 +478,11 @@ class SnapshotHelperMT {
    std::unique_ptr<ROOT::Experimental::TBufferMerger> fMerger; // must use a ptr because TBufferMerger is not movable
    std::vector<std::shared_ptr<ROOT::Experimental::TBufferMergerFile>> fOutputFiles;
    std::vector<TTree *> fOutputTrees; // ROOT will own/manage these TTrees, must not delete
-   std::vector<int> fIsFirstEvent; // vector<bool> is evil
-   const std::string fDirName; // name of TFile subdirectory in which output must be written (possibly empty)
-   const std::string fTreeName; // name of output tree
+   std::vector<int> fIsFirstEvent;    // vector<bool> is evil
+   const std::string fDirName;        // name of TFile subdirectory in which output must be written (possibly empty)
+   const std::string fTreeName;       // name of output tree
    const ColumnNames_t fBranchNames;
+
 public:
    using BranchTypes_t = TypeList<BranchTypes...>;
    SnapshotHelperMT(const unsigned int nSlots, const std::string &filename, const std::string &dirname,
@@ -536,7 +532,8 @@ public:
       fOutputTrees[slot]->Fill();
       auto entries = fOutputTrees[slot]->GetEntries();
       auto autoflush = fOutputTrees[slot]->GetAutoFlush();
-      if ((autoflush > 0) && (entries % autoflush == 0)) fOutputFiles[slot]->Write();
+      if ((autoflush > 0) && (entries % autoflush == 0))
+         fOutputFiles[slot]->Write();
    }
 
    template <int... S>
@@ -551,7 +548,8 @@ public:
    void Finalize()
    {
       for (auto &file : fOutputFiles) {
-         if (file) file->Write();
+         if (file)
+            file->Write();
       }
    }
 };

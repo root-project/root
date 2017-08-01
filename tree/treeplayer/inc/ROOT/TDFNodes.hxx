@@ -58,7 +58,7 @@ class TLoopManager : public std::enable_shared_from_this<TLoopManager> {
    std::map<std::string, TmpBranchBasePtr_t> fBookedBranches;
    RangeBaseVec_t fBookedRanges;
    std::vector<std::shared_ptr<bool>> fResProxyReadiness;
-   ::TDirectory * const fDirPtr{nullptr};
+   ::TDirectory *const fDirPtr{nullptr};
    std::shared_ptr<TTree> fTree{nullptr}; //< Shared pointer to the input TTree/TChain. It does not own the pointee if
                                           //the TTree/TChain was passed directly as an argument to TDataFrame's ctor (in
                                           //which case we let users retain ownership).
@@ -69,7 +69,7 @@ class TLoopManager : public std::enable_shared_from_this<TLoopManager> {
    unsigned int fNChildren{0};      ///< Number of nodes of the functional graph hanging from this object
    unsigned int fNStopsReceived{0}; ///< Number of times that a children node signaled to stop processing entries.
    const ELoopType fLoopType; ///< The kind of event loop that is going to be run (e.g. on ROOT files, on no files)
-   std::string fToJit; ///< string containing all `BuildAndBook` actions that should be jitted before running
+   std::string fToJit;        ///< string containing all `BuildAndBook` actions that should be jitted before running
 
    void RunEmptySourceMT();
    void RunEmptySource();
@@ -109,10 +109,10 @@ public:
    void Report() const;
    /// End of recursive chain of calls, does nothing
    void PartialReport() const {}
-   void SetTree(const std::shared_ptr<TTree>& tree) { fTree = tree; }
+   void SetTree(const std::shared_ptr<TTree> &tree) { fTree = tree; }
    void IncrChildrenCount() { ++fNChildren; }
    void StopProcessing() { ++fNStopsReceived; }
-   void Jit(const std::string& s) { fToJit.append(s); }
+   void Jit(const std::string &s) { fToJit.append(s); }
 };
 } // end ns TDF
 } // end ns Detail
@@ -261,7 +261,8 @@ public:
    void Run(unsigned int slot, Long64_t entry) final
    {
       // check if entry passes all filters
-      if (fPrevData.CheckFilters(slot, entry)) Exec(slot, entry, TypeInd_t());
+      if (fPrevData.CheckFilters(slot, entry))
+         Exec(slot, entry, TypeInd_t());
    }
 
    template <int... S>
@@ -290,10 +291,11 @@ protected:
    const std::string fName;
    unsigned int fNChildren{0};      ///< Number of nodes of the functional graph hanging from this object
    unsigned int fNStopsReceived{0}; ///< Number of times that a children node signaled to stop processing entries.
-   const unsigned int fNSlots; ///< Number of thread slots used by this node, inherited from parent node.
+   const unsigned int fNSlots;      ///< Number of thread slots used by this node, inherited from parent node.
 
 public:
-   TCustomColumnBase(TLoopManager *df, const ColumnNames_t &tmpBranches, std::string_view name, const unsigned int nSlots);
+   TCustomColumnBase(TLoopManager *df, const ColumnNames_t &tmpBranches, std::string_view name,
+                     const unsigned int nSlots);
    TCustomColumnBase &operator=(const TCustomColumnBase &) = delete;
    virtual ~TCustomColumnBase() = default;
 
@@ -309,7 +311,11 @@ public:
    virtual void Update(unsigned int slot, Long64_t entry) = 0;
    virtual void IncrChildrenCount() = 0;
    virtual void StopProcessing() = 0;
-   void ResetChildrenCount() { fNChildren = 0; fNStopsReceived = 0; }
+   void ResetChildrenCount()
+   {
+      fNChildren = 0;
+      fNStopsReceived = 0;
+   }
    unsigned int GetNSlots() const { return fNSlots; }
 };
 
@@ -384,14 +390,16 @@ public:
    void StopProcessing()
    {
       ++fNStopsReceived;
-      if (fNStopsReceived == fNChildren) fPrevData.StopProcessing();
+      if (fNStopsReceived == fNChildren)
+         fPrevData.StopProcessing();
    }
 
    void IncrChildrenCount()
    {
       ++fNChildren;
       // propagate "children activation" upstream
-      if (fNChildren == 1) fPrevData.IncrChildrenCount();
+      if (fNChildren == 1)
+         fPrevData.IncrChildrenCount();
    }
 };
 
@@ -407,7 +415,7 @@ protected:
    const std::string fName;
    unsigned int fNChildren{0};      ///< Number of nodes of the functional graph hanging from this object
    unsigned int fNStopsReceived{0}; ///< Number of times that a children node signaled to stop processing entries.
-   const unsigned int fNSlots; ///< Number of thread slots used by this node, inherited from parent node.
+   const unsigned int fNSlots;      ///< Number of thread slots used by this node, inherited from parent node.
 
 public:
    TFilterBase(TLoopManager *df, const ColumnNames_t &tmpBranches, std::string_view name, const unsigned int nSlots);
@@ -424,7 +432,11 @@ public:
    void PrintReport() const;
    virtual void IncrChildrenCount() = 0;
    virtual void StopProcessing() = 0;
-   void ResetChildrenCount() { fNChildren = 0; fNStopsReceived = 0; }
+   void ResetChildrenCount()
+   {
+      fNChildren = 0;
+      fNStopsReceived = 0;
+   }
    virtual void TriggerChildrenCount() = 0;
    unsigned int GetNSlots() const { return fNSlots; }
    virtual void ResetReportCount() = 0;
@@ -494,14 +506,16 @@ public:
    void StopProcessing()
    {
       ++fNStopsReceived;
-      if (fNStopsReceived == fNChildren) fPrevData.StopProcessing();
+      if (fNStopsReceived == fNChildren)
+         fPrevData.StopProcessing();
    }
 
    void IncrChildrenCount()
    {
       ++fNChildren;
       // propagate "children activation" upstream. named filters do the propagation via `TriggerChildrenCount`.
-      if (fNChildren == 1 && fName.empty()) fPrevData.IncrChildrenCount();
+      if (fNChildren == 1 && fName.empty())
+         fPrevData.IncrChildrenCount();
    }
 
    void TriggerChildrenCount() final
@@ -532,8 +546,8 @@ protected:
    ULong64_t fNProcessedEntries{0};
    unsigned int fNChildren{0};      ///< Number of nodes of the functional graph hanging from this object
    unsigned int fNStopsReceived{0}; ///< Number of times that a children node signaled to stop processing entries.
-   bool fHasStopped{false}; ///< True if the end of the range has been reached
-   const unsigned int fNSlots; ///< Number of thread slots used by this node, inherited from parent node.
+   bool fHasStopped{false};         ///< True if the end of the range has been reached
+   const unsigned int fNSlots;      ///< Number of thread slots used by this node, inherited from parent node.
 
 public:
    TRangeBase(TLoopManager *implPtr, const ColumnNames_t &tmpBranches, unsigned int start, unsigned int stop,
@@ -548,7 +562,11 @@ public:
    virtual void PartialReport() const = 0;
    virtual void IncrChildrenCount() = 0;
    virtual void StopProcessing() = 0;
-   void ResetChildrenCount() { fNChildren = 0; fNStopsReceived = 0; }
+   void ResetChildrenCount()
+   {
+      fNChildren = 0;
+      fNStopsReceived = 0;
+   }
    unsigned int GetNSlots() const { return fNSlots; }
 };
 
@@ -601,14 +619,16 @@ public:
    void StopProcessing()
    {
       ++fNStopsReceived;
-      if (fNStopsReceived == fNChildren && !fHasStopped) fPrevData.StopProcessing();
+      if (fNStopsReceived == fNChildren && !fHasStopped)
+         fPrevData.StopProcessing();
    }
 
    void IncrChildrenCount()
    {
       ++fNChildren;
       // propagate "children activation" upstream
-      if (fNChildren == 1) fPrevData.IncrChildrenCount();
+      if (fNChildren == 1)
+         fPrevData.IncrChildrenCount();
    }
 };
 

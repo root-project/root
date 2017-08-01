@@ -29,8 +29,9 @@ namespace TDF {
 /// column created by Define.
 std::string ColumnName2ColumnTypeName(const std::string &colName, TTree *tree, TCustomColumnBase *tmpBranch)
 {
-   TBranch* branch = nullptr;
-   if (tree) branch = tree->GetBranch(colName.c_str());
+   TBranch *branch = nullptr;
+   if (tree)
+      branch = tree->GetBranch(colName.c_str());
    if (!branch and !tmpBranch) {
       throw std::runtime_error("Column \"" + colName + "\" is not in a file and has not been defined.");
    }
@@ -126,7 +127,8 @@ unsigned int GetNSlots()
 {
    unsigned int nSlots = 1;
 #ifdef R__USE_IMT
-   if (ROOT::IsImplicitMTEnabled()) nSlots = ROOT::GetImplicitMTPoolSize();
+   if (ROOT::IsImplicitMTEnabled())
+      nSlots = ROOT::GetImplicitMTPoolSize();
 #endif // R__USE_IMT
    return nSlots;
 }
@@ -184,9 +186,11 @@ ColumnNames_t FindUnknownColumns(const ColumnNames_t &columns, const TLoopManage
    ColumnNames_t unknownColumns;
    for (auto &column : columns) {
       const auto isTreeBranch = (tree != nullptr && tree->GetBranch(column.c_str()) != nullptr);
-      if (isTreeBranch) continue;
+      if (isTreeBranch)
+         continue;
       const auto isCustomColumn = (customColumns.find(column) != customColumns.end());
-      if (isCustomColumn) continue;
+      if (isCustomColumn)
+         continue;
       unknownColumns.emplace_back(column);
    }
    return unknownColumns;
