@@ -506,7 +506,8 @@ TBasicRNNLayer<Architecture_t> *TDeepNet<Architecture_t, Layer_t>::AddBasicRNNLa
                                                                                     size_t timeSteps, bool rememberState)
 {
    TBasicRNNLayer<Architecture_t> *basicRNNLayer = new TBasicRNNLayer<Architecture_t>(batchSize, stateSize, inputSize,
-                                                                                      timeSteps, rememberState, fIsTraining);
+                                                                                      timeSteps, rememberState, DNN::EActivationFunction::kTanh,
+                                                                                      fIsTraining);
    fLayers.push_back(basicRNNLayer);
    return basicRNNLayer;
 }

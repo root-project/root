@@ -25,6 +25,7 @@
 #include "Reference/Initialization.cxx"
 #include "Reference/Dropout.cxx"
 #include "Reference/DenoisePropagation.cxx"
+#include "Reference/RecurrentPropagation.cxx"
 
 namespace TMVA {
 namespace DNN  {

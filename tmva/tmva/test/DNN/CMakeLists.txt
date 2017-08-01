@@ -11,6 +11,7 @@ include_directories(${ROOT_INCLUDE_DIRS})
 
 ROOT_ADD_TEST_SUBDIRECTORY(CNN)
 ROOT_ADD_TEST_SUBDIRECTORY(DAE)
+ROOT_ADD_TEST_SUBDIRECTORY(RNN)
 #--- CUDA tests. ---------------------------
 if (CUDA_FOUND)
 
