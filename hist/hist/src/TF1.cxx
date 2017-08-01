@@ -1110,11 +1110,11 @@ void TF1::DrawF1(Double_t xmin, Double_t xmax, Option_t *option)
 
 Double_t TF1::Eval(Double_t x, Double_t y, Double_t z, Double_t t) const
 {
-   if (fType == 0) return fFormula->Eval(x, y, z, t);
+   if (fType == EFType::kFormula) return fFormula->Eval(x, y, z, t);
 
    Double_t xx[4] = {x, y, z, t};
    Double_t *pp = (Double_t *)fParams->GetParameters();
-   if (fType == 2)((TF1 *)this)->InitArgs(xx, pp);
+   if (fType == EFType::KInterpreted)((TF1 *)this)->InitArgs(xx, pp);
    return ((TF1 *)this)->EvalPar(xx, pp);
 }
 
@@ -1141,7 +1141,7 @@ Double_t TF1::EvalPar(const Double_t *x, const Double_t *params)
 {
    //fgCurrent = this;
 
-   if (fType == 0) {
+   if (fType == EFType::kFormula) {
       assert(fFormula);
 
       if (fNormalized && fNormIntegral != 0)
@@ -1150,7 +1150,7 @@ Double_t TF1::EvalPar(const Double_t *x, const Double_t *params)
          return fFormula->EvalPar(x, params);
    }
    Double_t result = 0;
-   if (fType == 1)  {
+   if (fType == EFType::kPtrScalarFreeFcn)  {
       if (fFunctor) {
          assert(fParams);
          if (params) result = ((TF1FunctorPointerImpl<Double_t> *)fFunctor)->fImpl((Double_t *)x, (Double_t *)params);
@@ -1163,7 +1163,7 @@ Double_t TF1::EvalPar(const Double_t *x, const Double_t *params)
 
       return result;
    }
-   if (fType == 2) {
+   if (fType == EFType::KInterpreted) {
       if (fMethodCall) fMethodCall->Execute(result);
       else             result = GetSave(x);
 
@@ -1173,7 +1173,7 @@ Double_t TF1::EvalPar(const Double_t *x, const Double_t *params)
       return result;
    }
 
-   if (fType == 3) {
+   if (fType == EFType::kTemplated) {
       if (fFunctor) {
          if (params) result =  EvalParVec(x, params);
          else result =  EvalParVec(x, (Double_t *) fParams->GetParameters());
@@ -2594,12 +2594,12 @@ Bool_t TF1::IsValid() const
 
 void TF1::Print(Option_t *option) const
 {
-   if (fType == 0) {
+   if (fType == EFType::kFormula) {
       printf("Formula based function:     %s \n", GetName());
       assert(fFormula);
       fFormula->Print(option);
    } else if (fType >  0) {
-      if (fType == 2)
+      if (fType == EFType::kFormula)
          printf("Interpreted based function: %s(double *x, double *p).  Ndim = %d, Npar = %d  \n", GetName(), GetNpar(), GetNdim());
       else {
          if (fFunctor)
