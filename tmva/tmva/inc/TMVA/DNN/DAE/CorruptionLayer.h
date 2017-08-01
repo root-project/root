@@ -74,7 +74,9 @@ public:
    void Forward(std::vector<Matrix_t> input, bool applyDropout = false);
 
    void Backward(std::vector<Matrix_t> &gradients_backward,
-                 const std::vector<Matrix_t> &activations_backward);
+                 const std::vector<Matrix_t> &activations_backward,
+                 std::vector<Matrix_t> &inp1,
+                 std::vector<Matrix_t> &inp2);
 
    void Print() const;
 
@@ -150,7 +152,9 @@ auto TCorruptionLayer<Architecture_t>::Forward(std::vector<Matrix_t> input, bool
 //______________________________________________________________________________
 template <typename Architecture_t>
 auto inline TCorruptionLayer<Architecture_t>::Backward(std::vector<Matrix_t> &gradients_backward,
-                                                     const std::vector<Matrix_t> &activations_backward)
+                                                     const std::vector<Matrix_t> &activations_backward,
+                                                     std::vector<Matrix_t> &inp1,
+                                                     std::vector<Matrix_t> &inp2)
 -> void
 {
 }
