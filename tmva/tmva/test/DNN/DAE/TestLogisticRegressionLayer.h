@@ -47,7 +47,7 @@ template <typename Architecture> auto testLayer1()
 
    using TLogisticRegressionLayer = TLogisticRegressionLayer<Architecture>;
 
-   TLogisticRegressionLayer logistic(6, 6, 2, 2,0.1,1000);
+   TLogisticRegressionLayer logistic(6, 6, 2, 2,0.1);
    logistic.Initialize();
 
    double train_X[][6] = {
@@ -116,10 +116,11 @@ template <typename Architecture> auto testLayer1()
          }
       }
    }
-   
-   
-   logistic.Backward(inputLabel,input,inputLabel,input);
-   
+   std::vector<Matrix_t>a,b;
+   for(size_t i=0;i<1000;i++)
+   {
+      logistic.Backward(inputLabel,a,input,b);
+   }
    logistic.Forward(testInput, false);
    std::cout<<std::endl;
    std::cout<<"Expected Output: "<<std::endl<<1<<std::endl<<0<<std::endl<<0<<std::endl<<1<<std::endl<<std::endl;

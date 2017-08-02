@@ -23,3 +23,6 @@ ROOT_ADD_TEST(TMVA-DNN-DAE-LogisticRegressionLayer COMMAND testLogisticRegressio
 
 ROOT_EXECUTABLE(testNetPreTrain TestNetPreTrain.cxx LIBRARIES ${Libraries})
 ROOT_ADD_TEST(TMVA-DNN-DAE-NetPreTrain COMMAND testNetPreTrain)
+
+ROOT_EXECUTABLE(testNetFineTune TestNetFineTune.cxx LIBRARIES ${Libraries})
+ROOT_ADD_TEST(TMVA-DNN-DAE-NetFineTune COMMAND testNetFineTune)
