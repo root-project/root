@@ -24,8 +24,8 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-#ifndef TMVA_TEST_DNN_TEST_DEEPNET_AE_H
-#define TMVA_TEST_DNN_TEST_DEEPNET_AE_H
+#ifndef TMVA_TEST_DNN_TEST_DEEPNET_AE_FINETUNE_H
+#define TMVA_TEST_DNN_TEST_DEEPNET_AE_FINETUNE_H
 
 #include "../Utility.h"
 
@@ -44,30 +44,79 @@ template <typename Architecture> auto constructDeepAutoEncoderNet(TDeepNet<Archi
    using Scalar_t = typename Architecture::Scalar_t;
    using Matrix_t = typename Architecture::Matrix_t;
 
-   std::vector<Matrix_t> input;
-   size_t batchSize=1;
-   size_t visibleUnits=6;
-   std::vector<size_t> numHiddenUnitsPerLayer = {4,3,2};
-   Scalar_t learningRate =0.1;
-   Scalar_t corruptionLevel = 0.3;
-   Scalar_t dropoutProbability = 1;
-   size_t epochs=5;
+   double train_X[][6] = {
+      {1, 1, 1, 0, 0, 0},
+      {1, 0, 1, 0, 0, 0},
+      {1, 1, 1, 0, 0, 0},
+      {0, 0, 1, 1, 1, 0},
+      {0, 0, 1, 1, 0, 0},
+      {0, 0, 1, 1, 1, 0}
+   };
+   double train_Y[][2] = {
+      {1, 0},
+      {1, 0},
+      {1, 0},
+      {0, 1},
+      {0, 1},
+      {0, 1}
+   };
 
-   Matrix_t inputMatrix(visibleUnits,1);
-   for(size_t i=0; i<batchSize; i++)
+   double test_X[][6] = {
+      {1, 0, 1, 0, 0, 0},
+      {0, 0, 1, 1, 1, 0}
+   };
+
+   std::vector<Matrix_t>input, inputLabel, testInput;
+   for(size_t i=0; i<6;i++)
    {
-      input.emplace_back(visibleUnits,1);
+      input.emplace_back(6,1);
+      inputLabel.emplace_back(2,1);
    }
-   for(size_t i=0; i<batchSize; i++)
+   for(size_t i=0; i<2;i++)
    {
-      randomMatrix(inputMatrix);
-      Architecture::Copy(input[i],inputMatrix );
+      testInput.emplace_back(6,1);
    }
-   net.PreTrain(input,
-                numHiddenUnitsPerLayer,
-                learningRate, corruptionLevel,
-                dropoutProbability, epochs,
-                EActivationFunction::kSigmoid, false);
+
+   for(size_t i=0; i<6; i++)
+   {
+      for(size_t j=0; j<(size_t)input[i].GetNrows(); j++)
+      {
+         for(size_t k=0; k<(size_t)input[i].GetNcols(); k++)
+         {
+            input[i](j,k)=train_X[i][j];
+         }
+      }
+   }
+
+   for(size_t i=0; i<6; i++)
+   {
+      for(size_t j=0; j<(size_t)inputLabel[i].GetNrows(); j++)
+      {
+         for(size_t k=0; k<(size_t)inputLabel[i].GetNcols(); k++)
+         {
+            inputLabel[i](j,k)=train_Y[i][j];
+         }
+      }
+   }
+
+   for(size_t i=0; i<2; i++)
+   {
+      for(size_t j=0; j<(size_t)testInput[i].GetNrows(); j++)
+      {
+         for(size_t k=0; k<(size_t)testInput[i].GetNcols(); k++)
+         {
+            testInput[i](j,k)=test_X[i][j];
+         }
+      }
+   }
+
+
+   size_t batchSize=6;
+   size_t testDataBatchSize =2;
+
+   net.FineTune(input,
+                testInput,
+                inputLabel,2,testDataBatchSize, 0.1, 1000);
 }
 
 template <typename Architecture> auto testNet()
@@ -76,7 +125,7 @@ template <typename Architecture> auto testNet()
    using Scalar_t = typename Architecture::Scalar_t;
    using Matrix_t = typename Architecture::Matrix_t;
    using Net_t = TDeepNet<Architecture>;
-   size_t batchSize = 1;
+   size_t batchSize = 6;
    Net_t convNet(batchSize, 1, 1, 1, 1, 1, 1,
                  ELossFunction::kMeanSquaredError, EInitialization::kGauss);
 
