@@ -110,6 +110,18 @@ public:
       return message_router_->OnProcessMessageReceived(browser, source_process, message);
    }
 
+   void OnUncaughtException(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefRefPtr<CefV8Context> context,
+                            CefRefPtr<CefV8Exception> exception, CefRefPtr<CefV8StackTrace> stackTrace) OVERRIDE
+   {
+      printf("!!!!!! OnUncaughtException !!!!!\n");
+   }
+
+   void OnRegisterCustomSchemes(CefRawPtr<CefSchemeRegistrar> registrar) OVERRIDE
+   {
+      // registrar->AddCustomScheme("rootscheme", true, true, true, true, true, true);
+      registrar->AddCustomScheme("rootscheme", true, false, false, true, false, false);
+   }
+
    /*   virtual bool OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefProcessId source_process,
                                             CefRefPtr<CefProcessMessage> message) OVERRIDE
       {
