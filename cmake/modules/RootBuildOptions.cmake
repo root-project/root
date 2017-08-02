@@ -231,10 +231,10 @@ if(builtin_all)
   set(builtin_veccore_defvalue ON)
 endif()
 
-#---VC does not support yet Arm and PPC processors----------------------------------------------
-if (CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64" OR CMAKE_SYSTEM_PROCESSOR STREQUAL "ppc64le")
-   message(STATUS "A system not supported by Vc, ${CMAKE_SYSTEM_PROCESSOR}, was detected. Disabling Vc by default.")
-   set(vc_defvalue OFF)
+#---Vc supports only x86_64 architecture-------------------------------------------------------
+if (NOT CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64")
+  message(STATUS "Vc does not support ${CMAKE_SYSTEM_PROCESSOR}. Support for Vc disabled.")
+  set(vc_defvalue OFF)
 endif()
 
 #---Options depending of CMake Generator-------------------------------------------------------
