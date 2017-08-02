@@ -20,7 +20,12 @@
 
 namespace PyROOT {
 
+#if PY_VERSION_HEX >= 0x03000000
+void* InitializeNumpy();
+#else
 void InitializeNumpy();
+#endif
+
 PyObject* GetNumpyIterator(PyObject* self, PyObject* args, PyObject* kwds);
 PyObject* GetNumpyIteratorInfo(PyObject* self, PyObject* args, PyObject* kwds);
 PyObject* FillNumpy(PyObject* self, PyObject* args);

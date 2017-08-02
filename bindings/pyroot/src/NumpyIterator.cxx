@@ -425,8 +425,10 @@ bool dtypedim_request(ArrayInfo &arrayinfo, Request request, bool swap_bytes) {
 
 const char* gettuplestring(PyObject* p, Py_ssize_t pos) {
   PyObject* obj = PyTuple_GET_ITEM(p, pos);
-  if (PyString_Check(obj))
-    return PyString_AsString(obj);
+  if (PyUnicode_Check(obj))
+    return PyUnicode_AS_DATA(obj);
+  else if (PyBytes_Check(obj))
+    return PyBytes_AsString(obj);
   else {
     PyErr_Format(PyExc_TypeError, "expected a string in argument %ld", pos);
     return 0;
@@ -435,9 +437,16 @@ const char* gettuplestring(PyObject* p, Py_ssize_t pos) {
 
 /////////////////////////////////////////////////////// Python functions
 
+#if PY_VERSION_HEX >= 0x03000000
+void* InitializeNumpy() {
+  import_array();
+  return 0;
+}
+#else
 void InitializeNumpy() {
   import_array();
 }
+#endif
 
 bool gettree(PyObject* self, TTree* &tree) {
   if (!ObjectProxy_Check(self)) {
@@ -511,14 +520,16 @@ PyObject* GetNumpyIterator(PyObject* self, PyObject* args, PyObject* kwds) {
     PyObject* value;
     Py_ssize_t pos = 0;
     while (PyDict_Next(kwds, &pos, &key, &value)) {
-      if (std::string(PyString_AsString(key)) == std::string("return_new_buffers")) {
+      if ((PyUnicode_Check(key)  &&  std::string(PyUnicode_AS_DATA(key)) == std::string("return_new_buffers"))  ||
+          (PyBytes_Check(key)  &&  std::string(PyBytes_AsString(key)) == std::string("return_new_buffers"))) {
         if (PyObject_IsTrue(value))
           return_new_buffers = true;
         else
           return_new_buffers = false;
       }
 
-      else if (std::string(PyString_AsString(key)) == std::string("swap_bytes")) {
+      else if ((PyUnicode_Check(key)  &&  std::string(PyUnicode_AS_DATA(key)) == std::string("swap_bytes"))  ||
+               (PyBytes_Check(key)  &&  std::string(PyBytes_AsString(key)) == std::string("swap_bytes"))) {
         if (PyObject_IsTrue(value))
           swap_bytes = true;
         else
@@ -526,7 +537,7 @@ PyObject* GetNumpyIterator(PyObject* self, PyObject* args, PyObject* kwds) {
       }
 
       else {
-        PyErr_Format(PyExc_TypeError, "unrecognized option: %s", PyString_AsString(key));
+        PyErr_Format(PyExc_TypeError, "unrecognized option: %s", PyUnicode_Check(key) ? PyUnicode_AS_DATA(key) : PyBytes_AsString(key));
         return 0;
       }
     }
@@ -567,7 +578,8 @@ PyObject* GetNumpyIteratorInfo(PyObject* self, PyObject* args, PyObject* kwds) {
     PyObject* value;
     Py_ssize_t pos = 0;
     while (PyDict_Next(kwds, &pos, &key, &value)) {
-      if (std::string(PyString_AsString(key)) == std::string("swap_bytes")) {
+      if ((PyUnicode_Check(key)  &&  std::string(PyUnicode_AS_DATA(key)) == std::string("swap_bytes"))  ||
+          (PyBytes_Check(key)  &&  std::string(PyBytes_AsString(key)) == std::string("swap_bytes"))) {
         if (PyObject_IsTrue(value))
           swap_bytes = true;
         else
@@ -575,7 +587,7 @@ PyObject* GetNumpyIteratorInfo(PyObject* self, PyObject* args, PyObject* kwds) {
       }
 
       else {
-        PyErr_Format(PyExc_TypeError, "unrecognized option: %s", PyString_AsString(key));
+        PyErr_Format(PyExc_TypeError, "unrecognized option: %s", PyUnicode_Check(key) ? PyUnicode_AS_DATA(key) : PyBytes_AsString(key));
         return 0;
       }
     }
@@ -620,17 +632,19 @@ PyObject* FillNumpy(PyObject* self, PyObject* args) {
   TBranch* branch = leaf->GetBranch();
   TTree* tree = branch->GetTree();
 
-  PyObject* array;
+  PyObject* pyarray;
   Long64_t entry_start = 0;
-  if (!PyArg_ParseTuple(args, "O|l", &array, &entry_start))
+  if (!PyArg_ParseTuple(args, "O|l", &pyarray, &entry_start))
     return 0;
 
   Long64_t entry_end = tree->GetEntries();
 
-  if (!PyArray_Check(array)) {
+  if (!PyArray_Check(pyarray)) {
     PyErr_SetString(PyExc_TypeError, "first argument must be a Numpy array");
     return 0;
   }
+
+  PyArrayObject* array = reinterpret_cast<PyArrayObject*>(pyarray);
 
   Long64_t arraylength = 1;
   for (int i = 0;  i < PyArray_NDIM(array);  i++)
