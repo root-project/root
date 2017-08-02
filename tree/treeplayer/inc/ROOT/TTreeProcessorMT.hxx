@@ -45,6 +45,13 @@ the threaded object.
 
 namespace ROOT {
    namespace Internal {
+
+      struct TreeViewCluster {
+         Long64_t startEntry;
+         Long64_t endEntry;
+         std::size_t filenameIdx;
+      };
+
       class TTreeView {
       private:
          std::vector<std::string> fFileNames; ///< Names of the files
@@ -273,6 +280,7 @@ namespace ROOT {
    private:
       ROOT::TThreadedObject<ROOT::Internal::TTreeView> treeView; ///<! Threaded object with <file,tree> per thread
 
+      std::vector<ROOT::Internal::TreeViewCluster> MakeClusters();
    public:
       TTreeProcessorMT(std::string_view filename, std::string_view treename = "");
       TTreeProcessorMT(const std::vector<std::string_view>& filenames, std::string_view treename = "");
