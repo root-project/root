@@ -176,7 +176,7 @@ TEST(StressHistogram, TestH1Integral)
    int n = 10000;
    TH1D h1("h1", "h1", 100, -5, 5);
    TF1 gaus("gaus1d", gaus1d, -5, 5, 3);
-   gaus.SetParameters(1, 0, 1);
+   gaus.SetParameters(1000, 0, 1);
 
    h1.FillRandom("gaus1d", n);
 
