@@ -56,6 +56,29 @@ TTreeProcessorMT::TTreeProcessorMT(TTree &tree) : treeView(tree) {}
 /// \param[in] entries List of entry numbers to process.
 TTreeProcessorMT::TTreeProcessorMT(TTree &tree, TEntryList &entries) : treeView(tree, entries) {}
 
+////////////////////////////////////////////////////////////////////////
+/// Divide input data in clusters, i.e. the workloads to distribute to tasks
+std::vector<ROOT::Internal::TreeViewCluster> TTreeProcessorMT::MakeClusters() {
+   std::vector<ROOT::Internal::TreeViewCluster> clusters;
+   const auto &fileNames = treeView->GetFileNames();
+   const auto nFileNames = fileNames.size();
+   const auto &treeName = treeView->GetTreeName();
+   for (auto i = 0u; i < nFileNames; ++i) {
+      std::unique_ptr<TFile> f(TFile::Open(fileNames[i].c_str())); // need TFile::Open to load plugins if need be
+      TTree *t = nullptr; // not a leak, t will be deleted by f
+      f->GetObject(treeName.c_str(), t);
+      auto clusterIter = t->GetClusterIterator(0);
+      Long64_t start = 0, end = 0;
+      const Long64_t entries = t->GetEntries();
+      // Iterate over the clusters in the current file and generate a task for each of them
+      while ((start = clusterIter()) < entries) {
+         end = clusterIter.GetNextEntry();
+         clusters.emplace_back(ROOT::Internal::TreeViewCluster{start, end, i});
+      }
+   }
+   return clusters;
+}
+
 //////////////////////////////////////////////////////////////////////////////
 /// Process the entries of a TTree in parallel. The user-provided function
 /// receives a TTreeReader which can be used to iterate on a subrange of
@@ -78,31 +101,9 @@ void TTreeProcessorMT::Process(std::function<void(TTreeReader &)> func)
    // Enable this IMT use case (activate its locks)
    Internal::TParTreeProcessingRAII ptpRAII;
 
-   // Divide input data in clusters, i.e. our task-sized workloads
-   struct TreeViewCluster {
-      Long64_t startEntry;
-      Long64_t endEntry;
-      size_t filenameIdx;
-   };
-   std::vector<TreeViewCluster> clusters;
-   const auto &fileNames = treeView->GetFileNames();
-   const auto nFileNames = fileNames.size();
-   const auto &treeName = treeView->GetTreeName();
-   for (auto i = 0u; i < nFileNames; ++i) {
-      std::unique_ptr<TFile> f(TFile::Open(fileNames[i].c_str())); // need TFile::Open to load plugins if need be
-      TTree *t = nullptr; // not a leak, t will be deleted by f
-      f->GetObject(treeName.c_str(), t);
-      auto clusterIter = t->GetClusterIterator(0);
-      Long64_t start = 0, end = 0;
-      const Long64_t entries = t->GetEntries();
-      // Iterate over the clusters in the current file and generate a task for each of them
-      while ((start = clusterIter()) < entries) {
-         end = clusterIter.GetNextEntry();
-         clusters.emplace_back(TreeViewCluster{start, end, i});
-      }
-   }
+   auto clusters = MakeClusters();
 
-   auto mapFunction = [this, &func](const TreeViewCluster &c) {
+   auto mapFunction = [this, &func](const ROOT::Internal::TreeViewCluster &c) {
       treeView->SetCurrent(c.filenameIdx);
       auto tr = treeView->GetTreeReader(c.startEntry, c.endEntry);
       func(*tr);
