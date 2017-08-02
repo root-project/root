@@ -104,9 +104,12 @@ void TTreeProcessorMT::Process(std::function<void(TTreeReader &)> func)
    auto clusters = MakeClusters();
 
    auto mapFunction = [this, &func](const ROOT::Internal::TreeViewCluster &c) {
-      treeView->SetCurrent(c.filenameIdx);
-      auto tr = treeView->GetTreeReader(c.startEntry, c.endEntry);
-      func(*tr);
+      // get the idx to the TreeViewInput for this task in the current thread
+      const auto dataIdx = treeView->FindOrOpenFile(c.filenameIdx);
+      auto readerAndEntryList = treeView->GetTreeReader(dataIdx, c.startEntry, c.endEntry);
+      auto &reader = std::get<0>(readerAndEntryList);
+      func(*reader);
+      treeView->Cleanup(dataIdx);
    };
 
    // Assume number of threads has been initialized via ROOT::EnableImplicitMT
