@@ -96,20 +96,14 @@ void TFilterBase::PrintReport() const
    Printf("%-10s: pass=%-10lld all=%-10lld -- %8.3f %%", fName.c_str(), accepted, all, perc);
 }
 
-// This is an helper class to allow to pick a slot. If the same thread requires multiple
-// times a slot without previously giving it back, it is assigned the same slot.
+// This is an helper class to allow to pick a slot without resorting to a map
+// indexed by thread ids.
 // WARNING: this class does not work as a regular stack. The size is
 // fixed at construction time and no blocking is foreseen.
 class TSlotStack {
 private:
-   struct TSlotCount {
-      TSlotCount(unsigned int slot = 0U, unsigned int count = 0U) : fSlot(slot), fCount(count) {}
-      unsigned int fSlot;
-      unsigned int fCount;
-   };
    unsigned int fCursor;
    std::vector<unsigned int> fBuf;
-   std::map<std::thread::id, TSlotCount> fThrIdSlotCountMap;
    ROOT::TSpinMutex fMutex;
 
 public:
@@ -121,17 +115,8 @@ public:
 
 void TSlotStack::Push(unsigned int slotNumber)
 {
-   auto thisThrId = std::this_thread::get_id();
-
    std::lock_guard<ROOT::TSpinMutex> guard(fMutex);
-   auto slotCountIt = fThrIdSlotCountMap.find(thisThrId);
-   assert(fThrIdSlotCountMap.end() == slotCountIt > 0 &&
-          "A slot number has been pushed back to the TSlotStack by a thread that never popped it.");
-   auto &count = slotCountIt->second.fCount;
-   --count;
-   if (0 == count) {
-      fBuf[fCursor++] = slotNumber;
-   }
+   fBuf[fCursor++] = slotNumber;
    assert(fCursor <= fBuf.size() && "TSlotStack assumes that at most a fixed number of values can be present in the "
                                     "stack. fCursor is greater than the size of the internal buffer. This violates "
                                     "such assumption.");
@@ -139,36 +124,12 @@ void TSlotStack::Push(unsigned int slotNumber)
 
 unsigned int TSlotStack::Pop()
 {
-   auto thisThrId = std::this_thread::get_id();
-   {
-      std::lock_guard<ROOT::TSpinMutex> guard(fMutex);
-      auto slotCountIt = fThrIdSlotCountMap.find(thisThrId);
-      if (fThrIdSlotCountMap.end() != slotCountIt) {
-         auto &slot = slotCountIt->second.fSlot;
-         auto &count = slotCountIt->second.fCount;
-         if (0 == count) {
-            slot = fBuf[--fCursor];
-         }
-         count++;
-         return slot;
-      } else {
-         if (0 != fCursor) { // There is an index to give away
-            const auto slot = fBuf[--fCursor];
-            fThrIdSlotCountMap[thisThrId] = {slot, 1U};
-            return slot;
-         } else { // There is no index to give away
-            // Trigger busy wait
-         }
-      }
-   }
-   // This point should never be reached unless the runtime allows more working threads
-   // than workers the user selected.
-   assert(0 && "A slot number has been pushed back to the TSlotStack by a thread that never popped it.");
-   while (0U == fCursor) {
-   };
-
-   return Pop();
+   assert(fCursor > 0 &&
+          "TSlotStack assumes that a value can be always popped. fCursor is <=0 and this violates such assumption.");
+   std::lock_guard<ROOT::TSpinMutex> guard(fMutex);
+   return fBuf[--fCursor];
 }
+
 TLoopManager::TLoopManager(TTree *tree, const ColumnNames_t &defaultBranches)
    : fTree(std::shared_ptr<TTree>(tree, [](TTree *) {})), fDefaultColumns(defaultBranches),
      fNSlots(TDFInternal::GetNSlots()), fLoopType(ELoopType::kROOTFiles)
