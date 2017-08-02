@@ -40,6 +40,7 @@ public:
 class Request {
 public:
   TBranch* branch;
+  std::string leaf;
 };
 
 class ClusterBuffer {

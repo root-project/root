@@ -263,9 +263,19 @@ void NumpyIterator::Reset() {
 
 bool getrequest(Request &request, TTree* tree, const char* branchName) {
   request.branch = tree->GetBranch(branchName);
-  if (request.branch == 0) {
-    PyErr_Format(PyExc_IOError, "could not read branch \"%s\" from tree \"%s\"", branchName, tree->GetName());
-    return false;
+
+  if (request.branch != 0)
+    request.leaf = std::string();
+
+  else {
+    request.branch = tree->GetLeaf(branchName)->GetBranch();
+
+    if (request.branch == 0) {
+      PyErr_Format(PyExc_IOError, "could not read branch \"%s\" from tree \"%s\"", branchName, tree->GetName());
+      return false;
+    }
+
+    request.leaf = branchName;
   }
   return true;
 }
@@ -324,7 +334,11 @@ const char* leaftype(TLeaf* leaf, bool swap_bytes) {
       case kFloat_t:    return swap_bytes ? "<f4" : ">f4";
       case kDouble32_t: return swap_bytes ? "<f4" : ">f4";
       case kDouble_t:   return swap_bytes ? "<f8" : ">f8";
-      default: return 0;
+      default:
+        if (std::string(expectedClass->GetName()) == std::string("TClonesArray"))
+          return swap_bytes ? "<i4" : ">i4";
+        else
+          return 0;
     }
   }
   return 0;
@@ -409,9 +423,11 @@ bool dtypedim_multibranch(ArrayInfo &arrayinfo, TObjArray* branches, bool swap_b
   return false;
 }
 
-bool dtypedim_branch(ArrayInfo &arrayinfo, TBranch* branch, bool swap_bytes) {
-  TObjArray* leaves = branch->GetListOfLeaves();
-  if (leaves->GetEntries() == 1)
+bool dtypedim_branch(ArrayInfo &arrayinfo, Request request, bool swap_bytes) {
+  TObjArray* leaves = request.branch->GetListOfLeaves();
+  if (request.leaf != std::string(""))
+    return dtypedim_unileaf(arrayinfo, request.branch->GetLeaf(request.leaf.c_str()), swap_bytes);
+  else if (leaves->GetEntries() == 1)
     return dtypedim_unileaf(arrayinfo, dynamic_cast<TLeaf*>(leaves->First()), swap_bytes);
   else
     return dtypedim_multileaf(arrayinfo, leaves, swap_bytes);
@@ -419,10 +435,10 @@ bool dtypedim_branch(ArrayInfo &arrayinfo, TBranch* branch, bool swap_bytes) {
 
 bool dtypedim_request(ArrayInfo &arrayinfo, Request request, bool swap_bytes) {
   TObjArray* subbranches = request.branch->GetListOfBranches();
-  if (subbranches->GetEntries() != 0)
+  if (subbranches->GetEntries() != 0  &&  request.leaf == std::string(""))
     return dtypedim_multibranch(arrayinfo, subbranches, swap_bytes);
   else
-    return dtypedim_branch(arrayinfo, request.branch, swap_bytes);
+    return dtypedim_branch(arrayinfo, request, swap_bytes);
 }
 
 bool checkstring(PyObject* str) {
