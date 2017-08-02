@@ -25,6 +25,7 @@
 #include "TClass.h"
 #include "TMethodCall.h"
 #include "TF1Helper.h"
+#include "TF1NormSum.h"
 #include "TVirtualMutex.h"
 #include "Math/WrappedFunction.h"
 #include "Math/WrappedTF1.h"
@@ -431,9 +432,65 @@ TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, EA
       fXmax = xmin;
    }
    // create rep formula (no need to add to gROOT list since we will add the TF1 object)
-   fFormula = new TFormula(name, formula, false);
-   fNpar = fFormula->GetNpar();
-   fNdim = fFormula->GetNdim();
+   // First check if we need NSUM syntax:
+   if (TString(formula, 5) == "NSUM(" && formula[strlen(formula)-1] == ')') {
+            // using comma as delimiter
+      char delimiter = ',';
+      // first, remove "NSUM(" and ")" and spaces
+      TString formDense = TString(formula)(5,strlen(formula)-5-1);
+      formDense.ReplaceAll(' ', "");
+      
+      // make sure standard functions are defined (e.g. gaus, expo)
+      InitStandardFunctions();
+  
+      // Go char-by-char to split terms and define the relevant functions
+      int parenCount = 0;
+      int termStart = 0;
+      TObjArray *newFuncs = new TObjArray();
+      newFuncs->SetOwner(kTRUE);
+      TObjArray *coeffNames = new TObjArray();
+      coeffNames->SetOwner(kTRUE);
+      TString fullFormula("");
+      for (int i = 0; i < formDense.Length(); ++i) {
+      	 if (formDense[i] == '(')
+      	    parenCount++;
+      	 else if (formDense[i] == ')')
+      	    parenCount--;
+      	 else if (formDense[i] == delimiter && parenCount == 0) {
+      	    // term goes from termStart to i
+      	    DefineNSUMTerm(newFuncs, coeffNames, fullFormula, formDense, termStart, i, xmin, xmax);
+      	    termStart = i + 1;
+      	 }
+      }
+      DefineNSUMTerm(newFuncs, coeffNames, fullFormula, formDense, termStart, formDense.Length(), xmin, xmax);
+
+      TF1NormSum *normSum = new TF1NormSum(fullFormula, xmin, xmax);
+      
+      fNpar = normSum->GetNpar();
+      fNdim = 1; // (note: may want to extend functionality in the future)
+
+      fType = EFType::kPtrScalarFreeFcn; // (note: may want to add new fType for this case)
+      // fFunctor = ROOT::Math::ParamFunctor(normSum);
+      using Fnc_t = typename ROOT::Internal::GetFunctorType<decltype(ROOT::Internal::GetTheRightOp(&TF1NormSum::operator()))>::type;
+      fFunctor = new TF1::TF1FunctorPointerImpl<Fnc_t>(ROOT::Math::ParamFunctorTempl<Fnc_t>(normSum));
+      fParams = new TF1Parameters(fNpar);
+      fParams->SetParameters(&(normSum->GetParameters())[0]); // inherit default parameters from normSum
+
+      // Parameter names
+      for (int i = 0; i < fNpar; i++) {
+      	 if (coeffNames->At(i) != nullptr) {
+	    TString coeffName = ((TObjString *)coeffNames->At(i))->GetString();
+	    this->SetParName(i, (const char *)coeffName);
+      	 } else {
+	    this->SetParName(i, normSum->GetParName(i));
+	 }
+      }
+      
+   } else { // regular TFormula
+      fFormula = new TFormula(name, formula, false);
+      fNpar = fFormula->GetNpar();
+      fNdim = fFormula->GetNdim();
+   }
    if (fNpar) {
       fParErrors.resize(fNpar);
       fParMin.resize(fNpar);
@@ -615,6 +672,67 @@ Bool_t TF1::AddToGlobalList(Bool_t on)
    return prevStatus;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Helper functions for NSUM parsing
+
+// Defines the formula that a given term uses, if not already defined,
+// and appends "sanitized" formula to `fullFormula` string
+void TF1::DefineNSUMTerm(TObjArray *newFuncs, TObjArray *coeffNames,
+			 TString &fullFormula,
+			 TString &formula, int termStart, int termEnd,
+			 Double_t xmin, Double_t xmax) {
+   TString originalTerm = formula(termStart, termEnd-termStart);
+   int coeffLength = TermCoeffLength(originalTerm);
+   if (coeffLength != -1)
+      termStart += coeffLength + 1;
+  
+   // `originalFunc` is the real formula and `cleanedFunc` is the
+   // sanitized version that will not confuse the TF1NormSum
+   // constructor
+   TString originalFunc = formula(termStart, termEnd-termStart);
+   TString cleanedFunc = TString(formula(termStart, termEnd-termStart))
+      .ReplaceAll('+', "<plus>")
+      .ReplaceAll('*',"<times>");
+
+   // define function (if necessary)
+   if (!gROOT->GetListOfFunctions()->FindObject(cleanedFunc))
+      newFuncs->Add(new TF1(cleanedFunc, originalFunc, xmin, xmax));
+
+   // append sanitized term to `fullFormula`
+   if (fullFormula.Length() != 0)
+      fullFormula.Append('+');
+
+   // include numerical coefficient
+   if (coeffLength != -1 && originalTerm[0] != '[')
+      fullFormula.Append(originalTerm(0, coeffLength+1));
+
+   // add coefficient name
+   if (coeffLength != -1 && originalTerm[0] == '[')
+      coeffNames->Add(new TObjString(TString(originalTerm(1,coeffLength-2))));
+   else
+      coeffNames->Add(nullptr);
+
+   fullFormula.Append(cleanedFunc);
+}
+
+
+// Returns length of coeff at beginning of a given term, not counting the '*'
+// Returns -1 if no coeff found
+// Coeff can be either a number or parameter name
+int TF1::TermCoeffLength(TString &term) {
+  int firstAsterisk = term.First('*');
+  if (firstAsterisk == -1) // no asterisk found
+    return -1;
+
+  if (TString(term(0,firstAsterisk)).IsFloat())
+     return firstAsterisk;
+     
+  if (term[0] == '[' && term[firstAsterisk-1] == ']'
+      && TString(term(1,firstAsterisk-2)).IsAlnum())
+     return firstAsterisk;
+
+  return -1;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator =
