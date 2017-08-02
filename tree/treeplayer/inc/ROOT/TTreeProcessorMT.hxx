@@ -63,17 +63,17 @@ namespace ROOT {
          TEntryList fCurrentEntryList;        ///< Entry numbers for the current range being processed
 
          ////////////////////////////////////////////////////////////////////////////////
-         /// Initialize the file and the tree for this view, first looking for a tree in
-         /// the file if necessary.
+         /// Initialize TTreeView.
          void Init()
          {
-            // Here we do not use a TContext since the TThreadedObject protects
-            // the copies done for every processing slots.
-            fCurrentFile.reset(TFile::Open(fFileNames[fCurrentIdx].data()));
+            // Set the current index to an "impossible" value
+            fCurrentIdx = std::numeric_limits<decltype(fCurrentIdx)>::max();
 
             // If the tree name is empty, look for a tree in the file
             if (fTreeName.empty()) {
-               TIter next(fCurrentFile->GetListOfKeys());
+               ::TDirectory::TContext ctxt(gDirectory);
+               std::unique_ptr<TFile> f(TFile::Open(fFileNames[fCurrentIdx].data()));
+               TIter next(f->GetListOfKeys());
                while (TKey *key = (TKey*)next()) {
                   const char *className = key->GetClassName();
                   if (strcmp(className, "TTree") == 0) {
@@ -86,14 +86,6 @@ namespace ROOT {
                   throw std::runtime_error(msg);
                }
             }
-
-            // We cannot use here the template method (TFile::GetObject) because the header will finish
-            // in the PCH and the specialization will be available. PyROOT will not be able to specialize
-            // the method for types other that TTree.
-            fCurrentTree = (TTree*)fCurrentFile->Get(fTreeName.data());
-
-            // Do not remove this tree from list of cleanups (thread unsafe)
-            fCurrentTree->ResetBit(TObject::kMustCleanup);
          }
 
       public:
