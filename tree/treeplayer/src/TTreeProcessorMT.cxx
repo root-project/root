@@ -78,26 +78,37 @@ void TTreeProcessorMT::Process(std::function<void(TTreeReader &)> func)
    // Enable this IMT use case (activate its locks)
    Internal::TParTreeProcessingRAII ptpRAII;
 
-   // Iterate over the collection of files
-   std::vector<std::tuple<Long64_t, Long64_t, size_t>> vTuple;
-   for (size_t i = 0; i < treeView->GetNumFiles(); ++i) {
-      treeView->SetCurrent(i);
-      auto clusterIter = treeView->GetClusterIterator();
+   // Divide input data in clusters, i.e. our task-sized workloads
+   struct TreeViewCluster {
+      Long64_t startEntry;
+      Long64_t endEntry;
+      size_t filenameIdx;
+   };
+   std::vector<TreeViewCluster> clusters;
+   const auto &fileNames = treeView->GetFileNames();
+   const auto nFileNames = fileNames.size();
+   const auto &treeName = treeView->GetTreeName();
+   for (auto i = 0u; i < nFileNames; ++i) {
+      std::unique_ptr<TFile> f(TFile::Open(fileNames[i].c_str())); // need TFile::Open to load plugins if need be
+      TTree *t = nullptr; // not a leak, t will be deleted by f
+      f->GetObject(treeName.c_str(), t);
+      auto clusterIter = t->GetClusterIterator(0);
       Long64_t start = 0, end = 0;
+      const Long64_t entries = t->GetEntries();
       // Iterate over the clusters in the current file and generate a task for each of them
-      while ((start = clusterIter()) < treeView->GetEntries()) {
+      while ((start = clusterIter()) < entries) {
          end = clusterIter.GetNextEntry();
-         vTuple.emplace_back(start, end, i);
+         clusters.emplace_back(TreeViewCluster{start, end, i});
       }
    }
 
-   auto mapFunction = [this, &func](const std::tuple<Long64_t, Long64_t, size_t> &t) {
-      treeView->SetCurrent(std::get<2>(t));
-      auto tr = treeView->GetTreeReader(std::get<0>(t), std::get<1>(t));
+   auto mapFunction = [this, &func](const TreeViewCluster &c) {
+      treeView->SetCurrent(c.filenameIdx);
+      auto tr = treeView->GetTreeReader(c.startEntry, c.endEntry);
       func(*tr);
    };
 
    // Assume number of threads has been initialized via ROOT::EnableImplicitMT
    TThreadExecutor pool;
-   pool.Foreach(mapFunction, vTuple);
+   pool.Foreach(mapFunction, clusters);
 }
