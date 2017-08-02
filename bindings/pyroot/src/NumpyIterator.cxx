@@ -423,16 +423,19 @@ bool dtypedim_request(ArrayInfo &arrayinfo, Request request, bool swap_bytes) {
     return dtypedim_branch(arrayinfo, request.branch, swap_bytes);
 }
 
-const char* gettuplestring(PyObject* p, Py_ssize_t pos) {
-  PyObject* obj = PyTuple_GET_ITEM(p, pos);
-  if (PyUnicode_Check(obj))
-    return PyUnicode_AS_DATA(obj);
-  else if (PyBytes_Check(obj))
-    return PyBytes_AsString(obj);
-  else {
-    PyErr_Format(PyExc_TypeError, "expected a string in argument %ld", pos);
-    return 0;
+bool checkstring(PyObject* str) {
+  return PyUnicode_Check(str)  ||  PyBytes_Check(str);
+}
+
+std::string getstring(PyObject* str) {
+  if (PyUnicode_Check(str)) {
+    PyObject* bytes = PyUnicode_AsEncodedString(str, "ascii", "backslashreplace");
+    std::string out(PyBytes_AsString(bytes));
+    Py_DECREF(bytes);
+    return out;
   }
+  else
+    return std::string(PyBytes_AsString(str));
 }
 
 /////////////////////////////////////////////////////// Python functions
@@ -492,14 +495,15 @@ bool getrequests(PyObject* self, PyObject* args, TTree* &tree, std::vector<Reque
   }
 
   for (int i = 0;  i < PyTuple_GET_SIZE(args);  i++) {
-    const char* branchName = gettuplestring(args, i);
-    if (branchName == 0) {
+    PyObject* obj = PyTuple_GET_ITEM(args, i);
+    if (!checkstring(obj)) {
       PyErr_SetString(PyExc_TypeError, "all arguments must be strings (branch names)");
       return false;
     }
+    std::string branchName = getstring(obj);
 
     Request request;
-    if (!getrequest(request, tree, branchName)) return false;
+    if (!getrequest(request, tree, branchName.c_str())) return false;
     requests.push_back(request);
   }
 
@@ -520,24 +524,27 @@ PyObject* GetNumpyIterator(PyObject* self, PyObject* args, PyObject* kwds) {
     PyObject* value;
     Py_ssize_t pos = 0;
     while (PyDict_Next(kwds, &pos, &key, &value)) {
-      if ((PyUnicode_Check(key)  &&  std::string(PyUnicode_AS_DATA(key)) == std::string("return_new_buffers"))  ||
-          (PyBytes_Check(key)  &&  std::string(PyBytes_AsString(key)) == std::string("return_new_buffers"))) {
+      if (checkstring(key)  &&  getstring(key) == std::string("return_new_buffers")) {
         if (PyObject_IsTrue(value))
           return_new_buffers = true;
         else
           return_new_buffers = false;
       }
 
-      else if ((PyUnicode_Check(key)  &&  std::string(PyUnicode_AS_DATA(key)) == std::string("swap_bytes"))  ||
-               (PyBytes_Check(key)  &&  std::string(PyBytes_AsString(key)) == std::string("swap_bytes"))) {
+      else if (checkstring(key)  &&  getstring(key) == std::string("swap_bytes")) {
         if (PyObject_IsTrue(value))
           swap_bytes = true;
         else
           swap_bytes = false;
       }
 
+      else if (checkstring(key)) {
+        PyErr_Format(PyExc_TypeError, "unrecognized option: %s", getstring(key).c_str());
+        return 0;
+      }
+
       else {
-        PyErr_Format(PyExc_TypeError, "unrecognized option: %s", PyUnicode_Check(key) ? PyUnicode_AS_DATA(key) : PyBytes_AsString(key));
+        PyErr_SetString(PyExc_TypeError, "unrecognized option");
         return 0;
       }
     }
@@ -578,16 +585,20 @@ PyObject* GetNumpyIteratorInfo(PyObject* self, PyObject* args, PyObject* kwds) {
     PyObject* value;
     Py_ssize_t pos = 0;
     while (PyDict_Next(kwds, &pos, &key, &value)) {
-      if ((PyUnicode_Check(key)  &&  std::string(PyUnicode_AS_DATA(key)) == std::string("swap_bytes"))  ||
-          (PyBytes_Check(key)  &&  std::string(PyBytes_AsString(key)) == std::string("swap_bytes"))) {
+      if (checkstring(key)  &&  getstring(key) == std::string("swap_bytes")) {
         if (PyObject_IsTrue(value))
           swap_bytes = true;
         else
           swap_bytes = false;
       }
 
+      else if (checkstring(key)) {
+        PyErr_Format(PyExc_TypeError, "unrecognized option: %s", getstring(key).c_str());
+        return 0;
+      }
+
       else {
-        PyErr_Format(PyExc_TypeError, "unrecognized option: %s", PyUnicode_Check(key) ? PyUnicode_AS_DATA(key) : PyBytes_AsString(key));
+        PyErr_SetString(PyExc_TypeError, "unrecognized option");
         return 0;
       }
     }
