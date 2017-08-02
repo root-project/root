@@ -23,6 +23,7 @@
 #include <TLeafS.h>
 #include <TLeafS.h>
 #include <TObjArray.h>
+#include <TTree.h>
 
 // Bindings
 #include "PyROOT.h"
@@ -153,6 +154,8 @@ void ClusterBuffer::Reset() {
   bfEntryEnd = 0;
   exEntryStart = 0;
   exEntryEnd = 0;
+  // required for re-readability
+  fRequest.branch->DropBaskets();
 }
 
 // step all ClusterBuffers forward, for all branches, returning true when done and setting error_string on any errors
@@ -191,7 +194,7 @@ bool NumpyIterator::StepForward(const char* &error_string) {
         return true;
     }
   }
-  
+
   return false;
 }
 
@@ -254,7 +257,6 @@ void NumpyIterator::Reset() {
   for (unsigned int i = 0;  i < fClusterBuffers.size();  i++) {
     fClusterBuffers[i]->Reset();
   }
-  fTree->Refresh();
 }
 
 /////////////////////////////////////////////////////// helper functions
@@ -567,7 +569,7 @@ PyObject* GetNumpyIterator(PyObject* self, PyObject* args, PyObject* kwds) {
   }
 
   Long64_t num_entries = requests.back().branch->GetTree()->GetEntries();
-  out->iter = new NumpyIterator(tree, requests, arrayinfo, num_entries, return_new_buffers, swap_bytes);
+  out->iter = new NumpyIterator(requests, arrayinfo, num_entries, return_new_buffers, swap_bytes);
 
   return reinterpret_cast<PyObject*>(out);
 }

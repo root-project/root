@@ -13,7 +13,6 @@
 // ROOT
 #include <TBranch.h>
 #include <TBufferFile.h>
-#include <TTree.h>
 
 // Standard
 #include <vector>
@@ -49,7 +48,6 @@ private:
   const Long64_t fItemSize;
   const bool fSwapBytes;
   TBufferFile fBufferFile;
-  TBufferFile fTrashBufferFile;
   std::vector<char> fExtra;
   bool fUsingExtra;
 
@@ -65,9 +63,12 @@ private:
 
 public:
   ClusterBuffer(const Request request, const Long64_t itemsize, const bool swap_bytes) :
-    fRequest(request), fItemSize(itemsize), fSwapBytes(swap_bytes), fBufferFile(TBuffer::kWrite, 32*1024), fTrashBufferFile(TBuffer::kWrite, 0), fUsingExtra(false),
+    fRequest(request), fItemSize(itemsize), fSwapBytes(swap_bytes), fBufferFile(TBuffer::kWrite, 32*1024), fUsingExtra(false),
     bfEntryStart(0), bfEntryEnd(0), exEntryStart(0), exEntryEnd(0)
-  {}
+  {
+    // required for re-readability
+    fRequest.branch->DropBaskets();
+  }
 
   void ReadOne(Long64_t keep_start, const char* &error_string);
   void* GetBuffer(Long64_t &numbytes, Long64_t entry_start, Long64_t entry_end);
@@ -77,7 +78,6 @@ public:
 
 class NumpyIterator {
 private:
-  TTree* fTree;
   std::vector<std::unique_ptr<ClusterBuffer>> fClusterBuffers;
   const std::vector<ArrayInfo> fArrayInfo;   // has the same length as fClusterBuffers
   const Long64_t fNumEntries;
@@ -88,12 +88,12 @@ private:
   bool StepForward(const char* &error_string);
 
 public:
-  NumpyIterator(TTree* tree, const std::vector<Request> &requests, const std::vector<ArrayInfo> arrayinfo, Long64_t num_entries, bool return_new_buffers, bool swap_bytes) :
-    fTree(tree), fArrayInfo(arrayinfo), fNumEntries(num_entries), fReturnNewBuffers(return_new_buffers), fCurrentStart(0), fCurrentEnd(0)
+  NumpyIterator(const std::vector<Request> &requests, const std::vector<ArrayInfo> arrayinfo, Long64_t num_entries, bool return_new_buffers, bool swap_bytes) :
+    fArrayInfo(arrayinfo), fNumEntries(num_entries), fReturnNewBuffers(return_new_buffers), fCurrentStart(0), fCurrentEnd(0)
   {
-    for (unsigned int i = 0;  i < fArrayInfo.size();  i++)
+    for (unsigned int i = 0;  i < fArrayInfo.size();  i++) {
       fClusterBuffers.push_back(std::unique_ptr<ClusterBuffer>(new ClusterBuffer(requests[i], fArrayInfo[i].dtype->elsize, swap_bytes)));
-    fTree->Refresh();
+    }
   }
 
   PyObject* arrays();
