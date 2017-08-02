@@ -203,14 +203,6 @@ namespace ROOT {
          }
 
          //////////////////////////////////////////////////////////////////////////
-         /// Get the cluster iterator for the current tree of this view, starting
-         /// from entry zero.
-         TTree::TClusterIterator GetClusterIterator()
-         {
-            return fCurrentTree->GetClusterIterator(0);
-         }
-
-         //////////////////////////////////////////////////////////////////////////
          /// Get a TTreeReader for the current tree of this view.
          std::unique_ptr<TTreeReader> GetTreeReader(Long64_t start, Long64_t end)
          {
@@ -246,10 +238,17 @@ namespace ROOT {
          }
 
          //////////////////////////////////////////////////////////////////////////
-         /// Get the number of files of this view.
-         size_t GetNumFiles() const
+         /// Get the filenames for this view.
+         const std::vector<std::string> &GetFileNames() const
          {
-            return fFileNames.size();
+            return fFileNames;
+         }
+
+         //////////////////////////////////////////////////////////////////////////
+         /// Get the name of the tree of this view.
+         std::string GetTreeName() const
+         {
+            return fTreeName;
          }
 
          //////////////////////////////////////////////////////////////////////////
