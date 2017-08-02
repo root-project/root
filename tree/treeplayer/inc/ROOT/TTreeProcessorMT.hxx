@@ -58,7 +58,7 @@ namespace ROOT {
          std::string fTreeName;               ///< Name of the tree
          std::unique_ptr<TFile> fCurrentFile; ///<! Current file object of this view.
          TTree *fCurrentTree;                 ///<! Current tree object of this view.
-         unsigned int fCurrentIdx;            ///<! Index of the current file.
+         std::size_t fCurrentIdx;             ///<! Index of the current file.
          std::vector<TEntryList> fEntryLists; ///< Entry numbers to be processed per tree/file
          TEntryList fCurrentEntryList;        ///< Entry numbers for the current range being processed
 
@@ -161,7 +161,7 @@ namespace ROOT {
             if (clRefTChain == tree.IsA()) {
                // We need to convert the global entry numbers to per-tree entry numbers.
                // This will allow us to build a TEntryList for a given entry range of a tree of the chain.
-               size_t nTrees = fFileNames.size();
+               std::size_t nTrees = fFileNames.size();
                fEntryLists.resize(nTrees);
 
                TChain *chain = dynamic_cast<TChain*>(&tree);
