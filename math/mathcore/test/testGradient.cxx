@@ -1,6 +1,7 @@
 // @(#)root/test:$Id$
 // Author: Alejandro García Montoro 07/2017
 
+#include "Fit/FitExecutionPolicy.h"
 #include "Fit/FitUtil.h"
 #include "Fit/BinData.h"
 #include "Math/WrappedMultiTF1.h"
@@ -25,7 +26,7 @@
 template <typename U, ROOT::Fit::ExecutionPolicy V>
 struct GradientTestTraits {
    using DataType = U;
-   static constexpr ROOT::Fit::ExecutionPolicy ExecutionPolicyType = V;
+   static constexpr ROOT::Fit::ExecutionPolicy ExecutionPolicyType() { return V; };
 
    static void PrintTypeInfo()
    {
@@ -39,8 +40,8 @@ struct GradientTestTraits {
    static std::string execPolicyStr;
 };
 
-using ScalarSerial = GradientTestTraits<Double_t, ROOT::Fit::kSerial>;
-using ScalarMultithread = GradientTestTraits<Double_t, ROOT::Fit::kMultithread>;
+using ScalarSerial = GradientTestTraits<Double_t, ROOT::Fit::ExecutionPolicy::kSerial>;
+using ScalarMultithread = GradientTestTraits<Double_t, ROOT::Fit::ExecutionPolicy::kMultithread>;
 
 template <>
 std::string ScalarSerial::dataTypeStr = "Scalar";
@@ -53,8 +54,8 @@ template <>
 std::string ScalarMultithread::execPolicyStr = "Multithread";
 
 #ifdef R__HAS_VECCORE
-using VectorialSerial = GradientTestTraits<ROOT::Double_v, ROOT::Fit::kSerial>;
-using VectorialMultithread = GradientTestTraits<ROOT::Double_v, ROOT::Fit::kMultithread>;
+using VectorialSerial = GradientTestTraits<ROOT::Double_v, ROOT::Fit::ExecutionPolicy::kSerial>;
+using VectorialMultithread = GradientTestTraits<ROOT::Double_v, ROOT::Fit::ExecutionPolicy::kMultithread>;
 
 template <>
 std::string VectorialSerial::dataTypeStr = "Vectorial";
@@ -115,7 +116,7 @@ struct GradientTestEvaluation {
 
       // Instantiate the Chi2FCN object, responsible for evaluating the gradient.
       fFitter =
-         new ROOT::Fit::Chi2FCN<GradFunctionType, BaseFunctionType>(fData, *fFitFunction, T::ExecutionPolicyType);
+         new ROOT::Fit::Chi2FCN<GradFunctionType, BaseFunctionType>(fData, *fFitFunction, T::ExecutionPolicyType());
    }
 
    Double_t BenchmarkSolution(Double_t *solution)

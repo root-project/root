@@ -612,7 +612,8 @@ double FitUtil::EvaluateChi2Residual(const IModelFunction & func, const BinData 
 }
 
 void FitUtil::EvaluateChi2Gradient(const IModelFunction &f, const BinData &data, const double *p, double *grad,
-                                   unsigned int &nPoints, const unsigned int &executionPolicy, unsigned nChunks)
+                                   unsigned int &nPoints, const ROOT::Fit::ExecutionPolicy &executionPolicy,
+                                   unsigned nChunks)
 {
    // evaluate the gradient of the chi2 function
    // this function is used when the model function knows how to calculate the derivative and we can
@@ -760,7 +761,7 @@ void FitUtil::EvaluateChi2Gradient(const IModelFunction &f, const BinData &data,
 
    std::vector<double> g(npar);
 
-   if (executionPolicy == ROOT::Fit::kSerial) {
+   if (executionPolicy == ROOT::Fit::ExecutionPolicy::kSerial) {
       std::vector<std::vector<double>> allGradients(initialNPoints);
       for (unsigned int i = 0; i < initialNPoints; ++i) {
          allGradients[i] = mapFunction(i);
@@ -768,7 +769,7 @@ void FitUtil::EvaluateChi2Gradient(const IModelFunction &f, const BinData &data,
       g = redFunction(allGradients);
    }
 #ifdef R__USE_IMT
-   else if (executionPolicy == ROOT::Fit::kMultithread) {
+   else if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
       auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(initialNPoints);
       ROOT::TThreadExecutor pool;
       g = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, initialNPoints), redFunction, chunks);

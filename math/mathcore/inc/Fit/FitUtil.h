@@ -279,7 +279,8 @@ namespace FitUtil {
       return also nPoints as the effective number of used points in the Chi2 evaluation
   */
   void EvaluateChi2Gradient(const IModelFunction &func, const BinData &data, const double *x, double *grad,
-                            unsigned int &nPoints, const unsigned int &executionPolicy = ROOT::Fit::kSerial,
+                            unsigned int &nPoints,
+                            const ROOT::Fit::ExecutionPolicy &executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial,
                             unsigned nChunks = 0);
 
   /**
@@ -838,9 +839,11 @@ namespace FitUtil {
          return mask;
       }
 
-      static void EvalChi2Gradient(const IModelFunctionTempl<T> &f, const BinData &data, const double *p, double *grad,
-                                   unsigned int &nPoints, const unsigned int &executionPolicy = ROOT::Fit::kSerial,
-                                   unsigned nChunks = 0)
+      static void
+      EvalChi2Gradient(const IModelFunctionTempl<T> &f, const BinData &data, const double *p, double *grad,
+                       unsigned int &nPoints,
+                       const ROOT::Fit::ExecutionPolicy &executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial,
+                       unsigned nChunks = 0)
       {
          // evaluate the gradient of the chi2 function
          // this function is used when the model function knows how to calculate the derivative and we can
@@ -959,7 +962,7 @@ namespace FitUtil {
          std::vector<T> gVec(npar);
          std::vector<double> g(npar);
 
-         if (executionPolicy == ROOT::Fit::kSerial) {
+         if (executionPolicy == ROOT::Fit::ExecutionPolicy::kSerial) {
             std::vector<std::vector<T>> allGradients(numVectors);
             for (unsigned int i = 0; i < numVectors; ++i) {
                allGradients[i] = mapFunction(i);
@@ -968,7 +971,7 @@ namespace FitUtil {
             gVec = redFunction(allGradients);
          }
 #ifdef R__USE_IMT
-         else if (executionPolicy == ROOT::Fit::kMultithread) {
+         else if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
             auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(numVectors);
             ROOT::TThreadExecutor pool;
             gVec = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, numVectors), redFunction, chunks);
@@ -1068,9 +1071,11 @@ static void EvalPoissonLogLGradient(const IModelFunctionTempl<T> &, const BinDat
       {
          return FitUtil::EvaluateChi2Effective(func, data, p, nPoints);
       }
-      static void EvalChi2Gradient(const IModelFunctionTempl<double> &func, const BinData &data, const double *p,
-                                   double *g, unsigned int &nPoints,
-                                   const unsigned int &executionPolicy = ROOT::Fit::kSerial, unsigned nChunks = 0)
+      static void
+      EvalChi2Gradient(const IModelFunctionTempl<double> &func, const BinData &data, const double *p, double *g,
+                       unsigned int &nPoints,
+                       const ROOT::Fit::ExecutionPolicy &executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial,
+                       unsigned nChunks = 0)
       {
          FitUtil::EvaluateChi2Gradient(func, data, p, g, nPoints, executionPolicy, nChunks);
       }
