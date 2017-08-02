@@ -265,8 +265,11 @@ namespace ROOT {
                // requested file needs to be added to fOpenInputs
                TDirectory::TContext ctxt(gDirectory); // needed to restore the directory after opening the file
                std::unique_ptr<TFile> f(TFile::Open(fFileNames[filenameIdx].data()));
-               TTree *t = nullptr;
-               f->GetObject(fTreeName.c_str(), t);
+               // We must use TFile::Get instead of TFile::GetObject because this header will finish                 
+               // in the PCH and the TFile::GetObject<TTree> specialization will be available there. PyROOT will then
+               // not be able to specialize the method for types other that TTree.
+               // A test that fails as a consequence of this issue is python-ttree-tree.
+               TTree *t = static_cast<TTree*>(f->GetObjectChecked(fTreeName.c_str(), "TTree"));
                t->ResetBit(TObject::kMustCleanup);
                fOpenInputs.emplace_back(TreeViewInput{std::move(f), t, filenameIdx, /*useCount=*/1});
                return fOpenInputs.size() - 1;
