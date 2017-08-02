@@ -722,30 +722,37 @@ Bool_t TCanvasPainter::ProcessWS(THttpCallArg *arg)
    if (conn->fHandle->PreviewData(arg))
       return kTRUE;
 
-   const char *cdata = (arg->GetPostDataLength() <= 0) ? "" : (const char *)arg->GetPostData();
+   if (arg->GetPostDataLength() <= 0)
+      return kTRUE;
 
-   if (strncmp(cdata, "READY", 5) == 0) {
+   std::string cdata((const char *)arg->GetPostData(), arg->GetPostDataLength());
+
+   if (cdata.find("READY") == 0) {
       conn->fReady = kTRUE;
       CheckDataToSend();
-   } else if (strncmp(cdata, "SNAPDONE:", 9) == 0) {
+   } else if (cdata.find("SNAPDONE:") == 0) {
+      cdata.erase(0, 9);
       conn->fReady = kTRUE;
-      conn->fDrawReady = kTRUE;                                // at least first drawing is performed
-      conn->fDelivered = (uint64_t)TString(cdata + 9).Atoll(); // delivered version of the snapshot
+      conn->fDrawReady = kTRUE;                            // at least first drawing is performed
+      conn->fDelivered = (uint64_t)TString(cdata).Atoll(); // delivered version of the snapshot
       CheckDataToSend();
-   } else if (strncmp(cdata, "RREADY:", 7) == 0) {
+   } else if (cdata.find("RREADY:") == 0) {
       conn->fReady = kTRUE;
       conn->fDrawReady = kTRUE; // at least first drawing is performed
       CheckDataToSend();
-   } else if (strncmp(cdata, "GETMENU:", 8) == 0) {
+   } else if (cdata.find("GETMENU:") == 0) {
       conn->fReady = kTRUE;
-      conn->fGetMenu = cdata + 8;
+      cdata.erase(0, 8);
+      conn->fGetMenu = cdata;
       CheckDataToSend();
-   } else if (strncmp(cdata, "GEXE:", 5) == 0) {
+   } else if (cdata.find("GEXE:") == 0) {
       // TODO: temporary solution, should be removed later
       // used now to terminate ROOT session
-      gROOT->ProcessLine(cdata + 5);
-   } else if (strncmp(cdata, "REPLY:", 6) == 0) {
-      const char *sid = cdata + 6;
+      cdata.erase(0, 5);
+      gROOT->ProcessLine(cdata.c_str());
+   } else if (cdata.find("REPLY:") == 0) {
+      cdata.erase(0, 6);
+      const char *sid = cdata.c_str();
       const char *separ = strchr(sid, ':');
       std::string id;
       if (separ)
@@ -762,20 +769,20 @@ Bool_t TCanvasPainter::ProcessWS(THttpCallArg *arg)
       }
       conn->fReady = kTRUE;
       CheckDataToSend();
-   } else if (strncmp(cdata, "OBJEXEC:", 8) == 0) {
-      TString buf(cdata + 8);
-      Int_t pos = buf.First(':');
+   } else if (cdata.find("OBJEXEC:") == 0) {
+      cdata.erase(0, 8);
+      size_t pos = cdata.find(':');
 
-      if (pos > 0) {
-         TString id = buf(0, pos);
-         buf.Remove(0, pos + 1);
-         ROOT::Experimental::Internal::TDrawable *drawable = FindDrawable(fCanvas, id.Data());
-         if (drawable && (buf.Length() > 0)) {
-            printf("Execute %s for drawable %p\n", buf.Data(), drawable);
-            drawable->Execute(buf.Data());
+      if ((pos != std::string::npos) && (pos > 0)) {
+         std::string id(cdata, pos);
+         cdata.erase(0, pos + 1);
+         ROOT::Experimental::Internal::TDrawable *drawable = FindDrawable(fCanvas, id);
+         if (drawable && (cdata.length() > 0)) {
+            printf("Execute %s for drawable %p\n", cdata.c_str(), drawable);
+            drawable->Execute(cdata);
          }
       }
-   } else if (strcmp(cdata, "KEEPALIVE") == 0) {
+   } else if (cdata == "KEEPALIVE") {
       // do nothing, it is just keep alive message for websocket
    }
 
