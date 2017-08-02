@@ -58,14 +58,15 @@ TTreeProcessorMT::TTreeProcessorMT(TTree &tree, TEntryList &entries) : treeView(
 
 ////////////////////////////////////////////////////////////////////////
 /// Divide input data in clusters, i.e. the workloads to distribute to tasks
-std::vector<ROOT::Internal::TreeViewCluster> TTreeProcessorMT::MakeClusters() {
+std::vector<ROOT::Internal::TreeViewCluster> TTreeProcessorMT::MakeClusters()
+{
    std::vector<ROOT::Internal::TreeViewCluster> clusters;
    const auto &fileNames = treeView->GetFileNames();
    const auto nFileNames = fileNames.size();
    const auto &treeName = treeView->GetTreeName();
    for (auto i = 0u; i < nFileNames; ++i) {
       std::unique_ptr<TFile> f(TFile::Open(fileNames[i].c_str())); // need TFile::Open to load plugins if need be
-      TTree *t = nullptr; // not a leak, t will be deleted by f
+      TTree *t = nullptr;                                          // not a leak, t will be deleted by f
       f->GetObject(treeName.c_str(), t);
       auto clusterIter = t->GetClusterIterator(0);
       Long64_t start = 0, end = 0;
