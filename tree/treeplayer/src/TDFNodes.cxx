@@ -125,7 +125,7 @@ void TSlotStack::Push(unsigned int slotNumber)
 
    std::lock_guard<ROOT::TSpinMutex> guard(fMutex);
    auto slotCountIt = fThrIdSlotCountMap.find(thisThrId);
-   assert(fThrIdSlotCountMap.end() == slotCountIt > 0 &&
+   assert(fThrIdSlotCountMap.end() == slotCountIt &&
           "A slot number has been pushed back to the TSlotStack by a thread that never popped it.");
    auto &count = slotCountIt->second.fCount;
    --count;
