@@ -20,10 +20,13 @@
 #include <chrono>
 #include <string>
 
-// Class to encapsulate the types that define how the gradient test is performed
+// Class to encapsulate the types that define how the gradient test is performed; it also stores information strings
+// about the types.
 //    DataType defines how to instantiate the gradient evaluation: Double_t, Double_v.
 //    ExecutionPolicyType defines the execution policy: kSerial, kMultithread...
-template <typename U, ROOT::Fit::ExecutionPolicy V>
+//    DataInfoStr points to a human-readable string describing DataType (e.g., "Scalar", "Vectorial")
+//    PolicyInfoStr points to a human-readable string describing ExecutionPolicyType (e.g., "Serial", "Multithread")
+template <typename U, ROOT::Fit::ExecutionPolicy V, const char *dataInfoStr, const char *policyInfoStr>
 struct GradientTestTraits {
    using DataType = U;
    static constexpr ROOT::Fit::ExecutionPolicy ExecutionPolicyType() { return V; };
@@ -31,41 +34,31 @@ struct GradientTestTraits {
    static void PrintTypeInfo()
    {
       std::cout << "------------ TEST INFO -----------" << std::endl;
-      std::cout << "- Data type:        " << dataTypeStr << std::endl;
-      std::cout << "- Execution policy: " << execPolicyStr << std::endl;
+      std::cout << "- Data type:        " << dataInfoStr << std::endl;
+      std::cout << "- Execution policy: " << policyInfoStr << std::endl;
       std::cout << "----------------------------------" << std::endl;
    }
-
-   static std::string dataTypeStr;
-   static std::string execPolicyStr;
 };
 
-using ScalarSerial = GradientTestTraits<Double_t, ROOT::Fit::ExecutionPolicy::kSerial>;
-using ScalarMultithread = GradientTestTraits<Double_t, ROOT::Fit::ExecutionPolicy::kMultithread>;
+// Info strings describing data types
+char scalarStr[] = "Scalar";
+char vectorStr[] = "Vectorial";
 
-template <>
-std::string ScalarSerial::dataTypeStr = "Scalar";
-template <>
-std::string ScalarSerial::execPolicyStr = "Serial";
+// Info strings describing execution policies
+char serialStr[] = "Serial";
+char mthreadStr[] = "Multithread";
 
-template <>
-std::string ScalarMultithread::dataTypeStr = "Scalar";
-template <>
-std::string ScalarMultithread::execPolicyStr = "Multithread";
+// Typedefs of GradientTestTraits for scalar (serial and multithreaded) scenarios
+using ScalarSerial = GradientTestTraits<Double_t, ROOT::Fit::ExecutionPolicy::kSerial, scalarStr, serialStr>;
+using ScalarMultithread = GradientTestTraits<Double_t, ROOT::Fit::ExecutionPolicy::kMultithread, scalarStr, mthreadStr>;
 
 #ifdef R__HAS_VECCORE
-using VectorialSerial = GradientTestTraits<ROOT::Double_v, ROOT::Fit::ExecutionPolicy::kSerial>;
-using VectorialMultithread = GradientTestTraits<ROOT::Double_v, ROOT::Fit::ExecutionPolicy::kMultithread>;
 
-template <>
-std::string VectorialSerial::dataTypeStr = "Vectorial";
-template <>
-std::string VectorialSerial::execPolicyStr = "Serial";
+// Typedefs of GradientTestTraits for vectorial (serial and multithreaded) scenarios
+using VectorialSerial = GradientTestTraits<ROOT::Double_v, ROOT::Fit::ExecutionPolicy::kSerial, vectorStr, serialStr>;
+using VectorialMultithread =
+   GradientTestTraits<ROOT::Double_v, ROOT::Fit::ExecutionPolicy::kMultithread, vectorStr, mthreadStr>;
 
-template <>
-std::string VectorialMultithread::dataTypeStr = "Vectorial";
-template <>
-std::string VectorialMultithread::execPolicyStr = "Multithread";
 #endif
 
 // Model function to test the gradient evaluation
