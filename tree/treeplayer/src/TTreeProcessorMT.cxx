@@ -64,7 +64,7 @@ std::vector<ROOT::Internal::TreeViewCluster> TTreeProcessorMT::MakeClusters()
    const auto &fileNames = treeView->GetFileNames();
    const auto nFileNames = fileNames.size();
    const auto &treeName = treeView->GetTreeName();
-   for (auto i = 0u; i < nFileNames; ++i) {
+   for (auto i = 0u; i < nFileNames; ++i) { // TTreeViewCluster requires the index of the file the cluster belongs to
       std::unique_ptr<TFile> f(TFile::Open(fileNames[i].c_str())); // need TFile::Open to load plugins if need be
       TTree *t = nullptr;                                          // not a leak, t will be deleted by f
       f->GetObject(treeName.c_str(), t);
