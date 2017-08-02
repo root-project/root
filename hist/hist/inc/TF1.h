@@ -410,8 +410,7 @@ public:
    virtual Double_t EvalPar(const Double_t *x, const Double_t *params = 0);
    template <class T> T EvalPar(const T *x, const Double_t *params = 0);
    virtual Double_t operator()(Double_t x, Double_t y = 0, Double_t z = 0, Double_t t = 0) const;
-   virtual Double_t operator()(const Double_t *x, const Double_t *params = 0);
-   template <class T> T operator()(const T *data, const Double_t *params);
+   template <class T> T operator()(const T *x, const Double_t *params = nullptr);
    virtual void     ExecuteEvent(Int_t event, Int_t px, Int_t py);
    virtual void     FixParameter(Int_t ipar, Double_t value);
    bool      IsVectorized()
@@ -716,16 +715,10 @@ inline Double_t TF1::operator()(Double_t x, Double_t y, Double_t z, Double_t t) 
    return Eval(x, y, z, t);
 }
 
-inline Double_t TF1::operator()(const Double_t *x, const Double_t *params)
-{
-   if (fMethodCall) InitArgs(x, params);
-   return EvalPar(x, params);
-}
-
 template <class T>
-inline T TF1::operator()(const T *data, const Double_t *params)
+inline T TF1::operator()(const T *x, const Double_t *params)
 {
-   return EvalParVec(data, params);
+   return EvalPar(x, params);
 }
 
 template <class T>
