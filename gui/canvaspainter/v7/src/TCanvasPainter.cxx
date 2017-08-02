@@ -775,6 +775,8 @@ Bool_t TCanvasPainter::ProcessWS(THttpCallArg *arg)
             drawable->Execute(buf.Data());
          }
       }
+   } else if (strcmp(cdata, "KEEPALIVE") == 0) {
+      // do nothing, it is just keep alive message for websocket
    }
 
    return kTRUE;
