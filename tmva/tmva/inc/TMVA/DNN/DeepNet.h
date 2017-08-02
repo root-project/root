@@ -185,8 +185,7 @@ public:
 
    TLogisticRegressionLayer<Architecture_t> *
    AddLogisticRegressionLayer(size_t inputUnits, size_t outputUnits,
-                              size_t testDataBatchSize, Scalar_t learningRate,
-                              size_t epochs);
+                              size_t testDataBatchSize, Scalar_t learningRate);
 
    void AddLogisticRegressionLayer(TLogisticRegressionLayer<Architecture_t> *logisticRegressionLayer);
 
@@ -241,7 +240,7 @@ public:
                  Scalar_t dropoutProbability, size_t epochs,
                  EActivationFunction f, bool applyDropout = false);
 
-   void FineTune(std::vector<Matrix_t> &input, std::vector<Matrix_t> &outputLabel,
+   void FineTune(std::vector<Matrix_t> &input, std::vector<Matrix_t> &testInput, std::vector<Matrix_t> &outputLabel,
                  size_t outputUnits,size_t testDataBatchSize, Scalar_t learningRate, size_t epochs);
 
    /*! Function for parallel backward in the vector of deep nets, where the master
@@ -590,13 +589,13 @@ void TDeepNet<Architecture_t, Layer_t>::AddReconstructionLayer(TReconstructionLa
 template <typename Architecture_t, typename Layer_t>
 TLogisticRegressionLayer<Architecture_t> *
 TDeepNet<Architecture_t, Layer_t>::AddLogisticRegressionLayer(size_t inputUnits, size_t outputUnits, size_t testDataBatchSize,
-                                                              Scalar_t learningRate, size_t epochs)
+                                                              Scalar_t learningRate)
 {
    size_t batchSize = this->GetBatchSize();
 
    TLogisticRegressionLayer<Architecture_t> *logisticRegressionLayer = new TLogisticRegressionLayer<Architecture_t>(batchSize, inputUnits,
                                                                                                                     outputUnits, testDataBatchSize,
-                                                                                                                    learningRate, epochs);
+                                                                                                                    learningRate);
    fLayers.push_back(logisticRegressionLayer);
    return logisticRegressionLayer;
 }
@@ -755,7 +754,7 @@ auto TDeepNet<Architecture_t, Layer_t>::PreTrain(std::vector<Matrix_t> &input, s
    fLayers.back()->Initialize();
    fLayers.back()->Forward(fLayers[fLayers.size() - 2]->GetOutput(),
                            applyDropout); // as we have to pass compressed Input
-   fLayers.back()->Backward(fLayers[fLayers.size() - 2]->GetOutput(), input, inp1, inp2);
+   fLayers.back()->Backward(fLayers[fLayers.size() - 2]->GetOutput(), inp1, fLayers[fLayers.size() - 3]->GetOutput() , input);
    // three layers are added, now pointer is on third layer
    size_t weightsSize = fLayers.back()->GetWeights().size();
    size_t biasesSize = fLayers.back()->GetBiases().size();
@@ -772,8 +771,9 @@ auto TDeepNet<Architecture_t, Layer_t>::PreTrain(std::vector<Matrix_t> &input, s
       }
       fLayers[fLayers.size() - 2]->Forward(fLayers[fLayers.size() - 3]->GetOutput(), applyDropout);
       fLayers[fLayers.size() - 1]->Forward(fLayers[fLayers.size() - 2]->GetOutput(), applyDropout);
-      fLayers[fLayers.size() - 1]->Backward(fLayers[fLayers.size() - 2]->GetOutput(), input, inp1, inp2);
+      fLayers[fLayers.size() - 1]->Backward(fLayers[fLayers.size() - 2]->GetOutput(), inp1, fLayers[fLayers.size() - 3]->GetOutput(), input);
    }
+   fLayers.back()->Print();
 
    for (size_t i = 1; i < numOfHiddenLayers; i++) {
 
@@ -795,7 +795,7 @@ auto TDeepNet<Architecture_t, Layer_t>::PreTrain(std::vector<Matrix_t> &input, s
                              corruptionLevel, dropoutProbability);
       fLayers.back()->Initialize();
       fLayers.back()->Forward(fLayers[fLayers.size() - 2]->GetOutput(), applyDropout); // as we have to pass compressed Input
-      fLayers.back()->Backward(fLayers[fLayers.size() - 2]->GetOutput(), input, inp1, inp2);
+      fLayers.back()->Backward(fLayers[fLayers.size() - 2]->GetOutput(), inp1, fLayers[fLayers.size() - 3]->GetOutput(), fLayers[fLayers.size() - 5]->GetOutput());
 
       // three layers are added, now pointer is on third layer
       size_t weightsSize = fLayers.back()->GetWeights().size();
@@ -814,26 +814,51 @@ auto TDeepNet<Architecture_t, Layer_t>::PreTrain(std::vector<Matrix_t> &input, s
          fLayers[fLayers.size() - 2]->Forward(fLayers[fLayers.size() - 3]->GetOutput(), applyDropout);
          fLayers[fLayers.size() - 1]->Forward(fLayers[fLayers.size() - 2]->GetOutput(), applyDropout);
          fLayers[fLayers.size() - 1]->Backward(fLayers[fLayers.size() - 2]->GetOutput(),
-                                               fLayers[fLayers.size() - 3]->GetOutput(), inp1, inp2);
+                                               inp1, fLayers[fLayers.size() - 3]->GetOutput(),
+                                               fLayers[fLayers.size() - 5]->GetOutput());
       }
+      fLayers.back()->Print();
 
    }
 }
 //______________________________________________________________________________
 template <typename Architecture_t, typename Layer_t>
-auto TDeepNet<Architecture_t, Layer_t>::FineTune(std::vector<Matrix_t> &input, std::vector<Matrix_t> &inputLabel,
+auto TDeepNet<Architecture_t, Layer_t>::FineTune(std::vector<Matrix_t> &input, std::vector<Matrix_t> &testInput,
+                                                 std::vector<Matrix_t> &inputLabel,
                                                  size_t outputUnits,size_t testDataBatchSize, Scalar_t learningRate, size_t epochs)
 -> void
 {
-   size_t inputUnits = input[0].GetNrows();
+   std::vector<Matrix_t> inp1;
+   std::vector<Matrix_t> inp2;
+   if(fLayers.size() == 0) // only Logistic Regression Layer
+   {
+      size_t inputUnits = input[0].GetNrows();
 
-   AddLogisticRegressionLayer(inputUnits, outputUnits, testDataBatchSize,
-                              learningRate, epochs);
-   //have to add
-   fLayers.back()->Initialize();
-   fLayers.back()->Backward();
-   fLayers.back()->Forward();
+      AddLogisticRegressionLayer(inputUnits, outputUnits, testDataBatchSize,
+                                 learningRate);
+      fLayers.back()->Initialize();
+      for(size_t i=0; i<epochs;i++)
+      {
+         fLayers.back()->Backward(inputLabel, inp1, input, inp2);
+      }
+      fLayers.back()->Forward(input, false);
+      fLayers.back()->Print();
+   }
+   else
+   { // if used after any other layer
+      size_t inputUnits = fLayers.back()->GetOutputAt(0).GetNrows();
+      AddLogisticRegressionLayer(inputUnits, outputUnits, testDataBatchSize,
+                                 learningRate);
+      fLayers.back()->Initialize();
+      for(size_t i=0; i<epochs;i++)
+      {
+         fLayers.back()->Backward(inputLabel, inp1, fLayers[fLayers.size() -2]->GetOutput(), inp2);
+      }
+      fLayers.back()->Forward(testInput, false);
+      fLayers.back()->Print();
+   }
 }
+
 //______________________________________________________________________________
 template <typename Architecture_t, typename Layer_t>
 auto TDeepNet<Architecture_t, Layer_t>::Backward(std::vector<Matrix_t> input, const Matrix_t &groundTruth,

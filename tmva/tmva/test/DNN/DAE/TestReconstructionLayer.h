@@ -32,6 +32,7 @@
 
 #include "TMVA/DNN/Functions.h"
 #include "TMVA/DNN/DAE/ReconstructionLayer.h"
+#include "TMVA/DNN/DAE/CorruptionLayer.h"
 
 #include "TMVA/DNN/Functions.h"
 #include <iostream>
@@ -64,13 +65,15 @@ template <typename Architecture> auto testLayer(size_t batchSize, size_t visible
    TReconstructionLayer dae(batchSize, visibleUnits, hiddenUnits,0.1, EActivationFunction::kSigmoid,Weights,Biases,0.3,1);
 
 
-   std::vector<Matrix_t> input, compressedInput;
+   std::vector<Matrix_t> input, compressedInput, corruptedInput;
    for(size_t i=0; i<batchSize; i++)
    {
       input.emplace_back(visibleUnits,1);
+      corruptedInput.emplace_back(visibleUnits,1);
       compressedInput.emplace_back(hiddenUnits,1);
    }
    Matrix_t inputMatrix(visibleUnits, 1);
+   Matrix_t corruptedMatrix(visibleUnits,1);
    Matrix_t compressMatrix(hiddenUnits,1);
 
 
@@ -80,6 +83,8 @@ template <typename Architecture> auto testLayer(size_t batchSize, size_t visible
    {
       randomMatrix(inputMatrix);
       Architecture::Copy(input[i],inputMatrix);
+      randomMatrix(corruptedMatrix);
+      Architecture::Copy(corruptedInput[i],corruptedMatrix);
       randomMatrix(compressMatrix);
       Architecture::Copy(compressedInput[i],compressMatrix);
    }
@@ -114,7 +119,7 @@ template <typename Architecture> auto testLayer(size_t batchSize, size_t visible
 
 
    dae.Forward(compressedInput,false);
-   dae.Backward(compressedInput,input, compressedInput,input);
+   dae.Backward(compressedInput,input, corruptedInput,input);
 
 
    std::cout<<std::endl;
