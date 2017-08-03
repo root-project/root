@@ -103,7 +103,7 @@ TLogisticRegressionLayer<Architecture_t>::TLogisticRegressionLayer(size_t batchS
                                                                    size_t outputUnits, size_t testDataBatchSize,
                                                                    Scalar_t learningRate)
    : VGeneralLayer<Architecture_t>(batchSize, 1, 1, 0, 0, 0, 0, 1, {outputUnits}, {inputUnits}, 1, {outputUnits},
-   {1}, testDataBatchSize, outputUnits, 1, EInitialization::kUniform),
+   {1}, testDataBatchSize, outputUnits, 1, 9, EInitialization::kUniform),
    fInputUnits(inputUnits), fOutputUnits(outputUnits),
    fTestDataBatchSize(testDataBatchSize), fLearningRate(learningRate)
 

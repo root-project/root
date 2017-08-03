@@ -119,7 +119,7 @@ TDenseLayer<Architecture_t>::TDenseLayer(size_t batchSize, size_t inputWidth, si
                                          Scalar_t dropoutProbability, EActivationFunction f, ERegularization reg,
                                          Scalar_t weightDecay)
    : VGeneralLayer<Architecture_t>(batchSize, 1, 1, inputWidth, 1, 1, width, 1, width, inputWidth, 1, width, 1, 1,
-                                   batchSize, width, init),
+                                   batchSize, width, 3, init),
      fDerivatives(), fDropoutProbability(dropoutProbability), fF(f), fReg(reg), fWeightDecay(weightDecay)
 {
    fDerivatives.emplace_back(batchSize, width);

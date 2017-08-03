@@ -100,7 +100,7 @@ TCompressionLayer<Architecture_t>::TCompressionLayer(size_t batchSize, size_t vi
                            size_t hiddenUnits, Scalar_t dropoutProbability, EActivationFunction f,
                            std::vector<Matrix_t> weights, std::vector<Matrix_t> biases)
    : VGeneralLayer<Architecture_t>(batchSize, 1, 1, 0, 0, 0, 0, 1, {hiddenUnits}, {visibleUnits},2,{hiddenUnits,visibleUnits},
-   {1,1}, batchSize, hiddenUnits, 1, EInitialization::kZero),
+   {1,1}, batchSize, hiddenUnits, 1, 7, EInitialization::kZero),
    fVisibleUnits(visibleUnits), fDropoutProbability(dropoutProbability),
    fType(2), fHiddenUnits(hiddenUnits), fF(f)//,
    //fWeights(hiddenUnits,visibleUnits),  fBiases(hiddenUnits,1)
