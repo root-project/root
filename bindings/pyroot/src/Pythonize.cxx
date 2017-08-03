@@ -2544,10 +2544,6 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
       return kTRUE;
    }
 
-   else if ( name == "TLeaf" ) {
-      Utility::AddToClass( pyclass, "FillNumpy", (PyCFunction) FillNumpy, METH_VARARGS );
-   }
-
    else if ( name == "TTree" ) {
    // allow direct browsing of the tree
       Utility::AddToClass( pyclass, "__getattr__", (PyCFunction) TTreeGetAttr, METH_O );

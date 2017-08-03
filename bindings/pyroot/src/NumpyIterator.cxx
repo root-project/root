@@ -337,6 +337,7 @@ const char* leaftype(TLeaf* leaf, bool swap_bytes) {
       default:
         if (std::string(expectedClass->GetName()) == std::string("TClonesArray"))
           return swap_bytes ? "<i4" : ">i4";
+        // else if... more?  (FIXME)
         else
           return 0;
     }
@@ -374,8 +375,8 @@ void getdim(TLeaf* leaf, std::vector<int>& dims, std::vector<std::string>& count
   }
 }
 
-bool dtypedim(PyArray_Descr* &dtype, TLeaf* leaf, bool swap_bytes) {
-  dtype = PyArray_DescrFromType(0);
+bool getarrayinfo(ArrayInfo &arrayinfo, TLeaf* leaf, bool swap_bytes) {
+  arrayinfo.dtype = PyArray_DescrFromType(0);
 
   const char* asstring = leaftype(leaf, swap_bytes);
   if (asstring == 0) {
@@ -383,7 +384,7 @@ bool dtypedim(PyArray_Descr* &dtype, TLeaf* leaf, bool swap_bytes) {
     return false;
   }
 
-  if (!PyArray_DescrConverter(PyUnicode_FromString(asstring), &dtype)) {
+  if (!PyArray_DescrConverter(PyUnicode_FromString(asstring), &arrayinfo.dtype)) {
     PyErr_SetString(PyExc_ValueError, "cannot create a dtype");
     return 0;
   }
@@ -391,7 +392,7 @@ bool dtypedim(PyArray_Descr* &dtype, TLeaf* leaf, bool swap_bytes) {
   return true;
 }
 
-bool dtypedim_unileaf(ArrayInfo &arrayinfo, TLeaf* leaf, bool swap_bytes) {
+bool getarrayinfo_unileaf(ArrayInfo &arrayinfo, TLeaf* leaf, bool swap_bytes) {
   std::vector<std::string> counters;
   getdim(leaf, arrayinfo.dims, counters);
   arrayinfo.nd = 1 + arrayinfo.dims.size();    // first dimension is for the set of entries itself
@@ -400,45 +401,45 @@ bool dtypedim_unileaf(ArrayInfo &arrayinfo, TLeaf* leaf, bool swap_bytes) {
   else
     arrayinfo.counter = counters[0];
 
-  return dtypedim(arrayinfo.dtype, leaf, swap_bytes);
+  return getarrayinfo(arrayinfo, leaf, swap_bytes);
 }
 
-bool dtypedim_multileaf(ArrayInfo &arrayinfo, TObjArray* leaves, bool swap_bytes) {
+bool getarrayinfo_multileaf(ArrayInfo &arrayinfo, TObjArray* leaves, bool swap_bytes) {
   // silence warnings until this placeholder is implemented
   (void)(arrayinfo);
   (void)(leaves);
   (void)(swap_bytes);
   // TODO: Numpy recarray dtype
-  PyErr_SetString(PyExc_NotImplementedError, "multileaf");
+  PyErr_SetString(PyExc_NotImplementedError, "TBranch has multiple leaves (\"leaf list\"), which will someday be translated to Numpy record arrays. But today is not that day.");
   return false;
 }
 
-bool dtypedim_multibranch(ArrayInfo &arrayinfo, TObjArray* branches, bool swap_bytes) {
+bool getarrayinfo_multibranch(ArrayInfo &arrayinfo, TObjArray* branches, bool swap_bytes) {
   // silence warnings until this placeholder is implemented
   (void)(arrayinfo);
   (void)(branches);
   (void)(swap_bytes);
   // TODO: dict of Numpy arrays (nested when this function is called recursively)
-  PyErr_SetString(PyExc_NotImplementedError, "multibranch");
+  PyErr_SetString(PyExc_NotImplementedError, "TBranch has multiple sub-branches, which will someday be translated to a Python dict of arrays. But today is not that day.");
   return false;
 }
 
-bool dtypedim_branch(ArrayInfo &arrayinfo, Request request, bool swap_bytes) {
+bool getarrayinfo_branch(ArrayInfo &arrayinfo, Request request, bool swap_bytes) {
   TObjArray* leaves = request.branch->GetListOfLeaves();
   if (request.leaf != std::string(""))
-    return dtypedim_unileaf(arrayinfo, request.branch->GetLeaf(request.leaf.c_str()), swap_bytes);
+    return getarrayinfo_unileaf(arrayinfo, request.branch->GetLeaf(request.leaf.c_str()), swap_bytes);
   else if (leaves->GetEntries() == 1)
-    return dtypedim_unileaf(arrayinfo, dynamic_cast<TLeaf*>(leaves->First()), swap_bytes);
+    return getarrayinfo_unileaf(arrayinfo, dynamic_cast<TLeaf*>(leaves->First()), swap_bytes);
   else
-    return dtypedim_multileaf(arrayinfo, leaves, swap_bytes);
+    return getarrayinfo_multileaf(arrayinfo, leaves, swap_bytes);
 }
 
-bool dtypedim_request(ArrayInfo &arrayinfo, Request request, bool swap_bytes) {
+bool getarrayinfo_request(ArrayInfo &arrayinfo, Request request, bool swap_bytes) {
   TObjArray* subbranches = request.branch->GetListOfBranches();
   if (subbranches->GetEntries() != 0  &&  request.leaf == std::string(""))
-    return dtypedim_multibranch(arrayinfo, subbranches, swap_bytes);
+    return getarrayinfo_multibranch(arrayinfo, subbranches, swap_bytes);
   else
-    return dtypedim_branch(arrayinfo, request, swap_bytes);
+    return getarrayinfo_branch(arrayinfo, request, swap_bytes);
 }
 
 bool checkstring(PyObject* str) {
@@ -469,34 +470,18 @@ void InitializeNumpy() {
 }
 #endif
 
-bool gettree(PyObject* self, TTree* &tree) {
-  if (!ObjectProxy_Check(self)) {
-    PyErr_SetString(PyExc_TypeError, "TTree::GetNumpyIterator must be called with a TTree instance as its implicit argument");
+template<typename T>
+bool getpyroot(PyObject* in, T* &out) {
+  if (!ObjectProxy_Check(in)) {
+    PyErr_Format(PyExc_TypeError, "argument must be a %s object", T::Class());
     return false;
   }
-  PyROOT::ObjectProxy* pyobj = reinterpret_cast<PyROOT::ObjectProxy*>(self);
+  PyROOT::ObjectProxy* objectProxy = reinterpret_cast<PyROOT::ObjectProxy*>(in);
 
-  tree = (TTree*)TClass::GetClass(Cppyy::GetFinalName(pyobj->ObjectIsA()).c_str())->DynamicCast(TTree::Class(), pyobj->GetObject());
+  out = reinterpret_cast<T*>(TClass::GetClass(Cppyy::GetFinalName(objectProxy->ObjectIsA()).c_str())->DynamicCast(T::Class(), objectProxy->GetObject()));
 
-  if (!tree) {
-    PyErr_SetString(PyExc_TypeError, "TTree::GetNumpyIterator must be called with a TTree instance as its implicit argument");
-    return false;
-  }
-
-  return true;
-}
-
-bool getleaf(PyObject* self, TLeaf* &leaf) {
-  if (!ObjectProxy_Check(self)) {
-    PyErr_SetString(PyExc_TypeError, "TLeaf::FillNumpy must be called with a TLeaf instance as its implicit argument");
-    return false;
-  }
-  PyROOT::ObjectProxy* pyobj = reinterpret_cast<PyROOT::ObjectProxy*>(self);
-
-  leaf = (TLeaf*)TClass::GetClass(Cppyy::GetFinalName(pyobj->ObjectIsA()).c_str())->DynamicCast(TLeaf::Class(), pyobj->GetObject());
-
-  if (!leaf) {
-    PyErr_SetString(PyExc_TypeError, "TLeaf::FillNumpy must be called with a TLeaf instance as its implicit argument");
+  if (!out) {
+    PyErr_Format(PyExc_TypeError, "argument must be a %s object", T::Class());
     return false;
   }
 
@@ -504,7 +489,7 @@ bool getleaf(PyObject* self, TLeaf* &leaf) {
 }
 
 bool getrequests(PyObject* self, PyObject* args, TTree* &tree, std::vector<Request> &requests) {
-  if (!gettree(self, tree))
+  if (!getpyroot<TTree>(self, tree))
     return false;
 
   if (PyTuple_GET_SIZE(args) < 1) {
@@ -572,7 +557,7 @@ PyObject* GetNumpyIterator(PyObject* self, PyObject* args, PyObject* kwds) {
 
   for (unsigned int i = 0;  i < requests.size();  i++) {
     arrayinfo.push_back(ArrayInfo());
-    if (!dtypedim_request(arrayinfo.back(), requests[i], swap_bytes))
+    if (!getarrayinfo_request(arrayinfo.back(), requests[i], swap_bytes))
       return 0;
   }
 
@@ -626,7 +611,7 @@ PyObject* GetNumpyIteratorInfo(PyObject* self, PyObject* args, PyObject* kwds) {
 
   for (unsigned int i = 0;  i < requests.size();  i++) {
     ArrayInfo arrayinfo;
-    if (!dtypedim_request(arrayinfo, requests[i], swap_bytes)) {
+    if (!getarrayinfo_request(arrayinfo, requests[i], swap_bytes)) {
       Py_DECREF(out);
       return 0;
     }
@@ -651,58 +636,6 @@ PyObject* GetNumpyIteratorInfo(PyObject* self, PyObject* args, PyObject* kwds) {
   }
 
   return out;
-}
-
-PyObject* FillNumpy(PyObject* self, PyObject* args) {
-  TLeaf* leaf;
-  if (!getleaf(self, leaf))
-    return 0;
-
-  TBranch* branch = leaf->GetBranch();
-  TTree* tree = branch->GetTree();
-
-  PyObject* pyarray;
-  Long64_t entry_start = 0;
-  if (!PyArg_ParseTuple(args, "O|l", &pyarray, &entry_start))
-    return 0;
-
-  Long64_t entry_end = tree->GetEntries();
-
-  if (!PyArray_Check(pyarray)) {
-    PyErr_SetString(PyExc_TypeError, "first argument must be a Numpy array");
-    return 0;
-  }
-
-  PyArrayObject* array = reinterpret_cast<PyArrayObject*>(pyarray);
-
-  Long64_t arraylength = 1;
-  for (int i = 0;  i < PyArray_NDIM(array);  i++)
-    arraylength *= PyArray_DIM(array, i);
-
-  char* arraydata = PyArray_BYTES(array);
-
-  if (PyArray_DESCR(array)->elsize != leaf->GetLenType()) {
-    PyErr_Format(PyExc_TypeError, "array expects %d-byte elements but leaf provides %d-byte elements", PyArray_DESCR(array)->elsize, leaf->GetLenType());
-    return 0;
-  }
-
-  int makeclass_mode = tree->GetMakeClass();
-  tree->SetMakeClass(1);
-
-  int leaflength = leaf->GetLenType();
-  char branchdata[leaflength];
-  branch->SetAddress(branchdata);
-
-  Long64_t i, j;
-  for (i = 0;  i < arraylength  &&  i < entry_end - entry_start;  i++) {
-    branch->GetEntry(entry_start + i);
-    for (j = 0;  j < leaflength;  j++)
-      arraydata[i*leaflength + j] = branchdata[j];
-  }
-  
-  tree->SetMakeClass(makeclass_mode);
-
-  return Py_BuildValue("i", i);
 }
 
 } // namespace PyROOT
