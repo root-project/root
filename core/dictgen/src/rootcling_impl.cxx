@@ -4152,8 +4152,13 @@ int RootClingMain(int argc,
          }
 
          if (strcmp("-failOnWarnings", argv[ic]) == 0) {
+            using namespace ROOT::TMetaUtils;
             // Fail on Warnings and Errors
-            ROOT::TMetaUtils::GetErrorIgnoreLevel() = ROOT::TMetaUtils::kThrowOnWarning;
+            // If warnings are disabled with the current verbosity settings, lower
+            // it so that the user sees the warning that caused the failure.
+            if (GetErrorIgnoreLevel() > kWarning)
+               GetErrorIgnoreLevel() = kWarning;
+            GetWarningsAreErrors() = true;
             ic += 1;
             continue;
          }
@@ -6011,7 +6016,7 @@ int ROOT_rootcling_Driver(int argc, char **argv, const ROOT::Internal::RootCling
 
    gDriverConfig = nullptr;
 
-   auto nerrors = ROOT::TMetaUtils::GetNumberOfWarningsAndErrors();
+   auto nerrors = ROOT::TMetaUtils::GetNumberOfErrors();
    if (nerrors > 0){
       ROOT::TMetaUtils::Info(0,"Problems have been detected during the generation of the dictionary.\n");
       return 1;
