@@ -44,8 +44,8 @@ sap.ui.define([
 
          switch (name) {
             case "Close canvas": p.OnWebsocketClosed(); p.CloseWebsocket(true); break;
-            case "Interrupt": p.SendWebsocket("GEXE:gROOT->SetInterrupt()"); break;
-            case "Quit ROOT": p.SendWebsocket("GEXE:gApplication->Terminate(0)"); break;
+            case "Interrupt": p.SendWebsocket("INTERRUPT"); break;
+            case "Quit ROOT": p.SendWebsocket("QUIT"); break;
          }
 
          MessageToast.show("Action triggered on item: " + name);
@@ -61,12 +61,12 @@ sap.ui.define([
 
 		onInterruptPress : function() {
 		   var p = this.getCanvasPainter();
-         if (p) p.SendWebsocket("GEXE:gROOT->SetInterrupt()");
+         if (p) p.SendWebsocket("INTERRUPT");
 		},
 
 		onQuitRootPress : function() {
 		   var p = this.getCanvasPainter();
-         if (p) p.SendWebsocket("GEXE:gApplication->Terminate(0)");
+         if (p) p.SendWebsocket("QUIT");
 		},
 
 
