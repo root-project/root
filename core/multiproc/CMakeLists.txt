@@ -9,5 +9,5 @@ set(sources TMPClient.cxx MPSendRecv.cxx TProcessExecutor.cxx TMPWorker.cxx)
 ROOT_STANDARD_LIBRARY_PACKAGE(MultiProc
                               OBJECT_LIBRARY
                               HEADERS ${headers}
-                              LIBRARIES dl
+                              LIBRARIES Core Net dl
                               DEPENDENCIES Core Net Tree)

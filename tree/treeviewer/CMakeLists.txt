@@ -19,4 +19,4 @@ endif()
 ROOT_STANDARD_LIBRARY_PACKAGE(TreeViewer
                               HEADERS ${headers}
                               DICTIONARY_OPTIONS "-writeEmptyRootPCM"
-                              DEPENDENCIES Gui Ged TreePlayer)
+                              DEPENDENCIES TreePlayer Gui Ged)

@@ -10,5 +10,5 @@ if(MACOSX_LDAP_DEPRECATED)
 endif()
 
 ROOT_STANDARD_LIBRARY_PACKAGE(RLDAP
-                              LIBRARIES ${LDAP_LIBRARIES}
+                              LIBRARIES Core ${LDAP_LIBRARIES}
                               DEPENDENCIES Core Net)
