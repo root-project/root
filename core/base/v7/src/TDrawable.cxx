@@ -18,9 +18,9 @@
 #include <cassert>
 
 // pin vtable
-ROOT::Experimental::Internal::TDrawable::~TDrawable() {}
+ROOT::Experimental::TDrawable::~TDrawable() {}
 
-void ROOT::Experimental::Internal::TDrawable::Execute(const std::string &)
+void ROOT::Experimental::TDrawable::Execute(const std::string &)
 {
    assert(false && "Did not expect a menu item to be invoked!");
 }

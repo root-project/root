@@ -16,11 +16,9 @@
 #ifndef ROOT7_TCanvas
 #define ROOT7_TCanvas
 
-#include "ROOT/TDrawable.hxx"
-#include "ROOT/TypeTraits.hxx"
+#include "ROOT/TPad.hxx"
 #include "ROOT/TVirtualCanvasPainter.hxx"
 
-#include <experimental/string_view>
 #include <memory>
 #include <string>
 #include <vector>
@@ -33,22 +31,20 @@ class TCanvasSharedPtrMaker;
 }
 
 /** \class ROOT::Experimental::TCanvas
-  Graphic container for `TDrawable`-s.
+  A window's topmost `TPad`.
   Access is through TCanvasPtr.
   */
 
-class TCanvas {
-public:
-   using Primitives_t = std::vector<std::unique_ptr<Internal::TDrawable>>;
-
+class TCanvas: public Internal::TPadBase {
 private:
-   /// Content of the pad.
-   Primitives_t fPrimitives;
-
    /// Title of the canvas.
    std::string fTitle;
 
-   uint64_t fModified; //<! increment counter when canvas modified.
+   /// Size of the canvas in pixels.
+   std::array<TPadCoord::Pixel, 2> fSize;
+
+   /// Increment counter when canvas modified.
+   uint64_t fModified;
 
    /// The painter of this canvas, bootstrapping the graphics connection.
    /// Unmapped canvases (those that never had `Draw()` invoked) might not have
@@ -67,64 +63,7 @@ public:
    /// Create a temporary TCanvas; for long-lived ones please use Create().
    TCanvas() = default;
 
-   /// Default destructor.
-   ~TCanvas() = default;
-
-   // TODO: Draw() should return the Drawable&.
-   /// Add something to be painted.
-   /// The pad observes what's lifetime through a weak pointer.
-   template <class T>
-   void Draw(const std::shared_ptr<T> &what)
-   {
-      // Requires GetDrawable(what, options) to be known!
-      fPrimitives.emplace_back(GetDrawable(what));
-   }
-
-   /// Add something to be painted, with options.
-   /// The pad observes what's lifetime through a weak pointer.
-   template <class T, class OPTIONS>
-   void Draw(const std::shared_ptr<T> &what, const OPTIONS &options)
-   {
-      // Requires GetDrawable(what, options) to be known!
-      fPrimitives.emplace_back(GetDrawable(what, options));
-   }
-
-   /// Add something to be painted. The pad claims ownership.
-   template <class T>
-   void Draw(std::unique_ptr<T> &&what)
-   {
-      // Requires GetDrawable(what, options) to be known!
-      fPrimitives.emplace_back(GetDrawable(std::move(what)));
-   }
-
-   /// Add something to be painted, with options. The pad claims ownership.
-   template <class T, class OPTIONS>
-   void Draw(std::unique_ptr<T> &&what, const OPTIONS &options)
-   {
-      // Requires GetDrawable(what, options) to be known!
-      fPrimitives.emplace_back(GetDrawable(std::move(what), options));
-   }
-
-   /// Add a copy of something to be painted.
-   template <class T, class = typename std::enable_if<!ROOT::TypeTraits::IsSmartOrDumbPtr<T>::value>::type>
-   void Draw(const T &what)
-   {
-      // Requires GetDrawable(what, options) to be known!
-      fPrimitives.emplace_back(GetDrawable(std::make_unique<T>(what)));
-   }
-
-   /// Add a copy of something to be painted, with options.
-   template <class T, class OPTIONS,
-             class = typename std::enable_if<!ROOT::TypeTraits::IsSmartOrDumbPtr<T>::value>::type>
-   void Draw(const T &what, const OPTIONS &options)
-   {
-      // Requires GetDrawable(what, options) to be known!
-      fPrimitives.emplace_back(GetDrawable(std::make_unique<T>(what), options));
-      Modified();
-   }
-
-   /// Remove an object from the list of primitives.
-   // TODO: void Wipe();
+   const std::array<TPadCoord::Pixel, 2> &GetSize() const { return fSize; }
 
    /// Display the canvas.
    void Show(const std::string &where = "");
@@ -150,8 +89,11 @@ public:
    /// Set the canvas's title.
    void SetTitle(const std::string &title) { fTitle = title; }
 
-   /// Get the elements contained in the canvas.
-   const Primitives_t &GetPrimitives() const { return fPrimitives; }
+   /// Convert a `Pixel` position to Canvas-normalized positions.
+   std::array<TPadCoord::Normal, 2> PixelsToNormal(const std::array<TPadCoord::Pixel, 2> &pos) const final
+   {
+      return {{pos[0] / fSize[0], pos[1] / fSize[1]}};
+   }
 
    static const std::vector<std::shared_ptr<TCanvas>> &GetCanvases();
 };
