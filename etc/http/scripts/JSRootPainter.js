@@ -4068,8 +4068,8 @@
 
          switch (arg) {
             case "Close canvas": this.OnWebsocketClosed(); this.CloseWebsocket(true); break;
-            case "Interrupt": this.SendWebsocket("GEXE:gROOT->SetInterrupt()"); break;
-            case "Quit ROOT": this.SendWebsocket("GEXE:gApplication->Terminate(0)"); break;
+            case "Interrupt": this.SendWebsocket("INTERRUPT"); break;
+            case "Quit ROOT": this.SendWebsocket("QUIT"); break;
             default: console.log('click', arg);
          }
       }
