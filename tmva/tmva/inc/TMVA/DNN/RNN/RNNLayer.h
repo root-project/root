@@ -150,7 +150,7 @@ public:
    const size_t GetTimeSteps()   const {return fTimeSteps;}
    const size_t GetStateSize()   const {return fStateSize;}
    const size_t GetInputSize()   const {return this->GetInputWidth();}
-   inline bool IsRememberState()  const {return fRememberState;} 
+   inline bool IsRememberState()  const {return fRememberState;}
    inline DNN::EActivationFunction GetActivationFunction()  const {return fF;}
    Matrix_t        & GetState()            {return fState;}
    const Matrix_t & GetState()       const  {return fState;}
@@ -179,7 +179,7 @@ TBasicRNNLayer<Architecture_t>::TBasicRNNLayer(size_t batchSize, size_t stateSiz
                                               DNN::EActivationFunction f,
                                               bool training)
    : VGeneralLayer<Architecture_t>(batchSize, 1, 1, inputSize, 0, 0, 0, 2, {stateSize, stateSize}, {inputSize, stateSize},
-   1, {stateSize}, {1}, timeSteps, batchSize, stateSize, DNN::EInitialization::kZero),
+   1, {stateSize}, {1}, timeSteps, batchSize, stateSize, 5, DNN::EInitialization::kZero),
    fTimeSteps(timeSteps), fStateSize(stateSize), fRememberState(rememberState), fWeightsInput(this->GetWeightsAt(0)), fF(f),
    fState(batchSize, stateSize), fWeightsState(this->GetWeightsAt(1)), fBiases(this->GetBiasesAt(0)), fDerivatives(stateSize, inputSize),
    fWeightInputGradients(this->GetWeightGradientsAt(0)), fWeightStateGradients(this->GetWeightGradientsAt(1)), fBiasGradients(this->GetBiasGradientsAt(0))
@@ -326,7 +326,7 @@ auto inline TBasicRNNLayer<Architecture_t>::Backward(Tensor_t &gradients_backwar
                gradients_backward[t - 1]);
       } else {
          const Matrix_t & precStateActivations = initState;
-         CellBackward(state_gradients_backward, precStateActivations, currStateActivations, activations_backward[t - 1], 
+         CellBackward(state_gradients_backward, precStateActivations, currStateActivations, activations_backward[t - 1],
                gradients_backward[t - 1]);
       }
    }

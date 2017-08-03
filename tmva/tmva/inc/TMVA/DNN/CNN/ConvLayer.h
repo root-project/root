@@ -144,7 +144,7 @@ TConvLayer<Architecture_t>::TConvLayer(size_t batchSize, size_t inputDepth, size
                                        ERegularization reg, Scalar_t weightDecay)
    : VGeneralLayer<Architecture_t>(batchSize, inputDepth, inputHeight, inputWidth, depth, height, width, 1,
                                    weightsNRows, weightsNCols, 1, biasesNRows, biasesNCols, outputNSlices, outputNRows,
-                                   outputNCols, init),
+                                   outputNCols, 1, init),
      fFilterDepth(filterDepth), fFilterHeight(filterHeight), fFilterWidth(filterWidth), fStrideRows(strideRows),
      fStrideCols(strideCols), fPaddingHeight(paddingHeight), fPaddingWidth(paddingWidth),
      fNLocalViewPixels(filterDepth * filterHeight * filterWidth), fNLocalViews(height * width),

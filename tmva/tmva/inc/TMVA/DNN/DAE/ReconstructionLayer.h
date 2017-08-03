@@ -129,7 +129,7 @@ TReconstructionLayer<Architecture_t>::TReconstructionLayer(size_t batchSize, siz
                            std::vector<Matrix_t> biases,
                            Scalar_t corruptionLevel, Scalar_t dropoutProbability)
    : VGeneralLayer<Architecture_t>(batchSize, 1, 1, 0, 0, 0, 0, 1, {hiddenUnits},{visibleUnits},2, {hiddenUnits,visibleUnits},
-   {1,1}, batchSize, visibleUnits, 1, EInitialization::kZero),
+   {1,1}, batchSize, visibleUnits, 1, 8, EInitialization::kZero),
    fVisibleUnits(visibleUnits),
    fHiddenUnits(hiddenUnits),
    fVBiasError(visibleUnits, 1),
