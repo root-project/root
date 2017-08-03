@@ -26,8 +26,8 @@ class TCanvas;
 class TMenuItems;
 
 namespace Internal {
-
 class TVirtualCanvasPainter;
+}
 
 /** \class TDrawable
   Base class for drawable entities: objects that can be painted on a `TPad`.
@@ -37,13 +37,15 @@ class TDrawable {
 public:
    virtual ~TDrawable();
 
-   virtual void Paint(TVirtualCanvasPainter &onCanv) = 0;
+   virtual void Paint(Internal::TVirtualCanvasPainter &onCanv) = 0;
 
    /** Method can be used to provide menu items for the drawn object */
    virtual void PopulateMenu(TMenuItems &){};
 
    virtual void Execute(const std::string &);
 };
+
+namespace Internal {
 
 /// \class TAnyPtr
 /// Models a shared pointer or a unique pointer.
