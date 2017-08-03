@@ -11,10 +11,6 @@
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 #include <Vc/Vc>
 #pragma GCC diagnostic pop
-
-#if !defined(VECCORE_ENABLE_VC)
-#define VECCORE_ENABLE_VC
-#endif
 #endif
 
 #include <VecCore/VecCore>
