@@ -222,7 +222,7 @@ private:
    /// Disable assignment.
    TCanvasPainter &operator=(const TCanvasPainter &) = delete;
 
-   ROOT::Experimental::Internal::TDrawable *FindDrawable(const ROOT::Experimental::TCanvas &can, const std::string &id);
+   ROOT::Experimental::TDrawable *FindDrawable(const ROOT::Experimental::TCanvas &can, const std::string &id);
 
    bool CreateHttpServer(bool with_http = false);
    void CheckDataToSend();
@@ -777,7 +777,7 @@ Bool_t TCanvasPainter::ProcessWS(THttpCallArg *arg)
       if ((pos != std::string::npos) && (pos > 0)) {
          std::string id(cdata, pos);
          cdata.erase(0, pos + 1);
-         ROOT::Experimental::Internal::TDrawable *drawable = FindDrawable(fCanvas, id);
+         ROOT::Experimental::TDrawable *drawable = FindDrawable(fCanvas, id);
          if (drawable && (cdata.length() > 0)) {
             printf("Execute %s for drawable %p\n", cdata.c_str(), drawable);
             drawable->Execute(cdata);
@@ -814,7 +814,7 @@ void TCanvasPainter::CheckDataToSend()
          buf.Append(cmd.fName);
          cmd.fConnId = conn.fHandle->GetId();
       } else if (!conn.fGetMenu.empty()) {
-         ROOT::Experimental::Internal::TDrawable *drawable = FindDrawable(fCanvas, conn.fGetMenu);
+         ROOT::Experimental::TDrawable *drawable = FindDrawable(fCanvas, conn.fGetMenu);
 
          printf("Request menu for object %s found drawable %p\n", conn.fGetMenu.c_str(), drawable);
 
@@ -877,7 +877,7 @@ void TCanvasPainter::AddDisplayItem(ROOT::Experimental::TDisplayItem *item)
    fDisplayList.Add(item);
 }
 
-ROOT::Experimental::Internal::TDrawable *TCanvasPainter::FindDrawable(const ROOT::Experimental::TCanvas &can,
+ROOT::Experimental::TDrawable *TCanvasPainter::FindDrawable(const ROOT::Experimental::TCanvas &can,
                                                                       const std::string &id)
 {
 

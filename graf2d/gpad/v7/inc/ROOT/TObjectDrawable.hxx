@@ -24,18 +24,17 @@ class TObject;
 
 namespace ROOT {
 namespace Experimental {
-namespace Internal {
 /// \class ROOT::Experimental::Internal::TObjectDrawable
 /// Provides v7 drawing facilities for TObject types (TGraph etc).
-class TObjectDrawable : public TDrawable {
+class TObjectDrawable: public TDrawable {
    const std::shared_ptr<TObject> fObj; ///< The object to be painted
    std::string fOpts;                   ///< The drawing options
 
 public:
-   TObjectDrawable(const std::shared_ptr<TObject> &obj, std::string_view opts) : fObj(obj), fOpts(opts) {}
+   TObjectDrawable(const std::shared_ptr<TObject> &obj, std::string_view opts): fObj(obj), fOpts(opts) {}
 
    /// Paint the histogram
-   void Paint(TVirtualCanvasPainter &canv) final;
+   void Paint(Internal::TVirtualCanvasPainter &canv) final;
 
    /// Fill menu items for the object
    void PopulateMenu(TMenuItems &) final;
@@ -43,16 +42,15 @@ public:
    /// Executes menu item
    void Execute(const std::string &) final;
 };
-} // namespace Internal
 } // namespace Experimental
 } // namespace ROOT
 
 /// Interface to graphics taking a shared_ptr<TObject>.
 /// Must be on global scope, else lookup cannot find it (no ADL for TObject).
-inline std::unique_ptr<ROOT::Experimental::Internal::TDrawable> GetDrawable(const std::shared_ptr<TObject> &obj,
-                                                                            std::string_view opts = {})
+inline std::unique_ptr<ROOT::Experimental::TDrawable>
+GetDrawable(const std::shared_ptr<TObject> &obj, std::string_view opts = {})
 {
-   return std::make_unique<ROOT::Experimental::Internal::TObjectDrawable>(obj, opts);
+   return std::make_unique<ROOT::Experimental::TObjectDrawable>(obj, opts);
 }
 
 #endif

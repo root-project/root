@@ -25,7 +25,7 @@
 
 #include <exception>
 
-void ROOT::Experimental::Internal::TObjectDrawable::Paint(TVirtualCanvasPainter &canv)
+void ROOT::Experimental::TObjectDrawable::Paint(Internal::TVirtualCanvasPainter &canv)
 {
    ROOT::Experimental::TDisplayItem *res = new TOrdinaryDisplayItem<TObject>(fObj.get());
    res->SetOption(fOpts.c_str());
@@ -33,7 +33,7 @@ void ROOT::Experimental::Internal::TObjectDrawable::Paint(TVirtualCanvasPainter 
    canv.AddDisplayItem(res);
 }
 
-void ROOT::Experimental::Internal::TObjectDrawable::PopulateMenu(TMenuItems &items)
+void ROOT::Experimental::TObjectDrawable::PopulateMenu(TMenuItems &items)
 {
    TObject *obj = fObj.get();
 
@@ -41,7 +41,7 @@ void ROOT::Experimental::Internal::TObjectDrawable::PopulateMenu(TMenuItems &ite
    items.PopulateObjectMenu(obj, obj->IsA());
 }
 
-void ROOT::Experimental::Internal::TObjectDrawable::Execute(const std::string &exec)
+void ROOT::Experimental::TObjectDrawable::Execute(const std::string &exec)
 {
    TObject *obj = fObj.get();
 

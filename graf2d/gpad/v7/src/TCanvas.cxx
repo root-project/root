@@ -15,9 +15,6 @@
 
 #include "ROOT/TCanvas.hxx"
 
-#include "ROOT/TDrawable.hxx"
-#include "ROOT/TLogger.hxx"
-
 #include <memory>
 #include <stdio.h>
 #include <string.h>
@@ -30,7 +27,7 @@ static std::vector<std::shared_ptr<ROOT::Experimental::TCanvas>> &GetHeldCanvase
    static std::vector<std::shared_ptr<ROOT::Experimental::TCanvas>> sCanvases;
    return sCanvases;
 }
-}
+} // namespace
 
 const std::vector<std::shared_ptr<ROOT::Experimental::TCanvas>> &ROOT::Experimental::TCanvas::GetCanvases()
 {
