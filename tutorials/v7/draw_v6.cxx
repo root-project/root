@@ -37,24 +37,29 @@ void draw_v6()
 
    canvas->Show(); // new window should popup and async update will be triggered
 
-   // canvas->Show("/usr/bin/opera");  // one could specify program name which should show canvas
-   // canvas->Show("firefox");         // it could be firefox, opera, chromium; canvas can be shown several times
+   // canvas->Show("opera");   // one could specify program name which should show canvas (like chromium or firefox)
+   // canvas->Show("/usr/bin/chromium --app=$url &"); // one could use $url parameter, which replaced with canvas URL
 
    // synchronous, wait until painting is finished
    canvas->Update(false,
                   [](bool res) { std::cout << "First Update done = " << (res ? "true" : "false") << std::endl; });
 
-   // call again, should return immediately
+   // canvas->Modified(); // when uncommented, invalidate canvas and force repainting with next Update()
+
+   // call Update again, should return immediately if canvas was not modified
    canvas->Update(false,
                   [](bool res) { std::cout << "Second Update done = " << (res ? "true" : "false") << std::endl; });
 
    // request to create PNG file in asynchronous mode and specify lambda function as callback
-   // when request processed by the client, callback called with result value
-   canvas->SaveAs("draw.png", true, [](bool res) {
-      std::cout << "Producing PNG done res = " << (res ? "true" : "false") << std::endl;
-   }); // asynchronous
+   // when request processed by the client, callback invoked with result value
+   canvas->SaveAs("draw.png", true,
+                  [](bool res) { std::cout << "Producing PNG done res = " << (res ? "true" : "false") << std::endl; });
 
    // this function executed in synchronous mode (async = false is default),
    // mean previous file saving will be completed as well at this point
-   canvas->SaveAs("draw.svg"); // asynchronous
+   canvas->SaveAs("draw.svg"); // synchronous
+
+   // hide canvas after 10 seconds - close all connections and close all opened windows
+   // gSystem->Sleep(10000);
+   // canvas->Hide();
 }

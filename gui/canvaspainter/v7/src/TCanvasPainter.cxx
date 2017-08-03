@@ -212,7 +212,7 @@ private:
    uint64_t fSnapshotDelivered; ///!< minimal version delivered to all connections
    WebUpdatesList fUpdatesLst;  ///!< list of callbacks for canvas update
 
-   static std::string fAddr;    ///<! real http address (when assigned)
+   static TString fAddr;        ///<! real http address (when assigned)
    static THttpServer *gServer; ///<! server
 
    /// Disable copy construction.
@@ -223,7 +223,7 @@ private:
 
    ROOT::Experimental::Internal::TDrawable *FindDrawable(const ROOT::Experimental::TCanvas &can, const std::string &id);
 
-   void CreateHttpServer(Bool_t with_http = kFALSE);
+   bool CreateHttpServer(bool with_http = false);
    void CheckDataToSend();
 
    bool WaitWhenCanvasPainted(uint64_t ver);
@@ -237,11 +237,13 @@ private:
 
    void PopFrontCommand(bool res = false);
 
-   virtual Bool_t ProcessWS(THttpCallArg *arg);
+   virtual Bool_t ProcessWS(THttpCallArg *arg) override;
 
    void CancelCommands(bool cancel_all, UInt_t connid = 0);
 
    void CancelUpdates();
+
+   void CloseConnections();
 
 public:
    /// Create a TVirtualCanvasPainter for the given canvas.
@@ -258,9 +260,14 @@ public:
    {
       CancelCommands(true);
       CancelUpdates();
+      CloseConnections();
+
+      if (gServer)
+         gServer->Unregister(this);
+      // TODO: should we close server when all canvases are closed?
    }
 
-   virtual bool IsBatchMode() const { return fBatchMode; }
+   virtual bool IsBatchMode() const override { return fBatchMode; }
 
    virtual void AddDisplayItem(ROOT::Experimental::TDisplayItem *item) final;
 
@@ -306,7 +313,7 @@ public:
    };
 };
 
-std::string TCanvasPainter::fAddr = "";
+TString TCanvasPainter::fAddr = "";
 THttpServer *TCanvasPainter::gServer = 0;
 
 /** \class TCanvasPainterReg
@@ -321,24 +328,37 @@ struct TCanvasPainterReg {
 
 } // unnamed namespace
 
-void TCanvasPainter::CreateHttpServer(Bool_t with_http)
+bool TCanvasPainter::CreateHttpServer(bool with_http)
 {
    if (!gServer)
       gServer = new THttpServer("dummy");
 
-   if (!with_http || !fAddr.empty())
-      return;
+   if (!with_http || (fAddr.Length() > 0))
+      return true;
 
    // gServer = new THttpServer("http:8080?loopback&websocket_timeout=10000");
-   const char *port = gSystem->Getenv("WEBGUI_PORT");
-   TString buf;
-   if (!port) {
+
+   int http_port = 0;
+   const char *ports = gSystem->Getenv("WEBGUI_PORT");
+   if (ports)
+      http_port = TString(ports).Atoi();
+   if (!http_port)
       gRandom->SetSeed(0);
-      buf.Form("%d", (int)(8800 + 1000 * gRandom->Rndm(1)));
-      port = buf.Data(); // "8181";
+
+   for (int ntry = 0; ntry < 100; ++ntry) {
+      if (!http_port)
+         http_port = (int)(8800 + 1000 * gRandom->Rndm(1));
+
+      // TODO: ensure that port can be used
+      if (gServer->CreateEngine(TString::Format("http:%d?websocket_timeout=10000", http_port))) {
+         fAddr.Form("http://localhost:%d", http_port);
+         return true;
+      }
+
+      http_port = 0;
    }
-   fAddr = TString::Format("http://localhost:%s", port).Data();
-   gServer->CreateEngine(TString::Format("http:%s?websocket_timeout=10000", port).Data());
+
+   return false;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -366,7 +386,8 @@ void TCanvasPainter::NewDisplay(const std::string &where)
    if (symbol_qt5 && (is_native || is_qt5)) {
       typedef void (*FunctionQt5)(const char *, void *, bool);
 
-      addr.Form("://dummy:8080/web7gui/%s/draw.htm?longpollcanvas%s", GetName(), (IsBatchMode() ? "&batch_mode" : ""));
+      addr.Form("://dummy:8080/web7gui/%s/draw.htm?longpollcanvas%s&qt5", GetName(),
+                (IsBatchMode() ? "&batch_mode" : ""));
       // addr.Form("example://localhost:8080/Canvases/%s/draw.htm", Canvas()->GetName());
 
       Info("NewDisplay", "Show canvas in Qt5 window:  %s", addr.Data());
@@ -395,9 +416,12 @@ void TCanvasPainter::NewDisplay(const std::string &where)
       return;
    }
 
-   CreateHttpServer(kTRUE); // ensure that http port is available
+   if (!CreateHttpServer(true)) {
+      Error("NewDisplay", "Fail to start HTTP server");
+      return;
+   }
 
-   addr.Form("%s/web7gui/%s/draw.htm?webcanvas", fAddr.c_str(), GetName());
+   addr.Form("%s/web7gui/%s/draw.htm?webcanvas", fAddr.Data(), GetName());
 
    TString exec;
 
@@ -558,6 +582,26 @@ void TCanvasPainter::CancelUpdates()
       curr->fCallback(false);
       fUpdatesLst.erase(curr);
    }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+/// Close all web connections - will lead to close
+
+void TCanvasPainter::CloseConnections()
+{
+   for (auto &&conn : fWebConn) {
+
+      if (!conn.fHandle)
+         continue;
+
+      conn.fReady = kFALSE;
+      conn.fHandle->SendCharStar("CLOSE");
+      conn.fHandle->ClearHandle();
+      delete conn.fHandle;
+      conn.fHandle = nullptr;
+   }
+
+   fWebConn.clear();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -741,8 +785,7 @@ void TCanvasPainter::CheckDataToSend()
 
    uint64_t min_delivered = 0;
 
-   for (WebConnList::iterator citer = fWebConn.begin(); citer != fWebConn.end(); ++citer) {
-      WebConn &conn = *citer;
+   for (auto &&conn : fWebConn) {
 
       if (conn.fDelivered && (!min_delivered || (min_delivered < conn.fDelivered)))
          min_delivered = conn.fDelivered;
