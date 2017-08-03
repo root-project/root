@@ -32,6 +32,7 @@
 #include "TRandom.h"
 #include "TPad.h"
 #include "TROOT.h"
+#include "TApplication.h"
 #include "TClass.h"
 #include "TBufferJSON.h"
 
@@ -745,11 +746,11 @@ Bool_t TCanvasPainter::ProcessWS(THttpCallArg *arg)
       cdata.erase(0, 8);
       conn->fGetMenu = cdata;
       CheckDataToSend();
-   } else if (cdata.find("GEXE:") == 0) {
-      // TODO: temporary solution, should be removed later
-      // used now to terminate ROOT session
-      cdata.erase(0, 5);
-      gROOT->ProcessLine(cdata.c_str());
+   } else if (cdata == "QUIT") {
+      if (gApplication)
+         gApplication->Terminate(0);
+   } else if (cdata == "INTERRUPT") {
+      gROOT->SetInterrupt();
    } else if (cdata.find("REPLY:") == 0) {
       cdata.erase(0, 6);
       const char *sid = cdata.c_str();
