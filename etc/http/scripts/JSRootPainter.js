@@ -24,6 +24,8 @@
    }
 } (function(JSROOT, d3) {
 
+   "use strict";
+
    JSROOT.sources.push("2d");
 
    // do it here while require.js does not provide method to load css files
@@ -938,10 +940,8 @@
       return ((str === "1x10") ? "10" : str) + exp;
    }
 
-   Painter.translateLaTeX = function(_string) {
-      var str = _string, i;
-
-      var lstr = str.match(/\^{(.*?)}/gi);
+   Painter.translateLaTeX = function(str) {
+      var i, lstr = str.match(/\^{(.*?)}/gi);
       if (lstr)
          for (i = 0; i < lstr.length; ++i)
             str = str.replace(lstr[i], Painter.translateSuperscript(lstr[i].substr(2, lstr[i].length-3)));
@@ -956,7 +956,7 @@
          for (i = 0; i < lstr.length; ++i)
             str = str.replace(lstr[i], lstr[i].replace(' ', '').replace('#sqrt{', '#sqrt').replace('}', ''));
 
-      for (i = 0; i < Painter.symbols_map.length; ++i)
+      for (i in Painter.symbols_map)
          str = str.replace(new RegExp(i,'g'), Painter.symbols_map[i]);
 
       // simple workaround for simple #splitline{first_line}{second_line}
@@ -2584,6 +2584,20 @@
       return this;
    }
 
+   TObjectPainter.prototype.SendWebsocket = function(msg) {
+      if (!this._websocket) return false;
+      this._websocket.send(msg);
+      if (this._websocket_kind !== "websocket") return true;
+      if (this._websocket_timer) clearTimeout(this._websocket_timer);
+      this._websocket_timer = setTimeout(this.KeepAliveWebsocket.bind(this), 10000);
+      return true;
+   }
+
+   TObjectPainter.prototype.KeepAliveWebsocket = function() {
+      delete this._websocket_timer;
+      this.SendWebsocket("KEEPALIVE");
+   }
+
    TObjectPainter.prototype.CloseWebsocket = function(force) {
       if (this._websocket && this._websocket_state > 0) {
          this._websocket_state = force ? -1 : 0; // -1 prevent socket from reopening
@@ -2697,7 +2711,7 @@
          var canvp = this.pad_painter();
 
          if (canvp && canvp._websocket && this.snapid)
-            canvp._websocket.send('OBJEXEC:' + this.snapid + ":" + arg);
+            canvp.SendWebsocket('OBJEXEC:' + this.snapid + ":" + arg);
       }
 
       function DoFillMenu(_menu, _call_back, items) {
@@ -2727,7 +2741,7 @@
 
       canvp._getmenu_callback = DoFillMenu.bind(this, menu, call_back);
 
-      canvp._websocket.send('GETMENU:' + this.snapid); // request menu items for given painter
+      canvp.SendWebsocket('GETMENU:' + this.snapid); // request menu items for given painter
 
       setTimeout(canvp._getmenu_callback, 2000); // set timeout to avoid menu hanging
    }
@@ -3997,7 +4011,7 @@
    TPadPainter.prototype.ToggleEventStatus = function() {
       // when function called, jquery should be already loaded
 
-      if (this.enlarge_main('state')==='on') return;
+      if ((this.enlarge_main('state')==='on') || this.plain_layout) return;
 
       this.has_event_status = !this.has_event_status;
       if (JSROOT.Painter.ShowStatus) this.has_event_status = false;
@@ -4036,6 +4050,12 @@
       if (resized) this.CheckCanvasResize(); // redraw with resize
    }
 
+
+   TPadPainter.prototype.SetTooltipAllowed = function(on) {
+      var fp = this.frame_painter();
+      fp.tooltip_allowed = !!on;
+   }
+
    TPadPainter.prototype.ShowCanvasMenu = function(name) {
 
       d3.event.stopPropagation(); // disable main context menu
@@ -4045,10 +4065,13 @@
 
       function HandleClick(arg) {
          if (!this._websocket) return;
-         console.log('click', arg);
 
-         if (arg=="Interrupt") { this._websocket.send("GEXE:gROOT->SetInterrupt()"); }
-         if (arg=="Quit ROOT") { this._websocket.send("GEXE:gApplication->Terminate(0)"); }
+         switch (arg) {
+            case "Close canvas": this.OnWebsocketClosed(); this.CloseWebsocket(true); break;
+            case "Interrupt": this.SendWebsocket("GEXE:gROOT->SetInterrupt()"); break;
+            case "Quit ROOT": this.SendWebsocket("GEXE:gApplication->Terminate(0)"); break;
+            default: console.log('click', arg);
+         }
       }
 
       JSROOT.Painter.createMenu(this, function(menu) {
@@ -4138,7 +4161,7 @@
 
       } else {
 
-         if (this._websocket)
+         if (this._websocket && !this.plain_layout)
             this.CreateCanvasMenu();
 
          var render_to = this.select_main();
@@ -4821,7 +4844,7 @@
 
    TPadPainter.prototype.OnWebsocketOpened = function(conn) {
       // indicate that we are ready to recieve any following commands
-      conn.send('READY');
+      this.SendWebsocket('READY');
    }
 
    TPadPainter.prototype.OnWebsocketMsg = function(conn, msg) {
@@ -5057,13 +5080,11 @@
          //rrr.setSize(sz.width, sz.height);
          //rrr.render(main.scene, main.camera);
 
-         var svg = d3.select(svg3d);
-
-         var layer = main.svg_layer("special_layer");
-         group = layer.append("g")
-                      .attr("class","temp_saveaspng")
-                      .attr("transform", "translate(" + sz.x + "," + sz.y + ")");
-         group.node().appendChild(svg3d);
+          main.svg_layer("special_layer")      // select layer
+              .append("g")                     // create special group
+              .attr("class","temp_saveaspng")
+              .attr("transform", "translate(" + sz.x + "," + sz.y + ")")
+              .node().appendChild(svg3d);      // add code
       }, true);
 
 //      if (((can3d === 1) || (can3d === 2)) && main && main.Render3D) {
@@ -5204,17 +5225,16 @@
       switch(action) {
          case 'enable': is_visible = true; break;
          case 'enterbtn': return; // do nothing, just cleanup timeout
-         case 'timeout': isvisible = false; break;
-         case 'toggle': {
-            state = !state; btn.property('buttons_state', state);
+         case 'timeout': is_visible = false; break;
+         case 'toggle':
+            state = !state;
+            btn.property('buttons_state', state);
             is_visible = state;
             break;
-         }
          case 'disable':
-         case 'leavebtn': {
-            if (state) return;
-            return btn.property('timout_handler', setTimeout(this.toggleButtonsVisibility.bind(this,'timeout'),500));
-         }
+         case 'leavebtn':
+            if (!state) btn.property('timout_handler', setTimeout(this.toggleButtonsVisibility.bind(this,'timeout'), 500));
+            return;
       }
 
       group.selectAll('svg').each(function() {
