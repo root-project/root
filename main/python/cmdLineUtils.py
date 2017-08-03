@@ -932,11 +932,12 @@ def _rootLsPrintLongLs(keyList,indent,treeListing):
         datime = key.GetDatime()
         time = datime.GetTime()
         date = datime.GetDate()
+        year = datime.GetYear()
         time = _prepareTime(time)
         rec = \
             [key.GetClassName(), \
             MONTH[int(str(date)[4:6])]+" " +str(date)[6:]+ \
-            " "+time[:2]+":"+time[2:4], \
+            " "+time[:2]+":"+time[2:4]+" "+str(year)+" ", \
             key.GetName(), \
             "\""+key.GetTitle()+"\""]
         write(LONG_TEMPLATE.format(*rec,**dic),indent,end="\n")
