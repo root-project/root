@@ -66,14 +66,16 @@ THttpCallArg::~THttpCallArg()
 
 TString THttpCallArg::AccessHeader(TString &buf, const char *name, const char *value, Bool_t doing_set)
 {
-   if (name == 0) return TString();
+   if (name == 0)
+      return TString();
 
    Int_t curr = 0;
 
    while (curr < buf.Length() - 2) {
 
       Int_t next = buf.Index("\r\n", curr);
-      if (next == kNPOS) break; // should never happen
+      if (next == kNPOS)
+         break; // should never happen
 
       if (buf.Index(name, curr) != curr) {
          curr = next + 2;
@@ -91,13 +93,15 @@ TString THttpCallArg::AccessHeader(TString &buf, const char *name, const char *v
       curr++;
       while ((curr < next) && (buf[curr] == ' ')) curr++;
 
-      if (value == 0) return buf(curr, next - curr);
+      if (value == 0)
+         return buf(curr, next - curr);
       buf.Remove(curr, next - curr);
       buf.Insert(curr, value);
       return TString(value);
    }
 
-   if (value == 0) return TString();
+   if (value == 0)
+      return TString();
 
    buf.Append(TString::Format("%s: %s\r\n", name, value));
    return TString(value);
@@ -113,7 +117,8 @@ TString THttpCallArg::CountHeader(const TString &buf, Int_t number) const
    while (curr < buf.Length() - 2) {
 
       Int_t next = buf.Index("\r\n", curr);
-      if (next == kNPOS) break; // should never happen
+      if (next == kNPOS)
+         break; // should never happen
 
       if (cnt == number) {
          // we should extract name of header
@@ -127,7 +132,8 @@ TString THttpCallArg::CountHeader(const TString &buf, Int_t number) const
    }
 
    // return total number of headers
-   if (number == -1111) return TString::Format("%d", cnt);
+   if (number == -1111)
+      return TString::Format("%d", cnt);
    return TString();
 }
 
@@ -139,14 +145,24 @@ TString THttpCallArg::CountHeader(const TString &buf, Int_t number) const
 
 void THttpCallArg::SetPostData(void *data, Long_t length, Bool_t make_copy)
 {
-   if (fPostData) free(fPostData);
+   if (fPostData) {
+      free(fPostData);
+      fPostData = 0;
+      fPostDataLength = 0;
+   }
+
+   if (length <= 0)
+      return;
+
    if (make_copy && data && length) {
       void *newdata = malloc(length + 1);
       memcpy(newdata, data, length);
       data = newdata;
    }
 
-   if (data != 0) *(((char *)data) + length) = 0;
+   if (data != 0)
+      *(((char *)data) + length) = 0;
+
    fPostData = data;
    fPostDataLength = length;
 }
@@ -156,7 +172,8 @@ void THttpCallArg::SetPostData(void *data, Long_t length, Bool_t make_copy)
 
 void THttpCallArg::SetWSHandle(TNamed *handle)
 {
-   if (fWSHandle) delete fWSHandle;
+   if (fWSHandle)
+      delete fWSHandle;
    fWSHandle = handle;
 }
 
@@ -176,7 +193,8 @@ TNamed *THttpCallArg::TakeWSHandle()
 
 void THttpCallArg::SetBinData(void *data, Long_t length)
 {
-   if (fBinData) free(fBinData);
+   if (fBinData)
+      free(fBinData);
    fBinData = data;
    fBinDataLength = length;
 
@@ -195,7 +213,8 @@ void THttpCallArg::SetPathAndFileName(const char *fullpath)
    fPathName.Clear();
    fFileName.Clear();
 
-   if (fullpath == 0) return;
+   if (fullpath == 0)
+      return;
 
    const char *rslash = strrchr(fullpath, '/');
    if (rslash == 0) {
@@ -203,7 +222,8 @@ void THttpCallArg::SetPathAndFileName(const char *fullpath)
    } else {
       while ((fullpath != rslash) && (*fullpath == '/')) fullpath++;
       fPathName.Append(fullpath, rslash - fullpath);
-      if (fPathName == "/") fPathName.Clear();
+      if (fPathName == "/")
+         fPathName.Clear();
       fFileName = rslash + 1;
    }
 }
@@ -213,10 +233,13 @@ void THttpCallArg::SetPathAndFileName(const char *fullpath)
 
 TString THttpCallArg::GetHeader(const char *name)
 {
-   if ((name == 0) || (*name == 0)) return TString();
+   if ((name == 0) || (*name == 0))
+      return TString();
 
-   if (strcmp(name, "Content-Type") == 0) return fContentType;
-   if (strcmp(name, "Content-Length") == 0) return TString::Format("%ld", GetContentLength());
+   if (strcmp(name, "Content-Type") == 0)
+      return fContentType;
+   if (strcmp(name, "Content-Length") == 0)
+      return TString::Format("%ld", GetContentLength());
 
    return AccessHeader(fHeader, name);
 }
@@ -228,7 +251,8 @@ TString THttpCallArg::GetHeader(const char *name)
 
 void THttpCallArg::AddHeader(const char *name, const char *value)
 {
-   if ((name == 0) || (*name == 0) || (strcmp(name, "Content-Length") == 0)) return;
+   if ((name == 0) || (*name == 0) || (strcmp(name, "Content-Length") == 0))
+      return;
 
    if (strcmp(name, "Content-Type") == 0)
       SetContentType(value);
@@ -241,7 +265,8 @@ void THttpCallArg::AddHeader(const char *name, const char *value)
 
 void THttpCallArg::FillHttpHeader(TString &hdr, const char *kind)
 {
-   if (kind == 0) kind = "HTTP/1.1";
+   if (kind == 0)
+      kind = "HTTP/1.1";
 
    if ((fContentType.Length() == 0) || Is404()) {
       hdr.Form("%s 404 Not Found\r\n"
@@ -271,7 +296,8 @@ Bool_t THttpCallArg::CompressWithGzip()
 
    // 10 bytes (ZIP header), compressed data, 8 bytes (CRC and original length)
    Int_t buflen = 10 + objlen + 8;
-   if (buflen < 512) buflen = 512;
+   if (buflen < 512)
+      buflen = 512;
 
    void *buffer = malloc(buflen);
 

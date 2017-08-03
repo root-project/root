@@ -45,7 +45,8 @@ public:
 
    virtual void Send(const void *buf, int len)
    {
-      if (fWSconn) mg_websocket_write(fWSconn, WEBSOCKET_OPCODE_TEXT, (const char *)buf, len);
+      if (fWSconn)
+         mg_websocket_write(fWSconn, WEBSOCKET_OPCODE_TEXT, (const char *)buf, len);
    }
 };
 
@@ -54,12 +55,15 @@ public:
 int websocket_connect_handler(const struct mg_connection *conn, void *)
 {
    const struct mg_request_info *request_info = mg_get_request_info(conn);
-   if (request_info == 0) return 1;
+   if (request_info == 0)
+      return 1;
 
    TCivetweb *engine = (TCivetweb *)request_info->user_data;
-   if (engine == 0) return 1;
+   if (engine == 0)
+      return 1;
    THttpServer *serv = engine->GetServer();
-   if (serv == 0) return 1;
+   if (serv == 0)
+      return 1;
 
    THttpCallArg arg;
    arg.SetPathAndFileName(request_info->uri); // path and file name
@@ -79,9 +83,11 @@ void websocket_ready_handler(struct mg_connection *conn, void *)
    const struct mg_request_info *request_info = mg_get_request_info(conn);
 
    TCivetweb *engine = (TCivetweb *)request_info->user_data;
-   if (engine == 0) return;
+   if (engine == 0)
+      return;
    THttpServer *serv = engine->GetServer();
-   if (serv == 0) return;
+   if (serv == 0)
+      return;
 
    THttpCallArg arg;
    arg.SetPathAndFileName(request_info->uri); // path and file name
@@ -100,10 +106,16 @@ int websocket_data_handler(struct mg_connection *conn, int, char *data, size_t l
 {
    const struct mg_request_info *request_info = mg_get_request_info(conn);
 
+   // do not handle empty data
+   if (len == 0)
+      return 1;
+
    TCivetweb *engine = (TCivetweb *)request_info->user_data;
-   if (engine == 0) return 1;
+   if (engine == 0)
+      return 1;
    THttpServer *serv = engine->GetServer();
-   if (serv == 0) return 1;
+   if (serv == 0)
+      return 1;
 
    THttpCallArg arg;
    arg.SetPathAndFileName(request_info->uri); // path and file name
@@ -125,9 +137,11 @@ void websocket_close_handler(const struct mg_connection *conn, void *)
    const struct mg_request_info *request_info = mg_get_request_info(conn);
 
    TCivetweb *engine = (TCivetweb *)request_info->user_data;
-   if (engine == 0) return;
+   if (engine == 0)
+      return;
    THttpServer *serv = engine->GetServer();
-   if (serv == 0) return;
+   if (serv == 0)
+      return;
 
    THttpCallArg arg;
    arg.SetPathAndFileName(request_info->uri); // path and file name
@@ -146,7 +160,8 @@ static int log_message_handler(const struct mg_connection *conn, const char *mes
 
    TCivetweb *engine = (TCivetweb *)mg_get_user_data(ctx);
 
-   if (engine) return engine->ProcessLog(message);
+   if (engine)
+      return engine->ProcessLog(message);
 
    // provide debug output
    if ((gDebug > 0) || (strstr(message, "cannot bind to") != 0))
@@ -162,9 +177,11 @@ static int begin_request_handler(struct mg_connection *conn, void *)
    const struct mg_request_info *request_info = mg_get_request_info(conn);
 
    TCivetweb *engine = (TCivetweb *)request_info->user_data;
-   if (engine == 0) return 0;
+   if (engine == 0)
+      return 0;
    THttpServer *serv = engine->GetServer();
-   if (serv == 0) return 0;
+   if (serv == 0)
+      return 0;
 
    THttpCallArg arg;
 
@@ -192,7 +209,8 @@ static int begin_request_handler(struct mg_connection *conn, void *)
       arg.SetQuery(request_info->query_string);  // query arguments
       arg.SetTopName(engine->GetTopName());
       arg.SetMethod(request_info->request_method); // method like GET or POST
-      if (request_info->remote_user != 0) arg.SetUserName(request_info->remote_user);
+      if (request_info->remote_user != 0)
+         arg.SetUserName(request_info->remote_user);
 
       TString header;
       for (int n = 0; n < request_info->num_headers; n++)
@@ -225,7 +243,8 @@ static int begin_request_handler(struct mg_connection *conn, void *)
          cont.Append(TString::Format("  FileName : %s\n", arg.GetFileName()));
          cont.Append(TString::Format("  Query    : %s\n", arg.GetQuery()));
          cont.Append(TString::Format("  PostData : %ld\n", arg.GetPostDataLength()));
-         if (arg.GetUserName()) cont.Append(TString::Format("  User     : %s\n", arg.GetUserName()));
+         if (arg.GetUserName())
+            cont.Append(TString::Format("  User     : %s\n", arg.GetUserName()));
 
          cont.Append("</pre><p>\n");
 
@@ -264,7 +283,8 @@ static int begin_request_handler(struct mg_connection *conn, void *)
          dozip = kFALSE;
          for (int n = 0; n < request_info->num_headers; n++) {
             TString name = request_info->http_headers[n].name;
-            if (name.Index("Accept-Encoding", 0, TString::kIgnoreCase) != 0) continue;
+            if (name.Index("Accept-Encoding", 0, TString::kIgnoreCase) != 0)
+               continue;
             TString value = request_info->http_headers[n].value;
             dozip = (value.Index("gzip", 0, TString::kIgnoreCase) != kNPOS);
             break;
@@ -274,13 +294,15 @@ static int begin_request_handler(struct mg_connection *conn, void *)
       case 3: dozip = kTRUE; break;
       }
 
-      if (dozip) arg.CompressWithGzip();
+      if (dozip)
+         arg.CompressWithGzip();
 
       TString hdr;
       arg.FillHttpHeader(hdr, "HTTP/1.1");
       mg_printf(conn, "%s", hdr.Data());
 
-      if (arg.GetContentLength() > 0) mg_write(conn, arg.GetContent(), (size_t)arg.GetContentLength());
+      if (arg.GetContentLength() > 0)
+         mg_write(conn, arg.GetContent(), (size_t)arg.GetContentLength());
    }
 
    // Returning non-zero tells civetweb that our function has replied to
@@ -320,10 +342,10 @@ static int begin_request_handler(struct mg_connection *conn, void *)
 
 ClassImp(TCivetweb);
 
-   ////////////////////////////////////////////////////////////////////////////////
-   /// constructor
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
 
-   TCivetweb::TCivetweb()
+TCivetweb::TCivetweb()
    : THttpEngine("civetweb", "compact embedded http server"), fCtx(0), fCallbacks(0), fTopName(), fDebug(kFALSE)
 {
 }
@@ -333,8 +355,10 @@ ClassImp(TCivetweb);
 
 TCivetweb::~TCivetweb()
 {
-   if (fCtx != 0) mg_stop((struct mg_context *)fCtx);
-   if (fCallbacks != 0) free(fCallbacks);
+   if (fCtx != 0)
+      mg_stop((struct mg_context *)fCtx);
+   if (fCallbacks != 0)
+      free(fCallbacks);
    fCtx = 0;
    fCallbacks = 0;
 }
@@ -344,7 +368,8 @@ TCivetweb::~TCivetweb()
 
 Int_t TCivetweb::ProcessLog(const char *message)
 {
-   if ((gDebug > 0) || (strstr(message, "cannot bind to") != 0)) Error("Log", "%s", message);
+   if ((gDebug > 0) || (strstr(message, "cannot bind to") != 0))
+      Error("Log", "%s", message);
 
    return 0;
 }
@@ -388,29 +413,38 @@ Bool_t TCivetweb::Create(const char *args)
             url.ParseOptions();
 
             const char *top = url.GetValueFromOptions("top");
-            if (top != 0) fTopName = top;
+            if (top != 0)
+               fTopName = top;
 
             const char *log = url.GetValueFromOptions("log");
-            if (log != 0) log_file = log;
+            if (log != 0)
+               log_file = log;
 
             Int_t thrds = url.GetIntValueFromOptions("thrds");
-            if (thrds > 0) num_threads.Form("%d", thrds);
+            if (thrds > 0)
+               num_threads.Form("%d", thrds);
 
             const char *afile = url.GetValueFromOptions("auth_file");
-            if (afile != 0) auth_file = afile;
+            if (afile != 0)
+               auth_file = afile;
 
             const char *adomain = url.GetValueFromOptions("auth_domain");
-            if (adomain != 0) auth_domain = adomain;
+            if (adomain != 0)
+               auth_domain = adomain;
 
             const char *sslc = url.GetValueFromOptions("ssl_cert");
-            if (sslc != 0) ssl_cert = sslc;
+            if (sslc != 0)
+               ssl_cert = sslc;
 
             Int_t wtmout = url.GetIntValueFromOptions("websocket_timeout");
-            if (wtmout > 0) websocket_timeout.Format("%d", wtmout * 1000);
+            if (wtmout > 0)
+               websocket_timeout.Format("%d", wtmout * 1000);
 
-            if (url.HasOption("debug")) fDebug = kTRUE;
+            if (url.HasOption("debug"))
+               fDebug = kTRUE;
 
-            if (url.HasOption("loopback") && (sport.Index(":") == kNPOS)) sport = TString("127.0.0.1:") + sport;
+            if (url.HasOption("loopback") && (sport.Index(":") == kNPOS))
+               sport = TString("127.0.0.1:") + sport;
          }
       }
    }
@@ -449,7 +483,8 @@ Bool_t TCivetweb::Create(const char *args)
    // Start the web server.
    fCtx = mg_start((struct mg_callbacks *)fCallbacks, this, options);
 
-   if (fCtx == 0) return kFALSE;
+   if (fCtx == 0)
+      return kFALSE;
 
    mg_set_request_handler((struct mg_context *)fCtx, "/", begin_request_handler, 0);
 

@@ -2436,7 +2436,7 @@
       this.req = null;
 
       this.nextrequest = function(data, kind) {
-         var url = this.path;
+         var url = this.path, sync = "";
          if (kind === "connect") {
             url+="?connect";
             this.connid = "connect";
@@ -2445,6 +2445,7 @@
             if ((this.connid===null) || (this.connid==="close")) return;
             url+="?connection="+this.connid + "&close";
             this.connid = "close";
+            if (JSROOT.browser.qt5) sync = ";sync"; // use sync mode to close qt5 webengine
          } else
          if ((this.connid===null) || (typeof this.connid!=='number')) {
             return console.error("No connection");
@@ -2460,7 +2461,7 @@
             url += post;
          }
 
-         var req = JSROOT.NewHttpRequest(url, "text", function(res) {
+         var req = JSROOT.NewHttpRequest(url, "text" + sync, function(res) {
             if (res===null) res = this.response; // workaround for WebEngine - it does not handle content correctly
             if (this.handle.req === this) {
                this.handle.req = null; // get response for existing dummy request
@@ -2583,13 +2584,12 @@
       return this;
    }
 
-   TObjectPainter.prototype.CloseWebsocket = function() {
-      if (this._websocket && this._websocket_opened) {
-         this._websocket_opened = false;
+   TObjectPainter.prototype.CloseWebsocket = function(force) {
+      if (this._websocket && this._websocket_state > 0) {
+         this._websocket_state = force ? -1 : 0; // -1 prevent socket from reopening
+         this._websocket.onclose = null; // hide normal handler
          this._websocket.close();
          delete this._websocket;
-         if (typeof this.OnWebsocketClosed == 'function')
-            this.OnWebsocketClosed();
       }
    }
 
@@ -2603,14 +2603,14 @@
 
       // this._websocket = conn;
       this._websocket_kind = socket_kind;
-      this._websocket_opened = false;
+      this._websocket_state = 0;
 
       var pthis = this, sum1 = 0, sum2 = 0, cnt = 0;
 
       function retry_open(first_time) {
 
-      if (pthis._websocket_opened) return;
-      console.log("try open wensocket again");
+      if (pthis._websocket_state != 0) return;
+      console.log("try open wensocket again " + pthis._websocket_state);
       if (pthis._websocket) pthis._websocket.close();
       delete pthis._websocket;
 
@@ -2647,7 +2647,7 @@
 
       conn.onopen = function() {
          console.log('websocket initialized');
-         pthis._websocket_opened = true;
+         pthis._websocket_state = 1;
          if (typeof pthis.OnWebsocketOpened == 'function')
             pthis.OnWebsocketOpened(conn);
       }
@@ -2661,10 +2661,10 @@
       }
 
       conn.onclose = function() {
-         console.log('websocket closed');
          delete pthis._websocket;
-         if (pthis._websocket_opened) {
-            pthis._websocket_opened = false;
+         if (pthis._websocket_state > 0) {
+            console.log('websocket closed');
+            pthis._websocket_state = 0;
             if (typeof pthis.OnWebsocketClosed == 'function')
                pthis.OnWebsocketClosed();
          }
@@ -4826,8 +4826,10 @@
 
    TPadPainter.prototype.OnWebsocketMsg = function(conn, msg) {
 
-      if (msg.substr(0,5)=='SNAP:') {
-
+      if (msg == "CLOSE") {
+         this.OnWebsocketClosed();
+         this.CloseWebsocket(true);
+      } else if (msg.substr(0,5)=='SNAP:') {
          msg = msg.substr(5);
          var p1 = msg.indexOf(":"),
              snapid = msg.substr(0,p1),
@@ -4885,16 +4887,12 @@
          if (cmd == "SVG") {
             var res = "";
             if (this.CreateSvg) res = this.CreateSvg();
-            console.log('SVG size = ' + res.length);
             conn.send(reply + res);
          } else if (cmd == "PNG") {
             this.ProduceImage(true, 'any.png', function(can) {
                var res = can.toDataURL('image/png'),
                    separ = res.indexOf("base64,");
-               if (separ>0)
-                  conn.send(reply + res.substr(separ+7));
-               else
-                  conn.send(reply);
+               conn.send(reply + ((separ>0) ? res.substr(separ+7) : ""));
             });
          } else {
             console.log('Urecognized command ' + cmd);
@@ -4912,8 +4910,7 @@
 
    TPadPainter.prototype.WindowBeforeUnloadHanlder = function() {
       // when window closed, close socket
-      this.CloseWebsocket();
-      return null; // one could block close, but not now
+      this.CloseWebsocket(true);
    }
 
    TPadPainter.prototype.GetAllRanges = function() {

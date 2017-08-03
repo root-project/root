@@ -129,6 +129,9 @@ public:
    /// Display the canvas.
    void Show(const std::string &where = "");
 
+   /// Close all canvas displays
+   void Hide();
+
    // Indicates that primitives list was changed or any primitive was modified
    void Modified() { fModified++; }
 
