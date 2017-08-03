@@ -259,24 +259,119 @@ void NumpyIterator::Reset() {
   }
 }
 
-/////////////////////////////////////////////////////// helper functions
+/////////////////////////////////////////////////////// internal functions
 
-bool getrequest(Request &request, TTree* tree, const char* branchName) {
-  request.branch = tree->GetBranch(branchName);
+bool checkstring(PyObject* str) {
+  return PyUnicode_Check(str)  ||  PyBytes_Check(str);
+}
 
-  if (request.branch != 0)
-    request.leaf = std::string();
+std::string getstring(PyObject* str) {
+  if (PyUnicode_Check(str)) {
+    PyObject* bytes = PyUnicode_AsEncodedString(str, "ascii", "backslashreplace");
+    std::string out(PyBytes_AsString(bytes));
+    Py_DECREF(bytes);
+    return out;
+  }
+  else
+    return std::string(PyBytes_AsString(str));
+}
 
-  else {
-    request.branch = tree->GetLeaf(branchName)->GetBranch();
+bool checkpyroot(PyObject* in, std::string expect) {
+  if (!ObjectProxy_Check(in))
+    return false;
 
-    if (request.branch == 0) {
-      PyErr_Format(PyExc_IOError, "could not read branch \"%s\" from tree \"%s\"", branchName, tree->GetName());
-      return false;
+  PyROOT::ObjectProxy* objectProxy = reinterpret_cast<PyROOT::ObjectProxy*>(in);
+
+  return Cppyy::IsSubtype(objectProxy->ObjectIsA(), Cppyy::GetScope(expect));
+}
+
+template<typename T>
+bool getpyroot(PyObject* in, T* &out) {
+  if (!ObjectProxy_Check(in)) {
+    PyErr_Format(PyExc_TypeError, "argument must be a %s object", T::Class()->GetName());
+    return false;
+  }
+  PyROOT::ObjectProxy* objectProxy = reinterpret_cast<PyROOT::ObjectProxy*>(in);
+
+  out = reinterpret_cast<T*>(TClass::GetClass(Cppyy::GetFinalName(objectProxy->ObjectIsA()).c_str())->DynamicCast(T::Class(), objectProxy->GetObject()));
+
+  if (!out) {
+    PyErr_Format(PyExc_TypeError, "argument must be a %s object", T::Class()->GetName());
+    return false;
+  }
+
+  return true;
+}
+
+bool getrequest(Request &request, TTree* tree, PyObject* obj) {
+  if (checkstring(obj)) {
+    std::string name = getstring(obj);
+    TBranch* branch = tree->GetBranch(name.c_str());
+
+    if (branch != 0) {
+      request.branch = branch;
+      request.leaf = std::string("");
+      return true;
     }
 
-    request.leaf = branchName;
+    else {
+      TLeaf* leaf = tree->GetLeaf(name.c_str());
+      if (leaf != 0) {
+        request.branch = leaf->GetBranch();
+        request.leaf = name;
+        return true;
+      }
+    }
+
+    PyErr_Format(PyExc_TypeError, "if an argument is a string (\"%s\"), it must correspond to a TBranch (checked first) or TLeaf (checked last) name in the TTree", name.c_str());
+    return false;
   }
+  else {
+    TBranch* branch;
+    if (checkpyroot(obj, std::string("TBranch"))  &&  getpyroot<TBranch>(obj, branch)) {
+      if (branch->GetTree() != tree) {
+        PyErr_Format(PyExc_TypeError, "TBranch \"%s\" does not belong to TTree \"%s\"", branch->GetName(), tree->GetName());
+        return false;
+      }
+
+      request.branch = branch;
+      request.leaf = std::string("");
+      return true;
+    }
+
+    TLeaf* leaf;
+    if (checkpyroot(obj, std::string("TLeaf"))  &&  getpyroot<TLeaf>(obj, leaf)) {
+      if (leaf->GetBranch()->GetTree() != tree) {
+        PyErr_Format(PyExc_TypeError, "TLeaf \"%s\" does not belong to TTree \"%s\"", leaf->GetName(), tree->GetName());
+        return false;
+      }
+
+      request.branch = leaf->GetBranch();
+      request.leaf = std::string(leaf->GetName());
+      return true;
+    }
+
+    PyErr_SetString(PyExc_TypeError, "if an argument is not a string, it must be a PyROOT TBranch or TLeaf object");
+    return false;
+  }
+}
+
+bool getrequests(PyObject* self, PyObject* args, TTree* &tree, std::vector<Request> &requests) {
+  if (!getpyroot<TTree>(self, tree))
+    return false;
+
+  if (PyTuple_GET_SIZE(args) < 1) {
+    PyErr_SetString(PyExc_TypeError, "at least one argument is required");
+    return false;
+  }
+
+  for (int i = 0;  i < PyTuple_GET_SIZE(args);  i++) {
+    PyObject* obj = PyTuple_GET_ITEM(args, i);
+    Request request;
+    if (!getrequest(request, tree, obj)) return false;
+    requests.push_back(request);
+  }
+
   return true;
 }
 
@@ -376,8 +471,6 @@ void getdim(TLeaf* leaf, std::vector<int>& dims, std::vector<std::string>& count
 }
 
 bool getarrayinfo(ArrayInfo &arrayinfo, TLeaf* leaf, bool swap_bytes) {
-  arrayinfo.dtype = PyArray_DescrFromType(0);
-
   const char* asstring = leaftype(leaf, swap_bytes);
   if (asstring == 0) {
     PyErr_Format(PyExc_ValueError, "cannot convert type of TLeaf \"%s\" to Numpy", leaf->GetName());
@@ -385,7 +478,7 @@ bool getarrayinfo(ArrayInfo &arrayinfo, TLeaf* leaf, bool swap_bytes) {
   }
 
   if (!PyArray_DescrConverter(PyUnicode_FromString(asstring), &arrayinfo.dtype)) {
-    PyErr_SetString(PyExc_ValueError, "cannot create a dtype");
+    PyErr_SetString(PyExc_ValueError, "cannot create dtype");
     return 0;
   }
 
@@ -442,22 +535,7 @@ bool getarrayinfo_request(ArrayInfo &arrayinfo, Request request, bool swap_bytes
     return getarrayinfo_branch(arrayinfo, request, swap_bytes);
 }
 
-bool checkstring(PyObject* str) {
-  return PyUnicode_Check(str)  ||  PyBytes_Check(str);
-}
-
-std::string getstring(PyObject* str) {
-  if (PyUnicode_Check(str)) {
-    PyObject* bytes = PyUnicode_AsEncodedString(str, "ascii", "backslashreplace");
-    std::string out(PyBytes_AsString(bytes));
-    Py_DECREF(bytes);
-    return out;
-  }
-  else
-    return std::string(PyBytes_AsString(str));
-}
-
-/////////////////////////////////////////////////////// Python functions
+/////////////////////////////////////////////////////// public functions
 
 #if PY_VERSION_HEX >= 0x03000000
 void* InitializeNumpy() {
@@ -469,49 +547,6 @@ void InitializeNumpy() {
   import_array();
 }
 #endif
-
-template<typename T>
-bool getpyroot(PyObject* in, T* &out) {
-  if (!ObjectProxy_Check(in)) {
-    PyErr_Format(PyExc_TypeError, "argument must be a %s object", T::Class());
-    return false;
-  }
-  PyROOT::ObjectProxy* objectProxy = reinterpret_cast<PyROOT::ObjectProxy*>(in);
-
-  out = reinterpret_cast<T*>(TClass::GetClass(Cppyy::GetFinalName(objectProxy->ObjectIsA()).c_str())->DynamicCast(T::Class(), objectProxy->GetObject()));
-
-  if (!out) {
-    PyErr_Format(PyExc_TypeError, "argument must be a %s object", T::Class());
-    return false;
-  }
-
-  return true;
-}
-
-bool getrequests(PyObject* self, PyObject* args, TTree* &tree, std::vector<Request> &requests) {
-  if (!getpyroot<TTree>(self, tree))
-    return false;
-
-  if (PyTuple_GET_SIZE(args) < 1) {
-    PyErr_SetString(PyExc_TypeError, "at least one argument is required");
-    return false;
-  }
-
-  for (int i = 0;  i < PyTuple_GET_SIZE(args);  i++) {
-    PyObject* obj = PyTuple_GET_ITEM(args, i);
-    if (!checkstring(obj)) {
-      PyErr_SetString(PyExc_TypeError, "all arguments must be strings (branch names)");
-      return false;
-    }
-    std::string branchName = getstring(obj);
-
-    Request request;
-    if (!getrequest(request, tree, branchName.c_str())) return false;
-    requests.push_back(request);
-  }
-
-  return true;
-}
 
 PyObject* GetNumpyIterator(PyObject* self, PyObject* args, PyObject* kwds) {
   TTree *tree;
