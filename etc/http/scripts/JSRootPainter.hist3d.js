@@ -24,6 +24,8 @@
    }
 } (function(JSROOT, d3, __DUMMY__, THREE, THREE_MORE, document) {
 
+   "use strict";
+
    JSROOT.sources.push("hist3d");
 
    if ((typeof document=='undefined') && (typeof window=='object')) document = window.document;
