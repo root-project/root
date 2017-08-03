@@ -15,7 +15,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ASImage
                               HEADERS TASImage.h TASImagePlugin.h TASPluginGS.h
                               SOURCES TASImage.cxx TASPluginGS.cxx  G__ASImage.cxx
                               DICTIONARY_OPTIONS "-writeEmptyRootPCM"
-                              LIBRARIES ${AFTERIMAGE_LIBRARIES} ${FREETYPE_LIBRARIES} ${ASEXTRA_LIBRARIES} ${X11_LIBRARIES} ${ZLIB_LIBRARIES}
+                              LIBRARIES Core ${AFTERIMAGE_LIBRARIES} ${FREETYPE_LIBRARIES} ${ASEXTRA_LIBRARIES} ${X11_LIBRARIES} ${ZLIB_LIBRARIES}
                               DEPENDENCIES Graf BUILTINS AFTERIMAGE)
 
 

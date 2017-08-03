@@ -12,4 +12,4 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Gpad
                               HEADERS *.h ${Gpad_v7_dict_headers}
                               SOURCES *.cxx ${root7src}
                               DICTIONARY_OPTIONS "-writeEmptyRootPCM"
-                              DEPENDENCIES Graf MultiProc Hist)
+                              DEPENDENCIES Graf Hist)

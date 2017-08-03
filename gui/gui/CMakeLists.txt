@@ -36,4 +36,4 @@ set(headers3 TRootGuiFactory.h TRootApplication.h TRootCanvas.h
 ROOT_STANDARD_LIBRARY_PACKAGE(Gui
                               HEADERS ${headers1} ${headers2} ${headers3}
                               DICTIONARY_OPTIONS "-writeEmptyRootPCM"
-                              DEPENDENCIES Gpad Graf MathCore Core)
+                              DEPENDENCIES Core Gpad Graf MathCore)

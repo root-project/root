@@ -16,7 +16,7 @@ endif()
 ROOT_STANDARD_LIBRARY_PACKAGE(PyROOT
                               NO_INSTALL_HEADERS
                               DICTIONARY_OPTIONS "-writeEmptyRootPCM"
-                              LIBRARIES ${PYTHON_LIBRARIES}
+                              LIBRARIES Core Net Tree MathCore Rint ${PYTHON_LIBRARIES}
                               DEPENDENCIES Core MathCore Net Tree Rint)
 ROOT_LINKER_LIBRARY(JupyROOT ../JupyROOT/src/*.cxx DEPENDENCIES Core)
 
