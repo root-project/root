@@ -410,14 +410,14 @@ public:
 
    void PartialReport() const final { fPrevData.PartialReport(); }
 
-   void StopProcessing()
+   void StopProcessing() final
    {
       ++fNStopsReceived;
       if (fNStopsReceived == fNChildren)
          fPrevData.StopProcessing();
    }
 
-   void IncrChildrenCount()
+   void IncrChildrenCount() final
    {
       ++fNChildren;
       // propagate "children activation" upstream
@@ -529,14 +529,14 @@ public:
       PrintReport();
    }
 
-   void StopProcessing()
+   void StopProcessing() final
    {
       ++fNStopsReceived;
       if (fNStopsReceived == fNChildren)
          fPrevData.StopProcessing();
    }
 
-   void IncrChildrenCount()
+   void IncrChildrenCount() final
    {
       ++fNChildren;
       // propagate "children activation" upstream. named filters do the propagation via `TriggerChildrenCount`.
@@ -550,7 +550,7 @@ public:
       fPrevData.IncrChildrenCount();
    }
 
-   void ResetReportCount()
+   void ResetReportCount() final
    {
       assert(!fName.empty()); // this method is to only be called on named filters
       // fAccepted and fRejected could be different than 0 if this is not the first event-loop run using this filter
@@ -644,14 +644,14 @@ public:
 
    void PartialReport() const final { fPrevData.PartialReport(); }
 
-   void StopProcessing()
+   void StopProcessing() final
    {
       ++fNStopsReceived;
       if (fNStopsReceived == fNChildren && !fHasStopped)
          fPrevData.StopProcessing();
    }
 
-   void IncrChildrenCount()
+   void IncrChildrenCount() final
    {
       ++fNChildren;
       // propagate "children activation" upstream
