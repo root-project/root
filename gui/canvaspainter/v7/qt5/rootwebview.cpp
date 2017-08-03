@@ -25,8 +25,22 @@ RootWebView::RootWebView(QWidget *parent) : QWebEngineView(parent)
    //        this, SLOT(doConsole(JavaScriptConsoleMessageLevel, const QString &, int, const QString &)));
 
    // connect(this, &QWebEngineView::javaScriptConsoleMessage, this, &RootWebView::doConsole);
+
+   connect(page(), &QWebEnginePage::windowCloseRequested, this, &RootWebView::onWindowCloseRequested);
 }
 
 RootWebView::~RootWebView()
 {
+}
+
+void RootWebView::closeEvent(QCloseEvent *)
+{
+   page()->runJavaScript("if (window && window.onqt5unload) window.onqt5unload();");
+
+   // printf("run javascript done\n");
+}
+
+void RootWebView::onWindowCloseRequested()
+{
+   close();
 }
