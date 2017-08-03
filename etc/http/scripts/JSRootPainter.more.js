@@ -23,6 +23,8 @@
    }
 } (function(JSROOT, d3) {
 
+   "use strict";
+
    JSROOT.sources.push("more2d");
 
    function drawText() {

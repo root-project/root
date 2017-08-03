@@ -25,6 +25,8 @@
    }
 } (function($, myui, d3, JSROOT) {
 
+   "use strict";
+
    JSROOT.sources.push("jq2d");
 
    if ( typeof define === "function" && define.amd )
@@ -1494,7 +1496,7 @@
 
    // ================================================
 
-   TabsDisplay = function(frameid) {
+   function TabsDisplay(frameid) {
       JSROOT.MDIDisplay.call(this, frameid);
       this.cnt = 0;
    }
