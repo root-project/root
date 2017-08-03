@@ -93,7 +93,9 @@
    }
 } (function(JSROOT) {
 
-   JSROOT.version = "dev 28/07/2017";
+   "use strict";
+
+   JSROOT.version = "dev 3/08/2017";
 
    JSROOT.source_dir = "";
    JSROOT.source_min = false;
@@ -748,7 +750,6 @@
             var filecontent = "", u8Arr = new Uint8Array(xhr.response);
             for (var i = 0; i < u8Arr.length; ++i)
                filecontent += String.fromCharCode(u8Arr[i]);
-            delete u8Arr;
 
             return callback(filecontent);
          }

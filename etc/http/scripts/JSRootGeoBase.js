@@ -22,6 +22,8 @@
    }
 } (function( JSROOT, THREE, ThreeBSP ) {
 
+   "use strict";
+
    /** @namespace JSROOT.GEO */
    /// Holder of all TGeo-related functions and classes
    JSROOT.GEO = {
@@ -2818,7 +2820,7 @@
 
       var names = [], cnts = [], obj = null;
       for (var k=0;k<chlds.length;++k) {
-         chld = chlds[k];
+         var chld = chlds[k];
          if (!chld || !chld.fName) continue;
          if (!chld.$geo_suffix) {
             var indx = names.indexOf(chld.fName);

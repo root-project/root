@@ -1,7 +1,6 @@
 /// @file JSRootTree.js
 /// Collect all TTree-relevant methods like reading and processing
 
-
 (function( factory ) {
    if ( typeof define === "function" && define.amd ) {
       define( ['JSRootCore', 'JSRootIOEvolution', 'JSRootMath'], factory );
@@ -18,6 +17,8 @@
       factory(JSROOT);
    }
 } (function(JSROOT) {
+
+   "use strict";
 
    JSROOT.sources.push("tree");
 

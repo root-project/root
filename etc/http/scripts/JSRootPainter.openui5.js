@@ -26,6 +26,8 @@
    }
 } (function($, myui, d3, JSROOT) {
 
+   "use strict";
+
    JSROOT.sources.push("openui5");
 
    var load_callback = JSROOT.complete_script_load;
@@ -45,171 +47,252 @@
    element.setAttribute('type', "text/javascript");
    element.setAttribute('id', "sap-ui-bootstrap");
    // use nojQuery while we are already load jquery and jquery-ui, later one can use directly sap-ui-core.js
-   element.setAttribute('src', "https://openui5.hana.ondemand.com/resources/sap-ui-core-nojQuery.js");
+   element.setAttribute('src', "https://openui5.hana.ondemand.com/resources/sap-ui-core-nojQuery.js"); // latest openui5 version
+   // element.setAttribute('src', "/currentdir/openui5/resources/sap-ui-core-nojQuery.js"); // can be used with THttpServer
+   // element.setAttribute('src', "https://openui5.hana.ondemand.com/1.38.21/resources/sap-ui-core-nojQuery.js"); // some previous version
 //   element.setAttribute('data-sap-ui-trace', "true");
-   element.setAttribute('data-sap-ui-libs', "sap.m,sap.ui.table,sap.ui.commons,sap.tnt");
+   element.setAttribute('data-sap-ui-libs', "sap.m");
 //   element.setAttribute('data-sap-ui-areas', "uiArea1");
 
    element.setAttribute('data-sap-ui-theme', 'sap_belize');
    element.setAttribute('data-sap-ui-compatVersion', 'edge');
    element.setAttribute('data-sap-ui-preload', 'async');
+   // for the moment specify path in the THttpServer, later can adjust for offline case
+   element.setAttribute('data-sap-ui-resourceroots', '{ "sap.ui.jsroot": "/jsrootsys/openui5/" }');
 
    element.setAttribute('data-sap-ui-evt-oninit', "JSROOT.completeUI5Loading()");
 
    document.getElementsByTagName("head")[0].appendChild(element);
 
 
-
    JSROOT.Painter.createMenu = function(painter, maincallback) {
-      var menuname = 'root_ctx_menu';
 
-      if (!maincallback && typeof painter==='function') { maincallback = painter; painter = null; }
+      var menu = { painter: painter,  element: null, cnt: 1, stack: [], items: [], separ: false };
 
-      var menu = { painter: painter,  element: null, code: "", cnt: 1, funcs: {}, separ: false };
+      // this is slighly modified version of original MenuItem.render function.
+      // need to be updated with any further changes
+      function RenderCustomItem(rm, oItem, oMenu, oInfo) {
+         var oSubMenu = oItem.getSubmenu();
+         rm.write("<li ");
 
-      menu.add = function(name, arg, func) {
-         if (name == "separator") { this.code += "<li>-</li>"; this.separ = true; return; }
-
-         if (name.indexOf("header:")==0) {
-            this.code += "<li class='ui-widget-header' style='padding:3px; padding-left:5px;'>"+name.substr(7)+"</li>";
-            return;
+         var sClass = "sapUiMnuItm";
+         if (oInfo.iItemNo == 1) {
+            sClass += " sapUiMnuItmFirst";
+         } else if (oInfo.iItemNo == oInfo.iTotalItems) {
+            sClass += " sapUiMnuItmLast";
+         }
+         if (!oMenu.checkEnabled(oItem)) {
+            sClass += " sapUiMnuItmDsbl";
+         }
+         if (oItem.getStartsSection()) {
+            sClass += " sapUiMnuItmSepBefore";
          }
 
-         if (name=="endsub:") { this.code += "</ul></li>"; return; }
-         var close_tag = "</li>", style = "";
-         if (name.indexOf("sub:")==0) { name = name.substr(4); close_tag="<ul>"; /* style += ";padding-right:2em" */}
-
-         if (typeof arg == 'function') { func = arg; arg = name;  }
-
-         // if ((arg==null) || (typeof arg != 'string')) arg = name;
-
-         var item = "";
-
-         if (name.indexOf("chk:")==0) { item = "<span class='ui-icon ui-icon-check' style='margin:1px'></span>"; name = name.substr(4); } else
-         if (name.indexOf("unk:")==0) { item = "<span class='ui-icon ui-icon-blank' style='margin:1px'></span>"; name = name.substr(4); }
-
-         // special handling of first versions with menu support
-         if (($.ui.version.indexOf("1.10")==0) || ($.ui.version.indexOf("1.9")==0))
-            item = '<a href="#">' + item + name + '</a>';
-         else
-         if ($.ui.version.indexOf("1.11")==0)
-            item += name;
-         else
-            item = '<div>' + item + name + '</div>';
-
-         this.code += "<li cnt='" + this.cnt + "' arg='" + arg + "' style='" + style + "'>" + item + close_tag;
-         if (typeof func == 'function') this.funcs[this.cnt] = func; // keep call-back function
-
-         this.cnt++;
-      }
-
-      menu.addchk = function(flag, name, arg, func) {
-         return this.add((flag ? "chk:" : "unk:") + name, arg, func);
-      }
-
-      menu.size = function() { return this.cnt-1; }
-
-      menu.addDrawMenu = function(menu_name, opts, call_back) {
-         if (!opts) opts = [];
-         if (opts.length==0) opts.push("");
-
-         var without_sub = false;
-         if (menu_name.indexOf("nosub:")==0) {
-            without_sub = true;
-            menu_name = menu_name.substr(6);
+         rm.writeAttribute("class", sClass);
+         if (oItem.getTooltip_AsString()) {
+            rm.writeAttributeEscaped("title", oItem.getTooltip_AsString());
          }
+         rm.writeElementData(oItem);
 
-         if (opts.length === 1) {
-            if (opts[0]==='inspect') menu_name = menu_name.replace("Draw", "Inspect");
-            return this.add(menu_name, opts[0], call_back);
-         }
-
-         if (!without_sub) this.add("sub:" + menu_name, opts[0], call_back);
-
-         for (var i=0;i<opts.length;++i) {
-            var name = opts[i];
-            if (name=="") name = '&lt;dflt&gt;';
-
-            var group = i+1;
-            if ((opts.length>5) && (name.length>0)) {
-               // check if there are similar options, which can be grouped once again
-               while ((group<opts.length) && (opts[group].indexOf(name)==0)) group++;
-            }
-
-            if (without_sub) name = menu_name + " " + name;
-
-            if (group < i+2) {
-               this.add(name, opts[i], call_back);
-            } else {
-               this.add("sub:" + name, opts[i], call_back);
-               for (var k=i+1;k<group;++k)
-                  this.add(opts[k], opts[k], call_back);
-               this.add("endsub:");
-               i = group-1;
-            }
-         }
-         if (!without_sub) this.add("endsub:");
-      }
-
-      menu.remove = function() {
-         if (this.element!==null) {
-            this.element.remove();
-            if (this.close_callback) this.close_callback();
-            document.body.removeEventListener('click', this.remove_bind);
-         }
-         this.element = null;
-      }
-
-      menu.remove_bind = menu.remove.bind(menu);
-
-      menu.show = function(event, close_callback) {
-         this.remove();
-
-         if (typeof close_callback == 'function') this.close_callback = close_callback;
-
-         document.body.addEventListener('click', this.remove_bind);
-
-         var oldmenu = document.getElementById(menuname);
-         if (oldmenu) oldmenu.parentNode.removeChild(oldmenu);
-
-         $(document.body).append('<ul class="jsroot_ctxmenu">' + this.code + '</ul>');
-
-         this.element = $('.jsroot_ctxmenu');
-
-         var pthis = this;
-
-         this.element
-            .attr('id', menuname)
-            .css('left', event.clientX + window.pageXOffset)
-            .css('top', event.clientY + window.pageYOffset)
-//            .css('font-size', '80%')
-            .css('position', 'absolute') // this overrides ui-menu-items class property
-            .menu({
-               items: "> :not(.ui-widget-header)",
-               select: function( event, ui ) {
-                  var arg = ui.item.attr('arg'),
-                      cnt = ui.item.attr('cnt'),
-                      func = cnt ? pthis.funcs[cnt] : null;
-                  pthis.remove();
-                  if (typeof func == 'function') {
-                     if ('painter' in menu)
-                        func.bind(pthis.painter)(arg); // if 'painter' field set, returned as this to callback
-                     else
-                        func(arg);
-                  }
-              }
+         // ARIA
+         if (oInfo.bAccessible) {
+            rm.writeAccessibilityState(oItem, {
+               role: "menuitem",
+               disabled: !oMenu.checkEnabled(oItem),
+               posinset: oInfo.iItemNo,
+               setsize: oInfo.iTotalItems,
+               labelledby: {value: /*oMenu.getId() + "-label " + */this.getId() + "-txt " + this.getId() + "-scuttxt", append: true}
             });
+            if (oSubMenu) {
+               rm.writeAttribute("aria-haspopup", true);
+               rm.writeAttribute("aria-owns", oSubMenu.getId());
+            }
+         }
 
-         var newx = null, newy = null;
+         // Left border
+         rm.write("><div class=\"sapUiMnuItmL\"></div>");
 
-         if (event.clientX + this.element.width() > $(window).width()) newx = $(window).width() - this.element.width() - 20;
-         if (event.clientY + this.element.height() > $(window).height()) newy = $(window).height() - this.element.height() - 20;
+         // icon/check column
+         rm.write("<div class=\"sapUiMnuItmIco\">");
+         if (oItem.getIcon()) {
+            rm.writeIcon(oItem.getIcon(), null, {title: null});
+         }
+         rm.write("</div>");
 
-         if (newx!==null) this.element.css('left', (newx>0 ? newx : 0) + window.pageXOffset);
-         if (newy!==null) this.element.css('top', (newy>0 ? newy : 0) + window.pageYOffset);
+         // Text column
+         rm.write("<div id=\"" + this.getId() + "-txt\" class=\"sapUiMnuItmTxt\">");
+         rm.write(oItem.custom_html);
+         rm.write("</div>");
+
+         // Shortcut column
+         rm.write("<div id=\"" + this.getId() + "-scuttxt\" class=\"sapUiMnuItmSCut\"></div>");
+
+         // Submenu column
+         rm.write("<div class=\"sapUiMnuItmSbMnu\">");
+         if (oSubMenu) {
+            rm.write("<div class=\"sapUiIconMirrorInRTL\"></div>");
+         }
+         rm.write("</div>");
+
+         // Right border
+         rm.write("<div class=\"sapUiMnuItmR\"></div>");
+
+         rm.write("</li>");
       }
 
-      JSROOT.CallBack(maincallback, menu);
+      JSROOT.sap.ui.define([ 'sap/ui/unified/Menu', 'sap/ui/unified/MenuItem', 'sap/ui/unified/MenuItemBase' ],
+                            function(sapMenu, sapMenuItem, sapMenuItemBase) {
+
+         menu.add = function(name, arg, func) {
+            if (name == "separator") { this.separ = true; return; }
+
+            if (name.indexOf("header:")==0)
+               return this.items.push(new sapMenuItem("", { text: name.substr(7), enabled: false }));
+
+            if (name=="endsub:") {
+               var last = this.stack.pop();
+               last._item.setSubmenu(new sapMenu("", { items: this.items }));
+               this.items = last._items;
+               return;
+            }
+
+            var issub = false, checked = null;
+            if (name.indexOf("sub:")==0) {
+               name = name.substr(4);
+               issub = true;
+            }
+
+            if (typeof arg == 'function') { func = arg; arg = name;  }
+
+            // if ((arg==null) || (typeof arg != 'string')) arg = name;
+
+            if (name.indexOf("chk:")==0) { name = name.substr(4); checked = true; } else
+            if (name.indexOf("unk:")==0) { name = name.substr(4); checked = false; }
+
+            var item = new sapMenuItem("", { });
+
+            if (!issub && (name.indexOf("<svg")==0)) {
+               item.custom_html = name;
+               item.render = RenderCustomItem;
+            } else {
+               item.setText(name);
+               if (this.separ) item.setStartsSection(true);
+               this.separ = false;
+            }
+
+            if (checked) item.setIcon("sap-icon://accept");
+
+            this.items.push(item);
+
+            if (issub) {
+               this.stack.push({ _items: this.items, _item: item });
+               this.items = [];
+            }
+
+            if (typeof func == 'function') {
+               item.menu_func = func; // keep call-back function
+               item.menu_arg = arg; // keep call-back argument
+            }
+
+            this.cnt++;
+         }
+
+         menu.addchk = function(flag, name, arg, func) {
+            return this.add((flag ? "chk:" : "unk:") + name, arg, func);
+         }
+
+         menu.size = function() { return this.cnt-1; }
+
+         menu.addDrawMenu = function(menu_name, opts, call_back) {
+            if (!opts) opts = [];
+            if (opts.length==0) opts.push("");
+
+            var without_sub = false;
+            if (menu_name.indexOf("nosub:")==0) {
+               without_sub = true;
+               menu_name = menu_name.substr(6);
+            }
+
+            if (opts.length === 1) {
+               if (opts[0]==='inspect') menu_name = menu_name.replace("Draw", "Inspect");
+               return this.add(menu_name, opts[0], call_back);
+            }
+
+            if (!without_sub) this.add("sub:" + menu_name, opts[0], call_back);
+
+            for (var i=0;i<opts.length;++i) {
+               var name = opts[i];
+               if (name=="") name = '&lt;dflt&gt;';
+
+               var group = i+1;
+               if ((opts.length>5) && (name.length>0)) {
+                  // check if there are similar options, which can be grouped once again
+                  while ((group<opts.length) && (opts[group].indexOf(name)==0)) group++;
+               }
+
+               if (without_sub) name = menu_name + " " + name;
+
+               if (group < i+2) {
+                  this.add(name, opts[i], call_back);
+               } else {
+                  this.add("sub:" + name, opts[i], call_back);
+                  for (var k=i+1;k<group;++k)
+                     this.add(opts[k], opts[k], call_back);
+                  this.add("endsub:");
+                  i = group-1;
+               }
+            }
+            if (!without_sub) this.add("endsub:");
+         }
+
+         menu.remove = function() {
+            if (this.remove_bind) {
+               document.body.removeEventListener('click', this.remove_bind);
+               this.remove_bind = null;
+            }
+            if (this.element) {
+               this.element.destroy();
+               if (this.close_callback) this.close_callback();
+            }
+            this.element = null;
+         }
+
+         menu.remove_bind = menu.remove.bind(menu);
+
+         menu.show = function(event, close_callback) {
+            this.remove();
+
+            if (typeof close_callback == 'function') this.close_callback = close_callback;
+
+            var old = sap.ui.getCore().byId("root_context_menu");
+            if (old) old.destroy();
+
+            document.body.addEventListener('click', this.remove_bind);
+
+            this.element = new sapMenu("root_context_menu", { items: this.items });
+
+            // this.element.attachClosed({}, this.remove, this);
+
+            this.element.attachItemSelect(null, this.menu_item_select, this);
+
+            var eDock = sap.ui.core.Popup.Dock;
+            // var oButton = oEvent.getSource();
+            this.element.open(false, null, eDock.BeginTop, eDock.BeginTop, null, event.clientX + " " + event.clientY);
+         }
+
+         menu.menu_item_select = function(oEvent) {
+            var item = oEvent.getParameter("item");
+            if (!item || !item.menu_func) return;
+            // console.log('select item arg', item.menu_arg);
+            // console.log('select item', item.getText());
+            if (this.painter)
+               item.menu_func.bind(this.painter)(item.menu_arg);
+            else
+               item.menu_func(item.menu_arg);
+         }
+
+         JSROOT.CallBack(maincallback, menu);
+      });
 
       return menu;
    }
