@@ -734,8 +734,8 @@ Bool_t TCanvasPainter::ProcessWS(THttpCallArg *arg)
    } else if (cdata.find("SNAPDONE:") == 0) {
       cdata.erase(0, 9);
       conn->fReady = kTRUE;
-      conn->fDrawReady = kTRUE;                            // at least first drawing is performed
-      conn->fDelivered = (uint64_t)TString(cdata).Atoll(); // delivered version of the snapshot
+      conn->fDrawReady = kTRUE;                       // at least first drawing is performed
+      conn->fDelivered = (uint64_t)std::stoll(cdata); // delivered version of the snapshot
       CheckDataToSend();
    } else if (cdata.find("RREADY:") == 0) {
       conn->fReady = kTRUE;
