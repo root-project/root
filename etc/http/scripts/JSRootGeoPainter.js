@@ -30,6 +30,8 @@
    }
 } (function( JSROOT, d3, THREE ) {
 
+   "use strict";
+
    JSROOT.sources.push("geom");
 
    if ( typeof define === "function" && define.amd )
@@ -2751,7 +2753,7 @@
 
          if ((center[naxis]===0) && (center[naxis]>=box.min[name]) && (center[naxis]<=box.max[name]))
            if (!this.options._axis_center || (naxis===0)) {
-               geom = new THREE.SphereBufferGeometry(text_size*0.25);
+               var geom = new THREE.SphereBufferGeometry(text_size*0.25);
                mesh = new THREE.Mesh(geom, textMaterial);
                mesh.translateX((naxis===0) ? center[0] : buf[0]);
                mesh.translateY((naxis===1) ? center[1] : buf[1]);

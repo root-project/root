@@ -223,6 +223,7 @@ SimpleApp::~SimpleApp()
 
 void SimpleApp::OnRegisterCustomSchemes(CefRawPtr<CefSchemeRegistrar> registrar)
 {
+   // registrar->AddCustomScheme("rootscheme", true, true, true, true, true, true);
    registrar->AddCustomScheme("rootscheme", true, false, false, true, false, false);
 }
 
@@ -390,6 +391,12 @@ extern "C" void webgui_start_browser_in_cef3(const char *url, void *http_serv, b
    // settings.single_process = true;
 
    if (batch_mode) settings.windowless_rendering_enabled = true;
+
+   //TString plog = "cef.log";
+   //cef_string_ascii_to_utf16(plog.Data(), plog.Length(), &settings.log_file);
+   settings.log_severity = LOGSEVERITY_INFO; // LOGSEVERITY_VERBOSE;
+   //settings.uncaught_exception_stack_size = 100;
+   //settings.ignore_certificate_errors = true;
 
    // SimpleApp implements application-level callbacks for the browser process.
    // It will create the first browser instance in OnContextInitialized() after

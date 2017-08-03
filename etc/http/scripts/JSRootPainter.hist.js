@@ -22,6 +22,8 @@
    }
 } (function(JSROOT, d3) {
 
+   "use strict";
+
    JSROOT.sources.push("hist");
 
    JSROOT.ToolbarIcons.th2color = {
@@ -3241,7 +3243,7 @@
       }
       var pp = this.pad_painter();
       if (pp && pp._websocket) {
-         pp._websocket.send("EXEC:SetLog" + axis + (curr ? "(0)" : "(1)"));
+         pp.SendWebsocket("EXEC:SetLog" + axis + (curr ? "(0)" : "(1)"));
       } else {
          pad["fLog" + axis] = curr ? 0 : 1;
          obj.RedrawPad();
@@ -6360,7 +6362,7 @@
             }
 
             var cmd = "M" + xp[iminus] + "," + yp[iminus];
-            for (i = iminus+1;i<=iplus;++i)
+            for (var i=iminus+1;i<=iplus;++i)
                cmd +=  "l" + (xp[i] - xp[i-1]) + "," + (yp[i] - yp[i-1]);
             if (fillcolor !== 'none') cmd += "Z";
 
@@ -7448,16 +7450,14 @@
       lst.Add(JSROOT.clone(stack.fHists.arr[0]));
       this.haserrors = this.HasErrors(stack.fHists.arr[0]);
       for (var i=1;i<nhists;++i) {
-         var hnext = JSROOT.clone(stack.fHists.arr[i]);
-         var hprev = lst.arr[i-1];
+         var hnext = JSROOT.clone(stack.fHists.arr[i]),
+              hprev = lst.arr[i-1];
 
          if ((hnext.fNbins != hprev.fNbins) ||
              (hnext.fXaxis.fXmin != hprev.fXaxis.fXmin) ||
              (hnext.fXaxis.fXmax != hprev.fXaxis.fXmax)) {
             JSROOT.console("When drawing THStack, cannot sum-up histograms " + hnext.fName + " and " + hprev.fName);
-            delete hnext;
             lst.Clear();
-            delete lst;
             return false;
          }
 
