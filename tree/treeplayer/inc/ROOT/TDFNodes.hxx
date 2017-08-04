@@ -255,7 +255,7 @@ public:
 
 template <typename Helper, typename PrevDataFrame, typename BranchTypes_t = typename Helper::BranchTypes_t>
 class TAction final : public TActionBase {
-   using TypeInd_t = TDFInternal::GenStaticSeq_t<BranchTypes_t::list_size>;
+   using TypeInd_t = GenStaticSeq_t<BranchTypes_t::list_size>;
 
    Helper fHelper;
    const ColumnNames_t fBranches;
