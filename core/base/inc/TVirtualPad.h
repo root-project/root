@@ -67,6 +67,7 @@ public:
    virtual TLegend *BuildLegend(Double_t x1=0.5, Double_t y1=0.67, Double_t x2=0.88, Double_t y2=0.88, const char *title="", Option_t * option ="") = 0;
    virtual TVirtualPad* cd(Int_t subpadnumber=0) = 0;
    virtual void     Clear(Option_t *option="") = 0;
+   virtual Int_t    Clip(Double_t *x, Double_t *y, Double_t xclipl, Double_t yclipb, Double_t xclipr, Double_t yclipt) = 0;
    virtual void     Close(Option_t *option="") = 0;
    virtual void     CopyPixmap() = 0;
    virtual void     CopyPixmaps() = 0;
@@ -261,7 +262,7 @@ public:
 
    static TVirtualPad *&Pad();
 
-   ClassDef(TVirtualPad,2)  //Abstract base class for Pads and Canvases
+   ClassDef(TVirtualPad,3)  //Abstract base class for Pads and Canvases
 };
 
 //
