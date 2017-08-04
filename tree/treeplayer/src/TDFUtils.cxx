@@ -161,20 +161,20 @@ void CheckSnapshot(unsigned int nTemplateParams, unsigned int nColumnNames)
 const ColumnNames_t SelectColumns(unsigned int nRequiredNames, const ColumnNames_t &names,
                                   const ColumnNames_t &defaultNames)
 {
-   // TODO fix grammar in case nRequiredNames == 1 or names.size() == 1
    if (names.empty()) {
       // use default column names
       if (defaultNames.size() < nRequiredNames)
-         throw std::runtime_error(std::to_string(nRequiredNames) +
-                                  " column names are required but none were provided and the default list has size " +
-                                  std::to_string(defaultNames.size()));
+         throw std::runtime_error(
+            std::to_string(nRequiredNames) + " column name" + (nRequiredNames == 1 ? " is" : "s are") +
+            " required but none were provided and the default list has size " + std::to_string(defaultNames.size()));
       // return first nRequiredNames default column names
       return ColumnNames_t(defaultNames.begin(), defaultNames.begin() + nRequiredNames);
    } else {
       // use column names provided by the user to this particular transformation/action
       if (names.size() != nRequiredNames)
-         throw std::runtime_error(std::to_string(nRequiredNames) + " column names are required but " +
-                                  std::to_string(names.size()) + " were provided.");
+         throw std::runtime_error(std::to_string(nRequiredNames) + " column name" +
+                                  (nRequiredNames == 1 ? " is" : "s are") + " required but " +
+                                  std::to_string(names.size()) + (names.size() == 1 ? " was" : " were") + " provided.");
       return names;
    }
 }
