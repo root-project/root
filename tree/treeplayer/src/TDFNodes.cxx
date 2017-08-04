@@ -254,7 +254,7 @@ void TLoopManager::InitNodes()
 }
 
 /// Perform clean-up operations. To be called at the end of each event loop.
-void TLoopManager::CleanUp()
+void TLoopManager::CleanUpNodes()
 {
    fHasRunAtLeastOnce = true;
 
@@ -323,7 +323,7 @@ void TLoopManager::Run()
    }
 #endif // R__USE_IMT
 
-   CleanUp();
+   CleanUpNodes();
 }
 
 TLoopManager *TLoopManager::GetImplPtr()
