@@ -111,13 +111,10 @@ void GenerateInput(std::vector<T> &numbers, double minVal, double maxVal, UInt_t
    }
 }
 
-std::string MakeTitle(std::string_view version,
-                      std::string_view histname,
-                      std::string_view title,
-                      std::string_view axis)
+std::string MakeTitle(const std::string &version, const std::string &histname, const std::string &title,
+                      const std::string &axis)
 {
-   std::string result = std::string(version) + " " + std::string(histname) + " " + title.to_string() + " [" + axis.to_string() + "]";
-   return result;
+   return version + " " + histname + " " + title + " [" + axis + "]";
 }
 
 template <int dim, typename type> const char *GetHist();
@@ -144,8 +141,8 @@ namespace R7 {
       // This is odd ...
       using InputType_t = double;
 
-      using FillFunc_t = std::add_pointer_t<long(ExpTH2 &hist, std::vector<InputType_t> &input, std::string_view type)>;
-
+      using FillFunc_t =
+         std::add_pointer_t<long(ExpTH2 &hist, std::vector<InputType_t> &input, const std::string &type)>;
 
       struct EE {
          static constexpr const char * const gType = "regular bin size  ";
@@ -178,7 +175,8 @@ namespace R7 {
          }
       };
 
-      inline static long fillN(ExpTH2 &hist, std::vector<InputType_t> &input, std::string_view gType) {
+      inline static long fillN(ExpTH2 &hist, std::vector<InputType_t> &input, const std::string &gType)
+      {
 
          // This is odd :( ...
          using array_t = std::array<InputType_t, 2>;
@@ -194,8 +192,8 @@ namespace R7 {
          return hist.GetNDim();
       }
 
-
-      inline static long fillBuffered(ExpTH2 &hist, std::vector<InputType_t> &input, std::string_view gType) {
+      inline static long fillBuffered(ExpTH2 &hist, std::vector<InputType_t> &input, const std::string &gType)
+      {
          Experimental::THistBufferedFill<ExpTH2> filler(hist);
          std::string title = MakeTitle(gVersion, GetHist<kNDim, T>(),"fills (buffered)   ", gType);
          {
@@ -206,7 +204,8 @@ namespace R7 {
          return hist.GetNDim();
       }
 
-      inline static long fill(ExpTH2 &hist, std::vector<InputType_t> &input, std::string_view gType) {
+      inline static long fill(ExpTH2 &hist, std::vector<InputType_t> &input, const std::string &gType)
+      {
          std::string title = MakeTitle(gVersion, GetHist<kNDim, T>(),"fills              ", gType);
          {
             Timer t(title.c_str(),input.size()/2);
@@ -227,8 +226,8 @@ namespace R7 {
       // This is odd ...
       using InputType_t = double;
 
-      using FillFunc_t = std::add_pointer_t<long(ExpTH1 &hist, std::vector<InputType_t> &input, std::string_view type)>;
-
+      using FillFunc_t =
+         std::add_pointer_t<long(ExpTH1 &hist, std::vector<InputType_t> &input, const std::string &type)>;
 
       struct EE {
          static constexpr const char * const gType = "regular bin size  ";
@@ -261,7 +260,8 @@ namespace R7 {
          }
       };
 
-      inline static long fillN(ExpTH1 &hist, std::vector<InputType_t> &input, std::string_view gType) {
+      inline static long fillN(ExpTH1 &hist, std::vector<InputType_t> &input, const std::string &gType)
+      {
 
          // This is odd :( ...
          using array_t = std::array<InputType_t, 1>;
@@ -277,8 +277,8 @@ namespace R7 {
          return hist.GetNDim();
       }
 
-
-      inline static long fillBuffered(ExpTH1 &hist, std::vector<InputType_t> &input, std::string_view gType) {
+      inline static long fillBuffered(ExpTH1 &hist, std::vector<InputType_t> &input, const std::string &gType)
+      {
          Experimental::THistBufferedFill<ExpTH1> filler(hist);
          std::string title = MakeTitle(gVersion, GetHist<kNDim, T>(),"fills (buffered)   ", gType);
          {
@@ -289,7 +289,8 @@ namespace R7 {
          return hist.GetNDim();
       }
 
-      inline static long fill(ExpTH1 &hist, std::vector<InputType_t> &input, std::string_view gType) {
+      inline static long fill(ExpTH1 &hist, std::vector<InputType_t> &input, const std::string &gType)
+      {
          std::string title = MakeTitle(gVersion, GetHist<kNDim, T>(),"fills              ", gType);
          {
             Timer t(title.c_str(),input.size());
@@ -327,8 +328,8 @@ namespace R6 {
       // This is odd ...
       using InputType_t = double;
 
-      using FillFunc_t = std::add_pointer_t<long(HistType_t &hist, std::vector<InputType_t> &input, std::string_view type)>;
-
+      using FillFunc_t =
+         std::add_pointer_t<long(HistType_t &hist, std::vector<InputType_t> &input, const std::string &type)>;
 
       struct EE {
 
@@ -363,8 +364,8 @@ namespace R6 {
          }
       };
 
-
-      static long fillBuffered(HistType_t &hist, std::vector<InputType_t> &input, std::string_view gType) {
+      static long fillBuffered(HistType_t &hist, std::vector<InputType_t> &input, const std::string &gType)
+      {
          std::string title = MakeTitle(gVersion, GetHist<kNDim,T>(),"fills (buffered)   ", gType);
          hist.SetBuffer(TH1::GetDefaultBufferSize());
          {
@@ -376,8 +377,8 @@ namespace R6 {
          return (long)hist.GetEntries();
       }
 
-
-      static long fillN(HistType_t &hist, std::vector<InputType_t> &input, std::string_view gType) {
+      static long fillN(HistType_t &hist, std::vector<InputType_t> &input, const std::string &gType)
+      {
          std::string title = MakeTitle(gVersion, GetHist<kNDim,T>(),"fills N (stride 32)", gType);
          constexpr size_t stride = gStride;
          {
@@ -389,7 +390,8 @@ namespace R6 {
          return (long)hist.GetEntries();
       }
 
-      static long fill(HistType_t &hist, std::vector<InputType_t> &input, std::string_view gType) {
+      static long fill(HistType_t &hist, std::vector<InputType_t> &input, const std::string &gType)
+      {
          std::string title = MakeTitle(gVersion, GetHist<kNDim,T>(),"fills              ", gType);
          {
             //Timer t("R6 2D fills [regular bins size]",input.size()/2);
@@ -410,8 +412,8 @@ namespace R6 {
       // This is odd ...
       using InputType_t = double;
 
-      using FillFunc_t = std::add_pointer_t<long(HistType_t &hist, std::vector<InputType_t> &input, std::string_view type)>;
-
+      using FillFunc_t =
+         std::add_pointer_t<long(HistType_t &hist, std::vector<InputType_t> &input, const std::string &type)>;
 
       struct EE {
 
@@ -446,8 +448,8 @@ namespace R6 {
          }
       };
 
-
-      static long fillBuffered(HistType_t &hist, std::vector<InputType_t> &input, std::string_view gType) {
+      static long fillBuffered(HistType_t &hist, std::vector<InputType_t> &input, const std::string &gType)
+      {
          std::string title = MakeTitle(gVersion, GetHist<kNDim,T>(),"fills (buffered)   ", gType);
          hist.SetBuffer(TH1::GetDefaultBufferSize());
          {
@@ -459,8 +461,8 @@ namespace R6 {
          return (long)hist.GetEntries();
       }
 
-
-      static long fillN(HistType_t &hist, std::vector<InputType_t> &input, std::string_view gType) {
+      static long fillN(HistType_t &hist, std::vector<InputType_t> &input, const std::string &gType)
+      {
          std::string title = MakeTitle(gVersion, GetHist<kNDim,T>(),"fills N (stride 32)", gType);
          constexpr size_t stride = gStride;
          {
@@ -472,7 +474,8 @@ namespace R6 {
          return (long)hist.GetEntries();
       }
 
-      static long fill(HistType_t &hist, std::vector<InputType_t> &input, std::string_view gType) {
+      static long fill(HistType_t &hist, std::vector<InputType_t> &input, const std::string &gType)
+      {
          std::string title = MakeTitle(gVersion, GetHist<kNDim,T>(),"fills              ", gType);
          {
             //Timer t("R6 2D fills [regular bins size]",input.size()/2);

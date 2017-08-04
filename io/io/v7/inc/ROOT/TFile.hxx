@@ -19,8 +19,8 @@
 
 #include "TClass.h"
 
-#include "RStringView.h"
 #include <memory>
+#include <string>
 #include <typeinfo>
 
 namespace ROOT {
@@ -49,8 +49,7 @@ private:
 
   /// Serialize the object at address, using the object's TClass.
   //FIXME: what about `cl` "pointing" to a base class?
-  void WriteMemoryWithType(std::string_view name, const void *address,
-                           TClass *cl);
+  void WriteMemoryWithType(const std::string &name, const void *address, TClass *cl);
 
   friend Internal::TFileSharedPtrCtor;
 
@@ -82,36 +81,32 @@ public:
   /// Open a file with `name` for reading.
   ///
   /// \note: Synchronizes multi-threaded accesses through locks.
-  static TFilePtr Open(std::string_view name,
-                       const Options_t &opts = Options_t());
+  static TFilePtr Open(const std::string &name, const Options_t &opts = Options_t());
 
   /// Open an existing file with `name` for reading and writing. If a file with
   /// that name does not exist, an invalid TFilePtr will be returned.
   ///
   /// \note: Synchronizes multi-threaded accesses through locks.
-  static TFilePtr OpenForUpdate(std::string_view name,
-                                const Options_t &opts = Options_t());
+  static TFilePtr OpenForUpdate(const std::string &name, const Options_t &opts = Options_t());
 
   /// Open a file with `name` for reading and writing. Fail (return an invalid
   /// `TFilePtr`) if a file with this name already exists.
   ///
   /// \note: Synchronizes multi-threaded accesses through locks.
-  static TFilePtr Create(std::string_view name,
-                         const Options_t &opts = Options_t());
+  static TFilePtr Create(const std::string &name, const Options_t &opts = Options_t());
 
   /// Open a file with `name` for reading and writing. If a file with this name
   /// already exists, delete it and create a new one. Else simply create a new file.
   ///
   /// \note: Synchronizes multi-threaded accesses through locks.
-  static TFilePtr Recreate(std::string_view name,
-                           const Options_t &opts = Options_t());
+  static TFilePtr Recreate(const std::string &name, const Options_t &opts = Options_t());
 
   ///\}
 
   /// Set the new directory used for cached reads, returns the old directory.
   ///
   /// \note: Synchronizes multi-threaded accesses through locks.
-  static std::string SetCacheDir(std::string_view path);
+  static std::string SetCacheDir(const std::string &path);
 
   /// Get the directory used for cached reads.
   static std::string GetCacheDir();
@@ -137,7 +132,7 @@ public:
   /// \throws TDirectoryTypeMismatch if the object stored under this name is of
   ///   a type different from `T`.
   template<class T>
-  std::unique_ptr<T> Read(std::string_view name) {
+  std::unique_ptr<T> Read(const std::string &name) {
     // FIXME: need separate collections for a TDirectory's key/value and registered objects. Here, we want to emit a read and must look through the key/values without attaching an object to the TDirectory.
       // FIXME: do not register read object in TDirectory
       // FIXME: implement actual read
@@ -148,29 +143,30 @@ public:
 
   /// Write an object that is not lifetime managed by this TFileImplBase.
   template<class T>
-  void Write(std::string_view name, const T &obj) {
+  void Write(const std::string &name, const T &obj) {
     WriteMemoryWithType(name, &obj, TClass::GetClass(typeid(T)));
   }
 
   /// Write an object that is not lifetime managed by this TFileImplBase.
   template<class T>
-  void Write(std::string_view name, const T *obj) {
+  void Write(const std::string &name, const T *obj) {
     WriteMemoryWithType(name, obj, TClass::GetClass(typeid(T)));
   }
 
   /// Write an object that is already lifetime managed by this TFileImplBase.
-  void Write(std::string_view name) {
-    auto dep = Find(name.to_string());
+  void Write(const std::string &name) {
+    auto dep = Find(name);
     WriteMemoryWithType(name, dep.GetPointer().get(), dep.GetType());
   }
 
   /// Hand over lifetime management of an object to this TFileImplBase, and
   /// write it.
   template<class T>
-  void Write(std::string_view name, std::shared_ptr <T> &&obj) {
-    Add(name, obj);
-    // FIXME: use an iterator from the insertion to write instead of a second name lookup.
-    Write(name);
+  void Write(const std::string &name, std::shared_ptr<T> &&obj)
+  {
+     Add(name, obj);
+     // FIXME: use an iterator from the insertion to write instead of a second name lookup.
+     Write(name);
   }
 };
 

@@ -93,10 +93,10 @@ namespace Experimental {
 
   public:
     TLogEntry() = default;
-    TLogEntry(ELogLevel level, std::string_view group):
+    TLogEntry(ELogLevel level, const std::string &group):
        fGroup(group), fLevel(level) {}
-    TLogEntry(ELogLevel level, std::string_view group, std::string_view filename,
-           int line, std::string_view funcname):
+    TLogEntry(ELogLevel level, const std::string &group, const std::string &filename,
+           int line, const std::string &funcname):
     fGroup(group), fFile(filename), fFuncName(funcname), fLine(line),
     fLevel(level) {}
 
