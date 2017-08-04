@@ -78,7 +78,7 @@ class TLoopManager : public std::enable_shared_from_this<TLoopManager> {
    void RunAndCheckFilters(unsigned int slot, Long64_t entry);
    void InitNodeSlots(TTreeReader *r, unsigned int slot);
    void InitNodes();
-   void CleanUp();
+   void CleanUpNodes();
    void JitActions();
    void EvalChildrenCounts();
 
