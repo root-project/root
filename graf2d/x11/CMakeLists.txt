@@ -11,7 +11,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(GX11
                               DICTIONARY_OPTIONS "-writeEmptyRootPCM"
                               DEPENDENCIES Core
                               LIBRARIES Core ${X11_LIBRARIES} ${X11_Xpm_LIB} ${CMAKE_THREAD_LIBS_INIT}
-                              INSTALL_OPTIONS FILTER "X11/" FILTER "X11$")
+                              INSTALL_OPTIONS FILTER "inc/X11/" FILTER "X11$")
 
 if(AIX)
   include_directories(AFTER ${CMAKE_CURRENT_SOURCE_DIR}/inc)
