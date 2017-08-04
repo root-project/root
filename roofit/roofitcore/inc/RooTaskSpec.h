@@ -18,6 +18,7 @@
 
 #include "RooFit.h"
 #include <list>
+#include <string>
 #include "RooAbsTestStatistic.h"
 
 class RooArgList;
@@ -30,7 +31,7 @@ class RooTaskSpec {
   struct Task {
     Int_t id;
     Bool_t binned;
-    const char* name;
+    std::string name;
     Int_t entries;
     Bool_t is_done;
   };

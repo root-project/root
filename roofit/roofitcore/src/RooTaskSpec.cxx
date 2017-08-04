@@ -66,7 +66,7 @@ RooTaskSpec::RooTaskSpec(RooAbsReal* nll){
     ra->Print();
     cout <<"printed"<<endl;
 
-    RooAbsOptTestStatistic* rats = dynamic_cast<RooAbsOptTestStatistic*>(ra->list().at(0)) ;
+    RooAbsTestStatistic* rats = dynamic_cast<RooAbsTestStatistic*>(ra->list().at(0)) ;
     if (!rats) {
       cout << "ERROR: NLL is a RooAddition, but first element of addition is not a RooAbsTestStatistic!" << endl ;
       _fit_case = 0;

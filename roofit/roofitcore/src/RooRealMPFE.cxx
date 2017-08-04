@@ -225,18 +225,11 @@ void RooRealMPFE::initialize()
   // Clear eval error log prior to forking
   // to avoid confusions...
   clearEvalErrorLog() ;
-  if (_useTaskSpec){
-    cout<<"sending arg"<<endl;
-    setTaskSpec();
-  } else {
-    cout<<"UseTaskSpec not set true!"<<endl;
-  }
   // Fork server process and setup IPC
   _pipe = new BidirMMapPipe();
 //  if (RooTrace::timing_flag > 0) {
 //    _initTiming();
 //  }
-
   if (_pipe->isChild()) {
     // Start server loop
 //    RooTrace::callgrind_zero() ;
@@ -251,6 +244,13 @@ void RooRealMPFE::initialize()
     delete _pipe;
     _exit(0) ;
   } else {
+    if (_useTaskSpec){
+      cout<<"sending arg"<<endl;
+      setTaskSpec();
+    } else {
+      cout<<"UseTaskSpec not set true!"<<endl;
+    }
+
     // Client process - fork successul
     if (_verboseClient) ccoutD(Minimization) << "RooRealMPFE::initialize(" <<
 	GetName() << ") successfully forked server process " <<
@@ -386,9 +386,10 @@ void RooRealMPFE::setTaskSpec() {
   cout<<"Setting TaskSpec!"<<endl;
   RooAbsTestStatistic* tmp = dynamic_cast<RooAbsTestStatistic*>(_arg.absArg());
   RooTaskSpec taskspecification = RooTaskSpec(tmp);
+  Message msg = TaskSpec;
   cout<<"Got task spec "<< endl;
   tmp->Print();
-  //  *_pipe << taskspecification;
+  *_pipe << msg << *taskspecification.tasks.begin();
   //for (std::list<RooTaskSpec::Task>::const_iterator task = taskspecification.tasks.begin(), end = taskspecification.tasks.end(); task != end; ++task){
   //  cout << "This task is " << task->name <<endl;
   //  }
@@ -407,14 +408,20 @@ namespace RooFit {
     write(&ns, sizeof(ns));
     return *this;
   }
-  BidirMMapPipe& BidirMMapPipe::operator<< (const RooTaskSpec& TaskSpec) {
-    for (std::list<RooTaskSpec::Task>::const_iterator task = TaskSpec.tasks.begin(), end = TaskSpec.tasks.end(); task != end; ++task){
-      const char *name = task->name;
-      write(&name, sizeof(name));
-      return *this;
-    }
 
+  BidirMMapPipe& BidirMMapPipe::operator<< (const RooTaskSpec& TaskSpec) {
+    cout<<"passing TaskSpec out"<<endl;
+    for (std::list<RooTaskSpec::Task>::const_iterator task = TaskSpec.tasks.begin(), end = TaskSpec.tasks.end(); task != end; ++task){
+      *this << *task;
+    }
+    return *this;
   }
+  BidirMMapPipe& BidirMMapPipe::operator<< (const RooTaskSpec::Task& Task) {
+    cout<<"passing Task out"<<endl;
+    *this << Task.name;
+    return *this;
+  }
+
 
   BidirMMapPipe& BidirMMapPipe::operator>> (TimePoint& wall) {
     Duration::rep ns;
@@ -425,9 +432,14 @@ namespace RooFit {
     return *this;
   }
 
-  BidirMMapPipe& BidirMMapPipe::operator>> (const RooTaskSpec::Task& Task) {
-    const char *name = Task.name;
-    read(&name, sizeof(name));
+  //  BidirMMapPipe& BidirMMapPipe::operator>> (const RooTaskSpec::Task& Task) {
+  //  const char *name = Task.name;
+  //  read(&name, sizeof(name));
+  //   return *this;
+  // }
+  BidirMMapPipe& BidirMMapPipe::operator>> (RooTaskSpec::Task& Task) {
+    cout<<"passing Task in"<<endl;
+    *this  >> Task.name;
     return *this;
   }
 }
@@ -660,11 +672,11 @@ void RooRealMPFE::serverLoop() {
 
       case TaskSpec: {
 
-        //RooTaskSpec::Task taskspecification;
+        RooTaskSpec::Task taskspecification;
 	//	cout << *_pipe << endl;
-        RooTaskSpec taskspecification;
-	//        *_pipe >> taskspecification;
-	std::cout << "EEEEEE TaskSpec'd"<<endl;
+        //RooTaskSpec taskspecification;
+	*_pipe >> taskspecification;
+	std::cout << "EEEEEE TaskSpec'd "<< taskspecification.name <<endl;
         break;
       }
 
@@ -1271,6 +1283,7 @@ std::ostream& operator<<(std::ostream& out, const RooRealMPFE::Message value){
     PROCESS_VAL(RooRealMPFE::EnableOffset);
     PROCESS_VAL(RooRealMPFE::CalculateNoOffset);
     PROCESS_VAL(RooRealMPFE::SetCpuAffinity);
+    PROCESS_VAL(RooRealMPFE::TaskSpec);
     PROCESS_VAL(RooRealMPFE::MeasureCommunicationTime);
     PROCESS_VAL(RooRealMPFE::RetrieveTimings);
     PROCESS_VAL(RooRealMPFE::EnableTimingNumInts);

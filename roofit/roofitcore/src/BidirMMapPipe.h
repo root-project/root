@@ -793,7 +793,8 @@ class BidirMMapPipe {
         BidirMMapPipe& operator>>(char* (&str));
 
 	BidirMMapPipe& operator<<(const RooTaskSpec& TaskSpec);
-	BidirMMapPipe& operator>>(const RooTaskSpec::Task& taskspec);
+	BidirMMapPipe& operator<<(const RooTaskSpec::Task& Task);
+	BidirMMapPipe& operator>>(RooTaskSpec::Task& Task);
         /** @brief write a std::string object
          *
          * @param str string to write
@@ -817,7 +818,7 @@ class BidirMMapPipe {
          * @returns pipe written to
          */
         template<class T> BidirMMapPipe& operator<<(const T* tptr)
-        { write(&tptr, sizeof(tptr)); return *this; }
+	  {   write(&tptr, sizeof(tptr)); return *this; }
 
         /** @brief read raw pointer to T from other side
          *
