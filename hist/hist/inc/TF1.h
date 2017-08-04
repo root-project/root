@@ -724,8 +724,8 @@ inline T TF1::operator()(const T *x, const Double_t *params)
 template <class T>
 T TF1::EvalPar(const T *x, const Double_t *params)
 {
-   if (fType == EFType::kTemplVec || EFType::kTemplScalar) {
-      return EvalParTempl(x, params);
+  if (fType == EFType::kTemplVec || fType == EFType::kTemplScalar) {
+    return EvalParTempl(x, params);
    } else
       return TF1::EvalPar((double *) x, params);
 }
