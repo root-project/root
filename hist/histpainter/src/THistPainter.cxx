@@ -301,6 +301,7 @@ using `TH1::GetOption`:
 | "SURF3"   | Same as SURF with in addition a contour view drawn on the top.|
 | "SURF4"   | Draw a surface using Gouraud shading.|
 | "SURF5"   | Same as SURF3 but only the colored contour is drawn. Used with option CYL, SPH or PSR it allows to draw colored contours on a sphere, a cylinder or a in pseudo rapidity space. In cartesian or polar coordinates, option SURF3 is used.|
+| "LEGO9"   | Draw the 3D axis only. Mainly needed for internal use |
 | "FB"      | With LEGO or SURFACE, suppress the Front-Box.|
 | "BB"      | With LEGO or SURFACE, suppress the Back-Box.|
 | "A"       | With LEGO or SURFACE, suppress the axis.|
@@ -3815,6 +3816,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
       if (l[4] == '2') { Hoption.Lego = 12; l[4] = ' '; }
       if (l[4] == '3') { Hoption.Lego = 13; l[4] = ' '; }
       if (l[4] == '4') { Hoption.Lego = 14; l[4] = ' '; }
+      if (l[4] == '9') { Hoption.Lego = 19; l[4] = ' '; }
       l = strstr(chopt,"FB"); if (l) { Hoption.FrontBox = 0; strncpy(l,"  ",2); }
       l = strstr(chopt,"BB"); if (l) { Hoption.BackBox = 0;  strncpy(l,"  ",2); }
       l = strstr(chopt,"0");  if (l) { Hoption.Zero = 1;  strncpy(l," ",1); }
@@ -7670,6 +7672,14 @@ void THistPainter::PaintLego(Option_t *)
 
    if (raster) fLego->InitRaster(-1.1,-1.1,1.1,1.1,1000,800);
    else        fLego->InitMoveScreen(-1.1,1.1);
+
+   if (Hoption.Lego == 19) {
+      fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMove1);
+      if (Hoption.BackBox)   fLego->BackBox(90);
+      if (Hoption.FrontBox)  fLego->FrontBox(90);
+      if (!Hoption.Axis)     PaintLegoAxis(axis, 90);
+      return;
+   }
 
    if (Hoption.Lego == 11 || Hoption.Lego == 12) {
       if (Hoption.System == kCARTESIAN && Hoption.BackBox) {
