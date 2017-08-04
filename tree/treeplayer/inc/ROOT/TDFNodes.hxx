@@ -134,7 +134,7 @@ temporary columns whose values are generated on the fly. While the type of the
 value is known at compile time (or just-in-time), it is only at runtime that nodes
 can check whether a certain value is generated on the fly or not.
 
-TColumnValuePtr abstracts this difference by providing the same interface for
+TColumnValue abstracts this difference by providing the same interface for
 both cases and handling the reading or generation of new values transparently.
 Only one of the two data members fReaderProxy or fValuePtr will be non-null
 for a given TColumnValue, depending on whether the value comes from a real
