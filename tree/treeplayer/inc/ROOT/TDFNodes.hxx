@@ -270,7 +270,8 @@ public:
    }
 
    TAction(const TAction &) = delete;
-   TActionBase &operator=(const TActionBase &) = delete;
+   TAction &operator=(const TAction &) = delete;
+   ~TAction() { fHelper.Finalize(); }
 
    void InitSlot(TTreeReader *r, unsigned int slot) final
    {
@@ -293,8 +294,6 @@ public:
    }
 
    void TriggerChildrenCount() final { fPrevData.IncrChildrenCount(); }
-
-   ~TAction() { fHelper.Finalize(); }
 
    virtual void ClearValueReaders(unsigned int slot) final { ResetTDFValueTuple(fValues[slot], TypeInd_t()); }
 };
