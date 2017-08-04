@@ -18,8 +18,6 @@
 
 #include "ROOT/TPadExtent.hxx"
 
-#include <array>
-
 namespace ROOT {
 namespace Experimental {
 
