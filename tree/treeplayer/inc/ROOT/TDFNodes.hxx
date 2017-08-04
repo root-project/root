@@ -78,7 +78,8 @@ class TLoopManager : public std::enable_shared_from_this<TLoopManager> {
    void RunAndCheckFilters(unsigned int slot, Long64_t entry);
    void InitNodeSlots(TTreeReader *r, unsigned int slot);
    void InitNodes();
-   void CleanUp();
+   void CleanUpNodes();
+   void CleanUpTask(unsigned int slot);
    void JitActions();
    void EvalChildrenCounts();
 
@@ -164,7 +165,6 @@ public:
 
    void MakeProxy(TTreeReader *r, const std::string &bn)
    {
-      Reset();
       bool useReaderValue = std::is_same<ProxyParam_t, T>::value;
       if (useReaderValue)
          fReaderValue.reset(new TTreeReaderValue<T>(*r, bn.c_str()));
@@ -213,6 +213,15 @@ struct TTDFValueTuple<TypeList<BranchTypes...>> {
 template <typename BranchType>
 using TDFValueTuple_t = typename TTDFValueTuple<BranchType>::type;
 
+/// Clear the proxies of a tuple of TColumnValues
+template<typename ValueTuple, int...S>
+void ResetTDFValueTuple(ValueTuple& values, StaticSeq<S...>)
+{
+   // hack to expand a parameter pack without c++17 fold expressions.
+   std::initializer_list<int> expander{(std::get<S>(values).Reset(), 0)...};
+   (void)expander; // avoid "unused variable" warnings
+}
+
 class TActionBase {
 protected:
    TLoopManager *fImplPtr; ///< A raw pointer to the TLoopManager at the root of this functional
@@ -230,6 +239,7 @@ public:
    virtual void Run(unsigned int slot, Long64_t entry) = 0;
    virtual void InitSlot(TTreeReader *r, unsigned int slot) = 0;
    virtual void TriggerChildrenCount() = 0;
+   virtual void ClearValueReaders(unsigned int slot) = 0;
    unsigned int GetNSlots() const { return fNSlots; }
 };
 
@@ -275,6 +285,11 @@ public:
    void TriggerChildrenCount() final { fPrevData.IncrChildrenCount(); }
 
    ~TAction() { fHelper.Finalize(); }
+
+   virtual void ClearValueReaders(unsigned int slot) final
+   {
+      ResetTDFValueTuple(fValues[slot], TypeInd_t());
+   }
 };
 
 } // end NS TDF
@@ -311,6 +326,7 @@ public:
    virtual void Update(unsigned int slot, Long64_t entry) = 0;
    virtual void IncrChildrenCount() = 0;
    virtual void StopProcessing() = 0;
+   virtual void ClearValueReaders(unsigned int slot) = 0;
    void ResetChildrenCount()
    {
       fNChildren = 0;
@@ -401,6 +417,11 @@ public:
       if (fNChildren == 1)
          fPrevData.IncrChildrenCount();
    }
+
+   virtual void ClearValueReaders(unsigned int slot) final
+   {
+      ResetTDFValueTuple(fValues[slot], TypeInd_t());
+   }
 };
 
 class TFilterBase {
@@ -440,6 +461,7 @@ public:
    virtual void TriggerChildrenCount() = 0;
    unsigned int GetNSlots() const { return fNSlots; }
    virtual void ResetReportCount() = 0;
+   virtual void ClearValueReaders(unsigned int slot) = 0;
 };
 
 template <typename FilterF, typename PrevDataFrame>
@@ -530,6 +552,11 @@ public:
       // fAccepted and fRejected could be different than 0 if this is not the first event-loop run using this filter
       std::fill(fAccepted.begin(), fAccepted.end(), 0);
       std::fill(fRejected.begin(), fRejected.end(), 0);
+   }
+
+   virtual void ClearValueReaders(unsigned int slot) final
+   {
+      ResetTDFValueTuple(fValues[slot], TypeInd_t());
    }
 };
 
@@ -641,7 +668,6 @@ template <typename T>
 void ROOT::Internal::TDF::TColumnValue<T>::SetTmpColumn(unsigned int slot,
                                                         ROOT::Detail::TDF::TCustomColumnBase *tmpColumn)
 {
-   Reset();
    fTmpColumn = tmpColumn;
    if (tmpColumn->GetTypeId() != typeid(T))
       throw std::runtime_error(std::string("TColumnValue: type specified is ") + typeid(T).name() +
