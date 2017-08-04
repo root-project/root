@@ -231,7 +231,7 @@ void TLoopManager::RunTreeProcessorMT()
       CleanUpTask(slot);
       slotStack.ReturnSlot(slot);
    });
-#endif // not implemented otherwise
+#endif // no-op otherwise (will not be called)
 }
 
 /// Run event loop over one or multiple ROOT files, in sequence.
