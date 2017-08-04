@@ -169,6 +169,7 @@ void TLoopManager::RunEmptySourceMT()
       for (auto currEntry = range.first; currEntry < range.second; ++currEntry) {
          RunAndCheckFilters(slot, currEntry);
       }
+      CleanUpTask(slot);
       slotStack.Push(slot);
    };
 
@@ -203,6 +204,7 @@ void TLoopManager::RunTreeProcessorMT()
       while (r.Next()) {
          RunAndCheckFilters(slot, r.GetCurrentEntry());
       }
+      CleanUpTask(slot);
       slotStack.Push(slot);
    });
 #endif // not implemented otherwise
@@ -271,6 +273,15 @@ void TLoopManager::CleanUpNodes()
    for (auto &ptr : fBookedFilters) ptr->ResetChildrenCount();
    for (auto &ptr : fBookedRanges) ptr->ResetChildrenCount();
    for (auto &pair : fBookedBranches) pair.second->ResetChildrenCount();
+}
+
+/// Perform clean-up operations. To be called at the end of each task execution.
+// TODO in case of interleaved task execution, each task must clear the readervalues in its task slot
+void TLoopManager::CleanUpTask(unsigned int slot)
+{
+   for (auto &ptr : fBookedActions) ptr->ClearValueReaders(slot);
+   for (auto &ptr : fBookedFilters) ptr->ClearValueReaders(slot);
+   for (auto &pair : fBookedBranches) pair.second->ClearValueReaders(slot);
 }
 
 /// Jit all actions that required runtime column type inference, and clean the `fToJit` member variable.
