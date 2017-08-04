@@ -18,6 +18,8 @@
 
 #include "ROOT/TPadCoord.hxx"
 
+#include <array>
+
 namespace ROOT {
 namespace Experimental {
 
