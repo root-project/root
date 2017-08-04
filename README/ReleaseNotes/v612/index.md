@@ -125,9 +125,14 @@ large TClonesArray where each element contains another small vector container.
 
 ## Tutorials
 
+## Command line tools
+  - `rootls` has been extended.
+    - option `-l` displays the year
+    - option `-t` displays all details of 'THnSparse'
+
 
 ## Class Reference Guide
-
+  - The list of libraries needed by each class is displayed as a diagram.
 
 ## Build, Configuration and Testing Infrastructure
 
