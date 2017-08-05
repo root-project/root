@@ -27,12 +27,11 @@
 #ifndef TMVA_DNN_TENSORDATALOADER
 #define TMVA_DNN_TENSORDATALOADER
 
+#include "TMatrix.h"
+#include "TMVA/Event.h"
+
 namespace TMVA {
 namespace DNN {
-
-#include "TMatrix.h"
-
-#include "TMVA/Event.h"
 
 //
 // Input Data Types
@@ -135,12 +134,12 @@ private:
 
    const Data_t &fData; ///< The data that should be loaded in the batches.
 
-   size_t fNSamples;    ///< The total number of samples in the dataset.
-   size_t fBatchSize;   ///< The size of a batch.
-   size_t fBatchDepth;  ///< The number of matrices in the tensor.
-   size_t fBatchHeight; ///< The number od rows in each matrix.
-   size_t fBatchWidth;  ///< The number of columns in each matrix.
-   size_t fNOutputFeatures;
+   size_t fNSamples;        ///< The total number of samples in the dataset.
+   size_t fBatchSize;       ///< The size of a batch.
+   size_t fBatchDepth;      ///< The number of matrices in the tensor.
+   size_t fBatchHeight;     ///< The number od rows in each matrix.
+   size_t fBatchWidth;      ///< The number of columns in each matrix.
+   size_t fNOutputFeatures; ///< The number of outputs from the classifier/regressor
    size_t fBatchIndex;
 
    size_t fNStreams; ///< Number of buffer pairs.
@@ -161,13 +160,13 @@ public:
 
    /** Copy input tensor into the given host buffer. Function to be specialized by
     *  the architecture-specific backend. */
-   void CopyTensorInput(HostBuffer_t &buffer, IndexIterator_t begin, size_t batchSize);
+   void CopyTensorInput(HostBuffer_t &buffer, IndexIterator_t begin);
    /** Copy output matrix into the given host buffer. Function to be specialized
     * by the architecture-spcific backend. */
-   void CopyTensorOutput(HostBuffer_t &buffer, IndexIterator_t begin, size_t batchSize);
+   void CopyTensorOutput(HostBuffer_t &buffer, IndexIterator_t begin);
    /** Copy weight matrix into the given host buffer. Function to be specialized
     * by the architecture-spcific backend. */
-   void CopyTensorWeights(HostBuffer_t &buffer, IndexIterator_t begin, size_t batchSize);
+   void CopyTensorWeights(HostBuffer_t &buffer, IndexIterator_t begin);
 
    BatchIterator_t begin() { return TTensorBatchIterator<Data_t, Architecture_t>(*this); }
    BatchIterator_t end() { return TTensorBatchIterator<Data_t, Architecture_t>(*this, fNSamples / fBatchSize); }
@@ -207,10 +206,11 @@ TTensorDataLoader<Data_t, Architecture_t>::TTensorDataLoader(const Data_t &data,
 {
    size_t inputTensorSize = fBatchDepth * fBatchHeight * fBatchWidth;
    size_t outputMatrixSize = fBatchSize * fNOutputFeatures;
+   size_t weightMatrixSize = fBatchSize;
 
    for (size_t i = 0; i < fNStreams; i++) {
-      fHostBuffers.push_back(HostBuffer_t(inputTensorSize + outputMatrixSize));
-      fDeviceBuffers.push_back(DeviceBuffer_t(inputTensorSize + outputMatrixSize));
+      fHostBuffers.push_back(HostBuffer_t(inputTensorSize + outputMatrixSize + weightMatrixSize));
+      fDeviceBuffers.push_back(DeviceBuffer_t(inputTensorSize + outputMatrixSize + weightMatrixSize));
    }
 
    fSampleIndices.reserve(fNSamples);
@@ -244,9 +244,9 @@ TTensorBatch<Architecture_t> TTensorDataLoader<Data_t, Architecture_t>::GetTenso
    size_t sampleIndex = fBatchIndex * fBatchSize;
    IndexIterator_t sampleIndexIterator = fSampleIndices.begin() + sampleIndex;
 
-   CopyTensorInput(inputHostBuffer, sampleIndexIterator, fBatchSize);
-   CopyTensorOutput(outputHostBuffer, sampleIndexIterator, fBatchSize);
-   CopyTensorWeights(weightHostBuffer, sampleIndexIterator, fBatchSize);
+   CopyTensorInput(inputHostBuffer, sampleIndexIterator);
+   CopyTensorOutput(outputHostBuffer, sampleIndexIterator);
+   CopyTensorWeights(weightHostBuffer, sampleIndexIterator);
 
    deviceBuffer.CopyFrom(hostBuffer);
 
