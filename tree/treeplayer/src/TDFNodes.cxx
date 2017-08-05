@@ -144,6 +144,14 @@ void TLoopManager::RunAndCheckFilters(unsigned int slot, Long64_t entry)
    for (auto &namedFilterPtr : fBookedNamedFilters) namedFilterPtr->CheckFilters(slot, entry);
 }
 
+/// Perform clean-up operations. To be called at the end of each task execution.
+void TLoopManager::CleanUpTask(unsigned int slot)
+{
+   for (auto &ptr : fBookedActions) ptr->ClearValueReaders(slot);
+   for (auto &ptr : fBookedFilters) ptr->ClearValueReaders(slot);
+   for (auto &pair : fBookedBranches) pair.second->ClearValueReaders(slot);
+}
+
 void TLoopManager::Run()
 {
 #ifdef R__USE_IMT
@@ -175,6 +183,7 @@ void TLoopManager::Run()
             for (auto currEntry = range.first; currEntry < range.second; ++currEntry) {
                RunAndCheckFilters(slot, currEntry);
             }
+            CleanUpTask(slot);
             slotStack.Push(slot);
          };
 
@@ -192,6 +201,7 @@ void TLoopManager::Run()
             while (r.Next()) {
                RunAndCheckFilters(slot, r.GetCurrentEntry());
             }
+            CleanUpTask(slot);
             slotStack.Push(slot);
          });
       }

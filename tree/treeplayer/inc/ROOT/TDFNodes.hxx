@@ -97,6 +97,7 @@ public:
    void SetTree(std::shared_ptr<TTree> tree) { fTree = tree; }
    void IncrChildrenCount() { ++fNChildren; }
    void StopProcessing() { ++fNStopsReceived; }
+   void CleanUpTask(unsigned int slot);
 };
 } // end ns TDF
 } // end ns Detail
@@ -197,6 +198,15 @@ struct TTDFValueTuple<TTypeList<BranchTypes...>> {
 template <typename BranchType>
 using TDFValueTuple_t = typename TTDFValueTuple<BranchType>::type;
 
+/// Clear the proxies of a tuple of TColumnValues
+template<typename ValueTuple, int...S>
+void ResetTDFValueTuple(ValueTuple& values, TStaticSeq<S...>)
+{
+   // hack to expand a parameter pack without c++17 fold expressions.
+   std::initializer_list<int> expander{(std::get<S>(values).Reset(), 0)...};
+   (void)expander; // avoid "unused variable" warnings
+}
+
 class TActionBase {
 protected:
    TLoopManager *fImplPtr; ///< A raw pointer to the TLoopManager at the root of this functional
@@ -211,6 +221,7 @@ public:
    virtual void Run(unsigned int slot, Long64_t entry) = 0;
    virtual void Init(TTreeReader *r, unsigned int slot) = 0;
    unsigned int GetNSlots() const { return fNSlots; }
+   virtual void ClearValueReaders(unsigned int slot) = 0;
 };
 
 template <typename Helper, typename PrevDataFrame, typename BranchTypes_t = typename Helper::BranchTypes_t>
@@ -251,6 +262,8 @@ public:
    }
 
    ~TAction() { fHelper.Finalize(); }
+
+   void ClearValueReaders(unsigned int slot) final { ResetTDFValueTuple(fValues[slot], TypeInd_t()); }
 };
 
 } // end NS TDF
@@ -285,6 +298,7 @@ public:
    void IncrChildrenCount() { ++fNChildren; }
    virtual void StopProcessing() = 0;
    unsigned int GetNSlots() const { return fNSlots; }
+   virtual void ClearValueReaders(unsigned int slot) = 0;
 };
 
 template <typename F, typename PrevData>
@@ -357,6 +371,8 @@ public:
       ++fNStopsReceived;
       if (fNStopsReceived == fNChildren) fPrevData.StopProcessing();
    }
+
+   virtual void ClearValueReaders(unsigned int slot) final { ResetTDFValueTuple(fValues[slot], TypeInd_t()); }
 };
 
 class TFilterBase {
@@ -388,6 +404,7 @@ public:
    virtual void StopProcessing() = 0;
    unsigned int GetNSlots() const { return fNSlots; }
    virtual void ResetReportCount() = 0;
+   virtual void ClearValueReaders(unsigned int slot) = 0;
 };
 
 template <typename FilterF, typename PrevDataFrame>
@@ -460,6 +477,8 @@ public:
       std::fill(fAccepted.begin(), fAccepted.end(), 0);
       std::fill(fRejected.begin(), fRejected.end(), 0);
    }
+
+   void ClearValueReaders(unsigned int slot) final { ResetTDFValueTuple(fValues[slot], TypeInd_t()); }
 };
 
 class TRangeBase {
