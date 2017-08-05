@@ -103,11 +103,13 @@ void TFilterBase::PrintReport() const
 // fixed at construction time and no blocking is foreseen.
 class TSlotStack {
 private:
-   unsigned int &GetCount() {
+   unsigned int &GetCount()
+   {
       thread_local unsigned int count = 0U;
       return count;
    }
-   unsigned int &GetIndex() {
+   unsigned int &GetIndex()
+   {
       thread_local unsigned int index = UINT_MAX;
       return index;
    }
@@ -143,10 +145,11 @@ unsigned int TSlotStack::GetSlot()
    auto &index = GetIndex();
    auto &count = GetCount();
    count++;
-   if (UINT_MAX != index) return index;
+   if (UINT_MAX != index)
+      return index;
    std::lock_guard<ROOT::TSpinMutex> guard(fMutex);
-   assert(fCursor > 0 &&
-          "TSlotStack assumes that a value can be always obtained. In this case fCursor is <=0 and this violates such assumption.");
+   assert(fCursor > 0 && "TSlotStack assumes that a value can be always obtained. In this case fCursor is <=0 and this "
+                         "violates such assumption.");
    index = fBuf[--fCursor];
    return index;
 }

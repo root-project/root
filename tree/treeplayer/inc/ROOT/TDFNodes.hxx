@@ -224,8 +224,8 @@ template <typename BranchType>
 using TDFValueTuple_t = typename TTDFValueTuple<BranchType>::type;
 
 /// Clear the proxies of a tuple of TColumnValues
-template<typename ValueTuple, int...S>
-void ResetTDFValueTuple(ValueTuple& values, StaticSeq<S...>)
+template <typename ValueTuple, int... S>
+void ResetTDFValueTuple(ValueTuple &values, StaticSeq<S...>)
 {
    // hack to expand a parameter pack without c++17 fold expressions.
    std::initializer_list<int> expander{(std::get<S>(values).Reset(), 0)...};
@@ -296,10 +296,7 @@ public:
 
    ~TAction() { fHelper.Finalize(); }
 
-   virtual void ClearValueReaders(unsigned int slot) final
-   {
-      ResetTDFValueTuple(fValues[slot], TypeInd_t());
-   }
+   virtual void ClearValueReaders(unsigned int slot) final { ResetTDFValueTuple(fValues[slot], TypeInd_t()); }
 };
 
 } // end NS TDF
@@ -428,10 +425,7 @@ public:
          fPrevData.IncrChildrenCount();
    }
 
-   virtual void ClearValueReaders(unsigned int slot) final
-   {
-      ResetTDFValueTuple(fValues[slot], TypeInd_t());
-   }
+   virtual void ClearValueReaders(unsigned int slot) final { ResetTDFValueTuple(fValues[slot], TypeInd_t()); }
 };
 
 class TFilterBase {
@@ -564,10 +558,7 @@ public:
       std::fill(fRejected.begin(), fRejected.end(), 0);
    }
 
-   virtual void ClearValueReaders(unsigned int slot) final
-   {
-      ResetTDFValueTuple(fValues[slot], TypeInd_t());
-   }
+   virtual void ClearValueReaders(unsigned int slot) final { ResetTDFValueTuple(fValues[slot], TypeInd_t()); }
 };
 
 class TRangeBase {
