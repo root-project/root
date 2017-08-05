@@ -133,9 +133,9 @@ void TReference<AReal>::Im2col(TMatrixT<AReal> &A, TMatrixT<AReal> &B, size_t im
          size_t currLocalViewPixel = 0;
 
          // within the local view
-         for (size_t m = 0; m < (size_t)B.GetNrows(); m++) {
-            for (size_t k = i - fltHeight / 2; k <= i + (fltHeight - 1) / 2; k++) {
-               for (size_t l = j - fltWidth / 2; l <= j + (fltWidth - 1) / 2; l++) {
+         for (int m = 0; m < B.GetNrows(); m++) {
+            for (int k = i - fltHeight / 2; k <= i + (fltHeight - 1) / 2; k++) {
+               for (int l = j - fltWidth / 2; l <= j + (fltWidth - 1) / 2; l++) {
 
                   // Check the boundaries
                   if (k < 0 || k >= imgHeight || l < 0 || l >= imgWidth)
@@ -334,11 +334,11 @@ void TReference<AReal>::Downsample(TMatrixT<AReal> &A, TMatrixT<AReal> &B, const
    for (int i = fltHeight / 2; i <= imgHeightBound; i += strideRows) {
       for (int j = fltWidth / 2; j <= imgWidthBound; j += strideCols) {
          // within local views
-         for (size_t m = 0; m < (size_t)C.GetNrows(); m++) {
+         for (int m = 0; m < C.GetNrows(); m++) {
             AReal value = -std::numeric_limits<AReal>::max();
 
-            for (size_t k = i - fltHeight / 2; k <= i + (fltHeight - 1) / 2; k++) {
-               for (size_t l = j - fltWidth / 2; l <= j + (fltWidth - 1) / 2; l++) {
+            for (int k = i - fltHeight / 2; k <= i + (fltHeight - 1) / 2; k++) {
+               for (int l = j - fltWidth / 2; l <= j + (fltWidth - 1) / 2; l++) {
                   if (C(m, k * imgWidth + l) > value) {
                      value = C(m, k * imgWidth + l);
                      B(m, currLocalView) = k * imgWidth + l;
