@@ -146,7 +146,7 @@ template <>
 void TDataLoader<TMVAInput_t, TReference<Real_t>>::CopyOutput(TMatrixT<Real_t> &matrix, IndexIterator_t sampleIterator)
 {
    Event *event = std::get<0>(fData).front();
-   DataSetInfo &info = std::get<1>(fData);
+   const DataSetInfo &info = std::get<1>(fData);
    Int_t m = matrix.GetNrows();
    Int_t n = matrix.GetNcols();
 
@@ -211,7 +211,7 @@ void TDataLoader<TMVAInput_t, TReference<Double_t>>::CopyOutput(TMatrixT<Double_
                                                                 IndexIterator_t sampleIterator)
 {
    Event *event = std::get<0>(fData).front();
-   DataSetInfo &info = std::get<1>(fData);
+   const DataSetInfo &info = std::get<1>(fData);
    Int_t m = matrix.GetNrows();
    Int_t n = matrix.GetNcols();
 
