@@ -97,7 +97,7 @@ int tdf007_snapshot()
    auto snapshot_tdf = d2.Snapshot<int>(treeName, outFileName, {"b1_square"});
    auto h = snapshot_tdf.Histo1D();
    auto c = new TCanvas();
-   h->Draw();
+   h->DrawClone();
 
    return 0;
 }
