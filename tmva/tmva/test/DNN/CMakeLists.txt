@@ -113,4 +113,7 @@ endif (BLAS_FOUND AND imt)
 
   # DNN - Minimization
   ROOT_EXECUTABLE(testMinimization TestMinimization.cxx LIBRARIES ${Libraries})
-  ROOT_ADD_TEST(TMVA-DNN-Minimization COMMAND testMinimization)
+  # this test takes more than 20 minutes on arm in non-optimised mode
+  if (NOT (CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64" AND CMAKE_BUILD_TYPE STREQUAL "Debug") )
+    ROOT_ADD_TEST(TMVA-DNN-Minimization COMMAND testMinimization)
+  endif()
