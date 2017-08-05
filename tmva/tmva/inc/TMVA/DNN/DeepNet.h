@@ -11,9 +11,9 @@
  *      Deep Neural Network                                                       *
  *                                                                                *
  * Authors (alphabetical):                                                        *
- *      Akshay Vashistha     <akshayvashistha1995@gmail.com> - CERN, Switzerland  *                                                                                *
- *      Vladimir Ilievski      <ilievski.vladimir@live.com>  - CERN, Switzerland  *
- *                                                                                *                                                                                *
+ *      Akshay Vashistha     <akshayvashistha1995@gmail.com> - CERN, Switzerland  * *
+ *      Vladimir Ilievski    <ilievski.vladimir@live.com>  - CERN, Switzerland  *
+ *                                                                                * *
  * Copyright (c) 2005-2015:                                                       *
  *      CERN, Switzerland                                                         *
  *      U. of Victoria, Canada                                                    *
@@ -88,7 +88,7 @@ private:
    size_t fBatchHeight; ///< The height of the batch used for training/testing.
    size_t fBatchWidth;  ///< The width of the batch used for training/testing.
 
-   bool fIsTraining;     ///< Is the network training?
+   bool fIsTraining; ///< Is the network training?
 
    ELossFunction fJ;      ///< The loss function of the network.
    EInitialization fI;    ///< The initialization method of the network.
@@ -102,7 +102,7 @@ public:
    /*! Constructor */
    TDeepNet(size_t BatchSize, size_t InputDepth, size_t InputHeight, size_t InputWidth, size_t BatchDepth,
             size_t BatchHeight, size_t BatchWidth, ELossFunction fJ, EInitialization fI = EInitialization::kZero,
-            ERegularization fR = ERegularization::kNone, Scalar_t fWeightDecay = 0.0, bool isTraining=false);
+            ERegularization fR = ERegularization::kNone, Scalar_t fWeightDecay = 0.0, bool isTraining = false);
 
    /*! Copy-constructor */
    TDeepNet(const TDeepNet &);
@@ -162,30 +162,28 @@ public:
     *  the layer is already created. */
    void AddReshapeLayer(TReshapeLayer<Architecture_t> *reshapeLayer);
 
-   TCorruptionLayer<Architecture_t> * AddCorruptionLayer(size_t visibleUnits,size_t hiddenUnits, Scalar_t dropoutProbability,
-                                                         Scalar_t corruptionLevel);
+   TCorruptionLayer<Architecture_t> *AddCorruptionLayer(size_t visibleUnits, size_t hiddenUnits,
+                                                        Scalar_t dropoutProbability, Scalar_t corruptionLevel);
 
    void AddCorruptionLayer(TCorruptionLayer<Architecture_t> *corruptionLayer);
 
-   TCompressionLayer<Architecture_t> *
-   AddCompressionLayer(size_t visibleUnits, size_t hiddenUnits,
-                       Scalar_t dropoutProbability, EActivationFunction f,
-                       std::vector<Matrix_t> weights,
-                       std::vector<Matrix_t> biases);
+   TCompressionLayer<Architecture_t> *AddCompressionLayer(size_t visibleUnits, size_t hiddenUnits,
+                                                          Scalar_t dropoutProbability, EActivationFunction f,
+                                                          std::vector<Matrix_t> weights, std::vector<Matrix_t> biases);
 
    void AddCompressionLayer(TCompressionLayer<Architecture_t> *compressionLayer);
 
-   TReconstructionLayer<Architecture_t> *AddReconstructionLayer(
-         size_t visibleUnits, size_t hiddenUnits, Scalar_t learningRate,
-         EActivationFunction f, std::vector<Matrix_t> weights,
-         std::vector<Matrix_t> biases, Scalar_t corruptionLevel,
-         Scalar_t dropoutProbability);
+   TReconstructionLayer<Architecture_t> *AddReconstructionLayer(size_t visibleUnits, size_t hiddenUnits,
+                                                                Scalar_t learningRate, EActivationFunction f,
+                                                                std::vector<Matrix_t> weights,
+                                                                std::vector<Matrix_t> biases, Scalar_t corruptionLevel,
+                                                                Scalar_t dropoutProbability);
 
    void AddReconstructionLayer(TReconstructionLayer<Architecture_t> *reconstructionLayer);
 
-   TLogisticRegressionLayer<Architecture_t> *
-   AddLogisticRegressionLayer(size_t inputUnits, size_t outputUnits,
-                              size_t testDataBatchSize, Scalar_t learningRate);
+   TLogisticRegressionLayer<Architecture_t> *AddLogisticRegressionLayer(size_t inputUnits, size_t outputUnits,
+                                                                        size_t testDataBatchSize,
+                                                                        Scalar_t learningRate);
 
    void AddLogisticRegressionLayer(TLogisticRegressionLayer<Architecture_t> *logisticRegressionLayer);
 
@@ -234,14 +232,12 @@ public:
 
    /* To train the Deep AutoEncoder network with required number of TDAELayer
     * class type layers. */
-   void PreTrain(std::vector<Matrix_t> &input,
-                 std::vector<size_t> numHiddenUnitsPerLayer,
-                 Scalar_t learningRate, Scalar_t corruptionLevel,
-                 Scalar_t dropoutProbability, size_t epochs,
-                 EActivationFunction f, bool applyDropout = false);
+   void PreTrain(std::vector<Matrix_t> &input, std::vector<size_t> numHiddenUnitsPerLayer, Scalar_t learningRate,
+                 Scalar_t corruptionLevel, Scalar_t dropoutProbability, size_t epochs, EActivationFunction f,
+                 bool applyDropout = false);
 
    void FineTune(std::vector<Matrix_t> &input, std::vector<Matrix_t> &testInput, std::vector<Matrix_t> &outputLabel,
-                 size_t outputUnits,size_t testDataBatchSize, Scalar_t learningRate, size_t epochs);
+                 size_t outputUnits, size_t testDataBatchSize, Scalar_t learningRate, size_t epochs);
 
    /*! Function for parallel backward in the vector of deep nets, where the master
     *  net is the net calling this function and getting the updates from the other nets.
@@ -309,7 +305,7 @@ public:
    inline size_t GetBatchHeight() const { return fBatchHeight; }
    inline size_t GetBatchWidth() const { return fBatchWidth; }
 
-   inline bool   IsTraining() const {return fIsTraining;}
+   inline bool IsTraining() const { return fIsTraining; }
 
    inline ELossFunction GetLossFunction() const { return fJ; }
    inline EInitialization GetInitialization() const { return fI; }
@@ -501,12 +497,12 @@ void TDeepNet<Architecture_t, Layer_t>::AddMaxPoolLayer(TMaxPoolLayer<Architectu
 
 //______________________________________________________________________________
 template <typename Architecture_t, typename Layer_t>
-TBasicRNNLayer<Architecture_t> *TDeepNet<Architecture_t, Layer_t>::AddBasicRNNLayer(size_t batchSize, size_t stateSize, size_t inputSize,
-                                                                                    size_t timeSteps, bool rememberState)
+TBasicRNNLayer<Architecture_t> *TDeepNet<Architecture_t, Layer_t>::AddBasicRNNLayer(size_t batchSize, size_t stateSize,
+                                                                                    size_t inputSize, size_t timeSteps,
+                                                                                    bool rememberState)
 {
-   TBasicRNNLayer<Architecture_t> *basicRNNLayer = new TBasicRNNLayer<Architecture_t>(batchSize, stateSize, inputSize,
-                                                                                      timeSteps, rememberState, DNN::EActivationFunction::kTanh,
-                                                                                      fIsTraining);
+   TBasicRNNLayer<Architecture_t> *basicRNNLayer = new TBasicRNNLayer<Architecture_t>(
+      batchSize, stateSize, inputSize, timeSteps, rememberState, DNN::EActivationFunction::kTanh, fIsTraining);
    fLayers.push_back(basicRNNLayer);
    return basicRNNLayer;
 }
@@ -519,14 +515,15 @@ void TDeepNet<Architecture_t, Layer_t>::AddBasicRNNLayer(TBasicRNNLayer<Architec
 }
 //______________________________________________________________________________
 template <typename Architecture_t, typename Layer_t>
-TCorruptionLayer<Architecture_t> *
-TDeepNet<Architecture_t, Layer_t>::AddCorruptionLayer(size_t visibleUnits,size_t hiddenUnits, Scalar_t dropoutProbability,
-                                                      Scalar_t corruptionLevel)
+TCorruptionLayer<Architecture_t> *TDeepNet<Architecture_t, Layer_t>::AddCorruptionLayer(size_t visibleUnits,
+                                                                                        size_t hiddenUnits,
+                                                                                        Scalar_t dropoutProbability,
+                                                                                        Scalar_t corruptionLevel)
 {
    size_t batchSize = this->GetBatchSize();
 
-   TCorruptionLayer<Architecture_t> *corruptionLayer = new TCorruptionLayer<Architecture_t>(batchSize, visibleUnits, hiddenUnits,
-                                                                                            dropoutProbability, corruptionLevel);
+   TCorruptionLayer<Architecture_t> *corruptionLayer =
+      new TCorruptionLayer<Architecture_t>(batchSize, visibleUnits, hiddenUnits, dropoutProbability, corruptionLevel);
    fLayers.push_back(corruptionLayer);
    return corruptionLayer;
 }
@@ -535,20 +532,19 @@ TDeepNet<Architecture_t, Layer_t>::AddCorruptionLayer(size_t visibleUnits,size_t
 template <typename Architecture_t, typename Layer_t>
 void TDeepNet<Architecture_t, Layer_t>::AddCorruptionLayer(TCorruptionLayer<Architecture_t> *corruptionLayer)
 {
-  fLayers.push_back(corruptionLayer);
+   fLayers.push_back(corruptionLayer);
 }
 
 //______________________________________________________________________________
 template <typename Architecture_t, typename Layer_t>
-TCompressionLayer<Architecture_t> *
-TDeepNet<Architecture_t, Layer_t>::AddCompressionLayer(size_t visibleUnits, size_t hiddenUnits, Scalar_t dropoutProbability,
-                                                       EActivationFunction f, std::vector<Matrix_t> weights, std::vector<Matrix_t> biases)
+TCompressionLayer<Architecture_t> *TDeepNet<Architecture_t, Layer_t>::AddCompressionLayer(
+   size_t visibleUnits, size_t hiddenUnits, Scalar_t dropoutProbability, EActivationFunction f,
+   std::vector<Matrix_t> weights, std::vector<Matrix_t> biases)
 {
    size_t batchSize = this->GetBatchSize();
 
-   TCompressionLayer<Architecture_t> *compressionLayer = new TCompressionLayer<Architecture_t>(batchSize, visibleUnits,
-                                                                                               hiddenUnits, dropoutProbability, f,
-                                                                                               weights, biases);
+   TCompressionLayer<Architecture_t> *compressionLayer = new TCompressionLayer<Architecture_t>(
+      batchSize, visibleUnits, hiddenUnits, dropoutProbability, f, weights, biases);
    fLayers.push_back(compressionLayer);
    return compressionLayer;
 }
@@ -562,46 +558,42 @@ void TDeepNet<Architecture_t, Layer_t>::AddCompressionLayer(TCompressionLayer<Ar
 
 //______________________________________________________________________________
 template <typename Architecture_t, typename Layer_t>
-TReconstructionLayer<Architecture_t> *
-TDeepNet<Architecture_t, Layer_t>::AddReconstructionLayer(size_t visibleUnits, size_t hiddenUnits, Scalar_t learningRate,
-                                                          EActivationFunction f, std::vector<Matrix_t> weights,
-                                                          std::vector<Matrix_t> biases, Scalar_t corruptionLevel,
-                                                          Scalar_t dropoutProbability)
+TReconstructionLayer<Architecture_t> *TDeepNet<Architecture_t, Layer_t>::AddReconstructionLayer(
+   size_t visibleUnits, size_t hiddenUnits, Scalar_t learningRate, EActivationFunction f, std::vector<Matrix_t> weights,
+   std::vector<Matrix_t> biases, Scalar_t corruptionLevel, Scalar_t dropoutProbability)
 {
    size_t batchSize = this->GetBatchSize();
 
-   TReconstructionLayer<Architecture_t> *reconstructionLayer = new TReconstructionLayer<Architecture_t>(batchSize, visibleUnits, hiddenUnits,
-                                                                                                        learningRate,
-                                                                                                        f, weights,biases, corruptionLevel,
-                                                                                                        dropoutProbability);
+   TReconstructionLayer<Architecture_t> *reconstructionLayer = new TReconstructionLayer<Architecture_t>(
+      batchSize, visibleUnits, hiddenUnits, learningRate, f, weights, biases, corruptionLevel, dropoutProbability);
    fLayers.push_back(reconstructionLayer);
    return reconstructionLayer;
 }
 //______________________________________________________________________________
 
 template <typename Architecture_t, typename Layer_t>
-void TDeepNet<Architecture_t, Layer_t>::AddReconstructionLayer(TReconstructionLayer<Architecture_t> *reconstructionLayer)
+void TDeepNet<Architecture_t, Layer_t>::AddReconstructionLayer(
+   TReconstructionLayer<Architecture_t> *reconstructionLayer)
 {
    fLayers.push_back(reconstructionLayer);
 }
 
 //______________________________________________________________________________
 template <typename Architecture_t, typename Layer_t>
-TLogisticRegressionLayer<Architecture_t> *
-TDeepNet<Architecture_t, Layer_t>::AddLogisticRegressionLayer(size_t inputUnits, size_t outputUnits, size_t testDataBatchSize,
-                                                              Scalar_t learningRate)
+TLogisticRegressionLayer<Architecture_t> *TDeepNet<Architecture_t, Layer_t>::AddLogisticRegressionLayer(
+   size_t inputUnits, size_t outputUnits, size_t testDataBatchSize, Scalar_t learningRate)
 {
    size_t batchSize = this->GetBatchSize();
 
-   TLogisticRegressionLayer<Architecture_t> *logisticRegressionLayer = new TLogisticRegressionLayer<Architecture_t>(batchSize, inputUnits,
-                                                                                                                    outputUnits, testDataBatchSize,
-                                                                                                                    learningRate);
+   TLogisticRegressionLayer<Architecture_t> *logisticRegressionLayer =
+      new TLogisticRegressionLayer<Architecture_t>(batchSize, inputUnits, outputUnits, testDataBatchSize, learningRate);
    fLayers.push_back(logisticRegressionLayer);
    return logisticRegressionLayer;
 }
 //______________________________________________________________________________
 template <typename Architecture_t, typename Layer_t>
-void TDeepNet<Architecture_t, Layer_t>::AddLogisticRegressionLayer(TLogisticRegressionLayer<Architecture_t> *logisticRegressionLayer)
+void TDeepNet<Architecture_t, Layer_t>::AddLogisticRegressionLayer(
+   TLogisticRegressionLayer<Architecture_t> *logisticRegressionLayer)
 {
    fLayers.push_back(logisticRegressionLayer);
 }
@@ -723,11 +715,10 @@ auto TDeepNet<Architecture_t, Layer_t>::ParallelForward(std::vector<TDeepNet<Arc
 }
 //_____________________________________________________________________________
 template <typename Architecture_t, typename Layer_t>
-auto TDeepNet<Architecture_t, Layer_t>::PreTrain(std::vector<Matrix_t> &input, std::vector<size_t> numHiddenUnitsPerLayer,
-                                                 Scalar_t learningRate, Scalar_t corruptionLevel,
-                                                 Scalar_t dropoutProbability, size_t epochs, EActivationFunction f,
-                                                 bool applyDropout)
--> void
+auto TDeepNet<Architecture_t, Layer_t>::PreTrain(std::vector<Matrix_t> &input,
+                                                 std::vector<size_t> numHiddenUnitsPerLayer, Scalar_t learningRate,
+                                                 Scalar_t corruptionLevel, Scalar_t dropoutProbability, size_t epochs,
+                                                 EActivationFunction f, bool applyDropout) -> void
 {
    std::vector<Matrix_t> inp1;
    std::vector<Matrix_t> inp2;
@@ -735,124 +726,107 @@ auto TDeepNet<Architecture_t, Layer_t>::PreTrain(std::vector<Matrix_t> &input, s
    size_t batchSize = this->GetBatchSize();
    size_t visibleUnits = (size_t)input[0].GetNrows();
 
-   AddCorruptionLayer(visibleUnits,numHiddenUnitsPerLayer[0], dropoutProbability, corruptionLevel);
+   AddCorruptionLayer(visibleUnits, numHiddenUnitsPerLayer[0], dropoutProbability, corruptionLevel);
    fLayers.back()->Initialize();
    fLayers.back()->Forward(input, applyDropout);
-   //fLayers.back()->Print();
+   // fLayers.back()->Print();
 
-   AddCompressionLayer(visibleUnits, numHiddenUnitsPerLayer[0],
-                       dropoutProbability, f, fLayers.back()->GetWeights(),
+   AddCompressionLayer(visibleUnits, numHiddenUnitsPerLayer[0], dropoutProbability, f, fLayers.back()->GetWeights(),
                        fLayers.back()->GetBiases());
    fLayers.back()->Initialize();
-   fLayers.back()->Forward(fLayers[fLayers.size() - 2]->GetOutput(),
-                           applyDropout); // as we have to pass corrupt input
+   fLayers.back()->Forward(fLayers[fLayers.size() - 2]->GetOutput(), applyDropout); // as we have to pass corrupt input
 
-   AddReconstructionLayer(visibleUnits, numHiddenUnitsPerLayer[0], learningRate,
-                          f, fLayers.back()->GetWeights(),
-                          fLayers.back()->GetBiases(), corruptionLevel,
-                          dropoutProbability);
+   AddReconstructionLayer(visibleUnits, numHiddenUnitsPerLayer[0], learningRate, f, fLayers.back()->GetWeights(),
+                          fLayers.back()->GetBiases(), corruptionLevel, dropoutProbability);
    fLayers.back()->Initialize();
    fLayers.back()->Forward(fLayers[fLayers.size() - 2]->GetOutput(),
                            applyDropout); // as we have to pass compressed Input
-   fLayers.back()->Backward(fLayers[fLayers.size() - 2]->GetOutput(), inp1, fLayers[fLayers.size() - 3]->GetOutput() , input);
+   fLayers.back()->Backward(fLayers[fLayers.size() - 2]->GetOutput(), inp1, fLayers[fLayers.size() - 3]->GetOutput(),
+                            input);
    // three layers are added, now pointer is on third layer
    size_t weightsSize = fLayers.back()->GetWeights().size();
    size_t biasesSize = fLayers.back()->GetBiases().size();
-   for(size_t epoch=0; epoch<epochs-1; epoch++)
-   {
-      //fLayers[fLayers.size() - 3]->Forward(input,applyDropout);
-      for(size_t j=0; j< weightsSize; j++)
-      {
+   for (size_t epoch = 0; epoch < epochs - 1; epoch++) {
+      // fLayers[fLayers.size() - 3]->Forward(input,applyDropout);
+      for (size_t j = 0; j < weightsSize; j++) {
          Architecture_t::Copy(fLayers[fLayers.size() - 2]->GetWeightsAt(j), fLayers.back()->GetWeightsAt(j));
       }
-      for(size_t j=0; j< biasesSize; j++)
-      {
+      for (size_t j = 0; j < biasesSize; j++) {
          Architecture_t::Copy(fLayers[fLayers.size() - 2]->GetBiasesAt(j), fLayers.back()->GetBiasesAt(j));
       }
       fLayers[fLayers.size() - 2]->Forward(fLayers[fLayers.size() - 3]->GetOutput(), applyDropout);
       fLayers[fLayers.size() - 1]->Forward(fLayers[fLayers.size() - 2]->GetOutput(), applyDropout);
-      fLayers[fLayers.size() - 1]->Backward(fLayers[fLayers.size() - 2]->GetOutput(), inp1, fLayers[fLayers.size() - 3]->GetOutput(), input);
+      fLayers[fLayers.size() - 1]->Backward(fLayers[fLayers.size() - 2]->GetOutput(), inp1,
+                                            fLayers[fLayers.size() - 3]->GetOutput(), input);
    }
    fLayers.back()->Print();
 
    for (size_t i = 1; i < numOfHiddenLayers; i++) {
 
-      AddCorruptionLayer(numHiddenUnitsPerLayer[i - 1],numHiddenUnitsPerLayer[i], dropoutProbability,
-                         corruptionLevel);
+      AddCorruptionLayer(numHiddenUnitsPerLayer[i - 1], numHiddenUnitsPerLayer[i], dropoutProbability, corruptionLevel);
       fLayers.back()->Initialize();
-      fLayers.back()->Forward(fLayers[fLayers.size() - 3]->GetOutput(), applyDropout); // as we have to pass compressed Input
+      fLayers.back()->Forward(fLayers[fLayers.size() - 3]->GetOutput(),
+                              applyDropout); // as we have to pass compressed Input
 
-      AddCompressionLayer(numHiddenUnitsPerLayer[i - 1],
-                          numHiddenUnitsPerLayer[i], dropoutProbability, f,
-                          fLayers.back()->GetWeights(),
-                          fLayers.back()->GetBiases());
+      AddCompressionLayer(numHiddenUnitsPerLayer[i - 1], numHiddenUnitsPerLayer[i], dropoutProbability, f,
+                          fLayers.back()->GetWeights(), fLayers.back()->GetBiases());
+      fLayers.back()->Initialize();
+      fLayers.back()->Forward(fLayers[fLayers.size() - 2]->GetOutput(), applyDropout);
+
+      AddReconstructionLayer(numHiddenUnitsPerLayer[i - 1], numHiddenUnitsPerLayer[i], learningRate, f,
+                             fLayers.back()->GetWeights(), fLayers.back()->GetBiases(), corruptionLevel,
+                             dropoutProbability);
       fLayers.back()->Initialize();
       fLayers.back()->Forward(fLayers[fLayers.size() - 2]->GetOutput(),
-                              applyDropout);
-
-      AddReconstructionLayer(numHiddenUnitsPerLayer[i - 1], numHiddenUnitsPerLayer[i], learningRate,
-                             f, fLayers.back()->GetWeights(), fLayers.back()->GetBiases(),
-                             corruptionLevel, dropoutProbability);
-      fLayers.back()->Initialize();
-      fLayers.back()->Forward(fLayers[fLayers.size() - 2]->GetOutput(), applyDropout); // as we have to pass compressed Input
-      fLayers.back()->Backward(fLayers[fLayers.size() - 2]->GetOutput(), inp1, fLayers[fLayers.size() - 3]->GetOutput(), fLayers[fLayers.size() - 5]->GetOutput());
+                              applyDropout); // as we have to pass compressed Input
+      fLayers.back()->Backward(fLayers[fLayers.size() - 2]->GetOutput(), inp1, fLayers[fLayers.size() - 3]->GetOutput(),
+                               fLayers[fLayers.size() - 5]->GetOutput());
 
       // three layers are added, now pointer is on third layer
       size_t weightsSize = fLayers.back()->GetWeights().size();
       size_t biasesSize = fLayers.back()->GetBiases().size();
-      for(size_t epoch=0; epoch<epochs-1; epoch++)
-      {
-         //fLayers[fLayers.size() - 3]->Forward(input,applyDropout);
-         for(size_t j=0; j< weightsSize; j++)
-         {
+      for (size_t epoch = 0; epoch < epochs - 1; epoch++) {
+         // fLayers[fLayers.size() - 3]->Forward(input,applyDropout);
+         for (size_t j = 0; j < weightsSize; j++) {
             Architecture_t::Copy(fLayers[fLayers.size() - 2]->GetWeightsAt(j), fLayers.back()->GetWeightsAt(j));
          }
-         for(size_t j=0; j< biasesSize; j++)
-         {
+         for (size_t j = 0; j < biasesSize; j++) {
             Architecture_t::Copy(fLayers[fLayers.size() - 2]->GetBiasesAt(j), fLayers.back()->GetBiasesAt(j));
          }
          fLayers[fLayers.size() - 2]->Forward(fLayers[fLayers.size() - 3]->GetOutput(), applyDropout);
          fLayers[fLayers.size() - 1]->Forward(fLayers[fLayers.size() - 2]->GetOutput(), applyDropout);
-         fLayers[fLayers.size() - 1]->Backward(fLayers[fLayers.size() - 2]->GetOutput(),
-                                               inp1, fLayers[fLayers.size() - 3]->GetOutput(),
+         fLayers[fLayers.size() - 1]->Backward(fLayers[fLayers.size() - 2]->GetOutput(), inp1,
+                                               fLayers[fLayers.size() - 3]->GetOutput(),
                                                fLayers[fLayers.size() - 5]->GetOutput());
       }
       fLayers.back()->Print();
-
    }
 }
 //______________________________________________________________________________
 template <typename Architecture_t, typename Layer_t>
 auto TDeepNet<Architecture_t, Layer_t>::FineTune(std::vector<Matrix_t> &input, std::vector<Matrix_t> &testInput,
-                                                 std::vector<Matrix_t> &inputLabel,
-                                                 size_t outputUnits,size_t testDataBatchSize, Scalar_t learningRate, size_t epochs)
--> void
+                                                 std::vector<Matrix_t> &inputLabel, size_t outputUnits,
+                                                 size_t testDataBatchSize, Scalar_t learningRate, size_t epochs) -> void
 {
    std::vector<Matrix_t> inp1;
    std::vector<Matrix_t> inp2;
-   if(fLayers.size() == 0) // only Logistic Regression Layer
+   if (fLayers.size() == 0) // only Logistic Regression Layer
    {
       size_t inputUnits = input[0].GetNrows();
 
-      AddLogisticRegressionLayer(inputUnits, outputUnits, testDataBatchSize,
-                                 learningRate);
+      AddLogisticRegressionLayer(inputUnits, outputUnits, testDataBatchSize, learningRate);
       fLayers.back()->Initialize();
-      for(size_t i=0; i<epochs;i++)
-      {
+      for (size_t i = 0; i < epochs; i++) {
          fLayers.back()->Backward(inputLabel, inp1, input, inp2);
       }
       fLayers.back()->Forward(input, false);
       fLayers.back()->Print();
-   }
-   else
-   { // if used after any other layer
+   } else { // if used after any other layer
       size_t inputUnits = fLayers.back()->GetOutputAt(0).GetNrows();
-      AddLogisticRegressionLayer(inputUnits, outputUnits, testDataBatchSize,
-                                 learningRate);
+      AddLogisticRegressionLayer(inputUnits, outputUnits, testDataBatchSize, learningRate);
       fLayers.back()->Initialize();
-      for(size_t i=0; i<epochs;i++)
-      {
-         fLayers.back()->Backward(inputLabel, inp1, fLayers[fLayers.size() -2]->GetOutput(), inp2);
+      for (size_t i = 0; i < epochs; i++) {
+         fLayers.back()->Backward(inputLabel, inp1, fLayers[fLayers.size() - 2]->GetOutput(), inp2);
       }
       fLayers.back()->Forward(testInput, false);
       fLayers.back()->Print();
@@ -954,37 +928,19 @@ auto TDeepNet<Architecture_t, Layer_t>::ParallelBackwardMomentum(std::vector<TDe
 
    // Backpropagate the error in i'th layer of each deep net
    for (size_t i = depth - 1; i > 0; i--) {
-     Layer_t *masterLayer = this->GetLayerAt(i);
+      Layer_t *masterLayer = this->GetLayerAt(i);
 
-     for (size_t j = 0; j < nets.size(); j++) {
-       Layer_t *layer = nets[j].GetLayerAt(i);
+      for (size_t j = 0; j < nets.size(); j++) {
+         Layer_t *layer = nets[j].GetLayerAt(i);
 
-       layer->Backward(nets[j].GetLayerAt(i - 1)->GetActivationGradients(),
-                       nets[j].GetLayerAt(i - 1)->GetOutput(), inp1, inp2);
-       masterLayer->UpdateWeightGradients(layer->GetWeightGradients(),
-                                          learningRate / momentum);
-       masterLayer->UpdateBiasGradients(layer->GetBiasGradients(),
-                                        learningRate / momentum);
-
-       //  Architecture_t::ScaleAdd(this->GetLayerAt(i)->GetWeightGradients(),
-       //                           nets[j].GetLayerAt(i)->GetWeightGradients(),
-       //                           -learningRate / momentum);
-       //  Architecture_t::ScaleAdd(this->GetLayerAt(i)->GetBiasGradients(),
-       //  nets[j].GetLayerAt(i)->GetBiasGradients(),
-       //                           -learningRate / momentum);
+         layer->Backward(nets[j].GetLayerAt(i - 1)->GetActivationGradients(), nets[j].GetLayerAt(i - 1)->GetOutput(),
+                         inp1, inp2);
+         masterLayer->UpdateWeightGradients(layer->GetWeightGradients(), learningRate / momentum);
+         masterLayer->UpdateBiasGradients(layer->GetBiasGradients(), learningRate / momentum);
       }
 
-      masterLayer->UpdateWeightGradients(masterLayer->GetWeightGradients(),
-                                         1.0 - momentum);
-      masterLayer->UpdateBiasGradients(masterLayer->GetBiasGradients(),
-                                       1.0 - momentum);
-
-      // Architecture_t::ScaleAdd(this->GetLayerAt(i)->GetWeightGradients(),
-      // this->GetLayerAt(i)->GetWeightGradients(),
-      //                          momentum - 1.0);
-      // Architecture_t::ScaleAdd(this->GetLayerAt(i)->GetBiasGradients(),
-      // this->GetLayerAt(i)->GetBiasGradients(),
-      //                          momentum - 1.0);
+      masterLayer->UpdateWeightGradients(masterLayer->GetWeightGradients(), 1.0 - momentum);
+      masterLayer->UpdateBiasGradients(masterLayer->GetBiasGradients(), 1.0 - momentum);
    }
 
    std::vector<Matrix_t> dummy;
@@ -996,34 +952,16 @@ auto TDeepNet<Architecture_t, Layer_t>::ParallelBackwardMomentum(std::vector<TDe
    // First layer of each deep net
    Layer_t *masterFirstLayer = this->GetLayerAt(0);
    for (size_t i = 0; i < nets.size(); i++) {
-     Layer_t *layer = nets[i].GetLayerAt(0);
+      Layer_t *layer = nets[i].GetLayerAt(0);
 
-     layer->Backward(dummy, batches[i].GetInput(), inp1, inp2);
+      layer->Backward(dummy, batches[i].GetInput(), inp1, inp2);
 
-     masterFirstLayer->UpdateWeightGradients(layer->GetWeightGradients(),
-                                             learningRate / momentum);
-     masterFirstLayer->UpdateBiasGradients(layer->GetBiasGradients(),
-                                           learningRate / momentum);
-
-     // Architecture_t::ScaleAdd(this->GetLayerAt(0)->GetWeightGradients(),
-     // nets[i].GetLayerAt(0)->GetWeightGradients(),
-     //                          -learningRate / momentum);
-     // Architecture_t::ScaleAdd(this->GetLayerAt(0)->GetBiasGradients(),
-     // nets[i].GetLayerAt(0)->GetBiasGradients(),
-     //                          -learningRate / momentum);
+      masterFirstLayer->UpdateWeightGradients(layer->GetWeightGradients(), learningRate / momentum);
+      masterFirstLayer->UpdateBiasGradients(layer->GetBiasGradients(), learningRate / momentum);
    }
 
-   masterFirstLayer->UpdateWeightGradients(
-       masterFirstLayer->GetWeightGradients(), 1.0 - momentum);
-   masterFirstLayer->UpdateBiasGradients(masterFirstLayer->GetBiasGradients(),
-                                         1.0 - momentum);
-
-   //  Architecture_t::ScaleAdd(this->GetLayerAt(0)->GetWeightGradients(),
-   //  this->GetLayerAt(0)->GetWeightGradients(),
-   //                           momentum - 1.0);
-   //  Architecture_t::ScaleAdd(this->GetLayerAt(0)->GetBiasGradients(),
-   //  this->GetLayerAt(0)->GetBiasGradients(),
-   //                           momentum - 1.0);
+   masterFirstLayer->UpdateWeightGradients(masterFirstLayer->GetWeightGradients(), 1.0 - momentum);
+   masterFirstLayer->UpdateBiasGradients(masterFirstLayer->GetBiasGradients(), 1.0 - momentum);
 
    for (size_t i = 0; i < depth; i++) {
       Layer_t *masterLayer = this->GetLayerAt(i);
@@ -1034,10 +972,6 @@ auto TDeepNet<Architecture_t, Layer_t>::ParallelBackwardMomentum(std::vector<TDe
 
          layer->CopyWeights(masterLayer->GetWeights());
          layer->CopyBiases(masterLayer->GetBiases());
-
-         //  Architecture_t::Copy(layer->GetWeights(),
-         //  masterLayer->GetWeights());
-         //  Architecture_t::Copy(layer->GetBiases(), masterLayer->GetBiases());
       }
    }
 }
@@ -1062,10 +996,10 @@ auto TDeepNet<Architecture_t, Layer_t>::ParallelBackwardNestorov(std::vector<TDe
    // Backpropagate the error in i'th layer of each deep net
    for (size_t i = depth - 1; i > 0; i--) {
       for (size_t j = 0; j < nets.size(); j++) {
-        Layer_t *layer = nets[j].GetLayerAt(i);
+         Layer_t *layer = nets[j].GetLayerAt(i);
 
-        layer->Backward(nets[j].GetLayerAt(i - 1)->GetActivationGradients(),
-                        nets[j].GetLayerAt(i - 1)->GetOutput(), inp1, inp2);
+         layer->Backward(nets[j].GetLayerAt(i - 1)->GetActivationGradients(), nets[j].GetLayerAt(i - 1)->GetOutput(),
+                         inp1, inp2);
       }
    }
 
@@ -1077,8 +1011,8 @@ auto TDeepNet<Architecture_t, Layer_t>::ParallelBackwardNestorov(std::vector<TDe
 
    // First layer of each deep net
    for (size_t i = 0; i < nets.size(); i++) {
-     Layer_t *layer = nets[i].GetLayerAt(0);
-     layer->Backward(dummy, batches[i].GetInput(), inp1, inp2);
+      Layer_t *layer = nets[i].GetLayerAt(0);
+      layer->Backward(dummy, batches[i].GetInput(), inp1, inp2);
    }
 
    for (size_t i = 0; i < depth; i++) {
@@ -1089,10 +1023,6 @@ auto TDeepNet<Architecture_t, Layer_t>::ParallelBackwardNestorov(std::vector<TDe
          layer->CopyWeights(masterLayer->GetWeights());
          layer->CopyBiases(masterLayer->GetBiases());
 
-         //  Architecture_t::Copy(layer->GetWeights(),
-         //  masterLayer->GetWeights());
-         //  Architecture_t::Copy(layer->GetBiases(), masterLayer->GetBiases());
-
          layer->UpdateWeights(masterLayer->GetWeightGradients(), 1.0);
          layer->UpdateBiases(masterLayer->GetBiasGradients(), 1.0);
       }
@@ -1100,28 +1030,12 @@ auto TDeepNet<Architecture_t, Layer_t>::ParallelBackwardNestorov(std::vector<TDe
       for (size_t j = 0; j < nets.size(); j++) {
          Layer_t *layer = nets[j].GetLayerAt(i);
 
-         masterLayer->UpdateWeightGradients(layer->GetWeightGradients(),
-                                            learningRate / momentum);
-         masterLayer->UpdateBiasGradients(layer->GetBiasGradients(),
-                                          learningRate / momentum);
-
-         //  Architecture_t::ScaleAdd(masterLayer->GetWeightGradients(),
-         //  layer->GetWeightGradients(),
-         //                           -learningRate / momentum);
-         //  Architecture_t::ScaleAdd(masterLayer->GetBiasGradients(),
-         //  layer->GetBiasGradients(), -learningRate /
-         //  momentum);
+         masterLayer->UpdateWeightGradients(layer->GetWeightGradients(), learningRate / momentum);
+         masterLayer->UpdateBiasGradients(layer->GetBiasGradients(), learningRate / momentum);
       }
 
-      masterLayer->UpdateWeightGradients(masterLayer->GetWeightGradients(),
-                                         1.0 - momentum);
-      masterLayer->UpdateBiasGradients(masterLayer->GetBiasGradients(),
-                                       1.0 - momentum);
-
-      // Architecture_t::ScaleAdd(masterLayer->GetWeightGradients(),
-      // masterLayer->GetWeightGradients(), momentum - 1.0);
-      // Architecture_t::ScaleAdd(masterLayer->GetBiasGradients(),
-      // masterLayer->GetBiasGradients(), momentum - 1.0);
+      masterLayer->UpdateWeightGradients(masterLayer->GetWeightGradients(), 1.0 - momentum);
+      masterLayer->UpdateBiasGradients(masterLayer->GetBiasGradients(), 1.0 - momentum);
 
       masterLayer->Update(1.0);
    }
@@ -1147,11 +1061,10 @@ auto TDeepNet<Architecture_t, Layer_t>::Loss(const Matrix_t &groundTruth, const 
 
    if (includeRegularization) {
       for (size_t i = 0; i < fLayers.size(); i++) {
-        for (size_t j = 0; j < (fLayers[i]->GetWeights()).size(); j++) {
-          loss += this->GetWeightDecay() *
-                  regularization<Architecture_t>(fLayers[i]->GetWeightsAt(j),
-                                                 this->GetRegularization());
-        }
+         for (size_t j = 0; j < (fLayers[i]->GetWeights()).size(); j++) {
+            loss += this->GetWeightDecay() *
+                    regularization<Architecture_t>(fLayers[i]->GetWeightsAt(j), this->GetRegularization());
+         }
       }
    }
 

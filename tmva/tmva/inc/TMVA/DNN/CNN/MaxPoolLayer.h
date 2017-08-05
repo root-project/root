@@ -94,8 +94,7 @@ public:
     *  layer. Must only be called directly at the corresponding call
     *  to Forward(...). */
    void Backward(std::vector<Matrix_t> &gradients_backward, const std::vector<Matrix_t> &activations_backward,
-                 std::vector<Matrix_t> &inp1,
-                 std::vector<Matrix_t> &inp2);
+                 std::vector<Matrix_t> &inp1, std::vector<Matrix_t> &inp2);
 
    /*! Prints the info about the layer. */
    void Print() const;
@@ -185,8 +184,7 @@ auto TMaxPoolLayer<Architecture_t>::Forward(std::vector<Matrix_t> input, bool ap
 template <typename Architecture_t>
 auto TMaxPoolLayer<Architecture_t>::Backward(std::vector<Matrix_t> &gradients_backward,
                                              const std::vector<Matrix_t> &activations_backward,
-                                             std::vector<Matrix_t> &inp1,
-                                             std::vector<Matrix_t> &inp2) -> void
+                                             std::vector<Matrix_t> &inp1, std::vector<Matrix_t> &inp2) -> void
 {
 
    Architecture_t::MaxPoolLayerBackward(gradients_backward, this->GetActivationGradients(), indexMatrix,

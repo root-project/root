@@ -76,9 +76,10 @@ public:
 
    /*! General Constructor with different weights dimension */
    VGeneralLayer(size_t BatchSize, size_t InputDepth, size_t InputHeight, size_t InputWidth, size_t Depth,
-                 size_t Height, size_t Width, size_t WeightsNSlices, std::vector<size_t> WeightsNRows, std::vector<size_t> WeightsNCols,
-                 size_t BiasesNSlices, std::vector<size_t> BiasesNRows, std::vector<size_t> BiasesNCols, size_t OutputNSlices, size_t OutputNRows,
-                 size_t OutputNCols, size_t LayerType, EInitialization Init);
+                 size_t Height, size_t Width, size_t WeightsNSlices, std::vector<size_t> WeightsNRows,
+                 std::vector<size_t> WeightsNCols, size_t BiasesNSlices, std::vector<size_t> BiasesNRows,
+                 std::vector<size_t> BiasesNCols, size_t OutputNSlices, size_t OutputNRows, size_t OutputNCols,
+                 size_t LayerType, EInitialization Init);
 
    /*! Copy the layer provided as a pointer */
    VGeneralLayer(VGeneralLayer<Architecture_t> *layer);
@@ -99,10 +100,8 @@ public:
 
    /*! Backpropagates the error. Must only be called directly at the corresponding
     *  call to Forward(...). */
-   virtual void Backward(std::vector<Matrix_t> &gradients_backward,
-                         const std::vector<Matrix_t> &activations_backward,
-                         std::vector<Matrix_t> &inp1,
-                         std::vector<Matrix_t> &inp2) = 0;
+   virtual void Backward(std::vector<Matrix_t> &gradients_backward, const std::vector<Matrix_t> &activations_backward,
+                         std::vector<Matrix_t> &inp1, std::vector<Matrix_t> &inp2) = 0;
 
    /*! Updates the weights and biases, given the learning rate */
    void Update(const Scalar_t learningRate);
@@ -185,7 +184,7 @@ public:
    void SetDepth(size_t depth) { fDepth = depth; }
    void SetHeight(size_t height) { fHeight = height; }
    void SetWidth(size_t width) { fWidth = width; }
-   void SetLayerType(size_t layerType) {fLayerType = layerType; }
+   void SetLayerType(size_t layerType) { fLayerType = layerType; }
    void SetIsTraining(bool isTraining) { fIsTraining = isTraining; }
 };
 
@@ -198,7 +197,8 @@ VGeneralLayer<Architecture_t>::VGeneralLayer(size_t batchSize, size_t inputDepth
                                              size_t depth, size_t height, size_t width, size_t weightsNSlices,
                                              size_t weightsNRows, size_t weightsNCols, size_t biasesNSlices,
                                              size_t biasesNRows, size_t biasesNCols, size_t outputNSlices,
-                                             size_t outputNRows, size_t outputNCols, size_t layerType, EInitialization init)
+                                             size_t outputNRows, size_t outputNCols, size_t layerType,
+                                             EInitialization init)
    : fBatchSize(batchSize), fInputDepth(inputDepth), fInputHeight(inputHeight), fInputWidth(inputWidth), fDepth(depth),
      fHeight(height), fWidth(width), fIsTraining(true), fWeights(), fBiases(), fWeightGradients(), fBiasGradients(),
      fOutput(), fActivationGradients(), fInit(init), fLayerType(layerType)
@@ -220,14 +220,14 @@ VGeneralLayer<Architecture_t>::VGeneralLayer(size_t batchSize, size_t inputDepth
    }
 }
 
-
 //_________________________________________________________________________________________________
 template <typename Architecture_t>
 VGeneralLayer<Architecture_t>::VGeneralLayer(size_t batchSize, size_t inputDepth, size_t inputHeight, size_t inputWidth,
                                              size_t depth, size_t height, size_t width, size_t weightsNSlices,
                                              std::vector<size_t> weightsNRows, std::vector<size_t> weightsNCols,
-                                             size_t biasesNSlices, std::vector<size_t> biasesNRows, std::vector<size_t> biasesNCols,
-                                             size_t outputNSlices, size_t outputNRows, size_t outputNCols,size_t layerType, EInitialization init)
+                                             size_t biasesNSlices, std::vector<size_t> biasesNRows,
+                                             std::vector<size_t> biasesNCols, size_t outputNSlices, size_t outputNRows,
+                                             size_t outputNCols, size_t layerType, EInitialization init)
    : fBatchSize(batchSize), fInputDepth(inputDepth), fInputHeight(inputHeight), fInputWidth(inputWidth), fDepth(depth),
      fHeight(height), fWidth(width), fIsTraining(true), fWeights(), fBiases(), fWeightGradients(), fBiasGradients(),
      fOutput(), fActivationGradients(), fInit(init), fLayerType(layerType)
@@ -255,7 +255,8 @@ VGeneralLayer<Architecture_t>::VGeneralLayer(VGeneralLayer<Architecture_t> *laye
    : fBatchSize(layer->GetBatchSize()), fInputDepth(layer->GetInputDepth()), fInputHeight(layer->GetInputHeight()),
      fInputWidth(layer->GetInputWidth()), fDepth(layer->GetDepth()), fHeight(layer->GetHeight()),
      fWidth(layer->GetWidth()), fIsTraining(layer->IsTraining()), fWeights(), fBiases(), fWeightGradients(),
-     fBiasGradients(), fOutput(), fActivationGradients(), fInit(layer->GetInitialization()), fLayerType(layer->GetLayerType())
+     fBiasGradients(), fOutput(), fActivationGradients(), fInit(layer->GetInitialization()),
+     fLayerType(layer->GetLayerType())
 {
    size_t weightsNSlices = (layer->GetWeights()).size();
    size_t weightsNRows = 0;
