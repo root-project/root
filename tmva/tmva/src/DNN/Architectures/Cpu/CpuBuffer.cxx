@@ -198,7 +198,7 @@ void TDataLoader<TMVAInput_t, TCpu<Double_t>>::CopyOutput(
     IndexIterator_t sampleIterator,
     size_t batchSize)
 {
-   DataSetInfo &info = std::get<1>(fData);
+   const DataSetInfo &info = std::get<1>(fData);
    size_t n = buffer.GetSize() / batchSize;
 
    // Copy target(s).
@@ -264,7 +264,7 @@ void TDataLoader<TMVAInput_t, TCpu<Real_t>>::CopyOutput(
     IndexIterator_t sampleIterator,
     size_t batchSize)
 {
-   DataSetInfo &info = std::get<1>(fData);
+   const DataSetInfo &info = std::get<1>(fData);
    size_t n       = buffer.GetSize() / batchSize;
 
    // Copy target(s).
