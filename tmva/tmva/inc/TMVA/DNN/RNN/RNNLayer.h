@@ -178,10 +178,10 @@ TBasicRNNLayer<Architecture_t>::TBasicRNNLayer(size_t batchSize, size_t stateSiz
                                               size_t timeSteps, bool rememberState,
                                               DNN::EActivationFunction f,
                                               bool training)
-   : VGeneralLayer<Architecture_t>(batchSize, 1, 1, inputSize, 0, 0, 0, 2, {stateSize, stateSize}, {inputSize, stateSize},
-   1, {stateSize}, {1}, timeSteps, batchSize, stateSize, 5, DNN::EInitialization::kZero),
+   : VGeneralLayer<Architecture_t>(batchSize, 1, 1, inputSize, 1, 1, stateSize, 2, {stateSize, stateSize}, {inputSize, stateSize},
+   1, {stateSize}, {1}, timeSteps, batchSize, stateSize, DNN::EInitialization::kZero),
    fTimeSteps(timeSteps), fStateSize(stateSize), fRememberState(rememberState), fWeightsInput(this->GetWeightsAt(0)), fF(f),
-   fState(batchSize, stateSize), fWeightsState(this->GetWeightsAt(1)), fBiases(this->GetBiasesAt(0)), fDerivatives(stateSize, inputSize),
+   fState(batchSize, stateSize), fWeightsState(this->GetWeightsAt(1)), fBiases(this->GetBiasesAt(0)), fDerivatives(batchSize, stateSize),
    fWeightInputGradients(this->GetWeightGradientsAt(0)), fWeightStateGradients(this->GetWeightGradientsAt(1)), fBiasGradients(this->GetBiasGradientsAt(0))
 {
    // Nothing
@@ -193,7 +193,7 @@ TBasicRNNLayer<Architecture_t>::TBasicRNNLayer(const TBasicRNNLayer &layer)
    : VGeneralLayer<Architecture_t>(layer), fTimeSteps(layer.fTimeSteps), fStateSize(layer.fStateSize),
    fRememberState(layer.fRememberState), fWeightsInput(this->GetWeightsAt(0)),
    fState(layer.GetBatchSize(), layer.GetStateSize()), fWeightsState(this->GetWeightsAt(1)),
-   fBiases(this->GetBiasesAt(0)), fDerivatives(layer.GetStateSize(), layer.GetInputSize()),
+   fBiases(this->GetBiasesAt(0)), fDerivatives(layer.GetBatchSize(), layer.GetStateSize()),
    fWeightInputGradients(this->GetWeightGradientsAt(0)), fF(layer.GetActivationFunction()),
    fWeightStateGradients(this->GetWeightGradientsAt(1)), fBiasGradients(this->GetBiasGradientsAt(0))
 {
@@ -301,20 +301,20 @@ auto inline TBasicRNNLayer<Architecture_t>::CellForward(Matrix_t &input)
 
 //____________________________________________________________________________
 template <typename Architecture_t>
-auto inline TBasicRNNLayer<Architecture_t>::Backward(Tensor_t &gradients_backward,           // T x B x D
-                                                     const Tensor_t &activations_backward,
+auto inline TBasicRNNLayer<Architecture_t>::Backward(Tensor_t &gradients_backward,          // T x B x D
+                                                     const Tensor_t &activations_backward,  // T x B x D 
                                                      std::vector<Matrix_t> &inp1,
-                                                     std::vector<Matrix_t> &inp2)   // T x B x D
+                                                     std::vector<Matrix_t> &inp2)   
 -> void
 {
    // activations backward is input
    // gradients_backward is activationGradients of layer before it, which is input layer
    // currently gradient_backward is for input(x) and not for state
    // we also need the one for state as
-   Matrix_t state_gradients_backward(fStateSize, fStateSize);  // B x H
+   Matrix_t state_gradients_backward(this->GetBatchSize(), fStateSize);  // B x H
    DNN::initialize<Architecture_t>(state_gradients_backward,  DNN::EInitialization::kZero);
 
-   Matrix_t initState(fStateSize, 1);  // H x 1
+   Matrix_t initState(this->GetBatchSize(), fStateSize);  // B x H
    DNN::initialize<Architecture_t>(initState,   DNN::EInitialization::kZero);
 
    for (size_t t = fTimeSteps; t > 0; t--) {
