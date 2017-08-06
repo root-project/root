@@ -48,7 +48,7 @@ TMVA::CrossEvaluation::CrossEvaluation(TMVA::DataLoader *dataloader, TFile * out
      fSplitSpectator(splitSpectator),
      fAnalysisType(analysisType),
      fClassifier(new TMVA::Factory("CrossEvaluation","!V:!ROC:Silent:!ModelPersistence:!Color:!DrawProgressBar:AnalysisType=classification")),
-     fFactory(new TMVA::Factory("CrossEvaluation", outputFile, "!V:!ROC:Silent:ModelPersistence:!Color:!DrawProgressBar:AnalysisType=classification"))
+     fFactory(new TMVA::Factory("CrossEvaluation", outputFile, "!V:!ROC:Silent:!ModelPersistence:!Color:!DrawProgressBar:AnalysisType=classification"))
 {
    fFoldStatus=kFALSE;
 
@@ -63,7 +63,7 @@ TMVA::CrossEvaluation::CrossEvaluation(TMVA::DataLoader *dataloader, TString spl
      fSplitSpectator(splitSpectator),
      fAnalysisType(analysisType),
      fClassifier(new TMVA::Factory("CrossEvaluation","!V:!ROC:Silent:!ModelPersistence:!Color:!DrawProgressBar:AnalysisType=classification")),
-     fFactory(new TMVA::Factory("CrossEvaluation", "!V:!ROC:Silent:ModelPersistence:!Color:!DrawProgressBar:AnalysisType=classification"))
+     fFactory(new TMVA::Factory("CrossEvaluation", "!V:!ROC:Silent:!ModelPersistence:!Color:!DrawProgressBar:AnalysisType=classification"))
 {
    fFoldStatus=kFALSE;
 
@@ -188,12 +188,11 @@ void TMVA::CrossEvaluation::MergeFolds()
    TString methodTitle   = fMethod.GetValue<TString>("MethodTitle");
    TString methodOptions = fMethod.GetValue<TString>("MethodOptions");
 
-   MethodBase* smethod = fFactory->BookMethod(fDataLoader.get(), methodName, methodTitle, methodOptions);
-   
-   // This is to ensure the method is constructed. Can be replace by a call to classifierFactory.
+   fFactory->BookMethod(fDataLoader.get(), methodName, methodTitle, methodOptions);
+
+   // This ensures some variables are created as they should. Could be replaced by what?
    fFactory->TrainAllMethods();
-   // DataSetInfo & dsi = fDataLoader->GetDataSetInfo();
-   // ClassifierFactory::Instance().Create( methodName.Data(), dsi, "" );
+   MethodBase * smethod = dynamic_cast<MethodBase *>(fFactory->GetMethod(fDataLoader->GetName(), methodTitle));
 
    // Merge results from the folds into a single result
    switch (fAnalysisType) {
@@ -208,7 +207,9 @@ void TMVA::CrossEvaluation::MergeFolds()
    fDataLoader->MergeCustomSplit();
 
    // Run produce final output (e.g. file)
+   // TMVA::gConfig().SetSilent(kFALSE);
    fFactory->EvaluateAllMethods();
+   // TMVA::gConfig().SetSilent(kTRUE);
 }
 
 void TMVA::CrossEvaluation::Evaluate()
@@ -223,9 +224,9 @@ void TMVA::CrossEvaluation::Evaluate()
    if(methodName == "") Log() << kFATAL << "No method booked for cross-validation" << Endl;
 
    TMVA::MsgLogger::EnableOutput();
-   TMVA::gConfig().SetSilent(kFALSE);
+   // TMVA::gConfig().SetSilent(kFALSE);
    Log() << kINFO << "Evaluate method: " << methodTitle << Endl;
-   TMVA::gConfig().SetSilent(kTRUE); // Return to prev value?
+   // TMVA::gConfig().SetSilent(kTRUE); // Return to prev value?
 
    // Generate K folds on given dataset
    if(!fFoldStatus){
@@ -241,7 +242,7 @@ void TMVA::CrossEvaluation::Evaluate()
    // Merge and inject the results into DataSet
    MergeFolds();
 
-   TMVA::gConfig().SetSilent(kFALSE);
+   // TMVA::gConfig().SetSilent(kFALSE);
    Log() << kINFO << "Evaluation done." << Endl;
-   TMVA::gConfig().SetSilent(kTRUE);
+   // TMVA::gConfig().SetSilent(kTRUE);
 }

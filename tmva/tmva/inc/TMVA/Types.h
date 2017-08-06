@@ -106,6 +106,7 @@ namespace TMVA {
          kRSNNS          ,
          kRSVM           ,
          kRXGB           ,
+         kCrossEvaluation,
          kMaxMethod
       };
 
