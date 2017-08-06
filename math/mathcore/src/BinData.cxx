@@ -629,7 +629,9 @@ namespace ROOT {
     {
 #ifdef R__HAS_VECCORE
        // Add padding to be a multiple of SIMD vector size and help looping
-       auto extraP = vecCore::VectorSize<ROOT::Double_v>() - ((fMaxPoints) % vecCore::VectorSize<ROOT::Double_v>());
+       auto extraP = 0; 
+       unsigned int modP = (fMaxPoints) % vecCore::VectorSize<ROOT::Double_v>();
+       if (modP > 0) extraP = vecCore::VectorSize<ROOT::Double_v>() - modP; 
        fData.resize(fMaxPoints + extraP);
 #else
        fData.resize(fMaxPoints);

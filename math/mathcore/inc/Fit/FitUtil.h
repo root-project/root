@@ -222,11 +222,21 @@ namespace FitUtil {
 
 #ifdef R__HAS_VECCORE
             inline double ExecFunc(const IModelFunctionTempl<ROOT::Double_v> *f, const double *x, const double *p) const{
-                ROOT::Double_v xx;
-                vecCore::Load<ROOT::Double_v>(xx, x);
-                const double *p0 = p;
-                auto res =  (*f)( &xx, (const double *)p0);
-                return vecCore::Get<ROOT::Double_v>(res, 0);
+               if (fDim == 1) { 
+                  ROOT::Double_v xx;
+                  vecCore::Load<ROOT::Double_v>(xx, x);
+                  const double *p0 = p;
+                  auto res =  (*f)( &xx, (const double *)p0);
+                  return vecCore::Get<ROOT::Double_v>(res, 0);
+               }
+               else { 
+                  std::vector<ROOT::Double_v> xx(fDim); 
+                  for (unsigned int i = 0; i  < fDim; ++i) { 
+                     vecCore::Load<ROOT::Double_v>(xx[i], x+i);
+                  }
+                  auto res =  (*f)( xx.data(), p);
+                  return vecCore::Get<ROOT::Double_v>(res, 0);
+               }
             }
 #endif
 
@@ -347,6 +357,8 @@ namespace FitUtil {
          // the actual number of used points
          // normal chi2 using only error on values (from fitting histogram)
          // optionally the integral of function in the bin is used
+
+         //Info("EvalChi2","Using vecorized implementation %d",(int) data.Opt().fIntegral);
 
          unsigned int n = data.Size();
 
@@ -817,6 +829,10 @@ static void EvalPoissonLogLGradient(const IModelFunctionTempl<T> &, const BinDat
          // the actual number of used points
          // normal chi2 using only error on values (from fitting histogram)
          // optionally the integral of function in the bin is used
+
+
+         //Info("EvalChi2","Using non-vecorized implementation %d",(int) data.Opt().fIntegral);
+
          return FitUtil::EvaluateChi2(func, data, p, nPoints, executionPolicy, nChunks);
       }
 
