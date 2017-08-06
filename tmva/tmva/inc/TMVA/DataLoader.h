@@ -164,7 +164,10 @@ namespace TMVA {
 
       void PrepareFoldDataSet( UInt_t foldNumber, Types::ETreeType tt);
       void MakeKFoldDataSet(UInt_t numberFolds, bool validationSet=false);
-      std::vector<std::vector<TMVA::Event*>> SplitSets(std::vector<TMVA::Event*>& oldSet, int seedNum, int numFolds);
+      std::vector<std::vector<TMVA::Event*>> SplitSets(std::vector<TMVA::Event*>& oldSet, int seedNum, UInt_t numFolds);
+      void MakeKFoldDataSetCE(UInt_t numFolds, TString splitVariableName);
+      std::vector<std::vector<TMVA::Event*>> SplitSetsCE( std::vector<TMVA::Event*>& oldSet, UInt_t spectatorIdx, UInt_t numFolds);
+      void MergeCustomSplit(Types::ETreeType tt = Types::kTraining);
 
       const DataSetInfo& GetDefaultDataSetInfo(){ return DefaultDataSetInfo(); }
 
@@ -221,6 +224,7 @@ namespace TMVA {
       Types::EAnalysisType                      fAnalysisType;    // the training type
 
       Bool_t                                    fMakeFoldDataSet; // flag telling if the DataSet folds have been done
+      UInt_t                                    fCvNumFolds;
 
    protected:
 
