@@ -8,8 +8,7 @@
  * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
- *      Testing the Denoise Layer functionalities that are responsible for        *
- *      propagation.                                                              *
+ *      Testing the ReconstructionLayer.                                                       *
  *                                                                                *
  * Authors (alphabetical):                                                        *
  *      Akshay Vashistha    <akshayvashistha1995@gmail.com>  - CERN, Switzerland  *

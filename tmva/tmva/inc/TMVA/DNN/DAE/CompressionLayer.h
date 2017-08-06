@@ -42,6 +42,8 @@ namespace DAE {
 
   /** \class TCompressionLayer
     *  Used to Compress the input values.
+    *  Here input is stored into compressed number of hidden units.
+    *  These are basically the features after every layer.
   */
 
 template <typename Architecture_t>
@@ -53,7 +55,7 @@ public:
 
    size_t fVisibleUnits; ///< total number of visible units
 
-   size_t fHiddenUnits;
+   size_t fHiddenUnits; ///< tital number of hidden units.
 
    Scalar_t fDropoutProbability; ///< Probability that an input is active.
 
@@ -66,14 +68,19 @@ public:
                      Scalar_t DropoutProbability, EActivationFunction f,
                      std::vector<Matrix_t> Weights, std::vector<Matrix_t> Biases);
 
-   /*! Copy the denoise layer provided as a pointer */
+   /*! Copy the compression layer provided as a pointer */
    TCompressionLayer(TCompressionLayer<Architecture_t> *layer);
 
    /*! Copy constructor. */
    TCompressionLayer(const TCompressionLayer &);
 
+   /* Destructor */
+   ~TCompressionLayer();
+
+   /* This forward pass compresses the input. Updated weights and biases are used from previous layers. */
    void Forward(std::vector<Matrix_t> input, bool applyDropout = false);
 
+   /* Not required in this layer */
    void Backward(std::vector<Matrix_t> &gradients_backward,
                  const std::vector<Matrix_t> &activations_backward,
                  std::vector<Matrix_t> &inp1,
@@ -86,11 +93,6 @@ public:
    size_t GetType() const {return fType;}
    Scalar_t GetDropoutProbability() const { return fDropoutProbability; }
    EActivationFunction GetActivationFunction() const { return fF; }
-   //  const Matrix_t & GetWeights() const {return fWeights;}
-   //  Matrix_t & GetWeights() {return fWeights;}
-
-   //  const Matrix_t & GetBiases() const {return fBiases;}
-   //  Matrix_t & GetBiases() {return fBiases;}
 
 };
 
@@ -100,22 +102,13 @@ TCompressionLayer<Architecture_t>::TCompressionLayer(size_t batchSize, size_t vi
                            size_t hiddenUnits, Scalar_t dropoutProbability, EActivationFunction f,
                            std::vector<Matrix_t> weights, std::vector<Matrix_t> biases)
    : VGeneralLayer<Architecture_t>(batchSize, 1, 1, 0, 0, 0, 0, 1, {hiddenUnits}, {visibleUnits},2,{hiddenUnits,visibleUnits},
-   {1,1}, batchSize, hiddenUnits, 1, 7, EInitialization::kZero),
+   {1,1}, batchSize, hiddenUnits, 1, EInitialization::kZero),
    fVisibleUnits(visibleUnits), fDropoutProbability(dropoutProbability),
-   fType(2), fHiddenUnits(hiddenUnits), fF(f)//,
-   //fWeights(hiddenUnits,visibleUnits),  fBiases(hiddenUnits,1)
+   fType(2), fHiddenUnits(hiddenUnits), fF(f)
 
  {
    Architecture_t::Copy(this->GetWeightsAt(0),weights[0]);
    Architecture_t::Copy(this->GetBiasesAt(0),biases[0]);
-
-   std::cout<<"Compression default constructor"<<std::endl;
-   std::cout<<"No of visibleUnits "<<visibleUnits<<std::endl;
-   std::cout<<"no of hiddenUnits "<<hiddenUnits<<std::endl;
-   std::cout<<"weights rows: "<<this->GetWeightsAt(0).GetNrows()<<std::endl;
-   std::cout<<"weights cols: "<<this->GetWeightsAt(0).GetNcols()<<std::endl;
-   std::cout<<"Bias 0 rows "<<this->GetBiasesAt(0).GetNrows()<<std::endl;
-   std::cout<<"Bias 1 rows "<<this->GetBiasesAt(1).GetNrows()<<std::endl<<std::endl;
  }
 //______________________________________________________________________________
 template <typename Architecture_t>
@@ -123,9 +116,7 @@ TCompressionLayer<Architecture_t>::TCompressionLayer(TCompressionLayer<Architect
    : VGeneralLayer<Architecture_t>(layer),
    fVisibleUnits(layer->GetVisibleUnits()),fType(2),
    fDropoutProbability(layer->GetDropoutProbability()),
-   fHiddenUnits(layer->GetHiddenUnits()),fF(layer->GetActivationFunction())//,
-   //  fWeights(layer->GetHiddenUnits(), layer->GetVisibleUnits()),
-   //  fBiases(layer->GetHiddenUnits(),1)
+   fHiddenUnits(layer->GetHiddenUnits()),fF(layer->GetActivationFunction())
 {
    Architecture_t::Copy(this->GetWeightsAt(0), layer->weights[0]);
    Architecture_t::Copy(this->GetBiasesAt(0), layer->biases[0]);
@@ -137,10 +128,7 @@ TCompressionLayer<Architecture_t>::TCompressionLayer(const TCompressionLayer &co
    : VGeneralLayer<Architecture_t>(compress),
    fVisibleUnits(compress.fVisibleUnits),fType(2),
    fDropoutProbability(compress.fDropoutProbability),
-   fHiddenUnits(compress.fHiddenUnits),fF(compress.fF)//,
-   //    fWeights(compress.fHiddenUnits,compress.fVisibleUnits),
-   //    fBiases(compress.fHiddenUnits,1)
-
+   fHiddenUnits(compress.fHiddenUnits),fF(compress.fF)
 
 {
    Architecture_t::Copy(this->GetWeightsAt(0), compress.weights[0]);
@@ -148,16 +136,20 @@ TCompressionLayer<Architecture_t>::TCompressionLayer(const TCompressionLayer &co
    // Output Tensor will be created in General Layer
 }
 //______________________________________________________________________________
+
+template <typename Architecture_t> TCompressionLayer<Architecture_t>::~TCompressionLayer() {}
+
+//______________________________________________________________________________
 template <typename Architecture_t>
 auto TCompressionLayer<Architecture_t>::Forward(std::vector<Matrix_t> input, bool applyDropout) -> void {
-   std::cout<<"in forward compressionLayer "<<std::endl;
+
    for (size_t i = 0; i < this->GetBatchSize(); i++) {
 
       Architecture_t::EncodeInput(input[i], this->GetOutputAt(i), this->GetWeightsAt(0));
       Architecture_t::AddBiases(this->GetOutputAt(i), this->GetBiasesAt(0));
       evaluate<Architecture_t>(this->GetOutputAt(i), fF);
    }
-   std::cout<<"Forward done compressionLayer"<<std::endl<<std::endl;
+
 }
 //______________________________________________________________________________
 template <typename Architecture_t>
@@ -177,6 +169,7 @@ auto TCompressionLayer<Architecture_t>::Print() const
                << "Input Units: " << this->GetVisibleUnits() << "\n"
                << "Hidden units " << this->GetHiddenUnits() << "\n";
 
+      std::cout<<"Compressed Input: "<<std::endl;
       for(size_t j=0; j<this->GetWeightsAt(0).GetNrows(); j++)
       {
          for(size_t k=0; k<this->GetWeightsAt(0).GetNcols(); k++)

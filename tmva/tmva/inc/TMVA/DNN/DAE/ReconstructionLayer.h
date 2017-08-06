@@ -41,7 +41,10 @@ namespace DNN {
 namespace DAE {
 
 /** \class TReconstructionLayer
-     Reconstruction Layer for AutoEncoders.
+  *  Reconstruction Layer for AutoEncoders.
+  *  This reconstructs input based on the difference between Actual and Corrupted values.
+  *  It takes weights and biases from previous layers. And used concept of tied weights
+  *  to update parameters.
 */
 
 template <typename Architecture_t>
@@ -129,7 +132,7 @@ TReconstructionLayer<Architecture_t>::TReconstructionLayer(size_t batchSize, siz
                            std::vector<Matrix_t> biases,
                            Scalar_t corruptionLevel, Scalar_t dropoutProbability)
    : VGeneralLayer<Architecture_t>(batchSize, 1, 1, 0, 0, 0, 0, 1, {hiddenUnits},{visibleUnits},2, {hiddenUnits,visibleUnits},
-   {1,1}, batchSize, visibleUnits, 1, 8, EInitialization::kZero),
+   {1,1}, batchSize, visibleUnits, 1, EInitialization::kZero),
    fVisibleUnits(visibleUnits),
    fHiddenUnits(hiddenUnits),
    fVBiasError(visibleUnits, 1),
@@ -141,14 +144,6 @@ TReconstructionLayer<Architecture_t>::TReconstructionLayer(size_t batchSize, siz
 {
    Architecture_t::Copy(this->GetWeightsAt(0),weights[0]);
    Architecture_t::Copy(this->GetBiasesAt(0),biases[0]);
-
-   std::cout<<"Default Constructor Reconstruction: "<<std::endl;
-   std::cout<<"visible units "<<visibleUnits<<std::endl;
-   std::cout<<"hidden units "<<hiddenUnits<<std::endl;
-   std::cout<<"weights rows: "<<this->GetWeightsAt(0).GetNrows()<<std::endl;
-   std::cout<<"weights cols: "<<this->GetWeightsAt(0).GetNcols()<<std::endl;
-   std::cout<<"Bias 0 rows "<<this->GetBiasesAt(0).GetNrows()<<std::endl;
-   std::cout<<"Bias 1 rows "<<this->GetBiasesAt(1).GetNrows()<<std::endl<<std::endl;
 
 }
 
@@ -187,7 +182,6 @@ TReconstructionLayer<Architecture_t>::TReconstructionLayer(const TReconstruction
 {
    Architecture_t::Copy(this->GetWeightsAt(0),dae.weights[0]);
    Architecture_t::Copy(this->GetBiasesAt(0),dae.biases[0]);
-
 
 }
 
@@ -230,15 +224,6 @@ auto inline TReconstructionLayer<Architecture_t>::Backward(std::vector<Matrix_t>
                                                      std::vector<Matrix_t> &input)
 -> void
 {
-   std::cout<<"Reconstruction BackWard starts "<<std::endl;
-   /*std::cout<<"batch size: "<<this->GetBatchSize()<<std::endl;
-
-   std::cout<<"output size: "<<this->GetOutput().size()<<std::endl;
-   std::cout<<"output rows: "<<this->GetOutputAt(0).GetNrows()<<std::endl;
-   std::cout<<"output cols: "<<this->GetOutputAt(0).GetNcols()<<std::endl;
-   std::cout<<"Weights cols "<<this->GetWeightsAt(0).GetNcols()<<std::endl;
-   std::cout<<"Weights rows "<<this->GetWeightsAt(0).GetNrows()<<std::endl;*/
-
    for (size_t i = 0; i < this->GetBatchSize(); i++)
    {
       Architecture_t::UpdateParams(input[i], corruptedInput[i],
@@ -250,7 +235,6 @@ auto inline TReconstructionLayer<Architecture_t>::Backward(std::vector<Matrix_t>
                                    this->GetLearningRate(), this->GetBatchSize());
    }
 
-   std::cout<<"Reconstruction Backward ends "<<std::endl<<std::endl;
 }
 //______________________________________________________________________________
 template<typename Architecture_t>
@@ -260,7 +244,7 @@ auto TReconstructionLayer<Architecture_t>::Print() const
    std::cout << "Batch Size: " << this->GetBatchSize() << "\n"
             << "Input Units: " << this->GetVisibleUnits() << "\n"
             << "Hidden Units: " << this->GetHiddenUnits() << "\n";
-   std::cout<<"Reconstructed Input "<<std::endl;
+   std::cout<<"Reconstructed Input: "<<std::endl;
    for(size_t i=0; i<this->GetBatchSize(); i++)
    {
       for(size_t j=0; j<this->GetOutputAt(i).GetNrows(); j++)
@@ -273,9 +257,6 @@ auto TReconstructionLayer<Architecture_t>::Print() const
       }
       std::cout<<std::endl;
    }
-   std::cout<<this->GetBatchSize()<<std::endl;
-   std::cout<<this->GetWeights().size()<<std::endl;
-   std::cout<<this->GetOutput().size()<<std::endl;
 
 }
 

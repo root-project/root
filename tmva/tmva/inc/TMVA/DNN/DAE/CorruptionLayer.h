@@ -40,9 +40,10 @@ namespace TMVA {
 namespace DNN {
 namespace DAE {
 
-  /** \class TCorruptionLayer
-    *  Used to corrupt the input values according to defined Corruption level.
-  */
+   /** \class TCorruptionLayer
+     *  Used to corrupt the input values according to defined Corruption level.
+     *  Here we mask the values of input according to corruption level.
+   */
 
 template <typename Architecture_t>
 class TCorruptionLayer : public VGeneralLayer<Architecture_t> {
@@ -53,7 +54,7 @@ public:
 
    size_t fVisibleUnits; ///< total number of visible units
 
-   size_t fHiddenUnits;
+   size_t fHiddenUnits; ///< total number of hidden units in a denoise layer
 
    Scalar_t fDropoutProbability; ///< Probability that an input is active.
 
@@ -65,14 +66,19 @@ public:
    TCorruptionLayer(size_t BatchSize, size_t VisibleUnits, size_t HiddenUnits, Scalar_t DropoutProbability,
                     Scalar_t CorruptionLevel);
 
-   /*! Copy the denoise layer provided as a pointer */
+   /*! Copy the corruption layer provided as a pointer */
    TCorruptionLayer(TCorruptionLayer<Architecture_t> *layer);
 
    /*! Copy constructor. */
    TCorruptionLayer(const TCorruptionLayer &);
 
+   /* Destructor */
+   ~TCorruptionLayer();
+
+   /* The corruption function. All the inputs are corrupted in one forward pass */
    void Forward(std::vector<Matrix_t> input, bool applyDropout = false);
 
+   /* Not required for this layer */
    void Backward(std::vector<Matrix_t> &gradients_backward,
                  const std::vector<Matrix_t> &activations_backward,
                  std::vector<Matrix_t> &inp1,
@@ -80,6 +86,7 @@ public:
 
    void Print() const;
 
+   /* Getters */
    size_t GetVisibleUnits() const { return fVisibleUnits; }
    size_t GetHiddenUnits() const {return fHiddenUnits;}
    size_t GetType() const {return fType;}
@@ -94,19 +101,11 @@ TCorruptionLayer<Architecture_t>::TCorruptionLayer(size_t batchSize, size_t visi
                            size_t hiddenUnits,
                            Scalar_t dropoutProbability, Scalar_t corruptionLevel)
    : VGeneralLayer<Architecture_t>(batchSize, 1, 1, 0, 0, 0, 0, 1, {hiddenUnits}, {visibleUnits},
-   2, {hiddenUnits,visibleUnits}, {1,1}, batchSize, visibleUnits, 1, 6, EInitialization::kUniform),
+   2, {hiddenUnits,visibleUnits}, {1,1}, batchSize, visibleUnits, 1, EInitialization::kUniform),
    fVisibleUnits(visibleUnits), fDropoutProbability(dropoutProbability),
    fType(1), fCorruptionLevel(corruptionLevel), fHiddenUnits(hiddenUnits)
 
 {
-   std::cout<<"Default constructor corruption: "<<std::endl;
-   std::cout<<"No of visibleUnits: "<<fVisibleUnits<<std::endl;
-   std::cout<<"No of Hidden Units: "<<fHiddenUnits<<std::endl;
-   std::cout<<"weights rows: "<<this->GetWeightsAt(0).GetNrows()<<std::endl;
-   std::cout<<"weights cols: "<<this->GetWeightsAt(0).GetNcols()<<std::endl;
-   std::cout<<"Bias 0 rows "<<this->GetBiasesAt(0).GetNrows()<<std::endl;
-   std::cout<<"Bias 1 rows "<<this->GetBiasesAt(1).GetNrows()<<std::endl<<std::endl;
-
 }
 //______________________________________________________________________________
 template <typename Architecture_t>
@@ -134,11 +133,14 @@ TCorruptionLayer<Architecture_t>::TCorruptionLayer(const TCorruptionLayer &corru
 
 }
 //______________________________________________________________________________
+
+template <typename Architecture_t> TCorruptionLayer<Architecture_t>::~TCorruptionLayer() {}
+
+//______________________________________________________________________________
 template <typename Architecture_t>
 auto TCorruptionLayer<Architecture_t>::Forward(std::vector<Matrix_t> input, bool applyDropout)
 -> void
 {
-   std::cout<<"Forward corruption "<<std::endl;
    for (size_t i = 0; i < this->GetBatchSize(); i++)
    {
       if (applyDropout && (this->GetDropoutProbability() != 1.0))
@@ -147,7 +149,6 @@ auto TCorruptionLayer<Architecture_t>::Forward(std::vector<Matrix_t> input, bool
       }
       Architecture_t::CorruptInput(input[i], this->GetOutputAt(i), this->GetCorruptionLevel());
    }
-   std::cout<<"Forward corruption done "<<std::endl<<std::endl;
 }
 //______________________________________________________________________________
 template <typename Architecture_t>
@@ -158,6 +159,7 @@ auto inline TCorruptionLayer<Architecture_t>::Backward(std::vector<Matrix_t> &gr
 -> void
 {
 }
+
 //______________________________________________________________________________
 template<typename Architecture_t>
 auto TCorruptionLayer<Architecture_t>::Print() const
@@ -166,7 +168,7 @@ auto TCorruptionLayer<Architecture_t>::Print() const
    std::cout << "Batch Size: " << this->GetBatchSize() << "\n"
             << "Input Units: " << this->GetVisibleUnits() << "\n"
             << "Hidden units: "<< this->GetHiddenUnits() <<"\n";
-
+   std::cout<<"Corrupted Output: "<<std::endl;
    for(size_t i=0; i<this->GetBatchSize(); i++)
    {
       for(size_t j=0; j<this->GetOutputAt(i).GetNrows(); j++)
