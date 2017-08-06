@@ -70,9 +70,7 @@ public:
    /* copy constructor */
    TLogisticRegressionLayer(const TLogisticRegressionLayer &);
 
-   /* had to use initialize as initialize in GeneralLayer initializes its weights and biases*/
-   //void Initialize(DNN::EInitialization m);
-   // actually a predict log reg fn.
+   // This is basically the prediction step. Can be used in DeepNet to Predict output.
    void Forward(std::vector<Matrix_t> input, bool applyDropout = false);
 
    void Backward(std::vector<Matrix_t> &gradients_backward,
@@ -103,7 +101,7 @@ TLogisticRegressionLayer<Architecture_t>::TLogisticRegressionLayer(size_t batchS
                                                                    size_t outputUnits, size_t testDataBatchSize,
                                                                    Scalar_t learningRate)
    : VGeneralLayer<Architecture_t>(batchSize, 1, 1, 0, 0, 0, 0, 1, {outputUnits}, {inputUnits}, 1, {outputUnits},
-   {1}, testDataBatchSize, outputUnits, 1, 9, EInitialization::kUniform),
+   {1}, testDataBatchSize, outputUnits, 1, EInitialization::kUniform),
    fInputUnits(inputUnits), fOutputUnits(outputUnits),
    fTestDataBatchSize(testDataBatchSize), fLearningRate(learningRate)
 
@@ -178,7 +176,6 @@ auto TLogisticRegressionLayer<Architecture_t>::Forward(std::vector<Matrix_t> inp
       Architecture_t::SoftmaxAE(this->GetOutputAt(i));
 
    }
-   //return this->GetOutput();
 }
 
 //______________________________________________________________________________
