@@ -90,7 +90,7 @@ public:
                                             TMatrixT<Scalar_t> & bias_gradients,
                                             TMatrixT<Scalar_t> & df, //DxH
                                             const TMatrixT<Scalar_t> & state, // BxH
-                                            const TMatrixT<Scalar_t> & weights_input, // HxD 
+                                            const TMatrixT<Scalar_t> & weights_input, // HxD
                                             const TMatrixT<Scalar_t> & weights_state, // HxH
                                             const TMatrixT<Scalar_t> & input,  // BxD
                                             TMatrixT<Scalar_t> & input_gradient);
@@ -392,7 +392,7 @@ public:
     */
    static void SumColumns(TMatrixT<AReal> &B, const TMatrixT<AReal> &A);
 
-      //____________________________________________________________________________
+   //____________________________________________________________________________
    //
    // AutoEncoder Propagation
    //____________________________________________________________________________
@@ -444,11 +444,6 @@ public:
                                   TMatrixT<AReal> &fBiases,
                                   AReal learningRate,
                                   size_t fBatchSize);
-
-   static void Transform(TMatrixT<AReal> &input,
-                         TMatrixT<AReal> &transformed,
-                         TMatrixT<AReal> &fWeights,
-                         TMatrixT<AReal> &fBiases);
 
 };
 

@@ -11,9 +11,9 @@
  *      Deep Neural Network                                                       *
  *                                                                                *
  * Authors (alphabetical):                                                        *
- *      Akshay Vashistha     <akshayvashistha1995@gmail.com> - CERN, Switzerland  * *
- *      Vladimir Ilievski    <ilievski.vladimir@live.com>  - CERN, Switzerland  *
- *                                                                                * *
+ *      Akshay Vashistha     <akshayvashistha1995@gmail.com> - CERN, Switzerland  *
+ *      Vladimir Ilievski    <ilievski.vladimir@live.com>  - CERN, Switzerland    *
+ *                                                                                *
  * Copyright (c) 2005-2015:                                                       *
  *      CERN, Switzerland                                                         *
  *      U. of Victoria, Canada                                                    *
@@ -162,59 +162,50 @@ public:
     *  the layer is already created. */
    void AddReshapeLayer(TReshapeLayer<Architecture_t> *reshapeLayer);
 
+   /*! Function for adding Corruption layer in the Deep Neural Network,
+    *  with given number of visibleUnits and hiddenUnits. It corrupts input
+    *  according to given corruptionLevel and dropoutProbability. */
    TCorruptionLayer<Architecture_t> *AddCorruptionLayer(size_t visibleUnits, size_t hiddenUnits,
                                                         Scalar_t dropoutProbability, Scalar_t corruptionLevel);
 
+   /*! Function for adding Corruption Layer in the Deep Neural Network,
+     *  when the layer is already created.  */
    void AddCorruptionLayer(TCorruptionLayer<Architecture_t> *corruptionLayer);
 
+   /*! Function for adding Compression layer in the Deep Neural Network,
+    *  with given number of visibleUnits and hiddenUnits. It compresses the input units
+    *   taking weights and biases from prev layers. */
    TCompressionLayer<Architecture_t> *AddCompressionLayer(size_t visibleUnits, size_t hiddenUnits,
                                                           Scalar_t dropoutProbability, EActivationFunction f,
                                                           std::vector<Matrix_t> weights, std::vector<Matrix_t> biases);
 
+   /*! Function for adding Compression Layer in the Deep Neural Network, when
+    *  the layer is already created. */
    void AddCompressionLayer(TCompressionLayer<Architecture_t> *compressionLayer);
 
+   /*! Function for adding Reconstruction layer in the Deep Neural Network,
+    *  with given number of visibleUnits and hiddenUnits. It reconstructs the input units
+    *  taking weights and biases from prev layers. Same corruptionLevel and dropoutProbability
+    *  must be passed as in corruptionLayer. */
    TReconstructionLayer<Architecture_t> *AddReconstructionLayer(size_t visibleUnits, size_t hiddenUnits,
                                                                 Scalar_t learningRate, EActivationFunction f,
                                                                 std::vector<Matrix_t> weights,
                                                                 std::vector<Matrix_t> biases, Scalar_t corruptionLevel,
                                                                 Scalar_t dropoutProbability);
 
+   /*! Function for adding Reconstruction Layer in the Deep Neural Network, when
+    *  the layer is already created. */
    void AddReconstructionLayer(TReconstructionLayer<Architecture_t> *reconstructionLayer);
 
+   /*! Function for adding logisticRegressionLayer in the Deep Neural Network,
+    *  with given number of inputUnits and outputUnits. It classifies the outputUnits. */
    TLogisticRegressionLayer<Architecture_t> *AddLogisticRegressionLayer(size_t inputUnits, size_t outputUnits,
                                                                         size_t testDataBatchSize,
                                                                         Scalar_t learningRate);
 
+   /*! Function for adding logisticRegressionLayer in the Deep Neural Network, when
+    *  the layer is already created. */
    void AddLogisticRegressionLayer(TLogisticRegressionLayer<Architecture_t> *logisticRegressionLayer);
-
-   /*! Function for adding Denoise layers in the Deep Neural Network,
-    *  with given given number of inputUnits, hiddenUnits for every layer,
-    *  activation function and the dropout probability.
-    */
-   // std::vector<TDAELayer<Architecture_t>> *AddDAELayers(size_t inputUnits,
-   // std::vector<size_t> numHiddenUnitsPerLayer,
-   //                                           Scalar_t dropoutProbability =
-   //                                           1.0,
-   //                                          EActivationFunction f =
-   //                                          EActivationFunction::kSigmoid);
-
-   /*! Function for adding Denoise Layer in the Deep Neural Network,
-    *  when the layer is already created.  */
-   // void AddDAELayers(std::vector<TDAELayer<Architecture_t>> *daeLayers);
-
-   /*! Function for adding Logistic Regression layer in the Deep Neural Network,
-    *  with given given number of inputUnits , outputUnits and
-    *  number of testDataBatchSize.
-    */
-   // TLogisticRegressionLayer<Architecture_t>
-   // *AddLogisticRegressionLayer(size_t inputUnits, size_t outputUnits,
-   //                                                                 size_t
-   //                                                                 testDataBatchSize);
-
-   /*! Function for adding Denoise Layer in the Deep Neural Network,
-    *  when the layer is already created.  */
-   // void AddLogisticRegressionLayer(TLogisticRegressionLayer<Architecture_t>
-   // *logisticRegressionLayer);
 
    /*! Function for initialization of the Neural Net. */
    void Initialize();
@@ -230,12 +221,15 @@ public:
    /*! Function that executes the entire backward pass in the network. */
    void Backward(std::vector<Matrix_t> input, const Matrix_t &groundTruth, const Matrix_t &weights);
 
-   /* To train the Deep AutoEncoder network with required number of TDAELayer
-    * class type layers. */
+   /* To train the Deep AutoEncoder network with required number of Corruption, Compression and Reconstruction
+    * layers. */
    void PreTrain(std::vector<Matrix_t> &input, std::vector<size_t> numHiddenUnitsPerLayer, Scalar_t learningRate,
                  Scalar_t corruptionLevel, Scalar_t dropoutProbability, size_t epochs, EActivationFunction f,
                  bool applyDropout = false);
 
+   /* To classify outputLabel in Deep AutoEncoder. Should be used after PreTrain if required.
+    * Currently, it used Logistic Regression Layer. Otherwise we can use any other classification layer also.
+   */
    void FineTune(std::vector<Matrix_t> &input, std::vector<Matrix_t> &testInput, std::vector<Matrix_t> &outputLabel,
                  size_t outputUnits, size_t testDataBatchSize, Scalar_t learningRate, size_t epochs);
 

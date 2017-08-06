@@ -60,14 +60,6 @@ void TReference<Real_t>::UpdateParams(
       }
    }
 
-  /*for (size_t i = 0; i < (size_t)fVBiases.GetNrows(); i++)
-  {
-    for(size_t j=0; j<(size_t)fVBiases.GetNcols();j++)
-    {
-      std::cout<<fVBiases(i,j)<<std::endl;
-    }
-  }*/
-
   //updating fHBiases
    for(size_t i = 0; i < fHBiases.GetNrows(); i++)
    {
@@ -80,14 +72,6 @@ void TReference<Real_t>::UpdateParams(
       fHBiases(i, 0) += learningRate * HBiasError(i, 0) / fBatchSize;
    }
 
-   /*for (size_t i = 0; i < (size_t)fHBiases.GetNrows(); i++)
-   {
-      for(size_t j=0; j<(size_t)fHBiases.GetNcols();j++)
-      {
-      std::cout<<fHBiases(i,j)<<std::endl;
-      }
-   }*/
-
    //updating weights
    for(size_t i = 0; i < fHBiases.GetNrows(); i++)
    {
@@ -97,15 +81,6 @@ void TReference<Real_t>::UpdateParams(
                                           VBiasError(j, 0) * y(i, 0)) / fBatchSize;
       }
    }
-
-   /*for (size_t i = 0; i < (size_t)fWeights.GetNrows(); i++)
-   {
-      for(size_t j=0; j<(size_t)fWeights.GetNcols();j++)
-      {
-         std::cout<<fWeights(i,j)<<"\t";
-      }
-      std::cout<<std::endl;
-   }*/
 }
 
 //______________________________________________________________________________
@@ -243,30 +218,6 @@ void TReference<Real_t>::UpdateParamsLogReg(TMatrixT<Real_t> &input,
    }
 }
 //______________________________________________________________________________
-// Transform input from input dimensions to transformed dimensions
-//
-//______________________________________________________________________________
-template<typename Real_t>
-void TReference<Real_t>::Transform(TMatrixT<Real_t> &input,
-                                   TMatrixT<Real_t> &transformed,
-                                   TMatrixT<Real_t> &fWeights,
-                                   TMatrixT<Real_t> &fBiases)
-{
-   size_t m,n;
-   m=fWeights.GetNrows();
-   n=fWeights.GetNcols();
-
-   for (size_t i = 0; i < m ; i++)
-   {
-      Double_t output = 0.0;
-      for(size_t j = 0; j < n; j++)
-      {
-         output += fWeights(i, j) * input(j, 0);
-      }
-      output += fBiases(i, 0);
-      transformed(i, 0) = output;
-   }
-}
 
 }
 }
