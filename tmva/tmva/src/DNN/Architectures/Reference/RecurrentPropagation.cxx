@@ -27,7 +27,7 @@ auto TReference<Scalar_t>::RecurrentLayerBackward(TMatrixT<Scalar_t> & state_gra
                                                   TMatrixT<Scalar_t> & input_weight_gradients,
                                                   TMatrixT<Scalar_t> & state_weight_gradients,
                                                   TMatrixT<Scalar_t> & bias_gradients,
-                                                  TMatrixT<Scalar_t> & df, //DxH
+                                                  TMatrixT<Scalar_t> & df, //BxH
                                                   const TMatrixT<Scalar_t> & state, // BxH
                                                   const TMatrixT<Scalar_t> & weights_input, // HxD 
                                                   const TMatrixT<Scalar_t> & weights_state, // HxH
@@ -55,12 +55,12 @@ auto TReference<Scalar_t>::RecurrentLayerBackward(TMatrixT<Scalar_t> & state_gra
    if (input_weight_gradients.GetNoElements() > 0) {
       TMatrixT<Scalar_t> tmp(input_weight_gradients);
       input_weight_gradients.TMult(df, input);             // H x B . B x D
-      input_weight_gradients.Plus(tmp, input_weight_gradients);
+      input_weight_gradients += tmp;
    }
    if (state_weight_gradients.GetNoElements() > 0) {
       TMatrixT<Scalar_t> tmp(state_weight_gradients);
       state_weight_gradients.TMult(df, state);             // H x B . B x H
-      state_weight_gradients.Plus(tmp, state_weight_gradients);
+      state_weight_gradients += tmp;
    }
    
    // Bias gradients. B x H -> H x 1
