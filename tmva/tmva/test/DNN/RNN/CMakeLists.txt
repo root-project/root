@@ -21,6 +21,10 @@ include_directories(${ROOT_INCLUDE_DIRS})
 ROOT_EXECUTABLE(testForwardPass TestForwardPass.cxx LIBRARIES ${Libraries})
 ROOT_ADD_TEST(TMVA-DNN-RNN-Forward COMMAND testForwardPass)
 
+# RNN - Full Test Reference
+ROOT_EXECUTABLE(testFullRNN TestFullRNN.cxx LIBRARIES ${Libraries})
+ROOT_ADD_TEST(TMVA-DNN-RNN-FullRNN COMMAND testFullRNN)
+
 # RNN - Loss Reference
 #ROOT_EXECUTABLE(testRecurrentNetLoss TestRecurrentNetLoss.cxx LIBRARIES ${Libraries})
 #ROOT_ADD_TEST(TMVA-DNN-RNN-Loss COMMAND testRecurrentNetLoss)

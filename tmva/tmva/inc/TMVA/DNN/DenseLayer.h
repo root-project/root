@@ -1,4 +1,4 @@
-// @(#)root/tmva/tmva/dnn:$Id$
+
 // Author: Vladimir Ilievski
 
 /**********************************************************************************
@@ -181,7 +181,8 @@ auto TDenseLayer<Architecture_t>::Backward(std::vector<Matrix_t> &gradients_back
 template <typename Architecture_t>
 void TDenseLayer<Architecture_t>::Print() const
 {
-   std::cout << "Width = " << this->GetWeightsAt(0).GetNrows();
+   std::cout << "Rows = " << this->GetWeightsAt(0).GetNrows();
+   std::cout << "Cols = " << this->GetWeightsAt(0).GetNcols();
    std::cout << ", Activation Function = ";
    std::cout << static_cast<int>(fF) << std::endl;
 }
