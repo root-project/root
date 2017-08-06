@@ -16,6 +16,7 @@
 #pragma link C++ class TMVA::Envelope+;
 #pragma link C++ class TMVA::OptionMap+;
 #pragma link C++ class TMVA::VariableImportance+;
+#pragma link C++ class TMVA::CrossEvaluation+;
 #pragma link C++ class TMVA::CrossValidation+;
 #pragma link C++ class TMVA::HyperParameterOptimisation+;
 
