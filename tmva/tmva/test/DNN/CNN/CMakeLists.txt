@@ -29,3 +29,19 @@ ROOT_ADD_TEST(TMVA-DNN-CNN-Pred COMMAND testConvNetPred)
 
 ROOT_EXECUTABLE(testConvBackpropagation TestConvBackpropagation.cxx LIBRARIES ${Libraries})
 ROOT_ADD_TEST(TMVA-DNN-CNN-Backpropagation COMMAND testConvBackpropagation)
+
+#--- CPU tests. ----------------------------
+if (BLAS_FOUND AND imt)
+
+include_directories(SYSTEM ${TBB_INCLUDE_DIRS})
+
+ROOT_EXECUTABLE(testIm2ColCpu TestIm2ColCpu.cxx LIBRARIES ${Libraries})
+ROOT_ADD_TEST(TMVA-DNN-CNN-Im2Col-CPU COMMAND testIm2ColCpu)
+
+ROOT_EXECUTABLE(testDownsampleCpu TestDownsampleCpu.cxx LIBRARIES ${Libraries})
+ROOT_ADD_TEST(TMVA-DNN-CNN-Downsample-CPU COMMAND testDownsampleCpu)
+
+ROOT_EXECUTABLE(testRotWeightsCpu TestRotateWeightsCpu.cxx LIBRARIES ${Libraries})
+ROOT_ADD_TEST(TMVA-DNN-CNN-rotWeights-CPU COMMAND testrotWeightsCpu)
+
+endif (BLAS_FOUND AND imt)
