@@ -1823,7 +1823,7 @@ const char *TSpectrum::DeconvolutionRL(Double_t *source, const Double_t *respons
      x(0) \\
      x(1) \\
      \dots \\
-     x(N_x-1)
+     x(N_y-1)
  \end{bmatrix}
  \f]
 */
