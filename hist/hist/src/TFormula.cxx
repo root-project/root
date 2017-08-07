@@ -263,24 +263,24 @@ bool TFormulaParamOrder::operator() (const TString& a, const TString& b) const {
 
 ////////////////////////////////////////////////////////////////////////////////
 void TFormula::ReplaceAllName(TString &formula, TString &name, TString &replacement) {
-   // TODO write a function that will replace all instances of the name
-   // use TString::Index(name) to find instances of the name
-   // make sure that the characters on either side of the name are !IsFunctionNameChar(/* char */)
-   // replace with TString::Replace(position, length, newstring)
+   // Replace all instances of the name
 
-   std::cout << "TODO: add that either end of name is not functionnamechar" << std::endl;
-   std::cout << "TODO: add brackets when replacing?" << std::endl;
-   std::cout << "need to replace all instances of " << name << " with " << replacement << std::endl;
-   // while (formula.Index(name) != -1) {
-   //    formula.Replace(formula.Index(name), name.Length(), replacement);
-   // }
-   // First, I will start with the code for ReplaceAll:
+   // TODO: should we add brackets here?
+   // // add brackets around the replacement string
+   // replacement.Prepend("{");
+   // replacement.Append("}");
+
    int i = 0;
    while ((i = formula.Index(name, i, TString::kExact)) != kNPOS) {
-      formula.Replace(i, name.Length(), replacement);
-      i += replacement.Length();
+      // replace if characters on either side of name are not function-name-characters
+      if ((i==0 || !IsFunctionNameChar(formula[i-1]))
+	  && (i + name.Length() == formula.Length() || !IsFunctionNameChar(formula[i+name.Length()]))) {
+	 formula.Replace(i, name.Length(), replacement);
+	 i += replacement.Length();
+      } else {
+	 i += name.Length();
+      }
    }
-
    
    std::cout << "Now our \"naive\" formula looks like : " << formula << std::endl;
 }
@@ -1221,8 +1221,6 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
 ///   Handling user functions (and possibly more)
 ///   to take variables and optionally parameters as arguments
 void TFormula::HandleUserFunctions(TString &formula) {
-   // TODO: detect user function (like what ExtractFunctors does?)
-
    std::cout << "HandleUserFunctions on " << formula <<  " -- this function will replace user functions followed by variables/parameters in parentheses as appropriate" << std::endl;
 
    // loop through characters (mostly copied from `TFormula::ExtractFunctors`)
@@ -1245,7 +1243,7 @@ void TFormula::HandleUserFunctions(TString &formula) {
       // ignore numbers (scientific notation)
       if (IsScientificNotation(formula, i))
    	 continue;
-      // x in hexadecimal number
+      // ignore x in hexadecimal number
       if (IsHexadecimal(formula, i)) {
       	 while (!IsOperator(formula[i]) && i < formula.Length())
    	    i++;
@@ -1314,7 +1312,9 @@ void TFormula::HandleUserFunctions(TString &formula) {
 		  TString::Format("[%s]", f->GetParName(argNr-f->GetNdim()));
 	       TString newName = TString(formula(argSeparators[argNr] + 1,
 						 argSeparators[argNr+1]-argSeparators[argNr] - 1));
-	       std::cout << "TODO: of course, we should \"handle\" the newName before simply plugging it in" << std::endl;
+
+	       // preprocess the formula so that nesting works
+	       PreProcessFormula(newName);
 	       ReplaceAllName(replacementFormula, oldName, newName);
 	    }
 
@@ -1330,7 +1330,12 @@ void TFormula::HandleUserFunctions(TString &formula) {
       
    }
 
-   // TODO finish
+   // TODO
+   // 
+   // - handle only parameters (or only variables?)
+   // - handle parametrized functions as well
+   // - google tests
+   // - handle fancy parameter syntax
    
    std::cout << "End function `HandleUserFunctions`" << std::endl;
 }
@@ -1692,12 +1697,10 @@ void TFormula::ExtractFunctors(TString &formula)
                if (f1) f = f1->GetFormula();
             }
             if (f) {
-	       std::cout << "TODO: replace the functionality here with a preprocess command earlier" << std::endl;
-	       
                TString replacementFormula = f->GetExpFormula();
-	       // TODO: be able to replace not just f, but also arguments (variables/parameters) afterwards
-	       // This means adjusting the replacementFormula according to what comes after in parentheses
-	       
+	       // Note this is only for replacing functions that do
+	       // not specify variables and/or parameters in brackets
+	       // (the other case is done by `HandleUserFunctions`)
 	       
 	       
                // analyze expression string
@@ -1789,8 +1792,6 @@ void TFormula::ExtractFunctors(TString &formula)
 ///       * first check if function exists, and has same number of arguments, then accept it and set as found.
 ///    If all functors after iteration are matched with corresponding action,
 ///    it inputs C++ code of formula into cling, and sets flag that formula is ready to evaluate.
-
-/// TODO: if a functor has arguments, it can also be a user-defined function (handle parametrized functions in `HandleParametrizedFunctions`)
 
 void TFormula::ProcessFormula(TString &formula)
 {
