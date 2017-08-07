@@ -885,15 +885,27 @@ double FitUtil::EvaluateLogL(const IModelFunctionTempl<double>  & func, const Un
          }
       }
    nPoints++;
+       // {
+       //     R__LOCKGUARD(gROOTMutex);
+       //     std::cout << "compute Log-l for point  " << i << "  nPoints  " << nPoints << " = " << logval << std::endl;
+       // }
       return LikelihoodAux<double>(logval, W, W2);
    };
 
 #ifdef R__USE_IMT
+  // auto redFunction = [](const std::vector<LikelihoodAux<double>> & objs){
+  //          return std::accumulate(objs.begin(), objs.end(), LikelihoodAux<double>(0.0,0.0,0.0),
+  //                      [](const LikelihoodAux<double> &l1, const LikelihoodAux<double> &l2){
+  //                          return l1+l2;
+  //                 });
+  // };
+  // do not use std::accumulate to be sure to maintain always the same order
   auto redFunction = [](const std::vector<LikelihoodAux<double>> & objs){
-           return std::accumulate(objs.begin(), objs.end(), LikelihoodAux<double>(0.0,0.0,0.0),
-                       [](const LikelihoodAux<double> &l1, const LikelihoodAux<double> &l2){
-                           return l1+l2;
-                  });
+     auto l0 =  LikelihoodAux<double>(0.0,0.0,0.0);
+     for ( auto & l : objs ) {
+        l0 = l0 + l;
+     }
+     return l0;
   };
 #else
   (void)nChunks;
