@@ -1425,7 +1425,9 @@ unsigned FitUtil::setAutomaticChunking(unsigned nEvents){
       SysInfo_t s;
       gSystem->GetSysInfo(&s);
       auto ncpu  = s.fCpus;
-      return ((nEvents/ncpu + 1) % 1000) *40 ; //arbitrary formula
+      if (nEvents/ncpu < 1000) return ncpu;
+      return nEvents/1000;
+      //return ((nEvents/ncpu + 1) % 1000) *40 ; //arbitrary formula
 }
 
 }
