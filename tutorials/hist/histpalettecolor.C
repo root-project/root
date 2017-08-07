@@ -4,7 +4,7 @@
 /// Palette coloring for histogram is activated thanks to the options `PFC`
 /// (Palette Fill Color), `PLC` (Palette Line Color) and `AMC` (Palette Marker Color).
 /// When one of these options is given to `TH1::Draw` the histogram get its color
-/// from the current color palette defined by `gStyle->SetPalette(…)`. The color
+/// from the current color palette defined by `gStyle->SetPalette(...)`. The color
 /// is determined according to the number of objects having palette coloring in
 /// the current pad.
 ///
