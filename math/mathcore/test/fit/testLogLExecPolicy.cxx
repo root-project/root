@@ -98,6 +98,7 @@ public:
       }
       fitter.Config().MinimizerOptions().SetPrintLevel(3);
       fitter.Config().SetMinimizer("Minuit2", "Migrad");
+      fitter.Config().MinimizerOptions().SetTolerance(10);
    }
 
 
