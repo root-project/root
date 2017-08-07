@@ -1,14 +1,10 @@
 #include "gtest/gtest.h"
 
-#include "ROOT/THist.hxx"
-
 #include <atomic>
 #include <vector>
 
 /** Basic tests for histograms of integral precision using vector<atomic> storage.
    */
-
-using namespace ROOT::Experimental;
 
 // Implementation of op+= for integral.
 template <class INTEGRAL>
@@ -39,6 +35,10 @@ std::atomic<PRECISION> &operator+=(std::atomic<PRECISION> &lhs, PRECISION rhs)
 {
    return atomic_addeq(lhs, rhs);
 }
+
+#include "ROOT/THist.hxx"
+
+using namespace ROOT::Experimental;
 
 // Storage using vector<atomic<>>
 template <class PRECISION>
