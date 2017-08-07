@@ -27,3 +27,11 @@ While there are several levels of automated tests that will be triggered before 
 strongly encourage new developers to run the tests _before_ submitting new code.  [Please follow the testing docs](https://root.cern.ch/run-tests)
 for more information.
 
+Continuous Integration
+----------------------
+
+ROOT currently has two automated CI tests that are used for pull requests:
+- *Build and test*: When known contributors submit a PR, a Jenkins-based CI workflow will kick off; the results will be posted to the ticket.  Interacting with the Jenkins instance is [documented here](https://github.com/phsft-bot/build-configuration/blob/master/README.md).  The build and tests done for each PR are a subset of those done for nightly builds.
+- *Formatting check*: We utilize a Travis-CI-based build to automatically check that a PR follows known ROOT coding conventions.  This is done with the `clang-format` tool.  If coding violations are found, `clang-format` will generate a suggested patch file; we suggest utilizing this output directly
+
+Typically, every PR must pass both steps.  Committers have the ability to override this requirement.
