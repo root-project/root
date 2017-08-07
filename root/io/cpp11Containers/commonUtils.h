@@ -181,33 +181,12 @@ bool IsSame<double>(const std::unordered_multiset<double>& a, const std::unorder
 
 template <>
 bool IsSame<>(const TH1F& a, const TH1F& b){
-   if( 0 != strcmp(a.GetName(),b.GetName())) {
-      std::cout << "The names of the histograms differ: " << a.GetName() << " " << b.GetName() << std::endl;
-      return false;
-   }
-   if( 0 != strcmp(a.GetTitle(),b.GetTitle())) {
-      std::cout << "The title of the histograms differ: " << a.GetTitle() << " " << b.GetTitle() << std::endl;
-      return false;
-   }
-   auto nbinsa = a.GetNbinsX();
-   auto nbinsb = b.GetNbinsX();
-   if( nbinsa != nbinsb) {
-      std::cout << "The # of bins of the histograms differ: " << nbinsa << " " << nbinsb << std::endl;
-      return false;
-   }
-   for (int i=0;i<a.GetNbinsX();++i) {
-      auto binca = a.GetBinContent(i);
-      auto bincb = b.GetBinContent(i);
-      if (binca != bincb) {
-         std::cout << "The content of bin " << i << "  of the histograms differ: " << binca << " " << bincb << std::endl;
-         return false;
-      }
-      auto binea = a.GetBinError(i);
-      auto bineb = b.GetBinError(i);
-      if (binea != bineb) {
-         std::cout << "The error of bin " << i << "  of the histograms differ: " << binea << " " << bineb << std::endl;
-         return false;
-      }
+   if( 0 != strcmp(a.GetName(),b.GetName())) return false;
+   if( 0 != strcmp(a.GetTitle(),b.GetTitle())) return false;
+   if( a.GetNbinsX() != b.GetNbinsX()) return false;
+   for (int i=0;i<a.GetNbinsX();++i){
+      if (a.GetBinContent(i)!=b.GetBinContent(i)) return false;
+      if (a.GetBinError(i)!=b.GetBinError(i)) return false;
    }
    return true;
 }
