@@ -630,7 +630,7 @@ void TTreeCache::ResetMissCache() {
 /// Returns:
 /// - IOPos describing the IO operation necessary for the basket on this branch
 /// - On failure, IOPos.length will be set to 0.
-TTreeCache::IOPos TTreeCache::FindBranchBasket(TBranch &b) {
+TTreeCache::IOPos TTreeCache::FindBranchBasketPos(TBranch &b, Long64_t entry) {
    if (R__unlikely(b.GetDirectory() == 0)) {
       //printf("Branch at %p has no valid directory.\n", &b);
       return IOPos{0, 0};
@@ -657,7 +657,7 @@ TTreeCache::IOPos TTreeCache::FindBranchBasket(TBranch &b) {
 
    // Search for the basket that contains the event of interest.  Unlike the primary cache, we
    // are only interested in a single basket per branch - we don't try to fill the cache.
-   Long64_t basketOffset = TMath::BinarySearch(blistsize, entries, fTree->GetReadEntry());
+   Long64_t basketOffset = TMath::BinarySearch(blistsize, entries, entry);
    if (basketOffset < 0) { // No entry found.
       //printf("No entry offset found for entry %ld\n", fTree->GetReadEntry());
       return IOPos{0, 0};
@@ -686,7 +686,7 @@ TTreeCache::IOPos TTreeCache::FindBranchBasket(TBranch &b) {
       return IOPos{0, 0};
    }
 
-   return IOPos{static_cast<ULong64_t>(pos), static_cast<UInt_t>(len)};
+   return {pos, len};
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -703,22 +703,21 @@ TTreeCache::IOPos TTreeCache::FindBranchBasket(TBranch &b) {
 ///   this IO operation.
 /// - If no corresponding branch could be found (or an error occurs), this
 ///   returns nullptr.
-TBranch *TTreeCache::CalculateMissEntries(Long64_t pos_in, Int_t len_in, Bool_t all) {
-   if (R__unlikely((pos_in < 0) || (len_in < 0))) {
+TBranch *TTreeCache::CalculateMissEntries(Long64_t pos, Int_t len, Bool_t all) {
+   if (R__unlikely((pos < 0) || (len < 0))) {
       return nullptr;
    }
-   auto pos = static_cast<ULong64_t>(pos_in);
-   auto len = static_cast<UInt_t>(len_in);
 
    int count = all ? (fTree->GetListOfLeaves())->GetEntriesFast() : fMissCache->fBranches.size();
    fMissCache->fEntries.reserve(count);
    fMissCache->fEntries.clear();
    Bool_t found_request = kFALSE;
    TBranch *resultBranch = nullptr;
+   Long64_t entry = fTree->GetReadEntry();
    //printf("Will search %d branches for basket at %ld.\n", count, pos);
    for (int i=0; i<count; i++) {
       TBranch *b = all ? static_cast<TBranch*>(static_cast<TLeaf*>((fTree->GetListOfLeaves())->UncheckedAt(i))->GetBranch()) : fMissCache->fBranches[i];
-      IOPos iopos = FindBranchBasket(*b);
+      IOPos iopos = FindBranchBasketPos(*b, entry);
       if (iopos.fLen == 0) {  // Error indicator
          continue;
       }
@@ -820,11 +819,11 @@ Bool_t TTreeCache::CheckMissCache(char *buf, Long64_t pos, int len) {
    //printf("Checking the miss cache for offset=%ld, length=%d\n", pos, len);
 
    // First, binary search to see if the desired basket is already cached.
-   MissCache::Entry mcentry{IOPos{static_cast<ULong64_t>(pos), static_cast<UInt_t>(len)}};
+   MissCache::Entry mcentry{IOPos{pos, len}};
    auto iter = std::lower_bound(fMissCache->fEntries.begin(), fMissCache->fEntries.end(), mcentry);
 
    if (iter != fMissCache->fEntries.end()) {
-      if (static_cast<UInt_t>(len) > iter->fIO.fLen) {
+      if (len > iter->fIO.fLen) {
          fNMissReadMiss++;
          return kFALSE;
       }
