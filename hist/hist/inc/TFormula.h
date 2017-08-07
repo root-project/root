@@ -23,6 +23,8 @@
 #include <list>
 #include <map>
 
+class TMap;
+
 class TFormulaFunction
 {
 public:
@@ -108,6 +110,8 @@ private:
    void     HandleLinear(TString &formula);
    Bool_t   InitLambdaExpression(const char * formula);
    static Bool_t   IsDefaultVariableName(const TString &name);
+   void     ReplaceAllName(TString &formula, TString &name, TString &replacement);
+   
 protected:
 
    std::list<TFormulaFunction>         fFuncs;    //!

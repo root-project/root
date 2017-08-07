@@ -23,7 +23,7 @@
 #include "TError.h"
 #include "TInterpreter.h"
 #include "TFormula.h"
-#include "TRegexp.h"
+#include "TMap.h"
 #include <cassert>
 #include <iostream>
 #include <unordered_map>
@@ -259,6 +259,23 @@ bool TFormulaParamOrder::operator() (const TString& a, const TString& b) const {
    }
 
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+void TFormula::ReplaceAllName(TString &formula, TString &name, TString &replacement) {
+   // TODO write a function that will replace all instances of the name
+   // use TString::Index(name) to find instances of the name
+   // make sure that the characters on either side of the name are !IsFunctionNameChar(/* char */)
+   // replace with TString::Replace(position, length, newstring)
+
+   std::cout << "TODO: add that either end of name is not functionnamechar" << std::endl;
+   std::cout << "need to replace all instances of " << name << " with " << replacement << std::endl;
+   while (formula.Index(name) != -1) {
+      formula.Replace(formula.Index(name), name.Length(), replacement);
+   }
+   std::cout << "Now our \"naive\" formula looks like : " << formula << std::endl;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 TFormula::TFormula()
@@ -992,7 +1009,7 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
 
 
 
-      std::cout << formula << " ---- " << funName << "  " << funPos << std::endl;
+      //std::cout << formula << " ---- " << funName << "  " << funPos << std::endl;
       while(funPos != kNPOS && !IsAParameterName(formula,funPos))
       {
 
@@ -1001,11 +1018,11 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
 
          // check that first and last character is not alphanumeric
          Int_t iposBefore = funPos - 1;
-         std::cout << "looping on  funpos is " << funPos << " formula is " << formula << " function " << funName << std::endl;
+         //std::cout << "looping on  funpos is " << funPos << " formula is " << formula << " function " << funName << std::endl;
          if (iposBefore >= 0) {
             assert( iposBefore < formula.Length() );
             if (isalpha(formula[iposBefore] ) ) {
-               std::cout << "previous character for function " << funName << " is " << formula[iposBefore] << "- skip " << std::endl;
+               //std::cout << "previous character for function " << funName << " is " << formula[iposBefore] << "- skip " << std::endl;
                funPos = formula.Index(funName,lastFunPos);
                continue;
             }
@@ -1021,7 +1038,7 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
                // check if also last character is not alphanumeric or is not an operator and not a parenthesis ( or [.
                // Parenthesis [] are used to express the variables
                if ( isalnum(c ) || ( ! IsOperator(c ) && c != '(' && c != ')' && c != '[' && c != ']' ) ) {
-                  std::cout << "last character for function " << funName << " is " << c << " skip .." <<  std::endl;
+                  //std::cout << "last character for function " << funName << " is " << c << " skip .." <<  std::endl;
                   funPos = formula.Index(funName,lastFunPos);
                   continue;
                }
@@ -1076,7 +1093,7 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
             }
          }
          // chech if dimension obtained from [...] is compatible with what is defined in existing pre-defined functions
-         std::cout << " Found dim = " << dim  << " and function dimension is " << funDim << std::endl;
+         //std::cout << " Found dim = " << dim  << " and function dimension is " << funDim << std::endl;
          if(dim != funDim)
          {
             pair<TString,Int_t> key = make_pair(funName,dim);
@@ -1106,7 +1123,7 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
          {
             counter = TString(formula(openingParenthesisPos+1,formula.Index(')',funPos) - openingParenthesisPos -1)).Atoi();
          }
-         std::cout << "openingParenthesisPos  " << openingParenthesisPos << " counter is " << counter <<  std::endl;
+         //std::cout << "openingParenthesisPos  " << openingParenthesisPos << " counter is " << counter <<  std::endl;
 
          TString body = (isNormalized ? it->second.second : it->second.first);
          if(isNormalized && body == "")
@@ -1179,13 +1196,13 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
             fNumber = functionsNumbers[funName] + 10*(dim-1);
          }
 
-         std::cout << " replace " << pattern << " with " << replacement << std::endl;
+         //std::cout << " replace " << pattern << " with " << replacement << std::endl;
 
          formula.Replace(funPos,pattern.Length(),replacement,replacement.Length());
 
          funPos = formula.Index(funName);
       }
-      std::cout << " End loop of " << funName << " formula is now " << formula << std::endl;
+      //std::cout << " End loop of " << funName << " formula is now " << formula << std::endl;
    }
 
 }
@@ -1197,7 +1214,7 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
 void TFormula::HandleUserFunctions(TString &formula) {
    // TODO: detect user function (like what ExtractFunctors does?)
 
-   std::cout << "HandleUserFunctions on " << formula << " (Work in Progress)" << std::endl;
+   std::cout << "HandleUserFunctions on " << formula <<  " -- this function will replace user functions followed by variables/parameters in parentheses as appropriate" << std::endl;
 
    // loop through characters (mostly copied from `TFormula::ExtractFunctors`)
    for(Int_t i = 0 ; i < formula.Length() ; ++i) {
@@ -1205,27 +1222,108 @@ void TFormula::HandleUserFunctions(TString &formula) {
 
       // ignore things that start with square brackets
       if (formula[i] == '[') {
-	 while(formula[i] != ']')
-	    i++;
-	 continue;
+   	 while(formula[i] != ']')
+   	    i++;
+   	 continue;
       }
       // ignore strings
       if (formula[i] == '\"') {
-	 do
-	    i++;
-	 while(formula[i] != '\"');
-	 continue;
+   	 do
+   	    i++;
+   	 while(formula[i] != '\"');
+   	 continue;
       }
       // ignore numbers (scientific notation)
       if (IsScientificNotation(formula, i))
-	 continue;
-      // if (IsHexadecimal(formula, i)) {
-      // 	 while ()
-      // }
-      // TODO finish
-      
+   	 continue;
+      // x in hexadecimal number
+      if (IsHexadecimal(formula, i)) {
+      	 while (!IsOperator(formula[i]) && i < formula.Length())
+   	    i++;
+   	 continue;
+      }
+
+      if (isalpha(formula[i]) && !IsOperator(formula[i])) {
+   	 std::cout << "character : " << i << " " << formula[i] << " is not an operator and is alpha" << std::endl;
+
+	 int j;
+	 for (j = i; j < formula.Length() && IsFunctionNameChar(formula[j]); j++);
+	 TString name = (TString) formula(i, j-i);
+	 std::cout << "found name " << name << std::endl;
+
+	 // Code to retrieve `f` copied from ExtractFunctors
+	 TObject *obj = 0;
+	 {
+	    R__LOCKGUARD(gROOTMutex);
+	    obj = gROOT->GetListOfFunctions()->FindObject(name);
+	 }
+	 TFormula * f = dynamic_cast<TFormula*> (obj);
+	 if (!f) {
+	    // maybe object is a TF1
+	    TF1 * f1 = dynamic_cast<TF1*> (obj);
+	    if (f1) f = f1->GetFormula();
+	 }
+	 //
+
+	 std::cout << "after looking through gROOT list of functions, f is " << f << std::endl;
+	 
+	 if(f && j < formula.Length() && formula[j] == '(') {
+	    std::cout << " name is followed by parentheses!" << std::endl;
+	    std::cout << "f has " << f->GetNdim() << " dimensions and " << f->GetNpar() << " parameters" << std::endl;
+
+	    // Count arguments (careful about parentheses depth)
+	    int nArguments = 1;
+	    int depth = 1;
+	    std::vector<int> argSeparators;
+	    argSeparators.push_back(j);
+	    int k;
+	    for (k = j+1; depth >= 1 && k < formula.Length(); k++) {
+	       if (formula[k] == ',' && depth == 1) {
+		  nArguments++;
+		  argSeparators.push_back(k);
+	       } else if (formula[k] == '(')
+		  depth++;
+	       else if (formula[k] == ')')
+		  depth--;
+	    }
+	    argSeparators.push_back(k-1);
+	    
+
+	    std::cout << "Our formula has " << nArguments << " arguments" << std::endl;
+
+	    if (nArguments == f->GetNdim() + f->GetNpar())
+	       std::cout << "The count is good!" << std::endl;
+
+	    std::cout << "naive replacement formula: " << f->GetExpFormula() << std::endl;
+	    TString replacementFormula = TString(f->GetExpFormula());
+
+	    // now loop over the arguments and make changes to replacement formula
+	    const char * defaultVariableNames[] = { "x","y","z","t" };
+	    for (int argNr = 0; argNr < nArguments; argNr++) {
+	       TString oldName = (argNr < f->GetNdim()) ?
+		  TString(defaultVariableNames[argNr]) :
+		  TString::Format("[p%d]", argNr - f->GetNdim());
+	       TString newName = TString(formula(argSeparators[argNr] + 1,
+						 argSeparators[argNr+1]-argSeparators[argNr] - 1));
+	       std::cout << "TODO: of course, we should \"handle\" the newName before simply plugging it in" << std::endl;
+	       ReplaceAllName(replacementFormula, oldName, newName);
+	    }
+
+	    formula.Replace(i, k-i, replacementFormula);
+	    std::cout << "new formula is : " << formula << std::endl;
+	    
+	    i += replacementFormula.Length() - 1; // skip to end of replacement
+	 } else {
+	    i = j; // skip to end of candidate "name"
+	 }
+	 
+      }
       
    }
+
+   // TODO finish
+   
+   std::cout << "End function `HandleUserFunctions`" << std::endl;
 }
 
 
@@ -1448,15 +1546,15 @@ Bool_t TFormula::PrepareFormula(TString &formula)
 
 void TFormula::ExtractFunctors(TString &formula)
 {
-   std::cout << "Commencing ExtractFunctors on " << formula << std::endl;
+   //std::cout << "Commencing ExtractFunctors on " << formula << std::endl;
    
    TString name = "";
    TString body = "";
-   printf("formula is : %s \n",formula.Data() );
+   // printf("formula is : %s \n",formula.Data() );
    for(Int_t i = 0 ; i < formula.Length(); ++i )
    {
 
-      std::cout << "loop on character : " << i << " " << formula[i] << std::endl;
+      //std::cout << "loop on character : " << i << " " << formula[i] << std::endl;
       // case of parameters
       if(formula[i] == '[')
       {
@@ -1469,7 +1567,7 @@ void TFormula::ExtractFunctors(TString &formula)
          }
          i++;
          //rename parameter name XX to pXX
-         std::cout << "examine parameters " << param << std::endl;
+         //std::cout << "examine parameters " << param << std::endl;
          int paramIndex = -1;
          if (param.IsDigit()) {
             paramIndex = param.Atoi();
@@ -1490,7 +1588,7 @@ void TFormula::ExtractFunctors(TString &formula)
          TString replacement = TString::Format("{[%s]}",param.Data());
          formula.Replace(tmp,i - tmp, replacement,replacement.Length());
          fFuncs.push_back(TFormulaFunction(param));
-         printf("found parameter %s \n",param.Data() );
+         // printf("found parameter %s \n",param.Data() );
          continue;
       }
       // case of strings
@@ -1514,11 +1612,11 @@ void TFormula::ExtractFunctors(TString &formula)
       }
 
 
-      std::cout << "investigating character : " << i << " " << formula[i] << " of formula " << formula << std::endl;
+      //std::cout << "investigating character : " << i << " " << formula[i] << " of formula " << formula << std::endl;
       // look for variable and function names. They  start in C++ with alphanumeric characters
       if(isalpha(formula[i]) && !IsOperator(formula[i]))  // not really needed to check if operator (if isalpha is not an operator)
       {
-         std::cout << "character : " << i << " " << formula[i] << " is not an operator and is alpha " << std::endl;
+         //std::cout << "character : " << i << " " << formula[i] << " is not an operator and is alpha " << std::endl;
 
          while( IsFunctionNameChar(formula[i]) && i < formula.Length())
          {
@@ -1536,7 +1634,7 @@ void TFormula::ExtractFunctors(TString &formula)
 
             name.Append(formula[i++]);
          }
-         printf(" build a name %s \n",name.Data() );
+         // printf(" build a name %s \n",name.Data() );
          if(formula[i] == '(')
          {
             i++;
@@ -1570,7 +1668,7 @@ void TFormula::ExtractFunctors(TString &formula)
          else
          {
 
-            std::cout << "check if character : " << i << " " << formula[i] << " from name " << name << "  is a function " << std::endl;
+            //std::cout << "check if character : " << i << " " << formula[i] << " from name " << name << "  is a function " << std::endl;
 
             // check if function is provided by gROOT
             TObject *obj = 0;
@@ -1585,7 +1683,14 @@ void TFormula::ExtractFunctors(TString &formula)
                if (f1) f = f1->GetFormula();
             }
             if (f) {
+	       std::cout << "TODO: replace the functionality here with a preprocess command earlier" << std::endl;
+	       
                TString replacementFormula = f->GetExpFormula();
+	       // TODO: be able to replace not just f, but also arguments (variables/parameters) afterwards
+	       // This means adjusting the replacementFormula according to what comes after in parentheses
+	       
+	       
+	       
                // analyze expression string
                std::cout << "formula to replace for " << f->GetName() << " is " << replacementFormula << std::endl;
                PreProcessFormula(replacementFormula);
@@ -1638,6 +1743,7 @@ void TFormula::ExtractFunctors(TString &formula)
                i += replacementFormula.Length()-name.Length();
 
                // we have extracted all the functor for "fname"
+	       std::cout << "We have extracted all the functors for fname" << std::endl;
                std::cout << " i = " << i << " f[i] = " << formula[i] << " - " << formula << std::endl;
                name = "";
 
@@ -1675,9 +1781,11 @@ void TFormula::ExtractFunctors(TString &formula)
 ///    If all functors after iteration are matched with corresponding action,
 ///    it inputs C++ code of formula into cling, and sets flag that formula is ready to evaluate.
 
+/// TODO: if a functor has arguments, it can also be a user-defined function (handle parametrized functions in `HandleParametrizedFunctions`)
+
 void TFormula::ProcessFormula(TString &formula)
 {
-   //std::cout << "Begin: formula is " << formula << " list of functors " << fFuncs.size() << std::endl;
+   std::cout << "Begin: formula is " << formula << " list of functors " << fFuncs.size() << std::endl;
 
    for(list<TFormulaFunction>::iterator funcsIt = fFuncs.begin(); funcsIt != fFuncs.end(); ++funcsIt)
    {
@@ -1754,6 +1862,7 @@ void TFormula::ProcessFormula(TString &formula)
             {
                fun.fFound = true;
             }
+
          }
 
          if(!fun.fFound)
@@ -1907,6 +2016,7 @@ void TFormula::ProcessFormula(TString &formula)
       }
       Bool_t hasBoth = hasVariables && hasParameters;
       Bool_t inputIntoCling = (formula.Length() > 0);
+      //std::cout << "inputIntoCling is "<< inputIntoCling << std::endl;
       if (inputIntoCling) {
 
          // save copy of inputFormula in a std::strig for the unordered map
