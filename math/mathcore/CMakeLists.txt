@@ -40,6 +40,10 @@ ROOT_STANDARD_LIBRARY_PACKAGE(MathCore HEADERS TComplex.h TMath.h ${MATHCORE_HEA
                               DEPENDENCIES Core ${MATHCORE_DEPENDENCIES}
                               BUILTINS ${MATHCORE_BUILTINS})
 
+if(builtin_vc)
+  target_include_directories(MathCore SYSTEM BEFORE INTERFACE $<BUILD_INTERFACE:${Vc_INCLUDE_DIR}>)
+endif()
+
 if(veccore)
   target_compile_definitions(MathCore INTERFACE ${VecCore_DEFINITIONS})
 endif()
