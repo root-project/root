@@ -38,33 +38,33 @@ public:
    enum EPrefillType { kNoPrefill, kAllBranches };
 
 protected:
-   Long64_t        fEntryMin;         ///<! first entry in the cache
-   Long64_t        fEntryMax;         ///<! last entry in the cache
-   Long64_t        fEntryCurrent;     ///<! current lowest entry number in the cache
-   Long64_t        fEntryNext;        ///<! next entry number where cache must be filled
-   Int_t           fNbranches;        ///<! Number of branches in the cache
-   Int_t           fNReadOk;          ///<  Number of blocks read and found in the cache
-   Int_t           fNMissReadOk{0};   ///<  Number of blocks read, not found in the primary cache, and found in the secondary cache.
-   Int_t           fNReadMiss;        ///<  Number of blocks read and not found in the cache
-   Int_t           fNMissReadMiss{0}; ///<  Number of blocks read and not found in either cache.
-   Int_t           fNReadPref;        ///<  Number of blocks that were prefetched
-   Int_t           fNMissReadPref{0}; ///<  Number of blocks read into the secondary ("miss") cache.
-   TObjArray      *fBranches;         ///<! List of branches to be stored in the cache
-   TList          *fBrNames;          ///<! list of branch names in the cache
-   TTree          *fTree;             ///<! pointer to the current Tree
-   Bool_t          fIsLearning;       ///<! true if cache is in learning mode
-   Bool_t          fIsManual;         ///<! true if cache is StopLearningPhase was used
-   Bool_t          fFirstBuffer;      ///<! true if first buffer is used for prefetching
-   Bool_t          fOneTime;          ///<! used in the learning phase
-   Bool_t          fReverseRead;      ///<! reading in reverse mode
-   Int_t           fFillTimes;        ///<! how many times we can fill the current buffer
-   Bool_t          fFirstTime;        ///<! save the fact that we processes the first entry
-   Long64_t        fFirstEntry;       ///<! save the value of the first entry
-   Bool_t          fReadDirectionSet; ///<! read direction established
-   Bool_t          fEnabled;          ///<! cache enabled for cached reading
-   EPrefillType    fPrefillType;      ///<  Whether a pre-filling is enabled (and if applicable which type)
-   static  Int_t   fgLearnEntries;    ///<  number of entries used for learning mode
-   Bool_t          fAutoCreated;      ///<! true if cache was automatically created
+   Long64_t        fEntryMin{0};               ///<! first entry in the cache
+   Long64_t        fEntryMax{1};              ///<! last entry in the cache
+   Long64_t        fEntryCurrent{-1};         ///<! current lowest entry number in the cache
+   Long64_t        fEntryNext{-1};            ///<! next entry number where cache must be filled
+   Int_t           fNbranches{0};             ///<! Number of branches in the cache
+   Int_t           fNReadOk{0};               ///<  Number of blocks read and found in the cache
+   Int_t           fNMissReadOk{0};           ///<  Number of blocks read, not found in the primary cache, and found in the secondary cache.
+   Int_t           fNReadMiss{0};             ///<  Number of blocks read and not found in the cache
+   Int_t           fNMissReadMiss{0};         ///<  Number of blocks read and not found in either cache.
+   Int_t           fNReadPref{0};             ///<  Number of blocks that were prefetched
+   Int_t           fNMissReadPref{0};         ///<  Number of blocks read into the secondary ("miss") cache.
+   TObjArray      *fBranches{nullptr};        ///<! List of branches to be stored in the cache
+   TList          *fBrNames{nullptr};         ///<! list of branch names in the cache
+   TTree          *fTree{nullptr};            ///<! pointer to the current Tree
+   Bool_t          fIsLearning{kTRUE};        ///<! true if cache is in learning mode
+   Bool_t          fIsManual{kFALSE};         ///<! true if cache is StopLearningPhase was used
+   Bool_t          fFirstBuffer{kTRUE};       ///<! true if first buffer is used for prefetching
+   Bool_t          fOneTime{kFALSE};          ///<! used in the learning phase
+   Bool_t          fReverseRead{kFALSE};      ///<! reading in reverse mode
+   Int_t           fFillTimes{0};             ///<! how many times we can fill the current buffer
+   Bool_t          fFirstTime{kTRUE};         ///<! save the fact that we processes the first entry
+   Long64_t        fFirstEntry{-1};           ///<! save the value of the first entry
+   Bool_t          fReadDirectionSet{kFALSE}; ///<! read direction established
+   Bool_t          fEnabled{kTRUE};           ///<! cache enabled for cached reading
+   EPrefillType    fPrefillType;              ///<  Whether a pre-filling is enabled (and if applicable which type)
+   static  Int_t   fgLearnEntries;            ///<  number of entries used for learning mode
+   Bool_t          fAutoCreated{kFALSE};      ///<! true if cache was automatically created
 
    // These members hold cached data for missed branches when miss optimization
    // is enabled.  Pointers are only initialized if the miss cache is enabled.

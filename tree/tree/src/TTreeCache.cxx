@@ -266,29 +266,7 @@ ClassImp(TTreeCache);
 /// Default Constructor.
 
 TTreeCache::TTreeCache() : TFileCacheRead(),
-   fEntryMin(0),
-   fEntryMax(1),
-   fEntryCurrent(-1),
-   fEntryNext(-1),
-   fNbranches(0),
-   fNReadOk(0),
-   fNReadMiss(0),
-   fNReadPref(0),
-   fBranches(0),
-   fBrNames(0),
-   fTree(0),
-   fIsLearning(kTRUE),
-   fIsManual(kFALSE),
-   fFirstBuffer(kTRUE),
-   fOneTime(kFALSE),
-   fReverseRead(0),
-   fFillTimes(0),
-   fFirstTime(kTRUE),
-   fFirstEntry(-1),
-   fReadDirectionSet(kFALSE),
-   fEnabled(kTRUE),
-   fPrefillType(GetConfiguredPrefillType()),
-   fAutoCreated(kFALSE)
+   fPrefillType(GetConfiguredPrefillType())
 {
 }
 
@@ -296,29 +274,11 @@ TTreeCache::TTreeCache() : TFileCacheRead(),
 /// Constructor.
 
 TTreeCache::TTreeCache(TTree *tree, Int_t buffersize) : TFileCacheRead(tree->GetCurrentFile(),buffersize,tree),
-   fEntryMin(0),
    fEntryMax(tree->GetEntriesFast()),
-   fEntryCurrent(-1),
    fEntryNext(0),
-   fNbranches(0),
-   fNReadOk(0),
-   fNReadMiss(0),
-   fNReadPref(0),
-   fBranches(0),
    fBrNames(new TList),
    fTree(tree),
-   fIsLearning(kTRUE),
-   fIsManual(kFALSE),
-   fFirstBuffer(kTRUE),
-   fOneTime(kFALSE),
-   fReverseRead(0),
-   fFillTimes(0),
-   fFirstTime(kTRUE),
-   fFirstEntry(-1),
-   fReadDirectionSet(kFALSE),
-   fEnabled(kTRUE),
-   fPrefillType(GetConfiguredPrefillType()),
-   fAutoCreated(kFALSE)
+   fPrefillType(GetConfiguredPrefillType())
 {
    fEntryNext = fEntryMin + fgLearnEntries;
    Int_t nleaves = tree->GetListOfLeaves()->GetEntries();
