@@ -72,11 +72,13 @@ protected:
    Long64_t        fFirstMiss {-1}; //! set to the event # of the first miss.
    Long64_t        fLastMiss  {-1}; //! set to the event # of the last miss.
 
+   // Representation of a positioned buffer IO.
+   // {0,0} designates the uninitialized - or invalid - buffer.
    struct IOPos {
-      IOPos(ULong64_t pos, UInt_t len) : fPos(pos), fLen(len) {}
+      IOPos(Long64_t pos, Int_t len) : fPos(pos), fLen(len) {}
 
-      ULong64_t fPos{0};  //! Position in file of cache entry.
-      UInt_t fLen{0};  //! Length of cache entry.
+      Long64_t fPos{0};  //! Position in file of cache entry.
+      Int_t fLen{0};  //! Length of cache entry.
    };
    struct MissCache {
       struct Entry {
@@ -110,7 +112,7 @@ private:
    Bool_t CheckMissCache(char *buf, Long64_t pos, int len);  // Check the miss cache for a particular buffer, fetching if deemed necessary.
    Bool_t FillMissCache();  // Fill the miss cache from the current set of active branches.
    Bool_t CalculateMissCache();  // Calculate the appropriate miss cache to fetch; helper function for FillMissCache
-   IOPos FindBranchBasket(TBranch &);  // Given a branch, determine the location of its basket for the current entry.
+   IOPos FindBranchBasketPos(TBranch &, Long64_t entry);  // Given a branch and an entry, determine the file location (offset / size) of the corresponding basket.
    TBranch* CalculateMissEntries(Long64_t, int, bool);   // Given an file read, try to determine the corresponding branch.
    Bool_t ProcessMiss(Long64_t pos, int len);   // Given a file read not in the miss cache, handle (possibly) loading the data.
 
