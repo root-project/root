@@ -197,18 +197,23 @@ bool IsSame<>(const TH1F& a, const TH1F& b){
    }
    for (int i=0;i<a.GetNbinsX();++i) {
       auto binca = a.GetBinContent(i);
+      auto bincallu = *(ULong64_t*)(&binca);
       auto bincb = b.GetBinContent(i);
-      if (binca != bincb) {
+      auto bincbllu = *(ULong64_t*)(&bincb);
+      if (bincallu != bincbllu) {
          std::cout << "The content of bin " << i << "  of the histograms differ: " << binca << " " << bincb << std::endl;
          return false;
       }
       auto binea = a.GetBinError(i);
+      auto bineallu = *(ULong64_t*)(&binea);
       auto bineb = b.GetBinError(i);
-      if (binea != bineb) {
+      auto binebllu = *(ULong64_t*)(&bineb);
+      if (bineallu != binebllu) {
          std::cout << "The error of bin " << i << "  of the histograms differ: " << binea << " " << bineb << std::endl;
          return false;
       }
    }
+
    return true;
 }
 
