@@ -20,6 +20,7 @@
 
 #include "TMatrix.h"
 #include "TMVA/DNN/Architectures/Reference/DataLoader.h"
+#include "TMVA/DNN/Architectures/Reference/TensorDataLoader.h"
 #include <vector>
 
 namespace TMVA

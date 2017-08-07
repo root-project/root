@@ -48,7 +48,8 @@ endforeach()
 
 #---Assign source files to the implementations -----------------
 SET(DNN_FILES      src/DNN/Architectures/Reference.cxx
-                   src/DNN/Architectures/Reference/DataLoader.cxx)
+                   src/DNN/Architectures/Reference/DataLoader.cxx
+                   src/DNN/Architectures/Reference/TensorDataLoader.cxx)
 SET(DNN_CUDA_FILES src/DNN/Architectures/Cuda.cu
                    src/DNN/Architectures/Cuda/CudaBuffers.cxx
                    src/DNN/Architectures/Cuda/CudaMatrix.cu)

@@ -139,12 +139,12 @@ private:
    size_t fBatchDepth;      ///< The number of matrices in the tensor.
    size_t fBatchHeight;     ///< The number od rows in each matrix.
    size_t fBatchWidth;      ///< The number of columns in each matrix.
-   size_t fNOutputFeatures; ///< The number of outputs from the classifier/regressor
-   size_t fBatchIndex;
+   size_t fNOutputFeatures; ///< The number of outputs from the classifier/regressor.
+   size_t fBatchIndex;      ///< The index of the batch when there are multiple batches in parallel
 
-   size_t fNStreams; ///< Number of buffer pairs.
-   std::vector<DeviceBuffer_t> fDeviceBuffers;
-   std::vector<HostBuffer_t> fHostBuffers;
+   size_t fNStreams;                           ///< Number of buffer pairs.
+   std::vector<DeviceBuffer_t> fDeviceBuffers; ///< The device buffers used to keep the input, output and weight data.
+   std::vector<HostBuffer_t> fHostBuffers;     ///< The host buffers used to load the input, output and weight data.
 
    std::vector<size_t> fSampleIndices; ///< Ordering of the samples in the epoch.
 
