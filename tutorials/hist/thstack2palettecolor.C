@@ -5,7 +5,7 @@
 /// (Palette Fill Color).
 /// When this option is given to `THStack::Draw` the histograms  in the
 /// `THStack` get their color from the current color palette defined by
-/// `gStyle->SetPalette(…)`. The color is determined according to the number of
+/// `gStyle->SetPalette(...)`. The color is determined according to the number of
 /// histograms.
 ///
 /// In this example four 2D histograms are displayed with palette coloring.
