@@ -269,10 +269,19 @@ void TFormula::ReplaceAllName(TString &formula, TString &name, TString &replacem
    // replace with TString::Replace(position, length, newstring)
 
    std::cout << "TODO: add that either end of name is not functionnamechar" << std::endl;
+   std::cout << "TODO: add brackets when replacing?" << std::endl;
    std::cout << "need to replace all instances of " << name << " with " << replacement << std::endl;
-   while (formula.Index(name) != -1) {
-      formula.Replace(formula.Index(name), name.Length(), replacement);
+   // while (formula.Index(name) != -1) {
+   //    formula.Replace(formula.Index(name), name.Length(), replacement);
+   // }
+   // First, I will start with the code for ReplaceAll:
+   int i = 0;
+   while ((i = formula.Index(name, i, TString::kExact)) != kNPOS) {
+      formula.Replace(i, name.Length(), replacement);
+      i += replacement.Length();
    }
+
+   
    std::cout << "Now our \"naive\" formula looks like : " << formula << std::endl;
 }
 
@@ -1302,7 +1311,7 @@ void TFormula::HandleUserFunctions(TString &formula) {
 	    for (int argNr = 0; argNr < nArguments; argNr++) {
 	       TString oldName = (argNr < f->GetNdim()) ?
 		  TString(defaultVariableNames[argNr]) :
-		  TString::Format("[p%d]", argNr - f->GetNdim());
+		  TString::Format("[%s]", f->GetParName(argNr-f->GetNdim()));
 	       TString newName = TString(formula(argSeparators[argNr] + 1,
 						 argSeparators[argNr+1]-argSeparators[argNr] - 1));
 	       std::cout << "TODO: of course, we should \"handle\" the newName before simply plugging it in" << std::endl;
