@@ -304,8 +304,15 @@ add_custom_command(OUTPUT etc/dictpch/allLinkDefs.h
                    COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/build/unix/makepchinput.py ${CMAKE_SOURCE_DIR} . ${__clingetcpch} -- ${CMAKE_CXX_FLAGS_SEPARATE}
                    DEPENDS ${CMAKE_SOURCE_DIR}/build/unix/makepchinput.py ${__allFiles})
 
+get_property(incdirs DIRECTORY PROPERTY INCLUDE_DIRECTORIES)
+foreach(d ${incdirs})
+  if(EXISTS ${d})
+    set(__allIncludes ${__allIncludes} -I${d})
+  endif()
+endforeach()
+
 add_custom_command(OUTPUT etc/allDict.cxx.pch
-                   COMMAND ${CMAKE_COMMAND} -E env ROOTIGNOREPREFIX=1 ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py etc/allDict.cxx.pch -I${CMAKE_BINARY_DIR}/include
+                   COMMAND ${CMAKE_COMMAND} -E env ROOTIGNOREPREFIX=1 ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py etc/allDict.cxx.pch ${__allIncludes} -I${CMAKE_BINARY_DIR}/include
                    DEPENDS ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py
                            etc/dictpch/allLinkDefs.h
                            etc/dictpch/allHeaders.h
