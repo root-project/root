@@ -108,6 +108,7 @@ namespace TMVA {
 
    class MethodBase : virtual public IMethod, public Configurable {
 
+      friend class CrossEvaluation;
       friend class Factory;
       friend class RootFinder;
       friend class MethodBoost;
