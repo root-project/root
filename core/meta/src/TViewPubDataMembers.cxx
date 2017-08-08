@@ -91,8 +91,12 @@ TObject *TViewPubDataMembers::FindObject(const char * name) const
    while (TClass *cl = (TClass*)next()) {
       THashList *hl = dynamic_cast<THashList*>(cl->GetListOfDataMembers(kFALSE));
       TIter content_next(hl->GetListForObject(name));
-      while (TDictionary *p = (TDictionary*) content_next())
-         if (p->Property() & kIsPublic) return p;
+      while (TDictionary *p = (TDictionary*) content_next()) {
+         // The 'ListForObject' is actually a hash table bucket that can also
+         // contain other element/name.
+         if (strcmp(name,p->GetName())==0 && (p->Property() & kIsPublic))
+            return p;
+      }
    }
    return 0;
 }
