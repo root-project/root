@@ -283,5 +283,27 @@ void TCuda<AFloat>::Reshape(TCudaMatrix<AFloat> &A, const TCudaMatrix<AFloat> &B
     
 }
 
+//____________________________________________________________________________
+template<typename AFloat>
+void TCuda<AFloat>::Flatten(TCudaMatrix<AFloat> &A,
+                            const std::vector<TCudaMatrix<AFloat>> &B,
+                            size_tt size,
+                            size_t nRows,
+                            size_t nCols)
+{
+
+}
+
+//____________________________________________________________________________
+template<typename AFloat>
+void TCuda<AFloat>::Deflatten(std::vector<TCudaMatrix<AFloat>> &A,
+                              const TCudaMatrix<AFloat> &B,
+                              size_t index,
+                              size_t nRows,
+                              size_t nCols)
+{
+
+}
+
 } // namespace DNN
 } // namespace TMVA
