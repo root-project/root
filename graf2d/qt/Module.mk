@@ -55,7 +55,7 @@ else
 GQTCXXFLAGS   += -I$(QTDIR)/mkspecs/default
 endif
 
-GQTCXXFLAGS   +=  -I. $(QTINCDIR:%=-I%)
+GQTCXXFLAGS   +=  -I. $(QTINCDIR:%=-isystem%)
 
 GQTLIB        := $(LPATH)/libGQt.$(SOEXT)
 GQTMAP        := $(GQTLIB:.$(SOEXT)=.rootmap)
