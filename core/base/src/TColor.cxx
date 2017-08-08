@@ -42,6 +42,7 @@ namespace {
 
 static Int_t   gHighestColorIndex = 0;   ///< Highest color index defined
 static Float_t gColorThreshold    = -1.; ///< Color threshold used by GetColor
+static Int_t   gDefinedColors     = 0;  ///< Number of defined colors.
 
 #define fgGrayscaleMode TColor__GrayScaleMode()
 #define fgPalette TColor__Palette()
@@ -1017,6 +1018,7 @@ TColor::TColor(Int_t color, Float_t r, Float_t g, Float_t b, const char *name,
    // fill color structure
    SetRGB(r, g, b);
    fAlpha = a;
+   gDefinedColors++;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1037,6 +1039,7 @@ TColor::TColor(Float_t r, Float_t g, Float_t b, Float_t a): TNamed("","")
    // enter in the list of colors
    TObjArray *lcolors = (TObjArray*)gROOT->GetListOfColors();
    lcolors->AddAtAndExpand(this, fNumber);
+   gDefinedColors++;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1386,6 +1389,18 @@ Int_t TColor::GetNumberOfColors()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Static function returns kTRUE if some new colors have been defined after
+/// initialisation. This is useful know in order to avoid JSON conversion of
+/// colors (by JSROOT) if not needed.
+
+Bool_t TColor::DefinedColors()
+{
+   // After initialization gDefinedColors == 649. If it is bigger it means some new
+   // colors have been defined
+   return (gDefinedColors > 649);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Return pixel value corresponding to this color. This pixel value can
 /// be used in the GUI classes. This call does not work in batch mode since
 /// it needs to communicate with the graphics system.
@@ -1699,6 +1714,7 @@ void TColor::SetRGB(Float_t r, Float_t g, Float_t b)
       if (nplanes > 8) light->SetRGB(lr, lg, lb);
       else             light->SetRGB(0.8,0.8,0.8);
    }
+   gDefinedColors++;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
