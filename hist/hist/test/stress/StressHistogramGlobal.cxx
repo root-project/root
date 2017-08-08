@@ -40,7 +40,7 @@ std::ostream &operator<<(std::ostream &out, TH1D &h)
 
 void FillVariableRange(Double_t v[numberOfBins + 1])
 {
-   r.SetSeed(0);
+   r.SetSeed(initialSeed);
    // Double_t v[numberOfBins+1];
    Double_t minLimit = (maxRange - minRange) / (numberOfBins * 2);
    Double_t maxLimit = (maxRange - minRange) * 4 / (numberOfBins);
