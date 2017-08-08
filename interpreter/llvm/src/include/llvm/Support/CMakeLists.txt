@@ -60,7 +60,9 @@ if(DEFINED llvm_vc)
     PROPERTIES GENERATED TRUE
                HEADER_FILE_ONLY TRUE)
 else()
-  file(WRITE "${version_inc}" "")
+  if(NOT EXISTS "${version_inc}")
+    file(WRITE "${version_inc}" "")
+  endif()
 endif()
 
 add_custom_target(llvm_vcsrevision_h DEPENDS "${version_inc}")
