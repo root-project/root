@@ -375,7 +375,7 @@ public:
 
    //____________________________________________________________________________
    //
-   //  Max Pooling Layer Propagation
+   //  Reshape Layer Propagation
    //____________________________________________________________________________
    /** @name Forward and Backward Propagation in Reshape Layer
     */
@@ -383,6 +383,15 @@ public:
 
    /** Transform the matrix \p B to a matrix with different dimensions \p A */
    static void Reshape(TCudaMatrix<AFloat> &A, const TCudaMatrix<AFloat> &B);
+
+   /** Flattens the tensor \p B, such that each matrix, is stretched in
+    *  one row, resulting with a matrix \p A. */
+   static void Flatten(TCudaMatrix<AFloat> &A, const std::vector<TCudaMatrix<AFloat>> &B, size_t size, size_t nRows,
+                       size_t nCols);
+
+   /** Transforms each row of \p B to a matrix and stores it in the tensor \p B. */
+   static void Deflatten(std::vector<TCudaMatrix<AFloat>> &A, const TCudaMatrix<AFloat> &B, size_t index, size_t nRows,
+                         size_t nCols);
 
    ///@}
 
