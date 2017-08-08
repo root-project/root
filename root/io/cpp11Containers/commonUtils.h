@@ -15,6 +15,8 @@
 #ifndef ROOTTEST_COMMON_UTILS
 #define ROOTTEST_COMMON_UTILS
 
+bool gVerboseComparison = false;
+
 template <class T>
 bool IsSame(const T& a, const T& b){
    cout << "ERROR\n";
@@ -183,17 +185,17 @@ bool IsSame<double>(const std::unordered_multiset<double>& a, const std::unorder
 template <>
 bool IsSame<>(const TH1F& a, const TH1F& b){
    if( 0 != strcmp(a.GetName(),b.GetName())) {
-      std::cout << "The names of the histograms differ: " << a.GetName() << " " << b.GetName() << std::endl;
+      if (gVerboseComparison) std::cout << "The names of the histograms differ: " << a.GetName() << " " << b.GetName() << std::endl;
       return false;
    }
    if( 0 != strcmp(a.GetTitle(),b.GetTitle())) {
-      std::cout << "The title of the histograms differ: " << a.GetTitle() << " " << b.GetTitle() << std::endl;
+      if (gVerboseComparison) std::cout << "The title of the histograms differ: " << a.GetTitle() << " " << b.GetTitle() << std::endl;
       return false;
    }
    auto nbinsa = a.GetNbinsX();
    auto nbinsb = b.GetNbinsX();
    if( nbinsa != nbinsb) {
-      std::cout << "The # of bins of the histograms differ: " << nbinsa << " " << nbinsb << std::endl;
+      if (gVerboseComparison) std::cout << "The # of bins of the histograms differ: " << nbinsa << " " << nbinsb << std::endl;
       return false;
    }
    for (int i=0;i<a.GetNbinsX();++i) {
@@ -202,7 +204,7 @@ bool IsSame<>(const TH1F& a, const TH1F& b){
       auto bincb = b.GetBinContent(i);
       auto bincbllu = *(ULong64_t*)(&bincb);
       if (bincallu != bincbllu) {
-         std::cout << "The content of bin " << i << "  of the histograms differ: " << binca << " " << bincb << std::endl;
+         if (gVerboseComparison) std::cout << "The content of bin " << i << "  of the histograms differ: " << binca << " " << bincb << std::endl;
          return false;
       }
       auto binea = a.GetBinError(i);
@@ -210,7 +212,7 @@ bool IsSame<>(const TH1F& a, const TH1F& b){
       auto bineb = b.GetBinError(i);
       auto binebllu = *(ULong64_t*)(&bineb);
       if (bineallu != binebllu) {
-         std::cout << "The error of bin " << i << "  of the histograms differ: " << binea << " " << bineb << std::endl;
+         if (gVerboseComparison) std::cout << "The error of bin " << i << "  of the histograms differ: " << binea << " " << bineb << std::endl;
          return false;
       }
    }
@@ -303,8 +305,10 @@ void readAndCheckFromFile(const T& obj, const char* objName, const char* filenam
 
 template<class T>
 void writeReadCheck(const T& obj, const char* objName, const char* filename){
+   gVerboseComparison = true;
    writeToFile(obj,objName,filename);
    readAndCheckFromFile(obj,objName,filename);
+   gVerboseComparison = false;
 }
 
 template<class Cont>
