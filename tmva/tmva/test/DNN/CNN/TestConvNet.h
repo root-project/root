@@ -135,6 +135,34 @@ auto testDownsample(const typename Architecture::Matrix_t &A, const typename Arc
    return true;
 }
 
+/** Flatten the 3D tensor A using the Flatten function and compare it to
+ *  the result in the flat matrix B. */
+//______________________________________________________________________________
+template <typename Architecture>
+auto testFlatten(std::vector<typename Architecture::Matrix_t> &A, const typename Architecture::Matrix_t &B, size_t size,
+                 size_t nRows, size_t nCols) -> bool
+{
+
+   using Matrix_t = typename Architecture::Matrix_t;
+
+   size_t m, n;
+   m = B.GetNrows();
+   n = B.GetNcols();
+
+   Matrix_t AFlat(m, n);
+   Architecture::Flatten(AFlat, A, size, nRows, nCols);
+
+   for (size_t i = 0; i < m; i++) {
+      for (size_t j = 0; j < n; j++) {
+         if (AFlat(i, j) != B(i, j)) {
+            return false;
+         }
+      }
+   }
+
+   return true;
+}
+
 /*! Generate a conv net, perform forward pass */
 //______________________________________________________________________________
 template <typename Architecture>
