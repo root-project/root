@@ -21,12 +21,19 @@ macro(ROOTTEST_SETUP_MACROTEST)
     list(APPEND RootExeDefines "-e;#define ${d}")
   endforeach()
 
+  set(EXTERNALS_INCLUDE_DIR
+    ${CMAKE_BINARY_DIR}/externals/${CMAKE_INSTALL_PREFIX}/include)
+
+  if(EXISTS ${EXTERNALS_INCLUDE_DIR})
+    set(RootExternalIncludes -e "gSystem->AddIncludePath(\"-I${EXTERNALS_INCLUDE_DIR}\")")
+  endif()
+
   set(root_cmd root.exe ${RootExeDefines}
                -e "gSystem->SetBuildDir(\"${CMAKE_CURRENT_BINARY_DIR}\",true)"
                -e "gSystem->AddDynamicPath(\"${CMAKE_CURRENT_BINARY_DIR}\")"
                -e "gROOT->SetMacroPath(\"${CMAKE_CURRENT_SOURCE_DIR}\")"
                -e "gSystem->AddIncludePath(\"-I${CMAKE_CURRENT_BINARY_DIR}\")"
-               ${RootExeOptions}
+               ${RootExternalIncludes} ${RootExeOptions}
                -q -l -b) 
 
   set(root_buildcmd root.exe ${RootExeDefines} -q -l -b)
