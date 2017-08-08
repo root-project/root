@@ -26,8 +26,8 @@ void check(const char* testName){
    TH1::AddDirectory(0); // same name is ok
    gRandom->SetSeed(1); // make all contents identical irrespective of the container
 
-   std::string binFilename(testName); binFilename+=".root";
-   std::string xmlFilename(testName); xmlFilename+=".xml";
+   std::string binFilename(testName); binFilename+="UnorderedSet"; binFilename+=".root";
+   std::string xmlFilename(testName); xmlFilename+="UnorderedSet"; xmlFilename+=".xml";
 
    std::vector<const char*> filenames  {binFilename.c_str()/*, xmlFilename.c_str()*/}; // NEED XML HERE
 
