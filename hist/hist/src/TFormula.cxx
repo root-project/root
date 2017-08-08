@@ -265,10 +265,9 @@ bool TFormulaParamOrder::operator() (const TString& a, const TString& b) const {
 void TFormula::ReplaceAllName(TString &formula, TString &name, TString &replacement) {
    // Replace all instances of the name
 
-   // TODO: should we add brackets here?
-   // // add brackets around the replacement string
-   // replacement.Prepend("{");
-   // replacement.Append("}");
+   // add parentheses around the replacement string
+   replacement.Prepend("(");
+   replacement.Append(")");
 
    int i = 0;
    while ((i = formula.Index(name, i, TString::kExact)) != kNPOS) {
@@ -282,7 +281,11 @@ void TFormula::ReplaceAllName(TString &formula, TString &name, TString &replacem
       }
    }
    
-   std::cout << "Now our \"naive\" formula looks like : " << formula << std::endl;
+   //std::cout << "Now our formula is : " << formula << std::endl;
+
+   // remove the parentheses we added
+   replacement.Remove(0);
+   replacement.Remove(replacement.Length() - 1);
 }
 
 
@@ -1332,8 +1335,8 @@ void TFormula::HandleUserFunctions(TString &formula) {
 
    // TODO
    // 
-   // - handle only parameters (or only variables?)
    // - handle parametrized functions as well
+   // - handle only parameters (or only variables?)
    // - google tests
    // - handle fancy parameter syntax
    
