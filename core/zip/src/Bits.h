@@ -180,7 +180,6 @@ struct bits_internal_state {
  */
 int R__bi_init (bits_internal_state *state);
 
-
 /* ===========================================================================
  * Send a value on a given number of bits.
  * IN assertion: length <= 16 and value fits in length bits.
