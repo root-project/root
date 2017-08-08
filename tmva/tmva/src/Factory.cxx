@@ -305,8 +305,8 @@ TMVA::Factory::~Factory( void )
    // problem with call of REGISTER_METHOD macro ...
    //   ClassifierFactory::DestroyInstance();
    //   Types::DestroyInstance();
-   Tools::DestroyInstance();
-   Config::DestroyInstance();
+   //Tools::DestroyInstance();
+   //Config::DestroyInstance();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
