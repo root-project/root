@@ -113,6 +113,8 @@ public:
       fitter.Config().ParSettings(3).SetLowerLimit(0);
       fitter.Config().ParSettings(4).SetLowerLimit(0);
       fitter.Config().ParSettings(5).SetLowerLimit(0);
+      // save the parameter settings for the other fits
+      paramSettings = fitter.Config().ParamsSettings();  
       start = std::chrono::system_clock::now();
       bool ret = fitter.Fit(*dataSB);
       end =  std::chrono::system_clock::now();
@@ -126,11 +128,7 @@ public:
       std::cout << "\n///////////////////////////////MT TEST////////////////////////////" << std::endl << std::endl;
       fSeq->SetParameters(p);
       fitter.SetFunction(*wfSeq, false);
-      fitter.Config().ParSettings(0).SetLimits(0, 1);
-      fitter.Config().ParSettings(1).Fix();
-      fitter.Config().ParSettings(3).SetLowerLimit(0);
-      fitter.Config().ParSettings(4).SetLowerLimit(0);
-      fitter.Config().ParSettings(5).SetLowerLimit(0);
+      fitter.Config().ParamsSettings() = paramSettings; 
       start = std::chrono::system_clock::now();
       bool ret = fitter.Fit(*dataSB, 0, ROOT::Fit::ExecutionPolicy::kMultithread);
       end =  std::chrono::system_clock::now();
@@ -144,6 +142,7 @@ public:
       std::cout << "\n///////////////////////////////MP TEST////////////////////////////\n\n";
       fSeq->SetParameters(p);
       fitter.SetFunction(*wfSeq, false);
+      fitter.Config().ParamsSettings() = paramSettings; 
       start = std::chrono::system_clock::now();
       bool ret = fitter.Fit(*dataSB, 0, ROOT::Fit::ExecutionPolicy::kMultiprocess);
       end =  std::chrono::system_clock::now();
@@ -158,11 +157,7 @@ public:
       std::cout << "\n////////////////////////////VECTOR TEST////////////////////////////" << std::endl << std::endl;
       fVec->SetParameters(p);
       fitter.SetFunction(*wfVec);
-      fitter.Config().ParSettings(0).SetLimits(0, 1);
-      fitter.Config().ParSettings(1).Fix();
-      fitter.Config().ParSettings(3).SetLowerLimit(0);
-      fitter.Config().ParSettings(4).SetLowerLimit(0);
-      fitter.Config().ParSettings(5).SetLowerLimit(0);
+      fitter.Config().ParamsSettings() = paramSettings; 
       start = std::chrono::system_clock::now();
       bool ret = fitter.Fit(*dataSB);
       end =  std::chrono::system_clock::now();
@@ -176,6 +171,7 @@ public:
       std::cout << "\n///////////////////////////////MT+VEC TEST////////////////////////////\n\n";
       fVec->SetParameters(p);
       fitter.SetFunction(*wfVec);
+      fitter.Config().ParSettings(0).SetLimits(0, 1);
       start = std::chrono::system_clock::now();
       bool ret = fitter.Fit(*dataSB, 0, ROOT::Fit::ExecutionPolicy::kMultithread);
       end =  std::chrono::system_clock::now();
@@ -189,6 +185,7 @@ public:
       std::cout << "\n///////////////////////////////MP+VEC TEST////////////////////////////\n\n";
       fVec->SetParameters(p);
       fitter.SetFunction(*wfVec);
+      fitter.Config().ParamsSettings() = paramSettings; 
       start = std::chrono::system_clock::now();
       bool ret = fitter.Fit(*dataSB, 0, ROOT::Fit::ExecutionPolicy::kMultiprocess);
       end =  std::chrono::system_clock::now();
@@ -213,6 +210,7 @@ private:
    std::chrono::duration<double> duration;
    ROOT::Fit::Fitter fitter;
    ROOT::Fit::UnBinData *dataSB;
+   std::vector<ROOT::Fit::ParameterSettings> paramSettings; 
    bool filledData = false;
    double p[paramSize] = {0.1, 1000., 130., 2., 3.5, 1.5};
 };
