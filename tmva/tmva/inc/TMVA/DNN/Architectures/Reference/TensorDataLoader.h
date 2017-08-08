@@ -108,6 +108,12 @@ TTensorDataLoader<AData, TReference<AReal>>::TTensorDataLoader(const AData &data
      fBatchWidth(batchWidth), fNOutputFeatures(nOutputFeatures), fBatchIndex(0), inputTensor(),
      outputMatrix(batchSize, nOutputFeatures), weightMatrix(batchSize, 1), fSampleIndices()
 {
+
+   inputTensor.reserve(batchDepth);
+   for (size_t i = 0; i < batchDepth; i++) {
+      inputTensor.emplace_back(batchHeight, batchWidth);
+   }
+
    fSampleIndices.reserve(fNSamples);
    for (size_t i = 0; i < fNSamples; i++) {
       fSampleIndices.push_back(i);
@@ -128,9 +134,9 @@ auto TTensorDataLoader<AData, TReference<AReal>>::GetTensorBatch() -> TTensorBat
    size_t sampleIndex = fBatchIndex * fBatchSize;
    IndexIterator_t sampleIndexIterator = fSampleIndices.begin() + sampleIndex;
 
-   CopyInput(inputTensor, sampleIndexIterator);
-   CopyOutput(outputMatrix, sampleIndexIterator);
-   CopyWeights(weightMatrix, sampleIndexIterator);
+   CopyTensorInput(inputTensor, sampleIndexIterator);
+   CopyTensorOutput(outputMatrix, sampleIndexIterator);
+   CopyTensorWeights(weightMatrix, sampleIndexIterator);
 
    fBatchIndex++;
    return TTensorBatch<TReference<AReal>>(inputTensor, outputMatrix, weightMatrix);
