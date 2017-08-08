@@ -171,7 +171,7 @@ public:
       std::cout << "\n///////////////////////////////MT+VEC TEST////////////////////////////\n\n";
       fVec->SetParameters(p);
       fitter.SetFunction(*wfVec);
-      fitter.Config().ParSettings(0).SetLimits(0, 1);
+      fitter.Config().ParamsSettings() = paramSettings; 
       start = std::chrono::system_clock::now();
       bool ret = fitter.Fit(*dataSB, 0, ROOT::Fit::ExecutionPolicy::kMultithread);
       end =  std::chrono::system_clock::now();
