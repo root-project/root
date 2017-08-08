@@ -8,12 +8,6 @@
 /// \date March 2017
 /// \author Danilo Piparo
 
-#include "TCanvas.h"
-#include "TFile.h"
-#include "TH1.h"
-#include "TTree.h"
-
-#include "ROOT/TDataFrame.hxx"
 
 // A simple helper function to fill a test tree: this makes the example
 // stand-alone.
