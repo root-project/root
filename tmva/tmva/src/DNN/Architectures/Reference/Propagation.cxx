@@ -392,5 +392,34 @@ void TReference<AReal>::Reshape(TMatrixT<AReal> &A, const TMatrixT<AReal> &B)
    }
 }
 
+
+//______________________________________________________________________________
+template <typename AReal>
+void TReference<AReal>::Flatten(TMatrixT<AReal> &A, const std::vector<TMatrixT<AReal>> &B, size_t size, size_t nRows,
+                                 size_t nCols)
+{
+   for (size_t i = 0; i < (size_t)size; i++) {
+      for (size_t j = 0; j < (size_t)nRows; j++) {
+         for (size_t k = 0; k < (size_t)nCols; k++) {
+            A(i, j * nCols + k) = B[i](j, k);
+         }
+      }
+   }
+}
+
+//______________________________________________________________________________
+template <typename AReal>
+void TReference<AReal>::Deflatten(std::vector<TMatrixT<AReal>> &A, const TMatrixT<AReal> &B, size_t size,
+                                   size_t nRows, size_t nCols)
+{
+   for (size_t i = 0; i < (size_t)size; i++) {
+      for (size_t j = 0; j < (size_t)nRows; j++) {
+         for (size_t k = 0; k < (size_t)nCols; k++) {
+            A[i](j, k) = B(i, j * nCols + k);
+         }
+      }
+   }
+}
+
 } // namespace DNN
 } // namespace TMVA
