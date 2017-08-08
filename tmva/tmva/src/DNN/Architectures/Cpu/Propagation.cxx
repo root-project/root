@@ -366,5 +366,33 @@ void TCpu<AFloat>::Reshape(TCpuMatrix<AFloat> &A, const TCpuMatrix<AFloat> &B)
    }
 }
 
+//____________________________________________________________________________
+template <typename AFloat>
+void TCpu<AFloat>::Flatten(TCpuMatrix<AFloat> &A, const std::vector<TCpuMatrix<AFloat>> &B, size_t size, size_t nRows,
+                           size_t nCols)
+{
+   for (size_t i = 0; i < (size_t)size; i++) {
+      for (size_t j = 0; j < (size_t)nRows; j++) {
+         for (size_t k = 0; k < (size_t)nCols; k++) {
+            A(i, j * nCols + k) = B[i](j, k);
+         }
+      }
+   }
+}
+
+//____________________________________________________________________________
+template <typename AFloat>
+void TCpu<AFloat>::Deflatten(std::vector<TCpuMatrix<AFloat>> &A, const TCpuMatrix<AFloat> &B, size_t size, size_t nRows,
+                             size_t nCols)
+{
+   for (size_t i = 0; i < (size_t)size; i++) {
+      for (size_t j = 0; j < (size_t)nRows; j++) {
+         for (size_t k = 0; k < (size_t)nCols; k++) {
+            A[i](j, k) = B(i, j * nCols + k);
+         }
+      }
+   }
+}
+
 } // namespace DNN
 } // namespace TMVA
