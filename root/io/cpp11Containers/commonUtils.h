@@ -100,7 +100,7 @@ bool IsSame(const std::unordered_set<T>& a, const std::unordered_set<T>& b){
    std::vector<T> v2;
    for (auto& el : b) v2.emplace_back(el);
 
-   auto sortingFunction = [](const T& a, const T& b){return std::string(a.GetName())<std::string(b.GetName());};
+   auto sortingFunction = [](const T& o1, const T& o2){return std::string(o1.GetName())<std::string(o2.GetName());};
    std::sort(v1.begin(),v1.end(),sortingFunction); // FUNDAMENTAL!
    std::sort(v2.begin(),v2.end(),sortingFunction); // FUNDAMENTAL!
    return IsSame(v1,v2);
@@ -113,7 +113,7 @@ bool IsSame(const std::unordered_multiset<T>& a, const std::unordered_multiset<T
    std::vector<T> v2;
    for (auto& el : b) v2.emplace_back(el);
 
-   auto sortingFunction = [](const T& a, const T& b){return std::string(a.GetName())<std::string(b.GetName());};
+   auto sortingFunction = [](const T& o1, const T& o2){return std::string(o1.GetName())<std::string(o2.GetName());};
    std::sort(v1.begin(),v1.end(),sortingFunction); // FUNDAMENTAL!
    std::sort(v2.begin(),v2.end(),sortingFunction); // FUNDAMENTAL!
    return IsSame(v1,v2);
@@ -126,12 +126,13 @@ bool IsSame(const std::unordered_set<std::vector<T>>& a, const std::unordered_se
    std::vector<std::vector<T>> v2;
    for (auto& el : b) v2.emplace_back(el);
 
-   auto sortingFunction = [](const std::vector<T>& a, const std::vector<T>& b){
+   auto sortingFunction = [](const std::vector<T>& vt1, const std::vector<T>& vt2){
       std::string namesA,namesB;
-      for (auto&& h:a) namesA+=h.GetName();
-      for (auto&& h:b) namesB+=h.GetName();
+      for (auto&& h:vt1) namesA+=h.GetName();
+      for (auto&& h:vt2) namesB+=h.GetName();
       return namesA<namesB;
    };
+
    std::sort(v1.begin(),v1.end(),sortingFunction); // FUNDAMENTAL!
    std::sort(v2.begin(),v2.end(),sortingFunction); // FUNDAMENTAL!
    return IsSame(v1,v2);
@@ -144,10 +145,10 @@ bool IsSame(const std::unordered_multiset<std::vector<T>>& a, const std::unorder
    std::vector<std::vector<T>> v2;
    for (auto& el : b) v2.emplace_back(el);
 
-   auto sortingFunction = [](const std::vector<T>& a, const std::vector<T>& b){
+   auto sortingFunction = [](const std::vector<T>& vt1, const std::vector<T>& vt2){
       std::string namesA,namesB;
-      for (auto&& h:a) namesA+=h.GetName();
-      for (auto&& h:b) namesB+=h.GetName();
+      for (auto&& h:vt1) namesA+=h.GetName();
+      for (auto&& h:vt2) namesB+=h.GetName();
       return namesA<namesB;
    };
    std::sort(v1.begin(),v1.end(),sortingFunction); // FUNDAMENTAL!
@@ -347,7 +348,7 @@ void fillHistoNestedAssoCont(NestedCont& nestedCont, unsigned int n=5000){
    for (auto& el : nestedCont) v.emplace_back(el);
    auto sortingFunction = [](const contPair_t& p1,const contPair_t& p2){return p1.first<p2.first;};
    std::sort(v.begin(),v.end(),sortingFunction); // FUNDAMENTAL!
-   nestedCont.clear();   
+   nestedCont.clear();
    for (auto& hCont:v){
       fillHistoCont(hCont.second,n);
       nestedCont.insert(hCont);
