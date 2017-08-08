@@ -2,7 +2,6 @@
 // Authors: David Gonzalez Maline November 2008
 //          Martin Storø Nyfløtt  June 2017
 
-
 #include <sstream>
 #include <cmath>
 
@@ -137,12 +136,18 @@ private:
       h1YStats.reset(new TH1D("h1YStats", "h1YStats", binsizeY, lower_limit, upper_limit));
       h1ZStats.reset(new TH1D("h1ZStats", "h1ZStats", binsizeZ, lower_limit, upper_limit));
 
-      pe2XY.reset(new TProfile2D("pe2XY", "pe2XY", binsizeX, lower_limit, upper_limit, binsizeY, lower_limit, upper_limit));
-      pe2XZ.reset(new TProfile2D("pe2XZ", "pe2XZ", binsizeX, lower_limit, upper_limit, binsizeZ, lower_limit, upper_limit));
-      pe2YX.reset(new TProfile2D("pe2YX", "pe2YX", binsizeY, lower_limit, upper_limit, binsizeX, lower_limit, upper_limit));
-      pe2YZ.reset(new TProfile2D("pe2YZ", "pe2YZ", binsizeY, lower_limit, upper_limit, binsizeZ, lower_limit, upper_limit));
-      pe2ZX.reset(new TProfile2D("pe2ZX", "pe2ZX", binsizeZ, lower_limit, upper_limit, binsizeX, lower_limit, upper_limit));
-      pe2ZY.reset(new TProfile2D("pe2ZY", "pe2ZY", binsizeZ, lower_limit, upper_limit, binsizeY, lower_limit, upper_limit));
+      pe2XY.reset(
+         new TProfile2D("pe2XY", "pe2XY", binsizeX, lower_limit, upper_limit, binsizeY, lower_limit, upper_limit));
+      pe2XZ.reset(
+         new TProfile2D("pe2XZ", "pe2XZ", binsizeX, lower_limit, upper_limit, binsizeZ, lower_limit, upper_limit));
+      pe2YX.reset(
+         new TProfile2D("pe2YX", "pe2YX", binsizeY, lower_limit, upper_limit, binsizeX, lower_limit, upper_limit));
+      pe2YZ.reset(
+         new TProfile2D("pe2YZ", "pe2YZ", binsizeY, lower_limit, upper_limit, binsizeZ, lower_limit, upper_limit));
+      pe2ZX.reset(
+         new TProfile2D("pe2ZX", "pe2ZX", binsizeZ, lower_limit, upper_limit, binsizeX, lower_limit, upper_limit));
+      pe2ZY.reset(
+         new TProfile2D("pe2ZY", "pe2ZY", binsizeZ, lower_limit, upper_limit, binsizeY, lower_limit, upper_limit));
 
       h2wXY.reset(new TH2D("h2wXY", "h2wXY", binsizeX, lower_limit, upper_limit, binsizeY, lower_limit, upper_limit));
       h2wXZ.reset(new TH2D("h2wXZ", "h2wXZ", binsizeX, lower_limit, upper_limit, binsizeZ, lower_limit, upper_limit));
@@ -193,12 +198,18 @@ private:
       p3.reset(new TProfile3D("p3", "p3", binsizeX, lower_limitX, upper_limitX, binsizeY, lower_limitY, upper_limitY,
                               binsizeZ, lower_limitZ, upper_limitZ));
 
-      p2XY.reset(new TProfile2D("p2XY", "p2XY", binsizeX, lower_limitX, upper_limitX, binsizeY, lower_limitY, upper_limitY));
-      p2XZ.reset(new TProfile2D("p2XZ", "p2XZ", binsizeX, lower_limitX, upper_limitX, binsizeZ, lower_limitZ, upper_limitZ));
-      p2YX.reset(new TProfile2D("p2YX", "p2YX", binsizeY, lower_limitY, upper_limitY, binsizeX, lower_limitX, upper_limitX));
-      p2YZ.reset(new TProfile2D("p2YZ", "p2YZ", binsizeY, lower_limitY, upper_limitY, binsizeZ, lower_limitZ, upper_limitZ));
-      p2ZX.reset(new TProfile2D("p2ZX", "p2ZX", binsizeZ, lower_limitZ, upper_limitZ, binsizeX, lower_limitX, upper_limitX));
-      p2ZY.reset(new TProfile2D("p2ZY", "p2ZY", binsizeZ, lower_limitZ, upper_limitZ, binsizeY, lower_limitY, upper_limitY));
+      p2XY.reset(
+         new TProfile2D("p2XY", "p2XY", binsizeX, lower_limitX, upper_limitX, binsizeY, lower_limitY, upper_limitY));
+      p2XZ.reset(
+         new TProfile2D("p2XZ", "p2XZ", binsizeX, lower_limitX, upper_limitX, binsizeZ, lower_limitZ, upper_limitZ));
+      p2YX.reset(
+         new TProfile2D("p2YX", "p2YX", binsizeY, lower_limitY, upper_limitY, binsizeX, lower_limitX, upper_limitX));
+      p2YZ.reset(
+         new TProfile2D("p2YZ", "p2YZ", binsizeY, lower_limitY, upper_limitY, binsizeZ, lower_limitZ, upper_limitZ));
+      p2ZX.reset(
+         new TProfile2D("p2ZX", "p2ZX", binsizeZ, lower_limitZ, upper_limitZ, binsizeX, lower_limitX, upper_limitX));
+      p2ZY.reset(
+         new TProfile2D("p2ZY", "p2ZY", binsizeZ, lower_limitZ, upper_limitZ, binsizeY, lower_limitY, upper_limitY));
 
       p1X.reset(new TProfile("p1X", "pe1X", binsizeX, lower_limitX, upper_limitX));
       p1Y.reset(new TProfile("p1Y", "pe1Y", binsizeY, lower_limitY, upper_limitY));
@@ -495,22 +506,22 @@ public:
       options = cmpOptStats;
       h2Projection.reset(nullptr);
       h2Projection.reset((TH2D *)h3->Project3DProfile("yx UF OF")->ProjectionXY("1", "B"));
-      EXPECT_EQ(0,Equals("TH3 -> PBXY", h2XY, h2Projection, options));
+      EXPECT_EQ(0, Equals("TH3 -> PBXY", h2XY, h2Projection, options));
       h2Projection.reset(nullptr);
       h2Projection.reset((TH2D *)h3->Project3DProfile("zx UF OF")->ProjectionXY("2", "B"));
-      EXPECT_EQ(0,Equals("TH3 -> PBXZ", h2XZ, h2Projection, options));
+      EXPECT_EQ(0, Equals("TH3 -> PBXZ", h2XZ, h2Projection, options));
       h2Projection.reset(nullptr);
       h2Projection.reset((TH2D *)h3->Project3DProfile("xy UF OF")->ProjectionXY("3", "B"));
-      EXPECT_EQ(0,Equals("TH3 -> PBYX", h2YX, h2Projection, options));
+      EXPECT_EQ(0, Equals("TH3 -> PBYX", h2YX, h2Projection, options));
       h2Projection.reset(nullptr);
       h2Projection.reset((TH2D *)h3->Project3DProfile("zy UF OF")->ProjectionXY("4", "B"));
-      EXPECT_EQ(0,Equals("TH3 -> PBYZ", h2YZ, h2Projection, options));
+      EXPECT_EQ(0, Equals("TH3 -> PBYZ", h2YZ, h2Projection, options));
       h2Projection.reset(nullptr);
       h2Projection.reset((TH2D *)h3->Project3DProfile("xz UF OF")->ProjectionXY("5", "B"));
-      EXPECT_EQ(0,Equals("TH3 -> PBZX", h2ZX, h2Projection, options));
+      EXPECT_EQ(0, Equals("TH3 -> PBZX", h2ZX, h2Projection, options));
       h2Projection.reset(nullptr);
       h2Projection.reset((TH2D *)h3->Project3DProfile("yz UF OF")->ProjectionXY("6", "B"));
-      EXPECT_EQ(0,Equals("TH3 -> PBZY", h2ZY, h2Projection, options));
+      EXPECT_EQ(0, Equals("TH3 -> PBZY", h2ZY, h2Projection, options));
       options = 0;
       if (defaultEqualOptions & cmpOptPrint) std::cout << "----------------------------------------------" << std::endl;
 

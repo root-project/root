@@ -46,5 +46,5 @@ TYPED_TEST(HistTest, TestCloneHn)
 
    unique_ptr<TypeParam> s2((TypeParam *)s1->Clone());
 
-   EXPECT_TRUE(HistogramsEquals(*(THnBase*)s1.get(), *(THnBase*)s2.get()));
+   EXPECT_TRUE(HistogramsEquals(*(THnBase *)s1.get(), *(THnBase *)s2.get()));
 }

@@ -53,7 +53,7 @@ TYPED_TEST(HistTest, TestHnRebin1)
 
    auto s3 = s1->Rebin(rebin);
 
-   EXPECT_TRUE(HistogramsEquals(*((THnBase*)s2.get()), *((THnBase*)s3)));
+   EXPECT_TRUE(HistogramsEquals(*((THnBase *)s2.get()), *((THnBase *)s3)));
 
    delete s3;
 }

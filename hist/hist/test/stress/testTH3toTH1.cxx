@@ -37,8 +37,8 @@ TEST(StressHistogram, TestTH3toTH1)
 
    r.SetSeed(10);
 
-   TH3D h3("h3", "h3", binsizeX, lower_limit, upper_limit, binsizeY, lower_limit, upper_limit, binsizeZ,
-                       lower_limit, upper_limit);
+   TH3D h3("h3", "h3", binsizeX, lower_limit, upper_limit, binsizeY, lower_limit, upper_limit, binsizeZ, lower_limit,
+           upper_limit);
 
    TH1::StatOverflows(kTRUE);
 
@@ -47,11 +47,11 @@ TEST(StressHistogram, TestTH3toTH1)
    TH1D h1Z("h1Z", "h1Z", binsizeZ, lower_limit, upper_limit);
 
    TH1D h1XR("h1XR", "h1XR", maxbinX - minbinX + 1, h1X.GetXaxis()->GetBinLowEdge(minbinX),
-                        h1X.GetXaxis()->GetBinUpEdge(maxbinX));
+             h1X.GetXaxis()->GetBinUpEdge(maxbinX));
    TH1D h1YR("h1YR", "h1YR", maxbinY - minbinY + 1, h1Y.GetXaxis()->GetBinLowEdge(minbinY),
-                        h1Y.GetXaxis()->GetBinUpEdge(maxbinY));
+             h1Y.GetXaxis()->GetBinUpEdge(maxbinY));
    TH1D h1ZR("h1ZR", "h1ZR", maxbinZ - minbinZ + 1, h1Z.GetXaxis()->GetBinLowEdge(minbinZ),
-                        h1Z.GetXaxis()->GetBinUpEdge(maxbinZ));
+             h1Z.GetXaxis()->GetBinUpEdge(maxbinZ));
 
    TH1D h1XOR("h1XOR", "h1XOR", binsizeX, lower_limit, upper_limit);
    TH1D h1YOR("h1YOR", "h1YOR", binsizeY, lower_limit, upper_limit);

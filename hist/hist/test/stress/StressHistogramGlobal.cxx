@@ -183,8 +183,8 @@ int Equals(const char *msg, TH3D &h1, TH3D &h2, int options, double ERRORLIMIT)
 
    int differents = (&h1 == &h2); // Check they are not the same histogram!
    if (debug) {
-      std::cout << static_cast<void *>(&h1) << " " << static_cast<void *>(&h2) << " " << (&h1 == &h2) << " " << differents
-                << std::endl;
+      std::cout << static_cast<void *>(&h1) << " " << static_cast<void *>(&h2) << " " << (&h1 == &h2) << " "
+                << differents << std::endl;
    }
 
    for (int i = 0; i <= h1.GetNbinsX() + 1; ++i)
@@ -209,8 +209,7 @@ int Equals(const char *msg, TH3D &h1, TH3D &h2, int options, double ERRORLIMIT)
             differents += (bool)Equals(y, h2.GetYaxis()->GetBinCenter(j), ERRORLIMIT);
             differents += (bool)Equals(z, h2.GetZaxis()->GetBinCenter(h), ERRORLIMIT);
             differents += (bool)Equals(h1.GetBinContent(i, j, h), h2.GetBinContent(i, j, h), ERRORLIMIT);
-            if (compareError)
-               differents += (bool)Equals(h1.GetBinError(i, j, h), h2.GetBinError(i, j, h), ERRORLIMIT);
+            if (compareError) differents += (bool)Equals(h1.GetBinError(i, j, h), h2.GetBinError(i, j, h), ERRORLIMIT);
          }
 
    // Statistical tests:
@@ -231,8 +230,8 @@ int Equals(const char *msg, TH2D &h1, TH2D &h2, int options, double ERRORLIMIT)
 
    int differents = (&h1 == &h2); // Check they are not the same histogram!
    if (debug) {
-      std::cout << static_cast<void *>(&h1) << " " << static_cast<void *>(&h2) << " " << (&h1 == &h2) << " " << differents
-                << std::endl;
+      std::cout << static_cast<void *>(&h1) << " " << static_cast<void *>(&h2) << " " << (&h1 == &h2) << " "
+                << differents << std::endl;
    }
 
    for (int i = 0; i <= h1.GetNbinsX() + 1; ++i)
@@ -273,8 +272,8 @@ int Equals(const char *msg, TH1D &h1, TH1D &h2, int options, double ERRORLIMIT)
 
    int differents = (&h1 == &h2); // Check they are not the same histogram!
    if (debug) {
-      std::cout << static_cast<void *>(&h1) << " " << static_cast<void *>(&h2) << " " << (&h1 == &h2) << " " << differents
-                << std::endl;
+      std::cout << static_cast<void *>(&h1) << " " << static_cast<void *>(&h2) << " " << (&h1 == &h2) << " "
+                << differents << std::endl;
    }
 
    // check axis
@@ -305,10 +304,9 @@ int Equals(const char *msg, TH1D &h1, TH1D &h2, int options, double ERRORLIMIT)
       if (compareError) differents += (bool)Equals(h1.GetBinError(i), h2.GetBinError(i), ERRORLIMIT);
 
       if (debug) {
-         std::cout << Equals(x, h2.GetXaxis()->GetBinCenter(i), ERRORLIMIT) << " [" << x
-                   << "]: " << h1.GetBinContent(i) << " +/- " << h1.GetBinError(i) << " | " << h2.GetBinContent(i)
-                   << " +/- " << h2.GetBinError(i) << " | "
-                   << Equals(h1.GetBinContent(i), h2.GetBinContent(i), ERRORLIMIT) << " "
+         std::cout << Equals(x, h2.GetXaxis()->GetBinCenter(i), ERRORLIMIT) << " [" << x << "]: " << h1.GetBinContent(i)
+                   << " +/- " << h1.GetBinError(i) << " | " << h2.GetBinContent(i) << " +/- " << h2.GetBinError(i)
+                   << " | " << Equals(h1.GetBinContent(i), h2.GetBinContent(i), ERRORLIMIT) << " "
                    << Equals(h1.GetBinError(i), h2.GetBinError(i), ERRORLIMIT) << " " << differents << std::endl;
       }
    }
@@ -363,8 +361,8 @@ int CompareStatistics(TH1 &h1, TH1 &h2, bool debug, double ERRORLIMIT)
    // RMS
    differents += (bool)Equals(h1.GetRMS(1), h2.GetRMS(1), ERRORLIMIT);
    if (debug)
-      std::cout << "RMS: " << h1.GetRMS(1) << " " << h2.GetRMS(1) << " | " << fabs(h1.GetRMS(1) - h2.GetRMS(1))
-                << " " << differents << std::endl;
+      std::cout << "RMS: " << h1.GetRMS(1) << " " << h2.GetRMS(1) << " | " << fabs(h1.GetRMS(1) - h2.GetRMS(1)) << " "
+                << differents << std::endl;
 
    // Number of Entries
    // check if is an unweighted histogram compare entries and  effective entries

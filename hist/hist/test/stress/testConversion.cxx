@@ -52,11 +52,11 @@ TEST(StressHistogram, TestConversion1D)
    unique_ptr<THnSparse> s1f(THnSparse::CreateSparse("s1f", "s1fTitle", &h1f));
    unique_ptr<THnSparse> s1d(THnSparse::CreateSparse("s1d", "s1dTitle", &h1d));
 
-   unique_ptr<TH1> h1cn ((TH1 *)h1c.Clone("h1cn"));
-   unique_ptr<TH1> h1sn ((TH1 *)h1s.Clone("h1sn"));
-   unique_ptr<TH1> h1in ((TH1 *)h1i.Clone("h1in"));
-   unique_ptr<TH1> h1fn ((TH1 *)h1f.Clone("h1fn"));
-   unique_ptr<TH1> h1dn ((TH1 *)h1s.Clone("h1dn"));
+   unique_ptr<TH1> h1cn((TH1 *)h1c.Clone("h1cn"));
+   unique_ptr<TH1> h1sn((TH1 *)h1s.Clone("h1sn"));
+   unique_ptr<TH1> h1in((TH1 *)h1i.Clone("h1in"));
+   unique_ptr<TH1> h1fn((TH1 *)h1f.Clone("h1fn"));
+   unique_ptr<TH1> h1dn((TH1 *)h1s.Clone("h1dn"));
 
    EXPECT_TRUE(HistogramsEquals(*s1c.get(), h1c));
    EXPECT_TRUE(HistogramsEquals(*s1s.get(), h1s));
@@ -75,7 +75,6 @@ TEST(StressHistogram, TestConversion1D)
    EXPECT_TRUE(HistogramsEquals(*n1i.get(), *h1in.get()));
    EXPECT_TRUE(HistogramsEquals(*n1f.get(), *h1fn.get()));
    EXPECT_TRUE(HistogramsEquals(*n1d.get(), *h1dn.get()));
-
 }
 
 TEST(StressHistogram, TestConversion2D)
@@ -89,11 +88,16 @@ TEST(StressHistogram, TestConversion2D)
    TF2 f("gaus2D", gaus2d, minRangeArray[0], maxRangeArray[0], minRangeArray[1], maxRangeArray[1], 5);
    f.SetParameters(10., 3.5, .4, 6, 1);
 
-   TH2C h2c("h2c", "h2-title", nbins[0], minRangeArray[0], maxRangeArray[0], nbins[1], minRangeArray[1], maxRangeArray[1]);
-   TH2S h2s("h2s", "h2-title", nbins[0], minRangeArray[0], maxRangeArray[0], nbins[1], minRangeArray[1], maxRangeArray[1]);
-   TH2I h2i("h2i", "h2-title", nbins[0], minRangeArray[0], maxRangeArray[0], nbins[1], minRangeArray[1], maxRangeArray[1]);
-   TH2F h2f("h2f", "h2-title", nbins[0], minRangeArray[0], maxRangeArray[0], nbins[1], minRangeArray[1], maxRangeArray[1]);
-   TH2D h2d("h2d", "h2-title", nbins[0], minRangeArray[0], maxRangeArray[0], nbins[1], minRangeArray[1], maxRangeArray[1]);
+   TH2C h2c("h2c", "h2-title", nbins[0], minRangeArray[0], maxRangeArray[0], nbins[1], minRangeArray[1],
+            maxRangeArray[1]);
+   TH2S h2s("h2s", "h2-title", nbins[0], minRangeArray[0], maxRangeArray[0], nbins[1], minRangeArray[1],
+            maxRangeArray[1]);
+   TH2I h2i("h2i", "h2-title", nbins[0], minRangeArray[0], maxRangeArray[0], nbins[1], minRangeArray[1],
+            maxRangeArray[1]);
+   TH2F h2f("h2f", "h2-title", nbins[0], minRangeArray[0], maxRangeArray[0], nbins[1], minRangeArray[1],
+            maxRangeArray[1]);
+   TH2D h2d("h2d", "h2-title", nbins[0], minRangeArray[0], maxRangeArray[0], nbins[1], minRangeArray[1],
+            maxRangeArray[1]);
 
    h2c.FillRandom("gaus2D", nevents);
    h2s.FillRandom("gaus2D", nevents);
@@ -140,14 +144,20 @@ TEST(StressHistogram, TestConversion3D)
 
    const int nevents = 500;
 
-   TF3 f("gaus3D", gaus3d, minRangeArray[0], maxRangeArray[0], minRangeArray[1], maxRangeArray[1], minRangeArray[2], maxRangeArray[2], 7);
+   TF3 f("gaus3D", gaus3d, minRangeArray[0], maxRangeArray[0], minRangeArray[1], maxRangeArray[1], minRangeArray[2],
+         maxRangeArray[2], 7);
    f.SetParameters(10., 3.5, .4, 6, 1, 7, 2);
 
-   TH3C h3c("h3c", "h3-title", nbins[0], minRangeArray[0], maxRangeArray[0], nbins[1], minRangeArray[1], maxRangeArray[1], nbins[2], minRangeArray[2], maxRangeArray[2]);
-   TH3S h3s("h3s", "h3-title", nbins[0], minRangeArray[0], maxRangeArray[0], nbins[1], minRangeArray[1], maxRangeArray[1], nbins[2], minRangeArray[2], maxRangeArray[2]);
-   TH3I h3i("h3i", "h3-title", nbins[0], minRangeArray[0], maxRangeArray[0], nbins[1], minRangeArray[1], maxRangeArray[1], nbins[2], minRangeArray[2], maxRangeArray[2]);
-   TH3F h3f("h3f", "h3-title", nbins[0], minRangeArray[0], maxRangeArray[0], nbins[1], minRangeArray[1], maxRangeArray[1], nbins[2], minRangeArray[2], maxRangeArray[2]);
-   TH3D h3d("h3d", "h3-title", nbins[0], minRangeArray[0], maxRangeArray[0], nbins[1], minRangeArray[1], maxRangeArray[1], nbins[2], minRangeArray[2], maxRangeArray[2]);
+   TH3C h3c("h3c", "h3-title", nbins[0], minRangeArray[0], maxRangeArray[0], nbins[1], minRangeArray[1],
+            maxRangeArray[1], nbins[2], minRangeArray[2], maxRangeArray[2]);
+   TH3S h3s("h3s", "h3-title", nbins[0], minRangeArray[0], maxRangeArray[0], nbins[1], minRangeArray[1],
+            maxRangeArray[1], nbins[2], minRangeArray[2], maxRangeArray[2]);
+   TH3I h3i("h3i", "h3-title", nbins[0], minRangeArray[0], maxRangeArray[0], nbins[1], minRangeArray[1],
+            maxRangeArray[1], nbins[2], minRangeArray[2], maxRangeArray[2]);
+   TH3F h3f("h3f", "h3-title", nbins[0], minRangeArray[0], maxRangeArray[0], nbins[1], minRangeArray[1],
+            maxRangeArray[1], nbins[2], minRangeArray[2], maxRangeArray[2]);
+   TH3D h3d("h3d", "h3-title", nbins[0], minRangeArray[0], maxRangeArray[0], nbins[1], minRangeArray[1],
+            maxRangeArray[1], nbins[2], minRangeArray[2], maxRangeArray[2]);
 
    h3c.FillRandom("gaus3D", nevents);
    h3s.FillRandom("gaus3D", nevents);

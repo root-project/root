@@ -59,8 +59,8 @@ TEST(StressHistogram, TestDivide2D1)
    for (Int_t i = 0; i <= h4.GetNbinsX() + 1; ++i) {
       for (Int_t j = 0; j <= h4.GetNbinsY() + 1; ++j) {
          Double_t error = h4.GetBinError(i, j) * h4.GetBinError(i, j);
-         error -= (2 * (c2 * c2) / (c1 * c1)) * h3.GetBinContent(i, j) * h3.GetBinContent(i, j) *
-                  h2.GetBinError(i, j) * h2.GetBinError(i, j);
+         error -= (2 * (c2 * c2) / (c1 * c1)) * h3.GetBinContent(i, j) * h3.GetBinContent(i, j) * h2.GetBinError(i, j) *
+                  h2.GetBinError(i, j);
          h4.SetBinError(i, j, sqrt(error));
       }
    }

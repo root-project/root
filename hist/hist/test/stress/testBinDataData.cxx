@@ -68,7 +68,7 @@ TEST(StressHistogram, TestBinDataData1DInt)
       h1.Fill(value, 1.0);
    }
 
-   unique_ptr<THnSparse> s1 (THnSparse::CreateSparse("fbdi1Ds", "THnSparse 1D - title", &h1));
+   unique_ptr<THnSparse> s1(THnSparse::CreateSparse("fbdi1Ds", "THnSparse 1D - title", &h1));
 
    ROOT::Fit::DataOptions opt;
    opt.fUseEmpty = true;
@@ -159,8 +159,8 @@ TEST(StressHistogram, TestBinDataData3D)
    func.SetParameters(0., 3., 200.);
    func.SetParLimits(1, 0, 5);
 
-   TH3D h3("fbd3D", "h3-title", numberOfBins, minRange, maxRange, numberOfBins, minRange, maxRange,
-                       numberOfBins, minRange, maxRange);
+   TH3D h3("fbd3D", "h3-title", numberOfBins, minRange, maxRange, numberOfBins, minRange, maxRange, numberOfBins,
+           minRange, maxRange);
    for (Int_t e = 0; e < nEvents * nEvents; ++e) {
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
@@ -191,8 +191,8 @@ TEST(StressHistogram, TestBinDataData3DInt)
    func.SetParameters(0., 3., 200.);
    func.SetParLimits(1, 0, 5);
 
-   TH3D h3("fbdi3D", "h3-title", numberOfBins, minRange, maxRange, numberOfBins, minRange, maxRange,
-                       numberOfBins, minRange, maxRange);
+   TH3D h3("fbdi3D", "h3-title", numberOfBins, minRange, maxRange, numberOfBins, minRange, maxRange, numberOfBins,
+           minRange, maxRange);
    for (Int_t e = 0; e < nEvents * nEvents; ++e) {
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);

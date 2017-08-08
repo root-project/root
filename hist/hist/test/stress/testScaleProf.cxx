@@ -63,10 +63,10 @@ TEST(StressHistogram, TestScale2DProf)
 
 TEST(StressHistogram, TestScale3DProf)
 {
-   TProfile3D p1("scD3-p1", "p1", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange,
-                                   maxRange, numberOfBins + 2, minRange, maxRange);
-   TProfile3D p2("scD3-p2", "p2=c1*p1", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange,
-                                   maxRange, numberOfBins + 2, minRange, maxRange);
+   TProfile3D p1("scD3-p1", "p1", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
+                 numberOfBins + 2, minRange, maxRange);
+   TProfile3D p2("scD3-p2", "p2=c1*p1", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
+                 numberOfBins + 2, minRange, maxRange);
    Double_t c1 = r.Rndm();
 
    for (Int_t e = 0; e < nEvents * nEvents; ++e) {

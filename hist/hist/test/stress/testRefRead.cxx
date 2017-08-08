@@ -54,10 +54,7 @@ protected:
       }
    }
 
-   virtual void TearDown()
-   {
-      refFile->Close();
-   }
+   virtual void TearDown() { refFile->Close(); }
 };
 
 TEST_F(RefReadTest, TestRefRead1D)
@@ -119,8 +116,8 @@ TEST_F(RefReadTest, TestRefRead3D)
    // Tests consistency with a reference file for 3D Histogram
 
    if (refFileOption == refFileWrite) {
-      TH3D h1("rr3D-h1", "h1-Title", numberOfBins, minRange, maxRange, numberOfBins, minRange, maxRange,
-                    numberOfBins, minRange, maxRange);
+      TH3D h1("rr3D-h1", "h1-Title", numberOfBins, minRange, maxRange, numberOfBins, minRange, maxRange, numberOfBins,
+              minRange, maxRange);
       h1.Sumw2();
 
       for (Int_t e = 0; e < nEvents * nEvents; ++e) {
@@ -132,8 +129,8 @@ TEST_F(RefReadTest, TestRefRead3D)
       h1.Write();
    } else {
       unique_ptr<TH3D> h1(static_cast<TH3D *>(refFile->Get("rr3D-h1")));
-      TH3D h2("rr3D-h2", "h2-Title", numberOfBins, minRange, maxRange, numberOfBins, minRange, maxRange,
-                          numberOfBins, minRange, maxRange);
+      TH3D h2("rr3D-h2", "h2-Title", numberOfBins, minRange, maxRange, numberOfBins, minRange, maxRange, numberOfBins,
+              minRange, maxRange);
       h2.Sumw2();
 
       for (Int_t e = 0; e < nEvents * nEvents; ++e) {
@@ -176,7 +173,6 @@ TEST_F(RefReadTest, TestRefReadProf1D)
       EXPECT_EQ(0, Equals("Ref Read Prof 1D", *p1.get(), p2, cmpOptStats));
       TH1::SetDefaultSumw2(true);
    }
-
 }
 
 TEST_F(RefReadTest, TestRefReadProf2D)
@@ -212,7 +208,7 @@ TEST_F(RefReadTest, TestRefReadProf3D)
    // Tests consistency with a reference file for 3D Profile
    if (refFileOption == refFileWrite) {
       TProfile3D p1("rr3D-p1", "p1-Title", numberOfBins, minRange, maxRange, numberOfBins, minRange, maxRange,
-                          numberOfBins, minRange, maxRange);
+                    numberOfBins, minRange, maxRange);
 
       for (Int_t e = 0; e < nEvents * nEvents; ++e) {
          Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
@@ -224,8 +220,8 @@ TEST_F(RefReadTest, TestRefReadProf3D)
       p1.Write();
    } else {
       unique_ptr<TProfile3D> p1(static_cast<TProfile3D *>(refFile->Get("rr3D-p1")));
-      TProfile3D p2("rr3D-p2", "p2-Title", numberOfBins, minRange, maxRange, numberOfBins, minRange,
-                                      maxRange, numberOfBins, minRange, maxRange);
+      TProfile3D p2("rr3D-p2", "p2-Title", numberOfBins, minRange, maxRange, numberOfBins, minRange, maxRange,
+                    numberOfBins, minRange, maxRange);
 
       for (Int_t e = 0; e < nEvents * nEvents; ++e) {
          Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);

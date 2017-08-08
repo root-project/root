@@ -29,14 +29,14 @@ TEST(StressHistogram, TestMergeProf3D)
 {
    // Tests the merge method for 3D Profiles
 
-   TProfile3D p1("merge3D-p1", "p1-Title", numberOfBins, minRange, maxRange, numberOfBins + 1,
-                                   minRange, maxRange, numberOfBins + 2, minRange, maxRange);
-   TProfile3D p2("merge3D-p2", "p2-Title", numberOfBins, minRange, maxRange, numberOfBins + 1,
-                                   minRange, maxRange, numberOfBins + 2, minRange, maxRange);
-   TProfile3D p3("merge3D-p3", "p3-Title", numberOfBins, minRange, maxRange, numberOfBins + 1,
-                                   minRange, maxRange, numberOfBins + 2, minRange, maxRange);
-   TProfile3D p4("merge3D-p4", "p4-Title", numberOfBins, minRange, maxRange, numberOfBins + 1,
-                                   minRange, maxRange, numberOfBins + 2, minRange, maxRange);
+   TProfile3D p1("merge3D-p1", "p1-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
+                 numberOfBins + 2, minRange, maxRange);
+   TProfile3D p2("merge3D-p2", "p2-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
+                 numberOfBins + 2, minRange, maxRange);
+   TProfile3D p3("merge3D-p3", "p3-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
+                 numberOfBins + 2, minRange, maxRange);
+   TProfile3D p4("merge3D-p4", "p4-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
+                 numberOfBins + 2, minRange, maxRange);
 
    for (Int_t e = 0; e < nEvents * nEvents; ++e) {
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);

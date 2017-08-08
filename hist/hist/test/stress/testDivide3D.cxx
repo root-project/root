@@ -30,9 +30,9 @@ TEST(StressHistogram, TestDivide3D1)
    Double_t c2 = r.Rndm() + 1;
 
    TH3D h1("d3D1-h1", "h1-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
-                       numberOfBins + 2, minRange, maxRange);
+           numberOfBins + 2, minRange, maxRange);
    TH3D h2("d3D1-h2", "h2-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
-                       numberOfBins + 2, minRange, maxRange);
+           numberOfBins + 2, minRange, maxRange);
 
    h1.Sumw2();
    h2.Sumw2();
@@ -55,12 +55,12 @@ TEST(StressHistogram, TestDivide3D1)
    for (int i = 0; i < h2.GetSize(); ++i)
       if (h2.GetBinContent(i) == 0) h2.SetBinContent(i, 1);
 
-   TH3D h3("d3D1-h3", "h3=(c1*h1)/(c2*h2)", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange,
-                       maxRange, numberOfBins + 2, minRange, maxRange);
+   TH3D h3("d3D1-h3", "h3=(c1*h1)/(c2*h2)", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
+           numberOfBins + 2, minRange, maxRange);
    h3.Divide(&h1, &h2, c1, c2);
 
    TH3D h4("d3D1-h4", "h4=h3*h2)", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
-                       numberOfBins + 2, minRange, maxRange);
+           numberOfBins + 2, minRange, maxRange);
    h4.Multiply(&h2, &h3, c2 / c1, 1.0);
    for (Int_t i = 0; i <= h4.GetNbinsX() + 1; ++i) {
       for (Int_t j = 0; j <= h4.GetNbinsY() + 1; ++j) {
@@ -86,9 +86,9 @@ TEST(StressHistogram, TestDivide3D2)
    // Tests the second Divide method for 3D Histograms
 
    TH3D h1("d3D2-h1", "h1-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
-                       numberOfBins + 2, minRange, maxRange);
+           numberOfBins + 2, minRange, maxRange);
    TH3D h2("d3D2-h2", "h2-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
-                       numberOfBins + 2, minRange, maxRange);
+           numberOfBins + 2, minRange, maxRange);
 
    h1.Sumw2();
    h2.Sumw2();
@@ -115,7 +115,7 @@ TEST(StressHistogram, TestDivide3D2)
    h3->Divide(&h2);
 
    TH3D h4("d3D2-h4", "h4=h3*h2)", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
-                       numberOfBins + 2, minRange, maxRange);
+           numberOfBins + 2, minRange, maxRange);
    h4.Multiply(&h2, h3.get(), 1.0, 1.0);
    for (Int_t i = 0; i <= h4.GetNbinsX() + 1; ++i) {
       for (Int_t j = 0; j <= h4.GetNbinsY() + 1; ++j) {

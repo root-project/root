@@ -33,8 +33,7 @@ TEST(StressHistogram, TestAdd2DProfile1)
 
    TProfile2D p1("t2D1-p1", "p1", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange, maxRange);
    TProfile2D p2("t2D1-p2", "p2", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange, maxRange);
-   TProfile2D p3("t2D1-p3", "p3=c1*p1+c2*p2", numberOfBins, minRange, maxRange, numberOfBins + 2,
-                                   minRange, maxRange);
+   TProfile2D p3("t2D1-p3", "p3=c1*p1+c2*p2", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange, maxRange);
 
    for (Int_t e = 0; e < nEvents * nEvents; ++e) {
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
@@ -52,8 +51,7 @@ TEST(StressHistogram, TestAdd2DProfile1)
       p3.Fill(x, y, z, c2);
    }
 
-   TProfile2D p4("t2D1-p4", "p4=c1*p1+c2*p2", numberOfBins, minRange, maxRange, numberOfBins + 2,
-                                   minRange, maxRange);
+   TProfile2D p4("t2D1-p4", "p4=c1*p1+c2*p2", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange, maxRange);
    p4.Add(&p1, &p2, c1, c2);
    EXPECT_TRUE(HistogramsEquals(p3, p4, cmpOptStats, 1E-10));
 }

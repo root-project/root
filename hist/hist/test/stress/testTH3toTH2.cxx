@@ -39,8 +39,8 @@ TEST(StressHistogram, TestTH3toTH2)
 
    r.SetSeed(10);
 
-   TH3D h3("h3", "h3", binsizeX, lower_limit, upper_limit, binsizeY, lower_limit, upper_limit, binsizeZ,
-                       lower_limit, upper_limit);
+   TH3D h3("h3", "h3", binsizeX, lower_limit, upper_limit, binsizeY, lower_limit, upper_limit, binsizeZ, lower_limit,
+           upper_limit);
 
    TH1::StatOverflows(kTRUE);
 
@@ -52,23 +52,23 @@ TEST(StressHistogram, TestTH3toTH2)
    TH2D h2ZY("h2ZY", "h2ZY", binsizeZ, lower_limit, upper_limit, binsizeY, lower_limit, upper_limit);
 
    TH2D h2XYR("h2XYR", "h2XYR", maxbinX - minbinX + 1, h3.GetXaxis()->GetBinLowEdge(minbinX),
-                          h3.GetXaxis()->GetBinUpEdge(maxbinX), maxbinY - minbinY + 1,
-                          h3.GetYaxis()->GetBinLowEdge(minbinY), h3.GetYaxis()->GetBinUpEdge(maxbinY));
+              h3.GetXaxis()->GetBinUpEdge(maxbinX), maxbinY - minbinY + 1, h3.GetYaxis()->GetBinLowEdge(minbinY),
+              h3.GetYaxis()->GetBinUpEdge(maxbinY));
    TH2D h2XZR("h2XZR", "h2XZR", maxbinX - minbinX + 1, h3.GetXaxis()->GetBinLowEdge(minbinX),
-                          h3.GetXaxis()->GetBinUpEdge(maxbinX), maxbinZ - minbinZ + 1,
-                          h3.GetZaxis()->GetBinLowEdge(minbinZ), h3.GetZaxis()->GetBinUpEdge(maxbinZ));
+              h3.GetXaxis()->GetBinUpEdge(maxbinX), maxbinZ - minbinZ + 1, h3.GetZaxis()->GetBinLowEdge(minbinZ),
+              h3.GetZaxis()->GetBinUpEdge(maxbinZ));
    TH2D h2YXR("h2YXR", "h2YXR", maxbinY - minbinY + 1, h3.GetYaxis()->GetBinLowEdge(minbinY),
-                          h3.GetYaxis()->GetBinUpEdge(maxbinY), maxbinX - minbinX + 1,
-                          h3.GetXaxis()->GetBinLowEdge(minbinX), h3.GetXaxis()->GetBinUpEdge(maxbinX));
+              h3.GetYaxis()->GetBinUpEdge(maxbinY), maxbinX - minbinX + 1, h3.GetXaxis()->GetBinLowEdge(minbinX),
+              h3.GetXaxis()->GetBinUpEdge(maxbinX));
    TH2D h2YZR("h2YZR", "h2YZR", maxbinY - minbinY + 1, h3.GetYaxis()->GetBinLowEdge(minbinY),
-                          h3.GetYaxis()->GetBinUpEdge(maxbinY), maxbinZ - minbinZ + 1,
-                          h3.GetZaxis()->GetBinLowEdge(minbinZ), h3.GetZaxis()->GetBinUpEdge(maxbinZ));
+              h3.GetYaxis()->GetBinUpEdge(maxbinY), maxbinZ - minbinZ + 1, h3.GetZaxis()->GetBinLowEdge(minbinZ),
+              h3.GetZaxis()->GetBinUpEdge(maxbinZ));
    TH2D h2ZXR("h2ZXR", "h2ZXR", maxbinZ - minbinZ + 1, h3.GetZaxis()->GetBinLowEdge(minbinZ),
-                          h3.GetZaxis()->GetBinUpEdge(maxbinZ), maxbinX - minbinX + 1,
-                          h3.GetXaxis()->GetBinLowEdge(minbinX), h3.GetXaxis()->GetBinUpEdge(maxbinX));
+              h3.GetZaxis()->GetBinUpEdge(maxbinZ), maxbinX - minbinX + 1, h3.GetXaxis()->GetBinLowEdge(minbinX),
+              h3.GetXaxis()->GetBinUpEdge(maxbinX));
    TH2D h2ZYR("h2ZYR", "h2ZYR", maxbinZ - minbinZ + 1, h3.GetZaxis()->GetBinLowEdge(minbinZ),
-                          h3.GetZaxis()->GetBinUpEdge(maxbinZ), maxbinY - minbinY + 1,
-                          h3.GetYaxis()->GetBinLowEdge(minbinY), h3.GetYaxis()->GetBinUpEdge(maxbinY));
+              h3.GetZaxis()->GetBinUpEdge(maxbinZ), maxbinY - minbinY + 1, h3.GetYaxis()->GetBinLowEdge(minbinY),
+              h3.GetYaxis()->GetBinUpEdge(maxbinY));
 
    TH2D h2XYOR("h2XYOR", "h2XYOR", binsizeX, lower_limit, upper_limit, binsizeY, lower_limit, upper_limit);
    TH2D h2XZOR("h2XZOR", "h2XZOR", binsizeX, lower_limit, upper_limit, binsizeZ, lower_limit, upper_limit);
@@ -85,23 +85,23 @@ TEST(StressHistogram, TestTH3toTH2)
    TProfile2D pe2ZY("pe2ZY", "pe2ZY", binsizeZ, lower_limit, upper_limit, binsizeY, lower_limit, upper_limit);
 
    TProfile2D pe2XYR("pe2XYR", "pe2XYR", maxbinX - minbinX + 1, h3.GetXaxis()->GetBinLowEdge(minbinX),
-                     h3.GetXaxis()->GetBinUpEdge(maxbinX), maxbinY - minbinY + 1,
-                     h3.GetYaxis()->GetBinLowEdge(minbinY), h3.GetYaxis()->GetBinUpEdge(maxbinY));
+                     h3.GetXaxis()->GetBinUpEdge(maxbinX), maxbinY - minbinY + 1, h3.GetYaxis()->GetBinLowEdge(minbinY),
+                     h3.GetYaxis()->GetBinUpEdge(maxbinY));
    TProfile2D pe2XZR("pe2XZR", "pe2XZR", maxbinX - minbinX + 1, h3.GetXaxis()->GetBinLowEdge(minbinX),
-                     h3.GetXaxis()->GetBinUpEdge(maxbinX), maxbinZ - minbinZ + 1,
-                     h3.GetZaxis()->GetBinLowEdge(minbinZ), h3.GetZaxis()->GetBinUpEdge(maxbinZ));
+                     h3.GetXaxis()->GetBinUpEdge(maxbinX), maxbinZ - minbinZ + 1, h3.GetZaxis()->GetBinLowEdge(minbinZ),
+                     h3.GetZaxis()->GetBinUpEdge(maxbinZ));
    TProfile2D pe2YXR("pe2YXR", "pe2YXR", maxbinY - minbinY + 1, h3.GetYaxis()->GetBinLowEdge(minbinY),
-                     h3.GetYaxis()->GetBinUpEdge(maxbinY), maxbinX - minbinX + 1,
-                     h3.GetXaxis()->GetBinLowEdge(minbinX), h3.GetXaxis()->GetBinUpEdge(maxbinX));
+                     h3.GetYaxis()->GetBinUpEdge(maxbinY), maxbinX - minbinX + 1, h3.GetXaxis()->GetBinLowEdge(minbinX),
+                     h3.GetXaxis()->GetBinUpEdge(maxbinX));
    TProfile2D pe2YZR("pe2YZR", "pe2YZR", maxbinY - minbinY + 1, h3.GetYaxis()->GetBinLowEdge(minbinY),
-                     h3.GetYaxis()->GetBinUpEdge(maxbinY), maxbinZ - minbinZ + 1,
-                     h3.GetZaxis()->GetBinLowEdge(minbinZ), h3.GetZaxis()->GetBinUpEdge(maxbinZ));
+                     h3.GetYaxis()->GetBinUpEdge(maxbinY), maxbinZ - minbinZ + 1, h3.GetZaxis()->GetBinLowEdge(minbinZ),
+                     h3.GetZaxis()->GetBinUpEdge(maxbinZ));
    TProfile2D pe2ZXR("pe2ZXR", "pe2ZXR", maxbinZ - minbinZ + 1, h3.GetZaxis()->GetBinLowEdge(minbinZ),
-                     h3.GetZaxis()->GetBinUpEdge(maxbinZ), maxbinX - minbinX + 1,
-                     h3.GetXaxis()->GetBinLowEdge(minbinX), h3.GetXaxis()->GetBinUpEdge(maxbinX));
+                     h3.GetZaxis()->GetBinUpEdge(maxbinZ), maxbinX - minbinX + 1, h3.GetXaxis()->GetBinLowEdge(minbinX),
+                     h3.GetXaxis()->GetBinUpEdge(maxbinX));
    TProfile2D pe2ZYR("pe2ZYR", "pe2ZYR", maxbinZ - minbinZ + 1, h3.GetZaxis()->GetBinLowEdge(minbinZ),
-                     h3.GetZaxis()->GetBinUpEdge(maxbinZ), maxbinY - minbinY + 1,
-                     h3.GetYaxis()->GetBinLowEdge(minbinY), h3.GetYaxis()->GetBinUpEdge(maxbinY));
+                     h3.GetZaxis()->GetBinUpEdge(maxbinZ), maxbinY - minbinY + 1, h3.GetYaxis()->GetBinLowEdge(minbinY),
+                     h3.GetYaxis()->GetBinUpEdge(maxbinY));
 
    TProfile2D pe2XYOR("pe2XYOR", "pe2XYOR", binsizeX, lower_limit, upper_limit, binsizeY, lower_limit, upper_limit);
    TProfile2D pe2XZOR("pe2XZOR", "pe2XZOR", binsizeX, lower_limit, upper_limit, binsizeZ, lower_limit, upper_limit);

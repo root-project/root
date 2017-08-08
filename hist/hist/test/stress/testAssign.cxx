@@ -65,7 +65,7 @@ TEST(StressHistogram, TestAssign3D)
    // Tests the operator=() method for 3D Histograms
 
    TH3D h1("=3D-h1", "h1-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
-                       numberOfBins + 2, minRange, maxRange);
+           numberOfBins + 2, minRange, maxRange);
 
    h1.Sumw2();
 
@@ -77,7 +77,7 @@ TEST(StressHistogram, TestAssign3D)
    }
 
    TH3D h2("=3D-h2", "h2-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
-                       numberOfBins + 2, minRange, maxRange);
+           numberOfBins + 2, minRange, maxRange);
    h2 = h1;
 
    EXPECT_TRUE(HistogramsEquals(h1, h2, cmpOptStats));

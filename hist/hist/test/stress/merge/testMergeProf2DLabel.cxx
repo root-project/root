@@ -30,14 +30,14 @@ TEST(StressHistogram, TestMergeProf2DLabelAll)
 {
    // Tests the merge method with fully equally labelled 2D Profiles
 
-   TProfile2D p1("merge2DLabelAll-p1", "p1-Title", numberOfBins, minRange, maxRange, numberOfBins + 2,
-                                   minRange, maxRange);
-   TProfile2D p2("merge2DLabelAll-p2", "p2-Title", numberOfBins, minRange, maxRange, numberOfBins + 2,
-                                   minRange, maxRange);
-   TProfile2D p3("merge2DLabelAll-p3", "p3-Title", numberOfBins, minRange, maxRange, numberOfBins + 2,
-                                   minRange, maxRange);
-   TProfile2D p4("merge2DLabelAll-p4", "p4-Title", numberOfBins, minRange, maxRange, numberOfBins + 2,
-                                   minRange, maxRange);
+   TProfile2D p1("merge2DLabelAll-p1", "p1-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange,
+                 maxRange);
+   TProfile2D p2("merge2DLabelAll-p2", "p2-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange,
+                 maxRange);
+   TProfile2D p3("merge2DLabelAll-p3", "p3-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange,
+                 maxRange);
+   TProfile2D p4("merge2DLabelAll-p4", "p4-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange,
+                 maxRange);
 
    for (Int_t e = 0; e < nEvents * nEvents; ++e) {
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
@@ -85,14 +85,14 @@ TEST(StressHistogram, TestMergeProf2DLabelAllDiff)
 {
    // Tests the merge method with fully differently labelled 2D Profiles
 
-   TProfile2D p1("merge2DLabelAllDiff-p1", "p1-Title", numberOfBins, minRange, maxRange,
-                                   numberOfBins + 2, minRange, maxRange);
-   TProfile2D p2("merge2DLabelAllDiff-p2", "p2-Title", numberOfBins, minRange, maxRange,
-                                   numberOfBins + 2, minRange, maxRange);
-   TProfile2D p3("merge2DLabelAllDiff-p3", "p3-Title", numberOfBins, minRange, maxRange,
-                                   numberOfBins + 2, minRange, maxRange);
-   TProfile2D p4("merge2DLabelAllDiff-p4", "p4-Title", numberOfBins, minRange, maxRange,
-                                   numberOfBins + 2, minRange, maxRange);
+   TProfile2D p1("merge2DLabelAllDiff-p1", "p1-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange,
+                 maxRange);
+   TProfile2D p2("merge2DLabelAllDiff-p2", "p2-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange,
+                 maxRange);
+   TProfile2D p3("merge2DLabelAllDiff-p3", "p3-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange,
+                 maxRange);
+   TProfile2D p4("merge2DLabelAllDiff-p4", "p4-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange,
+                 maxRange);
 
    for (Int_t e = 0; e < nEvents * nEvents; ++e) {
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
@@ -150,14 +150,14 @@ TEST(StressHistogram, TestMergeProf2DLabelDiff)
 {
    // Tests the merge with some different labels method for 2D Profiles
 
-   TProfile2D p1("merge2DLabelDiff-p1", "p1-Title", numberOfBins, minRange, maxRange,
-                 numberOfBins + 2, minRange, maxRange);
-   TProfile2D p2("merge2DLabelDiff-p2", "p2-Title", numberOfBins, minRange, maxRange,
-                 numberOfBins + 2, minRange, maxRange);
-   TProfile2D p3("merge2DLabelDiff-p3", "p3-Title", numberOfBins, minRange, maxRange,
-                 numberOfBins + 2, minRange, maxRange);
-   TProfile2D p4("merge2DLabelDiff-p4", "p4-Title", numberOfBins, minRange, maxRange,
-                                   numberOfBins + 2, minRange, maxRange);
+   TProfile2D p1("merge2DLabelDiff-p1", "p1-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange,
+                 maxRange);
+   TProfile2D p2("merge2DLabelDiff-p2", "p2-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange,
+                 maxRange);
+   TProfile2D p3("merge2DLabelDiff-p3", "p3-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange,
+                 maxRange);
+   TProfile2D p4("merge2DLabelDiff-p4", "p4-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange,
+                 maxRange);
 
    // It does not work properly! Look, the bins with the same labels
    // are different ones and still the tests passes! This is not
@@ -204,14 +204,14 @@ TEST(StressHistogram, TestMergeProf2DLabelSame)
 {
    // Tests the merge with some equal labels method for 2D Profiles
 
-   TProfile2D p1("merge2DLabelSame-p1", "p1-Title", numberOfBins, minRange, maxRange,
-                                   numberOfBins + 2, minRange, maxRange);
-   TProfile2D p2("merge2DLabelSame-p2", "p2-Title", numberOfBins, minRange, maxRange,
-                                   numberOfBins + 2, minRange, maxRange);
-   TProfile2D p3("merge2DLabelSame-p3", "p3-Title", numberOfBins, minRange, maxRange,
-                                   numberOfBins + 2, minRange, maxRange);
-   TProfile2D p4("merge2DLabelSame-p4", "p4-Title", numberOfBins, minRange, maxRange,
-                                   numberOfBins + 2, minRange, maxRange);
+   TProfile2D p1("merge2DLabelSame-p1", "p1-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange,
+                 maxRange);
+   TProfile2D p2("merge2DLabelSame-p2", "p2-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange,
+                 maxRange);
+   TProfile2D p3("merge2DLabelSame-p3", "p3-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange,
+                 maxRange);
+   TProfile2D p4("merge2DLabelSame-p4", "p4-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange,
+                 maxRange);
 
    // It does not work properly! Look, the bins with the same labels
    // are different ones and still the tests passes! This is not

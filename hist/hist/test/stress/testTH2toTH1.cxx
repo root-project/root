@@ -47,19 +47,19 @@ TEST(StressHistogram, TestTH2toTH1)
    TH1D h1YOR("h1YOR", "h1YOR", binsizeY, lower_limit, upper_limit);
 
    TH1D h1XR("h1XR", "h1XR", maxbinX - minbinX + 1, h1X.GetXaxis()->GetBinLowEdge(minbinX),
-                         h1X.GetXaxis()->GetBinUpEdge(maxbinX));
+             h1X.GetXaxis()->GetBinUpEdge(maxbinX));
    TH1D h1YR("h1YR", "h1YR", maxbinY - minbinY + 1, h1Y.GetXaxis()->GetBinLowEdge(minbinY),
-                         h1Y.GetXaxis()->GetBinUpEdge(maxbinY));
+             h1Y.GetXaxis()->GetBinUpEdge(maxbinY));
 
    TProfile pe1XY("pe1XY", "pe1XY", binsizeX, lower_limit, upper_limit);
    TProfile pe1XYOR("pe1XYOR", "pe1XYOR", binsizeX, lower_limit, upper_limit);
    TProfile pe1XYR("pe1XYR", "pe1XYR", maxbinX - minbinX + 1, h1X.GetXaxis()->GetBinLowEdge(minbinX),
-                                   h1X.GetXaxis()->GetBinUpEdge(maxbinX));
+                   h1X.GetXaxis()->GetBinUpEdge(maxbinX));
 
    TProfile pe1YX("pe1YX", "pe1YX", binsizeY, lower_limit, upper_limit);
    TProfile pe1YXOR("pe1YXOR", "pe1YXOR", binsizeY, lower_limit, upper_limit);
    TProfile pe1YXR("pe1YXR", "pe1YXR", maxbinY - minbinY + 1, h1Y.GetXaxis()->GetBinLowEdge(minbinY),
-                                   h1Y.GetXaxis()->GetBinUpEdge(maxbinY));
+                   h1Y.GetXaxis()->GetBinUpEdge(maxbinY));
 
    for (int ix = 0; ix <= h2XY.GetXaxis()->GetNbins() + 1; ++ix) {
       double xc = h2XY.GetXaxis()->GetBinCenter(ix);

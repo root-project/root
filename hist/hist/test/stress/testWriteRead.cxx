@@ -77,7 +77,7 @@ TEST(StressHistogram, TestWriteRead3D)
    // Tests the write and read methods for 3D Histograms
 
    TH3D h1("wr3D-h1", "h1-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
-                       numberOfBins + 2, minRange, maxRange);
+           numberOfBins + 2, minRange, maxRange);
 
    h1.Sumw2();
 

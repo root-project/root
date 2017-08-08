@@ -64,5 +64,5 @@ TYPED_TEST(HistTest, TestAddHn)
 
    s1->Add(s2.get(), c);
 
-   EXPECT_TRUE(HistogramsEquals(*(THnBase*)s3.get(), *(THnBase*)s1.get(), cmpOptStats, 1E-10));
+   EXPECT_TRUE(HistogramsEquals(*(THnBase *)s3.get(), *(THnBase *)s1.get(), cmpOptStats, 1E-10));
 }

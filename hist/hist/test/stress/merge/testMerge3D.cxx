@@ -28,13 +28,13 @@ TEST(StressHistogram, TestMerge3D)
    // Tests the merge method for 3D Histograms
 
    TH3D h1("merge3D-h1", "h1-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
-                       numberOfBins + 2, minRange, maxRange);
+           numberOfBins + 2, minRange, maxRange);
    TH3D h2("merge3D-h2", "h2-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
-                       numberOfBins + 2, minRange, maxRange);
+           numberOfBins + 2, minRange, maxRange);
    TH3D h3("merge3D-h3", "h3-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
-                       numberOfBins + 2, minRange, maxRange);
+           numberOfBins + 2, minRange, maxRange);
    TH3D h4("merge3D-h4", "h4-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
-                       numberOfBins + 2, minRange, maxRange);
+           numberOfBins + 2, minRange, maxRange);
 
    h1.Sumw2();
    h2.Sumw2();
@@ -80,11 +80,11 @@ TEST(StressHistogram, TestMerge3DExtend)
    // when axis can be extended (e.g. for time histograms)
 
    TH3D h1("merge3D-h1", "h1-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
-                       numberOfBins + 2, minRange, maxRange);
+           numberOfBins + 2, minRange, maxRange);
    TH3D h2("merge3D-h2", "h2-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
-                       numberOfBins + 2, minRange, maxRange);
+           numberOfBins + 2, minRange, maxRange);
    TH3D h4("merge3D-h4", "h4-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
-                       numberOfBins + 2, minRange, maxRange);
+           numberOfBins + 2, minRange, maxRange);
 
    h1.SetCanExtend(extendType);
    h2.SetCanExtend(extendType);

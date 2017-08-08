@@ -69,13 +69,14 @@ int Equals(const char *msg, TH3D &h1, TH3D &h2, int options = 0, double ERRORLIM
 int Equals(const char *msg, THnBase &h1, THnBase &h2, int options = 0, double ERRORLIMIT = defaultErrorLimit);
 int Equals(const char *msg, THnBase &h1, TH1 &h2, int options = 0, double ERRORLIMIT = defaultErrorLimit);
 
-template<typename T, typename U>
-int Equals(const char *msg, std::unique_ptr<T> &h1, std::unique_ptr<U> &h2, int options = 0, double ERRORLIMIT = defaultErrorLimit)
+template <typename T, typename U>
+int Equals(const char *msg, std::unique_ptr<T> &h1, std::unique_ptr<U> &h2, int options = 0,
+           double ERRORLIMIT = defaultErrorLimit)
 {
    return Equals(msg, *h1.get(), *h2.get(), options, ERRORLIMIT);
 };
 
-template<typename T, typename U>
+template <typename T, typename U>
 ::testing::AssertionResult HistogramsEquals(T &h1, U &h2, int options = 0, double ERRORLIMIT = defaultErrorLimit)
 {
    int differences = Equals("", h1, h2, options, ERRORLIMIT);

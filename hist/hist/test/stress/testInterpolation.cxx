@@ -95,8 +95,8 @@ TEST(StressHistogram, TestInterpolation3D)
 {
    // Tests interpolation method for 3D Histogram
 
-   TH3D h1("h1", "h1", numberOfBins, minRange, maxRange, 2 * numberOfBins, minRange, maxRange,
-                       4 * numberOfBins, minRange, maxRange);
+   TH3D h1("h1", "h1", numberOfBins, minRange, maxRange, 2 * numberOfBins, minRange, maxRange, 4 * numberOfBins,
+           minRange, maxRange);
 
    h1.Reset();
 

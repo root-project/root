@@ -63,7 +63,7 @@ TEST(StressHistogram, TestCopyConstructor3D)
    // Tests the copy constructor for 3D Histograms
 
    TH3D h1("cc3D-h1", "h1-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
-                       numberOfBins + 2, minRange, maxRange);
+           numberOfBins + 2, minRange, maxRange);
 
    h1.Sumw2();
 

@@ -28,12 +28,12 @@ TEST(StressHistogram, TestAdd3D1)
    Double_t c1 = r.Rndm();
    Double_t c2 = r.Rndm();
 
-   TH3D h1("t3D1-h1", "h1", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
-                       numberOfBins + 2, minRange, maxRange);
-   TH3D h2("t3D1-h2", "h2", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
-                       numberOfBins + 2, minRange, maxRange);
-   TH3D h3("t3D1-h3", "h3=c1*h1+c2*h2", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange,
-                       maxRange, numberOfBins + 2, minRange, maxRange);
+   TH3D h1("t3D1-h1", "h1", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange, numberOfBins + 2,
+           minRange, maxRange);
+   TH3D h2("t3D1-h2", "h2", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange, numberOfBins + 2,
+           minRange, maxRange);
+   TH3D h3("t3D1-h3", "h3=c1*h1+c2*h2", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
+           numberOfBins + 2, minRange, maxRange);
 
    h1.Sumw2();
    h2.Sumw2();
@@ -55,8 +55,8 @@ TEST(StressHistogram, TestAdd3D1)
       h3.Fill(x, y, z, c2);
    }
 
-   TH3D h4("t3D1-h4", "h4=c1*h1+c2*h2", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange,
-                       maxRange, numberOfBins + 2, minRange, maxRange);
+   TH3D h4("t3D1-h4", "h4=c1*h1+c2*h2", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
+           numberOfBins + 2, minRange, maxRange);
    h4.Add(&h1, &h2, c1, c2);
    EXPECT_TRUE(HistogramsEquals(h3, h4, cmpOptStats, 1E-10));
 }
@@ -67,12 +67,12 @@ TEST(StressHistogram, TestAdd3D2)
 
    Double_t c2 = r.Rndm();
 
-   TH3D h1("t3D2-h1", "h1", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
-                       numberOfBins + 2, minRange, maxRange);
-   TH3D h2("t3D2-h2", "h2", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
-                       numberOfBins + 2, minRange, maxRange);
+   TH3D h1("t3D2-h1", "h1", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange, numberOfBins + 2,
+           minRange, maxRange);
+   TH3D h2("t3D2-h2", "h2", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange, numberOfBins + 2,
+           minRange, maxRange);
    TH3D h3("t3D2-h3", "h3=h1+c2*h2", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
-                       numberOfBins + 2, minRange, maxRange);
+           numberOfBins + 2, minRange, maxRange);
 
    h1.Sumw2();
    h2.Sumw2();
@@ -105,9 +105,9 @@ TEST(StressHistogram, TestAdd3D3)
    Double_t c1 = r.Rndm();
 
    TH3D h1("t1D1-h1", "h1-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
-                       numberOfBins + 2, minRange, maxRange);
-   TH3D h2("t1D1-h2", "h2=c1*h1+c2*h2", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange,
-                       maxRange, numberOfBins + 2, minRange, maxRange);
+           numberOfBins + 2, minRange, maxRange);
+   TH3D h2("t1D1-h2", "h2=c1*h1+c2*h2", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
+           numberOfBins + 2, minRange, maxRange);
 
    h1.Sumw2();
    h2.Sumw2();
@@ -126,7 +126,7 @@ TEST(StressHistogram, TestAdd3D3)
    }
 
    TH3D h3("t1D1-h3", "h3=c1*h1", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
-                       numberOfBins + 2, minRange, maxRange);
+           numberOfBins + 2, minRange, maxRange);
    h3.Add(&h1, &h1, c1, -1);
 
    // TH1::Add will reset the stats in this case so we need to do for the reference histogram

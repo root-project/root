@@ -81,7 +81,7 @@ TYPED_TEST(HistTest, TestDivHn1)
       s4->SetBinError(coord, sqrt(error));
    }
 
-   EXPECT_TRUE(HistogramsEquals(*(THnBase*)s1.get(), *(THnBase*)s4.get(), cmpOptStats, 1E-6));
+   EXPECT_TRUE(HistogramsEquals(*(THnBase *)s1.get(), *(THnBase *)s4.get(), cmpOptStats, 1E-6));
 }
 
 TYPED_TEST(HistTest, TestDivHn2)
@@ -141,5 +141,5 @@ TYPED_TEST(HistTest, TestDivHn2)
       s4->SetBinError(coord, sqrt(error));
    }
 
-   EXPECT_TRUE(HistogramsEquals(*(THnBase*)s1.get(), *(THnBase*)s4.get(), cmpOptStats, 1E-6));
+   EXPECT_TRUE(HistogramsEquals(*(THnBase *)s1.get(), *(THnBase *)s4.get(), cmpOptStats, 1E-6));
 }

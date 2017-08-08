@@ -62,8 +62,8 @@ TEST(StressHistogram, TestCopyConstructorProfile3D)
 {
    // Tests the copy constructor for 3D Profiles
 
-   TProfile3D p1("cc3D-p1", "p1-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange,
-                                   maxRange, numberOfBins + 2, minRange, maxRange);
+   TProfile3D p1("cc3D-p1", "p1-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
+                 numberOfBins + 2, minRange, maxRange);
 
    for (Int_t e = 0; e < nEvents * nEvents; ++e) {
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);

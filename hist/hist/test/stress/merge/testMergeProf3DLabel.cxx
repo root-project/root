@@ -30,14 +30,14 @@ TEST(StressHistogram, TestMergeProf3DLabelAll)
 {
    // Tests the merge method with fully equally labelled 3D Profiles
 
-   TProfile3D p1("merge3DLabelAll-p1", "p1-Title", numberOfBins, minRange, maxRange, numberOfBins + 1,
-                 minRange, maxRange, numberOfBins + 2, minRange, maxRange);
-   TProfile3D p2("merge3DLabelAll-p2", "p2-Title", numberOfBins, minRange, maxRange, numberOfBins + 1,
-                 minRange, maxRange, numberOfBins + 2, minRange, maxRange);
-   TProfile3D p3("merge3DLabelAll-p3", "p3-Title", numberOfBins, minRange, maxRange, numberOfBins + 1,
-                 minRange, maxRange, numberOfBins + 2, minRange, maxRange);
-   TProfile3D p4("merge3DLabelAll-p4", "p4-Title", numberOfBins, minRange, maxRange, numberOfBins + 1,
-                  minRange, maxRange, numberOfBins + 2, minRange, maxRange);
+   TProfile3D p1("merge3DLabelAll-p1", "p1-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange,
+                 maxRange, numberOfBins + 2, minRange, maxRange);
+   TProfile3D p2("merge3DLabelAll-p2", "p2-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange,
+                 maxRange, numberOfBins + 2, minRange, maxRange);
+   TProfile3D p3("merge3DLabelAll-p3", "p3-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange,
+                 maxRange, numberOfBins + 2, minRange, maxRange);
+   TProfile3D p4("merge3DLabelAll-p4", "p4-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange,
+                 maxRange, numberOfBins + 2, minRange, maxRange);
 
    for (Int_t e = 0; e < nEvents * nEvents; ++e) {
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
@@ -88,14 +88,14 @@ TEST(StressHistogram, TestMergeProf3DLabelAllDiff)
 {
    // Tests the merge method with fully differently labelled 3D Profiles
 
-   TProfile3D p1("merge3DLabelAllDiff-p1", "p1-Title", numberOfBins, minRange, maxRange,
-                 numberOfBins + 1, minRange, maxRange, numberOfBins + 2, minRange, maxRange);
-   TProfile3D p2("merge3DLabelAllDiff-p2", "p2-Title", numberOfBins, minRange, maxRange,
-                 numberOfBins + 1, minRange, maxRange, numberOfBins + 2, minRange, maxRange);
-   TProfile3D p3("merge3DLabelAllDiff-p3", "p3-Title", numberOfBins, minRange, maxRange,
-                 numberOfBins + 1, minRange, maxRange, numberOfBins + 2, minRange, maxRange);
-   TProfile3D p4("merge3DLabelAllDiff-p4", "p4-Title", numberOfBins, minRange, maxRange,
-                  numberOfBins + 1, minRange, maxRange, numberOfBins + 2, minRange, maxRange);
+   TProfile3D p1("merge3DLabelAllDiff-p1", "p1-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange,
+                 maxRange, numberOfBins + 2, minRange, maxRange);
+   TProfile3D p2("merge3DLabelAllDiff-p2", "p2-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange,
+                 maxRange, numberOfBins + 2, minRange, maxRange);
+   TProfile3D p3("merge3DLabelAllDiff-p3", "p3-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange,
+                 maxRange, numberOfBins + 2, minRange, maxRange);
+   TProfile3D p4("merge3DLabelAllDiff-p4", "p4-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange,
+                 maxRange, numberOfBins + 2, minRange, maxRange);
 
    for (Int_t e = 0; e < nEvents * nEvents; ++e) {
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
@@ -160,14 +160,14 @@ TEST(StressHistogram, TestMergeProf3DLabelDiff)
 {
    // Tests the merge with some different labels method for 3D Profiles
 
-   TProfile3D p1("merge3DLabelDiff-p1", "p1-Title", numberOfBins, minRange, maxRange,
-                 numberOfBins + 1, minRange, maxRange, numberOfBins + 2, minRange, maxRange);
-   TProfile3D p2("merge3DLabelDiff-p2", "p2-Title", numberOfBins, minRange, maxRange,
-                 numberOfBins + 1, minRange, maxRange, numberOfBins + 2, minRange, maxRange);
-   TProfile3D p3("merge3DLabelDiff-p3", "p3-Title", numberOfBins, minRange, maxRange,
-                 numberOfBins + 1, minRange, maxRange, numberOfBins + 2, minRange, maxRange);
-   TProfile3D p4("merge3DLabelDiff-p4", "p4-Title", numberOfBins, minRange, maxRange,
-                  numberOfBins + 1, minRange, maxRange, numberOfBins + 2, minRange, maxRange);
+   TProfile3D p1("merge3DLabelDiff-p1", "p1-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange,
+                 maxRange, numberOfBins + 2, minRange, maxRange);
+   TProfile3D p2("merge3DLabelDiff-p2", "p2-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange,
+                 maxRange, numberOfBins + 2, minRange, maxRange);
+   TProfile3D p3("merge3DLabelDiff-p3", "p3-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange,
+                 maxRange, numberOfBins + 2, minRange, maxRange);
+   TProfile3D p4("merge3DLabelDiff-p4", "p4-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange,
+                 maxRange, numberOfBins + 2, minRange, maxRange);
 
    // It does not work properly! Look, the bins with the same labels
    // are different ones and still the tests passes! This is not
@@ -217,14 +217,14 @@ TEST(StressHistogram, TestMergeProf3DLabelSame)
 {
    // Tests the merge with some equal labels method for 3D Profiles
 
-   TProfile3D p1("merge3DLabelSame-p1", "p1-Title", numberOfBins, minRange, maxRange,
-                 numberOfBins + 1, minRange, maxRange, numberOfBins + 2, minRange, maxRange);
-   TProfile3D p2("merge3DLabelSame-p2", "p2-Title", numberOfBins, minRange, maxRange,
-                 numberOfBins + 1, minRange, maxRange, numberOfBins + 2, minRange, maxRange);
-   TProfile3D p3("merge3DLabelSame-p3", "p3-Title", numberOfBins, minRange, maxRange,
-                 numberOfBins + 1, minRange, maxRange, numberOfBins + 2, minRange, maxRange);
-   TProfile3D p4("merge3DLabelSame-p4", "p4-Title", numberOfBins, minRange, maxRange,
-                  numberOfBins + 1, minRange, maxRange, numberOfBins + 2, minRange, maxRange);
+   TProfile3D p1("merge3DLabelSame-p1", "p1-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange,
+                 maxRange, numberOfBins + 2, minRange, maxRange);
+   TProfile3D p2("merge3DLabelSame-p2", "p2-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange,
+                 maxRange, numberOfBins + 2, minRange, maxRange);
+   TProfile3D p3("merge3DLabelSame-p3", "p3-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange,
+                 maxRange, numberOfBins + 2, minRange, maxRange);
+   TProfile3D p4("merge3DLabelSame-p4", "p4-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange,
+                 maxRange, numberOfBins + 2, minRange, maxRange);
 
    // It does not work properly! Look, the bins with the same labels
    // are different ones and still the tests passes! This is not

@@ -28,14 +28,14 @@ TEST(StressHistogram, TestMerge3DLabelAll)
 {
    // Tests the merge method with fully equally labelled 3D Histograms
 
-   TH3D h1("merge3DLabelAll-h1", "h1-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange,
-                       maxRange, numberOfBins + 2, minRange, maxRange);
-   TH3D h2("merge3DLabelAll-h2", "h2-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange,
-                       maxRange, numberOfBins + 2, minRange, maxRange);
-   TH3D h3("merge3DLabelAll-h3", "h3-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange,
-                       maxRange, numberOfBins + 2, minRange, maxRange);
-   TH3D h4("merge3DLabelAll-h4", "h4-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange,
-                       maxRange, numberOfBins + 2, minRange, maxRange);
+   TH3D h1("merge3DLabelAll-h1", "h1-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
+           numberOfBins + 2, minRange, maxRange);
+   TH3D h2("merge3DLabelAll-h2", "h2-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
+           numberOfBins + 2, minRange, maxRange);
+   TH3D h3("merge3DLabelAll-h3", "h3-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
+           numberOfBins + 2, minRange, maxRange);
+   TH3D h4("merge3DLabelAll-h4", "h4-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
+           numberOfBins + 2, minRange, maxRange);
    for (Int_t e = 0; e < nEvents * nEvents; ++e) {
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
@@ -86,14 +86,14 @@ TEST(StressHistogram, TestMerge3DLabelAllDiff)
    // are different ones and still the tests passes! This is not
    // consistent with TH1::Merge()
 
-   TH3D h1("merge3DLabelAllDiff-h1", "h1-Title", numberOfBins, minRange, maxRange, numberOfBins + 1,
-                       minRange, maxRange, numberOfBins + 2, minRange, maxRange);
-   TH3D h2("merge3DLabelAllDiff-h2", "h2-Title", numberOfBins, minRange, maxRange, numberOfBins + 1,
-                       minRange, maxRange, numberOfBins + 2, minRange, maxRange);
-   TH3D h3("merge3DLabelAllDiff-h3", "h3-Title", numberOfBins, minRange, maxRange, numberOfBins + 1,
-                       minRange, maxRange, numberOfBins + 2, minRange, maxRange);
-   TH3D h4("merge3DLabelAllDiff-h4", "h4-Title", numberOfBins, minRange, maxRange, numberOfBins + 1,
-                       minRange, maxRange, numberOfBins + 2, minRange, maxRange);
+   TH3D h1("merge3DLabelAllDiff-h1", "h1-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
+           numberOfBins + 2, minRange, maxRange);
+   TH3D h2("merge3DLabelAllDiff-h2", "h2-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
+           numberOfBins + 2, minRange, maxRange);
+   TH3D h3("merge3DLabelAllDiff-h3", "h3-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
+           numberOfBins + 2, minRange, maxRange);
+   TH3D h4("merge3DLabelAllDiff-h4", "h4-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
+           numberOfBins + 2, minRange, maxRange);
 
    for (Int_t e = 0; e < nEvents * nEvents; ++e) {
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
@@ -156,14 +156,14 @@ TEST(StressHistogram, TestMerge3DLabelDiff)
    // are different ones and still the tests passes! This is not
    // consistent with TH1::Merge()
 
-   TH3D h1("merge3DLabelDiff-h1", "h1-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange,
-                       maxRange, numberOfBins + 2, minRange, maxRange);
-   TH3D h2("merge3DLabelDiff-h2", "h2-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange,
-                       maxRange, numberOfBins + 2, minRange, maxRange);
-   TH3D h3("merge3DLabelDiff-h3", "h3-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange,
-                       maxRange, numberOfBins + 2, minRange, maxRange);
-   TH3D h4("merge3DLabelDiff-h4", "h4-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange,
-                       maxRange, numberOfBins + 2, minRange, maxRange);
+   TH3D h1("merge3DLabelDiff-h1", "h1-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
+           numberOfBins + 2, minRange, maxRange);
+   TH3D h2("merge3DLabelDiff-h2", "h2-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
+           numberOfBins + 2, minRange, maxRange);
+   TH3D h3("merge3DLabelDiff-h3", "h3-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
+           numberOfBins + 2, minRange, maxRange);
+   TH3D h4("merge3DLabelDiff-h4", "h4-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
+           numberOfBins + 2, minRange, maxRange);
 
    h1.GetXaxis()->SetBinLabel(2, "gamma");
    h2.GetXaxis()->SetBinLabel(6, "beta");
@@ -207,14 +207,14 @@ TEST(StressHistogram, TestMerge3DLabelSame)
 {
    // Tests the merge with some equal labels method for 3D Histograms
 
-   TH3D h1("merge3DLabelSame-h1", "h1-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange,
-                       maxRange, numberOfBins + 2, minRange, maxRange);
-   TH3D h2("merge3DLabelSame-h2", "h2-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange,
-                       maxRange, numberOfBins + 2, minRange, maxRange);
-   TH3D h3("merge3DLabelSame-h3", "h3-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange,
-                       maxRange, numberOfBins + 2, minRange, maxRange);
-   TH3D h4("merge3DLabelSame-h4", "h4-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange,
-                       maxRange, numberOfBins + 2, minRange, maxRange);
+   TH3D h1("merge3DLabelSame-h1", "h1-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
+           numberOfBins + 2, minRange, maxRange);
+   TH3D h2("merge3DLabelSame-h2", "h2-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
+           numberOfBins + 2, minRange, maxRange);
+   TH3D h3("merge3DLabelSame-h3", "h3-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
+           numberOfBins + 2, minRange, maxRange);
+   TH3D h4("merge3DLabelSame-h4", "h4-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
+           numberOfBins + 2, minRange, maxRange);
 
    h1.GetXaxis()->SetBinLabel(4, "alpha");
    h2.GetXaxis()->SetBinLabel(4, "alpha");

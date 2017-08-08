@@ -77,5 +77,5 @@ TYPED_TEST(HistTest, TestMergeHn)
 
    s1->Merge(&list);
 
-   EXPECT_TRUE(HistogramsEquals(*(THnBase*)s1.get(), *(THnBase*)s4.get(), cmpOptNone, 1E-10));
+   EXPECT_TRUE(HistogramsEquals(*(THnBase *)s1.get(), *(THnBase *)s4.get(), cmpOptNone, 1E-10));
 }

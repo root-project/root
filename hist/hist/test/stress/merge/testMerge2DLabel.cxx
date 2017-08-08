@@ -28,14 +28,10 @@ TEST(StressHistogram, TestMerge2DLabelAll)
 {
    // Tests the merge method with fully equally labelled 2D Histograms
 
-   TH2D h1("merge2DLabelAll-h1", "h1-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange,
-                       maxRange);
-   TH2D h2("merge2DLabelAll-h2", "h2-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange,
-                       maxRange);
-   TH2D h3("merge2DLabelAll-h3", "h3-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange,
-                       maxRange);
-   TH2D h4("merge2DLabelAll-h4", "h4-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange,
-                       maxRange);
+   TH2D h1("merge2DLabelAll-h1", "h1-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange, maxRange);
+   TH2D h2("merge2DLabelAll-h2", "h2-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange, maxRange);
+   TH2D h3("merge2DLabelAll-h3", "h3-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange, maxRange);
+   TH2D h4("merge2DLabelAll-h4", "h4-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange, maxRange);
 
    for (Int_t e = 0; e < nEvents * nEvents; ++e) {
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
@@ -84,14 +80,14 @@ TEST(StressHistogram, TestMerge2DLabelAllDiff)
    // are different ones and still the tests passes! This is not
    // consistent with TH1::Merge()
 
-   TH2D h1("merge2DLabelAllDiff-h1", "h1-Title", numberOfBins, minRange, maxRange, numberOfBins + 2,
-                       minRange, maxRange);
-   TH2D h2("merge2DLabelAllDiff-h2", "h2-Title", numberOfBins, minRange, maxRange, numberOfBins + 2,
-                       minRange, maxRange);
-   TH2D h3("merge2DLabelAllDiff-h3", "h3-Title", numberOfBins, minRange, maxRange, numberOfBins + 2,
-                       minRange, maxRange);
-   TH2D h4("merge2DLabelAllDiff-h4", "h4-Title", numberOfBins, minRange, maxRange, numberOfBins + 2,
-                       minRange, maxRange);
+   TH2D h1("merge2DLabelAllDiff-h1", "h1-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange,
+           maxRange);
+   TH2D h2("merge2DLabelAllDiff-h2", "h2-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange,
+           maxRange);
+   TH2D h3("merge2DLabelAllDiff-h3", "h3-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange,
+           maxRange);
+   TH2D h4("merge2DLabelAllDiff-h4", "h4-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange,
+           maxRange);
 
    for (Int_t e = 0; e < nEvents * nEvents; ++e) {
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
@@ -146,14 +142,10 @@ TEST(StressHistogram, TestMerge2DLabelDiff)
    // are different ones and still the tests passes! This is not
    // consistent with TH1::Merge()
 
-   TH2D h1("merge2DLabelDiff-h1", "h1-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange,
-                       maxRange);
-   TH2D h2("merge2DLabelDiff-h2", "h2-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange,
-                       maxRange);
-   TH2D h3("merge2DLabelDiff-h3", "h3-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange,
-                       maxRange);
-   TH2D h4("merge2DLabelDiff-h4", "h4-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange,
-                       maxRange);
+   TH2D h1("merge2DLabelDiff-h1", "h1-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange, maxRange);
+   TH2D h2("merge2DLabelDiff-h2", "h2-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange, maxRange);
+   TH2D h3("merge2DLabelDiff-h3", "h3-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange, maxRange);
+   TH2D h4("merge2DLabelDiff-h4", "h4-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange, maxRange);
 
    h1.GetXaxis()->SetBinLabel(2, "gamma");
    h2.GetXaxis()->SetBinLabel(6, "beta");
@@ -198,14 +190,10 @@ TEST(StressHistogram, TestMerge2DLabelSame)
    // histogram with labels - just merges according to the x-values
    // This test is basically useless
 
-   TH2D h1("merge2DLabelSame-h1", "h1-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange,
-                       maxRange);
-   TH2D h2("merge2DLabelSame-h2", "h2-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange,
-                       maxRange);
-   TH2D h3("merge2DLabelSame-h3", "h3-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange,
-                       maxRange);
-   TH2D h4("merge2DLabelSame-h4", "h4-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange,
-                       maxRange);
+   TH2D h1("merge2DLabelSame-h1", "h1-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange, maxRange);
+   TH2D h2("merge2DLabelSame-h2", "h2-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange, maxRange);
+   TH2D h3("merge2DLabelSame-h3", "h3-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange, maxRange);
+   TH2D h4("merge2DLabelSame-h4", "h4-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange, maxRange);
 
    h1.GetXaxis()->SetBinLabel(4, "alpha");
    h2.GetXaxis()->SetBinLabel(4, "alpha");

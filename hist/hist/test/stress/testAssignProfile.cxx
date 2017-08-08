@@ -64,8 +64,8 @@ TEST(StressHistogram, TestAssignProfile3D)
 {
    // Tests the operator=() method for 3D Profiles
 
-   TProfile3D p1("=3D-p1", "p1-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange,
-                                   maxRange, numberOfBins + 2, minRange, maxRange);
+   TProfile3D p1("=3D-p1", "p1-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
+                 numberOfBins + 2, minRange, maxRange);
 
    for (Int_t e = 0; e < nEvents * nEvents; ++e) {
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
@@ -75,8 +75,8 @@ TEST(StressHistogram, TestAssignProfile3D)
       p1.Fill(x, y, z, t, 1.0);
    }
 
-   TProfile3D p2("=3D-p2", "p2-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange,
-                                   maxRange, numberOfBins + 2, minRange, maxRange);
+   TProfile3D p2("=3D-p2", "p2-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
+                 numberOfBins + 2, minRange, maxRange);
    p2 = p1;
 
    EXPECT_TRUE(HistogramsEquals(p1, p2));

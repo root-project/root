@@ -63,7 +63,7 @@ TEST(StressHistogram, TestClone3D)
    // Tests the clone method for 3D Histograms
 
    TH3D h1("cl3D-h1", "h1-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
-                       numberOfBins + 2, minRange, maxRange);
+           numberOfBins + 2, minRange, maxRange);
 
    h1.Sumw2();
 
@@ -118,8 +118,8 @@ TEST(StressHistogram, TestCloneProfile3D)
 {
    // Tests the clone method for 3D Profiles
 
-   TProfile3D p1("cl3D-p1", "p1-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange,
-                                   maxRange, numberOfBins + 2, minRange, maxRange);
+   TProfile3D p1("cl3D-p1", "p1-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
+                 numberOfBins + 2, minRange, maxRange);
 
    for (Int_t e = 0; e < nEvents * nEvents; ++e) {
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
@@ -149,7 +149,7 @@ TEST(StressHistogram, TestCloneProfileVar1D)
       p1.Fill(x, y, 1.0);
    }
 
-   unique_ptr<TProfile> p2(static_cast<TProfile*>(p1.Clone()));
+   unique_ptr<TProfile> p2(static_cast<TProfile *>(p1.Clone()));
 
    EXPECT_TRUE(HistogramsEquals(p1, *p2.get(), cmpOptStats));
 }

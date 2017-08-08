@@ -55,8 +55,7 @@ TEST(StressHistogram, TestIntegerRebinNoName)
    unique_ptr<TH1D> h2(dynamic_cast<TH1D *>(h1.Clone()));
    h2->Rebin(rebin);
 
-   TH1D h3("testIntegerRebinNoName", "testIntegerRebinNoName", int(h1.GetNbinsX() / rebin + 0.1), minRange,
-                       maxRange);
+   TH1D h3("testIntegerRebinNoName", "testIntegerRebinNoName", int(h1.GetNbinsX() / rebin + 0.1), minRange, maxRange);
    r.SetSeed(seed);
    for (Int_t i = 0; i < nEvents; ++i) h3.Fill(r.Uniform(minRange * .9, maxRange * 1.1));
 

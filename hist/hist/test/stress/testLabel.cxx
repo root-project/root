@@ -32,8 +32,7 @@ TEST(StressHistogram, TestLabel)
    TH1D h1("lD1-h1", "h1-Title", 2 * numberOfBins, minRange, maxRange);
    // build histo with extra  labels to tets the deflate option
    int extraBins = 20;
-   TH1D h2("lD1-h2", "h2-Title", 2 * numberOfBins + 20, minRange,
-                       maxRange + extraBins * h1.GetXaxis()->GetBinWidth(1));
+   TH1D h2("lD1-h2", "h2-Title", 2 * numberOfBins + 20, minRange, maxRange + extraBins * h1.GetXaxis()->GetBinWidth(1));
 
    // set labels
    std::vector<std::string> vLabels;
@@ -66,8 +65,8 @@ TEST(StressHistogram, TestLabel2DX)
 
    TH2D h1("lD2-h1", "h1-Title", 2 * numberOfBins, minRange, maxRange, numberOfBins, minRange, maxRange);
    // build histo with extra  labels to tets the deflate option
-   TH2D h2("lD2-h2", "h2-Title", 2 * numberOfBins + 20, minRange,
-                       maxRange + 20 * h1.GetXaxis()->GetBinWidth(1), numberOfBins, minRange, maxRange);
+   TH2D h2("lD2-h2", "h2-Title", 2 * numberOfBins + 20, minRange, maxRange + 20 * h1.GetXaxis()->GetBinWidth(1),
+           numberOfBins, minRange, maxRange);
 
    // set labels
    std::vector<std::string> vLabels;
@@ -104,7 +103,7 @@ TEST(StressHistogram, TestLabel2DY)
    TH2D h1("lD2-h1", "h1-Title", numberOfBins, minRange, maxRange, 2 * numberOfBins, minRange, maxRange);
    // build histo with extra  labels to tets the deflate option
    TH2D h2("lD2-h2", "h2-Title", numberOfBins, minRange, maxRange, 2 * numberOfBins + 20, minRange,
-                       maxRange + 20 * h1.GetYaxis()->GetBinWidth(1));
+           maxRange + 20 * h1.GetYaxis()->GetBinWidth(1));
 
    // set labels
    std::vector<std::string> vLabels;

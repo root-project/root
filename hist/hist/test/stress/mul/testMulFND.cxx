@@ -57,7 +57,7 @@ TYPED_TEST(HistTest, TestMulFND)
 
    s1->Multiply(&f, c1);
 
-   EXPECT_TRUE(HistogramsEquals(*(THnBase*)s1.get(), *(THnBase*)s2.get()));
+   EXPECT_TRUE(HistogramsEquals(*(THnBase *)s1.get(), *(THnBase *)s2.get()));
 }
 
 TYPED_TEST(HistTest, TestMulFND2)
@@ -86,11 +86,11 @@ TYPED_TEST(HistTest, TestMulFND2)
       s1->Fill(points, 1.0);
       s2->Fill(points,
                f.Eval(s2->GetAxis(0)->GetBinCenter(s2->GetAxis(0)->FindBin(points[0])),
-                       s2->GetAxis(1)->GetBinCenter(s2->GetAxis(1)->FindBin(points[1]))) *
+                      s2->GetAxis(1)->GetBinCenter(s2->GetAxis(1)->FindBin(points[1]))) *
                   c1);
    }
 
    s1->Multiply(&f, c1);
 
-   EXPECT_TRUE(HistogramsEquals(*(THnBase*)s1.get(), *(THnBase*)s2.get()));
+   EXPECT_TRUE(HistogramsEquals(*(THnBase *)s1.get(), *(THnBase *)s2.get()));
 }

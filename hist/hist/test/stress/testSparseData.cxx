@@ -140,8 +140,8 @@ TEST(StressHistogram, TestSparseData3DFull)
    TF2 func("GAUS3D", gaus3d, minRange, maxRange, 3);
    func.SetParameters(500., +.5, 1.5, -.5, 2.0);
 
-   TH3D h3("fsdf3D", "h3-title", numberOfBins, minRange, maxRange, numberOfBins, minRange, maxRange,
-                       numberOfBins, minRange, maxRange);
+   TH3D h3("fsdf3D", "h3-title", numberOfBins, minRange, maxRange, numberOfBins, minRange, maxRange, numberOfBins,
+           minRange, maxRange);
    for (Int_t e = 0; e < nEvents * nEvents; ++e) {
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
@@ -169,8 +169,8 @@ TEST(StressHistogram, TestSparseData3DSparse)
    TF2 func("GAUS3D", gaus3d, minRange, maxRange, 3);
    func.SetParameters(500., +.5, 1.5, -.5, 2.0);
 
-   TH3D h3("fsds3D", "h3-title", numberOfBins, minRange, maxRange, numberOfBins, minRange, maxRange,
-                       numberOfBins, minRange, maxRange);
+   TH3D h3("fsds3D", "h3-title", numberOfBins, minRange, maxRange, numberOfBins, minRange, maxRange, numberOfBins,
+           minRange, maxRange);
    for (Int_t e = 0; e < numberOfBins * numberOfBins * numberOfBins; ++e) {
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);

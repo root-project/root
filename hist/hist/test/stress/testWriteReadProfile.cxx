@@ -75,8 +75,8 @@ TEST(StressHistogram, TestWriteReadProfile3D)
 {
    // Tests the write and read methods for 3D Profile
 
-   TProfile3D p1("wr3D-p1", "p1-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange,
-                                   maxRange, numberOfBins + 2, minRange, maxRange);
+   TProfile3D p1("wr3D-p1", "p1-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
+                 numberOfBins + 2, minRange, maxRange);
 
    for (Int_t e = 0; e < nEvents * nEvents; ++e) {
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
