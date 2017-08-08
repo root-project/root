@@ -1,4 +1,4 @@
-// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss, Eckhard v. Toerne, Jan Therhaag
+// Author: Kim Albertsson
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -39,10 +39,14 @@ REGISTER_METHOD(CrossEvaluation)
 
 ClassImp(TMVA::MethodCrossEvaluation);
 
+// TODO: 
+//    Organise after life time?
+//       Construction - Train - Eval - Application
+
 const Int_t TMVA::MethodCrossEvaluation::fgDebugLevel = 0;
 
 ////////////////////////////////////////////////////////////////////////////////
-/// The standard constructor for the "boosted decision trees".
+/// 
 
 TMVA::MethodCrossEvaluation::MethodCrossEvaluation( const TString& jobName,
                             const TString& methodTitle,
@@ -57,6 +61,14 @@ TMVA::MethodCrossEvaluation::MethodCrossEvaluation( const TString& jobName,
 TMVA::MethodCrossEvaluation::MethodCrossEvaluation( DataSetInfo& theData,
                             const TString& theWeightFile)
    : TMVA::MethodBase( Types::kCrossEvaluation, theData, theWeightFile)
+{
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+///
+
+TMVA::MethodCrossEvaluation::~MethodCrossEvaluation( void )
 {
 }
 
@@ -81,7 +93,7 @@ void TMVA::MethodCrossEvaluation::ProcessOptions()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Common initialisation with defaults for the BDT-Method.
+/// Common initialisation with defaults for the Method.
 
 void TMVA::MethodCrossEvaluation::Init( void )
 {
@@ -92,17 +104,6 @@ void TMVA::MethodCrossEvaluation::Init( void )
 /// Reset the method, as if it had just been instantiated (forget all training etc.).
 
 void TMVA::MethodCrossEvaluation::Reset( void )
-{
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor.
-///
-///  - Note: fEventSample and ValidationSample are already deleted at the end of TRAIN
-///         When they are not used anymore
-
-TMVA::MethodCrossEvaluation::~MethodCrossEvaluation( void )
 {
 }
 
@@ -126,6 +127,7 @@ void TMVA::MethodCrossEvaluation::SetTuneParameters(std::map<TString,Double_t> t
 
 void TMVA::MethodCrossEvaluation::Train()
 {
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -157,13 +159,16 @@ void  TMVA::MethodCrossEvaluation::ReadWeightsFromStream( std::istream& istr )
 ///
 
 Double_t TMVA::MethodCrossEvaluation::GetMvaValue( Double_t* err, Double_t* errUpper ){
+   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get the multiclass MVA response.
 
-const std::vector<Float_t>& TMVA::MethodCrossEvaluation::GetMulticlassValues()
+const std::vector<Float_t> & TMVA::MethodCrossEvaluation::GetMulticlassValues()
 {
+   Log() << kFATAL << "Multiclass not implemented for CrossEvaluation" << Endl;
+   return fNotImplementedRetValVec;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -171,7 +176,8 @@ const std::vector<Float_t>& TMVA::MethodCrossEvaluation::GetMulticlassValues()
 
 const std::vector<Float_t> & TMVA::MethodCrossEvaluation::GetRegressionValues()
 {
-
+   Log() << kFATAL << "Regression not implemented for CrossEvaluation" << Endl;
+   return fNotImplementedRetValVec;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -207,6 +213,7 @@ void TMVA::MethodCrossEvaluation::GetHelpMessage() const
 
 const TMVA::Ranking * TMVA::MethodCrossEvaluation::CreateRanking()
 {
+   Log() << kFATAL << "Ranking not implemented for CrossEvaluation" << Endl;
    return nullptr;
 }
 

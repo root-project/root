@@ -110,6 +110,11 @@ namespace TMVA {
       void DeclareCompatibilityOptions();
 
    private:
+
+      // Temporary holder of data while GetMulticlassValues and GetRegressionValues
+      // are not implemented.
+      std::vector<Float_t> fNotImplementedRetValVec;
+
       // Init used in the various constructors
       void Init( void );
       void PreProcessNegativeEventWeights();
@@ -119,7 +124,7 @@ namespace TMVA {
 
       // for backward compatibility
 
-      ClassDef(MethodCrossEvaluation,0);  // Analysis of Boosted Decision Trees
+      ClassDef(MethodCrossEvaluation, 0);
    };
 
 } // namespace TMVA
