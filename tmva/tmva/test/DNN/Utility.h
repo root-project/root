@@ -63,6 +63,50 @@ void constructConvNet(TDeepNet<AArchitecture> &net)
    net.AddDenseLayer(widthFC2, fFC2);
 }
 
+/** Construct a linear convolutional neural network with one convolutional layer,
+ *  one pooling layer and two fully connected layers. The dimensions are
+ *  predetermined. The activation functions are all linear.  */
+//______________________________________________________________________________
+template <typename AArchitecture>
+void constructLinearConvNet(TDeepNet<AArchitecture> &net)
+{
+   size_t depth = 12;
+   size_t filterHeightConv = 2;
+   size_t filterWidthConv = 2;
+   size_t strideRowsConv = 1;
+   size_t strideColsConv = 1;
+   size_t zeroPaddingHeight = 1;
+   size_t zeroPaddingWidth = 1;
+
+   EActivationFunction fConv = EActivationFunction::kIdentity;
+
+   net.AddConvLayer(depth, filterHeightConv, filterWidthConv, strideRowsConv, strideColsConv, zeroPaddingHeight,
+                    zeroPaddingWidth, fConv);
+
+   size_t filterHeightPool = 6;
+   size_t filterWidthPool = 6;
+   size_t strideRowsPool = 1;
+   size_t strideColsPool = 1;
+
+   net.AddMaxPoolLayer(filterHeightPool, filterWidthPool, strideRowsPool, strideColsPool);
+
+   size_t depthReshape = 1;
+   size_t heightReshape = 1;
+   size_t widthReshape = net.GetLayerAt(net.GetDepth() - 1)->GetDepth() *
+                         net.GetLayerAt(net.GetDepth() - 1)->GetHeight() *
+                         net.GetLayerAt(net.GetDepth() - 1)->GetWidth();
+
+   net.AddReshapeLayer(depthReshape, heightReshape, widthReshape);
+
+   size_t widthFC1 = 20;
+   EActivationFunction fFC1 = EActivationFunction::kIdentity;
+   net.AddDenseLayer(widthFC1, fFC1);
+
+   size_t widthFC2 = 5;
+   EActivationFunction fFC2 = EActivationFunction::kIdentity;
+   net.AddDenseLayer(widthFC2, fFC2);
+}
+
 /** Construct a random linear neural network with up to five layers.*/
 //______________________________________________________________________________
 template <typename AArchitecture>
