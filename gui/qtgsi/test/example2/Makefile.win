@@ -21,7 +21,7 @@ else
 OPTIMIZE  := -Ox
 endif
 
-QTCXXFLAGS   := -GR $(OPTIMIZE) -W3 -nologo $(shell root-config --cflags) -FIw32pragma.h -D_CRT_SECURE_NO_DEPRECATE -DQT_DLL -DQT_THREAD_SUPPORT -DQT3_SUPPORT $(QTINCDIR:%=-I%)
+QTCXXFLAGS   := -GR $(OPTIMIZE) -W3 -nologo $(shell root-config --cflags) -FIw32pragma.h -D_CRT_SECURE_NO_DEPRECATE -DQT_DLL -DQT_THREAD_SUPPORT -DQT3_SUPPORT $(QTINCDIR:%=-isystem%)
 LFLAGS       := -nologo -machine:ix86 $(LINKDEBUG)
 ROOTGLIBS    := $(shell root-config --glibs)
 QTGSILIBS    := $(QTLIB) $(ROOTGLIBS) '$(ROOTSYS)\lib\libqtgsi.lib'
