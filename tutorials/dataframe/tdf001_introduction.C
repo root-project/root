@@ -11,14 +11,6 @@
 /// \author Enrico Guiraud
 
 // ## Preparation
-// This notebook can be compiled with this invocation
-// `g++ -o tdf001_introduction tdf001_introduction.C `root-config --cflags --libs` -lTreePlayer`
-
-#include "TFile.h"
-#include "TH1F.h"
-#include "TTree.h"
-
-#include "ROOT/TDataFrame.hxx"
 
 // A simple helper function to fill a test tree: this makes the example
 // stand-alone.
@@ -167,9 +159,4 @@ int tdf001_introduction()
    std::cout << *entries_sum2 << std::endl;
 
    return 0;
-}
-
-int main()
-{
-   return tdf001_introduction();
 }
