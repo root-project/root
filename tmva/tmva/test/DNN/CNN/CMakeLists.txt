@@ -30,6 +30,9 @@ ROOT_ADD_TEST(TMVA-DNN-CNN-Pred COMMAND testConvNetPred)
 ROOT_EXECUTABLE(testConvBackpropagation TestConvBackpropagation.cxx LIBRARIES ${Libraries})
 ROOT_ADD_TEST(TMVA-DNN-CNN-Backpropagation COMMAND testConvBackpropagation)
 
+ROOT_EXECUTABLE(testTensorDataLoader TestTensorDataLoader.cxx LIBRARIES ${Libraries})
+ROOT_ADD_TEST(TMVA-DNN-Tensor-Data-Loader COMMAND testTensorDataLoader)
+
 #--- CPU tests. ----------------------------
 if (BLAS_FOUND AND imt)
 
