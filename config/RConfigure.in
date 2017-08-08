@@ -47,4 +47,6 @@
 #endif
 #endif
 
+#@haslz4compression@ R__HAS_LZ4   /**/
+
 #endif
