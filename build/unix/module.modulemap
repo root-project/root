@@ -22,7 +22,6 @@ module ROOT_Types {
   module "RConfigure.h" { textual header "RConfigure.h" export * }
   module "RVersion.h" { textual header "RVersion.h" export * }
   // This should go in RConfig.h as it defines macros.
-  module "TException.h" { textual header "TException.h" export * }
   export *
 }
 
@@ -46,6 +45,7 @@ module ROOT_Core_Config_C {
  exclude header "RtypesImp.h"
  module "Rtypes.h" { header "Rtypes.h" export * }
  module "DllImport.h" { header "DllImport.h" export * } // Should merge in RConfig.h.
+ module "TException.h" { header "TException.h" export * }
  module "TGenericClassInfo.h" { header "TGenericClassInfo.h" export * }
  module "TSchemaHelper.h" { header "TSchemaHelper.h" export * }
  module "RootMetaSelection.h" { header "RootMetaSelection.h" export * }

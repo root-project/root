@@ -25,6 +25,10 @@ module "libc" {
     export *
     header "xlocale.h"
   }
+  module "setjmp.h" {
+    export *
+    header "setjmp.h"
+  }
   module "math.h" {
     export *
     header "math.h"
