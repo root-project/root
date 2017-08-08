@@ -875,7 +875,6 @@ Float_t TStyle::GetTitleSize( Option_t *axis) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Show the options from the current style
-/// if (TClass::GetClass("TStyleManager")) gSystem->Load("libGed");
 
 void TStyle::Paint(Option_t *option)
 {
