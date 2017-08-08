@@ -492,7 +492,7 @@ function (ROOT_CXXMODULES_APPEND_TO_MODULEMAP library library_headers)
                         TSchemaHelper.h ESTLType.h RStringView.h Varargs.h
                         RootMetaSelection.h libcpp_string_view.h
                         RWrap_libcpp_string_view.h
-                        TException.h ThreadLocalStorage.h 
+                        ThreadLocalStorage.h
                         TBranchProxyTemplate.h TGLIncludes.h TGLWSIncludes.h
                         snprintf.h strlcpy.h")
 
