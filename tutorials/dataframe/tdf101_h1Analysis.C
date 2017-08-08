@@ -8,15 +8,6 @@
 /// \date December 2016
 /// \author Axel Naumann
 
-#include "ROOT/TDataFrame.hxx"
-#include "TCanvas.h"
-#include "TChain.h"
-#include "TF1.h"
-#include "TH2.h"
-#include "TLine.h"
-#include "TPaveStats.h"
-#include "TStyle.h"
-
 auto Select = [](ROOT::Experimental::TDataFrame &dataFrame) {
    using Farrayiew_t = std::array_view<float>;
    using Iarrayiew_t = std::array_view<int>;

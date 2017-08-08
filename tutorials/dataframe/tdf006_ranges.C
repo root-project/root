@@ -7,11 +7,6 @@
 /// \date March 2017
 /// \author Danilo Piparo
 
-#include "TFile.h"
-#include "TTree.h"
-
-#include "ROOT/TDataFrame.hxx"
-
 // A simple helper function to fill a test tree: this makes the example
 // stand-alone.
 void fill_tree(const char *filename, const char *treeName)
