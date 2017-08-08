@@ -31,7 +31,8 @@ Continuous Integration
 ----------------------
 
 ROOT currently has two automated CI tests that are used for pull requests:
-- *Build and test*: When known contributors submit a PR, a Jenkins-based CI workflow will kick off; the results will be posted to the ticket.  Interacting with the Jenkins instance is [documented here](https://github.com/phsft-bot/build-configuration/blob/master/README.md).  The build and tests done for each PR are a subset of those done for nightly builds.
+- *Build and test*: When known contributors submit a PR, a Jenkins-based CI workflow will kick off; the results will be posted to the pull request.  Interacting with the Jenkins instance is [documented here](https://github.com/phsft-bot/build-configuration/blob/master/README.md); interacting with Jenkins is restricted to contributors / project members.  Ask for help if needed.  The build and tests done for each PR are a subset of those done for nightly builds.
 - *Formatting check*: We utilize a Travis-CI-based build to automatically check that a PR follows known ROOT coding conventions.  This is done with the `clang-format` tool.  If coding violations are found, `clang-format` will generate a suggested patch file; we suggest utilizing this output directly
+- *Simple Static Analysis*: The Travis-CI build will run a simple set of static analyses using `clang-tidy`.
 
-Typically, every PR must pass both steps.  Committers have the ability to override this requirement.
+Typically, every PR must pass all steps; we will ask you to fix any issues that arise.  Committers have the ability to override this requirement.
