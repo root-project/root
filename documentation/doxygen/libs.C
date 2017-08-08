@@ -3,6 +3,7 @@ void libs(TString classname)
    const char *libname;
 
    // Find in which library classname sits
+   classname.ReplaceAll("_1",":");
    libname = gInterpreter->GetClassSharedLibs(classname.Data());
 
    if(!libname) return;

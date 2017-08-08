@@ -17,7 +17,7 @@ esac
 
 echo '#!/bin/sh'  > listofclass.sh
 echo '' >> listofclass.sh
-grep -s "Collaboration diagram for"  $DOXYGEN_OUTPUT_DIRECTORY/html/classT*.html | sed -e "s/.html:.*$//" | sed -e "s/^.*html\/class/\.\/makelibs.sh /"  >> listofclass.sh
+grep -s "Collaboration diagram for"  $DOXYGEN_OUTPUT_DIRECTORY/html/class*.html | sed -e "s/.html:.*$//" | sed -e "s/^.*html\/class/\.\/makelibs.sh /"  >> listofclass.sh
 
 chmod +x ./listofclass.sh
  ./listofclass.sh
