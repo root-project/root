@@ -116,8 +116,8 @@ TMVA::DataLoader::~DataLoader( void )
    // problem with call of REGISTER_METHOD macro ...
    //   ClassifierDataLoader::DestroyInstance();
    //   Types::DestroyInstance();
-   Tools::DestroyInstance();
-   Config::DestroyInstance();
+   //Tools::DestroyInstance();
+   //Config::DestroyInstance();
 }
 
 
