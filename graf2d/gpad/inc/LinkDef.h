@@ -48,8 +48,12 @@
 #pragma link C++ class ROOT::Experimental::TMenuItems+;
 #pragma link C++ class ROOT::Experimental::Detail::TPadUserCoordBase+;
 #pragma link C++ class ROOT::Experimental::Detail::TPadLinearUserCoord+;
+#pragma link C++ struct ROOT::Experimental::Internal::TPadHorizVert+;
+#pragma link C++ class ROOT::Experimental::TPadExtent+;
+#pragma link C++ class ROOT::Experimental::TPadPos+;
 #pragma link C++ class ROOT::Experimental::Internal::TPadBase+;
 #pragma link C++ class ROOT::Experimental::TPad+;
+#pragma link C++ class ROOT::Experimental::TPadDrawable+;
 #pragma link C++ class ROOT::Experimental::TCanvas+;
 #pragma link C++ class ROOT::Experimental::TPadCoord::Pixel+;
 #pragma link C++ class ROOT::Experimental::TPadCoord::CoordSysBase<ROOT::Experimental::TPadCoord::Pixel>+;
