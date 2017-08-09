@@ -93,11 +93,11 @@ hsimple.root: $(ROOT_LOC)/tutorials/hsimple.C
 	$(CMDECHO) ! $(CALLROOTEXE) -b -l -q $(ROOT_LOC)/tutorials/hsimple.C > hsimple.log 2>&1
 
 hsimple9.root: hsimple.root
-	$(CMDECHO) hadd -f9 hsimple9.root hsimple.root > hsimple9.log 2>&1  \
+	$(CMDECHO) hadd -f109 hsimple9.root hsimple.root > hsimple9.log 2>&1  \
      || handleError.sh --log=hsimple9.log --res=$$?
 
 hsimple9x2.root: hsimple.root
-	$(CMDECHO) ( hadd -f9 hsimple9x2.root hsimple.root && hadd -f9 -a hsimple9x2.root hsimple.root )  > hsimple9x2.log 2>&1  \
+	$(CMDECHO) ( hadd -f109 hsimple9x2.root hsimple.root && hadd -f109 -a hsimple9x2.root hsimple.root )  > hsimple9x2.log 2>&1  \
      || handleError.sh --log=hsimple9x2.log --res=$$?
 
 hsimple209.root: hsimple.root
@@ -112,8 +112,14 @@ hsimpleK202.root: hsimple.root hsimple9.root hsimple209.root hsimple9x2.root
 	$(CMDECHO) hadd -fk202 hsimpleK202.root hsimple209.root hsimple.root hsimple9.root hsimple9x2.root > hsimpleK202.log 2>&1  \
 		|| handleError.sh --log=hsimpleK202.log --res=$$?
 
-hsimpleF.root: hsimple.root hsimple9.root hsimple209.root hsimple9x2.root
-	$(CMDECHO) hadd -ff hsimpleF.root hsimple9.root hsimple209.root hsimple.root hsimple9x2.root > hsimpleF.log 2>&1  \
+# LZ4-based compression (compression level 9)
+hsimpleK409.root: hsimple.root hsimple9.root hsimple209.root hsimple409.root hsimple9x2.root
+	$(CMDECHO) hadd -fk409 hsimpleK409.root hsimpleK202.root hsimpleK.root hsimple.root hsimple9.root hsimple209.root hsimple409.root hsimple9x2.root > hsimpleK409.log 2>&1  \
+		|| handleError.sh --log=hsimpleK409.log --res=$$?
+
+# Default compression algorithm
+hsimpleF.root: hsimple.root hsimple9.root hsimple209.root hsimple409.root hsimple9x2.root
+	$(CMDECHO) hadd -ff hsimpleF.root hsimple9.root hsimple209.root hsimple409.root hsimple.root hsimple9x2.root > hsimpleF.log 2>&1  \
 		|| handleError.sh --log=hsimpleF.log --res=$$?
 
 

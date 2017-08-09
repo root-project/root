@@ -1,0 +1,374 @@
+
+Processing runautocache.C...
+Starting runautocache() test
+
+* Learn entries set to 20, readahead to 256000
+* Cleared ROOT_TTREECACHE_SIZE and ROOT_TTREECACHE_PREFILL env variables
+* Set resource variables TTreeCache Size and Prefill to 0.0, 0
+--- Start of subtest 1
+Check if deleting a tree can affect another tree's cache
+cache did not get deleted
+
+--- Start of subtest 2
+Read TTree from AliESDs-0.root, will read events and print cache info
+Reported AutoFlush value for the TTree -30000000
+No call to SetCacheSize()
+Reported number of entries 100. Getting all entries..
+Reported cache size from TTree: 0
+Reading 2296202 bytes in 679 transactions
+No TTreeCache for other stats
+
+--- Start of subtest 3
+Read TTree from AliESDs-0.root, will read events and print cache info
+Reported AutoFlush value for the TTree -30000000
+-> Calling SetCacheSize(-1) <-
+Reported number of entries 100. Getting all entries..
+Reported cache size from TTree: 30000000
+Reported buffer size from TTreeCache: 30000000
+PrintCacheStats output:
+******TreeCache statistics for tree: esdTree in file: AliESDs-0.root ******
+Number of branches in the cache ...: 484
+Cache Efficiency ..................: 1.000000
+Cache Efficiency Rel...............: 0.234074
+Learn entries......................: 20
+Cached Reading.....................: 1216387 bytes in 9 transactions
+Reading............................: 1003154 bytes in 517 uncached transactions
+Readahead..........................: 256000 bytes with overhead = 641793 bytes
+Average transaction................: 135.154111 Kbytes
+Number of blocks in current cache..: 158, total size: 1216387
+-- end of PrintCacheStats output --
+
+* Resource variable TTreeCache.Size=0.0
+--- Start of subtest 4
+Read TTree from AliESDs-0.root, will read events and print cache info
+Reported AutoFlush value for the TTree -30000000
+No call to SetCacheSize()
+Reported number of entries 100. Getting all entries..
+Reported cache size from TTree: 0
+Reading 2296202 bytes in 679 transactions
+No TTreeCache for other stats
+
+* Resource variable TTreeCache.Size=0.1
+--- Start of subtest 5
+Read TTree from AliESDs-0.root, will read events and print cache info
+Reported AutoFlush value for the TTree -30000000
+No call to SetCacheSize()
+Reported number of entries 100. Getting all entries..
+Reported cache size from TTree: 3000000
+Reported buffer size from TTreeCache: 3000000
+PrintCacheStats output:
+******TreeCache statistics for tree: esdTree in file: AliESDs-0.root ******
+Number of branches in the cache ...: 484
+Cache Efficiency ..................: 0.793970
+Cache Efficiency Rel...............: 0.234074
+Learn entries......................: 20
+Cached Reading.....................: 1216387 bytes in 9 transactions
+Reading............................: 1003154 bytes in 517 uncached transactions
+Readahead..........................: 256000 bytes with overhead = 641793 bytes
+Average transaction................: 135.154111 Kbytes
+Number of blocks in current cache..: 158, total size: 1852655
+-- end of PrintCacheStats output --
+
+* Resource variable TTreeCache.Prefill=1
+--- Start of subtest 6
+Read TTree from AliESDs-0.root, will read events and print cache info
+Reported AutoFlush value for the TTree -30000000
+No call to SetCacheSize()
+Reported number of entries 100. Getting all entries..
+Reported cache size from TTree: 3000000
+Reported buffer size from TTreeCache: 3000000
+PrintCacheStats output:
+******TreeCache statistics for tree: esdTree in file: AliESDs-0.root ******
+Number of branches in the cache ...: 484
+Cache Efficiency ..................: 0.562969
+Cache Efficiency Rel...............: 1.000000
+Learn entries......................: 20
+Cached Reading.....................: 2219541 bytes in 17 transactions
+Reading............................: 0 bytes in 0 uncached transactions
+Readahead..........................: 256000 bytes with overhead = 1027193 bytes
+Average transaction................: 130.561235 Kbytes
+Number of blocks in current cache..: 158, total size: 1852655
+-- end of PrintCacheStats output --
+
+* Resource variable TTreeCache.Prefill=0 and env variable ROOT_TTREECACHE_PREFILL=1
+--- Start of subtest 7
+Read TTree from AliESDs-0.root, will read events and print cache info
+Reported AutoFlush value for the TTree -30000000
+No call to SetCacheSize()
+Reported number of entries 100. Getting all entries..
+Reported cache size from TTree: 3000000
+Reported buffer size from TTreeCache: 3000000
+PrintCacheStats output:
+******TreeCache statistics for tree: esdTree in file: AliESDs-0.root ******
+Number of branches in the cache ...: 484
+Cache Efficiency ..................: 0.562969
+Cache Efficiency Rel...............: 1.000000
+Learn entries......................: 20
+Cached Reading.....................: 2219541 bytes in 17 transactions
+Reading............................: 0 bytes in 0 uncached transactions
+Readahead..........................: 256000 bytes with overhead = 1027193 bytes
+Average transaction................: 130.561235 Kbytes
+Number of blocks in current cache..: 158, total size: 1852655
+-- end of PrintCacheStats output --
+
+* Cleared env variable ROOT_TTREECACHE_PREFILL
+* Resource variable TTreeCache.Size=0.0, env variable ROOT_TTREECACHE_SIZE=0.2
+--- Start of subtest 8
+Read TTree from AliESDs-0.root, will read events and print cache info
+Reported AutoFlush value for the TTree -30000000
+No call to SetCacheSize()
+Reported number of entries 100. Getting all entries..
+Reported cache size from TTree: 6000000
+Reported buffer size from TTreeCache: 6000000
+PrintCacheStats output:
+******TreeCache statistics for tree: esdTree in file: AliESDs-0.root ******
+Number of branches in the cache ...: 484
+Cache Efficiency ..................: 0.918605
+Cache Efficiency Rel...............: 0.234074
+Learn entries......................: 20
+Cached Reading.....................: 1216387 bytes in 9 transactions
+Reading............................: 1003154 bytes in 517 uncached transactions
+Readahead..........................: 256000 bytes with overhead = 641793 bytes
+Average transaction................: 135.154111 Kbytes
+Number of blocks in current cache..: 158, total size: 1485843
+-- end of PrintCacheStats output --
+
+--- Start of subtest 9
+Read TTree from AliESDs-0.root, will read events and print cache info
+Reported AutoFlush value for the TTree -30000000
+-> Calling SetCacheSize(-1) <-
+Reported number of entries 100. Getting all entries..
+Reported cache size from TTree: 6000000
+Reported buffer size from TTreeCache: 6000000
+PrintCacheStats output:
+******TreeCache statistics for tree: esdTree in file: AliESDs-0.root ******
+Number of branches in the cache ...: 484
+Cache Efficiency ..................: 0.918605
+Cache Efficiency Rel...............: 0.234074
+Learn entries......................: 20
+Cached Reading.....................: 1216387 bytes in 9 transactions
+Reading............................: 1003154 bytes in 517 uncached transactions
+Readahead..........................: 256000 bytes with overhead = 641793 bytes
+Average transaction................: 135.154111 Kbytes
+Number of blocks in current cache..: 158, total size: 1485843
+-- end of PrintCacheStats output --
+
+--- Start of subtest 10
+Read TTree from AliESDs-0.root, will read events and print cache info
+Reported AutoFlush value for the TTree -30000000
+-> Calling SetCacheSize(0) <-
+Reported number of entries 100. Getting all entries..
+Reported cache size from TTree: 0
+Reading 2296202 bytes in 679 transactions
+No TTreeCache for other stats
+
+--- Start of subtest 11
+Read TTree from AliESDs-0.root, will read events and print cache info
+Reported AutoFlush value for the TTree -30000000
+-> Calling SetCacheSize(950000) <-
+Reported number of entries 100. Getting all entries..
+Reported cache size from TTree: 950000
+Reported buffer size from TTreeCache: 950000
+PrintCacheStats output:
+******TreeCache statistics for tree: esdTree in file: AliESDs-0.root ******
+Number of branches in the cache ...: 484
+Cache Efficiency ..................: 0.634538
+Cache Efficiency Rel...............: 0.234074
+Learn entries......................: 20
+Cached Reading.....................: 1216387 bytes in 13 transactions
+Reading............................: 1003154 bytes in 517 uncached transactions
+Readahead..........................: 256000 bytes with overhead = 894674 bytes
+Average transaction................: 93.568231 Kbytes
+Number of blocks in current cache..: 51, total size: 827421
+-- end of PrintCacheStats output --
+
+* env variable ROOT_TTREECACHE_SIZE=1.1
+* Writing two root files, second with AutoFlush 1.15 times the first
+--- Start of subtest 12
+New TChain with two files, different cluster size, read across boundary
+No call to chain.SetCacheSize()
+Reported cache size from chain: 0
+Chain reports 200 entries
+Getting last entry from first file in chain
+Reported AutoFlush from current tree: 50
+Reported cache size from chain: 1290594
+Reported cache size from current tree: 1290594
+Reported buffer size from TTreeCache: 1290594
+Getting first entry from second file in chain
+Reported AutoFlush from current tree: 57
+Reported cache size from chain: 1290594
+Reported cache size from current tree: 1290594
+Reported buffer size from TTreeCache: 1290594
+TTreeCache object pointer stayed the same
+
+--- Start of subtest 13
+New TChain with two files, different cluster size, read across boundary
+-> Calling chain.SetCacheSize(-1) <-
+Reported cache size from chain: -1
+Chain reports 200 entries
+Getting last entry from first file in chain
+Reported AutoFlush from current tree: 50
+Reported cache size from chain: 1290594
+Reported cache size from current tree: 1290594
+Reported buffer size from TTreeCache: 1290594
+Getting first entry from second file in chain
+Reported AutoFlush from current tree: 57
+Reported cache size from chain: 1290594
+Reported cache size from current tree: 1290594
+Reported buffer size from TTreeCache: 1290594
+TTreeCache object pointer stayed the same
+
+* Writing two root files, second with AutoFlush 1.3 times the first
+--- Start of subtest 14
+New TChain with two files, different cluster size, read across boundary
+No call to chain.SetCacheSize()
+Reported cache size from chain: 0
+Chain reports 200 entries
+Getting last entry from first file in chain
+Reported AutoFlush from current tree: 50
+Reported cache size from chain: 1290594
+Reported cache size from current tree: 1290594
+Reported buffer size from TTreeCache: 1290594
+Getting first entry from second file in chain
+Reported AutoFlush from current tree: 65
+Reported cache size from chain: 1677772
+Reported cache size from current tree: 1677772
+Reported buffer size from TTreeCache: 1677772
+TTreeCache buffer size changed, object location not checked
+
+--- Start of subtest 15
+New TChain with two files, different cluster size, read across boundary
+-> Calling chain.SetCacheSize(-1) <-
+Reported cache size from chain: -1
+Chain reports 200 entries
+Getting last entry from first file in chain
+Reported AutoFlush from current tree: 50
+Reported cache size from chain: 1290594
+Reported cache size from current tree: 1290594
+Reported buffer size from TTreeCache: 1290594
+Getting first entry from second file in chain
+Reported AutoFlush from current tree: 65
+Reported cache size from chain: 1290594
+Reported cache size from current tree: 1290594
+Reported buffer size from TTreeCache: 1290594
+TTreeCache object pointer stayed the same
+
+--- Start of subtest 16
+New TChain with two files, different cluster size, read across boundary
+-> Calling chain.SetCacheSize(0) <-
+Reported cache size from chain: 0
+Chain reports 200 entries
+Getting last entry from first file in chain
+Reported AutoFlush from current tree: 50
+Reported cache size from chain: 0
+Reported cache size from current tree: 0
+No TTreeCache
+Getting first entry from second file in chain
+Reported AutoFlush from current tree: 65
+Reported cache size from chain: 0
+Reported cache size from current tree: 0
+No TTreeCache
+TTreeCache object pointer stayed the same
+
+--- Start of subtest 17
+New TChain with two files, different cluster size, read across boundary
+-> Calling chain.SetCacheSize(1500000) <-
+Reported cache size from chain: 1500000
+Chain reports 200 entries
+Getting last entry from first file in chain
+Reported AutoFlush from current tree: 50
+Reported cache size from chain: 1500000
+Reported cache size from current tree: 1500000
+Reported buffer size from TTreeCache: 1500000
+Getting first entry from second file in chain
+Reported AutoFlush from current tree: 65
+Reported cache size from chain: 1500000
+Reported cache size from current tree: 1500000
+Reported buffer size from TTreeCache: 1500000
+TTreeCache object pointer stayed the same
+
+* Cleared env variable ROOT_TTREECACHE_SIZE
+--- Start of subtest 18
+New TChain with two files, different cluster size, use a selector
+No call to chain.SetCacheSize()
+MySelector::Process called, entry=99
+Reported cache size from fChain: 1027000
+Reported AutoFlush value for the TTree 50
+Reported cache size from TTree: 1027000
+Buffer size of TTreeCache: 1027000
+MySelector::Process called, entry=0
+Reported cache size from fChain: 1027000
+Reported AutoFlush value for the TTree 65
+Reported cache size from TTree: 1027000
+Buffer size of TTreeCache: 1027000
+TTreeCache object pointer stayed the same
+
+* env variable ROOT_TTREECACHE_SIZE=1.1
+--- Start of subtest 19
+New TChain with two files, different cluster size, use a selector
+No call to chain.SetCacheSize()
+MySelector::Process called, entry=99
+Reported cache size from fChain: 1290594
+Reported AutoFlush value for the TTree 50
+Reported cache size from TTree: 1290594
+Buffer size of TTreeCache: 1290594
+MySelector::Process called, entry=0
+Reported cache size from fChain: 1677772
+Reported AutoFlush value for the TTree 65
+Reported cache size from TTree: 1677772
+Buffer size of TTreeCache: 1677772
+TTreeCache buffer size changed, object location not checked
+
+--- Start of subtest 20
+New TChain with two files, different cluster size, use a selector
+-> Calling chain.SetCacheSize(-1) <-
+MySelector::Process called, entry=99
+Reported cache size from fChain: 1290594
+Reported AutoFlush value for the TTree 50
+Reported cache size from TTree: 1290594
+Buffer size of TTreeCache: 1290594
+MySelector::Process called, entry=0
+Reported cache size from fChain: 1290594
+Reported AutoFlush value for the TTree 65
+Reported cache size from TTree: 1290594
+Buffer size of TTreeCache: 1290594
+TTreeCache object pointer stayed the same
+
+--- Start of subtest 21
+New TChain with two files, different cluster size, use a selector
+-> Calling chain.SetCacheSize(0) <-
+MySelector::Process called, entry=99
+Reported cache size from fChain: 0
+Reported AutoFlush value for the TTree 50
+Reported cache size from TTree: 0
+No TTreeCache after Process()
+MySelector::Process called, entry=0
+Reported cache size from fChain: 0
+Reported AutoFlush value for the TTree 65
+Reported cache size from TTree: 0
+No TTreeCache after Process()
+TTreeCache object pointer stayed the same
+
+--- Start of subtest 22
+New TChain with two files, different cluster size, use a selector
+-> Calling chain.SetCacheSize(1500000) <-
+MySelector::Process called, entry=99
+Reported cache size from fChain: 1500000
+Reported AutoFlush value for the TTree 50
+Reported cache size from TTree: 1500000
+Buffer size of TTreeCache: 1500000
+MySelector::Process called, entry=0
+Reported cache size from fChain: 1500000
+Reported AutoFlush value for the TTree 65
+Reported cache size from TTree: 1500000
+Buffer size of TTreeCache: 1500000
+TTreeCache object pointer stayed the same
+
+--- Start of subtest 23
+Created a new TTree with default constructor
+-> Calling SetCacheSize(1000000) <-
+cache does not exist
+Read esdTree into existing TTree object; current working diretory gROOT
+Changed working directory back to file, load entry 0
+cache exists, tree reports size=33000000
+(int) 0
