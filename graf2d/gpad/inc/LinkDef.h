@@ -46,6 +46,13 @@
 #pragma link C++ class std::vector<ROOT::Experimental::Detail::TMenuArgument>+;
 #pragma link C++ class ROOT::Experimental::Detail::TArgsMenuItem+;
 #pragma link C++ class ROOT::Experimental::TMenuItems+;
+#pragma link C++ class ROOT::Experimental::Detail::TPadUserCoordBase+;
+#pragma link C++ class ROOT::Experimental::Detail::TPadLinearUserCoord+;
+#pragma link C++ class ROOT::Experimental::Internal::TPadBase+;
+#pragma link C++ class ROOT::Experimental::TPad+;
+#pragma link C++ class ROOT::Experimental::TCanvas+;
+#pragma link C++ class ROOT::Experimental::TPadCoord::Pixel+;
+#pragma link C++ class ROOT::Experimental::TPadCoord::CoordSysBase<ROOT::Experimental::TPadCoord::Pixel>+;
 #endif
 
 #endif
