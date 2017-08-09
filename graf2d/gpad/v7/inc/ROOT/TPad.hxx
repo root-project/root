@@ -147,6 +147,29 @@ public:
 };
 } // namespace Internal
 
+
+/** \class TPadDrawable
+   Draw a TPad, by drawing its contained graphical elements at the pad offset in the parent pad.'
+   */
+class TPadDrawable: public TDrawable {
+private:
+   const std::unique_ptr<TPad> fPad; ///< The pad to be painted
+   TPadPos fPos;                     ///< Offset with respect to parent TPad.
+
+public:
+   TPadDrawable() = default;
+
+   TPadDrawable(std::unique_ptr<TPad> &&pPad, const TPadPos &pos): fPad(std::move(pPad)), fPos(pos) {}
+
+   /// Paint the pad.
+   void Paint(Internal::TVirtualCanvasPainter & /*canv*/) final
+   {
+      // FIXME: and then what? Something with fPad.GetListOfPrimitives()?
+   }
+
+   TPad *Get() const { return fPad.get(); }
+};
+
 /** \class ROOT::Experimental::TPad
   Graphic container for `TDrawable`-s.
   */
@@ -159,32 +182,15 @@ private:
    /// Size of the pad in the parent's (!) coordinate system.
    TPadExtent fSize;
 
-   /** \class TPadDrawable
-      Draw a TPad, by drawing its contained graphical elements at the pad offset in the parent pad.'
-      */
-   class TPadDrawable: public TDrawable {
-   private:
-      const std::unique_ptr<TPad> fPad; ///< The pad to be painted
-      TPadPos fPos;                     ///< Offset with respect to parent TPad.
 
-   public:
-      TPadDrawable(std::unique_ptr<TPad> &&pPad, const TPadPos &pos): fPad(std::move(pPad)), fPos(pos) {}
-
-      /// Paint the pad.
-      void Paint(Internal::TVirtualCanvasPainter & /*canv*/) final
-      {
-         // FIXME: and then what? Something with fPad.GetListOfPrimitives()?
-      }
-
-      TPad *Get() const { return fPad.get(); }
-   };
+public:
 
    friend std::unique_ptr<TPadDrawable> GetDrawable(std::unique_ptr<TPad> &&pad, const TPadPos &pos)
    {
       return std::make_unique<TPadDrawable>(std::move(pad), pos);
    }
 
-public:
+
    /// Create a child pad.
    TPad(const TPadBase &parent, const TPadExtent &size): fParent(&parent), fSize(size) {}
 
