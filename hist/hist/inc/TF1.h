@@ -37,6 +37,7 @@ class TF1;
 class TH1;
 class TAxis;
 class TMethodCall;
+class TF1NormSum;
 
 namespace ROOT {
    namespace Fit {
@@ -264,6 +265,14 @@ protected:
       DoInitialize(addToGlobList);
    };
 
+
+private:
+   // NSUM parsing helper functions
+   void DefineNSUMTerm(TObjArray *newFuncs, TObjArray *coeffNames,
+		       TString &fullFormula,
+		       TString &formula, int termStart, int termEnd,
+		       Double_t xmin, Double_t xmax);
+   int TermCoeffLength(TString &term);
 
 public:
 
