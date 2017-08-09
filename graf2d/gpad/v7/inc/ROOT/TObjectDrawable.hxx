@@ -31,6 +31,9 @@ class TObjectDrawable: public TDrawable {
    std::string fOpts;                   ///< The drawing options
 
 public:
+
+   TObjectDrawable() = default;
+
    TObjectDrawable(const std::shared_ptr<TObject> &obj, std::string_view opts): fObj(obj), fOpts(opts) {}
 
    /// Paint the histogram
