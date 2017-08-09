@@ -105,7 +105,7 @@ The FORMULA class (ROOT version 5)
   Conceptually, fOper was changed from a simple array of Int_t
   to an array of composite values.
   For example a 'ylandau(5)' operation used to be encoded as 4105;
-  it is now encoded as (klandau >> kTFOperShit) + 5
+  it is now encoded as (klandau >> kTFOperShift) + 5
   Any class inheriting from TFormula and using directly fOper (which
   is now a private data member), needs to be updated to take this
   in consideration.  The member functions recommended to set and
