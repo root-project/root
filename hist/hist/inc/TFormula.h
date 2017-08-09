@@ -110,7 +110,7 @@ private:
    void     HandleLinear(TString &formula);
    Bool_t   InitLambdaExpression(const char * formula);
    static Bool_t   IsDefaultVariableName(const TString &name);
-   void     ReplaceAllName(TString &formula, TString &name, TString &replacement);
+   void     ReplaceAllNames(TString &formula, std::map<TString, TString> &substitutions);
    void     FillParametrizedFunctions(std::map< std::pair<TString,Int_t> ,std::pair<TString,TString> > &functions);
    
 protected:

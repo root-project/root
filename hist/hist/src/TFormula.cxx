@@ -262,39 +262,66 @@ bool TFormulaParamOrder::operator() (const TString& a, const TString& b) const {
 
 
 ////////////////////////////////////////////////////////////////////////////////
-void TFormula::ReplaceAllName(TString &formula, TString &name, TString &replacement) {
+void TFormula::ReplaceAllNames(TString &formula, map<TString, TString> &substitutions) {
+   /// Take in a dictionary of old to new, going through the formula in one pass
+
    // Replace all instances of the name
-   std::cout << "calling ReplaceAllName on " << formula
-	     << ", " << name << ", " << replacement << std::endl;
+   std::cout << "calling ReplaceAllNames on " << formula << std::endl;
+
    
    // add parentheses around the replacement string
-   replacement.Prepend("(");
-   replacement.Append(")");
+   // replacement.Prepend("(");
+   // replacement.Append(")");
 
-   int i = 0;
-   while ((i = formula.Index(name, i, TString::kExact)) != kNPOS) {
-      std::cout << "value of i " << i << std::endl;
-      // replace if characters on either side of name are not function-name-characters
-      if ((i==0 || !IsFunctionNameChar(formula[i-1]))
-	  && (i + name.Length() == formula.Length() || !IsFunctionNameChar(formula[i+name.Length()]))) {
-	 formula.Replace(i, name.Length(), replacement);
-	 i += replacement.Length();
-      } else {
-	 i += name.Length();
+   for (int i = 0; i < formula.Length(); i++) {
+      // start of name
+      // (a little subtle, since we want to match names like "{V0}" and "[0]")
+      if (isalpha(formula[i]) || formula[i] == '{' || formula[i] == '[') {
+	 int j; // index to end of name
+	 for (j = i + 1; j < formula.Length() &&
+		 (IsFunctionNameChar(formula[j]) ||
+		  (formula[i] == '{' && formula[j] == '}') ||
+		  (formula[i] == '[' && formula[j] == ']')); j++);
+	 TString name = (TString) formula(i, j-i);
+
+	 std::cout << "Looking for name: " << name << std::endl;
+	 
+	 // if we find the name, do the substitution
+	 if (substitutions.find(name) != substitutions.end()) {
+	    formula.Replace(i, name.Length(), "("+substitutions[name]+")");
+	    i += substitutions[name].Length() - 1;
+	    std::cout << "made substitution: " << name << " to " << substitutions[name] << std::endl;
+	 } else if (isalpha(formula[i])) {
+	    // if formula[i] is alpha, can skip to end of candidate name, otherwise, we'll just
+	    // move one character ahead and try again
+	    i += name.Length() - 1;
+	 }
       }
-      std::cout << "end of loop value of i " << i << std::endl;
    }
+
+   
+   // TODO rewrite loop!
+   // int i = 0;
+   // while ((i = formula.Index(name, i, TString::kExact)) != kNPOS) {
+   //    std::cout << "value of i " << i << std::endl;
+   //    // replace if characters on either side of name are not function-name-characters
+   //    if ((i==0 || !IsFunctionNameChar(formula[i-1]))
+   // 	  && (i + name.Length() == formula.Length() || !IsFunctionNameChar(formula[i+name.Length()]))) {
+   // 	 formula.Replace(i, name.Length(), replacement);
+   // 	 i += replacement.Length();
+   //    } else {
+   // 	 i += name.Length();
+   //    }
+   //    std::cout << "end of loop value of i " << i << std::endl;
+   // }
    
    //std::cout << "Now our formula is : " << formula << std::endl;
 
    // remove the parentheses we added
-   std::cout << "replacement with brackets: " << replacement << std::endl;
-   replacement.Remove(0,1);
-   std::cout << "//" << std::endl;
-   replacement.Remove(replacement.Length() - 1);
-   std::cout << "replacement without brackets: " << replacement << std::endl;
+   // replacement.Remove(0,1);
+   // replacement.Remove(replacement.Length() - 1);
 
-   std::cout << "finished ReplaceAllName" << std::endl;
+   std::cout << "finished ReplaceAllNames" << std::endl;
 }
 
 
@@ -1208,13 +1235,13 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
             fNumber = functionsNumbers[funName] + 10*(dim-1);
          }
 
-         std::cout << " replace " << pattern << " with " << replacement << std::endl;
+         // std::cout << " replace " << pattern << " with " << replacement << std::endl;
 
          formula.Replace(funPos,pattern.Length(),replacement,replacement.Length());
 
          funPos = formula.Index(funName);
       }
-      std::cout << " End loop of " << funName << " formula is now " << formula << std::endl;
+      // std::cout << " End loop of " << funName << " formula is now " << formula << std::endl;
    }
 
 }
@@ -1229,7 +1256,7 @@ void TFormula::HandleUserFunctions(TString &formula) {
    // Define parametrized functions, in case we need to use them
    std::map< std::pair<TString,Int_t> ,std::pair<TString,TString> > parFunctions;
    FillParametrizedFunctions(parFunctions);
-   
+
    // loop through characters (partly copied from `TFormula::ExtractFunctors`)
    for(Int_t i = 0 ; i < formula.Length() ; ++i) {
       // ignore things that start with square brackets
@@ -1347,8 +1374,12 @@ void TFormula::HandleUserFunctions(TString &formula) {
 	    std::cout << "naive replacement formula: " << replacementFormula << std::endl;
 	    std::cout << "formula: " << formula << std::endl;
 
+	    // map to rename each argument in `replacementFormula`
+	    map<TString, TString> argSubstitutions;
+
+	    const char *defaultVariableNames[] = { "x","y","z","t" };
+	    
 	    // check nArguments and modify replacementFormula as necessary
-	    const char * defaultVariableNames[] = { "x","y","z","t" };
 	    bool canReplace = false;
 	    if (nArguments == ndim + npar) {
 	       // loop through all variables and parameters, making appropriate
@@ -1369,14 +1400,17 @@ void TFormula::HandleUserFunctions(TString &formula) {
 		  // preprocess the formula so that nesting works
 		  PreProcessFormula(newName);
 		  // TODO: make this code resistant to name-swaps!
-		  ReplaceAllName(replacementFormula, oldName, newName);
+		  // use a map and go through in one pass
+		  // ReplaceAllName(replacementFormula, oldName, newName);
+		  std::cout << "will replace " << oldName << " with " << newName << std::endl;
+		  argSubstitutions[oldName] = newName;
 	       }
 
 	       canReplace = true;
 	    } else if (nArguments == f->GetNpar()) {
 	       std::cout << "Assuming variables are implicit [work in progress]" << std::endl;
 	       // loop to check if all arguments are parameters
-	       bool allParams = true;
+	       bool allParams = true; // that all arguments are parameters
 	       for (int argNr = 0; argNr < nArguments && allParams; argNr++) {
 		  int openIdx = argSeparators[argNr] + 1;
 		  int closeIdx = argSeparators[argNr+1] - 1;
@@ -1396,6 +1430,8 @@ void TFormula::HandleUserFunctions(TString &formula) {
 	       
 	       // loop to replace parameter names
 	       if (allParams) {
+
+		  
 		  for (int argNr = 0; argNr < nArguments; argNr++) {
 		     TString oldName = (f) ?
 			TString::Format("[%s]", f->GetParName(argNr)) :
@@ -1405,16 +1441,23 @@ void TFormula::HandleUserFunctions(TString &formula) {
 
 		     // preprocess the formula so that nesting works
 		     PreProcessFormula(newName);
-		     ReplaceAllName(replacementFormula, oldName, newName);
+		     // todo also make this code resistant to name-swaps
+		     // ReplaceAllName(replacementFormula, oldName, newName);
+		     argSubstitutions[oldName] = newName;
 		  }
-
+		  
 		  canReplace = true;
 	       }
 	    }
 
+	    std::cout << "putting substitutions in" << std::endl;
+	    if (canReplace)
+	       ReplaceAllNames(replacementFormula, argSubstitutions);
+	    std::cout << "now replacementFormula is " << replacementFormula << std::endl;
+	    
 
 	    if (canReplace) {
-	       std::cout << "about to replace position " << i << " length " << k-i << " in replacementFormula : " << replacementFormula << std::endl;
+	       std::cout << "about to replace position " << i << " length " << k-i << " in formula : " << formula << std::endl;
 	       formula.Replace(i, k-i, replacementFormula);
 	       i += replacementFormula.Length() - 1; // skip to end of replacement
 	       std::cout << "new formula is : " << formula << std::endl;
@@ -1430,6 +1473,7 @@ void TFormula::HandleUserFunctions(TString &formula) {
       }
       
    }
+
 
    // TODO
    // 
