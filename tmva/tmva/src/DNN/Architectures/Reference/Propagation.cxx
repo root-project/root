@@ -88,7 +88,6 @@ void TReference<AReal>::Copy(TMatrixT<AReal> &A, const TMatrixT<AReal> &B)
    A = B;
 }
 
-
 template <typename AReal>
 void TReference<AReal>::ScaleAdd(std::vector<TMatrixT<AReal>> &A, const std::vector<TMatrixT<AReal>> &B, AReal beta)
 {
@@ -225,6 +224,8 @@ void TReference<AReal>::CalculateConvActivationGradients(std::vector<TMatrixT<AR
                                                          size_t filterHeight, size_t filterWidth)
 {
 
+   if (activation_gradients_backward.size() == 0) return;
+
    // Transform the weights
    TMatrixT<AReal> rotWeights(filterDepth, depth * filterHeight * filterWidth);
    RotateWeights(rotWeights, weights, filterDepth, filterHeight, filterWidth, weights.GetNrows());
@@ -260,8 +261,8 @@ void TReference<AReal>::CalculateConvWeightGradients(TMatrixT<AReal> &weight_gra
                                                      size_t filterHeight, size_t filterWidth, size_t nLocalViews)
 {
    // reinitialize the weight gradients to 0
-   for (size_t i = 0; i < depth; i++) {
-      for (size_t j = 0; j < nLocalViews; j++) {
+   for (size_t i = 0; i < weight_gradients.GetNrows(); i++) {
+      for (size_t j = 0; j < weight_gradients.GetNcols(); j++) {
          weight_gradients(i, j) = 0;
       }
    }
@@ -392,11 +393,10 @@ void TReference<AReal>::Reshape(TMatrixT<AReal> &A, const TMatrixT<AReal> &B)
    }
 }
 
-
 //______________________________________________________________________________
 template <typename AReal>
 void TReference<AReal>::Flatten(TMatrixT<AReal> &A, const std::vector<TMatrixT<AReal>> &B, size_t size, size_t nRows,
-                                 size_t nCols)
+                                size_t nCols)
 {
    for (size_t i = 0; i < (size_t)size; i++) {
       for (size_t j = 0; j < (size_t)nRows; j++) {
@@ -409,8 +409,8 @@ void TReference<AReal>::Flatten(TMatrixT<AReal> &A, const std::vector<TMatrixT<A
 
 //______________________________________________________________________________
 template <typename AReal>
-void TReference<AReal>::Deflatten(std::vector<TMatrixT<AReal>> &A, const TMatrixT<AReal> &B, size_t size,
-                                   size_t nRows, size_t nCols)
+void TReference<AReal>::Deflatten(std::vector<TMatrixT<AReal>> &A, const TMatrixT<AReal> &B, size_t size, size_t nRows,
+                                  size_t nCols)
 {
    for (size_t i = 0; i < (size_t)size; i++) {
       for (size_t j = 0; j < (size_t)nRows; j++) {
