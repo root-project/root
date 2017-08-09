@@ -11,7 +11,7 @@ ROOT Source Code
 
 The source code for ROOT is kept in [GitHub](http://github.com/root-project/root) and follows mainly the pull-request model;
 the primary branch for development is `master`.
-Visit [this page](https://root.cern.ch/integrating-github-pull-request-root-repository) for more details on how to
+Visit [this page](https://root.cern/creating-pull-request) for more details on how to
 create pull requests.
 
 Once a PR is created, a member of the ROOT team will review it as quickly as possible.  If you are familiar with the
