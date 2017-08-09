@@ -48,6 +48,7 @@ namespace TMVA {
 
    class Ranking;
 
+   // Looks for serialised methods of the form methodTitle + "_fold" + iFold;
    class MethodCrossEvaluation : public MethodBase {
 
    public:
@@ -64,8 +65,8 @@ namespace TMVA {
       virtual ~MethodCrossEvaluation( void );
 
       // optimize tuning parameters
-      virtual std::map<TString,Double_t> OptimizeTuningParameters(TString fomType="ROCIntegral", TString fitType="FitGA");
-      virtual void SetTuneParameters(std::map<TString,Double_t> tuneParameters);
+      // virtual std::map<TString,Double_t> OptimizeTuningParameters(TString fomType="ROCIntegral", TString fitType="FitGA");
+      // virtual void SetTuneParameters(std::map<TString,Double_t> tuneParameters);
 
       // training method
       void Train( void );
@@ -90,15 +91,12 @@ namespace TMVA {
       const std::vector<Float_t>& GetMulticlassValues();
       const std::vector<Float_t>& GetRegressionValues();
 
-
       // the option handling methods
       void DeclareOptions();
       void ProcessOptions();
 
       // make ROOT-independent C++ class for classifier response (classifier-specific implementation)
       void MakeClassSpecific( std::ostream&, const TString& ) const;
-
-      // header and auxiliary classes
       void MakeClassSpecificHeader( std::ostream&, const TString& ) const;
 
       void GetHelpMessage() const;
@@ -107,17 +105,28 @@ namespace TMVA {
       Bool_t HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets );
 
    protected:
+      void Init( void );
       void DeclareCompatibilityOptions();
 
    private:
+      MethodBase * InstantiateMethodFromXML(TString methodTypeName, TString weightfile) const;
+
+   public: // TODO: Only public until proper getter and setters are implemented
+   // TODO: Add setter both for EMVA and String Typename directly.
+      TString fEncapsulatedMethodName; // TODO; Change to methodTitle
+      TString fEncapsulatedMethodTypeName; // TODO; Change to methodName
+      UInt_t  fNumFolds;
+      TString fSplitSpectator;
+      Int_t   fIdxSpec; // Cached lookup value for index of fSplitSpectator 
+   private:
+      // MethodBase::fFileDir gives path to weightfiles
+
+      // TODO: Make unique
+      std::vector<MethodBase *> fEncapsulatedMethods;
 
       // Temporary holder of data while GetMulticlassValues and GetRegressionValues
       // are not implemented.
       std::vector<Float_t> fNotImplementedRetValVec;
-
-      // Init used in the various constructors
-      void Init( void );
-      void PreProcessNegativeEventWeights();
 
       // debugging flags
       static const Int_t fgDebugLevel;     // debug level determining some printout/control plots etc.

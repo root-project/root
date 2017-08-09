@@ -112,8 +112,9 @@ namespace TMVA {
       friend class Factory;
       friend class RootFinder;
       friend class MethodBoost;
+      friend class MethodCrossEvaluation;
       friend class Experimental::Classification;
-
+      
    public:
 
       enum EWeightFileType { kROOT=0, kTEXT };

@@ -8,6 +8,7 @@
 #include "TMVA/DataSet.h"
 #include "TMVA/Event.h"
 #include "TMVA/MethodBase.h"
+#include "TMVA/MethodCrossEvaluation.h"
 #include "TMVA/MsgLogger.h"
 #include "TMVA/ResultsClassification.h"
 #include "TMVA/ResultsMulticlass.h"
@@ -245,7 +246,7 @@ void TMVA::CrossEvaluation::MergeFolds()
 
    fFactory->BookMethod(fDataLoader.get(), methodName, methodTitle, methodOptions);
 
-   // This ensures some variables are created as they should. Could be replaced by what?
+   // TODO: This ensures some variables are created as they should. Could be replaced by what?
    fFactory->TrainAllMethods();
    MethodBase * smethod = dynamic_cast<MethodBase *>(fFactory->GetMethod(fDataLoader->GetName(), methodTitle));
 
@@ -304,7 +305,7 @@ void TMVA::CrossEvaluation::Evaluate()
       TString methodCrossEvaluationName = Types::Instance().GetMethodName( Types::kCrossEvaluation );
       IMethod * im = ClassifierFactory::Instance().Create( methodCrossEvaluationName.Data(),
                                                            "", // jobname
-                                                           "CrossEvaluation_title",   // title
+                                                           "CrossEvaluation_"+methodTitle,   // title
                                                            fDataLoader->GetDataSetInfo(), // dsi
                                                            "" // options
                                                          ); 
@@ -314,7 +315,7 @@ void TMVA::CrossEvaluation::Evaluate()
 
       // Taken directly from what is done in Factory::BookMethod
       TString fFileDir = TString(fDataLoader->GetName()) + "/" + gConfig().GetIONames().fWeightFileDir;
-      if(fModelPersistence) method->SetWeightFileDir(fFileDir);
+      method->SetWeightFileDir(fFileDir);
       method->SetModelPersistence(fModelPersistence);
       method->SetAnalysisType(fAnalysisType);
       method->SetupMethod();
@@ -322,13 +323,18 @@ void TMVA::CrossEvaluation::Evaluate()
       method->ProcessSetup();
       // method->SetFile(fgTargetFile);
       // method->SetSilentFile(IsSilentFile());
-      
-      // Pass dataloader in there
-      // Pass info about the correct method name (method_title_base + foldNum)
-      // Pass info about the number of folds
 
       // check-for-unused-options is performed; may be overridden by derived classes
       method->CheckSetup();
+
+      // Pass info about the correct method name (method_title_base + foldNum)
+      // Pass info about the number of folds
+      // TODO: Parameterise the internal jobname
+      MethodCrossEvaluation * method_ce = dynamic_cast<MethodCrossEvaluation *>(method);
+      method_ce->fEncapsulatedMethodName     = "CrossEvaluation_internal_" + methodTitle;
+      method_ce->fEncapsulatedMethodTypeName = methodName;
+      method_ce->fNumFolds                   = fNumFolds;
+      method_ce->fSplitSpectator             = fSplitSpectator;
 
       method->WriteStateToFile();
       // Not supported by MethodCrossEvaluation yet

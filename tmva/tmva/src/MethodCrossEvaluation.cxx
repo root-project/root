@@ -34,6 +34,12 @@
 #include "TMVA/MethodCrossEvaluation.h"
 
 #include "TMVA/ClassifierFactory.h"
+#include "TMVA/Config.h"
+#include "TMVA/MethodCategory.h"
+#include "TMVA/Tools.h"
+#include "TMVA/Types.h"
+
+#include "TSystem.h"
 
 REGISTER_METHOD(CrossEvaluation)
 
@@ -111,16 +117,16 @@ void TMVA::MethodCrossEvaluation::Reset( void )
 /// Call the Optimizer with the set of parameters and ranges that
 /// are meant to be tuned.
 
-std::map<TString,Double_t>  TMVA::MethodCrossEvaluation::OptimizeTuningParameters(TString fomType, TString fitType)
-{
-}
+// std::map<TString,Double_t>  TMVA::MethodCrossEvaluation::OptimizeTuningParameters(TString fomType, TString fitType)
+// {
+// }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the tuning parameters according to the argument.
 
-void TMVA::MethodCrossEvaluation::SetTuneParameters(std::map<TString,Double_t> tuneParameters)
-{
-}
+// void TMVA::MethodCrossEvaluation::SetTuneParameters(std::map<TString,Double_t> tuneParameters)
+// {
+// }
 
 ////////////////////////////////////////////////////////////////////////////////
 ///  training.
@@ -131,10 +137,70 @@ void TMVA::MethodCrossEvaluation::Train()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+///
+   
+TMVA::MethodBase * TMVA::MethodCrossEvaluation::InstantiateMethodFromXML(TString methodTypeName, TString weightfile) const
+{
+       // recreate
+      TMVA::MethodBase * m = dynamic_cast<MethodBase*>( ClassifierFactory::Instance()
+                                      .Create(std::string(methodTypeName), DataInfo(), weightfile)
+                                    );
+
+      
+      // TODO: We need to get a datasetmanager in here somehow       
+      // if( m->GetMethodType() == Types::kCategory ){
+      //   MethodCategory *methCat = (dynamic_cast<MethodCategory*>(m));
+      //   if( !methCat ) {
+      //      Log() << kFATAL << "Method with type kCategory cannot be casted to MethodCategory." << Endl;
+      //   } else {
+      //      methCat->fDataSetManager = DataInfo().GetDataSetManager();
+      //   }
+      // }
+
+      // TODO: Should fFileDir not contain the correct value already?
+      TString fileDir= DataInfo().GetName();
+      fileDir += "/" + gConfig().GetIONames().fWeightFileDir;
+      m->SetWeightFileDir(fileDir);
+      // m->SetModelPersistence(fModelPersistence);
+      // m->SetSilentFile(IsSilentFile());
+      m->SetAnalysisType(fAnalysisType);
+      m->SetupMethod();
+      m->ReadStateFromFile();
+      // m->SetTestvarName(testvarName);
+      
+      return m;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Write weights to XML.
 
 void TMVA::MethodCrossEvaluation::AddWeightsXMLTo( void* parent ) const
-{
+{  
+   void* wght = gTools().AddChild(parent, "Weights");
+
+   //TODO: Options in optionstring are handled auto. Just add these there.
+   gTools().AddAttr( wght, "SplitSpectator", fSplitSpectator );
+   gTools().AddAttr( wght, "NumFolds", fNumFolds );
+   gTools().AddAttr( wght, "EncapsulatedMethodName", fEncapsulatedMethodName );
+   gTools().AddAttr( wght, "EncapsulatedMethodTypeName", fEncapsulatedMethodTypeName );
+
+
+   for (UInt_t iFold = 0; iFold < fNumFolds; ++iFold) {
+      TString foldStr     = Form("fold%i", iFold+1);
+      TString fileDir= DataInfo().GetName();
+      fileDir += "/" + gConfig().GetIONames().fWeightFileDir;
+      TString weightfile  = fileDir + "/" + fEncapsulatedMethodName + "_" + foldStr + ".weights.xml";
+
+      // TODO: Add a swithch in options for using either split files or only one.
+      // TODO: This would store the method inside MethodCrossEvaluation
+      //       Another option is to store the folds as separate files.
+      // //Retrieve encap. method for fold n
+      // MethodBase * method = InstantiateMethodFromXML(fEncapsulatedMethodTypeName, weightfile);
+
+      // // Serialise encapsulated method for fold n
+      // void* foldNode = gTools().AddChild(parent, foldStr);
+      // method->WriteStateToXML(foldNode);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -143,6 +209,53 @@ void TMVA::MethodCrossEvaluation::AddWeightsXMLTo( void* parent ) const
 
 void TMVA::MethodCrossEvaluation::ReadWeightsFromXML(void* parent)
 {
+   std::cout << __FILE__ << __LINE__ << std::endl;
+
+   gTools().ReadAttr( parent, "SplitSpectator", fSplitSpectator );
+   gTools().ReadAttr( parent, "NumFolds", fNumFolds );
+   gTools().ReadAttr( parent, "EncapsulatedMethodName", fEncapsulatedMethodName );
+   gTools().ReadAttr( parent, "EncapsulatedMethodTypeName", fEncapsulatedMethodTypeName );
+
+   for (UInt_t iFold = 0; iFold < fNumFolds; ++iFold){
+      TString foldStr = Form( "Fold%i", iFold+1 );
+      // void* foldNode = gTools().GetChild(parent, foldStr);
+      // if (foldNode == nullptr) {
+      //    Log() << kFATAL << "Malformed data. Expected tag \"" << foldStr << "\" to exist." << Endl;
+      //    return;
+      // }
+
+      TString fileDir = gSystem->DirName(GetWeightFileName());
+      TString weightfile  = fileDir + "/" + fEncapsulatedMethodName + "_" + foldStr + ".weights.xml";
+
+      std::cout << "Reading weightfile: " << weightfile << std::endl;
+
+      fEncapsulatedMethods.push_back(InstantiateMethodFromXML(fEncapsulatedMethodTypeName, weightfile));
+   }
+
+   // TODO: This is init of a variable, should it be here?
+   // No, it should be in Init method which is run after Options are parsed :)
+   std::vector<VariableInfo> spectatorInfos = DataInfo().GetSpectatorInfos();
+   fIdxSpec = -1;
+   for (UInt_t iSpectator = 0; iSpectator < spectatorInfos.size(); ++iSpectator) {
+      VariableInfo vi = spectatorInfos[iSpectator];
+      if (vi.GetName() == fSplitSpectator) {
+         fIdxSpec = iSpectator;
+         break;
+      } else if (vi.GetLabel() == fSplitSpectator) {
+         fIdxSpec = iSpectator;
+         break;
+      } else if (vi.GetExpression() == fSplitSpectator) {
+         fIdxSpec = iSpectator;
+         break;
+      }
+   };
+
+   Log() << kDEBUG << "Spectator variable\"" << fSplitSpectator << "\" has index: " << fIdxSpec << Endl;
+
+   if (fIdxSpec == -1) {
+      Log() << kFATAL << "Spectator variable\"" << fSplitSpectator << "\" not found." << Endl;
+      return;
+   }
 
 }
 
@@ -158,8 +271,13 @@ void  TMVA::MethodCrossEvaluation::ReadWeightsFromStream( std::istream& istr )
 ////////////////////////////////////////////////////////////////////////////////
 ///
 
-Double_t TMVA::MethodCrossEvaluation::GetMvaValue( Double_t* err, Double_t* errUpper ){
-   return 0;
+Double_t TMVA::MethodCrossEvaluation::GetMvaValue( Double_t* err, Double_t* errUpper )
+{
+   const Event* ev = GetEvent();
+   auto val = ev->GetSpectator(fIdxSpec);
+   UInt_t iFold = (UInt_t)val % (UInt_t)fNumFolds;
+
+   return fEncapsulatedMethods.at(iFold)->GetMvaValue(err, errUpper);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
