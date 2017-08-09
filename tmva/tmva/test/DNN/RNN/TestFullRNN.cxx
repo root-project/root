@@ -26,7 +26,8 @@ int main() {
 
    //testFullRNN(size_t batchSize, size_t stateSize, size_t inputSize, size_t outputSize)
    // reconstruct 8 bit vector
-   testFullRNN<TReference<double>>(64, 10, 8, 8) ;
+   testFullRNN<TReference<double>>(2, 2, 2, 2) ;
+   //testFullRNN<TReference<double>>(64, 10, 8, 8) ;
    //testFullRNN<TReference<double>>(3, 8, 100, 50) ;
 
    return 0;

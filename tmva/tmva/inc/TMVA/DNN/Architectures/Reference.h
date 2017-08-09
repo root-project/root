@@ -388,6 +388,8 @@ public:
    /** Transforms each row of \p B to a matrix and stores it in the tensor \p B. */
    static void Deflatten(std::vector<TMatrixT<AReal>> &A, const TMatrixT<Scalar_t> &B, size_t index, size_t nRows,
                          size_t nCols);
+   /** Rearrage data accoring to time fill B x T x D out with T x B x D matrix in*/
+   static void Rearrange(std::vector<TMatrixT<AReal>> &out, const std::vector<TMatrixT<AReal>> &in); 
 
    ///@}
 

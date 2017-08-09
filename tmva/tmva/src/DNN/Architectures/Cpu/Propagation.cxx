@@ -394,5 +394,30 @@ void TCpu<AFloat>::Deflatten(std::vector<TCpuMatrix<AFloat>> &A, const TCpuMatri
    }
 }
 
+//______________________________________________________________________________
+template <typename AReal>
+void TCpu<AReal>::Rearrange(std::vector<TCpuMatrix<AReal>> &out, const std::vector<TCpuMatrix<AReal>> &in)
+{
+   // B x T x D out --- T x B x D in*/
+   size_t B = out.size();
+   size_t T = out[0].GetNrows();
+   size_t D = out[0].GetNcols();
+   if ((T != in.size()) || (B != in[0].GetNrows()) 
+       || (D != in[0].GetNcols())) {
+      std::cout << "Incompatible Dimensions\n"
+         << in.size() << "x" << in[0].GetNrows() << "x" << in[0].GetNcols() 
+         << " --> " << B << "x" << T << "x" << D << "\n";
+      return;
+   }
+   for (size_t i = 0; i < B; ++i) {
+      for (size_t j = 0; j < T; ++j) {
+         for (size_t k = 0; k < D; ++k) {
+            out[i](j, k) = in[j](i, k);
+         }
+      }
+   }
+   return;
+}
+
 } // namespace DNN
 } // namespace TMVA

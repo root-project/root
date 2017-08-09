@@ -136,7 +136,7 @@ public:
 
    /*! Function for adding Recurrent Layer in the Deep Neural Network,
     * with given parameters */
-   TBasicRNNLayer<Architecture_t> *AddBasicRNNLayer(size_t batchSize, size_t stateSize, size_t inputSize,
+   TBasicRNNLayer<Architecture_t> *AddBasicRNNLayer(size_t stateSize, size_t inputSize,
                                                     size_t timeSteps, bool rememberState = false);
 
    /*! Function for adding Vanilla RNN when the layer is already created
@@ -491,12 +491,12 @@ void TDeepNet<Architecture_t, Layer_t>::AddMaxPoolLayer(TMaxPoolLayer<Architectu
 
 //______________________________________________________________________________
 template <typename Architecture_t, typename Layer_t>
-TBasicRNNLayer<Architecture_t> *TDeepNet<Architecture_t, Layer_t>::AddBasicRNNLayer(size_t batchSize, size_t stateSize,
+TBasicRNNLayer<Architecture_t> *TDeepNet<Architecture_t, Layer_t>::AddBasicRNNLayer(size_t stateSize,
                                                                                     size_t inputSize, size_t timeSteps,
                                                                                     bool rememberState)
 {
    TBasicRNNLayer<Architecture_t> *basicRNNLayer = new TBasicRNNLayer<Architecture_t>(
-      batchSize, stateSize, inputSize, timeSteps, rememberState, DNN::EActivationFunction::kTanh, fIsTraining);
+      this->GetBatchSize(), stateSize, inputSize, timeSteps, rememberState, DNN::EActivationFunction::kTanh, fIsTraining, this->GetInitialization());
    fLayers.push_back(basicRNNLayer);
    return basicRNNLayer;
 }
@@ -684,6 +684,22 @@ auto TDeepNet<Architecture_t, Layer_t>::Initialize() -> void
    }
 }
 
+template <typename Architecture>
+auto debugTensor(const std::vector<typename Architecture::Matrix_t> &A, const std::string name = "tensor")
+-> void
+{
+  std::cout << name << "\n";
+  for (size_t l = 0; l < A.size(); ++l) {
+      for (size_t i = 0; i < A[l].GetNrows(); ++i) {
+        for (size_t j = 0; j < A[l].GetNcols(); ++j) {
+            std::cout << A[l](i, j) << " ";
+        }
+        std::cout << "\n";
+      }
+      std::cout << "********\n";
+  } 
+}
+
 //______________________________________________________________________________
 template <typename Architecture_t, typename Layer_t>
 auto TDeepNet<Architecture_t, Layer_t>::Forward(std::vector<Matrix_t> input, bool applyDropout) -> void
@@ -715,6 +731,7 @@ auto TDeepNet<Architecture_t, Layer_t>::ParallelForward(std::vector<TDeepNet<Arc
       }
    }
 }
+
 //_____________________________________________________________________________
 template <typename Architecture_t, typename Layer_t>
 auto TDeepNet<Architecture_t, Layer_t>::PreTrain(std::vector<Matrix_t> &input,
@@ -804,6 +821,7 @@ auto TDeepNet<Architecture_t, Layer_t>::PreTrain(std::vector<Matrix_t> &input,
       fLayers.back()->Print();
    }
 }
+
 //______________________________________________________________________________
 template <typename Architecture_t, typename Layer_t>
 auto TDeepNet<Architecture_t, Layer_t>::FineTune(std::vector<Matrix_t> &input, std::vector<Matrix_t> &testInput,
@@ -846,14 +864,18 @@ auto TDeepNet<Architecture_t, Layer_t>::Backward(std::vector<Matrix_t> input, co
    evaluateGradients<Architecture_t>(fLayers.back()->GetActivationGradientsAt(0), this->GetLossFunction(), groundTruth,
                                      fLayers.back()->GetOutputAt(0), weights);
    for (size_t i = fLayers.size() - 1; i > 0; i--) {
-      std::vector<Matrix_t> activation_gradient_backward = fLayers[i - 1]->GetActivationGradients();
-      std::vector<Matrix_t> activations_backward = fLayers[i - 1]->GetOutput();
+      std::vector<Matrix_t> &activation_gradient_backward = fLayers[i - 1]->GetActivationGradients();
+      std::vector<Matrix_t> &activations_backward = fLayers[i - 1]->GetOutput();
       fLayers[i]->Backward(activation_gradient_backward, activations_backward, inp1, inp2);
+      //debugTensor<Architecture_t>(activation_gradient_backward, "act grad backward after back of dense");
    }
 
-   std::vector<Matrix_t> dummy;
+   std::vector<Matrix_t> gradient_input;
+   for (size_t i = 0; i < input.size(); i++) {
+      gradient_input.emplace_back(input[i].GetNrows(), input[i].GetNcols());
+   }
 
-   fLayers[0]->Backward(dummy, input, inp1, inp2);
+   fLayers[0]->Backward(gradient_input, input, inp1, inp2);
 }
 
 //______________________________________________________________________________
