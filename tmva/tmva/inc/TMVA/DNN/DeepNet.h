@@ -156,7 +156,7 @@ public:
    /*! Function for adding Reshape Layer in the Deep Neural Network, with a given
     *  height and width. It will take every matrix from the previous layer and
     *  reshape it to a matrix with new dimensions. */
-   TReshapeLayer<Architecture_t> *AddReshapeLayer(size_t depth, size_t height, size_t width);
+   TReshapeLayer<Architecture_t> *AddReshapeLayer(size_t depth, size_t height, size_t width, bool flattening);
 
    /*! Function for adding Reshape Layer in the Deep Neural Network, when
     *  the layer is already created. */
@@ -628,13 +628,13 @@ void TDeepNet<Architecture_t, Layer_t>::AddDenseLayer(TDenseLayer<Architecture_t
 //______________________________________________________________________________
 template <typename Architecture_t, typename Layer_t>
 TReshapeLayer<Architecture_t> *TDeepNet<Architecture_t, Layer_t>::AddReshapeLayer(size_t depth, size_t height,
-                                                                                  size_t width)
+                                                                                  size_t width, bool flattening)
 {
    size_t batchSize = this->GetBatchSize();
    size_t inputDepth;
    size_t inputHeight;
    size_t inputWidth;
-   size_t outputNSlices = this->GetBatchSize();
+   size_t outputNSlices;
    size_t outputNRows;
    size_t outputNCols;
 
@@ -649,11 +649,19 @@ TReshapeLayer<Architecture_t> *TDeepNet<Architecture_t, Layer_t>::AddReshapeLaye
       inputWidth = lastLayer->GetWidth();
    }
 
-   outputNRows = depth;
-   outputNCols = height * width;
+   if (flattening) {
+      outputNSlices = 1;
+      outputNRows = this->GetBatchSize();
+      outputNCols = depth * height * width;
+   } else {
+      outputNSlices = this->GetBatchSize();
+      outputNRows = depth;
+      outputNCols = height * width;
+   }
 
-   TReshapeLayer<Architecture_t> *reshapeLayer = new TReshapeLayer<Architecture_t>(
-      batchSize, inputDepth, inputHeight, inputWidth, depth, height, width, outputNSlices, outputNRows, outputNCols);
+   TReshapeLayer<Architecture_t> *reshapeLayer =
+      new TReshapeLayer<Architecture_t>(batchSize, inputDepth, inputHeight, inputWidth, depth, height, width,
+                                        outputNSlices, outputNRows, outputNCols, flattening);
 
    fLayers.push_back(reshapeLayer);
 
