@@ -71,22 +71,24 @@ int testSimpleFile(const char *filename, Long64_t entries, Int_t compSetting, Lo
 int execTestMultiMerge()
 {
    Int_t result = 0;
-   result += testMergedFile("mfile1-4.root",1,5874, kIs32bits ? 3 : 0);
-   result += testMergedFile("mzfile1-4.root",206,5819, kIs32bits ? 2 : 0);
-
-   result += testSimpleFile("hsimple.root",25000,1,519464, kIs32bits ? 10 : 8);
-   result += testSimpleFile("hsimple9.root",25000,9,518137,3);
-   result += testSimpleFile("hsimple9x2.root",2*25000,9,1020462,9);
-   result += testSimpleFile("hsimple209.root",25000,209,395932,8);
-   result += testSimpleFile("hsimpleK.root",5*25000,209,1919250,16);
+   int hsimpleFTolerance = 6; // 5 for non fst builds
+   result += testMergedFile("mzfile1-4.root",206,4992, kIs32bits ? 2 : 0);
+   result += testMergedFile("mlz4file1-4.root",406,5013, kIs32bits ? 2 : 0);
+   result += testMergedFile("mzlibfile1-4.root",106,4917, kIs32bits ? 2 : 0);
+   result += testSimpleFile("hsimple.root",25000,1,414415, kIs32bits ? 10 : 8);
+   result += testSimpleFile("hsimple9.root",25000,109,432030,3);
+   result += testSimpleFile("hsimple9x2.root",2*25000,109,851123,9);
+   result += testSimpleFile("hsimple209.root",25000,209,394077,8);
+   result += testSimpleFile("hsimple409.root",25000,409,516289,8);
+   result += testSimpleFile("hsimpleK.root",6*25000,209,2298976,16);
    if (lzma_version_number() < 50020010) {
       // lzma v5.2.0 produced larger files ...
       // but even older version (eg v5.0.0) produced smaller files ...
       result += testSimpleFile("hsimpleK202.root",5*25000,202,1938720,700);
    } else {
-      result += testSimpleFile("hsimpleK202.root",5*25000,202,1940576,16);
-   } 
-   int hsimpleFTolerance = 6; // 5 for non fst builds
-   result += testSimpleFile("hsimpleF.root",5*25000,9,2523787,hsimpleFTolerance);
+      result += testSimpleFile("hsimpleK202.root",12*25000,202,4631252,16);
+   }
+   result += testSimpleFile("hsimpleK409.root",24*25000,409,12046474,16);
+   result += testSimpleFile("hsimpleF.root",6*25000,109,2527731,hsimpleFTolerance);
    return result;
 }

@@ -1,0 +1,128 @@
+
+Processing exectrim.C...
+Warning in <TClass::Init>: no dictionary for class Belle2::ARICHAeroHit is available
+Warning in <TClass::Init>: no dictionary for class Belle2::RelationsInterface<TObject> is available
+Warning in <TClass::Init>: no dictionary for class Belle2::ARICHSimHit is available
+Warning in <TClass::Init>: no dictionary for class Belle2::SimHitBase is available
+Warning in <TClass::Init>: no dictionary for class Belle2::BKLMSimHitPosition is available
+Warning in <TClass::Init>: no dictionary for class Belle2::RelationContainer is available
+Warning in <TClass::Init>: no dictionary for class Belle2::RelationElement is available
+Warning in <TClass::Init>: no dictionary for class Belle2::BKLMSimHit is available
+Warning in <TClass::Init>: no dictionary for class Belle2::BeamBackHit is available
+Warning in <TClass::Init>: no dictionary for class Belle2::CDCSimHit is available
+Warning in <TClass::Init>: no dictionary for class Belle2::WireID is available
+Warning in <TClass::Init>: no dictionary for class Belle2::ECLHit is available
+Warning in <TClass::Init>: no dictionary for class Belle2::ECLSimHit is available
+Warning in <TClass::Init>: no dictionary for class Belle2::EKLMSimHit is available
+Warning in <TClass::Init>: no dictionary for class Belle2::EKLMHitBase is available
+Warning in <TClass::Init>: no dictionary for class Belle2::EKLMHitCoord is available
+Warning in <TClass::Init>: no dictionary for class Belle2::EKLMHitGlobalCoord is available
+Warning in <TClass::Init>: no dictionary for class Belle2::EKLMHitMomentum is available
+Warning in <TClass::Init>: no dictionary for class Belle2::EventMetaData is available
+Warning in <TClass::Init>: no dictionary for class Belle2::MCParticle is available
+Warning in <TClass::Init>: no dictionary for class Belle2::Const::DetectorSet is available
+Warning in <TClass::Init>: no dictionary for class Belle2::PXDSimHit is available
+Warning in <TClass::Init>: no dictionary for class Belle2::VXDSimHit is available
+Warning in <TClass::Init>: no dictionary for class Belle2::PXDTrueHit is available
+Warning in <TClass::Init>: no dictionary for class Belle2::VXDTrueHit is available
+Warning in <TClass::Init>: no dictionary for class Belle2::SVDSimHit is available
+Warning in <TClass::Init>: no dictionary for class Belle2::SVDTrueHit is available
+Warning in <TClass::Init>: no dictionary for class Belle2::StrSimHit is available
+Warning in <TClass::Init>: no dictionary for class Belle2::TOPBarHit is available
+Warning in <TClass::Init>: no dictionary for class Belle2::TOPSimHit is available
+Warning in <TClass::Init>: no dictionary for class Belle2::BackgroundMetaData is available
+Warning in <TClass::Init>: no dictionary for class Belle2::FileMetaData is available
+Warning in <TClass::Init>: no dictionary for class Belle2::ProcessStatistics is available
+Warning in <TClass::Init>: no dictionary for class Belle2::Mergeable is available
+Warning in <TClass::Init>: no dictionary for class Belle2::ModuleStatistics is available
+Warning in <TClass::Init>: no dictionary for class Belle2::CalcMeanCov<2,double> is available
+******************************************************************************
+*Tree    :tree      : tree                                                   *
+*Entries :       10 : Total =            8885 bytes  File  Size =       2567 *
+*        :          : Tree compression factor =   1.20                       *
+******************************************************************************
+*Br    0 :StrSimHits : Int_t StrSimHits_                                     *
+*Entries :       10 : Total  Size=        674 bytes  File Size  =        138 *
+*Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.20     *
+*............................................................................*
+******************************************************************************
+*Tree    :tree      : tree                                                   *
+*Entries :       10 : Total =           22463 bytes  File  Size =       6161 *
+*        :          : Tree compression factor =   1.18                       *
+******************************************************************************
+*Br    0 :StrSimHits : Int_t StrSimHits_                                     *
+*Entries :       10 : Total  Size=      12266 bytes  File Size  =        138 *
+*Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.20     *
+*............................................................................*
+*Br    1 :StrSimHits.fUniqueID : UInt_t fUniqueID[StrSimHits_]               *
+*Entries :       10 : Total  Size=        767 bytes  File Size  =        114 *
+*Baskets :        1 : Basket Size=       4654 bytes  Compression=   1.18     *
+*............................................................................*
+*Br    2 :StrSimHits.fBits : UInt_t fBits[StrSimHits_]                       *
+*Entries :       10 : Total  Size=        747 bytes  File Size  =        110 *
+*Baskets :        1 : Basket Size=       4654 bytes  Compression=   1.19     *
+*............................................................................*
+*Br    3 :StrSimHits.m_backgroundTag : UShort_t m_backgroundTag[StrSimHits_] *
+*Entries :       10 : Total  Size=        797 bytes  File Size  =        120 *
+*Baskets :        1 : Basket Size=       4654 bytes  Compression=   1.18     *
+*............................................................................*
+*Br    4 :StrSimHits.m_CellId : Int_t m_CellId[StrSimHits_]                  *
+*Entries :       10 : Total  Size=        762 bytes  File Size  =        113 *
+*Baskets :        1 : Basket Size=       4654 bytes  Compression=   1.19     *
+*............................................................................*
+*Br    5 :StrSimHits.m_TrackId : Int_t m_TrackId[StrSimHits_]                *
+*Entries :       10 : Total  Size=        767 bytes  File Size  =        114 *
+*Baskets :        1 : Basket Size=       4654 bytes  Compression=   1.18     *
+*............................................................................*
+*Br    6 :StrSimHits.m_Pdg : Int_t m_Pdg[StrSimHits_]                        *
+*Entries :       10 : Total  Size=        747 bytes  File Size  =        110 *
+*Baskets :        1 : Basket Size=       4654 bytes  Compression=   1.19     *
+*............................................................................*
+*Br    7 :StrSimHits.m_FlightTime : Float_t m_FlightTime[StrSimHits_]        *
+*Entries :       10 : Total  Size=        782 bytes  File Size  =        117 *
+*Baskets :        1 : Basket Size=       4654 bytes  Compression=   1.18     *
+*............................................................................*
+*Br    8 :StrSimHits.m_Edep : Float_t m_Edep[StrSimHits_]                    *
+*Entries :       10 : Total  Size=        752 bytes  File Size  =        111 *
+*Baskets :        1 : Basket Size=       4654 bytes  Compression=   1.19     *
+*............................................................................*
+*Br    9 :StrSimHits.m_Momentum.fUniqueID : UInt_t fUniqueID[StrSimHits_]    *
+*Entries :       10 : Total  Size=        800 bytes  File Size  =        125 *
+*Baskets :        1 : Basket Size=       4654 bytes  Compression=   1.17     *
+*............................................................................*
+*Br   10 :StrSimHits.m_Momentum.fBits : UInt_t fBits[StrSimHits_]            *
+*Entries :       10 : Total  Size=        780 bytes  File Size  =        121 *
+*Baskets :        1 : Basket Size=       4654 bytes  Compression=   1.17     *
+*............................................................................*
+*Br   11 :StrSimHits.m_Momentum.fX : Double_t fX[StrSimHits_]                *
+*Entries :       10 : Total  Size=        765 bytes  File Size  =        118 *
+*Baskets :        1 : Basket Size=       4654 bytes  Compression=   1.18     *
+*............................................................................*
+*Br   12 :StrSimHits.m_Momentum.fY : Double_t fY[StrSimHits_]                *
+*Entries :       10 : Total  Size=        765 bytes  File Size  =        118 *
+*Baskets :        1 : Basket Size=       4654 bytes  Compression=   1.18     *
+*............................................................................*
+*Br   13 :StrSimHits.m_Momentum.fZ : Double_t fZ[StrSimHits_]                *
+*Entries :       10 : Total  Size=        765 bytes  File Size  =        118 *
+*Baskets :        1 : Basket Size=       4654 bytes  Compression=   1.18     *
+*............................................................................*
+*Br   14 :StrSimHits.m_Position.fUniqueID : UInt_t fUniqueID[StrSimHits_]    *
+*Entries :       10 : Total  Size=        800 bytes  File Size  =        125 *
+*Baskets :        1 : Basket Size=       4654 bytes  Compression=   1.17     *
+*............................................................................*
+*Br   15 :StrSimHits.m_Position.fBits : UInt_t fBits[StrSimHits_]            *
+*Entries :       10 : Total  Size=        780 bytes  File Size  =        121 *
+*Baskets :        1 : Basket Size=       4654 bytes  Compression=   1.17     *
+*............................................................................*
+*Br   16 :StrSimHits.m_Position.fX : Double_t fX[StrSimHits_]                *
+*Entries :       10 : Total  Size=        765 bytes  File Size  =        118 *
+*Baskets :        1 : Basket Size=       4654 bytes  Compression=   1.18     *
+*............................................................................*
+*Br   17 :StrSimHits.m_Position.fY : Double_t fY[StrSimHits_]                *
+*Entries :       10 : Total  Size=        765 bytes  File Size  =        118 *
+*Baskets :        1 : Basket Size=       4654 bytes  Compression=   1.18     *
+*............................................................................*
+*Br   18 :StrSimHits.m_Position.fZ : Double_t fZ[StrSimHits_]                *
+*Entries :       10 : Total  Size=        765 bytes  File Size  =        118 *
+*Baskets :        1 : Basket Size=       4654 bytes  Compression=   1.18     *
+*............................................................................*
