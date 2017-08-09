@@ -15,6 +15,7 @@ set(MATHCORE_HEADERS TRandom.h
   Math/ChebyshevPol.h Math/KDTree.h Math/TDataPoint.h Math/TDataPointN.h Math/Delaunay2D.h
   Math/Random.h Math/TRandomEngine.h Math/RandomFunctions.h Math/StdEngine.h
   Math/MersenneTwisterEngine.h Math/MixMaxEngine.h   TRandomGen.h Math/LCGEngine.h
+  Math/Math_vectypes.hxx
 )
 
 if(veccore)
@@ -39,6 +40,10 @@ ROOT_STANDARD_LIBRARY_PACKAGE(MathCore HEADERS TComplex.h TMath.h ${MATHCORE_HEA
                               LIBRARIES ${CMAKE_THREAD_LIBS_INIT} ${MATHCORE_LIBRARIES}
                               DEPENDENCIES Core ${MATHCORE_DEPENDENCIES}
                               BUILTINS ${MATHCORE_BUILTINS})
+
+if(builtin_vc)
+  target_include_directories(MathCore SYSTEM BEFORE INTERFACE $<BUILD_INTERFACE:${Vc_INCLUDE_DIR}>)
+endif()
 
 if(veccore)
   target_compile_definitions(MathCore INTERFACE ${VecCore_DEFINITIONS})

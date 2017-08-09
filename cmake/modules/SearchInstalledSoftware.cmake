@@ -1248,6 +1248,11 @@ if(vc OR builtin_vc)
       set(vc OFF CACHE BOOL "" FORCE)
       set(builtin_vc OFF CACHE BOOL "" FORCE)
     endif()
+    if(cxx17 OR CMAKE_CXX_STANDARD EQUAL 17)
+      message(STATUS "Vc uses std::for_each_n(), which is not available in GCC; switching OFF 'vc' option")
+      set(vc OFF CACHE BOOL "" FORCE)
+      set(builtin_vc OFF CACHE BOOL "" FORCE)
+    endif()
   elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     if ( APPLE AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4)
       message(STATUS "Vc requires Apple Clang version >= 4.0; switching OFF 'vc' option")
@@ -1283,22 +1288,17 @@ elseif(vc)
       set(vc OFF CACHE BOOL "" FORCE)
     endif()
   endif()
-  if(Vc_FOUND)
-    # FIXME - The altenative is to add include_dirs to all packages that include any Math headers
-    execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/include)
-    execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink ${Vc_INCLUDE_DIR}/Vc ${CMAKE_BINARY_DIR}/include/Vc)
-  endif()
 endif()
 
-if(vc AND NOT Vc_FOUND AND NOT (veccore OR builtin_veccore))
+if(vc AND NOT Vc_FOUND)
   set(Vc_VERSION "1.3.2")
   set(Vc_PROJECT "Vc-${Vc_VERSION}")
   set(Vc_SRC_URI "${lcgpackages}/${Vc_PROJECT}.tar.gz")
   set(Vc_SRC_MD5 "f996a2dcab9f0ef3e21ba0d0feba9c3e")
-  set(Vc_DESTDIR "${CMAKE_BINARY_DIR}/VC-prefix/install")
+  set(Vc_DESTDIR "${CMAKE_BINARY_DIR}/externals")
   set(Vc_ROOTDIR "${Vc_DESTDIR}/${CMAKE_INSTALL_PREFIX}")
   set(Vc_LIBNAME "${CMAKE_STATIC_LIBRARY_PREFIX}Vc${CMAKE_STATIC_LIBRARY_SUFFIX}")
-  set(Vc_LIBRARY "${Vc_ROOTDIR}/${_LIBDIR_DEFAULT}/${Vc_LIBNAME}")
+  set(Vc_LIBRARY "${Vc_ROOTDIR}/lib/${Vc_LIBNAME}")
 
   ExternalProject_Add(VC
     URL     ${Vc_SRC_URI}
@@ -1316,14 +1316,21 @@ if(vc AND NOT Vc_FOUND AND NOT (veccore OR builtin_veccore))
     INSTALL_COMMAND env DESTDIR=${Vc_DESTDIR} ${CMAKE_COMMAND} --build . --target install
   )
 
-  set(VC_TARGET VC)
-  add_library(Vc STATIC IMPORTED)
-  set_property(TARGET Vc PROPERTY IMPORTED_LOCATION ${Vc_LIBRARY})
-  add_dependencies(Vc VC)
-
+  set(VC_TARGET Vc)
   set(Vc_LIBRARIES Vc)
   set(Vc_INCLUDE_DIR "${Vc_ROOTDIR}/include")
-  set(Vc_CMAKE_MODULES_DIR "${Vc_ROOTDIR}/${_LIBDIR_DEFAULT}/cmake/Vc")
+  set(Vc_CMAKE_MODULES_DIR "${Vc_ROOTDIR}/lib/cmake/Vc")
+
+  add_library(VcExt STATIC IMPORTED)
+  set_property(TARGET VcExt PROPERTY IMPORTED_LOCATION ${Vc_LIBRARY})
+  add_dependencies(VcExt VC)
+
+  add_library(Vc INTERFACE)
+  target_include_directories(Vc SYSTEM BEFORE INTERFACE $<BUILD_INTERFACE:${Vc_INCLUDE_DIR}>)
+  target_link_libraries(Vc INTERFACE VcExt)
+
+  # propagate build-time include directories to rootcling
+  set_property(DIRECTORY PROPERTY INCLUDE_DIRECTORIES $<BUILD_INTERFACE:${Vc_INCLUDE_DIR}>)
 
   find_package_handle_standard_args(Vc
     FOUND_VAR Vc_FOUND
@@ -1339,11 +1346,6 @@ if(Vc_FOUND)
 endif()
 
 #---Check for VecCore--------------------------------------------------------------------
-if(veccore AND NOT builtin_veccore AND builtin_vc)
-  message(WARNING "Vc is not relocatable, so 'builtin_vc' requires 'builtin_veccore' to set up Vc properly.")
-  set(builtin_veccore ON CACHE BOOL "" FORCE)
-endif()
-
 if(builtin_veccore)
   unset(VecCore_FOUND)
   unset(VecCore_FOUND CACHE)
@@ -1352,20 +1354,10 @@ elseif(veccore)
   if(vc)
     set(VecCore_COMPONENTS Vc)
   endif()
-  if(fail-on-missing)
-    find_package(VecCore 0.4.0 CONFIG QUIET REQUIRED COMPONENTS ${VecCore_COMPONENTS})
-  else()
-    find_package(VecCore 0.4.0 CONFIG QUIET COMPONENTS ${VecCore_COMPONENTS})
-    if(NOT VecCore_FOUND)
-      message(STATUS "VecCore not found, support for it disabled.")
-      message(STATUS "Please enable the option 'builtin_veccore' to build VecCore internally.")
-      set(veccore OFF CACHE BOOL "" FORCE)
-    endif()
-  endif()
-  if(VecCore_FOUND)
-    # FIXME - The altenative is to add include_dirs to all packages that include any Math headers
-    execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/include)
-    execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink ${VecCore_INCLUDE_DIR}/VecCore ${CMAKE_BINARY_DIR}/include/VecCore)
+  find_package(VecCore 0.4.0 CONFIG QUIET COMPONENTS ${VecCore_COMPONENTS})
+  if(NOT VecCore_FOUND)
+    message(STATUS "VecCore not found, switching on 'builtin_veccore' option.")
+    set(builtin_veccore ON CACHE BOOL "" FORCE)
   endif()
 endif()
 
@@ -1374,20 +1366,13 @@ if(veccore AND NOT VecCore_FOUND)
   set(VecCore_PROJECT "VecCore-${VecCore_VERSION}")
   set(VecCore_SRC_URI "${lcgpackages}/${VecCore_PROJECT}.tar.gz")
   set(VecCore_SRC_MD5 "7728dc706744e54a79fcb80059a31529")
-  set(VecCore_DESTDIR "${CMAKE_BINARY_DIR}/VECCORE-prefix/install")
+  set(VecCore_DESTDIR "${CMAKE_BINARY_DIR}/externals")
   set(VecCore_ROOTDIR "${VecCore_DESTDIR}/${CMAKE_INSTALL_PREFIX}")
-
-  if(builtin_vc)
-    set(Vc_VERSION "1.3.2") # version built by VecCore
-    set(Vc_LIBNAME "${CMAKE_STATIC_LIBRARY_PREFIX}Vc${CMAKE_STATIC_LIBRARY_SUFFIX}")
-    set(Vc_LIBRARY "${VecCore_ROOTDIR}/lib/${Vc_LIBNAME}")
-  endif()
 
   ExternalProject_Add(VECCORE
     URL     ${VecCore_SRC_URI}
     URL_MD5 ${VecCore_SRC_MD5}
     BUILD_IN_SOURCE 0
-    BUILD_BYPRODUCTS ${Vc_LIBRARY}
     LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
     CMAKE_ARGS -G ${CMAKE_GENERATOR}
                -DBUILD_TESTING=OFF -DBUILD_VC=${builtin_vc}
@@ -1400,55 +1385,32 @@ if(veccore AND NOT VecCore_FOUND)
     INSTALL_COMMAND env DESTDIR=${VecCore_DESTDIR} ${CMAKE_COMMAND} --build . --target install
   )
 
-  set(VECCORE_TARGET VECCORE)
+  set(VECCORE_TARGET VecCore)
+  set(VecCore_LIBRARIES VecCore)
+  set(VecCore_INCLUDE_DIRS ${VecCore_INCLUDE_DIRS} ${VecCore_ROOTDIR}/include)
 
-  if(builtin_vc)
-    add_library(Vc STATIC IMPORTED)
-    set_property(TARGET Vc PROPERTY IMPORTED_LOCATION ${Vc_LIBRARY})
-    add_dependencies(Vc VECCORE)
+  add_library(VecCore INTERFACE)
+  target_include_directories(VecCore SYSTEM INTERFACE $<BUILD_INTERFACE:${VecCore_ROOTDIR}/include>)
+  add_dependencies(VecCore VECCORE)
 
-    set(Vc_LIBRARIES Vc)
-    set(Vc_INCLUDE_DIR ${VecCore_ROOTDIR}/include)
-    set(Vc_INCLUDE_DIRS ${VecCore_ROOTDIR}/include)
-    set(Vc_CMAKE_MODULES_DIR "${VecCore_ROOTDIR}/lib/cmake/Vc")
+  # propagate build-time include directories to rootcling
+  set_property(DIRECTORY PROPERTY INCLUDE_DIRECTORIES $<BUILD_INTERFACE:${VecCore_ROOTDIR}/include>)
 
-    find_package_handle_standard_args(Vc
-      FOUND_VAR Vc_FOUND
-      REQUIRED_VARS Vc_INCLUDE_DIR Vc_LIBRARIES Vc_CMAKE_MODULES_DIR
-      VERSION_VAR Vc_VERSION)
-  endif()
-
-  if (vc OR builtin_vc)
+  if (Vc_FOUND)
     set(VecCore_Vc_FOUND True)
     set(VecCore_Vc_DEFINITIONS -DVECCORE_ENABLE_VC)
     set(VecCore_Vc_INCLUDE_DIR ${Vc_INCLUDE_DIR})
     set(VecCore_Vc_LIBRARIES ${Vc_LIBRARIES})
 
-    set(VecCore_DEFINITIONS -DVECCORE_ENABLE_VC)
-    set(VecCore_INCLUDE_DIRS ${Vc_INCLUDE_DIR})
-    set(VecCore_LIBRARIES ${Vc_LIBRARIES})
+    set(VecCore_DEFINITIONS ${VecCore_Vc_DEFINITIONS})
+    set(VecCore_INCLUDE_DIRS ${VecCore_Vc_INCLUDE_DIR} ${VecCore_INCLUDE_DIRS})
+    target_link_libraries(VecCore INTERFACE ${Vc_LIBRARIES})
   endif()
-
-  set(VecCore_INCLUDE_DIRS ${VecCore_INCLUDE_DIRS} ${VecCore_ROOTDIR}/include)
 
   find_package_handle_standard_args(VecCore
     FOUND_VAR VecCore_FOUND
-    REQUIRED_VARS VecCore_INCLUDE_DIRS
+    REQUIRED_VARS VecCore_INCLUDE_DIRS VecCore_LIBRARIES
     VERSION_VAR VecCore_VERSION)
-
-  # The following few lines are a temporary fix for a breakage introduced
-  # recently in math/mathcore VecCore integration. Once the proper solution
-  # is found, the lines below should be removed from here and added to the
-  # proper targets.
-  add_definitions(${VecCore_DEFINITIONS})
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${VecCore_DEFINITIONS}")
-  include_directories(SYSTEM BEFORE ${VecCore_INCLUDE_DIRS})
-
-  # Copy Vc and VecCore headers to build directory, otherwise dictionary generation breaks
-  add_custom_command(TARGET VECCORE POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory ${VecCore_INCLUDE_DIRS}/ ${CMAKE_BINARY_DIR}/include)
-
-  ### End of temporary fix
 
   install(DIRECTORY ${VecCore_ROOTDIR}/ DESTINATION ".")
 endif()
