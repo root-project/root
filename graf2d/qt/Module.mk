@@ -157,5 +157,5 @@ $(GQTMOC) : $(call stripsrc,$(GQTDIRS)/moc_%.cxx): $(GQTDIRI)/%.h
 ifeq (,$(QT4))
 	$(QTMOCEXE)  $< -o $@
 else
-	$(QTMOCEXE) $(GQTCXXFLAGS) $< -o $@
+	$(QTMOCEXE) $(subst -isystem,-I,$(GQTCXXFLAGS)) $< -o $@
 endif
