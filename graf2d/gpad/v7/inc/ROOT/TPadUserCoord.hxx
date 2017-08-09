@@ -43,7 +43,7 @@ protected:
    TPadUserCoordBase() = default;
 
 public:
-   virtual ~TPadUserCoordBase();
+   virtual ~TPadUserCoordBase() {}
 
    /// Convert user coordinates to normal coordinates.
    virtual std::array<TPadCoord::Normal, 2> ToNormal(const std::array<TPadCoord::User, 2> &) const = 0;
@@ -56,7 +56,7 @@ public:
 class TPadLinearUserCoord: public TPadUserCoordBase {
 private:
    std::array<double, 2> fMin; ///< (x,y) user coordinate of bottom-left corner
-   std::array<double, 2> fMax; ///< (x,y) user coordinate of top-right cornder
+   std::array<double, 2> fMax; ///< (x,y) user coordinate of top-right corner
 
    /// For (pos-min)/(max-min) calculations, return a sensible, div-by-0 protected denominator.
    double GetDenominator(int idx) const
@@ -71,7 +71,7 @@ public:
    TPadLinearUserCoord(const std::array<double, 2> &min, const std::array<double, 2> &max): fMin(min), fMax(max) {}
 
    /// Destructor to have a vtable.
-   virtual ~TPadLinearUserCoord();
+   virtual ~TPadLinearUserCoord() {}
 
    /// Convert user coordinates to normal coordinates.
    std::array<TPadCoord::Normal, 2> ToNormal(const std::array<TPadCoord::User, 2> &pos) const override
