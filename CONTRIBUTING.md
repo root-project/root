@@ -9,7 +9,7 @@ This short guide aims to provide hints and pointers to making the process as qui
 ROOT Source Code
 ----------------
 
-The source code for ROOT is kept in [GitHub](http://github.com/root-project/root) and follows the pull-request model;
+The source code for ROOT is kept in [GitHub](http://github.com/root-project/root) and follows mainly the pull-request model;
 the primary branch for development is `master`.
 Visit [this page](https://root.cern.ch/integrating-github-pull-request-root-repository) for more details on how to
 create pull requests.
@@ -31,7 +31,7 @@ Continuous Integration
 ----------------------
 
 ROOT currently has two automated CI tests that are used for pull requests:
-- *Build and test*: When known contributors submit a PR, a Jenkins-based CI workflow will kick off; the results will be posted to the pull request.  Interacting with the Jenkins instance is [documented here](https://github.com/phsft-bot/build-configuration/blob/master/README.md); interacting with Jenkins is restricted to contributors / project members.  Ask for help if needed.  The build and tests done for each PR are a subset of those done for nightly builds.
+- *Build and test*: When known contributors submit a PR, a Jenkins-based CI workflow will kick off; a project member will need to initiate the build; the results will be posted to the pull request. For project members, interacting with the Jenkins instance is [documented here](https://github.com/phsft-bot/build-configuration/blob/master/README.md). Be aware that the build platforms and tests done for each PR are a subset of those done for nightly builds.
 - *Formatting check*: We utilize a Travis-CI-based build to automatically check that a PR follows known ROOT coding conventions.  This is done with the `clang-format` tool.  If coding violations are found, `clang-format` will generate a suggested patch file; we suggest utilizing this output directly
 - *Simple Static Analysis*: The Travis-CI build will run a simple set of static analyses using `clang-tidy`.
 
