@@ -57,7 +57,14 @@ public:
    /// Create a temporary TCanvas; for long-lived ones please use Create().
    TCanvas() = default;
 
+   /// Return canvas pixel size as array with two elements - width and height
    const std::array<TPadCoord::Pixel, 2> &GetSize() const { return fSize; }
+
+   /// Set canvas pixel size as array with two elements - width and height
+   void SetSize(const std::array<TPadCoord::Pixel, 2> &sz) { fSize = sz; }
+
+   /// Set canvas pixel size - width and height
+   void SetSize(const TPadCoord::Pixel &width, const TPadCoord::Pixel &height) { fSize[0] = width; fSize[1] = height; }
 
    /// Display the canvas.
    void Show(const std::string &where = "");
