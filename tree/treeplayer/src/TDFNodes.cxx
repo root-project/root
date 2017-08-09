@@ -105,12 +105,12 @@ class TSlotStack {
 private:
    unsigned int &GetCount()
    {
-      thread_local unsigned int count = 0U;
+      TTHREAD_TLS(unsigned int) count = 0U;
       return count;
    }
    unsigned int &GetIndex()
    {
-      thread_local unsigned int index = UINT_MAX;
+      TTHREAD_TLS(unsigned int) index = UINT_MAX;
       return index;
    }
    unsigned int fCursor;
