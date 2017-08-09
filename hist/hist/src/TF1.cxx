@@ -1674,9 +1674,10 @@ Int_t TF1::GetNDF() const
 
 Int_t TF1::GetNumberFreeParameters() const
 {
-   Int_t nfree = GetNpar();
+   Int_t ntot = GetNpar();
+   Int_t nfree = ntot; 
    Double_t al, bl;
-   for (Int_t i = 0; i < nfree; i++) {
+   for (Int_t i = 0; i < ntot; i++) {
       ((TF1 *)this)->GetParLimits(i, al, bl);
       if (al * bl != 0 && al >= bl) nfree--;
    }
