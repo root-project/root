@@ -386,6 +386,9 @@ public:
     *  tensor \p B. */
    static void Deflatten(std::vector<TCpuMatrix<AReal>> &A, const TCpuMatrix<AReal> &B, size_t index, size_t nRows,
                          size_t nCols);
+   /** Rearrage data accoring to time fill B x T x D out with T x B x D matrix in*/
+   static void Rearrange(std::vector<TCpuMatrix<AReal>> &out, const std::vector<TCpuMatrix<AReal>> &in); 
+
 
    ///@}
 
