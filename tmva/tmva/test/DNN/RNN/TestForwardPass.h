@@ -53,7 +53,7 @@ auto testForwardPass(size_t timeSteps, size_t batchSize, size_t stateSize,
 
    TMatrixT<Double_t> weightsInput = layer->GetWeightsInput();  // H x D
    TMatrixT<Double_t> weightsState = layer->GetWeightsState();  // H x H
-   TMatrixT<Double_t> biases = layer->GetBiases();              // H x 1
+   TMatrixT<Double_t> biases = layer->GetBiasesAt(0);              // H x 1
    TMatrixT<Double_t> state = layer->GetState();                // B x H 
    TMatrixT<Double_t> tmp(batchSize, stateSize);
 
