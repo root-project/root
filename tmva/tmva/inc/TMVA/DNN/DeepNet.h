@@ -842,7 +842,7 @@ auto TDeepNet<Architecture_t, Layer_t>::Backward(std::vector<Matrix_t> input, co
 {
    std::vector<Matrix_t> inp1;
    std::vector<Matrix_t> inp2;
-   // Last layer should not be deep
+   // Last layer should be dense layer
    evaluateGradients<Architecture_t>(fLayers.back()->GetActivationGradientsAt(0), this->GetLossFunction(), groundTruth,
                                      fLayers.back()->GetOutputAt(0), weights);
    for (size_t i = fLayers.size() - 1; i > 0; i--) {
@@ -852,10 +852,6 @@ auto TDeepNet<Architecture_t, Layer_t>::Backward(std::vector<Matrix_t> input, co
    }
 
    std::vector<Matrix_t> dummy;
-   for (size_t i = 0; i < this->GetBatchSize(); i++) {
-      // Should we determine the dimensions?
-      dummy.emplace_back(0, 0);
-   }
 
    fLayers[0]->Backward(dummy, input, inp1, inp2);
 }
