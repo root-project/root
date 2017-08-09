@@ -965,7 +965,9 @@ void TFormula::HandlePolN(TString &formula)
 ///    Normalized function has char 'n' after name, eg.
 ///    gausn[var](0) will be replaced with [0]*exp(-0.5*((var-[1])/[2])^2)/(sqrt(2*pi)*[2])
 ///
-///    Adding function is easy, just follow these rules:
+///    Adding function is easy, just follow these rules, and add to
+///    `TFormula::FillParametrizedFunctions` defined further below:
+///
 ///    - Key for function map is pair of name and dimension of function
 ///    - value of key is a pair function body and normalized function body
 ///    - {Vn} is a place where variable appear, n represents n-th variable from variable list.
@@ -976,30 +978,11 @@ void TFormula::HandlePolN(TString &formula)
 
 void TFormula::HandleParametrizedFunctions(TString &formula)
 {
+   std::cout << "Begin `HandleParametrizedFunctions` on " << formula << std::endl;
+
+   // define all parametrized functions
    map< pair<TString,Int_t> ,pair<TString,TString> > functions;
-   functions.insert(make_pair(make_pair("gaus",1),make_pair("[0]*exp(-0.5*(({V0}-[1])/[2])*(({V0}-[1])/[2]))","[0]*exp(-0.5*(({V0}-[1])/[2])*(({V0}-[1])/[2]))/(sqrt(2*pi)*[2])")));
-   functions.insert(make_pair(make_pair("landau",1),make_pair("[0]*TMath::Landau({V0},[1],[2],false)","[0]*TMath::Landau({V0},[1],[2],true)")));
-   functions.insert(make_pair(make_pair("expo",1),make_pair("exp([0]+[1]*{V0})","")));
-   functions.insert(make_pair(make_pair("crystalball",1),make_pair("[0]*ROOT::Math::crystalball_function({V0},[3],[4],[2],[1])","[0]*ROOT::Math::crystalball_pdf({V0},[3],[4],[2],[1])")));
-   functions.insert(make_pair(make_pair("breitwigner",1),make_pair("[0]*ROOT::Math::breitwigner_pdf({V0},[2],[1])","[0]*ROOT::Math::breitwigner_pdf({V0},[2],[4],[1])")));
-   // chebyshev polynomial
-   functions.insert(make_pair(make_pair("cheb0" ,1),make_pair("ROOT::Math::Chebyshev0({V0},[0])","")));
-   functions.insert(make_pair(make_pair("cheb1" ,1),make_pair("ROOT::Math::Chebyshev1({V0},[0],[1])","")));
-   functions.insert(make_pair(make_pair("cheb2" ,1),make_pair("ROOT::Math::Chebyshev2({V0},[0],[1],[2])","")));
-   functions.insert(make_pair(make_pair("cheb3" ,1),make_pair("ROOT::Math::Chebyshev3({V0},[0],[1],[2],[3])","")));
-   functions.insert(make_pair(make_pair("cheb4" ,1),make_pair("ROOT::Math::Chebyshev4({V0},[0],[1],[2],[3],[4])","")));
-   functions.insert(make_pair(make_pair("cheb5" ,1),make_pair("ROOT::Math::Chebyshev5({V0},[0],[1],[2],[3],[4],[5])","")));
-   functions.insert(make_pair(make_pair("cheb6" ,1),make_pair("ROOT::Math::Chebyshev6({V0},[0],[1],[2],[3],[4],[5],[6])","")));
-   functions.insert(make_pair(make_pair("cheb7" ,1),make_pair("ROOT::Math::Chebyshev7({V0},[0],[1],[2],[3],[4],[5],[6],[7])","")));
-   functions.insert(make_pair(make_pair("cheb8" ,1),make_pair("ROOT::Math::Chebyshev8({V0},[0],[1],[2],[3],[4],[5],[6],[7],[8])","")));
-   functions.insert(make_pair(make_pair("cheb9" ,1),make_pair("ROOT::Math::Chebyshev9({V0},[0],[1],[2],[3],[4],[5],[6],[7],[8],[9])","")));
-   functions.insert(make_pair(make_pair("cheb10",1),make_pair("ROOT::Math::Chebyshev10({V0},[0],[1],[2],[3],[4],[5],[6],[7],[8],[9],[10])","")));
-   // 2-dimensional functions
-   functions.insert(make_pair(make_pair("gaus",2),make_pair("[0]*exp(-0.5*(({V0}-[1])/[2])^2 - 0.5*(({V1}-[3])/[4])^2)","")));
-   functions.insert(make_pair(make_pair("landau",2),make_pair("[0]*TMath::Landau({V0},[1],[2],false)*TMath::Landau({V1},[3],[4],false)","")));
-   functions.insert(make_pair(make_pair("expo",2),make_pair("exp([0]+[1]*{V0})","exp([0]+[1]*{V0}+[2]*{V1})")));
-   // gaussian with correlations
-   functions.insert(make_pair(make_pair("bigaus",2),make_pair("[0]*ROOT::Math::bigaussian_pdf({V0},{V1},[2],[4],[5],[1],[3])","[0]*ROOT::Math::bigaussian_pdf({V0},{V1},[2],[4],[5],[1],[3])")));
+   FillParametrizedFunctions(functions);
 
    map<TString,Int_t> functionsNumbers;
    functionsNumbers["gaus"] = 100;
@@ -1136,7 +1119,15 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
          //Int_t openingParenthesisPos = formula.Index('(',funPos);
          //Bool_t defaultCounter = (openingParenthesisPos == kNPOS);
          Int_t counter;
-         if(defaultCounter)
+	 if (!defaultCounter &&
+	     formula.Index(',', openingParenthesisPos) != kNPOS &&
+	     formula.Index(',', openingParenthesisPos) < formula.Index(')', openingParenthesisPos))
+	 {
+	    // TODO: account for nested parentheses in if-condition
+	    std::cout << "Multiple arguments in parentheses -- leaving this for `HandleUserFunctions`" << std::endl;
+	    break;
+	 }
+	 else if(defaultCounter)
          {
             counter = 0;
          }
@@ -1144,7 +1135,7 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
          {
             counter = TString(formula(openingParenthesisPos+1,formula.Index(')',funPos) - openingParenthesisPos -1)).Atoi();
          }
-         //std::cout << "openingParenthesisPos  " << openingParenthesisPos << " counter is " << counter <<  std::endl;
+         std::cout << "openingParenthesisPos  " << openingParenthesisPos << " counter is " << counter <<  std::endl;
 
          TString body = (isNormalized ? it->second.second : it->second.first);
          if(isNormalized && body == "")
@@ -1217,13 +1208,13 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
             fNumber = functionsNumbers[funName] + 10*(dim-1);
          }
 
-         //std::cout << " replace " << pattern << " with " << replacement << std::endl;
+         std::cout << " replace " << pattern << " with " << replacement << std::endl;
 
          formula.Replace(funPos,pattern.Length(),replacement,replacement.Length());
 
          funPos = formula.Index(funName);
       }
-      //std::cout << " End loop of " << funName << " formula is now " << formula << std::endl;
+      std::cout << " End loop of " << funName << " formula is now " << formula << std::endl;
    }
 
 }
@@ -1233,10 +1224,14 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
 ///   Handling user functions (and possibly more)
 ///   to take variables and optionally parameters as arguments
 void TFormula::HandleUserFunctions(TString &formula) {
-   // loop through characters (mostly copied from `TFormula::ExtractFunctors`)
-   for(Int_t i = 0 ; i < formula.Length() ; ++i) {
-      // std::cout << "loop on character " << i << formula[i] << std::endl;
+   std::cout << "calling `HandleUserFunctions` on " << formula << std::endl;
 
+   // Define parametrized functions, in case we need to use them
+   std::map< std::pair<TString,Int_t> ,std::pair<TString,TString> > parFunctions;
+   FillParametrizedFunctions(parFunctions);
+   
+   // loop through characters (partly copied from `TFormula::ExtractFunctors`)
+   for(Int_t i = 0 ; i < formula.Length() ; ++i) {
       // ignore things that start with square brackets
       if (formula[i] == '[') {
    	 while(formula[i] != ']')
@@ -1260,17 +1255,34 @@ void TFormula::HandleUserFunctions(TString &formula) {
    	 continue;
       }
 
+      // investigate possible start of function name
       if (isalpha(formula[i]) && !IsOperator(formula[i])) {
    	 // std::cout << "character : " << i << " " << formula[i] << " is not an operator and is alpha" << std::endl;
 
-	 int j;
+	 int j; // index to end of name
 	 for (j = i; j < formula.Length() && IsFunctionNameChar(formula[j]); j++);
 	 TString name = (TString) formula(i, j-i);
-	 // std::cout << "found name " << name << std::endl;
+	 // std::cout << "parsed name " << name << std::endl;
 
-	 // TODO handle parametrized functions here
+	 // Count arguments (careful about parentheses depth)
+	 // Make list of indices where each argument is separated
+	 int nArguments = 1;
+	 int depth = 1;
+	 std::vector<int> argSeparators;
+	 argSeparators.push_back(j); // opening parenthesis
+	 int k; // index for end of closing parenthesis
+	 for (k = j+1; depth >= 1 && k < formula.Length(); k++) {
+	    if (formula[k] == ',' && depth == 1) {
+	       nArguments++;
+	       argSeparators.push_back(k);
+	    } else if (formula[k] == '(')
+	       depth++;
+	    else if (formula[k] == ')')
+	       depth--;
+	 }
+	 argSeparators.push_back(k-1); // closing parenthesis
 	 
-	 // Code to retrieve `f` copied from ExtractFunctors
+	 // retrieve `f` (code copied from ExtractFunctors)
 	 TObject *obj = 0;
 	 {
 	    R__LOCKGUARD(gROOTMutex);
@@ -1282,81 +1294,112 @@ void TFormula::HandleUserFunctions(TString &formula) {
 	    TF1 * f1 = dynamic_cast<TF1*> (obj);
 	    if (f1) f = f1->GetFormula();
 	 }
-	 //
+	 // `f` should be found by now, if it was a user-defined function
 
-	 // std::cout << "after looking through gROOT list of functions, f is " << f << std::endl;
+	 bool nameRecognized = (f != NULL);
 	 
-	 if(f && j < formula.Length() && formula[j] == '(') {
-	    // std::cout << "f has " << f->GetNdim() << " dimensions and " << f->GetNpar() << " parameters" << std::endl;
+	 // Get ndim, npar, and replacementFormula of function
+	 int ndim;
+	 int npar;
+	 TString replacementFormula;
+	 if (f) {
+	    ndim = f->GetNdim();
+	    npar = f->GetNpar();
+	    replacementFormula = f->GetExpFormula();
+	 } else {
+	 // otherwise, try default parametrized functions
 
-	    // Count arguments (careful about parentheses depth)
-	    // Make list of indices where each argument is separated
-	    int nArguments = 1;
-	    int depth = 1;
-	    std::vector<int> argSeparators;
-	    argSeparators.push_back(j); // opening parenthesis
-	    int k;
-	    for (k = j+1; depth >= 1 && k < formula.Length(); k++) {
-	       if (formula[k] == ',' && depth == 1) {
-		  nArguments++;
-		  argSeparators.push_back(k);
-	       } else if (formula[k] == '(')
-		  depth++;
-	       else if (formula[k] == ')')
-		  depth--;
+	    for (auto keyval : parFunctions) {
+	       auto key = keyval.first; // pair(name, ndim)
+	       auto val = keyval.second; // pair(formula without normalization, formula with normalization)
+	       if (name == key.first)
+		  replacementFormula = val.first;
+	       else if (name == key.first + "n" && val.second != "")
+		  replacementFormula = val.second;
+	       else
+		  continue;
+	       
+	       // go through replacementFormula to find the number of parameters
+	       npar = 0;
+	       int idx = 0;
+	       while ((idx = replacementFormula.Index('[', idx)) != kNPOS) {
+		  npar = max(npar, 1+TString(replacementFormula(idx+1, replacementFormula.Length()-idx-1)).Atoi());
+		  idx = replacementFormula.Index(']', idx);
+		  if (idx == kNPOS)
+		     Error("HandleUserFunctions", "Square brackets not matching in formula %s", (const char *) replacementFormula);
+
+	       }
+	       // npar should be set correctly
+
+	       // set ndim
+	       ndim = key.second;
+
+	       // break if number of arguments is good (important for `gaus`, which has two definitions with different numbers of arguments)
+	       if (nArguments == ndim + npar) {
+		  nameRecognized = true;
+		  break;
+	       }
 	    }
-	    argSeparators.push_back(k-1); // closing parenthesis
-
-	    std::cout << "naive replacement formula: " << f->GetExpFormula() << std::endl;
+	 }
+	 
+	 // if we have "recognizedName(...", then apply substitutions
+	 if(nameRecognized && j < formula.Length() && formula[j] == '(') {
+	    std::cout << "naive replacement formula: " << replacementFormula << std::endl;
 	    std::cout << "formula: " << formula << std::endl;
-	    
-	    TString replacementFormula = TString(f->GetExpFormula());
 
 	    // check nArguments and modify replacementFormula as necessary
 	    const char * defaultVariableNames[] = { "x","y","z","t" };
 	    bool canReplace = false;
-	    if (nArguments == f->GetNdim() + f->GetNpar()) {
+	    if (nArguments == ndim + npar) {
 	       // loop through all variables and parameters, making appropriate
 	       // substitutions to replacementFormula
 	       for (int argNr = 0; argNr < nArguments; argNr++) {
-		  TString oldName = (argNr < f->GetNdim()) ?
-		     TString(defaultVariableNames[argNr]) :
-		     TString::Format("[%s]", f->GetParName(argNr-f->GetNdim()));
+		  TString oldName = (f) ?
+		     // user-input function
+		     ((argNr < ndim) ? 
+		      TString(defaultVariableNames[argNr]) :
+		      TString::Format("[%s]", f->GetParName(argNr-ndim))) :
+		     // parametrized function
+		     ((argNr < ndim) ? 
+		      TString::Format("{V%d}", argNr) :
+		      TString::Format("[%d]", argNr-ndim));
 		  TString newName = TString(formula(argSeparators[argNr] + 1,
 						    argSeparators[argNr+1]-argSeparators[argNr] - 1));
 
 		  // preprocess the formula so that nesting works
 		  PreProcessFormula(newName);
+		  // TODO: make this code resistant to name-swaps!
 		  ReplaceAllName(replacementFormula, oldName, newName);
 	       }
 
 	       canReplace = true;
 	    } else if (nArguments == f->GetNpar()) {
-	       std::cout << "Are you giving me just parameters? [work in progress]" << std::endl;
+	       std::cout << "Assuming variables are implicit [work in progress]" << std::endl;
 	       // loop to check if all arguments are parameters
 	       bool allParams = true;
 	       for (int argNr = 0; argNr < nArguments && allParams; argNr++) {
 		  int openIdx = argSeparators[argNr] + 1;
 		  int closeIdx = argSeparators[argNr+1] - 1;
-		  cout << "open Idx is " << openIdx << " " << formula[openIdx] << std::endl;
-		  cout << "close Idx is " << closeIdx << " " << formula[closeIdx] << std::endl;
+		  // cout << "open Idx is " << openIdx << " " << formula[openIdx] << std::endl;
+		  // cout << "close Idx is " << closeIdx << " " << formula[closeIdx] << std::endl;
 		  if (formula[openIdx] != '[' || formula[closeIdx] != ']' || closeIdx <= openIdx+1)
 		     allParams = false;
 
 		  for (int idx = openIdx + 1; idx < closeIdx && allParams; idx++)
 		     if (!IsFunctionNameChar(formula[idx])) {
-			std::cout << "The character " << formula[idx] << " offended" << std::endl;
 			allParams = false;
 		     }
 
 		  if (!allParams)
-		     std::cout << "Warning: argument " << argNr << " is not a parameter" << std::endl;
+		     Warning("HandleUserFunctions", "Argument %d is not a parameter", argNr);
 	       }
 	       
 	       // loop to replace parameter names
 	       if (allParams) {
 		  for (int argNr = 0; argNr < nArguments; argNr++) {
-		     TString oldName = TString::Format("[%s]", f->GetParName(argNr));
+		     TString oldName = (f) ?
+			TString::Format("[%s]", f->GetParName(argNr)) :
+			TString::Format("[%d]", argNr);
 		     TString newName = TString(formula(argSeparators[argNr] + 1,
 						       argSeparators[argNr+1]-argSeparators[argNr] - 1));
 
@@ -1367,8 +1410,6 @@ void TFormula::HandleUserFunctions(TString &formula) {
 
 		  canReplace = true;
 	       }
-	    } else {
-	       std::cout << "Number of parameters doesn't work" << std::endl;
 	    }
 
 
@@ -1378,9 +1419,7 @@ void TFormula::HandleUserFunctions(TString &formula) {
 	       i += replacementFormula.Length() - 1; // skip to end of replacement
 	       std::cout << "new formula is : " << formula << std::endl;
 	    } else {
-	       std::cout << "Warning: number of arguments (" << nArguments << ") does not match Ndim (" <<
-		  f->GetNdim() << ") + Npar (" << f->GetNpar() << ")" << std::endl;
-	       std::cout << "Unable to make replacement" << std::endl;
+	       Warning("HandleUserFunctions", "Unable to make replacement: Number of parameters doesn't work: %d arguments, %d dimensions, %d parameters", nArguments, ndim, npar);
 	       i = j;
 	    }
 	    
@@ -2187,6 +2226,37 @@ void TFormula::ProcessFormula(TString &formula)
    }
 
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Fill map with parametrized functions
+
+void TFormula::FillParametrizedFunctions(map< pair<TString,Int_t> ,pair<TString,TString> > &functions) {
+   // map< pair<TString,Int_t> ,pair<TString,TString> > functions;
+   functions.insert(make_pair(make_pair("gaus",1),make_pair("[0]*exp(-0.5*(({V0}-[1])/[2])*(({V0}-[1])/[2]))","[0]*exp(-0.5*(({V0}-[1])/[2])*(({V0}-[1])/[2]))/(sqrt(2*pi)*[2])")));
+   functions.insert(make_pair(make_pair("landau",1),make_pair("[0]*TMath::Landau({V0},[1],[2],false)","[0]*TMath::Landau({V0},[1],[2],true)")));
+   functions.insert(make_pair(make_pair("expo",1),make_pair("exp([0]+[1]*{V0})","")));
+   functions.insert(make_pair(make_pair("crystalball",1),make_pair("[0]*ROOT::Math::crystalball_function({V0},[3],[4],[2],[1])","[0]*ROOT::Math::crystalball_pdf({V0},[3],[4],[2],[1])")));
+   functions.insert(make_pair(make_pair("breitwigner",1),make_pair("[0]*ROOT::Math::breitwigner_pdf({V0},[2],[1])","[0]*ROOT::Math::breitwigner_pdf({V0},[2],[4],[1])")));
+   // chebyshev polynomial
+   functions.insert(make_pair(make_pair("cheb0" ,1),make_pair("ROOT::Math::Chebyshev0({V0},[0])","")));
+   functions.insert(make_pair(make_pair("cheb1" ,1),make_pair("ROOT::Math::Chebyshev1({V0},[0],[1])","")));
+   functions.insert(make_pair(make_pair("cheb2" ,1),make_pair("ROOT::Math::Chebyshev2({V0},[0],[1],[2])","")));
+   functions.insert(make_pair(make_pair("cheb3" ,1),make_pair("ROOT::Math::Chebyshev3({V0},[0],[1],[2],[3])","")));
+   functions.insert(make_pair(make_pair("cheb4" ,1),make_pair("ROOT::Math::Chebyshev4({V0},[0],[1],[2],[3],[4])","")));
+   functions.insert(make_pair(make_pair("cheb5" ,1),make_pair("ROOT::Math::Chebyshev5({V0},[0],[1],[2],[3],[4],[5])","")));
+   functions.insert(make_pair(make_pair("cheb6" ,1),make_pair("ROOT::Math::Chebyshev6({V0},[0],[1],[2],[3],[4],[5],[6])","")));
+   functions.insert(make_pair(make_pair("cheb7" ,1),make_pair("ROOT::Math::Chebyshev7({V0},[0],[1],[2],[3],[4],[5],[6],[7])","")));
+   functions.insert(make_pair(make_pair("cheb8" ,1),make_pair("ROOT::Math::Chebyshev8({V0},[0],[1],[2],[3],[4],[5],[6],[7],[8])","")));
+   functions.insert(make_pair(make_pair("cheb9" ,1),make_pair("ROOT::Math::Chebyshev9({V0},[0],[1],[2],[3],[4],[5],[6],[7],[8],[9])","")));
+   functions.insert(make_pair(make_pair("cheb10",1),make_pair("ROOT::Math::Chebyshev10({V0},[0],[1],[2],[3],[4],[5],[6],[7],[8],[9],[10])","")));
+   // 2-dimensional functions
+   functions.insert(make_pair(make_pair("gaus",2),make_pair("[0]*exp(-0.5*(({V0}-[1])/[2])^2 - 0.5*(({V1}-[3])/[4])^2)","")));
+   functions.insert(make_pair(make_pair("landau",2),make_pair("[0]*TMath::Landau({V0},[1],[2],false)*TMath::Landau({V1},[3],[4],false)","")));
+   functions.insert(make_pair(make_pair("expo",2),make_pair("exp([0]+[1]*{V0})","exp([0]+[1]*{V0}+[2]*{V1})")));
+   // gaussian with correlations
+   functions.insert(make_pair(make_pair("bigaus",2),make_pair("[0]*ROOT::Math::bigaussian_pdf({V0},{V1},[2],[4],[5],[1],[3])","[0]*ROOT::Math::bigaussian_pdf({V0},{V1},[2],[4],[5],[1],[3])")));
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set parameter names only in case of pre-defined functions.
