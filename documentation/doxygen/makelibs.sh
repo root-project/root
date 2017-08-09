@@ -30,5 +30,5 @@ dot -Tsvg libraries.dot -o $PICNAME
 
 # Make sure the picture size in the html file the same as the svg
 PICSIZE=`grep "svg width" $PICNAME | sed -e "s/<svg //"`
-sed -i'.back' -e "s/\(^.*__coll__graph.svg\"\)\( width.*\">\)\(.*$\)/\1 $PICSIZE>\3/"  $HTMLPATH/class$1.html
+sed -i'.back' -e "s/\(^.*src\)\(.*__coll__graph.svg\"\)\( width.*\">\)\(.*$\)/<div class=\"center\"><img src\2 $PICSIZE><\/div>/"  $HTMLPATH/class$1.html
 rm $HTMLPATH/class$1.html.back
