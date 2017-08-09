@@ -595,6 +595,7 @@ void MethodDL::ParseReshapeLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet
    int depth = 0;
    int height = 0;
    int width = 0;
+   bool flattening = false;
 
    // Split layer details
    TObjArray *subStrings = layerString.Tokenize(delim);
@@ -618,12 +619,19 @@ void MethodDL::ParseReshapeLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet
          TString strWidth(token->GetString());
          width = strWidth.Atoi();
       } break;
+      case 4: // flattening
+      {
+         TString flat(token->GetString());
+         if(flat == "FLAT"){
+             flattening = true;  
+         }
+      } break;
       }
       ++idxToken;
    }
 
    // Add the reshape layer
-   TReshapeLayer<Architecture_t> *reshapeLayer = deepNet.AddReshapeLayer(depth, height, width);
+   TReshapeLayer<Architecture_t> *reshapeLayer = deepNet.AddReshapeLayer(depth, height, width, flattening);
    TReshapeLayer<Architecture_t> *copyReshapeLayer = new TReshapeLayer<Architecture_t>(*reshapeLayer);
 
    // add the copy to all slave nets

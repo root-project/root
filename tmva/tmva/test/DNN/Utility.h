@@ -52,7 +52,7 @@ void constructConvNet(TDeepNet<AArchitecture> &net)
                          net.GetLayerAt(net.GetDepth() - 1)->GetHeight() *
                          net.GetLayerAt(net.GetDepth() - 1)->GetWidth();
 
-   net.AddReshapeLayer(depthReshape, heightReshape, widthReshape);
+   net.AddReshapeLayer(depthReshape, heightReshape, widthReshape, true);
 
    size_t widthFC1 = 20;
    EActivationFunction fFC1 = ActivationFunctions[rand() % ActivationFunctions.size()];
@@ -96,7 +96,7 @@ void constructLinearConvNet(TDeepNet<AArchitecture> &net)
                          net.GetLayerAt(net.GetDepth() - 1)->GetHeight() *
                          net.GetLayerAt(net.GetDepth() - 1)->GetWidth();
 
-   net.AddReshapeLayer(depthReshape, heightReshape, widthReshape);
+   net.AddReshapeLayer(depthReshape, heightReshape, widthReshape, true);
 
    size_t widthFC1 = 20;
    EActivationFunction fFC1 = EActivationFunction::kIdentity;
