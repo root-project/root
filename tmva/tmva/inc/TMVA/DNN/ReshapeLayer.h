@@ -41,9 +41,14 @@ public:
    using Matrix_t = typename Architecture_t::Matrix_t;
    using Scalar_t = typename Architecture_t::Scalar_t;
 
+private:
+   bool fFlattening; ///< Whather the layer is doing flattening
+
+public:
    /*! Constructor */
    TReshapeLayer(size_t BatchSize, size_t InputDepth, size_t InputHeight, size_t InputWidth, size_t Depth,
-                 size_t Height, size_t Width, size_t OutputNSlices, size_t OutputNRows, size_t OutputNCols);
+                 size_t Height, size_t Width, size_t OutputNSlices, size_t OutputNRows, size_t OutputNCols,
+                 bool Flattening);
 
    /*! Copy the reshape layer provided as a pointer */
    TReshapeLayer(TReshapeLayer<Architecture_t> *layer);
@@ -60,8 +65,7 @@ public:
    void Forward(std::vector<Matrix_t> input, bool applyDropout = false);
 
    void Backward(std::vector<Matrix_t> &gradients_backward, const std::vector<Matrix_t> &activations_backward,
-                 std::vector<Matrix_t> &inp1,
-                 std::vector<Matrix_t> &inp2);
+                 std::vector<Matrix_t> &inp1, std::vector<Matrix_t> &inp2);
 
    /*! Prints the info about the layer. */
    void Print() const;
@@ -74,9 +78,10 @@ public:
 template <typename Architecture_t>
 TReshapeLayer<Architecture_t>::TReshapeLayer(size_t batchSize, size_t inputDepth, size_t inputHeight, size_t inputWidth,
                                              size_t depth, size_t height, size_t width, size_t outputNSlices,
-                                             size_t outputNRows, size_t outputNCols)
+                                             size_t outputNRows, size_t outputNCols, bool flattening)
    : VGeneralLayer<Architecture_t>(batchSize, inputDepth, inputHeight, inputWidth, depth, height, width, 0, 0, 0, 0, 0,
-                                   0, outputNSlices, outputNRows, outputNCols, EInitialization::kZero)
+                                   0, outputNSlices, outputNRows, outputNCols, EInitialization::kZero),
+     fFlattening(flattening)
 {
    if (this->GetInputDepth() * this->GetInputHeight() * this->GetInputWidth() !=
        this->GetDepth() * this->GetHeight() * this->GetWidth()) {
@@ -110,8 +115,15 @@ TReshapeLayer<Architecture_t>::~TReshapeLayer()
 template <typename Architecture_t>
 auto TReshapeLayer<Architecture_t>::Forward(std::vector<Matrix_t> input, bool applyDropout) -> void
 {
-   for (size_t i = 0; i < this->GetBatchSize(); i++) {
-      Architecture_t::Reshape(this->GetOutputAt(i), input[i]);
+   if (fFlattening) {
+      size_t size = input.size();
+      size_t nRows = input[0].GetNrows();
+      size_t nCols = input[0].GetNcols();
+      Architecture_t::Flatten(this->GetOutputAt(0), input, size, nRows, nCols);
+   } else {
+      for (size_t i = 0; i < this->GetBatchSize(); i++) {
+         Architecture_t::Reshape(this->GetOutputAt(i), input[i]);
+      }
    }
 }
 
@@ -119,11 +131,17 @@ auto TReshapeLayer<Architecture_t>::Forward(std::vector<Matrix_t> input, bool ap
 template <typename Architecture_t>
 auto TReshapeLayer<Architecture_t>::Backward(std::vector<Matrix_t> &gradients_backward,
                                              const std::vector<Matrix_t> &activations_backward,
-                                             std::vector<Matrix_t> &inp1,
-                                             std::vector<Matrix_t> &inp2) -> void
+                                             std::vector<Matrix_t> &inp1, std::vector<Matrix_t> &inp2) -> void
 {
-   for (size_t i = 0; i < this->GetBatchSize(); i++) {
-      Architecture_t::Reshape(gradients_backward[i], this->GetActivationGradientsAt(i));
+   if (fFlattening) {
+      size_t size = gradients_backward.size();
+      size_t nRows = gradients_backward[0].GetNrows();
+      size_t nCols = gradients_backward[0].GetNcols();
+      Architecture_t::Deflatten(gradients_backward, this->GetActivationGradientsAt(0), size, nRows, nCols);
+   } else {
+      for (size_t i = 0; i < this->GetBatchSize(); i++) {
+         Architecture_t::Reshape(gradients_backward[i], this->GetActivationGradientsAt(i));
+      }
    }
 }
 
