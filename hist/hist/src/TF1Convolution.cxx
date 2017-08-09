@@ -1,5 +1,5 @@
 // @(#)root/hist:$Id$
-// Authors: L. Moneta, A. Flandi   08/2014
+// Authors: Lorenzo Moneta, Aurélie Flandi  27/08/14
 //
 /**********************************************************************
  *                                                                    *
