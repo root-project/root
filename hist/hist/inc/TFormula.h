@@ -105,6 +105,7 @@ private:
    void     FillDefaults();
    void     HandlePolN(TString &formula);
    void     HandleParametrizedFunctions(TString &formula);
+   void     HandleParamRanges(TString &formula);
    void     HandleUserFunctions(TString &formula);
    void     HandleExponentiation(TString &formula);
    void     HandleLinear(TString &formula);
