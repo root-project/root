@@ -26,7 +26,7 @@ void InitializeNumpy();
 #endif
 
 PyObject* GetNumpyIterator(PyObject* self, PyObject* args, PyObject* kwds);
-PyObject* GetNumpyIteratorInfo(PyObject* self, PyObject* args, PyObject* kwds);
+PyObject* GetNumpyIteratorInfo(PyObject* self, PyObject* args);
 
 class ArrayInfo {
 public:
@@ -46,25 +46,22 @@ class ClusterBuffer {
 private:
   const Request fRequest;
   const Long64_t fItemSize;
-  const bool fSwapBytes;
   TBufferFile fBufferFile;
-  std::vector<char> fExtra;
-  bool fUsingExtra;
+  std::vector<char> fSaved;
 
   // always numbers of entries (not bytes) and always inclusive on start, exclusive on end (like Python)
-  // also, the TBufferFile is always ahead of the extra buffer and there's no gap between them
-  Long64_t bfEntryStart;
-  Long64_t bfEntryEnd;
-  Long64_t exEntryStart;
-  Long64_t exEntryEnd;
+  // also, the TBufferFile is always ahead of the saved buffer and there's no gap between them
+  Long64_t fBufferStart;
+  Long64_t fBufferEnd;
+  Long64_t fSavedStart;
+  Long64_t fSavedEnd;
 
-  void CopyToExtra(Long64_t keep_start);
-  void CheckExtraAllocations();
+  void CopyToSaved(Long64_t keep_start);
 
 public:
-  ClusterBuffer(const Request request, const Long64_t itemsize, const bool swap_bytes) :
-    fRequest(request), fItemSize(itemsize), fSwapBytes(swap_bytes), fBufferFile(TBuffer::kWrite, 32*1024), fUsingExtra(false),
-    bfEntryStart(0), bfEntryEnd(0), exEntryStart(0), exEntryEnd(0)
+  ClusterBuffer(const Request request, const Long64_t itemsize) :
+    fRequest(request), fItemSize(itemsize), fBufferFile(TBuffer::kWrite, 32*1024),
+    fBufferStart(0), fBufferEnd(0), fSavedStart(0), fSavedEnd(0)
   {
     // required for re-readability
     fRequest.branch->DropBaskets();
@@ -87,11 +84,11 @@ private:
   bool StepForward(const char* &error_string);
 
 public:
-  NumpyIterator(const std::vector<Request> &requests, const std::vector<ArrayInfo> arrayinfo, Long64_t num_entries, bool return_new_buffers, bool swap_bytes) :
+  NumpyIterator(const std::vector<Request> &requests, const std::vector<ArrayInfo> arrayinfo, Long64_t num_entries, bool return_new_buffers) :
     fArrayInfo(arrayinfo), fNumEntries(num_entries), fReturnNewBuffers(return_new_buffers), fCurrentStart(0), fCurrentEnd(0)
   {
     for (unsigned int i = 0;  i < fArrayInfo.size();  i++) {
-      fClusterBuffers.push_back(std::unique_ptr<ClusterBuffer>(new ClusterBuffer(requests[i], fArrayInfo[i].dtype->elsize, swap_bytes)));
+      fClusterBuffers.push_back(std::unique_ptr<ClusterBuffer>(new ClusterBuffer(requests[i], fArrayInfo[i].dtype->elsize)));
     }
   }
 
@@ -104,7 +101,6 @@ typedef struct {
 } PyNumpyIterator;
 
 static PyObject* PyNumpyIterator_iter(PyObject* self) {
-  PyNumpyIterator* thyself = reinterpret_cast<PyNumpyIterator*>(self);
   Py_INCREF(self);
   return self;
 }
