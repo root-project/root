@@ -67,7 +67,6 @@ int testSimpleFile(const char *filename, Long64_t entries, Int_t compSetting, Lo
    return 0;
 }
 
-
 int execTestMultiMerge()
 {
    Int_t result = 0;
@@ -84,7 +83,7 @@ int execTestMultiMerge()
    if (lzma_version_number() < 50020010) {
       // lzma v5.2.0 produced larger files ...
       // but even older version (eg v5.0.0) produced smaller files ...
-      result += testSimpleFile("hsimpleK202.root",5*25000,202,1938720,700);
+      result += testSimpleFile("hsimpleK202.root",6*25000,202,1938720,700);
    } else {
       result += testSimpleFile("hsimpleK202.root",12*25000,202,4631252,16);
    }

@@ -1,7 +1,7 @@
 
 Processing execTestMultiMerge.C...
-TFile**		mfile1-4.root	
- TFile*		mfile1-4.root	
+TFile**		mzfile1-4.root	
+ TFile*		mzfile1-4.root	
   KEY: TDirectoryFile	hist;1	hist
   KEY: TDirectoryFile	named;1	named
   KEY: TList	MyList;1	Doubly linked list
@@ -26,8 +26,34 @@ Collection name='TList', class='TList', size=12
  TObjString = uno
  TObjString = due
  TObjString = tre
-TFile**		mzfile1-4.root	
- TFile*		mzfile1-4.root	
+TFile**		mlz4file1-4.root	
+ TFile*		mlz4file1-4.root	
+  KEY: TDirectoryFile	hist;1	hist
+  KEY: TDirectoryFile	named;1	named
+  KEY: TList	MyList;1	Doubly linked list
+TDirectoryFile*		hist	hist
+ KEY: TH1F	Gaus;1	Gaus
+TH1.Print Name  = Gaus, Entries= 400, Total sum= 400
+TDirectoryFile*		named	named
+ KEY: TNamed	MyNamed;4	3
+ KEY: TNamed	MyNamed;3	4
+ KEY: TNamed	MyNamed;2	1
+ KEY: TNamed	MyNamed;1	2
+Collection name='TList', class='TList', size=12
+ TObjString = uno
+ TObjString = due
+ TObjString = tre
+ TObjString = uno
+ TObjString = due
+ TObjString = tre
+ TObjString = uno
+ TObjString = due
+ TObjString = tre
+ TObjString = uno
+ TObjString = due
+ TObjString = tre
+TFile**		mzlibfile1-4.root	
+ TFile*		mzlibfile1-4.root	
   KEY: TDirectoryFile	hist;1	hist
   KEY: TDirectoryFile	named;1	named
   KEY: TList	MyList;1	Doubly linked list
@@ -56,6 +82,7 @@ Checking hsimple.root
 Checking hsimple9.root
 Checking hsimple9x2.root
 Checking hsimple209.root
+Checking hsimple409.root
 Checking hsimpleK.root
 Checking hsimpleK202.root
 Checking hsimpleF.root
