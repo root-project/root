@@ -24,6 +24,7 @@
 #include "TInterpreter.h"
 #include "TFormula.h"
 #include "TMap.h"
+#include "TRegexp.h"
 #include <cassert>
 #include <iostream>
 #include <unordered_map>
@@ -1119,21 +1120,33 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
          //Int_t openingParenthesisPos = formula.Index('(',funPos);
          //Bool_t defaultCounter = (openingParenthesisPos == kNPOS);
          Int_t counter;
-	 if (!defaultCounter &&
-	     formula.Index(',', openingParenthesisPos) != kNPOS &&
-	     formula.Index(',', openingParenthesisPos) < formula.Index(')', openingParenthesisPos))
-	 {
-	    // TODO: change condition to "if it's not a number and then close paren"
-	    std::cout << "Multiple arguments in parentheses -- leaving this for `HandleUserFunctions`" << std::endl;
-	    break;
-	 }
-	 else if(defaultCounter)
+	 // TODO delete the commented code below
+	 // if (!defaultCounter &&
+	 //     formula.Index(',', openingParenthesisPos) != kNPOS &&
+	 //     formula.Index(',', openingParenthesisPos) < formula.Index(')', openingParenthesisPos))
+	 // {
+	 //    std::cout << "Multiple arguments in parentheses -- leaving this for `HandleUserFunctions`" << std::endl;
+	 //    break;
+	 // }
+	 // else
+	 if(defaultCounter)
          {
             counter = 0;
          }
          else
          {
-            counter = TString(formula(openingParenthesisPos+1,formula.Index(')',funPos) - openingParenthesisPos -1)).Atoi();
+	    TRegexp counterPattern("([0-9]+)");
+	    Ssiz_t *len = new Ssiz_t();
+	    if(counterPattern.Index(formula, len, openingParenthesisPos) == -1) {
+	       std::cout << "Not just a number in parentheses -- leaving this for `HandleUserFunctions`" << std::endl;
+	       std::cout << "(also, setting funPos from " << funPos;
+	       funPos = formula.Index(funName, funPos+1);
+	       std::cout << " to " << funPos << std::endl;
+	       continue;
+	       // TODO check that this code works
+	    } else {
+	       counter = TString(formula(openingParenthesisPos+1,formula.Index(')',funPos) - openingParenthesisPos -1)).Atoi();
+	    }
          }
          std::cout << "openingParenthesisPos  " << openingParenthesisPos << " counter is " << counter <<  std::endl;
 
@@ -1230,8 +1243,10 @@ void TFormula::HandleUserFunctions(TString &formula) {
    std::map< std::pair<TString,Int_t> ,std::pair<TString,TString> > parFunctions;
    FillParametrizedFunctions(parFunctions);
 
-   // loop through characters (partly copied from `TFormula::ExtractFunctors`)
+   // loop through characters
    for(Int_t i = 0 ; i < formula.Length() ; ++i) {
+      // List of things to ignore copied from `TFormula::ExtractFunctors`
+      
       // ignore things that start with square brackets
       if (formula[i] == '[') {
    	 while(formula[i] != ']')
@@ -1307,35 +1322,45 @@ void TFormula::HandleUserFunctions(TString &formula) {
 	    npar = f->GetNpar();
 	    replacementFormula = f->GetExpFormula();
 	 } else {
-	 // otherwise, try default parametrized functions
+	 // otherwise, try to match default parametrized functions
 
 	    for (auto keyval : parFunctions) {
-	       auto key = keyval.first; // pair(name, ndim)
-	       auto val = keyval.second; // pair(formula without normalization, formula with normalization)
-	       if (name == key.first)
-		  replacementFormula = val.first;
-	       else if (name == key.first + "n" && val.second != "")
-		  replacementFormula = val.second;
+	       // (name, ndim)
+	       pair<TString, Int_t> name_ndim = keyval.first;
+	       // (formula without normalization, formula with normalization)
+	       pair<TString, TString> formulaPair = keyval.second;
+
+	       // match names like gaus, gausn, breitwigner
+	       if (name == name_ndim.first)
+		  replacementFormula = formulaPair.first;
+	       else if (name == name_ndim.first + "n" && formulaPair.second != "")
+		  replacementFormula = formulaPair.second;
 	       else
 		  continue;
+
+	       // set ndim
+	       ndim = name_ndim.second;
 	       
 	       // go through replacementFormula to find the number of parameters
 	       npar = 0;
 	       int idx = 0;
 	       while ((idx = replacementFormula.Index('[', idx)) != kNPOS) {
-		  npar = max(npar, 1+TString(replacementFormula(idx+1, replacementFormula.Length()-idx-1)).Atoi());
+		  npar = max(npar,
+			     1+TString(replacementFormula(idx+1,
+							  replacementFormula.Length())).Atoi());
 		  idx = replacementFormula.Index(']', idx);
 		  if (idx == kNPOS)
-		     Error("HandleUserFunctions", "Square brackets not matching in formula %s", (const char *) replacementFormula);
+		     Error("HandleUserFunctions",
+			   "Square brackets not matching in formula %s",
+			   (const char *) replacementFormula);
 
 	       }
-	       // npar should be set correctly
+	       // npar should be set correctly now
 
-	       // set ndim
-	       ndim = key.second;
-
-	       // break if number of arguments is good (important for `gaus`, which has two definitions with different numbers of arguments)
-	       if (nArguments == ndim + npar) {
+	       // break if number of arguments is good (note: `gaus`, has two
+	       // definitions with different numbers of arguments, but it works
+	       // out so that it should be unambiguous)
+	       if (nArguments == ndim + npar || nArguments == npar || nArguments == ndim) {
 		  nameRecognized = true;
 		  break;
 	       }
@@ -1377,31 +1402,32 @@ void TFormula::HandleUserFunctions(TString &formula) {
 	       }
 
 	       canReplace = true;
-	    } else if (nArguments == f->GetNpar()) {
-	       std::cout << "Assuming variables are implicit [work in progress]" << std::endl;
+	    } else if (nArguments == npar) {
+	       std::cout << "Try to assume variables are implicit" << std::endl;
+
 	       // loop to check if all arguments are parameters
-	       bool allParams = true; // that all arguments are parameters
-	       for (int argNr = 0; argNr < nArguments && allParams; argNr++) {
+	       bool varsImplicit = true;
+	       for (int argNr = 0; argNr < nArguments && varsImplicit; argNr++) {
 		  int openIdx = argSeparators[argNr] + 1;
 		  int closeIdx = argSeparators[argNr+1] - 1;
-		  // cout << "open Idx is " << openIdx << " " << formula[openIdx] << std::endl;
-		  // cout << "close Idx is " << closeIdx << " " << formula[closeIdx] << std::endl;
+
+		  // check brackets on either end
 		  if (formula[openIdx] != '[' || formula[closeIdx] != ']' || closeIdx <= openIdx+1)
-		     allParams = false;
+		     varsImplicit = false;
 
-		  for (int idx = openIdx + 1; idx < closeIdx && allParams; idx++)
-		     if (!IsFunctionNameChar(formula[idx])) {
-			allParams = false;
-		     }
+		  // check that the middle is a single function-name
+		  for (int idx = openIdx + 1; idx < closeIdx && varsImplicit; idx++)
+		     if (!IsFunctionNameChar(formula[idx]))
+			varsImplicit = false;
 
-		  if (!allParams)
-		     Warning("HandleUserFunctions", "Argument %d is not a parameter", argNr);
+		  if (!varsImplicit)
+		     Warning("HandleUserFunctions",
+			     "Argument %d is not a parameter. Cannot assume variables are implicit.",
+			     argNr);
 	       }
 	       
 	       // loop to replace parameter names
-	       if (allParams) {
-
-		  
+	       if (varsImplicit) {
 		  for (int argNr = 0; argNr < nArguments; argNr++) {
 		     TString oldName = (f) ?
 			TString::Format("[%s]", f->GetParName(argNr)) :
@@ -1417,20 +1443,41 @@ void TFormula::HandleUserFunctions(TString &formula) {
 		  canReplace = true;
 	       }
 	    }
+	    if (!canReplace && nArguments == ndim) {
+	       // Treat parameters as implicit
 
-	    std::cout << "putting substitutions in" << std::endl;
+	       // loop to replace variable names
+	       for (int argNr = 0; argNr < nArguments; argNr++) {
+		  TString oldName = (f) ?
+		     TString(defaultVariableNames[argNr]) :
+		     TString::Format("{V%d}", argNr);
+		  TString newName = TString(formula(argSeparators[argNr]+1,
+						    argSeparators[argNr+1]-argSeparators[argNr]-1));
+
+		  // preprocess so nesting works
+		  PreProcessFormula(newName);
+		  argSubstitutions[oldName] = newName;
+	       }
+	       
+	       canReplace = true;
+	    }
+
+
 	    if (canReplace)
 	       ReplaceAllNames(replacementFormula, argSubstitutions);
-	    std::cout << "now replacementFormula is " << replacementFormula << std::endl;
+	    std::cout << "after replacement, replacementFormula is " << replacementFormula << std::endl;
 	    
 
 	    if (canReplace) {
-	       std::cout << "about to replace position " << i << " length " << k-i << " in formula : " << formula << std::endl;
+	       //std::cout << "about to replace position " << i << " length " << k-i << " in formula : " << formula << std::endl;
 	       formula.Replace(i, k-i, replacementFormula);
 	       i += replacementFormula.Length() - 1; // skip to end of replacement
-	       std::cout << "new formula is : " << formula << std::endl;
+	       // std::cout << "new formula is : " << formula << std::endl;
 	    } else {
-	       Warning("HandleUserFunctions", "Unable to make replacement: Number of parameters doesn't work: %d arguments, %d dimensions, %d parameters", nArguments, ndim, npar);
+	       Warning("HandleUserFunctions",
+		       "Unable to make replacement. Number of parameters doesn't work : "
+		       "%d arguments, %d dimensions, %d parameters",
+		       nArguments, ndim, npar);
 	       i = j;
 	    }
 	    
@@ -1445,11 +1492,11 @@ void TFormula::HandleUserFunctions(TString &formula) {
 
    // TODO
    // 
-   // - handle only parameters (implicit variables) for parametrized functions
-   // - handle only variables (implicit parameters)
+   // + handle only parameters (implicit variables) for parametrized functions (should be working)
+   // + handle only variables (implicit parameters) (should be working)
    //   - inheriting values of old parameters?
    //   - then take over functionality from old part of ProcessFormula?
-   // - add TFormulaParsingTests
+   // - add TFormulaParsingTests for parametrized functions
    // - handle fancy parameter syntax
 }
 
