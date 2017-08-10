@@ -12,6 +12,7 @@
 
 // ROOT
 #include <TBranch.h>
+#include <TLeaf.h>
 #include <TBufferFile.h>
 
 // Standard
@@ -56,12 +57,15 @@ private:
   Long64_t fSavedStart;
   Long64_t fSavedEnd;
 
+  ClusterBuffer* fCounter;
+
   void CopyToSaved(Long64_t keep_start);
 
 public:
-  ClusterBuffer(const Request request, const Long64_t itemsize) :
+  ClusterBuffer(const Request request, const Long64_t itemsize, ClusterBuffer* counter) :
     fRequest(request), fItemSize(itemsize), fBufferFile(TBuffer::kWrite, 32*1024),
-    fBufferStart(0), fBufferEnd(0), fSavedStart(0), fSavedEnd(0)
+    fBufferStart(0), fBufferEnd(0), fSavedStart(0), fSavedEnd(0),
+    fCounter(counter)
   {
     // required for re-readability
     fRequest.branch->DropBaskets();
@@ -69,7 +73,8 @@ public:
 
   void ReadOne(Long64_t keep_start, const char* &error_string);
   void* GetBuffer(Long64_t &numbytes, Long64_t entry_start, Long64_t entry_end);
-  Long64_t EntryEnd();
+  Long64_t GetLastEntry();
+  bool IsLeaf(TLeaf* leaf);
 };
 
 class NumpyIterator {
@@ -88,7 +93,19 @@ public:
     fArrayInfo(arrayinfo), fNumEntries(num_entries), fReturnNewBuffers(return_new_buffers), fCurrentStart(0), fCurrentEnd(0)
   {
     for (unsigned int i = 0;  i < fArrayInfo.size();  i++) {
-      fClusterBuffers.push_back(std::unique_ptr<ClusterBuffer>(new ClusterBuffer(requests[i], fArrayInfo[i].dtype->elsize)));
+      ClusterBuffer* counter = nullptr;
+      TLeaf* countleaf = reinterpret_cast<TLeaf*>(requests[i].branch->GetListOfLeaves()->First())->GetLeafCount();
+
+      if (countleaf != nullptr) {
+        for (unsigned int j = 0;  j < i;  j++) {
+          if (fClusterBuffers[j].get()->IsLeaf(countleaf)) {
+            counter = fClusterBuffers[j].get();
+            break;
+          }
+        }
+      }
+
+      fClusterBuffers.push_back(std::unique_ptr<ClusterBuffer>(new ClusterBuffer(requests[i], fArrayInfo[i].dtype->elsize, counter)));
     }
   }
 

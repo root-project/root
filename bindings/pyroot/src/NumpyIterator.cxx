@@ -14,7 +14,6 @@
 #include <TLeafB.h>
 #include <TLeafD.h>
 #include <TLeafF.h>
-#include <TLeaf.h>
 #include <TLeafI.h>
 #include <TLeafI.h>
 #include <TLeafL.h>
@@ -122,14 +121,19 @@ void ClusterBuffer::ReadOne(Long64_t keep_start, const char* &error_string) {
 
 // GetBuffer returns a pointer to contiguous data with its size
 // if you're lucky (and ask for it), this is performed without any copies
-void* ClusterBuffer::GetBuffer(Long64_t &numbytes, Long64_t entry_start, Long64_t EntryEnd) {
-  numbytes = (EntryEnd - entry_start) * fItemSize;
+void* ClusterBuffer::GetBuffer(Long64_t &numbytes, Long64_t entry_start, Long64_t entry_end) {
+  numbytes = (entry_end - entry_start) * fItemSize;
   const Long64_t offset = (entry_start - fSavedStart) * fItemSize;
   return &fSaved.data()[offset];
 }
 
-Long64_t ClusterBuffer::EntryEnd() {
-  return fBufferEnd;  // hide the distinction between bf and saved
+Long64_t ClusterBuffer::GetLastEntry() {
+  return fBufferEnd;  // hide the distinction between buffer and saved
+}
+
+bool ClusterBuffer::IsLeaf(TLeaf* leaf) {
+  TObjArray* list = fRequest.branch->GetListOfLeaves();
+  return list->GetEntries() == 1  &&  reinterpret_cast<TLeaf*>(list->First()) == leaf; 
 }
 
 // step all ClusterBuffers forward, for all branches, returning true when done and setting error_string on any errors
@@ -144,7 +148,7 @@ bool NumpyIterator::StepForward(const char* &error_string) {
   // increment the branches that are at the forefront
   for (unsigned int i = 0;  i < fClusterBuffers.size();  i++) {
     ClusterBuffer &buf = *fClusterBuffers[i];
-    if (buf.EntryEnd() == fCurrentStart) {
+    if (buf.GetLastEntry() == fCurrentStart) {
       buf.ReadOne(fCurrentStart, error_string);
       if (error_string != nullptr)
         return true;
@@ -155,14 +159,14 @@ bool NumpyIterator::StepForward(const char* &error_string) {
   fCurrentEnd = -1;
   for (unsigned int i = 0;  i < fClusterBuffers.size();  i++) {
     ClusterBuffer &buf = *fClusterBuffers[i];
-    if (buf.EntryEnd() > fCurrentEnd)
-      fCurrentEnd = buf.EntryEnd();
+    if (buf.GetLastEntry() > fCurrentEnd)
+      fCurrentEnd = buf.GetLastEntry();
   }
 
   // bring all others up to at least fCurrentEnd
   for (unsigned int i = 0;  i < fClusterBuffers.size();  i++) {
     ClusterBuffer &buf = *fClusterBuffers[i];
-    while (buf.EntryEnd() < fCurrentEnd) {
+    while (buf.GetLastEntry() < fCurrentEnd) {
       buf.ReadOne(fCurrentStart, error_string);
       if (error_string != nullptr)
         return true;
