@@ -541,9 +541,7 @@ TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, EA
 
       TF1NormSum *normSum = new TF1NormSum(fullFormula, xmin, xmax);
 
-
       if (xmin == 0 && xmax == 1.) Info("TF1","Created TF1NormSum object using the default [0,1] range");
-
       
       fNpar = normSum->GetNpar();
       fNdim = 1; // (note: may want to extend functionality in the future)
