@@ -2,7 +2,7 @@
 
 #Set the list of files to be deleted by clean (Targets can also be specified).:
 CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog merged*.root a_*.root b_*.root input*.root freidt_merge.root mfile*.root mzfile*.root \
-     hsimple*.root
+     mlz4file*.root mzlibfile*.root hsimple*.root
 
 # Set the list of target to make while testing.  By default, mytest is the
 # only target added.  If the name of the target is changed in the rules then
@@ -77,39 +77,63 @@ endif
 
 mfile1.root mfile2.root mfile3.root mfile4.root: execMergeMulti.success
 
+# Default compression algorithm (default compression level - 1)
 mfile1-4.root: execMergeMulti.success mfile1.root mfile2.root mfile3.root mfile4.root
 	$(CMDECHO) ( hadd -f mfile1-2.root mfile1.root mfile2.root && hadd -f mfile3-4.root mfile3.root mfile4.root \
 	     && hadd -f mfile1-4.root mfile1-2.root mfile3-4.root ) > mfile1-4.log 2>&1  \
 	|| handleError.sh --log=mfile1-4.log --res=$$?
 
+# ZLIB-based compression (compression level 6)
+mzlibfile1-4.root: execMergeMulti.success mfile1.root mfile2.root mfile3.root mfile4.root
+	$(CMDECHO) ( hadd -f106 mzlibfile1-2.root mfile1.root mfile2.root && hadd -f106 mzlibfile3-4.root mfile3.root mfile4.root \
+	     && hadd -f106 mzlibfile1-4.root mzlibfile1-2.root mzlibfile3-4.root ) > mzlibfile1-4.log 2>&1  \
+	|| handleError.sh --log=mzlibfile1-4.log --res=$$?
+
+# LZMA-based compression (compression level 6)
 mzfile1-4.root: execMergeMulti.success mfile1.root mfile2.root mfile3.root mfile4.root
 	$(CMDECHO) ( hadd -f206 mzfile1-2.root mfile1.root mfile2.root && hadd -f206 mzfile3-4.root mfile3.root mfile4.root \
 	     && hadd -f206 mzfile1-4.root mzfile1-2.root mzfile3-4.root ) > mzfile1-4.log 2>&1  \
 	|| handleError.sh --log=mzfile1-4.log --res=$$?
 
-execTestMultiMerge.log: mfile1-4.root mzfile1-4.root hsimple.root hsimple9.root hsimple9x2.root hsimple209.root hsimpleK.root hsimpleK202.root hsimpleF.root
+# LZ4-based compression (compression level 6)
+mlz4file1-4.root: execMergeMulti.success mfile1.root mfile2.root mfile3.root mfile4.root
+	$(CMDECHO) ( hadd -f406 mlz4file1-2.root mfile1.root mfile2.root && hadd -f406 mlz4file3-4.root mfile3.root mfile4.root \
+	     && hadd -f406 mlz4file1-4.root mlz4file1-2.root mlz4file3-4.root ) > mlz4file1-4.log 2>&1  \
+	|| handleError.sh --log=mlz4file1-4.log --res=$$?
+
+execTestMultiMerge.log: mfile1-4.root mzfile1-4.root mzlibfile1-4.root mlz4file1-4.root hsimple.root hsimple9.root hsimple9x2.root hsimple209.root hsimple409.root hsimpleK.root hsimpleK202.root hsimpleF.root
 
 hsimple.root: $(ROOT_LOC)/tutorials/hsimple.C
 	$(CMDECHO) ! $(CALLROOTEXE) -b -l -q $(ROOT_LOC)/tutorials/hsimple.C > hsimple.log 2>&1
 
+# Default compression algorithm (compression level 9)
 hsimple9.root: hsimple.root
 	$(CMDECHO) hadd -f109 hsimple9.root hsimple.root > hsimple9.log 2>&1  \
      || handleError.sh --log=hsimple9.log --res=$$?
 
+# Default compression algorithm (compression level 9)
 hsimple9x2.root: hsimple.root
 	$(CMDECHO) ( hadd -f109 hsimple9x2.root hsimple.root && hadd -f109 -a hsimple9x2.root hsimple.root )  > hsimple9x2.log 2>&1  \
      || handleError.sh --log=hsimple9x2.log --res=$$?
 
+# LZMA-based compression (compression level 9)
 hsimple209.root: hsimple.root
 	$(CMDECHO) hadd -f209 hsimple209.root hsimple.root > hsimple209.log 2>&1  \
 		|| handleError.sh --log=hsimple209.log --res=$$?
 
-hsimpleK.root: hsimple.root hsimple9.root hsimple209.root hsimple9x2.root
-	$(CMDECHO) hadd -fk hsimpleK.root hsimple209.root hsimple.root hsimple9.root hsimple9x2.root > hsimpleK.log 2>&1  \
+# LZ4-based compression (compression level 9)
+hsimple409.root: hsimple.root
+	$(CMDECHO) hadd -f409 hsimple409.root hsimple.root > hsimple409.log 2>&1  \
+		|| handleError.sh --log=hsimple409.log --res=$$?
+
+# Default compression algorithm
+hsimpleK.root: hsimple.root hsimple9.root hsimple209.root hsimple409.root hsimple9x2.root
+	$(CMDECHO) hadd -fk hsimpleK.root hsimple209.root hsimple409.root hsimple.root hsimple9.root hsimple9x2.root > hsimpleK.log 2>&1  \
 		|| handleError.sh --log=hsimpleK.log --res=$$?
 
-hsimpleK202.root: hsimple.root hsimple9.root hsimple209.root hsimple9x2.root
-	$(CMDECHO) hadd -fk202 hsimpleK202.root hsimple209.root hsimple.root hsimple9.root hsimple9x2.root > hsimpleK202.log 2>&1  \
+# LZMA-based compression (compression level 2) 
+hsimpleK202.root: hsimple.root hsimple9.root hsimple209.root hsimple409.root hsimple9x2.root
+	$(CMDECHO) hadd -fk202 hsimpleK202.root hsimple209.root hsimple409.root hsimple.root hsimple9.root hsimple9x2.root > hsimpleK202.log 2>&1  \
 		|| handleError.sh --log=hsimpleK202.log --res=$$?
 
 # LZ4-based compression (compression level 9)

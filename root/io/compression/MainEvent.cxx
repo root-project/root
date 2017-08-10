@@ -307,11 +307,8 @@ int main(int argc, char **argv)
       else if (comp == 101) expectedSize = 1254808;
       else if (comp == 201) expectedSize = 1111230;
       else if (comp == 301) expectedSize = 1265018;
-#ifdef R__HAS_LZ4
-      else if (comp == 5) expectedSize = 1284420;
-#else
+      else if (comp == 405) expectedSize = 1284420;
       else if (comp == 5) expectedSize = 1208369;
-#endif
 
       if (expectedSize > 0 &&
           (tree->GetZipBytes() > expectedSize + 5000 ||
