@@ -1,6 +1,5 @@
 // @(#)root/hist:$Id$
-// Authors: L. Moneta, A. Flandi   08/2014
-//
+// Authors: Lorenzo Moneta, Aurélie Flandi  27/08/14
 //
 /**********************************************************************
  *                                                                    *
@@ -8,11 +7,7 @@
  *                                                                    *
  *                                                                    *
  **********************************************************************/
-//
-//  TF1NormSum.cxx
-//
-//
-//
+
 #include "TROOT.h"
 #include "TClass.h"
 #include "TMath.h"
@@ -26,46 +21,39 @@
 Class adding two functions: c1*f1+c2*f2
 */
 
-//ClassImp(TF1NormSum);
+////////////////////////////////////////////////////////////////////////////////
+/// Function to find and rename duplicate parameters with the same name
 
+template<class Iterator>
+void FixDuplicateNames(Iterator begin, Iterator end) {
 
-// function to find and rename duplicate parameters with the same name
+   // make a map of values
 
-template<class Iterator> 
-void FixDuplicateNames(Iterator begin, Iterator end) { 
-
-
-   // make a map of values 
-
-   std::multimap<TString, int > parMap; 
-   for (Iterator it = begin; it !=  end; ++it) { 
+   std::multimap<TString, int > parMap;
+   for (Iterator it = begin; it !=  end; ++it) {
       parMap.insert( std::make_pair( *it, std::distance(begin,it) ) );
    }
-   for ( auto & elem : parMap) { 
-      TString name = elem.first; 
-      int n = parMap.count( name); 
+   for ( auto & elem : parMap) {
+      TString name = elem.first;
+      int n = parMap.count( name);
       if (n > 1 ) {
           std::pair <std::multimap<TString,int>::iterator, std::multimap<TString,int>::iterator> ret;
           ret = parMap.equal_range(name);
-          int i = 0; 
+          int i = 0;
           for (std::multimap<TString,int>::iterator it=ret.first; it!=ret.second; ++it) {
              *(begin+it->second) = TString::Format("%s%d",name.Data(),++i);
           }
       }
    }
 
-   // for (Iterator it = begin; it !=  end; ++it) 
-   //    std::cout << *it << "  ";
-   // std::cout << std::endl;
-
 }
 
-
+////////////////////////////////////////////////////////////////////////////////
 
 void TF1NormSum::InitializeDataMembers(const std::vector <std::shared_ptr < TF1 >> &functions, const std::vector <Double_t> &coeffs, Double_t scale)
 {
 
-   fScale           = scale; 
+   fScale           = scale;
    fFunctions       = functions;
    fCoeffs          = coeffs;
    fNOfFunctions    = functions.size();
@@ -77,25 +65,22 @@ void TF1NormSum::InitializeDataMembers(const std::vector <std::shared_ptr < TF1 
    {
       int npar = fFunctions[n] -> GetNpar();
       fCstIndexes[n]      = fFunctions[n] -> GetParNumber("Constant");//return -1 if there is no constant parameter
-      //std::cout << " cst index of function " << n << " : " << fCstIndexes[n] << std::endl;
-      //std::cout << "nofparam of function " << n <<" : " << fNOfParams[n] << std::endl;
       fParNames[n] = TString::Format("Coeff%d",n);
-      //printf("examing function %s \n",fFunctions[n]->GetName() );
       if (fCstIndexes[n]!= -1)                                        //if there exists a constant parameter
       {
-         fFunctions[n] -> FixParameter(fCstIndexes[n], 1.);          //fixes the parameters called "Constant" to 1
-         int k = 0;                                                  //index for the temp arry, k wil go form 0 until fNofNonCstParameter
-         for (int i=0; i<npar; i++)                         //go through all the parameter to
+         fFunctions[n] -> FixParameter(fCstIndexes[n], 1.); // fixes the parameters called "Constant" to 1
+         int k = 0;                                         // index for the temp array, k wil go form 0 until fNofNonCstParameter
+         for (int i=0; i<npar; i++)                         // go through all the parameter to
          {
-            if (i==fCstIndexes[n])   continue;                      //go to next step if this is the constant parameter
-            fParNames.push_back(  fFunctions[n] -> GetParName(i) ); 
+            if (i==fCstIndexes[n])   continue;              // go to next step if this is the constant parameter
+            fParNames.push_back(  fFunctions[n] -> GetParName(i) );
             k++;
          }
       }
-      else { 
+      else {
          for (int i=0; i < npar; i++)                        //go through all the parameter to
          {
-            fParNames.push_back( fFunctions[n] -> GetParName(i) ); 
+            fParNames.push_back( fFunctions[n] -> GetParName(i) );
          }
       }
       //normalize the functions if it is not already done (do at the end so constant parameter is not zero)
@@ -105,13 +90,16 @@ void TF1NormSum::InitializeDataMembers(const std::vector <std::shared_ptr < TF1 
    FixDuplicateNames(fParNames.begin()+fNOfFunctions, fParNames.end());
 
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
 TF1NormSum::TF1NormSum()
 {
    fNOfFunctions  = 0;
    fScale         = 1.;
-   fFunctions     = std::vector< std::shared_ptr < TF1 >>(0) ;     // Vector of size fNOfFunctions containing TF1 functions
-   fCoeffs        = std::vector < Double_t  >(0) ;        // Vector of size fNOfFunctions containing coefficients in front of each function
-   fCstIndexes = std::vector < Int_t     > (0);   
+   fFunctions     = std::vector< std::shared_ptr < TF1 >>(0); // Vector of size fNOfFunctions containing TF1 functions
+   fCoeffs        = std::vector < Double_t  >(0) ;            // Vector of size fNOfFunctions containing coefficients in front of each function
+   fCstIndexes = std::vector < Int_t     > (0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -123,7 +111,7 @@ TF1NormSum::TF1NormSum(const std::vector <TF1*> &functions, const std::vector <D
    {
     f[i] = std::shared_ptr < TF1 >((TF1*)functions[i]->Clone());
    }
-   
+
    InitializeDataMembers(f,coeffs,scale);
 }
 
@@ -137,23 +125,23 @@ TF1NormSum::TF1NormSum(TF1* function1, TF1* function2, Double_t coeff1, Double_t
    TF1 * fnew1 = 0;
    TF1 * fnew2 = 0;
    // need to use Copy because clone does not work for functor-based functions
-   if (function1) { 
+   if (function1) {
       fnew1 = (TF1*) function1->IsA()->New();
-      function1->Copy(*fnew1); 
+      function1->Copy(*fnew1);
    }
-   if (function2) { 
+   if (function2) {
       fnew2 = (TF1*) function2->IsA()->New();
-      function2->Copy(*fnew2); 
+      function2->Copy(*fnew2);
    }
    if (fnew1 == nullptr || fnew2 == nullptr)
       Fatal("TF1NormSum","Invalid input functions - Abort");
 
    std::shared_ptr < TF1 > f1( fnew1);
    std::shared_ptr < TF1 > f2( fnew2);
-   
+
    functions       = {f1, f2};
    coeffs          = {coeff1,    coeff2};
-   
+
    InitializeDataMembers(functions, coeffs,scale);
 }
 
@@ -167,17 +155,17 @@ TF1NormSum::TF1NormSum(TF1* function1, TF1* function2, TF1* function3, Double_t 
    TF1 * fnew1 = 0;
    TF1 * fnew2 = 0;
    TF1 * fnew3 = 0;
-   if (function1) { 
+   if (function1) {
       fnew1 = (TF1*) function1->IsA()->New();
-      function1->Copy(*fnew1); 
+      function1->Copy(*fnew1);
    }
-   if (function2) { 
+   if (function2) {
       fnew2 = (TF1*) function2->IsA()->New();
-      function2->Copy(*fnew2); 
+      function2->Copy(*fnew2);
    }
-   if (function3) { 
+   if (function3) {
       fnew3 = (TF1*) function3->IsA()->New();
-      function3->Copy(*fnew3); 
+      function3->Copy(*fnew3);
    }
    if (!fnew1 || !fnew2  || !fnew3 )
       Fatal("TF1NormSum","Invalid input functions - Abort");
@@ -185,11 +173,11 @@ TF1NormSum::TF1NormSum(TF1* function1, TF1* function2, TF1* function3, Double_t 
    std::shared_ptr < TF1 > f1( fnew1);
    std::shared_ptr < TF1 > f2( fnew2);
    std::shared_ptr < TF1 > f3( fnew3);
-   
-   
+
+
    functions       = {f1, f2, f3};
    coeffs          = {coeff1,    coeff2,    coeff3};
-   
+
    InitializeDataMembers(functions, coeffs,scale);
 }
 
@@ -197,24 +185,24 @@ TF1NormSum::TF1NormSum(TF1* function1, TF1* function2, TF1* function3, Double_t 
 /// TF1NormSum constructor taking any addition of formulas with coefficient or not
 ///
 /// - example 1 : 2.*expo + gauss + 0.5* gauss
-/// - example 2 : expo + 0.3*f1 if f1 is defined in the list of fucntions
+/// - example 2 : expo + 0.3*f1 if f1 is defined in the list of functions
 
 TF1NormSum::TF1NormSum(const TString &formula, Double_t xmin, Double_t xmax)
 {
    TF1::InitStandardFunctions();
-   
+
    TObjArray *arrayall    = formula.Tokenize("*+");
    TObjArray *arraytimes  = formula.Tokenize("*") ;
    Int_t noffunctions     = (formula.Tokenize("+")) -> GetEntries();
    Int_t nofobj           = arrayall  -> GetEntries();
    Int_t nofcoeffs        = nofobj - noffunctions;
-   
+
    std::vector < std::shared_ptr < TF1 >     > functions(noffunctions);
    std::vector < Double_t > coeffs(noffunctions);
    std::vector < TString  > funcstringall(nofobj);
    std::vector < Int_t    > indexsizetimes(nofcoeffs+1);
    std::vector < Bool_t   > isacoeff(nofobj);//1 is it is a coeff, 0 if it is a functions
-   
+
    for (int i=0; i<nofobj; i++)
    {
       funcstringall[i] = ((TObjString*)((*arrayall)[i])) -> GetString();
@@ -260,15 +248,6 @@ TF1NormSum::TF1NormSum(const TString &formula, Double_t xmin, Double_t xmax)
       }
    }
    InitializeDataMembers(functions, coeffs,1.);
-   
-   /*for (auto f : functions)
-    {
-    f->Print();
-    }
-    for (auto c : coeffs)
-    {
-    std::cout << "coeff " << c << std::endl;
-    }*/
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -277,7 +256,7 @@ TF1NormSum::TF1NormSum(const TString &formula, Double_t xmin, Double_t xmax)
 double TF1NormSum::operator()(double* x, double* p)
 {
    if (p!=0)   TF1NormSum::SetParameters(p);                           // first refresh the parameters
-   
+
    Double_t sum = 0.;
    for (unsigned int n=0; n<fNOfFunctions; n++)
    {
@@ -305,7 +284,7 @@ std::vector<double>  TF1NormSum::GetParameters() const {
             k++;
          }
       }
-      nOfNonCstParams = k; 
+      nOfNonCstParams = k;
    }
    return params;
 }
@@ -321,7 +300,7 @@ void TF1NormSum::SetParameters(const double* params)//params should have the siz
       fCoeffs[n] = params[n];
    }
    Int_t    offset     = 0;
-   int k = 0;  // k indicates the nnumber of non-constant parameter per function
+   int k = 0;  // k indicates the number of non-constant parameter per function
    for (unsigned int n=0; n<fNOfFunctions; n++)
    {
       bool equalParams = true;
@@ -340,8 +319,8 @@ void TF1NormSum::SetParameters(const double* params)//params should have the siz
          }
       }
       // update function integral if not equal
-      if (!equalParams) fFunctions[n]->Update(); 
-            
+      if (!equalParams) fFunctions[n]->Update();
+
    }
 }
 
@@ -356,9 +335,12 @@ void TF1NormSum::SetParameters(Double_t p0, Double_t p1, Double_t p2, Double_t p
 {
    const double params[] = {p0,p1,p2,p3,p4,p5,p6,p7,p8,p9,p10};
    TF1NormSum::SetParameters(params);
-   
+
 }
-//return the number of (non constant) paramters including the coefficients: for 2 functions: c1,c2,p0,p1,p2,p3...
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return the number of (non constant) parameters including the coefficients: for 2 functions: c1,c2,p0,p1,p2,p3...
+
 Int_t TF1NormSum::GetNpar() const
 {
    Int_t nofparams = 0;
@@ -367,5 +349,5 @@ Int_t TF1NormSum::GetNpar() const
       nofparams += fFunctions[n]->GetNpar();
       if (fCstIndexes[n] >= 0) nofparams -= 1;
    }
-   return nofparams + fNOfFunctions;                                   //fNOfFunctions for the  coefficientws
+   return nofparams + fNOfFunctions;  //fNOfFunctions for the coefficients
 }
