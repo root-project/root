@@ -584,7 +584,6 @@ function(ROOT_LINKER_LIBRARY library)
   endif()
   if(TARGET G__${library})
     add_dependencies(${library} G__${library})
-    message("${library} --> G__${library}")
   else()
     # Uncomment to see if we maybe forgot to add a dependency between linking
     # a dictionary and generating the G__*.cxx file. We can't have this by
