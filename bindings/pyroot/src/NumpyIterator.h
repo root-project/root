@@ -51,7 +51,8 @@ private:
   std::vector<char> fSaved;
 
   // always numbers of entries (not bytes) and always inclusive on start, exclusive on end (like Python)
-  // also, the TBufferFile is always ahead of the saved buffer and there's no gap between them
+  Long64_t fEntriesStart;
+  Long64_t fEntriesEnd;
   Long64_t fBufferStart;
   Long64_t fBufferEnd;
   Long64_t fSavedStart;
@@ -59,19 +60,17 @@ private:
 
   ClusterBuffer* fCounter;
 
-  void CopyToSaved(Long64_t keep_start);
-
 public:
   ClusterBuffer(const Request request, const Long64_t itemsize, ClusterBuffer* counter) :
     fRequest(request), fItemSize(itemsize), fBufferFile(TBuffer::kWrite, 32*1024),
-    fBufferStart(0), fBufferEnd(0), fSavedStart(0), fSavedEnd(0),
+    fEntriesStart(0), fEntriesEnd(0), fBufferStart(0), fBufferEnd(0), fSavedStart(0), fSavedEnd(0),
     fCounter(counter)
   {
     // required for re-readability
     fRequest.branch->DropBaskets();
   }
 
-  void ReadOne(Long64_t keep_start, const char* &error_string);
+  void ReadOne(Long64_t entry_start, const char* &error_string);
   void* GetBuffer(Long64_t &numbytes, Long64_t entry_start, Long64_t entry_end);
   Long64_t GetLastEntry();
   bool IsLeaf(TLeaf* leaf);

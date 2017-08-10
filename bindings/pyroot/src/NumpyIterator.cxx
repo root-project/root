@@ -45,9 +45,59 @@ namespace PyROOT {
 
 /////////////////////////////////////////////////////// class methods
 
-void ClusterBuffer::CopyToSaved(Long64_t keep_start) {
-  // this is a safer algorithm than is necessary, and it could impact performance, but significantly less so than the other speed-ups
+// ReadOne asks ROOT to read one basket from the file
+// and ClusterBuffer ensures that entries as old as keep_start are preserved
+void ClusterBuffer::ReadOne(Long64_t entry_start, const char* &error_string) {
+  // read in one more basket, starting at the old fBufferEnd
+  Long64_t num_entries = fRequest.branch->GetBulkRead().GetEntriesSerialized(fEntriesEnd, fBufferFile);
 
+  // check for errors
+  if (num_entries <= 0) {
+    error_string = "failed to read TBasket into TBufferFile (using GetBulkRead().GetEntriesSerialized)";
+    return;
+  }
+
+  Long64_t buffer_size = num_entries;   // FIXME
+
+  switch (fItemSize) {
+  case 8:
+    {
+      Long64_t* buffer64 = reinterpret_cast<Long64_t*>(fBufferFile.GetCurrent());
+      for (Long64_t i = 0;  i < buffer_size;  i++)
+        buffer64[i] = __builtin_bswap64(buffer64[i]);
+      break;
+    }
+
+  case 4:
+    {
+      Int_t* buffer32 = reinterpret_cast<Int_t*>(fBufferFile.GetCurrent());
+      for (Long64_t i = 0;  i < buffer_size;  i++)
+        buffer32[i] = __builtin_bswap32(buffer32[i]);
+      break;
+    }
+
+  case 2:
+    {
+      Short_t* buffer16 = reinterpret_cast<Short_t*>(fBufferFile.GetCurrent());
+      for (Long64_t i = 0;  i < buffer_size;  i++)
+        buffer16[i] = __builtin_bswap16(buffer16[i]);
+      break;
+    }
+
+  default:
+    error_string = "illegal fItemSize";
+    return;
+  }
+
+  // update the range
+  fEntriesStart = fEntriesEnd;
+  fEntriesEnd = fEntriesStart + num_entries;
+  fBufferStart = fBufferEnd;
+  fBufferEnd = fBufferStart + buffer_size;
+
+  // always mirror to the saved buffer
+  Long64_t keep_start = entry_start;    // FIXME
+  
   // remove data from the start of the saved buffer to keep it from growing too much
   if (fSavedStart < keep_start) {
     const Long64_t offset = (keep_start - fSavedStart) * fItemSize;
@@ -69,66 +119,18 @@ void ClusterBuffer::CopyToSaved(Long64_t keep_start) {
   }
 }
 
-// ReadOne asks ROOT to read one basket from the file
-// and ClusterBuffer ensures that entries as old as keep_start are preserved
-void ClusterBuffer::ReadOne(Long64_t keep_start, const char* &error_string) {
-  // read in one more basket, starting at the old fBufferEnd
-  Long64_t numentries = fRequest.branch->GetBulkRead().GetEntriesSerialized(fBufferEnd, fBufferFile);
-
-  switch (fItemSize) {
-  case 8:
-    {
-      Long64_t* buffer64 = reinterpret_cast<Long64_t*>(fBufferFile.GetCurrent());
-      for (Long64_t i = 0;  i < numentries;  i++)
-        buffer64[i] = __builtin_bswap64(buffer64[i]);
-      break;
-    }
-
-  case 4:
-    {
-      Int_t* buffer32 = reinterpret_cast<Int_t*>(fBufferFile.GetCurrent());
-      for (Long64_t i = 0;  i < numentries;  i++)
-        buffer32[i] = __builtin_bswap32(buffer32[i]);
-      break;
-    }
-
-  case 2:
-    {
-      Short_t* buffer16 = reinterpret_cast<Short_t*>(fBufferFile.GetCurrent());
-      for (Long64_t i = 0;  i < numentries;  i++)
-        buffer16[i] = __builtin_bswap16(buffer16[i]);
-      break;
-    }
-
-  default:
-    error_string = "illegal fItemSize";
-    return;
-  }
-
-  // update the range
-  fBufferStart = fBufferEnd;
-  fBufferEnd = fBufferStart + numentries;
-
-  // check for errors
-  if (numentries <= 0) {
-    fBufferEnd = fBufferStart;
-    error_string = "failed to read TBasket into TBufferFile (using GetBulkRead().GetEntriesSerialized)";
-  }
-
-  // always mirror to the saved buffer
-  CopyToSaved(keep_start);
-}
-
 // GetBuffer returns a pointer to contiguous data with its size
 // if you're lucky (and ask for it), this is performed without any copies
 void* ClusterBuffer::GetBuffer(Long64_t &numbytes, Long64_t entry_start, Long64_t entry_end) {
+  // FIXME
+
   numbytes = (entry_end - entry_start) * fItemSize;
   const Long64_t offset = (entry_start - fSavedStart) * fItemSize;
   return &fSaved.data()[offset];
 }
 
 Long64_t ClusterBuffer::GetLastEntry() {
-  return fBufferEnd;  // hide the distinction between buffer and saved
+  return fEntriesEnd;
 }
 
 bool ClusterBuffer::IsLeaf(TLeaf* leaf) {
