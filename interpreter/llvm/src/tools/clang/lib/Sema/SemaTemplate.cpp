@@ -1383,10 +1383,20 @@ Sema::CheckClassTemplate(Scope *S, unsigned TagSpec, TagUseKind TUK,
     return true;
   }
 
+  // AXEL - do not check for redecls of template arg defaults when parsing
+  // dictionary forward decls.
+  bool fwdDeclFromROOT = false;
+  if (Attr && Attr->getKind() == AttributeList::AT_Annotate
+    && Attr->getNumArgs() > 0 && Attr->isArgExpr(0))
+    if (auto AnnotVal = dyn_cast<StringLiteral>(Attr->getArgAsExpr(0)))
+      if (AnnotVal->getString().startswith("$clingAutoload$"))
+        fwdDeclFromROOT = true;
+
   // Check the template parameter list of this declaration, possibly
   // merging in the template parameter list from the previous class
   // template declaration. Skip this check for a friend in a dependent
   // context, because the template parameter list might be dependent.
+  if (!fwdDeclFromROOT)
   if (!(TUK == TUK_Friend && CurContext->isDependentContext()) &&
       CheckTemplateParameterList(
           TemplateParams,
