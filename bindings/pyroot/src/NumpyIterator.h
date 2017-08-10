@@ -17,6 +17,7 @@
 
 // Standard
 #include <vector>
+#include <tuple>
 
 namespace PyROOT {
 
@@ -51,19 +52,19 @@ private:
   std::vector<char> fSaved;
 
   // always numbers of entries (not bytes) and always inclusive on start, exclusive on end (like Python)
-  Long64_t fEntriesStart;
-  Long64_t fEntriesEnd;
   Long64_t fBufferStart;
   Long64_t fBufferEnd;
   Long64_t fSavedStart;
   Long64_t fSavedEnd;
+  Long64_t fSavedSize;
 
   ClusterBuffer* fCounter;
+  std::vector<std::tuple<Long64_t, Long64_t, Long64_t>> fOldCounts;
 
 public:
   ClusterBuffer(const Request request, const Long64_t itemsize, ClusterBuffer* counter) :
     fRequest(request), fItemSize(itemsize), fBufferFile(TBuffer::kWrite, 32*1024),
-    fEntriesStart(0), fEntriesEnd(0), fBufferStart(0), fBufferEnd(0), fSavedStart(0), fSavedEnd(0),
+    fBufferStart(0), fBufferEnd(0), fSavedStart(0), fSavedEnd(0), fSavedSize(0),
     fCounter(counter)
   {
     // required for re-readability
@@ -74,6 +75,7 @@ public:
   void* GetBuffer(Long64_t &numbytes, Long64_t entry_start, Long64_t entry_end);
   Long64_t GetLastEntry();
   bool IsLeaf(TLeaf* leaf);
+  Long64_t UseAsCounter(Long64_t entry_start, Long64_t num_entries);
 };
 
 class NumpyIterator {

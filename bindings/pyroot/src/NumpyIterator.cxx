@@ -49,7 +49,7 @@ namespace PyROOT {
 // and ClusterBuffer ensures that entries as old as keep_start are preserved
 void ClusterBuffer::ReadOne(Long64_t entry_start, const char* &error_string) {
   // read in one more basket, starting at the old fBufferEnd
-  Long64_t num_entries = fRequest.branch->GetBulkRead().GetEntriesSerialized(fEntriesEnd, fBufferFile);
+  Long64_t num_entries = fRequest.branch->GetBulkRead().GetEntriesSerialized(fBufferEnd, fBufferFile);
 
   // check for errors
   if (num_entries <= 0) {
@@ -57,7 +57,14 @@ void ClusterBuffer::ReadOne(Long64_t entry_start, const char* &error_string) {
     return;
   }
 
-  Long64_t buffer_size = num_entries;   // FIXME
+  Long64_t buffer_size = num_entries;
+  if (fCounter != nullptr) {
+    buffer_size = fCounter->UseAsCounter(entry_start, num_entries);
+    if (buffer_size < 0) {
+      error_string = "failed to use counter to determine the size of this buffer";
+      return;
+    }
+  }
 
   switch (fItemSize) {
   case 8:
@@ -90,31 +97,35 @@ void ClusterBuffer::ReadOne(Long64_t entry_start, const char* &error_string) {
   }
 
   // update the range
-  fEntriesStart = fEntriesEnd;
-  fEntriesEnd = fEntriesStart + num_entries;
   fBufferStart = fBufferEnd;
-  fBufferEnd = fBufferStart + buffer_size;
+  fBufferEnd = fBufferStart + num_entries;
 
-  // always mirror to the saved buffer
-  Long64_t keep_start = entry_start;    // FIXME
-  
   // remove data from the start of the saved buffer to keep it from growing too much
-  if (fSavedStart < keep_start) {
-    const Long64_t offset = (keep_start - fSavedStart) * fItemSize;
-    const Long64_t newsize = (fSavedEnd - keep_start) * fItemSize;
+  if (fSavedStart < entry_start) {
+    Long64_t offset = (entry_start - fSavedStart) * fItemSize;
+
+    if (fCounter != nullptr) {
+      offset = fCounter->UseAsCounter(fSavedStart, entry_start - fSavedStart) * fItemSize;
+      if (offset < 0) {
+        error_string = "failed to use counter to determine an offset for this buffer";
+        return;
+      }
+    }
+
+    Long64_t newsize = fSaved.size() - offset;
 
     memmove(fSaved.data(), &fSaved.data()[offset], newsize);
     fSaved.resize(newsize);
-    fSavedStart = keep_start;
+    fSavedStart = entry_start;
   }
 
   // append the BufferFile at the end of the saved buffer
-  const Long64_t oldsize = fSaved.size();
-  const Long64_t additional = (fBufferEnd - fBufferStart) * fItemSize;
+  Long64_t oldsize = fSaved.size();
+  if (buffer_size > 0) {
+    Long64_t num_bytes = buffer_size * fItemSize;
 
-  if (additional > 0) {
-    fSaved.resize(oldsize + additional);
-    memcpy(&fSaved.data()[oldsize], fBufferFile.GetCurrent(), additional);
+    fSaved.resize(oldsize + num_bytes);
+    memcpy(&fSaved.data()[oldsize], fBufferFile.GetCurrent(), num_bytes);
     fSavedEnd = fBufferEnd;
   }
 }
@@ -122,20 +133,58 @@ void ClusterBuffer::ReadOne(Long64_t entry_start, const char* &error_string) {
 // GetBuffer returns a pointer to contiguous data with its size
 // if you're lucky (and ask for it), this is performed without any copies
 void* ClusterBuffer::GetBuffer(Long64_t &numbytes, Long64_t entry_start, Long64_t entry_end) {
-  // FIXME
-
   numbytes = (entry_end - entry_start) * fItemSize;
-  const Long64_t offset = (entry_start - fSavedStart) * fItemSize;
+  Long64_t offset = (entry_start - fSavedStart) * fItemSize;
+
+  if (fCounter != nullptr) {
+    numbytes = fCounter->UseAsCounter(entry_start, entry_end - entry_start) * fItemSize;
+    if (numbytes < 0)
+      return nullptr;
+
+    offset = fCounter->UseAsCounter(fSavedStart, entry_start - fSavedStart) * fItemSize;
+    if (offset < 0)
+      return nullptr;
+  }
+
   return &fSaved.data()[offset];
 }
 
 Long64_t ClusterBuffer::GetLastEntry() {
-  return fEntriesEnd;
+  return fBufferEnd;
 }
 
 bool ClusterBuffer::IsLeaf(TLeaf* leaf) {
   TObjArray* list = fRequest.branch->GetListOfLeaves();
   return list->GetEntries() == 1  &&  reinterpret_cast<TLeaf*>(list->First()) == leaf; 
+}
+
+Long64_t ClusterBuffer::UseAsCounter(Long64_t entry_start, Long64_t num_entries) {
+  if (num_entries == 0)
+    return 0;
+
+  for (unsigned int i = 0;  i < fOldCounts.size();  i++) {
+    if (std::get<0>(fOldCounts[i]) == entry_start  &&  std::get<1>(fOldCounts[i]) == num_entries)
+      return std::get<2>(fOldCounts[i]);
+  }
+
+  if (entry_start < fSavedStart)
+    return -1;
+
+  Long64_t total = 0;
+  switch (fItemSize) {
+  case 4:
+    {
+      Int_t* buffer32 = &reinterpret_cast<Int_t*>(fSaved.data())[entry_start - fSavedStart];
+      for (Long64_t i = 0;  i < num_entries;  i++)
+        total += buffer32[i];
+
+      fOldCounts.push_back(std::tuple<Long64_t, Long64_t, Long64_t>(entry_start, num_entries, total));
+      return total;
+    }
+
+  default:
+    return -1;
+  }
 }
 
 // step all ClusterBuffers forward, for all branches, returning true when done and setting error_string on any errors
