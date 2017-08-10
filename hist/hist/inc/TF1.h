@@ -274,7 +274,6 @@ private:
 		       Double_t xmin, Double_t xmax);
    int TermCoeffLength(TString &term);
 
-   
 public:
 
    template <class T>
