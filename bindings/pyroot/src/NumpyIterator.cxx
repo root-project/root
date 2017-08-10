@@ -148,16 +148,6 @@ Long64_t ClusterBuffer::EntryEnd() {
   return bfEntryEnd;  // hide the distinction between bf and extra
 }
 
-void ClusterBuffer::Reset() {
-  fExtra.clear();
-  bfEntryStart = 0;
-  bfEntryEnd = 0;
-  exEntryStart = 0;
-  exEntryEnd = 0;
-  // required for re-readability
-  fRequest.branch->DropBaskets();
-}
-
 // step all ClusterBuffers forward, for all branches, returning true when done and setting error_string on any errors
 bool NumpyIterator::StepForward(const char* &error_string) {
   // put your feet together for the next step
@@ -249,14 +239,6 @@ PyObject* NumpyIterator::arrays() {
   }
 
   return out;
-}
-
-void NumpyIterator::Reset() {
-  fCurrentStart = 0;
-  fCurrentEnd = 0;
-  for (unsigned int i = 0;  i < fClusterBuffers.size();  i++) {
-    fClusterBuffers[i]->Reset();
-  }
 }
 
 /////////////////////////////////////////////////////// internal functions

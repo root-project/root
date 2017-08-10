@@ -73,7 +73,6 @@ public:
   void ReadOne(Long64_t keep_start, const char* &error_string);
   void* GetBuffer(Long64_t &numbytes, Long64_t entry_start, Long64_t entry_end);
   Long64_t EntryEnd();
-  void Reset();
 };
 
 class NumpyIterator {
@@ -97,7 +96,6 @@ public:
   }
 
   PyObject* arrays();
-  void Reset();
 };
 
 typedef struct {
@@ -107,7 +105,6 @@ typedef struct {
 
 static PyObject* PyNumpyIterator_iter(PyObject* self) {
   PyNumpyIterator* thyself = reinterpret_cast<PyNumpyIterator*>(self);
-  thyself->iter->Reset();
   Py_INCREF(self);
   return self;
 }
