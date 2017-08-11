@@ -49,7 +49,8 @@ TEST(StressHistogram, TestDivide2D1)
    }
    // avoid bins in h2 with zero content
    for (int i = 0; i < h2.GetSize(); ++i)
-      if (h2.GetBinContent(i) == 0) h2.SetBinContent(i, 1);
+      if (h2.GetBinContent(i) == 0)
+         h2.SetBinContent(i, 1);
 
    TH2D h3("d2D1-h3", "h3=(c1*h1)/(c2*h2)", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange, maxRange);
    h3.Divide(&h1, &h2, c1, c2);
@@ -96,7 +97,8 @@ TEST(StressHistogram, TestDivide2D2)
    }
    // avoid bins in h2 with zero content
    for (int i = 0; i < h2.GetSize(); ++i)
-      if (h2.GetBinContent(i) == 0) h2.SetBinContent(i, 1);
+      if (h2.GetBinContent(i) == 0)
+         h2.SetBinContent(i, 1);
 
    unique_ptr<TH2D> h3(static_cast<TH2D *>(h1.Clone()));
    h3->Divide(&h2);

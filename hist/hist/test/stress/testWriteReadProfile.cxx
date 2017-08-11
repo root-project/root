@@ -62,8 +62,6 @@ TEST(StressHistogram, TestWriteReadProfile2D)
       p1.Fill(x, y, z, 1.0);
    }
 
-   
-
    TFile f(("tmpHist" + std::to_string(getpid()) + ".root").c_str(), "RECREATE");
    p1.Write();
    f.Close();

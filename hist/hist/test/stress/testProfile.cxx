@@ -33,7 +33,8 @@ TEST(StressHistogram, TestProfile2Extend)
       double x = r.Uniform(-1, 11);
       double y = r.Gaus(10, 3);
       double z = r.Gaus(10 + 2 * (x + y), 1);
-      if (y <= 0 || y >= 20) continue; // do not want overflow in h0
+      if (y <= 0 || y >= 20)
+         continue; // do not want overflow in h0
       h1.Fill(x, y, z);
       h2.Fill(x, y, z);
    }
@@ -51,7 +52,8 @@ TEST(StressHistogram, TestProfileExtend)
    for (int i = 0; i < nEvents; ++i) {
       double x = gRandom->Gaus(10, 3);
       double y = gRandom->Gaus(10 + 2 * x, 1);
-      if (x <= 0 || x >= 20) continue; // do not want overflow in h0
+      if (x <= 0 || x >= 20)
+         continue; // do not want overflow in h0
       h1.Fill(x, y);
       h0.Fill(x, y);
    }

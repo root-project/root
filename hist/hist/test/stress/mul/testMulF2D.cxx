@@ -71,10 +71,9 @@ TEST(StressHistogram, TestMulF2D2)
       Double_t x = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       h1.Fill(x, y, 1.0);
-      h2.Fill(x, y,
-              f.Eval(h2.GetXaxis()->GetBinCenter(h2.GetXaxis()->FindBin(x)),
-                     h2.GetYaxis()->GetBinCenter(h2.GetYaxis()->FindBin(y))) *
-                 c1);
+      h2.Fill(x, y, f.Eval(h2.GetXaxis()->GetBinCenter(h2.GetXaxis()->FindBin(x)),
+                           h2.GetYaxis()->GetBinCenter(h2.GetYaxis()->FindBin(y))) *
+                       c1);
    }
 
    h1.Multiply(&f, c1);

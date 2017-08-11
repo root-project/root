@@ -89,7 +89,8 @@ TEST(StressHistogram, TestH3Integral)
    }
    w.Start();
    h3.Fit(&gaus, fitOpt);
-   if (defaultEqualOptions & cmpOptDebug) std::cout << "Time to fit         " << w.RealTime() << std::endl;
+   if (defaultEqualOptions & cmpOptDebug)
+      std::cout << "Time to fit         " << w.RealTime() << std::endl;
 
    // test first nentries
    double err = 0;
@@ -107,7 +108,8 @@ TEST(StressHistogram, TestH3Integral)
    w.Start();
    double igh = h3.IntegralAndError(ix1, ix2, iy1, iy2, iz1, iz2, err1, "width");
    w.Stop();
-   if (defaultEqualOptions & cmpOptDebug) std::cout << "Time to integral of selected  " << w.RealTime() << std::endl;
+   if (defaultEqualOptions & cmpOptDebug)
+      std::cout << "Time to integral of selected  " << w.RealTime() << std::endl;
 
    double x1 = h3.GetXaxis()->GetBinLowEdge(ix1);
    double x2 = h3.GetXaxis()->GetBinUpEdge(ix2);

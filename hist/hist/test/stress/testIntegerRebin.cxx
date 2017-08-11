@@ -30,14 +30,16 @@ TEST(StressHistogram, TestIntegerRebin)
    TH1D h1("h1", "Original Histogram", TMath::Nint(r.Uniform(1, 5)) * rebin, minRange, maxRange);
    r.SetSeed(seed);
    h1.Sumw2();
-   for (Int_t i = 0; i < nEvents; ++i) h1.Fill(r.Uniform(minRange * .9, maxRange * 1.1), r.Uniform(0, 10));
+   for (Int_t i = 0; i < nEvents; ++i)
+      h1.Fill(r.Uniform(minRange * .9, maxRange * 1.1), r.Uniform(0, 10));
 
    unique_ptr<TH1D> h2(static_cast<TH1D *>(h1.Rebin(rebin, "testIntegerRebin")));
 
    TH1D h3("testIntegerRebin2", "testIntegerRebin2", h1.GetNbinsX() / rebin, minRange, maxRange);
    r.SetSeed(seed);
    h3.Sumw2();
-   for (Int_t i = 0; i < nEvents; ++i) h3.Fill(r.Uniform(minRange * .9, maxRange * 1.1), r.Uniform(0, 10));
+   for (Int_t i = 0; i < nEvents; ++i)
+      h3.Fill(r.Uniform(minRange * .9, maxRange * 1.1), r.Uniform(0, 10));
 
    EXPECT_TRUE(HistogramsEquals(*h2.get(), h3, cmpOptStats));
 }
@@ -51,14 +53,16 @@ TEST(StressHistogram, TestIntegerRebinNoName)
    UInt_t seed = r.GetSeed();
    TH1D h1("h2", "Original Histogram", TMath::Nint(r.Uniform(1, 5)) * rebin, minRange, maxRange);
    r.SetSeed(seed);
-   for (Int_t i = 0; i < nEvents; ++i) h1.Fill(r.Uniform(minRange * .9, maxRange * 1.1));
+   for (Int_t i = 0; i < nEvents; ++i)
+      h1.Fill(r.Uniform(minRange * .9, maxRange * 1.1));
 
    unique_ptr<TH1D> h2(dynamic_cast<TH1D *>(h1.Clone()));
    h2->Rebin(rebin);
 
    TH1D h3("testIntegerRebinNoName", "testIntegerRebinNoName", int(h1.GetNbinsX() / rebin + 0.1), minRange, maxRange);
    r.SetSeed(seed);
-   for (Int_t i = 0; i < nEvents; ++i) h3.Fill(r.Uniform(minRange * .9, maxRange * 1.1));
+   for (Int_t i = 0; i < nEvents; ++i)
+      h3.Fill(r.Uniform(minRange * .9, maxRange * 1.1));
 
    EXPECT_TRUE(HistogramsEquals(*h2.get(), h3, cmpOptStats));
 }

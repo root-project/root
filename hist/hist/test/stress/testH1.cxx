@@ -43,8 +43,8 @@ TEST(StressHistogram, TestH1Buffer)
    double eps = TMath::Limits<double>::Epsilon();
 
    // now test that functions are consistent
-   EXPECT_EQ(Equals(h1.GetMean(), h2.GetMean(), eps), 0)
-      << "Histogram Mean = " << h1.GetMean() << "  " << h2.GetMean() << " -  " << std::endl;
+   EXPECT_EQ(Equals(h1.GetMean(), h2.GetMean(), eps), 0) << "Histogram Mean = " << h1.GetMean() << "  " << h2.GetMean()
+                                                         << " -  " << std::endl;
 
    double s1[TH1::kNstat];
    double s2[TH1::kNstat];
@@ -52,8 +52,8 @@ TEST(StressHistogram, TestH1Buffer)
    h2.GetStats(s2);
    std::vector<std::string> snames = {"sumw", "sumw2", "sumwx", "sumwx2"};
    for (unsigned int i = 0; i < snames.size(); ++i) {
-      EXPECT_EQ(Equals(s1[i], s2[i], eps), 0)
-         << "Statistics " << snames[i] << "  = " << s1[i] << "  " << s2[i] << " -  " << std::endl;
+      EXPECT_EQ(Equals(s1[i], s2[i], eps), 0) << "Statistics " << snames[i] << "  = " << s1[i] << "  " << s2[i]
+                                              << " -  " << std::endl;
    }
 
    // another fill will reset the histogram
@@ -67,14 +67,14 @@ TEST(StressHistogram, TestH1Buffer)
    x = gRandom->Uniform(-3, 3);
    h1.Fill(x);
    h2.Fill(x);
-   EXPECT_FALSE(h1.GetMaximum() != h2.GetMaximum())
-      << "Histogram maximum = " << h1.GetMaximum() << "  " << h2.GetMaximum() << " -  " << std::endl;
+   EXPECT_FALSE(h1.GetMaximum() != h2.GetMaximum()) << "Histogram maximum = " << h1.GetMaximum() << "  "
+                                                    << h2.GetMaximum() << " -  " << std::endl;
 
    x = gRandom->Uniform(-3, 3);
    h1.Fill(x);
    h2.Fill(x);
-   EXPECT_FALSE(h1.GetMinimum() != h2.GetMinimum())
-      << "Histogram minimum = " << h1.GetMinimum() << "  " << h2.GetMinimum() << " - " << std::endl;
+   EXPECT_FALSE(h1.GetMinimum() != h2.GetMinimum()) << "Histogram minimum = " << h1.GetMinimum() << "  "
+                                                    << h2.GetMinimum() << " - " << std::endl;
 
    x = gRandom->Uniform(-3, 3);
    h1.Fill(x);
@@ -136,8 +136,8 @@ TEST(StressHistogram, TestH1BufferWeights)
    h2.GetStats(s2);
    std::vector<std::string> snames = {"sumw", "sumw2", "sumwx", "sumwx2"};
    for (unsigned int i = 0; i < snames.size(); ++i) {
-      EXPECT_EQ(Equals(s1[i], s2[i], eps), 0)
-         << "Statistics " << snames[i] << "  = " << s1[i] << "  " << s2[i] << " -  " << std::endl;
+      EXPECT_EQ(Equals(s1[i], s2[i], eps), 0) << "Statistics " << snames[i] << "  = " << s1[i] << "  " << s2[i]
+                                              << " -  " << std::endl;
    }
 
    // another fill will reset the histogram
@@ -160,7 +160,8 @@ TEST(StressHistogram, TestH1Extend)
    h1.SetCanExtend(TH1::kXaxis);
    for (int i = 0; i < nEvents; ++i) {
       double x = gRandom->Gaus(10, 3);
-      if (x <= 0 || x >= 20) continue; // do not want overflow in h0
+      if (x <= 0 || x >= 20)
+         continue; // do not want overflow in h0
       h1.Fill(x);
       h0.Fill(x);
    }
@@ -180,7 +181,8 @@ TEST(StressHistogram, TestH1Integral)
    h1.FillRandom("gaus1d", n);
 
    TString fitOpt = "LQ0";
-   if (defaultEqualOptions & cmpOptDebug) fitOpt = "L0";
+   if (defaultEqualOptions & cmpOptDebug)
+      fitOpt = "L0";
    h1.Fit(&gaus, fitOpt);
 
    // test first nentries

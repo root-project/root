@@ -66,7 +66,8 @@ TEST(StressHistogram, TestH2Extend)
    for (int i = 0; i < nEvents; ++i) {
       double x = r.Uniform(-1, 11);
       double y = r.Gaus(10, 3);
-      if (y <= 0 || y >= 20) continue; // do not want overflow in h0
+      if (y <= 0 || y >= 20)
+         continue; // do not want overflow in h0
       h1.Fill(x, y);
       h2.Fill(x, y);
    }
@@ -89,7 +90,8 @@ TEST(StressHistogram, TestH2Integral)
    gaus.SetParameters(100, 0, 1.2, 1., 1);
    h2.FillRandom("gaus2d", n);
    TString fitOpt = "LQ0";
-   if (defaultEqualOptions & cmpOptDebug) fitOpt = "L0";
+   if (defaultEqualOptions & cmpOptDebug)
+      fitOpt = "L0";
    h2.Fit(&gaus, fitOpt);
 
    // test first nentries

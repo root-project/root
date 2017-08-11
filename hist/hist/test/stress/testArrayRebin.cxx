@@ -35,7 +35,8 @@ TEST(StressHistogram, TestArrayRebin)
    UInt_t seed = r.GetSeed();
    TH1D h1("h3", "Original Histogram", TMath::Nint(r.Uniform(1, 5)) * rebin * 2, minRange, maxRange);
    r.SetSeed(seed);
-   for (Int_t i = 0; i < nEvents; ++i) h1.Fill(r.Uniform(minRange * .9, maxRange * 1.1));
+   for (Int_t i = 0; i < nEvents; ++i)
+      h1.Fill(r.Uniform(minRange * .9, maxRange * 1.1));
 
    // Create vector - generate bin edges ( nbins is always > 2)
    // ignore fact that array may contains bins with zero size
@@ -49,7 +50,8 @@ TEST(StressHistogram, TestArrayRebin)
 
 #ifdef __DEBUG__
    std::cout << "min range = " << minRange << " max range " << maxRange << std::endl;
-   for (Int_t i = 0; i < rebin; ++i) std::cout << rebinArray[i] << std::endl;
+   for (Int_t i = 0; i < rebin; ++i)
+      std::cout << rebinArray[i] << std::endl;
    std::cout << "rebin: " << rebin << std::endl;
 #endif
 
@@ -57,7 +59,8 @@ TEST(StressHistogram, TestArrayRebin)
 
    TH1D h3("testArrayRebin2", "testArrayRebin2", rebin - 1, rebinArray);
    r.SetSeed(seed);
-   for (Int_t i = 0; i < nEvents; ++i) h3.Fill(r.Uniform(minRange * .9, maxRange * 1.1));
+   for (Int_t i = 0; i < nEvents; ++i)
+      h3.Fill(r.Uniform(minRange * .9, maxRange * 1.1));
 
    EXPECT_TRUE(HistogramsEquals(*h2.get(), h3, cmpOptStats));
 }
@@ -90,7 +93,8 @@ TEST(StressHistogram, TestArrayRebinProfile)
    }
 
 #ifdef __DEBUG__
-   for (Int_t i = 0; i < rebin; ++i) std::cout << rebinArray[i] << std::endl;
+   for (Int_t i = 0; i < rebin; ++i)
+      std::cout << rebinArray[i] << std::endl;
    std::cout << "rebin: " << rebin << std::endl;
 #endif
 

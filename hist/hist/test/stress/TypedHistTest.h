@@ -10,20 +10,15 @@
 using namespace std;
 
 template <typename HIST>
-class HistTest : public ::testing::Test
-{
+class HistTest : public ::testing::Test {
 public:
-   unique_ptr<HIST> ProduceHist(const char* name, const char* title, Int_t dim,
-                    const Int_t* nBins, const Double_t* xMin = 0,
-                    const Double_t* xMax = 0)
+   unique_ptr<HIST> ProduceHist(const char *name, const char *title, Int_t dim, const Int_t *nBins,
+                                const Double_t *xMin = 0, const Double_t *xMax = 0)
    {
       return unique_ptr<HIST>(new HIST(name, title, dim, nBins, xMin, xMax));
    }
 
-   const char* GetClassName()
-   {
-      return HIST::Class()->GetName();
-   }
+   const char *GetClassName() { return HIST::Class()->GetName(); }
 };
 
-#endif //ROOT_TYPEDHISTTEST_H
+#endif // ROOT_TYPEDHISTTEST_H

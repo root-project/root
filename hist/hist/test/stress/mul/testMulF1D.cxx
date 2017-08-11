@@ -68,10 +68,9 @@ TEST(StressHistogram, TestMulF1D2)
    for (Int_t e = 0; e < nEvents; ++e) {
       Double_t value = r.Uniform(0.9 * minRange, 1.1 * maxRange);
       h1.Fill(value, 1.0);
-      h2.Fill(value,
-              f.Eval(h2.GetXaxis()->GetBinCenter(h2.GetXaxis()->FindBin(value)),
-                     h2.GetYaxis()->GetBinCenter(h2.GetYaxis()->FindBin(double(0)))) *
-                 c1);
+      h2.Fill(value, f.Eval(h2.GetXaxis()->GetBinCenter(h2.GetXaxis()->FindBin(value)),
+                            h2.GetYaxis()->GetBinCenter(h2.GetYaxis()->FindBin(double(0)))) *
+                        c1);
    }
 
    h1.Multiply(&f, c1);

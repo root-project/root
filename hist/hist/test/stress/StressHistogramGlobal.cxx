@@ -29,7 +29,8 @@ int defaultEqualOptions = 0;
 std::ostream &operator<<(std::ostream &out, TH1D &h)
 {
    out << h.GetName() << ": [" << h.GetBinContent(1);
-   for (Int_t i = 1; i < h.GetNbinsX(); ++i) out << ", " << h.GetBinContent(i);
+   for (Int_t i = 1; i < h.GetNbinsX(); ++i)
+      out << ", " << h.GetBinContent(i);
    out << "] ";
 
    return out;
@@ -110,7 +111,8 @@ int Equals(const char *msg, THnBase &h1, THnBase &h2, int options, double ERRORL
             differents += Equals(y, h2.GetAxis(1)->GetBinCenter(j), ERRORLIMIT);
             differents += Equals(z, h2.GetAxis(2)->GetBinCenter(h), ERRORLIMIT);
             differents += Equals(h1.GetBinContent(bin), h2.GetBinContent(bin), ERRORLIMIT);
-            if (compareError) differents += Equals(h1.GetBinError(bin), h2.GetBinError(bin), ERRORLIMIT);
+            if (compareError)
+               differents += Equals(h1.GetBinError(bin), h2.GetBinError(bin), ERRORLIMIT);
          }
 
    // Statistical tests:
@@ -118,7 +120,8 @@ int Equals(const char *msg, THnBase &h1, THnBase &h2, int options, double ERRORL
    //    if ( compareStats )
    //       differents += CompareStatistics( h1, h2, debug, ERRORLIMIT);
 
-   if (print || debug) std::cout << msg << ": \t" << (differents ? "FAILED" : "OK") << std::endl;
+   if (print || debug)
+      std::cout << msg << ": \t" << (differents ? "FAILED" : "OK") << std::endl;
 
    return differents;
 }
@@ -134,14 +137,17 @@ int Equals(const char *msg, THnBase &s, TH1 &h2, int options, double ERRORLIMIT)
 
    const int dim(s.GetNdimensions());
    if (dynamic_cast<TH3 *>(&h2)) {
-      if (dim != 3) return 1;
+      if (dim != 3)
+         return 1;
    } else if (dynamic_cast<TH2 *>(&h2)) {
-      if (dim != 2) return 1;
+      if (dim != 2)
+         return 1;
    } else if (dim != 1)
       return 1;
 
    TArray *array = dynamic_cast<TArray *>(&h2);
-   if (!array) Fatal("Equals(const char* msg, THnBase* s, TH1* h2, int options, double ERRORLIMIT)", "NO ARRAY!");
+   if (!array)
+      Fatal("Equals(const char* msg, THnBase* s, TH1* h2, int options, double ERRORLIMIT)", "NO ARRAY!");
 
    Int_t coord[3];
    for (Long64_t i = 0; i < s.GetNbins(); ++i) {
@@ -153,7 +159,8 @@ int Equals(const char *msg, THnBase &s, TH1 &h2, int options, double ERRORLIMIT)
       Double_t err2 = h2.GetBinError(bin);
 
       differents += Equals(v1, v2, ERRORLIMIT);
-      if (compareError) differents += Equals(err1, err2, ERRORLIMIT);
+      if (compareError)
+         differents += Equals(err1, err2, ERRORLIMIT);
    }
 
    for (Long64_t i = 0; i < array->GetSize(); ++i) {
@@ -166,10 +173,12 @@ int Equals(const char *msg, THnBase &s, TH1 &h2, int options, double ERRORLIMIT)
       Double_t err2 = h2.GetBinError(i);
 
       differents += Equals(v1, v2, ERRORLIMIT);
-      if (compareError) differents += Equals(err1, err2, ERRORLIMIT);
+      if (compareError)
+         differents += Equals(err1, err2, ERRORLIMIT);
    }
 
-   if (print || debug) std::cout << msg << ": \t" << (differents ? "FAILED" : "OK") << std::endl;
+   if (print || debug)
+      std::cout << msg << ": \t" << (differents ? "FAILED" : "OK") << std::endl;
 
    return differents;
 }
@@ -210,13 +219,16 @@ int Equals(const char *msg, TH3D &h1, TH3D &h2, int options, double ERRORLIMIT)
             differents += (bool)Equals(y, h2.GetYaxis()->GetBinCenter(j), ERRORLIMIT);
             differents += (bool)Equals(z, h2.GetZaxis()->GetBinCenter(h), ERRORLIMIT);
             differents += (bool)Equals(h1.GetBinContent(i, j, h), h2.GetBinContent(i, j, h), ERRORLIMIT);
-            if (compareError) differents += (bool)Equals(h1.GetBinError(i, j, h), h2.GetBinError(i, j, h), ERRORLIMIT);
+            if (compareError)
+               differents += (bool)Equals(h1.GetBinError(i, j, h), h2.GetBinError(i, j, h), ERRORLIMIT);
          }
 
    // Statistical tests:
-   if (compareStats) differents += CompareStatistics(h1, h2, debug, ERRORLIMIT);
+   if (compareStats)
+      differents += CompareStatistics(h1, h2, debug, ERRORLIMIT);
 
-   if (print || debug) std::cout << msg << ": \t" << (differents ? "FAILED" : "OK") << std::endl;
+   if (print || debug)
+      std::cout << msg << ": \t" << (differents ? "FAILED" : "OK") << std::endl;
 
    return differents;
 }
@@ -252,13 +264,16 @@ int Equals(const char *msg, TH2D &h1, TH2D &h2, int options, double ERRORLIMIT)
          differents += (bool)Equals(x, h2.GetXaxis()->GetBinCenter(i), ERRORLIMIT);
          differents += (bool)Equals(y, h2.GetYaxis()->GetBinCenter(j), ERRORLIMIT);
          differents += (bool)Equals(h1.GetBinContent(i, j), h2.GetBinContent(i, j), ERRORLIMIT);
-         if (compareError) differents += (bool)Equals(h1.GetBinError(i, j), h2.GetBinError(i, j), ERRORLIMIT);
+         if (compareError)
+            differents += (bool)Equals(h1.GetBinError(i, j), h2.GetBinError(i, j), ERRORLIMIT);
       }
 
    // Statistical tests:
-   if (compareStats) differents += CompareStatistics(h1, h2, debug, ERRORLIMIT);
+   if (compareStats)
+      differents += CompareStatistics(h1, h2, debug, ERRORLIMIT);
 
-   if (print || debug) std::cout << msg << ": \t" << (differents ? "FAILED" : "OK") << std::endl;
+   if (print || debug)
+      std::cout << msg << ": \t" << (differents ? "FAILED" : "OK") << std::endl;
 
    return differents;
 }
@@ -302,7 +317,8 @@ int Equals(const char *msg, TH1D &h1, TH1D &h2, int options, double ERRORLIMIT)
       differents += (bool)Equals(x, h2.GetXaxis()->GetBinCenter(i), ERRORLIMIT);
       differents += (bool)Equals(h1.GetBinContent(i), h2.GetBinContent(i), ERRORLIMIT);
 
-      if (compareError) differents += (bool)Equals(h1.GetBinError(i), h2.GetBinError(i), ERRORLIMIT);
+      if (compareError)
+         differents += (bool)Equals(h1.GetBinError(i), h2.GetBinError(i), ERRORLIMIT);
 
       if (debug) {
          std::cout << Equals(x, h2.GetXaxis()->GetBinCenter(i), ERRORLIMIT) << " [" << x << "]: " << h1.GetBinContent(i)
@@ -313,9 +329,11 @@ int Equals(const char *msg, TH1D &h1, TH1D &h2, int options, double ERRORLIMIT)
    }
 
    // Statistical tests:
-   if (compareStats) differents += CompareStatistics(h1, h2, debug, ERRORLIMIT);
+   if (compareStats)
+      differents += CompareStatistics(h1, h2, debug, ERRORLIMIT);
 
-   if (print || debug) std::cout << msg << ": \t" << (differents ? "FAILED" : "OK") << std::endl;
+   if (print || debug)
+      std::cout << msg << ": \t" << (differents ? "FAILED" : "OK") << std::endl;
 
    return differents;
 }
@@ -336,9 +354,11 @@ int CompareStatistics(TH1 &h1, TH1 &h2, bool debug, double ERRORLIMIT)
 
    int precLevel = gErrorIgnoreLevel;
    // switch off Info mesaage from chi2 test
-   if (!debug) gErrorIgnoreLevel = 1001;
+   if (!debug)
+      gErrorIgnoreLevel = 1001;
 
-   if (debug) h2.Print();
+   if (debug)
+      h2.Print();
 
    std::string option = "WW OF UF";
    const char *opt = option.c_str();
@@ -349,9 +369,11 @@ int CompareStatistics(TH1 &h1, TH1 &h2, bool debug, double ERRORLIMIT)
    differents += (bool)Equals(chi_12, 1, ERRORLIMIT);
    differents += (bool)Equals(chi_21, 1, ERRORLIMIT);
    differents += (bool)Equals(chi_12, chi_21, ERRORLIMIT);
-   if (debug) std::cout << "Chi2Test " << chi_12 << " " << chi_21 << " | " << differents << std::endl;
+   if (debug)
+      std::cout << "Chi2Test " << chi_12 << " " << chi_21 << " | " << differents << std::endl;
 
-   if (!debug) gErrorIgnoreLevel = precLevel;
+   if (!debug)
+      gErrorIgnoreLevel = precLevel;
 
    // Mean
    differents += (bool)Equals(h1.GetMean(1), h2.GetMean(1), ERRORLIMIT);
@@ -488,11 +510,14 @@ bool operator==(ROOT::Fit::BinData &bd1, ROOT::Fit::BinData &bd2)
       double value2 = 0, error2 = 0;
       const double *x2 = bd2.GetPoint(bin, value2, error2);
 
-      if (!TMath::AreEqualRel(value1, value2, eps)) return false;
-      if (!TMath::AreEqualRel(error1, error2, eps)) return false;
+      if (!TMath::AreEqualRel(value1, value2, eps))
+         return false;
+      if (!TMath::AreEqualRel(error1, error2, eps))
+         return false;
 
       for (unsigned int j = 0; j < ndim; ++j)
-         if (!TMath::AreEqualRel(x1[j], x2[j], eps)) return false;
+         if (!TMath::AreEqualRel(x1[j], x2[j], eps))
+            return false;
    }
    return true;
 }

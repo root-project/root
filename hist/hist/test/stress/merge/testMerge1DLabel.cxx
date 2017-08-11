@@ -145,7 +145,8 @@ TEST(StressHistogram, TestMerge1DLabelDiff)
 
    // choose random same labels (nbins -2)
    std::vector<TString> labels2(8);
-   for (int i = 0; i < 8; ++i) labels2[i] = labels[r.Integer(10)];
+   for (int i = 0; i < 8; ++i)
+      labels2[i] = labels[r.Integer(10)];
 
    for (Int_t e = 0; e < nEvents; ++e) {
       int i = r.Integer(8);
@@ -159,14 +160,16 @@ TEST(StressHistogram, TestMerge1DLabelDiff)
       }
    }
 
-   for (int i = 0; i < 8; ++i) labels2[i] = labels[r.Integer(10)];
+   for (int i = 0; i < 8; ++i)
+      labels2[i] = labels[r.Integer(10)];
    for (Int_t e = 0; e < nEvents; ++e) {
       Int_t i = r.Integer(8);
       h2.Fill(labels2[i], 1.0);
       h4.Fill(labels2[i], 1.0);
    }
 
-   for (int i = 0; i < 8; ++i) labels2[i] = labels[r.Integer(10)];
+   for (int i = 0; i < 8; ++i)
+      labels2[i] = labels[r.Integer(10)];
    for (Int_t e = 0; e < nEvents; ++e) {
       Int_t i = r.Integer(8);
       h3.Fill(labels2[i], 1.0);

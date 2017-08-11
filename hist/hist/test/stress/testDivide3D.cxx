@@ -53,7 +53,8 @@ TEST(StressHistogram, TestDivide3D1)
    }
    // avoid bins in h2 with zero content
    for (int i = 0; i < h2.GetSize(); ++i)
-      if (h2.GetBinContent(i) == 0) h2.SetBinContent(i, 1);
+      if (h2.GetBinContent(i) == 0)
+         h2.SetBinContent(i, 1);
 
    TH3D h3("d3D1-h3", "h3=(c1*h1)/(c2*h2)", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
            numberOfBins + 2, minRange, maxRange);
@@ -110,7 +111,8 @@ TEST(StressHistogram, TestDivide3D2)
    }
    // avoid bins in h2 with zero content
    for (int i = 0; i < h2.GetSize(); ++i)
-      if (h2.GetBinContent(i) == 0) h2.SetBinContent(i, 1);
+      if (h2.GetBinContent(i) == 0)
+         h2.SetBinContent(i, 1);
 
    unique_ptr<TH3D> h3(static_cast<TH3D *>(h1.Clone()));
    h3->Divide(&h2);

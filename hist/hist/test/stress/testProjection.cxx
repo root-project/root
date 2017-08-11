@@ -407,7 +407,8 @@ public:
       h2Projection.reset((TH2D *)h3->Project3D("YZ"));
       EXPECT_EQ(0, Equals("TH3 -> ZY", h2ZY, h2Projection, options));
       options = 0;
-      if (defaultEqualOptions & cmpOptPrint) std::cout << "----------------------------------------------" << std::endl;
+      if (defaultEqualOptions & cmpOptPrint)
+         std::cout << "----------------------------------------------" << std::endl;
 
       // TH1 derived from TH3
       options = cmpOptStats;
@@ -439,7 +440,8 @@ public:
       tmp1.reset(0);
 
       options = 0;
-      if (defaultEqualOptions & cmpOptPrint) std::cout << "----------------------------------------------" << std::endl;
+      if (defaultEqualOptions & cmpOptPrint)
+         std::cout << "----------------------------------------------" << std::endl;
 
       // TH1 derived from h2XY
       options = cmpOptStats;
@@ -485,7 +487,8 @@ public:
       projectionTH1D.reset(h2ZY->ProjectionY("y"));
       EXPECT_EQ(0, Equals("TH2ZY -> Y", h1Y, projectionTH1D, options));
       options = 0;
-      if (defaultEqualOptions & cmpOptPrint) std::cout << "----------------------------------------------" << std::endl;
+      if (defaultEqualOptions & cmpOptPrint)
+         std::cout << "----------------------------------------------" << std::endl;
 
       // in the following comparison with profiles we need to re-calculate statistics using bin centers
       // on the reference histograms
@@ -523,7 +526,8 @@ public:
       h2Projection.reset((TH2D *)h3->Project3DProfile("yz UF OF")->ProjectionXY("6", "B"));
       EXPECT_EQ(0, Equals("TH3 -> PBZY", h2ZY, h2Projection, options));
       options = 0;
-      if (defaultEqualOptions & cmpOptPrint) std::cout << "----------------------------------------------" << std::endl;
+      if (defaultEqualOptions & cmpOptPrint)
+         std::cout << "----------------------------------------------" << std::endl;
 
       // test directly project3dprofile
       options = cmpOptStats;
@@ -545,7 +549,8 @@ public:
       peProjection.reset(h3->Project3DProfile("yz  UF OF"));
       EXPECT_EQ(0, Equals("TH3 -> PZY", pe2ZY, peProjection, options));
       options = 0;
-      if (defaultEqualOptions & cmpOptPrint) std::cout << "----------------------------------------------" << std::endl;
+      if (defaultEqualOptions & cmpOptPrint)
+         std::cout << "----------------------------------------------" << std::endl;
 
       // test option E of ProjectionXY
       options = 0;
@@ -568,12 +573,14 @@ public:
       h2Projection.reset(h3->Project3DProfile("yz  UF OF")->ProjectionXY("6", "E"));
       EXPECT_EQ(0, Equals("TH3 -> PEZY", pe2ZY, h2Projection, options));
       options = 0;
-      if (defaultEqualOptions & cmpOptPrint) std::cout << "----------------------------------------------" << std::endl;
+      if (defaultEqualOptions & cmpOptPrint)
+         std::cout << "----------------------------------------------" << std::endl;
 
       // test option W of ProjectionXY
 
       // The error fails when built with weights. It is not properly calculated
-      if (buildWithWeights) options = cmpOptNoError;
+      if (buildWithWeights)
+         options = cmpOptNoError;
       h2Projection.reset(nullptr);
       h2Projection.reset((TH2D *)h3->Project3DProfile("yx  UF OF")->ProjectionXY("1", "W"));
       EXPECT_EQ(0, Equals("TH3 -> PWXY", h2wXY, h2Projection, options));
@@ -593,7 +600,8 @@ public:
       h2Projection.reset((TH2D *)h3->Project3DProfile("yz  UF OF")->ProjectionXY("6", "W"));
       EXPECT_EQ(0, Equals("TH3 -> PWZY", h2wZY, h2Projection, options));
       options = 0;
-      if (defaultEqualOptions & cmpOptPrint) std::cout << "----------------------------------------------" << std::endl;
+      if (defaultEqualOptions & cmpOptPrint)
+         std::cout << "----------------------------------------------" << std::endl;
 
       // test 1D histograms
       options = cmpOptStats;
@@ -637,7 +645,8 @@ public:
       projectionTH1D.reset(h2ZY->ProfileY("PBY", 0, h2ZY->GetXaxis()->GetNbins() + 1)->ProjectionX("1", "B"));
       EXPECT_EQ(0, Equals("TH2ZY -> PBY", h1Y, projectionTH1D, options));
       options = 0;
-      if (defaultEqualOptions & cmpOptPrint) std::cout << "----------------------------------------------" << std::endl;
+      if (defaultEqualOptions & cmpOptPrint)
+         std::cout << "----------------------------------------------" << std::endl;
 
       // 1D testing direct profiles
       options = cmpOptStats;
@@ -678,7 +687,8 @@ public:
       projectionTH1D.reset(h2ZY->ProfileY("PY", 0, h2ZY->GetXaxis()->GetNbins() + 1));
       EXPECT_EQ(0, Equals("TH2ZY -> PY", pe1YZ, projectionTH1D, options));
       options = 0;
-      if (defaultEqualOptions & cmpOptPrint) std::cout << "----------------------------------------------" << std::endl;
+      if (defaultEqualOptions & cmpOptPrint)
+         std::cout << "----------------------------------------------" << std::endl;
 
       // 1D testing e profiles
       options = 0;
@@ -719,11 +729,13 @@ public:
       projectionTH1D.reset(h2ZY->ProfileY("PEY", 0, h2ZY->GetXaxis()->GetNbins() + 1)->ProjectionX("1", "E"));
       EXPECT_EQ(0, Equals("TH2ZY -> PEY", pe1YZ, projectionTH1D, options));
       options = 0;
-      if (defaultEqualOptions & cmpOptPrint) std::cout << "----------------------------------------------" << std::endl;
+      if (defaultEqualOptions & cmpOptPrint)
+         std::cout << "----------------------------------------------" << std::endl;
 
       // 1D testing w profiles
       // The error is not properly propagated when build with weights :S
-      if (buildWithWeights) options = cmpOptNoError;
+      if (buildWithWeights)
+         options = cmpOptNoError;
       projectionTH1D.reset(nullptr);
       projectionTH1D.reset(h2XY->ProfileX("PWX", 0, h2XY->GetYaxis()->GetNbins() + 1)->ProjectionX("1", "W"));
       EXPECT_EQ(0, Equals("TH2XY -> PWX", hw1XY, projectionTH1D, options));
@@ -762,7 +774,8 @@ public:
       EXPECT_EQ(0, Equals("TH2ZY -> PWY", hw1YZ, projectionTH1D, options));
 
       options = 0;
-      if (defaultEqualOptions & cmpOptPrint) std::cout << "----------------------------------------------" << std::endl;
+      if (defaultEqualOptions & cmpOptPrint)
+         std::cout << "----------------------------------------------" << std::endl;
 
       // do THNsparse after Profile because reference histograms need to have a ResetStats
       // the statistics coming from a projected THNsparse has been computed using the bin centers
@@ -807,7 +820,8 @@ public:
       h2Projection.reset((TH2D *)n3->Projection(1, 2));
       EXPECT_EQ(0, Equals("THn3 -> ZY", h2ZY, h2Projection, options));
       options = 0;
-      if (defaultEqualOptions & cmpOptPrint) std::cout << "----------------------------------------------" << std::endl;
+      if (defaultEqualOptions & cmpOptPrint)
+         std::cout << "----------------------------------------------" << std::endl;
 
       // TH1 derived from STH3
       options = cmpOptStats;
@@ -831,7 +845,8 @@ public:
       projectionTH1D.reset(n3->Projection(2));
       EXPECT_EQ(0, Equals("THn3 -> Z", h1Z, projectionTH1D, options));
       options = 0;
-      if (defaultEqualOptions & cmpOptPrint) std::cout << "----------------------------------------------" << std::endl;
+      if (defaultEqualOptions & cmpOptPrint)
+         std::cout << "----------------------------------------------" << std::endl;
    }
 
    void buildProfiles()
@@ -860,7 +875,8 @@ public:
          double u = TMath::Gaus(x, 0, 3) * TMath::Gaus(y, 3, 5) * TMath::Gaus(z, -3, 10);
 
          double w = 1;
-         if (buildWithWeights) w += x * x + (y - 2) * (y - 2) + (z + 2) * (z + 2);
+         if (buildWithWeights)
+            w += x * x + (y - 2) * (y - 2) + (z + 2) * (z + 2);
 
          p3->Fill(x, y, z, u, w);
 
@@ -916,7 +932,8 @@ public:
       profile2D.reset(p3->Project3DProfile("yz"));
       EXPECT_EQ(0, Equals("TProfile3D -> ZY", p2ZY, profile2D, options));
       options = 0;
-      if (defaultEqualOptions & cmpOptPrint) cout << "----------------------------------------------" << endl;
+      if (defaultEqualOptions & cmpOptPrint)
+         cout << "----------------------------------------------" << endl;
 
       // TProfile1 derived from TProfile2D from TProfile3D
       options = cmpOptStats;
