@@ -517,7 +517,7 @@ else()
 endif()
 
 CHECK_CXX_SOURCE_COMPILES("#include <experimental/string_view>
-   int main() { std::experimental::string_view().to_string(); return 0;}" found_stdexpstringview)
+   int main() { char arr[3] = {'B', 'a', 'r'}; std::experimental::string_view strv(arr, sizeof(arr)); return 0;}" found_stdexpstringview)
 if(found_stdexpstringview)
   set(hasstdexpstringview define)
 else()
