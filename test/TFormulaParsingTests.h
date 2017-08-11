@@ -743,15 +743,71 @@ bool test40() {
    return ok;
 }
  
-/* bool test41() { */
-/*    bool ok = true; */
+bool test41() {
+   // Test variable/parameter parsing for parametrized functions
 
-/*    TF1 f1("f1", "gaus(0) + gaus(3)"); */
-   
-   
-/*    return ok; */
-/* } */
+   bool ok = true;
 
+   // old variable-counting method
+   TF1 f1("f1", "gaus(0) + gaus(3)", -5, 5);
+   f1.SetParameters(1, 0, 1, 1, 1, 1);
+   ok &= fpEqual(f1.Eval(0), 1 + TMath::Exp(-.5), true);
+   ok &= fpEqual(f1.Eval(1), 1 + TMath::Exp(-.5), true);
+
+   // new param-range method
+   TF1 f2("f2", "gaus([0..2]) + gaus([3..5])", -5, 5);
+   f2.SetParameters(1, 0, 1, 1, 1, 1);
+   ok &= fpEqual(f2.Eval(0), 1 + TMath::Exp(-.5), true);
+   ok &= fpEqual(f2.Eval(1), 1 + TMath::Exp(-.5), true);
+							   
+
+   TF1 f3("f3", "[0] + gaus([1..3])", -5, 5);
+   f3.SetParameters(2, 1, 0, 1);
+   ok &= fpEqual(f3.Eval(0), 3, true);
+   ok &= fpEqual(f3.Eval(1), 2 + TMath::Exp(-.5), true);
+
+   TF2 f4("f4", "gaus(y)", -5, 5, -5, 5);
+   f4.SetParameters(2,0,1);
+   ok &= fpEqual(f4.Eval(0, 0), 2, true);
+   ok &= fpEqual(f4.Eval(1, 0), 2, true);
+   ok &= fpEqual(f4.Eval(0, -1), 2*TMath::Exp(-.5), true);
+   ok &= fpEqual(f4.Eval(1, -1), 2*TMath::Exp(-.5), true);
+
+   TF2 f5("f5", "[0] + gaus(y, [1..3])", -5, 5, -5, 5);
+   f5.SetParameters(0,2,0,1);
+   ok &= fpEqual(f5.Eval(0, 0), 2, true);
+   ok &= fpEqual(f5.Eval(1, 0), 2, true);
+   ok &= fpEqual(f5.Eval(0, -1), 2*TMath::Exp(-.5), true);
+   ok &= fpEqual(f5.Eval(1, -1), 2*TMath::Exp(-.5), true);
+   
+   return ok;
+}
+
+bool test42() {
+   // Test variable parsing when using form x[N]
+
+   bool ok = true;
+
+   TF2 f1("f1", "x[1] + 1", -5, 5, -5, 5);
+   ok &= (f1.Eval(1,1) == 2);
+   ok &= (f1.Eval(0,1) == 2);
+   ok &= (f1.Eval(1,0) == 1);
+   ok &= (f1.Eval(0,0) == 1);
+   
+   TF2 f2("f2", "f1(y,x) + 0*y", -5, 5, -5, 5);
+   ok &= (f2.Eval(1,1) == 2);
+   ok &= (f2.Eval(0,1) == 1);
+   ok &= (f2.Eval(1,0) == 2);
+   ok &= (f2.Eval(0,0) == 1);
+   
+   TF2 f3("f3", "f1(x[1], x[0]) + 0*y", -5, 5, -5, 5);
+   ok &= (f3.Eval(1,1) == 2);
+   ok &= (f3.Eval(0,1) == 1);
+   ok &= (f3.Eval(1,0) == 2);
+   ok &= (f3.Eval(0,0) == 1);
+
+   return ok;
+}
  
 void PrintError(int itest)  { 
    Error("TFormula test","test%d FAILED ",itest);
@@ -810,7 +866,8 @@ int runTests(bool debug = false) {
    IncrTest(itest); if (!test38() ) { PrintError(itest); }
    IncrTest(itest); if (!test39() ) { PrintError(itest); }
    IncrTest(itest); if (!test40() ) { PrintError(itest); }
-   /* IncrTest(itest); if (!test41() ) { PrintError(itest); } */
+   IncrTest(itest); if (!test41() ) { PrintError(itest); }
+   IncrTest(itest); if (!test42() ) { PrintError(itest); }
 
    std::cout << ".\n";
     
