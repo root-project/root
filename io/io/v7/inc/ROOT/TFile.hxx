@@ -158,7 +158,7 @@ public:
    /// Write an object that is already lifetime managed by this TFileImplBase.
    void Write(std::string_view name)
    {
-      auto dep = Find(name.to_string());
+      auto dep = Find(name);
       WriteMemoryWithType(name, dep.GetPointer().get(), dep.GetType());
    }
 
