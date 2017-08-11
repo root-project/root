@@ -2841,7 +2841,7 @@ hasstodstringview="undef"
 message "Checking for string_view implementation"
 if test "x$usecxx11" = "xdefine" ; then
     check_code '#include <string_view>
-int main() {std::string_view().to_string(); return 0; }' '$(CXX11FLAGS)'
+int main() { char arr[3] = {'B', 'a', 'r'}; std::string_view strv(arr, sizeof(arr)); return 0;}" }' '$(CXX11FLAGS)'
     if test $include_result -eq 1 ; then
         hasstdstringview="define"
         result '<string_view>'
@@ -2852,7 +2852,7 @@ int main() { size_t pos; std::string_view str; std::stod(str,&pos); return 0;}' 
         fi
     else
         check_code '#include <experimental/string_view>
-int main() {std::experimental::string_view().to_string(); return 0; }' '$(CXX11FLAGS)'
+int main() { char arr[3] = {'B', 'a', 'r'}; std::experimental::string_view strv(arr, sizeof(arr)); return 0;}"' '$(CXX11FLAGS)'
         if test $include_result -eq 1 ; then
             hasstdexpstringview="define"
             result '<experimental/string_view>'
