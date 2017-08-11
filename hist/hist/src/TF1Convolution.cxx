@@ -88,7 +88,9 @@ void TF1Convolution::InitializeDataMembers(TF1* function1, TF1* function2, Bool_
    fNofParams2 = fFunction2->GetNpar();
    fParams1    = std::vector<Double_t>(fNofParams1);
    fParams2    = std::vector<Double_t>(fNofParams2);
-   fCstIndex   = (fFunction1->GetParNumber("Constant") == -1) ? -1 : fFunction2->GetParNumber("Constant"); // TODO: add dropConstantParam flag
+   fCstIndex = (fFunction1->GetParNumber("Constant") == -1)
+                  ? -1
+                  : fFunction2->GetParNumber("Constant"); // TODO: add dropConstantParam flag
    fFlagFFT    = useFFT;
    fFlagGraph  = false;
    fNofPoints  = 10000;
