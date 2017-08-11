@@ -9,6 +9,8 @@
 #include "TROOT.h"
 #include "Math/MinimizerOptions.h"
 
+#include <chrono>
+
 bool compareResult(double v1, double v2, std::string s = "", double tol = 0.01)
 {
    // compare v1 with reference v2
