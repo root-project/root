@@ -808,13 +808,21 @@ double FitUtil::EvaluateLogL(const IModelFunctionTempl<double>  & func, const Un
 
    //unsigned int nRejected = 0;
 
+   bool normalizeFunc = false;
+
    // set parameters of the function to cache integral value
 #ifdef USE_PARAMCACHE
    (const_cast<IModelFunctionTempl<double> &>(func)).SetParameters(p);
-#endif
-
-   // this is needed if function must be normalized
-   bool normalizeFunc = false;
+#endif 
+#ifdef R__USE_IMT
+         // in case parameter needs to be propagated to user function use trick to set parameters by calling one time the function
+         // this will be done in sequential mode and parameters can be set in a thread safe manner
+         if (!normalizeFunc) {
+            double x(0.0);
+            func( &x, p);
+         }
+#endif  
+   
    double norm = 1.0;
    if (normalizeFunc) {
       // compute integral of the function
@@ -838,7 +846,7 @@ double FitUtil::EvaluateLogL(const IModelFunctionTempl<double>  & func, const Un
          }
          norm = igEval.Integral(&xmin[0],&xmax[0]);
       }
-   }
+   } 
 
    // needed to compue effective global weight in case of extended likelihood
 

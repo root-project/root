@@ -21,39 +21,49 @@ bool compareResult(double v1, double v2, std::string s = "", double tol = 0.01)
 
 //Functor for a Higgs Fit normalized with analytical integral
 template<class T>
-class Func {
+class Func : public ROOT::Math::IParametricFunctionMultiDimTempl<T> {
 public:
 
-   Func()
+   Func(const double * p = nullptr)
    {
       params.resize(paramSize);
-   }
-   T operator()(const T *data, const Double_t *p)
-   {
-      bool changed = false;
-      for (unsigned i = 0; i < params.size(); i++) {
-         R__LOCKGUARD(gROOTMutex);
-         if (p[i] != params[i])
-            if (!changed) {
-               changed = true;
-            }
-
+      if (p) {
+         std::copy(p, p+paramSize, params.begin() );
+         ComputeIntegrals(p);
       }
 
-      if (changed) {
-         R__LOCKGUARD(gROOTMutex);
-         for (unsigned i = 0; i < paramSize; i++) {
-            params[i] = p[i];
+   }
+
+   virtual T DoEvalPar(const T *data, const Double_t *p) const
+   {
+
+      if (data == nullptr) {
+         ((Func<T> *) this)->SetParameters(p);
+         return TMath::QuietNaN();
+      }
+      // use the trick to get notification of computing integrals
+      // by passing a null ptr for the data
+      // if (data == nullptr) {
+      //    (SetParameters(p);
+      //    
+      // }
+      
+      for (unsigned i = 0; i < params.size(); i++)   {
+         if (p[i] != params[i] ) {
+            {
+                 R__LOCKGUARD(gROOTMutex);
+                 std::cout << "different parameters found " << i << "  " << p[i] << "  " << params[i] << std::endl;
+
+                                                                                                         R__ASSERT(0);
+//                 std::copy(p, p+paramSize, params.begin() );
+      //           // different parameters
+      //           // compute the integral and update the cached param vector
+      //           // this needs to be locked because is a non-const part
+      //           ComputeIntegrals(p);
+      //       }
+             break;
+            }
          }
-         auto funcInt1 = [&](double x) {
-            return 50.*TMath::Sqrt(TMath::Pi()) * exp((p[4] * p[4]) / (4 * p[5])) * TMath::Erf((0.5 * p[4] + p[5] * 0.01 * x) / (TMath::Sqrt(p[5])))
-                   / (TMath::Sqrt(p[5]));
-         };
-         auto funcInt2 = [&](double x) {
-            return -p[3] * TMath::Sqrt(TMath::Pi() / 2.) * TMath::Erf((p[2] - x) / (TMath::Sqrt(2.) * p[3]));
-         };
-         integral1 = funcInt1(200) - funcInt1(100);
-         integral2 = funcInt2(200) - funcInt2(100);
       }
 
       auto f1 = params[0] * exp(-(*data + (-p[2])) * (*data + (-p[2])) / (2.*p[3] * p[3]));
@@ -61,12 +71,44 @@ public:
       auto f2 = (1 - params[0]) * exp(-(params[4] * (*data * (0.01)) +
                                         params[5] * ((*data) * (0.01)) * ((*data) * (0.01))));
 
+      // use cached integral values
       f1 /= integral2 != 0 ? integral2 : 1;
       f2 /= integral1 != 0 ? integral1 : 1;
       return f1 + f2;
    }
 
+      virtual ROOT::Math::IBaseFunctionMultiDimTempl<T> *Clone() const {
+         return new Func<T>(*this); 
+      }
+      virtual unsigned int NDim() const { return 1; }
+      virtual unsigned int NPar() const {
+         return paramSize;
+      }
+      virtual double * Parameters() const {
+         return (double *)params.data(); 
+      }
+      virtual void SetParameters(const double * p) {
+         std::copy(p, p+paramSize, params.begin() );
+         ComputeIntegrals(p);
+      }
+   
+
 private:
+
+   void ComputeIntegrals(  const Double_t *p ) {
+
+      auto funcInt1 = [&](double x) {
+         return 50.*TMath::Sqrt(TMath::Pi()) * exp((p[4] * p[4]) / (4 * p[5])) * TMath::Erf((0.5 * p[4] + p[5] * 0.01 * x) / (TMath::Sqrt(p[5])))
+         / (TMath::Sqrt(p[5]));
+      };
+      auto funcInt2 = [&](double x) {
+         return -p[3] * TMath::Sqrt(TMath::Pi() / 2.) * TMath::Erf((p[2] - x) / (TMath::Sqrt(2.) * p[3]));
+      };
+      integral1 = funcInt1(200) - funcInt1(100);
+      integral2 = funcInt2(200) - funcInt2(100);
+
+   }
+
 
    double integral1 = 1.;
    double integral2 = 1.;
@@ -78,17 +120,22 @@ class TestVector {
 public:
    TestVector(unsigned nPoints)
    {
-      fSeq =  new TF1("fseq", Func<double>(), 100, 200, paramSize);
-      wfSeq =  new ROOT::Math::WrappedMultiTF1Templ<double>(*fSeq);
+      fSeq =  new TF1("fseq", Func<double>(p), 100, 200, paramSize);
+      //wfSeq =  new ROOT::Math::WrappedMultiTF1Templ<double>(*fSeq);
+      wfSeq =  new Func<double> (p);
 
 #ifdef R__HAS_VECCORE
-      fVec = new TF1("fvCore", Func<ROOT::Double_v>(), 100, 200, paramSize);
-      wfVec =  new ROOT::Math::WrappedMultiTF1Templ<ROOT::Double_v>(*fVec);
+      // not needed but just to test vectorized ctor of TF1
+      fVec = new TF1("fvCore", Func<ROOT::Double_v>(p), 100, 200, paramSize);
+      //wfVec =  new ROOT::Math::WrappedMultiTF1Templ<ROOT::Double_v>(*fVec);
+      wfVec = new Func<ROOT::Double_v>();
 #endif
 
+      
       dataSB = new ROOT::Fit::UnBinData(nPoints);
 
       fSeq->SetParameters(p);
+      wfSeq->SetParameters(p);
       if (!filledData) {
          for (unsigned i = 0; i < nPoints; ++i) {
             double x = fSeq->GetRandom();
@@ -98,7 +145,7 @@ public:
       }
       fitter.Config().MinimizerOptions().SetPrintLevel(3);
       fitter.Config().SetMinimizer("Minuit2", "Migrad");
-      fitter.Config().MinimizerOptions().SetTolerance(10);
+      //fitter.Config().MinimizerOptions().SetTolerance(10);
    }
 
 
@@ -106,7 +153,7 @@ public:
    double testFitSeq()
    {
       std::cout << "\n////////////////////////////SEQUENTIAL TEST////////////////////////////" << std::endl << std::endl;
-      fSeq->SetParameters(p);
+      wfSeq->SetParameters(p);
       fitter.SetFunction(*wfSeq, false);
       fitter.Config().ParSettings(0).SetLimits(0, 1);
       fitter.Config().ParSettings(1).Fix();
@@ -126,7 +173,7 @@ public:
    double testMTFit()
    {
       std::cout << "\n///////////////////////////////MT TEST////////////////////////////" << std::endl << std::endl;
-      fSeq->SetParameters(p);
+      wfSeq->SetParameters(p);
       fitter.SetFunction(*wfSeq, false);
       fitter.Config().ParamsSettings() = paramSettings; 
       start = std::chrono::system_clock::now();
@@ -140,7 +187,7 @@ public:
    double testMPFit()
    {
       std::cout << "\n///////////////////////////////MP TEST////////////////////////////\n\n";
-      fSeq->SetParameters(p);
+      wfSeq->SetParameters(p);
       fitter.SetFunction(*wfSeq, false);
       fitter.Config().ParamsSettings() = paramSettings; 
       start = std::chrono::system_clock::now();
@@ -155,7 +202,7 @@ public:
    double testFitVec()
    {
       std::cout << "\n////////////////////////////VECTOR TEST////////////////////////////" << std::endl << std::endl;
-      fVec->SetParameters(p);
+      wfVec->SetParameters(p);
       fitter.SetFunction(*wfVec);
       fitter.Config().ParamsSettings() = paramSettings; 
       start = std::chrono::system_clock::now();
@@ -169,7 +216,7 @@ public:
    double testMTFitVec()
    {
       std::cout << "\n///////////////////////////////MT+VEC TEST////////////////////////////\n\n";
-      fVec->SetParameters(p);
+      wfVec->SetParameters(p);
       fitter.SetFunction(*wfVec);
       fitter.Config().ParamsSettings() = paramSettings; 
       start = std::chrono::system_clock::now();
@@ -183,7 +230,7 @@ public:
    double testMPFitVec()
    {
       std::cout << "\n///////////////////////////////MP+VEC TEST////////////////////////////\n\n";
-      fVec->SetParameters(p);
+      wfVec->SetParameters(p);
       fitter.SetFunction(*wfVec);
       fitter.Config().ParamsSettings() = paramSettings; 
       start = std::chrono::system_clock::now();
@@ -201,10 +248,10 @@ public:
 
 private:
    TF1 *fSeq;
-   ROOT::Math::WrappedMultiTF1Templ<double> *wfSeq;
+   ROOT::Math::IParametricFunctionMultiDimTempl<double> *wfSeq;
 #ifdef R__HAS_VECCORE
    TF1 *fVec;
-   ROOT::Math::WrappedMultiTF1Templ<ROOT::Double_v> *wfVec;
+   ROOT::Math::IParametricFunctionMultiDimTempl<ROOT::Double_v> *wfVec;
 #endif
    std::chrono::time_point<std::chrono::system_clock> start, end;
    std::chrono::duration<double> duration;
@@ -219,6 +266,9 @@ private:
 int main()
 {
    TestVector test(200000);
+
+   ROOT::EnableImplicitMT(0);  
+   ROOT::EnableThreadSafety();
 
    //Sequential
    if (!test.testFitSeq()) {

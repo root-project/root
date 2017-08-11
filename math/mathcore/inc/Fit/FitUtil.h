@@ -466,14 +466,23 @@ namespace FitUtil {
          unsigned int n = data.Size();
 
          //unsigned int nRejected = 0;
+         bool normalizeFunc = false;
 
          // set parameters of the function to cache integral value
 #ifdef USE_PARAMCACHE
          (const_cast<IModelFunctionTempl<T> &>(func)).SetParameters(p);
 #endif
+ 
+#ifdef R__USE_IMT
+         // in case parameter needs to be propagated to user function use trick to set parameters by calling one time the function
+         // this will be done in sequential mode and parameters can be set in a thread safe manner
+         if (!normalizeFunc) {
+            T x(0.0);
+            func( &x, p);
+         }
+#endif  
 
          // this is needed if function must be normalized
-         bool normalizeFunc = false;
          double norm = 1.0;
          if (normalizeFunc) {
             // compute integral of the function
