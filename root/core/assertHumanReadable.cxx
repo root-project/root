@@ -9,7 +9,7 @@ int checkFail(std::string_view input)
    auto parseResult = ROOT::FromHumanReadableSize(input,res);
    if (parseResult == ROOT::EFromHumanReadableSize::kSuccess) {
       Error("FromHumanReadableSize","Parsing %s should have failed but got the value %lld instead of -1",
-            input.to_string().c_str(),res);
+            std::string(input).c_str(),res);
       return 1;
    } else {
       return 0;
@@ -22,12 +22,12 @@ int checkParsing(std::string_view input, Long64_t expected)
    auto parseResult = ROOT::FromHumanReadableSize(input,res);
    if (parseResult == ROOT::EFromHumanReadableSize::kParseFail) {
       Error("FromHumanReadableSize","Parsing %s failed.",
-            input.to_string().c_str());
+            std::string(input).c_str());
       return 1;
    }
    if (parseResult == ROOT::EFromHumanReadableSize::kOverflow) {
       Error("FromHumanReadableSize","Overflow of %s which does not fit in a long long.",
-            input.to_string().c_str());
+            std::string(input).c_str());
       return 1;
    }
    bool match = ( res == expected );
@@ -39,7 +39,7 @@ int checkParsing(std::string_view input, Long64_t expected)
    }
    if (!match) {
       Error("FromHumanReadableSize","Incorrectly parsed %s and got the value %lld instead of %lld",
-            input.to_string().c_str(),res,expected);
+            std::string(input).c_str(),res,expected);
       return 1;
    } else {
       return 0;
