@@ -1409,6 +1409,7 @@ if(veccore AND NOT VecCore_FOUND)
 
     set(VecCore_DEFINITIONS ${VecCore_Vc_DEFINITIONS})
     set(VecCore_INCLUDE_DIRS ${VecCore_Vc_INCLUDE_DIR} ${VecCore_INCLUDE_DIRS})
+    set(VecCore_LIBRARIES ${VecCore_LIBRARIES} ${Vc_LIBRARIES})
     target_link_libraries(VecCore INTERFACE ${Vc_LIBRARIES})
   endif()
 
