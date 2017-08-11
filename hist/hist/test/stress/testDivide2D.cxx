@@ -4,6 +4,7 @@
 
 #include <cmath>
 #include <sstream>
+#include "gtest/gtest.h"
 
 #include "TH2.h"
 #include "TH3.h"
@@ -15,8 +16,6 @@
 #include "HFitInterface.h"
 
 #include "TRandom2.h"
-
-#include "gtest/gtest.h"
 
 #include "StressHistogramGlobal.h"
 

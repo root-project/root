@@ -2,8 +2,7 @@
 // Authors: David Gonzalez Maline November 2008
 //          Martin Storø Nyfløtt  June 2017
 
-#include <cmath>
-#include <sstream>
+#include "StressHistogramGlobal.h"
 
 #include "TH2.h"
 #include "TH3.h"
@@ -29,9 +28,9 @@
 
 #include "TROOT.h"
 
+#include <cmath>
+#include <sstream>
 #include "gtest/gtest.h"
-
-#include "StressHistogramGlobal.h"
 
 using namespace std;
 

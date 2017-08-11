@@ -5,9 +5,6 @@
 #ifndef ROOT_STRESSHISTOGRAMGLOBAL_H
 #define ROOT_STRESSHISTOGRAMGLOBAL_H
 
-#include <sstream>
-#include <cmath>
-
 #include "TH2.h"
 #include "TH3.h"
 #include "THn.h"
@@ -34,6 +31,10 @@
 #include "TClass.h"
 
 #include "TROOT.h"
+
+#include "gtest/gtest.h"
+#include <sstream>
+#include <cmath>
 
 #define minRange 1
 #define maxRange 5

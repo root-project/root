@@ -2,8 +2,8 @@
 // Authors: David Gonzalez Maline November 2008
 //          Martin Storø Nyfløtt  June 2017
 
-#include <cmath>
-#include <sstream>
+#include "StressHistogramGlobal.h"
+#include "TypedHistTest.h"
 
 #include "TH2.h"
 #include "TH3.h"
@@ -17,10 +17,9 @@
 #include "TFile.h"
 #include "TRandom2.h"
 
+#include <cmath>
+#include <sstream>
 #include "gtest/gtest.h"
-
-#include "StressHistogramGlobal.h"
-#include "TypedHistTest.h"
 
 using namespace std;
 
