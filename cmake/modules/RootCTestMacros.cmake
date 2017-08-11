@@ -23,10 +23,7 @@ macro(ROOTTEST_SETUP_MACROTEST)
 
   set(EXTERNALS_INCLUDE_DIR
     ${CMAKE_BINARY_DIR}/externals/${CMAKE_INSTALL_PREFIX}/include)
-
-  if(EXISTS ${EXTERNALS_INCLUDE_DIR})
-    set(RootExternalIncludes -e "gSystem->AddIncludePath(\"-I${EXTERNALS_INCLUDE_DIR}\")")
-  endif()
+  set(RootExternalIncludes -e "gSystem->AddIncludePath(\"-I${EXTERNALS_INCLUDE_DIR}\")")
 
   set(root_cmd root.exe ${RootExeDefines}
                -e "gSystem->SetBuildDir(\"${CMAKE_CURRENT_BINARY_DIR}\",true)"
