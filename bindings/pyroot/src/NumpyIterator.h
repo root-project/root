@@ -12,12 +12,10 @@
 
 // ROOT
 #include <TBranch.h>
-#include <TLeaf.h>
 #include <TBufferFile.h>
 
 // Standard
 #include <vector>
-#include <tuple>
 
 namespace PyROOT {
 
@@ -28,7 +26,7 @@ void InitializeNumpy();
 #endif
 
 PyObject* GetNumpyIterator(PyObject* self, PyObject* args, PyObject* kwds);
-PyObject* GetNumpyIteratorInfo(PyObject* self, PyObject* args);
+PyObject* GetNumpyIteratorInfo(PyObject* self, PyObject* args, PyObject* kwds);
 
 class ArrayInfo {
 public:
@@ -48,34 +46,32 @@ class ClusterBuffer {
 private:
   const Request fRequest;
   const Long64_t fItemSize;
+  const bool fSwapBytes;
   TBufferFile fBufferFile;
-  std::vector<char> fSaved;
+  std::vector<char> fExtra;
+  bool fUsingExtra;
 
   // always numbers of entries (not bytes) and always inclusive on start, exclusive on end (like Python)
-  Long64_t fBufferStart;
-  Long64_t fBufferEnd;
-  Long64_t fSavedStart;
-  Long64_t fSavedEnd;
-  Long64_t fSavedSize;
+  // also, the TBufferFile is always ahead of the extra buffer and there's no gap between them
+  Long64_t bfEntryStart;
+  Long64_t bfEntryEnd;
+  Long64_t exEntryStart;
+  Long64_t exEntryEnd;
 
-  ClusterBuffer* fCounter;
-  std::vector<std::tuple<Long64_t, Long64_t, Long64_t>> fOldCounts;
+  void CopyToExtra(Long64_t keep_start);
 
 public:
-  ClusterBuffer(const Request request, const Long64_t itemsize, ClusterBuffer* counter) :
-    fRequest(request), fItemSize(itemsize), fBufferFile(TBuffer::kWrite, 32*1024),
-    fBufferStart(0), fBufferEnd(0), fSavedStart(0), fSavedEnd(0), fSavedSize(0),
-    fCounter(counter)
+  ClusterBuffer(const Request request, const Long64_t itemsize, const bool swap_bytes) :
+    fRequest(request), fItemSize(itemsize), fSwapBytes(swap_bytes), fBufferFile(TBuffer::kWrite, 32*1024), fUsingExtra(false),
+    bfEntryStart(0), bfEntryEnd(0), exEntryStart(0), exEntryEnd(0)
   {
     // required for re-readability
     fRequest.branch->DropBaskets();
   }
 
-  void ReadOne(Long64_t entry_start, const char* &error_string);
+  void ReadOne(Long64_t keep_start, const char* &error_string);
   void* GetBuffer(Long64_t &numbytes, Long64_t entry_start, Long64_t entry_end);
-  Long64_t GetLastEntry();
-  bool IsLeaf(TLeaf* leaf);
-  Long64_t UseAsCounter(Long64_t entry_start, Long64_t num_entries);
+  Long64_t EntryEnd();
 };
 
 class NumpyIterator {
@@ -90,23 +86,11 @@ private:
   bool StepForward(const char* &error_string);
 
 public:
-  NumpyIterator(const std::vector<Request> &requests, const std::vector<ArrayInfo> arrayinfo, Long64_t num_entries, bool return_new_buffers) :
+  NumpyIterator(const std::vector<Request> &requests, const std::vector<ArrayInfo> arrayinfo, Long64_t num_entries, bool return_new_buffers, bool swap_bytes) :
     fArrayInfo(arrayinfo), fNumEntries(num_entries), fReturnNewBuffers(return_new_buffers), fCurrentStart(0), fCurrentEnd(0)
   {
     for (unsigned int i = 0;  i < fArrayInfo.size();  i++) {
-      ClusterBuffer* counter = nullptr;
-      TLeaf* countleaf = reinterpret_cast<TLeaf*>(requests[i].branch->GetListOfLeaves()->First())->GetLeafCount();
-
-      if (countleaf != nullptr) {
-        for (unsigned int j = 0;  j < i;  j++) {
-          if (fClusterBuffers[j].get()->IsLeaf(countleaf)) {
-            counter = fClusterBuffers[j].get();
-            break;
-          }
-        }
-      }
-
-      fClusterBuffers.push_back(std::unique_ptr<ClusterBuffer>(new ClusterBuffer(requests[i], fArrayInfo[i].dtype->elsize, counter)));
+      fClusterBuffers.push_back(std::unique_ptr<ClusterBuffer>(new ClusterBuffer(requests[i], fArrayInfo[i].dtype->elsize, swap_bytes)));
     }
   }
 
