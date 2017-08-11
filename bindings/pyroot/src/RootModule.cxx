@@ -926,10 +926,6 @@ extern "C" void initlibPyROOT()
    Py_INCREF( gNullPtrObject );
    PyModule_AddObject( gRootModule, (char*)"nullptr", gNullPtrObject );
 
-// inject PyNumpyIteratorType
-   Py_INCREF( &PyNumpyIteratorType );
-   PyModule_AddObject( gRootModule, (char*)"NumpyIterator", reinterpret_cast<PyObject*>(&PyNumpyIteratorType) );
-
 // initialize Numpy if it isn't already
    InitializeNumpy();
 
