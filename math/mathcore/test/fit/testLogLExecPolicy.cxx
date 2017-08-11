@@ -84,8 +84,8 @@ public:
       virtual unsigned int NPar() const {
          return paramSize;
       }
-      virtual double * Parameters() const {
-         return (double *)params.data(); 
+      virtual const double * Parameters() const {
+         return params.data(); 
       }
       virtual void SetParameters(const double * p) {
          std::copy(p, p+paramSize, params.begin() );
