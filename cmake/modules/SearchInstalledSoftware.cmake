@@ -1289,7 +1289,7 @@ elseif(vc)
     endif()
   endif()
   if(Vc_FOUND)
-    set_property(DIRECTORY PROPERTY INCLUDE_DIRECTORIES ${Vc_INCLUDE_DIR})
+    set_property(DIRECTORY APPEND PROPERTY INCLUDE_DIRECTORIES ${Vc_INCLUDE_DIR})
   endif()
 endif()
 
@@ -1333,7 +1333,7 @@ if(vc AND NOT Vc_FOUND)
   target_link_libraries(Vc INTERFACE VcExt)
 
   # propagate build-time include directories to rootcling
-  set_property(DIRECTORY PROPERTY INCLUDE_DIRECTORIES ${Vc_INCLUDE_DIR})
+  set_property(DIRECTORY APPEND PROPERTY INCLUDE_DIRECTORIES ${Vc_INCLUDE_DIR})
 
   find_package_handle_standard_args(Vc
     FOUND_VAR Vc_FOUND
@@ -1362,7 +1362,7 @@ elseif(veccore)
     message(STATUS "VecCore not found, switching on 'builtin_veccore' option.")
     set(builtin_veccore ON CACHE BOOL "" FORCE)
   else()
-    set_property(DIRECTORY PROPERTY INCLUDE_DIRECTORIES ${VecCore_INCLUDE_DIRS})
+    set_property(DIRECTORY APPEND PROPERTY INCLUDE_DIRECTORIES ${VecCore_INCLUDE_DIRS})
   endif()
 endif()
 
@@ -1399,7 +1399,7 @@ if(veccore AND NOT VecCore_FOUND)
   add_dependencies(VecCore VECCORE)
 
   # propagate build-time include directories to rootcling
-  set_property(DIRECTORY PROPERTY INCLUDE_DIRECTORIES ${VecCore_ROOTDIR}/include)
+  set_property(DIRECTORY APPEND PROPERTY INCLUDE_DIRECTORIES ${VecCore_ROOTDIR}/include)
 
   if (Vc_FOUND)
     set(VecCore_Vc_FOUND True)
