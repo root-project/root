@@ -306,7 +306,7 @@ add_custom_command(OUTPUT etc/dictpch/allLinkDefs.h
 
 get_property(incdirs DIRECTORY PROPERTY INCLUDE_DIRECTORIES)
 foreach(d ${incdirs})
-  if(EXISTS ${d})
+  if(NOT "${d}" MATCHES "AFTER|BEFORE|INTERFACE|PRIVATE|PUBLIC|SYSTEM")
     set(__allIncludes ${__allIncludes} -I${d})
   endif()
 endforeach()
