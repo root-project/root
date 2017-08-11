@@ -124,7 +124,7 @@ std::string
 MakeTitle(std::string_view version, std::string_view histname, std::string_view title, std::string_view axis)
 {
    std::string result =
-      std::string(version) + " " + std::string(histname) + " " + title.to_string() + " [" + axis.to_string() + "]";
+      std::string(version) + " " + std::string(histname) + " " + std::string(title) + " [" + std::string(axis) + "]";
    return result;
 }
 
