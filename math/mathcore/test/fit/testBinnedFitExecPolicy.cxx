@@ -5,6 +5,8 @@
 #include "Math/IParamFunction.h"
 #include "TFitResult.h"
 #include "TError.h"
+#include "TStopwatch.h"
+#include "TROOT.h"
 #include "Math/MinimizerOptions.h"
 
 bool compareResult(double v1, double v2, std::string s = "", double tol = 0.01)
@@ -25,6 +27,10 @@ T func(const T *data, const double *params)
 
 int main()
 {
+
+   ROOT::EnableImplicitMT(8);
+   ROOT::EnableThreadSafety();
+   
    TF1 *f = new TF1("fvCore", func<double>, 100, 200, 4);
    f->SetParameters(1, 1000, 7.5, 1.5);
 
@@ -33,23 +39,37 @@ int main()
    gRandom->SetSeed(1);
    h1f.FillRandom("fvCore", 1000000);
 
+   ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit2");
+
+   std::chrono::time_point<std::chrono::system_clock> start, end;
+   std::chrono::duration<double> duration;
    std::cout << "\n **FIT: Chi2 **\n\n";
+   start = std::chrono::system_clock::now();
    auto r1 = h1f.Fit(f, "S");
    if ((Int_t)r1 != 0) {
       Error("testBinnedFitExecPolicy", "Sequential Chi2 Fit failed!");
       return -1;
    }
+   end =  std::chrono::system_clock::now();
+   duration = end - start;
+   std::cout << "Time for the Sequential Chi2 Fit: " << duration.count() << std::endl;
 
    std::cout << "\n **FIT: Binned Likelihood **\n\n";
+   f->SetParameters(1, 1000, 7.5, 1.5);
+   start = std::chrono::system_clock::now();
    auto rL1 = h1f.Fit(f, "S L");
    if ((Int_t)rL1 != 0) {
       Error("testBinnedFitExecPolicy", "Sequential  Binned Likelihood Fit failed!");
       return -1;
    }
+   end =  std::chrono::system_clock::now();
+   duration = end - start;
+   std::cout << "Time for the Sequential  Binned Likelihood Fit: " << duration.count() << std::endl;
 
 #ifdef R__USE_IMT
    std::cout << "\n **FIT: Multithreaded Chi2 **\n\n";
    f->SetParameters(1, 1000, 7.5, 1.5);
+   start = std::chrono::system_clock::now();
    auto r2 = h1f.Fit(f, "MULTITHREAD S");
    if ((Int_t)r2 != 0) {
       Error("testBinnedFitExecPolicy", "Multithreaded Chi2 Fit failed!");
@@ -58,9 +78,13 @@ int main()
       if (!compareResult(r2->MinFcnValue(), r1->MinFcnValue(), "Mutithreaded Chi2 Fit: "))
          return 1;
    }
+   end =  std::chrono::system_clock::now();
+   duration = end - start;
+   std::cout << "Time for the Mutithreaded Chi2 Fit: " << duration.count() << std::endl;
 
    std::cout << "\n **FIT: Multithreaded Binned Likelihood **\n\n";
    f->SetParameters(1, 1000, 7.5, 1.5);
+   start = std::chrono::system_clock::now();
    auto rL2 = h1f.Fit(f, "MULTITHREAD S L");
    if ((Int_t)rL2 != 0) {
       Error("testBinnedFitExecPolicy", "Multithreaded Binned Likelihood Fit failed!");
@@ -69,6 +93,9 @@ int main()
       if (!compareResult(rL2->MinFcnValue(), rL1->MinFcnValue(), "Mutithreaded Binned Likelihood Fit (PoissonLogL): "))
          return 2;
    }
+   end =  std::chrono::system_clock::now();
+   duration = end - start;
+   std::cout << "Time for the Mutithreaded Binned Likelihood Fit :" << duration.count() << std::endl;
 #endif
 
 #ifdef R__HAS_VECCORE
@@ -76,6 +103,7 @@ int main()
 
    std::cout << "\n **FIT: Vectorized Chi2 **\n\n";
    fvecCore->SetParameters(1, 1000, 7.5, 1.5);
+   start = std::chrono::system_clock::now();
    auto r3 = h1f.Fit(fvecCore, "S");
    if ((Int_t)r3 != 0) {
       Error("testBinnedFitExecPolicy", "Vectorized Chi2 Fit failed!");
@@ -84,9 +112,13 @@ int main()
       if (!compareResult(r3->MinFcnValue(), r1->MinFcnValue(), "Vectorized Chi2 Fit: "))
          return 3;
    }
+   end =  std::chrono::system_clock::now();
+   duration = end - start;
+   std::cout << "Time for the Vectorized Chi2 Fit: " << duration.count() << std::endl;
 
    std::cout << "\n **FIT: Vectorized Binned Likelihood **\n\n";
    fvecCore->SetParameters(1, 1000, 7.5, 1.5);
+   start = std::chrono::system_clock::now();
    auto rL3 = h1f.Fit(fvecCore, "S L");
    if ((Int_t)rL3 != 0) {
       Error("testBinnedFitExecPolicy", "Vectorized Binned Likelihood Fit failed!");
@@ -96,9 +128,14 @@ int main()
                          "Vectorized Binned Likelihood Fit (PoissonLogL) Fit: "))
          return 4;
    }
+   end =  std::chrono::system_clock::now();
+   duration = end - start;
+   std::cout << "Time for the Vectorized Binned Likelihood Fit: " << duration.count() << std::endl;
+  
 
 #ifdef R__USE_IMT
    std::cout << "\n **FIT: Mutithreaded vectorized Chi2 **\n\n";
+   start = std::chrono::system_clock::now();
    auto r4 = h1f.Fit(fvecCore, "MULTITHREAD S");
    if ((Int_t)r4 != 0) {
       Error("testBinnedFitExecPolicy", "Mutithreaded vectorized Chi2 Fit failed!");
@@ -107,9 +144,13 @@ int main()
       if (!compareResult(r4->MinFcnValue(), r1->MinFcnValue(), "Mutithreaded vectorized Chi2 Fit: "))
          return 5;
    }
+   end =  std::chrono::system_clock::now();
+   duration = end - start;
+   std::cout << "Time for the Mutithreaded vectorized Chi2 Fit: " << duration.count() << std::endl;
 
    std::cout << "\n **FIT: Multithreaded and vectorized Binned Likelihood **\n\n";
    fvecCore->SetParameters(1, 1000, 7.5, 1.5);
+   start = std::chrono::system_clock::now();
    auto rL4 = h1f.Fit(fvecCore, "MULTITHREAD S L");
    if ((Int_t)rL4 != 0) {
       Error("testBinnedFitExecPolicy", "Multithreaded Binned Likelihood vectorized Fit failed!");
@@ -119,6 +160,10 @@ int main()
                          "Mutithreaded vectorized Binned Likelihood Fit (PoissonLogL) Fit: "))
          return 6;
    }
+   end =  std::chrono::system_clock::now();
+   duration = end - start;
+   std::cout << "Time for the multithreaded+vectorized  Binned Likelihood Fit: " << duration.count() << std::endl;
+
 
 #endif
 #endif
