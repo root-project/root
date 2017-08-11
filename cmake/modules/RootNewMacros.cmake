@@ -278,6 +278,16 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   foreach( d ${incdirs})
    set(includedirs ${includedirs} -I${d})
   endforeach()
+
+  foreach(dep ${ARG_DEPENDENCIES})
+    if(TARGET ${dep})
+      get_property(dep_include_dirs TARGET ${dep} PROPERTY INCLUDE_DIRECTORIES)
+      foreach(d ${dep_include_dirs})
+        set(includedirs ${includedirs} -I${d})
+      endforeach()
+    endif()
+  endforeach()
+
   list(REMOVE_DUPLICATES includedirs)
   #---Get the list of definitions---------------------------
   get_directory_property(defs COMPILE_DEFINITIONS)
