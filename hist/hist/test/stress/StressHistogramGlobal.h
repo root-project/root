@@ -44,7 +44,6 @@
 #define defaultErrorLimit 1.E-10
 #define refFileOption 1
 //#define refFileName "http://root.cern.ch/files/stressHistogram.5.18.00.root"
-#define initialRandomSeed 0
 
 // In case of deviation, the profiles' content will not work anymore
 // try only for testing the statistics

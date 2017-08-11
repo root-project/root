@@ -25,7 +25,7 @@ using namespace std;
 
 TEST(StressHistogram, TestMerge2D)
 {
-   TRandom2 r(initialRandomSeed);
+   TRandom2 r;
    // Tests the merge method for 2D Histograms
 
    TH2D h1("merge2D-h1", "h1-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange, maxRange);

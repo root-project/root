@@ -35,7 +35,7 @@ using namespace std;
 class RefReadTest : public ::testing::Test {
 protected:
    unique_ptr<TFile> refFile;
-   TRandom2 r = TRandom2(initialRandomSeed);
+   TRandom2 r = TRandom2();
 
    virtual void SetUp()
    {

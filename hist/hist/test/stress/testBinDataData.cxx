@@ -29,7 +29,7 @@ using namespace std;
 
 TEST(StressHistogram, TestBinDataData1D)
 {
-   TRandom2 r(initialRandomSeed);
+   TRandom2 r;
    TF1 func("GAUS", gaus1d, minRange, maxRange, 3);
    func.SetParameters(0., 3., 200.);
    func.SetParLimits(1, 0, 5);
@@ -59,7 +59,7 @@ TEST(StressHistogram, TestBinDataData1D)
 
 TEST(StressHistogram, TestBinDataData1DInt)
 {
-   TRandom2 r(initialRandomSeed);
+   TRandom2 r;
    TF1 func("GAUS", gaus1d, minRange, maxRange, 3);
    func.SetParameters(0., 3., 200.);
    func.SetParLimits(1, 0, 5);
@@ -93,7 +93,7 @@ TEST(StressHistogram, TestBinDataData1DInt)
 
 TEST(StressHistogram, TestBinDataData2D)
 {
-   TRandom2 r(initialRandomSeed);
+   TRandom2 r;
    TF1 func("GAUS", gaus2d, minRange, maxRange, 3);
    func.SetParameters(0., 3., 200.);
    func.SetParLimits(1, 0, 5);
@@ -124,7 +124,7 @@ TEST(StressHistogram, TestBinDataData2D)
 
 TEST(StressHistogram, TestBinDataData2DInt)
 {
-   TRandom2 r(initialRandomSeed);
+   TRandom2 r;
    TF1 func("GAUS", gaus2d, minRange, maxRange, 3);
    func.SetParameters(0., 3., 200.);
    func.SetParLimits(1, 0, 5);
@@ -159,7 +159,7 @@ TEST(StressHistogram, TestBinDataData2DInt)
 
 TEST(StressHistogram, TestBinDataData3D)
 {
-   TRandom2 r(initialRandomSeed);
+   TRandom2 r;
    TF1 func("GAUS", gaus3d, minRange, maxRange, 3);
    func.SetParameters(0., 3., 200.);
    func.SetParLimits(1, 0, 5);
@@ -192,7 +192,7 @@ TEST(StressHistogram, TestBinDataData3D)
 
 TEST(StressHistogram, TestBinDataData3DInt)
 {
-   TRandom2 r(initialRandomSeed);
+   TRandom2 r;
    TF1 func("GAUS", gaus3d, minRange, maxRange, 3);
    func.SetParameters(0., 3., 200.);
    func.SetParLimits(1, 0, 5);

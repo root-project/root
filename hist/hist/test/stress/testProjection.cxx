@@ -111,7 +111,7 @@ class ProjectionTester : public ::testing::Test {
    unique_ptr<THnD> n3;
 
    bool buildWithWeights = false;
-   TRandom2 r = TRandom2(initialRandomSeed);
+   TRandom2 r = TRandom2();
 
 private:
    void CreateHistograms()
@@ -947,7 +947,7 @@ public:
 protected:
    virtual void SetUp()
    {
-      r.SetSeed(initialRandomSeed);
+      r.SetSeed();
 
       TProfile::Approximate();
       TProfile2D::Approximate();

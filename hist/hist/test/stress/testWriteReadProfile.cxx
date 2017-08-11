@@ -28,7 +28,7 @@ using namespace std;
 
 TEST(StressHistogram, TestWriteReadProfile1D)
 {
-   TRandom2 r(initialRandomSeed);
+   TRandom2 r;
    // Tests the write and read methods for 1D Profiles
 
    TProfile p1("wr1D-p1", "p1-Title", numberOfBins, minRange, maxRange);
@@ -51,7 +51,7 @@ TEST(StressHistogram, TestWriteReadProfile1D)
 
 TEST(StressHistogram, TestWriteReadProfile2D)
 {
-   TRandom2 r(initialRandomSeed);
+   TRandom2 r;
    // Tests the write and read methods for 2D Profiles
 
    TProfile2D p1("wr2D-p1", "p1-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange, maxRange);
@@ -77,7 +77,7 @@ TEST(StressHistogram, TestWriteReadProfile2D)
 
 TEST(StressHistogram, TestWriteReadProfile3D)
 {
-   TRandom2 r(initialRandomSeed);
+   TRandom2 r;
    // Tests the write and read methods for 3D Profile
 
    TProfile3D p1("wr3D-p1", "p1-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,

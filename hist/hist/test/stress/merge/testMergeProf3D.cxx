@@ -27,7 +27,7 @@ using namespace std;
 
 TEST(StressHistogram, TestMergeProf3D)
 {
-   TRandom2 r(initialRandomSeed);
+   TRandom2 r;
    // Tests the merge method for 3D Profiles
 
    TProfile3D p1("merge3D-p1", "p1-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
@@ -77,7 +77,7 @@ TEST(StressHistogram, TestMergeProf3D)
 
 TEST(StressHistogram, TestMergeProf3DDiff)
 {
-   TRandom2 r(initialRandomSeed);
+   TRandom2 r;
    // Tests the merge method with different binned 3D Profile
 
    // This tests fails! Segmentation Fault!!It should not!

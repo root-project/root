@@ -27,7 +27,7 @@ using namespace std;
 
 TEST(StressHistogram, TestMergeProf2D)
 {
-   TRandom2 r(initialRandomSeed);
+   TRandom2 r;
    // Tests the merge method for 2D Profiles
 
    TProfile2D p1("merge2D-p1", "p1-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange, maxRange);
@@ -70,7 +70,7 @@ TEST(StressHistogram, TestMergeProf2D)
 
 TEST(StressHistogram, TestMergeProf2DDiff)
 {
-   TRandom2 r(initialRandomSeed);
+   TRandom2 r;
    // Tests the merge method with different binned 2D Profile
 
    // This tests fails! It should not!

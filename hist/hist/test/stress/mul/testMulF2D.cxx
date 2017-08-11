@@ -25,7 +25,7 @@ using namespace std;
 
 TEST(StressHistogram, TestMulF2D)
 {
-   TRandom2 r(initialRandomSeed);
+   TRandom2 r;
    Double_t c1 = r.Rndm();
 
    TH2D h1("mf2D-h1", "h1-Title", numberOfBins, minRange, maxRange, numberOfBins, minRange, maxRange);
@@ -54,7 +54,7 @@ TEST(StressHistogram, TestMulF2D)
 
 TEST(StressHistogram, TestMulF2D2)
 {
-   TRandom2 r(initialRandomSeed);
+   TRandom2 r;
    Double_t c1 = r.Rndm();
 
    TH2D h1("mf2D2-h1", "h1-Title", numberOfBins, minRange, maxRange, numberOfBins, minRange, maxRange);

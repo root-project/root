@@ -28,7 +28,7 @@ TYPED_TEST_CASE(HistTest, HistTestTypes_t);
 
 TYPED_TEST(HistTest, TestMulHn)
 {
-   TRandom2 r(initialRandomSeed);
+   TRandom2 r;
    // Tests the Multiply method for Sparse Histograms
 
    Int_t bsize[] = {TMath::Nint(r.Uniform(1, 5)), TMath::Nint(r.Uniform(1, 5)), TMath::Nint(r.Uniform(1, 5))};

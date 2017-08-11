@@ -25,7 +25,7 @@ using namespace std;
 
 TEST(StressHistogram, TestAdd2DProfile1)
 {
-   TRandom2 r(initialRandomSeed);
+   TRandom2 r;
    TH1::SetDefaultSumw2();
    // Tests the first Add method for 1D Profiles
 
@@ -59,7 +59,7 @@ TEST(StressHistogram, TestAdd2DProfile1)
 
 TEST(StressHistogram, TestAdd2DProfile2)
 {
-   TRandom2 r(initialRandomSeed);
+   TRandom2 r;
    TH1::SetDefaultSumw2();
    // Tests the second Add method for 2D Profiles
 

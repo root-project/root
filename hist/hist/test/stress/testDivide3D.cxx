@@ -24,7 +24,7 @@ using namespace std;
 
 TEST(StressHistogram, TestDivide3D1)
 {
-   TRandom2 r(initialRandomSeed);
+   TRandom2 r;
    // Tests the first Divide method for 3D Histograms
 
    Double_t c1 = r.Rndm() + 1;
@@ -84,7 +84,7 @@ TEST(StressHistogram, TestDivide3D1)
 
 TEST(StressHistogram, TestDivide3D2)
 {
-   TRandom2 r(initialRandomSeed);
+   TRandom2 r;
    // Tests the second Divide method for 3D Histograms
 
    TH3D h1("d3D2-h1", "h1-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,

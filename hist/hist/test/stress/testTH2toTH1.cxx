@@ -34,7 +34,7 @@ TEST(StressHistogram, TestTH2toTH1)
    const int lower_limit = 0;
    const int upper_limit = 10;
 
-   TRandom2 r(initialRandomSeed);
+   TRandom2 r;
 
    r.SetSeed(10);
 

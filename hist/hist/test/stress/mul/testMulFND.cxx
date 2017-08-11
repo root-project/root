@@ -30,7 +30,7 @@ TYPED_TEST_CASE(HistTest, HistTestTypes_t);
 
 TYPED_TEST(HistTest, TestMulFND)
 {
-   TRandom2 r(initialRandomSeed);
+   TRandom2 r;
    const UInt_t nDims = 3;
    Double_t c1 = r.Rndm();
 
@@ -63,7 +63,7 @@ TYPED_TEST(HistTest, TestMulFND)
 
 TYPED_TEST(HistTest, TestMulFND2)
 {
-   TRandom2 r(initialRandomSeed);
+   TRandom2 r;
    const UInt_t nDims = 3;
    Double_t c1 = r.Rndm();
 

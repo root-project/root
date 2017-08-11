@@ -27,7 +27,7 @@ using namespace std;
 
 TEST(StressHistogram, TestWriteRead1D)
 {
-   TRandom2 r(initialRandomSeed);
+   TRandom2 r;
    // Tests the write and read methods for 1D Histograms
 
    TH1D h1("wr1D-h1", "h1-Title", numberOfBins, minRange, maxRange);
@@ -51,7 +51,7 @@ TEST(StressHistogram, TestWriteRead1D)
 
 TEST(StressHistogram, TestWriteRead2D)
 {
-   TRandom2 r(initialRandomSeed);
+   TRandom2 r;
    // Tests the write and read methods for 2D Histograms
 
    TH2D h1("wr2D-h1", "h1-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange, maxRange);
@@ -76,7 +76,7 @@ TEST(StressHistogram, TestWriteRead2D)
 
 TEST(StressHistogram, TestWriteRead3D)
 {
-   TRandom2 r(initialRandomSeed);
+   TRandom2 r;
    // Tests the write and read methods for 3D Histograms
 
    TH3D h1("wr3D-h1", "h1-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
@@ -106,7 +106,7 @@ TYPED_TEST_CASE(HistTest, HistTestTypes_t);
 
 TYPED_TEST(HistTest, TestWriteReadHn)
 {
-   TRandom2 r(initialRandomSeed);
+   TRandom2 r;
    // Tests the write and read methods for n-dim Histograms
 
    Int_t bsize[] = {TMath::Nint(r.Uniform(1, 5)), TMath::Nint(r.Uniform(1, 5)), TMath::Nint(r.Uniform(1, 5))};
@@ -136,7 +136,7 @@ TYPED_TEST(HistTest, TestWriteReadHn)
 
 TEST(StressHistogram, TestWriteReadVar1D)
 {
-   TRandom2 r(initialRandomSeed);
+   TRandom2 r;
    // Tests the write and read methods for 1D Histograms with variable bin size
 
    Double_t v[numberOfBins + 1];

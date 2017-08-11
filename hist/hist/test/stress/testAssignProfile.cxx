@@ -25,7 +25,7 @@ using namespace std;
 
 TEST(StressHistogram, TestAssignProfile1D)
 {
-   TRandom2 r(initialRandomSeed);
+   TRandom2 r;
    // Tests the operator=() method for 1D Profiles
 
    TProfile p1("=1D-p1", "p1-Title", numberOfBins, minRange, maxRange);
@@ -44,7 +44,7 @@ TEST(StressHistogram, TestAssignProfile1D)
 
 TEST(StressHistogram, TestAssignProfile2D)
 {
-   TRandom2 r(initialRandomSeed);
+   TRandom2 r;
    // Tests the operator=() method for 2D Profiles
 
    TProfile2D p1("=2D-p1", "p1-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange, maxRange);
@@ -64,7 +64,7 @@ TEST(StressHistogram, TestAssignProfile2D)
 
 TEST(StressHistogram, TestAssignProfile3D)
 {
-   TRandom2 r(initialRandomSeed);
+   TRandom2 r;
    // Tests the operator=() method for 3D Profiles
 
    TProfile3D p1("=3D-p1", "p1-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
@@ -87,7 +87,7 @@ TEST(StressHistogram, TestAssignProfile3D)
 
 TEST(StressHistogram, TestAssignProfileVar1D)
 {
-   TRandom2 r(initialRandomSeed);
+   TRandom2 r;
    // Tests the operator=() method for 1D Profiles with variable bin size
 
    Double_t v[numberOfBins + 1];

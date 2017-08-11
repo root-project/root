@@ -26,7 +26,7 @@ using namespace std;
 
 TEST(StressHistogram, TestInterpolation1D)
 {
-   TRandom2 r(initialRandomSeed);
+   TRandom2 r;
    // Tests interpolation method for 1D Histogram
 
    TH1D h1("h1", "h1", numberOfBins, minRange, maxRange);
@@ -58,7 +58,7 @@ Double_t function2D(Double_t x, Double_t y)
 
 TEST(StressHistogram, TestInterpolation2D)
 {
-   TRandom2 r(initialRandomSeed);
+   TRandom2 r;
    // Tests interpolation method for 2D Histogram
 
    TH2D h1("h1", "h1", numberOfBins, minRange, maxRange, 2 * numberOfBins, minRange, maxRange);
@@ -95,7 +95,7 @@ Double_t function3D(Double_t x, Double_t y, Double_t z)
 
 TEST(StressHistogram, TestInterpolation3D)
 {
-   TRandom2 r(initialRandomSeed);
+   TRandom2 r;
    // Tests interpolation method for 3D Histogram
 
    TH3D h1("h1", "h1", numberOfBins, minRange, maxRange, 2 * numberOfBins, minRange, maxRange, 4 * numberOfBins,
@@ -125,7 +125,7 @@ TEST(StressHistogram, TestInterpolation3D)
 
 TEST(StressHistogram, TestInterpolationVar1D)
 {
-   TRandom2 r(initialRandomSeed);
+   TRandom2 r;
    // Tests interpolation method for 1D Histogram with variable bin size
 
    Double_t v[numberOfBins + 1];

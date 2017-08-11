@@ -44,7 +44,7 @@ TEST(StressHistogram, TestProfile2Extend)
 
 TEST(StressHistogram, TestProfileExtend)
 {
-   TRandom2 r(initialRandomSeed);
+   TRandom2 r;
    TProfile::Approximate(true);
    TProfile h1("h1", "h1", 10, 0, 10);
    TProfile h0("h0", "h0", 10, 0, 20);

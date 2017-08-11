@@ -26,7 +26,7 @@ using namespace std;
 
 TEST(StressHistogram, TestMerge3DLabelAll)
 {
-   TRandom2 r(initialRandomSeed);
+   TRandom2 r;
    // Tests the merge method with fully equally labelled 3D Histograms
 
    TH3D h1("merge3DLabelAll-h1", "h1-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
@@ -81,7 +81,7 @@ TEST(StressHistogram, TestMerge3DLabelAll)
 
 TEST(StressHistogram, TestMerge3DLabelAllDiff)
 {
-   TRandom2 r(initialRandomSeed);
+   TRandom2 r;
    // Tests the merge method with fully differently labelled 3D Histograms
 
    // It does not work properly! Look, the bins with the same labels
@@ -152,7 +152,7 @@ TEST(StressHistogram, TestMerge3DLabelAllDiff)
 
 TEST(StressHistogram, TestMerge3DLabelDiff)
 {
-   TRandom2 r(initialRandomSeed);
+   TRandom2 r;
    // Tests the merge with some different labels method for 3D Histograms
 
    // It does not work properly! Look, the bins with the same labels
@@ -208,7 +208,7 @@ TEST(StressHistogram, TestMerge3DLabelDiff)
 
 TEST(StressHistogram, TestMerge3DLabelSame)
 {
-   TRandom2 r(initialRandomSeed);
+   TRandom2 r;
    // Tests the merge with some equal labels method for 3D Histograms
 
    TH3D h1("merge3DLabelSame-h1", "h1-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,

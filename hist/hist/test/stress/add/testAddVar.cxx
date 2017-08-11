@@ -23,7 +23,7 @@ using namespace std;
 
 TEST(StressHistogram, TestAddVar1)
 {
-   TRandom2 r(initialRandomSeed);
+   TRandom2 r;
    // Tests the second Add method for 1D Histograms with variable bin size
 
    Double_t v[numberOfBins + 1];
@@ -51,7 +51,7 @@ TEST(StressHistogram, TestAddVar1)
 
 TEST(StressHistogram, TestAddVar2)
 {
-   TRandom2 r(initialRandomSeed);
+   TRandom2 r;
    // Tests the second Add method for 1D Histograms with variable bin size
 
    Double_t v[numberOfBins + 1];
@@ -77,7 +77,7 @@ TEST(StressHistogram, TestAddVar2)
 
 TEST(StressHistogram, TestAddVar3)
 {
-   TRandom2 r(initialRandomSeed);
+   TRandom2 r;
    // Tests the first add method to do scale of 1D Histograms with variable bin width
 
    Double_t v[numberOfBins + 1];

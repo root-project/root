@@ -25,7 +25,7 @@ using namespace std;
 
 TEST(StressHistogram, TestCopyConstructorProfile1D)
 {
-   TRandom2 r(initialRandomSeed);
+   TRandom2 r;
    // Tests the copy constructor for 1D Profiles
 
    TProfile p1("cc1D-p1", "p1-Title", numberOfBins, minRange, maxRange);
@@ -43,7 +43,7 @@ TEST(StressHistogram, TestCopyConstructorProfile1D)
 
 TEST(StressHistogram, TestCopyConstructorProfile2D)
 {
-   TRandom2 r(initialRandomSeed);
+   TRandom2 r;
    // Tests the copy constructor for 2D Profiles
 
    TProfile2D p1("cc2D-p1", "p1-Title", numberOfBins, minRange, maxRange, numberOfBins + 2, minRange, maxRange);
@@ -62,7 +62,7 @@ TEST(StressHistogram, TestCopyConstructorProfile2D)
 
 TEST(StressHistogram, TestCopyConstructorProfile3D)
 {
-   TRandom2 r(initialRandomSeed);
+   TRandom2 r;
    // Tests the copy constructor for 3D Profiles
 
    TProfile3D p1("cc3D-p1", "p1-Title", numberOfBins, minRange, maxRange, numberOfBins + 1, minRange, maxRange,
@@ -83,7 +83,7 @@ TEST(StressHistogram, TestCopyConstructorProfile3D)
 
 TEST(StressHistogram, TestCopyConstructorProfileVar1D)
 {
-   TRandom2 r(initialRandomSeed);
+   TRandom2 r;
    // Tests the copy constructor for 1D Profiles with variable bin size
 
    Double_t v[numberOfBins + 1];
