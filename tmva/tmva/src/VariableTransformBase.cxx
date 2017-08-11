@@ -92,7 +92,7 @@ TMVA::VariableTransformBase::VariableTransformBase( DataSetInfo& dsi,
       fTargets.push_back( VariableInfo( fDsi.GetTargetInfo(itgt) ) );
    }
    for (UInt_t ispct = 0; ispct < fDsi.GetNSpectators(); ispct++) {
-      fTargets.push_back( VariableInfo( fDsi.GetSpectatorInfo(ispct) ) );
+      fSpectators.push_back( VariableInfo( fDsi.GetSpectatorInfo(ispct) ) );
    }
 }
 
