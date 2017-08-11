@@ -24,6 +24,7 @@
 #include <type_traits>
 #include <unordered_map>
 #include <string>
+#include <RStringView.h>
 
 namespace ROOT {
 namespace Experimental {
@@ -35,7 +36,7 @@ class TDirectoryUnknownKey: public std::exception {
    std::string fKeyName;
 
 public:
-   TDirectoryUnknownKey(const std::string &keyName): fKeyName(keyName) {}
+   TDirectoryUnknownKey(std::string_view keyName): fKeyName(keyName) {}
    const char *what() const noexcept final { return fKeyName.c_str(); }
 };
 
@@ -47,7 +48,7 @@ class TDirectoryTypeMismatch: public std::exception {
    std::string fKeyName;
    // FIXME: add expected and actual type names.
 public:
-   TDirectoryTypeMismatch(const std::string &keyName): fKeyName(keyName) {}
+   TDirectoryTypeMismatch(std::string_view keyName): fKeyName(keyName) {}
    const char *what() const noexcept final { return fKeyName.c_str(); }
 };
 
@@ -67,8 +68,10 @@ public:
  */
 
 class TDirectory {
-   /// The directory content is a hashed map of name =>
-   /// `Internal::TDirectoryEntry`.
+   // TODO: ContentMap_t should allow lookup by string_view while still providing
+   // storage of names.
+
+   /// The directory content is a hashed map of name => `Internal::TDirectoryEntry`.
    using ContentMap_t = std::unordered_map<std::string, Internal::TDirectoryEntry>;
 
    /// The `TDirectory`'s content.
@@ -92,7 +95,7 @@ public:
    /// \param name  - Key of the object.
    /// \param args  - arguments to be passed to the constructor of `T`
    template <class T, class... ARGS>
-   std::shared_ptr<ToContentType_t<T>> Create(const std::string &name, ARGS &&... args)
+   std::shared_ptr<ToContentType_t<T>> Create(std::string_view name, ARGS &&... args)
    {
       auto ptr = std::make_shared<ToContentType_t<T>>(std::forward<ARGS>(args)...);
       Add(name, ptr);
@@ -101,9 +104,9 @@ public:
 
    /// Find the TDirectoryEntry associated to the name. Returns empty TDirectoryEntry if
    /// nothing is found.
-   Internal::TDirectoryEntry Find(const std::string &name) const
+   Internal::TDirectoryEntry Find(std::string_view name) const
    {
-      auto idx = fContent.find(name);
+      auto idx = fContent.find(std::string(name));
       if (idx == fContent.end())
          return nullptr;
       return idx->second;
@@ -127,9 +130,9 @@ public:
    /// \note if `second` is kValidValueBase, then `first`.CastPointer<`T`>()
    ///    is a valid cast to base class `T` of the stored object
    template <class T>
-   std::pair<Internal::TDirectoryEntry, EFindStatus> Find(const std::string &name) const
+   std::pair<Internal::TDirectoryEntry, EFindStatus> Find(std::string_view name) const
    {
-      auto idx = fContent.find(name);
+      auto idx = fContent.find(std::string(name));
       if (idx == fContent.end())
          return {nullptr, EFindStatus::kKeyNameNotFound};
       if (idx->second.GetTypeInfo() == typeid(ToContentType_t<T>))
@@ -147,7 +150,7 @@ public:
    /// \throws TDirectoryTypeMismatch if the object stored under this name is of
    ///   a type that is not a derived type of `T`.
    template <class T>
-   std::shared_ptr<ToContentType_t<T>> Get(const std::string &name)
+   std::shared_ptr<ToContentType_t<T>> Get(std::string_view name)
    {
       const auto &pair = Find<T>(name);
       const Internal::TDirectoryEntry &entry = pair.first;
@@ -166,16 +169,17 @@ public:
    /// Add an existing object (rather a `shared_ptr` to it) to the TDirectory.
    /// The TDirectory will have shared ownership.
    template <class T>
-   void Add(const std::string &name, const std::shared_ptr<T> &ptr)
+   void Add(std::string_view name, const std::shared_ptr<T> &ptr)
    {
       Internal::TDirectoryEntry entry(ptr);
       // FIXME: CXX17: insert_or_assign
-      auto idx = fContent.find(name);
+      std::string sName(name);
+      auto idx = fContent.find(sName);
       if (idx != fContent.end()) {
          R__LOG_HERE(ELogLevel::kWarning, "CORE") << "Replacing object with name \"" << name << "\"" << std::endl;
          idx->second.swap(entry);
       } else {
-         fContent[name].swap(entry);
+         fContent[sName].swap(entry);
       }
    }
 
