@@ -808,6 +808,33 @@ bool test42() {
 
    return ok;
 }
+
+bool test43() {
+   // test whether value of parameter name carries through
+
+   bool ok = true;
+
+   TF1 f1("f1", "[const] + [linear]*x", -5, 5);
+   f1.SetParameters(1,2);
+
+   TF1 f2("f2", "f1", -5, 5);
+   ok &= (f2.Eval(1) == 3);
+
+   TF1 f3("f3", "f1(x, [const], [linear])", -5, 5);
+   ok &= (f3.Eval(1) == 3);
+   
+   TF1 f4("f4", "f1([const], [linear])", -5, 5);
+   ok &= (f4.Eval(1) == 3);
+
+   TF1 f5("f5", "f1(x)", -5, 5);
+   ok &= (f5.Eval(1) == 3);
+
+   TF1 f6("f6", "f1([first], [second])");
+   // parameters "should" initialize to zero
+   ok &= (f6.Eval(1) == 0);
+
+   return ok;
+}
  
 void PrintError(int itest)  { 
    Error("TFormula test","test%d FAILED ",itest);
@@ -868,6 +895,7 @@ int runTests(bool debug = false) {
    IncrTest(itest); if (!test40() ) { PrintError(itest); }
    IncrTest(itest); if (!test41() ) { PrintError(itest); }
    IncrTest(itest); if (!test42() ) { PrintError(itest); }
+   IncrTest(itest); if (!test43() ) { PrintError(itest); }
 
    std::cout << ".\n";
     
