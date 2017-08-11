@@ -38,11 +38,11 @@ TEST(StressHistogram, TestWriteReadProfile1D)
       p1.Fill(x, y, 1.0);
    }
 
-   TFile f("tmpHist.root", "RECREATE");
+   TFile f(("tmpHist" + std::to_string(getpid()) + ".root").c_str(), "RECREATE");
    p1.Write();
    f.Close();
 
-   TFile f2("tmpHist.root");
+   TFile f2(("tmpHist" + std::to_string(getpid()) + ".root").c_str());
    unique_ptr<TProfile> p2(static_cast<TProfile *>(f2.Get("wr1D-p1")));
 
    EXPECT_TRUE(HistogramsEquals(p1, *p2.get(), cmpOptStats));
@@ -61,11 +61,13 @@ TEST(StressHistogram, TestWriteReadProfile2D)
       p1.Fill(x, y, z, 1.0);
    }
 
-   TFile f("tmpHist.root", "RECREATE");
+   
+
+   TFile f(("tmpHist" + std::to_string(getpid()) + ".root").c_str(), "RECREATE");
    p1.Write();
    f.Close();
 
-   TFile f2("tmpHist.root");
+   TFile f2(("tmpHist" + std::to_string(getpid()) + ".root").c_str());
    unique_ptr<TProfile2D> p2(static_cast<TProfile2D *>(f2.Get("wr2D-p1")));
 
    EXPECT_TRUE(HistogramsEquals(p1, *p2.get(), cmpOptStats));
@@ -86,11 +88,11 @@ TEST(StressHistogram, TestWriteReadProfile3D)
       p1.Fill(x, y, z, t, 1.0);
    }
 
-   TFile f("tmpHist.root", "RECREATE");
+   TFile f(("tmpHist" + std::to_string(getpid()) + ".root").c_str(), "RECREATE");
    p1.Write();
    f.Close();
 
-   TFile f2("tmpHist.root");
+   TFile f2(("tmpHist" + std::to_string(getpid()) + ".root").c_str());
    unique_ptr<TProfile3D> p2(static_cast<TProfile3D *>(f2.Get("wr3D-p1")));
 
    // In this particular case the statistics are not checked. The
@@ -115,11 +117,11 @@ TEST(StressHistogram, TestWriteReadProfileVar1D)
       p1.Fill(x, y, 1.0);
    }
 
-   TFile f("tmpHist.root", "RECREATE");
+   TFile f(("tmpHist" + std::to_string(getpid()) + ".root").c_str(), "RECREATE");
    p1.Write();
    f.Close();
 
-   TFile f2("tmpHist.root");
+   TFile f2(("tmpHist" + std::to_string(getpid()) + ".root").c_str());
    unique_ptr<TProfile> p2(static_cast<TProfile *>(f2.Get("wr1D-p1")));
 
    EXPECT_TRUE(HistogramsEquals(p1, *p2.get(), cmpOptStats));
