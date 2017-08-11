@@ -9,12 +9,12 @@
 namespace PyROOT {
 
 #if PY_VERSION_HEX >= 0x03000000
-void* InitializeNumpy();
+  void* InitializeNumpy();
 #else
-void InitializeNumpy();
+  void InitializeNumpy();
 #endif
 
-PyObject* FillNumpyArray(PyObject* self, PyObject* args);
+  PyObject* FillNumpyArray(PyObject* self, PyObject* args);
 
 } // namespace PyROOT
 

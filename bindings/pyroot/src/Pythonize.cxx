@@ -14,7 +14,7 @@
 #include "TFunctionHolder.h"
 #include "Converters.h"
 #include "TMemoryRegulator.h"
-#include "NumpyIterator.h"
+#include "NumpyInterface.h"
 #include "Utility.h"
 
 // ROOT

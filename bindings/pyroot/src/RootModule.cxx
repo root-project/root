@@ -14,7 +14,7 @@
 #include "TTupleOfInstances.h"
 #include "RootWrapper.h"
 #include "TCallContext.h"
-#include "NumpyIterator.h"
+#include "NumpyInterface.h"
 #include "Utility.h"
 
 // ROOT
