@@ -380,20 +380,18 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   endforeach()
 
   #---call rootcint------------------------------------------
-  add_custom_command(OUTPUT ${dictionary}.stamp
-                     BYPRODUCTS ${dictionary}.cxx ${pcm_name} ${rootmap_name}
+  add_custom_command(OUTPUT ${dictionary}.cxx ${pcm_name} ${rootmap_name}
                      COMMAND ${command} -v2 -f  ${dictionary}.cxx ${newargs} ${excludepathsargs} ${rootmapargs}
                                         ${ARG_OPTIONS} ${definitions} ${includedirs} ${headerfiles} ${_linkdef}
-                     COMMAND ${CMAKE_COMMAND} -E touch ${dictionary}.stamp
                      IMPLICIT_DEPENDS ${_implicitdeps}
                      DEPENDS ${_list_of_header_dependencies} ${_linkdef} ${ROOTCINTDEP} ${ARG_DEPENDENCIES})
   get_filename_component(dictname ${dictionary} NAME)
 
   #---roottest compability
   if(ARG_NOINSTALL OR CMAKE_ROOTTEST_DICT OR (NOT DEFINED CMAKE_LIBRARY_OUTPUT_DIRECTORY))
-    add_custom_target(${dictname} DEPENDS ${dictionary}.stamp)
+    add_custom_target(${dictname} DEPENDS ${dictionary}.cxx)
   else()
-    add_custom_target(${dictname} DEPENDS ${dictionary}.stamp)
+    add_custom_target(${dictname} DEPENDS ${dictionary}.cxx)
 
     set_property(GLOBAL APPEND PROPERTY ROOT_DICTIONARY_TARGETS ${dictname})
     set_property(GLOBAL APPEND PROPERTY ROOT_DICTIONARY_FILES ${CMAKE_CURRENT_BINARY_DIR}/${dictionary}.cxx)
