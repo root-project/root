@@ -2,8 +2,8 @@
 // Authors: David Gonzalez Maline November 2008
 //          Martin Storø Nyfløtt  June 2017
 
-#include <sstream>
 #include <cmath>
+#include <sstream>
 
 #include "TH2.h"
 #include "TH3.h"

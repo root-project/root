@@ -9,8 +9,8 @@
 #include "THn.h"
 #include "THnSparse.h"
 
-#include "TF1.h"
 #include "HFitInterface.h"
+#include "TF1.h"
 #include "TRandom2.h"
 
 #include "gtest/gtest.h"

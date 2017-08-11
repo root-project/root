@@ -20,9 +20,9 @@
 
 #include "Math/IntegratorOptions.h"
 
-#include "TRandom2.h"
-#include "TFile.h"
 #include "TClass.h"
+#include "TFile.h"
+#include "TRandom2.h"
 
 #include "TROOT.h"
 
