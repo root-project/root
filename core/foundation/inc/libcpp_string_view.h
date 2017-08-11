@@ -116,11 +116,11 @@ namespace std {
       constexpr void swap(basic_string_view& s) noexcept;
 
       // 7.8, basic_string_view string operations
+      // This one was replaced by a string ctor on the way to std::string_view. Keep it
+      // because we need to do the conversion string(string_view) somehow!
       template<class Allocator>
       explicit operator basic_string<charT, traits, Allocator>() const;
-      template<class Allocator = allocator<charT>>
-      basic_string<charT, traits, Allocator> to_string(
-        const Allocator& a = Allocator()) const;
+      Axel removed to_string which was kicked out on the way to std::string_view.
 
       size_type copy(charT* s, size_type n, size_type pos = 0) const;
 
@@ -346,12 +346,6 @@ _ROOT_LIBCPP_BEGIN_NAMESPACE_LFTS
         _LIBCPP_INLINE_VISIBILITY
         _LIBCPP_EXPLICIT operator basic_string<_CharT, _Traits, _Allocator>() const
         { return basic_string<_CharT, _Traits, _Allocator>( begin(), end()); }
-
-        template<class _Allocator = allocator<_CharT> >
-        _LIBCPP_INLINE_VISIBILITY
-        basic_string<_CharT, _Traits, _Allocator>
-        to_string( const _Allocator& __a = _Allocator()) const
-        { return basic_string<_CharT, _Traits, _Allocator> ( begin(), end(), __a ); }
 
         size_type copy(_CharT* __s, size_type __n, size_type __pos = 0) const
         {
