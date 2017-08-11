@@ -27,6 +27,7 @@ void InitializeNumpy();
 
 PyObject* GetNumpyIterator(PyObject* self, PyObject* args, PyObject* kwds);
 PyObject* GetNumpyIteratorInfo(PyObject* self, PyObject* args, PyObject* kwds);
+PyObject* FillNumpyArray(PyObject* self, PyObject* args);
 
 class ArrayInfo {
 public:

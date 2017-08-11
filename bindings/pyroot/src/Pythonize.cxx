@@ -2543,7 +2543,7 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
 
       return kTRUE;
    }
-
+   
    else if ( name == "TTree" ) {
    // allow direct browsing of the tree
       Utility::AddToClass( pyclass, "__getattr__", (PyCFunction) TTreeGetAttr, METH_O );
@@ -2569,7 +2569,11 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
 
    // add Python-only GetNumpyIterator method
       Utility::AddToClass( pyclass, "GetNumpyIterator", (PyCFunction) GetNumpyIterator, METH_VARARGS | METH_KEYWORDS );
-      Utility::AddToClass( pyclass, "GetNumpyIteratorInfo", (PyCFunction) GetNumpyIteratorInfo, METH_VARARGS );
+      Utility::AddToClass( pyclass, "GetNumpyIteratorInfo", (PyCFunction) GetNumpyIteratorInfo, METH_VARARGS | METH_KEYWORDS );
+   }
+
+   else if ( name == "TBranch" ) {
+      Utility::AddToClass( pyclass, "FillNumpyArray", (PyCFunction) FillNumpyArray, METH_VARARGS );
    }
 
    else if ( name == "TChain" ) {
