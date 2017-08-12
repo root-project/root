@@ -818,8 +818,16 @@ double FitUtil::EvaluateLogL(const IModelFunctionTempl<double>  & func, const Un
          // in case parameter needs to be propagated to user function use trick to set parameters by calling one time the function
          // this will be done in sequential mode and parameters can be set in a thread safe manner
          if (!normalizeFunc) {
-            double x(0.0);
-            func( &x, p);
+            if (data.NDim() == 1) {
+               const double * x = data.GetCoordComponent(0,0);
+               func( x, p);
+            }
+            else {
+               std::vector<double> x(data.NDim());
+               for (unsigned int j = 0; j < data.NDim(); ++j)
+                  x[j] = *data.GetCoordComponent(0, j);
+               func( x.data(), p);
+            }
          }
 #endif  
    
