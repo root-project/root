@@ -33,6 +33,7 @@
 #include "TMVA/DNN/Functions.h"
 
 #include <vector>
+#include <iostream>
 
 namespace TMVA {
 namespace DNN {
@@ -89,7 +90,7 @@ public:
    * different events in the batch. Computes activations as well as
    * the first partial derivative of the activation function at those
    * activations. */
-   void Forward(std::vector<Matrix_t> input, bool applyDropout = false);
+   void Forward(std::vector<Matrix_t> &input, bool applyDropout = false);
 
    /*! Compute weight, bias and activation gradients. Uses the precomputed
     *  first partial derviatives of the activation function computed during
@@ -183,7 +184,8 @@ TConvLayer<Architecture_t>::TConvLayer(const TConvLayer &convLayer)
    : VGeneralLayer<Architecture_t>(convLayer), fFilterDepth(convLayer.fFilterDepth),
      fFilterHeight(convLayer.fFilterHeight), fFilterWidth(convLayer.fFilterWidth), fStrideRows(convLayer.fStrideRows),
      fStrideCols(convLayer.fStrideCols), fPaddingHeight(convLayer.fPaddingHeight),
-     fPaddingWidth(convLayer.fPaddingWidth), fDropoutProbability(convLayer.fDropoutProbability), fF(convLayer.fF),
+     fPaddingWidth(convLayer.fPaddingWidth), fNLocalViewPixels(convLayer.fNLocalViewPixels),
+     fNLocalViews(convLayer.fNLocalViews), fDropoutProbability(convLayer.fDropoutProbability), fF(convLayer.fF),
      fReg(convLayer.fReg), fWeightDecay(convLayer.fWeightDecay)
 {
    size_t outputNSlices = convLayer.fDerivatives.size();
@@ -203,8 +205,9 @@ TConvLayer<Architecture_t>::~TConvLayer()
 
 //______________________________________________________________________________
 template <typename Architecture_t>
-auto TConvLayer<Architecture_t>::Forward(std::vector<Matrix_t> input, bool applyDropout) -> void
+auto TConvLayer<Architecture_t>::Forward(std::vector<Matrix_t> &input, bool applyDropout) -> void
 {
+   std::cout << "Conv Layer Forward" << std::endl;
    for (size_t i = 0; i < this->GetBatchSize(); i++) {
 
       if (applyDropout && (this->GetDropoutProbability() != 1.0)) {
@@ -230,7 +233,7 @@ auto TConvLayer<Architecture_t>::Backward(std::vector<Matrix_t> &gradients_backw
                                           const std::vector<Matrix_t> &activations_backward,
                                           std::vector<Matrix_t> &inp1, std::vector<Matrix_t> &inp2) -> void
 {
-
+  std::cout << "Conv Layer Backward" << std::endl;
    Architecture_t::ConvLayerBackward(
       gradients_backward, this->GetWeightGradientsAt(0), this->GetBiasGradientsAt(0), this->GetDerivatives(),
       this->GetActivationGradients(), this->GetWeightsAt(0), activations_backward, this->GetBatchSize(),
