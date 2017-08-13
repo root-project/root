@@ -136,8 +136,8 @@ public:
 
    /*! Function for adding Recurrent Layer in the Deep Neural Network,
     * with given parameters */
-   TBasicRNNLayer<Architecture_t> *AddBasicRNNLayer(size_t stateSize, size_t inputSize,
-                                                    size_t timeSteps, bool rememberState = false);
+   TBasicRNNLayer<Architecture_t> *AddBasicRNNLayer(size_t stateSize, size_t inputSize, size_t timeSteps,
+                                                    bool rememberState = false);
 
    /*! Function for adding Vanilla RNN when the layer is already created
     */
@@ -211,7 +211,7 @@ public:
    void Initialize();
 
    /*! Function that executes the entire forward pass in the network. */
-   void Forward(std::vector<Matrix_t> input, bool applyDropout = false);
+   void Forward(std::vector<Matrix_t> &input, bool applyDropout = false);
 
    /*! Function for parallel forward in the vector of deep nets, where the master
     *  net is the net calling this function. There is one batch for one deep net.*/
@@ -219,7 +219,7 @@ public:
                         std::vector<TTensorBatch<Architecture_t>> &batches, bool applyDropout = false);
 
    /*! Function that executes the entire backward pass in the network. */
-   void Backward(std::vector<Matrix_t> input, const Matrix_t &groundTruth, const Matrix_t &weights);
+   void Backward(std::vector<Matrix_t> &input, const Matrix_t &groundTruth, const Matrix_t &weights);
 
    /* To train the Deep AutoEncoder network with required number of Corruption, Compression and Reconstruction
     * layers. */
@@ -338,8 +338,8 @@ template <typename Architecture_t, typename Layer_t>
 TDeepNet<Architecture_t, Layer_t>::TDeepNet(size_t batchSize, size_t inputDepth, size_t inputHeight, size_t inputWidth,
                                             size_t batchDepth, size_t batchHeight, size_t batchWidth, ELossFunction J,
                                             EInitialization I, ERegularization R, Scalar_t weightDecay, bool isTraining)
-   : fLayers(), fBatchSize(batchSize), fInputDepth(inputDepth), fInputHeight(inputHeight), fBatchDepth(batchDepth),
-     fBatchHeight(batchHeight), fBatchWidth(batchWidth), fInputWidth(inputWidth), fJ(J), fI(I), fR(R),
+   : fLayers(), fBatchSize(batchSize), fInputDepth(inputDepth), fInputHeight(inputHeight), fInputWidth(inputWidth),
+     fBatchDepth(batchDepth), fBatchHeight(batchHeight), fBatchWidth(batchWidth), fJ(J), fI(I), fR(R),
      fWeightDecay(weightDecay), fIsTraining(isTraining)
 {
    // Nothing to do here.
@@ -491,12 +491,13 @@ void TDeepNet<Architecture_t, Layer_t>::AddMaxPoolLayer(TMaxPoolLayer<Architectu
 
 //______________________________________________________________________________
 template <typename Architecture_t, typename Layer_t>
-TBasicRNNLayer<Architecture_t> *TDeepNet<Architecture_t, Layer_t>::AddBasicRNNLayer(size_t stateSize,
-                                                                                    size_t inputSize, size_t timeSteps,
+TBasicRNNLayer<Architecture_t> *TDeepNet<Architecture_t, Layer_t>::AddBasicRNNLayer(size_t stateSize, size_t inputSize,
+                                                                                    size_t timeSteps,
                                                                                     bool rememberState)
 {
-   TBasicRNNLayer<Architecture_t> *basicRNNLayer = new TBasicRNNLayer<Architecture_t>(
-      this->GetBatchSize(), stateSize, inputSize, timeSteps, rememberState, DNN::EActivationFunction::kTanh, fIsTraining, this->GetInitialization());
+   TBasicRNNLayer<Architecture_t> *basicRNNLayer =
+      new TBasicRNNLayer<Architecture_t>(this->GetBatchSize(), stateSize, inputSize, timeSteps, rememberState,
+                                         DNN::EActivationFunction::kTanh, fIsTraining, this->GetInitialization());
    fLayers.push_back(basicRNNLayer);
    return basicRNNLayer;
 }
@@ -685,24 +686,23 @@ auto TDeepNet<Architecture_t, Layer_t>::Initialize() -> void
 }
 
 template <typename Architecture>
-auto debugTensor(const std::vector<typename Architecture::Matrix_t> &A, const std::string name = "tensor")
--> void
+auto debugTensor(const std::vector<typename Architecture::Matrix_t> &A, const std::string name = "tensor") -> void
 {
-  std::cout << name << "\n";
-  for (size_t l = 0; l < A.size(); ++l) {
+   std::cout << name << "\n";
+   for (size_t l = 0; l < A.size(); ++l) {
       for (size_t i = 0; i < A[l].GetNrows(); ++i) {
-        for (size_t j = 0; j < A[l].GetNcols(); ++j) {
+         for (size_t j = 0; j < A[l].GetNcols(); ++j) {
             std::cout << A[l](i, j) << " ";
-        }
-        std::cout << "\n";
+         }
+         std::cout << "\n";
       }
       std::cout << "********\n";
-  } 
+   }
 }
 
 //______________________________________________________________________________
 template <typename Architecture_t, typename Layer_t>
-auto TDeepNet<Architecture_t, Layer_t>::Forward(std::vector<Matrix_t> input, bool applyDropout) -> void
+auto TDeepNet<Architecture_t, Layer_t>::Forward(std::vector<Matrix_t> &input, bool applyDropout) -> void
 {
    fLayers.front()->Forward(input, applyDropout);
 
@@ -717,6 +717,7 @@ auto TDeepNet<Architecture_t, Layer_t>::ParallelForward(std::vector<TDeepNet<Arc
                                                         std::vector<TTensorBatch<Architecture_t>> &batches,
                                                         bool applyDropout) -> void
 {
+   std::cout << "Parallel Forward" << std::endl;
    size_t depth = this->GetDepth();
 
    // The first layer of each deep net
@@ -855,9 +856,10 @@ auto TDeepNet<Architecture_t, Layer_t>::FineTune(std::vector<Matrix_t> &input, s
 
 //______________________________________________________________________________
 template <typename Architecture_t, typename Layer_t>
-auto TDeepNet<Architecture_t, Layer_t>::Backward(std::vector<Matrix_t> input, const Matrix_t &groundTruth,
+auto TDeepNet<Architecture_t, Layer_t>::Backward(std::vector<Matrix_t> &input, const Matrix_t &groundTruth,
                                                  const Matrix_t &weights) -> void
 {
+   std::cout << "Backward" << std::endl;
    std::vector<Matrix_t> inp1;
    std::vector<Matrix_t> inp2;
    // Last layer should be dense layer
@@ -867,15 +869,11 @@ auto TDeepNet<Architecture_t, Layer_t>::Backward(std::vector<Matrix_t> input, co
       std::vector<Matrix_t> &activation_gradient_backward = fLayers[i - 1]->GetActivationGradients();
       std::vector<Matrix_t> &activations_backward = fLayers[i - 1]->GetOutput();
       fLayers[i]->Backward(activation_gradient_backward, activations_backward, inp1, inp2);
-      //debugTensor<Architecture_t>(activation_gradient_backward, "act grad backward after back of dense");
+      // debugTensor<Architecture_t>(activation_gradient_backward, "act grad backward after back of dense");
    }
 
-   std::vector<Matrix_t> gradient_input;
-   for (size_t i = 0; i < input.size(); i++) {
-      gradient_input.emplace_back(input[i].GetNrows(), input[i].GetNcols());
-   }
-
-   fLayers[0]->Backward(gradient_input, input, inp1, inp2);
+   std::vector<Matrix_t> dummy;
+   fLayers[0]->Backward(dummy, input, inp1, inp2);
 }
 
 //______________________________________________________________________________
@@ -884,6 +882,7 @@ auto TDeepNet<Architecture_t, Layer_t>::ParallelBackward(std::vector<TDeepNet<Ar
                                                          std::vector<TTensorBatch<Architecture_t>> &batches,
                                                          Scalar_t learningRate) -> void
 {
+   std::cout << "Parallel Backward" << std::endl;
    std::vector<Matrix_t> inp1;
    std::vector<Matrix_t> inp2;
    size_t depth = this->GetDepth();
@@ -904,10 +903,6 @@ auto TDeepNet<Architecture_t, Layer_t>::ParallelBackward(std::vector<TDeepNet<Ar
    }
 
    std::vector<Matrix_t> dummy;
-   for (size_t i = 0; i < this->GetBatchSize(); i++) {
-      // Should we determine the dimensions?
-      dummy.emplace_back(0, 0);
-   }
 
    // First layer of each deep net
    for (size_t i = 0; i < nets.size(); i++) {
@@ -935,6 +930,7 @@ auto TDeepNet<Architecture_t, Layer_t>::ParallelBackwardMomentum(std::vector<TDe
                                                                  std::vector<TTensorBatch<Architecture_t>> &batches,
                                                                  Scalar_t learningRate, Scalar_t momentum) -> void
 {
+   std::cout << "Parallel Backward Momentum" << std::endl;
    std::vector<Matrix_t> inp1;
    std::vector<Matrix_t> inp2;
    size_t depth = this->GetDepth();
@@ -964,10 +960,6 @@ auto TDeepNet<Architecture_t, Layer_t>::ParallelBackwardMomentum(std::vector<TDe
    }
 
    std::vector<Matrix_t> dummy;
-   for (size_t i = 0; i < this->GetBatchSize(); i++) {
-      // Should we determine the dimensions?
-      dummy.emplace_back(0, 0);
-   }
 
    // First layer of each deep net
    Layer_t *masterFirstLayer = this->GetLayerAt(0);
@@ -1002,6 +994,7 @@ auto TDeepNet<Architecture_t, Layer_t>::ParallelBackwardNestorov(std::vector<TDe
                                                                  std::vector<TTensorBatch<Architecture_t>> &batches,
                                                                  Scalar_t learningRate, Scalar_t momentum) -> void
 {
+   std::cout << "Parallel Backward Nestorov" << std::endl;
    std::vector<Matrix_t> inp1;
    std::vector<Matrix_t> inp2;
    size_t depth = this->GetDepth();
@@ -1024,10 +1017,6 @@ auto TDeepNet<Architecture_t, Layer_t>::ParallelBackwardNestorov(std::vector<TDe
    }
 
    std::vector<Matrix_t> dummy;
-   for (size_t i = 0; i < this->GetBatchSize(); i++) {
-      // Should we determine the dimensions?
-      dummy.emplace_back(0, 0);
-   }
 
    // First layer of each deep net
    for (size_t i = 0; i < nets.size(); i++) {

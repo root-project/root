@@ -223,7 +223,6 @@ void TReference<AReal>::CalculateConvActivationGradients(std::vector<TMatrixT<AR
                                                          size_t height, size_t width, size_t filterDepth,
                                                          size_t filterHeight, size_t filterWidth)
 {
-
    if (activation_gradients_backward.size() == 0) return;
 
    // Transform the weights
@@ -297,7 +296,7 @@ void TReference<AReal>::CalculateConvWeightGradients(TMatrixT<AReal> &weight_gra
 
          for (size_t k = 0; k < filterDepth; k++) {
             for (size_t l = 0; l < filterHeight * filterWidth; l++) {
-               weight_gradients(j, k * filterDepth + l) += res(k, (tempNLocalViews - 1) - l);
+               weight_gradients(j, k * (filterHeight * filterWidth) + l) += res(k, (tempNLocalViews - 1) - l);
             }
          }
       }
@@ -429,11 +428,10 @@ void TReference<AReal>::Rearrange(std::vector<TMatrixT<AReal>> &out, const std::
    size_t B = out.size();
    size_t T = out[0].GetNrows();
    size_t D = out[0].GetNcols();
-   if ((T != in.size()) || (B != in[0].GetNrows()) 
-       || (D != in[0].GetNcols())) {
+   if ((T != in.size()) || (B != in[0].GetNrows()) || (D != in[0].GetNcols())) {
       std::cout << "Incompatible Dimensions\n"
-         << in.size() << "x" << in[0].GetNrows() << "x" << in[0].GetNcols() 
-         << " --> " << B << "x" << T << "x" << D << "\n";
+                << in.size() << "x" << in[0].GetNrows() << "x" << in[0].GetNcols() << " --> " << B << "x" << T << "x"
+                << D << "\n";
       return;
    }
    for (size_t i = 0; i < B; ++i) {
