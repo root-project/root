@@ -18,76 +18,63 @@
 #include "TMVA/DNN/Architectures/Cpu.h"
 #include "TMVA/DNN/Architectures/Cpu/Blas.h"
 
-namespace TMVA
-{
-namespace DNN
-{
+namespace TMVA {
+namespace DNN {
 
-template<typename AFloat>
-void TCpu<AFloat>::MultiplyTranspose(TCpuMatrix<AFloat> &output,
-                                     const TCpuMatrix<AFloat> &input,
+template <typename AFloat>
+void TCpu<AFloat>::MultiplyTranspose(TCpuMatrix<AFloat> &output, const TCpuMatrix<AFloat> &input,
                                      const TCpuMatrix<AFloat> &Weights)
 {
-    int m = (int) input.GetNrows();
-    int k = (int) input.GetNcols();
-    int n = (int) Weights.GetNrows();
+   int m = (int)input.GetNrows();
+   int k = (int)input.GetNcols();
+   int n = (int)Weights.GetNrows();
 
-    char transa = 'N';
-    char transb = 'T';
+   char transa = 'N';
+   char transb = 'T';
 
-    AFloat alpha = 1.0;
-    AFloat beta  = 0.0;
+   AFloat alpha = 1.0;
+   AFloat beta = 0.0;
 
-    const AFloat *A = input.GetRawDataPointer();
-    const AFloat *B = Weights.GetRawDataPointer();
-          AFloat *C = output.GetRawDataPointer();
+   const AFloat *A = input.GetRawDataPointer();
+   const AFloat *B = Weights.GetRawDataPointer();
+   AFloat *C = output.GetRawDataPointer();
 
-    ::TMVA::DNN::Blas::Gemm(&transa, &transb, &m, &n, &k, &alpha,
-                            A, &m, B, &n, &beta, C, &m);
+   ::TMVA::DNN::Blas::Gemm(&transa, &transb, &m, &n, &k, &alpha, A, &m, B, &n, &beta, C, &m);
 }
 
-template<typename AFloat>
-void TCpu<AFloat>::AddRowWise(
-    TCpuMatrix<AFloat> &output,
-    const TCpuMatrix<AFloat> &biases)
+template <typename AFloat>
+void TCpu<AFloat>::AddRowWise(TCpuMatrix<AFloat> &output, const TCpuMatrix<AFloat> &biases)
 {
-    int m = (int) output.GetNrows();
-    int n = (int) output.GetNcols();
+   int m = (int)output.GetNrows();
+   int n = (int)output.GetNcols();
 
-    int inc = 1.0;
-    AFloat alpha = 1.0;
+   int inc = 1.0;
+   AFloat alpha = 1.0;
 
-          AFloat * A = output.GetRawDataPointer();
-    const AFloat * x = TCpuMatrix<AFloat>::GetOnePointer();
-    const AFloat * y = biases.GetRawDataPointer();
+   AFloat *A = output.GetRawDataPointer();
+   const AFloat *x = TCpuMatrix<AFloat>::GetOnePointer();
+   const AFloat *y = biases.GetRawDataPointer();
 
-    ::TMVA::DNN::Blas::Ger(&m, &n, &alpha, x, &inc, y, &inc, A, &m);
+   ::TMVA::DNN::Blas::Ger(&m, &n, &alpha, x, &inc, y, &inc, A, &m);
 }
 
-template<typename AFloat>
-void TCpu<AFloat>::Backward(
-    TCpuMatrix<AFloat> & activationGradientsBackward,
-    TCpuMatrix<AFloat> & weightGradients,
-    TCpuMatrix<AFloat> & biasGradients,
-    TCpuMatrix<AFloat> & df,
-    const TCpuMatrix<AFloat> & activationGradients,
-    const TCpuMatrix<AFloat> & weights,
-    const TCpuMatrix<AFloat> & activationsBackward)
+template <typename AFloat>
+void TCpu<AFloat>::Backward(TCpuMatrix<AFloat> &activationGradientsBackward, TCpuMatrix<AFloat> &weightGradients,
+                            TCpuMatrix<AFloat> &biasGradients, TCpuMatrix<AFloat> &df,
+                            const TCpuMatrix<AFloat> &activationGradients, const TCpuMatrix<AFloat> &weights,
+                            const TCpuMatrix<AFloat> &activationsBackward)
 {
    // Compute element-wise product.
    Hadamard(df, activationGradients);
 
    // Activation gradients.
-   if (activationGradientsBackward.GetNElements() > 0)
-       Multiply(activationGradientsBackward, df, weights);
+   if (activationGradientsBackward.GetNElements() > 0) Multiply(activationGradientsBackward, df, weights);
 
    // Weight gradients.
-   if (weightGradients.GetNElements() > 0)
-       TransposeMultiply(weightGradients, df, activationsBackward);
+   if (weightGradients.GetNElements() > 0) TransposeMultiply(weightGradients, df, activationsBackward);
 
    // Bias gradients.
-   if (biasGradients.GetNElements() > 0)
-       SumColumns(biasGradients, df);
+   if (biasGradients.GetNElements() > 0) SumColumns(biasGradients, df);
 }
 
 //____________________________________________________________________________
@@ -96,7 +83,7 @@ void TCpu<AFloat>::Im2col(TCpuMatrix<AFloat> &A, TCpuMatrix<AFloat> &B, size_t i
                           size_t fltHeight, size_t fltWidth, size_t strideRows, size_t strideCols,
                           size_t zeroPaddingHeight, size_t zeroPaddingWidth)
 {
-      // image boudaries
+   // image boudaries
    int imgHeightBound = imgHeight + zeroPaddingHeight - (fltHeight - 1) / 2 - 1;
    int imgWidthBound = imgWidth + zeroPaddingWidth - (fltWidth - 1) / 2 - 1;
    size_t currLocalView = 0;
@@ -179,8 +166,8 @@ void TCpu<AFloat>::ConvLayerBackward(std::vector<TCpuMatrix<AFloat>> &activation
    }
 
    // Calculate the activation gradients of the previous layer
-   CalculateConvActivationGradients(activationGradientsBackward, df, weights, batchSize, inputHeight, inputWidth,
-                                    depth, height, width, filterDepth, filterHeight, filterWidth);
+   CalculateConvActivationGradients(activationGradientsBackward, df, weights, batchSize, inputHeight, inputWidth, depth,
+                                    height, width, filterDepth, filterHeight, filterWidth);
 
    // Calculate the weight gradients
    CalculateConvWeightGradients(weightGradients, df, activationsBackward, batchSize, inputHeight, inputWidth, depth,
@@ -199,6 +186,8 @@ void TCpu<AFloat>::CalculateConvActivationGradients(std::vector<TCpuMatrix<AFloa
                                                     size_t width, size_t filterDepth, size_t filterHeight,
                                                     size_t filterWidth)
 {
+   if (activationGradientsBackward.size() == 0) return;
+
    // Transform the weights
    TCpuMatrix<AFloat> rotWeights(filterDepth, depth * filterHeight * filterWidth);
    RotateWeights(rotWeights, weights, filterDepth, filterHeight, filterWidth, weights.GetNrows());
@@ -234,8 +223,8 @@ void TCpu<AFloat>::CalculateConvWeightGradients(TCpuMatrix<AFloat> &weightGradie
                                                 size_t filterWidth, size_t nLocalViews)
 {
    // reinitialize the weight gradients to 0
-   for (size_t i = 0; i < depth; i++) {
-      for (size_t j = 0; j < nLocalViews; j++) {
+   for (size_t i = 0; i < weightGradients.GetNrows(); i++) {
+      for (size_t j = 0; j < weightGradients.GetNcols(); j++) {
          weightGradients(i, j) = 0;
       }
    }
@@ -266,11 +255,11 @@ void TCpu<AFloat>::CalculateConvWeightGradients(TCpuMatrix<AFloat> &weightGradie
          Im2col(rowDeltaTr, rowDelta, height, width, inputHeight, inputWidth, tempStrideRows, tempStrideCols,
                 tempZeroPaddingHeight, tempZeroPaddingWidth);
 
-        TransposeMultiply(res, activationsBackward[i], rowDeltaTr);
+         TransposeMultiply(res, activationsBackward[i], rowDeltaTr);
 
          for (size_t k = 0; k < filterDepth; k++) {
             for (size_t l = 0; l < filterHeight * filterWidth; l++) {
-               weightGradients(j, k * filterDepth + l) += res(k, (tempNLocalViews - 1) - l);
+               weightGradients(j, k * (filterHeight * filterWidth) + l) += res(k, (tempNLocalViews - 1) - l);
             }
          }
       }
@@ -402,11 +391,10 @@ void TCpu<AReal>::Rearrange(std::vector<TCpuMatrix<AReal>> &out, const std::vect
    size_t B = out.size();
    size_t T = out[0].GetNrows();
    size_t D = out[0].GetNcols();
-   if ((T != in.size()) || (B != in[0].GetNrows()) 
-       || (D != in[0].GetNcols())) {
+   if ((T != in.size()) || (B != in[0].GetNrows()) || (D != in[0].GetNcols())) {
       std::cout << "Incompatible Dimensions\n"
-         << in.size() << "x" << in[0].GetNrows() << "x" << in[0].GetNcols() 
-         << " --> " << B << "x" << T << "x" << D << "\n";
+                << in.size() << "x" << in[0].GetNrows() << "x" << in[0].GetNcols() << " --> " << B << "x" << T << "x"
+                << D << "\n";
       return;
    }
    for (size_t i = 0; i < B; ++i) {
