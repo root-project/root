@@ -100,7 +100,7 @@ public:
 
    /*! Compute and return the next state with given input
    *  matrix */
-   void Forward(Tensor_t input, bool isTraining = true);
+   void Forward(Tensor_t &input, bool isTraining = true);
 
    /*! Forward for a single cell (time unit) */
    void CellForward(Matrix_t &input);
@@ -255,7 +255,7 @@ auto debugMatrix(const typename Architecture::Matrix_t &A, const std::string nam
 
 //______________________________________________________________________________
 template <typename Architecture_t>
-auto inline TBasicRNNLayer<Architecture_t>::Forward(Tensor_t input, bool isTraining)
+auto inline TBasicRNNLayer<Architecture_t>::Forward(Tensor_t &input, bool isTraining)
 -> void
 {
    if (!this->fRememberState) InitState(DNN::EInitialization::kZero);
