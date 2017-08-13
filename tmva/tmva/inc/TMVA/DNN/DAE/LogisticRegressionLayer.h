@@ -71,7 +71,7 @@ public:
    TLogisticRegressionLayer(const TLogisticRegressionLayer &);
 
    // This is basically the prediction step. Can be used in DeepNet to Predict output.
-   void Forward(std::vector<Matrix_t> input, bool applyDropout = false);
+   void Forward(std::vector<Matrix_t> &input, bool applyDropout = false);
 
    void Backward(std::vector<Matrix_t> &gradients_backward,
                  const std::vector<Matrix_t> &activations_backward,
@@ -166,7 +166,7 @@ auto inline TLogisticRegressionLayer<Architecture_t>::Backward(std::vector<Matri
 
 //______________________________________________________________________________
 template <typename Architecture_t>
-auto TLogisticRegressionLayer<Architecture_t>::Forward(std::vector<Matrix_t> input, bool applyDropout)
+auto TLogisticRegressionLayer<Architecture_t>::Forward(std::vector<Matrix_t> &input, bool applyDropout)
 -> void
 {
    for(size_t i=0; i<this->GetTestDataBatchSize(); i++)

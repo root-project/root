@@ -76,7 +76,7 @@ public:
    ~TCorruptionLayer();
 
    /* The corruption function. All the inputs are corrupted in one forward pass */
-   void Forward(std::vector<Matrix_t> input, bool applyDropout = false);
+   void Forward(std::vector<Matrix_t> &input, bool applyDropout = false);
 
    /* Not required for this layer */
    void Backward(std::vector<Matrix_t> &gradients_backward,
@@ -138,7 +138,7 @@ template <typename Architecture_t> TCorruptionLayer<Architecture_t>::~TCorruptio
 
 //______________________________________________________________________________
 template <typename Architecture_t>
-auto TCorruptionLayer<Architecture_t>::Forward(std::vector<Matrix_t> input, bool applyDropout)
+auto TCorruptionLayer<Architecture_t>::Forward(std::vector<Matrix_t> &input, bool applyDropout)
 -> void
 {
    for (size_t i = 0; i < this->GetBatchSize(); i++)
