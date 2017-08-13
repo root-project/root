@@ -32,6 +32,7 @@
 #include "TMVA/DNN/DeepNet.h"
 
 #include <limits>
+#include <iostream>
 
 namespace TMVA {
 namespace DNN {
@@ -246,6 +247,7 @@ template <typename Architecture_t>
 void TDLGradientDescent<Architecture_t>::Step(DeepNet_t &master, std::vector<DeepNet_t> &nets,
                                               std::vector<TTensorBatch<Architecture_t>> &batches)
 {
+
    master.ParallelForward(nets, batches);
    master.ParallelBackward(nets, batches, fLearningRate);
 }
