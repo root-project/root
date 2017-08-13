@@ -11,6 +11,9 @@
 #include "TMVA/DNN/Functions.h"
 #include "TMVA/DNN/Net.h"
 #include "TMVA/DNN/DeepNet.h"
+#include "TMVA/DNN/CNN/ConvLayer.h"
+#include "TMVA/DNN/CNN/MaxPoolLayer.h"
+#include "TMVA/DNN/DenseLayer.h"
 
 namespace TMVA {
 namespace DNN {
@@ -58,7 +61,7 @@ void constructConvNet(TDeepNet<AArchitecture> &net)
    EActivationFunction fFC1 = ActivationFunctions[rand() % ActivationFunctions.size()];
    net.AddDenseLayer(widthFC1, fFC1);
 
-   size_t widthFC2 = 5;
+   size_t widthFC2 = 2;
    EActivationFunction fFC2 = EActivationFunction::kIdentity;
    net.AddDenseLayer(widthFC2, fFC2);
 }
@@ -105,6 +108,93 @@ void constructLinearConvNet(TDeepNet<AArchitecture> &net)
    size_t widthFC2 = 5;
    EActivationFunction fFC2 = EActivationFunction::kIdentity;
    net.AddDenseLayer(widthFC2, fFC2);
+}
+
+//______________________________________________________________________________
+template <typename AArchitecture>
+void constructMasterSlaveConvNets(TDeepNet<AArchitecture> &master, std::vector<TDeepNet<AArchitecture>> &nets)
+{
+   /* For random selection */
+   std::vector<EActivationFunction> ActivationFunctions = {EActivationFunction::kIdentity, EActivationFunction::kRelu,
+                                                           EActivationFunction::kSigmoid, EActivationFunction::kTanh};
+
+   // Add Convolutional Layer
+   size_t depth = 12;
+   size_t filterHeightConv = 2;
+   size_t filterWidthConv = 2;
+   size_t strideRowsConv = 1;
+   size_t strideColsConv = 1;
+   size_t zeroPaddingHeight = 1;
+   size_t zeroPaddingWidth = 1;
+
+   EActivationFunction fConv = ActivationFunctions[rand() % ActivationFunctions.size()];
+
+   TConvLayer<AArchitecture> *convLayer =
+      master.AddConvLayer(depth, filterHeightConv, filterWidthConv, strideRowsConv, strideColsConv, zeroPaddingHeight,
+                          zeroPaddingWidth, fConv);
+
+   convLayer->Initialize();
+   TConvLayer<AArchitecture> *copyConvLayer = new TConvLayer<AArchitecture>(*convLayer);
+
+   // add the copy to all slave nets
+   for (size_t i = 0; i < nets.size(); i++) {
+      nets[i].AddConvLayer(copyConvLayer);
+   }
+
+   // Add Max Pooling Layer
+   size_t filterHeightPool = 6;
+   size_t filterWidthPool = 6;
+   size_t strideRowsPool = 1;
+   size_t strideColsPool = 1;
+
+   // Add the Max pooling layer
+   TMaxPoolLayer<AArchitecture> *maxPoolLayer =
+      master.AddMaxPoolLayer(filterHeightPool, filterWidthPool, strideRowsPool, strideColsPool);
+   TMaxPoolLayer<AArchitecture> *copyMaxPoolLayer = new TMaxPoolLayer<AArchitecture>(*maxPoolLayer);
+
+   // Add the copy to all slave nets
+   for (size_t i = 0; i < nets.size(); i++) {
+      nets[i].AddMaxPoolLayer(copyMaxPoolLayer);
+   }
+
+   // Add the reshape layer
+   size_t depthReshape = 1;
+   size_t heightReshape = 1;
+   size_t widthReshape = master.GetLayerAt(master.GetDepth() - 1)->GetDepth() *
+                         master.GetLayerAt(master.GetDepth() - 1)->GetHeight() *
+                         master.GetLayerAt(master.GetDepth() - 1)->GetWidth();
+
+   TReshapeLayer<AArchitecture> *reshapeLayer = master.AddReshapeLayer(depthReshape, heightReshape, widthReshape, true);
+   TReshapeLayer<AArchitecture> *copyReshapeLayer = new TReshapeLayer<AArchitecture>(*reshapeLayer);
+
+   // Add the copy to all slave nets
+   for (size_t i = 0; i < nets.size(); i++) {
+      nets[i].AddReshapeLayer(copyReshapeLayer);
+   }
+
+   // Add Dense Layer
+   size_t widthFC1 = 20;
+   EActivationFunction fFC1 = ActivationFunctions[rand() % ActivationFunctions.size()];
+   TDenseLayer<AArchitecture> *denseLayer = master.AddDenseLayer(widthFC1, fFC1);
+   denseLayer->Initialize();
+   TDenseLayer<AArchitecture> *copyDenseLayer = new TDenseLayer<AArchitecture>(*denseLayer);
+
+   // add the copy to all slave nets
+   for (size_t i = 0; i < nets.size(); i++) {
+      nets[i].AddDenseLayer(copyDenseLayer);
+   }
+
+   // Add the final Dense Layer
+   size_t widthFC2 = 5;
+   EActivationFunction fFC2 = EActivationFunction::kIdentity;
+   TDenseLayer<AArchitecture> *finalDenseLayer = master.AddDenseLayer(widthFC2, fFC2);
+   finalDenseLayer->Initialize();
+   TDenseLayer<AArchitecture> *copyFinalDenseLayer = new TDenseLayer<AArchitecture>(*finalDenseLayer);
+
+   // add the copy to all slave nets
+   for (size_t i = 0; i < nets.size(); i++) {
+      nets[i].AddDenseLayer(copyFinalDenseLayer);
+   }
 }
 
 /** Construct a random linear neural network with up to five layers.*/

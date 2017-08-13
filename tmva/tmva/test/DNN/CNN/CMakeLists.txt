@@ -36,6 +36,9 @@ ROOT_ADD_TEST(TMVA-DNN-CNN-Backpropagation COMMAND testConvBackpropagation)
 ROOT_EXECUTABLE(testTensorDataLoader TestTensorDataLoader.cxx LIBRARIES ${Libraries})
 ROOT_ADD_TEST(TMVA-DNN-Tensor-Data-Loader COMMAND testTensorDataLoader)
 
+ROOT_EXECUTABLE(testDLMinimization TestMinimization.cxx LIBRARIES ${Libraries})
+ROOT_ADD_TEST(TMVA-DNN-CNN-Minimization COMMAND testDLMinimization)
+
 #--- CPU tests. ----------------------------
 if (BLAS_FOUND AND imt)
 
@@ -61,5 +64,8 @@ ROOT_ADD_TEST(TMVA-DNN-CNN-Pred-CPU COMMAND testConvNetPredCpu)
 
 ROOT_EXECUTABLE(testTensorDataLoaderCpu TestTensorDataLoaderCpu.cxx LIBRARIES ${Libraries})
 ROOT_ADD_TEST(TMVA-DNN-Tensor-Data-Loader-CPU COMMAND testTensorDataLoaderCpu)
+
+ROOT_EXECUTABLE(testDLMinimizationCpu TestMinimizationCpu.cxx LIBRARIES ${Libraries})
+ROOT_ADD_TEST(TMVA-DNN-CNN-Minimization-CPU COMMAND testDLMinimizationCpu)
 
 endif (BLAS_FOUND AND imt)
