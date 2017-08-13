@@ -29,10 +29,21 @@
 
 #include "../Utility.h"
 
+#include "TFile.h"
+#include "TTree.h"
+#include "TString.h"
+#include "TBranch.h"
+#include "TTreeReader.h"
+#include "TTreeReaderValue.h"
+#include "TTreeReaderArray.h"
+
+#include "TMVA/Event.h"
+
 #include "TMVA/DNN/TensorDataLoader.h"
 #include "TMVA/DNN/DeepNet.h"
 
 #include <vector>
+#include <iostream>
 
 using namespace TMVA::DNN;
 using namespace TMVA::DNN::CNN;
@@ -174,6 +185,111 @@ auto testIdentity() -> typename Architecture_t::Scalar_t
    }
 
    return maximumError;
+}
+
+//______________________________________________________________________________
+template <typename Architecture_t>
+void testDataLoaderDataSet()
+{
+   using DeepNet_t = TDeepNet<Architecture_t>;
+   using DataLoader_t = TTensorDataLoader<TensorInput, Architecture_t>;
+
+   // Load the photon input
+   TFile *photonInput(0);
+   TString photonFileName =
+      "/Users/vladimirilievski/Desktop/Vladimir/GSoC/ROOT-CI/common-version/root/tmva/tmva/test/DNN/CNN/"
+      "dataset/SinglePhotonPt50_FEVTDEBUG_n250k_IMG_CROPS32.root";
+   photonInput = TFile::Open(photonFileName);
+   TTreeReader photonReader("RHTree", photonInput);
+
+   // Load the electron input
+   TFile *electronInput(0);
+   TString electronFileName = "/Users/vladimirilievski/Desktop/Vladimir/GSoC/ROOT-CI/common-version/root/tmva/tmva/"
+                              "test/DNN/CNN/dataset/SingleElectronPt50_FEVTDEBUG_n250k_IMG_CROPS32.root";
+   electronInput = TFile::Open(electronFileName);
+   TTreeReader electronReader("RHTree", electronInput);
+
+   // Calculate the number of samples
+   size_t nSamples = (size_t)(photonReader.GetEntries(true) + electronReader.GetEntries(true));
+   size_t nChannels = 1;
+   size_t imgWidth = 32;
+   size_t imgHeight = 32;
+   size_t batchSize = 256;
+
+   // Initialize the input
+   std::vector<TMatrixT<Double_t>> inputTensor;
+   inputTensor.reserve(nSamples);
+   for (size_t i = 0; i < nSamples; i++) {
+      inputTensor.emplace_back(nChannels, imgWidth * imgHeight);
+   }
+
+   size_t nOutput = 2;
+   // Initialize the output and the weights
+   TMatrixT<Double_t> output(nSamples, nOutput);
+   TMatrixT<Double_t> weights(nSamples, 1);
+
+   // Get the Energy Red Branches
+   TTreeReaderArray<Real_t> photonEnergyRedBr(photonReader, "EBenergyRed");
+   TTreeReaderArray<Real_t> electronEnergyRedBr(electronReader, "EBenergyRed");
+
+   size_t counter = 0;
+
+   // Read the photons first
+   while (photonReader.Next()) {
+      // Set the input
+      for (size_t i = 0; i < photonEnergyRedBr.GetSize(); i++) {
+         inputTensor[counter](0, i) = static_cast<Double_t>(photonEnergyRedBr[i]);
+      }
+
+      // Set the output
+      output(counter, 0) = 1.0;
+      output(counter, 1) = 0.0;
+
+      // Set the weights
+      weights(counter, 0) = 1.0;
+
+      counter++;
+   }
+
+   // Read the electrons
+   while (electronReader.Next()) {
+      // Set the input
+      for (size_t i = 0; i < electronEnergyRedBr.GetSize(); i++) {
+         inputTensor[counter](0, i) = static_cast<Double_t>(electronEnergyRedBr[i]);
+      }
+
+      // Set the output
+      output(counter, 0) = 0.0;
+      output(counter, 1) = 1.0;
+
+      // Set the weights
+      weights(counter, 0) = 1.0;
+
+      counter++;
+   }
+
+   // Construct the Linear Net
+   size_t batchDepth = batchSize;
+   size_t batchHeight = nChannels;
+   size_t batchWidth = imgHeight * imgWidth;
+   size_t nOutputs = 2;
+
+   TensorInput input(inputTensor, output, weights);
+   DataLoader_t loader(input, nSamples, batchSize, batchDepth, batchHeight, batchWidth, nOutputs);
+
+   DeepNet_t convNet(batchSize, nChannels, imgHeight, imgWidth, batchDepth, batchHeight, batchWidth,
+                     ELossFunction::kMeanSquaredError, EInitialization::kIdentity);
+   constructConvNet(convNet);
+   convNet.Initialize();
+
+   for (auto b : loader) {
+      auto inputTensor = b.GetInput();
+      auto outputMatrix = b.GetOutput();
+      auto weightMatrix = b.GetWeights();
+
+      convNet.Forward(inputTensor);
+      convNet.Backward(inputTensor, outputMatrix, weightMatrix);
+   }
 }
 
 #endif

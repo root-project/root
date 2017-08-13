@@ -35,6 +35,7 @@
 #define TMVA_DNN_ARCHITECTURES_REFERENCE_TENSORDATALOADER
 
 #include "TMVA/DNN/TensorDataLoader.h"
+#include <iostream>
 
 namespace TMVA {
 namespace DNN {
