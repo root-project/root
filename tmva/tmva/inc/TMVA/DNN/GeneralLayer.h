@@ -27,6 +27,8 @@
 #ifndef TMVA_DNN_GENERALLAYER
 #define TMVA_DNN_GENERALLAYER
 
+#include <iostream>
+
 namespace TMVA {
 namespace DNN {
 
@@ -94,7 +96,7 @@ public:
    /*! Computes activation of the layer for the given input. The input
     * must be in 3D tensor form with the different matrices corresponding to
     * different events in the batch.  */
-   virtual void Forward(std::vector<Matrix_t> input, bool applyDropout = false) = 0;
+   virtual void Forward(std::vector<Matrix_t> &input, bool applyDropout = false) = 0;
 
    /*! Backpropagates the error. Must only be called directly at the corresponding
     *  call to Forward(...). */
@@ -193,8 +195,7 @@ VGeneralLayer<Architecture_t>::VGeneralLayer(size_t batchSize, size_t inputDepth
                                              size_t depth, size_t height, size_t width, size_t weightsNSlices,
                                              size_t weightsNRows, size_t weightsNCols, size_t biasesNSlices,
                                              size_t biasesNRows, size_t biasesNCols, size_t outputNSlices,
-                                             size_t outputNRows, size_t outputNCols,
-                                             EInitialization init)
+                                             size_t outputNRows, size_t outputNCols, EInitialization init)
    : fBatchSize(batchSize), fInputDepth(inputDepth), fInputHeight(inputHeight), fInputWidth(inputWidth), fDepth(depth),
      fHeight(height), fWidth(width), fIsTraining(true), fWeights(), fBiases(), fWeightGradients(), fBiasGradients(),
      fOutput(), fActivationGradients(), fInit(init)
@@ -388,7 +389,6 @@ template <typename Architecture_t>
 auto VGeneralLayer<Architecture_t>::UpdateBiases(const std::vector<Matrix_t> &biasGradients,
                                                  const Scalar_t learningRate) -> void
 {
-
    for (size_t i = 0; i < fBiases.size(); i++) {
       Architecture_t::ScaleAdd(fBiases[i], biasGradients[i], -learningRate);
    }
@@ -418,6 +418,7 @@ auto VGeneralLayer<Architecture_t>::UpdateBiasGradients(const std::vector<Matrix
 template <typename Architecture_t>
 auto VGeneralLayer<Architecture_t>::CopyWeights(const std::vector<Matrix_t> &otherWeights) -> void
 {
+
    for (size_t i = 0; i < fWeights.size(); i++) {
       Architecture_t::Copy(fWeights[i], otherWeights[i]);
    }

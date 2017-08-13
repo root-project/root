@@ -32,6 +32,8 @@
 #include "TMVA/DNN/GeneralLayer.h"
 #include "TMVA/DNN/Functions.h"
 
+#include <iostream>
+
 namespace TMVA {
 namespace DNN {
 /** \class TDenseLayer
@@ -83,7 +85,7 @@ public:
     * different events in the batch. Computes activations as well as
     * the first partial derivative of the activation function at those
     * activations. */
-   void Forward(std::vector<Matrix_t> input, bool applyDropout = false);
+   void Forward(std::vector<Matrix_t> &input, bool applyDropout = false);
 
    /*! Compute weight, bias and activation gradients. Uses the precomputed
     *  first partial derviatives of the activation function computed during
@@ -151,8 +153,9 @@ TDenseLayer<Architecture_t>::~TDenseLayer()
 
 //______________________________________________________________________________
 template <typename Architecture_t>
-auto TDenseLayer<Architecture_t>::Forward(std::vector<Matrix_t> input, bool applyDropout) -> void
+auto TDenseLayer<Architecture_t>::Forward(std::vector<Matrix_t> &input, bool applyDropout) -> void
 {
+   std::cout << "Dense Layer Forward" << std::endl;
    if (applyDropout && (this->GetDropoutProbability() != 1.0)) {
       Architecture_t::Dropout(input[0], this->GetDropoutProbability());
    }
@@ -169,6 +172,7 @@ auto TDenseLayer<Architecture_t>::Backward(std::vector<Matrix_t> &gradients_back
                                            const std::vector<Matrix_t> &activations_backward,
                                            std::vector<Matrix_t> &inp1, std::vector<Matrix_t> &inp2) -> void
 {
+   std::cout << "Dense Layer Backward" << std::endl;
    Architecture_t::Backward(gradients_backward[0], this->GetWeightGradientsAt(0), this->GetBiasGradientsAt(0),
                             this->GetDerivativesAt(0), this->GetActivationGradientsAt(0), this->GetWeightsAt(0),
                             activations_backward[0]);

@@ -91,7 +91,7 @@ public:
 
 
 
-   void Forward(std::vector<Matrix_t> input, bool applyDropout = false);
+   void Forward(std::vector<Matrix_t> &input, bool applyDropout = false);
 
    void Backward(std::vector<Matrix_t> &compressedInput,
                  const std::vector<Matrix_t> &input,
@@ -197,7 +197,7 @@ template <typename Architecture_t> TReconstructionLayer<Architecture_t>::~TRecon
 // Input here should be compressedInput
 // reconstruction step
 template <typename Architecture_t>
-auto TReconstructionLayer<Architecture_t>::Forward(std::vector<Matrix_t> input, bool applyDropout)
+auto TReconstructionLayer<Architecture_t>::Forward(std::vector<Matrix_t> &input, bool applyDropout)
 -> void
 {
    std::cout<<"Reconstruction Forward starts "<<std::endl;

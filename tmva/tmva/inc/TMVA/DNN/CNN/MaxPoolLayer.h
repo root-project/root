@@ -32,6 +32,8 @@
 #include "TMVA/DNN/GeneralLayer.h"
 #include "TMVA/DNN/Functions.h"
 
+#include <iostream>
+
 namespace TMVA {
 namespace DNN {
 namespace CNN {
@@ -87,7 +89,7 @@ public:
     *  must be in 3D tensor form with the different matrices corresponding to
     *  different events in the batch. It spatially downsamples the input
     *  matrices. */
-   void Forward(std::vector<Matrix_t> input, bool applyDropout = false);
+   void Forward(std::vector<Matrix_t> &input, bool applyDropout = false);
 
    /*! Depending on the winning units determined during the Forward pass,
     *  it only forwards the derivatives to the right units in the previous
@@ -166,8 +168,9 @@ TMaxPoolLayer<Architecture_t>::~TMaxPoolLayer()
 
 //______________________________________________________________________________
 template <typename Architecture_t>
-auto TMaxPoolLayer<Architecture_t>::Forward(std::vector<Matrix_t> input, bool applyDropout) -> void
+auto TMaxPoolLayer<Architecture_t>::Forward(std::vector<Matrix_t> &input, bool applyDropout) -> void
 {
+   std::cout << "Max Pool Layer Forward" << std::endl;
    for (size_t i = 0; i < this->GetBatchSize(); i++) {
 
       if (applyDropout && (this->GetDropoutProbability() != 1.0)) {
@@ -186,7 +189,7 @@ auto TMaxPoolLayer<Architecture_t>::Backward(std::vector<Matrix_t> &gradients_ba
                                              const std::vector<Matrix_t> &activations_backward,
                                              std::vector<Matrix_t> &inp1, std::vector<Matrix_t> &inp2) -> void
 {
-
+   std::cout << "Max Pool Layer Backward" << std::endl;
    Architecture_t::MaxPoolLayerBackward(gradients_backward, this->GetActivationGradients(), indexMatrix,
                                         this->GetBatchSize(), this->GetDepth(), this->GetNLocalViews());
 }

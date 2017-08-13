@@ -32,6 +32,8 @@
 #include "TMVA/DNN/GeneralLayer.h"
 #include "TMVA/DNN/Functions.h"
 
+#include <iostream>
+
 namespace TMVA {
 namespace DNN {
 
@@ -62,13 +64,15 @@ public:
    /*! The input must be in 3D tensor form with the different matrices
     *  corresponding to different events in the batch. It transforms the
     *  input matrices. */
-   void Forward(std::vector<Matrix_t> input, bool applyDropout = false);
+   void Forward(std::vector<Matrix_t> &input, bool applyDropout = false);
 
    void Backward(std::vector<Matrix_t> &gradients_backward, const std::vector<Matrix_t> &activations_backward,
                  std::vector<Matrix_t> &inp1, std::vector<Matrix_t> &inp2);
 
    /*! Prints the info about the layer. */
    void Print() const;
+
+   bool isFlattening() const { return fFlattening; }
 };
 
 //
@@ -93,13 +97,14 @@ TReshapeLayer<Architecture_t>::TReshapeLayer(size_t batchSize, size_t inputDepth
 //_________________________________________________________________________________________________
 template <typename Architecture_t>
 TReshapeLayer<Architecture_t>::TReshapeLayer(TReshapeLayer<Architecture_t> *layer)
-   : VGeneralLayer<Architecture_t>(layer)
+   : VGeneralLayer<Architecture_t>(layer), fFlattening(layer->isFlattening())
 {
 }
 
 //_________________________________________________________________________________________________
 template <typename Architecture_t>
-TReshapeLayer<Architecture_t>::TReshapeLayer(const TReshapeLayer &layer) : VGeneralLayer<Architecture_t>(layer)
+TReshapeLayer<Architecture_t>::TReshapeLayer(const TReshapeLayer &layer)
+   : VGeneralLayer<Architecture_t>(layer), fFlattening(layer.fFlattening)
 {
    // Nothing to do here.
 }
@@ -113,8 +118,9 @@ TReshapeLayer<Architecture_t>::~TReshapeLayer()
 
 //_________________________________________________________________________________________________
 template <typename Architecture_t>
-auto TReshapeLayer<Architecture_t>::Forward(std::vector<Matrix_t> input, bool applyDropout) -> void
+auto TReshapeLayer<Architecture_t>::Forward(std::vector<Matrix_t> &input, bool applyDropout) -> void
 {
+   std::cout << "Reshape Layer Forward" << std::endl;
    if (fFlattening) {
       size_t size = input.size();
       size_t nRows = input[0].GetNrows();
@@ -133,6 +139,7 @@ auto TReshapeLayer<Architecture_t>::Backward(std::vector<Matrix_t> &gradients_ba
                                              const std::vector<Matrix_t> &activations_backward,
                                              std::vector<Matrix_t> &inp1, std::vector<Matrix_t> &inp2) -> void
 {
+   std::cout << "Reshape Layer Backward" << std::endl;
    if (fFlattening) {
       size_t size = gradients_backward.size();
       size_t nRows = gradients_backward[0].GetNrows();

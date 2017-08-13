@@ -78,7 +78,7 @@ public:
    ~TCompressionLayer();
 
    /* This forward pass compresses the input. Updated weights and biases are used from previous layers. */
-   void Forward(std::vector<Matrix_t> input, bool applyDropout = false);
+   void Forward(std::vector<Matrix_t> &input, bool applyDropout = false);
 
    /* Not required in this layer */
    void Backward(std::vector<Matrix_t> &gradients_backward,
@@ -141,7 +141,7 @@ template <typename Architecture_t> TCompressionLayer<Architecture_t>::~TCompress
 
 //______________________________________________________________________________
 template <typename Architecture_t>
-auto TCompressionLayer<Architecture_t>::Forward(std::vector<Matrix_t> input, bool applyDropout) -> void {
+auto TCompressionLayer<Architecture_t>::Forward(std::vector<Matrix_t> &input, bool applyDropout) -> void {
 
    for (size_t i = 0; i < this->GetBatchSize(); i++) {
 
