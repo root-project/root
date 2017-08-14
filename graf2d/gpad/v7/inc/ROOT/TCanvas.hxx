@@ -37,13 +37,19 @@ class TCanvasSharedPtrMaker;
 
 class TCanvas: public Internal::TPadBase {
 private:
-   std::string fTitle;                    ///< Title of the canvas.
+   /// Title of the canvas.
+   std::string fTitle;
 
-   std::array<TPadCoord::Pixel, 2> fSize; ///< Size of the canvas in pixels.
+   /// Size of the canvas in pixels,
+   std::array<TPadCoord::Pixel, 2> fSize;
 
-   uint64_t fModified;                    ///<! Increment counter when canvas modified.
+   /// Modify counter, incremented every time canvas is changed
+   uint64_t fModified;                    ///<!
 
-   std::unique_ptr<Internal::TVirtualCanvasPainter> fPainter;  ///<! The painter of this canvas, bootstrapping the graphics connection.
+   /// The painter of this canvas, bootstrapping the graphics connection.
+   /// Unmapped canvases (those that never had `Draw()` invoked) might not have
+   /// a painter.
+   std::unique_ptr<Internal::TVirtualCanvasPainter> fPainter;  ///<!
 
    /// Disable copy construction for now.
    TCanvas(const TCanvas &) = delete;
