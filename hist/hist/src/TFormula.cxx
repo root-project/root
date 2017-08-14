@@ -239,13 +239,13 @@ bool TFormulaParamOrder::operator() (const TString& a, const TString& b) const {
 
    TRegexp numericPattern("p?[0-9]+");
    Ssiz_t *len = new Ssiz_t(); // buffer to store length of regex match
-   
+
    int patternStart = numericPattern.Index(a, len);
    bool aNumeric = (patternStart == 0 && *len == a.Length());
 
    patternStart = numericPattern.Index(b, len);
    bool bNumeric = (patternStart == 0 && *len == b.Length());
-   
+
    if (aNumeric && !bNumeric)
       return true; // assume a (numeric) is always before b (not numeric)
    else if (!aNumeric && bNumeric)
@@ -253,8 +253,8 @@ bool TFormulaParamOrder::operator() (const TString& a, const TString& b) const {
    else if (!aNumeric && !bNumeric)
       return a < b;
    else {
-      int aInt = (a[0] == 'p') ? TString(a(1,a.Length())).Atoi() : a.Atoi();
-      int bInt = (b[0] == 'p') ? TString(b(1,b.Length())).Atoi() : b.Atoi();
+      int aInt = (a[0] == 'p') ? TString(a(1, a.Length())).Atoi() : a.Atoi();
+      int bInt = (b[0] == 'p') ? TString(b(1, b.Length())).Atoi() : b.Atoi();
       return aInt < bInt;
    }
 
