@@ -13,13 +13,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_TPadUserCoord
-#define ROOT7_TPadUserCoord
+#ifndef ROOT7_TPadUserCoordBase
+#define ROOT7_TPadUserCoordBase
 
 #include <ROOT/TPadCoord.hxx>
 
 #include <array>
-#include <limits>
 
 namespace ROOT {
 namespace Experimental {
@@ -43,41 +42,10 @@ protected:
    TPadUserCoordBase() = default;
 
 public:
-   virtual ~TPadUserCoordBase() {}
+   virtual ~TPadUserCoordBase();
 
    /// Convert user coordinates to normal coordinates.
    virtual std::array<TPadCoord::Normal, 2> ToNormal(const std::array<TPadCoord::User, 2> &) const = 0;
-};
-
-/** \class ROOT::Experimental::Detail::TPadLinearUserCoord
-  The default, linear min/max coordinate system for `TPad`, `TCanvas`.
-  */
-
-class TPadLinearUserCoord: public TPadUserCoordBase {
-private:
-   std::array<double, 2> fMin; ///< (x,y) user coordinate of bottom-left corner
-   std::array<double, 2> fMax; ///< (x,y) user coordinate of top-right corner
-
-   /// For (pos-min)/(max-min) calculations, return a sensible, div-by-0 protected denominator.
-   double GetDenominator(int idx) const
-   {
-      if (fMin[idx] < fMax[idx])
-         return std::max(std::numeric_limits<double>::min(), fMin[idx] - fMax[idx]);
-      return std::min(-std::numeric_limits<double>::min(), fMin[idx] - fMax[idx]);
-   }
-
-public:
-   /// Initialize a TPadLinearUserCoord.
-   TPadLinearUserCoord(const std::array<double, 2> &min, const std::array<double, 2> &max): fMin(min), fMax(max) {}
-
-   /// Destructor to have a vtable.
-   virtual ~TPadLinearUserCoord() {}
-
-   /// Convert user coordinates to normal coordinates.
-   std::array<TPadCoord::Normal, 2> ToNormal(const std::array<TPadCoord::User, 2> &pos) const override
-   {
-      return {{(pos[0] - fMin[0]) / GetDenominator(0), (pos[1] - fMin[1]) / GetDenominator(1)}};
-   }
 };
 
 } // namespace Detail
