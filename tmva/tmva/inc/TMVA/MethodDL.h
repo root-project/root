@@ -82,6 +82,9 @@ private:
 
    void Init();
 
+   // Function to parse the layout of the input
+   void ParseInputLayout();
+
    /*! After calling the ProcesOptions(), all of the options are parsed,
     *  so using the parsed options, and given the architecture and the
     *  type of the layers, we build the Deep Network passed as
@@ -116,11 +119,16 @@ private:
    void ParseLstmLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
                        std::vector<DNN::TDeepNet<Architecture_t, Layer_t>> &nets, TString layerString, TString delim);
 
+   size_t fInputDepth;  ///< The depth of the input.
+   size_t fInputHeight; ///< The height of the input.
+   size_t fInputWidth;  ///< The width of the input.
+
    DNN::EInitialization fWeightInitialization; ///< The initialization method
    DNN::EOutputFunction fOutputFunction;       ///< The output function for making the predictions
    DNN::ELossFunction fLossFunction;           ///< The loss function
 
-   TString fLayoutString;               ///< The string defining the layout of the CNN
+   TString fInputLayoutString;          ///< The string defining the layout of the input
+   TString fLayoutString;               ///< The string defining the layout of the deep net
    TString fErrorStrategy;              ///< The string defining the error strategy for training
    TString fTrainingStrategyString;     ///< The string defining the training strategy
    TString fWeightInitializationString; ///< The string defining the weight initialization method
@@ -170,11 +178,15 @@ public:
    const Ranking *CreateRanking();
 
    /* Getters */
+   size_t GetInputDepth() { return fInputDepth; }
+   size_t GetInputHeight() { return fInputHeight; }
+   size_t GetInputWidth() { return fInputWidth; }
 
    DNN::EInitialization GetWeightInitialization() { return fWeightInitialization; }
    DNN::EOutputFunction GetOutputFunction() { return fOutputFunction; }
    DNN::ELossFunction GetLossFunction() { return fLossFunction; }
 
+   TString GetInputLayoutString() { return fInputLayoutString; }
    TString GetLayoutString() { return fLayoutString; }
    TString GetErrorStrategyString() { return fErrorStrategy; }
    TString GetTrainingStrategyString() { return fTrainingStrategyString; }
@@ -187,6 +199,10 @@ public:
    KeyValueVector_t &GetKeyValueSettings() { return fSettings; }
 
    /** Setters */
+   void SetInputDepth(size_t inputDepth) { fInputDepth = inputDepth; }
+   void SetInputHeight(size_t inputHeight) { fInputHeight = inputHeight; }
+   void SetInputWidth(size_t inputWidth) { fInputWidth = inputWidth; }
+
    void SetWeightInitialization(DNN::EInitialization weightInitialization)
    {
       fWeightInitialization = weightInitialization;
