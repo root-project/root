@@ -265,8 +265,6 @@ protected:
       DoInitialize(addToGlobList);
    };
 
-
-
 private:
    // NSUM parsing helper functions
    void DefineNSUMTerm(TObjArray *newFuncs, TObjArray *coeffNames,
@@ -274,7 +272,6 @@ private:
 		       TString &formula, int termStart, int termEnd,
 		       Double_t xmin, Double_t xmax);
    int TermCoeffLength(TString &term);
-
 
 public:
 

@@ -105,14 +105,14 @@ private:
    void     FillDefaults();
    void     HandlePolN(TString &formula);
    void     HandleParametrizedFunctions(TString &formula);
-   void     HandleParamRanges(TString &formula);
-   void     HandleFunctionArguments(TString &formula);
+   void HandleParamRanges(TString &formula);
+   void HandleFunctionArguments(TString &formula);
    void     HandleExponentiation(TString &formula);
    void     HandleLinear(TString &formula);
    Bool_t   InitLambdaExpression(const char * formula);
    static Bool_t   IsDefaultVariableName(const TString &name);
-   void     ReplaceAllNames(TString &formula, std::map<TString, TString> &substitutions);
-   void     FillParametrizedFunctions(std::map< std::pair<TString,Int_t> ,std::pair<TString,TString> > &functions);
+   void ReplaceAllNames(TString &formula, std::map<TString, TString> &substitutions);
+   void FillParametrizedFunctions(std::map<std::pair<TString, Int_t>, std::pair<TString, TString>> &functions);
 
 protected:
 
