@@ -146,7 +146,9 @@ void MethodDL::DeclareOptions()
 {
    // Set default values for all option strings
 
-   DeclareOptionRef(fLayoutString = "DENSE|(N+100)*2|SOFTSIGN,LINEAR", "Layout", "Layout of the network.");
+   DeclareOptionRef(fInputLayoutString = "0|0|0", "InputLayout", "The Layout of the input");
+
+   DeclareOptionRef(fLayoutString = "DENSE|(N+100)*2|SOFTSIGN,DENSE|0|LINEAR", "Layout", "Layout of the network.");
 
    DeclareOptionRef(fErrorStrategy = "CROSSENTROPY", "ErrorStrategy", "Loss function: Mean squared error (regression)"
                                                                       " or cross entropy (binary classification).");
@@ -246,6 +248,9 @@ void MethodDL::ProcessOptions()
 #endif // DNNCPU
    }
 
+   // Input Layout
+   ParseInputLayout();
+
    // Loss function and output.
    fOutputFunction = EOutputFunction::kSigmoid;
    if (fAnalysisType == Types::kClassification) {
@@ -325,6 +330,52 @@ void MethodDL::ProcessOptions()
 void MethodDL::Init()
 {
    // Nothing to do here
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Parse the input layout
+void MethodDL::ParseInputLayout()
+{
+   // Define the delimiter
+   const TString delim("|");
+
+   // Get the input layout string
+   TString inputLayoutString = this->GetInputLayoutString();
+
+   size_t depth = 0;
+   size_t height = 0;
+   size_t width = 0;
+
+   // Split the input layout string
+   TObjArray *inputDimStrings = inputLayoutString.Tokenize(delim);
+   TIter nextInputDim(inputDimStrings);
+   TObjString *inputDimString = (TObjString *)nextInputDim();
+   int idxToken = 0;
+
+   for (; inputDimString != nullptr; inputDimString = (TObjString *)nextInputDim()) {
+      switch (idxToken) {
+      case 0: // input depth
+      {
+         TString strDepth(inputDimString->GetString());
+         depth = (size_t)strDepth.Atoi();
+      } break;
+      case 1: // input height
+      {
+         TString strHeight(inputDimString->GetString());
+         height = (size_t)strHeight.Atoi();
+      } break;
+      case 2: // input width
+      {
+         TString strWidth(inputDimString->GetString());
+         width = (size_t)strWidth.Atoi();
+      } break;
+      }
+      ++idxToken;
+   }
+
+   this->SetInputDepth(depth);
+   this->SetInputHeight(height);
+   this->SetInputWidth(width);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -459,7 +510,7 @@ void MethodDL::ParseConvLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
 
    for (; token != nullptr; token = (TObjString *)nextToken()) {
       switch (idxToken) {
-      case 1: // depth or width
+      case 1: // depth
       {
          TString strDepth(token->GetString());
          depth = strDepth.Atoi();
@@ -622,8 +673,8 @@ void MethodDL::ParseReshapeLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet
       case 4: // flattening
       {
          TString flat(token->GetString());
-         if(flat == "FLAT"){
-             flattening = true;  
+         if (flat == "FLAT") {
+            flattening = true;
          }
       } break;
       }
@@ -683,9 +734,10 @@ void MethodDL::ParseLstmLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
 ////////////////////////////////////////////////////////////////////////////////
 /// Standard constructor.
 MethodDL::MethodDL(const TString &jobName, const TString &methodTitle, DataSetInfo &theData, const TString &theOption)
-   : MethodBase(jobName, Types::kDL, methodTitle, theData, theOption), fWeightInitialization(), fOutputFunction(),
-     fLossFunction(), fLayoutString(), fErrorStrategy(), fTrainingStrategyString(), fWeightInitializationString(),
-     fArchitectureString(), fResume(false), fTrainingSettings()
+   : MethodBase(jobName, Types::kDL, methodTitle, theData, theOption), fInputDepth(), fInputHeight(), fInputWidth(),
+     fWeightInitialization(), fOutputFunction(), fLossFunction(), fInputLayoutString(), fLayoutString(),
+     fErrorStrategy(), fTrainingStrategyString(), fWeightInitializationString(), fArchitectureString(), fResume(false),
+     fTrainingSettings()
 {
    // Nothing to do here
 }
@@ -693,9 +745,10 @@ MethodDL::MethodDL(const TString &jobName, const TString &methodTitle, DataSetIn
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor from a weight file.
 MethodDL::MethodDL(DataSetInfo &theData, const TString &theWeightFile)
-   : MethodBase(Types::kDL, theData, theWeightFile), fWeightInitialization(), fOutputFunction(), fLossFunction(),
-     fLayoutString(), fErrorStrategy(), fTrainingStrategyString(), fWeightInitializationString(), fArchitectureString(),
-     fResume(false), fTrainingSettings()
+   : MethodBase(Types::kDL, theData, theWeightFile), fInputDepth(), fInputHeight(), fInputWidth(),
+     fWeightInitialization(), fOutputFunction(), fLossFunction(), fInputLayoutString(), fLayoutString(),
+     fErrorStrategy(), fTrainingStrategyString(), fWeightInitializationString(), fArchitectureString(), fResume(false),
+     fTrainingSettings()
 {
    // Nothing to do here
 }
@@ -811,9 +864,9 @@ void MethodDL::TrainGpu()
       // After the processing of the options, initialize the master deep net
       size_t batchSize = settings.batchSize;
       // Should be replaced by actual implementation. No support for this now.
-      size_t inputDepth = 0;
-      size_t inputHeight = 0;
-      size_t inputWidth = 0;
+      size_t inputDepth = this->GetInputDepth();
+      size_t inputHeight = this->GetInputHeight();
+      size_t inputWidth = this->GetInputWidth();
       size_t batchDepth = settings.batchSize;
       size_t batchHeight = inputDepth;
       size_t batchWidth = inputHeight * inputWidth;
@@ -975,9 +1028,9 @@ void MethodDL::TrainCpu()
       // After the processing of the options, initialize the master deep net
       size_t batchSize = settings.batchSize;
       // Should be replaced by actual implementation. No support for this now.
-      size_t inputDepth = 0;
-      size_t inputHeight = 0;
-      size_t inputWidth = 0;
+      size_t inputDepth = this->GetInputDepth();
+      size_t inputHeight = this->GetInputHeight();
+      size_t inputWidth = this->GetInputWidth();
       size_t batchDepth = settings.batchSize;
       size_t batchHeight = inputDepth;
       size_t batchWidth = inputHeight * inputWidth;
