@@ -22,7 +22,7 @@
 #include "ROOT/TDrawable.hxx"
 #include "ROOT/TPadExtent.hxx"
 #include "ROOT/TPadPos.hxx"
-#include "ROOT/TPadUserCoord.hxx"
+#include "ROOT/TPadUserCoordBase.hxx"
 #include "ROOT/TypeTraits.hxx"
 
 namespace ROOT {
