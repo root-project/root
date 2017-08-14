@@ -1424,7 +1424,7 @@ void TFormula::HandleUserFunctions(TString &formula) {
 
                      // If the name stays the same, keep the old value of the parameter
 		     if (f && oldName == newName)
-			DoAddParameter(f->GetParName(parNr), f->GetParameter(parNr), false);
+		        DoAddParameter(f->GetParName(parNr), f->GetParameter(parNr), false);
 		  }
 	       }
 
@@ -1475,7 +1475,7 @@ void TFormula::HandleUserFunctions(TString &formula) {
 
                      // If the name stays the same, keep the old value of the parameter
 		     if (f && oldName == newName)
-			DoAddParameter(f->GetParName(argNr), f->GetParameter(argNr), false);
+		        DoAddParameter(f->GetParName(argNr), f->GetParameter(argNr), false);
 		  }
 		  
 		  canReplace = true;
@@ -1805,8 +1805,10 @@ void TFormula::ExtractFunctors(TString &formula)
             // only add if parameter does not already exist, because maybe
             // `HandleUserFunctions` already assigned a default value to the
             // parameter
-            if (fParams.find(param) == fParams.end())
+            if (fParams.find(param) == fParams.end() || GetParNumber(param) < 0 || (unsigned) GetParNumber(param) >= fClingParameters.size()) {
+               // std::cout << "Setting parameter " << param << " to 0" << std::endl;
                DoAddParameter(param, 0, false);
+            }
 
          }
          TString replacement = TString::Format("{[%s]}",param.Data());
