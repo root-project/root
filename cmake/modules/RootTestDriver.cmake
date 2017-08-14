@@ -161,7 +161,7 @@ if(CMD)
 
     if(_errvar0)
       # Filter messages in stderr that are expected
-      string(STRIP ${_errvar0} _errvar0)
+      string(STRIP "${_errvar0}" _errvar0)
       string(REPLACE "\n" ";" _lines "${_errvar0}")
       if(CMAKE_VERSION VERSION_GREATER 3.6)
         list(FILTER _lines EXCLUDE REGEX "^Info in <.+::ACLiC>: creating shared library.+")
