@@ -23,6 +23,7 @@
 #include "TError.h"
 #include "TInterpreter.h"
 #include "TFormula.h"
+#include "TRegexp.h"
 #include <cassert>
 #include <iostream>
 #include <unordered_map>
@@ -234,31 +235,29 @@ bool TFormulaParamOrder::operator() (const TString& a, const TString& b) const {
    // implement comparison used to set parameter orders in TFormula
    // want p2 to be before p10
 
-   // strip first character in case you have (p0, p1, pN)
-   if ( a[0] == 'p' && a.Length() > 1)  {
-      if ( b[0] == 'p' &&  b.Length() > 1)  {
-         // strip first character
-         TString lhs = a(1,a.Length()-1);
-         TString rhs = b(1,b.Length()-1);
-         if (lhs.IsDigit() && rhs.IsDigit() )
-            return (lhs.Atoi() < rhs.Atoi() );
-      }
-      else {
-         return true;  // assume a(a numeric name) is always before b (an alphanumeric name)
-      }
-   }
+   // Returns true if (a < b), meaning a comes before b, and false if (a >= b)
+
+   TRegexp numericPattern("p?[0-9]+");
+   Ssiz_t *len = new Ssiz_t(); // buffer to store length of regex match
+   
+   int patternStart = numericPattern.Index(a, len);
+   bool aNumeric = (patternStart == 0 && *len == a.Length());
+
+   patternStart = numericPattern.Index(b, len);
+   bool bNumeric = (patternStart == 0 && *len == b.Length());
+   
+   if (aNumeric && !bNumeric)
+      return true; // assume a (numeric) is always before b (not numeric)
+   else if (!aNumeric && bNumeric)
+      return false; // b comes before a
+   else if (!aNumeric && !bNumeric)
+      return a < b;
    else {
-      if (  b[0] == 'p' &&  b.Length() > 1)
-         // now b is numeric and a is not so return false
-         return false;
-
-      // case both names are numeric
-      if (a.IsDigit() && b.IsDigit() )
-         return (a.Atoi() < b.Atoi() );
-
+      int aInt = (a[0] == 'p') ? TString(a(1,a.Length())).Atoi() : a.Atoi();
+      int bInt = (b[0] == 'p') ? TString(b(1,b.Length())).Atoi() : b.Atoi();
+      return aInt < bInt;
    }
 
-   return a < b;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
