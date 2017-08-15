@@ -1,6 +1,9 @@
 create_subdirectory_options(CLANG TOOL)
 
 add_clang_subdirectory(diagtool)
+add_clang_subdirectory(driver)
+add_clang_subdirectory(clang-format)
+add_clang_subdirectory(clang-format-vs)
 add_clang_subdirectory(clang-fuzzer)
 add_clang_subdirectory(clang-import-test)
 add_clang_subdirectory(clang-offload-bundler)
@@ -16,15 +19,6 @@ if(CLANG_ENABLE_STATIC_ANALYZER)
   add_clang_subdirectory(clang-check)
   add_clang_subdirectory(scan-build)
   add_clang_subdirectory(scan-view)
-endif()
-
-if(CLANG_ENABLE_FORMAT)
-  add_clang_subdirectory(clang-format)
-  add_clang_subdirectory(clang-format-vs)
-endif()
-
-if(CLANG_ENABLE_COMPILER)
-  add_clang_subdirectory(driver)
 endif()
 
 # We support checking out the clang-tools-extra repository into the 'extra'
