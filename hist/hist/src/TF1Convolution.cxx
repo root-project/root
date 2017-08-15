@@ -375,7 +375,11 @@ void TF1Convolution::SetExtraRange(Double_t percentage)
 
 void TF1Convolution::SetRange(Double_t a, Double_t b)
 {
-   if (a>=b)   return;
+   if (a>=b) {
+      Warning("SetRange", "Invalid range: %f >= %f", a, b);
+      return;
+   }
+
    fXmin = a;
    fXmax = b;
    if (fFlagFFT && ( a==-TMath::Infinity() || b==TMath::Infinity() ) )
