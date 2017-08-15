@@ -85,6 +85,25 @@ void TF1NormSum::InitializeDataMembers(const std::vector <std::shared_ptr < TF1 
       }
       //normalize the functions if it is not already done (do at the end so constant parameter is not zero)
       if (!fFunctions[n] -> IsEvalNormalized())  fFunctions[n]  -> SetNormalized(true);
+
+   }
+
+
+   // Set range
+   if (fNOfFunctions == 0)
+   {
+      fXmin = 0;
+      fXmax = 1;
+      Info("InitializeDataMembers", "Initializing empty TF1NormSum with default [0,1] range");
+   }
+   else {
+      fFunctions[0]->GetRange(fXmin, fXmax);
+      Info("InitializeDataMembers", "Initializing TF1NormSum with [%f,%f] range", fXmin, fXmax);
+      for (unsigned int n = 1 ; n < fNOfFunctions ; n++)
+      {
+         fFunctions[n]->SetRange(fXmin, fXmax);
+         fFunctions[n]->Update();
+      }
    }
 
    FixDuplicateNames(fParNames.begin()+fNOfFunctions, fParNames.end());
@@ -100,6 +119,8 @@ TF1NormSum::TF1NormSum()
    fFunctions     = std::vector< std::shared_ptr < TF1 >>(0); // Vector of size fNOfFunctions containing TF1 functions
    fCoeffs        = std::vector < Double_t  >(0) ;            // Vector of size fNOfFunctions containing coefficients in front of each function
    fCstIndexes = std::vector < Int_t     > (0);
+   fXmin = 0; // Dummy values of xmin and xmax
+   fXmax = 1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -350,4 +371,23 @@ Int_t TF1NormSum::GetNpar() const
       if (fCstIndexes[n] >= 0) nofparams -= 1;
    }
    return nofparams + fNOfFunctions;  //fNOfFunctions for the coefficients
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void TF1NormSum::SetRange(Double_t a, Double_t b)
+{
+   if (a>=b) {
+      Warning("SetRange", "Invalid range: %f >= %f", a, b);
+      return;
+   }
+
+   fXmin = a;
+   fXmax = b;
+
+   for (std::shared_ptr<TF1> func : fFunctions) {
+      func->SetRange(a, b);
+      func->Update();
+   }
+   
 }

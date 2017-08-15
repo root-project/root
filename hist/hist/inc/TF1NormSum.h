@@ -21,6 +21,8 @@ protected:
 
    unsigned int fNOfFunctions;                         ///<! Number of functions to add
    Double_t     fScale;                                ///< Fixed Scale parameter to normalize function (e.g. bin width)
+   Double_t     fXmin;                                 /// Minimal bound of range of NormSum
+   Double_t     fXmax;                                 /// Maximal bound of range of NormSum
    std::vector < std::shared_ptr < TF1 > > fFunctions; ///< Vector of size fNOfFunctions containing TF1 functions
    std::vector < Double_t  > fCoeffs;                  ///< Vector of size afNOfFunctions containing coefficients in front of each function
    std::vector < Int_t     > fCstIndexes;              ///< Vector with size of fNOfFunctions containing the index of the constant parameter/ function (the removed ones)
@@ -46,6 +48,8 @@ public:
 
    void        SetParameters(Double_t p0, Double_t p1, Double_t p2=0., Double_t p3=0., Double_t p4=0.,
                                    Double_t p5=0., Double_t p6=0., Double_t p7=0., Double_t p8=0., Double_t p9=0., Double_t p10=0.);
+
+   void        SetRange(Double_t a, Double_t b);
 
    Int_t       GetNpar() const;
 
