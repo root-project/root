@@ -50,8 +50,8 @@ void TCpu<Real_t>::Multiply(TCpuMatrix<Real_t> &C,
 //____________________________________________________________________________
 template<typename Real_t>
 void TCpu<Real_t>::TransposeMultiply(TCpuMatrix<Real_t> &C,
-                                                  const TCpuMatrix<Real_t> &A,
-                                                  const TCpuMatrix<Real_t> &B)
+                                     const TCpuMatrix<Real_t> &A,
+                                     const TCpuMatrix<Real_t> &B)
 {
     int m = (int) A.GetNcols();
     int k = (int) A.GetNrows();
