@@ -25,12 +25,8 @@ import IPython.display
 import ROOT
 from JupyROOT import handlers
 
-#Notebook-trimming imports
+#Notebook-trimming import
 import json
-import webbrowser
-i = 0;
-import time
-import threading
 
 # We want iPython to take over the graphics
 ROOT.gROOT.SetBatch()
@@ -102,18 +98,6 @@ def disableJSVisDebug():
     _enableJSVis = False
     _enableJSVisDebug = False
     
-def processEventLoopServer():
-    thttp_server = ROOT.THttpServer("http:8088?top=ROOT;readwrite")
-    while True:
-      ROOT.gSystem.ProcessEvents()
-      time.sleep(0.02)
-	  
-def browse():
-    webbrowser.open("http://localhost:8088",new=1)
-    thread = threading.Thread(target = processEventLoopServer)
-    thread.daemon = True;
-    thread.start()
-
 def _getPlatform():
     return sys.platform
 
@@ -357,8 +341,6 @@ class CaptureDrawnPrimitives(object):
 
     def register(self):
         self.shell.events.register('post_execute', self._post_execute)
-        
-       	   
 
 class NotebookDrawer(object):
     '''
@@ -427,26 +409,26 @@ class NotebookDrawer(object):
 	{'_typename': 'TCanvas', 'fPrimitives': {'arr': [{'arr': [{'_typename': 'NotTColor'}], '_typename': 'NotObjArray', 'name': 'ListOfOthers'}]}}
 	"""
 	
+	if ROOT.TColor.DefinedColors():
+	    return object_json
+	
 	#Only TCanvas JSON objects have TColors to remove in the first place
 	if "_typename" in object_json and object_json["_typename"]!="TCanvas":
 	    return object_json
 
 	#TColor objects are known to have this fixed nested structure in the TCanvas as follows:
 	#TCanvas -> fPrimitives-> arr-> TObjArray (an element in arr)
-	if "fPrimitives" in object_json:
-	    fPrimitives_array = object_json["fPrimitives"]["arr"]
-	    for element in fPrimitives_array:
-		if element["_typename"] == "TObjArray" and element["name"] == "ListOfColors":
-		    element.clear()
+	if "fPrimitives" not in object_json:
+	    return object_json
+	  
+	fPrimitives_array = object_json["fPrimitives"]["arr"]
+	for element in fPrimitives_array:
+	    if element["_typename"] == "TObjArray" and element["name"] == "ListOfColors":
+		element.clear()
 
 
 	return object_json
       
-    
-      
-    
-    
-
     def _trimJSONForGraphics(self,object_json):
 	'''
 	Function that calls helper functions to trim redundant information in JSON graphics files to reduce size
@@ -459,7 +441,11 @@ class NotebookDrawer(object):
         # Workaround to have ConvertToJSON work
         
         #<class 'ROOT.TString'>
-        object_json = ROOT.TBufferJSON.ConvertToJSONGraphics(self.drawableObject,3)
+        object_json = ROOT.TBufferJSON.ConvertToJSON(self.drawableObject,3)
+        #<type 'dict'>
+        parsed_json = json.loads(str(object_json))
+        #<type 'dict'>
+        trimmed_json = self._trimJSONForGraphics(parsed_json)
 	  
         # Here we could optimise the string manipulation
         divId = 'root_plot_' + str(self._getUID())
@@ -476,7 +462,7 @@ class NotebookDrawer(object):
         thisJsCode = _jsCode.format(jsCanvasWidth = height,
                                     jsCanvasHeight = width,
                                     jsROOTSourceDir = _jsROOTSourceDir,
-                                    jsonContent = object_json.Data(),
+                                    jsonContent = json.dumps(trimmed_json),
                                     jsDrawOptions = options,
                                     jsDivId = divId)
         return thisJsCode
@@ -557,9 +543,7 @@ def enhanceROOTModule():
     ROOT.disableJSVis = disableJSVis
     ROOT.enableJSVisDebug = enableJSVisDebug
     ROOT.disableJSVisDebug = disableJSVisDebug
-    #Add notebook browser
-    ROOT.Jowser = browse
-
+    
 def enableCppHighlighting():
     ipDispJs = IPython.display.display_javascript
     # Define highlight mode for %%cpp magic
