@@ -26,6 +26,7 @@ namespace Experimental {
   */
 struct TPadPos: Internal::TPadHorizVert {
    using Internal::TPadHorizVert::TPadHorizVert;
+   TPadPos() = default;
    TPadPos(const TPadExtent& extent): Internal::TPadHorizVert(extent) {}
 
    /// Add a `TPadExtent`.
