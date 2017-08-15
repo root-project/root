@@ -208,8 +208,8 @@ public:
       auto loopManager = GetDataFrameChecked();
       const auto nColumns = TTraits::CallableTraits<F>::arg_types::list_size;
       const auto validColumnNames = GetValidatedColumnNames(*loopManager, nColumns, columns);
-      using loopManagerF_t = TDFDetail::TFilter<F, Proxied>;
-      auto FilterPtr = std::make_shared<loopManagerF_t>(std::move(f), validColumnNames, *fProxiedPtr, name);
+      using F_t = TDFDetail::TFilter<F, Proxied>;
+      auto FilterPtr = std::make_shared<F_t>(std::move(f), validColumnNames, *fProxiedPtr, name);
       loopManager->Book(FilterPtr);
       return TInterface<TFilterBase>(FilterPtr, fImplWeakPtr);
    }
@@ -285,9 +285,9 @@ public:
       TDFInternal::CheckTmpBranch(name, loopManager->GetTree());
       auto nColumns = TTraits::CallableTraits<F>::arg_types::list_size;
       const auto validColumnNames = GetValidatedColumnNames(*loopManager, nColumns, columns);
-      using loopManagerB_t = TDFDetail::TCustomColumn<F, Proxied>;
+      using B_t = TDFDetail::TCustomColumn<F, Proxied>;
       const std::string nameInt(name);
-      auto BranchPtr = std::make_shared<loopManagerB_t>(nameInt, std::move(expression), validColumnNames, *fProxiedPtr);
+      auto BranchPtr = std::make_shared<B_t>(nameInt, std::move(expression), validColumnNames, *fProxiedPtr);
       loopManager->Book(BranchPtr);
       return TInterface<TCustomColumnBase>(BranchPtr, fImplWeakPtr);
    }
