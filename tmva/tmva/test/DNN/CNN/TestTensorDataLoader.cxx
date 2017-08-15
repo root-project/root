@@ -40,14 +40,14 @@ int main()
 
    std::cout << "Testing tensor data loader:" << std::endl;
 
-   Scalar_t maximumError = 0.0;
-   Scalar_t error = testSum<TReference<Scalar_t>>();
-   std::cout << "Sum: Maximum relative error = " << error << std::endl;
-   maximumError = std::max(error, maximumError);
+   //    Scalar_t maximumError = 0.0;
+   //    Scalar_t error = testSum<TReference<Scalar_t>>();
+   //    std::cout << "Sum: Maximum relative error = " << error << std::endl;
+   //    maximumError = std::max(error, maximumError);
 
-   error = testIdentity<TReference<Scalar_t>>();
-   std::cout << "Identity: Maximum relative error = " << error << std::endl;
-   maximumError = std::max(error, maximumError);
+   //    error = testIdentity<TReference<Scalar_t>>();
+   //    std::cout << "Identity: Maximum relative error = " << error << std::endl;
+   //    maximumError = std::max(error, maximumError);
 
    testDataLoaderDataSet<TReference<Scalar_t>>();
 }

@@ -39,6 +39,9 @@ ROOT_ADD_TEST(TMVA-DNN-Tensor-Data-Loader COMMAND testTensorDataLoader)
 ROOT_EXECUTABLE(testDLMinimization TestMinimization.cxx LIBRARIES ${Libraries})
 ROOT_ADD_TEST(TMVA-DNN-CNN-Minimization COMMAND testDLMinimization)
 
+ROOT_EXECUTABLE(testMethodDL TestMethodDL.cxx LIBRARIES ${Libraries})
+ROOT_ADD_TEST(TMVA-DNN-CNN-MethodDL COMMAND testMethodDL)
+
 #--- CPU tests. ----------------------------
 if (BLAS_FOUND AND imt)
 
