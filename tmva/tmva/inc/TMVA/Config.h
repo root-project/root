@@ -64,6 +64,9 @@ namespace TMVA {
 
       Bool_t DrawProgressBar() const { return fDrawProgressBar; }
       void   SetDrawProgressBar( Bool_t d ) { fDrawProgressBar = d; }
+      
+      UInt_t NWorkers() const {return fNWorkers; }
+      void SetNWorkers (UInt_t n) {fNWorkers = n; }
 
    public:
 
@@ -118,11 +121,13 @@ namespace TMVA {
       std::atomic<Bool_t> fSilent;                // no output at all
       std::atomic<Bool_t> fWriteOptionsReference; // if set true: Configurable objects write file with option reference
       std::atomic<Bool_t> fDrawProgressBar;       // draw progress bar to indicate training evolution
+      std::atomic<UInt_t> fNWorkers;			  // number of workers in multiprocessing parallelization
 #else
       Bool_t fUseColoredConsole;     // coloured standard output
       Bool_t fSilent;                // no output at all
       Bool_t fWriteOptionsReference; // if set true: Configurable objects write file with option reference
       Bool_t fDrawProgressBar;       // draw progress bar to indicate training evolution
+      UInt_t fNWorkers;
 #endif
       mutable MsgLogger* fLogger;   // message logger
       MsgLogger& Log() const { return *fLogger; }

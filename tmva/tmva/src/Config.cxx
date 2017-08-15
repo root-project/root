@@ -57,6 +57,7 @@ TMVA::Config::Config() :
    fSilent               ( kFALSE ),
    fWriteOptionsReference( kFALSE ),
    fDrawProgressBar      ( kFALSE ),
+   fNWorkers			 (	  1	  ),
    fLogger               ( new MsgLogger("Config") )
 {
    // plotting
@@ -113,4 +114,3 @@ TMVA::Config& TMVA::Config::Instance()
    return fgConfigPtr ? *fgConfigPtr :*(fgConfigPtr = new Config());
 #endif
 }
-

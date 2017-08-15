@@ -33,12 +33,14 @@
 #include <vector>
 #include <map>
 #include "TCut.h"
+#include <memory>
 
 #include "TMVA/Factory.h"
 #include "TMVA/Types.h"
 #include "TMVA/DataSet.h"
+#include "TFile.h"
 
-class TFile;
+//class TFile;
 class TTree;
 class TDirectory;
 class TH2;
@@ -226,6 +228,8 @@ namespace TMVA {
       ClassDef(DataLoader,3);
    };
    void DataLoaderCopy(TMVA::DataLoader* des, TMVA::DataLoader* src);
+   std::vector < std::shared_ptr<TFile> > DataLoaderCopyMP(TMVA::DataLoader *des, TMVA::DataLoader *src); 
+   void DataLoaderCopyMPCloseFiles(std::vector< std::shared_ptr<TFile> > files);
 } // namespace TMVA
 
 #endif

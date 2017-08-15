@@ -14,11 +14,13 @@
 #include "TMultiGraph.h"
 #include "TString.h"
 #include "TSystem.h"
+#include "ROOT/TProcessExecutor.hxx"
 
 #include <iostream>
 #include <memory>
 #include <vector>
 
+using namespace std;
 /*! \class TMVA::HyperParameterOptimisationResult
 \ingroup TMVA
 
@@ -28,6 +30,8 @@
 \ingroup TMVA
 
 */
+
+//const int nWorkers = 4U;
 
 TMVA::HyperParameterOptimisationResult::HyperParameterOptimisationResult()
    : fROCAVG(0.0), fROCCurves(std::make_shared<TMultiGraph>())
@@ -98,27 +102,41 @@ void TMVA::HyperParameterOptimisation::Evaluate()
         fFoldStatus=kTRUE;
     }
     fResults.fMethodName = methodName;
+    auto workItem = [&](UInt_t workerID) {
+      TString foldTitle = methodTitle;
+      foldTitle += "_opt";
+      foldTitle += workerID+1;
 
-    for(UInt_t i = 0; i < fNumFolds; ++i) {
+      Event::SetIsTraining(kTRUE);
+      fDataLoader->PrepareFoldDataSet(workerID, TMVA::Types::kTraining);
 
-        TString foldTitle = methodTitle;
-        foldTitle += "_opt";
-        foldTitle += i+1;
+      auto smethod = fClassifier->BookMethod(fDataLoader.get(), methodName, methodTitle, methodOptions);
 
-        Event::SetIsTraining(kTRUE);
-        fDataLoader->PrepareFoldDataSet(i, TMVA::Types::kTraining);
+      auto params=smethod->OptimizeTuningParameters(fFomType,fFitType);
 
-        auto smethod = fClassifier->BookMethod(fDataLoader.get(), methodName, methodTitle, methodOptions);
+      //fResults.fFoldParameters.push_back(params);
 
-        auto params=smethod->OptimizeTuningParameters(fFomType,fFitType);
-        fResults.fFoldParameters.push_back(params);
+      smethod->Data()->DeleteResults(smethod->GetMethodName(), Types::kTraining, Types::kClassification);
 
-        smethod->Data()->DeleteResults(smethod->GetMethodName(), Types::kTraining, Types::kClassification);
+      fClassifier->DeleteAllMethods();
 
-        fClassifier->DeleteAllMethods();
+      fClassifier->fMethodsMap.clear();
 
-        fClassifier->fMethodsMap.clear();
-
+      return params;
+    };
+    vector < map<TString,Double_t>  > res;
+    auto nWorkers = TMVA::gConfig().NWorkers();
+    if(nWorkers> 1) {
+      ROOT::TProcessExecutor workers(nWorkers);
+      res = workers.Map(workItem, ROOT::TSeqI(fNumFolds));
+    }
+    else {
+      for(UInt_t i = 0; i < fNumFolds; ++ i) {
+        res.push_back(workItem(i));
+      }
+    }
+    for(auto results: res) {
+      fResults.fFoldParameters.push_back(results);
     }
 
 }
