@@ -391,3 +391,11 @@ void TF1NormSum::SetRange(Double_t a, Double_t b)
    }
    
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+void TF1NormSum::GetRange(Double_t &a, Double_t &b) const
+{
+   a = fXmin;
+   b = fXmax;
+}

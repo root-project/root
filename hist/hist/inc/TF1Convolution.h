@@ -61,6 +61,7 @@ class TF1Convolution
    Double_t GetXmin() const {return fXmin;}
    Double_t GetXmax() const {return fXmax;}
    const char *    GetParName(Int_t ipar) const { return fParNames.at(ipar).Data(); }
+   void     GetRange(Double_t &a, Double_t &b) const;
 
    Double_t operator()(Double_t* t, Double_t* p);
 };

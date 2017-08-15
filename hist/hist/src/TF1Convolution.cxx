@@ -392,3 +392,11 @@ void TF1Convolution::SetRange(Double_t a, Double_t b)
    }
    fFlagGraph = false;  // to indicate we need to re-do the convolution
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+void TF1Convolution::GetRange(Double_t &a, Double_t &b) const
+{
+   a = fXmin;
+   b = fXmax;
+}

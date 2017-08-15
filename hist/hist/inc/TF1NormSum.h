@@ -56,5 +56,11 @@ public:
    Double_t    GetScale() const { return fScale; }
 
    const char* GetParName(Int_t ipar) const { return fParNames.at(ipar).Data(); }
+
+   Double_t    GetXmin() const {return fXmin;}
+
+   Double_t    GetXmax() const {return fXmax;}
+   
+   void        GetRange(Double_t &a, Double_t &b) const;
 };
 #endif /* defined(ROOT_TF1NormSum__) */
