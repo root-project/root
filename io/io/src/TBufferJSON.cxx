@@ -43,7 +43,6 @@
 #include "rapidjson/writer.h"
 #include "rapidjson/stringbuffer.h"
 #include <iostream>
-//using namespace rapidjson;
 
 #include "Compression.h"
 #include "TColor.h"
@@ -317,16 +316,6 @@ TBufferJSON::~TBufferJSON() {
 		setlocale(LC_NUMERIC, fNumericLocale.Data());
 }
 	
-void TBufferJSON::Test(){
-	std::ofstream myfile;
-	myfile.open ("CompTest2.txt");
-	TString inputJSON = "':[],'fSumw2':[],'fOption':'','fFunctions':{'_typename':'TList','name':'TList','arr':[{'_typename':'TPaveStats','fUniqueID':0,'fBits':50331657,'fLineColor':1,'fLineStyle':1,'fLineWidth':1,'fFillColor':0,'fFillStyle':1001,'fX1':54.4000016212464,'fY1':13429.9267626215,'fX2':70.4000020980835,'fY2':16613.3167389034,'fX1NDC':0.780000016093254,'fY1NDC':0.775000005960464,'fX2NDC':0.980000019073486,'fY2NDC':0.935000002384186,'fBorderSize':1,'fInit':1,'fShadowColor':1,'fCornerRadius':0,'fOption':'brNDC','fName':'stats','fTextAngle':0,'fTextSize':0,'fTextAlign':12,'fTextColor':1,'fTextFont':42,'fLabel':'','fLongest':18,'fMargin':0.05,'fLines':{'_typename':'TList','name':'TList','arr':[{'_typename':'TLatex','fUniqueID':0,'fBits':50331648,'fName':'','fTitle':'TracksPt','fTextAngle':0,'fTextSize':0.0368,'fTextAlign':0,'fTextColor':0,'fTextFont':0,'fX':0,'fY':0,'fLineColor':1,'fLineStyle':1,'fLineWidth':2,'fLimitFactorSize':3,'fOriginSize':0.0368000008165836},{'_typename':'TLatex','fUniqueID':0,'fBits':50331648,'fName':'','fTitle':'Entries = 499832 ','fTextAngle':0,'fTextSize':0,'fTextAlign':0,'fTextColor':0,'fTextFont':0,'fX':0,'fY':0,'fLineColor':1,'fLineStyle':1,'fLineWidth':2,'fLimitFactorSize':3,'fOriginSize':0.04},{'_typename':'TLatex','fUniqueID':0,'fBits':50331648,'fName':'','fTitle':'Mean  =  12.54','fTextAngle':0,'fTextSize':0,'fTextAlign':0,'fTextColor':0,'fTextFont':0,'fX':0,'fY':0,'fLineColor':1,'fLineStyle':1,'fLineWidth':2,'fLimitFactorSize':3,'fOriginSize':0.04},{'_typename':'TLatex','fUniqueID':0,'fBits':50331648,'fName':'','fTitle':'Std Dev   =  6.554','fTextAngle':0,'fTextSize':0,'fTextAlign':0,'fTextColor':0,'fTextFont':0,'fX':0,'fY':0,'fLineColor':1,'fLineStyle':1,'fLineWidth':2,'fLimitFactorSize':3,'fOriginSize':0.04}],'opt':['','','','']},'fOptFit':0,'fOptStat':1111,'fFitFormat':'5.4g','fStatFormat':'6.4g','fParent':{'$ref':3}}],'opt':['brNDC']},'fBufferSize':0,'fBuffer':[],'fBinStatErrOpt':0,'fArray':[0,646,1812,3079,4274,5546,6496,7755,8828,9645,10586,11204,12167,12819,13433,14055,14273,14851,15129,15159,15118,14923,14889,15090,14741,14706,14176,13718,13160,13046,12217,11983,11282,10857,10309,9693,9045,8511,7964,7595,6952,6473,6028,5716,5134,4730,4236,3896,3660,3186,2900,2660,2323,2181,1851,1705,1481,1319,1134,1028,924,759,702,606,517,443,418,325,282,243,196,186,137,126,103,91,69,63,48,38,37,20,15,16,15,14,10,11,8,3,8,1,7,4,1,1,3,1,1,1,2,0,1,1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0]},{'_typename':'TPaveText','fUniqueID':0,'fBits':50331657,'fLineColor':1,'fLineStyle':1,'fLineWidth':1,'fFillColor':0,'fFillStyle':0,'fX1':26.7747125658153,'fY1':16712.7977090158,'fX2':37.2252874341847,'fY2':17807.0880541282,'fX1NDC':0.434683908045977,'fY1NDC':0.940000003948808,'fX2NDC':0.565316091954023,'fY2NDC':0.995000004768372,'fBorderSize':0,'fInit':1,'fShadowColor':1,'fCornerRadius':0,'fOption':'blNDC','fName':'title','fTextAngle':0,'fTextSize':0,'fTextAlign':22,'fTextColor':1,'fTextFont':42,'fLabel':'','fLongest':6,'fMargin':0.05,'fLines':{'_typename':'TList','name':'TList','arr':[{'_typename':'TLatex','fUniqueID':0,'fBits':50331648,'fName':'','fTitle':'Tracks','fTextAngle':0,'fTextSize':0,'fTextAlign':0,'fTextColor':0,'fTextFont':0,'fX':0,'fY':0,'fLineColor':1,'fLineStyle':1,'fLineWidth':2,'fLimitFactorSize':3,'fOriginSize':0.0467500016093254}],'opt':['']}},{'_typename':'TObjArray','name':'ListOfColors','arr':[{'_typename':'TColor','fUniqueID':0,'fBits':50331648,'fName':'background','fTitle':'','fNumber':0,'fRed':1,'fGreen':1,'fBlue':1,'fHue':0,'fLight':1,'fSaturation':0,'fAlpha':1},{'_typename':'TColor','fUniqueID':0,'fBits':50331648,'fName':'black','fTitle':'','fNumber':1,'fRed':0,'fGreen':0,'fBlue':0,'fHue':0,'fLight':0,'fSaturation':0,'fAlpha':1},{'_typename':'TColor','fUniqueID':0,'fBits':50331648,'fName':'red','fTitle':'','fNumber':2,'fRed':1,'fGreen':0,'fBlue':0,'fHue':360,'fLight':0.5,'fSaturation':1,'fAlpha':1}]}],'opt':['','','blNDC','']},'fExecs':null,'fName':'c1_n9','fTitle':'c1_n9','fNumPaletteColor':0,'fNextPaletteColor':0,'fDISPLAY':'$DISPLAY','fDoubleBuffer':0,'fRetained':true,'fXsizeUser':0,'fYsizeUser':0,'fXsizeReal':20,'fYsizeReal':14.28571,'fWindowTopX':0,'fWindowTopY':0,'fWindowWidth':0,'fWindowHeight':0,'fCw':696,'fCh':472,'fCatt':{'_typename':'TAttCanvas','fXBetween':2,'fYBetween':2,'fTitleFromTop':1.2,'fXdate':0.2,'fYdate':0.3,'fAdate':1},'kMoveOpaque':true,'kResizeOpaque':true,'fHighLightColor':2,'fBatch':true,'kShowEventStatus':false,'kAutoExec':true,'kMenuBar':true}'";
-	//TString inputJSON = "{'_typename': 'TCanvas', 'fPrimitives' : { 'arr': [ {'arr':[{'_typename': 'TColor'}],'_typename':'TObjArray','name':'ListOfColors'} ]}}";
-	TString trimmedJSON = TBufferJSON::TColorCompression(inputJSON);
-	myfile << "EXPECTED:";
-	myfile << "{'_typename': 'TCanvas', 'fPrimitives': {'arr': [{}]}}" << std::endl;
-	myfile << "GOT:";
-}
 
 // Returns true if TColorCompression has occurred 
 TString TBufferJSON::TColorCompression(TString jsonString) {
@@ -400,6 +389,7 @@ TString TBufferJSON::ConvertToJSON(const TObject *obj, Int_t compact,
 					- clActual->GetBaseClassOffset(TObject::Class()));
 	}
 	
+	//If first digit is 4, then performa the TColor compression
 	if (compact>=40){
 		TString initialJSONString = ConvertToJSON(ptr, clActual, compact, member_name);
 		return TColorCompression(initialJSONString);
