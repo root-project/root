@@ -839,15 +839,16 @@ bool test43()
    return ok;
 }
 
-bool test44() {
+bool test44()
+{
    // test whether user-defined and parametrized functions can be nested
 
    bool ok = true;
-   
+
    TF1 f1("f1", "x**[0]");
    TF1 f2("f2", "x + 1");
    TF2 f3("f3", "f1(f2(x), y)");
-   ok &= (f3.Eval(2,3) == 27);
+   ok &= (f3.Eval(2, 3) == 27);
 
    TF1 f4("f4", "f2(f2(x))");
    ok &= (f4.Eval(5) == 7);
@@ -857,10 +858,10 @@ bool test44() {
 
    TF1 f6("f6", "gaus(gaus(x, 1, 0, 1), 1, 0, 1)");
    ok &= fpEqual(f6.Eval(0), TMath::Exp(-.5), true);
-   
+
    return ok;
 }
- 
+
 void PrintError(int itest)  { 
    Error("TFormula test","test%d FAILED ",itest);
    failedTests.push_back(itest);

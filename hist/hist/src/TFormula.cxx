@@ -691,8 +691,7 @@ void TFormula::Clear(Option_t * )
 bool TFormula::PrepareEvalMethod()
 {
 
-   if(!fMethod)
-      {
+   if (!fMethod) {
       fMethod = new TMethodCall();
 
       Bool_t hasParameters = (fNpar > 0);
@@ -867,8 +866,7 @@ void TFormula::FillDefaults()
 void TFormula::HandlePolN(TString &formula)
 {
    Int_t polPos = formula.Index("pol");
-   while(polPos != kNPOS  && !IsAParameterName(formula,polPos) )
-      {
+   while (polPos != kNPOS && !IsAParameterName(formula, polPos)) {
 
       Bool_t defaultVariable = false;
       TString variable;
@@ -922,28 +920,28 @@ void TFormula::HandlePolN(TString &formula)
       if (degree > 0) {
          replacement.Insert(0, '(');
          replacement.Append(')');
-         }
-         TString pattern;
-         if (defaultCounter && !defaultDegree) {
-            pattern = TString::Format("%spol%d", (defaultVariable ? "" : variable.Data()), degree);
-         } else if (defaultCounter && defaultDegree) {
-            pattern = TString::Format("%spol", (defaultVariable ? "" : variable.Data()));
-         } else {
-            pattern = TString::Format("%spol%d(%d)", (defaultVariable ? "" : variable.Data()), degree, counter);
-         }
+      }
+      TString pattern;
+      if (defaultCounter && !defaultDegree) {
+         pattern = TString::Format("%spol%d", (defaultVariable ? "" : variable.Data()), degree);
+      } else if (defaultCounter && defaultDegree) {
+         pattern = TString::Format("%spol", (defaultVariable ? "" : variable.Data()));
+      } else {
+         pattern = TString::Format("%spol%d(%d)", (defaultVariable ? "" : variable.Data()), degree, counter);
+      }
 
-         if (!formula.Contains(pattern)) {
-            Error("HandlePolN", "Error handling polynomial function - expression is %s - trying to replace %s with %s ",
-                  formula.Data(), pattern.Data(), replacement.Data());
-            break;
-         }
-         if (formula == pattern) {
-            // case of single polynomial
-            SetBit(kLinear, 1);
-            fNumber = 300 + degree;
-         }
-         formula.ReplaceAll(pattern, replacement);
-         polPos = formula.Index("pol");
+      if (!formula.Contains(pattern)) {
+         Error("HandlePolN", "Error handling polynomial function - expression is %s - trying to replace %s with %s ",
+               formula.Data(), pattern.Data(), replacement.Data());
+         break;
+      }
+      if (formula == pattern) {
+         // case of single polynomial
+         SetBit(kLinear, 1);
+         fNumber = 300 + degree;
+      }
+      formula.ReplaceAll(pattern, replacement);
+      polPos = formula.Index("pol");
       }
 }
 
@@ -1499,8 +1497,7 @@ void TFormula::HandleFunctionArguments(TString &formula)
 void TFormula::HandleExponentiation(TString &formula)
 {
    Int_t caretPos = formula.Last('^');
-   while(caretPos != kNPOS  && !IsAParameterName(formula,caretPos) )
-      {
+   while (caretPos != kNPOS && !IsAParameterName(formula, caretPos)) {
 
       TString right, left;
       Int_t temp = caretPos;
@@ -1601,8 +1598,7 @@ void TFormula::HandleLinear(TString &formula)
    fLinearParts.reserve(nofLinParts + 1);
    Int_t Nlinear = 0;
    bool first = true;
-   while(linPos != kNPOS && !IsAParameterName(formula,linPos))
-      {
+   while (linPos != kNPOS && !IsAParameterName(formula, linPos)) {
       SetBit(kLinear, 1);
       // analyze left part only the first time
       Int_t temp = 0;
@@ -1715,8 +1711,7 @@ void TFormula::ExtractFunctors(TString &formula)
    TString name = "";
    TString body = "";
    // printf("formula is : %s \n",formula.Data() );
-   for(Int_t i = 0 ; i < formula.Length(); ++i )
-      {
+   for (Int_t i = 0; i < formula.Length(); ++i) {
 
       // std::cout << "loop on character : " << i << " " << formula[i] << std::endl;
       // case of parameters
@@ -1760,25 +1755,25 @@ void TFormula::ExtractFunctors(TString &formula)
          fFuncs.push_back(TFormulaFunction(param));
          // printf("found parameter %s \n",param.Data() );
          continue;
-            }
-            // case of strings
-            if (formula[i] == '\"') {
-               // look for next instance of "\"
-               do {
-                  i++;
-               } while (formula[i] != '\"');
-            }
-            // case of e or E for numbers in exponential notaton (e.g. 2.2e-3)
-            if (IsScientificNotation(formula, i))
-               continue;
-            // case of x for hexadecimal numbers
-            if (IsHexadecimal(formula, i)) {
-               // find position of operator
-               // do not check cases if character is not only a to f, but accept anything
-               while (!IsOperator(formula[i]) && i < formula.Length()) {
-                  i++;
-               }
-               continue;
+      }
+      // case of strings
+      if (formula[i] == '\"') {
+         // look for next instance of "\"
+         do {
+            i++;
+         } while (formula[i] != '\"');
+      }
+      // case of e or E for numbers in exponential notaton (e.g. 2.2e-3)
+      if (IsScientificNotation(formula, i))
+         continue;
+      // case of x for hexadecimal numbers
+      if (IsHexadecimal(formula, i)) {
+         // find position of operator
+         // do not check cases if character is not only a to f, but accept anything
+         while (!IsOperator(formula[i]) && i < formula.Length()) {
+            i++;
+         }
+         continue;
          }
 
          // std::cout << "investigating character : " << i << " " << formula[i] << " of formula " << formula <<
@@ -1924,8 +1919,8 @@ void TFormula::ExtractFunctors(TString &formula)
                i += 2;
                fFuncs.push_back(TFormulaFunction(name));
             }
-            }
-            name = body = "";
+         }
+         name = body = "";
       }
 }
 
@@ -2139,12 +2134,11 @@ void TFormula::ProcessFormula(TString &formula)
 
          fun.fFound = false;
       }
-      }
+   }
    //std::cout << "End: formula is " << formula << std::endl;
 
    // ignore case of functors have been matched - try to pass it to Cling
-   if(!fReadyToExecute)
-      {
+   if (!fReadyToExecute) {
       fReadyToExecute = true;
       Bool_t hasVariables = (fNdim > 0);
       Bool_t hasParameters = (fNpar > 0);
@@ -2212,7 +2206,7 @@ void TFormula::ProcessFormula(TString &formula)
             fAllParametersSetted = true;
             fClingInitialized = true;
          }
-         }
+      }
       }
 
 
@@ -2245,8 +2239,7 @@ void TFormula::ProcessFormula(TString &formula)
             itvar = fVars.erase(itvar);
          } else
             itvar++;
-         }
-      while( itvar != fVars.end() );
+      } while (itvar != fVars.end());
    }
 
 }
@@ -2395,8 +2388,7 @@ const TObject* TFormula::GetLinearPart(Int_t i) const
 
 void TFormula::AddVariable(const TString &name, double value)
 {
-   if(fVars.find(name) != fVars.end() )
-      {
+   if (fVars.find(name) != fVars.end()) {
       TFormulaVariable &var = fVars[name];
       var.fValue = value;
 
@@ -2417,8 +2409,7 @@ void TFormula::AddVariable(const TString &name, double value)
          // printf("process formula again - %s \n",fClingInput.Data() );
          ProcessFormula(fClingInput);
       }
-      }
-
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2431,8 +2422,7 @@ void TFormula::AddVariable(const TString &name, double value)
 void TFormula::AddVariables(const TString *vars, const Int_t size)
 {
    Bool_t anyNewVar = false;
-   for(Int_t i = 0 ; i < size; ++i)
-      {
+   for (Int_t i = 0; i < size; ++i) {
 
       const TString &vname = vars[i];
 
@@ -2451,15 +2441,15 @@ void TFormula::AddVariables(const TString *vars, const Int_t size)
             fClingVariables.reserve(multiplier * fClingVariables.capacity());
          }
          fClingVariables.push_back(0.0);
-            }
-            // else
-            // {
-            //    var.fValue = v.second;
-            //    fClingVariables[var.fArrayPos] = v.second;
-            // }
       }
-      if (anyNewVar && !fFormula.IsNull()) {
-         ProcessFormula(fClingInput);
+      // else
+      // {
+      //    var.fValue = v.second;
+      //    fClingVariables[var.fArrayPos] = v.second;
+      // }
+   }
+   if (anyNewVar && !fFormula.IsNull()) {
+      ProcessFormula(fClingInput);
       }
 }
 
@@ -2641,8 +2631,7 @@ void TFormula::DoAddParameter(const TString &name, Double_t value, Bool_t proces
          fClingInput.ReplaceAll(name, TString::Format("[%s]", name.Data()));
          ProcessFormula(fClingInput);
       }
-      }
-
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2741,7 +2730,7 @@ void TFormula::SetParameter(const char *name, Double_t value)
          fAllParametersSetted = false;
          break;
       }
-      }
+   }
 #endif
 }
 
@@ -2766,7 +2755,7 @@ void TFormula::SetParameters(const pair<TString,Double_t> *params,const Int_t si
       fParams[p.first].fValue = p.second;
       fParams[p.first].fFound = true;
       fClingParameters[fParams[p.first].fArrayPos] = p.second;
-      }
+   }
    fAllParametersSetted = true;
    for(map<TString,TFormulaVariable>::iterator it = fParams.begin(); it != fParams.end(); it++)
       {
@@ -2774,7 +2763,7 @@ void TFormula::SetParameters(const pair<TString,Double_t> *params,const Int_t si
          fAllParametersSetted = false;
          break;
       }
-      }
+   }
 }
 #endif
 
@@ -2910,17 +2899,17 @@ void TFormula::ReplaceParamName(TString & formula, const TString & oldName, cons
             it->fName = name;
             break;
          }
-         }
-         if (!found) {
-            Error("SetParName", "Parameter %s is not defined.", oldName.Data());
-            return;
-         }
-         // change whitespace to \\s avoid problems in parsing
-         TString newName = name;
-         newName.ReplaceAll(" ", "\\s");
-         TString pattern = TString::Format("[%s]", oldName.Data());
-         TString replacement = TString::Format("[%s]", newName.Data());
-         formula.ReplaceAll(pattern, replacement);
+      }
+      if (!found) {
+         Error("SetParName", "Parameter %s is not defined.", oldName.Data());
+         return;
+      }
+      // change whitespace to \\s avoid problems in parsing
+      TString newName = name;
+      newName.ReplaceAll(" ", "\\s");
+      TString pattern = TString::Format("[%s]", oldName.Data());
+      TString replacement = TString::Format("[%s]", newName.Data());
+      formula.ReplaceAll(pattern, replacement);
    }
 
 }
@@ -2986,7 +2975,7 @@ Double_t TFormula::DoEval(const double * x, const double * params) const
          }
       }
       return TMath::QuietNaN();
-      }
+   }
    if (fLambdaPtr && TestBit(TFormula::kLambda)) {// case of lambda functions
       std::function<double(double *, double *)> & fptr = * ( (std::function<double(double *, double *)> *) fLambdaPtr);
       assert(x);
@@ -3142,19 +3131,19 @@ void TFormula::Print(Option_t *option) const
             printf("%s is unknown.\n", fun.GetName());
          }
       }
-      }
-      if (!fAllParametersSetted) {
-         // we can skip this
-         // Info("Print","Not all parameters are setted.");
-         // for(map<TString,TFormulaVariable>::const_iterator it = fParams.begin(); it != fParams.end(); ++it)
-         // {
-         //    pair<TString,TFormulaVariable> param = *it;
-         //    if(!param.second.fFound)
-         //    {
-         //       printf("%s has default value %lf\n",param.first.Data(),param.second.GetInitialValue());
-         //    }
-         // }
-      }
+   }
+   if (!fAllParametersSetted) {
+      // we can skip this
+      // Info("Print","Not all parameters are setted.");
+      // for(map<TString,TFormulaVariable>::const_iterator it = fParams.begin(); it != fParams.end(); ++it)
+      // {
+      //    pair<TString,TFormulaVariable> param = *it;
+      //    if(!param.second.fFound)
+      //    {
+      //       printf("%s has default value %lf\n",param.first.Data(),param.second.GetInitialValue());
+      //    }
+      // }
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
