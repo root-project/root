@@ -84,7 +84,7 @@ large TClonesArray where each element contains another small vector container.
     -  LogZ for violins
     -  scaling of candles and violins with respect to each other
     -  static functions for WhiskerRange and BoxRange
-  - In some case it was not somme possible to zoom a 1D histogram using the mouse
+  - In some case it was not possible to zoom a 1D histogram using the mouse
     on the X axis. This was described
     [here](https://root-forum.cern.ch/t/axis-blocked-when-overlaying-two-histograms/25326)
   - When drawing an histogram with option "BOX" with log scale along the Z axis
