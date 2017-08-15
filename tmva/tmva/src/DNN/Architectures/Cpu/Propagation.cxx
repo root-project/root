@@ -25,6 +25,7 @@ template <typename AFloat>
 void TCpu<AFloat>::MultiplyTranspose(TCpuMatrix<AFloat> &output, const TCpuMatrix<AFloat> &input,
                                      const TCpuMatrix<AFloat> &Weights)
 {
+
    int m = (int)input.GetNrows();
    int k = (int)input.GetNcols();
    int n = (int)Weights.GetNrows();
@@ -83,6 +84,7 @@ void TCpu<AFloat>::Im2col(TCpuMatrix<AFloat> &A, TCpuMatrix<AFloat> &B, size_t i
                           size_t fltHeight, size_t fltWidth, size_t strideRows, size_t strideCols,
                           size_t zeroPaddingHeight, size_t zeroPaddingWidth)
 {
+
    // image boudaries
    int imgHeightBound = imgHeight + zeroPaddingHeight - (fltHeight - 1) / 2 - 1;
    int imgWidthBound = imgWidth + zeroPaddingWidth - (fltWidth - 1) / 2 - 1;
@@ -209,7 +211,7 @@ void TCpu<AFloat>::CalculateConvActivationGradients(std::vector<TCpuMatrix<AFloa
       Im2col(dfTr, df[i], inputHeight, inputWidth, filterHeight, filterWidth, tempStrideRows, tempStrideCols,
              tempZeroPaddingHeight, tempZeroPaddingWidth);
 
-      TransposeMultiply(activationGradientsBackward[i], rotWeights, dfTr);
+      MultiplyTranspose(activationGradientsBackward[i], rotWeights, dfTr);
    }
 }
 
@@ -248,14 +250,14 @@ void TCpu<AFloat>::CalculateConvWeightGradients(TCpuMatrix<AFloat> &weightGradie
             rowDelta(0, k) = df[i](j, k);
          }
 
-         // convolution
-         TCpuMatrix<AFloat> res(filterDepth, filterHeight * filterWidth);
 
          TCpuMatrix<AFloat> rowDeltaTr(tempNLocalViews, tempNLocalViewPixels);
          Im2col(rowDeltaTr, rowDelta, height, width, inputHeight, inputWidth, tempStrideRows, tempStrideCols,
                 tempZeroPaddingHeight, tempZeroPaddingWidth);
 
-         TransposeMultiply(res, activationsBackward[i], rowDeltaTr);
+         // convolution
+         TCpuMatrix<AFloat> res(filterDepth, filterHeight * filterWidth);
+         MultiplyTranspose(res, activationsBackward[i], rowDeltaTr);
 
          for (size_t k = 0; k < filterDepth; k++) {
             for (size_t l = 0; l < filterHeight * filterWidth; l++) {
@@ -271,6 +273,8 @@ template <typename AFloat>
 void TCpu<AFloat>::CalculateConvBiasGradients(TCpuMatrix<AFloat> &biasGradients, std::vector<TCpuMatrix<AFloat>> &df,
                                               size_t batchSize, size_t depth, size_t nLocalViews)
 {
+   std::cout << "Calculate Conv Bias Gradients method call" << std::endl;
+
    for (size_t i = 0; i < depth; i++) {
       AFloat sum = 0;
       for (size_t j = 0; j < nLocalViews; j++) {
