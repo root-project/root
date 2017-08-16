@@ -1381,6 +1381,14 @@ Int_t TColor::GetColorPalette(Int_t i)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Static function returning the current active palette.
+
+TArrayI TColor::GetPalette()
+{
+   return fgPalette;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Static function returning number of colors in the color palette.
 
 Int_t TColor::GetNumberOfColors()
