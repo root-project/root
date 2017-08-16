@@ -757,6 +757,7 @@ INPUT                  = . \
                          ../../bindings/pyroot/ \
                          ../../core/base/ \
                          ../../core/cont/ \
+                         ../../core/foundation/ \
                          ../../core/macosx/ \
                          ../../core/meta/ \
                          ../../core/metautils/ \
