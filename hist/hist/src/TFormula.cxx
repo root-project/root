@@ -1921,9 +1921,9 @@ void TFormula::ExtractFunctors(TString &formula)
             i += 2;
             fFuncs.push_back(TFormulaFunction(name));
          }
-         }
-         name = body = "";
       }
+      name = body = "";
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
