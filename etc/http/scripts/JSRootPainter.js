@@ -2561,7 +2561,6 @@
       this.path = addr;
       this.connid = null;
 
-
       this.nextrequest = function(data, kind) {
          var req = { request: "", persistent: false };
          if (kind === "connect") {
@@ -2739,7 +2738,6 @@
 
       retry_open(true); // call for the first time
    }
-
 
    TObjectPainter.prototype.FillObjectExecMenu = function(menu, call_back) {
 
@@ -4914,8 +4912,16 @@
       this.SendWebsocket('READY');
    }
 
-   TPadPainter.prototype.OnWebsocketMsg = function(conn, msg) {
 
+   /// function called when canvas menu item Save is called
+   TPadPainter.prototype.SaveCanvasAsFile = function(fname) {
+      var pthis = this, pnt = fname.indexOf(".");
+      this.CreateImage(fname.substr(pnt+1), function(res) {
+         pthis.SendWebsocket("SAVE:" + fname + ":" + res);
+      })
+   }
+
+   TPadPainter.prototype.OnWebsocketMsg = function(conn, msg) {
       if (msg == "CLOSE") {
          this.OnWebsocketClosed();
          this.CloseWebsocket(true);
@@ -4967,23 +4973,31 @@
              cmdid = msg.substr(0,p1),
              cmd = msg.substr(p1+1),
              reply = "REPLY:" + cmdid + ":";
-         if (cmd == "SVG") {
-            var res = "";
-            if (this.CreateSvg) res = this.CreateSvg();
-            conn.send(reply + res);
-         } else if (cmd == "PNG") {
-            this.ProduceImage(true, 'any.png', function(can) {
-               var res = can.toDataURL('image/png'),
-                   separ = res.indexOf("base64,");
-               conn.send(reply + ((separ>0) ? res.substr(separ+7) : ""));
+         if ((cmd == "SVG") || (cmd == "PNG") || (cmd == "JPEG")) {
+            this.CreateImage(cmd.toLowerCase(), function(res) {
+               conn.send(reply + res);
             });
          } else {
-            console.log('Urecognized command ' + cmd);
+            console.log('Unrecognized command ' + cmd);
             conn.send(reply);
          }
 
       } else {
          console.log("unrecognized msg " + msg);
+      }
+   }
+
+   TPadPainter.prototype.CreateImage = function(format, call_back) {
+      if (format=="svg") {
+         JSROOT.CallBack(call_back, btoa(this.CreateSvg()));
+      } else if ((format=="png") || (format=="jpeg")) {
+         this.ProduceImage(true, 'any.' + format, function(can) {
+            var res = can.toDataURL('image/' + format),
+                separ = res.indexOf("base64,");
+            JSROOT.CallBack(call_back, (separ>0) ? res.substr(separ+7) : "");
+         });
+      } else {
+         JSROOT.CallBack(call_back, "");
       }
    }
 
