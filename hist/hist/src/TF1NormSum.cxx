@@ -92,13 +92,17 @@ void TF1NormSum::InitializeDataMembers(const std::vector <std::shared_ptr < TF1 
    // Set range
    if (fNOfFunctions == 0)
    {
-      fXmin = 0;
-      fXmax = 1;
+      fXmin = 0.;
+      fXmax = 1.;
       Info("InitializeDataMembers", "Initializing empty TF1NormSum with default [0,1] range");
    }
    else {
       fFunctions[0]->GetRange(fXmin, fXmax);
-      Info("InitializeDataMembers", "Initializing TF1NormSum with [%f,%f] range", fXmin, fXmax);
+      if (fXmin >= fXmax) {
+         fXmin = 0.;
+         fXmax = 1.;
+         Info("InitializeDataMembers", "Initializing empty TF1NormSum with default [0,1] range");
+      }
       for (unsigned int n = 1 ; n < fNOfFunctions ; n++)
       {
          fFunctions[n]->SetRange(fXmin, fXmax);

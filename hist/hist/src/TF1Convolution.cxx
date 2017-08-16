@@ -130,6 +130,10 @@ TF1Convolution::TF1Convolution(TF1* function1, TF1* function2, Double_t xmin, Do
    if (xmin < xmax) {
       fXmin      = xmin;
       fXmax      = xmax;
+   } else {
+      Info("TF1Convolution", "Using default range [0, 1] for TF1Convolution");
+      fXmin      = 0.;
+      fXmax      = 1.;
    }
 }
 
@@ -163,6 +167,10 @@ TF1Convolution::TF1Convolution(TString formula,  Double_t xmin, Double_t xmax, B
    if (xmin < xmax) {
       fXmin      = xmin;
       fXmax      = xmax;
+   } else {
+      Info("TF1Convolution", "Using default range [0, 1] for TF1Convolution");
+      fXmin      = 0.;
+      fXmax      = 1.;
    }
 }
 
@@ -195,6 +203,10 @@ TF1Convolution::TF1Convolution(TString formula1, TString formula2,  Double_t xmi
    if (xmin < xmax) {
       fXmin      = xmin;
       fXmax      = xmax;
+   } else {
+      Info("TF1Convolution", "Using default range [0, 1] for TF1Convolution");
+      fXmin      = 0.;
+      fXmax      = 1.;
    }
 }
 
