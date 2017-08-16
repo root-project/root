@@ -638,6 +638,17 @@ bool TCanvasPainter::FrontCommandReplied(const std::string &reply)
          Info("FrontCommandReplied", "Create PNG file %s len %d", cmd.fArg.c_str(), (int)png.length());
          result = true;
       }
+   } else if (cmd.fName == "JPEG") {
+      if (reply.length() == 0) {
+         Error("FrontCommandReplied", "Fail to produce JPEG image %s", cmd.fArg.c_str());
+      } else {
+         std::string png = base64_decode(reply);
+         std::ofstream ofs(cmd.fArg);
+         ofs.write(png.c_str(), png.length());
+         ofs.close();
+         Info("FrontCommandReplied", "Create JPEG file %s len %d", cmd.fArg.c_str(), (int)png.length());
+         result = true;
+      }
    } else {
       Error("FrontCommandReplied", "Unknown command %s", cmd.fName.c_str());
    }
