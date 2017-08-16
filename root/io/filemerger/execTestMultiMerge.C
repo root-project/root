@@ -75,8 +75,10 @@ int execTestMultiMerge()
    result += testMergedFile("mlz4file1-4.root",406,5013, kIs32bits ? 2 : 0);
    result += testMergedFile("mzlibfile1-4.root",106,4917, kIs32bits ? 2 : 0);
    result += testSimpleFile("hsimple.root",25000,1,414415, kIs32bits ? 10 : 8);
-   result += testSimpleFile("hsimple9.root",25000,109,432030,3);
-   result += testSimpleFile("hsimple9x2.root",2*25000,109,851123,9);
+   result += testSimpleFile("hsimple9.root",25000,9,432029,3);
+   result += testSimpleFile("hsimple109.root",25000,109,432038,3);
+   result += testSimpleFile("hsimple9x2.root",2*25000,9,851123,9);
+   result += testSimpleFile("hsimple109x2.root",2*25000,109,851134,9);
    result += testSimpleFile("hsimple209.root",25000,209,394077,8);
    result += testSimpleFile("hsimple409.root",25000,409,516289,8);
    result += testSimpleFile("hsimpleK.root",6*25000,209,2298976,16);
@@ -88,6 +90,6 @@ int execTestMultiMerge()
       result += testSimpleFile("hsimpleK202.root",12*25000,202,4631252,16);
    }
    result += testSimpleFile("hsimpleK409.root",24*25000,409,12046474,16);
-   result += testSimpleFile("hsimpleF.root",6*25000,109,2527731,hsimpleFTolerance);
+   result += testSimpleFile("hsimpleF.root",6*25000,9,2527731,hsimpleFTolerance);
    return result;
 }
