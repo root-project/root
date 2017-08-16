@@ -1340,6 +1340,12 @@ if(vc AND NOT Vc_FOUND)
     REQUIRED_VARS Vc_INCLUDE_DIR Vc_LIBRARIES Vc_CMAKE_MODULES_DIR
     VERSION_VAR Vc_VERSION)
 
+  # FIXME: This is a workaround to let ROOT find the headers at runtime if
+  # they are in the build directory. This is necessary until we decide how to
+  # treat externals with headers used by ROOT
+  execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
+    ${Vc_INCLUDE_DIR}/Vc ${CMAKE_BINARY_DIR}/include/Vc)
+
   install(DIRECTORY ${Vc_ROOTDIR}/ DESTINATION ".")
 endif()
 
@@ -1417,6 +1423,12 @@ if(veccore AND NOT VecCore_FOUND)
     FOUND_VAR VecCore_FOUND
     REQUIRED_VARS VecCore_INCLUDE_DIRS VecCore_LIBRARIES
     VERSION_VAR VecCore_VERSION)
+
+  # FIXME: This is a workaround to let ROOT find the headers at runtime if
+  # they are in the build directory. This is necessary until we decide how to
+  # treat externals with headers used by ROOT
+  execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
+    ${VecCore_ROOTDIR}/include/VecCore ${CMAKE_BINARY_DIR}/include/VecCore)
 
   install(DIRECTORY ${VecCore_ROOTDIR}/ DESTINATION ".")
 endif()
