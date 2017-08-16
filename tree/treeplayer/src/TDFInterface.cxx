@@ -131,9 +131,15 @@ Long_t JitTransformation(void *thisPtr, const std::string &methodName, const std
    ss << "){ return " << expression << ";}";
    auto filterLambda = ss.str();
 
+   // The TInterface type to convert the result to. For example, Filter returns a TInterface<TFilter<F,P>> but when
+   // returning it from a jitted call we need to convert it to TInterface<TFilterBase> as we are missing information
+   // on types F and P at compile time.
+   const auto targetTypeName = std::string("ROOT::Experimental::TDF::TInterface<ROOT::Detail::TDF::") +
+                               (methodName == "Define" ? "TCustomColumnBase" : "TFilterBase") + ">";
+
    // Here we have two cases: filter and column
    ss.str("");
-   ss << "((" << interfaceTypeName << "*)" << thisPtr << ")->" << methodName << "(";
+   ss << targetTypeName << "(((" << interfaceTypeName << "*)" << thisPtr << ")->" << methodName << "(";
    if (methodName == "Define") {
       ss << "\"" << name << "\", ";
    }
@@ -149,7 +155,7 @@ Long_t JitTransformation(void *thisPtr, const std::string &methodName, const std
       ss << ", \"" << name << "\"";
    }
 
-   ss << ");";
+   ss << "));";
 
    TInterpreter::EErrorCode interpErrCode;
    auto retVal = gInterpreter->ProcessLine(ss.str().c_str(), &interpErrCode);
@@ -235,6 +241,27 @@ bool AtLeastOneEmptyString(const std::vector<std::string_view> strings)
    }
    return false;
 }
+
+std::shared_ptr<TFilterBase> UpcastNode(const std::shared_ptr<TFilterBase> ptr)
+{
+   return ptr;
+}
+
+std::shared_ptr<TCustomColumnBase> UpcastNode(const std::shared_ptr<TCustomColumnBase> ptr)
+{
+   return ptr;
+}
+
+std::shared_ptr<TRangeBase> UpcastNode(const std::shared_ptr<TRangeBase> ptr)
+{
+   return ptr;
+}
+
+std::shared_ptr<TLoopManager> UpcastNode(const std::shared_ptr<TLoopManager> ptr)
+{
+   return ptr;
+}
+
 } // end ns TDF
 } // end ns Internal
 } // end ns ROOT
