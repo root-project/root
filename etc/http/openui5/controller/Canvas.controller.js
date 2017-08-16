@@ -51,6 +51,11 @@ sap.ui.define([
             case "Close canvas": p.OnWebsocketClosed(); p.CloseWebsocket(true); break;
             case "Interrupt": p.SendWebsocket("INTERRUPT"); break;
             case "Quit ROOT": p.SendWebsocket("QUIT"); break;
+            case "Canvas.png":
+            case "Canvas.jpeg":
+            case "Canvas.svg":
+               p.SaveCanvasAsFile(name);
+               break;
          }
 
          MessageToast.show("Action triggered on item: " + name);

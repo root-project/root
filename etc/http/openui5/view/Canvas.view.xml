@@ -19,7 +19,7 @@
                           <items>
                             <MenuItem text="Canvas.png"/>
                             <MenuItem text="Canvas.svg"/>
-                            <MenuItem text="Canvas.jpg"/>
+                            <MenuItem text="Canvas.jpeg"/>
                           </items>
                         </MenuItem>
                         <MenuItem text="Save as ..." icon="sap-icon://save" />
