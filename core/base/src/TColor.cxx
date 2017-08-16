@@ -1381,7 +1381,7 @@ Int_t TColor::GetColorPalette(Int_t i)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Static function the current palette.
+/// Static function returning the current active palette.
 
 TArrayI TColor::GetPalette()
 {
