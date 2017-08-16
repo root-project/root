@@ -8,6 +8,7 @@
     		<headerContent>
 	         <OverflowToolbar id="otb1">
 	            <Button icon="sap-icon://system-exit" type="Transparent" tooltip="Quit ROOT session" press="onQuitRootPress"/>
+	            <Button icon="sap-icon://user-edit" type="Transparent" tooltip="Toggle GED editor" press="toggleGedEditor"/>
 	            <MenuButton text="File">
                   <menu>
                      <Menu itemSelected="onFileMenuAction">
@@ -34,7 +35,7 @@
                   <menu>
                      <Menu itemSelected="onViewMenuAction">
                        <items>
-                        <MenuItem text="Editor" />
+                        <MenuItem text="Editor" icon="{/GedIcon}"/>
                         <MenuItem text="Toolbar"/>
                         <MenuItem text="Event statusbar"/>
                         <MenuItem text="Tooltip info" icon="sap-icon://accept"/>
