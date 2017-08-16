@@ -248,6 +248,8 @@ bool TFormulaParamOrder::operator() (const TString& a, const TString& b) const {
    patternStart = numericPattern.Index(b, len);
    bool bNumeric = (patternStart == 0 && *len == b.Length());
 
+   delete len;
+   
    if (aNumeric && !bNumeric)
       return true; // assume a (numeric) is always before b (not numeric)
    else if (!aNumeric && bNumeric)

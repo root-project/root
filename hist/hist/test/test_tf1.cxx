@@ -10,13 +10,13 @@ using namespace std;
 
 Float_t delta = 0.00000000001;
 
-void coeffNamesGeneric(TString *formula, TObjArray *coeffNames) {
-   TF1 *cn0 = new TF1("cn0", *formula, 0, 1);
-   ASSERT_EQ(cn0->GetNpar(), coeffNames->GetEntries());
+void coeffNamesGeneric(TString &formula, TObjArray *coeffNames) {
+   TF1 cn0("cn0", formula, 0, 1);
+   ASSERT_EQ(cn0.GetNpar(), coeffNames->GetEntries());
    for (int i = 0; i < coeffNames->GetEntries(); i++) {
       TObjString *coeffObj = (TObjString *)coeffNames->At(i);
       TString coeffName = coeffObj->GetString();
-      EXPECT_EQ(coeffName, TString(cn0->GetParName(i)));
+      EXPECT_EQ(coeffName, TString(cn0.GetParName(i)));
    }
 }
 
@@ -30,52 +30,54 @@ void test_nsumCoeffNames()
    coeffNames->Add(new TObjString("Mean"));
    coeffNames->Add(new TObjString("Sigma"));
    coeffNames->Add(new TObjString("Slope"));
-   TString *formula = new TString("NSUM([sg] * gaus, [bg] * expo)");
+   TString formula("NSUM([sg] * gaus, [bg] * expo)");
    
    coeffNamesGeneric(formula, coeffNames);
+
+   delete coeffNames;
 }
 
 // Test that the NSUM is normalized as we'd expect
 void test_normalization() {
    double xmin = -5;
    double xmax = 5;
-   TF1 *n0 = new TF1("n0", "NSUM(.5 * gaus, .5 * (x+[0])**2)", xmin, xmax);
-   EXPECT_NEAR(n0->Integral(xmin, xmax), 1, delta);
-   n0->SetParameter(4,1); // should not affect integral
-   EXPECT_NEAR(n0->Integral(xmin, xmax), 1, delta);
-   n0->SetParameter(0,0);
-   EXPECT_NEAR(n0->Integral(xmin, xmax), .5, delta);
+   TF1 n0("n0", "NSUM(.5 * gaus, .5 * (x+[0])**2)", xmin, xmax);
+   EXPECT_NEAR(n0.Integral(xmin, xmax), 1, delta);
+   n0.SetParameter(4,1); // should not affect integral
+   EXPECT_NEAR(n0.Integral(xmin, xmax), 1, delta);
+   n0.SetParameter(0,0);
+   EXPECT_NEAR(n0.Integral(xmin, xmax), .5, delta);
    
-   TF1 *n1 = new TF1("n1", "NSUM([sg] * gaus, [bg] * (x+[0])**2)", xmin, xmax);
-   n1->SetParameter(0,.5);
-   n1->SetParameter(1,.5);
-   EXPECT_NEAR(n1->Integral(xmin, xmax), 1, delta);
-   n0->SetParameter(0,0);
-   EXPECT_NEAR(n0->Integral(xmin, xmax), .5, delta);
+   TF1 n1("n1", "NSUM([sg] * gaus, [bg] * (x+[0])**2)", xmin, xmax);
+   n1.SetParameter(0,.5);
+   n1.SetParameter(1,.5);
+   EXPECT_NEAR(n1.Integral(xmin, xmax), 1, delta);
+   n0.SetParameter(0,0);
+   EXPECT_NEAR(n0.Integral(xmin, xmax), .5, delta);
 
-   TF1 *n2 = new TF1("n2", "NSUM([sg] * gaus, -0.5 * (x+[0])**2)", xmin, xmax);
-   n2->SetParameter(0,.5);
-   EXPECT_NEAR(n2->GetParameter(1), -.5, delta);
-   EXPECT_NEAR(n2->Integral(xmin, xmax), 0, delta);
-   n2->SetParameter(0,0);
-   EXPECT_NEAR(n2->Integral(xmin, xmax), -.5, delta);
+   TF1 n2("n2", "NSUM([sg] * gaus, -0.5 * (x+[0])**2)", xmin, xmax);
+   n2.SetParameter(0,.5);
+   EXPECT_NEAR(n2.GetParameter(1), -.5, delta);
+   EXPECT_NEAR(n2.Integral(xmin, xmax), 0, delta);
+   n2.SetParameter(0,0);
+   EXPECT_NEAR(n2.Integral(xmin, xmax), -.5, delta);
 }
 
 void voigtHelper(double sigma, double lg)
 {
-   TF1 *lor = new TF1("lor", "breitwigner", -20, 20);
-   lor->SetParameters(1, 0, lg);
-   TF1 *mygausn = new TF1("mygausn", "gausn", -20, 20);
-   mygausn->SetParameters(1, 0, sigma);
+   TF1 lor("lor", "breitwigner", -20, 20);
+   lor.SetParameters(1, 0, lg);
+   TF1 mygausn("mygausn", "gausn", -20, 20);
+   mygausn.SetParameters(1, 0, sigma);
 
-   TF1 *conv = new TF1("conv", "CONV(lor, mygausn)", -20, 20);
+   TF1 conv("conv", "CONV(lor, mygausn)", -20, 20);
 
    // Voigt should just be the convolution of the gaussian and lorentzian
-   TF1 *myvoigt = new TF1("myvoigt", "TMath::Voigt(x, [0], [1])", -20, 20);
-   myvoigt->SetParameters(sigma, lg);
+   TF1 myvoigt("myvoigt", "TMath::Voigt(x, [0], [1])", -20, 20);
+   myvoigt.SetParameters(sigma, lg);
 
    for (double x = -19.5; x < 20; x += .5)
-      EXPECT_NEAR(conv->Eval(x), myvoigt->Eval(x), .01 * conv->Eval(x));
+      EXPECT_NEAR(conv.Eval(x), myvoigt.Eval(x), .01 * conv.Eval(x));
 }
 
 // Test that the voigt can be expressed as a convolution of a gaussian and lorentzian
