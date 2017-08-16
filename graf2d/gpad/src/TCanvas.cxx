@@ -32,6 +32,7 @@
 #include "TVirtualPadEditor.h"
 #include "TVirtualViewer3D.h"
 #include "TPadPainter.h"
+#include "TParameter.h"
 #include "TVirtualGL.h"
 #include "TVirtualPS.h"
 #include "TObjectSpy.h"
@@ -2026,6 +2027,23 @@ void TCanvas::Streamer(TBuffer &b)
          colors->Delete();
          delete colors;
       }
+      //restore the palette
+      TObjArray *currentpalette = (TObjArray*)fPrimitives->FindObject("CurrentColorPalette");
+      if (currentpalette) {
+         TIter next(currentpalette);
+         Int_t n = currentpalette->GetEntries();
+         Int_t palcolors[n];
+         TParameter<Int_t> *colidx;
+         Int_t i = 0;
+         while ((colidx = (TParameter<Int_t>*)next())) {
+            palcolors[i] = (Int_t)colidx->GetVal();
+            i++;
+         }
+         gStyle->SetPalette(n,palcolors);
+         fPrimitives->Remove(currentpalette);
+         currentpalette->Delete();
+         delete currentpalette;
+      }
       if (v>7) b.ClassMember("fDISPLAY","TString");
       fDISPLAY.Streamer(b);
       if (v>7) b.ClassMember("fDoubleBuffer", "Int_t");
@@ -2093,6 +2111,21 @@ void TCanvas::Streamer(TBuffer &b)
          colors = (TObjArray*)gROOT->GetListOfColors();
          fPrimitives->Add(colors);
       }
+
+      //save the current palette if it is not the default one
+      if (TColor::DefinedColors()) {
+         TArrayI pal = TColor::GetPalette();
+         Int_t palsize = pal.GetSize();
+         TObjArray *CurrentColorPalette = new TObjArray();
+         CurrentColorPalette->SetName("CurrentColorPalette");
+         for (Int_t i=0; i<palsize; i++) {
+            TParameter<Int_t> *colindex = new TParameter<Int_t>();
+            colindex->SetVal(pal[i]);
+            CurrentColorPalette->Add(colindex);
+         }
+         fPrimitives->Add(CurrentColorPalette);
+      }
+
       R__c = b.WriteVersion(TCanvas::IsA(), kTRUE);
       b.ClassBegin(TCanvas::IsA());
       b.ClassMember("TPad");
