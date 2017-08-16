@@ -179,6 +179,8 @@ class TInterface {
    template <typename T>
    friend class TInterface;
 
+   const std::shared_ptr<Proxied> fProxiedPtr; ///< Smart pointer to the graph node encapsulated by this TInterface.
+   const std::weak_ptr<TLoopManager> fImplWeakPtr; ///< Weak pointer to the TLoopManager at the root of the graph.
 public:
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Append a filter to the call graph.
@@ -1201,8 +1203,7 @@ protected:
    {
    }
 
-   const std::shared_ptr<Proxied> fProxiedPtr;
-   std::weak_ptr<TLoopManager> fImplWeakPtr;
+   const std::shared_ptr<Proxied>& GetProxiedPtr() const { return fProxiedPtr; }
 };
 
 template <>
