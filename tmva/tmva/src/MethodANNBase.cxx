@@ -1101,7 +1101,7 @@ void TMVA::MethodANNBase::MakeClassSpecific( std::ostream& fout, const TString& 
       fout << "   fWeights" << lIdx << ".back() = 1.;" << std::endl;
    }
    fout << std::endl;
-   for (Int_t i = 1; i < numLayers - 1; i++) {
+   for (Int_t i = 0; i < numLayers - 1; i++) {
       fout << "   // layer " << i << " to " << i + 1 << std::endl;
       if (i + 1 == numLayers - 1) {
          fout << "   for (int o=0; o<" << ((TObjArray *)fNetwork->At(i + 1))->GetEntries() << "; o++) {" << std::endl;
