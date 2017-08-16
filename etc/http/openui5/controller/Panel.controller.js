@@ -1,13 +1,10 @@
 sap.ui.define([
    'sap/ui/core/mvc/Controller',
-   'sap/ui/core/ResizeHandler',
-
+   'sap/ui/core/ResizeHandler'
 ], function (Controller, ResizeHandler) {
    "use strict";
 
-   console.log('READ Panel.controller.js');
-
-   var res = Controller.extend("sap.ui.jsroot.controller.Panel", {
+   return Controller.extend("sap.ui.jsroot.controller.Panel", {
 
        // preferDOM: true,
 
@@ -44,12 +41,8 @@ sap.ui.define([
        onInit : function() {
           this.canvas_painter = JSROOT.openui5_canvas_painter;
           delete JSROOT.openui5_canvas_painter;
-          console.log('INIT JSROOT PANEL DONE', typeof this.canvas_painter);
           ResizeHandler.register(this.getView(), this.onResize.bind(this));
       }
    });
-
-
-   return res;
 
 });
