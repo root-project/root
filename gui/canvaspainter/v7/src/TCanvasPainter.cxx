@@ -238,6 +238,8 @@ private:
 
    void PopFrontCommand(bool res = false);
 
+   void SaveCreatedFile(std::string &reply);
+
    virtual Bool_t ProcessWS(THttpCallArg *arg) override;
 
    void CancelCommands(bool cancel_all, UInt_t connid = 0);
@@ -617,36 +619,15 @@ bool TCanvasPainter::FrontCommandReplied(const std::string &reply)
 
    bool result = false;
 
-   if (cmd.fName == "SVG") {
+   if ((cmd.fName == "SVG") || (cmd.fName == "PNG") || (cmd.fName == "JPEG")) {
       if (reply.length() == 0) {
-         Error("FrontCommandReplied", "Fail to produce SVG image %s", cmd.fArg.c_str());
+         Error("FrontCommandReplied", "Fail to produce %s image %s", cmd.fName.c_str(), cmd.fArg.c_str());
       } else {
+         std::string content = base64_decode(reply);
          std::ofstream ofs(cmd.fArg);
-         ofs.write(reply.c_str(), reply.length());
+         ofs.write(content.c_str(), content.length());
          ofs.close();
-         Info("FrontCommandReplied", "Create SVG file %s len %d", cmd.fArg.c_str(), (int)reply.length());
-         result = true;
-      }
-   } else if (cmd.fName == "PNG") {
-      if (reply.length() == 0) {
-         Error("FrontCommandReplied", "Fail to produce PNG image %s", cmd.fArg.c_str());
-      } else {
-         std::string png = base64_decode(reply);
-         std::ofstream ofs(cmd.fArg);
-         ofs.write(png.c_str(), png.length());
-         ofs.close();
-         Info("FrontCommandReplied", "Create PNG file %s len %d", cmd.fArg.c_str(), (int)png.length());
-         result = true;
-      }
-   } else if (cmd.fName == "JPEG") {
-      if (reply.length() == 0) {
-         Error("FrontCommandReplied", "Fail to produce JPEG image %s", cmd.fArg.c_str());
-      } else {
-         std::string png = base64_decode(reply);
-         std::ofstream ofs(cmd.fArg);
-         ofs.write(png.c_str(), png.length());
-         ofs.close();
-         Info("FrontCommandReplied", "Create JPEG file %s len %d", cmd.fArg.c_str(), (int)png.length());
+         Info("FrontCommandReplied", "Create %s file %s len %d", cmd.fName.c_str(), cmd.fArg.c_str(), (int)content.length());
          result = true;
       }
    } else {
@@ -655,6 +636,28 @@ bool TCanvasPainter::FrontCommandReplied(const std::string &reply)
 
    return result;
 }
+
+/// Method called when GUI sends file to save on local disk
+/// File coded with base64 coding
+void TCanvasPainter::SaveCreatedFile(std::string &reply)
+{
+   size_t pos = reply.find(":");
+   if ((pos == std::string::npos) || (pos==0)) {
+      Error("SaveCreatedFile", "Not found : separator");
+      return;
+   }
+
+   std::string fname(reply, 0, pos);
+   reply.erase(0, pos+1);
+
+   std::string binary = base64_decode(reply);
+   std::ofstream ofs(fname);
+   ofs.write(binary.c_str(), binary.length());
+   ofs.close();
+
+   Info("SaveCreatedFile", "Create file %s len %d", fname.c_str(), (int)binary.length());
+}
+
 
 Bool_t TCanvasPainter::ProcessWS(THttpCallArg *arg)
 {
@@ -781,6 +784,9 @@ Bool_t TCanvasPainter::ProcessWS(THttpCallArg *arg)
       }
       conn->fReady = kTRUE;
       CheckDataToSend();
+   } else if (cdata.find("SAVE:") == 0) {
+      cdata.erase(0,5);
+      SaveCreatedFile(cdata);
    } else if (cdata.find("OBJEXEC:") == 0) {
       cdata.erase(0, 8);
       size_t pos = cdata.find(':');
