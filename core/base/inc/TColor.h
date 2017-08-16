@@ -85,6 +85,7 @@ public:
    static Int_t   GetColorDark(Int_t color);
    static Int_t   GetColorTransparent(Int_t color, Float_t a);
    static Int_t   GetFreeColorIndex();
+   static TArrayI GetPalette();
    static ULong_t Number2Pixel(Int_t ci);
    static ULong_t RGB2Pixel(Int_t r, Int_t g, Int_t b);
    static ULong_t RGB2Pixel(Float_t r, Float_t g, Float_t b);
