@@ -108,13 +108,21 @@ hsimple.root: $(ROOT_LOC)/tutorials/hsimple.C
 
 # Default compression algorithm (compression level 9)
 hsimple9.root: hsimple.root
-	$(CMDECHO) hadd -f109 hsimple9.root hsimple.root > hsimple9.log 2>&1  \
+	$(CMDECHO) hadd -f9 hsimple9.root hsimple.root > hsimple9.log 2>&1  \
+     || handleError.sh --log=hsimple9.log --res=$$?
+
+hsimple109.root: hsimple.root
+	$(CMDECHO) hadd -f109 hsimple109.root hsimple.root > hsimple109.log 2>&1  \
      || handleError.sh --log=hsimple9.log --res=$$?
 
 # Default compression algorithm (compression level 9)
 hsimple9x2.root: hsimple.root
-	$(CMDECHO) ( hadd -f109 hsimple9x2.root hsimple.root && hadd -f109 -a hsimple9x2.root hsimple.root )  > hsimple9x2.log 2>&1  \
+	$(CMDECHO) ( hadd -f9 hsimple9x2.root hsimple.root && hadd -f9 -a hsimple9x2.root hsimple.root )  > hsimple9x2.log 2>&1  \
      || handleError.sh --log=hsimple9x2.log --res=$$?
+
+hsimple109x2.root: hsimple.root
+	$(CMDECHO) ( hadd -f109 hsimple109x2.root hsimple.root && hadd -f109 -a hsimple109x2.root hsimple.root )  > hsimple109x2.log 2>&1  \
+     || handleError.sh --log=hsimple109x2.log --res=$$?
 
 # LZMA-based compression (compression level 9)
 hsimple209.root: hsimple.root
