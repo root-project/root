@@ -115,6 +115,8 @@ void ROOT::Experimental::TCanvas::SaveAs(const std::string &filename, bool async
       fPainter->DoWhenReady("SVG", filename, async, callback);
    else if (filename.find(".png") != std::string::npos)
       fPainter->DoWhenReady("PNG", filename, async, callback);
+   else if ((filename.find(".jpg") != std::string::npos) || (filename.find(".jpeg") != std::string::npos))
+      fPainter->DoWhenReady("JPEG", filename, async, callback);
 }
 
 // TODO: removal from GetHeldCanvases().
