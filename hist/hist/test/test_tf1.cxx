@@ -1,6 +1,6 @@
 #include "TF1.h"
+#include "TF1NormSum.h"
 #include "TObjString.h"
-// #include "TObject.h"
 
 #include "gtest/gtest.h"
 
@@ -81,6 +81,26 @@ void voigtHelper(double sigma, double lg)
       EXPECT_NEAR(conv.Eval(x), myvoigt.Eval(x), .01 * conv.Eval(x));
 }
 
+// Test that we can change the range of TF1NormSum and TF1Convolution
+// (TODO: and of TF1, once the base class is working)
+void test_setRange() {
+   // TODO: make this test more elegant once the base class is working
+
+   TF1NormSum *nsum = new TF1NormSum("[sg] * gaus + [bg] * expo", 0, 1);
+   TF1 f1("f1", nsum, -10, 10, nsum->GetNpar());
+   f1.SetParameters(1,1,0,1,1);
+   EXPECT_NEAR(f1.Integral(0,1), 2, delta);
+
+   // set range of nsum
+   nsum->SetRange(-5, 5);
+
+   TF1 f2("f2", nsum, -10, 10, nsum->GetNpar());
+   f2.SetParameters(1,1,0,1,1);
+   EXPECT_NEAR(f2.Integral(-5, 5), 2, delta);
+   
+   delete nsum;
+}
+
 // Test that the voigt can be expressed as a convolution of a gaussian and lorentzian
 // Check that the values match to within 1%
 void test_convVoigt()
@@ -103,4 +123,9 @@ TEST(TF1, Normalization)
 TEST(TF1, ConvVoigt)
 {
    test_convVoigt();
+}
+
+TEST(TF1, SetRange)
+{
+   test_setRange();
 }
