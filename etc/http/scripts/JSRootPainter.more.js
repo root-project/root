@@ -72,7 +72,7 @@
    function drawLine() {
 
       var line = this.GetObject(),
-          lineatt = JSROOT.Painter.createAttLine(line),
+          lineatt = new JSROOT.TAttLineHandler(line),
           kLineNDC = JSROOT.BIT(14),
           isndc = line.TestBit(kLineNDC);
 
@@ -93,7 +93,7 @@
    function drawPolyLine() {
 
       var polyline = this.GetObject(),
-          lineatt = JSROOT.Painter.createAttLine(polyline),
+          lineatt = new JSROOT.TAttLineHandler(polyline),
           fillatt = this.createAttFill(polyline),
           kPolyLineNDC = JSROOT.BIT(14),
           isndc = polyline.TestBit(kPolyLineNDC),
@@ -122,7 +122,7 @@
 
       var ellipse = this.GetObject();
 
-      if(!this.lineatt) this.lineatt = JSROOT.Painter.createAttLine(ellipse);
+      if(!this.lineatt) this.lineatt = new JSROOT.TAttLineHandler(ellipse);
       if (!this.fillatt) this.fillatt = this.createAttFill(ellipse);
 
       // create svg:g container for ellipse drawing
@@ -171,7 +171,7 @@
 
       var box = this.GetObject(),
           draw_line = (typeof this._drawopt == 'string') && (this._drawopt.toUpperCase().indexOf("L")>=0),
-          lineatt = JSROOT.Painter.createAttLine(box),
+          lineatt = new JSROOT.TAttLineHandler(box),
           fillatt = this.createAttFill(box);
 
       // create svg:g container for box drawing
@@ -199,7 +199,7 @@
 
    function drawMarker() {
       var marker = this.GetObject(),
-          att = JSROOT.Painter.createAttMarker(marker),
+          att = new JSROOT.TAttMarkerHandler(marker),
           kMarkerNDC = JSROOT.BIT(14),
           isndc = marker.TestBit(kMarkerNDC);
 
@@ -220,7 +220,7 @@
 
    function drawArrow() {
       var arrow = this.GetObject();
-      if (!this.lineatt) this.lineatt = JSROOT.Painter.createAttLine(arrow);
+      if (!this.lineatt) this.lineatt = new JSROOT.TAttLineHandler(arrow);
       if (!this.fillatt) this.fillatt = this.createAttFill(arrow);
 
       var wsize = Math.max(this.pad_width(), this.pad_height()) * arrow.fArrowSize;
@@ -527,7 +527,7 @@
       var name = this.GetTipName("\n");
 
       if (!this.lineatt)
-         this.lineatt = JSROOT.Painter.createAttLine(tf1);
+         this.lineatt = new JSROOT.TAttLineHandler(tf1);
       this.lineatt.used = false;
       if (!this.fillatt)
          this.fillatt = this.createAttFill(tf1, undefined, undefined, 1);
@@ -836,7 +836,7 @@
           excl_width = 0;
 
       if (!this.lineatt)
-         this.lineatt = JSROOT.Painter.createAttLine(graph, undefined, true);
+         this.lineatt = new JSROOT.TAttLineHandler(graph, undefined, true);
       if (!this.fillatt)
          this.fillatt = this.createAttFill(graph, undefined, undefined, 1);
       this.fillatt.used = false;
@@ -1091,7 +1091,7 @@
              path = "", n, pnt, grx, gry;
 
          if (!this.markeratt)
-            this.markeratt = JSROOT.Painter.createAttMarker(graph, this.options.Mark - 100);
+            this.markeratt = new JSROOT.TAttMarkerHandler(graph, this.options.Mark - 100);
          else
             this.markeratt.Change(undefined, this.options.Mark - 100);
 
@@ -1719,6 +1719,24 @@
       if (indx >= graphs.arr.length)
          return this.DrawNextFunction(0, this.DrawingReady.bind(this));
 
+      // if there is auto colors assignment, try to provide it
+      if (this._pfc || this._plc || this._pmc) {
+         if (!this.pallette && JSROOT.Painter.GetColorPalette)
+            this.palette = JSROOT.Painter.GetColorPalette();
+         if (this.palette) {
+            var color = this.palette.calcColor(indx, graphs.arr.length+1);
+            var icolor = JSROOT.Painter.root_colors.indexOf(color);
+            if (icolor<0) {
+               icolor = JSROOT.Painter.root_colors.length;
+               JSROOT.Painter.root_colors.push(color);
+            }
+            if (this._pfc) graphs.arr[indx].fFillColor = icolor;
+            if (this._plc) graphs.arr[indx].fLineColor = icolor;
+            if (this._pmc) graphs.arr[indx].fMarkerColor = icolor;
+         }
+      }
+
+
       JSROOT.draw(this.divid, graphs.arr[indx], graphs.opt[indx] || opt,
                   this.DrawNextGraph.bind(this, indx+1, opt));
    }
@@ -1729,19 +1747,22 @@
 
       painter.SetDivId(divid, -1); // it may be no element to set divid
 
-      if (opt == null) opt = "";
-      opt = opt.toUpperCase().replace("3D","").replace("FB",""); // no 3D supported, FB not clear
+      var d = new JSROOT.DrawOptions(opt);
+      d.check("3D"); d.check("FB"); // no 3D supported, FB not clear
 
-      if ((opt.indexOf("A") >= 0) || !painter.main_painter()) {
-         opt = opt.replace("A","");
+      painter._pfc = d.check("PFC");
+      painter._plc = d.check("PLC");
+      painter._pmc = d.check("PMC");
+
+      if (d.check("A") || !painter.main_painter()) {
          painter.DrawAxis(function(hpainter) {
             painter.firstpainter = hpainter;
             painter.SetDivId(divid);
-            painter.DrawNextGraph(0, opt);
+            painter.DrawNextGraph(0, d.remain());
          });
       } else {
          painter.SetDivId(divid);
-         painter.DrawNextGraph(0, opt);
+         painter.DrawNextGraph(0, d.remain());
       }
 
       return painter;
@@ -1780,7 +1801,7 @@
                       x2 = this.AxisToSvg("x", obj.fBuf[indx++]),
                       y2 = this.AxisToSvg("y", obj.fBuf[indx++]);
 
-                  if (!lineatt) lineatt = JSROOT.Painter.createAttLine(attr);
+                  if (!lineatt) lineatt = new JSROOT.TAttLineHandler(attr);
 
                   var rect = this.draw_g
                      .append("svg:rect")
@@ -1805,7 +1826,7 @@
                       x2 = this.AxisToSvg("x", obj.fBuf[indx++], isndc),
                       y2 = this.AxisToSvg("y", obj.fBuf[indx++], isndc);
 
-                  if (!lineatt) lineatt = JSROOT.Painter.createAttLine(attr);
+                  if (!lineatt) lineatt = new JSROOT.TAttLineHandler(attr);
 
                   this.draw_g
                       .append("svg:line").attr("x1", x1).attr("y1", y1).attr("x2", x2).attr("y2", y2)
@@ -1819,7 +1840,7 @@
 
                   var npoints = parseInt(obj.fOper.arr[k].fString), cmd = "";
 
-                  if (!lineatt) lineatt = JSROOT.Painter.createAttLine(attr);
+                  if (!lineatt) lineatt = new JSROOT.TAttLineHandler(attr);
 
                   for (var n=0;n<npoints;++n)
                      cmd += ((n>0) ? "L" : "M") +
@@ -1843,7 +1864,7 @@
                case "polymarker": {
                   var npoints = parseInt(obj.fOper.arr[k].fString), cmd = "";
 
-                  if (!markeratt) markeratt = JSROOT.Painter.createAttMarker(attr);
+                  if (!markeratt) markeratt = new JSROOT.TAttMarkerHandler(attr);
 
                   markeratt.reset_pos();
                   for (var n=0;n<npoints;++n)

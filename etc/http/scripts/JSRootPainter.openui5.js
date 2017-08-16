@@ -56,6 +56,8 @@
 
    element.setAttribute('data-sap-ui-theme', 'sap_belize');
    element.setAttribute('data-sap-ui-compatVersion', 'edge');
+   // element.setAttribute('data-sap-ui-bindingSyntax', 'complex');
+
    element.setAttribute('data-sap-ui-preload', 'async');
    // for the moment specify path in the THttpServer, later can adjust for offline case
    element.setAttribute('data-sap-ui-resourceroots', '{ "sap.ui.jsroot": "/jsrootsys/openui5/" }');
@@ -65,7 +67,9 @@
    document.getElementsByTagName("head")[0].appendChild(element);
 
 
-   JSROOT.Painter.createMenu = function(painter, maincallback) {
+   // function allows to create menu with openui
+   // for the moment deactivated - can be used later
+   JSROOT.Painter.createMenuNew = function(painter, maincallback) {
 
       var menu = { painter: painter,  element: null, cnt: 1, stack: [], items: [], separ: false };
 

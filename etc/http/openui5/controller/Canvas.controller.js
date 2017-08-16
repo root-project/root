@@ -1,19 +1,24 @@
 sap.ui.define([
    'jquery.sap.global',
 	'sap/ui/core/mvc/Controller',
+   'sap/ui/model/json/JSONModel',
    'sap/m/MessageToast',
-   'sap/ui/commons/Button',
+   'sap/ui/commons/Button', // should be replaced with sap/m/Button, used due to layout testing
    'sap/ui/layout/SplitterLayoutData',
    'sap/ui/unified/Menu',
    'sap/ui/unified/MenuItem'
 
-], function (jQuery, Controller, MessageToast, Button, SplitterLayoutData, Menu, MenuItem) {
+], function (jQuery, Controller, JSONModel, MessageToast, Button, SplitterLayoutData, Menu, MenuItem) {
 	"use strict";
 
 	var CController = Controller.extend("sap.ui.jsroot.controller.Canvas", {
 		onInit : function() {
-		   console.log('On Canvas controller init');
 		   this._Page = this.getView().byId("CanvasMainPage");
+
+         var model = new JSONModel({ GedIcon: "" });
+         this.getView().setModel(model);
+
+		   // this.toggleGedEditor();
 		},
 
 		getCanvasPainter : function(also_without_websocket) {
@@ -69,12 +74,61 @@ sap.ui.define([
          if (p) p.SendWebsocket("QUIT");
 		},
 
-
 		ShowCanvasStatus : function (text1,text2,text3,text4) {
 		   this.getView().byId("FooterLbl1").setText(text1);
 		   this.getView().byId("FooterLbl2").setText(text2);
 		   this.getView().byId("FooterLbl3").setText(text3);
 		   this.getView().byId("FooterLbl4").setText(text4);
+		},
+
+		SelectPainter : function(painter, pnt) {
+		   var obj = painter.GetObject();
+
+		   var split = this.getView().byId("MainAreaSplitter");
+
+         if (split) {
+	          var area0 = split.getContentAreas()[0];
+
+	          // if (area0) area0.setText("select " + (obj ? obj._typename : painter.GetTipName()));
+	       }
+
+         console.log('Select painter', obj ? obj._typename : painter.GetTipName());
+		},
+
+		toggleGedEditor : function() {
+
+	      var new_state = ! this.getView().getModel().getProperty("/GedIcon");
+
+         this.getView().getModel().setProperty("/GedIcon", new_state ? "sap-icon://accept" : "");
+
+         var split = this.getView().byId("MainAreaSplitter"),
+             p = this.getCanvasPainter(true);
+
+         if (!p || !split) return;
+
+         if (new_state) {
+            var oLd = new SplitterLayoutData({
+               resizable : true,
+               size      : "250px",
+               maxSize   : "500px"
+            });
+
+            var oContent = sap.ui.xmlview({
+               viewName : "sap.ui.jsroot.view.Ged",
+               layoutData: oLd
+            });
+
+            split.insertContentArea(oContent, 0);
+
+            var ctrl = oContent.getController();
+            p.SelectObjectPainter = ctrl.onObjectSelect.bind(ctrl, p);
+
+            ctrl.onObjectSelect(p,p);
+
+         } else {
+            split.removeContentArea(split.getContentAreas()[0]);
+            delete p.SelectObjectPainter;
+         }
 		},
 
 		onViewMenuAction : function (oEvent) {
@@ -88,29 +142,8 @@ sap.ui.define([
 
          switch (name) {
             case "Editor":
-
-               var split = this.getView().byId("MainAreaSplitter");
-
-               if (new_state) {
-                  var oLd = new SplitterLayoutData({
-                     resizable : true,
-                     size      : "250px",
-                     maxSize   : "500px"
-                  });
-
-                  var oContent = new Button({
-                     width: "100%",
-                     height: "100%",
-                     text : "GED placeholder",
-                     layoutData: oLd
-                  });
-
-                  split.insertContentArea(oContent, 0);
-               } else {
-                  split.removeContentArea(split.getContentAreas()[0]);
-               }
-
-               break;
+               this.toggleGedEditor();
+               return;
             case "Toolbar":
                this._Page.setShowSubHeader(new_state)
                break;

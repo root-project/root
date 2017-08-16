@@ -41,11 +41,39 @@
             "M460.293,256.149H339.237c-28.521,0-51.721,23.199-51.721,51.726v89.915c0,28.504,23.2,51.715,51.721,51.715h121.045   c28.521,0,51.721-23.199,51.721-51.715v-89.915C512.002,279.354,488.802,256.149,460.293,256.149z M465.03,397.784   c0,2.615-2.122,4.736-4.748,4.736H339.237c-2.614,0-4.747-2.121-4.747-4.736v-89.909c0-2.626,2.121-4.753,4.747-4.753h121.045 c2.615,0,4.748,2.116,4.748,4.753V397.784z"
    };
 
+   function ColorPalette(arr) {
+      this.palette = arr;
+   }
+
+   /// returns color index which correspond to contour index of provided length
+   ColorPalette.prototype.calcColorIndex = function(i,len) {
+      var theColor = Math.floor((i+0.99)*this.palette.length/(len-1));
+      if (theColor > this.palette.length-1) theColor = this.palette.length-1;
+      return theColor;
+   }
+
+   /// returns color with provided index
+   ColorPalette.prototype.getColor = function(indx) {
+      return this.palette[indx];
+   }
+
+   /// returns number of colors in the palette
+   ColorPalette.prototype.getLength = function() {
+      return this.palette.length;
+   }
+
+   // calculate color for given i and len
+   ColorPalette.prototype.calcColor = function(i,len) {
+      var indx = this.calcColorIndex(i,len);
+      return this.getColor(indx);
+   }
+
+
    JSROOT.Painter.CreateDefaultPalette = function() {
 
       function HLStoRGB(h, l, s) {
          var r, g, b;
-         if (s < 1e-300) {
+         if (s < 1e-100) {
             r = g = b = l; // achromatic
          } else {
             function hue2rgb(p, q, t) {
@@ -53,34 +81,34 @@
                if (t > 1) t -= 1;
                if (t < 1 / 6) return p + (q - p) * 6 * t;
                if (t < 1 / 2) return q;
-               if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+               if (t < 2 / 3) return p + (q - p) * (2/3 - t) * 6;
                return p;
             }
-            var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-            var p = 2 * l - q;
-            r = hue2rgb(p, q, h + 1 / 3);
+            var q = (l < 0.5) ? l * (1 + s) : l + s - l * s,
+                p = 2 * l - q;
+            r = hue2rgb(p, q, h + 1/3);
             g = hue2rgb(p, q, h);
-            b = hue2rgb(p, q, h - 1 / 3);
+            b = hue2rgb(p, q, h - 1/3);
          }
-         return 'rgb(' + Math.round(r * 255) + ',' + Math.round(g * 255) + ',' + Math.round(b * 255) + ')';
+         return 'rgb(' + Math.round(r*255) + ',' + Math.round(g*255) + ',' + Math.round(b*255) + ')';
       }
 
       var palette = [], saturation = 1, lightness = 0.5, maxHue = 280, minHue = 0, maxPretty = 50;
       for (var i = 0; i < maxPretty; ++i) {
-         var hue = (maxHue - (i + 1) * ((maxHue - minHue) / maxPretty)) / 360.0;
-         var rgbval = HLStoRGB(hue, lightness, saturation);
+         var hue = (maxHue - (i + 1) * ((maxHue - minHue) / maxPretty)) / 360,
+             rgbval = HLStoRGB(hue, lightness, saturation);
          palette.push(rgbval);
       }
-      return palette;
+      return new ColorPalette(palette);
    }
 
    JSROOT.Painter.CreateGrayPalette = function() {
       var palette = [];
       for (var i = 0; i < 50; ++i) {
-         var code = Math.round((i+2)/60 * 255 );
+         var code = Math.round((i+2)/60*255);
          palette.push('rgb('+code+','+code+','+code+')');
       }
-      return palette;
+      return new ColorPalette(palette);
    }
 
    JSROOT.Painter.CreateGradientColorTable = function(Stops, Red, Green, Blue, NColors, alpha) {
@@ -98,11 +126,11 @@
           }
        }
 
-       return palette;
+       return new ColorPalette(palette);
    }
 
    JSROOT.Painter.GetColorPalette = function(col,alfa) {
-      if ((col===null) || (col===0)) col = JSROOT.gStyle.Palette;
+      col = col || JSROOT.gStyle.Palette;
       if ((col>0) && (col<10)) return JSROOT.Painter.CreateGrayPalette();
       if (col < 51) return JSROOT.Painter.CreateDefaultPalette();
       if (col > 112) col = 57;
@@ -632,7 +660,7 @@
             for (var i=0;i<contour.length-1;++i) {
                var z0 = z(contour[i]),
                    z1 = z(contour[i+1]),
-                   col = main.getValueColor((contour[i]+contour[i+1])/2);
+                   col = main.getContourColor((contour[i]+contour[i+1])/2);
 
                var r = this.draw_g.append("svg:rect")
                           .attr("x", 0)
@@ -1086,11 +1114,11 @@
       if (this.invert_side) second_shift = -second_shift;
 
       if (is_gaxis) {
-         if (!this.lineatt) this.lineatt = JSROOT.Painter.createAttLine(axis);
+         if (!this.lineatt) this.lineatt = new JSROOT.TAttLineHandler(axis);
          scaling_size = (vertical ? pad_w : pad_h);
          tickSize = Math.round(axis.fTickSize * scaling_size);
       } else {
-         if (!this.lineatt) this.lineatt = JSROOT.Painter.createAttLine(axis.fAxisColor, 1);
+         if (!this.lineatt) this.lineatt = new JSROOT.TAttLineHandler(axis.fAxisColor, 1);
          scaling_size = (vertical ? w : h);
          tickSize = Math.round(axis.fTickLength * scaling_size);
       }
@@ -1502,7 +1530,7 @@
             .style("stroke-width", "1px");
 
       if (this.lineatt === undefined)
-         this.lineatt = JSROOT.Painter.createAttLine(pt, lwidth>0 ? 1 : 0);
+         this.lineatt = new JSROOT.TAttLineHandler(pt, lwidth>0 ? 1 : 0);
       if (this.fillatt === undefined)
          this.fillatt = this.createAttFill(pt);
 
@@ -1528,7 +1556,7 @@
                  .attr("width", width)
                  .attr("height", height);
 
-      this.AddDrag({ obj: pt, minwidth: 10, minheight: 20,
+      this.AddDrag({ obj: pt, minwidth: 10, minheight: 20, canselect: true,
                      redraw: this.DrawPave.bind(this),
                      ctxmenu: JSROOT.touches && JSROOT.gStyle.ContextMenu && this.UseContextMenu });
 
@@ -1967,7 +1995,7 @@
 
             // Draw line
             if (lopt.indexOf('l') != -1) {
-               var lineatt = (painter && painter.lineatt) ? painter.lineatt : JSROOT.Painter.createAttLine(o_line)
+               var lineatt = (painter && painter.lineatt) ? painter.lineatt : new JSROOT.TAttLineHandler(o_line);
                this.draw_g.append("svg:line")
                   .attr("x1", x0 + padding_x)
                   .attr("y1", mid_y)
@@ -1983,7 +2011,7 @@
 
             // Draw Polymarker
             if (lopt.indexOf('p') != -1) {
-               var marker = (painter && painter.markeratt) ? painter.markeratt : JSROOT.Painter.createAttMarker(o_marker);
+               var marker = (painter && painter.markeratt) ? painter.markeratt : new JSROOT.TAttMarkerHandler(o_marker);
                this.draw_g
                    .append("svg:path")
                    .attr("d", marker.create((x0 + tpos_x)/2, mid_y))
@@ -2465,7 +2493,7 @@
          this.fillatt = this.createAttFill(this.histo, undefined, undefined, 1);
 
       if (!this.lineatt || !this.lineatt.changed) {
-         this.lineatt = JSROOT.Painter.createAttLine(this.histo);
+         this.lineatt = new JSROOT.TAttLineHandler(this.histo);
          var main = this.main_painter();
 
          if (main) {
@@ -2708,8 +2736,6 @@
          if ((this.scale_xmin <= 0) || (this.scale_xmin >= this.scale_xmax))
             this.scale_xmin = this.scale_xmax * 0.0001;
 
-         this.xmin_log = this.scale_xmin;
-
          this.x = d3.scaleLog();
       } else {
          this.x = d3.scaleLinear();
@@ -2766,8 +2792,6 @@
 
          if ((this.scale_ymin <= 0) || (this.scale_ymin >= this.scale_ymax))
             this.scale_ymin = 3e-4 * this.scale_ymax;
-
-         this.ymin_log = this.scale_ymin;
 
          this.y = d3.scaleLog();
       } else
@@ -3264,7 +3288,6 @@
 
       if (zoom_x) {
          var cnt = 0, main_xmin = main.xmin;
-         if (main.logx && main.xmin_log) main_xmin = main.xmin_log;
          if (xmin <= main_xmin) { xmin = main_xmin; cnt++; }
          if (xmax >= main.xmax) { xmax = main.xmax; cnt++; }
          if (cnt === 2) { zoom_x = false; unzoom_x = true; }
@@ -3274,7 +3297,6 @@
 
       if (zoom_y) {
          var cnt = 0, main_ymin = main.ymin;
-         if (main.logy && main.ymin_log) main_ymin = main.ymin_log;
          if (ymin <= main_ymin) { ymin = main_ymin; cnt++; }
          if (ymax >= main.ymax) { ymax = main.ymax; cnt++; }
          if (cnt === 2) { zoom_y = false; unzoom_y = true; }
@@ -3473,12 +3495,9 @@
       d3.select(window).on("mousemove.zoomRect", null)
                        .on("mouseup.zoomRect", null);
 
-      var m = d3.mouse(this.svg_frame().node());
-
+      var m = d3.mouse(this.svg_frame().node()), changed = [true, true];
       m[0] = Math.max(0, Math.min(this.frame_width(), m[0]));
       m[1] = Math.max(0, Math.min(this.frame_height(), m[1]));
-
-      var changed = [true, true];
 
       switch (this.zoom_kind) {
          case 1: this.zoom_curr[0] = m[0]; this.zoom_curr[1] = m[1]; break;
@@ -3501,12 +3520,34 @@
          isany = true;
       }
 
+      var kind = this.zoom_kind, pnt = (kind===1) ? { x: this.zoom_origin[0], y: this.zoom_origin[1] } : null;
+
       this.clearInteractiveElements();
 
       if (isany) {
          this.zoom_changed_interactive = 2;
          this.Zoom(xmin, xmax, ymin, ymax);
+      } else {
+         switch (kind) {
+            case 1:
+               var fp = this.frame_painter();
+               if (fp) fp.ProcessFrameClick(pnt);
+               break;
+            case 2:
+               var pp = this.pad_painter();
+               if (typeof pp.SelectObjectPainter == 'function')
+                  pp.SelectObjectPainter(this.x_handle);
+               break;
+            case 3:
+               var pp = this.pad_painter();
+               if (typeof pp.SelectObjectPainter == 'function')
+                  pp.SelectObjectPainter(this.y_handle);
+               break;
+         }
       }
+
+      this.zoom_kind = 0;
+
    }
 
    THistPainter.prototype.startTouchZoom = function() {
@@ -4323,8 +4364,8 @@
       return this.CreateContour(nlevels, zmin, zmax, zminpos);
    }
 
+   /// return index from contours array, which corresponds to the content value **zc**
    THistPainter.prototype.getContourIndex = function(zc) {
-      // return contour index, which corresponds to the z content value
 
       var cntr = this.GetContour();
 
@@ -4348,28 +4389,17 @@
       return Math.floor(0.01+(zc-this.colzmin)*(cntr.length-1)/(this.colzmax-this.colzmin));
    }
 
-   THistPainter.prototype.getIndexColor = function(index, asindx) {
-      if (index < 0) return null;
+   /// return color from the palette, which corresponds given controur value
+   /// optionally one can return color index of the palette
+   THistPainter.prototype.getContourColor = function(zc, asindx) {
+      var zindx = this.getContourIndex(zc);
+      if (zindx < 0) return null;
 
-      var cntr = this.GetContour();
+      var cntr = this.GetContour(),
+          palette = this.GetPalette(),
+          indx = palette.calcColorIndex(zindx, cntr.length);
 
-      var palette = this.GetPalette();
-      var theColor = Math.floor((index+0.99)*palette.length/(cntr.length-1));
-      if (theColor > palette.length-1) theColor = palette.length-1;
-      return asindx ? theColor : palette[theColor];
-   }
-
-   THistPainter.prototype.getValueColor = function(zc, asindx) {
-
-      var index = this.getContourIndex(zc);
-
-      if (index < 0) return null;
-
-      var palette = this.GetPalette();
-
-      var theColor = Math.floor((index+0.99)*palette.length/(this.fContour.length-1));
-      if (theColor > palette.length-1) theColor = palette.length-1;
-      return asindx ? theColor : palette[theColor];
+      return asindx ? indx : palette.getColor(indx);
    }
 
    THistPainter.prototype.GetPalette = function(force) {
@@ -5039,7 +5069,7 @@
       if (show_markers) {
          // draw markers also when e2 option was specified
          if (!this.markeratt)
-            this.markeratt = JSROOT.Painter.createAttMarker(this.histo, this.options.Mark - 20);
+            this.markeratt = new JSROOT.TAttMarkerHandler(this.histo, this.options.Mark - 20);
          if (this.markeratt.size > 0) {
             // simply use relative move from point, can optimize in the future
             path_marker = "";
@@ -6080,7 +6110,7 @@
       for (i = handle.i1; i < handle.i2; ++i) {
          for (j = handle.j1; j < handle.j2; ++j) {
             binz = histo.getBinContent(i + 1, j + 1);
-            colindx = this.getValueColor(binz, true);
+            colindx = this.getContourColor(binz, true);
             if (binz===0) {
                if (this.options.Color===11) continue;
                if ((colindx === null) && this._show_empty_bins) colindx = 0;
@@ -6109,7 +6139,7 @@
            this.draw_g
                .append("svg:path")
                .attr("palette-index", colindx)
-               .attr("fill", this.fPalette[colindx])
+               .attr("fill", this.fPalette.getColor(colindx))
                .attr("d", colPaths[colindx]);
 
       return handle;
@@ -6281,8 +6311,7 @@
          poly = polys[ipoly];
          if (!poly) continue;
 
-         var colindx = Math.floor((ipoly+0.99)*palette.length/(levels.length-1));
-         if (colindx > palette.length-1) colindx = palette.length-1;
+         var colindx = palette.calcColorIndex(ipoly, levels.length);
 
          var xx = poly.fX, yy = poly.fY, np = poly.fLastPoint+1,
              istart = 0, iminus, iplus, xmin = 0, ymin = 0, nadd;
@@ -6333,11 +6362,8 @@
    TH2Painter.prototype.DrawBinsContour = function(frame_w,frame_h) {
       var handle = this.PrepareColorDraw({ rounding: false, extra: 100 });
 
-      // initialize contour
-      this.getContourIndex(0);
-
       // get levels
-      var levels = this.fContour,
+      var levels = this.GetContour(),
           palette = this.GetPalette(),
           painter = this;
 
@@ -6346,17 +6372,17 @@
              .append("svg:rect")
              .attr("x", 0).attr("y", 0)
              .attr("width", frame_w).attr("height", frame_h)
-             .style("fill", palette[Math.floor(0.99*palette.length/(levels.length-1))]);
+             .style("fill", palette.calcColor(0, levels.length));
 
       this.BuildContour(handle, levels, palette,
          function(colindx,xp,yp,iminus,iplus) {
-            var icol = palette[colindx],
+            var icol = palette.getColor(colindx),
                 fillcolor = icol, lineatt = null;
 
             switch(painter.options.Contour) {
                case 1: break;
-               case 11: fillcolor = 'none'; lineatt = JSROOT.Painter.createAttLine(icol); break;
-               case 12: fillcolor = 'none'; lineatt = JSROOT.Painter.createAttLine({fLineColor:1, fLineStyle: (colindx%5 + 1), fLineWidth: 1 }); break;
+               case 11: fillcolor = 'none'; lineatt = new JSROOT.TAttLineHandler(icol); break;
+               case 12: fillcolor = 'none'; lineatt = new JSROOT.TAttLineHandler({fLineColor:1, fLineStyle: (colindx%5 + 1), fLineWidth: 1 }); break;
                case 13: fillcolor = 'none'; lineatt = painter.lineatt; break;
                case 14: break;
             }
@@ -6440,7 +6466,7 @@
 
       for (i = 0; i < len; ++ i) {
          bin = histo.fBins.arr[i];
-         colindx = this.getValueColor(bin.fContent, true);
+         colindx = this.getContourColor(bin.fContent, true);
          if (colindx === null) continue;
          if ((bin.fContent === 0) && (this.options.Color === 11)) continue;
 
@@ -6461,7 +6487,7 @@
             item = this.draw_g
                      .append("svg:path")
                      .attr("palette-index", colindx)
-                     .attr("fill", this.fPalette[colindx])
+                     .attr("fill", this.fPalette.getColor(colindx))
                      .attr("d", colPaths[colindx])
             if (this.options.Line)
                item.call(this.lineatt.func);
@@ -6727,7 +6753,7 @@
       // create attribute only when necessary
       if (!this.markeratt) {
          if (histo.fMarkerColor === 1) histo.fMarkerColor = histo.fLineColor;
-         this.markeratt = JSROOT.Painter.createAttMarker(histo, 5);
+         this.markeratt = new JSROOT.TAttMarkerHandler(histo, 5);
       }
 
       // reset absolution position for markers
@@ -6843,7 +6869,7 @@
          // one can use direct drawing of scatter plot without any patterns
 
          if (!this.markeratt)
-            this.markeratt = JSROOT.Painter.createAttMarker(histo);
+            this.markeratt = new JSROOT.TAttMarkerHandler(histo);
 
          this.markeratt.reset_pos();
 
@@ -6910,18 +6936,18 @@
          }
       }
 
-      var layer = this.svg_frame().select('.main_layer');
-      var defs = layer.select("defs");
+      var layer = this.svg_frame().select('.main_layer'),
+          defs = layer.select("defs");
       if (defs.empty() && (colPaths.length>0))
          defs = layer.insert("svg:defs",":first-child");
 
       if (!this.markeratt)
-         this.markeratt = JSROOT.Painter.createAttMarker(histo);
+         this.markeratt = new JSROOT.TAttMarkerHandler(histo);
 
       for (colindx=0;colindx<colPaths.length;++colindx)
         if ((colPaths[colindx] !== undefined) && (colindx<this.fContour.length)) {
-           var pattern_class = "scatter_" + colindx;
-           var pattern = defs.select('.'+pattern_class);
+           var pattern_class = "scatter_" + colindx,
+               pattern = defs.select('.' + pattern_class);
            if (pattern.empty())
               pattern = defs.append('svg:pattern')
                             .attr("class", pattern_class)
@@ -7252,7 +7278,7 @@
          if (h.hide_only_zeros) {
             colindx = (binz === 0) && !this._show_empty_bins ? null : 0;
          } else {
-            colindx = this.getValueColor(binz, true);
+            colindx = this.getContourColor(binz, true);
             if ((colindx === null) && (binz === 0) && this._show_empty_bins) colindx = 0;
          }
       }
@@ -7269,7 +7295,7 @@
                   color2: this.fillatt ? this.fillatt.color : 'blue',
                   lines: this.GetBinTips(i, j), exact: true, menu: true };
 
-      if (this.options.Color > 0) res.color2 = this.GetPalette()[colindx];
+      if (this.options.Color > 0) res.color2 = this.GetPalette().getColor(colindx);
 
       if (pnt.disabled) {
          ttrect.remove();
@@ -7765,6 +7791,7 @@
       return JSROOT.Painter.drawHistogram2D(divid, hist, opt);
    }
 
+   JSROOT.ColorPalette = ColorPalette;
    JSROOT.TPavePainter = TPavePainter;
    JSROOT.TAxisPainter = TAxisPainter;
    JSROOT.THistPainter = THistPainter;

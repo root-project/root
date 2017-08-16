@@ -1,0 +1,44 @@
+    <core:FragmentDefinition
+    	xmlns="sap.m"
+    	xmlns:l="sap.ui.layout"
+    	xmlns:f="sap.ui.layout.form"
+    	xmlns:core="sap.ui.core">
+    	<VBox class="sapUiSmallMargin">
+    		<f:SimpleForm id="TAttFill"
+    			editable="true"
+    			layout="ResponsiveGridLayout"
+    			title="TAttFill"
+    			labelSpanXL="1"
+    			labelSpanL="2"
+    			labelSpanM="4"
+    			labelSpanS="6"
+    			adjustLabelSpan="false"
+    			emptySpanXL="0"
+    			emptySpanL="0"
+    			emptySpanM="0"
+    			emptySpanS="0"
+    			columnsXL="1"
+    			columnsL="1"
+    			columnsM="1"
+    			breakpointXL="800"
+    			breakpointL="500"
+    			breakpointM="300"
+    			singleContainerFullSize="false" >
+    			<f:content>
+    				<Label text="Style" />
+    				<Select selectedKey="{/pattern}">
+					  <items>
+						 <core:Item text="none" key="0"/>
+						 <core:Item text="solid" key="1001"/>
+						 <core:Item text="3001" key="3001"/>
+						 <core:Item text="3002" key="3002"/>
+						 <core:Item text="3003" key="3003"/>
+						 <core:Item text="3004" key="3004"/>
+					  </items>
+				   </Select>
+    				<Label text="Color" />
+    				<Button text="{/color}" press="processTAttFill_Color"/>
+    			</f:content>
+    		</f:SimpleForm>
+    	</VBox>
+    </core:FragmentDefinition>

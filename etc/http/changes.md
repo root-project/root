@@ -14,6 +14,7 @@
 9. Optionally use openui5 for GUI functionality - like Menu creation.
    On the long run will completely replace jquery-ui widgets
 10. In all sources specify "use strict" derictive, fix several connected errors.   
+11. Implement PFC, PLC and PMC draw options for TMultiGraph
 
 
 ## Changes in 5.2.0
