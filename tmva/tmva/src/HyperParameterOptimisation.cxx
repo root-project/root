@@ -31,8 +31,6 @@ using namespace std;
 
 */
 
-//const int nWorkers = 4U;
-
 TMVA::HyperParameterOptimisationResult::HyperParameterOptimisationResult()
    : fROCAVG(0.0), fROCCurves(std::make_shared<TMultiGraph>())
 {
@@ -103,40 +101,39 @@ void TMVA::HyperParameterOptimisation::Evaluate()
     }
     fResults.fMethodName = methodName;
     auto workItem = [&](UInt_t workerID) {
-      TString foldTitle = methodTitle;
-      foldTitle += "_opt";
-      foldTitle += workerID+1;
 
-      Event::SetIsTraining(kTRUE);
-      fDataLoader->PrepareFoldDataSet(workerID, TMVA::Types::kTraining);
+        TString foldTitle = methodTitle;
+        foldTitle += "_opt";
+        foldTitle += workerID+1;
 
-      auto smethod = fClassifier->BookMethod(fDataLoader.get(), methodName, methodTitle, methodOptions);
+        Event::SetIsTraining(kTRUE);
+        fDataLoader->PrepareFoldDataSet(workerID, TMVA::Types::kTraining);
 
-      auto params=smethod->OptimizeTuningParameters(fFomType,fFitType);
+        auto smethod = fClassifier->BookMethod(fDataLoader.get(), methodName, methodTitle, methodOptions);
 
-      //fResults.fFoldParameters.push_back(params);
+        auto params=smethod->OptimizeTuningParameters(fFomType,fFitType);
 
-      smethod->Data()->DeleteResults(smethod->GetMethodName(), Types::kTraining, Types::kClassification);
+        smethod->Data()->DeleteResults(smethod->GetMethodName(), Types::kTraining, Types::kClassification);
 
-      fClassifier->DeleteAllMethods();
+        fClassifier->DeleteAllMethods();
 
-      fClassifier->fMethodsMap.clear();
+        fClassifier->fMethodsMap.clear();
 
-      return params;
+        return params;
+
     };
-    vector < map<TString,Double_t>  > res;
+    vector<map<TString,Double_t>> res;
     auto nWorkers = TMVA::gConfig().NWorkers();
-    if(nWorkers> 1) {
-      ROOT::TProcessExecutor workers(nWorkers);
-      res = workers.Map(workItem, ROOT::TSeqI(fNumFolds));
-    }
-    else {
+    if(nWorkers > 1) {
+        ROOT::TProcessExecutor workers(nWorkers);
+        res = workers.Map(workItem, ROOT::TSeqI(fNumFolds));
+    } else {
       for(UInt_t i = 0; i < fNumFolds; ++ i) {
         res.push_back(workItem(i));
       }
     }
-    for(auto results: res) {
-      fResults.fFoldParameters.push_back(results);
+    for(auto results : res) {
+        fResults.fFoldParameters.push_back(results);
     }
 
 }
