@@ -30,6 +30,7 @@
 
 class RooMinimizer;
 
+
 class RooMinimizerFcn : public ROOT::Math::IBaseFunctionMultiDim {
 
  public:

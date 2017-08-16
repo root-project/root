@@ -12,9 +12,6 @@
  * with or without modification, are permitted according to the terms        *
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
-
-#ifndef __ROOFIT_NOROOGAUSSMINIMIZER
-
 #ifndef ROO_GAUSS_MINIMIZER
 #define ROO_GAUSS_MINIMIZER
 
@@ -99,10 +96,6 @@ private:
 
   RooGaussMinimizer(const RooGaussMinimizer&) ;
 	
-  ClassDef(RooGaussMinimizer,0) // RooFit interface to ROOT::Fit::Fitter
 } ;
-
-
-#endif
 
 #endif
