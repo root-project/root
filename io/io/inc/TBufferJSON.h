@@ -35,7 +35,7 @@ public:
    virtual ~TBufferJSON();
 
    void SetCompact(int level);
-
+   static TString   ConvertToJSONGraphics(const TObject *obj, Int_t compact = 0, const char *member_name = 0);
    static TString   ConvertToJSON(const TObject *obj, Int_t compact = 0, const char *member_name = 0);
    static TString   ConvertToJSON(const void *obj, const TClass *cl, Int_t compact = 0, const char *member_name = 0);
    static TString   ConvertToJSON(const void *obj, TDataMember *member, Int_t compact = 0, Int_t arraylen = -1);
