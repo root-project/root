@@ -25,10 +25,11 @@ import IPython.display
 import ROOT
 from JupyROOT import handlers
 
+#Notebook-trimming import
+import json
+
 # We want iPython to take over the graphics
 ROOT.gROOT.SetBatch()
-
-
 cppMIME = 'text/x-c++src'
 
 _jsMagicHighlight = """
@@ -60,7 +61,7 @@ _jsCode = """
        Core.draw("{jsDivId}", obj, "{jsDrawOptions}");
      }}
  );
-</script>
+</script> 
 """
 
 TBufferJSONErrorMessage="The TBufferJSON class is necessary for JS visualisation to work and cannot be found. Did you enable the http module (-D http=ON for CMake)?"
@@ -96,7 +97,7 @@ def disableJSVisDebug():
     global _enableJSVisDebug
     _enableJSVis = False
     _enableJSVisDebug = False
-
+    
 def _getPlatform():
     return sys.platform
 
@@ -150,11 +151,10 @@ def commentRemover( text ):
 
    return re.sub(pattern, replacer, text)
 
-
 # Here functions are defined to process C++ code
 def processCppCodeImpl(code):
     #code = commentRemover(code)
-    ROOT.gInterpreter.ProcessLine(code)
+    ROOT.gInterpreter.ProcessLine(code)    
 
 def processMagicCppCodeImpl(code):
     err = ROOT.ProcessLineWrapper(code)
@@ -390,14 +390,66 @@ class NotebookDrawer(object):
                     return False
         return True
 
+    def _removeTColors(self,object_json):
+	'''
+	This function trims the json by trimming the list of TColors that are not used in JS rendering, and hence can
+	be safely removed, reducing the size of notebooks with TCanvases markedly
+	'''
+	
+	"""Test JSON that isn't a TCanvas
+	>>> self._removeTColors({"_typename": "NotTCanvas"})
+	{'_typename': 'NotTCanvas'}
 
+	Test TCanvas with TColorArray is deleted successfully
+	>>> self._removeTColors({"_typename": "TCanvas", "fPrimitives" : { "arr": [ {"arr":[{"_typename": "TColor"}],"_typename":"TObjArray","name":"ListOfColors", } ]}})
+	{'_typename': 'TCanvas', 'fPrimitives': {'arr': [{}]}}
+
+	Test TCanvas with No TColorArray is not changed
+	>>> self._removeTColors({"_typename": "TCanvas", "fPrimitives" : { "arr": [ {"arr":[{"_typename": "NotTColor"}],"_typename":"NotObjArray","name":"ListOfOthers", } ]}})
+	{'_typename': 'TCanvas', 'fPrimitives': {'arr': [{'arr': [{'_typename': 'NotTColor'}], '_typename': 'NotObjArray', 'name': 'ListOfOthers'}]}}
+	"""
+	
+	if ROOT.TColor.DefinedColors():
+	    return object_json
+	
+	#Only TCanvas JSON objects have TColors to remove in the first place
+	if "_typename" in object_json and object_json["_typename"]!="TCanvas":
+	    return object_json
+
+	#TColor objects are known to have this fixed nested structure in the TCanvas as follows:
+	#TCanvas -> fPrimitives-> arr-> TObjArray (an element in arr)
+	if "fPrimitives" not in object_json:
+	    return object_json
+	  
+	fPrimitives_array = object_json["fPrimitives"]["arr"]
+	for element in fPrimitives_array:
+	    if element["_typename"] == "TObjArray" and element["name"] == "ListOfColors":
+		element.clear()
+
+
+	return object_json
+      
+    def _trimJSONForGraphics(self,object_json):
+	'''
+	Function that calls helper functions to trim redundant information in JSON graphics files to reduce size
+	'''
+	trimmed_json =self._removeTColors(object_json)
+	return trimmed_json 
+
+      
     def _getJsCode(self):
         # Workaround to have ConvertToJSON work
-        json = ROOT.TBufferJSON.ConvertToJSON(self.drawableObject, 3)
-
+        
+        #<class 'ROOT.TString'>
+        object_json = ROOT.TBufferJSON.ConvertToJSON(self.drawableObject,3)
+        #<type 'dict'>
+        parsed_json = json.loads(str(object_json))
+        #<type 'dict'>
+        trimmed_json = self._trimJSONForGraphics(parsed_json)
+	  
         # Here we could optimise the string manipulation
         divId = 'root_plot_' + str(self._getUID())
-
+ 
         height = _jsCanvasHeight
         width = _jsCanvasHeight
         options = "all"
@@ -410,7 +462,7 @@ class NotebookDrawer(object):
         thisJsCode = _jsCode.format(jsCanvasWidth = height,
                                     jsCanvasHeight = width,
                                     jsROOTSourceDir = _jsROOTSourceDir,
-                                    jsonContent = json.Data(),
+                                    jsonContent = json.dumps(trimmed_json),
                                     jsDrawOptions = options,
                                     jsDivId = divId)
         return thisJsCode
@@ -491,7 +543,7 @@ def enhanceROOTModule():
     ROOT.disableJSVis = disableJSVis
     ROOT.enableJSVisDebug = enableJSVisDebug
     ROOT.disableJSVisDebug = disableJSVisDebug
-
+    
 def enableCppHighlighting():
     ipDispJs = IPython.display.display_javascript
     # Define highlight mode for %%cpp magic
@@ -504,4 +556,5 @@ def iPythonize():
     #enableCppHighlighting()
     enhanceROOTModule()
     welcomeMsg()
+    
 
