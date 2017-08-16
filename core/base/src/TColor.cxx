@@ -1383,7 +1383,7 @@ Int_t TColor::GetColorPalette(Int_t i)
 ////////////////////////////////////////////////////////////////////////////////
 /// Static function returning the current active palette.
 
-TArrayI TColor::GetPalette()
+const TArrayI& TColor::GetPalette()
 {
    return fgPalette;
 }
