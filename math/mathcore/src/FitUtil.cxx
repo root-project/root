@@ -173,7 +173,11 @@ namespace ROOT {
                // case + inf or nan
                return  + std::numeric_limits<double>::max();
          }
-         bool CheckValue(double & rval) {
+
+         // Check if the value is a finite number. The argument rval is updated if it is infinite or NaN,
+         // setting it to the maximum finite value (preserving the sign).
+         bool CheckInfNaNValue(double &rval)
+         {
             if (rval > - std::numeric_limits<double>::max() && rval < std::numeric_limits<double>::max() )
                return true;
             else if (rval < 0) {
@@ -607,140 +611,194 @@ double FitUtil::EvaluateChi2Residual(const IModelFunction & func, const BinData 
 
 }
 
-void FitUtil::EvaluateChi2Gradient(const IModelFunction & f, const BinData & data, const double * p, double * grad, unsigned int & nPoints) {
+void FitUtil::EvaluateChi2Gradient(const IModelFunction &f, const BinData &data, const double *p, double *grad,
+                                   unsigned int &nPoints, const ROOT::Fit::ExecutionPolicy &executionPolicy,
+                                   unsigned nChunks)
+{
    // evaluate the gradient of the chi2 function
    // this function is used when the model function knows how to calculate the derivative and we can
    // avoid that the minimizer re-computes them
    //
    // case of chi2 effective (errors on coordinate) is not supported
 
-   if ( data.HaveCoordErrors() ) {
-      MATH_ERROR_MSG("FitUtil::EvaluateChi2Residual","Error on the coordinates are not used in calculating Chi2 gradient");            return; // it will assert otherwise later in GetPoint
+   if (data.HaveCoordErrors()) {
+      MATH_ERROR_MSG("FitUtil::EvaluateChi2Gradient",
+                     "Error on the coordinates are not used in calculating Chi2 gradient");
+      return; // it will assert otherwise later in GetPoint
    }
 
-   unsigned int nRejected = 0;
+   const IGradModelFunction *fg = dynamic_cast<const IGradModelFunction *>(&f);
+   assert(fg != nullptr); // must be called by a gradient function
 
-   const IGradModelFunction * fg = dynamic_cast<const IGradModelFunction *>( &f);
-   assert (fg != 0); // must be called by a gradient function
-
-   const IGradModelFunction & func = *fg;
-   unsigned int n = data.Size();
-
+   const IGradModelFunction &func = *fg;
 
 #ifdef DEBUG
    std::cout << "\n\nFit data size = " << n << std::endl;
    std::cout << "evaluate chi2 using function gradient " << &func << "  " << p << std::endl;
 #endif
 
-   const DataOptions & fitOpt = data.Opt();
+   const DataOptions &fitOpt = data.Opt();
    bool useBinIntegral = fitOpt.fIntegral && data.HasBinEdges();
    bool useBinVolume = (fitOpt.fBinVolume && data.HasBinEdges());
 
    double wrefVolume = 1.0;
-   std::vector<double> xc;
    if (useBinVolume) {
       if (fitOpt.fNormBinVolume) wrefVolume /= data.RefVolume();
-      xc.resize(data.NDim() );
    }
 
-   IntegralEvaluator<> igEval( func, p, useBinIntegral);
-
-   //int nRejected = 0;
-   // set values of parameters
+   IntegralEvaluator<> igEval(func, p, useBinIntegral);
 
    unsigned int npar = func.NPar();
-   //   assert (npar == NDim() );  // npar MUST be  Chi2 dimension
-   std::vector<double> gradFunc( npar );
-   // set all vector values to zero
-   std::vector<double> g( npar);
+   unsigned initialNPoints = data.Size();
 
-   for (unsigned int i = 0; i < n; ++ i) {
+   std::vector<bool> isPointRejected(initialNPoints);
 
+   auto mapFunction = [&](const unsigned int i) {
+      // set all vector values to zero
+      std::vector<double> gradFunc(npar);
+      std::vector<double> pointContribution(npar);
 
-      double y, invError = 0;
-      const double * x1 = data.GetPoint(i,y, invError);
+      const auto x1 = data.GetCoordComponent(i, 0);
+      const auto y = data.Value(i);
+      auto invError = data.Error(i);
+
+      invError = (invError != 0.0) ? 1.0 / invError : 1;
 
       double fval = 0;
-      const double * x2 = 0;
 
+      const double *x = nullptr;
+      std::vector<double> xc;
+
+      unsigned int ndim = data.NDim();
       double binVolume = 1;
       if (useBinVolume) {
-         unsigned int ndim = data.NDim();
-         x2 = data.BinUpEdge(i);
+         const double *x2 = data.BinUpEdge(i);
+
+         xc.resize(ndim);
          for (unsigned int j = 0; j < ndim; ++j) {
-            binVolume *= std::abs( x2[j]-x1[j] );
-            xc[j] = 0.5*(x2[j]+ x1[j]);
+            auto x1_j = *data.GetCoordComponent(i, j);
+            binVolume *= std::abs(x2[j] - x1_j);
+            xc[j] = 0.5 * (x2[j] + x1_j);
          }
+
+         x = xc.data();
+
          // normalize the bin volume using a reference value
          binVolume *= wrefVolume;
+      } else if (ndim > 1) {
+         xc.resize(ndim);
+         xc[0] = *x1;
+         for (unsigned int j = 1; j < ndim; ++j)
+            xc[j] = *data.GetCoordComponent(i, j);
+         x = xc.data();
+      } else {
+         x = x1;
       }
 
-      const double * x = (useBinVolume) ? &xc.front() : x1;
-
-      if (!useBinIntegral ) {
-         fval = func ( x, p );
-         func.ParameterGradient(  x , p, &gradFunc[0] );
-      }
-      else {
-         x2 = data.BinUpEdge(i);
+      if (!useBinIntegral) {
+         fval = func(x, p);
+         func.ParameterGradient(x, p, &gradFunc[0]);
+      } else {
+         auto x2 = data.BinUpEdge(i);
          // calculate normalized integral and gradient (divided by bin volume)
          // need to set function and parameters here in case loop is parallelized
-         fval = igEval( x1, x2 ) ;
-         CalculateGradientIntegral( func, x1, x2, p, &gradFunc[0]);
+         fval = igEval(x, x2);
+         CalculateGradientIntegral(func, x, x2, p, &gradFunc[0]);
       }
-      if (useBinVolume) fval *= binVolume;
+      if (useBinVolume)
+         fval *= binVolume;
 
 #ifdef DEBUG
-      std::cout << x[0] << "  " << y << "  " << 1./invError << " params : ";
+      std::cout << x[0] << "  " << y << "  " << 1. / invError << " params : ";
       for (unsigned int ipar = 0; ipar < npar; ++ipar)
          std::cout << p[ipar] << "\t";
       std::cout << "\tfval = " << fval << std::endl;
 #endif
-      if ( !CheckValue(fval) ) {
-         nRejected++;
-         continue;
+      if (!CheckInfNaNValue(fval)) {
+         isPointRejected[i] = true;
+         // Return a zero contribution to all partial derivatives on behalf of the current point
+         return pointContribution;
       }
 
       // loop on the parameters
       unsigned int ipar = 0;
-      for ( ; ipar < npar ; ++ipar) {
+      for (; ipar < npar; ++ipar) {
 
          // correct gradient for bin volumes
-         if (useBinVolume) gradFunc[ipar] *= binVolume;
+         if (useBinVolume)
+            gradFunc[ipar] *= binVolume;
 
          // avoid singularity in the function (infinity and nan ) in the chi2 sum
          // eventually add possibility of excluding some points (like singularity)
          double dfval = gradFunc[ipar];
-         if ( !CheckValue(dfval) ) {
-               break; // exit loop on parameters
+         if (!CheckInfNaNValue(dfval)) {
+            break; // exit loop on parameters
          }
 
          // calculate derivative point contribution
-         double tmp = - 2.0 * ( y -fval )* invError * invError * gradFunc[ipar];
-         g[ipar] += tmp;
-
+         pointContribution[ipar] = -2.0 * (y - fval) * invError * invError * gradFunc[ipar];
       }
 
-      if ( ipar < npar ) {
-          // case loop was broken for an overflow in the gradient calculation
-         nRejected++;
-         continue;
+      if (ipar < npar) {
+         // case loop was broken for an overflow in the gradient calculation
+         isPointRejected[i] = true;
       }
 
+      return pointContribution;
+   };
 
+   // Vertically reduce the set of vectors by summing its equally-indexed components
+   auto redFunction = [&](const std::vector<std::vector<double>> &pointContributions) {
+      std::vector<double> result(npar);
+
+      for (auto const &pointContribution : pointContributions) {
+         for (unsigned int parameterIndex = 0; parameterIndex < npar; parameterIndex++)
+            result[parameterIndex] += pointContribution[parameterIndex];
+      }
+
+      return result;
+   };
+
+   std::vector<double> g(npar);
+
+   if (executionPolicy == ROOT::Fit::ExecutionPolicy::kSerial) {
+      std::vector<std::vector<double>> allGradients(initialNPoints);
+      for (unsigned int i = 0; i < initialNPoints; ++i) {
+         allGradients[i] = mapFunction(i);
+      }
+      g = redFunction(allGradients);
+   }
+#ifdef R__USE_IMT
+   else if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
+      auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(initialNPoints);
+      ROOT::TThreadExecutor pool;
+      g = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, initialNPoints), redFunction, chunks);
+   }
+#endif
+   // else if(executionPolicy == ROOT::Fit::kMultiprocess){
+   //    ROOT::TProcessExecutor pool;
+   //    g = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction);
+   // }
+   else {
+      Error("FitUtil::EvaluateChi2Gradient",
+            "Execution policy unknown. Avalaible choices:\n 0: Serial (default)\n 1: MultiThread (requires IMT)\n");
    }
 
    // correct the number of points
-   nPoints = n;
-   if (nRejected != 0)  {
-      assert(nRejected <= n);
-      nPoints = n - nRejected;
-      if (nPoints < npar)  MATH_ERROR_MSG("FitUtil::EvaluateChi2Gradient","Error - too many points rejected for overflow in gradient calculation");
+   nPoints = initialNPoints;
+
+   if (std::any_of(isPointRejected.begin(), isPointRejected.end(), [](bool point) { return point; })) {
+      unsigned nRejected = std::accumulate(isPointRejected.begin(), isPointRejected.end(), 0);
+      assert(nRejected <= initialNPoints);
+      nPoints = initialNPoints - nRejected;
+
+      if (nPoints < npar)
+         MATH_ERROR_MSG("FitUtil::EvaluateChi2Gradient",
+                        "Error - too many points rejected for overflow in gradient calculation");
    }
 
    // copy result
    std::copy(g.begin(), g.end(), grad);
-
 }
 
 //______________________________________________________________________________________________________
@@ -1010,41 +1068,88 @@ nPoints = 0;
    return -logl;
 }
 
-void FitUtil::EvaluateLogLGradient(const IModelFunction & f, const UnBinData & data, const double * p, double * grad, unsigned int & ) {
+void FitUtil::EvaluateLogLGradient(const IModelFunction &f, const UnBinData &data, const double *p, double *grad,
+                                   unsigned int &, const ROOT::Fit::ExecutionPolicy &executionPolicy, unsigned nChunks)
+{
    // evaluate the gradient of the log likelihood function
 
-   const IGradModelFunction * fg = dynamic_cast<const IGradModelFunction *>( &f);
-   assert (fg != 0); // must be called by a grad function
-   const IGradModelFunction & func = *fg;
+   const IGradModelFunction *fg = dynamic_cast<const IGradModelFunction *>(&f);
+   assert(fg != nullptr); // must be called by a grad function
 
-   unsigned int n = data.Size();
-   //int nRejected = 0;
+   const IGradModelFunction &func = *fg;
 
    unsigned int npar = func.NPar();
-   std::vector<double> gradFunc( npar );
-   std::vector<double> g( npar);
+   unsigned initialNPoints = data.Size();
 
-   for (unsigned int i = 0; i < n; ++ i) {
-      const double * x = data.Coords(i);
-      double fval = func ( x , p);
-      func.ParameterGradient( x, p, &gradFunc[0] );
-      for (unsigned int kpar = 0; kpar < npar; ++ kpar) {
+   const double kdmax1 = std::sqrt(std::numeric_limits<double>::max());
+   const double kdmax2 = std::numeric_limits<double>::max() / (4 * initialNPoints);
+
+   auto mapFunction = [&](const unsigned int i) {
+      std::vector<double> gradFunc(npar);
+      std::vector<double> pointContribution(npar);
+
+      const double *x = data.GetCoordComponent(i, 0);
+
+      double fval = func(x, p);
+      func.ParameterGradient(x, p, &gradFunc[0]);
+
+      for (unsigned int kpar = 0; kpar < npar; ++kpar) {
          if (fval > 0)
-            g[kpar] -= 1./fval * gradFunc[ kpar ];
-         else if (gradFunc [ kpar] != 0) {
-            const double kdmax1 = std::sqrt( std::numeric_limits<double>::max() );
-            const double kdmax2 = std::numeric_limits<double>::max() / (4*n);
-            double gg = kdmax1 * gradFunc[ kpar ];
-            if ( gg > 0) gg = std::min( gg, kdmax2);
-            else gg = std::max(gg, - kdmax2);
-            g[kpar] -= gg;
+            pointContribution[kpar] = -1. / fval * gradFunc[kpar];
+         else if (gradFunc[kpar] != 0) {
+            double gg = kdmax1 * gradFunc[kpar];
+            if (gg > 0)
+               gg = std::min(gg, kdmax2);
+            else
+               gg = std::max(gg, -kdmax2);
+            pointContribution[kpar] = -gg;
          }
          // if func derivative is zero term is also zero so do not add in g[kpar]
       }
 
-    // copy result
-   std::copy(g.begin(), g.end(), grad);
+      return pointContribution;
+   };
+
+   // Vertically reduce the set of vectors by summing its equally-indexed components
+   auto redFunction = [&](const std::vector<std::vector<double>> &pointContributions) {
+      std::vector<double> result(npar);
+
+      for (auto const &pointContribution : pointContributions) {
+         for (unsigned int parameterIndex = 0; parameterIndex < npar; parameterIndex++)
+            result[parameterIndex] += pointContribution[parameterIndex];
+      }
+
+      return result;
+   };
+
+   std::vector<double> g(npar);
+
+   if (executionPolicy == ROOT::Fit::ExecutionPolicy::kSerial) {
+      std::vector<std::vector<double>> allGradients(initialNPoints);
+      for (unsigned int i = 0; i < initialNPoints; ++i) {
+         allGradients[i] = mapFunction(i);
+      }
+      g = redFunction(allGradients);
    }
+#ifdef R__USE_IMT
+   else if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
+      auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(initialNPoints);
+      ROOT::TThreadExecutor pool;
+      g = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, initialNPoints), redFunction, chunks);
+   }
+#endif
+   // else if(executionPolicy == ROOT::Fit::ExecutionPolicy::kMultiprocess){
+   //    ROOT::TProcessExecutor pool;
+   //    g = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction);
+   // }
+   else {
+      Error("FitUtil::EvaluateLogLGradient", "Execution policy unknown. Avalaible choices:\n "
+                                             "ROOT::Fit::ExecutionPolicy::kSerial (default)\n "
+                                             "ROOT::Fit::ExecutionPolicy::kMultithread (requires IMT)\n");
+   }
+
+   // copy result
+   std::copy(g.begin(), g.end(), grad);
 }
 //_________________________________________________________________________________________________
 // for binned log likelihood functions
@@ -1366,87 +1471,149 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction &func, const BinData &d
    return res;
 }
 
-void FitUtil::EvaluatePoissonLogLGradient(const IModelFunction & f, const BinData & data, const double * p, double * grad ) {
+void FitUtil::EvaluatePoissonLogLGradient(const IModelFunction &f, const BinData &data, const double *p, double *grad,
+                                          unsigned int &, const ROOT::Fit::ExecutionPolicy &executionPolicy,
+                                          unsigned nChunks)
+{
    // evaluate the gradient of the Poisson log likelihood function
 
-   const IGradModelFunction * fg = dynamic_cast<const IGradModelFunction *>( &f);
-   assert (fg != 0); // must be called by a grad function
-   const IGradModelFunction & func = *fg;
+   const IGradModelFunction *fg = dynamic_cast<const IGradModelFunction *>(&f);
+   assert(fg != nullptr); // must be called by a grad function
 
-   unsigned int n = data.Size();
+   const IGradModelFunction &func = *fg;
 
-   const DataOptions & fitOpt = data.Opt();
+   const DataOptions &fitOpt = data.Opt();
    bool useBinIntegral = fitOpt.fIntegral && data.HasBinEdges();
    bool useBinVolume = (fitOpt.fBinVolume && data.HasBinEdges());
 
    double wrefVolume = 1.0;
-   std::vector<double> xc;
-   if (useBinVolume) {
-      if (fitOpt.fNormBinVolume) wrefVolume /= data.RefVolume();
-      xc.resize(data.NDim() );
-   }
+   if (useBinVolume && fitOpt.fNormBinVolume)
+      wrefVolume /= data.RefVolume();
 
-   IntegralEvaluator<> igEval( func, p, useBinIntegral);
+   IntegralEvaluator<> igEval(func, p, useBinIntegral);
 
    unsigned int npar = func.NPar();
-   std::vector<double> gradFunc( npar );
-   std::vector<double> g( npar);
+   unsigned initialNPoints = data.Size();
 
-   for (unsigned int i = 0; i < n; ++ i) {
-      const double * x1 = data.Coords(i);
-      double y = data.Value(i);
+   auto mapFunction = [&](const unsigned int i) {
+      // set all vector values to zero
+      std::vector<double> gradFunc(npar);
+      std::vector<double> pointContribution(npar);
+
+      const auto x1 = data.GetCoordComponent(i, 0);
+      const auto y = data.Value(i);
+      auto invError = data.Error(i);
+
+      invError = (invError != 0.0) ? 1.0 / invError : 1;
+
       double fval = 0;
-      const double * x2 = 0;
 
+      const double *x = nullptr;
+      std::vector<double> xc;
+
+      unsigned ndim = data.NDim();
       double binVolume = 1.0;
       if (useBinVolume) {
-         x2 = data.BinUpEdge(i);
-         unsigned int ndim = data.NDim();
+         const double *x2 = data.BinUpEdge(i);
+
+         xc.resize(ndim);
          for (unsigned int j = 0; j < ndim; ++j) {
-            binVolume *= std::abs( x2[j]-x1[j] );
-            xc[j] = 0.5*(x2[j]+ x1[j]);
+            auto x1_j = *data.GetCoordComponent(i, j);
+            binVolume *= std::abs(x2[j] - x1_j);
+            xc[j] = 0.5 * (x2[j] + x1_j);
          }
+
+         x = xc.data();
+
          // normalize the bin volume using a reference value
          binVolume *= wrefVolume;
+      } else if (ndim > 1) {
+         xc.resize(ndim);
+         xc[0] = *x1;
+         for (unsigned int j = 1; j < ndim; ++j)
+            xc[j] = *data.GetCoordComponent(i, j);
+         x = xc.data();
+      } else {
+         x = x1;
       }
-
-      const double * x = (useBinVolume) ? &xc.front() : x1;
 
       if (!useBinIntegral) {
-         fval = func ( x, p );
-         func.ParameterGradient(  x , p, &gradFunc[0] );
-      }
-      else {
+         fval = func(x, p);
+         func.ParameterGradient(x, p, &gradFunc[0]);
+      } else {
          // calculate integral (normalized by bin volume)
          // need to set function and parameters here in case loop is parallelized
-         x2 = data.BinUpEdge(i);
-         fval = igEval( x1, x2) ;
-         CalculateGradientIntegral( func, x1, x2, p, &gradFunc[0]);
+         auto x2 = data.BinUpEdge(i);
+         fval = igEval(x, x2);
+         CalculateGradientIntegral(func, x, x2, p, &gradFunc[0]);
       }
-      if (useBinVolume) fval *= binVolume;
+      if (useBinVolume)
+         fval *= binVolume;
 
       // correct the gradient
-      for (unsigned int kpar = 0; kpar < npar; ++ kpar) {
+      for (unsigned int ipar = 0; ipar < npar; ++ipar) {
 
          // correct gradient for bin volumes
-         if (useBinVolume) gradFunc[kpar] *= binVolume;
+         if (useBinVolume)
+            gradFunc[ipar] *= binVolume;
 
          // df/dp * (1.  - y/f )
          if (fval > 0)
-            g[kpar] += gradFunc[ kpar ] * ( 1. - y/fval );
-         else if (gradFunc [ kpar] != 0) {
-            const double kdmax1 = std::sqrt( std::numeric_limits<double>::max() );
-            const double kdmax2 = std::numeric_limits<double>::max() / (4*n);
-            double gg = kdmax1 * gradFunc[ kpar ];
-            if ( gg > 0) gg = std::min( gg, kdmax2);
-            else gg = std::max(gg, - kdmax2);
-            g[kpar] -= gg;
+            pointContribution[ipar] = gradFunc[ipar] * (1. - y / fval);
+         else if (gradFunc[ipar] != 0) {
+            const double kdmax1 = std::sqrt(std::numeric_limits<double>::max());
+            const double kdmax2 = std::numeric_limits<double>::max() / (4 * initialNPoints);
+            double gg = kdmax1 * gradFunc[ipar];
+            if (gg > 0)
+               gg = std::min(gg, kdmax2);
+            else
+               gg = std::max(gg, -kdmax2);
+            pointContribution[ipar] = -gg;
          }
       }
 
-      // copy result
-      std::copy(g.begin(), g.end(), grad);
+      return pointContribution;
+   };
+
+   // Vertically reduce the set of vectors by summing its equally-indexed components
+   auto redFunction = [&](const std::vector<std::vector<double>> &pointContributions) {
+      std::vector<double> result(npar);
+
+      for (auto const &pointContribution : pointContributions) {
+         for (unsigned int parameterIndex = 0; parameterIndex < npar; parameterIndex++)
+            result[parameterIndex] += pointContribution[parameterIndex];
+      }
+
+      return result;
+   };
+
+   std::vector<double> g(npar);
+
+   if (executionPolicy == ROOT::Fit::ExecutionPolicy::kSerial) {
+      std::vector<std::vector<double>> allGradients(initialNPoints);
+      for (unsigned int i = 0; i < initialNPoints; ++i) {
+         allGradients[i] = mapFunction(i);
+      }
+      g = redFunction(allGradients);
    }
+#ifdef R__USE_IMT
+   else if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
+      auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(initialNPoints);
+      ROOT::TThreadExecutor pool;
+      g = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, initialNPoints), redFunction, chunks);
+   }
+#endif
+   // else if(executionPolicy == ROOT::Fit::kMultiprocess){
+   //    ROOT::TProcessExecutor pool;
+   //    g = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction);
+   // }
+   else {
+      Error("FitUtil::EvaluateChi2Gradient",
+            "Execution policy unknown. Avalaible choices:\n 0: Serial (default)\n 1: MultiThread (requires IMT)\n");
+   }
+
+   // copy result
+   std::copy(g.begin(), g.end(), grad);
 }
 
 unsigned FitUtil::setAutomaticChunking(unsigned nEvents){
@@ -1461,4 +1628,3 @@ unsigned FitUtil::setAutomaticChunking(unsigned nEvents){
 }
 
 } // end namespace ROOT
-

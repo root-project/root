@@ -23,12 +23,18 @@ namespace ROOT {
       class IGradientFunctionOneDim;
       template<class T>
       class IBaseFunctionMultiDimTempl;
-      class IGradientFunctionMultiDim;
+      template <class T>
+      class IGradientFunctionMultiDimTempl;
+      template <class T>
+      class IGradientMultiDimTempl;
 
       template<class T>
       using IMultiGenFunctionTempl = IBaseFunctionMultiDimTempl<T>;
       using IBaseFunctionMultiDim = IBaseFunctionMultiDimTempl<double>;
       using IMultiGenFunction = IMultiGenFunctionTempl<double>;
+
+      using IGradientFunctionMultiDim = IGradientFunctionMultiDimTempl<double>;
+      using IGradientMultiDim = IGradientMultiDimTempl<double>;
 
       typedef IBaseFunctionOneDim        IGenFunction;
       typedef IBaseFunctionMultiDim      IMultiGenFunction;

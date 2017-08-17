@@ -123,11 +123,11 @@ public:
       return FitUtil::EvaluatePdf(BaseFCN::ModelFunction(), BaseFCN::Data(), x, i, g);
    }
 
-
    // need to be virtual to be instantited
    virtual void Gradient(const double *x, double *g) const {
       // evaluate the chi2 gradient
-      FitUtil::EvaluateLogLGradient(BaseFCN::ModelFunction(), BaseFCN::Data(), x, g, fNEffPoints);
+      FitUtil::Evaluate<typename BaseFCN::T>::EvalLogLGradient(BaseFCN::ModelFunction(), BaseFCN::Data(), x, g,
+                                                               fNEffPoints, fExecutionPolicy);
    }
 
    /// get type of fit method function

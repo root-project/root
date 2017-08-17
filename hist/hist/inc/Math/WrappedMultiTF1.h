@@ -26,6 +26,7 @@ namespace ROOT {
          double DerivPrecision(double eps);
          TF1 *CopyTF1Ptr(const TF1 *funcToCopy);
       };
+
       /**
          Class to Wrap a ROOT Function class (like TF1)  in a IParamMultiFunction interface
          of multi-dimensions to be used in the ROOT::Math numerical algorithm.
@@ -117,9 +118,9 @@ namespace ROOT {
          std::string ParameterName(unsigned int i) const {
             return std::string(fFunc->GetParName(i));
          }
-         
+
          // evaluate the derivative of the function with respect to the parameters
-         void  ParameterGradient(const double *x, const double *par, double *grad) const;
+         void ParameterGradient(const T *x, const double *par, T *grad) const;
 
          /// precision value used for calculating the derivative step-size
          /// h = eps * |x|. The default is 0.001, give a smaller in case function changes rapidly
@@ -163,7 +164,7 @@ namespace ROOT {
          }
 
          /// evaluate the partial derivative with respect to the parameter
-         double DoParameterDerivative(const double *x, const double *p, unsigned int ipar) const;
+         T DoParameterDerivative(const T *x, const double *p, unsigned int ipar) const;
 
          bool fLinear;                 // flag for linear functions
          bool fPolynomial;             // flag for polynomial functions
@@ -174,7 +175,39 @@ namespace ROOT {
 
       };
 
-// impelmentations for WrappedMultiTF1Templ<T>
+      /**
+       * Auxiliar class to bypass the (provisional) lack of vectorization in TFormula::EvalPar.
+       *
+       * WrappedMultiTF1Templ::DoParameterDerivation calls TFormula::EvalPar in the case of a general linear function
+       * built with TFormula using ++; as EvalPar is not vectorized, in order to generalize  DoParameterDerivative with
+       * a general type T, we use this auxiliar class to branch the code in compile time with the double
+       * specialization (that can call EvalPar) and the general implementation (that throws an error in the case of
+       * general linear function).
+       */
+      template <class T>
+      struct GeneralLinearFunctionDerivation {
+         static T DoParameterDerivative(const WrappedMultiTF1Templ<T> *, const T *, unsigned int)
+         {
+            Error("DoParameterDerivative", "The vectorized implementation of DoParameterDerivative does not support"
+                                           "general linear functions built in TFormula with ++");
+
+            return TMath::SignalingNaN();
+         }
+      };
+
+      template <>
+      struct GeneralLinearFunctionDerivation<double> {
+         static double
+         DoParameterDerivative(const WrappedMultiTF1Templ<double> *wrappedFunc, const double *x, unsigned int ipar)
+         {
+            const TFormula *df = dynamic_cast<const TFormula *>(wrappedFunc->GetFunction()->GetLinearPart(ipar));
+            assert(df != 0);
+            return (const_cast<TFormula *>(df))->EvalPar(x); // derivatives should not depend on parameters since
+            // function  is linear
+         }
+      };
+
+      // implementations for WrappedMultiTF1Templ<T>
       template<class T>
       WrappedMultiTF1Templ<T>::WrappedMultiTF1Templ(TF1 &f, unsigned int dim)  :
          fLinear(false),
@@ -235,8 +268,8 @@ namespace ROOT {
          return *this;
       }
 
-      template<class T>
-      void  WrappedMultiTF1Templ<T>::ParameterGradient(const double *x, const double *par, double *grad) const
+      template <class T>
+      void WrappedMultiTF1Templ<T>::ParameterGradient(const T *x, const double *par, T *grad) const
       {
          // evaluate the gradient of the function with respect to the parameters
          //IMPORTANT NOTE: TF1::GradientPar returns 0 for fixed parameters to avoid computing useless derivatives
@@ -256,12 +289,12 @@ namespace ROOT {
          }
       }
 
-      template<class T>
-      double WrappedMultiTF1Templ<T>::DoParameterDerivative(const double *x, const double *p, unsigned int ipar) const
+      template <class T>
+      T WrappedMultiTF1Templ<T>::DoParameterDerivative(const T *x, const double *p, unsigned int ipar) const
       {
          // evaluate the derivative of the function with respect to parameter ipar
          // see note above concerning the fixed parameters
-         if (! fLinear) {
+         if (!fLinear) {
             fFunc->SetParameters(p);
             double prec = this->GetDerivPrecision();
             return fFunc->GradientPar(ipar, x, prec);
@@ -270,16 +303,16 @@ namespace ROOT {
             // case of polynomial function (no parameter dependency)  (case for dim = 1)
             assert(fDim == 1);
             if (ipar == 0) return 1.0;
+#ifdef R__HAS_VECCORE
+            return vecCore::math::Pow(x[0], static_cast<T>(ipar));
+#else
             return std::pow(x[0], static_cast<int>(ipar));
+#endif
          } else {
             // case of general linear function (built in TFormula with ++ )
-            const TFormula *df = dynamic_cast<const TFormula *>(fFunc->GetLinearPart(ipar));
-            assert(df != 0);
-            return (const_cast<TFormula *>(df))->EvalPar(x) ;     // derivatives should not depend on parameters since
-            // function  is linear
+            return GeneralLinearFunctionDerivation<T>::DoParameterDerivative(this, x, ipar);
          }
       }
-
       template<class T>
       void WrappedMultiTF1Templ<T>::SetDerivPrecision(double eps)
       {

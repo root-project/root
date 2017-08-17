@@ -28,6 +28,7 @@
 #include "TAttLine.h"
 #include "TAttFill.h"
 #include "TAttMarker.h"
+#include "TROOT.h"
 #include "TMath.h"
 #include "Math/Math_vectypes.hxx"
 #include "Math/ParamFunctor.h"
@@ -550,7 +551,17 @@ public:
       return (fFormula) ? fFormula->GetVariable(name) : 0;
    }
    virtual Double_t GradientPar(Int_t ipar, const Double_t *x, Double_t eps = 0.01);
+   template <class T>
+   T GradientPar(Int_t ipar, const T *x, Double_t eps = 0.01);
+   template <class T>
+   T GradientParTempl(Int_t ipar, const T *x, Double_t eps = 0.01);
+
    virtual void     GradientPar(const Double_t *x, Double_t *grad, Double_t eps = 0.01);
+   template <class T>
+   void GradientPar(const T *x, T *grad, Double_t eps = 0.01);
+   template <class T>
+   void GradientParTempl(const T *x, T *grad, Double_t eps = 0.01);
+
    virtual void     InitArgs(const Double_t *x, const Double_t *params);
    static  void     InitStandardFunctions();
    virtual Double_t Integral(Double_t a, Double_t b, Double_t epsrel = 1.e-12);
@@ -797,6 +808,102 @@ void TF1::SetFunction(PtrObj &p, MemFn memFn)
    // set from a pointer to a member function
    fType = EFType::kPtrScalarFreeFcn;
    fFunctor = new TF1::TF1FunctorPointerImpl<double>(ROOT::Math::ParamFunctor(p, memFn));
+}
+
+template <class T>
+inline T TF1::GradientPar(Int_t ipar, const T *x, Double_t eps)
+{
+   if (fType == EFType::kTemplVec || fType == EFType::kTemplScalar) {
+      return GradientParTempl<T>(ipar, x, eps);
+   } else
+      return GradientParTempl<Double_t>(ipar, (const Double_t *)x, eps);
+}
+
+template <class T>
+inline T TF1::GradientParTempl(Int_t ipar, const T *x, Double_t eps)
+{
+   if (GetNpar() == 0)
+      return 0;
+
+   if (eps < 1e-10 || eps > 1) {
+      Warning("Derivative", "parameter esp=%g out of allowed range[1e-10,1], reset to 0.01", eps);
+      eps = 0.01;
+   }
+   Double_t h;
+   TF1 *func = (TF1 *)this;
+   Double_t *parameters = GetParameters();
+
+   // If we are in a multi-threading scenario, make this function thread-safe
+   // using a copy of the parameters vector.
+   // TODO: Check that GetImplicitMTPoolSize is the best method to check that we
+   // have more than one thread accesing the resources.
+   std::vector<Double_t> parametersCopy;
+   if (ROOT::GetImplicitMTPoolSize() != 0) {
+      parametersCopy.resize(GetNpar());
+      std::copy(parameters, parameters + GetNpar(), parametersCopy.begin());
+      parameters = parametersCopy.data();
+   }
+
+   Double_t al, bl, h2;
+   T f1, f2, g1, g2, d0, d2;
+
+   ((TF1 *)this)->GetParLimits(ipar, al, bl);
+   if (al * bl != 0 && al >= bl) {
+      // this parameter is fixed
+      return 0;
+   }
+
+   // check if error has been computer (is not zero)
+   if (func->GetParError(ipar) != 0)
+      h = eps * func->GetParError(ipar);
+   else
+      h = eps;
+
+   // save original parameters
+   Double_t par0 = parameters[ipar];
+
+   parameters[ipar] = par0 + h;
+   f1 = func->EvalPar(x, parameters);
+   parameters[ipar] = par0 - h;
+   f2 = func->EvalPar(x, parameters);
+   parameters[ipar] = par0 + h / 2;
+   g1 = func->EvalPar(x, parameters);
+   parameters[ipar] = par0 - h / 2;
+   g2 = func->EvalPar(x, parameters);
+
+   // compute the central differences
+   h2 = 1 / (2. * h);
+   d0 = f1 - f2;
+   d2 = 2 * (g1 - g2);
+
+   T grad = h2 * (4 * d2 - d0) / 3.;
+
+   // restore original value
+   parameters[ipar] = par0;
+
+   return grad;
+}
+
+template <class T>
+inline void TF1::GradientPar(const T *x, T *grad, Double_t eps)
+{
+   if (fType == EFType::kTemplVec || fType == EFType::kTemplScalar) {
+      GradientParTempl<T>(x, grad, eps);
+   } else
+      GradientParTempl<Double_t>((const Double_t *)x, (Double_t *)grad, eps);
+}
+
+template <class T>
+inline void TF1::GradientParTempl(const T *x, T *grad, Double_t eps)
+{
+   if (eps < 1e-10 || eps > 1) {
+      Warning("Derivative", "parameter esp=%g out of allowed range[1e-10,1], reset to 0.01", eps);
+      eps = 0.01;
+   }
+
+   for (Int_t ipar = 0; ipar < GetNpar(); ipar++) {
+      grad[ipar] = GradientParTempl<T>(ipar, x, eps);
+   }
 }
 
 #endif
