@@ -101,7 +101,6 @@ void BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<double> &meanV,
    loopManager.Book(std::make_shared<Action_t>(Helper_t(meanV, nSlots), bl, prevNode));
 }
 /****** end BuildAndBook ******/
-/// \endcond
 
 template <typename ActionType, typename... BranchTypes, typename PrevNodeType, typename ActionResultType>
 void CallBuildAndBook(PrevNodeType &prevNode, const ColumnNames_t &bl, const unsigned int nSlots,
