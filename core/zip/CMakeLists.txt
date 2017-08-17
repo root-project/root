@@ -5,7 +5,7 @@
 # of the core subdirectory.
 
 if(CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64")
-    set(vector_zlib ON)
+    set(vector_zlib_x86 ON)
 endif()
 
 # Public headers for ROOT compression.

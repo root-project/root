@@ -50,7 +50,10 @@
 /* @(#) $Id$ */
 
 #include "deflate.h"
+
+#ifdef vector_zlib_x86
 #include <immintrin.h>
+#endif
 
 #ifdef __x86_64__
 #include "cpuid.h"
@@ -139,18 +142,27 @@ static const config configuration_table[10] = {
 /* rank Z_BLOCK between Z_NO_FLUSH and Z_PARTIAL_FLUSH */
 #define RANK(f) (((f) << 1) - ((f) > 4 ? 9 : 0))
 
+#ifdef vector_zlib_x86
 static uint32_t hash_func_sse42(deflate_state *s, uint32_t h, void* str) __attribute__ ((__target__ ("sse4.2")));
 
 static uint32_t hash_func_sse42(deflate_state *s, uint32_t h, void* str) {
     return _mm_crc32_u32(0, *(uint32_t*)str) & s->hash_mask;
 }
+#endif
 
 static uint32_t hash_func_default(deflate_state *s, uint32_t h, void* str) {
 	return ((h << s->hash_shift) ^ (*(uint32_t*)str)) & s->hash_mask;
 }
 
+#ifdef vector_zlib_x86
 static uint32_t hash_func(deflate_state *s, uint32_t h, void* str) __attribute__ ((ifunc ("resolve_hash_func")));
+#else
+static uint32_t hash_func(deflate_state *s, uint32_t h, void* str){
+    return hash_func_default(s, h, str);
+}
+#endif
 
+#ifdef vector_zlib_x86
 void *resolve_hash_func(void)
 {
   unsigned int eax, ebx, ecx, edx;
@@ -161,6 +173,7 @@ void *resolve_hash_func(void)
     return hash_func_default;
   return hash_func_sse42;
 }
+#endif
 
 /* ===========================================================================
  * Insert string str in the dictionary and return the previous head
@@ -1455,7 +1468,7 @@ static void fill_window_default(s)
  *    performed for at least two bytes (required for the zip translate_eol
  *    option -- not supported here).
  */
-
+#ifdef vector_zlib_x86
 static void fill_window_sse42(deflate_state *) __attribute__ ((__target__ ("sse4.2")));
 
 static void fill_window_sse42(s)
@@ -1599,18 +1612,23 @@ static void fill_window_sse42(s)
            "not enough room for search");
 }
 
-static void fill_window(deflate_state *) __attribute__ ((ifunc ("resolve_fill_window")));
-
 void *resolve_fill_window(void)
 {
-	unsigned int eax, ebx, ecx, edx;
-	if (!__get_cpuid (1, &eax, &ebx, &ecx, &edx))
-		return fill_window_default;
-	/* We need SSE4.2 ISA support */
-	if (!(ecx & bit_SSE4_2))
-		return fill_window_default;
-	return fill_window_sse42;
+    unsigned int eax, ebx, ecx, edx;
+    if (!__get_cpuid (1, &eax, &ebx, &ecx, &edx))
+        return fill_window_default;
+    /* We need SSE4.2 ISA support */
+    if (!(ecx & bit_SSE4_2))
+        return fill_window_default;
+    return fill_window_sse42;
 }
+
+static void fill_window(deflate_state *) __attribute__ ((ifunc ("resolve_fill_window")));
+#else
+void fill_window(deflate_state *s){
+    return fill_window_default(s);
+}
+#endif
 
 /* ===========================================================================
  * Flush the current block, with given end-of-file flag.
