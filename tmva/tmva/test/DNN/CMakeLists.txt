@@ -82,6 +82,11 @@ if (BLAS_FOUND AND imt)
     LIBRARIES ${Libraries})
   ROOT_ADD_TEST(TMVA-DNN-Backpropagation-Cpu COMMAND testBackpropagationCpu)
 
+  # DNN - BackpropagationDL CPU
+  ROOT_EXECUTABLE(testBackpropagationDLCpu TestBackpropagationDLCpu.cxx
+    LIBRARIES ${Libraries})
+  ROOT_ADD_TEST(TMVA-DNN-Backpropagation-DL-Cpu COMMAND testBackpropagationDLCpu)
+
   # DNN - DataLoader CPU
   ROOT_EXECUTABLE(testDataLoaderCpu TestDataLoaderCpu.cxx
     LIBRARIES ${Libraries})
@@ -109,6 +114,10 @@ endif (BLAS_FOUND AND imt)
   # DNN - Backpropagation
   ROOT_EXECUTABLE(testBackpropagation TestBackpropagation.cxx LIBRARIES ${Libraries})
   ROOT_ADD_TEST(TMVA-DNN-Backpropagation COMMAND testBackpropagation)
+
+  # DNN - Backpropagation DL
+  ROOT_EXECUTABLE(testBackpropagationDL TestBackpropagationDL.cxx LIBRARIES ${Libraries})
+  ROOT_ADD_TEST(TMVA-DNN-Backpropagation-DL COMMAND testBackpropagationDL)
 
   # DNN - DataLoader
   ROOT_EXECUTABLE(testDataLoader TestDataLoader.cxx LIBRARIES ${Libraries})
