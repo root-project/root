@@ -986,6 +986,8 @@ namespace FitUtil {
             ROOT::TThreadExecutor pool;
             gVec = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, numVectors), redFunction, chunks);
          }
+#else
+  (void)nChunks;
 #endif
          // else if(executionPolicy == ROOT::Fit::kMultiprocess){
          //    ROOT::TProcessExecutor pool;
@@ -1143,6 +1145,8 @@ static double EvalPoissonBinPdf(const IModelFunctionTempl<T> &, const BinData &,
             ROOT::TThreadExecutor pool;
             gVec = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, numVectors), redFunction, chunks);
          }
+#else
+  (void)nChunks;
 #endif
          // else if(executionPolicy == ROOT::Fit::ExecutionPolicy::kMultiprocess){
          //    ROOT::TProcessExecutor pool;
@@ -1256,6 +1260,8 @@ static double EvalPoissonBinPdf(const IModelFunctionTempl<T> &, const BinData &,
             ROOT::TThreadExecutor pool;
             gVec = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, numVectors), redFunction, chunks);
          }
+#else
+  (void)nChunks;
 #endif
          // else if(executionPolicy == ROOT::Fit::ExecutionPolicy::kMultiprocess){
          //    ROOT::TProcessExecutor pool;
