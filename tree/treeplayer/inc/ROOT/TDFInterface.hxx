@@ -117,7 +117,7 @@ std::vector<std::string> FindUsedColumnNames(const std::string, TObjArray *, con
 
 using TmpBranchBasePtr_t = std::shared_ptr<TCustomColumnBase>;
 
-Long_t JitTransformation(void *thisPtr, const std::string &methodName, const std::string &nodeTypeName,
+Long_t JitTransformation(void *thisPtr, const std::string &methodName, const std::string &interfaceTypeName,
                          const std::string &name, const std::string &expression, TObjArray *branches,
                          const std::vector<std::string> &tmpBranches,
                          const std::map<std::string, TmpBranchBasePtr_t> &tmpBookedBranches, TTree *tree);
