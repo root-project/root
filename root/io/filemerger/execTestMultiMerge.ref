@@ -80,10 +80,14 @@ Collection name='TList', class='TList', size=12
  TObjString = tre
 Checking hsimple.root
 Checking hsimple9.root
+Checking hsimple101.root
+Checking hsimple106.root
 Checking hsimple109.root
 Checking hsimple9x2.root
 Checking hsimple109x2.root
 Checking hsimple209.root
+Checking hsimple401.root
+Checking hsimple406.root
 Checking hsimple409.root
 Checking hsimpleK.root
 Checking hsimpleK202.root
