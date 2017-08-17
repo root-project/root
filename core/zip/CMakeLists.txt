@@ -4,6 +4,10 @@
 # The Core library is build in the main CMakeLists.txt
 # of the core subdirectory.
 
+if(CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64")
+    set(vector_zlib ON)
+endif()
+
 # Public headers for ROOT compression.
 Set(ZipRootHeaders
   ${CMAKE_CURRENT_SOURCE_DIR}/inc/Compression.h

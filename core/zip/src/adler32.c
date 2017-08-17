@@ -6,10 +6,12 @@
 /* @(#) $Id$ */
 
 #include "zutil.h"
+
+#ifdef vector_zlib
 #include <xmmintrin.h>
 #include <tmmintrin.h>
-
 #include <immintrin.h>
+#endif
 
 #ifdef __x86_64__
 #include "cpuid.h"
