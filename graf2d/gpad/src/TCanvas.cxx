@@ -2103,6 +2103,7 @@ void TCanvas::Streamer(TBuffer &b)
       //in the same buffer. If the list of colors has already been saved
       //in the buffer, do not add the list of colors to the list of primitives.
       TObjArray *colors = 0;
+      TObjArray *CurrentColorPalette = 0;
       if (TColor::DefinedColors()) {
          if (!b.CheckObject(gROOT->GetListOfColors(),TObjArray::Class())) {
             colors = (TObjArray*)gROOT->GetListOfColors();
@@ -2111,7 +2112,7 @@ void TCanvas::Streamer(TBuffer &b)
          //save the current palette
          TArrayI pal = TColor::GetPalette();
          Int_t palsize = pal.GetSize();
-         TObjArray *CurrentColorPalette = new TObjArray();
+         CurrentColorPalette = new TObjArray();
          CurrentColorPalette->SetName("CurrentColorPalette");
          for (Int_t i=0; i<palsize; i++) CurrentColorPalette->Add(gROOT->GetColor(pal[i]));
          fPrimitives->Add(CurrentColorPalette);
@@ -2121,7 +2122,8 @@ void TCanvas::Streamer(TBuffer &b)
       b.ClassBegin(TCanvas::IsA());
       b.ClassMember("TPad");
       TPad::Streamer(b);
-      if(colors) fPrimitives->Remove(colors);
+      if (colors) fPrimitives->Remove(colors);
+      if (CurrentColorPalette) { fPrimitives->Remove(CurrentColorPalette); delete CurrentColorPalette; }
       b.ClassMember("fDISPLAY","TString");
       fDISPLAY.Streamer(b);
       b.ClassMember("fDoubleBuffer", "Int_t");
