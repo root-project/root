@@ -14,8 +14,9 @@
 #include <iostream>
 #include "TF1.h"
 #include <memory>
+#include "TF1AbsComposition.h"
 
-class TF1NormSum {
+class TF1NormSum : public TF1AbsComposition {
 
 protected:
 
@@ -38,13 +39,17 @@ public:
    TF1NormSum(TF1* function1, TF1* function2, TF1*function3, Double_t coeff1 = 1., Double_t coeff2 = 1., Double_t coeff3 = 1., Double_t scale = 1.);
    TF1NormSum(const TString &formula, Double_t xmin, Double_t xmax);
 
-   double  operator()(double* x, double* p);
+   /* ~TF1NormSum() { */
+   /*    std::cout << "Calling TF1NormSum destructor" << std::endl; */
+   /* } */
+   
+   double  operator()(const Double_t* x, const Double_t* p);
 
    std::vector<double> GetParameters() const;
 
    void        SetScale(Double_t scale) { fScale = scale; };
 
-   void        SetParameters(const double* params);
+   void        SetParameters(const Double_t* params);
 
    void        SetParameters(Double_t p0, Double_t p1, Double_t p2=0., Double_t p3=0., Double_t p4=0.,
                                    Double_t p5=0., Double_t p6=0., Double_t p7=0., Double_t p8=0., Double_t p9=0., Double_t p10=0.);
@@ -62,5 +67,7 @@ public:
    Double_t    GetXmax() const {return fXmax;}
    
    void        GetRange(Double_t &a, Double_t &b) const;
+
+   void        Update();
 };
 #endif /* defined(ROOT_TF1NormSum__) */

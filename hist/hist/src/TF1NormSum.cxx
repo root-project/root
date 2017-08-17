@@ -278,7 +278,7 @@ TF1NormSum::TF1NormSum(const TString &formula, Double_t xmin, Double_t xmax)
 ////////////////////////////////////////////////////////////////////////////////
 /// Overload the parenthesis to add the functions
 
-double TF1NormSum::operator()(double* x, double* p)
+double TF1NormSum::operator()(const Double_t* x, const Double_t* p)
 {
    if (p!=0)   TF1NormSum::SetParameters(p);                           // first refresh the parameters
 
@@ -318,7 +318,7 @@ std::vector<double>  TF1NormSum::GetParameters() const {
 ///
 /// double *params must contains first an array of the coefficients, then an array of the parameters.
 
-void TF1NormSum::SetParameters(const double* params)//params should have the size [fNOfFunctions][fNOfNonCstParams]
+void TF1NormSum::SetParameters(const Double_t* params)//params should have the size [fNOfFunctions][fNOfNonCstParams]
 {
    for (unsigned int n=0; n<fNOfFunctions; n++)                         //initialization of the coefficients
    {
@@ -402,4 +402,12 @@ void TF1NormSum::GetRange(Double_t &a, Double_t &b) const
 {
    a = fXmin;
    b = fXmax;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///   Update the component functions of the normalized sum
+
+void TF1NormSum::Update() {
+   for (std::shared_ptr<TF1> func : fFunctions)
+      func->Update();
 }

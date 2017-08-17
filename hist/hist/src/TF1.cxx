@@ -475,10 +475,10 @@ TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, EA
       // (note: currently ignoring `useFFT` option)
       fNpar = conv->GetNpar();
       fNdim = 1;                         // (note: may want to extend this in the future?)
-      fType = EFType::kPtrScalarFreeFcn; // (note: may want to add new fType for this case)
-      using Fnc_t = typename ROOT::Internal::GetFunctorType<decltype(
-         ROOT::Internal::GetTheRightOp(&TF1Convolution::operator()))>::type;
-      fFunctor = new TF1::TF1FunctorPointerImpl<Fnc_t>(ROOT::Math::ParamFunctorTempl<Fnc_t>(conv));
+
+      fType = EFType::kCompositionFcn;
+      fComposition = std::unique_ptr<TF1AbsComposition>(conv);
+
       fParams = new TF1Parameters(fNpar); // default to zeros (TF1Convolution has no GetParameters())
       // set parameter names
       for (int i = 0; i < fNpar; i++)
@@ -546,10 +546,9 @@ TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, EA
       fNpar = normSum->GetNpar();
       fNdim = 1; // (note: may want to extend functionality in the future)
 
-      fType = EFType::kPtrScalarFreeFcn; // (note: may want to add new fType for this case)
-      // fFunctor = ROOT::Math::ParamFunctor(normSum);
-      using Fnc_t = typename ROOT::Internal::GetFunctorType<decltype(ROOT::Internal::GetTheRightOp(&TF1NormSum::operator()))>::type;
-      fFunctor = new TF1::TF1FunctorPointerImpl<Fnc_t>(ROOT::Math::ParamFunctorTempl<Fnc_t>(normSum));
+      fType = EFType::kCompositionFcn;
+      fComposition = std::unique_ptr<TF1AbsComposition>(normSum);
+      
       fParams = new TF1Parameters(fNpar);
       fParams->SetParameters(&(normSum->GetParameters())[0]); // inherit default parameters from normSum
 
@@ -1383,6 +1382,15 @@ Double_t TF1::EvalPar(const Double_t *x, const Double_t *params)
       return result;
    }
 #endif
+
+   if (fType == EFType::kCompositionFcn) {
+      if (!fComposition)
+         Error("EvalPar", "Composition function not found");
+
+      result = (*fComposition)(x, params);
+   }
+
+
    return result;
 }
 
@@ -2733,6 +2741,7 @@ Bool_t TF1::IsValid() const
 
 void TF1::Print(Option_t *option) const
 {
+   // TODO: this function has problems -- fix them!
    if (fType == EFType::kFormula) {
       printf("Formula based function:     %s \n", GetName());
       assert(fFormula);
@@ -2740,6 +2749,8 @@ void TF1::Print(Option_t *option) const
    } else if (fType >  0) {
       if (fType == EFType::kFormula)
          printf("Interpreted based function: %s(double *x, double *p).  Ndim = %d, Npar = %d  \n", GetName(), GetNpar(), GetNdim());
+      else if (fType == EFType::kCompositionFcn)
+         printf("Composition based function: %s. Ndim = %d, Npar = %d \n", GetName(), GetNdim(), GetNpar());
       else {
          if (fFunctor)
             printf("Compiled based function: %s  based on a functor object.  Ndim = %d, Npar = %d\n", GetName(), GetNpar(), GetNdim());
@@ -3354,6 +3365,11 @@ void TF1::SetRange(Double_t xmin, Double_t xmax)
 {
    fXmin = xmin;
    fXmax = xmax;
+   if (fType == EFType::kCompositionFcn && fComposition) {
+      // need to set range in composition function as well
+      // TODO: make this work for nested compositions?
+      fComposition->SetRange(xmin, xmax); // automatically updates sub-functions
+   }
    Update();
 }
 
@@ -3494,6 +3510,8 @@ void TF1::Streamer(TBuffer &b)
 
 void TF1::Update()
 {
+   std::cout << "Updating function " << GetName() << " " << GetTitle() << std::endl;
+   
    delete fHistogram;
    fHistogram = 0;
    if (!fIntegral.empty()) {
@@ -3512,6 +3530,12 @@ void TF1::Update()
 
    // std::vector<double>x(fNdim);
    // if ((fType == 1) && !fFunctor->Empty())  (*fFunctor)x.data(), (Double_t*)fParams);
+   if (fType == EFType::kCompositionFcn && fComposition) {
+      // double-check that the parameters are correct
+      fComposition->SetParameters(GetParameters());
+
+      fComposition->Update(); // should not be necessary, but just to be safe
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

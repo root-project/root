@@ -309,13 +309,13 @@ Double_t TF1Convolution::EvalNumConv(Double_t t)
 ////////////////////////////////////////////////////////////////////////////////
 /// Used in TF1 when doing the fit, will be evaluated at each point.
 
-Double_t TF1Convolution::operator()(Double_t* t, Double_t* p)
+Double_t TF1Convolution::operator()(const Double_t* x, const Double_t* p)
 {
    if (p!=0)   TF1Convolution::SetParameters(p);                           // first refresh the parameters
 
    Double_t result = 0.;
-   if (fFlagFFT)  result = EvalFFTConv(t[0]);
-   else           result = EvalNumConv(t[0]);
+   if (fFlagFFT)  result = EvalFFTConv(x[0]);
+   else           result = EvalNumConv(x[0]);
    return result;
 }
 
@@ -331,13 +331,13 @@ void TF1Convolution::SetNofPointsFFT(Int_t n)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void TF1Convolution::SetParameters(Double_t* p)
+void TF1Convolution::SetParameters(const Double_t* params)
 {
    bool equalParams = true;
    for (int i=0; i<fNofParams1; i++) {
-      fFunction1 -> SetParameter(i,p[i]);
-      equalParams &= ( fParams1[i] == p[i] );
-      fParams1[i] = p[i];
+      fFunction1 -> SetParameter(i,params[i]);
+      equalParams &= ( fParams1[i] == params[i] );
+      fParams1[i] = params[i];
    }
    Int_t k       = 0;
    Int_t offset  = 0;
@@ -351,9 +351,9 @@ void TF1Convolution::SetParameters(Double_t* p)
          offset2=1;
          continue;
       }
-      fFunction2 -> SetParameter(k,p[i-offset2]);
-      equalParams &= ( fParams2[k-offset2] == p[i-offset2] );
-      fParams2[k-offset2] = p[i-offset2];
+      fFunction2 -> SetParameter(k,params[i-offset2]);
+      equalParams &= ( fParams2[k-offset2] == params[i-offset2] );
+      fParams2[k-offset2] = params[i-offset2];
       k++;
    }
 
@@ -408,4 +408,12 @@ void TF1Convolution::GetRange(Double_t &a, Double_t &b) const
 {
    a = fXmin;
    b = fXmax;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///   Update the two component functions of the convolution
+
+void TF1Convolution::Update() {
+      fFunction1->Update();
+      fFunction2->Update();
 }

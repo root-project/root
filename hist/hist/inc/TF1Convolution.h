@@ -15,8 +15,9 @@
 #include "TF1.h"
 #include "TGraph.h"
 #include <memory>
+#include "TF1AbsComposition.h"
 
-class TF1Convolution
+class TF1Convolution : public TF1AbsComposition
 {
    std::shared_ptr <TF1>      fFunction1;
    std::shared_ptr <TF1>      fFunction2;
@@ -49,7 +50,7 @@ class TF1Convolution
    TF1Convolution(TString formula, Double_t xmin = 1., Double_t xmax = 0., Bool_t useFFT = true);
    TF1Convolution(TString formula1, TString formula2, Double_t xmin = 1., Double_t xmax = 0., Bool_t useFFT = true);
 
-   void     SetParameters(Double_t* p);
+   void     SetParameters(const Double_t* params);
    void     SetParameters(Double_t p0,    Double_t p1,    Double_t p2=0., Double_t p3=0.,
                           Double_t p4=0., Double_t p5=0., Double_t p6=0., Double_t p7=0.);
    void     SetRange(Double_t a, Double_t b);
@@ -63,7 +64,9 @@ class TF1Convolution
    const char *    GetParName(Int_t ipar) const { return fParNames.at(ipar).Data(); }
    void     GetRange(Double_t &a, Double_t &b) const;
 
-   Double_t operator()(Double_t* t, Double_t* p);
+   void     Update();
+   
+   Double_t operator()(const Double_t* x, const Double_t* p);
 };
 
 
