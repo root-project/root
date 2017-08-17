@@ -339,7 +339,7 @@ public:
       std::stringstream snapCall;
       // build a string equivalent to
       // "reinterpret_cast</nodetype/*>(this)->Snapshot<Ts...>(treename,filename,*reinterpret_cast<ColumnNames_t*>(&columnList))"
-      snapCall << "if (gROOTMutex) gROOTMutex->UnLock();";
+      snapCall << "if (gROOTMutex) gROOTMutex->UnLock();"; // black magic: avoids a deadlock in the interpreter
       snapCall << "reinterpret_cast<ROOT::Experimental::TDF::TInterface<" << GetNodeTypeName() << ">*>(" << this
                << ")->Snapshot<";
       bool first = true;
