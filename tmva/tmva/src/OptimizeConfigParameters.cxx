@@ -26,7 +26,7 @@
 */
 
 #include "TMVA/OptimizeConfigParameters.h"
-
+#include "TMVA/Config.h"
 #include "TMVA/DataSet.h"
 #include "TMVA/DataSetInfo.h"
 #include "TMVA/Event.h"
@@ -262,7 +262,9 @@ void TMVA::OptimizeConfigParameters::optimizeFit()
    FitterBase* fitter = NULL;
 
    if ( fOptimizationFitType == "Minuit"  ) {
-      TString opt="";
+      TString opt="FitStrategy=0:UseImprove=False:UseMinos=False:Tolerance=100";
+      if (!TMVA::gConfig().IsSilent() ) opt += TString(":PrintLevel=0");
+
       fitter = new MinuitFitter(  *this,
                                   "FitterMinuit_BDTOptimize",
                                   ranges, opt );
