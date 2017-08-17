@@ -111,9 +111,20 @@ hsimple9.root: hsimple.root
 	$(CMDECHO) hadd -f9 hsimple9.root hsimple.root > hsimple9.log 2>&1  \
      || handleError.sh --log=hsimple9.log --res=$$?
 
+# ZLIB compression algorithm (compression level 9)
+hsimple101.root: hsimple.root
+	$(CMDECHO) hadd -f101 hsimple101.root hsimple.root > hsimple101.log 2>&1  \
+     || handleError.sh --log=hsimple101.log --res=$$?
+
+# ZLIB compression algorithm (compression level 9)
+hsimple106.root: hsimple.root
+	$(CMDECHO) hadd -f106 hsimple106.root hsimple.root > hsimple106.log 2>&1  \
+     || handleError.sh --log=hsimple106.log --res=$$?
+
+# ZLIB compression algorithm (compression level 9)
 hsimple109.root: hsimple.root
 	$(CMDECHO) hadd -f109 hsimple109.root hsimple.root > hsimple109.log 2>&1  \
-     || handleError.sh --log=hsimple9.log --res=$$?
+     || handleError.sh --log=hsimple109.log --res=$$?
 
 # Default compression algorithm (compression level 9)
 hsimple9x2.root: hsimple.root
@@ -129,10 +140,20 @@ hsimple209.root: hsimple.root
 	$(CMDECHO) hadd -f209 hsimple209.root hsimple.root > hsimple209.log 2>&1  \
 		|| handleError.sh --log=hsimple209.log --res=$$?
 
+# LZ4-based compression (compression level 1)
+hsimple401.root: hsimple.root
+	$(CMDECHO) hadd -f401 hsimple401.root hsimple.root > hsimple401.log 2>&1  \
+     || handleError.sh --log=hsimple401.log --res=$$?
+
+# LZ4-based compression (compression level 6)
+hsimple406.root: hsimple.root
+	$(CMDECHO) hadd -f406 hsimple406.root hsimple.root > hsimple406.log 2>&1  \
+     || handleError.sh --log=hsimple406.log --res=$$?
+
 # LZ4-based compression (compression level 9)
 hsimple409.root: hsimple.root
 	$(CMDECHO) hadd -f409 hsimple409.root hsimple.root > hsimple409.log 2>&1  \
-		|| handleError.sh --log=hsimple409.log --res=$$?
+     || handleError.sh --log=hsimple409.log --res=$$?
 
 # Default compression algorithm
 hsimpleK.root: hsimple.root hsimple9.root hsimple209.root hsimple409.root hsimple9x2.root

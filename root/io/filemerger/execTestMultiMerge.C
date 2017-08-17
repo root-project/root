@@ -76,10 +76,14 @@ int execTestMultiMerge()
    result += testMergedFile("mzlibfile1-4.root",106,4917, kIs32bits ? 2 : 0);
    result += testSimpleFile("hsimple.root",25000,1,414415, kIs32bits ? 10 : 8);
    result += testSimpleFile("hsimple9.root",25000,9,432029,3);
+   result += testSimpleFile("hsimple101.root",25000,101,414590,3);
+   result += testSimpleFile("hsimple106.root",25000,106,432127,3);
    result += testSimpleFile("hsimple109.root",25000,109,432038,3);
    result += testSimpleFile("hsimple9x2.root",2*25000,9,851123,9);
    result += testSimpleFile("hsimple109x2.root",2*25000,109,851134,9);
    result += testSimpleFile("hsimple209.root",25000,209,394077,8);
+   result += testSimpleFile("hsimple401.root",25000,401,416513,8);
+   result += testSimpleFile("hsimple406.root",25000,406,516337,8);
    result += testSimpleFile("hsimple409.root",25000,409,516289,8);
    result += testSimpleFile("hsimpleK.root",6*25000,209,2298976,16);
    if (lzma_version_number() < 50020010) {
