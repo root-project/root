@@ -64,7 +64,7 @@ std::vector<std::string> FindUsedColumnNames(const std::string expression, TObjA
 
 // Jit a string filter or a string temporary column, call this->Define or this->Filter as needed
 // Return pointer to the new functional chain node returned by the call, cast to Long_t
-Long_t JitTransformation(void *thisPtr, const std::string &methodName, const std::string &nodeTypeName,
+Long_t JitTransformation(void *thisPtr, const std::string &methodName, const std::string &interfaceTypeName,
                          const std::string &name, const std::string &expression, TObjArray *branches,
                          const std::vector<std::string> &tmpBranches,
                          const std::map<std::string, TmpBranchBasePtr_t> &tmpBookedBranches, TTree *tree)
@@ -133,7 +133,7 @@ Long_t JitTransformation(void *thisPtr, const std::string &methodName, const std
 
    // Here we have two cases: filter and column
    ss.str("");
-   ss << "((" << nodeTypeName << "*)" << thisPtr << ")->" << methodName << "(";
+   ss << "((" << interfaceTypeName << "*)" << thisPtr << ")->" << methodName << "(";
    if (methodName == "Define") {
       ss << "\"" << name << "\", ";
    }
