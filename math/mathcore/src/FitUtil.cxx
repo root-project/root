@@ -774,6 +774,8 @@ void FitUtil::EvaluateChi2Gradient(const IModelFunction &f, const BinData &data,
       ROOT::TThreadExecutor pool;
       g = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, initialNPoints), redFunction, chunks);
    }
+#else
+  (void)nChunks;
 #endif
    // else if(executionPolicy == ROOT::Fit::kMultiprocess){
    //    ROOT::TProcessExecutor pool;
@@ -1137,7 +1139,10 @@ void FitUtil::EvaluateLogLGradient(const IModelFunction &f, const UnBinData &dat
       ROOT::TThreadExecutor pool;
       g = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, initialNPoints), redFunction, chunks);
    }
+#else
+  (void)nChunks;
 #endif
+
    // else if(executionPolicy == ROOT::Fit::ExecutionPolicy::kMultiprocess){
    //    ROOT::TProcessExecutor pool;
    //    g = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction);
@@ -1602,7 +1607,10 @@ void FitUtil::EvaluatePoissonLogLGradient(const IModelFunction &f, const BinData
       ROOT::TThreadExecutor pool;
       g = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, initialNPoints), redFunction, chunks);
    }
+#else
+  (void)nChunks;
 #endif
+
    // else if(executionPolicy == ROOT::Fit::kMultiprocess){
    //    ROOT::TProcessExecutor pool;
    //    g = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction);
