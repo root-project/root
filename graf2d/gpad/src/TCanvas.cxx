@@ -2103,13 +2103,12 @@ void TCanvas::Streamer(TBuffer &b)
       //in the same buffer. If the list of colors has already been saved
       //in the buffer, do not add the list of colors to the list of primitives.
       TObjArray *colors = 0;
-      if (!b.CheckObject(gROOT->GetListOfColors(),TObjArray::Class())) {
-         colors = (TObjArray*)gROOT->GetListOfColors();
-         fPrimitives->Add(colors);
-      }
-
-      //save the current palette if it is not the default one
       if (TColor::DefinedColors()) {
+         if (!b.CheckObject(gROOT->GetListOfColors(),TObjArray::Class())) {
+            colors = (TObjArray*)gROOT->GetListOfColors();
+            fPrimitives->Add(colors);
+         }
+         //save the current palette
          TArrayI pal = TColor::GetPalette();
          Int_t palsize = pal.GetSize();
          TObjArray *CurrentColorPalette = new TObjArray();
