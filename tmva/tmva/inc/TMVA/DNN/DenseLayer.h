@@ -155,7 +155,6 @@ TDenseLayer<Architecture_t>::~TDenseLayer()
 template <typename Architecture_t>
 auto TDenseLayer<Architecture_t>::Forward(std::vector<Matrix_t> &input, bool applyDropout) -> void
 {
-   std::cout << "Dense Layer Forward" << std::endl;
    if (applyDropout && (this->GetDropoutProbability() != 1.0)) {
       Architecture_t::Dropout(input[0], this->GetDropoutProbability());
    }
