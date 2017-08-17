@@ -32,7 +32,6 @@
 #include "TVirtualPadEditor.h"
 #include "TVirtualViewer3D.h"
 #include "TPadPainter.h"
-#include "TParameter.h"
 #include "TVirtualGL.h"
 #include "TVirtualPS.h"
 #include "TObjectSpy.h"
@@ -2023,27 +2022,24 @@ void TCanvas::Streamer(TBuffer &b)
                }
             }
          }
+         //restore the palette if needed
+         TObjArray *currentpalette = (TObjArray*)fPrimitives->FindObject("CurrentColorPalette");
+         if (currentpalette) {
+           TIter nextpal(currentpalette);
+           Int_t n = currentpalette->GetEntries();
+           Int_t palcolors[n];
+           TColor *col = 0;
+           Int_t i = 0;
+           while ((col = (TColor*)nextpal())) palcolors[i++] = col->GetNumber();
+           gStyle->SetPalette(n,palcolors);
+           fPrimitives->Remove(currentpalette);
+           delete currentpalette;
+         }
          fPrimitives->Remove(colors);
          colors->Delete();
          delete colors;
       }
-      //restore the palette
-      TObjArray *currentpalette = (TObjArray*)fPrimitives->FindObject("CurrentColorPalette");
-      if (currentpalette) {
-         TIter next(currentpalette);
-         Int_t n = currentpalette->GetEntries();
-         Int_t palcolors[n];
-         TParameter<Int_t> *colidx;
-         Int_t i = 0;
-         while ((colidx = (TParameter<Int_t>*)next())) {
-            palcolors[i] = (Int_t)colidx->GetVal();
-            i++;
-         }
-         gStyle->SetPalette(n,palcolors);
-         fPrimitives->Remove(currentpalette);
-         currentpalette->Delete();
-         delete currentpalette;
-      }
+
       if (v>7) b.ClassMember("fDISPLAY","TString");
       fDISPLAY.Streamer(b);
       if (v>7) b.ClassMember("fDoubleBuffer", "Int_t");
@@ -2118,11 +2114,7 @@ void TCanvas::Streamer(TBuffer &b)
          Int_t palsize = pal.GetSize();
          TObjArray *CurrentColorPalette = new TObjArray();
          CurrentColorPalette->SetName("CurrentColorPalette");
-         for (Int_t i=0; i<palsize; i++) {
-            TParameter<Int_t> *colindex = new TParameter<Int_t>();
-            colindex->SetVal(pal[i]);
-            CurrentColorPalette->Add(colindex);
-         }
+         for (Int_t i=0; i<palsize; i++) CurrentColorPalette->Add(gROOT->GetColor(pal[i]));
          fPrimitives->Add(CurrentColorPalette);
       }
 
