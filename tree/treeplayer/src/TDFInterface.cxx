@@ -67,7 +67,8 @@ std::vector<std::string> FindUsedColumnNames(const std::string expression, TObjA
 Long_t JitTransformation(void *thisPtr, const std::string &methodName, const std::string &interfaceTypeName,
                          const std::string &name, const std::string &expression, TObjArray *branches,
                          const std::vector<std::string> &customColumns,
-                         const std::map<std::string, TmpBranchBasePtr_t> &tmpBookedBranches, TTree *tree)
+                         const std::map<std::string, TmpBranchBasePtr_t> &tmpBookedBranches, TTree *tree,
+                         std::string_view returnTypeName)
 {
    auto usedBranches = FindUsedColumnNames(expression, branches, customColumns);
    auto exprNeedsVariables = !usedBranches.empty();
@@ -134,8 +135,7 @@ Long_t JitTransformation(void *thisPtr, const std::string &methodName, const std
    // The TInterface type to convert the result to. For example, Filter returns a TInterface<TFilter<F,P>> but when
    // returning it from a jitted call we need to convert it to TInterface<TFilterBase> as we are missing information
    // on types F and P at compile time.
-   const auto targetTypeName = std::string("ROOT::Experimental::TDF::TInterface<ROOT::Detail::TDF::") +
-                               (methodName == "Define" ? "TCustomColumnBase" : "TFilterBase") + ">";
+   const auto targetTypeName = std::string("ROOT::Experimental::TDF::TInterface<") + returnTypeName + ">";
 
    // Here we have two cases: filter and column
    ss.str("");
