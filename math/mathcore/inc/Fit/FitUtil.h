@@ -986,8 +986,6 @@ namespace FitUtil {
             ROOT::TThreadExecutor pool;
             gVec = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, numVectors), redFunction, chunks);
          }
-#else
-  (void)nChunks;
 #endif
          // else if(executionPolicy == ROOT::Fit::kMultiprocess){
          //    ROOT::TProcessExecutor pool;
@@ -998,7 +996,10 @@ namespace FitUtil {
                "FitUtil::EvaluateChi2Gradient",
                "Execution policy unknown. Avalaible choices:\n 0: Serial (default)\n 1: MultiThread (requires IMT)\n");
          }
-
+#ifndef R__USE_IMT
+         //to fix compiler warning 
+         (void)nChunks;
+#endif
          // Compute the contribution from the remaining points
          auto remainingPointsContribution = mapFunction(numVectors);
 
@@ -1145,8 +1146,6 @@ static double EvalPoissonBinPdf(const IModelFunctionTempl<T> &, const BinData &,
             ROOT::TThreadExecutor pool;
             gVec = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, numVectors), redFunction, chunks);
          }
-#else
-  (void)nChunks;
 #endif
          // else if(executionPolicy == ROOT::Fit::ExecutionPolicy::kMultiprocess){
          //    ROOT::TProcessExecutor pool;
@@ -1157,6 +1156,10 @@ static double EvalPoissonBinPdf(const IModelFunctionTempl<T> &, const BinData &,
                                                           "ROOT::Fit::ExecutionPolicy::kSerial (default)\n "
                                                           "ROOT::Fit::ExecutionPolicy::kMultithread (requires IMT)\n");
          }
+#ifndef R__USE_IMT
+         //to fix compiler warning 
+         (void)nChunks;
+#endif
 
          // Compute the contribution from the remaining points
          auto remainingPointsContribution = mapFunction(numVectors);
@@ -1260,8 +1263,6 @@ static double EvalPoissonBinPdf(const IModelFunctionTempl<T> &, const BinData &,
             ROOT::TThreadExecutor pool;
             gVec = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, numVectors), redFunction, chunks);
          }
-#else
-  (void)nChunks;
 #endif
          // else if(executionPolicy == ROOT::Fit::ExecutionPolicy::kMultiprocess){
          //    ROOT::TProcessExecutor pool;
@@ -1272,7 +1273,11 @@ static double EvalPoissonBinPdf(const IModelFunctionTempl<T> &, const BinData &,
                                                    "ROOT::Fit::ExecutionPolicy::kSerial (default)\n "
                                                    "ROOT::Fit::ExecutionPolicy::kMultithread (requires IMT)\n");
          }
-
+#ifndef R__USE_IMT
+         //to fix compiler warning 
+         (void)nChunks;
+#endif
+         
          // Compute the contribution from the remaining points
          auto remainingPointsContribution = mapFunction(numVectors);
 

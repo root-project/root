@@ -774,8 +774,6 @@ void FitUtil::EvaluateChi2Gradient(const IModelFunction &f, const BinData &data,
       ROOT::TThreadExecutor pool;
       g = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, initialNPoints), redFunction, chunks);
    }
-#else
-  (void)nChunks;
 #endif
    // else if(executionPolicy == ROOT::Fit::kMultiprocess){
    //    ROOT::TProcessExecutor pool;
@@ -785,6 +783,11 @@ void FitUtil::EvaluateChi2Gradient(const IModelFunction &f, const BinData &data,
       Error("FitUtil::EvaluateChi2Gradient",
             "Execution policy unknown. Avalaible choices:\n 0: Serial (default)\n 1: MultiThread (requires IMT)\n");
    }
+
+#ifndef R__USE_IMT
+   //to fix compiler warning
+   (void)nChunks;
+#endif
 
    // correct the number of points
    nPoints = initialNPoints;
@@ -1139,8 +1142,6 @@ void FitUtil::EvaluateLogLGradient(const IModelFunction &f, const UnBinData &dat
       ROOT::TThreadExecutor pool;
       g = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, initialNPoints), redFunction, chunks);
    }
-#else
-  (void)nChunks;
 #endif
 
    // else if(executionPolicy == ROOT::Fit::ExecutionPolicy::kMultiprocess){
@@ -1152,6 +1153,12 @@ void FitUtil::EvaluateLogLGradient(const IModelFunction &f, const UnBinData &dat
                                              "ROOT::Fit::ExecutionPolicy::kSerial (default)\n "
                                              "ROOT::Fit::ExecutionPolicy::kMultithread (requires IMT)\n");
    }
+
+#ifndef R__USE_IMT
+   //to fix compiler warning 
+   (void)nChunks;
+#endif
+ 
 
    // copy result
    std::copy(g.begin(), g.end(), grad);
@@ -1607,8 +1614,6 @@ void FitUtil::EvaluatePoissonLogLGradient(const IModelFunction &f, const BinData
       ROOT::TThreadExecutor pool;
       g = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, initialNPoints), redFunction, chunks);
    }
-#else
-  (void)nChunks;
 #endif
 
    // else if(executionPolicy == ROOT::Fit::kMultiprocess){
@@ -1619,6 +1624,11 @@ void FitUtil::EvaluatePoissonLogLGradient(const IModelFunction &f, const BinData
       Error("FitUtil::EvaluateChi2Gradient",
             "Execution policy unknown. Avalaible choices:\n 0: Serial (default)\n 1: MultiThread (requires IMT)\n");
    }
+
+#ifndef R__USE_IMT
+   //to fix compiler warning
+   (void)nChunks;
+#endif
 
    // copy result
    std::copy(g.begin(), g.end(), grad);
