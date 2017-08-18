@@ -308,8 +308,7 @@ public:
       auto nColumns = TTraits::CallableTraits<F>::arg_types::list_size;
       const auto validColumnNames = GetValidatedColumnNames(*loopManager, nColumns, columns);
       using B_t = TDFDetail::TCustomColumn<F, Proxied>;
-      const std::string nameInt(name);
-      auto BranchPtr = std::make_shared<B_t>(nameInt, std::move(expression), validColumnNames, *fProxiedPtr);
+      auto BranchPtr = std::make_shared<B_t>(name, std::move(expression), validColumnNames, *fProxiedPtr);
       loopManager->Book(BranchPtr);
       return TInterface<B_t>(BranchPtr, fImplWeakPtr);
    }
