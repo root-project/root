@@ -93,7 +93,7 @@ public:
    TLoopManager *GetImplPtr();
    std::shared_ptr<TLoopManager> GetSharedPtr() { return shared_from_this(); }
    const ColumnNames_t &GetDefaultColumnNames() const;
-   const ColumnNames_t GetTmpBranches() const { return {}; };
+   const ColumnNames_t GetCustomColumns() const { return {}; };
    TTree *GetTree() const;
    TCustomColumnBase *GetBookedBranch(const std::string &name) const;
    const std::map<std::string, TCustomColumnBasePtr_t> &GetBookedColumns() const { return fBookedCustomColumns; }
@@ -241,7 +241,7 @@ protected:
    const unsigned int fNSlots; ///< Number of thread slots used by this node.
 
 public:
-   TActionBase(TLoopManager *implPtr, const ColumnNames_t &tmpBranches, const unsigned int nSlots);
+   TActionBase(TLoopManager *implPtr, const ColumnNames_t &customColumns, const unsigned int nSlots);
    TActionBase(const TActionBase &) = delete;
    TActionBase &operator=(const TActionBase &) = delete;
    virtual ~TActionBase() = default;
@@ -264,7 +264,7 @@ class TAction final : public TActionBase {
 
 public:
    TAction(Helper &&h, const ColumnNames_t &bl, PrevDataFrame &pd)
-      : TActionBase(pd.GetImplPtr(), pd.GetTmpBranches(), pd.GetNSlots()), fHelper(std::move(h)), fBranches(bl),
+      : TActionBase(pd.GetImplPtr(), pd.GetCustomColumns(), pd.GetNSlots()), fHelper(std::move(h)), fBranches(bl),
         fPrevData(pd), fValues(fNSlots)
    {
    }
@@ -315,7 +315,7 @@ protected:
    const unsigned int fNSlots;      ///< Number of thread slots used by this node, inherited from parent node.
 
 public:
-   TCustomColumnBase(TLoopManager *df, const ColumnNames_t &tmpBranches, std::string_view name,
+   TCustomColumnBase(TLoopManager *df, const ColumnNames_t &customColumns, std::string_view name,
                      const unsigned int nSlots);
    TCustomColumnBase &operator=(const TCustomColumnBase &) = delete;
    virtual ~TCustomColumnBase() = default;
@@ -328,7 +328,7 @@ public:
    virtual void Report() const = 0;
    virtual void PartialReport() const = 0;
    std::string GetName() const;
-   ColumnNames_t GetTmpBranches() const;
+   ColumnNames_t GetCustomColumns() const;
    virtual void Update(unsigned int slot, Long64_t entry) = 0;
    virtual void IncrChildrenCount() = 0;
    virtual void StopProcessing() = 0;
@@ -357,7 +357,7 @@ class TCustomColumn final : public TCustomColumnBase {
 
 public:
    TCustomColumn(std::string_view name, F &&expression, const ColumnNames_t &bl, PrevData &pd)
-      : TCustomColumnBase(pd.GetImplPtr(), pd.GetTmpBranches(), name, pd.GetNSlots()),
+      : TCustomColumnBase(pd.GetImplPtr(), pd.GetCustomColumns(), name, pd.GetNSlots()),
         fExpression(std::move(expression)), fBranches(bl), fLastResultPtr(fNSlots), fPrevData(pd),
         fLastCheckedEntry(fNSlots, -1), fValues(fNSlots)
    {
@@ -442,7 +442,7 @@ protected:
    const unsigned int fNSlots;      ///< Number of thread slots used by this node, inherited from parent node.
 
 public:
-   TFilterBase(TLoopManager *df, const ColumnNames_t &tmpBranches, std::string_view name, const unsigned int nSlots);
+   TFilterBase(TLoopManager *df, const ColumnNames_t &customColumns, std::string_view name, const unsigned int nSlots);
    TFilterBase &operator=(const TFilterBase &) = delete;
    virtual ~TFilterBase() = default;
 
@@ -451,7 +451,7 @@ public:
    virtual void Report() const = 0;
    virtual void PartialReport() const = 0;
    TLoopManager *GetImplPtr() const;
-   ColumnNames_t GetTmpBranches() const;
+   ColumnNames_t GetCustomColumns() const;
    bool HasName() const;
    void PrintReport() const;
    virtual void IncrChildrenCount() = 0;
@@ -479,7 +479,7 @@ class TFilter final : public TFilterBase {
 
 public:
    TFilter(FilterF &&f, const ColumnNames_t &bl, PrevDataFrame &pd, std::string_view name = "")
-      : TFilterBase(pd.GetImplPtr(), pd.GetTmpBranches(), name, pd.GetNSlots()), fFilter(std::move(f)), fBranches(bl),
+      : TFilterBase(pd.GetImplPtr(), pd.GetCustomColumns(), name, pd.GetNSlots()), fFilter(std::move(f)), fBranches(bl),
         fPrevData(pd), fValues(fNSlots)
    {
    }
@@ -577,13 +577,13 @@ protected:
    const unsigned int fNSlots;      ///< Number of thread slots used by this node, inherited from parent node.
 
 public:
-   TRangeBase(TLoopManager *implPtr, const ColumnNames_t &tmpBranches, unsigned int start, unsigned int stop,
+   TRangeBase(TLoopManager *implPtr, const ColumnNames_t &customColumns, unsigned int start, unsigned int stop,
               unsigned int stride, const unsigned int nSlots);
    TRangeBase &operator=(const TRangeBase &) = delete;
    virtual ~TRangeBase() = default;
 
    TLoopManager *GetImplPtr() const;
-   ColumnNames_t GetTmpBranches() const;
+   ColumnNames_t GetCustomColumns() const;
    virtual bool CheckFilters(unsigned int slot, Long64_t entry) = 0;
    virtual void Report() const = 0;
    virtual void PartialReport() const = 0;
@@ -603,7 +603,7 @@ class TRange final : public TRangeBase {
 
 public:
    TRange(unsigned int start, unsigned int stop, unsigned int stride, PrevData &pd)
-      : TRangeBase(pd.GetImplPtr(), pd.GetTmpBranches(), start, stop, stride, pd.GetNSlots()), fPrevData(pd)
+      : TRangeBase(pd.GetImplPtr(), pd.GetCustomColumns(), start, stop, stride, pd.GetNSlots()), fPrevData(pd)
    {
    }
 

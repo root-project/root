@@ -34,7 +34,7 @@ namespace TDF {
 // Match expression against names of branches passed as parameter
 // Return vector of names of the branches used in the expression
 std::vector<std::string> FindUsedColumnNames(const std::string expression, TObjArray *branches,
-                                             const std::vector<std::string> &tmpBranches)
+                                             const std::vector<std::string> &customColumns)
 {
    // Check what branches and temporary branches are used in the expression
    // To help matching the regex
@@ -42,7 +42,7 @@ std::vector<std::string> FindUsedColumnNames(const std::string expression, TObjA
    int paddedExprLen = paddedExpr.size();
    static const std::string regexBit("[^a-zA-Z0-9_]");
    std::vector<std::string> usedBranches;
-   for (auto brName : tmpBranches) {
+   for (auto brName : customColumns) {
       std::string bNameRegexContent = regexBit + brName + regexBit;
       TRegexp bNameRegex(bNameRegexContent.c_str());
       if (-1 != bNameRegex.Index(paddedExpr.c_str(), &paddedExprLen)) {
@@ -66,10 +66,10 @@ std::vector<std::string> FindUsedColumnNames(const std::string expression, TObjA
 // Return pointer to the new functional chain node returned by the call, cast to Long_t
 Long_t JitTransformation(void *thisPtr, const std::string &methodName, const std::string &interfaceTypeName,
                          const std::string &name, const std::string &expression, TObjArray *branches,
-                         const std::vector<std::string> &tmpBranches,
+                         const std::vector<std::string> &customColumns,
                          const std::map<std::string, TmpBranchBasePtr_t> &tmpBookedBranches, TTree *tree)
 {
-   auto usedBranches = FindUsedColumnNames(expression, branches, tmpBranches);
+   auto usedBranches = FindUsedColumnNames(expression, branches, customColumns);
    auto exprNeedsVariables = !usedBranches.empty();
 
    // Move to the preparation of the jitting
@@ -174,7 +174,7 @@ Long_t JitTransformation(void *thisPtr, const std::string &methodName, const std
 // (see comments in the body for actual jitted code)
 std::string JitBuildAndBook(const ColumnNames_t &bl, const std::string &prevNodeTypename, void *prevNode,
                             const std::type_info &art, const std::type_info &at, const void *rOnHeap, TTree *tree,
-                            const unsigned int nSlots, const std::map<std::string, TmpBranchBasePtr_t> &tmpBranches)
+                            const unsigned int nSlots, const std::map<std::string, TmpBranchBasePtr_t> &customColumns)
 {
    gInterpreter->ProcessLine("#include \"ROOT/TDataFrame.hxx\"");
    auto nBranches = bl.size();
@@ -182,8 +182,8 @@ std::string JitBuildAndBook(const ColumnNames_t &bl, const std::string &prevNode
    // retrieve pointers to temporary columns (null if the column is not temporary)
    std::vector<TCustomColumnBase *> tmpBranchPtrs(nBranches, nullptr);
    for (auto i = 0u; i < nBranches; ++i) {
-      auto tmpBranchIt = tmpBranches.find(bl[i]);
-      if (tmpBranchIt != tmpBranches.end())
+      auto tmpBranchIt = customColumns.find(bl[i]);
+      if (tmpBranchIt != customColumns.end())
          tmpBranchPtrs[i] = tmpBranchIt->second.get();
    }
 
