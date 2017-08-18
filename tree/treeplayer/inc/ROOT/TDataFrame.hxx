@@ -81,7 +81,7 @@ inline std::string printValue(ROOT::Experimental::TDataFrame *tdf)
    auto df = tdf->GetDataFrameChecked();
    auto *tree = df->GetTree();
    auto defBranches = df->GetDefaultColumnNames();
-   auto tmpBranches = df->GetTmpBranches();
+   auto customColumns = df->GetCustomColumns();
 
    std::ostringstream ret;
    if (tree) {
