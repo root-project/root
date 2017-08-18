@@ -94,7 +94,6 @@ public:
    TLoopManager *GetImplPtr();
    std::shared_ptr<TLoopManager> GetSharedPtr() { return shared_from_this(); }
    const ColumnNames_t &GetDefaultColumnNames() const;
-   const ColumnNames_t GetCustomColumns() const { return {}; };
    const ColumnNames_t &GetCustomColumnNames() const { return fCustomColumnNames; };
    TTree *GetTree() const;
    TCustomColumnBase *GetBookedBranch(const std::string &name) const;
@@ -239,11 +238,10 @@ protected:
    TLoopManager *fImplPtr; ///< A raw pointer to the TLoopManager at the root of this functional
                            /// graph. It is only guaranteed to contain a valid address during an
                            /// event loop.
-   const ColumnNames_t fTmpBranches;
    const unsigned int fNSlots; ///< Number of thread slots used by this node.
 
 public:
-   TActionBase(TLoopManager *implPtr, const ColumnNames_t &customColumns, const unsigned int nSlots);
+   TActionBase(TLoopManager *implPtr, const unsigned int nSlots);
    TActionBase(const TActionBase &) = delete;
    TActionBase &operator=(const TActionBase &) = delete;
    virtual ~TActionBase() = default;
@@ -266,8 +264,8 @@ class TAction final : public TActionBase {
 
 public:
    TAction(Helper &&h, const ColumnNames_t &bl, PrevDataFrame &pd)
-      : TActionBase(pd.GetImplPtr(), pd.GetCustomColumns(), pd.GetNSlots()), fHelper(std::move(h)), fBranches(bl),
-        fPrevData(pd), fValues(fNSlots)
+      : TActionBase(pd.GetImplPtr(), pd.GetNSlots()), fHelper(std::move(h)), fBranches(bl), fPrevData(pd),
+        fValues(fNSlots)
    {
    }
 
@@ -311,15 +309,13 @@ class TCustomColumnBase {
 protected:
    TLoopManager *fImplPtr; ///< A raw pointer to the TLoopManager at the root of this functional graph. It is only
                            /// guaranteed to contain a valid address during an event loop.
-   ColumnNames_t fTmpBranches;
    const std::string fName;
    unsigned int fNChildren{0};      ///< Number of nodes of the functional graph hanging from this object
    unsigned int fNStopsReceived{0}; ///< Number of times that a children node signaled to stop processing entries.
    const unsigned int fNSlots;      ///< Number of thread slots used by this node, inherited from parent node.
 
 public:
-   TCustomColumnBase(TLoopManager *df, const ColumnNames_t &customColumns, std::string_view name,
-                     const unsigned int nSlots);
+   TCustomColumnBase(TLoopManager *df, std::string_view name, const unsigned int nSlots);
    TCustomColumnBase &operator=(const TCustomColumnBase &) = delete;
    virtual ~TCustomColumnBase() = default;
 
@@ -331,7 +327,6 @@ public:
    virtual void Report() const = 0;
    virtual void PartialReport() const = 0;
    std::string GetName() const;
-   ColumnNames_t GetCustomColumns() const;
    virtual void Update(unsigned int slot, Long64_t entry) = 0;
    virtual void IncrChildrenCount() = 0;
    virtual void StopProcessing() = 0;
@@ -360,13 +355,12 @@ class TCustomColumn final : public TCustomColumnBase {
 
 public:
    TCustomColumn(std::string_view name, F &&expression, const ColumnNames_t &bl, PrevData &pd)
-      : TCustomColumnBase(pd.GetImplPtr(), pd.GetCustomColumns(), name, pd.GetNSlots()),
+      : TCustomColumnBase(pd.GetImplPtr(), name, pd.GetNSlots()),
         fExpression(std::move(expression)), fBranches(bl), fLastResultPtr(fNSlots), fPrevData(pd),
         fLastCheckedEntry(fNSlots, -1), fValues(fNSlots)
    {
       std::generate(fLastResultPtr.begin(), fLastResultPtr.end(),
                     []() { return std::unique_ptr<ret_type>(new ret_type()); });
-      fTmpBranches.emplace_back(name);
    }
 
    TCustomColumn(const TCustomColumn &) = delete;
@@ -434,7 +428,6 @@ class TFilterBase {
 protected:
    TLoopManager *fImplPtr; ///< A raw pointer to the TLoopManager at the root of this functional graph. It is only
                            /// guaranteed to contain a valid address during an event loop.
-   const ColumnNames_t fTmpBranches;
    std::vector<Long64_t> fLastCheckedEntry = {-1};
    std::vector<int> fLastResult = {true}; // std::vector<bool> cannot be used in a MT context safely
    std::vector<ULong64_t> fAccepted = {0};
@@ -445,7 +438,7 @@ protected:
    const unsigned int fNSlots;      ///< Number of thread slots used by this node, inherited from parent node.
 
 public:
-   TFilterBase(TLoopManager *df, const ColumnNames_t &customColumns, std::string_view name, const unsigned int nSlots);
+   TFilterBase(TLoopManager *df, std::string_view name, const unsigned int nSlots);
    TFilterBase &operator=(const TFilterBase &) = delete;
    virtual ~TFilterBase() = default;
 
@@ -454,7 +447,6 @@ public:
    virtual void Report() const = 0;
    virtual void PartialReport() const = 0;
    TLoopManager *GetImplPtr() const;
-   ColumnNames_t GetCustomColumns() const;
    bool HasName() const;
    void PrintReport() const;
    virtual void IncrChildrenCount() = 0;
@@ -482,7 +474,7 @@ class TFilter final : public TFilterBase {
 
 public:
    TFilter(FilterF &&f, const ColumnNames_t &bl, PrevDataFrame &pd, std::string_view name = "")
-      : TFilterBase(pd.GetImplPtr(), pd.GetCustomColumns(), name, pd.GetNSlots()), fFilter(std::move(f)), fBranches(bl),
+      : TFilterBase(pd.GetImplPtr(), name, pd.GetNSlots()), fFilter(std::move(f)), fBranches(bl),
         fPrevData(pd), fValues(fNSlots)
    {
    }
@@ -567,7 +559,6 @@ class TRangeBase {
 protected:
    TLoopManager *fImplPtr; ///< A raw pointer to the TLoopManager at the root of this functional graph. It is only
                            /// guaranteed to contain a valid address during an event loop.
-   ColumnNames_t fTmpBranches;
    unsigned int fStart;
    unsigned int fStop;
    unsigned int fStride;
@@ -580,13 +571,12 @@ protected:
    const unsigned int fNSlots;      ///< Number of thread slots used by this node, inherited from parent node.
 
 public:
-   TRangeBase(TLoopManager *implPtr, const ColumnNames_t &customColumns, unsigned int start, unsigned int stop,
-              unsigned int stride, const unsigned int nSlots);
+   TRangeBase(TLoopManager *implPtr, unsigned int start, unsigned int stop, unsigned int stride,
+              const unsigned int nSlots);
    TRangeBase &operator=(const TRangeBase &) = delete;
    virtual ~TRangeBase() = default;
 
    TLoopManager *GetImplPtr() const;
-   ColumnNames_t GetCustomColumns() const;
    virtual bool CheckFilters(unsigned int slot, Long64_t entry) = 0;
    virtual void Report() const = 0;
    virtual void PartialReport() const = 0;
@@ -606,7 +596,7 @@ class TRange final : public TRangeBase {
 
 public:
    TRange(unsigned int start, unsigned int stop, unsigned int stride, PrevData &pd)
-      : TRangeBase(pd.GetImplPtr(), pd.GetCustomColumns(), start, stop, stride, pd.GetNSlots()), fPrevData(pd)
+      : TRangeBase(pd.GetImplPtr(), start, stop, stride, pd.GetNSlots()), fPrevData(pd)
    {
    }
 
