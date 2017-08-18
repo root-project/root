@@ -43,7 +43,7 @@ namespace {
 static Int_t   gHighestColorIndex = 0;   ///< Highest color index defined
 static Float_t gColorThreshold    = -1.; ///< Color threshold used by GetColor
 static Int_t   gDefinedColors     = 0;  ///< Number of defined colors.
-static Int_t gLastDefinedColors = 0; ///< Previous number of defined colors
+static Int_t gLastDefinedColors = 649; ///< Previous number of defined colors
 
 #define fgGrayscaleMode TColor__GrayScaleMode()
 #define fgPalette TColor__Palette()
