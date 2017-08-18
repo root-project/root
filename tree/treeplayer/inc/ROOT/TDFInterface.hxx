@@ -446,7 +446,8 @@ public:
       ColumnNames_t selectedColumns;
       selectedColumns.reserve(32);
 
-      const auto customColumns = fProxiedPtr->GetCustomColumns();
+      auto df = GetDataFrameChecked();
+      const auto &customColumns = df->GetCustomColumnNames();
       // Since we support gcc48 and it does not provide in its stl std::regex,
       // we need to use TRegexp
       TRegexp regexp(theRegex);
@@ -457,7 +458,6 @@ public:
          }
       }
 
-      auto df = GetDataFrameChecked();
       auto tree = df->GetTree();
       if (tree) {
          const auto branches = tree->GetListOfBranches();
@@ -1109,7 +1109,7 @@ private:
       auto df = GetDataFrameChecked();
       auto tree = df->GetTree();
       auto branches = tree ? tree->GetListOfBranches() : nullptr;
-      auto customColumns = fProxiedPtr->GetCustomColumns();
+      const auto &customColumns = df->GetCustomColumnNames();
       auto tmpBookedBranches = df->GetBookedColumns();
       const std::string transformInt(transformation);
       const std::string nameInt(nodeName);
