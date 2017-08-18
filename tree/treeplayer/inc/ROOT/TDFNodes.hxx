@@ -54,7 +54,7 @@ class TLoopManager : public std::enable_shared_from_this<TLoopManager> {
 
    ActionBaseVec_t fBookedActions;
    FilterBaseVec_t fBookedFilters;
-   FilterBaseVec_t fBookedNamedFilters;
+   FilterBaseVec_t fBookedNamedFilters; ///< Contains a subset of fBookedFilters, i.e. only the named filters
    std::map<std::string, TmpBranchBasePtr_t> fBookedBranches;
    RangeBaseVec_t fBookedRanges;
    std::vector<std::shared_ptr<bool>> fResProxyReadiness;
