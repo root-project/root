@@ -1785,9 +1785,9 @@ const char *TSpectrum::DeconvolutionRL(Double_t *source, const Double_t *respons
 ///
 ///  -  source: pointer to the vector of source spectrum
 ///  -  respMatrix: pointer to the matrix of response spectra
-///  -  ssizex: length of source spectrum and # of columns of the response
+///  -  ssizex: length of source spectrum and # of rows of the response
 ///      matrix. ssizex must be >= ssizey.
-///  -  ssizey: length of destination spectrum and # of rows of the response
+///  -  ssizey: length of destination coefficients and # of columns of the response
 ///      matrix.
 ///  -  numberIterations: number of iterations
 ///  -  numberRepetitions: number of repetitions for boosted deconvolution.
@@ -1823,7 +1823,7 @@ const char *TSpectrum::DeconvolutionRL(Double_t *source, const Double_t *respons
      x(0) \\
      x(1) \\
      \dots \\
-     x(N_x-1)
+     x(N_y-1)
  \end{bmatrix}
  \f]
 */
