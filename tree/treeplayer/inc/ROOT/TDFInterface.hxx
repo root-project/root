@@ -204,6 +204,18 @@ public:
    /// \endcond
 
    ////////////////////////////////////////////////////////////////////////////
+   /// \brief Copy-assignment operator for TInterface.
+   TInterface &operator=(const TInterface &) = default;
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Copy-ctor for TInterface.
+   TInterface(const TInterface &) = default;
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Move-ctor for TInterface.
+   TInterface(TInterface &&) = default;
+
+   ////////////////////////////////////////////////////////////////////////////
    /// \brief Append a filter to the call graph.
    /// \param[in] f Function, lambda expression, functor class or any other callable object. It must return a `bool`
    /// signalling whether the event has passed the selection (true) or not (false).
