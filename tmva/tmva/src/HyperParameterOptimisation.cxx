@@ -69,7 +69,7 @@ void TMVA::HyperParameterOptimisationResult::Print() const
 TMVA::HyperParameterOptimisation::HyperParameterOptimisation(TMVA::DataLoader *dataloader):Envelope("HyperParameterOptimisation",dataloader),
     fFomType("Separation"),
     fFitType("Minuit"),
-    fNumFolds(5),
+    fNumFolds(4),
     fResults(),
     fClassifier(new TMVA::Factory("HyperParameterOptimisation","!V:!ROC:Silent:!ModelPersistence:!Color:!DrawProgressBar:AnalysisType=Classification"))
 {
@@ -90,6 +90,7 @@ void TMVA::HyperParameterOptimisation::SetNumFolds(UInt_t i)
 
 void TMVA::HyperParameterOptimisation::Evaluate()
 {
+   cout << "Number of Workers : " << TMVA::gConfig().NWorkers() << endl;
     TString methodName    = fMethod.GetValue<TString>("MethodName");
     TString methodTitle   = fMethod.GetValue<TString>("MethodTitle");
     TString methodOptions = fMethod.GetValue<TString>("MethodOptions");
@@ -102,7 +103,8 @@ void TMVA::HyperParameterOptimisation::Evaluate()
     fResults.fMethodName = methodName;
     auto workItem = [&](UInt_t workerID) {
 
-        TString foldTitle = methodTitle;
+       TString foldTitle = methodTitle;
+
         foldTitle += "_opt";
         foldTitle += workerID+1;
 
@@ -124,16 +126,22 @@ void TMVA::HyperParameterOptimisation::Evaluate()
     };
     vector<map<TString,Double_t>> res;
     auto nWorkers = TMVA::gConfig().NWorkers();
+    cout << "Number of Workers : " << TMVA::gConfig().NWorkers() << endl;
     if(nWorkers > 1) {
+      cout << "I am here" << endl;
         ROOT::TProcessExecutor workers(nWorkers);
+        cout << "Number of Workers : " << TMVA::gConfig().NWorkers() << endl;
         res = workers.Map(workItem, ROOT::TSeqI(fNumFolds));
+        cout << "Number of Workers : " << TMVA::gConfig().NWorkers() << endl;
     } else {
       for(UInt_t i = 0; i < fNumFolds; ++ i) {
         res.push_back(workItem(i));
       }
     }
+    cout << "Number of Workers : " << TMVA::gConfig().NWorkers() << endl;
     for(auto results : res) {
         fResults.fFoldParameters.push_back(results);
     }
+    cout << "Number of Workers : " << TMVA::gConfig().NWorkers() << endl;
 
 }

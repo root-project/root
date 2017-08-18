@@ -66,7 +66,7 @@ namespace TMVA {
       void   SetDrawProgressBar( Bool_t d ) { fDrawProgressBar = d; }
 
       UInt_t NWorkers() const { return fNWorkers; }
-      void SetNWorkers ( UInt_t n ) { fNWorkers = n; }
+      void SetNWorkers (UInt_t n) { fNWorkers = n; }
 
    public:
 
@@ -101,7 +101,6 @@ namespace TMVA {
          TString fOptionsReferenceFileDir;
       } fIONames; // Customisable weight file properties
 
-
    private:
 
       // private constructor
@@ -121,7 +120,7 @@ namespace TMVA {
       std::atomic<Bool_t> fSilent;                // no output at all
       std::atomic<Bool_t> fWriteOptionsReference; // if set true: Configurable objects write file with option reference
       std::atomic<Bool_t> fDrawProgressBar;       // draw progress bar to indicate training evolution
-      std::atomic<UInt_t> fNWorkers;			        // number of workers in multiprocessing parallelization
+      std::atomic<UInt_t> fNWorkers;              
 #else
       Bool_t fUseColoredConsole;     // coloured standard output
       Bool_t fSilent;                // no output at all

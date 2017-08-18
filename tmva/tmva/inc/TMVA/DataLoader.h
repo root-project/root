@@ -85,16 +85,15 @@ namespace TMVA {
       // special case: signal/background
 
       // Data input related
-      void SetInputTrees( const TString& signalFileName, const TString& backgroundFileName,
+      void SetInputTrees(const TString& signalFileName, const TString& backgroundFileName,
                           Double_t signalWeight=1.0, Double_t backgroundWeight=1.0 );
-      void SetInputTrees( TTree* inputTree, const TCut& SigCut, const TCut& BgCut );
+      void SetInputTrees( TTree *inputTree, const TCut& SigCut, const TCut& BgCut );
       // Set input trees  at once
-      void SetInputTrees( TTree* signal, TTree* background,
-                          Double_t signalWeight=1.0, Double_t backgroundWeight=1.0) ;
+      void SetInputTrees( TTree *signal, TTree* background, Double_t signalWeight=1.0, Double_t backgroundWeight=1.0) ;
 
-      void AddSignalTree( TTree* signal,    Double_t weight=1.0, Types::ETreeType treetype = Types::kMaxTreeType );
+      void AddSignalTree( TTree *signal,    Double_t weight=1.0, Types::ETreeType treetype = Types::kMaxTreeType );
       void AddSignalTree( TString datFileS, Double_t weight=1.0, Types::ETreeType treetype = Types::kMaxTreeType );
-      void AddSignalTree( TTree* signal, Double_t weight, const TString& treetype );
+      void AddSignalTree( TTree *signal, Double_t weight, const TString& treetype );
 
       // ... depreciated, kept for backwards compatibility
       void SetSignalTree( TTree* signal, Double_t weight=1.0);

@@ -868,9 +868,43 @@ std::vector<std::shared_ptr<TFile>> TMVA::DataLoaderCopyMP(TMVA::DataLoader *des
 {
 
 	std::vector<std::shared_ptr<TFile>> vec_files;
-	for(std::vector<TreeInfo>::const_iterator treeinfo_signal=src->DataInput().Sbegin(),
+   std::map<TString, std::shared_ptr<TFile>> map_files;
+   for(std::vector<TreeInfo>::const_iterator treeinfo = src->DataInput().Sbegin(); treeinfo != src->DataInput().Send(); ++ treeinfo) {
+      TTree *stree = treeinfo -> GetTree();
+      TString sfileName = stree->GetCurrentFile()->GetName();
+      std::shared_ptr<TFile> sfile;
+      if(map_files.find(sfileName) == map_files.end()) {
+         sfile =  std::shared_ptr<TFile>(TFile::Open(sfileName)) ;
+         map_files[sfileName] = sfile;
+         vec_files.push_back(sfile);
+      }
+      else {
+         sfile = map_files[sfileName];
+      }
+
+      TTree* signalTree = (TTree*)sfile->Get(stree->GetName());
+      des->AddSignalTree(signalTree);
+   }
+   for(std::vector<TreeInfo>::const_iterator treeinfo = src->DataInput().Bbegin(); treeinfo != src->DataInput().Bend(); ++ treeinfo) {
+      TTree *btree = treeinfo -> GetTree();
+      TString bfileName = btree->GetCurrentFile()->GetName();
+      std::shared_ptr<TFile> bfile;
+      if(map_files.find(bfileName) == map_files.end()) {
+         bfile = std::shared_ptr<TFile>(TFile::Open(bfileName)) ;
+         map_files[bfileName] = bfile;
+         vec_files.push_back(bfile);
+      }
+      else {
+         bfile = map_files[bfileName];
+      }
+
+      TTree* backgroundTree = (TTree*)bfile->Get(btree->GetName());
+      des->AddBackgroundTree(backgroundTree);
+   }
+
+	/*for(std::vector<TreeInfo>::const_iterator treeinfo_signal=src->DataInput().Sbegin(),
                                             treeinfo_back=src->DataInput().Bbegin();
-		treeinfo_signal!=src->DataInput().Send(), treeinfo_back!=src->DataInput().Bend();
+		treeinfo_signal!=src->DataInput().Send() | treeinfo_back!=src->DataInput().Bend();
 		treeinfo_signal++, treeinfo_back++) {
 		TTree *stree = treeinfo_signal -> GetTree();
 		TTree *btree = treeinfo_back   -> GetTree();
@@ -892,11 +926,10 @@ std::vector<std::shared_ptr<TFile>> TMVA::DataLoaderCopyMP(TMVA::DataLoader *des
 
     vec_files.push_back(sfile);
     vec_files.push_back(bfile);
-	}
+}*/
 	return vec_files;
 }
-void TMVA::DataLoaderCopyMPCloseFiles(std::vector<std::shared_ptr<TFile>> files)
-{
+void TMVA::DataLoaderCopyMPCloseFiles(std::vector<std::shared_ptr<TFile> > files) {
 	for(auto file: files) {
 		file->Close();
 	}
