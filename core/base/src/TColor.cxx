@@ -42,8 +42,8 @@ namespace {
 
 static Int_t   gHighestColorIndex = 0;   ///< Highest color index defined
 static Float_t gColorThreshold    = -1.; ///< Color threshold used by GetColor
-static Int_t   gDefinedColors     = 0;  ///< Number of defined colors.
-static Int_t gLastDefinedColors = 649; ///< Previous number of defined colors
+static Int_t   gDefinedColors     = 0;   ///< Number of defined colors.
+static Int_t   gLastDefinedColors = 649; ///< Previous number of defined colors
 
 #define fgGrayscaleMode TColor__GrayScaleMode()
 #define fgPalette TColor__Palette()
@@ -1398,9 +1398,9 @@ Int_t TColor::GetNumberOfColors()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Static function returns kTRUE if some new colors have been defined after
-/// initialisation. This is useful know in order to avoid JSON conversion of
-/// colors (by JSROOT) if not needed.
+/// Static function returning kTRUE if some new colors have been defined after
+/// initialisation or since the last call to this method. This allows to avoid
+/// the colors and palette streaming in TCanvas::Streamer if not needed.
 
 Bool_t TColor::DefinedColors()
 {
