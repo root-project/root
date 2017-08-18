@@ -300,7 +300,6 @@ void TLoopManager::CleanUpNodes()
 }
 
 /// Perform clean-up operations. To be called at the end of each task execution.
-// TODO in case of interleaved task execution, each task must clear the readervalues in its task slot
 void TLoopManager::CleanUpTask(unsigned int slot)
 {
    for (auto &ptr : fBookedActions) ptr->ClearValueReaders(slot);
