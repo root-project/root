@@ -50,17 +50,26 @@ void FixDuplicateNames(Iterator begin, Iterator end) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void TF1NormSum::InitializeDataMembers(const std::vector <std::shared_ptr < TF1 >> &functions, const std::vector <Double_t> &coeffs, Double_t scale)
+void TF1NormSum::InitializeDataMembers(const std::vector <TF1 *> &functions, const std::vector <Double_t> &coeffs, Double_t scale)
 {
 
    fScale           = scale;
-   fFunctions       = functions;
    fCoeffs          = coeffs;
    fNOfFunctions    = functions.size();
    fCstIndexes      = std::vector < Int_t     > (fNOfFunctions);
    fParNames        = std::vector<TString> (fNOfFunctions);
    fParNames.reserve(3*fNOfFunctions);  // enlarge capacity for function parameters
 
+   // fill fFunctions with unique_ptr's
+   fFunctions = std::vector<std::unique_ptr<TF1> >(functions.size());
+   for (unsigned int n = 0 ; n < fNOfFunctions ; n++)
+   {
+      fFunctions[n] = std::unique_ptr<TF1> ((TF1 *)functions[n]->Clone());
+      if (!fFunctions[n])
+         Fatal("InitializeDataMembers", "Invalid input function -- abort");
+   }
+
+   
    for (unsigned int n=0; n < fNOfFunctions; n++)
    {
       int npar = fFunctions[n] -> GetNpar();
@@ -120,7 +129,7 @@ TF1NormSum::TF1NormSum()
 {
    fNOfFunctions  = 0;
    fScale         = 1.;
-   fFunctions     = std::vector< std::shared_ptr < TF1 >>(0); // Vector of size fNOfFunctions containing TF1 functions
+   fFunctions     = std::vector< std::unique_ptr < TF1 >>(0); // Vector of size fNOfFunctions containing TF1 functions
    fCoeffs        = std::vector < Double_t  >(0) ;            // Vector of size fNOfFunctions containing coefficients in front of each function
    fCstIndexes = std::vector < Int_t     > (0);
    fXmin = 0; // Dummy values of xmin and xmax
@@ -131,13 +140,14 @@ TF1NormSum::TF1NormSum()
 
 TF1NormSum::TF1NormSum(const std::vector <TF1*> &functions, const std::vector <Double_t> &coeffs, Double_t scale)
 {
-   std::vector <std::shared_ptr < TF1 > >f;
-   for (unsigned int i = 0; i<functions.size(); i++)
-   {
-    f[i] = std::shared_ptr < TF1 >((TF1*)functions[i]->Clone());
-   }
+   // todo : delete commented code
+   // std::vector <std::unique_ptr < TF1 > >f;
+   // for (unsigned int i = 0; i<functions.size(); i++)
+   // {
+   //  f[i] = std::unique_ptr < TF1 >((TF1*)functions[i]->Clone());
+   // }
 
-   InitializeDataMembers(f,coeffs,scale);
+   InitializeDataMembers(functions,coeffs,scale);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -145,26 +155,27 @@ TF1NormSum::TF1NormSum(const std::vector <TF1*> &functions, const std::vector <D
 
 TF1NormSum::TF1NormSum(TF1* function1, TF1* function2, Double_t coeff1, Double_t coeff2, Double_t scale)
 {
-   std::vector < std::shared_ptr < TF1 > > functions(2);
    std::vector < Double_t > coeffs(2);
-   TF1 * fnew1 = 0;
-   TF1 * fnew2 = 0;
-   // need to use Copy because clone does not work for functor-based functions
-   if (function1) {
-      fnew1 = (TF1*) function1->IsA()->New();
-      function1->Copy(*fnew1);
-   }
-   if (function2) {
-      fnew2 = (TF1*) function2->IsA()->New();
-      function2->Copy(*fnew2);
-   }
-   if (fnew1 == nullptr || fnew2 == nullptr)
-      Fatal("TF1NormSum","Invalid input functions - Abort");
+   // TF1 * fnew1 = 0;
+   // TF1 * fnew2 = 0;
+   // // need to use Copy because clone does not work for functor-based functions
+   // if (function1) {
+   //    fnew1 = (TF1*) function1->IsA()->New();
+   //    function1->Copy(*fnew1);
+   // }
+   // if (function2) {
+   //    fnew2 = (TF1*) function2->IsA()->New();
+   //    function2->Copy(*fnew2);
+   // }
+   // if (fnew1 == nullptr || fnew2 == nullptr)
+   //    Fatal("TF1NormSum","Invalid input functions - Abort");
 
-   std::shared_ptr < TF1 > f1( fnew1);
-   std::shared_ptr < TF1 > f2( fnew2);
-
-   functions       = {f1, f2};
+   // todo : delete the commented-out code
+   // std::vector < std::unique_ptr < TF1 > > functions(2);
+   // functions = {std::unique_ptr < TF1 > (fnew1), std::unique_ptr < TF1 > (fnew2)};
+   std::vector<TF1 *> functions(2);
+   functions = {function1, function2};
+   
    coeffs          = {coeff1,    coeff2};
 
    InitializeDataMembers(functions, coeffs,scale);
@@ -175,32 +186,33 @@ TF1NormSum::TF1NormSum(TF1* function1, TF1* function2, Double_t coeff1, Double_t
 
 TF1NormSum::TF1NormSum(TF1* function1, TF1* function2, TF1* function3, Double_t coeff1, Double_t coeff2, Double_t coeff3, Double_t scale)
 {
-   std::vector < std::shared_ptr < TF1 > > functions(3);
    std::vector < Double_t > coeffs(3);
-   TF1 * fnew1 = 0;
-   TF1 * fnew2 = 0;
-   TF1 * fnew3 = 0;
-   if (function1) {
-      fnew1 = (TF1*) function1->IsA()->New();
-      function1->Copy(*fnew1);
-   }
-   if (function2) {
-      fnew2 = (TF1*) function2->IsA()->New();
-      function2->Copy(*fnew2);
-   }
-   if (function3) {
-      fnew3 = (TF1*) function3->IsA()->New();
-      function3->Copy(*fnew3);
-   }
-   if (!fnew1 || !fnew2  || !fnew3 )
-      Fatal("TF1NormSum","Invalid input functions - Abort");
+   // TF1 * fnew1 = 0;
+   // TF1 * fnew2 = 0;
+   // TF1 * fnew3 = 0;
+   // if (function1) {
+   //    fnew1 = (TF1*) function1->IsA()->New();
+   //    function1->Copy(*fnew1);
+   // }
+   // if (function2) {
+   //    fnew2 = (TF1*) function2->IsA()->New();
+   //    function2->Copy(*fnew2);
+   // }
+   // if (function3) {
+   //    fnew3 = (TF1*) function3->IsA()->New();
+   //    function3->Copy(*fnew3);
+   // }
+   // if (!fnew1 || !fnew2  || !fnew3 )
+   //    Fatal("TF1NormSum","Invalid input functions - Abort");
 
-   std::shared_ptr < TF1 > f1( fnew1);
-   std::shared_ptr < TF1 > f2( fnew2);
-   std::shared_ptr < TF1 > f3( fnew3);
-
-
-   functions       = {f1, f2, f3};
+   // todo: delete the commented-out
+   // std::vector < std::unique_ptr < TF1 > > functions(3);
+   // functions = {std::unique_ptr < TF1 > (fnew1),
+   //              std::unique_ptr < TF1 > (fnew2),
+   //              std::unique_ptr < TF1 > (fnew3)};
+   std::vector< TF1 * > functions(3);
+   functions = {function1, function2, function3};
+   
    coeffs          = {coeff1,    coeff2,    coeff3};
 
    InitializeDataMembers(functions, coeffs,scale);
@@ -222,7 +234,7 @@ TF1NormSum::TF1NormSum(const TString &formula, Double_t xmin, Double_t xmax)
    Int_t nofobj           = arrayall  -> GetEntries();
    Int_t nofcoeffs        = nofobj - noffunctions;
 
-   std::vector < std::shared_ptr < TF1 >     > functions(noffunctions);
+   std::vector < TF1 * > functions(noffunctions);
    std::vector < Double_t > coeffs(noffunctions);
    std::vector < TString  > funcstringall(nofobj);
    std::vector < Int_t    > indexsizetimes(nofcoeffs+1);
@@ -258,7 +270,7 @@ TF1NormSum::TF1NormSum(const TString &formula, Double_t xmin, Double_t xmax)
          coeffs[i]    = 1.;
          TF1* f = (TF1*)(gROOT -> GetListOfFunctions() -> FindObject(funcstringall[k]));
          if (!f)   Error("TF1NormSum", "Function %s does not exist", funcstringall[k].Data());
-         functions[i] = std::shared_ptr < TF1 > ((TF1*)f->Clone(TString::Format("function_%s_%d",funcstringall[k].Data(), i)));
+         functions[i] = (TF1*)f->Clone(TString::Format("function_%s_%d",funcstringall[k].Data(), i));
          functions[i]->SetRange(xmin,xmax);
          k++;
       }
@@ -267,7 +279,7 @@ TF1NormSum::TF1NormSum(const TString &formula, Double_t xmin, Double_t xmax)
          coeffs[i]    = funcstringall[k].Atof();
          TF1* f  = (TF1*)(gROOT -> GetListOfFunctions() -> FindObject(funcstringall[k+1]));
          if (!f)   Error("TF1NormSum", "Function %s does not exist", funcstringall[k+1].Data());
-         functions[i] = std::shared_ptr < TF1 >((TF1*)f->Clone(TString::Format("function_%s_%d",funcstringall[k+1].Data(), i) ));
+         functions[i] = (TF1*)f->Clone(TString::Format("function_%s_%d",funcstringall[k+1].Data(), i) );
          functions[i]->SetRange(xmin,xmax);
          k=k+2;
       }
@@ -389,9 +401,9 @@ void TF1NormSum::SetRange(Double_t a, Double_t b)
    fXmin = a;
    fXmax = b;
 
-   for (std::shared_ptr<TF1> func : fFunctions) {
-      func->SetRange(a, b);
-      func->Update();
+   for (unsigned int n = 0 ; n < fNOfFunctions ; n++) {
+      fFunctions[n]->SetRange(a, b);
+      fFunctions[n]->Update();
    }
    
 }
@@ -408,6 +420,24 @@ void TF1NormSum::GetRange(Double_t &a, Double_t &b) const
 ///   Update the component functions of the normalized sum
 
 void TF1NormSum::Update() {
-   for (std::shared_ptr<TF1> func : fFunctions)
-      func->Update();
+   for (unsigned int n = 0 ; n < fNOfFunctions ; n++)
+      fFunctions[n]->Update();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void TF1NormSum::Copy(TObject &obj) const {
+   ((TF1NormSum &)obj).fNOfFunctions = fNOfFunctions;
+   ((TF1NormSum &)obj).fScale = fScale;
+   ((TF1NormSum &)obj).fXmin = fXmin;
+   ((TF1NormSum &)obj).fXmax = fXmax;
+   ((TF1NormSum &)obj).fCoeffs = fCoeffs;
+   ((TF1NormSum &)obj).fCstIndexes = fCstIndexes;
+   ((TF1NormSum &)obj).fParNames = fParNames;
+
+   // Clone objects in unique_ptr's
+   ((TF1NormSum &)obj).fFunctions = std::vector<std::unique_ptr<TF1> >(fNOfFunctions);
+   for (unsigned int n = 0 ; n < fNOfFunctions ; n++) {
+      ((TF1NormSum &)obj).fFunctions[n] = std::unique_ptr<TF1>((TF1 *)fFunctions[n]->Clone());
+   }
 }

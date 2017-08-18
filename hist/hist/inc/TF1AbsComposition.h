@@ -25,6 +25,8 @@ public:
    virtual void   SetRange(Double_t a, Double_t b) = 0;
    virtual void   SetParameters(const Double_t *params) = 0;
    virtual void   Update() = 0;
+
+   virtual void   Copy(TObject &obj) const = 0;
 };
 
 #endif

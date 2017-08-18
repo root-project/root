@@ -417,3 +417,10 @@ void TF1Convolution::Update() {
    fFunction1->Update();
    fFunction2->Update();
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+void TF1Convolution::Copy(TObject &obj) const {
+   // TODO : write!!!
+   // ((TF1Convolution &)obj).
+}

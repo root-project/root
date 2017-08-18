@@ -934,7 +934,8 @@ void TF1::Copy(TObject &obj) const
       else ((TF1 &)obj).fParams = new TF1Parameters(*fParams);
    }
    if (fComposition) {
-      // TODO add something
+      // todo: does this work?
+      fComposition->Copy(obj);
    }
 }
 

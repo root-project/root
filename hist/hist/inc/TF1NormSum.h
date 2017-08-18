@@ -24,12 +24,12 @@ protected:
    Double_t     fScale;                                ///< Fixed Scale parameter to normalize function (e.g. bin width)
    Double_t     fXmin;                                 /// Minimal bound of range of NormSum
    Double_t     fXmax;                                 /// Maximal bound of range of NormSum
-   std::vector < std::shared_ptr < TF1 > > fFunctions; ///< Vector of size fNOfFunctions containing TF1 functions
+   std::vector < std::unique_ptr < TF1 > > fFunctions; ///< Vector of size fNOfFunctions containing TF1 functions
    std::vector < Double_t  > fCoeffs;                  ///< Vector of size afNOfFunctions containing coefficients in front of each function
    std::vector < Int_t     > fCstIndexes;              ///< Vector with size of fNOfFunctions containing the index of the constant parameter/ function (the removed ones)
    std::vector< TString >    fParNames;                ///< Parameter names
 
-   void InitializeDataMembers(const std::vector <std::shared_ptr < TF1 >> &functions, const std::vector <Double_t> &coeffs, Double_t scale); // acts as a constructor
+   void InitializeDataMembers(const std::vector <TF1 *> &functions, const std::vector <Double_t> &coeffs, Double_t scale); // acts as a constructor
 
 public:
 
@@ -39,7 +39,7 @@ public:
    TF1NormSum(TF1* function1, TF1* function2, TF1*function3, Double_t coeff1 = 1., Double_t coeff2 = 1., Double_t coeff3 = 1., Double_t scale = 1.);
    TF1NormSum(const TString &formula, Double_t xmin, Double_t xmax);
 
-   virtual ~TF1NormSum() {
+   ~TF1NormSum() {
       std::cout << "Calling TF1NormSum destructor" << std::endl;
    }
    
@@ -69,5 +69,7 @@ public:
    void        GetRange(Double_t &a, Double_t &b) const;
 
    void        Update();
+
+   void        Copy(TObject &obj) const;
 };
 #endif /* defined(ROOT_TF1NormSum__) */
