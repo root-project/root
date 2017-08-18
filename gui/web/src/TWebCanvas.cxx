@@ -30,30 +30,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#ifdef WEBGUI_WITH_CEF
-#include "../cef/simple_app.h"
-#include "TApplication.h"
-#include "TTimer.h"
-
-class TCefTimer : public TTimer {
-public:
-   TCefTimer(Long_t milliSec, Bool_t mode) : TTimer(milliSec, mode)
-   {
-      // construtor
-   }
-   virtual ~TCefTimer()
-   {
-      // destructor
-   }
-   virtual void Timeout()
-   {
-      // just dummy workaround
-      CefDoMessageLoopWork();
-   }
-};
-
-
-#endif
 
 ClassImp(TWebCanvas)
 
@@ -62,15 +38,17 @@ TWebCanvas::TWebCanvas() :
    TCanvasImp(),
    fWebConn(),
    fAddr(),
+   fServer(0),
    fHasSpecials(kFALSE)
 {
 }
 
-TWebCanvas::TWebCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height, TString addr) :
+TWebCanvas::TWebCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height, TString addr, void *serv) :
    THttpWSHandler(name, "title"),
    TCanvasImp(c, name, x, y, width, height),
    fWebConn(),
    fAddr(addr),
+   fServer(serv),
    fHasSpecials(kFALSE)
 {
    UInt_t hash = TString::Hash(&c, sizeof(c));
@@ -292,108 +270,42 @@ void TWebCanvas::Show()
 {
    TString addr;
 
-   addr.Form("%s/webgui/%s/draw.htm?webcanvas", fAddr.Data(), GetName());
-   // addr.Form("http://localhost:8080/Canvases/%s/draw.htm?longpollcanvas", Canvas()->GetName());
+   Func_t symbol_qt5 = gSystem->DynFindSymbol("*", "webgui_start_browser_in_qt5");
+   if (symbol_qt5) {
+      typedef void (*FunctionQt5)(const char *, void *, bool);
 
-   Func_t symbol = gSystem->DynFindSymbol("*", "webgui_start_browser_new");
-   if (symbol) {
-      typedef void (*FunctionFunc)(const char*);
+      addr.Form("://dummy:8080/web6gui/%s/draw.htm?longpollcanvas%s&qt5", GetName(),
+                (gROOT->IsBatch() ? "&batch_mode" : ""));
+      // addr.Form("example://localhost:8080/Canvases/%s/draw.htm", Canvas()->GetName());
 
-      addr.Form("example://dummy:8080/webgui/%s/draw.htm?longpollcanvas", GetName());
-      //addr.Form("example://localhost:8080/Canvases/%s/draw.htm", Canvas()->GetName());
+      Info("NewDisplay", "Show canvas in Qt5 window:  %s", addr.Data());
 
-      Info("Show", "Call TWebCanvas::Show:  %s", addr.Data());
-
-      FunctionFunc func = (FunctionFunc) symbol;
-      func(addr.Data());
+      FunctionQt5 func = (FunctionQt5)symbol_qt5;
+      func(addr.Data(), fServer, gROOT->IsBatch());
       return;
    }
 
+   // TODO: one should try to load CEF libraries only when really needed
+   // probably, one should create separate DLL with CEF-related code
+   Func_t symbol_cef = gSystem->DynFindSymbol("*", "webgui_start_browser_in_cef3");
+   const char *cef_path = gSystem->Getenv("CEF_PATH");
+   const char *rootsys = gSystem->Getenv("ROOTSYS");
+   if (symbol_cef && cef_path && !gSystem->AccessPathName(cef_path) && rootsys) {
+      typedef void (*FunctionCef3)(const char *, void *, bool, const char *, const char *);
+
+      addr.Form("/web6gui/%s/draw.htm?cef_canvas%s", GetName(), (gROOT->IsBatch() ? "&batch_mode" : ""));
+
+      Info("NewDisplay", "Show canvas in CEF window:  %s", addr.Data());
+
+      FunctionCef3 func = (FunctionCef3)symbol_cef;
+      func(addr.Data(), fServer, gROOT->IsBatch(), rootsys, cef_path);
+
+      return;
+   }
+
+   addr.Form("%s/web6gui/%s/draw.htm?webcanvas", fAddr.Data(), GetName());
+
    Info("Show", "Call TWebCanvas::Show:  %s", addr.Data());
-
-   #ifdef WEBGUI_WITH_CEF
-      const char* cef = gSystem->Getenv("CEF_PATH");
-      Info("Show", "CEF %s", cef);
-      if (cef && !gSystem->AccessPathName(cef)) {
-
-         TApplication* root_app = gROOT->GetApplication();
-
-         printf("Start cef window with addr %s app %p\n", addr.Data(), root_app);
-
-         CefMainArgs main_args(root_app->Argc(), root_app->Argv());
-
-         // CEF applications have multiple sub-processes (render, plugin, GPU, etc)
-         // that share the same executable. This function checks the command-line and,
-         // if this is a sub-process, executes the appropriate logic.
-
-/*         int exit_code = CefExecuteProcess(main_args, NULL, NULL);
-         if (exit_code >= 0) {
-           // The sub-process has completed so return here.
-           return exit_code;
-         }
-*/
-
-         // Install xlib error handlers so that the application won't be terminated
-         // on non-fatal errors.
-//         XSetErrorHandler(XErrorHandlerImpl);
-//         XSetIOErrorHandler(XIOErrorHandlerImpl);
-
-         // Specify CEF global settings here.
-         CefSettings settings;
-
-       //  settings.multi_threaded_message_loop = false; // not supported
-       //  settings.external_message_pump = false;
-         const char* rootsys = gSystem->Getenv("ROOTSYS");
-
-         printf("Get build dir %s\n", rootsys);
-
-         TString path, path2, cef_main;
-         path.Form("%s/Resources/", cef);
-         path2.Form("%s/Resources/locales/", cef);
-         cef_main.Form("%s/bin/cef_main", rootsys);
-
-          cef_string_ascii_to_utf16(path.Data(), path.Length(), &settings.resources_dir_path);
-
-          cef_string_ascii_to_utf16(path2.Data(), path2.Length(), &settings.locales_dir_path);
-
-          settings.no_sandbox = true;
-          // settings.single_process = true;
-
-
-         // SimpleApp implements application-level callbacks for the browser process.
-         // It will create the first browser instance in OnContextInitialized() after
-         // CEF has initialized.
-         CefRefPtr<SimpleApp> *app = new CefRefPtr<SimpleApp>(new SimpleApp(addr.Data(), cef_main.Data()));
-
-         // Initialize CEF for the browser process.
-         CefInitialize(main_args, settings, app->get(), NULL);
-
-
-         // let run event loop, should be improved later
-         TCefTimer *timer = new TCefTimer(10, kTRUE);
-         timer->TurnOn();
-
-
-         // Run the CEF message loop. This will block until CefQuitMessageLoop() is
-         // called.
-         // CefRunMessageLoop();
-
-       /*  int cnt = 0;
-         while (true) {
-           CefDoMessageLoopWork();
-           ::sleep(1);
-         }
-       */
-         // printf("doing shutdown\n");
-
-         // Shut down CEF.
-         //CefShutdown();
-
-
-
-         return;
-      }
-   #endif
 
    // exec.Form("setsid chromium --app=http://localhost:8080/Canvases/%s/draw.htm?websocket </dev/null >/dev/null 2>/dev/null &", Canvas()->GetName());
 

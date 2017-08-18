@@ -41,7 +41,7 @@ THttpServer *TWebGuiFactory::GetHttpServer() { return gServer; }
 TWebGuiFactory::TWebGuiFactory() :
    TGuiFactory("WebRootProxy","web-based ROOT GUI Factory"),
    fGuiProxy(0),
-   fAddr("http://localhost:8181")
+   fAddr()
 {
    //if (TGQt::GetVirtualX())  gVirtualX = TGQt::GetVirtualX();
    // gSystem->Load("libGui");
@@ -79,24 +79,38 @@ TApplicationImp *TWebGuiFactory::CreateApplicationImp(const char *classname, int
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void TWebGuiFactory::CreateHttpServer()
+Bool_t TWebGuiFactory::CreateHttpServer()
 {
-   if (gServer) return;
+   if (!gServer)
+      gServer = new THttpServer("dummy");
 
-   if (gSystem->DynFindSymbol("*", "webgui_start_browser_new")) {
-      gServer = new THttpServer("nope"); // server without any external engine
-   } else {
-      // gServer = new THttpServer("http:8080?loopback&websocket_timeout=10000");
-     const char *port = gSystem->Getenv("WEBGUI_PORT");
-     TString buf;
-     if (!port) {
-        gRandom->SetSeed(0);
-        buf.Form("%d", (int) (8800 + 1000* gRandom->Rndm(1)));
-        port = buf.Data(); // "8181";
-     }
-     fAddr.Form("http://localhost:%s", port);
-     gServer = new THttpServer(Form("http:%s?websocket_timeout=10000", port));
+   Bool_t with_http = !gSystem->DynFindSymbol("*", "webgui_start_browser_in_qt5") &&
+                      !gSystem->DynFindSymbol("*", "webgui_start_browser_in_cef3");
+
+   if (!with_http || (fAddr.Length() > 0)) return kTRUE;
+
+   // gServer = new THttpServer("http:8080?loopback&websocket_timeout=10000");
+
+   int http_port = 0;
+   const char *ports = gSystem->Getenv("WEBGUI_PORT");
+   if (ports)
+      http_port = TString(ports).Atoi();
+   if (!http_port)
+      gRandom->SetSeed(0);
+
+   for (int ntry = 0; ntry < 100; ++ntry) {
+      if (!http_port)
+         http_port = (int)(8800 + 1000 * gRandom->Rndm(1));
+
+      if (gServer->CreateEngine(TString::Format("http:%d?websocket_timeout=10000", http_port))) {
+         fAddr.Form("http://localhost:%d", http_port);
+         return kTRUE;
+      }
+
+      http_port = 0;
    }
+
+   return kFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -105,9 +119,9 @@ TCanvasImp *TWebGuiFactory::CreateCanvasImp(TCanvas *c, const char *title, UInt_
 {
    CreateHttpServer();
 
-   TWebCanvas *res = new TWebCanvas(c, title, 0, 0, width, height, fAddr);
+   TWebCanvas *res = new TWebCanvas(c, title, 0, 0, width, height, fAddr, gServer);
 
-   gServer->Register("/webgui", res);
+   gServer->Register("/web6gui", res);
 
    return res;
 }
@@ -118,9 +132,9 @@ TCanvasImp *TWebGuiFactory::CreateCanvasImp(TCanvas *c, const char *title, Int_t
 {
    CreateHttpServer();
 
-   TWebCanvas *res = new TWebCanvas(c, title, x, y, width, height, fAddr);
+   TWebCanvas *res = new TWebCanvas(c, title, x, y, width, height, fAddr, gServer);
 
-   gServer->Register("/webgui", res);
+   gServer->Register("/web6gui", res);
 
    return res;
 }

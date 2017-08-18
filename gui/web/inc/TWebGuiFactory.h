@@ -33,7 +33,7 @@ private:
 
    TString fAddr;
 
-   void CreateHttpServer();
+   Bool_t CreateHttpServer();
 
 public:
    TWebGuiFactory();

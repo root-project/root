@@ -56,7 +56,8 @@ protected:
    WebConnList     fWebConn;      ///<! connections list
 
    TString         fAddr;         ///<! URL address of the canvas
-   Bool_t          fHasSpecials;  ///<!  has special objects whic may require pad ranges
+   void           *fServer;       ///<! THttpServer, required only for direct communications from CEF or Qt5
+   Bool_t          fHasSpecials;  ///<!  has special objects which may require pad ranges
 
    virtual void   Lock() { }
    virtual void   Unlock() { }
@@ -78,7 +79,7 @@ protected:
 
 public:
    TWebCanvas();
-   TWebCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height, TString addr);
+   TWebCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height, TString addr, void *server);
    virtual ~TWebCanvas();
 
    virtual Int_t  InitWindow();
