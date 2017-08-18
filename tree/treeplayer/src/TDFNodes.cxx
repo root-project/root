@@ -402,7 +402,9 @@ void TLoopManager::Book(const FilterBasePtr_t &filterPtr)
 
 void TLoopManager::Book(const TCustomColumnBasePtr_t &columnPtr)
 {
-   fBookedCustomColumns[columnPtr->GetName()] = columnPtr;
+   const auto &name = columnPtr->GetName();
+   fBookedCustomColumns[name] = columnPtr;
+   fCustomColumnNames.emplace_back(name);
 }
 
 void TLoopManager::Book(const std::shared_ptr<bool> &readinessPtr)
