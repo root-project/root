@@ -26,12 +26,12 @@ test.root: def.C def.h $(ROOTCORELIBS)
 testForeignDraw.log: Run.C test.root 
 	$(CMDECHO) $(CALLROOTEXE) -b -l -q Run.C 2>&1 | tee fulloutput.log | grep -v 'Total =' > testForeignDraw.log
 
-ifeq ($(lz4),)
-    testForeignDraw: testForeignDraw.log
-	$(CMDECHO) diff -ubw testForeignDrawLZ4.ref testForeignDraw.log
-else
+ifneq ($(lz4),1)
     testForeignDraw: testForeignDraw.log
 	$(CMDECHO) diff -ubw testForeignDraw.ref testForeignDraw.log
+else
+    testForeignDraw: testForeignDraw.log
+	$(CMDECHO) diff -ubw testForeignDrawLZ4.ref testForeignDraw.log
 endif
 
 testWithFailure:
