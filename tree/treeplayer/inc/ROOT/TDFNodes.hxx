@@ -56,6 +56,7 @@ class TLoopManager : public std::enable_shared_from_this<TLoopManager> {
    FilterBaseVec_t fBookedFilters;
    FilterBaseVec_t fBookedNamedFilters; ///< Contains a subset of fBookedFilters, i.e. only the named filters
    std::map<std::string, TCustomColumnBasePtr_t> fBookedCustomColumns;
+   ColumnNames_t fCustomColumnNames; ///< Contains names of all custom columns defined in the functional graph.
    RangeBaseVec_t fBookedRanges;
    std::vector<std::shared_ptr<bool>> fResProxyReadiness;
    ::TDirectory *const fDirPtr{nullptr};
@@ -94,6 +95,7 @@ public:
    std::shared_ptr<TLoopManager> GetSharedPtr() { return shared_from_this(); }
    const ColumnNames_t &GetDefaultColumnNames() const;
    const ColumnNames_t GetCustomColumns() const { return {}; };
+   const ColumnNames_t &GetCustomColumnNames() const { return fCustomColumnNames; };
    TTree *GetTree() const;
    TCustomColumnBase *GetBookedBranch(const std::string &name) const;
    const std::map<std::string, TCustomColumnBasePtr_t> &GetBookedColumns() const { return fBookedCustomColumns; }
@@ -275,7 +277,8 @@ public:
 
    void InitSlot(TTreeReader *r, unsigned int slot) final
    {
-      InitTDFValues(slot, fValues[slot], r, fBranches, fTmpBranches, fImplPtr->GetBookedColumns(), TypeInd_t());
+      InitTDFValues(slot, fValues[slot], r, fBranches, fImplPtr->GetCustomColumnNames(), fImplPtr->GetBookedColumns(),
+                    TypeInd_t());
       fHelper.InitSlot(r, slot);
    }
 
@@ -371,8 +374,8 @@ public:
 
    void InitSlot(TTreeReader *r, unsigned int slot) final
    {
-      TDFInternal::InitTDFValues(slot, fValues[slot], r, fBranches, fTmpBranches, fImplPtr->GetBookedColumns(),
-                                 TypeInd_t());
+      TDFInternal::InitTDFValues(slot, fValues[slot], r, fBranches, fImplPtr->GetCustomColumnNames(),
+                                 fImplPtr->GetBookedColumns(), TypeInd_t());
    }
 
    void *GetValuePtr(unsigned int slot) final { return static_cast<void *>(fLastResultPtr[slot].get()); }
@@ -515,8 +518,8 @@ public:
 
    void InitSlot(TTreeReader *r, unsigned int slot) final
    {
-      TDFInternal::InitTDFValues(slot, fValues[slot], r, fBranches, fTmpBranches, fImplPtr->GetBookedColumns(),
-                                 TypeInd_t());
+      TDFInternal::InitTDFValues(slot, fValues[slot], r, fBranches, fImplPtr->GetCustomColumnNames(),
+                                 fImplPtr->GetBookedColumns(), TypeInd_t());
    }
 
    // recursive chain of `Report`s
