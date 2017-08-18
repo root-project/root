@@ -414,6 +414,6 @@ void TF1Convolution::GetRange(Double_t &a, Double_t &b) const
 ///   Update the two component functions of the convolution
 
 void TF1Convolution::Update() {
-      fFunction1->Update();
-      fFunction2->Update();
+   fFunction1->Update();
+   fFunction2->Update();
 }

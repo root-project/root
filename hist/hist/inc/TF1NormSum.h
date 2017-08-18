@@ -39,9 +39,9 @@ public:
    TF1NormSum(TF1* function1, TF1* function2, TF1*function3, Double_t coeff1 = 1., Double_t coeff2 = 1., Double_t coeff3 = 1., Double_t scale = 1.);
    TF1NormSum(const TString &formula, Double_t xmin, Double_t xmax);
 
-   /* ~TF1NormSum() { */
-   /*    std::cout << "Calling TF1NormSum destructor" << std::endl; */
-   /* } */
+   virtual ~TF1NormSum() {
+      std::cout << "Calling TF1NormSum destructor" << std::endl;
+   }
    
    double  operator()(const Double_t* x, const Double_t* p);
 
