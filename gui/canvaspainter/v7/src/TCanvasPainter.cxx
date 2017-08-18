@@ -792,7 +792,7 @@ Bool_t TCanvasPainter::ProcessWS(THttpCallArg *arg)
       size_t pos = cdata.find(':');
 
       if ((pos != std::string::npos) && (pos > 0)) {
-         std::string id(cdata, pos);
+         std::string id(cdata, 0, pos);
          cdata.erase(0, pos + 1);
          ROOT::Experimental::TDrawable *drawable = FindDrawable(fCanvas, id);
          if (drawable && (cdata.length() > 0)) {
