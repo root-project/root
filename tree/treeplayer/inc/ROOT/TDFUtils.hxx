@@ -133,7 +133,7 @@ using ReaderValueOrArray_t = typename TReaderValueOrArray<T>::Proxy_t;
 template <typename TDFValueTuple, int... S>
 void InitTDFValues(unsigned int slot, TDFValueTuple &valueTuple, TTreeReader *r, const ColumnNames_t &bn,
                    const ColumnNames_t &tmpbn,
-                   const std::map<std::string, std::shared_ptr<TCustomColumnBase>> &tmpBranches, StaticSeq<S...>)
+                   const std::map<std::string, std::shared_ptr<TCustomColumnBase>> &customCols, StaticSeq<S...>)
 {
    // isTmpBranch has length bn.size(). Elements are true if the corresponding
    // branch is a temporary branch created with Define, false if they are
@@ -146,7 +146,7 @@ void InitTDFValues(unsigned int slot, TDFValueTuple &valueTuple, TTreeReader *r,
    // The statement defines a variable with type std::initializer_list<int>, containing all zeroes, and SetTmpColumn or
    // SetProxy are conditionally executed as the braced init list is expanded. The final ... expands S.
    std::initializer_list<int> expander{(isTmpColumn[S]
-                                           ? std::get<S>(valueTuple).SetTmpColumn(slot, tmpBranches.at(bn.at(S)).get())
+                                           ? std::get<S>(valueTuple).SetTmpColumn(slot, customCols.at(bn.at(S)).get())
                                            : std::get<S>(valueTuple).MakeProxy(r, bn.at(S)),
                                         0)...};
    (void)expander; // avoid "unused variable" warnings for expander on gcc4.9

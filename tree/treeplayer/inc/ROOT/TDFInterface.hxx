@@ -118,12 +118,12 @@ using TmpBranchBasePtr_t = std::shared_ptr<TCustomColumnBase>;
 
 Long_t JitTransformation(void *thisPtr, const std::string &methodName, const std::string &interfaceTypeName,
                          const std::string &name, const std::string &expression, TObjArray *branches,
-                         const std::vector<std::string> &tmpBranches,
+                         const std::vector<std::string> &customColumns,
                          const std::map<std::string, TmpBranchBasePtr_t> &tmpBookedBranches, TTree *tree);
 
 std::string JitBuildAndBook(const ColumnNames_t &bl, const std::string &prevNodeTypename, void *prevNode,
                             const std::type_info &art, const std::type_info &at, const void *r, TTree *tree,
-                            const unsigned int nSlots, const std::map<std::string, TmpBranchBasePtr_t> &tmpBranches);
+                            const unsigned int nSlots, const std::map<std::string, TmpBranchBasePtr_t> &customColumns);
 
 // allocate a shared_ptr on the heap, return a reference to it. the user is responsible of deleting the shared_ptr*.
 // this function is meant to only be used by TInterface's action methods, and should be deprecated as soon as we find
@@ -424,12 +424,12 @@ public:
       ColumnNames_t selectedColumns;
       selectedColumns.reserve(32);
 
-      const auto tmpBranches = fProxiedPtr->GetTmpBranches();
+      const auto customColumns = fProxiedPtr->GetCustomColumns();
       // Since we support gcc48 and it does not provide in its stl std::regex,
       // we need to use TRegexp
       TRegexp regexp(theRegex);
       int dummy;
-      for (auto &&branchName : tmpBranches) {
+      for (auto &&branchName : customColumns) {
          if (isEmptyRegex || -1 != regexp.Index(branchName.c_str(), &dummy)) {
             selectedColumns.emplace_back(branchName);
          }
@@ -1087,7 +1087,7 @@ private:
       auto df = GetDataFrameChecked();
       auto tree = df->GetTree();
       auto branches = tree ? tree->GetListOfBranches() : nullptr;
-      auto tmpBranches = fProxiedPtr->GetTmpBranches();
+      auto customColumns = fProxiedPtr->GetCustomColumns();
       auto tmpBookedBranches = df->GetBookedColumns();
       const std::string transformInt(transformation);
       const std::string nameInt(nodeName);
@@ -1096,7 +1096,7 @@ private:
       TInterface<TypeTraits::TakeFirstParameter_t<decltype(upcastNode)>> upcastInterface(upcastNode, fImplWeakPtr);
       const auto thisTypeName = "ROOT::Experimental::TDF::TInterface<" + upcastInterface.GetNodeTypeName() + ">";
       return TDFInternal::JitTransformation(&upcastInterface, transformInt, thisTypeName, nameInt, expressionInt,
-                                            branches, tmpBranches, tmpBookedBranches, tree);
+                                            branches, customColumns, tmpBookedBranches, tree);
    }
 
    /// Return string containing fully qualified type name of the node pointed by fProxied.
@@ -1130,14 +1130,14 @@ private:
       auto realNColumns = (nColumns > -1 ? nColumns : sizeof...(BranchTypes));
       const auto validColumnNames = GetValidatedColumnNames(*loopManager, realNColumns, columns);
       const unsigned int nSlots = fProxiedPtr->GetNSlots();
-      const auto &tmpBranches = loopManager->GetBookedColumns();
+      const auto &customColumns = loopManager->GetBookedColumns();
       auto tree = loopManager->GetTree();
       auto rOnHeap = TDFInternal::MakeSharedOnHeap(r);
       auto upcastNode = TDFInternal::UpcastNode(fProxiedPtr);
       TInterface<TypeTraits::TakeFirstParameter_t<decltype(upcastNode)>> upcastInterface(upcastNode, fImplWeakPtr);
       auto toJit = TDFInternal::JitBuildAndBook(validColumnNames, upcastInterface.GetNodeTypeName(), upcastNode.get(),
                                                 typeid(std::shared_ptr<ActionResultType>), typeid(ActionType), rOnHeap,
-                                                tree, nSlots, tmpBranches);
+                                                tree, nSlots, customColumns);
       loopManager->Jit(toJit);
       return MakeResultProxy(r, loopManager);
    }

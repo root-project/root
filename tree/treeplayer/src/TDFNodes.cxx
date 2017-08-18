@@ -34,8 +34,8 @@ namespace ROOT {
 namespace Internal {
 namespace TDF {
 
-TActionBase::TActionBase(TLoopManager *implPtr, const ColumnNames_t &tmpBranches, const unsigned int nSlots)
-   : fImplPtr(implPtr), fTmpBranches(tmpBranches), fNSlots(nSlots)
+TActionBase::TActionBase(TLoopManager *implPtr, const ColumnNames_t &customColumns, const unsigned int nSlots)
+   : fImplPtr(implPtr), fTmpBranches(customColumns), fNSlots(nSlots)
 {
 }
 
@@ -43,11 +43,11 @@ TActionBase::TActionBase(TLoopManager *implPtr, const ColumnNames_t &tmpBranches
 } // end NS Internal
 } // end NS ROOT
 
-TCustomColumnBase::TCustomColumnBase(TLoopManager *implPtr, const ColumnNames_t &tmpBranches, std::string_view name,
+TCustomColumnBase::TCustomColumnBase(TLoopManager *implPtr, const ColumnNames_t &customColumns, std::string_view name,
                                      const unsigned int nSlots)
-   : fImplPtr(implPtr), fTmpBranches(tmpBranches), fName(name), fNSlots(nSlots){};
+   : fImplPtr(implPtr), fTmpBranches(customColumns), fName(name), fNSlots(nSlots){};
 
-ColumnNames_t TCustomColumnBase::GetTmpBranches() const
+ColumnNames_t TCustomColumnBase::GetCustomColumns() const
 {
    return fTmpBranches;
 }
@@ -62,9 +62,9 @@ TLoopManager *TCustomColumnBase::GetImplPtr() const
    return fImplPtr;
 }
 
-TFilterBase::TFilterBase(TLoopManager *implPtr, const ColumnNames_t &tmpBranches, std::string_view name,
+TFilterBase::TFilterBase(TLoopManager *implPtr, const ColumnNames_t &customColumns, std::string_view name,
                          const unsigned int nSlots)
-   : fImplPtr(implPtr), fTmpBranches(tmpBranches), fLastCheckedEntry(nSlots, -1), fLastResult(nSlots),
+   : fImplPtr(implPtr), fTmpBranches(customColumns), fLastCheckedEntry(nSlots, -1), fLastResult(nSlots),
      fAccepted(nSlots), fRejected(nSlots), fName(name), fNSlots(nSlots)
 {
 }
@@ -74,7 +74,7 @@ TLoopManager *TFilterBase::GetImplPtr() const
    return fImplPtr;
 }
 
-ColumnNames_t TFilterBase::GetTmpBranches() const
+ColumnNames_t TFilterBase::GetCustomColumns() const
 {
    return fTmpBranches;
 }
@@ -427,9 +427,9 @@ void TLoopManager::Report() const
    for (const auto &fPtr : fBookedNamedFilters) fPtr->PrintReport();
 }
 
-TRangeBase::TRangeBase(TLoopManager *implPtr, const ColumnNames_t &tmpBranches, unsigned int start, unsigned int stop,
+TRangeBase::TRangeBase(TLoopManager *implPtr, const ColumnNames_t &customColumns, unsigned int start, unsigned int stop,
                        unsigned int stride, const unsigned int nSlots)
-   : fImplPtr(implPtr), fTmpBranches(tmpBranches), fStart(start), fStop(stop), fStride(stride), fNSlots(nSlots)
+   : fImplPtr(implPtr), fTmpBranches(customColumns), fStart(start), fStop(stop), fStride(stride), fNSlots(nSlots)
 {
 }
 
@@ -438,7 +438,7 @@ TLoopManager *TRangeBase::GetImplPtr() const
    return fImplPtr;
 }
 
-ColumnNames_t TRangeBase::GetTmpBranches() const
+ColumnNames_t TRangeBase::GetCustomColumns() const
 {
    return fTmpBranches;
 }
