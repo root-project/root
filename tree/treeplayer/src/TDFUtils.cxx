@@ -181,7 +181,7 @@ const ColumnNames_t SelectColumns(unsigned int nRequiredNames, const ColumnNames
 
 ColumnNames_t FindUnknownColumns(const ColumnNames_t &columns, const TLoopManager &lm)
 {
-   const auto customColumns = lm.GetBookedBranches();
+   const auto customColumns = lm.GetBookedColumns();
    auto *const tree = lm.GetTree();
    ColumnNames_t unknownColumns;
    for (auto &column : columns) {

@@ -264,7 +264,7 @@ void TLoopManager::InitNodeSlots(TTreeReader *r, unsigned int slot)
 {
    // booked branches must be initialized first
    // because actions and filters might need to point to the values encapsulate
-   for (auto &bookedBranch : fBookedBranches) bookedBranch.second->InitSlot(r, slot);
+   for (auto &bookedBranch : fBookedCustomColumns) bookedBranch.second->InitSlot(r, slot);
    for (auto &ptr : fBookedActions) ptr->InitSlot(r, slot);
    for (auto &ptr : fBookedFilters) ptr->InitSlot(r, slot);
 }
@@ -296,7 +296,7 @@ void TLoopManager::CleanUpNodes()
    fNStopsReceived = 0;
    for (auto &ptr : fBookedFilters) ptr->ResetChildrenCount();
    for (auto &ptr : fBookedRanges) ptr->ResetChildrenCount();
-   for (auto &pair : fBookedBranches) pair.second->ResetChildrenCount();
+   for (auto &pair : fBookedCustomColumns) pair.second->ResetChildrenCount();
 }
 
 /// Perform clean-up operations. To be called at the end of each task execution.
@@ -305,7 +305,7 @@ void TLoopManager::CleanUpTask(unsigned int slot)
 {
    for (auto &ptr : fBookedActions) ptr->ClearValueReaders(slot);
    for (auto &ptr : fBookedFilters) ptr->ClearValueReaders(slot);
-   for (auto &pair : fBookedBranches) pair.second->ClearValueReaders(slot);
+   for (auto &pair : fBookedCustomColumns) pair.second->ClearValueReaders(slot);
 }
 
 /// Jit all actions that required runtime column type inference, and clean the `fToJit` member variable.
@@ -379,8 +379,8 @@ TTree *TLoopManager::GetTree() const
 
 TCustomColumnBase *TLoopManager::GetBookedBranch(const std::string &name) const
 {
-   auto it = fBookedBranches.find(name);
-   return it == fBookedBranches.end() ? nullptr : it->second.get();
+   auto it = fBookedCustomColumns.find(name);
+   return it == fBookedCustomColumns.end() ? nullptr : it->second.get();
 }
 
 TDirectory *TLoopManager::GetDirectory() const
@@ -401,9 +401,9 @@ void TLoopManager::Book(const FilterBasePtr_t &filterPtr)
    }
 }
 
-void TLoopManager::Book(const TmpBranchBasePtr_t &branchPtr)
+void TLoopManager::Book(const TCustomColumnBasePtr_t &columnPtr)
 {
-   fBookedBranches[branchPtr->GetName()] = branchPtr;
+   fBookedCustomColumns[columnPtr->GetName()] = columnPtr;
 }
 
 void TLoopManager::Book(const std::shared_ptr<bool> &readinessPtr)

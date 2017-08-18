@@ -40,7 +40,7 @@ namespace TDFInternal = ROOT::Internal::TDF;
 using ActionBasePtr_t = std::shared_ptr<TDFInternal::TActionBase>;
 using ActionBaseVec_t = std::vector<ActionBasePtr_t>;
 class TCustomColumnBase;
-using TmpBranchBasePtr_t = std::shared_ptr<TCustomColumnBase>;
+using TCustomColumnBasePtr_t = std::shared_ptr<TCustomColumnBase>;
 class TFilterBase;
 using FilterBasePtr_t = std::shared_ptr<TFilterBase>;
 using FilterBaseVec_t = std::vector<FilterBasePtr_t>;
@@ -55,7 +55,7 @@ class TLoopManager : public std::enable_shared_from_this<TLoopManager> {
    ActionBaseVec_t fBookedActions;
    FilterBaseVec_t fBookedFilters;
    FilterBaseVec_t fBookedNamedFilters; ///< Contains a subset of fBookedFilters, i.e. only the named filters
-   std::map<std::string, TmpBranchBasePtr_t> fBookedBranches;
+   std::map<std::string, TCustomColumnBasePtr_t> fBookedCustomColumns;
    RangeBaseVec_t fBookedRanges;
    std::vector<std::shared_ptr<bool>> fResProxyReadiness;
    ::TDirectory *const fDirPtr{nullptr};
@@ -96,12 +96,12 @@ public:
    const ColumnNames_t GetTmpBranches() const { return {}; };
    TTree *GetTree() const;
    TCustomColumnBase *GetBookedBranch(const std::string &name) const;
-   const std::map<std::string, TmpBranchBasePtr_t> &GetBookedBranches() const { return fBookedBranches; }
+   const std::map<std::string, TCustomColumnBasePtr_t> &GetBookedColumns() const { return fBookedCustomColumns; }
    ::TDirectory *GetDirectory() const;
    ULong64_t GetNEmptyEntries() const { return fNEmptyEntries; }
    void Book(const ActionBasePtr_t &actionPtr);
    void Book(const FilterBasePtr_t &filterPtr);
-   void Book(const TmpBranchBasePtr_t &branchPtr);
+   void Book(const TCustomColumnBasePtr_t &branchPtr);
    void Book(const std::shared_ptr<bool> &branchPtr);
    void Book(const RangeBasePtr_t &rangePtr);
    bool CheckFilters(int, unsigned int);
@@ -275,7 +275,7 @@ public:
 
    void InitSlot(TTreeReader *r, unsigned int slot) final
    {
-      InitTDFValues(slot, fValues[slot], r, fBranches, fTmpBranches, fImplPtr->GetBookedBranches(), TypeInd_t());
+      InitTDFValues(slot, fValues[slot], r, fBranches, fTmpBranches, fImplPtr->GetBookedColumns(), TypeInd_t());
       fHelper.InitSlot(r, slot);
    }
 
@@ -371,7 +371,7 @@ public:
 
    void InitSlot(TTreeReader *r, unsigned int slot) final
    {
-      TDFInternal::InitTDFValues(slot, fValues[slot], r, fBranches, fTmpBranches, fImplPtr->GetBookedBranches(),
+      TDFInternal::InitTDFValues(slot, fValues[slot], r, fBranches, fTmpBranches, fImplPtr->GetBookedColumns(),
                                  TypeInd_t());
    }
 
@@ -515,7 +515,7 @@ public:
 
    void InitSlot(TTreeReader *r, unsigned int slot) final
    {
-      TDFInternal::InitTDFValues(slot, fValues[slot], r, fBranches, fTmpBranches, fImplPtr->GetBookedBranches(),
+      TDFInternal::InitTDFValues(slot, fValues[slot], r, fBranches, fTmpBranches, fImplPtr->GetBookedColumns(),
                                  TypeInd_t());
    }
 

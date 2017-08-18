@@ -1088,7 +1088,7 @@ private:
       auto tree = df->GetTree();
       auto branches = tree ? tree->GetListOfBranches() : nullptr;
       auto tmpBranches = fProxiedPtr->GetTmpBranches();
-      auto tmpBookedBranches = df->GetBookedBranches();
+      auto tmpBookedBranches = df->GetBookedColumns();
       const std::string transformInt(transformation);
       const std::string nameInt(nodeName);
       const std::string expressionInt(expression);
@@ -1130,7 +1130,7 @@ private:
       auto realNColumns = (nColumns > -1 ? nColumns : sizeof...(BranchTypes));
       const auto validColumnNames = GetValidatedColumnNames(*loopManager, realNColumns, columns);
       const unsigned int nSlots = fProxiedPtr->GetNSlots();
-      const auto &tmpBranches = loopManager->GetBookedBranches();
+      const auto &tmpBranches = loopManager->GetBookedColumns();
       auto tree = loopManager->GetTree();
       auto rOnHeap = TDFInternal::MakeSharedOnHeap(r);
       auto upcastNode = TDFInternal::UpcastNode(fProxiedPtr);
