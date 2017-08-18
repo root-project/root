@@ -2027,11 +2027,11 @@ void TCanvas::Streamer(TBuffer &b)
          if (currentpalette) {
            TIter nextpal(currentpalette);
            Int_t n = currentpalette->GetEntries();
-           Int_t palcolors[n];
+           TArrayI palcolors(n);
            TColor *col = 0;
            Int_t i = 0;
            while ((col = (TColor*)nextpal())) palcolors[i++] = col->GetNumber();
-           gStyle->SetPalette(n,palcolors);
+           gStyle->SetPalette(n,palcolors.GetArray());
            fPrimitives->Remove(currentpalette);
            delete currentpalette;
          }
