@@ -155,7 +155,7 @@ int tdf001_introduction()
    // Additional columns can be expressed as strings. The content must be C++
    // code. The name of the variables must be the name of the branches. The code
    // is just in time compiled.
-   auto entries_sum2 = d.Define("sum", "b1 + b2").Filter("sum > 4.2").Count();
+   auto entries_sum2 = d.Define("sum2", "b1 + b2").Filter("sum2 > 4.2").Count();
    std::cout << *entries_sum2 << std::endl;
 
    return 0;
