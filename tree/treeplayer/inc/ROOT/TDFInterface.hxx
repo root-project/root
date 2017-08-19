@@ -187,6 +187,7 @@ class TInterface {
 
    const std::shared_ptr<Proxied> fProxiedPtr; ///< Smart pointer to the graph node encapsulated by this TInterface.
    const std::weak_ptr<TLoopManager> fImplWeakPtr; ///< Weak pointer to the TLoopManager at the root of the graph.
+   ColumnNames_t fValidCustomColumns; ///< Names of columns `Define`d for this branch of the functional graph.
 public:
    /// \cond HIDDEN_SYMBOLS
    // Template conversion operator, meant to use to convert TInterfaces of certain node types to TInterfaces of base
@@ -199,7 +200,7 @@ public:
    {
       static_assert(std::is_base_of<NewProxied, Proxied>::value,
                     "TInterface<T> can only be converted to TInterface<BaseOfT>");
-      return TInterface<NewProxied>(fProxiedPtr, fImplWeakPtr);
+      return TInterface<NewProxied>(fProxiedPtr, fImplWeakPtr, fValidCustomColumns);
    }
    /// \endcond
 
@@ -244,7 +245,7 @@ public:
       using F_t = TDFDetail::TFilter<F, Proxied>;
       auto FilterPtr = std::make_shared<F_t>(std::move(f), validColumnNames, *fProxiedPtr, name);
       loopManager->Book(FilterPtr);
-      return TInterface<F_t>(FilterPtr, fImplWeakPtr);
+      return TInterface<F_t>(FilterPtr, fImplWeakPtr, fValidCustomColumns);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -322,7 +323,9 @@ public:
       using B_t = TDFDetail::TCustomColumn<F, Proxied>;
       auto BranchPtr = std::make_shared<B_t>(name, std::move(expression), validColumnNames, *fProxiedPtr);
       loopManager->Book(BranchPtr);
-      return TInterface<B_t>(BranchPtr, fImplWeakPtr);
+      auto validColumns = fValidCustomColumns;
+      validColumns.emplace_back(name);
+      return TInterface<B_t>(BranchPtr, fImplWeakPtr, validColumns);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -375,7 +378,8 @@ public:
       auto tree = df->GetTree();
       std::stringstream snapCall;
       auto upcastNode = TDFInternal::UpcastNode(fProxiedPtr);
-      TInterface<TTraits::TakeFirstParameter_t<decltype(upcastNode)>> upcastInterface(fProxiedPtr, fImplWeakPtr);
+      TInterface<TTraits::TakeFirstParameter_t<decltype(upcastNode)>> upcastInterface(fProxiedPtr, fImplWeakPtr,
+                                                                                      fValidCustomColumns);
       // build a string equivalent to
       // "(TInterface<nodetype*>*)(this)->Snapshot<Ts...>(treename,filename,*(ColumnNames_t*)(&columnList))"
 
@@ -491,7 +495,7 @@ public:
       using Range_t = TDFDetail::TRange<Proxied>;
       auto RangePtr = std::make_shared<Range_t>(start, stop, stride, *fProxiedPtr);
       df->Book(RangePtr);
-      TInterface<TDFDetail::TRange<Proxied>> tdf_r(RangePtr, fImplWeakPtr);
+      TInterface<TDFDetail::TRange<Proxied>> tdf_r(RangePtr, fImplWeakPtr, fValidCustomColumns);
       return tdf_r;
    }
 
@@ -1115,7 +1119,8 @@ private:
       const std::string nameInt(nodeName);
       const std::string expressionInt(expression);
       auto upcastNode = TDFInternal::UpcastNode(fProxiedPtr);
-      TInterface<TypeTraits::TakeFirstParameter_t<decltype(upcastNode)>> upcastInterface(upcastNode, fImplWeakPtr);
+      TInterface<TypeTraits::TakeFirstParameter_t<decltype(upcastNode)>> upcastInterface(upcastNode, fImplWeakPtr,
+                                                                                         fValidCustomColumns);
       const auto thisTypeName = "ROOT::Experimental::TDF::TInterface<" + upcastInterface.GetNodeTypeName() + ">";
       return TDFInternal::JitTransformation(&upcastInterface, transformInt, thisTypeName, nameInt, expressionInt,
                                             branches, customColumns, tmpBookedBranches, tree);
@@ -1156,7 +1161,8 @@ private:
       auto tree = loopManager->GetTree();
       auto rOnHeap = TDFInternal::MakeSharedOnHeap(r);
       auto upcastNode = TDFInternal::UpcastNode(fProxiedPtr);
-      TInterface<TypeTraits::TakeFirstParameter_t<decltype(upcastNode)>> upcastInterface(upcastNode, fImplWeakPtr);
+      TInterface<TypeTraits::TakeFirstParameter_t<decltype(upcastNode)>> upcastInterface(upcastNode, fImplWeakPtr,
+                                                                                         fValidCustomColumns);
       auto toJit = TDFInternal::JitBuildAndBook(validColumnNames, upcastInterface.GetNodeTypeName(), upcastNode.get(),
                                                 typeid(std::shared_ptr<ActionResultType>), typeid(ActionType), rOnHeap,
                                                 tree, nSlots, customColumns);
@@ -1256,14 +1262,16 @@ protected:
       return df;
    }
 
-   TInterface(const std::shared_ptr<Proxied> &proxied, const std::weak_ptr<TLoopManager> &impl)
-      : fProxiedPtr(proxied), fImplWeakPtr(impl)
+   TInterface(const std::shared_ptr<Proxied> &proxied, const std::weak_ptr<TLoopManager> &impl,
+              const ColumnNames_t &validColumns)
+      : fProxiedPtr(proxied), fImplWeakPtr(impl), fValidCustomColumns(validColumns)
    {
    }
 
    /// Only enabled when building a TInterface<TLoopManager>
    template <typename T = Proxied, typename std::enable_if<std::is_same<T, TLoopManager>::value, int>::type = 0>
-   TInterface(const std::shared_ptr<Proxied> &proxied) : fProxiedPtr(proxied), fImplWeakPtr(proxied->GetSharedPtr())
+   TInterface(const std::shared_ptr<Proxied> &proxied)
+      : fProxiedPtr(proxied), fImplWeakPtr(proxied->GetSharedPtr()), fValidCustomColumns()
    {
    }
 
