@@ -265,7 +265,7 @@ namespace FitUtil {
       return also nPoints as the effective number of used points in the Chi2 evaluation
   */
   double EvaluateChi2(const IModelFunction &func, const BinData &data, const double *x, unsigned int &nPoints,
-                      const ROOT::Fit::ExecutionPolicy &executionPolicy, unsigned nChunks = 0);
+                      ROOT::Fit::ExecutionPolicy executionPolicy, unsigned nChunks = 0);
 
   /**
       evaluate the effective Chi2 given a model function and the data at the point x.
@@ -280,7 +280,7 @@ namespace FitUtil {
   */
   void EvaluateChi2Gradient(const IModelFunction &func, const BinData &data, const double *x, double *grad,
                             unsigned int &nPoints,
-                            const ROOT::Fit::ExecutionPolicy &executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial,
+                            ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial,
                             unsigned nChunks = 0);
 
   /**
@@ -288,7 +288,7 @@ namespace FitUtil {
       return also nPoints as the effective number of used points in the LogL evaluation
   */
   double EvaluateLogL(const IModelFunction &func, const UnBinData &data, const double *p, int iWeight, bool extended,
-                      unsigned int &nPoints, const ROOT::Fit::ExecutionPolicy &executionPolicy, unsigned nChunks = 0);
+                      unsigned int &nPoints, ROOT::Fit::ExecutionPolicy executionPolicy, unsigned nChunks = 0);
 
   /**
       evaluate the LogL gradient given a model function and the data at the point x.
@@ -296,7 +296,7 @@ namespace FitUtil {
   */
   void EvaluateLogLGradient(const IModelFunction &func, const UnBinData &data, const double *x, double *grad,
                             unsigned int &nPoints,
-                            const ROOT::Fit::ExecutionPolicy &executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial,
+                            ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial,
                             unsigned nChunks = 0);
 
   // #ifdef R__HAS_VECCORE
@@ -311,18 +311,17 @@ namespace FitUtil {
       By default is extended, pass extedend to false if want to be not extended (MultiNomial)
   */
   double EvaluatePoissonLogL(const IModelFunction &func, const BinData &data, const double *x, int iWeight,
-                             bool extended, unsigned int &nPoints, const ROOT::Fit::ExecutionPolicy &executionPolicy,
+                             bool extended, unsigned int &nPoints, ROOT::Fit::ExecutionPolicy executionPolicy,
                              unsigned nChunks = 0);
 
   /**
       evaluate the Poisson LogL given a model function and the data at the point x.
       return also nPoints as the effective number of used points in the LogL evaluation
   */
-  void
-  EvaluatePoissonLogLGradient(const IModelFunction &func, const BinData &data, const double *x, double *grad,
-                              unsigned int &nPoints,
-                              const ROOT::Fit::ExecutionPolicy &executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial,
-                              unsigned nChunks = 0);
+  void EvaluatePoissonLogLGradient(const IModelFunction &func, const BinData &data, const double *x, double *grad,
+                                   unsigned int &nPoints,
+                                   ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial,
+                                   unsigned nChunks = 0);
 
   // methods required by dedicate minimizer like Fumili
 
@@ -370,7 +369,8 @@ namespace FitUtil {
    template<class T>
    struct Evaluate {
 #ifdef R__HAS_VECCORE
-      static double EvalChi2(const IModelFunctionTempl<T> &func, const BinData & data, const double * p, unsigned int &nPoints, const ROOT::Fit::ExecutionPolicy &executionPolicy, unsigned nChunks = 0)
+      static double EvalChi2(const IModelFunctionTempl<T> &func, const BinData &data, const double *p,
+                             unsigned int &nPoints, ROOT::Fit::ExecutionPolicy executionPolicy, unsigned nChunks = 0)
       {
          // evaluate the chi2 given a  vectorized function reference  , the data and returns the value and also in nPoints
          // the actual number of used points
@@ -449,6 +449,13 @@ namespace FitUtil {
          };
 #else
          (void)nChunks;
+
+         // If IMT is disabled, force the execution policy to the serial case
+         if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
+            Warning("FitUtil::EvaluateChi2", "Multithread execution policy requires IMT, which is disabled. Changing "
+                                             "to ROOT::Fit::ExecutionPolicy::kSerial.");
+            executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial;
+         }
 #endif
 
          T res{};
@@ -478,8 +485,9 @@ namespace FitUtil {
          return vecCore::ReduceAdd(res);
       }
 
-      static double EvalLogL(const IModelFunctionTempl<T> &func, const UnBinData & data, const double * const p, int iWeight,
-                             bool extended, unsigned int &nPoints, const ROOT::Fit::ExecutionPolicy &executionPolicy, unsigned nChunks = 0)
+      static double EvalLogL(const IModelFunctionTempl<T> &func, const UnBinData &data, const double *const p,
+                             int iWeight, bool extended, unsigned int &nPoints,
+                             ROOT::Fit::ExecutionPolicy executionPolicy, unsigned nChunks = 0)
       {
          // evaluate the LogLikelihood
          unsigned int n = data.Size();
@@ -491,7 +499,7 @@ namespace FitUtil {
 #ifdef USE_PARAMCACHE
          (const_cast<IModelFunctionTempl<T> &>(func)).SetParameters(p);
 #endif
- 
+
 #ifdef R__USE_IMT
          // in case parameter needs to be propagated to user function use trick to set parameters by calling one time the function
          // this will be done in sequential mode and parameters can be set in a thread safe manner
@@ -601,6 +609,13 @@ namespace FitUtil {
          };
 #else
          (void)nChunks;
+
+         // If IMT is disabled, force the execution policy to the serial case
+         if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
+            Warning("FitUtil::EvaluateLogL", "Multithread execution policy requires IMT, which is disabled. Changing "
+                                             "to ROOT::Fit::ExecutionPolicy::kSerial.");
+            executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial;
+         }
 #endif
 
          T logl_v{};
@@ -699,8 +714,9 @@ namespace FitUtil {
 
       }
 
-      static double EvalPoissonLogL(const IModelFunctionTempl<T> &func, const BinData &data, const double *p, int iWeight, bool extended,
-                                    unsigned int, const ROOT::Fit::ExecutionPolicy &executionPolicy, unsigned nChunks = 0)
+      static double EvalPoissonLogL(const IModelFunctionTempl<T> &func, const BinData &data, const double *p,
+                                    int iWeight, bool extended, unsigned int,
+                                    ROOT::Fit::ExecutionPolicy executionPolicy, unsigned nChunks = 0)
       {
          // evaluate the Poisson Log Likelihood
          // for binned likelihood fits
@@ -798,6 +814,14 @@ namespace FitUtil {
          auto redFunction = [](const std::vector<T> &objs) { return std::accumulate(objs.begin(), objs.end(), T{}); };
 #else
          (void)nChunks;
+
+         // If IMT is disabled, force the execution policy to the serial case
+         if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
+            Warning("FitUtil::Evaluate<T>::EvalPoissonLogL",
+                    "Multithread execution policy requires IMT, which is disabled. Changing "
+                    "to ROOT::Fit::ExecutionPolicy::kSerial.");
+            executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial;
+         }
 #endif
 
          T res{};
@@ -849,11 +873,10 @@ namespace FitUtil {
          return mask;
       }
 
-      static void
-      EvalChi2Gradient(const IModelFunctionTempl<T> &f, const BinData &data, const double *p, double *grad,
-                       unsigned int &nPoints,
-                       const ROOT::Fit::ExecutionPolicy &executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial,
-                       unsigned nChunks = 0)
+      static void EvalChi2Gradient(const IModelFunctionTempl<T> &f, const BinData &data, const double *p, double *grad,
+                                   unsigned int &nPoints,
+                                   ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial,
+                                   unsigned nChunks = 0)
       {
          // evaluate the gradient of the chi2 function
          // this function is used when the model function knows how to calculate the derivative and we can
@@ -972,6 +995,19 @@ namespace FitUtil {
          std::vector<T> gVec(npar);
          std::vector<double> g(npar);
 
+#ifndef R__USE_IMT
+         // to fix compiler warning
+         (void)nChunks;
+
+         // If IMT is disabled, force the execution policy to the serial case
+         if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
+            Warning("FitUtil::EvaluateChi2Gradient",
+                    "Multithread execution policy requires IMT, which is disabled. Changing "
+                    "to ROOT::Fit::ExecutionPolicy::kSerial.");
+            executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial;
+         }
+#endif
+
          if (executionPolicy == ROOT::Fit::ExecutionPolicy::kSerial) {
             std::vector<std::vector<T>> allGradients(numVectors);
             for (unsigned int i = 0; i < numVectors; ++i) {
@@ -996,10 +1032,7 @@ namespace FitUtil {
                "FitUtil::EvaluateChi2Gradient",
                "Execution policy unknown. Avalaible choices:\n 0: Serial (default)\n 1: MultiThread (requires IMT)\n");
          }
-#ifndef R__USE_IMT
-         //to fix compiler warning 
-         (void)nChunks;
-#endif
+
          // Compute the contribution from the remaining points
          auto remainingPointsContribution = mapFunction(numVectors);
 
@@ -1049,7 +1082,7 @@ static double EvalPoissonBinPdf(const IModelFunctionTempl<T> &, const BinData &,
       static void
       EvalPoissonLogLGradient(const IModelFunctionTempl<T> &f, const BinData &data, const double *p, double *grad,
                               unsigned int &,
-                              const ROOT::Fit::ExecutionPolicy &executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial,
+                              ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial,
                               unsigned nChunks = 0)
       {
          // evaluate the gradient of the Poisson log likelihood function
@@ -1132,6 +1165,19 @@ static double EvalPoissonBinPdf(const IModelFunctionTempl<T> &, const BinData &,
 
          std::vector<T> gVec(npar);
 
+#ifndef R__USE_IMT
+         // to fix compiler warning
+         (void)nChunks;
+
+         // If IMT is disabled, force the execution policy to the serial case
+         if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
+            Warning("FitUtil::EvaluatePoissonLogLGradient",
+                    "Multithread execution policy requires IMT, which is disabled. Changing "
+                    "to ROOT::Fit::ExecutionPolicy::kSerial.");
+            executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial;
+         }
+#endif
+
          if (executionPolicy == ROOT::Fit::ExecutionPolicy::kSerial) {
             std::vector<std::vector<T>> allGradients(numVectors);
             for (unsigned int i = 0; i < numVectors; ++i) {
@@ -1156,10 +1202,6 @@ static double EvalPoissonBinPdf(const IModelFunctionTempl<T> &, const BinData &,
                                                           "ROOT::Fit::ExecutionPolicy::kSerial (default)\n "
                                                           "ROOT::Fit::ExecutionPolicy::kMultithread (requires IMT)\n");
          }
-#ifndef R__USE_IMT
-         //to fix compiler warning 
-         (void)nChunks;
-#endif
 
          // Compute the contribution from the remaining points
          auto remainingPointsContribution = mapFunction(numVectors);
@@ -1172,11 +1214,10 @@ static double EvalPoissonBinPdf(const IModelFunctionTempl<T> &, const BinData &,
          }
       }
 
-      static void
-      EvalLogLGradient(const IModelFunctionTempl<T> &f, const UnBinData &data, const double *p, double *grad,
-                       unsigned int &,
-                       const ROOT::Fit::ExecutionPolicy &executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial,
-                       unsigned nChunks = 0)
+      static void EvalLogLGradient(const IModelFunctionTempl<T> &f, const UnBinData &data, const double *p,
+                                   double *grad, unsigned int &,
+                                   ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial,
+                                   unsigned nChunks = 0)
       {
          // evaluate the gradient of the log likelihood function
 
@@ -1250,6 +1291,19 @@ static double EvalPoissonBinPdf(const IModelFunctionTempl<T> &, const BinData &,
          std::vector<T> gVec(npar);
          std::vector<double> g(npar);
 
+#ifndef R__USE_IMT
+         // to fix compiler warning
+         (void)nChunks;
+
+         // If IMT is disabled, force the execution policy to the serial case
+         if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
+            Warning("FitUtil::EvaluateLogLGradient",
+                    "Multithread execution policy requires IMT, which is disabled. Changing "
+                    "to ROOT::Fit::ExecutionPolicy::kSerial.");
+            executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial;
+         }
+#endif
+
          if (executionPolicy == ROOT::Fit::ExecutionPolicy::kSerial) {
             std::vector<std::vector<T>> allGradients(numVectors);
             for (unsigned int i = 0; i < numVectors; ++i) {
@@ -1273,11 +1327,7 @@ static double EvalPoissonBinPdf(const IModelFunctionTempl<T> &, const BinData &,
                                                    "ROOT::Fit::ExecutionPolicy::kSerial (default)\n "
                                                    "ROOT::Fit::ExecutionPolicy::kMultithread (requires IMT)\n");
          }
-#ifndef R__USE_IMT
-         //to fix compiler warning 
-         (void)nChunks;
-#endif
-         
+
          // Compute the contribution from the remaining points
          auto remainingPointsContribution = mapFunction(numVectors);
 
@@ -1294,7 +1344,8 @@ static double EvalPoissonBinPdf(const IModelFunctionTempl<T> &, const BinData &,
    struct Evaluate<double>{
 #endif
 
-      static double EvalChi2(const IModelFunction & func, const BinData & data, const double * p, unsigned int &nPoints, const ROOT::Fit::ExecutionPolicy &executionPolicy, unsigned nChunks = 0)
+      static double EvalChi2(const IModelFunction &func, const BinData &data, const double *p, unsigned int &nPoints,
+                             ROOT::Fit::ExecutionPolicy executionPolicy, unsigned nChunks = 0)
       {
          // evaluate the chi2 given a  function reference, the data and returns the value and also in nPoints
          // the actual number of used points
@@ -1307,14 +1358,16 @@ static double EvalPoissonBinPdf(const IModelFunctionTempl<T> &, const BinData &,
          return FitUtil::EvaluateChi2(func, data, p, nPoints, executionPolicy, nChunks);
       }
 
-      static double EvalLogL(const IModelFunctionTempl<double> &func, const UnBinData & data, const double * p, int iWeight,
-      bool extended, unsigned int &nPoints, const ROOT::Fit::ExecutionPolicy &executionPolicy, unsigned nChunks = 0)
+      static double EvalLogL(const IModelFunctionTempl<double> &func, const UnBinData &data, const double *p,
+                             int iWeight, bool extended, unsigned int &nPoints,
+                             ROOT::Fit::ExecutionPolicy executionPolicy, unsigned nChunks = 0)
       {
          return FitUtil::EvaluateLogL(func, data, p, iWeight, extended, nPoints, executionPolicy, nChunks);
       }
 
-      static double EvalPoissonLogL(const IModelFunctionTempl<double> &func, const BinData &data, const double *p, int iWeight, bool extended, unsigned int &nPoints,
-                                    const ROOT::Fit::ExecutionPolicy &executionPolicy, unsigned nChunks = 0)
+      static double EvalPoissonLogL(const IModelFunctionTempl<double> &func, const BinData &data, const double *p,
+                                    int iWeight, bool extended, unsigned int &nPoints,
+                                    ROOT::Fit::ExecutionPolicy executionPolicy, unsigned nChunks = 0)
       {
          return FitUtil::EvaluatePoissonLogL(func, data, p, iWeight, extended, nPoints, executionPolicy, nChunks);
       }
@@ -1323,11 +1376,10 @@ static double EvalPoissonBinPdf(const IModelFunctionTempl<T> &, const BinData &,
       {
          return FitUtil::EvaluateChi2Effective(func, data, p, nPoints);
       }
-      static void
-      EvalChi2Gradient(const IModelFunctionTempl<double> &func, const BinData &data, const double *p, double *g,
-                       unsigned int &nPoints,
-                       const ROOT::Fit::ExecutionPolicy &executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial,
-                       unsigned nChunks = 0)
+      static void EvalChi2Gradient(const IModelFunctionTempl<double> &func, const BinData &data, const double *p,
+                                   double *g, unsigned int &nPoints,
+                                   ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial,
+                                   unsigned nChunks = 0)
       {
          FitUtil::EvaluateChi2Gradient(func, data, p, g, nPoints, executionPolicy, nChunks);
       }
@@ -1345,17 +1397,16 @@ static double EvalPoissonBinPdf(const IModelFunctionTempl<T> &, const BinData &,
       static void
       EvalPoissonLogLGradient(const IModelFunctionTempl<double> &func, const BinData &data, const double *p, double *g,
                               unsigned int &nPoints,
-                              const ROOT::Fit::ExecutionPolicy &executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial,
+                              ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial,
                               unsigned nChunks = 0)
       {
          FitUtil::EvaluatePoissonLogLGradient(func, data, p, g, nPoints, executionPolicy, nChunks);
       }
 
-      static void
-      EvalLogLGradient(const IModelFunctionTempl<double> &func, const UnBinData &data, const double *p, double *g,
-                       unsigned int &nPoints,
-                       const ROOT::Fit::ExecutionPolicy &executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial,
-                       unsigned nChunks = 0)
+      static void EvalLogLGradient(const IModelFunctionTempl<double> &func, const UnBinData &data, const double *p,
+                                   double *g, unsigned int &nPoints,
+                                   ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial,
+                                   unsigned nChunks = 0)
       {
          FitUtil::EvaluateLogLGradient(func, data, p, g, nPoints, executionPolicy, nChunks);
       }
