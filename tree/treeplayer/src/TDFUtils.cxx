@@ -133,15 +133,21 @@ unsigned int GetNSlots()
    return nSlots;
 }
 
-void CheckTmpBranch(std::string_view branchName, TTree *treePtr)
+void CheckCustomColumn(std::string_view definedCol, TTree *treePtr, const ColumnNames_t &customCols)
 {
    if (treePtr != nullptr) {
-      std::string branchNameInt(branchName);
-      auto branch = treePtr->GetBranch(branchNameInt.c_str());
+      // check if definedCol is already present in TTree
+      const std::string definedColStr(definedCol);
+      const auto branch = treePtr->GetBranch(definedColStr.c_str());
       if (branch != nullptr) {
-         auto msg = "branch \"" + branchNameInt + "\" already present in TTree";
+         const auto msg = "branch \"" + definedCol + "\" already present in TTree";
          throw std::runtime_error(msg);
       }
+   }
+   // check if definedCol has already been `Define`d in the functional graph
+   if (std::find(customCols.begin(), customCols.end(), definedCol) != customCols.end()) {
+      const auto msg = "Redefinition of column \"" + definedCol + "\"";
+      throw std::runtime_error(msg);
    }
 }
 
