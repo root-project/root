@@ -317,7 +317,7 @@ public:
    Define(std::string_view name, F expression, const ColumnNames_t &columns = {})
    {
       auto loopManager = GetDataFrameChecked();
-      TDFInternal::CheckTmpBranch(name, loopManager->GetTree());
+      TDFInternal::CheckCustomColumn(name, loopManager->GetTree(), loopManager->GetCustomColumnNames());
       auto nColumns = TTraits::CallableTraits<F>::arg_types::list_size;
       const auto validColumnNames = GetValidatedColumnNames(*loopManager, nColumns, columns);
       using B_t = TDFDetail::TCustomColumn<F, Proxied>;
