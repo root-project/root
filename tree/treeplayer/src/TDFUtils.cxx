@@ -179,16 +179,15 @@ const ColumnNames_t SelectColumns(unsigned int nRequiredNames, const ColumnNames
    }
 }
 
-ColumnNames_t FindUnknownColumns(const ColumnNames_t &columns, const TLoopManager &lm)
+ColumnNames_t
+FindUnknownColumns(const ColumnNames_t &requiredCols, TTree *tree, const ColumnNames_t &definedCols)
 {
-   const auto customColumns = lm.GetBookedColumns();
-   auto *const tree = lm.GetTree();
    ColumnNames_t unknownColumns;
-   for (auto &column : columns) {
+   for (auto &column : requiredCols) {
       const auto isTreeBranch = (tree != nullptr && tree->GetBranch(column.c_str()) != nullptr);
       if (isTreeBranch)
          continue;
-      const auto isCustomColumn = (customColumns.find(column) != customColumns.end());
+      const auto isCustomColumn = std::find(definedCols.begin(), definedCols.end(), column) != definedCols.end();
       if (isCustomColumn)
          continue;
       unknownColumns.emplace_back(column);

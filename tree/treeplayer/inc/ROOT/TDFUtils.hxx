@@ -191,7 +191,7 @@ void CheckSnapshot(unsigned int nTemplateParams, unsigned int nColumnNames);
 const ColumnNames_t SelectColumns(unsigned int nArgs, const ColumnNames_t &bl, const ColumnNames_t &defBl);
 
 /// Check whether column names refer to a valid branch of a TTree or have been `Define`d. Return invalid column names.
-ColumnNames_t FindUnknownColumns(const ColumnNames_t &columns, const TLoopManager &lm);
+ColumnNames_t FindUnknownColumns(const ColumnNames_t &requiredCols, TTree *tree, const ColumnNames_t &definedCols);
 
 namespace ActionTypes {
 struct Histo1D {

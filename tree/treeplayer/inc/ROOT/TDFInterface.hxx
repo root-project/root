@@ -1235,7 +1235,7 @@ private:
    {
       const auto &defaultColumns = lm.GetDefaultColumnNames();
       const auto trueColumns = TDFInternal::SelectColumns(nColumns, userColumns, defaultColumns);
-      const auto unknownColumns = TDFInternal::FindUnknownColumns(trueColumns, lm);
+      const auto unknownColumns = TDFInternal::FindUnknownColumns(trueColumns, lm.GetTree(), fValidCustomColumns);
 
       if (!unknownColumns.empty()) {
          // throw
