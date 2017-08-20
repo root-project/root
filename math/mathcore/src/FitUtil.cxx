@@ -221,15 +221,17 @@ namespace ROOT {
 // for chi2 functions
 //___________________________________________________________________________________________________________________________
 
-double FitUtil::EvaluateChi2(const IModelFunction & func, const BinData & data, const double * p, unsigned int &, const ROOT::Fit::ExecutionPolicy & executionPolicy, unsigned nChunks) {
-   // evaluate the chi2 given a  function reference  , the data and returns the value and also in nPoints
-   // the actual number of used points
-   // normal chi2 using only error on values (from fitting histogram)
-   // optionally the integral of function in the bin is used
+      double FitUtil::EvaluateChi2(const IModelFunction &func, const BinData &data, const double *p, unsigned int &,
+                                   ROOT::Fit::ExecutionPolicy executionPolicy, unsigned nChunks)
+      {
+         // evaluate the chi2 given a  function reference  , the data and returns the value and also in nPoints
+         // the actual number of used points
+         // normal chi2 using only error on values (from fitting histogram)
+         // optionally the integral of function in the bin is used
 
-   unsigned int n = data.Size();
+         unsigned int n = data.Size();
 
-   // set parameters of the function to cache integral value
+      // set parameters of the function to cache integral value
 #ifdef USE_PARAMCACHE
    (const_cast<IModelFunction &>(func)).SetParameters(p);
 #endif
@@ -359,6 +361,13 @@ double FitUtil::EvaluateChi2(const IModelFunction & func, const BinData & data, 
   };
 #else
   (void)nChunks;
+
+  // If IMT is disabled, force the execution policy to the serial case
+  if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
+     Warning("FitUtil::EvaluateChi2", "Multithread execution policy requires IMT, which is disabled. Changing "
+                                      "to ROOT::Fit::ExecutionPolicy::kSerial.");
+     executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial;
+  }
 #endif
 
   double res{};
@@ -612,8 +621,7 @@ double FitUtil::EvaluateChi2Residual(const IModelFunction & func, const BinData 
 }
 
 void FitUtil::EvaluateChi2Gradient(const IModelFunction &f, const BinData &data, const double *p, double *grad,
-                                   unsigned int &nPoints, const ROOT::Fit::ExecutionPolicy &executionPolicy,
-                                   unsigned nChunks)
+                                   unsigned int &nPoints, ROOT::Fit::ExecutionPolicy executionPolicy, unsigned nChunks)
 {
    // evaluate the gradient of the chi2 function
    // this function is used when the model function knows how to calculate the derivative and we can
@@ -761,6 +769,15 @@ void FitUtil::EvaluateChi2Gradient(const IModelFunction &f, const BinData &data,
 
    std::vector<double> g(npar);
 
+#ifndef R__USE_IMT
+   // If IMT is disabled, force the execution policy to the serial case
+   if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
+      Warning("FitUtil::EvaluateChi2Gradient", "Multithread execution policy requires IMT, which is disabled. Changing "
+                                               "to ROOT::Fit::ExecutionPolicy::kSerial.");
+      executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial;
+   }
+#endif
+
    if (executionPolicy == ROOT::Fit::ExecutionPolicy::kSerial) {
       std::vector<std::vector<double>> allGradients(initialNPoints);
       for (unsigned int i = 0; i < initialNPoints; ++i) {
@@ -863,8 +880,10 @@ double FitUtil::EvaluatePdf(const IModelFunction & func, const UnBinData & data,
    return logPdf;
 }
 
-double FitUtil::EvaluateLogL(const IModelFunctionTempl<double>  & func, const UnBinData & data, const double * p,
-                                   int iWeight,  bool extended, unsigned int &nPoints, const ROOT::Fit::ExecutionPolicy &executionPolicy, unsigned nChunks) {
+double FitUtil::EvaluateLogL(const IModelFunctionTempl<double> &func, const UnBinData &data, const double *p,
+                             int iWeight, bool extended, unsigned int &nPoints,
+                             ROOT::Fit::ExecutionPolicy executionPolicy, unsigned nChunks)
+{
    // evaluate the LogLikelihood
 
    unsigned int n = data.Size();
@@ -876,7 +895,7 @@ double FitUtil::EvaluateLogL(const IModelFunctionTempl<double>  & func, const Un
    // set parameters of the function to cache integral value
 #ifdef USE_PARAMCACHE
    (const_cast<IModelFunctionTempl<double> &>(func)).SetParameters(p);
-#endif 
+#endif
 #ifdef R__USE_IMT
          // in case parameter needs to be propagated to user function use trick to set parameters by calling one time the function
          // this will be done in sequential mode and parameters can be set in a thread safe manner
@@ -892,84 +911,86 @@ double FitUtil::EvaluateLogL(const IModelFunctionTempl<double>  & func, const Un
                func( x.data(), p);
             }
          }
-#endif  
-   
-   double norm = 1.0;
-   if (normalizeFunc) {
-      // compute integral of the function
-      std::vector<double> xmin(data.NDim());
-      std::vector<double> xmax(data.NDim());
-      IntegralEvaluator<> igEval( func, p, true);
-      // compute integral in the ranges where is defined
-      if (data.Range().Size() > 0 ) {
-         norm = 0;
-         for (unsigned int ir = 0; ir < data.Range().Size(); ++ir) {
-            data.Range().GetRange(&xmin[0],&xmax[0],ir);
-            norm += igEval.Integral(xmin.data(),xmax.data());
-         }
-      } else {
-         // use (-inf +inf)
-         data.Range().GetRange(&xmin[0],&xmax[0]);
-         // check if funcition is zero at +- inf
-         if (func(xmin.data(), p) != 0 || func(xmax.data(), p) != 0) {
-            MATH_ERROR_MSG("FitUtil::EvaluateLogLikelihood","A range has not been set and the function is not zero at +/- inf");
-            return 0;
-         }
-         norm = igEval.Integral(&xmin[0],&xmax[0]);
-      }
-   } 
-
-   // needed to compue effective global weight in case of extended likelihood
-
-    auto mapFunction = [&](const unsigned i){
-       double W = 0;
-       double W2 = 0;
-       double fval = 0;
-
-       if(data.NDim() > 1) {
-          std::vector<double> x(data.NDim());
-          for (unsigned int j = 0; j < data.NDim(); ++j)
-             x[j] = *data.GetCoordComponent(i, j);
-#ifdef USE_PARAMCACHE
-          fval = func ( x.data() );
-#else
-          fval = func ( x.data(), p );
 #endif
 
-          // one -dim case
-       } else {
-          const auto x = data.GetCoordComponent(i, 0);
-#ifdef USE_PARAMCACHE
-          fval = func ( x );
-#else
-          fval = func ( x, p );
-#endif
-
-       }
-
-      if (normalizeFunc) fval = fval * (1/norm);
-
-      // function EvalLog protects against negative or too small values of fval
-      double logval =  ROOT::Math::Util::EvalLog( fval);
-      if (iWeight > 0) {
-         double weight = data.Weight(i);
-         logval *= weight;
-         if (iWeight ==2) {
-            logval *= weight; // use square of weights in likelihood
-            if (!extended) {
-               // needed sum of weights and sum of weight square if likelkihood is extended
-               W = weight;
-               W2 = weight*weight;
+         double norm = 1.0;
+         if (normalizeFunc) {
+            // compute integral of the function
+            std::vector<double> xmin(data.NDim());
+            std::vector<double> xmax(data.NDim());
+            IntegralEvaluator<> igEval(func, p, true);
+            // compute integral in the ranges where is defined
+            if (data.Range().Size() > 0) {
+               norm = 0;
+               for (unsigned int ir = 0; ir < data.Range().Size(); ++ir) {
+                  data.Range().GetRange(&xmin[0], &xmax[0], ir);
+                  norm += igEval.Integral(xmin.data(), xmax.data());
+               }
+            } else {
+               // use (-inf +inf)
+               data.Range().GetRange(&xmin[0], &xmax[0]);
+               // check if funcition is zero at +- inf
+               if (func(xmin.data(), p) != 0 || func(xmax.data(), p) != 0) {
+                  MATH_ERROR_MSG("FitUtil::EvaluateLogLikelihood",
+                                 "A range has not been set and the function is not zero at +/- inf");
+                  return 0;
+               }
+               norm = igEval.Integral(&xmin[0], &xmax[0]);
             }
          }
-      }
-   nPoints++;
-       // {
-       //     R__LOCKGUARD(gROOTMutex);
-       //     std::cout << "compute Log-l for point  " << i << "  nPoints  " << nPoints << " = " << logval << std::endl;
-       // }
-      return LikelihoodAux<double>(logval, W, W2);
-   };
+
+         // needed to compue effective global weight in case of extended likelihood
+
+         auto mapFunction = [&](const unsigned i) {
+            double W = 0;
+            double W2 = 0;
+            double fval = 0;
+
+            if (data.NDim() > 1) {
+               std::vector<double> x(data.NDim());
+               for (unsigned int j = 0; j < data.NDim(); ++j)
+                  x[j] = *data.GetCoordComponent(i, j);
+#ifdef USE_PARAMCACHE
+               fval = func(x.data());
+#else
+         fval = func(x.data(), p);
+#endif
+
+               // one -dim case
+            } else {
+               const auto x = data.GetCoordComponent(i, 0);
+#ifdef USE_PARAMCACHE
+               fval = func(x);
+#else
+         fval = func(x, p);
+#endif
+            }
+
+            if (normalizeFunc)
+               fval = fval * (1 / norm);
+
+            // function EvalLog protects against negative or too small values of fval
+            double logval = ROOT::Math::Util::EvalLog(fval);
+            if (iWeight > 0) {
+               double weight = data.Weight(i);
+               logval *= weight;
+               if (iWeight == 2) {
+                  logval *= weight; // use square of weights in likelihood
+                  if (!extended) {
+                     // needed sum of weights and sum of weight square if likelkihood is extended
+                     W = weight;
+                     W2 = weight * weight;
+                  }
+               }
+            }
+            nPoints++;
+            // {
+            //     R__LOCKGUARD(gROOTMutex);
+            //     std::cout << "compute Log-l for point  " << i << "  nPoints  " << nPoints << " = " << logval <<
+            //     std::endl;
+            // }
+            return LikelihoodAux<double>(logval, W, W2);
+         };
 
 #ifdef R__USE_IMT
   // auto redFunction = [](const std::vector<LikelihoodAux<double>> & objs){
@@ -988,6 +1009,13 @@ double FitUtil::EvaluateLogL(const IModelFunctionTempl<double>  & func, const Un
   };
 #else
   (void)nChunks;
+
+  // If IMT is disabled, force the execution policy to the serial case
+  if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
+     Warning("FitUtil::EvaluateLogL", "Multithread execution policy requires IMT, which is disabled. Changing "
+                                      "to ROOT::Fit::ExecutionPolicy::kSerial.");
+     executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial;
+  }
 #endif
 
   double logl{};
@@ -1074,7 +1102,7 @@ nPoints = 0;
 }
 
 void FitUtil::EvaluateLogLGradient(const IModelFunction &f, const UnBinData &data, const double *p, double *grad,
-                                   unsigned int &, const ROOT::Fit::ExecutionPolicy &executionPolicy, unsigned nChunks)
+                                   unsigned int &, ROOT::Fit::ExecutionPolicy executionPolicy, unsigned nChunks)
 {
    // evaluate the gradient of the log likelihood function
 
@@ -1129,6 +1157,15 @@ void FitUtil::EvaluateLogLGradient(const IModelFunction &f, const UnBinData &dat
 
    std::vector<double> g(npar);
 
+#ifndef R__USE_IMT
+   // If IMT is disabled, force the execution policy to the serial case
+   if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
+      Warning("FitUtil::EvaluateLogLGradient", "Multithread execution policy requires IMT, which is disabled. Changing "
+                                               "to ROOT::Fit::ExecutionPolicy::kSerial.");
+      executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial;
+   }
+#endif
+
    if (executionPolicy == ROOT::Fit::ExecutionPolicy::kSerial) {
       std::vector<std::vector<double>> allGradients(initialNPoints);
       for (unsigned int i = 0; i < initialNPoints; ++i) {
@@ -1155,10 +1192,9 @@ void FitUtil::EvaluateLogLGradient(const IModelFunction &f, const UnBinData &dat
    }
 
 #ifndef R__USE_IMT
-   //to fix compiler warning 
+   // to fix compiler warning
    (void)nChunks;
 #endif
- 
 
    // copy result
    std::copy(g.begin(), g.end(), grad);
@@ -1272,8 +1308,10 @@ double FitUtil::EvaluatePoissonBinPdf(const IModelFunction & func, const BinData
    return logPdf;
 }
 
-double FitUtil::EvaluatePoissonLogL(const IModelFunction &func, const BinData &data, const double *p, int iWeight, bool extended,
-                                    unsigned int &nPoints, const ROOT::Fit::ExecutionPolicy &executionPolicy, unsigned nChunks) {
+double FitUtil::EvaluatePoissonLogL(const IModelFunction &func, const BinData &data, const double *p, int iWeight,
+                                    bool extended, unsigned int &nPoints, ROOT::Fit::ExecutionPolicy executionPolicy,
+                                    unsigned nChunks)
+{
    // evaluate the Poisson Log Likelihood
    // for binned likelihood fits
    // this is Sum ( f(x_i)  -  y_i * log( f (x_i) ) )
@@ -1455,6 +1493,13 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction &func, const BinData &d
    };
 #else
    (void)nChunks;
+
+   // If IMT is disabled, force the execution policy to the serial case
+   if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
+      Warning("FitUtil::EvaluatePoissonLogL", "Multithread execution policy requires IMT, which is disabled. Changing "
+                                              "to ROOT::Fit::ExecutionPolicy::kSerial.");
+      executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial;
+   }
 #endif
 
    double res{};
@@ -1484,8 +1529,7 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction &func, const BinData &d
 }
 
 void FitUtil::EvaluatePoissonLogLGradient(const IModelFunction &f, const BinData &data, const double *p, double *grad,
-                                          unsigned int &, const ROOT::Fit::ExecutionPolicy &executionPolicy,
-                                          unsigned nChunks)
+                                          unsigned int &, ROOT::Fit::ExecutionPolicy executionPolicy, unsigned nChunks)
 {
    // evaluate the gradient of the Poisson log likelihood function
 
@@ -1601,6 +1645,16 @@ void FitUtil::EvaluatePoissonLogLGradient(const IModelFunction &f, const BinData
 
    std::vector<double> g(npar);
 
+#ifndef R__USE_IMT
+   // If IMT is disabled, force the execution policy to the serial case
+   if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
+      Warning("FitUtil::EvaluatePoissonLogLGradient",
+              "Multithread execution policy requires IMT, which is disabled. Changing "
+              "to ROOT::Fit::ExecutionPolicy::kSerial.");
+      executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial;
+   }
+#endif
+
    if (executionPolicy == ROOT::Fit::ExecutionPolicy::kSerial) {
       std::vector<std::vector<double>> allGradients(initialNPoints);
       for (unsigned int i = 0; i < initialNPoints; ++i) {
@@ -1621,7 +1675,7 @@ void FitUtil::EvaluatePoissonLogLGradient(const IModelFunction &f, const BinData
    //    g = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction);
    // }
    else {
-      Error("FitUtil::EvaluateChi2Gradient",
+      Error("FitUtil::EvaluatePoissonLogLGradient",
             "Execution policy unknown. Avalaible choices:\n 0: Serial (default)\n 1: MultiThread (requires IMT)\n");
    }
 
