@@ -53,7 +53,7 @@ ClassImp(TFormula);
 
     This is a new version of the TFormula class based on Cling.
     This class is not 100% backward compatible with the old TFormula class, which is still available in ROOT as
-    `ROOT::v5::TFormula`. Some of the TFormula member funtions available in version 5, such as
+    `ROOT::v5::TFormula`. Some of the TFormula member functions available in version 5, such as
     `Analyze` and `AnalyzeFunction` are not available in the new TFormula.
     On the other hand formula expressions which were valid in version 5 are still valid in TFormula version 6
 
@@ -69,23 +69,26 @@ ClassImp(TFormula);
     - `2*pi*sqrt(x/y)`
     - `gaus(0)*expo(3)  + ypol3(5)*x`
     - `gausn(0)*expo(3) + ypol3(5)*x`
+    - `gaus(x, [0..2]) + expo(y, [3..4])`
 
-    In the last example above:
+    In the last examples above:
 
     - `gaus(0)` is a substitute for `[0]*exp(-0.5*((x-[1])/[2])**2)`
     and (0) means start numbering parameters at 0
     - `gausn(0)` is a substitute for `[0]*exp(-0.5*((x-[1])/[2])**2)/(sqrt(2*pi)*[2]))`
     and (0) means start numbering parameters at 0
-    - `expo(3)` is a substitute for `exp([3]+[4]*x`
+    - `expo(3)` is a substitute for `exp([3]+[4]*x)`
     - `pol3(5)` is a substitute for `par[5]+par[6]*x+par[7]*x**2+par[8]*x**3`
     (`PolN` stands for Polynomial of degree N)
+    - `gaus(x, [0..2])` is a more explicit way of writing `gaus(0)`
+    - `expo(y, [3..4])` is a substitute for `exp([3]+[4]*y)`
 
     `TMath` functions can be part of the expression, eg:
 
     - `TMath::Landau(x)*sin(x)`
     - `TMath::Erf(x)`
 
-    Formula may contain constans, eg:
+    Formula may contain constants, eg:
 
     - `sqrt2`
     - `e`
@@ -94,6 +97,21 @@ ClassImp(TFormula);
     - `infinity`
 
     and more.
+
+    Formulas may also contain other user-defined ROOT functions defined with a
+    TFormula, eg, where `f1` is defined on one x-dimension and 2 parameters:
+
+    - `f1(x, [omega], [phi])`
+    - `f1([0..1])`
+    - `f1([1], [0])`
+    - `f1(y)`
+
+    To replace only parameter names, the dimension variable can be dropped.
+    Alternatively, to change only the dimension variable, the parameters can be
+    dropped. Note that if a parameter is dropped or keeps its old name, its old
+    value will be copied to the new function. The syntax used in the examples
+    above also applies to the predefined parametrized functions like `gaus` and
+    `expo`.
 
     Comparisons operators are also supported `(&amp;&amp;, ||, ==, &lt;=, &gt;=, !)`
 
@@ -115,12 +133,12 @@ ClassImp(TFormula);
 
     `TFormula new("new","x*sin(x*(x&lt;0.5 || x&gt;1))")`
 
-    The class supports unlimited numer of variables and parameters.
+    The class supports unlimited number of variables and parameters.
     By default the names which can be used for the variables are `x,y,z,t` or
-    `x[0],x[1],x[2],x[3],....x[N]` for N-dimensionals formula.
+    `x[0],x[1],x[2],x[3],....x[N]` for N-dimensional formulas.
 
     This class is not anymore the base class for the function classes `TF1`, but it has now
-    adata member of TF1 which can be access via `TF1::GetFormula`.
+    a data member of TF1 which can be accessed via `TF1::GetFormula`.
 
     \class TFormulaFunction
     Helper class for TFormula
@@ -540,7 +558,7 @@ Bool_t TFormula::InitLambdaExpression(const char * formula) {
 /// Compile the given expression with Cling
 /// backward compatibility method to be used in combination with the empty constructor
 /// if no expression is given , the current stored formula (retrieved with GetExpFormula()) or the title  is used.
-/// return 0 if the formula compilation is successfull
+/// return 0 if the formula compilation is successful
 
 Int_t TFormula::Compile(const char *expression)
 {
@@ -2080,7 +2098,7 @@ void TFormula::ProcessFormula(TString &formula)
          }
          // check for observables defined as x[0],x[1],....
          // maybe could use a regular expression here
-         // only in case match with defined variables is not successfull
+         // only in case match with defined variables is not successful
          TString funname = fun.GetName();
          if (funname.Contains("x[") && funname.Contains("]")) {
             TString sdigit = funname(2, funname.Index("]"));
