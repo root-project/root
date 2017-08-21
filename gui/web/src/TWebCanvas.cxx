@@ -310,7 +310,20 @@ void TWebCanvas::Show()
 
    // exec.Form("setsid chromium --app=http://localhost:8080/Canvases/%s/draw.htm?websocket </dev/null >/dev/null 2>/dev/null &", Canvas()->GetName());
 
+
+   const char *swhere = gSystem->Getenv("WEBGUI_WHERE"); // let configure place like with ROOT7
+   std::string where = swhere ? swhere : "browser";
+
    TString exec;
+
+   if (where != "browser") {
+      if (where.find("$url") != std::string::npos) {
+         exec = where.c_str();
+         exec.ReplaceAll("$url", addr);
+      } else {
+         exec.Form("%s %s", where.c_str(), addr.Data());
+      }
+   } else
    if (gSystem->InheritsFrom("TMacOSXSystem"))
       exec.Form("open %s", addr.Data());
    else
