@@ -21,8 +21,6 @@
 #include "TCanvas.h"
 #include "TROOT.h"
 #include "TClass.h"
-#include "TMethod.h"
-#include "TMethodCall.h"
 #include "TList.h"
 #include "TBufferJSON.h"
 #include "TApplication.h"
@@ -183,66 +181,9 @@ void TWebCanvas::CheckModifiedFlag()
          if (!obj) obj = Canvas();
 
          TWebMenuItems items;
-
          items.PopulateObjectMenu(obj, obj->IsA());
-
-/*         TClass* cl = obj->IsA();
-
-         TList* lst = new TList;
-         cl->GetMenuItems(lst);
-         // while there is no streamer for TMethod class, one needs own implementation
-
-         // TBufferJSON::ConvertToJSON(lst, 3);
-
-         TIter iter(lst);
-         TMethod* m = 0;
-
-         std::vector<TWebMenuItem> items;
-
-         while ((m = (TMethod*) iter()) != 0) {
-
-            TWebMenuItem item(m->GetName(), m->GetTitle());
-
-            if (m->IsMenuItem() == kMenuToggle) {
-               TString getter;
-               if (m->Getter() && strlen(m->Getter()) > 0) {
-                  getter = m->Getter();
-               } else
-                  if (strncmp(m->GetName(),"Set",3)==0) {
-                     getter = TString(m->GetName())(3, strlen(m->GetName())-3);
-                     if (cl->GetMethodAllAny(TString("Has") + getter)) getter = TString("Has") + getter;
-                     else if (cl->GetMethodAllAny(TString("Get") + getter)) getter = TString("Get") + getter;
-                     else if (cl->GetMethodAllAny(TString("Is") + getter)) getter = TString("Is") + getter;
-                     else getter = "";
-                  }
-
-               if ((getter.Length()>0) && cl->GetMethodAllAny(getter)) {
-
-                  TMethodCall* call = new TMethodCall(cl, getter, "");
-
-                  if (call->ReturnType() == TMethodCall::kLong) {
-                     Long_t l(0);
-                     call->Execute(obj, l);
-                     item.SetChecked(l!=0);
-                     item.SetExec(Form("%s(%s)", m->GetName(), (l!=0) ? "0" : "1"));
-                  } else {
-                     Error("CheckModifiedFlag", "Cannot get toggle value with getter %s", getter.Data());
-                  }
-
-                  delete call;
-               }
-            } else {
-               item.SetExec(Form("%s()", m->GetName()));
-            }
-
-            items.push_back(item);
-         }
-*/
-
          buf = "MENU";
          buf += items.ProduceJSON();
-
-         // printf("%s\n", buf.Data());
 
          conn.fGetMenu = 0;
       } else
