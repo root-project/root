@@ -98,7 +98,7 @@ void ROOT::Experimental::TMenuItems::PopulateObjectMenu(void *obj, TClass *cl)
       }
    }
 
-   // delete lst;
+   delete lst;
 }
 
 std::string ROOT::Experimental::TMenuItems::ProduceJSON()
