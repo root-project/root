@@ -31,6 +31,7 @@ project.xcworkspace
 
 # Visual Code
 .vscode/*
+.build
 
 # Vim
 *.swp
