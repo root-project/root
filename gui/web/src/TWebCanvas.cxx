@@ -113,23 +113,29 @@ TObject* TWebCanvas::FindPrimitive(UInt_t id, TPad *pad)
 }
 
 
-TPadWebSnapshot* TWebCanvas::CreateSnapshot(TPad* pad)
+TString TWebCanvas::CreateSnapshot(TPad* pad, TPadWebSnapshot *master, TList *tempbuf)
 {
-   TPadWebSnapshot *lst = new TPadWebSnapshot();
+   TList main_buf;
+   if (!master && !tempbuf) tempbuf = &main_buf;
+
+   TPadWebSnapshot *curr = new TPadWebSnapshot();
+   if (master) {
+      curr->SetObjectIDAsPtr(pad);
+      master->Add(curr);
+   }
 
    TWebSnapshot* padshot = new TWebSnapshot();
-
    padshot->SetObjectIDAsPtr(pad);
    padshot->SetSnapshot(TWebSnapshot::kObject, pad);
-   lst->Add(padshot);
+   curr->Add(padshot);
 
-   TIter iter(pad->GetListOfPrimitives());
+   TList *primitives = pad->GetListOfPrimitives();
+
+   TIter iter(primitives);
    TObject* obj = 0;
    while ((obj = iter()) != 0) {
       if (obj->InheritsFrom(TPad::Class())) {
-         TWebSnapshot* sub = CreateSnapshot((TPad*) obj);
-         sub->SetObjectIDAsPtr(obj);
-         lst->Add(sub);
+         CreateSnapshot((TPad*) obj, curr, tempbuf);
       } else {
          TWebSnapshot *sub = new TWebSnapshot();
          sub->SetObjectIDAsPtr(obj);
@@ -154,11 +160,38 @@ TPadWebSnapshot* TWebCanvas::CreateSnapshot(TPad* pad)
             sub->SetSnapshot(TWebSnapshot::kObject, obj);
          }
 
-         lst->Add(sub);
+         curr->Add(sub);
       }
    }
 
-   return lst;
+   // remove primitives and keep them in extra list
+   tempbuf->Add(pad, "!!!#####!!!"); // special marker for pad
+   TObjLink *lnk = primitives->FirstLink();
+   while (lnk) {
+      TObjLink *next = lnk->Next();
+      tempbuf->Add(lnk->GetObject(), lnk->GetOption());
+      primitives->Remove(lnk);
+      lnk = next;
+   }
+
+   if (tempbuf != &main_buf) return "";
+
+   TString res = TBufferJSON::ConvertToJSON(curr, 23);
+
+   TPad *rpad = 0;
+   lnk = main_buf.FirstLink();
+   while(lnk) {
+      if (lnk->GetOption() && (strcmp(lnk->GetOption(), "!!!#####!!!")==0)) {
+         rpad = (TPad*) lnk->GetObject();
+      } else {
+         rpad->GetListOfPrimitives()->Add(lnk->GetObject(), lnk->GetOption());
+      }
+      lnk = lnk->Next();
+   }
+
+   main_buf.Clear();
+
+   return res;
 }
 
 
@@ -188,13 +221,10 @@ void TWebCanvas::CheckModifiedFlag()
          conn.fGetMenu = 0;
       } else
       if (conn.fModified) {
-         // buf = "JSON";
-         // buf  += TBufferJSON::ConvertToJSON(Canvas(), 3);
-
          buf = "SNAP6:";
-         TPadWebSnapshot *snapshot = CreateSnapshot(Canvas());
-         buf  += TBufferJSON::ConvertToJSON(snapshot, 23);
-         delete snapshot;
+         buf += CreateSnapshot(Canvas());
+
+         // printf("%s\n", buf.Data());
          conn.fModified = kFALSE;
       }
 

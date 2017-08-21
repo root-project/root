@@ -66,7 +66,7 @@ protected:
    virtual Bool_t PerformUpdate();
    virtual TVirtualPadPainter* CreatePadPainter();
 
-   TPadWebSnapshot* CreateSnapshot(TPad* pad);
+   TString CreateSnapshot(TPad *pad, TPadWebSnapshot *master = 0, TList *tempbuf = 0);
    TObject* FindPrimitive(UInt_t id, TPad *pad = 0);
    Bool_t DecodePadRanges(TPad *pad, const char *arg);
    Bool_t DecodeAllRanges(const char *arg);
