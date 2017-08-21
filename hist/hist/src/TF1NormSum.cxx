@@ -64,7 +64,8 @@ void TF1NormSum::InitializeDataMembers(const std::vector <TF1 *> &functions, con
    fFunctions = std::vector<std::unique_ptr<TF1> >(functions.size());
    for (unsigned int n = 0 ; n < fNOfFunctions ; n++)
    {
-      fFunctions[n] = std::unique_ptr<TF1> ((TF1 *)functions[n]->Clone());
+      fFunctions[n] = std::unique_ptr<TF1>((TF1 *)functions[n]->Clone());
+
       if (!fFunctions[n])
          Fatal("InitializeDataMembers", "Invalid input function -- abort");
    }
@@ -120,7 +121,6 @@ void TF1NormSum::InitializeDataMembers(const std::vector <TF1 *> &functions, con
    }
 
    FixDuplicateNames(fParNames.begin()+fNOfFunctions, fParNames.end());
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -285,6 +285,13 @@ TF1NormSum::TF1NormSum(const TString &formula, Double_t xmin, Double_t xmax)
       }
    }
    InitializeDataMembers(functions, coeffs,1.);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor (necessary to hold unique_ptr as member variable)
+TF1NormSum::TF1NormSum(const TF1NormSum &nsum)
+{
+   nsum.Copy((TObject &)*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

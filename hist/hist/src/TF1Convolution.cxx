@@ -41,15 +41,16 @@ One should use also a not too small number of points for the DFT (a minimum of 1
 
 class TF1Convolution_EvalWrapper
 {
-   std::shared_ptr < TF1 > fFunction1;
-   std::shared_ptr < TF1 > fFunction2;
+   // TODO: convert these to unique_ptr as well?
+   std::unique_ptr<TF1> fFunction1;
+   std::unique_ptr<TF1> fFunction2;
    Double_t fT0;
 
 public:
-
-   TF1Convolution_EvalWrapper(std::shared_ptr<TF1> & f1 , std::shared_ptr<TF1> & f2, Double_t t)
-      : fFunction1(f1), fFunction2(f2), fT0(t)
+   TF1Convolution_EvalWrapper(std::unique_ptr<TF1> &f1, std::unique_ptr<TF1> &f2, Double_t t) : fT0(t)
    {
+      fFunction1 = std::unique_ptr<TF1>((TF1 *)f1->Clone());
+      fFunction2 = std::unique_ptr<TF1>((TF1 *)f2->Clone());
    }
    Double_t operator()(Double_t x) const
    {
@@ -69,12 +70,12 @@ void TF1Convolution::InitializeDataMembers(TF1* function1, TF1* function2, Bool_
    if (function1) {
       TF1 * fnew1 = (TF1*) function1->IsA()->New();
       function1->Copy(*fnew1);
-      fFunction1  = std::shared_ptr<TF1>(fnew1);
+      fFunction1 = std::unique_ptr<TF1>(fnew1);
    }
    if (function2) {
       TF1 * fnew2 = (TF1*) function2->IsA()->New();
       function2->Copy(*fnew2);
-      fFunction2  = std::shared_ptr<TF1>(fnew2);
+      fFunction2 = std::unique_ptr<TF1>(fnew2);
    }
    if (fFunction1.get() == nullptr|| fFunction2.get() == nullptr)
       Fatal("InitializeDataMembers","Invalid functions - Abort");
@@ -157,9 +158,9 @@ TF1Convolution::TF1Convolution(TString formula,  Double_t xmin, Double_t xmax, B
          if (!f->GetFormula()->IsValid() )
             Error("TF1Convolution","Invalid formula : %s",stringarray[i].Data() );
          if (i == 0)
-            fFunction1 = std::shared_ptr<TF1>(f);
+            fFunction1 = std::unique_ptr<TF1>(f);
          else
-            fFunction2 = std::shared_ptr<TF1>(f);
+            fFunction2 = std::unique_ptr<TF1>(f);
       }
    }
    InitializeDataMembers(funcarray[0], funcarray[1],useFFT);
@@ -187,12 +188,12 @@ TF1Convolution::TF1Convolution(TString formula1, TString formula2,  Double_t xmi
    TF1* f2 = (TF1*)(gROOT -> GetListOfFunctions() -> FindObject(formula2));
    // if function do not exists try using TFormula
    if (!f1) {
-      fFunction1 = std::shared_ptr<TF1>(new TF1("f_conv_1",formula1) );
+      fFunction1 = std::unique_ptr<TF1>(new TF1("f_conv_1", formula1));
       if (!fFunction1->GetFormula()->IsValid() )
          Error("TF1Convolution","Invalid formula for : %s",formula1.Data() );
    }
    if (!f2) {
-      fFunction2 = std::shared_ptr<TF1>(new TF1("f_conv_1",formula2) );
+      fFunction2 = std::unique_ptr<TF1>(new TF1("f_conv_1", formula2));
       if (!fFunction2->GetFormula()->IsValid() )
          Error("TF1Convolution","Invalid formula for : %s",formula2.Data() );
    }
@@ -205,6 +206,13 @@ TF1Convolution::TF1Convolution(TString formula1, TString formula2,  Double_t xmi
       Info("TF1Convolution", "Using default range [-inf, inf] for TF1Convolution");
       SetRange(-TMath::Infinity(), TMath::Infinity());
    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor (necessary to hold unique_ptr as member variable)
+TF1Convolution::TF1Convolution(const TF1Convolution &conv)
+{
+   conv.Copy((TObject &)*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -258,7 +266,8 @@ void TF1Convolution::MakeFFTConv()
    fftinverse -> Transform();
 
    // fill a graph with the result of the convolution
-   if (!fGraphConv) fGraphConv  = std::shared_ptr< TGraph >(new TGraph(fNofPoints));
+   if (!fGraphConv)
+      fGraphConv = std::unique_ptr<TGraph>(new TGraph(fNofPoints));
 
    for (int i=0;i<fNofPoints;i++)
    {
@@ -421,6 +430,23 @@ void TF1Convolution::Update() {
 ////////////////////////////////////////////////////////////////////////////////
 
 void TF1Convolution::Copy(TObject &obj) const {
-   // TODO : write!!!
-   // ((TF1Convolution &)obj).
+   // copy numbers
+   ((TF1Convolution &)obj).fXmin = fXmin;
+   ((TF1Convolution &)obj).fXmax = fXmax;
+   ((TF1Convolution &)obj).fNofParams1 = fNofParams1;
+   ((TF1Convolution &)obj).fNofParams2 = fNofParams2;
+   ((TF1Convolution &)obj).fCstIndex = fCstIndex;
+   ((TF1Convolution &)obj).fNofPoints = fNofPoints;
+   ((TF1Convolution &)obj).fFlagFFT = fFlagFFT;
+   ((TF1Convolution &)obj).fFlagGraph = fFlagGraph;
+
+   // copy vectors
+   ((TF1Convolution &)obj).fParams1 = fParams1;
+   ((TF1Convolution &)obj).fParams2 = fParams2;
+   ((TF1Convolution &)obj).fParNames = fParNames;
+
+   // Copy unique_ptr's
+   ((TF1Convolution &)obj).fFunction1 = std::unique_ptr<TF1>((TF1 *)fFunction1->Clone());
+   ((TF1Convolution &)obj).fFunction2 = std::unique_ptr<TF1>((TF1 *)fFunction2->Clone());
+   ((TF1Convolution &)obj).fGraphConv = std::unique_ptr<TGraph>((TGraph *)fGraphConv->Clone());
 }

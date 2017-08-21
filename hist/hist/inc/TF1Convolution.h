@@ -19,9 +19,9 @@
 
 class TF1Convolution : public TF1AbsComposition
 {
-   std::shared_ptr <TF1>      fFunction1;
-   std::shared_ptr <TF1>      fFunction2;
-   std::shared_ptr <TGraph>   fGraphConv;
+   std::unique_ptr<TF1> fFunction1;
+   std::unique_ptr<TF1> fFunction2;
+   std::unique_ptr<TGraph> fGraphConv;
 
    std::vector < Double_t >   fParams1;
    std::vector < Double_t >   fParams2;
@@ -49,6 +49,9 @@ class TF1Convolution : public TF1AbsComposition
    TF1Convolution(TF1* function1, TF1* function2, Double_t xmin, Double_t xmax, Bool_t useFFT = true);
    TF1Convolution(TString formula, Double_t xmin = 1., Double_t xmax = 0., Bool_t useFFT = true);
    TF1Convolution(TString formula1, TString formula2, Double_t xmin = 1., Double_t xmax = 0., Bool_t useFFT = true);
+
+   // Copy constructor
+   TF1Convolution(const TF1Convolution &conv);
 
    ~TF1Convolution() {
       std::cout << "Calling TF1Convolution destructor" << std::endl;
