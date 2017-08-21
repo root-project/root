@@ -15,7 +15,7 @@
 #include "ROOT/TSpinMutex.hxx"
 #include "ROOT/TReentrantRWLock.hxx"
 
-#include "TBuffer.h" // Needed by ClassDEfInlineOverride
+#include "TBuffer.h" // Needed by ClassDefInlineOverride
 
 template <typename MutexT, typename RecurseCountsT = ROOT::Internal::RecurseCounts>
 class TRWMutexImp : public TVirtualRWMutex {
