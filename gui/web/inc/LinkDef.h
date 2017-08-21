@@ -22,6 +22,11 @@
 #pragma link C++ class std::vector<TWebSnapshot*>+;
 #pragma link C++ class TPadWebSnapshot+;
 #pragma link C++ class TWebMenuItem+;
-#pragma link C++ class std::vector<TWebMenuItem>+;
+#pragma link C++ class std::vector<TWebMenuItem*>+;
+#pragma link C++ class TWebCheckedMenuItem+;
+#pragma link C++ class TWebMenuArgument+;
+#pragma link C++ class std::vector<TWebMenuArgument>+;
+#pragma link C++ class TWebArgsMenuItem+;
+#pragma link C++ class TWebMenuItems+;
 
 #endif

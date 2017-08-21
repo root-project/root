@@ -182,7 +182,11 @@ void TWebCanvas::CheckModifiedFlag()
          TObject* obj = FindPrimitive(conn.fGetMenu);
          if (!obj) obj = Canvas();
 
-         TClass* cl = obj->IsA();
+         TWebMenuItems items;
+
+         items.PopulateObjectMenu(obj, obj->IsA());
+
+/*         TClass* cl = obj->IsA();
 
          TList* lst = new TList;
          cl->GetMenuItems(lst);
@@ -233,13 +237,12 @@ void TWebCanvas::CheckModifiedFlag()
 
             items.push_back(item);
          }
+*/
 
          buf = "MENU";
-         buf += TBufferJSON::ConvertToJSON(&items, gROOT->GetClass("std::list<TWebMenuItem>"));
+         buf += items.ProduceJSON();
 
-         printf("%s\n", buf.Data());
-
-         delete lst;
+         // printf("%s\n", buf.Data());
 
          conn.fGetMenu = 0;
       } else
