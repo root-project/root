@@ -13,3 +13,7 @@ ROOT_GENERATE_DICTIONARY(G__${libname} *.h MODULE ${libname} LINKDEF LinkDef.h O
 ROOT_LINKER_LIBRARY(${libname} *.cxx G__${libname}.cxx LIBRARIES ${TBB_LIBRARIES} DEPENDENCIES Net RIO Thread Imt)
 ROOT_INSTALL_HEADERS()
 
+if (testing)
+  add_subdirectory(test)
+endif()
+

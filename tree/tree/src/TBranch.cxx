@@ -1457,7 +1457,7 @@ TFile* TBranch::GetFile(Int_t mode)
 /// Drops the cluster two behind the current cluster and returns a fresh basket
 /// by either reusing or creating a new one
 
-TBasket* TBranch::GetFreshCluster()
+TBasket *TBranch::GetFreshCluster()
 {
    TBasket *basket = 0;
 
@@ -1465,50 +1465,54 @@ TBasket* TBranch::GetFreshCluster()
    // So we need to check if we reach the zero before we have gone back (1-VirtualSize) clusters
    // if this is the case, we want to keep everything in memory so we return a new basket
    TTree::TClusterIterator iter = fTree->GetClusterIterator(fBasketEntry[fReadBasket]);
-   if (iter.GetStartEntry() == 0) return fTree->CreateBasket(this);
+   if (iter.GetStartEntry() == 0) {
+      return fTree->CreateBasket(this);
+   }
 
    // Iterate backwards (1-VirtualSize) clusters to reach cluster to be unloaded from memory
    for (Int_t j = 0; j < -fTree->GetMaxVirtualSize(); j++) {
-      iter = fTree->GetClusterIterator(iter.GetStartEntry() - 1);
-      if (iter.GetStartEntry() == 0) return fTree->CreateBasket(this);
+      if (iter.Previous() == 0) {
+         return fTree->CreateBasket(this);
+      }
    }
 
-   Int_t entryToFlush = fTree->GetClusterIterator(iter.GetStartEntry() - 1).GetStartEntry();
+   Int_t entryToUnload = iter.Previous();
    // Finds the basket to unload from memory. Since the basket should be close to current
    // basket, just iterate backwards until the correct basket is reached. This should
    // be fast as long as the number of baskets per cluster is small
-   Int_t basketToFlush = fReadBasket;
-   while (fBasketEntry[basketToFlush] != entryToFlush) {
-      basketToFlush--;
-      if (basketToFlush < 0) {
+   Int_t basketToUnload = fReadBasket;
+   while (fBasketEntry[basketToUnload] != entryToUnload) {
+      basketToUnload--;
+      if (basketToUnload < 0) {
          return fTree->CreateBasket(this);
       }
    }
 
    // Retrieves the basket that is going to be unloaded from memory. If the basket did not
    // exist, create a new one
-   basket = (TBasket*)fBaskets.UncheckedAt(basketToFlush);
+   basket = (TBasket *)fBaskets.UncheckedAt(basketToUnload);
    if (basket) {
-      fBaskets.AddAt(0, basketToFlush);
+      fBaskets.AddAt(0, basketToUnload);
       --fNBaskets;
    } else {
       basket = fTree->CreateBasket(this);
    }
-   ++basketToFlush;
+   ++basketToUnload;
 
    // Clear the rest of the baskets. While it would be ideal to reuse these baskets
    // for other baskets in the new cluster. It would require the function to go
    // beyond its current scope. In the ideal case when each cluster only has 1 basket
    // this will perform well
-   while (fBasketEntry[basketToFlush] < iter.GetStartEntry()) {
-      TBasket* oldbasket = (TBasket*)fBaskets.UncheckedAt(basketToFlush);
+   iter.Next();
+   while (fBasketEntry[basketToUnload] < iter.GetStartEntry()) {
+      TBasket *oldbasket = (TBasket *)fBaskets.UncheckedAt(basketToUnload);
       if (oldbasket) {
          oldbasket->DropBuffers();
          delete oldbasket;
-         fBaskets.AddAt(0, basketToFlush);
+         fBaskets.AddAt(0, basketToUnload);
          --fNBaskets;
       }
-      ++basketToFlush;
+      ++basketToUnload;
    }
    fBaskets.SetLast(-1);
    return basket;

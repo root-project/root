@@ -252,6 +252,10 @@ public:
       // of this next cluster
       Long64_t Next();
 
+      // Move on to the previous cluster and return the starting entry
+      // of this previous cluster
+      Long64_t Previous();
+
       // Return the start entry of the current cluster.
       Long64_t GetStartEntry() {
          return fStartEntry;
