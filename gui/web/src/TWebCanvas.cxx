@@ -87,7 +87,8 @@ Bool_t TWebCanvas::IsJSSupportedClass(TObject* obj)
 {
    if (!obj) return kTRUE;
 
-   if (obj->InheritsFrom("TH1") || obj->InheritsFrom("TGraph") || obj->InheritsFrom("TPave") || obj->InheritsFrom("TArrow")) return kTRUE;
+   if (obj->InheritsFrom("TH1") || obj->InheritsFrom("TGraph") || obj->InheritsFrom("TFrame") ||
+       obj->InheritsFrom("TPave") || obj->InheritsFrom("TArrow")) return kTRUE;
 
    return kFALSE;
 }
@@ -146,6 +147,9 @@ TString TWebCanvas::CreateSnapshot(TPad* pad, TPadWebSnapshot *master, TList *te
             TWebPadPainter *painter = dynamic_cast<TWebPadPainter *> (Canvas()->GetCanvasPainter());
             if (painter) painter->ResetPainting(); // ensure painter is created
             // call paint function of object itself
+
+            // printf("Call painter for %s\n", obj->ClassName());
+
             obj->Paint(iter.GetOption());
             if (painter) p = painter->TakePainting();
             fHasSpecials = kTRUE;
@@ -224,7 +228,7 @@ void TWebCanvas::CheckModifiedFlag()
          buf = "SNAP6:";
          buf += CreateSnapshot(Canvas());
 
-         // printf("%s\n", buf.Data());
+         // printf("Snapshot created %s\n", buf.Data());
          conn.fModified = kFALSE;
       }
 
@@ -423,7 +427,7 @@ Bool_t TWebCanvas::ProcessWS(THttpCallArg *arg)
          CheckModifiedFlag();
       } else
       if (strncmp(cdata,"GETMENU",7)==0) {
-         void *ptr = this;
+         void *ptr = Canvas();
          conn->fReady = kTRUE;
          conn->fGetMenu = TString::Hash(ptr, sizeof(void *));
          CheckModifiedFlag();

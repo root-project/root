@@ -13,7 +13,7 @@
 #pragma link off all functions;
 
 #pragma link C++ class TWebGuiFactory;
-#pragma link C++ class TWebCanvas;
+#pragma link C++ class TWebCanvas+;
 #pragma link C++ class TWebPadPainter;
 #pragma link C++ class TWebVirtualX+;
 #pragma link C++ class TWebPainting+;
