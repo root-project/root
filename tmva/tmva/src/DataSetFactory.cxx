@@ -288,6 +288,7 @@ void TMVA::DataSetFactory::ChangeToNewTree( TreeInfo& tinfo, const DataSetInfo &
    TTree *tr = tinfo.GetTree()->GetTree();
 
    tr->SetBranchStatus("*",1);
+   tr->ResetBranchAddresses();
 
    Bool_t hasDollar = kFALSE;
 
