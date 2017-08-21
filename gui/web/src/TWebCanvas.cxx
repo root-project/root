@@ -25,6 +25,7 @@
 #include "TMethodCall.h"
 #include "TList.h"
 #include "TBufferJSON.h"
+#include "TApplication.h"
 #include "Riostream.h"
 
 #include <stdio.h>
@@ -246,7 +247,7 @@ void TWebCanvas::CheckModifiedFlag()
          // buf = "JSON";
          // buf  += TBufferJSON::ConvertToJSON(Canvas(), 3);
 
-         buf = "SNAP";
+         buf = "SNAP6:";
          TPadWebSnapshot *snapshot = CreateSnapshot(Canvas());
          buf  += TBufferJSON::ConvertToJSON(snapshot, 23);
          delete snapshot;
@@ -340,7 +341,8 @@ Bool_t TWebCanvas::DecodePadRanges(TPad *pad, const char *arg)
    pad->Range(px1,py1,px2,py2);
    pad->RangeAxis(ux1,uy1,ux2,uy2);
 
-   Info("GetRanges", "Apply new ranges %s for pad %s", arg, pad->GetName());
+   if (gDebug > 0)
+      Info("DecodePadRanges", "Apply new ranges %s for pad %s", arg, pad->GetName());
 
    // without special objects no need for explicit update of the canvas
    if (!fHasSpecials) return kFALSE;
@@ -386,7 +388,6 @@ Bool_t TWebCanvas::ProcessWS(THttpCallArg *arg)
       }
       ++iter;
    }
-
 
    if (strcmp(arg->GetMethod(),"WS_CONNECT")==0) {
 
@@ -456,18 +457,18 @@ Bool_t TWebCanvas::ProcessWS(THttpCallArg *arg)
                gROOT->ProcessLine(exec);
             }
          }
-      } else
-      if (strncmp(cdata,"EXEC:",5)==0) {
+      } else if (strncmp(cdata,"EXEC:",5)==0) {
          if (Canvas()!=0) {
             TString exec;
             exec.Form("((%s*) %p)->%s;", Canvas()->ClassName(), Canvas(), cdata+5);
             gROOT->ProcessLine(exec);
          }
-      } else
-      if (strncmp(cdata,"GEXE:",5)==0) {
+      } else if (strncmp(cdata,"QUIT",4)==0) {
+         if (gApplication)
+            gApplication->Terminate(0);
+      } else if (strncmp(cdata,"GEXE:",5)==0) {
          gROOT->ProcessLine(cdata+5); // temporary solution, will be removed later
-      } else
-      if (strncmp(cdata,"GETIMG:",7)==0) {
+      } else if (strncmp(cdata,"GETIMG:",7)==0) {
          const char* img = cdata+7;
 
          const char* separ = strchr(img,':');
@@ -485,6 +486,7 @@ Bool_t TWebCanvas::ProcessWS(THttpCallArg *arg)
          }
          conn->fReady = kTRUE;
          CheckModifiedFlag();
+      } else if (strncmp(cdata,"KEEPALIVE",9)==0) {
       } else {
          Error("ProcessWSRequest", "GET unknown request %d %s", (int) strlen(cdata), cdata);
       }
