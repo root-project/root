@@ -703,7 +703,7 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
             arg->fContent.ReplaceAll("=\"jsrootsys/", repl);
          }
 
-         if ((arg->fQuery.Index("no_h_json") == kNPOS) && (arg->fContent.Index(hjsontag) != kNPOS)) {
+         if ((arg->fQuery.Index("no_h_json") == kNPOS) && (arg->fQuery.Index("webcanvas") == kNPOS) && (arg->fContent.Index(hjsontag) != kNPOS)) {
             TString h_json;
             TRootSnifferStoreJson store(h_json, kTRUE);
             const char *topname = fTopName.Data();
@@ -713,7 +713,7 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
             arg->fContent.ReplaceAll(hjsontag, h_json);
          }
 
-         if ((arg->fQuery.Index("no_root_json") == kNPOS) && (arg->fContent.Index(rootjsontag) != kNPOS)) {
+         if ((arg->fQuery.Index("no_root_json") == kNPOS) && (arg->fQuery.Index("webcanvas") == kNPOS) && (arg->fContent.Index(rootjsontag) != kNPOS)) {
             TString str;
             void *bindata = 0;
             Long_t bindatalen = 0;
