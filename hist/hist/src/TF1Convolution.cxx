@@ -212,9 +212,20 @@ TF1Convolution::TF1Convolution(TString formula1, TString formula2,  Double_t xmi
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor (necessary to hold unique_ptr as member variable)
+
 TF1Convolution::TF1Convolution(const TF1Convolution &conv)
 {
    conv.Copy((TObject &)*this);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Operator =
+
+TF1Convolution &TF1Convolution::operator=(const TF1Convolution &rhs)
+{
+   if (this != &rhs)
+      rhs.Copy(*this);
+   return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

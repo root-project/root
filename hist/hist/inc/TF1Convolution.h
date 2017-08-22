@@ -53,6 +53,7 @@ class TF1Convolution : public TF1AbsComposition
    // Copy constructor
    TF1Convolution(const TF1Convolution &conv);
 
+   TF1Convolution &operator=(const TF1Convolution &rhs);
    virtual ~TF1Convolution() { std::cout << "Calling TF1Convolution destructor" << std::endl; }
 
    void     SetParameters(const Double_t* params);

@@ -65,8 +65,15 @@ void TF1NormSum::InitializeDataMembers(const std::vector <TF1 *> &functions, con
    fFunctions = std::vector<std::unique_ptr<TF1> >(functions.size());
    for (unsigned int n = 0 ; n < fNOfFunctions ; n++)
    {
+      bool notGlobal = functions[n]->TestBit(TF1::kNotGlobal);
+      if (!notGlobal)
+         functions[n]->SetBit(TF1::kNotGlobal, kTRUE); // don't this function in list of globals
+
       fFunctions[n] = std::unique_ptr<TF1>(
          (TF1 *)functions[n]->Clone(TString::Format("function_%s_%d", functions[n]->GetName(), n)));
+
+      if (!notGlobal)
+         functions[n]->ResetBit(TF1::kNotGlobal); // don't this function in list of globals
 
       if (!fFunctions[n])
          Fatal("InitializeDataMembers", "Invalid input function -- abort");
@@ -286,7 +293,6 @@ TF1NormSum::TF1NormSum(const TString &formula, Double_t xmin, Double_t xmax)
          functions[i]->GetRange(old_xmin, old_xmax);
          functions[i]->SetRange(xmin, xmax);
       }
-      functions[i]->SetBit(TF1::kNotGlobal, kTRUE); // don't want to put `f` in list of globals
 
       k++;
    }
@@ -299,9 +305,20 @@ TF1NormSum::TF1NormSum(const TString &formula, Double_t xmin, Double_t xmax)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor (necessary to hold unique_ptr as member variable)
+
 TF1NormSum::TF1NormSum(const TF1NormSum &nsum)
 {
    nsum.Copy((TObject &)*this);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Operator =
+
+TF1NormSum &TF1NormSum::operator=(const TF1NormSum &rhs)
+{
+   if (this != &rhs)
+      rhs.Copy(*this);
+   return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -42,6 +42,8 @@ public:
    // Copy constructor
    TF1NormSum(const TF1NormSum &nsum);
 
+   TF1NormSum &operator=(const TF1NormSum &rhs);
+
    virtual ~TF1NormSum()
    {
       std::cout << "Calling TF1NormSum destructor" << std::endl;
