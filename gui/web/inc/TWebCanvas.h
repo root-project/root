@@ -46,9 +46,9 @@ protected:
    struct WebConn {
       THttpWSEngine  *fHandle;     ///<! websocket handle
       Bool_t          fReady;
-      UInt_t          fGetMenu;    ///<! object id for menu request
+      TString         fGetMenu;    ///<! object id for menu request
       Bool_t          fModified;
-      WebConn() : fHandle(0), fReady(kFALSE), fGetMenu(0), fModified(kFALSE) {}
+      WebConn() : fHandle(0), fReady(kFALSE), fGetMenu(), fModified(kFALSE) {}
    };
 
    typedef std::list<WebConn> WebConnList;
@@ -69,7 +69,7 @@ protected:
    TString CreateSnapshot(TPad *pad, TPadWebSnapshot *master = 0, TList *tempbuf = 0);
    TWebSnapshot *CreateObjectSnapshot(TObject *obj, const char *opt);
 
-   TObject* FindPrimitive(UInt_t id, TPad *pad = 0);
+   TObject* FindPrimitive(const char *id, TPad *pad = 0);
    Bool_t DecodePadRanges(TPad *pad, const char *arg);
    Bool_t DecodeAllRanges(const char *arg);
 

@@ -94,25 +94,42 @@ Bool_t TWebCanvas::IsJSSupportedClass(TObject* obj)
    return kFALSE;
 }
 
-TObject* TWebCanvas::FindPrimitive(UInt_t id, TPad *pad)
+TObject* TWebCanvas::FindPrimitive(const char *sid, TPad *pad)
 {
    // search of object with given id in list of primitives
 
    if (!pad) pad = Canvas();
+
+   const char *kind = "";
+   const char *separ = strchr(sid, '#');
+   UInt_t id = 0;
+
+   if (separ == 0) {
+      id = (UInt_t) TString(sid).Atoll();
+   } else {
+      kind = separ + 1;
+      id = (UInt_t) TString(sid, separ-sid).Atoll();
+   }
 
    if (TString::Hash(&pad, sizeof(pad)) == id) return pad;
 
    TIter iter(pad->GetListOfPrimitives());
    TObject* obj = 0;
    while ((obj = iter()) != 0) {
-      if (TString::Hash(&obj, sizeof(obj)) == id) return obj;
-      if (obj->InheritsFrom(TH1::Class())) {
-         TIter fiter(((TH1 *)obj)->GetListOfFunctions());
+      TH1 *h1 = obj->InheritsFrom(TH1::Class()) ? (TH1 *)obj : 0;
+      if (TString::Hash(&obj, sizeof(obj)) == id) {
+         if (h1 && (*kind == 'x')) return h1->GetXaxis();
+         if (h1 && (*kind == 'y')) return h1->GetYaxis();
+         if (h1 && (*kind == 'z')) return h1->GetZaxis();
+         return obj;
+      }
+      if (h1 != 0) {
+         TIter fiter(h1->GetListOfFunctions());
          TObject *fobj = 0;
          while ((fobj = fiter()) != 0)
             if (TString::Hash(&fobj, sizeof(fobj)) == id) return fobj;
       } else if (obj->InheritsFrom(TPad::Class())) {
-         obj = FindPrimitive(id, (TPad*) obj);
+         obj = FindPrimitive(sid, (TPad*) obj);
          if (obj) return obj;
       }
    }
@@ -256,17 +273,19 @@ void TWebCanvas::CheckModifiedFlag()
 
       TString buf;
 
-      if (conn.fGetMenu) {
+      if (conn.fGetMenu.Length()>0) {
 
-         TObject* obj = FindPrimitive(conn.fGetMenu);
+         TObject* obj = FindPrimitive(conn.fGetMenu.Data());
          if (!obj) obj = Canvas();
 
          TWebMenuItems items;
          items.PopulateObjectMenu(obj, obj->IsA());
-         buf = "MENU";
+         buf = "MENU:";
+         buf.Append(conn.fGetMenu);
+         buf.Append(":");
          buf += items.ProduceJSON();
 
-         conn.fGetMenu = 0;
+         conn.fGetMenu.Clear();
       } else
       if (conn.fModified) {
          buf = "SNAP6:";
@@ -396,15 +415,15 @@ Bool_t TWebCanvas::DecodeAllRanges(const char *arg)
   const char *curr = arg, *pos = 0;
 
   while ((pos = strstr(curr, "id=")) != 0) {
-     unsigned int id = 0;
      curr = pos + 3;
-     if (sscanf(curr,"%u", &id)!=1) break;
-     curr = strstr(curr,":");
-     if (!curr) break;
+     const char *next = strstr(curr,":");
+     if (!next) break;
 
-     TPad *pad = dynamic_cast<TPad *>(FindPrimitive(id));
+     TString sid(curr, next-curr);
+     TPad *pad = dynamic_cast<TPad *>(FindPrimitive(sid.Data()));
 
-     if (pad && DecodePadRanges(pad, curr+1)) isany = kTRUE;
+     curr = next+1;
+     if (pad && DecodePadRanges(pad, curr)) isany = kTRUE;
   }
 
   if (isany) PerformUpdate();
@@ -469,13 +488,7 @@ Bool_t TWebCanvas::ProcessWS(THttpCallArg *arg)
       } else
       if (strncmp(cdata,"GETMENU:",8)==0) {
          conn->fReady = kTRUE;
-         conn->fGetMenu = (UInt_t) TString(cdata+8).Atoll();
-         CheckModifiedFlag();
-      } else
-      if (strncmp(cdata,"GETMENU",7)==0) {
-         void *ptr = Canvas();
-         conn->fReady = kTRUE;
-         conn->fGetMenu = TString::Hash(ptr, sizeof(void *));
+         conn->fGetMenu = cdata+8;
          CheckModifiedFlag();
       } else
       if (strncmp(cdata,"OBJEXEC:",8)==0) {
@@ -483,10 +496,10 @@ Bool_t TWebCanvas::ProcessWS(THttpCallArg *arg)
          Int_t pos = buf.First(':');
 
          if (pos>0) {
-            UInt_t id = (UInt_t) TString(buf(0,pos)).Atoll();
+            TString sid(buf, pos);
             buf.Remove(0, pos+1);
 
-            TObject* obj = FindPrimitive(id);
+            TObject* obj = FindPrimitive(sid.Data());
             if (obj && (buf.Length()>0)) {
                TString exec;
                exec.Form("((%s*) %p)->%s;", obj->ClassName(), obj, buf.Data());
