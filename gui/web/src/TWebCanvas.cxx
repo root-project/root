@@ -486,6 +486,9 @@ Bool_t TWebCanvas::ProcessWS(THttpCallArg *arg)
                exec.Form("((%s*) %p)->%s;", obj->ClassName(), obj, buf.Data());
                Info("ProcessWSRequest", "Obj %s Execute %s", obj->GetName(), exec.Data());
                gROOT->ProcessLine(exec);
+
+               PerformUpdate(); // check that canvas was changed
+
             }
          }
       } else if (strncmp(cdata,"EXEC:",5)==0) {
@@ -576,8 +579,6 @@ Bool_t TWebCanvas::PerformUpdate()
    // check if canvas modified. If true and communication allowed,
    // It scan all primitives in the TCanvas and subpads and convert them into
    // the structure which will be delivered to JSROOT client
-
-   printf("TWebCanvas::PerformUpdate\n");
 
    if (IsAnyPadModified(Canvas())) {
       for (WebConnList::iterator iter = fWebConn.begin(); iter != fWebConn.end(); ++iter)
