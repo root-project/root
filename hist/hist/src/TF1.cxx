@@ -3514,8 +3514,8 @@ void TF1::Streamer(TBuffer &b)
 
 void TF1::Update()
 {
-   std::cout << "Updating function " << GetName() << " " << GetTitle() << std::endl;
-   
+   // std::cout << "Updating function " << GetName() << " " << GetTitle() << std::endl;
+
    delete fHistogram;
    fHistogram = 0;
    if (!fIntegral.empty()) {

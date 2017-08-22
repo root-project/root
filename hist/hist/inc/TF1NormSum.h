@@ -44,12 +44,8 @@ public:
 
    TF1NormSum &operator=(const TF1NormSum &rhs);
 
-   virtual ~TF1NormSum()
-   {
-      std::cout << "Calling TF1NormSum destructor" << std::endl;
-      gROOT->GetListOfFunctions()->ls();
-   }
-   
+   virtual ~TF1NormSum() {}
+
    double  operator()(const Double_t* x, const Double_t* p);
 
    std::vector<double> GetParameters() const;

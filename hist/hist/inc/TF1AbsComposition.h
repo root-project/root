@@ -17,9 +17,7 @@
 class TF1AbsComposition : public TObject {
 
 public:
-   virtual ~TF1AbsComposition() {
-      std::cout << "Calling TF1AbsComposition destructor" << std::endl;
-   }
+   virtual ~TF1AbsComposition() {}
 
    virtual double operator()(const Double_t *x, const Double_t *p) = 0; // for Eval
    virtual void   SetRange(Double_t a, Double_t b) = 0;
