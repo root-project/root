@@ -65,7 +65,8 @@ void TF1NormSum::InitializeDataMembers(const std::vector <TF1 *> &functions, con
    fFunctions = std::vector<std::unique_ptr<TF1> >(functions.size());
    for (unsigned int n = 0 ; n < fNOfFunctions ; n++)
    {
-      fFunctions[n] = std::unique_ptr<TF1>((TF1 *)functions[n]->Clone());
+      fFunctions[n] = std::unique_ptr<TF1>(
+         (TF1 *)functions[n]->Clone(TString::Format("function_%s_%d", functions[n]->GetName(), n)));
 
       if (!fFunctions[n])
          Fatal("InitializeDataMembers", "Invalid input function -- abort");
@@ -105,14 +106,14 @@ void TF1NormSum::InitializeDataMembers(const std::vector <TF1 *> &functions, con
    {
       fXmin = 0.;
       fXmax = 1.;
-      Info("InitializeDataMembers", "Initializing empty TF1NormSum with default [0,1] range");
+      // Info("InitializeDataMembers", "Initializing empty TF1NormSum with default [0,1] range");
    }
    else {
       fFunctions[0]->GetRange(fXmin, fXmax);
       if (fXmin >= fXmax) {
          fXmin = 0.;
          fXmax = 1.;
-         Info("InitializeDataMembers", "Initializing empty TF1NormSum with default [0,1] range");
+         // Info("InitializeDataMembers", "Initializing empty TF1NormSum with default [0,1] range");
       }
       for (unsigned int n = 1 ; n < fNOfFunctions ; n++)
       {
@@ -263,31 +264,37 @@ TF1NormSum::TF1NormSum(const TString &formula, Double_t xmin, Double_t xmax)
       else              isacoeff[j-1] = 1;
       k = 1;
    }
-   k = 0;
+
+   Double_t old_xmin, old_xmax;
+   k = 0; // index of term in funcstringall
    for (int i=0; i<noffunctions; i++)
    {
-      if (isacoeff[k]==0)
-      {
-         coeffs[i]    = 1.;
-         TF1* f = (TF1*)(gROOT -> GetListOfFunctions() -> FindObject(funcstringall[k]));
-         if (!f)   Error("TF1NormSum", "Function %s does not exist", funcstringall[k].Data());
-         f->SetBit(TF1::kNotGlobal, kTRUE);
-         functions[i] = (TF1*)f->Clone(TString::Format("function_%s_%d",funcstringall[k].Data(), i));
-         functions[i]->SetRange(xmin,xmax);
+      // first, handle coefficient
+      if (isacoeff[k]) {
+         coeffs[i] = funcstringall[k].Atof();
          k++;
+      } else {
+         coeffs[i] = 1.;
       }
-      else
-      {
-         coeffs[i]    = funcstringall[k].Atof();
-         TF1* f  = (TF1*)(gROOT -> GetListOfFunctions() -> FindObject(funcstringall[k+1]));
-         if (!f)   Error("TF1NormSum", "Function %s does not exist", funcstringall[k+1].Data());
-         f->SetBit(TF1::kNotGlobal, kTRUE);
-         functions[i] = (TF1*)f->Clone(TString::Format("function_%s_%d",funcstringall[k+1].Data(), i) );
-         functions[i]->SetRange(xmin,xmax);
-         k=k+2;
+
+      // then, handle function
+      functions[i] = (TF1 *)(gROOT->GetListOfFunctions()->FindObject(funcstringall[k]));
+      if (!functions[i])
+         Error("TF1NormSum", "Function %s does not exist", funcstringall[k].Data());
+      // (set range for first function, which determines range of whole TF1NormSum)
+      if (i == 0) {
+         functions[i]->GetRange(old_xmin, old_xmax);
+         functions[i]->SetRange(xmin, xmax);
       }
+      functions[i]->SetBit(TF1::kNotGlobal, kTRUE); // don't want to put `f` in list of globals
+
+      k++;
    }
    InitializeDataMembers(functions, coeffs,1.);
+
+   // Set range of first function back to original state
+   if (noffunctions > 0 && functions[0])
+      functions[0]->SetRange(old_xmin, old_xmax);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
