@@ -763,6 +763,9 @@ Bool_t TCanvasPainter::ProcessWS(THttpCallArg *arg)
    } else if (cdata == "QUIT") {
       if (gApplication)
          gApplication->Terminate(0);
+   } else if (cdata == "RELOAD") {
+      conn->fSend = 0; // reset send version, causes new data sending
+      CheckDataToSend();
    } else if (cdata == "INTERRUPT") {
       gROOT->SetInterrupt();
    } else if (cdata.find("REPLY:") == 0) {
