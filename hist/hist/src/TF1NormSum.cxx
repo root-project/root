@@ -65,15 +65,11 @@ void TF1NormSum::InitializeDataMembers(const std::vector <TF1 *> &functions, con
    fFunctions = std::vector<std::unique_ptr<TF1> >(functions.size());
    for (unsigned int n = 0 ; n < fNOfFunctions ; n++)
    {
-      bool notGlobal = functions[n]->TestBit(TF1::kNotGlobal);
-      if (!notGlobal)
-         functions[n]->SetBit(TF1::kNotGlobal, kTRUE); // don't this function in list of globals
-
-      fFunctions[n] = std::unique_ptr<TF1>(
-         (TF1 *)functions[n]->Clone(TString::Format("function_%s_%d", functions[n]->GetName(), n)));
-
-      if (!notGlobal)
-         functions[n]->ResetBit(TF1::kNotGlobal); // don't this function in list of globals
+      TF1 *f = new TF1();
+      functions[n]->Copy(*f);
+      fFunctions[n] = std::unique_ptr<TF1>(f);
+      // Use Copy, not Clone (otherwise the whole thing is messier and involves
+      // bits like kNotGlobal)
 
       if (!fFunctions[n])
          Fatal("InitializeDataMembers", "Invalid input function -- abort");
