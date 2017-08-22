@@ -845,7 +845,9 @@ void TCanvasPainter::CheckDataToSend()
             drawable->PopulateMenu(items);
 
             // FIXME: got problem with std::list<TMenuItem>, can be generic TBufferJSON
-            buf = "MENU";
+            buf = "MENU:";
+            buf.Append(conn.fGetMenu);
+            buf.Append(":");
             buf.Append(items.ProduceJSON());
          }
 
@@ -901,9 +903,14 @@ ROOT::Experimental::TDrawable *TCanvasPainter::FindDrawable(const ROOT::Experime
                                                                       const std::string &id)
 {
 
+   std::string search = id;
+   size_t pos = search.find("#");
+   // exclude extra specifier, later can be used for menu and commands execution
+   if (pos != std::string::npos) search.resize(pos);
+
    for (auto &&drawable : can.GetPrimitives()) {
 
-      if (id == ROOT::Experimental::TDisplayItem::MakeIDFromPtr(&(*drawable)))
+      if (search == ROOT::Experimental::TDisplayItem::MakeIDFromPtr(&(*drawable)))
          return &(*drawable);
    }
 
