@@ -511,3 +511,4 @@ tags
 # TMVA datasets
 /tmva/tmva/test/DNN/CNN/dataset/SingleElectronPt50_FEVTDEBUG_n250k_IMG_CROPS32.root
 /tmva/tmva/test/DNN/CNN/dataset/SinglePhotonPt50_FEVTDEBUG_n250k_IMG_CROPS32.root
+/tmva/tmva/test/DNN/CNN/dataset/tmva_class_example.root
