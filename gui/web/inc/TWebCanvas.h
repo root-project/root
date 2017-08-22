@@ -67,6 +67,8 @@ protected:
    virtual TVirtualPadPainter* CreatePadPainter();
 
    TString CreateSnapshot(TPad *pad, TPadWebSnapshot *master = 0, TList *tempbuf = 0);
+   TWebSnapshot *CreateObjectSnapshot(TObject *obj, const char *opt);
+
    TObject* FindPrimitive(UInt_t id, TPad *pad = 0);
    Bool_t DecodePadRanges(TPad *pad, const char *arg);
    Bool_t DecodeAllRanges(const char *arg);

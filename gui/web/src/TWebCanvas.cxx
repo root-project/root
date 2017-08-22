@@ -22,6 +22,7 @@
 #include "TROOT.h"
 #include "TClass.h"
 #include "TList.h"
+#include "TH1.h"
 #include "TBufferJSON.h"
 #include "TApplication.h"
 #include "Riostream.h"
@@ -114,6 +115,36 @@ TObject* TWebCanvas::FindPrimitive(UInt_t id, TPad *pad)
 }
 
 
+TWebSnapshot *TWebCanvas::CreateObjectSnapshot(TObject *obj, const char *opt)
+{
+   TWebSnapshot *sub = new TWebSnapshot();
+   sub->SetObjectIDAsPtr(obj);
+   sub->SetOption(opt);
+   TWebPainting *p = 0;
+
+   if (!IsJSSupportedClass(obj)) {
+      TWebPadPainter *painter = dynamic_cast<TWebPadPainter *> (Canvas()->GetCanvasPainter());
+      if (painter) painter->ResetPainting(); // ensure painter is created
+
+      // calling Paint function for the object
+      obj->Paint(opt);
+
+      if (painter) p = painter->TakePainting();
+      fHasSpecials = kTRUE;
+   }
+
+   // when paint method was used and resultative,
+
+   if (p) {
+      p->FixSize();
+      sub->SetSnapshot(TWebSnapshot::kSVG, p);
+   } else {
+      sub->SetSnapshot(TWebSnapshot::kObject, obj);
+   }
+
+   return sub;
+}
+
 TString TWebCanvas::CreateSnapshot(TPad* pad, TPadWebSnapshot *master, TList *tempbuf)
 {
    TList main_buf;
@@ -131,68 +162,75 @@ TString TWebCanvas::CreateSnapshot(TPad* pad, TPadWebSnapshot *master, TList *te
    curr->Add(padshot);
 
    TList *primitives = pad->GetListOfPrimitives();
+   TList hlist; // list of histograms, required for functions handling
 
    TIter iter(primitives);
    TObject* obj = 0;
    while ((obj = iter()) != 0) {
       if (obj->InheritsFrom(TPad::Class())) {
          CreateSnapshot((TPad*) obj, curr, tempbuf);
-      } else {
+      } else if (obj->InheritsFrom(TH1::Class())) {
          TWebSnapshot *sub = new TWebSnapshot();
-         sub->SetObjectIDAsPtr(obj);
+         TH1 *hist = (TH1*) obj;
+         sub->SetObjectIDAsPtr(hist);
          sub->SetOption(iter.GetOption());
-         TWebPainting *p = 0;
-
-         if (!IsJSSupportedClass(obj)) {
-            TWebPadPainter *painter = dynamic_cast<TWebPadPainter *> (Canvas()->GetCanvasPainter());
-            if (painter) painter->ResetPainting(); // ensure painter is created
-            // call paint function of object itself
-
-            // printf("Call painter for %s\n", obj->ClassName());
-
-            obj->Paint(iter.GetOption());
-            if (painter) p = painter->TakePainting();
-            fHasSpecials = kTRUE;
-         }
-
-         // when paint method was used and resultative,
-
-         if (p) {
-            p->FixSize();
-            sub->SetSnapshot(TWebSnapshot::kSVG, p);
-         } else {
-            sub->SetSnapshot(TWebSnapshot::kObject, obj);
-         }
-
+         sub->SetSnapshot(TWebSnapshot::kObject, obj);
          curr->Add(sub);
+
+         TIter fiter(hist->GetListOfFunctions());
+         TObject *fobj = 0;
+         while ((fobj = fiter()) != 0)
+            if (!fobj->InheritsFrom("TPaveStats") && !fobj->InheritsFrom("TPaletteAxis"))
+               curr->Add(CreateObjectSnapshot(fobj, fiter.GetOption()));
+
+         hlist.Add(hist);
+      } else {
+         curr->Add(CreateObjectSnapshot(obj, iter.GetOption()));
       }
    }
 
-   const char *pad_marker = "!!!#####!!!";
+   const char *pad_marker = "!!!pad!!!";
+   const char *hist_marker = "!!!hist!!!";
 
    // remove primitives and keep them in extra list
    tempbuf->Add(pad, pad_marker); // special marker for pad
-   TObjLink *lnk = primitives->FirstLink();
-   while (lnk) {
-      TObjLink *next = lnk->Next();
-      tempbuf->Add(lnk->GetObject(), lnk->GetOption());
-      primitives->Remove(lnk);
-      lnk = next;
+   iter.Reset();
+   while ((obj = iter()) != 0)
+      tempbuf->Add(obj, iter.GetOption());
+   primitives->Clear("nodelete");
+
+   // remove functions from all histograms and also add them to extra list
+   TIter hiter(&hlist);
+   TH1 *h1 = 0;
+   while ((h1 = (TH1*) hiter()) != 0) {
+      tempbuf->Add(h1, hist_marker); // special marker for pad
+      TIter fiter(h1->GetListOfFunctions());
+      while ((obj = fiter()) != 0)
+         tempbuf->Add(obj, fiter.GetOption());
+      h1->GetListOfFunctions()->Clear("nodelete");
    }
+
+   hlist.Clear("nodelete");
 
    if (tempbuf != &main_buf) return "";
 
    TString res = TBufferJSON::ConvertToJSON(curr, 23);
 
    TPad *rpad = 0;
-   lnk = main_buf.FirstLink();
-   while(lnk) {
-      if (lnk->GetOption() && (strcmp(lnk->GetOption(), pad_marker)==0)) {
-         rpad = (TPad*) lnk->GetObject();
-      } else {
-         rpad->GetListOfPrimitives()->Add(lnk->GetObject(), lnk->GetOption());
+   h1 = 0;
+   TIter miter(&main_buf);
+   while ((obj = miter()) != 0) {
+      TString opt = miter.GetOption();
+
+      if (opt == pad_marker) {
+         rpad = (TPad*) obj; h1 = 0;
+      } else if (opt == hist_marker) {
+         rpad = 0; h1 = (TH1*) obj;
+      } else if (rpad != 0) {
+         rpad->GetListOfPrimitives()->Add(obj, opt);
+      } else if (h1 != 0) {
+         h1->GetListOfFunctions()->Add(obj, opt);
       }
-      lnk = lnk->Next();
    }
 
    main_buf.Clear("nodelete");
@@ -538,6 +576,8 @@ Bool_t TWebCanvas::PerformUpdate()
    // check if canvas modified. If true and communication allowed,
    // It scan all primitives in the TCanvas and subpads and convert them into
    // the structure which will be delivered to JSROOT client
+
+   printf("TWebCanvas::PerformUpdate\n");
 
    if (IsAnyPadModified(Canvas())) {
       for (WebConnList::iterator iter = fWebConn.begin(); iter != fWebConn.end(); ++iter)
