@@ -34,6 +34,7 @@
 #include "cpuid.h"
 #endif
 
+
 #define local static
 
 /* Definitions for doing the crc four data bytes at a time. */

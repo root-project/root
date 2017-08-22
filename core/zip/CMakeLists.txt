@@ -4,8 +4,10 @@
 # The Core library is build in the main CMakeLists.txt
 # of the core subdirectory.
 
-if(CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64")
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "amd64|x86_64|AMD64|x86|X86")
     set(vector_zlib_x86 ON)
+    set(ZLIB_ASMS contrib/amd64/crc32-pclmul_asm.S)
+    set_source_files_properties(${ZLIB_ASMS} PROPERTIES LANGUAGE C)
 endif()
 
 # Public headers for ROOT compression.
@@ -56,4 +58,8 @@ endforeach()
 add_custom_target(${tgt} DEPENDS ${dst_list})
 set_property(GLOBAL APPEND PROPERTY ROOT_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/inc)
 
-ROOT_OBJECT_LIBRARY(Zip ${ZLIB_SRCS})
+if(vector_zlib_x86)
+  set_source_files_properties(crc32-pclmul_asm.lo crc32-pclmul_asm.o COMPILE_FLAGS "-mpclmul")
+endif()
+
+ROOT_OBJECT_LIBRARY(Zip ${ZLIB_SRCS} ${ZLIB_ASMS})
