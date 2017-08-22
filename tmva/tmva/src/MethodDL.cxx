@@ -1046,6 +1046,7 @@ void MethodDL::TrainCpu()
 {
 #ifdef DNNCPU // Included only if DNNCPU flag is set.
 
+   std::cout << "Train CPU Method" << std::endl;
    using Architecture_t = DNN::TCpu<Double_t>;
    using Scalar_t = Architecture_t::Scalar_t;
    using Matrix_t = typename Architecture_t::Matrix_t;
