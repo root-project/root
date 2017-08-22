@@ -168,8 +168,10 @@ TString TWebCanvas::CreateSnapshot(TPad* pad, TPadWebSnapshot *master, TList *te
       }
    }
 
+   const char *pad_marker = "!!!#####!!!";
+
    // remove primitives and keep them in extra list
-   tempbuf->Add(pad, "!!!#####!!!"); // special marker for pad
+   tempbuf->Add(pad, pad_marker); // special marker for pad
    TObjLink *lnk = primitives->FirstLink();
    while (lnk) {
       TObjLink *next = lnk->Next();
@@ -185,7 +187,7 @@ TString TWebCanvas::CreateSnapshot(TPad* pad, TPadWebSnapshot *master, TList *te
    TPad *rpad = 0;
    lnk = main_buf.FirstLink();
    while(lnk) {
-      if (lnk->GetOption() && (strcmp(lnk->GetOption(), "!!!#####!!!")==0)) {
+      if (lnk->GetOption() && (strcmp(lnk->GetOption(), pad_marker)==0)) {
          rpad = (TPad*) lnk->GetObject();
       } else {
          rpad->GetListOfPrimitives()->Add(lnk->GetObject(), lnk->GetOption());
@@ -193,17 +195,15 @@ TString TWebCanvas::CreateSnapshot(TPad* pad, TPadWebSnapshot *master, TList *te
       lnk = lnk->Next();
    }
 
-   main_buf.Clear();
+   main_buf.Clear("nodelete");
 
    return res;
 }
 
 
-
 void TWebCanvas::CheckModifiedFlag()
 {
    if (!Canvas()) return;
-
 
    for (WebConnList::iterator citer = fWebConn.begin(); citer != fWebConn.end(); ++citer) {
       WebConn& conn = *citer;
@@ -226,9 +226,11 @@ void TWebCanvas::CheckModifiedFlag()
       } else
       if (conn.fModified) {
          buf = "SNAP6:";
+
          buf += CreateSnapshot(Canvas());
 
-         // printf("Snapshot created %s\n", buf.Data());
+         //printf("Snapshot created %d\n", buf.Length());
+         //if (buf.Length() < 10000) printf("Snapshot %s\n", buf.Data());
          conn.fModified = kFALSE;
       }
 
