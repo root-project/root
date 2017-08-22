@@ -845,26 +845,28 @@ if(xrootd)
         set(xrootd OFF CACHE BOOL "" FORCE)
       endif()
     else()
-      set(xrootd_versionnum ${xrdversnum})  # variable used internally
+      set(XROOTD_VERSIONNUM ${xrdversnum})  # variable used internally
     endif()
   endif()
 endif()
 if(builtin_xrootd)
-  set(xrootd_version 4.6.1)
-  set(xrootd_versionnum 400060001)
+  set(XROOTD_VERSION 4.6.1)
+  set(XROOTD_VERSIONNUM 400060001)
+  set(XROOTD_SRC_URI http://xrootd.org/download/v${XROOTD_VERSION}/xrootd-${XROOTD_VERSION}.tar.gz)
+  set(XROOTD_DESTDIR ${CMAKE_BINARY_DIR}/externals)
+  set(XROOTD_ROOTDIR ${XROOTD_DESTDIR})
   message(STATUS "Downloading and building XROOTD version ${xrootd_version}")
   string(REPLACE "-Wall " "" __cxxflags "${CMAKE_CXX_FLAGS}")  # Otherwise it produces many warnings
   string(REPLACE "-W " "" __cxxflags "${__cxxflags}")          # Otherwise it produces many warnings
-  string(REPLACE "-Wshadow" "" __cxxflags "${__cxxflags}")          # Otherwise it produces many warnings  
-  string(REPLACE "-Woverloaded-virtual" "" __cxxflags "${__cxxflags}")  # Otherwise it produces many warnings  
-  set(XROOTD_LIBRARIES ${CMAKE_BINARY_DIR}/${_LIBDIR_DEFAULT}/libXrdUtils${CMAKE_SHARED_LIBRARY_SUFFIX}
-                       ${CMAKE_BINARY_DIR}/${_LIBDIR_DEFAULT}/libXrdClient${CMAKE_SHARED_LIBRARY_SUFFIX}
-                       ${CMAKE_BINARY_DIR}/${_LIBDIR_DEFAULT}/libXrdCl${CMAKE_SHARED_LIBRARY_SUFFIX})
+  string(REPLACE "-Wshadow" "" __cxxflags "${__cxxflags}")          # Otherwise it produces many warnings
+  string(REPLACE "-Woverloaded-virtual" "" __cxxflags "${__cxxflags}")  # Otherwise it produces manywarnings  
+  set(XROOTD_LIBRARIES ${XROOTD_ROOTDIR}/${_LIBDIR_DEFAULT}/libXrdUtils${CMAKE_SHARED_LIBRARY_SUFFIX}
+                       ${XROOTD_ROOTDIR}/${_LIBDIR_DEFAULT}/libXrdClient${CMAKE_SHARED_LIBRARY_SUFFIX}
+                       ${XROOTD_ROOTDIR}/${_LIBDIR_DEFAULT}/libXrdCl${CMAKE_SHARED_LIBRARY_SUFFIX})
   ExternalProject_Add(
     XROOTD
-    URL http://xrootd.org/download/v${xrootd_version}/xrootd-${xrootd_version}.tar.gz
-    # URL ${lcgpackages}/xrootd-${xrootd_version}.tar.gz
-    INSTALL_DIR ${CMAKE_BINARY_DIR}
+    URL ${XROOTD_SRC_URI}
+    INSTALL_DIR ${XROOTD_ROOTDIR}
     CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
                -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
                -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
@@ -878,16 +880,15 @@ if(builtin_xrootd)
     BUILD_BYPRODUCTS ${XROOTD_LIBRARIES}
   )
   # We cannot call find_package(XROOTD) becuase the package is not yet built. So, we need to emulate what it defines....
-  set(XROOTD_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/include/xrootd ${CMAKE_BINARY_DIR}/include/xrootd/private)
+  set(XROOTD_INCLUDE_DIRS ${XROOTD_ROOTDIR}/include/xrootd ${XROOTD_ROOTDIR}/include/xrootd/private)
   set(XROOTD_NOMAIN TRUE)
-  set(XROOTD_CFLAGS "-DROOTXRDVERS=${xrootd_versionnum}")
-  install(DIRECTORY ${CMAKE_BINARY_DIR}/${_LIBDIR_DEFAULT}/ DESTINATION ${CMAKE_INSTALL_LIBDIR}
-                    COMPONENT libraries
-                    FILES_MATCHING PATTERN "libXrd*")
+  set(XROOTD_CFLAGS "-DROOTXRDVERS=${XROOTD_VERSIONNUM}")
+  install(DIRECTORY ${XROOTD_ROOTDIR}/${_LIBDIR_DEFAULT}/ DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries)
+  install(DIRECTORY ${XROOTD_ROOTDIR}/include/xrootd/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
   set(XROOTD_TARGET XROOTD)
   set(xrootd ON CACHE BOOL "" FORCE)
 endif()
-if(xrootd AND xrootd_versionnum VERSION_GREATER 300030005)
+if(xrootd AND XROOTD_VERSION VERSION_GREATER 3.3.5)
   set(netxng ON)
 else()
   set(netxng OFF)
