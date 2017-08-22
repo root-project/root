@@ -41,15 +41,24 @@ void TTensorDataLoader<TensorInput, TReference<Real_t>>::CopyTensorInput(std::ve
 {
    const std::vector<TMatrixT<Double_t>> &inputTensor = std::get<0>(fData);
 
-   for (size_t i = 0; i < fBatchSize; i++) {
-      size_t sampleIndex = *sampleIterator;
-      for (size_t j = 0; j < fBatchHeight; j++) {
-         for (size_t k = 0; k < fBatchWidth; k++) {
-            tensor[i](j, k) = static_cast<Real_t>(inputTensor[sampleIndex](j, k));
+   if (fBatchDepth == 1) {
+      for (size_t i = 0; i < fBatchHeight; i++) {
+         size_t sampleIndex = *sampleIterator;
+         for (size_t j = 0; j < fBatchWidth; j++) {
+            tensor[0](i, j) = static_cast<Real_t>(inputTensor[0](sampleIndex, j));
          }
+         sampleIterator++;
       }
-
-      sampleIterator++;
+   } else {
+      for (size_t i = 0; i < fBatchDepth; i++) {
+         size_t sampleIndex = *sampleIterator;
+         for (size_t j = 0; j < fBatchHeight; j++) {
+            for (size_t k = 0; k < fBatchWidth; k++) {
+               tensor[i](j, k) = static_cast<Real_t>(inputTensor[sampleIndex](j, k));
+            }
+         }
+         sampleIterator++;
+      }
    }
 }
 
@@ -92,15 +101,24 @@ void TTensorDataLoader<TensorInput, TReference<Double_t>>::CopyTensorInput(std::
 {
    const std::vector<TMatrixT<Double_t>> &inputTensor = std::get<0>(fData);
 
-   for (size_t i = 0; i < fBatchSize; i++) {
-      size_t sampleIndex = *sampleIterator;
-      for (size_t j = 0; j < fBatchHeight; j++) {
-         for (size_t k = 0; k < fBatchWidth; k++) {
-            tensor[i](j, k) = inputTensor[sampleIndex](j, k);
+   if (fBatchDepth == 1) {
+      for (size_t i = 0; i < fBatchHeight; i++) {
+         size_t sampleIndex = *sampleIterator;
+         for (size_t j = 0; j < fBatchWidth; j++) {
+            tensor[0](i, j) = inputTensor[0](sampleIndex, j);
          }
+         sampleIterator++;
       }
-
-      sampleIterator++;
+   } else {
+      for (size_t i = 0; i < fBatchDepth; i++) {
+         size_t sampleIndex = *sampleIterator;
+         for (size_t j = 0; j < fBatchHeight; j++) {
+            for (size_t k = 0; k < fBatchWidth; k++) {
+               tensor[i](j, k) = inputTensor[sampleIndex](j, k);
+            }
+         }
+         sampleIterator++;
+      }
    }
 }
 
@@ -144,16 +162,26 @@ void TTensorDataLoader<TMVAInput_t, TReference<Real_t>>::CopyTensorInput(std::ve
    // one event, one  example in the batch
    Event *event = fData.front();
 
-   for (size_t i = 0; i < fBatchSize; i++) {
-      size_t sampleIndex = *sampleIterator;
-      for (size_t j = 0; j < fBatchHeight; j++) {
-         for (size_t k = 0; k < fBatchWidth; k++) {
+   if (fBatchDepth == 1) {
+      for (size_t i = 0; i < fBatchHeight; i++) {
+         size_t sampleIndex = *sampleIterator;
+         for (size_t j = 0; j < fBatchWidth; j++) {
             event = fData[sampleIndex];
-            tensor[i](j, k) = static_cast<Real_t>(event->GetValue(j * fBatchHeight + k));
+            tensor[0](i, j) = static_cast<Real_t>(event->GetValue(j));
          }
+         sampleIterator++;
       }
-
-      sampleIterator++;
+   } else {
+      for (size_t i = 0; i < fBatchDepth; i++) {
+         size_t sampleIndex = *sampleIterator;
+         for (size_t j = 0; j < fBatchHeight; j++) {
+            for (size_t k = 0; k < fBatchWidth; k++) {
+               event = fData[sampleIndex];
+               tensor[i](j, k) = static_cast<Real_t>(event->GetValue(j * fBatchHeight + k));
+            }
+         }
+         sampleIterator++;
+      }
    }
 }
 
@@ -208,16 +236,26 @@ void TTensorDataLoader<TMVAInput_t, TReference<Double_t>>::CopyTensorInput(std::
    // one event, one  example in the batch
    Event *event = fData.front();
 
-   for (size_t i = 0; i < fBatchSize; i++) {
-      size_t sampleIndex = *sampleIterator;
-      for (size_t j = 0; j < fBatchHeight; j++) {
-         for (size_t k = 0; k < fBatchWidth; k++) {
+   if (fBatchDepth == 1) {
+      for (size_t i = 0; i < fBatchHeight; i++) {
+         size_t sampleIndex = *sampleIterator;
+         for (size_t j = 0; j < fBatchWidth; j++) {
             event = fData[sampleIndex];
-            tensor[i](j, k) = event->GetValue(j * fBatchHeight + k);
+            tensor[0](i, j) = event->GetValue(j);
          }
+         sampleIterator++;
       }
-
-      sampleIterator++;
+   } else {
+      for (size_t i = 0; i < fBatchDepth; i++) {
+         size_t sampleIndex = *sampleIterator;
+         for (size_t j = 0; j < fBatchHeight; j++) {
+            for (size_t k = 0; k < fBatchWidth; k++) {
+               event = fData[sampleIndex];
+               tensor[i](j, k) = event->GetValue(j * fBatchHeight + k);
+            }
+         }
+         sampleIterator++;
+      }
    }
 }
 
