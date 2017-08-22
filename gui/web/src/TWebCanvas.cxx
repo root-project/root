@@ -299,7 +299,7 @@ void TWebCanvas::Show()
    if (symbol_qt5) {
       typedef void (*FunctionQt5)(const char *, void *, bool);
 
-      addr.Form("://dummy:8080/web6gui/%s/draw.htm?longpollcanvas%s&qt5", GetName(),
+      addr.Form("://dummy:8080/web6gui/%s/draw.htm?longpollcanvas&no_root_json%s&qt5", GetName(),
                 (gROOT->IsBatch() ? "&batch_mode" : ""));
       // addr.Form("example://localhost:8080/Canvases/%s/draw.htm", Canvas()->GetName());
 
@@ -318,7 +318,7 @@ void TWebCanvas::Show()
    if (symbol_cef && cef_path && !gSystem->AccessPathName(cef_path) && rootsys) {
       typedef void (*FunctionCef3)(const char *, void *, bool, const char *, const char *);
 
-      addr.Form("/web6gui/%s/draw.htm?cef_canvas%s", GetName(), (gROOT->IsBatch() ? "&batch_mode" : ""));
+      addr.Form("/web6gui/%s/draw.htm?cef_canvas&no_root_json%s", GetName(), (gROOT->IsBatch() ? "&batch_mode" : ""));
 
       Info("NewDisplay", "Show canvas in CEF window:  %s", addr.Data());
 
