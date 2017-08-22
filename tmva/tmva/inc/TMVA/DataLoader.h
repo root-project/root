@@ -45,12 +45,13 @@ class TH2;
 
 namespace TMVA {
 
-   class IMethod;
-   class Envelope;
-   class MethodBase;
+   class CvSplit;
    class DataInputHandler;
    class DataSetInfo;
    class DataSetManager;
+   class Envelope;
+   class MethodBase;
+   class IMethod;   
    class VariableTransformBase;
    class VarTransformHandler;
    class Classification;
@@ -160,14 +161,10 @@ namespace TMVA {
       void PrepareTrainingAndTestTree( const TCut& cut, Int_t NsigTrain, Int_t NbkgTrain, Int_t NsigTest, Int_t NbkgTest, 
                                        const TString& otherOpt="SplitMode=Random:!V" );
 
-      void PrepareTrainingAndTestTree( int foldNumber, Types::ETreeType tt );
-
-      void PrepareFoldDataSet( UInt_t foldNumber, Types::ETreeType tt);
-      void MakeKFoldDataSet(UInt_t numberFolds, bool validationSet=false);
-      std::vector<std::vector<TMVA::Event*>> SplitSets(std::vector<TMVA::Event*>& oldSet, int seedNum, UInt_t numFolds);
-      void MakeKFoldDataSetCE(UInt_t numFolds, TString splitVariableName);
-      std::vector<std::vector<TMVA::Event*>> SplitSetsCE( std::vector<TMVA::Event*>& oldSet, UInt_t spectatorIdx, UInt_t numFolds);
-      void MergeCustomSplit(Types::ETreeType tt = Types::kTraining);
+      // Cross validation
+      void MakeKFoldDataSet(CvSplit & s);
+      void PrepareFoldDataSet(CvSplit & s, UInt_t foldNumber, Types::ETreeType tt = Types::kTraining);
+      void RecombineKFoldDataSet(CvSplit & s, Types::ETreeType tt = Types::kTraining);
 
       const DataSetInfo& GetDefaultDataSetInfo(){ return DefaultDataSetInfo(); }
 
@@ -210,25 +207,15 @@ namespace TMVA {
       std::vector<TTree*>                       fTrainAssignTree; // for each class: tmp tree if user wants to assign the events directly
       std::vector<TTree*>                       fTestAssignTree;  // for each class: tmp tree if user wants to assign the events directly
 
-      std::vector<std::vector<TMVA::Event*>>          fTrainSigEvents;
-      std::vector<std::vector<TMVA::Event*>>          fTrainBkgEvents;
-      std::vector<std::vector<TMVA::Event*>>          fValidSigEvents;
-      std::vector<std::vector<TMVA::Event*>>          fValidBkgEvents;
-      std::vector<std::vector<TMVA::Event*>>          fTestSigEvents;
-      std::vector<std::vector<TMVA::Event*>>          fTestBkgEvents;
-
       Int_t                                     fATreeType = 0;          // type of event (=classIndex)
       Float_t                                   fATreeWeight = 0.0;        // weight of the event
       std::vector<Float_t>                      fATreeEvent;         // event variables
       
       Types::EAnalysisType                      fAnalysisType;    // the training type
 
-      Bool_t                                    fMakeFoldDataSet; // flag telling if the DataSet folds have been done
-      UInt_t                                    fCvNumFolds;
-
    protected:
 
-      ClassDef(DataLoader,3);
+      ClassDef(DataLoader,4);
    };
    void DataLoaderCopy(TMVA::DataLoader* des, TMVA::DataLoader* src);
 } // namespace TMVA

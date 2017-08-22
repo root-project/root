@@ -1,10 +1,22 @@
 // @(#)root/tmva $Id$
-// Author: Omar Zapata, Thomas James Stevenson.
+// Author: Kim Albertsson
 
+/*************************************************************************
+ * Copyright (C) 2017, Kim Albertsson                                    *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
+//////////////////////////////////////////////////////////////////////////////
+///
+//////////////////////////////////////////////////////////////////////////////
 #include "TMVA/CrossEvaluation.h"
 
 #include "TMVA/ClassifierFactory.h"
 #include "TMVA/Config.h"
+#include "TMVA/CvSplit.h"
 #include "TMVA/DataSet.h"
 #include "TMVA/Event.h"
 #include "TMVA/MethodBase.h"
@@ -24,22 +36,6 @@
 
 #include <iostream>
 #include <memory>
-
-// Generalisations
-//    Dataloader
-//       PrapareForCV( Split s ) <- Split is a generic splitter that fills vectors from incoming vectors 
-//                                  (2 -> 2)
-//                                  With this idea of Split, we can use new Split(new Split()) to do nesting
-//                                  no, i think it better to do PrepareForCV(Split outer, Split inner) since 
-//                                  Hmm, the best would be to have a HyperParam() that does what ever and 
-//                                  returns a model for use in CE.
-//                                  Operating on the model that the current data in the data set is that to 
-//                                  be split and that no-one is allowed to modify it until is done. Yikes, 
-//                                  feels it would be so much neater with the 
-//                                  DSV approach..! (Although there are issues there as well.)
-//                                  
-//       PrapareForSplit(Uint_t iSplit) <- indep (iFold for K-folds, run rumber for bootstrap)
-//       
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Inherit from configurable
@@ -65,6 +61,7 @@ TMVA::CrossEvaluation::CrossEvaluation(TMVA::DataLoader *dataloader, TFile * out
          "!V:!ROC:Silent:!ModelPersistence:!Color:!DrawProgressBar:AnalysisType=classification"))
 {
    fFoldStatus=kFALSE;
+   fSplit = std::unique_ptr<CvSplitCrossEvaluation>(new CvSplitCrossEvaluation(fNumFolds, splitSpectator));
 
    if (fAnalysisType != Types::kClassification and fAnalysisType != Types::kMulticlass) {
       Log() << kFATAL << "Only binary and multiclass classification supported so far." << Endl;
@@ -86,6 +83,7 @@ TMVA::CrossEvaluation::CrossEvaluation(TMVA::DataLoader *dataloader, TString spl
          "!V:!ROC:Silent:!ModelPersistence:!Color:!DrawProgressBar:AnalysisType=classification"))
 {
    fFoldStatus=kFALSE;
+   fSplit = std::unique_ptr<CvSplitCrossEvaluation>(new CvSplitCrossEvaluation(fNumFolds, splitSpectator));
 
    if (fAnalysisType != Types::kClassification and fAnalysisType != Types::kMulticlass) {
       Log() << kFATAL << "Only binary and multiclass classification supported so far." << Endl;
@@ -106,7 +104,8 @@ TMVA::CrossEvaluation::~CrossEvaluation()
 void TMVA::CrossEvaluation::SetNumFolds(UInt_t i)
 {
    fNumFolds=i;
-   fDataLoader->MakeKFoldDataSet(fNumFolds);
+   fSplit = std::unique_ptr<CvSplitCrossEvaluation>(new CvSplitCrossEvaluation(fNumFolds, fSplitSpectator));
+   fDataLoader->MakeKFoldDataSet(*fSplit.get());
    fFoldStatus=kTRUE;
 }
 
@@ -208,7 +207,7 @@ void TMVA::CrossEvaluation::ProcessFold(UInt_t iFold)
    foldTitle += iFold+1;
 
 
-   fDataLoader->PrepareFoldDataSet(iFold, TMVA::Types::kTraining);
+   fDataLoader->PrepareFoldDataSet(*fSplit.get(), iFold, TMVA::Types::kTraining);
    MethodBase* smethod = fClassifier->BookMethod(fDataLoader.get(), methodName, foldTitle, methodOptions);
 
    // Train method (train method and eval train set)
@@ -247,6 +246,8 @@ void TMVA::CrossEvaluation::MergeFolds()
    fFactory->BookMethod(fDataLoader.get(), methodName, methodTitle, methodOptions);
 
    // TODO: This ensures some variables are created as they should. Could be replaced by what?
+   //    (However not all variable are set up correctly, leading to 
+   //    "Error in <TString::AssertElement>: out of bounds: i = -1, Length = 0" being output)
    fFactory->TrainAllMethods();
    MethodBase * smethod = dynamic_cast<MethodBase *>(fFactory->GetMethod(fDataLoader->GetName(), methodTitle));
 
@@ -260,7 +261,7 @@ void TMVA::CrossEvaluation::MergeFolds()
    }
 
    // Merge inputs 
-   fDataLoader->MergeCustomSplit();
+   fDataLoader->RecombineKFoldDataSet( *fSplit.get() );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -284,7 +285,7 @@ void TMVA::CrossEvaluation::Evaluate()
 
    // Generate K folds on given dataset
    if(!fFoldStatus){
-       fDataLoader->MakeKFoldDataSetCE(fNumFolds, fSplitSpectator);
+       fDataLoader->MakeKFoldDataSet(*fSplit.get());
        fFoldStatus=kTRUE;
    }
 

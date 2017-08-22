@@ -4,6 +4,7 @@
 #include "TMVA/CrossValidation.h"
 
 #include "TMVA/Config.h"
+#include "TMVA/CvSplit.h"
 #include "TMVA/DataSet.h"
 #include "TMVA/Event.h"
 #include "TMVA/MethodBase.h"
@@ -106,21 +107,22 @@ TMVA::CrossValidation::~CrossValidation()
 //_______________________________________________________________________
 void TMVA::CrossValidation::SetNumFolds(UInt_t i)
 {
-   fNumFolds=i;
-   fDataLoader->MakeKFoldDataSet(fNumFolds);
-   fFoldStatus=kTRUE;
+   fNumFolds = i;
+   fFoldStatus = kFALSE;
+   // fDataLoader->MakeKFoldDataSet(fNumFolds);
+   // fFoldStatus=kTRUE;
 }
 
 //_______________________________________________________________________
 void TMVA::CrossValidation::Evaluate()
 {
-   fResults.resize(fMethods.size());
+	fResults.resize(fMethods.size());
    for (UInt_t j = 0; j < fMethods.size(); j++) {
 
-      TString methodName = fMethods[j].GetValue<TString>("MethodName");
-      TString methodTitle = fMethods[j].GetValue<TString>("MethodTitle");
-      TString methodOptions = fMethods[j].GetValue<TString>("MethodOptions");
-      if (methodName == "")
+      TString methodName    = fMethod.GetValue<TString>("MethodName");
+      TString methodTitle   = fMethod.GetValue<TString>("MethodTitle");
+      TString methodOptions = fMethod.GetValue<TString>("MethodOptions");
+      if(methodName == "")
          Log() << kFATAL << "No method booked for cross-validation" << Endl;
 
       TMVA::MsgLogger::EnableOutput();
@@ -129,21 +131,22 @@ void TMVA::CrossValidation::Evaluate()
       TMVA::gConfig().SetSilent(kTRUE);
 
       // Generate K folds on given dataset
-      if (!fFoldStatus) {
-         fDataLoader->MakeKFoldDataSet(fNumFolds);
-         fFoldStatus = kTRUE;
+      CvSplitBootstrappedStratified split {fNumFolds, 0};
+      if(!fFoldStatus){
+          fDataLoader->MakeKFoldDataSet(split);
+          fFoldStatus=kTRUE;
       }
 
       // Process K folds
-      for (UInt_t i = 0; i < fNumFolds; ++i) {
+      for(UInt_t i=0; i<fNumFolds; ++i){
          Log() << kDEBUG << "Fold (" << methodTitle << "): " << i << Endl;
          // Get specific fold of dataset and setup method
          TString foldTitle = methodTitle;
          foldTitle += "_fold";
-         foldTitle += i + 1;
+         foldTitle += i+1;
 
-         fDataLoader->PrepareFoldDataSet(i, TMVA::Types::kTesting);
-         MethodBase *smethod = fClassifier->BookMethod(fDataLoader.get(), methodName, methodTitle, methodOptions);
+         fDataLoader->PrepareFoldDataSet(split, i, TMVA::Types::kTesting);
+         MethodBase* smethod = fClassifier->BookMethod(fDataLoader.get(), methodName, methodTitle, methodOptions);
 
          // Train method
          Event::SetIsTraining(kTRUE);
@@ -155,10 +158,10 @@ void TMVA::CrossValidation::Evaluate()
          smethod->TestClassification();
 
          // Store results
-         fResults[j].fROCs[i] = fClassifier->GetROCIntegral(fDataLoader->GetName(), methodTitle);
+         fResults[j].fROCs[i] = fClassifier->GetROCIntegral(fDataLoader->GetName(),methodTitle);
 
-         TGraph *gr = fClassifier->GetROCCurve(fDataLoader->GetName(), methodTitle, true);
-         gr->SetLineColor(i + 1);
+         TGraph* gr = fClassifier->GetROCCurve(fDataLoader->GetName(), methodTitle, true);
+         gr->SetLineColor(i+1);
          gr->SetLineWidth(2);
          gr->SetTitle(foldTitle.Data());
          fResults[j].fROCCurves->Add(gr);
@@ -167,10 +170,10 @@ void TMVA::CrossValidation::Evaluate()
          fResults[j].fSeps.push_back(smethod->GetSeparation());
 
          Double_t err;
-         fResults[j].fEff01s.push_back(smethod->GetEfficiency("Efficiency:0.01", Types::kTesting, err));
-         fResults[j].fEff10s.push_back(smethod->GetEfficiency("Efficiency:0.10", Types::kTesting, err));
-         fResults[j].fEff30s.push_back(smethod->GetEfficiency("Efficiency:0.30", Types::kTesting, err));
-         fResults[j].fEffAreas.push_back(smethod->GetEfficiency("", Types::kTesting, err));
+         fResults[j].fEff01s.push_back(smethod->GetEfficiency("Efficiency:0.01",Types::kTesting, err));
+         fResults[j].fEff10s.push_back(smethod->GetEfficiency("Efficiency:0.10",Types::kTesting,err));
+         fResults[j].fEff30s.push_back(smethod->GetEfficiency("Efficiency:0.30",Types::kTesting,err));
+         fResults[j].fEffAreas.push_back(smethod->GetEfficiency(""             ,Types::kTesting,err));
          fResults[j].fTrainEff01s.push_back(smethod->GetTrainingEfficiency("Efficiency:0.01"));
          fResults[j].fTrainEff10s.push_back(smethod->GetTrainingEfficiency("Efficiency:0.10"));
          fResults[j].fTrainEff30s.push_back(smethod->GetTrainingEfficiency("Efficiency:0.30"));

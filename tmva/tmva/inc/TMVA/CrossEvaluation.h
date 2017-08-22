@@ -1,5 +1,17 @@
 // @(#)root/tmva $Id$
-// Author: Kim Albertsson 2017
+// Author: Kim Albertsson
+
+/*************************************************************************
+ * Copyright (C) 2017, Kim Albertsson                                    *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
+//////////////////////////////////////////////////////////////////////////////
+///
+//////////////////////////////////////////////////////////////////////////////
 
 #ifndef ROOT_TMVA_CROSS_EVALUATION
 #define ROOT_TMVA_CROSS_EVALUATION
@@ -20,14 +32,14 @@
 
 namespace TMVA {
 
+   class CvSplitCrossEvaluation;
+
    using EventCollection_t = std::vector<Event *>;
    using EventTypes_t      = std::vector<Bool_t>;
    using EventOutputs_t    = std::vector<Float_t>;
    using EventOutputsMulticlass_t = std::vector< std::vector<Float_t> >;
 
    class CrossEvaluation : public Envelope {
-      UInt_t                 fNumFolds;     //!
-      Bool_t                 fFoldStatus;   //!
    public:
       explicit CrossEvaluation(TMVA::DataLoader *dataloader, TString splitSpectator, Types::EAnalysisType analysisType);
       explicit CrossEvaluation(TMVA::DataLoader *dataloader, TFile * outputFile, TString splitSpectator, Types::EAnalysisType analysisType);
@@ -51,11 +63,15 @@ namespace TMVA {
       void ProcessFold(UInt_t iFold);
       void MergeFolds();
 
+      UInt_t fNumFolds;     //!
+      Bool_t fFoldStatus;   //!
+
       TString fSplitSpectator;
       Types::EAnalysisType fAnalysisType;
 
       std::unique_ptr<Factory> fClassifier;
       std::unique_ptr<Factory> fFactory;
+      std::unique_ptr<CvSplitCrossEvaluation> fSplit;
 
       std::vector<EventTypes_t> fClassesPerFold;
       std::vector<EventOutputs_t> fOutputsPerFold;

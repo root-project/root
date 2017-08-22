@@ -12,6 +12,7 @@
 #include "TString.h"
 #include "TSystem.h"
 
+#include "TMVA/CvSplit.h"
 #include "TMVA/DataLoader.h"
 #include "TMVA/DataSet.h"
 #include "TMVA/DataSetInfo.h"
@@ -52,7 +53,8 @@ data_t createData(Int_t nPoints, UInt_t start)
       x += 0.1;
       id++;
    }
-   
+   data->ResetBranchAddresses();
+
    return std::make_tuple(ids, data);
 }
 
@@ -108,9 +110,9 @@ void testSetsEqOrig(DataSet * ds, id_vec_t ids, UInt_t numFolds) {
  * Checks wether a fold has been prepared successfully. Only does the split on the
  * training set, (d->PrepareFoldDataSet(iFold, Types::kTraining);)
  */
-bool testFold(DataLoader * d, UInt_t iFold, UInt_t numFolds, id_vec_t ids) {
+bool testFold(DataLoader * d, UInt_t iFold, CvSplit & split, id_vec_t ids) {
    DataSet * ds = d->GetDataSetInfo().GetDataSet();
-   d->PrepareFoldDataSet(iFold, Types::kTraining);
+   d->PrepareFoldDataSet(split, iFold, Types::kTraining);
 
    // Are folds of correct sizes?
    // TODO: This assumes that all folds are of the same size. This is not neccearily true,
@@ -127,7 +129,7 @@ bool testFold(DataLoader * d, UInt_t iFold, UInt_t numFolds, id_vec_t ids) {
    testSetInOrig(ds, ids, Types::kTraining);
    testSetInOrig(ds, ids, Types::kTesting );
 
-   testSetsEqOrig(ds, ids, numFolds);
+   testSetsEqOrig(ds, ids, split.GetNumFolds());
 
    return true;
 }
@@ -165,9 +167,10 @@ TEST(CrossEvaluationSplitting, TrainingSetSplitOnSpectator)
    d->GetDataSetInfo().GetDataSet(); // Force creation of dataset.
    TMVA::MsgLogger::EnableOutput();
 
-   d->MakeKFoldDataSetCE(NUM_FOLDS, "id");
+   TMVA::CvSplitCrossEvaluation split {NUM_FOLDS, "id"};
+   d->MakeKFoldDataSet(split);
 
    // Actual test
-   testFold(d, 0, NUM_FOLDS, ids);
-   testFold(d, 1, NUM_FOLDS, ids);
+   testFold(d, 0, split, ids);
+   testFold(d, 1, split, ids);
 }
