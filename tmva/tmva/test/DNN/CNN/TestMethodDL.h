@@ -84,6 +84,9 @@ void testMethodDL(TString architectureStr)
    // Input Layout
    TString inputLayoutString("InputLayout=1|32|32");
 
+   // Input Layout
+   TString batchLayoutString("BatchLayout=256|1|1024");
+
    // General layout.
    TString layoutString("Layout=CONV|12|2|2|1|1|1|1|TANH,MAXPOOL|6|6|1|1,RESHAPE|1|1|9408|FLAT,DENSE|512|TANH,DENSE|32|"
                         "TANH,DENSE|2|LINEAR");
@@ -111,6 +114,9 @@ void testMethodDL(TString architectureStr)
    // Concatenate all option strings
    dnnOptions.Append(":");
    dnnOptions.Append(inputLayoutString);
+
+   dnnOptions.Append(":");
+   dnnOptions.Append(batchLayoutString);
 
    dnnOptions.Append(":");
    dnnOptions.Append(layoutString);

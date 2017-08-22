@@ -84,6 +84,7 @@ private:
 
    // Function to parse the layout of the input
    void ParseInputLayout();
+   void ParseBatchLayout();
 
    /*! After calling the ProcesOptions(), all of the options are parsed,
     *  so using the parsed options, and given the architecture and the
@@ -123,11 +124,16 @@ private:
    size_t fInputHeight; ///< The height of the input.
    size_t fInputWidth;  ///< The width of the input.
 
+   size_t fBatchDepth;  ///< The depth of the batch used to train the deep net.
+   size_t fBatchHeight; ///< The height of the batch used to train the deep net.
+   size_t fBatchWidth;  ///< The width of the batch used to train the deep net.
+
    DNN::EInitialization fWeightInitialization; ///< The initialization method
    DNN::EOutputFunction fOutputFunction;       ///< The output function for making the predictions
    DNN::ELossFunction fLossFunction;           ///< The loss function
 
    TString fInputLayoutString;          ///< The string defining the layout of the input
+   TString fBatchLayoutString;          ///< The string defining the layout of the batch
    TString fLayoutString;               ///< The string defining the layout of the deep net
    TString fErrorStrategy;              ///< The string defining the error strategy for training
    TString fTrainingStrategyString;     ///< The string defining the training strategy
@@ -182,11 +188,16 @@ public:
    size_t GetInputHeight() { return fInputHeight; }
    size_t GetInputWidth() { return fInputWidth; }
 
+   size_t GetBatchDepth() { return fBatchDepth; }
+   size_t GetBatchHeight() { return fBatchHeight; }
+   size_t GetBatchWidth() { return fBatchWidth; }
+
    DNN::EInitialization GetWeightInitialization() { return fWeightInitialization; }
    DNN::EOutputFunction GetOutputFunction() { return fOutputFunction; }
    DNN::ELossFunction GetLossFunction() { return fLossFunction; }
 
    TString GetInputLayoutString() { return fInputLayoutString; }
+   TString GetBatchLayoutString() { return fBatchLayoutString; }
    TString GetLayoutString() { return fLayoutString; }
    TString GetErrorStrategyString() { return fErrorStrategy; }
    TString GetTrainingStrategyString() { return fTrainingStrategyString; }
@@ -202,6 +213,10 @@ public:
    void SetInputDepth(size_t inputDepth) { fInputDepth = inputDepth; }
    void SetInputHeight(size_t inputHeight) { fInputHeight = inputHeight; }
    void SetInputWidth(size_t inputWidth) { fInputWidth = inputWidth; }
+
+   void SetBatchDepth(size_t batchDepth) { fBatchDepth = batchDepth; }
+   void SetBatchHeight(size_t batchHeight) { fBatchHeight = batchHeight; }
+   void SetBatchWidth(size_t batchWidth) { fBatchWidth = batchWidth; }
 
    void SetWeightInitialization(DNN::EInitialization weightInitialization)
    {
