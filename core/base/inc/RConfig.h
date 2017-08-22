@@ -21,6 +21,7 @@
 
 #include "RVersion.h"
 
+#define module This!will!be!a!keyword!for!the!modules!TS!
 
 /*---- new C++ features ------------------------------------------------------*/
 
