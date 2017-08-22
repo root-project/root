@@ -14,8 +14,8 @@
 #include <iostream>
 #include <memory>
 
-class TF1AbsComposition {
-   
+class TF1AbsComposition : public TObject {
+
 public:
    virtual ~TF1AbsComposition() {
       std::cout << "Calling TF1AbsComposition destructor" << std::endl;

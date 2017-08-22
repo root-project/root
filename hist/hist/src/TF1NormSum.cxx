@@ -270,6 +270,7 @@ TF1NormSum::TF1NormSum(const TString &formula, Double_t xmin, Double_t xmax)
          coeffs[i]    = 1.;
          TF1* f = (TF1*)(gROOT -> GetListOfFunctions() -> FindObject(funcstringall[k]));
          if (!f)   Error("TF1NormSum", "Function %s does not exist", funcstringall[k].Data());
+         f->SetBit(TF1::kNotGlobal, kTRUE);
          functions[i] = (TF1*)f->Clone(TString::Format("function_%s_%d",funcstringall[k].Data(), i));
          functions[i]->SetRange(xmin,xmax);
          k++;
@@ -279,6 +280,7 @@ TF1NormSum::TF1NormSum(const TString &formula, Double_t xmin, Double_t xmax)
          coeffs[i]    = funcstringall[k].Atof();
          TF1* f  = (TF1*)(gROOT -> GetListOfFunctions() -> FindObject(funcstringall[k+1]));
          if (!f)   Error("TF1NormSum", "Function %s does not exist", funcstringall[k+1].Data());
+         f->SetBit(TF1::kNotGlobal, kTRUE);
          functions[i] = (TF1*)f->Clone(TString::Format("function_%s_%d",funcstringall[k+1].Data(), i) );
          functions[i]->SetRange(xmin,xmax);
          k=k+2;

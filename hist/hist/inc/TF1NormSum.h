@@ -44,6 +44,7 @@ public:
 
    ~TF1NormSum() {
       std::cout << "Calling TF1NormSum destructor" << std::endl;
+      gROOT->GetListOfFunctions()->ls();
    }
    
    double  operator()(const Double_t* x, const Double_t* p);
