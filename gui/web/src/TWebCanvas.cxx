@@ -494,7 +494,6 @@ Bool_t TWebCanvas::ProcessWS(THttpCallArg *arg)
                gROOT->ProcessLine(exec);
 
                PerformUpdate(); // check that canvas was changed
-
             }
          }
       } else if (strncmp(cdata,"EXEC:",5)==0) {
@@ -506,6 +505,9 @@ Bool_t TWebCanvas::ProcessWS(THttpCallArg *arg)
       } else if (strncmp(cdata,"QUIT",4)==0) {
          if (gApplication)
             gApplication->Terminate(0);
+      } else if (strncmp(cdata,"RELOAD",6)==0) {
+         conn->fModified = kTRUE;
+         CheckModifiedFlag();
       } else if (strncmp(cdata,"GEXE:",5)==0) {
          gROOT->ProcessLine(cdata+5); // temporary solution, will be removed later
       } else if (strncmp(cdata,"GETIMG:",7)==0) {
