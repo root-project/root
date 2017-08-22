@@ -162,36 +162,31 @@ void testMethodDL_DNN(TString architectureStr)
    TTree *signalTree = (TTree *)input->Get("TreeS");
    TTree *background = (TTree *)input->Get("TreeB");
 
-   TString outfileName("results/TMVA_DNN.root");
+   TString outfileName("TMVA_DNN.root");
    TFile *outputFile = TFile::Open(outfileName, "RECREATE");
 
-   // create factory
-   TMVA::Factory *factory =
-      new TMVA::Factory("TMVAClassification", outputFile,
-                        "!V:!Silent:Color:DrawProgressBar:Transformations=I;D;P;G,D:AnalysisType=Classification");
-
-   // create dataset and add variables
    TMVA::DataLoader *dataloader = new TMVA::DataLoader("dataset");
 
    dataloader->AddVariable("myvar1 := var1+var2", 'F');
    dataloader->AddVariable("myvar2 := var1-var2", "Expression 2", "", 'F');
    dataloader->AddVariable("var3", "Variable 3", "units", 'F');
    dataloader->AddVariable("var4", "Variable 4", "units", 'F');
-
    dataloader->AddSpectator("spec1 := var1*2", "Spectator 1", "units", 'F');
    dataloader->AddSpectator("spec2 := var1*3", "Spectator 2", "units", 'F');
 
-   // Add Signal and Background Trees
+   // global event weights per tree
    Double_t signalWeight = 1.0;
    Double_t backgroundWeight = 1.0;
 
+   // Add signal and background trees
    dataloader->AddSignalTree(signalTree, signalWeight);
    dataloader->AddBackgroundTree(background, backgroundWeight);
 
-   // Prepare training and testing set
    dataloader->SetBackgroundWeightExpression("weight");
+
    TCut mycuts = "";
    TCut mycutb = "";
+
    dataloader->PrepareTrainingAndTestTree(
       mycuts, mycutb, "nTrain_Signal=1000:nTrain_Background=1000:SplitMode=Random:NormMode=NumEvents:!V");
 
@@ -202,33 +197,32 @@ void testMethodDL_DNN(TString architectureStr)
    TString batchLayoutString("BatchLayout=1|256|4");
 
    // General layout.
-   TString layoutString("Layout=DENSE|128|TANH,DENSE|128|TANH,DENSE|128|TANH,DENSE|1|LINEAR");
+   TString layoutString("Layout=DENSE|128|LINEAR,DENSE|128|LINEAR,DENSE|128|LINEAR,DENSE|1|LINEAR");
 
    // Training strategies.
    TString training0("LearningRate=1e-1,Momentum=0.9,Repetitions=1,"
-                     "ConvergenceSteps=20,BatchSize=256,TestRepetitions=10,"
+                     "ConvergenceSteps=20,BatchSize=256,TestRepetitions=1,"
                      "WeightDecay=1e-4,Regularization=L2,"
                      "DropConfig=0.0+0.5+0.5+0.5, Multithreading=True");
    TString training1("LearningRate=1e-2,Momentum=0.9,Repetitions=1,"
-                     "ConvergenceSteps=20,BatchSize=256,TestRepetitions=10,"
+                     "ConvergenceSteps=20,BatchSize=256,TestRepetitions=1,"
                      "WeightDecay=1e-4,Regularization=L2,"
                      "DropConfig=0.0+0.0+0.0+0.0, Multithreading=True");
    TString training2("LearningRate=1e-3,Momentum=0.0,Repetitions=1,"
-                     "ConvergenceSteps=20,BatchSize=256,TestRepetitions=10,"
+                     "ConvergenceSteps=20,BatchSize=256,TestRepetitions=1,"
                      "WeightDecay=1e-4,Regularization=L2,"
                      "DropConfig=0.0+0.0+0.0+0.0, Multithreading=True");
    TString trainingStrategyString("TrainingStrategy=");
    trainingStrategyString += training0 + "|" + training1 + "|" + training2;
 
    // General Options.
-   TString dnnOptions("!H:V:ErrorStrategy=CROSSENTROPY:"
+   TString dnnOptions("!H:V:ErrorStrategy=SUMOFSQUARES:"
                       "WeightInitialization=XAVIERUNIFORM");
 
    // Concatenate all option strings
    dnnOptions.Append(":");
    dnnOptions.Append(inputLayoutString);
 
-   // Concatenate all option strings
    dnnOptions.Append(":");
    dnnOptions.Append(batchLayoutString);
 
@@ -241,7 +235,12 @@ void testMethodDL_DNN(TString architectureStr)
    dnnOptions.Append(":Architecture=");
    dnnOptions.Append(architectureStr);
 
-   TString methodTitle = "DL_CPU";
+   // create factory
+   TMVA::Factory *factory =
+      new TMVA::Factory("TMVAClassification", outputFile,
+                        "!V:!Silent:Color:DrawProgressBar:Transformations=I;D;P;G,D:AnalysisType=Classification");
+
+   TString methodTitle = "DL_" + architectureStr;
    factory->BookMethod(dataloader, TMVA::Types::kDL, methodTitle, dnnOptions);
 
    // Train MVAs using the set of training events

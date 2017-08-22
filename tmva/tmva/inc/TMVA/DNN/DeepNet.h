@@ -717,7 +717,6 @@ auto TDeepNet<Architecture_t, Layer_t>::ParallelForward(std::vector<TDeepNet<Arc
                                                         std::vector<TTensorBatch<Architecture_t>> &batches,
                                                         bool applyDropout) -> void
 {
-   std::cout << "Parallel Forward" << std::endl;
    size_t depth = this->GetDepth();
 
    // The first layer of each deep net
@@ -859,7 +858,6 @@ template <typename Architecture_t, typename Layer_t>
 auto TDeepNet<Architecture_t, Layer_t>::Backward(std::vector<Matrix_t> &input, const Matrix_t &groundTruth,
                                                  const Matrix_t &weights) -> void
 {
-   std::cout << "Backward" << std::endl;
    std::vector<Matrix_t> inp1;
    std::vector<Matrix_t> inp2;
    // Last layer should be dense layer
@@ -881,7 +879,6 @@ auto TDeepNet<Architecture_t, Layer_t>::ParallelBackward(std::vector<TDeepNet<Ar
                                                          std::vector<TTensorBatch<Architecture_t>> &batches,
                                                          Scalar_t learningRate) -> void
 {
-   std::cout << "Parallel Backward" << std::endl;
    std::vector<Matrix_t> inp1;
    std::vector<Matrix_t> inp2;
    size_t depth = this->GetDepth();
@@ -929,7 +926,6 @@ auto TDeepNet<Architecture_t, Layer_t>::ParallelBackwardMomentum(std::vector<TDe
                                                                  std::vector<TTensorBatch<Architecture_t>> &batches,
                                                                  Scalar_t learningRate, Scalar_t momentum) -> void
 {
-   std::cout << "Parallel Backward Momentum" << std::endl;
    std::vector<Matrix_t> inp1;
    std::vector<Matrix_t> inp2;
    size_t depth = this->GetDepth();
