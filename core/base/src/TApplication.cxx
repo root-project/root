@@ -475,6 +475,11 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
          if (fFiles) {
             for (auto f: *fFiles) {
                TObjString* file = dynamic_cast<TObjString*>(f);
+               if (!file) {
+                  Error("GetOptions()", "Inconsistent file entry (not a TObjString)!");
+                  f->Dump();
+                  continue;
+               }
 
                if (file->TestBit(kExpression))
                   continue;
