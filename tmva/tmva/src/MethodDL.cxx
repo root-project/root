@@ -148,6 +148,8 @@ void MethodDL::DeclareOptions()
 
    DeclareOptionRef(fInputLayoutString = "0|0|0", "InputLayout", "The Layout of the input");
 
+   DeclareOptionRef(fBatchLayoutString = "0|0|0", "BatchLayout", "The Layout of the batch");
+
    DeclareOptionRef(fLayoutString = "DENSE|(N+100)*2|SOFTSIGN,DENSE|0|LINEAR", "Layout", "Layout of the network.");
 
    DeclareOptionRef(fErrorStrategy = "CROSSENTROPY", "ErrorStrategy", "Loss function: Mean squared error (regression)"
@@ -250,6 +252,7 @@ void MethodDL::ProcessOptions()
 
    // Input Layout
    ParseInputLayout();
+   ParseBatchLayout();
 
    // Loss function and output.
    fOutputFunction = EOutputFunction::kSigmoid;
@@ -376,6 +379,52 @@ void MethodDL::ParseInputLayout()
    this->SetInputDepth(depth);
    this->SetInputHeight(height);
    this->SetInputWidth(width);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Parse the input layout
+void MethodDL::ParseBatchLayout()
+{
+   // Define the delimiter
+   const TString delim("|");
+
+   // Get the input layout string
+   TString batchLayoutString = this->GetBatchLayoutString();
+
+   size_t batchDepth = 0;
+   size_t batchHeight = 0;
+   size_t batchWidth = 0;
+
+   // Split the input layout string
+   TObjArray *batchDimStrings = batchLayoutString.Tokenize(delim);
+   TIter nextBatchDim(batchDimStrings);
+   TObjString *batchDimString = (TObjString *)nextBatchDim();
+   int idxToken = 0;
+
+   for (; batchDimString != nullptr; batchDimString = (TObjString *)nextBatchDim()) {
+      switch (idxToken) {
+      case 0: // input depth
+      {
+         TString strDepth(batchDimString->GetString());
+         batchDepth = (size_t)strDepth.Atoi();
+      } break;
+      case 1: // input height
+      {
+         TString strHeight(batchDimString->GetString());
+         batchHeight = (size_t)strHeight.Atoi();
+      } break;
+      case 2: // input width
+      {
+         TString strWidth(batchDimString->GetString());
+         batchWidth = (size_t)strWidth.Atoi();
+      } break;
+      }
+      ++idxToken;
+   }
+
+   this->SetBatchDepth(batchDepth);
+   this->SetBatchHeight(batchHeight);
+   this->SetBatchWidth(batchWidth);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -735,9 +784,9 @@ void MethodDL::ParseLstmLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
 /// Standard constructor.
 MethodDL::MethodDL(const TString &jobName, const TString &methodTitle, DataSetInfo &theData, const TString &theOption)
    : MethodBase(jobName, Types::kDL, methodTitle, theData, theOption), fInputDepth(), fInputHeight(), fInputWidth(),
-     fWeightInitialization(), fOutputFunction(), fLossFunction(), fInputLayoutString(), fLayoutString(),
-     fErrorStrategy(), fTrainingStrategyString(), fWeightInitializationString(), fArchitectureString(), fResume(false),
-     fTrainingSettings()
+     fBatchDepth(), fBatchHeight(), fBatchWidth(), fWeightInitialization(), fOutputFunction(), fLossFunction(),
+     fInputLayoutString(), fBatchLayoutString(), fLayoutString(), fErrorStrategy(), fTrainingStrategyString(),
+     fWeightInitializationString(), fArchitectureString(), fResume(false), fTrainingSettings()
 {
    // Nothing to do here
 }
@@ -745,10 +794,10 @@ MethodDL::MethodDL(const TString &jobName, const TString &methodTitle, DataSetIn
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor from a weight file.
 MethodDL::MethodDL(DataSetInfo &theData, const TString &theWeightFile)
-   : MethodBase(Types::kDL, theData, theWeightFile), fInputDepth(), fInputHeight(), fInputWidth(),
-     fWeightInitialization(), fOutputFunction(), fLossFunction(), fInputLayoutString(), fLayoutString(),
-     fErrorStrategy(), fTrainingStrategyString(), fWeightInitializationString(), fArchitectureString(), fResume(false),
-     fTrainingSettings()
+   : MethodBase(Types::kDL, theData, theWeightFile), fInputDepth(), fInputHeight(), fInputWidth(), fBatchDepth(),
+     fBatchHeight(), fBatchWidth(), fWeightInitialization(), fOutputFunction(), fLossFunction(), fInputLayoutString(),
+     fBatchLayoutString(), fLayoutString(), fErrorStrategy(), fTrainingStrategyString(), fWeightInitializationString(),
+     fArchitectureString(), fResume(false), fTrainingSettings()
 {
    // Nothing to do here
 }
@@ -867,9 +916,9 @@ void MethodDL::TrainGpu()
       size_t inputDepth = this->GetInputDepth();
       size_t inputHeight = this->GetInputHeight();
       size_t inputWidth = this->GetInputWidth();
-      size_t batchDepth = settings.batchSize;
-      size_t batchHeight = inputDepth;
-      size_t batchWidth = inputHeight * inputWidth;
+      size_t batchDepth = this->GetBatchDepth();
+      size_t batchHeight = this->GetBatchHeight();
+      size_t batchWidth = this->GetBatchWidth();
       ELossFunction J = this->GetLossFunction();
       EInitialization I = this->GetWeightInitialization();
       ERegularization R = settings.regularization;
@@ -1031,9 +1080,9 @@ void MethodDL::TrainCpu()
       size_t inputDepth = this->GetInputDepth();
       size_t inputHeight = this->GetInputHeight();
       size_t inputWidth = this->GetInputWidth();
-      size_t batchDepth = settings.batchSize;
-      size_t batchHeight = inputDepth;
-      size_t batchWidth = inputHeight * inputWidth;
+      size_t batchDepth = this->GetBatchDepth();
+      size_t batchHeight = this->GetBatchHeight();
+      size_t batchWidth = this->GetBatchWidth();
       ELossFunction J = this->GetLossFunction();
       EInitialization I = this->GetWeightInitialization();
       ERegularization R = settings.regularization;
