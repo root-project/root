@@ -171,10 +171,17 @@ auto TDenseLayer<Architecture_t>::Backward(std::vector<Matrix_t> &gradients_back
                                            const std::vector<Matrix_t> &activations_backward,
                                            std::vector<Matrix_t> &inp1, std::vector<Matrix_t> &inp2) -> void
 {
-   std::cout << "Dense Layer Backward" << std::endl;
-   Architecture_t::Backward(gradients_backward[0], this->GetWeightGradientsAt(0), this->GetBiasGradientsAt(0),
-                            this->GetDerivativesAt(0), this->GetActivationGradientsAt(0), this->GetWeightsAt(0),
-                            activations_backward[0]);
+   if (gradients_backward.size() == 0) {
+      Matrix_t dummy(0, 0);
+      Architecture_t::Backward(dummy, this->GetWeightGradientsAt(0), this->GetBiasGradientsAt(0),
+                               this->GetDerivativesAt(0), this->GetActivationGradientsAt(0), this->GetWeightsAt(0),
+                               activations_backward[0]);
+
+   } else {
+      Architecture_t::Backward(gradients_backward[0], this->GetWeightGradientsAt(0), this->GetBiasGradientsAt(0),
+                               this->GetDerivativesAt(0), this->GetActivationGradientsAt(0), this->GetWeightsAt(0),
+                               activations_backward[0]);
+   }
 
    addRegularizationGradients<Architecture_t>(this->GetWeightGradientsAt(0), this->GetWeightsAt(0),
                                               this->GetWeightDecay(), this->GetRegularization());
