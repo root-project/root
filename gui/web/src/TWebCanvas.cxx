@@ -105,10 +105,16 @@ TObject* TWebCanvas::FindPrimitive(UInt_t id, TPad *pad)
    TIter iter(pad->GetListOfPrimitives());
    TObject* obj = 0;
    while ((obj = iter()) != 0) {
-      if (obj->InheritsFrom(TPad::Class())) obj = FindPrimitive(id, (TPad*) obj);
-      else if (TString::Hash(&obj, sizeof(obj)) != id) obj = 0;
-
-      if (obj) return obj;
+      if (TString::Hash(&obj, sizeof(obj)) == id) return obj;
+      if (obj->InheritsFrom(TH1::Class())) {
+         TIter fiter(((TH1 *)obj)->GetListOfFunctions());
+         TObject *fobj = 0;
+         while ((fobj = fiter()) != 0)
+            if (TString::Hash(&fobj, sizeof(fobj)) == id) return fobj;
+      } else if (obj->InheritsFrom(TPad::Class())) {
+         obj = FindPrimitive(id, (TPad*) obj);
+         if (obj) return obj;
+      }
    }
 
    return 0;
