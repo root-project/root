@@ -27,6 +27,8 @@ public:
    virtual void   Update() = 0;
 
    virtual void   Copy(TObject &obj) const = 0;
+
+   ClassDef(TF1AbsComposition, 1);
 };
 
 #endif

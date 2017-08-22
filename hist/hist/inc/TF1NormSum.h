@@ -42,7 +42,8 @@ public:
    // Copy constructor
    TF1NormSum(const TF1NormSum &nsum);
 
-   ~TF1NormSum() {
+   virtual ~TF1NormSum()
+   {
       std::cout << "Calling TF1NormSum destructor" << std::endl;
       gROOT->GetListOfFunctions()->ls();
    }
@@ -75,5 +76,7 @@ public:
    void        Update();
 
    void        Copy(TObject &obj) const;
+
+   ClassDef(TF1NormSum, 1);
 };
 #endif /* defined(ROOT_TF1NormSum__) */

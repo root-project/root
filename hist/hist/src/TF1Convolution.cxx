@@ -39,6 +39,8 @@ If no function range is given by default the function1 range + 10% is used
 One should use also a not too small number of points for the DFT (a minimum of 1000).  By default 10000 points are used.
 */
 
+ClassImp(TF1Convolution);
+
 class TF1Convolution_EvalWrapper
 {
    // TODO: convert these to unique_ptr as well?
