@@ -450,8 +450,8 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   # files which for some reason (temporarily?) cannot be put in the PCH. Eg.
   # all rest of the first dict is in the PCH but this file is not and it
   # cannot be present in the original dictionary.
-  if(NOT ARG_MULTIDICT)
-    ROOT_CXXMODULES_APPEND_TO_MODULEMAP("${library_name}" "${headerfiles}")
+  if(ARG_MODULE AND NOT ARG_MULTIDICT)
+    ROOT_CXXMODULES_APPEND_TO_MODULEMAP("${ARG_MODULE}" "${headerfiles}")
   endif()
 endfunction()
 
@@ -480,7 +480,7 @@ function (ROOT_CXXMODULES_APPEND_TO_MODULEMAP library library_headers)
     # FIXME: Krb5Auth.h triggers "declaration of '__mb_cur_max' has a different language linkage"
     # problem.
     # FIXME: error: declaration of 'NSObject' must be imported from module 'ROOT.libBonjour.so.TBonjourBrowser.h' before it is required
-    if (${library} MATCHES "libKrb5Auth.so" OR ${library} MATCHES "(libGCocoa|libGQuartz)\\..*")
+    if (${library} MATCHES "Krb5Auth" OR ${library} MATCHES "(GCocoa|GQuartz)")
       return()
     endif()
   endif(APPLE)
@@ -501,7 +501,7 @@ function (ROOT_CXXMODULES_APPEND_TO_MODULEMAP library library_headers)
 
   set(modulemap_entry "module \"${library}\" {")
   # For modules GCocoa and GQuartz we need objc context.
-  if (${library} MATCHES "(libGCocoa|libGQuartz)\\..*")
+  if (${library} MATCHES "(GCocoa|GQuartz)")
     set (modulemap_entry "${modulemap_entry}\n  requires objc\n")
   else()
     set (modulemap_entry "${modulemap_entry}\n  requires cplusplus\n")
