@@ -28,6 +28,13 @@
 
 namespace ROOT {
 
+class TVirtualRWMutex;
+
+// Global mutex set in TThread::Init
+// Use either R__READ_LOCKGUARD(ROOT::gCoreMutex);
+//         or R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
+R__EXTERN TVirtualRWMutex *gCoreMutex;
+
 class TVirtualRWMutex : public TVirtualMutex  {
 
 public:
