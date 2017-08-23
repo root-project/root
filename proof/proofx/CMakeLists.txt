@@ -24,4 +24,5 @@ endif()
 ROOT_STANDARD_LIBRARY_PACKAGE(Proofx
                               HEADERS ${headers}
                               LIBRARIES ${XROOTD_LIBRARIES} XrdProofd
-                              DEPENDENCIES Net Proof Thread)
+                              DEPENDENCIES Net Proof Thread
+                              BUILTINS XROOTD)
