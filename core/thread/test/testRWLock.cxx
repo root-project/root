@@ -14,6 +14,8 @@
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
 
+using namespace ROOT;
+
 void testWriteLockV(TVirtualMutex *m, size_t repetition)
 {
    for (size_t i = 0; i < repetition; ++i) {

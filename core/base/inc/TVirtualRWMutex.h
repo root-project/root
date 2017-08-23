@@ -26,6 +26,8 @@
 #include "TVirtualMutex.h"
 
 
+namespace ROOT {
+
 class TVirtualRWMutex : public TVirtualMutex  {
 
 public:
@@ -44,6 +46,8 @@ public:
    ClassDefOverride(TVirtualRWMutex, 0)  // Virtual mutex lock class
 };
 
+
+} // namespace ROOT.
 
 
 #endif
