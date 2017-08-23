@@ -165,8 +165,9 @@ namespace {
 namespace cling {
   IncrementalParser::IncrementalParser(Interpreter* interp, const char* llvmdir)
       : m_Interpreter(interp),
+        m_Consumer(new cling::DeclCollector()),
         m_CI(CIFactory::createCI("", interp->getOptions(), llvmdir,
-                                 m_Consumer = new cling::DeclCollector())),
+                                 m_Consumer.get())),
         m_ModuleNo(0) {
 
     if (!m_CI) {
@@ -242,7 +243,7 @@ namespace cling {
 
     ExternalASTSource *External = TheSema->getASTContext().getExternalSource();
     if (External)
-      External->StartTranslationUnit(m_Consumer);
+      External->StartTranslationUnit(m_Consumer.get());
 
     // Start parsing the "main file" to warm up lexing (enter caching lex mode
     // for ParseInternal()'s call EnterSourceFile() to make sense.
