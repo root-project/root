@@ -801,6 +801,8 @@ Bool_t TCanvasPainter::ProcessWS(THttpCallArg *arg)
          if (drawable && (cdata.length() > 0)) {
             printf("Execute %s for drawable %p\n", cdata.c_str(), drawable);
             drawable->Execute(cdata);
+         } else if (id == ROOT::Experimental::TDisplayItem::MakeIDFromPtr((void *)&fCanvas)) {
+            printf("Execute %s for canvas itself (ignore for the moment)\n", cdata.c_str());
          }
       }
    } else if (cdata == "KEEPALIVE") {
