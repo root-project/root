@@ -300,6 +300,7 @@ public:
    Long_t            ProcessLineSync(const char *line, Int_t *error = 0);
    Long_t            ProcessLineFast(const char *line, Int_t *error = 0);
    Bool_t            ReadingObject() const;
+   void              RecursiveRemove(TObject *obj);
    void              RefreshBrowsers();
    static void       RegisterModule(const char* modulename,
                                     const char** headers,
