@@ -66,12 +66,11 @@ void TMVA::HyperParameterOptimisationResult::Print() const
 
 }
 
-TMVA::HyperParameterOptimisation::HyperParameterOptimisation(TMVA::DataLoader *dataloader):Envelope("HyperParameterOptimisation",dataloader),
-    fFomType("Separation"),
-    fFitType("Minuit"),
-    fNumFolds(4),
-    fResults(),
-    fClassifier(new TMVA::Factory("HyperParameterOptimisation","!V:!ROC:Silent:!ModelPersistence:!Color:!DrawProgressBar:AnalysisType=Classification"))
+TMVA::HyperParameterOptimisation::HyperParameterOptimisation(TMVA::DataLoader *dataloader)
+   : Envelope("HyperParameterOptimisation", dataloader), fFomType("Separation"), fFitType("Minuit"), fNumFolds(4),
+     fResults(), fClassifier(new TMVA::Factory(
+                    "HyperParameterOptimisation",
+                    "!V:!ROC:Silent:!ModelPersistence:!Color:!DrawProgressBar:AnalysisType=Classification"))
 {
     fFoldStatus=kFALSE;
 }
@@ -91,57 +90,49 @@ void TMVA::HyperParameterOptimisation::SetNumFolds(UInt_t i)
 void TMVA::HyperParameterOptimisation::Evaluate()
 {
    cout << "Number of Workers : " << TMVA::gConfig().NWorkers() << endl;
-    TString methodName    = fMethod.GetValue<TString>("MethodName");
-    TString methodTitle   = fMethod.GetValue<TString>("MethodTitle");
-    TString methodOptions = fMethod.GetValue<TString>("MethodOptions");
+   TString methodName = fMethod.GetValue<TString>("MethodName");
+   TString methodTitle = fMethod.GetValue<TString>("MethodTitle");
+   TString methodOptions = fMethod.GetValue<TString>("MethodOptions");
 
-    if(!fFoldStatus)
-    {
-        fDataLoader->MakeKFoldDataSet(fNumFolds);
-        fFoldStatus=kTRUE;
-    }
-    fResults.fMethodName = methodName;
-    auto workItem = [&](UInt_t workerID) {
+   if (!fFoldStatus) {
+      fDataLoader->MakeKFoldDataSet(fNumFolds);
+      fFoldStatus = kTRUE;
+   }
+   fResults.fMethodName = methodName;
+   auto workItem = [&](UInt_t workerID) {
 
-       TString foldTitle = methodTitle;
+      TString foldTitle = methodTitle;
 
-        foldTitle += "_opt";
-        foldTitle += workerID+1;
+      foldTitle += "_opt";
+      foldTitle += workerID + 1;
 
-        Event::SetIsTraining(kTRUE);
-        fDataLoader->PrepareFoldDataSet(workerID, TMVA::Types::kTraining);
+      Event::SetIsTraining(kTRUE);
+      fDataLoader->PrepareFoldDataSet(workerID, TMVA::Types::kTraining);
 
-        auto smethod = fClassifier->BookMethod(fDataLoader.get(), methodName, methodTitle, methodOptions);
+      auto smethod = fClassifier->BookMethod(fDataLoader.get(), methodName, methodTitle, methodOptions);
 
-        auto params=smethod->OptimizeTuningParameters(fFomType,fFitType);
+      auto params = smethod->OptimizeTuningParameters(fFomType, fFitType);
 
-        smethod->Data()->DeleteResults(smethod->GetMethodName(), Types::kTraining, Types::kClassification);
+      smethod->Data()->DeleteResults(smethod->GetMethodName(), Types::kTraining, Types::kClassification);
 
-        fClassifier->DeleteAllMethods();
+      fClassifier->DeleteAllMethods();
 
-        fClassifier->fMethodsMap.clear();
+      fClassifier->fMethodsMap.clear();
 
-        return params;
+      return params;
 
-    };
-    vector<map<TString,Double_t>> res;
-    auto nWorkers = TMVA::gConfig().NWorkers();
-    cout << "Number of Workers : " << TMVA::gConfig().NWorkers() << endl;
-    if(nWorkers > 1) {
-      cout << "I am here" << endl;
-        ROOT::TProcessExecutor workers(nWorkers);
-        cout << "Number of Workers : " << TMVA::gConfig().NWorkers() << endl;
-        res = workers.Map(workItem, ROOT::TSeqI(fNumFolds));
-        cout << "Number of Workers : " << TMVA::gConfig().NWorkers() << endl;
-    } else {
-      for(UInt_t i = 0; i < fNumFolds; ++ i) {
-        res.push_back(workItem(i));
+   };
+   vector<map<TString, Double_t>> res;
+   auto nWorkers = TMVA::gConfig().NWorkers();
+   if (nWorkers > 1) {
+      ROOT::TProcessExecutor workers(nWorkers);
+      res = workers.Map(workItem, ROOT::TSeqI(fNumFolds));
+   } else {
+      for (UInt_t i = 0; i < fNumFolds; ++i) {
+         res.push_back(workItem(i));
       }
-    }
-    cout << "Number of Workers : " << TMVA::gConfig().NWorkers() << endl;
-    for(auto results : res) {
-        fResults.fFoldParameters.push_back(results);
-    }
-    cout << "Number of Workers : " << TMVA::gConfig().NWorkers() << endl;
-
+   }
+   for (auto results : res) {
+      fResults.fFoldParameters.push_back(results);
+   }
 }

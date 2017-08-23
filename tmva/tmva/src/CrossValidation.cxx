@@ -135,8 +135,8 @@ void TMVA::CrossValidation::Evaluate()
       TString foldTitle = methodTitle;
       foldTitle += "_fold";
       foldTitle += workerID + 1;
-	    auto classifier = std::unique_ptr<Factory>(new TMVA::Factory(
-        "CrossValidation","!V:!ROC:Silent:!ModelPersistence:!Color:!DrawProgressBar:AnalysisType=Classification"));
+      auto classifier = std::unique_ptr<Factory>(new TMVA::Factory(
+         "CrossValidation", "!V:!ROC:Silent:!ModelPersistence:!Color:!DrawProgressBar:AnalysisType=Classification"));
       fDataLoader->PrepareFoldDataSet(workerID, TMVA::Types::kTesting);
       MethodBase *smethod = classifier->BookMethod(fDataLoader.get(), methodName, methodTitle, methodOptions);
 
@@ -152,7 +152,7 @@ void TMVA::CrossValidation::Evaluate()
       // Store results
       auto res = classifier->GetROCIntegral(fDataLoader->GetName(), methodTitle);
 
-      TGraph* gr = classifier->GetROCCurve(fDataLoader->GetName(), methodTitle, true);
+      TGraph *gr = classifier->GetROCCurve(fDataLoader->GetName(), methodTitle, true);
       gr->SetLineColor(workerID + 1);
       gr->SetLineWidth(2);
       gr->SetTitle(foldTitle.Data());
@@ -165,7 +165,7 @@ void TMVA::CrossValidation::Evaluate()
       fResults.fEff01s.push_back(smethod->GetEfficiency("Efficiency:0.01", Types::kTesting, err));
       fResults.fEff10s.push_back(smethod->GetEfficiency("Efficiency:0.10", Types::kTesting, err));
       fResults.fEff30s.push_back(smethod->GetEfficiency("Efficiency:0.30", Types::kTesting, err));
-      fResults.fEffAreas.push_back(smethod->GetEfficiency(""             , Types::kTesting, err));
+      fResults.fEffAreas.push_back(smethod->GetEfficiency("", Types::kTesting, err));
       fResults.fTrainEff01s.push_back(smethod->GetTrainingEfficiency("Efficiency:0.01"));
       fResults.fTrainEff10s.push_back(smethod->GetTrainingEfficiency("Efficiency:0.10"));
       fResults.fTrainEff30s.push_back(smethod->GetTrainingEfficiency("Efficiency:0.30"));
@@ -177,30 +177,28 @@ void TMVA::CrossValidation::Evaluate()
       classifier->fMethodsMap.clear();
 
       return make_pair(res, workerID);
-	};
-  vector<pair<double, UInt_t>> res;
+   };
+   vector<pair<double, UInt_t>> res;
 
-  auto nWorkers = TMVA::gConfig().NWorkers();
+   auto nWorkers = TMVA::gConfig().NWorkers();
 
-  if(nWorkers > 1) {
+   if (nWorkers > 1) {
       ROOT::TProcessExecutor workers(nWorkers);
       res = workers.Map(workItem, ROOT::TSeqI(fNumFolds));
-  }
+   } else {
+      for (UInt_t i = 0; i < fNumFolds; ++i) {
+         auto res_pair = workItem(i);
+         res.push_back(res_pair);
+      }
+   }
 
-  else {
-    for(UInt_t i = 0; i < fNumFolds; ++ i) {
-        auto res_pair = workItem(i);
-        res.push_back(res_pair);
-    }
-  }
-
-  for(auto res_pair: res) {
+   for (auto res_pair : res) {
       fResults.fROCs[res_pair.second] = res_pair.first;
-  }
+   }
 
-  TMVA::gConfig().SetSilent(kFALSE);
-  Log() << kINFO << "Evaluation done." << Endl;
-  TMVA::gConfig().SetSilent(kTRUE);
+   TMVA::gConfig().SetSilent(kFALSE);
+   Log() << kINFO << "Evaluation done." << Endl;
+   TMVA::gConfig().SetSilent(kTRUE);
 }
 
 const TMVA::CrossValidationResult& TMVA::CrossValidation::GetResults() const {

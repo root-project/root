@@ -66,7 +66,7 @@ namespace TMVA {
       void   SetDrawProgressBar( Bool_t d ) { fDrawProgressBar = d; }
 
       UInt_t NWorkers() const { return fNWorkers; }
-      void SetNWorkers (UInt_t n) { fNWorkers = n; }
+      void SetNWorkers(UInt_t n) { fNWorkers = n; }
 
    public:
 
@@ -120,7 +120,7 @@ namespace TMVA {
       std::atomic<Bool_t> fSilent;                // no output at all
       std::atomic<Bool_t> fWriteOptionsReference; // if set true: Configurable objects write file with option reference
       std::atomic<Bool_t> fDrawProgressBar;       // draw progress bar to indicate training evolution
-      std::atomic<UInt_t> fNWorkers;              
+      std::atomic<UInt_t> fNWorkers;
 #else
       Bool_t fUseColoredConsole;     // coloured standard output
       Bool_t fSilent;                // no output at all
