@@ -241,13 +241,13 @@ local unsigned long crc32_generic(crc, buf, len)
     return crc ^ 0xffffffffUL;
 }
 
+#ifdef vector_zlib_x86
 /* Function stolen from linux kernel 3.14. It computes the CRC over the given
  * buffer with initial CRC value <crc32>. The buffer is <len> byte in length,
  * and must be 16-byte aligned.
  */
 extern uint crc32_pclmul_le_16(unsigned char const *buffer,
                                size_t len, uInt crc32);
-#ifdef vector_zlib_x86
 uLong crc32_pclmul(uLong, const Bytef *, uInt) __attribute__ ((__target__ ("sse4.2,pclmul")));
 
 void *resolve_crc32(void)
@@ -260,7 +260,6 @@ void *resolve_crc32(void)
         return crc32_default;
     return crc32_pclmul;
 }
-#endif
 
 uLong crc32_pclmul(crc, buf, len)
     uLong crc;
@@ -300,6 +299,7 @@ uLong crc32_pclmul(crc, buf, len)
 #undef PCLMUL_ALIGN
 #undef PCLMUL_ALIGN_MASK
 }
+#endif // vector_zlib_x86
 
 uLong crc32_default(crc, buf, len)
     uLong crc;
