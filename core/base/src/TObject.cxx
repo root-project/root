@@ -86,7 +86,7 @@ TObject::~TObject()
       if (root->MustClean()) {
          if (root == this) return;
          if (TestBit(kMustCleanup)) {
-            root->GetListOfCleanups()->RecursiveRemove(this);
+            root->RecursiveRemove(this);
          }
       }
    }

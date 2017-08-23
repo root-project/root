@@ -2382,6 +2382,17 @@ const char *TROOT::GetGitDate()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Recursively remove this object from the list of Cleanups.
+/// Typically RecursiveRemove is implemented by classes that can contain
+/// mulitple references to a same object or shared ownership of the object
+/// with others.
+
+void TROOT::RecursiveRemove(TObject *obj)
+{
+   fCleanups->RecursiveRemove(obj);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Refresh all browsers. Call this method when some command line
 /// command or script has changed the browser contents. Not needed
 /// for objects that have the kMustCleanup bit set. Most useful to
