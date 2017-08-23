@@ -22,5 +22,8 @@ if(GCC_MAJOR GREATER 3)
 endif()
 
 ROOT_GENERATE_DICTIONARY(G__Proofx ${headers} MODULE Proofx LINKDEF LinkDef.h)
-ROOT_LINKER_LIBRARY(Proofx ${sources} G__Proofx.cxx LIBRARIES ${XROOTD_LIBRARIES} XrdProofd DEPENDENCIES Net Proof Thread )
+ROOT_LINKER_LIBRARY(Proofx ${sources} G__Proofx.cxx 
+                    LIBRARIES ${XROOTD_LIBRARIES} XrdProofd 
+                    DEPENDENCIES Net Proof Thread
+                    BUILTINS XROOTD)
 ROOT_INSTALL_HEADERS()
