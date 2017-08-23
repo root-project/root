@@ -1161,6 +1161,9 @@ void TMVA::Factory::TrainAllMethods()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Evaluates all booked methods on the testing data and adds the output to the
+/// Results in the corresponiding DataSet.
+///
 
 void TMVA::Factory::TestAllMethods()
 {
@@ -1394,6 +1397,8 @@ void TMVA::Factory::EvaluateAllMethods( void )
         // Find approximate optimal working point w.r.t. signalEfficiency * signalPurity.
         // theMethod->TestMulticlass(); // This is where the actual GA calc is done
         // multiclass_testEff.push_back(theMethod->GetMulticlassEfficiency(multiclass_testPur));
+
+        theMethod->TestMulticlass();
 
         // Confusion matrix at three background efficiency levels
         multiclass_trainConfusionEffB01.push_back(theMethod->GetMulticlassConfusionMatrix(0.01, Types::kTraining));
