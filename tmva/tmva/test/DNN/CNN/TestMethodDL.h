@@ -197,19 +197,19 @@ void testMethodDL_DNN(TString architectureStr)
    TString batchLayoutString("BatchLayout=1|256|4");
 
    // General layout.
-   TString layoutString("Layout=DENSE|128|LINEAR,DENSE|128|LINEAR,DENSE|128|LINEAR,DENSE|1|LINEAR");
+   TString layoutString("Layout=DENSE|128|TANH,DENSE|128|TANH,DENSE|128|TANH,DENSE|1|LINEAR");
 
    // Training strategies.
    TString training0("LearningRate=1e-1,Momentum=0.9,Repetitions=1,"
-                     "ConvergenceSteps=20,BatchSize=256,TestRepetitions=1,"
+                     "ConvergenceSteps=20,BatchSize=256,TestRepetitions=10,"
                      "WeightDecay=1e-4,Regularization=L2,"
                      "DropConfig=0.0+0.5+0.5+0.5, Multithreading=True");
    TString training1("LearningRate=1e-2,Momentum=0.9,Repetitions=1,"
-                     "ConvergenceSteps=20,BatchSize=256,TestRepetitions=1,"
+                     "ConvergenceSteps=20,BatchSize=256,TestRepetitions=10,"
                      "WeightDecay=1e-4,Regularization=L2,"
                      "DropConfig=0.0+0.0+0.0+0.0, Multithreading=True");
-   TString training2("LearningRate=1e-3,Momentum=0.0,Repetitions=1,"
-                     "ConvergenceSteps=20,BatchSize=256,TestRepetitions=1,"
+   TString training2("LearningRate=1e-3,Momentum=0.9,Repetitions=1,"
+                     "ConvergenceSteps=20,BatchSize=256,TestRepetitions=10,"
                      "WeightDecay=1e-4,Regularization=L2,"
                      "DropConfig=0.0+0.0+0.0+0.0, Multithreading=True");
    TString trainingStrategyString("TrainingStrategy=");

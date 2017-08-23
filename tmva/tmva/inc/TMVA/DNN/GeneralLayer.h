@@ -361,7 +361,7 @@ auto VGeneralLayer<Architecture_t>::Initialize() -> void
    }
 
    for (size_t i = 0; i < fBiases.size(); i++) {
-      initialize<Architecture_t>(fBiases[i], this->GetInitialization());
+      initialize<Architecture_t>(fBiases[i], EInitialization::kZero);
       initialize<Architecture_t>(fBiasGradients[i], EInitialization::kZero);
    }
 }
