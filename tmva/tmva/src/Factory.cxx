@@ -120,6 +120,7 @@ TMVA::Factory::Factory( TString jobName, TFile* theTargetFile, TString theOption
 : Configurable          ( theOption ),
    fTransformations      ( "I" ),
    fVerbose              ( kFALSE ),
+   fVerboseLevel         ( kINFO ),
    fCorrelations         ( kFALSE ),
    fROC                  ( kTRUE ),
    fSilentFile           ( kFALSE ),
@@ -151,6 +152,10 @@ TMVA::Factory::Factory( TString jobName, TFile* theTargetFile, TString theOption
    Bool_t drawProgressBar = kTRUE;
 #endif
    DeclareOptionRef( fVerbose, "V", "Verbose flag" );
+   DeclareOptionRef( fVerboseLevel=TString("Info"), "VerboseLevel", "VerboseLevel (Debug/Verbose/Info)" );
+   AddPreDefVal(TString("Debug"));
+   AddPreDefVal(TString("Verbose"));
+   AddPreDefVal(TString("Info"));
    DeclareOptionRef( color,    "Color", "Flag for coloured screen output (default: True, if in batch mode: False)" );
    DeclareOptionRef( fTransformations, "Transformations", "List of transformations to test; formatting example: \"Transformations=I;D;P;U;G,D\", for identity, decorrelation, PCA, Uniform and Gaussianisation followed by decorrelation transformations" );
    DeclareOptionRef( fCorrelations, "Correlations", "boolean to show correlation in output" );
@@ -173,7 +178,10 @@ TMVA::Factory::Factory( TString jobName, TFile* theTargetFile, TString theOption
    ParseOptions();
    CheckForUnusedOptions();
 
-   if (Verbose()) Log().SetMinType( kVERBOSE );
+   if (Verbose()) fLogger->SetMinType( kVERBOSE );
+   if (fVerboseLevel.CompareTo("Debug")   ==0) fLogger->SetMinType( kDEBUG );
+   if (fVerboseLevel.CompareTo("Verbose") ==0) fLogger->SetMinType( kVERBOSE );
+   if (fVerboseLevel.CompareTo("Info")    ==0) fLogger->SetMinType( kINFO );
 
    // global settings
    gConfig().SetUseColor( color );
@@ -228,6 +236,10 @@ TMVA::Factory::Factory( TString jobName, TString theOption )
    Bool_t drawProgressBar = kTRUE;
 #endif
    DeclareOptionRef( fVerbose, "V", "Verbose flag" );
+   DeclareOptionRef( fVerboseLevel=TString("Info"), "VerboseLevel", "VerboseLevel (Debug/Verbose/Info)" );
+   AddPreDefVal(TString("Debug"));
+   AddPreDefVal(TString("Verbose"));
+   AddPreDefVal(TString("Info"));
    DeclareOptionRef( color,    "Color", "Flag for coloured screen output (default: True, if in batch mode: False)" );
    DeclareOptionRef( fTransformations, "Transformations", "List of transformations to test; formatting example: \"Transformations=I;D;P;U;G,D\", for identity, decorrelation, PCA, Uniform and Gaussianisation followed by decorrelation transformations" );
    DeclareOptionRef( fCorrelations, "Correlations", "boolean to show correlation in output" );
@@ -250,7 +262,10 @@ TMVA::Factory::Factory( TString jobName, TString theOption )
    ParseOptions();
    CheckForUnusedOptions();
 
-   if (Verbose()) Log().SetMinType( kVERBOSE );
+   if (Verbose()) fLogger->SetMinType( kVERBOSE );
+   if (fVerboseLevel.CompareTo("Debug")   ==0) fLogger->SetMinType( kDEBUG );
+   if (fVerboseLevel.CompareTo("Verbose") ==0) fLogger->SetMinType( kVERBOSE );
+   if (fVerboseLevel.CompareTo("Info")    ==0) fLogger->SetMinType( kINFO );
 
    // global settings
    gConfig().SetUseColor( color );
