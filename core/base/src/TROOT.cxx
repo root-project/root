@@ -176,6 +176,7 @@ static void *gInterpreterLib = 0;
 
 // Mutex for protection of concurrent gROOT access
 TVirtualMutex* gROOTMutex = 0;
+ROOT::TVirtualRWMutex *ROOT::gCoreMutex = nullptr;
 
 // For accessing TThread::Tsd indirectly.
 void **(*gThreadTsd)(void*,Int_t) = 0;
