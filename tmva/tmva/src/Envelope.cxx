@@ -114,6 +114,7 @@ Method to get the pointer to TMVA::DataLoader object.
 
 DataLoader *Envelope::GetDataLoader(){    return fDataLoader.get();}
 
+<<<<<<< HEAD
 //_______________________________________________________________________
 /**
 Method to set the pointer to TMVA::DataLoader object.
@@ -121,6 +122,13 @@ Method to set the pointer to TMVA::DataLoader object.
 */
 void Envelope::SetDataLoader(DataLoader *dalaloader){
         fDataLoader=std::shared_ptr<DataLoader>(dalaloader) ;
+=======
+////////////////////////////////////////////////////////////////////////////////
+
+void Envelope::SetDataLoader(DataLoader *dataloader)
+{
+   fDataLoader = std::shared_ptr<DataLoader>(dataloader);
+>>>>>>> TMVA Envelope Fix Spelling mistakes
 }
 
 //_______________________________________________________________________
