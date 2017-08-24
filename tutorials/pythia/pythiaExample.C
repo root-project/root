@@ -211,7 +211,7 @@ int showEventSample()
   canvas->SetLogy();
   hist->Draw("e1");
   TF1* func = hist->GetFunction("expo");
-  
+
   char expression[64];
   sprintf(expression,"T #approx %5.1f", -1000 / func->GetParameter(1));
   TLatex* latex = new TLatex(1.5, 1e-4, expression);
