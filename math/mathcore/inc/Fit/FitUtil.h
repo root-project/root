@@ -934,10 +934,11 @@ namespace FitUtil {
             T fval = 0;
 
             const T *x = nullptr;
+            std::vector<T> xc;
 
             unsigned int ndim = data.NDim();
             if (ndim > 1) {
-               std::vector<T> xc(ndim);
+               xc.resize(ndim);
                xc[0] = x1;
                for (unsigned int j = 1; j < ndim; ++j)
                   vecCore::Load<T>(xc[j], data.GetCoordComponent(i * vecSize, j));
@@ -1115,10 +1116,11 @@ static double EvalPoissonBinPdf(const IModelFunctionTempl<T> &, const BinData &,
             T fval = 0;
 
             const T *x = nullptr;
+            std::vector<T> xc;
 
             unsigned ndim = data.NDim();
             if (ndim > 1) {
-               std::vector<T> xc(ndim);
+               xc.resize(ndim);
                xc[0] = x1;
                for (unsigned int j = 1; j < ndim; ++j)
                   vecCore::Load<T>(xc[j], data.GetCoordComponent(i * vecSize, j));
@@ -1242,10 +1244,11 @@ static double EvalPoissonBinPdf(const IModelFunctionTempl<T> &, const BinData &,
             vecCore::Load<T>(x1, data.GetCoordComponent(i * vecSize, 0));
 
             const T *x = nullptr;
+            std::vector<T> xc;
 
             unsigned int ndim = data.NDim();
             if (ndim > 1) {
-               std::vector<T> xc(ndim);
+               xc.resize(ndim);
                xc[0] = x1;
                for (unsigned int j = 1; j < ndim; ++j)
                   vecCore::Load<T>(xc[j], data.GetCoordComponent(i * vecSize, j));
