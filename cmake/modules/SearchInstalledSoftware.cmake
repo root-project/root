@@ -910,6 +910,8 @@ if(builtin_xrootd)
                -DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET}
                -DENABLE_PYTHON=OFF
                -DENABLE_CEPH=OFF
+    INSTALL_COMMAND ${CMAKE_COMMAND} --build . --target install
+            COMMAND ${CMAKE_COMMAND} -E copy_directory <INSTALL_DIR>/include/xrootd <INSTALL_DIR>/include
     LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
     BUILD_BYPRODUCTS ${XROOTD_LIBRARIES}
   )
