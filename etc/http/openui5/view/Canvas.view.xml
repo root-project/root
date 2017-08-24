@@ -8,6 +8,7 @@
     		<headerContent>
 	         <OverflowToolbar id="otb1">
 	            <Button icon="sap-icon://system-exit" type="Transparent" tooltip="Quit ROOT session" press="onQuitRootPress"/>
+	            <Button icon="sap-icon://refresh" type="Transparent" tooltip="Reload canvas from server" press="onReloadPress"/>
 	            <Button icon="sap-icon://user-edit" type="Transparent" tooltip="Toggle GED editor" press="toggleGedEditor"/>
 	            <MenuButton text="File">
                   <menu>
@@ -37,7 +38,7 @@
                        <items>
                         <MenuItem text="Editor" icon="{/GedIcon}"/>
                         <MenuItem text="Toolbar"/>
-                        <MenuItem text="Event statusbar"/>
+                        <MenuItem text="Event statusbar" icon="{/StatusIcon}"/>
                         <MenuItem text="Tooltip info" icon="sap-icon://accept"/>
                         <MenuItem text="Colors" startsSection="true" />
                         <MenuItem text="Fonts"/>
@@ -47,7 +48,16 @@
                   </menu>
                 </MenuButton>
 	             <Button text="Options" type="Transparent"></Button>
-	             <Button text="Tools" type="Transparent"></Button>
+	             <MenuButton text="Tools" type="Transparent">
+                  <menu>
+                     <Menu itemSelected="onToolsMenuAction">
+                       <items>
+                        <MenuItem text="Fit panel"/>
+                        <MenuItem text="Browser" enabled="false"/>
+                      </items>
+                     </Menu>
+                  </menu>
+	             </MenuButton>
 	             <ToolbarSpacer />
 	             <Button text="Help" type="Transparent"></Button>
 	         </OverflowToolbar>
@@ -78,10 +88,10 @@
     		</content>
     		<footer>
     			<OverflowToolbar>
-       		   <Label text="Label 1" id="FooterLbl1"/>
-       		   <Label text="Label 2" id="FooterLbl2"/>
-       		   <Label text="Label 3" id="FooterLbl3"/>
-       		   <Label text="Label 4" id="FooterLbl4"/>
+       		   <Label text="{/StatusLbl1}" id="FooterLbl1"/>
+       		   <Label text="{/StatusLbl2}" id="FooterLbl2"/>
+       		   <Label text="{/StatusLbl3}" id="FooterLbl3"/>
+       		   <Label text="{/StatusLbl4}" id="FooterLbl4"/>
     			</OverflowToolbar>
     		</footer>
     	</Page>
