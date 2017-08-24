@@ -876,7 +876,10 @@ TROOT::~TROOT()
 
 #ifdef R__COMPLETE_MEM_TERMINATION
       SafeDelete(fBrowsables);
-      SafeDelete(fRootFolder);
+
+      // FIXME: Causes rootcling to deadlock, debug and uncomment
+      // SafeDelete(fRootFolder);
+
       fSpecials->Delete();   SafeDelete(fSpecials);    // delete special objects : PostScript, Minuit, Html
 #endif
       fClosedObjects->Delete("slow"); // and closed files
@@ -930,8 +933,10 @@ TROOT::~TROOT()
       SafeDelete(fGlobals);
       if (fGlobalFunctions) fGlobalFunctions->Delete();
       SafeDelete(fGlobalFunctions);
-      fEnums->Delete();
-      fClasses->Delete();    SafeDelete(fClasses);     // TClass'es must be deleted last
+      fEnums.load()->Delete();
+
+      // FIXME: Causes segfault in rootcling, debug and uncomment
+      // fClasses->Delete();    SafeDelete(fClasses);     // TClass'es must be deleted last
 #endif
 
       // Remove shared libraries produced by the TSystem::CompileMacro() call
@@ -957,7 +962,10 @@ TROOT::~TROOT()
       // the last access ...
       // So for now, let's avoid delete TCling except in the special build
       // checking the completeness of the termination deletion.
-      gDestroyCling(fInterpreter);
+
+      // TODO: Should we do more cleanup here than just call delete?
+      // Segfaults rootcling in some cases, debug and uncomment
+      // delete fInterpreter;
 #endif
 
 #ifdef R__COMPLETE_MEM_TERMINATION
