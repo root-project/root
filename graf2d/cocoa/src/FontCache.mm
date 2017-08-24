@@ -23,6 +23,7 @@
 #include "TSystem.h"
 #include "TError.h"
 #include "TEnv.h"
+#include "TROOT.h"
 
 namespace ROOT {
 namespace MacOSX {
@@ -505,7 +506,7 @@ CTFontRef FontCache::SelectSymbolFont(Float_t fontSize, unsigned fontIndex)
 
    if (it == fFonts[fontIndex].end()) {
       //This GetValue
-      const char * const fontDirectoryPath = gEnv->GetValue("Root.TTFontPath","$(ROOTSYS)/fonts");//This one I do not own.
+      const char * const fontDirectoryPath = gEnv->GetValue("Root.TTFontPath",TROOT::GetTTFFontDir());
       char * const fontFileName = gSystem->Which(fontDirectoryPath, "symbol.ttf", kReadPermission);//This must be deleted.
 
       const Util::ScopedArray<char> arrayGuard(fontFileName);
