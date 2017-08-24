@@ -25,7 +25,9 @@ namespace Internal {
 
 class TBranchIMTHelper {
 
+#ifdef R__USE_IM
 using TaskGroup_t = ROOT::Experimental::TTaskGroup;
+#endif
 
 public:
    template<typename FN> void Run(const FN &lambda) {
