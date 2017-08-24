@@ -48,20 +48,76 @@
 ///    
 ///    TODO: fJobName for fClassifier and fFactory ("CrossEvaluation")
 ///    
+///    TODO: Add optional file to fold factory to save output (for debugging at least).
+///    
 
-TMVA::CrossEvaluation::CrossEvaluation(TMVA::DataLoader *dataloader, TFile * outputFile, 
-                                       TString splitSpectator, Types::EAnalysisType analysisType)
-   : TMVA::Envelope("CrossEvaluation", dataloader),
-     fNumFolds(5),
-     fSplitSpectator(splitSpectator),
-     fAnalysisType(analysisType),
-     fClassifier(new TMVA::Factory("CrossEvaluation_internal",
-         "!V:!ROC:Silent:ModelPersistence:!Color:!DrawProgressBar:AnalysisType=classification")),
-     fFactory(new TMVA::Factory("CrossEvaluation", outputFile, 
-         "!V:!ROC:Silent:!ModelPersistence:!Color:!DrawProgressBar:AnalysisType=classification"))
+TMVA::CrossEvaluation::CrossEvaluation(TMVA::DataLoader *dataloader, TFile * outputFile, TString options)
+   : TMVA::Envelope("CrossEvaluation", dataloader, nullptr, options),
+     fAnalysisType(Types::kMaxAnalysisType),
+     fFoldStatus(kFALSE),
+     fNumFolds(2),
+     fSplitSpectator(""),
+     fTransformations( "" )
 {
-   fFoldStatus=kFALSE;
-   fSplit = std::unique_ptr<CvSplitCrossEvaluation>(new CvSplitCrossEvaluation(fNumFolds, splitSpectator));
+   DeclareOptionRef( fVerbose, "V", "Verbose flag" );
+   DeclareOptionRef( fVerboseLevel=TString("Info"), "VerboseLevel", "VerboseLevel (Debug/Verbose/Info)" );
+   AddPreDefVal(TString("Debug"));
+   AddPreDefVal(TString("Verbose"));
+   AddPreDefVal(TString("Info"));
+   
+   DeclareOptionRef( fTransformations, "Transformations", "List of transformations to test; formatting example: \"Transformations=I;D;P;U;G,D\", for identity, decorrelation, PCA, Uniform and Gaussianisation followed by decorrelation transformations" );
+   DeclareOptionRef( fModelPersistence, "ModelPersistence", "Option to save the trained model in xml file or using serialization");
+   
+   TString analysisType("Auto");
+   DeclareOptionRef( analysisType, "AnalysisType", "Set the analysis type (Classification, Regression, Multiclass, Auto) (default: Auto)" );
+   AddPreDefVal(TString("Classification"));
+   AddPreDefVal(TString("Regression"));
+   AddPreDefVal(TString("Multiclass"));
+   AddPreDefVal(TString("Auto"));
+
+   DeclareOptionRef( fSplitSpectator, "SplitSpectator", "The spectator variable to use for the fold splitting" );
+   DeclareOptionRef( fNumFolds, "NumFolds", "Number of folds to generate" );
+
+   ParseOptions();
+   CheckForUnusedOptions();
+
+   analysisType.ToLower();
+   if     ( analysisType == "classification" ) fAnalysisType = Types::kClassification;
+   else if( analysisType == "regression" )     fAnalysisType = Types::kRegression;
+   else if( analysisType == "multiclass" )     fAnalysisType = Types::kMulticlass;
+   else if( analysisType == "auto" )           fAnalysisType = Types::kNoAnalysisType;
+
+
+   TString fCvFactoryOptions = "";
+   TString fOutputFactoryOptions = "";
+   if (fVerbose) {
+      fCvFactoryOptions += "V:";
+      fOutputFactoryOptions += "V:";
+   } else {
+      fCvFactoryOptions += "!V:";
+      fOutputFactoryOptions += "!V:";
+   }
+
+   fCvFactoryOptions += Form("VerboseLevel=%s:", fVerboseLevel.Data());
+   fOutputFactoryOptions += Form("VerboseLevel=%s:", fVerboseLevel.Data());
+
+   fCvFactoryOptions += Form("AnalysisType=%s:", analysisType.Data());
+   fOutputFactoryOptions += Form("AnalysisType=%s:", analysisType.Data());
+
+   if (fTransformations != "") {
+      fCvFactoryOptions += Form("Transformations=%s:", fTransformations.Data());
+      fOutputFactoryOptions += Form("Transformations=%s:", fTransformations.Data());
+   }
+
+   if (fModelPersistence) {
+      fCvFactoryOptions += Form("ModelPersistence:");
+   } else {
+      fCvFactoryOptions += Form("!ModelPersistence:");
+   }
+
+   fClassifier = std::unique_ptr<TMVA::Factory>(new TMVA::Factory("CrossEvaluation_internal", fCvFactoryOptions + "!ROC:!Color:!DrawProgressBar"));
+   fFactory = std::unique_ptr<TMVA::Factory>(new TMVA::Factory("CrossEvaluation", outputFile,  fOutputFactoryOptions + "!ModelPersistence"));
+   fSplit = std::unique_ptr<CvSplitCrossEvaluation>(new CvSplitCrossEvaluation(fNumFolds, fSplitSpectator));
 
    if (fAnalysisType != Types::kClassification and fAnalysisType != Types::kMulticlass) {
       Log() << kFATAL << "Only binary and multiclass classification supported so far." << Endl;
@@ -71,19 +127,74 @@ TMVA::CrossEvaluation::CrossEvaluation(TMVA::DataLoader *dataloader, TFile * out
 ////////////////////////////////////////////////////////////////////////////////
 ///
 
-TMVA::CrossEvaluation::CrossEvaluation(TMVA::DataLoader *dataloader, TString splitSpectator, 
-                                       Types::EAnalysisType analysisType)
-   : TMVA::Envelope("CrossEvaluation", dataloader),
-     fNumFolds(5),
-     fSplitSpectator(splitSpectator),
-     fAnalysisType(analysisType),
-     fClassifier(new TMVA::Factory("CrossEvaluation_internal",
-         "!V:!ROC:Silent:ModelPersistence:!Color:!DrawProgressBar:AnalysisType=classification")),
-     fFactory(new TMVA::Factory("CrossEvaluation",
-         "!V:!ROC:Silent:!ModelPersistence:!Color:!DrawProgressBar:AnalysisType=classification"))
+TMVA::CrossEvaluation::CrossEvaluation(TMVA::DataLoader *dataloader, TString options)
+   : TMVA::Envelope("CrossEvaluation", dataloader, nullptr, options),
+     fAnalysisType(Types::kMaxAnalysisType),
+     fFoldStatus(kFALSE),
+     fNumFolds(2),
+     fSplitSpectator(""),
+     fTransformations( "" )
 {
-   fFoldStatus=kFALSE;
-   fSplit = std::unique_ptr<CvSplitCrossEvaluation>(new CvSplitCrossEvaluation(fNumFolds, splitSpectator));
+   DeclareOptionRef( fVerbose, "V", "Verbose flag" );
+   DeclareOptionRef( fVerboseLevel=TString("Info"), "VerboseLevel", "VerboseLevel (Debug/Verbose/Info)" );
+   AddPreDefVal(TString("Debug"));
+   AddPreDefVal(TString("Verbose"));
+   AddPreDefVal(TString("Info"));
+   
+   DeclareOptionRef( fTransformations, "Transformations", "List of transformations to test; formatting example: \"Transformations=I;D;P;U;G,D\", for identity, decorrelation, PCA, Uniform and Gaussianisation followed by decorrelation transformations" );
+   
+   TString analysisType("Auto");
+   DeclareOptionRef( analysisType, "AnalysisType", "Set the analysis type (Classification, Regression, Multiclass, Auto) (default: Auto)" );
+   AddPreDefVal(TString("Classification"));
+   AddPreDefVal(TString("Regression"));
+   AddPreDefVal(TString("Multiclass"));
+   AddPreDefVal(TString("Auto"));
+
+   DeclareOptionRef( fSplitSpectator, "SplitSpectator", "The spectator variable to use for the fold splitting" );
+   DeclareOptionRef( fNumFolds, "NumFolds", "Number of folds to generate" );
+
+   ParseOptions();
+   CheckForUnusedOptions();
+
+   analysisType.ToLower();
+   if     ( analysisType == "classification" ) fAnalysisType = Types::kClassification;
+   else if( analysisType == "regression" )     fAnalysisType = Types::kRegression;
+   else if( analysisType == "multiclass" )     fAnalysisType = Types::kMulticlass;
+   else if( analysisType == "auto" )           fAnalysisType = Types::kNoAnalysisType;
+
+
+   TString fCvFactoryOptions = "";
+   TString fOutputFactoryOptions = "";
+   if (fVerbose) {
+      fCvFactoryOptions += "V:";
+      fOutputFactoryOptions += "V:";
+   } else {
+      fCvFactoryOptions += "!V:";
+      fOutputFactoryOptions += "!V:";
+   }
+
+   fCvFactoryOptions += Form("VerboseLevel=%s:", fVerboseLevel.Data());
+   fOutputFactoryOptions += Form("VerboseLevel=%s:", fVerboseLevel.Data());
+
+   fCvFactoryOptions += Form("AnalysisType=%s:", analysisType.Data());
+   fOutputFactoryOptions += Form("AnalysisType=%s:", analysisType.Data());
+
+   if (fTransformations != "") {
+      fCvFactoryOptions += Form("Transformations=%s:", fTransformations.Data());
+      fOutputFactoryOptions += Form("Transformations=%s:", fTransformations.Data());
+   }
+
+   if (fModelPersistence) {
+      fCvFactoryOptions += Form("ModelPersistence:");
+   } else {
+      fCvFactoryOptions += Form("!ModelPersistence:");
+   }
+
+   std::cout << "persitance: " << fModelPersistence << std::endl;
+
+   fClassifier = std::unique_ptr<TMVA::Factory>(new TMVA::Factory("CrossEvaluation_internal", fCvFactoryOptions + "!ROC:!Color:!DrawProgressBar"));
+   fFactory = std::unique_ptr<TMVA::Factory>(new TMVA::Factory("CrossEvaluation",  fOutputFactoryOptions + "!ModelPersistence"));
+   fSplit = std::unique_ptr<CvSplitCrossEvaluation>(new CvSplitCrossEvaluation(fNumFolds, fSplitSpectator));
 
    if (fAnalysisType != Types::kClassification and fAnalysisType != Types::kMulticlass) {
       Log() << kFATAL << "Only binary and multiclass classification supported so far." << Endl;
@@ -227,8 +338,8 @@ void TMVA::CrossEvaluation::ProcessFold(UInt_t iFold)
    }
 
    // Clean-up for this fold
-   smethod->Data()->DeleteResults(methodName, Types::kTesting, smethod->GetAnalysisType());
-   smethod->Data()->DeleteResults(methodName, Types::kTraining, smethod->GetAnalysisType());
+   smethod->Data()->DeleteResults(foldTitle, Types::kTesting, smethod->GetAnalysisType());
+   smethod->Data()->DeleteResults(foldTitle, Types::kTraining, smethod->GetAnalysisType());
    fClassifier->DeleteAllMethods();
    fClassifier->fMethodsMap.clear();
 }
@@ -248,6 +359,8 @@ void TMVA::CrossEvaluation::MergeFolds()
    // TODO: This ensures some variables are created as they should. Could be replaced by what?
    //    (However not all variable are set up correctly, leading to 
    //    "Error in <TString::AssertElement>: out of bounds: i = -1, Length = 0" being output)
+   // This acutally trains a method, though we don't need to do that at this stage, so
+   // we really should not call TrainAllMethods here.
    fFactory->TrainAllMethods();
    MethodBase * smethod = dynamic_cast<MethodBase *>(fFactory->GetMethod(fDataLoader->GetName(), methodTitle));
 

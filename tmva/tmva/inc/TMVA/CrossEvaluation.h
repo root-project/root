@@ -41,8 +41,8 @@ namespace TMVA {
 
    class CrossEvaluation : public Envelope {
    public:
-      explicit CrossEvaluation(TMVA::DataLoader *dataloader, TString splitSpectator, Types::EAnalysisType analysisType);
-      explicit CrossEvaluation(TMVA::DataLoader *dataloader, TFile * outputFile, TString splitSpectator, Types::EAnalysisType analysisType);
+      explicit CrossEvaluation(TMVA::DataLoader *dataloader, TString options);
+      explicit CrossEvaluation(TMVA::DataLoader *dataloader, TFile * outputFile, TString options);
       ~CrossEvaluation();
 
       void SetNumFolds(UInt_t i);
@@ -63,11 +63,16 @@ namespace TMVA {
       void ProcessFold(UInt_t iFold);
       void MergeFolds();
 
-      UInt_t fNumFolds;     //!
-      Bool_t fFoldStatus;   //!
+      
+      
 
-      TString fSplitSpectator;
-      Types::EAnalysisType fAnalysisType;
+      Types::EAnalysisType fAnalysisType;     //! Indicates 
+      Bool_t               fFoldStatus;       //!
+      UInt_t               fNumFolds;         //!
+      TString              fSplitSpectator;
+      TString              fTransformations;
+      Bool_t               fVerbose;
+      TString              fVerboseLevel;
 
       std::unique_ptr<Factory> fClassifier;
       std::unique_ptr<Factory> fFactory;
