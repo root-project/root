@@ -285,9 +285,17 @@ protected:
 
 // Types used by Google Test to instantiate the tests.
 #ifdef R__HAS_VECCORE
+#  ifdef R__USE_IMT
 typedef ::testing::Types<ScalarMultithread, VectorialSerial, VectorialMultithread> TestTypes;
+#  else
+typedef ::testing::Types<ScalarSerial, VectorialSerial, VectorialMultithread> TestTypes;
+#  endif
 #else
-typedef ::testing::Types<ScalarMultithread> TestTypes;
+#  ifdef R__USE_IMT
+typedef ::testing::Types<ScalarSerial> TestTypes;
+#  else
+typedef ::testing::Types<ScalarSerial> TestTypes;
+#  endif
 #endif
 
 TYPED_TEST_CASE(Chi2GradientTest, TestTypes);
