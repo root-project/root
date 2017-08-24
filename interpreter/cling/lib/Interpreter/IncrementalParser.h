@@ -16,9 +16,9 @@
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
 
-#include <vector>
 #include <deque>
 #include <memory>
+#include <vector>
 
 namespace llvm {
   struct GenericValue;
@@ -56,6 +56,9 @@ namespace cling {
     // FIXME: Get rid of that back reference to the interpreter.
     Interpreter* m_Interpreter;
 
+    // Consumer buffering Decls.
+    std::unique_ptr<DeclCollector> m_Consumer;
+
     // compiler instance.
     std::unique_ptr<clang::CompilerInstance> m_CI;
 
@@ -67,9 +70,6 @@ namespace cling {
 
     // file ID of the memory buffer
     clang::FileID m_VirtualFileID;
-
-    // CI owns it
-    DeclCollector* m_Consumer;
 
     ///\brief The storage for our transactions.
     ///
