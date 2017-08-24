@@ -514,10 +514,10 @@ TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, EA
       // first, remove "NSUM(" and ")" and spaces
       TString formDense = TString(formula)(5,strlen(formula)-5-1);
       formDense.ReplaceAll(' ', "");
-      
+
       // make sure standard functions are defined (e.g. gaus, expo)
       InitStandardFunctions();
-  
+
       // Go char-by-char to split terms and define the relevant functions
       int parenCount = 0;
       int termStart = 0;
@@ -542,7 +542,7 @@ TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, EA
       TF1NormSum *normSum = new TF1NormSum(fullFormula, xmin, xmax);
 
       if (xmin == 0 && xmax == 1.) Info("TF1","Created TF1NormSum object using the default [0,1] range");
-      
+
       fNpar = normSum->GetNpar();
       fNdim = 1; // (note: may want to extend functionality in the future)
 
@@ -561,7 +561,7 @@ TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, EA
             this->SetParName(i, normSum->GetParName(i));
          }
       }
-      
+
    } else { // regular TFormula
       fFormula = new TFormula(name, formula, false);
       fNpar = fFormula->GetNpar();
@@ -670,10 +670,6 @@ TF1::TF1(const char *name, ROOT::Math::ParamFunctor f, Double_t xmin, Double_t x
 
 void TF1::DoInitialize(EAddToList addToGlobalList)
 {
-
-   fMinimum = -1111;
-   fMaximum = -1111;
-
    // add to global list of functions if default adding is on OR if bit is set
    bool doAdd = ((addToGlobalList == EAddToList::kDefault && fgAddToGlobList)
                  || addToGlobalList == EAddToList::kAdd);
@@ -760,7 +756,7 @@ void TF1::DefineNSUMTerm(TObjArray *newFuncs, TObjArray *coeffNames, TString &fu
    int coeffLength = TermCoeffLength(originalTerm);
    if (coeffLength != -1)
       termStart += coeffLength + 1;
-  
+
    // `originalFunc` is the real formula and `cleanedFunc` is the
    // sanitized version that will not confuse the TF1NormSum
    // constructor
@@ -801,7 +797,7 @@ int TF1::TermCoeffLength(TString &term) {
 
   if (TString(term(0,firstAsterisk)).IsFloat())
      return firstAsterisk;
-     
+
   if (term[0] == '[' && term[firstAsterisk-1] == ']'
       && TString(term(1,firstAsterisk-2)).IsAlnum())
      return firstAsterisk;
@@ -1762,7 +1758,7 @@ Int_t TF1::GetNDF() const
 Int_t TF1::GetNumberFreeParameters() const
 {
    Int_t ntot = GetNpar();
-   Int_t nfree = ntot; 
+   Int_t nfree = ntot;
    Double_t al, bl;
    for (Int_t i = 0; i < ntot; i++) {
       ((TF1 *)this)->GetParLimits(i, al, bl);

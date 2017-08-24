@@ -232,17 +232,17 @@ protected:
       kCompositionFcn
    }; // formula based on composition class (e.g. NSUM, CONV)
 
-   Double_t    fXmin = -1111;        //Lower bounds for the range
-   Double_t    fXmax = -1111;        //Upper bounds for the range
-   Int_t       fNpar;        //Number of parameters
-   Int_t       fNdim;        //Function dimension
-   Int_t       fNpx = 100;   //Number of points used for the graphical representation
-   EFType      fType = EFType::kTemplScalar;
-   Int_t       fNpfits{};      //Number of points used in the fit
-   Int_t       fNDF{};         //Number of degrees of freedom in the fit
-   Double_t    fChisquare{};   //Function fit chisquare
-   Double_t    fMinimum;     //Minimum value for plotting
-   Double_t    fMaximum;     //Maximum value for plotting
+   Double_t    fXmin{-1111};        //Lower bounds for the range
+   Double_t    fXmax{-1111};        //Upper bounds for the range
+   Int_t       fNpar{};        //Number of parameters
+   Int_t       fNdim{};        //Function dimension
+   Int_t       fNpx{100};   //Number of points used for the graphical representation
+   EFType      fType{EFType::kTemplScalar};
+   Int_t       fNpfits{};    //Number of points used in the fit
+   Int_t       fNDF{};       //Number of degrees of freedom in the fit
+   Double_t    fChisquare{}; //Function fit chisquare
+   Double_t    fMinimum{-1111};     //Minimum value for plotting
+   Double_t    fMaximum{-1111};     //Maximum value for plotting
    std::vector<Double_t>    fParErrors;  //Array of errors of the fNpar parameters
    std::vector<Double_t>    fParMin;     //Array of lower limits of the fNpar parameters
    std::vector<Double_t>    fParMax;     //Array of upper limits of the fNpar parameters
@@ -251,16 +251,16 @@ protected:
    std::vector<Double_t>    fAlpha;      //!Array alpha. for each bin in x the deconvolution r of fIntegral
    std::vector<Double_t>    fBeta;       //!Array beta.  is approximated by x = alpha +beta*r *gamma*r**2
    std::vector<Double_t>    fGamma;      //!Array gamma.
-   TObject     *fParent = nullptr;     //!Parent object hooking this function (if one)
-   TH1         *fHistogram = nullptr;  //!Pointer to histogram used for visualisation
-   TMethodCall *fMethodCall = nullptr; //!Pointer to MethodCall in case of interpreted function
-   Bool_t      fNormalized = false;    //Normalization option (false by default)
+   TObject     *fParent{nullptr};     //!Parent object hooking this function (if one)
+   TH1         *fHistogram{nullptr};  //!Pointer to histogram used for visualisation
+   TMethodCall *fMethodCall{nullptr}; //!Pointer to MethodCall in case of interpreted function
+   Bool_t      fNormalized{false};    //Normalization option (false by default)
    Double_t    fNormIntegral{};        //Integral of the function before being normalized
-   TF1FunctorPointer  *fFunctor = nullptr; //! Functor object to wrap any C++ callable object
-   TFormula    *fFormula = nullptr;        //Pointer to TFormula in case when user define formula
-   TF1Parameters *fParams = nullptr;   //Pointer to Function parameters object (exists only for not-formula functions)
+   TF1FunctorPointer  *fFunctor{nullptr}; //! Functor object to wrap any C++ callable object
+   TFormula    *fFormula{nullptr};        //Pointer to TFormula in case when user define formula
+   TF1Parameters *fParams{nullptr};   //Pointer to Function parameters object (exists only for not-formula functions)
    std::unique_ptr<TF1AbsComposition> fComposition; //! Pointer to composition (NSUM or CONV)
-   TF1AbsComposition *fComposition_ptr = nullptr;   // saved pointer (unique_ptr is transient)
+   TF1AbsComposition *fComposition_ptr{nullptr};   // saved pointer (unique_ptr is transient)
 
    /// General constructor for TF1. Most of the other constructors delegate on it
    TF1(EFType functionType, const char *name, Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim, EAddToList addToGlobList, TF1Parameters *params = nullptr, TF1FunctorPointer * functor = nullptr):
