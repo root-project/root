@@ -364,6 +364,25 @@ public:
       TInterface<TTraits::TakeFirstParameter_t<decltype(upcastNode)>> upcastInterface(fProxiedPtr, fImplWeakPtr);
       // build a string equivalent to
       // "(TInterface<nodetype*>*)(this)->Snapshot<Ts...>(treename,filename,*(ColumnNames_t*)(&columnList))"
+
+      // The interpretation has multiple steps including
+      // 1. Parse
+      // 2. Codegen
+      // 3. Link
+      // 4. run static initializers
+      // 5. run user code
+      //
+      // Where 1,2,3 explicitly modify the state of the (global) interpreter and must be (and, of course, are)
+      // covered by the ROOT global lock.  Technically, cling should release the lock when executing user
+      // code at step 4 and 5 but currently does not.  Since the user code can create threads that may
+      // want to get the lock (to access the global data in either Core or Clang), not releasing the lock
+      // can lead to deadlock .. hence the 'gROOTMutex->UnLock' below ... Once Cling is updated to
+      // release the lock, this line (and the lock taking later on) must be removed.
+      //
+      // Updating Cling properly has challenges as step 4 and 5 may have implied steps like
+      // late compilation and/or late linking.  The challenge is to reorder and delineate
+      // those steps.
+
       snapCall << "if (gROOTMutex) gROOTMutex->UnLock();"; // black magic: avoids a deadlock in the interpreter
       snapCall << "reinterpret_cast<ROOT::Experimental::TDF::TInterface<" << upcastInterface.GetNodeTypeName() << ">*>("
                << &upcastInterface << ")->Snapshot<";
