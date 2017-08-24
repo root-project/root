@@ -22,9 +22,19 @@ void TMVA::mvasMulticlass(TString dataset, TString fin , HistType htype , Bool_t
    const Bool_t Save_Images = kTRUE;
 
    // checks if file with name "fin" is already open, and if not opens one
-   TFile* file = TMVAGlob::OpenFile( fin );  
+   TFile *file = TMVAGlob::OpenFile(fin);
 
-   TDirectory* tempdir = (TDirectory*)file->GetDirectory(dataset.Data())->Get("InputVariables_Id" );
+   // find directory from input variable transformation and extract class names
+   TIter keys_dir = file->GetDirectory(dataset.Data())->GetListOfKeys();
+   TKey *key;
+   TDirectory *tempdir = 0;
+   while ((key = (TKey *)keys_dir())) {
+      TString name = key->GetName();
+      if (name.BeginsWith("InputVariables_")) {
+         tempdir = (TDirectory *)(file->GetDirectory(dataset.Data())->Get(name));
+         break;
+      }
+   }
    std::vector<TString> classnames(TMVAGlob::GetClassNames(tempdir));
 
    // define Canvas layout here!
@@ -41,7 +51,7 @@ void TMVA::mvasMulticlass(TString dataset, TString fin , HistType htype , Bool_t
 
    // search for the right histograms in full list of keys
    TIter next(file->GetDirectory(dataset.Data())->GetListOfKeys());
-   TKey *key(0);   
+   key = 0;
    while ((key = (TKey*)next())) {
 
       if (!TString(key->GetName()).BeginsWith("Method_")) continue;
