@@ -1121,7 +1121,21 @@ void FitUtil::EvaluateLogLGradient(const IModelFunction &f, const UnBinData &dat
       std::vector<double> gradFunc(npar);
       std::vector<double> pointContribution(npar);
 
-      const double *x = data.GetCoordComponent(i, 0);
+      const auto x1 = data.GetCoordComponent(i, 0);
+
+      const double *x = nullptr;
+      std::vector<double> xc;
+
+      unsigned int ndim = data.NDim();
+      if (ndim > 1) {
+         xc.resize(ndim);
+         xc[0] = *x1;
+         for (unsigned int j = 1; j < ndim; ++j)
+            xc[j] = *data.GetCoordComponent(i, j);
+         x = xc.data();
+      } else {
+         x = x1;
+      }
 
       double fval = func(x, p);
       func.ParameterGradient(x, p, &gradFunc[0]);
