@@ -164,7 +164,7 @@ void TReentrantRWLock<MutexT, RecurseCountsT>::WriteUnLock()
    std::lock_guard<MutexT> lock(fMutex);
 
    if (!fWriter || fRecurseCounts.fWriteRecurse == 0) {
-      Error("TRWSpinLock::WriteUnLock", "Write lock already released for %p", this);
+      Error("TReentrantRWLock::WriteUnLock", "Write lock already released for %p", this);
       return;
    }
 
