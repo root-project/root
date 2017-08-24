@@ -246,8 +246,8 @@ TGraphAsymmErrors::TGraphAsymmErrors(const TH1 *h)
    for (Int_t i=0;i<fNpoints;i++) {
       fEXlow[i]  = h->GetBinWidth(i+1)*gStyle->GetErrorX();
       fEXhigh[i] = fEXlow[i];
-      fEYlow[i]  = h->GetBinError(i+1);
-      fEYhigh[i] = fEYlow[i];
+      fEYlow[i]  = h->GetBinErrorLow(i+1);
+      fEYhigh[i] = h->GetBinErrorUp(i+1);;
    }
 }
 
