@@ -3,6 +3,28 @@
 /// - Package   : TMVA
 /// - Exectuable: TMVACrossEvaluation
 /// 
+///
+/// Performs a verification that the cross evaluation splitting was performed as
+/// intended. If the input data has ids (EventNumbers)
+///
+///    0,1,2,3,4,5,6,7,8,9,10
+///
+/// these will be split into e.g. 3 parts
+///
+///    Part 0: 0,3,6,9
+///    Part 1: 1,4,7,10
+///    Part 2: 2,5,8
+///
+/// This file verifies that each fold is calculated so that the test data for
+/// each fold is equal to the equivalent part. That is the test set for fold 0
+/// is part 0 and the train set is part 1 + part 2.
+///
+///    Fold 0:
+///       Train: 1,2,4,5,7,8,10,
+///       Test : 0,3,6,9
+///
+/// Et.c.
+///
 
 #include "gtest/gtest.h"
 
@@ -24,7 +46,7 @@
 
 using id_vec_t      = std::vector<UInt_t>;
 using data_t        = std::tuple<id_vec_t, TTree *>;
-using fold_id_vec_t = std::vector<id_vec_t>;
+using fold_id_vec_t = std::vector<std::shared_ptr<id_vec_t>>;
 
 namespace TMVA {
 
@@ -58,51 +80,136 @@ data_t createData(Int_t nPoints, UInt_t start)
    return std::make_tuple(ids, data);
 }
 
-/*
- * Checks whether all points in a set (train/test etc) can be found in the original
- * generated data.
+/**
+ * Performs the same split as CvSplitCrossEvaluation
  *
- * \param ds  Input DataSet to verify
- * \param ids Original data to verify against
- * \param tt  Populated set to check (kTraining or kTesting). A populated set is
- *            what is stored in the DataSet after PrepareFoldDataSet has been called. 
+ * @param ids
  */
-void testSetInOrig(DataSet * ds, id_vec_t ids, Types::ETreeType tt) {
-   for (auto & ev : ds->GetEventCollection(tt)) {
-      UInt_t spectator_id = ev->GetSpectators().at(0);
+fold_id_vec_t getCurrentFoldExternal(id_vec_t ids, UInt_t numFolds, UInt_t iFold)
+{
+   std::cout << "Entering getCurrentFoldExternal" << std::endl;
 
-      auto idx_it = std::find(std::begin(ids), std::end(ids), spectator_id);
-      EXPECT_NE(idx_it, std::end(ids)) << "Event with id: " << spectator_id << " not found in original data.";
+   // Generate the individual folds
+   fold_id_vec_t fold_vec;
+   for (size_t i = 0; i<numFolds; ++i) {
+      fold_vec.push_back(std::shared_ptr<id_vec_t>(new id_vec_t()));
    }
+
+   for (auto & val : ids) {
+      fold_vec[ val % numFolds ]->push_back(val);
+   }
+
+   for (auto & vec : fold_vec) {
+      std::sort(vec->begin(), vec->end());
+   }
+
+   for (size_t k = 0; k < numFolds; ++k) {
+      std::cout << "Events in fold " << k << ": ";
+      for (size_t i = 0; i < fold_vec[k]->size(); ++i) {
+         std::cout << fold_vec[k]->at(i) << ", ";
+      }
+      std::cout << std::endl;
+   }
+
+   // Combine folds into a a training and test set
+   fold_id_vec_t combined_vec;
+   for (size_t i = 0; i<2; ++i) {
+      combined_vec.push_back(std::shared_ptr<id_vec_t>(new id_vec_t()));
+   }
+
+   for (size_t i = 0; i < numFolds; ++i) {
+      auto fold = fold_vec[i];
+      if (i != iFold) {
+         combined_vec[0]->insert(combined_vec[0]->end(), fold->begin(), fold->end());
+      } else {
+         // Fold number iFold is kept as test set
+         combined_vec[1]->insert(combined_vec[1]->end(), fold->begin(), fold->end());
+      }
+   }
+
+   for (auto & vec : combined_vec) {
+      std::sort(vec->begin(), vec->end());
+   }
+
+   // Print the contents of the sets
+   std::cout << "Events in training: ";
+   for (size_t i = 0; i < combined_vec[0]->size(); ++i) {
+      std::cout << combined_vec[0]->at(i) << ", ";
+   }
+   std::cout << std::endl;
+
+   std::cout << "Events in testing : ";
+   for (size_t i = 0; i < combined_vec[1]->size(); ++i) {
+      std::cout << combined_vec[1]->at(i) << ", ";
+   }
+   std::cout << std::endl;
+
+   return combined_vec;
 }
 
-/*
- * Checks whether the datapoints contained in DataSet are the same as in original data.
- *
- * The folds are split into equal sized parts, that means that if the number of events
- * is not evenly divisible with the number of folds some events will be skipped.
- * 
- * \param ds  Input DataSet to verify
- * \param ids Original data to verify against
- */
-void testSetsEqOrig(DataSet * ds, id_vec_t ids, UInt_t numFolds) {
-   std::vector<UInt_t> fold_ids;
+fold_id_vec_t getCurrentFold(DataSet * ds)
+{
+   std::cout << "Entering getCurrentFold" << std::endl;
+
+   fold_id_vec_t fold_vec;
+   for (size_t i = 0; i<2; ++i) {
+      fold_vec.push_back(std::shared_ptr<id_vec_t>(new id_vec_t()));
+   }
+
    for (auto & ev : ds->GetEventCollection(Types::kTraining)) {
-      fold_ids.push_back(ev->GetSpectators().at(0));
+      fold_vec[0]->push_back(ev->GetSpectators().at(0));
    }
    for (auto & ev : ds->GetEventCollection(Types::kTesting)) {
-      fold_ids.push_back(ev->GetSpectators().at(0));
+      fold_vec[1]->push_back(ev->GetSpectators().at(0));
    }
 
-   std::sort(fold_ids.begin(), fold_ids.end());
-   std::sort(ids.begin()     , ids.end());
+   for (auto & vec : fold_vec) {
+      std::sort(vec->begin(), vec->end());
+   }
 
-   // Check that the number of elements in dataset is equal to number of elements in orig data.
-   EXPECT_EQ(fold_ids.size(), ids.size()) << "Number of events in original dataset and the split data set differ.";
+   // Print the contents of the sets
+   std::cout << "Events in training: ";
+   for (size_t i = 0; i < fold_vec[0]->size(); ++i) {
+      std::cout << fold_vec[0]->at(i) << ", ";
+   }
+   std::cout << std::endl;
 
-   // And that they contain the same data
-   for (UInt_t i = 0; i < ids.size(); ++i) {
-      ASSERT_EQ(ids[i], fold_ids[i]) << "Original dataset and split dataset contains different data.";
+   std::cout << "Events in testing : ";
+   for (size_t i = 0; i < fold_vec[1]->size(); ++i) {
+      std::cout << fold_vec[1]->at(i) << ", ";
+   }
+   std::cout << std::endl;
+
+   return fold_vec;
+}
+
+
+void verifySplitExternal( DataSet * ds, id_vec_t ids, UInt_t numFolds, UInt_t iFold )
+{
+   fold_id_vec_t fold_vec_ext = getCurrentFoldExternal(ids, numFolds, iFold);
+   fold_id_vec_t fold_vec     = getCurrentFold(ds);
+
+   auto training_ext = fold_vec_ext[0];
+   auto training     = fold_vec[0];
+   auto test_ext     = fold_vec_ext[1];
+   auto test         = fold_vec[1];
+
+   EXPECT_EQ(training_ext->size(), training->size());
+   EXPECT_EQ(test_ext->size(), test->size());
+
+   std::cout << "training_ext->size(): " << training_ext->size() << std::endl;
+   std::cout << "training->size()    : " << training->size() << std::endl;
+   std::cout << "test_ext->size()    : " << test_ext->size() << std::endl;
+   std::cout << "test->size()        : " << test->size() << std::endl;
+
+   // Verify Training set
+   for (size_t iEvent = 0; iEvent < training->size(); ++iEvent) {
+      EXPECT_EQ(training_ext->at(iEvent), training->at(iEvent));
+   }
+
+   // Verify Test set
+   for (size_t iEvent = 0; iEvent < test->size(); ++iEvent) {
+      EXPECT_EQ(test_ext->at(iEvent), test->at(iEvent));
    }
 }
 
@@ -110,39 +217,23 @@ void testSetsEqOrig(DataSet * ds, id_vec_t ids, UInt_t numFolds) {
  * Checks wether a fold has been prepared successfully. Only does the split on the
  * training set, (d->PrepareFoldDataSet(iFold, Types::kTraining);)
  */
-bool testFold(DataLoader * d, UInt_t iFold, CvSplit & split, id_vec_t ids) {
+bool testFold(DataLoader * d, id_vec_t ids, CvSplit & split, UInt_t iFold)
+{
    DataSet * ds = d->GetDataSetInfo().GetDataSet();
    d->PrepareFoldDataSet(split, iFold, Types::kTraining);
 
-   // Are folds of correct sizes?
-   // TODO: This assumes that all folds are of the same size. This is not neccearily true,
-   // if we input 21 events in two folds one fold will be 11 points and the other 10 points.
-   // The test case should take this into account
-   const UInt_t nPoints           = ids.size();
-   // const UInt_t nPointsPerFold    = nPoints/numFolds;
-   // const UInt_t nPointsInTrainSet = nPointsPerFold*(numFolds-1);
-   // // std::cout << "Points in input dataset: " << ids.size() << std::endl;
-   // // std::cout << "Points used for CE     : " << ids.size()-numSkippedEvents << std::endl;
-   // // EXPECT_EQ(nPointsInTrainSet, ds->GetEventCollection(Types::kTraining).size());
-   // // EXPECT_EQ(nPointsPerFold   , ds->GetEventCollection(Types::kTesting).size());
-
-   testSetInOrig(ds, ids, Types::kTraining);
-   testSetInOrig(ds, ids, Types::kTesting );
-
-   testSetsEqOrig(ds, ids, split.GetNumFolds());
+   verifySplitExternal(ds, ids, split.GetNumFolds(), iFold);
 
    return true;
 }
+
 } // End namespace TMVA
 
 TEST(CrossEvaluationSplitting, TrainingSetSplitOnSpectator)
 {
-   // TODO: In case of nPointsSig = 11; nPointsBkg = 10; the folds will be
-   // of uneven size. The test suite should take this into account.
-
    TMVA::Tools::Instance();
 
-   const UInt_t NUM_FOLDS = 2;
+   const UInt_t NUM_FOLDS = 3;
    const UInt_t nPointsSig = 11;
    const UInt_t nPointsBkg = 10;
    
@@ -171,6 +262,6 @@ TEST(CrossEvaluationSplitting, TrainingSetSplitOnSpectator)
    d->MakeKFoldDataSet(split);
 
    // Actual test
-   testFold(d, 0, split, ids);
-   testFold(d, 1, split, ids);
+   testFold(d, ids, split, 0);
+   testFold(d, ids, split, 1);
 }

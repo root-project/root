@@ -57,7 +57,7 @@ public:
    virtual void PrepareFoldDataSet (DataSetInfo & dsi, UInt_t foldNumber, Types::ETreeType tt) = 0;
    virtual void RecombineKFoldDataSet (DataSetInfo & dsi, Types::ETreeType tt = Types::kTraining) = 0;
 
-   Bool_t GetNumFolds() {return fNumFolds;}
+   UInt_t GetNumFolds() {return fNumFolds;}
    Bool_t NeedsRebuild() {return fMakeFoldDataSet;}
 
 protected:
