@@ -41,34 +41,6 @@
             "M460.293,256.149H339.237c-28.521,0-51.721,23.199-51.721,51.726v89.915c0,28.504,23.2,51.715,51.721,51.715h121.045   c28.521,0,51.721-23.199,51.721-51.715v-89.915C512.002,279.354,488.802,256.149,460.293,256.149z M465.03,397.784   c0,2.615-2.122,4.736-4.748,4.736H339.237c-2.614,0-4.747-2.121-4.747-4.736v-89.909c0-2.626,2.121-4.753,4.747-4.753h121.045 c2.615,0,4.748,2.116,4.748,4.753V397.784z"
    };
 
-   function ColorPalette(arr) {
-      this.palette = arr;
-   }
-
-   /// returns color index which correspond to contour index of provided length
-   ColorPalette.prototype.calcColorIndex = function(i,len) {
-      var theColor = Math.floor((i+0.99)*this.palette.length/(len-1));
-      if (theColor > this.palette.length-1) theColor = this.palette.length-1;
-      return theColor;
-   }
-
-   /// returns color with provided index
-   ColorPalette.prototype.getColor = function(indx) {
-      return this.palette[indx];
-   }
-
-   /// returns number of colors in the palette
-   ColorPalette.prototype.getLength = function() {
-      return this.palette.length;
-   }
-
-   // calculate color for given i and len
-   ColorPalette.prototype.calcColor = function(i,len) {
-      var indx = this.calcColorIndex(i,len);
-      return this.getColor(indx);
-   }
-
-
    JSROOT.Painter.CreateDefaultPalette = function() {
 
       function HLStoRGB(h, l, s) {
@@ -99,7 +71,7 @@
              rgbval = HLStoRGB(hue, lightness, saturation);
          palette.push(rgbval);
       }
-      return new ColorPalette(palette);
+      return new JSROOT.ColorPalette(palette);
    }
 
    JSROOT.Painter.CreateGrayPalette = function() {
@@ -108,7 +80,7 @@
          var code = Math.round((i+2)/60*255);
          palette.push('rgb('+code+','+code+','+code+')');
       }
-      return new ColorPalette(palette);
+      return new JSROOT.ColorPalette(palette);
    }
 
    JSROOT.Painter.CreateGradientColorTable = function(Stops, Red, Green, Blue, NColors, alpha) {
@@ -126,7 +98,7 @@
           }
        }
 
-       return new ColorPalette(palette);
+       return new JSROOT.ColorPalette(palette);
    }
 
    JSROOT.Painter.GetColorPalette = function(col,alfa) {
@@ -1096,7 +1068,7 @@
       title_g.style("cursor", "move").call(drag_move);
    }
 
-   TAxisPainter.prototype.DrawAxis = function(vertical, layer, w, h, transform, reverse, second_shift) {
+   TAxisPainter.prototype.DrawAxis = function(vertical, layer, w, h, transform, reverse, second_shift, disable_axis_drawing) {
       // function draw complete TAxis
       // later will be used to draw TGaxis
 
@@ -1138,11 +1110,12 @@
          if (vertical && axis.fChopt=="+L") side = -1; else
          if ((axis.fChopt.indexOf("-")>=0) && (axis.fChopt.indexOf("+")>=0)) { side = 1; both_sides = 1; }
 
-         axis_g.append("svg:line")
-               .attr("x1",0).attr("y1",0)
-               .attr("x1",vertical ? 0 : w)
-               .attr("y1", vertical ? h : 0)
-               .call(this.lineatt.func);
+         if (!disable_axis_drawing)
+            axis_g.append("svg:line")
+                  .attr("x1",0).attr("y1",0)
+                  .attr("x1",vertical ? 0 : w)
+                  .attr("y1", vertical ? h : 0)
+                  .call(this.lineatt.func);
       }
 
       if (transform !== undefined)
@@ -1190,16 +1163,16 @@
          lasth = h2;
       }
 
-      if (res.length > 0)
+      if ((res.length > 0) && !disable_axis_drawing)
          axis_g.append("svg:path").attr("d", res).call(this.lineatt.func);
 
-      if ((second_shift!==0) && (res2.length>0))
+      if ((second_shift!==0) && (res2.length>0) && !disable_axis_drawing)
          axis_g.append("svg:path").attr("d", res2).call(this.lineatt.func);
 
       var last = vertical ? h : 0,
           labelsize = (axis.fLabelSize >= 1) ? axis.fLabelSize : Math.round(axis.fLabelSize * (is_gaxis ? this.pad_height() : h)),
           labelfont = JSROOT.Painter.getFontDetails(axis.fLabelFont, labelsize),
-          label_color = JSROOT.Painter.root_colors[axis.fLabelColor],
+          label_color = this.get_color(axis.fLabelColor),
           labeloffset = 3 + Math.round(axis.fLabelOffset * scaling_size),
           label_g = axis_g.append("svg:g")
                          .attr("class","axis_labels")
@@ -1222,7 +1195,7 @@
       for (var nmajor=0;nmajor<handle.major.length;++nmajor) {
          var pos = Math.round(this.func(handle.major[nmajor])),
              lbl = this.format(handle.major[nmajor], true);
-         if (lbl === null) continue;
+         if ((lbl === null) || disable_axis_drawing) continue;
 
          var t = label_g.append("svg:text").attr("fill", label_color).text(lbl);
 
@@ -1276,7 +1249,7 @@
          last = pos;
      }
 
-     if (this.order!==0)
+     if ((this.order!==0) && !disable_axis_drawing)
         label_g.append("svg:text")
                .attr("fill", label_color)
                .attr("x", vertical ? labeloffset : w+5)
@@ -1286,7 +1259,7 @@
                .attr("dy", "-.5em")
                .text('\xD7' + JSROOT.Painter.formatExp(Math.pow(10,this.order).toExponential(0)));
 
-     if ((textscale>0) && (textscale<1.)) {
+     if ((textscale>0) && (textscale<1.) && !disable_axis_drawing) {
         // rotate X labels if they are too big
         if ((textscale < 0.7) && !vertical && (side>0) && (maxtextlen > 5)) {
            label_g.selectAll("text").each(function() {
@@ -1319,13 +1292,13 @@
             .attr("width", w).attr("height", labelfont.size + 3);
       }
 
-      if (axis.fTitle.length > 0) {
+      if ((axis.fTitle.length > 0) && !disable_axis_drawing) {
          var title_g = axis_g.append("svg:g").attr("class", "axis_title"),
              title_fontsize = (axis.fTitleSize >= 1) ? axis.fTitleSize : Math.round(axis.fTitleSize * text_scaling_size),
              title_offest_k = 1.6*(axis.fTitleSize<1 ? axis.fTitleSize : axis.fTitleSize/text_scaling_size),
              center = axis.TestBit(JSROOT.EAxisBits.kCenterTitle),
              rotate = axis.TestBit(JSROOT.EAxisBits.kRotateTitle) ? -1 : 1,
-             title_color = JSROOT.Painter.root_colors[axis.fTitleColor],
+             title_color = this.get_color(axis.fTitleColor),
              shift_x = 0, shift_y = 0;
 
          this.StartTextDrawing(axis.fTitleFont, title_fontsize, title_g);
@@ -1525,8 +1498,8 @@
                       " v" + (-height + lwidth) + " h" + lwidth +
                       " v" + height + " h" + (-width) +
                       " v" + (-lwidth) + " Z")
-            .style("fill", JSROOT.Painter.root_colors[pt.fShadowColor])
-            .style("stroke", JSROOT.Painter.root_colors[pt.fShadowColor])
+            .style("fill", this.get_color(pt.fShadowColor))
+            .style("stroke", this.get_color(pt.fShadowColor))
             .style("stroke-width", "1px");
 
       if (this.lineatt === undefined)
@@ -1571,101 +1544,84 @@
 
       this.StartTextDrawing(pave.fTextFont, height/1.2);
 
-      this.DrawText(pave.fTextAlign, 0, 0, width, height, pave.fLabel, JSROOT.Painter.root_colors[pave.fTextColor]);
+      this.DrawText(pave.fTextAlign, 0, 0, width, height, pave.fLabel, this.get_color(pave.fTextColor));
 
       this.FinishTextDrawing(null, this.FinishPave);
    }
 
-   TPavePainter.prototype.DrawPaveText = function(width, height, refill) {
+   TPavePainter.prototype.DrawPaveStats = function(width, height, refill) {
+      if (refill && this.IsStats()) this.FillStatistic();
 
       if (refill && this.IsStats()) this.FillStatistic();
 
       var pt = this.GetObject(),
-          tcolor = JSROOT.Painter.root_colors[pt.fTextColor],
-          lwidth = pt.fBorderSize,
+          tcolor = this.get_color(pt.fTextColor),
           first_stat = 0,
           num_cols = 0,
-          nlines = pt.fLines.arr.length,
+          nlines = 0,
           lines = [],
-          maxlen = 0,
-          draw_header = (pt.fLabel.length>0) && !this.IsStats();
+          maxlen = 0;
 
-      if (draw_header) this.FirstRun++; // increment finish counter
+      // now draw TLine and TBox objects
+      for (var j=0;j<pt.fLines.arr.length;++j) {
+         var entry = pt.fLines.arr[j];
+         if ((entry._typename=="TText") || (entry._typename=="TLatex"))
+            lines.push(entry.fTitle);
+      }
+
+      nlines = lines.length;
 
       // adjust font size
       for (var j = 0; j < nlines; ++j) {
-         var line = pt.fLines.arr[j].fTitle;
-         lines.push(line);
+         var line = lines[j];
          if (j>0) maxlen = Math.max(maxlen, line.length);
-         if (!this.IsStats() || (j == 0) || (line.indexOf('|') < 0)) continue;
-         if (first_stat === 0) first_stat = j;
+         if ((j == 0) || (line.indexOf('|') < 0)) continue;
+         if (first_stat === 0) first_stat = lines.length-1;
          var parts = line.split("|");
          if (parts.length > num_cols)
             num_cols = parts.length;
       }
-
-      if ((nlines===1) && !this.IsStats() &&
-          (lines[0].indexOf("#splitline{")===0) && (lines[0][lines[0].length-1]=="}")) {
-            var pos = lines[0].indexOf("}{");
-            if ((pos>0) && (pos == lines[0].lastIndexOf("}{"))) {
-               lines[1] = lines[0].substr(pos+2, lines[0].length - pos - 3);
-               lines[0] = lines[0].substr(11, pos - 11);
-               nlines = 2;
-               this.UseTextColor = true;
-            }
-         }
 
       // for characters like 'p' or 'y' several more pixels required to stay in the box when drawn in last line
       var stepy = height / nlines, has_head = false, margin_x = pt.fMargin * width;
 
       this.StartTextDrawing(pt.fTextFont, height/(nlines * 1.2));
 
+      this.UseTextColor = true;
+
       if (nlines == 1) {
          this.DrawText(pt.fTextAlign, 0, 0, width, height, lines[0], tcolor);
+      } else
+      for (var j = 0; j < nlines; ++j) {
+         var posy = j*stepy, jcolor = tcolor;
          this.UseTextColor = true;
-      } else {
-         for (var j = 0; j < nlines; ++j) {
-            var posy = j*stepy, jcolor = tcolor;
-            if (!this.UseTextColor && (j<pt.fLines.arr.length) && (pt.fLines.arr[j].fTextColor!==0))
-               jcolor = JSROOT.Painter.root_colors[pt.fLines.arr[j].fTextColor];
-            if (jcolor===undefined) {
-               jcolor = tcolor;
-               this.UseTextColor = true;
-            }
 
-            if (this.IsStats()) {
-               if ((first_stat > 0) && (j >= first_stat)) {
-                  var parts = lines[j].split("|");
-                  for (var n = 0; n < parts.length; ++n)
-                     this.DrawText("middle",
-                                    width * n / num_cols, posy,
-                                    width/num_cols, stepy, parts[n], jcolor);
-               } else if (lines[j].indexOf('=') < 0) {
-                  if (j==0) {
-                     has_head = true;
-                     if (lines[j].length > maxlen + 5)
-                        lines[j] = lines[j].substr(0,maxlen+2) + "...";
-                  }
-                  this.DrawText((j == 0) ? "middle" : "start",
-                                 margin_x, posy, width-2*margin_x, stepy, lines[j], jcolor);
-               } else {
-                  var parts = lines[j].split("="), sumw = 0;
-                  for (var n = 0; n < 2; ++n)
-                     sumw += this.DrawText((n == 0) ? "start" : "end",
-                                      margin_x, posy, width-2*margin_x, stepy, parts[n], jcolor);
-                  this.TextScaleFactor(1.05*sumw/(width-2*margin_x), this.draw_g);
-               }
-            } else {
-               this.DrawText(pt.fTextAlign, margin_x, posy, width-2*margin_x, stepy, lines[j], jcolor);
+         if ((first_stat > 0) && (j >= first_stat)) {
+            var parts = lines[j].split("|");
+            for (var n = 0; n < parts.length; ++n)
+               this.DrawText("middle",
+                     width * n / num_cols, posy,
+                     width/num_cols, stepy, parts[n], jcolor);
+         } else if (lines[j].indexOf('=') < 0) {
+            if (j==0) {
+               has_head = true;
+               if (lines[j].length > maxlen + 5)
+                  lines[j] = lines[j].substr(0,maxlen+2) + "...";
             }
+            this.DrawText((j == 0) ? "middle" : "start",
+                  margin_x, posy, width-2*margin_x, stepy, lines[j], jcolor);
+         } else {
+            var parts = lines[j].split("="), sumw = 0;
+            for (var n = 0; n < 2; ++n)
+               sumw += this.DrawText((n == 0) ? "start" : "end",
+                     margin_x, posy, width-2*margin_x, stepy, parts[n], jcolor);
+            this.TextScaleFactor(1.05*sumw/(width-2*margin_x), this.draw_g);
          }
       }
 
-      this.FinishTextDrawing(undefined, this.FinishPave);
-
       var lpath = "";
 
-      if ((lwidth > 0) && has_head)
+      if ((pt.fBorderSize > 0) && has_head)
          lpath += "M0," + Math.round(stepy) + "h" + width;
 
       if ((first_stat > 0) && (num_cols > 1)) {
@@ -1676,6 +1632,141 @@
       }
 
       if (lpath) this.draw_g.append("svg:path").attr("d",lpath).call(this.lineatt.func);
+
+      this.FinishTextDrawing(undefined, this.FinishPave);
+   }
+
+   TPavePainter.prototype.DrawPaveText = function(width, height) {
+
+      var pt = this.GetObject(),
+          tcolor = this.get_color(pt.fTextColor),
+          nlines = 0,
+          lines = [],
+          can_height = this.pad_height(),
+          individual_positioning = false,
+          draw_header = (pt.fLabel.length>0);
+
+      if (draw_header) this.FirstRun++; // increment finish counter
+
+      // first check how many text lines in the list
+      for (var j=0;j<pt.fLines.arr.length;++j) {
+         var entry = pt.fLines.arr[j];
+         if ((entry._typename=="TText") || (entry._typename=="TLatex")) {
+            nlines++; // count lines
+            if ((entry.fX>0) || (entry.fY>0)) individual_positioning = true; //
+         }
+      }
+
+      var nline = 0;
+      // now draw TLine and TBox objects
+      for (var j=0;j<pt.fLines.arr.length;++j) {
+         var entry = pt.fLines.arr[j],
+             ytext = (nlines>0) ? Math.round((1-(nline-0.5)/nlines)*height) : 0;
+         switch (entry._typename) {
+            case "TText":
+            case "TLatex":
+               nline++; // just count line number
+               if (individual_positioning) {
+                  // each line should be drawn and scaled separately
+
+                  var lx = entry.fX, ly = entry.fY;
+
+                  if ((lx>0) && (lx<1)) lx = Math.round(lx*width); else lx = pt.fMargin * width;
+                  if ((ly>0) && (ly<1)) ly = Math.round((1-ly)*height); else ly = ytext;
+
+                  var jcolor = entry.fTextColor ? this.get_color(entry.fTextColor) : undefined;
+                  if (jcolor===undefined) {
+                     jcolor = tcolor;
+                     this.UseTextColor = true;
+                  }
+
+                  this.StartTextDrawing(pt.fTextFont, (entry.fTextSize || pt.fTextSize) * can_height);
+
+                  this.DrawText(entry.fTextAlign || pt.fTextAlign, lx, ly, 0, 0, entry.fTitle, jcolor);
+
+                  // this.DrawText(pt.fTextAlign, margin_x, posy, width-2*margin_x, stepy, entry.fTitle, tcolor);
+
+                  this.FinishTextDrawing(undefined, this.FinishPave);
+
+
+                  this.FirstRun++;
+
+               } else {
+                  lines.push(entry); // make as before
+               }
+               break;
+            case "TLine":
+            case "TBox":
+               var lx1 = entry.fX1, lx2 = entry.fX2,
+                   ly1 = entry.fY1, ly2 = entry.fY2;
+               if (lx1!==0) lx1 = Math.round(lx1*width);
+               lx2 = lx2 ? Math.round(lx2*width) : width;
+               ly1 = ly1 ? Math.round((1-ly1)*height) : ytext;
+               ly2 = ly2 ? Math.round((1-ly2)*height) : ytext;
+               if (entry._typename == "TLine") {
+                  var lineatt = new JSROOT.TAttLineHandler(entry);
+                  this.draw_g.append("svg:line")
+                             .attr("x1", lx1)
+                             .attr("y1", ly1)
+                             .attr("x2", lx2)
+                             .attr("y2", ly2)
+                             .call(lineatt.func);
+               } else {
+                  var fillatt = this.createAttFill(entry);
+
+                  this.draw_g.append("svg:rect")
+                      .attr("x", lx1)
+                      .attr("y", ly2)
+                      .attr("width", lx2-lx1)
+                      .attr("height", ly1-ly2)
+                      .call(fillatt.func);
+               }
+               break;
+         }
+      }
+
+      if (individual_positioning) {
+         // we should call FinishPave
+         if (this.FinishPave) this.FinishPave();
+
+      } else {
+
+         var line0 = (nlines===1) ? lines[0].fTitle : "";
+
+         if ((line0.indexOf("#splitline{")===0) && (line0[line0.length-1]=="}")) {
+            var pos = line0.indexOf("}{");
+            if ((pos>0) && (pos == line0.lastIndexOf("}{"))) {
+               lines[1] = JSROOT.extend({}, lines[0]); // clone object
+               lines[1].fTitle = line0.substr(pos+2, line0.length - pos - 3);
+               lines[0].fTitle = line0.substr(11, pos - 11);
+               nlines = 2;
+               this.UseTextColor = true;
+            }
+         }
+
+         // for characters like 'p' or 'y' several more pixels required to stay in the box when drawn in last line
+         var stepy = height / nlines, has_head = false, margin_x = pt.fMargin * width;
+
+         this.StartTextDrawing(pt.fTextFont, height/(nlines * 1.2));
+
+         if (nlines == 1) {
+            this.DrawText(pt.fTextAlign, 0, 0, width, height, lines[0].fTitle, tcolor);
+            this.UseTextColor = true;
+         } else
+         for (var j = 0; j < nlines; ++j) {
+            var posy = j*stepy, jcolor = tcolor;
+            if (!this.UseTextColor && (lines[j].fTextColor!==0))
+               jcolor = this.get_color(lines[j].fTextColor);
+            if (jcolor===undefined) {
+               jcolor = tcolor;
+               this.UseTextColor = true;
+            }
+
+            this.DrawText(pt.fTextAlign, margin_x, posy, width-2*margin_x, stepy, lines[j].fTitle, jcolor);
+         }
+
+         this.FinishTextDrawing(undefined, this.FinishPave);
+      }
 
       if (draw_header) {
          var x = Math.round(width*0.25),
@@ -1919,6 +2010,8 @@
             painter.PaveDrawFunc = painter.DrawPaveLabel;
             break;
          case "TPaveStats":
+            painter.PaveDrawFunc = painter.DrawPaveStats;
+            break;
          case "TPaveText":
             painter.PaveDrawFunc = painter.DrawPaveText;
             break;
@@ -1951,7 +2044,7 @@
 
          this.StartTextDrawing(legend.fTextFont, h / (nlines * 1.2));
 
-         var tcolor = JSROOT.Painter.root_colors[legend.fTextColor],
+         var tcolor = this.get_color(legend.fTextColor),
              column_width = Math.round(w/ncols),
              padding_x = Math.round(0.03*w/ncols),
              padding_y = Math.round(0.03*h),
@@ -2134,11 +2227,11 @@
              Spec: 0, Pie: 0, List: 0, Zscale: 0, FrontBox: 1, BackBox: 1, Candle: "",
              GLBox: 0, GLColor: 0,
              System: JSROOT.Painter.Coord.kCARTESIAN,
-             AutoColor: 0, NoStat: 0, AutoZoom: false,
+             AutoColor: 0, NoStat: false, AutoZoom: false,
              HighRes: 0, Zero: 1, Palette: 0, BaseLine: false,
              Optimize: JSROOT.gStyle.OptimizeDraw,
-             minimum: -1111, maximum: -1111 },
-           d = new JSROOT.DrawOptions(opt ? opt : this.histo.fOption),
+             minimum: -1111, maximum: -1111, original: opt },
+           d = new JSROOT.DrawOptions(opt || this.histo.fOption),
            hdim = this.Dimension(),
            pad = this.root_pad(),
            need_fillcol = false;
@@ -2158,7 +2251,7 @@
       if (d.check('AUTOCOL')) { option.AutoColor = 1; option.Hist = 1; }
       if (d.check('AUTOZOOM')) { option.AutoZoom = 1; option.Hist = 1; }
 
-      if (d.check('NOSTAT')) option.NoStat = 1;
+      if (d.check('NOSTAT')) option.NoStat = true;
 
       var tooltip = null;
       if (d.check('NOTOOLTIP')) tooltip = false;
@@ -2176,14 +2269,14 @@
       if (d.check('TICKY')) pad.fTicky = 1;
 
       if (d.check('FILL_', true)) {
-         if (d.partAsInt(1)>0) this.histo.fFillColor = d.partAsInt(); else
+         if (d.partAsInt(1)>0) option.histoFillColor = d.partAsInt(); else
          for (var col=0;col<8;++col)
-            if (JSROOT.Painter.root_colors[col].toUpperCase() === d.part) this.histo.fFillColor = col;
+            if (JSROOT.Painter.root_colors[col].toUpperCase() === d.part) option.histoFillColor = col;
       }
       if (d.check('LINE_', true)) {
-         if (d.partAsInt(1)>0) this.histo.fLineColor = d.partAsInt(); else
+         if (d.partAsInt(1)>0) option.histoLineColor = JSROOT.Painter.root_colors[d.partAsInt()]; else
          for (var col=0;col<8;++col)
-            if (JSROOT.Painter.root_colors[col].toUpperCase() === d.part) this.histo.fLineColor = col;
+            if (JSROOT.Painter.root_colors[col].toUpperCase() === d.part) option.histoLineColor = d.part;
       }
 
       if (d.check('X+')) option.AxisPos = 10;
@@ -2288,6 +2381,7 @@
          if (d.part.indexOf('3')>=0) option.Color = 13;
 
          if (d.part.indexOf('Z')>=0) option.Zscale = 1;
+         if (d.part.indexOf('A')>=0) option.Axis = -1;
          if (hdim == 1) option.Hist = 1;
                    else option.Scat = 0;
       }
@@ -2358,6 +2452,7 @@
       if (d.check('*H') || d.check('*')) { option.Mark = 23; option.Hist = -1; }
 
       if (d.check('HIST')) { option.Hist = 2; option.Func = 0; option.Error = 0; }
+      if (d.check('H')) option.Hist = 1;
 
       if (this.IsTH2Poly()) {
          if (option.Fill + option.Line + option.Mark != 0) option.Scat = 0;
@@ -2490,10 +2585,10 @@
    THistPainter.prototype.CheckHistDrawAttributes = function() {
 
       if (!this.fillatt || !this.fillatt.changed)
-         this.fillatt = this.createAttFill(this.histo, undefined, undefined, 1);
+         this.fillatt = this.createAttFill(this.histo, undefined, this.options.histoFillColor, 1);
 
       if (!this.lineatt || !this.lineatt.changed) {
-         this.lineatt = new JSROOT.TAttLineHandler(this.histo);
+         this.lineatt = new JSROOT.TAttLineHandler(this.histo, undefined, undefined, this.options.histoLineColor);
          var main = this.main_painter();
 
          if (main) {
@@ -2503,7 +2598,7 @@
       }
    }
 
-   THistPainter.prototype.UpdateObject = function(obj) {
+   THistPainter.prototype.UpdateObject = function(obj, opt) {
 
       var histo = this.GetObject();
 
@@ -2517,6 +2612,20 @@
          // The only that could be done is update of content
 
          // this.histo = obj;
+
+         // check only stats bit, later other settings can be monitored
+         if (histo.TestBit(JSROOT.TH1StatusBits.kNoStats) != obj.TestBit(JSROOT.TH1StatusBits.kNoStats)) {
+            histo.fBits = obj.fBits;
+
+            var statpainter = this.FindPainterFor(this.FindStat());
+            if (statpainter) statpainter.Enabled = !histo.TestBit(JSROOT.TH1StatusBits.kNoStats);
+         }
+
+         // if (histo.TestBit(JSROOT.TH1StatusBits.kNoStats)) this.ToggleStat();
+
+         // special tratement for webcanvas - also name can be changed
+         if (this.snapid !== undefined)
+            histo.fName = obj.fName;
 
          histo.fFillColor = obj.fFillColor;
          histo.fFillStyle = obj.fFillStyle;
@@ -2572,13 +2681,25 @@
             histo.fBinEntries = obj.fBinEntries;
          }
 
-         if (obj.fFunctions && !this.options.Same && this.options.Func)
+         if (obj.fFunctions && !this.options.Same && this.options.Func) {
             for (var n=0;n<obj.fFunctions.arr.length;++n) {
                var func = obj.fFunctions.arr[n];
-               if (!func || !func._typename || !func.fName) continue;
-               var funcpainter = this.FindPainterFor(null, func.fName, func._typename);
-               if (funcpainter) funcpainter.UpdateObject(func);
+               if (!func || !func._typename) continue;
+               var funcpainter = func.fName ? this.FindPainterFor(null, func.fName, func._typename) : null;
+               if (funcpainter) {
+                  funcpainter.UpdateObject(func);
+               } else if ((func._typename != 'TPaletteAxis') && (func._typename != 'TPaveStats')) {
+                  console.log('Get ' + func._typename + ' in histogram functions list, need to use?');
+                  // histo.fFunctions.Add(func,"");
+               }
             }
+         }
+
+         var changed_opt = (histo.fOpion != obj.fOption);
+         histo.fOpion = obj.fOption;
+
+         if (((opt !== undefined) && (this.options.original !== opt)) || changed_opt)
+            this.options = this.DecodeOptions(opt);
       }
 
       if (!this.zoom_changed_interactive) this.CheckPadRange();
@@ -2857,11 +2978,11 @@
       layer.selectAll(".xgrid").remove();
       layer.selectAll(".ygrid").remove();
 
-      var pad = this.root_pad(), h = this.frame_height(), w = this.frame_width(),
-          grid, grid_style = JSROOT.gStyle.fGridStyle, grid_color = "black";
-
-      if (JSROOT.Painter.fGridColor > 0)
-         grid_color = JSROOT.Painter.root_colors[JSROOT.Painter.fGridColor];
+      var pad = this.root_pad(),
+          h = this.frame_height(),
+          w = this.frame_width(),
+          grid, grid_style = JSROOT.gStyle.fGridStyle,
+          grid_color = (JSROOT.gStyle.fGridColor > 0) ? this.get_color(JSROOT.gStyle.fGridColor) : "black";
 
       if ((grid_style < 0) || (grid_style >= JSROOT.Painter.root_line_styles.length)) grid_style = 11;
 
@@ -2959,10 +3080,13 @@
       var draw_horiz = this.swap_xy ? this.y_handle : this.x_handle,
           draw_vertical = this.swap_xy ? this.x_handle : this.y_handle;
 
-      draw_horiz.DrawAxis(false, layer, w, h, draw_horiz.invert_side ? undefined : "translate(0," + h + ")",
-                          false, pad.fTickx ? -h : 0);
-      draw_vertical.DrawAxis(true, layer, w, h, draw_vertical.invert_side ? "translate(" + w + ",0)" : undefined,
-                             false, pad.fTicky ? w : 0);
+      draw_horiz.DrawAxis(false, layer, w, h,
+                          draw_horiz.invert_side ? undefined : "translate(0," + h + ")",
+                          false, pad.fTickx ? -h : 0, this.options.Axis < 0);
+
+      draw_vertical.DrawAxis(true, layer, w, h,
+                             draw_vertical.invert_side ? "translate(" + w + ",0)" : undefined,
+                             false, pad.fTicky ? w : 0, this.options.Axis < 0);
 
       if (shrink_forbidden) return;
 
@@ -3209,12 +3333,12 @@
       // object will be redraw automatically
       if (func_painter === null) {
          if (func._typename === 'TPaveText' || func._typename === 'TPaveStats') {
-            do_draw = !this.histo.TestBit(JSROOT.TH1StatusBits.kNoStats) && (this.options.NoStat!=1);
+            do_draw = !this.histo.TestBit(JSROOT.TH1StatusBits.kNoStats) && !this.options.NoStat;
          } else
          if (func._typename === 'TF1') {
             do_draw = !func.TestBit(JSROOT.BIT(9));
          } else
-            do_draw = (func._typename !== "TPaletteAxis");
+            do_draw = (func._typename !== 'TPaletteAxis');
       }
 
       if (do_draw)
@@ -3255,8 +3379,8 @@
    }
 
    THistPainter.prototype.ToggleLog = function(axis) {
-      var obj = this.main_painter(), pad = this.root_pad();
-      if (!obj) obj = this;
+      var painter = this.main_painter() || this,
+          pad = this.root_pad();
       var curr = pad["fLog" + axis];
       // do not allow log scale for labels
       if (!curr) {
@@ -3265,12 +3389,13 @@
          if (this.swap_xy && axis==="y") kind = this["x_kind"];
          if (kind === "labels") return;
       }
+
       var pp = this.pad_painter();
-      if (pp && pp._websocket) {
-         pp.SendWebsocket("EXEC:SetLog" + axis + (curr ? "(0)" : "(1)"));
+      if (pp && pp._websocket && pp.snapid) {
+         pp.SendWebsocket("OBJEXEC:" + pp.snapid + ":SetLog" + axis + (curr ? "(0)" : "(1)"));
       } else {
          pad["fLog" + axis] = curr ? 0 : 1;
-         obj.RedrawPad();
+         painter.RedrawPad();
       }
    }
 
@@ -3412,6 +3537,22 @@
       this.Unzoom(kind);
    }
 
+   THistPainter.prototype.FindAlternativeClickHandler = function(pos) {
+      var pp = this.pad_painter(true);
+      if (!pp) return false;
+
+      var pnt = { x: pos[0], y: pos[1], painters: true, disabled: true, click_handler: true };
+
+      var hints = pp.GetTooltips(pnt);
+      for (var k=0;k<hints.length;++k)
+         if (hints[k] && (typeof hints[k].click_handler == 'function')) {
+            hints[k].click_handler(hints[k]);
+            return true;
+         }
+
+      return false;
+   }
+
    THistPainter.prototype.startRectSel = function() {
       // ignore when touch selection is activated
 
@@ -3422,8 +3563,12 @@
 
       d3.event.preventDefault();
 
+      var pos = d3.mouse(this.svg_frame().node());
+
+      if (this.FindAlternativeClickHandler(pos)) return;
+
       this.clearInteractiveElements();
-      this.zoom_origin = d3.mouse(this.svg_frame().node());
+      this.zoom_origin = pos;
 
       var w = this.frame_width(), h = this.frame_height();
 
@@ -3534,14 +3679,10 @@
                if (fp) fp.ProcessFrameClick(pnt);
                break;
             case 2:
-               var pp = this.pad_painter();
-               if (typeof pp.SelectObjectPainter == 'function')
-                  pp.SelectObjectPainter(this.x_handle);
+               this.pad_painter().SelectObjectPainter(this.x_handle);
                break;
             case 3:
-               var pp = this.pad_painter();
-               if (typeof pp.SelectObjectPainter == 'function')
-                  pp.SelectObjectPainter(this.y_handle);
+               this.pad_painter().SelectObjectPainter(this.y_handle);
                break;
          }
       }
@@ -4028,6 +4169,8 @@
             if (fp!==null) kind = "frame";
 
             if (pnt!==null) frame_corner = (pnt.x>0) && (pnt.x<20) && (pnt.y>0) && (pnt.y<20);
+
+            if (fp) fp.SetLastEventPos(pnt);
          }
       }
 
@@ -4042,7 +4185,7 @@
             domenu = fp.FillContextMenu(menu);
 
          if (domenu)
-            menu.painter.FillObjectExecMenu(menu, function() {
+            menu.painter.FillObjectExecMenu(menu, kind, function() {
                 // suppress any running zooming
                 menu.painter.SwitchTooltip(false);
                 menu.show(menu.painter.ctx_menu_evnt, menu.painter.SwitchTooltip.bind(menu.painter, true) );
@@ -4403,8 +4546,10 @@
    }
 
    THistPainter.prototype.GetPalette = function(force) {
-      if (!this.fPalette || force)
-         this.fPalette = JSROOT.Painter.GetColorPalette(this.options.Palette);
+      if (!this.fPalette || force) {
+         var pp = this.options.Palette ? null : this.pad_painter();
+         this.fPalette = (pp && pp.CanvasPalette) ? pp.CanvasPalette : JSROOT.Painter.GetColorPalette(this.options.Palette);
+      }
       return this.fPalette;
    }
 
@@ -4748,7 +4893,8 @@
       // If no any draw options specified, do not try draw histogram
       if (!this.options.Bar && !this.options.Hist && !this.options.Line &&
           !this.options.Error && !this.options.Same && !this.options.Lego && !this.options.Text) {
-         this.draw_content = false;
+         if (this.options.Axis < 0) this.options.Hist = 1; // if axis was disabled, draw content anyway
+                               else this.draw_content = false;
       }
       if (this.options.Axis > 0) { // Paint histogram axis only
          this.draw_content = false;
@@ -5080,7 +5226,7 @@
       }
 
       if (show_text) {
-         text_col = JSROOT.Painter.root_colors[this.histo.fMarkerColor];
+         text_col = this.get_color(this.histo.fMarkerColor);
          text_angle = (this.options.Text>1000) ? this.options.Text % 1000 : 0;
          text_size = 20;
 
@@ -6502,7 +6648,7 @@
 
       if (handle===null) handle = this.PrepareColorDraw({ rounding: false });
 
-      var text_col = JSROOT.Painter.root_colors[histo.fMarkerColor],
+      var text_col = this.get_color(histo.fMarkerColor),
           text_angle = (this.options.Text > 1000) ? this.options.Text % 1000 : 0,
           text_g = this.draw_g.append("svg:g").attr("class","th2_text"),
           text_size = 20, text_offset = 0;
@@ -7791,7 +7937,6 @@
       return JSROOT.Painter.drawHistogram2D(divid, hist, opt);
    }
 
-   JSROOT.ColorPalette = ColorPalette;
    JSROOT.TPavePainter = TPavePainter;
    JSROOT.TAxisPainter = TAxisPainter;
    JSROOT.THistPainter = THistPainter;

@@ -34,7 +34,7 @@
    JSROOT.complete_script_load = null; // normal callback is intercepted - we need to instantiate openui5
 
    JSROOT.completeUI5Loading = function() {
-      console.log('complete ui5 loading', typeof sap);
+      // console.log('complete ui5 loading', typeof sap);
       JSROOT.sap = sap;
       JSROOT.CallBack(load_callback);
       load_callback = null;
@@ -301,6 +301,88 @@
       return menu;
    }
 
+   JSROOT.TObjectPainter.prototype.ShowInpsector = function() {
+      var handle = {}; // should be controller?
+      handle.closeObjectInspector = function() {
+         this.dialog.close();
+         this.dialog.destroy();
+      }
+      handle.dialog = JSROOT.sap.ui.xmlfragment("sap.ui.jsroot.view.Inspector", handle);
+
+      // FIXME: global id is used, should find better solution later
+      var view = sap.ui.getCore().byId("object_inspector");
+      view.getController().setObject(this.GetObject());
+
+      handle.dialog.open();
+   }
+
+   // ===================================================================================================
+
+   JSROOT.TCanvasPainter.prototype.ActivateGed = function(painter) {
+      // function used to actiavte GED
+
+      var main = JSROOT.sap.ui.getCore().byId("TopCanvasId");
+      if (main) main.getController().showGeEditor(true);
+
+      this.SelectObjectPainter(painter);
+   }
+
+   JSROOT.TCanvasPainter.prototype.ActivateFitPanel = function(painter) {
+      // function used to actiavte FitPanel
+
+      var main = JSROOT.sap.ui.getCore().byId("TopCanvasId");
+      if (main) main.getController().showLeftArea("FitPanel");
+   }
+
+   JSROOT.TCanvasPainter.prototype.SelectObjectPainter = function(painter) {
+      var main = JSROOT.sap.ui.getCore().byId("TopCanvasId");
+      var ged = main ? main.getController().getGed() : null;
+      if (ged) ged.onObjectSelect(this, painter);
+   }
+
+   JSROOT.TCanvasPainter.prototype.HasEventStatus = function() {
+      var main = JSROOT.sap.ui.getCore().byId("TopCanvasId");
+      return main ? main.getController().isStatusShown() : false;
+   }
+
+   JSROOT.TCanvasPainter.prototype.ToggleEventStatus = function() {
+      var main = JSROOT.sap.ui.getCore().byId("TopCanvasId");
+      if (main) main.getController().toggleShowStatus();
+   }
+
+   JSROOT.TCanvasPainter.prototype.ShowStatus = function(lbl1,lbl2,lbl3,lbl4) {
+      var main = JSROOT.sap.ui.getCore().byId("TopCanvasId");
+      if (main) main.getController().ShowCanvasStatus(lbl1,lbl2,lbl3,lbl4);
+   }
+
+   JSROOT.TCanvasPainter.prototype.ShowMessage = function(msg) {
+      var main = JSROOT.sap.ui.getCore().byId("TopCanvasId");
+      if (main) main.getController().showMessage(msg);
+   }
+
+   JSROOT.TCanvasPainter.prototype.MethodsDialog = function(painter, method, menu_obj_id) {
+
+      var main = JSROOT.sap.ui.getCore().byId("TopCanvasId");
+      if (!main) return;
+
+      var pthis = this;
+
+      method.fClassName = painter.GetClassName();
+      // TODO: deliver class name together with menu items
+      if ((menu_obj_id.indexOf("#x")>0) || (menu_obj_id.indexOf("#y")>0) || (menu_obj_id.indexOf("#z")>0)) method.fClassName = "TAxis";
+
+      main.getController().showMethodsDialog(method, function(args) {
+
+         var exec = method.fExec;
+         if (args) exec = exec.substr(0,exec.length-1) + args + ')';
+
+         // invoked only when user press Ok button
+         console.log('execute method for object ' + menu_obj_id + ' exec= ' + exec);
+
+         pthis.SendWebsocket('OBJEXEC:' + menu_obj_id + ":" + exec);
+      });
+
+   }
 
    return JSROOT;
 

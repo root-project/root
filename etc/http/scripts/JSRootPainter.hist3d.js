@@ -1174,7 +1174,7 @@
          // geometry.computeVertexNormals();
 
          var rootcolor = histo.fFillColor,
-             fcolor = JSROOT.Painter.root_colors[rootcolor];
+             fcolor = this.get_color(rootcolor);
 
          if (palette) {
             fcolor = palette.calcColor(nlevel, levels.length);
@@ -1334,7 +1334,7 @@
       }
 
       // create boxes
-      var lcolor = JSROOT.Painter.root_colors[histo.fLineColor];
+      var lcolor = this.get_color(histo.fLineColor);
       material = new THREE.LineBasicMaterial({ color: new THREE.Color(lcolor) });
       if (!JSROOT.browser.isIE) material.linewidth = histo.fLineWidth;
 
@@ -1526,7 +1526,7 @@
              var geometry = new THREE.BufferGeometry();
              geometry.addAttribute( 'position', new THREE.BufferAttribute( linepos, 3 ) );
 
-             var material = new THREE.LineBasicMaterial({ color: new THREE.Color(JSROOT.Painter.root_colors[histo.fLineColor]) });
+             var material = new THREE.LineBasicMaterial({ color: new THREE.Color(main.get_color(histo.fLineColor)) });
 
              var line = new THREE.Line(geometry, material);
              main.toplevel.add(line);
@@ -1822,8 +1822,8 @@
             if (palette) {
                fcolor = palette.calcColor(lvl, levels.length);
             } else {
-               fcolor = histo.fFillColor > 1 ? JSROOT.Painter.root_colors[histo.fFillColor] : 'white';
-               if ((this.options.Surf === 14) && (histo.fFillColor<2)) fcolor = JSROOT.Painter.root_colors[48];
+               fcolor = histo.fFillColor > 1 ? this.get_color(histo.fFillColor) : 'white';
+               if ((this.options.Surf === 14) && (histo.fFillColor<2)) fcolor = this.get_color(48);
             }
             if (this.options.Surf === 14)
                material = new THREE.MeshLambertMaterial( { color: fcolor, side: THREE.DoubleSide  } );
@@ -1842,7 +1842,7 @@
          if (nsegments*6 !== lindx)
             console.error('SURF lines mismmatch nsegm', nsegments, ' lindx', lindx, 'difference', nsegments*6 - lindx);
 
-         var lcolor = JSROOT.Painter.root_colors[histo.fLineColor],
+         var lcolor = this.get_color(histo.fLineColor),
              material = new THREE.LineBasicMaterial({ color: new THREE.Color(lcolor) });
          if (!JSROOT.browser.isIE) material.linewidth = histo.fLineWidth;
          var line = JSROOT.Painter.createLineSegments(lpos, material);
@@ -1859,7 +1859,7 @@
          if (this.options.Surf === 1)
             material = new THREE.LineDashedMaterial( { color: 0x0, dashSize: 2, gapSize: 2  } );
          else
-            material = new THREE.LineBasicMaterial({ color: new THREE.Color(JSROOT.Painter.root_colors[histo.fLineColor]) });
+            material = new THREE.LineBasicMaterial({ color: new THREE.Color(this.get_color(histo.fLineColor)) });
 
          var line = JSROOT.Painter.createLineSegments(grid, material);
          line.painter = this;
@@ -1996,7 +1996,7 @@
        }
 
        // create lines
-       var lcolor = JSROOT.Painter.root_colors[this.GetObject().fLineColor],
+       var lcolor = this.get_color(this.GetObject().fLineColor),
            material = new THREE.LineBasicMaterial({ color: new THREE.Color(lcolor) }),
            line = JSROOT.Painter.createLineSegments(lpos, material);
 
@@ -2481,7 +2481,7 @@
          }
       }
 
-      var mesh = pnts.CreatePoints(JSROOT.Painter.root_colors[histo.fMarkerColor]);
+      var mesh = pnts.CreatePoints(this.get_color(histo.fMarkerColor));
       main.toplevel.add(mesh);
 
       mesh.bins = bins;
@@ -2519,7 +2519,7 @@
          if (this.Draw3DScatter()) return;
 
       var rootcolor = this.GetObject().fFillColor,
-          fillcolor = JSROOT.Painter.root_colors[rootcolor],
+          fillcolor = this.get_color(rootcolor),
           buffer_size = 0, use_lambert = false,
           use_helper = false, use_colors = false, use_opacity = 1, use_scale = true,
           single_bin_verts, single_bin_norms,
@@ -2800,7 +2800,7 @@
          this.toplevel.add(combined_bins);
 
          if (helper_kind[nseq] > 0) {
-            var lcolor = JSROOT.Painter.root_colors[this.GetObject().fLineColor],
+            var lcolor = this.get_color(this.GetObject().fLineColor),
                 helper_material = new THREE.LineBasicMaterial( { color: lcolor } ),
                 lines = null;
 
@@ -3165,7 +3165,7 @@
          }
 
          if (err) {
-            var lcolor = JSROOT.Painter.root_colors[this.GetObject().fLineColor],
+            var lcolor = this.get_color(this.GetObject().fLineColor),
                 material = new THREE.LineBasicMaterial({ color: new THREE.Color(lcolor) });
             if (!JSROOT.browser.isIE) material.linewidth = this.GetObject().fLineWidth;
             var errmesh = JSROOT.Painter.createLineSegments(err, material);
@@ -3185,7 +3185,7 @@
          if (pnts) {
 
             var fcolor = palette ? palette.calcColor(lvl, levels.length) :
-                                   JSROOT.Painter.root_colors[graph.fMarkerColor];
+                                   this.get_color(graph.fMarkerColor);
 
             var mesh = pnts.CreatePoints(fcolor);
 
@@ -3281,7 +3281,7 @@
             pnts.AddPoint(main.grx(poly.fP[i]), main.gry(poly.fP[i+1]), main.grz(poly.fP[i+2]));
          }
 
-         var mesh = pnts.CreatePoints(JSROOT.Painter.root_colors[poly.fMarkerColor]);
+         var mesh = pnts.CreatePoints(this.get_color(poly.fMarkerColor));
 
          main.toplevel.add(mesh);
 

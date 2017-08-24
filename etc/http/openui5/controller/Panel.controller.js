@@ -1,26 +1,19 @@
 sap.ui.define([
    'sap/ui/core/mvc/Controller',
-   'sap/ui/core/ResizeHandler'
-], function (Controller, ResizeHandler) {
+   'sap/ui/core/ResizeHandler',
+   'sap/m/Dialog',
+   'sap/m/Button'
+], function (Controller, ResizeHandler, Dialog, Button) {
    "use strict";
 
    return Controller.extend("sap.ui.jsroot.controller.Panel", {
 
-       // preferDOM: true,
-
        onAfterRendering: function() {
-         //if (sap.HTML.prototype.onAfterRendering) {
-         //   sapHTML.prototype.onAfterRendering.apply(this, arguments);
-         //}
-         var view = this.getView();
-         var dom = view.getDomRef();
-
-         if (this.canvas_painter && this.canvas_painter._configured_socket_kind) {
-            this.canvas_painter.SetDivId(dom, -1);
-            this.canvas_painter.OpenWebsocket(this.canvas_painter._configured_socket_kind);
-            delete this.canvas_painter._configured_socket_kind;
-         }
-
+          if (this.canvas_painter && this.canvas_painter._configured_socket_kind) {
+             this.canvas_painter.SetDivId(this.getView().getDomRef(), -1);
+             this.canvas_painter.OpenWebsocket(this.canvas_painter._configured_socket_kind);
+             delete this.canvas_painter._configured_socket_kind;
+          }
        },
 
        onBeforeRendering: function() {
@@ -41,7 +34,15 @@ sap.ui.define([
        onInit : function() {
           this.canvas_painter = JSROOT.openui5_canvas_painter;
           delete JSROOT.openui5_canvas_painter;
+
           ResizeHandler.register(this.getView(), this.onResize.bind(this));
+      },
+
+      onExit : function() {
+         if (this.canvas_painter)
+            this.canvas_painter.Cleanup();
+
+         delete this.canvas_painter;
       }
    });
 

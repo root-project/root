@@ -2165,7 +2165,7 @@
 
       if (drawing && socket_kind) {
 
-         var painter = new JSROOT.TPadPainter(null, true);
+         var painter = new JSROOT.TCanvasPainter(null);
          painter.plain_layout = painter.batch_mode = JSROOT.GetUrlOption("batch_mode") !== null;
          if (painter.batch_mode) JSROOT.BatchMode = true;
 
@@ -2183,17 +2183,10 @@
             JSROOT.openui5_canvas_painter = painter;
 
             return JSROOT.AssertPrerequisites('openui5', function() {
-               //new JSROOT.sap.m.Text({
-               //   text: "Hello World"
-               //}).placeAt(myDiv.attr("id"));
                new JSROOT.sap.ui.xmlview({
+                  id: "TopCanvasId",
                   viewName: "sap.ui.jsroot.view.Canvas"
                }).placeAt(myDiv.attr("id"));
-               //new JSROOT.sap.ui.core.ComponentContainer({
-               //   name : "sap.ui.jsroot"
-               //}).placeAt(myDiv.attr("id"));
-
-               console.log('CREATING VIEW with canvas');
             });
          };
 
