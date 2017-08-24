@@ -37,14 +37,15 @@ find_library(PYTHIA6_LIBRARY NAMES pythia6 Pythia6
 
 set(PYTHIA6_LIBRARIES ${PYTHIA6_LIBRARY})
 
-find_library(PYTHIA6_rootinterface_LIBRARY NAMES rootinterface
+foreach(lib rootinterface pythia6_dummy)
+  find_library(PYTHIA6_${lib}_LIBRARY NAMES ${lib}
              HINTS ${_pythia6dirs}
              PATH_SUFFIXES lib
              DOC "Specify the Pythia rootinterface library here.")
-
-if(PYTHIA6_rootinterface_LIBRARY)
-  list(APPEND PYTHIA6_LIBRARIES ${PYTHIA6_rootinterface_LIBRARY})
-endif()
+  if(PYTHIA6_${lib}_LIBRARY)
+    list(APPEND PYTHIA6_LIBRARIES ${PYTHIA6_${lib}_LIBRARY})
+  endif()
+endforeach()
 
 get_filename_component(PYTHIA6_LIBRARY_DIR ${PYTHIA6_LIBRARY} PATH)
 
