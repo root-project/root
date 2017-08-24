@@ -77,6 +77,14 @@ sap.ui.define([
             oPage.addContent(fragm);
          }
 
+         if (painter.markeratt && painter.markeratt.used) {
+            var model = new JSONModel( painter.markeratt );
+            var fragm = this.getFragment("TAttMarker", true);
+            model.attachPropertyChange({ _kind: "TAttMarker", _painter: painter, _handle: painter.markeratt }, this.modelPropertyChange, this);
+            fragm.setModel(model);
+            oPage.addContent(fragm);
+         }
+
       },
 
       // TODO: special controller for each fragment?
@@ -133,6 +141,10 @@ sap.ui.define([
       // TODO: make it generic
       processTAttFill_Color : function() {
          this.makeColorDialog('TAttFill', '/color');
+      },
+
+      processTAttMarker_Color : function() {
+         this.makeColorDialog('TAttMarker', '/color');
       }
 
    });
