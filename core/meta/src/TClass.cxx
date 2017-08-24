@@ -437,7 +437,7 @@ IdMap_t *TClass::GetIdMap() {
 
 #ifdef R__COMPLETE_MEM_TERMINATION
    static IdMap_t gIdMapObject;
-   return &gIdMap;
+   return &gIdMapObject;
 #else
    static IdMap_t *gIdMap = new IdMap_t;
    return gIdMap;
@@ -448,7 +448,7 @@ DeclIdMap_t *TClass::GetDeclIdMap() {
 
 #ifdef R__COMPLETE_MEM_TERMINATION
    static DeclIdMap_t gDeclIdMapObject;
-   return &gIdMap;
+   return &gDeclIdMapObject;
 #else
    static DeclIdMap_t *gDeclIdMap = new DeclIdMap_t;
    return gDeclIdMap;
