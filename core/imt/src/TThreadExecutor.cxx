@@ -4,6 +4,7 @@
 //////////////////////////////////////////////////////////////////////////
 ///
 /// \class ROOT::TThreadExecutor
+/// \ingroup Parallelism
 /// \brief This class provides a simple interface to execute the same task
 /// multiple times in parallel, possibly with different arguments every
 /// time. This mimics the behaviour of python's pool.Map method.

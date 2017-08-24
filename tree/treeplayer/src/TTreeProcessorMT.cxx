@@ -10,6 +10,7 @@
  *************************************************************************/
 
 /** \class ROOT::TTreeProcessorMT
+    \ingroup Parallelism
     \brief A class to process the entries of a TTree in parallel.
 
 By means of its Process method, ROOT::TTreeProcessorMT provides a way to process the
