@@ -9,7 +9,7 @@
 /// \date August 2017
 
 #include "TROOT.h"
-#include "ROOT/Async.hxx"
+#include "ROOT/Future.hxx"
 
 #include <future>
 #include <iostream>
