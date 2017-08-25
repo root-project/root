@@ -37,7 +37,13 @@ acquisition, simulation and data analysis systems.
 | v5-34-00-patches | [![Build Status](https://epsft-jenkins.cern.ch/buildStatus/icon?job=root-incremental-v5-34-00-patches)](https://epsft-jenkins.cern.ch/view/ROOT/job/root-incremental-v5-34-00-patches/) | [![Build Status](https://epsft-jenkins.cern.ch/buildStatus/icon?job=root-nightly-v5-34-00-patches)](https://epsft-jenkins.cern.ch/view/ROOT/job/root-nightly-v5-34-00-patches/) |
 | v6-10-00-patches |  [![Build Status](https://epsft-jenkins.cern.ch/buildStatus/icon?job=root-incremental-v6-10-00-patches)](https://epsft-jenkins.cern.ch/view/ROOT/job/root-incremental-v6-10-00-patches/) | [![Build Status](https://epsft-jenkins.cern.ch/buildStatus/icon?job=root-nightly-v6-10-00-patches)](https://epsft-jenkins.cern.ch/view/ROOT/job/root-nightly-v6-10-00-patches/) |
 
-## Live Demo
+## Cite
+We are [![DOI](https://zenodo.org/badge/10994345.svg)](https://zenodo.org/badge/latestdoi/10994345)
+
+Please cite us as
+    The ROOT Team, "ROOT" [software], Release vX.YY/ZZ, Zenodo, 99 February 9999. https://doi.org/10.5281/zenodo.848819
+
+## Live Demo for CERN Users
 [![](https://swanserver.web.cern.ch/swanserver/images/badge_swan_white_150.png)](http://cern.ch/swanserver/cgi-bin/go?projurl=https://github.com/cernphsft/rootbinder.git)
 
 ## Screenshots
