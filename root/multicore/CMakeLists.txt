@@ -9,6 +9,17 @@ ROOTTEST_ADD_TEST(TThreadedObjectAutoMemManagement
                  MACRO  testTThreadedObjectAutoMemManagement.C)
 
 if(ROOT_imt_FOUND)
+
+# Three tutorials which for the moment are tests as they do not work in cling, only compiled and aclic mode
+ROOTTEST_ADD_TEST(mt303_AsyncSimple
+                  MACRO mt303_AsyncSimple.C+)
+
+ROOTTEST_ADD_TEST(mt304_AsyncNested
+                  MACRO mt304_AsyncNested.C+)
+
+ROOTTEST_ADD_TEST(mt305_Future
+                  MACRO mt305_Future.C+)
+
 # ROOT-8850
 ROOTTEST_GENERATE_EXECUTABLE(loadImt loadImt.cpp LIBRARIES Core RIO)
 
