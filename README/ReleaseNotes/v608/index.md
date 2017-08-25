@@ -633,6 +633,7 @@ Changes will be part of the future 6.08/08
 ### Core
 
 - Re-enabled support for TMapFile (and libNew). (ROOT-8454)
+- Prevent leak of TProtoClass (when there is multiple dictionary, for example for STL collections).
 
 ### TTree Libraries
 
