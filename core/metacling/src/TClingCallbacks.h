@@ -100,6 +100,9 @@ public:
 
    virtual void PrintStackTrace();
 
+   virtual void EnteringUserCode();
+   virtual void ReturnedFromUserCode();
+
 private:
    bool tryAutoParseInternal(llvm::StringRef Name, clang::LookupResult &R,
                             clang::Scope *S, const clang::FileEntry* FE = 0);

@@ -351,6 +351,22 @@ void TCling__PrintStackTrace() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Lock the interpreter.
+
+extern "C"
+void TCling__LockInterpreterMutex() {
+   if (gInterpreterMutex) gInterpreterMutex->Lock();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Unlock the interpreter.
+
+extern "C"
+void TCling__UnlockInterpreterMutex() {
+   if (gInterpreterMutex) gInterpreterMutex->UnLock();
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Update TClingClassInfo for a class (e.g. upon seeing a definition).
 
 static void TCling__UpdateClassInfo(const NamedDecl* TD)
