@@ -42,7 +42,8 @@ We are [![DOI](https://zenodo.org/badge/10994345.svg)](https://zenodo.org/badge/
 
 Please cite us as
 
-    The ROOT Team, "ROOT" [software], Release vX.YY/ZZ, Zenodo, 99 February 9999. https://doi.org/10.5281/zenodo.848819
+    The ROOT Team, "ROOT" [software], Release vX.YY/ZZ, 99 February 9999.
+    https://doi.org/10.5281/zenodo.848819
 
 ## Live Demo for CERN Users
 [![](https://swanserver.web.cern.ch/swanserver/images/badge_swan_white_150.png)](http://cern.ch/swanserver/cgi-bin/go?projurl=https://github.com/cernphsft/rootbinder.git)
