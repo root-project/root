@@ -49,7 +49,7 @@ auto testForwardPass(size_t timeSteps, size_t batchSize, size_t stateSize,
    Net_t rnn(batchSize, timeSteps, batchSize, inputSize, 0, 0, 0, ELossFunction::kMeanSquaredError, EInitialization::kGauss);
    RNNLayer_t* layer = rnn.AddBasicRNNLayer(batchSize, stateSize, inputSize, timeSteps);
 
-   layer->Initialize(EInitialization::kGauss);
+   layer->Initialize();
 
    TMatrixT<Double_t> weightsInput = layer->GetWeightsInput();  // H x D
    TMatrixT<Double_t> weightsState = layer->GetWeightsState();  // H x H

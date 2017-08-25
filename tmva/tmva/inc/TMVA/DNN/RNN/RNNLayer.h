@@ -92,7 +92,7 @@ public:
 
    /*! Initialize the weights according to the given initialization
     **  method. */
-   void Initialize(DNN::EInitialization m);
+   //void Initialize(DNN::EInitialization m);
 
    /*! Initialize the state
     **  method. */
@@ -140,6 +140,8 @@ public:
    const Matrix_t & GetWeightsInput()   const {return fWeightsInput;}
    Matrix_t        & GetWeightsState()        {return fWeightsState;}
    const Matrix_t & GetWeightsState()   const {return fWeightsState;}
+   Matrix_t        & GetDerivatives()        {return fDerivatives;}
+   const Matrix_t & GetDerivatives()   const {return fDerivatives;}
    //Matrix_t        & GetBiases()              {return fBiases;}
    //const Matrix_t & GetBiases()         const {return fBiases;}
    //Matrix_t        & GetBiasGradients()            {return fBiasGradients;}
@@ -185,14 +187,14 @@ TBasicRNNLayer<Architecture_t>::TBasicRNNLayer(const TBasicRNNLayer &layer)
 }
 
 //______________________________________________________________________________
-template<typename Architecture_t>
-auto TBasicRNNLayer<Architecture_t>::Initialize(DNN::EInitialization m)
--> void
-{
-   DNN::initialize<Architecture_t>(fWeightsInput, m);
-   DNN::initialize<Architecture_t>(fWeightsState, m);
-   DNN::initialize<Architecture_t>(fBiases,  DNN::EInitialization::kZero);
-}
+//template<typename Architecture_t>
+//auto TBasicRNNLayer<Architecture_t>::Initialize(DNN::EInitialization m)
+//-> void
+//{
+//   DNN::initialize<Architecture_t>(fWeightsInput, m);
+//   DNN::initialize<Architecture_t>(fWeightsState, m);
+//   DNN::initialize<Architecture_t>(fBiases,  DNN::EInitialization::kZero);
+//}
 
 //______________________________________________________________________________
 template<typename Architecture_t>
@@ -324,18 +326,9 @@ auto inline TBasicRNNLayer<Architecture_t>::CellBackward(Matrix_t & state_gradie
 -> Matrix_t &
 {
    DNN::evaluateDerivative<Architecture_t>(fDerivatives, this->GetActivationFunction(), currStateActivations);
-   //debugMatrix<Architecture_t>(state_gradients_backward, "0 state grad");
-   //debugMatrix<Architecture_t>(fWeightInputGradients, "0 wx grad");
-   //debugMatrix<Architecture_t>(fWeightStateGradients, "0 wh grad");
-   //debugMatrix<Architecture_t>(fDerivatives, "bef df");
-   auto &lol =  Architecture_t::RecurrentLayerBackward(state_gradients_backward, fWeightInputGradients, fWeightStateGradients,
+   return Architecture_t::RecurrentLayerBackward(state_gradients_backward, fWeightInputGradients, fWeightStateGradients,
                                                  fBiasGradients, fDerivatives, precStateActivations, fWeightsInput,
                                                  fWeightsState, input, input_gradient);
-   //debugMatrix<Architecture_t>(state_gradients_backward, "state grad");
-   //debugMatrix<Architecture_t>(fWeightInputGradients, "wx grad");
-   //debugMatrix<Architecture_t>(fWeightStateGradients, "wh grad");
-   //debugMatrix<Architecture_t>(fDerivatives, "df");
-   return lol;
 }
 
 } // namespace RNN
