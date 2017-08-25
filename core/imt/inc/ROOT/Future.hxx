@@ -38,7 +38,7 @@ class Future;
 namespace Detail {
 template <typename T>
 class FutureImpl {
-   template<typename V> friend class Future;
+   template<typename V> friend class Experimental::Future;
 protected:
    using TTaskGroup = Experimental::TTaskGroup;
    std::future<T> fStdFut;
@@ -53,20 +53,20 @@ protected:
 
    FutureImpl(FutureImpl<T> &&other) { *this = std::move(other); }
 
-   FutureImpl(const FutureImpl<T> &other) = delete;
+   FutureImpl &operator=(std::future<T> &&other)
+   {
+      fStdFut = std::move(other);
+   }
+
+   FutureImpl<T> &operator=(FutureImpl<T> &&other) = default;
 
 public:
 
-   FutureImpl<T> &operator=(FutureImpl<T> &&other)
-   {
-      fStdFut = std::move(other.fStdFut);
-      fTg = std::move(other.fTg);
-      return *this;
-   }
-
    FutureImpl<T> &operator=(FutureImpl<T> &other) = delete;
 
-   void wait() { fTg->Wait(); }
+   FutureImpl(const FutureImpl<T> &other) = delete;
+
+   void wait() { if (fTg) fTg->Wait(); }
 
    bool valid() const { return fStdFut.valid(); };
 };
@@ -86,8 +86,6 @@ private:
 public:
    Future(std::future<T> &&fut) : Detail::FutureImpl<T>(std::forward<std::future<T>>(fut)) {};
 
-   Future(Future<T>&& other): Detail::FutureImpl<T>(std::forward<Future<T>>(other)) {}
-
    T get()
    {
       this->wait();
@@ -106,8 +104,6 @@ private:
 public:
    Future(std::future<void> &&fut) : Detail::FutureImpl<void>(std::forward<std::future<void>>(fut)) {};
 
-   Future(Future<void> &&other) : Detail::FutureImpl<void>(std::forward<Future<void>>(other)) {}
-
    void get()
    {
       this->wait();
@@ -123,9 +119,7 @@ private:
    Future(std::future<T &> &&fut, std::unique_ptr<TTaskGroup> &&tg)
       : Detail::FutureImpl<T &>(std::forward<std::future<T &>>(fut), std::move(tg)){};
 public:
-   Future(std::future<T&> &&fut) : Detail::FutureImpl<T>(std::forward<std::future<T&>>(fut)) {};
-
-   Future(Future<T&> &&other) : Detail::FutureImpl<T&>(std::forward<Future<T&>>(other)) {}
+   Future(std::future<T&> &&fut) : Detail::FutureImpl<T&>(std::forward<std::future<T&>>(fut)) {};
 
    T &get()
    {
