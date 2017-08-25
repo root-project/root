@@ -43,7 +43,6 @@ ClassImp(TF1Convolution);
 
 class TF1Convolution_EvalWrapper
 {
-   // TODO: convert these to unique_ptr as well?
    std::unique_ptr<TF1> fFunction1;
    std::unique_ptr<TF1> fFunction2;
    Double_t fT0;
@@ -93,7 +92,7 @@ void TF1Convolution::InitializeDataMembers(TF1* function1, TF1* function2, Bool_
    fParams2    = std::vector<Double_t>(fNofParams2);
    fCstIndex = (fFunction1->GetParNumber("Constant") == -1)
                   ? -1
-                  : fFunction2->GetParNumber("Constant"); // TODO: add dropConstantParam flag
+                  : fFunction2->GetParNumber("Constant"); // TODO: add dropConstantParam flag?
    fFlagFFT    = useFFT;
    fFlagGraph  = false;
    fNofPoints  = 10000;

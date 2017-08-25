@@ -68,11 +68,12 @@ void TF1NormSum::InitializeDataMembers(const std::vector <TF1 *> &functions, con
       TF1 *f = new TF1();
       functions[n]->Copy(*f);
       fFunctions[n] = std::unique_ptr<TF1>(f);
-      // Use Copy, not Clone (otherwise the whole thing is messier and involves
-      // bits like kNotGlobal)
+      // Use Copy, not Clone
 
       if (!fFunctions[n])
          Fatal("InitializeDataMembers", "Invalid input function -- abort");
+
+      functions[n]->SetBit(TF1::kNotGlobal, kTRUE);
    }
 
    
@@ -145,13 +146,6 @@ TF1NormSum::TF1NormSum()
 
 TF1NormSum::TF1NormSum(const std::vector <TF1*> &functions, const std::vector <Double_t> &coeffs, Double_t scale)
 {
-   // todo : delete commented code
-   // std::vector <std::unique_ptr < TF1 > >f;
-   // for (unsigned int i = 0; i<functions.size(); i++)
-   // {
-   //  f[i] = std::unique_ptr < TF1 >((TF1*)functions[i]->Clone());
-   // }
-
    InitializeDataMembers(functions,coeffs,scale);
 }
 
@@ -160,28 +154,11 @@ TF1NormSum::TF1NormSum(const std::vector <TF1*> &functions, const std::vector <D
 
 TF1NormSum::TF1NormSum(TF1* function1, TF1* function2, Double_t coeff1, Double_t coeff2, Double_t scale)
 {
-   std::vector < Double_t > coeffs(2);
-   // TF1 * fnew1 = 0;
-   // TF1 * fnew2 = 0;
-   // // need to use Copy because clone does not work for functor-based functions
-   // if (function1) {
-   //    fnew1 = (TF1*) function1->IsA()->New();
-   //    function1->Copy(*fnew1);
-   // }
-   // if (function2) {
-   //    fnew2 = (TF1*) function2->IsA()->New();
-   //    function2->Copy(*fnew2);
-   // }
-   // if (fnew1 == nullptr || fnew2 == nullptr)
-   //    Fatal("TF1NormSum","Invalid input functions - Abort");
-
-   // todo : delete the commented-out code
-   // std::vector < std::unique_ptr < TF1 > > functions(2);
-   // functions = {std::unique_ptr < TF1 > (fnew1), std::unique_ptr < TF1 > (fnew2)};
    std::vector<TF1 *> functions(2);
-   functions = {function1, function2};
-   
-   coeffs          = {coeff1,    coeff2};
+   std::vector < Double_t > coeffs(2);
+
+   functions = {function1, function2};   
+   coeffs = {coeff1, coeff2};
 
    InitializeDataMembers(functions, coeffs,scale);
 }
@@ -191,34 +168,11 @@ TF1NormSum::TF1NormSum(TF1* function1, TF1* function2, Double_t coeff1, Double_t
 
 TF1NormSum::TF1NormSum(TF1* function1, TF1* function2, TF1* function3, Double_t coeff1, Double_t coeff2, Double_t coeff3, Double_t scale)
 {
-   std::vector < Double_t > coeffs(3);
-   // TF1 * fnew1 = 0;
-   // TF1 * fnew2 = 0;
-   // TF1 * fnew3 = 0;
-   // if (function1) {
-   //    fnew1 = (TF1*) function1->IsA()->New();
-   //    function1->Copy(*fnew1);
-   // }
-   // if (function2) {
-   //    fnew2 = (TF1*) function2->IsA()->New();
-   //    function2->Copy(*fnew2);
-   // }
-   // if (function3) {
-   //    fnew3 = (TF1*) function3->IsA()->New();
-   //    function3->Copy(*fnew3);
-   // }
-   // if (!fnew1 || !fnew2  || !fnew3 )
-   //    Fatal("TF1NormSum","Invalid input functions - Abort");
-
-   // todo: delete the commented-out
-   // std::vector < std::unique_ptr < TF1 > > functions(3);
-   // functions = {std::unique_ptr < TF1 > (fnew1),
-   //              std::unique_ptr < TF1 > (fnew2),
-   //              std::unique_ptr < TF1 > (fnew3)};
    std::vector< TF1 * > functions(3);
+   std::vector < Double_t > coeffs(3);
+
    functions = {function1, function2, function3};
-   
-   coeffs          = {coeff1,    coeff2,    coeff3};
+   coeffs = {coeff1, coeff2, coeff3};
 
    InitializeDataMembers(functions, coeffs,scale);
 }

@@ -933,10 +933,12 @@ void TF1::Copy(TObject &obj) const
       if (paramsToCopy) *paramsToCopy = *fParams;
       else ((TF1 &)obj).fParams = new TF1Parameters(*fParams);
    }
-   // if (fComposition) {
-   //    // todo: does this work?
-   //    fComposition->Copy(obj);
-   // }
+
+   if (fComposition) {
+      TF1AbsComposition *comp = (TF1AbsComposition *)fComposition->IsA()->New();
+      fComposition->Copy(*comp);
+      ((TF1 &)obj).fComposition = std::unique_ptr<TF1AbsComposition>(comp);
+   }
 }
 
 
@@ -2753,8 +2755,11 @@ void TF1::Print(Option_t *option) const
    } else if (fType >  0) {
       if (fType == EFType::kFormula)
          printf("Interpreted based function: %s(double *x, double *p).  Ndim = %d, Npar = %d  \n", GetName(), GetNpar(), GetNdim());
-      else if (fType == EFType::kCompositionFcn)
+      else if (fType == EFType::kCompositionFcn) {
          printf("Composition based function: %s. Ndim = %d, Npar = %d \n", GetName(), GetNdim(), GetNpar());
+         if (!fComposition)
+            printf("fComposition not found!\n"); // this is bad
+      }
       else {
          if (fFunctor)
             printf("Compiled based function: %s  based on a functor object.  Ndim = %d, Npar = %d\n", GetName(), GetNpar(), GetNdim());
@@ -3370,8 +3375,6 @@ void TF1::SetRange(Double_t xmin, Double_t xmax)
    fXmin = xmin;
    fXmax = xmax;
    if (fType == EFType::kCompositionFcn && fComposition) {
-      // need to set range in composition function as well
-      // TODO: make this work for nested compositions?
       fComposition->SetRange(xmin, xmax); // automatically updates sub-functions
    }
    Update();
@@ -3493,7 +3496,7 @@ void TF1::Streamer(TBuffer &b)
    else {
       Int_t saved = 0;
       // save not-formula functions as array of points
-      if (fType > 0 && fSave.empty()) {
+      if (fType > 0 && fSave.empty() && fType != EFType::kCompositionFcn) {
          saved = 1;
          Save(fXmin, fXmax, 0, 0, 0, 0);
       }
