@@ -38,13 +38,16 @@ class Future;
 namespace Detail {
 template <typename T>
 class FutureImpl {
-   template<typename V> friend class Experimental::Future;
+   template <typename V>
+   friend class Experimental::Future;
+
 protected:
    using TTaskGroup = Experimental::TTaskGroup;
    std::future<T> fStdFut;
-   std::unique_ptr<TTaskGroup> fTg {nullptr};
+   std::unique_ptr<TTaskGroup> fTg{nullptr};
 
-   FutureImpl(std::future<T> &&fut, std::unique_ptr<TTaskGroup> &&tg) : fStdFut(std::move(fut)) {
+   FutureImpl(std::future<T> &&fut, std::unique_ptr<TTaskGroup> &&tg) : fStdFut(std::move(fut))
+   {
       fTg = std::move(tg);
    };
    FutureImpl(){};
@@ -53,20 +56,20 @@ protected:
 
    FutureImpl(FutureImpl<T> &&other) { *this = std::move(other); }
 
-   FutureImpl &operator=(std::future<T> &&other)
-   {
-      fStdFut = std::move(other);
-   }
+   FutureImpl &operator=(std::future<T> &&other) { fStdFut = std::move(other); }
 
    FutureImpl<T> &operator=(FutureImpl<T> &&other) = default;
 
 public:
-
    FutureImpl<T> &operator=(FutureImpl<T> &other) = delete;
 
    FutureImpl(const FutureImpl<T> &other) = delete;
 
-   void wait() { if (fTg) fTg->Wait(); }
+   void wait()
+   {
+      if (fTg)
+         fTg->Wait();
+   }
 
    bool valid() const { return fStdFut.valid(); };
 };
@@ -78,13 +81,16 @@ namespace Experimental {
 /// A future class. It can wrap an std::future.
 template <typename T>
 class Future final : public Detail::FutureImpl<T> {
-template <class Function, class... Args>
-   friend Future<typename std::result_of<typename std::decay<Function>::type(typename std::decay<Args>::type...)>::type> Async(Function &&f, Args &&... args);
+   template <class Function, class... Args>
+   friend Future<typename std::result_of<typename std::decay<Function>::type(typename std::decay<Args>::type...)>::type>
+   Async(Function &&f, Args &&... args);
+
 private:
    Future(std::future<T> &&fut, std::unique_ptr<TTaskGroup> &&tg)
       : Detail::FutureImpl<T>(std::forward<std::future<T>>(fut), std::move(tg)){};
+
 public:
-   Future(std::future<T> &&fut) : Detail::FutureImpl<T>(std::forward<std::future<T>>(fut)) {};
+   Future(std::future<T> &&fut) : Detail::FutureImpl<T>(std::forward<std::future<T>>(fut)){};
 
    T get()
    {
@@ -96,13 +102,16 @@ public:
 // Two specialisations, for void and T& as for std::future
 template <>
 class Future<void> final : public Detail::FutureImpl<void> {
-template <class Function, class... Args>
-   friend Future<typename std::result_of<typename std::decay<Function>::type(typename std::decay<Args>::type...)>::type> Async(Function &&f, Args &&... args);
+   template <class Function, class... Args>
+   friend Future<typename std::result_of<typename std::decay<Function>::type(typename std::decay<Args>::type...)>::type>
+   Async(Function &&f, Args &&... args);
+
 private:
    Future(std::future<void> &&fut, std::unique_ptr<TTaskGroup> &&tg)
       : Detail::FutureImpl<void>(std::forward<std::future<void>>(fut), std::move(tg)){};
+
 public:
-   Future(std::future<void> &&fut) : Detail::FutureImpl<void>(std::forward<std::future<void>>(fut)) {};
+   Future(std::future<void> &&fut) : Detail::FutureImpl<void>(std::forward<std::future<void>>(fut)){};
 
    void get()
    {
@@ -113,13 +122,16 @@ public:
 
 template <typename T>
 class Future<T &> final : public Detail::FutureImpl<T &> {
-template <class Function, class... Args>
-   friend Future<typename std::result_of<typename std::decay<Function>::type(typename std::decay<Args>::type...)>::type> Async(Function &&f, Args &&... args);
+   template <class Function, class... Args>
+   friend Future<typename std::result_of<typename std::decay<Function>::type(typename std::decay<Args>::type...)>::type>
+   Async(Function &&f, Args &&... args);
+
 private:
    Future(std::future<T &> &&fut, std::unique_ptr<TTaskGroup> &&tg)
       : Detail::FutureImpl<T &>(std::forward<std::future<T &>>(fut), std::move(tg)){};
+
 public:
-   Future(std::future<T&> &&fut) : Detail::FutureImpl<T&>(std::forward<std::future<T&>>(fut)) {};
+   Future(std::future<T &> &&fut) : Detail::FutureImpl<T &>(std::forward<std::future<T &>>(fut)){};
 
    T &get()
    {
