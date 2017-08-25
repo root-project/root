@@ -747,6 +747,12 @@ void MethodDL::ParseRnnLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
                              std::vector<DNN::TDeepNet<Architecture_t, Layer_t>> &nets, TString layerString,
                              TString delim)
 {
+   int depth = 0;
+   int stateSize = 0;
+   int inputSize = 0;
+   int timeSteps = 0;
+   bool rememberState = false;
+
    // Split layer details
    TObjArray *subStrings = layerString.Tokenize(delim);
    TIter nextToken(subStrings);
@@ -755,8 +761,39 @@ void MethodDL::ParseRnnLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
 
    for (; token != nullptr; token = (TObjString *)nextToken()) {
       switch (idxToken) {
+         case 1:  // state size 
+         {
+            TString strstateSize(token->GetString());
+            stateSize = strstateSize.Atoi();
+         } break;
+         case 2:
+         {
+            TString strinputSize(token->GetString());
+            inputSize = strinputSize.Atoi();
+         } break;
+         case 3:
+         {
+            TString strtimeSteps(token->GetString());
+            timeSteps = strtimeSteps.Atoi();
+         }
+         case 4:
+         {
+            TString strrememberState(token->GetString());
+            rememberState = (bool) strrememberState.Atoi();
+         } break;
       }
       ++idxToken;
+   }
+
+   // Add the recurrent layer, initialize the weights and biases and copy
+   TBasicRNNLayer<Architecture_t> *basicRNNLayer = deepNet.AddBasicRNNLayer(stateSize, inputSize,
+                                                                        timeSteps, rememberState);
+   basicRNNLayer->Initialize();
+   TBasicRNNLayer<Architecture_t> *copyRNNLayer = new TBasicRNNLayer<Architecture_t>(*basicRNNLayer);
+
+   // add the copy to all slave nets
+   for (size_t i = 0; i < nets.size(); i++) {
+      nets[i].AddBasicRNNLayer(copyRNNLayer);
    }
 }
 
