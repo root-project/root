@@ -5,7 +5,7 @@
 set(sources base.cxx)
 
 if (imt)
-  set(headers ROOT/TPoolManager.hxx ROOT/TThreadExecutor.hxx ROOT/TTaskGroup.hxx)
+  set(headers ROOT/TPoolManager.hxx ROOT/TThreadExecutor.hxx ROOT/TTaskGroup.hxx ROOT/Future.hxx)
   ROOT_GENERATE_DICTIONARY(G__Imt ${headers} STAGE1 MODULE Imt LINKDEF LinkDef.h  DEPENDENCIES Core Thread BUILTINS TBB) # For auto{loading,parsing}
   set(sources ${sources} TImplicitMT.cxx TThreadExecutor.cxx TPoolManager.cxx TTaskGroup.cxx G__Imt.cxx)
 endif()
