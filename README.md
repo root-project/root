@@ -41,6 +41,7 @@ acquisition, simulation and data analysis systems.
 We are [![DOI](https://zenodo.org/badge/10994345.svg)](https://zenodo.org/badge/latestdoi/10994345)
 
 Please cite us as
+
     The ROOT Team, "ROOT" [software], Release vX.YY/ZZ, Zenodo, 99 February 9999. https://doi.org/10.5281/zenodo.848819
 
 ## Live Demo for CERN Users
