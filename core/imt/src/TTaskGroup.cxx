@@ -42,11 +42,13 @@ TTaskGroup::TTaskGroup()
    fTaskContainer = ((TaskContainerPtr_t *)new tbb::task_group());
 }
 
-TTaskGroup::TTaskGroup( TTaskGroup&& other ) {
+TTaskGroup::TTaskGroup(TTaskGroup &&other)
+{
    *this = std::move(other);
 }
 
-TTaskGroup& TTaskGroup::operator=( TTaskGroup&& other ) {
+TTaskGroup &TTaskGroup::operator=(TTaskGroup &&other)
+{
    fTaskContainer = other.fTaskContainer;
    other.fTaskContainer = nullptr;
    fCanRun.store(other.fCanRun);
@@ -55,7 +57,8 @@ TTaskGroup& TTaskGroup::operator=( TTaskGroup&& other ) {
 
 TTaskGroup::~TTaskGroup()
 {
-   if (!fTaskContainer) return;
+   if (!fTaskContainer)
+      return;
    Wait();
    delete ((tbb::task_group *)fTaskContainer);
 }
