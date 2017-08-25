@@ -44,9 +44,9 @@ private:
 
 public:
    TTaskGroup();
-   TTaskGroup( TTaskGroup&& other );
-   TTaskGroup(const TTaskGroup& ) = delete;
-   TTaskGroup& operator=( TTaskGroup&& other );
+   TTaskGroup(TTaskGroup &&other);
+   TTaskGroup(const TTaskGroup &) = delete;
+   TTaskGroup &operator=(TTaskGroup &&other);
    ~TTaskGroup();
 
    void Run(const std::function<void(void)> &closure);
