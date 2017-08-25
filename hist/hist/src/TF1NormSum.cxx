@@ -73,7 +73,7 @@ void TF1NormSum::InitializeDataMembers(const std::vector <TF1 *> &functions, con
       if (!fFunctions[n])
          Fatal("InitializeDataMembers", "Invalid input function -- abort");
 
-      functions[n]->SetBit(TF1::kNotGlobal, kTRUE);
+      fFunctions[n]->SetBit(TF1::kNotGlobal, kTRUE);
    }
 
    

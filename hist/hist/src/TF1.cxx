@@ -3429,6 +3429,7 @@ void TF1::Streamer(TBuffer &b)
             R__LOCKGUARD(gROOTMutex);
             gROOT->GetListOfFunctions()->Add(this);
          }
+         if (v >= 10) fComposition = std::unique_ptr<TF1AbsComposition>(fComposition_ptr);
          return;
       } else {
          ROOT::v5::TF1Data fold;
@@ -3500,7 +3501,10 @@ void TF1::Streamer(TBuffer &b)
          saved = 1;
          Save(fXmin, fXmax, 0, 0, 0, 0);
       }
-
+      if (fType == EFType::kCompositionFcn)
+         fComposition_ptr = fComposition.get();
+      else
+         fComposition_ptr = nullptr;
       b.WriteClassBuffer(TF1::Class(), this);
 
       // clear vector contents
