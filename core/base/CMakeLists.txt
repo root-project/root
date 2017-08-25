@@ -35,7 +35,7 @@ ROOT_GENERATE_DICTIONARY(G__Core
                          LINKDEF LinkDef.h)
 
 list(REMOVE_ITEM sources TROOT.cxx roota.cxx)
-ROOT_OBJECT_LIBRARY(Base G__Core.cxx ${sources})
+ROOT_OBJECT_LIBRARY(Base G__Core.cxx ${sources} BUILTINS PCRE)
 
 ROOT_INSTALL_HEADERS()
 
