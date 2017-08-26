@@ -13,3 +13,9 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Gpad
                               SOURCES *.cxx ${root7src}
                               DICTIONARY_OPTIONS "-writeEmptyRootPCM"
                               DEPENDENCIES Graf Hist)
+
+if(testing)
+    if(root7)
+        add_subdirectory(v7/test)
+    endif()
+endif()
