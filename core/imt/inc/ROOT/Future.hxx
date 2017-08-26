@@ -77,14 +77,14 @@ namespace Experimental {
 ////////////////////////////////////////////////////////////////////////////////
 /// A future class. It can wrap an std::future.
 template <typename T>
-class Future final : public Detail::FutureImpl<T> {
+class Future final : public ROOT::Detail::FutureImpl<T> {
 template <class Function, class... Args>
    friend Future<typename std::result_of<typename std::decay<Function>::type(typename std::decay<Args>::type...)>::type> Async(Function &&f, Args &&... args);
 private:
    Future(std::future<T> &&fut, std::unique_ptr<TTaskGroup> &&tg)
-      : Detail::FutureImpl<T>(std::forward<std::future<T>>(fut), std::move(tg)){};
+      : ROOT::Detail::FutureImpl<T>(std::forward<std::future<T>>(fut), std::move(tg)){};
 public:
-   Future(std::future<T> &&fut) : Detail::FutureImpl<T>(std::forward<std::future<T>>(fut)) {};
+   Future(std::future<T> &&fut) : ROOT::Detail::FutureImpl<T>(std::forward<std::future<T>>(fut)) {};
 
    T get()
    {
@@ -95,14 +95,14 @@ public:
 /// \cond
 // Two specialisations, for void and T& as for std::future
 template <>
-class Future<void> final : public Detail::FutureImpl<void> {
+class Future<void> final : public ROOT::Detail::FutureImpl<void> {
 template <class Function, class... Args>
    friend Future<typename std::result_of<typename std::decay<Function>::type(typename std::decay<Args>::type...)>::type> Async(Function &&f, Args &&... args);
 private:
    Future(std::future<void> &&fut, std::unique_ptr<TTaskGroup> &&tg)
-      : Detail::FutureImpl<void>(std::forward<std::future<void>>(fut), std::move(tg)){};
+      : ROOT::Detail::FutureImpl<void>(std::forward<std::future<void>>(fut), std::move(tg)){};
 public:
-   Future(std::future<void> &&fut) : Detail::FutureImpl<void>(std::forward<std::future<void>>(fut)) {};
+   Future(std::future<void> &&fut) : ROOT::Detail::FutureImpl<void>(std::forward<std::future<void>>(fut)) {};
 
    void get()
    {
@@ -112,14 +112,14 @@ public:
 };
 
 template <typename T>
-class Future<T &> final : public Detail::FutureImpl<T &> {
+class Future<T &> final : public ROOT::Detail::FutureImpl<T &> {
 template <class Function, class... Args>
    friend Future<typename std::result_of<typename std::decay<Function>::type(typename std::decay<Args>::type...)>::type> Async(Function &&f, Args &&... args);
 private:
    Future(std::future<T &> &&fut, std::unique_ptr<TTaskGroup> &&tg)
-      : Detail::FutureImpl<T &>(std::forward<std::future<T &>>(fut), std::move(tg)){};
+      : ROOT::Detail::FutureImpl<T &>(std::forward<std::future<T &>>(fut), std::move(tg)){};
 public:
-   Future(std::future<T&> &&fut) : Detail::FutureImpl<T&>(std::forward<std::future<T&>>(fut)) {};
+   Future(std::future<T&> &&fut) : ROOT::Detail::FutureImpl<T&>(std::forward<std::future<T&>>(fut)) {};
 
    T &get()
    {
