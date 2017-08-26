@@ -4219,6 +4219,8 @@ int RootClingMain(int argc,
    clingArgs.push_back("-fsyntax-only");
    clingArgs.push_back("-fPIC");
    clingArgs.push_back("-Xclang");
+   clingArgs.push_back("-fmodules-embed-all-files");
+   clingArgs.push_back("-Xclang");
    clingArgs.push_back("-main-file-name");
    clingArgs.push_back("-Xclang");
    clingArgs.push_back((dictname + ".h").c_str());
@@ -4264,6 +4266,9 @@ int RootClingMain(int argc,
       interpPtr = owningInterpPtr.get();
    }
    cling::Interpreter &interp = *interpPtr;
+   // FIXME: Remove this once we switch cling to use the driver. This would handle  -fmodules-embed-all-files for us.
+   interp.getCI()->getFrontendOpts().ModulesEmbedAllFiles = true;
+   interp.getCI()->getSourceManager().setAllFilesAreTransient(true);
 
    if (ROOT::TMetaUtils::GetErrorIgnoreLevel() == ROOT::TMetaUtils::kInfo) {
       ROOT::TMetaUtils::Info(0, "\n");
