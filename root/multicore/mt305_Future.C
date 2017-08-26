@@ -29,7 +29,7 @@ void mt305_Future()
    // future from a promise
    std::promise<int> p;
    Future<int> f3 (p.get_future());
-   std::thread([&p] { p.set_value_at_thread_exit(9); }).detach();
+   std::thread([&p] { p.set_value(9); }).detach();
 
    std::cout << "Waiting..." << std::flush;
    f1.wait();
