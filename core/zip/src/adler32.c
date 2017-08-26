@@ -7,7 +7,7 @@
 
 #include "zutil.h"
 
-#ifdef vector_zlib_x86
+#ifdef ZLIB_ENABLE_SIMD
 #include <xmmintrin.h>
 #include <tmmintrin.h>
 #include <immintrin.h>
@@ -149,7 +149,7 @@ uLong ZEXPORT adler32_default(uLong adler, const Bytef *buf, uInt len)
 #define likely(x)       __builtin_expect(!!(x), 1)
 #define unlikely(x)     __builtin_expect(!!(x), 0)
 
-#ifdef vector_zlib_x86
+#if defined ZLIB_ENABLE_SIMD
 /* ========================================================================= */
  __attribute__ ((target ("sse4.2")))
 uLong ZEXPORT adler32_sse42(uLong adler, const Bytef *buf, uInt len)
@@ -380,7 +380,7 @@ void *resolve_adler32(void)
 }
 
 uLong ZEXPORT adler32(uLong adler, const Bytef *buf, uInt len)  __attribute__ ((ifunc ("resolve_adler32")));
-#else // vector_zlib_x86
+#else // ZLIB_ENABLE_SIMD
 uLong ZEXPORT adler32(uLong adler, const Bytef *buf, uInt len){
   return adler32(adler, buf, len);
 }

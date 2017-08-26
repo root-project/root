@@ -241,7 +241,7 @@ local unsigned long crc32_generic(crc, buf, len)
     return crc ^ 0xffffffffUL;
 }
 
-#ifdef vector_zlib_x86
+#ifdef ZLIB_ENABLE_SIMD
 /* Function stolen from linux kernel 3.14. It computes the CRC over the given
  * buffer with initial CRC value <crc32>. The buffer is <len> byte in length,
  * and must be 16-byte aligned.
@@ -299,25 +299,27 @@ uLong crc32_pclmul(crc, buf, len)
 #undef PCLMUL_ALIGN
 #undef PCLMUL_ALIGN_MASK
 }
-#endif // vector_zlib_x86
 
-uLong crc32_default(crc, buf, len)
+/* This function needs to be resolved at load time */
+uLong crc32(unsigned long, const unsigned char FAR *, unsigned) 
+__attribute__ ((ifunc ("resolve_crc32")));
+#else
+uLong crc32(unsigned long crc, const unsigned char FAR *buf, unsigned len)
+    uLong crc;
+    const Bytef *buf;
+    uInt len;
+{
+    return crc32_default(crc, buf, len);
+}
+#endif
+
+uLong crc32_default(unsigned long crc, const unsigned char FAR *buf, unsigned len)
     uLong crc;
     const Bytef *buf;
     uInt len;
 {
     return crc32_generic(crc, buf, len);
 }
-
-/* This function needs to be resolved at load time */
-#ifdef vector_zlib_x86
-uLong crc32(unsigned long, const unsigned char FAR *, unsigned) 
-__attribute__ ((ifunc ("resolve_crc32")));
-#else
-uLong crc32(unsigned long crc, const unsigned char FAR *buf, unsigned len){
-    return crc32_default(crc, buf, len);
-}
-#endif
 
 #ifdef BYFOUR
 

@@ -51,7 +51,7 @@
 
 #include "deflate.h"
 
-#ifdef vector_zlib_x86
+#if defined ZLIB_ENABLE_SIMD
 #include <immintrin.h>
 #endif
 
@@ -142,7 +142,7 @@ static const config configuration_table[10] = {
 /* rank Z_BLOCK between Z_NO_FLUSH and Z_PARTIAL_FLUSH */
 #define RANK(f) (((f) << 1) - ((f) > 4 ? 9 : 0))
 
-#ifdef vector_zlib_x86
+#if defined ZLIB_ENABLE_SIMD
 static uint32_t hash_func_sse42(deflate_state *s, uint32_t h, void* str) __attribute__ ((__target__ ("sse4.2")));
 
 static uint32_t hash_func_sse42(deflate_state *s, uint32_t h, void* str) {
@@ -154,7 +154,7 @@ static uint32_t hash_func_default(deflate_state *s, uint32_t h, void* str) {
 	return ((h << s->hash_shift) ^ (*(uint32_t*)str)) & s->hash_mask;
 }
 
-#ifdef vector_zlib_x86
+#if defined ZLIB_ENABLE_SIMD
 static uint32_t hash_func(deflate_state *s, uint32_t h, void* str) __attribute__ ((ifunc ("resolve_hash_func")));
 #else
 static uint32_t hash_func(deflate_state *s, uint32_t h, void* str){
@@ -162,7 +162,7 @@ static uint32_t hash_func(deflate_state *s, uint32_t h, void* str){
 }
 #endif
 
-#ifdef vector_zlib_x86
+#if defined ZLIB_ENABLE_SIMD
 void *resolve_hash_func(void)
 {
   unsigned int eax, ebx, ecx, edx;
@@ -1468,7 +1468,7 @@ static void fill_window_default(s)
  *    performed for at least two bytes (required for the zip translate_eol
  *    option -- not supported here).
  */
-#ifdef vector_zlib_x86
+#if defined ZLIB_ENABLE_SIMD
 static void fill_window_sse42(deflate_state *) __attribute__ ((__target__ ("sse4.2")));
 
 static void fill_window_sse42(s)
