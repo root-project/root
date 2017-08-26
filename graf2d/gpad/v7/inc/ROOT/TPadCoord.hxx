@@ -33,6 +33,8 @@ protected:
       CoordSysBase(double val): fVal(val) {}
       DERIVED &ToDerived() { return static_cast<DERIVED &>(*this); }
 
+      DERIVED operator-() { return DERIVED(-fVal); }
+
       friend DERIVED operator+(DERIVED lhs, DERIVED rhs) { return DERIVED{lhs.fVal + rhs.fVal}; }
       friend DERIVED operator-(DERIVED lhs, DERIVED rhs) { return DERIVED{lhs.fVal - rhs.fVal}; }
       friend double operator/(DERIVED lhs, DERIVED rhs) { return lhs.fVal / rhs.fVal; }
@@ -122,6 +124,11 @@ public:
    friend TPadCoord operator-(TPadCoord lhs, const TPadCoord &rhs)
    {
       return TPadCoord{lhs.fNormal - rhs.fNormal, lhs.fPixel - rhs.fPixel, lhs.fUser - rhs.fUser};
+   }
+
+   /// Unary -.
+   TPadCoord operator-() {
+      return TPadCoord(-fNormal, -fPixel, -fUser);
    }
 
    /// Add a `TPadCoord`.
