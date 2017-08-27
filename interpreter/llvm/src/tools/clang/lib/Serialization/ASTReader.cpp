@@ -2131,12 +2131,7 @@ InputFile ASTReader::getInputFile(ModuleFile &F, unsigned ID, bool Complain) {
         Diag(diag::note_pch_rebuild_required) << TopLevelPCHName;
     }
 
-    //IsOutOfDate = true;
-    // Force the match of the file from the live filesystem to the
-    // file in teh PCH. Size and time are used as part of the key;
-    // they must agree on both sides.
-    FileMgr.modifyFileEntry(const_cast<FileEntry*>(File),
-                            StoredSize, StoredTime);
+    IsOutOfDate = true;
   }
   // FIXME: If the file is overridden and we've already opened it,
   // issue an error (or split it into a separate FileEntry).
