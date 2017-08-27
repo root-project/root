@@ -354,7 +354,7 @@ const FileEntry *DirectoryLookup::LookupFile(
     return HS.getFileAndSuggestModule(TmpDir, IncludeLoc, getDir(),
                                       isSystemHeaderDirectory(),
                                       RequestingModule, SuggestedModule,
-                                      OpenFile, true /*CacheFailures*/);
+                                      OpenFile);
   }
 
   if (isFramework())
