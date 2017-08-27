@@ -1244,37 +1244,8 @@ bool ASTReader::ReadSourceManagerBlock(ModuleFile &F) {
 /// \brief Attempt to resolve the location based on PP header search.
 /// Find the first match with the longest trailing part.
 static StringRef
-resolveFileThroughHeaderSearch(Preprocessor& PP, StringRef Filename,
-                               llvm::StringMap<std::string>& HSStemMap) {
-  // Locate /a/b/c/d.h given the -I paths, by removing leading subdirectories
-  // until a file is found.
+resolveFileThroughHeaderSearch(Preprocessor& PP, StringRef Filename) {
   HeaderSearch& HdrSearch = PP.getHeaderSearchInfo();
-
-  // Iteration through HSStemMap is faster than searching through all possible
-  // stems of Filename, especially as we might have one entry for /a/b/c and
-  // another for /a/b/c/d.
-  for (const auto& entry: HSStemMap) {
-    if (Filename.startswith(entry.getKey())) {
-      StringRef value = entry.getValue();
-      llvm::SmallString<1024> substName = value;
-      llvm::sys::path::append(substName,
-                              Filename.drop_front(entry.getKey().size()));
-      const DirectoryLookup* FoundDir = 0;
-      const FileEntry* FE
-        = HdrSearch.LookupFile(substName, SourceLocation(), true/*isAngled*/,
-                               0/*FromDir*/, FoundDir,
- ArrayRef<std::pair<const FileEntry *, const DirectoryEntry *>>() /*Includers*/,
-                               0/*Searchpath*/, 0/*RelPath*/,
-                               0/*RequestingModule*/, 0/*SuggestedModule*/,
-                               0/*IsMapped*/,
-                               false /*SkipCache*/,
-                               false /*BuildSystemModule*/,
-                               false /*OpenFile*/,
-                               true /*CacheFailure*/);
-      if (FE)
-        return FE->getName();
-    }
-  }
    bool isAbsolute = true;
    // Find the longest available match.
    for (llvm::sys::path::const_iterator
@@ -1295,7 +1266,7 @@ resolveFileThroughHeaderSearch(Preprocessor& PP, StringRef Filename,
       const FileEntry* FE
         = HdrSearch.LookupFile(trailingPart, SourceLocation(), true/*isAngled*/,
                                0/*FromDir*/, FoundDir,
- ArrayRef<std::pair<const FileEntry *, const DirectoryEntry *>>() /*Includers*/,
+                               ArrayRef<std::pair<const FileEntry *, const DirectoryEntry *>>() /*Includers*/,
                                0/*Searchpath*/, 0/*RelPath*/,
                                0/*RequestingModule*/, 0/*SuggestedModule*/,
                                0/*IsMapped*/,
@@ -1303,13 +1274,8 @@ resolveFileThroughHeaderSearch(Preprocessor& PP, StringRef Filename,
                                false /*BuildSystemModule*/,
                                false /*OpenFile*/,
                                true /*CacheFailure*/);
-     if (FE) {
-       typedef std::pair<StringRef, std::string> HSStemEl_t;
-       size_t lenStem = IDir->data() - Filename.data();
-       HSStemMap.insert(HSStemEl_t(Filename.substr(0, lenStem),
-                                   FoundDir->getName()));
-       return FE->getName();
-     }
+      if (FE)
+        return FE->getName();
    }
    return StringRef();
 }
@@ -2126,8 +2092,7 @@ InputFile ASTReader::getInputFile(ModuleFile &F, unsigned ID, bool Complain) {
     if (!Resolved.empty())
       File = FileMgr.getFile(Resolved);
     if (!File) {
-      StringRef PPResolved = resolveFileThroughHeaderSearch(PP, Filename,
-                                                            HSStemMap);
+      StringRef PPResolved = resolveFileThroughHeaderSearch(PP, Filename);
       if (!PPResolved.empty())
         File = FileMgr.getFile(PPResolved);
     }

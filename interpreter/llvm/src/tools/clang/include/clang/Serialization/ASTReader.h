@@ -709,9 +709,6 @@ private:
   /// added to the global preprocessing entity ID to produce a local ID.
   GlobalPreprocessedEntityMapType GlobalPreprocessedEntityMap;
 
-  /// \brief Known stem mapping for resolveFileThroughHeaderSearch.
-  llvm::StringMap<std::string> HSStemMap;
-
   /// \name CodeGen-relevant special data
   /// \brief Fields containing data that is relevant to CodeGen.
   //@{
