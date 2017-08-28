@@ -60,6 +60,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TVirtualFFT.h"
+#include "TString.h"
 
 class TComplex;
 
@@ -72,7 +73,7 @@ class TFFTReal: public TVirtualFFT{
    Int_t     fTotalSize;  //total size of the transform
    Int_t    *fN;          //transform sizes in each dimension
    void     *fKind;       //transform kinds in each dimension
-   Option_t *fFlags;      //transform flags
+   TString   fFlags;      //transform flags
 
    Int_t  MapOptions(const Int_t *kind);
    UInt_t MapFlag(Option_t *flag);
