@@ -286,15 +286,16 @@ void TWebCanvas::CheckModifiedFlag()
          buf += items.ProduceJSON();
 
          conn.fGetMenu.Clear();
-      } else
-      if (conn.fModified) {
+      } else if (conn.fModified) {
          buf = "SNAP6:";
-
          buf += CreateSnapshot(Canvas());
 
          //printf("Snapshot created %d\n", buf.Length());
          //if (buf.Length() < 10000) printf("Snapshot %s\n", buf.Data());
          conn.fModified = kFALSE;
+      } else if (conn.fSend.Length() > 0) {
+         buf = conn.fSend;
+         conn.fSend.Clear();
       }
 
       if (buf.Length() > 0) {
@@ -454,7 +455,7 @@ Bool_t TWebCanvas::ProcessWS(THttpCallArg *arg)
    if (strcmp(arg->GetMethod(),"WS_READY")==0) {
       THttpWSEngine* wshandle = dynamic_cast<THttpWSEngine*> (arg->TakeWSHandle());
 
-      if (conn != 0) Error("ProcessWSRequest","WSHandle with given websocket id exists!!!");
+      if (conn != 0) Error("ProcessWS","WSHandle with given websocket id exists!!!");
 
       WebConn newconn;
       newconn.fHandle = wshandle;
@@ -470,7 +471,7 @@ Bool_t TWebCanvas::ProcessWS(THttpCallArg *arg)
       // process received data
 
       if (!conn) {
-         Error("ProcessWSRequest","Get websocket data without valid connection - ignore!!!");
+         Error("ProcessWS","Get websocket data without valid connection - ignore!!!");
          return kFALSE;
       }
 
@@ -490,8 +491,7 @@ Bool_t TWebCanvas::ProcessWS(THttpCallArg *arg)
          conn->fReady = kTRUE;
          conn->fGetMenu = cdata+8;
          CheckModifiedFlag();
-      } else
-      if (strncmp(cdata,"OBJEXEC:",8)==0) {
+      } else if (strncmp(cdata,"OBJEXEC:",8)==0) {
          TString buf(cdata+8);
          Int_t pos = buf.First(':');
 
@@ -503,17 +503,46 @@ Bool_t TWebCanvas::ProcessWS(THttpCallArg *arg)
             if (obj && (buf.Length()>0)) {
                TString exec;
                exec.Form("((%s*) %p)->%s;", obj->ClassName(), obj, buf.Data());
-               Info("ProcessWSRequest", "Obj %s Execute %s", obj->GetName(), exec.Data());
+               Info("ProcessWS", "Obj %s Execute %s", obj->GetName(), exec.Data());
                gROOT->ProcessLine(exec);
 
                PerformUpdate(); // check that canvas was changed
             }
          }
-      } else if (strncmp(cdata,"EXEC:",5)==0) {
-         if (Canvas()!=0) {
+      } else if (strncmp(cdata,"EXECANDSEND:",12)==0) {
+         TString buf(cdata+12), reply;
+         TObject *obj = 0;
+
+         Int_t pos = buf.First(':');
+
+         if (pos>0) {
+            reply.Append(buf, pos);
+            buf.Remove(0, pos+1);
+            pos = buf.First(':');
+            if (pos>0) {
+               TString sid(buf, pos);
+               buf.Remove(0, pos+1);
+               obj = FindPrimitive(sid.Data());
+            }
+         }
+
+         if (obj && (buf.Length()>0) && (reply.Length()>0)) {
             TString exec;
-            exec.Form("((%s*) %p)->%s;", Canvas()->ClassName(), Canvas(), cdata+5);
-            gROOT->ProcessLine(exec);
+            exec.Form("((%s*) %p)->%s;", obj->ClassName(), obj, buf.Data());
+            if (gDebug > 1) Info("ProcessWS", "Obj %s Exec %s", obj->GetName(), exec.Data());
+
+            Long_t res = gROOT->ProcessLine(exec);
+            TObject *resobj = (TObject *) res;
+            if (resobj) {
+               conn->fSend = reply;
+               conn->fSend.Append(":");
+               conn->fSend.Append(TBufferJSON::ConvertToJSON(resobj,23));
+               if (reply[0]=='D') delete resobj; // delete object if first symbol in reply is D
+            }
+
+            // PerformUpdate(); // check that canvas was changed
+
+            CheckModifiedFlag(); // check if data should be send
          }
       } else if (strncmp(cdata,"QUIT",4)==0) {
          if (gApplication)
@@ -521,8 +550,6 @@ Bool_t TWebCanvas::ProcessWS(THttpCallArg *arg)
       } else if (strncmp(cdata,"RELOAD",6)==0) {
          conn->fModified = kTRUE;
          CheckModifiedFlag();
-      } else if (strncmp(cdata,"GEXE:",5)==0) {
-         gROOT->ProcessLine(cdata+5); // temporary solution, will be removed later
       } else if (strncmp(cdata,"GETIMG:",7)==0) {
          const char* img = cdata+7;
 
@@ -537,13 +564,13 @@ Bool_t TWebCanvas::ProcessWS(THttpCallArg *arg)
             ofs << img;
             ofs.close();
 
-            Info("ProcessWSRequest", "SVG file %s has been created", filename.Data());
+            Info("ProcessWS", "SVG file %s has been created", filename.Data());
          }
          conn->fReady = kTRUE;
          CheckModifiedFlag();
       } else if (strncmp(cdata,"KEEPALIVE",9)==0) {
       } else {
-         Error("ProcessWSRequest", "GET unknown request %d %s", (int) strlen(cdata), cdata);
+         Error("ProcessWS", "GET unknown request %d %s", (int) strlen(cdata), cdata);
       }
 
    } else

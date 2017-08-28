@@ -48,7 +48,8 @@ protected:
       Bool_t          fReady;
       TString         fGetMenu;    ///<! object id for menu request
       Bool_t          fModified;
-      WebConn() : fHandle(0), fReady(kFALSE), fGetMenu(), fModified(kFALSE) {}
+      TString         fSend;       ///<! extra data which should be send to the client
+      WebConn() : fHandle(0), fReady(kFALSE), fGetMenu(), fModified(kFALSE), fSend() {}
    };
 
    typedef std::list<WebConn> WebConnList;
