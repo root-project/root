@@ -292,7 +292,7 @@ void TWebCanvas::CheckModifiedFlag()
          buf = "SNAP6:";
          buf += CreateSnapshot(Canvas());
 
-         printf("Snapshot created %d\n", buf.Length());
+         // printf("Snapshot created %d\n", buf.Length());
          //if (buf.Length() < 10000) printf("Snapshot %s\n", buf.Data());
          conn.fModified = kFALSE;
       } else if (conn.fSend.Length() > 0) {

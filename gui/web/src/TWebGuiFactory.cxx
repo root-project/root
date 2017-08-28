@@ -102,7 +102,7 @@ Bool_t TWebGuiFactory::CreateHttpServer()
       if (!http_port)
          http_port = (int)(8800 + 1000 * gRandom->Rndm(1));
 
-      if (gServer->CreateEngine(TString::Format("http:%d?websocket_timeout=10000", http_port))) {
+      if (gServer->CreateEngine(TString::Format("http:%d?websocket_timeout=10000&thrds=20", http_port))) {
          fAddr.Form("http://localhost:%d", http_port);
          return kTRUE;
       }
