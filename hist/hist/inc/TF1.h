@@ -266,7 +266,6 @@ protected:
       DoInitialize(addToGlobList);
    };
 
-
 private:
    // NSUM parsing helper functions
    void DefineNSUMTerm(TObjArray *newFuncs, TObjArray *coeffNames,
