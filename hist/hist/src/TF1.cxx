@@ -527,15 +527,15 @@ TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, EA
       coeffNames->SetOwner(kTRUE);
       TString fullFormula("");
       for (int i = 0; i < formDense.Length(); ++i) {
-      	 if (formDense[i] == '(')
-      	    parenCount++;
-      	 else if (formDense[i] == ')')
-      	    parenCount--;
-      	 else if (formDense[i] == delimiter && parenCount == 0) {
-      	    // term goes from termStart to i
-      	    DefineNSUMTerm(newFuncs, coeffNames, fullFormula, formDense, termStart, i, xmin, xmax);
-      	    termStart = i + 1;
-      	 }
+         if (formDense[i] == '(')
+            parenCount++;
+         else if (formDense[i] == ')')
+            parenCount--;
+         else if (formDense[i] == delimiter && parenCount == 0) {
+            // term goes from termStart to i
+            DefineNSUMTerm(newFuncs, coeffNames, fullFormula, formDense, termStart, i, xmin, xmax);
+            termStart = i + 1;
+         }
       }
       DefineNSUMTerm(newFuncs, coeffNames, fullFormula, formDense, termStart, formDense.Length(), xmin, xmax);
 
@@ -555,12 +555,12 @@ TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, EA
 
       // Parameter names
       for (int i = 0; i < fNpar; i++) {
-      	 if (coeffNames->At(i) != nullptr) {
-	    TString coeffName = ((TObjString *)coeffNames->At(i))->GetString();
-	    this->SetParName(i, (const char *)coeffName);
-      	 } else {
-	    this->SetParName(i, normSum->GetParName(i));
-	 }
+         if (coeffNames->At(i) != nullptr) {
+            TString coeffName = ((TObjString *)coeffNames->At(i))->GetString();
+            this->SetParName(i, (const char *)coeffName);
+         } else {
+            this->SetParName(i, normSum->GetParName(i));
+         }
       }
       
    } else { // regular TFormula
@@ -754,10 +754,9 @@ Bool_t TF1::AddToGlobalList(Bool_t on)
 
 // Defines the formula that a given term uses, if not already defined,
 // and appends "sanitized" formula to `fullFormula` string
-void TF1::DefineNSUMTerm(TObjArray *newFuncs, TObjArray *coeffNames,
-			 TString &fullFormula,
-			 TString &formula, int termStart, int termEnd,
-			 Double_t xmin, Double_t xmax) {
+void TF1::DefineNSUMTerm(TObjArray *newFuncs, TObjArray *coeffNames, TString &fullFormula, TString &formula,
+                         int termStart, int termEnd, Double_t xmin, Double_t xmax)
+{
    TString originalTerm = formula(termStart, termEnd-termStart);
    int coeffLength = TermCoeffLength(originalTerm);
    if (coeffLength != -1)
