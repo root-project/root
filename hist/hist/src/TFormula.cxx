@@ -23,7 +23,6 @@
 #include "TError.h"
 #include "TInterpreter.h"
 #include "TFormula.h"
-#include "TMap.h"
 #include "TRegexp.h"
 #include <cassert>
 #include <iostream>
