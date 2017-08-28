@@ -3761,7 +3761,8 @@ void TClass::GetMissingDictionariesForMembers(TCollection& result, TCollection& 
       // If it is a built-in data type.
       TClass* dmTClass = 0;
       if (dm->GetDataType()) {
-         dmTClass = dm->GetDataType()->Class();
+         // We have a basic datatype.
+         dmTClass = nullptr;
          // Otherwise get the string representing the type.
       } else if (dm->GetTypeName()) {
          dmTClass = TClass::GetClass(dm->GetTypeName());
