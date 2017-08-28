@@ -3738,7 +3738,7 @@ void TClass::GetMissingDictionariesForBaseClasses(TCollection& result, TCollecti
    TIter nextBase(lb);
    TBaseClass* base = 0;
    while ((base = (TBaseClass*)nextBase())) {
-      TClass* baseCl = base->Class();
+      TClass* baseCl = base->GetClassPointer();
       if (baseCl) {
             baseCl->GetMissingDictionariesWithRecursionCheck(result, visited, recurse);
       }
