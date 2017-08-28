@@ -377,6 +377,24 @@ void TWebCanvas::Show()
    gSystem->Exec(exec);
 }
 
+void TWebCanvas::ShowCmd(const char *arg, Bool_t show)
+{
+   // command used to toggle showing of menu, toolbar, editors, ...
+   for (WebConnList::iterator citer = fWebConn.begin(); citer != fWebConn.end(); ++citer) {
+      WebConn& conn = *citer;
+
+      if (!conn.fHandle) continue;
+
+      conn.fSend = "SHOW:";
+      conn.fSend.Append(arg);
+      conn.fSend.Append(show ? ":1" : ":0");
+   }
+
+   CheckModifiedFlag();
+}
+
+
+
 Bool_t TWebCanvas::DecodePadRanges(TPad *pad, const char *arg)
 {
    if (!arg || !*arg) return kFALSE;

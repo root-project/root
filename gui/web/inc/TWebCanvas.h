@@ -80,6 +80,8 @@ protected:
 
    Bool_t IsJSSupportedClass(TObject* obj);
 
+   void ShowCmd(const char *arg, Bool_t show);
+
 public:
    TWebCanvas();
    TWebCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height, TString addr, void *server);
@@ -93,6 +95,12 @@ public:
 
    virtual UInt_t GetWindowGeometry(Int_t &x, Int_t &y, UInt_t &w, UInt_t &h);
 
+   virtual void   ShowMenuBar(Bool_t show = kTRUE) { ShowCmd("Menu", show); }
+   virtual void   ShowStatusBar(Bool_t show = kTRUE) { ShowCmd("StatusBar", show); }
+   virtual void   ShowEditor(Bool_t show = kTRUE) { ShowCmd("Editor", show); }
+   virtual void   ShowToolBar(Bool_t show = kTRUE) { ShowCmd("ToolBar", show); }
+   virtual void   ShowToolTips(Bool_t show = kTRUE) { ShowCmd("ToolTips", show); }
+
 /*
    virtual void   ForceUpdate() { }
    virtual void   Iconify() { }
@@ -101,14 +109,8 @@ public:
    virtual void   SetWindowSize(UInt_t w, UInt_t h);
    virtual void   SetWindowTitle(const char *newTitle);
    virtual void   SetCanvasSize(UInt_t w, UInt_t h);
-   virtual void   ShowMenuBar(Bool_t show = kTRUE);
-   virtual void   ShowStatusBar(Bool_t show = kTRUE);
    virtual void   RaiseWindow();
    virtual void   ReallyDelete();
-
-   virtual void   ShowEditor(Bool_t show = kTRUE) {}
-   virtual void   ShowToolBar(Bool_t show = kTRUE) {}
-   virtual void   ShowToolTips(Bool_t show = kTRUE) {}
 
    virtual Bool_t HasEditor() const { return kFALSE; }
    virtual Bool_t HasMenuBar() const { return kFALSE; }
