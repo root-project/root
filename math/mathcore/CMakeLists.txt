@@ -15,12 +15,13 @@ set(MATHCORE_HEADERS TRandom.h
   Math/ChebyshevPol.h Math/KDTree.h Math/TDataPoint.h Math/TDataPointN.h Math/Delaunay2D.h
   Math/Random.h Math/TRandomEngine.h Math/RandomFunctions.h Math/StdEngine.h
   Math/MersenneTwisterEngine.h Math/MixMaxEngine.h   TRandomGen.h Math/LCGEngine.h
-  Math/Math_vectypes.hxx
+  Math/Math_vectypes.hxx TMathVectorized.h
 )
 
 if(veccore)
   set(MATHCORE_LIBRARIES ${VecCore_LIBRARIES})
   set(MATHCORE_BUILTINS VECCORE)
+  # set(MATHCORE_HEADERS ${MATHCORE_HEADERS} TMathVectorized.h)
 endif()
 
 add_definitions(-DUSE_ROOT_ERROR)
