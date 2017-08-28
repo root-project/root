@@ -70,10 +70,7 @@ private:
 
    TGraph *fGraph;
 
-   std::vector<Float_t> fMvaSignal;
-   std::vector<Float_t> fMvaBackground;
-   std::vector<Float_t> fMvaSignalWeights;
-   std::vector<Float_t> fMvaBackgroundWeights;
+   std::vector<std::tuple<Float_t, Float_t, Bool_t>> fMva;
 
    std::vector<Double_t> ComputeSensitivity(const UInt_t num_points);
    std::vector<Double_t> ComputeSpecificity(const UInt_t num_points);
