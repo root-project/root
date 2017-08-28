@@ -15,6 +15,7 @@
 #define ROOT_TWebMenuItem
 
 #include "TString.h"
+#include "TClass.h"
 
 #include <string>
 #include <vector>
@@ -27,19 +28,23 @@ class TClass;
 
 class TWebMenuItem {
 protected:
-   std::string  fName;     //  name of the menu item
-   std::string  fTitle;    //  title of menu item
-   std::string  fExec;     // execute when item is activated
+   std::string fName;       //  name of the menu item
+   std::string fTitle;      //  title of menu item
+   std::string fExec;       // execute when item is activated
+   std::string fClassName;  // class name
 public:
 
-   TWebMenuItem() : fName(), fTitle(), fExec() {}
-   TWebMenuItem(const std::string &name, const std::string &title) : fName(name), fTitle(title), fExec() {}
-   TWebMenuItem(const TWebMenuItem &rhs) : fName(rhs.fName), fTitle(rhs.fTitle), fExec(rhs.fExec) {}
+   TWebMenuItem() : fName(), fTitle(), fExec(), fClassName() {}
+   TWebMenuItem(const std::string &name, const std::string &title) : fName(name), fTitle(title), fExec(), fClassName() {}
+   TWebMenuItem(const TWebMenuItem &rhs) : fName(rhs.fName), fTitle(rhs.fTitle), fExec(rhs.fExec), fClassName(rhs.fClassName) {}
    virtual ~TWebMenuItem() {}
 
    /** Set execution string with all required arguments,
     * which will be executed when menu item is selected  */
    void SetExec(const std::string &exec) { fExec = exec; }
+
+   /** Set class name, to which method belons to  */
+   void SetClassName(const std::string &clname) { fClassName = clname; }
 
    /** Returns menu item name */
    const std::string &GetName() const { return fName; }
@@ -118,17 +123,19 @@ public:
 
    void Add(TWebMenuItem *item) { fItems.push_back(item); }
 
-   void AddMenuItem(const std::string &name, const std::string &title, const std::string &exec)
+   void AddMenuItem(const std::string &name, const std::string &title, const std::string &exec, TClass *cl = 0)
    {
       TWebMenuItem *item = new TWebMenuItem(name, title);
       item->SetExec(exec);
+      if (cl) item->SetClassName(cl->GetName());
       Add(item);
    }
 
-   void AddChkMenuItem(const std::string &name, const std::string &title, bool checked, const std::string &toggle)
+   void AddChkMenuItem(const std::string &name, const std::string &title, bool checked, const std::string &toggle, TClass *cl = 0)
    {
       TWebCheckedMenuItem *item = new TWebCheckedMenuItem(name, title, checked);
       item->SetExec(toggle);
+      if (cl) item->SetClassName(cl->GetName());
       Add(item);
    }
 

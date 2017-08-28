@@ -64,7 +64,7 @@ void TWebMenuItems::PopulateObjectMenu(void *obj, TClass *cl)
                Long_t l(0);
                call->Execute(obj, l);
 
-               AddChkMenuItem(m->GetName(), m->GetTitle(), l != 0, Form("%s(%s)", m->GetName(), (l != 0) ? "0" : "1"));
+               AddChkMenuItem(m->GetName(), m->GetTitle(), l != 0, Form("%s(%s)", m->GetName(), (l != 0) ? "0" : "1"), m->GetClass());
 
             } else {
                // Error("CheckModifiedFlag", "Cannot get toggle value with getter %s", getter.Data());
@@ -76,10 +76,11 @@ void TWebMenuItems::PopulateObjectMenu(void *obj, TClass *cl)
          TList *args = m->GetListOfMethodArgs();
 
          if (!args || (args->GetSize() == 0)) {
-            AddMenuItem(m->GetName(), m->GetTitle(), Form("%s()", m->GetName()));
+            AddMenuItem(m->GetName(), m->GetTitle(), Form("%s()", m->GetName()), m->GetClass());
          } else {
             TWebArgsMenuItem *item = new TWebArgsMenuItem(m->GetName(), m->GetTitle());
             item->SetExec(Form("%s()", m->GetName()));
+            if (m->GetClass()) item->SetClassName(m->GetClass()->GetName());
 
             TIter args_iter(args);
             TMethodArg *arg = 0;
