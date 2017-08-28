@@ -1313,8 +1313,8 @@ void TFormula::HandleFunctionArguments(TString &formula)
          bool nameRecognized = (f != NULL);
 
          // Get ndim, npar, and replacementFormula of function
-         int ndim;
-         int npar;
+         int ndim = 0;
+         int npar = 0;
          TString replacementFormula;
          if (f) {
             ndim = f->GetNdim();
