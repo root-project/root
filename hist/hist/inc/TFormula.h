@@ -23,7 +23,6 @@
 #include <list>
 #include <map>
 
-class TMap;
 
 class TFormulaFunction
 {
