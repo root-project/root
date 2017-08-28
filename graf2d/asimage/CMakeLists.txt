@@ -13,7 +13,7 @@ include_directories(${FREETYPE_INCLUDE_DIRS} ${AFTERIMAGE_INCLUDE_DIR} ${X11_INC
 ROOT_STANDARD_LIBRARY_PACKAGE(ASImage
                               NO_INSTALL_HEADERS
                               HEADERS TASImage.h TASImagePlugin.h TASPluginGS.h
-                              SOURCES TASImage.cxx TASPluginGS.cxx  G__ASImage.cxx
+                              SOURCES TASImage.cxx TASPluginGS.cxx
                               DICTIONARY_OPTIONS "-writeEmptyRootPCM"
                               LIBRARIES Core ${AFTERIMAGE_LIBRARIES} ${FREETYPE_LIBRARIES} ${ASEXTRA_LIBRARIES} ${X11_LIBRARIES} ${ZLIB_LIBRARIES}
                               DEPENDENCIES Graf BUILTINS AFTERIMAGE)
