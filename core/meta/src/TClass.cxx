@@ -3760,10 +3760,10 @@ void TClass::GetMissingDictionariesForMembers(TCollection& result, TCollection& 
          dmTClass = dm->GetDataType()->Class();
          // Otherwise get the string representing the type.
       } else if (dm->GetTypeName()) {
-            dmTClass = TClass::GetClass(dm->GetTypeName());
+         dmTClass = TClass::GetClass(dm->GetTypeName());
       }
       if (dmTClass) {
-            dmTClass->GetMissingDictionariesWithRecursionCheck(result, visited, recurse);
+         dmTClass->GetMissingDictionariesWithRecursionCheck(result, visited, recurse);
       }
    }
 }
