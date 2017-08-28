@@ -9,51 +9,51 @@
 
 # Coarse-grained ownership
 * @Axel-Naumann
-bindings/* @peremato
-cmake/* @peremato
-core/* @Axel-Naumann
-documentation/* @couet
-fonts/* @bellenot
-geom/* @agheata
-graf2d/* @couet
-graf3d/* @couet
-gui/* @bellenot
-hist/* @lmoneta
-html/* @Axel-Naumann
-icons/* @bellenot
-interpreter/* @Axel-Naumann
-io/* @pcanal
-main/* @pcanal
-math/* @lmoneta
-misc/* @Axel-Naumann
-montecarlo/* @peremato
-net/* @gganis
-proof/* @gganis
-roofit/* @lmoneta
-rootx/* @Axel-Naumann
-sql/* @pcanal
-test/* @peremato
-tmva/* @lmoneta
-tree/* @pcanal
-tutorials/* @couet
+/bindings/ @peremato
+/cmake/ @peremato
+/core/ @Axel-Naumann
+/documentation/ @couet
+/fonts/ @bellenot
+/geom/ @agheata
+/graf2d/ @couet
+/graf3d/ @couet
+/gui/ @bellenot
+/hist/ @lmoneta
+/html/ @Axel-Naumann
+/icons/ @bellenot
+/interpreter/ @Axel-Naumann
+/io/ @pcanal
+/main/ @pcanal
+/math/ @lmoneta
+/misc/ @Axel-Naumann
+/montecarlo/ @peremato
+/net/ @gganis
+/proof/ @gganis
+/roofit/ @lmoneta
+/rootx/ @Axel-Naumann
+/sql/ @pcanal
+/test/ @peremato
+/tmva/ @lmoneta
+/tree/ @pcanal
+/tutorials/ @couet
 
 # Projects that span over several code modules:
-bindings/pyroot/* @peremato
-bindings/pyroot/JupyROOT @etejedor
-bindings/r/* @omazapa
-core/base/* @pcanal
-core/cont/* @pcanal
-core/imt/* @dpiparo
-core/lz4/* @pcanal
-core/lzma/* @pcanal
-core/multiproc/* @gganis
-core/thread/* @pcanal
-core/multiproc/* @gganis
-graf2d/qt/* @bellenot
-graf2d/cocoa/* @TimurP
-graf2d/ios/* @TimurP
-graf3d/eve/* @osschar
-net/http/* @linev
-tree/treeplayer/inc/ROOT/TDataFrame* @dpiparo @bluehood
-tree/treeplayer/src/TDF* @dpiparo @bluehood
+/bindings/pyroot/ @peremato
+/bindings/pyroot/JupyROOT @etejedor
+/bindings/r/ @omazapa
+/core/base/ @pcanal
+/core/cont/ @pcanal
+/core/imt/ @dpiparo
+/core/lz4/ @pcanal
+/core/lzma/ @pcanal
+/core/multiproc/ @gganis
+/core/thread/ @pcanal
+/core/multiproc/ @gganis
+/graf2d/qt/ @bellenot
+/graf2d/cocoa/ @TimurP
+/graf2d/ios/ @TimurP
+/graf3d/eve/ @osschar
+/net/http/ @linev
+/tree/treeplayer/inc/ROOT/TDataFrame* @dpiparo @bluehood
+/tree/treeplayer/src/TDF* @dpiparo @bluehood
 CMakeLists.txt @peremato
