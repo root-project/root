@@ -19,7 +19,7 @@
 class TF1NormSum : public TF1AbsComposition {
 
 protected:
-   unsigned int fNOfFunctions;                         /// Number of functions to add
+   unsigned int fNOfFunctions;                         ///< Number of functions to add
    Double_t     fScale;                                ///< Fixed Scale parameter to normalize function (e.g. bin width)
    Double_t     fXmin;                                 /// Minimal bound of range of NormSum
    Double_t     fXmax;                                 /// Maximal bound of range of NormSum
