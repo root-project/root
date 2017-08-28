@@ -2567,8 +2567,8 @@ void TFormula::SetParName(Int_t ipar, const char * name)
       return;
    }
 
-   //replace also parameter name in formula expression
-   ReplaceParamName(fFormula, oldName, name);
+   //replace also parameter name in formula expression in case is not a lambda
+   if (! TestBit(TFormula::kLambda))  ReplaceParamName(fFormula, oldName, name);
 
 }
 
