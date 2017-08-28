@@ -39,12 +39,15 @@ protected:
    Int_t      fKind;       ///<   kind of snapshots
    TObject*   fSnapshot;   ///<   snapshot data
 
+   void SetKind(Int_t kind) { fKind = kind; }
+
 public:
 
    enum {
      kNone = 0,         // dummy
      kObject = 1,       // object itself
-     kSVG = 2
+     kSVG = 2,          // list of SVG primitives
+     kSubPad = 3        // subpad
    };
 
    TWebSnapshot();
@@ -67,7 +70,7 @@ class TPadWebSnapshot : public TWebSnapshot {
 protected:
    std::vector<TWebSnapshot*> fPrimitives;
 public:
-   TPadWebSnapshot() : TWebSnapshot(), fPrimitives() {}
+   TPadWebSnapshot() : TWebSnapshot(), fPrimitives() { SetKind(kSubPad); }
    virtual ~TPadWebSnapshot();
 
    void Add(TWebSnapshot *snap) { fPrimitives.push_back(snap); }

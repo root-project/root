@@ -239,6 +239,8 @@ TString TWebCanvas::CreateSnapshot(TPad* pad, TPadWebSnapshot *master, TList *te
 
    TString res = TBufferJSON::ConvertToJSON(curr, 23);
 
+   // TBufferJSON::ExportToFile("debug.json", curr);
+
    TPad *rpad = 0;
    h1 = 0;
    TIter miter(&main_buf);
@@ -290,7 +292,7 @@ void TWebCanvas::CheckModifiedFlag()
          buf = "SNAP6:";
          buf += CreateSnapshot(Canvas());
 
-         //printf("Snapshot created %d\n", buf.Length());
+         printf("Snapshot created %d\n", buf.Length());
          //if (buf.Length() < 10000) printf("Snapshot %s\n", buf.Data());
          conn.fModified = kFALSE;
       } else if (conn.fSend.Length() > 0) {
