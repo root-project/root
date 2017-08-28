@@ -62,7 +62,7 @@ extern "C" {
                                     llvm::StringRef canonicalName);
    void TCling__PrintStackTrace();
    void TCling__LockInterpreterMutex();
-   void TCling__UnlockInterpreterMutex();
+   bool TCling__UnlockInterpreterMutex();
 }
 
 TClingCallbacks::TClingCallbacks(cling::Interpreter* interp)
@@ -787,9 +787,13 @@ void TClingCallbacks::PrintStackTrace() {
 }
 
 void TClingCallbacks::EnteringUserCode() {
-  TCling__UnlockInterpreterMutex();
+   // We can safely assume that if the lock exist already when we are in Cling code,
+   // then the lock has (or should been taken) already.  So it is fair to unlock it.
+   fMutexExistedWhenEnteringUserCode.push(TCling__UnlockInterpreterMutex());
 }
 
 void TClingCallbacks::ReturnedFromUserCode() {
-  TCling__LockInterpreterMutex();
+   if (fMutexExistedWhenEnteringUserCode.top())
+      TCling__LockInterpreterMutex();
+   fMutexExistedWhenEnteringUserCode.pop();
 }

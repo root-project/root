@@ -362,8 +362,12 @@ void TCling__LockInterpreterMutex() {
 /// Unlock the interpreter.
 
 extern "C"
-void TCling__UnlockInterpreterMutex() {
-   if (gInterpreterMutex) gInterpreterMutex->UnLock();
+bool TCling__UnlockInterpreterMutex() {
+   if (gInterpreterMutex) {
+      gInterpreterMutex->UnLock();
+      return true;
+   }
+   return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
