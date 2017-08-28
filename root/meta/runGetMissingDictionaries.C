@@ -121,7 +121,6 @@ struct TestClass {
   Tmplt<int> fTmpltInt;
   Tmplt<Tmplt<NoDictClass*> > fTmpltTmpltNoDict;
   Tmplt<Member> fTmpltMember;
-  Tmplt<Base> fTmpltBase;
   MemberHidden* fMemberHidden;
   Outer<Double32_t> obj;
   Tmplt<TmpParam> templateParam;
@@ -149,7 +148,6 @@ int runGetMissingDictionaries()
    expectedResult.Add(TClass::GetClass("Tmplt<int>"));
    expectedResult.Add(TClass::GetClass("Member"));
    expectedResult.Add(TClass::GetClass("Tmplt<Member>"));
-   expectedResult.Add(TClass::GetClass("Tmplt<Base>"));
    expectedResult.Add(TClass::GetClass("Outer<Double32_t>"));
    expectedResult.Add(TClass::GetClass("Tmplt<TmpParam>"));
    expectedResult.Add(TClass::GetClass("Tmplt<Tmplt<TmpTmpParam> >"));
@@ -157,6 +155,7 @@ int runGetMissingDictionaries()
    expectedResult.Add(TClass::GetClass("ParamList<ParamL1,ParamL2>"));
    expectedResult.Add(TClass::GetClass("TypedefExample"));
    expectedResult.Add(TClass::GetClass("BasicTests::TestAll"));
+   expectedResult.Add(TClass::GetClass("Base"));
 
    cerr<<"No recursion:"<<endl; // Write on the same stream of the errors below
    THashTable missingDictClassesNoRecursion;
@@ -192,8 +191,6 @@ int runGetMissingDictionaries()
    expectedResult.Add(TClass::GetClass("vector<Tmplt<NoDictClass*> >"));
    expectedResult.Add(TClass::GetClass("Tmplt<NoDictClass*>"));
    expectedResult.Add(TClass::GetClass("vector<Member>"));
-   expectedResult.Add(TClass::GetClass("Base"));
-   expectedResult.Add(TClass::GetClass("vector<Base>"));
    expectedResult.Add(TClass::GetClass("Inner<Double32_t>"));
    expectedResult.Add(TClass::GetClass("TmpParam"));
    expectedResult.Add(TClass::GetClass("TmpTmpParam"));
