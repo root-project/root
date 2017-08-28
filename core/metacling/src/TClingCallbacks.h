@@ -11,6 +11,8 @@
 
 #include "cling/Interpreter/InterpreterCallbacks.h"
 
+#include <stack>
+
 namespace clang {
    class Decl;
    class LookupResult;
@@ -43,6 +45,7 @@ private:
    bool fIsAutoParsingSuspended;
    bool fPPOldFlag;
    bool fPPChanged;
+   std::stack<bool> fMutexExistedWhenEnteringUserCode;
 public:
    TClingCallbacks(cling::Interpreter* interp);
 
