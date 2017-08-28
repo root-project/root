@@ -925,24 +925,28 @@ bool XMLReader::Parse(const std::string &fileName, SelectionRules& out)
                   iAttrName=attrs[i].fName;
                   iAttrValue=attrs[i].fValue;
 
-                  if (tagKind == kClass && csr && "modifier" == iAttrName){
-                   switch (iAttrValue.at(0)) {
-                      case '+':
-                         csr->SetRequestStreamerInfo(true);
-                         break;
-                      case '!':
-                         csr->SetRequestNoInputOperator(true);
-                         break;
-                      case '-':
-                         csr->SetRequestNoStreamer(true);
-                         break;
-                      default:
+                  // request no streamer
+                  if (tagKind == kClass && csr && "noStreamer" == iAttrName){
+                    if (iAttrValue == "true") {
+                      csr->SetRequestNoStreamer(true);
+                    } else if (iAttrValue != "false") {
                       ROOT::TMetaUtils::Error(0,
-                         "XML at line %s: class attribute modifier must be one of +/-/! (it was %s)\n",
+                         "XML at line %s: class attribute 'noStreamer' must be 'true' or 'false' (it was %s)\n",
                          lineNumCharp, iAttrValue.c_str());
-                   }
-                   continue;
+                    }
                   }
+
+                  // request no input operator
+                  if (tagKind == kClass && csr && "noInputOperator" == iAttrName){
+                    if (iAttrValue == "true") {
+                      csr->SetRequestNoInputOperator(true);
+                    } else if (iAttrValue != "false") {
+                      ROOT::TMetaUtils::Error(0,
+                         "XML at line %s: class attribute 'noInputOperator' must be 'true' or 'false' (it was %s)\n",
+                         lineNumCharp, iAttrValue.c_str());
+                    }
+                  }
+
                   // Set the class version
                   if (tagKind == kClass &&
                       csr &&
