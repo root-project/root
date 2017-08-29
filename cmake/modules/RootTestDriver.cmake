@@ -181,9 +181,9 @@ if(CMD)
     endif()
 
     if(DEFINED RC AND (NOT "${_rc}" STREQUAL "${RC}"))
-      message(FATAL_ERROR "error code: ${_rc}")
+      message(FATAL_ERROR "got exit code ${_rc} but expected ${RC}")
     elseif(NOT DEFINED RC AND _rc)
-      message(FATAL_ERROR "error code: ${_rc}")
+      message(FATAL_ERROR "got exit code ${_rc} but expected 0")
     endif()
 
     if(CNVCMD)
