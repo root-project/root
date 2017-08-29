@@ -10,16 +10,20 @@
 /// \date August 2017
 /// \author Danilo Piparo
 
-// ## Preparation
-
-void tdf009_FromScratchVSTTree() {
-
-   // ## Preparation
-   auto treeName = "myTree";
-
-   // ##This is the classic way
+// ##This is the classic way of creating a ROOT dataset
+// The steps are:
+// - Create a file
+// - Create a tree associated to the file
+// - Define the variables to write in the entries
+// - Define the branches associated to those variables
+// - Write the event loop to set the right value to the variables
+//   - Call TTree::Fill to save the value of the variables
+// - Write the TTree
+// - Close the file
+void classicWay()
+{
    TFile f("tdf009_FromScratchVSTTree_classic.root", "RECREATE");
-   TTree t(treeName, treeName);
+   TTree t("treeName", "treeName");
    double b1;
    int b2;
    t.Branch("b1", &b1);
@@ -31,15 +35,33 @@ void tdf009_FromScratchVSTTree() {
    }
    t.Write();
    f.Close();
+}
 
-   // ## This is the TDataFrame way
-   // Few lines are needed to achieve the same result.
-   // Parallel creation of the TTree is not supported in the
-   // classic method.
+// ##This is the TDF way of creating a ROOT dataset
+// Few lines are needed to achieve the same result.
+// Parallel creation of the TTree is not supported in the
+// classic method.
+// In this case the steps are:
+// - Create an empty TDataFrame
+// - If needed, define variables for the functions used to fill the branches
+// - Create new columns expressing their content with lambdas, functors, functions or strings
+// - Invoke the Snapshot action
+//
+// Parallelism is not the only advantage. Starting from an existing dataset and
+// filter it, enrich it with new columns, leave aside some other columns and
+// write a new dataset becomes very easy to do.
+void TDFWay()
+{
    ROOT::Experimental::TDataFrame tdf(10);
    auto b = 0.;
    tdf.Define("b1",[&b](){return b++;})
       .Define("b2","(int) b1 * b1") // This can even be a string
-      .Snapshot(treeName, "tdf009_FromScratchVSTTree_tdf.root");
+      .Snapshot("treeName", "tdf009_FromScratchVSTTree_tdf.root");
+}
+
+void tdf009_FromScratchVSTTree() {
+
+   classicWay();
+   TDFWay();
 
 }
