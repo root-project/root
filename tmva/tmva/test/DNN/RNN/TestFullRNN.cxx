@@ -22,11 +22,12 @@ using namespace TMVA::DNN::RNN;
 
 
 int main() {
-   std::cout << "Training RNN to identity fun first \n then increment numbers\n then add numbers\n";
+   std::cout << "Training RNN to identity first";
 
    //testFullRNN(size_t batchSize, size_t stateSize, size_t inputSize, size_t outputSize)
    // reconstruct 8 bit vector
-   testFullRNN<TReference<double>>(2, 2, 2, 2) ;
+   // batchsize, statesize, inputsize, outputsize
+   testFullRNN<TReference<double>>(2, 3, 2, 2) ;
    //testFullRNN<TReference<double>>(64, 10, 8, 8) ;
    //testFullRNN<TReference<double>>(3, 8, 100, 50) ;
 
