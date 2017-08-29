@@ -7,9 +7,9 @@ TWebSnapshot::TWebSnapshot() :
    fObjectID(),
    fOption(),
    fKind(0),
-   fSnapshot(0)
+   fSnapshot(0),
+   fOwner(kFALSE)
 {
-
 }
 
 TWebSnapshot::~TWebSnapshot()
@@ -18,11 +18,12 @@ TWebSnapshot::~TWebSnapshot()
 }
 
 
-void TWebSnapshot::SetSnapshot(Int_t kind, TObject* shot)
+void TWebSnapshot::SetSnapshot(Int_t kind, TObject* shot, Bool_t owner)
 {
-   if (fSnapshot && (fKind != kObject)) delete fSnapshot;
+   if (fSnapshot && fOwner) delete fSnapshot;
    fKind = kind;
    fSnapshot = shot;
+   fOwner = owner;
 }
 
 void TWebSnapshot::SetObjectIDAsPtr(void* ptr)

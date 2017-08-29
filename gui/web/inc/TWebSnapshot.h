@@ -38,6 +38,7 @@ protected:
    TString    fOption;     ///<   object draw option
    Int_t      fKind;       ///<   kind of snapshots
    TObject*   fSnapshot;   ///<   snapshot data
+   Bool_t     fOwner;      ///<!  if objected owned
 
    void SetKind(Int_t kind) { fKind = kind; }
 
@@ -47,7 +48,8 @@ public:
      kNone = 0,         // dummy
      kObject = 1,       // object itself
      kSVG = 2,          // list of SVG primitives
-     kSubPad = 3        // subpad
+     kSubPad = 3,       // subpad
+     kSpecial = 4       // special object like list of colors or palette
    };
 
    TWebSnapshot();
@@ -59,7 +61,7 @@ public:
 
    void SetOption(const char* opt) { fOption = opt; }
 
-   void SetSnapshot(Int_t kind, TObject* shot);
+   void SetSnapshot(Int_t kind, TObject* shot, Bool_t owner = kFALSE);
    Int_t GetKind() const { return fKind; }
    TObject* GetSnapshot() const { return fSnapshot; }
 
