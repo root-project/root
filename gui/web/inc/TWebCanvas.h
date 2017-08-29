@@ -67,6 +67,7 @@ protected:
    virtual Bool_t PerformUpdate();
    virtual TVirtualPadPainter* CreatePadPainter();
 
+   Bool_t AddCanvasSpecials(TPadWebSnapshot *master);
    TString CreateSnapshot(TPad *pad, TPadWebSnapshot *master = 0, TList *tempbuf = 0);
    TWebSnapshot *CreateObjectSnapshot(TObject *obj, const char *opt);
 

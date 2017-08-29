@@ -21,6 +21,9 @@
 #include "TCanvas.h"
 #include "TROOT.h"
 #include "TClass.h"
+#include "TColor.h"
+#include "TObjArray.h"
+#include "TArrayI.h"
 #include "TList.h"
 #include "TH1.h"
 #include "TBufferJSON.h"
@@ -88,8 +91,11 @@ Bool_t TWebCanvas::IsJSSupportedClass(TObject* obj)
 {
    if (!obj) return kTRUE;
 
-   if (obj->InheritsFrom("TH1") || obj->InheritsFrom("TGraph") || obj->InheritsFrom("TFrame") ||
+   if (obj->InheritsFrom("TH1") || obj->InheritsFrom("TGraph") || obj->InheritsFrom("TF1") ||
+       obj->InheritsFrom("TFrame") || obj->InheritsFrom("TBox") ||
        obj->InheritsFrom("TPave") || obj->InheritsFrom("TArrow")) return kTRUE;
+
+   printf("Unsupported class %s\n", obj->ClassName());
 
    return kFALSE;
 }
@@ -160,13 +166,45 @@ TWebSnapshot *TWebCanvas::CreateObjectSnapshot(TObject *obj, const char *opt)
 
    if (p) {
       p->FixSize();
-      sub->SetSnapshot(TWebSnapshot::kSVG, p);
+      sub->SetSnapshot(TWebSnapshot::kSVG, p, kTRUE);
    } else {
       sub->SetSnapshot(TWebSnapshot::kObject, obj);
    }
 
    return sub;
 }
+
+Bool_t TWebCanvas::AddCanvasSpecials(TPadWebSnapshot *master)
+{
+   // if (!TColor::DefinedColors()) return 0;
+   TObjArray *colors = (TObjArray*) gROOT->GetListOfColors();
+
+   if (!colors) return kFALSE;
+   Int_t cnt = 0;
+   for (Int_t n=0;n<=colors->GetLast();++n)
+      if (colors->At(n) != 0) cnt++;
+   if (cnt <= 598) return kFALSE; // normally there are 598 colors defined
+
+   TWebSnapshot *sub = new TWebSnapshot();
+   sub->SetSnapshot(TWebSnapshot::kSpecial, colors);
+   master->Add(sub);
+
+   printf("ADD COLORS TABLES %d\n", cnt);
+
+   //save the current palette
+   TArrayI pal = TColor::GetPalette();
+   Int_t palsize = pal.GetSize();
+   TObjArray *CurrentColorPalette = new TObjArray();
+   CurrentColorPalette->SetName("CurrentColorPalette");
+   for (Int_t i=0; i<palsize; i++) CurrentColorPalette->Add(gROOT->GetColor(pal[i]));
+
+   sub = new TWebSnapshot();
+   sub->SetSnapshot(TWebSnapshot::kSpecial, CurrentColorPalette, kTRUE);
+   master->Add(sub);
+
+   return kTRUE;
+}
+
 
 TString TWebCanvas::CreateSnapshot(TPad* pad, TPadWebSnapshot *master, TList *tempbuf)
 {
@@ -183,6 +221,8 @@ TString TWebCanvas::CreateSnapshot(TPad* pad, TPadWebSnapshot *master, TList *te
    padshot->SetObjectIDAsPtr(pad);
    padshot->SetSnapshot(TWebSnapshot::kObject, pad);
    curr->Add(padshot);
+
+   if (tempbuf == &main_buf) AddCanvasSpecials(curr);
 
    TList *primitives = pad->GetListOfPrimitives();
    TList hlist; // list of histograms, required for functions handling
@@ -240,6 +280,8 @@ TString TWebCanvas::CreateSnapshot(TPad* pad, TPadWebSnapshot *master, TList *te
    TString res = TBufferJSON::ConvertToJSON(curr, 23);
 
    // TBufferJSON::ExportToFile("debug.json", curr);
+
+   delete curr; // destroy created snapshot
 
    TPad *rpad = 0;
    h1 = 0;
