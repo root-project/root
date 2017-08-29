@@ -229,14 +229,17 @@ template <typename Architecture_t>
 auto inline TBasicRNNLayer<Architecture_t>::Forward(Tensor_t &input, bool isTraining)   // B x T x D
 -> void
 {
-   Tensor_t arrInput(fTimeSteps, typename Architecture_t::Matrix_t(this->GetBatchSize(), this->GetInputWidth()));     // T x B x D
+   Tensor_t arrInput;
+   for (size_t t = 0; t < fTimeSteps; ++t) arrInput.emplace_back(this->GetBatchSize(), this->GetInputWidth()); // T x B x D
    Architecture_t::Rearrange(arrInput, input);
-   Tensor_t arrOutput(fTimeSteps, typename Architecture_t::Matrix_t(this->GetBatchSize(), fStateSize));     // T x B x H
+   Tensor_t arrOutput;
+   for (size_t t = 0; t < fTimeSteps;++t) arrOutput.emplace_back(this->GetBatchSize(), fStateSize); // T x B x H 
 
    if (!this->fRememberState) InitState(DNN::EInitialization::kZero);
    for (size_t t = 0; t < fTimeSteps; ++t) {
       CellForward(arrInput[t]);
       Architecture_t::Copy(arrOutput[t], fState);
+      //debugMatrix<Architecture_t>(fState, "arch state");
    }
    Architecture_t::Rearrange(this->GetOutput(), arrOutput);  // B x T x D
 }
@@ -273,12 +276,15 @@ auto inline TBasicRNNLayer<Architecture_t>::Backward(Tensor_t &gradients_backwar
   if (gradients_backward.size() == 0 || gradients_backward[0].GetNrows() == 0 || gradients_backward[0].GetNcols() == 0) {
      dummy = true;
   }
-  Tensor_t arr_gradients_backward(fTimeSteps, typename Architecture_t::Matrix_t(this->GetBatchSize(), this->GetInputSize()));   // T x B x D
+  Tensor_t arr_gradients_backward;
+  for (size_t t = 0; t < fTimeSteps; ++t) arr_gradients_backward.emplace_back(this->GetBatchSize(), this->GetInputSize()); // T x B x D
+
   if (!dummy) {
       // TODO gradients_backward will be written back on the matrix
      //Architecture_t::Rearrange(arr_gradients_backward, gradients_backward);
   }
-  Tensor_t arr_activations_backward(fTimeSteps, typename Architecture_t::Matrix_t(this->GetBatchSize(), this->GetInputSize())); // T x B x D
+  Tensor_t arr_activations_backward;
+  for (size_t t = 0; t < fTimeSteps; ++t) arr_activations_backward.emplace_back(this->GetBatchSize(), this->GetInputSize());  // T x B x D
   Architecture_t::Rearrange(arr_activations_backward, activations_backward);
    
    Matrix_t state_gradients_backward(this->GetBatchSize(), fStateSize);  // B x H
@@ -287,9 +293,12 @@ auto inline TBasicRNNLayer<Architecture_t>::Backward(Tensor_t &gradients_backwar
    Matrix_t initState(this->GetBatchSize(), fStateSize);  // B x H
    DNN::initialize<Architecture_t>(initState,   DNN::EInitialization::kZero);
 
-   Tensor_t arr_output(fTimeSteps, typename Architecture_t::Matrix_t(this->GetBatchSize(), fStateSize));
+   Tensor_t arr_output;
+   for (size_t t = 0; t < fTimeSteps; ++t) arr_output.emplace_back(this->GetBatchSize(), fStateSize);
    Architecture_t::Rearrange(arr_output, this->GetOutput());
-   Tensor_t arr_actgradients(fTimeSteps, typename Architecture_t::Matrix_t(this->GetBatchSize(), fStateSize));
+
+   Tensor_t arr_actgradients;
+   for (size_t t = 0; t < fTimeSteps; ++t) arr_actgradients.emplace_back(this->GetBatchSize(), fStateSize);
    Architecture_t::Rearrange(arr_actgradients, this->GetActivationGradients());
 
    for (size_t t = fTimeSteps; t > 0; t--) {

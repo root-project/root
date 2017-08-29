@@ -45,7 +45,7 @@ if (BLAS_FOUND AND imt)
   include_directories(SYSTEM ${TBB_INCLUDE_DIRS})
 
   # DNN - Forward CPU
-  #ROOT_EXECUTABLE(testForwardPassCpu TestForwardPassCpu.cxx LIBRARIES ${Libraries})
-  #ROOT_ADD_TEST(TMVA-DNN-RNN-Forward-Cpu COMMAND testForwardPassCpu)
+  ROOT_EXECUTABLE(testForwardPassCpu TestForwardPassCpu.cxx LIBRARIES ${Libraries})
+  ROOT_ADD_TEST(TMVA-DNN-RNN-Forward-Cpu COMMAND testForwardPassCpu)
 
 endif (BLAS_FOUND AND imt)
