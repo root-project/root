@@ -354,20 +354,23 @@ void TCling__PrintStackTrace() {
 /// Lock the interpreter.
 
 extern "C"
-void TCling__LockInterpreterMutex() {
-   if (gInterpreterMutex) gInterpreterMutex->Lock();
+void TCling__RestoreInterpreterMutex(void* state) {
+   if (gInterpreterMutex && state) {
+      std::unique_ptr<TVirtualMutex::State> uniqueP{static_cast<TVirtualMutex::State*>(state)};
+      gInterpreterMutex->Restore(std::move(uniqueP));
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Unlock the interpreter.
 
 extern "C"
-bool TCling__UnlockInterpreterMutex() {
+void* TCling__ResetInterpreterMutex() {
    if (gInterpreterMutex) {
-      gInterpreterMutex->UnLock();
-      return true;
+      auto uniqueP = gInterpreterMutex->Reset();
+      return uniqueP.release();
    }
-   return false;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
