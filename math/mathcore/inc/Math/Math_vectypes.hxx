@@ -5,17 +5,19 @@
 
 #ifdef R__HAS_VECCORE
 
-#if defined(R__HAS_VC) && !defined(VECCORE_ENABLE_VC)
-#define VECCORE_ENABLE_VC
-#endif
-
+#if defined(R__HAS_VC)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wall"
 #pragma GCC diagnostic ignored "-Wunused-parameter"
-#include <VecCore/VecCore>
+#include <Vc/Vc>
 #pragma GCC diagnostic pop
 
+#if !defined(VECCORE_ENABLE_VC)
+#define VECCORE_ENABLE_VC
+#endif
+#endif
 
+#include <VecCore/VecCore>
 
 namespace ROOT {
 
