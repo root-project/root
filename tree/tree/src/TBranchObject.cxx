@@ -548,6 +548,9 @@ void TBranchObject::Streamer(TBuffer& R__b)
 {
    if (R__b.IsReading()) {
       R__b.ReadClassBuffer(TBranchObject::Class(), this);
+      // We should rewarn in this process.
+      ResetBit(kWarn);
+      ResetBit(kOldWarn);
    } else {
       TDirectory* dirsav = fDirectory;
       fDirectory = 0;  // to avoid recursive calls
