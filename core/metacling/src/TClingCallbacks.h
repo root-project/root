@@ -45,7 +45,7 @@ private:
    bool fIsAutoParsingSuspended;
    bool fPPOldFlag;
    bool fPPChanged;
-   std::stack<bool> fMutexExistedWhenEnteringUserCode;
+   std::stack<void*> fMutexStatesWhenEnteringUserCode;
 public:
    TClingCallbacks(cling::Interpreter* interp);
 
