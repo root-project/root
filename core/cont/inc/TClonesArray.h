@@ -38,7 +38,6 @@ protected:
 public:
    enum {
       kForgetBits     = BIT(0),   // Do not create branches for fBits, fUniqueID
-      kNoSplit        = BIT(1),   // Array not split by TTree::Branch
       kBypassStreamer = BIT(12)   // Class Streamer not called (default)
    };
 
