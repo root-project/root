@@ -580,43 +580,11 @@ function(ROOT_LINKER_LIBRARY library)
                        DEPENDS bindexplib )
   else()
     #---Need to add a dummy source file if all sources are OBJECT libraries (Xcode, ...)
-    add_custom_command(OUTPUT dummy.cxx COMMAND ${CMAKE_COMMAND} -E touch dummy.cxx)
-    # We have two possible kind of inputs to this function. One are real source files
-    # like headers and source file and the others are object files that we don't need
-    # to compile. We now assign each source file into one of those groups.
-    # The motivation behind this is that we don't want to just use add_library() on all
-    # passed source files because then they all have the same dependencies as our library
-    # linking target (which is a safety measure by CMake). E.g. if we just call add_library
-    # on the input set, then the compilation of each .o files would depend on the rootcling
-    # invocation of this dictionary (which in turns depends on a lot of expensive targets
-    # like LLVM and clang ) even though we don't need any of those just for compiling our
-    # object files.
-    # So what we do below is taking all our 'real source files' that need to be compiled and
-    # compile them first into an CMake "Object library" (aka, just compiling them into
-    # object files) which has no unnecesary dependencies beside move_headers. Then we
-    # reference those object files from the final add_library call. Now those object files
-    # can be compiled in parallel to the rootcling/LLVM/clang path and are only blocking
-    # the compilation when we hit the linking step for the current library.
-    foreach(source_file ${lib_srcs})
-      if (source_file)
-        if("${source_file}" MATCHES "[.](o)$" OR "${source_file}" MATCHES "[$][<]" OR "${source_file}" MATCHES "^G__")
-            set(obj_sources "${obj_sources};${source_file}")
-        elseif ("${source_file}" MATCHES "[.](cc|cpp|cxx|hh|hpp|hxx|h|c|mm)$")
-            set(real_sources "${real_sources};${source_file}")
-        else()
-            message(AUTHOR_WARNING "Unknown file type: '${source_file}'")
-            # Let's add it to object sources which is the old way of handling this.
-            set(obj_sources "${obj_sources};${source_file}")
-        endif()
-      endif()
-    endforeach()
-    if (real_sources)
-      add_library(${library}_OBJS OBJECT ${real_sources})
-      add_dependencies(${library}_OBJS move_headers)
-      set(${library}_OBJS_LIST $<TARGET_OBJECTS:${library}_OBJS>)
+    if(NOT lib_srcs MATCHES "(^|[;])[^$][^<]")
+      add_custom_command(OUTPUT dummy.cxx COMMAND ${CMAKE_COMMAND} -E touch dummy.cxx)
+      set(lib_srcs ${lib_srcs} dummy.cxx)
     endif()
-
-    add_library(${library} ${_all} ${ARG_TYPE} ${obj_sources} ${${library}_OBJS_LIST} dummy.cxx)
+    add_library( ${library} ${_all} ${ARG_TYPE} ${lib_srcs})
     if(ARG_TYPE STREQUAL SHARED)
       set_target_properties(${library} PROPERTIES  ${ROOT_LIBRARY_PROPERTIES} )
     endif()
