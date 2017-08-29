@@ -812,6 +812,8 @@ INPUT                  = . \
                          ../../misc/memstat/ \
                          ../../misc/table/ \
                          ../../montecarlo/ \
+                         ../../mpi/rmpi \
+                         ../../mpi/rootmpi \
                          ../../net/alien/ \
                          ../../net/auth/ \
                          ../../net/bonjour/ \

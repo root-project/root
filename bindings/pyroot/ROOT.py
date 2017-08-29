@@ -460,7 +460,10 @@ class ModuleFacade( types.ModuleType ):
             return getattr( self, name )
          else:
             self.__dict__[ name ] = attr               # normal member
+            if name == "Mpi" :                         # special case to load Mpi hooks and attributes
+                _orig_ihook(name)
             return attr
+         
       except AttributeError:
          pass
 

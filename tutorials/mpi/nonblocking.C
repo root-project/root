@@ -1,0 +1,74 @@
+/// \file
+/// \ingroup tutorial_mpi
+///
+///  Example for asynchronous communication using nonblocking messages.
+///
+/// ~~~{.cpp}
+///  rootmpi -np 2 nonblocking.C
+/// ~~~
+///
+///
+/// \macro_output
+/// \macro_code
+///
+/// \author Omar Zapata
+
+using namespace ROOT::Mpi;
+
+struct particle {
+   int x;
+   int y;
+   int z;
+};
+
+void nonblocking()
+{
+   TEnvironment env; // environment to start communication system
+
+   if (COMM_WORLD.GetSize() == 1)
+      return; // need at least 2 process
+
+   // data to send/recv
+   std::map<std::string, std::string> mymap; // std oebjct
+   TMatrixD mymat(2, 2);                     // ROOT object
+   particle p;                               // custom object
+
+   if (COMM_WORLD.IsMainProcess()) {
+      mymap["key"] = "hola";
+
+      mymat[0][0] = 0.1;
+      mymat[0][1] = 0.2;
+      mymat[1][0] = 0.3;
+      mymat[1][1] = 0.4;
+
+      p.x = 1;
+      p.y = 2;
+      p.z = 3;
+
+      std::cout << "Sending particle = " << Form("p.x = %d p.y = %d p.x = %d", p.x, p.y, p.z) << std::endl;
+      auto req = COMM_WORLD.ISend(p, 1, 0);
+      req.Wait();
+      std::cout << "Sending map = " << mymap["key"] << std::endl;
+      req = COMM_WORLD.ISsend(mymap, 1, 1);
+      req.Wait();
+      std::cout << "Sending mat = ";
+      mymat.Print();
+      req = COMM_WORLD.ISend(mymat, 1, 2);
+      req.Wait();
+
+   } else {
+      // you can Received the messages in other order(is nonblocking)
+      auto req = COMM_WORLD.IRecv(mymap, 0, 1);
+      req.Wait();
+      std::cout << "Received map = " << mymap["key"] << std::endl;
+
+      req = COMM_WORLD.IRecv(mymat, 0, 2);
+      req.Wait();
+      std::cout << "Received mat = ";
+      mymat.Print();
+
+      req = COMM_WORLD.IRecv(p, 0, 0);
+      req.Wait();
+      std::cout << "Received particle = " << Form("p.x = %d p.y = %d p.x = %d", p.x, p.y, p.z) << std::endl;
+   }
+}

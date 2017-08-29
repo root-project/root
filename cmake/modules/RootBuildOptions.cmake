@@ -131,6 +131,7 @@ ROOT_BUILD_OPTION(memory_termination OFF "Free internal ROOT memory before proce
 ROOT_BUILD_OPTION(memstat ON "A memory statistics utility, helps to detect memory leaks")
 ROOT_BUILD_OPTION(minuit2 OFF "Build the new libMinuit2 minimizer library")
 ROOT_BUILD_OPTION(monalisa ON "Monalisa monitoring support, requires libapmoncpp")
+ROOT_BUILD_OPTION(mpi OFF "Message Passing Interface for ROOT")
 ROOT_BUILD_OPTION(mysql ON "MySQL support, requires libmysqlclient")
 ROOT_BUILD_OPTION(odbc ON "ODBC support, requires libiodbc or libodbc")
 ROOT_BUILD_OPTION(opengl ON "OpenGL support, requires libGL and libGLU")

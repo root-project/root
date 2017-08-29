@@ -1,0 +1,6 @@
+TODO:
+TMpiFile: 
+ * improve message error with more detailed information 
+ * check that ranks are not major that the size of the communicator and to integrate that to ROOTMpi error handling
+ * improve tests
+ * measure of perfomance for I/O 

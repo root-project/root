@@ -56,5 +56,9 @@ set( JsMVADirName "JsMVA")
 install (DIRECTORY ${JsMVADirName} DESTINATION ${runtimedir})
 file(COPY ${JsMVADirName} DESTINATION ${localruntimedir})
 
+set( MpiDirName "Mpi")
+install (DIRECTORY ${MpiDirName} DESTINATION ${runtimedir})
+file(COPY ${MpiDirName} DESTINATION ${localruntimedir})
+
 #---Install headers----------------------------------------------------------
 ROOT_INSTALL_HEADERS()
