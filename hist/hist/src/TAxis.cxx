@@ -1192,3 +1192,10 @@ void TAxis::ZoomOut(Double_t factor, Double_t offset)
    if (first==GetFirst() && last==GetLast()) { first--; last++; }
    SetRange(first,last);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Print axis bins and ranges
+void TAxis::Print(Option_t *) const
+{
+   printf(" %s\t%s \tNbins= %d, \tmin= %g, \tmax=%g", GetName(), GetTitle(), GetNbins(), GetXmin(), GetXmax());
+}
