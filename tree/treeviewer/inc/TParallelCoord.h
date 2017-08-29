@@ -27,7 +27,7 @@ class TSelectorDraw;
 
 class TParallelCoord : public TNamed {
 public:
-   enum {
+   enum EStatusBits {
       kVertDisplay      =BIT(14),      // If the axes are drawn vertically, false if horizontally.
       kCurveDisplay     =BIT(15),      // If the polylines are replaced by interpolated curves.
       kPaintEntries     =BIT(16),      // To prentry the TParallelCoord to paint all the entries.

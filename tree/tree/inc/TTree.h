@@ -215,7 +215,7 @@ public:
    };
 
    // TTree status bits
-   enum {
+   enum EStatusBits {
       kForceRead   = BIT(11),
       kCircular    = BIT(12)
    };

@@ -144,7 +144,7 @@ protected:
 
 public:
    // TH1 status bits
-   enum {
+   enum EStatusBits {
       kNoStats     = BIT(9),  ///< don't draw stats box
       kUserContour = BIT(10), ///< user specified contour levels
     //kCanRebin    = BIT(11), ///< FIXME DEPRECATED - to be removed, replaced by SetCanExtend / CanExtendAllAxes

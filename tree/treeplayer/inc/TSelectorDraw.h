@@ -31,7 +31,7 @@ class TEntryListArray;
 class TSelectorDraw : public TSelector {
 
 protected:
-   enum { kWarn = BIT(12) };
+   enum EStatusBits { kWarn = BIT(12) };
 
    TTree         *fTree;           //  Pointer to current Tree
    TTreeFormula **fVar;            //![fDimension] Array of pointers to variables formula

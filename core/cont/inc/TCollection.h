@@ -135,7 +135,7 @@ private:
    void operator=(const TCollection &); //are too complex to be automatically copied
 
 protected:
-   enum { kIsOwner = BIT(14) };
+   enum EStatusBits { kIsOwner = BIT(14) };
 
    TString   fName;               //name of the collection
    Int_t     fSize;               //number of elements in collection

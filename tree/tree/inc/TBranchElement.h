@@ -48,7 +48,7 @@ class TBranchElement : public TBranch {
 
 // Types
 protected:
-   enum {
+   enum EStatusBits {
       kBranchFolder = BIT(14),
       kDeleteObject = BIT(16),  ///<  We are the owner of fObject.
       kCache        = BIT(18),  ///<  Need to pushd/pop fOnfileObject.

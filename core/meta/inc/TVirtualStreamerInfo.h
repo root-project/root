@@ -62,7 +62,8 @@ protected:
 public:
 
    //status bits
-   enum { kCannotOptimize        = BIT(12),
+   enum EStatusBits {
+          kCannotOptimize        = BIT(12),
           kIgnoreTObjectStreamer = BIT(13),  // eventhough BIT(13) is taken up by TObject (to preserve forward compatibility)
           kRecovered             = BIT(14),
           kNeedCheck             = BIT(15),
