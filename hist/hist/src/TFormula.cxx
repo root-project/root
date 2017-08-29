@@ -1758,7 +1758,10 @@ void TFormula::ExtractFunctors(TString &formula)
             }
          } else {
             // handle whitespace characters in parname
+            Int_t oldParamLength  = param.Length();
             param.ReplaceAll("\\s", " ");
+            // we need to change index i after replacing since string length changes
+            i -= param.Length() - oldParamLength; 
 
             // only add if parameter does not already exist, because maybe
             // `HandleFunctionArguments` already assigned a default value to the
