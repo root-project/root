@@ -15,10 +15,11 @@
 #include "TDirectory.h"
 #include "TROOT.h"
 #include "TCanvas.h"
-#include <thread>
-#include <iostream>
 #include "ROOT/TSeq.hxx"
 #include "ROOT/TThreadedObject.hxx"
+
+#include <thread>
+#include <iostream>
 
 // The number of workers
 const UInt_t nWorkers = 8U;
@@ -79,7 +80,8 @@ Int_t mt301_fillHistos(UInt_t nNumbers = 1001, Bool_t ranges = kFALSE)
    auto fh3d = h3d.Merge();
 
    // Make the canvas
-   TCanvas *c = new TCanvas("c", "c", 800, 800);
+   if (gROOT->GetListOfCanvases()->FindObject("c1")) delete gROOT->GetListOfCanvases()->FindObject("c1");
+   TCanvas *c = new TCanvas("c1", "c1", 800, 800);
    c->Divide(2, 2);
 
    c->cd(1);
@@ -89,7 +91,8 @@ Int_t mt301_fillHistos(UInt_t nNumbers = 1001, Bool_t ranges = kFALSE)
    c->cd(3);
    fh3d->DrawClone();
 
-   gROOTMutex = 0;
+   // To be able to re-run in the same ROOT shell
+   // gROOTMutex = 0;
 
    return 0;
 }
