@@ -31,7 +31,9 @@ class TMethodCall;
 class TDataMember : public TDictionary {
 
 private:
-   enum { kObjIsPersistent = BIT(2) };
+   enum EStatusBits {
+      kObjIsPersistent = BIT(2)
+   };
 
    DataMemberInfo_t   *fInfo;         //!pointer to CINT data member info
    TClass             *fClass;        //!pointer to the class

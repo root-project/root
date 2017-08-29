@@ -50,7 +50,7 @@ protected:
   };
 
 public:
-   enum {
+   enum EStatusBits {
       kIndirectAddress = BIT(11), ///< Data member is a pointer to an array of basic types.
       kNewValue = BIT(12)         ///< Set if we own the value buffer and so must delete it ourselves.
    };

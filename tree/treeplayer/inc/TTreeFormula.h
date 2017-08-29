@@ -60,7 +60,7 @@ class TTreeFormula : public ROOT::v5::TFormula {
 friend class TTreeFormulaManager;
 
 protected:
-   enum {
+   enum EStatusBits {
       kIsCharacter = BIT(12),
       kMissingLeaf = BIT(15), // true if some of the needed leaves are missing in the current TTree
       kIsInteger   = BIT(17), // true if the branch contains an integer variable

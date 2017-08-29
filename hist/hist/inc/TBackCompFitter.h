@@ -49,7 +49,7 @@ public:
 
 public:
 
-   enum {
+   enum EStatusBits {
       kCanDeleteLast = BIT(9)  // object can be deleted before creating a new one
    };
 

@@ -48,7 +48,7 @@ private:
    TMap& operator=(const TMap& map);  // not implemented
 
 protected:
-   enum { kIsOwnerValue = BIT(15) };
+   enum EStatusBits { kIsOwnerValue = BIT(15) };
 
    virtual void        PrintCollectionEntry(TObject* entry, Option_t* option, Int_t recurse) const;
 

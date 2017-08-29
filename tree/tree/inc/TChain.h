@@ -55,7 +55,7 @@ protected:
 
 public:
    // TChain constants
-   enum {
+   enum EStatusBits {
       kGlobalWeight   = BIT(15),
       kAutoDelete     = BIT(16),
       kProofUptodate  = BIT(17),

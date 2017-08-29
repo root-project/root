@@ -59,7 +59,7 @@ protected:
 
 public:
 
-   enum {
+   enum EStatusBits {
       kHaveWarnedReadingOld = BIT(14)
    };
 

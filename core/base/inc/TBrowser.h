@@ -49,7 +49,7 @@ protected:
    Bool_t         fNeedRefresh;        //True if the browser needs refresh
 
 public:
-   enum {
+   enum EStatusBits {
       kNoHidden     = BIT(9)   // don't show '.' files and directories
    };
 

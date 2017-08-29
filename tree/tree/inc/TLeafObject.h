@@ -36,7 +36,7 @@ protected:
    Bool_t       fVirtual;        ///<  Support for polymorphism, when set classname is written with object.
 
 public:
-   enum { kWarn = BIT(12) };
+   enum EStatusBits { kWarn = BIT(12) };
 
    TLeafObject();
    TLeafObject(TBranch *parent, const char *name, const char *type);

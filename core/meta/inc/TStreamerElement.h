@@ -73,7 +73,7 @@ public:
       kSTLbitset            = ROOT::kSTLbitset
    };
    // TStreamerElement status bits
-   enum {
+   enum EStatusBits {
       kHasRange     = BIT(6),
       kCache        = BIT(9),
       kRepeat       = BIT(10),
@@ -374,7 +374,7 @@ public:
 //________________________________________________________________________
 class TStreamerSTL : public TStreamerElement {
 
-   enum {
+   enum EStatusBits {
       kWarned       = BIT(21)
    };
 

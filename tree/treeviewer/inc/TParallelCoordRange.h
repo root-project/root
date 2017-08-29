@@ -24,7 +24,7 @@ class TString;
 
 class TParallelCoordRange : public TNamed, public TAttLine {
 public:
-   enum {
+   enum EStatusBits {
       kShowOnPad = BIT(15),
       kLiveUpdate = BIT(16)
    };
