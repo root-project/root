@@ -82,25 +82,67 @@ void voigtHelper(double sigma, double lg)
 }
 
 // Test that we can change the range of TF1NormSum and TF1Convolution
-// (TODO: and of TF1, once the base class is working)
 void test_setRange() {
-   // TODO: make this test more elegant once the base class is working
-
-   TF1NormSum *nsum = new TF1NormSum("[sg] * gaus + [bg] * expo", 0, 1);
-   TF1 f1("f1", nsum, -10, 10, nsum->GetNpar());
+   // Define TF1 using NSUM
+   TF1 f1("f1", "NSUM([sg] * gaus, [bg] * expo)", 0, 1);
    f1.SetParameters(1,1,0,1,1);
+   f1.Print("V");
    EXPECT_NEAR(f1.Integral(0,1), 2, delta);
 
-   // set range of nsum
-   nsum->SetRange(-5, 5);
+   // set range and check value of integral again
+   f1.SetRange(-5, 5);
+   EXPECT_NEAR(f1.Integral(-5, 5), 2, delta);
 
-   TF1 f2("f2", nsum, -10, 10, nsum->GetNpar());
-   f2.SetParameters(1,1,0,1,1);
-   EXPECT_NEAR(f2.Integral(-5, 5), 2, delta);
-   
-   delete nsum;
+   // now same thing with CONV
+   TF1 f2("f2", "CONV(gaus, breitwigner)", 0, 1);
+   f2.SetParameters(1, 1, 1, 1, 1, 1);
+   f2.SetRange(-100, 100); // making our convolution much more accurate
+   EXPECT_NEAR(f2.Integral(-20, 20), 2.466, .005);
+}
 
-   // todo add more here
+// Test that we can copy and clone TF1 objects based on NSUM and CONV
+void test_copyClone()
+{
+   // Define original TF1 using NSUM
+   TF1 *f1 = new TF1("f1", "NSUM(gaus, expo)", -5, 5);
+   f1->SetParameters(1, 1, 0, 1, 1);
+
+   // Make copy and test
+   TF1 *f2 = new TF1();
+   f1->Copy(*f2);
+   for (double x = -5; x < 5; x += .5)
+      EXPECT_NEAR(f1->Eval(x), f2->Eval(x), delta);
+
+   // Make clone and test
+   TF1 *f3 = (TF1 *)f1->Clone();
+   for (double x = -5; x < 5; x += .5)
+      EXPECT_NEAR(f1->Eval(x), f3->Eval(x), delta);
+
+   delete f1;
+   delete f2;
+   delete f3;
+
+   // Same thing for CONV
+
+   // Define original TF1 using NSUM
+   TF1 *f4 = new TF1("f4", "CONV(gaus, breitwigner)", -15, 15);
+   f4->SetParameters(1, 1, 1, 1, 1, 1);
+
+   // Make copy
+   TF1 *f5 = new TF1();
+   f4->Copy(*f5);
+   // Test copy
+   for (double x = -5; x < 5; x += .5)
+      EXPECT_NEAR(f4->Eval(x), f5->Eval(x), delta);
+   // Make clone
+   TF1 *f6 = (TF1 *)f4->Clone();
+   // Test clone
+   for (double x = -5; x < 5; x += .5)
+      EXPECT_NEAR(f4->Eval(x), f6->Eval(x), delta);
+
+   delete f4;
+   delete f5;
+   delete f6;
 }
 
 // Test that the voigt can be expressed as a convolution of a gaussian and lorentzian
@@ -130,4 +172,9 @@ TEST(TF1, ConvVoigt)
 TEST(TF1, SetRange)
 {
    test_setRange();
+}
+
+TEST(TF1, CopyClone)
+{
+   test_copyClone();
 }

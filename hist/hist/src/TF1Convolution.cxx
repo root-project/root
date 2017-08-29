@@ -463,7 +463,7 @@ void TF1Convolution::Copy(TObject &obj) const {
    ((TF1Convolution &)obj).fCstIndex = fCstIndex;
    ((TF1Convolution &)obj).fNofPoints = fNofPoints;
    ((TF1Convolution &)obj).fFlagFFT = fFlagFFT;
-   ((TF1Convolution &)obj).fFlagGraph = fFlagGraph;
+   ((TF1Convolution &)obj).fFlagGraph = false; // since we're not copying the graph
 
    // copy vectors
    ((TF1Convolution &)obj).fParams1 = fParams1;
