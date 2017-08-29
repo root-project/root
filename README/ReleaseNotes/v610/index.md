@@ -39,6 +39,11 @@ The following interfaces have been removed, after deprecation in v6.08.
 - `SetFCN(void*)` from TVirtualFitter, TFitter, TBackCompFitter, TMinuit
 - `TFoam::SetRhoInt(void*)`
 
+### Core
+
+- The enum constant TRef::kNotComputed was never used and has been removed.
+- The enum constantTClonesArray::kNoSplit has not been used since v2.26 and has been removed.
+
 ## Interpreter
 
 - Automatic declaration of variables (`h = new TH1F(...)`) is *only* available at the prompt. The side-effects of relying on this in source files is simply too grave. Due to a bug (ROOT-8538), automatically declared variables must currently reside on the top-most scope, i.e. not inside an `if` block etc.
