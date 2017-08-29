@@ -92,6 +92,12 @@ TH1Merger::EMergerType TH1Merger::ExamineHistograms() {
 
    do  {
 
+      // Make sure buffers are emptied, in particular when buffersize was too large.
+      // It acts also as synchronizer (via TH1::fgRefSync) in the case of the same histogram
+      // filled with different threads.
+      if (h->GetBuffer())
+         h->SetBuffer(0);
+
       // check first histogram compatibility
       if (h != fH0) {
          if (h->GetDimension() != dimension) {
@@ -110,7 +116,6 @@ TH1Merger::EMergerType TH1Merger::ExamineHistograms() {
 
       
       if (hasLimits) {
-         h->BufferEmpty();
 
 //          // this is done in case the first histograms are empty and
 //          // the histogram have different limits
