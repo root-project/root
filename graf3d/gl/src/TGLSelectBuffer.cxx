@@ -47,7 +47,7 @@ TGLSelectBuffer::~TGLSelectBuffer()
 
 Bool_t TGLSelectBuffer::CanGrow()
 {
-   return fBufSize < fgMaxBufSize;
+   return 2 * fBufSize < fgMaxBufSize;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
