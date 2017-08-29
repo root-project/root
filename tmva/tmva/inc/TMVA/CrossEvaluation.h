@@ -45,8 +45,14 @@ namespace TMVA {
       explicit CrossEvaluation(TMVA::DataLoader *dataloader, TFile * outputFile, TString options);
       ~CrossEvaluation();
 
+      void InitOptions();
+      void ParseOptions();
+
       void SetNumFolds(UInt_t i);
+      void SetSplitSpectator(TString spectatorName);
+
       UInt_t GetNumFolds() {return fNumFolds;}
+      TString GetSplitSpectator() {return fSplitSpectator;}
 
       Factory & GetFactory() {return *fFactory;}
 
@@ -54,31 +60,35 @@ namespace TMVA {
 
    private:
 
-      void StoreResults(MethodBase * smethod);
-      void MergeResults(MethodBase * smethod);
+      void StoreFoldResults(MethodBase * smethod);
+      void MergeFoldResults(MethodBase * smethod);
 
-      void StoreResultsMulticlass(MethodBase * smethod);
-      void MergeResultsMulticlass(MethodBase * smethod);
+      void StoreFoldResultsMulticlass(MethodBase * smethod);
+      void MergeFoldResultsMulticlass(MethodBase * smethod);
 
       void ProcessFold(UInt_t iFold);
       void MergeFolds();
 
+      void ClearFoldResultsCache();
+
       
       
 
-      Types::EAnalysisType fAnalysisType;     //! Indicates 
-      Bool_t               fFoldStatus;       //!
-      UInt_t               fNumFolds;         //!
+      Types::EAnalysisType fAnalysisType;    //! Indicates 
+      TString              fAnalysisTypeStr; //! Indicates 
+      Bool_t               fFoldStatus;      //!
+      UInt_t               fNumFolds;        //!
       TFile *              fOutputFile;
       TString              fSplitSpectator;
       TString              fTransformations;
       Bool_t               fVerbose;
       TString              fVerboseLevel;
 
-      std::unique_ptr<Factory> fClassifier;
+      std::unique_ptr<Factory> fFoldFactory;
       std::unique_ptr<Factory> fFactory;
       std::unique_ptr<CvSplitCrossEvaluation> fSplit;
 
+      // Storage used during fold evaluation
       std::vector<EventTypes_t> fClassesPerFold;
       std::vector<EventOutputs_t> fOutputsPerFold;
       std::vector<EventOutputsMulticlass_t> fOutputsPerFoldMulticlass;
