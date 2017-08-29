@@ -132,7 +132,7 @@ public:
 
    static void SetGlobalCallbackFunc(void *c, CallbackFunc_t f);
 
-   ClassDef(TH2,5)  //2-Dim histogram base class
+   ClassDef(TH2,4)  //2-Dim histogram base class
 };
 
 

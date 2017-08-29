@@ -106,7 +106,7 @@ protected:
     EBinErrorOpt  fBinStatErrOpt;   ///< option for bin statistical errors
     void *fCallbackCtx;             ///<!Context for the function to be called back
     CallbackFunc_t fCallbackFunc;   ///<!Function to be called back, for example to get ranges
-    TString fNameForRanges;         ///<Name to be used to identidy the range
+    TString fNameForRanges;         ///<!Name to be used to identidy the range
     static Int_t  fgBufferSize;     ///<!default buffer size for automatic histograms
     static Bool_t fgAddDirectory;   ///<!flag to add histograms to the directory
     static Bool_t fgStatOverflows;  ///<!flag to use under/overflows in statistics
@@ -114,9 +114,9 @@ protected:
 
     static void *fgCallbackCtx;           ///<!Global context setting for the function to be called back
     static CallbackFunc_t fgCallbackFunc; ///<!Global callback function setting, for example to get ranges
-    static TRWLock fgRefSyncMtx;          ///<Protection of fgRefSync
-    static THashList *fgRefSync;          ///<Range synchronisation information
-    static TString fgStripOffDirs;        ///<Comma/space separated list of tags to be stripped off
+    static TRWLock fgRefSyncMtx;          ///<!Protection of fgRefSync
+    static THashList *fgRefSync;          ///<!Range synchronisation information
+    static TString fgStripOffDirs;        ///<!Comma/space separated list of tags to be stripped off
 
  public:
     static Int_t FitOptionsMake(Option_t *option, Foption_t &Foption);
@@ -470,7 +470,7 @@ protected:
        SetBinError(binx, biny, content);
     }
 
-    ClassDef(TH1, 8) // 1-Dim histogram base class
+    ClassDef(TH1, 7) // 1-Dim histogram base class
 
        protected : virtual Double_t RetrieveBinContent(Int_t bin) const;
     virtual void UpdateBinContent(Int_t bin, Double_t content);

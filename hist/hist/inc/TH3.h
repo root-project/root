@@ -159,7 +159,7 @@ protected:
       return h.DoProject2D(name, title, projX,projY, computeErrors, originalRange, useUF, useOF);
    }
 
-   ClassDef(TH3,6)  //3-Dim histogram base class
+   ClassDef(TH3,5)  //3-Dim histogram base class
 };
 
 //________________________________________________________________________
