@@ -41,8 +41,8 @@ The following interfaces have been removed, after deprecation in v6.08.
 
 ### Core
 
-- The enum constant TRef::kNotComputed was never used and has been removed.
-- The enum constantTClonesArray::kNoSplit has not been used since v2.26 and has been removed.
+- The enum constant `TRef::kNotComputed`, `TLink::kObjIsParent` were never used and have been removed.
+- The enum constant `TClonesArray::kNoSplit` has not been used since v2.26 and has been removed.
 
 ## Interpreter
 
