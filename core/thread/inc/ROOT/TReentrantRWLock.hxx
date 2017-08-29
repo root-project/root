@@ -14,7 +14,8 @@
 #define ROOT_TRWSpinLock
 
 #include "ThreadLocalStorage.h"
-#include "TSpinMutex.hxx"
+#include "ROOT/TSpinMutex.hxx"
+#include "TVirtualMutex.h"
 
 #include <atomic>
 #include <condition_variable>
@@ -144,6 +145,9 @@ public:
    void ReadUnLock();
    void WriteLock();
    void WriteUnLock();
+
+   std::unique_ptr<TVirtualMutex::State> Reset();
+   void Restore(std::unique_ptr<TVirtualMutex::State>&&);
 
    };
 } // end of namespace ROOT
