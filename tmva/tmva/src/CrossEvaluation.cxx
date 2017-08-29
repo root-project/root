@@ -56,6 +56,7 @@ TMVA::CrossEvaluation::CrossEvaluation(TMVA::DataLoader *dataloader, TFile * out
      fAnalysisType(Types::kMaxAnalysisType),
      fFoldStatus(kFALSE),
      fNumFolds(2),
+     fOutputFile(outputFile),
      fSplitSpectator(""),
      fTransformations( "" )
 {
@@ -132,6 +133,7 @@ TMVA::CrossEvaluation::CrossEvaluation(TMVA::DataLoader *dataloader, TString opt
      fAnalysisType(Types::kMaxAnalysisType),
      fFoldStatus(kFALSE),
      fNumFolds(2),
+     fOutputFile(nullptr),
      fSplitSpectator(""),
      fTransformations( "" )
 {
@@ -254,11 +256,12 @@ void TMVA::CrossEvaluation::MergeResults(MethodBase * smethod)
    Types::EAnalysisType analysisType = smethod->GetAnalysisType();
 
    ResultsClassification * metaResults;
-   // metaResults = dynamic_cast<ResultsClassification *>(ds->GetResults(methodName, Types::kTraining, analysisType));
-   // metaResults->GetValueVector()->insert(metaResults->GetValueVector()->begin(), outputs.begin(), outputs.end());
-   // metaResults->GetValueVectorTypes()->insert(metaResults->GetValueVectorTypes()->begin(), classes.begin(), classes.end());
 
-   // TODO: For now this is a copy of the testign set. We might want to inject specific training results here. 
+   // For now this is a copy of the testing set. We might want to inject training data here.
+   metaResults = dynamic_cast<ResultsClassification *>(ds->GetResults(methodName, Types::kTraining, analysisType));
+   metaResults->GetValueVector()->insert(metaResults->GetValueVector()->begin(), outputs.begin(), outputs.end());
+   metaResults->GetValueVectorTypes()->insert(metaResults->GetValueVectorTypes()->begin(), classes.begin(), classes.end());
+
    metaResults = dynamic_cast<ResultsClassification *>(ds->GetResults(methodName, Types::kTesting, analysisType));
    metaResults->GetValueVector()->insert(metaResults->GetValueVector()->begin(), outputs.begin(), outputs.end());
    metaResults->GetValueVectorTypes()->insert(metaResults->GetValueVectorTypes()->begin(), classes.begin(), classes.end());
@@ -293,10 +296,11 @@ void TMVA::CrossEvaluation::MergeResultsMulticlass(MethodBase * smethod)
    Types::EAnalysisType analysisType = smethod->GetAnalysisType();
 
    ResultsMulticlass * metaResults;
+
+   // For now this is a copy of the testing set. We might want to inject training data here.
    metaResults = dynamic_cast<ResultsMulticlass *>(ds->GetResults(methodName, Types::kTraining, analysisType));
    metaResults->GetValueVector()->insert(metaResults->GetValueVector()->begin(), outputs.begin(), outputs.end());
 
-   // TODO: For now this is a copy of the testign set. We might want to inject training data here.
    metaResults = dynamic_cast<ResultsMulticlass *>(ds->GetResults(methodName, Types::kTesting, analysisType));
    metaResults->GetValueVector()->insert(metaResults->GetValueVector()->begin(), outputs.begin(), outputs.end());
 }
@@ -356,13 +360,12 @@ void TMVA::CrossEvaluation::MergeFolds()
 
    fFactory->BookMethod(fDataLoader.get(), methodName, methodTitle, methodOptions);
 
-   // TODO: This ensures some variables are created as they should. Could be replaced by what?
-   //    (However not all variable are set up correctly, leading to 
-   //    "Error in <TString::AssertElement>: out of bounds: i = -1, Length = 0" being output)
-   // This acutally trains a method, though we don't need to do that at this stage, so
-   // we really should not call TrainAllMethods here.
-   fFactory->TrainAllMethods();
    MethodBase * smethod = dynamic_cast<MethodBase *>(fFactory->GetMethod(fDataLoader->GetName(), methodTitle));
+
+   // Write data such as VariableTransformations to output file.
+   if (fOutputFile != nullptr) {
+      fFactory->WriteDataInformation(smethod->DataInfo());
+   }
 
    // Merge results from the folds into a single result
    switch (fAnalysisType) {

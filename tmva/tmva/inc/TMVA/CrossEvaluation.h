@@ -69,6 +69,7 @@ namespace TMVA {
       Types::EAnalysisType fAnalysisType;     //! Indicates 
       Bool_t               fFoldStatus;       //!
       UInt_t               fNumFolds;         //!
+      TFile *              fOutputFile;
       TString              fSplitSpectator;
       TString              fTransformations;
       Bool_t               fVerbose;
