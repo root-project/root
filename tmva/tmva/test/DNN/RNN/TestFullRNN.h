@@ -23,6 +23,7 @@
 
 #include "TMVA/DNN/Functions.h"
 #include "TMVA/DNN/DeepNet.h"
+#include "TMVA/DNN/Net.h"
 
 using namespace TMVA::DNN;
 using namespace TMVA::DNN::RNN;
@@ -43,6 +44,20 @@ auto printTensor(const std::vector<typename Architecture::Matrix_t> &A, const st
   } 
 }
 
+template <typename Architecture>
+auto printMatrix(const typename Architecture::Matrix_t &A, const std::string name = "matrix")
+-> void
+{
+  std::cout << name << "\n";
+  for (size_t i = 0; i < A.GetNrows(); ++i) {
+    for (size_t j = 0; j < A.GetNcols(); ++j) {
+        std::cout << A(i, j) << " ";
+    }
+    std::cout << "\n";
+  }
+  std::cout << "********\n";
+}
+
 /* Generate a full recurrent neural net
  * like a word generative model */
 //______________________________________________________________________________
@@ -55,59 +70,51 @@ auto testFullRNN(size_t batchSize, size_t stateSize,
    using Tensor_t   = std::vector<Matrix_t>;
    using RNNLayer_t = TBasicRNNLayer<Architecture>; 
    using FCLayer_t  = TDenseLayer<Architecture>;
+   using Reshape_t  = TReshapeLayer<Architecture>;
    using Net_t      = TDeepNet<Architecture>;
    using Scalar_t   = typename Architecture::Scalar_t; 
+   using MLP_t      = TNet<Architecture>;    
  
    // check, denselayer takes only first one as input, 
    // so make sure time = 1, in the current case
    size_t timeSteps = 1;
-   std::vector<TMatrixT<Double_t>> XRef(timeSteps, TMatrixT<Double_t>(batchSize, inputSize));    // T x B x D
-   std::vector<TMatrixT<Double_t>> YRef(timeSteps, TMatrixT<Double_t>(batchSize, outputSize));    // T x B x O
+   std::vector<TMatrixT<Double_t>> XRef(batchSize, TMatrixT<Double_t>(timeSteps, inputSize));    // B x T x D
+   //TMatrixT<Double_t> YRef(batchSize, outputSize);    // B x O  (D = O)
    Tensor_t XArch;
-   for (size_t i = 0; i < timeSteps; ++i) {
+   Matrix_t YArch(batchSize, outputSize);             // B x O  (D = O)
+   for (size_t i = 0; i < batchSize; ++i) {
       randomMatrix(XRef[i]);
       std::cerr << "Copying output into input\n";
-      YRef[i] = XRef[i];
       XArch.emplace_back(XRef[i]);
+      for (size_t j = 0; j < outputSize; ++j) {
+         YArch(i, j) = XArch[i](0, j);
+      }
    }
 
-   Net_t rnn(batchSize, timeSteps, batchSize, inputSize, 0, 0, 0, ELossFunction::kMeanSquaredError, EInitialization::kGauss);
-   //RNNLayer_t* layer = rnn.AddBasicRNNLayer(stateSize, inputSize, timeSteps, false);
+   Net_t rnn(batchSize, batchSize, timeSteps, inputSize, 0, 0, 0, ELossFunction::kMeanSquaredError, EInitialization::kGauss);
+   RNNLayer_t* layer = rnn.AddBasicRNNLayer(stateSize, inputSize, timeSteps, false);
+   Reshape_t* reshape = rnn.AddReshapeLayer(1, 1, stateSize, true);
    FCLayer_t* classifier = rnn.AddDenseLayer(outputSize, EActivationFunction::kIdentity); 
 
    Matrix_t W(batchSize, 1);
    for (size_t i = 0; i < batchSize; ++i) W(i, 0) = 1.0;
    rnn.Initialize();
 
-   //printTensor<Architecture>(classifier->GetWeights(), "dense weights");
-   //printTensor<Architecture>(classifier->GetBiases(), "dense biases");
-   //printTensor<Architecture>(layer->GetWeights(), "rnn weights");
-   //printTensor<Architecture>(layer->GetBiases(), "rnn biases");
-
    size_t iter = 0;
-   while (iter++ < 3) {
+   while (iter++ < 50) {
       rnn.Forward(XArch);
-      //printTensor<Architecture>(layer->GetOutput(), "RNN Output");
-      Scalar_t loss = rnn.Loss(YRef[0], W, false);
+      Scalar_t loss = rnn.Loss(YArch, W, false);
 
-      for (size_t i = 0; i < inputSize; ++i) std::cout << XRef[0](0, i) << " "; std::cout << "\n";
-      for (size_t i = 0; i < inputSize; ++i) std::cout << rnn.GetLayers().back()->GetOutputAt(0)(0, i) << " "; std::cout << "\n";
-      std::cout << "The loss is: " << loss << std::endl;
+      //if (iter % 20 == 0) {
+         //for (size_t i = 0; i < inputSize; ++i) std::cout << XRef[0](0, i) << " "; std::cout << "\n";
+         //for (size_t i = 0; i < inputSize; ++i) std::cout << rnn.GetLayers().back()->GetOutputAt(0)(0, i) << " "; std::cout << "\n";
+      //}
+      std::cout << "loss: " << loss << std::endl;
 
-      rnn.Backward(XRef, YRef[0], W);
+      rnn.Backward(XArch, YArch, W);
 
-      printTensor<Architecture>(classifier->GetWeights(), "dense weight");
-      printTensor<Architecture>(classifier->GetWeightGradients(), "dense weight grad");
-      printTensor<Architecture>(classifier->GetBiases(), "dense bias");
-      printTensor<Architecture>(classifier->GetBiasGradients(), "dense bias grad");
-      //printTensor<Architecture>(layer->GetWeightGradients(), "rnn weight grad");
-      //printTensor<Architecture>(layer->GetBiasGradients(), "rnn bias grad");
+      rnn.Update(0.1);
 
-      rnn.Update(1.0);
-   //printTensor<Architecture>(classifier->GetWeights(), "dense weights");
-   //printTensor<Architecture>(classifier->GetBiases(), "dense biases");
-   //printTensor<Architecture>(layer->GetWeights(), "rnn weights");
-   //printTensor<Architecture>(layer->GetBiases(), "rnn biases");
    }
 }
 

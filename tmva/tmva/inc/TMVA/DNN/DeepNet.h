@@ -13,6 +13,7 @@
  * Authors (alphabetical):                                                        *
  *      Akshay Vashistha     <akshayvashistha1995@gmail.com> - CERN, Switzerland  *
  *      Vladimir Ilievski    <ilievski.vladimir@live.com>  - CERN, Switzerland    *
+ *      Saurav Shekhar       <sauravshekhar01@gmail.com> - CERN, Switzerland      *
  *                                                                                *
  * Copyright (c) 2005-2015:                                                       *
  *      CERN, Switzerland                                                         *
@@ -870,6 +871,10 @@ auto TDeepNet<Architecture_t, Layer_t>::Backward(std::vector<Matrix_t> &input, c
    }
  
    std::vector<Matrix_t> dummy;
+   for (size_t i = 0; i < input.size(); i++) {
+      //dummy.emplace_back(input[i].GetNrows(), input[i].GetNcols());
+      dummy.emplace_back(0, 0);
+    }
    fLayers[0]->Backward(dummy, input, inp1, inp2);
 }
 

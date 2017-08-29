@@ -40,25 +40,28 @@ auto testForwardPass(size_t timeSteps, size_t batchSize, size_t stateSize,
    using Net_t      = TDeepNet<Architecture>;
  
    std::vector<TMatrixT<Double_t>> XRef(timeSteps, TMatrixT<Double_t>(batchSize, inputSize));    // T x B x D
-   Tensor_t XArch;
+   Tensor_t XArch, arr_XArch(batchSize, Matrix_t(timeSteps, inputSize));
    for (size_t i = 0; i < timeSteps; ++i) {
       randomMatrix(XRef[i]);
       XArch.emplace_back(XRef[i]);
    }
+   Architecture::Rearrange(arr_XArch, XArch);     // B x T x D
 
-   Net_t rnn(batchSize, timeSteps, batchSize, inputSize, 0, 0, 0, ELossFunction::kMeanSquaredError, EInitialization::kGauss);
-   RNNLayer_t* layer = rnn.AddBasicRNNLayer(batchSize, stateSize, inputSize, timeSteps);
+   Net_t rnn(batchSize, batchSize, timeSteps, inputSize, 0, 0, 0, ELossFunction::kMeanSquaredError, EInitialization::kGauss);
+   RNNLayer_t* layer = rnn.AddBasicRNNLayer(stateSize, inputSize, timeSteps);
 
    layer->Initialize();
 
    TMatrixT<Double_t> weightsInput = layer->GetWeightsInput();  // H x D
    TMatrixT<Double_t> weightsState = layer->GetWeightsState();  // H x H
-   TMatrixT<Double_t> biases = layer->GetBiasesAt(0);              // H x 1
+   TMatrixT<Double_t> biases = layer->GetBiasesAt(0);           // H x 1
    TMatrixT<Double_t> state = layer->GetState();                // B x H 
    TMatrixT<Double_t> tmp(batchSize, stateSize);
 
-   rnn.Forward(XArch);
-   Tensor_t outputArch = layer->GetOutput();
+   rnn.Forward(arr_XArch);
+   Tensor_t outputArch = layer->GetOutput();    // B x T x H
+   Tensor_t arr_outputArch(timeSteps, Matrix_t(batchSize, stateSize));  // T x B x H
+   Architecture::Rearrange(arr_outputArch, outputArch);
 
    Double_t maximumError = 0.0;
    for (size_t t = 0; t < timeSteps; ++t) {
@@ -73,7 +76,7 @@ auto testForwardPass(size_t timeSteps, size_t batchSize, size_t stateSize,
       }
       // activation fn
       applyMatrix(state, [](double x){return tanh(x);});
-      TMatrixT<Double_t> output = outputArch[t];
+      TMatrixT<Double_t> output = arr_outputArch[t];
       Double_t error = maximumRelativeError(output, state);
       std::cout << "Time " << t << " Error: " << error << "\n";
       maximumError = std::max(error, maximumError);
