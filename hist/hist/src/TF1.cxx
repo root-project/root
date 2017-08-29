@@ -2746,23 +2746,26 @@ Bool_t TF1::IsValid() const
 
 void TF1::Print(Option_t *option) const
 {
-   // TODO: this function has problems -- fix them!
    if (fType == EFType::kFormula) {
       printf("Formula based function:     %s \n", GetName());
       assert(fFormula);
       fFormula->Print(option);
    } else if (fType >  0) {
-      if (fType == EFType::kFormula)
-         printf("Interpreted based function: %s(double *x, double *p).  Ndim = %d, Npar = %d  \n", GetName(), GetNpar(), GetNdim());
+      if (fType == EFType::kInterpreted)
+         printf("Interpreted based function: %s(double *x, double *p).  Ndim = %d, Npar = %d  \n", GetName(), GetNdim(),
+                GetNpar());
       else if (fType == EFType::kCompositionFcn) {
          printf("Composition based function: %s. Ndim = %d, Npar = %d \n", GetName(), GetNdim(), GetNpar());
          if (!fComposition)
-            printf("fComposition not found!\n"); // this is bad
+            printf("fComposition not found!\n"); // this would be bad
       } else {
          if (fFunctor)
-            printf("Compiled based function: %s  based on a functor object.  Ndim = %d, Npar = %d\n", GetName(), GetNpar(), GetNdim());
+            printf("Compiled based function: %s  based on a functor object.  Ndim = %d, Npar = %d\n", GetName(),
+                   GetNdim(), GetNpar());
          else {
-            printf("Function based on a list of points from a compiled based function: %s.  Ndim = %d, Npar = %d, Npx = %zu\n", GetName(), GetNpar(), GetNdim(), fSave.size());
+            printf("Function based on a list of points from a compiled based function: %s.  Ndim = %d, Npar = %d, Npx "
+                   "= %zu\n",
+                   GetName(), GetNdim(), GetNpar(), fSave.size());
             if (fSave.empty())
                Warning("Print", "Function %s is based on a list of points but list is empty", GetName());
          }
