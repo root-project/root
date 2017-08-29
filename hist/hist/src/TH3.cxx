@@ -56,6 +56,8 @@ cell content.
 -   TH3D a 3-D histogram with eight bytes per cell (double)
 */
 
+void *TH3::fgCallbackCtx = 0;
+CallbackFunc_t TH3::fgCallbackFunc = 0;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
@@ -165,80 +167,144 @@ void TH3::Copy(TObject &obj) const
    ((TH3&)obj).fTsumwyz     = fTsumwyz;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Fill histogram with all entries in the buffer.
-/// action = -1 histogram is reset and refilled from the buffer (called by THistPainter::Paint)
-/// action =  0 histogram is filled from the buffer
-/// action =  1 histogram is filled and buffer is deleted
-///             The buffer is automatically deleted when the number of entries
-///             in the buffer is greater than the number of entries in the histogram
+/// Sets a global function for callbacks (see setting ranges in BufferEmpty)
+///
 
-Int_t TH3::BufferEmpty(Int_t action)
+void TH3::SetGlobalCallbackFunc(void *c, CallbackFunc_t f)
 {
-   // do we need to compute the bin size?
-   if (!fBuffer) return 0;
-   Int_t nbentries = (Int_t)fBuffer[0];
-   if (!nbentries) return 0;
-   Double_t *buffer = fBuffer;
-   if (nbentries < 0) {
-      if (action == 0) return 0;
-      nbentries  = -nbentries;
-      fBuffer=0;
-      Reset("ICES");
-      fBuffer = buffer;
-   }
-   if (CanExtendAllAxes() || fXaxis.GetXmax() <= fXaxis.GetXmin() ||
-      fYaxis.GetXmax() <= fYaxis.GetXmin() ||
-      fZaxis.GetXmax() <= fZaxis.GetXmin()) {
-         //find min, max of entries in buffer
-         Double_t xmin = fBuffer[2];
-         Double_t xmax = xmin;
-         Double_t ymin = fBuffer[3];
-         Double_t ymax = ymin;
-         Double_t zmin = fBuffer[4];
-         Double_t zmax = zmin;
-         for (Int_t i=1;i<nbentries;i++) {
-            Double_t x = fBuffer[4*i+2];
-            if (x < xmin) xmin = x;
-            if (x > xmax) xmax = x;
-            Double_t y = fBuffer[4*i+3];
-            if (y < ymin) ymin = y;
-            if (y > ymax) ymax = y;
-            Double_t z = fBuffer[4*i+4];
-            if (z < zmin) zmin = z;
-            if (z > zmax) zmax = z;
-         }
-         if (fXaxis.GetXmax() <= fXaxis.GetXmin() || fYaxis.GetXmax() <= fYaxis.GetXmin() || fZaxis.GetXmax() <= fZaxis.GetXmin()) {
-            THLimitsFinder::GetLimitsFinder()->FindGoodLimits(this,xmin,xmax,ymin,ymax,zmin,zmax);
-         } else {
-            fBuffer = 0;
-            Int_t keep = fBufferSize; fBufferSize = 0;
-            if (xmin <  fXaxis.GetXmin()) ExtendAxis(xmin,&fXaxis);
-            if (xmax >= fXaxis.GetXmax()) ExtendAxis(xmax,&fXaxis);
-            if (ymin <  fYaxis.GetXmin()) ExtendAxis(ymin,&fYaxis);
-            if (ymax >= fYaxis.GetXmax()) ExtendAxis(ymax,&fYaxis);
-            if (zmin <  fZaxis.GetXmin()) ExtendAxis(zmin,&fZaxis);
-            if (zmax >= fZaxis.GetXmax()) ExtendAxis(zmax,&fZaxis);
-            fBuffer = buffer;
-            fBufferSize = keep;
-         }
-   }
-   fBuffer = 0;
-
-   for (Int_t i=0;i<nbentries;i++) {
-      Fill(buffer[4*i+2],buffer[4*i+3],buffer[4*i+4],buffer[4*i+1]);
-   }
-   fBuffer = buffer;
-
-   if (action > 0) { delete [] fBuffer; fBuffer = 0; fBufferSize = 0;}
-   else {
-      if (nbentries == (Int_t)fEntries) fBuffer[0] = -nbentries;
-      else                              fBuffer[0] = 0;
-   }
-   return nbentries;
+   fgCallbackCtx = c;
+   fgCallbackFunc = f;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Sets axes ranges from the content of the given list
+///
+
+Int_t TH3::SetRangesFromList(TList *axl)
+{
+   Int_t rc = -1;
+   if (!axl || (axl && axl->GetSize() != 3)) {
+      Warning("SetRangesFromList", "empty or inconsistent list received (%p)!", axl);
+      return rc;
+   }
+   TObjLink *oln = axl->FirstLink();
+   TAxis *nax = (TAxis *)oln->GetObject();
+   oln = oln->Next();
+   TAxis *nay = (TAxis *)oln->GetObject();
+   oln = oln->Next();
+   TAxis *naz = (TAxis *)oln->GetObject();
+   if (nax && nay && naz) {
+      if (nax->GetNbins() > 0 && nax->GetXmax() > nax->GetXmin() && nay->GetNbins() > 0 &&
+          nay->GetXmax() > nay->GetXmin() && naz->GetNbins() > 0 && naz->GetXmax() > naz->GetXmin()) {
+         if (gDebug > 1)
+            Info("SetRangesFromList", "found|had for '%s' :\n"
+                                      "\t xbins, xmin, xmax : %d|%d, %f|%f, %f|%f\n"
+                                      "\t ybins, ymin, ymax : %d|%d, %f|%f, %f|%f\n"
+                                      "\t zbins, zmin, zmax : %d|%d, %f|%f, %f|%f",
+                 axl->GetName(), nax->GetNbins(), fXaxis.GetNbins(), nax->GetXmin(), fXaxis.GetXmin(), nax->GetXmax(),
+                 fXaxis.GetXmax(), nay->GetNbins(), fYaxis.GetNbins(), nay->GetXmin(), fYaxis.GetXmin(), nay->GetXmax(),
+                 fYaxis.GetXmax(), naz->GetNbins(), fZaxis.GetNbins(), naz->GetXmin(), fZaxis.GetXmin(), naz->GetXmax(),
+                 fZaxis.GetXmax());
+         SetBins(nax->GetNbins(), nax->GetXmin(), nax->GetXmax(), nay->GetNbins(), nay->GetXmin(), nay->GetXmax(),
+                 naz->GetNbins(), naz->GetXmin(), naz->GetXmax());
+         rc = 0;
+      } else {
+         Warning("SetRangesFromList", "found for '%s'"
+                                      " inconsistent xbins, xmin, xmax or ybins, ymin, ymax  or zbins, zmin, zmax"
+                                      "(%d, %f, %f, %d, %f, %f, %d, %f, %f)",
+                 axl->GetName(), nax->GetNbins(), nax->GetXmin(), nax->GetXmax(), nay->GetNbins(), nay->GetXmin(),
+                 nay->GetXmax(), naz->GetNbins(), naz->GetXmin(), naz->GetXmax());
+      }
+   } else {
+      Warning("SetRangesFromList", "not all axes defined for '%s' (%p, %p, %p)", axl->GetName(), nax, nay, naz);
+   }
+   return rc;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Gets a list with axes ranges. Owner ship transferred to caller.
+///
+
+TList *TH3::GetListWithRanges(const char *nm)
+{
+
+   TList *axl = new TList;
+   axl->SetName(nm);
+   axl->SetOwner(kFALSE);
+   // Add axis to the list
+   axl->Add(&fXaxis);
+   axl->Add(&fYaxis);
+   axl->Add(&fZaxis);
+   // Done
+   return axl;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate new axes from the buffer content, eventually extending, if required
+/// and allowed. Result is stored in fXaxis.
+///
+
+void TH3::RecalculateAxes(Double_t *buf, Int_t nbent)
+{
+
+   // find min, max of entries in buffer
+   Double_t xmin = fBuffer[2];
+   Double_t xmax = xmin;
+   Double_t ymin = fBuffer[3];
+   Double_t ymax = ymin;
+   Double_t zmin = fBuffer[4];
+   Double_t zmax = zmin;
+   for (Int_t i = 1; i < nbent; i++) {
+      Double_t x = fBuffer[4 * i + 2];
+      if (x < xmin)
+         xmin = x;
+      if (x > xmax)
+         xmax = x;
+      Double_t y = fBuffer[4 * i + 3];
+      if (y < ymin)
+         ymin = y;
+      if (y > ymax)
+         ymax = y;
+      Double_t z = fBuffer[4 * i + 4];
+      if (z < zmin)
+         zmin = z;
+      if (z > zmax)
+         zmax = z;
+   }
+   if (HasNoLimits()) {
+      THLimitsFinder::GetLimitsFinder()->FindGoodLimits(this, xmin, xmax, ymin, ymax, zmin, zmax);
+   } else {
+      fBuffer = 0;
+      Int_t keep = fBufferSize;
+      fBufferSize = 0;
+      if (xmin < fXaxis.GetXmin())
+         ExtendAxis(xmin, &fXaxis);
+      if (xmax >= fXaxis.GetXmax())
+         ExtendAxis(xmax, &fXaxis);
+      if (ymin < fYaxis.GetXmin())
+         ExtendAxis(ymin, &fYaxis);
+      if (ymax >= fYaxis.GetXmax())
+         ExtendAxis(ymax, &fYaxis);
+      if (zmin < fZaxis.GetXmin())
+         ExtendAxis(zmin, &fZaxis);
+      if (zmax >= fZaxis.GetXmax())
+         ExtendAxis(zmax, &fZaxis);
+      fBuffer = buf;
+      fBufferSize = keep;
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Evaluate if teh histogram has limits
+
+Bool_t TH3::HasNoLimits()
+{
+   return (fXaxis.GetXmax() <= fXaxis.GetXmin() || fYaxis.GetXmax() <= fYaxis.GetXmin() ||
+           fZaxis.GetXmax() <= fZaxis.GetXmin())
+             ? kTRUE
+             : kFALSE;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// accumulate arguments in buffer. When buffer is full, empty the buffer
@@ -282,7 +348,6 @@ Int_t TH3::Fill(Double_t )
    Error("Fill", "Invalid signature - do nothing");
    return -1;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Increment cell defined by x,y,z by 1 .

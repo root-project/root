@@ -18,6 +18,7 @@
 #include "Riostream.h"
 #include "TROOT.h"
 #include "TClass.h"
+#include "TEnv.h"
 #include "TMath.h"
 #include "THashList.h"
 #include "TH1.h"
@@ -37,6 +38,7 @@
 #include "TBrowser.h"
 #include "TObjString.h"
 #include "TError.h"
+#include "TRegexp.h"
 #include "TVirtualHistPainter.h"
 #include "TVirtualFFT.h"
 #include "TSystem.h"
@@ -526,6 +528,12 @@ Bool_t TH1::fgAddDirectory = kTRUE;
 Bool_t TH1::fgDefaultSumw2 = kFALSE;
 Bool_t TH1::fgStatOverflows= kFALSE;
 
+void *TH1::fgCallbackCtx = 0;
+CallbackFunc_t TH1::fgCallbackFunc = 0;
+TRWLock TH1::fgRefSyncMtx;
+THashList *TH1::fgRefSync = 0;
+TString TH1::fgStripOffDirs = "__TThreaded_dir_?";
+
 extern void H1InitGaus();
 extern void H1InitExpo();
 extern void H1InitPolynom();
@@ -559,6 +567,7 @@ TH1::TH1(): TNamed(), TAttLine(), TAttFill(), TAttMarker()
    fMinimum       = -1111;
    fBufferSize    = 0;
    fBuffer        = 0;
+   fCallbackFunc = 0;
    fBinStatErrOpt = kNormal;
    fXaxis.SetName("xaxis");
    fYaxis.SetName("yaxis");
@@ -574,6 +583,16 @@ TH1::TH1(): TNamed(), TAttLine(), TAttFill(), TAttMarker()
 
 TH1::~TH1()
 {
+
+   // Remove synchrnization info, if any
+   if (fgRefSync) {
+      fgRefSyncMtx.WriteLock();
+      TString onm = GetNameForRanges();
+      TObject *o = fgRefSync->FindObject(onm);
+      fgRefSync->Remove(o);
+      fgRefSyncMtx.WriteUnLock();
+   }
+
    if (!TestBit(kNotDeleted)) {
       return;
    }
@@ -726,6 +745,7 @@ void TH1::Build()
    fMinimum       = -1111;
    fBufferSize    = 0;
    fBuffer        = 0;
+   fCallbackFunc = 0;
    fBinStatErrOpt = kNormal;
    fXaxis.SetName("xaxis");
    fYaxis.SetName("yaxis");
@@ -1221,6 +1241,194 @@ void TH1::AddDirectory(Bool_t add)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Sets a global function for callbacks (see setting ranges in BufferEmpty)
+///
+
+void TH1::SetGlobalCallbackFunc(void *c, CallbackFunc_t f)
+{
+   fgCallbackCtx = c;
+   fgCallbackFunc = f;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Sets list of dir tags to be stripped off
+///
+
+void TH1::SetStripOffDirs(const char *tags)
+{
+   if (tags && strlen(tags) > 0) {
+      TString tt(tags);
+      Bool_t isadd = (tags[0] == '+') ? kTRUE : kFALSE;
+      if (isadd) {
+         tt.Remove(0, 1);
+         TString t;
+         Ssiz_t from = 0;
+         while (tt.Tokenize(t, from, "[, ]")) {
+            if (!t.IsNull() && !fgStripOffDirs.Contains(t)) {
+               fgStripOffDirs += " ";
+               fgStripOffDirs += tt;
+            }
+         }
+
+      } else {
+         // Just replace existing settings
+         if (fgStripOffDirs != tags) {
+            fgStripOffDirs = tags;
+         }
+      }
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get current list of dir tags to be stripped off
+///
+
+const char *TH1::GetStripOffDirs()
+{
+   return fgStripOffDirs;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get identifier for list wth ranges. It allows for the same name in different
+/// directories and for stripping off one or more tags, like the ones used in
+/// TThreadedObjects
+///
+
+TString &TH1::GetNameForRanges()
+{
+
+   if (!fNameForRanges.IsNull())
+      return fNameForRanges;
+
+   // Strip-off list
+   TString stripOffDirs = fgStripOffDirs;
+   TString soffs = gEnv->GetValue("Hist.StripOffDirs", stripOffDirs);
+   if (!soffs.IsNull() && soffs[0] == '+') {
+      soffs.Remove(0, 1);
+      soffs += TString::Format(" %s", fgStripOffDirs.Data());
+   }
+   std::list<TRegexp> lsto;
+   TString so;
+   Ssiz_t from = 0;
+   while (soffs.Tokenize(so, from, "[, ]")) {
+      if (!so.IsNull())
+         lsto.push_back(TRegexp(so));
+   }
+
+   // Prepare name identifier
+   fNameForRanges = GetName();
+
+   TDirectory *dir = gDirectory;
+   while (dir && strcmp(dir->GetName(), "Rint")) {
+      Bool_t addnm = kTRUE;
+      // Check if it has to be stripped off
+      if (!lsto.empty()) {
+         TString nm(dir->GetName());
+         for (auto re : lsto) {
+            if (nm.Contains(re)) {
+               addnm = kFALSE;
+               break;
+            }
+         }
+      }
+      // Add it if still required
+      if (addnm)
+         fNameForRanges.Insert(0, TString::Format("%s/", dir->GetName()));
+      // Go to next step up
+      dir = dir->GetMotherDir();
+   }
+
+   return fNameForRanges;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Sets axes ranges from the content of the given list
+///
+
+Int_t TH1::SetRangesFromList(TList *axl)
+{
+   Int_t rc = -1;
+   if (!axl || (axl && axl->GetSize() != 1)) {
+      Warning("SetRangesFromList", "empty or inconsistent list received (%p)!", axl);
+      return rc;
+   }
+   TAxis *nax = (TAxis *)axl->First();
+   if (nax) {
+      if (nax->GetNbins() > 0 && nax->GetXmax() > nax->GetXmin()) {
+         if (gDebug > 1)
+            Info("SetRangesFromList", "found|had for '%s' : bins, xmin, xmax : %d|%d, %f|%f, %f|%f", axl->GetName(),
+                 nax->GetNbins(), fXaxis.GetNbins(), nax->GetXmin(), fXaxis.GetXmin(), nax->GetXmax(),
+                 fXaxis.GetXmax());
+         SetBins(nax->GetNbins(), nax->GetXmin(), nax->GetXmax());
+         rc = 0;
+      } else {
+         Warning("SetRangesFromList", "found for '%s' inconsistent bins, xmin, xmax (%d, %f, %f)", axl->GetName(),
+                 nax->GetNbins(), nax->GetXmin(), nax->GetXmax());
+      }
+   } else {
+      Warning("SetRangesFromList", "axis not defined for '%s'", axl->GetName());
+   }
+   return rc;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Gets a list with axes ranges. Owner ship transferred to caller.
+///
+
+TList *TH1::GetListWithRanges(const char *nm)
+{
+
+   TList *axl = new TList;
+   axl->SetName(nm);
+   axl->SetOwner(kFALSE);
+   // Add axis to the list
+   axl->Add(&fXaxis);
+   // Done
+   return axl;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate new axes from the buffer content, eventually extending, if required
+/// and allowed. Result is stored in fXaxis.
+///
+
+void TH1::RecalculateAxes(Double_t *buf, Int_t nbent)
+{
+
+   // find min, max of entries in buffer
+   Double_t xmin = fBuffer[2];
+   Double_t xmax = xmin;
+   for (Int_t i = 1; i < nbent; i++) {
+      Double_t x = fBuffer[2 * i + 2];
+      if (x < xmin)
+         xmin = x;
+      if (x > xmax)
+         xmax = x;
+   }
+   if (HasNoLimits()) {
+      THLimitsFinder::GetLimitsFinder()->FindGoodLimits(this, xmin, xmax);
+   } else {
+      fBuffer = 0;
+      Int_t keep = fBufferSize;
+      fBufferSize = 0;
+      if (xmin < fXaxis.GetXmin())
+         ExtendAxis(xmin, &fXaxis);
+      if (xmax >= fXaxis.GetXmax())
+         ExtendAxis(xmax, &fXaxis);
+      fBuffer = buf;
+      fBufferSize = keep;
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Evaluate if teh histogram has limits
+
+Bool_t TH1::HasNoLimits()
+{
+   return (fXaxis.GetXmax() <= fXaxis.GetXmin()) ? kTRUE : kFALSE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Fill histogram with all entries in the buffer.
 ///
 ///  - action = -1 histogram is reset and refilled from the buffer (called by THistPainter::Paint)
@@ -1235,6 +1443,7 @@ void TH1::AddDirectory(Bool_t add)
 
 Int_t TH1::BufferEmpty(Int_t action)
 {
+
    // do we need to compute the bin size?
    if (!fBuffer) return 0;
    Int_t nbentries = (Int_t)fBuffer[0];
@@ -1263,24 +1472,92 @@ Int_t TH1::BufferEmpty(Int_t action)
       Reset("ICES");
       fBuffer = buffer;
    }
-   if (CanExtendAllAxes() || (fXaxis.GetXmax() <= fXaxis.GetXmin())) {
-      //find min, max of entries in buffer
-      Double_t xmin = fBuffer[2];
-      Double_t xmax = xmin;
-      for (Int_t i=1;i<nbentries;i++) {
-         Double_t x = fBuffer[2*i+2];
-         if (x < xmin) xmin = x;
-         if (x > xmax) xmax = x;
+   if (CanExtendAllAxes() || HasNoLimits()) {
+
+      Bool_t needaxes = kTRUE;
+
+      // Get name identifier
+      TString onm = GetNameForRanges();
+
+      // Check if we are required to invoke an callback function, for example
+      // to synchronize with other processes. Local setting take priority.
+      CallbackFunc_t funcb = fgCallbackFunc;
+      void *ctx = fgCallbackCtx;
+      if (fCallbackFunc) {
+         funcb = fCallbackFunc;
+         ctx = fCallbackCtx;
       }
-      if (fXaxis.GetXmax() <= fXaxis.GetXmin()) {
-         THLimitsFinder::GetLimitsFinder()->FindGoodLimits(this,xmin,xmax);
-      } else {
-         fBuffer = 0;
-         Int_t keep = fBufferSize; fBufferSize = 0;
-         if (xmin <  fXaxis.GetXmin()) ExtendAxis(xmin,&fXaxis);
-         if (xmax >= fXaxis.GetXmax()) ExtendAxis(xmax,&fXaxis);
-         fBuffer = buffer;
-         fBufferSize = keep;
+      if (funcb) {
+
+         // Calculate the new axis from the buffer content
+         RecalculateAxes(buffer, nbentries);
+
+         // Prepare the range sync info
+         TList *axl = GetListWithRanges(onm);
+
+         // Call the function
+         TList *raxl = (*funcb)(ctx, axl);
+         // If we get new limits, set them
+         if (raxl) {
+            needaxes = (SetRangesFromList(raxl) != 0) ? kTRUE : kFALSE;
+            if (needaxes) {
+               Warning("BufferEmpty", "callback: received inconsistent information (%s, %d)", raxl->GetName(),
+                       raxl->GetSize());
+            }
+         }
+         // Cleanup
+         if (axl)
+            delete axl;
+      }
+
+      if (needaxes) {
+
+         // Check if new axis are already available
+         {
+            fgRefSyncMtx.ReadLock();
+            if (!fgRefSync)
+               fgRefSync = new THashList;
+            TList *raxl = (TList *)fgRefSync->FindObject(onm);
+            if (raxl) {
+               needaxes = (SetRangesFromList(raxl) != 0) ? kTRUE : kFALSE;
+               if (needaxes) {
+                  Warning("BufferEmpty", "refsync:1 received inconsistent information (%s, %d)", raxl->GetName(),
+                          raxl->GetSize());
+               }
+            }
+            fgRefSyncMtx.ReadUnLock();
+         }
+      }
+
+      if (needaxes) {
+
+         fgRefSyncMtx.WriteLock();
+
+         // Did some one in the meantime put axes in ?
+         TList *raxl = (TList *)fgRefSync->FindObject(onm);
+         if (raxl) {
+            needaxes = (SetRangesFromList(raxl) != 0) ? kTRUE : kFALSE;
+            if (needaxes) {
+               Warning("BufferEmpty", "refsync:2 received inconsistent information (%s, %d)", raxl->GetName(),
+                       raxl->GetSize());
+            }
+         }
+
+         if (needaxes) {
+
+            // Calculate the new axis from the buffer content
+            RecalculateAxes(buffer, nbentries);
+
+            // Prepare the range sync info and add it to the list
+            TList *axl = GetListWithRanges(onm);
+            fgRefSync->Add(axl);
+            if (gDebug > 1) {
+               Info("BufferEmpty", "refsync:2 setting ref for '%s'", axl->GetName());
+               axl->Print();
+            }
+         }
+
+         fgRefSyncMtx.WriteUnLock();
       }
    }
 

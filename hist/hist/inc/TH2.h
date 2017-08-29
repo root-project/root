@@ -35,6 +35,9 @@ protected:
    Double_t     fTsumwy2;         //Total Sum of weight*Y*Y
    Double_t     fTsumwxy;         //Total Sum of weight*X*Y
 
+   static void *fgCallbackCtx;           ///<!Global context setting for the function to be called back
+   static CallbackFunc_t fgCallbackFunc; ///<!Global callback function setting, for example to get ranges
+
    TH2();
    TH2(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup
                                          ,Int_t nbinsy,Double_t ylow,Double_t yup);
@@ -57,6 +60,11 @@ protected:
    Int_t    Fill(Double_t); //MayNotUse
    Int_t    Fill(const char*, Double_t) { return Fill(0);}  //MayNotUse
 
+   virtual void RecalculateAxes(Double_t *b, Int_t n);
+   virtual TList *GetListWithRanges(const char *n);
+   virtual Bool_t HasNoLimits();
+   virtual Int_t SetRangesFromList(TList *axl);
+
 private:
 
    TH2(const TH2&);
@@ -64,7 +72,6 @@ private:
 
 public:
    virtual ~TH2();
-   virtual Int_t    BufferEmpty(Int_t action=0);
    virtual void     Copy(TObject &hnew) const;
    virtual Int_t    Fill(Double_t x, Double_t y);
    virtual Int_t    Fill(Double_t x, Double_t y, Double_t w);
@@ -122,6 +129,8 @@ public:
    virtual TH1     *ShowBackground(Int_t niter=20, Option_t *option="same");
    virtual Int_t    ShowPeaks(Double_t sigma=2, Option_t *option="", Double_t threshold=0.05); // *MENU*
    virtual void     Smooth(Int_t ntimes=1, Option_t *option=""); // *MENU*
+
+   static void SetGlobalCallbackFunc(void *c, CallbackFunc_t f);
 
    ClassDef(TH2,4)  //2-Dim histogram base class
 };
