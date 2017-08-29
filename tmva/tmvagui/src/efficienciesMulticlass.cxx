@@ -363,7 +363,9 @@ void TMVA::plotEfficienciesMulticlass1vs1(TString dataset, TString fin, TString 
    classcanvasmap_t classCanvasMap;
    for (auto &classname : classnames) {
 
-      if (classname == baseClassname) { continue; }
+      if (classname == baseClassname) {
+         continue;
+      }
 
       TString name = Form("1v1roc_%s_vs_%s", baseClassname.Data(), classname.Data());
       TString title = Form("ROC Curve %s (Sig) vs %s (Bkg)", baseClassname.Data(), classname.Data());
