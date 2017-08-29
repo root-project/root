@@ -862,6 +862,20 @@ bool test44()
    return ok;
 }
 
+bool test45()
+{
+   // test dealing with whitespace in parameter names
+   // inlcuding cloning tests (see ROOT-8971)
+   TF1* func = new TF1("expo","expo");
+   func->SetParNames("A", "- 1 / T");
+   func->SetParameters(1,1);
+
+   TF1 * func2 = (TF1*) func->Clone("func2");
+
+   bool ok = fpEqual( func2->Eval(1), func->Eval(1), true);
+   return ok;
+}
+
 void PrintError(int itest)  { 
    Error("TFormula test","test%d FAILED ",itest);
    failedTests.push_back(itest);
@@ -918,26 +932,12 @@ int runTests(bool debug = false) {
    IncrTest(itest); if (!test37() ) { PrintError(itest); }
    IncrTest(itest); if (!test38() ) { PrintError(itest); }
    IncrTest(itest); if (!test39() ) { PrintError(itest); }
-   IncrTest(itest);
-   if (!test40()) {
-      PrintError(itest);
-   }
-   IncrTest(itest);
-   if (!test41()) {
-      PrintError(itest);
-   }
-   IncrTest(itest);
-   if (!test42()) {
-      PrintError(itest);
-   }
-   IncrTest(itest);
-   if (!test43()) {
-      PrintError(itest);
-   }
-   IncrTest(itest);
-   if (!test44()) {
-      PrintError(itest);
-   }
+   IncrTest(itest); if (!test40() ) { PrintError(itest); }
+   IncrTest(itest); if (!test41() ) { PrintError(itest); }
+   IncrTest(itest); if (!test42() ) { PrintError(itest); }
+   IncrTest(itest); if (!test43() ) { PrintError(itest); }
+   IncrTest(itest); if (!test44() ) { PrintError(itest); }
+   IncrTest(itest); if (!test45() ) { PrintError(itest); }
 
    std::cout << ".\n";
     
