@@ -294,6 +294,24 @@ void randomMatrix(AMatrix &X)
    }
 }
 
+/*! Fill matrix with random, uniform-distributed values in [-1, 1] */
+//______________________________________________________________________________
+template <typename AMatrix>
+void uniformMatrix(AMatrix &X)
+{
+   size_t m, n;
+   m = X.GetNrows();
+   n = X.GetNcols();
+
+   TRandom rand(clock());
+
+   for (size_t i = 0; i < m; i++) {
+      for (size_t j = 0; j < n; j++) {
+         X(i, j) = rand.Uniform(-1, 1);
+      }
+   }
+}
+
 /*! Generate a random batch as input for a neural net. */
 //______________________________________________________________________________
 template <typename AMatrix>

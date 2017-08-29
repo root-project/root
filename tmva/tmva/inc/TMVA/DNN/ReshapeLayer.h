@@ -120,7 +120,6 @@ TReshapeLayer<Architecture_t>::~TReshapeLayer()
 template <typename Architecture_t>
 auto TReshapeLayer<Architecture_t>::Forward(std::vector<Matrix_t> &input, bool applyDropout) -> void
 {
-   std::cout << "Reshape Layer Forward" << std::endl;
    if (fFlattening) {
       size_t size = input.size();
       size_t nRows = input[0].GetNrows();
@@ -139,7 +138,6 @@ auto TReshapeLayer<Architecture_t>::Backward(std::vector<Matrix_t> &gradients_ba
                                              const std::vector<Matrix_t> &activations_backward,
                                              std::vector<Matrix_t> &inp1, std::vector<Matrix_t> &inp2) -> void
 {
-   std::cout << "Reshape Layer Backward" << std::endl;
    if (fFlattening) {
       size_t size = gradients_backward.size();
       size_t nRows = gradients_backward[0].GetNrows();
