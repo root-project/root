@@ -70,7 +70,7 @@ int testSimpleFile(const char *filename, Long64_t entries, Int_t compSetting, Lo
 int execTestMultiMerge()
 {
    Int_t result = 0;
-   int hsimpleFTolerance = 6; // 5 for non fst builds
+   int hsimpleFTolerance = 10; // 5 for non fst builds
    result += testMergedFile("mzfile1-4.root",206,4992, kIs32bits ? 2 : 0);
    result += testMergedFile("mlz4file1-4.root",406,5029, kIs32bits ? 2 : 0);
    result += testMergedFile("mzlibfile1-4.root",106,4917, kIs32bits ? 2 : 0);
