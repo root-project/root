@@ -81,6 +81,10 @@ void TF1Convolution::InitializeDataMembers(TF1* function1, TF1* function2, Bool_
    if (fFunction1.get() == nullptr|| fFunction2.get() == nullptr)
       Fatal("InitializeDataMembers","Invalid functions - Abort");
 
+   // Set kNotGlobal bit
+   fFunction1->SetBit(TF1::kNotGlobal, kTRUE);
+   fFunction2->SetBit(TF1::kNotGlobal, kTRUE);
+
    // add by default an extra 10% on  each side
    fFunction1->GetRange(fXmin, fXmax);
    Double_t range = fXmax - fXmin;
@@ -115,6 +119,15 @@ void TF1Convolution::InitializeDataMembers(TF1* function1, TF1* function2, Bool_
       fParams2.erase(fParams2.begin()+fCstIndex);
    }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// constructor without arguments
+
+TF1Convolution::TF1Convolution() {
+   // Nothing to do
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor from the two function pointer and a flag is using FFT
 
@@ -457,8 +470,8 @@ void TF1Convolution::Copy(TObject &obj) const {
    ((TF1Convolution &)obj).fParams2 = fParams2;
    ((TF1Convolution &)obj).fParNames = fParNames;
 
-   // Copy unique_ptr's
+   // Clone unique_ptr's
    ((TF1Convolution &)obj).fFunction1 = std::unique_ptr<TF1>((TF1 *)fFunction1->Clone());
    ((TF1Convolution &)obj).fFunction2 = std::unique_ptr<TF1>((TF1 *)fFunction2->Clone());
-   ((TF1Convolution &)obj).fGraphConv = std::unique_ptr<TGraph>((TGraph *)fGraphConv->Clone());
+   // fGraphConv is transient anyway, so we don't bother to copy it
 }

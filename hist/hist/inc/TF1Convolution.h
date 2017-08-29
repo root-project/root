@@ -19,9 +19,9 @@
 
 class TF1Convolution : public TF1AbsComposition
 {
-   std::unique_ptr<TF1> fFunction1;
-   std::unique_ptr<TF1> fFunction2;
-   std::unique_ptr<TGraph> fGraphConv;
+   std::unique_ptr<TF1> fFunction1;     ///< First function to be convolved
+   std::unique_ptr<TF1> fFunction2;     ///< Second function to be convolved
+   std::unique_ptr<TGraph> fGraphConv;  ///<! Graph of the convolution
 
    std::vector < Double_t >   fParams1;
    std::vector < Double_t >   fParams2;
@@ -45,6 +45,7 @@ class TF1Convolution : public TF1AbsComposition
 
    public:
 
+   TF1Convolution();
    TF1Convolution(TF1* function1, TF1* function2, Bool_t useFFT = true);
    TF1Convolution(TF1* function1, TF1* function2, Double_t xmin, Double_t xmax, Bool_t useFFT = true);
    TF1Convolution(TString formula, Double_t xmin = 1., Double_t xmax = 0., Bool_t useFFT = true);
