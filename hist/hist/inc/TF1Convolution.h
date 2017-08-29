@@ -35,8 +35,7 @@ class TF1Convolution : public TF1AbsComposition
    Int_t    fCstIndex;                   ///< Index of the constant parameter f the first function
    Int_t    fNofPoints;                  ///< Number of point for FFT array
    Bool_t   fFlagFFT;                    ///< Choose FFT or numerical convolution
-   Bool_t   fFlagGraph;                  ///< Tells if the graph is already done or not
-
+   Bool_t   fFlagGraph = false;                  ///<! Tells if the graph is already done or not
 
    Double_t EvalNumConv(Double_t t);
    Double_t EvalFFTConv(Double_t t);

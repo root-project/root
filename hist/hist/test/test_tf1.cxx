@@ -86,7 +86,6 @@ void test_setRange() {
    // Define TF1 using NSUM
    TF1 f1("f1", "NSUM([sg] * gaus, [bg] * expo)", 0, 1);
    f1.SetParameters(1,1,0,1,1);
-   f1.Print("V");
    EXPECT_NEAR(f1.Integral(0,1), 2, delta);
 
    // set range and check value of integral again
@@ -128,15 +127,15 @@ void test_copyClone()
    TF1 *f4 = new TF1("f4", "CONV(gaus, breitwigner)", -15, 15);
    f4->SetParameters(1, 1, 1, 1, 1, 1);
 
+   
    // Make copy
    TF1 *f5 = new TF1();
    f4->Copy(*f5);
-   // Test copy
    for (double x = -5; x < 5; x += .5)
       EXPECT_NEAR(f4->Eval(x), f5->Eval(x), delta);
+
    // Make clone
    TF1 *f6 = (TF1 *)f4->Clone();
-   // Test clone
    for (double x = -5; x < 5; x += .5)
       EXPECT_NEAR(f4->Eval(x), f6->Eval(x), delta);
 
