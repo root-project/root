@@ -137,6 +137,7 @@ int main()
 
 #ifdef R__USE_IMT
    std::cout << "\n **FIT: Mutithreaded vectorized Chi2 **\n\n";
+   fvecCore->SetParameters(1, 1000, 7.5, 1.5);
    start = std::chrono::system_clock::now();
    auto r4 = h1f.Fit(fvecCore, "MULTITHREAD S");
    if ((Int_t)r4 != 0) {
