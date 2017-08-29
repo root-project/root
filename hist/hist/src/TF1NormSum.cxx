@@ -51,7 +51,8 @@ void FixDuplicateNames(Iterator begin, Iterator end) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void TF1NormSum::InitializeDataMembers(const std::vector <TF1 *> &functions, const std::vector <Double_t> &coeffs, Double_t scale)
+void TF1NormSum::InitializeDataMembers(const std::vector<TF1 *> &functions, const std::vector<Double_t> &coeffs,
+                                       Double_t scale)
 {
 
    fScale           = scale;
@@ -62,9 +63,8 @@ void TF1NormSum::InitializeDataMembers(const std::vector <TF1 *> &functions, con
    fParNames.reserve(3*fNOfFunctions);  // enlarge capacity for function parameters
 
    // fill fFunctions with unique_ptr's
-   fFunctions = std::vector<std::unique_ptr<TF1> >(functions.size());
-   for (unsigned int n = 0 ; n < fNOfFunctions ; n++)
-   {
+   fFunctions = std::vector<std::unique_ptr<TF1>>(functions.size());
+   for (unsigned int n = 0; n < fNOfFunctions; n++) {
       TF1 *f = new TF1();
       functions[n]->Copy(*f);
       fFunctions[n] = std::unique_ptr<TF1>(f);
@@ -76,7 +76,6 @@ void TF1NormSum::InitializeDataMembers(const std::vector <TF1 *> &functions, con
       fFunctions[n]->SetBit(TF1::kNotGlobal, kTRUE);
    }
 
-   
    for (unsigned int n=0; n < fNOfFunctions; n++)
    {
       int npar = fFunctions[n] -> GetNpar();
@@ -101,32 +100,27 @@ void TF1NormSum::InitializeDataMembers(const std::vector <TF1 *> &functions, con
       }
       //normalize the functions if it is not already done (do at the end so constant parameter is not zero)
       if (!fFunctions[n] -> IsEvalNormalized())  fFunctions[n]  -> SetNormalized(true);
-
    }
 
-
    // Set range
-   if (fNOfFunctions == 0)
-   {
+   if (fNOfFunctions == 0) {
       fXmin = 0.;
       fXmax = 1.;
       // Info("InitializeDataMembers", "Initializing empty TF1NormSum with default [0,1] range");
-   }
-   else {
+   } else {
       fFunctions[0]->GetRange(fXmin, fXmax);
       if (fXmin >= fXmax) {
          fXmin = 0.;
          fXmax = 1.;
          // Info("InitializeDataMembers", "Initializing empty TF1NormSum with default [0,1] range");
       }
-      for (unsigned int n = 1 ; n < fNOfFunctions ; n++)
-      {
+      for (unsigned int n = 1; n < fNOfFunctions; n++) {
          fFunctions[n]->SetRange(fXmin, fXmax);
          fFunctions[n]->Update();
       }
    }
 
-   FixDuplicateNames(fParNames.begin()+fNOfFunctions, fParNames.end());
+   FixDuplicateNames(fParNames.begin() + fNOfFunctions, fParNames.end());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -135,7 +129,7 @@ TF1NormSum::TF1NormSum()
 {
    fNOfFunctions  = 0;
    fScale         = 1.;
-   fFunctions     = std::vector< std::unique_ptr < TF1 >>(0); // Vector of size fNOfFunctions containing TF1 functions
+   fFunctions = std::vector<std::unique_ptr<TF1>>(0);         // Vector of size fNOfFunctions containing TF1 functions
    fCoeffs        = std::vector < Double_t  >(0) ;            // Vector of size fNOfFunctions containing coefficients in front of each function
    fCstIndexes = std::vector < Int_t     > (0);
    fXmin = 0; // Dummy values of xmin and xmax
@@ -146,7 +140,7 @@ TF1NormSum::TF1NormSum()
 
 TF1NormSum::TF1NormSum(const std::vector <TF1*> &functions, const std::vector <Double_t> &coeffs, Double_t scale)
 {
-   InitializeDataMembers(functions,coeffs,scale);
+   InitializeDataMembers(functions, coeffs, scale);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -157,7 +151,7 @@ TF1NormSum::TF1NormSum(TF1* function1, TF1* function2, Double_t coeff1, Double_t
    std::vector<TF1 *> functions(2);
    std::vector < Double_t > coeffs(2);
 
-   functions = {function1, function2};   
+   functions = {function1, function2};
    coeffs = {coeff1, coeff2};
 
    InitializeDataMembers(functions, coeffs,scale);
@@ -168,7 +162,7 @@ TF1NormSum::TF1NormSum(TF1* function1, TF1* function2, Double_t coeff1, Double_t
 
 TF1NormSum::TF1NormSum(TF1* function1, TF1* function2, TF1* function3, Double_t coeff1, Double_t coeff2, Double_t coeff3, Double_t scale)
 {
-   std::vector< TF1 * > functions(3);
+   std::vector<TF1 *> functions(3);
    std::vector < Double_t > coeffs(3);
 
    functions = {function1, function2, function3};
@@ -193,7 +187,7 @@ TF1NormSum::TF1NormSum(const TString &formula, Double_t xmin, Double_t xmax)
    Int_t nofobj           = arrayall  -> GetEntries();
    Int_t nofcoeffs        = nofobj - noffunctions;
 
-   std::vector < TF1 * > functions(noffunctions);
+   std::vector<TF1 *> functions(noffunctions);
    std::vector < Double_t > coeffs(noffunctions);
    std::vector < TString  > funcstringall(nofobj);
    std::vector < Int_t    > indexsizetimes(nofcoeffs+1);
@@ -274,7 +268,7 @@ TF1NormSum &TF1NormSum::operator=(const TF1NormSum &rhs)
 ////////////////////////////////////////////////////////////////////////////////
 /// Overload the parenthesis to add the functions
 
-double TF1NormSum::operator()(const Double_t* x, const Double_t* p)
+double TF1NormSum::operator()(const Double_t *x, const Double_t *p)
 {
    // first refresh the parameters
    if (p != 0)
@@ -315,7 +309,7 @@ std::vector<double>  TF1NormSum::GetParameters() const {
 ///
 /// double *params must contains first an array of the coefficients, then an array of the parameters.
 
-void TF1NormSum::SetParameters(const Double_t* params)//params should have the size [fNOfFunctions][fNOfNonCstParams]
+void TF1NormSum::SetParameters(const Double_t *params) // params should have the size [fNOfFunctions][fNOfNonCstParams]
 {
    for (unsigned int n=0; n<fNOfFunctions; n++)                         //initialization of the coefficients
    {
@@ -378,7 +372,7 @@ Int_t TF1NormSum::GetNpar() const
 
 void TF1NormSum::SetRange(Double_t a, Double_t b)
 {
-   if (a>=b) {
+   if (a >= b) {
       Warning("SetRange", "Invalid range: %f >= %f", a, b);
       return;
    }
@@ -386,11 +380,10 @@ void TF1NormSum::SetRange(Double_t a, Double_t b)
    fXmin = a;
    fXmax = b;
 
-   for (unsigned int n = 0 ; n < fNOfFunctions ; n++) {
+   for (unsigned int n = 0; n < fNOfFunctions; n++) {
       fFunctions[n]->SetRange(a, b);
       fFunctions[n]->Update();
    }
-   
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -404,14 +397,16 @@ void TF1NormSum::GetRange(Double_t &a, Double_t &b) const
 ////////////////////////////////////////////////////////////////////////////////
 ///   Update the component functions of the normalized sum
 
-void TF1NormSum::Update() {
-   for (unsigned int n = 0 ; n < fNOfFunctions ; n++)
+void TF1NormSum::Update()
+{
+   for (unsigned int n = 0; n < fNOfFunctions; n++)
       fFunctions[n]->Update();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void TF1NormSum::Copy(TObject &obj) const {
+void TF1NormSum::Copy(TObject &obj) const
+{
    ((TF1NormSum &)obj).fNOfFunctions = fNOfFunctions;
    ((TF1NormSum &)obj).fScale = fScale;
    ((TF1NormSum &)obj).fXmin = fXmin;
@@ -421,8 +416,8 @@ void TF1NormSum::Copy(TObject &obj) const {
    ((TF1NormSum &)obj).fParNames = fParNames;
 
    // Clone objects in unique_ptr's
-   ((TF1NormSum &)obj).fFunctions = std::vector<std::unique_ptr<TF1> >(fNOfFunctions);
-   for (unsigned int n = 0 ; n < fNOfFunctions ; n++) {
+   ((TF1NormSum &)obj).fFunctions = std::vector<std::unique_ptr<TF1>>(fNOfFunctions);
+   for (unsigned int n = 0; n < fNOfFunctions; n++) {
       ((TF1NormSum &)obj).fFunctions[n] = std::unique_ptr<TF1>((TF1 *)fFunctions[n]->Clone());
    }
 }

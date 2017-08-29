@@ -123,10 +123,10 @@ void TF1Convolution::InitializeDataMembers(TF1* function1, TF1* function2, Bool_
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor without arguments
 
-TF1Convolution::TF1Convolution() {
+TF1Convolution::TF1Convolution()
+{
    // Nothing to do
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor from the two function pointer and a flag is using FFT
@@ -343,13 +343,15 @@ Double_t TF1Convolution::EvalNumConv(Double_t t)
 ////////////////////////////////////////////////////////////////////////////////
 /// Used in TF1 when doing the fit, will be evaluated at each point.
 
-Double_t TF1Convolution::operator()(const Double_t* x, const Double_t* p)
+Double_t TF1Convolution::operator()(const Double_t *x, const Double_t *p)
 {
    if (p!=0)   TF1Convolution::SetParameters(p);                           // first refresh the parameters
 
    Double_t result = 0.;
-   if (fFlagFFT)  result = EvalFFTConv(x[0]);
-   else           result = EvalNumConv(x[0]);
+   if (fFlagFFT)
+      result = EvalFFTConv(x[0]);
+   else
+      result = EvalNumConv(x[0]);
    return result;
 }
 
@@ -365,12 +367,12 @@ void TF1Convolution::SetNofPointsFFT(Int_t n)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void TF1Convolution::SetParameters(const Double_t* params)
+void TF1Convolution::SetParameters(const Double_t *params)
 {
    bool equalParams = true;
    for (int i=0; i<fNofParams1; i++) {
-      fFunction1 -> SetParameter(i,params[i]);
-      equalParams &= ( fParams1[i] == params[i] );
+      fFunction1->SetParameter(i, params[i]);
+      equalParams &= (fParams1[i] == params[i]);
       fParams1[i] = params[i];
    }
    Int_t k       = 0;
@@ -385,9 +387,9 @@ void TF1Convolution::SetParameters(const Double_t* params)
          offset2=1;
          continue;
       }
-      fFunction2 -> SetParameter(k,params[i-offset2]);
-      equalParams &= ( fParams2[k-offset2] == params[i-offset2] );
-      fParams2[k-offset2] = params[i-offset2];
+      fFunction2->SetParameter(k, params[i - offset2]);
+      equalParams &= (fParams2[k - offset2] == params[i - offset2]);
+      fParams2[k - offset2] = params[i - offset2];
       k++;
    }
 
@@ -418,7 +420,7 @@ void TF1Convolution::SetExtraRange(Double_t percentage)
 
 void TF1Convolution::SetRange(Double_t a, Double_t b)
 {
-   if (a>=b) {
+   if (a >= b) {
       Warning("SetRange", "Invalid range: %f >= %f", a, b);
       return;
    }
@@ -447,14 +449,16 @@ void TF1Convolution::GetRange(Double_t &a, Double_t &b) const
 ////////////////////////////////////////////////////////////////////////////////
 ///   Update the two component functions of the convolution
 
-void TF1Convolution::Update() {
+void TF1Convolution::Update()
+{
    fFunction1->Update();
    fFunction2->Update();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void TF1Convolution::Copy(TObject &obj) const {
+void TF1Convolution::Copy(TObject &obj) const
+{
    // copy numbers
    ((TF1Convolution &)obj).fXmin = fXmin;
    ((TF1Convolution &)obj).fXmax = fXmax;

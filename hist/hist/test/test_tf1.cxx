@@ -82,11 +82,12 @@ void voigtHelper(double sigma, double lg)
 }
 
 // Test that we can change the range of TF1NormSum and TF1Convolution
-void test_setRange() {
+void test_setRange()
+{
    // Define TF1 using NSUM
    TF1 f1("f1", "NSUM([sg] * gaus, [bg] * expo)", 0, 1);
-   f1.SetParameters(1,1,0,1,1);
-   EXPECT_NEAR(f1.Integral(0,1), 2, delta);
+   f1.SetParameters(1, 1, 0, 1, 1);
+   EXPECT_NEAR(f1.Integral(0, 1), 2, delta);
 
    // set range and check value of integral again
    f1.SetRange(-5, 5);
@@ -127,7 +128,6 @@ void test_copyClone()
    TF1 *f4 = new TF1("f4", "CONV(gaus, breitwigner)", -15, 15);
    f4->SetParameters(1, 1, 1, 1, 1, 1);
 
-   
    // Make copy
    TF1 *f5 = new TF1();
    f4->Copy(*f5);

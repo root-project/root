@@ -548,7 +548,7 @@ TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, EA
 
       fType = EFType::kCompositionFcn;
       fComposition = std::unique_ptr<TF1AbsComposition>(normSum);
-      
+
       fParams = new TF1Parameters(fNpar);
       fParams->SetParameters(&(normSum->GetParameters())[0]); // inherit default parameters from normSum
 
@@ -1395,7 +1395,6 @@ Double_t TF1::EvalPar(const Double_t *x, const Double_t *params)
 
       result = (*fComposition)(x, params);
    }
-
 
    return result;
 }
@@ -2759,8 +2758,7 @@ void TF1::Print(Option_t *option) const
          printf("Composition based function: %s. Ndim = %d, Npar = %d \n", GetName(), GetNdim(), GetNpar());
          if (!fComposition)
             printf("fComposition not found!\n"); // this is bad
-      }
-      else {
+      } else {
          if (fFunctor)
             printf("Compiled based function: %s  based on a functor object.  Ndim = %d, Npar = %d\n", GetName(), GetNpar(), GetNdim());
          else {
@@ -3429,7 +3427,8 @@ void TF1::Streamer(TBuffer &b)
             R__LOCKGUARD(gROOTMutex);
             gROOT->GetListOfFunctions()->Add(this);
          }
-         if (v >= 10) fComposition = std::unique_ptr<TF1AbsComposition>(fComposition_ptr);
+         if (v >= 10)
+            fComposition = std::unique_ptr<TF1AbsComposition>(fComposition_ptr);
          return;
       } else {
          ROOT::v5::TF1Data fold;
