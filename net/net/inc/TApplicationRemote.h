@@ -49,7 +49,7 @@ public:
    };
    // TApplication specific bits
    enum EStatusBits {
-      kCollecting       = BIT(16)   // TRUE while collecting from server
+      kCollecting       = BIT(17)   // TRUE while collecting from server
    };
 
 private:
