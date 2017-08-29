@@ -470,7 +470,7 @@ protected:
        SetBinError(binx, biny, content);
     }
 
-    ClassDef(TH1, 7) // 1-Dim histogram base class
+    ClassDef(TH1, 8) // 1-Dim histogram base class
 
        protected : virtual Double_t RetrieveBinContent(Int_t bin) const;
     virtual void UpdateBinContent(Int_t bin, Double_t content);
