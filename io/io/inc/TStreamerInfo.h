@@ -136,14 +136,7 @@ private:
 public:
 
    /// Status bits
-   enum EStatusBits {
-      kCannotOptimize        = BIT(12),
-      kIgnoreTObjectStreamer = BIT(13),  ///< Eventhough BIT(13) is taken up by TObject (to preserverse forward compatibility)
-      kRecovered             = BIT(14),
-      kNeedCheck             = BIT(15),
-      kIsCompiled            = BIT(16),
-      kBuildOldUsed          = BIT(17)
-   };
+   /// See TVirtualStreamerInfo::EStatusBits for the values.
 
 /// EReadWrite Enumerator
 /// | Enum Constant | Description   |
