@@ -223,7 +223,7 @@ protected:
 
 private:
 
-   enum EPropertyBits {
+   enum EStatusBits {
       kBitIsChain = BIT(14), ///< our tree is a chain
       kBitHaveWarnedAboutEntryListAttachedToTTree = BIT(15) ///< the tree had a TEntryList and we have warned about that
    };

@@ -136,12 +136,13 @@ private:
 public:
 
    /// Status bits
-   enum { kCannotOptimize        = BIT(12),
-          kIgnoreTObjectStreamer = BIT(13),  ///< Eventhough BIT(13) is taken up by TObject (to preserverse forward compatibility)
-          kRecovered             = BIT(14),
-          kNeedCheck             = BIT(15),
-          kIsCompiled            = BIT(16),
-          kBuildOldUsed          = BIT(17)
+   enum EStatusBits {
+      kCannotOptimize        = BIT(12),
+      kIgnoreTObjectStreamer = BIT(13),  ///< Eventhough BIT(13) is taken up by TObject (to preserverse forward compatibility)
+      kRecovered             = BIT(14),
+      kNeedCheck             = BIT(15),
+      kIsCompiled            = BIT(16),
+      kBuildOldUsed          = BIT(17)
    };
 
 /// EReadWrite Enumerator

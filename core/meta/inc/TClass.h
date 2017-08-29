@@ -77,16 +77,18 @@ friend class TProtoClass;
 
 public:
    // TClass status bits
-   enum { kClassSaved  = BIT(12), kIgnoreTObjectStreamer = BIT(15),
-          kUnloaded    = BIT(16), // The library containing the dictionary for this class was
-                                  // loaded and has been unloaded from memory.
-          kIsTObject = BIT(17),
-          kIsForeign   = BIT(18),
-          kIsEmulation = BIT(19), // Deprecated
-          kStartWithTObject = BIT(20),  // see comments for IsStartingWithTObject()
-          kWarned      = BIT(21),
-          kHasNameMapNode = BIT(22),
-          kHasCustomStreamerMember = BIT(23) // The class has a Streamer method and it is implemented by the user or an older (not StreamerInfo based) automatic streamer.
+   enum EStatusBits {
+      kClassSaved  = BIT(12),
+      kIgnoreTObjectStreamer = BIT(15),
+      kUnloaded    = BIT(16), // The library containing the dictionary for this class was
+                              // loaded and has been unloaded from memory.
+      kIsTObject = BIT(17),
+      kIsForeign   = BIT(18),
+      kIsEmulation = BIT(19), // Deprecated
+      kStartWithTObject = BIT(20),  // see comments for IsStartingWithTObject()
+      kWarned      = BIT(21),
+      kHasNameMapNode = BIT(22),
+      kHasCustomStreamerMember = BIT(23) // The class has a Streamer method and it is implemented by the user or an older (not StreamerInfo based) automatic streamer.
    };
    enum ENewType { kRealNew = 0, kClassNew, kDummyNew };
    enum ECheckSum {

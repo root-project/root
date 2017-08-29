@@ -65,7 +65,7 @@ private:
 
    Bool_t      fUserHisto;   // True when SetHistogram has been called
 
-   enum {
+   enum EStatusBits {
       kOldInterpolation =  BIT(15)
    };
 

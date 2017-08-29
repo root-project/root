@@ -45,7 +45,7 @@ protected:
    friend void TFriendElement__SetTree(TTree *tree, TList *frlist);
 
 public:
-   enum { kFromChain = BIT(11) };
+   enum EStatusBits { kFromChain = BIT(11) };
    TFriendElement();
    TFriendElement(TTree *tree, const char *treename, const char *filename);
    TFriendElement(TTree *tree, const char *treename, TFile *file);

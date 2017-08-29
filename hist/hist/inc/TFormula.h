@@ -145,7 +145,7 @@ protected:
 
 public:
 
-   enum {
+   enum EStatusBits {
       kNotGlobal     = BIT(10),    // don't store in gROOT->GetListOfFunction (it should be protected)
       kNormalized    = BIT(14),    // set to true if the TFormula (ex gausn) is normalized
       kLinear        = BIT(16),    //set to true if the TFormula is for linear fitting

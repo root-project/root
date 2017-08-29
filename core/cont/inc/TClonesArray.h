@@ -36,7 +36,7 @@ protected:
    TObjArray    *fKeep;        //!Saved copies of pointers to objects
 
 public:
-   enum {
+   enum EStatusBits {
       kForgetBits     = BIT(0),   // Do not create branches for fBits, fUniqueID
       kBypassStreamer = BIT(12)   // Class Streamer not called (default)
    };

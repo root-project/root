@@ -301,12 +301,9 @@ public:
    virtual void GetRange(Double_t *xmin, Double_t *xmax) const;
    virtual TH1 *DoCreateHistogram(Double_t xmin, Double_t xmax, Bool_t recreate = kFALSE);
 
-   enum {
-      kNotGlobal   = BIT(10),  // don't register in global list of functions
-   };
-
    // TF1 status bits
-   enum {
+   enum EStatusBits {
+      kNotGlobal   = BIT(10),  // don't register in global list of functions
       kNotDraw     = BIT(9)  // don't draw the function when in a TH1
    };
 

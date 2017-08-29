@@ -54,7 +54,7 @@ private:
 
 public:
    // TAxis status bits
-   enum {
+   enum EStatusBits {
           kDecimals      = BIT(7),
           kTickPlus      = BIT(9),
           kTickMinus     = BIT(10),
