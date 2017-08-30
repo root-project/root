@@ -92,7 +92,7 @@ Bool_t TWebCanvas::IsJSSupportedClass(TObject* obj)
    if (!obj) return kTRUE;
 
    if (obj->InheritsFrom("TH1") || obj->InheritsFrom("TGraph") || obj->InheritsFrom("TF1") ||
-       obj->InheritsFrom("TFrame") ||
+       obj->InheritsFrom("TFrame") || obj->InheritsFrom("THStack") || obj->InheritsFrom("TMultiGraph") ||
        // obj->InheritsFrom("TBox") ||  // this is supported but can be handled via VirtualX and VirtualPadPainter
        obj->InheritsFrom("TPave") || obj->InheritsFrom("TArrow")) return kTRUE;
 
