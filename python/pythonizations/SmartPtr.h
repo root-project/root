@@ -22,17 +22,17 @@ public:
 
 int MyShareable::sInstances = 0;
 
-auto_ptr<MyShareable> mine = auto_ptr<MyShareable>(new MyShareable);
+unique_ptr<MyShareable> mine = unique_ptr<MyShareable>(new MyShareable);
 
-void renew_mine() { mine = auto_ptr<MyShareable>(new MyShareable); }
+void renew_mine() { mine = unique_ptr<MyShareable>(new MyShareable); }
 
-auto_ptr<MyShareable> gime_mine();
-auto_ptr<MyShareable>* gime_mine_ptr();
-auto_ptr<MyShareable>& gime_mine_ref();
+unique_ptr<MyShareable> gime_mine();
+unique_ptr<MyShareable>* gime_mine_ptr();
+unique_ptr<MyShareable>& gime_mine_ref();
 
-void pass_mine_sp(auto_ptr<MyShareable> p);
-void pass_mine_sp_ref(auto_ptr<MyShareable>& p);
-void pass_mine_sp_ptr(auto_ptr<MyShareable>* p);
+void pass_mine_sp(unique_ptr<MyShareable> p);
+void pass_mine_sp_ref(unique_ptr<MyShareable>& p);
+void pass_mine_sp_ptr(unique_ptr<MyShareable>* p);
 
 void pass_mine_rp(MyShareable);
 void pass_mine_rp_ref(const MyShareable&);
