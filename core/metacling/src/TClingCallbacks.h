@@ -45,7 +45,6 @@ private:
    bool fIsAutoParsingSuspended;
    bool fPPOldFlag;
    bool fPPChanged;
-   std::stack<void*> fMutexStatesWhenEnteringUserCode;
 public:
    TClingCallbacks(cling::Interpreter* interp);
 
@@ -103,8 +102,8 @@ public:
 
    virtual void PrintStackTrace();
 
-   virtual void EnteringUserCode();
-   virtual void ReturnedFromUserCode();
+   virtual void* EnteringUserCode();
+   virtual void ReturnedFromUserCode(void* stateInfo);
 
 private:
    bool tryAutoParseInternal(llvm::StringRef Name, clang::LookupResult &R,

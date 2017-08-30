@@ -786,14 +786,13 @@ void TClingCallbacks::PrintStackTrace() {
    TCling__PrintStackTrace();
 }
 
-void TClingCallbacks::EnteringUserCode() {
+void* TClingCallbacks::EnteringUserCode() {
    // We can safely assume that if the lock exist already when we are in Cling code,
    // then the lock has (or should been taken) already. Any action (that caused callers
    // to take the lock) is halted during ProcessLine. So it is fair to unlock it.
-   fMutexStatesWhenEnteringUserCode.push(TCling__ResetInterpreterMutex());
+   return TCling__ResetInterpreterMutex();
 }
 
-void TClingCallbacks::ReturnedFromUserCode() {
-   TCling__RestoreInterpreterMutex(fMutexStatesWhenEnteringUserCode.top());
-   fMutexStatesWhenEnteringUserCode.pop();
+void TClingCallbacks::ReturnedFromUserCode(void* stateInfo) {
+   TCling__RestoreInterpreterMutex(stateInfo);
 }
