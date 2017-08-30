@@ -12,6 +12,7 @@
 /bindings/ @peremato
 /cmake/ @peremato
 /core/ @Axel-Naumann
+/core/ @pcanal
 /documentation/ @couet
 /fonts/ @bellenot
 /geom/ @agheata
@@ -22,6 +23,7 @@
 /html/ @Axel-Naumann
 /icons/ @bellenot
 /interpreter/ @Axel-Naumann
+/interpreter/ @vgvassilev
 /io/ @pcanal
 /main/ @pcanal
 /math/ @lmoneta
