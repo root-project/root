@@ -753,7 +753,7 @@ T TF1::EvalPar(const T *x, const Double_t *params)
 template <class T>
 inline T TF1::EvalParTempl(const T *data, const Double_t *params)
 {
-   assert(fType == EFType::kTemplScalar || EFType::kTemplVec);
+   assert(fType == EFType::kTemplScalar || fType == EFType::kTemplVec);
    if (!params) params = (Double_t *)fParams->GetParameters();
    if (fFunctor)
       return ((TF1FunctorPointerImpl<T> *)fFunctor)->fImpl(data, params);
