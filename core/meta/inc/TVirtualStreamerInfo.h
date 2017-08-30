@@ -72,6 +72,14 @@ public:
           kBuildRunning          = BIT(18)
    };
 
+   enum class EStatusBitsDupExceptions {
+        // This bit duplicates TObject::kInvalidObject. As the semantic of kIgnoreTObjectStreamer is a persistent,
+        // we can not change its value without breaking forward compatibility.
+        // Furthermore, TObject::kInvalidObject and its semantic is not (and should not be)
+        // used in TVirtualStreamerInfo
+        kIgnoreTObjectStreamer  = TVirtualStreamerInfo::kIgnoreTObjectStreamer,
+   };
+
    enum EReadWrite {
       kBase        =  0,  kOffsetL = 20,  kOffsetP = 40,  kCounter =  6,  kCharStar = 7,
       kChar        =  1,  kShort   =  2,  kInt     =  3,  kLong    =  4,  kFloat    = 5,
