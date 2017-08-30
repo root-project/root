@@ -18,7 +18,7 @@
 
 #include <cmath>
 #include <limits>
-#include "Math_vectypes.hxx"
+#include "Types.h"
 
 
 // for defining unused variables in the interfaces

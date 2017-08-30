@@ -15,7 +15,7 @@ set(MATHCORE_HEADERS TRandom.h
   Math/ChebyshevPol.h Math/KDTree.h Math/TDataPoint.h Math/TDataPointN.h Math/Delaunay2D.h
   Math/Random.h Math/TRandomEngine.h Math/RandomFunctions.h Math/StdEngine.h
   Math/MersenneTwisterEngine.h Math/MixMaxEngine.h   TRandomGen.h Math/LCGEngine.h
-  Math/Math_vectypes.hxx
+  Math/Types.h
 )
 
 if(veccore)

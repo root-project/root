@@ -13,7 +13,7 @@
 #ifndef ROOT_Math_IFunctionfwd
 #define ROOT_Math_IFunctionfwd
 
-#include "Math_vectypes.hxx"
+#include "Types.h"
 
 namespace ROOT {
 

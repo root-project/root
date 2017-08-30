@@ -30,7 +30,7 @@
 #include "TAttMarker.h"
 #include "TROOT.h"
 #include "TMath.h"
-#include "Math/Math_vectypes.hxx"
+#include "Math/Types.h"
 #include "Math/ParamFunctor.h"
 
 
