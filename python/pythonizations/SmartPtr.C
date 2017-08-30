@@ -1,3 +1,6 @@
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated"
+
 #include "SmartPtr.h"
 
 auto_ptr<MyShareable> gime_mine() { return mine; }
@@ -20,3 +23,4 @@ void pass_mine_rp(MyShareable) {}
 void pass_mine_rp_ref(const MyShareable&) {}
 void pass_mine_rp_ptr(const MyShareable*) {}
 
+#pragma GCC diagnostic pop
