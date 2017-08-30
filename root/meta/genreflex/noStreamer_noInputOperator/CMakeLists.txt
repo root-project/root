@@ -7,7 +7,8 @@ ROOTTEST_ADD_TESTDIRS()
 ROOTTEST_ADD_TEST(invalidNoStreamerGenreflex
                   COMMAND ${ROOT_genreflex_CMD} foo.h -o ${CMAKE_CURRENT_BINARY_DIR}/invalidNoStreamer_rflx.cpp  --selection_file=invalidNoStreamer_selection.xml
                   WORKING_DIR ${CMAKE_CURRENT_SOURCE_DIR}
-                  OUTREF invalidNoStreamerGenreflex.ref)
+                  OUTREF invalidNoStreamerGenreflex.ref
+                  PASSRC 1)
 
 #   custom streamer
 ROOTTEST_GENERATE_REFLEX_DICTIONARY(customStreamer_rflx foo_custom_streamer.h SELECTION noStreamer_selection.xml)
@@ -32,7 +33,8 @@ ROOTTEST_ADD_TEST(noStreamerFalseDict
 ROOTTEST_ADD_TEST(invalidNoInpuOperatorGenreflex
                   COMMAND ${ROOT_genreflex_CMD} foo.h -o ${CMAKE_CURRENT_BINARY_DIR}/invalidNoInputOperator_rflx.cpp  --selection_file=invalidNoInputOperator_selection.xml
                   WORKING_DIR ${CMAKE_CURRENT_SOURCE_DIR}
-                  OUTREF invalidNoInputOperatorGenreflex.ref)
+                  OUTREF invalidNoInputOperatorGenreflex.ref
+                  PASSRC 1)
 
 #   noInputOperator = true
 ROOTTEST_GENERATE_REFLEX_DICTIONARY(noInputOperator_rflx foo_custom_input_operator.h SELECTION noInputOperator_selection.xml)
