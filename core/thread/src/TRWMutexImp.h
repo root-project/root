@@ -29,7 +29,7 @@ public:
 
    TVirtualRWMutex *Factory(Bool_t /*recursive*/ = kFALSE) override;
    std::unique_ptr<TVirtualMutex::State> Reset() override;
-   void Restore(std::unique_ptr<TVirtualMutex::State>&&) override;
+   void Restore(std::unique_ptr<TVirtualMutex::State> &&) override;
 
    ClassDefInlineOverride(TRWMutexImp,0)  // Concrete RW mutex lock class
 };

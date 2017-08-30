@@ -83,11 +83,10 @@ std::unique_ptr<TVirtualMutex::State> TRWMutexImp<MutexT, RecurseCountsT>::Reset
 /// must only be called while the mutex is unlocked.
 
 template <typename MutexT, typename RecurseCountsT>
-void TRWMutexImp<MutexT, RecurseCountsT>::Restore(std::unique_ptr<TVirtualMutex::State>&& state)
+void TRWMutexImp<MutexT, RecurseCountsT>::Restore(std::unique_ptr<TVirtualMutex::State> &&state)
 {
    fMutexImp.Restore(std::move(state));
 }
-
 
 template class TRWMutexImp<TMutex>;
 template class TRWMutexImp<ROOT::TSpinMutex>;
