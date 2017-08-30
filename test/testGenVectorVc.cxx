@@ -1,5 +1,5 @@
 // ROOT
-#include "Math/Math_vectypes.hxx"
+#include "Math/Types.h"
 #include "Math/GenVector/PositionVector3D.h"
 #include "Math/GenVector/DisplacementVector3D.h"
 #include "Math/GenVector/Plane3D.h"

@@ -70,7 +70,7 @@ MATHCOREDICTH :=  TComplex.h \
                 Math/ChebyshevPol.h \
                 Math/SpecFuncMathCore.h \
                 Math/DistFuncMathCore.h \
-                Math/Math_vectypes.hxx \
+                Math/Types.h \
 		$(patsubst $(MODDIRI)/%,%,$(filter-out $(MODDIRI)/Fit/LinkDef%,$(filter-out $(MODDIRI)/Fit/Chi2Grad%,$(wildcard $(MODDIRI)/Fit/*.h))))
 
 MATHCOREMH1   := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))

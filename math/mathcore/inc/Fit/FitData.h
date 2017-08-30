@@ -24,7 +24,7 @@ Classes for describing the input data for fitting
 
 #include "Fit/DataOptions.h"
 #include "Fit/DataRange.h"
-#include "Math/Math_vectypes.hxx"
+#include "Math/Types.h"
 
 #include <vector>
 #include <cassert>
