@@ -1,6 +1,9 @@
 #ifndef SMARTPTR_H
 #define SMARTPTR_H
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated"
+
 #include <memory>
 #include <iostream>
 
@@ -38,5 +41,5 @@ void pass_mine_rp(MyShareable);
 void pass_mine_rp_ref(const MyShareable&);
 void pass_mine_rp_ptr(const MyShareable*);
 
+#pragma GCC diagnostic pop
 #endif
-
