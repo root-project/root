@@ -62,12 +62,12 @@ $(call pcmrule,PYTHIA8)
 $(PYTHIA8DS):   $(PYTHIA8H) $(PYTHIA8L) $(ROOTCLINGEXE) $(call pcmdep,PYTHIA8)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,PYTHIA8) -c $(FPYTHIA8INCDIR:%=-isystem%) $(PYTHIA8H) $(PYTHIA8L)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,PYTHIA8) -c $(FPYTHIA8INCDIR:%=-I%) $(PYTHIA8H) $(PYTHIA8L)
 
 $(PYTHIA8MAP):  $(PYTHIA8H) $(PYTHIA8L) $(ROOTCLINGEXE) $(call pcmdep,PYTHIA8)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCLINGSTAGE2) -r $(PYTHIA8DS) $(call dictModule,PYTHIA8) -c $(FPYTHIA8INCDIR:%=-isystem%) $(PYTHIA8H) $(PYTHIA8L)
+		$(ROOTCLINGSTAGE2) -r $(PYTHIA8DS) $(call dictModule,PYTHIA8) -c $(FPYTHIA8INCDIR:%=-I%) $(PYTHIA8H) $(PYTHIA8L)
 
 all-$(MODNAME): $(PYTHIA8LIB)
 
