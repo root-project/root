@@ -356,7 +356,8 @@ void TCling__PrintStackTrace() {
 extern "C"
 void TCling__RestoreInterpreterMutex(void* state) {
    if (gInterpreterMutex && state) {
-      std::unique_ptr<TVirtualMutex::State> uniqueP{static_cast<TVirtualMutex::State*>(state)};
+      auto typedState = static_cast<TVirtualMutex::State*>(state);
+      std::unique_ptr<TVirtualMutex::State> uniqueP{typedState};
       gInterpreterMutex->Restore(std::move(uniqueP));
    }
 }
