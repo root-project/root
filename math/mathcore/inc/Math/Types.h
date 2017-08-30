@@ -6,11 +6,21 @@
 #ifdef R__HAS_VECCORE
 
 #if defined(R__HAS_VC)
+
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wconditional-uninitialized"
+#endif
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wall"
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 #include <Vc/Vc>
 #pragma GCC diagnostic pop
+#endif
+
+#ifdef __clang__
+#pragma clang diagnostic pop
 #endif
 
 #include <VecCore/VecCore>
