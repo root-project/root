@@ -556,6 +556,8 @@ namespace FitUtil {
             T W2{};
             T fval{};
 
+            (void)p; /* avoid unused lambda capture warning if PARAMCACHE is disabled */
+
             if(data.NDim() > 1) {
                std::vector<T> x(data.NDim());
                for (unsigned int j = 0; j < data.NDim(); ++j)
