@@ -219,16 +219,16 @@ void TWebPadPainter::DrawLineNDC(Double_t u1, Double_t v1, Double_t u2, Double_t
 
 void TWebPadPainter::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, EBoxMode mode)
 {
-   // printf("PAINT BOX %f %f %f %f\n", x1, y1, x2, y2);
+   // printf("PAINT BOX %4.2f %4.2f %4.2f %4.2f mode %d linecol %d\n", x1, y1, x2, y2, (int) mode, gVirtualX->GetLineColor());
 
-   GetAttributes(1); // get only line attributes
+   // GetAttributes(1); // get only line attributes
 
    if (GetLineWidth()<=0 && mode == TVirtualPadPainter::kHollow) return;
 
    if (mode == TVirtualPadPainter::kHollow)
-      StoreOperation("rect", 0, 1);
+      StoreOperation("rect", 0, 1); // only border
    else
-      StoreOperation("box", 0, 3);
+      StoreOperation("box", 0, 2); // only fill
 
    Float_t *buf = Reserve(4);
    buf[0] = x1;

@@ -92,10 +92,11 @@ Bool_t TWebCanvas::IsJSSupportedClass(TObject* obj)
    if (!obj) return kTRUE;
 
    if (obj->InheritsFrom("TH1") || obj->InheritsFrom("TGraph") || obj->InheritsFrom("TF1") ||
-       obj->InheritsFrom("TFrame") || obj->InheritsFrom("TBox") ||
+       obj->InheritsFrom("TFrame") ||
+       // obj->InheritsFrom("TBox") ||  // this is supported but can be handled via VirtualX and VirtualPadPainter
        obj->InheritsFrom("TPave") || obj->InheritsFrom("TArrow")) return kTRUE;
 
-   printf("Unsupported class %s\n", obj->ClassName());
+   // printf("Unsupported class %s\n", obj->ClassName());
 
    return kFALSE;
 }
@@ -547,6 +548,7 @@ Bool_t TWebCanvas::ProcessWS(THttpCallArg *arg)
       } else
       if (strncmp(cdata, "RREADY:", 7)==0) {
          conn->fReady = kTRUE;
+         // printf("Get ranges %s\n", cdata);
          if (!DecodeAllRanges(cdata+7)) CheckModifiedFlag();
       } else
       if (strncmp(cdata,"GETMENU:",8)==0) {
