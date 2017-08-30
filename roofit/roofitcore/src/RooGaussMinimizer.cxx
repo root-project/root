@@ -65,7 +65,7 @@ automatic PDF optimization.
 
 #include "RooMinimizer.h"
 #include "RooGaussMinimizer.h"
-#include "RooGaussMinimizer.h"
+#include "RooGaussMinimizerFcn.h"
 #include "RooFitResult.h"
 
 #include "Math/Minimizer.h"
@@ -122,8 +122,8 @@ RooGaussMinimizer::RooGaussMinimizer(RooAbsReal& function)
 
   if (_theFitter) delete _theFitter ;
   _theFitter = new ROOT::Fit::Fitter;
-  RooMinimizer *theRooMinimizer = dynamic_cast<RooMinimizer*>(this);
-  _fcn = new RooMinimizerFcn(_func,theRooMinimizer,_verbose);
+  //  RooMinimizer *theRooMinimizer = dynamic_cast<RooMinimizer*>(this);
+  _fcn = new RooGaussMinimizerFcn(_func,this,_verbose);
   _theFitter->Config().SetMinimizer(_minimizerType.c_str());
   // default max number of calls
   _theFitter->Config().MinimizerOptions().SetMaxIterations(500*_fcn->NDim());

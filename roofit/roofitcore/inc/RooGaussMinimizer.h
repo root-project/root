@@ -23,6 +23,7 @@
 
 #include "Fit/Fitter.h"
 #include "RooMinimizerFcn.h"
+#include "RooGaussMinimizerFcn.h"
 
 class RooAbsReal ;
 class RooFitResult ;
@@ -69,8 +70,8 @@ protected:
   inline std::ofstream* logfile() { return fitterFcn()->GetLogFile(); }
   inline Double_t& maxFCN() { return fitterFcn()->GetMaxFCN() ; }
   
-  const RooMinimizerFcn* fitterFcn() const {  return ( fitter()->GetFCN() ? ((RooMinimizerFcn*) fitter()->GetFCN()) : _fcn ) ; }
-  RooMinimizerFcn* fitterFcn() { return ( fitter()->GetFCN() ? ((RooMinimizerFcn*) fitter()->GetFCN()) : _fcn ) ; }
+  const RooGaussMinimizerFcn* fitterFcn() const {  return ( fitter()->GetFCN() ? ((RooGaussMinimizerFcn*) fitter()->GetFCN()) : _fcn ) ; }
+  RooGaussMinimizerFcn* fitterFcn() { return ( fitter()->GetFCN() ? ((RooGaussMinimizerFcn*) fitter()->GetFCN()) : _fcn ) ; }
 
 private:
 
@@ -87,7 +88,7 @@ private:
 
   TMatrixDSym* _extV ;
 
-  RooMinimizerFcn *_fcn;
+  RooGaussMinimizerFcn *_fcn;
   std::string _minimizerType;
 
   static ROOT::Fit::Fitter *_theFitter ;
