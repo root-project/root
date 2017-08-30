@@ -8,7 +8,7 @@
 
 #---Declare ZipLZ4 sources as part of libCore-------------------------------
 set(headers ${CMAKE_CURRENT_SOURCE_DIR}/inc/ZipLZ4.h)
-set(sources ${CMAKE_CURRENT_SOURCE_DIR}/src/ZipLZ4.c)
+set(sources ${CMAKE_CURRENT_SOURCE_DIR}/src/ZipLZ4.cxx)
 
 
 include_directories(${LZ4_INCLUDE_DIR})
