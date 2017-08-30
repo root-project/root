@@ -93,9 +93,9 @@ Int_t TPosixMutex::UnLock(void)
 }
 
 namespace {
-   struct TPosixMutexState: public TVirtualMutex::State {
-      int fLockCount = 0;;
-   };
+struct TPosixMutexState: public TVirtualMutex::State {
+   int fLockCount = 0;
+};
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -116,7 +116,8 @@ std::unique_ptr<TVirtualMutex::State> TPosixMutex::Reset()
    // But we can try.
    if (int rc = UnLock()) {
       SysError("Reset", "pthread_mutex_unlock failed with %d, "
-                        "but Reset() must be called on locked mutex!", rc);
+                        "but Reset() must be called on locked mutex!",
+               rc);
       return std::move(pState);
    }
    ++pState->fLockCount;
@@ -127,9 +128,9 @@ std::unique_ptr<TVirtualMutex::State> TPosixMutex::Reset()
 /// Restore the mutex state to the state pointed to by `state`. This function
 /// must only be called while the mutex is unlocked.
 
-void TPosixMutex::Restore(std::unique_ptr<TVirtualMutex::State>&& state)
+void TPosixMutex::Restore(std::unique_ptr<TVirtualMutex::State> &&state)
 {
-   TPosixMutexState* pState = dynamic_cast<TPosixMutexState*>(state.get());
+   TPosixMutexState *pState = dynamic_cast<TPosixMutexState *>(state.get());
    if (!pState) {
       if (state) {
          SysError("Restore", "LOGIC ERROR - invalid state object!");

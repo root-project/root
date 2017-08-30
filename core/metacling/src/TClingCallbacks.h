@@ -102,8 +102,8 @@ public:
 
    virtual void PrintStackTrace();
 
-   virtual void* EnteringUserCode();
-   virtual void ReturnedFromUserCode(void* stateInfo);
+   virtual void *EnteringUserCode();
+   virtual void ReturnedFromUserCode(void *stateInfo);
 
 private:
    bool tryAutoParseInternal(llvm::StringRef Name, clang::LookupResult &R,
