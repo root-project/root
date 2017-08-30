@@ -23,7 +23,7 @@
 /html/ @Axel-Naumann
 /icons/ @bellenot
 /interpreter/ @Axel-Naumann
-/interpreter/ @vgvassilev
+/interpreter/llvm/ @vgvassilev
 /io/ @pcanal
 /main/ @pcanal
 /math/ @lmoneta
