@@ -39,6 +39,9 @@ protected:
    Double_t     fTsumwxz;         //Total Sum of weight*X*Z
    Double_t     fTsumwyz;         //Total Sum of weight*Y*Z
 
+   static void *fgCallbackCtx;           ///<!Global context setting for the function to be called back
+   static CallbackFunc_t fgCallbackFunc; ///<!Global callback function setting, for example to get ranges
+
    TH3();
    TH3(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup
                                   ,Int_t nbinsy,Double_t ylow,Double_t yup
@@ -62,6 +65,11 @@ protected:
    Int_t    Fill(const char*,Double_t,Double_t) {return Fill(0);} //MayNotUse
    Int_t    Fill(const char*,const char*,Double_t) {return Fill(0);} //MayNotUse
 
+   virtual void RecalculateAxes(Double_t *b, Int_t n);
+   virtual TList *GetListWithRanges(const char *n);
+   virtual Bool_t HasNoLimits();
+   virtual Int_t SetRangesFromList(TList *axl);
+
 private:
 
    TH3(const TH3&);
@@ -69,7 +77,6 @@ private:
 
 public:
    virtual ~TH3();
-   virtual Int_t    BufferEmpty(Int_t action=0);
    virtual void     Copy(TObject &hnew) const;
    virtual Int_t    Fill(Double_t x, Double_t y, Double_t z);
    virtual Int_t    Fill(Double_t x, Double_t y, Double_t z, Double_t w);
@@ -127,6 +134,8 @@ public:
    virtual void      SetBinContent(Int_t bin, Int_t, Double_t content) { SetBinContent(bin, content); }
    virtual void      SetBinContent(Int_t binx, Int_t biny, Int_t binz, Double_t content) { SetBinContent(GetBin(binx, biny, binz), content); }
    virtual void     SetShowProjection(const char *option="xy",Int_t nbins=1);   // *MENU*
+
+   static void SetGlobalCallbackFunc(void *c, CallbackFunc_t f);
 
 protected:
 

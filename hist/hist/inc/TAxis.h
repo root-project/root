@@ -138,7 +138,8 @@ public:
                          return (fXbins.GetSize() != 0);
                       }
    virtual void       LabelsOption(Option_t *option="h");  // *MENU*
-           void       RotateTitle(Bool_t rotate=kTRUE); // *TOGGLE* *GETTER=GetRotateTitle
+   virtual void Print(Option_t *) const;
+   void RotateTitle(Bool_t rotate = kTRUE); // *TOGGLE* *GETTER=GetRotateTitle
    virtual void       SaveAttributes(std::ostream &out, const char *name, const char *subname);
    virtual void       Set(Int_t nbins, Double_t xmin, Double_t xmax);
    virtual void       Set(Int_t nbins, const Float_t *xbins);

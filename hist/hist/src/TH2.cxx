@@ -53,6 +53,8 @@ ClassImp(TH2);
 - TH2D a 2-D histogram with eight bytes per cell (double)
 */
 
+void *TH2::fgCallbackCtx = 0;
+CallbackFunc_t TH2::fgCallbackFunc = 0;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -165,77 +167,123 @@ TH2::~TH2()
 {
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Sets a global function for callbacks (see setting ranges in BufferEmpty)
+///
+
+void TH2::SetGlobalCallbackFunc(void *c, CallbackFunc_t f)
+{
+   fgCallbackCtx = c;
+   fgCallbackFunc = f;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Fill histogram with all entries in the buffer.
-///  - action = -1 histogram is reset and refilled from the buffer (called by THistPainter::Paint)
-///  - action =  0 histogram is filled from the buffer
-///  - action =  1 histogram is filled and buffer is deleted
-///                The buffer is automatically deleted when the number of entries
-///                in the buffer is greater than the number of entries in the histogram
+/// Sets axes ranges from the content of the given list
+///
 
-Int_t TH2::BufferEmpty(Int_t action)
+Int_t TH2::SetRangesFromList(TList *axl)
 {
-   // do we need to compute the bin size?
-   if (!fBuffer) return 0;
-   Int_t nbentries = (Int_t)fBuffer[0];
-
-   // nbentries correspond to the number of entries of histogram
-
-   if (nbentries == 0) return 0;
-   if (nbentries < 0 && action == 0) return 0;    // case histogram has been already filled from the buffer
-
-   Double_t *buffer = fBuffer;
-   if (nbentries < 0) {
-      nbentries  = -nbentries;
-      //  a reset might call BufferEmpty() giving an infinite loop
-      // Protect it by setting fBuffer = 0
-      fBuffer=0;
-       //do not reset the list of functions
-      Reset("ICES");
-      fBuffer = buffer;
+   Int_t rc = -1;
+   if (!axl || (axl && axl->GetSize() != 2)) {
+      Warning("SetRangesFromList", "empty or inconsistent list received (%p)!", axl);
+      return rc;
    }
-
-   if (CanExtendAllAxes() || fXaxis.GetXmax() <= fXaxis.GetXmin() || fYaxis.GetXmax() <= fYaxis.GetXmin()) {
-      //find min, max of entries in buffer
-      Double_t xmin = fBuffer[2];
-      Double_t xmax = xmin;
-      Double_t ymin = fBuffer[3];
-      Double_t ymax = ymin;
-      for (Int_t i=1;i<nbentries;i++) {
-         Double_t x = fBuffer[3*i+2];
-         if (x < xmin) xmin = x;
-         if (x > xmax) xmax = x;
-         Double_t y = fBuffer[3*i+3];
-         if (y < ymin) ymin = y;
-         if (y > ymax) ymax = y;
-      }
-      if (fXaxis.GetXmax() <= fXaxis.GetXmin() || fYaxis.GetXmax() <= fYaxis.GetXmin()) {
-         THLimitsFinder::GetLimitsFinder()->FindGoodLimits(this,xmin,xmax,ymin,ymax);
+   TObjLink *oln = axl->FirstLink();
+   TAxis *nax = (TAxis *)oln->GetObject();
+   oln = oln->Next();
+   TAxis *nay = (TAxis *)oln->GetObject();
+   if (nax && nay) {
+      if (nax->GetNbins() > 0 && nax->GetXmax() > nax->GetXmin() && nay->GetNbins() > 0 &&
+          nay->GetXmax() > nay->GetXmin()) {
+         if (gDebug > 1)
+            Info("SetRangesFromList", "found|had for '%s' :\n"
+                                      "\t xbins, xmin, xmax : %d|%d, %f|%f, %f|%f\n"
+                                      "\t ybins, ymin, ymax : %d|%d, %f|%f, %f|%f",
+                 axl->GetName(), nax->GetNbins(), fXaxis.GetNbins(), nax->GetXmin(), fXaxis.GetXmin(), nax->GetXmax(),
+                 fXaxis.GetXmax(), nay->GetNbins(), fYaxis.GetNbins(), nay->GetXmin(), fYaxis.GetXmin(), nay->GetXmax(),
+                 fYaxis.GetXmax());
+         SetBins(nax->GetNbins(), nax->GetXmin(), nax->GetXmax(), nay->GetNbins(), nay->GetXmin(), nay->GetXmax());
+         rc = 0;
       } else {
-         fBuffer = 0;
-         Int_t keep = fBufferSize; fBufferSize = 0;
-         if (xmin <  fXaxis.GetXmin()) ExtendAxis(xmin,&fXaxis);
-         if (xmax >= fXaxis.GetXmax()) ExtendAxis(xmax,&fXaxis);
-         if (ymin <  fYaxis.GetXmin()) ExtendAxis(ymin,&fYaxis);
-         if (ymax >= fYaxis.GetXmax()) ExtendAxis(ymax,&fYaxis);
-         fBuffer = buffer;
-         fBufferSize = keep;
+         Warning("SetRangesFromList", "found for '%s'"
+                                      " inconsistent xbins, xmin, xmax or ybins, ymin, ymax "
+                                      "(%d, %f, %f, %d, %f, %f)",
+                 axl->GetName(), nax->GetNbins(), nax->GetXmin(), nax->GetXmax(), nay->GetNbins(), nay->GetXmin(),
+                 nay->GetXmax());
       }
+   } else {
+      Warning("SetRangesFromList", "not all axes defined for '%s' (%p, %p)", axl->GetName(), nax, nay);
    }
+   return rc;
+}
 
-   fBuffer = 0;
-   for (Int_t i=0;i<nbentries;i++) {
-      Fill(buffer[3*i+2],buffer[3*i+3],buffer[3*i+1]);
-   }
-   fBuffer = buffer;
+////////////////////////////////////////////////////////////////////////////////
+/// Gets a list with axes ranges. Owner ship transferred to caller.
+///
 
-   if (action > 0) { delete [] fBuffer; fBuffer = 0; fBufferSize = 0;}
-   else {
-      if (nbentries == (Int_t)fEntries) fBuffer[0] = -nbentries;
-      else                              fBuffer[0] = 0;
+TList *TH2::GetListWithRanges(const char *nm)
+{
+
+   TList *axl = new TList;
+   axl->SetName(nm);
+   axl->SetOwner(kFALSE);
+   // Add axis to the list
+   axl->Add(&fXaxis);
+   axl->Add(&fYaxis);
+   // Done
+   return axl;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate new axes from the buffer content, eventually extending, if required
+/// and allowed. Result is stored in fXaxis.
+///
+
+void TH2::RecalculateAxes(Double_t *buf, Int_t nbent)
+{
+
+   // find min, max of entries in buffer
+   Double_t xmin = fBuffer[2];
+   Double_t xmax = xmin;
+   Double_t ymin = fBuffer[3];
+   Double_t ymax = ymin;
+   for (Int_t i = 1; i < nbent; i++) {
+      Double_t x = fBuffer[3 * i + 2];
+      if (x < xmin)
+         xmin = x;
+      if (x > xmax)
+         xmax = x;
+      Double_t y = fBuffer[3 * i + 3];
+      if (y < ymin)
+         ymin = y;
+      if (y > ymax)
+         ymax = y;
    }
-   return nbentries;
+   if (HasNoLimits()) {
+      THLimitsFinder::GetLimitsFinder()->FindGoodLimits(this, xmin, xmax, ymin, ymax);
+   } else {
+      fBuffer = 0;
+      Int_t keep = fBufferSize;
+      fBufferSize = 0;
+      if (xmin < fXaxis.GetXmin())
+         ExtendAxis(xmin, &fXaxis);
+      if (xmax >= fXaxis.GetXmax())
+         ExtendAxis(xmax, &fXaxis);
+      if (ymin < fYaxis.GetXmin())
+         ExtendAxis(ymin, &fYaxis);
+      if (ymax >= fYaxis.GetXmax())
+         ExtendAxis(ymax, &fYaxis);
+      fBuffer = buf;
+      fBufferSize = keep;
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Evaluate if teh histogram has limits
+
+Bool_t TH2::HasNoLimits()
+{
+   return (fXaxis.GetXmax() <= fXaxis.GetXmin() || fYaxis.GetXmax() <= fYaxis.GetXmin()) ? kTRUE : kFALSE;
 }
 
 
