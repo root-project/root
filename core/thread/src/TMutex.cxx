@@ -104,7 +104,7 @@ std::unique_ptr<TVirtualMutex::State> TMutex::Reset()
 /// Restore the mutex state to the state pointed to by `state`. This function
 /// must only be called while the mutex is unlocked.
 
-void TMutex::Restore(std::unique_ptr<State>&& state)
+void TMutex::Restore(std::unique_ptr<State> &&state)
 {
    fMutexImp->Restore(std::move(state));
 }

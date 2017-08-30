@@ -53,7 +53,7 @@ public:
 
    TVirtualMutex *Factory(Bool_t recursive = kFALSE);
    std::unique_ptr<TVirtualMutex::State> Reset();
-   void Restore(std::unique_ptr<State>&& state);
+   void Restore(std::unique_ptr<State> &&state);
 
    ClassDef(TMutex,0)  // Mutex lock class
 };
