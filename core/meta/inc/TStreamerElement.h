@@ -83,6 +83,21 @@ public:
       kWholeObject  = BIT(14)
    };
 
+   enum class EStatusBitsDupExceptions {
+      // This bit duplicates TObject::kInvalidObject. As the semantic of kDoNotDelete is a persistent,
+      // we can not change its value without breaking forward compatibility.
+      // Furthermore, TObject::kInvalidObject and its semantic is not (and should not be)
+      // used in TStreamerElement
+      kDoNotDelete  = TStreamerElement::kDoNotDelete,
+
+      // This bit duplicates TObject::kCannotPick. As the semantic of kHasRange is a persistent,
+      // we can not change its value without breaking forward compatibility.
+      // Furthermore, TObject::kCannotPick and its semantic is not (and should not be)
+      // used in TStreamerElement
+      kHasRange = TStreamerElement::kHasRange
+   };
+
+
    TStreamerElement();
    TStreamerElement(const char *name, const char *title, Int_t offset, Int_t dtype, const char *typeName);
    virtual         ~TStreamerElement();
