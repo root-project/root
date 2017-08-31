@@ -528,7 +528,7 @@ double RooGaussMinimizerFcn::DoEval(const double *x) const
 
   // Calculate the function for these parameters  
   RooAbsReal::setHideOffset(kFALSE) ;
-  double fvalue = _funct->getVal(); //######## OI THIS IS WHERE WE COMPUTE THE GRADIENT####
+  double fvalue = _funct->getVal();
   RooAbsReal::setHideOffset(kTRUE) ;
 
   if (RooAbsPdf::evalError() || RooAbsReal::numEvalErrors()>0 || fvalue>1e30) {
@@ -582,6 +582,44 @@ double RooGaussMinimizerFcn::DoEval(const double *x) const
 
   return fvalue;
 }
+
+
+
+double RooGaussMinimizerFcn::DoDerivative(const double *x, unsigned int icoord) const {
+  // Set the parameter values for this iteration
+  // EGP TODO: this is already done in DoEval as well; find efficient way to do only once
+  for (int index = 0; index < _nDim; index++) {
+    if (_logfile) (*_logfile) << x[index] << " " ;
+    SetPdfParamVal(index,x[index]);
+  }
+
+  // Calculate the function for these parameters
+  RooAbsReal::setHideOffset(kFALSE) ; // EGP TODO: check whether this is necessary
+
+  ///// EGP TODO: REPLACE BELOW DERIVATIVE CALCULATION WITH THE FANCY MINUIT TYPE STUFF
+  double dx = max(1e-5 * x[icoord], 1e-8);
+  double fvalue_0 = _funct->getVal();
+
+  if (_logfile) (*_logfile) << x[icoord] << " " ;
+  SetPdfParamVal(icoord,x[icoord] + dx);
+
+  double fvalue_dx = _funct->getVal();
+
+  double derivative_i_value = (fvalue_dx - fvalue_0) / dx; //######## OI THIS IS WHERE WE COMPUTE THE GRADIENT####
+  ///// EGP TODO: REPLACE ABOVE DERIVATIVE CALCULATION WITH THE FANCY MINUIT TYPE STUFF
+
+  RooAbsReal::setHideOffset(kTRUE) ; // EGP TODO: check whether this is necessary
+
+  // EGP TODO: decide whether to do error handling and logging, like in DoEval
+
+  // EGP TOOO: update this when changing the derivative algorithm
+  // Count the function calls necessary for this derivative and use that.
+  // Except when the derivative itself calls DoEval where the counter is already updated!
+  _evalCounter += 2;
+
+  return derivative_i_value;
+}
+
 
 #endif
 

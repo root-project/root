@@ -70,8 +70,8 @@ protected:
   inline std::ofstream* logfile() { return fitterFcn()->GetLogFile(); }
   inline Double_t& maxFCN() { return fitterFcn()->GetMaxFCN() ; }
   
-  const RooGaussMinimizerFcn* fitterFcn() const {  return ( fitter()->GetFCN() ? ((RooGaussMinimizerFcn*) fitter()->GetFCN()) : _fcn ) ; }
-  RooGaussMinimizerFcn* fitterFcn() { return ( fitter()->GetFCN() ? ((RooGaussMinimizerFcn*) fitter()->GetFCN()) : _fcn ) ; }
+  const RooGaussMinimizerFcn* fitterFcn() const {  return ( fitter()->GetFCN() ? (dynamic_cast<RooGaussMinimizerFcn*>(fitter()->GetFCN())) : _fcn ) ; }
+  RooGaussMinimizerFcn* fitterFcn() { return ( fitter()->GetFCN() ? (dynamic_cast<RooGaussMinimizerFcn*>(fitter()->GetFCN())) : _fcn ) ; }
 
 private:
 

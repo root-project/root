@@ -80,6 +80,8 @@ class RooGaussMinimizerFcn : public ROOT::Math::IMultiGradFunction {
   virtual double DoEval(const double * x) const;  
   void updateFloatVec() ;
 
+  virtual double DoDerivative(const double *x, unsigned int icoord) const;
+
 private:
 
   mutable Int_t _evalCounter ;
