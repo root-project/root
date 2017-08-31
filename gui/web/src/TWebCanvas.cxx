@@ -565,12 +565,14 @@ Bool_t TWebCanvas::ProcessWS(THttpCallArg *arg)
          cdata += 7;
 
          const char *separ = strchr(cdata, ':');
-         conn->fDrawVersion = TString(cdata, separ-cdata).Atoll();
-         cdata = separ+1;
-
-         if (gDebug>1) Info("ProcessWS", "RANGES %s", cdata);
-
-         if (connid==0) DecodeAllRanges(cdata); // only first connection get ranges
+         if (!separ) {
+            conn->fDrawVersion = TString(cdata).Atoll();
+         } else {
+            conn->fDrawVersion = TString(cdata, separ-cdata).Atoll();
+            cdata = separ+1;
+            if (gDebug>1) Info("ProcessWS", "RANGES %s", cdata);
+            if (connid==0) DecodeAllRanges(cdata); // only first connection get ranges
+         }
          CheckDataToSend();
       } else
       if (strncmp(cdata,"GETMENU:",8)==0) {
