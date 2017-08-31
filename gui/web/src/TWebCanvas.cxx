@@ -93,10 +93,31 @@ Bool_t TWebCanvas::IsJSSupportedClass(TObject* obj)
 {
    if (!obj) return kTRUE;
 
-   if (obj->InheritsFrom("TH1") || obj->InheritsFrom("TGraph") || obj->InheritsFrom("TF1") ||
-       obj->InheritsFrom("TFrame") || obj->InheritsFrom("THStack") || obj->InheritsFrom("TMultiGraph") ||
-       // obj->InheritsFrom("TBox") ||  // this is supported but can be handled via VirtualX and VirtualPadPainter
-       obj->InheritsFrom("TPave") || obj->InheritsFrom("TArrow")) return kTRUE;
+   static const struct {
+      const char *name;
+      bool with_derived;
+   } supported_classes[] = {
+       { "TH1", true },
+       { "TF1", true },
+       { "TGraph", true },
+       { "TFrame", false },
+       { "THStack", false },
+       { "TMultiGraph", false },
+       { "TPave", true },
+       { "TGaxis", false },
+       { "TPave", true },
+       { "TArrow", false },
+//       { "TBox", false },    // can be handled via TWebPainter
+       { "TLine", false },
+       { 0, false }
+   };
+
+   for (int i = 0; supported_classes[i].name != 0; ++i)
+      if (strcmp(supported_classes[i].name, obj->ClassName()) == 0) return kTRUE;
+
+   for (int i = 0; supported_classes[i].name != 0; ++i)
+      if (supported_classes[i].with_derived)
+         if (obj->InheritsFrom(supported_classes[i].name)) return kTRUE;
 
    // printf("Unsupported class %s\n", obj->ClassName());
 
