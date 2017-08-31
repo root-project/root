@@ -606,6 +606,7 @@ std::string TClingMethodInfo::GetMangledName() const
    const FunctionDecl* D = GetMethodDecl();
 
    R__LOCKGUARD(gInterpreterMutex);
+   cling::Interpreter::PushTransactionRAII RAII(fInterp);
    GlobalDecl GD;
    if (const CXXConstructorDecl* Ctor = dyn_cast<CXXConstructorDecl>(D))
      GD = GlobalDecl(Ctor, Ctor_Complete);
