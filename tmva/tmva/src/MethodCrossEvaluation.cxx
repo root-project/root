@@ -45,12 +45,6 @@ REGISTER_METHOD(CrossEvaluation)
 
 ClassImp(TMVA::MethodCrossEvaluation);
 
-// TODO: 
-//    Organise after life time?
-//       Construction - Train - Eval - Application
-
-const Int_t TMVA::MethodCrossEvaluation::fgDebugLevel = 0;
-
 ////////////////////////////////////////////////////////////////////////////////
 /// 
 
@@ -209,8 +203,6 @@ void TMVA::MethodCrossEvaluation::AddWeightsXMLTo( void* parent ) const
 
 void TMVA::MethodCrossEvaluation::ReadWeightsFromXML(void* parent)
 {
-   std::cout << __FILE__ << __LINE__ << std::endl;
-
    gTools().ReadAttr( parent, "SplitSpectator", fSplitSpectator );
    gTools().ReadAttr( parent, "NumFolds", fNumFolds );
    gTools().ReadAttr( parent, "EncapsulatedMethodName", fEncapsulatedMethodName );
@@ -227,7 +219,7 @@ void TMVA::MethodCrossEvaluation::ReadWeightsFromXML(void* parent)
       TString fileDir = gSystem->DirName(GetWeightFileName());
       TString weightfile  = fileDir + "/" + fEncapsulatedMethodName + "_" + foldStr + ".weights.xml";
 
-      std::cout << "Reading weightfile: " << weightfile << std::endl;
+      Log() << kDEBUG << "Reading weightfile: " << weightfile << std::endl;
 
       fEncapsulatedMethods.push_back(InstantiateMethodFromXML(fEncapsulatedMethodTypeName, weightfile));
    }
@@ -263,9 +255,9 @@ void TMVA::MethodCrossEvaluation::ReadWeightsFromXML(void* parent)
 /// Read the weights
 /// 
 
-void  TMVA::MethodCrossEvaluation::ReadWeightsFromStream( std::istream& istr )
+void  TMVA::MethodCrossEvaluation::ReadWeightsFromStream( std::istream& /*istr*/ )
 {
-
+   Log() << kFATAL << "CrossEvaluation currently supports only reading from XML." << Endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -299,8 +291,7 @@ const std::vector<Float_t> & TMVA::MethodCrossEvaluation::GetRegressionValues()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Here we could write some histograms created during the processing
-/// to the output file.
+///
 
 void  TMVA::MethodCrossEvaluation::WriteMonitoringHistosToFile( void ) const
 {
@@ -311,23 +302,16 @@ void  TMVA::MethodCrossEvaluation::WriteMonitoringHistosToFile( void ) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get help message text.
+///
 
 void TMVA::MethodCrossEvaluation::GetHelpMessage() const
 {
-   // Log() << Endl;
-   // Log() << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
-   // Log() << Endl;
-   // Log() << gTools().Color("bold") << "--- Performance optimisation:" << gTools().Color("reset") << Endl;
-   // Log() << Endl;
-   // Log() << "By the nature of the binary splits performed on the individual" << Endl;
-   // Log() << gTools().Color("bold") << "--- Performance tuning via configuration options:" << gTools().Color("reset") << Endl;
-   // Log() << Endl;
-   // Log() << "The two most important parameters in the configuration are the  " << Endl;
-
+   Log() << kFATAL << "Method CrossEvaluation should not be created manually,"
+                      " only as part of using TMVA::Reader." << Endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+///
 
 const TMVA::Ranking * TMVA::MethodCrossEvaluation::CreateRanking()
 {
@@ -337,24 +321,26 @@ const TMVA::Ranking * TMVA::MethodCrossEvaluation::CreateRanking()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Bool_t TMVA::MethodCrossEvaluation::HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets )
+Bool_t TMVA::MethodCrossEvaluation::HasAnalysisType( Types::EAnalysisType /*type*/, UInt_t /*numberClasses*/, UInt_t /*numberTargets*/ )
 {
-   return kTRUE;
+   // TODO: Should be delegated to encapsulated method
+   Log() << kFATAL << "HasAnalysisType not implemented for CrossEvaluation" << Endl;
+   return kFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Make ROOT-independent C++ class for classifier response (classifier-specific implementation).
 
-void TMVA::MethodCrossEvaluation::MakeClassSpecific( std::ostream& fout, const TString& className ) const
+void TMVA::MethodCrossEvaluation::MakeClassSpecific( std::ostream& /*fout*/, const TString& /*className*/ ) const
 {
-
+   Log() << kFATAL << "MakeClassSpecific not implemented for CrossEvaluation" << Endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Specific class header.
 
-void TMVA::MethodCrossEvaluation::MakeClassSpecificHeader(  std::ostream& fout, const TString& className) const
+void TMVA::MethodCrossEvaluation::MakeClassSpecificHeader(  std::ostream& /*fout*/, const TString& /*className*/) const
 {
-
+   Log() << kFATAL << "MakeClassSpecificHeader not implemented for CrossEvaluation" << Endl;
 }
 
