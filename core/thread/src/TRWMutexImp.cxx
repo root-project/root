@@ -67,6 +67,27 @@ TVirtualRWMutex *TRWMutexImp<MutexT, RecurseCountsT>::Factory(Bool_t /*recursive
    return new TRWMutexImp();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Reset the mutex state to unlocked. The state before resetting to unlocked is
+/// returned and can be passed to `Restore()` later on. This function must only
+/// be called while the mutex is locked.
+
+template <typename MutexT, typename RecurseCountsT>
+std::unique_ptr<TVirtualMutex::State> TRWMutexImp<MutexT, RecurseCountsT>::Reset()
+{
+   return fMutexImp.Reset();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Restore the mutex state to the state pointed to by `state`. This function
+/// must only be called while the mutex is unlocked.
+
+template <typename MutexT, typename RecurseCountsT>
+void TRWMutexImp<MutexT, RecurseCountsT>::Restore(std::unique_ptr<TVirtualMutex::State> &&state)
+{
+   fMutexImp.Restore(std::move(state));
+}
+
 template class TRWMutexImp<TMutex>;
 template class TRWMutexImp<ROOT::TSpinMutex>;
 template class TRWMutexImp<TMutex, ROOT::Internal::UniqueLockRecurseCount>;

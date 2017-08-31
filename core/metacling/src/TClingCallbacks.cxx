@@ -61,6 +61,8 @@ extern "C" {
    void TCling__LibraryUnloadedRTTI(const void* dyLibHandle,
                                     llvm::StringRef canonicalName);
    void TCling__PrintStackTrace();
+   void TCling__RestoreInterpreterMutex(void *state);
+   void *TCling__ResetInterpreterMutex();
 }
 
 TClingCallbacks::TClingCallbacks(cling::Interpreter* interp)
@@ -782,4 +784,17 @@ void TClingCallbacks::LibraryUnloaded(const void* dyLibHandle,
 
 void TClingCallbacks::PrintStackTrace() {
    TCling__PrintStackTrace();
+}
+
+void *TClingCallbacks::EnteringUserCode()
+{
+   // We can safely assume that if the lock exist already when we are in Cling code,
+   // then the lock has (or should been taken) already. Any action (that caused callers
+   // to take the lock) is halted during ProcessLine. So it is fair to unlock it.
+   return TCling__ResetInterpreterMutex();
+}
+
+void TClingCallbacks::ReturnedFromUserCode(void *stateInfo)
+{
+   TCling__RestoreInterpreterMutex(stateInfo);
 }

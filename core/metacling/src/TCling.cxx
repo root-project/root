@@ -351,6 +351,30 @@ void TCling__PrintStackTrace() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Lock the interpreter.
+
+extern "C" void TCling__RestoreInterpreterMutex(void *state)
+{
+   if (gInterpreterMutex && state) {
+      auto typedState = static_cast<TVirtualMutex::State *>(state);
+      std::unique_ptr<TVirtualMutex::State> uniqueP{typedState};
+      gInterpreterMutex->Restore(std::move(uniqueP));
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Unlock the interpreter.
+
+extern "C" void *TCling__ResetInterpreterMutex()
+{
+   if (gInterpreterMutex) {
+      auto uniqueP = gInterpreterMutex->Reset();
+      return uniqueP.release();
+   }
+   return nullptr;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Update TClingClassInfo for a class (e.g. upon seeing a definition).
 
 static void TCling__UpdateClassInfo(const NamedDecl* TD)

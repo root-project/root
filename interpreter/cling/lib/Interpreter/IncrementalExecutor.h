@@ -11,8 +11,11 @@
 #define CLING_INCREMENTAL_EXECUTOR_H
 
 #include "IncrementalJIT.h"
-#include "BackendPasses.h"
 
+#include "BackendPasses.h"
+#include "EnterUserCodeRTTI.h"
+
+#include "cling/Interpreter/InterpreterCallbacks.h"
 #include "cling/Interpreter/Transaction.h"
 #include "cling/Interpreter/Value.h"
 #include "cling/Utils/Casting.h"
@@ -56,7 +59,10 @@ namespace cling {
     // optimizer etc passes
     std::unique_ptr<BackendPasses> m_BackendPasses;
 
-    ///\brier A pointer to the IncrementalExecutor of the parent Interpreter.
+    ///\brief Whom to call upon invocation of user code.
+    InterpreterCallbacks* m_Callbacks;
+
+    ///\brief A pointer to the IncrementalExecutor of the parent Interpreter.
     ///
     IncrementalExecutor* m_externalIncrementalExecutor;
 
@@ -150,7 +156,9 @@ namespace cling {
     void setExternalIncrementalExecutor(IncrementalExecutor *extIncrExec) {
       m_externalIncrementalExecutor = extIncrExec;
     }
-
+    void setCallbacks(InterpreterCallbacks* callbacks) {
+      m_Callbacks = callbacks;
+    }
     void installLazyFunctionCreator(LazyFunctionCreatorFunc_t fp);
 
     ///\brief Send all collected modules to the JIT, making their symbols
@@ -190,9 +198,10 @@ namespace cling {
       }
       typedef void (*InitFun_t)(void*);
       InitFun_t fun;
-      ExecutionResult res = executeInitOrWrapper(function, fun);
+      ExecutionResult res = jitInitOrWrapper(function, fun);
       if (res != kExeSuccess)
         return res;
+      EnterUserCodeRTTI euc(m_Callbacks);
       (*fun)(returnValue);
       return kExeSuccess;
     }
@@ -266,15 +275,16 @@ namespace cling {
     ExecutionResult executeInit(llvm::StringRef function) {
       typedef void (*InitFun_t)();
       InitFun_t fun;
-      ExecutionResult res = executeInitOrWrapper(function, fun);
+      ExecutionResult res = jitInitOrWrapper(function, fun);
       if (res != kExeSuccess)
         return res;
+      EnterUserCodeRTTI euc(m_Callbacks);
       (*fun)();
       return kExeSuccess;
     }
 
     template <class T>
-    ExecutionResult executeInitOrWrapper(llvm::StringRef funcname, T& fun) {
+    ExecutionResult jitInitOrWrapper(llvm::StringRef funcname, T& fun) {
       fun = utils::UIntToFunctionPtr<T>(m_JIT->getSymbolAddress(funcname,
                                                               false /*dlsym*/));
 
