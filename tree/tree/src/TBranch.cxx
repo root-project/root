@@ -1360,6 +1360,11 @@ TBranch::GetEntriesSerialized(Long64_t entry, TBuffer &user_buf, TBuffer *count_
 {
    // TODO: eventually support multiple leaves.
    if (R__unlikely(fNleaves != 1)) {return -1;}
+   TLeaf *leaf = static_cast<TLeaf*>(fLeaves.UncheckedAt(0));
+   if (R__unlikely(leaf->GetDeserializeType() == TLeaf::DeserializeType::kDestructive)) {
+      printf("Encountered a branch with destructive deserialization; failing.\n");
+      return -1;
+   }
 
    // Remember which entry we are reading.
    fReadEntry = entry;
@@ -1390,10 +1395,13 @@ TBranch::GetEntriesSerialized(Long64_t entry, TBuffer &user_buf, TBuffer *count_
    Int_t N = ((fNextBasketEntry < 0) ? fEntryNumber : fNextBasketEntry) - first;
    //printf("Requesting %d events; fNextBasketEntry=%d; first=%lld.\n", N, fNextBasketEntry, first);
 
+   if (R__unlikely(!leaf->ReadBasketSerialized(*buf, N))) {
+      printf("Leaf failed to read.\n");
+      return -1;
+   }
    user_buf.SetBufferOffset(bufbegin);
 
    if (count_buf) {
-      TLeaf *leaf = static_cast<TLeaf*>(fLeaves.UncheckedAt(0));
       TLeaf *count_leaf = leaf->GetLeafCount();
       if (count_leaf) {
          //printf("Getting leaf count entries.\n");

@@ -39,6 +39,7 @@ public:
 
    virtual void    Export(TClonesArray *list, Int_t n);
    virtual void    FillBasket(TBuffer &b);
+   virtual DeserializeType GetDeserializeType() const { return kInPlace; }
    const char     *GetTypeName() const;
    virtual Int_t   GetMaximum() const {return (Int_t)fMaximum;}
    virtual Int_t   GetMinimum() const {return (Int_t)fMinimum;}
