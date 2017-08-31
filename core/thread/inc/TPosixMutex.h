@@ -36,6 +36,8 @@ friend class TPosixCondition;
 private:
    pthread_mutex_t  fMutex;   // the pthread mutex
 
+   constexpr static int kIsRecursive = BIT(14);
+
 public:
    TPosixMutex(Bool_t recursive=kFALSE);
    virtual ~TPosixMutex();
@@ -43,6 +45,9 @@ public:
    Int_t  Lock();
    Int_t  UnLock();
    Int_t  TryLock();
+
+   std::unique_ptr<TVirtualMutex::State> Reset();
+   void Restore(std::unique_ptr<TVirtualMutex::State> &&);
 
    ClassDef(TPosixMutex,0)  // Posix mutex lock
 };
