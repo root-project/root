@@ -83,5 +83,5 @@ distclean-$(MODNAME): clean-$(MODNAME)
 distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
-$(PYTHIA8O):    CXXFLAGS += $(FPYTHIA8INCDIR:%=-I%)
-$(PYTHIA8DO):   CXXFLAGS += $(FPYTHIA8INCDIR:%=-I%)
+$(PYTHIA8O):    CXXFLAGS += $(FPYTHIA8INCDIR:%=-isystem%)
+$(PYTHIA8DO):   CXXFLAGS += $(FPYTHIA8INCDIR:%=-isystem%)
