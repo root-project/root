@@ -71,6 +71,7 @@
 #pragma link C++ class TListOfEnums+;
 #pragma link C++ class TListOfEnumsWithLock+;
 #pragma link C++ class TListOfEnumsWithLockIter;
+#pragma link C++ class ROOT::Detail::TStatusBitsChecker-;
 //for new protoclasses
 #pragma link C++ class std::vector<TDataMember * >+;
 #pragma link C++ class std::vector<TProtoClass::TProtoRealData >+;
