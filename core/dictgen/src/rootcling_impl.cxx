@@ -3406,6 +3406,9 @@ std::list<std::string> RecordDecl2Headers(const clang::CXXRecordDecl &rcd,
 {
    std::list<std::string> headers;
 
+   // We push a new transaction because we could deserialize decls here
+   cling::Interpreter::PushTransactionRAII RAII(&interp);
+
    // Avoid infinite recursion
    if (!visitedDecls.insert(rcd.getCanonicalDecl()).second)
       return headers;
