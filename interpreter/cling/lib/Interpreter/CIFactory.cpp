@@ -845,8 +845,14 @@ static void stringifyPreprocSetting(PreprocessorOptions& PPOpts,
       return CI.release();
     }
 
-    CI->createFileManager();
     clang::CompilerInvocation& Invocation = CI->getInvocation();
+    // Ensure we use the supplied VFS overlay to mount system modulemaps.
+    // FIXME: Drop this commit once the TODO for this in CompilerInstance.cpp
+    // in createFileManager() has been fixed.
+    CI->setVirtualFileSystem(
+        clang::createVFSFromCompilerInvocation(Invocation, *Diags));
+
+    CI->createFileManager();
     std::string& PCHFile = Invocation.getPreprocessorOpts().ImplicitPCHInclude;
     bool InitLang = true, InitTarget = true;
     if (!PCHFile.empty()) {
