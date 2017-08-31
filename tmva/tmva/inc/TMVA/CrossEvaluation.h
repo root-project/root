@@ -79,6 +79,7 @@ namespace TMVA {
       Bool_t               fFoldStatus;      //!
       UInt_t               fNumFolds;        //!
       TFile *              fOutputFile;
+      Bool_t               fSilent;
       TString              fSplitSpectator;
       TString              fTransformations;
       Bool_t               fVerbose;

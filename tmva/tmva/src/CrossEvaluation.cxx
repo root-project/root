@@ -66,23 +66,8 @@ TMVA::CrossEvaluation::CrossEvaluation(TMVA::DataLoader *dataloader, TFile * out
 ///
 
 TMVA::CrossEvaluation::CrossEvaluation(TMVA::DataLoader *dataloader, TString options)
-   : TMVA::Envelope("CrossEvaluation", dataloader, nullptr, options),
-     fAnalysisType(Types::kMaxAnalysisType),
-     fFoldStatus(kFALSE),
-     fNumFolds(2),
-     fOutputFile(nullptr),
-     fSplitSpectator(""),
-     fTransformations( "" )
-{
-
-   InitOptions();
-   ParseOptions();
-   CheckForUnusedOptions();
-
-   if (fAnalysisType != Types::kClassification and fAnalysisType != Types::kMulticlass) {
-      Log() << kFATAL << "Only binary and multiclass classification supported so far." << Endl;
-   }
-}
+   : CrossEvaluation(dataloader, nullptr, options)
+{}
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -96,6 +81,7 @@ TMVA::CrossEvaluation::~CrossEvaluation()
 void TMVA::CrossEvaluation::InitOptions()
 {
    // Forwarding of Factory options
+   DeclareOptionRef( fSilent,   "Silent", "Batch mode: boolean silent flag inhibiting any output from TMVA after the creation of the factory class object (default: False)" );
    DeclareOptionRef( fVerbose, "V", "Verbose flag" );
    DeclareOptionRef( fVerboseLevel=TString("Info"), "VerboseLevel", "VerboseLevel (Debug/Verbose/Info)" );
    AddPreDefVal(TString("Debug"));
@@ -155,6 +141,11 @@ void TMVA::CrossEvaluation::ParseOptions()
       fCvFactoryOptions += Form("ModelPersistence:");
    } else {
       fCvFactoryOptions += Form("!ModelPersistence:");
+   }
+
+   if (fSilent) {
+      fCvFactoryOptions += Form("Silent:");
+      fOutputFactoryOptions += Form("Silent:");
    }
 
    fFoldFactory = std::unique_ptr<TMVA::Factory>(new TMVA::Factory("CrossEvaluation_internal", fCvFactoryOptions + "!ROC:!Color:!DrawProgressBar"));
