@@ -42,7 +42,8 @@ TWebCanvas::TWebCanvas() :
    fWebConn(),
    fAddr(),
    fServer(0),
-   fHasSpecials(kFALSE)
+   fHasSpecials(kFALSE),
+   fCanvVersion(1)
 {
 }
 
@@ -52,7 +53,8 @@ TWebCanvas::TWebCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t wi
    fWebConn(),
    fAddr(addr),
    fServer(serv),
-   fHasSpecials(kFALSE)
+   fHasSpecials(kFALSE),
+   fCanvVersion(1)
 {
    UInt_t hash = TString::Hash(&c, sizeof(c));
    SetName(Form("0x%u", hash)); // make name very screwed
@@ -154,10 +156,21 @@ TWebSnapshot *TWebCanvas::CreateObjectSnapshot(TObject *obj, const char *opt)
 
    if (!IsJSSupportedClass(obj)) {
       TWebPadPainter *painter = dynamic_cast<TWebPadPainter *> (Canvas()->GetCanvasPainter());
-      if (painter) painter->ResetPainting(); // ensure painter is created
+      if (painter) {
+         painter->ResetPainting(); // ensure painter is created
+         painter->SetWebCanvasSize(Canvas()->GetWw(), Canvas()->GetWh()); // provide canvas dimension
+      }
+
+      TWebVirtualX *vx = dynamic_cast<TWebVirtualX *> (gVirtualX);
+      if (vx) {
+         vx->SetWebCanvasSize(Canvas()->GetWw(), Canvas()->GetWh());
+         vx->SetWebPainter(painter); // redirect virtualx back to pad painter
+      }
 
       // calling Paint function for the object
       obj->Paint(opt);
+
+      if (vx) vx->SetWebPainter(0);
 
       if (painter) p = painter->TakePainting();
       fHasSpecials = kTRUE;
@@ -190,7 +203,7 @@ Bool_t TWebCanvas::AddCanvasSpecials(TPadWebSnapshot *master)
    sub->SetSnapshot(TWebSnapshot::kSpecial, colors);
    master->Add(sub);
 
-   printf("ADD COLORS TABLES %d\n", cnt);
+   if (gDebug>1) Info("AddCanvasSpecials" ,"ADD COLORS TABLES %d", cnt);
 
    //save the current palette
    TArrayI pal = TColor::GetPalette();
@@ -307,7 +320,7 @@ TString TWebCanvas::CreateSnapshot(TPad* pad, TPadWebSnapshot *master, TList *te
 }
 
 
-void TWebCanvas::CheckModifiedFlag()
+void TWebCanvas::CheckDataToSend()
 {
    if (!Canvas()) return;
 
@@ -331,13 +344,14 @@ void TWebCanvas::CheckModifiedFlag()
          buf += items.ProduceJSON();
 
          conn.fGetMenu.Clear();
-      } else if (conn.fModified) {
+      } else if (conn.fDrawVersion < fCanvVersion) {
          buf = "SNAP6:";
+         buf.Append(TString::LLtoa(fCanvVersion, 10));
+         buf.Append(":");
          buf += CreateSnapshot(Canvas());
 
          // printf("Snapshot created %d\n", buf.Length());
          //if (buf.Length() < 10000) printf("Snapshot %s\n", buf.Data());
-         conn.fModified = kFALSE;
       } else if (conn.fSend.Length() > 0) {
          buf = conn.fSend;
          conn.fSend.Clear();
@@ -435,14 +449,14 @@ void TWebCanvas::ShowCmd(const char *arg, Bool_t show)
       conn.fSend.Append(show ? ":1" : ":0");
    }
 
-   CheckModifiedFlag();
+   CheckDataToSend();
 }
 
 
 
 Bool_t TWebCanvas::DecodePadRanges(TPad *pad, const char *arg)
 {
-   if (!arg || !*arg) return kFALSE;
+   if (!pad || !arg || !*arg) return kFALSE;
 
    Double_t ux1,ux2,uy1,uy2,px1,px2,py1,py2;
    Int_t cnt = sscanf(arg, "%lf:%lf:%lf:%lf:%lf:%lf:%lf:%lf",&ux1,&ux2,&uy1,&uy2,&px1,&px2,&py1,&py2);
@@ -473,25 +487,25 @@ Bool_t TWebCanvas::DecodePadRanges(TPad *pad, const char *arg)
 
 Bool_t TWebCanvas::DecodeAllRanges(const char *arg)
 {
-  if (!arg || !*arg) return kFALSE;
-  Bool_t isany = kFALSE;
+   if (!arg || !*arg) return kFALSE;
+   //Bool_t isany = kFALSE;
 
-  const char *curr = arg, *pos = 0;
+   const char *curr = arg, *pos = 0;
 
-  while ((pos = strstr(curr, "id=")) != 0) {
-     curr = pos + 3;
-     const char *next = strstr(curr,":");
-     if (!next) break;
+   while ((pos = strstr(curr, "id=")) != 0) {
+      curr = pos + 3;
+      const char *next = strstr(curr,":");
+      if (!next) break;
 
-     TString sid(curr, next-curr);
-     TPad *pad = dynamic_cast<TPad *>(FindPrimitive(sid.Data()));
+      TString sid(curr, next-curr);
+      TPad *pad = dynamic_cast<TPad *>(FindPrimitive(sid.Data()));
 
-     curr = next+1;
-     if (pad && DecodePadRanges(pad, curr)) isany = kTRUE;
-  }
+      curr = next+1;
+      DecodePadRanges(pad, curr);
+   }
 
-  if (isany) PerformUpdate();
-  return kTRUE;
+   // if (isany) PerformUpdate();
+   return kTRUE;
 }
 
 
@@ -501,12 +515,13 @@ Bool_t TWebCanvas::ProcessWS(THttpCallArg *arg)
 
    // try to identify connection for given WS request
    WebConn* conn = 0;
+   Int_t connid = 0;
    WebConnList::iterator iter = fWebConn.begin();
    while (iter != fWebConn.end()) {
       if (iter->fHandle && (iter->fHandle->GetId() == arg->GetWSId()) && arg->GetWSId()) {
          conn = &(*iter); break;
       }
-      ++iter;
+      ++iter; ++connid;
    }
 
    if (strcmp(arg->GetMethod(),"WS_CONNECT")==0) {
@@ -522,7 +537,6 @@ Bool_t TWebCanvas::ProcessWS(THttpCallArg *arg)
 
       WebConn newconn;
       newconn.fHandle = wshandle;
-      newconn.fModified = kTRUE;
 
       fWebConn.push_back(newconn);
 
@@ -544,17 +558,25 @@ Bool_t TWebCanvas::ProcessWS(THttpCallArg *arg)
 
       if (strncmp(cdata,"READY",5)==0) {
          conn->fReady = kTRUE;
-         CheckModifiedFlag();
+         CheckDataToSend();
       } else
       if (strncmp(cdata, "RREADY:", 7)==0) {
          conn->fReady = kTRUE;
-         // printf("Get ranges %s\n", cdata);
-         if (!DecodeAllRanges(cdata+7)) CheckModifiedFlag();
+         cdata += 7;
+
+         const char *separ = strchr(cdata, ':');
+         conn->fDrawVersion = TString(cdata, separ-cdata).Atoll();
+         cdata = separ+1;
+
+         if (gDebug>1) Info("ProcessWS", "RANGES %s", cdata);
+
+         if (connid==0) DecodeAllRanges(cdata); // only first connection get ranges
+         CheckDataToSend();
       } else
       if (strncmp(cdata,"GETMENU:",8)==0) {
          conn->fReady = kTRUE;
          conn->fGetMenu = cdata+8;
-         CheckModifiedFlag();
+         CheckDataToSend();
       } else if (strncmp(cdata,"OBJEXEC:",8)==0) {
          TString buf(cdata+8);
          Int_t pos = buf.First(':');
@@ -606,14 +628,14 @@ Bool_t TWebCanvas::ProcessWS(THttpCallArg *arg)
 
             // PerformUpdate(); // check that canvas was changed
 
-            CheckModifiedFlag(); // check if data should be send
+            CheckDataToSend(); // check if data should be send
          }
       } else if (strncmp(cdata,"QUIT",4)==0) {
          if (gApplication)
             gApplication->Terminate(0);
       } else if (strncmp(cdata,"RELOAD",6)==0) {
-         conn->fModified = kTRUE;
-         CheckModifiedFlag();
+         conn->fDrawVersion = 0;
+         CheckDataToSend();
       } else if (strncmp(cdata,"GETIMG:",7)==0) {
          const char* img = cdata+7;
 
@@ -631,7 +653,7 @@ Bool_t TWebCanvas::ProcessWS(THttpCallArg *arg)
             Info("ProcessWS", "SVG file %s has been created", filename.Data());
          }
          conn->fReady = kTRUE;
-         CheckModifiedFlag();
+         CheckDataToSend();
       } else if (strncmp(cdata,"KEEPALIVE",9)==0) {
       } else {
          Error("ProcessWS", "GET unknown request %d %s", (int) strlen(cdata), cdata);
@@ -692,12 +714,37 @@ Bool_t TWebCanvas::PerformUpdate()
    // It scan all primitives in the TCanvas and subpads and convert them into
    // the structure which will be delivered to JSROOT client
 
-   if (IsAnyPadModified(Canvas())) {
-      for (WebConnList::iterator iter = fWebConn.begin(); iter != fWebConn.end(); ++iter)
-         iter->fModified = kTRUE;
-   }
+   if (IsAnyPadModified(Canvas())) fCanvVersion++;
 
-   CheckModifiedFlag();
+   CheckDataToSend();
+
+   // block in canvas update, can it be optional
+   WaitWhenCanvasPainted(fCanvVersion);
 
    return kTRUE;
 }
+
+
+Bool_t TWebCanvas::WaitWhenCanvasPainted(Long64_t ver)
+{
+   // simple polling loop until specified version delivered to the clients
+
+   long cnt = 0;
+   bool had_connection = false;
+
+   while (cnt++ < 1000) {
+      if (fWebConn.size() > 0) had_connection = true;
+
+      if ((fWebConn.size() == 0) && (had_connection || (cnt > 800)))
+         return kFALSE; // wait ~1 min if no new connection established
+
+      if ((fWebConn.size() > 0) && (fWebConn.front().fDrawVersion >= ver)) return kTRUE;
+
+      gSystem->ProcessEvents();
+
+      gSystem->Sleep((cnt < 500) ? 1 : 100); // increase sleep interval when do very often
+   }
+
+   return kFALSE;
+}
+

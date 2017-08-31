@@ -44,12 +44,12 @@ class TWebCanvas : public THttpWSHandler, public TCanvasImp {
 protected:
 
    struct WebConn {
-      THttpWSEngine  *fHandle;     ///<! websocket handle
+      THttpWSEngine  *fHandle;       ///<! websocket handle
       Bool_t          fReady;
-      TString         fGetMenu;    ///<! object id for menu request
-      Bool_t          fModified;
-      TString         fSend;       ///<! extra data which should be send to the client
-      WebConn() : fHandle(0), fReady(kFALSE), fGetMenu(), fModified(kFALSE), fSend() {}
+      TString         fGetMenu;      ///<! object id for menu request
+      Long64_t        fDrawVersion;  ///<! canvas version drawn by client
+      TString         fSend;         ///<! extra data which should be send to the client
+      WebConn() : fHandle(0), fReady(kFALSE), fGetMenu(), fDrawVersion(0), fSend() {}
    };
 
    typedef std::list<WebConn> WebConnList;
@@ -58,7 +58,8 @@ protected:
 
    TString         fAddr;         ///<! URL address of the canvas
    void           *fServer;       ///<! THttpServer, required only for direct communications from CEF or Qt5
-   Bool_t          fHasSpecials;  ///<!  has special objects which may require pad ranges
+   Bool_t          fHasSpecials;  ///<! has special objects which may require pad ranges
+   Long64_t        fCanvVersion;  ///<! actual canvas version, changed with every new Modified() call
 
    virtual void   Lock() { }
    virtual void   Unlock() { }
@@ -77,7 +78,9 @@ protected:
 
    Bool_t IsAnyPadModified(TPad *pad);
 
-   void CheckModifiedFlag();
+   void CheckDataToSend();
+
+   Bool_t WaitWhenCanvasPainted(Long64_t ver);
 
    Bool_t IsJSSupportedClass(TObject* obj);
 
