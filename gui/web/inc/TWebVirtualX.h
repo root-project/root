@@ -14,11 +14,15 @@
 
 #include "TVirtualX.h"
 
+class TWebPadPainter;
+
 class TWebVirtualX : public TVirtualX {
 protected:
-   TVirtualX *fX11;
-   Int_t      fWindowId; ///< currently selected window id
-   UInt_t     fCw, fCh;  ///< selected dimensions for the web canvas
+   TVirtualX        *fX11;      ///<! pointer on original virtual X
+   TWebPadPainter   *fPainter;  ///<! pad painter which should handle current drawing
+   Int_t             fWindowId; ///<! currently selected window id
+   UInt_t            fCw, fCh;  ///<! selected dimensions for the web canvas
+
    Bool_t     IsWeb(Int_t id) const { return id == 777111777; }
 
 public:
@@ -27,6 +31,7 @@ public:
    virtual ~TWebVirtualX();
 
    void SetWebCanvasSize(UInt_t w, UInt_t h) { fCw = w; fCh = h; }
+   void SetWebPainter(TWebPadPainter *p = 0) { fPainter = p; }
 
    virtual Bool_t    Init(void *display=0);
    virtual void      ClearWindow();

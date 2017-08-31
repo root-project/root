@@ -18,6 +18,7 @@
 
 class TVirtualPad;
 class TWebCanvas;
+class TPoint;
 
 /*
 TWebPadPainter tries to support old Paint methods of the ROOT classes.
@@ -32,6 +33,8 @@ protected:
    TWebPainterAttributes *fAttr; ///!< current attributes
    Bool_t fAttrChanged;          ///!< flag that attributes are changed after last paint operation
    TWebPainting *fPainting;      ///!< object to store all painting
+   UInt_t fCw, fCh;              ///!< canvas dimensions, need for back pixel conversion
+   Float_t fKx, fKy;             ///!< coefficient to recalculate pixel coordinates
 
    TWebPainterAttributes *Attr();
 
@@ -47,6 +50,8 @@ public:
 
    TWebPainting *TakePainting();
    void ResetPainting();
+
+   void SetWebCanvasSize(UInt_t w, UInt_t h);
 
    //Final overriders for TVirtualPadPainter pure virtual functions.
    //1. Part, which simply delegates to TVirtualX.
@@ -129,6 +134,10 @@ public:
 
    //jpg, png, bmp, gif output.
    void     SaveImage(TVirtualPad *pad, const char *fileName, Int_t type) const;
+
+
+   // reimplementing some direct X11 calls, which are not fetched
+   void     DrawFillArea(Int_t n, TPoint *xy);
 
 private:
    //Let's make this clear:

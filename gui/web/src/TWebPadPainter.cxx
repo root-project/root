@@ -38,7 +38,11 @@ Implement TVirtualPadPainter which abstracts painting operations.
 TWebPadPainter::TWebPadPainter() :
    fAttr(0),
    fAttrChanged(kFALSE),
-   fPainting(0)
+   fPainting(0),
+   fCw(0),
+   fCh(0),
+   fKx(1),
+   fKy(1)
 {
 }
 
@@ -50,6 +54,16 @@ TWebPadPainter::~TWebPadPainter()
    ResetPainting();
    if (fAttr) { delete fAttr; fAttr = 0; }
 }
+
+
+void TWebPadPainter::SetWebCanvasSize(UInt_t w, UInt_t h)
+{
+   fCw = w;
+   fCh = h;
+   fKx = (w>0) ? 1./w : 1.;
+   fKy = (h>0) ? 1./h : 1.;
+}
+
 
 TWebPainting *TWebPadPainter::TakePainting()
 {
@@ -76,7 +90,6 @@ Float_t *TWebPadPainter::Reserve(Int_t sz)
 {
    if (!fPainting) fPainting = new TWebPainting();
    return fPainting->Reserve(sz);
-
 }
 
 void TWebPadPainter::GetAttributes(Int_t attrmask)
@@ -446,5 +459,26 @@ void TWebPadPainter::DrawTextNDC(Double_t  u , Double_t v, const wchar_t * /*tex
    Float_t *buf = Reserve(2);
    buf[0] = u;
    buf[1] = v;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////
+/// Reimplement X function
+
+void TWebPadPainter::DrawFillArea(Int_t np, TPoint *xy)
+{
+   if (np < 3) {
+      ::Error("TWebPadPainter::DrawFillArea", "invalid number of points %d", np);
+      return;
+   }
+
+   StoreOperation("fillarea", new TObjString(TString::Itoa(np, 10)), 2);
+
+   Float_t *buf = Reserve(np*2);
+   for (Int_t n=0;n<np;++n) {
+      buf[n*2] = gPad->PixeltoX(xy[n].fX);
+      buf[n*2+1] = gPad->PixeltoY(xy[n].fY);
+   }
+
 }
 

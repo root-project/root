@@ -1,5 +1,7 @@
 #include "TWebVirtualX.h"
 
+#include "TWebPadPainter.h"
+
 #include <stdio.h>
 
 ClassImp(TWebVirtualX);
@@ -7,6 +9,7 @@ ClassImp(TWebVirtualX);
 TWebVirtualX::TWebVirtualX() :
    TVirtualX(),
    fX11(0),
+   fPainter(0),
    fWindowId(0),
    fCw(800),
    fCh(600)
@@ -17,6 +20,7 @@ TWebVirtualX::TWebVirtualX() :
 TWebVirtualX::TWebVirtualX(const char *name, const char *title, TVirtualX *vx) :
    TVirtualX(name, title),
    fX11(vx),
+   fPainter(0),
    fWindowId(0),
    fCw(800),
    fCh(600)
@@ -307,6 +311,8 @@ void TWebVirtualX::DrawCellArray(Int_t x1, Int_t y1,
 
 void TWebVirtualX::DrawFillArea(Int_t n, TPoint *xy)
 {
+   if (fPainter) return fPainter->DrawFillArea(n, xy);
+
    return fX11->DrawFillArea(n, xy);
 }
 
