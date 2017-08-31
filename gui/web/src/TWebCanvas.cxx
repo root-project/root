@@ -220,10 +220,10 @@ Bool_t TWebCanvas::AddCanvasSpecials(TPadWebSnapshot *master)
 }
 
 
-TString TWebCanvas::CreateSnapshot(TPad* pad, TPadWebSnapshot *master, TList *tempbuf)
+TString TWebCanvas::CreateSnapshot(TPad* pad, TPadWebSnapshot *master, TList *primitives_lst)
 {
-   TList main_buf;
-   if (!master && !tempbuf) tempbuf = &main_buf;
+   TList master_lst; // main list of TList object which are primitives or functions
+   if (!master && !primitives_lst) primitives_lst = &master_lst;
 
    TPadWebSnapshot *curr = new TPadWebSnapshot();
    if (master) {
@@ -236,16 +236,17 @@ TString TWebCanvas::CreateSnapshot(TPad* pad, TPadWebSnapshot *master, TList *te
    padshot->SetSnapshot(TWebSnapshot::kObject, pad);
    curr->Add(padshot);
 
-   if (tempbuf == &main_buf) AddCanvasSpecials(curr);
+   if (primitives_lst == &master_lst) AddCanvasSpecials(curr);
 
    TList *primitives = pad->GetListOfPrimitives();
-   TList hlist; // list of histograms, required for functions handling
+
+   primitives_lst->Add(primitives); // add list of primitives
 
    TIter iter(primitives);
    TObject* obj = 0;
    while ((obj = iter()) != 0) {
       if (obj->InheritsFrom(TPad::Class())) {
-         CreateSnapshot((TPad*) obj, curr, tempbuf);
+         CreateSnapshot((TPad*) obj, curr, primitives_lst);
       } else if (obj->InheritsFrom(TH1::Class())) {
          TWebSnapshot *sub = new TWebSnapshot();
          TH1 *hist = (TH1*) obj;
@@ -260,36 +261,26 @@ TString TWebCanvas::CreateSnapshot(TPad* pad, TPadWebSnapshot *master, TList *te
             if (!fobj->InheritsFrom("TPaveStats") && !fobj->InheritsFrom("TPaletteAxis"))
                curr->Add(CreateObjectSnapshot(fobj, fiter.GetOption()));
 
-         hlist.Add(hist);
+         primitives_lst->Add(hist->GetListOfFunctions());
       } else {
          curr->Add(CreateObjectSnapshot(obj, iter.GetOption()));
       }
    }
 
-   const char *pad_marker = "!!!pad!!!";
-   const char *hist_marker = "!!!hist!!!";
+   if (primitives_lst != &master_lst) return "";
 
-   // remove primitives and keep them in extra list
-   tempbuf->Add(pad, pad_marker); // special marker for pad
-   iter.Reset();
-   while ((obj = iter()) != 0)
-      tempbuf->Add(obj, iter.GetOption());
-   primitives->Clear("nodelete");
+   // now move all primitives and functions into separate list to perform I/O
 
-   // remove functions from all histograms and also add them to extra list
-   TIter hiter(&hlist);
-   TH1 *h1 = 0;
-   while ((h1 = (TH1*) hiter()) != 0) {
-      tempbuf->Add(h1, hist_marker); // special marker for pad
-      TIter fiter(h1->GetListOfFunctions());
+   TList save_lst;
+   TIter diter(&master_lst);
+   TList *dlst = 0;
+   while ((dlst = (TList*) diter()) != 0) {
+      TIter fiter(dlst);
       while ((obj = fiter()) != 0)
-         tempbuf->Add(obj, fiter.GetOption());
-      h1->GetListOfFunctions()->Clear("nodelete");
+         save_lst.Add(obj, fiter.GetOption());
+      save_lst.Add(dlst); // add list itslef to have marker
+      dlst->Clear("nodelete");
    }
-
-   hlist.Clear("nodelete");
-
-   if (tempbuf != &main_buf) return "";
 
    TString res = TBufferJSON::ConvertToJSON(curr, 23);
 
@@ -297,24 +288,17 @@ TString TWebCanvas::CreateSnapshot(TPad* pad, TPadWebSnapshot *master, TList *te
 
    delete curr; // destroy created snapshot
 
-   TPad *rpad = 0;
-   h1 = 0;
-   TIter miter(&main_buf);
-   while ((obj = miter()) != 0) {
-      TString opt = miter.GetOption();
-
-      if (opt == pad_marker) {
-         rpad = (TPad*) obj; h1 = 0;
-      } else if (opt == hist_marker) {
-         rpad = 0; h1 = (TH1*) obj;
-      } else if (rpad != 0) {
-         rpad->GetListOfPrimitives()->Add(obj, opt);
-      } else if (h1 != 0) {
-         h1->GetListOfFunctions()->Add(obj, opt);
+   TIter siter(&save_lst);
+   diter.Reset();
+   while ((dlst = (TList*) diter()) != 0) {
+      while ((obj = siter()) != 0) {
+         if (obj == dlst) break;
+         dlst->Add(obj, siter.GetOption());
       }
    }
 
-   main_buf.Clear("nodelete");
+   master_lst.Clear("nodelete");
+   save_lst.Clear("nodelete");
 
    return res;
 }
