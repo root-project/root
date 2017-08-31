@@ -49,13 +49,13 @@ class TBranchElement : public TBranch {
 // Types
 protected:
    enum EStatusBits {
-      kBranchFolder = BIT(14),
-      kDeleteObject = BIT(16),  ///<  We are the owner of fObject.
-      kCache        = BIT(18),  ///<  Need to pushd/pop fOnfileObject.
-      kOwnOnfileObj = BIT(19),  ///<  We are the owner of fOnfileObject.
-      kAddressSet   = BIT(20),  ///<  The addressing set have been called for this branch
-      kMakeClass    = BIT(21),  ///<  This branch has been switched to using the MakeClass Mode
-      kDecomposedObj= BIT(21)   ///<  More explicit alias for kMakeClass.
+      kBranchFolder  = BIT(14),
+      kDeleteObject  = BIT(16), ///<  We are the owner of fObject.
+      kCache         = BIT(18), ///<  Need to pushd/pop fOnfileObject.
+      kOwnOnfileObj  = BIT(19), ///<  We are the owner of fOnfileObject.
+      kAddressSet    = BIT(20), ///<  The addressing set have been called for this branch
+      kMakeClass     = BIT(21), ///<  This branch has been switched to using the MakeClass Mode
+      kDecomposedObj = BIT(21)  ///<  More explicit alias for kMakeClass.
    };
 
    // Note on fType values:

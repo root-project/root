@@ -59,11 +59,11 @@ protected:
       Double_t      fWeight;                 //weight for all events (default = 1)
 
       enum EStatusBits {
-         kIsBayesian       = BIT(14),              //bayesian statistics are used
-         kPosteriorMode    = BIT(15),              //use posterior mean for best estimate (Bayesian statistics)
-         kShortestInterval = BIT(16),              // use shortest interval
-         kUseBinPrior      = BIT(17),              // use a different prior for each bin
-         kUseWeights       = BIT(18)               // use weights
+         kIsBayesian       = BIT(14),  //bayesian statistics are used
+         kPosteriorMode    = BIT(15),  //use posterior mean for best estimate (Bayesian statistics)
+         kShortestInterval = BIT(16),  // use shortest interval
+         kUseBinPrior      = BIT(17),  // use a different prior for each bin
+         kUseWeights       = BIT(18)   // use weights
       };
 
       void          Build(const char* name,const char* title);

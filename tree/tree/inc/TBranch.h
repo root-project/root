@@ -63,12 +63,12 @@ protected:
    // TBranch status bits
    enum EStatusBits {
       kDoNotProcess = ::kDoNotProcess, // Active bit for branches
-      kIsClone      = ::kIsClone, // to indicate a TBranchClones
+      kIsClone      = ::kIsClone,      // to indicate a TBranchClones
       kBranchObject = ::kBranchObject, // branch is a TObject*
-      kBranchAny    = ::kBranchAny, // branch is an object*
+      kBranchAny    = ::kBranchAny,    // branch is an object*
       // kMapObject    = kBranchObject | kBranchAny;
+      kAutoDelete   = BIT(15),
 
-      kAutoDelete = BIT(15),
       kDoNotUseBufferMap = BIT(22) // If set, at least one of the entry in the branch will use the buffer's map of classname and objects.
    };
 

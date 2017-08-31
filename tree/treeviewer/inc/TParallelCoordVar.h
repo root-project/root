@@ -24,9 +24,9 @@ class TH1F;
 class TParallelCoordVar : public TNamed, public TAttLine, public TAttFill {
 public:
    enum EStatusBits {
-      kLogScale      =BIT(14),
-      kShowBox       =BIT(15),
-      kShowBarHisto  =BIT(16)
+      kLogScale      = BIT(14),
+      kShowBox       = BIT(15),
+      kShowBarHisto  = BIT(16)
    };
 private:
    Int_t             fNbins;        // Number of bins in fHistogram.

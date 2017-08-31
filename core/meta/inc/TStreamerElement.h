@@ -88,7 +88,7 @@ public:
       // we can not change its value without breaking forward compatibility.
       // Furthermore, TObject::kInvalidObject and its semantic is not (and should not be)
       // used in TStreamerElement
-      kDoNotDelete  = TStreamerElement::kDoNotDelete,
+      kDoNotDelete = TStreamerElement::kDoNotDelete,
 
       // This bit duplicates TObject::kCannotPick. As the semantic of kHasRange is a persistent,
       // we can not change its value without breaking forward compatibility.
