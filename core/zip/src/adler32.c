@@ -23,7 +23,7 @@ static uLong adler32_combine_ OF((uLong adler1, uLong adler2, z_off64_t len2));
 #define NMAX 5552
 /* NMAX is the largest n such that 255n(n+1)/2 + (n+1)(BASE-1) <= 2^32-1 */
 
-/* 
+/*
  * As we are using _signed_ integer arithmetic for the SSE/AVX2 implementations,
  * we consider the max as 2^31-1
  */
@@ -80,7 +80,7 @@ static uLong adler32_combine_ OF((uLong adler1, uLong adler2, z_off64_t len2));
 /* ========================================================================= */
 uLong ZEXPORT adler32_default(uLong adler, const Bytef *buf, uInt len)
 {
-	
+
     unsigned long sum2;
     unsigned n;
 
@@ -196,7 +196,7 @@ uLong ZEXPORT adler32_sse42(uLong adler, const Bytef *buf, uInt len)
     __m128i dot2v = _mm_load_si128((__m128i*)dot2);
     short __attribute__ ((aligned(16))) dot3[8] = {1, 1, 1, 1, 1, 1, 1, 1};
     __m128i dot3v = _mm_load_si128((__m128i*)dot3);
-    // We will need to multiply by 
+    // We will need to multiply by
     //char __attribute__ ((aligned(16))) shift[4] = {0, 0, 0, 4}; //{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4};
     char __attribute__ ((aligned(16))) shift[16] = {4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     __m128i shiftv = _mm_load_si128((__m128i*)shift);
@@ -301,7 +301,7 @@ uLong ZEXPORT adler32_avx2(uLong adler, const Bytef *buf, uInt len)
     __m256i dot2v = _mm256_load_si256((__m256i*)dot2);
     short __attribute__ ((aligned(32))) dot3[16] = {1, 1, 1, 1, 1, 1, 1, 1,  1, 1, 1, 1, 1, 1, 1, 1};
     __m256i dot3v = _mm256_load_si256((__m256i*)dot3);
-    // We will need to multiply by 
+    // We will need to multiply by
     char __attribute__ ((aligned(16))) shift[16] = {5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     __m128i shiftv = _mm_load_si128((__m128i*)shift);
     while (len >= 32) {
@@ -362,7 +362,9 @@ void *resolve_adler32(void)
   /* Collect CPU features */
   if (!__get_cpuid (1, &eax, &ebx, &ecx, &edx))
     return adler32_default;
-  has_sse42 = ((ecx & bit_SSE4_2) != 0);
+  // Clang and GCC has different names for SSE (bit_SSE42 vs bit_SSE4_2)
+  // Using raw value here...
+  has_sse42 = ((ecx & 0x00100000) != 0);
 #if defined(bit_AVX2)
   if (__get_cpuid_max (0, NULL) < 7)
     return adler32_default;

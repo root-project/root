@@ -169,7 +169,9 @@ void *resolve_hash_func(void)
   if (!__get_cpuid (1, &eax, &ebx, &ecx, &edx))
     return hash_func_default;
   /* We need SSE4.2 ISA support */
-  if (!(ecx & bit_SSE4_2))
+  // Clang and GCC has different names for SSE (bit_SSE42 vs bit_SSE4_2)
+  // Using raw value here...
+  if (!(ecx & 0x00100000))
     return hash_func_default;
   return hash_func_sse42;
 }
@@ -1124,7 +1126,7 @@ static void lm_init (s)
  *
  * ------------------------------------------------------------
  * uInt longest_match(...) {
- *    ...   
+ *    ...
  *    do {
  *        match = s->window + cur_match;                //s0
  *        if (*(ushf*)(match+best_len-1) != scan_end || //s1
@@ -1162,7 +1164,7 @@ static void lm_init (s)
  *       "s->window" is loop-invariant of that newly created tight loop. It is
  *       lot easier for compiler to promote this quantity to register and keep
  *       its value throughout the entire small loop.
- * 
+ *
  * 2) Transfrom s3 such that it examines sizeof(long)-byte-match at a time.
  *    This is done by:
  *        ------------------------------------------------
@@ -1513,7 +1515,7 @@ static void fill_window_sse42(s)
                later. (Using level 0 permanently is not an optimal usage of
                zlib, so we don't care about this pathological case.)
              */
-            
+
             /* Use intrinsics, because compiler generates suboptimal code */
             n = s->hash_size;
             __m128i W = _mm_set1_epi16(wsize);
@@ -1618,7 +1620,9 @@ void *resolve_fill_window(void)
     if (!__get_cpuid (1, &eax, &ebx, &ecx, &edx))
         return fill_window_default;
     /* We need SSE4.2 ISA support */
-    if (!(ecx & bit_SSE4_2))
+    // Clang and GCC has different names for SSE (bit_SSE42 vs bit_SSE4_2)
+    // Using raw value here...
+    if (!(ecx & 0x00100000))
         return fill_window_default;
     return fill_window_sse42;
 }

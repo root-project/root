@@ -259,7 +259,9 @@ static inline bool can_sse41(void)
 {
     unsigned int eax, ebx, ecx, edx;
     __get_cpuid (1, &eax, &ebx, &ecx, &edx);
-    return (ecx & bit_SSE4_2) && (ecx & bit_PCLMUL);
+    // Clang and GCC has different names for SSE (bit_SSE42 vs bit_SSE4_2)
+    // The same for bit_PCLMUL, using raw value here...
+    return (ecx & 0x00100000) && (ecx & 0x00000002);
 }
 
 uLong crc32__(unsigned long crc, const unsigned char FAR *buf, unsigned len);
@@ -311,7 +313,7 @@ uLong crc32_pclmul(crc, buf, len)
 }
 
 /* This function needs to be resolved at load time */
-uLong crc32(unsigned long, const unsigned char FAR *, unsigned) 
+uLong crc32(unsigned long, const unsigned char FAR *, unsigned)
 __attribute__ ((ifunc ("resolve_crc32")));
 #else
 uLong crc32(crc, buf, len)
