@@ -32,6 +32,7 @@ if(CTEST_BUILD_NAME MATCHES clang39)  # ABI mismatch between our clang and exter
               tutorial-tmva-TMVAClassificationCategoryApplication
               tutorial-tmva-TMVARegressionApplication
               tutorial-tmva-TMVAMulticlassApplication
+              tutorial-tmva-TMVARegression
               roottest-cling-stl-map-stringMap
               roottest-root-meta-genreflex-TClass-execbasic
               roottest-cling-stl-map-badstringMap)
