@@ -99,15 +99,21 @@ TStatusBitsChecker::Registry::~Registry() = default;
 UChar_t TStatusBitsChecker::ConvertToBit(Long64_t constant, TClass &classRef, const char *constantName)
 {
 
-   if (constant < 0) {
+   if (constant <= 0) {
       Error("TStatusBitsChecker::ConvertBit", "In %s the value of %s is %lld which was not produced by BIT macro.",
             classRef.GetName(), constantName, constant);
       return 255;
    }
 
-   auto backshift = std::log2(constant);
+   int backshift;
+   double fraction = std::frexp(constant, &backshift);
+   // frexp doc is:
+   //    if no errors occur,
+   //    returns the value x in the range (-1;-0.5], [0.5; 1)
+   //    and stores an integer value in *exp such that x×2^(*exp) = arg
+   --backshift; // frexp is such that BIT(0) == 1 == 0.5*2^(*exp) with *exp == 1
 
-   if (std::abs(std::nearbyint(backshift) - backshift) > 0.00001f) {
+   if (backshift < 0 || std::abs(0.5 - fraction) > 0.00001f) {
       Error("TStatusBitsChecker::ConvertBit", "In %s the value of %s is %lld which was not produced by BIT macro.",
             classRef.GetName(), constantName, constant);
       return 255;
