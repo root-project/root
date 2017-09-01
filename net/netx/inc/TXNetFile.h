@@ -57,15 +57,14 @@ class TXNetFile : public TNetFile {
 friend class TXNetSystem;
 
 private:
-   // Members
-   XrdClient         *fClient;       // Handle to the client object
-   Bool_t             fIsRootd;      // Nature of remote file server
-
    // Static members
    static Bool_t  fgInitDone;    // Avoid initializing more than once
    static Bool_t  fgRootdBC;     // Control rootd backward compatibility
    static TFileStager *fgFileStager; // Stager for IsStaged checks
 
+   // Members
+   XrdClient         *fClient;      // Handle to the client object
+   Bool_t             fIsRootd;     // Nature of remote file server
    void              *fInitMtx;     // Protects fInitDone, serializes the
                                     // attempts to Init() for this object only
 
