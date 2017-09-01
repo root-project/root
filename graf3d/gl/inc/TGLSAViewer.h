@@ -40,8 +40,8 @@ public:
    enum EGLSACommands {
       kGLHelpAbout, kGLHelpViewer,
       kGLPerspYOZ, kGLPerspXOZ, kGLPerspXOY,
-      kGLXOY,  kGLXOZ,  kGLZOY,
-      kGLXnOY, kGLXnOZ, kGLZnOY,
+      kGLXOY,  kGLXOZ,  kGLZOY,  kGLZOX,
+      kGLXnOY, kGLXnOZ, kGLZnOY, kGLZnOX,
       kGLOrthoRotate, kGLOrthoDolly,
       kGLSaveEPS, kGLSavePDF, kGLSavePNG, kGLSaveGIF, kGLSaveAnimGIF,
       kGLSaveJPG, kGLSaveAS, kGLCloseViewer, kGLQuitROOT,
