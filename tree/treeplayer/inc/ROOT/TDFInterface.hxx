@@ -337,6 +337,9 @@ public:
    /// Refer to the first overload of this method for the full documentation.
    TInterface<TCustomColumnBase> Define(std::string_view name, std::string_view expression)
    {
+      auto loopManager = GetDataFrameChecked();
+      // this check must be done before jitting lest we throw exceptions in jitted code
+      TDFInternal::CheckTmpBranch(name, loopManager->GetTree());
       auto retVal = CallJitTransformation("Define", name, expression);
       return *(TInterface<TCustomColumnBase> *)retVal;
    }
