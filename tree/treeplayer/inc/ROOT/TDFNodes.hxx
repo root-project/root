@@ -322,24 +322,14 @@ public:
    virtual void InitSlot(TTreeReader *r, unsigned int slot) = 0;
    virtual void *GetValuePtr(unsigned int slot) = 0;
    virtual const std::type_info &GetTypeId() const = 0;
-   virtual bool CheckFilters(unsigned int slot, Long64_t entry) = 0;
    TLoopManager *GetImplPtr() const;
-   virtual void Report() const = 0;
-   virtual void PartialReport() const = 0;
    std::string GetName() const;
    virtual void Update(unsigned int slot, Long64_t entry) = 0;
-   virtual void IncrChildrenCount() = 0;
-   virtual void StopProcessing() = 0;
    virtual void ClearValueReaders(unsigned int slot) = 0;
-   void ResetChildrenCount()
-   {
-      fNChildren = 0;
-      fNStopsReceived = 0;
-   }
    unsigned int GetNSlots() const { return fNSlots; }
 };
 
-template <typename F, typename PrevData>
+template <typename F>
 class TCustomColumn final : public TCustomColumnBase {
    using BranchTypes_t = typename CallableTraits<F>::arg_types;
    using TypeInd_t = TDFInternal::GenStaticSeq_t<BranchTypes_t::list_size>;
@@ -348,16 +338,14 @@ class TCustomColumn final : public TCustomColumnBase {
    F fExpression;
    const ColumnNames_t fBranches;
    std::vector<std::unique_ptr<ret_type>> fLastResultPtr;
-   PrevData &fPrevData;
    std::vector<Long64_t> fLastCheckedEntry = {-1};
 
    std::vector<TDFInternal::TDFValueTuple_t<BranchTypes_t>> fValues;
 
 public:
-   TCustomColumn(std::string_view name, F &&expression, const ColumnNames_t &bl, PrevData &pd)
-      : TCustomColumnBase(pd.GetImplPtr(), name, pd.GetNSlots()),
-        fExpression(std::move(expression)), fBranches(bl), fLastResultPtr(fNSlots), fPrevData(pd),
-        fLastCheckedEntry(fNSlots, -1), fValues(fNSlots)
+   TCustomColumn(std::string_view name, F &&expression, const ColumnNames_t &bl, TLoopManager *lm)
+      : TCustomColumnBase(lm, name, lm->GetNSlots()), fExpression(std::move(expression)), fBranches(bl),
+        fLastResultPtr(fNSlots), fLastCheckedEntry(fNSlots, -1), fValues(fNSlots)
    {
       std::generate(fLastResultPtr.begin(), fLastResultPtr.end(),
                     []() { return std::unique_ptr<ret_type>(new ret_type()); });
@@ -385,12 +373,6 @@ public:
 
    const std::type_info &GetTypeId() const { return typeid(ret_type); }
 
-   bool CheckFilters(unsigned int slot, Long64_t entry) final
-   {
-      // dummy call: it just forwards to the previous object in the chain
-      return fPrevData.CheckFilters(slot, entry);
-   }
-
    template <int... S, typename... BranchTypes>
    void UpdateHelper(unsigned int slot, Long64_t entry, TDFInternal::StaticSeq<S...>, TypeList<BranchTypes...>)
    {
@@ -398,27 +380,6 @@ public:
       // silence "unused parameter" warnings in gcc
       (void)slot;
       (void)entry;
-   }
-
-   // recursive chain of `Report`s
-   // TCustomColumn simply forwards the call to the previous node
-   void Report() const final { fPrevData.PartialReport(); }
-
-   void PartialReport() const final { fPrevData.PartialReport(); }
-
-   void StopProcessing() final
-   {
-      ++fNStopsReceived;
-      if (fNStopsReceived == fNChildren)
-         fPrevData.StopProcessing();
-   }
-
-   void IncrChildrenCount() final
-   {
-      ++fNChildren;
-      // propagate "children activation" upstream
-      if (fNChildren == 1)
-         fPrevData.IncrChildrenCount();
    }
 
    virtual void ClearValueReaders(unsigned int slot) final { ResetTDFValueTuple(fValues[slot], TypeInd_t()); }
