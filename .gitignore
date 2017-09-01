@@ -38,6 +38,7 @@ project.xcworkspace
 
 # QtCreator
 CMakeLists.txt.user
+*.autosave
 
 # Eclipse
 .settings/*
