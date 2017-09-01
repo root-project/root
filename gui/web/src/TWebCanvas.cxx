@@ -108,18 +108,20 @@ Bool_t TWebCanvas::IsJSSupportedClass(TObject* obj)
        { "TPave", true },
        { "TArrow", false },
 //       { "TBox", false },    // can be handled via TWebPainter
-       { "TLine", false },
+       { "TLine", false },     // also can be handler via TWebPainter
        { 0, false }
    };
 
+   // fast check of class name
    for (int i = 0; supported_classes[i].name != 0; ++i)
       if (strcmp(supported_classes[i].name, obj->ClassName()) == 0) return kTRUE;
 
+   // now check inheritance only for configured classes
    for (int i = 0; supported_classes[i].name != 0; ++i)
       if (supported_classes[i].with_derived)
          if (obj->InheritsFrom(supported_classes[i].name)) return kTRUE;
 
-   // printf("Unsupported class %s\n", obj->ClassName());
+   printf("Unsupported class %s\n", obj->ClassName());
 
    return kFALSE;
 }
@@ -292,6 +294,8 @@ TString TWebCanvas::CreateSnapshot(TPad* pad, TPadWebSnapshot *master, TList *pr
 
    // now move all primitives and functions into separate list to perform I/O
 
+   TBufferJSON::ExportToFile("canvas.json", pad);
+
    TList save_lst;
    TIter diter(&master_lst);
    TList *dlst = 0;
@@ -303,9 +307,16 @@ TString TWebCanvas::CreateSnapshot(TPad* pad, TPadWebSnapshot *master, TList *pr
       dlst->Clear("nodelete");
    }
 
-   TString res = TBufferJSON::ConvertToJSON(curr, 23);
+   // TBufferJSON::ExportToFile("canvas_empty.json", pad);
 
-   // TBufferJSON::ExportToFile("debug.json", curr);
+   //gDebug = 4;
+
+   // Info("CreateSnapshot","In canvas primitives are %d", pad->GetListOfPrimitives()->GetSize());
+
+   TString res = TBufferJSON::ConvertToJSON(curr, 23);
+   // gDebug = 0;
+
+   // TBufferJSON::ExportToFile("snapshot.json", curr);
 
    delete curr; // destroy created snapshot
 
@@ -318,8 +329,9 @@ TString TWebCanvas::CreateSnapshot(TPad* pad, TPadWebSnapshot *master, TList *pr
       }
    }
 
-   master_lst.Clear("nodelete");
    save_lst.Clear("nodelete");
+
+   master_lst.Clear("nodelete");
 
    return res;
 }
