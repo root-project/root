@@ -14,6 +14,11 @@ ROOTTEST_ADD_TEST(missingBranches
                   MACRO test_missingBranches.C
                   ERRREF test_missingBranches.eref)
 
+ROOTTEST_GENERATE_EXECUTABLE(test_columnoverride test_columnoverride.cxx LIBRARIES ${DFLIBRARIES})
+ROOTTEST_ADD_TEST(test_columnoverride
+                  EXEC test_columnoverride
+                  DEPENDS ${GENERATE_EXECUTABLE_TEST})
+
 ROOTTEST_GENERATE_EXECUTABLE(regression_ranges regression_ranges.cxx LIBRARIES ${DFLIBRARIES})
 ROOTTEST_ADD_TEST(regression_ranges
                   EXEC regression_ranges
