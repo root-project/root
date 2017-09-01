@@ -1557,7 +1557,7 @@ void THtml::CreateListOfClasses(const char* filter)
 
    fDocEntityInfo.fClassFilter = filter;
 
-   // start from begining
+   // start from beginning
    gClassTable->Init();
    if (filter && (!filter[0] || !strcmp(filter, "*")))
       filter = ".*";
