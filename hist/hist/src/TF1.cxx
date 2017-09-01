@@ -1395,6 +1395,23 @@ Double_t TF1::EvalPar(const Double_t *x, const Double_t *params)
    return result;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+///   EvalPar for vectorized
+#ifdef R__HAS_VECCORE
+ROOT::Double_v TF1::EvalPar(const ROOT::Double_v *x, const Double_t *params)
+{
+   if (fType == EFType::kTemplVec || fType == EFType::kTemplScalar) {
+      return EvalParTempl(x, params);
+   } else if (fType == EFType::kFormula) {
+      if (!fFormula->IsVectorized())
+         Warning("EvalPar", "Switching formula to vectorized");
+      fFormula->SetVectorized(true);
+
+      return fFormula->EvalPar(x, params);
+   } else
+      return TF1::EvalPar((double *)x, params);
+}
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute action corresponding to one event.

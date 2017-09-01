@@ -709,6 +709,7 @@ void TFormula::Clear(Option_t * )
 
 bool TFormula::PrepareEvalMethod()
 {
+   std::cout << "Calling PrepareEvalMethod!" << std::endl; // todo remove
 
    if (!fMethod) {
       fMethod = new TMethodCall();
@@ -717,7 +718,10 @@ bool TFormula::PrepareEvalMethod()
       Bool_t hasVariables = (fNdim > 0);
       TString prototypeArguments = "";
       if (hasVariables) {
-         prototypeArguments.Append("Double_t*");
+         if (fVectorized)
+            prototypeArguments.Append("ROOT::Double_v*");
+         else
+            prototypeArguments.Append("Double_t*");
       }
       if (hasVariables && hasParameters) {
          prototypeArguments.Append(",");
@@ -2181,8 +2185,11 @@ void TFormula::ProcessFormula(TString &formula)
          // and also formula is same as FClingInput typically and it will be modified
          std::string inputFormula = std::string(formula);
 
+         TString argType = fVectorized ? "ROOT::Double_v" : "Double_t";
+         std::cout << "Defining argType as " << argType << " in TFormula::ProcessFormula" << std::endl; // todo remove
+
          // valid input formula - try to put into Cling
-         TString argumentsPrototype = TString::Format("%s%s%s", (hasVariables ? "Double_t *x" : ""),
+         TString argumentsPrototype = TString::Format("%s%s%s", (hasVariables ? (argType + " *x").Data() : ""),
                                                       (hasBoth ? "," : ""), (hasParameters ? "Double_t *p" : ""));
 
          // set the name for Cling using the hash_function
@@ -2203,8 +2210,8 @@ void TFormula::ProcessFormula(TString &formula)
          auto hasher = gClingFunctions.hash_function();
          fClingName = TString::Format("%s__id%zu", gNamePrefix.Data(), hasher(inputFormula));
 
-         fClingInput = TString::Format("Double_t %s(%s){ return %s ; }", fClingName.Data(), argumentsPrototype.Data(),
-                                       inputFormula.c_str());
+         fClingInput = TString::Format("%s %s(%s){ return %s ; }", argType.Data(), fClingName.Data(),
+                                       argumentsPrototype.Data(), inputFormula.c_str());
 
          // this is not needed (maybe can be re-added in case of recompilation of identical expressions
          // // check in case of a change if need to re-initialize
@@ -2936,10 +2943,41 @@ void TFormula::ReplaceParamName(TString & formula, const TString & oldName, cons
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+void TFormula::SetVectorized(Bool_t vectorized)
+{
+#ifdef R__HAS_VECCORE
+   if (vectorized != fVectorized) {
+      fVectorized = vectorized;
+      std::cout << "Testing switching vectorized flag" << std::endl; // todo remove
+      std::cout << "currently, fClingInput is " << fClingInput << std::endl;
+      ProcessFormula(fClingInput);
+      // PrepareEvalMethod(); // todo: need this?
+   }
+#else
+   if (vectorized)
+      Warning("SetVectorized", "Cannot set vectorized -- try building with option -Dbuiltin_veccore=On");
+#endif
+}
+
+////////////////////////////////////////////////////////////////////////////////
 Double_t TFormula::EvalPar(const Double_t *x,const Double_t *params) const
 {
    return DoEval(x, params);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+#ifdef R__HAS_VECCORE
+ROOT::Double_v TFormula::EvalPar(const ROOT::Double_v *x, const Double_t *params) const
+{
+   std::cout << "TODO write proper TFormula::EvalPar for Double_v *x" << std::endl;
+
+   if (fVectorized)
+      return DoEvalVec(x, params);
+
+   Error("EvalPar", "Formula is not vectorized"); // can't switch formula to vectorized because of `const`
+   return TMath::QuietNaN();
+}
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Sets first 4  variables (e.g. x, y, z, t) and evaluate formula.
@@ -3007,7 +3045,7 @@ Double_t TFormula::DoEval(const double * x, const double * params) const
    }
    // this is needed when reading from a file
    if (!fClingInitialized) {
-      Error("Eval","Formula is invalid or not properly initialized - try calling TFormula::Compile");
+      Error("DoEval", "Formula is invalid or not properly initialized - try calling TFormula::Compile");
       return TMath::QuietNaN();
 #ifdef EVAL_IS_NOT_CONST
       // need to replace in cling the name of the pointer of this object
@@ -3031,6 +3069,55 @@ Double_t TFormula::DoEval(const double * x, const double * params) const
    }
    return result;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+// Copied from DoEval, but this is the vectorized version
+#ifdef R__HAS_VECCORE
+ROOT::Double_v TFormula::DoEvalVec(const ROOT::Double_v *x, const double *params) const
+{
+   if (!fReadyToExecute) {
+      Error("Eval", "Formula is invalid and not ready to execute ");
+      for (auto it = fFuncs.begin(); it != fFuncs.end(); ++it) {
+         TFormulaFunction fun = *it;
+         if (!fun.fFound) {
+            printf("%s is unknown.\n", fun.GetName());
+         }
+      }
+      return TMath::QuietNaN();
+   }
+   // todo maybe save lambda ptr stuff for later
+
+   if (!fClingInitialized) {
+      Error("DoEvalVec", "Formula is invalid or not properly initialized - try calling TFormula::Compile");
+      return TMath::QuietNaN();
+// todo: the below never gets executed anyway?
+#ifdef EVAL_IS_NOT_CONST
+      // need to replace in cling the name of the pointer of this object
+      TString oldClingName = fClingName;
+      fClingName.Replace(fClingName.Index("_0x") + 1, fClingName.Length(), TString::Format("%p", this));
+      fClingInput.ReplaceAll(oldClingName, fClingName);
+      InputFormulaIntoCling();
+#endif
+   }
+
+   ROOT::Double_v result = 0;
+   void *args[2];
+
+   // todo: to get the fClingVariables part working will require some more work,
+   // because all the "AddVariables" etc code assumes that the variables are
+   // doubles
+   ROOT::Double_v *vars = const_cast<ROOT::Double_v *>(x); // backup plan: fClingVariables.data()
+   args[0] = &vars;
+   if (fNpar <= 0)
+      (*fFuncPtr)(0, 1, args, &result);
+   else {
+      double *pars = (params) ? const_cast<double *>(params) : const_cast<double *>(fClingParameters.data());
+      args[1] = &pars;
+      (*fFuncPtr)(0, 2, args, &result);
+   }
+   return result;
+}
+#endif // R__HAS_VECCORE
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the expression formula.
