@@ -12,3 +12,6 @@ ROOT_OBJECT_LIBRARY(Meta ${sources})
 
 ROOT_INSTALL_HEADERS()
 
+if(testing)
+  add_subdirectory(test)
+endif()
