@@ -185,8 +185,7 @@ const ColumnNames_t SelectColumns(unsigned int nRequiredNames, const ColumnNames
    }
 }
 
-ColumnNames_t
-FindUnknownColumns(const ColumnNames_t &requiredCols, TTree *tree, const ColumnNames_t &definedCols)
+ColumnNames_t FindUnknownColumns(const ColumnNames_t &requiredCols, TTree *tree, const ColumnNames_t &definedCols)
 {
    ColumnNames_t unknownColumns;
    for (auto &column : requiredCols) {
