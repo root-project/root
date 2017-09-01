@@ -268,8 +268,12 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   # Replace the non-standard folder layout of Core.
   if (ARG_STAGE1 AND ARG_MODULE STREQUAL "Core")
     # FIXME: Glob these folders.
-    set(core_folders "base|clib|clingutils|cont|dictgen|doc|foundation|lzma|lz4|macosx|meta|metacling|multiproc|newdelete|pcre|rint|rootcling_stage1|textinput|thread|unix|winnt|zip")
-    string(REGEX REPLACE "${CMAKE_SOURCE_DIR}/core/(${core_folders})/inc/" ""  headerfiles "${headerfiles}")
+    set(core_folders base clib clingutils cont dictgen doc foundation lzma lz4
+                     macosx meta metacling multiproc newdelete pcre rint
+                     rootcling_stage1 textinput thread unix winnt zip)
+    foreach(core_folder ${core_folders})
+     string(REPLACE "${CMAKE_SOURCE_DIR}/core/(${core_folders})/inc/" ""  headerfiles "${headerfiles}")
+    endforeach()
   endif()
 
   if(CMAKE_PROJECT_NAME STREQUAL ROOT)
@@ -482,7 +486,7 @@ function (ROOT_CXXMODULES_APPEND_TO_MODULEMAP library library_headers)
     endif()
   endif(APPLE)
 
-  set(excluded_headers "RConfig.h RVersion.h RtypesImp.h TVersionCheck.h
+  set(excluded_headers RConfig.h RVersion.h RtypesImp.h TVersionCheck.h
                         Rtypes.h RtypesCore.h TClassEdit.h
                         TIsAProxy.h TVirtualIsAProxy.h
                         DllImport.h TGenericClassInfo.h
@@ -491,7 +495,7 @@ function (ROOT_CXXMODULES_APPEND_TO_MODULEMAP library library_headers)
                         RWrap_libcpp_string_view.h
                         ThreadLocalStorage.h
                         TBranchProxyTemplate.h TGLIncludes.h TGLWSIncludes.h
-                        snprintf.h strlcpy.h")
+                        snprintf.h strlcpy.h)
 
    # Deprecated header files.
   set (excluded_headers "${excluded_headers}")
@@ -507,12 +511,19 @@ function (ROOT_CXXMODULES_APPEND_TO_MODULEMAP library library_headers)
     set(found_headers ${library_headers})
   endif()
   foreach(header ${found_headers})
-    #message (STATUS "header: ${header}")
     set(textual_header "")
     if (${header} MATCHES ".*\\.icc$")
       set(textual_header "textual ")
     endif()
-    if (NOT ${excluded_headers} MATCHES ${header})
+    # Check if header is in included header list
+    set(is_excluded NO)
+    foreach(excluded_header ${excluded_headers})
+      if(${header} MATCHES ${excluded_header})
+        set(is_excluded YES)
+        break()
+      endif()
+    endforeach()
+    if(NOT is_excluded)
       set(modulemap_entry "${modulemap_entry}  module \"${header}\" { ${textual_header}header \"${header}\" export * }\n")
     endif()
   endforeach()
