@@ -52,6 +52,7 @@ allows a simple partial implementation for new OS'es.
 #include "TVersionCheck.h"
 #include "compiledata.h"
 #include "RConfigure.h"
+#include "THashList.h"
 
 const char *gRootDir;
 const char *gProgName;
@@ -1943,6 +1944,55 @@ int TSystem::Load(const char *module, const char *entry, Bool_t system)
    Func_t f = DynFindSymbol(module, entry);
    if (f) return 0;
    return -1;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+/// Load all libraries known to ROOT via the rootmap system.
+/// Returns the number of top level libraries successfully loaded.
+
+UInt_t TSystem::LoadAllLibraries()
+{
+   UInt_t nlibs = 0;
+
+   TEnv* mapfile = gInterpreter->GetMapfile();
+   if (!mapfile || !mapfile->GetTable()) return 0;
+
+   std::set<std::string> loadedlibs;
+   std::set<std::string> failedlibs;
+
+   TEnvRec* rec = 0;
+   TIter iEnvRec(mapfile->GetTable());
+   while ((rec = (TEnvRec*) iEnvRec())) {
+      TString libs = rec->GetValue();
+      TString lib;
+      Ssiz_t pos = 0;
+      while (libs.Tokenize(lib, pos)) {
+         // check that none of the libs failed to load
+         if (failedlibs.find(lib.Data()) != failedlibs.end()) {
+            // don't load it or any of its dependencies
+            libs = "";
+            break;
+         }
+      }
+      pos = 0;
+      while (libs.Tokenize(lib, pos)) {
+         // ignore libCore - it's already loaded
+         if (lib.BeginsWith("libCore"))
+            continue;
+
+         if (loadedlibs.find(lib.Data()) == loadedlibs.end()) {
+            // just load the first library - TSystem will do the rest.
+            auto res = gSystem->Load(lib);
+            if (res >=0) {
+               if (res == 0) ++nlibs;
+               loadedlibs.insert(lib.Data());
+            } else {
+               failedlibs.insert(lib.Data());
+            }
+         }
+      }
+   }
+   return nlibs;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
