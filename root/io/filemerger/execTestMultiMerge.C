@@ -72,7 +72,7 @@ int execTestMultiMerge()
    Int_t result = 0;
    int hsimpleFTolerance = 6; // 5 for non fst builds
    result += testMergedFile("mzfile1-4.root",206,4992, kIs32bits ? 2 : 0);
-   result += testMergedFile("mlz4file1-4.root",406,5013, kIs32bits ? 2 : 0);
+   result += testMergedFile("mlz4file1-4.root",406,5029, kIs32bits ? 2 : 0);
    result += testMergedFile("mzlibfile1-4.root",106,4917, kIs32bits ? 2 : 0);
    result += testSimpleFile("hsimple.root",25000,1,414415, kIs32bits ? 10 : 8);
    result += testSimpleFile("hsimple9.root",25000,9,432029,3);
@@ -82,9 +82,9 @@ int execTestMultiMerge()
    result += testSimpleFile("hsimple9x2.root",2*25000,9,851123,9);
    result += testSimpleFile("hsimple109x2.root",2*25000,109,851134,9);
    result += testSimpleFile("hsimple209.root",25000,209,394077,8);
-   result += testSimpleFile("hsimple401.root",25000,401,416513,8);
-   result += testSimpleFile("hsimple406.root",25000,406,516337,8);
-   result += testSimpleFile("hsimple409.root",25000,409,516289,8);
+   result += testSimpleFile("hsimple401.root",25000,401,416534,8);
+   result += testSimpleFile("hsimple406.root",25000,406,516373,8);
+   result += testSimpleFile("hsimple409.root",25000,409,516321,8);
    result += testSimpleFile("hsimpleK.root",6*25000,209,2298976,16);
    if (lzma_version_number() < 50020010) {
       // lzma v5.2.0 produced larger files ...
@@ -93,7 +93,7 @@ int execTestMultiMerge()
    } else {
       result += testSimpleFile("hsimpleK202.root",12*25000,202,4631252,16);
    }
-   result += testSimpleFile("hsimpleK409.root",24*25000,409,12046474,16);
+   result += testSimpleFile("hsimpleK409.root",24*25000,409,12046517,16);
    result += testSimpleFile("hsimpleF.root",30*25000,9,12582457,hsimpleFTolerance);
    return result;
 }
