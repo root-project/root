@@ -51,6 +51,9 @@ The following interfaces have been removed, after deprecation in v6.10.
 
 ## Core Libraries
 
+- When invoking root with the "-t" argument, ROOT enables thread-safety and,
+  if configured, implicit multithreading within ROOT.
+
 
 ## I/O Libraries
 
