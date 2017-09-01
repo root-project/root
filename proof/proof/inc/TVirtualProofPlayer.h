@@ -43,7 +43,7 @@ class TSelector;
 class TVirtualProofPlayer : public TObject, public TQObject {
 
 public:
-   enum EStatusBits { kIsSubmerger = BIT(16) };
+   enum EStatusBits { kIsSubmerger = BIT(14) };
    // TDSet status bits
    enum EExitStatus { kFinished, kStopped, kAborted };
 
