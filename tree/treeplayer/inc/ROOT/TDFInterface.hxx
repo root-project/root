@@ -320,8 +320,8 @@ public:
       TDFInternal::CheckCustomColumn(name, loopManager->GetTree(), loopManager->GetCustomColumnNames());
       auto nColumns = TTraits::CallableTraits<F>::arg_types::list_size;
       const auto validColumnNames = GetValidatedColumnNames(*loopManager, nColumns, columns);
-      using NewColumn_t = TDFDetail::TCustomColumn<F, Proxied>;
-      loopManager->Book(std::make_shared<NewColumn_t>(name, std::move(expression), validColumnNames, *fProxiedPtr));
+      using NewCol_t = TDFDetail::TCustomColumn<F>;
+      loopManager->Book(std::make_shared<NewCol_t>(name, std::move(expression), validColumnNames, loopManager.get()));
       TInterface<Proxied> newInterface(fProxiedPtr, fImplWeakPtr, fValidCustomColumns);
       newInterface.fValidCustomColumns.emplace_back(name);
       return newInterface;
@@ -1291,12 +1291,6 @@ template <>
 inline std::string TInterface<TDFDetail::TFilterBase>::GetNodeTypeName()
 {
    return "ROOT::Detail::TDF::TFilterBase";
-}
-
-template <>
-inline std::string TInterface<TDFDetail::TCustomColumnBase>::GetNodeTypeName()
-{
-   return "ROOT::Detail::TDF::TCustomColumnBase";
 }
 
 template <>

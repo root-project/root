@@ -284,7 +284,6 @@ void TLoopManager::CleanUpNodes()
    fNStopsReceived = 0;
    for (auto &ptr : fBookedFilters) ptr->ResetChildrenCount();
    for (auto &ptr : fBookedRanges) ptr->ResetChildrenCount();
-   for (auto &pair : fBookedCustomColumns) pair.second->ResetChildrenCount();
 }
 
 /// Perform clean-up operations. To be called at the end of each task execution.

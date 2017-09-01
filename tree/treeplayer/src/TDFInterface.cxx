@@ -25,7 +25,6 @@ namespace TDF {
 // extern templates
 template class TInterface<TLoopManager>;
 template class TInterface<TFilterBase>;
-template class TInterface<TCustomColumnBase>;
 }
 }
 
