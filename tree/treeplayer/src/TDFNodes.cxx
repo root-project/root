@@ -34,8 +34,7 @@ namespace ROOT {
 namespace Internal {
 namespace TDF {
 
-TActionBase::TActionBase(TLoopManager *implPtr, const unsigned int nSlots)
-   : fImplPtr(implPtr), fNSlots(nSlots)
+TActionBase::TActionBase(TLoopManager *implPtr, const unsigned int nSlots) : fImplPtr(implPtr), fNSlots(nSlots)
 {
 }
 
