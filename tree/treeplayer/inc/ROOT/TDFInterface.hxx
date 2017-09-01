@@ -1103,6 +1103,12 @@ public:
    /// order as the named filters have been added to the graph.
    void Report()
    {
+      // if this is a TInterface<TLoopManager> on which `Define` has been called, users
+      // are calling `Report` on a chain of the form LoopManager->Define->Define->..., which
+      // certainly does not contain named filters.
+      if (std::is_same<Proxied, TLoopManager>::value && !fValidCustomColumns.empty())
+         return;
+
       auto df = GetDataFrameChecked();
       if (!df->HasRunAtLeastOnce())
          df->Run();
