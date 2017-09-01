@@ -69,7 +69,7 @@ friend class TProofServLite;
 friend class TXProofServ;
 
 public:
-   enum EStatusBits { kHighMemory = BIT(16) };
+   enum EStatusBits { kHighMemory = BIT(17) };
    enum EQueryAction { kQueryOK, kQueryModify, kQueryStop, kQueryEnqueued };
 
 private:
