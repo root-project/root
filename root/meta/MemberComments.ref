@@ -21,12 +21,12 @@ OBJ: TList	TList	Doubly linked list : 0
  OBJ: TDataMember	kNstat	 : 0
  OBJ: TDataMember	kCanDelete	 : 0
  OBJ: TDataMember	kMustCleanup	 : 0
- OBJ: TDataMember	kObjInCanvas	 : 0
  OBJ: TDataMember	kIsReferenced	 : 0
  OBJ: TDataMember	kHasUUID	 : 0
  OBJ: TDataMember	kCannotPick	 : 0
  OBJ: TDataMember	kNoContextMenu	 : 0
  OBJ: TDataMember	kInvalidObject	 : 0
+ OBJ: TDataMember	kObjInCanvas	 : 0
  OBJ: TDataMember	kIsOnHeap	 : 0
  OBJ: TDataMember	kNotDeleted	 : 0
  OBJ: TDataMember	kZombie	 : 0
