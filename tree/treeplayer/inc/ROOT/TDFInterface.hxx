@@ -240,6 +240,8 @@ public:
    TInterface<TCustomColumnBase> Define(std::string_view name, std::string_view expression)
    {
       auto df = GetDataFrameChecked();
+      // this check must be done before jitting lest we throw exceptions in jitted code
+      TDFInternal::CheckTmpBranch(name, df->GetTree());
       auto tree = df->GetTree();
       auto branches = tree ? tree->GetListOfBranches() : nullptr;
       auto tmpBranches = fProxiedPtr->GetTmpBranches();
