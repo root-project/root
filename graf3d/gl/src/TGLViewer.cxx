@@ -107,9 +107,11 @@ TGLViewer::TGLViewer(TVirtualPad * pad, Int_t x, Int_t y,
    fOrthoXOYCamera (TGLOrthoCamera::kXOY,  TGLVector3( 0.0, 0.0, 1.0), TGLVector3(0.0, 1.0, 0.0)), // Looking down  Z axis,  X horz, Y vert
    fOrthoXOZCamera (TGLOrthoCamera::kXOZ,  TGLVector3( 0.0,-1.0, 0.0), TGLVector3(0.0, 0.0, 1.0)), // Looking along Y axis,  X horz, Z vert
    fOrthoZOYCamera (TGLOrthoCamera::kZOY,  TGLVector3(-1.0, 0.0, 0.0), TGLVector3(0.0, 1.0, 0.0)), // Looking along X axis,  Z horz, Y vert
+   fOrthoZOXCamera (TGLOrthoCamera::kZOX,  TGLVector3( 0.0,-1.0, 0.0), TGLVector3(1.0, 0.0, 0.0)), // Looking along Y axis,  Z horz, X vert
    fOrthoXnOYCamera(TGLOrthoCamera::kXnOY, TGLVector3( 0.0, 0.0,-1.0), TGLVector3(0.0, 1.0, 0.0)), // Looking along Z axis, -X horz, Y vert
    fOrthoXnOZCamera(TGLOrthoCamera::kXnOZ, TGLVector3( 0.0, 1.0, 0.0), TGLVector3(0.0, 0.0, 1.0)), // Looking down  Y axis, -X horz, Z vert
    fOrthoZnOYCamera(TGLOrthoCamera::kZnOY, TGLVector3( 1.0, 0.0, 0.0), TGLVector3(0.0, 1.0, 0.0)), // Looking down  X axis, -Z horz, Y vert
+   fOrthoZnOXCamera(TGLOrthoCamera::kZnOX, TGLVector3( 0.0, 1.0, 0.0), TGLVector3(1.0, 0.0, 0.0)), // Looking down  Y axis, -Z horz, X vert
    fCurrentCamera(&fPerspectiveCameraXOZ),
    fAutoRotator(0),
 
@@ -171,9 +173,11 @@ TGLViewer::TGLViewer(TVirtualPad * pad) :
    fOrthoXOYCamera (TGLOrthoCamera::kXOY,  TGLVector3( 0.0, 0.0, 1.0), TGLVector3(0.0, 1.0, 0.0)), // Looking down  Z axis,  X horz, Y vert
    fOrthoXOZCamera (TGLOrthoCamera::kXOZ,  TGLVector3( 0.0,-1.0, 0.0), TGLVector3(0.0, 0.0, 1.0)), // Looking along Y axis,  X horz, Z vert
    fOrthoZOYCamera (TGLOrthoCamera::kZOY,  TGLVector3(-1.0, 0.0, 0.0), TGLVector3(0.0, 1.0, 0.0)), // Looking along X axis,  Z horz, Y vert
+   fOrthoZOXCamera (TGLOrthoCamera::kZOX,  TGLVector3( 0.0,-1.0, 0.0), TGLVector3(1.0, 0.0, 0.0)), // Looking along Y axis,  Z horz, X vert
    fOrthoXnOYCamera(TGLOrthoCamera::kXnOY, TGLVector3( 0.0, 0.0,-1.0), TGLVector3(0.0, 1.0, 0.0)), // Looking along Z axis, -X horz, Y vert
    fOrthoXnOZCamera(TGLOrthoCamera::kXnOZ, TGLVector3( 0.0, 1.0, 0.0), TGLVector3(0.0, 0.0, 1.0)), // Looking down  Y axis, -X horz, Z vert
    fOrthoZnOYCamera(TGLOrthoCamera::kZnOY, TGLVector3( 1.0, 0.0, 0.0), TGLVector3(0.0, 1.0, 0.0)), // Looking down  X axis, -Z horz, Y vert
+   fOrthoZnOXCamera(TGLOrthoCamera::kZnOX, TGLVector3( 0.0, 1.0, 0.0), TGLVector3(1.0, 0.0, 0.0)), // Looking down  Y axis, -Z horz, X vert
    fCurrentCamera(&fPerspectiveCameraXOZ),
    fAutoRotator(0),
 
@@ -1764,6 +1768,8 @@ TGLCamera& TGLViewer::RefCamera(ECameraType cameraType)
       case kCameraOrthoXOZ:
          return fOrthoXOZCamera;
       case kCameraOrthoZOY:
+         return fOrthoZOXCamera;
+      case kCameraOrthoZOX:
          return fOrthoZOYCamera;
       case kCameraOrthoXnOY:
          return fOrthoXnOYCamera;
@@ -1771,6 +1777,8 @@ TGLCamera& TGLViewer::RefCamera(ECameraType cameraType)
          return fOrthoXnOZCamera;
       case kCameraOrthoZnOY:
          return fOrthoZnOYCamera;
+      case kCameraOrthoZnOX:
+         return fOrthoZnOXCamera;
       default:
          Error("TGLViewer::SetCurrentCamera", "invalid camera type");
          return *fCurrentCamera;
@@ -1818,6 +1826,10 @@ void TGLViewer::SetCurrentCamera(ECameraType cameraType)
          fCurrentCamera = &fOrthoZOYCamera;
          break;
       }
+      case kCameraOrthoZOX: {
+         fCurrentCamera = &fOrthoZOXCamera;
+         break;
+      }
       case kCameraOrthoXnOY: {
          fCurrentCamera = &fOrthoXnOYCamera;
          break;
@@ -1828,6 +1840,10 @@ void TGLViewer::SetCurrentCamera(ECameraType cameraType)
       }
       case kCameraOrthoZnOY: {
          fCurrentCamera = &fOrthoZnOYCamera;
+         break;
+      }
+      case kCameraOrthoZnOX: {
+         fCurrentCamera = &fOrthoZnOXCamera;
          break;
       }
       default: {
@@ -1899,6 +1915,13 @@ void TGLViewer::SetOrthoCamera(ECameraType camera,
       case kCameraOrthoZOY: {
          fOrthoZOYCamera.Configure(zoom, dolly, center, hRotate, vRotate);
          if (fCurrentCamera == &fOrthoZOYCamera) {
+            RequestDraw(TGLRnrCtx::kLODHigh);
+         }
+         break;
+      }
+      case kCameraOrthoZOX: {
+         fOrthoZOXCamera.Configure(zoom, dolly, center, hRotate, vRotate);
+         if (fCurrentCamera == &fOrthoZOXCamera) {
             RequestDraw(TGLRnrCtx::kLODHigh);
          }
          break;
