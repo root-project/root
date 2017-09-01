@@ -7,7 +7,7 @@ using namespace ROOT::Experimental;
 int main()
 {
    auto exceptionCount = 0u;
-   const auto expectedExceptionCount = 2u;
+   const auto expectedExceptionCount = 4u;
 
    // create tree
    TDataFrame newd(1);
@@ -31,6 +31,28 @@ int main()
    } catch (const std::runtime_error &e) {
       std::string msg(e.what());
       const auto expected_msg = "branch \"x\" already present in TTree";
+      if (msg.find(expected_msg) == std::string::npos)
+         throw;
+      exceptionCount++;
+   }
+
+   // re-define `Define`d column
+   try {
+      auto c = d.Define("y", [] { return 0; }).Define("y", [] { return 1; }).Count();
+   } catch (const std::runtime_error &e) {
+      std::string msg(e.what());
+      const auto expected_msg = "Redefinition of column \"y\"";
+      if (msg.find(expected_msg) == std::string::npos)
+         throw;
+      exceptionCount++;
+   }
+
+   // re-define `Define`d column (with a jitted Define)
+   try {
+      auto c = d.Define("y", [] { return 0; }).Define("y", "1").Count();
+   } catch (const std::runtime_error &e) {
+      std::string msg(e.what());
+      const auto expected_msg = "Redefinition of column \"y\"";
       if (msg.find(expected_msg) == std::string::npos)
          throw;
       exceptionCount++;
