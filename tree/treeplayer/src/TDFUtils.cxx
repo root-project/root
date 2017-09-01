@@ -135,18 +135,18 @@ unsigned int GetNSlots()
 
 void CheckCustomColumn(std::string_view definedCol, TTree *treePtr, const ColumnNames_t &customCols)
 {
+   const std::string definedColStr(definedCol);
    if (treePtr != nullptr) {
       // check if definedCol is already present in TTree
-      const std::string definedColStr(definedCol);
       const auto branch = treePtr->GetBranch(definedColStr.c_str());
       if (branch != nullptr) {
-         const auto msg = "branch \"" + definedCol + "\" already present in TTree";
+         const auto msg = "branch \"" + definedColStr + "\" already present in TTree";
          throw std::runtime_error(msg);
       }
    }
    // check if definedCol has already been `Define`d in the functional graph
    if (std::find(customCols.begin(), customCols.end(), definedCol) != customCols.end()) {
-      const auto msg = "Redefinition of column \"" + definedCol + "\"";
+      const auto msg = "Redefinition of column \"" + definedColStr + "\"";
       throw std::runtime_error(msg);
    }
 }
