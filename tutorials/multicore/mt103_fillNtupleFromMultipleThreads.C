@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_multicore
-///
+/// \notebook
 /// Fill the same TNtuple from different threads.
 /// This tutorial illustrates the basics of how it's possible with ROOT
 /// to write simultaneously to a single output file using TBufferMerger.

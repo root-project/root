@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_multicore
+/// \notebook
 /// Read n-tuples in distinct workers, fill histograms, merge them and fit.
 /// Knowing that other facilities like TProcessExecutor might be more adequate for
 /// this operation, this tutorial complements mc101, reading and merging.
