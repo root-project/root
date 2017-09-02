@@ -168,6 +168,9 @@ else
 		$(MAKE) lib)
 endif
 
+$(LZ4O): CFLAGS += $(LZ4LIBDIRI)
+$(LZ4O): CXXFLAGS += $(LZ4LIBDIRI)
+
 all-$(MODNAME): $(LZ4O)
 
 clean-$(MODNAME):
@@ -195,5 +198,3 @@ distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 $(LZ4O): $(LZ4LIBDEP)
-$(LZ4O): CFLAGS += $(LZ4LIBDIRI)
-
