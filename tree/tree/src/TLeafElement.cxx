@@ -97,6 +97,10 @@ TLeafElement::GetDeserializeType() const
      type = EDataType::kInt_t;
    else if (typeName == std::string("UInt_t"))
      type = EDataType::kUInt_t;
+   else if (typeName == std::string("Long_t"))
+     type = EDataType::kLong_t;
+   else if (typeName == std::string("ULong_t"))
+     type = EDataType::kULong_t;
    else if (typeName == std::string("Long64_t"))
      type = EDataType::kLong64_t;
    else if (typeName == std::string("ULong64_t"))
@@ -116,13 +120,15 @@ TLeafElement::GetDeserializeType() const
      }
    }
 
-   if (type == EDataType::kChar_t || type == EDataType::kUChar_t || type == EDataType::kBool_t) {
+   if (type == EDataType::kChar_t || type == EDataType::kUChar_t || type == EDataType::kBool_t || type == EDataType::kchar) {
       fDeserializeTypeCache.store(kZeroCopy, std::memory_order_relaxed);
       return kZeroCopy;
    } else if ((type == EDataType::kFloat_t) || (type == EDataType::kDouble_t) ||
               (type == EDataType::kShort_t) || (type == EDataType::kUShort_t) ||
               (type == EDataType::kInt_t) || (type == EDataType::kUInt_t) ||
-              (type == EDataType::kLong64_t) || (type == EDataType::kULong64_t)) {
+              (type == EDataType::kLong_t) || (type == EDataType::kULong_t) ||
+              (type == EDataType::kLong64_t) || (type == EDataType::kULong64_t) ||
+              (type == EDataType::kCounter)) {
       fDeserializeTypeCache.store(kInPlace, std::memory_order_relaxed);
       return kInPlace;
    }
