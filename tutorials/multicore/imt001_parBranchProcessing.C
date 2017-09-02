@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_multicore
+/// \notebook
 /// Demonstrate how to activate and use the implicit parallelisation of TTree::GetEntry.
 /// Such parallelisation creates one task per top-level branch of the tree being read.
 /// In this example, most of the branches are floating point numbers, which are very fast to read.
