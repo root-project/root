@@ -23,6 +23,16 @@ const Int_t  kExtraSpace        = 8;   // extra space at end of buffer (used for
 
 ClassImp(TBuffer);
 
+/// Default streamer implementation used by ClassDefInline to avoid
+/// requirement to include TBuffer.h
+void ROOT::Internal::DefaultStreamer(TBuffer &R__b, const TClass *cl, void *objpointer)
+{
+   if (R__b.IsReading())
+      R__b.ReadClassBuffer(cl, objpointer);
+   else
+      R__b.WriteClassBuffer(cl, objpointer);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// The user has provided memory than we don't own, thus we can not extent it
 /// either.
