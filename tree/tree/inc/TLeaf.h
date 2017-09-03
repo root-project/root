@@ -96,7 +96,6 @@ public:
    virtual void     ReadBasket(TBuffer&) {}
    virtual void     ReadBasketExport(TBuffer&, TClonesArray*, Int_t) {}
    virtual bool     ReadBasketFast(TBuffer&, Long64_t) { return false; }  // Read contents of leaf into a user-provided buffer.
-   virtual bool     ReadBasketSerialized(TBuffer&, Long64_t) { return false; }  // Read contents of leaf into a user-provided buffer
 
    virtual void     ReadValue(std::istream& /*s*/, Char_t /*delim*/ = ' ') {
       Error("ReadValue", "Not implemented!");
