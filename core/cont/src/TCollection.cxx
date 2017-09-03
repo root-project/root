@@ -809,3 +809,20 @@ TIter TIter::End()
 {
    return TIter(static_cast<TIterator*>(nullptr));
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return an empty collection for use with nullptr TRangeCast
+
+const TCollection &ROOT::Internal::EmptyCollection()
+{
+   static std::unique_ptr<TCollection> fgEmptyCollection((TCollection *)TClass::GetClass("TObjArray")->New());
+   return *fgEmptyCollection.get();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return true if 'cl' inherits from 'base'.
+
+bool ROOT::Internal::ContaineeInheritsFrom(TClass *cl, TClass *base)
+{
+   return cl->InheritsFrom(base);
+}

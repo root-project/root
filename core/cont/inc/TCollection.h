@@ -28,6 +28,7 @@
 
 #include "TString.h"
 
+#include <assert.h>
 
 class TClass;
 class TObjectTable;
@@ -271,6 +272,127 @@ public:
 inline TIter TCollection::begin() const { return ++(TIter(this)); }
 inline TIter TCollection::end() const { return TIter::End(); }
 
+namespace ROOT {
+namespace Internal {
+
+const TCollection &EmptyCollection();
+bool ContaineeInheritsFrom(TClass *cl, TClass *base);
+
+/// @brief Internal help class implmenting an iterator for TRangeDynCast.
+template <class Containee> // Containee must derive from TObject.
+class TRangeDynCastIterator : public TIter {
+   static_assert(std::is_base_of<TObject, Containee>::value, "Containee type must inherit from TObject");
+
+   /// This is a workaround against ClassDefInline not supporting classes
+   /// missing their default constructor or having them private.
+   template <class T>
+   friend class ROOT::Internal::ClassDefGenerateInitInstanceLocalInjector;
+
+   TRangeDynCastIterator() = default;
+
+public:
+   using TIter::TIter;
+   TRangeDynCastIterator(const TIter &iter) : TIter(iter) {}
+
+   Containee *operator()() = delete;
+
+   Containee *Next() { return dynamic_cast<Containee *>(TIter::Next()); }
+   Containee *operator*() const { return dynamic_cast<Containee *>(TIter::operator*()); }
+
+   ClassDefInline(TRangeDynCastIterator, 0);
+};
+
+} // Internal
+} // ROOT
+
+/// @brief TTypedIter is a typed version of TIter.
+///
+/// The typical use is:
+/// ~~~ {.cpp}
+///    TTypedIter<TBaseClass> next(cl->GetListOfBases());
+///    while(auto bcl = next()) {
+///       ... use bcl as a TBaseClass*
+///    }
+/// ~~~ {.cpp}
+template <class Containee> // Containee must derive from TObject.
+class TTypedIter : public TIter {
+   static_assert(std::is_base_of<TObject, Containee>::value, "Containee type must inherit from TObject");
+
+   /// This is a workaround against ClassDefInline not supporting classes
+   /// missing their default constructor or having them private.
+   template <class T>
+   friend class ROOT::Internal::ClassDefGenerateInitInstanceLocalInjector;
+
+   TTypedIter() = default;
+
+   static Containee *StaticCast(TObject *obj)
+   {
+      assert(!obj || ROOT::Internal::ContaineeInheritsFrom(obj->IsA(), Containee::Class()));
+      return static_cast<Containee *>(obj);
+   }
+
+public:
+   using TIter::TIter;
+   TTypedIter(const TIter &iter) : TIter(iter) {}
+
+   Containee *operator()() { return StaticCast(TIter::Next()); }
+   Containee *Next() { return StaticCast(TIter::Next()); }
+   Containee *operator*() const { return StaticCast(TIter::operator*()); }
+
+   ClassDefInline(TTypedIter, 0);
+};
+
+/// @brief TRangeStaticCast is an adaptater class that allows the typed iteration
+/// through a TCollection.
+///
+/// The typical use is:
+/// ~~~ {.cpp}
+///    for(auto bcl : TRangeStaticCast<TBaseClass>( *cl->GetListOfBases() )) {
+///        assert(bcl && bcl->IsA()->InheritsFrom(TBaseClass::Class()));
+///        ... use bcl as a TBaseClass*
+///    }
+///    for(auto bcl : TRangeStaticCast<TBaseClass>( cl->GetListOfBases() )) {
+///        assert(bcl && bcl->IsA()->InheritsFrom(TBaseClass::Class()));
+///        ... use bcl as a TBaseClass*
+///    }
+/// ~~~ {.cpp}
+template <class T>
+class TRangeStaticCast {
+   const TCollection &fCollection;
+
+public:
+   TRangeStaticCast(const TCollection &col) : fCollection(col) {}
+   TRangeStaticCast(const TCollection *col) : fCollection(col != nullptr ? *col : ROOT::Internal::EmptyCollection()) {}
+
+   TTypedIter<T> begin() const { return fCollection.begin(); }
+   TTypedIter<T> end() const { return fCollection.end(); }
+};
+
+/// @brief TRangeDynCast is an adaptater class that allows the typed iteration
+/// through a TCollection.
+///
+/// The typical use is:
+/// ~~~ {.cpp}
+///    for(auto bcl : TRangeDynCast<TBaseClass>( *cl->GetListOfBases() )) {
+///        if (!bcl) continue;
+///        ... use bcl as a TBaseClass*
+///    }
+///    for(auto bcl : TRangeDynCast<TBaseClass>( cl->GetListOfBases() )) {
+///        if (!bcl) continue;
+///        ... use bcl as a TBaseClass*
+///    }
+/// ~~~ {.cpp}
+template <class T>
+class TRangeDynCast {
+   const TCollection &fCollection;
+
+public:
+   TRangeDynCast(const TCollection &col) : fCollection(col) {}
+   TRangeDynCast(const TCollection *col) : fCollection(col != nullptr ? *col : ROOT::Internal::EmptyCollection()) {}
+
+   ROOT::Internal::TRangeDynCastIterator<T> begin() const { return fCollection.begin(); }
+   ROOT::Internal::TRangeDynCastIterator<T> end() const { return fCollection.end(); }
+};
 
 //---- R__FOR_EACH macro -------------------------------------------------------
 
