@@ -1312,12 +1312,12 @@ Bool_t TBranch::SupportsBulkRead() const {
 /// - This only returns events 
 /// 
 
-Int_t TBranch::GetEntriesFastSerializedHelper(Long64_t entry, TBuffer &user_buf, TLeaf* &leaf, Long64_t &first, TBuffer* &buf, Int_t &bufbegin, Int_t &N)
+Int_t TBranch::GetEntriesFastSerializedHelper(Long64_t entry, bool checkDeserializeType, TBuffer &user_buf, TLeaf* &leaf, Long64_t &first, TBuffer* &buf, Int_t &bufbegin, Int_t &N)
 {
    // TODO: eventually support multiple leaves.
    if (R__unlikely(fNleaves != 1)) {return -1;}
    leaf = static_cast<TLeaf*>(fLeaves.UncheckedAt(0));
-   if (R__unlikely(leaf->GetDeserializeType() == TLeaf::DeserializeType::kDestructive)) {
+   if (R__unlikely(checkDeserializeType && leaf->GetDeserializeType() == TLeaf::DeserializeType::kDestructive)) {
       printf("Encountered a branch with destructive deserialization; failing.\n");
       return -1;
    }
@@ -1353,14 +1353,14 @@ Int_t TBranch::GetEntriesFastSerializedHelper(Long64_t entry, TBuffer &user_buf,
    return 0;
 }
 
-Int_t TBranch::GetEntriesFast(Long64_t entry, TBuffer &user_buf)
+Int_t TBranch::GetEntriesFast(Long64_t entry, TBuffer &user_buf, bool checkDeserializeType)
 {
    TLeaf *leaf;
    Long64_t first;
    TBuffer* buf;
    Int_t bufbegin;
    Int_t N;
-   if (GetEntriesFastSerializedHelper(entry, user_buf, leaf, first, buf, bufbegin, N) != 0) {
+   if (GetEntriesFastSerializedHelper(entry, checkDeserializeType, user_buf, leaf, first, buf, bufbegin, N) != 0) {
      return -1;
    }
 
@@ -1371,14 +1371,14 @@ Int_t TBranch::GetEntriesFast(Long64_t entry, TBuffer &user_buf)
 }
 
 Int_t
-TBranch::GetEntriesSerialized(Long64_t entry, TBuffer &user_buf, TBuffer *count_buf)
+TBranch::GetEntriesSerialized(Long64_t entry, TBuffer &user_buf, TBuffer *count_buf, bool checkDeserializeType)
 {
    TLeaf *leaf;
    Long64_t first;
    TBuffer* buf;
    Int_t bufbegin;
    Int_t N;
-   if (GetEntriesFastSerializedHelper(entry, user_buf, leaf, first, buf, bufbegin, N) != 0) {
+   if (GetEntriesFastSerializedHelper(entry, checkDeserializeType, user_buf, leaf, first, buf, bufbegin, N) != 0) {
      return -1;
    }
 
@@ -1389,7 +1389,7 @@ TBranch::GetEntriesSerialized(Long64_t entry, TBuffer &user_buf, TBuffer *count_
       if (count_leaf) {
          //printf("Getting leaf count entries.\n");
          TBranch *count_branch = count_leaf->GetBranch();
-         if (R__unlikely(count_branch->GetEntriesSerialized(entry, *count_buf) < 0)) {
+         if (R__unlikely(count_branch->GetEntriesSerialized(entry, *count_buf, checkDeserializeType) < 0)) {
             printf("Failed to read count leaf.\n");
             return -1;
          }
