@@ -168,8 +168,9 @@ void TStatusBitsChecker::Registry::RegisterBits(TClass &classRef /* = false */)
    if (lb) {
       for (auto b : *lb) {
          TBaseClass *base = static_cast<TBaseClass *>(b);
-
-         RegisterBits(*(base->GetClassPointer()));
+         TClass *bcl = base->GetClassPointer();
+         if (bcl)
+            RegisterBits(*bcl);
       }
    }
 }
