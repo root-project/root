@@ -139,8 +139,7 @@ void TStatusBitsChecker::Registry::RegisterBits(TClass &classRef /* = false */)
 
    if (eStatusBits) {
 
-      for (auto c : *eStatusBits->GetConstants()) {
-         TEnumConstant *constant = static_cast<TEnumConstant *>(c);
+      for (auto constant : TRangeStaticCast<TEnumConstant>(*eStatusBits->GetConstants())) {
 
          // Ignore the known/intentional duplication.
          bool intentionalDup = exceptionBits && exceptionBits->GetConstant(constant->GetName());
@@ -166,8 +165,7 @@ void TStatusBitsChecker::Registry::RegisterBits(TClass &classRef /* = false */)
 
    TList *lb = classRef.GetListOfBases();
    if (lb) {
-      for (auto b : *lb) {
-         TBaseClass *base = static_cast<TBaseClass *>(b);
+      for (auto base : TRangeStaticCast<TBaseClass>(*lb)) {
          TClass *bcl = base->GetClassPointer();
          if (bcl)
             RegisterBits(*bcl);
