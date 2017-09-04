@@ -574,11 +574,11 @@ thread-safety, see [here](#generic-actions).
 TDataFrame::TDataFrame(std::string_view treeName, TDirectory *dirPtr, const ColumnNames_t &defaultBranches)
    : TInterface<TDFDetail::TLoopManager>(std::make_shared<TDFDetail::TLoopManager>(nullptr, defaultBranches))
 {
-   const std::string treeNameInt(treeName);
    if (!dirPtr) {
       auto msg = "Invalid TDirectory!";
       throw std::runtime_error(msg);
    }
+   const std::string treeNameInt(treeName);
    auto tree = static_cast<TTree *>(dirPtr->Get(treeNameInt.c_str()));
    if (!tree) {
       auto msg = "Tree \"" + treeNameInt + "\" cannot be found!";
