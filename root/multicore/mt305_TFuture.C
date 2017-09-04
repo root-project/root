@@ -8,27 +8,27 @@
 /// \author Danilo Piparo
 /// \date August 2017
 
-#include "ROOT/Future.hxx"
+#include "ROOT/TFuture.hxx"
 
 #include <future>
 #include <iostream>
 #include <thread>
 
-void mt305_Future()
+void mt305_TFuture()
 {
    using namespace ROOT::Experimental;
 
    // future from a packaged_task
    std::packaged_task<int()> task([]() { return 7; }); // wrap the function
-   Future<int> f1 = task.get_future();                 // get a future
+   TFuture<int> f1 = task.get_future();                // get a future
    std::thread(std::move(task)).detach();              // launch on a thread
 
    // future from an async()
-   Future<int> f2 = std::async(std::launch::async, []() { return 8; });
+   TFuture<int> f2 = std::async(std::launch::async, []() { return 8; });
 
    // future from a promise
    std::promise<int> p;
-   Future<int> f3 (p.get_future());
+   TFuture<int> f3 (p.get_future());
    std::thread([&p] { p.set_value(9); }).detach();
 
    std::cout << "Waiting..." << std::flush;

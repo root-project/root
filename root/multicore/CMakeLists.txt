@@ -17,8 +17,8 @@ ROOTTEST_ADD_TEST(mt303_AsyncSimple
 ROOTTEST_ADD_TEST(mt304_AsyncNested
                   MACRO mt304_AsyncNested.C+)
 
-ROOTTEST_ADD_TEST(mt305_Future
-                  MACRO mt305_Future.C+)
+ROOTTEST_ADD_TEST(mt305_TFuture
+                  MACRO mt305_TFuture.C+)
 
 # ROOT-8850
 ROOTTEST_GENERATE_EXECUTABLE(loadImt loadImt.cpp LIBRARIES Core RIO)
