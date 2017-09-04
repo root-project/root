@@ -22,9 +22,9 @@ class TBulkBranchRead {
    friend class ::TBranch;
 
 public:
-   Int_t  GetEntriesFast(Long64_t evt, TBuffer& user_buf) {return fParent.GetEntriesFast(evt, user_buf);}
-   Int_t  GetEntriesSerialized(Long64_t evt, TBuffer& user_buf) {return fParent.GetEntriesSerialized(evt, user_buf);}
-   Int_t  GetEntriesSerialized(Long64_t evt, TBuffer& user_buf, TBuffer* count_buf) {return fParent.GetEntriesSerialized(evt, user_buf, count_buf);}
+   Int_t  GetEntriesFast(Long64_t evt, TBuffer& user_buf, bool checkDeserializeType=true) {return fParent.GetEntriesFast(evt, user_buf, checkDeserializeType);}
+   Int_t  GetEntriesSerialized(Long64_t evt, TBuffer& user_buf, bool checkDeserializeType=true) {return fParent.GetEntriesSerialized(evt, user_buf, checkDeserializeType);}
+   Int_t  GetEntriesSerialized(Long64_t evt, TBuffer& user_buf, TBuffer* count_buf, bool checkDeserializeType=true) {return fParent.GetEntriesSerialized(evt, user_buf, count_buf, checkDeserializeType);}
    Bool_t SupportsBulkRead() const {return fParent.SupportsBulkRead();}
 
 private:

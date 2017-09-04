@@ -39,6 +39,7 @@ public:
 
    virtual void    Export(TClonesArray *list, Int_t n);
    virtual void    FillBasket(TBuffer &b);
+   virtual DeserializeType GetDeserializeType() const { return kInPlace; }
    const char     *GetTypeName() const;
    virtual Int_t   GetMaximum() const {return (Int_t)fMaximum;}
    virtual Int_t   GetMinimum() const {return (Int_t)fMinimum;}
@@ -51,7 +52,6 @@ public:
    virtual void    ReadBasket(TBuffer &b);
    virtual void    ReadBasketExport(TBuffer &b, TClonesArray *list, Int_t n);
    virtual bool    ReadBasketFast(TBuffer&, Long64_t);
-   virtual bool    ReadBasketSerialized(TBuffer&, Long64_t) {return GetDeserializeType() == kInPlace; }
    virtual void    ReadValue(std::istream& s, Char_t delim = ' ');
    virtual void    SetAddress(void *add=0);
    virtual void    SetMaximum(Long64_t max) {fMaximum = max;}
