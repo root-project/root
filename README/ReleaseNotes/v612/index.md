@@ -13,26 +13,21 @@ For more information, see:
 
 The following people have contributed to this new version:
 
- David Abdurachmanov, CERN, CMS,\
  Bertrand Bellenot, CERN/SFT,\
+ Georgios Bitzes, CERN/IT,\
+ Rene Brun, CERN/SFT,\
  Philippe Canal, FNAL,\
  Olivier Couet, CERN/SFT,\
- Kyle Cranmer, NYU, RooStats,\
- George Troska, Dortmund Univ.,\
  Gerri Ganis, CERN/SFT,\
  Andrei Gheata, CERN/SFT,\
- Christopher Jones, Fermilab, CMS,\
  Sergey Linev, GSI, http,\
  Pere Mato, CERN/SFT,\
  Lorenzo Moneta, CERN/SFT,\
  Axel Naumann, CERN/SFT,\
  Danilo Piparo, CERN/SFT,\
- Timur Pocheptsov, CERN/SFT,\
+ Fons Rademakers, CERN/SFT,\
  Enric Tejedor Saavedra, CERN/SFT,\
- Manuel Tobias Schiller,\
- David Smith, CERN/IT,\
- Matevz Tadel, UCSD/CMS, Eve,\
- Vassil Vassilev, Princeton University,\
+ Vassil Vassilev, Fermilab/CMS,\
  Wouter Verkerke, NIKHEF/Atlas, RooFit
 
 ## Removed interfaces
@@ -117,7 +112,15 @@ large TClonesArray where each element contains another small vector container.
 ## Montecarlo Libraries
 
 
-## PROOF Libraries
+## Parallelism
+  - The TTaskGroup class has been added to the ROOT::Experimental namespace. It allows to submit to the runtime
+  item of work which are dealt with in parallel;
+  - The Async template function has been added the ROOT::Experimental namespace. The template function is analogous
+  to *std::async* but without the possibility of specifying the execution policy and without creating a thread but
+  directly submitting the work to the runtime in order to use the same pool as any other item of work spawned by ROOT.
+  - The TFuture template has been added to the ROOT::Experimental namespace. It represents a future and is compatible
+  with the ROOT::Experimental::Async function. It has the same properties of an STL future and can be initialised by
+  one of these classes. For example, *TFuture<int> = std::async(myfunc,a,b,c);*
 
 
 ## Language Bindings
