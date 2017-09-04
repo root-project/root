@@ -158,28 +158,28 @@ public:
 
    void Exec(unsigned int slot, double x0) // 1D histos
    {
-      fTo->GetAtSlotUnchecked(slot)->Fill(x0);
+      fTo->GetAtSlotRaw(slot)->Fill(x0);
    }
 
    void Exec(unsigned int slot, double x0, double x1) // 1D weighted and 2D histos
    {
-      fTo->GetAtSlotUnchecked(slot)->Fill(x0, x1);
+      fTo->GetAtSlotRaw(slot)->Fill(x0, x1);
    }
 
    void Exec(unsigned int slot, double x0, double x1, double x2) // 2D weighted and 3D histos
    {
-      fTo->GetAtSlotUnchecked(slot)->Fill(x0, x1, x2);
+      fTo->GetAtSlotRaw(slot)->Fill(x0, x1, x2);
    }
 
    void Exec(unsigned int slot, double x0, double x1, double x2, double x3) // 3D weighted histos
    {
-      fTo->GetAtSlotUnchecked(slot)->Fill(x0, x1, x2, x3);
+      fTo->GetAtSlotRaw(slot)->Fill(x0, x1, x2, x3);
    }
 
    template <typename X0, typename std::enable_if<IsContainer<X0>::value, int>::type = 0>
    void Exec(unsigned int slot, const X0 &x0s)
    {
-      auto thisSlotH = fTo->GetAtSlotUnchecked(slot);
+      auto thisSlotH = fTo->GetAtSlotRaw(slot);
       for (auto &x0 : x0s) {
          thisSlotH->Fill(x0); // TODO: Can be optimised in case T == vector<double>
       }
@@ -189,7 +189,7 @@ public:
              typename std::enable_if<IsContainer<X0>::value && IsContainer<X1>::value, int>::type = 0>
    void Exec(unsigned int slot, const X0 &x0s, const X1 &x1s)
    {
-      auto thisSlotH = fTo->GetAtSlotUnchecked(slot);
+      auto thisSlotH = fTo->GetAtSlotRaw(slot);
       if (x0s.size() != x1s.size()) {
          throw std::runtime_error("Cannot fill histogram with values in containers of different sizes.");
       }
@@ -206,7 +206,7 @@ public:
                                      int>::type = 0>
    void Exec(unsigned int slot, const X0 &x0s, const X1 &x1s, const X2 &x2s)
    {
-      auto thisSlotH = fTo->GetAtSlotUnchecked(slot);
+      auto thisSlotH = fTo->GetAtSlotRaw(slot);
       if (!(x0s.size() == x1s.size() && x1s.size() == x2s.size())) {
          throw std::runtime_error("Cannot fill histogram with values in containers of different sizes.");
       }
@@ -224,7 +224,7 @@ public:
                                      int>::type = 0>
    void Exec(unsigned int slot, const X0 &x0s, const X1 &x1s, const X2 &x2s, const X3 &x3s)
    {
-      auto thisSlotH = fTo->GetAtSlotUnchecked(slot);
+      auto thisSlotH = fTo->GetAtSlotRaw(slot);
       if (!(x0s.size() == x1s.size() && x1s.size() == x2s.size() && x1s.size() == x3s.size())) {
          throw std::runtime_error("Cannot fill histogram with values in containers of different sizes.");
       }
