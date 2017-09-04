@@ -117,7 +117,7 @@ Long_t TPerfStats::fgResMemMax = -1;
 
 TPerfStats::TPerfStats(TList *input, TList *output)
    : fTrace(0), fPerfEvent(0), fPacketsHist(0), fProcPcktHist(0),
-      fEventsHist(0), fLatencyHist(0),
+      fEventsHist(0), fNodeHist(0), fLatencyHist(0),
       fProcTimeHist(0), fCpuTimeHist(0), fBytesRead(0),
       fTotCpuTime(0.), fTotBytesRead(0), fTotEvents(0), fNumEvents(0),
       fSlaves(0), fDoHist(kFALSE),
