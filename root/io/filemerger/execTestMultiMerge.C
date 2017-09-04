@@ -79,7 +79,11 @@ int execTestMultiMerge()
    result += testSimpleFile("hsimple.root",25000,1,414415, kIs32bits ? 10 : 8);
    result += testSimpleFile("hsimple9.root",25000,9,432029,3);
    // Increasing tolerance due test fail for fast-math builds and i686
-   result += testSimpleFile("hsimple101.root",25000,101,414590, kIs32bits ? 10 : 8);
+#ifdef R__FAST_MATH
+   result += testSimpleFile("hsimple101.root",25000,101,414590, 10);
+#else
+   result += testSimpleFile("hsimple101.root",25000,101,414590, kIs32bits ? 12 : 3);   
+#endif
    result += testSimpleFile("hsimple106.root",25000,106,432127,3);
 #ifdef R__FAST_MATH
    // Increasing tolerance due test fail for fast-math builds
