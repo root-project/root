@@ -9,8 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_Future
-#define ROOT_Future
+#ifndef ROOT_TFuture
+#define ROOT_TFuture
 
 #include "RConfigure.h"
 
@@ -32,39 +32,39 @@ namespace ROOT {
 // fwd declaration
 namespace Experimental {
 template <typename T>
-class Future;
+class TFuture;
 }
 
 namespace Detail {
 template <typename T>
-class FutureImpl {
-   template<typename V> friend class Experimental::Future;
+class TFutureImpl {
+   template<typename V> friend class Experimental::TFuture;
 protected:
    using TTaskGroup = Experimental::TTaskGroup;
    std::future<T> fStdFut;
    std::unique_ptr<TTaskGroup> fTg {nullptr};
 
-   FutureImpl(std::future<T> &&fut, std::unique_ptr<TTaskGroup> &&tg) : fStdFut(std::move(fut)) {
+   TFutureImpl(std::future<T> &&fut, std::unique_ptr<TTaskGroup> &&tg) : fStdFut(std::move(fut)) {
       fTg = std::move(tg);
    };
-   FutureImpl(){};
+   TFutureImpl(){};
 
-   FutureImpl(std::future<T> &&fut) : fStdFut(std::move(fut)) {}
+   TFutureImpl(std::future<T> &&fut) : fStdFut(std::move(fut)) {}
 
-   FutureImpl(FutureImpl<T> &&other) { *this = std::move(other); }
+   TFutureImpl(TFutureImpl<T> &&other) { *this = std::move(other); }
 
-   FutureImpl &operator=(std::future<T> &&other)
+   TFutureImpl &operator=(std::future<T> &&other)
    {
       fStdFut = std::move(other);
    }
 
-   FutureImpl<T> &operator=(FutureImpl<T> &&other) = default;
+   TFutureImpl<T> &operator=(TFutureImpl<T> &&other) = default;
 
 public:
 
-   FutureImpl<T> &operator=(FutureImpl<T> &other) = delete;
+   TFutureImpl<T> &operator=(TFutureImpl<T> &other) = delete;
 
-   FutureImpl(const FutureImpl<T> &other) = delete;
+   TFutureImpl(const TFutureImpl<T> &other) = delete;
 
    void wait() { if (fTg) fTg->Wait(); }
 
@@ -75,16 +75,16 @@ public:
 namespace Experimental {
 
 ////////////////////////////////////////////////////////////////////////////////
-/// A future class. It can wrap an std::future.
+/// A TFuture class. It can wrap an std::future.
 template <typename T>
-class Future final : public ROOT::Detail::FutureImpl<T> {
+class TFuture final : public ROOT::Detail::TFutureImpl<T> {
 template <class Function, class... Args>
-   friend Future<typename std::result_of<typename std::decay<Function>::type(typename std::decay<Args>::type...)>::type> Async(Function &&f, Args &&... args);
+   friend TFuture<typename std::result_of<typename std::decay<Function>::type(typename std::decay<Args>::type...)>::type> Async(Function &&f, Args &&... args);
 private:
-   Future(std::future<T> &&fut, std::unique_ptr<TTaskGroup> &&tg)
-      : ROOT::Detail::FutureImpl<T>(std::forward<std::future<T>>(fut), std::move(tg)){};
+   TFuture(std::future<T> &&fut, std::unique_ptr<TTaskGroup> &&tg)
+      : ROOT::Detail::TFutureImpl<T>(std::forward<std::future<T>>(fut), std::move(tg)){};
 public:
-   Future(std::future<T> &&fut) : ROOT::Detail::FutureImpl<T>(std::forward<std::future<T>>(fut)) {};
+   TFuture(std::future<T> &&fut) : ROOT::Detail::TFutureImpl<T>(std::forward<std::future<T>>(fut)) {};
 
    T get()
    {
@@ -95,14 +95,14 @@ public:
 /// \cond
 // Two specialisations, for void and T& as for std::future
 template <>
-class Future<void> final : public ROOT::Detail::FutureImpl<void> {
+class TFuture<void> final : public ROOT::Detail::TFutureImpl<void> {
 template <class Function, class... Args>
-   friend Future<typename std::result_of<typename std::decay<Function>::type(typename std::decay<Args>::type...)>::type> Async(Function &&f, Args &&... args);
+   friend TFuture<typename std::result_of<typename std::decay<Function>::type(typename std::decay<Args>::type...)>::type> Async(Function &&f, Args &&... args);
 private:
-   Future(std::future<void> &&fut, std::unique_ptr<TTaskGroup> &&tg)
-      : ROOT::Detail::FutureImpl<void>(std::forward<std::future<void>>(fut), std::move(tg)){};
+   TFuture(std::future<void> &&fut, std::unique_ptr<TTaskGroup> &&tg)
+      : ROOT::Detail::TFutureImpl<void>(std::forward<std::future<void>>(fut), std::move(tg)){};
 public:
-   Future(std::future<void> &&fut) : ROOT::Detail::FutureImpl<void>(std::forward<std::future<void>>(fut)) {};
+   TFuture(std::future<void> &&fut) : ROOT::Detail::TFutureImpl<void>(std::forward<std::future<void>>(fut)) {};
 
    void get()
    {
@@ -112,14 +112,14 @@ public:
 };
 
 template <typename T>
-class Future<T &> final : public ROOT::Detail::FutureImpl<T &> {
+class TFuture<T &> final : public ROOT::Detail::TFutureImpl<T &> {
 template <class Function, class... Args>
-   friend Future<typename std::result_of<typename std::decay<Function>::type(typename std::decay<Args>::type...)>::type> Async(Function &&f, Args &&... args);
+   friend TFuture<typename std::result_of<typename std::decay<Function>::type(typename std::decay<Args>::type...)>::type> Async(Function &&f, Args &&... args);
 private:
-   Future(std::future<T &> &&fut, std::unique_ptr<TTaskGroup> &&tg)
-      : ROOT::Detail::FutureImpl<T &>(std::forward<std::future<T &>>(fut), std::move(tg)){};
+   TFuture(std::future<T &> &&fut, std::unique_ptr<TTaskGroup> &&tg)
+      : ROOT::Detail::TFutureImpl<T &>(std::forward<std::future<T &>>(fut), std::move(tg)){};
 public:
-   Future(std::future<T&> &&fut) : ROOT::Detail::FutureImpl<T&>(std::forward<std::future<T&>>(fut)) {};
+   TFuture(std::future<T&> &&fut) : ROOT::Detail::TFutureImpl<T&>(std::forward<std::future<T&>>(fut)) {};
 
    T &get()
    {
@@ -131,9 +131,9 @@ public:
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Runs a function asynchronously potentially in a new thread and returns a
-/// ROOT Future that will hold the result.
+/// ROOT TFuture that will hold the result.
 template <class Function, class... Args>
-Future<typename std::result_of<typename std::decay<Function>::type(typename std::decay<Args>::type...)>::type>
+TFuture<typename std::result_of<typename std::decay<Function>::type(typename std::decay<Args>::type...)>::type>
 Async(Function &&f, Args &&... args)
 {
    // The return type according to the standard implementation of std::future
@@ -146,7 +146,7 @@ Async(Function &&f, Args &&... args)
    std::unique_ptr<ROOT::Experimental::TTaskGroup> tg(new ROOT::Experimental::TTaskGroup());
    tg->Run([thisPt]() { (*thisPt)(); });
 
-   return ROOT::Experimental::Future<Ret_t>(thisPt->get_future(), std::move(tg));
+   return ROOT::Experimental::TFuture<Ret_t>(thisPt->get_future(), std::move(tg));
 }
 }
 }
