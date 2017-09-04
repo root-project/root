@@ -21,10 +21,19 @@
 // Pulled from liblz4; upstream library explicitly exposes the symbol but the default build
 // excludes the header.
 typedef unsigned long long XXH64_hash_t;
-typedef struct { unsigned char digest[8]; } XXH64_canonical_t;
-extern "C" XXH64_hash_t LZ4_XXH64(const void* input, size_t length, unsigned long long seed);
-extern "C" void LZ4_XXH64_canonicalFromHash(XXH64_canonical_t* dst, XXH64_hash_t hash);
-extern "C" XXH64_hash_t LZ4_XXH64_hashFromCanonical(const XXH64_canonical_t* src);
+typedef struct {
+   unsigned char digest[8];
+} XXH64_canonical_t;
+
+#ifdef BUILTIN_LZ4
+#define XXH64 LZ4_XXH64
+#define XXH64_canonicalFromHash LZ4_XXH64_canonicalFromHash
+#define XXH64_hashFromCanonical LZ4_XXH64_hashFromCanonical
+#endif
+
+extern "C" XXH64_hash_t XXH64(const void *input, size_t length, unsigned long long seed);
+extern "C" void XXH64_canonicalFromHash(XXH64_canonical_t *dst, XXH64_hash_t hash);
+extern "C" XXH64_hash_t XXH64_hashFromCanonical(const XXH64_canonical_t *src);
 
 // Header consists of:
 // - 2 byte identifier "L4"
@@ -66,7 +75,7 @@ void R__zipLZ4(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, in
    if (R__unlikely(returnStatus == 0)) { /* LZ4 compression failed */
       return;
    }
-   XXH64_hash_t checksumResult = LZ4_XXH64(tgt + kHeaderSize, returnStatus, 0);
+   XXH64_hash_t checksumResult = XXH64(tgt + kHeaderSize, returnStatus, 0);
 
    tgt[0] = 'L';
    tgt[1] = '4';
@@ -85,7 +94,7 @@ void R__zipLZ4(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, in
    tgt[8] = (char)((in_size >> 16) & 0xff);
 
    // Write out checksum.
-   LZ4_XXH64_canonicalFromHash(reinterpret_cast<XXH64_canonical_t*>(tgt + kChecksumOffset), checksumResult);
+   XXH64_canonicalFromHash(reinterpret_cast<XXH64_canonical_t *>(tgt + kChecksumOffset), checksumResult);
 
    *irep = (int)returnStatus + kHeaderSize;
 }
@@ -115,13 +124,15 @@ void R__unzipLZ4(int *srcsize, unsigned char *src, int *tgtsize, unsigned char *
    // We should perform some performance tests to see whether we can interleave the two -- i.e., at
    // what size of chunks does interleaving (avoiding two fetches from RAM) improve enough for the
    // extra function call costs?  NOTE that ROOT limits the buffer size to 16MB.
-   XXH64_hash_t checksumResult = LZ4_XXH64(src + kHeaderSize, inputBufferSize, 0);
+   XXH64_hash_t checksumResult = XXH64(src + kHeaderSize, inputBufferSize, 0);
+   XXH64_hash_t checksumFromFile =
+      XXH64_hashFromCanonical(reinterpret_cast<XXH64_canonical_t *>(src + kChecksumOffset));
 
-   XXH64_hash_t checksumFromFile = LZ4_XXH64_hashFromCanonical(reinterpret_cast<XXH64_canonical_t*>(src + kChecksumOffset));
    if (R__unlikely(checksumFromFile != checksumResult)) {
-      fprintf(stderr,
-              "R__unzipLZ4: Buffer corruption error!  Calculated checksum %llu; checksum calculated in the file was %llu.\n",
-              checksumResult, checksumFromFile);
+      fprintf(
+         stderr,
+         "R__unzipLZ4: Buffer corruption error!  Calculated checksum %llu; checksum calculated in the file was %llu.\n",
+         checksumResult, checksumFromFile);
       return;
    }
    int returnStatus = LZ4_decompress_safe((char *)(&src[kHeaderSize]), (char *)(tgt), inputBufferSize, *tgtsize);
