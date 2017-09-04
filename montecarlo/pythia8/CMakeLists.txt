@@ -3,7 +3,7 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-include_directories(${PYTHIA8_INCLUDE_DIR})
+include_directories(SYSTEM ${PYTHIA8_INCLUDE_DIR})
 
 ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-delete-non-virtual-dtor)
 ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-misleading-indentation)
