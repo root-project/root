@@ -32,12 +32,12 @@ namespace Internal {
 namespace TDF {
 // Match expression against names of branches passed as parameter
 // Return vector of names of the branches used in the expression
-std::vector<std::string> FindUsedColumnNames(const std::string expression, TObjArray *branches,
-                                             const std::vector<std::string> &customColumns)
+std::vector<std::string>
+FindUsedColumnNames(std::string_view expression, TObjArray *branches, const std::vector<std::string> &customColumns)
 {
    // Check what branches and temporary branches are used in the expression
    // To help matching the regex
-   std::string paddedExpr = " " + expression + " ";
+   const std::string paddedExpr = " " + std::string(expression) + " ";
    int paddedExprLen = paddedExpr.size();
    static const std::string regexBit("[^a-zA-Z0-9_]");
    std::vector<std::string> usedBranches;
@@ -63,8 +63,8 @@ std::vector<std::string> FindUsedColumnNames(const std::string expression, TObjA
 
 // Jit a string filter or a string temporary column, call this->Define or this->Filter as needed
 // Return pointer to the new functional chain node returned by the call, cast to Long_t
-Long_t JitTransformation(void *thisPtr, const std::string &methodName, const std::string &interfaceTypeName,
-                         const std::string &name, const std::string &expression, TObjArray *branches,
+Long_t JitTransformation(void *thisPtr, std::string_view methodName, std::string_view interfaceTypeName,
+                         std::string_view name, std::string_view expression, TObjArray *branches,
                          const std::vector<std::string> &customColumns,
                          const std::map<std::string, TmpBranchBasePtr_t> &tmpBookedBranches, TTree *tree,
                          std::string_view returnTypeName)
@@ -134,7 +134,7 @@ Long_t JitTransformation(void *thisPtr, const std::string &methodName, const std
    // The TInterface type to convert the result to. For example, Filter returns a TInterface<TFilter<F,P>> but when
    // returning it from a jitted call we need to convert it to TInterface<TFilterBase> as we are missing information
    // on types F and P at compile time.
-   const auto targetTypeName = std::string("ROOT::Experimental::TDF::TInterface<") + returnTypeName + ">";
+   const auto targetTypeName = "ROOT::Experimental::TDF::TInterface<" + std::string(returnTypeName) + ">";
 
    // Here we have two cases: filter and column
    ss.str("");
@@ -159,7 +159,7 @@ Long_t JitTransformation(void *thisPtr, const std::string &methodName, const std
    TInterpreter::EErrorCode interpErrCode;
    auto retVal = gInterpreter->ProcessLine(ss.str().c_str(), &interpErrCode);
    if (TInterpreter::EErrorCode::kNoError != interpErrCode || !retVal) {
-      std::string msg = "Cannot interpret the invocation to " + methodName + ":  ";
+      std::string msg = "Cannot interpret the invocation to " + std::string(methodName) + ":  ";
       msg += ss.str();
       if (TInterpreter::EErrorCode::kNoError != interpErrCode) {
          msg += "\nInterpreter error code is " + std::to_string(interpErrCode) + ".";

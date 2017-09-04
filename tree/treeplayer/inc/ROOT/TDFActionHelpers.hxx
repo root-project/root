@@ -426,15 +426,17 @@ class SnapshotHelper {
    const ColumnNames_t fBranchNames;
 
 public:
-   SnapshotHelper(const std::string &filename, const std::string &dirname, const std::string &treename,
+   SnapshotHelper(std::string_view filename, std::string_view dirname, std::string_view treename,
                   const ColumnNames_t &bnames)
-      : fOutputFile(TFile::Open(filename.c_str(), "RECREATE")), fBranchNames(bnames)
+      : fOutputFile(TFile::Open(std::string(filename).c_str(), "RECREATE")), fBranchNames(bnames)
    {
       if (!dirname.empty()) {
-         fOutputFile->mkdir(dirname.c_str());
-         fOutputFile->cd(dirname.c_str());
+         std::string dirnameStr(dirname);
+         fOutputFile->mkdir(dirnameStr.c_str());
+         fOutputFile->cd(dirnameStr.c_str());
       }
-      fOutputTree.reset(new TTree(treename.c_str(), treename.c_str(), /*splitlevel=*/99, /*dir=*/fOutputFile.get()));
+      std::string treenameStr(treename);
+      fOutputTree.reset(new TTree(treenameStr.c_str(), treenameStr.c_str(), /*split=*/99, /*dir=*/fOutputFile.get()));
    }
 
    SnapshotHelper(const SnapshotHelper &) = delete;
@@ -485,9 +487,9 @@ class SnapshotHelperMT {
 
 public:
    using BranchTypes_t = TypeList<BranchTypes...>;
-   SnapshotHelperMT(const unsigned int nSlots, const std::string &filename, const std::string &dirname,
-                    const std::string &treename, const ColumnNames_t &bnames)
-      : fNSlots(nSlots), fMerger(new ROOT::Experimental::TBufferMerger(filename.c_str(), "RECREATE")),
+   SnapshotHelperMT(const unsigned int nSlots, std::string_view filename, std::string_view dirname,
+                    std::string_view treename, const ColumnNames_t &bnames)
+      : fNSlots(nSlots), fMerger(new ROOT::Experimental::TBufferMerger(std::string(filename).c_str(), "RECREATE")),
         fOutputFiles(fNSlots), fOutputTrees(fNSlots, nullptr), fIsFirstEvent(fNSlots, 1), fDirName(dirname),
         fTreeName(treename), fBranchNames(bnames)
    {
