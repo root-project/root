@@ -306,22 +306,14 @@ endif()
 
 #--Vc basic test-----------------------------------------------------------------------------------
 if(ROOT_vc_FOUND)
-  include_directories(SYSTEM BEFORE ${Vc_INCLUDE_DIRS})
-  
-  ROOT_ADD_CXX_FLAG(vc_flags -Wno-unused-parameter)
-  ROOT_ADD_CXX_FLAG(vc_flags -Wno-missing-braces)
-  ROOT_ADD_CXX_FLAG(vc_flags -Wno-conditional-uninitialized)
-  ROOT_ADD_CXX_FLAG(vc_flags -Wno-mismatched-tags)
-  ROOT_ADD_CXX_FLAG(vc_flags -Wno-undefined-var-template)
-  set_source_files_properties(testVc.cxx PROPERTIES COMPILE_FLAGS "${vc_flags}")
   ROOT_EXECUTABLE(testVc testVc.cxx LIBRARIES ${Vc_LIBRARIES} BUILTINS Vc)
+  target_include_directories(testVc SYSTEM BEFORE PRIVATE ${Vc_INCLUDE_DIRS})
   ROOT_ADD_TEST(test-Vc COMMAND testVc FAILREGEX "FAILED|Error in")
 endif()
 
 #--VecCore basic test------------------------------------------------------------------------------
 if(ROOT_veccore_FOUND)
   ROOT_EXECUTABLE(test-veccore test-veccore.cxx LIBRARIES ${VecCore_LIBRARIES} BUILTINS VECCORE)
-  target_compile_definitions(test-veccore PRIVATE ${VecCore_DEFINITIONS})
   target_include_directories(test-veccore SYSTEM BEFORE PRIVATE ${VecCore_INCLUDE_DIRS})
   if(VecCore_Vc_FOUND)
     ROOT_ADD_TEST(VecCore COMMAND test-veccore REGEX "Vc")
@@ -332,16 +324,8 @@ endif()
 
 #--Vc GenVector test-----------------------------------------------------------------------------------
 if(ROOT_vc_FOUND)
-  include_directories(SYSTEM BEFORE ${Vc_INCLUDE_DIRS})
-  
-  ROOT_ADD_CXX_FLAG(vc_flags -Wno-unused-parameter)
-  ROOT_ADD_CXX_FLAG(vc_flags -Wno-missing-braces)
-  ROOT_ADD_CXX_FLAG(vc_flags -Wno-conditional-uninitialized)
-  ROOT_ADD_CXX_FLAG(vc_flags -Wno-mismatched-tags)
-  ROOT_ADD_CXX_FLAG(vc_flags -Wno-undefined-var-template)
-  ROOT_ADD_CXX_FLAG(vc_flags -Wno-shadow)
-  set_source_files_properties(testGenVectorVc.cxx PROPERTIES COMPILE_FLAGS "${vc_flags}")
   ROOT_EXECUTABLE(testGenVectorVc testGenVectorVc.cxx LIBRARIES Physics GenVector ${Vc_LIBRARIES} BUILTINS Vc)
+  target_include_directories(testGenVectorVc SYSTEM BEFORE PRIVATE ${Vc_INCLUDE_DIRS})
   ROOT_ADD_TEST(test-GenVector-Vc COMMAND testGenVectorVc FAILREGEX "FAILED|Error in")
 endif()
 
