@@ -112,12 +112,12 @@ void CallBuildAndBook(PrevNodeType &prevNode, const ColumnNames_t &bl, const uns
    delete rOnHeap;
 }
 
-std::vector<std::string> FindUsedColumnNames(const std::string, TObjArray *, const std::vector<std::string> &);
+std::vector<std::string> FindUsedColumnNames(std::string_view, TObjArray *, const std::vector<std::string> &);
 
 using TmpBranchBasePtr_t = std::shared_ptr<TCustomColumnBase>;
 
-Long_t JitTransformation(void *thisPtr, const std::string &methodName, const std::string &interfaceTypeName,
-                         const std::string &name, const std::string &expression, TObjArray *branches,
+Long_t JitTransformation(void *thisPtr, std::string_view methodName, std::string_view interfaceTypeName,
+                         std::string_view name, std::string_view expression, TObjArray *branches,
                          const std::vector<std::string> &customColumns,
                          const std::map<std::string, TmpBranchBasePtr_t> &tmpBookedBranches, TTree *tree,
                          std::string_view returnTypeName);
@@ -413,9 +413,7 @@ public:
          snapCall << TDFInternal::ColumnName2ColumnTypeName(b, tree, df->GetBookedBranch(b));
          first = false;
       };
-      const std::string treeNameInt(treename);
-      const std::string filenameInt(filename);
-      snapCall << ">(\"" << treeNameInt << "\", \"" << filenameInt << "\", "
+      snapCall << ">(\"" << treename << "\", \"" << filename << "\", "
                << "*reinterpret_cast<std::vector<std::string>*>(" // vector<string> should be ColumnNames_t
                << &columnList << "));";
       // jit snapCall, return result
@@ -1124,14 +1122,11 @@ private:
       auto branches = tree ? tree->GetListOfBranches() : nullptr;
       const auto &customColumns = df->GetCustomColumnNames();
       auto tmpBookedBranches = df->GetBookedColumns();
-      const std::string transformInt(transformation);
-      const std::string nameInt(nodeName);
-      const std::string expressionInt(expression);
       auto upcastNode = TDFInternal::UpcastNode(fProxiedPtr);
       TInterface<TypeTraits::TakeFirstParameter_t<decltype(upcastNode)>> upcastInterface(upcastNode, fImplWeakPtr,
                                                                                          fValidCustomColumns);
       const auto thisTypeName = "ROOT::Experimental::TDF::TInterface<" + upcastInterface.GetNodeTypeName() + ">";
-      return TDFInternal::JitTransformation(&upcastInterface, transformInt, thisTypeName, nameInt, expressionInt,
+      return TDFInternal::JitTransformation(&upcastInterface, transformation, thisTypeName, nodeName, expression,
                                             branches, customColumns, tmpBookedBranches, tree, returnTypeName);
    }
 
@@ -1195,45 +1190,40 @@ private:
    {
       TDFInternal::CheckSnapshot(sizeof...(S), columnList.size());
 
+      const std::string fullTreename(treename);
       // split name into directory and treename if needed
       const auto lastSlash = treename.rfind('/');
-      std::string_view dirNameView, treeNameView;
+      std::string_view dirname = "";
       if (std::string_view::npos != lastSlash) {
-         dirNameView = treename.substr(0, lastSlash);
-         treeNameView = treename.substr(lastSlash + 1, treename.size());
-      } else {
-         treeNameView = treename;
+         dirname = treename.substr(0, lastSlash);
+         treename = treename.substr(lastSlash + 1, treename.size());
       }
-      const std::string dirName(dirNameView);
-      const std::string treeName(treeNameView);
 
-      auto df = GetDataFrameChecked();
-      const std::string filenameInt(filename);
+      // add action node to functional graph and run event loop
       std::shared_ptr<TDFInternal::TActionBase> actionPtr;
-
       if (!ROOT::IsImplicitMTEnabled()) {
          // single-thread snapshot
          using Helper_t = TDFInternal::SnapshotHelper<BranchTypes...>;
          using Action_t = TDFInternal::TAction<Helper_t, Proxied, TTraits::TypeList<BranchTypes...>>;
-         actionPtr.reset(new Action_t(Helper_t(filenameInt, dirName, treeName, columnList), columnList, *fProxiedPtr));
+         actionPtr.reset(new Action_t(Helper_t(filename, dirname, treename, columnList), columnList, *fProxiedPtr));
       } else {
          // multi-thread snapshot
          using Helper_t = TDFInternal::SnapshotHelperMT<BranchTypes...>;
          using Action_t = TDFInternal::TAction<Helper_t, Proxied>;
-         actionPtr.reset(new Action_t(Helper_t(fProxiedPtr->GetNSlots(), filenameInt, dirName, treeName, columnList),
+         actionPtr.reset(new Action_t(Helper_t(fProxiedPtr->GetNSlots(), filename, dirname, treename, columnList),
                                       columnList, *fProxiedPtr));
       }
+      auto df = GetDataFrameChecked();
       df->Book(std::move(actionPtr));
       df->Run();
 
       // create new TDF
       ::TDirectory::TContext ctxt;
-      std::string fullTreeNameInt(treename);
       // Now we mimic a constructor for the TDataFrame. We cannot invoke it here
       // since this would introduce a cyclic headers dependency.
       TInterface<TLoopManager> snapshotTDF(std::make_shared<TLoopManager>(nullptr, columnList));
-      auto chain = std::make_shared<TChain>(fullTreeNameInt.c_str());
-      chain->Add(filenameInt.c_str());
+      auto chain = std::make_shared<TChain>(fullTreename.c_str());
+      chain->Add(std::string(filename).c_str());
       snapshotTDF.fProxiedPtr->SetTree(chain);
 
       return snapshotTDF;
