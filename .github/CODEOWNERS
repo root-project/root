@@ -56,6 +56,6 @@
 /graf2d/ios/ @TimurP
 /graf3d/eve/ @osschar
 /net/http/ @linev
-/tree/treeplayer/inc/ROOT/TDataFrame* @dpiparo @bluehood
-/tree/treeplayer/src/TDF* @dpiparo @bluehood
+/tree/treeplayer/**/TDataFrame.* @dpiparo @bluehood
+/tree/treeplayer/**/TDF* @dpiparo @bluehood
 CMakeLists.txt @peremato
