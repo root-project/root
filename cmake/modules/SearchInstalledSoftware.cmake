@@ -172,6 +172,7 @@ if(builtin_lz4)
     )
   endif()
   set(LZ4_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
+  set(LZ4_DEFINITIONS -DBUILTIN_LZ4)
 endif()
 
 

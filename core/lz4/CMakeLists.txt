@@ -16,4 +16,8 @@ list(APPEND LibCore_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/inc)
 set(LibCore_SRCS ${LibCore_SRCS} PARENT_SCOPE)
 set(LibCore_INCLUDE_DIRS ${LibCore_INCLUDE} PARENT_SCOPE)
 
+foreach(dir ${LZ4_INCLUDE_DIR})
+	list(APPEND LibCore_INCLUDE_DIRS ${dir})
+endforeach()
+
 install(FILES ${LZ4_headers} COMPONENT headers DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
