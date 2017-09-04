@@ -640,7 +640,7 @@ int exportsock(rpdunix *conn)
       int fd = -1;
       int natt = 1000;
       while (natt > 0 && (fd = dup(d)) <= 2) {
-         if (fd != d) close(fd);
+         if (fd >= 0 && fd != d) close(fd);
          fd = -1;
          natt--;
       }
