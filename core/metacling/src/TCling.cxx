@@ -4216,16 +4216,35 @@ void TCling::GetFunctionOverloads(ClassInfo_t *cl, const char *funcname,
                                   std::vector<DeclId_t>& res) const
 {
    clang::Sema& S = fInterpreter->getSema();
+   clang::ASTContext& Ctx = S.Context;
    const clang::Decl* CtxDecl
       = cl ? (const clang::Decl*)((TClingClassInfo*)cl)->GetDeclId():
-      S.Context.getTranslationUnitDecl();
-   const clang::DeclContext*
-      DeclCtx = llvm::dyn_cast<const clang::RecordDecl>(CtxDecl);
+      Ctx.getTranslationUnitDecl();
+   auto RecDecl = llvm::dyn_cast<const clang::RecordDecl>(CtxDecl);
+   const clang::DeclContext* DeclCtx = RecDecl;
+
    if (!DeclCtx)
       DeclCtx = dyn_cast<clang::NamespaceDecl>(CtxDecl);
    if (!DeclCtx) return;
-   clang::DeclarationName DName
-      = &S.Context.Idents.get(funcname);
+
+   clang::DeclarationName DName;
+   // The DeclarationName is funcname, unless it's a ctor or dtor.
+   // FIXME: or operator or conversion! See enum clang::DeclarationName::NameKind.
+
+   if (RecDecl) {
+      if (RecDecl->getNameAsString() == funcname) {
+         clang::QualType QT = Ctx.getTypeDeclType(RecDecl);
+         DName = Ctx.DeclarationNames.getCXXConstructorName(Ctx.getCanonicalType(QT));
+      } else if (funcname[0] == '~' && RecDecl->getNameAsString() == funcname + 1) {
+         clang::QualType QT = Ctx.getTypeDeclType(RecDecl);
+         DName = Ctx.DeclarationNames.getCXXDestructorName(Ctx.getCanonicalType(QT));
+      } else {
+         DName = &Ctx.Idents.get(funcname);
+      }
+   } else {
+      DName = &Ctx.Idents.get(funcname);
+   }
+
    clang::LookupResult R(S, DName, clang::SourceLocation(),
                          Sema::LookupOrdinaryName, clang::Sema::ForRedeclaration);
    S.LookupQualifiedName(R, const_cast<DeclContext*>(DeclCtx));
