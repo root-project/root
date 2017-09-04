@@ -561,6 +561,8 @@ Bool_t TFormula::InitLambdaExpression(const char * formula) {
 
 Int_t TFormula::Compile(const char *expression)
 {
+   std::cout << "calling Compile on " << expression << std::endl; // todo remove
+
    TString formula = expression;
    if (formula.IsNull() ) {
       formula = fFormula;
@@ -730,6 +732,7 @@ bool TFormula::PrepareEvalMethod()
          prototypeArguments.Append("Double_t*");
       }
       // init method call using real function name (cling name) which is defined in ProcessFormula
+      std::cout << "In PrepareEvalMethod, fClingName is " << fClingName << std::endl; // todo remove
       fMethod->InitWithPrototype(fClingName, prototypeArguments);
       if (!fMethod->IsValid()) {
          Error("Eval", "Can't find %s function prototype with arguments %s", fClingName.Data(),
@@ -1690,6 +1693,8 @@ void TFormula::PreProcessFormula(TString &formula)
 
 Bool_t TFormula::PrepareFormula(TString &formula)
 {
+   std::cout << "running PrepareFormula on " << formula << std::endl;
+
    fFuncs.clear();
    fReadyToExecute = false;
    ExtractFunctors(formula);
@@ -2198,7 +2203,12 @@ void TFormula::ProcessFormula(TString &formula)
          // check if formula exist already in the map
          R__LOCKGUARD(gROOTMutex);
 
+         for (auto thing : gClingFunctions) // todo remove
+            std::cout << "gClingFunctions : " << thing.first << std::endl;
+
          auto funcit = gClingFunctions.find(inputFormula);
+
+         std::cout << "setting funcit... Good? " << (funcit != gClingFunctions.end()) << std::endl; // todo remove
 
          if (funcit != gClingFunctions.end()) {
             fFuncPtr = (TInterpreter::CallFuncIFacePtr_t::Generic_t)funcit->second;
@@ -2947,11 +2957,44 @@ void TFormula::SetVectorized(Bool_t vectorized)
 {
 #ifdef R__HAS_VECCORE
    if (vectorized != fVectorized) {
+      if (!fFormula)
+         Error("SetVectorized", "Cannot set vectorized to %d -- Formula is missing", vectorized);
+
       fVectorized = vectorized;
+      fClingInitialized = false;
+      fReadyToExecute = false;
+      fAllParametersSetted = false; // I don't think this will help at all
+      // if (fMethod)
+      //    delete fMethod;
+      fMethod = nullptr;  // will this help? (maybe memory leaks?)
+      fFuncPtr = nullptr; // will this help? (maybe memory leaks?)
+
+      gClingFunctions.clear(); // could this break things? Something more subtle is probably better
+
+      fClingName = "";
+
       std::cout << "Testing switching vectorized flag" << std::endl; // todo remove
       std::cout << "currently, fClingInput is " << fClingInput << std::endl;
-      ProcessFormula(fClingInput);
-      // PrepareEvalMethod(); // todo: need this?
+      std::cout << "but fFormula is " << fFormula << std::endl;
+
+      fClingInput = fFormula;
+
+      PreProcessFormula(fFormula);
+      bool ret = PrepareFormula(fFormula);
+      std::cout << "Prepare formula successful? " << ret << std::endl;
+
+      // ProcessFormula(fClingInput); // with this alone, they ask us to call TFormula::Compile()
+
+      // std::cout << "in the middle of this mess, fClingInput is " << fClingInput << std::endl;
+
+      // Compile(fClingInput); // todo: figure out ordering
+
+      // this is just really broken now...
+
+      // PrepareEvalMethod(); // maybe try this?
+
+      std::cout << "after this mess, fClingInput is " << fClingInput << std::endl; // todo remove
+      std::cout << "fClingInitialized? " << fClingInitialized << std::endl;
    }
 #else
    if (vectorized)
@@ -3035,6 +3078,11 @@ Double_t TFormula::DoEval(const double * x, const double * params) const
       }
       return TMath::QuietNaN();
    }
+
+   std::cout << "fLambdaPtr ? " << fLambdaPtr << std::endl;       // todo remove
+   std::cout << "is x defined ? " << (x ? 1 : 0) << std::endl;    // todo remove
+   std::cout << "fFuncPtr is what ? " << &*fFuncPtr << std::endl; // todo remove
+
    if (fLambdaPtr && TestBit(TFormula::kLambda)) {// case of lambda functions
       std::function<double(double *, double *)> & fptr = * ( (std::function<double(double *, double *)> *) fLambdaPtr);
       assert(x);
@@ -3060,9 +3108,9 @@ Double_t TFormula::DoEval(const double * x, const double * params) const
    void* args[2];
    double * vars = (x) ? const_cast<double*>(x) : const_cast<double*>(fClingVariables.data());
    args[0] = &vars;
-   if (fNpar <= 0)
+   if (fNpar <= 0) {
       (*fFuncPtr)(0, 1, args, &result);
-   else {
+   } else {
       double * pars = (params) ? const_cast<double*>(params) : const_cast<double*>(fClingParameters.data());
       args[1] = &pars;
       (*fFuncPtr)(0, 2, args, &result);
@@ -3075,6 +3123,8 @@ Double_t TFormula::DoEval(const double * x, const double * params) const
 #ifdef R__HAS_VECCORE
 ROOT::Double_v TFormula::DoEvalVec(const ROOT::Double_v *x, const double *params) const
 {
+   std::cout << "(DoEvalVec) fFuncPtr is what ? " << &*fFuncPtr << std::endl; // todo remove
+
    if (!fReadyToExecute) {
       Error("Eval", "Formula is invalid and not ready to execute ");
       for (auto it = fFuncs.begin(); it != fFuncs.end(); ++it) {
