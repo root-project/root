@@ -983,6 +983,9 @@ check_code() {
     logmsg " Compiling $1 with flags '$2'"
     echo "$1" > conftest.cxx
     cat <<EOF > conftest.mk
+ifneq (${enable_cxx14},)
+CXX14 := yes
+endif
 include ${ac_srcdir}/config/Makefile.${arch}
 CXX = ${altcxx}
 conftest.o: conftest.cxx
@@ -1106,7 +1109,9 @@ GCCTOOLCHAIN_OPT =
 ifneq (${gcctoolchain},)
 GCCTOOLCHAIN_OPT = --gcc-toolchain=${gcctoolchain}
 endif
-
+ifneq (${enable_cxx14},)
+CXX14 := yes
+endif
 conftest: conftest.cxx
 	\$(CXX) \$(CFLAGS) \$(GCCTOOLCHAIN_OPT) $cxxopt \$(LDFLAGS) \$< -o \$@
 
