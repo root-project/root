@@ -732,10 +732,10 @@ void TPolyLine3D::Streamer(TBuffer &b)
       b >> fN;
       if (fN) {
          fP = new Float_t[3*fN];
-         b.ClassMember("fP", "Float_t", 3*fN);
-         b.ReadFastArray(fP,3*fN);
+         b.ClassMember("fP", "Float_t", 3 * fN);
+         b.ReadFastArray(fP, 3 * fN);
       }
-      b.ClassMember("fOption","TString");
+      b.ClassMember("fOption", "TString");
       fOption.Streamer(b);
       fLastPoint = fN-1;
       b.ClassEnd(TPolyLine3D::IsA());
@@ -751,10 +751,10 @@ void TPolyLine3D::Streamer(TBuffer &b)
       Int_t size = Size();
       b << size;
       if (size) {
-         b.ClassMember("fP", "Float_t", 3*size);
-         b.WriteFastArray(fP, 3*size);
+         b.ClassMember("fP", "Float_t", 3 * size);
+         b.WriteFastArray(fP, 3 * size);
       }
-      b.ClassMember("fOption","TString");
+      b.ClassMember("fOption", "TString");
       fOption.Streamer(b);
       b.ClassEnd(TPolyLine3D::IsA());
       b.SetByteCount(R__c, kTRUE);
