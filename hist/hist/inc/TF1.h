@@ -29,16 +29,15 @@
 #include "TAttFill.h"
 #include "TAttMarker.h"
 #include "TROOT.h"
+#include "TF1AbsComposition.h"
 #include "TMath.h"
 #include "Math/Types.h"
 #include "Math/ParamFunctor.h"
-
 
 class TF1;
 class TH1;
 class TAxis;
 class TMethodCall;
-class TF1NormSum;
 
 namespace ROOT {
    namespace Fit {
@@ -224,11 +223,14 @@ public:
 
 protected:
    struct TF1FunctorPointer {};
-   enum  EFType {     kFormula = 0,      // formula functions which can be stored,
-                      kPtrScalarFreeFcn, // pointer to scalar free function,
-                      kInterpreted,      // interpreted functions constructed by name,
-                      kTemplVec,         // vectorized free functions or TemplScalar functors evaluating on vectorized parameters,
-                      kTemplScalar};     // TemplScalar functors evaluating on scalar parameters
+   enum EFType {
+      kFormula = 0,      // formula functions which can be stored,
+      kPtrScalarFreeFcn, // pointer to scalar free function,
+      kInterpreted,      // interpreted functions constructed by name,
+      kTemplVec,         // vectorized free functions or TemplScalar functors evaluating on vectorized parameters,
+      kTemplScalar,      // TemplScalar functors evaluating on scalar parameters
+      kCompositionFcn
+   }; // formula based on composition class (e.g. NSUM, CONV)
 
    Double_t    fXmin = -1111;        //Lower bounds for the range
    Double_t    fXmax = -1111;        //Upper bounds for the range
@@ -257,6 +259,8 @@ protected:
    TF1FunctorPointer  *fFunctor = nullptr; //! Functor object to wrap any C++ callable object
    TFormula    *fFormula = nullptr;        //Pointer to TFormula in case when user define formula
    TF1Parameters *fParams = nullptr;   //Pointer to Function parameters object (exists only for not-formula functions)
+   std::unique_ptr<TF1AbsComposition> fComposition; //! Pointer to composition (NSUM or CONV)
+   TF1AbsComposition *fComposition_ptr = nullptr;   // saved pointer (unique_ptr is transient)
 
    /// General constructor for TF1. Most of the other constructors delegate on it
    TF1(EFType functionType, const char *name, Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim, EAddToList addToGlobList, TF1Parameters *params = nullptr, TF1FunctorPointer * functor = nullptr):
@@ -678,13 +682,15 @@ public:
    //static  TGraph  *CalcGaussLegendreSamplingPoints(Int_t num=21, Double_t eps=3.0e-11);
    static  void     CalcGaussLegendreSamplingPoints(Int_t num, Double_t *x, Double_t *w, Double_t eps = 3.0e-11);
 
-   ClassDef(TF1, 9) //The Parametric 1-D function
-
 private:
-   template <class T> T EvalParTempl(const T *data, const Double_t *params = 0);
+   template <class T>
+   T EvalParTempl(const T *data, const Double_t *params = 0);
+
 #ifdef R__HAS_VECCORE
    inline double EvalParVec(const Double_t *data, const Double_t *params);
 #endif
+
+   ClassDef(TF1, 10) // The Parametric 1-D function
 };
 
 namespace ROOT {
