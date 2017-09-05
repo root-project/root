@@ -1688,8 +1688,6 @@ void TFormula::PreProcessFormula(TString &formula)
 
 Bool_t TFormula::PrepareFormula(TString &formula)
 {
-   std::cout << "running PrepareFormula on " << formula << std::endl;
-
    fFuncs.clear();
    fReadyToExecute = false;
    ExtractFunctors(formula);
@@ -1702,14 +1700,16 @@ Bool_t TFormula::PrepareFormula(TString &formula)
    fFormula.ReplaceAll("{","");
    fFormula.ReplaceAll("}","");
 
-   //std::cout << "functors are extracted formula is " << std::endl;
-   //std::cout << fFormula << std::endl << std::endl;
+   // std::cout << "functors are extracted formula is " << std::endl;
+   // std::cout << fFormula << std::endl << std::endl;
 
    fFuncs.sort();
    fFuncs.unique();
 
    // use inputFormula for Cling
    ProcessFormula(fClingInput);
+   std::cout << "done with ProcessFormula" << std::endl; // todo remove
+   std::cout << "fNumber is " << fNumber << std::endl;
 
    // for pre-defined functions (need after processing)
    if (fNumber != 0) SetPredefinedParamNames();
@@ -2161,7 +2161,7 @@ void TFormula::ProcessFormula(TString &formula)
          fun.fFound = false;
       }
    }
-   //std::cout << "End: formula is " << formula << std::endl;
+   // std::cout << "End: formula is " << formula << std::endl;
 
    // ignore case of functors have been matched - try to pass it to Cling
    if (!fReadyToExecute) {
@@ -2180,7 +2180,6 @@ void TFormula::ProcessFormula(TString &formula)
       Bool_t hasBoth = hasVariables && hasParameters;
       Bool_t inputIntoCling = (formula.Length() > 0);
       if (inputIntoCling) {
-
          // save copy of inputFormula in a std::strig for the unordered map
          // and also formula is same as FClingInput typically and it will be modified
          std::string inputFormula = std::string(formula);
@@ -2269,16 +2268,22 @@ void TFormula::ProcessFormula(TString &formula)
 
    // clean up un-used default variables in case formula is valid
    if (fClingInitialized && fReadyToExecute) {
+      std::cout << "cleanup stage" << std::endl; // todo remove
+
       auto itvar = fVars.begin();
       do {
+         std::cout << "start do-loop" << std::endl; // todo remove
          if (!itvar->second.fFound) {
-            // std::cout << "Erase variable " << itvar->first << std::endl;
+            std::cout << "Erase variable " << itvar->first << std::endl; // todo comment
             itvar = fVars.erase(itvar);
-         } else
+         } else {
+            std::cout << "increment itvar++ from " << itvar->first << std::endl; // todo remove
             itvar++;
+         }
       } while (itvar != fVars.end());
    }
 
+   std::cout << "done with ProcessFormula (1)" << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2962,13 +2967,14 @@ void TFormula::SetVectorized(Bool_t vectorized)
       fVectorized = vectorized;
       fClingInitialized = false;
       fReadyToExecute = false;
-      fAllParametersSetted = false; // I don't think this will help at all
+      // fAllParametersSetted = true; // I don't think this will help at all
       fMethod = nullptr;            // (todo check for memory leaks?)
       fClingName = "";
       fClingInput = fFormula;
 
       PreProcessFormula(fFormula);
-      PrepareFormula(fFormula);
+      Bool_t ret = PrepareFormula(fFormula);
+      std::cout << "Was PrepareFormula successful ? " << ret << std::endl;
    }
 #else
    if (vectorized)
@@ -2979,8 +2985,13 @@ void TFormula::SetVectorized(Bool_t vectorized)
 ////////////////////////////////////////////////////////////////////////////////
 Double_t TFormula::EvalPar(const Double_t *x,const Double_t *params) const
 {
+   std::cout << "fNdim is " << fNdim << std::endl; // todo remove line
+
    if (!fVectorized)
       return DoEval(x, params);
+
+   if (fNdim == 0)
+      return DoEvalVec(nullptr, params)[0];
 
 // otherwise, regular Double_t inputs on a vectorized function
 
