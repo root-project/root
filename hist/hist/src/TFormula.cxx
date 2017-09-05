@@ -2982,8 +2982,25 @@ Double_t TFormula::EvalPar(const Double_t *x,const Double_t *params) const
    if (!fVectorized)
       return DoEval(x, params);
 
-   Error("EvalPar", "Formula is vectorized");
+// otherwise, regular Double_t inputs on a vectorized function
+
+#ifdef R__HAS_VECCORE
+   // convert our input into vectors then convert back
+   Warning("EvalPar", "Function is vectorized - converting Double_t into ROOT::Double_v and back");
+
+   ROOT::Double_v xvec[fNdim];
+   for (int i = 0; i < fNdim; i++)
+      xvec[i] = x[i];
+
+   ROOT::Double_v ans = DoEvalVec(xvec, params);
+   return ans[0];
+
+#else
+   // this should never happen, because fVectorized can only be set true with
+   // R__HAS_VECCORE, but just in case:
+   Error("EvalPar", "Formula is vectorized (even though VECCORE is disabled!)");
    return TMath::QuietNaN();
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2993,8 +3010,25 @@ ROOT::Double_v TFormula::EvalPar(const ROOT::Double_v *x, const Double_t *params
    if (fVectorized)
       return DoEvalVec(x, params);
 
-   Error("EvalPar", "Formula is not vectorized"); // can't switch formula to vectorized because of `const`
-   return TMath::QuietNaN();
+   if (fNdim == 0)
+      return DoEval(nullptr, params);
+
+   // otherwise, trying to input vectors into a scalar function
+
+   Warning("EvalPar", "Function is not vectorized - converting ROOT::Double_v into Double_t and back");
+
+   int vecSize = x[0].size();
+   Double_t xscalars[vecSize][fNdim];
+
+   for (int i = 0; i < vecSize; i++)
+      for (int j = 0; j < fNdim; j++)
+         xscalars[i][j] = x[j][i];
+
+   ROOT::Double_v answers;
+   for (int i = 0; i < vecSize; i++)
+      answers[i] = DoEval(xscalars[i], params);
+
+   return answers;
 }
 #endif
 
