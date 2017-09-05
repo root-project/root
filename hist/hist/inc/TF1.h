@@ -422,7 +422,7 @@ public:
    virtual void     FixParameter(Int_t ipar, Double_t value);
    bool      IsVectorized()
    {
-      return fType == EFType::kTemplVec;
+      return (fType == EFType::kTemplVec) || (fType == EFType::kFormula && fFormula && fFormula->IsVectorized());
    }
    Double_t     GetChisquare() const
    {
@@ -654,6 +654,13 @@ public:
    virtual void     SetRange(Double_t xmin, Double_t ymin, Double_t zmin,  Double_t xmax, Double_t ymax, Double_t zmax);
    virtual void     SetSavedPoint(Int_t point, Double_t value);
    virtual void     SetTitle(const char *title = ""); // *MENU*
+   virtual void SetVectorized(Bool_t vectorized)
+   {
+      if (fType == EFType::kFormula && fFormula)
+         fFormula->SetVectorized(vectorized);
+      else
+         Warning("SetVectorized", "Can only set vectorized flag on formula-based TF1");
+   }
    virtual void     Update();
 
    static  TF1     *GetCurrent();
