@@ -1347,9 +1347,13 @@ if(vc AND NOT Vc_FOUND)
   # FIXME: This is a workaround to let ROOT find the headers at runtime if
   # they are in the build directory. This is necessary until we decide how to
   # treat externals with headers used by ROOT
-  add_custom_target(VC_SYMLINK COMMAND ${CMAKE_COMMAND} -E create_symlink
-    ${Vc_INCLUDE_DIR}/Vc ${CMAKE_BINARY_DIR}/include/Vc)
-  add_dependencies(VC VC_SYMLINK)
+  if(NOT EXISTS ${CMAKE_BINARY_DIR}/include/Vc)
+    if (NOT EXISTS ${CMAKE_BINARY_DIR}/include)
+      execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/include)
+    endif()
+    execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
+      ${Vc_INCLUDE_DIR}/Vc ${CMAKE_BINARY_DIR}/include/Vc)
+  endif()
   # end of workaround
 
   install(DIRECTORY ${Vc_ROOTDIR}/ DESTINATION ".")
@@ -1433,9 +1437,13 @@ if(veccore AND NOT VecCore_FOUND)
   # FIXME: This is a workaround to let ROOT find the headers at runtime if
   # they are in the build directory. This is necessary until we decide how to
   # treat externals with headers used by ROOT
-  add_custom_target(VECCORE_SYMLINK COMMAND ${CMAKE_COMMAND} -E create_symlink
-    ${VecCore_ROOTDIR}/include/VecCore ${CMAKE_BINARY_DIR}/include/VecCore)
-  add_dependencies(VECCORE VECCORE_SYMLINK)
+  if(NOT EXISTS ${CMAKE_BINARY_DIR}/include/VecCore)
+    if (NOT EXISTS ${CMAKE_BINARY_DIR}/include)
+      execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/include)
+    endif()
+    execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
+      ${VecCore_ROOTDIR}/include/VecCore ${CMAKE_BINARY_DIR}/include/VecCore)
+  endif()
   # end of workaround
 
   install(DIRECTORY ${VecCore_ROOTDIR}/ DESTINATION ".")
