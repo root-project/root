@@ -723,24 +723,40 @@ void TPolyLine3D::Streamer(TBuffer &b)
    UInt_t R__s, R__c;
    if (b.IsReading()) {
       b.ReadVersion(&R__s, &R__c);
+      b.ClassBegin(TPolyLine3D::IsA());
+      b.ClassMember("TObject");
       TObject::Streamer(b);
+      b.ClassMember("TAttLine");
       TAttLine::Streamer(b);
+      b.ClassMember("fN", "Int_t");
       b >> fN;
       if (fN) {
          fP = new Float_t[3*fN];
+         b.ClassMember("fP", "Float_t", 3*fN);
          b.ReadFastArray(fP,3*fN);
       }
+      b.ClassMember("fOption","TString");
       fOption.Streamer(b);
       fLastPoint = fN-1;
+      b.ClassEnd(TPolyLine3D::IsA());
       b.CheckByteCount(R__s, R__c, TPolyLine3D::IsA());
    } else {
       R__c = b.WriteVersion(TPolyLine3D::IsA(), kTRUE);
+      b.ClassBegin(TPolyLine3D::IsA());
+      b.ClassMember("TObject");
       TObject::Streamer(b);
+      b.ClassMember("TAttLine");
       TAttLine::Streamer(b);
+      b.ClassMember("fN", "Int_t");
       Int_t size = Size();
       b << size;
-      if (size) b.WriteFastArray(fP, 3*size);
+      if (size) {
+         b.ClassMember("fP", "Float_t", 3*size);
+         b.WriteFastArray(fP, 3*size);
+      }
+      b.ClassMember("fOption","TString");
       fOption.Streamer(b);
+      b.ClassEnd(TPolyLine3D::IsA());
       b.SetByteCount(R__c, kTRUE);
    }
 }
