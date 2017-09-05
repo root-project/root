@@ -1403,9 +1403,9 @@ ROOT::Double_v TF1::EvalPar(const ROOT::Double_v *x, const Double_t *params)
    if (fType == EFType::kTemplVec || fType == EFType::kTemplScalar) {
       return EvalParTempl(x, params);
    } else if (fType == EFType::kFormula) {
-      if (!fFormula->IsVectorized())
-         Warning("EvalPar", "Switching formula to vectorized");
-      fFormula->SetVectorized(true);
+      // if (!fFormula->IsVectorized()) // todo rethink how to do this
+      //    Warning("EvalPar", "Switching formula to vectorized");
+      // fFormula->SetVectorized(true);
 
       return fFormula->EvalPar(x, params);
    } else
