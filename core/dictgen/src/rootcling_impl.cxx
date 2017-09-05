@@ -994,20 +994,17 @@ bool CheckClassDef(const clang::RecordDecl &cl, const cling::Interpreter &interp
    }
    bool isAbstract = clxx->isAbstract();
 
-   bool result = true;
    if (!isAbstract && InheritsFromTObject(clxx, interp) && !InheritsFromTSelector(clxx, interp) && !hasClassDef) {
       std::string qualName;
       ROOT::TMetaUtils::GetQualifiedName(qualName, cl);
       const char *qualName_c = qualName.c_str();
-      ROOT::TMetaUtils::Error(qualName_c,
-                              "%s inherits from TObject but does not have its own ClassDef\n",
-                              qualName_c);
-      // We do want to always output the message (hence the Error level)
-      // but still want rootcling to succeed.
-      result = true;
+      ROOT::TMetaUtils::Warning(qualName_c, "The data members of %s will not be stored, "
+                                            "because it inherits from TObject but does not "
+                                            "have its own ClassDef.\n",
+                                qualName_c);
    }
 
-   return result;
+   return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
