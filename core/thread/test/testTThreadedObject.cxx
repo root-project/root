@@ -74,7 +74,6 @@ TEST(TThreadedObject, GetAtSlotUnchecked)
    EXPECT_TRUE(IsSameHist(model,*h));
 }
 
-/*
 TEST(TThreadedObject, GetAtSlotRaw)
 {
    TH1F model("h","h",64, -4, 4);
@@ -83,7 +82,6 @@ TEST(TThreadedObject, GetAtSlotRaw)
    auto h = tto.GetAtSlotRaw(0);
    EXPECT_TRUE(IsSameHist(model,*h));
 }
-*/
 
 TEST(TThreadedObject, SetAtSlot)
 {
