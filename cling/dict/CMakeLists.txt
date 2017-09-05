@@ -28,4 +28,8 @@ ROOTTEST_ADD_TEST(exectemplatetemplateTest
                   OUTREF exectemplatetemplateTest.ref
                   LABELS roottest regression cling)
 
+ROOTTEST_ADD_TEST(assertTmpltDefArgCtor
+                  MACRO assertTmpltDefArgCtor.C
+                  LABELS roottest regression cling)
+
 ROOTTEST_ADD_TESTDIRS()
