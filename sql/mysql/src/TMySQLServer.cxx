@@ -52,9 +52,6 @@
 #include "TObjString.h"
 #include "TObjArray.h"
 
-#include <my_global.h>
-
-
 ClassImp(TMySQLServer);
 
 ////////////////////////////////////////////////////////////////////////////////
