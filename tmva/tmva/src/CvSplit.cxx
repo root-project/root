@@ -396,11 +396,16 @@ void TMVA::CvSplitCrossEvaluation::PrepareFoldDataSet (DataSetInfo & dsi, UInt_t
       }
    }
 
+   Log() << kINFO << "Fold prepared, num events in training set: " << tempTrain->size() << Endl;
+   Log() << kINFO << "Fold prepared, num events in test     set: " << tempTest->size() << Endl;
+
    // Assign the vectors of the events to rebuild the dataset
    dsi.GetDataSet()->SetEventCollection(tempTrain,Types::kTraining,false);
    dsi.GetDataSet()->SetEventCollection(tempTest,Types::kTesting,false);
    delete tempTest;
    delete tempTrain;
+
+
 }
 
 void TMVA::CvSplitCrossEvaluation::RecombineKFoldDataSet (DataSetInfo & dsi, Types::ETreeType tt)
