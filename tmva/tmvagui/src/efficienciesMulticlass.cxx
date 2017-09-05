@@ -205,10 +205,11 @@ roccurvelist_t TMVA::getRocCurves(TDirectory *binDir, TString methodPrefix, TStr
 ////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Private convenience function that adds a number of graphs to a plot given
-/// by the provided methodName/classname/graph tuple. These graphs should be
-/// extracted from a root file produced by a TMVA::Factory running multiclass
-/// analysis. (See getRocCurves).
+/// Private convenience function.
+///
+/// Adds a given a list of roc curves provided as n-tuple on the form
+///    (methodname, classname, graph)
+/// to the canvas corresponding to the classname.
 ///
 
 void TMVA::plotEfficienciesMulticlass(roccurvelist_t rocCurves, classcanvasmap_t classCanvasMap)
@@ -234,9 +235,9 @@ void TMVA::plotEfficienciesMulticlass(roccurvelist_t rocCurves, classcanvasmap_t
 ////////////////////////////////////////////////////////////////////////////////
 /// Entry point. Called from the TMVAMulticlassGui Buttons
 ///
-/// @param dataset        Dataset to operate on. Should be created by the TMVA Multiclass Factory.
-/// @param filename_input Name of the input file procuded by a TMVA Multiclass Factory.
-/// @param plotType       Specified what kind of ROC curve to draw. Currently only rejB vs. effS is supported.
+/// \param dataset        Dataset to operate on. Should be created by the TMVA Multiclass Factory.
+/// \param filename_input Name of the input file procuded by a TMVA Multiclass Factory.
+/// \param plotType       Specified what kind of ROC curve to draw. Currently only rejB vs. effS is supported.
 
 void TMVA::efficienciesMulticlass1vsRest(TString dataset, TString filename_input, EEfficiencyPlotType plotType,
                                          Bool_t useTMVAStyle)
@@ -251,8 +252,8 @@ void TMVA::efficienciesMulticlass1vsRest(TString dataset, TString filename_input
 /// Work horse function. Will operate on the currently open file (opened by
 /// efficienciesMulticlass).
 ///
-/// @param plotType See effcienciesMulticlass.
-/// @param binDir   Directory in the file on which to operate.
+/// \param plotType See effcienciesMulticlass.
+/// \param binDir   Directory in the file on which to operate.
 
 void TMVA::plotEfficienciesMulticlass1vsRest(TString dataset, EEfficiencyPlotType plotType, TString filename_input)
 {
@@ -326,8 +327,16 @@ void TMVA::efficienciesMulticlass1vs1(TString dataset, TString fin)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Generates K canvases (1 for each class) that each plots a ROC curve
-/// comparing a given class (classname) against all others, one at a time.
+/// Generates K-1 plots comparing a given base class against all others (except
+/// itself). For each plot, the base class is considered signal and the other
+/// class is considered background.
+///
+/// Given 3 classes in the dataset and providing "Class 0" as the base class
+/// this would generate 2 plots comparing
+///    - Class 0 vs Class 1, and
+///    - Class 0 vs Class 2.
+/// For the "Class 0 vs Class 1" plot, events from Class 2 are ignored. For the
+/// "Class 0 vs Class 2" plot, events from Class 1 are ignored.
 ///
 /// \param dataset
 /// \param fin
@@ -353,6 +362,11 @@ void TMVA::plotEfficienciesMulticlass1vs1(TString dataset, TString fin, TString 
 
    classcanvasmap_t classCanvasMap;
    for (auto &classname : classnames) {
+
+      if (classname == baseClassname) {
+         continue;
+      }
+
       TString name = Form("1v1roc_%s_vs_%s", baseClassname.Data(), classname.Data());
       TString title = Form("ROC Curve %s (Sig) vs %s (Bkg)", baseClassname.Data(), classname.Data());
       EfficiencyPlotWrapper *plotWrapper = new EfficiencyPlotWrapper(name, title, dataset, iPlot++);
@@ -360,22 +374,7 @@ void TMVA::plotEfficienciesMulticlass1vs1(TString dataset, TString fin, TString 
    }
 
    roccurvelist_t rocCurves = getRocCurves(binDir, methodPrefix, graphNameRef);
-
-   for (auto &item : rocCurves) {
-      TString methodTitle = std::get<0>(item);
-      TString classname = std::get<1>(item);
-      TGraph *h = std::get<2>(item);
-
-      try {
-         EfficiencyPlotWrapper *plotWrapper = classCanvasMap.at(classname);
-         plotWrapper->addGraph(h);
-         plotWrapper->addLegendEntry(methodTitle, h);
-      } catch (const std::out_of_range &oor) {
-         cout << Form("ERROR: Class %s discovered among plots but was not found by TMVAMulticlassGui. Skipping.",
-                      classname.Data())
-              << endl;
-      }
-   }
+   plotEfficienciesMulticlass(rocCurves, classCanvasMap);
 
    for (auto const &item : classCanvasMap) {
       auto plotWrapper = item.second;
@@ -453,9 +452,9 @@ void EfficiencyPlotWrapper::addLegendEntry(TString methodTitle, TGraph *graph)
 ////////////////////////////////////////////////////////////////////////////////
 /// Helper to create new Canvas
 ///
-/// @param name  Name...
-/// @param title Title to be displayed on canvas
-/// @param i     Index to offset a collection of canvases from each other
+/// \param name  Name...
+/// \param title Title to be displayed on canvas
+/// \param i     Index to offset a collection of canvases from each other
 ///
 
 TCanvas *EfficiencyPlotWrapper::newEfficiencyCanvas(TString name, TString title, size_t i)
