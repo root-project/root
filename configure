@@ -983,7 +983,7 @@ check_code() {
     logmsg " Compiling $1 with flags '$2'"
     echo "$1" > conftest.cxx
     cat <<EOF > conftest.mk
-ifneq (${enable_cxx14},)
+ifeq (${enable_cxx14},yes)
 CXX14 := yes
 endif
 include ${ac_srcdir}/config/Makefile.${arch}
