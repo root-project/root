@@ -1109,7 +1109,7 @@ GCCTOOLCHAIN_OPT =
 ifneq (${gcctoolchain},)
 GCCTOOLCHAIN_OPT = --gcc-toolchain=${gcctoolchain}
 endif
-ifneq (${enable_cxx14},yes)
+ifeq (${enable_cxx14},yes)
 CXX14 := yes
 endif
 conftest: conftest.cxx
