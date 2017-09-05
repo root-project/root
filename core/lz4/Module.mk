@@ -168,6 +168,11 @@ else
 		$(MAKE) lib)
 endif
 
+ifeq ($(BUILTINLZ4),yes)
+$(LZ4O): CFLAGS += -DBUILTIN_LZ4
+$(LZ4O): CXXFLAGS += -DBUILTIN_LZ4
+endif
+
 $(LZ4O): CFLAGS += $(LZ4LIBDIRI)
 $(LZ4O): CXXFLAGS += $(LZ4LIBDIRI)
 
