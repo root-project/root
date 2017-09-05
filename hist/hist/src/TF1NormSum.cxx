@@ -216,7 +216,7 @@ TF1NormSum::TF1NormSum(const TString &formula, Double_t xmin, Double_t xmax)
       k = 1;
    }
 
-   Double_t old_xmin, old_xmax = 0.0;
+   Double_t old_xmin = 0.0, old_xmax = 0.0;
    k = 0; // index of term in funcstringall
    for (int i=0; i<noffunctions; i++)
    {
