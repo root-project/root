@@ -475,10 +475,10 @@ TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, EA
       // (note: currently ignoring `useFFT` option)
       fNpar = conv->GetNpar();
       fNdim = 1;                         // (note: may want to extend this in the future?)
-      fType = EFType::kPtrScalarFreeFcn; // (note: may want to add new fType for this case)
-      using Fnc_t = typename ROOT::Internal::GetFunctorType<decltype(
-         ROOT::Internal::GetTheRightOp(&TF1Convolution::operator()))>::type;
-      fFunctor = new TF1::TF1FunctorPointerImpl<Fnc_t>(ROOT::Math::ParamFunctorTempl<Fnc_t>(conv));
+
+      fType = EFType::kCompositionFcn;
+      fComposition = std::unique_ptr<TF1AbsComposition>(conv);
+
       fParams = new TF1Parameters(fNpar); // default to zeros (TF1Convolution has no GetParameters())
       // set parameter names
       for (int i = 0; i < fNpar; i++)
@@ -546,10 +546,9 @@ TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, EA
       fNpar = normSum->GetNpar();
       fNdim = 1; // (note: may want to extend functionality in the future)
 
-      fType = EFType::kPtrScalarFreeFcn; // (note: may want to add new fType for this case)
-      // fFunctor = ROOT::Math::ParamFunctor(normSum);
-      using Fnc_t = typename ROOT::Internal::GetFunctorType<decltype(ROOT::Internal::GetTheRightOp(&TF1NormSum::operator()))>::type;
-      fFunctor = new TF1::TF1FunctorPointerImpl<Fnc_t>(ROOT::Math::ParamFunctorTempl<Fnc_t>(normSum));
+      fType = EFType::kCompositionFcn;
+      fComposition = std::unique_ptr<TF1AbsComposition>(normSum);
+
       fParams = new TF1Parameters(fNpar);
       fParams->SetParameters(&(normSum->GetParameters())[0]); // inherit default parameters from normSum
 
@@ -933,6 +932,12 @@ void TF1::Copy(TObject &obj) const
       TF1Parameters *paramsToCopy = ((TF1 &)obj).fParams;
       if (paramsToCopy) *paramsToCopy = *fParams;
       else ((TF1 &)obj).fParams = new TF1Parameters(*fParams);
+   }
+
+   if (fComposition) {
+      TF1AbsComposition *comp = (TF1AbsComposition *)fComposition->IsA()->New();
+      fComposition->Copy(*comp);
+      ((TF1 &)obj).fComposition = std::unique_ptr<TF1AbsComposition>(comp);
    }
 }
 
@@ -1383,6 +1388,14 @@ Double_t TF1::EvalPar(const Double_t *x, const Double_t *params)
       return result;
    }
 #endif
+
+   if (fType == EFType::kCompositionFcn) {
+      if (!fComposition)
+         Error("EvalPar", "Composition function not found");
+
+      result = (*fComposition)(x, params);
+   }
+
    return result;
 }
 
@@ -2738,13 +2751,21 @@ void TF1::Print(Option_t *option) const
       assert(fFormula);
       fFormula->Print(option);
    } else if (fType >  0) {
-      if (fType == EFType::kFormula)
-         printf("Interpreted based function: %s(double *x, double *p).  Ndim = %d, Npar = %d  \n", GetName(), GetNpar(), GetNdim());
-      else {
+      if (fType == EFType::kInterpreted)
+         printf("Interpreted based function: %s(double *x, double *p).  Ndim = %d, Npar = %d  \n", GetName(), GetNdim(),
+                GetNpar());
+      else if (fType == EFType::kCompositionFcn) {
+         printf("Composition based function: %s. Ndim = %d, Npar = %d \n", GetName(), GetNdim(), GetNpar());
+         if (!fComposition)
+            printf("fComposition not found!\n"); // this would be bad
+      } else {
          if (fFunctor)
-            printf("Compiled based function: %s  based on a functor object.  Ndim = %d, Npar = %d\n", GetName(), GetNpar(), GetNdim());
+            printf("Compiled based function: %s  based on a functor object.  Ndim = %d, Npar = %d\n", GetName(),
+                   GetNdim(), GetNpar());
          else {
-            printf("Function based on a list of points from a compiled based function: %s.  Ndim = %d, Npar = %d, Npx = %zu\n", GetName(), GetNpar(), GetNdim(), fSave.size());
+            printf("Function based on a list of points from a compiled based function: %s.  Ndim = %d, Npar = %d, Npx "
+                   "= %zu\n",
+                   GetName(), GetNdim(), GetNpar(), fSave.size());
             if (fSave.empty())
                Warning("Print", "Function %s is based on a list of points but list is empty", GetName());
          }
@@ -3354,6 +3375,9 @@ void TF1::SetRange(Double_t xmin, Double_t xmax)
 {
    fXmin = xmin;
    fXmax = xmax;
+   if (fType == EFType::kCompositionFcn && fComposition) {
+      fComposition->SetRange(xmin, xmax); // automatically updates sub-functions
+   }
    Update();
 }
 
@@ -3406,6 +3430,8 @@ void TF1::Streamer(TBuffer &b)
             R__LOCKGUARD(gROOTMutex);
             gROOT->GetListOfFunctions()->Add(this);
          }
+         if (v >= 10)
+            fComposition = std::unique_ptr<TF1AbsComposition>(fComposition_ptr);
          return;
       } else {
          ROOT::v5::TF1Data fold;
@@ -3473,11 +3499,14 @@ void TF1::Streamer(TBuffer &b)
    else {
       Int_t saved = 0;
       // save not-formula functions as array of points
-      if (fType > 0 && fSave.empty()) {
+      if (fType > 0 && fSave.empty() && fType != EFType::kCompositionFcn) {
          saved = 1;
          Save(fXmin, fXmax, 0, 0, 0, 0);
       }
-
+      if (fType == EFType::kCompositionFcn)
+         fComposition_ptr = fComposition.get();
+      else
+         fComposition_ptr = nullptr;
       b.WriteClassBuffer(TF1::Class(), this);
 
       // clear vector contents
@@ -3512,6 +3541,12 @@ void TF1::Update()
 
    // std::vector<double>x(fNdim);
    // if ((fType == 1) && !fFunctor->Empty())  (*fFunctor)x.data(), (Double_t*)fParams);
+   if (fType == EFType::kCompositionFcn && fComposition) {
+      // double-check that the parameters are correct
+      fComposition->SetParameters(GetParameters());
+
+      fComposition->Update(); // should not be necessary, but just to be safe
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

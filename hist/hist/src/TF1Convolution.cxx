@@ -39,17 +39,19 @@ If no function range is given by default the function1 range + 10% is used
 One should use also a not too small number of points for the DFT (a minimum of 1000).  By default 10000 points are used.
 */
 
+ClassImp(TF1Convolution);
+
 class TF1Convolution_EvalWrapper
 {
-   std::shared_ptr < TF1 > fFunction1;
-   std::shared_ptr < TF1 > fFunction2;
+   std::unique_ptr<TF1> fFunction1;
+   std::unique_ptr<TF1> fFunction2;
    Double_t fT0;
 
 public:
-
-   TF1Convolution_EvalWrapper(std::shared_ptr<TF1> & f1 , std::shared_ptr<TF1> & f2, Double_t t)
-      : fFunction1(f1), fFunction2(f2), fT0(t)
+   TF1Convolution_EvalWrapper(std::unique_ptr<TF1> &f1, std::unique_ptr<TF1> &f2, Double_t t) : fT0(t)
    {
+      fFunction1 = std::unique_ptr<TF1>((TF1 *)f1->Clone());
+      fFunction2 = std::unique_ptr<TF1>((TF1 *)f2->Clone());
    }
    Double_t operator()(Double_t x) const
    {
@@ -69,15 +71,19 @@ void TF1Convolution::InitializeDataMembers(TF1* function1, TF1* function2, Bool_
    if (function1) {
       TF1 * fnew1 = (TF1*) function1->IsA()->New();
       function1->Copy(*fnew1);
-      fFunction1  = std::shared_ptr<TF1>(fnew1);
+      fFunction1 = std::unique_ptr<TF1>(fnew1);
    }
    if (function2) {
       TF1 * fnew2 = (TF1*) function2->IsA()->New();
       function2->Copy(*fnew2);
-      fFunction2  = std::shared_ptr<TF1>(fnew2);
+      fFunction2 = std::unique_ptr<TF1>(fnew2);
    }
    if (fFunction1.get() == nullptr|| fFunction2.get() == nullptr)
       Fatal("InitializeDataMembers","Invalid functions - Abort");
+
+   // Set kNotGlobal bit
+   fFunction1->SetBit(TF1::kNotGlobal, kTRUE);
+   fFunction2->SetBit(TF1::kNotGlobal, kTRUE);
 
    // add by default an extra 10% on  each side
    fFunction1->GetRange(fXmin, fXmax);
@@ -90,7 +96,7 @@ void TF1Convolution::InitializeDataMembers(TF1* function1, TF1* function2, Bool_
    fParams2    = std::vector<Double_t>(fNofParams2);
    fCstIndex = (fFunction1->GetParNumber("Constant") == -1)
                   ? -1
-                  : fFunction2->GetParNumber("Constant"); // TODO: add dropConstantParam flag
+                  : fFunction2->GetParNumber("Constant"); // TODO: add dropConstantParam flag?
    fFlagFFT    = useFFT;
    fFlagGraph  = false;
    fNofPoints  = 10000;
@@ -113,6 +119,15 @@ void TF1Convolution::InitializeDataMembers(TF1* function1, TF1* function2, Bool_
       fParams2.erase(fParams2.begin()+fCstIndex);
    }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// constructor without arguments
+
+TF1Convolution::TF1Convolution()
+{
+   // Nothing to do
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor from the two function pointer and a flag is using FFT
 
@@ -130,6 +145,9 @@ TF1Convolution::TF1Convolution(TF1* function1, TF1* function2, Double_t xmin, Do
    if (xmin < xmax) {
       fXmin      = xmin;
       fXmax      = xmax;
+   } else {
+      Info("TF1Convolution", "Using default range [-inf, inf] for TF1Convolution");
+      SetRange(-TMath::Infinity(), TMath::Infinity());
    }
 }
 
@@ -154,15 +172,18 @@ TF1Convolution::TF1Convolution(TString formula,  Double_t xmin, Double_t xmax, B
          if (!f->GetFormula()->IsValid() )
             Error("TF1Convolution","Invalid formula : %s",stringarray[i].Data() );
          if (i == 0)
-            fFunction1 = std::shared_ptr<TF1>(f);
+            fFunction1 = std::unique_ptr<TF1>(f);
          else
-            fFunction2 = std::shared_ptr<TF1>(f);
+            fFunction2 = std::unique_ptr<TF1>(f);
       }
    }
    InitializeDataMembers(funcarray[0], funcarray[1],useFFT);
    if (xmin < xmax) {
       fXmin      = xmin;
       fXmax      = xmax;
+   } else {
+      Info("TF1Convolution", "Using default range [-inf, inf] for TF1Convolution");
+      SetRange(-TMath::Infinity(), TMath::Infinity());
    }
 }
 
@@ -181,12 +202,12 @@ TF1Convolution::TF1Convolution(TString formula1, TString formula2,  Double_t xmi
    TF1* f2 = (TF1*)(gROOT -> GetListOfFunctions() -> FindObject(formula2));
    // if function do not exists try using TFormula
    if (!f1) {
-      fFunction1 = std::shared_ptr<TF1>(new TF1("f_conv_1",formula1) );
+      fFunction1 = std::unique_ptr<TF1>(new TF1("f_conv_1", formula1));
       if (!fFunction1->GetFormula()->IsValid() )
          Error("TF1Convolution","Invalid formula for : %s",formula1.Data() );
    }
    if (!f2) {
-      fFunction2 = std::shared_ptr<TF1>(new TF1("f_conv_1",formula2) );
+      fFunction2 = std::unique_ptr<TF1>(new TF1("f_conv_1", formula2));
       if (!fFunction2->GetFormula()->IsValid() )
          Error("TF1Convolution","Invalid formula for : %s",formula2.Data() );
    }
@@ -195,7 +216,28 @@ TF1Convolution::TF1Convolution(TString formula1, TString formula2,  Double_t xmi
    if (xmin < xmax) {
       fXmin      = xmin;
       fXmax      = xmax;
+   } else {
+      Info("TF1Convolution", "Using default range [-inf, inf] for TF1Convolution");
+      SetRange(-TMath::Infinity(), TMath::Infinity());
    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor (necessary to hold unique_ptr as member variable)
+
+TF1Convolution::TF1Convolution(const TF1Convolution &conv)
+{
+   conv.Copy((TObject &)*this);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Operator =
+
+TF1Convolution &TF1Convolution::operator=(const TF1Convolution &rhs)
+{
+   if (this != &rhs)
+      rhs.Copy(*this);
+   return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -249,7 +291,8 @@ void TF1Convolution::MakeFFTConv()
    fftinverse -> Transform();
 
    // fill a graph with the result of the convolution
-   if (!fGraphConv) fGraphConv  = std::shared_ptr< TGraph >(new TGraph(fNofPoints));
+   if (!fGraphConv)
+      fGraphConv = std::unique_ptr<TGraph>(new TGraph(fNofPoints));
 
    for (int i=0;i<fNofPoints;i++)
    {
@@ -300,13 +343,15 @@ Double_t TF1Convolution::EvalNumConv(Double_t t)
 ////////////////////////////////////////////////////////////////////////////////
 /// Used in TF1 when doing the fit, will be evaluated at each point.
 
-Double_t TF1Convolution::operator()(Double_t* t, Double_t* p)
+Double_t TF1Convolution::operator()(const Double_t *x, const Double_t *p)
 {
    if (p!=0)   TF1Convolution::SetParameters(p);                           // first refresh the parameters
 
    Double_t result = 0.;
-   if (fFlagFFT)  result = EvalFFTConv(t[0]);
-   else           result = EvalNumConv(t[0]);
+   if (fFlagFFT)
+      result = EvalFFTConv(x[0]);
+   else
+      result = EvalNumConv(x[0]);
    return result;
 }
 
@@ -322,13 +367,13 @@ void TF1Convolution::SetNofPointsFFT(Int_t n)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void TF1Convolution::SetParameters(Double_t* p)
+void TF1Convolution::SetParameters(const Double_t *params)
 {
    bool equalParams = true;
    for (int i=0; i<fNofParams1; i++) {
-      fFunction1 -> SetParameter(i,p[i]);
-      equalParams &= ( fParams1[i] == p[i] );
-      fParams1[i] = p[i];
+      fFunction1->SetParameter(i, params[i]);
+      equalParams &= (fParams1[i] == params[i]);
+      fParams1[i] = params[i];
    }
    Int_t k       = 0;
    Int_t offset  = 0;
@@ -342,9 +387,9 @@ void TF1Convolution::SetParameters(Double_t* p)
          offset2=1;
          continue;
       }
-      fFunction2 -> SetParameter(k,p[i-offset2]);
-      equalParams &= ( fParams2[k-offset2] == p[i-offset2] );
-      fParams2[k-offset2] = p[i-offset2];
+      fFunction2->SetParameter(k, params[i - offset2]);
+      equalParams &= (fParams2[k - offset2] == params[i - offset2]);
+      fParams2[k - offset2] = params[i - offset2];
       k++;
    }
 
@@ -375,7 +420,11 @@ void TF1Convolution::SetExtraRange(Double_t percentage)
 
 void TF1Convolution::SetRange(Double_t a, Double_t b)
 {
-   if (a>=b)   return;
+   if (a >= b) {
+      Warning("SetRange", "Invalid range: %f >= %f", a, b);
+      return;
+   }
+
    fXmin = a;
    fXmax = b;
    if (fFlagFFT && ( a==-TMath::Infinity() || b==TMath::Infinity() ) )
@@ -387,4 +436,46 @@ void TF1Convolution::SetRange(Double_t a, Double_t b)
       SetExtraRange(0.1);
    }
    fFlagGraph = false;  // to indicate we need to re-do the convolution
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void TF1Convolution::GetRange(Double_t &a, Double_t &b) const
+{
+   a = fXmin;
+   b = fXmax;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///   Update the two component functions of the convolution
+
+void TF1Convolution::Update()
+{
+   fFunction1->Update();
+   fFunction2->Update();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void TF1Convolution::Copy(TObject &obj) const
+{
+   // copy numbers
+   ((TF1Convolution &)obj).fXmin = fXmin;
+   ((TF1Convolution &)obj).fXmax = fXmax;
+   ((TF1Convolution &)obj).fNofParams1 = fNofParams1;
+   ((TF1Convolution &)obj).fNofParams2 = fNofParams2;
+   ((TF1Convolution &)obj).fCstIndex = fCstIndex;
+   ((TF1Convolution &)obj).fNofPoints = fNofPoints;
+   ((TF1Convolution &)obj).fFlagFFT = fFlagFFT;
+   ((TF1Convolution &)obj).fFlagGraph = false; // since we're not copying the graph
+
+   // copy vectors
+   ((TF1Convolution &)obj).fParams1 = fParams1;
+   ((TF1Convolution &)obj).fParams2 = fParams2;
+   ((TF1Convolution &)obj).fParNames = fParNames;
+
+   // Clone unique_ptr's
+   ((TF1Convolution &)obj).fFunction1 = std::unique_ptr<TF1>((TF1 *)fFunction1->Clone());
+   ((TF1Convolution &)obj).fFunction2 = std::unique_ptr<TF1>((TF1 *)fFunction2->Clone());
+   // fGraphConv is transient anyway, so we don't bother to copy it
 }
