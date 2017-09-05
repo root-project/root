@@ -17,6 +17,12 @@ from contextlib import contextmanager
 import os
 import sys
 
+# Support both Python2 and Python3 at the same time
+if sys.version_info.major > 2 : 
+    _input = input
+else:
+    _input = raw_input
+
 def fileno(file_or_fd):
     """
     Look for 'fileno' attribute.
@@ -663,10 +669,10 @@ def deleteRootObject(rootFile, pathSplit, interactive, recursive):
     else:
         if interactive:
             if pathSplit != []:
-                answer = raw_input(ASK_OBJECT_REMOVE \
+                answer = _input(ASK_OBJECT_REMOVE \
                     .format("/".join(pathSplit),rootFile.GetName()))
             else:
-                answer = raw_input(ASK_FILE_REMOVE \
+                answer = _input(ASK_FILE_REMOVE \
                     .format(rootFile.GetName()))
             remove = answer.lower() == 'y'
         else:
@@ -708,7 +714,7 @@ REPLACE_HELP = "replace object if already existing"
 def _openBrowser(rootFile=None):
     browser = ROOT.TBrowser()
     if rootFile: rootFile.Browse(browser)
-    raw_input("Press enter to exit.")
+    _input("Press enter to exit.")
 
 def rootBrowse(fileName=None):
     if fileName:
