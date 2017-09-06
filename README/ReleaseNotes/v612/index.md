@@ -14,12 +14,12 @@ For more information, see:
 The following people have contributed to this new version:
 
  Bertrand Bellenot, CERN/SFT,\
- Georgios Bitzes, CERN/IT,\
  Rene Brun, CERN/SFT,\
  Philippe Canal, FNAL,\
  Olivier Couet, CERN/SFT,\
  Gerri Ganis, CERN/SFT,\
  Andrei Gheata, CERN/SFT,\
+ Enrico Guiraud, CERN/SFT,\
  Sergey Linev, GSI, http,\
  Pere Mato, CERN/SFT,\
  Lorenzo Moneta, CERN/SFT,\
