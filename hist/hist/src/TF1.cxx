@@ -1395,9 +1395,30 @@ Double_t TF1::EvalPar(const Double_t *x, const Double_t *params)
    return result;
 }
 
+#ifdef R__HAS_VECCORE
+////////////////////////////////////////////////////////////////////////////////
+///   Eval for vectorized functions
+
+ROOT::Double_v TF1::Eval(ROOT::Double_v x, ROOT::Double_v y, ROOT::Double_v z, ROOT::Double_v t) const
+{
+   if (fType == EFType::kFormula)
+      return fFormula->Eval(x, y, z, t);
+
+   ROOT::Double_v xx[] = {x, y, z, t};
+   Double_t *pp = (Double_t *)fParams->GetParameters();
+   if (fMethodCall) {
+      // todo test this case
+      Long_t args[2];
+      args[0] = (Long_t)xx;
+      args[1] = (Long_t)pp;
+      fMethodCall->SetParamPtrs(args);
+   }
+   return ((TF1 *)this)->EvalPar(xx, pp);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 ///   EvalPar for vectorized
-#ifdef R__HAS_VECCORE
+
 ROOT::Double_v TF1::EvalPar(const ROOT::Double_v *x, const Double_t *params)
 {
    if (fType == EFType::kTemplVec || fType == EFType::kTemplScalar) {

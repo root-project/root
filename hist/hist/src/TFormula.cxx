@@ -2956,14 +2956,12 @@ void TFormula::SetVectorized(Bool_t vectorized)
       fVectorized = vectorized;
       fClingInitialized = false;
       fReadyToExecute = false;
-      // fAllParametersSetted = true; // I don't think this will help at all
-      fMethod = nullptr;            // (todo check for memory leaks?)
+      fMethod = nullptr; // (todo check for memory leaks?)
       fClingName = "";
       fClingInput = fFormula;
 
       PreProcessFormula(fFormula);
-      Bool_t ret = PrepareFormula(fFormula);
-      std::cout << "Was PrepareFormula successful ? " << ret << std::endl;
+      PrepareFormula(fFormula);
    }
 #else
    if (vectorized)
@@ -2974,6 +2972,8 @@ void TFormula::SetVectorized(Bool_t vectorized)
 ////////////////////////////////////////////////////////////////////////////////
 Double_t TFormula::EvalPar(const Double_t *x,const Double_t *params) const
 {
+   std::cout << "starting evalpar" << std::endl; // todo remove
+
    if (!fVectorized)
       return DoEval(x, params);
 
@@ -3003,6 +3003,12 @@ Double_t TFormula::EvalPar(const Double_t *x,const Double_t *params) const
 
 ////////////////////////////////////////////////////////////////////////////////
 #ifdef R__HAS_VECCORE
+ROOT::Double_v TFormula::Eval(ROOT::Double_v x, ROOT::Double_v y, ROOT::Double_v z, ROOT::Double_v t) const
+{
+   ROOT::Double_v xxx[] = {x, y, z, t};
+   return EvalPar(xxx, nullptr);
+}
+
 ROOT::Double_v TFormula::EvalPar(const ROOT::Double_v *x, const Double_t *params) const
 {
    if (fVectorized)
@@ -3036,7 +3042,7 @@ ROOT::Double_v TFormula::EvalPar(const ROOT::Double_v *x, const Double_t *params
 Double_t TFormula::Eval(Double_t x, Double_t y, Double_t z, Double_t t) const
 {
    double xxx[4] = {x,y,z,t};
-   return DoEval(xxx);
+   return EvalPar(xxx, nullptr); // takes care of case where formula is vectorized
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3045,7 +3051,7 @@ Double_t TFormula::Eval(Double_t x, Double_t y, Double_t z, Double_t t) const
 Double_t TFormula::Eval(Double_t x, Double_t y , Double_t z) const
 {
    double xxx[3] = {x,y,z};
-   return DoEval(xxx);
+   return EvalPar(xxx, nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3054,7 +3060,7 @@ Double_t TFormula::Eval(Double_t x, Double_t y , Double_t z) const
 Double_t TFormula::Eval(Double_t x, Double_t y) const
 {
    double xxx[2] = {x,y};
-   return DoEval(xxx);
+   return EvalPar(xxx, nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3062,9 +3068,8 @@ Double_t TFormula::Eval(Double_t x, Double_t y) const
 
 Double_t TFormula::Eval(Double_t x) const
 {
-   //double xxx[1] = {x};
    double * xxx = &x;
-   return DoEval(xxx);
+   return EvalPar(xxx, nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3115,7 +3120,7 @@ Double_t TFormula::DoEval(const double * x, const double * params) const
    if (fNpar <= 0) {
       (*fFuncPtr)(0, 1, args, &result);
    } else {
-      double * pars = (params) ? const_cast<double*>(params) : const_cast<double*>(fClingParameters.data());
+      double *pars = (params) ? const_cast<double *>(params) : const_cast<double *>(fClingParameters.data());
       args[1] = &pars;
       (*fFuncPtr)(0, 2, args, &result);
    }
