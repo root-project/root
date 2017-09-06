@@ -26,6 +26,7 @@
 #include "TArrayI.h"
 #include "TList.h"
 #include "TH1.h"
+#include "TGraph.h"
 #include "TBufferJSON.h"
 #include "TApplication.h"
 #include "Riostream.h"
@@ -274,7 +275,7 @@ TString TWebCanvas::CreateSnapshot(TPad* pad, TPadWebSnapshot *master, TList *pr
          CreateSnapshot((TPad*) obj, curr, primitives_lst);
       } else if (obj->InheritsFrom(TH1::Class())) {
          TWebSnapshot *sub = new TWebSnapshot();
-         TH1 *hist = (TH1*) obj;
+         TH1 *hist = (TH1 *) obj;
          sub->SetObjectIDAsPtr(hist);
          sub->SetOption(iter.GetOption());
          sub->SetSnapshot(TWebSnapshot::kObject, obj);
@@ -287,6 +288,20 @@ TString TWebCanvas::CreateSnapshot(TPad* pad, TPadWebSnapshot *master, TList *pr
                curr->Add(CreateObjectSnapshot(fobj, fiter.GetOption()));
 
          primitives_lst->Add(hist->GetListOfFunctions());
+      } else if (obj->InheritsFrom(TGraph::Class())) {
+         TWebSnapshot *sub = new TWebSnapshot();
+         TGraph *gr = (TGraph *) obj;
+         sub->SetObjectIDAsPtr(gr);
+         sub->SetOption(iter.GetOption());
+         sub->SetSnapshot(TWebSnapshot::kObject, obj);
+         curr->Add(sub);
+
+         TIter fiter(gr->GetListOfFunctions());
+         TObject *fobj = 0;
+         while ((fobj = fiter()) != 0)
+            curr->Add(CreateObjectSnapshot(fobj, fiter.GetOption()));
+
+         primitives_lst->Add(gr->GetListOfFunctions());
       } else {
          curr->Add(CreateObjectSnapshot(obj, iter.GetOption()));
       }
@@ -296,7 +311,7 @@ TString TWebCanvas::CreateSnapshot(TPad* pad, TPadWebSnapshot *master, TList *pr
 
    // now move all primitives and functions into separate list to perform I/O
 
-   TBufferJSON::ExportToFile("canvas.json", pad);
+   // TBufferJSON::ExportToFile("canvas.json", pad);
 
    TList save_lst;
    TIter diter(&master_lst);
@@ -523,7 +538,6 @@ Bool_t TWebCanvas::DecodeAllRanges(const char *arg)
       DecodePadRanges(pad, curr);
    }
 
-   // if (isany) PerformUpdate();
    return kTRUE;
 }
 
@@ -575,6 +589,8 @@ Bool_t TWebCanvas::ProcessWS(THttpCallArg *arg)
 
       const char* cdata = (arg->GetPostDataLength()<=0) ? "" : (const char*) arg->GetPostData();
 
+      // printf("GET: %s\n", cdata);
+
       if (strncmp(cdata,"READY",5)==0) {
          conn->fReady = kTRUE;
          CheckDataToSend();
@@ -613,7 +629,9 @@ Bool_t TWebCanvas::ProcessWS(THttpCallArg *arg)
                Info("ProcessWS", "Obj %s Execute %s", obj->GetName(), exec.Data());
                gROOT->ProcessLine(exec);
 
-               PerformUpdate(); // check that canvas was changed
+               // PerformUpdate(); // check that canvas was changed
+               if (IsAnyPadModified(Canvas())) fCanvVersion++;
+               CheckDataToSend();
             }
          }
       } else if (strncmp(cdata,"EXECANDSEND:",12)==0) {
@@ -646,8 +664,6 @@ Bool_t TWebCanvas::ProcessWS(THttpCallArg *arg)
                conn->fSend.Append(TBufferJSON::ConvertToJSON(resobj,23));
                if (reply[0]=='D') delete resobj; // delete object if first symbol in reply is D
             }
-
-            // PerformUpdate(); // check that canvas was changed
 
             CheckDataToSend(); // check if data should be send
          }
@@ -753,18 +769,27 @@ Bool_t TWebCanvas::WaitWhenCanvasPainted(Long64_t ver)
    long cnt = 0;
    bool had_connection = false;
 
+   if (gDebug>2) Info("WaitWhenCanvasPainted", "version %ld", (long) ver);
+
    while (cnt++ < 1000) {
       if (fWebConn.size() > 0) had_connection = true;
 
-      if ((fWebConn.size() == 0) && (had_connection || (cnt > 800)))
+      if ((fWebConn.size() == 0) && (had_connection || (cnt > 800))) {
+         if (gDebug>2) Info("WaitWhenCanvasPainted", "no connections - abort");
          return kFALSE; // wait ~1 min if no new connection established
+      }
 
-      if ((fWebConn.size() > 0) && (fWebConn.front().fDrawVersion >= ver)) return kTRUE;
+      if ((fWebConn.size() > 0) && (fWebConn.front().fDrawVersion >= ver)) {
+         if (gDebug>2) Info("WaitWhenCanvasPainted", "ver %ld got painted", (long) ver);
+         return kTRUE;
+      }
 
       gSystem->ProcessEvents();
 
       gSystem->Sleep((cnt < 500) ? 1 : 100); // increase sleep interval when do very often
    }
+
+   if (gDebug>2) Info("WaitWhenCanvasPainted", "timeout");
 
    return kFALSE;
 }
