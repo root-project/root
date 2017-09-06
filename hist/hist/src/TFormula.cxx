@@ -2956,9 +2956,12 @@ void TFormula::SetVectorized(Bool_t vectorized)
       fVectorized = vectorized;
       fClingInitialized = false;
       fReadyToExecute = false;
-      fMethod = nullptr; // (todo check for memory leaks?)
       fClingName = "";
       fClingInput = fFormula;
+
+      if (fMethod)
+         fMethod->Delete();
+      fMethod = nullptr;
 
       PreProcessFormula(fFormula);
       PrepareFormula(fFormula);
@@ -2972,8 +2975,6 @@ void TFormula::SetVectorized(Bool_t vectorized)
 ////////////////////////////////////////////////////////////////////////////////
 Double_t TFormula::EvalPar(const Double_t *x,const Double_t *params) const
 {
-   std::cout << "starting evalpar" << std::endl; // todo remove
-
    if (!fVectorized)
       return DoEval(x, params);
 
@@ -3160,10 +3161,7 @@ ROOT::Double_v TFormula::DoEvalVec(const ROOT::Double_v *x, const double *params
    ROOT::Double_v result = 0;
    void *args[2];
 
-   // todo: to get the fClingVariables part working will require some more work,
-   // because all the "AddVariables" etc code assumes that the variables are
-   // doubles
-   ROOT::Double_v *vars = const_cast<ROOT::Double_v *>(x); // backup plan: fClingVariables.data()
+   ROOT::Double_v *vars = const_cast<ROOT::Double_v *>(x);
    args[0] = &vars;
    if (fNpar <= 0)
       (*fFuncPtr)(0, 1, args, &result);

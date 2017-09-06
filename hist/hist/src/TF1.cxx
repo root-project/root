@@ -1309,7 +1309,7 @@ Double_t TF1::Eval(Double_t x, Double_t y, Double_t z, Double_t t) const
 
    Double_t xx[4] = {x, y, z, t};
    Double_t *pp = (Double_t *)fParams->GetParameters();
-   if (fType == EFType::kInterpreted)((TF1 *)this)->InitArgs(xx, pp);
+   // if (fType == EFType::kInterpreted)((TF1 *)this)->InitArgs(xx, pp);
    return ((TF1 *)this)->EvalPar(xx, pp);
 }
 
@@ -1406,13 +1406,6 @@ ROOT::Double_v TF1::Eval(ROOT::Double_v x, ROOT::Double_v y, ROOT::Double_v z, R
 
    ROOT::Double_v xx[] = {x, y, z, t};
    Double_t *pp = (Double_t *)fParams->GetParameters();
-   if (fMethodCall) {
-      // todo test this case
-      Long_t args[2];
-      args[0] = (Long_t)xx;
-      args[1] = (Long_t)pp;
-      fMethodCall->SetParamPtrs(args);
-   }
    return ((TF1 *)this)->EvalPar(xx, pp);
 }
 
