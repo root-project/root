@@ -286,6 +286,9 @@ namespace TMVA {
       Bool_t                     fVerbose;           // Verbosity
       TString                    fVerboseLevel;      // VerboseLevel
 
+      // Printing
+      Bool_t fCorrelations; // Whether to print correlations or not
+
       Bool_t                     fScaleWithPreselEff; // how to deal with requested #events in connection with preselection cuts 
 
       // the event
@@ -302,8 +305,7 @@ namespace TMVA {
       MsgLogger*                 fLogger;          //! message logger
       MsgLogger& Log() const { return *fLogger; }
    public:
-       
-       ClassDef(DataSetFactory,1);
+      ClassDef(DataSetFactory, 2);
    };
 }
 
