@@ -4484,7 +4484,7 @@ Int_t TTree::Fill()
             // When we are in one-basket-per-cluster mode, there is no need to optimize basket:
             // they will automatically grow to the size needed for an event cluster (with the basket)
             // shrinking preventing them from growing too much larger than the actually-used space.
-            if (!TestBit(TTree::kFlushAtCluster)) {
+            if (!TestBit(TTree::kOnlyFlushAtCluster)) {
                OptimizeBaskets(GetTotBytes(), 1, "");
                if (gDebug > 0)
                   Info("TTree::Fill", "OptimizeBaskets called at entry %lld, fZipBytes=%lld, fFlushedBytes=%lld\n",

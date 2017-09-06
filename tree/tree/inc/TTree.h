@@ -229,9 +229,9 @@ public:
 
    // TTree status bits
    enum EStatusBits {
-      kForceRead      = BIT(11),
-      kCircular       = BIT(12),
-      kFlushAtCluster = BIT(13) // If set, the branch's buffers will grow until an event cluster boundary is hit,
+      kForceRead          = BIT(11),
+      kCircular           = BIT(12),
+      kOnlyFlushAtCluster = BIT(13) // If set, the branch's buffers will grow until an event cluster boundary is hit,
                                 // guaranteeing a basket per cluster.  This mode does not provide any guarantee on the
                                 // memory bounds in the case of extremely large events.
    };
