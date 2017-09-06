@@ -299,7 +299,8 @@ TString TWebCanvas::CreateSnapshot(TPad* pad, TPadWebSnapshot *master, TList *pr
          TIter fiter(gr->GetListOfFunctions());
          TObject *fobj = 0;
          while ((fobj = fiter()) != 0)
-            curr->Add(CreateObjectSnapshot(fobj, fiter.GetOption()));
+            if (!fobj->InheritsFrom("TPaveStats")) // stats should be created on the client side
+               curr->Add(CreateObjectSnapshot(fobj, fiter.GetOption()));
 
          primitives_lst->Add(gr->GetListOfFunctions());
       } else {
