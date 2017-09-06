@@ -133,7 +133,9 @@ protected:
    Float_t fTargetMemoryRatio{1.1}; ///<! Ratio for memory usage in uncompressed buffers versus actual occupancy.  1.0
                                     /// indicates basket should be resized to exact memory usage, but causes significant
    /// memory churn.
+#ifdef R__TRACK_BASKET_ALLOC_TIME
    ULong64_t fAllocationTime{0}; ///<! Time spent reallocating basket memory buffers, in microseconds.
+#endif
    UInt_t fAllocationCount{0};   ///<! Number of reallocations basket memory buffers.
 
    static Int_t     fgBranchStyle;        ///<  Old/New branch style
@@ -306,7 +308,9 @@ public:
    virtual void            AddTotBytes(Int_t tot) { if (fIMTFlush) { fIMTTotBytes += tot; } else { fTotBytes += tot; } }
    virtual void            AddZipBytes(Int_t zip) { if (fIMTFlush) { fIMTZipBytes += zip; } else { fZipBytes += zip; } }
    // NOTE: these counters aren't thread safe like the ones above.
+#ifdef R__TRACK_BASKET_ALLOC_TIME
    void AddAllocationTime(ULong64_t time) { fAllocationTime += time; }
+#endif
    void AddAllocationCount(UInt_t count) { fAllocationCount += count; }
    virtual Long64_t        AutoSave(Option_t* option = "");
    virtual Int_t           Branch(TCollection* list, Int_t bufsize = 32000, Int_t splitlevel = 99, const char* name = "");
@@ -378,7 +382,9 @@ public:
    virtual Int_t           FlushBaskets(Bool_t create_cluster = true) const;
    virtual const char     *GetAlias(const char* aliasName) const;
    UInt_t GetAllocationCount() const { return fAllocationCount; }
+#ifdef R__TRACK_BASKET_ALLOC_TIME
    ULong64_t GetAllocationTime() const { return fAllocationTime; }
+#endif
    virtual Long64_t        GetAutoFlush() const {return fAutoFlush;}
    virtual Long64_t        GetAutoSave()  const {return fAutoSave;}
    virtual TBranch        *GetBranch(const char* name);
