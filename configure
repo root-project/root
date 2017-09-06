@@ -6713,7 +6713,7 @@ check_explicit "$enable_tbb" "$enable_tbb_explicit" \
 #
 useimt="undef"
 if test "x$enable_imt" = "xyes"; then
-        usecxxmodules="define"
+        useimt="define"
         result "yes"
 fi
 
