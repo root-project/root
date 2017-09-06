@@ -21,7 +21,7 @@
 #include <vector>
 #include <list>
 #include <map>
-#include <Math/Math_vectypes.hxx>
+#include <Math/Types.h>
 
 class TFormulaFunction
 {
