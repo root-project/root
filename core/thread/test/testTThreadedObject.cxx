@@ -6,38 +6,26 @@
 
 using namespace ROOT;
 
-bool IsSameHist(const TH1F& a, const TH1F& b)
+void IsSameHist(const TH1F& a, const TH1F& b)
 {
-   if( 0 != strcmp(a.GetName(),b.GetName())) {
-      std::cout << "The names of the histograms differ: " << a.GetName() << " " << b.GetName() << std::endl;
-      return false;
-   }
-   if( 0 != strcmp(a.GetTitle(),b.GetTitle())) {
-      std::cout << "The title of the histograms differ: " << a.GetTitle() << " " << b.GetTitle() << std::endl;
-      return false;
-   }
+   EXPECT_STREQ(a.GetName(),b.GetName()) << "The names of the histograms differ: " << a.GetName() << " " << b.GetName() << std::endl;
+
+   EXPECT_STREQ(a.GetTitle(),b.GetTitle()) << "The title of the histograms differ: " << a.GetTitle() << " " << b.GetTitle() << std::endl;
+
    auto nbinsa = a.GetNbinsX();
    auto nbinsb = b.GetNbinsX();
-   if( nbinsa != nbinsb) {
-      std::cout << "The # of bins of the histograms differ: " << nbinsa << " " << nbinsb << std::endl;
-      return false;
-   }
+   EXPECT_DOUBLE_EQ(nbinsa,nbinsb) << "The # of bins of the histograms differ: " << nbinsa << " " << nbinsb << std::endl;
+
    for (int i=0;i<a.GetNbinsX();++i) {
       auto binca = a.GetBinContent(i);
       auto bincb = b.GetBinContent(i);
-      if (binca != bincb) {
-         std::cout << "The content of bin " << i << "  of the histograms differ: " << binca << " " << bincb << std::endl;
-         return false;
-      }
+      EXPECT_DOUBLE_EQ(binca,bincb) << "The content of bin " << i << "  of the histograms differ: " << binca << " " << bincb << std::endl;
+
       auto binea = a.GetBinError(i);
       auto bineb = b.GetBinError(i);
-      if (binea != bineb) {
-         std::cout << "The error of bin " << i << "  of the histograms differ: " << binea << " " << bineb << std::endl;
-         return false;
-      }
-   }
+      EXPECT_DOUBLE_EQ(binea,bineb) << "The error of bin " << i << "  of the histograms differ: " << binea << " " << bineb << std::endl;;
 
-   return true;
+   }
 }
 
 TEST(TThreadedObject, CreateAndDestroy)
@@ -50,7 +38,7 @@ TEST(TThreadedObject, Get)
    TH1F model("h","h",64, -4, 4);
    ROOT::TThreadedObject<TH1F> tto("h","h",64, -4, 4);
    auto h = tto.Get();
-   EXPECT_TRUE(IsSameHist(model,*h));
+   IsSameHist(model,*h);
 }
 
 TEST(TThreadedObject, GetAtSlot)
@@ -58,7 +46,7 @@ TEST(TThreadedObject, GetAtSlot)
    TH1F model("h","h",64, -4, 4);
    ROOT::TThreadedObject<TH1F> tto("h","h",64, -4, 4);
    auto h = tto.GetAtSlot(0);
-   EXPECT_TRUE(IsSameHist(model,*h));
+   IsSameHist(model,*h);
 }
 
 TEST(TThreadedObject, GetAtSlotUnchecked)
@@ -67,7 +55,7 @@ TEST(TThreadedObject, GetAtSlotUnchecked)
    ROOT::TThreadedObject<TH1F> tto("h","h",64, -4, 4);
    tto->SetName("h");
    auto h = tto.GetAtSlot(0);
-   EXPECT_TRUE(IsSameHist(model,*h));
+   IsSameHist(model,*h);
 }
 
 TEST(TThreadedObject, GetAtSlotRaw)
@@ -76,7 +64,7 @@ TEST(TThreadedObject, GetAtSlotRaw)
    ROOT::TThreadedObject<TH1F> tto("h","h",64, -4, 4);
    tto->SetName("h");
    auto h = tto.GetAtSlotRaw(0);
-   EXPECT_TRUE(IsSameHist(model,*h));
+   IsSameHist(model,*h);
 }
 
 TEST(TThreadedObject, SetAtSlot)
@@ -85,7 +73,7 @@ TEST(TThreadedObject, SetAtSlot)
    tto.SetAtSlot(1, std::make_shared<TH1F>("h","h",64, -4, 4));
    auto h0 = tto.GetAtSlot(0);
    auto h1 = tto.GetAtSlot(1);
-   EXPECT_TRUE(IsSameHist(*h0,*h1));
+   IsSameHist(*h0,*h1);
 }
 
 TEST(TThreadedObject, Merge)
@@ -106,7 +94,7 @@ TEST(TThreadedObject, Merge)
    tto->FillRandom("gaus");
    tto.GetAtSlot(1)->FillRandom("gaus");
    auto hsum = tto.Merge();
-   EXPECT_TRUE(IsSameHist(*hsum,m0));
+   IsSameHist(*hsum,m0);
 }
 
 TEST(TThreadedObject, SnapshotMerge)
@@ -127,10 +115,10 @@ TEST(TThreadedObject, SnapshotMerge)
    tto->FillRandom("gaus",100);
    tto.GetAtSlot(1)->FillRandom("gaus",100);
    auto hsum0 = tto.SnapshotMerge();
-   EXPECT_TRUE(IsSameHist(*hsum0,m0));
+   IsSameHist(*hsum0,m0);
    auto hsum1 = tto.SnapshotMerge();
-   EXPECT_TRUE(IsSameHist(*hsum1,m0));
-   EXPECT_TRUE(IsSameHist(*hsum1,*hsum0));
+   IsSameHist(*hsum1,m0);
+   IsSameHist(*hsum1,*hsum0);
    EXPECT_TRUE(hsum1 != hsum0);
 }
 
