@@ -127,12 +127,12 @@ public:
            Int_t   ReadBasketBytes(Long64_t pos, TFile *file);
    virtual void    Reset();
 
-           // Time spent reseting basket sizes (typically, at event cluster boundaries), in microseconds
-           ULong64_t ResetAllocationTime() const {return fResetAllocationTime;}
-           // Count of resets performed of basket size.
-           Bool_t  ResetAllocationCount() const {return fResetAllocation;}
+   // Time spent reseting basket sizes (typically, at event cluster boundaries), in microseconds
+   ULong64_t ResetAllocationTime() const { return fResetAllocationTime; }
+   // Count of resets performed of basket size.
+   Bool_t ResetAllocationCount() const { return fResetAllocation; }
 
-           Int_t   LoadBasketBuffers(Long64_t pos, Int_t len, TFile *file, TTree *tree = 0);
+   Int_t LoadBasketBuffers(Long64_t pos, Int_t len, TFile *file, TTree *tree = 0);
    Long64_t        CopyTo(TFile *to);
 
            void    SetBranch(TBranch *branch) { fBranch = branch; }

@@ -881,11 +881,9 @@ Int_t TBranch::FillImpl(ROOT::Internal::TBranchIMTHelper *imtHelper)
    // first event cluster is written out and *then* enable one-basket-per-cluster mode.
    bool noFlushAtCluster = !fTree->TestBit(TTree::kFlushAtCluster) || (fTree->GetAutoFlush() < 0);
 
-   if (noFlushAtCluster &&
-       !fTree->TestBit(TTree::kCircular) &&
-         ((fSkipZip && (lnew >= TBuffer::kMinimalSize)) ||
-          (buf->TestBit(TBufferFile::kNotDecompressed)) ||
-          ((lnew + (2 * nsize) + nbytes) >= fBasketSize))) {
+   if (noFlushAtCluster && !fTree->TestBit(TTree::kCircular) &&
+       ((fSkipZip && (lnew >= TBuffer::kMinimalSize)) || (buf->TestBit(TBufferFile::kNotDecompressed)) ||
+        ((lnew + (2 * nsize) + nbytes) >= fBasketSize))) {
       Int_t nout = WriteBasketImpl(basket, fWriteBasket, imtHelper);
       if (nout < 0) Error("TBranch::Fill", "Failed to write out basket.\n");
       return (nout >= 0) ? nbytes : -1;
