@@ -2811,7 +2811,9 @@ Int_t TBranch::WriteBasketImpl(TBasket* basket, Int_t where, ROOT::Internal::TBr
          fTotBytes += addbytes;
          fTree->AddTotBytes(addbytes);
          fTree->AddZipBytes(nout);
+#ifdef R__TRACK_BASKET_ALLOC_TIME
          fTree->AddAllocationTime(reusebasket->ResetAllocationTime());
+#endif
          fTree->AddAllocationCount(reusebasket->ResetAllocationCount());
       }
 

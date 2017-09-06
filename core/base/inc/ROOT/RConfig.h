@@ -579,5 +579,11 @@
   #define R__likely(expr) expr
 #endif
 
+// Setting this define causes ROOT to keep statistics about memory buffer allocation
+// time within the TTree.  Given that this is a "hot-path", we provide a mechanism
+// for enabling / disabling this at compile time by developers; default is disabled.
+#ifndef R__TRACK_BASKET_ALLOC_TIME
+//#define R__TRACK_BASKET_ALLOC_TIME 1
+#endif
 
 #endif
