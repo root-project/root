@@ -1124,6 +1124,16 @@ TCling::TCling(const char *name, const char *title)
            eArg = clingArgsStorage.end(); iArg != eArg; ++iArg)
       interpArgs.push_back(iArg->c_str());
 
+#ifdef R__USE_CXXMODULES
+   // Activate C++ modules support. If we are running within rootcling, it's up
+   // to rootcling to set this flag depending on whether it wants to produce
+   // C++ modules.
+   if (!fromRootCling) {
+      // We only set this flag, rest is done by the CIFactory.
+      interpArgs.push_back("-fmodules");
+   }
+#endif
+
 #ifdef R__EXTERN_LLVMDIR
    TString llvmResourceDir = R__EXTERN_LLVMDIR;
 #else
