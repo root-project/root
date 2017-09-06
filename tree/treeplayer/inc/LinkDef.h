@@ -109,6 +109,7 @@
 #pragma link C++ namespace ROOT::Detail::TDF;
 #pragma link C++ namespace ROOT::Experimental::TDF;
 #pragma link C++ class ROOT::Detail::TDF::TFilterBase-;
+#pragma link C++ class ROOT::Detail::TDF::TCustomColumnBase-;
 #pragma link C++ class ROOT::Internal::TDF::CountHelper-;
 #pragma link C++ class ROOT::Detail::TDF::TRangeBase-;
 #pragma link C++ class ROOT::Detail::TDF::TLoopManager-;
