@@ -26,6 +26,7 @@ Warning in <TClass::Init>: no dictionary for class AliESDfriend is available
 Warning in <TClass::Init>: no dictionary for class AliESDfriendTrack is available
 Warning in <TClass::Init>: no dictionary for class AliTrackPointArray is available
 Warning in <TClass::Init>: no dictionary for class AliESDEvent is available
+Warning: Unused class rule: AliRawDataErrorLog::ERawDataErrorLevel
 MakeProject has generated 26 classes in aliceesd
 MAKEP file has been generated
 aliceesd.so has been generated
