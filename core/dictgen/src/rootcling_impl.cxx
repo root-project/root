@@ -40,8 +40,8 @@ const char *rootClingHelp =
    " -v\tThe verbose flags have the following meaning:                          \n"
    "  -v   Display all messages                                                 \n"
    "  -v0  Display no messages at all.                                          \n"
-   "  -v1  Display only error messages (default).                               \n"
-   "  -v2  Display error and warning messages.                                  \n"
+   "  -v1  Display only error messages.                                         \n"
+   "  -v2  Display error and warning messages (default).                        \n"
    "  -v3  Display error, warning and note messages.                            \n"
    "  -v4  Display all messages                                                 \n"
    "                                                                            \n"
@@ -3879,6 +3879,10 @@ int RootClingMain(int argc,
          ic++;
       }
    }
+
+   // Set the default verbosity
+   ROOT::TMetaUtils::GetErrorIgnoreLevel() = ROOT::TMetaUtils::kWarning;
+
    if (!strcmp(argv[ic], "-v")) {
       ROOT::TMetaUtils::GetErrorIgnoreLevel() = ROOT::TMetaUtils::kError; // The default is kError
       ic++;
