@@ -92,7 +92,7 @@ private:
    Bool_t            fReadyToExecute;       //! trasient to force initialization
    Bool_t            fClingInitialized;  //!  transient to force re-initialization
    Bool_t            fAllParametersSetted;    // flag to control if all parameters are setted
-   TMethodCall*      fMethod;        //! pointer to methocall
+   TMethodCall *fMethod;                      //! pointer to methodcall
    TString           fClingName;     //! unique name passed to Cling to define the function ( double clingName(double*x, double*p) )
 
    TInterpreter::CallFuncIFacePtr_t::Generic_t fFuncPtr;   //!  function pointer
