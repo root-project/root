@@ -13,6 +13,7 @@ For more information, see:
 
 The following people have contributed to this new version:
 
+ Guilherme Amadio, CERN/SFT,\
  Bertrand Bellenot, CERN/SFT,\
  Rene Brun, CERN/SFT,\
  Philippe Canal, FNAL,\
@@ -20,7 +21,7 @@ The following people have contributed to this new version:
  Gerri Ganis, CERN/SFT,\
  Andrei Gheata, CERN/SFT,\
  Enrico Guiraud, CERN/SFT,\
- Sergey Linev, GSI, http,\
+ Sergey Linev, GSI,\
  Pere Mato, CERN/SFT,\
  Lorenzo Moneta, CERN/SFT,\
  Axel Naumann, CERN/SFT,\
@@ -63,6 +64,13 @@ or will be set to the address of the histogram read from the file.
 
 - Resolved O(N^2) scaling problem in ```TTree::Draw()``` observed when a branch that contains a
 large TClonesArray where each element contains another small vector container.
+
+### TDataFrame
+  - Improved documentation
+  - Fix race condition: concurrent deletion of TTreeReader/TTreeReaderValue
+  - Avoid virtual calls for parts of the analysis that are not jitted
+  - Improve checks for column name validity (throw if column does not exist and if `Define`d column overrides an already existing column)
+  - Remove "custom column" nodes from the functional graph therewith optimising the traversal
 
 ## Histogram Libraries
 
@@ -113,6 +121,8 @@ large TClonesArray where each element contains another small vector container.
 
 
 ## Parallelism
+  - Fix issue which prevented nested TBB task execution without race conditions, e.g. in TDataFrame
+  - Fix race condition in TTreeProcessorMT due to TBB nested task execution
   - The TTaskGroup class has been added to the ROOT::Experimental namespace. It allows to submit to the runtime
   item of work which are dealt with in parallel;
   - The Async template function has been added the ROOT::Experimental namespace. The template function is analogous
