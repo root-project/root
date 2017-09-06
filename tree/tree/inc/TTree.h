@@ -130,10 +130,11 @@ protected:
    UInt_t         fNEntriesSinceSorting;  ///<! Number of entries processed since the last re-sorting of branches
    std::vector<std::pair<Long64_t,TBranch*>> fSortedBranches; ///<! Branches to be processed in parallel when IMT is on, sorted by average task time
    std::vector<TBranch*> fSeqBranches;    ///<! Branches to be processed sequentially when IMT is on
-   Float_t        fTargetMemoryRatio{1.1}; ///<! Ratio for memory usage in uncompressed buffers versus actual occupancy.  1.0 indicates basket should be resized to exact memory usage, but causes significant memory churn.
-   ULong64_t      fAllocationTime{0};        ///<! Time spent reallocating basket memory buffers, in microseconds.
-   UInt_t         fAllocationCount{0};       ///<! Number of reallocations basket memory buffers.
-
+   Float_t fTargetMemoryRatio{1.1}; ///<! Ratio for memory usage in uncompressed buffers versus actual occupancy.  1.0
+                                    /// indicates basket should be resized to exact memory usage, but causes significant
+   /// memory churn.
+   ULong64_t fAllocationTime{0}; ///<! Time spent reallocating basket memory buffers, in microseconds.
+   UInt_t fAllocationCount{0};   ///<! Number of reallocations basket memory buffers.
 
    static Int_t     fgBranchStyle;        ///<  Old/New branch style
    static Long64_t  fgMaxTreeSize;        ///<  Maximum size of a file containing a Tree
@@ -228,9 +229,11 @@ public:
 
    // TTree status bits
    enum EStatusBits {
-      kForceRead   = BIT(11),
-      kCircular    = BIT(12),
-      kFlushAtCluster = BIT(13)     // If set, the branch's buffers will grow until an event cluster boundary is hit, guaranteeing a basket per cluster.  This mode does not provide any guarantee on the memory bounds in the case of extremely large events.
+      kForceRead      = BIT(11),
+      kCircular       = BIT(12),
+      kFlushAtCluster = BIT(13) // If set, the branch's buffers will grow until an event cluster boundary is hit,
+                                // guaranteeing a basket per cluster.  This mode does not provide any guarantee on the
+                                // memory bounds in the case of extremely large events.
    };
 
    // Split level modifier
@@ -303,8 +306,8 @@ public:
    virtual void            AddTotBytes(Int_t tot) { if (fIMTFlush) { fIMTTotBytes += tot; } else { fTotBytes += tot; } }
    virtual void            AddZipBytes(Int_t zip) { if (fIMTFlush) { fIMTZipBytes += zip; } else { fZipBytes += zip; } }
    // NOTE: these counters aren't thread safe like the ones above.
-           void            AddAllocationTime(ULong64_t time) { fAllocationTime += time; }
-           void            AddAllocationCount(UInt_t count) { fAllocationCount += count; }
+   void AddAllocationTime(ULong64_t time) { fAllocationTime += time; }
+   void AddAllocationCount(UInt_t count) { fAllocationCount += count; }
    virtual Long64_t        AutoSave(Option_t* option = "");
    virtual Int_t           Branch(TCollection* list, Int_t bufsize = 32000, Int_t splitlevel = 99, const char* name = "");
    virtual Int_t           Branch(TList* list, Int_t bufsize = 32000, Int_t splitlevel = 99);
@@ -374,8 +377,8 @@ public:
    virtual Int_t           Fit(const char* funcname, const char* varexp, const char* selection = "", Option_t* option = "", Option_t* goption = "", Long64_t nentries = kMaxEntries, Long64_t firstentry = 0); // *MENU*
    virtual Int_t           FlushBaskets(Bool_t create_cluster = true) const;
    virtual const char     *GetAlias(const char* aliasName) const;
-           UInt_t          GetAllocationCount() const {return fAllocationCount;}
-           ULong64_t       GetAllocationTime() const {return fAllocationTime;}
+   UInt_t GetAllocationCount() const { return fAllocationCount; }
+   ULong64_t GetAllocationTime() const { return fAllocationTime; }
    virtual Long64_t        GetAutoFlush() const {return fAutoFlush;}
    virtual Long64_t        GetAutoSave()  const {return fAutoSave;}
    virtual TBranch        *GetBranch(const char* name);
@@ -447,7 +450,7 @@ public:
    virtual TTree          *GetTree() const { return const_cast<TTree*>(this); }
    virtual TVirtualIndex  *GetTreeIndex() const { return fTreeIndex; }
    virtual Int_t           GetTreeNumber() const { return 0; }
-           Float_t         GetTargetMemoryRatio() const { return fTargetMemoryRatio; }
+   Float_t GetTargetMemoryRatio() const { return fTargetMemoryRatio; }
    virtual Int_t           GetUpdate() const { return fUpdate; }
    virtual TList          *GetUserInfo();
    // See TSelectorDraw::GetVar
@@ -576,7 +579,7 @@ public:
    virtual void            SetParallelUnzip(Bool_t opt=kTRUE, Float_t RelSize=-1);
    virtual void            SetPerfStats(TVirtualPerfStats* perf);
    virtual void            SetScanField(Int_t n = 50) { fScanField = n; } // *MENU*
-           void            SetTargetMemoryRatio(Float_t ratio) { fTargetMemoryRatio = ratio; }
+   void SetTargetMemoryRatio(Float_t ratio) { fTargetMemoryRatio = ratio; }
    virtual void            SetTimerInterval(Int_t msec = 333) { fTimerInterval=msec; }
    virtual void            SetTreeIndex(TVirtualIndex* index);
    virtual void            SetWeight(Double_t w = 1, Option_t* option = "");

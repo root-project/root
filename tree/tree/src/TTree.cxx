@@ -4485,7 +4485,7 @@ Int_t TTree::Fill()
             // they will automatically grow to the size needed for an event cluster (with the basket)
             // shrinking preventing them from growing too much larger than the actually-used space.
             if (!TestBit(TTree::kFlushAtCluster)) {
-               OptimizeBaskets(GetTotBytes(),1,"");
+               OptimizeBaskets(GetTotBytes(), 1, "");
                if (gDebug > 0)
                   Info("TTree::Fill", "OptimizeBaskets called at entry %lld, fZipBytes=%lld, fFlushedBytes=%lld\n",
                        fEntries, GetZipBytes(), fFlushedBytes);

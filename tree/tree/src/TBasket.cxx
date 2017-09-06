@@ -748,15 +748,17 @@ void TBasket::Reset()
 
    Float_t target_mem_ratio = fBranch->GetTree()->GetTargetMemoryRatio();
    ssize_t max_size = std::max(fLastWriteBufferSize[0], std::max(fLastWriteBufferSize[1], fLastWriteBufferSize[2]));
-   Int_t target_size = static_cast<Int_t>(target_mem_ratio*Float_t(max_size));
+   Int_t target_size = static_cast<Int_t>(target_mem_ratio * Float_t(max_size));
    if (max_size && (curSize > target_size) && (newSize == -1)) {
       newSize = target_size;
-      newSize = newSize + 512 - newSize % 512;  // Wiggle room and alignment, as above.
+      newSize = newSize + 512 - newSize % 512; // Wiggle room and alignment, as above.
       // We only bother with a resize if it saves 8KB (two normal memory pages).
-      if ((newSize > curSize - 8*1024) || (static_cast<Float_t>(curSize)/static_cast<Float_t>(newSize) < target_mem_ratio)){
+      if ((newSize > curSize - 8 * 1024) ||
+          (static_cast<Float_t>(curSize) / static_cast<Float_t>(newSize) < target_mem_ratio)) {
          newSize = -1;
       } else if (gDebug > 0) {
-         Info("TBasket::Reset", "Resizing to %ld bytes (was %d); last three sizes were [%d, %d, %d].", newSize, curSize, fLastWriteBufferSize[0], fLastWriteBufferSize[1], fLastWriteBufferSize[2]);
+         Info("TBasket::Reset", "Resizing to %ld bytes (was %d); last three sizes were [%d, %d, %d].", newSize, curSize,
+              fLastWriteBufferSize[0], fLastWriteBufferSize[1], fLastWriteBufferSize[2]);
       }
    }
 
@@ -772,7 +774,7 @@ void TBasket::Reset()
 
    // Record the actual occupied size of the buffer.
    fLastWriteBufferSize[fNextBufferSizeRecord] = curLen;
-   fNextBufferSizeRecord = (fNextBufferSizeRecord+1) % 3;
+   fNextBufferSizeRecord = (fNextBufferSizeRecord + 1) % 3;
 
    TKey::Reset();
 
