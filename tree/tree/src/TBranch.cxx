@@ -879,7 +879,7 @@ Int_t TBranch::FillImpl(ROOT::Internal::TBranchIMTHelper *imtHelper)
    // based upon the number of bytes already flushed.  This is incompatible with one-basket-per-cluster
    // (since we will grow the basket indefinitely and never flush!).  Hence, we wait until the
    // first event cluster is written out and *then* enable one-basket-per-cluster mode.
-   bool noFlushAtCluster = !fTree->TestBit(TTree::kFlushAtCluster) || (fTree->GetAutoFlush() < 0);
+   bool noFlushAtCluster = !fTree->TestBit(TTree::kOnlyFlushAtCluster) || (fTree->GetAutoFlush() < 0);
 
    if (noFlushAtCluster && !fTree->TestBit(TTree::kCircular) &&
        ((fSkipZip && (lnew >= TBuffer::kMinimalSize)) || (buf->TestBit(TBufferFile::kNotDecompressed)) ||
