@@ -1140,7 +1140,7 @@ function(ROOT_ADD_TEST test)
   endif()
 
   #- Locate the test driver
-  find_file(ROOT_TEST_DRIVER RootTestDriver.cmake PATHS ${THISDIR} ${CMAKE_MODULE_PATH})
+  find_file(ROOT_TEST_DRIVER RootTestDriver.cmake PATHS ${THISDIR} ${CMAKE_MODULE_PATH} NO_DEFAULT_PATH)
   if(NOT ROOT_TEST_DRIVER)
     message(FATAL_ERROR "ROOT_ADD_TEST: RootTestDriver.cmake not found!")
   endif()
