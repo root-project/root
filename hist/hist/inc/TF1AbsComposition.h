@@ -11,6 +11,8 @@
 #ifndef ROOT_TF1AbsComposition__
 #define ROOT_TF1AbsComposition__
 
+#include "TObject.h"
+
 #include <iostream>
 #include <memory>
 
