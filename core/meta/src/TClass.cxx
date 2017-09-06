@@ -4372,6 +4372,19 @@ TVirtualStreamerInfo* TClass::GetStreamerInfo(Int_t version /* = 0 */) const
    if (sinfo && sinfo->GetClassVersion() == version)
       return sinfo;
 
+   // Note that the access to fClassVersion above is technically not thread-safe with a low probably of problems.
+   // fClassVersion is not an atomic and is modified TClass::SetClassVersion (called from RootClassVersion via
+   // ROOT::ResetClassVersion) and is 'somewhat' protected by the atomic fVersionUsed.
+   // However, direct access to fClassVersion should be replaced by calls to GetClassVersion to set fVersionUsed.
+   // Even with such a change the code here and in these functions need to be reviewed as a cursory look seem
+   // to indicates they are not yet properly protection against mutli-thread access.
+   //
+   // However, the use of these functions is rare and mostly done at library loading time which should
+   // in almost all cases preceeds the possibility of GetStreamerInfo being called from multiple thread
+   // on that same TClass object.
+   //
+   // Summary: need careful review but risk of problem is extremely low.
+
    R__LOCKGUARD(gInterpreterMutex);
 
    // Warning: version may be -1 for an emulated class, or -2 if the
