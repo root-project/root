@@ -4381,7 +4381,7 @@ TVirtualStreamerInfo* TClass::GetStreamerInfo(Int_t version /* = 0 */) const
    if ((version < -1) || (version >= fStreamerInfo->GetSize())) {
       Error("GetStreamerInfo", "class: %s, attempting to access a wrong version: %d", GetName(), version);
       // FIXME: Shouldn't we go to -1 here, or better just abort?
-      version = 0;
+      version = fClassVersion;
    }
 
    sinfo = (TVirtualStreamerInfo *)fStreamerInfo->At(version);
