@@ -277,8 +277,11 @@ Double_t TMVA::MethodCrossEvaluation::GetMvaValue( Double_t* err, Double_t* errU
 
 const std::vector<Float_t> & TMVA::MethodCrossEvaluation::GetMulticlassValues()
 {
-   Log() << kFATAL << "Multiclass not implemented for CrossEvaluation" << Endl;
-   return fNotImplementedRetValVec;
+   const Event *ev = GetEvent();
+   auto val = ev->GetSpectator(fIdxSpec);
+   UInt_t iFold = (UInt_t)val % (UInt_t)fNumFolds;
+
+   return fEncapsulatedMethods.at(iFold)->GetMulticlassValues();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
