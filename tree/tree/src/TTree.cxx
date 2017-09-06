@@ -883,7 +883,9 @@ TTree::~TTree()
 {
    if (fAllocationCount && (gDebug > 0)) {
       Info("TTree::~TTree", "For tree %s, allocation count is %u.", GetName(), fAllocationCount);
+#ifdef R__TRACK_BASKET_ALLOC_TIME
       Info("TTree::~TTree", "For tree %s, allocation time is %lluus.", GetName(), fAllocationTime);
+#endif
    }
 
    if (fDirectory) {

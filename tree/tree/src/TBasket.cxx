@@ -708,7 +708,9 @@ void TBasket::Reset()
 {
    // By default, we don't reallocate.
    fResetAllocation = false;
+#ifdef R__TRACK_BASKET_ALLOC_TIME
    fResetAllocationTime = 0;
+#endif
 
    // Name, Title, fClassName, fBranch
    // stay the same.
@@ -764,12 +766,16 @@ void TBasket::Reset()
 
    if (newSize != -1) {
       fResetAllocation = true;
+#ifdef R__TRACK_BASKET_ALLOC_TIME
       std::chrono::time_point<std::chrono::system_clock> start, end;
       start = std::chrono::high_resolution_clock::now();
+#endif
       fBufferRef->Expand(newSize,kFALSE);     // Expand without copying the existing data.
+#ifdef R__TRACK_BASKET_ALLOC_TIME
       end = std::chrono::high_resolution_clock::now();
       auto us = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
       fResetAllocationTime = us.count();
+#endif
    }
 
    // Record the actual occupied size of the buffer.
