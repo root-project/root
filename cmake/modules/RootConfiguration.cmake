@@ -507,6 +507,11 @@ if(gcctoolchain)
 else()
   set(setgcctoolchain undef)
 endif()
+if(memory_termination)
+  set(memory_term define)
+else()
+  set(memory_term undef)
+endif()
 
 CHECK_CXX_SOURCE_COMPILES("#include <string_view>
   int main() { char arr[3] = {'B', 'a', 'r'}; std::string_view strv(arr, sizeof(arr)); return 0;}" found_stdstringview)

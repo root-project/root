@@ -37,6 +37,7 @@
 #@hasstdinvoke@ R__HAS_STD_INVOKE /**/
 #@hasllvm@ R__EXTERN_LLVMDIR @llvmdir@
 #@useimt@ R__USE_IMT   /**/
+#@memory_term@ R__COMPLETE_MEM_TERMINATION /**/
 
 #if defined(R__HAS_VECCORE) && defined(R__HAS_VC)
 #ifndef VECCORE_ENABLE_VC
