@@ -1708,8 +1708,6 @@ Bool_t TFormula::PrepareFormula(TString &formula)
 
    // use inputFormula for Cling
    ProcessFormula(fClingInput);
-   std::cout << "done with ProcessFormula" << std::endl; // todo remove
-   std::cout << "fNumber is " << fNumber << std::endl;
 
    // for pre-defined functions (need after processing)
    if (fNumber != 0) SetPredefinedParamNames();
@@ -2268,22 +2266,13 @@ void TFormula::ProcessFormula(TString &formula)
 
    // clean up un-used default variables in case formula is valid
    if (fClingInitialized && fReadyToExecute) {
-      std::cout << "cleanup stage" << std::endl; // todo remove
-
-      auto itvar = fVars.begin();
-      do {
-         std::cout << "start do-loop" << std::endl; // todo remove
-         if (!itvar->second.fFound) {
-            std::cout << "Erase variable " << itvar->first << std::endl; // todo comment
-            itvar = fVars.erase(itvar);
-         } else {
-            std::cout << "increment itvar++ from " << itvar->first << std::endl; // todo remove
-            itvar++;
+      for (auto itvar : fVars) {
+         if (!itvar.second.fFound) {
+            // std::cout << "Erase variable " << itvar.first << std::endl;
+            fVars.erase(itvar.first);
          }
-      } while (itvar != fVars.end());
+      }
    }
-
-   std::cout << "done with ProcessFormula (1)" << std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2985,12 +2974,10 @@ void TFormula::SetVectorized(Bool_t vectorized)
 ////////////////////////////////////////////////////////////////////////////////
 Double_t TFormula::EvalPar(const Double_t *x,const Double_t *params) const
 {
-   std::cout << "fNdim is " << fNdim << std::endl; // todo remove line
-
    if (!fVectorized)
       return DoEval(x, params);
 
-   if (fNdim == 0)
+   if (fNdim == 0 || !x)
       return DoEvalVec(nullptr, params)[0];
 
 // otherwise, regular Double_t inputs on a vectorized function
@@ -3021,8 +3008,8 @@ ROOT::Double_v TFormula::EvalPar(const ROOT::Double_v *x, const Double_t *params
    if (fVectorized)
       return DoEvalVec(x, params);
 
-   if (fNdim == 0)
-      return DoEval(nullptr, params);
+   if (fNdim == 0 || !x)
+      return DoEval(nullptr, params); // automatic conversion to vectorized
 
    // otherwise, trying to input vectors into a scalar function
 

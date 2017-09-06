@@ -124,12 +124,8 @@ protected:
    Int_t                          fNpar;  //!
    Int_t                          fNumber;  //!
    std::vector<TObject*>          fLinearParts;  // vector of linear functions
-
-#ifdef R__HAS_VECCORE
-   Bool_t fVectorized = true; // whether we should use vectorized or regular variables
-#else
    Bool_t fVectorized = false; // whether we should use vectorized or regular variables
-#endif
+   // (we default to false since a lot of functions still cannot be expressed in vectorized form)
 
    static Bool_t IsOperator(const char c);
    static Bool_t IsBracket(const char c);
