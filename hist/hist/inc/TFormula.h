@@ -124,7 +124,7 @@ protected:
    Int_t                          fNpar;  //!
    Int_t                          fNumber;  //!
    std::vector<TObject*>          fLinearParts;  // vector of linear functions
-   Bool_t fVectorized = false; // whether we should use vectorized or regular variables
+   Bool_t fVectorized = false;                   // whether we should use vectorized or regular variables
    // (we default to false since a lot of functions still cannot be expressed in vectorized form)
 
    static Bool_t IsOperator(const char c);
@@ -175,6 +175,7 @@ public:
    Double_t       Eval(Double_t x, Double_t y , Double_t z , Double_t t ) const;
    Double_t       EvalPar(const Double_t *x, const Double_t *params=0) const;
 #ifdef R__HAS_VECCORE
+   ROOT::Double_v Eval(ROOT::Double_v x, ROOT::Double_v y = 0, ROOT::Double_v z = 0, ROOT::Double_v t = 0) const;
    ROOT::Double_v EvalPar(const ROOT::Double_v *x, const Double_t *params = 0) const;
 #endif
    TString        GetExpFormula(Option_t *option="") const;
