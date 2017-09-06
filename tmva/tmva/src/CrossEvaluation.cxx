@@ -139,7 +139,7 @@ void TMVA::CrossEvaluation::InitOptions()
 
 void TMVA::CrossEvaluation::ParseOptions()
 {
-   this->MethodBase::ParseOptions();
+   this->Envelope::ParseOptions();
 
    fAnalysisTypeStr.ToLower();
    if     ( fAnalysisTypeStr == "classification" ) fAnalysisType = Types::kClassification;
