@@ -2805,6 +2805,10 @@ if test "x$enable_cxxmodules" = "xyes"; then
 fi
 
 ######################################################################
+# Destruct global/static variables. Always off in classic build.
+memory_term="undef"
+
+######################################################################
 #
 ### echo %%% libc++ - compile and link using libc++
 #
@@ -8188,6 +8192,7 @@ sed \
     -e "s|@usec++14@|$usecxx14|"           \
     -e "s|@usec++17@|$usecxx17|"           \
     -e "s|@usecxxmodules@|$usecxxmodules|" \
+    -e "s|@memory_term@|$memory_term|"     \
     -e "s|@uselibc++@|$uselibcxx|"         \
     -e "s|@hasstdstringview@|$hasstdstringview|"       \
     -e "s|@hasstdexpstringview@|$hasstdexpstringview|" \
