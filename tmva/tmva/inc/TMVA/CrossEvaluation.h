@@ -71,16 +71,15 @@ namespace TMVA {
 
       void ClearFoldResultsCache();
 
-      
-      
-
       Types::EAnalysisType fAnalysisType;    //! Indicates 
-      TString              fAnalysisTypeStr; //! Indicates 
+      TString              fAnalysisTypeStr; //! Indicates
+      Bool_t               fCorrelations;
       Bool_t               fFoldStatus;      //!
       UInt_t               fNumFolds;        //!
       TFile *              fOutputFile;
       Bool_t               fSilent;
       TString              fSplitSpectator;
+      Bool_t               fROC;
       TString              fTransformations;
       Bool_t               fVerbose;
       TString              fVerboseLevel;

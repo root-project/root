@@ -118,7 +118,10 @@ void TMVA::CrossEvaluation::InitOptions()
    AddPreDefVal(TString("Info"));
    
    DeclareOptionRef( fTransformations, "Transformations", "List of transformations to test; formatting example: \"Transformations=I;D;P;U;G,D\", for identity, decorrelation, PCA, Uniform and Gaussianisation followed by decorrelation transformations" );
-   
+
+   DeclareOptionRef(fCorrelations, "Correlations", "Boolean to show correlation in output");
+   DeclareOptionRef(fROC, "ROC", "Boolean to show ROC in output");
+
    TString analysisType("Auto");
    DeclareOptionRef( fAnalysisTypeStr, "AnalysisType", "Set the analysis type (Classification, Regression, Multiclass, Auto) (default: Auto)" );
    AddPreDefVal(TString("Classification"));
@@ -166,6 +169,22 @@ void TMVA::CrossEvaluation::ParseOptions()
       fOutputFactoryOptions += Form("Transformations=%s:", fTransformations.Data());
    }
 
+   if (fCorrelations) {
+      // fCvFactoryOptions += "Correlations:";
+      fOutputFactoryOptions += "Correlations:";
+   } else {
+      // fCvFactoryOptions += "!Correlations:";
+      fOutputFactoryOptions += "!Correlations:";
+   }
+
+   if (fROC) {
+      // fCvFactoryOptions += "ROC:";
+      fOutputFactoryOptions += "ROC:";
+   } else {
+      // fCvFactoryOptions += "!ROC:";
+      fOutputFactoryOptions += "!ROC:";
+   }
+
    if (fModelPersistence) {
       fCvFactoryOptions += Form("ModelPersistence:");
    } else {
@@ -173,11 +192,12 @@ void TMVA::CrossEvaluation::ParseOptions()
    }
 
    if (fSilent) {
-      fCvFactoryOptions += Form("Silent:");
+      // fCvFactoryOptions += Form("Silent:");
       fOutputFactoryOptions += Form("Silent:");
    }
 
-   fFoldFactory = std::unique_ptr<TMVA::Factory>(new TMVA::Factory("CrossEvaluation_internal", fCvFactoryOptions + "!ROC:!Color:!DrawProgressBar"));
+   fFoldFactory = std::unique_ptr<TMVA::Factory>(new TMVA::Factory(
+      "CrossEvaluation_internal", fCvFactoryOptions + "!Correlations:!ROC:!Color:!DrawProgressBar:Silent"));
 
    // The fOutputFactory should always have !ModelPersitence set since we use a custom code path for this.
    //    In this case we create a special method (MethodCrossEvaluation) that can only be used by
