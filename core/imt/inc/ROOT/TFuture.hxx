@@ -38,13 +38,16 @@ class TFuture;
 namespace Detail {
 template <typename T>
 class TFutureImpl {
-   template<typename V> friend class Experimental::TFuture;
+   template <typename V>
+   friend class Experimental::TFuture;
+
 protected:
    using TTaskGroup = Experimental::TTaskGroup;
    std::future<T> fStdFut;
-   std::unique_ptr<TTaskGroup> fTg {nullptr};
+   std::unique_ptr<TTaskGroup> fTg{nullptr};
 
-   TFutureImpl(std::future<T> &&fut, std::unique_ptr<TTaskGroup> &&tg) : fStdFut(std::move(fut)) {
+   TFutureImpl(std::future<T> &&fut, std::unique_ptr<TTaskGroup> &&tg) : fStdFut(std::move(fut))
+   {
       fTg = std::move(tg);
    };
    TFutureImpl(){};
@@ -53,20 +56,20 @@ protected:
 
    TFutureImpl(TFutureImpl<T> &&other) : fStdFut(std::move(other.fStdFut)), fTg(std::move(other.fTg)) {}
 
-   TFutureImpl &operator=(std::future<T> &&other)
-   {
-      fStdFut = std::move(other);
-   }
+   TFutureImpl &operator=(std::future<T> &&other) { fStdFut = std::move(other); }
 
    TFutureImpl<T> &operator=(TFutureImpl<T> &&other) = default;
 
 public:
-
    TFutureImpl<T> &operator=(TFutureImpl<T> &other) = delete;
 
    TFutureImpl(const TFutureImpl<T> &other) = delete;
 
-   void wait() { if (fTg) fTg->Wait(); }
+   void wait()
+   {
+      if (fTg)
+         fTg->Wait();
+   }
 
    bool valid() const { return fStdFut.valid(); };
 };
@@ -78,13 +81,17 @@ namespace Experimental {
 /// A TFuture class. It can wrap an std::future.
 template <typename T>
 class TFuture final : public ROOT::Detail::TFutureImpl<T> {
-template <class Function, class... Args>
-   friend TFuture<typename std::result_of<typename std::decay<Function>::type(typename std::decay<Args>::type...)>::type> Async(Function &&f, Args &&... args);
+   template <class Function, class... Args>
+   friend TFuture<
+      typename std::result_of<typename std::decay<Function>::type(typename std::decay<Args>::type...)>::type>
+   Async(Function &&f, Args &&... args);
+
 private:
    TFuture(std::future<T> &&fut, std::unique_ptr<TTaskGroup> &&tg)
       : ROOT::Detail::TFutureImpl<T>(std::forward<std::future<T>>(fut), std::move(tg)){};
+
 public:
-   TFuture(std::future<T> &&fut) : ROOT::Detail::TFutureImpl<T>(std::forward<std::future<T>>(fut)) {};
+   TFuture(std::future<T> &&fut) : ROOT::Detail::TFutureImpl<T>(std::forward<std::future<T>>(fut)){};
 
    T get()
    {
@@ -96,13 +103,17 @@ public:
 // Two specialisations, for void and T& as for std::future
 template <>
 class TFuture<void> final : public ROOT::Detail::TFutureImpl<void> {
-template <class Function, class... Args>
-   friend TFuture<typename std::result_of<typename std::decay<Function>::type(typename std::decay<Args>::type...)>::type> Async(Function &&f, Args &&... args);
+   template <class Function, class... Args>
+   friend TFuture<
+      typename std::result_of<typename std::decay<Function>::type(typename std::decay<Args>::type...)>::type>
+   Async(Function &&f, Args &&... args);
+
 private:
    TFuture(std::future<void> &&fut, std::unique_ptr<TTaskGroup> &&tg)
       : ROOT::Detail::TFutureImpl<void>(std::forward<std::future<void>>(fut), std::move(tg)){};
+
 public:
-   TFuture(std::future<void> &&fut) : ROOT::Detail::TFutureImpl<void>(std::forward<std::future<void>>(fut)) {};
+   TFuture(std::future<void> &&fut) : ROOT::Detail::TFutureImpl<void>(std::forward<std::future<void>>(fut)){};
 
    void get()
    {
@@ -113,13 +124,17 @@ public:
 
 template <typename T>
 class TFuture<T &> final : public ROOT::Detail::TFutureImpl<T &> {
-template <class Function, class... Args>
-   friend TFuture<typename std::result_of<typename std::decay<Function>::type(typename std::decay<Args>::type...)>::type> Async(Function &&f, Args &&... args);
+   template <class Function, class... Args>
+   friend TFuture<
+      typename std::result_of<typename std::decay<Function>::type(typename std::decay<Args>::type...)>::type>
+   Async(Function &&f, Args &&... args);
+
 private:
    TFuture(std::future<T &> &&fut, std::unique_ptr<TTaskGroup> &&tg)
       : ROOT::Detail::TFutureImpl<T &>(std::forward<std::future<T &>>(fut), std::move(tg)){};
+
 public:
-   TFuture(std::future<T&> &&fut) : ROOT::Detail::TFutureImpl<T&>(std::forward<std::future<T&>>(fut)) {};
+   TFuture(std::future<T &> &&fut) : ROOT::Detail::TFutureImpl<T &>(std::forward<std::future<T &>>(fut)){};
 
    T &get()
    {
