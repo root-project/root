@@ -151,6 +151,39 @@ void TLeaf::FillBasket(TBuffer &)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// If the class supports it, generate an offset array base.
+///
+/// This class only returns `nullptr` on error.
+Int_t *TLeaf::GenerateOffsetArrayBase(Int_t base, Int_t events) const
+{
+   // In order to avoid a virtual call, we assume ROOT developers will override
+   // the default GenerateOffsetArray for cases where this function does not apply.
+
+   Int_t *retval = new Int_t[events];
+   if (R__unlikely(!retval)) {return nullptr;}
+
+   if (fLeafCount) {
+      Long64_t orig_entry = fBranch->GetReadEntry();
+      Long64_t orig_leaf_entry = fLeafCount->GetBranch()->GetReadEntry();
+      if (orig_leaf_entry != orig_entry) {
+         fLeafCount->GetBranch()->GetEntry(orig_entry);
+      }
+      for (Int_t idx = 0, offset = base; idx<events; idx++) {
+         retval[idx] = offset;
+         Int_t len = static_cast<Int_t>(fLeafCount->GetValue());
+         offset += fLenType*len;
+      }
+      fLeafCount->GetBranch()->GetEntry(orig_entry);
+   } else {
+      for (Int_t idx = 0, offset = base; idx<events; idx++, offset+= (fLenType*fLen)) {
+         retval[idx] = offset;
+      }
+   }
+
+   return retval;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Return a pointer to the counter of this leaf.
 ///
 /// - If leaf name has the form var[nelem], where nelem is alphanumeric, then
