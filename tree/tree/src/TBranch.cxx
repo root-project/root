@@ -1163,9 +1163,6 @@ TBasket* TBranch::GetBasket(Int_t basketnumber)
          }
       }
       Error("GetBasket","File: %s at byte:%lld, branch:%s, entry:%lld, badread=%d, nerrors=%d, basketnumber=%d",file->GetName(),basket->GetSeekKey(),GetName(),fReadEntry,badread,nerrors.load(),basketnumber);
-      if (basket->IsZombie()) {
-         MakeZombie();
-      }
       return 0;
    }
 
