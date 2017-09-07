@@ -51,7 +51,8 @@ protected:
    Int_t       fNevBuf;          ///< Number of entries in basket
    Int_t       fLast;            ///< Pointer to last used byte in basket
    Bool_t      fHeaderOnly;      ///< True when only the basket header must be read/written
-   UChar_t     fIOBits{0};       ///<!IO feature flags.  Serialized in custom portion of streamer to avoid forward compat issues unless needed.
+   UChar_t fIOBits{
+      0}; ///<!IO feature flags.  Serialized in custom portion of streamer to avoid forward compat issues unless needed.
    Int_t      *fDisplacement;    ///<![fNevBuf] Displacement of entries in fBuffer(TKey)
    Int_t      *fEntryOffset;     ///<[fNevBuf] Offset of entries in fBuffer(TKey)
    TBranch    *fBranch;          ///<Pointer to the basket support branch
@@ -60,7 +61,6 @@ protected:
    Int_t       fLastWriteBufferSize; ///<! Size of the buffer last time we wrote it to disk
 
 public:
-
    // The IO bits flag is to provide improved forward-compatibility detection.
    // Any new non-forward compatibility flags related serialization should be
    // added here.  When a new flag is added, set it in the kSupported field;
@@ -80,9 +80,7 @@ public:
    // changes that doing go into a supported release.
    //
    // (kUnsupported | kSupported) should result in the '|' of all IOBits.
-   enum class EUnsupportedIOBits {
-      kUnsupported = 0
-   };
+   enum class EUnsupportedIOBits { kUnsupported = 0 };
    // The number of known, defined IOBits.
    static const int kIOBitCount = 0;
 
@@ -119,7 +117,7 @@ public:
    virtual void    Update(Int_t newlast, Int_t skipped);
    virtual Int_t   WriteBuffer();
 
-   ClassDef(TBasket, 3);  //the TBranch buffers
+   ClassDef(TBasket, 3); // the TBranch buffers
 };
 
 #endif
