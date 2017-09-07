@@ -129,7 +129,7 @@ public:
            Int_t   ReadBasketBytes(Long64_t pos, TFile *file);
    virtual void    Reset();
 
-   // Time spent reseting basket sizes (typically, at event cluster boundaries), in microseconds
+// Time spent reseting basket sizes (typically, at event cluster boundaries), in microseconds
 #ifdef R__TRACK_BASKET_ALLOC_TIME
    ULong64_t ResetAllocationTime() const { return fResetAllocationTime; }
 #endif
