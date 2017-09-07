@@ -43,6 +43,14 @@ void verifySampleFile(TFile *f)
    }
 }
 
+TEST(TBasket, IOBits)
+{
+   EXPECT_EQ(static_cast<int>(TBasket::EIOBits::kSupported) | static_cast<int>(TBasket::EUnsupportedIOBits::kUnsupported),
+             (1<<static_cast<Int_t>(TBasket::kIOBitCount))-1);
+
+   EXPECT_EQ(static_cast<int>(TBasket::EIOBits::kSupported) & static_cast<int>(TBasket::EUnsupportedIOBits::kUnsupported), 0);
+}
+
 // Basic "sanity check" test -- can we create and delete trees?
 TEST(TBasket, CreateAndDestroy)
 {
@@ -113,13 +121,14 @@ TEST(TBasket, TestUnsupportedIO)
    TBasket *basket = br->GetBasket(0);
    ASSERT_TRUE(basket != nullptr);
 
-   EXPECT_EQ(basket->fIOBits, 0);
+   EXPECT_EQ(static_cast<Int_t>(basket->fIOBits), 0);
 
    // This tests that at least one bit in the bitset is available.
    // When we are down to one bitset, we'll have to expand the field.
-   EXPECT_TRUE(static_cast<UChar_t>(~TBasket::kSupported));
+   UChar_t unsupportedbits = ~static_cast<UChar_t>(TBasket::EIOBits::kSupported);
+   EXPECT_TRUE(unsupportedbits);
 
-   basket->fIOBits = ~TBasket::kSupported;
+   basket->fIOBits = unsupportedbits;
    br->FlushBaskets();
    t1.Write();
    f->Close();

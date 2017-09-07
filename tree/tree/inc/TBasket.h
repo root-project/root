@@ -70,13 +70,23 @@ public:
    // If (fIOBits & ~kSupported) is non-zero -- i.e., an unknown IO flag is set
    // in the fIOBits -- then the zombie flag will be set for this object.
    //
-   enum EIOBits {
+   enum class EIOBits {
       // The following to bits are reserved for now; when supported, set
       // kSupported = kGenerateOffsetMap | kBasketClassMap
       // kGenerateOffsetMap = BIT(1),
       // kBasketClassMap = BIT(2),
       kSupported = 0
    };
+   // This enum covers IOBits that are known to this ROOT release but
+   // not supported; provides a mechanism for us to have experimental
+   // changes that doing go into a supported release.
+   //
+   // (kUnsupported | kSupported) should result in the '|' of all IOBits.
+   enum class EUnsupportedIOBits {
+      kUnsupported = 0
+   };
+   // The number of known, defined IOBits.
+   static const int kIOBitCount = 0;
 
    TBasket();
    TBasket(TDirectory *motherDir);
