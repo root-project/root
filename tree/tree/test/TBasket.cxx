@@ -10,7 +10,7 @@
 
 static const Int_t gSampleEvents = 100;
 
-void createSampleFile(TMemFile *&f)
+void CreateSampleFile(TMemFile *&f)
 {
    f = new TMemFile("tbasket_test.root", "CREATE");
    ASSERT_TRUE(f != nullptr);
@@ -27,7 +27,7 @@ void createSampleFile(TMemFile *&f)
    t1.Write();
 }
 
-void verifySampleFile(TFile *f)
+void VerifySampleFile(TFile *f)
 {
    TTree *tree = nullptr;
    f->GetObject("t1", tree);
@@ -57,7 +57,7 @@ TEST(TBasket, CreateAndDestroy)
    std::vector<char> memBuffer;
 
    TMemFile *f;
-   createSampleFile(f);
+   CreateSampleFile(f);
    f->Close();
 
    Long64_t maxsize = f->GetSize();
@@ -68,14 +68,14 @@ TEST(TBasket, CreateAndDestroy)
 
    TMemFile f2("tbasket_test.root", &memBuffer[0], maxsize, "READ");
    ASSERT_FALSE(f2.IsZombie());
-   verifySampleFile(&f2);
+   VerifySampleFile(&f2);
 }
 
 // Create a TTree, pull out a TBasket.
 TEST(TBasket, CreateAndGetBasket)
 {
    TMemFile *f;
-   createSampleFile(f);
+   CreateSampleFile(f);
    ASSERT_FALSE(f->IsZombie());
 
    TTree *tree = nullptr;
@@ -92,7 +92,7 @@ TEST(TBasket, CreateAndGetBasket)
    ASSERT_FALSE(basket->IsZombie());
 
    EXPECT_EQ(basket->GetNevBuf(), gSampleEvents);
-   verifySampleFile(f);
+   VerifySampleFile(f);
 
    f->Close();
    delete f;
@@ -101,7 +101,7 @@ TEST(TBasket, CreateAndGetBasket)
 TEST(TBasket, TestUnsupportedIO)
 {
    TMemFile *f;
-   // Create a file; not using the createSampleFile helper as
+   // Create a file; not using the CreateSampleFile helper as
    // we must corrupt the basket here.
    f = new TMemFile("tbasket_test.root", "CREATE");
    ASSERT_NE(f, nullptr);
