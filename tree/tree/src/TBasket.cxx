@@ -791,8 +791,10 @@ void TBasket::Streamer(TBuffer &b)
       if (fNevBufSize < 0) {
          fNevBufSize = -fNevBufSize;
          b >> fIOBits;
-         if (!fIOBits || (fIOBits & (1<<7))) {
-            Error("TBasket::Streamer","The value of fNevBufSize (%d) or fIOBits (%d) is incorrect ; setting the buffer to a zombie.",-fNevBufSize, fIOBits);
+         if (!fIOBits || (fIOBits & (1 << 7))) {
+            Error("TBasket::Streamer",
+                  "The value of fNevBufSize (%d) or fIOBits (%d) is incorrect ; setting the buffer to a zombie.",
+                  -fNevBufSize, fIOBits);
             MakeZombie();
             fNevBufSize = 0;
          } else if (fIOBits && (fIOBits & ~static_cast<Int_t>(EIOBits::kSupported))) {
@@ -802,8 +804,8 @@ void TBasket::Streamer(TBuffer &b)
                                  "are %s), indicating this was written with a newer version of ROOT "
                                  "utilizing critical IO features this version of ROOT does not support."
                                  "  Refusing to deserialize.",
-                                 std::bitset<32>(static_cast<Int_t>(fIOBits)).to_string().c_str(),
-                                 std::bitset<32>(static_cast<Int_t>(EIOBits::kSupported)).to_string().c_str());
+                     std::bitset<32>(static_cast<Int_t>(fIOBits)).to_string().c_str(),
+                     std::bitset<32>(static_cast<Int_t>(EIOBits::kSupported)).to_string().c_str());
             } else if (nerrors == 10) {
                Error("Streamer", "Maximum number of errors has been reported; disabling further messages"
                                  "from this location until the process exits.");

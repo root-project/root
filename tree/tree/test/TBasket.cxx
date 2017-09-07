@@ -21,7 +21,7 @@ void CreateSampleFile(TMemFile *&f)
    Int_t idx;
    t1.Branch("idx", &idx, "idx/I");
 
-   for (idx=0; idx < gSampleEvents; idx++) {
+   for (idx = 0; idx < gSampleEvents; idx++) {
       t1.Fill();
    }
    t1.Write();
@@ -45,10 +45,12 @@ void VerifySampleFile(TFile *f)
 
 TEST(TBasket, IOBits)
 {
-   EXPECT_EQ(static_cast<int>(TBasket::EIOBits::kSupported) | static_cast<int>(TBasket::EUnsupportedIOBits::kUnsupported),
-             (1<<static_cast<Int_t>(TBasket::kIOBitCount))-1);
+   EXPECT_EQ(static_cast<int>(TBasket::EIOBits::kSupported) |
+                static_cast<int>(TBasket::EUnsupportedIOBits::kUnsupported),
+             (1 << static_cast<Int_t>(TBasket::kIOBitCount)) - 1);
 
-   EXPECT_EQ(static_cast<int>(TBasket::EIOBits::kSupported) & static_cast<int>(TBasket::EUnsupportedIOBits::kUnsupported), 0);
+   EXPECT_EQ(
+      static_cast<int>(TBasket::EIOBits::kSupported) & static_cast<int>(TBasket::EUnsupportedIOBits::kUnsupported), 0);
 }
 
 // Basic "sanity check" test -- can we create and delete trees?
@@ -111,7 +113,7 @@ TEST(TBasket, TestUnsupportedIO)
    ASSERT_FALSE(t1.IsZombie());
    Int_t idx;
    t1.Branch("idx", &idx, "idx/I");
-   for (idx=0; idx < gSampleEvents; idx++) {
+   for (idx = 0; idx < gSampleEvents; idx++) {
       t1.Fill();
    }
 
@@ -125,7 +127,7 @@ TEST(TBasket, TestUnsupportedIO)
    ASSERT_NE(cl, nullptr);
    Long_t offset = cl->GetDataMemberOffset("fIOBits");
    ASSERT_GT(offset, 0); // 0 can be returned on error
-   UChar_t *ioBits = reinterpret_cast<UChar_t*>(reinterpret_cast<char*>(basket) + offset);
+   UChar_t *ioBits = reinterpret_cast<UChar_t *>(reinterpret_cast<char *>(basket) + offset);
 
    EXPECT_EQ(*ioBits, 0);
 
@@ -134,7 +136,7 @@ TEST(TBasket, TestUnsupportedIO)
    UChar_t unsupportedbits = ~static_cast<UChar_t>(TBasket::EIOBits::kSupported);
    EXPECT_TRUE(unsupportedbits);
 
-   *ioBits = unsupportedbits & ((1<<7) - 1); // Last bit should always be clear.
+   *ioBits = unsupportedbits & ((1 << 7) - 1); // Last bit should always be clear.
    br->FlushBaskets();
    t1.Write();
    f->Close();
@@ -157,4 +159,3 @@ TEST(TBasket, TestUnsupportedIO)
    // Getting the basket should fail here and an error should have been triggered.
    ASSERT_EQ(basket, nullptr);
 }
-
