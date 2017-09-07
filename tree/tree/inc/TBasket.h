@@ -12,7 +12,6 @@
 #ifndef ROOT_TBasket
 #define ROOT_TBasket
 
-
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // TBasket                                                              //
@@ -35,6 +34,8 @@ class TBranch;
 
 class TBasket : public TKey {
 
+   friend class TBasket_TestUnsupportedIO_Test;
+
 private:
    TBasket(const TBasket&);            ///< TBasket objects are not copiable.
    TBasket& operator=(const TBasket&); ///< TBasket objects are not copiable.
@@ -52,6 +53,7 @@ protected:
    Int_t       fNevBuf;          ///< Number of entries in basket
    Int_t       fLast;            ///< Pointer to last used byte in basket
    Bool_t      fHeaderOnly;      ///< True when only the basket header must be read/written
+   UChar_t     fIOBits{0};       ///<!IO feature flags.  Serialized in custom portion of streamer to avoid forward compat issues unless needed.
    Int_t      *fDisplacement;    ///<![fNevBuf] Displacement of entries in fBuffer(TKey)
    Int_t      *fEntryOffset;     ///<[fNevBuf] Offset of entries in fBuffer(TKey)
    TBranch    *fBranch;          ///<Pointer to the basket support branch
@@ -60,6 +62,21 @@ protected:
    Int_t       fLastWriteBufferSize; ///<! Size of the buffer last time we wrote it to disk
 
 public:
+
+   // The IO bits flag is to provide improved forward-compatibility detection.
+   // Any new non-forward compatibility flags related serialization should be
+   // added here.  When a new flag is added, set it in the kSupported field;
+   //
+   // If (fIOBits & ~kSupported) is non-zero -- i.e., an unknown IO flag is set
+   // in the fIOBits -- then the zombie flag will be set for this object.
+   //
+   enum EIOBits {
+      // The following to bits are reserved for now; when supported, set
+      // kSupported = kGenerateOffsetMap | kBasketClassMap
+      // kGenerateOffsetMap = BIT(1),
+      // kBasketClassMap = BIT(2),
+      kSupported = 0
+   };
 
    TBasket();
    TBasket(TDirectory *motherDir);

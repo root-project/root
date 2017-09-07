@@ -23,6 +23,8 @@
 #include "TTimeStamp.h"
 #include "RZip.h"
 
+#include <bitset>
+
 const UInt_t kDisplacementMask = 0xFF000000;  // In the streamer the two highest bytes of
                                               // the fEntryOffset are used to stored displacement.
 
@@ -769,24 +771,21 @@ void TBasket::SetWriteMode()
 void TBasket::Streamer(TBuffer &b)
 {
    char flag;
+   bool hasIOBits = false;
    if (b.IsReading()) {
       TKey::Streamer(b); //this must be first
       Version_t v = b.ReadVersion();
       b >> fBufferSize;
       b >> fNevBufSize;
       if (fNevBufSize < 0) {
-         Error("Streamer","The value of fNevBufSize is incorrect (%d) ; trying to recover by setting it to zero",fNevBufSize);
-         MakeZombie();
-         fNevBufSize = 0;
+         hasIOBits = true;
+         fNevBufSize = -fNevBufSize;
       }
       b >> fNevBuf;
       b >> fLast;
       b >> flag;
       if (fLast > fBufferSize) fBufferSize = fLast;
-      if (!flag) {
-         return;
-      }
-      if (flag%10 != 2) {
+      if (flag && (flag % 10 != 2)) {
          delete [] fEntryOffset;
          fEntryOffset = new Int_t[fNevBufSize];
          if (fNevBuf) b.ReadArray(fEntryOffset);
@@ -810,6 +809,23 @@ void TBasket::Streamer(TBuffer &b)
          // This is now done in the TBranch streamer since fBranch might not
          // yet be set correctly.
          //   fBranch->GetTree()->IncrementTotalBuffers(fBufferSize);
+      }
+      if (hasIOBits) {
+         b >> fIOBits;
+         if (!fIOBits) {
+            Error("TBasket::Streamer","The value of fNevBufSize is incorrect (%d) ; setting the buffer to a zombie.",-fNevBufSize);
+            MakeZombie();
+            fNevBufSize = 0;
+         } else if (fIOBits && (fIOBits & ~kSupported)) {
+            Error("TKey::Streamer", "The value of fIOBits (%s) contains unknown flags (supported flags "
+                                    "are %s), indicating this was written with a newer version of ROOT "
+                                    "utilizing critical IO features this version of ROOT does not support."
+                                    "  Refusing to deserialize.",
+                                    std::bitset<32>(fIOBits).to_string().c_str(),
+                                    std::bitset<32>(kSupported).to_string().c_str());
+            fNevBufSize = 0;
+            MakeZombie();
+         }
       }
    } else {
       TKey::Streamer(b);   //this must be first
@@ -852,7 +868,11 @@ void TBasket::Streamer(TBuffer &b)
 //   fprintf(stderr,"equidist cost :  RT=%6.2f s  Cpu=%6.2f s\n",rt1,cp1);
 
       b << fBufferSize;
-      b << fNevBufSize;
+      if (fIOBits) {
+         b << -fNevBufSize;
+      } else {
+         b << fNevBufSize;
+      }
       b << fNevBuf;
       b << fLast;
       if (fHeaderOnly) {
@@ -873,6 +893,9 @@ void TBasket::Streamer(TBuffer &b)
             char *buf  = fBufferRef->Buffer();
             b.WriteFastArray(buf, fLast);
          }
+      }
+      if (fIOBits) {
+         b << fIOBits;
       }
    }
 }
