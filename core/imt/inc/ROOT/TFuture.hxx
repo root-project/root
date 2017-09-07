@@ -51,7 +51,7 @@ protected:
 
    TFutureImpl(std::future<T> &&fut) : fStdFut(std::move(fut)) {}
 
-   TFutureImpl(TFutureImpl<T> &&other) { *this = std::move(other); }
+   TFutureImpl(TFutureImpl<T> &&other) : fStdFut(std::move(other.fStdFut)), fTg(std::move(other.fTg)) {}
 
    TFutureImpl &operator=(std::future<T> &&other)
    {
