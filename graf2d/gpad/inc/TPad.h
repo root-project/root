@@ -219,9 +219,13 @@ public:
    Double_t          GetAspectRatio() const { return fAspectRatio; }
    Double_t          GetPhi() const   {return fPhi;}
    Double_t          GetTheta() const {return fTheta;}
+   ///Returns the minimum x-coordinate value visible on the pad. If log axis the returned value is in decades.
    Double_t          GetUxmin() const {return fUxmin;}
+   ///Returns the minimum y-coordinate value visible on the pad. If log axis the returned value is in decades.
    Double_t          GetUymin() const {return fUymin;}
+   ///Returns the maximum x-coordinate value visible on the pad. If log axis the returned value is in decades.
    Double_t          GetUxmax() const {return fUxmax;}
+   ///Returns the maximum y-coordinate value visible on the pad. If log axis the returned value is in decades.
    Double_t          GetUymax() const {return fUymax;}
    Bool_t            GetGridx() const {return fGridx;}
    Bool_t            GetGridy() const {return fGridy;}
