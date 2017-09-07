@@ -132,6 +132,7 @@ The structure of a directory is shown in TDirectoryFile::TDirectoryFile
 #include "TSchemaRuleSet.h"
 #include "TThreadSlots.h"
 #include "TGlobal.h"
+#include "TMath.h"
 
 using std::sqrt;
 
@@ -153,7 +154,7 @@ ROOT::TRWSpinLock TFile::fgRwLock;
 
 const Int_t kBEGIN = 100;
 
-ClassImp(TFile)
+ClassImp(TFile);
 
 //*-*x17 macros/layout_file
 // Needed to add the "fake" global gFile to the list of globals.
@@ -523,7 +524,7 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
 zombie:
    // error in file opening occurred, make this object a zombie
    {
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfClosedObjects()->Add(this);
    }
    MakeZombie();
@@ -556,7 +557,7 @@ TFile::~TFile()
    SafeDelete(fOpenPhases);
 
    {
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfClosedObjects()->Remove(this);
       gROOT->GetUUIDs()->RemoveUUID(GetUniqueID());
    }
@@ -839,7 +840,7 @@ void TFile::Init(Bool_t create)
    }
 
    {
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfFiles()->Add(this);
       gROOT->GetUUIDs()->AddUUID(fUUID,this);
    }
@@ -853,7 +854,7 @@ void TFile::Init(Bool_t create)
          if (fSeekInfo > fBEGIN) {
             ReadStreamerInfo();
             if (IsZombie()) {
-               R__LOCKGUARD2(gROOTMutex);
+               R__LOCKGUARD(gROOTMutex);
                gROOT->GetListOfFiles()->Remove(this);
                goto zombie;
             }
@@ -879,7 +880,7 @@ void TFile::Init(Bool_t create)
 
 zombie:
    {
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfClosedObjects()->Add(this);
    }
    // error in file opening occurred, make this object a zombie
@@ -938,7 +939,7 @@ void TFile::Close(Option_t *option)
    // If gDirectory points to this object or any of the nested
    // TDirectoryFile, TDirectoryFile::Close will induce the proper cd.
    fMustFlush = kFALSE; // Make sure there is only one Flush.
-   TDirectoryFile::Close();
+   TDirectoryFile::Close(option);
 
    if (IsWritable()) {
       TFree *f1 = (TFree*)fFree->First();
@@ -985,7 +986,7 @@ void TFile::Close(Option_t *option)
    pidDeleted.Delete();
 
    if (!IsZombie()) {
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfFiles()->Remove(this);
       gROOT->GetListOfBrowsers()->RecursiveRemove(this);
       gROOT->GetListOfClosedObjects()->Add(this);
@@ -1453,9 +1454,22 @@ void TFile::MakeFree(Long64_t first, Long64_t last)
 ///     20010404/150443  At:403130    N=4548      StreamerInfo   CX =  3.65
 ///     20010404/150443  At:407678    N=86        FreeSegments
 ///     20010404/150443  At:407764    N=1         END
+///
+/// If the parameter opt contains "forComp", the Date/Time is ommitted
+/// and the decompressed size is also printed.
+///
+///    Record_Adress Logical_Record_Length  Key_Length Object_Record_Length ClassName  CompressionFactor
+///
+/// Example of output
+///
 
-void TFile::Map()
+
+void TFile::Map(Option_t *opt)
 {
+   TString options(opt);
+   options.ToLower();
+   bool forComp = options.Contains("forcomp");
+
    Short_t  keylen,cycle;
    UInt_t   datime;
    Int_t    nbytes,date,time,objlen,nwheader;
@@ -1471,6 +1485,8 @@ void TFile::Map()
 
    char header[kBEGIN];
    char classname[512];
+
+   unsigned char nDigits = TMath::Log10(fEND) + 1;
 
    while (idcur < fEND) {
       Seek(idcur);
@@ -1516,15 +1532,29 @@ void TFile::Map()
       if (idcur == fSeekInfo) strlcpy(classname,"StreamerInfo",512);
       if (idcur == fSeekKeys) strlcpy(classname,"KeysList",512);
       TDatime::GetDateTime(datime, date, time);
-      if (objlen != nbytes-keylen) {
-         Float_t cx = Float_t(objlen+keylen)/Float_t(nbytes);
-         Printf("%d/%06d  At:%lld  N=%-8d  %-14s CX = %5.2f",date,time,idcur,nbytes,classname,cx);
+      if (!forComp) {
+         if (objlen != nbytes - keylen) {
+            Float_t cx = Float_t(objlen + keylen) / Float_t(nbytes);
+            Printf("%d/%06d  At:%-*lld  N=%-8d  %-14s CX = %5.2f", date, time, nDigits + 1, idcur, nbytes, classname,
+                   cx);
+         } else {
+            Printf("%d/%06d  At:%-*lld  N=%-8d  %-14s", date, time, nDigits + 1, idcur, nbytes, classname);
+         }
       } else {
-         Printf("%d/%06d  At:%lld  N=%-8d  %-14s",date,time,idcur,nbytes,classname);
+         // Printing to help compare two files.
+         if (objlen != nbytes - keylen) {
+            Float_t cx = Float_t(objlen + keylen) / Float_t(nbytes);
+            Printf("At:%-*lld  N=%-8d K=%-3d O=%-8d  %-14s CX = %5.2f", nDigits+1, idcur, nbytes, keylen, objlen, classname, cx);
+         } else {
+            Printf("At:%-*lld  N=%-8d K=%-3d O=%-8d  %-14s CX =  1", nDigits+1, idcur, nbytes, keylen, objlen, classname);
+         }
       }
       idcur += nbytes;
    }
-   Printf("%d/%06d  At:%lld  N=%-8d  %-14s",date,time,idcur,1,"END");
+   if (!forComp)
+      Printf("%d/%06d  At:%-*lld  N=%-8d  %-14s",date,time, nDigits+1, idcur,1,"END");
+   else
+      Printf("At:%-*lld  N=%-8d K=    O=          %-14s", nDigits+1, idcur,1,"END");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2879,7 +2909,7 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
          fprintf(fpMAKE,"genreflex %sProjectHeaders.h -o %sProjectDict.cxx --comments --iocomments %s ",subdirname.Data(),subdirname.Data(),gSystem->GetIncludePath());
          path.Form("%s/%sSelection.xml",clean_dirname.Data(),subdirname.Data());
       } else {
-         fprintf(fpMAKE,"rootcint -f %sProjectDict.cxx -c %s ",subdirname.Data(),gSystem->GetIncludePath());
+         fprintf(fpMAKE,"rootcint -v1 -f %sProjectDict.cxx -c %s ",subdirname.Data(),gSystem->GetIncludePath());
          path.Form("%s/%sLinkDef.h",clean_dirname.Data(),subdirname.Data());
       }
    } else {
@@ -4711,7 +4741,7 @@ TFile::EAsyncOpenStatus TFile::GetAsyncOpenStatus(const char* name)
    }
 
    // Check also the list of files open
-   R__LOCKGUARD2(gROOTMutex);
+   R__LOCKGUARD(gROOTMutex);
    TSeqCollection *of = gROOT->GetListOfFiles();
    if (of && (of->GetSize() > 0)) {
       TIter nxf(of);
@@ -4758,7 +4788,7 @@ const TUrl *TFile::GetEndpointUrl(const char* name)
    }
 
    // Check also the list of files open
-   R__LOCKGUARD2(gROOTMutex);
+   R__LOCKGUARD(gROOTMutex);
    TSeqCollection *of = gROOT->GetListOfFiles();
    if (of && (of->GetSize() > 0)) {
       TIter nxf(of);

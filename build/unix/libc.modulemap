@@ -1,8 +1,8 @@
-module "libc" {
+module "libc" [system] {
   export *
   module "assert.h" {
     export *
-    header "assert.h"
+    textual header "assert.h"
   }
   module "ctype.h" {
     export *
@@ -16,10 +16,6 @@ module "libc" {
     export *
     header "fenv.h"
   }
-  module "float.h" {
-    export *
-    header "float.h"
-  }
   module "inttypes.h" {
     export *
     header "inttypes.h"
@@ -28,6 +24,10 @@ module "libc" {
   module "xlocale.h" {
     export *
     header "xlocale.h"
+  }
+  module "setjmp.h" {
+    export *
+    header "setjmp.h"
   }
   module "math.h" {
     export *

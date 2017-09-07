@@ -68,7 +68,7 @@
 #include "TRandom3.h"
 #include "TMath.h"
 
-ClassImp(TSVDUnfold)
+ClassImp(TSVDUnfold);
 
 using namespace std;
 

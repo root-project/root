@@ -46,12 +46,12 @@
 #include "Riostream.h"
 #include "RStipples.h"
 
-ClassImp(TGedPopup)
-ClassImp(TGedSelect)
-ClassImp(TGedPatternFrame)
-ClassImp(TGedPatternSelector)
-ClassImp(TGedPatternPopup)
-ClassImp(TGedPatternSelect)
+ClassImp(TGedPopup);
+ClassImp(TGedSelect);
+ClassImp(TGedPatternFrame);
+ClassImp(TGedPatternSelector);
+ClassImp(TGedPatternPopup);
+ClassImp(TGedPatternSelect);
 
 TGGC* TGedPatternFrame::fgGC = 0;
 

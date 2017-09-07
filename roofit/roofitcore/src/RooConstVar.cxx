@@ -30,7 +30,7 @@ RooConstVar represent a constant real-valued object
 
 using namespace std;
 
-ClassImp(RooConstVar)
+ClassImp(RooConstVar);
   ;
 
 

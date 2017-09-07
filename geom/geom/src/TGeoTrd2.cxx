@@ -43,7 +43,7 @@ End_Macro
 #include "TGeoTrd2.h"
 #include "TMath.h"
 
-ClassImp(TGeoTrd2)
+ClassImp(TGeoTrd2);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// dummy ctor

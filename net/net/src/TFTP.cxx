@@ -60,7 +60,7 @@ Long64_t TFTP::fgBytesWrite = 0;
 Long64_t TFTP::fgBytesRead  = 0;
 
 
-ClassImp(TFTP)
+ClassImp(TFTP);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Open connection to host specified by the url using par parallel sockets.
@@ -132,7 +132,7 @@ void TFTP::Init(const char *surl, Int_t par, Int_t wsize)
    // for consistency during the final cleanup
    // (The socket will be delete by us when everything is ok remotely)
    {
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfSockets()->Remove(fSocket);
       gROOT->GetListOfSockets()->Add(this);
    }
@@ -896,7 +896,7 @@ Int_t TFTP::Close()
 
    // Remove from the list of Sockets
    {
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfSockets()->Remove(this);
    }
 

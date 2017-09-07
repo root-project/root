@@ -33,7 +33,7 @@
 
 using namespace std;
 
-ClassImp(RooAbsLValue)
+ClassImp(RooAbsLValue);
 ;
 
 

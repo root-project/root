@@ -51,7 +51,7 @@ End_Macro
 const UInt_t kIsBigFile = BIT(16);
 const Int_t  kMaxLen = 2048;
 
-ClassImp(TDirectoryFile)
+ClassImp(TDirectoryFile);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -127,7 +127,7 @@ TDirectoryFile::TDirectoryFile(const char *name, const char *title, Option_t *cl
 
    fModified = kFALSE;
 
-   R__LOCKGUARD2(gROOTMutex);
+   R__LOCKGUARD(gROOTMutex);
    gROOT->GetUUIDs()->AddUUID(fUUID,this);
 }
 
@@ -427,7 +427,7 @@ TObject *TDirectoryFile::CloneObject(const TObject *obj, Bool_t autoadd /* = kTR
 TObject *TDirectoryFile::FindObjectAnyFile(const char *name) const
 {
    TFile *f;
-   R__LOCKGUARD2(gROOTMutex);
+   R__LOCKGUARD(gROOTMutex);
    TIter next(gROOT->GetListOfFiles());
    while ((f = (TFile*)next())) {
       TObject *obj = f->GetList()->FindObject(name);
@@ -471,7 +471,7 @@ TDirectory *TDirectoryFile::GetDirectory(const char *apath,
    char *s = (char*)strchr(path, ':');
    if (s) {
       *s = '\0';
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       TDirectory *f = (TDirectory *)gROOT->GetListOfFiles()->FindObject(path);
       if (!f && !strcmp(gROOT->GetName(), path)) f = gROOT;
       if (s) *s = ':';
@@ -553,7 +553,7 @@ void TDirectoryFile::Close(Option_t *)
    // we must avoid "slow" as much as possible, in particular Delete("slow")
    // with a large number of objects (eg >10^5) would take for ever.
    {
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       if (fast) fList->Delete();
       else      fList->Delete("slow");
    }
@@ -1682,7 +1682,7 @@ void TDirectoryFile::Streamer(TBuffer &b)
             fUUID.Streamer(b);
          }
       }
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       gROOT->GetUUIDs()->AddUUID(fUUID,this);
       if (fSeekKeys) ReadKeys();
    } else {

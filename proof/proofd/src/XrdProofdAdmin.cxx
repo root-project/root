@@ -745,8 +745,8 @@ int XrdProofdAdmin::QueryLogPaths(XrdProofdProtocol *p)
          user.erase(user.find("|"));
       }
       if (io != STR_NPOS) {
-         ord.assign(buf, iu + strlen("|ord:"));
-         ord.erase(user.find("|"));
+         ord.assign(buf, io + strlen("|ord:"));
+         ord.erase(ord.find("|"));
       }
       if (stag.beginswith('*'))
          stag = "";
@@ -1445,13 +1445,6 @@ int XrdProofdAdmin::Exec(XrdProofdProtocol *p)
          case kMd5sum:
             opt = "";
             rederr = " 2>&1";
-            break;
-         default:
-            emsg = "undefined action: ";
-            emsg = action;
-            emsg = " - protocol error!";
-            TRACEP(p, XERR, emsg);
-            response->Send(kXR_ServerError, emsg.c_str());
             break;
       }
       if (action != kFind) {

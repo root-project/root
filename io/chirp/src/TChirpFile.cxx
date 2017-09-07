@@ -90,7 +90,7 @@ static void chirp_root_global_setup()
    did_setup = 1;
 }
 
-ClassImp(TChirpFile)
+ClassImp(TChirpFile);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -281,7 +281,7 @@ Int_t TChirpFile::SysStat(Int_t, Long_t * id, Long64_t * size, Long_t * flags, L
    return 0;
 }
 
-ClassImp(TChirpSystem)
+ClassImp(TChirpSystem);
 
 ////////////////////////////////////////////////////////////////////////////////
 

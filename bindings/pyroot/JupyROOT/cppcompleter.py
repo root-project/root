@@ -12,18 +12,28 @@ import ROOT
 _TTabComHookCode = """
 std::vector<std::string> _TTabComHook(const char* pattern){
    static auto ttc = new TTabCom;
-   int pLoc = strlen(pattern);
+   const size_t lineBufSize = 2*1024;  // must be equal to/larger than BUF_SIZE in TTabCom.cxx
+   std::unique_ptr<char[]> completed(new char[lineBufSize]);
+   strncpy(completed.get(), pattern, lineBufSize);
+   completed[lineBufSize-1] = '\\0';
+   int pLoc = strlen(completed.get());
    std::ostringstream oss;
-   ttc->Hook((char* )pattern, &pLoc, oss);
-   auto completions = oss.str();
-   vector<string> completions_v;
-   istringstream f(completions);
-   string s;
-   while (getline(f, s, '\\n')) {
-      //cout << "**" << s << "**" << endl;
-      completions_v.push_back(s);
+   Int_t firstChange = ttc->Hook(completed.get(), &pLoc, oss);
+   if (firstChange == -2) { // got some completions in oss
+      auto completions = oss.str();
+      vector<string> completions_v;
+      istringstream f(completions);
+      string s;
+      while (getline(f, s, '\\n')) {
+         completions_v.push_back(s);
+      }
+      return completions_v;
    }
-   return completions_v;
+   if (firstChange == -1) { // found no completions
+      return vector<string>();
+   }
+   // found exactly one completion
+   return vector<string>(1, completed.get());
 }
 """
 
@@ -72,21 +82,21 @@ class CppCompleter(object):
     Bool_t Add(const TH1* h1, Double_t c1 = 1)
     >>> for suggestion in comp._completeImpl("TROOT::Is"):
     ...     print(suggestion)
-    IsA
-    IsBatch
-    IsEqual
-    IsEscaped
-    IsExecutingMacro
-    IsFolder
-    IsInterrupted
-    IsLineProcessing
-    IsModified
-    IsOnHeap
-    IsProofServ
-    IsRootFile
-    IsSortable
-    IsWritable
-    IsZombie
+    TROOT::IsA
+    TROOT::IsBatch
+    TROOT::IsEqual
+    TROOT::IsEscaped
+    TROOT::IsExecutingMacro
+    TROOT::IsFolder
+    TROOT::IsInterrupted
+    TROOT::IsLineProcessing
+    TROOT::IsModified
+    TROOT::IsOnHeap
+    TROOT::IsProofServ
+    TROOT::IsRootFile
+    TROOT::IsSortable
+    TROOT::IsWritable
+    TROOT::IsZombie
     >>> comp.deactivate()
     >>> for suggestion in comp._completeImpl("TG"):
     ...     print(suggestion)
@@ -121,22 +131,34 @@ class CppCompleter(object):
         for accessor in self.accessors:
             tmpAccessorPos = line.rfind(accessor)
             if accessorPos < tmpAccessorPos:
-                accessorPos = tmpAccessorPos+len(accessor) if accessor!="::" else 0
+                accessorPos = tmpAccessorPos+len(accessor)
         return accessorPos
 
     def _completeImpl(self, line):
         line=line.split()[-1]
         suggestions = self._getSuggestions(line)
-        if not suggestions: return []
-        accessorPos = self._getLastAccessorPos(line)
         suggestions = filter(lambda s: len(s.strip()) != 0, suggestions)
         suggestions = sorted(suggestions)
-        # Look for spaces since these mark function signatures
-        are_signatures = "(" in "".join(suggestions)
+        if not suggestions: return []
+        # Remove combinations of opening and closing brackets and just opening
+        # brackets at the end of a line. Jupyter seems to expect functions
+        # without these brackets to work properly. The brackets of'operator()'
+        # must not be removed
+        suggestions = [sugg[:-2] if sugg[-2:] == '()' and sugg != 'operator()' else sugg for sugg in suggestions]
+        suggestions = [sugg[:-1] if sugg[-1:] == '(' else sugg for sugg in suggestions]
+        # If a function signature is encountered, add an empty item to the
+        # suggestions. Try to guess a function signature by an opening bracket
+        # ignoring 'operator()'.
+        are_signatures = "(" in "".join(filter(lambda s: s != 'operator()', suggestions))
+        accessorPos = self._getLastAccessorPos(line)
         if are_signatures:
             suggestions = [" "] + suggestions
         elif accessorPos > 0:
-            suggestions = [line[:accessorPos]+sugg for sugg in suggestions]
+            # Prepend variable name to suggestions. Do not prepend if the
+            # suggestion already contains the variable name, this can happen if
+            # e.g. there is only one valid completion
+            if len(suggestions) > 1 or line[:accessorPos] != suggestions[0][:accessorPos]:
+                suggestions = [line[:accessorPos]+sugg for sugg in suggestions]
         return suggestions
 
     def complete(self, ip, event) :

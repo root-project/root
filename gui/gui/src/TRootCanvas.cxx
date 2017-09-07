@@ -296,7 +296,7 @@ Bool_t TRootContainer::HandleButton(Event_t *event)
    return fCanvas->HandleContainerButton(event);
 }
 
-ClassImp(TRootCanvas)
+ClassImp(TRootCanvas);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a basic ROOT canvas.
@@ -702,6 +702,10 @@ void TRootCanvas::ReallyDelete()
               this, "EventInfo(Int_t, Int_t, Int_t, TObject*)");
 
    fCanvas->SetCanvasImp(0);
+   fCanvas->Clear();
+   fCanvas->SetName("");
+   if (gPad && gPad->GetCanvas() == fCanvas)
+      gPad = 0;
    delete this;
 }
 

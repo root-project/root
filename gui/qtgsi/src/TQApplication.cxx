@@ -25,7 +25,7 @@
 #include "TQApplication.h"
 #include "TQRootGuiFactory.h"
 
-ClassImp(TQApplication)
+ClassImp(TQApplication);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Used by Dictionary()

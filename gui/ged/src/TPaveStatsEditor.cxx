@@ -31,7 +31,7 @@
 #include "TGButton.h"
 #include "TPaveStats.h"
 
-ClassImp(TPaveStatsEditor)
+ClassImp(TPaveStatsEditor);
 
 enum EPaveStatsWid {
    kSTAT_NAME,

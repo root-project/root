@@ -39,7 +39,7 @@
 #include "TGNumberEntry.h"
 #include "TGLabel.h"
 
-ClassImp(TGeoBBoxEditor)
+ClassImp(TGeoBBoxEditor);
 
 enum ETGeoBBoxWid {
    kBOX_NAME, kBOX_X, kBOX_Y, kBOX_Z,

@@ -29,7 +29,7 @@ The shape encapsulating an assembly (union) of volumes.
 Automatically created by TGeoVolumeAssembly class
 */
 
-ClassImp(TGeoShapeAssembly)
+ClassImp(TGeoShapeAssembly);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor

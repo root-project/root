@@ -18,7 +18,7 @@ using namespace TMVA;
 
 REGISTER_METHOD(PyKeras)
 
-ClassImp(MethodPyKeras)
+ClassImp(MethodPyKeras);
 
 MethodPyKeras::MethodPyKeras(const TString &jobName, const TString &methodTitle, DataSetInfo &dsi, const TString &theOption)
    : PyMethodBase(jobName, Types::kPyKeras, methodTitle, dsi, theOption) {
@@ -128,6 +128,8 @@ void MethodPyKeras::Init() {
    _import_array(); // required to use numpy arrays
 
    // Import Keras
+   // NOTE: sys.argv has to be cleared because otherwise TensorFlow breaks
+   PyRunString("import sys; sys.argv = ['']", "Set sys.argv failed");
    PyRunString("import keras", "Import Keras failed");
 
    // Set flag that model is not setup

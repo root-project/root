@@ -55,8 +55,10 @@ public:
   RooAbsDataStore* store() { return _dstore ; }
   const RooAbsDataStore* store() const { return _dstore ; }
   const TTree* tree() const ;
-   
+  TTree *GetClonedTree() const;
+
   void convertToVectorStore() ;
+  void convertToTreeStore();
 
   void attachBuffers(const RooArgSet& extObs) ;
   void resetBuffers() ;
@@ -201,7 +203,7 @@ public:
                           const char* cutSpec=0, const char* cutRange=0, 
                           const RooCmdArg* formatCmd=0);
 
-
+  virtual void RecursiveRemove(TObject *obj);
 
   Bool_t hasFilledCache() const ; 
 
@@ -209,7 +211,7 @@ public:
   static void claimVars(RooAbsData*) ;
   static Bool_t releaseVars(RooAbsData*) ;
 
-  enum StorageType { Tree, Vector} ;
+  enum StorageType { Tree, Vector, Composite };
 
   static void setDefaultStorageType(StorageType s) ;
 
@@ -218,6 +220,8 @@ public:
 protected:
 
   static StorageType defaultStorageType ;
+
+  StorageType storageType;
 
   Double_t corrcov(RooRealVar &x,RooRealVar &y, const char* cutSpec, const char* cutRange, Bool_t corr) const  ;
   TMatrixDSym* corrcovMatrix(const RooArgList& vars, const char* cutSpec, const char* cutRange, Bool_t corr) const  ;
@@ -261,8 +265,7 @@ protected:
   std::map<std::string,RooAbsData*> _ownedComponents ; // Owned external components
 
 private:
-
-  ClassDef(RooAbsData,4) // Abstract data collection
+   ClassDef(RooAbsData, 5) // Abstract data collection
 };
 
 #endif

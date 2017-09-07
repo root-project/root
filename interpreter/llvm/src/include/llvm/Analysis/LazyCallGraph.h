@@ -44,6 +44,7 @@
 #include "llvm/ADT/iterator.h"
 #include "llvm/ADT/iterator_range.h"
 #include "llvm/IR/BasicBlock.h"
+#include "llvm/IR/Constants.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/Module.h"
 #include "llvm/IR/PassManager.h"
@@ -105,6 +106,7 @@ class raw_ostream;
 class LazyCallGraph {
 public:
   class Node;
+  class EdgeSequence;
   class SCC;
   class RefSCC;
   class edge_iterator;
@@ -120,16 +122,6 @@ public:
   /// inherently reference edges, and so the reference graph forms a superset
   /// of the formal call graph.
   ///
-  /// Furthermore, edges also may point to raw \c Function objects when those
-  /// functions have not been scanned and incorporated into the graph (yet).
-  /// This is one of the primary ways in which the graph can be lazy. When
-  /// functions are scanned and fully incorporated into the graph, all of the
-  /// edges referencing them are updated to point to the graph \c Node objects
-  /// instead of to the raw \c Function objects. This class even provides
-  /// methods to trigger this scan on-demand by attempting to get the target
-  /// node of the graph and providing a reference back to the graph in order to
-  /// lazily build it if necessary.
-  ///
   /// All of these forms of edges are fundamentally represented as outgoing
   /// edges. The edges are stored in the source node and point at the target
   /// node. This allows the edge structure itself to be a very compact data
@@ -140,63 +132,234 @@ public:
     enum Kind : bool { Ref = false, Call = true };
 
     Edge();
-    explicit Edge(Function &F, Kind K);
     explicit Edge(Node &N, Kind K);
 
     /// Test whether the edge is null.
     ///
     /// This happens when an edge has been deleted. We leave the edge objects
     /// around but clear them.
-    operator bool() const;
+    explicit operator bool() const;
+
+    /// Returnss the \c Kind of the edge.
+    Kind getKind() const;
 
     /// Test whether the edge represents a direct call to a function.
     ///
     /// This requires that the edge is not null.
     bool isCall() const;
 
+    /// Get the call graph node referenced by this edge.
+    ///
+    /// This requires that the edge is not null.
+    Node &getNode() const;
+
     /// Get the function referenced by this edge.
     ///
-    /// This requires that the edge is not null, but will succeed whether we
-    /// have built a graph node for the function yet or not.
+    /// This requires that the edge is not null.
     Function &getFunction() const;
 
-    /// Get the call graph node referenced by this edge if one exists.
-    ///
-    /// This requires that the edge is not null. If we have built a graph node
-    /// for the function this edge points to, this will return that node,
-    /// otherwise it will return null.
-    Node *getNode() const;
-
-    /// Get the call graph node for this edge, building it if necessary.
-    ///
-    /// This requires that the edge is not null. If we have not yet built
-    /// a graph node for the function this edge points to, this will first ask
-    /// the graph to build that node, inserting it into all the relevant
-    /// structures.
-    Node &getNode(LazyCallGraph &G);
-
   private:
-    friend class LazyCallGraph::Node;
+    friend class LazyCallGraph::EdgeSequence;
+    friend class LazyCallGraph::RefSCC;
 
-    PointerIntPair<PointerUnion<Function *, Node *>, 1, Kind> Value;
+    PointerIntPair<Node *, 1, Kind> Value;
 
     void setKind(Kind K) { Value.setInt(K); }
   };
 
-  typedef SmallVector<Edge, 4> EdgeVectorT;
-  typedef SmallVectorImpl<Edge> EdgeVectorImplT;
+  /// The edge sequence object.
+  ///
+  /// This typically exists entirely within the node but is exposed as
+  /// a separate type because a node doesn't initially have edges. An explicit
+  /// population step is required to produce this sequence at first and it is
+  /// then cached in the node. It is also used to represent edges entering the
+  /// graph from outside the module to model the graph's roots.
+  ///
+  /// The sequence itself both iterable and indexable. The indexes remain
+  /// stable even as the sequence mutates (including removal).
+  class EdgeSequence {
+    friend class LazyCallGraph;
+    friend class LazyCallGraph::Node;
+    friend class LazyCallGraph::RefSCC;
+
+    typedef SmallVector<Edge, 4> VectorT;
+    typedef SmallVectorImpl<Edge> VectorImplT;
+
+  public:
+    /// An iterator used for the edges to both entry nodes and child nodes.
+    class iterator
+        : public iterator_adaptor_base<iterator, VectorImplT::iterator,
+                                       std::forward_iterator_tag> {
+      friend class LazyCallGraph;
+      friend class LazyCallGraph::Node;
+
+      VectorImplT::iterator E;
+
+      // Build the iterator for a specific position in the edge list.
+      iterator(VectorImplT::iterator BaseI, VectorImplT::iterator E)
+          : iterator_adaptor_base(BaseI), E(E) {
+        while (I != E && !*I)
+          ++I;
+      }
+
+    public:
+      iterator() {}
+
+      using iterator_adaptor_base::operator++;
+      iterator &operator++() {
+        do {
+          ++I;
+        } while (I != E && !*I);
+        return *this;
+      }
+    };
+
+    /// An iterator over specifically call edges.
+    ///
+    /// This has the same iteration properties as the \c iterator, but
+    /// restricts itself to edges which represent actual calls.
+    class call_iterator
+        : public iterator_adaptor_base<call_iterator, VectorImplT::iterator,
+                                       std::forward_iterator_tag> {
+      friend class LazyCallGraph;
+      friend class LazyCallGraph::Node;
+
+      VectorImplT::iterator E;
+
+      /// Advance the iterator to the next valid, call edge.
+      void advanceToNextEdge() {
+        while (I != E && (!*I || !I->isCall()))
+          ++I;
+      }
+
+      // Build the iterator for a specific position in the edge list.
+      call_iterator(VectorImplT::iterator BaseI, VectorImplT::iterator E)
+          : iterator_adaptor_base(BaseI), E(E) {
+        advanceToNextEdge();
+      }
+
+    public:
+      call_iterator() {}
+
+      using iterator_adaptor_base::operator++;
+      call_iterator &operator++() {
+        ++I;
+        advanceToNextEdge();
+        return *this;
+      }
+    };
+
+    iterator begin() { return iterator(Edges.begin(), Edges.end()); }
+    iterator end() { return iterator(Edges.end(), Edges.end()); }
+
+    Edge &operator[](int i) { return Edges[i]; }
+    Edge &operator[](Node &N) {
+      assert(EdgeIndexMap.find(&N) != EdgeIndexMap.end() && "No such edge!");
+      return Edges[EdgeIndexMap.find(&N)->second];
+    }
+    Edge *lookup(Node &N) {
+      auto EI = EdgeIndexMap.find(&N);
+      return EI != EdgeIndexMap.end() ? &Edges[EI->second] : nullptr;
+    }
+
+    call_iterator call_begin() {
+      return call_iterator(Edges.begin(), Edges.end());
+    }
+    call_iterator call_end() { return call_iterator(Edges.end(), Edges.end()); }
+
+    iterator_range<call_iterator> calls() {
+      return make_range(call_begin(), call_end());
+    }
+
+    bool empty() {
+      for (auto &E : Edges)
+        if (E)
+          return false;
+
+      return true;
+    }
+
+  private:
+    VectorT Edges;
+    DenseMap<Node *, int> EdgeIndexMap;
+
+    EdgeSequence() = default;
+
+    /// Internal helper to insert an edge to a node.
+    void insertEdgeInternal(Node &ChildN, Edge::Kind EK);
+
+    /// Internal helper to change an edge kind.
+    void setEdgeKind(Node &ChildN, Edge::Kind EK);
+
+    /// Internal helper to remove the edge to the given function.
+    bool removeEdgeInternal(Node &ChildN);
+
+    /// Internal helper to replace an edge key with a new one.
+    ///
+    /// This should be used when the function for a particular node in the
+    /// graph gets replaced and we are updating all of the edges to that node
+    /// to use the new function as the key.
+    void replaceEdgeKey(Function &OldTarget, Function &NewTarget);
+  };
 
   /// A node in the call graph.
   ///
   /// This represents a single node. It's primary roles are to cache the list of
   /// callees, de-duplicate and provide fast testing of whether a function is
   /// a callee, and facilitate iteration of child nodes in the graph.
+  ///
+  /// The node works much like an optional in order to lazily populate the
+  /// edges of each node. Until populated, there are no edges. Once populated,
+  /// you can access the edges by dereferencing the node or using the `->`
+  /// operator as if the node was an `Optional<EdgeSequence>`.
   class Node {
     friend class LazyCallGraph;
-    friend class LazyCallGraph::SCC;
+    friend class LazyCallGraph::RefSCC;
 
+  public:
+    LazyCallGraph &getGraph() const { return *G; }
+
+    Function &getFunction() const { return *F; }
+
+    StringRef getName() const { return F->getName(); }
+
+    /// Equality is defined as address equality.
+    bool operator==(const Node &N) const { return this == &N; }
+    bool operator!=(const Node &N) const { return !operator==(N); }
+
+    /// Tests whether the node has been populated with edges.
+    operator bool() const { return Edges.hasValue(); }
+
+    // We allow accessing the edges by dereferencing or using the arrow
+    // operator, essentially wrapping the internal optional.
+    EdgeSequence &operator*() const {
+      // Rip const off because the node itself isn't changing here.
+      return const_cast<EdgeSequence &>(*Edges);
+    }
+    EdgeSequence *operator->() const { return &**this; }
+
+    /// Populate the edges of this node if necessary.
+    ///
+    /// The first time this is called it will populate the edges for this node
+    /// in the graph. It does this by scanning the underlying function, so once
+    /// this is done, any changes to that function must be explicitly reflected
+    /// in updates to the graph.
+    ///
+    /// \returns the populated \c EdgeSequence to simplify walking it.
+    ///
+    /// This will not update or re-scan anything if called repeatedly. Instead,
+    /// the edge sequence is cached and returned immediately on subsequent
+    /// calls.
+    EdgeSequence &populate() {
+      if (Edges)
+        return *Edges;
+
+      return populateSlow();
+    }
+
+  private:
     LazyCallGraph *G;
-    Function &F;
+    Function *F;
 
     // We provide for the DFS numbering and Tarjan walk lowlink numbers to be
     // stored directly within the node. These are both '-1' when nodes are part
@@ -204,133 +367,32 @@ public:
     int DFSNumber;
     int LowLink;
 
-    mutable EdgeVectorT Edges;
-    DenseMap<Function *, int> EdgeIndexMap;
+    Optional<EdgeSequence> Edges;
 
     /// Basic constructor implements the scanning of F into Edges and
     /// EdgeIndexMap.
-    Node(LazyCallGraph &G, Function &F);
+    Node(LazyCallGraph &G, Function &F)
+        : G(&G), F(&F), DFSNumber(0), LowLink(0) {}
 
-    /// Internal helper to insert an edge to a function.
-    void insertEdgeInternal(Function &ChildF, Edge::Kind EK);
+    /// Implementation of the scan when populating.
+    EdgeSequence &populateSlow();
 
-    /// Internal helper to insert an edge to a node.
-    void insertEdgeInternal(Node &ChildN, Edge::Kind EK);
+    /// Internal helper to directly replace the function with a new one.
+    ///
+    /// This is used to facilitate tranfsormations which need to replace the
+    /// formal Function object but directly move the body and users from one to
+    /// the other.
+    void replaceFunction(Function &NewF);
 
-    /// Internal helper to change an edge kind.
-    void setEdgeKind(Function &ChildF, Edge::Kind EK);
-
-    /// Internal helper to remove the edge to the given function.
-    void removeEdgeInternal(Function &ChildF);
+    void clear() { Edges.reset(); }
 
     /// Print the name of this node's function.
-    friend raw_ostream &operator<<(raw_ostream &OS, const Node &N);
+    friend raw_ostream &operator<<(raw_ostream &OS, const Node &N) {
+      return OS << N.F->getName();
+    }
 
     /// Dump the name of this node's function to stderr.
     void dump() const;
-
-  public:
-    LazyCallGraph &getGraph() const { return *G; }
-
-    Function &getFunction() const { return F; }
-
-    edge_iterator begin() const {
-      return edge_iterator(Edges.begin(), Edges.end());
-    }
-    edge_iterator end() const { return edge_iterator(Edges.end(), Edges.end()); }
-
-    const Edge &operator[](int i) const { return Edges[i]; }
-    const Edge &operator[](Function &F) const {
-      assert(EdgeIndexMap.find(&F) != EdgeIndexMap.end() && "No such edge!");
-      return Edges[EdgeIndexMap.find(&F)->second];
-    }
-    const Edge &operator[](Node &N) const { return (*this)[N.getFunction()]; }
-
-    call_edge_iterator call_begin() const {
-      return call_edge_iterator(Edges.begin(), Edges.end());
-    }
-    call_edge_iterator call_end() const {
-      return call_edge_iterator(Edges.end(), Edges.end());
-    }
-
-    iterator_range<call_edge_iterator> calls() const {
-      return make_range(call_begin(), call_end());
-    }
-
-    /// Equality is defined as address equality.
-    bool operator==(const Node &N) const { return this == &N; }
-    bool operator!=(const Node &N) const { return !operator==(N); }
-  };
-
-  /// A lazy iterator used for both the entry nodes and child nodes.
-  ///
-  /// When this iterator is dereferenced, if not yet available, a function will
-  /// be scanned for "calls" or uses of functions and its child information
-  /// will be constructed. All of these results are accumulated and cached in
-  /// the graph.
-  class edge_iterator
-      : public iterator_adaptor_base<edge_iterator, EdgeVectorImplT::iterator,
-                                     std::forward_iterator_tag> {
-    friend class LazyCallGraph;
-    friend class LazyCallGraph::Node;
-
-    EdgeVectorImplT::iterator E;
-
-    // Build the iterator for a specific position in the edge list.
-    edge_iterator(EdgeVectorImplT::iterator BaseI,
-                  EdgeVectorImplT::iterator E)
-        : iterator_adaptor_base(BaseI), E(E) {
-      while (I != E && !*I)
-        ++I;
-    }
-
-  public:
-    edge_iterator() {}
-
-    using iterator_adaptor_base::operator++;
-    edge_iterator &operator++() {
-      do {
-        ++I;
-      } while (I != E && !*I);
-      return *this;
-    }
-  };
-
-  /// A lazy iterator over specifically call edges.
-  ///
-  /// This has the same iteration properties as the \c edge_iterator, but
-  /// restricts itself to edges which represent actual calls.
-  class call_edge_iterator
-      : public iterator_adaptor_base<call_edge_iterator,
-                                     EdgeVectorImplT::iterator,
-                                     std::forward_iterator_tag> {
-    friend class LazyCallGraph;
-    friend class LazyCallGraph::Node;
-
-    EdgeVectorImplT::iterator E;
-
-    /// Advance the iterator to the next valid, call edge.
-    void advanceToNextEdge() {
-      while (I != E && (!*I || !I->isCall()))
-        ++I;
-    }
-
-    // Build the iterator for a specific position in the edge list.
-    call_edge_iterator(EdgeVectorImplT::iterator BaseI,
-                       EdgeVectorImplT::iterator E)
-        : iterator_adaptor_base(BaseI), E(E) {
-      advanceToNextEdge();
-    }
-
-  public:
-    call_edge_iterator() {}
-
-    using iterator_adaptor_base::operator++;
-    call_edge_iterator &operator++() {
-      ++I;
-      advanceToNextEdge();
-      return *this;
-    }
   };
 
   /// An SCC of the call graph.
@@ -364,7 +426,26 @@ public:
     ///
     /// We print the function names in the SCC wrapped in '()'s and skipping
     /// the middle functions if there are a large number.
-    friend raw_ostream &operator<<(raw_ostream &OS, const SCC &C);
+    //
+    // Note: this is defined inline to dodge issues with GCC's interpretation
+    // of enclosing namespaces for friend function declarations.
+    friend raw_ostream &operator<<(raw_ostream &OS, const SCC &C) {
+      OS << '(';
+      int i = 0;
+      for (LazyCallGraph::Node &N : C) {
+        if (i > 0)
+          OS << ", ";
+        // Elide the inner elements if there are too many.
+        if (i > 8) {
+          OS << "..., " << *C.Nodes.back();
+          break;
+        }
+        OS << N;
+        ++i;
+      }
+      OS << ')';
+      return OS;
+    }
 
     /// Dump a short description of this SCC to stderr.
     void dump() const;
@@ -388,6 +469,32 @@ public:
     int size() const { return Nodes.size(); }
 
     RefSCC &getOuterRefSCC() const { return *OuterRefSCC; }
+
+    /// Test if this SCC is a parent of \a C.
+    ///
+    /// Note that this is linear in the number of edges departing the current
+    /// SCC.
+    bool isParentOf(const SCC &C) const;
+
+    /// Test if this SCC is an ancestor of \a C.
+    ///
+    /// Note that in the worst case this is linear in the number of edges
+    /// departing the current SCC and every SCC in the entire graph reachable
+    /// from this SCC. Thus this very well may walk every edge in the entire
+    /// call graph! Do not call this in a tight loop!
+    bool isAncestorOf(const SCC &C) const;
+
+    /// Test if this SCC is a child of \a C.
+    ///
+    /// See the comments for \c isParentOf for detailed notes about the
+    /// complexity of this routine.
+    bool isChildOf(const SCC &C) const { return C.isParentOf(*this); }
+
+    /// Test if this SCC is a descendant of \a C.
+    ///
+    /// See the comments for \c isParentOf for detailed notes about the
+    /// complexity of this routine.
+    bool isDescendantOf(const SCC &C) const { return C.isAncestorOf(*this); }
 
     /// Provide a short name by printing this SCC to a std::string.
     ///
@@ -432,11 +539,36 @@ public:
     /// formRefSCCFast on the graph itself.
     RefSCC(LazyCallGraph &G);
 
+    void clear() {
+      Parents.clear();
+      SCCs.clear();
+      SCCIndices.clear();
+    }
+
     /// Print a short description useful for debugging or logging.
     ///
     /// We print the SCCs wrapped in '[]'s and skipping the middle SCCs if
     /// there are a large number.
-    friend raw_ostream &operator<<(raw_ostream &OS, const RefSCC &RC);
+    //
+    // Note: this is defined inline to dodge issues with GCC's interpretation
+    // of enclosing namespaces for friend function declarations.
+    friend raw_ostream &operator<<(raw_ostream &OS, const RefSCC &RC) {
+      OS << '[';
+      int i = 0;
+      for (LazyCallGraph::SCC &C : RC) {
+        if (i > 0)
+          OS << ", ";
+        // Elide the inner elements if there are too many.
+        if (i > 4) {
+          OS << "..., " << *RC.SCCs.back();
+          break;
+        }
+        OS << C;
+        ++i;
+      }
+      OS << ']';
+      return OS;
+    }
 
     /// Dump a short description of this RefSCC to stderr.
     void dump() const;
@@ -453,6 +585,10 @@ public:
     /// - The SCCs list is in fact in post-order.
     void verify();
 #endif
+
+    /// Handle any necessary parent set updates after inserting a trivial ref
+    /// or call edge.
+    void handleTrivialEdgeInsertion(Node &SourceN, Node &TargetN);
 
   public:
     typedef pointee_iterator<SmallVectorImpl<SCC *>::const_iterator> iterator;
@@ -478,7 +614,7 @@ public:
       return make_range(parent_begin(), parent_end());
     }
 
-    /// Test if this SCC is a parent of \a C.
+    /// Test if this RefSCC is a parent of \a C.
     bool isParentOf(const RefSCC &C) const { return C.isChildOf(*this); }
 
     /// Test if this RefSCC is an ancestor of \a C.
@@ -492,9 +628,9 @@ public:
     /// Test if this RefSCC is a descendant of \a C.
     bool isDescendantOf(const RefSCC &C) const;
 
-    /// Provide a short name by printing this SCC to a std::string.
+    /// Provide a short name by printing this RefSCC to a std::string.
     ///
-    /// This copes with the fact that we don't have a name per-se for an SCC
+    /// This copes with the fact that we don't have a name per-se for an RefSCC
     /// while still making the use of this in debugging and logging useful.
     std::string getName() const {
       std::string Name;
@@ -508,7 +644,7 @@ public:
     /// \name Mutation API
     ///
     /// These methods provide the core API for updating the call graph in the
-    /// presence of a (potentially still in-flight) DFS-found SCCs.
+    /// presence of (potentially still in-flight) DFS-found RefSCCs and SCCs.
     ///
     /// Note that these methods sometimes have complex runtimes, so be careful
     /// how you call them.
@@ -528,18 +664,34 @@ public:
     SmallVector<SCC *, 1> switchInternalEdgeToCall(Node &SourceN,
                                                    Node &TargetN);
 
-    /// Make an existing internal call edge into a ref edge.
+    /// Make an existing internal call edge between separate SCCs into a ref
+    /// edge.
     ///
-    /// If SourceN and TargetN are part of a single SCC, it may be split up due
-    /// to breaking a cycle in the call edges that formed it. If that happens,
-    /// then this routine will insert new SCCs into the postorder list *before*
-    /// the SCC of TargetN (previously the SCC of both). This preserves
-    /// postorder as the TargetN can reach all of the other nodes by definition
-    /// of previously being in a single SCC formed by the cycle from SourceN to
-    /// TargetN. The newly added nodes are added *immediately* and contiguously
-    /// prior to the TargetN SCC and so they may be iterated starting from
-    /// there.
-    void switchInternalEdgeToRef(Node &SourceN, Node &TargetN);
+    /// If SourceN and TargetN in separate SCCs within this RefSCC, changing
+    /// the call edge between them to a ref edge is a trivial operation that
+    /// does not require any structural changes to the call graph.
+    void switchTrivialInternalEdgeToRef(Node &SourceN, Node &TargetN);
+
+    /// Make an existing internal call edge within a single SCC into a ref
+    /// edge.
+    ///
+    /// Since SourceN and TargetN are part of a single SCC, this SCC may be
+    /// split up due to breaking a cycle in the call edges that formed it. If
+    /// that happens, then this routine will insert new SCCs into the postorder
+    /// list *before* the SCC of TargetN (previously the SCC of both). This
+    /// preserves postorder as the TargetN can reach all of the other nodes by
+    /// definition of previously being in a single SCC formed by the cycle from
+    /// SourceN to TargetN.
+    ///
+    /// The newly added SCCs are added *immediately* and contiguously
+    /// prior to the TargetN SCC and return the range covering the new SCCs in
+    /// the RefSCC's postorder sequence. You can directly iterate the returned
+    /// range to observe all of the new SCCs in postorder.
+    ///
+    /// Note that if SourceN and TargetN are in separate SCCs, the simpler
+    /// routine `switchTrivialInternalEdgeToRef` should be used instead.
+    iterator_range<iterator> switchInternalEdgeToRef(Node &SourceN,
+                                                     Node &TargetN);
 
     /// Make an existing outgoing ref edge into a call edge.
     ///
@@ -659,15 +811,48 @@ public:
     SmallVector<RefSCC *, 1> removeInternalRefEdge(Node &SourceN,
                                                    Node &TargetN);
 
+    /// A convenience wrapper around the above to handle trivial cases of
+    /// inserting a new call edge.
+    ///
+    /// This is trivial whenever the target is in the same SCC as the source or
+    /// the edge is an outgoing edge to some descendant SCC. In these cases
+    /// there is no change to the cyclic structure of SCCs or RefSCCs.
+    ///
+    /// To further make calling this convenient, it also handles inserting
+    /// already existing edges.
+    void insertTrivialCallEdge(Node &SourceN, Node &TargetN);
+
+    /// A convenience wrapper around the above to handle trivial cases of
+    /// inserting a new ref edge.
+    ///
+    /// This is trivial whenever the target is in the same RefSCC as the source
+    /// or the edge is an outgoing edge to some descendant RefSCC. In these
+    /// cases there is no change to the cyclic structure of the RefSCCs.
+    ///
+    /// To further make calling this convenient, it also handles inserting
+    /// already existing edges.
+    void insertTrivialRefEdge(Node &SourceN, Node &TargetN);
+
+    /// Directly replace a node's function with a new function.
+    ///
+    /// This should be used when moving the body and users of a function to
+    /// a new formal function object but not otherwise changing the call graph
+    /// structure in any way.
+    ///
+    /// It requires that the old function in the provided node have zero uses
+    /// and the new function must have calls and references to it establishing
+    /// an equivalent graph.
+    void replaceNodeFunction(Node &N, Function &NewF);
+
     ///@}
   };
 
-  /// A post-order depth-first SCC iterator over the call graph.
+  /// A post-order depth-first RefSCC iterator over the call graph.
   ///
-  /// This iterator triggers the Tarjan DFS-based formation of the SCC DAG for
-  /// the call graph, walking it lazily in depth-first post-order. That is, it
-  /// always visits SCCs for a callee prior to visiting the SCC for a caller
-  /// (when they are in different SCCs).
+  /// This iterator walks the cached post-order sequence of RefSCCs. However,
+  /// it trades stability for flexibility. It is restricted to a forward
+  /// iterator but will survive mutations which insert new RefSCCs and continue
+  /// to point to the same RefSCC even if it moves in the post-order sequence.
   class postorder_ref_scc_iterator
       : public iterator_facade_base<postorder_ref_scc_iterator,
                                     std::forward_iterator_tag, RefSCC> {
@@ -678,27 +863,36 @@ public:
     struct IsAtEndT {};
 
     LazyCallGraph *G;
-    RefSCC *C;
+    RefSCC *RC;
 
-    // Build the begin iterator for a node.
-    postorder_ref_scc_iterator(LazyCallGraph &G) : G(&G) {
-      C = G.getNextRefSCCInPostOrder();
-    }
+    /// Build the begin iterator for a node.
+    postorder_ref_scc_iterator(LazyCallGraph &G) : G(&G), RC(getRC(G, 0)) {}
 
-    // Build the end iterator for a node. This is selected purely by overload.
+    /// Build the end iterator for a node. This is selected purely by overload.
     postorder_ref_scc_iterator(LazyCallGraph &G, IsAtEndT /*Nonce*/)
-        : G(&G), C(nullptr) {}
+        : G(&G), RC(nullptr) {}
+
+    /// Get the post-order RefSCC at the given index of the postorder walk,
+    /// populating it if necessary.
+    static RefSCC *getRC(LazyCallGraph &G, int Index) {
+      if (Index == (int)G.PostOrderRefSCCs.size())
+        // We're at the end.
+        return nullptr;
+
+      return G.PostOrderRefSCCs[Index];
+    }
 
   public:
     bool operator==(const postorder_ref_scc_iterator &Arg) const {
-      return G == Arg.G && C == Arg.C;
+      return G == Arg.G && RC == Arg.RC;
     }
 
-    reference operator*() const { return *C; }
+    reference operator*() const { return *RC; }
 
     using iterator_facade_base::operator++;
     postorder_ref_scc_iterator &operator++() {
-      C = G->getNextRefSCCInPostOrder();
+      assert(RC && "Cannot increment the end iterator!");
+      RC = getRC(*G, G->RefSCCIndices.find(RC)->second + 1);
       return *this;
     }
   };
@@ -713,17 +907,21 @@ public:
   LazyCallGraph(LazyCallGraph &&G);
   LazyCallGraph &operator=(LazyCallGraph &&RHS);
 
-  edge_iterator begin() {
-    return edge_iterator(EntryEdges.begin(), EntryEdges.end());
-  }
-  edge_iterator end() {
-    return edge_iterator(EntryEdges.end(), EntryEdges.end());
-  }
+  EdgeSequence::iterator begin() { return EntryEdges.begin(); }
+  EdgeSequence::iterator end() { return EntryEdges.end(); }
+
+  void buildRefSCCs();
 
   postorder_ref_scc_iterator postorder_ref_scc_begin() {
+    if (!EntryEdges.empty())
+      assert(!PostOrderRefSCCs.empty() &&
+             "Must form RefSCCs before iterating them!");
     return postorder_ref_scc_iterator(*this);
   }
   postorder_ref_scc_iterator postorder_ref_scc_end() {
+    if (!EntryEdges.empty())
+      assert(!PostOrderRefSCCs.empty() &&
+             "Must form RefSCCs before iterating them!");
     return postorder_ref_scc_iterator(*this,
                                       postorder_ref_scc_iterator::IsAtEndT());
   }
@@ -737,7 +935,7 @@ public:
 
   /// Lookup a function's SCC in the graph.
   ///
-  /// \returns null if the function hasn't been assigned an SCC via the SCC
+  /// \returns null if the function hasn't been assigned an SCC via the RefSCC
   /// iterator walk.
   SCC *lookupSCC(Node &N) const { return SCCMap.lookup(&N); }
 
@@ -769,23 +967,90 @@ public:
   /// call graph. They can be used to update the core node-graph during
   /// a node-based inorder traversal that precedes any SCC-based traversal.
   ///
-  /// Once you begin manipulating a call graph's SCCs, you must perform all
-  /// mutation of the graph via the SCC methods.
+  /// Once you begin manipulating a call graph's SCCs, most mutation of the
+  /// graph must be performed via a RefSCC method. There are some exceptions
+  /// below.
 
   /// Update the call graph after inserting a new edge.
-  void insertEdge(Node &Caller, Function &Callee, Edge::Kind EK);
+  void insertEdge(Node &SourceN, Node &TargetN, Edge::Kind EK);
 
   /// Update the call graph after inserting a new edge.
-  void insertEdge(Function &Caller, Function &Callee, Edge::Kind EK) {
-    return insertEdge(get(Caller), Callee, EK);
+  void insertEdge(Function &Source, Function &Target, Edge::Kind EK) {
+    return insertEdge(get(Source), get(Target), EK);
   }
 
   /// Update the call graph after deleting an edge.
-  void removeEdge(Node &Caller, Function &Callee);
+  void removeEdge(Node &SourceN, Node &TargetN);
 
   /// Update the call graph after deleting an edge.
-  void removeEdge(Function &Caller, Function &Callee) {
-    return removeEdge(get(Caller), Callee);
+  void removeEdge(Function &Source, Function &Target) {
+    return removeEdge(get(Source), get(Target));
+  }
+
+  ///@}
+
+  ///@{
+  /// \name General Mutation API
+  ///
+  /// There are a very limited set of mutations allowed on the graph as a whole
+  /// once SCCs have started to be formed. These routines have strict contracts
+  /// but may be called at any point.
+
+  /// Remove a dead function from the call graph (typically to delete it).
+  ///
+  /// Note that the function must have an empty use list, and the call graph
+  /// must be up-to-date prior to calling this. That means it is by itself in
+  /// a maximal SCC which is by itself in a maximal RefSCC, etc. No structural
+  /// changes result from calling this routine other than potentially removing
+  /// entry points into the call graph.
+  ///
+  /// If SCC formation has begun, this function must not be part of the current
+  /// DFS in order to call this safely. Typically, the function will have been
+  /// fully visited by the DFS prior to calling this routine.
+  void removeDeadFunction(Function &F);
+
+  ///@}
+
+  ///@{
+  /// \name Static helpers for code doing updates to the call graph.
+  ///
+  /// These helpers are used to implement parts of the call graph but are also
+  /// useful to code doing updates or otherwise wanting to walk the IR in the
+  /// same patterns as when we build the call graph.
+
+  /// Recursively visits the defined functions whose address is reachable from
+  /// every constant in the \p Worklist.
+  ///
+  /// Doesn't recurse through any constants already in the \p Visited set, and
+  /// updates that set with every constant visited.
+  ///
+  /// For each defined function, calls \p Callback with that function.
+  template <typename CallbackT>
+  static void visitReferences(SmallVectorImpl<Constant *> &Worklist,
+                              SmallPtrSetImpl<Constant *> &Visited,
+                              CallbackT Callback) {
+    while (!Worklist.empty()) {
+      Constant *C = Worklist.pop_back_val();
+
+      if (Function *F = dyn_cast<Function>(C)) {
+        if (!F->isDeclaration())
+          Callback(*F);
+        continue;
+      }
+
+      if (BlockAddress *BA = dyn_cast<BlockAddress>(C)) {
+        // The blockaddress constant expression is a weird special case, we
+        // can't generically walk its operands the way we do for all other
+        // constants.
+        if (Visited.insert(BA->getFunction()).second)
+          Worklist.push_back(BA->getFunction());
+        continue;
+      }
+
+      for (Value *Op : C->operand_values())
+        if (Visited.insert(cast<Constant>(Op)).second)
+          Worklist.push_back(cast<Constant>(Op));
+    }
   }
 
   ///@}
@@ -800,14 +1065,11 @@ private:
   /// Maps function->node for fast lookup.
   DenseMap<const Function *, Node *> NodeMap;
 
-  /// The entry nodes to the graph.
+  /// The entry edges into the graph.
   ///
-  /// These nodes are reachable through "external" means. Put another way, they
+  /// These edges are from "external" sources. Put another way, they
   /// escape at the module scope.
-  EdgeVectorT EntryEdges;
-
-  /// Map of the entry nodes in the graph to their indices in \c EntryEdges.
-  DenseMap<Function *, int> EntryIndexMap;
+  EdgeSequence EntryEdges;
 
   /// Allocator that holds all the call graph SCCs.
   SpecificBumpPtrAllocator<SCC> SCCBPA;
@@ -818,22 +1080,19 @@ private:
   /// Allocator that holds all the call graph RefSCCs.
   SpecificBumpPtrAllocator<RefSCC> RefSCCBPA;
 
+  /// The post-order sequence of RefSCCs.
+  ///
+  /// This list is lazily formed the first time we walk the graph.
+  SmallVector<RefSCC *, 16> PostOrderRefSCCs;
+
+  /// A map from RefSCC to the index for it in the postorder sequence of
+  /// RefSCCs.
+  DenseMap<RefSCC *, int> RefSCCIndices;
+
   /// The leaf RefSCCs of the graph.
   ///
   /// These are all of the RefSCCs which have no children.
   SmallVector<RefSCC *, 4> LeafRefSCCs;
-
-  /// Stack of nodes in the DFS walk.
-  SmallVector<std::pair<Node *, edge_iterator>, 4> DFSStack;
-
-  /// Set of entry nodes not-yet-processed into RefSCCs.
-  SmallVector<Function *, 4> RefSCCEntryNodes;
-
-  /// Stack of nodes the DFS has walked but not yet put into a SCC.
-  SmallVector<Node *, 4> PendingRefSCCStack;
-
-  /// Counter for the next DFS number to assign.
-  int NextDFSNumber;
 
   /// Helper to insert a new function, with an already looked-up entry in
   /// the NodeMap.
@@ -856,6 +1115,23 @@ private:
     return new (RefSCCBPA.Allocate()) RefSCC(std::forward<Ts>(Args)...);
   }
 
+  /// Common logic for building SCCs from a sequence of roots.
+  ///
+  /// This is a very generic implementation of the depth-first walk and SCC
+  /// formation algorithm. It uses a generic sequence of roots and generic
+  /// callbacks for each step. This is designed to be used to implement both
+  /// the RefSCC formation and SCC formation with shared logic.
+  ///
+  /// Currently this is a relatively naive implementation of Tarjan's DFS
+  /// algorithm to form the SCCs.
+  ///
+  /// FIXME: We should consider newer variants such as Nuutila.
+  template <typename RootsT, typename GetBeginT, typename GetEndT,
+            typename GetNodeT, typename FormSCCCallbackT>
+  static void buildGenericSCCs(RootsT &&Roots, GetBeginT &&GetBegin,
+                               GetEndT &&GetEnd, GetNodeT &&GetNode,
+                               FormSCCCallbackT &&FormSCC);
+
   /// Build the SCCs for a RefSCC out of a list of nodes.
   void buildSCCs(RefSCC &RC, node_stack_range Nodes);
 
@@ -865,74 +1141,66 @@ private:
   /// and updates the root leaf list.
   void connectRefSCC(RefSCC &RC);
 
-  /// Retrieve the next node in the post-order RefSCC walk of the call graph.
-  RefSCC *getNextRefSCCInPostOrder();
+  /// Get the index of a RefSCC within the postorder traversal.
+  ///
+  /// Requires that this RefSCC is a valid one in the (perhaps partial)
+  /// postorder traversed part of the graph.
+  int getRefSCCIndex(RefSCC &RC) {
+    auto IndexIt = RefSCCIndices.find(&RC);
+    assert(IndexIt != RefSCCIndices.end() && "RefSCC doesn't have an index!");
+    assert(PostOrderRefSCCs[IndexIt->second] == &RC &&
+           "Index does not point back at RC!");
+    return IndexIt->second;
+  }
 };
 
 inline LazyCallGraph::Edge::Edge() : Value() {}
-inline LazyCallGraph::Edge::Edge(Function &F, Kind K) : Value(&F, K) {}
 inline LazyCallGraph::Edge::Edge(Node &N, Kind K) : Value(&N, K) {}
 
-inline LazyCallGraph::Edge::operator bool() const {
-  return !Value.getPointer().isNull();
+inline LazyCallGraph::Edge::operator bool() const { return Value.getPointer(); }
+
+inline LazyCallGraph::Edge::Kind LazyCallGraph::Edge::getKind() const {
+  assert(*this && "Queried a null edge!");
+  return Value.getInt();
 }
 
 inline bool LazyCallGraph::Edge::isCall() const {
   assert(*this && "Queried a null edge!");
-  return Value.getInt() == Call;
+  return getKind() == Call;
+}
+
+inline LazyCallGraph::Node &LazyCallGraph::Edge::getNode() const {
+  assert(*this && "Queried a null edge!");
+  return *Value.getPointer();
 }
 
 inline Function &LazyCallGraph::Edge::getFunction() const {
   assert(*this && "Queried a null edge!");
-  auto P = Value.getPointer();
-  if (auto *F = P.dyn_cast<Function *>())
-    return *F;
-
-  return P.get<Node *>()->getFunction();
-}
-
-inline LazyCallGraph::Node *LazyCallGraph::Edge::getNode() const {
-  assert(*this && "Queried a null edge!");
-  auto P = Value.getPointer();
-  if (auto *N = P.dyn_cast<Node *>())
-    return N;
-
-  return nullptr;
-}
-
-inline LazyCallGraph::Node &LazyCallGraph::Edge::getNode(LazyCallGraph &G) {
-  assert(*this && "Queried a null edge!");
-  auto P = Value.getPointer();
-  if (auto *N = P.dyn_cast<Node *>())
-    return *N;
-
-  Node &N = G.get(*P.get<Function *>());
-  Value.setPointer(&N);
-  return N;
+  return getNode().getFunction();
 }
 
 // Provide GraphTraits specializations for call graphs.
 template <> struct GraphTraits<LazyCallGraph::Node *> {
-  typedef LazyCallGraph::Node NodeType;
-  typedef LazyCallGraph::edge_iterator ChildIteratorType;
+  typedef LazyCallGraph::Node *NodeRef;
+  typedef LazyCallGraph::EdgeSequence::iterator ChildIteratorType;
 
-  static NodeType *getEntryNode(NodeType *N) { return N; }
-  static ChildIteratorType child_begin(NodeType *N) { return N->begin(); }
-  static ChildIteratorType child_end(NodeType *N) { return N->end(); }
+  static NodeRef getEntryNode(NodeRef N) { return N; }
+  static ChildIteratorType child_begin(NodeRef N) { return (*N)->begin(); }
+  static ChildIteratorType child_end(NodeRef N) { return (*N)->end(); }
 };
 template <> struct GraphTraits<LazyCallGraph *> {
-  typedef LazyCallGraph::Node NodeType;
-  typedef LazyCallGraph::edge_iterator ChildIteratorType;
+  typedef LazyCallGraph::Node *NodeRef;
+  typedef LazyCallGraph::EdgeSequence::iterator ChildIteratorType;
 
-  static NodeType *getEntryNode(NodeType *N) { return N; }
-  static ChildIteratorType child_begin(NodeType *N) { return N->begin(); }
-  static ChildIteratorType child_end(NodeType *N) { return N->end(); }
+  static NodeRef getEntryNode(NodeRef N) { return N; }
+  static ChildIteratorType child_begin(NodeRef N) { return (*N)->begin(); }
+  static ChildIteratorType child_end(NodeRef N) { return (*N)->end(); }
 };
 
 /// An analysis pass which computes the call graph for a module.
 class LazyCallGraphAnalysis : public AnalysisInfoMixin<LazyCallGraphAnalysis> {
   friend AnalysisInfoMixin<LazyCallGraphAnalysis>;
-  static char PassID;
+  static AnalysisKey Key;
 
 public:
   /// Inform generic clients of the result type.
@@ -972,11 +1240,6 @@ public:
 
   PreservedAnalyses run(Module &M, ModuleAnalysisManager &AM);
 };
-
-// Declare llvm::op<<.
-raw_ostream &operator<<(raw_ostream &OS, const LazyCallGraph::Node &N);
-raw_ostream &operator<<(raw_ostream &OS, const LazyCallGraph::SCC &C);
-raw_ostream &operator<<(raw_ostream &OS, const LazyCallGraph::RefSCC &RC);
 }
 
 #endif

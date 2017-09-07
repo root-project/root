@@ -151,7 +151,7 @@ This is especially useful for example with TVirtualMC or similar.
 #include "Riostream.h"
 
 
-ClassImp(TGenerator)
+ClassImp(TGenerator);
 
 ////////////////////////////////////////////////////////////////////////////////
 ///  Event generator default constructor
@@ -480,7 +480,7 @@ void TGenerator::Draw(Option_t *option)
    text->DrawText(-0.45,-0.92,tcount);
 
    if (nPionPlus+nPionMinus) {
-      snprintf(tcount,12,"Kaons/Pions= %4f",Float_t(nKaons)/Float_t(nPionPlus+nPionMinus));
+      snprintf(tcount,31,"Kaons/Pions= %4f",Float_t(nKaons)/Float_t(nPionPlus+nPionMinus));
    } else {
       strlcpy(tcount,"Kaons/Pions= inf",31);
    }

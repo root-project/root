@@ -44,7 +44,7 @@
 #define kMemValuePosMaster 8
 #define kEventNumberPos 13
 
-ClassImp(TProofProgressMemoryPlot)
+ClassImp(TProofProgressMemoryPlot);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Main constructor

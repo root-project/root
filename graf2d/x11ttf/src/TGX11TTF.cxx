@@ -151,7 +151,7 @@ public:
 static TTFX11Init gTTFX11Init;
 
 
-ClassImp(TGX11TTF)
+ClassImp(TGX11TTF);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create copy of TGX11 but now use TrueType fonts.

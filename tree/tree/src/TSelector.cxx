@@ -81,7 +81,7 @@ use `fChain->GetTree()->GetEntry(entry);`
 #include "TClass.h"
 #include "TInterpreter.h"
 
-ClassImp(TSelector)
+ClassImp(TSelector);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default selector ctor.

@@ -35,7 +35,7 @@ static void appendToGlobalArray(const char *Array, Module &M, Function *F,
     // Upgrade a 2-field global array type to the new 3-field format if needed.
     if (Data && OldEltTy->getNumElements() < 3)
       EltTy = StructType::get(IRB.getInt32Ty(), PointerType::getUnqual(FnTy),
-                              IRB.getInt8PtrTy(), nullptr);
+                              IRB.getInt8PtrTy());
     else
       EltTy = OldEltTy;
     if (Constant *Init = GVCtor->getInitializer()) {
@@ -44,10 +44,10 @@ static void appendToGlobalArray(const char *Array, Module &M, Function *F,
       for (unsigned i = 0; i != n; ++i) {
         auto Ctor = cast<Constant>(Init->getOperand(i));
         if (EltTy != OldEltTy)
-          Ctor = ConstantStruct::get(
-              EltTy, Ctor->getAggregateElement((unsigned)0),
-              Ctor->getAggregateElement(1),
-              Constant::getNullValue(IRB.getInt8PtrTy()), nullptr);
+          Ctor =
+              ConstantStruct::get(EltTy, Ctor->getAggregateElement((unsigned)0),
+                                  Ctor->getAggregateElement(1),
+                                  Constant::getNullValue(IRB.getInt8PtrTy()));
         CurrentCtors.push_back(Ctor);
       }
     }
@@ -55,7 +55,7 @@ static void appendToGlobalArray(const char *Array, Module &M, Function *F,
   } else {
     // Use the new three-field struct if there isn't one already.
     EltTy = StructType::get(IRB.getInt32Ty(), PointerType::getUnqual(FnTy),
-                            IRB.getInt8PtrTy(), nullptr);
+                            IRB.getInt8PtrTy());
   }
 
   // Build a 2 or 3 field global_ctor entry.  We don't take a comdat key.
@@ -89,14 +89,64 @@ void llvm::appendToGlobalDtors(Module &M, Function *F, int Priority, Constant *D
   appendToGlobalArray("llvm.global_dtors", M, F, Priority, Data);
 }
 
+static void appendToUsedList(Module &M, StringRef Name, ArrayRef<GlobalValue *> Values) {
+  GlobalVariable *GV = M.getGlobalVariable(Name);
+  SmallPtrSet<Constant *, 16> InitAsSet;
+  SmallVector<Constant *, 16> Init;
+  if (GV) {
+    ConstantArray *CA = dyn_cast<ConstantArray>(GV->getInitializer());
+    for (auto &Op : CA->operands()) {
+      Constant *C = cast_or_null<Constant>(Op);
+      if (InitAsSet.insert(C).second)
+        Init.push_back(C);
+    }
+    GV->eraseFromParent();
+  }
+
+  Type *Int8PtrTy = llvm::Type::getInt8PtrTy(M.getContext());
+  for (auto *V : Values) {
+    Constant *C = ConstantExpr::getBitCast(V, Int8PtrTy);
+    if (InitAsSet.insert(C).second)
+      Init.push_back(C);
+  }
+
+  if (Init.empty())
+    return;
+
+  ArrayType *ATy = ArrayType::get(Int8PtrTy, Init.size());
+  GV = new llvm::GlobalVariable(M, ATy, false, GlobalValue::AppendingLinkage,
+                                ConstantArray::get(ATy, Init), Name);
+  GV->setSection("llvm.metadata");
+}
+
+void llvm::appendToUsed(Module &M, ArrayRef<GlobalValue *> Values) {
+  appendToUsedList(M, "llvm.used", Values);
+}
+
+void llvm::appendToCompilerUsed(Module &M, ArrayRef<GlobalValue *> Values) {
+  appendToUsedList(M, "llvm.compiler.used", Values);
+}
+
 Function *llvm::checkSanitizerInterfaceFunction(Constant *FuncOrBitcast) {
   if (isa<Function>(FuncOrBitcast))
     return cast<Function>(FuncOrBitcast);
-  FuncOrBitcast->dump();
+  FuncOrBitcast->print(errs());
+  errs() << '\n';
   std::string Err;
   raw_string_ostream Stream(Err);
   Stream << "Sanitizer interface function redefined: " << *FuncOrBitcast;
   report_fatal_error(Err);
+}
+
+Function *llvm::declareSanitizerInitFunction(Module &M, StringRef InitName,
+                                             ArrayRef<Type *> InitArgTypes) {
+  assert(!InitName.empty() && "Expected init function name");
+  Function *F = checkSanitizerInterfaceFunction(M.getOrInsertFunction(
+      InitName,
+      FunctionType::get(Type::getVoidTy(M.getContext()), InitArgTypes, false),
+      AttributeList()));
+  F->setLinkage(Function::ExternalLinkage);
+  return F;
 }
 
 std::pair<Function *, Function *> llvm::createSanitizerCtorAndInitFunctions(
@@ -104,25 +154,118 @@ std::pair<Function *, Function *> llvm::createSanitizerCtorAndInitFunctions(
     ArrayRef<Type *> InitArgTypes, ArrayRef<Value *> InitArgs,
     StringRef VersionCheckName) {
   assert(!InitName.empty() && "Expected init function name");
-  assert(InitArgTypes.size() == InitArgTypes.size() &&
+  assert(InitArgs.size() == InitArgTypes.size() &&
          "Sanitizer's init function expects different number of arguments");
+  Function *InitFunction =
+      declareSanitizerInitFunction(M, InitName, InitArgTypes);
   Function *Ctor = Function::Create(
       FunctionType::get(Type::getVoidTy(M.getContext()), false),
       GlobalValue::InternalLinkage, CtorName, &M);
   BasicBlock *CtorBB = BasicBlock::Create(M.getContext(), "", Ctor);
   IRBuilder<> IRB(ReturnInst::Create(M.getContext(), CtorBB));
-  Function *InitFunction =
-      checkSanitizerInterfaceFunction(M.getOrInsertFunction(
-          InitName, FunctionType::get(IRB.getVoidTy(), InitArgTypes, false),
-          AttributeSet()));
-  InitFunction->setLinkage(Function::ExternalLinkage);
   IRB.CreateCall(InitFunction, InitArgs);
   if (!VersionCheckName.empty()) {
     Function *VersionCheckFunction =
         checkSanitizerInterfaceFunction(M.getOrInsertFunction(
             VersionCheckName, FunctionType::get(IRB.getVoidTy(), {}, false),
-            AttributeSet()));
+            AttributeList()));
     IRB.CreateCall(VersionCheckFunction, {});
   }
   return std::make_pair(Ctor, InitFunction);
+}
+
+void llvm::filterDeadComdatFunctions(
+    Module &M, SmallVectorImpl<Function *> &DeadComdatFunctions) {
+  // Build a map from the comdat to the number of entries in that comdat we
+  // think are dead. If this fully covers the comdat group, then the entire
+  // group is dead. If we find another entry in the comdat group though, we'll
+  // have to preserve the whole group.
+  SmallDenseMap<Comdat *, int, 16> ComdatEntriesCovered;
+  for (Function *F : DeadComdatFunctions) {
+    Comdat *C = F->getComdat();
+    assert(C && "Expected all input GVs to be in a comdat!");
+    ComdatEntriesCovered[C] += 1;
+  }
+
+  auto CheckComdat = [&](Comdat &C) {
+    auto CI = ComdatEntriesCovered.find(&C);
+    if (CI == ComdatEntriesCovered.end())
+      return;
+
+    // If this could have been covered by a dead entry, just subtract one to
+    // account for it.
+    if (CI->second > 0) {
+      CI->second -= 1;
+      return;
+    }
+
+    // If we've already accounted for all the entries that were dead, the
+    // entire comdat is alive so remove it from the map.
+    ComdatEntriesCovered.erase(CI);
+  };
+
+  auto CheckAllComdats = [&] {
+    for (Function &F : M.functions())
+      if (Comdat *C = F.getComdat()) {
+        CheckComdat(*C);
+        if (ComdatEntriesCovered.empty())
+          return;
+      }
+    for (GlobalVariable &GV : M.globals())
+      if (Comdat *C = GV.getComdat()) {
+        CheckComdat(*C);
+        if (ComdatEntriesCovered.empty())
+          return;
+      }
+    for (GlobalAlias &GA : M.aliases())
+      if (Comdat *C = GA.getComdat()) {
+        CheckComdat(*C);
+        if (ComdatEntriesCovered.empty())
+          return;
+      }
+  };
+  CheckAllComdats();
+
+  if (ComdatEntriesCovered.empty()) {
+    DeadComdatFunctions.clear();
+    return;
+  }
+
+  // Remove the entries that were not covering.
+  erase_if(DeadComdatFunctions, [&](GlobalValue *GV) {
+    return ComdatEntriesCovered.find(GV->getComdat()) ==
+           ComdatEntriesCovered.end();
+  });
+}
+
+std::string llvm::getUniqueModuleId(Module *M) {
+  MD5 Md5;
+  bool ExportsSymbols = false;
+  auto AddGlobal = [&](GlobalValue &GV) {
+    if (GV.isDeclaration() || GV.getName().startswith("llvm.") ||
+        !GV.hasExternalLinkage())
+      return;
+    ExportsSymbols = true;
+    Md5.update(GV.getName());
+    Md5.update(ArrayRef<uint8_t>{0});
+  };
+
+  for (auto &F : *M)
+    AddGlobal(F);
+  for (auto &GV : M->globals())
+    AddGlobal(GV);
+  for (auto &GA : M->aliases())
+    AddGlobal(GA);
+  for (auto &IF : M->ifuncs())
+    AddGlobal(IF);
+
+  if (!ExportsSymbols)
+    return "";
+
+  MD5::MD5Result R;
+  Md5.final(R);
+
+  SmallString<32> Str;
+  MD5::stringifyResult(R, Str);
+  return ("$" + Str).str();
 }

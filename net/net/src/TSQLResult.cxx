@@ -22,4 +22,4 @@
 
 #include "TSQLResult.h"
 
-ClassImp(TSQLResult)
+ClassImp(TSQLResult);

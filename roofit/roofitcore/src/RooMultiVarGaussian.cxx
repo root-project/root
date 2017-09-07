@@ -39,7 +39,7 @@ Multivariate Gaussian p.d.f. with correlations
 
 using namespace std;
 
-ClassImp(RooMultiVarGaussian)
+ClassImp(RooMultiVarGaussian);
   ;
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -9,13 +9,14 @@
  *************************************************************************/
 
 /**
-  \defgroup dataframe Data Frame
-The ROOT Data Frame allows to analyse data stored in TTrees with a high level interface.
+  \defgroup dataframe DataFrame
+ROOT's TDataFrame allows to analyse data stored in TTrees with a high level interface.
 */
 
 #ifndef ROOT_TDATAFRAME
 #define ROOT_TDATAFRAME
 
+#include "ROOT/TypeTraits.hxx"
 #include "ROOT/TDFInterface.hxx"
 #include "ROOT/TDFNodes.hxx"
 #include "ROOT/TDFUtils.hxx"
@@ -32,6 +33,7 @@ namespace ROOT {
 namespace Experimental {
 namespace TDFDetail = ROOT::Detail::TDF;
 namespace TDFInternal = ROOT::Internal::TDF;
+namespace TTraits = ROOT::TypeTraits;
 
 class TDataFrame : public TDF::TInterface<TDFDetail::TLoopManager> {
    using ColumnNames_t = TDFDetail::ColumnNames_t;
@@ -49,24 +51,23 @@ public:
    /// booking of actions or transformations.
    /// See TInterface for the documentation of the
    /// methods available.
-   template <typename FILENAMESCOLL,
-             typename std::enable_if<TDFInternal::TIsContainer<FILENAMESCOLL>::fgValue, int>::type = 0>
-   TDataFrame(std::string_view treeName, const FILENAMESCOLL &filenamescoll,
-              const ColumnNames_t &defaultBranches = {});
+   template <typename FILENAMESCOLL = std::vector<std::string>,
+             typename std::enable_if<TTraits::IsContainer<FILENAMESCOLL>::value, int>::type = 0>
+   TDataFrame(std::string_view treeName, const FILENAMESCOLL &filenamescoll, const ColumnNames_t &defaultBranches = {});
    TDataFrame(std::string_view treeName, ::TDirectory *dirPtr, const ColumnNames_t &defaultBranches = {});
    TDataFrame(TTree &tree, const ColumnNames_t &defaultBranches = {});
-   TDataFrame(Long64_t numEntries);
+   TDataFrame(ULong64_t numEntries);
 };
 
-template <typename FILENAMESCOLL, typename std::enable_if<TDFInternal::TIsContainer<FILENAMESCOLL>::fgValue, int>::type>
+template <typename FILENAMESCOLL, typename std::enable_if<TTraits::IsContainer<FILENAMESCOLL>::value, int>::type>
 TDataFrame::TDataFrame(std::string_view treeName, const FILENAMESCOLL &filenamescoll,
                        const ColumnNames_t &defaultBranches)
    : TDF::TInterface<TDFDetail::TLoopManager>(std::make_shared<TDFDetail::TLoopManager>(nullptr, defaultBranches))
 {
-   const std::string treeNameInt(treeName);
-   auto chain = new TChain(treeNameInt.c_str());
+   std::string treeNameInt(treeName);
+   auto chain = std::make_shared<TChain>(treeNameInt.c_str());
    for (auto &fileName : filenamescoll) chain->Add(TDFInternal::ToConstCharPtr(fileName));
-   fProxiedPtr->SetTree(std::make_shared<TTree>(static_cast<TTree *>(chain)));
+   GetProxiedPtr()->SetTree(chain);
 }
 
 } // end NS Experimental
@@ -78,21 +79,24 @@ namespace cling {
 inline std::string printValue(ROOT::Experimental::TDataFrame *tdf)
 {
    auto df = tdf->GetDataFrameChecked();
-   auto treeName = df->GetTreeName();
-   auto defBranches = df->GetDefaultBranches();
-   auto tmpBranches = df->GetTmpBranches();
+   auto *tree = df->GetTree();
+   auto defBranches = df->GetDefaultColumnNames();
 
    std::ostringstream ret;
-   ret << "A data frame built on top of the " << treeName << " dataset.";
-   if (!defBranches.empty()) {
-      if (defBranches.size() == 1)
-         ret << "\nDefault branch: " << defBranches[0];
-      else {
-         ret << "\nDefault branches:\n";
-         for (auto &&branch : defBranches) {
-            ret << " - " << branch << "\n";
+   if (tree) {
+      ret << "A data frame built on top of the " << tree->GetName() << " dataset.";
+      if (!defBranches.empty()) {
+         if (defBranches.size() == 1)
+            ret << "\nDefault branch: " << defBranches[0];
+         else {
+            ret << "\nDefault branches:\n";
+            for (auto &&branch : defBranches) {
+               ret << " - " << branch << "\n";
+            }
          }
       }
+   } else {
+      ret << "A data frame that will create " << df->GetNEmptyEntries() << " entries\n";
    }
 
    return ret.str();

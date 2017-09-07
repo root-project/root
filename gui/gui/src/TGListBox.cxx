@@ -52,11 +52,11 @@
 const TGFont *TGTextLBEntry::fgDefaultFont = 0;
 TGGC         *TGTextLBEntry::fgDefaultGC = 0;
 
-ClassImp(TGLBEntry)
-ClassImp(TGTextLBEntry)
-ClassImp(TGLineLBEntry)
-ClassImp(TGLBContainer)
-ClassImp(TGListBox)
+ClassImp(TGLBEntry);
+ClassImp(TGTextLBEntry);
+ClassImp(TGLineLBEntry);
+ClassImp(TGLBContainer);
+ClassImp(TGListBox);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Base class entry constructor.

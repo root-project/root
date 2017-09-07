@@ -49,7 +49,10 @@
 #include "llvm/Support/TargetRegistry.h"
 #include "llvm/Support/TargetSelect.h"
 #include "llvm/Support/ToolOutputFile.h"
+#include "llvm/Support/YAMLTraits.h"
 #include "llvm/Target/TargetMachine.h"
+#include "llvm/Transforms/Coroutines.h"
+#include "llvm/Transforms/IPO/AlwaysInliner.h"
 #include "llvm/Transforms/IPO/PassManagerBuilder.h"
 #include "llvm/Transforms/Utils/Cloning.h"
 #include <algorithm>
@@ -96,6 +99,15 @@ static cl::opt<bool>
 OutputAssembly("S", cl::desc("Write output as LLVM assembly"));
 
 static cl::opt<bool>
+    OutputThinLTOBC("thinlto-bc",
+                    cl::desc("Write output as ThinLTO-ready bitcode"));
+
+static cl::opt<std::string> ThinLinkBitcodeFile(
+    "thin-link-bitcode-file", cl::value_desc("filename"),
+    cl::desc(
+        "A file in which to write minimized bitcode for the thin link only"));
+
+static cl::opt<bool>
 NoVerify("disable-verify", cl::desc("Do not run the verifier"), cl::Hidden);
 
 static cl::opt<bool>
@@ -119,6 +131,10 @@ DisableOptimizations("disable-opt",
 static cl::opt<bool>
 StandardLinkOpts("std-link-opts",
                  cl::desc("Include the standard link time optimizations"));
+
+static cl::opt<bool>
+OptLevelO0("O0",
+  cl::desc("Optimization level 0. Similar to clang -O0"));
 
 static cl::opt<bool>
 OptLevelO1("O1",
@@ -190,10 +206,10 @@ static cl::opt<bool>
 PrintBreakpoints("print-breakpoints-for-testing",
                  cl::desc("Print select breakpoints location for testing"));
 
-static cl::opt<std::string>
-DefaultDataLayout("default-data-layout",
-          cl::desc("data layout string to use if not specified by module"),
-          cl::value_desc("layout-string"), cl::init(""));
+static cl::opt<std::string> ClDataLayout("data-layout",
+                                         cl::desc("data layout string to use"),
+                                         cl::value_desc("layout-string"),
+                                         cl::init(""));
 
 static cl::opt<bool> PreserveBitcodeUseListOrder(
     "preserve-bc-uselistorder",
@@ -214,6 +230,21 @@ static cl::opt<bool> DiscardValueNames(
     "discard-value-names",
     cl::desc("Discard names from Value (other than GlobalValue)."),
     cl::init(false), cl::Hidden);
+
+static cl::opt<bool> Coroutines(
+  "enable-coroutines",
+  cl::desc("Enable coroutine passes."),
+  cl::init(false), cl::Hidden);
+
+static cl::opt<bool> PassRemarksWithHotness(
+    "pass-remarks-with-hotness",
+    cl::desc("With PGO, include profile count in optimization remarks"),
+    cl::Hidden);
+
+static cl::opt<std::string>
+    RemarksFilename("pass-remarks-output",
+                    cl::desc("YAML output filename for pass remarks"),
+                    cl::value_desc("filename"));
 
 static inline void addPass(legacy::PassManagerBase &PM, Pass *P) {
   // Add the pass to the pass manager...
@@ -242,9 +273,9 @@ static void AddOptimizationPasses(legacy::PassManagerBase &MPM,
   if (DisableInline) {
     // No inlining pass
   } else if (OptLevel > 1) {
-    Builder.Inliner = createFunctionInliningPass(OptLevel, SizeLevel);
+    Builder.Inliner = createFunctionInliningPass(OptLevel, SizeLevel, false);
   } else {
-    Builder.Inliner = createAlwaysInlinerPass();
+    Builder.Inliner = createAlwaysInlinerLegacyPass();
   }
   Builder.DisableUnitAtATime = !UnitAtATime;
   Builder.DisableUnrollLoops = (DisableLoopUnrolling.getNumOccurrences() > 0) ?
@@ -261,13 +292,11 @@ static void AddOptimizationPasses(legacy::PassManagerBase &MPM,
   Builder.SLPVectorize =
       DisableSLPVectorization ? false : OptLevel > 1 && SizeLevel < 2;
 
-  // Add target-specific passes that need to run as early as possible.
   if (TM)
-    Builder.addExtension(
-        PassManagerBuilder::EP_EarlyAsPossible,
-        [&](const PassManagerBuilder &, legacy::PassManagerBase &PM) {
-          TM->addEarlyAsPossiblePasses(PM);
-        });
+    TM->adjustPassManager(Builder);
+
+  if (Coroutines)
+    addCoroutinePassesToExtensionPoints(Builder);
 
   Builder.populateFunctionPassManager(FPM);
   Builder.populateModulePassManager(MPM);
@@ -339,10 +368,12 @@ int main(int argc, char **argv) {
   InitializeAllTargets();
   InitializeAllTargetMCs();
   InitializeAllAsmPrinters();
+  InitializeAllAsmParsers();
 
   // Initialize passes
   PassRegistry &Registry = *PassRegistry::getPassRegistry();
   initializeCore(Registry);
+  initializeCoroutines(Registry);
   initializeScalarOpts(Registry);
   initializeObjCARCOpts(Registry);
   initializeVectorization(Registry);
@@ -356,14 +387,17 @@ int main(int argc, char **argv) {
   // supported.
   initializeCodeGenPreparePass(Registry);
   initializeAtomicExpandPass(Registry);
-  initializeRewriteSymbolsPass(Registry);
+  initializeRewriteSymbolsLegacyPassPass(Registry);
   initializeWinEHPreparePass(Registry);
   initializeDwarfEHPreparePass(Registry);
-  initializeSafeStackPass(Registry);
+  initializeSafeStackLegacyPassPass(Registry);
   initializeSjLjEHPreparePass(Registry);
   initializePreISelIntrinsicLoweringLegacyPassPass(Registry);
   initializeGlobalMergePass(Registry);
   initializeInterleavedAccessPass(Registry);
+  initializeCountingFunctionInserterPass(Registry);
+  initializeUnreachableBlockElimLegacyPassPass(Registry);
+  initializeExpandReductionsPass(Registry);
 
 #ifdef LINK_POLLY_INTO_TOOLS
   polly::initializePollyPasses(Registry);
@@ -382,6 +416,22 @@ int main(int argc, char **argv) {
   Context.setDiscardValueNames(DiscardValueNames);
   if (!DisableDITypeMap)
     Context.enableDebugTypeODRUniquing();
+
+  if (PassRemarksWithHotness)
+    Context.setDiagnosticHotnessRequested(true);
+
+  std::unique_ptr<tool_output_file> YamlFile;
+  if (RemarksFilename != "") {
+    std::error_code EC;
+    YamlFile = llvm::make_unique<tool_output_file>(RemarksFilename, EC,
+                                                   sys::fs::F_None);
+    if (EC) {
+      errs() << EC.message() << '\n';
+      return 1;
+    }
+    Context.setDiagnosticsOutputFile(
+        llvm::make_unique<yaml::Output>(YamlFile->os()));
+  }
 
   // Load the input module...
   std::unique_ptr<Module> M = parseIRFile(InputFilename, Err, Context);
@@ -404,12 +454,15 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  // If we are supposed to override the target triple, do so now.
+  // If we are supposed to override the target triple or data layout, do so now.
   if (!TargetTriple.empty())
     M->setTargetTriple(Triple::normalize(TargetTriple));
+  if (!ClDataLayout.empty())
+    M->setDataLayout(ClDataLayout);
 
   // Figure out what stream we are supposed to write to...
   std::unique_ptr<tool_output_file> Out;
+  std::unique_ptr<tool_output_file> ThinLinkOut;
   if (NoOutput) {
     if (!OutputFilename.empty())
       errs() << "WARNING: The -o (output filename) option is ignored when\n"
@@ -424,6 +477,15 @@ int main(int argc, char **argv) {
     if (EC) {
       errs() << EC.message() << '\n';
       return 1;
+    }
+
+    if (!ThinLinkBitcodeFile.empty()) {
+      ThinLinkOut.reset(
+          new tool_output_file(ThinLinkBitcodeFile, EC, sys::fs::F_None));
+      if (EC) {
+        errs() << EC.message() << '\n';
+        return 1;
+      }
     }
   }
 
@@ -465,9 +527,10 @@ int main(int argc, char **argv) {
     // The user has asked to use the new pass manager and provided a pipeline
     // string. Hand off the rest of the functionality to the new code for that
     // layer.
-    return runPassPipeline(argv[0], Context, *M, TM.get(), Out.get(),
+    return runPassPipeline(argv[0], *M, TM.get(), Out.get(),
                            PassPipeline, OK, VK, PreserveAssemblyUseListOrder,
-                           PreserveBitcodeUseListOrder)
+                           PreserveBitcodeUseListOrder, EmitSummaryIndex,
+                           EmitModuleHash)
                ? 0
                : 1;
   }
@@ -485,18 +548,13 @@ int main(int argc, char **argv) {
     TLII.disableAllFunctions();
   Passes.add(new TargetLibraryInfoWrapperPass(TLII));
 
-  // Add an appropriate DataLayout instance for this module.
-  const DataLayout &DL = M->getDataLayout();
-  if (DL.isDefault() && !DefaultDataLayout.empty()) {
-    M->setDataLayout(DefaultDataLayout);
-  }
-
   // Add internal analysis passes from the target machine.
   Passes.add(createTargetTransformInfoWrapperPass(TM ? TM->getTargetIRAnalysis()
                                                      : TargetIRAnalysis()));
 
   std::unique_ptr<legacy::FunctionPassManager> FPasses;
-  if (OptLevelO1 || OptLevelO2 || OptLevelOs || OptLevelOz || OptLevelO3) {
+  if (OptLevelO0 || OptLevelO1 || OptLevelO2 || OptLevelOs || OptLevelOz ||
+      OptLevelO3) {
     FPasses.reset(new legacy::FunctionPassManager(M.get()));
     FPasses->add(createTargetTransformInfoWrapperPass(
         TM ? TM->getTargetIRAnalysis() : TargetIRAnalysis()));
@@ -526,6 +584,11 @@ int main(int argc, char **argv) {
         StandardLinkOpts.getPosition() < PassList.getPosition(i)) {
       AddStandardLinkPasses(Passes);
       StandardLinkOpts = false;
+    }
+
+    if (OptLevelO0 && OptLevelO0.getPosition() < PassList.getPosition(i)) {
+      AddOptimizationPasses(Passes, *FPasses, TM.get(), 0, 0);
+      OptLevelO0 = false;
     }
 
     if (OptLevelO1 && OptLevelO1.getPosition() < PassList.getPosition(i)) {
@@ -600,6 +663,9 @@ int main(int argc, char **argv) {
     StandardLinkOpts = false;
   }
 
+  if (OptLevelO0)
+    AddOptimizationPasses(Passes, *FPasses, TM.get(), 0, 0);
+
   if (OptLevelO1)
     AddOptimizationPasses(Passes, *FPasses, TM.get(), 1, 0);
 
@@ -649,7 +715,10 @@ int main(int argc, char **argv) {
       if (EmitModuleHash)
         report_fatal_error("Text output is incompatible with -module-hash");
       Passes.add(createPrintModulePass(*OS, "", PreserveAssemblyUseListOrder));
-    } else
+    } else if (OutputThinLTOBC)
+      Passes.add(createWriteThinLTOBitcodePass(
+          *OS, ThinLinkOut ? &ThinLinkOut->os() : nullptr));
+    else
       Passes.add(createBitcodeWriterPass(*OS, PreserveBitcodeUseListOrder,
                                          EmitSummaryIndex, EmitModuleHash));
   }
@@ -681,6 +750,8 @@ int main(int argc, char **argv) {
                 "the compile-twice option\n";
       Out->os() << BOS->str();
       Out->keep();
+      if (YamlFile)
+        YamlFile->keep();
       return 1;
     }
     Out->os() << BOS->str();
@@ -689,6 +760,12 @@ int main(int argc, char **argv) {
   // Declare success.
   if (!NoOutput || PrintBreakpoints)
     Out->keep();
+
+  if (YamlFile)
+    YamlFile->keep();
+
+  if (ThinLinkOut)
+    ThinLinkOut->keep();
 
   return 0;
 }

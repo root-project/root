@@ -35,7 +35,7 @@ Identity activation function for TNeuron
 
 class TString;
 
-ClassImp(TMVA::TActivationIdentity)
+ClassImp(TMVA::TActivationIdentity);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// writes the identity function source code

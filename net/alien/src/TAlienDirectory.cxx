@@ -27,7 +27,7 @@
 #include "TObjString.h"
 
 
-ClassImp(TAlienDirectoryEntry)
+ClassImp(TAlienDirectoryEntry);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Browse an Alien directory.
@@ -46,7 +46,7 @@ void TAlienDirectoryEntry::Browse(TBrowser* b)
 }
 
 
-ClassImp(TAlienDirectory)
+ClassImp(TAlienDirectory);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

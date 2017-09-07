@@ -33,7 +33,7 @@ Basic TProofMgr functionality implementation in the case of Lite session.
 #include "TRegexp.h"
 #include "TSortedList.h"
 
-ClassImp(TProofMgrLite)
+ClassImp(TProofMgrLite);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a PROOF manager for the Lite environment.

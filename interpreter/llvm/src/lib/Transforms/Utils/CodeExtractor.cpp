@@ -17,6 +17,9 @@
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SetVector.h"
 #include "llvm/ADT/StringExtras.h"
+#include "llvm/Analysis/BlockFrequencyInfo.h"
+#include "llvm/Analysis/BlockFrequencyInfoImpl.h"
+#include "llvm/Analysis/BranchProbabilityInfo.h"
 #include "llvm/Analysis/LoopInfo.h"
 #include "llvm/Analysis/RegionInfo.h"
 #include "llvm/Analysis/RegionIterator.h"
@@ -26,9 +29,11 @@
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/Intrinsics.h"
 #include "llvm/IR/LLVMContext.h"
+#include "llvm/IR/MDBuilder.h"
 #include "llvm/IR/Module.h"
 #include "llvm/IR/Verifier.h"
 #include "llvm/Pass.h"
+#include "llvm/Support/BlockFrequency.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/ErrorHandling.h"
@@ -49,7 +54,7 @@ AggregateArgsOpt("aggregate-extracted-args", cl::Hidden,
                  cl::desc("Aggregate arguments to code-extracted functions"));
 
 /// \brief Test whether a block is valid for extraction.
-static bool isBlockValidForExtraction(const BasicBlock &BB) {
+bool CodeExtractor::isBlockValidForExtraction(const BasicBlock &BB) {
   // Landing pads must be in the function where they were inserted for cleanup.
   if (BB.isEHPad())
     return false;
@@ -68,24 +73,26 @@ static bool isBlockValidForExtraction(const BasicBlock &BB) {
 }
 
 /// \brief Build a set of blocks to extract if the input blocks are viable.
-template <typename IteratorT>
-static SetVector<BasicBlock *> buildExtractionBlockSet(IteratorT BBBegin,
-                                                       IteratorT BBEnd) {
+static SetVector<BasicBlock *>
+buildExtractionBlockSet(ArrayRef<BasicBlock *> BBs, DominatorTree *DT) {
+  assert(!BBs.empty() && "The set of blocks to extract must be non-empty");
   SetVector<BasicBlock *> Result;
-
-  assert(BBBegin != BBEnd);
 
   // Loop over the blocks, adding them to our set-vector, and aborting with an
   // empty set if we encounter invalid blocks.
-  do {
-    if (!Result.insert(*BBBegin))
-      llvm_unreachable("Repeated basic blocks in extraction input");
+  for (BasicBlock *BB : BBs) {
 
-    if (!isBlockValidForExtraction(**BBBegin)) {
+    // If this block is dead, don't process it.
+    if (DT && !DT->isReachableFromEntry(BB))
+      continue;
+
+    if (!Result.insert(BB))
+      llvm_unreachable("Repeated basic blocks in extraction input");
+    if (!CodeExtractor::isBlockValidForExtraction(*BB)) {
       Result.clear();
       return Result;
     }
-  } while (++BBBegin != BBEnd);
+  }
 
 #ifndef NDEBUG
   for (SetVector<BasicBlock *>::iterator I = std::next(Result.begin()),
@@ -101,41 +108,18 @@ static SetVector<BasicBlock *> buildExtractionBlockSet(IteratorT BBBegin,
   return Result;
 }
 
-/// \brief Helper to call buildExtractionBlockSet with an ArrayRef.
-static SetVector<BasicBlock *>
-buildExtractionBlockSet(ArrayRef<BasicBlock *> BBs) {
-  return buildExtractionBlockSet(BBs.begin(), BBs.end());
-}
-
-/// \brief Helper to call buildExtractionBlockSet with a RegionNode.
-static SetVector<BasicBlock *>
-buildExtractionBlockSet(const RegionNode &RN) {
-  if (!RN.isSubRegion())
-    // Just a single BasicBlock.
-    return buildExtractionBlockSet(RN.getNodeAs<BasicBlock>());
-
-  const Region &R = *RN.getNodeAs<Region>();
-
-  return buildExtractionBlockSet(R.block_begin(), R.block_end());
-}
-
-CodeExtractor::CodeExtractor(BasicBlock *BB, bool AggregateArgs)
-  : DT(nullptr), AggregateArgs(AggregateArgs||AggregateArgsOpt),
-    Blocks(buildExtractionBlockSet(BB)), NumExitBlocks(~0U) {}
-
 CodeExtractor::CodeExtractor(ArrayRef<BasicBlock *> BBs, DominatorTree *DT,
-                             bool AggregateArgs)
-  : DT(DT), AggregateArgs(AggregateArgs||AggregateArgsOpt),
-    Blocks(buildExtractionBlockSet(BBs)), NumExitBlocks(~0U) {}
+                             bool AggregateArgs, BlockFrequencyInfo *BFI,
+                             BranchProbabilityInfo *BPI)
+    : DT(DT), AggregateArgs(AggregateArgs || AggregateArgsOpt), BFI(BFI),
+      BPI(BPI), Blocks(buildExtractionBlockSet(BBs, DT)), NumExitBlocks(~0U) {}
 
-CodeExtractor::CodeExtractor(DominatorTree &DT, Loop &L, bool AggregateArgs)
-  : DT(&DT), AggregateArgs(AggregateArgs||AggregateArgsOpt),
-    Blocks(buildExtractionBlockSet(L.getBlocks())), NumExitBlocks(~0U) {}
-
-CodeExtractor::CodeExtractor(DominatorTree &DT, const RegionNode &RN,
-                             bool AggregateArgs)
-  : DT(&DT), AggregateArgs(AggregateArgs||AggregateArgsOpt),
-    Blocks(buildExtractionBlockSet(RN)), NumExitBlocks(~0U) {}
+CodeExtractor::CodeExtractor(DominatorTree &DT, Loop &L, bool AggregateArgs,
+                             BlockFrequencyInfo *BFI,
+                             BranchProbabilityInfo *BPI)
+    : DT(&DT), AggregateArgs(AggregateArgs || AggregateArgsOpt), BFI(BFI),
+      BPI(BPI), Blocks(buildExtractionBlockSet(L.getBlocks(), &DT)),
+      NumExitBlocks(~0U) {}
 
 /// definedInRegion - Return true if the specified value is defined in the
 /// extracted region.
@@ -206,9 +190,7 @@ void CodeExtractor::severSplitPHINodes(BasicBlock *&Header) {
   // containing PHI nodes merging values from outside of the region, and a
   // second that contains all of the code for the block and merges back any
   // incoming values from inside of the region.
-  BasicBlock::iterator AfterPHIs = Header->getFirstNonPHI()->getIterator();
-  BasicBlock *NewBB = Header->splitBasicBlock(AfterPHIs,
-                                              Header->getName()+".ce");
+  BasicBlock *NewBB = llvm::SplitBlock(Header, Header->getFirstNonPHI(), DT);
 
   // We only want to code extract the second block now, and it becomes the new
   // header of the region.
@@ -216,11 +198,6 @@ void CodeExtractor::severSplitPHINodes(BasicBlock *&Header) {
   Blocks.remove(OldPred);
   Blocks.insert(NewBB);
   Header = NewBB;
-
-  // Okay, update dominator sets. The blocks that dominate the new one are the
-  // blocks that dominate TIBB plus the new block itself.
-  if (DT)
-    DT->splitBlock(NewBB);
 
   // Okay, now we need to adjust the PHI nodes and any branches from within the
   // region to go to the new header block instead of the old header block.
@@ -236,12 +213,14 @@ void CodeExtractor::severSplitPHINodes(BasicBlock *&Header) {
 
     // Okay, everything within the region is now branching to the right block, we
     // just have to update the PHI nodes now, inserting PHI nodes into NewBB.
+    BasicBlock::iterator AfterPHIs;
     for (AfterPHIs = OldPred->begin(); isa<PHINode>(AfterPHIs); ++AfterPHIs) {
       PHINode *PN = cast<PHINode>(AfterPHIs);
       // Create a new PHI node in the new region, which has an incoming value
       // from OldPred of PN.
       PHINode *NewPN = PHINode::Create(PN->getType(), 1 + NumPredsFromRegion,
                                        PN->getName() + ".ce", &NewBB->front());
+      PN->replaceAllUsesWith(NewPN);
       NewPN->addIncoming(PN, OldPred);
 
       // Loop over all of the incoming value in PN, moving them to NewPN if they
@@ -339,7 +318,21 @@ Function *CodeExtractor::constructFunction(const ValueSet &inputs,
   // If the old function is no-throw, so is the new one.
   if (oldFunction->doesNotThrow())
     newFunction->setDoesNotThrow();
-  
+
+  // Inherit the uwtable attribute if we need to.
+  if (oldFunction->hasUWTable())
+    newFunction->setHasUWTable();
+
+  // Inherit all of the target dependent attributes.
+  //  (e.g. If the extracted region contains a call to an x86.sse
+  //  instruction we need to make sure that the extracted region has the
+  //  "target-features" attribute allowing it to be lowered.
+  // FIXME: This should be changed to check to see if a specific
+  //           attribute can not be inherited.
+  AttrBuilder AB(oldFunction->getAttributes().getFnAttributes());
+  for (const auto &Attr : AB.td_attrs())
+    newFunction->addFnAttr(Attr.first, Attr.second);
+
   newFunction->getBasicBlockList().push_back(newRootNode);
 
   // Create an iterator to name all of the arguments we inserted.
@@ -413,8 +406,10 @@ emitCallAndSwitchStatement(Function *newFunction, BasicBlock *codeReplacer,
   // Emit a call to the new function, passing in: *pointer to struct (if
   // aggregating parameters), or plan inputs and allocated memory for outputs
   std::vector<Value*> params, StructValues, ReloadOutputs, Reloads;
-  
-  LLVMContext &Context = newFunction->getContext();
+
+  Module *M = newFunction->getParent();
+  LLVMContext &Context = M->getContext();
+  const DataLayout &DL = M->getDataLayout();
 
   // Add inputs as params, or to be filled into the struct
   for (Value *input : inputs)
@@ -429,8 +424,9 @@ emitCallAndSwitchStatement(Function *newFunction, BasicBlock *codeReplacer,
       StructValues.push_back(output);
     } else {
       AllocaInst *alloca =
-          new AllocaInst(output->getType(), nullptr, output->getName() + ".loc",
-                         &codeReplacer->getParent()->front().front());
+        new AllocaInst(output->getType(), DL.getAllocaAddrSpace(),
+                       nullptr, output->getName() + ".loc",
+                       &codeReplacer->getParent()->front().front());
       ReloadOutputs.push_back(alloca);
       params.push_back(alloca);
     }
@@ -446,7 +442,8 @@ emitCallAndSwitchStatement(Function *newFunction, BasicBlock *codeReplacer,
 
     // Allocate a struct at the beginning of this function
     StructArgTy = StructType::get(newFunction->getContext(), ArgTypes);
-    Struct = new AllocaInst(StructArgTy, nullptr, "structArg",
+    Struct = new AllocaInst(StructArgTy, DL.getAllocaAddrSpace(), nullptr,
+                            "structArg",
                             &codeReplacer->getParent()->front().front());
     params.push_back(Struct);
 
@@ -672,6 +669,51 @@ void CodeExtractor::moveCodeToFunction(Function *newFunction) {
   }
 }
 
+void CodeExtractor::calculateNewCallTerminatorWeights(
+    BasicBlock *CodeReplacer,
+    DenseMap<BasicBlock *, BlockFrequency> &ExitWeights,
+    BranchProbabilityInfo *BPI) {
+  typedef BlockFrequencyInfoImplBase::Distribution Distribution;
+  typedef BlockFrequencyInfoImplBase::BlockNode BlockNode;
+
+  // Update the branch weights for the exit block.
+  TerminatorInst *TI = CodeReplacer->getTerminator();
+  SmallVector<unsigned, 8> BranchWeights(TI->getNumSuccessors(), 0);
+
+  // Block Frequency distribution with dummy node.
+  Distribution BranchDist;
+
+  // Add each of the frequencies of the successors.
+  for (unsigned i = 0, e = TI->getNumSuccessors(); i < e; ++i) {
+    BlockNode ExitNode(i);
+    uint64_t ExitFreq = ExitWeights[TI->getSuccessor(i)].getFrequency();
+    if (ExitFreq != 0)
+      BranchDist.addExit(ExitNode, ExitFreq);
+    else
+      BPI->setEdgeProbability(CodeReplacer, i, BranchProbability::getZero());
+  }
+
+  // Check for no total weight.
+  if (BranchDist.Total == 0)
+    return;
+
+  // Normalize the distribution so that they can fit in unsigned.
+  BranchDist.normalize();
+
+  // Create normalized branch weights and set the metadata.
+  for (unsigned I = 0, E = BranchDist.Weights.size(); I < E; ++I) {
+    const auto &Weight = BranchDist.Weights[I];
+
+    // Get the weight and update the current BFI.
+    BranchWeights[Weight.TargetNode.Index] = Weight.Amount;
+    BranchProbability BP(Weight.Amount, BranchDist.Total);
+    BPI->setEdgeProbability(CodeReplacer, Weight.TargetNode.Index, BP);
+  }
+  TI->setMetadata(
+      LLVMContext::MD_prof,
+      MDBuilder(TI->getContext()).createBranchWeights(BranchWeights));
+}
+
 Function *CodeExtractor::extractCodeRegion() {
   if (!isEligible())
     return nullptr;
@@ -681,6 +723,19 @@ Function *CodeExtractor::extractCodeRegion() {
   // Assumption: this is a single-entry code region, and the header is the first
   // block in the region.
   BasicBlock *header = *Blocks.begin();
+
+  // Calculate the entry frequency of the new function before we change the root
+  //   block.
+  BlockFrequency EntryFreq;
+  if (BFI) {
+    assert(BPI && "Both BPI and BFI are required to preserve profile info");
+    for (BasicBlock *Pred : predecessors(header)) {
+      if (Blocks.count(Pred))
+        continue;
+      EntryFreq +=
+          BFI->getBlockFreq(Pred) * BPI->getEdgeProbability(Pred, header);
+    }
+  }
 
   // If we have to split PHI nodes or the entry block, do so now.
   severSplitPHINodes(header);
@@ -705,12 +760,23 @@ Function *CodeExtractor::extractCodeRegion() {
   // Find inputs to, outputs from the code region.
   findInputsOutputs(inputs, outputs);
 
+  // Calculate the exit blocks for the extracted region and the total exit
+  //  weights for each of those blocks.
+  DenseMap<BasicBlock *, BlockFrequency> ExitWeights;
   SmallPtrSet<BasicBlock *, 1> ExitBlocks;
-  for (BasicBlock *Block : Blocks)
+  for (BasicBlock *Block : Blocks) {
     for (succ_iterator SI = succ_begin(Block), SE = succ_end(Block); SI != SE;
-         ++SI)
-      if (!Blocks.count(*SI))
+         ++SI) {
+      if (!Blocks.count(*SI)) {
+        // Update the branch weight for this successor.
+        if (BFI) {
+          BlockFrequency &BF = ExitWeights[*SI];
+          BF += BFI->getBlockFreq(Block) * BPI->getEdgeProbability(Block, *SI);
+        }
         ExitBlocks.insert(*SI);
+      }
+    }
+  }
   NumExitBlocks = ExitBlocks.size();
 
   // Construct new function based on inputs/outputs & add allocas for all defs.
@@ -719,9 +785,22 @@ Function *CodeExtractor::extractCodeRegion() {
                                             codeReplacer, oldFunction,
                                             oldFunction->getParent());
 
+  // Update the entry count of the function.
+  if (BFI) {
+    Optional<uint64_t> EntryCount =
+        BFI->getProfileCountFromFreq(EntryFreq.getFrequency());
+    if (EntryCount.hasValue())
+      newFunction->setEntryCount(EntryCount.getValue());
+    BFI->setBlockFreq(codeReplacer, EntryFreq.getFrequency());
+  }
+
   emitCallAndSwitchStatement(newFunction, codeReplacer, inputs, outputs);
 
   moveCodeToFunction(newFunction);
+
+  // Update the branch weights for the exit block.
+  if (BFI && NumExitBlocks > 1)
+    calculateNewCallTerminatorWeights(codeReplacer, ExitWeights, BPI);
 
   // Loop over all of the PHI nodes in the header block, and change any
   // references to the old incoming edge to be the new incoming edge.

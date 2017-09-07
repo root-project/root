@@ -40,7 +40,7 @@ Objects of this class are created by TGrid methods.*//*
 //
 //////////////////////////////////////////////////////////////////////////
 
-ClassImp(TGLiteJobStatus)
+ClassImp(TGLiteJobStatus);
 
 using namespace std;
 using namespace glite_api_wrapper;

@@ -77,8 +77,8 @@ public:
    virtual void     FillRandom(TH1 *h, Int_t ntimes=5000);
    virtual Int_t    FindFirstBinAbove(Double_t threshold=0, Int_t axis=1) const;
    virtual Int_t    FindLastBinAbove (Double_t threshold=0, Int_t axis=1) const;
-   virtual void     FitSlicesX(TF1 *f1=0,Int_t firstybin=0, Int_t lastybin=-1, Int_t cut=0, Option_t *option="QNR", TObjArray* arr = 0); // *MENU*
-   virtual void     FitSlicesY(TF1 *f1=0,Int_t firstxbin=0, Int_t lastxbin=-1, Int_t cut=0, Option_t *option="QNR", TObjArray* arr = 0); // *MENU*
+   virtual void     FitSlicesX(TF1 *f1=0,Int_t firstybin=0, Int_t lastybin=-1, Int_t cut=0, Option_t *option="QNR", TObjArray* arr = 0);
+   virtual void     FitSlicesY(TF1 *f1=0,Int_t firstxbin=0, Int_t lastxbin=-1, Int_t cut=0, Option_t *option="QNR", TObjArray* arr = 0);
    virtual Int_t    GetBin(Int_t binx, Int_t biny, Int_t binz = 0) const;
    virtual Double_t GetBinWithContent2(Double_t c, Int_t &binx, Int_t &biny, Int_t firstxbin=1, Int_t lastxbin=-1,Int_t firstybin=1, Int_t lastybin=-1, Double_t maxdiff=0) const;
    virtual Double_t GetBinContent(Int_t bin) const { return TH1::GetBinContent(bin); }

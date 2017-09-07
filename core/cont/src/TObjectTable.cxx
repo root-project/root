@@ -90,7 +90,7 @@ via the command gObjectTable->Print()
 TObjectTable *gObjectTable;
 
 
-ClassImp(TObjectTable)
+ClassImp(TObjectTable);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create an object table.

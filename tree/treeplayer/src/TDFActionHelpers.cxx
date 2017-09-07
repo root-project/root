@@ -14,7 +14,7 @@ namespace ROOT {
 namespace Internal {
 namespace TDF {
 
-CountHelper::CountHelper(const std::shared_ptr<unsigned int> &resultCount, unsigned int nSlots)
+CountHelper::CountHelper(const std::shared_ptr<unsigned int> &resultCount, const unsigned int nSlots)
    : fResultCount(resultCount), fCounts(nSlots, 0)
 {
 }
@@ -40,7 +40,7 @@ void FillHelper::UpdateMinMax(unsigned int slot, double v)
    thisMax = std::max(thisMax, v);
 }
 
-FillHelper::FillHelper(const std::shared_ptr<Hist_t> &h, unsigned int nSlots)
+FillHelper::FillHelper(const std::shared_ptr<Hist_t> &h, const unsigned int nSlots)
    : fResultHist(h), fNSlots(nSlots), fBufSize(fgTotalBufSize / nSlots),
      fMin(nSlots, std::numeric_limits<BufEl_t>::max()), fMax(nSlots, std::numeric_limits<BufEl_t>::min())
 {
@@ -84,11 +84,8 @@ void FillHelper::Finalize()
    }
 
    for (unsigned int i = 0; i < fNSlots; ++i) {
-      // TODO: Here one really needs to fix FillN!
-      if (fWBuffers[i].empty()) {
-         fWBuffers[i].resize(fBuffers[i].size(), 1.);
-      }
-      fResultHist->FillN(fBuffers[i].size(), fBuffers[i].data(), fWBuffers[i].data());
+      auto weights = fWBuffers[i].empty() ? nullptr : fWBuffers[i].data();
+      fResultHist->FillN(fBuffers[i].size(), fBuffers[i].data(), weights);
    }
 }
 
@@ -103,7 +100,7 @@ template void FillHelper::Exec(unsigned int, const std::vector<char> &, const st
 template void FillHelper::Exec(unsigned int, const std::vector<int> &, const std::vector<int> &);
 template void FillHelper::Exec(unsigned int, const std::vector<unsigned int> &, const std::vector<unsigned int> &);
 
-MinHelper::MinHelper(const std::shared_ptr<double> &minVPtr, unsigned int nSlots)
+MinHelper::MinHelper(const std::shared_ptr<double> &minVPtr, const unsigned int nSlots)
    : fResultMin(minVPtr), fMins(nSlots, std::numeric_limits<double>::max())
 {
 }
@@ -125,7 +122,7 @@ template void MinHelper::Exec(unsigned int, const std::vector<char> &);
 template void MinHelper::Exec(unsigned int, const std::vector<int> &);
 template void MinHelper::Exec(unsigned int, const std::vector<unsigned int> &);
 
-MaxHelper::MaxHelper(const std::shared_ptr<double> &maxVPtr, unsigned int nSlots)
+MaxHelper::MaxHelper(const std::shared_ptr<double> &maxVPtr, const unsigned int nSlots)
    : fResultMax(maxVPtr), fMaxs(nSlots, std::numeric_limits<double>::min())
 {
 }
@@ -149,7 +146,7 @@ template void MaxHelper::Exec(unsigned int, const std::vector<char> &);
 template void MaxHelper::Exec(unsigned int, const std::vector<int> &);
 template void MaxHelper::Exec(unsigned int, const std::vector<unsigned int> &);
 
-MeanHelper::MeanHelper(const std::shared_ptr<double> &meanVPtr, unsigned int nSlots)
+MeanHelper::MeanHelper(const std::shared_ptr<double> &meanVPtr, const unsigned int nSlots)
    : fResultMean(meanVPtr), fCounts(nSlots, 0), fSums(nSlots, 0)
 {
 }

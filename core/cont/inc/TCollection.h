@@ -28,6 +28,7 @@
 
 #include "TString.h"
 
+#include <assert.h>
 
 class TClass;
 class TObjectTable;
@@ -39,7 +40,91 @@ const Bool_t kIterBackward = !kIterForward;
 
 R__EXTERN TVirtualMutex *gCollectionMutex;
 
+// #define R__CHECK_COLLECTION_MULTI_ACCESS
+
+// When R__CHECK_COLLECTION_MULTI_ACCESS is turned on (defined),
+// the normal (not locked) ROOT TCollections are instrumented with a
+// pseudo read-write lock which does not halt the execution but detects
+// and report concurrent access to the same collections.
+// Multiple readers are allowed.
+// Multiple concurrent writer is reported as a Conflict
+// Readers access while a write is running is reported as Conflict
+// Re-entrant writing call by the same Writer thread are allowed.
+// Entering a writing section by a single Reader thread is allowed.
+
+#ifdef R__CHECK_COLLECTION_MULTI_ACCESS
+#include <atomic>
+#include <thread>
+#include <unordered_set>
+#endif
+
 class TCollection : public TObject {
+
+#ifdef R__CHECK_COLLECTION_MULTI_ACCESS
+public:
+   class TErrorLock {
+      // Warn when multiple thread try to acquire the same 'lock'
+      std::atomic<std::thread::id> fWriteCurrent;
+      std::atomic<size_t> fWriteCurrentRecurse;
+      std::atomic<size_t> fReadCurrentRecurse;
+      std::unordered_multiset<std::thread::id> fReadSet;
+      std::atomic_flag fSpinLockFlag;
+
+      void Lock(const TCollection *collection, const char *function);
+
+      void Unlock();
+
+      void ReadLock(const TCollection *collection, const char *function);
+
+      void ReadUnlock();
+
+      void ConflictReport(std::thread::id holder, const char *accesstype, const TCollection *collection,
+                          const char *function);
+
+   public:
+      TErrorLock() : fWriteCurrent(), fWriteCurrentRecurse(0), fReadCurrentRecurse(0)
+      {
+         std::atomic_flag_clear(&fSpinLockFlag);
+      }
+
+      class WriteGuard {
+         TErrorLock *fLock;
+
+      public:
+         WriteGuard(TErrorLock &lock, const TCollection *collection, const char *function) : fLock(&lock)
+         {
+            fLock->Lock(collection, function);
+         }
+         ~WriteGuard() { fLock->Unlock(); }
+      };
+
+      class ReadGuard {
+         TErrorLock *fLock;
+
+      public:
+         ReadGuard(TErrorLock &lock, const TCollection *collection, const char *function) : fLock(&lock)
+         {
+            fLock->ReadLock(collection, function);
+         }
+         ~ReadGuard() { fLock->ReadUnlock(); }
+      };
+   };
+
+   mutable TErrorLock fLock; //! Special 'lock' to detect multiple access to a collection.
+
+#define R__COLLECTION_WRITE_GUARD() TCollection::TErrorLock::WriteGuard wg(fLock, this, __PRETTY_FUNCTION__)
+#define R__COLLECTION_READ_GUARD() TCollection::TErrorLock::ReadGuard rg(fLock, this, __PRETTY_FUNCTION__)
+
+#define R__COLLECTION_ITER_GUARD(collection) \
+   TCollection::TErrorLock::ReadGuard rg(collection->fLock, collection, __PRETTY_FUNCTION__)
+
+#else
+
+#define R__COLLECTION_WRITE_GUARD()
+#define R__COLLECTION_READ_GUARD()
+#define R__COLLECTION_ITER_GUARD(collection)
+
+#endif
 
 private:
    static TCollection  *fgCurrentCollection;  //used by macro R__FOR_EACH
@@ -51,7 +136,7 @@ private:
    void operator=(const TCollection &); //are too complex to be automatically copied
 
 protected:
-   enum { kIsOwner = BIT(14) };
+   enum EStatusBits { kIsOwner = BIT(14) };
 
    TString   fName;               //name of the collection
    Int_t     fSize;               //number of elements in collection
@@ -187,6 +272,127 @@ public:
 inline TIter TCollection::begin() const { return ++(TIter(this)); }
 inline TIter TCollection::end() const { return TIter::End(); }
 
+namespace ROOT {
+namespace Internal {
+
+const TCollection &EmptyCollection();
+bool ContaineeInheritsFrom(TClass *cl, TClass *base);
+
+/// @brief Internal help class implmenting an iterator for TRangeDynCast.
+template <class Containee> // Containee must derive from TObject.
+class TRangeDynCastIterator : public TIter {
+   static_assert(std::is_base_of<TObject, Containee>::value, "Containee type must inherit from TObject");
+
+   /// This is a workaround against ClassDefInline not supporting classes
+   /// missing their default constructor or having them private.
+   template <class T>
+   friend class ROOT::Internal::ClassDefGenerateInitInstanceLocalInjector;
+
+   TRangeDynCastIterator() = default;
+
+public:
+   using TIter::TIter;
+   TRangeDynCastIterator(const TIter &iter) : TIter(iter) {}
+
+   Containee *operator()() = delete;
+
+   Containee *Next() { return dynamic_cast<Containee *>(TIter::Next()); }
+   Containee *operator*() const { return dynamic_cast<Containee *>(TIter::operator*()); }
+
+   ClassDefInline(TRangeDynCastIterator, 0);
+};
+
+} // Internal
+} // ROOT
+
+/// @brief TTypedIter is a typed version of TIter.
+///
+/// The typical use is:
+/// ~~~ {.cpp}
+///    TTypedIter<TBaseClass> next(cl->GetListOfBases());
+///    while(auto bcl = next()) {
+///       ... use bcl as a TBaseClass*
+///    }
+/// ~~~ {.cpp}
+template <class Containee> // Containee must derive from TObject.
+class TTypedIter : public TIter {
+   static_assert(std::is_base_of<TObject, Containee>::value, "Containee type must inherit from TObject");
+
+   /// This is a workaround against ClassDefInline not supporting classes
+   /// missing their default constructor or having them private.
+   template <class T>
+   friend class ROOT::Internal::ClassDefGenerateInitInstanceLocalInjector;
+
+   TTypedIter() = default;
+
+   static Containee *StaticCast(TObject *obj)
+   {
+      assert(!obj || ROOT::Internal::ContaineeInheritsFrom(obj->IsA(), Containee::Class()));
+      return static_cast<Containee *>(obj);
+   }
+
+public:
+   using TIter::TIter;
+   TTypedIter(const TIter &iter) : TIter(iter) {}
+
+   Containee *operator()() { return StaticCast(TIter::Next()); }
+   Containee *Next() { return StaticCast(TIter::Next()); }
+   Containee *operator*() const { return StaticCast(TIter::operator*()); }
+
+   ClassDefInline(TTypedIter, 0);
+};
+
+/// @brief TRangeStaticCast is an adaptater class that allows the typed iteration
+/// through a TCollection.
+///
+/// The typical use is:
+/// ~~~ {.cpp}
+///    for(auto bcl : TRangeStaticCast<TBaseClass>( *cl->GetListOfBases() )) {
+///        assert(bcl && bcl->IsA()->InheritsFrom(TBaseClass::Class()));
+///        ... use bcl as a TBaseClass*
+///    }
+///    for(auto bcl : TRangeStaticCast<TBaseClass>( cl->GetListOfBases() )) {
+///        assert(bcl && bcl->IsA()->InheritsFrom(TBaseClass::Class()));
+///        ... use bcl as a TBaseClass*
+///    }
+/// ~~~ {.cpp}
+template <class T>
+class TRangeStaticCast {
+   const TCollection &fCollection;
+
+public:
+   TRangeStaticCast(const TCollection &col) : fCollection(col) {}
+   TRangeStaticCast(const TCollection *col) : fCollection(col != nullptr ? *col : ROOT::Internal::EmptyCollection()) {}
+
+   TTypedIter<T> begin() const { return fCollection.begin(); }
+   TTypedIter<T> end() const { return fCollection.end(); }
+};
+
+/// @brief TRangeDynCast is an adaptater class that allows the typed iteration
+/// through a TCollection.
+///
+/// The typical use is:
+/// ~~~ {.cpp}
+///    for(auto bcl : TRangeDynCast<TBaseClass>( *cl->GetListOfBases() )) {
+///        if (!bcl) continue;
+///        ... use bcl as a TBaseClass*
+///    }
+///    for(auto bcl : TRangeDynCast<TBaseClass>( cl->GetListOfBases() )) {
+///        if (!bcl) continue;
+///        ... use bcl as a TBaseClass*
+///    }
+/// ~~~ {.cpp}
+template <class T>
+class TRangeDynCast {
+   const TCollection &fCollection;
+
+public:
+   TRangeDynCast(const TCollection &col) : fCollection(col) {}
+   TRangeDynCast(const TCollection *col) : fCollection(col != nullptr ? *col : ROOT::Internal::EmptyCollection()) {}
+
+   ROOT::Internal::TRangeDynCastIterator<T> begin() const { return fCollection.begin(); }
+   ROOT::Internal::TRangeDynCastIterator<T> end() const { return fCollection.end(); }
+};
 
 //---- R__FOR_EACH macro -------------------------------------------------------
 

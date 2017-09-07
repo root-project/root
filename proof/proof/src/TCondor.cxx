@@ -31,8 +31,8 @@
 #include "TEnv.h"
 #include "TClass.h"
 
-ClassImp(TCondorSlave)
-ClassImp(TCondor)
+ClassImp(TCondorSlave);
+ClassImp(TCondor);
 
 
 ////////////////////////////////////////////////////////////////////////////////

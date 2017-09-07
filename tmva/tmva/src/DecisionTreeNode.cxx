@@ -56,7 +56,7 @@ that is used to split the sample which "arrives" at the node, into a left
 
 using std::string;
 
-ClassImp(TMVA::DecisionTreeNode)
+ClassImp(TMVA::DecisionTreeNode);
 
 bool     TMVA::DecisionTreeNode::fgIsTraining = false;
 UInt_t   TMVA::DecisionTreeNode::fgTmva_Version_Code = 0;

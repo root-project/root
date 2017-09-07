@@ -17,6 +17,12 @@ from contextlib import contextmanager
 import os
 import sys
 
+# Support both Python2 and Python3 at the same time
+if sys.version_info.major > 2 : 
+    _input = input
+else:
+    _input = raw_input
+
 def fileno(file_or_fd):
     """
     Look for 'fileno' attribute.
@@ -190,6 +196,14 @@ def isTreeKey(key):
     classname = key.GetClassName()
     cl = ROOT.gROOT.GetClass(classname)
     return cl.InheritsFrom(ROOT.TTree.Class())
+
+def isTHnSparseKey(key):
+    """
+    Return True if the object, corresponding to the key, inherits from THnSparse
+    """
+    classname = key.GetClassName()
+    cl = ROOT.gROOT.GetClass(classname)
+    return cl.InheritsFrom(ROOT.THnSparse.Class())
 
 def getKey(rootFile,pathSplit):
     """
@@ -663,10 +677,10 @@ def deleteRootObject(rootFile, pathSplit, interactive, recursive):
     else:
         if interactive:
             if pathSplit != []:
-                answer = raw_input(ASK_OBJECT_REMOVE \
+                answer = _input(ASK_OBJECT_REMOVE \
                     .format("/".join(pathSplit),rootFile.GetName()))
             else:
-                answer = raw_input(ASK_FILE_REMOVE \
+                answer = _input(ASK_FILE_REMOVE \
                     .format(rootFile.GetName()))
             remove = answer.lower() == 'y'
         else:
@@ -708,7 +722,7 @@ REPLACE_HELP = "replace object if already existing"
 def _openBrowser(rootFile=None):
     browser = ROOT.TBrowser()
     if rootFile: rootFile.Browse(browser)
-    raw_input("Press enter to exit.")
+    _input("Press enter to exit.")
 
 def rootBrowse(fileName=None):
     if fileName:
@@ -932,17 +946,21 @@ def _rootLsPrintLongLs(keyList,indent,treeListing):
         datime = key.GetDatime()
         time = datime.GetTime()
         date = datime.GetDate()
+        year = datime.GetYear()
         time = _prepareTime(time)
         rec = \
             [key.GetClassName(), \
             MONTH[int(str(date)[4:6])]+" " +str(date)[6:]+ \
-            " "+time[:2]+":"+time[2:4], \
+            " "+time[:2]+":"+time[2:4]+" "+str(year)+" ", \
             key.GetName(), \
             "\""+key.GetTitle()+"\""]
         write(LONG_TEMPLATE.format(*rec,**dic),indent,end="\n")
         if treeListing and isTreeKey(key):
             tree = key.ReadObj()
             _recursifTreePrinter(tree,indent+2)
+        if treeListing and isTHnSparseKey(key):
+            hs = key.ReadObj()
+            hs.Print('all')
 
 ##
 # The code of the getTerminalSize function can be found here :

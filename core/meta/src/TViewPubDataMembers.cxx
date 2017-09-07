@@ -26,7 +26,7 @@ Iteration can only be done via the TIterator interfaces.
 #include "TDictionary.h"
 #include "THashList.h"
 
-// ClassImp(TViewPubDataMembers)
+// ClassImp(TViewPubDataMembers);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// loop over all base classes and add them to the container.
@@ -91,8 +91,12 @@ TObject *TViewPubDataMembers::FindObject(const char * name) const
    while (TClass *cl = (TClass*)next()) {
       THashList *hl = dynamic_cast<THashList*>(cl->GetListOfDataMembers(kFALSE));
       TIter content_next(hl->GetListForObject(name));
-      while (TDictionary *p = (TDictionary*) content_next())
-         if (p->Property() & kIsPublic) return p;
+      while (TDictionary *p = (TDictionary*) content_next()) {
+         // The 'ListForObject' is actually a hash table bucket that can also
+         // contain other element/name.
+         if (strcmp(name,p->GetName())==0 && (p->Property() & kIsPublic))
+            return p;
+      }
    }
    return 0;
 }
@@ -352,7 +356,7 @@ TObject   *TViewPubDataMembers::Remove(TObjLink * /* lnk */)
 Iterator of over the view's content.
 */
 
-// ClassImp(TViewPubDataMembersIter)
+// ClassImp(TViewPubDataMembersIter);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a new list iterator. By default the iteration direction

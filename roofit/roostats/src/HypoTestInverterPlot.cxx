@@ -43,7 +43,7 @@ hypotheses.
 
 using namespace std;
 
-ClassImp(RooStats::HypoTestInverterPlot)
+ClassImp(RooStats::HypoTestInverterPlot);
 
 using namespace RooStats;
 

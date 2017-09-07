@@ -526,7 +526,7 @@ Int_t TGCocoa::GetDepth() const
 //______________________________________________________________________________
 void TGCocoa::Update(Int_t mode)
 {
-   R__LOCKGUARD2(gROOTMutex);
+   R__LOCKGUARD(gROOTMutex);
 
    if (mode == 2) {
       assert(gClient != 0 && "Update, gClient is null");
@@ -4506,7 +4506,7 @@ Atom_t TGCocoa::FindAtom(const std::string &atomName, bool addIfNotFound)
 void TGCocoa::SetApplicationIcon()
 {
    if (gEnv) {
-      const char * const iconDirectoryPath = gEnv->GetValue("Gui.IconPath","$(ROOTSYS)/icons");//This one I do not own.
+      const char * const iconDirectoryPath = gEnv->GetValue("Gui.IconPath",TROOT::GetIconPath());
       if (iconDirectoryPath) {
          const Util::ScopedArray<char> fileName(gSystem->Which(iconDirectoryPath, "Root6Icon.png", kReadPermission));
          if (fileName.Get()) {

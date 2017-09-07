@@ -161,7 +161,7 @@ whichever algorithm is used, the output has to be checked:
 using namespace std;
 #endif
 
-ClassImp(TUnfoldDensity)
+ClassImp(TUnfoldDensity);
 
 TUnfoldDensity::~TUnfoldDensity(void)
 {

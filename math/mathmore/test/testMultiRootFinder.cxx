@@ -72,13 +72,18 @@ int testMultiRootFinder() {
 
   double x0[] = {-1.,-1.};
 
+  std::cout << "Testing  Multi-RootFinder - ";
   bool ret = rf.Solve(x0);
 
   if (!ret) {
+     std::cout << rf.Name()  << "\t :   FAILED\n";
      std::cerr << "testMultiRootFinder - Error running derivative algorithm " << std::endl;
      if (printlevel == 0) rf.PrintState(std::cout);
      status += rf.Status();
   }
+  else
+     std::cout << rf.Name()  << "\t :   OK\n";
+
 
   MultiRootFinder rf2(MultiRootFinder::kHybridS);
   Functor f1(&f, &FuncSystem::F1, 2);
@@ -90,12 +95,17 @@ int testMultiRootFinder() {
 
   rf2.SetPrintLevel(printlevel);
 
+  std::cout << "Testing  Multi-RootFinder - "; 
   bool ret2 = rf2.Solve(x0);
   if (!ret2) {
+     std::cout << rf2.Name()  << "\t :   FAILED\n";
+     std::cout << "\t  FAILED\n";
      std::cerr << "testMultiRootFinder - Error running non-derivative algorithm " << std::endl;
      if (printlevel == 0) rf2.PrintState(std::cout);
      status += 10*rf2.Status();
   }
+  else
+     std::cout << rf2.Name()  << "\t :   OK\n";
 
   return status;
 

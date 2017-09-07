@@ -16,6 +16,7 @@
 #ifndef LLVM_LIB_TARGET_AMDGPU_AMDGPUTARGETOBJECTFILE_H
 #define LLVM_LIB_TARGET_AMDGPU_AMDGPUTARGETOBJECTFILE_H
 
+#include "AMDGPU.h"
 #include "llvm/CodeGen/TargetLoweringObjectFileImpl.h"
 #include "llvm/Target/TargetMachine.h"
 
@@ -23,8 +24,7 @@ namespace llvm {
 
 class AMDGPUTargetObjectFile : public TargetLoweringObjectFileELF {
   public:
-    MCSection *SelectSectionForGlobal(const GlobalValue *GV, SectionKind Kind,
-                                      Mangler &Mang,
+    MCSection *SelectSectionForGlobal(const GlobalObject *GO, SectionKind Kind,
                                       const TargetMachine &TM) const override;
 };
 

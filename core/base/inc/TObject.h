@@ -56,13 +56,20 @@ public:
    //----- any given hierarchy).
    enum EStatusBits {
       kCanDelete        = BIT(0),   ///< if object in a list can be deleted
+      // 2 is taken by TDataMember
       kMustCleanup      = BIT(3),   ///< if object destructor must call RecursiveRemove()
-      kObjInCanvas      = BIT(3),   ///< for backward compatibility only, use kMustCleanup
       kIsReferenced     = BIT(4),   ///< if object is referenced by a TRef or TRefArray
       kHasUUID          = BIT(5),   ///< if object has a TUUID (its fUniqueID=UUIDNumber)
       kCannotPick       = BIT(6),   ///< if object in a pad cannot be picked
+      // 7 is taken by TAxis.
       kNoContextMenu    = BIT(8),   ///< if object does not want context menu
+      // 9, 10 are taken by TH1, TF1, TAxis and a few others
+      // 12 is taken by TAxis
       kInvalidObject    = BIT(13)   ///< if object ctor succeeded but object should not be used
+   };
+
+   enum EDeprecatedStatusBits {
+      kObjInCanvas      = BIT(3)   ///< for backward compatibility only, use kMustCleanup
    };
 
    //----- Private bits, clients can only test but not change them

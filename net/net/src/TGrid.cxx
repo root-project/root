@@ -34,7 +34,7 @@
 TGrid *gGrid = 0;
 
 
-ClassImp(TGrid)
+ClassImp(TGrid);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// The grid should be of the form:  <grid>://<host>[:<port>],

@@ -112,6 +112,11 @@ public:
   /// Evaluates a given SVal. If the SVal has only one possible (integer) value,
   /// that value is returned. Otherwise, returns NULL.
   virtual const llvm::APSInt *getKnownValue(ProgramStateRef state, SVal val) = 0;
+
+  /// Simplify symbolic expressions within a given SVal. Return an SVal
+  /// that represents the same value, but is hopefully easier to work with
+  /// than the original SVal.
+  virtual SVal simplifySVal(ProgramStateRef State, SVal Val) = 0;
   
   /// Constructs a symbolic expression for two non-location values.
   SVal makeSymExprValNN(ProgramStateRef state, BinaryOperator::Opcode op,
@@ -198,9 +203,13 @@ public:
   DefinedOrUnknownSVal getDerivedRegionValueSymbolVal(
       SymbolRef parentSymbol, const TypedValueRegion *region);
 
-  DefinedSVal getMetadataSymbolVal(
-      const void *symbolTag, const MemRegion *region,
-      const Expr *expr, QualType type, unsigned count);
+  DefinedSVal getMetadataSymbolVal(const void *symbolTag,
+                                   const MemRegion *region,
+                                   const Expr *expr, QualType type,
+                                   const LocationContext *LCtx,
+                                   unsigned count);
+
+  DefinedSVal getMemberPointer(const DeclaratorDecl *DD);
 
   DefinedSVal getFunctionPointer(const FunctionDecl *func);
   
@@ -222,6 +231,14 @@ public:
                              const TypedValueRegion *region) {
     return nonloc::LazyCompoundVal(
         BasicVals.getLazyCompoundValData(store, region));
+  }
+
+  NonLoc makePointerToMember(const DeclaratorDecl *DD) {
+    return nonloc::PointerToMember(DD);
+  }
+
+  NonLoc makePointerToMember(const PointerToMemberData *PTMD) {
+    return nonloc::PointerToMember(PTMD);
   }
 
   NonLoc makeZeroArrayIndex() {

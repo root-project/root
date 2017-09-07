@@ -70,7 +70,7 @@
 
 using namespace std;
 
-ClassImp(RooResolutionModel) 
+ClassImp(RooResolutionModel); 
 ;
 
 RooFormulaVar* RooResolutionModel::_identity = 0;

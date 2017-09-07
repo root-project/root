@@ -49,7 +49,7 @@ using namespace TMVA;
 
 REGISTER_METHOD(PyRandomForest)
 
-ClassImp(MethodPyRandomForest)
+ClassImp(MethodPyRandomForest);
 
 //_______________________________________________________________________
 MethodPyRandomForest::MethodPyRandomForest(const TString &jobName,

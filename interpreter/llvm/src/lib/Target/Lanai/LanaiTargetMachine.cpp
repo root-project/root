@@ -28,15 +28,15 @@ using namespace llvm;
 
 namespace llvm {
 void initializeLanaiMemAluCombinerPass(PassRegistry &);
-void initializeLanaiSetflagAluCombinerPass(PassRegistry &);
 } // namespace llvm
 
 extern "C" void LLVMInitializeLanaiTarget() {
   // Register the target.
-  RegisterTargetMachine<LanaiTargetMachine> registered_target(TheLanaiTarget);
+  RegisterTargetMachine<LanaiTargetMachine> registered_target(
+      getTheLanaiTarget());
 }
 
-static std::string computeDataLayout(const Triple &TT) {
+static std::string computeDataLayout() {
   // Data layout (keep in sync with clang/lib/Basic/Targets.cpp)
   return "E"        // Big endian
          "-m:e"     // ELF name manging
@@ -47,8 +47,7 @@ static std::string computeDataLayout(const Triple &TT) {
          "-S64";    // 64 bit natural stack alignment
 }
 
-static Reloc::Model getEffectiveRelocModel(const Triple &TT,
-                                           Optional<Reloc::Model> RM) {
+static Reloc::Model getEffectiveRelocModel(Optional<Reloc::Model> RM) {
   if (!RM.hasValue())
     return Reloc::PIC_;
   return *RM;
@@ -60,9 +59,8 @@ LanaiTargetMachine::LanaiTargetMachine(const Target &T, const Triple &TT,
                                        Optional<Reloc::Model> RM,
                                        CodeModel::Model CodeModel,
                                        CodeGenOpt::Level OptLevel)
-    : LLVMTargetMachine(T, computeDataLayout(TargetTriple), TT, Cpu,
-                        FeatureString, Options, getEffectiveRelocModel(TT, RM),
-                        CodeModel, OptLevel),
+    : LLVMTargetMachine(T, computeDataLayout(), TT, Cpu, FeatureString, Options,
+                        getEffectiveRelocModel(RM), CodeModel, OptLevel),
       Subtarget(TT, Cpu, FeatureString, *this, Options, CodeModel, OptLevel),
       TLOF(new LanaiTargetObjectFile()) {
   initAsmInfo();
@@ -112,5 +110,4 @@ void LanaiPassConfig::addPreEmitPass() {
 // scheduling pass.
 void LanaiPassConfig::addPreSched2() {
   addPass(createLanaiMemAluCombinerPass());
-  addPass(createLanaiSetflagAluCombinerPass());
 }

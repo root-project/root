@@ -37,7 +37,7 @@ Events are generated and 1-D, 2-D, and/or 3-D histograms are filled.
 #include <TParameter.h>
 #include <TROOT.h>
 
-ClassImp(TSelHist)
+ClassImp(TSelHist);
 
 ////////////////////////////////////////////////////////////////////////////////
 ///Constructor

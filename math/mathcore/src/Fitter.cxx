@@ -91,7 +91,7 @@ Fitter & Fitter::operator = (const Fitter &rhs)
 //    fBinFit = rhs.fBinFit;
 //    fResult = rhs.fResult;
 //    fConfig = rhs.fConfig;
-//    // function is copied and managed by FitResult (maybe should use an auto_ptr)
+//    // function is copied and managed by FitResult (maybe should use an unique_ptr)
 //    fFunc = fResult.ModelFunction();
 //    if (rhs.fFunc != 0 && fResult.ModelFunction() == 0) { // case no fit has been done yet - then clone
 //       if (fFunc) delete fFunc;
@@ -127,21 +127,6 @@ void Fitter::SetFunction(const IModelFunction & func, bool useGradient)
    fConfig.CreateParamsSettings(*fFunc);
    fFunc_v.reset();
 }
-
-#ifdef R__HAS_VECCORE
-void Fitter::SetFunction(const IModelFunction_v & func)
-{
-   //  set the fit model function (clone the given one and keep a copy )
-   //std::cout << "set a non-grad function" << std::endl;
-   fUseGradient = false;
-   fFunc_v = std::shared_ptr<IModelFunction_v>(dynamic_cast<IModelFunction_v *>(func.Clone() ) );
-   assert(fFunc_v);
-
-   // creates the parameter  settings
-   fConfig.CreateParamsSettings(*fFunc_v);
-   fFunc.reset();
-}
-#endif
 
 void Fitter::SetFunction(const IModel1DFunction & func, bool useGradient)
 {
@@ -343,7 +328,7 @@ bool Fitter::EvalFCN() {
 }
 
 
-bool Fitter::DoLeastSquareFit(ROOT::Fit::ExecutionPolicy executionPolicy) {
+bool Fitter::DoLeastSquareFit(const ROOT::Fit::ExecutionPolicy &executionPolicy) {
 
    // perform a chi2 fit on a set of binned data
    std::shared_ptr<BinData> data = std::dynamic_pointer_cast<BinData>(fData);
@@ -354,12 +339,10 @@ bool Fitter::DoLeastSquareFit(ROOT::Fit::ExecutionPolicy executionPolicy) {
       if (!fFunc_v ) {
          MATH_ERROR_MSG("Fitter::DoLeastSquareFit","model function is not set");
          return false;
-#ifdef R__HAS_VECCORE
       } else{
          Chi2FCN<BaseFunc, IModelFunction_v> chi2(data, fFunc_v, executionPolicy);
          fFitType = chi2.Type();
          return DoMinimization (chi2);
-#endif
      }
    } else {
 
@@ -392,7 +375,7 @@ bool Fitter::DoLeastSquareFit(ROOT::Fit::ExecutionPolicy executionPolicy) {
   return false;
 }
 
-bool Fitter::DoBinnedLikelihoodFit(bool extended) {
+bool Fitter::DoBinnedLikelihoodFit(bool extended, const ROOT::Fit::ExecutionPolicy &executionPolicy) {
    // perform a likelihood fit on a set of binned data
    // The fit is extended (Poisson logl_ by default
 
@@ -402,10 +385,11 @@ bool Fitter::DoBinnedLikelihoodFit(bool extended) {
    bool  useWeight = fConfig.UseWeightCorrection();
 
    // check function
-   if (!fFunc) {
-      MATH_ERROR_MSG("Fitter::DoBinnedLikelihoodFit","model function is not set");
-      return false;
-   }
+   if (!fFunc)
+      if (!fFunc_v) {
+         MATH_ERROR_MSG("Fitter::DoBinnedLikelihoodFit", "model function is not set");
+         return false;
+      }
 
    // logl fit (error should be 0.5) set if different than default values (of 1)
    if (fConfig.MinimizerOptions().ErrorDef() == gDefaultErrorDef ) {
@@ -421,21 +405,35 @@ bool Fitter::DoBinnedLikelihoodFit(bool extended) {
    fBinFit = true;
    fDataSize = data->Size();
 
-   // create a chi2 function to be used for the equivalent chi-square
-   Chi2FCN<BaseFunc> chi2(data,fFunc);
 
    if (!fUseGradient) {
       // do minimization without using the gradient
-      PoissonLikelihoodFCN<BaseFunc> logl(data,fFunc, useWeight, extended);
-      fFitType = logl.Type();
-      // do minimization
-      if (!DoMinimization (logl, &chi2) ) return false;
-      if (useWeight) {
-         logl.UseSumOfWeightSquare();
-         if (!ApplyWeightCorrection(logl) ) return false;
+      if (fFunc_v) {
+         // create a chi2 function to be used for the equivalent chi-square
+         Chi2FCN<BaseFunc, IModelFunction_v> chi2(data, fFunc_v);
+         PoissonLikelihoodFCN<BaseFunc, IModelFunction_v> logl(data, fFunc_v, useWeight, extended, executionPolicy);
+         fFitType = logl.Type();
+         // do minimization
+         if (!DoMinimization(logl, &chi2)) return false;
+         if (useWeight) {
+            logl.UseSumOfWeightSquare();
+            if (!ApplyWeightCorrection(logl)) return false;
+         }
+      } else {
+         // create a chi2 function to be used for the equivalent chi-square
+         Chi2FCN<BaseFunc> chi2(data, fFunc);
+         PoissonLikelihoodFCN<BaseFunc> logl(data, fFunc, useWeight, extended, executionPolicy);
+         fFitType = logl.Type();
+         // do minimization
+         if (!DoMinimization(logl, &chi2)) return false;
+         if (useWeight) {
+            logl.UseSumOfWeightSquare();
+            if (!ApplyWeightCorrection(logl)) return false;
+         }
       }
-   }
-   else {
+   } else {
+      // create a chi2 function to be used for the equivalent chi-square
+      Chi2FCN<BaseFunc> chi2(data, fFunc);
       if (fConfig.MinimizerOptions().PrintLevel() > 0)
          MATH_INFO_MSG("Fitter::DoLikelihoodFit","use gradient from model function");
       // check if fFunc provides gradient
@@ -449,7 +447,7 @@ bool Fitter::DoBinnedLikelihoodFit(bool extended) {
       if (!extended) {
          MATH_WARN_MSG("Fitter::DoBinnedLikelihoodFit","Not-extended binned fit with gradient not yet supported - do an extended fit");
       }
-      PoissonLikelihoodFCN<BaseGradFunc> logl(data,gradFun, useWeight, true);
+      PoissonLikelihoodFCN<BaseGradFunc> logl(data, gradFun, useWeight, true, executionPolicy);
       fFitType = logl.Type();
       // do minimization
       if (!DoMinimization (logl, &chi2) ) return false;
@@ -462,7 +460,7 @@ bool Fitter::DoBinnedLikelihoodFit(bool extended) {
 }
 
 
-bool Fitter::DoUnbinnedLikelihoodFit(bool extended, ROOT::Fit::ExecutionPolicy executionPolicy) {
+bool Fitter::DoUnbinnedLikelihoodFit(bool extended, const ROOT::Fit::ExecutionPolicy &executionPolicy) {
    // perform a likelihood fit on a set of unbinned data
 
    std::shared_ptr<UnBinData> data = std::dynamic_pointer_cast<UnBinData>(fData);
@@ -497,7 +495,6 @@ bool Fitter::DoUnbinnedLikelihoodFit(bool extended, ROOT::Fit::ExecutionPolicy e
 
    if (!fUseGradient) {
       // do minimization without using the gradient
-#ifdef R__HAS_VECCORE
      if (fFunc_v ){
        LogLikelihoodFCN<BaseFunc, IModelFunction_v> logl(data, fFunc_v, useWeight, extended, executionPolicy);
        fFitType = logl.Type();
@@ -507,10 +504,8 @@ bool Fitter::DoUnbinnedLikelihoodFit(bool extended, ROOT::Fit::ExecutionPolicy e
           if (!ApplyWeightCorrection(logl) ) return false;
         }
         return true;
-     }
-     else{         
-#endif
-       LogLikelihoodFCN<BaseFunc> logl(data, fFunc, useWeight, extended, executionPolicy);
+     } else {
+        LogLikelihoodFCN<BaseFunc> logl(data, fFunc, useWeight, extended, executionPolicy);
 
         fFitType = logl.Type();
         if (!DoMinimization (logl) ) return false;
@@ -519,9 +514,7 @@ bool Fitter::DoUnbinnedLikelihoodFit(bool extended, ROOT::Fit::ExecutionPolicy e
           if (!ApplyWeightCorrection(logl) ) return false;
         }
         return true;
-#ifdef R__HAS_VECCORE
      }
-#endif
    } else {
       // use gradient : check if fFunc provides gradient
       if (fConfig.MinimizerOptions().PrintLevel() > 0)
@@ -842,7 +835,7 @@ bool Fitter::ApplyWeightCorrection(const ROOT::Math::IMultiGenFunction & loglw2,
       return false;
    }
    // need to re-init the minimizer and set w2
-   fObjFunction = std::auto_ptr<ROOT::Math::IMultiGenFunction> ( loglw2.Clone() );
+   fObjFunction = std::unique_ptr<ROOT::Math::IMultiGenFunction> ( loglw2.Clone() );
    // need to re-initialize the minimizer for the changes applied in the
    // objective functions
    if (!DoInitMinimizer()) return false;

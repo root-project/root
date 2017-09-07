@@ -35,7 +35,7 @@
 #include "TCanvas.h"
 #include "TROOT.h"
 
-ClassImp(TAttMarkerEditor)
+ClassImp(TAttMarkerEditor);
 
 enum EMarkerWid {
    kCOLOR,

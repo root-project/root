@@ -51,14 +51,11 @@ combined in the main thread.
 #include "TTimeStamp.h"
 #include "RooProdPdf.h"
 #include "RooRealSumPdf.h"
-
 #include <string>
 
 using namespace std;
 
-ClassImp(RooAbsTestStatistic)
-;
-
+ClassImp(RooAbsTestStatistic);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
@@ -603,14 +600,7 @@ void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
   }
   coutI(Fitting) << "RooAbsTestStatistic::initSimMode: created " << n << " slave calculators." << endl;
   
-  // Delete datasets by hand as TList::Delete() doesn't see our datasets as 'on the heap'...
-  TIterator* iter = dsetList->MakeIterator();
-  TObject* ds;
-  while((ds = iter->Next())) {
-    delete ds;
-  }
-  delete iter;
-
+  dsetList->Delete(); // delete the content.
   delete dsetList;
   delete catIter;
 }

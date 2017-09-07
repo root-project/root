@@ -58,7 +58,7 @@ RooParametricStepFunction  aPdf = ("aPdf","PSF",*x,
 
 using namespace std;
 
-ClassImp(RooParametricStepFunction)
+ClassImp(RooParametricStepFunction);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor

@@ -39,7 +39,7 @@
 #include "TGNumberEntry.h"
 #include "TGLabel.h"
 
-ClassImp(TGeoTrapEditor)
+ClassImp(TGeoTrapEditor);
 
 enum ETGeoTrapWid {
    kTRAP_NAME, kTRAP_H1, kTRAP_BL1, kTRAP_TL1, kTRAP_DZ, kTRAP_ALPHA1,
@@ -503,7 +503,7 @@ void TGeoTrapEditor::DoPhi()
    if (!IsDelayed()) DoApply();
 }
 
-ClassImp(TGeoGtraEditor)
+ClassImp(TGeoGtraEditor);
 
 enum ETGeoGtraWid {
    kGTRA_TWIST

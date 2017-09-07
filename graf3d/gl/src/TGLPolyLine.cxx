@@ -28,7 +28,7 @@
 To draw a 3D polyline in a GL window.
 */
 
-ClassImp(TGLPolyLine)
+ClassImp(TGLPolyLine);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor

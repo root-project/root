@@ -12,7 +12,7 @@
 #include "TVirtualPadPainter.h"
 #include "TPluginManager.h"
 
-ClassImp(TVirtualPadPainter)
+ClassImp(TVirtualPadPainter);
 
 /** \class TVirtualPadPainter
 \ingroup Base

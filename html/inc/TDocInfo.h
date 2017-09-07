@@ -105,7 +105,7 @@ public:
       TNamed(name, doc), fSuper(super), fSub(0), fSelected(kTRUE) {
          if (super) super->GetSub().Add(this);
       }
-   virtual ~TModuleDocInfo() {}
+   virtual ~TModuleDocInfo() { fSub.Clear("nodelete"); fClasses.Clear("nodelete"); }
 
    void        SetDoc(const char* doc) { SetTitle(doc); }
    const char* GetDoc() const { return GetTitle(); }

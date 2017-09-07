@@ -19,7 +19,7 @@ This class represents an Internet Protocol (IP) address.
 #include "TBuffer.h"
 #include "TClass.h"
 
-ClassImp(TInetAddress)
+ClassImp(TInetAddress);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default ctor. Used in case of unknown host. Not a valid address.

@@ -93,7 +93,7 @@ The following method are available from the TFormLeafInfo interface:
  -  Update() : react to the possible loading of a shared library.
 */
 
-ClassImp(TTreeFormula)
+ClassImp(TTreeFormula);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -3412,8 +3412,14 @@ Int_t TTreeFormula::GetRealInstance(Int_t instance, Int_t codeindex) {
                }
                break;
             case -1: {
-                  local_index = 0;
-                  Int_t virt_accum = 0;
+                  if (instance <= fRealInstanceCache.fInstanceCache) {
+                     fRealInstanceCache.fLocalIndexCache = 0;
+                     fRealInstanceCache.fVirtAccumCache = 0;
+                  }
+                  fRealInstanceCache.fInstanceCache = instance;
+                  local_index = fRealInstanceCache.fLocalIndexCache;
+                  Int_t virt_accum = fRealInstanceCache.fVirtAccumCache;
+
                   Int_t maxloop = fManager->fCumulUsedVarDims->GetSize();
                   if (maxloop == 0) {
                      local_index--;
@@ -3424,12 +3430,15 @@ Int_t TTreeFormula::GetRealInstance(Int_t instance, Int_t codeindex) {
                         virt_accum += fManager->fCumulUsedVarDims->GetArray()[local_index];
                         local_index++;
                      } while( instance >= virt_accum && local_index<maxloop);
-                     if (local_index==maxloop && (instance >= virt_accum)) {
-                        local_index--;
+                     local_index--;
+                     // update the cache
+                     fRealInstanceCache.fVirtAccumCache = virt_accum - fManager->fCumulUsedVarDims->GetArray()[local_index];
+                     fRealInstanceCache.fLocalIndexCache = local_index;
+
+                     if (local_index==(maxloop-1) && (instance >= virt_accum)) {
                         instance = fNdata[0]+1; // out of bounds.
                         if (check) return fNdata[0]+1;
                      } else {
-                        local_index--;
                         if (fManager->fCumulUsedVarDims->At(local_index)) {
                            instance -= (virt_accum - fManager->fCumulUsedVarDims->At(local_index));
                         } else {

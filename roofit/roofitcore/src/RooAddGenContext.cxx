@@ -43,7 +43,7 @@ with a probability proportional to its associated coefficient
 
 using namespace std;
 
-ClassImp(RooAddGenContext)
+ClassImp(RooAddGenContext);
 ;
   
 

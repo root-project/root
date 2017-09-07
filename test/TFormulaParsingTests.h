@@ -693,7 +693,189 @@ bool test39() {
    
    return ok;
 }
- 
+
+bool test40()
+{
+   // test parsing variables/parameters of user-defined functions
+
+   TF2 f1("f1", "x - y", 0, 5, 0, 5);
+   TF2 f2("f2", "f1(y,x)", 0, 5, 0, 5);
+   bool ok = (f1.Eval(1, 2) == -1);
+   ok &= (f2.Eval(1, 2) == 1);
+
+   TF3 f3("f3", "x + 2*y + 3*z", 0, 5, 0, 5, 0, 5);
+   TF1 f4("f4", "f3(x,x,x)", 0, 5);
+   ok &= (f3.Eval(2, 2, 2) == 12);
+   ok &= (f4.Eval(2) == 12);
+
+   TF1 f5("f5", "[0]*x + [1]", 0, 5);
+   TF1 f6("f6", "f5(x,[1],[0])", 0, 5);
+   f6.SetParameters(1, 2);
+   ok &= (f6.Eval(0) == 1);
+   ok &= (f6.Eval(1) == 3);
+
+   // implicit x now
+   TF1 f7("f7", "f5([1], [0])", 0, 5);
+   f7.SetParameters(1, 2);
+   ok &= (f7.Eval(0) == 1);
+   ok &= (f7.Eval(1) == 3);
+
+   // now implicit parameters
+   TF2 f8("f8", "f5(y)", 0, 5, 0, 5);
+   f8.SetParameters(1, 2);
+   ok &= (f8.Eval(0, 0) == 2);
+   ok &= (f8.Eval(1, 0) == 2);
+   ok &= (f8.Eval(0, 1) == 3);
+   ok &= (f8.Eval(1, 1) == 3);
+
+   // and test [p0] notation
+   TF1 f9("f9", "[p0]*x + [p1]", 0, 5);
+   TF1 f10("f10", "f9(x,[p1],[p0])", 0, 5);
+   f10.SetParameters(1, 2);
+   ok &= (f10.Eval(0) == 1);
+   ok &= (f10.Eval(1) == 3);
+
+   // implicit x now
+   TF1 f11("f11", "f9([p1], [p0])", 0, 5);
+   f11.SetParameters(1, 2);
+   ok &= (f11.Eval(0) == 1);
+   ok &= (f11.Eval(1) == 3);
+
+   return ok;
+}
+
+bool test41()
+{
+   // Test variable/parameter parsing for parametrized functions
+
+   bool ok = true;
+
+   // old variable-counting method
+   TF1 f1("f1", "gaus(0) + gaus(3)", -5, 5);
+   f1.SetParameters(1, 0, 1, 1, 1, 1);
+   ok &= fpEqual(f1.Eval(0), 1 + TMath::Exp(-.5), true);
+   ok &= fpEqual(f1.Eval(1), 1 + TMath::Exp(-.5), true);
+
+   // new param-range method
+   TF1 f2("f2", "gaus([0..2]) + gaus([3..5])", -5, 5);
+   f2.SetParameters(1, 0, 1, 1, 1, 1);
+   ok &= fpEqual(f2.Eval(0), 1 + TMath::Exp(-.5), true);
+   ok &= fpEqual(f2.Eval(1), 1 + TMath::Exp(-.5), true);
+
+   TF1 f3("f3", "[0] + gaus([1..3])", -5, 5);
+   f3.SetParameters(2, 1, 0, 1);
+   ok &= fpEqual(f3.Eval(0), 3, true);
+   ok &= fpEqual(f3.Eval(1), 2 + TMath::Exp(-.5), true);
+
+   TF2 f4("f4", "gaus(y)", -5, 5, -5, 5);
+   f4.SetParameters(2, 0, 1);
+   ok &= fpEqual(f4.Eval(0, 0), 2, true);
+   ok &= fpEqual(f4.Eval(1, 0), 2, true);
+   ok &= fpEqual(f4.Eval(0, -1), 2 * TMath::Exp(-.5), true);
+   ok &= fpEqual(f4.Eval(1, -1), 2 * TMath::Exp(-.5), true);
+
+   TF2 f5("f5", "[0] + gaus(y, [1..3])", -5, 5, -5, 5);
+   f5.SetParameters(0, 2, 0, 1);
+   ok &= fpEqual(f5.Eval(0, 0), 2, true);
+   ok &= fpEqual(f5.Eval(1, 0), 2, true);
+   ok &= fpEqual(f5.Eval(0, -1), 2 * TMath::Exp(-.5), true);
+   ok &= fpEqual(f5.Eval(1, -1), 2 * TMath::Exp(-.5), true);
+
+   return ok;
+}
+
+bool test42()
+{
+   // Test variable parsing when using form x[N]
+
+   bool ok = true;
+
+   TF2 f1("f1", "x[1] + 1", -5, 5, -5, 5);
+   ok &= (f1.Eval(1, 1) == 2);
+   ok &= (f1.Eval(0, 1) == 2);
+   ok &= (f1.Eval(1, 0) == 1);
+   ok &= (f1.Eval(0, 0) == 1);
+
+   TF2 f2("f2", "f1(y,x) + 0*y", -5, 5, -5, 5);
+   ok &= (f2.Eval(1, 1) == 2);
+   ok &= (f2.Eval(0, 1) == 1);
+   ok &= (f2.Eval(1, 0) == 2);
+   ok &= (f2.Eval(0, 0) == 1);
+
+   TF2 f3("f3", "f1(x[1], x[0]) + 0*y", -5, 5, -5, 5);
+   ok &= (f3.Eval(1, 1) == 2);
+   ok &= (f3.Eval(0, 1) == 1);
+   ok &= (f3.Eval(1, 0) == 2);
+   ok &= (f3.Eval(0, 0) == 1);
+
+   return ok;
+}
+
+bool test43()
+{
+   // test whether value of parameter name carries through
+
+   bool ok = true;
+
+   TF1 f1("f1", "[const] + [linear]*x", -5, 5);
+   f1.SetParameters(1, 2);
+
+   TF1 f2("f2", "f1", -5, 5);
+   ok &= (f2.Eval(1) == 3);
+
+   TF1 f3("f3", "f1(x, [const], [linear])", -5, 5);
+   ok &= (f3.Eval(1) == 3);
+
+   TF1 f4("f4", "f1([const], [linear])", -5, 5);
+   ok &= (f4.Eval(1) == 3);
+
+   TF1 f5("f5", "f1(x)", -5, 5);
+   ok &= (f5.Eval(1) == 3);
+
+   TF1 f6("f6", "f1([first], [second])");
+   // parameters "should" initialize to zero
+   ok &= (f6.Eval(1) == 0);
+
+   return ok;
+}
+
+bool test44()
+{
+   // test whether user-defined and parametrized functions can be nested
+
+   bool ok = true;
+
+   TF1 f1("f1", "x**[0]");
+   TF1 f2("f2", "x + 1");
+   TF2 f3("f3", "f1(f2(x), y)");
+   ok &= (f3.Eval(2, 3) == 27);
+
+   TF1 f4("f4", "f2(f2(x))");
+   ok &= (f4.Eval(5) == 7);
+
+   TF1 f5("f5", "gaus(f2(x), 1, 0, 1)");
+   ok &= fpEqual(f5.Eval(0), TMath::Exp(-.5), true);
+
+   TF1 f6("f6", "gaus(gaus(x, 1, 0, 1), 1, 0, 1)");
+   ok &= fpEqual(f6.Eval(0), TMath::Exp(-.5), true);
+
+   return ok;
+}
+
+bool test45()
+{
+   // test dealing with whitespace in parameter names
+   // inlcuding cloning tests (see ROOT-8971)
+   TF1* func = new TF1("expo","expo");
+   func->SetParNames("A", "- 1 / T");
+   func->SetParameters(1,1);
+
+   TF1 * func2 = (TF1*) func->Clone("func2");
+
+   bool ok = fpEqual( func2->Eval(1), func->Eval(1), true);
+   return ok;
+}
+
 void PrintError(int itest)  { 
    Error("TFormula test","test%d FAILED ",itest);
    failedTests.push_back(itest);
@@ -750,6 +932,12 @@ int runTests(bool debug = false) {
    IncrTest(itest); if (!test37() ) { PrintError(itest); }
    IncrTest(itest); if (!test38() ) { PrintError(itest); }
    IncrTest(itest); if (!test39() ) { PrintError(itest); }
+   IncrTest(itest); if (!test40() ) { PrintError(itest); }
+   IncrTest(itest); if (!test41() ) { PrintError(itest); }
+   IncrTest(itest); if (!test42() ) { PrintError(itest); }
+   IncrTest(itest); if (!test43() ) { PrintError(itest); }
+   IncrTest(itest); if (!test44() ) { PrintError(itest); }
+   IncrTest(itest); if (!test45() ) { PrintError(itest); }
 
    std::cout << ".\n";
     

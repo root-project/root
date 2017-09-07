@@ -16,8 +16,8 @@
 This class provides file copy and merging services.
 
 It can be used to copy files (not only ROOT files), using TFile or
-any of its remote file access plugins. It is therefore usefull in
-a Grid environment where the files might be accessable via Castor,
+any of its remote file access plugins. It is therefore useful in
+a Grid environment where the files might be accessible via Castor,
 rfio, dcap, etc.
 The merging interface allows files containing histograms and trees
 to be merged, like the standalone hadd program.
@@ -50,7 +50,7 @@ to be merged, like the standalone hadd program.
 #include <sys/resource.h>
 #endif
 
-ClassImp(TFileMerger)
+ClassImp(TFileMerger);
 
 TClassRef R__TH1_Class("TH1");
 TClassRef R__TTree_Class("TTree");
@@ -100,7 +100,7 @@ TFileMerger::TFileMerger(Bool_t isLocal, Bool_t histoOneGo)
    fExcessFiles = new TList;
    fExcessFiles->SetOwner(kTRUE);
 
-   R__LOCKGUARD2(gROOTMutex);
+   R__LOCKGUARD(gROOTMutex);
    gROOT->GetListOfCleanups()->Add(this);
 }
 
@@ -110,7 +110,7 @@ TFileMerger::TFileMerger(Bool_t isLocal, Bool_t histoOneGo)
 TFileMerger::~TFileMerger()
 {
    {
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfCleanups()->Remove(this);
    }
    SafeDelete(fFileList);
@@ -421,7 +421,7 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
          while ( (key = (TKey*)nextkey())) {
 
             // Keep only the highest cycle number for each key for mergeable objects. They are stored
-            // in the (hash) list onsecutively and in decreasing order of cycles, so we can continue
+            // in the (hash) list consecutively and in decreasing order of cycles, so we can continue
             // until the name changes. We flag the case here and we act consequently later.
             Bool_t alreadyseen = (oldkeyname == key->GetName()) ? kTRUE : kFALSE;
 
@@ -945,7 +945,7 @@ void TFileMerger::RecursiveRemove(TObject *obj)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set a limit to the number file that TFileMerger will opened at one time.
+/// Set a limit to the number of files that TFileMerger will open simultaneously.
 ///
 /// If the request is higher than the system limit, we reset it to the system limit.
 /// If the request is less than two, we reset it to 2 (one for the output file and one for the input file).

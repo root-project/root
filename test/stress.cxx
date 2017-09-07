@@ -386,7 +386,7 @@ void stress3()
    Float_t comp = f.GetCompressionFactor();
    Bool_t OK = kTRUE;
    constexpr Long64_t lastgood  = 51651;
-   constexpr Long64_t tolerance = 100;
+   constexpr Long64_t tolerance = 150;
    if (last <lastgood-tolerance || last > lastgood+tolerance || comp <1.8 || comp > 2.4) OK = kFALSE;
    if (OK) printf("OK\n");
    else    {
@@ -648,7 +648,7 @@ void stress7()
    TEventList *elist; gDirectory->GetObject("elist",elist);
    // Fill hist htemp using the standard cut
    ntuple->Draw("px>>htemp0","py<0 && pz>4 && random<0.5","goff");
-   TH1F *htemp0;  gDirectory->GetObject("htemp0",htemp0);
+   TH1 *htemp0;  gDirectory->GetObject("htemp0",htemp0);
    Double_t pxmean0 = htemp0->GetMean();
    Double_t pxrms0  = htemp0->GetRMS();
 
@@ -660,8 +660,8 @@ void stress7()
    ntuple->SetEventList(elist);
    ntuple->Draw("px>>helist","","goff");
    ntuple->SetEventList(0);
-   TH1F *hcut;   gDirectory->GetObject("hcut",hcut);
-   TH1F *helist; gDirectory->GetObject("helist",helist);
+   TH1 *hcut;   gDirectory->GetObject("hcut",hcut);
+   TH1 *helist; gDirectory->GetObject("helist",helist);
    Int_t n1 = (Int_t)hcut->GetEntries();
    Int_t n2 = (Int_t)helist->GetEntries();
    htemp0->Write();
@@ -672,7 +672,7 @@ void stress7()
    // now loop on eventlist explicitly and fill helist again
    Float_t pxr;
    ntuple->SetBranchAddress("px",&pxr);
-   TH1F *helistc = (TH1F*)helist->Clone();
+   TH1 *helistc = (TH1*)helist->Clone();
    helistc->Reset();
    helistc->SetName("helistc");
    Int_t nlist = elist->GetN();
@@ -945,26 +945,26 @@ void stress9tree(TTree *tree, Int_t realTestNum)
    ntotin  += TFile::GetFileBytesRead() -nrsave;
 
    //Get pointers to the histograms generated above
-   TH1F *hNtrack = (TH1F*)hfile->Get("hNtrack");
-   TH1F *hNseg   = (TH1F*)hfile->Get("hNseg");
-   TH1F *hTemp   = (TH1F*)hfile->Get("hTemp");
-   TH1F *hHmean  = (TH1F*)hfile->Get("hHmean");
-   TH1F *hPx     = (TH1F*)hfile->Get("hPx");
-   TH1F *hPy     = (TH1F*)hfile->Get("hPy");
-   TH1F *hPz     = (TH1F*)hfile->Get("hPz");
-   TH1F *hRandom = (TH1F*)hfile->Get("hRandom");
-   TH1F *hMass2  = (TH1F*)hfile->Get("hMass2");
-   TH1F *hBx     = (TH1F*)hfile->Get("hBx");
-   TH1F *hBy     = (TH1F*)hfile->Get("hBy");
-   TH1F *hXfirst = (TH1F*)hfile->Get("hXfirst");
-   TH1F *hYfirst = (TH1F*)hfile->Get("hYfirst");
-   TH1F *hZfirst = (TH1F*)hfile->Get("hZfirst");
-   TH1F *hXlast  = (TH1F*)hfile->Get("hXlast");
-   TH1F *hYlast  = (TH1F*)hfile->Get("hYlast");
-   TH1F *hZlast  = (TH1F*)hfile->Get("hZlast");
-   TH1F *hCharge = (TH1F*)hfile->Get("hCharge");
-   TH1F *hNpoint = (TH1F*)hfile->Get("hNpoint");
-   TH1F *hValid  = (TH1F*)hfile->Get("hValid");
+   TH1 *hNtrack = (TH1*)hfile->Get("hNtrack");
+   TH1 *hNseg   = (TH1*)hfile->Get("hNseg");
+   TH1 *hTemp   = (TH1*)hfile->Get("hTemp");
+   TH1 *hHmean  = (TH1*)hfile->Get("hHmean");
+   TH1 *hPx     = (TH1*)hfile->Get("hPx");
+   TH1 *hPy     = (TH1*)hfile->Get("hPy");
+   TH1 *hPz     = (TH1*)hfile->Get("hPz");
+   TH1 *hRandom = (TH1*)hfile->Get("hRandom");
+   TH1 *hMass2  = (TH1*)hfile->Get("hMass2");
+   TH1 *hBx     = (TH1*)hfile->Get("hBx");
+   TH1 *hBy     = (TH1*)hfile->Get("hBy");
+   TH1 *hXfirst = (TH1*)hfile->Get("hXfirst");
+   TH1 *hYfirst = (TH1*)hfile->Get("hYfirst");
+   TH1 *hZfirst = (TH1*)hfile->Get("hZfirst");
+   TH1 *hXlast  = (TH1*)hfile->Get("hXlast");
+   TH1 *hYlast  = (TH1*)hfile->Get("hYlast");
+   TH1 *hZlast  = (TH1*)hfile->Get("hZlast");
+   TH1 *hCharge = (TH1*)hfile->Get("hCharge");
+   TH1 *hNpoint = (TH1*)hfile->Get("hNpoint");
+   TH1 *hValid  = (TH1*)hfile->Get("hValid");
 
    TH1F *hFullMatrix    = (TH1F*)hfile->Get("hFullMatrix");
    TH1F *hColMatrix     = (TH1F*)hfile->Get("hColMatrix");
@@ -1419,8 +1419,8 @@ void stress15()
    newfile->GetObject("T", newtree);
    newtree->Draw("fNtrack>>hNtrack","","goff");
    newtree->Draw("fH.GetMean()>>hHmean","","goff");
-   TH1F *hNtrack; newfile->GetObject("hNtrack",hNtrack);
-   TH1F *hHmean; newfile->GetObject("hHmean",hHmean);
+   TH1 *hNtrack; newfile->GetObject("hNtrack",hNtrack);
+   TH1 *hHmean; newfile->GetObject("hHmean",hHmean);
    ntotin  += newfile->GetBytesRead();
 
    // Open old reference file of stress9
@@ -1429,8 +1429,8 @@ void stress15()
       printf("FAILED\n");
       return;
    }
-   TH1F *bNtrack; oldfile->GetObject("bNtrack",bNtrack);
-   TH1F *bHmean;  oldfile->GetObject("bHmean",bHmean);
+   TH1 *bNtrack; oldfile->GetObject("bNtrack",bNtrack);
+   TH1 *bHmean;  oldfile->GetObject("bHmean",bHmean);
    Int_t cNtrack = HistCompare(hNtrack,bNtrack);
    Int_t cHmean  = HistCompare(hHmean, bHmean);
    delete newfile;

@@ -33,7 +33,7 @@ fast searches and comparisons.
 #include <iostream>
 using namespace std ;
 
-ClassImp(RooNameReg)
+ClassImp(RooNameReg);
 ;
 
 RooNameReg* RooNameReg::_instance = 0 ;

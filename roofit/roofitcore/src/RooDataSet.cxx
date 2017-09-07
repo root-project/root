@@ -60,7 +60,7 @@ char* operator+( streampos&, char* );
 
 using namespace std;
 
-ClassImp(RooDataSet)
+ClassImp(RooDataSet);
 ;
 
 
@@ -102,49 +102,52 @@ void RooDataSet::cleanup()
 
 void* RooDataSet::operator new (size_t bytes)
 {
-  //cout << " RooDataSet::operator new(" << bytes << ")" << endl ;
+  // cout << " RooDataSet::operator new(" << bytes << ")" << endl ;
 
-  if (!_poolBegin || _poolCur+(sizeof(RooDataSet)) >= _poolEnd) {
+  if (!_poolBegin || _poolCur + (sizeof(RooDataSet)) >= _poolEnd) {
 
-    if (_poolBegin!=0) {
-      oocxcoutD((TObject*)0,Caching) << "RooDataSet::operator new(), starting new 1MB memory pool" << endl ;
-    }
+     if (_poolBegin != 0) {
+        oocxcoutD((TObject *)0, Caching) << "RooDataSet::operator new(), starting new 1MB memory pool" << endl;
+     }
 
-    // Start pruning empty memory pools if number exceeds 3
-    if (_memPoolList.size()>3) {
-      
-      void* toFree(0) ;
+     // Start pruning empty memory pools if number exceeds 3
+     if (_memPoolList.size() > 3) {
 
-      for (std::list<POOLDATA>::iterator poolIter =  _memPoolList.begin() ; poolIter!=_memPoolList.end() ; ++poolIter) {
+        void *toFree(0);
 
-	// If pool is empty, delete it and remove it from list
-	if ((*(Int_t*)(poolIter->_base))==0) {
-	  oocxcoutD((TObject*)0,Caching) << "RooDataSet::operator new(), pruning empty memory pool " << (void*)(poolIter->_base) << endl ;
+        for (std::list<POOLDATA>::iterator poolIter = _memPoolList.begin(); poolIter != _memPoolList.end();
+             ++poolIter) {
 
-	  toFree = poolIter->_base ;
-	  _memPoolList.erase(poolIter) ;
-	  break ;
-	}
-      }      
+           // If pool is empty, delete it and remove it from list
+           if ((*(Int_t *)(poolIter->_base)) == 0) {
+              oocxcoutD((TObject *)0, Caching)
+                 << "RooDataSet::operator new(), pruning empty memory pool " << (void *)(poolIter->_base) << endl;
 
-      free(toFree) ;      
-    }
-    
-    void* mem = malloc(POOLSIZE) ;
+              toFree = poolIter->_base;
+              _memPoolList.erase(poolIter);
+              break;
+           }
+        }
 
-    _poolBegin = (char*)mem ;
-    // Reserve space for pool counter at head of pool
-    _poolCur = _poolBegin+sizeof(Int_t) ;
-    _poolEnd = _poolBegin+(POOLSIZE) ;
+        free(toFree);
+     }
 
-    // Clear pool counter
-    *((Int_t*)_poolBegin)=0 ;
-    
-    POOLDATA p ;
-    p._base=mem ;
-    _memPoolList.push_back(p) ;
+     void *mem = malloc(POOLSIZE);
+     memset(mem, TStorage::kObjectAllocMemValue, POOLSIZE);
 
-    RooSentinel::activate() ;
+     _poolBegin = (char *)mem;
+     // Reserve space for pool counter at head of pool
+     _poolCur = _poolBegin + sizeof(Int_t);
+     _poolEnd = _poolBegin + (POOLSIZE);
+
+     // Clear pool counter
+     *((Int_t *)_poolBegin) = 0;
+
+     POOLDATA p;
+     p._base = mem;
+     _memPoolList.push_back(p);
+
+     RooSentinel::activate();
   }
 
   char* ptr = _poolCur ;

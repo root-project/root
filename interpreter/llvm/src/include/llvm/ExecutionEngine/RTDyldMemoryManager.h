@@ -14,22 +14,24 @@
 #ifndef LLVM_EXECUTIONENGINE_RTDYLDMEMORYMANAGER_H
 #define LLVM_EXECUTIONENGINE_RTDYLDMEMORYMANAGER_H
 
-#include "RuntimeDyld.h"
-#include "llvm-c/ExecutionEngine.h"
+#include "llvm/ExecutionEngine/JITSymbol.h"
+#include "llvm/ExecutionEngine/RuntimeDyld.h"
 #include "llvm/Support/CBindingWrapping.h"
-#include "llvm/Support/Memory.h"
+#include "llvm-c/ExecutionEngine.h"
+#include <cstddef>
+#include <cstdint>
+#include <string>
 
 namespace llvm {
 
 class ExecutionEngine;
 
-  namespace object {
-    class ObjectFile;
-  }
+namespace object {
+  class ObjectFile;
+} // end namespace object
 
 class MCJITMemoryManager : public RuntimeDyld::MemoryManager {
 public:
-
   // Don't hide the notifyObjectLoaded method from RuntimeDyld::MemoryManager.
   using RuntimeDyld::MemoryManager::notifyObjectLoaded;
 
@@ -54,11 +56,11 @@ public:
 // FIXME: As the RuntimeDyld fills out, additional routines will be needed
 //        for the varying types of objects to be allocated.
 class RTDyldMemoryManager : public MCJITMemoryManager,
-                            public RuntimeDyld::SymbolResolver {
+                            public JITSymbolResolver {
+public:
+  RTDyldMemoryManager() = default;
   RTDyldMemoryManager(const RTDyldMemoryManager&) = delete;
   void operator=(const RTDyldMemoryManager&) = delete;
-public:
-  RTDyldMemoryManager() {}
   ~RTDyldMemoryManager() override;
 
   /// Register EH frames in the current process.
@@ -67,13 +69,8 @@ public:
   /// Deregister EH frames in the current proces.
   static void deregisterEHFramesInProcess(uint8_t *Addr, size_t Size);
 
-  void registerEHFrames(uint8_t *Addr, uint64_t LoadAddr, size_t Size) override {
-    registerEHFramesInProcess(Addr, Size);
-  }
-
-  void deregisterEHFrames(uint8_t *Addr, uint64_t LoadAddr, size_t Size) override {
-    registerEHFramesInProcess(Addr, Size);
-  }
+  void registerEHFrames(uint8_t *Addr, uint64_t LoadAddr, size_t Size) override;
+  void deregisterEHFrames() override;
 
   /// This method returns the address of the specified function or variable in
   /// the current process.
@@ -98,9 +95,8 @@ public:
   /// Clients writing custom RTDyldMemoryManagers are encouraged to override
   /// this method and return a SymbolInfo with the flags set correctly. This is
   /// necessary for RuntimeDyld to correctly handle weak and non-exported symbols.
-  RuntimeDyld::SymbolInfo findSymbol(const std::string &Name) override {
-    return RuntimeDyld::SymbolInfo(getSymbolAddress(Name),
-                                   JITSymbolFlags::Exported);
+  JITSymbol findSymbol(const std::string &Name) override {
+    return JITSymbol(getSymbolAddress(Name), JITSymbolFlags::Exported);
   }
 
   /// Legacy symbol lookup -- DEPRECATED! Please override
@@ -121,10 +117,10 @@ public:
   /// Clients writing custom RTDyldMemoryManagers are encouraged to override
   /// this method and return a SymbolInfo with the flags set correctly. This is
   /// necessary for RuntimeDyld to correctly handle weak and non-exported symbols.
-  RuntimeDyld::SymbolInfo
+  JITSymbol
   findSymbolInLogicalDylib(const std::string &Name) override {
-    return RuntimeDyld::SymbolInfo(getSymbolAddressInLogicalDylib(Name),
-                                   JITSymbolFlags::Exported);
+    return JITSymbol(getSymbolAddressInLogicalDylib(Name),
+                          JITSymbolFlags::Exported);
   }
 
   /// This method returns the address of the specified function. As such it is
@@ -138,13 +134,19 @@ public:
   /// MCJIT or RuntimeDyld.  Use getSymbolAddress instead.
   virtual void *getPointerToNamedFunction(const std::string &Name,
                                           bool AbortOnFailure = true);
+
+private:
+  struct EHFrame {
+    uint8_t *Addr;
+    size_t Size;
+  };
+  std::vector<EHFrame> EHFrames;
 };
 
 // Create wrappers for C Binding types (see CBindingWrapping.h).
 DEFINE_SIMPLE_CONVERSION_FUNCTIONS(
     RTDyldMemoryManager, LLVMMCJITMemoryManagerRef)
 
-} // namespace llvm
+} // end namespace llvm
 
-
-#endif
+#endif // LLVM_EXECUTIONENGINE_RTDYLDMEMORYMANAGER_H

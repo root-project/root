@@ -27,7 +27,7 @@
 TStyle  *gStyle;
 const UInt_t kTakeStyle = BIT(17);
 
-ClassImp(TStyle)
+ClassImp(TStyle);
 
 /** \class TStyle
 \ingroup Base
@@ -115,7 +115,7 @@ TStyle::TStyle(const char *name, const char *title)
    Reset();
 
    {
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfStyles()->Add(this);
    }
 
@@ -263,7 +263,7 @@ TStyle::TStyle(const char *name, const char *title)
 
 TStyle::~TStyle()
 {
-   R__LOCKGUARD2(gROOTMutex);
+   R__LOCKGUARD(gROOTMutex);
    gROOT->GetListOfStyles()->Remove(this);
    if (gStyle == this) gStyle = (TStyle*)gROOT->GetListOfStyles()->Last();
 }
@@ -875,7 +875,6 @@ Float_t TStyle::GetTitleSize( Option_t *axis) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Show the options from the current style
-/// if (TClass::GetClass("TStyleManager")) gSystem->Load("libGed");
 
 void TStyle::Paint(Option_t *option)
 {

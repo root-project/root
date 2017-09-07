@@ -1,0 +1,19 @@
+<mvc:View
+  	height="100%"
+   controllerName="sap.ui.jsroot.controller.FitPanel"
+  	xmlns:mvc="sap.ui.core.mvc"
+  	xmlns="sap.m">
+  	<Page
+  		id="fitpanel_page"
+  		title="Fit Panel"
+      showHeader="true" >
+    	<footer>
+    	   <Bar>
+    			<contentRight>
+    				<Button id="fitpanel_Fit" text="Fit" press="handleFitPress" />
+    				<Button id="fitpanel_Close" text="Close" press="handleClosePress" />
+    			</contentRight>
+    		</Bar>
+    	</footer>
+   </Page>
+</mvc:View>

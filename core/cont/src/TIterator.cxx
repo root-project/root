@@ -18,7 +18,7 @@ for collection iterators.
 #include "TIterator.h"
 #include "TError.h"
 
-ClassImp(TIterator)
+ClassImp(TIterator);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compare two iterator objects.

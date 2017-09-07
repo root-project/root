@@ -10,7 +10,6 @@
 #ifndef CLING_RUNTIME_EXCEPTION_H
 #define CLING_RUNTIME_EXCEPTION_H
 
-#include "llvm/Support/Compiler.h"
 #include <stdexcept>
 
 namespace clang {
@@ -28,7 +27,7 @@ namespace cling {
   public:
     InterpreterException(const std::string& Reason);
     InterpreterException(const char* What, clang::Sema* = nullptr);
-    virtual ~InterpreterException() LLVM_NOEXCEPT;
+    virtual ~InterpreterException() noexcept;
 
     ///\brief Return true if error was diagnosed false otherwise
     virtual bool diagnose() const;
@@ -45,7 +44,7 @@ namespace cling {
     const DerefType m_Type;
   public:
     InvalidDerefException(clang::Sema* S, const clang::Expr* E, DerefType type);
-    virtual ~InvalidDerefException() LLVM_NOEXCEPT;
+    virtual ~InvalidDerefException() noexcept;
 
     bool diagnose() const override;
   };
@@ -60,7 +59,7 @@ namespace cling {
   class CompilationException: public InterpreterException {
   public:
     CompilationException(const std::string& Reason);
-    ~CompilationException() LLVM_NOEXCEPT;
+    ~CompilationException() noexcept;
 
     // Handle fatal llvm errors by throwing an exception.
     // Yes, throwing exceptions in error handlers is bad.

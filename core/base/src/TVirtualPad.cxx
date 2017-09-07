@@ -38,7 +38,7 @@ TVirtualPad *&TVirtualPad::Pad()
       return *(TVirtualPad**)(*gThreadTsd)(&currentPad,ROOT::kPadThreadSlot);
 }
 
-ClassImp(TVirtualPad)
+ClassImp(TVirtualPad);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// VirtualPad default constructor

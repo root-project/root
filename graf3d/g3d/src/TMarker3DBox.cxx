@@ -25,7 +25,7 @@
 
 #include <assert.h>
 
-ClassImp(TMarker3DBox)
+ClassImp(TMarker3DBox);
 
 /** \class TMarker3DBox
 \ingroup g3d

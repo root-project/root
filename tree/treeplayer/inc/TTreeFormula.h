@@ -60,7 +60,7 @@ class TTreeFormula : public ROOT::v5::TFormula {
 friend class TTreeFormulaManager;
 
 protected:
-   enum {
+   enum EStatusBits {
       kIsCharacter = BIT(12),
       kMissingLeaf = BIT(15), // true if some of the needed leaves are missing in the current TTree
       kIsInteger   = BIT(17), // true if the branch contains an integer variable
@@ -82,6 +82,14 @@ protected:
       kAlternateString = 203,
       kMinIf           = 204,
       kMaxIf           = 205
+   };
+
+   // Helper struct to hold a cache
+   // that can accelerate calculation of the RealIndex.
+   struct RealInstanceCache {
+      Int_t fInstanceCache = 0;
+      Int_t fLocalIndexCache = 0;
+      Int_t fVirtAccumCache = 0;
    };
 
    TTree       *fTree;            //! pointer to Tree
@@ -120,6 +128,8 @@ protected:
    std::vector<std::string>  fAliasesUsed;    //! List of aliases used during the parsing of the expression.
 
    LongDouble_t*        fConstLD;   //! local version of fConsts able to store bigger numbers
+
+   RealInstanceCache fRealInstanceCache; //! Cache accelerating the GetRealInstance function
 
    TTreeFormula(const char *name, const char *formula, TTree *tree, const std::vector<std::string>& aliases);
    void Init(const char *name, const char *formula);

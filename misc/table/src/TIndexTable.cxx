@@ -52,7 +52,7 @@
 
 // TableClassImpl(TIndexTable,int);
    TTableDescriptor *TIndexTable::fgColDescriptors = TIndexTable::CreateDescriptor();
-   ClassImp(TIndexTable)
+   ClassImp(TIndexTable);
 
 #if 0
 void TIndexTable::Dictionary()

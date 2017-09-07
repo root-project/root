@@ -236,7 +236,7 @@ TFitResultPtr HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const 
    if ( (linear || fitOption.Gradient) )
       fitter->SetFunction(ROOT::Math::WrappedMultiTF1(*f1));
 #ifdef R__HAS_VECCORE      
-   else if(f1->IsTemplated())
+   else if(f1->IsVectorized())
       fitter->SetFunction(static_cast<const ROOT::Math::IParamMultiFunctionTempl<ROOT::Double_v> &>(ROOT::Math::WrappedMultiTF1Templ<ROOT::Double_v>(*f1)));
 #endif
    else
@@ -362,7 +362,7 @@ TFitResultPtr HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const 
       fitConfig.SetWeightCorrection(weight);
       bool extended = ((fitOption.Like & 4 ) != 4 );
       //if (!extended) Info("HFitImpl","Do a not -extended binned fit");
-      fitok = fitter->LikelihoodFit(*fitdata, extended);
+      fitok = fitter->LikelihoodFit(*fitdata, extended, fitOption.ExecPolicy);
    }
    else{ // standard least square fit
       fitok = fitter->Fit(*fitdata, fitOption.ExecPolicy);
@@ -709,7 +709,7 @@ void ROOT::Fit::FitOptionsMake(EFitObjectType type, const char *option, Foption_
       // }
 
       if (opt.Contains("MULTITHREAD")) {
-         fitOption.ExecPolicy = ROOT::Fit::kMultithread;
+         fitOption.ExecPolicy = ROOT::Fit::ExecutionPolicy::kMultithread;
          opt.ReplaceAll("MULTITHREAD","");
       }
 
@@ -893,7 +893,7 @@ TFitResultPtr ROOT::Fit::UnBinFit(ROOT::Fit::UnBinData * data, TF1 * fitfunc, Fo
    bool extended = (fitOption.Like & 1) == 1;
 
    bool fitok = false;
-   fitok = fitter->LikelihoodFit(fitdata, extended);
+   fitok = fitter->LikelihoodFit(fitdata, extended, fitOption.ExecPolicy);
    if ( !fitok  && !fitOption.Quiet )
       Warning("UnBinFit","Abnormal termination of minimization.");
 

@@ -20,4 +20,4 @@
 
 #include "TMutexImp.h"
 
-ClassImp(TMutexImp)
+ClassImp(TMutexImp);

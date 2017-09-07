@@ -21,7 +21,7 @@
 Statefull info for the current geometry level.
 */
 
-ClassImp(TGeoStateInfo)
+ClassImp(TGeoStateInfo);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor

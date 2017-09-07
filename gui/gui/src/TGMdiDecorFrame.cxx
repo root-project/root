@@ -52,14 +52,14 @@
 #include "TGMdiDecorFrame.h"
 #include "TGMdiMainFrame.h"
 
-ClassImp(TGMdiDecorFrame)
-ClassImp(TGMdiTitleBar)
-ClassImp(TGMdiButtons)
-ClassImp(TGMdiTitleIcon)
-ClassImp(TGMdiWinResizer)
-ClassImp(TGMdiVerticalWinResizer)
-ClassImp(TGMdiHorizontalWinResizer)
-ClassImp(TGMdiCornerWinResizer)
+ClassImp(TGMdiDecorFrame);
+ClassImp(TGMdiTitleBar);
+ClassImp(TGMdiButtons);
+ClassImp(TGMdiTitleIcon);
+ClassImp(TGMdiWinResizer);
+ClassImp(TGMdiVerticalWinResizer);
+ClassImp(TGMdiHorizontalWinResizer);
+ClassImp(TGMdiCornerWinResizer);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TGMdiDecorFrame constructor.

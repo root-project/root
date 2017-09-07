@@ -127,7 +127,7 @@ along with TUnfold.  If not, see <http://www.gnu.org/licenses/>.
 //#define DEBUG_DETAIL
 //#define FORCE_EIGENVALUE_DECOMPOSITION
 
-ClassImp(TUnfold)
+ClassImp(TUnfold);
 
 TUnfold::~TUnfold(void)
 {

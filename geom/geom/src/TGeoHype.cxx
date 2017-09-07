@@ -55,7 +55,7 @@ SUPPORTED CASES:
     e.g. tin=0 AND tout=0 => shape becomes a tube with: rmin,rmax,dz
 */
 
-ClassImp(TGeoHype)
+ClassImp(TGeoHype);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor

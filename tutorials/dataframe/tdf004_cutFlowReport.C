@@ -8,17 +8,6 @@
 /// \date December 2016
 /// \author Danilo Piparo
 
-#include "Math/Vector3D.h"
-#include "Math/Vector4D.h"
-#include "TCanvas.h"
-#include "TMath.h"
-#include "TRandom3.h"
-#include "TFile.h"
-#include "TH1F.h"
-#include "TTree.h"
-
-#include "ROOT/TDataFrame.hxx"
-
 using FourVector = ROOT::Math::XYZTVector;
 using FourVectors = std::vector<FourVector>;
 using CylFourVector = ROOT::Math::RhoEtaPhiVector;
@@ -80,10 +69,4 @@ void tdf004_cutFlowReport()
    filtered3.Report();
    std::cout << "All stats:" << std::endl;
    d.Report();
-}
-
-int main()
-{
-   tdf004_cutFlowReport();
-   return 0;
 }

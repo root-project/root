@@ -33,7 +33,7 @@ with any RooResolutionModel implementation
 
 using namespace std;
 
-ClassImp(RooDecay)
+ClassImp(RooDecay);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor

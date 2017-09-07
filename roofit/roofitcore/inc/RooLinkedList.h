@@ -79,6 +79,8 @@ public:
     return _first?_first->_arg:0 ;
   }
 
+  virtual void RecursiveRemove(TObject *obj);
+
   void Print(const char* opt) const ;
   void Sort(Bool_t ascend=kTRUE) ;
   

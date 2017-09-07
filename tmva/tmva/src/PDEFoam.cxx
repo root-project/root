@@ -91,7 +91,7 @@ PDEFoamEventDensity.
 #include <limits>
 #include <sstream>
 
-ClassImp(TMVA::PDEFoam)
+ClassImp(TMVA::PDEFoam);
 
 static const Float_t kHigh= FLT_MAX;
 static const Float_t kVlow=-FLT_MAX;

@@ -175,7 +175,7 @@ namespace TMVA {
                    }else{
                       if(objstr->GetString().BeginsWith("!"))
                       {
-                          objstr->GetString().ReplaceAll("!","");
+                          objstr->String().ReplaceAll("!","");
                           fOptMap[objstr->GetString()]=TString("0");
                       }else{
                           fOptMap[objstr->GetString()]=TString("1");

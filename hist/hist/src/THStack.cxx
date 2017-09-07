@@ -25,7 +25,7 @@
 #include "TObjString.h"
 #include "TVirtualMutex.h"
 
-ClassImp(THStack)
+ClassImp(THStack);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -130,7 +130,7 @@ THStack::THStack(const char *name, const char *title)
    fHistogram = 0;
    fMaximum   = -1111;
    fMinimum   = -1111;
-   R__LOCKGUARD2(gROOTMutex);
+   R__LOCKGUARD(gROOTMutex);
    gROOT->GetListOfCleanups()->Add(this);
 }
 
@@ -175,7 +175,7 @@ THStack::THStack(TH1* hist, Option_t *axis /*="x"*/,
    fMaximum   = -1111;
    fMinimum   = -1111;
    {
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfCleanups()->Add(this);
    }
    if (!axis) {
@@ -321,7 +321,7 @@ THStack::~THStack()
 {
 
    {
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfCleanups()->Remove(this);
    }
    if (!fHists) return;

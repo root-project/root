@@ -46,7 +46,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-ClassImp(TVolumeView)
+ClassImp(TVolumeView);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -529,9 +529,9 @@ void TVolumeView::Draw(Option_t *option)
 
    Int_t iopt = atoi(option);
    TDataSet *parent = 0;
-   char buffer[10];
+   char buffer[12];
    if (iopt < 0) {
-      snprintf(buffer,10,"%d",-iopt);
+      snprintf(buffer,12,"%d",-iopt);
       option = buffer;
       // select parent to draw
       parent = this;

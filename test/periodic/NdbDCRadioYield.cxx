@@ -1,3 +1,3 @@
 #include "NdbDCRadioYield.h"
 
-ClassImp(NdbDCRadioYield)
+ClassImp(NdbDCRadioYield);

@@ -23,13 +23,17 @@
 #include "llvm/ADT/SparseBitVector.h"
 #include "llvm/ADT/Statistic.h"
 #include "llvm/ADT/UniqueVector.h"
+#include "llvm/CodeGen/LexicalScopes.h"
+#include "llvm/CodeGen/MachineFrameInfo.h"
 #include "llvm/CodeGen/MachineFunction.h"
 #include "llvm/CodeGen/MachineFunctionPass.h"
 #include "llvm/CodeGen/MachineInstrBuilder.h"
+#include "llvm/CodeGen/MachineMemOperand.h"
 #include "llvm/CodeGen/Passes.h"
 #include "llvm/IR/DebugInfo.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/raw_ostream.h"
+#include "llvm/Target/TargetFrameLowering.h"
 #include "llvm/Target/TargetInstrInfo.h"
 #include "llvm/Target/TargetLowering.h"
 #include "llvm/Target/TargetRegisterInfo.h"
@@ -60,6 +64,27 @@ class LiveDebugValues : public MachineFunctionPass {
 private:
   const TargetRegisterInfo *TRI;
   const TargetInstrInfo *TII;
+  const TargetFrameLowering *TFI;
+  LexicalScopes LS;
+
+  /// Keeps track of lexical scopes associated with a user value's source
+  /// location.
+  class UserValueScopes {
+    DebugLoc DL;
+    LexicalScopes &LS;
+    SmallPtrSet<const MachineBasicBlock *, 4> LBlocks;
+
+  public:
+    UserValueScopes(DebugLoc D, LexicalScopes &L) : DL(std::move(D)), LS(L) {}
+
+    /// Return true if current scope dominates at least one machine
+    /// instruction in a given machine basic block.
+    bool dominates(MachineBasicBlock *MBB) {
+      if (LBlocks.empty())
+        LS.getMachineBasicBlocks(DL, LBlocks);
+      return LBlocks.count(MBB) != 0 || LS.dominates(DL, MBB);
+    }
+  };
 
   /// Based on std::pair so it can be used as an index into a DenseMap.
   typedef std::pair<const DILocalVariable *, const DILocation *>
@@ -83,7 +108,7 @@ private:
   struct VarLoc {
     const DebugVariable Var;
     const MachineInstr &MI; ///< Only used for cloning a new DBG_VALUE.
-
+    mutable UserValueScopes UVS;
     enum { InvalidKind = 0, RegisterKind } Kind;
 
     /// The value location. Stored separately to avoid repeatedly
@@ -96,9 +121,9 @@ private:
       uint64_t Hash;
     } Loc;
 
-    VarLoc(const MachineInstr &MI)
+    VarLoc(const MachineInstr &MI, LexicalScopes &LS)
         : Var(MI.getDebugVariable(), MI.getDebugLoc()->getInlinedAt()), MI(MI),
-          Kind(InvalidKind) {
+          UVS(MI.getDebugLoc(), LS), Kind(InvalidKind) {
       static_assert((sizeof(Loc) == sizeof(uint64_t)),
                     "hash does not cover all members of Loc");
       assert(MI.isDebugValue() && "not a DBG_VALUE");
@@ -106,11 +131,13 @@ private:
       if (int RegNo = isDbgValueDescribedByReg(MI)) {
         Kind = RegisterKind;
         Loc.RegisterLoc.RegNo = RegNo;
-        uint64_t Offset =
+        int64_t Offset =
             MI.isIndirectDebugValue() ? MI.getOperand(1).getImm() : 0;
         // We don't support offsets larger than 4GiB here. They are
         // slated to be replaced with DIExpressions anyway.
-        if (Offset >= (1ULL << 32))
+        // With indirect debug values used for spill locations, Offset 
+        // can be negative.
+        if (Offset == INT64_MIN || std::abs(Offset) >= (1LL << 32))
           Kind = InvalidKind;
         else
           Loc.RegisterLoc.Offset = Offset;
@@ -125,7 +152,13 @@ private:
       return 0;
     }
 
-    void dump() const { MI.dump(); }
+    /// Determine whether the lexical scope of this value's debug location
+    /// dominates MBB.
+    bool dominates(MachineBasicBlock &MBB) const { return UVS.dominates(&MBB); }
+
+#if !defined(NDEBUG) || defined(LLVM_ENABLE_DUMP)
+    LLVM_DUMP_METHOD void dump() const { MI.dump(); }
+#endif
 
     bool operator==(const VarLoc &Other) const {
       return Var == Other.Var && Loc.Hash == Other.Loc.Hash;
@@ -142,6 +175,11 @@ private:
   typedef UniqueVector<VarLoc> VarLocMap;
   typedef SparseBitVector<> VarLocSet;
   typedef SmallDenseMap<const MachineBasicBlock *, VarLocSet> VarLocInMBB;
+  struct SpillDebugPair {
+    MachineInstr *SpillInst;
+    MachineInstr *DebugInst;
+  };
+  typedef SmallVector<SpillDebugPair, 4> SpillMap;
 
   /// This holds the working set of currently open ranges. For fast
   /// access, this is done both as a set of VarLocIDs, and a map of
@@ -191,17 +229,25 @@ private:
     }
   };
 
+  bool isSpillInstruction(const MachineInstr &MI, MachineFunction *MF,
+                          unsigned &Reg);
+  int extractSpillBaseRegAndOffset(const MachineInstr &MI, unsigned &Reg);
+
   void transferDebugValue(const MachineInstr &MI, OpenRangesSet &OpenRanges,
                           VarLocMap &VarLocIDs);
+  void transferSpillInst(MachineInstr &MI, OpenRangesSet &OpenRanges,
+                         VarLocMap &VarLocIDs, SpillMap &Spills);
   void transferRegisterDef(MachineInstr &MI, OpenRangesSet &OpenRanges,
                            const VarLocMap &VarLocIDs);
   bool transferTerminatorInst(MachineInstr &MI, OpenRangesSet &OpenRanges,
                               VarLocInMBB &OutLocs, const VarLocMap &VarLocIDs);
   bool transfer(MachineInstr &MI, OpenRangesSet &OpenRanges,
-                VarLocInMBB &OutLocs, VarLocMap &VarLocIDs);
+                VarLocInMBB &OutLocs, VarLocMap &VarLocIDs, SpillMap &Spills,
+                bool transferSpills);
 
   bool join(MachineBasicBlock &MBB, VarLocInMBB &OutLocs, VarLocInMBB &InLocs,
-            const VarLocMap &VarLocIDs);
+            const VarLocMap &VarLocIDs,
+            SmallPtrSet<const MachineBasicBlock *, 16> &Visited);
 
   bool ExtendRanges(MachineFunction &MF);
 
@@ -217,7 +263,7 @@ public:
 
   MachineFunctionProperties getRequiredProperties() const override {
     return MachineFunctionProperties().set(
-        MachineFunctionProperties::Property::AllVRegsAllocated);
+        MachineFunctionProperties::Property::NoVRegs);
   }
 
   /// Print to ostream with a message.
@@ -228,6 +274,7 @@ public:
   /// Calculate the liveness information for the given machine function.
   bool runOnMachineFunction(MachineFunction &MF) override;
 };
+
 } // namespace
 
 //===----------------------------------------------------------------------===//
@@ -255,11 +302,13 @@ void LiveDebugValues::getAnalysisUsage(AnalysisUsage &AU) const {
 //            Debug Range Extension Implementation
 //===----------------------------------------------------------------------===//
 
+#ifndef NDEBUG
 void LiveDebugValues::printVarLocInMBB(const MachineFunction &MF,
                                        const VarLocInMBB &V,
                                        const VarLocMap &VarLocIDs,
                                        const char *msg,
                                        raw_ostream &Out) const {
+  Out << '\n' << msg << '\n';
   for (const MachineBasicBlock &BB : MF) {
     const auto &L = V.lookup(&BB);
     Out << "MBB: " << BB.getName() << ":\n";
@@ -268,10 +317,25 @@ void LiveDebugValues::printVarLocInMBB(const MachineFunction &MF,
       Out << " Var: " << VL.Var.getVar()->getName();
       Out << " MI: ";
       VL.dump();
-      Out << "\n";
     }
   }
   Out << "\n";
+}
+#endif
+
+/// Given a spill instruction, extract the register and offset used to
+/// address the spill location in a target independent way.
+int LiveDebugValues::extractSpillBaseRegAndOffset(const MachineInstr &MI,
+                                                  unsigned &Reg) {
+  assert(MI.hasOneMemOperand() && 
+         "Spill instruction does not have exactly one memory operand?");
+  auto MMOI = MI.memoperands_begin();
+  const PseudoSourceValue *PVal = (*MMOI)->getPseudoValue();
+  assert(PVal->kind() == PseudoSourceValue::FixedStack &&
+         "Inconsistent memory operand in spill instruction");
+  int FI = cast<FixedStackPseudoSourceValue>(PVal)->getFrameIndex();
+  const MachineBasicBlock *MBB = MI.getParent();
+  return TFI->getFrameIndexReference(*MBB->getParent(), FI, Reg);
 }
 
 /// End all previous ranges related to @MI and start a new range from @MI
@@ -294,7 +358,7 @@ void LiveDebugValues::transferDebugValue(const MachineInstr &MI,
   // Add the VarLoc to OpenRanges from this DBG_VALUE.
   // TODO: Currently handles DBG_VALUE which has only reg as location.
   if (isDbgValueDescribedByReg(MI)) {
-    VarLoc VL(MI);
+    VarLoc VL(MI, LS);
     unsigned ID = VarLocIDs.insert(VL);
     OpenRanges.insert(ID, VL.Var);
   }
@@ -309,8 +373,12 @@ void LiveDebugValues::transferRegisterDef(MachineInstr &MI,
   unsigned SP = TLI->getStackPointerRegisterToSaveRestore();
   SparseBitVector<> KillSet;
   for (const MachineOperand &MO : MI.operands()) {
+    // Determine whether the operand is a register def.  Assume that call
+    // instructions never clobber SP, because some backends (e.g., AArch64)
+    // never list SP in the regmask.
     if (MO.isReg() && MO.isDef() && MO.getReg() &&
-        TRI->isPhysicalRegister(MO.getReg())) {
+        TRI->isPhysicalRegister(MO.getReg()) &&
+        !(MI.isCall() && MO.getReg() == SP)) {
       // Remove ranges of all aliased registers.
       for (MCRegAliasIterator RAI(MO.getReg(), TRI, true); RAI.isValid(); ++RAI)
         for (unsigned ID : OpenRanges.getVarLocs())
@@ -329,6 +397,91 @@ void LiveDebugValues::transferRegisterDef(MachineInstr &MI,
     }
   }
   OpenRanges.erase(KillSet, VarLocIDs);
+}
+
+/// Decide if @MI is a spill instruction and return true if it is. We use 2
+/// criteria to make this decision:
+/// - Is this instruction a store to a spill slot?
+/// - Is there a register operand that is both used and killed?
+/// TODO: Store optimization can fold spills into other stores (including
+/// other spills). We do not handle this yet (more than one memory operand).
+bool LiveDebugValues::isSpillInstruction(const MachineInstr &MI,
+                                         MachineFunction *MF, unsigned &Reg) {
+  const MachineFrameInfo &FrameInfo = MF->getFrameInfo();
+  int FI;
+  const MachineMemOperand *MMO;
+
+  // TODO: Handle multiple stores folded into one. 
+  if (!MI.hasOneMemOperand())
+    return false;
+
+  // To identify a spill instruction, use the same criteria as in AsmPrinter.
+  if (!((TII->isStoreToStackSlotPostFE(MI, FI) ||
+         TII->hasStoreToStackSlot(MI, MMO, FI)) &&
+        FrameInfo.isSpillSlotObjectIndex(FI)))
+    return false;
+
+  // In a spill instruction generated by the InlineSpiller the spilled register
+  // has its kill flag set. Return false if we don't find such a register.
+  Reg = 0;
+  for (const MachineOperand &MO : MI.operands()) {
+    if (MO.isReg() && MO.isUse() && MO.isKill()) {
+      Reg = MO.getReg();
+      break;
+    }
+  }
+  return Reg != 0;
+}
+
+/// A spilled register may indicate that we have to end the current range of
+/// a variable and create a new one for the spill location.
+/// We don't want to insert any instructions in transfer(), so we just create
+/// the DBG_VALUE witout inserting it and keep track of it in @Spills.
+/// It will be inserted into the BB when we're done iterating over the
+/// instructions.
+void LiveDebugValues::transferSpillInst(MachineInstr &MI,
+                                        OpenRangesSet &OpenRanges,
+                                        VarLocMap &VarLocIDs,
+                                        SpillMap &Spills) {
+  unsigned Reg;
+  MachineFunction *MF = MI.getParent()->getParent();
+  if (!isSpillInstruction(MI, MF, Reg))
+    return;
+
+  // Check if the register is the location of a debug value.
+  for (unsigned ID : OpenRanges.getVarLocs()) {
+    if (VarLocIDs[ID].isDescribedByReg() == Reg) {
+      DEBUG(dbgs() << "Spilling Register " << PrintReg(Reg, TRI) << '('
+                   << VarLocIDs[ID].Var.getVar()->getName() << ")\n");
+
+      // Create a DBG_VALUE instruction to describe the Var in its spilled
+      // location, but don't insert it yet to avoid invalidating the
+      // iterator in our caller.
+      unsigned SpillBase;
+      int SpillOffset = extractSpillBaseRegAndOffset(MI, SpillBase);
+      const MachineInstr *DMI = &VarLocIDs[ID].MI;
+      MachineInstr *SpDMI =
+          BuildMI(*MF, DMI->getDebugLoc(), DMI->getDesc(), true, SpillBase, 0,
+                  DMI->getDebugVariable(), DMI->getDebugExpression());
+      SpDMI->getOperand(1).setImm(SpillOffset);
+      DEBUG(dbgs() << "Creating DBG_VALUE inst for spill: ";
+            SpDMI->print(dbgs(), false, TII));
+
+      // The newly created DBG_VALUE instruction SpDMI must be inserted after
+      // MI. Keep track of the pairing.
+      SpillDebugPair MIP = {&MI, SpDMI};
+      Spills.push_back(MIP);
+
+      // End all previous ranges of Var.
+      OpenRanges.erase(VarLocIDs[ID].Var);
+
+      // Add the VarLoc to OpenRanges.
+      VarLoc VL(*SpDMI, LS);
+      unsigned SpillLocID = VarLocIDs.insert(VL);
+      OpenRanges.insert(SpillLocID, VL.Var);
+      return;
+    }
+  }
 }
 
 /// Terminate all open ranges at the end of the current basic block.
@@ -356,10 +509,13 @@ bool LiveDebugValues::transferTerminatorInst(MachineInstr &MI,
 
 /// This routine creates OpenRanges and OutLocs.
 bool LiveDebugValues::transfer(MachineInstr &MI, OpenRangesSet &OpenRanges,
-                               VarLocInMBB &OutLocs, VarLocMap &VarLocIDs) {
+                               VarLocInMBB &OutLocs, VarLocMap &VarLocIDs,
+                               SpillMap &Spills, bool transferSpills) {
   bool Changed = false;
   transferDebugValue(MI, OpenRanges, VarLocIDs);
   transferRegisterDef(MI, OpenRanges, VarLocIDs);
+  if (transferSpills)
+    transferSpillInst(MI, OpenRanges, VarLocIDs, Spills);
   Changed = transferTerminatorInst(MI, OpenRanges, OutLocs, VarLocIDs);
   return Changed;
 }
@@ -368,7 +524,8 @@ bool LiveDebugValues::transfer(MachineInstr &MI, OpenRangesSet &OpenRanges,
 /// inserting a new DBG_VALUE instruction at the start of the @MBB - if the same
 /// source variable in all the predecessors of @MBB reside in the same location.
 bool LiveDebugValues::join(MachineBasicBlock &MBB, VarLocInMBB &OutLocs,
-                           VarLocInMBB &InLocs, const VarLocMap &VarLocIDs) {
+                           VarLocInMBB &InLocs, const VarLocMap &VarLocIDs,
+                           SmallPtrSet<const MachineBasicBlock *, 16> &Visited) {
   DEBUG(dbgs() << "join MBB: " << MBB.getName() << "\n");
   bool Changed = false;
 
@@ -376,21 +533,39 @@ bool LiveDebugValues::join(MachineBasicBlock &MBB, VarLocInMBB &OutLocs,
 
   // For all predecessors of this MBB, find the set of VarLocs that
   // can be joined.
+  int NumVisited = 0;
   for (auto p : MBB.predecessors()) {
+    // Ignore unvisited predecessor blocks.  As we are processing
+    // the blocks in reverse post-order any unvisited block can
+    // be considered to not remove any incoming values.
+    if (!Visited.count(p))
+      continue;
     auto OL = OutLocs.find(p);
     // Join is null in case of empty OutLocs from any of the pred.
     if (OL == OutLocs.end())
       return false;
 
-    // Just copy over the Out locs to incoming locs for the first predecessor.
-    if (p == *MBB.pred_begin()) {
+    // Just copy over the Out locs to incoming locs for the first visited
+    // predecessor, and for all other predecessors join the Out locs.
+    if (!NumVisited)
       InLocsT = OL->second;
-      continue;
-    }
-    // Join with this predecessor.
-    InLocsT &= OL->second;
+    else
+      InLocsT &= OL->second;
+    NumVisited++;
   }
 
+  // Filter out DBG_VALUES that are out of scope.
+  VarLocSet KillSet;
+  for (auto ID : InLocsT)
+    if (!VarLocIDs[ID].dominates(MBB))
+      KillSet.set(ID);
+  InLocsT.intersectWithComplement(KillSet);
+
+  // As we are processing blocks in reverse post-order we
+  // should have processed at least one predecessor, unless it
+  // is the entry block which has no predecessor.
+  assert((NumVisited || MBB.pred_empty()) &&
+         "Should have processed at least one predecessor");
   if (InLocsT.empty())
     return false;
 
@@ -429,10 +604,11 @@ bool LiveDebugValues::ExtendRanges(MachineFunction &MF) {
   bool OLChanged = false;
   bool MBBJoined = false;
 
-  VarLocMap VarLocIDs;   // Map VarLoc<>unique ID for use in bitvectors.
+  VarLocMap VarLocIDs;      // Map VarLoc<>unique ID for use in bitvectors.
   OpenRangesSet OpenRanges; // Ranges that are open until end of bb.
-  VarLocInMBB OutLocs;   // Ranges that exist beyond bb.
-  VarLocInMBB InLocs;    // Ranges that are incoming after joining.
+  VarLocInMBB OutLocs;      // Ranges that exist beyond bb.
+  VarLocInMBB InLocs;       // Ranges that are incoming after joining.
+  SpillMap Spills;          // DBG_VALUEs associated with spills.
 
   DenseMap<unsigned int, MachineBasicBlock *> OrderToBB;
   DenseMap<MachineBasicBlock *, unsigned int> BBToOrder;
@@ -444,9 +620,14 @@ bool LiveDebugValues::ExtendRanges(MachineFunction &MF) {
       Pending;
 
   // Initialize every mbb with OutLocs.
+  // We are not looking at any spill instructions during the initial pass
+  // over the BBs. The LiveDebugVariables pass has already created DBG_VALUE
+  // instructions for spills of registers that are known to be user variables
+  // within the BB in which the spill occurs.
   for (auto &MBB : MF)
     for (auto &MI : MBB)
-      transfer(MI, OpenRanges, OutLocs, VarLocIDs);
+      transfer(MI, OpenRanges, OutLocs, VarLocIDs, Spills,
+               /*transferSpills=*/false);
 
   DEBUG(printVarLocInMBB(MF, OutLocs, VarLocIDs, "OutLocs after initialization",
                          dbgs()));
@@ -463,21 +644,33 @@ bool LiveDebugValues::ExtendRanges(MachineFunction &MF) {
   // To solve it, we perform join() and transfer() using the two worklist method
   // until the ranges converge.
   // Ranges have converged when both worklists are empty.
+  SmallPtrSet<const MachineBasicBlock *, 16> Visited;
   while (!Worklist.empty() || !Pending.empty()) {
     // We track what is on the pending worklist to avoid inserting the same
     // thing twice.  We could avoid this with a custom priority queue, but this
     // is probably not worth it.
     SmallPtrSet<MachineBasicBlock *, 16> OnPending;
+    DEBUG(dbgs() << "Processing Worklist\n");
     while (!Worklist.empty()) {
       MachineBasicBlock *MBB = OrderToBB[Worklist.top()];
       Worklist.pop();
-      MBBJoined = join(*MBB, OutLocs, InLocs, VarLocIDs);
-
+      MBBJoined = join(*MBB, OutLocs, InLocs, VarLocIDs, Visited);
+      Visited.insert(MBB);
       if (MBBJoined) {
         MBBJoined = false;
         Changed = true;
+        // Now that we have started to extend ranges across BBs we need to
+        // examine spill instructions to see whether they spill registers that
+        // correspond to user variables.
         for (auto &MI : *MBB)
-          OLChanged |= transfer(MI, OpenRanges, OutLocs, VarLocIDs);
+          OLChanged |= transfer(MI, OpenRanges, OutLocs, VarLocIDs, Spills,
+                                /*transferSpills=*/true);
+
+        // Add any DBG_VALUE instructions necessitated by spills.
+        for (auto &SP : Spills)
+          MBB->insertAfter(MachineBasicBlock::iterator(*SP.SpillInst),
+                           SP.DebugInst);
+        Spills.clear();
 
         DEBUG(printVarLocInMBB(MF, OutLocs, VarLocIDs,
                                "OutLocs after propagating", dbgs()));
@@ -505,12 +698,15 @@ bool LiveDebugValues::ExtendRanges(MachineFunction &MF) {
 }
 
 bool LiveDebugValues::runOnMachineFunction(MachineFunction &MF) {
+  if (!MF.getFunction()->getSubprogram())
+    // LiveDebugValues will already have removed all DBG_VALUEs.
+    return false;
+
   TRI = MF.getSubtarget().getRegisterInfo();
   TII = MF.getSubtarget().getInstrInfo();
+  TFI = MF.getSubtarget().getFrameLowering();
+  LS.initialize(MF);
 
-  bool Changed = false;
-
-  Changed |= ExtendRanges(MF);
-
+  bool Changed = ExtendRanges(MF);
   return Changed;
 }

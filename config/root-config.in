@@ -77,8 +77,8 @@ if test "$platform" = "ios"; then
 else
    newlib="-lNew"
    rootglibs="-lGui"
-   rootevelibs="-lEve -lEG -lTreePlayer -lGeom -lGed -lRGL"
-   rootlibs="-lCore -lRIO -lNet -lHist -lGraf -lGraf3d -lGpad -lTree \
+   rootevelibs="-lEve -lEG -lGeom -lGed -lRGL"
+   rootlibs="-lCore -lImt -lRIO -lNet -lHist -lGraf -lGraf3d -lGpad -lTree -lTreePlayer\
              -lRint -lPostscript -lMatrix -lPhysics -lMathCore -lThread\
              -lMultiProc"
 fi
@@ -91,6 +91,7 @@ if test "$platform" = "win32"; then
               -include:_G__cpp_setupG__G3D        \
               -include:_G__cpp_setupG__GPad       \
               -include:_G__cpp_setupG__Tree       \
+              -include:_G__cpp_setupG__TreePlayer \
               -include:_G__cpp_setupG__Thread     \
               -include:_G__cpp_setupG__Rint       \
               -include:_G__cpp_setupG__PostScript \
@@ -98,7 +99,6 @@ if test "$platform" = "win32"; then
               -include:_G__cpp_setupG__Physics"
    rootuglibs="-include:_G__cpp_setupG__Gui1"
    rootuevelibs="-include:_G__cpp_setupG__EG         \
-                 -include:_G__cpp_setupG__TreePlayer \
                  -include:_G__cpp_setupG__Geom1      \
                  -include:_G__cpp_setupG__Ged        \
                  -include:_G__cpp_setupG__GL         \
@@ -111,6 +111,7 @@ elif test "$platform" = "aix5"; then
               -Wl,-u,.G__cpp_setupG__G3D        \
               -Wl,-u,.G__cpp_setupG__GPad       \
               -Wl,-u,.G__cpp_setupG__Tree       \
+              -Wl,-u,.G__cpp_setupG__TreePlayer \
               -Wl,-u,.G__cpp_setupG__Thread     \
               -Wl,-u,.G__cpp_setupG__Rint       \
               -Wl,-u,.G__cpp_setupG__PostScript \
@@ -118,7 +119,6 @@ elif test "$platform" = "aix5"; then
               -Wl,-u,.G__cpp_setupG__Physics"
    rootuglibs="-Wl,-u,.G__cpp_setupG__Gui1"
    rootuevelibs="-Wl,-u,.G__cpp_setupG__EG         \
-                 -Wl,-u,.G__cpp_setupG__TreePlayer \
                  -Wl,-u,.G__cpp_setupG__Geom1      \
                  -Wl,-u,.G__cpp_setupG__Ged        \
                  -Wl,-u,.G__cpp_setupG__GL         \
@@ -131,6 +131,7 @@ else
               -Wl,-u,_G__cpp_setupG__G3D        \
               -Wl,-u,_G__cpp_setupG__GPad       \
               -Wl,-u,_G__cpp_setupG__Tree       \
+              -Wl,-u,_G__cpp_setupG__TreePlayer \
               -Wl,-u,_G__cpp_setupG__Thread     \
               -Wl,-u,_G__cpp_setupG__Rint       \
               -Wl,-u,_G__cpp_setupG__PostScript \
@@ -138,7 +139,6 @@ else
               -Wl,-u,_G__cpp_setupG__Physics"
    rootuglibs="-Wl,-u,_G__cpp_setupG__Gui1"
    rootuevelibs="-Wl,-u,_G__cpp_setupG__EG         \
-                 -Wl,-u,_G__cpp_setupG__TreePlayer \
                  -Wl,-u,_G__cpp_setupG__Geom1      \
                  -Wl,-u,_G__cpp_setupG__Ged        \
                  -Wl,-u,_G__cpp_setupG__GL         \

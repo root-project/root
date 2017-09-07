@@ -33,6 +33,16 @@ If necessary, one could bind http server to specific IP address like:
 
     new THttpServer("http:192.168.1.17:8080")
 
+One also can provide extra arguments for THttpServer itself 
+
+   - readonly, ro   - use server in read-only mode (default)
+   - readwrite, rw  - use server in read-write mode
+   - global         - let scan global directories for canvases and files (default)
+   - noglobal       - disable scan of global directories 
+
+Example:
+
+    new THttpServer("http:8080;ro;noglobal")
 
 
 ## Registering objects
@@ -84,7 +94,6 @@ string to the icon name to let browser show command as extra button. In last cas
     serv->Hide("/DoSomething");
 
 One can find example of command interface usage in [tutorials/http/httpcontrol.C](https://github.com/root-project/root/blob/master/tutorials/http/httpcontrol.C) macro.
-
 
 
 ## Configuring user access

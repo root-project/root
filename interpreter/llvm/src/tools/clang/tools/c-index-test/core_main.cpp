@@ -7,6 +7,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "clang/CodeGen/ObjectFilePCHContainerOperations.h"
 #include "clang/Frontend/ASTUnit.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Frontend/CompilerInvocation.h"
@@ -15,6 +16,7 @@
 #include "clang/Index/IndexDataConsumer.h"
 #include "clang/Index/USRGeneration.h"
 #include "clang/Index/CodegenNameGenerator.h"
+#include "clang/Serialization/ASTReader.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Signals.h"
 #include "llvm/Support/raw_ostream.h"
@@ -41,14 +43,27 @@ static cl::opt<ActionType>
 Action(cl::desc("Action:"), cl::init(ActionType::None),
        cl::values(
           clEnumValN(ActionType::PrintSourceSymbols,
-                     "print-source-symbols", "Print symbols from source"),
-          clEnumValEnd),
+                     "print-source-symbols", "Print symbols from source")),
        cl::cat(IndexTestCoreCategory));
 
 static cl::extrahelp MoreHelp(
   "\nAdd \"-- <compiler arguments>\" at the end to setup the compiler "
   "invocation\n"
 );
+
+static cl::opt<bool>
+DumpModuleImports("dump-imported-module-files",
+               cl::desc("Print symbols and input files from imported modules"));
+
+static cl::opt<bool>
+IncludeLocals("include-locals", cl::desc("Print local symbols"));
+
+static cl::opt<std::string>
+ModuleFilePath("module-file",
+               cl::desc("Path to module file to print symbols from"));
+static cl::opt<std::string>
+  ModuleFormat("fmodule-format", cl::init("raw"),
+        cl::desc("Container format for clang modules and PCH, 'raw' or 'obj'"));
 
 }
 } // anonymous namespace
@@ -135,29 +150,87 @@ public:
 // Print Source Symbols
 //===----------------------------------------------------------------------===//
 
-static bool printSourceSymbols(ArrayRef<const char *> Args) {
+static void dumpModuleFileInputs(serialization::ModuleFile &Mod,
+                                 ASTReader &Reader,
+                                 raw_ostream &OS) {
+  OS << "---- Module Inputs ----\n";
+  Reader.visitInputFiles(Mod, /*IncludeSystem=*/true, /*Complain=*/false,
+                        [&](const serialization::InputFile &IF, bool isSystem) {
+    OS << (isSystem ? "system" : "user") << " | ";
+    OS << IF.getFile()->getName() << '\n';
+  });
+}
+
+static bool printSourceSymbols(ArrayRef<const char *> Args,
+                               bool dumpModuleImports,
+                               bool indexLocals) {
   SmallVector<const char *, 4> ArgsWithProgName;
   ArgsWithProgName.push_back("clang");
   ArgsWithProgName.append(Args.begin(), Args.end());
   IntrusiveRefCntPtr<DiagnosticsEngine>
     Diags(CompilerInstance::createDiagnostics(new DiagnosticOptions));
-  IntrusiveRefCntPtr<CompilerInvocation>
-    CInvok(createInvocationFromCommandLine(ArgsWithProgName, Diags));
+  auto CInvok = createInvocationFromCommandLine(ArgsWithProgName, Diags);
   if (!CInvok)
     return true;
 
-  auto DataConsumer = std::make_shared<PrintIndexDataConsumer>(outs());
+  raw_ostream &OS = outs();
+  auto DataConsumer = std::make_shared<PrintIndexDataConsumer>(OS);
   IndexingOptions IndexOpts;
+  IndexOpts.IndexFunctionLocals = indexLocals;
   std::unique_ptr<FrontendAction> IndexAction;
   IndexAction = createIndexingAction(DataConsumer, IndexOpts,
                                      /*WrappedAction=*/nullptr);
 
   auto PCHContainerOps = std::make_shared<PCHContainerOperations>();
   std::unique_ptr<ASTUnit> Unit(ASTUnit::LoadFromCompilerInvocationAction(
-      CInvok.get(), PCHContainerOps, Diags, IndexAction.get()));
+      std::move(CInvok), PCHContainerOps, Diags, IndexAction.get()));
 
   if (!Unit)
     return true;
+
+  if (dumpModuleImports) {
+    if (auto Reader = Unit->getASTReader()) {
+      Reader->getModuleManager().visit([&](serialization::ModuleFile &Mod) -> bool {
+        OS << "==== Module " << Mod.ModuleName << " ====\n";
+        indexModuleFile(Mod, *Reader, DataConsumer, IndexOpts);
+        dumpModuleFileInputs(Mod, *Reader, OS);
+        return true; // skip module dependencies.
+      });
+    }
+  }
+
+  return false;
+}
+
+static bool printSourceSymbolsFromModule(StringRef modulePath,
+                                         StringRef format) {
+  FileSystemOptions FileSystemOpts;
+  auto pchContOps = std::make_shared<PCHContainerOperations>();
+  // Register the support for object-file-wrapped Clang modules.
+  pchContOps->registerReader(llvm::make_unique<ObjectFilePCHContainerReader>());
+  auto pchRdr = pchContOps->getReaderOrNull(format);
+  if (!pchRdr) {
+    errs() << "unknown module format: " << format << '\n';
+    return true;
+  }
+
+  IntrusiveRefCntPtr<DiagnosticsEngine> Diags =
+      CompilerInstance::createDiagnostics(new DiagnosticOptions());
+  std::unique_ptr<ASTUnit> AU = ASTUnit::LoadFromASTFile(
+      modulePath, *pchRdr, Diags,
+      FileSystemOpts, /*UseDebugInfo=*/false,
+      /*OnlyLocalDecls=*/true, None,
+      /*CaptureDiagnostics=*/false,
+      /*AllowPCHWithCompilerErrors=*/true,
+      /*UserFilesAreVolatile=*/false);
+  if (!AU) {
+    errs() << "failed to create TU for: " << modulePath << '\n';
+    return true;
+  }
+
+  auto DataConsumer = std::make_shared<PrintIndexDataConsumer>(outs());
+  IndexingOptions IndexOpts;
+  indexASTUnit(*AU, DataConsumer, IndexOpts);
 
   return false;
 }
@@ -168,9 +241,11 @@ static bool printSourceSymbols(ArrayRef<const char *> Args) {
 
 static void printSymbolInfo(SymbolInfo SymInfo, raw_ostream &OS) {
   OS << getSymbolKindString(SymInfo.Kind);
-  if (SymInfo.SubKinds) {
+  if (SymInfo.SubKind != SymbolSubKind::None)
+    OS << '/' << getSymbolSubKindString(SymInfo.SubKind);
+  if (SymInfo.Properties) {
     OS << '(';
-    printSymbolSubKinds(SymInfo.SubKinds, OS);
+    printSymbolProperties(SymInfo.Properties, OS);
     OS << ')';
   }
   OS << '/' << getSymbolLanguageString(SymInfo.Lang);
@@ -219,11 +294,15 @@ int indextest_core_main(int argc, const char **argv) {
   }
 
   if (options::Action == ActionType::PrintSourceSymbols) {
+    if (!options::ModuleFilePath.empty()) {
+      return printSourceSymbolsFromModule(options::ModuleFilePath,
+                                          options::ModuleFormat);
+    }
     if (CompArgs.empty()) {
       errs() << "error: missing compiler args; pass '-- <compiler arguments>'\n";
       return 1;
     }
-    return printSourceSymbols(CompArgs);
+    return printSourceSymbols(CompArgs, options::DumpModuleImports, options::IncludeLocals);
   }
 
   return 0;

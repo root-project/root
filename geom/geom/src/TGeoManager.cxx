@@ -286,7 +286,7 @@ in order to enhance rays.
 
 TGeoManager *gGeoManager = 0;
 
-ClassImp(TGeoManager)
+ClassImp(TGeoManager);
 
 std::mutex TGeoManager::fgMutex;
 Bool_t TGeoManager::fgLock         = kFALSE;
@@ -806,7 +806,7 @@ Int_t TGeoManager::AddVolume(TGeoVolume *volume)
 
 TGeoNavigator *TGeoManager::AddNavigator()
 {
-   if (fMultiThread) fgMutex.lock();
+   if (fMultiThread) { TGeoManager::ThreadId(); fgMutex.lock(); }
    std::thread::id threadId = std::this_thread::get_id();
    NavigatorsMap_t::const_iterator it = fNavigators.find(threadId);
    TGeoNavigatorArray *array = 0;

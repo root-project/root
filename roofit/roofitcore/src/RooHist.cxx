@@ -41,7 +41,7 @@ a RooPlot.
 
 using namespace std;
 
-ClassImp(RooHist)
+ClassImp(RooHist);
   ;
 
 

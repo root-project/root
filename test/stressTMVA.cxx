@@ -3015,7 +3015,7 @@ void addClassificationTests( UnitTestSuite& TMVA_test, bool full=true)
    if (full) TMVA_test.addTest(new MethodUnitTestWithROCLimits( TMVA::Types::kTMlpANN, "TMlpANN", "!H:!V:NCycles=200:HiddenLayers=N+1,N:LearningMethod=BFGS:ValidationFraction=0.3"  , 0.7, 0.98) ); // n_cycles:#nodes:#nodes:...
    TMVA_test.addTest(new MethodUnitTestWithROCLimits( TMVA::Types::kSVM, "SVM", "Gamma=0.25:Tol=0.001:VarTransform=Norm" , 0.88, 0.98) );
    TMVA_test.addTest(new MethodUnitTestWithROCLimits( TMVA::Types::kBDT, "BDTG",
-                                                      "!H:!V:NTrees=400:BoostType=Grad:Shrinkage=0.30:UseBaggedBoost:GradBaggingFraction=0.6:SeparationType=GiniIndex:nCuts=20:MaxDepth=2" , 0.88, 0.98) );
+                                                      "!H:!V:NTrees=400:BoostType=Grad:Shrinkage=0.10:UseBaggedBoost:GradBaggingFraction=0.6:SeparationType=GiniIndex:nCuts=20:MaxDepth=2" , 0.88, 0.98) );
    TMVA_test.addTest(new MethodUnitTestWithROCLimits( TMVA::Types::kBDT, "BDT",
                                                       "!H:!V:NTrees=400:nEventsMin=100:MaxDepth=3:BoostType=AdaBoost:SeparationType=GiniIndex:nCuts=10:PruneMethod=NoPruning" , 0.88, 0.98) );
    if (full) TMVA_test.addTest(new MethodUnitTestWithROCLimits( TMVA::Types::kBDT, "BDTB",
@@ -3036,14 +3036,9 @@ void addClassificationTests( UnitTestSuite& TMVA_test, bool full=true)
       "Regularization=None,TestRepetitions=5, Multithreading=True"
       "|LearningRate=0.001,Momentum=0.0,ConvergenceSteps=20,BatchSize=256,"
       "Regularization=None,TestRepetitions=5, Multithreading=True";
-   TString configStandard = "Architecture=STANDARD:" + config;
    TString configCpu      = "Architecture=CPU:" + config;
    TString configGpu      = "Architecture=GPU:" + config;
 
-
-    TMVA_test.addTest(new MethodUnitTestWithROCLimits(
-                          TMVA::Types::kDNN, "DNN Standard",
-                          configStandard, 0.85, 0.98));
 #ifdef DNNCPU
    TMVA_test.addTest(new MethodUnitTestWithROCLimits(
                          TMVA::Types::kDNN, "DNN CPU", configCpu, 0.85, 0.98)

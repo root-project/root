@@ -42,7 +42,7 @@
 #include "TVirtualPad.h"
 #include "TGraphErrors.h"
 
-ClassImp(TGraphEditor)
+ClassImp(TGraphEditor);
 
 enum EGraphWid {
    kShape = 0,

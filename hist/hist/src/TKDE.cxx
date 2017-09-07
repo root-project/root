@@ -44,7 +44,7 @@
 #include "TKDE.h"
 
 
-ClassImp(TKDE)
+ClassImp(TKDE);
 
 class TKDE::TKernel {
    TKDE* fKDE;

@@ -20,7 +20,7 @@
 Paint TH3 histograms as "voxels" - colored boxes, transparent if transfer function was specified.
 */
 
-ClassImp(TGLVoxelPainter)
+ClassImp(TGLVoxelPainter);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

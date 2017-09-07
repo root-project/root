@@ -30,21 +30,24 @@ template <typename T> void testBinarySearch()
    cout << endl;
 
 
+   auto begin = k;
+   auto end = k + nn;
+
    for ( T elem = -1; elem <= maxint; ++elem ) {
-      Long_t index = TMath::BinarySearch((Long_t) 20, k, elem);
+      Long_t index = TMath::BinarySearch((Long_t) nn, k, elem);
 
       T* pind;
-      pind = std::lower_bound(k, k+20, elem);
-      Long_t index2 = ((*pind == elem)? (pind - k): ( pind - k - 1));
+      pind = std::lower_bound(begin, end, elem);
+      Long_t index2 = ((pind!=end && (*pind == elem)) ? (pind - k): ( pind - k - 1));
 
-      pind = std::upper_bound(k, k+20, elem);
-      Long_t index3 = ((*pind == elem)? (pind - k): ( pind - k - 1));
+      pind = std::upper_bound(begin, end, elem);
+      Long_t index3 = ((pind!=end && (*pind == elem)) ? (pind - k): ( pind - k - 1));
 
-      cout << " ELEM = " << elem
-           << " [TMATH] [i:" << index  << " k[i]:" << k[index] << ']'
-           << " [LOWER] [i:" << index2 << " k[i]:" << k[index2] << ']'
-           << " [UPPER] [i:" << index3 << " k[i]:" << k[index3] << ']'
-           << endl;
+      cout << " ELEM = " << elem;
+      cout << " [TMATH] [i:" << index  << " k[i]:"; if (index>=0 && index<nn) cout << k[index]; else cout << "n/a"; cout << ']';
+      cout << " [LOWER] [i:" << index2 << " k[i]:"; if (index2>=0 && index<nn) cout << k[index2]; else cout << "n/a"; cout << ']';
+      cout << " [UPPER] [i:" << index3 << " k[i]:"; if (index3>=0 && index<nn) cout << k[index3]; else cout << "n/a"; cout << ']';
+      cout << endl;
 
    }
 }

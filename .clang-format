@@ -1,4 +1,3 @@
-Language:        Cpp
 # BasedOnStyle:  LLVM
 AccessModifierOffset: -3
 AlignAfterOpenBracket: Align
@@ -12,8 +11,8 @@ AllowAllParametersOfDeclarationOnNextLine: true
 AllowShortBlocksOnASingleLine: false
 AllowShortCaseLabelsOnASingleLine: true
 AllowShortFunctionsOnASingleLine: Inline
-AllowShortIfStatementsOnASingleLine: true
-AllowShortLoopsOnASingleLine: true
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
 # This option is "deprecated and is retained for backwards compatibility."
 # AlwaysBreakAfterDefinitionReturnType: None
 AlwaysBreakAfterReturnType: None
@@ -76,12 +75,14 @@ PenaltyBreakComment: 300
 PenaltyBreakFirstLessLess: 120
 PenaltyBreakString: 1000
 PenaltyExcessCharacter: 1000000
-PenaltyReturnTypeOnItsOwnLine: 60000
+PenaltyReturnTypeOnItsOwnLine: 10
 PointerAlignment: Right
 ReflowComments:  true
 SortIncludes: false
 SpaceAfterCStyleCast: false
 SpaceBeforeAssignmentOperators: true
+# You want this : enable it if you have https://reviews.llvm.org/D32525
+# SpaceBeforeColon: false
 SpaceBeforeParens: ControlStatements
 SpaceInEmptyParentheses: false
 SpacesBeforeTrailingComments: 1

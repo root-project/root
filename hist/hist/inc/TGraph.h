@@ -66,7 +66,7 @@ protected:
 
 public:
    // TGraph status bits
-   enum {
+   enum EStatusBits {
       kClipFrame     = BIT(10),  ///< clip to the frame boundary
       kResetHisto    = BIT(17),  ///< fHistogram must be reset in GetHistogram
       kNotEditable   = BIT(18),  ///< bit set if graph is non editable

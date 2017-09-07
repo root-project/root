@@ -40,7 +40,7 @@
 
 using namespace std ;
 
-ClassImp(RooStats::HistFactory::HistFactorySimultaneous)
+ClassImp(RooStats::HistFactory::HistFactorySimultaneous);
 ;
 
 

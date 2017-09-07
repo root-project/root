@@ -51,7 +51,7 @@ End_Macro
 #include "TBuffer3DTypes.h"
 #include "TMath.h"
 
-ClassImp(TGeoTorus)
+ClassImp(TGeoTorus);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor

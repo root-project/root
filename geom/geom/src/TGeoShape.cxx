@@ -41,12 +41,10 @@ composite shapes and the composition operation can be recursive (composition
 of composites). This allows the creation of a quite large number of different
 shape topologies and combinations.
 
-  Shapes are named objects and register themselves to the manager class at
-creation time. This is responsible for their final deletion. Shapes
-can be created without name if their retrieval by name is no needed. Generally
-shapes are objects that are useful only at geometry creation stage. The pointer
-to a shape is in fact needed only when referring to a given volume and it is
-always accessible at that level. A shape may be referenced by several volumes,
+  Named shapes register themselves to the manager class at creation time. The
+manager is responsible for their final deletion. Shapes can be created using their
+default constructor if their retrieval by name is not needed, but in this case 
+they are owned by the user. A shape may be referenced by several volumes,
 therefore its deletion is not possible once volumes were defined based on it.
 
 ### Creating shapes
@@ -156,7 +154,7 @@ are interpreted and which is their result inside specific shape classes.
 #include "TBuffer3DTypes.h"
 #include "TMath.h"
 
-ClassImp(TGeoShape)
+ClassImp(TGeoShape);
 
 TGeoMatrix *TGeoShape::fgTransform = NULL;
 Double_t    TGeoShape::fgEpsMch = 2.220446049250313e-16;

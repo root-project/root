@@ -38,4 +38,10 @@
 #@hasllvm@ R__EXTERN_LLVMDIR @llvmdir@
 #@useimt@ R__USE_IMT   /**/
 
+#if defined(R__HAS_VECCORE) && defined(R__HAS_VC)
+#ifndef VECCORE_ENABLE_VC
+#define VECCORE_ENABLE_VC
+#endif
+#endif
+
 #endif

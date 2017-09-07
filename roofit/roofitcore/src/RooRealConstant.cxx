@@ -42,7 +42,7 @@ RooRealVar objects and will recycle them as appropriate.
 
 using namespace std;
 
-ClassImp(RooRealConstant)
+ClassImp(RooRealConstant);
 ;
 
 

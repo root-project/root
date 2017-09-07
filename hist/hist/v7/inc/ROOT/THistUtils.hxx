@@ -16,13 +16,37 @@
 #define ROOT7_THistUtils_h
 
 #include <array>
+#include <type_traits>
 
 namespace ROOT {
 namespace Experimental {
 namespace Hist {
 
 template <int DIMENSIONS>
-using CoordArray_t = std::array<double, DIMENSIONS>;
+struct TCoordArray: std::array<double, DIMENSIONS> {
+   using Base_t = std::array<double, DIMENSIONS>;
+
+   /// Default construction.
+   TCoordArray() = default;
+
+   /// Construction with one `double` per `DIMENSION`.
+   template<class...ELEMENTS, class = typename std::enable_if<sizeof...(ELEMENTS) + 1 == DIMENSIONS>::type>
+   TCoordArray(double x, ELEMENTS...el): Base_t{{x, el...}} {}
+
+   /// Fallback constructor, invoked if the one above fails because of the wrong number of
+   /// arguments / coordinates.
+   template<class T, class...ELEMENTS, class = typename std::enable_if<sizeof...(ELEMENTS) + 1 != DIMENSIONS>::type>
+   TCoordArray(T, ELEMENTS...) {
+      static_assert(sizeof...(ELEMENTS) + 1 == DIMENSIONS, "Number of coordinates does not match DIMENSIONS");
+   }
+
+   /// Construction from a C-style array.
+   TCoordArray(double (&arr)[DIMENSIONS]): Base_t(arr) {}
+};
+
+template <int DIMENSIONS>
+//using CoordArray_t = std::array<double, DIMENSIONS>;
+using CoordArray_t = TCoordArray<DIMENSIONS>;
 
 
 } // namespace Hist

@@ -148,7 +148,7 @@
 
 TStyleManager *TStyleManager::fgStyleManager = 0;
 
-ClassImp(TStyleManager)
+ClassImp(TStyleManager);
 
 enum EStyleManagerWid {
    kMenuNew,

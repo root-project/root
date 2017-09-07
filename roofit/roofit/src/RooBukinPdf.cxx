@@ -47,7 +47,7 @@ RooBukinPdf implements the NovosibirskA function
 
 using namespace std;
 
-ClassImp(RooBukinPdf)
+ClassImp(RooBukinPdf);
 
 ////////////////////////////////////////////////////////////////////////////////
 

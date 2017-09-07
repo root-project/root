@@ -32,4 +32,4 @@
 
 #include "TGWidget.h"
 
-ClassImp(TGWidget)
+ClassImp(TGWidget);

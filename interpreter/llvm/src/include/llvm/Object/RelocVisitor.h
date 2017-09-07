@@ -1,4 +1,4 @@
-//===-- RelocVisitor.h - Visitor for object file relocations -*- C++ -*-===//
+//===- RelocVisitor.h - Visitor for object file relocations -----*- C++ -*-===//
 //
 //                     The LLVM Compiler Infrastructure
 //
@@ -16,34 +16,38 @@
 #ifndef LLVM_OBJECT_RELOCVISITOR_H
 #define LLVM_OBJECT_RELOCVISITOR_H
 
+#include "llvm/ADT/Triple.h"
 #include "llvm/Object/COFF.h"
 #include "llvm/Object/ELFObjectFile.h"
 #include "llvm/Object/MachO.h"
 #include "llvm/Object/ObjectFile.h"
-#include "llvm/Support/Debug.h"
+#include "llvm/Support/Casting.h"
 #include "llvm/Support/ELF.h"
+#include "llvm/Support/ErrorHandling.h"
+#include "llvm/Support/ErrorOr.h"
 #include "llvm/Support/MachO.h"
-#include "llvm/Support/raw_ostream.h"
+#include <cstdint>
+#include <system_error>
 
 namespace llvm {
 namespace object {
 
 struct RelocToApply {
   // The computed value after applying the relevant relocations.
-  int64_t Value;
+  int64_t Value = 0;
 
   // The width of the value; how many bytes to touch when applying the
   // relocation.
-  char Width;
+  char Width = 0;
+
+  RelocToApply() = default;
   RelocToApply(int64_t Value, char Width) : Value(Value), Width(Width) {}
-  RelocToApply() : Value(0), Width(0) {}
 };
 
 /// @brief Base class for object file relocation visitors.
 class RelocVisitor {
 public:
-  explicit RelocVisitor(const ObjectFile &Obj)
-    : ObjToVisit(Obj), HasError(false) {}
+  explicit RelocVisitor(const ObjectFile &Obj) : ObjToVisit(Obj) {}
 
   // TODO: Should handle multiple applied relocations via either passing in the
   // previously computed value or just count paired relocations as a single
@@ -64,22 +68,22 @@ public:
 
 private:
   const ObjectFile &ObjToVisit;
-  bool HasError;
+  bool HasError = false;
 
   RelocToApply visitELF(uint32_t RelocType, RelocationRef R, uint64_t Value) {
     if (ObjToVisit.getBytesInAddress() == 8) { // 64-bit object file
       switch (ObjToVisit.getArch()) {
       case Triple::x86_64:
         switch (RelocType) {
-        case llvm::ELF::R_X86_64_NONE:
+        case ELF::R_X86_64_NONE:
           return visitELF_X86_64_NONE(R);
-        case llvm::ELF::R_X86_64_64:
+        case ELF::R_X86_64_64:
           return visitELF_X86_64_64(R, Value);
-        case llvm::ELF::R_X86_64_PC32:
+        case ELF::R_X86_64_PC32:
           return visitELF_X86_64_PC32(R, Value);
-        case llvm::ELF::R_X86_64_32:
+        case ELF::R_X86_64_32:
           return visitELF_X86_64_32(R, Value);
-        case llvm::ELF::R_X86_64_32S:
+        case ELF::R_X86_64_32S:
           return visitELF_X86_64_32S(R, Value);
         default:
           HasError = true;
@@ -88,10 +92,21 @@ private:
       case Triple::aarch64:
       case Triple::aarch64_be:
         switch (RelocType) {
-        case llvm::ELF::R_AARCH64_ABS32:
+        case ELF::R_AARCH64_ABS32:
           return visitELF_AARCH64_ABS32(R, Value);
-        case llvm::ELF::R_AARCH64_ABS64:
+        case ELF::R_AARCH64_ABS64:
           return visitELF_AARCH64_ABS64(R, Value);
+        default:
+          HasError = true;
+          return RelocToApply();
+        }
+      case Triple::bpfel:
+      case Triple::bpfeb:
+        switch (RelocType) {
+        case ELF::R_BPF_64_64:
+          return visitELF_BPF_64_64(R, Value);
+        case ELF::R_BPF_64_32:
+          return visitELF_BPF_64_32(R, Value);
         default:
           HasError = true;
           return RelocToApply();
@@ -99,9 +114,9 @@ private:
       case Triple::mips64el:
       case Triple::mips64:
         switch (RelocType) {
-        case llvm::ELF::R_MIPS_32:
+        case ELF::R_MIPS_32:
           return visitELF_MIPS64_32(R, Value);
-        case llvm::ELF::R_MIPS_64:
+        case ELF::R_MIPS_64:
           return visitELF_MIPS64_64(R, Value);
         default:
           HasError = true;
@@ -110,9 +125,9 @@ private:
       case Triple::ppc64le:
       case Triple::ppc64:
         switch (RelocType) {
-        case llvm::ELF::R_PPC64_ADDR32:
+        case ELF::R_PPC64_ADDR32:
           return visitELF_PPC64_ADDR32(R, Value);
-        case llvm::ELF::R_PPC64_ADDR64:
+        case ELF::R_PPC64_ADDR64:
           return visitELF_PPC64_ADDR64(R, Value);
         default:
           HasError = true;
@@ -120,9 +135,9 @@ private:
         }
       case Triple::systemz:
         switch (RelocType) {
-        case llvm::ELF::R_390_32:
+        case ELF::R_390_32:
           return visitELF_390_32(R, Value);
-        case llvm::ELF::R_390_64:
+        case ELF::R_390_64:
           return visitELF_390_64(R, Value);
         default:
           HasError = true;
@@ -130,12 +145,22 @@ private:
         }
       case Triple::sparcv9:
         switch (RelocType) {
-        case llvm::ELF::R_SPARC_32:
-        case llvm::ELF::R_SPARC_UA32:
+        case ELF::R_SPARC_32:
+        case ELF::R_SPARC_UA32:
           return visitELF_SPARCV9_32(R, Value);
-        case llvm::ELF::R_SPARC_64:
-        case llvm::ELF::R_SPARC_UA64:
+        case ELF::R_SPARC_64:
+        case ELF::R_SPARC_UA64:
           return visitELF_SPARCV9_64(R, Value);
+        default:
+          HasError = true;
+          return RelocToApply();
+        }
+      case Triple::amdgcn:
+        switch (RelocType) {
+        case ELF::R_AMDGPU_ABS32:
+          return visitELF_AMDGPU_ABS32(R, Value);
+        case ELF::R_AMDGPU_ABS64:
+          return visitELF_AMDGPU_ABS64(R, Value);
         default:
           HasError = true;
           return RelocToApply();
@@ -148,11 +173,11 @@ private:
       switch (ObjToVisit.getArch()) {
       case Triple::x86:
         switch (RelocType) {
-        case llvm::ELF::R_386_NONE:
+        case ELF::R_386_NONE:
           return visitELF_386_NONE(R);
-        case llvm::ELF::R_386_32:
+        case ELF::R_386_32:
           return visitELF_386_32(R, Value);
-        case llvm::ELF::R_386_PC32:
+        case ELF::R_386_PC32:
           return visitELF_386_PC32(R, Value);
         default:
           HasError = true;
@@ -160,7 +185,7 @@ private:
         }
       case Triple::ppc:
         switch (RelocType) {
-        case llvm::ELF::R_PPC_ADDR32:
+        case ELF::R_PPC_ADDR32:
           return visitELF_PPC_ADDR32(R, Value);
         default:
           HasError = true;
@@ -172,12 +197,12 @@ private:
         default:
           HasError = true;
           return RelocToApply();
-        case llvm::ELF::R_ARM_ABS32:
+        case ELF::R_ARM_ABS32:
           return visitELF_ARM_ABS32(R, Value);
         }
       case Triple::lanai:
         switch (RelocType) {
-        case llvm::ELF::R_LANAI_32:
+        case ELF::R_LANAI_32:
           return visitELF_Lanai_32(R, Value);
         default:
           HasError = true;
@@ -186,7 +211,7 @@ private:
       case Triple::mipsel:
       case Triple::mips:
         switch (RelocType) {
-        case llvm::ELF::R_MIPS_32:
+        case ELF::R_MIPS_32:
           return visitELF_MIPS_32(R, Value);
         default:
           HasError = true;
@@ -194,9 +219,17 @@ private:
         }
       case Triple::sparc:
         switch (RelocType) {
-        case llvm::ELF::R_SPARC_32:
-        case llvm::ELF::R_SPARC_UA32:
+        case ELF::R_SPARC_32:
+        case ELF::R_SPARC_UA32:
           return visitELF_SPARC_32(R, Value);
+        default:
+          HasError = true;
+          return RelocToApply();
+        }
+      case Triple::hexagon:
+        switch (RelocType) {
+        case ELF::R_HEX_32:
+          return visitELF_HEX_32(R, Value);
         default:
           HasError = true;
           return RelocToApply();
@@ -299,6 +332,15 @@ private:
     int64_t Addend = getELFAddend(R);
     int32_t Res = (Value + Addend) & 0xFFFFFFFF;
     return RelocToApply(Res, 4);
+  }
+
+  /// BPF ELF
+  RelocToApply visitELF_BPF_64_32(RelocationRef R, uint64_t Value) {
+    uint32_t Res = Value & 0xFFFFFFFF;
+    return RelocToApply(Res, 4);
+  }
+  RelocToApply visitELF_BPF_64_64(RelocationRef R, uint64_t Value) {
+    return RelocToApply(Value, 8);
   }
 
   /// PPC64 ELF
@@ -404,6 +446,21 @@ private:
     return RelocToApply(static_cast<uint32_t>(Res), 4);
   }
 
+  RelocToApply visitELF_HEX_32(RelocationRef R, uint64_t Value) {
+    int64_t Addend = getELFAddend(R);
+    return RelocToApply(Value + Addend, 4);
+  }
+
+  RelocToApply visitELF_AMDGPU_ABS32(RelocationRef R, uint64_t Value) {
+    int64_t Addend = getELFAddend(R);
+    return RelocToApply(Value + Addend, 4);
+  }
+
+  RelocToApply visitELF_AMDGPU_ABS64(RelocationRef R, uint64_t Value) {
+    int64_t Addend = getELFAddend(R);
+    return RelocToApply(Value + Addend, 8);
+  }
+
   /// I386 COFF
   RelocToApply visitCOFF_I386_SECREL(RelocationRef R, uint64_t Value) {
     return RelocToApply(static_cast<uint32_t>(Value), /*Width=*/4);
@@ -430,6 +487,7 @@ private:
   }
 };
 
-}
-}
-#endif
+} // end namespace object
+} // end namespace llvm
+
+#endif // LLVM_OBJECT_RELOCVISITOR_H

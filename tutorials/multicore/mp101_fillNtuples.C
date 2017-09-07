@@ -36,7 +36,7 @@ Int_t mp101_fillNtuples()
    gROOT->SetBatch();
 
    //---------------------------------------
-   // Perform the operation sequentially 
+   // Perform the operation sequentially
 
    // Create a random generator and and Ntuple to hold the numbers
    TRandom3 rndm(1);

@@ -32,8 +32,8 @@
 #include "Riostream.h"
 #include "TApplication.h"
 
-ClassImp(TGWindow)
-ClassImp(TGUnknownWindowHandler)
+ClassImp(TGWindow);
+ClassImp(TGUnknownWindowHandler);
 
 Int_t TGWindow::fgCounter = 0;
 

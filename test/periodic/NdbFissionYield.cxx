@@ -1,4 +1,4 @@
 #include "NdbFissionYield.h"
 
-ClassImp(NdbFissionYield)
+ClassImp(NdbFissionYield);
 

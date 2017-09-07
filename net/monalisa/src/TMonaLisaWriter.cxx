@@ -56,7 +56,7 @@
 #include "THashList.h"
 
 
-ClassImp(TMonaLisaWriter)
+ClassImp(TMonaLisaWriter);
 
 
 // Information which is kept about an alive instance of TFile

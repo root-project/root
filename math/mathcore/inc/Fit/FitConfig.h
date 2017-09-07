@@ -20,6 +20,7 @@
 
 #include "Math/IParamFunctionfwd.h"
 
+#include "TMath.h"
 
 #include <vector>
 
@@ -103,10 +104,34 @@ public:
       set the parameter settings from a model function.
       Create always new parameter setting list from a given model function
    */
-   void CreateParamsSettings(const ROOT::Math::IParamMultiFunction & func);
-#ifdef R__HAS_VECCORE
-   void CreateParamsSettings(const ROOT::Math::IParamMultiFunctionTempl<ROOT::Double_v> & func);
+   template <class T>
+   void CreateParamsSettings(const ROOT::Math::IParamMultiFunctionTempl<T> &func) {
+      // initialize from model function
+      // set the parameters values from the function
+      unsigned int npar = func.NPar();
+      const double *begin = func.Parameters();
+      if (begin == 0) {
+         fSettings = std::vector<ParameterSettings>(npar);
+         return;
+      }
+
+      fSettings.clear();
+      fSettings.reserve(npar);
+      const double *end = begin + npar;
+      unsigned int i = 0;
+      for (const double *ipar = begin; ipar != end; ++ipar) {
+         double val = *ipar;
+         double step = 0.3 * fabs(val); // step size is 30% of par value
+         // double step = 2.0*fabs(val);   // step size is 30% of par value
+         if (val == 0) step = 0.3;
+
+         fSettings.push_back(ParameterSettings(func.ParameterName(i), val, step));
+#ifdef DEBUG
+         std::cout << "FitConfig: add parameter " << func.ParameterName(i) << " val = " << val << std::endl;
 #endif
+         i++;
+      }
+   }
 
    /**
       set the parameter settings from number of parameters and a vector of values and optionally step values. If there are not existing or number of parameters does not match existing one, create a new parameter setting list.

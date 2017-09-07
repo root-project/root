@@ -967,7 +967,7 @@ def XTN2 : SOpInst<"vmovn_high", "qhk", "silUsUiUl", OP_XTN>;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Signed integer saturating extract and unsigned narrow to high
-def SQXTUN2 : SOpInst<"vqmovun_high", "qhk", "sil", OP_SQXTUN>;
+def SQXTUN2 : SOpInst<"vqmovun_high", "emd", "HsHiHl", OP_SQXTUN>;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Integer saturating extract and narrow to high
@@ -1362,7 +1362,7 @@ def SCALAR_SHL: SInst<"vshl", "sss", "SlSUl">;
 def SCALAR_QSHL: SInst<"vqshl", "sss", "ScSsSiSlSUcSUsSUiSUl">;
 // Scalar Saturating Rounding Shift Left
 def SCALAR_QRSHL: SInst<"vqrshl", "sss", "ScSsSiSlSUcSUsSUiSUl">;
-// Scalar Shift Rouding Left
+// Scalar Shift Rounding Left
 def SCALAR_RSHL: SInst<"vrshl", "sss", "SlSUl">;
 
 ////////////////////////////////////////////////////////////////////////////////

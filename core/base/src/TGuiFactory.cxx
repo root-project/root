@@ -32,7 +32,7 @@ batch mode directly using an instance of this base class.
 TGuiFactory *gGuiFactory = 0;
 TGuiFactory *gBatchGuiFactory = 0;
 
-ClassImp(TGuiFactory)
+ClassImp(TGuiFactory);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TGuiFactory ctor only called by derived classes.

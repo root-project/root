@@ -14,7 +14,7 @@
 
 #include "ruby.h"
 
-ClassImp(TRuby)
+ClassImp(TRuby);
 
 extern VALUE cTObject;
 

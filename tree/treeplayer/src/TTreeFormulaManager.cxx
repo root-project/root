@@ -15,7 +15,7 @@
 #include "TError.h"
 #include "TLeafElement.h"
 
-ClassImp(TTreeFormulaManager)
+ClassImp(TTreeFormulaManager);
 
    /** \class TTreeFormulaManager
    Used to coordinate one or more TTreeFormula objects.

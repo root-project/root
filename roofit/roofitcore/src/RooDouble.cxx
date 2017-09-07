@@ -29,7 +29,7 @@ value.
 
 using namespace std;
 
-ClassImp(RooDouble)
+ClassImp(RooDouble);
 ;
 
 

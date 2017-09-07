@@ -91,7 +91,7 @@ A Graphical cut may be saved to a file via TCutG::Write.
 #include "TClass.h"
 #include "TMath.h"
 
-ClassImp(TCutG)
+ClassImp(TCutG);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TCutG default constructor.

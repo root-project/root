@@ -31,7 +31,7 @@ any external RooAbsReal input function provided in the constructor.
 
 using namespace std;
 
-ClassImp(RooCachedReal)
+ClassImp(RooCachedReal);
   ;
 
 

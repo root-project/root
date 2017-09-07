@@ -33,7 +33,7 @@ ToyMCSampler as its TestStatSampler.
 #include "RooRandom.h"
 
 
-ClassImp(RooStats::HypoTestCalculatorGeneric)
+ClassImp(RooStats::HypoTestCalculatorGeneric);
 
 using namespace RooStats;
 using namespace std;

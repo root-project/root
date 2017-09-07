@@ -45,7 +45,7 @@ implementations like RooAcceptReject and RooFoam
 
 using namespace std;
 
-ClassImp(RooAbsNumGenerator)
+ClassImp(RooAbsNumGenerator);
   ;
 
 

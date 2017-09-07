@@ -13,7 +13,7 @@
 #include "TROOT.h"
 #include "TExec.h"
 
-ClassImp(TExec)
+ClassImp(TExec);
 
 /** \class TExec
 \ingroup Base

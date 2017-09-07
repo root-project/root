@@ -197,27 +197,24 @@ namespace ROOT {
          @ingroup  GenFunc
        */
 
-      class IGradientMultiDim {
+      template <class T>
+      class IGradientMultiDimTempl {
 
       public:
 
          /// virual destructor
-         virtual ~IGradientMultiDim() {}
+         virtual ~IGradientMultiDimTempl() {}
 
          /**
              Evaluate all the vector of function derivatives (gradient)  at a point x.
              Derived classes must re-implement if it is more efficient than evaluting one at a time
          */
-         virtual void  Gradient(const double *x, double *grad) const = 0;
+         virtual void Gradient(const T *x, T *grad) const = 0;
 
          /**
             Return the partial derivative with respect to the passed coordinate
          */
-         double Derivative(const double *x, unsigned int icoord = 0) const
-         {
-            return DoDerivative(x, icoord);
-         }
-
+         T Derivative(const T *x, unsigned int icoord = 0) const { return DoDerivative(x, icoord); }
 
          /**
              Optimized method to evaluate at the same time the function value and derivative at a point x.
@@ -226,8 +223,7 @@ namespace ROOT {
              evaluate value and derivative at the same time
 
          */
-         virtual void FdF(const double *x, double &f, double *df) const  = 0;
-
+         virtual void FdF(const T *x, T &f, T *df) const = 0;
 
       private:
 
@@ -235,8 +231,7 @@ namespace ROOT {
          /**
             function to evaluate the derivative with respect each coordinate. To be implemented by the derived class
          */
-         virtual  double  DoDerivative(const double *x, unsigned int icoord) const = 0;
-
+         virtual T DoDerivative(const T *x, unsigned int icoord) const = 0;
       };
 
 //___________________________________________________________________________________
@@ -315,8 +310,8 @@ namespace ROOT {
 //___________________________________________________________________________________
       /**
          Interface (abstract class) for multi-dimensional functions providing a gradient calculation.
-         It implements both the ROOT::Math::IBaseFunctionMultiDim and
-         ROOT::Math::IGradientMultiDim interfaces.
+         It implements both the ROOT::Math::IBaseFunctionMultiDimTempl and
+         ROOT::Math::IGradientMultiDimTempl interfaces.
          The method ROOT::Math::IFunction::Gradient calculates the full gradient vector,
          ROOT::Math::IFunction::Derivative calculates the partial derivative for each coordinate and
          ROOT::Math::Fdf calculates the gradient and the function value at the same time.
@@ -327,28 +322,24 @@ namespace ROOT {
          @ingroup  GenFunc
       */
 
-
-      class IGradientFunctionMultiDim :
-         virtual public IBaseFunctionMultiDim ,
-         public IGradientMultiDim {
-
+      template <class T>
+      class IGradientFunctionMultiDimTempl : virtual public IBaseFunctionMultiDimTempl<T>,
+                                             public IGradientMultiDimTempl<T> {
 
       public:
-
-         typedef IBaseFunctionMultiDim BaseFunc;
-         typedef IGradientMultiDim BaseGrad;
-
+         typedef IBaseFunctionMultiDimTempl<T> BaseFunc;
+         typedef IGradientMultiDimTempl<T> BaseGrad;
 
          /**
-             Virtual Destructor (no operations)
+            Virtual Destructor (no operations)
          */
-         virtual ~IGradientFunctionMultiDim() {}
+         virtual ~IGradientFunctionMultiDimTempl() {}
 
          /**
-             Evaluate all the vector of function derivatives (gradient)  at a point x.
-             Derived classes must re-implement it if more efficient than evaluting one at a time
+            Evaluate all the vector of function derivatives (gradient)  at a point x.
+            Derived classes must re-implement it if more efficient than evaluting one at a time
          */
-         virtual void  Gradient(const double *x, double *grad) const
+         virtual void Gradient(const T *x, T *grad) const
          {
             unsigned int ndim = NDim();
             for (unsigned int icoord  = 0; icoord < ndim; ++icoord)
@@ -357,15 +348,13 @@ namespace ROOT {
 
          using  BaseFunc::NDim;
 
-
          /**
-             Optimized method to evaluate at the same time the function value and derivative at a point x.
-             Often both value and derivatives are needed and it is often more efficient to compute them at the same time.
-             Derived class should implement this method if performances play an important role and if it is faster to
-             evaluate value and derivative at the same time
-
+            Optimized method to evaluate at the same time the function value and derivative at a point x.
+            Often both value and derivatives are needed and it is often more efficient to compute them at the same time.
+            Derived class should implement this method if performances play an important role and if it is faster to
+            evaluate value and derivative at the same time
          */
-         virtual void FdF(const double *x, double &f, double *df) const
+         virtual void FdF(const T *x, T &f, T *df) const
          {
             f = BaseFunc::operator()(x);
             Gradient(x, df);
@@ -373,7 +362,6 @@ namespace ROOT {
 
 
       };
-
 
 //___________________________________________________________________________________
       /**
@@ -428,5 +416,5 @@ namespace ROOT {
 
    } // namespace Math
 } // namespace ROOT
- 
+
 #endif /* ROOT_Math_IFunction */

@@ -33,7 +33,7 @@ most useful implementation of RooPlotable are RooHist and RooCurve.
 
 using namespace std;
 
-ClassImp(RooPlotable)
+ClassImp(RooPlotable);
 ;
 
 

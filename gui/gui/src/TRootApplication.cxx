@@ -26,7 +26,7 @@
 #include "TGClient.h"
 #include "TVirtualX.h"
 
-ClassImp(TRootApplication)
+ClassImp(TRootApplication);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create ROOT application environment.

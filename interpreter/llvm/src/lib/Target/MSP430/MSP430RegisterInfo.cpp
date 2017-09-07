@@ -41,12 +41,12 @@ MSP430RegisterInfo::getCalleeSavedRegs(const MachineFunction *MF) const {
   const Function* F = MF->getFunction();
   static const MCPhysReg CalleeSavedRegs[] = {
     MSP430::FP, MSP430::R5, MSP430::R6, MSP430::R7,
-    MSP430::R8, MSP430::R9, MSP430::R10, MSP430::R11,
+    MSP430::R8, MSP430::R9, MSP430::R10,
     0
   };
   static const MCPhysReg CalleeSavedRegsFP[] = {
     MSP430::R5, MSP430::R6, MSP430::R7,
-    MSP430::R8, MSP430::R9, MSP430::R10, MSP430::R11,
+    MSP430::R8, MSP430::R9, MSP430::R10,
     0
   };
   static const MCPhysReg CalleeSavedRegsIntr[] = {
@@ -114,13 +114,13 @@ MSP430RegisterInfo::eliminateFrameIndex(MachineBasicBlock::iterator II,
   int FrameIndex = MI.getOperand(FIOperandNum).getIndex();
 
   unsigned BasePtr = (TFI->hasFP(MF) ? MSP430::FP : MSP430::SP);
-  int Offset = MF.getFrameInfo()->getObjectOffset(FrameIndex);
+  int Offset = MF.getFrameInfo().getObjectOffset(FrameIndex);
 
   // Skip the saved PC
   Offset += 2;
 
   if (!TFI->hasFP(MF))
-    Offset += MF.getFrameInfo()->getStackSize();
+    Offset += MF.getFrameInfo().getStackSize();
   else
     Offset += 2; // Skip the saved FP
 

@@ -37,6 +37,8 @@ def Debug(msg):
      print('Kernel main: %r' % msg, file=sys.__stderr__)
 
 class ROOTKernel(MetaKernel):
+    identifier_regex = r'[^\d\W](?:[\w]*(?:\.|->|::)?)*'
+    func_call_regex = r'([^\d\W](?:[\w]*(?:\.|->|::)?)*)\([^\)\()]*\Z'
     implementation = 'ROOT'
     implementation_version = '1.0'
     language = 'c++'

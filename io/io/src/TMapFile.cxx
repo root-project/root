@@ -191,7 +191,7 @@ TObject *TMapRec::GetObject() const
 
 
 
-ClassImp(TMapFile)
+ClassImp(TMapFile);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default ctor. Does not much except setting some basic values.
@@ -449,7 +449,7 @@ TMapFile::TMapFile(const char *name, const char *title, Option_t *option,
       // store shadow mapfile (it contains the real fFd in case map
       // is not writable)
       fVersion  = -1;   // make this the shadow map file
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfMappedFiles()->AddLast(this);
 
    } else {
@@ -482,14 +482,14 @@ TMapFile::TMapFile(const char *name, const char *title, Option_t *option,
 
       // store shadow mapfile
       fVersion  = -1;   // make this the shadow map file
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfMappedFiles()->AddLast(this);
 
    }
 
    mapfil->InitDirectory();
    {
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfMappedFiles()->AddFirst(mapfil);
    }
 
@@ -957,7 +957,7 @@ void TMapFile::Close(Option_t *option)
    }
 
    {
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfMappedFiles()->Remove(shadow);
       gROOT->GetListOfMappedFiles()->Remove(this);
    }
@@ -993,7 +993,7 @@ void TMapFile::Close(Option_t *option)
 
 TMapFile *TMapFile::FindShadowMapFile()
 {
-   R__LOCKGUARD2(gROOTMutex);
+   R__LOCKGUARD(gROOTMutex);
    TObjLink *lnk = ((TList *)gROOT->GetListOfMappedFiles())->LastLink();
    while (lnk) {
       TMapFile *mf = (TMapFile*)lnk->GetObject();

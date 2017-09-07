@@ -193,7 +193,7 @@ Int_t TJoinHelper::Join()
 
 //------------------------------------------------------------------------------
 
-ClassImp(TThread)
+ClassImp(TThread);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -320,6 +320,10 @@ void TThread::Init()
    // Not having it means (See TVirtualMutext.h) that the LOCKGUARD macro are empty.
    ::Fatal("Init","_REENTRANT must be #define-d for TThread to work properly.");
 #endif
+
+   // 'Insure' gROOT is created before initializing the Thread safe behavior
+   // (to make sure we do not have two attempting to create it).
+   ROOT::GetROOT();
 
    fgThreadImp = gThreadFactory->CreateThreadImp();
    gMainInternalMutex = new TMutex(kTRUE);

@@ -62,8 +62,8 @@ should be prepended by gfal:.
 
 #include "TGFALFile.h"
 
-ClassImp(TGFALFile)
-ClassImp(TGFALSystem)
+ClassImp(TGFALFile);
+ClassImp(TGFALSystem);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a GFAL file object.

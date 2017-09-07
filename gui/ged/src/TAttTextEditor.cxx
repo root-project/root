@@ -37,7 +37,7 @@
 #include "TCanvas.h"
 #include "TROOT.h"
 
-ClassImp(TAttTextEditor)
+ClassImp(TAttTextEditor);
 
 enum ETextWid {
    kCOLOR,

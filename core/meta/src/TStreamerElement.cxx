@@ -179,7 +179,7 @@ static void GetRange(const char *comments, Double_t &xmin, Double_t &xmax, Doubl
    if (xmin >= xmax && nbits <15) xmin = nbits+0.1;
 }
 
-ClassImp(TStreamerElement)
+ClassImp(TStreamerElement);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default ctor.
@@ -219,7 +219,7 @@ TStreamerElement::TStreamerElement(const char *name, const char *title, Int_t of
       fTypeName = typeName;
    } else {
       //must protect call into the interpreter
-      R__LOCKGUARD2(gInterpreterMutex);
+      R__LOCKGUARD(gInterpreterMutex);
       fTypeName    = TClassEdit::ResolveTypedef(typeName);
    }
    fStreamer    = 0;
@@ -592,7 +592,7 @@ void TStreamerElement::Update(const TClass *oldClass, TClass *newClass)
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-ClassImp(TStreamerBase)
+ClassImp(TStreamerBase);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -883,7 +883,7 @@ Int_t TStreamerBase::WriteBuffer (TBuffer &b, char *pointer)
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-ClassImp(TStreamerBasicPointer)
+ClassImp(TStreamerBasicPointer);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default ctor.
@@ -996,7 +996,7 @@ void TStreamerBasicPointer::Streamer(TBuffer &R__b)
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-ClassImp(TStreamerLoop)
+ClassImp(TStreamerLoop);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default ctor.
@@ -1100,7 +1100,7 @@ void TStreamerLoop::Streamer(TBuffer &R__b)
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-ClassImp(TStreamerBasicType)
+ClassImp(TStreamerBasicType);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default ctor.
@@ -1200,7 +1200,7 @@ void TStreamerBasicType::Streamer(TBuffer &R__b)
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-ClassImp(TStreamerObject)
+ClassImp(TStreamerObject);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default ctor.
@@ -1297,7 +1297,7 @@ void TStreamerObject::Streamer(TBuffer &R__b)
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-ClassImp(TStreamerObjectAny)
+ClassImp(TStreamerObjectAny);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default ctor.
@@ -1391,7 +1391,7 @@ void TStreamerObjectAny::Streamer(TBuffer &R__b)
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-ClassImp(TStreamerObjectPointer)
+ClassImp(TStreamerObjectPointer);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default ctor.
@@ -1495,7 +1495,7 @@ void TStreamerObjectPointer::Streamer(TBuffer &R__b)
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-ClassImp(TStreamerObjectAnyPointer)
+ClassImp(TStreamerObjectAnyPointer);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default ctor.
@@ -1590,7 +1590,7 @@ void TStreamerObjectAnyPointer::Streamer(TBuffer &R__b)
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-ClassImp(TStreamerString)
+ClassImp(TStreamerString);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default ctor.
@@ -1660,7 +1660,7 @@ void TStreamerString::Streamer(TBuffer &R__b)
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-ClassImp(TStreamerSTL)
+ClassImp(TStreamerSTL);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default ctor.
@@ -1986,7 +1986,7 @@ void TStreamerSTL::Streamer(TBuffer &R__b)
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-ClassImp(TStreamerSTLstring)
+ClassImp(TStreamerSTLstring);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default ctor.

@@ -32,7 +32,7 @@ shared in this way is the list of alternate named range definitions
 #include <iostream>
 using namespace std ;
 
-ClassImp(RooCategorySharedProperties)
+ClassImp(RooCategorySharedProperties);
 ;
 
 

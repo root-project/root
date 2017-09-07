@@ -251,7 +251,7 @@ int main(int argc, char **argv)
    fres.Form("%s/pq2%s.res", tdir.Data(), tag);
    if (!gSystem->AccessPathName(ferr)) gSystem->Unlink(ferr);
    if (!gSystem->AccessPathName(flog)) gSystem->Unlink(flog);
-   if (!gSystem->AccessPathName(fres)) gSystem->Unlink(ferr);
+   if (!gSystem->AccessPathName(fres)) gSystem->Unlink(fres);
 
    // Check URL
    bool def_proof= 0;

@@ -11,14 +11,6 @@
 /// \author Enrico Guiraud
 
 // ## Preparation
-// This notebook can be compiled with this invocation
-// `g++ -o tdf001_introduction tdf001_introduction.C `root-config --cflags --libs` -lTreePlayer`
-
-#include "TFile.h"
-#include "TH1F.h"
-#include "TTree.h"
-
-#include "ROOT/TDataFrame.hxx"
 
 // A simple helper function to fill a test tree: this makes the example
 // stand-alone.
@@ -107,7 +99,7 @@ int tdf001_introduction()
    std::cout << "The type of b1Vec is" << b1VecCl->GetName() << std::endl;
 
    // ### `Histo1D` action
-   // The `Histo1D` action allows to fill an histogram. It returns a TH1F filled
+   // The `Histo1D` action allows to fill an histogram. It returns a TH1D filled
    // with values of the column that passed the filters. For the most common
    // types, the type of the values stored in the column is automatically
    // guessed.
@@ -163,13 +155,8 @@ int tdf001_introduction()
    // Additional columns can be expressed as strings. The content must be C++
    // code. The name of the variables must be the name of the branches. The code
    // is just in time compiled.
-   auto entries_sum2 = d.Define("sum", "b1 + b2").Filter("sum > 4.2").Count();
+   auto entries_sum2 = d.Define("sum2", "b1 + b2").Filter("sum2 > 4.2").Count();
    std::cout << *entries_sum2 << std::endl;
 
    return 0;
-}
-
-int main()
-{
-   return tdf001_introduction();
 }

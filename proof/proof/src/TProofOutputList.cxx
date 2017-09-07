@@ -23,7 +23,7 @@ out some of the variables
 #include "TRegexp.h"
 #include "TString.h"
 
-ClassImp(TProofOutputList)
+ClassImp(TProofOutputList);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor

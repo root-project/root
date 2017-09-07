@@ -45,28 +45,41 @@ the threaded object.
 
 namespace ROOT {
    namespace Internal {
+
+      /// A cluster of entries as seen by TTreeView
+      struct TreeViewCluster {
+         Long64_t startEntry;
+         Long64_t endEntry;
+         std::size_t filenameIdx;
+      };
+
+      /// Input data as seen by TTreeView.
+      ///
+      /// Each thread will contain a TTreeView that will perform bookkeping of a vector of (few) TreeViewInputs.
+      /// This vector will contain a TreeViewInput for each task currently working on a different input file.
+      struct TreeViewInput {
+         std::unique_ptr<TFile> file;
+         TTree *tree; // needs to be a raw pointer because file destructs this tree when deleted
+         std::size_t filenameIdx; ///< The filename index of this file in the list of filenames contained in TTreeView
+         unsigned int useCount;   ///< Number of tasks that are currently using this input
+      };
+
       class TTreeView {
       private:
-         std::vector<std::string> fFileNames; ///< Names of the files
-         std::string fTreeName;               ///< Name of the tree
-         std::unique_ptr<TFile> fCurrentFile; ///<! Current file object of this view.
-         TTree *fCurrentTree;                 ///<! Current tree object of this view.
-         unsigned int fCurrentIdx;            ///<! Index of the current file.
-         std::vector<TEntryList> fEntryLists; ///< Entry numbers to be processed per tree/file
-         TEntryList fCurrentEntryList;        ///< Entry numbers for the current range being processed
+         std::vector<std::string> fFileNames;    ///< Names of the files
+         std::vector<TEntryList> fEntryLists;    ///< Entry numbers to be processed per tree/file. 1:1 with fFileNames
+         std::string fTreeName;                  ///< Name of the tree
+         std::vector<TreeViewInput> fOpenInputs; ///< Input files currently open.
 
          ////////////////////////////////////////////////////////////////////////////////
-         /// Initialize the file and the tree for this view, first looking for a tree in
-         /// the file if necessary.
+         /// Initialize TTreeView.
          void Init()
          {
-            // Here we do not use a TContext since the TThreadedObject protects
-            // the copies done for every processing slots.
-            fCurrentFile.reset(TFile::Open(fFileNames[fCurrentIdx].data()));
-
             // If the tree name is empty, look for a tree in the file
             if (fTreeName.empty()) {
-               TIter next(fCurrentFile->GetListOfKeys());
+               ::TDirectory::TContext ctxt(gDirectory);
+               std::unique_ptr<TFile> f(TFile::Open(fFileNames[0].c_str()));
+               TIter next(f->GetListOfKeys());
                while (TKey *key = (TKey*)next()) {
                   const char *className = key->GetClassName();
                   if (strcmp(className, "TTree") == 0) {
@@ -75,18 +88,10 @@ namespace ROOT {
                   }
                }
                if (fTreeName.empty()) {
-                  auto msg = "Cannot find any tree in file " + fFileNames[fCurrentIdx];
+                  auto msg = "Cannot find any tree in file " + fFileNames[0];
                   throw std::runtime_error(msg);
                }
             }
-
-            // We cannot use here the template method (TFile::GetObject) because the header will finish
-            // in the PCH and the specialization will be available. PyROOT will not be able to specialize
-            // the method for types other that TTree.
-            fCurrentTree = (TTree*)fCurrentFile->Get(fTreeName.data());
-
-            // Do not remove this tree from list of cleanups (thread unsafe)
-            fCurrentTree->ResetBit(TObject::kMustCleanup);
          }
 
       public:
@@ -96,7 +101,7 @@ namespace ROOT {
          /// \param[in] tn Name of the tree to process. If not provided,
          ///               the implementation will automatically search for a
          ///               tree in the file.
-         TTreeView(std::string_view fn, std::string_view tn) : fTreeName(tn), fCurrentIdx(0)
+         TTreeView(std::string_view fn, std::string_view tn) : fTreeName(tn)
          {
             fFileNames.emplace_back(fn);
             Init();
@@ -108,7 +113,7 @@ namespace ROOT {
          /// \param[in] tn Name of the tree to process. If not provided,
          ///               the implementation will automatically search for a
          ///               tree in the collection of files.
-         TTreeView(const std::vector<std::string_view>& fns, std::string_view tn) : fTreeName(tn), fCurrentIdx(0)
+         TTreeView(const std::vector<std::string_view>& fns, std::string_view tn) : fTreeName(tn)
          {
             if (fns.size() > 0) {
                for (auto& fn : fns)
@@ -124,7 +129,7 @@ namespace ROOT {
          //////////////////////////////////////////////////////////////////////////
          /// Constructor based on a TTree.
          /// \param[in] tree Tree or chain of files containing the tree to process.
-         TTreeView(TTree& tree) : fTreeName(tree.GetName()), fCurrentIdx(0)
+         TTreeView(TTree& tree) : fTreeName(tree.GetName())
          {
             static const TClassRef clRefTChain("TChain");
             if (clRefTChain == tree.IsA()) {
@@ -162,7 +167,7 @@ namespace ROOT {
             if (clRefTChain == tree.IsA()) {
                // We need to convert the global entry numbers to per-tree entry numbers.
                // This will allow us to build a TEntryList for a given entry range of a tree of the chain.
-               size_t nTrees = fFileNames.size();
+               std::size_t nTrees = fFileNames.size();
                fEntryLists.resize(nTrees);
 
                TChain *chain = dynamic_cast<TChain*>(&tree);
@@ -191,80 +196,93 @@ namespace ROOT {
          //////////////////////////////////////////////////////////////////////////
          /// Copy constructor.
          /// \param[in] view Object to copy.
-         TTreeView(const TTreeView& view) : fTreeName(view.fTreeName), fCurrentIdx(view.fCurrentIdx) 
+         TTreeView(const TTreeView& view) : fTreeName(view.fTreeName)
          {
             for (auto& fn : view.fFileNames)
                fFileNames.emplace_back(fn);
 
             for (auto& el : view.fEntryLists)
                fEntryLists.emplace_back(el);
-
-            Init();
-         }
-
-         //////////////////////////////////////////////////////////////////////////
-         /// Get the cluster iterator for the current tree of this view, starting
-         /// from entry zero.
-         TTree::TClusterIterator GetClusterIterator()
-         {
-            return fCurrentTree->GetClusterIterator(0);
          }
 
          //////////////////////////////////////////////////////////////////////////
          /// Get a TTreeReader for the current tree of this view.
-         std::unique_ptr<TTreeReader> GetTreeReader(Long64_t start, Long64_t end)
+         using TreeReaderEntryListPair = std::pair<std::unique_ptr<TTreeReader>, std::unique_ptr<TEntryList>>;
+         TreeReaderEntryListPair GetTreeReader(std::size_t dataIdx, Long64_t start, Long64_t end)
          {
-            TTreeReader *reader;
+            std::unique_ptr<TTreeReader> reader;
+            std::unique_ptr<TEntryList> elist;
             if (fEntryLists.size() > 0) {
                // TEntryList and SetEntriesRange do not work together (the former has precedence).
                // We need to construct a TEntryList that contains only those entry numbers
                // in our desired range.
-               fCurrentEntryList.Reset();
-               if (fEntryLists[fCurrentIdx].GetN() > 0) {
-                  Long64_t entry = fEntryLists[fCurrentIdx].GetEntry(0);
+               const auto filenameIdx = fOpenInputs[dataIdx].filenameIdx;
+               elist.reset(new TEntryList);
+               if (fEntryLists[filenameIdx].GetN() > 0) {
+                  Long64_t entry = fEntryLists[filenameIdx].GetEntry(0);
                   do {
-                     if (entry >= start && entry < end) fCurrentEntryList.Enter(entry);
-                  } while ((entry = fEntryLists[fCurrentIdx].Next()) >= 0);
+                     if (entry >= start && entry < end) // TODO can quit this loop early when entry >= end
+                        elist->Enter(entry);
+                  } while ((entry = fEntryLists[filenameIdx].Next()) >= 0);
                }
-
-               reader = new TTreeReader(fCurrentTree, &fCurrentEntryList);
-            }
-            else {
+               reader.reset(new TTreeReader(fOpenInputs[dataIdx].tree, elist.get()));
+            } else {
                // If no TEntryList is involved we can safely set the range in the reader
-               reader = new TTreeReader(fCurrentTree);
+               reader.reset(new TTreeReader(fOpenInputs[dataIdx].tree));
                reader->SetEntriesRange(start, end);
             }
 
-            return std::unique_ptr<TTreeReader>(reader);
+            return std::make_pair(std::move(reader), std::move(elist));
          }
 
          //////////////////////////////////////////////////////////////////////////
-         /// Get the number of entries of the current tree of this view.
-         Long64_t GetEntries() const
+         /// Get the filenames for this view.
+         const std::vector<std::string> &GetFileNames() const
          {
-            return fCurrentTree->GetEntries();
+            return fFileNames;
          }
 
          //////////////////////////////////////////////////////////////////////////
-         /// Get the number of files of this view.
-         size_t GetNumFiles() const
+         /// Get the name of the tree of this view.
+         std::string GetTreeName() const
          {
-            return fFileNames.size();
+            return fTreeName;
          }
 
          //////////////////////////////////////////////////////////////////////////
-         /// Set the current file and tree of this view.
-         void SetCurrent(unsigned int i)
+         /// Search the open files for the filename with index i. If found, increment its "user counter", otherwise
+         /// open it and add it to the vector of open files. Return the file's index in the vector of open files.
+         std::size_t FindOrOpenFile(std::size_t filenameIdx)
          {
-            if (i != fCurrentIdx) {
-               fCurrentIdx = i;
-               // Here we need to restore the directory after opening the file.
-               TDirectory::TContext ctxt(gDirectory);
-               TFile *f = TFile::Open(fFileNames[fCurrentIdx].data());
-               fCurrentTree = (TTree*)f->Get(fTreeName.data());
-               fCurrentTree->ResetBit(TObject::kMustCleanup);
-               fCurrentFile.reset(f);
+            const auto inputIt =
+               std::find_if(fOpenInputs.begin(), fOpenInputs.end(),
+                            [filenameIdx](const TreeViewInput &i) { return i.filenameIdx == filenameIdx; });
+            if (inputIt != fOpenInputs.end()) {
+               // requested file is already open
+               inputIt->useCount++;
+               return std::distance(fOpenInputs.begin(), inputIt); // return input's index in fOpenInputs
+            } else {
+               // requested file needs to be added to fOpenInputs
+               TDirectory::TContext ctxt(gDirectory); // needed to restore the directory after opening the file
+               std::unique_ptr<TFile> f(TFile::Open(fFileNames[filenameIdx].data()));
+               // We must use TFile::Get instead of TFile::GetObject because this header will finish                 
+               // in the PCH and the TFile::GetObject<TTree> specialization will be available there. PyROOT will then
+               // not be able to specialize the method for types other that TTree.
+               // A test that fails as a consequence of this issue is python-ttree-tree.
+               TTree *t = static_cast<TTree*>(f->GetObjectChecked(fTreeName.c_str(), "TTree"));
+               t->ResetBit(TObject::kMustCleanup);
+               fOpenInputs.emplace_back(TreeViewInput{std::move(f), t, filenameIdx, /*useCount=*/1});
+               return fOpenInputs.size() - 1;
             }
+         }
+
+         //////////////////////////////////////////////////////////////////////////
+         /// Decrease "use count" of the file at filenameIdx, delete corresponding TreeViewInput if use count is zero.
+         void Cleanup(std::size_t dataIdx)
+         {
+            fOpenInputs[dataIdx].useCount--;
+            if(fOpenInputs[dataIdx].useCount == 0)
+               fOpenInputs.erase(fOpenInputs.begin() + dataIdx);
          }
       };
    } // End of namespace Internal
@@ -272,8 +290,9 @@ namespace ROOT {
 
    class TTreeProcessorMT {
    private:
-      ROOT::TThreadedObject<ROOT::Internal::TTreeView> treeView; ///<! Threaded object with <file,tree> per thread
+      ROOT::TThreadedObject<ROOT::Internal::TTreeView> treeView; ///<! Thread-local TreeViews
 
+      std::vector<ROOT::Internal::TreeViewCluster> MakeClusters();
    public:
       TTreeProcessorMT(std::string_view filename, std::string_view treename = "");
       TTreeProcessorMT(const std::vector<std::string_view>& filenames, std::string_view treename = "");

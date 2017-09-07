@@ -27,7 +27,7 @@ env:
     - CCACHE_MAXSIZE=500M
     - CCACHE_CPP2=1
     - TIMEOUT=0
-    - secure: "DQSDJnYWR7kb2ylcE1e4GIfP9KJadHjG696HelK09zmsTJiRoxg2HhDnm3gHkrPh18AxYJAMW1rZHm0ZsnBKpS09NxOcPVseL+z3iWfBFpgCa2ueUMKHy/YBhNghmLOXVeQzGwol6iCU5xbO4ZMJHpytmQCH6Vm9ws7sg8kiatY="
+    - secure: "MWXnhg939UrLRP7Jg5xLFxxquIgale0crNyP9Y2L2Pg+zINTgSExyykP/+s4uV1mj44uYLr4oEU7Ue72w3yGptanau90BUO+ZN5clC7QEUWsfJUDBc/ytilp+xhNRNLA+MJvaYLNOyXJOf9JKf/IzgRAR0m0PGAl9pMRG2vP5Sg="
 
 # Do not build our sync branch.
 branches:
@@ -52,15 +52,7 @@ matrix:
     # across all platforms. By interleaving OS X, the hope is to get in the
     # queue faster while not blocking Linux builds from occuring.
     - os: linux
-      env: DIST=pangolin COMPILER=g++-4.7 CCOMPILER=gcc-4.7 NIGHTLY_CRON_SYNC=1
-      addons:
-        apt:
-          sources: *sources
-          packages: g++-4.7
-      compiler: gcc-4.7
-
-    - os: linux
-      env: DIST=pangolin COMPILER=g++-4.8 CCOMPILER=gcc-4.8
+      env: DIST=pangolin COMPILER=g++-4.8 CCOMPILER=gcc-4.8 NIGHTLY_CRON_SYNC=1
       addons:
         apt:
           sources: *sources
@@ -74,6 +66,11 @@ matrix:
           sources: *sources
           packages: g++-4.9
       compiler: gcc-4.9
+
+    - os: osx
+      env: COMPILER=clang++ CCOMPILER=clang
+      osx_image: xcode6.4
+      compiler: clang
 
     - os: linux
       env: DIST=pangolin COMPILER=g++-5 CCOMPILER=gcc-5
@@ -91,15 +88,10 @@ matrix:
           packages: g++-6
       compiler: gcc-6
 
-    - os: linux
-      env: DIST=trusty COMPILER=g++-4.7 CCOMPILER=gcc-4.7
-      sudo: required
-      dist: trusty
-      addons:
-        apt:
-          sources: *sources
-          packages: g++-4.7
-      compiler: gcc-4.7
+    - os: osx
+      env: COMPILER=clang++ CCOMPILER=clang
+      osx_image: xcode7.3
+      compiler: clang
 
     - os: linux
       env: DIST=trusty COMPILER=g++-4.8 CCOMPILER=gcc-4.8
@@ -123,8 +115,8 @@ matrix:
 
     - os: osx
       env: COMPILER=g++-6 CCOMPILER=gcc-6
-      osx_image: xcode7.2
-      compiler: g++-6
+      osx_image: xcode7.3
+      compiler: gcc-6
 
     - os: linux
       env: DIST=trusty COMPILER=g++-5 CCOMPILER=gcc-5
@@ -148,8 +140,18 @@ matrix:
 
     - os: osx
       env: COMPILER=clang++ CCOMPILER=clang
-      osx_image: xcode7.3
+      osx_image: xcode8.3
       compiler: clang
+
+    - os: linux
+      env: DIST=trusty COMPILER=g++-7 CCOMPILER=gcc-7
+      sudo: required
+      dist: trusty
+      addons:
+        apt:
+          sources: *sources
+          packages: g++-7
+      compiler: gcc-7
 
     - os: linux
       env: CXXLIB=libstdc++ COMPILER=clang++-3.7 CCOMPILER=clang-3.7
@@ -159,6 +161,11 @@ matrix:
           packages: ['clang-3.7', 'libstdc++-5-dev']
       compiler: clang-3.7
 
+    - os: osx
+      env: COMPILER=g++-7 CCOMPILER=gcc-7
+      osx_image: xcode8.3
+      compiler: gcc-7
+
     - os: linux
       env: CXXLIB=libstdc++ COMPILER=clang++-3.8 CCOMPILER=clang-3.8
       addons:
@@ -166,11 +173,6 @@ matrix:
           sources: *sources
           packages: ['clang-3.8', 'libstdc++-6-dev']
       compiler: clang-3.8
-
-    - os: osx
-      env: COMPILER=clang++ CCOMPILER=clang
-      osx_image: xcode8.3
-      compiler: clang
 
   allow_failures:
     # clang-3.5 crashes compiling clang-3.9 with libc++-3.9
@@ -182,35 +184,56 @@ install:
   CLING_USER_ROOT=`dirname $TRAVIS_BUILD_DIR`
   export CLING_BUILD_DEPS="$CLING_USER_ROOT/deps"
   export CLING_LOCAL_BIN="$CLING_USER_ROOT/bin"
-  if [ $TRAVIS_OS_NAME == 'linux' ]; then
-    CMAKE_URL="https://cmake.org/files/v3.6/cmake-3.6.0-Linux-x86_64.tar.gz"
-    export CMAKE=$CLING_BUILD_DEPS/cmake/bin/cmake
-  elif [ $TRAVIS_OS_NAME == 'osx' ] ; then
+  if [ $TRAVIS_OS_NAME == 'osx' ]; then
     brew install ccache python coreutils
     if [[ "$COMPILER" == g++-* ]]; then
-      brew install "gcc${COMPILER##*++-}"
-      export CXXFLAGS="-D__builtin_unreachable=__builtin_trap"
-      export CFLAGS="-D__builtin_unreachable=__builtin_trap"
+      brew install "gcc@${COMPILER##*++-}"
+      brew link --overwrite "gcc@${COMPILER##*++-}"
+      if [[ "$COMPILER" == "g++-6" ]]; then
+        export CXXFLAGS="-D__builtin_unreachable=__builtin_trap"
+        export CFLAGS="-D__builtin_unreachable=__builtin_trap"
+      fi
     fi
-    CMAKE_URL="https://cmake.org/files/v3.6/cmake-3.6.0-Darwin-x86_64.tar.gz"
-    export CMAKE=$CLING_BUILD_DEPS/cmake/CMake.app/Contents/bin/cmake
     PATH="/usr/local/opt/ccache/libexec:$PATH"
     # This is where timeout is hiding now, is the above still neccessary?
     PATH="$PATH:/usr/local/opt/coreutils/libexec/gnubin"
   fi
 
-  # Containers need to timeout before the buildscript exists
-  if [ $TRAVIS_OS_NAME == 'osx' ] || [ "$DIST" == "trusty" ]; then
-    TIMEOUT='40m' # Any more and Travis might cancel
+  if [ "$COMPILER" == "g++-6" ]; then
+    export CLING_BUILD_FLAGS="-DCMAKE_CXX_STANDARD=17 -DCMAKE_CXX_STANDARD_REQUIRED=ON"
+    # On OS X force the test to reproduce __float128 issues with libstdc++.
+    if [ $TRAVIS_OS_NAME != 'osx' ]; then
+      export CLING_BUILD_FLAGS="$CLING_BUILD_FLAGS -DCXX_EXTENSIONS=OFF"
+    fi
+    CMAKEREQ="3.8"
+  else
+    CMAKEREQ="3.6"
   fi
+
+  # Containers need to timeout before the buildscript exits
+  TIMEOUT='37m' # Any more and Travis might cancel
 
   # If we timeout, objects can be corrupted in the cache, causing link errors
   # Turn this on to get the mapping to the cache.o to delete
   # export CCACHE_LOGFILE="$CLING_USER_ROOT/ccache.log"
 
-  if [ ! -f $CMAKE ]; then
-    mkdir -pv $CLING_BUILD_DEPS/cmake
-    travis_retry curl -k $CMAKE_URL | tar --strip-components=1 -xz -C $CLING_BUILD_DEPS/cmake
+  # Get installed CMake version and make sure its at least CMAKEREQ
+  CMKV=( `cmake --version` )
+  CMKV=${CMKV[2]}
+  if [ "${CMKV:0:1}" -lt "${CMAKEREQ:0:1}" ] || [ "${CMKV:2:1}" -lt "${CMAKEREQ:2:1}" ]; then
+    if [ $TRAVIS_OS_NAME == 'linux' ]; then
+      CMAKE_URL="https://cmake.org/files/v${CMAKEREQ}/cmake-${CMAKEREQ}.0-Linux-x86_64.tar.gz"
+      export CMAKE=$CLING_BUILD_DEPS/cmake/bin/cmake
+    else
+      CMAKE_URL="https://cmake.org/files/v${CMAKEREQ}/cmake-${CMAKEREQ}.0-Darwin-x86_64.tar.gz"
+      export CMAKE=$CLING_BUILD_DEPS/cmake/CMake.app/Contents/bin/cmake
+    fi
+    if [ ! -f $CMAKE ]; then
+      mkdir -pv $CLING_BUILD_DEPS/cmake
+      travis_retry curl -k $CMAKE_URL | tar --strip-components=1 -xz -C $CLING_BUILD_DEPS/cmake
+    fi
+  else
+    export CMAKE="cmake"
   fi
 
 before_script:
@@ -222,16 +245,24 @@ before_script:
    if [ -n "$NIGHTLY_CRON_SYNC" ] && [ "$TRAVIS_EVENT_TYPE" = "cron" ] \
       && [ "$TRAVIS_BRANCH" == "master" ] && [ "$TRAVIS_PULL_REQUEST" == "false" ] \
       && [ "$TRAVIS_REPO_SLUG" == "vgvassilev/cling" ] ; then
+      # Override the default travis clone command to enable sync.
+      cd ../../ && rm -fr ${TRAVIS_REPO_SLUG}
+      git clone https://$OAUTH_TOKEN@github.com/${TRAVIS_REPO_SLUG} ${TRAVIS_REPO_SLUG}
+      cd ${TRAVIS_REPO_SLUG}
+
       echo "Syncing repository."
       git remote add alt http://root.cern.ch/git/cling.git
       git pull alt master
-      git remote remove origin
-      git remote add origin https://$OAUTH_TOKEN@github.com/${TRAVIS_REPO_SLUG}
-      git push --verbose origin master
 
       # Move the tag to newest master
-      git tag --force cling-nightlies HEAD
+      git tag --force cling-nightlies master
+
+      # Push to origin
+      git push --verbose origin master
       git push --verbose --force origin cling-nightlies
+
+      # Some debug output.
+      git remote -v && git branch -a
    fi
 
 script:
@@ -242,13 +273,15 @@ script:
       --with-cling-url=https://github.com/$TRAVIS_REPO_SLUG \
       --with-clang-url=http://root.cern.ch/git/clang.git \
       --with-llvm-url=http://root.cern.ch/git/llvm.git \
+      --with-cmake-flags="$CLING_BUILD_FLAGS" \
       --skip-cleanup
   else
     tools/packaging/cpt.py \
-      --tarball-tag=$TRAVIS_TAG \
+      --tarball-tag=$([[ $TRAVIS_TAG = cling-nightlies ]] && echo "master" || echo "$TRAVIS_TAG") \
       --with-cling-url=https://github.com/$TRAVIS_REPO_SLUG \
       --with-clang-url=http://root.cern.ch/git/clang.git \
-      --with-llvm-url=http://root.cern.ch/git/llvm.git
+      --with-llvm-url=http://root.cern.ch/git/llvm.git \
+      --with-cmake-flags="$CLING_BUILD_FLAGS"
   fi
 
   RESULT="$?"

@@ -25,7 +25,7 @@ functions (accessible via TROOT::GetListOfGlobalFunctions()).
 #include <iostream>
 #include "TVirtualMutex.h"
 
-ClassImp(TFunction)
+ClassImp(TFunction);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default TFunction ctor. TFunctions are constructed in TROOT via
@@ -139,7 +139,7 @@ TList *TFunction::GetListOfMethodArgs()
 
 const char *TFunction::GetReturnTypeName() const
 {
-   R__LOCKGUARD2(gInterpreterMutex);
+   R__LOCKGUARD(gInterpreterMutex);
    if (fInfo == 0 || gCling->MethodInfo_Type(fInfo) == 0) return "Unknown";
    return gCling->MethodInfo_TypeName(fInfo);
 }
@@ -153,7 +153,7 @@ const char *TFunction::GetReturnTypeName() const
 
 std::string TFunction::GetReturnTypeNormalizedName() const
 {
-   R__LOCKGUARD2(gInterpreterMutex);
+   R__LOCKGUARD(gInterpreterMutex);
    if (fInfo == 0 || gCling->MethodInfo_Type(fInfo) == 0) return "Unknown";
    return gCling->MethodInfo_TypeNormalizedName(fInfo);
 }
@@ -245,7 +245,7 @@ const char *TFunction::GetMangledName() const
 const char *TFunction::GetPrototype() const
 {
    if (fInfo) {
-      R__LOCKGUARD2(gInterpreterMutex);
+      R__LOCKGUARD(gInterpreterMutex);
       return gCling->MethodInfo_GetPrototype(fInfo);
    } else
       return 0;

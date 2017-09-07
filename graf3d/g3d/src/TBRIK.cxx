@@ -16,7 +16,7 @@
 #include "TBuffer3DTypes.h"
 #include "TGeometry.h"
 
-ClassImp(TBRIK)
+ClassImp(TBRIK);
 
 /** \class TBRIK
 \ingroup g3d

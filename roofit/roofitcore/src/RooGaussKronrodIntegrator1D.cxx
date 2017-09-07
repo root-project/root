@@ -60,7 +60,7 @@ reached
 
 using namespace std;
 
-ClassImp(RooGaussKronrodIntegrator1D)
+ClassImp(RooGaussKronrodIntegrator1D);
 ;
 
 

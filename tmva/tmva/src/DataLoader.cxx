@@ -78,7 +78,7 @@
 #include "TMVA/ResultsMulticlass.h"
 #include "TMVA/Types.h"
 
-ClassImp(TMVA::DataLoader)
+ClassImp(TMVA::DataLoader);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -116,8 +116,8 @@ TMVA::DataLoader::~DataLoader( void )
    // problem with call of REGISTER_METHOD macro ...
    //   ClassifierDataLoader::DestroyInstance();
    //   Types::DestroyInstance();
-   Tools::DestroyInstance();
-   Config::DestroyInstance();
+   //Tools::DestroyInstance();
+   //Config::DestroyInstance();
 }
 
 

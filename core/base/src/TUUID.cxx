@@ -128,7 +128,7 @@ system clock catches up.
 #endif
 #include <chrono>
 
-ClassImp(TUUID)
+ClassImp(TUUID);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a UUID.
@@ -141,7 +141,7 @@ TUUID::TUUID()
    uuid_time_t *time_last_ptr = TTHREAD_TLS_PTR(time_last);
 
    if (firstTime) {
-      R__LOCKGUARD2(gROOTMutex); // rand and random are not thread safe.
+      R__LOCKGUARD(gROOTMutex); // rand and random are not thread safe.
 
       UInt_t seed;
       if (gSystem) {

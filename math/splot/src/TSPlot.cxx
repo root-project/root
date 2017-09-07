@@ -20,7 +20,7 @@
 
 extern void Yields(Int_t &, Double_t *, Double_t &f, Double_t *x, Int_t iflag);
 
-ClassImp(TSPlot)
+ClassImp(TSPlot);
 
 //____________________________________________________________________
 //Begin_Html <!--

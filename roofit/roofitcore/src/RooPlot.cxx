@@ -71,7 +71,7 @@ object onto a one-dimensional plot.
 
 using namespace std;
 
-ClassImp(RooPlot)
+ClassImp(RooPlot);
 ;
 
 Bool_t RooPlot::_addDirStatus = kTRUE ;

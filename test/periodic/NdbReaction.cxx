@@ -1,3 +1,3 @@
 #include "NdbReaction.h"
 
-ClassImp(NdbReaction)
+ClassImp(NdbReaction);

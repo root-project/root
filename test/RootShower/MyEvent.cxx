@@ -25,8 +25,8 @@
 // MyEvent class implementation
 //______________________________________________________________________________
 
-ClassImp(EventHeader)
-ClassImp(MyEvent)
+ClassImp(EventHeader);
+ClassImp(MyEvent);
 
 TClonesArray *MyEvent::fgParticles = 0;
 

@@ -55,7 +55,7 @@ TObjArray  *TProcessID::fgPIDs   = 0; //pointer to the list of TProcessID
 TProcessID *TProcessID::fgPID    = 0; //pointer to the TProcessID of the current session
 UInt_t      TProcessID::fgNumber = 0; //Current referenced object instance count
 TExMap     *TProcessID::fgObjPIDs= 0; //Table (pointer,pids)
-ClassImp(TProcessID)
+ClassImp(TProcessID);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return hash value for this object.
@@ -90,7 +90,7 @@ TProcessID::~TProcessID()
 {
    delete fObjects;
    fObjects = 0;
-   R__LOCKGUARD2(gROOTMutex);
+   R__LOCKGUARD(gROOTMutex);
    fgPIDs->Remove(this);
 }
 
@@ -99,7 +99,7 @@ TProcessID::~TProcessID()
 
 TProcessID *TProcessID::AddProcessID()
 {
-   R__LOCKGUARD2(gROOTMutex);
+   R__LOCKGUARD(gROOTMutex);
 
    if (fgPIDs && fgPIDs->GetEntriesFast() >= 65534) {
       if (fgPIDs->GetEntriesFast() == 65534) {
@@ -138,7 +138,7 @@ TProcessID *TProcessID::AddProcessID()
 
 UInt_t TProcessID::AssignID(TObject *obj)
 {
-   R__LOCKGUARD2(gROOTMutex);
+   R__LOCKGUARD(gROOTMutex);
 
    UInt_t uid = obj->GetUniqueID() & 0xffffff;
    if (obj == fgPID->GetObjectWithID(uid)) return uid;
@@ -187,7 +187,7 @@ void TProcessID::CheckInit()
 
 void TProcessID::Cleanup()
 {
-   R__LOCKGUARD2(gROOTMutex);
+   R__LOCKGUARD(gROOTMutex);
 
    fgPIDs->Delete();
    gROOT->GetListOfCleanups()->Remove(fgPIDs);
@@ -248,7 +248,7 @@ UInt_t TProcessID::GetNProcessIDs()
 
 TProcessID *TProcessID::GetProcessWithUID(UInt_t uid, const void *obj)
 {
-   R__LOCKGUARD2(gROOTMutex);
+   R__LOCKGUARD(gROOTMutex);
 
    Int_t pid = (uid>>24)&0xff;
    if (pid==0xff) {
@@ -329,7 +329,7 @@ TObjArray *TProcessID::GetPIDs()
 
 Bool_t TProcessID::IsValid(TProcessID *pid)
 {
-   R__LOCKGUARD2(gROOTMutex);
+   R__LOCKGUARD(gROOTMutex);
 
    if (fgPIDs==0) return kFALSE;
    if (fgPIDs->IndexOf(pid) >= 0) return kTRUE;

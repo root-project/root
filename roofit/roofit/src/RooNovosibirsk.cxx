@@ -36,7 +36,7 @@ Function taken from H. Ikeda et al. NIM A441 (2000), p. 401 (Belle Collaboration
 
 using namespace std;
 
-ClassImp(RooNovosibirsk)
+ClassImp(RooNovosibirsk);
 
 ////////////////////////////////////////////////////////////////////////////////
 

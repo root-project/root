@@ -26,26 +26,17 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "TBranch.h"
-
-#include "TObjArray.h"
-
-#include "TAttLine.h"
-
-#include "TAttFill.h"
-
-#include "TAttMarker.h"
-
 #include "TArrayD.h"
-
 #include "TArrayI.h"
-
+#include "TAttFill.h"
+#include "TAttLine.h"
+#include "TAttMarker.h"
+#include "TBranch.h"
 #include "TBuffer.h"
-
-#include "TDataType.h"
-
 #include "TClass.h"
-
+#include "TDataType.h"
+#include "TDirectory.h"
+#include "TObjArray.h"
 #include "TVirtualTreePlayer.h"
 
 #include <atomic>
@@ -53,7 +44,6 @@
 class TBranch;
 class TBrowser;
 class TFile;
-class TDirectory;
 class TLeaf;
 class TH1;
 class TTreeFormula;
@@ -139,9 +129,6 @@ protected:
    static Long64_t  fgMaxTreeSize;        ///<  Maximum size of a file containing a Tree
 
 private:
-   TTree(const TTree& tt);              // not implemented
-   TTree& operator=(const TTree& tt);   // not implemented
-
    // For simplicity, although fIMTFlush is always disabled in non-IMT builds, we don't #ifdef it out.
    mutable Bool_t fIMTFlush{false};               ///<! True if we are doing a multithreaded flush.
    mutable std::atomic<Long64_t> fIMTTotBytes;    ///<! Total bytes for the IMT flush baskets
@@ -151,7 +138,6 @@ private:
    void             SortBranchesByTime();
 
 protected:
-   void             AddClone(TTree*);
    virtual void     KeepCircular();
    virtual TBranch *BranchImp(const char* branchname, const char* classname, TClass* ptrClass, void* addobj, Int_t bufsize, Int_t splitlevel);
    virtual TBranch *BranchImp(const char* branchname, TClass* ptrClass, void* addobj, Int_t bufsize, Int_t splitlevel);
@@ -229,7 +215,7 @@ public:
    };
 
    // TTree status bits
-   enum {
+   enum EStatusBits {
       kForceRead   = BIT(11),
       kCircular    = BIT(12)
    };
@@ -280,13 +266,17 @@ public:
    };
 
    TTree();
-   TTree(const char* name, const char* title, Int_t splitlevel = 99);
+   TTree(const char* name, const char* title, Int_t splitlevel = 99, TDirectory* dir = gDirectory);
    virtual ~TTree();
+
+   TTree(const TTree& tt) = delete;
+   TTree& operator=(const TTree& tt) = delete;
 
    virtual Int_t           AddBranchToCache(const char *bname, Bool_t subbranches = kFALSE);
    virtual Int_t           AddBranchToCache(TBranch *branch,   Bool_t subbranches = kFALSE);
    virtual Int_t           DropBranchFromCache(const char *bname, Bool_t subbranches = kFALSE);
    virtual Int_t           DropBranchFromCache(TBranch *branch,   Bool_t subbranches = kFALSE);
+   void                    AddClone(TTree*);
    virtual TFriendElement *AddFriend(const char* treename, const char* filename = "");
    virtual TFriendElement *AddFriend(const char* treename, TFile* file);
    virtual TFriendElement *AddFriend(TTree* tree, const char* alias = "", Bool_t warn = kFALSE);

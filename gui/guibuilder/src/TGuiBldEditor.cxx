@@ -38,7 +38,7 @@
 #include "TGSplitter.h"
 #include "TGTableLayout.h"
 
-ClassImp(TGuiBldEditor)
+ClassImp(TGuiBldEditor);
 
 
 ////////////////////////////////////////////////////////////////////////////////

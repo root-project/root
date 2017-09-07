@@ -34,8 +34,11 @@ ROOT_GENERATE_DICTIONARY(G__Core
                          OPTIONS ${dict_opts}
                          LINKDEF LinkDef.h)
 
+# This is needed becuase LinkDef.h includes other LinkDef starting from  ${CMAKE_SOURCE_DIR}
+set_property(TARGET G__Core PROPERTY INCLUDE_DIRECTORIES ${CMAKE_SOURCE_DIR})
+
 list(REMOVE_ITEM sources TROOT.cxx roota.cxx)
-ROOT_OBJECT_LIBRARY(Base G__Core.cxx ${sources})
+ROOT_OBJECT_LIBRARY(Base G__Core.cxx ${sources} BUILTINS PCRE)
 
 ROOT_INSTALL_HEADERS()
 

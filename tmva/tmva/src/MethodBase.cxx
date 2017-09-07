@@ -125,7 +125,7 @@
 #include <limits>
 
 
-ClassImp(TMVA::MethodBase)
+ClassImp(TMVA::MethodBase);
 
 using std::endl;
 using std::atof;
@@ -2664,6 +2664,45 @@ std::vector<Float_t> TMVA::MethodBase::GetMulticlassTrainingEfficiency(std::vect
    return resMulticlass->GetAchievableEff();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Construct a confusion matrix for a multiclass classifier. The confusion
+/// matrix compares, in turn, each class agaist all other classes in a pair-wise
+/// fashion. In rows with index \f$ k_r = 0 ... K \f$, \f$ k_r \f$ is
+/// considered signal for the sake of comparison and for each column
+/// \f$ k_c = 0 ... K \f$ the corresponding class is considered background.
+///
+/// Note that the diagonal elements will be returned as NaN since this will
+/// compare a class against itself.
+///
+/// \see TMVA::ResultsMulticlass::GetConfusionMatrix
+///
+/// \param[in] effB The background efficiency for which to evaluate.
+/// \param[in] type The data set on which to evaluate (training, testing ...).
+///
+/// \return A matrix containing signal efficiencies for the given background
+///         efficiency. The diagonal elements are NaN since this measure is
+///         meaningless (comparing a class against itself).
+///
+
+TMatrixD TMVA::MethodBase::GetMulticlassConfusionMatrix(Double_t effB, Types::ETreeType type)
+{
+   if (GetAnalysisType() != Types::kMulticlass) {
+      Log() << kFATAL << "Cannot get confusion matrix for non-multiclass analysis." << std::endl;
+      return TMatrixD(0, 0);
+   }
+
+   Data()->SetCurrentType(type);
+   ResultsMulticlass *resMulticlass =
+      dynamic_cast<ResultsMulticlass *>(Data()->GetResults(GetMethodName(), type, Types::kMulticlass));
+
+   if (resMulticlass == nullptr) {
+      Log() << kFATAL << Form("Dataset[%s] : ", DataInfo().GetName())
+            << "unable to create pointer in GetMulticlassEfficiency, exiting." << Endl;
+      return TMatrixD(0, 0);
+   }
+
+   return resMulticlass->GetConfusionMatrix(effB);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// compute significance of mean difference

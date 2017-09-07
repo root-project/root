@@ -52,9 +52,9 @@
 #include "TEnv.h"
 #include "Riostream.h"
 
-ClassImp(TGSlider)
-ClassImp(TGVSlider)
-ClassImp(TGHSlider)
+ClassImp(TGSlider);
+ClassImp(TGVSlider);
+ClassImp(TGHSlider);
 
 
 ////////////////////////////////////////////////////////////////////////////////

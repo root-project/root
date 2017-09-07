@@ -39,7 +39,7 @@ Lightweight interface adaptor that exports a RooAbsReal as a ROOT::Math::IMultiG
 
 using namespace std;
 
-ClassImp(RooMultiGenFunction)
+ClassImp(RooMultiGenFunction);
 ;
 
 

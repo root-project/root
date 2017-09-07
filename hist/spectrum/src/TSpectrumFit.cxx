@@ -27,7 +27,7 @@
 #include "TSpectrumFit.h"
 #include "TMath.h"
 
-ClassImp(TSpectrumFit)
+ClassImp(TSpectrumFit);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor

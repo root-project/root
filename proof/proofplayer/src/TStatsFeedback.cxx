@@ -31,7 +31,7 @@ Utility class to display PROOF stats feedback histos during queries
 #include "TStyle.h"
 #include "TVirtualPad.h"
 
-ClassImp(TStatsFeedback)
+ClassImp(TStatsFeedback);
 
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -53,7 +53,7 @@ added, which returns all events in a given TMVA::Volume.
 
 #include <limits>
 
-ClassImp(TMVA::PDEFoamDecisionTreeDensity)
+ClassImp(TMVA::PDEFoamDecisionTreeDensity);
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -279,13 +279,22 @@ void JumpScopeChecker::BuildScopeInformation(Stmt *S,
   unsigned &ParentScope = ((isa<Expr>(S) && !isa<StmtExpr>(S))
                             ? origParentScope : independentParentScope);
 
-  bool SkipFirstSubStmt = false;
+  unsigned StmtsToSkip = 0u;
 
   // If we found a label, remember that it is in ParentScope scope.
   switch (S->getStmtClass()) {
   case Stmt::AddrLabelExprClass:
     IndirectJumpTargets.push_back(cast<AddrLabelExpr>(S)->getLabel());
     break;
+
+  case Stmt::ObjCForCollectionStmtClass: {
+    auto *CS = cast<ObjCForCollectionStmt>(S);
+    unsigned Diag = diag::note_protected_by_objc_fast_enumeration;
+    unsigned NewParentScope = Scopes.size();
+    Scopes.push_back(GotoScope(ParentScope, Diag, 0, S->getLocStart()));
+    BuildScopeInformation(CS->getBody(), NewParentScope);
+    return;
+  }
 
   case Stmt::IndirectGotoStmtClass:
     // "goto *&&lbl;" is a special case which we treat as equivalent
@@ -304,11 +313,15 @@ void JumpScopeChecker::BuildScopeInformation(Stmt *S,
     break;
 
   case Stmt::SwitchStmtClass:
-    // Evaluate the condition variable before entering the scope of the switch
-    // statement.
+    // Evaluate the C++17 init stmt and condition variable
+    // before entering the scope of the switch statement.
+    if (Stmt *Init = cast<SwitchStmt>(S)->getInit()) {
+      BuildScopeInformation(Init, ParentScope);
+      ++StmtsToSkip;
+    }
     if (VarDecl *Var = cast<SwitchStmt>(S)->getConditionVariable()) {
       BuildScopeInformation(Var, ParentScope);
-      SkipFirstSubStmt = true;
+      ++StmtsToSkip;
     }
     // Fall through
 
@@ -321,30 +334,27 @@ void JumpScopeChecker::BuildScopeInformation(Stmt *S,
 
   case Stmt::IfStmtClass: {
     IfStmt *IS = cast<IfStmt>(S);
-    if (!IS->isConstexpr())
+    if (!(IS->isConstexpr() || IS->isObjCAvailabilityCheck()))
       break;
+
+    unsigned Diag = IS->isConstexpr() ? diag::note_protected_by_constexpr_if
+                                      : diag::note_protected_by_if_available;
 
     if (VarDecl *Var = IS->getConditionVariable())
       BuildScopeInformation(Var, ParentScope);
 
     // Cannot jump into the middle of the condition.
     unsigned NewParentScope = Scopes.size();
-    Scopes.push_back(GotoScope(ParentScope,
-                               diag::note_protected_by_constexpr_if, 0,
-                               IS->getLocStart()));
+    Scopes.push_back(GotoScope(ParentScope, Diag, 0, IS->getLocStart()));
     BuildScopeInformation(IS->getCond(), NewParentScope);
 
     // Jumps into either arm of an 'if constexpr' are not allowed.
     NewParentScope = Scopes.size();
-    Scopes.push_back(GotoScope(ParentScope,
-                               diag::note_protected_by_constexpr_if, 0,
-                               IS->getLocStart()));
+    Scopes.push_back(GotoScope(ParentScope, Diag, 0, IS->getLocStart()));
     BuildScopeInformation(IS->getThen(), NewParentScope);
     if (Stmt *Else = IS->getElse()) {
       NewParentScope = Scopes.size();
-      Scopes.push_back(GotoScope(ParentScope,
-                                 diag::note_protected_by_constexpr_if, 0,
-                                 IS->getLocStart()));
+      Scopes.push_back(GotoScope(ParentScope, Diag, 0, IS->getLocStart()));
       BuildScopeInformation(Else, NewParentScope);
     }
     return;
@@ -537,22 +547,20 @@ void JumpScopeChecker::BuildScopeInformation(Stmt *S,
   }
 
   for (Stmt *SubStmt : S->children()) {
-    if (SkipFirstSubStmt) {
-      SkipFirstSubStmt = false;
+    if (!SubStmt)
+        continue;
+    if (StmtsToSkip) {
+      --StmtsToSkip;
       continue;
     }
-
-    if (!SubStmt) continue;
 
     // Cases, labels, and defaults aren't "scope parents".  It's also
     // important to handle these iteratively instead of recursively in
     // order to avoid blowing out the stack.
     while (true) {
       Stmt *Next;
-      if (CaseStmt *CS = dyn_cast<CaseStmt>(SubStmt))
-        Next = CS->getSubStmt();
-      else if (DefaultStmt *DS = dyn_cast<DefaultStmt>(SubStmt))
-        Next = DS->getSubStmt();
+      if (SwitchCase *SC = dyn_cast<SwitchCase>(SubStmt))
+        Next = SC->getSubStmt();
       else if (LabelStmt *LS = dyn_cast<LabelStmt>(SubStmt))
         Next = LS->getSubStmt();
       else

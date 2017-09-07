@@ -35,7 +35,9 @@
 #ifndef LLVM_ANALYSIS_ALIASANALYSISSUMMARY_H
 #define LLVM_ANALYSIS_ALIASANALYSISSUMMARY_H
 
+#include "llvm/ADT/DenseMapInfo.h"
 #include "llvm/ADT/Optional.h"
+#include "llvm/ADT/SmallVector.h"
 #include "llvm/IR/CallSite.h"
 #include <bitset>
 
@@ -96,6 +98,9 @@ AliasAttrs getExternallyVisibleAttrs(AliasAttrs);
 // Function summary related stuffs
 //===----------------------------------------------------------------------===//
 
+/// The maximum number of arguments we can put into a summary.
+static const unsigned MaxSupportedArgsInSummary = 50;
+
 /// We use InterfaceValue to describe parameters/return value, as well as
 /// potential memory locations that are pointed to by parameters/return value,
 /// of a function.
@@ -109,24 +114,86 @@ struct InterfaceValue {
   unsigned DerefLevel;
 };
 
-inline bool operator==(InterfaceValue lhs, InterfaceValue rhs) {
-  return lhs.Index == rhs.Index && lhs.DerefLevel == rhs.DerefLevel;
+inline bool operator==(InterfaceValue LHS, InterfaceValue RHS) {
+  return LHS.Index == RHS.Index && LHS.DerefLevel == RHS.DerefLevel;
 }
-inline bool operator!=(InterfaceValue lhs, InterfaceValue rhs) {
-  return !(lhs == rhs);
+inline bool operator!=(InterfaceValue LHS, InterfaceValue RHS) {
+  return !(LHS == RHS);
+}
+inline bool operator<(InterfaceValue LHS, InterfaceValue RHS) {
+  return LHS.Index < RHS.Index ||
+         (LHS.Index == RHS.Index && LHS.DerefLevel < RHS.DerefLevel);
+}
+inline bool operator>(InterfaceValue LHS, InterfaceValue RHS) {
+  return RHS < LHS;
+}
+inline bool operator<=(InterfaceValue LHS, InterfaceValue RHS) {
+  return !(RHS < LHS);
+}
+inline bool operator>=(InterfaceValue LHS, InterfaceValue RHS) {
+  return !(LHS < RHS);
+}
+
+// We use UnknownOffset to represent pointer offsets that cannot be determined
+// at compile time. Note that MemoryLocation::UnknownSize cannot be used here
+// because we require a signed value.
+static const int64_t UnknownOffset = INT64_MAX;
+
+inline int64_t addOffset(int64_t LHS, int64_t RHS) {
+  if (LHS == UnknownOffset || RHS == UnknownOffset)
+    return UnknownOffset;
+  // FIXME: Do we need to guard against integer overflow here?
+  return LHS + RHS;
 }
 
 /// We use ExternalRelation to describe an externally visible aliasing relations
 /// between parameters/return value of a function.
 struct ExternalRelation {
   InterfaceValue From, To;
+  int64_t Offset;
 };
+
+inline bool operator==(ExternalRelation LHS, ExternalRelation RHS) {
+  return LHS.From == RHS.From && LHS.To == RHS.To && LHS.Offset == RHS.Offset;
+}
+inline bool operator!=(ExternalRelation LHS, ExternalRelation RHS) {
+  return !(LHS == RHS);
+}
+inline bool operator<(ExternalRelation LHS, ExternalRelation RHS) {
+  if (LHS.From < RHS.From)
+    return true;
+  if (LHS.From > RHS.From)
+    return false;
+  if (LHS.To < RHS.To)
+    return true;
+  if (LHS.To > RHS.To)
+    return false;
+  return LHS.Offset < RHS.Offset;
+}
+inline bool operator>(ExternalRelation LHS, ExternalRelation RHS) {
+  return RHS < LHS;
+}
+inline bool operator<=(ExternalRelation LHS, ExternalRelation RHS) {
+  return !(RHS < LHS);
+}
+inline bool operator>=(ExternalRelation LHS, ExternalRelation RHS) {
+  return !(LHS < RHS);
+}
 
 /// We use ExternalAttribute to describe an externally visible AliasAttrs
 /// for parameters/return value.
 struct ExternalAttribute {
   InterfaceValue IValue;
   AliasAttrs Attr;
+};
+
+/// AliasSummary is just a collection of ExternalRelation and ExternalAttribute
+struct AliasSummary {
+  // RetParamRelations is a collection of ExternalRelations.
+  SmallVector<ExternalRelation, 8> RetParamRelations;
+
+  // RetParamAttributes is a collection of ExternalAttributes.
+  SmallVector<ExternalAttribute, 8> RetParamAttributes;
 };
 
 /// This is the result of instantiating InterfaceValue at a particular callsite
@@ -136,10 +203,31 @@ struct InstantiatedValue {
 };
 Optional<InstantiatedValue> instantiateInterfaceValue(InterfaceValue, CallSite);
 
+inline bool operator==(InstantiatedValue LHS, InstantiatedValue RHS) {
+  return LHS.Val == RHS.Val && LHS.DerefLevel == RHS.DerefLevel;
+}
+inline bool operator!=(InstantiatedValue LHS, InstantiatedValue RHS) {
+  return !(LHS == RHS);
+}
+inline bool operator<(InstantiatedValue LHS, InstantiatedValue RHS) {
+  return std::less<Value *>()(LHS.Val, RHS.Val) ||
+         (LHS.Val == RHS.Val && LHS.DerefLevel < RHS.DerefLevel);
+}
+inline bool operator>(InstantiatedValue LHS, InstantiatedValue RHS) {
+  return RHS < LHS;
+}
+inline bool operator<=(InstantiatedValue LHS, InstantiatedValue RHS) {
+  return !(RHS < LHS);
+}
+inline bool operator>=(InstantiatedValue LHS, InstantiatedValue RHS) {
+  return !(LHS < RHS);
+}
+
 /// This is the result of instantiating ExternalRelation at a particular
 /// callsite
 struct InstantiatedRelation {
   InstantiatedValue From, To;
+  int64_t Offset;
 };
 Optional<InstantiatedRelation> instantiateExternalRelation(ExternalRelation,
                                                            CallSite);
@@ -153,6 +241,25 @@ struct InstantiatedAttr {
 Optional<InstantiatedAttr> instantiateExternalAttribute(ExternalAttribute,
                                                         CallSite);
 }
+
+template <> struct DenseMapInfo<cflaa::InstantiatedValue> {
+  static inline cflaa::InstantiatedValue getEmptyKey() {
+    return cflaa::InstantiatedValue{DenseMapInfo<Value *>::getEmptyKey(),
+                                    DenseMapInfo<unsigned>::getEmptyKey()};
+  }
+  static inline cflaa::InstantiatedValue getTombstoneKey() {
+    return cflaa::InstantiatedValue{DenseMapInfo<Value *>::getTombstoneKey(),
+                                    DenseMapInfo<unsigned>::getTombstoneKey()};
+  }
+  static unsigned getHashValue(const cflaa::InstantiatedValue &IV) {
+    return DenseMapInfo<std::pair<Value *, unsigned>>::getHashValue(
+        std::make_pair(IV.Val, IV.DerefLevel));
+  }
+  static bool isEqual(const cflaa::InstantiatedValue &LHS,
+                      const cflaa::InstantiatedValue &RHS) {
+    return LHS.Val == RHS.Val && LHS.DerefLevel == RHS.DerefLevel;
+  }
+};
 }
 
 #endif

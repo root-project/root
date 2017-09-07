@@ -94,6 +94,15 @@ MultiplexExternalSemaSource::GetExternalCXXCtorInitializers(uint64_t Offset) {
   return nullptr;
 }
 
+ExternalASTSource::ExtKind
+MultiplexExternalSemaSource::hasExternalDefinitions(const Decl *D) {
+  for (const auto &S : Sources)
+    if (auto EK = S->hasExternalDefinitions(D))
+      if (EK != EK_ReplyHazy)
+        return EK;
+  return EK_ReplyHazy;
+}
+
 bool MultiplexExternalSemaSource::
 FindExternalVisibleDeclsByName(const DeclContext *DC, DeclarationName Name) {
   bool AnyDeclsFound = false;
@@ -285,7 +294,8 @@ void MultiplexExternalSemaSource::ReadPendingInstantiations(
 }
 
 void MultiplexExternalSemaSource::ReadLateParsedTemplates(
-    llvm::MapVector<const FunctionDecl *, LateParsedTemplate *> &LPTMap) {
+    llvm::MapVector<const FunctionDecl *, std::unique_ptr<LateParsedTemplate>>
+        &LPTMap) {
   for (size_t i = 0; i < Sources.size(); ++i)
     Sources[i]->ReadLateParsedTemplates(LPTMap);
 }

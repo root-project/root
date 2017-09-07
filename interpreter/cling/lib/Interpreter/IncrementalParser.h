@@ -23,6 +23,7 @@
 namespace llvm {
   struct GenericValue;
   class MemoryBuffer;
+  class Module;
 }
 
 namespace clang {
@@ -228,6 +229,14 @@ namespace cling {
     ///\param[in] input - The incremental input that needs to be parsed.
     ///
     EParseResult ParseInternal(llvm::StringRef input);
+
+    ///\brief Create a unique name for the next llvm::Module
+    ///
+    std::string makeModuleName();
+
+    ///\brief Create a new llvm::Module
+    ///
+    llvm::Module* StartModule();
 
   };
 } // end namespace cling

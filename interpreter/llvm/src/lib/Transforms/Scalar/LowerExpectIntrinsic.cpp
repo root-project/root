@@ -67,11 +67,11 @@ static bool handleSwitchExpect(SwitchInst &SI) {
   if (!ExpectedValue)
     return false;
 
-  SwitchInst::CaseIt Case = SI.findCaseValue(ExpectedValue);
+  SwitchInst::CaseHandle Case = *SI.findCaseValue(ExpectedValue);
   unsigned n = SI.getNumCases(); // +1 for default case.
   SmallVector<uint32_t, 16> Weights(n + 1, UnlikelyBranchWeight);
 
-  if (Case == SI.case_default())
+  if (Case == *SI.case_default())
     Weights[0] = LikelyBranchWeight;
   else
     Weights[Case.getCaseIndex() + 1] = LikelyBranchWeight;
@@ -83,9 +83,8 @@ static bool handleSwitchExpect(SwitchInst &SI) {
   return true;
 }
 
-static bool handleBranchExpect(BranchInst &BI) {
-  if (BI.isUnconditional())
-    return false;
+// Handle both BranchInst and SelectInst.
+template <class BrSelInst> static bool handleBrSelExpect(BrSelInst &BSI) {
 
   // Handle non-optimized IR code like:
   //   %expval = call i64 @llvm.expect.i64(i64 %conv1, i64 1)
@@ -98,9 +97,9 @@ static bool handleBranchExpect(BranchInst &BI) {
 
   CallInst *CI;
 
-  ICmpInst *CmpI = dyn_cast<ICmpInst>(BI.getCondition());
+  ICmpInst *CmpI = dyn_cast<ICmpInst>(BSI.getCondition());
   if (!CmpI) {
-    CI = dyn_cast<CallInst>(BI.getCondition());
+    CI = dyn_cast<CallInst>(BSI.getCondition());
   } else {
     if (CmpI->getPredicate() != CmpInst::ICMP_NE)
       return false;
@@ -129,13 +128,20 @@ static bool handleBranchExpect(BranchInst &BI) {
   else
     Node = MDB.createBranchWeights(UnlikelyBranchWeight, LikelyBranchWeight);
 
-  BI.setMetadata(LLVMContext::MD_prof, Node);
+  BSI.setMetadata(LLVMContext::MD_prof, Node);
 
   if (CmpI)
     CmpI->setOperand(0, ArgValue);
   else
-    BI.setCondition(ArgValue);
+    BSI.setCondition(ArgValue);
   return true;
+}
+
+static bool handleBranchExpect(BranchInst &BI) {
+  if (BI.isUnconditional())
+    return false;
+
+  return handleBrSelExpect<BranchInst>(BI);
 }
 
 static bool lowerExpectIntrinsic(Function &F) {
@@ -151,11 +157,19 @@ static bool lowerExpectIntrinsic(Function &F) {
         ExpectIntrinsicsHandled++;
     }
 
-    // Remove llvm.expect intrinsics.
-    for (BasicBlock::iterator BI = BB.begin(), BE = BB.end(); BI != BE;) {
-      CallInst *CI = dyn_cast<CallInst>(BI++);
-      if (!CI)
+    // Remove llvm.expect intrinsics. Iterate backwards in order
+    // to process select instructions before the intrinsic gets
+    // removed.
+    for (auto BI = BB.rbegin(), BE = BB.rend(); BI != BE;) {
+      Instruction *Inst = &*BI++;
+      CallInst *CI = dyn_cast<CallInst>(Inst);
+      if (!CI) {
+        if (SelectInst *SI = dyn_cast<SelectInst>(Inst)) {
+          if (handleBrSelExpect(*SI))
+            ExpectIntrinsicsHandled++;
+        }
         continue;
+      }
 
       Function *Fn = CI->getCalledFunction();
       if (Fn && Fn->getIntrinsicID() == Intrinsic::expect) {

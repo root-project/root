@@ -26,7 +26,7 @@ the internal reader thread. This class allows to handle the related issue.
 #include "TList.h"
 
 
-ClassImp(TXSocketHandler)
+ClassImp(TXSocketHandler);
 
 // Unique instance of the socket input handler
 TXSocketHandler *TXSocketHandler::fgSocketHandler = 0;

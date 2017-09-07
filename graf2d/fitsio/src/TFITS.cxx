@@ -85,7 +85,7 @@ several methods to manage them.
 #include "fitsio.h"
 #include <stdlib.h>
 
-ClassImp(TFITSHDU)
+ClassImp(TFITSHDU);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Clean path from possible filter and put the result in 'dst'.

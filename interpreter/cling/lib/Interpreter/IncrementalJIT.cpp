@@ -41,7 +41,7 @@ public:
   class NotifyFinalizedT {
   public:
     NotifyFinalizedT(cling::IncrementalJIT &jit) : m_JIT(jit) {}
-    void operator()(llvm::orc::ObjectLinkingLayerBase::ObjSetHandleT H) {
+    void operator()(llvm::orc::RTDyldObjectLinkingLayerBase::ObjSetHandleT H) {
       m_JIT.RemoveUnfinalizedSection(H);
     }
 
@@ -125,7 +125,7 @@ class Azog: public RTDyldMemoryManager {
   AllocInfo m_ROData;
   AllocInfo m_RWData;
 
-#ifdef LLVM_ON_WIN32
+#ifdef CLING_WIN_SEH_EXCEPTIONS
   uintptr_t getBaseAddr() const {
     if (LLVM_LIKELY(m_Code.m_Start && m_ROData.m_Start && m_RWData.m_Start)) {
       return uintptr_t(std::min(std::min(m_Code.m_Start, m_ROData.m_Start),
@@ -140,6 +140,10 @@ class Azog: public RTDyldMemoryManager {
                          ? std::min(m_ROData.m_Start, m_RWData.m_Start)
                          : std::max(m_ROData.m_Start, m_RWData.m_Start));
   }
+
+  // FIXME: This is directly mirroring a structure in RTDyldMemoryManager that
+  // is private. Get Win64 exceptions into LLVM or add an accessor for it.
+  platform::windows::EHFrameInfos m_EHFrames;
 #endif
 
 public:
@@ -198,19 +202,20 @@ public:
 
   void registerEHFrames(uint8_t *Addr, uint64_t LoadAddr,
                         size_t Size) override {
-#ifdef LLVM_ON_WIN32
-    platform::RegisterEHFrames(Addr, Size, getBaseAddr(), true);
+#ifdef CLING_WIN_SEH_EXCEPTIONS
+    const platform::windows::RuntimePRFunction PRFunc = { Addr, Size };
+    m_EHFrames.emplace_back(PRFunc);
 #else
     return getExeMM()->registerEHFrames(Addr, LoadAddr, Size);
 #endif
   }
 
-  void deregisterEHFrames(uint8_t *Addr, uint64_t LoadAddr,
-                          size_t Size) override {
-#ifdef LLVM_ON_WIN32
-    platform::DeRegisterEHFrames(Addr, Size);
+  void deregisterEHFrames() override {
+#ifdef CLING_WIN_SEH_EXCEPTIONS
+    platform::DeRegisterEHFrames(getBaseAddr(), m_EHFrames);
+    platform::windows::EHFrameInfos().swap(m_EHFrames);
 #else
-    return getExeMM()->deregisterEHFrames(Addr, LoadAddr, Size);
+    return getExeMM()->deregisterEHFrames();
 #endif
   }
 
@@ -246,8 +251,12 @@ public:
     // the fact that we're lazily emitting object files: The only way you can
     // get more than one set of objects loaded but not yet finalized is if
     // they were loaded during relocation of another set.
-    if (m_jit.m_UnfinalizedSections.size() == 1)
+    if (m_jit.m_UnfinalizedSections.size() == 1) {
+#ifdef CLING_WIN_SEH_EXCEPTIONS
+      platform::RegisterEHFrames(getBaseAddr(), m_EHFrames, true);
+#endif
       return getExeMM()->finalizeMemory(ErrMsg);
+    }
     return false;
   };
 
@@ -294,9 +303,9 @@ IncrementalJIT::IncrementalJIT(IncrementalExecutor& exe,
 }
 
 
-llvm::orc::JITSymbol
+llvm::JITSymbol
 IncrementalJIT::getInjectedSymbols(const std::string& Name) const {
-  using JITSymbol = llvm::orc::JITSymbol;
+  using JITSymbol = llvm::JITSymbol;
   auto SymMapI = m_SymbolMap.find(Name);
   if (SymMapI != m_SymbolMap.end())
     return JITSymbol(SymMapI->second, llvm::JITSymbolFlags::Exported);
@@ -319,7 +328,7 @@ IncrementalJIT::lookupSymbol(llvm::StringRef Name, void *InAddr, bool Jit) {
 #ifdef MANGLE_PREFIX
       Key.insert(0, MANGLE_PREFIX);
 #endif
-      m_SymbolMap[Key] = llvm::orc::TargetAddress(InAddr);
+      m_SymbolMap[Key] = llvm::JITTargetAddress(InAddr);
     }
     llvm::sys::DynamicLibrary::AddSymbol(Name, InAddr);
     return std::make_pair(InAddr, true);
@@ -327,16 +336,16 @@ IncrementalJIT::lookupSymbol(llvm::StringRef Name, void *InAddr, bool Jit) {
   return std::make_pair(Addr, false);
 }
     
-llvm::orc::JITSymbol
+llvm::JITSymbol
 IncrementalJIT::getSymbolAddressWithoutMangling(const std::string& Name,
                                                 bool AlsoInProcess) {
   if (auto Sym = getInjectedSymbols(Name))
     return Sym;
 
   if (AlsoInProcess) {
-    if (RuntimeDyld::SymbolInfo SymInfo = m_ExeMM->findSymbol(Name))
-      return llvm::orc::JITSymbol(SymInfo.getAddress(),
-                                  llvm::JITSymbolFlags::Exported);
+    if (llvm::JITSymbol SymInfo = m_ExeMM->findSymbol(Name))
+      return llvm::JITSymbol(SymInfo.getAddress(),
+                             llvm::JITSymbolFlags::Exported);
 #ifdef LLVM_ON_WIN32
     // FIXME: DLSym symbol lookup can overlap m_ExeMM->findSymbol wasting time
     // looking for a symbol in libs where it is already known not to exist.
@@ -346,15 +355,15 @@ IncrementalJIT::getSymbolAddressWithoutMangling(const std::string& Name,
     // An upside to doing it this way is RTLD_GLOBAL won't need to be used
     // allowing libs with competing symbols to co-exists.
     if (const void* Sym = platform::DLSym(Name))
-      return llvm::orc::JITSymbol(llvm::orc::TargetAddress(Sym),
-                                  llvm::JITSymbolFlags::Exported);
+      return llvm::JITSymbol(llvm::JITTargetAddress(Sym),
+                             llvm::JITSymbolFlags::Exported);
 #endif
   }
 
   if (auto Sym = m_LazyEmitLayer.findSymbol(Name, false))
     return Sym;
 
-  return llvm::orc::JITSymbol(nullptr);
+  return llvm::JITSymbol(nullptr);
 }
 
 size_t IncrementalJIT::addModules(std::vector<llvm::Module*>&& modules) {
@@ -368,14 +377,12 @@ size_t IncrementalJIT::addModules(std::vector<llvm::Module*>&& modules) {
   auto Resolver = llvm::orc::createLambdaResolver(
     [&](const std::string &S) {
       if (auto Sym = getInjectedSymbols(S))
-        return RuntimeDyld::SymbolInfo((uint64_t)Sym.getAddress(),
-                                       Sym.getFlags());
+        return JITSymbol((uint64_t)Sym.getAddress(), Sym.getFlags());
       return m_ExeMM->findSymbol(S);
     },
     [&](const std::string &Name) {
       if (auto Sym = getSymbolAddressWithoutMangling(Name, true))
-        return RuntimeDyld::SymbolInfo(Sym.getAddress(),
-                                       Sym.getFlags());
+        return JITSymbol(Sym.getAddress(), Sym.getFlags());
 
       const std::string* NameNP = &Name;
 #ifdef MANGLE_PREFIX
@@ -393,7 +400,7 @@ size_t IncrementalJIT::addModules(std::vector<llvm::Module*>&& modules) {
       /// It is used to resolve symbols during module linking.
 
       uint64_t addr = uint64_t(getParent().NotifyLazyFunctionCreators(*NameNP));
-      return RuntimeDyld::SymbolInfo(addr, llvm::JITSymbolFlags::Weak);
+      return JITSymbol(addr, llvm::JITSymbolFlags::Weak);
     });
 
   ModuleSetHandleT MSHandle

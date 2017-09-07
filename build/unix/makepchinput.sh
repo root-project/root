@@ -66,6 +66,7 @@ done
 # Can not be put in a dictionary until they properly handle ROOT/*
 echo '#include "ROOT/TSeq.hxx"' >> $allheaders
 echo '#include "ROOT/StringConv.hxx"' >> $allheaders
+echo '#include "ROOT/TDataFrame.hxx"' >> $allheaders
 
 if [ "x$1" = "x--" ]; then
     shift
@@ -142,9 +143,9 @@ done
 cat $cppflags.tmp | sort | uniq | grep -v $srcdir | grep -v `pwd` > $cppflags
 
 # Remove unwanted files
-sed -e "s/.*TSelectorCint.h.*//g" \
-    < $allheaders > $allheaders.tmp
-mv -f $allheaders.tmp $allheaders
+#sed -e "s/.*HEADER.h.*//g" \
+#    < $allheaders > $allheaders.tmp
+#mv -f $allheaders.tmp $allheaders
 
 echo
 echo Generating PCH for ${selmodules}

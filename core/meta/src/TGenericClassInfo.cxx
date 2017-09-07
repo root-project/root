@@ -55,7 +55,7 @@ namespace Internal {
                                   NewFunc_t New, NewArrFunc_t NewArray,
                                   DelFunc_t Delete, DelArrFunc_t DeleteArray,
                                   DesFunc_t Destruct) {
-         R__LOCKGUARD2(gROOTMutex);
+         R__LOCKGUARD(gROOTMutex);
          R__instance.SetNew(New);
          R__instance.SetNewArray(NewArray);
          R__instance.SetDelete(Delete);
@@ -65,7 +65,7 @@ namespace Internal {
 
    void TCDGIILIBase::SetName(const std::string& name,
                               std::string& nameMember) {
-      R__LOCKGUARD2(gInterpreterMutex);
+      R__LOCKGUARD(gInterpreterMutex);
       if (nameMember.empty()) {
          TClassEdit::GetNormalizedName(nameMember, name);
       }
@@ -73,7 +73,7 @@ namespace Internal {
 
    void TCDGIILIBase::SetfgIsA(atomic_TClass_ptr& isA, TClass*(*dictfun)()) {
       if (!isA.load()) {
-         R__LOCKGUARD2(gInterpreterMutex);
+         R__LOCKGUARD(gInterpreterMutex);
          dictfun();
       }
    }
@@ -240,7 +240,7 @@ namespace Internal {
          ::Fatal("TClass::TClass", "ROOT system not initialized");
 
       if (!fClass && fAction) {
-         R__LOCKGUARD2(gInterpreterMutex);
+         R__LOCKGUARD(gInterpreterMutex);
          // Check again, while we waited for the lock, something else might
          // have set fClass.
          if (fClass) return fClass;

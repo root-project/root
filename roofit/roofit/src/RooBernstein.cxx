@@ -35,7 +35,7 @@ http://www.idav.ucdavis.edu/education/CAGDNotes/Bernstein-Polynomials.pdf
 
 using namespace std;
 
-ClassImp(RooBernstein)
+ClassImp(RooBernstein);
 
 ////////////////////////////////////////////////////////////////////////////////
 

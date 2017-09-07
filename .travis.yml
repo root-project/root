@@ -48,7 +48,15 @@ matrix:
       compiler: clang
 
     - os: linux
-      env: TOOL=clang-tidy
+      env: TOOL=clang-tidy-analyzer
+      addons:
+        apt:
+          sources: *sources
+          packages: ['clang-3.9', 'clang-tidy-3.9', 'libstdc++-6-dev']
+      compiler: clang
+
+    - os: linux
+      env: TOOL=clang-tidy-modernize
       addons:
         apt:
           sources: *sources
@@ -56,11 +64,11 @@ matrix:
       compiler: clang
 
   allow_failures:
-    # clang-tidy is still experimental
-    - env: TOOL=clang-tidy
+    # clang-tidy-modernize is still experimental
+    - env: TOOL=clang-tidy-modernize
 install:
   - |
-    if [[ $TOOL == 'clang-tidy' ]]; then
+    if [[ $TOOL == clang-tidy* ]]; then
       export BUILD_DEPS="${TRAVIS_BUILD_DIR}/deps"
       mkdir ${BUILD_DEPS} && cd ${BUILD_DEPS}
       CMAKE_URL="https://cmake.org/files/v3.6/cmake-3.6.0-Linux-x86_64.tar.gz"
@@ -74,7 +82,7 @@ script:
 - echo "Copying and generating header files." && echo -en "travis_fold:start:install.headers"
 - |
   # We need to put in place all relevant headers before running clang-tidy.
-  if [[ $TOOL == 'clang-tidy' ]]; then
+  if [[ $TOOL == clang-tidy* ]]; then
     mkdir ../build
     cd ../build
     export CC=clang-3.9
@@ -119,21 +127,29 @@ script:
         echo "$RESULT_OUTPUT"
         exit 1
       fi
-    elif [[ $TOOL == 'clang-tidy' ]]; then
+    elif [[ $TOOL == clang-tidy* ]]; then
+      CLANG_TIDY_CHECKS='-*'
+      if [[ $TOOL == clang-tidy-analyzer ]]; then
+        CLANG_TIDY_CHECKS+='clang-analyzer-*,-clang-analyzer-alpha*'
+      elif [[ $TOOL == clang-tidy-modernize ]]; then
+        CLANG_TIDY_CHECKS+='modernize*'
+      fi
+
       echo "Running clang-tidy-3.9 only against the changes in branch $TRAVIS_BRANCH."
 
       cd ../root/
       # Workaround for travis issue: travis-ci/travis-ci#6069
       git remote set-branches --add origin master
       git fetch
-      RESULT_OUTPUT="$(git diff -U0 origin/master | clang-tidy-diff-3.9.py -p1 -clang-tidy-binary $(which clang-tidy-3.9) -checks=-*,clang-analyzer-*)"
+      RESULT_OUTPUT="$(git diff -U0 origin/master | clang-tidy-diff-3.9.py -p1 -clang-tidy-binary $(which clang-tidy-3.9) \
+                       -checks=$CLANG_TIDY_CHECKS)"
       if [[ $? -eq 0 ]]; then
-        echo "clang-tidy passed."
+        echo "$TOOL passed."
         exit 0
       else
         echo "To reproduce it locally please run"
         echo -e "\tgit checkout $TRAVIS_BRANCH"
-        echo -e "Command: git diff -U0 $TRAVIS_BRANCH..origin/master | clang-tidy-diff.py -p1 -clang-tidy-binary \$(which clang-tidy) -checks=-*,clang-analyzer-*"
+        echo -e "Command: git diff -U0 $TRAVIS_BRANCH..origin/master | clang-tidy-diff.py -p1 -clang-tidy-binary \$(which clang-tidy) -checks=$CLANG_TIDY_CHECKS"
         echo "$RESULT_OUTPUT"
         exit 1
       fi

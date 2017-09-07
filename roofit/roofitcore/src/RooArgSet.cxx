@@ -62,7 +62,7 @@ using namespace std ;
 char* operator+( streampos&, char* );
 #endif
 
-ClassImp(RooArgSet)
+ClassImp(RooArgSet);
   ;
 
 char* RooArgSet::_poolBegin = 0 ;
@@ -136,6 +136,7 @@ void* RooArgSet::operator new (size_t bytes)
     }
     
     void* mem = malloc(POOLSIZE) ;
+    memset(mem, TStorage::kObjectAllocMemValue, POOLSIZE);
 
     _poolBegin = (char*)mem ;
     // Reserve space for pool counter at head of pool
@@ -1036,6 +1037,3 @@ Bool_t RooArgSet::isInRange(const char* rangeSpec)
   delete iter ;
   return kFALSE ;
 }
-
-
-

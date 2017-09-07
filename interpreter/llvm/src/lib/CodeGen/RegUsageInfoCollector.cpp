@@ -1,4 +1,4 @@
-//===- RegUsageInfoCollector.cpp - Register Usage Informartion Collector --===//
+//===-- RegUsageInfoCollector.cpp - Register Usage Information Collector --===//
 //
 //                     The LLVM Compiler Infrastructure
 //
@@ -17,6 +17,7 @@
 ///
 //===----------------------------------------------------------------------===//
 
+#include "llvm/ADT/Statistic.h"
 #include "llvm/CodeGen/MachineBasicBlock.h"
 #include "llvm/CodeGen/MachineFunctionPass.h"
 #include "llvm/CodeGen/MachineInstr.h"
@@ -26,10 +27,14 @@
 #include "llvm/CodeGen/RegisterUsageInfo.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/raw_ostream.h"
+#include "llvm/Target/TargetFrameLowering.h"
 
 using namespace llvm;
 
 #define DEBUG_TYPE "ip-regalloc"
+
+STATISTIC(NumCSROpt,
+          "Number of functions optimized for callee saved registers");
 
 namespace llvm {
 void initializeRegUsageInfoCollectorPass(PassRegistry &);
@@ -43,7 +48,7 @@ public:
     initializeRegUsageInfoCollectorPass(Registry);
   }
 
-  const char *getPassName() const override {
+  StringRef getPassName() const override {
     return "Register Usage Information Collector Pass";
   }
 
@@ -52,10 +57,6 @@ public:
   bool runOnMachineFunction(MachineFunction &MF) override;
 
   static char ID;
-
-private:
-  void markRegClobbered(const TargetRegisterInfo *TRI, uint32_t *RegMask,
-                        unsigned PReg);
 };
 } // end of anonymous namespace
 
@@ -69,13 +70,6 @@ INITIALIZE_PASS_END(RegUsageInfoCollector, "RegUsageInfoCollector",
 
 FunctionPass *llvm::createRegUsageInfoCollector() {
   return new RegUsageInfoCollector();
-}
-
-void RegUsageInfoCollector::markRegClobbered(const TargetRegisterInfo *TRI,
-                                             uint32_t *RegMask, unsigned PReg) {
-  // If PReg is clobbered then all of its alias are also clobbered.
-  for (MCRegAliasIterator AI(PReg, TRI, true); AI.isValid(); ++AI)
-    RegMask[*AI / 32] &= ~(1u << *AI % 32);
 }
 
 void RegUsageInfoCollector::getAnalysisUsage(AnalysisUsage &AU) const {
@@ -101,20 +95,47 @@ bool RegUsageInfoCollector::runOnMachineFunction(MachineFunction &MF) {
   unsigned RegMaskSize = (TRI->getNumRegs() + 31) / 32;
   RegMask.resize(RegMaskSize, 0xFFFFFFFF);
 
+  const Function *F = MF.getFunction();
+
   PhysicalRegisterUsageInfo *PRUI = &getAnalysis<PhysicalRegisterUsageInfo>();
 
   PRUI->setTargetMachine(&TM);
 
   DEBUG(dbgs() << "Clobbered Registers: ");
-  for (unsigned PReg = 1, PRegE = TRI->getNumRegs(); PReg < PRegE; ++PReg)
-    if (!MRI->reg_nodbg_empty(PReg) && MRI->isPhysRegUsed(PReg))
-      markRegClobbered(TRI, &RegMask[0], PReg);
 
-  const uint32_t *CallPreservedMask =
-      TRI->getCallPreservedMask(MF, MF.getFunction()->getCallingConv());
-  // Set callee saved register as preserved.
-  for (unsigned i = 0; i < RegMaskSize; ++i)
-    RegMask[i] = RegMask[i] | CallPreservedMask[i];
+  const BitVector &UsedPhysRegsMask = MRI->getUsedPhysRegsMask();
+  auto SetRegAsDefined = [&RegMask] (unsigned Reg) {
+    RegMask[Reg / 32] &= ~(1u << Reg % 32);
+  };
+  // Scan all the physical registers. When a register is defined in the current
+  // function set it and all the aliasing registers as defined in the regmask.
+  for (unsigned PReg = 1, PRegE = TRI->getNumRegs(); PReg < PRegE; ++PReg) {
+    // If a register is in the UsedPhysRegsMask set then mark it as defined.
+    // All it's aliases will also be in the set, so we can skip setting
+    // as defined all the aliases here.
+    if (UsedPhysRegsMask.test(PReg)) {
+      SetRegAsDefined(PReg);
+      continue;
+    }
+    // If a register is defined by an instruction mark it as defined together
+    // with all it's aliases.
+    if (!MRI->def_empty(PReg)) {
+      for (MCRegAliasIterator AI(PReg, TRI, true); AI.isValid(); ++AI)
+        SetRegAsDefined(*AI);
+    }
+  }
+
+  if (!TargetFrameLowering::isSafeForNoCSROpt(F)) {
+    const uint32_t *CallPreservedMask =
+        TRI->getCallPreservedMask(MF, F->getCallingConv());
+    // Set callee saved register as preserved.
+    for (unsigned i = 0; i < RegMaskSize; ++i)
+      RegMask[i] = RegMask[i] | CallPreservedMask[i];
+  } else {
+    ++NumCSROpt;
+    DEBUG(dbgs() << MF.getName()
+                 << " function optimized for not having CSR.\n");
+  }
 
   for (unsigned PReg = 1, PRegE = TRI->getNumRegs(); PReg < PRegE; ++PReg)
     if (MachineOperand::clobbersPhysReg(&(RegMask[0]), PReg))
@@ -122,7 +143,7 @@ bool RegUsageInfoCollector::runOnMachineFunction(MachineFunction &MF) {
 
   DEBUG(dbgs() << " \n----------------------------------------\n");
 
-  PRUI->storeUpdateRegUsageInfo(MF.getFunction(), std::move(RegMask));
+  PRUI->storeUpdateRegUsageInfo(F, std::move(RegMask));
 
   return false;
 }

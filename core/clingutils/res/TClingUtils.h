@@ -107,7 +107,6 @@ typedef void (*CallWriteStreamer_t)(const AnnotatedRecordDecl &cl,
 
 const int kInfo            =      0;
 const int kNote            =    500;
-const int kThrowOnWarning  =    999;
 const int kWarning         =   1000;
 const int kError           =   2000;
 const int kSysError        =   3000;
@@ -694,12 +693,22 @@ void ReplaceAll(std::string& str, const std::string& from, const std::string& to
 // Functions for the printouts -------------------------------------------------
 
 //______________________________________________________________________________
-inline unsigned int &GetNumberOfWarningsAndErrors(){
-   static unsigned  int gNumberOfWarningsAndErrors = 0;
-   return gNumberOfWarningsAndErrors;
+inline unsigned int &GetNumberOfErrors()
+{
+   static unsigned int gNumberOfErrors = 0;
+   return gNumberOfErrors;
 }
 
 //______________________________________________________________________________
+// True if printing a warning should increase GetNumberOfErrors
+inline bool &GetWarningsAreErrors()
+{
+   static bool gWarningsAreErrors = false;
+   return gWarningsAreErrors;
+}
+
+//______________________________________________________________________________
+// Inclusive minimum error level a message needs to get handled
 inline int &GetErrorIgnoreLevel() {
    static int gErrorIgnoreLevel = ROOT::TMetaUtils::kError;
    return gErrorIgnoreLevel;
@@ -717,7 +726,7 @@ inline void LevelPrint(bool prefix, int level, const char *location, const char 
       type = "Info";
    if (level >= ROOT::TMetaUtils::kNote)
       type = "Note";
-   if (level >= ROOT::TMetaUtils::kThrowOnWarning)
+   if (level >= ROOT::TMetaUtils::kWarning)
       type = "Warning";
    if (level >= ROOT::TMetaUtils::kError)
       type = "Error";
@@ -737,11 +746,10 @@ inline void LevelPrint(bool prefix, int level, const char *location, const char 
 
    fflush(stderr);
 
-   if (GetErrorIgnoreLevel() == ROOT::TMetaUtils::kThrowOnWarning ||
-      GetErrorIgnoreLevel() > ROOT::TMetaUtils::kError){
-      ++GetNumberOfWarningsAndErrors();
-      }
-
+   // Keep track of the warnings/errors we printed.
+   if (level >= ROOT::TMetaUtils::kError || (level == ROOT::TMetaUtils::kWarning && GetWarningsAreErrors())) {
+      ++GetNumberOfErrors();
+   }
 }
 
 //______________________________________________________________________________

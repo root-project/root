@@ -73,7 +73,7 @@ private:
 };
 
 
-ClassImp(TBrowser)
+ClassImp(TBrowser);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a new browser with a name, title. Width and height are by
@@ -246,7 +246,7 @@ TBrowser::~TBrowser()
 void TBrowser::Destructor()
 {
    if (fImp) fImp->CloseTabs();
-   R__LOCKGUARD2(gROOTMutex);
+   R__LOCKGUARD(gROOTMutex);
    gROOT->GetListOfBrowsers()->Remove(this);
    delete fContextMenu;
    delete fTimer;
@@ -328,7 +328,7 @@ void TBrowser::Create(TObject *obj)
    fTimer = new TBrowserTimer(this);
    gSystem->AddTimer(fTimer);
 
-   R__LOCKGUARD2(gROOTMutex);
+   R__LOCKGUARD(gROOTMutex);
    gROOT->GetListOfBrowsers()->Add(this);
 
    // Get the list of globals

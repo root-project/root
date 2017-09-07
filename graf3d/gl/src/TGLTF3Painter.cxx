@@ -32,7 +32,7 @@
 Plot-painter for TF3 functions.
 */
 
-ClassImp(TGLTF3Painter)
+ClassImp(TGLTF3Painter);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -383,7 +383,7 @@ void TGLTF3Painter::DrawSectionXOY() const
 "gliso" option for TH3.
 */
 
-ClassImp(TGLIsoPainter)
+ClassImp(TGLIsoPainter);
 
 ////////////////////////////////////////////////////////////////////////////////
 ///Constructor.

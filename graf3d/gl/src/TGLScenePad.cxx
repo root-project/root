@@ -44,7 +44,7 @@ Implements VirtualViewer3D interface and fills the base-class
 visualization structures from pad contents.
 */
 
-ClassImp(TGLScenePad)
+ClassImp(TGLScenePad);
 
 ////////////////////////////////////////////////////////////////////////////////
 

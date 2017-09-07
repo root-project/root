@@ -36,7 +36,7 @@ the proxy to functions a Double_t on the right hand side of expressions.
 
 using namespace std;
 
-ClassImp(RooRealProxy)
+ClassImp(RooRealProxy);
 ;
 
 

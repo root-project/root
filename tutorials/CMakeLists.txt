@@ -158,6 +158,18 @@ else()
   set(tmva_veto tmva/createData.C)
 endif()
 
+if (NOT ROOT_pythia6_FOUND)
+  set(pythia_veto pythia/pythiaExample.C)
+endif()
+if (NOT ROOT_pythia8_FOUND)
+  set(pythia_veto ${pythia_veto} pythia/pythia8.C)
+else()
+  if("$ENV{PYTHIA8}" STREQUAL "")
+    get_filename_component(pythia8dir "${PYTHIA8_INCLUDE_DIR}" DIRECTORY)
+    list(APPEND ROOT_environ PYTHIA8=${pythia8dir})
+  endif()
+endif()
+
 #---These ones are disabled !!! ------------------------------------
 set(extra_veto
   htmlex.C
@@ -166,10 +178,10 @@ set(extra_veto
   rootlogoff.C         # Helper macro
   rootmarks.C          # Instrumentation. Not a standalone tutorial
   memstat/memstatExample.C   # Instrumentation. Not a standalone tutorial
+  multicore/mp_H1_lambdas.C # not a tutorial; used by mp104_processH1.C et al.
   html/*.C
   net/*.C
   proof/*.C
-  pythia/*.C
   sql/*.C
   tree/hsimpleProxy.C # A driver uses this macro which cannot be executed directly
   tree/tree0.C
@@ -205,6 +217,7 @@ set(all_veto hsimple.C
              ${tbb_veto}
              ${imt_veto}
              ${classic_veto}
+             ${pythia_veto}
              )
 
 file(GLOB_RECURSE tutorials RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.C)
@@ -232,7 +245,6 @@ set(returncode_1 fit/fit2a.C fit/graph2dfit.C
                  hist/ContourList.C
                  hist/hstack.C
                  hist/hbars.C
-                 hist/h2proj.C
                  hist/th2polyBoxes.C
                  hist/statsEditing.C
                  hist/cumulative.C
@@ -319,7 +331,7 @@ foreach(t ${tutorials})
 
   ROOT_ADD_TEST(tutorial-${tname}
                 COMMAND ${ROOT_root_CMD} -b -l -q ${CMAKE_CURRENT_SOURCE_DIR}/${t}${${tname}-aclic}
-                PASSRC ${rc} FAILREGEX "Error in" ": error:" "segmentation violation" "FROM HESSE     STATUS=FAILED"
+                PASSRC ${rc} FAILREGEX "Error in <" ": error:" "segmentation violation" "FROM HESSE     STATUS=FAILED"
                 LABELS tutorial
                 DEPENDS tutorial-hsimple ${${tname}-depends}
                 ENVIRONMENT ${ROOT_environ}
@@ -345,6 +357,10 @@ if(ROOT_python_FOUND)
              histfactory/makeQuickModel.py # not a tutorial
              eve/lineset.py         # requires GUI
              )
+  if(NOT ROOT_mathmore_FOUND)
+    list(APPEND pyveto math/Legendre.py)
+  endif()
+  
   list(REMOVE_ITEM pytutorials ${pyveto})
   if(ROOT_CLASSIC_BUILD)
     set(classic_veto_py dataframe/tdf*.py)

@@ -122,7 +122,7 @@
 #include "TMath.h"
 #include "TError.h"
 
-ClassImp(TDecompBase)
+ClassImp(TDecompBase);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor

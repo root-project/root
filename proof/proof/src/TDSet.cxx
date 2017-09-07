@@ -54,8 +54,8 @@ See TDSet.
 #include "TVirtualStreamerInfo.h"
 #include "TClassRef.h"
 
-ClassImp(TDSetElement)
-ClassImp(TDSet)
+ClassImp(TDSetElement);
+ClassImp(TDSet);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor

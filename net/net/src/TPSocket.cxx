@@ -32,7 +32,7 @@
 #include "TError.h"
 #include "TVirtualMutex.h"
 
-ClassImp(TPSocket)
+ClassImp(TPSocket);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a parallel socket. Connect to the named service at address addr.
@@ -135,7 +135,7 @@ TPSocket::TPSocket(const char *host, Int_t port, Int_t size,
                Int_t tcpw = (size > 1 ? -1 : tcpwindowsize);
                TSocket *ns = new TSocket(host, port, tcpw);
                if (ns->IsValid()) {
-                  R__LOCKGUARD2(gROOTMutex);
+                  R__LOCKGUARD(gROOTMutex);
                   gROOT->GetListOfSockets()->Remove(ns);
                   fSocket = ns->GetDescriptor();
                   fSize = size;
@@ -231,7 +231,7 @@ TPSocket::TPSocket(const char *host, Int_t port, Int_t size, TSocket *sock)
                Int_t tcpw = (size > 1 ? -1 : fTcpWindowSize);
                TSocket *ns = new TSocket(host, port, tcpw);
                if (ns->IsValid()) {
-                  R__LOCKGUARD2(gROOTMutex);
+                  R__LOCKGUARD(gROOTMutex);
                   gROOT->GetListOfSockets()->Remove(ns);
                   fSocket = ns->GetDescriptor();
                   fSize = size;
@@ -264,7 +264,7 @@ TPSocket::TPSocket(const char *host, Int_t port, Int_t size, TSocket *sock)
 
    // Add to the list if everything OK
    if (IsValid()) {
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfSockets()->Add(this);
    }
 }
@@ -306,7 +306,7 @@ TPSocket::TPSocket(TSocket *pSockets[], Int_t size)
    fAddress = fSockets[0]->GetInetAddress();
 
    {
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfSockets()->Add(this);
    }
 }
@@ -354,7 +354,7 @@ void TPSocket::Close(Option_t *option)
    fSockets = 0;
 
    {
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfSockets()->Remove(this);
    }
 }
@@ -422,7 +422,7 @@ void TPSocket::Init(Int_t tcpwindowsize, TSocket *sock)
       // establish fSize parallel socket connections between client and server
       for (i = 0; i < fSize; i++) {
          fSockets[i] = ss.Accept();
-         R__LOCKGUARD2(gROOTMutex);
+         R__LOCKGUARD(gROOTMutex);
          gROOT->GetListOfSockets()->Remove(fSockets[i]);
       }
 

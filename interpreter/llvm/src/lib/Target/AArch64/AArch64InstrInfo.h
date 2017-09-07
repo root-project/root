@@ -27,13 +27,7 @@ namespace llvm {
 class AArch64Subtarget;
 class AArch64TargetMachine;
 
-class AArch64InstrInfo : public AArch64GenInstrInfo {
-  // Reserve bits in the MachineMemOperand target hint flags, starting at 1.
-  // They will be shifted into MOTargetHintStart when accessed.
-  enum TargetMemOperandFlags {
-    MOSuppressPair = 1
-  };
-
+class AArch64InstrInfo final : public AArch64GenInstrInfo {
   const AArch64RegisterInfo RI;
   const AArch64Subtarget &Subtarget;
 
@@ -45,7 +39,7 @@ public:
   /// always be able to get register info as well (through this method).
   const AArch64RegisterInfo &getRegisterInfo() const { return RI; }
 
-  unsigned GetInstSizeInBytes(const MachineInstr &MI) const;
+  unsigned getInstSizeInBytes(const MachineInstr &MI) const override;
 
   bool isAsCheapAsAMove(const MachineInstr &MI) const override;
 
@@ -93,6 +87,38 @@ public:
   /// Return true if this is an unscaled load/store.
   bool isUnscaledLdSt(MachineInstr &MI) const;
 
+  static bool isPairableLdStInst(const MachineInstr &MI) {
+    switch (MI.getOpcode()) {
+    default:
+      return false;
+    // Scaled instructions.
+    case AArch64::STRSui:
+    case AArch64::STRDui:
+    case AArch64::STRQui:
+    case AArch64::STRXui:
+    case AArch64::STRWui:
+    case AArch64::LDRSui:
+    case AArch64::LDRDui:
+    case AArch64::LDRQui:
+    case AArch64::LDRXui:
+    case AArch64::LDRWui:
+    case AArch64::LDRSWui:
+    // Unscaled instructions.
+    case AArch64::STURSi:
+    case AArch64::STURDi:
+    case AArch64::STURQi:
+    case AArch64::STURWi:
+    case AArch64::STURXi:
+    case AArch64::LDURSi:
+    case AArch64::LDURDi:
+    case AArch64::LDURQi:
+    case AArch64::LDURWi:
+    case AArch64::LDURXi:
+    case AArch64::LDURSWi:
+      return true;
+    }
+  }
+
   /// Return true if this is a load/store that can be potentially paired/merged.
   bool isCandidateToMergeOrPair(MachineInstr &MI) const;
 
@@ -107,15 +133,18 @@ public:
                                   int64_t &Offset, unsigned &Width,
                                   const TargetRegisterInfo *TRI) const;
 
-  bool enableClusterLoads() const override { return true; }
+  /// Return the immediate offset of the base register in a load/store \p LdSt.
+  MachineOperand &getMemOpBaseRegImmOfsOffsetOperand(MachineInstr &LdSt) const;
 
-  bool enableClusterStores() const override { return true; }
+  /// \brief Returns true if opcode \p Opc is a memory operation. If it is, set
+  /// \p Scale, \p Width, \p MinOffset, and \p MaxOffset accordingly.
+  ///
+  /// For unscaled instructions, \p Scale is set to 1.
+  bool getMemOpInfo(unsigned Opcode, unsigned &Scale, unsigned &Width,
+                    int64_t &MinOffset, int64_t &MaxOffset) const;
 
   bool shouldClusterMemOps(MachineInstr &FirstLdSt, MachineInstr &SecondLdSt,
                            unsigned NumLoads) const override;
-
-  bool shouldScheduleAdjacent(MachineInstr &First,
-                              MachineInstr &Second) const override;
 
   MachineInstr *emitFrameIndexDebugValue(MachineFunction &MF, int FrameIx,
                                          uint64_t Offset, const MDNode *Var,
@@ -140,6 +169,10 @@ public:
                             int FrameIndex, const TargetRegisterClass *RC,
                             const TargetRegisterInfo *TRI) const override;
 
+  // This tells target independent code that it is okay to pass instructions
+  // with subreg operands to foldMemoryOperandImpl.
+  bool isSubregFoldable() const override { return true; }
+
   using TargetInstrInfo::foldMemoryOperandImpl;
   MachineInstr *
   foldMemoryOperandImpl(MachineFunction &MF, MachineInstr &MI,
@@ -147,23 +180,32 @@ public:
                         MachineBasicBlock::iterator InsertPt, int FrameIndex,
                         LiveIntervals *LIS = nullptr) const override;
 
-  bool AnalyzeBranch(MachineBasicBlock &MBB, MachineBasicBlock *&TBB,
+  /// \returns true if a branch from an instruction with opcode \p BranchOpc
+  ///  bytes is capable of jumping to a position \p BrOffset bytes away.
+  bool isBranchOffsetInRange(unsigned BranchOpc,
+                             int64_t BrOffset) const override;
+
+  MachineBasicBlock *getBranchDestBlock(const MachineInstr &MI) const override;
+
+  bool analyzeBranch(MachineBasicBlock &MBB, MachineBasicBlock *&TBB,
                      MachineBasicBlock *&FBB,
                      SmallVectorImpl<MachineOperand> &Cond,
                      bool AllowModify = false) const override;
-  unsigned RemoveBranch(MachineBasicBlock &MBB) const override;
-  unsigned InsertBranch(MachineBasicBlock &MBB, MachineBasicBlock *TBB,
+  unsigned removeBranch(MachineBasicBlock &MBB,
+                        int *BytesRemoved = nullptr) const override;
+  unsigned insertBranch(MachineBasicBlock &MBB, MachineBasicBlock *TBB,
                         MachineBasicBlock *FBB, ArrayRef<MachineOperand> Cond,
-                        const DebugLoc &DL) const override;
+                        const DebugLoc &DL,
+                        int *BytesAdded = nullptr) const override;
   bool
-  ReverseBranchCondition(SmallVectorImpl<MachineOperand> &Cond) const override;
+  reverseBranchCondition(SmallVectorImpl<MachineOperand> &Cond) const override;
   bool canInsertSelect(const MachineBasicBlock &, ArrayRef<MachineOperand> Cond,
                        unsigned, unsigned, int &, int &, int &) const override;
   void insertSelect(MachineBasicBlock &MBB, MachineBasicBlock::iterator MI,
                     const DebugLoc &DL, unsigned DstReg,
                     ArrayRef<MachineOperand> Cond, unsigned TrueReg,
                     unsigned FalseReg) const override;
-  void getNoopForMachoTarget(MCInst &NopInst) const override;
+  void getNoop(MCInst &NopInst) const override;
 
   /// analyzeCompare - For a comparison instruction, return the source registers
   /// in SrcReg and SrcReg2, and the value it compares against in CmpValue.
@@ -210,7 +252,33 @@ public:
   ArrayRef<std::pair<unsigned, const char *>>
   getSerializableBitmaskMachineOperandTargetFlags() const override;
 
+  bool isFunctionSafeToOutlineFrom(MachineFunction &MF) const override;
+  unsigned getOutliningBenefit(size_t SequenceSize, size_t Occurrences,
+                               bool CanBeTailCall) const override;
+  AArch64GenInstrInfo::MachineOutlinerInstrType
+  getOutliningType(MachineInstr &MI) const override;
+  void insertOutlinerEpilogue(MachineBasicBlock &MBB,
+                              MachineFunction &MF,
+                              bool IsTailCall) const override;
+  void insertOutlinerPrologue(MachineBasicBlock &MBB,
+                              MachineFunction &MF,
+                              bool isTailCall) const override;
+  MachineBasicBlock::iterator
+  insertOutlinedCall(Module &M, MachineBasicBlock &MBB,
+                     MachineBasicBlock::iterator &It,
+                     MachineFunction &MF,
+                     bool IsTailCall) const override;
+  /// Returns true if the instruction has a shift by immediate that can be
+  /// executed in one cycle less.
+  bool isFalkorLSLFast(const MachineInstr &MI) const;
 private:
+
+  /// \brief Sets the offsets on outlined instructions in \p MBB which use SP
+  /// so that they will be valid post-outlining.
+  ///
+  /// \param MBB A \p MachineBasicBlock in an outlined function.
+  void fixupPostOutline(MachineBasicBlock &MBB) const;
+
   void instantiateCondBranch(MachineBasicBlock &MBB, const DebugLoc &DL,
                              MachineBasicBlock *TBB,
                              ArrayRef<MachineOperand> Cond) const;

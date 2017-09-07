@@ -15,7 +15,7 @@
 #include "TClassEdit.h"
 #include "TStreamer.h"
 
-ClassImp(TRealData)
+ClassImp(TRealData);
 
 /** \class TRealData
 The TRealData class manages the effective list of all data members

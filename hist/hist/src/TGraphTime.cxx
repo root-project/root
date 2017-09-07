@@ -16,7 +16,7 @@
 #include "TObjArray.h"
 #include "TSystem.h"
 
-ClassImp(TGraphTime)
+ClassImp(TGraphTime);
 
 /** \class TGraphTime
     \ingroup Hist

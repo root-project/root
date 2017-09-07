@@ -11,8 +11,8 @@
 #ifndef ROOT_TRESULTPROXY
 #define ROOT_TRESULTPROXY
 
+#include "ROOT/TypeTraits.hxx"
 #include "ROOT/TDFNodes.hxx"
-#include "ROOT/TDFUtils.hxx"
 
 #include <memory>
 
@@ -39,6 +39,7 @@ namespace Experimental {
 namespace TDF {
 namespace TDFInternal = ROOT::Internal::TDF;
 namespace TDFDetail = ROOT::Detail::TDF;
+namespace TTraits = ROOT::TypeTraits;
 
 /// Smart pointer for the return type of actions
 /**
@@ -62,7 +63,7 @@ If iteration is not supported by the type of the proxied object, a compilation e
 template <typename T>
 class TResultProxy {
    /// \cond HIDDEN_SYMBOLS
-   template <typename V, bool isCont = TDFInternal::TIsContainer<V>::fgValue>
+   template <typename V, bool isCont = TTraits::IsContainer<V>::value>
    struct TIterationHelper {
       using Iterator_t = void;
       void GetBegin(const V &) { static_assert(sizeof(V) == 0, "It does not make sense to ask begin for this class."); }
@@ -83,10 +84,10 @@ class TResultProxy {
    template <typename W>
    friend TResultProxy<W> TDFDetail::MakeResultProxy(const std::shared_ptr<W> &, const SPTLM_t &);
 
-   ShrdPtrBool_t fReadiness =
+   const ShrdPtrBool_t fReadiness =
       std::make_shared<bool>(false); ///< State registered also in the TLoopManager until the event loop is executed
    WPTLM_t fImplWeakPtr;             ///< Points to the TLoopManager at the root of the functional graph
-   SPT_t fObjPtr;                    ///< Shared pointer encapsulating the wrapped result
+   const SPT_t fObjPtr;              ///< Shared pointer encapsulating the wrapped result
 
    /// Triggers the event loop in the TLoopManager instance to which it's associated via the fImplWeakPtr
    void TriggerRun();
@@ -96,7 +97,8 @@ class TResultProxy {
    /// Triggers event loop and execution of all actions booked in the associated TLoopManager.
    T *Get()
    {
-      if (!*fReadiness) TriggerRun();
+      if (!*fReadiness)
+         TriggerRun();
       return fObjPtr.get();
    }
 
@@ -110,10 +112,7 @@ public:
 
    /// Get a const reference to the encapsulated object.
    /// Triggers event loop and execution of all actions booked in the associated TLoopManager.
-   const T &GetValue()
-   {
-      return *Get();
-   }
+   const T &GetValue() { return *Get(); }
 
    /// Get a pointer to the encapsulated object.
    /// Triggers event loop and execution of all actions booked in the associated TLoopManager.
@@ -128,7 +127,8 @@ public:
    /// sense, throw a compilation error otherwise
    typename TIterationHelper<T>::Iterator_t begin()
    {
-      if (!*fReadiness) TriggerRun();
+      if (!*fReadiness)
+         TriggerRun();
       return TIterationHelper<T>::GetBegin(*fObjPtr);
    }
 
@@ -136,7 +136,8 @@ public:
    /// sense, throw a compilation error otherwise
    typename TIterationHelper<T>::Iterator_t end()
    {
-      if (!*fReadiness) TriggerRun();
+      if (!*fReadiness)
+         TriggerRun();
       return TIterationHelper<T>::GetEnd(*fObjPtr);
    }
 };

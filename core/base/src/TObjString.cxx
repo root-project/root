@@ -17,7 +17,7 @@ Collectable string class. This is a TObject containing a TString.
 
 #include "TObjString.h"
 
-ClassImp(TObjString)
+ClassImp(TObjString);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// String compare the argument with this object.

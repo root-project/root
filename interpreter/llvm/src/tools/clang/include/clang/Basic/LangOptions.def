@@ -101,13 +101,13 @@ BENIGN_LANGOPT(ObjCInferRelatedResultType , 1, 1,
 LANGOPT(AppExt , 1, 0, "Objective-C App Extension")
 LANGOPT(Trigraphs         , 1, 0,"trigraphs")
 LANGOPT(LineComment       , 1, 0, "'//' comments")
-LANGOPT(Bool              , 1, 1, "bool, true, and false keywords")
+LANGOPT(Bool              , 1, 0, "bool, true, and false keywords")
 LANGOPT(Half              , 1, 0, "half keyword")
 LANGOPT(WChar             , 1, CPlusPlus, "wchar_t keyword")
 LANGOPT(DeclSpecKeyword   , 1, 0, "__declspec keyword")
 BENIGN_LANGOPT(DollarIdents   , 1, 1, "'$' in identifiers")
 BENIGN_LANGOPT(AsmPreprocessor, 1, 0, "preprocessor in asm mode")
-BENIGN_LANGOPT(GNUMode        , 1, 1, "GNU extensions")
+LANGOPT(GNUMode           , 1, 1, "GNU extensions")
 LANGOPT(GNUKeywords       , 1, 1, "GNU keywords")
 BENIGN_LANGOPT(ImplicitInt, 1, !C99 && !CPlusPlus, "C89 implicit 'int'")
 LANGOPT(Digraphs          , 1, 0, "digraphs")
@@ -133,7 +133,8 @@ LANGOPT(Freestanding, 1, 0, "freestanding implementation")
 LANGOPT(NoBuiltin         , 1, 0, "disable builtin functions")
 LANGOPT(NoMathBuiltin     , 1, 0, "disable math builtin functions")
 LANGOPT(GNUAsm            , 1, 1, "GNU-style inline assembly")
-LANGOPT(Coroutines        , 1, 0, "C++ coroutines")
+LANGOPT(CoroutinesTS      , 1, 0, "C++ coroutines TS")
+LANGOPT(RelaxedTemplateTemplateArgs, 1, 0, "C++17 relaxed matching of template template arguments")
 
 BENIGN_LANGOPT(ThreadsafeStatics , 1, 1, "thread-safe static initializers")
 LANGOPT(POSIXThreads      , 1, 0, "POSIX thread support")
@@ -142,7 +143,10 @@ BENIGN_LANGOPT(EmitAllDecls      , 1, 0, "emitting all declarations")
 LANGOPT(MathErrno         , 1, 1, "errno in math functions")
 BENIGN_LANGOPT(HeinousExtensions , 1, 0, "extensions that we really don't like and may be ripped out at any time")
 LANGOPT(Modules           , 1, 0, "modules extension to C")
-BENIGN_LANGOPT(CompilingModule, 1, 0, "compiling a module interface")
+COMPATIBLE_LANGOPT(ModulesTS  , 1, 0, "C++ Modules TS")
+BENIGN_ENUM_LANGOPT(CompilingModule, CompilingModuleKind, 2, CMK_None,
+                    "compiling a module interface")
+BENIGN_LANGOPT(CompilingPCH, 1, 0, "building a pch")
 COMPATIBLE_LANGOPT(ModulesDeclUse    , 1, 0, "require declaration of module uses")
 BENIGN_LANGOPT(ModulesSearchAll  , 1, 1, "searching even non-imported modules to find unresolved references")
 COMPATIBLE_LANGOPT(ModulesStrictDeclUse, 1, 0, "requiring declaration of module uses and all headers to be in modules")
@@ -193,8 +197,12 @@ LANGOPT(CUDAHostDeviceConstexpr, 1, 1, "treating unattributed constexpr function
 LANGOPT(CUDADeviceFlushDenormalsToZero, 1, 0, "flushing denormals to zero")
 LANGOPT(CUDADeviceApproxTranscendentals, 1, 0, "using approximate transcendental functions")
 
-LANGOPT(SizedDeallocation , 1, 0, "enable sized deallocation functions")
+LANGOPT(SizedDeallocation , 1, 0, "sized deallocation")
+LANGOPT(AlignedAllocation , 1, 0, "aligned allocation")
+LANGOPT(NewAlignOverride  , 32, 0, "maximum alignment guaranteed by '::operator new(size_t)'")
 LANGOPT(ConceptsTS , 1, 0, "enable C++ Extensions for Concepts")
+BENIGN_LANGOPT(ModulesCodegen , 1, 0, "Modules code generation")
+BENIGN_LANGOPT(ModulesDebugInfo , 1, 0, "Modules debug info")
 BENIGN_LANGOPT(ElideConstructors , 1, 1, "C++ copy constructor elision")
 BENIGN_LANGOPT(DumpRecordLayouts , 1, 0, "dumping the layout of IRgen'd records")
 BENIGN_LANGOPT(DumpRecordLayoutsSimple , 1, 0, "dumping the layout of IRgen'd records in a simple form")
@@ -209,7 +217,8 @@ BENIGN_LANGOPT(DebuggerObjCLiteral , 1, 0, "debugger Objective-C literals and su
 BENIGN_LANGOPT(SpellChecking , 1, 1, "spell-checking")
 LANGOPT(SinglePrecisionConstants , 1, 0, "treating double-precision floating point constants as single precision constants")
 LANGOPT(FastRelaxedMath , 1, 0, "OpenCL fast relaxed math")
-LANGOPT(DefaultFPContract , 1, 0, "FP_CONTRACT")
+/// \brief FP_CONTRACT mode (on/off/fast).
+ENUM_LANGOPT(DefaultFPContractMode, FPContractModeKind, 2, FPC_Off, "FP contraction type")
 LANGOPT(NoBitFieldTypeAlign , 1, 0, "bit-field type alignment")
 LANGOPT(HexagonQdsp6Compat , 1, 0, "hexagon-qdsp6 backward compatibility")
 LANGOPT(ObjCAutoRefCount , 1, 0, "Objective-C automated reference counting")
@@ -254,6 +263,11 @@ LANGOPT(RetainCommentsFromSystemHeaders, 1, 0, "retain documentation comments fr
 LANGOPT(SanitizeAddressFieldPadding, 2, 0, "controls how aggressive is ASan "
                                            "field padding (0: none, 1:least "
                                            "aggressive, 2: more aggressive)")
+
+LANGOPT(XRayInstrument, 1, 0, "controls whether to do XRay instrumentation")
+
+BENIGN_LANGOPT(AllowEditorPlaceholders, 1, 0,
+               "allow editor placeholders in source")
 
 #undef LANGOPT
 #undef COMPATIBLE_LANGOPT

@@ -42,7 +42,7 @@ weighting all cell values with a gauss function.
 
 #include "Rtypes.h"
 
-ClassImp(TMVA::PDEFoamKernelGauss)
+ClassImp(TMVA::PDEFoamKernelGauss);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor for streamer

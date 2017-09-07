@@ -17,7 +17,7 @@
 #include "TList.h"
 #include "TMath.h"
 
-ClassImp(TH2Poly)
+ClassImp(TH2Poly);
 
 /** \class TH2Poly
     \ingroup Hist
@@ -93,7 +93,8 @@ The following very simple macro shows how to build and fill a `TH2Poly`:
 }
 ~~~
 
-More examples can bin found in `$ROOTSYS/tutorials/hist/th2poly*.C`
+More examples can be found in th2polyBoxes.C, th2polyEurope.C, th2polyHoneycomb.C
+and th2polyUSA.C.
 
 ## Partitioning Algorithm
 The partitioning algorithm forms an essential part of the `TH2Poly`
@@ -1269,7 +1270,9 @@ void TH2Poly::SetFloat(Bool_t flag)
 
 Bool_t TH2Poly::IsInsideBin(Int_t binnr, Double_t x, Double_t y)
 {
+   if (!fBins) return false;
    TH2PolyBin* bin = (TH2PolyBin*)fBins->At(binnr);
+   if (!bin) return false;
    return bin->IsInside(x,y);
 }
 

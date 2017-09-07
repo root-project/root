@@ -16,10 +16,9 @@
 #include "clang/AST/Expr.h"
 #include "clang/AST/TypeLocVisitor.h"
 #include "llvm/Support/ErrorHandling.h"
-#include "llvm/Support/raw_ostream.h"
 using namespace clang;
 
-static const unsigned TypeLocMaxDataAlign = llvm::alignOf<void *>();
+static const unsigned TypeLocMaxDataAlign = alignof(void *);
 
 //===----------------------------------------------------------------------===//
 // TypeLoc Implementation
@@ -211,7 +210,7 @@ SourceLocation TypeLoc::getEndLoc() const {
     switch (Cur.getTypeLocClass()) {
     default:
       if (!Last)
-	Last = Cur;
+        Last = Cur;
       return Last.getLocalSourceRange().getEnd();
     case Paren:
     case ConstantArray:
@@ -341,7 +340,6 @@ TypeSpecifierType BuiltinTypeLoc::getWrittenTypeSpec() const {
   case BuiltinType::OCLEvent:
   case BuiltinType::OCLClkEvent:
   case BuiltinType::OCLQueue:
-  case BuiltinType::OCLNDRange:
   case BuiltinType::OCLReserveID:
   case BuiltinType::BuiltinFn:
   case BuiltinType::OMPArraySection:
@@ -387,6 +385,17 @@ TypeLoc TypeLoc::findExplicitQualifierLoc() const {
   }
 
   return TypeLoc();
+}
+
+void ObjCTypeParamTypeLoc::initializeLocal(ASTContext &Context,
+                                           SourceLocation Loc) {
+  setNameLoc(Loc);
+  if (!getNumProtocols()) return;
+
+  setProtocolLAngleLoc(Loc);
+  setProtocolRAngleLoc(Loc);
+  for (unsigned i = 0, e = getNumProtocols(); i != e; ++i)
+    setProtocolLoc(i, Loc);
 }
 
 void ObjCObjectTypeLoc::initializeLocal(ASTContext &Context, 

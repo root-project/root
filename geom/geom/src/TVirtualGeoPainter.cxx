@@ -22,7 +22,7 @@ Abstract class for geometry painters
 
 TVirtualGeoPainter  *TVirtualGeoPainter::fgGeoPainter = 0;
 
-ClassImp(TVirtualGeoPainter)
+ClassImp(TVirtualGeoPainter);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Geometry painter default constructor

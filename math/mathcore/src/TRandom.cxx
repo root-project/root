@@ -139,7 +139,7 @@ A TRandom object may be written to a Root file
 #include "Math/QuantFuncMathCore.h"
 #include "TUUID.h"
 
-ClassImp(TRandom)
+ClassImp(TRandom);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor. For seed see SetSeed().

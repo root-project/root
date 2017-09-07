@@ -14,6 +14,11 @@ include_directories(${LLVM_INCLUDE_DIRS} ${CLING_INCLUDE_DIRS})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/res ${CMAKE_CURRENT_SOURCE_DIR}/../foundation/res)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CLING_CXXFLAGS}")
 
+# This is to avoid warnings coming from GCC 7 in llvm/src/include/llvm/ADT/DenseMap.h:1010
+if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
+  ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-maybe-uninitialized)
+endif()
+
 ROOT_OBJECT_LIBRARY(ClingUtils ${sources})
 
 add_dependencies(ClingUtils CLING)
@@ -40,8 +45,12 @@ foreach(dict ${stldicts})
   string(REPLACE "2" "" header ${dict})
   string(REPLACE "complex" "root_std_complex.h" header ${header})
   string(REPLACE "multi" "" header ${header})
-  ROOT_GENERATE_DICTIONARY(G__std_${dict} ${header} STAGE1 MODULE ${dict}Dict LINKDEF src/${dict}Linkdef.h)
-  ROOT_LINKER_LIBRARY(${dict}Dict G__std_${dict}.cxx DEPENDENCIES  Core)
+  ROOT_STANDARD_LIBRARY_PACKAGE(${dict}Dict
+                                NO_SOURCES NO_INSTALL_HEADERS
+                                STAGE1
+                                HEADERS ${header}
+                                LINKDEF src/${dict}Linkdef.h
+                                DEPENDENCIES Core)
 endforeach()
 
 #---Deal with LLVM resource here----------------------------------------------
@@ -62,8 +71,6 @@ set(llvminclude-bin ${CMAKE_BINARY_DIR}/interpreter/llvm/src/include)
 foreach(file  Interpreter/DynamicExprInfo.h
         Interpreter/DynamicLookupRuntimeUniverse.h
         Interpreter/DynamicLookupLifetimeHandler.h
-        Interpreter/Interpreter.h
-        Interpreter/InvocationOptions.h
         Interpreter/Exception.h
         Interpreter/RuntimePrintValue.h
         Interpreter/RuntimeUniverse.h
@@ -90,33 +97,6 @@ foreach(file wchar.h bits/stat.h bits/time.h)
   if(EXISTS /usr/include/${file})
     list(APPEND copy_commands COMMAND ${CMAKE_COMMAND} -E copy /usr/include/${file} ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${LLVM_VERSION}/include/${file})
   endif()
-endforeach()
-
-foreach( file llvm/ADT/IntrusiveRefCntPtr.h
-        llvm/ADT/StringRef.h
-        llvm/ADT/SmallVector.h
-        llvm/ADT/iterator_range.h
-        llvm/Config/llvm-config.h
-        llvm/Support/AlignOf.h
-        llvm/Support/Allocator.h
-        llvm/Support/Casting.h
-        llvm/Support/Compiler.h
-        llvm/Support/DataTypes.h
-        llvm/Support/MathExtras.h
-        llvm/Support/Memory.h
-        llvm/Support/SwapByteOrder.h
-        llvm/Support/type_traits.h )
-  get_filename_component(path ${file} PATH)
-  if(EXISTS ${llvminclude}/${file})
-    list(APPEND copy_commands COMMAND ${CMAKE_COMMAND} -E copy ${llvminclude}/${file} ${CMAKE_BINARY_DIR}/etc/cling/${file})
-    list(APPEND files_to_copy ${llvminclude}/${file})
-    install(FILES ${llvminclude}/${file} DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/cling/${path})
-  else()
-    list(APPEND copy_commands COMMAND ${CMAKE_COMMAND} -E copy ${llvminclude-bin}/${file} ${CMAKE_BINARY_DIR}/etc/cling/${file})
-    list(APPEND files_to_copy ${llvminclude-bin}/${file})
-    install(FILES ${llvminclude-bin}/${file} DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/cling/${path})
-  endif()
-  set_property(GLOBAL APPEND PROPERTY CLINGETCPCH etc/cling/${file})
 endforeach()
 
 set(stamp_file ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/LLVMRES.stamp)
