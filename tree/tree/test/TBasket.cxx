@@ -1,6 +1,8 @@
 
 #include "gtest/gtest.h"
 
+#include "TEnum.h"
+#include "TEnumConstant.h"
 #include "TMemFile.h"
 #include "TTree.h"
 #include "TBranch.h"
@@ -45,12 +47,51 @@ void VerifySampleFile(TFile *f)
 
 TEST(TBasket, IOBits)
 {
-   EXPECT_EQ(static_cast<int>(TBasket::EIOBits::kSupported) |
-                static_cast<int>(TBasket::EUnsupportedIOBits::kUnsupported),
+   EXPECT_EQ(static_cast<Int_t>(TBasket::EIOBits::kSupported) |
+                static_cast<Int_t>(TBasket::EUnsupportedIOBits::kUnsupported),
              (1 << static_cast<Int_t>(TBasket::kIOBitCount)) - 1);
 
    EXPECT_EQ(
-      static_cast<int>(TBasket::EIOBits::kSupported) & static_cast<int>(TBasket::EUnsupportedIOBits::kUnsupported), 0);
+      static_cast<Int_t>(TBasket::EIOBits::kSupported) & static_cast<Int_t>(TBasket::EUnsupportedIOBits::kUnsupported), 0);
+
+   TClass *cl = TClass::GetClass("TBasket");
+   ASSERT_NE(cl, nullptr);
+   TEnum *eIOBits = (TEnum *)cl->GetListOfEnums()->FindObject("EIOBits");
+   ASSERT_NE(eIOBits, nullptr);
+
+   Int_t supported = static_cast<Int_t>(TBasket::EIOBits::kSupported);
+   Bool_t foundSupported = false;
+   for (auto c : *eIOBits->GetConstants()) {
+      TEnumConstant *constant = static_cast<TEnumConstant *>(c);
+
+      printf("Looking at constant %s.\n", constant->GetName());
+      if (!strcmp(constant->GetName(), "kSupported")) {
+         foundSupported = true;
+         continue;
+      }
+      EXPECT_EQ(constant->GetValue() & supported, constant->GetValue());
+      supported -= constant->GetValue();
+   }
+   EXPECT_TRUE(foundSupported);
+   EXPECT_EQ(supported, 0);
+
+   TEnum *eUnsupportedIOBits = (TEnum *)cl->GetListOfEnums()->FindObject("EUnsupportedIOBits");
+   ASSERT_NE(eUnsupportedIOBits, nullptr);
+   Int_t unsupported = static_cast<Int_t>(TBasket::EUnsupportedIOBits::kUnsupported);
+   Bool_t foundUnsupported = false;
+   for (auto c : *eUnsupportedIOBits->GetConstants()) {
+      TEnumConstant *constant = static_cast<TEnumConstant *>(c);
+
+      printf("Looking at constant %s.\n", constant->GetName());
+      if (!strcmp(constant->GetName(), "kUnsupported")) {
+         foundUnsupported = true;
+         continue;
+      }
+      EXPECT_EQ(constant->GetValue() & unsupported, constant->GetValue());
+      unsupported -= constant->GetValue();
+   }
+   EXPECT_TRUE(foundUnsupported);
+   EXPECT_EQ(unsupported, 0);
 }
 
 // Basic "sanity check" test -- can we create and delete trees?
