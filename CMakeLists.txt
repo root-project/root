@@ -1,6 +1,14 @@
 #---Check if cmake has the required version-----------------------------------------------------
+
 cmake_minimum_required(VERSION 3.4.3 FATAL_ERROR)
-cmake_policy(SET CMP0005 NEW)
+
+set(policy_new CMP0068)
+foreach(policy ${policy_new})
+  if(POLICY ${policy})
+    cmake_policy(SET ${policy} NEW)
+  endif()
+endforeach()
+
 include(cmake/modules/CaptureCommandLine.cmake)
 
 #---Set name of the project to "ROOT". Has to be done after check of cmake version--------------
