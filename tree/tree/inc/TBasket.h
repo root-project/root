@@ -121,7 +121,7 @@ public:
    virtual void    Update(Int_t newlast, Int_t skipped);
    virtual Int_t   WriteBuffer();
 
-   ClassDef(TBasket,2);  //the TBranch buffers
+   ClassDef(TBasket, 3);  //the TBranch buffers
 };
 
 #endif
