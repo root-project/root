@@ -134,7 +134,7 @@ TEST(TBasket, TestUnsupportedIO)
    UChar_t unsupportedbits = ~static_cast<UChar_t>(TBasket::EIOBits::kSupported);
    EXPECT_TRUE(unsupportedbits);
 
-   *ioBits = unsupportedbits;
+   *ioBits = unsupportedbits & ((1<<7) - 1); // Last bit should always be clear.
    br->FlushBaskets();
    t1.Write();
    f->Close();
@@ -154,7 +154,6 @@ TEST(TBasket, TestUnsupportedIO)
    ASSERT_NE(br, nullptr);
 
    basket = br->GetBasket(0);
-   EXPECT_TRUE(br->IsZombie());
    // Getting the basket should fail here and an error should have been triggered.
    ASSERT_EQ(basket, nullptr);
 }

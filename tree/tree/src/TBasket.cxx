@@ -770,16 +770,47 @@ void TBasket::SetWriteMode()
 
 void TBasket::Streamer(TBuffer &b)
 {
+   // As in TBranch::GetBasket, this is used as a half-hearted measure to suppress
+   // the error reporting when many failures occur.
+   static std::atomic<Int_t> nerrors(0);
+
    char flag;
-   bool hasIOBits = false;
    if (b.IsReading()) {
       TKey::Streamer(b); //this must be first
       Version_t v = b.ReadVersion();
       b >> fBufferSize;
+      // NOTE: we now use the upper-bit of the fNevBufSize to see if we have serialized any of the
+      // optional IOBits.  If that bit is set, we immediately read out the IOBits; to replace this
+      // (minimal) safeguard against corruption, we will set aside the upper-bit of fIOBits to do
+      // the same thing (the fact this bit is reserved is tested in the unit tests).  If there is
+      // someday a need for more than 7 IOBits, we'll widen the field using the same trick.
+      //
+      // We like to keep this safeguard because we immediately will allocate a buffer based on
+      // the value of fNevBufSize -- and would like to avoid wildly inappropriate allocations.
       b >> fNevBufSize;
       if (fNevBufSize < 0) {
-         hasIOBits = true;
          fNevBufSize = -fNevBufSize;
+         b >> fIOBits;
+         if (!fIOBits || (fIOBits & (1<<7))) {
+            Error("TBasket::Streamer","The value of fNevBufSize (%d) or fIOBits (%d) is incorrect ; setting the buffer to a zombie.",-fNevBufSize, fIOBits);
+            MakeZombie();
+            fNevBufSize = 0;
+         } else if (fIOBits && (fIOBits & ~static_cast<Int_t>(EIOBits::kSupported))) {
+            nerrors++;
+            if (nerrors < 10) {
+               Error("Streamer", "The value of fIOBits (%s) contains unknown flags (supported flags "
+                                 "are %s), indicating this was written with a newer version of ROOT "
+                                 "utilizing critical IO features this version of ROOT does not support."
+                                 "  Refusing to deserialize.",
+                                 std::bitset<32>(static_cast<Int_t>(fIOBits)).to_string().c_str(),
+                                 std::bitset<32>(static_cast<Int_t>(EIOBits::kSupported)).to_string().c_str());
+            } else if (nerrors == 10) {
+               Error("Streamer", "Maximum number of errors has been reported; disabling further messages"
+                                 "from this location until the process exits.");
+            }
+            fNevBufSize = 0;
+            MakeZombie();
+         }
       }
       b >> fNevBuf;
       b >> fLast;
@@ -809,23 +840,6 @@ void TBasket::Streamer(TBuffer &b)
          // This is now done in the TBranch streamer since fBranch might not
          // yet be set correctly.
          //   fBranch->GetTree()->IncrementTotalBuffers(fBufferSize);
-      }
-      if (hasIOBits) {
-         b >> fIOBits;
-         if (!fIOBits) {
-            Error("TBasket::Streamer","The value of fNevBufSize is incorrect (%d) ; setting the buffer to a zombie.",-fNevBufSize);
-            MakeZombie();
-            fNevBufSize = 0;
-         } else if (fIOBits && (fIOBits & ~static_cast<Int_t>(EIOBits::kSupported))) {
-            Error("TKey::Streamer", "The value of fIOBits (%s) contains unknown flags (supported flags "
-                                    "are %s), indicating this was written with a newer version of ROOT "
-                                    "utilizing critical IO features this version of ROOT does not support."
-                                    "  Refusing to deserialize.",
-                                    std::bitset<32>(static_cast<Int_t>(fIOBits)).to_string().c_str(),
-                                    std::bitset<32>(static_cast<Int_t>(EIOBits::kSupported)).to_string().c_str());
-            fNevBufSize = 0;
-            MakeZombie();
-         }
       }
    } else {
       TKey::Streamer(b);   //this must be first
@@ -870,6 +884,7 @@ void TBasket::Streamer(TBuffer &b)
       b << fBufferSize;
       if (fIOBits) {
          b << -fNevBufSize;
+         b << fIOBits;
       } else {
          b << fNevBufSize;
       }
@@ -893,9 +908,6 @@ void TBasket::Streamer(TBuffer &b)
             char *buf  = fBufferRef->Buffer();
             b.WriteFastArray(buf, fLast);
          }
-      }
-      if (fIOBits) {
-         b << fIOBits;
       }
    }
 }
