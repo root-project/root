@@ -816,13 +816,13 @@ void TBasket::Streamer(TBuffer &b)
             Error("TBasket::Streamer","The value of fNevBufSize is incorrect (%d) ; setting the buffer to a zombie.",-fNevBufSize);
             MakeZombie();
             fNevBufSize = 0;
-         } else if (fIOBits && (fIOBits & ~kSupported)) {
+         } else if (fIOBits && (fIOBits & ~static_cast<Int_t>(EIOBits::kSupported))) {
             Error("TKey::Streamer", "The value of fIOBits (%s) contains unknown flags (supported flags "
                                     "are %s), indicating this was written with a newer version of ROOT "
                                     "utilizing critical IO features this version of ROOT does not support."
                                     "  Refusing to deserialize.",
-                                    std::bitset<32>(fIOBits).to_string().c_str(),
-                                    std::bitset<32>(kSupported).to_string().c_str());
+                                    std::bitset<32>(static_cast<Int_t>(fIOBits)).to_string().c_str(),
+                                    std::bitset<32>(static_cast<Int_t>(EIOBits::kSupported)).to_string().c_str());
             fNevBufSize = 0;
             MakeZombie();
          }
