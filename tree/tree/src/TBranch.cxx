@@ -1147,7 +1147,7 @@ TBasket* TBranch::GetBasket(Int_t basketnumber)
 
    //now read basket
    Int_t badread = basket->ReadBasketBuffers(fBasketSeek[basketnumber],fBasketBytes[basketnumber],file);
-   if (badread || basket->GetSeekKey() != fBasketSeek[basketnumber]) {
+   if (R__unlikely(badread || basket->GetSeekKey() != fBasketSeek[basketnumber] || basket->IsZombie())) {
       nerrors++;
       if (nerrors > 10) return 0;
       if (nerrors == 10) {
@@ -1163,6 +1163,9 @@ TBasket* TBranch::GetBasket(Int_t basketnumber)
          }
       }
       Error("GetBasket","File: %s at byte:%lld, branch:%s, entry:%lld, badread=%d, nerrors=%d, basketnumber=%d",file->GetName(),basket->GetSeekKey(),GetName(),fReadEntry,badread,nerrors.load(),basketnumber);
+      if (basket->IsZombie()) {
+         MakeZombie();
+      }
       return 0;
    }
 
