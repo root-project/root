@@ -80,15 +80,15 @@ TEST(TBasket, CreateAndGetBasket)
 
    TTree *tree = nullptr;
    f->GetObject("t1", tree);
-   ASSERT_TRUE(tree != nullptr);
+   ASSERT_NE(tree, nullptr);
    ASSERT_FALSE(tree->IsZombie());
 
    TBranch *br = tree->GetBranch("idx");
-   ASSERT_TRUE(br != nullptr);
+   ASSERT_NE(br, nullptr);
    ASSERT_FALSE(br->IsZombie());
 
    TBasket *basket = br->GetBasket(0);
-   ASSERT_TRUE(basket != nullptr);
+   ASSERT_NE(basket, nullptr);
    ASSERT_FALSE(basket->IsZombie());
 
    EXPECT_EQ(basket->GetNevBuf(), gSampleEvents);
@@ -104,7 +104,7 @@ TEST(TBasket, TestUnsupportedIO)
    // Create a file; not using the createSampleFile helper as
    // we must corrupt the basket here.
    f = new TMemFile("tbasket_test.root", "CREATE");
-   ASSERT_TRUE(f != nullptr);
+   ASSERT_NE(f, nullptr);
    ASSERT_FALSE(f->IsZombie());
 
    TTree t1("t1", "Simple tree for testing.");
@@ -116,19 +116,25 @@ TEST(TBasket, TestUnsupportedIO)
    }
 
    TBranch *br = t1.GetBranch("idx");
-   ASSERT_TRUE(br != nullptr);
+   ASSERT_NE(br, nullptr);
 
    TBasket *basket = br->GetBasket(0);
-   ASSERT_TRUE(basket != nullptr);
+   ASSERT_NE(basket, nullptr);
 
-   EXPECT_EQ(static_cast<Int_t>(basket->fIOBits), 0);
+   TClass *cl = basket->IsA();
+   ASSERT_NE(cl, nullptr);
+   Long_t offset = cl->GetDataMemberOffset("fIOBits");
+   ASSERT_GT(offset, 0); // 0 can be returned on error
+   UChar_t *ioBits = reinterpret_cast<UChar_t*>(reinterpret_cast<char*>(basket) + offset);
+
+   EXPECT_EQ(*ioBits, 0);
 
    // This tests that at least one bit in the bitset is available.
    // When we are down to one bitset, we'll have to expand the field.
    UChar_t unsupportedbits = ~static_cast<UChar_t>(TBasket::EIOBits::kSupported);
    EXPECT_TRUE(unsupportedbits);
 
-   basket->fIOBits = unsupportedbits;
+   *ioBits = unsupportedbits;
    br->FlushBaskets();
    t1.Write();
    f->Close();
@@ -141,15 +147,15 @@ TEST(TBasket, TestUnsupportedIO)
    TMemFile f2("tbasket_test.root", &memBuffer[0], maxsize, "READ");
    TTree *tree;
    f2.GetObject("t1", tree);
-   ASSERT_TRUE(tree != nullptr);
+   ASSERT_NE(tree, nullptr);
    ASSERT_FALSE(tree->IsZombie());
 
    br = tree->GetBranch("idx");
-   ASSERT_TRUE(br != nullptr);
+   ASSERT_NE(br, nullptr);
 
    basket = br->GetBasket(0);
    EXPECT_TRUE(br->IsZombie());
    // Getting the basket should fail here and an error should have been triggered.
-   ASSERT_TRUE(basket == nullptr);
+   ASSERT_EQ(basket, nullptr);
 }
 
