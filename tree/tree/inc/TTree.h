@@ -132,11 +132,11 @@ protected:
    std::vector<TBranch*> fSeqBranches;    ///<! Branches to be processed sequentially when IMT is on
    Float_t fTargetMemoryRatio{1.1}; ///<! Ratio for memory usage in uncompressed buffers versus actual occupancy.  1.0
                                     /// indicates basket should be resized to exact memory usage, but causes significant
-   /// memory churn.
+/// memory churn.
 #ifdef R__TRACK_BASKET_ALLOC_TIME
    ULong64_t fAllocationTime{0}; ///<! Time spent reallocating basket memory buffers, in microseconds.
 #endif
-   UInt_t fAllocationCount{0};   ///<! Number of reallocations basket memory buffers.
+   UInt_t fAllocationCount{0}; ///<! Number of reallocations basket memory buffers.
 
    static Int_t     fgBranchStyle;        ///<  Old/New branch style
    static Long64_t  fgMaxTreeSize;        ///<  Maximum size of a file containing a Tree
@@ -231,11 +231,11 @@ public:
 
    // TTree status bits
    enum EStatusBits {
-      kForceRead          = BIT(11),
-      kCircular           = BIT(12),
+      kForceRead = BIT(11),
+      kCircular = BIT(12),
       kOnlyFlushAtCluster = BIT(14) // If set, the branch's buffers will grow until an event cluster boundary is hit,
-                                // guaranteeing a basket per cluster.  This mode does not provide any guarantee on the
-                                // memory bounds in the case of extremely large events.
+      // guaranteeing a basket per cluster.  This mode does not provide any guarantee on the
+      // memory bounds in the case of extremely large events.
    };
 
    // Split level modifier
@@ -307,7 +307,7 @@ public:
    // manner only when we are flushing multiple baskets in parallel.
    virtual void            AddTotBytes(Int_t tot) { if (fIMTFlush) { fIMTTotBytes += tot; } else { fTotBytes += tot; } }
    virtual void            AddZipBytes(Int_t zip) { if (fIMTFlush) { fIMTZipBytes += zip; } else { fZipBytes += zip; } }
-   // NOTE: these counters aren't thread safe like the ones above.
+// NOTE: these counters aren't thread safe like the ones above.
 #ifdef R__TRACK_BASKET_ALLOC_TIME
    void AddAllocationTime(ULong64_t time) { fAllocationTime += time; }
 #endif
