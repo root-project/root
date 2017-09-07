@@ -34,8 +34,6 @@ class TBranch;
 
 class TBasket : public TKey {
 
-   friend class TBasket_TestUnsupportedIO_Test;
-
 private:
    TBasket(const TBasket&);            ///< TBasket objects are not copiable.
    TBasket& operator=(const TBasket&); ///< TBasket objects are not copiable.
