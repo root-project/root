@@ -1535,9 +1535,10 @@ void TFile::Map(Option_t *opt)
       if (!forComp) {
          if (objlen != nbytes - keylen) {
             Float_t cx = Float_t(objlen + keylen) / Float_t(nbytes);
-            Printf("%d/%06d  At:%-*lld  N=%-8d  %-14s CX = %5.2f", nDigits+1, date, time, idcur, nbytes, classname, cx);
+            Printf("%d/%06d  At:%-*lld  N=%-8d  %-14s CX = %5.2f", date, time, nDigits + 1, idcur, nbytes, classname,
+                   cx);
          } else {
-            Printf("%d/%06d  At:%-*lld  N=%-8d  %-14s", nDigits+1, date, time, idcur, nbytes, classname);
+            Printf("%d/%06d  At:%-*lld  N=%-8d  %-14s", date, time, nDigits + 1, idcur, nbytes, classname);
          }
       } else {
          // Printing to help compare two files.
