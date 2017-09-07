@@ -14,6 +14,7 @@
 #include "TTree.h"
 #include "TBranch.h"
 #include "TFile.h"
+#include "TLeaf.h"
 #include "TBufferFile.h"
 #include "TMath.h"
 #include "TROOT.h"
@@ -183,9 +184,14 @@ Int_t TBasket::DropBuffers()
 /// Result is cached, meaning that this should only be invoked once per basket.
 
 Int_t *TBasket::GetCalculatedEntryOffset() {
-   if (fEntryOffset == (Int_t *)1) {
-      fEntryOffset = nullptr;
+   fEntryOffset = nullptr;
+
+   if (fBranch->GetNleaves() != 1) {
+      return fEntryOffset;
    }
+
+   TLeaf *leaf = static_cast<TLeaf*>((*fBranch->GetListOfLeaves())[0]);
+   fEntryOffset = leaf->GenerateOffsetArray(fLast, fNevBuf);
    return fEntryOffset;
 }
 

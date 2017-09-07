@@ -49,6 +49,8 @@ protected:
     static T Exec(const TLeaf *leaf, Int_t i = 0) { return leaf->GetValue(i); }
   };
 
+   Int_t *GenerateOffsetArrayBase(Int_t base, Int_t events) const;  // For leaves containing fixed-size objects (no polymorphism!), this will generate an appropriate offset array.
+
 public:
    enum EStatusBits {
       kIndirectAddress = BIT(11), ///< Data member is a pointer to an array of basic types.
@@ -60,8 +62,10 @@ public:
    virtual ~TLeaf();
 
    virtual void     Browse(TBrowser* b);
+   virtual Bool_t   CanGenerateOffsetArray() {return true;} // overload and return true if this leaf can generate its own offset array.
    virtual void     Export(TClonesArray*, Int_t) {}
    virtual void     FillBasket(TBuffer& b);
+   virtual Int_t   *GenerateOffsetArray(Int_t base, Int_t events) {return GenerateOffsetArrayBase(base, events);}
    TBranch         *GetBranch() const { return fBranch; }
    virtual TLeaf   *GetLeafCount() const { return fLeafCount; }
    virtual TLeaf   *GetLeafCounter(Int_t& countval) const;
