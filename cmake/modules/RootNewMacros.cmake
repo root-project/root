@@ -391,21 +391,12 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     list(APPEND _implicitdeps CXX ${_dep})
   endforeach()
 
-  # Add other rootcling invocations for our PCM generation. This is only necessary when rootcling is supposed
-  # to generate C++ modules as those build upon the generated modules of other rootcling invocations.
-  set(module_dependencies "")
-  if(runtime_cxxmodules)
-    foreach(dep ${ARG_DEPENDENCIES})
-      set(module_dependencies ${module_dependencies} ROOTCLING_${dep})
-    endforeach()
-  endif()
-
   #---call rootcint------------------------------------------
   add_custom_command(OUTPUT ${dictionary}.cxx ${pcm_name} ${rootmap_name}
                      COMMAND ${command} -v2 -f  ${dictionary}.cxx ${newargs} ${excludepathsargs} ${rootmapargs}
                                         ${ARG_OPTIONS} ${definitions} ${includedirs} ${headerfiles} ${_linkdef}
                      IMPLICIT_DEPENDS ${_implicitdeps}
-                     DEPENDS ${_list_of_header_dependencies} ${_linkdef} ${ROOTCINTDEP} ${ARG_DEPENDENCIES} ${module_dependencies})
+                     DEPENDS ${_list_of_header_dependencies} ${_linkdef} ${ROOTCINTDEP} ${ARG_DEPENDENCIES})
   get_filename_component(dictname ${dictionary} NAME)
 
   #---roottest compability
@@ -420,20 +411,6 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     else()
       install(FILES ${pcm_name} ${rootmap_name}
                     DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries)
-    endif()
-  endif()
-  # Create a target for this rootcling invocation based on the module name.
-  # We can use this in other ROOT_GENERATE_DICTIONARY that only care about
-  # the generation of PCMs without waiting on the whole module compilation.
-  if(ARG_MODULE AND NOT ARG_MULTIDICT)
-    # If we have multiple modules with the same name, let's just attach the
-    # generation of this dictionary to the ROOTCLING_X target of the existing
-    # module. This happens for example with ROOTCLING_Smatrix which also has a
-    # "Smatrix32" part.
-    if (TARGET ROOTCLING_${ARG_MODULE})
-      add_dependencies(ROOTCLING_${ARG_MODULE} ${dictname})
-    else()
-      add_custom_target(ROOTCLING_${ARG_MODULE} DEPENDS ${dictname})
     endif()
   endif()
 
