@@ -42,6 +42,8 @@
 
 #include "TBranchIMTHelper.h"
 
+#include "ROOT/TTreeSettings.hxx"
+
 #include <atomic>
 #include <cstddef>
 #include <string.h>
@@ -184,6 +186,7 @@ TBranch::TBranch(TTree *tree, const char* name, void* address, const char* leafl
 , fEntryOffsetLen(0)
 , fWriteBasket(0)
 , fEntryNumber(0)
+, fIOBits(tree ? ROOT::Experimental::TTreeSettings(*tree).GetFeatures() : 0)
 , fOffset(0)
 , fMaxBaskets(10)
 , fNBaskets(0)
@@ -234,6 +237,7 @@ TBranch::TBranch(TBranch *parent, const char* name, void* address, const char* l
 , fEntryOffsetLen(0)
 , fWriteBasket(0)
 , fEntryNumber(0)
+, fIOBits(parent->fIOBits)
 , fOffset(0)
 , fMaxBaskets(10)
 , fNBaskets(0)
