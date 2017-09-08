@@ -20,7 +20,6 @@
 #include <queue>
 #include <thread>
 
-class TArrayC;
 class TBufferFile;
 
 namespace ROOT {
