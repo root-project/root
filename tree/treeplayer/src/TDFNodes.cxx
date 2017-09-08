@@ -225,6 +225,7 @@ void TLoopManager::RunTreeProcessorMT()
 void TLoopManager::RunTreeReader()
 {
    TTreeReader r(fTree.get());
+   if (0 == fTree->GetEntriesFast()) return;
    InitNodeSlots(&r, 0);
 
    // recursive call to check filters and conditionally execute actions
