@@ -5,6 +5,21 @@
 using namespace ROOT::Experimental;
 
 namespace TEST_CATEGORY {
+
+void FillTree(const char *filename, const char *treeName, int nevents = 0)
+{
+   TFile f(filename, "RECREATE");
+   TTree t(treeName, treeName);
+   t.SetAutoFlush(1); // yes, one event per cluster: to make MT more meaningful
+   int b;
+   t.Branch("b1", &b);
+   for (int i = 0; i < nevents; ++i) {
+      b = i;
+      t.Fill();
+   }
+   t.Write();
+   f.Close();
+}
 }
 
 TEST(TEST_CATEGORY, InvalidRef)
@@ -65,13 +80,7 @@ TEST(TEST_CATEGORY, Ranges)
    auto treeName = "t";
 #ifndef dataframe_regression_1_CREATED
 #define dataframe_regression_1_CREATED
-   {
-      TDataFrame d(100);
-      d.Define("b", []() {
-          static int b = 0;
-          return b++;
-       }).Snapshot<int>(treeName, fileName, {"b"});
-   }
+   TEST_CATEGORY::FillTree(fileName, treeName, 100)
 #endif
    // one child ending before the father -- only one stop signal must be propagated upstream
    TDataFrame d(treeName, fileName, {"b"});

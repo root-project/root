@@ -21,6 +21,7 @@ void FillTree(const char *filename, const char *treeName, int nevents = 0)
 {
    TFile f(filename, "RECREATE");
    TTree t(treeName, treeName);
+   t.SetAutoFlush(1); // yes, one event per cluster: to make MT more meaningful
    double b1;
    int b2;
    t.Branch("b1", &b1);
@@ -70,12 +71,12 @@ TEST(TEST_CATEGORY, BuildWithTDirectory)
    auto treename = "t";
 #ifndef testTDF_simple_1_CREATED
 #define testTDF_simple_1_CREATED
-   TEST_CATEGORY::FillTree(filename, treename, 10);
+   TEST_CATEGORY::FillTree(filename, treename, 50);
 #endif
    TFile f(filename);
    TDataFrame tdf(treename, &f);
    auto c = tdf.Count();
-   EXPECT_EQ(10U, *c);
+   EXPECT_EQ(50U, *c);
 }
 
 // Define
