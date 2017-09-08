@@ -84,6 +84,13 @@ Begin_Macro(source)
    l->Draw();
 }
 End_Macro
+
+TPolyLine3D is a basic graphics primitive which ignores the fact the current pad
+has logarithmic scale(s). It simply draws the 3D line in the current user coordinates.
+If logarithmic scale is set along one of the three axis, the logarithm of
+vector coordinates along this axis should be use. Alternatively and higher level
+class, knowing about logarithmic scales, might be used. For instance TGraph2D with
+option `L`.
 */
 
 ////////////////////////////////////////////////////////////////////////////////
