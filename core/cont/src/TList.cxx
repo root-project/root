@@ -717,7 +717,7 @@ void TList::RecursiveRemove(TObject *obj)
    while (lnk) {
       next = lnk->Next();
       TObject *ob = lnk->GetObject();
-      if (ob->TestBit(kNotDeleted)) {
+      if (ob && ob->TestBit(kNotDeleted)) {
          if (ob->IsEqual(obj)) {
             if (lnk == fFirst) {
                fFirst = next;
