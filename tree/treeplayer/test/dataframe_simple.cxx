@@ -6,7 +6,7 @@
 #include "TROOT.h"
 TEST(dataframe_simple, EnableImplicitMT)
 {
-   ROOT::EnableImplicitMT();
+   ROOT::EnableImplicitMT(4);
 }
 
 #undef TEST_CATEGORY
