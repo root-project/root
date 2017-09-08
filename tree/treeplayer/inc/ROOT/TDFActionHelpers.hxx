@@ -31,6 +31,8 @@ namespace ROOT {
 namespace Internal {
 namespace TDF {
 using namespace ROOT::TypeTraits;
+using namespace ROOT::Experimental::TDF;
+
 
 using Count_t = unsigned long;
 using Hist_t = ::TH1D;
@@ -427,8 +429,8 @@ class SnapshotHelper {
 
 public:
    SnapshotHelper(std::string_view filename, std::string_view dirname, std::string_view treename,
-                  const ColumnNames_t &bnames)
-      : fOutputFile(TFile::Open(std::string(filename).c_str(), "RECREATE")), fBranchNames(bnames)
+                  const ColumnNames_t &bnames, const SnapshotOptions &options)
+      : fOutputFile(TFile::Open(std::string(filename).c_str(), options.fMode.c_str(), /*ftitle=*/"", options.fCompress)), fBranchNames(bnames)
    {
       if (!dirname.empty()) {
          std::string dirnameStr(dirname);
@@ -436,7 +438,10 @@ public:
          fOutputFile->cd(dirnameStr.c_str());
       }
       std::string treenameStr(treename);
-      fOutputTree.reset(new TTree(treenameStr.c_str(), treenameStr.c_str(), /*split=*/99, /*dir=*/fOutputFile.get()));
+      fOutputTree.reset(new TTree(treenameStr.c_str(), treenameStr.c_str(), options.fSplitLevel, /*dir=*/fOutputFile.get()));
+
+      if (options.fAutoFlush)
+        fOutputTree->SetAutoFlush(options.fAutoFlush);
    }
 
    SnapshotHelper(const SnapshotHelper &) = delete;
@@ -483,15 +488,16 @@ class SnapshotHelperMT {
    std::vector<int> fIsFirstEvent;    // vector<bool> is evil
    const std::string fDirName;        // name of TFile subdirectory in which output must be written (possibly empty)
    const std::string fTreeName;       // name of output tree
+   const SnapshotOptions fOptions;    // struct holding options to pass down to TFile and TTree in this action
    const ColumnNames_t fBranchNames;
 
 public:
    using BranchTypes_t = TypeList<BranchTypes...>;
    SnapshotHelperMT(const unsigned int nSlots, std::string_view filename, std::string_view dirname,
-                    std::string_view treename, const ColumnNames_t &bnames)
-      : fNSlots(nSlots), fMerger(new ROOT::Experimental::TBufferMerger(std::string(filename).c_str(), "RECREATE")),
+                    std::string_view treename, const ColumnNames_t &bnames, const SnapshotOptions &options)
+      : fNSlots(nSlots), fMerger(new ROOT::Experimental::TBufferMerger(std::string(filename).c_str(), options.fMode.c_str(), options.fCompress)),
         fOutputFiles(fNSlots), fOutputTrees(fNSlots, nullptr), fIsFirstEvent(fNSlots, 1), fDirName(dirname),
-        fTreeName(treename), fBranchNames(bnames)
+        fTreeName(treename), fOptions(options), fBranchNames(bnames)
    {
    }
    SnapshotHelperMT(const SnapshotHelperMT &) = delete;
@@ -511,8 +517,10 @@ public:
       if (!fDirName.empty()) {
          treeDirectory = fOutputFiles[slot]->mkdir(fDirName.c_str());
       }
-      fOutputTrees[slot] = new TTree(fTreeName.c_str(), fTreeName.c_str(), /*splitlvl=*/99, /*dir=*/treeDirectory);
+      fOutputTrees[slot] = new TTree(fTreeName.c_str(), fTreeName.c_str(), fOptions.fSplitLevel, /*dir=*/treeDirectory);
       fOutputTrees[slot]->ResetBit(kMustCleanup); // do not mingle with the thread-unsafe gListOfCleanups
+      if (fOptions.fAutoFlush)
+         fOutputTrees[slot]->SetAutoFlush(fOptions.fAutoFlush);
       if (r) {
          // not an empty-source TDF
          auto inputTree = r->GetTree();
@@ -532,8 +540,8 @@ public:
       }
       fOutputTrees[slot]->Fill();
       auto entries = fOutputTrees[slot]->GetEntries();
-      auto autoflush = fOutputTrees[slot]->GetAutoFlush();
-      if ((autoflush > 0) && (entries % autoflush == 0))
+      auto autoFlush = fOutputTrees[slot]->GetAutoFlush();
+      if ((autoFlush > 0) && (entries % autoFlush == 0))
          fOutputFiles[slot]->Write();
    }
 
