@@ -1,12 +1,12 @@
 
 #include "gtest/gtest.h"
 
+#include "TBasket.h"
+#include "TBranch.h"
 #include "TEnum.h"
 #include "TEnumConstant.h"
 #include "TMemFile.h"
 #include "TTree.h"
-#include "TBranch.h"
-#include "TBasket.h"
 
 #include <vector>
 
