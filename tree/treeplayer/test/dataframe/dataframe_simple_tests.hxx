@@ -79,6 +79,23 @@ TEST(TEST_CATEGORY, BuildWithTDirectory)
    EXPECT_EQ(50U, *c);
 }
 
+// Jitting of column types
+TEST(TEST_CATEGORY, TypeGuessing)
+{
+   auto filename = "dataframe_simple_2.root";
+   auto treename = "t";
+#ifndef testTDF_simple_2_CREATED
+#define testTDF_simple_2_CREATED
+   TEST_CATEGORY::FillTree(filename, treename, 50);
+#endif
+   TDataFrame tdf(treename, filename, {"b1"});
+   auto hcompiled = tdf.Histo1D<double>();
+   auto hjitted = tdf.Histo1D();
+   EXPECT_EQ(50, hcompiled->GetEntries());
+   EXPECT_EQ(50, hjitted->GetEntries());
+   EXPECT_DOUBLE_EQ(hcompiled->GetMean(), hjitted->GetMean());
+}
+
 // Define
 
 TEST(TEST_CATEGORY, Define_lambda)
