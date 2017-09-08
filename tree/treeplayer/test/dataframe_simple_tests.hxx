@@ -7,13 +7,14 @@
 using namespace ROOT::Experimental;
 
 namespace TEST_CATEGORY {
+
    int DefineFunction() {return 1;}
 
    struct DefineStruct {
       int operator()() {return 1;}
    };
 
-   void FillTree(const char *filename, const char *treeName)
+   void FillTree(const char *filename, const char *treeName, int nevents = 0)
    {
       TFile f(filename, "RECREATE");
       TTree t(treeName, treeName);
@@ -21,6 +22,11 @@ namespace TEST_CATEGORY {
       int b2;
       t.Branch("b1", &b1);
       t.Branch("b2", &b2);
+      for (int i=0; i < nevents; ++i) {
+         b1 = i;
+         b2 = i*i;
+         t.Fill();
+      }
       t.Write();
       f.Close();
    }
@@ -40,21 +46,34 @@ TEST(TEST_CATEGORY, CreateZeroEntries)
    EXPECT_EQ(0U, *c);
 }
 
-/*
-This fails with an error in the TTreeReader, i.e.
-Warning in <TTreeReader::SetEntryBase()>: The current tree in the TChain t has changed (e.g. by TTree::Process) even though TTreeReader::SetEntry() was called, which switched the tree again. Did you mean to call TTreeReader::SetLocalEntry()?
-*/
 TEST(TEST_CATEGORY, CreateZeroEntriesWithBranches)
 {
-   auto filename = "testTDF_simple.root";
+   auto filename = "dataframe_simple_0.root";
    auto treename = "t";
+#ifndef testTDF_simple_0_CREATED
+#define testTDF_simple_0_CREATED
    TEST_CATEGORY::FillTree(filename, treename);
+#endif
    TDataFrame tdf(treename, filename);
    auto c = tdf.Count();
    auto m = tdf.Mean("b1");
    EXPECT_EQ(0U, *c);
    EXPECT_EQ(0., *m);
 
+}
+
+TEST(TEST_CATEGORY, BuildWithTDirectory)
+{
+   auto filename = "dataframe_simple_1.root";
+   auto treename = "t";
+#ifndef testTDF_simple_1_CREATED
+#define testTDF_simple_1_CREATED
+   TEST_CATEGORY::FillTree(filename, treename, 10);
+#endif
+   TFile f(filename);
+   TDataFrame tdf(treename, &f);
+   auto c = tdf.Count();
+   EXPECT_EQ(10U, *c);
 }
 
 // Define
