@@ -76,11 +76,17 @@ dataloader->PrepareTrainingAndTestTree( "", "", "nTest_cls1=1:nTest_cls2=1" );
 TMVA::CrossEvaluation::CrossEvaluation(TMVA::DataLoader *dataloader, TFile * outputFile, TString options)
    : TMVA::Envelope("CrossEvaluation", dataloader, nullptr, options),
      fAnalysisType(Types::kMaxAnalysisType),
+     fAnalysisTypeStr("auto"),
+     fCorrelations(kFALSE),
      fFoldStatus(kFALSE),
      fNumFolds(2),
      fOutputFile(outputFile),
+     fSilent(kFALSE),
      fSplitSpectator(""),
-     fTransformations( "" )
+     fROC(kTRUE),
+     fTransformations(""),
+     fVerbose(kFALSE),
+     fVerboseLevel(kINFO)
 {
    InitOptions();
    ParseOptions();
