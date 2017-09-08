@@ -5,12 +5,11 @@
 using namespace ROOT::Experimental;
 
 namespace TEST_CATEGORY {
-
 }
 
 TEST(TEST_CATEGORY, InvalidRef)
 {
-   auto getFilterNode = [](){
+   auto getFilterNode = []() {
       ROOT::Experimental::TDataFrame d(5);
       return d.Filter([]() { return true; });
    };
@@ -18,7 +17,7 @@ TEST(TEST_CATEGORY, InvalidRef)
    auto f = getFilterNode();
    try {
       f.Filter([]() { return true; });
-   } catch (const std::runtime_error& e) {
+   } catch (const std::runtime_error &e) {
       ret = 0;
    }
    EXPECT_EQ(0, ret) << "No exception thrown when the original tdf went out of scope.";
@@ -32,13 +31,16 @@ TEST(TEST_CATEGORY, MultipleTriggerRun)
 #define dataframe_regression_0_CREATED
    {
       TDataFrame tdf(1);
-      tdf.Define("b1",[](){return 1U;}).Snapshot<unsigned int>(treeName, fileName, {"b1"});
+      tdf.Define("b1", []() { return 1U; }).Snapshot<unsigned int>(treeName, fileName, {"b1"});
    }
 #endif
 
    TDataFrame d(treeName, fileName, {"b1"});
    int i = 0;
-   auto sentinel = [&i]() { ++i; return true; };
+   auto sentinel = [&i]() {
+      ++i;
+      return true;
+   };
    auto f1 = d.Filter(sentinel);
    auto m1 = f1.Min();
    *m1; // this should cause i to be incremented
@@ -56,7 +58,8 @@ TEST(TEST_CATEGORY, MultipleTriggerRun)
 #ifdef R__IMT
 TEST(TEST_CATEGORY, Ranges)
 {
-   if (ROOT::EnableImplicitMT()) return;
+   if (ROOT::EnableImplicitMT())
+      return;
 
    auto fileName = "dataframe_regression_1.root";
    auto treeName = "t";
@@ -64,17 +67,19 @@ TEST(TEST_CATEGORY, Ranges)
 #define dataframe_regression_1_CREATED
    {
       TDataFrame d(100);
-      d.Define("b", []() { static int b = 0; return b++; }).Snapshot<int>(treeName, fileName, {"b"});
+      d.Define("b", []() {
+          static int b = 0;
+          return b++;
+       }).Snapshot<int>(treeName, fileName, {"b"});
    }
 #endif
    // one child ending before the father -- only one stop signal must be propagated upstream
    TDataFrame d(treeName, fileName, {"b"});
-   auto fromARange  = d.Range(10, 50).Range(10, 20).Min();                      // 20
+   auto fromARange = d.Range(10, 50).Range(10, 20).Min();                       // 20
    auto fromAFilter = d.Filter([](int b) { return b > 95; }).Range(10).Count(); // 4
 
    EXPECT_DOUBLE_EQ(*fromARange, 20);
    EXPECT_DOUBLE_EQ(*fromAFilter, 4);
-
 }
 #endif
 

@@ -8,28 +8,31 @@ using namespace ROOT::Experimental;
 
 namespace TEST_CATEGORY {
 
-   int DefineFunction() {return 1;}
+int DefineFunction()
+{
+   return 1;
+}
 
-   struct DefineStruct {
-      int operator()() {return 1;}
-   };
+struct DefineStruct {
+   int operator()() { return 1; }
+};
 
-   void FillTree(const char *filename, const char *treeName, int nevents = 0)
-   {
-      TFile f(filename, "RECREATE");
-      TTree t(treeName, treeName);
-      double b1;
-      int b2;
-      t.Branch("b1", &b1);
-      t.Branch("b2", &b2);
-      for (int i=0; i < nevents; ++i) {
-         b1 = i;
-         b2 = i*i;
-         t.Fill();
-      }
-      t.Write();
-      f.Close();
+void FillTree(const char *filename, const char *treeName, int nevents = 0)
+{
+   TFile f(filename, "RECREATE");
+   TTree t(treeName, treeName);
+   double b1;
+   int b2;
+   t.Branch("b1", &b1);
+   t.Branch("b2", &b2);
+   for (int i = 0; i < nevents; ++i) {
+      b1 = i;
+      b2 = i * i;
+      t.Fill();
    }
+   t.Write();
+   f.Close();
+}
 }
 
 TEST(TEST_CATEGORY, CreateEmpty)
@@ -59,7 +62,6 @@ TEST(TEST_CATEGORY, CreateZeroEntriesWithBranches)
    auto m = tdf.Mean("b1");
    EXPECT_EQ(0U, *c);
    EXPECT_EQ(0., *m);
-
 }
 
 TEST(TEST_CATEGORY, BuildWithTDirectory)
@@ -81,7 +83,7 @@ TEST(TEST_CATEGORY, BuildWithTDirectory)
 TEST(TEST_CATEGORY, Define_lambda)
 {
    TDataFrame tdf(10);
-   auto d = tdf.Define("i", [](){return 1;});
+   auto d = tdf.Define("i", []() { return 1; });
    auto m = d.Mean("i");
 }
 
@@ -109,7 +111,7 @@ TEST(TEST_CATEGORY, Define_jitted)
 
 TEST(TEST_CATEGORY, Define_jitted_complex)
 {
-   // The test can be run in sequential and MT mode.
+// The test can be run in sequential and MT mode.
 #ifndef RNDM_GEN_CREATED
 #define RNDM_GEN_CREATED
    gInterpreter->ProcessLine("TRandom r(1);");
@@ -119,14 +121,13 @@ TEST(TEST_CATEGORY, Define_jitted_complex)
    auto m = d.Mean("i");
 }
 
-
 // Define + Filters
 TEST(TEST_CATEGORY, Define_Filter)
 {
    TRandom r(1);
    TDataFrame tdf(50);
-   auto d = tdf.Define("r", [&r](){return r.Uniform(0.,8.);});
-   auto df = d.Filter([](double x){ return x > 5;},{"r"});
+   auto d = tdf.Define("r", [&r]() { return r.Uniform(0., 8.); });
+   auto df = d.Filter([](double x) { return x > 5; }, {"r"});
    auto m = df.Mean("r");
 }
 
@@ -134,7 +135,7 @@ TEST(TEST_CATEGORY, Define_Filter_jitted)
 {
    TRandom r(1);
    TDataFrame tdf(50);
-   auto d = tdf.Define("r", [&r](){return r.Uniform(0.,8.);});
+   auto d = tdf.Define("r", [&r]() { return r.Uniform(0., 8.); });
    auto df = d.Filter("r>5");
    auto m = df.Mean("r");
 }
@@ -143,8 +144,8 @@ TEST(TEST_CATEGORY, Define_Filter_named)
 {
    TRandom r(1);
    TDataFrame tdf(50);
-   auto d = tdf.Define("r", [&r](){return r.Uniform(0.,8.);});
-   auto df = d.Filter([](double x){ return x > 5;},{"r"},"myFilter");
+   auto d = tdf.Define("r", [&r]() { return r.Uniform(0., 8.); });
+   auto df = d.Filter([](double x) { return x > 5; }, {"r"}, "myFilter");
    auto m = df.Mean("r");
 }
 
@@ -152,8 +153,8 @@ TEST(TEST_CATEGORY, Define_Filter_named_jitted)
 {
    TRandom r(1);
    TDataFrame tdf(50);
-   auto d = tdf.Define("r", [&r](){return r.Uniform(0.,8.);});
-   auto df = d.Filter("r>5","myFilter");
+   auto d = tdf.Define("r", [&r]() { return r.Uniform(0., 8.); });
+   auto df = d.Filter("r>5", "myFilter");
    auto m = df.Mean("r");
 }
 
@@ -163,7 +164,7 @@ TEST(TEST_CATEGORY, Define_jitted_Filter)
    gInterpreter->ProcessLine("r.SetSeed(1);");
    TDataFrame tdf(50);
    auto d = tdf.Define("r", "r.Uniform(0.,8.)");
-   auto df = d.Filter([](double x){ return x > 5;},{"r"});
+   auto df = d.Filter([](double x) { return x > 5; }, {"r"});
    auto m = df.Mean("r");
 }
 
@@ -181,7 +182,7 @@ TEST(TEST_CATEGORY, Define_jitted_Filter_named)
    gInterpreter->ProcessLine("r.SetSeed(1);");
    TDataFrame tdf(50);
    auto d = tdf.Define("r", "r.Uniform(0.,8.)");
-   auto df = d.Filter([](double x){ return x > 5;},{"r"},"myFilter");
+   auto df = d.Filter([](double x) { return x > 5; }, {"r"}, "myFilter");
    auto m = df.Mean("r");
 }
 
@@ -190,7 +191,6 @@ TEST(TEST_CATEGORY, Define_jitted_Filter_named_jitted)
    gInterpreter->ProcessLine("r.SetSeed(1);");
    TDataFrame tdf(50);
    auto d = tdf.Define("r", "r.Uniform(0.,8.)");
-   auto df = d.Filter("r>5","myFilter");
+   auto df = d.Filter("r>5", "myFilter");
    auto m = df.Mean("r");
 }
-
