@@ -35,6 +35,16 @@ namespace ROOT {
 namespace Experimental {
 template <int D, typename P, template <int, typename, template <typename> class> class... S>
 class THist;
+
+namespace TDF {
+struct SnapshotOptions {
+  Int_t fAutoFlush  = 0;          //< AutoFlush value for output tree
+  Int_t fCompress   = 1;          //< Compression algorithm and compression level of output file
+  Int_t fSplitLevel = 99;         //< Split level of output tree
+  std::string fMode = "RECREATE"; //< Mode of creation of output file (i.e. "RECREATE" or "UPDATE")
+};
+}
+
 } // ns Experimental
 
 namespace Detail {
@@ -49,6 +59,7 @@ class TLoopManager;
 // type used for tag dispatching
 struct TInferType {
 };
+
 } // end ns Detail
 } // end ns TDF
 

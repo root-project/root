@@ -355,14 +355,15 @@ public:
    /// \param[in] treename The name of the output TTree
    /// \param[in] filename The name of the output TFile
    /// \param[in] columnList The list of names of the columns/branches to be written
+   /// \param[in] options SnapshotOptions struct with extra options to pass to TFile and TTree
    ///
    /// This function returns a `TDataFrame` built with the output tree as a source.
    template <typename... BranchTypes>
    TInterface<TLoopManager> Snapshot(std::string_view treename, std::string_view filename,
-                                     const ColumnNames_t &columnList)
+                                     const ColumnNames_t &columnList, const SnapshotOptions &options = SnapshotOptions())
    {
       using TypeInd_t = TDFInternal::GenStaticSeq_t<sizeof...(BranchTypes)>;
-      return SnapshotImpl<BranchTypes...>(treename, filename, columnList, TypeInd_t());
+      return SnapshotImpl<BranchTypes...>(treename, filename, columnList, options, TypeInd_t());
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -370,11 +371,12 @@ public:
    /// \param[in] treename The name of the output TTree
    /// \param[in] filename The name of the output TFile
    /// \param[in] columnList The list of names of the columns/branches to be written
+   /// \param[in] options SnapshotOptions struct with extra options to pass to TFile and TTree
    ///
    /// This function returns a `TDataFrame` built with the output tree as a source.
    /// The types of the columns are automatically inferred and do not need to be specified.
    TInterface<TLoopManager> Snapshot(std::string_view treename, std::string_view filename,
-                                     const ColumnNames_t &columnList)
+                                     const ColumnNames_t &columnList, const SnapshotOptions &options = SnapshotOptions())
    {
       auto df = GetDataFrameChecked();
       auto tree = df->GetTree();
@@ -383,7 +385,7 @@ public:
       TInterface<TTraits::TakeFirstParameter_t<decltype(upcastNode)>> upcastInterface(fProxiedPtr, fImplWeakPtr,
                                                                                       fValidCustomColumns);
       // build a string equivalent to
-      // "(TInterface<nodetype*>*)(this)->Snapshot<Ts...>(treename,filename,*(ColumnNames_t*)(&columnList))"
+      // "(TInterface<nodetype*>*)(this)->Snapshot<Ts...>(treename,filename,*(ColumnNames_t*)(&columnList), options)"
       snapCall << "reinterpret_cast<ROOT::Experimental::TDF::TInterface<" << upcastInterface.GetNodeTypeName() << ">*>("
                << &upcastInterface << ")->Snapshot<";
       bool first = true;
@@ -395,7 +397,8 @@ public:
       };
       snapCall << ">(\"" << treename << "\", \"" << filename << "\", "
                << "*reinterpret_cast<std::vector<std::string>*>(" // vector<string> should be ColumnNames_t
-               << &columnList << "));";
+               << &columnList << "),"
+               << "*reinterpret_cast<ROOT::Experimental::TDF::SnapshotOptions*>(" << &options << "));";
       // jit snapCall, return result
       TInterpreter::EErrorCode errorCode;
       auto newTDFPtr = gInterpreter->ProcessLine(snapCall.str().c_str(), &errorCode);
@@ -411,11 +414,12 @@ public:
    /// \param[in] treename The name of the output TTree
    /// \param[in] filename The name of the output TFile
    /// \param[in] columnNameRegexp The regular expression to match the column names to be selected. The presence of a '^' and a '$' at the end of the string is implicitly assumed if they are not specified. See the documentation of TRegexp for more details. An empty string signals the selection of all columns.
+   /// \param[in] options SnapshotOptions struct with extra options to pass to TFile and TTree
    ///
    /// This function returns a `TDataFrame` built with the output tree as a source.
    /// The types of the columns are automatically inferred and do not need to be specified.
    TInterface<TLoopManager> Snapshot(std::string_view treename, std::string_view filename,
-                                     std::string_view columnNameRegexp = "")
+                                     std::string_view columnNameRegexp = "", const SnapshotOptions &options = SnapshotOptions())
    {
       const auto theRegexSize = columnNameRegexp.size();
       std::string theRegex(columnNameRegexp);
@@ -453,7 +457,7 @@ public:
          }
       }
 
-      return Snapshot(treename, filename, selectedColumns);
+      return Snapshot(treename, filename, selectedColumns, options);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -1166,7 +1170,7 @@ private:
    /// the TTreeReaderValue/TemporaryBranch
    template <typename... BranchTypes, int... S>
    TInterface<TLoopManager> SnapshotImpl(std::string_view treename, std::string_view filename,
-                                         const ColumnNames_t &columnList, TDFInternal::StaticSeq<S...> /*dummy*/)
+                                         const ColumnNames_t &columnList, const SnapshotOptions &options, TDFInternal::StaticSeq<S...> /*dummy*/)
    {
       TDFInternal::CheckSnapshot(sizeof...(S), columnList.size());
 
@@ -1185,12 +1189,12 @@ private:
          // single-thread snapshot
          using Helper_t = TDFInternal::SnapshotHelper<BranchTypes...>;
          using Action_t = TDFInternal::TAction<Helper_t, Proxied, TTraits::TypeList<BranchTypes...>>;
-         actionPtr.reset(new Action_t(Helper_t(filename, dirname, treename, columnList), columnList, *fProxiedPtr));
+         actionPtr.reset(new Action_t(Helper_t(filename, dirname, treename, columnList, options), columnList, *fProxiedPtr));
       } else {
          // multi-thread snapshot
          using Helper_t = TDFInternal::SnapshotHelperMT<BranchTypes...>;
          using Action_t = TDFInternal::TAction<Helper_t, Proxied>;
-         actionPtr.reset(new Action_t(Helper_t(fProxiedPtr->GetNSlots(), filename, dirname, treename, columnList),
+         actionPtr.reset(new Action_t(Helper_t(fProxiedPtr->GetNSlots(), filename, dirname, treename, columnList, options),
                                       columnList, *fProxiedPtr));
       }
       auto df = GetDataFrameChecked();
