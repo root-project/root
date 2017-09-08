@@ -318,6 +318,7 @@ using `TH1::GetOption`:
 | "BOX"    | Draw a for each cell with volume proportional to the content's absolute value. An hidden line removal algorithm is used|
 | "BOX1"   | Same as BOX but an hidden surface removal algorithm is used|
 | "BOX2"   | The boxes' colors are picked in the current palette according to the bins' contents|
+| "BOX2Z"  | Same as "BOX2". In addition the color palette is also drawn.|
 | "BOX3"   | Same as BOX1, but the border lines of each lego-bar are not drawn.|
 | "LEGO"   | Same as `BOX`.|
 
@@ -2518,6 +2519,7 @@ End_Macro
 | "BOX"    | Draw a for each cell with volume proportional to the content's absolute value. An hidden line removal algorithm is used|
 | "BOX1"   | Same as BOX but an hidden surface removal algorithm is used|
 | "BOX2"   | The boxes' colors are picked in the current palette according to the bins' contents|
+| "BOX2Z"  | Same as "BOX2". In addition the color palette is also drawn.|
 | "BOX3"   | Same as BOX1, but the border lines of each lego-bar are not drawn.|
 
 Note that instead of `BOX` one can also use `LEGO`.
@@ -2589,7 +2591,7 @@ Begin_Macro(source)
       z = abs(sin(x)/x + cos(y)*y);
       h3box->Fill(x,y,z);
    }
-   h3box->Draw("BOX2");
+   h3box->Draw("BOX2 Z");
 }
 End_Macro
 
@@ -7205,6 +7207,16 @@ void THistPainter::PaintH3Box(Int_t iopt)
    //       Draw axis and title
    if (!Hoption.Axis && !Hoption.Same) PaintLegoAxis(axis, 90);
    PaintTitle();
+
+   // Draw palette. if needed.
+   if (Hoption.Zscale) {
+      Int_t ndiv   = fH->GetContour();
+      if (ndiv == 0 ) {
+         ndiv = gStyle->GetNumberContours();
+         fH->SetContour(ndiv);
+      }
+      PaintPalette();
+   }
 
    delete axis;
    delete fLego; fLego = 0;

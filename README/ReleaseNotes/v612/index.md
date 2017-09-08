@@ -101,6 +101,8 @@ large TClonesArray where each element contains another small vector container.
     displayed. It is now fixed. It was reported
     [here](https://sft.its.cern.ch/jira/browse/ROOT-8200).
   - It is now possible to set the titles and the axis ranges of a TMultiGraph drawn as 3D lines.
+  - Implement the option "Z" (to draw the palette) for 3D histograms drawn with
+    the option "BOX2".
 
 ## 3D Graphics Libraries
 
