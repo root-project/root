@@ -103,6 +103,7 @@ TEST(TEST_CATEGORY, Define_lambda)
    TDataFrame tdf(10);
    auto d = tdf.Define("i", []() { return 1; });
    auto m = d.Mean("i");
+   EXPECT_DOUBLE_EQ(1., *m);
 }
 
 TEST(TEST_CATEGORY, Define_function)
@@ -110,6 +111,7 @@ TEST(TEST_CATEGORY, Define_function)
    TDataFrame tdf(10);
    auto d = tdf.Define("i", TEST_CATEGORY::DefineFunction);
    auto m = d.Mean("i");
+   EXPECT_DOUBLE_EQ(1., *m);
 }
 
 TEST(TEST_CATEGORY, Define_functor)
@@ -118,6 +120,7 @@ TEST(TEST_CATEGORY, Define_functor)
    TEST_CATEGORY::DefineStruct def;
    auto d = tdf.Define("i", def);
    auto m = d.Mean("i");
+   EXPECT_DOUBLE_EQ(1., *m);
 }
 
 TEST(TEST_CATEGORY, Define_jitted)
@@ -125,6 +128,7 @@ TEST(TEST_CATEGORY, Define_jitted)
    TDataFrame tdf(10);
    auto d = tdf.Define("i", "1");
    auto m = d.Mean("i");
+   EXPECT_DOUBLE_EQ(1., *m);
 }
 
 TEST(TEST_CATEGORY, Define_jitted_complex)
@@ -132,11 +136,13 @@ TEST(TEST_CATEGORY, Define_jitted_complex)
 // The test can be run in sequential and MT mode.
 #ifndef RNDM_GEN_CREATED
 #define RNDM_GEN_CREATED
-   gInterpreter->ProcessLine("TRandom r(1);");
+   gInterpreter->ProcessLine("TRandom r;");
 #endif
+   gInterpreter->ProcessLine("r.SetSeed(1);");
    TDataFrame tdf(50);
    auto d = tdf.Define("i", "r.Uniform(0.,8.)");
-   auto m = d.Mean("i");
+   auto m = d.Max("i");
+   EXPECT_EQ(7.867497533559811628, *m);
 }
 
 // Define + Filters
@@ -146,7 +152,8 @@ TEST(TEST_CATEGORY, Define_Filter)
    TDataFrame tdf(50);
    auto d = tdf.Define("r", [&r]() { return r.Uniform(0., 8.); });
    auto df = d.Filter([](double x) { return x > 5; }, {"r"});
-   auto m = df.Mean("r");
+   auto m = df.Max("r");
+   EXPECT_EQ(7.867497533559811628, *m);
 }
 
 TEST(TEST_CATEGORY, Define_Filter_jitted)
@@ -155,7 +162,8 @@ TEST(TEST_CATEGORY, Define_Filter_jitted)
    TDataFrame tdf(50);
    auto d = tdf.Define("r", [&r]() { return r.Uniform(0., 8.); });
    auto df = d.Filter("r>5");
-   auto m = df.Mean("r");
+   auto m = df.Max("r");
+   EXPECT_EQ(7.867497533559811628, *m);
 }
 
 TEST(TEST_CATEGORY, Define_Filter_named)
@@ -164,7 +172,8 @@ TEST(TEST_CATEGORY, Define_Filter_named)
    TDataFrame tdf(50);
    auto d = tdf.Define("r", [&r]() { return r.Uniform(0., 8.); });
    auto df = d.Filter([](double x) { return x > 5; }, {"r"}, "myFilter");
-   auto m = df.Mean("r");
+   auto m = df.Max("r");
+   EXPECT_EQ(7.867497533559811628, *m);
 }
 
 TEST(TEST_CATEGORY, Define_Filter_named_jitted)
@@ -173,7 +182,8 @@ TEST(TEST_CATEGORY, Define_Filter_named_jitted)
    TDataFrame tdf(50);
    auto d = tdf.Define("r", [&r]() { return r.Uniform(0., 8.); });
    auto df = d.Filter("r>5", "myFilter");
-   auto m = df.Mean("r");
+   auto m = df.Max("r");
+   EXPECT_EQ(7.867497533559811628, *m);
 }
 
 // jitted Define + Filters
@@ -183,7 +193,8 @@ TEST(TEST_CATEGORY, Define_jitted_Filter)
    TDataFrame tdf(50);
    auto d = tdf.Define("r", "r.Uniform(0.,8.)");
    auto df = d.Filter([](double x) { return x > 5; }, {"r"});
-   auto m = df.Mean("r");
+   auto m = df.Max("r");
+   EXPECT_EQ(7.867497533559811628, *m);
 }
 
 TEST(TEST_CATEGORY, Define_jitted_Filter_jitted)
@@ -192,7 +203,8 @@ TEST(TEST_CATEGORY, Define_jitted_Filter_jitted)
    TDataFrame tdf(50);
    auto d = tdf.Define("r", "r.Uniform(0.,8.)");
    auto df = d.Filter("r>5");
-   auto m = df.Mean("r");
+   auto m = df.Max("r");
+   EXPECT_EQ(7.867497533559811628, *m);
 }
 
 TEST(TEST_CATEGORY, Define_jitted_Filter_named)
@@ -201,7 +213,8 @@ TEST(TEST_CATEGORY, Define_jitted_Filter_named)
    TDataFrame tdf(50);
    auto d = tdf.Define("r", "r.Uniform(0.,8.)");
    auto df = d.Filter([](double x) { return x > 5; }, {"r"}, "myFilter");
-   auto m = df.Mean("r");
+   auto m = df.Max("r");
+   EXPECT_EQ(7.867497533559811628, *m);
 }
 
 TEST(TEST_CATEGORY, Define_jitted_Filter_named_jitted)
@@ -210,5 +223,6 @@ TEST(TEST_CATEGORY, Define_jitted_Filter_named_jitted)
    TDataFrame tdf(50);
    auto d = tdf.Define("r", "r.Uniform(0.,8.)");
    auto df = d.Filter("r>5", "myFilter");
-   auto m = df.Mean("r");
+   auto m = df.Max("r");
+   EXPECT_EQ(7.867497533559811628, *m);
 }
