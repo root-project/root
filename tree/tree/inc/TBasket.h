@@ -27,7 +27,6 @@
 
 #include "TKey.h"
 
-
 class TFile;
 class TTree;
 class TBranch;
@@ -94,7 +93,9 @@ public:
    TBranch        *GetBranch() const {return fBranch;}
            Int_t   GetBufferSize() const {return fBufferSize;}
            Int_t  *GetDisplacement() const {return fDisplacement;}
-           Int_t  *GetEntryOffset() const {return fEntryOffset;}
+           Int_t  *GetEntryOffset() {return R__likely(fEntryOffset != (Int_t*)1) ? fEntryOffset :
+                                            GetCalculatedEntryOffset();}
+           Int_t  *GetCalculatedEntryOffset();
            Int_t   GetEntryPointer(Int_t Entry);
            Int_t   GetNevBuf() const {return fNevBuf;}
            Int_t   GetNevBufSize() const {return fNevBufSize;}
