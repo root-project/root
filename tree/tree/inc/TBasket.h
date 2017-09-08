@@ -76,7 +76,7 @@ public:
    };
    // This enum covers IOBits that are known to this ROOT release but
    // not supported; provides a mechanism for us to have experimental
-   // changes that doing go into a supported release.
+   // changes that are not going go into a supported release.
    //
    // (kUnsupported | kSupported) should result in the '|' of all IOBits.
    enum class EUnsupportedIOBits: Char_t { kUnsupported = 0 };
