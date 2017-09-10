@@ -1,5 +1,5 @@
 #pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated"
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
 #include "SmartPtr.h"
 
