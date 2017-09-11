@@ -4757,6 +4757,8 @@ void THistPainter::PaintBarH(Option_t *)
    }
 
    PaintTitle();
+   PaintAxis(kFALSE);
+
    //    Draw box with histogram statistics and/or fit parameters
    if (Hoption.Same != 1 && !fH->TestBit(TH1::kNoStats)) {  // bit set via TH1::SetStats
       TIter next(fFunctions);
@@ -4768,7 +4770,6 @@ void THistPainter::PaintBarH(Option_t *)
       PaintStat(gStyle->GetOptStat(),(TF1*)obj);
    }
 
-   PaintAxis(kFALSE);
    fXaxis = xaxis;
    fYaxis = yaxis;
 }
