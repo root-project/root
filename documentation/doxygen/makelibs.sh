@@ -11,6 +11,10 @@ PICNAME=$HTMLPATH/"class"$1"__coll__graph.svg"
 # Find the libraries for the class $1
 root -l -b -q "libs.C(\"$1\")"
 
+if [[ ! -f libslist.dot ]] ; then
+   exit
+fi
+
 sed -i'.back' -e "s/\.so.*$/\";/" libslist.dot
 rm libslist.dot.back
 
