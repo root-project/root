@@ -1,5 +1,5 @@
 #include "TFile.h"
-#include <RConfig.h>
+#include "RConfig.h"
 
 extern "C" uint32_t lzma_version_number(void);
 
