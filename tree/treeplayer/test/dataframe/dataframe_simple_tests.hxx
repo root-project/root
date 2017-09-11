@@ -234,5 +234,3 @@ TEST(TEST_CATEGORY, GetNSlots)
    EXPECT_EQ(NSLOTS, ROOT::Internal::TDF::GetNSlots());
 }
 #endif
-
-
