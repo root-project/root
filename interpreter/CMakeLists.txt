@@ -125,6 +125,19 @@ else()
   add_subdirectory(llvm/src EXCLUDE_FROM_ALL)
 endif()
 
+#---Make LLVM compilation flags public---------------------------------------------------------------
+# Extract the compilation flags from LLVM and make them public to the
+# rest of ROOT so that we can compile against LLVM with matching flags.
+
+# LLVM doesn't really give us a API to get this with an in-source build
+# so we just use the normal way of doing this and read the llvm directory
+# compilation properties.
+get_directory_property(LLVM_DEFS DIRECTORY llvm/src COMPILE_DEFINITIONS)
+# Turns DEFINE1;DEFINE2 to -DDEFINE1 -DDEFINE2
+string (REPLACE ";" " -D" LLVM_DEFS ";${LLVM_DEFS}")
+# CACHE variable that contains the additional flags that LLVM needs.
+set(ROOT_LLVM_FLAGS "${LLVM_DEFS}" CACHE STRING "" FORCE)
+
 #---Avoid to dependencies to system (e.g. atomic) libraries without modifying the LLVM code----------
 if(CMAKE_SYSTEM_NAME STREQUAL Darwin)
   get_target_property(__libs LLVMSupport INTERFACE_LINK_LIBRARIES)
