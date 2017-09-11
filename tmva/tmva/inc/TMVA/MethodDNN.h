@@ -64,6 +64,8 @@ namespace TMVA {
 
 class MethodDNN : public MethodBase
 {
+   friend struct TestMethodDNNValidationSize;
+
    using Architecture_t = DNN::TReference<Double_t>;
    using Net_t          = DNN::TNet<Architecture_t>;
    using Matrix_t       = typename Architecture_t::Matrix_t;
@@ -89,6 +91,8 @@ private:
    void DeclareOptions();
    void ProcessOptions();
 
+   UInt_t GetNumValidationSamples();
+
    // general helper functions
    void     Init();
 
@@ -101,6 +105,7 @@ private:
    TString                        fTrainingStrategyString;
    TString                        fWeightInitializationString;
    TString                        fArchitectureString;
+   TString                        fValidationSize;
    LayoutVector_t                 fLayout;
    std::vector<TTrainingSettings> fTrainingSettings;
    bool                           fResume;
