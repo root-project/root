@@ -118,7 +118,7 @@ const char *ToConstCharPtr(const char *s)
    return s;
 }
 
-const char *ToConstCharPtr(const std::string s)
+const char *ToConstCharPtr(const std::string& s)
 {
    return s.c_str();
 }
