@@ -104,6 +104,7 @@ Bool_t TWebCanvas::IsJSSupportedClass(TObject* obj)
        { "TFrame", false },
        { "THStack", false },
        { "TMultiGraph", false },
+       { "TGraphPolargram", true },
        { "TPave", true },
        { "TGaxis", false },
        { "TPave", true },
@@ -334,7 +335,7 @@ TString TWebCanvas::CreateSnapshot(TPad* pad, TPadWebSnapshot *master, TList *pr
    TString res = TBufferJSON::ConvertToJSON(curr, 23);
    // gDebug = 0;
 
-   // TBufferJSON::ExportToFile("snapshot.json", curr);
+   TBufferJSON::ExportToFile("snapshot.json", curr);
 
    delete curr; // destroy created snapshot
 
