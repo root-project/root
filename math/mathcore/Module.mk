@@ -39,6 +39,7 @@ MATHCOREDICTH := TComplex.h \
                  Math/DistFuncMathCore.h \
                  Math/DistSampler.h \
                  Math/DistSamplerOptions.h \
+                 Math/Error.h \
                  Math/Factory.h \
                  Math/FitMethodFunction.h \
                  Math/Functor.h \
@@ -54,6 +55,7 @@ MATHCOREDICTH := TComplex.h \
                  Math/IParamFunction.h \
                  Math/IRootFinderMethod.h \
                  Math/KDTree.h \
+                 Math/LCGEngine.h \
                  Math/MersenneTwisterEngine.h \
                  Math/Minimizer.h \
                  Math/MinimizerOptions.h \
@@ -66,6 +68,7 @@ MATHCOREDICTH := TComplex.h \
                  Math/RichardsonDerivator.h \
                  Math/RootFinder.h \
                  Math/SpecFuncMathCore.h \
+                 Math/StdEngine.h \
                  Math/TDataPoint.h \
                  Math/TDataPointN.h \
                  Math/TRandomEngine.h \
