@@ -103,7 +103,7 @@ large TClonesArray where each element contains another small vector container.
   - It is now possible to set the titles and the axis ranges of a TMultiGraph drawn as 3D lines.
   - Implement the option "Z" (to draw the palette) for 3D histograms drawn with
     the option "BOX2".
-  - With the option `HBAR`the histogram grid was painted over the stat box.
+  - With the option `HBAR` the histogram grid was painted over the stat box.
 
 ## 3D Graphics Libraries
 
