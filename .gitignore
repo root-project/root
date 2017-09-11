@@ -48,6 +48,7 @@ CMakeLists.txt.user
 
 # Other Stuff
 *.d
+tags
 
 # /
 /bin
