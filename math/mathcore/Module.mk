@@ -153,7 +153,7 @@ $(call pcmrule,MATHCORE)
 $(MATHCOREDS):  $(add-prefix include/,$(MATHCOREDICTH)) $(MATHCOREL0) $(MATHCORELS) $(ROOTCLINGEXE) $(call pcmdep,MATHCORE)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,MATHCORE) -c -writeEmptyRootPCM -I$(ROOT_SRCDIR) $(MATHCOREDICTH) $(MATHCOREL0)
+		$(ROOTCLINGSTAGE2) -v1 -f $@ $(call dictModule,MATHCORE) -c -writeEmptyRootPCM -I$(ROOT_SRCDIR) $(MATHCOREDICTH) $(MATHCOREL0)
 
 $(MATHCOREMAP): $(add-prefix include/,$(MATHCOREDICTH)) $(MATHCOREL0) $(MATHCORELS) $(ROOTCLINGEXE) $(call pcmdep,MATHCORE)
 		$(MAKEDIR)
