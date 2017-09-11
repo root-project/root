@@ -21,11 +21,12 @@ TEST(TDataFrameNodes, TSlotStackGetOneTooMuch)
 
       std::vector<std::thread> ts;
 
-      for (unsigned int i = 0; i < 3;++i) {
-         ts.emplace_back([&s](){s.GetSlot();});
+      for (unsigned int i = 0; i < 3; ++i) {
+         ts.emplace_back([&s]() { s.GetSlot(); });
       }
 
-      for (auto&& t : ts) t.join();
+      for (auto &&t : ts)
+         t.join();
    };
 
    ASSERT_DEATH(theTest(), "TSlotStack assumes that a value can be always obtained.");
@@ -39,26 +40,16 @@ TEST(TDataFrameNodes, TSlotStackPutBackTooMany)
 
       std::vector<std::thread> ts;
 
-      for (unsigned int i = 0; i < 2;++i) {
-         ts.emplace_back([&s](){s.GetSlot();});
+      for (unsigned int i = 0; i < 2; ++i) {
+         ts.emplace_back([&s]() { s.GetSlot(); });
       }
-      for (unsigned int i = 0; i < 2;++i) {
-         ts.emplace_back([&s, i](){s.ReturnSlot(i);});
+      for (unsigned int i = 0; i < 2; ++i) {
+         ts.emplace_back([&s, i]() { s.ReturnSlot(i); });
       }
 
-      for (auto&& t : ts) t.join();
+      for (auto &&t : ts)
+         t.join();
    };
 
    ASSERT_DEATH(theTest(), "TSlotStack has a reference count relative to an index which will become negative");
 }
-
-
-
-
-
-
-
-
-
-
-

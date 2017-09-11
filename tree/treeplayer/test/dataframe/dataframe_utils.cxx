@@ -196,7 +196,7 @@ TEST(TDataFrameUtils, FindUnknownColumns)
    TTree t("t", "t");
    t.Branch("a", &i);
 
-   auto ncols = ROOT::Internal::TDF::FindUnknownColumns({"a","b","c","d"}, &t, {"b"});
+   auto ncols = ROOT::Internal::TDF::FindUnknownColumns({"a", "b", "c", "d"}, &t, {"b"});
    EXPECT_STREQ("c", ncols[0].c_str());
    EXPECT_STREQ("d", ncols[1].c_str());
 }
