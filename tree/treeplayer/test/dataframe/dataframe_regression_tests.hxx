@@ -1,4 +1,5 @@
 #include "ROOT/TDataFrame.hxx"
+#include "TROOT.h"
 
 #include "gtest/gtest.h"
 
@@ -70,20 +71,20 @@ TEST(TEST_CATEGORY, MultipleTriggerRun)
    EXPECT_EQ(2, i) << "The filter was not correctly executed for the second time.";
 }
 
-#ifdef R__IMT
+#ifdef R__USE_IMT
 TEST(TEST_CATEGORY, Ranges)
 {
-   if (ROOT::EnableImplicitMT())
+   if (ROOT::IsImplicitMTEnabled())
       return;
 
    auto fileName = "dataframe_regression_1.root";
    auto treeName = "t";
 #ifndef dataframe_regression_1_CREATED
 #define dataframe_regression_1_CREATED
-   TEST_CATEGORY::FillTree(fileName, treeName, 100)
+   TEST_CATEGORY::FillTree(fileName, treeName, 100);
 #endif
    // one child ending before the father -- only one stop signal must be propagated upstream
-   TDataFrame d(treeName, fileName, {"b"});
+   TDataFrame d(treeName, fileName, {"b1"});
    auto fromARange = d.Range(10, 50).Range(10, 20).Min();                       // 20
    auto fromAFilter = d.Filter([](int b) { return b > 95; }).Range(10).Count(); // 4
 
