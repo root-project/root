@@ -15,6 +15,7 @@ The following people have contributed to this new version:
 
  Guilherme Amadio, CERN/SFT,\
  Bertrand Bellenot, CERN/SFT,\
+ Brian Bockelman, UNL,\
  Rene Brun, CERN/SFT,\
  Philippe Canal, FNAL,\
  Olivier Couet, CERN/SFT,\
@@ -62,6 +63,8 @@ auto h1 = key->ReadObject<TH1>
 ```
 after which h1 will either be null if the key contains something that is not a TH1 (or derived class)
 or will be set to the address of the histogram read from the file.
+
+- Added a new mechanism for providing clean forward-compatibility breaks in a ``TTree`` (i.e., a newer version of ROOT writes a ``TTree`` an older version cannot read).  When future versions of ROOT utilize an IO feature that this version does not support, ROOT will provide a clear error message instead of crashing or returning garbage data.  In future ROOT6 releases, forward-compatibility breaks will only be allowed if a non-default feature is enabled via the ``ROOT::Experimental`` namespace; it is expected ROOT7 will enable forward-compatibility breaks by default.
 
 ## TTree Libraries
 
