@@ -1401,7 +1401,7 @@ void TPad::DrawClassObject(const TObject *classobj, Option_t *option)
 
             Int_t dim = d->GetArrayDim();
             Int_t indx = 0;
-            snprintf(dname,256,"%s",obj->EscapeChars(d->GetName()));
+            snprintf(dname,256,"%s",d->GetName());
             Int_t ldname = 0;
             while (indx < dim ){
                ldname = strlen(dname);
@@ -1439,8 +1439,8 @@ void TPad::DrawClassObject(const TObject *classobj, Option_t *option)
             if (fcount > nf) break;
             if (i >= nkf) { i = 1; y = ysep - 0.5*dy; x += 1/Double_t(nc); }
             else { i++; y -= dy; }
-            ptext = pt->AddText(x,(y-v1)/dv,obj->EscapeChars(m->GetName()));
 
+            ptext = pt->AddText(x,(y-v1)/dv,m->GetName());
             // Check if method is overloaded in a derived class
             // If yes, Change the color of the text to blue
             for (j=ilevel-1;j>=0;j--) {
