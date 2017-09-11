@@ -22,7 +22,6 @@
 
 #include <cassert>
 #include <mutex>
-#include <numeric> // std::accumulate (PrintReport), std::iota (TSlotStack)
 #include <string>
 class TDirectory;
 class TTree;
