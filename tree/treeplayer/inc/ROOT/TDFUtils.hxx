@@ -108,7 +108,7 @@ using TVBVec_t = std::vector<TVBPtr_t>;
 std::string ColumnName2ColumnTypeName(const std::string &colName, TTree *, TCustomColumnBase *);
 
 const char *ToConstCharPtr(const char *s);
-const char *ToConstCharPtr(const std::string s);
+const char *ToConstCharPtr(const std::string& s);
 unsigned int GetNSlots();
 
 /// Choose between TTreeReader{Array,Value} depending on whether the branch type
