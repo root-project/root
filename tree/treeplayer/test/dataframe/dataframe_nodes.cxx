@@ -53,3 +53,23 @@ TEST(TDataFrameNodes, TSlotStackPutBackTooMany)
 
    ASSERT_DEATH(theTest(), "TSlotStack has a reference count relative to an index which will become negative");
 }
+
+TEST(TDataFrameNodes, TLoopManagerGetImplPtr)
+{
+   ROOT::Detail::TDF::TLoopManager lm(nullptr, {});
+   ASSERT_EQ(&lm, lm.GetImplPtr());
+}
+
+TEST(TDataFrameNodes, TLoopManagerJit)
+{
+   ROOT::Detail::TDF::TLoopManager lm(nullptr, {});
+   lm.Jit("souble d = 3.14");
+   int ret (1);
+   try {
+      testing::internal::CaptureStderr();
+      lm.Run();
+   } catch (const std::runtime_error &e) {
+      ret = 0;
+   }
+   EXPECT_EQ(0, ret) << "Bogus C++ code was jitted and nothing was detected!";
+}
