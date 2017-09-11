@@ -323,7 +323,7 @@ void RScanner::UnimplementedDecl(clang::Decl* D, const std::string &txt)
    clang::Decl::Kind k = D->getKind();
 
    bool show = true;
-   if (k >= 0 || k <= fgDeclLast) {
+   if (k <= fgDeclLast) {
       if (fDeclTable [k])
          show = false; // already displayed
       else
