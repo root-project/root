@@ -226,3 +226,13 @@ TEST(TEST_CATEGORY, Define_jitted_Filter_named_jitted)
    auto m = df.Max("r");
    EXPECT_EQ(7.867497533559811628, *m);
 }
+
+// This tests the interface but we need to run it both w/ and w/o implicit mt
+#ifdef R__USE_IMT
+TEST(TEST_CATEGORY, GetNSlots)
+{
+   EXPECT_EQ(NSLOTS, ROOT::Internal::TDF::GetNSlots());
+}
+#endif
+
+
