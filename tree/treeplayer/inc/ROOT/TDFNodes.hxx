@@ -19,6 +19,7 @@
 #include "TTreeReaderValue.h"
 
 #include <map>
+#include <numeric> // std::accumulate (PrintReport), std::iota (TSlotStack)
 #include <string>
 #include <tuple>
 #include <cassert>
