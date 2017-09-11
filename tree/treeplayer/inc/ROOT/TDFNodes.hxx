@@ -22,12 +22,41 @@
 #include <string>
 #include <tuple>
 #include <cassert>
+#include <climits>
 
 namespace ROOT {
 
 namespace Internal {
 namespace TDF {
 class TActionBase;
+
+// This is an helper class to allow to pick a slot without resorting to a map
+// indexed by thread ids.
+// WARNING: this class does not work as a regular stack. The size is
+// fixed at construction time and no blocking is foreseen.
+class TSlotStack {
+private:
+   unsigned int &GetCount()
+   {
+      TTHREAD_TLS(unsigned int) count = 0U;
+      return count;
+   }
+   unsigned int &GetIndex()
+   {
+      TTHREAD_TLS(unsigned int) index = UINT_MAX;
+      return index;
+   }
+   unsigned int fCursor;
+   std::vector<unsigned int> fBuf;
+   ROOT::TSpinMutex fMutex;
+
+public:
+   TSlotStack() = delete;
+   TSlotStack(unsigned int size) : fCursor(size), fBuf(size) { std::iota(fBuf.begin(), fBuf.end(), 0U); }
+   void ReturnSlot(unsigned int slotNumber);
+   unsigned int GetSlot();
+};
+
 }
 }
 
