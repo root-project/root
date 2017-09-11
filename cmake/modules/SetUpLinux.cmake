@@ -107,7 +107,9 @@ set(CMAKE_M_LIBS -lm)
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -rdynamic")
 
 if(CMAKE_COMPILER_IS_GNUCXX)
-
+  if(CMAKE_BUILD_TYPE STREQUAL Optimized)
+      set(CMAKE_CXX_FLAGS "-ffast-math")
+  endif()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe ${BIT_ENVIRONMENT} ${FP_MATH_FLAGS} -Wshadow -Wall -W -Woverloaded-virtual -fsigned-char -fPIC")
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pipe ${BIT_ENVIRONMENT} -Wall -W -fPIC")
 
