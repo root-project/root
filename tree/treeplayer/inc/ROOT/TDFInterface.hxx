@@ -1052,7 +1052,7 @@ public:
    TResultProxy<double> Max(std::string_view columnName = "")
    {
       const auto userColumns = columnName.empty() ? ColumnNames_t() : ColumnNames_t({std::string(columnName)});
-      auto maxV = std::make_shared<double>(std::numeric_limits<double>::min());
+      auto maxV = std::make_shared<double>(std::numeric_limits<double>::lowest());
       return CreateAction<TDFInternal::ActionTypes::Max, T>(userColumns, maxV);
    }
 
