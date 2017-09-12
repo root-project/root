@@ -190,7 +190,8 @@ const ColumnNames_t SelectColumns(unsigned int nRequiredNames, const ColumnNames
    }
 }
 
-ColumnNames_t FindUnknownColumns(const ColumnNames_t &requiredCols, TTree *tree, const ColumnNames_t &definedCols)
+ColumnNames_t FindUnknownColumns(const ColumnNames_t &requiredCols, TTree *tree, const ColumnNames_t &definedCols,
+                                 const ColumnNames_t &dataSourceColumns)
 {
    ColumnNames_t unknownColumns;
    for (auto &column : requiredCols) {
@@ -199,6 +200,10 @@ ColumnNames_t FindUnknownColumns(const ColumnNames_t &requiredCols, TTree *tree,
          continue;
       const auto isCustomColumn = std::find(definedCols.begin(), definedCols.end(), column) != definedCols.end();
       if (isCustomColumn)
+         continue;
+      const auto isDataSourceColumn =
+         std::find(dataSourceColumns.begin(), dataSourceColumns.end(), column) != dataSourceColumns.end();
+      if (isDataSourceColumn)
          continue;
       unknownColumns.emplace_back(column);
    }
