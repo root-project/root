@@ -359,9 +359,19 @@ public:
    unsigned int GetNSlots() const { return fNSlots; }
 };
 
+template <typename F, bool PassSlotNumber = false>
+struct CustomColumnBranchTypes {
+   using type = typename CallableTraits<F>::arg_types;
+};
+
 template <typename F>
+struct CustomColumnBranchTypes<F, true> {
+   using type = RemoveFirstParameter_t<typename CallableTraits<F>::arg_types>;
+};
+
+template <typename F, bool PassSlotNumber = false>
 class TCustomColumn final : public TCustomColumnBase {
-   using BranchTypes_t = typename CallableTraits<F>::arg_types;
+   using BranchTypes_t = typename CustomColumnBranchTypes<F, PassSlotNumber>::type;
    using TypeInd_t = TDFInternal::GenStaticSeq_t<BranchTypes_t::list_size>;
    using ret_type = typename CallableTraits<F>::ret_type;
 
@@ -396,7 +406,7 @@ public:
    {
       if (entry != fLastCheckedEntry[slot]) {
          // evaluate this filter, cache the result
-         UpdateHelper(slot, entry, TypeInd_t(), BranchTypes_t());
+         UpdateHelper(slot, entry, TypeInd_t(), BranchTypes_t(), std::integral_constant<bool, PassSlotNumber>());
          fLastCheckedEntry[slot] = entry;
       }
    }
@@ -404,7 +414,18 @@ public:
    const std::type_info &GetTypeId() const { return typeid(ret_type); }
 
    template <int... S, typename... BranchTypes>
-   void UpdateHelper(unsigned int slot, Long64_t entry, TDFInternal::StaticSeq<S...>, TypeList<BranchTypes...>)
+   void UpdateHelper(unsigned int slot, Long64_t entry, TDFInternal::StaticSeq<S...>, TypeList<BranchTypes...>,
+                     std::true_type shouldPassSlotNumber)
+   {
+      *fLastResultPtr[slot] = fExpression(slot, std::get<S>(fValues[slot]).Get(entry)...);
+      // silence "unused parameter" warnings in gcc
+      (void)slot;
+      (void)entry;
+   }
+
+   template <int... S, typename... BranchTypes>
+   void UpdateHelper(unsigned int slot, Long64_t entry, TDFInternal::StaticSeq<S...>, TypeList<BranchTypes...>,
+                     std::false_type shouldPassSlotNumber)
    {
       *fLastResultPtr[slot] = fExpression(std::get<S>(fValues[slot]).Get(entry)...);
       // silence "unused parameter" warnings in gcc
@@ -412,7 +433,7 @@ public:
       (void)entry;
    }
 
-   virtual void ClearValueReaders(unsigned int slot) final { ResetTDFValueTuple(fValues[slot], TypeInd_t()); }
+   void ClearValueReaders(unsigned int slot) final { ResetTDFValueTuple(fValues[slot], TypeInd_t()); }
 };
 
 class TFilterBase {
