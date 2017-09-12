@@ -877,7 +877,7 @@ public:
    TResultProxy<double> Max(std::string_view branchName = "")
    {
       auto bl = GetBranchNames<T>({branchName}, "calculate the maximum");
-      auto maxV = std::make_shared<double>(std::numeric_limits<double>::min());
+      auto maxV = std::make_shared<double>(std::numeric_limits<double>::lowest());
       return CreateAction<TDFInternal::ActionTypes::Max, T>(bl, maxV);
    }
 
