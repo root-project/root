@@ -448,7 +448,7 @@ void TProfile2Poly::GetStats(Double_t *stats) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Print overflow regions.
 
-void TProfile2Poly::printOverflowRegions()
+void TProfile2Poly::PrintOverflowRegions()
 {
    Double_t total = 0;
    Double_t cont = 0;
