@@ -12,6 +12,7 @@
 #define ROOT_TDF_TINTERFACE
 
 #include "ROOT/TResultProxy.hxx"
+#include "ROOT/TDataSource.hxx"
 #include "ROOT/TDFNodes.hxx"
 #include "ROOT/TDFActionHelpers.hxx"
 #include "ROOT/TDFUtils.hxx"
@@ -189,6 +190,8 @@ class TInterface {
    const std::shared_ptr<Proxied> fProxiedPtr; ///< Smart pointer to the graph node encapsulated by this TInterface.
    const std::weak_ptr<TLoopManager> fImplWeakPtr; ///< Weak pointer to the TLoopManager at the root of the graph.
    ColumnNames_t fValidCustomColumns; ///< Names of columns `Define`d for this branch of the functional graph.
+   /// Non-owning pointer to a data-source object. Null if no data-source. TLoopManager has ownership of the object.
+   TDataSource *fDataSource = nullptr;
 public:
    /// \cond HIDDEN_SYMBOLS
    // Template conversion operator, meant to use to convert TInterfaces of certain node types to TInterfaces of base
@@ -1276,7 +1279,8 @@ protected:
    /// Only enabled when building a TInterface<TLoopManager>
    template <typename T = Proxied, typename std::enable_if<std::is_same<T, TLoopManager>::value, int>::type = 0>
    TInterface(const std::shared_ptr<Proxied> &proxied)
-      : fProxiedPtr(proxied), fImplWeakPtr(proxied->GetSharedPtr()), fValidCustomColumns()
+      : fProxiedPtr(proxied), fImplWeakPtr(proxied->GetSharedPtr()), fValidCustomColumns(),
+        fDataSource(proxied->GetDataSource())
    {
    }
 
