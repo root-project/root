@@ -23,10 +23,13 @@ void tprofile2polyRealisticModuleError(Int_t numEvents = 1000000)
    auto err = new TProfile2Poly();
 
    ifstream infile;
-   infile.open("data/tprofile2poly_tutorial.data");
+   TString dir = gROOT->GetTutorialDir();
+   dir.Append("/hist/data/tprofile2poly_tutorial.data");
+   infile.open(dir.Data());
+
    if (!infile) // Verify that the file was open successfully
    {
-      std::cerr << "File data/tprofile2poly_tutorial.data could not be opened!\n"; // Report error
+      std::cerr << dir.Data() << std::endl; // Report error
       std::cerr << "Error code: " << strerror(errno) << std::endl; // Get some info as to why
       return;
    }
