@@ -13,6 +13,7 @@
 
 #include "ROOT/TypeTraits.hxx"
 #include "ROOT/RArrayView.hxx"
+#include "Compression.h"
 #include "TH1.h"
 #include "TTreeReaderArray.h"
 #include "TTreeReaderValue.h"
@@ -38,10 +39,12 @@ class THist;
 
 namespace TDF {
 struct SnapshotOptions {
-  Int_t fAutoFlush  = 0;          //< AutoFlush value for output tree
-  Int_t fCompress   = 1;          //< Compression algorithm and compression level of output file
-  Int_t fSplitLevel = 99;         //< Split level of output tree
-  std::string fMode = "RECREATE"; //< Mode of creation of output file (i.e. "RECREATE" or "UPDATE")
+  using ECAlgo = ::ROOT::ECompressionAlgorithm;
+  std::string fMode             = "RECREATE"; //< Mode of creation of output file
+  ECAlgo fCompressionAlgorithm  = ROOT::kLZ4; //< Compression algorithm of output file
+  Int_t  fCompressionLevel      = 1;          //< Compression level of output file
+  Int_t  fAutoFlush             = 0;          //< AutoFlush value for output tree
+  Int_t  fSplitLevel            = 99;         //< Split level of output tree
 };
 }
 

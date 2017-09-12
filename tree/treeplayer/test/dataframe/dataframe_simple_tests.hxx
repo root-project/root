@@ -279,7 +279,8 @@ TEST(TEST_CATEGORY, Snapshot_action_with_options)
    for (auto algorithm : { ROOT::kZLIB, ROOT::kLZMA, ROOT::kLZ4 }) {
       TDataFrame tdf(1000);
 
-      opts.fCompress = ROOT::CompressionSettings(algorithm, 6);
+      opts.fCompressionLevel = 6;
+      opts.fCompressionAlgorithm = algorithm;
 
       auto s = tdf.Define("one", []() { return 1.0; })
                   .Snapshot<double>("mytree", "snapshot_test_opts.root", {"one"}, opts);
