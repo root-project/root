@@ -96,7 +96,7 @@ public:
 
 
    Double_t GetOverflowContent(Int_t idx) { return fOverflowBins[idx].fSumw; }
-   void printOverflowRegions();
+   void PrintOverflowRegions();
 
 private:
    TProfile2PolyBin fOverflowBins[kNOverflow];
