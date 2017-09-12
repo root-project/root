@@ -5,8 +5,8 @@
 ///
 /// \macro_code
 ///
-/// \author Danilo Piparo
 /// \date August 2017
+/// \author Danilo Piparo
 
 
 void workItem0()

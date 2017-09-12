@@ -5,8 +5,8 @@
 ///
 /// \macro_code
 ///
-/// \author Danilo Piparo
 /// \date August 2017
+/// \author Danilo Piparo
 
 int Fibonacci(int n) {
    if( n<2 ) {

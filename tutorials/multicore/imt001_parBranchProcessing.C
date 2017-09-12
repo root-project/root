@@ -9,8 +9,8 @@
 ///
 /// \macro_code
 ///
-/// \author Enric Tejedor
 /// \date 26/09/2016
+/// \author Enric Tejedor
 
 
 int imt001_parBranchProcessing()

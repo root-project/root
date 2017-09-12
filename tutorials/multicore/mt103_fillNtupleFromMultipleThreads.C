@@ -7,8 +7,8 @@
 ///
 /// \macro_code
 ///
-/// \author Guilherme Amadio
 /// \date May 2017
+/// \author Guilherme Amadio
 
 void mt103_fillNtupleFromMultipleThreads()
 {
