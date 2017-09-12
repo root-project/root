@@ -12,6 +12,7 @@
 #define ROOT_TDFNODES
 
 #include "ROOT/TypeTraits.hxx"
+#include "ROOT/TDataSource.hxx"
 #include "ROOT/TDFUtils.hxx"
 #include "ROOT/RArrayView.hxx"
 #include "ROOT/TSpinMutex.hxx"
@@ -79,8 +80,8 @@ using RangeBasePtr_t = std::shared_ptr<TRangeBase>;
 using RangeBaseVec_t = std::vector<RangeBasePtr_t>;
 
 class TLoopManager : public std::enable_shared_from_this<TLoopManager> {
-
-   enum class ELoopType { kROOTFiles, kNoFiles };
+   using TDataSource = ROOT::Experimental::TDF::TDataSource;
+   enum class ELoopType { kROOTFiles, kNoFiles, kDataSource };
 
    ActionBaseVec_t fBookedActions;
    FilterBaseVec_t fBookedFilters;
@@ -101,6 +102,7 @@ class TLoopManager : public std::enable_shared_from_this<TLoopManager> {
    unsigned int fNStopsReceived{0}; ///< Number of times that a children node signaled to stop processing entries.
    const ELoopType fLoopType; ///< The kind of event loop that is going to be run (e.g. on ROOT files, on no files)
    std::string fToJit;        ///< string containing all `BuildAndBook` actions that should be jitted before running
+   std::unique_ptr<TDataSource> fDataSource; ///< Owning pointer to a data-source object. Null if no data-source.
 
    void RunEmptySourceMT();
    void RunEmptySource();
@@ -117,6 +119,7 @@ class TLoopManager : public std::enable_shared_from_this<TLoopManager> {
 public:
    TLoopManager(TTree *tree, const ColumnNames_t &defaultBranches);
    TLoopManager(ULong64_t nEmptyEntries);
+   TLoopManager(std::unique_ptr<TDataSource> ds, const ColumnNames_t &defaultBranches);
    TLoopManager(const TLoopManager &) = delete;
    TLoopManager &operator=(const TLoopManager &) = delete;
 
@@ -130,6 +133,7 @@ public:
    const std::map<std::string, TCustomColumnBasePtr_t> &GetBookedColumns() const { return fBookedCustomColumns; }
    ::TDirectory *GetDirectory() const;
    ULong64_t GetNEmptyEntries() const { return fNEmptyEntries; }
+   TDataSource *GetDataSource() const { return fDataSource.get(); }
    void Book(const ActionBasePtr_t &actionPtr);
    void Book(const FilterBasePtr_t &filterPtr);
    void Book(const TCustomColumnBasePtr_t &branchPtr);
