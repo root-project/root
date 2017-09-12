@@ -44,6 +44,15 @@ private:
    // Helper for managing the compressed buffer.
    void InitializeCompressedBuffer(Int_t len, TFile* file);
 
+   // Handles special logic around deleting / reseting the entry offset pointer.
+   void ResetEntryOffset();
+
+   // Get entry offset as result of a calculation.
+   Int_t  *GetCalculatedEntryOffset();
+
+   // Returns true if the underlying TLeaf can regenerate the entry offsets for us.
+   Bool_t CanGenerateOffsetArray();
+
 protected:
    Int_t       fBufferSize{0};  ///< fBuffer length in bytes
    Int_t       fNevBufSize{0};  ///< Length in Int_t of fEntryOffset OR fixed length of each entry if fEntryOffset is null!
@@ -51,6 +60,7 @@ protected:
    Int_t       fLast{0};  ///< Pointer to last used byte in basket
    Bool_t      fHeaderOnly{kFALSE};  ///< True when only the basket header must be read/written
    UChar_t     fIOBits{0};  ///<!IO feature flags.  Serialized in custom portion of streamer to avoid forward compat issues unless needed.
+   Bool_t      fReadEntryOffset{kFALSE}; ///<!Set to true if offset array was read from a file.
    Int_t      *fDisplacement{nullptr};  ///<![fNevBuf] Displacement of entries in fBuffer(TKey)
    Int_t      *fEntryOffset{nullptr};  ///<[fNevBuf] Offset of entries in fBuffer(TKey)
    TBranch    *fBranch{nullptr};  ///<Pointer to the basket support branch
@@ -69,9 +79,9 @@ public:
    enum class EIOBits : Char_t {
       // The following to bits are reserved for now; when supported, set
       // kSupported = kGenerateOffsetMap | kBasketClassMap
-      // kGenerateOffsetMap = BIT(1),
-      // kBasketClassMap = BIT(2),
-      kSupported = 0
+      kGenerateOffsetMap = BIT(0),
+      // kBasketClassMap = BIT(1),
+      kSupported = kGenerateOffsetMap
    };
    // This enum covers IOBits that are known to this ROOT release but
    // not supported; provides a mechanism for us to have experimental
@@ -80,7 +90,7 @@ public:
    // (kUnsupported | kSupported) should result in the '|' of all IOBits.
    enum class EUnsupportedIOBits : Char_t { kUnsupported = 0 };
    // The number of known, defined IOBits.
-   static constexpr int kIOBitCount = 0;
+   static constexpr int kIOBitCount = 1;
 
    TBasket();
    TBasket(TDirectory *motherDir);
@@ -95,7 +105,6 @@ public:
            Int_t  *GetDisplacement() const {return fDisplacement;}
            Int_t  *GetEntryOffset() {return R__likely(fEntryOffset != (Int_t*)1) ? fEntryOffset :
                                             GetCalculatedEntryOffset();}
-           Int_t  *GetCalculatedEntryOffset();
            Int_t   GetEntryPointer(Int_t Entry);
            Int_t   GetNevBuf() const {return fNevBuf;}
            Int_t   GetNevBufSize() const {return fNevBufSize;}
