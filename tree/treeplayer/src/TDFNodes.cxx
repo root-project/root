@@ -269,7 +269,7 @@ void TLoopManager::CleanUpTask(unsigned int slot)
 void TLoopManager::JitActions()
 {
    auto error = TInterpreter::EErrorCode::kNoError;
-   gInterpreter->ProcessLine(fToJit.c_str(), &error);
+   gInterpreter->Calc(fToJit.c_str(), &error);
    if (TInterpreter::EErrorCode::kNoError != error) {
       std::string exceptionText =
          "An error occurred while jitting. The lines above might indicate the cause of the crash\n";
