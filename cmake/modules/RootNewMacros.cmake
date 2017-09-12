@@ -269,7 +269,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
                      macosx meta metacling multiproc newdelete pcre rint
                      rootcling_stage1 textinput thread unix winnt zip)
     foreach(core_folder ${core_folders})
-     string(REPLACE "${CMAKE_SOURCE_DIR}/core/(${core_folders})/inc/" ""  headerfiles "${headerfiles}")
+      string(REPLACE "${CMAKE_SOURCE_DIR}/core/${core_folder}/inc/" ""  headerfiles "${headerfiles}")
     endforeach()
   endif()
 
