@@ -104,6 +104,9 @@ large TClonesArray where each element contains another small vector container.
   - Implement the option "Z" (to draw the palette) for 3D histograms drawn with
     the option "BOX2".
   - With the option `HBAR` the histogram grid was painted over the stat box.
+  - The `TGraph`'s options "F" and "L" respectively draw a filled polygon and
+    a line plot. They can be combined when calling `TGraph::Draw`. Doing that
+    produced a filled polygon only. Now it produces a filled polygon and a line plot.
 
 ## 3D Graphics Libraries
 
