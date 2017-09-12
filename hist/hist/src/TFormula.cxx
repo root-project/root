@@ -161,7 +161,7 @@ static std::unordered_map<std::string,  void *> gClingFunctions = std::unordered
 Bool_t TFormula::IsOperator(const char c)
 {
    // operator ":" must be handled separately
-   char ops[] = { '+','^', '-','/','*','<','>','|','&','!','=','?'};
+   char ops[] = {'+','^','-','/','*','<','>','|','&','!','=','?','%'};
    Int_t opsLen = sizeof(ops)/sizeof(char);
    for(Int_t i = 0; i < opsLen; ++i)
       if(ops[i] == c)
