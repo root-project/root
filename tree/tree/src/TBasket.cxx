@@ -196,6 +196,18 @@ Int_t *TBasket::GetCalculatedEntryOffset() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Determine whether we can generate the offset array when this branch is read.
+///
+
+Bool_t TBasket::CanGenerateOffsetArray() {
+   if (fBranch->GetNleaves() != 1) {
+      return kFALSE;
+   }
+   TLeaf *leaf = static_cast<TLeaf*>((*fBranch->GetListOfLeaves())[0]);
+   return leaf->CanGenerateOffsetArray();
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Get pointer to buffer for internal entry.
 
 Int_t TBasket::GetEntryPointer(Int_t entry)
@@ -619,9 +631,12 @@ AfterBuffer:
    fBranch->GetTree()->IncrementTotalBuffers(fBufferSize);
 
    // Read offsets table if needed.
-   if (!fBranch->GetEntryOffsetLen()) {
+   if (!fBranch->GetEntryOffsetLen() || CanGenerateOffsetArray()) {
       return 0;
    }
+   // TODO: we really should serialize _whether_ an offset array was written so we can improve
+   // when we can avoid writing out the offset array.
+   // At this point, we're required to read out an offset array.
    ResetEntryOffset();
    fBufferRef->SetBufferOffset(fLast);
    fBufferRef->ReadArray(fEntryOffset);
@@ -631,6 +646,7 @@ AfterBuffer:
       Warning("ReadBasketBuffers","basket:%s has fNevBuf=%d but fEntryOffset=0, pos=%lld, len=%d, fNbytes=%d, fObjlen=%d, trying to repair",GetName(),fNevBuf,pos,len,fNbytes,fObjlen);
       return 0;
    }
+   fReadEntryOffset = kTRUE;
    // Read the array of diplacement if any.
    delete [] fDisplacement;
    fDisplacement = 0;
@@ -873,7 +889,7 @@ void TBasket::Streamer(TBuffer &b)
          if (fDisplacement)  flag += 40;
          b << flag;
 
-         if (fEntryOffset && fNevBuf) {
+         if (fEntryOffset && fNevBuf && !CanGenerateOffsetArray()) {
             b.WriteArray(fEntryOffset, fNevBuf);
             if (fDisplacement) b.WriteArray(fDisplacement, fNevBuf);
          }
