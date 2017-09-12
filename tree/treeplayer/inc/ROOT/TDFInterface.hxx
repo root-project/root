@@ -362,8 +362,7 @@ public:
    TInterface<TLoopManager> Snapshot(std::string_view treename, std::string_view filename,
                                      const ColumnNames_t &columnList, const SnapshotOptions &options = SnapshotOptions())
    {
-      using TypeInd_t = TDFInternal::GenStaticSeq_t<sizeof...(BranchTypes)>;
-      return SnapshotImpl<BranchTypes...>(treename, filename, columnList, options, TypeInd_t());
+      return SnapshotImpl<BranchTypes...>(treename, filename, columnList, options);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -1168,11 +1167,11 @@ private:
    /// since there are no copies, the address of the value passed by reference
    /// is the address pointing to the storage of the read/created object in/by
    /// the TTreeReaderValue/TemporaryBranch
-   template <typename... BranchTypes, int... S>
+   template <typename... BranchTypes>
    TInterface<TLoopManager> SnapshotImpl(std::string_view treename, std::string_view filename,
-                                         const ColumnNames_t &columnList, const SnapshotOptions &options, TDFInternal::StaticSeq<S...> /*dummy*/)
+                                         const ColumnNames_t &columnList, const SnapshotOptions &options)
    {
-      TDFInternal::CheckSnapshot(sizeof...(S), columnList.size());
+      TDFInternal::CheckSnapshot(sizeof...(BranchTypes), columnList.size());
 
       const std::string fullTreename(treename);
       // split name into directory and treename if needed
