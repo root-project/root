@@ -1486,9 +1486,6 @@ void TGeoManager::CloseGeometry(Option_t *option)
       // Create a geometry navigator if not present
       if (!GetCurrentNavigator()) fCurrentNavigator = AddNavigator();
       nnavigators = GetListOfNavigators()->GetEntriesFast();
-      TIter next(fShapes);
-      TGeoShape *shape;
-      while ((shape = (TGeoShape*)next())) shape->AfterStreamer();
       Voxelize("ALL");
       CountLevels();
       for (Int_t i=0; i<nnavigators; i++) {
