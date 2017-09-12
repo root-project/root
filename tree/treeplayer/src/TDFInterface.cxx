@@ -157,7 +157,7 @@ Long_t JitTransformation(void *thisPtr, std::string_view methodName, std::string
    ss << "));";
 
    TInterpreter::EErrorCode interpErrCode;
-   auto retVal = gInterpreter->ProcessLine(ss.str().c_str(), &interpErrCode);
+   auto retVal = gInterpreter->Calc(ss.str().c_str(), &interpErrCode);
    if (TInterpreter::EErrorCode::kNoError != interpErrCode || !retVal) {
       std::string msg = "Cannot interpret the invocation to " + std::string(methodName) + ":  ";
       msg += ss.str();
@@ -175,7 +175,7 @@ std::string JitBuildAndBook(const ColumnNames_t &bl, const std::string &prevNode
                             const std::type_info &art, const std::type_info &at, const void *rOnHeap, TTree *tree,
                             const unsigned int nSlots, const std::map<std::string, TmpBranchBasePtr_t> &customColumns)
 {
-   gInterpreter->ProcessLine("#include \"ROOT/TDataFrame.hxx\"");
+   gInterpreter->Declare("#include \"ROOT/TDataFrame.hxx\"");
    auto nBranches = bl.size();
 
    // retrieve pointers to temporary columns (null if the column is not temporary)
