@@ -229,6 +229,17 @@ TEST(TEST_CATEGORY, Define_jitted_Filter_named_jitted)
    EXPECT_EQ(7.867497533559811628, *m);
 }
 
+TEST(TEST_CATEGORY, DefineSlot)
+{
+   std::array<int, NSLOTS> values;
+   for (auto i = 0u; i < NSLOTS; ++i)
+      values[i] = i;
+   TDataFrame df(NSLOTS);
+   auto ddf = df.DefineSlot("s", [values](unsigned int slot) { return values[slot]; });
+   auto m = ddf.Max("s");
+   EXPECT_EQ(*m, NSLOTS-1); // no matter the order of processing, the higher slot number is always taken at least once
+}
+
 TEST(TEST_CATEGORY, Snapshot_update)
 {
    using SnapshotOptions = ROOT::Experimental::TDF::SnapshotOptions;
