@@ -11,8 +11,8 @@
 ///
 /// \macro_code
 ///
-/// \author Danilo Piparo
 /// \date January 2016
+/// \author Danilo Piparo
 
 // Some useful constants and functions
 
