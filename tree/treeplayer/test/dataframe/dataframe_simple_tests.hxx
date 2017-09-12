@@ -1,6 +1,8 @@
 #include "ROOT/TDataFrame.hxx"
-#include "TRandom.h"
+#include "Compression.h"
+#include "TFile.h"
 #include "TInterpreter.h"
+#include "TRandom.h"
 
 #include "gtest/gtest.h"
 
@@ -225,6 +227,76 @@ TEST(TEST_CATEGORY, Define_jitted_Filter_named_jitted)
    auto df = d.Filter("r>5", "myFilter");
    auto m = df.Max("r");
    EXPECT_EQ(7.867497533559811628, *m);
+}
+
+TEST(TEST_CATEGORY, Snapshot_update)
+{
+   using SnapshotOptions = ROOT::Experimental::TDF::SnapshotOptions;
+
+   SnapshotOptions opts;
+
+   opts.fMode = "UPDATE";
+
+   TDataFrame tdf1(1000);
+   auto s1 = tdf1.Define("one", []() { return 1.0; })
+               .Snapshot<double>("mytree1", "snapshot_test_update.root", {"one"});
+
+   EXPECT_EQ(1000U, *s1.Count());
+
+   EXPECT_EQ(1.0, *s1.Min("one"));
+   EXPECT_EQ(1.0, *s1.Max("one"));
+   EXPECT_EQ(1.0, *s1.Mean("one"));
+
+   TDataFrame tdf2(1000);
+   auto s2 = tdf2.Define("two", []() { return 2.0; })
+               .Snapshot<double>("mytree2", "snapshot_test_update.root", {"two"}, opts);
+
+   EXPECT_EQ(1000U, *s2.Count());
+
+   EXPECT_EQ(2.0, *s2.Min("two"));
+   EXPECT_EQ(2.0, *s2.Max("two"));
+   EXPECT_EQ(2.0, *s2.Mean("two"));
+
+   TFile *f = TFile::Open("snapshot_test_update.root", "READ");
+   auto mytree1 = (TTree*) f->Get("mytree1");
+   auto mytree2 = (TTree*) f->Get("mytree2");
+
+   EXPECT_NE(nullptr, mytree1);
+   EXPECT_NE(nullptr, mytree2);
+
+   f->Close();
+   delete f;
+}
+
+TEST(TEST_CATEGORY, Snapshot_action_with_options)
+{
+   using SnapshotOptions = ROOT::Experimental::TDF::SnapshotOptions;
+
+   SnapshotOptions opts;
+   opts.fAutoFlush = 10;
+   opts.fMode = "RECREATE";
+
+   for (auto algorithm : { ROOT::kZLIB, ROOT::kLZMA, ROOT::kLZ4 }) {
+      TDataFrame tdf(1000);
+
+      opts.fCompress = ROOT::CompressionSettings(algorithm, 6);
+
+      auto s = tdf.Define("one", []() { return 1.0; })
+                  .Snapshot<double>("mytree", "snapshot_test_opts.root", {"one"}, opts);
+
+      EXPECT_EQ(1000U, *s.Count());
+      EXPECT_EQ(1.0, *s.Min("one"));
+      EXPECT_EQ(1.0, *s.Max("one"));
+      EXPECT_EQ(1.0, *s.Mean("one"));
+
+      TFile *f = TFile::Open("snapshot_test_opts.root", "READ");
+
+      EXPECT_EQ(algorithm, f->GetCompressionAlgorithm());
+      EXPECT_EQ(6, f->GetCompressionLevel());
+
+      f->Close();
+      delete f;
+   }
 }
 
 // This tests the interface but we need to run it both w/ and w/o implicit mt
