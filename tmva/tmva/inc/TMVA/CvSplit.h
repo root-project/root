@@ -124,18 +124,15 @@ public:
 private:
    std::vector<std::vector<Event*>> SplitSets (std::vector<TMVA::Event*>& oldSet, UInt_t numFolds) override;
 
-   UInt_t GetSpectatorIndexForName(TString name);
+   UInt_t GetSpectatorIndexForName(DataSetInfo & dsi, TString name);
 
 private:
    TString fSpectatorName;
    UInt_t fSpectatorIdx;
 
-   std::vector<std::vector<TMVA::Event*>> fTrainSigEvents;
-   std::vector<std::vector<TMVA::Event*>> fTrainBkgEvents;
-   std::vector<std::vector<TMVA::Event*>> fValidSigEvents;
-   std::vector<std::vector<TMVA::Event*>> fValidBkgEvents;
-   std::vector<std::vector<TMVA::Event*>> fTestSigEvents;
-   std::vector<std::vector<TMVA::Event*>> fTestBkgEvents;
+   std::vector<std::vector<TMVA::Event*>> fTrainEvents;
+   std::vector<std::vector<TMVA::Event*>> fValidEvents;
+   std::vector<std::vector<TMVA::Event*>> fTestEvents;
 
 private:
    ClassDefOverride(CvSplitCrossEvaluation, 0);

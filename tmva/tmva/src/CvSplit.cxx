@@ -256,32 +256,8 @@ TMVA::CvSplitCrossEvaluation::CvSplitCrossEvaluation (UInt_t numFolds, TString s
 
 void TMVA::CvSplitCrossEvaluation::MakeKFoldDataSet (DataSetInfo & dsi)
 {
-   // Find index of spectator (or variable?)
-   // Search on title, fallback on label/expression
-   std::vector<VariableInfo> spectatorInfos = dsi.GetSpectatorInfos();
-   fSpectatorIdx = -1;
-   for (UInt_t iSpectator = 0; iSpectator < spectatorInfos.size(); ++iSpectator) {
-      VariableInfo vi = spectatorInfos[iSpectator];
-      if (vi.GetName() == fSpectatorName) {
-         fSpectatorIdx = iSpectator;
-         break;
-      } else if (vi.GetLabel() == fSpectatorName) {
-         fSpectatorIdx = iSpectator;
-         break;
-      } else if (vi.GetExpression() == fSpectatorName) {
-         fSpectatorIdx = iSpectator;
-         break;
-      }
-   };
-
-   if (fSpectatorIdx == -1) {
-      Log() << kFATAL << "Spectator variable\"" << fSpectatorName << "\" not found." << Endl;
-      return;
-   }
-
-   // One vector for each fold (stratified? not for starters)
-   // split on the var (SplitSets is really Bootstrapping *sigh*)
-   //
+   // Validate spectator
+   fSpectatorIdx = GetSpectatorIndexForName(dsi, fSpectatorName);
 
    // No need to do it again if the sets have already been split.
    if (fMakeFoldDataSet) {
@@ -292,35 +268,12 @@ void TMVA::CvSplitCrossEvaluation::MakeKFoldDataSet (DataSetInfo & dsi)
    fMakeFoldDataSet = kTRUE;
 
    // Get the original event vectors for testing and training from the dataset.
-   const std::vector<Event *> trainingDataOrig =
-      dsi.GetDataSet()->GetEventCollection(Types::kTraining);
-   const std::vector<Event *> testingDataOrig = dsi.GetDataSet()->GetEventCollection(Types::kTesting);
-
-   std::vector<Event *> trainData;
-   std::vector<Event *> testData;
-
-   // Split the testing and training sets into signal and background classes.
-   for (UInt_t i = 0; i < trainingDataOrig.size(); ++i) {
-      trainData.push_back(trainingDataOrig.at(i));
-   }
-
-   for (UInt_t i = 0; i < testingDataOrig.size(); ++i) {
-      // trainData.push_back( trainingDataOrig.at(i) );
-      testData.push_back(testingDataOrig.at(i));
-   }
+   std::vector<Event *> trainData = dsi.GetDataSet()->GetEventCollection(Types::kTraining);
+   std::vector<Event *> testData  = dsi.GetDataSet()->GetEventCollection(Types::kTesting);
 
    // Split the sets into the number of folds.
-   fTrainSigEvents = SplitSets(trainData, fNumFolds);
-   fTestSigEvents = SplitSets(testData, fNumFolds);
-   // fTrainBkgEvents = SplitSets(trainData, fNumFolds);
-   // fTestBkgEvents  = SplitSets(testData,, fNumFolds);
-
-   fTrainBkgEvents.clear();
-   fTestBkgEvents.clear();
-   for (UInt_t iFold = 0; iFold < fNumFolds; ++iFold) {
-      fTrainBkgEvents.emplace_back();
-      fTestBkgEvents.emplace_back();
-   };
+   fTrainEvents = SplitSets(trainData, fNumFolds);
+   fTestEvents = SplitSets(testData, fNumFolds);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -334,96 +287,73 @@ void TMVA::CvSplitCrossEvaluation::PrepareFoldDataSet (DataSetInfo & dsi, UInt_t
       return;
    }
 
-   UInt_t numFolds = fTrainSigEvents.size();
-
-   std::vector<TMVA::Event*>* tempTrain = new std::vector<TMVA::Event*>;
-   std::vector<TMVA::Event*>* tempTest = new std::vector<TMVA::Event*>;
+   UInt_t numFolds = fTrainEvents.size();
 
    UInt_t nTrain = 0;
    UInt_t nTest = 0;
 
-   // Get the number of events so the memory can be reserved.
-   for(UInt_t i=0; i<numFolds; ++i){
-      if(tt == Types::kTraining){
-         if(i!=foldNumber){
-            nTrain += fTrainSigEvents.at(i).size();
-            nTrain += fTrainBkgEvents.at(i).size();
-         }
-         else{
-            nTest += fTrainSigEvents.at(i).size();
-            nTest += fTrainSigEvents.at(i).size();
-         }
+   // Count num events in train set (for reservation)
+   for (UInt_t i=0; i<numFolds; ++i) {
+      if (i == foldNumber) {
+         continue;
       }
-      else if(tt == Types::kValidation){
-         if(i!=foldNumber){
-            nTrain += fValidSigEvents.at(i).size();
-            nTrain += fValidBkgEvents.at(i).size();
-         }
-         else{
-            nTest += fValidSigEvents.at(i).size();
-            nTest += fValidSigEvents.at(i).size();
-         }
-      }
-      else if(tt == Types::kTesting){
-         if(i!=foldNumber){
-            nTrain += fTestSigEvents.at(i).size();
-            nTrain += fTestBkgEvents.at(i).size();
-         }
-         else{
-            nTest += fTestSigEvents.at(i).size();
-            nTest += fTestSigEvents.at(i).size();
-         }
+
+      if (tt == Types::kTraining) {
+         nTrain += fTrainEvents.at(i).size();
+      } else if (tt == Types::kValidation) {
+         nTrain += fValidEvents.at(i).size();
+      } else if (tt == Types::kTesting) {
+         nTrain += fTestEvents.at(i).size();
       }
    }
 
+   // Count num events in train set
+   if (tt == Types::kTraining) {
+      nTest = fTrainEvents.at(foldNumber).size();
+   } else if (tt == Types::kValidation) {
+      nTest = fValidEvents.at(foldNumber).size();
+   } else if (tt == Types::kTesting) {
+      nTest = fTestEvents.at(foldNumber).size();
+   }
+   
+   // Create vectors for fold train / test data
+   std::vector<TMVA::Event*> tempTrain;
+   std::vector<TMVA::Event*> tempTest;
+   
    // Reserve memory before filling vectors
-   tempTrain->reserve(nTrain);
-   tempTest->reserve(nTest);
+   tempTrain.reserve(nTrain);
+   tempTest.reserve(nTest);
 
-   // Fill vectors with correct folds for testing and training.
-   for(UInt_t j=0; j<numFolds; ++j){
+   // Insert data into train set
+   for(UInt_t i = 0; i<numFolds; ++i){
+      if (i == foldNumber) {
+         continue;
+      }
+
       if(tt == Types::kTraining){
-         if(j!=foldNumber){
-            tempTrain->insert(tempTrain->end(), fTrainSigEvents.at(j).begin(), fTrainSigEvents.at(j).end());
-            tempTrain->insert(tempTrain->end(), fTrainBkgEvents.at(j).begin(), fTrainBkgEvents.at(j).end());
-         }
-         else{
-            tempTest->insert(tempTest->end(), fTrainSigEvents.at(j).begin(), fTrainSigEvents.at(j).end());
-            tempTest->insert(tempTest->end(), fTrainBkgEvents.at(j).begin(), fTrainBkgEvents.at(j).end());
-         }
-      }
-      else if(tt == Types::kValidation){
-         if(j!=foldNumber){
-            tempTrain->insert(tempTrain->end(), fValidSigEvents.at(j).begin(), fValidSigEvents.at(j).end());
-            tempTrain->insert(tempTrain->end(), fValidBkgEvents.at(j).begin(), fValidBkgEvents.at(j).end());
-         }
-         else{
-            tempTest->insert(tempTest->end(), fValidSigEvents.at(j).begin(), fValidSigEvents.at(j).end());
-            tempTest->insert(tempTest->end(), fValidBkgEvents.at(j).begin(), fValidBkgEvents.at(j).end());
-         }
-      }
-      else if(tt == Types::kTesting){
-         if(j!=foldNumber){
-            tempTrain->insert(tempTrain->end(), fTestSigEvents.at(j).begin(), fTestSigEvents.at(j).end());
-            tempTrain->insert(tempTrain->end(), fTestBkgEvents.at(j).begin(), fTestBkgEvents.at(j).end());
-         }
-         else{
-            tempTest->insert(tempTest->end(), fTestSigEvents.at(j).begin(), fTestSigEvents.at(j).end());
-            tempTest->insert(tempTest->end(), fTestBkgEvents.at(j).begin(), fTestBkgEvents.at(j).end());
-         }
+         tempTrain.insert(tempTrain.end(), fTrainEvents.at(i).begin(), fTrainEvents.at(i).end());
+      } else if (tt == Types::kValidation) {
+         tempTrain.insert(tempTrain.end(), fValidEvents.at(i).begin(), fValidEvents.at(i).end());
+      } else if (tt == Types::kTesting) {
+         tempTrain.insert(tempTrain.end(), fTestEvents.at(i).begin(), fTestEvents.at(i).end());
       }
    }
 
-   Log() << kINFO << "Fold prepared, num events in training set: " << tempTrain->size() << Endl;
-   Log() << kINFO << "Fold prepared, num events in test     set: " << tempTest->size() << Endl;
+   // Insert data into test set
+   if(tt == Types::kTraining){
+      tempTest.insert(tempTest.end(), fTrainEvents.at(foldNumber).begin(), fTrainEvents.at(foldNumber).end());
+   } else if (tt == Types::kValidation) {
+      tempTest.insert(tempTest.end(), fValidEvents.at(foldNumber).begin(), fValidEvents.at(foldNumber).end());
+   } else if (tt == Types::kTesting) {
+      tempTest.insert(tempTest.end(), fTestEvents.at(foldNumber).begin(), fTestEvents.at(foldNumber).end());
+   }
+
+   Log() << kINFO << "Fold prepared, num events in training set: " << tempTrain.size() << Endl;
+   Log() << kINFO << "Fold prepared, num events in test     set: " << tempTest.size() << Endl;
 
    // Assign the vectors of the events to rebuild the dataset
-   dsi.GetDataSet()->SetEventCollection(tempTrain,Types::kTraining,false);
-   dsi.GetDataSet()->SetEventCollection(tempTest,Types::kTesting,false);
-   delete tempTest;
-   delete tempTrain;
-
-
+   dsi.GetDataSet()->SetEventCollection(&tempTrain, Types::kTraining, false);
+   dsi.GetDataSet()->SetEventCollection(&tempTest, Types::kTesting, false);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -438,8 +368,7 @@ void TMVA::CvSplitCrossEvaluation::RecombineKFoldDataSet (DataSetInfo & dsi, Typ
    std::vector<Event *> *tempVec = new std::vector<Event *>;
 
    for (UInt_t i = 0; i < fNumFolds; ++i) {
-      tempVec->insert(tempVec->end(), fTrainSigEvents.at(i).begin(), fTrainSigEvents.at(i).end());
-      tempVec->insert(tempVec->end(), fTrainBkgEvents.at(i).begin(), fTrainBkgEvents.at(i).end());
+      tempVec->insert(tempVec->end(), fTrainEvents.at(i).begin(), fTrainEvents.at(i).end());
    }
 
    dsi.GetDataSet()->SetEventCollection(tempVec, Types::kTraining, false);
@@ -477,7 +406,21 @@ TMVA::CvSplitCrossEvaluation::SplitSets (std::vector<TMVA::Event*>& oldSet, UInt
 ////////////////////////////////////////////////////////////////////////////////
 ///
 
-UInt_t TMVA::CvSplitCrossEvaluation::GetSpectatorIndexForName ( TString name )
+UInt_t TMVA::CvSplitCrossEvaluation::GetSpectatorIndexForName (DataSetInfo & dsi, TString name)
 {
+   std::vector<VariableInfo> spectatorInfos = dsi.GetSpectatorInfos();
 
+   for (UInt_t iSpectator = 0; iSpectator < spectatorInfos.size(); ++iSpectator) {
+      VariableInfo vi = spectatorInfos[iSpectator];
+      if (vi.GetName() == name) {
+         return iSpectator;
+      } else if (vi.GetLabel() == name) {
+         return iSpectator;
+      } else if (vi.GetExpression() == name) {
+         return iSpectator;
+      }
+   }
+
+   Log() << kFATAL << "Spectator \"" << name << "\" not found." << Endl;
+   return 0; // Cannot happen
 }
