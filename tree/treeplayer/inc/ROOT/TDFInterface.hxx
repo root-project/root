@@ -313,18 +313,41 @@ public:
    /// * column aliasing, i.e. changing the name of a branch/column
    ///
    /// An exception is thrown if the name of the new column is already in use.
-   template <typename F, typename std::enable_if<!std::is_convertible<F, std::string>::value, int>::type = 0>
+   template <typename F, bool ShouldPassSlotNumber = false,
+             typename std::enable_if<!std::is_convertible<F, std::string>::value, int>::type = 0>
    TInterface<Proxied> Define(std::string_view name, F expression, const ColumnNames_t &columns = {})
    {
       auto loopManager = GetDataFrameChecked();
       TDFInternal::CheckCustomColumn(name, loopManager->GetTree(), loopManager->GetCustomColumnNames());
       auto nColumns = TTraits::CallableTraits<F>::arg_types::list_size;
+      if (ShouldPassSlotNumber)
+         nColumns--;
       const auto validColumnNames = GetValidatedColumnNames(*loopManager, nColumns, columns);
-      using NewCol_t = TDFDetail::TCustomColumn<F>;
+      using NewCol_t = TDFDetail::TCustomColumn<F, ShouldPassSlotNumber>;
       loopManager->Book(std::make_shared<NewCol_t>(name, std::move(expression), validColumnNames, loopManager.get()));
       TInterface<Proxied> newInterface(fProxiedPtr, fImplWeakPtr, fValidCustomColumns);
       newInterface.fValidCustomColumns.emplace_back(name);
       return newInterface;
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Creates a custom column with a value dependent on the processing slot.
+   /// \param[in] name The name of the custom column.
+   /// \param[in] expression Function, lambda expression, functor class or any other callable object producing the
+   /// temporary value. Returns the value that will be assigned to the custom column.
+   /// \param[in] columns Names of the columns/branches in input to the producer function.
+   ///
+   /// This alternative implementation of `Define` is meant as a helper in writing thread-safe custom columns.
+   /// The expression must be a callable of signature R(unsigned int, T1, T2, ...) where `T1, T2...` are the types
+   /// of the columns that the expression takes as input. The first parameter is reserved for an unsigned integer
+   /// representing a "slot number". TDataFrame guarantees that different threads will invoke the expression with
+   /// different slot numbers - slot numbers will range from zero to ROOT::GetImplicitMTPoolSize()-1.
+   ///
+   /// See Define for more information.
+   template <typename F>
+   TInterface<Proxied> DefineSlot(std::string_view name, F expression, const ColumnNames_t &columns = {})
+   {
+      return Define<F, true>(name, std::move(expression), columns);
    }
 
    ////////////////////////////////////////////////////////////////////////////
