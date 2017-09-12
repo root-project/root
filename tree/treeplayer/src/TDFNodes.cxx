@@ -123,6 +123,12 @@ TLoopManager::TLoopManager(ULong64_t nEmptyEntries)
 {
 }
 
+TLoopManager::TLoopManager(std::unique_ptr<TDataSource> ds, const ColumnNames_t &defaultBranches)
+   : fDefaultColumns(defaultBranches), fNSlots(TDFInternal::GetNSlots()), fLoopType(ELoopType::kDataSource),
+     fDataSource(std::move(ds))
+{
+}
+
 /// Run event loop with no source files, in parallel.
 void TLoopManager::RunEmptySourceMT()
 {

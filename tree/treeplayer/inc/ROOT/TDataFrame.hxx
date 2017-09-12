@@ -17,6 +17,7 @@ ROOT's TDataFrame allows to analyse data stored in TTrees with a high level inte
 #define ROOT_TDATAFRAME
 
 #include "ROOT/TypeTraits.hxx"
+#include "ROOT/TDataSource.hxx"
 #include "ROOT/TDFInterface.hxx"
 #include "ROOT/TDFNodes.hxx"
 #include "ROOT/TDFUtils.hxx"
@@ -37,7 +38,7 @@ namespace TTraits = ROOT::TypeTraits;
 
 class TDataFrame : public TDF::TInterface<TDFDetail::TLoopManager> {
    using ColumnNames_t = TDFDetail::ColumnNames_t;
-
+   using TDataSource = ROOT::Experimental::TDF::TDataSource;
 public:
    TDataFrame(std::string_view treeName, std::string_view filenameglob, const ColumnNames_t &defaultBranches = {});
    ////////////////////////////////////////////////////////////////////////////
@@ -57,6 +58,7 @@ public:
    TDataFrame(std::string_view treeName, ::TDirectory *dirPtr, const ColumnNames_t &defaultBranches = {});
    TDataFrame(TTree &tree, const ColumnNames_t &defaultBranches = {});
    TDataFrame(ULong64_t numEntries);
+   TDataFrame(std::unique_ptr<TDataSource>, const ColumnNames_t &defaultBranches = {});
 };
 
 template <typename FILENAMESCOLL, typename std::enable_if<TTraits::IsContainer<FILENAMESCOLL>::value, int>::type>

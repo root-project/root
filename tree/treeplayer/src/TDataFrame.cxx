@@ -632,3 +632,14 @@ TDataFrame::TDataFrame(ULong64_t numEntries)
    : TInterface<TDFDetail::TLoopManager>(std::make_shared<TDFDetail::TLoopManager>(numEntries))
 {
 }
+
+//////////////////////////////////////////////////////////////////////////
+/// \brief Build dataframe associated to datasource.
+/// \param[in] ds The data-source object.
+/// \param[in] defaultBranches Collection of default column names to fall back to when none is specified.
+///
+/// A dataframe associated to a datasource will query it to access column values.
+TDataFrame::TDataFrame(std::unique_ptr<TDataSource> ds, const ColumnNames_t &defaultBranches)
+   : TInterface<TDFDetail::TLoopManager>(std::make_shared<TDFDetail::TLoopManager>(std::move(ds), defaultBranches))
+{
+}
