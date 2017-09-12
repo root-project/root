@@ -140,6 +140,58 @@ ClassImp(TFormula);
     This class is not anymore the base class for the function classes `TF1`, but it has now
     a data member of TF1 which can be accessed via `TF1::GetFormula`.
 
+    ### A note on variables and parameters
+
+    In a TFormula, a variable is a defined by a name such as "x" or "mass" in a
+    formula defined as
+
+    ```
+    TFormula("", "x * mass + 10")
+    ```
+
+    Parameters are very similar but can be unnamed. It is specified using brackets
+    e.g. `[0]`. In the following example `[0]` is the first parameter and `[1]` is
+    the second.
+
+    ```
+    TFormula("", "[0]+[1]*[0]")
+    ```
+
+    Variables and parameters can be combined in the same TFormula. Here we consider
+    a very simple case where we have an exponential decay after some time t and a
+    number of events with timestamps for which we want to evaluate this function.
+
+    ```
+    TFormula tf ("", "[0]*exp(-[1]*t)");
+    tf.SetParameter(0, 1);
+    tf.SetParameter(1, 0.5);
+
+    for (auto & event : events) {
+       tf.Eval(event.t);
+    }
+    ```
+
+    A guiding rule is that values of parameters should be fixed when looping over events, while variables can vary.
+
+    ### A note on operators
+
+    All operators of C/C++ are allowed in a TFormula with a few caveats.
+
+    The operators `|`, `&`, `%` can be used but will raise an error if used in
+    conjunction with a variable or a parameter. Variables and parameters are treated
+    as doubles internally for which these operators are not defined.
+    This means the following command will run successfully
+       ```root -l -q -e TFormula("", "x+(10%3)").Eval(0)```
+    but not
+       ```root -l -q -e TFormula("", "x%10").Eval(0)```.
+
+    The operator `^` is defined to mean exponentiation instead of the C/C++
+    interpretaion xor. `**` is added, also meaning exponentiation.
+
+    The operators `++` and `@` are added, and are shorthand for the a linear
+    function. That means the expression `x@2` will be expanded to
+    ```[n]*x + [n+1]*2``` where n is the first previously unused parameter number.
+
     \class TFormulaFunction
     Helper class for TFormula
 
