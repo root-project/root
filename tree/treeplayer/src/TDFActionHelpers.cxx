@@ -42,7 +42,7 @@ void FillHelper::UpdateMinMax(unsigned int slot, double v)
 
 FillHelper::FillHelper(const std::shared_ptr<Hist_t> &h, const unsigned int nSlots)
    : fResultHist(h), fNSlots(nSlots), fBufSize(fgTotalBufSize / nSlots),
-     fMin(nSlots, std::numeric_limits<BufEl_t>::max()), fMax(nSlots, std::numeric_limits<BufEl_t>::min())
+     fMin(nSlots, std::numeric_limits<BufEl_t>::max()), fMax(nSlots, std::numeric_limits<BufEl_t>::lowest())
 {
    fBuffers.reserve(fNSlots);
    fWBuffers.reserve(fNSlots);
@@ -79,7 +79,7 @@ void FillHelper::Finalize()
    BufEl_t globalMax = *std::max_element(fMax.begin(), fMax.end());
 
    if (fResultHist->CanExtendAllAxes() && globalMin != std::numeric_limits<BufEl_t>::max() &&
-       globalMax != std::numeric_limits<BufEl_t>::min()) {
+       globalMax != std::numeric_limits<BufEl_t>::lowest()) {
       fResultHist->SetBins(fResultHist->GetNbinsX(), globalMin, globalMax);
    }
 
@@ -123,7 +123,7 @@ template void MinHelper::Exec(unsigned int, const std::vector<int> &);
 template void MinHelper::Exec(unsigned int, const std::vector<unsigned int> &);
 
 MaxHelper::MaxHelper(const std::shared_ptr<double> &maxVPtr, const unsigned int nSlots)
-   : fResultMax(maxVPtr), fMaxs(nSlots, std::numeric_limits<double>::min())
+   : fResultMax(maxVPtr), fMaxs(nSlots, std::numeric_limits<double>::lowest())
 {
 }
 
@@ -134,7 +134,7 @@ void MaxHelper::Exec(unsigned int slot, double v)
 
 void MaxHelper::Finalize()
 {
-   *fResultMax = std::numeric_limits<double>::min();
+   *fResultMax = std::numeric_limits<double>::lowest();
    for (auto &m : fMaxs) {
       *fResultMax = std::max(m, *fResultMax);
    }
