@@ -13,6 +13,8 @@ TEST(TDataFrameNodes, TSlotStackCheckSameThreadSameSlot)
    EXPECT_EQ(s.GetSlot(), s.GetSlot());
 }
 
+#ifndef NDEBUG
+
 TEST(TDataFrameNodes, TSlotStackGetOneTooMuch)
 {
    auto theTest = []() {
@@ -53,6 +55,8 @@ TEST(TDataFrameNodes, TSlotStackPutBackTooMany)
 
    ASSERT_DEATH(theTest(), "TSlotStack has a reference count relative to an index which will become negative");
 }
+
+#endif
 
 TEST(TDataFrameNodes, TLoopManagerGetImplPtr)
 {
