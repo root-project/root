@@ -15,6 +15,9 @@ ClassImp(TMVA::CvSplit);
 ClassImp(TMVA::CvSplitBootstrappedStratified);
 ClassImp(TMVA::CvSplitCrossEvaluation);
 
+////////////////////////////////////////////////////////////////////////////////
+///
+
 TMVA::CvSplit::CvSplit (UInt_t numFolds)
 : fNumFolds(numFolds), fMakeFoldDataSet(kFALSE)
 {}
@@ -23,11 +26,16 @@ TMVA::CvSplit::CvSplit (UInt_t numFolds)
       TMVA::CvSplitBootstrappedStratified
 ============================================================================= */
 
+////////////////////////////////////////////////////////////////////////////////
+///
+
 TMVA::CvSplitBootstrappedStratified::CvSplitBootstrappedStratified (UInt_t numFolds, UInt_t seed, Bool_t validationSet)
 : CvSplit(numFolds), fSeed(seed), fValidationSet(validationSet)
 {}
 
-// Post-condition: Size of vector equals numElems in ETreeType
+////////////////////////////////////////////////////////////////////////////////
+///
+
 void TMVA::CvSplitBootstrappedStratified::MakeKFoldDataSet (DataSetInfo & dsi)
 {
    // Remove validation set?
@@ -87,8 +95,9 @@ void TMVA::CvSplitBootstrappedStratified::MakeKFoldDataSet (DataSetInfo & dsi)
    fTestBkgEvents = SplitSets(TestBkgData, fNumFolds);
 }
 
-// Returns training and testing sets
-// Post-condition: Size of vector = 2
+////////////////////////////////////////////////////////////////////////////////
+///
+
 void TMVA::CvSplitBootstrappedStratified::PrepareFoldDataSet (DataSetInfo & dsi, UInt_t foldNumber, Types::ETreeType tt)
 {
    if (foldNumber >= fNumFolds) {
@@ -184,8 +193,10 @@ void TMVA::CvSplitBootstrappedStratified::PrepareFoldDataSet (DataSetInfo & dsi,
    delete tempTrain;
 }
 
-// Inverse of MakeKFoldsDataSet
-// Post-condition: Size of vector = 2
+////////////////////////////////////////////////////////////////////////////////
+/// Inverse of MakeKFoldsDataSet
+/// 
+
 void TMVA::CvSplitBootstrappedStratified::RecombineKFoldDataSet (DataSetInfo &, Types::ETreeType)
 {
    Log() << kFATAL << "Recombination not implemented for CvSplitBootstrappedStratified" << Endl;
@@ -194,7 +205,6 @@ void TMVA::CvSplitBootstrappedStratified::RecombineKFoldDataSet (DataSetInfo &, 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Splits the input vector in to equally sized randomly sampled folds.
-/// Randomly sampled!? This is bootstrapping then?
 /// 
 
 std::vector<std::vector<TMVA::Event*>>
@@ -234,11 +244,16 @@ TMVA::CvSplitBootstrappedStratified::SplitSets (std::vector<TMVA::Event*>& oldSe
       TMVA::CvSplitCrossEvaluation
 ============================================================================= */
 
+////////////////////////////////////////////////////////////////////////////////
+///
+
 TMVA::CvSplitCrossEvaluation::CvSplitCrossEvaluation (UInt_t numFolds, TString spectatorName)
 : CvSplit(numFolds), fSpectatorName(spectatorName)
 {}
 
-// Post-condition: Size of vector equals numElems in ETreeType
+////////////////////////////////////////////////////////////////////////////////
+///
+
 void TMVA::CvSplitCrossEvaluation::MakeKFoldDataSet (DataSetInfo & dsi)
 {
    // Find index of spectator (or variable?)
@@ -307,6 +322,9 @@ void TMVA::CvSplitCrossEvaluation::MakeKFoldDataSet (DataSetInfo & dsi)
       fTestBkgEvents.emplace_back();
    };
 }
+
+////////////////////////////////////////////////////////////////////////////////
+///
 
 void TMVA::CvSplitCrossEvaluation::PrepareFoldDataSet (DataSetInfo & dsi, UInt_t foldNumber, Types::ETreeType tt)
 {
@@ -408,6 +426,9 @@ void TMVA::CvSplitCrossEvaluation::PrepareFoldDataSet (DataSetInfo & dsi, UInt_t
 
 }
 
+////////////////////////////////////////////////////////////////////////////////
+///
+
 void TMVA::CvSplitCrossEvaluation::RecombineKFoldDataSet (DataSetInfo & dsi, Types::ETreeType tt)
 {
    if (tt != Types::kTraining) {
@@ -426,6 +447,9 @@ void TMVA::CvSplitCrossEvaluation::RecombineKFoldDataSet (DataSetInfo & dsi, Typ
 
    delete tempVec;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+///
 
 std::vector<std::vector<TMVA::Event*>>
 TMVA::CvSplitCrossEvaluation::SplitSets (std::vector<TMVA::Event*>& oldSet, UInt_t numFolds)
@@ -449,6 +473,9 @@ TMVA::CvSplitCrossEvaluation::SplitSets (std::vector<TMVA::Event*>& oldSet, UInt
 
    return tempSets;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+///
 
 UInt_t TMVA::CvSplitCrossEvaluation::GetSpectatorIndexForName ( TString name )
 {
