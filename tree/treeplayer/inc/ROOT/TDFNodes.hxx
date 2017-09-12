@@ -102,7 +102,8 @@ class TLoopManager : public std::enable_shared_from_this<TLoopManager> {
    unsigned int fNStopsReceived{0}; ///< Number of times that a children node signaled to stop processing entries.
    const ELoopType fLoopType; ///< The kind of event loop that is going to be run (e.g. on ROOT files, on no files)
    std::string fToJit;        ///< string containing all `BuildAndBook` actions that should be jitted before running
-   std::unique_ptr<TDataSource> fDataSource; ///< Owning pointer to a data-source object. Null if no data-source.
+   std::unique_ptr<TDataSource> fDataSource; ///< Owning pointer to a data-source object. Null if no data-source
+   ColumnNames_t fDefinedDataSourceColumns; ///< List of data-source columns that have been `Define`d so far
 
    void RunEmptySourceMT();
    void RunEmptySource();
@@ -149,6 +150,8 @@ public:
    void IncrChildrenCount() { ++fNChildren; }
    void StopProcessing() { ++fNStopsReceived; }
    void Jit(const std::string &s) { fToJit.append(s); }
+   const ColumnNames_t &GetDefinedDataSourceColumns() const { return fDefinedDataSourceColumns; }
+   void AddDataSourceColumn(std::string_view name) { fDefinedDataSourceColumns.emplace_back(name); }
 };
 } // end ns TDF
 } // end ns Detail

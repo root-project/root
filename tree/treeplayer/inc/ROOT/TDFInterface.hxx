@@ -1149,13 +1149,15 @@ private:
              typename std::enable_if<!TDFInternal::TNeedJitting<BranchTypes...>::value, int>::type = 0>
    TResultProxy<ActionResultType> CreateAction(const ColumnNames_t &columns, const std::shared_ptr<ActionResultType> &r)
    {
-      auto loopManager = GetDataFrameChecked();
-      const auto nColumns = sizeof...(BranchTypes);
-      const auto validColumnNames = GetValidatedColumnNames(*loopManager, nColumns, columns);
+      auto lm = GetDataFrameChecked();
+      constexpr auto nColumns = sizeof...(BranchTypes);
+      const auto colsAndUndefCols = CheckColumnNames(columns, nColumns, *lm);
+      if (fDataSource)
+         DefineDataSourceColumns<BranchTypes...>(colsAndUndefCols, *lm, TDFInternal::GenStaticSeq_t<nColumns>());
+      const auto &theColumnNames = colsAndUndefCols.first;
       const auto nSlots = fProxiedPtr->GetNSlots();
-      TDFInternal::BuildAndBook<BranchTypes...>(validColumnNames, r, nSlots, *loopManager, *fProxiedPtr,
-                                                (ActionType *)nullptr);
-      return MakeResultProxy(r, loopManager);
+      TDFInternal::BuildAndBook<BranchTypes...>(theColumnNames, r, nSlots, *lm, *fProxiedPtr, (ActionType *)nullptr);
+      return MakeResultProxy(r, lm);
    }
 
    // User did not specify type, do type inference
@@ -1238,12 +1240,18 @@ private:
       return snapshotTDF;
    }
 
-   ColumnNames_t GetValidatedColumnNames(TLoopManager &lm, const unsigned int nColumns,
-                                         const ColumnNames_t &userColumns)
+   /// Given the desired number of columns and the user-provided list of columns:
+   /// * fallback to using the first nColumns default columns if needed (or throw if nColumns > nDefaultColumns)
+   /// * check that selected column names refer to valid branches, custom columns or datasource columns (throw if not)
+   /// Return the list of selected column names and a bitmask indicating the columns that must be defined via datasource
+   std::pair<ColumnNames_t, std::vector<bool>>
+   CheckColumnNames(const ColumnNames_t &userColumns, const unsigned int nColumns, TLoopManager &lm)
    {
       const auto &defaultColumns = lm.GetDefaultColumnNames();
-      const auto trueColumns = TDFInternal::SelectColumns(nColumns, userColumns, defaultColumns);
-      const auto unknownColumns = TDFInternal::FindUnknownColumns(trueColumns, lm.GetTree(), fValidCustomColumns);
+      const auto selectedColumns = TDFInternal::SelectColumns(nColumns, userColumns, defaultColumns);
+      const auto unknownColumns =
+         TDFInternal::FindUnknownColumns(selectedColumns, lm.GetTree(), fValidCustomColumns,
+                                         fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
 
       if (!unknownColumns.empty()) {
          // throw
@@ -1256,7 +1264,54 @@ private:
          throw std::runtime_error("Unknown column" + unknowns.str());
       }
 
-      return trueColumns;
+      const auto mustBeDefined = FindUndefinedDSColumns(selectedColumns, lm.GetDefinedDataSourceColumns());
+      return std::make_pair(selectedColumns, mustBeDefined);
+   }
+
+   //TODO remove usages of this everywhere
+   ColumnNames_t
+   GetValidatedColumnNames(TLoopManager &lm, const unsigned int nColumns, const ColumnNames_t &userColumns) {
+      return CheckColumnNames(userColumns, nColumns, lm).first;
+   }
+
+      /// Return a bitset each element of which indicates whether the corresponding element in `selectedColumns` is the
+      /// name of a column that must be defined via datasource. All elements of the returned vector are false if no
+      /// data-source is present.
+      std::vector<bool> FindUndefinedDSColumns(const ColumnNames_t &requestedCols, const ColumnNames_t &definedDSCols)
+   {
+      const auto nColumns = requestedCols.size();
+      std::vector<bool> mustBeDefined(nColumns, false);
+      if (fDataSource) {
+         for (auto i = 0u; i < nColumns; ++i)
+            mustBeDefined[i] =
+               std::find(definedDSCols.begin(), definedDSCols.end(), requestedCols[i]) == definedDSCols.end();
+      }
+      return mustBeDefined;
+   }
+
+   template <typename... ColumnTypes, int... S>
+   void DefineDataSourceColumns(const std::pair<std::vector<std::string>, std::vector<bool>> &colsAndUndefCols,
+                                TLoopManager &lm, TDFInternal::StaticSeq<S...> /*dummy*/)
+   {
+      assert(fDataSource != nullptr);
+      const auto &columns = colsAndUndefCols.first;
+      const auto &mustBeDefined = colsAndUndefCols.second;
+      if (std::none_of(mustBeDefined.begin(), mustBeDefined.end(), [](bool b) { return b; })) {
+         // no need to define any column
+         return;
+      } else {
+         // hack to expand a template parameter pack without c++17 fold expressions.
+         std::initializer_list<int> expander{
+            (mustBeDefined[S] ? DefineDSColumnHelper<ColumnTypes>(columns[S], lm) : /*no-op*/((void)0), 0)...};
+      }
+   }
+
+   template<typename T>
+   void DefineDSColumnHelper(std::string_view name, TLoopManager &lm) {
+      const auto nSlots = fProxiedPtr->GetNSlots();
+      auto readers = fDataSource->GetColumnReaders<T>(name, nSlots);
+      DefineSlot(name, [readers](unsigned int slot) { return **readers[slot]; });
+      lm.AddDataSourceColumn(name);
    }
 
 protected:
