@@ -1,4 +1,5 @@
 
+#include "ROOT/TTreeSettings.hxx"
 #include "TBasket.h"
 #include "TBranch.h"
 #include "TEnum.h"
@@ -196,4 +197,63 @@ TEST(TBasket, TestUnsupportedIO)
    basket = br->GetBasket(0);
    // Getting the basket should fail here and an error should have been triggered.
    ASSERT_EQ(basket, nullptr);
+}
+
+
+TEST(TBasket, TestSettingIOBits)
+{
+   TMemFile *f;
+   // Create a file; not using the CreateSampleFile helper as
+   // we want to change around the IOBits
+   f = new TMemFile("tbasket_test.root", "CREATE");
+   ASSERT_NE(f, nullptr);
+   ASSERT_FALSE(f->IsZombie());
+
+   TTree t1("t1", "Simple tree for testing.");
+   ASSERT_FALSE(t1.IsZombie());
+
+   ROOT::Experimental::TTreeSettings settings(t1);
+   ASSERT_EQ(settings.GetFeatures(), 0);
+   ASSERT_FALSE(settings.TestFeature(TBasket::EIOBits::kGenerateOffsetMap));
+   settings.SetFeature(TBasket::EIOBits::kGenerateOffsetMap);
+   ASSERT_EQ(settings.GetFeatures(), static_cast<UChar_t>(TBasket::EIOBits::kGenerateOffsetMap));
+   ASSERT_TRUE(settings.TestFeature(TBasket::EIOBits::kGenerateOffsetMap));
+   settings.ClearFeature(TBasket::EIOBits::kGenerateOffsetMap);
+   ASSERT_FALSE(settings.TestFeature(TBasket::EIOBits::kGenerateOffsetMap));
+   settings.SetFeature(TBasket::EIOBits::kGenerateOffsetMap);
+
+   Int_t idx;
+   Int_t sample[10] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+   Int_t elem;
+   t1.Branch("idx", &idx, "idx/I");
+   t1.Branch("elem", &elem, "elem/I");
+   t1.Branch("sample", &sample, "sample[elem]/I");
+   for (idx = 0; idx < gSampleEvents; idx++) {
+      elem = idx % 9;
+      t1.Fill();
+   }
+
+   TBranch *br = t1.GetBranch("sample");
+   ASSERT_NE(br, nullptr);
+
+   TBasket *basket = br->GetBasket(0);
+   ASSERT_NE(basket, nullptr);
+
+   ASSERT_NE(basket->GetEntryOffset(), nullptr);
+
+   TClass *cl = basket->IsA();
+   ASSERT_NE(cl, nullptr);
+   Long_t offset = cl->GetDataMemberOffset("fIOBits");
+   ASSERT_GT(offset, 0); // 0 can be returned on error
+   UChar_t *ioBits = reinterpret_cast<UChar_t *>(reinterpret_cast<char *>(basket) + offset);
+
+   EXPECT_EQ(*ioBits, static_cast<UChar_t>(TBasket::EIOBits::kGenerateOffsetMap));
+
+   tree->SetBranchAddress("idx", &saved_idx);
+
+   EXPECT_EQ(tree->GetEntries(), gSampleEvents);
+   for (Int_t idx = 0; idx < tree->GetEntries(); idx++) {
+      tree->GetEntry(idx);
+      EXPECT_EQ(idx, saved_idx);
+   }
 }
