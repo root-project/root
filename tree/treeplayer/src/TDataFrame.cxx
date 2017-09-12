@@ -610,7 +610,7 @@ TDataFrame::TDataFrame(std::string_view treeName, std::string_view filenameglob,
 ////////////////////////////////////////////////////////////////////////////
 /// \brief Build the dataframe
 /// \param[in] tree The tree or chain to be studied.
-/// \param[in] defaultBranches Collection of default branches.
+/// \param[in] defaultBranches Collection of default column names to fall back to when none is specified.
 ///
 /// The default branches are looked at in case no branch is specified in the
 /// booking of actions or transformations.
@@ -622,7 +622,7 @@ TDataFrame::TDataFrame(TTree &tree, const ColumnNames_t &defaultBranches)
 }
 
 //////////////////////////////////////////////////////////////////////////
-/// \brief Build the dataframe
+/// \brief Build a dataframe that generates numEntries entries.
 /// \param[in] numEntries The number of entries to generate.
 ///
 /// An empty-source dataframe constructed with a number of entries will
