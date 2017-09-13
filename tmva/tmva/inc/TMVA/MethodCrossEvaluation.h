@@ -8,20 +8,10 @@
  * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
- *      Analysis of Boosted Decision Trees                                        *
  *                                                                                *
  * Authors (alphabetical):                                                        *
- *      Andreas Hoecker <Andreas.Hocker@cern.ch> - CERN, Switzerland              *
- *      Helge Voss      <Helge.Voss@cern.ch>     - MPI-K Heidelberg, Germany      *
- *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
- *      Doug Schouten   <dschoute@sfu.ca>        - Simon Fraser U., Canada        *
- *      Jan Therhaag    <jan.therhaag@cern.ch>   - U. of Bonn, Germany            *
  *                                                                                *
  * Copyright (c) 2005-2011:                                                       *
- *      CERN, Switzerland                                                         *
- *      U. of Victoria, Canada                                                    *
- *      MPI-K Heidelberg, Germany                                                 *
- *      U. of Bonn, Germany                                                       *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *

@@ -73,6 +73,7 @@ protected:
 
 
 
+
 /* =============================================================================
       TMVA::CvSplitBootstrappedStratified
 ============================================================================= */
@@ -138,6 +139,6 @@ private:
    ClassDefOverride(CvSplitCrossEvaluation, 0);
 };
 
-}
+} // end namespace TMVA
 
 #endif

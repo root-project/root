@@ -28,11 +28,11 @@
 
 #include "gtest/gtest.h"
 
-#include "TFile.h"
-#include "TMath.h"
-#include "TTree.h"
-#include "TString.h"
-#include "TSystem.h"
+#include <TFile.h>
+#include <TMath.h>
+#include <TTree.h>
+#include <TString.h>
+#include <TSystem.h>
 
 #include "TMVA/CvSplit.h"
 #include "TMVA/DataLoader.h"
