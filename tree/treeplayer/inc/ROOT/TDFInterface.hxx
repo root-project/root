@@ -1305,6 +1305,7 @@ private:
          // hack to expand a template parameter pack without c++17 fold expressions.
          std::initializer_list<int> expander{
             (mustBeDefined[S] ? DefineDSColumnHelper<ColumnTypes>(columns[S], lm) : /*no-op*/((void)0), 0)...};
+         (void)expander; // avoid unused variable warnings
       }
    }
 

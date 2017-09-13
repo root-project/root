@@ -46,7 +46,7 @@ public:
    /// Convenience method called at the start of each task, before processing a range of entries.
    /// DataSources can implement it if needed (does nothing by default).
    /// firstEntry is the first entry of the range that the task will process.
-   virtual void InitSlot(unsigned int slot, ULong64_t firstEntry) {}
+   virtual void InitSlot(unsigned int /*slot*/, ULong64_t /*firstEntry*/) {}
 
 protected:
    /// type-erased vector of pointers to pointers to column values - one per slot
