@@ -2985,7 +2985,8 @@ Double_t TFormula::EvalPar(const Double_t *x,const Double_t *params) const
 
 #ifdef R__HAS_VECCORE
    // convert our input into vectors then convert back
-   Warning("EvalPar", "Function is vectorized - converting Double_t into ROOT::Double_v and back");
+   if (gDebug)
+      Info("EvalPar", "Function is vectorized - converting Double_t into ROOT::Double_v and back");
 
    ROOT::Double_v xvec[fNdim];
    for (int i = 0; i < fNdim; i++)
@@ -3020,7 +3021,8 @@ ROOT::Double_v TFormula::EvalPar(const ROOT::Double_v *x, const Double_t *params
 
    // otherwise, trying to input vectors into a scalar function
 
-   Warning("EvalPar", "Function is not vectorized - converting ROOT::Double_v into Double_t and back");
+   if (gDebug)
+      Info("EvalPar", "Function is not vectorized - converting ROOT::Double_v into Double_t and back");
 
    int vecSize = x[0].size();
    Double_t xscalars[vecSize][fNdim];
