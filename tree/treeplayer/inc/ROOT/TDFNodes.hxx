@@ -109,6 +109,8 @@ class TLoopManager : public std::enable_shared_from_this<TLoopManager> {
    void RunEmptySource();
    void RunTreeProcessorMT();
    void RunTreeReader();
+   void RunDataSourceMT();
+   void RunDataSource();
    void RunAndCheckFilters(unsigned int slot, Long64_t entry);
    void InitNodeSlots(TTreeReader *r, unsigned int slot);
    void InitNodes();

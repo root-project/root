@@ -212,6 +212,46 @@ void TLoopManager::RunTreeReader()
    }
 }
 
+/// Run event loop over data accessed through a DataSource, in sequence.
+void TLoopManager::RunDataSource()
+{
+   assert(fDataSource != nullptr);
+   const auto &rangePairs = fDataSource->GetEntryRanges();
+   InitNodeSlots(nullptr, 0);
+   fDataSource->InitSlot(0, 0);
+   // we are running single-thread, so all ranges are squashed together
+   const auto lastEntry = rangePairs.back().second;
+   for(ULong64_t i = 0ull; i < lastEntry; ++i) {
+      fDataSource->SetEntry(i, 0);
+      RunAndCheckFilters(0, i);
+   }
+}
+
+/// Run event loop over data accessed through a DataSource, in parallel.
+void TLoopManager::RunDataSourceMT()
+{
+#ifdef R__USE_IMT
+   assert(fDataSource != nullptr);
+   auto rangePairs = fDataSource->GetEntryRanges();
+   TSlotStack slotStack(fNSlots);
+
+   // Each task works on a subrange of entries
+   auto doWork = [this, &slotStack](const std::pair<ULong64_t, ULong64_t> &range) {
+      const auto slot = slotStack.GetSlot();
+      InitNodeSlots(nullptr, slot);
+      fDataSource->InitSlot(slot, range.first);
+      for (auto currEntry = range.first; currEntry < range.second; ++currEntry) {
+         RunAndCheckFilters(slot, currEntry);
+      }
+      CleanUpTask(slot);
+      slotStack.ReturnSlot(slot);
+   };
+
+   ROOT::TThreadExecutor pool;
+   pool.Foreach(doWork, rangePairs);
+#endif // not implemented otherwise (never called)
+}
+
 /// Execute actions and make sure named filters are called for each event.
 /// Named filters must be called even if the analysis logic would not require it, lest they report confusing results.
 void TLoopManager::RunAndCheckFilters(unsigned int slot, Long64_t entry)
@@ -310,12 +350,14 @@ void TLoopManager::Run()
       switch (fLoopType) {
       case ELoopType::kNoFiles: RunEmptySourceMT(); break;
       case ELoopType::kROOTFiles: RunTreeProcessorMT(); break;
+      case ELoopType::kDataSource: RunDataSourceMT(); break;
       }
    } else {
 #endif // R__USE_IMT
       switch (fLoopType) {
       case ELoopType::kNoFiles: RunEmptySource(); break;
       case ELoopType::kROOTFiles: RunTreeReader(); break;
+      case ELoopType::kDataSource: RunDataSource(); break;
       }
 #ifdef R__USE_IMT
    }
