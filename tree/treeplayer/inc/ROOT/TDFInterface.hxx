@@ -298,7 +298,7 @@ public:
                << &bnames << "));";
       // jit snapCall, return result
       TInterpreter::EErrorCode errorCode;
-      auto newTDFPtr = gInterpreter->ProcessLine(snapCall.str().c_str(), &errorCode);
+      auto newTDFPtr = gInterpreter->Calc(snapCall.str().c_str(), &errorCode);
       if (TInterpreter::EErrorCode::kNoError != errorCode) {
          std::string msg = "Cannot jit Snapshot call. Interpreter error code is " + std::to_string(errorCode) + ".";
          throw std::runtime_error(msg);

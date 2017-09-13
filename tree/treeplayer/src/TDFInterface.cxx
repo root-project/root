@@ -149,7 +149,7 @@ Long_t JitTransformation(void *thisPtr, const std::string &methodName, const std
    ss << ");";
 
    TInterpreter::EErrorCode interpErrCode;
-   auto retVal = gInterpreter->ProcessLine(ss.str().c_str(), &interpErrCode);
+   auto retVal = gInterpreter->Calc(ss.str().c_str(), &interpErrCode);
    if (TInterpreter::EErrorCode::kNoError != interpErrCode || !retVal) {
       std::string msg = "Cannot interpret the invocation to " + methodName + ":  ";
       msg += ss.str();
@@ -167,7 +167,7 @@ void JitBuildAndBook(const ColumnNames_t &bl, const std::string &nodeTypename, v
                      const std::type_info &at, const void *r, TTree *tree, unsigned int nSlots,
                      const std::map<std::string, TmpBranchBasePtr_t> &tmpBranches)
 {
-   gInterpreter->ProcessLine("#include \"ROOT/TDataFrame.hxx\"");
+   gInterpreter->Declare("#include \"ROOT/TDataFrame.hxx\"");
    auto nBranches = bl.size();
 
    // retrieve pointers to temporary columns (null if the column is not temporary)
@@ -218,7 +218,7 @@ void JitBuildAndBook(const ColumnNames_t &bl, const std::string &nodeTypename, v
                     << "*reinterpret_cast<ROOT::Detail::TDF::ColumnNames_t*>(" << &bl << "), " << nSlots
                     << ", *reinterpret_cast<" << actionResultTypeName << "*>(" << r << "));";
    auto error = TInterpreter::EErrorCode::kNoError;
-   gInterpreter->ProcessLine(createAction_str.str().c_str(), &error);
+   gInterpreter->Calc(createAction_str.str().c_str(), &error);
    if (error) {
       std::string exceptionText = "An error occurred while jitting this action:\n";
       exceptionText += createAction_str.str();
