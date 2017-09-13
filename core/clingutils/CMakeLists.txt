@@ -27,6 +27,11 @@ ROOT_INSTALL_HEADERS()
 
 #### STL dictionary (replacement for cintdlls)##############################
 
+# Make a list of header search paths we can iterate over when looking for STL
+# headers. We also add the inc/ directory for things like root_std_complex.h
+get_property(cxx_path GLOBAL PROPERTY ROOT_CLING_CXX_HEADERS_LOCATION)
+string(REPLACE ":" ";" cxx_path "${cxx_path}:${CMAKE_CURRENT_SOURCE_DIR}/inc")
+
 set(stldicts
     vector
     list
@@ -45,12 +50,22 @@ foreach(dict ${stldicts})
   string(REPLACE "2" "" header ${dict})
   string(REPLACE "complex" "root_std_complex.h" header ${header})
   string(REPLACE "multi" "" header ${header})
+
+  # Manually search for the header in our STL folders because the ROOT macros
+  # could pick up other files like /bin/map due to their extensive search paths.
+  find_file(abs_cling_header name ${header} HINTS ${cxx_path} NO_DEFAULT_PATH)
+  if(NOT abs_cling_header)
+    message(WARNING "Couldn't find STL header ${header} in Cling's search"
+                    "paths: ${cxx_path}")
+  endif()
+
   ROOT_STANDARD_LIBRARY_PACKAGE(${dict}Dict
                                 NO_SOURCES NO_INSTALL_HEADERS
                                 STAGE1
-                                HEADERS ${header}
+                                HEADERS "${abs_cling_header}"
                                 LINKDEF src/${dict}Linkdef.h
                                 DEPENDENCIES Core)
+  unset(abs_cling_header CACHE)
 endforeach()
 
 #---Deal with LLVM resource here----------------------------------------------
