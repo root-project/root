@@ -1,6 +1,8 @@
-input_line_9:2:3: error: use of undeclared identifier 'TObj'
+input_line_10:2:3: error: use of undeclared identifier 'TObj'
  (TObj)
   ^
+Error in <HandleInterpreterException>: Error evaluating expression (TObj).
+Execution of your code was aborted.
 ROOT_prompt_1:1:10: error: no member named 'k' in 'TObject'
 TObject::k
 ~~~~~~~~~^
