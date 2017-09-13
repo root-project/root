@@ -4690,7 +4690,8 @@ const char* TCling::TypeName(const char* typeDesc)
 ////////////////////////////////////////////////////////////////////////////////
 /// Read and parse a rootmapfile in its new format, and return 0 in case of
 /// success, -1 if the file has already been read, and -3 in case its format
-/// is the old one (e.g. containing "Library.ClassName")
+/// is the old one (e.g. containing "Library.ClassName"), -4 in case of syntax
+/// error.
 
 int TCling::ReadRootmapFile(const char *rootmapfile, TUniqueString *uniqueString)
 {
@@ -4701,6 +4702,10 @@ int TCling::ReadRootmapFile(const char *rootmapfile, TUniqueString *uniqueString
 
       // Add content of a specific rootmap file
       if (fRootmapFiles->FindObject(rootmapfile)) return -1;
+
+      if (uniqueString)
+         uniqueString->Append(std::string("\n#line 1 \"Forward declarations from ") + rootmapfile + "\"\n");
+
       std::ifstream file(rootmapfile);
       std::string line; line.reserve(200);
       std::string lib_name; line.reserve(100);
@@ -4718,6 +4723,11 @@ int TCling::ReadRootmapFile(const char *rootmapfile, TUniqueString *uniqueString
 
             while (getline(file, line, '\n')) {
                if (line[0] == '[') break;
+               if (!uniqueString) {
+                  Error("ReadRootmapFile", "Cannot handle \"{ decls }\" sections in custom rootmap file %s",
+                        rootmapfile);
+                  return -4;
+               }
                uniqueString->Append(line);
             }
          }
