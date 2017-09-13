@@ -37,7 +37,7 @@ int main() {
    d.Foreach([&fc]() { ++fc; });
 
    assert(*min == std::numeric_limits<double>::max());
-   assert(*max == std::numeric_limits<double>::min());
+   assert(*max == std::numeric_limits<double>::lowest());
    assert(*mean == 0);
    assert(h->GetEntries() == 0);
    assert(*c == 0);
