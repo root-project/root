@@ -221,7 +221,7 @@ void TLoopManager::RunDataSource()
    fDataSource->InitSlot(0, 0);
    // we are running single-thread, so all ranges are squashed together
    const auto lastEntry = rangePairs.back().second;
-   for(ULong64_t i = 0ull; i < lastEntry; ++i) {
+   for (ULong64_t i = 0ull; i < lastEntry; ++i) {
       fDataSource->SetEntry(i, 0);
       RunAndCheckFilters(0, i);
    }
