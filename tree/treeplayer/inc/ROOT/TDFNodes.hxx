@@ -415,7 +415,7 @@ public:
 
    template <int... S, typename... BranchTypes>
    void UpdateHelper(unsigned int slot, Long64_t entry, TDFInternal::StaticSeq<S...>, TypeList<BranchTypes...>,
-                     std::true_type shouldPassSlotNumber)
+                     std::true_type /*shouldPassSlotNumber*/)
    {
       *fLastResultPtr[slot] = fExpression(slot, std::get<S>(fValues[slot]).Get(entry)...);
       // silence "unused parameter" warnings in gcc
@@ -425,7 +425,7 @@ public:
 
    template <int... S, typename... BranchTypes>
    void UpdateHelper(unsigned int slot, Long64_t entry, TDFInternal::StaticSeq<S...>, TypeList<BranchTypes...>,
-                     std::false_type shouldPassSlotNumber)
+                     std::false_type /*shouldPassSlotNumber*/)
    {
       *fLastResultPtr[slot] = fExpression(std::get<S>(fValues[slot]).Get(entry)...);
       // silence "unused parameter" warnings in gcc
