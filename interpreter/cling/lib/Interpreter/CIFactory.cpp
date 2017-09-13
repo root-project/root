@@ -25,6 +25,7 @@
 #include "clang/Driver/Job.h"
 #include "clang/Driver/Tool.h"
 #include "clang/Frontend/FrontendDiagnostic.h"
+#include "clang/Frontend/MultiplexConsumer.h"
 #include "clang/Frontend/TextDiagnosticPrinter.h"
 #include "clang/Frontend/VerifyDiagnosticConsumer.h"
 #include "clang/Serialization/SerializationDiagnostic.h"
@@ -966,17 +967,20 @@ static void stringifyPreprocSetting(PreprocessorOptions& PPOpts,
     // Set up the ASTContext
     CI->createASTContext();
 
+    std::vector<std::unique_ptr<ASTConsumer>> Consumers;
+
     if (OnlyLex) {
       assert(!customConsumer && "Can't specify a custom consumer when in "
                                 "OnlyLex mode");
-      class IgnoreConsumer: public clang::ASTConsumer {};
-      CI->setASTConsumer(
-          std::unique_ptr<clang::ASTConsumer>(new IgnoreConsumer()));
     } else {
       assert(customConsumer && "Need to specify a custom consumer"
                                " when not in OnlyLex mode");
-      CI->setASTConsumer(std::move(customConsumer));
+      Consumers.push_back(std::move(customConsumer));
     }
+
+    std::unique_ptr<clang::MultiplexConsumer> multiConsumer(
+        new clang::MultiplexConsumer(std::move(Consumers)));
+    CI->setASTConsumer(std::move(multiConsumer));
 
     // Set up Sema
     CodeCompleteConsumer* CCC = 0;
