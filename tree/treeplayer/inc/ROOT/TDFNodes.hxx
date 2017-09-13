@@ -654,8 +654,9 @@ void ROOT::Internal::TDF::TColumnValue<T>::SetTmpColumn(unsigned int slot,
 {
    fCustomColumns.emplace_back(customColumn);
    if (customColumn->GetTypeId() != typeid(T))
-      throw std::runtime_error(std::string("TColumnValue: type specified is ") + typeid(T).name() +
-                               " but temporary column has type " + customColumn->GetTypeId().name());
+      throw std::runtime_error(
+         std::string("TColumnValue: type specified for column \"" + customColumn->GetName() + "\" is ") +
+         typeid(T).name() + " but temporary column has type " + customColumn->GetTypeId().name());
    fCustomValuePtrs.emplace_back(static_cast<T *>(customColumn->GetValuePtr(slot)));
    fSlot = slot;
 }
