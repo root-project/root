@@ -258,7 +258,7 @@ TEST(CrossEvaluationSplitting, TrainingSetSplitOnSpectator)
    d->GetDataSetInfo().GetDataSet(); // Force creation of dataset.
    TMVA::MsgLogger::EnableOutput();
 
-   TMVA::CvSplitCrossEvaluation split {NUM_FOLDS, "id"};
+   TMVA::CvSplitCrossEvaluation split {NUM_FOLDS, "int([id]) % int([numFolds])"};
    d->MakeKFoldDataSet(split);
 
    // Actual test

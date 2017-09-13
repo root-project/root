@@ -155,7 +155,7 @@ void TestContex::setUpCe()
 
    fOutputFile    = std::shared_ptr<TFile>(new TFile( fOutputFileName, "RECREATE" ));
    fCrossEvaluate = std::unique_ptr<TMVA::CrossEvaluation>(
-      new TMVA::CrossEvaluation(dataloader, fOutputFile.get(), "AnalysisType=Classification:SplitSpectator=EventNumber")
+      new TMVA::CrossEvaluation(dataloader, fOutputFile.get(), "AnalysisType=Classification:SplitExpr=int([EventNumber])%int([NumFolds])")
    );
    fCrossEvaluate->BookMethod(TMVA::Types::kBDT, "BDT", "!H:!V:NTrees=10");
 }

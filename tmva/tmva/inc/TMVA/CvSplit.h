@@ -29,7 +29,10 @@
 #include "TMVA/Configurable.h"
 #include "TMVA/Types.h"
 
-#include "Rtypes.h"
+#include <Rtypes.h>
+#include <TFormula.h>
+
+#include <memory>
 
 class TString;
 
@@ -108,6 +111,41 @@ private:
 
 
 
+
+
+/* =============================================================================
+      TMVA::CvSplitCrossEvaluationExpr
+============================================================================= */
+
+class CvSplitCrossEvaluationExpr
+{
+public:
+   CvSplitCrossEvaluationExpr(DataSetInfo & dsi, TString expr);
+   ~CvSplitCrossEvaluationExpr() {}
+
+   UInt_t Eval(UInt_t numFolds, const Event * ev);
+
+   static Bool_t Validate(TString expr);
+
+private:
+   UInt_t GetSpectatorIndexForName(DataSetInfo & dsi, TString name);
+
+private:
+   DataSetInfo & fDsi;
+
+   TString fSplitExpr; //! Expression used to split data into folds. Should output values between 0 and numFolds.
+   TFormula fSplitFormula; //! TFormula for splitExpr.
+   Int_t fIdxFormulaParNumFolds; //! Keeps track of the index of reserved par "NumFolds" in splitExpr.
+   std::vector< std::pair<Int_t, Int_t> > fFormulaParIdxToDsiSpecIdx; //! Maps parameter indicies in splitExpr to their spectator index in the datasetinfo.
+
+   std::vector<Double_t> fParValues;
+};
+
+
+
+
+
+
 /* =============================================================================
       TMVA::CvSplitCrossEvaluation
 ============================================================================= */
@@ -125,11 +163,9 @@ public:
 private:
    std::vector<std::vector<Event*>> SplitSets (std::vector<TMVA::Event*>& oldSet, UInt_t numFolds) override;
 
-   UInt_t GetSpectatorIndexForName(DataSetInfo & dsi, TString name);
-
 private:
-   TString fSpectatorName;
-   UInt_t fSpectatorIdx;
+   TString fSplitExprString; //! Expression used to split data into folds. Should output values between 0 and numFolds.
+   std::unique_ptr<CvSplitCrossEvaluationExpr> fSplitExpr;
 
    std::vector<std::vector<TMVA::Event*>> fTrainEvents;
    std::vector<std::vector<TMVA::Event*>> fValidEvents;

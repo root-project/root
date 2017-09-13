@@ -24,6 +24,7 @@
 
 #include "TMVA/ClassifierFactory.h"
 #include "TMVA/Config.h"
+#include "TMVA/CvSplit.h"
 #include "TMVA/MethodCategory.h"
 #include "TMVA/Tools.h"
 #include "TMVA/Types.h"
@@ -162,7 +163,7 @@ void TMVA::MethodCrossEvaluation::AddWeightsXMLTo( void* parent ) const
    void* wght = gTools().AddChild(parent, "Weights");
 
    //TODO: Options in optionstring are handled auto. Just add these there.
-   gTools().AddAttr( wght, "SplitSpectator", fSplitSpectator );
+   gTools().AddAttr( wght, "SplitExpr", fSplitExprString );
    gTools().AddAttr( wght, "NumFolds", fNumFolds );
    gTools().AddAttr( wght, "EncapsulatedMethodName", fEncapsulatedMethodName );
    gTools().AddAttr( wght, "EncapsulatedMethodTypeName", fEncapsulatedMethodTypeName );
@@ -192,7 +193,7 @@ void TMVA::MethodCrossEvaluation::AddWeightsXMLTo( void* parent ) const
 
 void TMVA::MethodCrossEvaluation::ReadWeightsFromXML(void* parent)
 {
-   gTools().ReadAttr( parent, "SplitSpectator", fSplitSpectator );
+   gTools().ReadAttr( parent, "SplitExpr", fSplitExprString );
    gTools().ReadAttr( parent, "NumFolds", fNumFolds );
    gTools().ReadAttr( parent, "EncapsulatedMethodName", fEncapsulatedMethodName );
    gTools().ReadAttr( parent, "EncapsulatedMethodTypeName", fEncapsulatedMethodTypeName );
@@ -213,31 +214,7 @@ void TMVA::MethodCrossEvaluation::ReadWeightsFromXML(void* parent)
       fEncapsulatedMethods.push_back(InstantiateMethodFromXML(fEncapsulatedMethodTypeName, weightfile));
    }
 
-   // TODO: This is init of a variable, should it be here?
-   // No, it should be in Init method which is run after Options are parsed :)
-   std::vector<VariableInfo> spectatorInfos = DataInfo().GetSpectatorInfos();
-   fIdxSpec = -1;
-   for (UInt_t iSpectator = 0; iSpectator < spectatorInfos.size(); ++iSpectator) {
-      VariableInfo vi = spectatorInfos[iSpectator];
-      if (vi.GetName() == fSplitSpectator) {
-         fIdxSpec = iSpectator;
-         break;
-      } else if (vi.GetLabel() == fSplitSpectator) {
-         fIdxSpec = iSpectator;
-         break;
-      } else if (vi.GetExpression() == fSplitSpectator) {
-         fIdxSpec = iSpectator;
-         break;
-      }
-   };
-
-   Log() << kDEBUG << "Spectator variable\"" << fSplitSpectator << "\" has index: " << fIdxSpec << Endl;
-
-   if (fIdxSpec == -1) {
-      Log() << kFATAL << "Spectator variable\"" << fSplitSpectator << "\" not found." << Endl;
-      return;
-   }
-
+   fSplitExpr = std::unique_ptr<CvSplitCrossEvaluationExpr>(new CvSplitCrossEvaluationExpr(DataInfo(), fSplitExprString));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -255,8 +232,9 @@ void  TMVA::MethodCrossEvaluation::ReadWeightsFromStream( std::istream& /*istr*/
 Double_t TMVA::MethodCrossEvaluation::GetMvaValue( Double_t* err, Double_t* errUpper )
 {
    const Event* ev = GetEvent();
-   auto val = ev->GetSpectator(fIdxSpec);
-   UInt_t iFold = (UInt_t)val % (UInt_t)fNumFolds;
+   // auto val = ev->GetSpectator(fIdxSpec);
+   // UInt_t iFold = (UInt_t)val % (UInt_t)fNumFolds;
+   UInt_t iFold = fSplitExpr->Eval(fNumFolds, ev);
 
    return fEncapsulatedMethods.at(iFold)->GetMvaValue(err, errUpper);
 }
@@ -267,8 +245,9 @@ Double_t TMVA::MethodCrossEvaluation::GetMvaValue( Double_t* err, Double_t* errU
 const std::vector<Float_t> & TMVA::MethodCrossEvaluation::GetMulticlassValues()
 {
    const Event *ev = GetEvent();
-   auto val = ev->GetSpectator(fIdxSpec);
-   UInt_t iFold = (UInt_t)val % (UInt_t)fNumFolds;
+   // auto val = ev->GetSpectator(fIdxSpec);
+   // UInt_t iFold = (UInt_t)val % (UInt_t)fNumFolds;
+   UInt_t iFold = fSplitExpr->Eval(fNumFolds, ev);
 
    return fEncapsulatedMethods.at(iFold)->GetMulticlassValues();
 }

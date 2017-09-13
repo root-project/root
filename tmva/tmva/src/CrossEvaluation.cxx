@@ -64,6 +64,9 @@ dataloader->AddTree( background, "cls2" );
 dataloader->PrepareTrainingAndTestTree( "", "", "nTest_cls1=1:nTest_cls2=1" );
 ~~~
 
+## Split Expression
+See CVSplit documentation?
+
 */
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -82,7 +85,7 @@ TMVA::CrossEvaluation::CrossEvaluation(TMVA::DataLoader *dataloader, TFile * out
      fNumFolds(2),
      fOutputFile(outputFile),
      fSilent(kFALSE),
-     fSplitSpectator(""),
+     fSplitExprString(""),
      fROC(kTRUE),
      fTransformations(""),
      fVerbose(kFALSE),
@@ -136,7 +139,7 @@ void TMVA::CrossEvaluation::InitOptions()
    AddPreDefVal(TString("Auto"));
 
    // Options specific to CE
-   DeclareOptionRef( fSplitSpectator, "SplitSpectator", "The spectator variable to use for the fold splitting" );
+   DeclareOptionRef( fSplitExprString, "SplitExpr", "The expression used to assign events to folds" );
    DeclareOptionRef( fNumFolds, "NumFolds", "Number of folds to generate" );
 }
 
@@ -214,7 +217,7 @@ void TMVA::CrossEvaluation::ParseOptions()
       fFactory = std::unique_ptr<TMVA::Factory>(new TMVA::Factory("CrossEvaluation", fOutputFile,  fOutputFactoryOptions + "!ModelPersistence"));
    }
 
-   fSplit = std::unique_ptr<CvSplitCrossEvaluation>(new CvSplitCrossEvaluation(fNumFolds, fSplitSpectator));
+   fSplit = std::unique_ptr<CvSplitCrossEvaluation>(new CvSplitCrossEvaluation(fNumFolds, fSplitExprString));
    
 }
 
@@ -225,7 +228,7 @@ void TMVA::CrossEvaluation::SetNumFolds(UInt_t i)
 {
    if (i != fNumFolds) {
       fNumFolds = i;
-      fSplit = std::unique_ptr<CvSplitCrossEvaluation>(new CvSplitCrossEvaluation(fNumFolds, fSplitSpectator));
+      fSplit = std::unique_ptr<CvSplitCrossEvaluation>(new CvSplitCrossEvaluation(fNumFolds, fSplitExprString));
       fDataLoader->MakeKFoldDataSet(*fSplit.get());
       fFoldStatus=kTRUE;
    }
@@ -234,11 +237,11 @@ void TMVA::CrossEvaluation::SetNumFolds(UInt_t i)
 ////////////////////////////////////////////////////////////////////////////////
 ///
 
-void TMVA::CrossEvaluation::SetSplitSpectator(TString spectatorName)
+void TMVA::CrossEvaluation::SetSplitExpr(TString splitExpr)
 {
-   if (spectatorName != fSplitSpectator) {
-      fSplitSpectator = spectatorName;
-      fSplit = std::unique_ptr<CvSplitCrossEvaluation>(new CvSplitCrossEvaluation(fNumFolds, fSplitSpectator));
+   if (splitExpr != fSplitExprString) {
+      fSplitExprString = splitExpr;
+      fSplit = std::unique_ptr<CvSplitCrossEvaluation>(new CvSplitCrossEvaluation(fNumFolds, fSplitExprString));
       fDataLoader->MakeKFoldDataSet(*fSplit.get());
       fFoldStatus=kTRUE;
    }
@@ -509,7 +512,7 @@ void TMVA::CrossEvaluation::Evaluate()
       method_ce->fEncapsulatedMethodName     = "CrossEvaluation_internal_" + methodTitle;
       method_ce->fEncapsulatedMethodTypeName = methodName;
       method_ce->fNumFolds                   = fNumFolds;
-      method_ce->fSplitSpectator             = fSplitSpectator;
+      method_ce->fSplitExprString            = fSplitExprString;
 
       method->WriteStateToFile();
       // Not supported by MethodCrossEvaluation yet

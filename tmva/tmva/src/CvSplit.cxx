@@ -5,15 +5,22 @@
 #include "TMVA/Event.h"
 #include "TMVA/MsgLogger.h"
 
-#include "TString.h"
+#include <TString.h>
+#include <TFormula.h>
 
-/* =============================================================================
-      TMVA::CvSplit
-============================================================================= */
+#include <stdexcept>
 
 ClassImp(TMVA::CvSplit);
 ClassImp(TMVA::CvSplitBootstrappedStratified);
 ClassImp(TMVA::CvSplitCrossEvaluation);
+
+
+
+
+
+/* =============================================================================
+      TMVA::CvSplit
+============================================================================= */
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -244,6 +251,109 @@ TMVA::CvSplitBootstrappedStratified::SplitSets (std::vector<TMVA::Event*>& oldSe
    return tempSets;
 }
 
+
+
+
+
+/* =============================================================================
+      TMVA::CvSplitCrossEvaluationExpr
+============================================================================= */
+
+////////////////////////////////////////////////////////////////////////////////
+///
+
+TMVA::CvSplitCrossEvaluationExpr::CvSplitCrossEvaluationExpr (DataSetInfo & dsi, TString expr)
+   : fDsi(dsi), fSplitFormula("", expr), fParValues(fSplitFormula.GetNpar()), fIdxFormulaParNumFolds(std::numeric_limits<UInt_t>::max())
+{
+   if (not fSplitFormula.IsValid()) {
+      throw std::runtime_error("Split expression \"" + std::string(fSplitExpr.Data()) + "\" is not a valid TFormula.");
+   }
+
+   // Go though all variable names in the formula,
+   //    Get it's index or crash
+   //    Fill value
+   // 
+   // Context: "numFolds" | "NumFolds" is replaced by the currently specified number of folds
+   // Caveat: only uses variables, not parameters
+   // If: Only one variable is used retain (var%numFolds) behaviour
+   // 
+   // numFolds could be sent in as the first parameter as well, does not look as nice
+   // Hard to read if one does not know that it means.
+   // 
+   // Can we allow both? Does this make sense?
+
+   for (Int_t iFormulaPar = 0; iFormulaPar < fSplitFormula.GetNpar(); ++iFormulaPar) {
+      TString name = fSplitFormula.GetParName(iFormulaPar);
+      
+      std::cout << "Found variable with name \"" << name << "\"." << std::endl;
+
+      if (name == "NumFolds" or name == "numFolds") {
+         std::cout << "NumFolds|numFolds is a reserved variable! Adding to context." << std::endl;
+         fIdxFormulaParNumFolds = iFormulaPar;
+      } else {
+         fFormulaParIdxToDsiSpecIdx.push_back( std::make_pair(iFormulaPar, GetSpectatorIndexForName(fDsi, name)) );
+      }
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///
+
+UInt_t TMVA::CvSplitCrossEvaluationExpr::Eval(UInt_t numFolds, const Event * ev)
+{
+   for (auto & p : fFormulaParIdxToDsiSpecIdx) {
+      auto iFormulaPar = p.first;
+      auto iSpectator  = p.second;
+
+      fParValues.at(iFormulaPar) = ev->GetSpectator(iSpectator);
+   }
+
+   if (fIdxFormulaParNumFolds < fSplitFormula.GetNpar()) {
+      fParValues[fIdxFormulaParNumFolds] = numFolds;
+   }
+
+   Double_t iFold = fSplitFormula.EvalPar(nullptr, &fParValues[0]);
+
+   if ( fabs(iFold - (double)((UInt_t)iFold)) > 1e-5) {
+      throw std::runtime_error("Output of splitExpr should be a non-negative integer between 0 and numFolds-1 inclusive.");
+   }
+
+   return iFold;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///
+
+Bool_t TMVA::CvSplitCrossEvaluationExpr::Validate(TString expr)
+{
+   return TFormula("", expr).IsValid();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///
+
+UInt_t TMVA::CvSplitCrossEvaluationExpr::GetSpectatorIndexForName (DataSetInfo & dsi, TString name)
+{
+   std::vector<VariableInfo> spectatorInfos = dsi.GetSpectatorInfos();
+
+   for (UInt_t iSpectator = 0; iSpectator < spectatorInfos.size(); ++iSpectator) {
+      VariableInfo vi = spectatorInfos[iSpectator];
+      if (vi.GetName() == name) {
+         return iSpectator;
+      } else if (vi.GetLabel() == name) {
+         return iSpectator;
+      } else if (vi.GetExpression() == name) {
+         return iSpectator;
+      }
+   }
+
+   throw std::runtime_error("Spectator \"" + std::string(name.Data()) + "\" not found.");
+}
+
+
+
+
+
 /* =============================================================================
       TMVA::CvSplitCrossEvaluation
 ============================================================================= */
@@ -251,9 +361,13 @@ TMVA::CvSplitBootstrappedStratified::SplitSets (std::vector<TMVA::Event*>& oldSe
 ////////////////////////////////////////////////////////////////////////////////
 ///
 
-TMVA::CvSplitCrossEvaluation::CvSplitCrossEvaluation (UInt_t numFolds, TString spectatorName)
-: CvSplit(numFolds), fSpectatorName(spectatorName)
-{}
+TMVA::CvSplitCrossEvaluation::CvSplitCrossEvaluation (UInt_t numFolds, TString splitExpr)
+: CvSplit(numFolds), fSplitExprString(splitExpr)
+{
+   if (not CvSplitCrossEvaluationExpr::Validate(fSplitExprString)) {
+      Log() << kFATAL << "Split expression \"" << fSplitExprString << "\" is not a valid TFormula." << Endl;
+   }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -261,7 +375,9 @@ TMVA::CvSplitCrossEvaluation::CvSplitCrossEvaluation (UInt_t numFolds, TString s
 void TMVA::CvSplitCrossEvaluation::MakeKFoldDataSet (DataSetInfo & dsi)
 {
    // Validate spectator
-   fSpectatorIdx = GetSpectatorIndexForName(dsi, fSpectatorName);
+   // fSpectatorIdx = GetSpectatorIndexForName(dsi, fSpectatorName);
+   
+   fSplitExpr = std::unique_ptr<CvSplitCrossEvaluationExpr>(new CvSplitCrossEvaluationExpr(dsi, fSplitExprString));
 
    // No need to do it again if the sets have already been split.
    if (fMakeFoldDataSet) {
@@ -399,32 +515,15 @@ TMVA::CvSplitCrossEvaluation::SplitSets (std::vector<TMVA::Event*>& oldSet, UInt
 
    for (ULong64_t i = 0; i < nEntries; i++) {
       TMVA::Event *ev = oldSet[i];
-      auto val = ev->GetSpectator(fSpectatorIdx);
+      // auto val = ev->GetSpectator(fSpectatorIdx);
+      // tempSets.at((UInt_t)val % (UInt_t)numFolds).push_back(ev);
 
-      tempSets.at((UInt_t)val % (UInt_t)numFolds).push_back(ev);
+      UInt_t iFold = fSplitExpr->Eval(numFolds, ev);
+
+      // std::cout << "Eval: \"" << iFold << "\"" << std::endl;
+      // std::cout << "EvalRaw: \"" << fSplitFormula.EvalPar(nullptr, par_values) << "\"" << std::endl;
+      tempSets.at((UInt_t)iFold).push_back(ev);
    }
 
    return tempSets;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///
-
-UInt_t TMVA::CvSplitCrossEvaluation::GetSpectatorIndexForName (DataSetInfo & dsi, TString name)
-{
-   std::vector<VariableInfo> spectatorInfos = dsi.GetSpectatorInfos();
-
-   for (UInt_t iSpectator = 0; iSpectator < spectatorInfos.size(); ++iSpectator) {
-      VariableInfo vi = spectatorInfos[iSpectator];
-      if (vi.GetName() == name) {
-         return iSpectator;
-      } else if (vi.GetLabel() == name) {
-         return iSpectator;
-      } else if (vi.GetExpression() == name) {
-         return iSpectator;
-      }
-   }
-
-   Log() << kFATAL << "Spectator \"" << name << "\" not found." << Endl;
-   return 0; // Cannot happen
 }

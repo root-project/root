@@ -49,10 +49,10 @@ namespace TMVA {
       void ParseOptions();
 
       void SetNumFolds(UInt_t i);
-      void SetSplitSpectator(TString spectatorName);
+      void SetSplitExpr(TString splitExpr);
 
       UInt_t GetNumFolds() {return fNumFolds;}
-      TString GetSplitSpectator() {return fSplitSpectator;}
+      TString GetSplitExpr() {return fSplitExprString;}
 
       Factory & GetFactory() {return *fFactory;}
 
@@ -78,7 +78,7 @@ namespace TMVA {
       UInt_t               fNumFolds;        //!
       TFile *              fOutputFile;
       Bool_t               fSilent;
-      TString              fSplitSpectator;
+      TString              fSplitExprString;
       Bool_t               fROC;
       TString              fTransformations;
       Bool_t               fVerbose;

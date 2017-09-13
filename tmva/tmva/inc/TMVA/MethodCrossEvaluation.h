@@ -27,12 +27,14 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include "TMVA/CvSplit.h"
 #include "TMVA/DataSetInfo.h"
 #include "TMVA/MethodBase.h"
 
 #include "TString.h"
 
 #include <iostream>
+#include <memory>
 
 namespace TMVA {
 
@@ -101,13 +103,16 @@ namespace TMVA {
    private:
       MethodBase * InstantiateMethodFromXML(TString methodTypeName, TString weightfile) const;
 
-   public: // TODO: Only public until proper getter and setters are implemented
-   // TODO: Add setter both for EMVA and String Typename directly.
+   public:
+      // TODO: Only public until proper getter and setters are implemented
+      // TODO: Add setter both for EMVA and String Typename directly.
       TString fEncapsulatedMethodName; // TODO; Change to methodTitle
       TString fEncapsulatedMethodTypeName; // TODO; Change to methodName
       UInt_t  fNumFolds;
-      TString fSplitSpectator;
-      Int_t   fIdxSpec; // Cached lookup value for index of fSplitSpectator 
+      
+      TString fSplitExprString;
+      std::unique_ptr<CvSplitCrossEvaluationExpr> fSplitExpr;
+
    private:
       // MethodBase::fFileDir gives path to weightfiles
 
