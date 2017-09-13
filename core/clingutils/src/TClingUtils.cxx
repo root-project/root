@@ -5044,8 +5044,6 @@ int ROOT::TMetaUtils::AST2SourceTools::PrepareArgsForFwdDecl(std::string& templa
                           const clang::TemplateParameterList& tmplParamList,
                           const cling::Interpreter& interpreter)
 {
-   static const char* paramPackWarning="Template parameter pack found: autoload of variadic templates is not supported yet.\n";
-
    templateArgs="<";
    for (auto prmIt = tmplParamList.begin();
         prmIt != tmplParamList.end(); prmIt++){
@@ -5056,14 +5054,12 @@ int ROOT::TMetaUtils::AST2SourceTools::PrepareArgsForFwdDecl(std::string& templa
       auto nDecl = *prmIt;
       std::string typeName;
 
-      if(nDecl->isParameterPack ()){
-         ROOT::TMetaUtils::Warning(0,paramPackWarning);
-         return 1;
-      }
-
       // Case 1
       if (llvm::isa<clang::TemplateTypeParmDecl>(nDecl)){
-         typeName = "typename " + (*prmIt)->getNameAsString();
+         typeName = "typename ";
+         if (nDecl->isParameterPack())
+            typeName += "... ";
+         typeName += (*prmIt)->getNameAsString();
       }
       // Case 2
       else if (auto nttpd = llvm::dyn_cast<clang::NonTypeTemplateParmDecl>(nDecl)){
