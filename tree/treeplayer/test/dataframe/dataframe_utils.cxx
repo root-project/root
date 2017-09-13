@@ -116,18 +116,19 @@ TEST(TDataFrameUtils, ToConstCharPtr)
    EXPECT_STREQ(s_content, ROOT::Internal::TDF::ToConstCharPtr(s));
 }
 
-// CheckCustomColumn(std::string_view definedCol, TTree *treePtr, const ColumnNames_t &customCols)
 
 TEST(TDataFrameUtils, CheckNonExistingCustomColumnNullTree)
 {
-   ROOT::Internal::TDF::CheckCustomColumn("Bla", nullptr, {"a", "b"});
+   // CheckCustomColumn(std::string_view definedCol, TTree *treePtr, const ColumnNames_t &customCols,
+   //                   const ColumnNames_t &dataSourceColumns)
+   ROOT::Internal::TDF::CheckCustomColumn("Bla", nullptr, {"a", "b"}, {});
 }
 
 TEST(TDataFrameUtils, CheckExistingCustomColumnNullTree)
 {
    int ret = 1;
    try {
-      ROOT::Internal::TDF::CheckCustomColumn("a", nullptr, {"a", "b"});
+      ROOT::Internal::TDF::CheckCustomColumn("a", nullptr, {"a", "b"}, {});
    } catch (const std::runtime_error &e) {
       ret = 0;
    }
@@ -142,7 +143,22 @@ TEST(TDataFrameUtils, CheckExistingCustomColumn)
 
    int ret = 1;
    try {
-      ROOT::Internal::TDF::CheckCustomColumn("a", &t, {"b"});
+      ROOT::Internal::TDF::CheckCustomColumn("a", &t, {"b"}, {});
+   } catch (const std::runtime_error &e) {
+      ret = 0;
+   }
+   EXPECT_EQ(0, ret);
+}
+
+TEST(TDataFrameUtils, CheckExistingCustomColumnDataSource)
+{
+   int i;
+   TTree t("t", "t");
+   t.Branch("a", &i);
+
+   int ret = 1;
+   try {
+      ROOT::Internal::TDF::CheckCustomColumn("c", &t, {"b"}, {"c"});
    } catch (const std::runtime_error &e) {
       ret = 0;
    }
