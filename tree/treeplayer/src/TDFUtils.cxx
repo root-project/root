@@ -133,7 +133,8 @@ unsigned int GetNSlots()
    return nSlots;
 }
 
-void CheckCustomColumn(std::string_view definedCol, TTree *treePtr, const ColumnNames_t &customCols)
+void CheckCustomColumn(std::string_view definedCol, TTree *treePtr, const ColumnNames_t &customCols,
+                       const ColumnNames_t &dataSourceColumns)
 {
    const std::string definedColStr(definedCol);
    if (treePtr != nullptr) {
@@ -148,6 +149,13 @@ void CheckCustomColumn(std::string_view definedCol, TTree *treePtr, const Column
    if (std::find(customCols.begin(), customCols.end(), definedCol) != customCols.end()) {
       const auto msg = "Redefinition of column \"" + definedColStr + "\"";
       throw std::runtime_error(msg);
+   }
+   // check if definedCol is already present in the DataSource (but has not yet been `Define`d)
+   if (!dataSourceColumns.empty()) {
+      if (std::find(dataSourceColumns.begin(), dataSourceColumns.end(), definedCol) != dataSourceColumns.end()) {
+         const auto msg = "Redefinition of column \"" + definedColStr + "\" already present in the data-source";
+         throw std::runtime_error(msg);
+      }
    }
 }
 

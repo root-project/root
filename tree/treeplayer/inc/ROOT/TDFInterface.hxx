@@ -321,7 +321,8 @@ public:
    TInterface<Proxied> Define(std::string_view name, F expression, const ColumnNames_t &columns = {})
    {
       auto loopManager = GetDataFrameChecked();
-      TDFInternal::CheckCustomColumn(name, loopManager->GetTree(), loopManager->GetCustomColumnNames());
+      TDFInternal::CheckCustomColumn(name, loopManager->GetTree(), loopManager->GetCustomColumnNames(),
+                                     fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
       auto nColumns = TTraits::CallableTraits<F>::arg_types::list_size;
       if (ShouldPassSlotNumber)
          nColumns--;
@@ -368,7 +369,8 @@ public:
    {
       auto loopManager = GetDataFrameChecked();
       // this check must be done before jitting lest we throw exceptions in jitted code
-      TDFInternal::CheckCustomColumn(name, loopManager->GetTree(), loopManager->GetCustomColumnNames());
+      TDFInternal::CheckCustomColumn(name, loopManager->GetTree(), loopManager->GetCustomColumnNames(),
+                                     fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
       using retType = TInterface<TTraits::TakeFirstParameter_t<decltype(TDFInternal::UpcastNode(fProxiedPtr))>>;
       auto retVal = CallJitTransformation("Define", name, expression, retType::GetNodeTypeName());
       auto retInterface = reinterpret_cast<retType *>(retVal);
