@@ -5096,7 +5096,7 @@ int ROOT::TMetaUtils::AST2SourceTools::PrepareArgsForFwdDecl(std::string& templa
          }
       }
 
-   templateArgs += typeName;
+      templateArgs += typeName;
    }
 
    templateArgs+=">";
