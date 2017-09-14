@@ -378,12 +378,12 @@ public:
    /// \param[in] treename The name of the output TTree
    /// \param[in] filename The name of the output TFile
    /// \param[in] columnList The list of names of the columns/branches to be written
-   /// \param[in] options SnapshotOptions struct with extra options to pass to TFile and TTree
+   /// \param[in] options TSnapshotOptions struct with extra options to pass to TFile and TTree
    ///
    /// This function returns a `TDataFrame` built with the output tree as a source.
    template <typename... BranchTypes>
    TInterface<TLoopManager> Snapshot(std::string_view treename, std::string_view filename,
-                                     const ColumnNames_t &columnList, const SnapshotOptions &options = SnapshotOptions())
+                                     const ColumnNames_t &columnList, const TSnapshotOptions &options = TSnapshotOptions())
    {
       return SnapshotImpl<BranchTypes...>(treename, filename, columnList, options);
    }
@@ -393,12 +393,12 @@ public:
    /// \param[in] treename The name of the output TTree
    /// \param[in] filename The name of the output TFile
    /// \param[in] columnList The list of names of the columns/branches to be written
-   /// \param[in] options SnapshotOptions struct with extra options to pass to TFile and TTree
+   /// \param[in] options TSnapshotOptions struct with extra options to pass to TFile and TTree
    ///
    /// This function returns a `TDataFrame` built with the output tree as a source.
    /// The types of the columns are automatically inferred and do not need to be specified.
    TInterface<TLoopManager> Snapshot(std::string_view treename, std::string_view filename,
-                                     const ColumnNames_t &columnList, const SnapshotOptions &options = SnapshotOptions())
+                                     const ColumnNames_t &columnList, const TSnapshotOptions &options = TSnapshotOptions())
    {
       auto df = GetDataFrameChecked();
       auto tree = df->GetTree();
@@ -420,7 +420,7 @@ public:
       snapCall << ">(\"" << treename << "\", \"" << filename << "\", "
                << "*reinterpret_cast<std::vector<std::string>*>(" // vector<string> should be ColumnNames_t
                << &columnList << "),"
-               << "*reinterpret_cast<ROOT::Experimental::TDF::SnapshotOptions*>(" << &options << "));";
+               << "*reinterpret_cast<ROOT::Experimental::TDF::TSnapshotOptions*>(" << &options << "));";
       // jit snapCall, return result
       TInterpreter::EErrorCode errorCode;
       auto newTDFPtr = gInterpreter->Calc(snapCall.str().c_str(), &errorCode);
@@ -436,12 +436,12 @@ public:
    /// \param[in] treename The name of the output TTree
    /// \param[in] filename The name of the output TFile
    /// \param[in] columnNameRegexp The regular expression to match the column names to be selected. The presence of a '^' and a '$' at the end of the string is implicitly assumed if they are not specified. See the documentation of TRegexp for more details. An empty string signals the selection of all columns.
-   /// \param[in] options SnapshotOptions struct with extra options to pass to TFile and TTree
+   /// \param[in] options TSnapshotOptions struct with extra options to pass to TFile and TTree
    ///
    /// This function returns a `TDataFrame` built with the output tree as a source.
    /// The types of the columns are automatically inferred and do not need to be specified.
    TInterface<TLoopManager> Snapshot(std::string_view treename, std::string_view filename,
-                                     std::string_view columnNameRegexp = "", const SnapshotOptions &options = SnapshotOptions())
+                                     std::string_view columnNameRegexp = "", const TSnapshotOptions &options = TSnapshotOptions())
    {
       const auto theRegexSize = columnNameRegexp.size();
       std::string theRegex(columnNameRegexp);
@@ -1192,7 +1192,7 @@ private:
    /// the TTreeReaderValue/TemporaryBranch
    template <typename... BranchTypes>
    TInterface<TLoopManager> SnapshotImpl(std::string_view treename, std::string_view filename,
-                                         const ColumnNames_t &columnList, const SnapshotOptions &options)
+                                         const ColumnNames_t &columnList, const TSnapshotOptions &options)
    {
       TDFInternal::CheckSnapshot(sizeof...(BranchTypes), columnList.size());
 

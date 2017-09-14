@@ -429,7 +429,7 @@ class SnapshotHelper {
 
 public:
    SnapshotHelper(std::string_view filename, std::string_view dirname, std::string_view treename,
-                  const ColumnNames_t &bnames, const SnapshotOptions &options)
+                  const ColumnNames_t &bnames, const TSnapshotOptions &options)
       : fOutputFile(TFile::Open(std::string(filename).c_str(), options.fMode.c_str(), /*ftitle=*/"",
                     ROOT::CompressionSettings(options.fCompressionAlgorithm, options.fCompressionLevel))),
                     fBranchNames(bnames)
@@ -490,13 +490,13 @@ class SnapshotHelperMT {
    std::vector<int> fIsFirstEvent;    // vector<bool> is evil
    const std::string fDirName;        // name of TFile subdirectory in which output must be written (possibly empty)
    const std::string fTreeName;       // name of output tree
-   const SnapshotOptions fOptions;    // struct holding options to pass down to TFile and TTree in this action
+   const TSnapshotOptions fOptions;    // struct holding options to pass down to TFile and TTree in this action
    const ColumnNames_t fBranchNames;
 
 public:
    using BranchTypes_t = TypeList<BranchTypes...>;
    SnapshotHelperMT(const unsigned int nSlots, std::string_view filename, std::string_view dirname,
-                    std::string_view treename, const ColumnNames_t &bnames, const SnapshotOptions &options)
+                    std::string_view treename, const ColumnNames_t &bnames, const TSnapshotOptions &options)
       : fNSlots(nSlots), fMerger(new ROOT::Experimental::TBufferMerger(std::string(filename).c_str(), options.fMode.c_str(),
                                  ROOT::CompressionSettings(options.fCompressionAlgorithm, options.fCompressionLevel))),
         fOutputFiles(fNSlots), fOutputTrees(fNSlots, nullptr), fIsFirstEvent(fNSlots, 1), fDirName(dirname),

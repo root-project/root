@@ -275,9 +275,9 @@ TEST(TEST_CATEGORY, DefineSlotCheckMT)
 
 TEST(TEST_CATEGORY, Snapshot_update)
 {
-   using SnapshotOptions = ROOT::Experimental::TDF::SnapshotOptions;
+   using TSnapshotOptions = ROOT::Experimental::TDF::TSnapshotOptions;
 
-   SnapshotOptions opts;
+   TSnapshotOptions opts;
 
    opts.fMode = "UPDATE";
 
@@ -313,9 +313,9 @@ TEST(TEST_CATEGORY, Snapshot_update)
 
 TEST(TEST_CATEGORY, Snapshot_action_with_options)
 {
-   using SnapshotOptions = ROOT::Experimental::TDF::SnapshotOptions;
+   using TSnapshotOptions = ROOT::Experimental::TDF::TSnapshotOptions;
 
-   SnapshotOptions opts;
+   TSnapshotOptions opts;
    opts.fAutoFlush = 10;
    opts.fMode = "RECREATE";
 

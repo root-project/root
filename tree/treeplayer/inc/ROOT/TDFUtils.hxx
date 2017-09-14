@@ -32,7 +32,7 @@ namespace ROOT {
 namespace Experimental {
 namespace TDF {
 /// A collection of options to steer the creation of the dataset on file
-struct SnapshotOptions {
+struct TSnapshotOptions {
    using ECAlgo = ::ROOT::ECompressionAlgorithm;
    std::string fMode = "RECREATE";            //< Mode of creation of output file
    ECAlgo fCompressionAlgorithm = ROOT::kLZ4; //< Compression algorithm of output file
