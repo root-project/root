@@ -561,8 +561,11 @@ public:
    void ForeachSlot(F f, const ColumnNames_t &columns = {})
    {
       auto loopManager = GetDataFrameChecked();
-      auto nColumns = TTraits::CallableTraits<F>::arg_types::list_size - 1;
+      using ColTypes_t = TypeTraits::RemoveFirstParameter_t<typename TTraits::CallableTraits<F>::arg_types>;
+      constexpr auto nColumns = ColTypes_t::list_size;
       const auto validColumnNames = GetValidatedColumnNames(*loopManager, nColumns, columns);
+      if (fDataSource)
+         DefineDataSourceColumns(validColumnNames, *loopManager, TDFInternal::GenStaticSeq_t<nColumns>(), ColTypes_t());
       using Helper_t = TDFInternal::ForeachSlotHelper<F>;
       using Action_t = TDFInternal::TAction<Helper_t, Proxied>;
       loopManager->Book(std::make_shared<Action_t>(Helper_t(std::move(f)), validColumnNames, *fProxiedPtr));
@@ -609,7 +612,10 @@ public:
       TDFInternal::CheckReduce(f, arg_types());
       auto loopManager = GetDataFrameChecked();
       const auto columns = columnName.empty() ? ColumnNames_t() : ColumnNames_t({std::string(columnName)});
+      constexpr auto nColumns = arg_types::list_size;
       const auto validColumnNames = GetValidatedColumnNames(*loopManager, 1, columns);
+      if (fDataSource)
+         DefineDataSourceColumns(validColumnNames, *loopManager, TDFInternal::GenStaticSeq_t<nColumns>(), arg_types());
       auto redObjPtr = std::make_shared<T>(initValue);
       using Helper_t = TDFInternal::ReduceHelper<F, T>;
       using Action_t = typename TDFInternal::TAction<Helper_t, Proxied>;
@@ -663,6 +669,9 @@ public:
       auto loopManager = GetDataFrameChecked();
       const auto columns = column.empty() ? ColumnNames_t() : ColumnNames_t({std::string(column)});
       const auto validColumnNames = GetValidatedColumnNames(*loopManager, 1, columns);
+      if (fDataSource)
+         DefineDataSourceColumns(validColumnNames, *loopManager, TDFInternal::GenStaticSeq_t<1>(),
+                                 TTraits::TypeList<T>());
       using Helper_t = TDFInternal::TakeHelper<T, COLL>;
       using Action_t = TDFInternal::TAction<Helper_t, Proxied>;
       auto valuesPtr = std::make_shared<COLL>();
@@ -1178,6 +1187,8 @@ private:
       auto loopManager = GetDataFrameChecked();
       auto realNColumns = (nColumns > -1 ? nColumns : sizeof...(BranchTypes));
       const auto validColumnNames = GetValidatedColumnNames(*loopManager, realNColumns, columns);
+      // TODO we can't call DefineDataSourceColumns here because the types are not yet known
+      // on the other hand the jitted BuildAndBook call might be too late...? To be checked
       const unsigned int nSlots = fProxiedPtr->GetNSlots();
       const auto &customColumns = loopManager->GetBookedColumns();
       auto tree = loopManager->GetTree();
