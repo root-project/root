@@ -326,10 +326,12 @@ public:
       auto loopManager = GetDataFrameChecked();
       TDFInternal::CheckCustomColumn(name, loopManager->GetTree(), loopManager->GetCustomColumnNames(),
                                      fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
-      auto nColumns = TTraits::CallableTraits<F>::arg_types::list_size;
-      if (ShouldPassSlotNumber)
-         nColumns--;
+      using ArgTypes_t = typename TTraits::CallableTraits<F>::arg_types;
+      using ColTypes_t = typename TDFInternal::RemoveFirstParameterIf<ShouldPassSlotNumber, ArgTypes_t>::type;
+      constexpr auto nColumns = ColTypes_t::list_size;
       const auto validColumnNames = GetValidatedColumnNames(*loopManager, nColumns, columns);
+      if (fDataSource)
+         DefineDataSourceColumns(validColumnNames, *loopManager, TDFInternal::GenStaticSeq_t<nColumns>(), ColTypes_t());
       using NewCol_t = TDFDetail::TCustomColumn<F, ShouldPassSlotNumber>;
       loopManager->Book(std::make_shared<NewCol_t>(name, std::move(expression), validColumnNames, loopManager.get()));
       TInterface<Proxied> newInterface(fProxiedPtr, fImplWeakPtr, fValidCustomColumns);
