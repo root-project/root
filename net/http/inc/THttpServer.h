@@ -54,12 +54,6 @@ protected:
 
    static Bool_t VerifyFilePath(const char *fname);
 
-   /** adds CORS to ProcessRequests() responses */
-   void SetCors(const char *cor) { fCors = cor; }
-
-   const char *GetCors() const { return fCors.Data(); }
-   Bool_t IsCors() const { return fCors.Length() > 0; }
-
 public:
    THttpServer(const char *engine = "civetweb:8080");
    virtual ~THttpServer();
@@ -76,6 +70,16 @@ public:
    Bool_t IsReadOnly() const;
 
    void SetReadOnly(Bool_t readonly);
+
+   /** Enable CORS header to ProcessRequests() responses
+    * Specified location (typically "*") add as "Access-Control-Allow-Origin" header */
+   void SetCors(const char *domain = "*") { fCors = domain; }
+
+   /** Returns kTRUE if CORS was configured */
+   Bool_t IsCors() const { return fCors.Length() > 0; }
+
+   /** Returns specified CORS domain */
+   const char *GetCors() const { return fCors.Data(); }
 
    /** set name of top item in objects hierarchy */
    void SetTopName(const char *top) { fTopName = top; }
