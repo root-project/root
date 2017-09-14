@@ -236,7 +236,7 @@ TEST(TEST_CATEGORY, Define_jitted_Filter_named_jitted)
 TEST(TEST_CATEGORY, DefineSlotConsistency)
 {
    TDataFrame df(8);
-   auto m = df.DefineSlot("x", [](unsigned int ) { return 1.; }).Max("x");
+   auto m = df.DefineSlot("x", [](unsigned int) { return 1.; }).Max("x");
    EXPECT_EQ(1., *m);
 }
 
@@ -248,7 +248,7 @@ TEST(TEST_CATEGORY, DefineSlot)
    TDataFrame df(NSLOTS);
    auto ddf = df.DefineSlot("s", [values](unsigned int slot) { return values[slot]; });
    auto m = ddf.Max("s");
-   EXPECT_EQ(*m, NSLOTS-1); // no matter the order of processing, the higher slot number is always taken at least once
+   EXPECT_EQ(*m, NSLOTS - 1); // no matter the order of processing, the higher slot number is always taken at least once
 }
 
 TEST(TEST_CATEGORY, DefineSlotCheckMT)
@@ -261,9 +261,10 @@ TEST(TEST_CATEGORY, DefineSlotCheckMT)
    std::vector<H_t> ids(nSlots, 0);
    TDataFrame d(nSlots);
    auto m = d.DefineSlot("x", [&](unsigned int slot) {
-      std::this_thread::sleep_for(std::chrono::milliseconds(100));
-      ids[slot] = hasher(std::this_thread::get_id());
-      return 1.; }).Max("x");
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                ids[slot] = hasher(std::this_thread::get_id());
+                return 1.;
+             }).Max("x");
 
    EXPECT_EQ(1, *m); // just in case
 
@@ -281,8 +282,7 @@ TEST(TEST_CATEGORY, Snapshot_update)
    opts.fMode = "UPDATE";
 
    TDataFrame tdf1(1000);
-   auto s1 = tdf1.Define("one", []() { return 1.0; })
-               .Snapshot<double>("mytree1", "snapshot_test_update.root", {"one"});
+   auto s1 = tdf1.Define("one", []() { return 1.0; }).Snapshot<double>("mytree1", "snapshot_test_update.root", {"one"});
 
    EXPECT_EQ(1000U, *s1.Count());
 
@@ -291,8 +291,8 @@ TEST(TEST_CATEGORY, Snapshot_update)
    EXPECT_EQ(1.0, *s1.Mean("one"));
 
    TDataFrame tdf2(1000);
-   auto s2 = tdf2.Define("two", []() { return 2.0; })
-               .Snapshot<double>("mytree2", "snapshot_test_update.root", {"two"}, opts);
+   auto s2 =
+      tdf2.Define("two", []() { return 2.0; }).Snapshot<double>("mytree2", "snapshot_test_update.root", {"two"}, opts);
 
    EXPECT_EQ(1000U, *s2.Count());
 
@@ -301,8 +301,8 @@ TEST(TEST_CATEGORY, Snapshot_update)
    EXPECT_EQ(2.0, *s2.Mean("two"));
 
    TFile *f = TFile::Open("snapshot_test_update.root", "READ");
-   auto mytree1 = (TTree*) f->Get("mytree1");
-   auto mytree2 = (TTree*) f->Get("mytree2");
+   auto mytree1 = (TTree *)f->Get("mytree1");
+   auto mytree2 = (TTree *)f->Get("mytree2");
 
    EXPECT_NE(nullptr, mytree1);
    EXPECT_NE(nullptr, mytree2);
@@ -319,14 +319,14 @@ TEST(TEST_CATEGORY, Snapshot_action_with_options)
    opts.fAutoFlush = 10;
    opts.fMode = "RECREATE";
 
-   for (auto algorithm : { ROOT::kZLIB, ROOT::kLZMA, ROOT::kLZ4 }) {
+   for (auto algorithm : {ROOT::kZLIB, ROOT::kLZMA, ROOT::kLZ4}) {
       TDataFrame tdf(1000);
 
       opts.fCompressionLevel = 6;
       opts.fCompressionAlgorithm = algorithm;
 
-      auto s = tdf.Define("one", []() { return 1.0; })
-                  .Snapshot<double>("mytree", "snapshot_test_opts.root", {"one"}, opts);
+      auto s =
+         tdf.Define("one", []() { return 1.0; }).Snapshot<double>("mytree", "snapshot_test_opts.root", {"one"}, opts);
 
       EXPECT_EQ(1000U, *s.Count());
       EXPECT_EQ(1.0, *s.Min("one"));
