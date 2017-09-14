@@ -44,7 +44,8 @@ protected:
    TString fDefaultPageCont; ///<! content of the file content
    TString fDrawPage;        ///<! file name for drawing of single element
    TString fDrawPageCont;    ///<! content of draw page
-   TString fCors;            ///<! CORS (cross-origin resource sharing): sets Access-Control-Allow-Origin for ProcessRequest responses
+   TString
+      fCors; ///<! CORS (cross-origin resource sharing): sets Access-Control-Allow-Origin for ProcessRequest responses
 
    std::mutex fMutex; ///<! mutex to protect list with arguments
    TList fCallArgs;   ///<! submitted arguments
