@@ -244,8 +244,11 @@ public:
    {
       TDFInternal::CheckFilter(f);
       auto loopManager = GetDataFrameChecked();
-      const auto nColumns = TTraits::CallableTraits<F>::arg_types::list_size;
+      using ColTypes_t = typename TTraits::CallableTraits<F>::arg_types;
+      constexpr auto nColumns = ColTypes_t::list_size;
       const auto validColumnNames = GetValidatedColumnNames(*loopManager, nColumns, columns);
+      if (fDataSource)
+         DefineDataSourceColumns(validColumnNames, *loopManager, TDFInternal::GenStaticSeq_t<nColumns>(), ColTypes_t());
       using F_t = TDFDetail::TFilter<F, Proxied>;
       auto FilterPtr = std::make_shared<F_t>(std::move(f), validColumnNames, *fProxiedPtr, name);
       loopManager->Book(FilterPtr);
@@ -1155,7 +1158,8 @@ private:
       constexpr auto nColumns = sizeof...(BranchTypes);
       const auto selectedCols = GetValidatedColumnNames(*lm, nColumns, columns);
       if (fDataSource)
-         DefineDataSourceColumns<BranchTypes...>(selectedCols, *lm, TDFInternal::GenStaticSeq_t<nColumns>());
+         DefineDataSourceColumns(selectedCols, *lm, TDFInternal::GenStaticSeq_t<nColumns>(),
+                                 TDFInternal::TypeList<BranchTypes...>());
       const auto nSlots = fProxiedPtr->GetNSlots();
       TDFInternal::BuildAndBook<BranchTypes...>(selectedCols, r, nSlots, *lm, *fProxiedPtr, (ActionType *)nullptr);
       return MakeResultProxy(r, lm);
@@ -1283,8 +1287,8 @@ private:
 
    /// Take a list of data-source column names and define the ones that haven't been defined yet.
    template <typename... ColumnTypes, int... S>
-   void DefineDataSourceColumns(const std::vector<std::string> &columns, TLoopManager &lm,
-                                TDFInternal::StaticSeq<S...> /*dummy*/)
+   void DefineDataSourceColumns(const std::vector<std::string> &columns, TLoopManager &lm, TDFInternal::StaticSeq<S...>,
+                                TTraits::TypeList<ColumnTypes...>)
    {
       assert(fDataSource != nullptr);
       const auto mustBeDefined = FindUndefinedDSColumns(columns, lm.GetDefinedDataSourceColumns());
