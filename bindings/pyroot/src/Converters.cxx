@@ -1036,14 +1036,15 @@ Bool_t PyROOT::TRefCppObjectConverter::SetArg(
 
       // instantiate an object proxy of this class
       if( ! fObjProxy ) {
-      // retrieve python class
+         // retrieve the python class from which we will create an instance
          PyObject* pyclass = CreateScopeProxy( fClass );
          if ( ! pyclass ) return kFALSE;                  // error has been set in CreateScopeProxy
-         fObjProxy = (ObjectProxy*)((PyTypeObject*)pyclass)->tp_new( (PyTypeObject*)pyclass, pyobject, NULL );
+         fObjProxy = (ObjectProxy*)((PyTypeObject*)pyclass)->tp_new( (PyTypeObject*)pyclass, NULL, NULL );
          Py_DECREF( pyclass );
       }
 
       if( fObjProxy->GetObject() ) {
+         // the actual C++ object was already created (in a previous call), so we need to destroy it
          Cppyy::CallDestructor( fObjProxy->ObjectIsA(), fObjProxy->GetObject() );
          Cppyy::Deallocate( fObjProxy->ObjectIsA(), fObjProxy->GetObject() );
          fObjProxy->Set(nullptr);
@@ -1052,6 +1053,7 @@ Bool_t PyROOT::TRefCppObjectConverter::SetArg(
       // get the constructor (i.e. __init__)
       PyObject* constructor = PyObject_GetAttr( (PyObject*)fObjProxy, PyStrings::gInit );
       if( ! constructor ) return kFALSE; 
+      
       // call the constructor with the arguments in the given tuple
       PyObject* obj = PyObject_CallObject( constructor, pyobject );
       Py_DECREF( constructor );
@@ -1060,7 +1062,6 @@ Bool_t PyROOT::TRefCppObjectConverter::SetArg(
 
       para.fValue.fVoidp = fObjProxy->GetObject();
       para.fTypeCode = 'V';
-      // TODO we need to remove the temporary object constructed from the tuple
       return kTRUE;
    }
 
