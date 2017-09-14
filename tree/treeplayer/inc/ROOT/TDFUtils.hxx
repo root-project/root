@@ -28,6 +28,22 @@
 class TTree;
 class TTreeReader;
 
+namespace ROOT {
+namespace Experimental {
+namespace TDF {
+/// A collection of options to steer the creation of the dataset on file
+struct SnapshotOptions {
+   using ECAlgo = ::ROOT::ECompressionAlgorithm;
+   std::string fMode = "RECREATE";            //< Mode of creation of output file
+   ECAlgo fCompressionAlgorithm = ROOT::kLZ4; //< Compression algorithm of output file
+   Int_t fCompressionLevel = 1;               //< Compression level of output file
+   Int_t fAutoFlush = 0;                      //< AutoFlush value for output tree
+   Int_t fSplitLevel = 99;                    //< Split level of output tree
+};
+}
+}
+}
+
 /// \cond HIDDEN_SYMBOLS
 
 namespace ROOT {
@@ -36,17 +52,6 @@ namespace ROOT {
 namespace Experimental {
 template <int D, typename P, template <int, typename, template <typename> class> class... S>
 class THist;
-
-namespace TDF {
-struct SnapshotOptions {
-  using ECAlgo = ::ROOT::ECompressionAlgorithm;
-  std::string fMode             = "RECREATE"; //< Mode of creation of output file
-  ECAlgo fCompressionAlgorithm  = ROOT::kLZ4; //< Compression algorithm of output file
-  Int_t  fCompressionLevel      = 1;          //< Compression level of output file
-  Int_t  fAutoFlush             = 0;          //< AutoFlush value for output tree
-  Int_t  fSplitLevel            = 99;         //< Split level of output tree
-};
-}
 
 } // ns Experimental
 
@@ -122,7 +127,7 @@ using TVBVec_t = std::vector<TVBPtr_t>;
 std::string ColumnName2ColumnTypeName(const std::string &colName, TTree *, TCustomColumnBase *);
 
 const char *ToConstCharPtr(const char *s);
-const char *ToConstCharPtr(const std::string& s);
+const char *ToConstCharPtr(const std::string &s);
 unsigned int GetNSlots();
 
 /// Choose between TTreeReader{Array,Value} depending on whether the branch type
