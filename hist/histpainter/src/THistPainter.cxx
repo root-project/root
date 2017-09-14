@@ -4200,7 +4200,8 @@ void THistPainter::Paint(Option_t *option)
       return;
    }
 
-   if (Hoption.Bar >= 20) {PaintBarH(option);
+   if (Hoption.Bar >= 20) {
+      PaintBarH(option);
       delete [] fXbuf; delete [] fYbuf;
       return;
    }
@@ -4718,6 +4719,7 @@ void THistPainter::PaintBarH(Option_t *)
    }
 
    PaintFrame();
+   PaintAxis(kFALSE);
 
    Int_t bar = Hoption.Bar - 20;
    Double_t xmin,xmax,ymin,ymax,umin,umax,w;
@@ -4757,7 +4759,6 @@ void THistPainter::PaintBarH(Option_t *)
    }
 
    PaintTitle();
-   PaintAxis(kFALSE);
 
    //    Draw box with histogram statistics and/or fit parameters
    if (Hoption.Same != 1 && !fH->TestBit(TH1::kNoStats)) {  // bit set via TH1::SetStats
