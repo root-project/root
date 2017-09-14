@@ -56,8 +56,7 @@ int TMVACrossEvaluation()
    TString fname = "./tmva_class_example.root";
    if (!gSystem->AccessPathName( fname )) {
       input = TFile::Open( fname ); // check if file in local directory exists
-   }
-   else {
+   } else {
       TFile::SetCacheFileDir(".");
       input = TFile::Open("http://root.cern.ch/files/tmva_class_example.root", "CACHEREAD");
    }
@@ -76,7 +75,7 @@ int TMVACrossEvaluation()
    TString outfileName( "TMVA.root" );
    TFile* outputFile = TFile::Open( outfileName, "RECREATE" );
 
-   TMVA::DataLoader *dataloader=new TMVA::DataLoader("dataset");
+   TMVA::DataLoader * dataloader = new TMVA::DataLoader("dataset");
    
    dataloader->AddVariable( "myvar1 := var1+var2", 'F' );
    dataloader->AddVariable( "myvar2 := var1-var2", "Expression 2", "", 'F' );
@@ -89,18 +88,22 @@ int TMVACrossEvaluation()
    dataloader->AddSignalTree    ( signalTree, 1.0 );
    dataloader->AddBackgroundTree( background, 1.0 );
    dataloader->SetBackgroundWeightExpression( "weight" );
-   dataloader->PrepareTrainingAndTestTree( "", "",
-      "nTest_Signal=1:nTest_Background=1:SplitMode=Random:NormMode=NumEvents:!V" );
+   dataloader->PrepareTrainingAndTestTree( "", "", "nTest_Signal=1"
+                                                   ":nTest_Background=1"
+                                                   ":SplitMode=Random"
+                                                   ":NormMode=NumEvents"
+                                                   ":!V");
 
    // Setting up the CrossEvaluation context (which wraps a TMVA::Factory 
    // internally).
    // New options for the CE context are
-   //    - SplitSpectator
+   //    - SplitExpr
    //    - NumFolds
    // NumFolds controls how many parts the input data is split into. These parts
    // are later reassembled in a leave-one-out fashion to make NumFolds 
    // different independent test sets.
-   // SplitSpectator is a spectator variable defined in the dataloader and used
+   // Split is an expression that is evaluated per event and indicates what fold
+   // that event should be 
    // to assign an event to a fold. The calculation is
    //    fold = spectatorValue % numFolds;
    // The idea here is that spectatorValue should be something like an event
@@ -108,28 +111,36 @@ int TMVACrossEvaluation()
    // This last property ensures that if a calibration is changed the same event
    // will still be assigned the same fold.
    
-   TMVA::Factory *ce = new TMVA::CrossEvaluation( "TMVACrossEvaluation", outputFile,
-      "!V:!Silent:ModelPersistence:Transformations=I;D;P;G,D:"
-      "AnalysisType=Classification:SplitSpectator=spec1:NumFolds=2"
-   );
+   UInt_t numFolds = 2;
+   TString analysisType = "Classification";
+   TString splitExpr = "int(fabs([spec1]))%int([NumFolds])";
+
+   TString methodOptions = Form("!V"
+                                ":!Silent"
+                                ":ModelPersistence"
+                                ":AnalysisType=%s"
+                                ":NumFolds=%i"
+                                ":SplitExpr=%s",
+                                analysisType.Data(),
+                                numFolds,
+                                splitExpr.Data());
+
+   TMVA::CrossEvaluation ce {"TMVACrossEvaluation", dataloader, outputFile, methodOptions};
 
    // ### Book MVA methods
-   // // Fisher discriminant (same as LD)
-   // ce->BookMethod( dataloader, TMVA::Types::kFisher, "Fisher", "H:!V:Fisher:VarTransform=None:CreateMVAPdfs:PDFInterpolMVAPdf=Spline2:NbinsMVAPdf=50:NsmoothMVAPdf=10" );
-
    // Boosted Decision Trees
-   ce->BookMethod( dataloader, TMVA::Types::kBDT, "BDTG",
-                        "!H:!V:NTrees=1000:MinNodeSize=2.5%:BoostType=Grad:Shrinkage=0.10:UseBaggedBoost:BaggedSampleFraction=0.5:nCuts=20:MaxDepth=2" );
+   ce.BookMethod( TMVA::Types::kBDT, "BDTG",
+                        "!H:!V:NTrees=1000:MinNodeSize=2.5%:BoostType=Grad:Shrinkage=0.10:nCuts=20:MaxDepth=2" );
    
    // --------------------------------------------------------------------------------------------------
 
    // Now you can train, test and evaluate the performance of the booked method
    
-   // ce->TrainAllMethods();    // Train MVAs using the set of training events
-   // ce->TestAllMethods();     // Evaluate all MVAs using the set of test events
-   // ce->EvaluateAllMethods(); // Evaluate and compare performance of all configured MVAs
+   // ce.TrainAllMethods();    // Train MVAs using the set of training events
+   // ce.TestAllMethods();     // Evaluate all MVAs using the set of test events
+   // ce.EvaluateAllMethods(); // Evaluate and compare performance of all configured MVAs
 
-   ce->Evaluate(); // Does all of the three above combined.
+   ce.Evaluate(); // Does all of the three above combined.
 
    // --------------------------------------------------------------
 
@@ -139,8 +150,6 @@ int TMVACrossEvaluation()
    std::cout << "==> Wrote root file: " << outputFile->GetName() << std::endl;
    std::cout << "==> TMVACrossEvaluation is done!" << std::endl;
 
-   delete factory;
-   delete dataloader;
    // Launch the GUI for the root macros
    if (!gROOT->IsBatch()) TMVA::TMVAGui( outfileName );
 
