@@ -191,7 +191,7 @@ class TInterface {
    const std::weak_ptr<TLoopManager> fImplWeakPtr; ///< Weak pointer to the TLoopManager at the root of the graph.
    ColumnNames_t fValidCustomColumns; ///< Names of columns `Define`d for this branch of the functional graph.
    /// Non-owning pointer to a data-source object. Null if no data-source. TLoopManager has ownership of the object.
-   TDataSource *fDataSource = nullptr;
+   TDataSource * const fDataSource = nullptr;
 public:
    /// \cond HIDDEN_SYMBOLS
    // Template conversion operator, meant to use to convert TInterfaces of certain node types to TInterfaces of base
