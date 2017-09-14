@@ -261,6 +261,17 @@ struct HistoUtils<T, true> {
    static bool HasAxisLimits(T &) { return true; }
 };
 
+/// `type` is TypeList if MustRemove is false, otherwise it is a TypeList with the first type removed
+template <bool MustRemove, typename TypeList>
+struct RemoveFirstParameterIf {
+   using type = TypeList;
+};
+
+template <typename TypeList>
+struct RemoveFirstParameterIf<true, TypeList> {
+   using type = RemoveFirstParameter_t<TypeList>;
+};
+
 } // end NS TDF
 } // end NS Internal
 } // end NS ROOT
