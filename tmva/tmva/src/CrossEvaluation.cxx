@@ -71,17 +71,16 @@ See CVSplit documentation?
 
 ////////////////////////////////////////////////////////////////////////////////
 ///    
-///    TODO: fJobName for fFoldFactory and fFactory ("CrossEvaluation")
-///    
 ///    TODO: Add optional file to fold factory to save output (for debugging at least).
 ///    
 
-TMVA::CrossEvaluation::CrossEvaluation(TMVA::DataLoader *dataloader, TFile * outputFile, TString options)
-   : TMVA::Envelope("CrossEvaluation", dataloader, nullptr, options),
+TMVA::CrossEvaluation::CrossEvaluation(TString jobName, TMVA::DataLoader *dataloader, TFile * outputFile, TString options)
+   : TMVA::Envelope(jobName, dataloader, nullptr, options),
      fAnalysisType(Types::kMaxAnalysisType),
      fAnalysisTypeStr("auto"),
      fCorrelations(kFALSE),
      fFoldStatus(kFALSE),
+     fJobName(jobName),
      fNumFolds(2),
      fOutputFile(outputFile),
      fSilent(kFALSE),
@@ -103,8 +102,8 @@ TMVA::CrossEvaluation::CrossEvaluation(TMVA::DataLoader *dataloader, TFile * out
 ////////////////////////////////////////////////////////////////////////////////
 ///
 
-TMVA::CrossEvaluation::CrossEvaluation(TMVA::DataLoader *dataloader, TString options)
-   : CrossEvaluation(dataloader, nullptr, options)
+TMVA::CrossEvaluation::CrossEvaluation(TString jobName, TMVA::DataLoader *dataloader, TString options)
+   : CrossEvaluation(jobName, dataloader, nullptr, options)
 {}
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -206,15 +205,15 @@ void TMVA::CrossEvaluation::ParseOptions()
    }
 
    fFoldFactory = std::unique_ptr<TMVA::Factory>(new TMVA::Factory(
-      "CrossEvaluation_internal", fCvFactoryOptions + "!Correlations:!ROC:!Color:!DrawProgressBar:Silent"));
+      fJobName, fCvFactoryOptions + "!Correlations:!ROC:!Color:!DrawProgressBar:Silent"));
 
    // The fOutputFactory should always have !ModelPersitence set since we use a custom code path for this.
    //    In this case we create a special method (MethodCrossEvaluation) that can only be used by
    //    CrossEvaluation and the Reader.
    if (fOutputFile == nullptr) {
-      fFactory = std::unique_ptr<TMVA::Factory>(new TMVA::Factory("CrossEvaluation",  fOutputFactoryOptions + "!ModelPersistence"));
+      fFactory = std::unique_ptr<TMVA::Factory>(new TMVA::Factory(fJobName,  fOutputFactoryOptions + "!ModelPersistence"));
    } else {
-      fFactory = std::unique_ptr<TMVA::Factory>(new TMVA::Factory("CrossEvaluation", fOutputFile,  fOutputFactoryOptions + "!ModelPersistence"));
+      fFactory = std::unique_ptr<TMVA::Factory>(new TMVA::Factory(fJobName, fOutputFile,  fOutputFactoryOptions + "!ModelPersistence"));
    }
 
    fSplit = std::unique_ptr<CvSplitCrossEvaluation>(new CvSplitCrossEvaluation(fNumFolds, fSplitExprString));
@@ -482,8 +481,8 @@ void TMVA::CrossEvaluation::Evaluate()
       // Create new MethodCrossEvaluation
       TString methodCrossEvaluationName = Types::Instance().GetMethodName( Types::kCrossEvaluation );
       IMethod * im = ClassifierFactory::Instance().Create( methodCrossEvaluationName.Data(),
-                                                           "", // jobname
-                                                           "CrossEvaluation_"+methodTitle,   // title
+                                                           fJobName, // jobname
+                                                           methodTitle,   // title
                                                            fDataLoader->GetDataSetInfo(), // dsi
                                                            "" // options
                                                          ); 
@@ -509,7 +508,7 @@ void TMVA::CrossEvaluation::Evaluate()
       // Pass info about the number of folds
       // TODO: Parameterise the internal jobname
       MethodCrossEvaluation * method_ce = dynamic_cast<MethodCrossEvaluation *>(method);
-      method_ce->fEncapsulatedMethodName     = "CrossEvaluation_internal_" + methodTitle;
+      method_ce->fEncapsulatedMethodName     = methodTitle;
       method_ce->fEncapsulatedMethodTypeName = methodName;
       method_ce->fNumFolds                   = fNumFolds;
       method_ce->fSplitExprString            = fSplitExprString;

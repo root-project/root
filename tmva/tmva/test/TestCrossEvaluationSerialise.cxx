@@ -30,8 +30,6 @@
 // Reader and verifies that the application phase produces the same output
 // using the factory produced TMVA.root as input.
 // 
-// TODO: Make a proper google test of it
-// 
 
 class TestContex {
 public:
@@ -41,9 +39,9 @@ public:
    }
 
    void genData(UInt_t nPoints, UInt_t seed = 100);
-   void setUpCe();
+   void setUpCe(TString jobname, TMVA::Types::EMVA methodType, TString methodName, TString methodOptions);
    void runCe();
-   void setUpApplicationPhase(TString methodName);
+   void setUpApplicationPhase(TString jobname, TString methodName);
    void runApplicationPhase(TString methodName);
    void verifyApplicationPhase();
 
@@ -137,7 +135,7 @@ void TestContex::genData(UInt_t nPoints, UInt_t seed)
 // === RUNNING CROSS EVALUATION ===
 // =============================================================================
 
-void TestContex::setUpCe()
+void TestContex::setUpCe(TString jobname, TMVA::Types::EMVA methodType, TString methodName, TString methodOptions)
 {
    fDataFile = std::shared_ptr<TFile>(new TFile( fDataFileName ));
    TTree * treeClass0 = (TTree *)fDataFile->Get("Signal");
@@ -155,9 +153,10 @@ void TestContex::setUpCe()
 
    fOutputFile    = std::shared_ptr<TFile>(new TFile( fOutputFileName, "RECREATE" ));
    fCrossEvaluate = std::unique_ptr<TMVA::CrossEvaluation>(
-      new TMVA::CrossEvaluation(dataloader, fOutputFile.get(), "AnalysisType=Classification:SplitExpr=int([EventNumber])%int([NumFolds])")
+      new TMVA::CrossEvaluation(jobname, dataloader, fOutputFile.get(), "AnalysisType=Classification:SplitExpr=int([EventNumber])%int([NumFolds])")
    );
-   fCrossEvaluate->BookMethod(TMVA::Types::kBDT, "BDT", "!H:!V:NTrees=10");
+
+   fCrossEvaluate->BookMethod(methodType, methodName, methodOptions);
 }
 
 void TestContex::runCe()
@@ -178,15 +177,15 @@ void TestContex::runCe()
 // === APPLICATION PHASE ===
 // =============================================================================
 
-void TestContex::setUpApplicationPhase(TString methodName)
+void TestContex::setUpApplicationPhase(TString jobname, TString methodName)
 {
-   fReader = std::unique_ptr<TMVA::Reader>(new TMVA::Reader( "!Color:!Silent" ));
+   fReader = std::unique_ptr<TMVA::Reader>(new TMVA::Reader( "!Color:!Silent:V" ));
 
    fReader->AddVariable(  "x" , &fX  );
    fReader->AddVariable(  "y" , &fY  );
    fReader->AddSpectator( "EventNumber", &fevNum );
 
-   TString weightfile = TString("dataset/weights/") + methodName + TString(".weights.xml");
+   TString weightfile = TString("dataset/weights/") + jobname+"_"+methodName + TString(".weights.xml");
    fReader->BookMVA( methodName, weightfile );
 }
 
@@ -196,7 +195,7 @@ void TestContex::runApplicationPhase(TString methodName)
    tree->SetBranchAddress( "x" , &fX  );
    tree->SetBranchAddress( "y" , &fY  );
    tree->SetBranchAddress( "EventNumber", &fevNum );
-   tree->SetBranchAddress( "BDT", &fMvaEval );
+   tree->SetBranchAddress( methodName, &fMvaEval );
 
    fApplicationResults.reserve( fApplicationResults.size() + tree->GetEntries() );
    for (Long64_t ievt=0; ievt<tree->GetEntries(); ievt++) {
@@ -234,20 +233,23 @@ void TestContex::verifyApplicationPhase()
 
 
 
-void TestCeSerialise()
+void TestCeSerialise(TMVA::Types::EMVA methodType, TString methodName, TString methodOptions)
 {
+   TString jobname = "test_ce_serialise";
+
    TestContex tc;
    tc.genData(100);
-   tc.setUpCe();
+   tc.setUpCe(jobname, methodType, methodName, methodOptions);
    tc.runCe(); // serialises CE method if modelPersitance
-   tc.setUpApplicationPhase("_CrossEvaluation_BDT");
-   tc.runApplicationPhase("_CrossEvaluation_BDT");
+   tc.setUpApplicationPhase(jobname, methodName);
+   tc.runApplicationPhase(methodName);
    tc.verifyApplicationPhase();
 }
 
 
 int main()
 {
-   TestCeSerialise();
+   TestCeSerialise(TMVA::Types::kBDT, "BDT", "!H:V:VerbosityLevel=Debug:NTrees=10");
+   TestCeSerialise(TMVA::Types::kDNN, "DNN", "!H:V:VerbosityLevel=Debug:TrainingStrategy=LearningRate=1e-1,BatchSize=5");
    return 0;
 }

@@ -163,6 +163,7 @@ void TMVA::MethodCrossEvaluation::AddWeightsXMLTo( void* parent ) const
    void* wght = gTools().AddChild(parent, "Weights");
 
    //TODO: Options in optionstring are handled auto. Just add these there.
+   gTools().AddAttr( wght, "JobName", fJobName );
    gTools().AddAttr( wght, "SplitExpr", fSplitExprString );
    gTools().AddAttr( wght, "NumFolds", fNumFolds );
    gTools().AddAttr( wght, "EncapsulatedMethodName", fEncapsulatedMethodName );
@@ -193,6 +194,7 @@ void TMVA::MethodCrossEvaluation::AddWeightsXMLTo( void* parent ) const
 
 void TMVA::MethodCrossEvaluation::ReadWeightsFromXML(void* parent)
 {
+   gTools().ReadAttr( parent, "JobName", fJobName );
    gTools().ReadAttr( parent, "SplitExpr", fSplitExprString );
    gTools().ReadAttr( parent, "NumFolds", fNumFolds );
    gTools().ReadAttr( parent, "EncapsulatedMethodName", fEncapsulatedMethodName );
@@ -207,7 +209,7 @@ void TMVA::MethodCrossEvaluation::ReadWeightsFromXML(void* parent)
       // }
 
       TString fileDir = gSystem->DirName(GetWeightFileName());
-      TString weightfile  = fileDir + "/" + fEncapsulatedMethodName + "_" + foldStr + ".weights.xml";
+      TString weightfile  = fileDir + "/" + fJobName + "_" + fEncapsulatedMethodName + "_" + foldStr + ".weights.xml";
 
       Log() << kDEBUG << "Reading weightfile: " << weightfile << std::endl;
 

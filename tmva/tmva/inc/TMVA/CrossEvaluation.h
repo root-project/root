@@ -41,8 +41,8 @@ namespace TMVA {
 
    class CrossEvaluation : public Envelope {
    public:
-      explicit CrossEvaluation(TMVA::DataLoader *dataloader, TString options);
-      explicit CrossEvaluation(TMVA::DataLoader *dataloader, TFile * outputFile, TString options);
+      explicit CrossEvaluation(TString jobName, TMVA::DataLoader *dataloader, TString options);
+      explicit CrossEvaluation(TString jobName, TMVA::DataLoader *dataloader, TFile * outputFile, TString options);
       ~CrossEvaluation();
 
       void InitOptions();
@@ -75,6 +75,7 @@ namespace TMVA {
       TString              fAnalysisTypeStr; //! Indicates
       Bool_t               fCorrelations;
       Bool_t               fFoldStatus;      //!
+      TString              fJobName;
       UInt_t               fNumFolds;        //!
       TFile *              fOutputFile;
       Bool_t               fSilent;
