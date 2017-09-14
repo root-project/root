@@ -302,14 +302,21 @@ public:
    ClassDefInline(TRangeDynCastIterator, 0);
 };
 
-} // Internal
-} // ROOT
+} // namespace Internal
+
+namespace Detail {
 
 /// @brief TTypedIter is a typed version of TIter.
 ///
+/// This requires the collection to contains elements of the type requested
+/// (or a derived class).  Any deviation from this expectation
+/// will only be caught/reported by an assert in debug builds.
+///
+/// This is best used with a TClonesArray, for other cases prefered TRangeDynCast.
+///
 /// The typical use is:
 /// ~~~ {.cpp}
-///    TTypedIter<TBaseClass> next(cl->GetListOfBases());
+///    TTypedIter<TBaseClass> next(tbaseClassClonesArrayPtr);
 ///    while(auto bcl = next()) {
 ///       ... use bcl as a TBaseClass*
 ///    }
@@ -343,15 +350,19 @@ public:
 };
 
 /// @brief TRangeStaticCast is an adaptater class that allows the typed iteration
-/// through a TCollection.
+/// through a TCollection.  This requires the collection to contains element
+/// of the type requested (or a derived class).  Any deviation from this expectation
+/// will only be caught/reported by an assert in debug builds.
+///
+/// This is best used with a TClonesArray, for other cases prefered TRangeDynCast.
 ///
 /// The typical use is:
 /// ~~~ {.cpp}
-///    for(auto bcl : TRangeStaticCast<TBaseClass>( *cl->GetListOfBases() )) {
+///    for(auto bcl : TRangeStaticCast<TBaseClass>( *tbaseClassClonesArrayPtr )) {
 ///        assert(bcl && bcl->IsA()->InheritsFrom(TBaseClass::Class()));
 ///        ... use bcl as a TBaseClass*
 ///    }
-///    for(auto bcl : TRangeStaticCast<TBaseClass>( cl->GetListOfBases() )) {
+///    for(auto bcl : TRangeStaticCast<TBaseClass>( tbaseClassClonesArrayPtr )) {
 ///        assert(bcl && bcl->IsA()->InheritsFrom(TBaseClass::Class()));
 ///        ... use bcl as a TBaseClass*
 ///    }
@@ -367,6 +378,9 @@ public:
    TTypedIter<T> begin() const { return fCollection.begin(); }
    TTypedIter<T> end() const { return fCollection.end(); }
 };
+
+} // namespace Detail
+} // namespace ROOT
 
 /// @brief TRangeDynCast is an adaptater class that allows the typed iteration
 /// through a TCollection.
