@@ -58,3 +58,6 @@ file(COPY ${JsMVADirName} DESTINATION ${localruntimedir})
 
 #---Install headers----------------------------------------------------------
 ROOT_INSTALL_HEADERS()
+
+#---Add the test directory---------------------------------------------------
+ROOT_ADD_TEST_SUBDIRECTORY(test)
