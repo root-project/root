@@ -17,6 +17,8 @@ const char *gCode = R"CODE(
 
 TEST(TCollection, RangeCast)
 {
+   using namespace ROOT::Detail;
+
    TClass *cl = TNamed::Class();
    TClass *tobjectCl = TObject::Class();
    TClass *baseClassCl = TBaseClass::Class();
@@ -49,6 +51,8 @@ TEST(TCollection, RangeCast)
 
 TEST(TCollection, TypedIter)
 {
+   using namespace ROOT::Detail;
+
    TClass *cl = TNamed::Class();
    TClass *tobjectCl = TObject::Class();
    TClass *baseClassCl = TBaseClass::Class();

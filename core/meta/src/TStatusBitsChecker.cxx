@@ -275,5 +275,5 @@ bool TStatusBitsChecker::CheckAllClasses(bool verbosity /* = false */)
    return result;
 }
 
-} // namespace Details
+} // namespace Detail
 } // namespace ROOT
