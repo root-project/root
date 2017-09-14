@@ -210,12 +210,13 @@ ClassImp(THttpServer)
    /// at once, separating them with ; like "http:8080;fastcgi:9000"
    /// One also can configure readonly flag for sniffer like
    /// "http:8080;readonly" or "http:8080;readwrite"
-   /// CORS (cross-origine resource sharing) for response of ProcessRequest()
-   /// can be set in the options like "http:8088s?cors" for all origins ("*")
-   /// or like "http:8088s?cors=domain" for a specific domain.
    ///
-   /// Also searches for JavaScript ROOT sources, which are used in web clients
-   /// Typically JSROOT sources located in $ROOTSYS/etc/http directory,
+   /// CORS (cross-origin resource sharing) header for response of ProcessRequest()
+   /// can be set in the options like "http:8088s;cors" for all origins ("*")
+   /// or "http:8088s;cors=domain" for a specific domain.
+   ///
+   /// THttpServer searches for JavaScript ROOT sources, which are used in the web clients
+   /// Typically JSROOT sources located from $ROOTSYS/etc/http directory,
    /// but one could set JSROOTSYS shell variable to specify alternative location
 
    THttpServer::THttpServer(const char *engine)
@@ -271,21 +272,15 @@ ClassImp(THttpServer)
             GetSniffer()->SetScanGlobalDir(kTRUE);
          } else if (strcmp(opt, "noglobal") == 0) {
             GetSniffer()->SetScanGlobalDir(kFALSE);
+         } else if (strncmp(opt, "cors=", 5) == 0) {
+            SetCors(opt+5);
+         } else if (strcmp(opt, "cors") == 0) {
+            SetCors("*");
          } else
             CreateEngine(opt);
       }
 
       delete lst;
-   }
-
-   // CORS
-   if (TString(engine).Index("cors") != kNPOS) {
-      TString engine_s = TString(engine);
-      if (engine_s.Index("cors=") == kNPOS) {
-         SetCors("*");
-      } else {
-         SetCors(TString(engine_s("[^&]*", engine_s.Index("cors=") + 5)));
-      }
    }
 }
 
