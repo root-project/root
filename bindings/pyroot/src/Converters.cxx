@@ -985,25 +985,56 @@ Bool_t PyROOT::TCppObjectConverter::ToMemory( PyObject* value, void* address )
 Bool_t PyROOT::TValueCppObjectConverter::SetArg(
       PyObject* pyobject, TParameter& para, TCallContext* /* ctxt */ )
 {
-   if ( ! ObjectProxy_Check( pyobject ) )
-      return kFALSE;
+   if ( ObjectProxy_Check( pyobject ) ) {
+      ObjectProxy* pyobj = (ObjectProxy*)pyobject;
+      if ( pyobj->ObjectIsA() && Cppyy::IsSubtype( pyobj->ObjectIsA(), fClass ) ) {
+         // calculate offset between formal and actual arguments
+         para.fValue.fVoidp = pyobj->GetObject();
+         if ( ! para.fValue.fVoidp )
+            return kFALSE;
 
-   ObjectProxy* pyobj = (ObjectProxy*)pyobject;
-   if ( pyobj->ObjectIsA() && Cppyy::IsSubtype( pyobj->ObjectIsA(), fClass ) ) {
-   // calculate offset between formal and actual arguments
-      para.fValue.fVoidp = pyobj->GetObject();
-      if ( ! para.fValue.fVoidp )
-         return kFALSE;
-
-      if ( pyobj->ObjectIsA() != fClass ) {
-         para.fValue.fLong += Cppyy::GetBaseOffset(
+         if ( pyobj->ObjectIsA() != fClass ) {
+            para.fValue.fLong += Cppyy::GetBaseOffset(
             pyobj->ObjectIsA(), fClass, para.fValue.fVoidp, 1 /* up-cast */ );
+         }
+
+         para.fTypeCode = 'V';
+         return kTRUE;
+      }
+   }
+   else if ( PyTuple_Check( pyobject ) ){  // It is a Python tuple (equivalent to a C++ initializer list)
+
+      // instantiate an object proxy of this class
+      if( ! fObjProxy ) {
+         // retrieve the python class from which we will create an instance
+         PyObject* pyclass = CreateScopeProxy( fClass );
+         if ( ! pyclass ) return kFALSE;                  // error has been set in CreateScopeProxy
+         fObjProxy = (ObjectProxy*)((PyTypeObject*)pyclass)->tp_new( (PyTypeObject*)pyclass, NULL, NULL );
+         Py_DECREF( pyclass );
       }
 
+      if( fObjProxy->GetObject() ) {
+         // the actual C++ object was already created (in a previous call), so we need to destroy it
+         Cppyy::CallDestructor( fObjProxy->ObjectIsA(), fObjProxy->GetObject() );
+         Cppyy::Deallocate( fObjProxy->ObjectIsA(), fObjProxy->GetObject() );
+         fObjProxy->Set(nullptr);
+      }
+
+      // get the constructor (i.e. __init__)
+      PyObject* constructor = PyObject_GetAttr( (PyObject*)fObjProxy, PyStrings::gInit );
+      if( ! constructor ) return kFALSE; 
+
+      // call the constructor with the arguments in the given tuple
+      PyObject* obj = PyObject_CallObject( constructor, pyobject );
+      Py_DECREF( constructor );
+      if ( ! obj ) return kFALSE;
+      Py_DECREF( obj );
+
+      para.fValue.fVoidp = fObjProxy->GetObject();
       para.fTypeCode = 'V';
       return kTRUE;
-   }
 
+   }
    return kFALSE;
 }
 
@@ -1053,7 +1084,7 @@ Bool_t PyROOT::TRefCppObjectConverter::SetArg(
       // get the constructor (i.e. __init__)
       PyObject* constructor = PyObject_GetAttr( (PyObject*)fObjProxy, PyStrings::gInit );
       if( ! constructor ) return kFALSE; 
-      
+
       // call the constructor with the arguments in the given tuple
       PyObject* obj = PyObject_CallObject( constructor, pyobject );
       Py_DECREF( constructor );
