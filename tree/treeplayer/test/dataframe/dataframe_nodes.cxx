@@ -36,6 +36,7 @@ TEST(TDataFrameNodes, TSlotStackGetOneTooMuch)
 
 TEST(TDataFrameNodes, TSlotStackPutBackTooMany)
 {
+   ::testing::FLAGS_gtest_death_test_style = "threadsafe";
    auto theTest = []() {
       unsigned int n(2);
       ROOT::Internal::TDF::TSlotStack s(n);
