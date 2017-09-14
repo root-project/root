@@ -445,6 +445,11 @@ Bool_t TCivetweb::Create(const char *args)
 
             if (url.HasOption("loopback") && (sport.Index(":") == kNPOS))
                sport = TString("127.0.0.1:") + sport;
+
+            if (GetServer() && url.HasOption("cors")) {
+               const char *cors = url.GetValueFromOptions("cors");
+               GetServer()->SetCors(cors && *cors ? cors : "*");
+            }
          }
       }
    }
