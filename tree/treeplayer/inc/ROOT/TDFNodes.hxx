@@ -369,18 +369,9 @@ public:
 };
 
 template <typename F, bool PassSlotNumber = false>
-struct CustomColumnBranchTypes {
-   using type = typename CallableTraits<F>::arg_types;
-};
-
-template <typename F>
-struct CustomColumnBranchTypes<F, true> {
-   using type = RemoveFirstParameter_t<typename CallableTraits<F>::arg_types>;
-};
-
-template <typename F, bool PassSlotNumber = false>
 class TCustomColumn final : public TCustomColumnBase {
-   using BranchTypes_t = typename CustomColumnBranchTypes<F, PassSlotNumber>::type;
+   using FunParamTypes_t = typename CallableTraits<F>::arg_types;
+   using BranchTypes_t = typename TDFInternal::RemoveFirstParameterIf<PassSlotNumber, FunParamTypes_t>::type;
    using TypeInd_t = TDFInternal::GenStaticSeq_t<BranchTypes_t::list_size>;
    using ret_type = typename CallableTraits<F>::ret_type;
 
