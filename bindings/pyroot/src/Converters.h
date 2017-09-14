@@ -170,7 +170,7 @@ namespace PyROOT {
    class TCppObjectConverter : public TVoidArrayConverter {
    public:
       TCppObjectConverter( Cppyy::TCppType_t klass, Bool_t keepControl = kFALSE ) :
-         TVoidArrayConverter( keepControl ), fClass( klass ) {}
+         TVoidArrayConverter( keepControl ), fClass( klass ), fObjProxy(nullptr) {}
 
    public:
       virtual Bool_t SetArg( PyObject*, TParameter&, TCallContext* ctxt = 0 );
@@ -179,6 +179,7 @@ namespace PyROOT {
 
    protected:
       Cppyy::TCppType_t fClass;
+      ObjectProxy* fObjProxy;
    };
 
    class TStrictCppObjectConverter : public TCppObjectConverter {

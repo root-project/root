@@ -8,8 +8,9 @@ struct A {
   int i;
   double f;
 };
-int get_i(const A& a) { return a.i; }
-double get_f(const A& a) { return a.f; }
+A func_by_ref(const A& a) { return a; }
+A func_by_val(A a) { return a; }
+
 """
 
 class ListInitialization(unittest.TestCase):
@@ -17,14 +18,19 @@ class ListInitialization(unittest.TestCase):
     def setUpClass(cls):
         ROOT.gInterpreter.Declare(cppcode)
 
-    def test_function_call(self):
-        self.assertEqual(ROOT.get_i((10,20.)), 10)
-        self.assertEqual(ROOT.get_f((10,20.)), 20.)
-        self.assertAlmostEqual(ROOT.get_f((10,)), 99.99)
+    def test_function_call_by_ref(self):
+        self.assertEqual(ROOT.func_by_ref((10,20.)).i, 10)
+        self.assertEqual(ROOT.func_by_ref((10,20.)).f, 20.)
+        self.assertAlmostEqual(ROOT.func_by_ref((10,)).f, 99.99)
     
     def test_invalid_constructor(self):
-        with self.assertRaises(TypeError): ROOT.get_i((1,2,3))
-        with self.assertRaises(TypeError): ROOT.get_i((1,'abc'))
+        with self.assertRaises(TypeError): ROOT.func_by_ref((1,2,3))
+        with self.assertRaises(TypeError): ROOT.func_by_ref((1,'abc'))
+
+    def test_function_call_by_val(self):
+        self.assertEqual(ROOT.func_by_val((10,20.)).i, 10)
+        self.assertEqual(ROOT.func_by_val((10,20.)).f, 20.)
+        self.assertAlmostEqual(ROOT.func_by_val((10,)).f, 99.99)
 
 if __name__ == '__main__':
     unittest.main()
