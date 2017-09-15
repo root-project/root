@@ -43,6 +43,9 @@ public:
    virtual const std::vector<std::pair<ULong64_t, ULong64_t>> &GetEntryRanges() const = 0;
    /// Different threads will loop over different ranges and will pass different "slot" values.
    virtual void SetEntry(ULong64_t entry, unsigned int slot) = 0;
+   /// Method to set the number of slots. Some implementations may rely on this
+   /// information for optimisation purposes.
+   virtual void SetNSlots(unsigned int nSlots) = 0;
    /// Convenience method called at the start of each task, before processing a range of entries.
    /// DataSources can implement it if needed (does nothing by default).
    /// firstEntry is the first entry of the range that the task will process.
