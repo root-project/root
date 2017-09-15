@@ -61,8 +61,10 @@ extern "C" {
    void TCling__LibraryUnloadedRTTI(const void* dyLibHandle,
                                     llvm::StringRef canonicalName);
    void TCling__PrintStackTrace();
-   void TCling__RestoreInterpreterMutex(void *state);
    void *TCling__ResetInterpreterMutex();
+   void TCling__RestoreInterpreterMutex(void *state);
+   void *TCling__LockCompilationDuringUserCodeExecution();
+   void TCling__UnlockCompilationDuringUserCodeExecution(void *state);
 }
 
 TClingCallbacks::TClingCallbacks(cling::Interpreter* interp)
@@ -797,4 +799,11 @@ void *TClingCallbacks::EnteringUserCode()
 void TClingCallbacks::ReturnedFromUserCode(void *stateInfo)
 {
    TCling__RestoreInterpreterMutex(stateInfo);
+}
+
+void* TClingCallbacks::LockCompilationDuringUserCodeExecution() {
+   return TCling__LockCompilationDuringUserCodeExecution();
+}
+void TClingCallbacks::UnlockCompilationDuringUserCodeExecution(void* StateInfo) {
+   TCling__UnlockCompilationDuringUserCodeExecution(StateInfo);
 }
