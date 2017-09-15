@@ -351,7 +351,7 @@ void TCling__PrintStackTrace() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Lock the interpreter.
+/// Restore the interpreter lock.
 
 extern "C" void TCling__RestoreInterpreterMutex(void *state)
 {
@@ -363,7 +363,7 @@ extern "C" void TCling__RestoreInterpreterMutex(void *state)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Unlock the interpreter.
+/// Completely reset the interpreter lock.
 
 extern "C" void *TCling__ResetInterpreterMutex()
 {
