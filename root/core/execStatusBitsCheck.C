@@ -3,7 +3,8 @@ void SkipLibrary(const char *libskip)
    TEnv* mapfile = gInterpreter->GetMapfile();
    if (!mapfile || !mapfile->GetTable()) return 0;
 
-   for(auto rec : TRangeStaticCast<TEnvRec>(mapfile->GetTable())) {
+   for(auto rec : TRangeDynCast<TEnvRec>(mapfile->GetTable())) {
+      if (!rec) continue;
       if (strstr(rec->GetValue(),libskip)) {
          mapfile->SetValue(rec->GetName(),"");
       }
