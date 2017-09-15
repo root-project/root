@@ -6705,7 +6705,7 @@ TObject *TPad::WaitPrimitive(const char *pname, const char *emode)
    Bool_t hasname = strlen(pname) > 0;
    if (!pname[0] && !emode[0]) testlast = kTRUE;
    if (testlast) gROOT->SetEditorMode();
-   while (!gSystem->ProcessEvents() && gPad) {
+   while (!gSystem->ProcessEvents() && gROOT->GetSelectedPad()) {
       if (gROOT->GetEditorMode() == 0) {
          if (hasname) {
             obj = FindObject(pname);
