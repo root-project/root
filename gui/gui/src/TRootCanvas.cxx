@@ -1299,7 +1299,7 @@ void TRootCanvas::SetWindowSize(UInt_t w, UInt_t h)
    gVirtualX->Update(1);
    if (!gThreadXAR) {
       gSystem->ProcessEvents();
-      gSystem->Sleep(10);
+      gSystem->Sleep(100);
       gSystem->ProcessEvents();
    }
 }
