@@ -36,18 +36,18 @@ TEST(TDataFrameNodes, TSlotStackGetOneTooMuch)
 
 TEST(TDataFrameNodes, TSlotStackPutBackTooMany)
 {
-   ::testing::FLAGS_gtest_death_test_style = "threadsafe";
-   auto theTest = []() {
+   std::mutex m;
+   auto theTest = [&m]() {
       unsigned int n(2);
       ROOT::Internal::TDF::TSlotStack s(n);
 
       std::vector<std::thread> ts;
 
       for (unsigned int i = 0; i < 2; ++i) {
-         ts.emplace_back([&s]() { s.GetSlot(); });
+         ts.emplace_back([&s, &m]() { std::lock_guard<std::mutex> lg(m); s.GetSlot(); });
       }
       for (unsigned int i = 0; i < 2; ++i) {
-         ts.emplace_back([&s, i]() { s.ReturnSlot(i); });
+         ts.emplace_back([&s, &m, i]() { std::lock_guard<std::mutex> lg(m); s.ReturnSlot(i); });
       }
 
       for (auto &&t : ts)
