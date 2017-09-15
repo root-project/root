@@ -88,6 +88,7 @@ large TClonesArray where each element contains another small vector container.
   - Avoid virtual calls for parts of the analysis that are not jitted
   - Improve checks for column name validity (throw if column does not exist and if `Define`d column overrides an already existing column)
   - Remove "custom column" nodes from the functional graph therewith optimising the traversal
+  - Add `DefineSlot`, a `Define` transformation that is aware of the multi-threading slot where the workload is executed
 
 ## Histogram Libraries
 
