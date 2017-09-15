@@ -10,15 +10,15 @@
 #include "cling/Utils/AST.h"
 
 #include "clang/AST/ASTContext.h"
+#include "clang/AST/DeclTemplate.h"
 #include "clang/AST/DeclarationName.h"
 #include "clang/AST/GlobalDecl.h"
-#include "clang/Sema/Sema.h"
+#include "clang/AST/Mangle.h"
 #include "clang/Sema/Lookup.h"
-#include "clang/AST/DeclTemplate.h"
+#include "clang/Sema/Sema.h"
 
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/StringRef.h"
-#include "clang/AST/Mangle.h"
 
 #include <memory>
 #include <stdio.h>
