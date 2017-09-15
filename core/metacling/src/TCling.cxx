@@ -375,6 +375,26 @@ extern "C" void *TCling__ResetInterpreterMutex()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Lock the interpreter.
+
+extern "C" void *TCling__LockCompilationDuringUserCodeExecution() {
+   if (gInterpreterMutex) {
+      gInterpreterMutex->Lock();
+   }
+   return nullptr;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Unlock the interpreter.
+
+extern "C" void TCling__UnlockCompilationDuringUserCodeExecution(void* /*state*/) {
+   if (gInterpreterMutex) {
+      gInterpreterMutex->UnLock();
+   }
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Update TClingClassInfo for a class (e.g. upon seeing a definition).
 
 static void TCling__UpdateClassInfo(const NamedDecl* TD)
