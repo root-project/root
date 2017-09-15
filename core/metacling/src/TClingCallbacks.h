@@ -104,6 +104,8 @@ public:
 
    virtual void *EnteringUserCode();
    virtual void ReturnedFromUserCode(void *stateInfo);
+   virtual void* LockCompilationDuringUserCodeExecution();
+   virtual void UnlockCompilationDuringUserCodeExecution(void* StateInfo);
 
 private:
    bool tryAutoParseInternal(llvm::StringRef Name, clang::LookupResult &R,
