@@ -6689,6 +6689,8 @@ void TPad::UseCurrentStyle()
 ///   }
 ///}
 /// ~~~
+///
+/// If ROOT runs in batch mode a call to this method does nothing.
 
 TObject *TPad::WaitPrimitive(const char *pname, const char *emode)
 {
