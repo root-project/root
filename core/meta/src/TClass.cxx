@@ -4200,12 +4200,12 @@ TMethod *TClass::GetMethod(const char *method, const char *params,
 
 TMethod* TClass::FindClassOrBaseMethodWithId(DeclId_t declId) {
    if (TFunction* method = GetMethodList()->Get(declId))
-      return reinterpret_cast<TMethod *>(method);
+      return static_cast<TMethod *>(method);
 
    for (auto item : *GetListOfBases())
-      if (auto base = reinterpret_cast<TBaseClass *>(item)->GetClassPointer())
+      if (auto base = static_cast<TBaseClass *>(item)->GetClassPointer())
          if (TFunction* method = base->FindClassOrBaseMethodWithId(declId))
-            return reinterpret_cast<TMethod *>(method);
+            return static_cast<TMethod *>(method);
 
    return nullptr;
 }
