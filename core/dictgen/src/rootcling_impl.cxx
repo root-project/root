@@ -2907,14 +2907,14 @@ int  ExtractClassesListAndDeclLines(RScanner &scan,
                {
                   llvm::raw_string_ostream sstr(mangledName);
                   if (const clang::TypeDecl* TD = llvm::dyn_cast<clang::TypeDecl>(rDecl)) {
-                     mangleCtx->mangleTypeName(clang::QualType(TD->getTypeForDecl(), 0), sstr);
+                     mangleCtx->mangleCXXRTTI(clang::QualType(TD->getTypeForDecl(), 0), sstr);
                   }
                }
                if (!mangledName.empty()) {
                   int errDemangle = 0;
                   char* demangledTIName = TClassEdit::DemangleName(mangledName.c_str(), errDemangle);
                   if (!errDemangle && demangledTIName) {
-                     static const char typeinfoNameFor[] = "typeinfo name for ";
+                     static const char typeinfoNameFor[] = "typeinfo for ";
                      if (!strncmp(demangledTIName, typeinfoNameFor, strlen(typeinfoNameFor))) {
                         std::string demangledName = demangledTIName + strlen(typeinfoNameFor);
                         // See the operations in TCling::AutoLoad(type_info)
@@ -2926,9 +2926,9 @@ int  ExtractClassesListAndDeclLines(RScanner &scan,
                         } // if demangledName != other name
                      } else {
                         ROOT::TMetaUtils::Error("ExtractClassesListAndDeclLines",
-                                                "Demangled typeinfo name '%s' does not start with 'typeinfo name for'\n",
+                                                "Demangled typeinfo name '%s' does not start with 'typeinfo for'\n",
                                                 demangledTIName);
-                     } // if demangled type_info starts with "typeinfo name for "
+                     } // if demangled type_info starts with "typeinfo for "
                   } // if demangling worked
                   free(demangledTIName);
                } // if mangling worked
