@@ -1128,7 +1128,7 @@ TBasket* TBranch::GetBasket(Int_t basketnumber)
    if (file == 0) {
       return 0;
    }
-   basket = (fTree->GetMaxVirtualSize() < 0) ? GetFreshCluster() : GetFreshBasket();
+   basket = (fTree->GetMaxVirtualSize() < 0 || fTree->GetClusterPrefetch()) ? GetFreshCluster() : GetFreshBasket();
 
    // fSkipZip is old stuff still maintained for CDF
    if (fSkipZip) basket->SetBit(TBufferFile::kNotDecompressed);
@@ -1279,7 +1279,7 @@ Int_t TBranch::GetEntry(Long64_t entry, Int_t getall)
             fNextBasketEntry = -1;
             return -1;
          }
-         if (fTree->GetMaxVirtualSize() < 0) {
+         if (fTree->GetMaxVirtualSize()< 0 || fTree->GetClusterPrefetch()) {
             TTree::TClusterIterator clusterIterator = fTree->GetClusterIterator(entry);
             clusterIterator.Next();
             Int_t nextClusterEntry = clusterIterator.GetNextEntry();
@@ -1469,7 +1469,8 @@ TBasket *TBranch::GetFreshCluster()
       return fTree->CreateBasket(this);
    }
 
-   // Iterate backwards (1-VirtualSize) clusters to reach cluster to be unloaded from memory
+   // Iterate backwards (1-VirtualSize) clusters to reach cluster to be unloaded from memory,
+   // skipped if VirtualSize > 0.
    for (Int_t j = 0; j < -fTree->GetMaxVirtualSize(); j++) {
       if (iter.Previous() == 0) {
          return fTree->CreateBasket(this);

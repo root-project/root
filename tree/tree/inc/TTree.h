@@ -119,6 +119,7 @@ protected:
    UInt_t         fFriendLockStatus;      ///<! Record which method is locking the friend recursion
    TBuffer       *fTransientBuffer;       ///<! Pointer to the current transient buffer.
    Bool_t         fCacheDoAutoInit;       ///<! true if cache auto creation or resize check is needed
+   Bool_t         fCacheDoClusterPrefetch;///<! true if cache is prefetching whole clusters
    Bool_t         fCacheUserSet;          ///<! true if the cache setting was explicitly given by user
    Bool_t         fIMTEnabled;            ///<! true if implicit multi-threading is enabled for this tree
    UInt_t         fNEntriesSinceSorting;  ///<! Number of entries processed since the last re-sorting of branches
@@ -389,6 +390,7 @@ public:
    virtual TTree          *GetFriend(const char*) const;
    virtual const char     *GetFriendAlias(TTree*) const;
    TH1                    *GetHistogram() { return GetPlayer()->GetHistogram(); }
+   virtual Bool_t          GetClusterPrefetch() { return fCacheDoClusterPrefetch; }
    virtual Bool_t          GetImplicitMT() { return fIMTEnabled; }
    virtual Int_t          *GetIndex() { return &fIndex.fArray[0]; }
    virtual Double_t       *GetIndexValues() { return &fIndexValues.fArray[0]; }
@@ -529,6 +531,7 @@ public:
    virtual void            SetFileNumber(Int_t number = 0);
    virtual void            SetEventList(TEventList* list);
    virtual void            SetEntryList(TEntryList* list, Option_t *opt="");
+   virtual void            SetClusterPrefetch(Bool_t enabled) { fCacheDoClusterPrefetch = enabled; }
    virtual void            SetImplicitMT(Bool_t enabled) { fIMTEnabled = enabled; }
    virtual void            SetMakeClass(Int_t make);
    virtual void            SetMaxEntryLoop(Long64_t maxev = kMaxEntries) { fMaxEntryLoop = maxev; } // *MENU*
