@@ -109,6 +109,8 @@ std::unique_ptr<TVirtualMutex::State> TPosixMutex::Reset()
    if (TestBit(kIsRecursive)) {
       while (!UnLock())
          ++pState->fLockCount;
+      if (!pState->fLockCount)
+         SysError("Reset", "Reset() called on unlocked Mutex!");
       return std::move(pState);
    }
    // Not recursive. Unlocking a non-recursive, non-robust, unlocked mutex has an
@@ -139,6 +141,12 @@ void TPosixMutex::Restore(std::unique_ptr<TVirtualMutex::State> &&state)
       // No state, do nothing.
       return;
    }
+
+   if (!pState->fLockCount) {
+      SysError("Reset", "Restore() called with unlocked state!");
+      return;
+   }
+
    do {
       Lock();
    } while (--pState->fLockCount);
