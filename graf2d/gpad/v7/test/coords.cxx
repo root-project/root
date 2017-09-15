@@ -1,4 +1,15 @@
-#include "gtest/gtest.h"
+// @(#)root/graf2d:$Id$
+// Author: Axel Naumann <axel@cern.ch>, 2017-08-26
+
+/*************************************************************************
+ * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
+ #include "gtest/gtest.h"
 
 #include "ROOT/TPadCoord.hxx"
 
