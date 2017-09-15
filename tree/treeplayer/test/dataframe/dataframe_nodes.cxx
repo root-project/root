@@ -1,5 +1,6 @@
 #include "ROOT/TDFNodes.hxx"
 
+#include <mutex>
 #include <thread>
 
 #include "gtest/gtest.h"
