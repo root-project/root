@@ -177,10 +177,15 @@ const ColumnNames_t SelectColumns(unsigned int nRequiredNames, const ColumnNames
       return ColumnNames_t(defaultNames.begin(), defaultNames.begin() + nRequiredNames);
    } else {
       // use column names provided by the user to this particular transformation/action
-      if (names.size() != nRequiredNames)
-         throw std::runtime_error(std::to_string(nRequiredNames) + " column name" +
-                                  (nRequiredNames == 1 ? " is" : "s are") + " required but " +
-                                  std::to_string(names.size()) + (names.size() == 1 ? " was" : " were") + " provided.");
+      if (names.size() != nRequiredNames) {
+         auto msg = std::to_string(nRequiredNames) + " column name" + (nRequiredNames == 1 ? " is" : "s are") +
+                    " required but " + std::to_string(names.size()) + (names.size() == 1 ? " was" : " were") +
+                    " provided:";
+         for (const auto &name : names)
+            msg += " \"" + name + "\",";
+         msg.back() = '.';
+         throw std::runtime_error(msg);
+      }
       return names;
    }
 }
