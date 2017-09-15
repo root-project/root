@@ -695,7 +695,7 @@ public:
 
    /// Return the current position in the master reference frame of the
    /// track being transported (as float)
-   virtual void     TrackPosition(Float_t &x, Float_t &y, Float_t &z) const;
+   virtual void TrackPosition(Float_t &x, Float_t &y, Float_t &z) const;
 
    /// Return the direction and the momentum (GeV/c) of the track
    /// currently being transported
@@ -707,7 +707,7 @@ public:
 
    /// Return the direction and the momentum (GeV/c) of the track
    /// currently being transported (as float)
-   virtual void     TrackMomentum(Float_t &px, Float_t &py, Float_t &pz, Float_t &etot) const;
+   virtual void TrackMomentum(Float_t &px, Float_t &py, Float_t &pz, Float_t &etot) const;
 
    /// Return the length in centimeters of the current step (in cm)
    virtual Double_t TrackStep() const =0;
@@ -888,18 +888,18 @@ private:
 
 // inline functions (with temorary implementation)
 
-inline void TVirtualMC::TrackPosition(Float_t& /*x*/, Float_t& /*y*/, Float_t& /*z*/) const
+inline void TVirtualMC::TrackPosition(Float_t & /*x*/, Float_t & /*y*/, Float_t & /*z*/) const
 {
-  /// Return the current position in the master reference frame of the
-  /// track being transported (as float)
-  Warning("TrackPosition(Float_t& ...)", "New function - not yet implemented.");
+   /// Return the current position in the master reference frame of the
+   /// track being transported (as float)
+   Warning("TrackPosition(Float_t& ...)", "New function - not yet implemented.");
 }
 
-inline void TVirtualMC::TrackMomentum(Float_t& /*px*/, Float_t& /*py*/, Float_t& /*pz*/, Float_t& /*etot*/) const
+inline void TVirtualMC::TrackMomentum(Float_t & /*px*/, Float_t & /*py*/, Float_t & /*pz*/, Float_t & /*etot*/) const
 {
-  /// Return the direction and the momentum (GeV/c) of the track
-  /// currently being transported (as float)
-  Warning("TrackPosition(Float_t& ...)", "New function - not yet implemented.");
+   /// Return the direction and the momentum (GeV/c) of the track
+   /// currently being transported (as float)
+   Warning("TrackPosition(Float_t& ...)", "New function - not yet implemented.");
 }
 
 #define gMC (TVirtualMC::GetMC())
