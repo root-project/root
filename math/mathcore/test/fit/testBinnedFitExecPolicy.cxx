@@ -5,7 +5,6 @@
 #include "Math/IParamFunction.h"
 #include "TFitResult.h"
 #include "TError.h"
-#include "TStopwatch.h"
 #include "TROOT.h"
 #include "Math/MinimizerOptions.h"
 
@@ -30,8 +29,7 @@ T func(const T *data, const double *params)
 int main()
 {
 
-   ROOT::EnableImplicitMT(8);
-   ROOT::EnableThreadSafety();
+   ROOT::EnableImplicitMT();
    
    TF1 *f = new TF1("fvCore", func<double>, 100, 200, 4);
    f->SetParameters(1, 1000, 7.5, 1.5);
