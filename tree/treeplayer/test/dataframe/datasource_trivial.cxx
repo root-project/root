@@ -55,6 +55,16 @@ TEST(TTrivialDS, ColumnReaders)
   }
 }
 
+TEST(TTrivialDS, SetNSlotsTwice)
+{
+  auto theTest = []() {
+    TTrivialDS tds(1);
+    tds.SetNSlots(1);
+    tds.SetNSlots(1);
+  };
+  ASSERT_DEATH(theTest(), "Setting the number of slots even if the number of slots is different from zero.");
+}
+
 TEST(TTrivialDS, FromATDF)
 {
   std::unique_ptr<TDataSource> tds(new TTrivialDS(32));
