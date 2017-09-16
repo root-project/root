@@ -62,7 +62,7 @@ public:
    virtual ~TLeaf();
 
    virtual void     Browse(TBrowser* b);
-   virtual Bool_t   CanGenerateOffsetArray() {return true;} // overload and return true if this leaf can generate its own offset array.
+   virtual Bool_t   CanGenerateOffsetArray() {return fLeafCount;} // overload and return true if this leaf can generate its own offset array.
    virtual void     Export(TClonesArray*, Int_t) {}
    virtual void     FillBasket(TBuffer& b);
    virtual Int_t   *GenerateOffsetArray(Int_t base, Int_t events) {return GenerateOffsetArrayBase(base, events);}

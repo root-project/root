@@ -163,17 +163,17 @@ Int_t *TLeaf::GenerateOffsetArrayBase(Int_t base, Int_t events) const
    if (R__unlikely(!retval)) {return nullptr;}
 
    if (fLeafCount) {
-      Long64_t orig_entry = fBranch->GetReadEntry();
+      Long64_t orig_entry = std::max(fBranch->GetReadEntry(), 0LL); // -1 indicates to start at the beginning?
       Long64_t orig_leaf_entry = fLeafCount->GetBranch()->GetReadEntry();
-      if (orig_leaf_entry != orig_entry) {
-         fLeafCount->GetBranch()->GetEntry(orig_entry);
-      }
+      Int_t len = 0;
       for (Int_t idx = 0, offset = base; idx<events; idx++) {
+         //printf("Generate offset: Entry=%lld, Idx=%d, offset=%d, fLenType=%d, len=%d.\n", orig_entry+idx, idx, offset, fLenType, len);
          retval[idx] = offset;
-         Int_t len = static_cast<Int_t>(fLeafCount->GetValue());
+         fLeafCount->GetBranch()->GetEntry(orig_entry + idx);
+         len = static_cast<Int_t>(fLeafCount->GetValue());
          offset += fLenType*len;
       }
-      fLeafCount->GetBranch()->GetEntry(orig_entry);
+      fLeafCount->GetBranch()->GetEntry(orig_leaf_entry);
    } else {
       for (Int_t idx = 0, offset = base; idx<events; idx++, offset+= (fLenType*fLen)) {
          retval[idx] = offset;
