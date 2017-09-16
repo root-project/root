@@ -84,12 +84,12 @@ TBasket::TBasket(const char *name, const char *title, TBranch *branch) :
          fOwnsCompressedBuffer = kTRUE;
       }
    }
+   fBranch      = branch;
    Streamer(*fBufferRef);
    fKeylen      = fBufferRef->Length();
    fObjlen      = fBufferSize - fKeylen;
    fLast        = fKeylen;
    fBuffer      = 0;
-   fBranch      = branch;
    fHeaderOnly  = kFALSE;
    if (fNevBufSize) {
       fEntryOffset = new Int_t[fNevBufSize];
@@ -184,14 +184,22 @@ Int_t TBasket::DropBuffers()
 /// Result is cached, meaning that this should only be invoked once per basket.
 
 Int_t *TBasket::GetCalculatedEntryOffset() {
-   fEntryOffset = nullptr;
-
-   if (fBranch->GetNleaves() != 1) {
+   if (fEntryOffset != reinterpret_cast<Int_t *>(1)) {
       return fEntryOffset;
    }
+   Info("GetCalculatedEntryOffset", "Getting calculated entry offset; corresponding fBranch: %p; fNevBuf: %d for TBasket=%p", fBranch, fNevBuf, this);
 
+   if (R__unlikely(!fBranch)) {
+      Error("GetCalculatedEntryOffset", "Basket entry offset calculation requested, but no associated TBranch!");
+      return nullptr;
+   }
+   if (R__unlikely(fBranch->GetNleaves() != 1)) {
+      Error("GetCalculatedEntryOffset", "Branch contains multiple leaves - unable to calculated entry offsets!");
+      return nullptr;
+   }
+   Info("GetCalculatedEntryOffset", "Asking leaf to generate the offset array.");
    TLeaf *leaf = static_cast<TLeaf*>((*fBranch->GetListOfLeaves())[0]);
-   fEntryOffset = leaf->GenerateOffsetArray(fLast, fNevBuf);
+   fEntryOffset = leaf->GenerateOffsetArray(fKeylen, fNevBuf);
    return fEntryOffset;
 }
 
@@ -631,7 +639,11 @@ AfterBuffer:
    fBranch->GetTree()->IncrementTotalBuffers(fBufferSize);
 
    // Read offsets table if needed.
-   if (!fBranch->GetEntryOffsetLen() || CanGenerateOffsetArray()) {
+   Info("ReadBasketBuffers", "Reading fIOBits=%u; branch offset len: %d; CanGenerateOffsetArray: %d; fEntryOffset=%p for TBasket=%p", fIOBits & static_cast<UChar_t>(EIOBits::kGenerateOffsetMap), fBranch->GetEntryOffsetLen(), CanGenerateOffsetArray(), fEntryOffset, this);
+   // If there's no EntryOffsetLen in the branch -- or the fEntryOffset is marked to be calculated-on-demand --
+   // then we skip reading out.
+   if (!fBranch->GetEntryOffsetLen() || (fEntryOffset == reinterpret_cast<Int_t *>(1))) {
+      Info("ReadBasketBuffers", "Skipping reading out offset array.");
       return 0;
    }
    // TODO: we really should serialize _whether_ an offset array was written so we can improve
@@ -730,6 +742,7 @@ void TBasket::Reset()
       ResetEntryOffset();
    } else if ((newNevBufSize != fNevBufSize) || (fEntryOffset <= (Int_t*)1)) {
       ResetEntryOffset();
+      Info("Reset", "Allocating a new fEntryOffset");
       fEntryOffset = new Int_t[newNevBufSize];
    }
    fNevBufSize = newNevBufSize;
@@ -832,7 +845,12 @@ void TBasket::Streamer(TBuffer &b)
       b >> fLast;
       b >> flag;
       if (fLast > fBufferSize) fBufferSize = fLast;
-      if (flag && (flag % 10 != 2)) {
+      Bool_t mustGenerateOffsets = false;
+      if (flag && (flag >= 80)) {
+         mustGenerateOffsets = true;
+         flag -= 80;
+      }
+      if (!mustGenerateOffsets && flag && (flag % 10 != 2)) {
          ResetEntryOffset();
          fEntryOffset = new Int_t[fNevBufSize];
          if (fNevBuf) b.ReadArray(fEntryOffset);
@@ -845,6 +863,9 @@ void TBasket::Streamer(TBuffer &b)
             fDisplacement = new Int_t[fNevBufSize];
             b.ReadArray(fDisplacement);
          }
+      } else if (mustGenerateOffsets) {
+         Info("Streamer", "Marking fEntryOffset to be regenerated upon first access.");
+         fEntryOffset = reinterpret_cast<Int_t *>(1);
       }
       if (flag == 1 || flag > 10) {
          fBufferRef = new TBufferFile(TBuffer::kRead,fBufferSize);
@@ -858,9 +879,6 @@ void TBasket::Streamer(TBuffer &b)
          //   fBranch->GetTree()->IncrementTotalBuffers(fBufferSize);
       }
    } else {
-      // On return from this function, we are guaranteed that fEntryOffset
-      // is either a valid pointer or nullptr.
-      GetEntryOffset();
 
       TKey::Streamer(b);   //this must be first
       b.WriteVersion(TBasket::IsA());
@@ -872,6 +890,7 @@ void TBasket::Streamer(TBuffer &b)
 
       b << fBufferSize;
       if (fIOBits) {
+         Info("Streamer", "Writing fIOBits=%d; fEntryOffset=%p; fNevBuf=%d; fHeaderOnly=%d for TBasket=%p", fIOBits, fEntryOffset, fNevBuf, fHeaderOnly, this);
          b << -fNevBufSize;
          b << fIOBits;
       } else {
@@ -879,19 +898,35 @@ void TBasket::Streamer(TBuffer &b)
       }
       b << fNevBuf;
       b << fLast;
+      Bool_t mustGenerateOffsets = fEntryOffset && fNevBuf && \
+             (fIOBits & static_cast<UChar_t>(TBasket::EIOBits::kGenerateOffsetMap)) && \
+             CanGenerateOffsetArray();
       if (fHeaderOnly) {
-         flag = 0;
+         flag = mustGenerateOffsets ? 80 : 0;
          b << flag;
       } else {
+         // On return from this function, we are guaranteed that fEntryOffset
+         // is either a valid pointer or nullptr.
+         if (fNevBuf) {
+            GetEntryOffset();
+         }
          flag = 1;
-         if (!fEntryOffset)  flag  = 2;
+         if (!fNevBuf || !fEntryOffset)  flag  = 2;
          if (fBufferRef)     flag += 10;
          if (fDisplacement)  flag += 40;
+         // Test if we can skip writing out the offset map.
+         if (mustGenerateOffsets) {
+            Info("Streamer", "Reader MUST generate the offset array.\n");
+            flag += 80;
+         }
          b << flag;
 
-         if (fEntryOffset && fNevBuf && !CanGenerateOffsetArray()) {
+         if (!mustGenerateOffsets && fEntryOffset && fNevBuf) {
             b.WriteArray(fEntryOffset, fNevBuf);
             if (fDisplacement) b.WriteArray(fDisplacement, fNevBuf);
+            Info("Streamer", "Writing out offset.\n");
+         } else {
+            Info("Streamer", "No entry offset necessary.\n");
          }
          if (fBufferRef) {
             char *buf  = fBufferRef->Buffer();
@@ -1000,10 +1035,16 @@ Int_t TBasket::WriteBuffer()
       //      for(Int_t z = fNevBuf; z > 0; --z) {
       //         if (fEntryOffset[z]) fEntryOffset[z] = fEntryOffset[z] - fEntryOffset[z-1];
       //      }
-      fBufferRef->WriteArray(entryOffset,fNevBuf+1);
-      if (fDisplacement) {
-         fBufferRef->WriteArray(fDisplacement,fNevBuf+1);
-         delete [] fDisplacement; fDisplacement = 0;
+      // If we have enabled the feature flag - and the leaf claims to be able to generate the offsets - skip writes.
+      if (!(fIOBits & static_cast<UChar_t>(TBasket::EIOBits::kGenerateOffsetMap)) || !CanGenerateOffsetArray()) {
+         Info("WriteBuffer", "Writing out offset from WriteBuff.  (TBasket=%p)", this);
+         fBufferRef->WriteArray(entryOffset,fNevBuf+1);
+         if (fDisplacement) {
+            fBufferRef->WriteArray(fDisplacement,fNevBuf+1);
+            delete [] fDisplacement; fDisplacement = 0;
+         }
+      } else {
+         Info("WriteBuffer", "Skipping serialization of entry offset from WriteBuffer. (TBasket=%p)", this);
       }
    }
 
