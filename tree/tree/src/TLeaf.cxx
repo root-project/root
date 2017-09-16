@@ -167,7 +167,6 @@ Int_t *TLeaf::GenerateOffsetArrayBase(Int_t base, Int_t events) const
       Long64_t orig_leaf_entry = fLeafCount->GetBranch()->GetReadEntry();
       Int_t len = 0;
       for (Int_t idx = 0, offset = base; idx<events; idx++) {
-         //printf("Generate offset: Entry=%lld, Idx=%d, offset=%d, fLenType=%d, len=%d.\n", orig_entry+idx, idx, offset, fLenType, len);
          retval[idx] = offset;
          fLeafCount->GetBranch()->GetEntry(orig_entry + idx);
          len = static_cast<Int_t>(fLeafCount->GetValue());

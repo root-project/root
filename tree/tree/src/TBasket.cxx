@@ -187,7 +187,6 @@ Int_t *TBasket::GetCalculatedEntryOffset() {
    if (fEntryOffset != reinterpret_cast<Int_t *>(1)) {
       return fEntryOffset;
    }
-   Info("GetCalculatedEntryOffset", "Getting calculated entry offset; corresponding fBranch: %p; fNevBuf: %d for TBasket=%p", fBranch, fNevBuf, this);
 
    if (R__unlikely(!fBranch)) {
       Error("GetCalculatedEntryOffset", "Basket entry offset calculation requested, but no associated TBranch!");
@@ -197,7 +196,6 @@ Int_t *TBasket::GetCalculatedEntryOffset() {
       Error("GetCalculatedEntryOffset", "Branch contains multiple leaves - unable to calculated entry offsets!");
       return nullptr;
    }
-   Info("GetCalculatedEntryOffset", "Asking leaf to generate the offset array.");
    TLeaf *leaf = static_cast<TLeaf*>((*fBranch->GetListOfLeaves())[0]);
    fEntryOffset = leaf->GenerateOffsetArray(fKeylen, fNevBuf);
    return fEntryOffset;
@@ -639,24 +637,31 @@ AfterBuffer:
    fBranch->GetTree()->IncrementTotalBuffers(fBufferSize);
 
    // Read offsets table if needed.
-   Info("ReadBasketBuffers", "Reading fIOBits=%u; branch offset len: %d; CanGenerateOffsetArray: %d; fEntryOffset=%p for TBasket=%p", fIOBits & static_cast<UChar_t>(EIOBits::kGenerateOffsetMap), fBranch->GetEntryOffsetLen(), CanGenerateOffsetArray(), fEntryOffset, this);
    // If there's no EntryOffsetLen in the branch -- or the fEntryOffset is marked to be calculated-on-demand --
    // then we skip reading out.
    if (!fBranch->GetEntryOffsetLen() || (fEntryOffset == reinterpret_cast<Int_t *>(1))) {
-      Info("ReadBasketBuffers", "Skipping reading out offset array.");
       return 0;
    }
-   // TODO: we really should serialize _whether_ an offset array was written so we can improve
-   // when we can avoid writing out the offset array.
    // At this point, we're required to read out an offset array.
-   ResetEntryOffset();
+   ResetEntryOffset();  // TODO: every basket, we reset the offset array.  Is this necessary?
+                        // Could we instead switch to std::vector?
    fBufferRef->SetBufferOffset(fLast);
    fBufferRef->ReadArray(fEntryOffset);
-   if (!fEntryOffset) {
+   if (R__unlikely(!fEntryOffset)) {
       fEntryOffset = new Int_t[fNevBuf+1];
       fEntryOffset[0] = fKeylen;
       Warning("ReadBasketBuffers","basket:%s has fNevBuf=%d but fEntryOffset=0, pos=%lld, len=%d, fNbytes=%d, fObjlen=%d, trying to repair",GetName(),fNevBuf,pos,len,fNbytes,fObjlen);
       return 0;
+   }
+   if (fIOBits & static_cast<UChar_t>(TBasket::EIOBits::kGenerateOffsetMap)) {
+      // In this case, we cannot regenerate the offset array at runtime -- but we wrote out an array of
+      // sizes instead of offsets (as sizes compress much better).
+      fEntryOffset[0] = fKeylen;
+      for (Int_t idx=1; idx<fNevBuf+1; idx++) {
+         printf("Reading offset for idx %d; old value %d", idx, fEntryOffset[idx]);
+         fEntryOffset[idx] += fEntryOffset[idx-1];
+         printf(", new value %d\n", fEntryOffset[idx]);
+      }
    }
    fReadEntryOffset = kTRUE;
    // Read the array of diplacement if any.
@@ -742,7 +747,6 @@ void TBasket::Reset()
       ResetEntryOffset();
    } else if ((newNevBufSize != fNevBufSize) || (fEntryOffset <= (Int_t*)1)) {
       ResetEntryOffset();
-      Info("Reset", "Allocating a new fEntryOffset");
       fEntryOffset = new Int_t[newNevBufSize];
    }
    fNevBufSize = newNevBufSize;
@@ -864,7 +868,6 @@ void TBasket::Streamer(TBuffer &b)
             b.ReadArray(fDisplacement);
          }
       } else if (mustGenerateOffsets) {
-         Info("Streamer", "Marking fEntryOffset to be regenerated upon first access.");
          fEntryOffset = reinterpret_cast<Int_t *>(1);
       }
       if (flag == 1 || flag > 10) {
@@ -890,7 +893,6 @@ void TBasket::Streamer(TBuffer &b)
 
       b << fBufferSize;
       if (fIOBits) {
-         Info("Streamer", "Writing fIOBits=%d; fEntryOffset=%p; fNevBuf=%d; fHeaderOnly=%d for TBasket=%p", fIOBits, fEntryOffset, fNevBuf, fHeaderOnly, this);
          b << -fNevBufSize;
          b << fIOBits;
       } else {
@@ -916,7 +918,6 @@ void TBasket::Streamer(TBuffer &b)
          if (fDisplacement)  flag += 40;
          // Test if we can skip writing out the offset map.
          if (mustGenerateOffsets) {
-            Info("Streamer", "Reader MUST generate the offset array.\n");
             flag += 80;
          }
          b << flag;
@@ -924,9 +925,6 @@ void TBasket::Streamer(TBuffer &b)
          if (!mustGenerateOffsets && fEntryOffset && fNevBuf) {
             b.WriteArray(fEntryOffset, fNevBuf);
             if (fDisplacement) b.WriteArray(fDisplacement, fNevBuf);
-            Info("Streamer", "Writing out offset.\n");
-         } else {
-            Info("Streamer", "No entry offset necessary.\n");
          }
          if (fBufferRef) {
             char *buf  = fBufferRef->Buffer();
@@ -1028,23 +1026,35 @@ Int_t TBasket::WriteBuffer()
    fLast = fBufferRef->Length();
    Int_t *entryOffset = GetEntryOffset();
    if (entryOffset) {
-      // Note: We might want to investigate the compression gain if we
-      // transform the Offsets to fBuffer in entry length to optimize
-      // compression algorithm.  The aggregate gain on a (random) CMS files
-      // is around 5.5%. So the code could something like:
-      //      for(Int_t z = fNevBuf; z > 0; --z) {
-      //         if (fEntryOffset[z]) fEntryOffset[z] = fEntryOffset[z] - fEntryOffset[z-1];
-      //      }
-      // If we have enabled the feature flag - and the leaf claims to be able to generate the offsets - skip writes.
-      if (!(fIOBits & static_cast<UChar_t>(TBasket::EIOBits::kGenerateOffsetMap)) || !CanGenerateOffsetArray()) {
-         Info("WriteBuffer", "Writing out offset from WriteBuff.  (TBasket=%p)", this);
+      Bool_t hasOffsetBit = fIOBits & static_cast<UChar_t>(TBasket::EIOBits::kGenerateOffsetMap);
+      if (!CanGenerateOffsetArray()) {
+         // If we have set the offset map flag, but cannot dynamically generate the map, then
+         // we should at least convert the offset array to a size array.
+         if (hasOffsetBit) {
+            for (Int_t idx=1; idx<fNevBuf+1; idx++) {
+               entryOffset[idx] -= entryOffset[idx-1];
+            }
+            entryOffset[0] = 0;
+         }
          fBufferRef->WriteArray(entryOffset,fNevBuf+1);
+         // Convert back to offset format: keeping both sizes and offsets in-memory were considered,
+         // but it seems better to use CPU than memory.
+         if (hasOffsetBit) {
+            entryOffset[0] = fKeylen;
+            for (Int_t idx=1; idx<fNevBuf+1; idx++) {
+               entryOffset[idx] += entryOffset[idx-1];
+            }
+         }
          if (fDisplacement) {
             fBufferRef->WriteArray(fDisplacement,fNevBuf+1);
             delete [] fDisplacement; fDisplacement = 0;
          }
-      } else {
-         Info("WriteBuffer", "Skipping serialization of entry offset from WriteBuffer. (TBasket=%p)", this);
+      } else if (!hasOffsetBit) {  // In this case, write out as normal
+         fBufferRef->WriteArray(entryOffset, fNevBuf + 1);
+         if (fDisplacement) {
+            fBufferRef->WriteArray(fDisplacement,fNevBuf+1);
+            delete [] fDisplacement; fDisplacement = 0;
+         }
       }
    }
 
