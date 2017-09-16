@@ -29,8 +29,6 @@ T func(const T *data, const double *params)
 int main()
 {
 
-   ROOT::EnableImplicitMT();
-   
    TF1 *f = new TF1("fvCore", func<double>, 100, 200, 4);
    f->SetParameters(1, 1000, 7.5, 1.5);
 
@@ -131,7 +129,6 @@ int main()
    end =  std::chrono::system_clock::now();
    duration = end - start;
    std::cout << "Time for the Vectorized Binned Likelihood Fit: " << duration.count() << std::endl;
-  
 
 #ifdef R__USE_IMT
    std::cout << "\n **FIT: Mutithreaded vectorized Chi2 **\n\n";
