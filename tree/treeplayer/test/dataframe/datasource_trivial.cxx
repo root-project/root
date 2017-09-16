@@ -47,33 +47,33 @@ TEST(TTrivialDS, ColumnReaders)
    auto slot = 0U;
    for (auto &&range : ranges) {
       for (auto i : ROOT::TSeq<ULong64_t>(range.first, range.second)) {
-      tds.SetEntry(i, slot);
-      auto val = **vals[slot];
-      EXPECT_EQ(i, val);
+         tds.SetEntry(i, slot);
+         auto val = **vals[slot];
+         EXPECT_EQ(i, val);
       }
       slot++;
-  }
+   }
 }
 
 TEST(TTrivialDS, SetNSlotsTwice)
 {
-  auto theTest = []() {
-    TTrivialDS tds(1);
-    tds.SetNSlots(1);
-    tds.SetNSlots(1);
-  };
-  ASSERT_DEATH(theTest(), "Setting the number of slots even if the number of slots is different from zero.");
+   auto theTest = []() {
+      TTrivialDS tds(1);
+      tds.SetNSlots(1);
+      tds.SetNSlots(1);
+   };
+   ASSERT_DEATH(theTest(), "Setting the number of slots even if the number of slots is different from zero.");
 }
 
 TEST(TTrivialDS, FromATDF)
 {
-  std::unique_ptr<TDataSource> tds(new TTrivialDS(32));
-  TDataFrame tdf(std::move(tds));
-  auto max = tdf.Max<ULong64_t>("col0");
-  auto min = tdf.Min<ULong64_t>("col0");
-  auto c = tdf.Count();
+   std::unique_ptr<TDataSource> tds(new TTrivialDS(32));
+   TDataFrame tdf(std::move(tds));
+   auto max = tdf.Max<ULong64_t>("col0");
+   auto min = tdf.Min<ULong64_t>("col0");
+   auto c = tdf.Count();
 
-  EXPECT_EQ(32U, *c);
-  EXPECT_DOUBLE_EQ(31., *max);
-  EXPECT_DOUBLE_EQ(0., *min);
+   EXPECT_EQ(32U, *c);
+   EXPECT_DOUBLE_EQ(31., *max);
+   EXPECT_DOUBLE_EQ(0., *min);
 }

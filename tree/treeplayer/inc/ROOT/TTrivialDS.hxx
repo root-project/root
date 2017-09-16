@@ -49,7 +49,7 @@ public:
 
    void SetNSlots(unsigned int nSlots)
    {
-       assert(0U == fNSlots && "Setting the number of slots even if the number of slots is different from zero.");
+      assert(0U == fNSlots && "Setting the number of slots even if the number of slots is different from zero.");
 
       fNSlots = nSlots;
       fCounter.resize(fNSlots);
