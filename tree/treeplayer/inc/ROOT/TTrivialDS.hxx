@@ -55,12 +55,12 @@ public:
       fCounter.resize(fNSlots);
       fCounterAddr.resize(fNSlots);
 
-      auto chunckSize = fSize / fNSlots;
+      auto chunkSize = fSize / fNSlots;
       auto start = 0UL;
       auto end = 0UL;
       for (auto i : ROOT::TSeqUL(fNSlots)) {
          start = end;
-         end += chunckSize;
+         end += chunkSize;
          fEntryRanges.emplace_back(start, end);
       }
       // TODO: redistribute reminder to all slots
