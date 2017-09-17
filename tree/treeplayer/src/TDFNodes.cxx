@@ -40,8 +40,11 @@ TActionBase::TActionBase(TLoopManager *implPtr, const unsigned int nSlots) : fIm
 } // end NS Internal
 } // end NS ROOT
 
-TCustomColumnBase::TCustomColumnBase(TLoopManager *implPtr, std::string_view name, const unsigned int nSlots)
-   : fImplPtr(implPtr), fName(name), fNSlots(nSlots){};
+TCustomColumnBase::TCustomColumnBase(TLoopManager *implPtr, std::string_view name, const unsigned int nSlots,
+                                     const bool isDSColumn)
+   : fImplPtr(implPtr), fName(name), fNSlots(nSlots), fIsDataSourceColumn(isDSColumn)
+{
+}
 
 std::string TCustomColumnBase::GetName() const
 {
