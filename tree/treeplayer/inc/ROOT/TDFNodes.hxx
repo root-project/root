@@ -350,12 +350,13 @@ protected:
    TLoopManager *fImplPtr; ///< A raw pointer to the TLoopManager at the root of this functional graph. It is only
                            /// guaranteed to contain a valid address during an event loop.
    const std::string fName;
-   unsigned int fNChildren{0};      ///< Number of nodes of the functional graph hanging from this object
-   unsigned int fNStopsReceived{0}; ///< Number of times that a children node signaled to stop processing entries.
-   const unsigned int fNSlots;      ///< Number of thread slots used by this node, inherited from parent node.
+   unsigned int fNChildren{0};      ///< number of nodes of the functional graph hanging from this object
+   unsigned int fNStopsReceived{0}; ///< number of times that a children node signaled to stop processing entries.
+   const unsigned int fNSlots;      ///< number of thread slots used by this node, inherited from parent node.
+   const bool fIsDataSourceColumn; ///< does the custom column refer to a data-source column? (or a user-define column?)
 
 public:
-   TCustomColumnBase(TLoopManager *df, std::string_view name, const unsigned int nSlots);
+   TCustomColumnBase(TLoopManager *df, std::string_view name, const unsigned int nSlots, const bool isDSColumn);
    TCustomColumnBase &operator=(const TCustomColumnBase &) = delete;
    virtual ~TCustomColumnBase() = default;
 
@@ -387,8 +388,9 @@ class TCustomColumn final : public TCustomColumnBase {
    std::vector<TDFInternal::TDFValueTuple_t<BranchTypes_t>> fValues;
 
 public:
-   TCustomColumn(std::string_view name, F &&expression, const ColumnNames_t &bl, TLoopManager *lm)
-      : TCustomColumnBase(lm, name, lm->GetNSlots()), fExpression(std::move(expression)), fBranches(bl),
+   TCustomColumn(std::string_view name, F &&expression, const ColumnNames_t &bl, TLoopManager *lm,
+                 bool isDSColumn = false)
+      : TCustomColumnBase(lm, name, lm->GetNSlots(), isDSColumn), fExpression(std::move(expression)), fBranches(bl),
         fLastResults(fNSlots), fLastCheckedEntry(fNSlots, -1), fValues(fNSlots)
    {
    }
