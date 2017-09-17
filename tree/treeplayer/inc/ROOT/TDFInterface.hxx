@@ -1324,7 +1324,7 @@ private:
       auto readers = fDataSource->GetColumnReaders<T>(name, nSlots);
       auto getValue = [readers](unsigned int slot) { return **readers[slot]; };
       using NewCol_t = TDFDetail::TCustomColumn<decltype(getValue), true>;
-      lm.Book(std::make_shared<NewCol_t>(name, std::move(getValue), ColumnNames_t{}, &lm));
+      lm.Book(std::make_shared<NewCol_t>(name, std::move(getValue), ColumnNames_t{}, &lm, true));
       lm.AddDataSourceColumn(name);
    }
 
