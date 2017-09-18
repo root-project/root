@@ -211,8 +211,10 @@ Bool_t PyROOT::Utility::AddToClass(
    Py_DECREF( method );
    Py_DECREF( func );
 
-   if ( PyErr_Occurred() )
+   if ( PyErr_Occurred() ) {
+      PyErr_Clear();
       return kFALSE;
+   }
 
    if ( ! isOk ) {
       PyErr_Format( PyExc_TypeError, "could not add method %s", label );
