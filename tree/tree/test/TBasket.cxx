@@ -61,7 +61,7 @@ TEST(TBasket, IOBits)
 
    Int_t supported = static_cast<Int_t>(TBasket::EIOBits::kSupported);
    Bool_t foundSupported = false;
-   for (auto constant : TRangeStaticCast<TEnumConstant>(eIOBits->GetConstants())) {
+   for (auto constant : ROOT::Detail::TRangeStaticCast<TEnumConstant>(eIOBits->GetConstants())) {
 
       if (!strcmp(constant->GetName(), "kSupported")) {
          foundSupported = true;
@@ -77,7 +77,7 @@ TEST(TBasket, IOBits)
    ASSERT_NE(eUnsupportedIOBits, nullptr);
    Int_t unsupported = static_cast<Int_t>(TBasket::EUnsupportedIOBits::kUnsupported);
    Bool_t foundUnsupported = false;
-   for (auto constant : TRangeStaticCast<TEnumConstant>(eUnsupportedIOBits->GetConstants())) {
+   for (auto constant : ROOT::Detail::TRangeStaticCast<TEnumConstant>(eUnsupportedIOBits->GetConstants())) {
 
       if (!strcmp(constant->GetName(), "kUnsupported")) {
          foundUnsupported = true;
