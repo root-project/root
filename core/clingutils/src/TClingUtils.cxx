@@ -5112,7 +5112,7 @@ int ROOT::TMetaUtils::AST2SourceTools::FwdDeclFromTmplDecl(const clang::Template
 
    defString = templatePrefixString + "class " + templDecl.getNameAsString();
    if (llvm::isa<clang::TemplateTemplateParmDecl>(&templDecl)) {
-      // When fwd delcaring the template template arg of
+      // When fwd declaring the template template arg of
       //   namespace N { template <template <class T> class C> class X; }
       // we don't need to put it into any namespace, and we want no trailing
       // ';'
