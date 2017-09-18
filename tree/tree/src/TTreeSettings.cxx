@@ -33,7 +33,8 @@ using namespace ROOT::Experimental;
  *
  */
 
-void TTreeSettings::ClearFeature(TBasket::EIOBits enum_bits) {
+void TTreeSettings::ClearFeature(TBasket::EIOBits enum_bits)
+{
    auto bits = static_cast<UChar_t>(enum_bits);
    if (R__unlikely((bits & static_cast<UChar_t>(TBasket::EIOBits::kSupported)) != bits)) {
       Error("TestFeature", "A feature is being cleared that is not supported.");
@@ -42,15 +43,15 @@ void TTreeSettings::ClearFeature(TBasket::EIOBits enum_bits) {
    fTree.fIOBits &= ~bits;
 }
 
-
-static std::string GetUnsupportedName(TBasket::EUnsupportedIOBits enum_flag) {
+static std::string GetUnsupportedName(TBasket::EUnsupportedIOBits enum_flag)
+{
    UChar_t flag = static_cast<UChar_t>(enum_flag);
 
    std::string retval = "unknown";
 
    TClass *cl = TClass::GetClass("TBasket");
    if (cl == nullptr) {
-     return retval;
+      return retval;
    }
 
    TEnum *eUnsupportedIOBits = (TEnum *)cl->GetListOfEnums()->FindObject("EUnsupportedIOBits");
@@ -67,8 +68,8 @@ static std::string GetUnsupportedName(TBasket::EUnsupportedIOBits enum_flag) {
    return retval;
 }
 
-
-bool TTreeSettings::SetFeature(TBasket::EIOBits enum_bits) {
+bool TTreeSettings::SetFeature(TBasket::EIOBits enum_bits)
+{
    auto bits = static_cast<UChar_t>(enum_bits);
    if (R__unlikely((bits & static_cast<UChar_t>(TBasket::EIOBits::kSupported)) != bits)) {
       UChar_t unsupported = bits & static_cast<UChar_t>(TBasket::EUnsupportedIOBits::kUnsupported);
@@ -85,7 +86,8 @@ bool TTreeSettings::SetFeature(TBasket::EIOBits enum_bits) {
    return kTRUE;
 }
 
-bool TTreeSettings::TestFeature(TBasket::EIOBits enum_bits) {
+bool TTreeSettings::TestFeature(TBasket::EIOBits enum_bits)
+{
    auto bits = static_cast<UChar_t>(enum_bits);
    if (R__unlikely((bits & static_cast<UChar_t>(TBasket::EIOBits::kSupported)) != bits)) {
       Error("TestFeature", "A feature is being tested for that is not supported or known.");
@@ -94,10 +96,12 @@ bool TTreeSettings::TestFeature(TBasket::EIOBits enum_bits) {
    return (fTree.fIOBits & bits) == bits;
 }
 
-UChar_t TTreeSettings::GetFeatures() {
+UChar_t TTreeSettings::GetFeatures()
+{
    return fTree.fIOBits;
 }
 
-UChar_t TBranchSettings::GetFeatures() {
+UChar_t TBranchSettings::GetFeatures()
+{
    return fBranch.fIOBits;
 }
