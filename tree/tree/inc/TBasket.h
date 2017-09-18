@@ -67,7 +67,7 @@ public:
    // If (fIOBits & ~kSupported) is non-zero -- i.e., an unknown IO flag is set
    // in the fIOBits -- then the zombie flag will be set for this object.
    //
-   enum class EIOBits: Char_t {
+   enum class EIOBits : Char_t {
       // The following to bits are reserved for now; when supported, set
       // kSupported = kGenerateOffsetMap | kBasketClassMap
       // kGenerateOffsetMap = BIT(1),
@@ -79,7 +79,7 @@ public:
    // changes that are not going go into a supported release.
    //
    // (kUnsupported | kSupported) should result in the '|' of all IOBits.
-   enum class EUnsupportedIOBits: Char_t { kUnsupported = 0 };
+   enum class EUnsupportedIOBits : Char_t { kUnsupported = 0 };
    // The number of known, defined IOBits.
    static constexpr int kIOBitCount = 0;
 
