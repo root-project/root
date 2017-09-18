@@ -294,6 +294,16 @@ TPad::TPad(const char *name, const char *title, Double_t xlow,
    fAbsYlowNDC   = 0.;
    fAbsWNDC      = 0.;
    fAbsHNDC      = 0.;
+   fXtoAbsPixelk = 0.;
+   fXtoPixelk    = 0.;
+   fXtoPixel     = 0.;
+   fYtoAbsPixelk = 0.;
+   fYtoPixelk    = 0.;
+   fYtoPixel     = 0.;
+   fUtoAbsPixelk = 0.;
+   fUtoPixelk    = 0.;
+   fUtoPixel     = 0.;
+
    fUxmin = fUymin = fUxmax = fUymax = 0;
    fLogx = gStyle->GetOptLogx();
    fLogy = gStyle->GetOptLogy();
