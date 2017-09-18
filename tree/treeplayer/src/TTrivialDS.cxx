@@ -72,6 +72,6 @@ void TTrivialDS::SetNSlots(unsigned int nSlots)
    // TODO: redistribute reminder to all slots
    fEntryRanges.back().second += fSize % fNSlots;
 }
-}
-}
-}
+} // ns TDF
+} // ns Experimental
+} // ns ROOT

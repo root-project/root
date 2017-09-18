@@ -126,6 +126,6 @@ void TRootDS::SetNSlots(unsigned int nSlots)
    }
    fEntryRanges.back().second += reminder;
 }
-}
-}
-}
+} // ns TDF
+} // ns Experimental
+} // ns ROOT
