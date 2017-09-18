@@ -201,10 +201,14 @@ class TColumnValue {
    std::vector<std::unique_ptr<TTreeReaderArray<ProxyParam_t>>> fReaderArrays;
    /// Non-owning ptrs to the value of a custom column.
    std::vector<T *> fCustomValuePtrs;
+   /// Non-owning ptrs to the value of a data-source column.
+   std::vector<T **> fDSValuePtrs;
    /// Non-owning ptrs to the node responsible for the custom column. Needed when querying custom values.
    std::vector<TCustomColumnBase *> fCustomColumns;
    /// The slot this value belongs to. Needed when querying custom column values.
    unsigned int fSlot;
+   /// Whether this column value refers to a data-source column. Only relevant when querying custom column values.
+   bool fIsDataSourceColumn = false;
 
 public:
    TColumnValue() = default;
@@ -246,8 +250,11 @@ public:
       else if (!fReaderArrays.empty()) // we must be using TTreeReaderArrays
          fReaderArrays.pop_back();
       else { // we must be using a custom column
-         fCustomValuePtrs.pop_back();
          fCustomColumns.pop_back();
+         if (!fCustomValuePtrs.empty())
+            fCustomValuePtrs.pop_back();
+         else
+            fDSValuePtrs.pop_back();
       }
    }
 };
@@ -368,6 +375,7 @@ public:
    virtual void Update(unsigned int slot, Long64_t entry) = 0;
    virtual void ClearValueReaders(unsigned int slot) = 0;
    unsigned int GetNSlots() const { return fNSlots; }
+   bool IsDataSourceColumn() const { return fIsDataSourceColumn; }
 };
 
 template <typename F, bool PassSlotNumber = false>
@@ -415,7 +423,9 @@ public:
       }
    }
 
-   const std::type_info &GetTypeId() const { return typeid(ret_type); }
+   const std::type_info &GetTypeId() const {
+      return fIsDataSourceColumn ? typeid(typename std::remove_pointer<ret_type>::type) : typeid(ret_type);
+   }
 
    template <int... S, typename... BranchTypes>
    void UpdateHelper(unsigned int slot, Long64_t entry, TDFInternal::StaticSeq<S...>, TypeList<BranchTypes...>,
@@ -678,11 +688,15 @@ void ROOT::Internal::TDF::TColumnValue<T>::SetTmpColumn(unsigned int slot,
                                                         ROOT::Detail::TDF::TCustomColumnBase *customColumn)
 {
    fCustomColumns.emplace_back(customColumn);
+   fIsDataSourceColumn = customColumn->IsDataSourceColumn();
    if (customColumn->GetTypeId() != typeid(T))
       throw std::runtime_error(
          std::string("TColumnValue: type specified for column \"" + customColumn->GetName() + "\" is ") +
          typeid(T).name() + " but temporary column has type " + customColumn->GetTypeId().name());
-   fCustomValuePtrs.emplace_back(static_cast<T *>(customColumn->GetValuePtr(slot)));
+   if (fIsDataSourceColumn)
+      fDSValuePtrs.emplace_back(static_cast<T **>(customColumn->GetValuePtr(slot)));
+   else
+      fCustomValuePtrs.emplace_back(static_cast<T *>(customColumn->GetValuePtr(slot)));
    fSlot = slot;
 }
 
@@ -700,7 +714,7 @@ T &ROOT::Internal::TDF::TColumnValue<T>::Get(Long64_t entry)
       return *(fReaderValues.back()->Get());
    } else {
       fCustomColumns.back()->Update(fSlot, entry);
-      return *fCustomValuePtrs.back();
+      return fIsDataSourceColumn ? **fDSValuePtrs.back() : *fCustomValuePtrs.back();
    }
 }
 
