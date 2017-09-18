@@ -377,7 +377,8 @@ extern "C" void *TCling__ResetInterpreterMutex()
 ////////////////////////////////////////////////////////////////////////////////
 /// Lock the interpreter.
 
-extern "C" void *TCling__LockCompilationDuringUserCodeExecution() {
+extern "C" void *TCling__LockCompilationDuringUserCodeExecution()
+{
    if (gInterpreterMutex) {
       gInterpreterMutex->Lock();
    }
@@ -387,12 +388,12 @@ extern "C" void *TCling__LockCompilationDuringUserCodeExecution() {
 ////////////////////////////////////////////////////////////////////////////////
 /// Unlock the interpreter.
 
-extern "C" void TCling__UnlockCompilationDuringUserCodeExecution(void* /*state*/) {
+extern "C" void TCling__UnlockCompilationDuringUserCodeExecution(void* /*state*/)
+{
    if (gInterpreterMutex) {
       gInterpreterMutex->UnLock();
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Update TClingClassInfo for a class (e.g. upon seeing a definition).
