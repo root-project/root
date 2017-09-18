@@ -49,6 +49,9 @@ The following interfaces have been removed, after deprecation in v6.10.
 
 - When invoking root with the "-t" argument, ROOT enables thread-safety and,
   if configured, implicit multithreading within ROOT.
+- `NULL` is not defined by `Rtypes.h` anymore. Instead, it's definition is expected to be
+  provided by `Rtype.h`'s `#include` of `stddef.h`.
+- ROOT now supports dictionaries for classes with template parameter packs.
 
 
 ## I/O Libraries
@@ -64,6 +67,8 @@ or will be set to the address of the histogram read from the file.
 
 - Resolved O(N^2) scaling problem in ```TTree::Draw()``` observed when a branch that contains a
 large TClonesArray where each element contains another small vector container.
+- `TTree::TTree()` now takes the `TDirectory*` that the tree should be constructed in.
+  Defaults to `gDirectory`, i.e. the default behavior did not change.
 
 ### TDataFrame
   - Improved documentation
