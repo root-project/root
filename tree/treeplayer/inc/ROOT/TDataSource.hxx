@@ -30,7 +30,7 @@ A TDataSource allows to seamlessly provide an adaptor for any kind of data set o
 */
 class TDataSource {
 public:
-   virtual ~TDataSource(){};
+   virtual ~TDataSource() = default;
 
    /// \brief Returns a reference to the collection of the dataset's column names
    virtual const std::vector<std::string> &GetColumnNames() const = 0;
