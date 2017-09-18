@@ -102,7 +102,7 @@ const std::vector<std::pair<ULong64_t, ULong64_t>> &TRootDS::GetEntryRanges() co
    return fEntryRanges;
 }
 
-void TRootDS::SetEntry(ULong64_t entry, unsigned int slot)
+void TRootDS::SetEntry(unsigned int slot, ULong64_t entry)
 {
    fChains[slot]->GetEntry(entry);
 }
