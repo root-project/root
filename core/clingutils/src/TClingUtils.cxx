@@ -5124,7 +5124,10 @@ int ROOT::TMetaUtils::AST2SourceTools::FwdDeclFromTmplDecl(const clang::Template
    }
    templatePrefixString = "template " + templatePrefixString + " ";
 
-   defString = templatePrefixString + "class " + templDecl.getNameAsString();
+   defString = templatePrefixString + "class ";
+   if (templDecl.isParameterPack())
+      defString += "... ";
+   defString +=  templDecl.getNameAsString();
    if (llvm::isa<clang::TemplateTemplateParmDecl>(&templDecl)) {
       // When fwd delcaring the template template arg of
       //   namespace N { template <template <class T> class C> class X; }
