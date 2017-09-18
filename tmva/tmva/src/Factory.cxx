@@ -493,6 +493,69 @@ TMVA::MethodBase* TMVA::Factory::BookMethod(TMVA::DataLoader *loader, Types::EMV
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Adds an already constructed method to be managed by this factory.
+/// 
+/// \note Private.
+/// \note Know what you are doing when using this method. The method that you
+/// are loading could be trained already. 
+/// 
+
+TMVA::MethodBase* TMVA::Factory::BookMethodWeightfile(DataLoader *loader, TMVA::Types::EMVA methodType, const TString &weightfile)
+{
+   TString datasetname = loader->GetName();
+   std::string methodTypeName = std::string(Types::Instance().GetMethodName(methodType));
+   DataSetInfo &dsi = loader->DefaultDataSetInfo();
+   
+   IMethod *im = ClassifierFactory::Instance().Create(methodTypeName, dsi, weightfile );
+   MethodBase *method = (dynamic_cast<MethodBase*>(im));
+
+   if (method == nullptr) return nullptr;
+
+   if( method->GetMethodType() == Types::kCategory ){
+      Log() << kERROR << "Cannot handle category methods for now." << Endl;
+   }
+
+   TString fFileDir;
+   if(fModelPersistence) {
+      fFileDir=loader->GetName();
+      fFileDir+="/"+gConfig().GetIONames().fWeightFileDir;
+   }
+
+   if(fModelPersistence) method->SetWeightFileDir(fFileDir);
+   method->SetModelPersistence(fModelPersistence);
+   method->SetAnalysisType( fAnalysisType );
+   method->SetupMethod();
+   method->SetFile(fgTargetFile);
+   method->SetSilentFile(IsSilentFile());
+
+   method->DeclareCompatibilityOptions();
+
+   // read weight file
+   method->ReadStateFromFile();
+
+   //method->CheckSetup();
+
+   TString methodTitle = method->GetName();
+   if (HasMethod(datasetname, methodTitle) != 0) {
+    Log() << kFATAL << "Booking failed since method with title <"
+     << methodTitle <<"> already exists "<< "in with DataSet Name <"<< loader->GetName()<<">  "
+     << Endl;
+   }
+
+   Log() << kINFO << "Booked classifier \"" << method->GetMethodName()
+         << "\" of type: \"" << method->GetMethodTypeName() << "\"" << Endl;
+
+   if(fMethodsMap.count(datasetname) == 0) {
+      MVector *mvector = new MVector;
+      fMethodsMap[datasetname] = mvector;
+   }
+
+   fMethodsMap[datasetname]->push_back( method );
+
+   return method;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Returns pointer to MVA that corresponds to given method title.
 
 TMVA::IMethod* TMVA::Factory::GetMethod(const TString& datasetname,  const TString &methodTitle ) const

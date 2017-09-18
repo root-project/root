@@ -66,6 +66,10 @@ TMVA::MethodCrossEvaluation::~MethodCrossEvaluation( void )
 
 void TMVA::MethodCrossEvaluation::DeclareOptions()
 {
+   DeclareOptionRef( fSplitExprString, "SplitExpr", "The expression used to assign events to folds" );
+   DeclareOptionRef( fNumFolds, "NumFolds", "Number of folds to generate" );
+   DeclareOptionRef( fEncapsulatedMethodName, "EncapsulatedMethodName", "");
+   DeclareOptionRef( fEncapsulatedMethodTypeName, "EncapsulatedMethodTypeName", "");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -80,6 +84,28 @@ void TMVA::MethodCrossEvaluation::DeclareCompatibilityOptions() {
 
 void TMVA::MethodCrossEvaluation::ProcessOptions()
 {
+   Log() << kINFO << "ProcessOptions -- fNumFolds: " << fNumFolds << Endl;
+   Log() << kINFO << "ProcessOptions -- fEncapsulatedMethodName: " << fEncapsulatedMethodName << Endl;
+   Log() << kINFO << "ProcessOptions -- fEncapsulatedMethodTypeName: " << fEncapsulatedMethodTypeName << Endl;
+   // TODO: Validate fNumFolds
+   // TODO: Validate fEncapsulatedMethodName
+   // TODO: Validate fEncapsulatedMethodTypeName
+
+   fSplitExpr = std::unique_ptr<CvSplitCrossEvaluationExpr>(new CvSplitCrossEvaluationExpr(DataInfo(), fSplitExprString));
+
+   // TODO: To private method. DRY.
+   for (UInt_t iFold = 0; iFold < fNumFolds; ++iFold) {
+      TString foldStr = Form( "Fold%i", iFold+1 );
+
+      TString fileDir = GetWeightFileDir();
+      TString weightfile  = fileDir + "/" + fJobName + "_" + fEncapsulatedMethodName + "_" + foldStr + ".weights.xml";
+
+      Log() << kINFO << "Reading weightfile: " << weightfile << Endl;
+
+      fEncapsulatedMethods.push_back(InstantiateMethodFromXML(fEncapsulatedMethodTypeName, weightfile));
+   }
+
+   // TODO: Verify that a method was instantiated
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -268,10 +294,10 @@ const std::vector<Float_t> & TMVA::MethodCrossEvaluation::GetRegressionValues()
 
 void  TMVA::MethodCrossEvaluation::WriteMonitoringHistosToFile( void ) const
 {
-   // Used for evaluation, which is outside the life time of MethodCrossEval.
-   Log() << kFATAL << "Method CrossEvaluation should not be created manually,"
-                      " only as part of using TMVA::Reader." << Endl;
-   return;
+   // // Used for evaluation, which is outside the life time of MethodCrossEval.
+   // Log() << kFATAL << "Method CrossEvaluation should not be created manually,"
+   //                    " only as part of using TMVA::Reader." << Endl;
+   // return;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -279,7 +305,7 @@ void  TMVA::MethodCrossEvaluation::WriteMonitoringHistosToFile( void ) const
 
 void TMVA::MethodCrossEvaluation::GetHelpMessage() const
 {
-   Log() << kFATAL << "Method CrossEvaluation should not be created manually,"
+   Log() << kWARNING << "Method CrossEvaluation should not be created manually,"
                       " only as part of using TMVA::Reader." << Endl;
 }
 
@@ -288,17 +314,17 @@ void TMVA::MethodCrossEvaluation::GetHelpMessage() const
 
 const TMVA::Ranking * TMVA::MethodCrossEvaluation::CreateRanking()
 {
-   Log() << kFATAL << "Ranking not implemented for CrossEvaluation" << Endl;
    return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Bool_t TMVA::MethodCrossEvaluation::HasAnalysisType( Types::EAnalysisType /*type*/, UInt_t /*numberClasses*/, UInt_t /*numberTargets*/ )
+Bool_t TMVA::MethodCrossEvaluation::HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets )
 {
-   // TODO: Should be delegated to encapsulated method
-   Log() << kFATAL << "HasAnalysisType not implemented for CrossEvaluation" << Endl;
-   return kFALSE;
+   return kTRUE;
+   // if (fEncapsulatedMethods.size() == 0) {return kFALSE;}
+   // if (fEncapsulatedMethods.at(0) == nullptr) {return kFALSE;}
+   // return fEncapsulatedMethods.at(0)->HasAnalysisType(type, numberClasses, numberTargets);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -306,7 +332,7 @@ Bool_t TMVA::MethodCrossEvaluation::HasAnalysisType( Types::EAnalysisType /*type
 
 void TMVA::MethodCrossEvaluation::MakeClassSpecific( std::ostream& /*fout*/, const TString& /*className*/ ) const
 {
-   Log() << kFATAL << "MakeClassSpecific not implemented for CrossEvaluation" << Endl;
+   Log() << kWARNING << "MakeClassSpecific not implemented for CrossEvaluation" << Endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -314,6 +340,6 @@ void TMVA::MethodCrossEvaluation::MakeClassSpecific( std::ostream& /*fout*/, con
 
 void TMVA::MethodCrossEvaluation::MakeClassSpecificHeader(  std::ostream& /*fout*/, const TString& /*className*/) const
 {
-   Log() << kFATAL << "MakeClassSpecificHeader not implemented for CrossEvaluation" << Endl;
+   Log() << kWARNING << "MakeClassSpecificHeader not implemented for CrossEvaluation" << Endl;
 }
 

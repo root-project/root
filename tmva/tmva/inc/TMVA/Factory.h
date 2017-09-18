@@ -192,6 +192,8 @@ namespace TMVA {
 
       void SetInputTreesFromEventAssignTrees();
 
+      MethodBase* BookMethodWeightfile(DataLoader *dataloader, TMVA::Types::EMVA methodType, const TString &weightfile);
+
    private:
 
       // data members

@@ -193,12 +193,6 @@ void TMVA::CrossEvaluation::ParseOptions()
       fOutputFactoryOptions += "!ROC:";
    }
 
-   if (fModelPersistence) {
-      fCvFactoryOptions += Form("ModelPersistence:");
-   } else {
-      fCvFactoryOptions += Form("!ModelPersistence:");
-   }
-
    if (fSilent) {
       // fCvFactoryOptions += Form("Silent:");
       fOutputFactoryOptions += Form("Silent:");
@@ -211,9 +205,9 @@ void TMVA::CrossEvaluation::ParseOptions()
    //    In this case we create a special method (MethodCrossEvaluation) that can only be used by
    //    CrossEvaluation and the Reader.
    if (fOutputFile == nullptr) {
-      fFactory = std::unique_ptr<TMVA::Factory>(new TMVA::Factory(fJobName,  fOutputFactoryOptions + "!ModelPersistence"));
+      fFactory = std::unique_ptr<TMVA::Factory>(new TMVA::Factory(fJobName,  fOutputFactoryOptions));
    } else {
-      fFactory = std::unique_ptr<TMVA::Factory>(new TMVA::Factory(fJobName, fOutputFile,  fOutputFactoryOptions + "!ModelPersistence"));
+      fFactory = std::unique_ptr<TMVA::Factory>(new TMVA::Factory(fJobName, fOutputFile,  fOutputFactoryOptions));
    }
 
    fSplit = std::unique_ptr<CvSplitCrossEvaluation>(new CvSplitCrossEvaluation(fNumFolds, fSplitExprString));
@@ -247,122 +241,6 @@ void TMVA::CrossEvaluation::SetSplitExpr(TString splitExpr)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Extract test set results from DataSet for given method and store this
-/// internally.
-///
-/// @param smethod method to which extract results for
-///
-
-void TMVA::CrossEvaluation::StoreFoldResults(MethodBase * smethod) {
-      DataSet * ds = fDataLoader->GetDataSetInfo().GetDataSet();
-      ResultsClassification * resultTestSet =
-         dynamic_cast<ResultsClassification *>( ds->GetResults(smethod->GetName(), 
-                                                Types::kTesting,
-                                                smethod->GetAnalysisType()));
-
-      EventCollection_t evCollection = ds->GetEventCollection(Types::kTesting);
-
-      fOutputsPerFold.push_back( *resultTestSet->GetValueVector()      );
-      fClassesPerFold.push_back( *resultTestSet->GetValueVectorTypes() );
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Clears the internal caches of fold results.
-///
-
-void TMVA::CrossEvaluation::ClearFoldResultsCache() {
-      fOutputsPerFold.clear();
-      fClassesPerFold.clear();
-      fOutputsPerFoldMulticlass.clear();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Assembles fold results stored by `StoreResults` and injects them into the
-/// DataSet connecting it to the given method. Both the test and train results
-/// are injected.
-///
-/// @note The train results are copies of the test ones. This is subject to
-/// change in future revisions.
-///
-/// @param smethod results are generated for this method
-///
-
-void TMVA::CrossEvaluation::MergeFoldResults(MethodBase * smethod)
-{
-   DataSet * ds = fDataLoader->GetDataSetInfo().GetDataSet();
-   EventOutputs_t outputs;
-   EventTypes_t classes;
-   for(UInt_t iFold = 0; iFold < fNumFolds; ++iFold) {
-      outputs.insert(outputs.end(), fOutputsPerFold.at(iFold).begin(), fOutputsPerFold.at(iFold).end());
-      classes.insert(classes.end(), fClassesPerFold.at(iFold).begin(), fClassesPerFold.at(iFold).end());
-   }
-
-   TString              methodName   = smethod->GetName();
-   Types::EAnalysisType analysisType = smethod->GetAnalysisType();
-
-   ResultsClassification * metaResults;
-
-   // For now this is a copy of the testing set. We might want to inject training data here.
-   metaResults = dynamic_cast<ResultsClassification *>(ds->GetResults(methodName, Types::kTraining, analysisType));
-   metaResults->GetValueVector()->insert(metaResults->GetValueVector()->begin(), outputs.begin(), outputs.end());
-   metaResults->GetValueVectorTypes()->insert(metaResults->GetValueVectorTypes()->begin(), classes.begin(), classes.end());
-
-   metaResults = dynamic_cast<ResultsClassification *>(ds->GetResults(methodName, Types::kTesting, analysisType));
-   metaResults->GetValueVector()->insert(metaResults->GetValueVector()->begin(), outputs.begin(), outputs.end());
-   metaResults->GetValueVectorTypes()->insert(metaResults->GetValueVectorTypes()->begin(), classes.begin(), classes.end());
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Extract test set results from DataSet for given method and store this
-/// internally.
-///
-/// @param smethod method to which extract results for
-///
-
-void TMVA::CrossEvaluation::StoreFoldResultsMulticlass(MethodBase * smethod)
-{
-      DataSet * ds = fDataLoader->GetDataSetInfo().GetDataSet();
-      ResultsMulticlass * resultTestSet =
-         dynamic_cast<ResultsMulticlass *>( ds->GetResults(smethod->GetName(),
-                                            Types::kTesting,
-                                            smethod->GetAnalysisType()));
-
-      fOutputsPerFoldMulticlass.push_back( *resultTestSet->GetValueVector());
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Assembles fold results stored by `StoreResults` and injects them into the
-/// DataSet connecting it to the given method. Both the test and train results
-/// are injected.
-///
-/// @note The train results are copies of the test ones. This is subject to
-/// change in future revisions.
-///
-/// @param smethod results are generated for this method
-///
-
-void TMVA::CrossEvaluation::MergeFoldResultsMulticlass(MethodBase * smethod)
-{
-   DataSet * ds = fDataLoader->GetDataSetInfo().GetDataSet();
-   EventOutputsMulticlass_t outputs;
-   for(UInt_t iFold = 0; iFold < fNumFolds; ++iFold) {
-      outputs.insert(outputs.end(), fOutputsPerFoldMulticlass.at(iFold).begin(), fOutputsPerFoldMulticlass.at(iFold).end());
-   }
-
-   TString              methodName   = smethod->GetName();
-   Types::EAnalysisType analysisType = smethod->GetAnalysisType();
-
-   ResultsMulticlass * metaResults;
-
-   // For now this is a copy of the testing set. We might want to inject training data here.
-   metaResults = dynamic_cast<ResultsMulticlass *>(ds->GetResults(methodName, Types::kTraining, analysisType));
-   metaResults->GetValueVector()->insert(metaResults->GetValueVector()->begin(), outputs.begin(), outputs.end());
-
-   metaResults = dynamic_cast<ResultsMulticlass *>(ds->GetResults(methodName, Types::kTesting, analysisType));
-   metaResults->GetValueVector()->insert(metaResults->GetValueVector()->begin(), outputs.begin(), outputs.end());
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Evaluates each fold in turn.
 ///   - Prepares train and test data sets
 ///   - Trains method
@@ -385,7 +263,6 @@ void TMVA::CrossEvaluation::ProcessFold(UInt_t iFold)
    foldTitle += "_fold";
    foldTitle += iFold+1;
 
-
    fDataLoader->PrepareFoldDataSet(*fSplit.get(), iFold, TMVA::Types::kTraining);
    MethodBase* smethod = fFoldFactory->BookMethod(fDataLoader.get(), methodName, foldTitle, methodOptions);
 
@@ -393,55 +270,10 @@ void TMVA::CrossEvaluation::ProcessFold(UInt_t iFold)
    Event::SetIsTraining(kTRUE);
    smethod->TrainMethod();
 
-   // Test method (evaluate the test set)
-   Event::SetIsTraining(kFALSE);
-   smethod->AddOutput(Types::kTesting, smethod->GetAnalysisType());
-
-   switch (fAnalysisType) {
-      case Types::kClassification: StoreFoldResults(smethod); break;
-      case Types::kMulticlass    : StoreFoldResultsMulticlass(smethod); break;
-      default:
-         Log() << kFATAL << "CrossEvaluation currently supports only classification and multiclass classification." << Endl;
-         break;
-   }
-
    // Clean-up for this fold
-   smethod->Data()->DeleteResults(foldTitle, Types::kTesting, smethod->GetAnalysisType());
    smethod->Data()->DeleteResults(foldTitle, Types::kTraining, smethod->GetAnalysisType());
    fFoldFactory->DeleteAllMethods();
    fFoldFactory->fMethodsMap.clear();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///
-
-void TMVA::CrossEvaluation::MergeFolds()
-{
-
-   TString methodName    = fMethod.GetValue<TString>("MethodName");
-   TString methodTitle   = fMethod.GetValue<TString>("MethodTitle");
-   TString methodOptions = fMethod.GetValue<TString>("MethodOptions");
-
-   fFactory->BookMethod(fDataLoader.get(), methodName, methodTitle, methodOptions);
-
-   MethodBase * smethod = dynamic_cast<MethodBase *>(fFactory->GetMethod(fDataLoader->GetName(), methodTitle));
-
-   // Write data such as VariableTransformations to output file.
-   if (fOutputFile != nullptr) {
-      fFactory->WriteDataInformation(smethod->DataInfo());
-   }
-
-   // Merge results from the folds into a single result
-   switch (fAnalysisType) {
-      case Types::kClassification: MergeFoldResults(smethod); break;
-      case Types::kMulticlass    : MergeFoldResultsMulticlass(smethod); break;
-      default:
-         Log() << kFATAL << "CrossEvaluation currently supports only classification and multiclass classification." << Endl;
-         break;
-   }
-
-   // Merge inputs 
-   fDataLoader->RecombineKFoldDataSet( *fSplit.get() );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -469,54 +301,23 @@ void TMVA::CrossEvaluation::Evaluate()
       ProcessFold(iFold);
    }
 
-   // Merge and inject the results into DataSet
-   MergeFolds();
-   ClearFoldResultsCache();
-
-   // Run produce final output (e.g. file)
-   fFactory->EvaluateAllMethods();
-
    // Serialise the cross evaluated method
-   if (fModelPersistence) {
-      // Create new MethodCrossEvaluation
-      TString methodCrossEvaluationName = Types::Instance().GetMethodName( Types::kCrossEvaluation );
-      IMethod * im = ClassifierFactory::Instance().Create( methodCrossEvaluationName.Data(),
-                                                           fJobName, // jobname
-                                                           methodTitle,   // title
-                                                           fDataLoader->GetDataSetInfo(), // dsi
-                                                           "" // options
-                                                         ); 
 
-      // Serialise it
-      MethodBase * method = dynamic_cast<MethodBase *>(im);
+   TString options = Form("SplitExpr=%s:NumFolds=%i"
+                          ":EncapsulatedMethodName=%s"
+                          ":EncapsulatedMethodTypeName=%s",
+                          fSplitExprString.Data(),
+                          fNumFolds,
+                          methodName.Data(),
+                          methodTitle.Data());
+   fFactory->BookMethod(fDataLoader.get(), Types::kCrossEvaluation, methodTitle, options);
+   
+   // Evaluation
+   fDataLoader->RecombineKFoldDataSet( *fSplit.get() );
 
-      // Taken directly from what is done in Factory::BookMethod
-      TString fFileDir = TString(fDataLoader->GetName()) + "/" + gConfig().GetIONames().fWeightFileDir;
-      method->SetWeightFileDir(fFileDir);
-      method->SetModelPersistence(fModelPersistence);
-      method->SetAnalysisType(fAnalysisType);
-      method->SetupMethod();
-      method->ParseOptions();
-      method->ProcessSetup();
-      // method->SetFile(fgTargetFile);
-      // method->SetSilentFile(IsSilentFile());
-
-      // check-for-unused-options is performed; may be overridden by derived classes
-      method->CheckSetup();
-
-      // Pass info about the correct method name (method_title_base + foldNum)
-      // Pass info about the number of folds
-      // TODO: Parameterise the internal jobname
-      MethodCrossEvaluation * method_ce = dynamic_cast<MethodCrossEvaluation *>(method);
-      method_ce->fEncapsulatedMethodName     = methodTitle;
-      method_ce->fEncapsulatedMethodTypeName = methodName;
-      method_ce->fNumFolds                   = fNumFolds;
-      method_ce->fSplitExprString            = fSplitExprString;
-
-      method->WriteStateToFile();
-      // Not supported by MethodCrossEvaluation yet
-      // if (fAnalysisType != Types::kRegression) { smethod->MakeClass(); }
-   }
+   fFactory->TrainAllMethods();
+   fFactory->TestAllMethods();
+   fFactory->EvaluateAllMethods();
 
    Log() << kINFO << "Evaluation done." << Endl;
 }

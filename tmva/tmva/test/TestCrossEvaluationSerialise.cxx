@@ -249,7 +249,7 @@ void TestCeSerialise(TMVA::Types::EMVA methodType, TString methodName, TString m
 
 int main()
 {
-   TestCeSerialise(TMVA::Types::kBDT, "BDT", "!H:V:VerbosityLevel=Debug:NTrees=10");
-   TestCeSerialise(TMVA::Types::kDNN, "DNN", "!H:V:VerbosityLevel=Debug:TrainingStrategy=LearningRate=1e-1,BatchSize=5");
+   TestCeSerialise(TMVA::Types::kBDT, "BDT", "!H:!V:NTrees=10");
+   TestCeSerialise(TMVA::Types::kDNN, "DNN", "!H:!V:TrainingStrategy=LearningRate=1e-1,BatchSize=5");
    return 0;
 }

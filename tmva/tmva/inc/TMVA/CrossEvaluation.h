@@ -59,17 +59,8 @@ namespace TMVA {
       void Evaluate();
 
    private:
-
-      void StoreFoldResults(MethodBase * smethod);
-      void MergeFoldResults(MethodBase * smethod);
-
-      void StoreFoldResultsMulticlass(MethodBase * smethod);
-      void MergeFoldResultsMulticlass(MethodBase * smethod);
-
       void ProcessFold(UInt_t iFold);
       void MergeFolds();
-
-      void ClearFoldResultsCache();
 
       Types::EAnalysisType fAnalysisType;    //! Indicates 
       TString              fAnalysisTypeStr; //! Indicates
@@ -88,11 +79,6 @@ namespace TMVA {
       std::unique_ptr<Factory> fFoldFactory;
       std::unique_ptr<Factory> fFactory;
       std::unique_ptr<CvSplitCrossEvaluation> fSplit;
-
-      // Storage used during fold evaluation
-      std::vector<EventTypes_t> fClassesPerFold;
-      std::vector<EventOutputs_t> fOutputsPerFold;
-      std::vector<EventOutputsMulticlass_t> fOutputsPerFoldMulticlass;
 
       ClassDef(CrossEvaluation, 0);
    };
