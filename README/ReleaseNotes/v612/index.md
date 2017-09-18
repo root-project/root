@@ -66,6 +66,15 @@ or will be set to the address of the histogram read from the file.
 
 - Added a new mechanism for providing clean forward-compatibility breaks in a ``TTree`` (i.e., a newer version of ROOT writes a ``TTree`` an older version cannot read).  When future versions of ROOT utilize an IO feature that this version does not support, ROOT will provide a clear error message instead of crashing or returning garbage data.  In future ROOT6 releases, forward-compatibility breaks will only be allowed if a non-default feature is enabled via the ``ROOT::Experimental`` namespace; it is expected ROOT7 will enable forward-compatibility breaks by default.
 
+   - When a file using an unsupported file format feature is encountered, the error message will be similar to the following:
+      ```
+      Error in <TBasket::Streamer>: The value of fIOBits (00000000000000000000000001111110) contains unknown flags (supported flags are 00000000000000000000000000000001), indicating this was written with a newer version of ROOT utilizing critical IO features this version of ROOT does not support.  Refusing to deserialize.
+      ```
+   - When an older version of ROOT, without this logic, encounters the file, the error message will be similar to the following:
+      ```
+      Error in <TBasket::Streamer>: The value of fNevBufSize is incorrect (-72) ; trying to recover by setting it to zero
+      ```
+
 ## TTree Libraries
 
 - Resolved O(N^2) scaling problem in ```TTree::Draw()``` observed when a branch that contains a
