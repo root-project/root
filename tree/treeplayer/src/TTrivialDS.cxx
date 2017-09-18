@@ -47,7 +47,7 @@ const std::vector<std::pair<ULong64_t, ULong64_t>> &TTrivialDS::GetEntryRanges()
    return fEntryRanges;
 }
 
-void TTrivialDS::SetEntry(ULong64_t entry, unsigned int slot)
+void TTrivialDS::SetEntry(unsigned int slot, ULong64_t entry)
 {
    fCounter[slot] = entry;
 }

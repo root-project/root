@@ -21,7 +21,6 @@ private:
    std::vector<std::vector<void *>> fBranchAddresses; // first container-> slot, second -> column;
    std::vector<std::unique_ptr<TChain>> fChains;
 
-   void InitAddresses() {}
    std::vector<void *> GetColumnReadersImpl(std::string_view, const std::type_info &);
 
 public:
@@ -32,7 +31,7 @@ public:
    bool HasColumn(std::string_view colName) const;
    void InitSlot(unsigned int slot, ULong64_t firstEntry);
    const std::vector<std::pair<ULong64_t, ULong64_t>> &GetEntryRanges() const;
-   void SetEntry(ULong64_t entry, unsigned int slot);
+   void SetEntry(unsigned int slot, ULong64_t entry);
    void SetNSlots(unsigned int nSlots);
 };
 } // ns TDF

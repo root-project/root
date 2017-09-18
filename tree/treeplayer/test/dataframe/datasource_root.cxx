@@ -78,7 +78,7 @@ TEST(TRootTDS, ColumnReaders)
    for (auto &&range : ranges) {
       tds.InitSlot(slot, range.first);
       for (auto i : ROOT::TSeq<int>(range.first, range.second)) {
-         tds.SetEntry(i, slot);
+         tds.SetEntry(slot, i);
          auto val = **vals[slot];
          EXPECT_EQ(i, val);
       }
