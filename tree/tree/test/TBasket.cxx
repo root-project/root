@@ -199,7 +199,6 @@ TEST(TBasket, TestUnsupportedIO)
    ASSERT_EQ(basket, nullptr);
 }
 
-
 // This tests that variable-length arrays still work -- make sure various modifications
 // haven't messed up this basic case.
 TEST(TBasket, TestVarLengthArrays)
@@ -270,7 +269,6 @@ TEST(TBasket, TestVarLengthArrays)
       }
    }
 }
-
 
 TEST(TBasket, TestSettingIOBits)
 {
