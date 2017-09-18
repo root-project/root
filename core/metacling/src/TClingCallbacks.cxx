@@ -801,9 +801,12 @@ void TClingCallbacks::ReturnedFromUserCode(void *stateInfo)
    TCling__RestoreInterpreterMutex(stateInfo);
 }
 
-void* TClingCallbacks::LockCompilationDuringUserCodeExecution() {
+void *TClingCallbacks::LockCompilationDuringUserCodeExecution()
+{
    return TCling__LockCompilationDuringUserCodeExecution();
 }
-void TClingCallbacks::UnlockCompilationDuringUserCodeExecution(void* StateInfo) {
+
+void TClingCallbacks::UnlockCompilationDuringUserCodeExecution(void *StateInfo)
+{
    TCling__UnlockCompilationDuringUserCodeExecution(StateInfo);
 }
