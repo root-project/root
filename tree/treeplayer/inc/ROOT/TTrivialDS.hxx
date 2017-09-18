@@ -27,7 +27,8 @@ public:
    void SetEntry(ULong64_t entry, unsigned int slot);
    void SetNSlots(unsigned int nSlots);
 };
-}
-}
-}
+} // ns TDF
+} // ns Experimental
+} // ns ROOT
+
 #endif
