@@ -41,60 +41,34 @@ See picture in TTree.
 ////////////////////////////////////////////////////////////////////////////////
 /// Default contructor.
 
-TBasket::TBasket() : fCompressedBufferRef(0), fOwnsCompressedBuffer(kFALSE), fLastWriteBufferSize(0)
-{
-   fDisplacement  = 0;
-   fEntryOffset   = 0;
-   fBufferRef     = 0;
-   fBuffer        = 0;
-   fHeaderOnly    = kFALSE;
-   fBufferSize    = 0;
-   fNevBufSize    = 0;
-   fNevBuf        = 0;
-   fLast          = 0;
-   fBranch        = 0;
-}
+TBasket::TBasket()
+{}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor used during reading.
 
-TBasket::TBasket(TDirectory *motherDir) : TKey(motherDir),fCompressedBufferRef(0), fOwnsCompressedBuffer(kFALSE), fLastWriteBufferSize(0)
-{
-   fDisplacement  = 0;
-   fEntryOffset   = 0;
-   fBufferRef     = 0;
-   fBuffer        = 0;
-   fHeaderOnly    = kFALSE;
-   fBufferSize    = 0;
-   fNevBufSize    = 0;
-   fNevBuf        = 0;
-   fLast          = 0;
-   fBranch        = 0;
-}
+TBasket::TBasket(TDirectory *motherDir) : TKey(motherDir)
+{}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Basket normal constructor, used during writing.
 
 TBasket::TBasket(const char *name, const char *title, TBranch *branch) :
-   TKey(branch->GetDirectory()),fCompressedBufferRef(0), fOwnsCompressedBuffer(kFALSE), fLastWriteBufferSize(0)
+   TKey(branch->GetDirectory()),
+   fBufferSize(branch->GetBasketSize()),
+   fNevBufSize(branch->GetEntryOffsetLen()),
+   fHeaderOnly(kTRUE)
 {
    SetName(name);
    SetTitle(title);
    fClassName   = "TBasket";
-   fBufferSize  = branch->GetBasketSize();
-   fNevBufSize  = branch->GetEntryOffsetLen();
-   fNevBuf      = 0;
-   fEntryOffset = 0;
-   fDisplacement= 0;
-   fBuffer      = 0;
+   fBuffer      = nullptr;
    fBufferRef   = new TBufferFile(TBuffer::kWrite, fBufferSize);
    fVersion    += 1000;
    if (branch->GetDirectory()) {
       TFile *file = branch->GetFile();
       fBufferRef->SetParent(file);
    }
-   fHeaderOnly  = kTRUE;
-   fLast        = 0; // Must initialize before calling Streamer()
    if (branch->GetTree()) {
 #ifdef R__USE_IMT
       fCompressedBufferRef = branch->GetTransientBuffer(fBufferSize);
