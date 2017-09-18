@@ -51,8 +51,9 @@ TEST(TBasket, IOBits)
                 static_cast<Int_t>(TBasket::EUnsupportedIOBits::kUnsupported),
              (1 << static_cast<Int_t>(TBasket::kIOBitCount)) - 1);
 
-   EXPECT_EQ(
-      static_cast<Int_t>(TBasket::EIOBits::kSupported) & static_cast<Int_t>(TBasket::EUnsupportedIOBits::kUnsupported), 0);
+   EXPECT_EQ(static_cast<Int_t>(TBasket::EIOBits::kSupported) &
+                static_cast<Int_t>(TBasket::EUnsupportedIOBits::kUnsupported),
+             0);
 
    TClass *cl = TClass::GetClass("TBasket");
    ASSERT_NE(cl, nullptr);
