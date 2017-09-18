@@ -1,4 +1,6 @@
-#include "ROOT/TTrivialDS.hxx"
+#include <ROOT/TDataFrame.hxx>
+#include <ROOT/TTrivialDS.hxx>
+#include <ROOT/TSeq.hxx>
 
 #include "gtest/gtest.h"
 
