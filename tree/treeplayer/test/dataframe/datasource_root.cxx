@@ -1,7 +1,9 @@
-#include "ROOT/TRootDS.hxx"
-#include "TGraph.h"
+#include <TGraph.h>
+#include <ROOT/TDataFrame.hxx>
+#include <ROOT/TRootDS.hxx>
+#include <ROOT/TSeq.hxx>
 
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 
 #include <iostream>
 
