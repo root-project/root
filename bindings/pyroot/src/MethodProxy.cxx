@@ -214,6 +214,11 @@ namespace {
 
    // collect doc strings
       Int_t nMethods = methods.size();
+
+   // from template proxy with no instantiations 
+      if ( nMethods == 0 )
+         return NULL;
+
       PyObject* doc = methods[0]->GetDocString();
 
    // simple case
