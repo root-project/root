@@ -9,11 +9,14 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include "RConfigure.h"
+
 #include "ROOT/TTaskGroup.hxx"
 
+#ifdef R__USE_IMT
 #include "TROOT.h"
-
 #include "tbb/task_group.h"
+#endif
 
 #include <type_traits>
 
@@ -36,10 +39,12 @@ namespace Experimental {
 
 TTaskGroup::TTaskGroup()
 {
+#ifdef R__USE_IMT
    if (!ROOT::IsImplicitMTEnabled()) {
       throw std::runtime_error("Implicit parallelism not enabled. Cannot instantiate a TTaskGroup.");
    }
    fTaskContainer = ((TaskContainerPtr_t *)new tbb::task_group());
+#endif
 }
 
 TTaskGroup::TTaskGroup(TTaskGroup &&other)
@@ -57,10 +62,12 @@ TTaskGroup &TTaskGroup::operator=(TTaskGroup &&other)
 
 TTaskGroup::~TTaskGroup()
 {
+#ifdef R__USE_IMT
    if (!fTaskContainer)
       return;
    Wait();
    delete ((tbb::task_group *)fTaskContainer);
+#endif
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -73,9 +80,14 @@ TTaskGroup::~TTaskGroup()
 /// makes the method block.
 void TTaskGroup::Run(const std::function<void(void)> &closure)
 {
-   while (!fCanRun) {
-   }
+#ifdef R__USE_IMT
+   while (!fCanRun)
+      /* empty */;
+
    ((tbb::task_group *)fTaskContainer)->run(closure);
+#else
+   closure();
+#endif
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -83,9 +95,11 @@ void TTaskGroup::Run(const std::function<void(void)> &closure)
 /// is blocking.
 void TTaskGroup::Wait()
 {
+#ifdef R__USE_IMT
    fCanRun = false;
    ((tbb::task_group *)fTaskContainer)->wait();
    fCanRun = true;
+#endif
 }
 }
 }
