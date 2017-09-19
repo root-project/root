@@ -83,7 +83,7 @@ public:
 protected:
    /// type-erased vector of pointers to pointers to column values - one per slot
    virtual std::vector<void *>
-   GetColumnReadersImpl(std::string_view name, unsigned int nSlots, const std::type_info &) = 0;
+   GetColumnReadersImpl(std::string_view name, const std::type_info &) = 0;
 };
 
 } // ns TDF
