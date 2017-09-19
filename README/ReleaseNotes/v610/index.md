@@ -656,6 +656,32 @@ Released on July 28, 2017
 *   [[ROOT-8927](https://sft.its.cern.ch/jira/browse/ROOT-8927)] - Title drawn on top of axis
 *   [[ROOT-8928](https://sft.its.cern.ch/jira/browse/ROOT-8928)] - Error with "argv" in testKeras* Programs
 
+## Release 6.10/06
+
+Released on September 19, 2017
+
+### Bugs and Issues fixed in this release
+
+*   [ROOT-7718] - Using undefined variable as array crashes ROOT
+*   [ROOT-8183] - tutorials/pythia/pythia8.C cannot be compiled
+*   [ROOT-8208] - GetMissingDictionaries in TClass does not find all missing dictionaries
+*   [ROOT-8832] - Pointer validation should set exit code to 1
+*   [ROOT-8896] - ROOT's string_view cannot be <<'ed to std::cout
+*   [ROOT-8933] - Command line arithmetic partly broken
+*   [ROOT-8934] - ROOTConfig should define ROOT_Imt_LIBRARY for the libImt library
+*   [ROOT-8941] - TGX11.h copied to include/ but not installed with CMake build for 6.10/04
+*   [ROOT-8946] - TClass::GetListOfAllPublicDataMembers->FindObject() returns wrong pointers
+*   [ROOT-8948] - compiledata.sh script not executed during ROOT build on Debian
+*   [ROOT-8964] - ROOT_GENERATE_DICTIONARY should not use files from install directory
+*   [ROOT-8967] - Headers not added to ROOT_INCLUDE_PATH for xrootd
+*   [ROOT-8970] - Homebrew installation cannot find fonts and icons
+*   [ROOT-8974] - simple calculations at root prompt
+*   [ROOT-8975] - ROOT Data Frames crashing when using a name already existant in the tree
+*   [ROOT-8981] - Python3.x and cmdLineUtils.py
+*   [ROOT-9005] - ROOT 6.10-patches broken beetween since 16/09
+*   [ROOT-8980] - variadic template warning in genreflex prohibits use in CMS build system
+
+
 ## HEAD of the v6-10-00-patches branch
 
-These changes will be part of the future 6.10/06
+These changes will be part of the future 6.10/08
