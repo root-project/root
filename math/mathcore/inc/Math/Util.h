@@ -54,19 +54,13 @@ namespace ROOT {
 
    template<class T>
    inline T EvalLog(T x) {
-      static const T epsilon = 2. * std::numeric_limits<double>::min();
-      T logval = vecCore::Blend<T>(x <= epsilon, x / epsilon + std::log(epsilon) - 1 ,  std::log(x));
+      static const T epsilon = T(2.0 * std::numeric_limits<double>::min());
+#if !defined(R__HAS_VECCORE)
+      T logval = x <= epsilon ? x / epsilon + std::log(epsilon) - T(1.0) : std::log(x);
+#else
+      T logval = vecCore::Blend<T>(x <= epsilon, x / epsilon + std::log(epsilon) - T(1.0), std::log(x));
+#endif
       return logval;
-   }
-
-   inline double EvalLog(double x)
-   {
-   // evaluate the log
-      static const double epsilon = 2. * std::numeric_limits<double>::min();
-      if (x <= epsilon)
-         return x / epsilon + std::log(epsilon) - 1;
-      else
-         return std::log(x);
    }
 
    } // end namespace Util
