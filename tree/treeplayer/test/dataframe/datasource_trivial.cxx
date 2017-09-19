@@ -76,10 +76,16 @@ TEST(TTrivialDS, FromATDF)
    auto max = tdf.Max<ULong64_t>("col0");
    auto min = tdf.Min<ULong64_t>("col0");
    auto c = tdf.Count();
+   auto max2 = tdf.Filter([](ULong64_t col0) { return col0 < 10; }, {"col0"}).Max<ULong64_t>("col0");
+   auto min2 = tdf.Filter([](ULong64_t col0) { return col0 > 10; }, {"col0"})
+                  .Define("j", [](ULong64_t col0) { return col0 * 2; }, {"col0"})
+                  .Min<ULong64_t>("j");
 
    EXPECT_EQ(32U, *c);
    EXPECT_DOUBLE_EQ(31., *max);
    EXPECT_DOUBLE_EQ(0., *min);
+   EXPECT_DOUBLE_EQ(9., *max2);
+   EXPECT_DOUBLE_EQ(22., *min2);
 }
 
 TEST(TTrivialDS, FromATDFWithJitting)
