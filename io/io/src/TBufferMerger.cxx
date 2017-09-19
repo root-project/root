@@ -44,16 +44,6 @@ std::shared_ptr<TBufferMergerFile> TBufferMerger::GetFile()
    return f;
 }
 
-size_t TBufferMerger::GetQueueSize() const
-{
-   return fQueue.size();
-}
-
-void TBufferMerger::RegisterCallback(const std::function<void(void)> &f)
-{
-   fCallback = f;
-}
-
 void TBufferMerger::Push(TBufferFile *buffer)
 {
    {
@@ -103,9 +93,6 @@ void TBufferMerger::WriteOutputFile()
          }
          merger.Reset();
       }
-
-      if (fCallback)
-         fCallback();
    }
 }
 
