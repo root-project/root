@@ -3094,11 +3094,21 @@ if test "x$enable_builtin_lz4" = "xno" ; then
         /usr/local/include /usr/include \
         /usr/local/include/lz4 /usr/include/lz4 \
         /opt/lz4/include
+    lz4incdir=$found_dir
+
+    check_header "xxhash.h" "" \
+        $LZ4 ${LZ4:+$LZ4/include} \
+        ${finkdir:+$finkdir/include} \
+        /usr/local/include /usr/include \
+        /usr/local/include/lz4 /usr/include/lz4 \
+        /opt/lz4/include
+    xxhashincdir=$found_dir
+
     if test "x$found_dir" = "x" ; then
         enable_builtin_lz4=yes
     else
         lz4inc=$found_hdr
-        lz4incdir=$found_dir
+        lz4incdir+=$lz4incdir:$xxhashincdir
     fi
 
     check_library "liblz4" "$enable_shared" "" \
@@ -3107,13 +3117,25 @@ if test "x$enable_builtin_lz4" = "xno" ; then
         /usr/local/lz4/lib /usr/local/lib \
         /usr/lib/lz4 /usr/local/lib/lz4 /usr/lz4/lib /usr/lib \
         /usr/lz4 /usr/local/lz4 /opt/lz4 /opt/lz4/lib
+    lz4lib="$found_lib"
+    lz4libdir="$found_dir"
+
+    check_library "libxxhash" "$enable_shared" "" \
+        ${finkdir:+$finkdir/lib} \
+        /usr/local/lib \
+        /usr/lib
+    xxhashlib="$found_lib"
+    xxhashlibdir="$found_dir"
+
     if test "x$found_lib" = "x" ; then
         lz4lib=""
+        xxhashlib=""
         lz4libdir=""
+        xxhashlibdir=""
         enable_builtin_lz4="yes"
     else
-        lz4lib="$found_lib"
-        lz4libdir="$found_dir"
+        lz4lib="$lz4lib $xxhashlib"
+        lz4libdir="$lz4libdir $xxhashlibdir"
     fi
 
     if test "x$lz4incdir" = "x" || test "x$lz4lib" = "x"; then
