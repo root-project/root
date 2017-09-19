@@ -12,18 +12,8 @@
 #ifndef ROOT_TTaskGroup
 #define ROOT_TTaskGroup
 
-#include "RConfigure.h"
-
 #include <atomic>
 #include <functional>
-
-// exclude in case ROOT does not have IMT support
-#ifndef R__USE_IMT
-// No need to error out for dictionaries.
-#if !defined(__ROOTCLING__) && !defined(G__DICTIONARY)
-#error "Cannot use ROOT::Experimental::TTaskGroup without defining R__USE_IMT."
-#endif
-#else
 
 namespace ROOT {
 namespace Experimental {
@@ -55,7 +45,5 @@ public:
 };
 }
 }
-
-#endif
 
 #endif
