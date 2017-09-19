@@ -111,3 +111,14 @@ TEST(TRootTDS, FromATDF)
    EXPECT_DOUBLE_EQ(29., *max);
    EXPECT_DOUBLE_EQ(0., *min);
 }
+
+TEST(TRootTDS, FromATDFWithJitting)
+{
+   std::unique_ptr<TDataSource> tds(new TRootDS(treeName, fileGlob));
+   TDataFrame tdf(std::move(tds));
+   auto max = tdf.Max("i");
+   auto min = tdf.Min("i");
+
+   EXPECT_DOUBLE_EQ(29., *max);
+   EXPECT_DOUBLE_EQ(0., *min);
+}

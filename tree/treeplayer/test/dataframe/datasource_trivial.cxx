@@ -81,3 +81,16 @@ TEST(TTrivialDS, FromATDF)
    EXPECT_DOUBLE_EQ(31., *max);
    EXPECT_DOUBLE_EQ(0., *min);
 }
+
+TEST(TTrivialDS, FromATDFWithJitting)
+{
+   std::unique_ptr<TDataSource> tds(new TTrivialDS(32));
+   TDataFrame tdf(std::move(tds));
+   auto max = tdf.Max("col0");
+   auto min = tdf.Min("col0");
+   auto c = tdf.Count();
+
+   EXPECT_EQ(32U, *c);
+   EXPECT_DOUBLE_EQ(31., *max);
+   EXPECT_DOUBLE_EQ(0., *min);
+}
