@@ -340,6 +340,10 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
       set(newargs -s ${library_output_dir}/${library_name})
       set(pcm_name ${library_output_dir}/${libprefix}${ARG_MODULE}_rdict.pcm)
       set(rootmap_name ${library_output_dir}/${libprefix}${ARG_MODULE}.rootmap)
+      if(runtime_cxxmodules)
+        set(cpp_module ${ARG_MODULE})
+        set(cpp_module_file ${cpp_module}.pcm)
+      endif()
     endif()
   else()
     set(library_name ${libprefix}${deduced_arg_module}${libsuffix})
@@ -395,7 +399,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   endforeach()
 
   #---call rootcint------------------------------------------
-  add_custom_command(OUTPUT ${dictionary}.cxx ${pcm_name} ${rootmap_name}
+  add_custom_command(OUTPUT ${dictionary}.cxx ${pcm_name} ${rootmap_name} ${cpp_module_file}
                      COMMAND ${command} -v2 -f  ${dictionary}.cxx ${newargs} ${excludepathsargs} ${rootmapargs}
                                         ${ARG_OPTIONS} ${definitions} ${includedirs} ${headerfiles} ${_linkdef}
                      IMPLICIT_DEPENDS ${_implicitdeps}
@@ -403,7 +407,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   get_filename_component(dictname ${dictionary} NAME)
 
   #---roottest compability
-  add_custom_target(${dictname} DEPENDS ${dictionary}.cxx ${pcm_name} ${rootmap_name})
+  add_custom_target(${dictname} DEPENDS ${dictionary}.cxx ${pcm_name} ${rootmap_name} ${cpp_module_file})
   if(NOT ARG_NOINSTALL AND NOT CMAKE_ROOTTEST_DICT AND DEFINED CMAKE_LIBRARY_OUTPUT_DIRECTORY)
     set_property(GLOBAL APPEND PROPERTY ROOT_DICTIONARY_TARGETS ${dictname})
     set_property(GLOBAL APPEND PROPERTY ROOT_DICTIONARY_FILES ${CMAKE_CURRENT_BINARY_DIR}/${dictionary}.cxx)
@@ -431,8 +435,8 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   # files which for some reason (temporarily?) cannot be put in the PCH. Eg.
   # all rest of the first dict is in the PCH but this file is not and it
   # cannot be present in the original dictionary.
-  if(ARG_MODULE AND NOT ARG_MULTIDICT)
-    ROOT_CXXMODULES_APPEND_TO_MODULEMAP("${ARG_MODULE}" "${headerfiles}")
+  if(cpp_module)
+    ROOT_CXXMODULES_APPEND_TO_MODULEMAP("${cpp_module}" "${headerfiles}")
   endif()
 endfunction()
 
