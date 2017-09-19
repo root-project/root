@@ -1320,7 +1320,6 @@ private:
    void DefineDSColumnHelper(std::string_view name, TLoopManager &lm)
    {
       assert(fDataSource != nullptr);
-      const auto nSlots = fProxiedPtr->GetNSlots();
       auto readers = fDataSource->GetColumnReaders<T>(name);
       auto getValue = [readers](unsigned int slot) { return *readers[slot]; };
       using NewCol_t = TDFDetail::TCustomColumn<decltype(getValue), /*PassSlotNumber=*/true>;
