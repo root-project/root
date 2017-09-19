@@ -244,6 +244,7 @@ namespace ROOT {
    bool useBinIntegral = fitOpt.fIntegral && data.HasBinEdges();
    bool useBinVolume = (fitOpt.fBinVolume && data.HasBinEdges());
    bool useExpErrors = (fitOpt.fExpErrors);
+   bool isWeighted = data.IsWeighted();
 
 #ifdef DEBUG
    std::cout << "\n\nFit data size = " << n << std::endl;
@@ -251,6 +252,7 @@ namespace ROOT {
    std::cout << "use empty bins  " << fitOpt.fUseEmpty << std::endl;
    std::cout << "use integral    " << fitOpt.fIntegral << std::endl;
    std::cout << "use all error=1 " << fitOpt.fErrors1 << std::endl;
+   if (isWeighted)   std::cout << "Weighted data set - sumw =  " << data.SumOfContent() << "  sumw2 = " << data.SumOfError2() << std::endl;
 #endif
 
 #ifdef USE_PARAMCACHE
@@ -273,9 +275,9 @@ namespace ROOT {
 
       const auto x1 = data.GetCoordComponent(i, 0);
       const auto y = data.Value(i);
-      auto invError = data.Error(i);
+      auto invError = data.InvError(i);
 
-      invError = (invError!= 0.0) ? 1.0/invError :1;
+      //invError = (invError!= 0.0) ? 1.0/invError :1;
 
       const double * x = nullptr;
       std::vector<double> xc;
@@ -320,13 +322,22 @@ namespace ROOT {
 
       // expected errors
       if (useExpErrors) {
-         // we need first to check if a weight factor needs to be applied
-         // weight = sumw2/sumw = error**2/content
-         double invWeight = y * invError * invError;
-        //  if (invError == 0) invWeight = (data.SumOfError2() > 0) ? data.SumOfContent()/ data.SumOfError2() : 1.0;
+         double invWeight  = 1.0; 
+         if (isWeighted) {
+            // we need first to check if a weight factor needs to be applied
+            // weight = sumw2/sumw = error**2/content
+            //invWeight = y * invError * invError;
+            // we use always the global weight and not the observed one in the bin
+            // for empty bins use global weight (if it is weighted data.SumError2() is not zero)
+            invWeight = data.SumOfContent()/ data.SumOfError2();
+            //if (invError > 0) invWeight = y * invError * invError;
+         }
+         
+         //  if (invError == 0) invWeight = (data.SumOfError2() > 0) ? data.SumOfContent()/ data.SumOfError2() : 1.0;
          // compute expected error  as f(x) / weight
          double invError2 = (fval > 0) ? invWeight / fval : 0.0;
          invError = std::sqrt(invError2);
+         //std::cout << "using Pearson chi2 " << x[0] << "  " << 1./invError2 << "  " << fval << std::endl;
       }
 
 //#define DEBUG
@@ -569,10 +580,12 @@ double FitUtil::EvaluateChi2Residual(const IModelFunction & func, const BinData 
    if (useExpErrors) {
       // we need first to check if a weight factor needs to be applied
       // weight = sumw2/sumw = error**2/content
-      double invWeight = y * invError * invError;
+      //NOTE: assume histogram is not weighted
+      // don't know how to do with bins with weight = 0
+      //double invWeight = y * invError * invError;
       // if (invError == 0) invWeight = (data.SumOfError2() > 0) ? data.SumOfContent()/ data.SumOfError2() : 1.0;
       // compute expected error  as f(x) / weight
-      double invError2 = (fval > 0) ? invWeight / fval : 0.0;
+      double invError2 = (fval > 0) ? 1.0 / fval : 0.0;
       invError = std::sqrt(invError2);
    }
 
@@ -1319,7 +1332,7 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction &func, const BinData &d
    // by default is etended. If extended is false the fit is not extended and
    // the global poisson term is removed (i.e is a binomial fit)
    // (remember that in this case one needs to have a function with a fixed normalization
-   // like in a non extended binned fit)
+   // like in a non extended unbinned fit)
    //
    // if use Weight use a weighted dataset
    // iWeight = 1 ==> logL = Sum( w f(x_i) )
@@ -1362,9 +1375,6 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction &func, const BinData &d
 #else
    IntegralEvaluator<> igEval(func, p, useBinIntegral);
 #endif
-   // double nuTot = 0; // total number of expected events (needed for non-extended fits)
-   // double wTot = 0; // sum of all weights
-   // double w2Tot = 0; // sum of weight squared  (these are needed for useW2)
 
    auto mapFunction = [&](const unsigned i) {
       auto x1 = data.GetCoordComponent(i, 0);
@@ -1440,22 +1450,21 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction &func, const BinData &d
          // can apply correction only when y is not zero otherwise weight is undefined
          // (in case of weighted likelihood I don't care about the constant term due to
          // the saturated model)
+ 
+         // use for the empty bins the global weight
+         double weight = 1.0;
          if (y != 0) {
-            auto pError = data.ErrorPtr(i);
-            auto error = (pError != nullptr) ? *pError : 1.;
-            double weight = (error * error) / y; // this is the bin effective weight
-            if (extended) {
-               nloglike = fval * weight;
-               // wTot  += weight;
-               // w2Tot += weight*weight;
-            }
-            nloglike -= weight * y * ROOT::Math::Util::EvalLog(fval);
+            double error = data.Error(i);
+            weight = (error * error) / y; // this is the bin effective weight
+            nloglike += weight * y * ( ROOT::Math::Util::EvalLog(y) - ROOT::Math::Util::EvalLog(fval) );
          }
-
-         //  need to compute total weight and weight-square
-         // if (extended ) {
-         //    nuTot += fval;
-         // }
+         else {
+            // for empty bin use the average weight  computed from the total data weight
+            weight = data.SumOfError2()/ data.SumOfContent();
+         }
+         if (extended) {
+            nloglike += weight  *  ( fval - y);
+         }
 
       } else {
          // standard case no weights or iWeight=1
@@ -1472,21 +1481,6 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction &func, const BinData &d
       return nloglike;
    };
 
-   // if (notExtended) {
-   //    // not extended : remove from the Likelihood the global Poisson term
-   //    if (!useW2)
-   //       nloglike -= nuTot - yTot * ROOT::Math::Util::EvalLog( nuTot);
-   //    else {
-   //       // this needs to be checked
-   //       nloglike -= wTot* nuTot - wTot* yTot * ROOT::Math::Util::EvalLog( nuTot);
-   //    }
-
-   // }
-
-   // if (extended && useW2) {
-   //    // effective total weight is total sum of weight square / sum of weights
-   //    //nloglike += (w2Tot/wTot) * nuTot;
-   // }
 #ifdef R__USE_IMT
    auto redFunction = [](const std::vector<double> &objs) {
       return std::accumulate(objs.begin(), objs.end(), double{});

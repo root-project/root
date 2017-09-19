@@ -103,6 +103,8 @@ namespace ROOT {
       }
 
       fpTmpCoordErrorVector = new double [ fDim ];
+
+      ComputeSums(); 
     }
 
     /**
@@ -140,6 +142,7 @@ namespace ROOT {
       }
 
       fpTmpCoordErrorVector = new double [ fDim ];
+      ComputeSums(); 
     }
 
     /**
@@ -178,6 +181,7 @@ namespace ROOT {
       }
 
       fpTmpCoordErrorVector = new double [ fDim ];
+      ComputeSums(); 
     }
 
     /**
@@ -428,6 +432,7 @@ namespace ROOT {
       fData[ fNPoints ] = y;
 
       FitData::Add( x );
+      fSumContent += y;
     }
 
     /**
@@ -447,6 +452,11 @@ namespace ROOT {
       fDataError[ fNPoints ] = (ey != 0.0) ? 1.0/ey : 0.0;
 
       FitData::Add( x );
+      fSumContent += y;
+      if (y != 0 || ey != 1.0)  fSumError2 += ey*ey;
+      // set the weight flag checking if error^2 != y 
+      if (!fIsWeighted) 
+         if (y != 0 && std::abs( ey*ey/y - 1.0) > 1.E-12) fIsWeighted = true; 
     }
 
     /**
@@ -469,6 +479,11 @@ namespace ROOT {
       fDataError[ fNPoints ] = ey;
 
       FitData::Add( x );
+      fSumContent += y;
+      if (y != 0 || ey != 1.0)  fSumError2 += ey*ey;
+       // set the weight flag checking if error^2 != y 
+      if (!fIsWeighted) 
+         if (y != 0 && std::abs( ey*ey/y - 1.0) > 1.E-12) fIsWeighted = true; 
     }
 
     /**
@@ -492,6 +507,9 @@ namespace ROOT {
       fDataErrorLow[ fNPoints ] = eyl;
 
       FitData::Add( x );
+      fSumContent += y;
+      if (y != 0 || eyl != 1.0 || eyh != 1.0)  fSumError2  += (eyl+eyh)*(eyl+eyh)/4;
+      
     }
 
     /**
@@ -510,10 +528,12 @@ namespace ROOT {
       fData[ fNPoints ] = val;
 
       FitData::Add( x );
+      fSumContent += val;
     }
 
     /**
       add multi-dim coordinate data with only error in value
+      The class stores internally the inverse of the error in this case
     */
     void BinData::Add( const double* x, double val, double eval )
     {
@@ -528,6 +548,10 @@ namespace ROOT {
       fDataError[ fNPoints ] = (eval != 0.0) ? 1.0/eval : 0.0;
 
       FitData::Add( x );
+      fSumContent += val;
+      if (val != 0 || eval != 1.0) fSumError2  += eval*eval;
+      if (!fIsWeighted) 
+         if (val != 0 && std::abs( eval*eval/val - 1.0) > 1.E-12) fIsWeighted = true;
     }
 
     /**
@@ -551,10 +575,14 @@ namespace ROOT {
 
         fCoordErrors[i][ fNPoints ] = ex[i];
       }
-
+      // in this case we store the y error and not the inverse
       fDataError[ fNPoints ] = eval;
 
       FitData::Add( x );
+      fSumContent += val;
+      if (val != 0 || eval != 1.0) fSumError2  += eval*eval;
+      if (!fIsWeighted) 
+         if (val != 0 && std::abs( eval*eval/val - 1.0) > 1.E-12) fIsWeighted = true;
     }
 
     /**
@@ -584,6 +612,9 @@ namespace ROOT {
       fDataErrorHigh[ fNPoints ] = ehval;
 
       FitData::Add( x );
+      fSumContent += val;
+      if (val != 0 || elval != 1.0 || ehval != 1.0 )
+         fSumError2  += (elval+ehval)*(elval+ehval)/4;
     }
 
 
@@ -794,6 +825,31 @@ namespace ROOT {
       FitData::UnWrap();
     }
 
+    void BinData::ComputeSums() {
+       unsigned int n = Size();
+       fSumContent = 0;
+       fSumError2 = 0; 
+       if (fErrorType != kAsymError) {
+          for (unsigned int i = 0; i < n; ++i)  {
+             double y = Value(i);
+             double err = Error(i);
+             fSumContent += y;
+             if (y != 0 || err != 1.0)  fSumError2 += err*err;
+          }
+       }
+       else {
+          for (unsigned int i = 0; i < n; ++i)  {
+             double y = Value(i); 
+             fSumContent += y;
+             double elval,ehval = 0;
+             GetAsymError(i,elval,ehval);
+             if (y != 0 || elval != 1.0 || ehval != 1.0) 
+                fSumError2 += (elval+ehval)*(elval+ehval)/4;
+          }
+       }
+       // set the weight flag
+       fIsWeighted =  (fSumContent != fSumError2); 
+    }
 
   } // end namespace Fit
 

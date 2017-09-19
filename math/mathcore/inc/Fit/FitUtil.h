@@ -783,20 +783,16 @@ namespace FitUtil {
                // can apply correction only when y is not zero otherwise weight is undefined
                // (in case of weighted likelihood I don't care about the constant term due to
                // the saturated model)
+               assert (data.GetErrorType() != ROOT::Fit::BinData::ErrorType::kNoError);
+               T error = 0.0;
+               vecCore::Load<T>(error, data.ErrorPtr(i * vecSize));
+               // for empty bin use the average weight  computed from the total data weight
                auto m = vecCore::Mask_v<T>(y != 0.0);
-               if (!vecCore::MaskFull(m)) {
-                  T error = 1;
-                  if (data.GetErrorType() != ROOT::Fit::BinData::ErrorType::kNoError)
-                     vecCore::Load<T>(error, data.ErrorPtr(i * vecSize));
-                  T weight;
-                  vecCore::MaskedAssign<T>(weight, y != 0, (error * error) / y);
-                  if (extended) {
-                     nloglike = fval * weight;
-                     // wTot  += weight;
-                     // w2Tot += weight*weight;
-                  }
-                  vecCore::MaskedAssign<T>(nloglike, y != 0, nloglike - weight * y * ROOT::Math::Util::EvalLog(fval));
+               auto weight = vecCore::Blend(m,(error * error) / y, T(data.SumOfError2()/ data.SumOfContent()) );
+               if (extended) {
+                  nloglike =  weight * ( fval - y);
                }
+               vecCore::MaskedAssign<T>(nloglike, y != 0, nloglike + weight * y *( ROOT::Math::Util::EvalLog(y) -  ROOT::Math::Util::EvalLog(fval)) );
 
             } else {
                // standard case no weights or iWeight=1
