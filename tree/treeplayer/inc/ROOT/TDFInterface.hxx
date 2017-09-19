@@ -148,6 +148,39 @@ std::shared_ptr<TCustomColumnBase> UpcastNode(const std::shared_ptr<TCustomColum
 std::shared_ptr<TRangeBase> UpcastNode(const std::shared_ptr<TRangeBase> ptr);
 std::shared_ptr<TLoopManager> UpcastNode(const std::shared_ptr<TLoopManager> ptr);
 
+ColumnNames_t GetValidatedColumnNames(TLoopManager &lm, const unsigned int nColumns, const ColumnNames_t &columns,
+                                      const ColumnNames_t &validCustomColumns, TDataSource *ds);
+
+std::vector<bool> FindUndefinedDSColumns(const ColumnNames_t &requestedCols, const ColumnNames_t &definedDSCols);
+
+/// Helper function to be used by `DefineDataSourceColumns`
+template <typename T>
+void DefineDSColumnHelper(std::string_view name, TLoopManager &lm, TDataSource &ds)
+{
+   auto readers = ds.GetColumnReaders<T>(name);
+   auto getValue = [readers](unsigned int slot) { return *readers[slot]; };
+   using NewCol_t = TCustomColumn<decltype(getValue), /*PassSlotNumber=*/true>;
+   lm.Book(std::make_shared<NewCol_t>(name, std::move(getValue), ColumnNames_t{}, &lm, /*isDSColumn=*/true));
+   lm.AddDataSourceColumn(name);
+}
+
+/// Take a list of data-source column names and define the ones that haven't been defined yet.
+template <typename... ColumnTypes, int... S>
+void DefineDataSourceColumns(const std::vector<std::string> &columns, TLoopManager &lm, StaticSeq<S...>,
+                             TTraits::TypeList<ColumnTypes...>, TDataSource &ds)
+{
+   const auto mustBeDefined = FindUndefinedDSColumns(columns, lm.GetDefinedDataSourceColumns());
+   if (std::none_of(mustBeDefined.begin(), mustBeDefined.end(), [](bool b) { return b; })) {
+      // no need to define any column
+      return;
+   } else {
+      // hack to expand a template parameter pack without c++17 fold expressions.
+      std::initializer_list<int> expander{
+         (mustBeDefined[S] ? DefineDSColumnHelper<ColumnTypes>(columns[S], lm, ds) : /*no-op*/ ((void)0), 0)...};
+      (void)expander; // avoid unused variable warnings
+   }
+}
+
 } // namespace TDF
 } // namespace Internal
 
@@ -246,9 +279,11 @@ public:
       auto loopManager = GetDataFrameChecked();
       using ColTypes_t = typename TTraits::CallableTraits<F>::arg_types;
       constexpr auto nColumns = ColTypes_t::list_size;
-      const auto validColumnNames = GetValidatedColumnNames(*loopManager, nColumns, columns);
+      const auto validColumnNames =
+         TDFInternal::GetValidatedColumnNames(*loopManager, nColumns, columns, fValidCustomColumns, fDataSource);
       if (fDataSource)
-         DefineDataSourceColumns(validColumnNames, *loopManager, TDFInternal::GenStaticSeq_t<nColumns>(), ColTypes_t());
+         TDFInternal::DefineDataSourceColumns(validColumnNames, *loopManager, TDFInternal::GenStaticSeq_t<nColumns>(),
+                                              ColTypes_t(), *fDataSource);
       using F_t = TDFDetail::TFilter<F, Proxied>;
       auto FilterPtr = std::make_shared<F_t>(std::move(f), validColumnNames, *fProxiedPtr, name);
       loopManager->Book(FilterPtr);
@@ -329,9 +364,11 @@ public:
       using ArgTypes_t = typename TTraits::CallableTraits<F>::arg_types;
       using ColTypes_t = typename TDFInternal::RemoveFirstParameterIf<ShouldPassSlotNumber, ArgTypes_t>::type;
       constexpr auto nColumns = ColTypes_t::list_size;
-      const auto validColumnNames = GetValidatedColumnNames(*loopManager, nColumns, columns);
+      const auto validColumnNames =
+         TDFInternal::GetValidatedColumnNames(*loopManager, nColumns, columns, fValidCustomColumns, fDataSource);
       if (fDataSource)
-         DefineDataSourceColumns(validColumnNames, *loopManager, TDFInternal::GenStaticSeq_t<nColumns>(), ColTypes_t());
+         TDFInternal::DefineDataSourceColumns(validColumnNames, *loopManager, TDFInternal::GenStaticSeq_t<nColumns>(),
+                                              ColTypes_t(), *fDataSource);
       using NewCol_t = TDFDetail::TCustomColumn<F, ShouldPassSlotNumber>;
       loopManager->Book(std::make_shared<NewCol_t>(name, std::move(expression), validColumnNames, loopManager.get()));
       TInterface<Proxied> newInterface(fProxiedPtr, fImplWeakPtr, fValidCustomColumns);
@@ -563,9 +600,11 @@ public:
       auto loopManager = GetDataFrameChecked();
       using ColTypes_t = TypeTraits::RemoveFirstParameter_t<typename TTraits::CallableTraits<F>::arg_types>;
       constexpr auto nColumns = ColTypes_t::list_size;
-      const auto validColumnNames = GetValidatedColumnNames(*loopManager, nColumns, columns);
+      const auto validColumnNames =
+         TDFInternal::GetValidatedColumnNames(*loopManager, nColumns, columns, fValidCustomColumns, fDataSource);
       if (fDataSource)
-         DefineDataSourceColumns(validColumnNames, *loopManager, TDFInternal::GenStaticSeq_t<nColumns>(), ColTypes_t());
+         TDFInternal::DefineDataSourceColumns(validColumnNames, *loopManager, TDFInternal::GenStaticSeq_t<nColumns>(),
+                                              ColTypes_t(), *fDataSource);
       using Helper_t = TDFInternal::ForeachSlotHelper<F>;
       using Action_t = TDFInternal::TAction<Helper_t, Proxied>;
       loopManager->Book(std::make_shared<Action_t>(Helper_t(std::move(f)), validColumnNames, *fProxiedPtr));
@@ -613,9 +652,11 @@ public:
       auto loopManager = GetDataFrameChecked();
       const auto columns = columnName.empty() ? ColumnNames_t() : ColumnNames_t({std::string(columnName)});
       constexpr auto nColumns = arg_types::list_size;
-      const auto validColumnNames = GetValidatedColumnNames(*loopManager, 1, columns);
+      const auto validColumnNames =
+         TDFInternal::GetValidatedColumnNames(*loopManager, 1, columns, fValidCustomColumns, fDataSource);
       if (fDataSource)
-         DefineDataSourceColumns(validColumnNames, *loopManager, TDFInternal::GenStaticSeq_t<nColumns>(), arg_types());
+         TDFInternal::DefineDataSourceColumns(validColumnNames, *loopManager, TDFInternal::GenStaticSeq_t<nColumns>(),
+                                              arg_types(), *fDataSource);
       auto redObjPtr = std::make_shared<T>(initValue);
       using Helper_t = TDFInternal::ReduceHelper<F, T>;
       using Action_t = typename TDFInternal::TAction<Helper_t, Proxied>;
@@ -668,10 +709,11 @@ public:
    {
       auto loopManager = GetDataFrameChecked();
       const auto columns = column.empty() ? ColumnNames_t() : ColumnNames_t({std::string(column)});
-      const auto validColumnNames = GetValidatedColumnNames(*loopManager, 1, columns);
+      const auto validColumnNames =
+         TDFInternal::GetValidatedColumnNames(*loopManager, 1, columns, fValidCustomColumns, fDataSource);
       if (fDataSource)
-         DefineDataSourceColumns(validColumnNames, *loopManager, TDFInternal::GenStaticSeq_t<1>(),
-                                 TTraits::TypeList<T>());
+         TDFInternal::DefineDataSourceColumns(validColumnNames, *loopManager, TDFInternal::GenStaticSeq_t<1>(),
+                                              TTraits::TypeList<T>(), *fDataSource);
       using Helper_t = TDFInternal::TakeHelper<T, COLL>;
       using Action_t = TDFInternal::TAction<Helper_t, Proxied>;
       auto valuesPtr = std::make_shared<COLL>();
@@ -1167,10 +1209,11 @@ private:
    {
       auto lm = GetDataFrameChecked();
       constexpr auto nColumns = sizeof...(BranchTypes);
-      const auto selectedCols = GetValidatedColumnNames(*lm, nColumns, columns);
+      const auto selectedCols =
+         TDFInternal::GetValidatedColumnNames(*lm, nColumns, columns, fValidCustomColumns, fDataSource);
       if (fDataSource)
-         DefineDataSourceColumns(selectedCols, *lm, TDFInternal::GenStaticSeq_t<nColumns>(),
-                                 TDFInternal::TypeList<BranchTypes...>());
+         TDFInternal::DefineDataSourceColumns(selectedCols, *lm, TDFInternal::GenStaticSeq_t<nColumns>(),
+                                 TDFInternal::TypeList<BranchTypes...>(), *fDataSource);
       const auto nSlots = fProxiedPtr->GetNSlots();
       TDFInternal::BuildAndBook<BranchTypes...>(selectedCols, r, nSlots, *lm, *fProxiedPtr, (ActionType *)nullptr);
       return MakeResultProxy(r, lm);
@@ -1184,14 +1227,13 @@ private:
    TResultProxy<ActionResultType> CreateAction(const ColumnNames_t &columns, const std::shared_ptr<ActionResultType> &r,
                                                const int nColumns = -1)
    {
-      auto loopManager = GetDataFrameChecked();
+      auto lm = GetDataFrameChecked();
       auto realNColumns = (nColumns > -1 ? nColumns : sizeof...(BranchTypes));
-      const auto validColumnNames = GetValidatedColumnNames(*loopManager, realNColumns, columns);
-      // TODO we can't call DefineDataSourceColumns here because the types are not yet known
-      // on the other hand the jitted BuildAndBook call might be too late...? To be checked
+      const auto validColumnNames =
+         TDFInternal::GetValidatedColumnNames(*lm, realNColumns, columns, fValidCustomColumns, fDataSource);
       const unsigned int nSlots = fProxiedPtr->GetNSlots();
-      const auto &customColumns = loopManager->GetBookedColumns();
-      auto tree = loopManager->GetTree();
+      const auto &customColumns = lm->GetBookedColumns();
+      auto tree = lm->GetTree();
       auto rOnHeap = TDFInternal::MakeSharedOnHeap(r);
       auto upcastNode = TDFInternal::UpcastNode(fProxiedPtr);
       TInterface<TypeTraits::TakeFirstParameter_t<decltype(upcastNode)>> upcastInterface(upcastNode, fImplWeakPtr,
@@ -1199,8 +1241,8 @@ private:
       auto toJit = TDFInternal::JitBuildAndBook(validColumnNames, upcastInterface.GetNodeTypeName(), upcastNode.get(),
                                                 typeid(std::shared_ptr<ActionResultType>), typeid(ActionType), rOnHeap,
                                                 tree, nSlots, customColumns);
-      loopManager->Jit(toJit);
-      return MakeResultProxy(r, loopManager);
+      lm->Jit(toJit);
+      return MakeResultProxy(r, lm);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -1256,75 +1298,6 @@ private:
       snapshotTDF.fProxiedPtr->SetTree(chain);
 
       return snapshotTDF;
-   }
-
-   /// Given the desired number of columns and the user-provided list of columns:
-   /// * fallback to using the first nColumns default columns if needed (or throw if nColumns > nDefaultColumns)
-   /// * check that selected column names refer to valid branches, custom columns or datasource columns (throw if not)
-   /// Return the list of selected column names.
-   ColumnNames_t GetValidatedColumnNames(TLoopManager &lm, const unsigned int nColumns, const ColumnNames_t &columns)
-   {
-      const auto &defaultColumns = lm.GetDefaultColumnNames();
-      const auto selectedColumns = TDFInternal::SelectColumns(nColumns, columns, defaultColumns);
-      const auto unknownColumns =
-         TDFInternal::FindUnknownColumns(selectedColumns, lm.GetTree(), fValidCustomColumns,
-                                         fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
-
-      if (!unknownColumns.empty()) {
-         // throw
-         std::stringstream unknowns;
-         std::string delim = unknownColumns.size() > 1 ? "s: " : ": "; // singular/plural
-         for (auto &unknown : unknownColumns) {
-            unknowns << delim << unknown;
-            delim = ',';
-         }
-         throw std::runtime_error("Unknown column" + unknowns.str());
-      }
-
-      return selectedColumns;
-   }
-
-   /// Return a bitset each element of which indicates whether the corresponding element in `selectedColumns` is the
-   /// name of a column that must be defined via datasource. All elements of the returned vector are false if no
-   /// data-source is present.
-   std::vector<bool> FindUndefinedDSColumns(const ColumnNames_t &requestedCols, const ColumnNames_t &definedDSCols)
-   {
-      assert(fDataSource != nullptr);
-      const auto nColumns = requestedCols.size();
-      std::vector<bool> mustBeDefined(nColumns, false);
-      for (auto i = 0u; i < nColumns; ++i)
-         mustBeDefined[i] =
-            std::find(definedDSCols.begin(), definedDSCols.end(), requestedCols[i]) == definedDSCols.end();
-      return mustBeDefined;
-   }
-
-   /// Take a list of data-source column names and define the ones that haven't been defined yet.
-   template <typename... ColumnTypes, int... S>
-   void DefineDataSourceColumns(const std::vector<std::string> &columns, TLoopManager &lm, TDFInternal::StaticSeq<S...>,
-                                TTraits::TypeList<ColumnTypes...>)
-   {
-      assert(fDataSource != nullptr);
-      const auto mustBeDefined = FindUndefinedDSColumns(columns, lm.GetDefinedDataSourceColumns());
-      if (std::none_of(mustBeDefined.begin(), mustBeDefined.end(), [](bool b) { return b; })) {
-         // no need to define any column
-         return;
-      } else {
-         // hack to expand a template parameter pack without c++17 fold expressions.
-         std::initializer_list<int> expander{
-            (mustBeDefined[S] ? DefineDSColumnHelper<ColumnTypes>(columns[S], lm) : /*no-op*/((void)0), 0)...};
-         (void)expander; // avoid unused variable warnings
-      }
-   }
-
-   template <typename T>
-   void DefineDSColumnHelper(std::string_view name, TLoopManager &lm)
-   {
-      assert(fDataSource != nullptr);
-      auto readers = fDataSource->GetColumnReaders<T>(name);
-      auto getValue = [readers](unsigned int slot) { return *readers[slot]; };
-      using NewCol_t = TDFDetail::TCustomColumn<decltype(getValue), /*PassSlotNumber=*/true>;
-      lm.Book(std::make_shared<NewCol_t>(name, std::move(getValue), ColumnNames_t{}, &lm, /*isDSColumn=*/true));
-      lm.AddDataSourceColumn(name);
    }
 
 protected:
