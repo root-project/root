@@ -130,8 +130,7 @@ TLoopManager::TLoopManager(std::unique_ptr<TDataSource> ds, const ColumnNames_t 
    : fDefaultColumns(defaultBranches), fNSlots(TDFInternal::GetNSlots()), fLoopType(ELoopType::kDataSource),
      fDataSource(std::move(ds))
 {
-   const auto nSlots = TDFInternal::GetNSlots();
-   fDataSource->SetNSlots( 0U == nSlots ? 1U : nSlots);
+   fDataSource->SetNSlots(fNSlots);
 }
 
 /// Run event loop with no source files, in parallel.
