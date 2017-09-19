@@ -49,7 +49,7 @@ TEST(TTrivialDS, ColumnReaders)
    auto slot = 0U;
    for (auto &&range : ranges) {
       for (auto i : ROOT::TSeq<ULong64_t>(range.first, range.second)) {
-         tds.SetEntry(i, slot);
+         tds.SetEntry(slot, i);
          auto val = **vals[slot];
          EXPECT_EQ(i, val);
       }
