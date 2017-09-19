@@ -5492,7 +5492,7 @@ void TTree::InitializeBranchLists(bool checkLeafCount)
    }
 
    // The special branch fBranchRef also needs to be processed sequentially
-   if (fBranchRef) {
+   if (fBranchRef && fBranches.FindObject(fBranchRef)) {
       fSeqBranches.push_back(fBranchRef);
    }
 
