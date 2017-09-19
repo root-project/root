@@ -158,6 +158,26 @@ RooGaussMinimizer::~RooGaussMinimizer()
 /// are 0,1,2 and represent MINUIT strategies for dealing
 /// most efficiently with fast FCNs (0), expensive FCNs (2)
 /// and 'intermediate' FCNs (1)
+Int_t RooGaussMinimizer::migrad()
+{
+  _fcn->Synchronize(_theFitter->Config().ParamsSettings(),
+		    _optConst,_verbose) ;
+  //  profileStart() ;
+  RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors) ;
+  RooAbsReal::clearEvalErrorLog() ;
+
+  _theFitter->Config().SetMinimizer(_minimizerType.c_str(),"migrad");
+  bool ret = _theFitter->FitFCN(*_fcn);
+  _status = ((ret) ? _theFitter->Result().Status() : -1);
+
+  RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
+  //  profileStop() ;
+  _fcn->BackProp(_theFitter->Result());
+
+  saveStatus("MIGRAD",_status) ;
+
+  return _status ;
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
