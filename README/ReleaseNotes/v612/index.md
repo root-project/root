@@ -124,6 +124,7 @@ large TClonesArray where each element contains another small vector container.
   - The `TGraph`'s options "F" and "L" respectively draw a filled polygon and
     a line plot. They can be combined when calling `TGraph::Draw`. Doing that
     produced a filled polygon only. Now it produces a filled polygon and a line plot.
+  - `TH1::SetOption()` method didn't work when called from `TH3D` instance.
 
 ## 3D Graphics Libraries
 

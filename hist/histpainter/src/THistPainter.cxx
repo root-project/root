@@ -3904,6 +3904,8 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
          Hoption.Scat = 0;
          Hoption.Box  = 1;
          if (l[3] == '1') { Hoption.Box = 11; l[3] = ' '; }
+         if (l[3] == '2') { Hoption.Box = 12; l[3] = ' '; }
+         if (l[3] == '3') { Hoption.Box = 13; l[3] = ' '; }
       } else {
          Hoption.Hist = 1;
       }
@@ -6571,25 +6573,25 @@ void THistPainter::PaintH3(Option_t *option)
 {
 
    char *cmd;
-   TString opt = fH->GetDrawOption();
+   TString opt = option;
    opt.ToLower();
    Int_t irep;
 
-   if (fH->GetDrawOption() && (strstr(opt,"box") ||  strstr(opt,"lego"))) {
-      if (strstr(opt,"1")) {
+   if (Hoption.Box || Hoption.Lego) {
+      if (Hoption.Box == 11 || Hoption.Lego == 11) {
          PaintH3Box(1);
-      } else if (strstr(opt,"2")) {
+      } else if (Hoption.Box == 12 || Hoption.Lego == 12) {
          PaintH3Box(2);
-      } else if (strstr(opt,"3")) {
+      } else if (Hoption.Box == 13 || Hoption.Lego == 13) {
          PaintH3Box(3);
       } else {
          PaintH3BoxRaster();
       }
       return;
-   } else if (fH->GetDrawOption() && strstr(opt,"iso")) {
+   } else if (strstr(opt,"iso")) {
       PaintH3Iso();
       return;
-   } else if (strstr(option,"tf3")) {
+   } else if (strstr(opt,"tf3")) {
       PaintTF3();
       return;
    } else {
