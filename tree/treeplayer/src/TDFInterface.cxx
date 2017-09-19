@@ -261,6 +261,44 @@ std::shared_ptr<TLoopManager> UpcastNode(const std::shared_ptr<TLoopManager> ptr
    return ptr;
 }
 
+/// Given the desired number of columns and the user-provided list of columns:
+/// * fallback to using the first nColumns default columns if needed (or throw if nColumns > nDefaultColumns)
+/// * check that selected column names refer to valid branches, custom columns or datasource columns (throw if not)
+/// Return the list of selected column names.
+ColumnNames_t GetValidatedColumnNames(TLoopManager &lm, const unsigned int nColumns, const ColumnNames_t &columns,
+                                      const ColumnNames_t &validCustomColumns, TDataSource *ds)
+{
+   const auto &defaultColumns = lm.GetDefaultColumnNames();
+   const auto selectedColumns = SelectColumns(nColumns, columns, defaultColumns);
+   const auto unknownColumns = FindUnknownColumns(selectedColumns, lm.GetTree(), validCustomColumns,
+                                                  ds ? ds->GetColumnNames() : ColumnNames_t{});
+
+   if (!unknownColumns.empty()) {
+      // throw
+      std::stringstream unknowns;
+      std::string delim = unknownColumns.size() > 1 ? "s: " : ": "; // singular/plural
+      for (auto &unknown : unknownColumns) {
+         unknowns << delim << unknown;
+         delim = ',';
+      }
+      throw std::runtime_error("Unknown column" + unknowns.str());
+   }
+
+   return selectedColumns;
+}
+
+/// Return a bitset each element of which indicates whether the corresponding element in `selectedColumns` is the
+/// name of a column that must be defined via datasource. All elements of the returned vector are false if no
+/// data-source is present.
+std::vector<bool> FindUndefinedDSColumns(const ColumnNames_t &requestedCols, const ColumnNames_t &definedDSCols)
+{
+   const auto nColumns = requestedCols.size();
+   std::vector<bool> mustBeDefined(nColumns, false);
+   for (auto i = 0u; i < nColumns; ++i)
+      mustBeDefined[i] = std::find(definedDSCols.begin(), definedDSCols.end(), requestedCols[i]) == definedDSCols.end();
+   return mustBeDefined;
+}
+
 } // end ns TDF
 } // end ns Internal
 } // end ns ROOT
