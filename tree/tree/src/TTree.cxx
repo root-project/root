@@ -5413,7 +5413,7 @@ Int_t TTree::GetEntry(Long64_t entry, Int_t getall)
          };
 
       ROOT::TThreadExecutor pool;
-      pool.Foreach(mapFunction, nbranches - fSeqBranches.size());
+      pool.Foreach(mapFunction, fSortedBranches.size());
 
       if (errnb < 0) {
          nb = errnb;
