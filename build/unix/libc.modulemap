@@ -33,6 +33,10 @@ module "libc" [system] {
     export *
     header "math.h"
   }
+  module "signal.h" {
+    export *
+    header "signal.h"
+  }
   module "stdio.h" {
     export *
     header "stdio.h"
