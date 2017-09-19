@@ -20,6 +20,7 @@
 #include <string>
 class TTree;
 using namespace ROOT::Detail::TDF;
+using namespace ROOT::Experimental::TDF;
 
 namespace ROOT {
 namespace Internal {
@@ -27,12 +28,17 @@ namespace TDF {
 
 /// Return a string containing the type of the given branch. Works both with real TTree branches and with temporary
 /// column created by Define.
-std::string ColumnName2ColumnTypeName(const std::string &colName, TTree *tree, TCustomColumnBase *tmpBranch)
+std::string
+ColumnName2ColumnTypeName(const std::string &colName, TTree *tree, TCustomColumnBase *tmpBranch, TDataSource *ds)
 {
+   if (ds && ds->HasColumn(colName)) {
+      return ds->GetTypeName(colName);
+   }
+
    TBranch *branch = nullptr;
    if (tree)
       branch = tree->GetBranch(colName.c_str());
-   if (!branch and !tmpBranch) {
+   if (!branch && !tmpBranch) {
       throw std::runtime_error("Column \"" + colName + "\" is not in a file and has not been defined.");
    }
    if (branch) {
