@@ -173,7 +173,8 @@ Long_t JitTransformation(void *thisPtr, std::string_view methodName, std::string
 // (see comments in the body for actual jitted code)
 std::string JitBuildAndBook(const ColumnNames_t &bl, const std::string &prevNodeTypename, void *prevNode,
                             const std::type_info &art, const std::type_info &at, const void *rOnHeap, TTree *tree,
-                            const unsigned int nSlots, const std::map<std::string, TmpBranchBasePtr_t> &customColumns)
+                            const unsigned int nSlots, const std::map<std::string, TmpBranchBasePtr_t> &customColumns,
+                            TDataSource *ds)
 {
    gInterpreter->Declare("#include \"ROOT/TDataFrame.hxx\"");
    auto nBranches = bl.size();
@@ -189,7 +190,7 @@ std::string JitBuildAndBook(const ColumnNames_t &bl, const std::string &prevNode
    // retrieve branch type names as strings
    std::vector<std::string> columnTypeNames(nBranches);
    for (auto i = 0u; i < nBranches; ++i) {
-      const auto columnTypeName = ColumnName2ColumnTypeName(bl[i], tree, tmpBranchPtrs[i]);
+      const auto columnTypeName = ColumnName2ColumnTypeName(bl[i], tree, tmpBranchPtrs[i], ds);
       if (columnTypeName.empty()) {
          std::string exceptionText = "The type of column ";
          exceptionText += bl[i];

@@ -11,6 +11,7 @@
 #ifndef ROOT_TDFUTILS
 #define ROOT_TDFUTILS
 
+#include "ROOT/TDataSource.hxx" // ColumnName2ColumnTypeName
 #include "ROOT/TypeTraits.hxx"
 #include "ROOT/RArrayView.hxx"
 #include "Compression.h"
@@ -75,6 +76,7 @@ namespace Internal {
 namespace TDF {
 using namespace ROOT::TypeTraits;
 using namespace ROOT::Detail::TDF;
+using namespace ROOT::Experimental::TDF;
 
 /// Compile-time integer sequence generator
 /// e.g. calling GenStaticSeq<3>::type() instantiates a StaticSeq<0,1,2>
@@ -124,7 +126,7 @@ struct TNeedJitting<TInferType> {
 using TVBPtr_t = std::shared_ptr<TTreeReaderValueBase>;
 using TVBVec_t = std::vector<TVBPtr_t>;
 
-std::string ColumnName2ColumnTypeName(const std::string &colName, TTree *, TCustomColumnBase *);
+std::string ColumnName2ColumnTypeName(const std::string &colName, TTree *, TCustomColumnBase *, TDataSource * = nullptr);
 
 const char *ToConstCharPtr(const char *s);
 const char *ToConstCharPtr(const std::string &s);

@@ -103,16 +103,6 @@ void BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<double> &meanV,
 }
 /****** end BuildAndBook ******/
 
-template <typename ActionType, typename... BranchTypes, typename PrevNodeType, typename ActionResultType>
-void CallBuildAndBook(PrevNodeType &prevNode, const ColumnNames_t &bl, const unsigned int nSlots,
-                      const std::shared_ptr<ActionResultType> *rOnHeap)
-{
-   // if we are here it means we are jitting, if we are jitting the loop manager must be alive
-   auto &loopManager = *prevNode.GetImplPtr();
-   BuildAndBook<BranchTypes...>(bl, *rOnHeap, nSlots, loopManager, prevNode, (ActionType *)nullptr);
-   delete rOnHeap;
-}
-
 std::vector<std::string> FindUsedColumnNames(std::string_view, TObjArray *, const std::vector<std::string> &);
 
 using TmpBranchBasePtr_t = std::shared_ptr<TCustomColumnBase>;
@@ -125,7 +115,8 @@ Long_t JitTransformation(void *thisPtr, std::string_view methodName, std::string
 
 std::string JitBuildAndBook(const ColumnNames_t &bl, const std::string &prevNodeTypename, void *prevNode,
                             const std::type_info &art, const std::type_info &at, const void *r, TTree *tree,
-                            const unsigned int nSlots, const std::map<std::string, TmpBranchBasePtr_t> &customColumns);
+                            const unsigned int nSlots, const std::map<std::string, TmpBranchBasePtr_t> &customColumns,
+                            TDataSource *ds);
 
 // allocate a shared_ptr on the heap, return a reference to it. the user is responsible of deleting the shared_ptr*.
 // this function is meant to only be used by TInterface's action methods, and should be deprecated as soon as we find
@@ -179,6 +170,22 @@ void DefineDataSourceColumns(const std::vector<std::string> &columns, TLoopManag
          (mustBeDefined[S] ? DefineDSColumnHelper<ColumnTypes>(columns[S], lm, ds) : /*no-op*/ ((void)0), 0)...};
       (void)expander; // avoid unused variable warnings
    }
+}
+
+/// Convenience function invoked by jitted code to build action nodes at runtime
+template <typename ActionType, typename... BranchTypes, typename PrevNodeType, typename ActionResultType>
+void CallBuildAndBook(PrevNodeType &prevNode, const ColumnNames_t &bl, const unsigned int nSlots,
+                      const std::shared_ptr<ActionResultType> *rOnHeap)
+{
+   // if we are here it means we are jitting, if we are jitting the loop manager must be alive
+   auto &loopManager = *prevNode.GetImplPtr();
+   using ColTypes_t = TypeList<BranchTypes...>;
+   constexpr auto nColumns = ColTypes_t::list_size;
+   auto ds = loopManager.GetDataSource();
+   if (ds)
+      DefineDataSourceColumns(bl, loopManager, GenStaticSeq_t<nColumns>(), ColTypes_t(), *ds);
+   BuildAndBook<BranchTypes...>(bl, *rOnHeap, nSlots, loopManager, prevNode, (ActionType *)nullptr);
+   delete rOnHeap;
 }
 
 } // namespace TDF
@@ -1240,7 +1247,7 @@ private:
                                                                                          fValidCustomColumns);
       auto toJit = TDFInternal::JitBuildAndBook(validColumnNames, upcastInterface.GetNodeTypeName(), upcastNode.get(),
                                                 typeid(std::shared_ptr<ActionResultType>), typeid(ActionType), rOnHeap,
-                                                tree, nSlots, customColumns);
+                                                tree, nSlots, customColumns, fDataSource);
       lm->Jit(toJit);
       return MakeResultProxy(r, lm);
    }
