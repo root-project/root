@@ -15,6 +15,7 @@
 #include <cinttypes>
 #include <cstdint>
 #include <cstring>
+#include <stdint.h>
 
 #include "RConfig.h"
 
