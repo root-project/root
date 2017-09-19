@@ -170,8 +170,8 @@ TEST(TBufferMerger, RegisterCallbackThreads)
    int events = 1000;
    int events_per_task = 50;
    int tasks = events / events_per_task;
-   int launched = 0;
-   int processed = 0;
+   volatile int launched = 0;
+   volatile int processed = 0;
 
    {
       ROOT::EnableThreadSafety();
@@ -257,8 +257,8 @@ TEST(TBufferMerger, RegisterCallbackTasks)
    int events = 1000;
    int events_per_task = 50;
    int tasks = events / events_per_task;
-   int launched = 0;
-   int processed = 0;
+   volatile int launched = 0;
+   volatile int processed = 0;
 
    {
       ROOT::EnableImplicitMT();
