@@ -160,7 +160,7 @@ template <typename... ColumnTypes, int... S>
 void DefineDataSourceColumns(const std::vector<std::string> &columns, TLoopManager &lm, StaticSeq<S...>,
                              TTraits::TypeList<ColumnTypes...>, TDataSource &ds)
 {
-   const auto mustBeDefined = FindUndefinedDSColumns(columns, lm.GetDefinedDataSourceColumns());
+   const auto mustBeDefined = FindUndefinedDSColumns(columns, lm.GetCustomColumnNames());
    if (std::none_of(mustBeDefined.begin(), mustBeDefined.end(), [](bool b) { return b; })) {
       // no need to define any column
       return;
@@ -1221,7 +1221,7 @@ private:
          TDFInternal::GetValidatedColumnNames(*lm, nColumns, columns, fValidCustomColumns, fDataSource);
       if (fDataSource)
          TDFInternal::DefineDataSourceColumns(selectedCols, *lm, TDFInternal::GenStaticSeq_t<nColumns>(),
-                                 TDFInternal::TypeList<BranchTypes...>(), *fDataSource);
+                                              TDFInternal::TypeList<BranchTypes...>(), *fDataSource);
       const auto nSlots = fProxiedPtr->GetNSlots();
       TDFInternal::BuildAndBook<BranchTypes...>(selectedCols, r, nSlots, *lm, *fProxiedPtr, (ActionType *)nullptr);
       return MakeResultProxy(r, lm);
