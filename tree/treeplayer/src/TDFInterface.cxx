@@ -32,32 +32,48 @@ namespace Internal {
 namespace TDF {
 // Match expression against names of branches passed as parameter
 // Return vector of names of the branches used in the expression
-std::vector<std::string>
-FindUsedColumnNames(std::string_view expression, TObjArray *branches, const std::vector<std::string> &customColumns)
+std::vector<std::string> FindUsedColumnNames(std::string_view expression, TObjArray *branches,
+                                             const ColumnNames_t &customColumns, const ColumnNames_t &dsColumns)
 {
-   // Check what branches and temporary branches are used in the expression
    // To help matching the regex
    const std::string paddedExpr = " " + std::string(expression) + " ";
    int paddedExprLen = paddedExpr.size();
    static const std::string regexBit("[^a-zA-Z0-9_]");
+
    std::vector<std::string> usedBranches;
+
+   // Check which custom columns match
    for (auto brName : customColumns) {
-      std::string bNameRegexContent = regexBit + brName + regexBit;
-      TRegexp bNameRegex(bNameRegexContent.c_str());
-      if (-1 != bNameRegex.Index(paddedExpr.c_str(), &paddedExprLen)) {
-         usedBranches.emplace_back(brName.c_str());
-      }
-   }
-   if (!branches)
-      return usedBranches;
-   for (auto bro : *branches) {
-      auto brName = bro->GetName();
       std::string bNameRegexContent = regexBit + brName + regexBit;
       TRegexp bNameRegex(bNameRegexContent.c_str());
       if (-1 != bNameRegex.Index(paddedExpr.c_str(), &paddedExprLen)) {
          usedBranches.emplace_back(brName);
       }
    }
+
+   // Check which tree branches match
+   if (branches) {
+      for (auto bro : *branches) {
+         auto brName = bro->GetName();
+         std::string bNameRegexContent = regexBit + brName + regexBit;
+         TRegexp bNameRegex(bNameRegexContent.c_str());
+         if (-1 != bNameRegex.Index(paddedExpr.c_str(), &paddedExprLen)) {
+            usedBranches.emplace_back(brName);
+         }
+      }
+   }
+
+   // Check which data-source columns match
+   for (auto col : dsColumns) {
+      std::string bNameRegexContent = regexBit + col + regexBit;
+      TRegexp bNameRegex(bNameRegexContent.c_str());
+      if (-1 != bNameRegex.Index(paddedExpr.c_str(), &paddedExprLen)) {
+         // if not already found among the custom columns
+         if (std::find(usedBranches.begin(), usedBranches.end(), col) == usedBranches.end())
+            usedBranches.emplace_back(col);
+      }
+   }
+
    return usedBranches;
 }
 
@@ -67,9 +83,10 @@ Long_t JitTransformation(void *thisPtr, std::string_view methodName, std::string
                          std::string_view name, std::string_view expression, TObjArray *branches,
                          const std::vector<std::string> &customColumns,
                          const std::map<std::string, TmpBranchBasePtr_t> &tmpBookedBranches, TTree *tree,
-                         std::string_view returnTypeName)
+                         std::string_view returnTypeName, TDataSource *ds)
 {
-   auto usedBranches = FindUsedColumnNames(expression, branches, customColumns);
+   const auto &dsColumns = ds ? ds->GetColumnNames() : ColumnNames_t{};
+   auto usedBranches = FindUsedColumnNames(expression, branches, customColumns, dsColumns);
    auto exprNeedsVariables = !usedBranches.empty();
 
    // Move to the preparation of the jitting
@@ -90,7 +107,7 @@ Long_t JitTransformation(void *thisPtr, std::string_view methodName, std::string
          // The map is a const reference, so no operator[]
          auto tmpBrIt = tmpBookedBranches.find(brName);
          auto tmpBr = tmpBrIt == tmpBookedBranches.end() ? nullptr : tmpBrIt->second.get();
-         auto brTypeName = ColumnName2ColumnTypeName(brName, tree, tmpBr);
+         auto brTypeName = ColumnName2ColumnTypeName(brName, tree, tmpBr, ds);
          ss << brTypeName << " " << brName << ";\n";
          usedBranchesTypes.emplace_back(brTypeName);
       }
