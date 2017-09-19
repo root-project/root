@@ -413,8 +413,8 @@ namespace FitUtil {
             vecCore::Load<T>(invErrorVec, invErrorptr);
 
             const T *x;
+            std::vector<T> xc;
             if(data.NDim() > 1) {
-               std::vector<T> xc;
                xc.resize(data.NDim());
                xc[0] = x1;
                for (unsigned int j = 1; j < data.NDim(); ++j)
@@ -565,8 +565,9 @@ namespace FitUtil {
             vecCore::Load<T>(x1, data.GetCoordComponent(i * vecSize, 0));
             const T *x = nullptr;
             unsigned int ndim = data.NDim();
+            std::vector<T> xc;
             if (ndim > 1) {
-               std::vector<T> xc(ndim);
+               xc.resize(ndim);
                xc[0] = x1;
                for (unsigned int j = 1; j < ndim; ++j)
                   vecCore::Load<T>(xc[j], data.GetCoordComponent(i * vecSize, j));
@@ -964,8 +965,11 @@ namespace FitUtil {
             const T *x = nullptr;
 
             unsigned int ndim = data.NDim();
+            // need to declare vector outside if statement
+            // otherwise pointer will be invalid
+            std::vector<T> xc;
             if (ndim > 1) {
-               std::vector<T> xc(ndim);
+               xc.resize(ndim);
                xc[0] = x1;
                for (unsigned int j = 1; j < ndim; ++j)
                   vecCore::Load<T>(xc[j], data.GetCoordComponent(i * vecSize, j));
@@ -1150,8 +1154,9 @@ namespace FitUtil {
             const T *x = nullptr;
 
             unsigned ndim = data.NDim();
+            std::vector<T> xc;
             if (ndim > 1) {
-               std::vector<T> xc(ndim);
+               xc.resize(ndim);
                xc[0] = x1;
                for (unsigned int j = 1; j < ndim; ++j)
                   vecCore::Load<T>(xc[j], data.GetCoordComponent(i * vecSize, j));
@@ -1293,8 +1298,9 @@ namespace FitUtil {
             const T *x = nullptr;
 
             unsigned int ndim = data.NDim();
+            std::vector<T> xc(ndim);
             if (ndim > 1) {
-               std::vector<T> xc(ndim);
+               xc.resize(ndim);
                xc[0] = x1;
                for (unsigned int j = 1; j < ndim; ++j)
                   vecCore::Load<T>(xc[j], data.GetCoordComponent(i * vecSize, j));

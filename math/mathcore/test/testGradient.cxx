@@ -122,6 +122,7 @@ struct Model1D : public Model<T> {
 
       // Create TH1 and fill it with values from model function
       fNumPoints = 12801;
+      //fNumPoints = 11;
       fHistogram = new TH1D(nameTH1.c_str(), "Test random numbers", fNumPoints, 100, 200);
       gRandom->SetSeed(1);
       fHistogram->FillRandom(nameTF1.c_str(), 1000000);
@@ -290,12 +291,19 @@ struct GradientTestEvaluation {
          fFitter->Gradient(fModel->fParams, solution);
       end = std::chrono::system_clock::now();
 
+      // std::cout << "Gradient is : " << fFitter->NDim() << "  ";
+      //  for (unsigned int i = 0; i < fNumParams ; ++i)
+      //    std::cout << "  " << solution[i];
+      // std::cout << std::endl;
+
+      
       std::chrono::duration<Double_t> timeElapsed = end - start;
 
       return timeElapsed.count() / fNumRepetitions;
+     
    }
 
-   static const int fNumRepetitions = 100;
+   static const int fNumRepetitions = 2;
 
    unsigned fNumParams;
    Model<typename T::DataType> *fModel;
@@ -441,6 +449,26 @@ typedef ::testing::Types<> TestTypes;
 #  endif
 #endif
 
+
+TYPED_TEST_CASE(LogLikelihoodGradientTest, TestTypes);
+
+// Test EvalChi2Gradient and outputs its speedup against the scalar serial case.
+TYPED_TEST(LogLikelihoodGradientTest, LogLikelihoodGradient)
+{
+   Double_t solution[TestFixture::fNumParams];
+
+   Double_t benchmarkTime = TestFixture::BenchmarkSolution(solution);
+
+   std::cout << std::fixed << std::setprecision(4);
+   std::cout << "Speed-up with respect to scalar serial case: " << TestFixture::fReferenceTime / benchmarkTime;
+   std::cout << std::endl;
+
+   for (unsigned i = 0; i < TestFixture::fNumParams; i++) {
+      EXPECT_NEAR(solution[i], TestFixture::fReferenceSolution[i], 1e-6);
+   }
+}
+
+
 TYPED_TEST_CASE(Chi2GradientTest, TestTypes);
 
 // Test EvalChi2Gradient and outputs its speedup against the scalar serial case.
@@ -477,20 +505,3 @@ TYPED_TEST(PoissonLikelihoodGradientTest, PoissonLikelihoodGradient)
    }
 }
 
-TYPED_TEST_CASE(LogLikelihoodGradientTest, TestTypes);
-
-// Test EvalChi2Gradient and outputs its speedup against the scalar serial case.
-TYPED_TEST(LogLikelihoodGradientTest, LogLikelihoodGradient)
-{
-   Double_t solution[TestFixture::fNumParams];
-
-   Double_t benchmarkTime = TestFixture::BenchmarkSolution(solution);
-
-   std::cout << std::fixed << std::setprecision(4);
-   std::cout << "Speed-up with respect to scalar serial case: " << TestFixture::fReferenceTime / benchmarkTime;
-   std::cout << std::endl;
-
-   for (unsigned i = 0; i < TestFixture::fNumParams; i++) {
-      EXPECT_NEAR(solution[i], TestFixture::fReferenceSolution[i], 1e-6);
-   }
-}
