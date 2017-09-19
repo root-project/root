@@ -216,9 +216,9 @@ if (NOT libcxx)
   file(WRITE ${CMAKE_BINARY_DIR}/include/modulemap.overlay.yaml "{'version' : 0, 'roots' : []}")
   set(__vfs_overlay "-ivfsoverlay ${CMAKE_BINARY_DIR}/include/modulemap.overlay.yaml")
 
-  if (cxxmodules)
+  if (cxxmodules OR runtime_modules)
     set(ROOT_CXXMODULES_COMMONFLAGS "${ROOT_CXXMODULES_COMMONFLAGS} ${__vfs_overlay}")
-  endif(cxxmodules)
+  endif()
 
   # Only use the first path from the HEADERS_LOCATION (which is separated by colons).
   get_property(__libcpp_full_paths GLOBAL PROPERTY ROOT_CLING_CXX_HEADERS_LOCATION)
