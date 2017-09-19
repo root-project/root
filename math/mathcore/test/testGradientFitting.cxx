@@ -7,17 +7,23 @@
 #include "HFitInterface.h"
 #include "TH2.h"
 #include "TF2.h"
+#include "TRandom.h"
 
 #include "gtest/gtest.h"
 
 #include <iostream>
 #include <string>
 
+
 // Gradient 2D function
 template <class T>
 class GradFunc2D : public ROOT::Math::IParamMultiGradFunctionTempl<T> {
 public:
-   void SetParameters(const double *p) { std::copy(p, p + NPar(), fParameters); }
+   void SetParameters(const double *p) {
+      std::copy(p, p + NPar(), fParameters);
+      // compute integral in interval [0,1][0,1]
+      fIntegral = Integral(p);
+   }
 
    const double *Parameters() const { return fParameters; }
 
@@ -32,19 +38,44 @@ public:
 
    unsigned int NPar() const { return 5; }
 
-   void ParameterGradient(const T *x, const double *, T *grad) const
+   void ParameterGradient(const T *x, const double * p, T *grad) const
    {
-      grad[0] = x[0] * x[0];
-      grad[1] = x[0];
-      grad[2] = x[1] * x[1];
-      grad[3] = x[1];
-      grad[4] = 1;
+      if (p == nullptr) {
+         ParameterGradient(x, fParameters, grad);
+         return; 
+      }
+      T xx = (1. - x[0] );
+      T yy = (1. - x[1] ); 
+      T fval = FVal(x,p);
+      grad[0] =  fval / fIntegral;  
+      grad[1] =  p[0] * ( xx / fIntegral - fval / (2. * fIntegral * fIntegral ) );
+      grad[2] =  p[0] * ( xx * xx / fIntegral -  fval / (3. * fIntegral * fIntegral ) );
+      grad[3] =  p[0] * ( yy / fIntegral - fval / (2. * fIntegral * fIntegral ) );
+      grad[4] =  p[0] * ( yy * yy / fIntegral -  fval / (3. * fIntegral * fIntegral ) );
+   }
+
+   // return integral in interval {0,1}{0,1}
+   double Integral(const double * p)
+   {
+      return 1. +  (p[1] + p[3] )/ 2. + (p[2] + p[4] )/ 3.; 
    }
 
 private:
+
+   T FVal(const T * x, const double *p) const
+   {
+      // use a function based on Bernstein polynomial which have easy normalization
+      T xx = (1. - x[0] );
+      T yy = (1. - x[1] ); 
+      T fval =  1. + p[1] * xx + p[2] * xx * xx + p[3] * yy + p[4] * yy * yy;
+      return fval; 
+   }
+
    T DoEvalPar(const T *x, const double *p) const
    {
-      return p[0] * x[0] * x[0] + p[1] * x[0] + p[2] * x[1] * x[1] + p[3] * x[1] + p[4];
+      if (p == nullptr) 
+         return DoEvalPar(x, fParameters); 
+      return p[0] * FVal(x,p) / fIntegral; 
    }
 
    T DoParameterDerivative(const T *x, const double *p, unsigned int ipar) const
@@ -54,7 +85,8 @@ private:
       return grad[ipar];
    }
 
-   double fParameters[5];
+   double fParameters[5] = {0,0,0,0,0};
+   double fIntegral = 1.0; 
 };
 
 template <typename U, typename V>
@@ -84,8 +116,10 @@ protected:
       std::string nameTF2 = streamTF2.str();
 
       GradFunc2D<typename T::DataType> fitFunction;
-      fFunction = new TF2(nameTF2.c_str(), fitFunction, 0., 10., 0, 10, 5);
-      double p0[5] = {1., 2., 0.5, 1., 3.};
+      fFunction = new TF2(nameTF2.c_str(), fitFunction, 0., 1., 0, 1, 5);
+      fFunction->SetNpx(300);
+      fFunction->SetNpy(300);
+      double p0[5] = {1., 1., 2., 3., 0.5};
       fFunction->SetParameters(p0);
       assert(fFunction->GetNpar() == 5);
 
@@ -98,27 +132,33 @@ protected:
       if (oldTH2)
          delete oldTH2;
 
-      fHistogram = new TH2D(nameTH2.c_str(), nameTH2.c_str(), fNumPoints, 0, 10., 30, 0., 10.);
+      fHistogram = new TH2D(nameTH2.c_str(), nameTH2.c_str(), fNumPoints, 0, 1., 99, 0., 1.);
 
       // Fill the histogram
-      for (int i = 0; i < 10000; ++i) {
+      gRandom->SetSeed(222);
+      for (int i = 0; i < 1000000; ++i) {
          double x, y = 0;
          fFunction->GetRandom2(x, y);
          fHistogram->Fill(x, y);
       }
 
-      // Fill the binned or unbinned data
-      FillData();
-
+   
       // Create the function
       GradFunc2D<typename T::DataType> function;
 
-      double p[5] = {2., 1., 1, 2., 100.};
+      double p[5] = {1., 1., 1, 1., 1.};
       function.SetParameters(p);
 
       // Create the fitter from the function
       fFitter.SetFunction(function);
-      fFitter.Config().SetMinimizer("Minuit");
+      //fFitter.SetFunction(function,false);
+      fFitter.Config().SetMinimizer("Minuit2");
+      //fFitter.Config().MinimizerOptions().SetPrintLevel(1);
+
+
+      // Fill the binned or unbinned data
+      FillData();
+
    }
 
    // Fill binned data
@@ -138,13 +178,20 @@ protected:
                            std::is_same<U, ROOT::Fit::UnBinData>::value>::type
    FillData()
    {
-      fData = new ROOT::Fit::UnBinData(fNumPoints, 2);
+      unsigned int npoints = 100*fNumPoints + 1;
+      //npoints = 101;
+      fData = new ROOT::Fit::UnBinData(npoints, 2);
 
-      TAxis *x = fHistogram->GetXaxis();
-      TAxis *y = fHistogram->GetYaxis();
+      gRandom->SetSeed(111); // to get the same data
+      for (unsigned i = 0; i < npoints; i++) {
+         double xdata, ydata = 0;
+         fFunction->GetRandom2(xdata, ydata);
+         fData->Add(xdata, ydata);
+      }
 
-      for (unsigned i = 0; i < fNumPoints; i++)
-         fData->Add(x->GetBinCenter(i), y->GetBinCenter(i));
+      // for unbin data we need to fix the overall normalization parameter
+      fFitter.Config().ParamsSettings()[0].SetValue(1); 
+      fFitter.Config().ParamsSettings()[0].Fix(); 
    }
 
    TF2 *fFunction;
@@ -152,12 +199,13 @@ protected:
    TH2D *fHistogram;
    ROOT::Fit::Fitter fFitter;
 
-   static const unsigned fNumPoints = 6801;
+   static const unsigned fNumPoints = 401;
 };
 
 // Types used by Google Test to instantiate the tests.
 #ifdef R__HAS_VECCORE
 typedef ::testing::Types<ScalarBinned, ScalarUnBinned, VectorialBinned, VectorialUnBinned> TestTypes;
+//typedef ::testing::Types<ScalarBinned,VectorialBinned> TestTypes;
 #else
 typedef ::testing::Types<ScalarBinned, ScalarUnBinned> TestTypes;
 #endif

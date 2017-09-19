@@ -35,6 +35,8 @@
 // using parameter cache is not thread safe but needed for normalizing the functions
 #define USE_PARAMCACHE
 
+//#define DEBUG_FITUTIL
+
 #ifdef R__HAS_VECCORE
 namespace vecCore {
 template <class T>
@@ -550,6 +552,7 @@ namespace FitUtil {
          // needed to compute effective global weight in case of extended likelihood
 
          auto vecSize = vecCore::VectorSize<T>();
+         unsigned int numVectors = n / vecSize;
 
          auto mapFunction = [ &, p](const unsigned i) {
             T W{};
@@ -558,25 +561,32 @@ namespace FitUtil {
 
             (void)p; /* avoid unused lambda capture warning if PARAMCACHE is disabled */
 
-            if(data.NDim() > 1) {
-               std::vector<T> x(data.NDim());
-               for (unsigned int j = 0; j < data.NDim(); ++j)
-                  vecCore::Load<T>(x[j], data.GetCoordComponent(i * vecSize, j));
-#ifdef USE_PARAMCACHE
-               fval = func(x.data());
-#else
-               fval = func(x.data(), p);
-#endif
-               // one -dim case
+            T x1;
+            vecCore::Load<T>(x1, data.GetCoordComponent(i * vecSize, 0));
+            const T *x = nullptr;
+            unsigned int ndim = data.NDim();
+            if (ndim > 1) {
+               std::vector<T> xc(ndim);
+               xc[0] = x1;
+               for (unsigned int j = 1; j < ndim; ++j)
+                  vecCore::Load<T>(xc[j], data.GetCoordComponent(i * vecSize, j));
+               x = xc.data();
             } else {
-               T x;
-               vecCore::Load<T>(x, data.GetCoordComponent(i * vecSize, 0));
-#ifdef USE_PARAMCACHE
-               fval = func(&x);
-#else
-               fval = func(&x, p);
-#endif
+               x = &x1;
             }
+
+#ifdef USE_PARAMCACHE
+            fval = func(x);
+#else
+            fval = func(x, p);
+#endif
+
+#ifdef DEBUG_FITUTIL
+            if (i < 5 || (i > numVectors-5) ) {
+               if (ndim == 1) std::cout << i << "  x " << x[0]  << " fval = " << fval; 
+               else std::cout << i << "  x " << x[0] << " y " << x[1] << " fval = " << fval; 
+            }
+#endif
 
             if (normalizeFunc) fval = fval * (1 / norm);
 
@@ -598,6 +608,12 @@ namespace FitUtil {
                   }
                }
             }
+#ifdef DEBUG_FITUTIL
+            if (i < 5 || (i > numVectors-5)  )  {
+                 std::cout << "   " << fval << "  logfval " << logval << std::endl;
+            }
+#endif
+
             nPoints++;
             return LikelihoodAux<T>(logval, W, W2);
          };
@@ -624,7 +640,7 @@ namespace FitUtil {
          T sumW_v{};
          T sumW2_v{};
          if (executionPolicy == ROOT::Fit::ExecutionPolicy::kSerial) {
-            for (unsigned int i = 0; i < n / vecSize; ++i) {
+            for (unsigned int i = 0; i < numVectors; ++i) {
                auto resArray = mapFunction(i);
                logl_v += resArray.logvalue;
                sumW_v += resArray.weight;
@@ -632,7 +648,7 @@ namespace FitUtil {
             }
 #ifdef R__USE_IMT
          } else if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
-            auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(data.Size() / vecSize);
+            auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking( numVectors);
             ROOT::TThreadExecutor pool;
             auto resArray = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, data.Size() / vecSize), redFunction, chunks);
             logl_v = resArray.logvalue;
@@ -645,6 +661,18 @@ namespace FitUtil {
          } else {
             Error("FitUtil::EvaluateLogL", "Execution policy unknown. Avalaible choices:\n ROOT::Fit::ExecutionPolicy::kSerial (default)\n ROOT::Fit::ExecutionPolicy::kMultithread (requires IMT)\n");
          }
+
+         // Compute the contribution from the remaining points ( Last padded SIMD vector of elements )
+         unsigned int remainingPoints = n % vecSize;
+         if (remainingPoints > 0) {
+            auto remainingPointsContribution = mapFunction(numVectors);
+            // Add the contribution from the valid remaining points and store the result in the output variable
+            auto remainingMask = vecCore::Int2Mask<T>(remainingPoints);
+            vecCore::MaskedAssign(logl_v, remainingMask, logl_v + remainingPointsContribution.logvalue);
+            vecCore::MaskedAssign(sumW_v, remainingMask, sumW_v + remainingPointsContribution.weight);
+            vecCore::MaskedAssign(sumW2_v, remainingMask, sumW2_v + remainingPointsContribution.weight2);
+         }
+
 
          //reduce vector type to double.
          double logl  = 0.;
@@ -708,6 +736,13 @@ namespace FitUtil {
             logl += extendedTerm;
          }
 
+#ifdef DEBUG_FITUTIL
+         std::cout << "Evaluated log L for parameters (";
+         for (unsigned int ip = 0; ip < func.NPar(); ++ip)
+            std::cout << " " << p[ip];
+         std::cout << ")  nll = " << -logl << std::endl;
+#endif
+         
          // reset the number of fitting data points
          //  nPoints = n;
          // std::cout<<", n: "<<nPoints<<std::endl;
@@ -893,11 +928,6 @@ namespace FitUtil {
 
          const IGradModelFunctionTempl<T> &func = *fg;
 
-#ifdef DEBUG
-         std::cout << "\n\nFit data size = " << n << std::endl;
-         std::cout << "evaluate chi2 using function gradient " << &func << "  " << p << std::endl;
-#endif
-
          const DataOptions &fitOpt = data.Opt();
          if (fitOpt.fBinVolume || fitOpt.fIntegral || fitOpt.fExpErrors)
             Error("FitUtil::EvaluateChi2Gradient", "The vectorized implementation doesn't support Integrals,"
@@ -947,12 +977,12 @@ namespace FitUtil {
             fval = func(x, p);
             func.ParameterGradient(x, p, &gradFunc[0]);
 
-#ifdef DEBUG
-            std::cout << x[0] << "  " << y << "  " << 1. / invError << " params : ";
-            for (unsigned int ipar = 0; ipar < npar; ++ipar)
-               std::cout << p[ipar] << "\t";
-            std::cout << "\tfval = " << fval << std::endl;
-#endif
+// #ifdef DEBUG_FITUTIL
+//             std::cout << x[0] << "  " << y << "  " << 1. / invError << " params : ";
+//             for (unsigned int ipar = 0; ipar < npar; ++ipar)
+//                std::cout << p[ipar] << "\t";
+//             std::cout << "\tfval = " << fval << std::endl;
+// #endif
 
             validPointsMasks[i] = CheckInfNaNValues(fval);
             if (vecCore::MaskEmpty(validPointsMasks[i])) {
@@ -1032,12 +1062,17 @@ namespace FitUtil {
          }
 
          // Compute the contribution from the remaining points
-         auto remainingPointsContribution = mapFunction(numVectors);
-
-         // Add the contribution from the valid remaining points and store the result in the output variable
-         auto remainingMask = vecCore::Int2Mask<T>(initialNPoints % vecSize);
+         unsigned int remainingPoints = initialNPoints % vecSize;
+         if (remainingPoints > 0) {
+            auto remainingPointsContribution = mapFunction(numVectors);
+            // Add the contribution from the valid remaining points and store the result in the output variable
+            auto remainingMask = vecCore::Int2Mask<T>(remainingPoints);
+            for (unsigned int param = 0; param < npar; param++) {
+               vecCore::MaskedAssign(gVec[param], remainingMask, gVec[param] + remainingPointsContribution[param]);
+            }
+         }
+         // reduce final gradient result from T to double
          for (unsigned int param = 0; param < npar; param++) {
-            vecCore::MaskedAssign(gVec[param], remainingMask, gVec[param] + remainingPointsContribution[param]);
             grad[param] = vecCore::ReduceAdd(gVec[param]);
          }
 
@@ -1060,7 +1095,7 @@ namespace FitUtil {
             if (nPoints < npar) {
                MATH_ERROR_MSG("FitUtil::EvaluateChi2Gradient",
                               "Too many points rejected for overflow in gradient calculation");
-            }
+           }
          }
       }
 
@@ -1072,7 +1107,7 @@ namespace FitUtil {
 
       /// evaluate the pdf (Poisson) contribution to the logl (return actually log of pdf)
       /// and its gradient
-static double EvalPoissonBinPdf(const IModelFunctionTempl<T> &, const BinData &, const double *, unsigned int , double * ) {
+      static double EvalPoissonBinPdf(const IModelFunctionTempl<T> &, const BinData &, const double *, unsigned int , double * ) {
          Error("FitUtil::Evaluate<T>::EvaluatePoissonBinPdf", "The vectorized evaluation of the BinnedLikelihood fit evaluated point by point is still not supported");
          return -1.;
       }
@@ -1202,14 +1237,20 @@ static double EvalPoissonBinPdf(const IModelFunctionTempl<T> &, const BinData &,
          }
 
          // Compute the contribution from the remaining points
-         auto remainingPointsContribution = mapFunction(numVectors);
-
-         // Add the contribution from the valid remaining points and store the result in the output variable
-         auto remainingMask = vecCore::Int2Mask<T>(initialNPoints % vecSize);
+         unsigned int remainingPoints = initialNPoints % vecSize;
+         if (remainingPoints > 0) {
+            auto remainingPointsContribution = mapFunction(numVectors);
+            // Add the contribution from the valid remaining points and store the result in the output variable
+            auto remainingMask = vecCore::Int2Mask<T>(initialNPoints % vecSize);
+            for (unsigned int param = 0; param < npar; param++) {
+               vecCore::MaskedAssign(gVec[param], remainingMask, gVec[param] + remainingPointsContribution[param]);
+            }
+         }
+         // reduce final gradient result from T to double
          for (unsigned int param = 0; param < npar; param++) {
-            vecCore::MaskedAssign(gVec[param], remainingMask, gVec[param] + remainingPointsContribution[param]);
             grad[param] = vecCore::ReduceAdd(gVec[param]);
          }
+
       }
 
       static void EvalLogLGradient(const IModelFunctionTempl<T> &f, const UnBinData &data, const double *p,
@@ -1224,10 +1265,20 @@ static double EvalPoissonBinPdf(const IModelFunctionTempl<T> &, const BinData &,
 
          const IGradModelFunctionTempl<T> &func = *fg;
 
+
          unsigned int npar = func.NPar();
          auto vecSize = vecCore::VectorSize<T>();
          unsigned initialNPoints = data.Size();
          unsigned numVectors = initialNPoints / vecSize;
+
+#ifdef DEBUG_FITUTIL 
+         std::cout << "\n===> Evaluate Gradient for parameters ";
+         for (unsigned int ip = 0; ip < npar; ++ip)
+            std::cout << "  " << p[ip];
+         std::cout << "\n";
+#endif 
+
+         (const_cast<IGradModelFunctionTempl<T> &>(func)).SetParameters(p);
 
          const T kdmax1 = vecCore::math::Sqrt(vecCore::NumericLimits<T>::Max());
          const T kdmax2 = vecCore::NumericLimits<T>::Max() / (4 * initialNPoints);
@@ -1252,8 +1303,16 @@ static double EvalPoissonBinPdf(const IModelFunctionTempl<T> &, const BinData &,
                x = &x1;
             }
 
+
             T fval = func(x, p);
             func.ParameterGradient(x, p, &gradFunc[0]);
+
+#ifdef DEBUG_FITUTIL            
+            if (i < 5 || (i > numVectors-5) ) {
+               if (ndim > 1) std::cout << i << "  x " << x[0] << " y " << x[1] << " gradient " << gradFunc[0] << "  " << gradFunc[1] << "  " << gradFunc[3] << std::endl;
+               else std::cout << i << "  x " << x[0] << " gradient " << gradFunc[0] << "  " << gradFunc[1] << "  " << gradFunc[3] << std::endl;
+            }
+#endif            
 
             vecCore::Mask<T> positiveValues = fval > 0;
 
@@ -1327,14 +1386,27 @@ static double EvalPoissonBinPdf(const IModelFunctionTempl<T> &, const BinData &,
          }
 
          // Compute the contribution from the remaining points
-         auto remainingPointsContribution = mapFunction(numVectors);
-
-         // Add the contribution from the valid remaining points and store the result in the output variable
-         auto remainingMask = vecCore::Int2Mask<T>(initialNPoints % vecSize);
+         unsigned int remainingPoints = initialNPoints % vecSize;
+         if (remainingPoints > 0) {
+            auto remainingPointsContribution = mapFunction(numVectors);
+            // Add the contribution from the valid remaining points and store the result in the output variable
+            auto remainingMask = vecCore::Int2Mask<T>(initialNPoints % vecSize);
+            for (unsigned int param = 0; param < npar; param++) {
+               vecCore::MaskedAssign(gVec[param], remainingMask, gVec[param] + remainingPointsContribution[param]);
+            }
+         }
+         // reduce final gradient result from T to double
          for (unsigned int param = 0; param < npar; param++) {
-            vecCore::MaskedAssign(gVec[param], remainingMask, gVec[param] + remainingPointsContribution[param]);
             grad[param] = vecCore::ReduceAdd(gVec[param]);
          }
+
+#ifdef DEBUG_FITUTIL
+         std::cout << "Final gradient ";
+         for (unsigned int param = 0; param < npar; param++) {
+            std::cout << "  " << grad[param];
+         }
+         std::cout << "\n";
+#endif
       }
    };
 

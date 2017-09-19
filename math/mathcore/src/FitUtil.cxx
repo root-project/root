@@ -1107,9 +1107,16 @@ double FitUtil::EvaluateLogL(const IModelFunctionTempl<double> &func, const UnBi
    }
 
    // reset the number of fitting data points
-  //  nPoints = n;
-// std::cout<<", n: "<<nPoints<<std::endl;
-nPoints = 0;
+   //  nPoints = n;
+   // std::cout<<", n: "<<nPoints<<std::endl;
+   nPoints = 0;
+
+#ifdef DEBUG  
+   std::cout << "Evaluated log L for parameters (";
+   for (unsigned int ip = 0; ip < func.NPar(); ++ip)
+      std::cout << " " << p[ip];
+   std::cout << ")  fval = " << -logl << std::endl;
+#endif
 
    return -logl;
 }
@@ -1127,6 +1134,15 @@ void FitUtil::EvaluateLogLGradient(const IModelFunction &f, const UnBinData &dat
    unsigned int npar = func.NPar();
    unsigned initialNPoints = data.Size();
 
+   (const_cast<IGradModelFunction &>(func)).SetParameters(p);
+
+#ifdef DEBUG  
+    std::cout << "\n===> Evaluate Gradient for parameters ";
+         for (unsigned int ip = 0; ip < npar; ++ip)
+            std::cout << "  " << p[ip];
+         std::cout << "\n";
+#endif
+
    const double kdmax1 = std::sqrt(std::numeric_limits<double>::max());
    const double kdmax2 = std::numeric_limits<double>::max() / (4 * initialNPoints);
 
@@ -1134,7 +1150,16 @@ void FitUtil::EvaluateLogLGradient(const IModelFunction &f, const UnBinData &dat
       std::vector<double> gradFunc(npar);
       std::vector<double> pointContribution(npar);
 
-      const double *x = data.GetCoordComponent(i, 0);
+
+      const double * x = nullptr; 
+      if (data.NDim() > 1) {
+         std::vector<double> xc(data.NDim());
+         for (unsigned int j = 0; j < data.NDim(); ++j)
+            xc[j] = *data.GetCoordComponent(i, j);
+         x = xc.data(); 
+      } else {
+         x = data.GetCoordComponent(i, 0);
+      }
 
       double fval = func(x, p);
       func.ParameterGradient(x, p, &gradFunc[0]);
@@ -1211,6 +1236,14 @@ void FitUtil::EvaluateLogLGradient(const IModelFunction &f, const UnBinData &dat
 
    // copy result
    std::copy(g.begin(), g.end(), grad);
+
+#ifdef DEBUG
+   std::cout << "FitUtil.cxx : Final gradient ";
+   for (unsigned int param = 0; param < npar; param++) {
+      std::cout << "  " << grad[param];
+   }
+   std::cout << "\n";
+#endif
 }
 //_________________________________________________________________________________________________
 // for binned log likelihood functions
