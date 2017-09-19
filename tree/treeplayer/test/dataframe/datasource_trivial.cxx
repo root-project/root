@@ -49,7 +49,7 @@ TEST(TTrivialDS, ColumnReaders)
    auto slot = 0U;
    for (auto &&range : ranges) {
       for (auto i : ROOT::TSeq<ULong64_t>(range.first, range.second)) {
-         tds.SetEntry(slot, i);
+         tds.SetEntry(i, slot);
          auto val = **vals[slot];
          EXPECT_EQ(i, val);
       }
@@ -57,6 +57,7 @@ TEST(TTrivialDS, ColumnReaders)
    }
 }
 
+#ifndef NDEBUG
 TEST(TTrivialDS, SetNSlotsTwice)
 {
    auto theTest = []() {
@@ -66,6 +67,7 @@ TEST(TTrivialDS, SetNSlotsTwice)
    };
    ASSERT_DEATH(theTest(), "Setting the number of slots even if the number of slots is different from zero.");
 }
+#endif
 
 TEST(TTrivialDS, FromATDF)
 {

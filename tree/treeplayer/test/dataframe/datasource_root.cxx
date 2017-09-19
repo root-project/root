@@ -86,6 +86,8 @@ TEST(TRootTDS, ColumnReaders)
    }
 }
 
+#ifndef NDEBUG
+
 TEST(TRootTDS, SetNSlotsTwice)
 {
    auto theTest = []() {
@@ -95,6 +97,7 @@ TEST(TRootTDS, SetNSlotsTwice)
    };
    ASSERT_DEATH(theTest(), "Setting the number of slots even if the number of slots is different from zero.");
 }
+#endif
 
 TEST(TRootTDS, FromATDF)
 {
