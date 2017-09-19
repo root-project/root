@@ -116,9 +116,9 @@ TEST(TRootTDS, FromATDFWithJitting)
 {
    std::unique_ptr<TDataSource> tds(new TRootDS(treeName, fileGlob));
    TDataFrame tdf(std::move(tds));
-   auto max = tdf.Max("i");
-   auto min = tdf.Min("i");
+   auto max = tdf.Filter("i<6").Max("i");
+   auto min = tdf.Define("j", "i").Filter("j>4").Min("j");
 
-   EXPECT_DOUBLE_EQ(29., *max);
-   EXPECT_DOUBLE_EQ(0., *min);
+   EXPECT_DOUBLE_EQ(5., *max);
+   EXPECT_DOUBLE_EQ(5., *min);
 }

@@ -86,11 +86,9 @@ TEST(TTrivialDS, FromATDFWithJitting)
 {
    std::unique_ptr<TDataSource> tds(new TTrivialDS(32));
    TDataFrame tdf(std::move(tds));
-   auto max = tdf.Max("col0");
-   auto min = tdf.Min("col0");
-   auto c = tdf.Count();
+   auto max = tdf.Filter("col0 < 10").Max("col0");
+   auto min = tdf.Filter("col0 > 10").Define("j", "col0*2").Min("j");
 
-   EXPECT_EQ(32U, *c);
-   EXPECT_DOUBLE_EQ(31., *max);
-   EXPECT_DOUBLE_EQ(0., *min);
+   EXPECT_DOUBLE_EQ(9., *max);
+   EXPECT_DOUBLE_EQ(22., *min);
 }
