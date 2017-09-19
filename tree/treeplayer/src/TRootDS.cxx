@@ -1,7 +1,8 @@
-#include <TClass.h>
 #include <ROOT/TDFUtils.hxx>
 #include <ROOT/TRootDS.hxx>
 #include <ROOT/TSeq.hxx>
+#include <TClass.h>
+#include <TInterpreter.h>
 
 #include <algorithm>
 #include <vector>
@@ -18,7 +19,7 @@ std::vector<void *> TRootDS::GetColumnReadersImpl(std::string_view name, const s
    if (fBranchAddresses.empty()) {
       auto nColumns = colNames.size();
       // Initialise the entire set of addresses
-      fBranchAddresses.resize(nColumns, std::vector<void *>(fNSlots));
+      fBranchAddresses.resize(nColumns, std::vector<void *>(fNSlots, nullptr));
    }
 
    const auto index = std::distance(colNames.begin(), std::find(colNames.begin(), colNames.end(), name));
@@ -41,6 +42,9 @@ TRootDS::TRootDS(std::string_view treeName, std::string_view fileNameGlob)
 
 TRootDS::~TRootDS()
 {
+   for(auto addr : fAddressesToFree) {
+      delete addr;
+   }
 }
 
 std::string TRootDS::GetTypeName(std::string_view colName) const
@@ -78,20 +82,25 @@ void TRootDS::InitSlot(unsigned int slot, ULong64_t firstEntry)
    fChains[slot].reset(chain);
    chain->Add(fFileNameGlob.c_str());
    chain->GetEntry(firstEntry);
+   TString setBranches;
    for (auto i : ROOT::TSeqU(fListOfBranches.size())) {
       auto colName = fListOfBranches[i].c_str();
       auto &addr = fBranchAddresses[i][slot];
       auto typeName = GetTypeName(colName);
-      auto isClass = nullptr != TClass::GetClass(typeName.c_str());
-      if (isClass) {
-         chain->SetBranchAddress(colName, &addr);
+      auto typeClass = TClass::GetClass(typeName.c_str());
+      if (typeClass) {
+//          chain->SetBranchAddress(colName, &addr);
+         setBranches += TString::Format("((TChain*)%p)->SetBranchAddress(\"%s\", (%s**)%p);\n", chain, colName, typeClass->GetName(), &addr);
       } else {
-         if (!addr) {
-            addr = new double(); // who frees this :) ?
-         }
+          if (!addr) {
+             addr = new double(); // who frees this :) ?
+             fAddressesToFree.emplace_back((double*)addr);
+          }
          chain->SetBranchAddress(colName, addr);
+         //setBranches += TString::Format("(*(void*)%p) = new %s();((TChain*)%p)->SetBranchAddress(\"%s\", (%s*)%p);\n",&addr, typeName.c_str(), chain, colName, typeName.c_str(), addr);
       }
    }
+   gInterpreter->Calc(setBranches);
 }
 
 const std::vector<std::pair<ULong64_t, ULong64_t>> &TRootDS::GetEntryRanges() const

@@ -16,6 +16,7 @@ private:
    std::string fTreeName;
    std::string fFileNameGlob;
    mutable TChain fModelChain; // Mutable needed for getting the column type name
+   std::vector<double*> fAddressesToFree;
    std::vector<std::string> fListOfBranches;
    std::vector<std::pair<ULong64_t, ULong64_t>> fEntryRanges;
    std::vector<std::vector<void *>> fBranchAddresses; // first container-> slot, second -> column;
