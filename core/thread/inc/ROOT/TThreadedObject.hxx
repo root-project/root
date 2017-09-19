@@ -153,12 +153,18 @@ namespace ROOT {
       /// objects.
       /// \tparam ARGS Arguments of the constructor of T
       template<class ...ARGS>
-      TThreadedObject(ARGS&&... args): fObjPointers(fgMaxSlots, nullptr)
+      TThreadedObject(ARGS&&... args)
       {
          fDirectories = Internal::TThreadedObjectUtils::DirCreator<T>::Create(fgMaxSlots);
 
          TDirectory::TContext ctxt(fDirectories[0]);
          fModel.reset(Internal::TThreadedObjectUtils::Detacher<T>::Detach(new T(std::forward<ARGS>(args)...)));
+
+         if(ROOT::IsImplicitMTEnabled()) {
+            TThreadedObject<T>::fgMaxSlots =  ROOT::GetImplicitMTPoolSize();
+         }
+
+         fObjPointers.resize(fgMaxSlots, nullptr);
       }
 
       /// Access a particular processing slot. This
