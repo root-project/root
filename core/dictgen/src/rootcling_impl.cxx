@@ -4266,6 +4266,7 @@ int RootClingMain(int argc,
    std::string outputFile;
    // Data is in 'outputFile', therefore in the same scope.
    StringRef moduleName;
+   std::string vfsArg;
    // Adding -fmodules to the args will break lexing with __CINT__ defined,
    // and we actually do lex with __CINT__ and reuse this variable later,
    // we have to copy it now.
@@ -4284,6 +4285,10 @@ int RootClingMain(int argc,
 
       clingArgsInterpreter.push_back("-fmodule-name");
       clingArgsInterpreter.push_back(moduleName.str());
+
+      std::string vfsPath = std::string(gDriverConfig->fTROOT__GetIncludeDir()) + "/modulemap.overlay.yaml";
+      vfsArg = "-ivfsoverlay" + vfsPath;
+      clingArgsInterpreter.push_back(vfsArg.c_str());
 
       // Set the C++ modules output directory to the directory where we generate
       // the shared library.
