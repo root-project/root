@@ -13,6 +13,7 @@
 #include "Minuit2/FunctionGradient.h"
 #include "Minuit2/MinimumParameters.h"
 #include "Minuit2/MnMatrix.h"
+#include "Minuit2/MnPrint.h"
 
 namespace ROOT {
    namespace Minuit2 {
@@ -37,6 +38,9 @@ FunctionGradient AnalyticalGradientCalculator::operator()(const MinimumParameter
          v(i) = grad[ext];
       }
    }
+#ifdef DEBUG  
+   std::cout << "User given gradient in Minuit2" << v << std::endl;
+#endif   
 
    return FunctionGradient(v);
 }
