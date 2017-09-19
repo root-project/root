@@ -42,7 +42,7 @@ TRootDS::TRootDS(std::string_view treeName, std::string_view fileNameGlob)
 
 TRootDS::~TRootDS()
 {
-   for(auto addr : fAddressesToFree) {
+   for (auto addr : fAddressesToFree) {
       delete addr;
    }
 }
@@ -89,15 +89,17 @@ void TRootDS::InitSlot(unsigned int slot, ULong64_t firstEntry)
       auto typeName = GetTypeName(colName);
       auto typeClass = TClass::GetClass(typeName.c_str());
       if (typeClass) {
-//          chain->SetBranchAddress(colName, &addr);
-         setBranches += TString::Format("((TChain*)%p)->SetBranchAddress(\"%s\", (%s**)%p);\n", chain, colName, typeClass->GetName(), &addr);
+         //          chain->SetBranchAddress(colName, &addr);
+         setBranches += TString::Format("((TChain*)%p)->SetBranchAddress(\"%s\", (%s**)%p);\n", chain, colName,
+                                        typeClass->GetName(), &addr);
       } else {
-          if (!addr) {
-             addr = new double(); // who frees this :) ?
-             fAddressesToFree.emplace_back((double*)addr);
-          }
+         if (!addr) {
+            addr = new double(); // who frees this :) ?
+            fAddressesToFree.emplace_back((double *)addr);
+         }
          chain->SetBranchAddress(colName, addr);
-         //setBranches += TString::Format("(*(void*)%p) = new %s();((TChain*)%p)->SetBranchAddress(\"%s\", (%s*)%p);\n",&addr, typeName.c_str(), chain, colName, typeName.c_str(), addr);
+         // setBranches += TString::Format("(*(void*)%p) = new %s();((TChain*)%p)->SetBranchAddress(\"%s\",
+         // (%s*)%p);\n",&addr, typeName.c_str(), chain, colName, typeName.c_str(), addr);
       }
    }
    gInterpreter->Calc(setBranches);
