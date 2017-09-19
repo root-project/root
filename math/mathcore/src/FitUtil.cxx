@@ -33,6 +33,8 @@
 #include <numeric>
 //#include <memory>
 
+#include "TROOT.h"
+
 //#define DEBUG
 #ifdef DEBUG
 #define NSAMPLE 10
@@ -966,7 +968,7 @@ double FitUtil::EvaluateLogL(const IModelFunctionTempl<double> &func, const UnBi
 #ifdef USE_PARAMCACHE
                fval = func(x.data());
 #else
-         fval = func(x.data(), p);
+               fval = func(x.data(), p);
 #endif
 
                // one -dim case
@@ -975,7 +977,7 @@ double FitUtil::EvaluateLogL(const IModelFunctionTempl<double> &func, const UnBi
 #ifdef USE_PARAMCACHE
                fval = func(x);
 #else
-         fval = func(x, p);
+               fval = func(x, p);
 #endif
             }
 
@@ -1151,9 +1153,10 @@ void FitUtil::EvaluateLogLGradient(const IModelFunction &f, const UnBinData &dat
       std::vector<double> pointContribution(npar);
 
 
-      const double * x = nullptr; 
+      const double * x = nullptr;
+      std::vector<double> xc;
       if (data.NDim() > 1) {
-         std::vector<double> xc(data.NDim());
+         xc.resize(data.NDim() );
          for (unsigned int j = 0; j < data.NDim(); ++j)
             xc[j] = *data.GetCoordComponent(i, j);
          x = xc.data(); 
@@ -1163,6 +1166,17 @@ void FitUtil::EvaluateLogLGradient(const IModelFunction &f, const UnBinData &dat
 
       double fval = func(x, p);
       func.ParameterGradient(x, p, &gradFunc[0]);
+      
+#ifdef DEBUG
+      {
+         R__LOCKGUARD(gROOTMutex);
+         if (i < 5 || (i > data.Size()-5) ) {
+            if (data.NDim() > 1) std::cout << i << "  x " << x[0] << " y " << x[1] << " func " << fval
+                                           << " gradient " << gradFunc[0] << "  " << gradFunc[1] << "  " << gradFunc[3] << std::endl;
+            else std::cout << i << "  x " << x[0] << " gradient " << gradFunc[0] << "  " << gradFunc[1] << "  " << gradFunc[3] << std::endl;
+         }
+      }
+#endif
 
       for (unsigned int kpar = 0; kpar < npar; ++kpar) {
          if (fval > 0)
