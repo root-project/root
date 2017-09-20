@@ -1,9 +1,7 @@
 #include "RConfigure.h"
 #include "ROOT/TBufferMerger.hxx"
 
-#ifdef R__USE_IMT
 #include "ROOT/TTaskGroup.hxx"
-#endif
 
 #include "TFile.h"
 #include "TROOT.h"
@@ -246,7 +244,6 @@ TEST(TBufferMerger, RegisterCallbackThreads)
    remove(testfile);
 }
 
-#ifdef R__USE_IMT
 TEST(TBufferMerger, RegisterCallbackTasks)
 {
    using namespace ROOT::Experimental;
@@ -261,7 +258,9 @@ TEST(TBufferMerger, RegisterCallbackTasks)
    volatile int processed = 0;
 
    {
+#ifdef R__USE_IMT
       ROOT::EnableImplicitMT();
+#endif
       TBufferMerger merger(testfile);
 
       /* define a task: create and push some events */
@@ -331,4 +330,3 @@ TEST(TBufferMerger, RegisterCallbackTasks)
 
    remove(testfile);
 }
-#endif
