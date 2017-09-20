@@ -122,7 +122,7 @@ namespace ROOT {
    void TThreadExecutor::Foreach(F func, ROOT::TSeq<INTEGER> args) {
        ParallelFor(*args.begin(), *args.end(), args.step(), [&](unsigned int i){func(i);});
    }
-   
+
    /// \cond
    //////////////////////////////////////////////////////////////////////////
    /// Execute func in parallel, taking an element of a
@@ -196,9 +196,6 @@ namespace ROOT {
       unsigned step = (nTimes + nChunks - 1) / nChunks;
       // Avoid empty chunks
       unsigned actualChunks = (nTimes + step - 1) / step;
-      if(actualChunks != nChunks){
-          Warning("ROOT::TThreadExecutor::Map", "The number of chunks has been reduced to %d to avoid empty chunks", actualChunks);
-      }
       using retType = decltype(func());
       std::vector<retType> reslist(actualChunks);
       auto lambda = [&](unsigned int i)
@@ -256,9 +253,6 @@ namespace ROOT {
       unsigned step = (end - start + nChunks - 1) / nChunks; //ceiling the division
       // Avoid empty chunks
       unsigned actualChunks = (end - start + step - 1) / step;
-      if(actualChunks != nChunks){
-          Warning("ROOT::TThreadExecutor::Map", "The number of chunks has been reduced to %d to avoid empty chunks", actualChunks);
-      }
 
       using retType = decltype(func(start));
       std::vector<retType> reslist(actualChunks);
@@ -292,9 +286,7 @@ namespace ROOT {
       unsigned step = (nToProcess + nChunks - 1) / nChunks; //ceiling the division
       // Avoid empty chunks
       unsigned actualChunks = (nToProcess + step - 1) / step;
-      if(actualChunks != nChunks){
-          Warning("ROOT::TThreadExecutor::Map", "The number of chunks has been reduced to %d to avoid empty chunks", actualChunks);
-      }
+
       using retType = decltype(func(args.front()));
       std::vector<retType> reslist(actualChunks);
       auto lambda = [&](unsigned int i)
@@ -341,7 +333,7 @@ namespace ROOT {
    auto TThreadExecutor::MapReduce(F func, unsigned nTimes, R redfunc, unsigned nChunks) -> typename std::result_of<F()>::type {
       return Reduce(Map(func, nTimes, redfunc, nChunks), redfunc);
    }
-   
+
    template<class F, class INTEGER, class R, class Cond>
    auto TThreadExecutor::MapReduce(F func, ROOT::TSeq<INTEGER> args, R redfunc, unsigned nChunks) -> typename std::result_of<F(INTEGER)>::type {
       return Reduce(Map(func, args, redfunc, nChunks), redfunc);
