@@ -15,6 +15,7 @@
 #include "TList.h"
 #include "TError.h"
 
+#include <algorithm>
 #include <functional>
 #include <map>
 #include <memory>
@@ -286,7 +287,7 @@ namespace ROOT {
 
    };
 
-   template<class T> unsigned TThreadedObject<T>::fgMaxSlots = 64;
+   template<class T> unsigned TThreadedObject<T>::fgMaxSlots = std::max(std::thread::hardware_concurrency(), 64u);
 
 } // End ROOT namespace
 
