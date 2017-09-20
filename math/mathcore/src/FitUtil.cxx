@@ -1579,6 +1579,10 @@ void FitUtil::EvaluatePoissonLogLGradient(const IModelFunction &f, const BinData
 
    const IGradModelFunction &func = *fg;
 
+#ifdef USE_PARAMCACHE
+   (const_cast<IGradModelFunction &>(func)).SetParameters(p);
+#endif
+   
    const DataOptions &fitOpt = data.Opt();
    bool useBinIntegral = fitOpt.fIntegral && data.HasBinEdges();
    bool useBinVolume = (fitOpt.fBinVolume && data.HasBinEdges());
@@ -1647,6 +1651,17 @@ void FitUtil::EvaluatePoissonLogLGradient(const IModelFunction &f, const BinData
       if (useBinVolume)
          fval *= binVolume;
 
+#ifdef DEBUG
+      {
+         R__LOCKGUARD(gROOTMutex);
+         if (i < 5 || (i > data.Size()-5) ) {
+            if (data.NDim() > 1) std::cout << i << "  x " << x[0] << " y " << x[1] << " func " << fval
+                                           << " gradient " << gradFunc[0] << "  " << gradFunc[1] << "  " << gradFunc[3] << std::endl;
+            else std::cout << i << "  x " << x[0] << " gradient " << gradFunc[0] << "  " << gradFunc[1] << "  " << gradFunc[3] << std::endl;
+         }
+      }
+#endif
+
       // correct the gradient
       for (unsigned int ipar = 0; ipar < npar; ++ipar) {
 
@@ -1668,6 +1683,7 @@ void FitUtil::EvaluatePoissonLogLGradient(const IModelFunction &f, const BinData
             pointContribution[ipar] = -gg;
          }
       }
+
 
       return pointContribution;
    };
@@ -1727,7 +1743,15 @@ void FitUtil::EvaluatePoissonLogLGradient(const IModelFunction &f, const BinData
 
    // copy result
    std::copy(g.begin(), g.end(), grad);
+
+#ifdef DEBUG
+   std::cout << "***** Final gradient : ";
+   for (unsigned int ii = 0; ii< npar; ++ii) std::cout << grad[ii] << "   ";
+   std::cout << "\n";
+#endif
+   
 }
+
 
 unsigned FitUtil::setAutomaticChunking(unsigned nEvents){
       SysInfo_t s;

@@ -89,20 +89,26 @@ private:
    double fIntegral = 1.0; 
 };
 
-template <typename U, typename V>
+struct LikelihoodFitType {};
+struct Chi2FitType {};
+
+template <typename U, typename V, typename F>
 struct GradientFittingTestTraits {
    using DataType = U;
    using FittingDataType = V;
+   using FitType = F; 
 };
 
 // Typedefs of GradientTestTraits for scalar (binned and unbinned) data
-using ScalarBinned = GradientFittingTestTraits<Double_t, ROOT::Fit::BinData>;
-using ScalarUnBinned = GradientFittingTestTraits<Double_t, ROOT::Fit::UnBinData>;
+using ScalarChi2 = GradientFittingTestTraits<Double_t, ROOT::Fit::BinData, Chi2FitType>;
+using ScalarBinned = GradientFittingTestTraits<Double_t, ROOT::Fit::BinData, LikelihoodFitType>;
+using ScalarUnBinned = GradientFittingTestTraits<Double_t, ROOT::Fit::UnBinData, LikelihoodFitType>;
 
 // Typedefs of GradientTestTraits for vectorial (binned and unbinned) data
 #ifdef R__HAS_VECCORE
-using VectorialBinned = GradientFittingTestTraits<ROOT::Double_v, ROOT::Fit::BinData>;
-using VectorialUnBinned = GradientFittingTestTraits<ROOT::Double_v, ROOT::Fit::UnBinData>;
+using VectorialChi2 = GradientFittingTestTraits<ROOT::Double_v, ROOT::Fit::BinData, Chi2FitType>;
+using VectorialBinned = GradientFittingTestTraits<ROOT::Double_v, ROOT::Fit::BinData, LikelihoodFitType>;
+using VectorialUnBinned = GradientFittingTestTraits<ROOT::Double_v, ROOT::Fit::UnBinData, LikelihoodFitType>;
 #endif
 
 template <class T>
@@ -146,19 +152,20 @@ protected:
       // Create the function
       GradFunc2D<typename T::DataType> function;
 
-      double p[5] = {1., 1., 1, 1., 1.};
+      double p[5] = {50., 1., 1, 2., 1.};
       function.SetParameters(p);
 
       // Create the fitter from the function
       fFitter.SetFunction(function);
       //fFitter.SetFunction(function,false);
       fFitter.Config().SetMinimizer("Minuit2");
-      //fFitter.Config().MinimizerOptions().SetPrintLevel(1);
+      //fFitter.Config().MinimizerOptions().SetPrintLevel(3);
 
 
       // Fill the binned or unbinned data
       FillData();
 
+      Fit(); 
    }
 
    // Fill binned data
@@ -194,6 +201,26 @@ protected:
       fFitter.Config().ParamsSettings()[0].Fix(); 
    }
 
+
+   // Perform the Fit
+   template <class F = typename T::FitType>
+   typename std::enable_if<std::is_same<F, typename T::FitType>::value &&
+                           std::is_same<F, LikelihoodFitType>::value>::type
+   Fit()
+   {
+      std::cout << "Doing a likelihood Fit " << std::endl;
+      fFitter.LikelihoodFit(*fData);
+   }
+
+   template <class F = typename T::FitType>
+   typename std::enable_if<std::is_same<F, typename T::FitType>::value &&
+                           std::is_same<F, Chi2FitType>::value>::type
+   Fit()
+   {
+      std::cout << "Doing a chi2 Fit " << std::endl;
+      fFitter.Fit(*fData);
+   }
+   
    TF2 *fFunction;
    typename T::FittingDataType *fData;
    TH2D *fHistogram;
@@ -204,10 +231,11 @@ protected:
 
 // Types used by Google Test to instantiate the tests.
 #ifdef R__HAS_VECCORE
-typedef ::testing::Types<ScalarBinned, ScalarUnBinned, VectorialBinned, VectorialUnBinned> TestTypes;
+typedef ::testing::Types<ScalarChi2, ScalarBinned, ScalarUnBinned, VectorialChi2, VectorialBinned, VectorialUnBinned> TestTypes;
+
 //typedef ::testing::Types<ScalarBinned,VectorialBinned> TestTypes;
 #else
-typedef ::testing::Types<ScalarBinned, ScalarUnBinned> TestTypes;
+typedef ::testing::Types<ScalarChi2, ScalarBinned, ScalarUnBinned> TestTypes;
 #endif
 
 // Declare that the GradientFittingTest class should be instantiated with the types defined by TestTypes
@@ -217,6 +245,8 @@ TYPED_TEST_CASE(GradientFittingTest, TestTypes);
 TYPED_TEST(GradientFittingTest, GradientFitting)
 {
    // TestFixture::fFitter.Config().MinimizerOptions().SetPrintLevel(3);
-   EXPECT_TRUE(TestFixture::fFitter.Fit(*TestFixture::fData));
+   EXPECT_TRUE(TestFixture::fFitter.Result().IsValid() && TestFixture::fFitter.Result().Edm() < 0.001);
    TestFixture::fFitter.Result().Print(std::cout);
 }
+
+
