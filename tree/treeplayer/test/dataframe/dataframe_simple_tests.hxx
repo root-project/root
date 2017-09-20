@@ -30,11 +30,20 @@ void FillTree(const char *filename, const char *treeName, int nevents = 0)
    t.SetAutoFlush(1); // yes, one event per cluster: to make MT more meaningful
    double b1;
    int b2;
+   double b3[2];
+   unsigned int n;
+   int b4[2] = {21, 42};
    t.Branch("b1", &b1);
    t.Branch("b2", &b2);
+   t.Branch("b3", b3, "b3[2]/D");
+   t.Branch("n", &n);
+   t.Branch("b4", b4, "b4[n]/I");
    for (int i = 0; i < nevents; ++i) {
       b1 = i;
       b2 = i * i;
+      b3[0] = b1;
+      b3[1] = -b1;
+      n = i % 2 + 1;
       t.Fill();
    }
    t.Write();
@@ -350,3 +359,25 @@ TEST(TEST_CATEGORY, GetNSlots)
    EXPECT_EQ(NSLOTS, ROOT::Internal::TDF::GetNSlots());
 }
 #endif
+
+TEST(TEST_CATEGORY, CArraysFromTree)
+{
+   auto filename = "dataframe_simple_3.root";
+   auto treename = "t";
+#ifndef testTDF_simple_3_CREATED
+#define testTDF_simple_3_CREATED
+   TEST_CATEGORY::FillTree(filename, treename, 10);
+#endif
+   TDataFrame df(treename, filename);
+
+   // no jitting
+   auto h = df.Filter([](double b1, unsigned int n, std::array_view<double> b3,
+                         std::array_view<int> b4) { return b3[0] == b1 && b4[0] == 21 && b4.size() == n; },
+                      {"b1", "n", "b3", "b4"})
+               .Histo1D<std::array_view<double>>("b3");
+   EXPECT_EQ(20, h->GetEntries());
+
+   // jitting
+   auto h_jit = df.Filter(/*"b3[0] == b1"*/"b4[0] == 21"/*"b4.size() == n"*/).Histo1D("b3");
+   EXPECT_EQ(20, h_jit->GetEntries());
+}
