@@ -242,7 +242,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
           list(APPEND _list_of_header_dependencies ${f})
         endif()
       endforeach()
-    elseif(CMAKE_PROJECT_NAME STREQUAL ROOT AND 
+    elseif(CMAKE_PROJECT_NAME STREQUAL ROOT AND
            EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${fp}) # only for ROOT project
       list(APPEND headerfiles ${CMAKE_CURRENT_SOURCE_DIR}/${fp})
       list(APPEND _list_of_header_dependencies ${CMAKE_CURRENT_SOURCE_DIR}/${fp})
@@ -261,7 +261,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
       unset(headerFile CACHE)
     endif()
   endforeach()
-  string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/inc/" ""  headerfiles "${headerfiles}") 
+  string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/inc/" ""  headerfiles "${headerfiles}")
   # Replace the non-standard folder layout of Core.
   if (ARG_STAGE1 AND ARG_MODULE STREQUAL "Core")
     # FIXME: Glob these folders.
@@ -805,7 +805,7 @@ function(ROOT_INSTALL_HEADERS)
     ROOT_GLOB_FILES(include_files
       RECURSE
       RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/${d}
-      FILTER ${filter} 
+      FILTER ${filter}
       ${d}/*.h ${d}/*.hxx ${d}/*.icc )
     foreach (include_file ${include_files})
       set (src ${CMAKE_CURRENT_SOURCE_DIR}/${d}/${include_file})
@@ -815,7 +815,7 @@ function(ROOT_INSTALL_HEADERS)
         COMMAND ${CMAKE_COMMAND} -E copy ${src} ${dst}
         COMMENT "Copying header ${src} to /include"
         DEPENDS ${src})
-      list(APPEND dst_list ${dst})  
+      list(APPEND dst_list ${dst})
     endforeach()
     set_property(GLOBAL APPEND PROPERTY ROOT_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/${d})
   endforeach()
@@ -1236,7 +1236,7 @@ endfunction()
 function(ROOT_ADD_GTEST test_suite)
   CMAKE_PARSE_ARGUMENTS(ARG "" "" "LIBRARIES" ${ARGN})
   include_directories(${CMAKE_CURRENT_BINARY_DIR} ${GTEST_INCLUDE_DIR} ${GMOCK_INCLUDE_DIR})
-  
+
   ROOT_GET_SOURCES(source_files . ${ARG_UNPARSED_ARGUMENTS})
   # Note we cannot use ROOT_EXECUTABLE without user-specified set of LIBRARIES to link with.
   # The test suites should choose this in their specific CMakeLists.txt file.
@@ -1258,6 +1258,36 @@ endfunction()
 function(ROOT_ADD_TEST_SUBDIRECTORY subdir)
   file(RELATIVE_PATH subdir ${CMAKE_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/${subdir})
   set_property(GLOBAL APPEND PROPERTY ROOT_TEST_SUBDIRS ${subdir})
+endfunction()
+
+#----------------------------------------------------------------------------
+# ROOT_ADD_PYUNITTESTS( <name> )
+#----------------------------------------------------------------------------
+function(ROOT_ADD_PYUNITTESTS name)
+  set(ROOT_ENV ROOTSYS=${ROOTSYS}
+      PATH=${ROOTSYS}/bin:$ENV{PATH}
+      LD_LIBRARY_PATH=${ROOTSYS}/lib:$ENV{LD_LIBRARY_PATH}
+      PYTHONPATH=${ROOTSYS}/lib:$ENV{PYTHONPATH})
+  string(REGEX REPLACE "[_]" "-" good_name "${name}")
+  ROOT_ADD_TEST(pyunittests-${good_name}
+                COMMAND ${PYTHON_EXECUTABLE} -m unittest discover -s ${CMAKE_CURRENT_SOURCE_DIR} -p "*.py" -v
+                ENVIRONMENT ${ROOT_ENV})
+endfunction()
+
+#----------------------------------------------------------------------------
+# ROOT_ADD_PYUNITTEST( <name> <file>)
+#----------------------------------------------------------------------------
+function(ROOT_ADD_PYUNITTEST name file)
+  set(ROOT_ENV ROOTSYS=${ROOTSYS}
+      PATH=${ROOTSYS}/bin:$ENV{PATH}
+      LD_LIBRARY_PATH=${ROOTSYS}/lib:$ENV{LD_LIBRARY_PATH}
+      PYTHONPATH=${ROOTSYS}/lib:$ENV{PYTHONPATH})
+  string(REGEX REPLACE "[_]" "-" good_name "${name}")
+  get_filename_component(file_name ${file} NAME)
+  get_filename_component(file_dir ${file} DIRECTORY)
+  ROOT_ADD_TEST(pyunittests-${good_name}
+                COMMAND ${PYTHON_EXECUTABLE} -m unittest discover -s ${CMAKE_CURRENT_SOURCE_DIR}/${file_dir} -p ${file_name} -v
+                ENVIRONMENT ${ROOT_ENV})
 endfunction()
 
 #----------------------------------------------------------------------------
