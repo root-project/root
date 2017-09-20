@@ -983,10 +983,8 @@ void TPad::Close(Option_t *)
 
    if (fPixmapID != -1) {
       if (gPad) {
-         if (!gPad->IsBatch()) {
-            GetPainter()->SelectDrawable(fPixmapID);
-            GetPainter()->DestroyDrawable();
-         }
+         if (!gPad->IsBatch())
+            GetPainter()->DestroyDrawable(fPixmapID);
       }
       fPixmapID = -1;
 

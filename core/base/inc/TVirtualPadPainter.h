@@ -61,7 +61,7 @@ public:
    virtual Int_t    CreateDrawable(UInt_t w, UInt_t h) = 0;//gVirtualX->OpenPixmap
    virtual void     ClearDrawable() = 0;//gVirtualX->Clear()
    virtual void     CopyDrawable(Int_t device, Int_t px, Int_t py) = 0;
-   virtual void     DestroyDrawable() = 0;//gVirtualX->CloseWindow
+   virtual void     DestroyDrawable(Int_t device) = 0;//gVirtualX->CloseWindow
    virtual void     SelectDrawable(Int_t device) = 0;//gVirtualX->SelectWindow
 
    //TASImage support.

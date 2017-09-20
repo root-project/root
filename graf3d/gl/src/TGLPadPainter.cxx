@@ -280,14 +280,14 @@ void TGLPadPainter::ClearDrawable()
 ////////////////////////////////////////////////////////////////////////////////
 ///Not required at the moment.
 
-void TGLPadPainter::CopyDrawable(Int_t /*id*/, Int_t /*px*/, Int_t /*py*/)
+void TGLPadPainter::CopyDrawable(Int_t /*device*/, Int_t /*px*/, Int_t /*py*/)
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 ///Not required at the moment.
 
-void TGLPadPainter::DestroyDrawable()
+void TGLPadPainter::DestroyDrawable(Int_t /*device*/)
 {
 }
 
