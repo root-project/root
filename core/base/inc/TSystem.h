@@ -495,6 +495,7 @@ public:
    virtual int             GetSockOpt(int sock, int kind, int *val);
 
    //---- System, CPU and Memory info
+   unsigned                GetNCPUs() const;
    virtual int             GetSysInfo(SysInfo_t *info) const;
    virtual int             GetCpuInfo(CpuInfo_t *info, Int_t sampleTime = 1000) const;
    virtual int             GetMemInfo(MemInfo_t *info) const;

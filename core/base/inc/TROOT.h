@@ -73,7 +73,7 @@ namespace Internal {
       TParBranchProcessingRAII()  { EnableParBranchProcessing();  }
       ~TParBranchProcessingRAII() { DisableParBranchProcessing(); }
    };
-      
+
    // Manage parallel tree processing
    void EnableParTreeProcessing();
    void DisableParTreeProcessing();
