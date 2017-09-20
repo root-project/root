@@ -53,7 +53,8 @@
 /// This set of methods behaves exactly like Map, but takes an additional
 /// function as a third argument. This function is applied to the set of
 /// objects returned by the corresponding Map execution to "squash" them
-/// to a single object. 
+/// to a single object. This function should be independent of the size of
+/// the vector returned by Map due to optimization of the number of chunks.
 ///
 /// If this function is a binary operator, the "squashing" will be performed in parallel.
 /// This is exclusive to ROOT::TThreadExecutor and not any other ROOT::TExecutor-derived classes.\n
