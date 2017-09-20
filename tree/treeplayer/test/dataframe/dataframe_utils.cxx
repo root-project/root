@@ -100,11 +100,19 @@ TEST(TDataFrameUtils, DeduceAllPODsFromColumns)
    t.Branch("arrint", &a, "a[2]/I");
    t.Branch("vararrint", &a, "a[i]/I");
 
-   std::map<const char *, const char *> nameTypes = {
-      {"char", "char"},         {"uchar", "unsigned char"},   {"i", "int"},         {"uint", "unsigned int"},
-      {"short", "short"},       {"ushort", "unsigned short"}, {"double", "double"}, {"float", "float"},
-      {"Long64_t", "Long64_t"}, {"ULong64_t", "ULong64_t"},   {"bool", "bool"},     {"arrint", "std::array_view<int>"},
-      {"vararrint", "std::array_view<int>"}};
+   std::map<const char *, const char *> nameTypes = {{"char", "char"},
+                                                     {"uchar", "unsigned char"},
+                                                     {"i", "int"},
+                                                     {"uint", "unsigned int"},
+                                                     {"short", "short"},
+                                                     {"ushort", "unsigned short"},
+                                                     {"double", "double"},
+                                                     {"float", "float"},
+                                                     {"Long64_t", "Long64_t"},
+                                                     {"ULong64_t", "ULong64_t"},
+                                                     {"bool", "bool"},
+                                                     {"arrint", "std::array_view<int>"},
+                                                     {"vararrint", "std::array_view<int>"}};
 
    for (auto &nameType : nameTypes) {
       auto typeName = ROOT::Internal::TDF::ColumnName2ColumnTypeName(nameType.first, &t, nullptr);
