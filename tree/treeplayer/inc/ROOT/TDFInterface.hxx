@@ -15,6 +15,7 @@
 #include "ROOT/TDataSource.hxx"
 #include "ROOT/TDFNodes.hxx"
 #include "ROOT/TDFActionHelpers.hxx"
+#include "ROOT/TDFHistoModels.hxx"
 #include "ROOT/TDFUtils.hxx"
 #include "TChain.h"
 #include "TH1.h" // For Histo actions
@@ -743,10 +744,15 @@ public:
    /// booked but not executed. See TResultProxy documentation.
    /// The user gives up ownership of the model histogram.
    template <typename V = TDFDetail::TInferType>
-   TResultProxy<::TH1D> Histo1D(::TH1D &&model = ::TH1D{"", "", 128u, 0., 0.}, std::string_view vName = "")
+   TResultProxy<::TH1D> Histo1D(const TH1DModel& model = {"", "", 128u, 0., 0.}, std::string_view vName = "")
    {
       const auto userColumns = vName.empty() ? ColumnNames_t() : ColumnNames_t({std::string(vName)});
-      auto h = std::make_shared<::TH1D>(std::move(model));
+      std::shared_ptr<::TH1D> h(nullptr);
+      {
+         Internal::TDF::TIgnoreErrorLevelRAAI iel(kError);
+         h = std::make_shared<::TH1D>(model.fName, model.fTitle, model.fNbinsX, model.fXLow, model.fXUp);
+      }
+
       if (h->GetXaxis()->GetXmax() == h->GetXaxis()->GetXmin())
          TDFInternal::HistoUtils<::TH1D>::SetCanExtendAllAxes(*h);
       return CreateAction<TDFInternal::ActionTypes::Histo1D, V>(userColumns, h);
@@ -755,7 +761,7 @@ public:
    template <typename V = TDFDetail::TInferType>
    TResultProxy<::TH1D> Histo1D(std::string_view vName)
    {
-      return Histo1D<V>(::TH1D{"", "", 128u, 0., 0.}, vName);
+      return Histo1D<V>({"", "", 128u, 0., 0.}, vName);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -768,13 +774,17 @@ public:
    ///
    /// See the description of the first Histo1D overload for more details.
    template <typename V = TDFDetail::TInferType, typename W = TDFDetail::TInferType>
-   TResultProxy<::TH1D> Histo1D(::TH1D &&model, std::string_view vName, std::string_view wName)
+   TResultProxy<::TH1D> Histo1D(const TH1DModel& model, std::string_view vName, std::string_view wName)
    {
       auto columnViews = {vName, wName};
       const auto userColumns = TDFInternal::AtLeastOneEmptyString(columnViews)
                                   ? ColumnNames_t()
                                   : ColumnNames_t(columnViews.begin(), columnViews.end());
-      auto h = std::make_shared<::TH1D>(std::move(model));
+      std::shared_ptr<::TH1D> h(nullptr);
+      {
+         Internal::TDF::TIgnoreErrorLevelRAAI iel(kError);
+         h = std::make_shared<::TH1D>(model.fName, model.fTitle, model.fNbinsX, model.fXLow, model.fXUp);
+      }
       return CreateAction<TDFInternal::ActionTypes::Histo1D, V, W>(userColumns, h);
    }
 
@@ -790,7 +800,7 @@ public:
    template <typename V = TDFDetail::TInferType, typename W = TDFDetail::TInferType>
    TResultProxy<::TH1D> Histo1D(std::string_view vName, std::string_view wName)
    {
-      return Histo1D<V, W>(::TH1D{"", "", 128u, 0., 0.}, vName, wName);
+      return Histo1D<V, W>({"", "", 128u, 0., 0.}, vName, wName);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -802,9 +812,9 @@ public:
    /// This overload will use the first two default columns as column names.
    /// See the description of the first Histo1D overload for more details.
    template <typename V, typename W>
-   TResultProxy<::TH1D> Histo1D(::TH1D &&model = ::TH1D{"", "", 128u, 0., 0.})
+   TResultProxy<::TH1D> Histo1D(const TH1DModel& model = {"", "", 128u, 0., 0.})
    {
-      return Histo1D<V, W>(std::move(model), "", "");
+      return Histo1D<V, W>(model, "", "");
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -823,9 +833,13 @@ public:
    /// booked but not executed. See TResultProxy documentation.
    /// The user gives up ownership of the model histogram.
    template <typename V1 = TDFDetail::TInferType, typename V2 = TDFDetail::TInferType>
-   TResultProxy<::TH2D> Histo2D(::TH2D &&model, std::string_view v1Name = "", std::string_view v2Name = "")
+   TResultProxy<::TH2D> Histo2D(const TH2DModel& model, std::string_view v1Name = "", std::string_view v2Name = "")
    {
-      auto h = std::make_shared<::TH2D>(std::move(model));
+      std::shared_ptr<::TH2D> h(nullptr);
+      {
+         Internal::TDF::TIgnoreErrorLevelRAAI iel(kError);
+         h = std::make_shared<::TH2D>(model.fName, model.fTitle, model.fNbinsX, model.fXLow, model.fXUp, model.fNbinsY, model.fYLow, model.fYUp);
+      }
       if (!TDFInternal::HistoUtils<::TH2D>::HasAxisLimits(*h)) {
          throw std::runtime_error("2D histograms with no axes limits are not supported yet.");
       }
@@ -851,10 +865,14 @@ public:
    /// The user gives up ownership of the model histogram.
    template <typename V1 = TDFDetail::TInferType, typename V2 = TDFDetail::TInferType,
              typename W = TDFDetail::TInferType>
-   TResultProxy<::TH2D> Histo2D(::TH2D &&model, std::string_view v1Name, std::string_view v2Name,
+   TResultProxy<::TH2D> Histo2D(const TH2DModel& model, std::string_view v1Name, std::string_view v2Name,
                                 std::string_view wName)
    {
-      auto h = std::make_shared<::TH2D>(std::move(model));
+      std::shared_ptr<::TH2D> h(nullptr);
+      {
+         Internal::TDF::TIgnoreErrorLevelRAAI iel(kError);
+         h = std::make_shared<::TH2D>(model.fName, model.fTitle, model.fNbinsX, model.fXLow, model.fXUp,  model.fNbinsY, model.fYLow, model.fYUp);
+      }
       if (!TDFInternal::HistoUtils<::TH2D>::HasAxisLimits(*h)) {
          throw std::runtime_error("2D histograms with no axes limits are not supported yet.");
       }
@@ -866,9 +884,9 @@ public:
    }
 
    template <typename V1, typename V2, typename W>
-   TResultProxy<::TH2D> Histo2D(::TH2D &&model)
+   TResultProxy<::TH2D> Histo2D(const TH2DModel& model)
    {
-      return Histo2D<V1, V2, W>(std::move(model), "", "", "");
+      return Histo2D<V1, V2, W>(model, "", "", "");
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -886,10 +904,14 @@ public:
    /// The user gives up ownership of the model histogram.
    template <typename V1 = TDFDetail::TInferType, typename V2 = TDFDetail::TInferType,
              typename V3 = TDFDetail::TInferType>
-   TResultProxy<::TH3D> Histo3D(::TH3D &&model, std::string_view v1Name = "", std::string_view v2Name = "",
+   TResultProxy<::TH3D> Histo3D(const TH3DModel& model, std::string_view v1Name = "", std::string_view v2Name = "",
                                 std::string_view v3Name = "")
    {
-      auto h = std::make_shared<::TH3D>(std::move(model));
+      std::shared_ptr<::TH3D> h(nullptr);
+      {
+         Internal::TDF::TIgnoreErrorLevelRAAI iel(kError);
+         h = std::make_shared<::TH3D>(model.fName, model.fTitle, model.fNbinsX, model.fXLow, model.fXUp, model.fNbinsY, model.fYLow, model.fYUp, model.fNbinsZ, model.fZLow, model.fZUp);
+      }
       if (!TDFInternal::HistoUtils<::TH3D>::HasAxisLimits(*h)) {
          throw std::runtime_error("3D histograms with no axes limits are not supported yet.");
       }
@@ -917,10 +939,14 @@ public:
    /// The user gives up ownership of the model histogram.
    template <typename V1 = TDFDetail::TInferType, typename V2 = TDFDetail::TInferType,
              typename V3 = TDFDetail::TInferType, typename W = TDFDetail::TInferType>
-   TResultProxy<::TH3D> Histo3D(::TH3D &&model, std::string_view v1Name, std::string_view v2Name,
+   TResultProxy<::TH3D> Histo3D(const TH3DModel& model, std::string_view v1Name, std::string_view v2Name,
                                 std::string_view v3Name, std::string_view wName)
    {
-      auto h = std::make_shared<::TH3D>(std::move(model));
+      std::shared_ptr<::TH3D> h(nullptr);
+      {
+         Internal::TDF::TIgnoreErrorLevelRAAI iel(kError);
+         h = std::make_shared<::TH3D>(model.fName, model.fTitle, model.fNbinsX, model.fXLow, model.fXUp, model.fNbinsY, model.fYLow, model.fYUp, model.fNbinsZ, model.fZLow, model.fZUp);
+      }
       if (!TDFInternal::HistoUtils<::TH3D>::HasAxisLimits(*h)) {
          throw std::runtime_error("3D histograms with no axes limits are not supported yet.");
       }
@@ -932,9 +958,9 @@ public:
    }
 
    template <typename V1, typename V2, typename V3, typename W>
-   TResultProxy<::TH3D> Histo3D(::TH3D &&model)
+   TResultProxy<::TH3D> Histo3D(const TH3DModel& model)
    {
-      return Histo3D<V1, V2, V3, W>(std::move(model), "", "", "", "");
+      return Histo3D<V1, V2, V3, W>(model, "", "", "", "");
    }
 
    ////////////////////////////////////////////////////////////////////////////
