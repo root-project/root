@@ -83,11 +83,12 @@ TEST(TDataFrameUtils, DeduceAllPODsFromColumns)
    Long64_t l;
    ULong64_t ul;
    bool b;
+   int a[2];
 
    TTree t("t", "t");
    t.Branch("char", &c);
    t.Branch("uchar", &uc);
-   t.Branch("int", &i);
+   t.Branch("i", &i);
    t.Branch("uint", &ui);
    t.Branch("short", &s);
    t.Branch("ushort", &us);
@@ -96,11 +97,14 @@ TEST(TDataFrameUtils, DeduceAllPODsFromColumns)
    t.Branch("Long64_t", &l);
    t.Branch("ULong64_t", &ul);
    t.Branch("bool", &b);
+   t.Branch("arrint", &a, "a[2]/I");
+   t.Branch("vararrint", &a, "a[i]/I");
 
    std::map<const char *, const char *> nameTypes = {
-      {"char", "char"},         {"uchar", "unsigned char"},   {"int", "int"},       {"uint", "unsigned int"},
+      {"char", "char"},         {"uchar", "unsigned char"},   {"i", "int"},         {"uint", "unsigned int"},
       {"short", "short"},       {"ushort", "unsigned short"}, {"double", "double"}, {"float", "float"},
-      {"Long64_t", "Long64_t"}, {"ULong64_t", "ULong64_t"},   {"bool", "bool"}};
+      {"Long64_t", "Long64_t"}, {"ULong64_t", "ULong64_t"},   {"bool", "bool"},     {"arrint", "std::array_view<int>"},
+      {"vararrint", "std::array_view<int>"}};
 
    for (auto &nameType : nameTypes) {
       auto typeName = ROOT::Internal::TDF::ColumnName2ColumnTypeName(nameType.first, &t, nullptr);

@@ -56,30 +56,39 @@ ColumnName2ColumnTypeName(const std::string &colName, TTree *tree, TCustomColumn
       if (branch->InheritsFrom(tbranchelRef)) {
          return static_cast<TBranchElement *>(branch)->GetClassName();
       } else { // Try the fundamental type
-         auto title = branch->GetTitle();
-         auto typeCode = title[strlen(title) - 1];
+         std::string_view title(branch->GetTitle());
+         char typeCode = title.back();
+         std::string type;
          if (typeCode == 'B')
-            return "char";
+            type = "char";
          else if (typeCode == 'b')
-            return "unsigned char";
+            type = "unsigned char";
          else if (typeCode == 'I')
-            return "int";
+            type = "int";
          else if (typeCode == 'i')
-            return "unsigned int";
+            type = "unsigned int";
          else if (typeCode == 'S')
-            return "short";
+            type = "short";
          else if (typeCode == 's')
-            return "unsigned short";
+            type = "unsigned short";
          else if (typeCode == 'D')
-            return "double";
+            type = "double";
          else if (typeCode == 'F')
-            return "float";
+            type = "float";
          else if (typeCode == 'L')
-            return "Long64_t";
+            type = "Long64_t";
          else if (typeCode == 'l')
-            return "ULong64_t";
+            type = "ULong64_t";
          else if (typeCode == 'O')
-            return "bool";
+            type = "bool";
+         if (title[title.size() - 3] == ']') {
+            // title has the form "varname[size]/X", i.e. it refers to an array (doesn't matter if size is fixed or not)
+            // TDataFrame reads it as an array_view
+            // TODO change array_view to span when available
+            return "std::array_view<" + type + ">";
+         } else {
+            return type;
+         }
       }
    } else {
       // this must be a temporary branch
