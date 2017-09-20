@@ -193,7 +193,6 @@ std::string JitBuildAndBook(const ColumnNames_t &bl, const std::string &prevNode
                             const unsigned int nSlots, const std::map<std::string, TmpBranchBasePtr_t> &customColumns,
                             TDataSource *ds)
 {
-   gInterpreter->Declare("#include \"ROOT/TDataFrame.hxx\"");
    auto nBranches = bl.size();
 
    // retrieve pointers to temporary columns (null if the column is not temporary)
