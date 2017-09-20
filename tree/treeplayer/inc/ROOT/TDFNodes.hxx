@@ -26,6 +26,7 @@
 #include <cassert>
 #include <climits>
 #include <deque> // std::vector substitute in case of vector<bool>
+#include <functional>
 
 namespace ROOT {
 
@@ -83,6 +84,29 @@ class TLoopManager : public std::enable_shared_from_this<TLoopManager> {
    using TDataSource = ROOT::Experimental::TDF::TDataSource;
    enum class ELoopType { kROOTFiles, kNoFiles, kDataSource };
 
+   using Callback_t = std::function<void(unsigned int)>;
+   class TLoopCallback {
+      const Callback_t fFun;
+      const ULong64_t fEveryN;
+      std::vector<ULong64_t> fCounters;
+
+   public:
+      TLoopCallback(Callback_t &&f, ULong64_t everyN, unsigned int nSlots)
+         : fFun(std::move(f)), fEveryN(everyN)
+      {
+         fCounters.resize(nSlots, 0ull);
+      }
+      void operator()(unsigned int slot)
+      {
+         auto &c = fCounters[slot];
+         ++c;
+         if (c == fEveryN) {
+            c = 0ull;
+            fFun(slot);
+         }
+      }
+   };
+
    ActionBaseVec_t fBookedActions;
    FilterBaseVec_t fBookedFilters;
    FilterBaseVec_t fBookedNamedFilters; ///< Contains a subset of fBookedFilters, i.e. only the named filters
@@ -105,6 +129,7 @@ class TLoopManager : public std::enable_shared_from_this<TLoopManager> {
    const std::unique_ptr<TDataSource> fDataSource; ///< Owning pointer to a data-source object. Null if no data-source
    ColumnNames_t fDefinedDataSourceColumns;        ///< List of data-source columns that have been `Define`d so far
    std::map<std::string, std::string> fAliasColumnNameMap; ///< ColumnNameAlias-columnName pairs
+   std::vector<TLoopCallback> fCallbacks;                  ///< Registered callbacks invoked once per event per slot
 
    void RunEmptySourceMT();
    void RunEmptySource();
@@ -157,6 +182,7 @@ public:
    void AddDataSourceColumn(std::string_view name) { fDefinedDataSourceColumns.emplace_back(name); }
    void AddColumnAlias(const std::string &alias, const std::string &colName) { fAliasColumnNameMap[alias] = colName; }
    const std::map<std::string, std::string> &GetAliasMap() const { return fAliasColumnNameMap; }
+   void RegisterCallback(std::function<void(unsigned int)> &&f, ULong64_t everyNevents);
 };
 } // end ns TDF
 } // end ns Detail
