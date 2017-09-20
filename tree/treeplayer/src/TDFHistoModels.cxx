@@ -41,6 +41,9 @@ TH1DModel::TH1DModel(const char *name, const char *title, int nbinsx, double xlo
    : fName(name), fTitle(title), fNbinsX(nbinsx), fXLow(xlow), fXUp(xup)
 {
 }
+TH1DModel::~TH1DModel()
+{
+}
 
 TH2DModel::TH2DModel(const ::TH2D &h)
    : fName(h.GetName()), fTitle(h.GetTitle()), fNbinsX(h.GetNbinsX()), fXLow(h.GetXaxis()->GetXmin()),
@@ -51,6 +54,9 @@ TH2DModel::TH2DModel(const ::TH2D &h)
 TH2DModel::TH2DModel(const char *name, const char *title, int nbinsx, double xlow, double xup, int nbinsy, double ylow,
                      double yup)
    : fName(name), fTitle(title), fNbinsX(nbinsx), fXLow(xlow), fXUp(xup), fNbinsY(nbinsy), fYLow(ylow), fYUp(yup)
+{
+}
+TH2DModel::~TH2DModel()
 {
 }
 
@@ -65,6 +71,9 @@ TH3DModel::TH3DModel(const char *name, const char *title, int nbinsx, double xlo
                      double yup, int nbinsz, double zlow, double zup)
    : fName(name), fTitle(title), fNbinsX(nbinsx), fXLow(xlow), fXUp(xup), fNbinsY(nbinsy), fYLow(ylow), fYUp(yup),
      fNbinsZ(nbinsz), fZLow(zlow), fZUp(zup)
+{
+}
+TH3DModel::~TH3DModel()
 {
 }
 
