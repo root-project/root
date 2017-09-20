@@ -15,6 +15,7 @@
 #include <memory> // shared_ptr, unique_ptr for IsSmartOrDumbPtr
 #include <type_traits>
 #include <vector> // for IsContainer
+#include "ROOT/RArrayView.hxx" // for IsContainer
 
 namespace ROOT {
 
@@ -61,6 +62,11 @@ struct IsContainer {
    }
 
    static constexpr bool value = Test<Test_t>(nullptr);
+};
+
+template<typename T>
+struct IsContainer<std::array_view<T>> {
+   static constexpr bool value = true;
 };
 
 /// Lightweight storage for a collection of types.
