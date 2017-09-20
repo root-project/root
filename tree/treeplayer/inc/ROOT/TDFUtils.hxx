@@ -78,6 +78,20 @@ using namespace ROOT::TypeTraits;
 using namespace ROOT::Detail::TDF;
 using namespace ROOT::Experimental::TDF;
 
+class TIgnoreErrorLevelRAAI {
+private:
+   int fCurIgnoreErrorLevel = gErrorIgnoreLevel;
+public:
+   TIgnoreErrorLevelRAAI(int errorIgnoreLevel)
+   {
+      gErrorIgnoreLevel = errorIgnoreLevel;
+   }
+   ~TIgnoreErrorLevelRAAI()
+   {
+      gErrorIgnoreLevel = fCurIgnoreErrorLevel;
+   }
+};
+
 /// Compile-time integer sequence generator
 /// e.g. calling GenStaticSeq<3>::type() instantiates a StaticSeq<0,1,2>
 template <int...>
