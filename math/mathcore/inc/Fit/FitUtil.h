@@ -1129,6 +1129,9 @@ namespace FitUtil {
 
          const IGradModelFunctionTempl<T> &func = *fg;
 
+         (const_cast<IGradModelFunctionTempl<T> &>(func)).SetParameters(p);
+
+
          const DataOptions &fitOpt = data.Opt();
          if (fitOpt.fBinVolume || fitOpt.fIntegral || fitOpt.fExpErrors)
             Error("FitUtil::EvaluatePoissonLogLGradient", "The vectorized implementation doesn't support Integrals,"
@@ -1181,10 +1184,22 @@ namespace FitUtil {
                   const T kdmax1 = vecCore::math::Sqrt(vecCore::NumericLimits<T>::Max());
                   const T kdmax2 = vecCore::NumericLimits<T>::Max() / (4 * initialNPoints);
                   T gg = kdmax1 * gradFunc[ipar];
-                  pointContributionVec[ipar] =
-                     -vecCore::Blend(gg > 0, vecCore::math::Min(gg, kdmax2), vecCore::math::Max(gg, -kdmax2));
+                  pointContributionVec[ipar] = -vecCore::Blend(gg > 0, vecCore::math::Min(gg, kdmax2), vecCore::math::Max(gg, -kdmax2));
                }
             }
+
+#ifdef DEBUG_FITUTIL
+      {
+         R__LOCKGUARD(gROOTMutex);
+         if (i < 5 || (i > data.Size()-5) ) {
+            if (data.NDim() > 1) std::cout << i << "  x " << x[0] << " y " << x[1];
+            else std::cout << i << "  x " << x[0];
+            std::cout << " func " << fval  << " gradient ";
+            for (unsigned int ii = 0; ii < npar; ++ii) std::cout << "  " << pointContributionVec[ii];
+            std::cout << "\n";
+         }
+      }
+#endif
 
             return pointContributionVec;
          };
@@ -1241,12 +1256,13 @@ namespace FitUtil {
                                                           "ROOT::Fit::ExecutionPolicy::kMultithread (requires IMT)\n");
          }
 
+
          // Compute the contribution from the remaining points
          unsigned int remainingPoints = initialNPoints % vecSize;
          if (remainingPoints > 0) {
             auto remainingPointsContribution = mapFunction(numVectors);
             // Add the contribution from the valid remaining points and store the result in the output variable
-            auto remainingMask = vecCore::Int2Mask<T>(initialNPoints % vecSize);
+            auto remainingMask = vecCore::Int2Mask<T>(remainingPoints);
             for (unsigned int param = 0; param < npar; param++) {
                vecCore::MaskedAssign(gVec[param], remainingMask, gVec[param] + remainingPointsContribution[param]);
             }
@@ -1255,6 +1271,12 @@ namespace FitUtil {
          for (unsigned int param = 0; param < npar; param++) {
             grad[param] = vecCore::ReduceAdd(gVec[param]);
          }
+
+#ifdef DEBUG_FITUTIL
+         std::cout << "***** Final gradient : ";
+         for (unsigned int ii = 0; ii< npar; ++ii) std::cout << grad[ii] << "   ";
+         std::cout << "\n";
+#endif  
 
       }
 
