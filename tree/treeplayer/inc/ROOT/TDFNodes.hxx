@@ -320,6 +320,7 @@ public:
    virtual void TriggerChildrenCount() = 0;
    virtual void ClearValueReaders(unsigned int slot) = 0;
    unsigned int GetNSlots() const { return fNSlots; }
+   virtual void PartialUpdate(unsigned int /*slot*/) { Warning("PartialUpdate", "Not implemented for this action!"); }
 };
 
 template <typename Helper, typename PrevDataFrame, typename BranchTypes_t = typename Helper::BranchTypes_t>
