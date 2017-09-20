@@ -13,8 +13,10 @@
 
 #include "ROOT/TypeTraits.hxx"
 #include "ROOT/TDFNodes.hxx"
+#include "TError.h" // Warning
 
 #include <memory>
+#include <functional>
 
 namespace ROOT {
 
@@ -31,7 +33,8 @@ namespace TDF {
 using ROOT::Experimental::TDF::TResultProxy;
 // Fwd decl for TResultProxy
 template <typename T>
-TResultProxy<T> MakeResultProxy(const std::shared_ptr<T> &r, const std::shared_ptr<TLoopManager> &df);
+TResultProxy<T> MakeResultProxy(const std::shared_ptr<T> &r, const std::shared_ptr<TLoopManager> &df,
+                                TDFInternal::TActionBase *actionPtr = nullptr);
 } // ns TDF
 } // ns Detail
 
@@ -82,12 +85,14 @@ class TResultProxy {
    using WPTLM_t = std::weak_ptr<TDFDetail::TLoopManager>;
    using ShrdPtrBool_t = std::shared_ptr<bool>;
    template <typename W>
-   friend TResultProxy<W> TDFDetail::MakeResultProxy(const std::shared_ptr<W> &, const SPTLM_t &);
+   friend TResultProxy<W>
+   TDFDetail::MakeResultProxy(const std::shared_ptr<W> &, const SPTLM_t &, TDFInternal::TActionBase *);
 
    const ShrdPtrBool_t fReadiness =
       std::make_shared<bool>(false); ///< State registered also in the TLoopManager until the event loop is executed
    WPTLM_t fImplWeakPtr;             ///< Points to the TLoopManager at the root of the functional graph
    const SPT_t fObjPtr;              ///< Shared pointer encapsulating the wrapped result
+   TDFInternal::TActionBase *fActionPtr = nullptr; ///< Points to the TDF action that produces this result
 
    /// Triggers the event loop in the TLoopManager instance to which it's associated via the fImplWeakPtr
    void TriggerRun();
@@ -102,12 +107,17 @@ class TResultProxy {
       return fObjPtr.get();
    }
 
-   TResultProxy(const SPT_t &objPtr, const ShrdPtrBool_t &readiness, const SPTLM_t &firstData)
-      : fReadiness(readiness), fImplWeakPtr(firstData), fObjPtr(objPtr)
+   TResultProxy(const SPT_t &objPtr, const ShrdPtrBool_t &readiness, const SPTLM_t &firstData,
+                TDFInternal::TActionBase *actionPtr = nullptr)
+      : fReadiness(readiness), fImplWeakPtr(firstData), fObjPtr(objPtr), fActionPtr(actionPtr)
    {
    }
 
+   void SetActionPtr(TDFInternal::TActionBase *a) { fActionPtr = a; }
+
 public:
+   using Value_t = T; ///< Convenience alias to simplify access to proxied type
+
    TResultProxy() = delete;
 
    /// Get a const reference to the encapsulated object.
@@ -140,6 +150,25 @@ public:
          TriggerRun();
       return TIterationHelper<T>::GetEnd(*fObjPtr);
    }
+
+   void RegisterCallback(ULong64_t everyNevents, std::function<void(T&)> callback)
+   {
+      if (everyNevents == 0) {
+         Warning("RegisterCallback",
+                 "everyNevents implies the callback will never be executed, so it's not going to be registered.");
+         return;
+      }
+      if (!fActionPtr)
+         throw std::runtime_error("Callback registration not implemented for this kind of action.");
+      auto lm = fImplWeakPtr.lock();
+      if (!lm)
+         throw std::runtime_error("The main TDataFrame is not reachable: did it go out of scope?");
+      auto c = [this, callback](unsigned int slot) {
+         fActionPtr->PartialUpdate(slot);
+         callback(*fObjPtr);
+      };
+      lm->RegisterCallback(std::move(c), everyNevents);
+   }
 };
 
 template <typename T>
@@ -157,10 +186,11 @@ void TResultProxy<T>::TriggerRun()
 namespace Detail {
 namespace TDF {
 template <typename T>
-TResultProxy<T> MakeResultProxy(const std::shared_ptr<T> &r, const std::shared_ptr<TLoopManager> &df)
+TResultProxy<T> MakeResultProxy(const std::shared_ptr<T> &r, const std::shared_ptr<TLoopManager> &df,
+                                TDFInternal::TActionBase *actionPtr)
 {
    auto readiness = std::make_shared<bool>(false);
-   auto resPtr = TResultProxy<T>(r, readiness, df);
+   auto resPtr = TResultProxy<T>(r, readiness, df, actionPtr);
    df->Book(readiness);
    return resPtr;
 }
