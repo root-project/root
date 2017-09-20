@@ -90,57 +90,44 @@ Long_t JitTransformation(void *thisPtr, std::string_view methodName, std::string
    auto exprNeedsVariables = !usedBranches.empty();
 
    // Move to the preparation of the jitting
-   // We put all of the jitted entities in a namespace called
-   // __tdf_filter_N, where N is a monotonically increasing index.
+   // We put all of the jitted entities in function f in namespace __tdf_N, where N is a monotonically increasing index
+   // and then try to declare that function to make sure column names, types and expression are proper C++
    std::vector<std::string> usedBranchesTypes;
-   std::stringstream ss;
    static unsigned int iNs = 0U;
-   ss << "__tdf_" << iNs++;
-   const auto nsName = ss.str();
-   ss.str("");
+   std::stringstream dummyDecl;
+   dummyDecl << "namespace __tdf_" << std::to_string(iNs++) << "{ void f(){\n";
 
+   // Declare variables with the same name as the column used by this transformation
    if (exprNeedsVariables) {
-      // Declare a namespace and inside it the variables in the expression
-      ss << "namespace " << nsName;
-      ss << " {\n";
       for (auto brName : usedBranches) {
          // The map is a const reference, so no operator[]
          auto tmpBrIt = tmpBookedBranches.find(brName);
          auto tmpBr = tmpBrIt == tmpBookedBranches.end() ? nullptr : tmpBrIt->second.get();
          auto brTypeName = ColumnName2ColumnTypeName(brName, tree, tmpBr, ds);
-         ss << brTypeName << " " << brName << ";\n";
+         dummyDecl << brTypeName << " " << brName << ";\n";
          usedBranchesTypes.emplace_back(brTypeName);
-      }
-      ss << "}";
-      auto variableDeclarations = ss.str();
-      ss.str("");
-      // We need ProcessLine to trigger auto{parsing,loading} where needed
-      TInterpreter::EErrorCode interpErrCode;
-      gInterpreter->ProcessLine(variableDeclarations.c_str(), &interpErrCode);
-      if (TInterpreter::EErrorCode::kNoError != interpErrCode) {
-         std::string msg = "Cannot declare these variables:  ";
-         msg += variableDeclarations;
-         msg += "\nInterpreter error code is " + std::to_string(interpErrCode) + ".";
-         throw std::runtime_error(msg);
       }
    }
 
-   // Declare within the same namespace, the expression to make sure it
-   // is proper C++
-   ss << "namespace " << nsName << "{ auto res = " << expression << ";}\n";
-   // Headers must have been parsed and libraries loaded: we can use Declare
-   if (!gInterpreter->Declare(ss.str().c_str())) {
-      std::string msg = "Cannot interpret this expression: ";
-      msg += " ";
-      msg += ss.str();
+   // Put the expression used for the transformation in the function
+   dummyDecl << "auto __tdfexprres = " << expression << ";}}"; // close scopes of f and namespace __tdf_N
+   // Try to declare the dummy function, error out if it does not compile
+   if (!gInterpreter->Declare(dummyDecl.str().c_str())) {
+      auto msg =
+         "Cannot interpret the following expression:\n" + std::string(expression) + "\n\nMake sure it is valid C++.";
       throw std::runtime_error(msg);
    }
 
    // Now we build the lambda and we invoke the method with it in the jitted world
-   ss.str("");
+   std::stringstream ss;
    ss << "[](";
    for (unsigned int i = 0; i < usedBranchesTypes.size(); ++i) {
       // We pass by reference to avoid expensive copies
+      // It can't be const reference in general, as users might want/need to call non-const methods on the values
+      // In the special case of arguments of type `std::array_view`, it *has* to be a const ref as we will pass in
+      // temporaries converted from TTreeReaderArrays.
+      if (usedBranchesTypes[i].find_first_of("std::array_view<") == 0u)
+         ss << "const ";
       ss << usedBranchesTypes[i] << "& " << usedBranches[i] << ", ";
    }
    if (!usedBranchesTypes.empty())
