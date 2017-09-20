@@ -81,15 +81,10 @@ using namespace ROOT::Experimental::TDF;
 class TIgnoreErrorLevelRAAI {
 private:
    int fCurIgnoreErrorLevel = gErrorIgnoreLevel;
+
 public:
-   TIgnoreErrorLevelRAAI(int errorIgnoreLevel)
-   {
-      gErrorIgnoreLevel = errorIgnoreLevel;
-   }
-   ~TIgnoreErrorLevelRAAI()
-   {
-      gErrorIgnoreLevel = fCurIgnoreErrorLevel;
-   }
+   TIgnoreErrorLevelRAAI(int errorIgnoreLevel) { gErrorIgnoreLevel = errorIgnoreLevel; }
+   ~TIgnoreErrorLevelRAAI() { gErrorIgnoreLevel = fCurIgnoreErrorLevel; }
 };
 
 /// Compile-time integer sequence generator
@@ -140,7 +135,8 @@ struct TNeedJitting<TInferType> {
 using TVBPtr_t = std::shared_ptr<TTreeReaderValueBase>;
 using TVBVec_t = std::vector<TVBPtr_t>;
 
-std::string ColumnName2ColumnTypeName(const std::string &colName, TTree *, TCustomColumnBase *, TDataSource * = nullptr);
+std::string
+ColumnName2ColumnTypeName(const std::string &colName, TTree *, TCustomColumnBase *, TDataSource * = nullptr);
 
 const char *ToConstCharPtr(const char *s);
 const char *ToConstCharPtr(const std::string &s);
