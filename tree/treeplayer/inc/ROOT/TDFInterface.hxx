@@ -228,11 +228,12 @@ class TInterface {
    template <typename T>
    friend class TInterface;
 
-   const std::shared_ptr<Proxied> fProxiedPtr; ///< Smart pointer to the graph node encapsulated by this TInterface.
+   const std::shared_ptr<Proxied> fProxiedPtr;     ///< Smart pointer to the graph node encapsulated by this TInterface.
    const std::weak_ptr<TLoopManager> fImplWeakPtr; ///< Weak pointer to the TLoopManager at the root of the graph.
    ColumnNames_t fValidCustomColumns; ///< Names of columns `Define`d for this branch of the functional graph.
    /// Non-owning pointer to a data-source object. Null if no data-source. TLoopManager has ownership of the object.
-   TDataSource * const fDataSource = nullptr;
+   TDataSource *const fDataSource = nullptr;
+
 public:
    /// \cond HIDDEN_SYMBOLS
    // Template conversion operator, meant to use to convert TInterfaces of certain node types to TInterfaces of base
@@ -437,8 +438,9 @@ public:
    ///
    /// This function returns a `TDataFrame` built with the output tree as a source.
    template <typename... BranchTypes>
-   TInterface<TLoopManager> Snapshot(std::string_view treename, std::string_view filename,
-                                     const ColumnNames_t &columnList, const TSnapshotOptions &options = TSnapshotOptions())
+   TInterface<TLoopManager>
+   Snapshot(std::string_view treename, std::string_view filename, const ColumnNames_t &columnList,
+            const TSnapshotOptions &options = TSnapshotOptions())
    {
       return SnapshotImpl<BranchTypes...>(treename, filename, columnList, options);
    }
@@ -453,7 +455,8 @@ public:
    /// This function returns a `TDataFrame` built with the output tree as a source.
    /// The types of the columns are automatically inferred and do not need to be specified.
    TInterface<TLoopManager> Snapshot(std::string_view treename, std::string_view filename,
-                                     const ColumnNames_t &columnList, const TSnapshotOptions &options = TSnapshotOptions())
+                                     const ColumnNames_t &columnList,
+                                     const TSnapshotOptions &options = TSnapshotOptions())
    {
       auto df = GetDataFrameChecked();
       auto tree = df->GetTree();
@@ -496,7 +499,8 @@ public:
    /// This function returns a `TDataFrame` built with the output tree as a source.
    /// The types of the columns are automatically inferred and do not need to be specified.
    TInterface<TLoopManager> Snapshot(std::string_view treename, std::string_view filename,
-                                     std::string_view columnNameRegexp = "", const TSnapshotOptions &options = TSnapshotOptions())
+                                     std::string_view columnNameRegexp = "",
+                                     const TSnapshotOptions &options = TSnapshotOptions())
    {
       const auto theRegexSize = columnNameRegexp.size();
       std::string theRegex(columnNameRegexp);
@@ -744,7 +748,7 @@ public:
    /// booked but not executed. See TResultProxy documentation.
    /// The user gives up ownership of the model histogram.
    template <typename V = TDFDetail::TInferType>
-   TResultProxy<::TH1D> Histo1D(const TH1DModel& model = {"", "", 128u, 0., 0.}, std::string_view vName = "")
+   TResultProxy<::TH1D> Histo1D(const TH1DModel &model = {"", "", 128u, 0., 0.}, std::string_view vName = "")
    {
       const auto userColumns = vName.empty() ? ColumnNames_t() : ColumnNames_t({std::string(vName)});
       std::shared_ptr<::TH1D> h(nullptr);
@@ -774,7 +778,7 @@ public:
    ///
    /// See the description of the first Histo1D overload for more details.
    template <typename V = TDFDetail::TInferType, typename W = TDFDetail::TInferType>
-   TResultProxy<::TH1D> Histo1D(const TH1DModel& model, std::string_view vName, std::string_view wName)
+   TResultProxy<::TH1D> Histo1D(const TH1DModel &model, std::string_view vName, std::string_view wName)
    {
       auto columnViews = {vName, wName};
       const auto userColumns = TDFInternal::AtLeastOneEmptyString(columnViews)
@@ -812,7 +816,7 @@ public:
    /// This overload will use the first two default columns as column names.
    /// See the description of the first Histo1D overload for more details.
    template <typename V, typename W>
-   TResultProxy<::TH1D> Histo1D(const TH1DModel& model = {"", "", 128u, 0., 0.})
+   TResultProxy<::TH1D> Histo1D(const TH1DModel &model = {"", "", 128u, 0., 0.})
    {
       return Histo1D<V, W>(model, "", "");
    }
@@ -833,12 +837,13 @@ public:
    /// booked but not executed. See TResultProxy documentation.
    /// The user gives up ownership of the model histogram.
    template <typename V1 = TDFDetail::TInferType, typename V2 = TDFDetail::TInferType>
-   TResultProxy<::TH2D> Histo2D(const TH2DModel& model, std::string_view v1Name = "", std::string_view v2Name = "")
+   TResultProxy<::TH2D> Histo2D(const TH2DModel &model, std::string_view v1Name = "", std::string_view v2Name = "")
    {
       std::shared_ptr<::TH2D> h(nullptr);
       {
          Internal::TDF::TIgnoreErrorLevelRAAI iel(kError);
-         h = std::make_shared<::TH2D>(model.fName, model.fTitle, model.fNbinsX, model.fXLow, model.fXUp, model.fNbinsY, model.fYLow, model.fYUp);
+         h = std::make_shared<::TH2D>(model.fName, model.fTitle, model.fNbinsX, model.fXLow, model.fXUp, model.fNbinsY,
+                                      model.fYLow, model.fYUp);
       }
       if (!TDFInternal::HistoUtils<::TH2D>::HasAxisLimits(*h)) {
          throw std::runtime_error("2D histograms with no axes limits are not supported yet.");
@@ -865,13 +870,14 @@ public:
    /// The user gives up ownership of the model histogram.
    template <typename V1 = TDFDetail::TInferType, typename V2 = TDFDetail::TInferType,
              typename W = TDFDetail::TInferType>
-   TResultProxy<::TH2D> Histo2D(const TH2DModel& model, std::string_view v1Name, std::string_view v2Name,
-                                std::string_view wName)
+   TResultProxy<::TH2D>
+   Histo2D(const TH2DModel &model, std::string_view v1Name, std::string_view v2Name, std::string_view wName)
    {
       std::shared_ptr<::TH2D> h(nullptr);
       {
          Internal::TDF::TIgnoreErrorLevelRAAI iel(kError);
-         h = std::make_shared<::TH2D>(model.fName, model.fTitle, model.fNbinsX, model.fXLow, model.fXUp,  model.fNbinsY, model.fYLow, model.fYUp);
+         h = std::make_shared<::TH2D>(model.fName, model.fTitle, model.fNbinsX, model.fXLow, model.fXUp, model.fNbinsY,
+                                      model.fYLow, model.fYUp);
       }
       if (!TDFInternal::HistoUtils<::TH2D>::HasAxisLimits(*h)) {
          throw std::runtime_error("2D histograms with no axes limits are not supported yet.");
@@ -884,7 +890,7 @@ public:
    }
 
    template <typename V1, typename V2, typename W>
-   TResultProxy<::TH2D> Histo2D(const TH2DModel& model)
+   TResultProxy<::TH2D> Histo2D(const TH2DModel &model)
    {
       return Histo2D<V1, V2, W>(model, "", "", "");
    }
@@ -904,13 +910,14 @@ public:
    /// The user gives up ownership of the model histogram.
    template <typename V1 = TDFDetail::TInferType, typename V2 = TDFDetail::TInferType,
              typename V3 = TDFDetail::TInferType>
-   TResultProxy<::TH3D> Histo3D(const TH3DModel& model, std::string_view v1Name = "", std::string_view v2Name = "",
+   TResultProxy<::TH3D> Histo3D(const TH3DModel &model, std::string_view v1Name = "", std::string_view v2Name = "",
                                 std::string_view v3Name = "")
    {
       std::shared_ptr<::TH3D> h(nullptr);
       {
          Internal::TDF::TIgnoreErrorLevelRAAI iel(kError);
-         h = std::make_shared<::TH3D>(model.fName, model.fTitle, model.fNbinsX, model.fXLow, model.fXUp, model.fNbinsY, model.fYLow, model.fYUp, model.fNbinsZ, model.fZLow, model.fZUp);
+         h = std::make_shared<::TH3D>(model.fName, model.fTitle, model.fNbinsX, model.fXLow, model.fXUp, model.fNbinsY,
+                                      model.fYLow, model.fYUp, model.fNbinsZ, model.fZLow, model.fZUp);
       }
       if (!TDFInternal::HistoUtils<::TH3D>::HasAxisLimits(*h)) {
          throw std::runtime_error("3D histograms with no axes limits are not supported yet.");
@@ -939,13 +946,14 @@ public:
    /// The user gives up ownership of the model histogram.
    template <typename V1 = TDFDetail::TInferType, typename V2 = TDFDetail::TInferType,
              typename V3 = TDFDetail::TInferType, typename W = TDFDetail::TInferType>
-   TResultProxy<::TH3D> Histo3D(const TH3DModel& model, std::string_view v1Name, std::string_view v2Name,
+   TResultProxy<::TH3D> Histo3D(const TH3DModel &model, std::string_view v1Name, std::string_view v2Name,
                                 std::string_view v3Name, std::string_view wName)
    {
       std::shared_ptr<::TH3D> h(nullptr);
       {
          Internal::TDF::TIgnoreErrorLevelRAAI iel(kError);
-         h = std::make_shared<::TH3D>(model.fName, model.fTitle, model.fNbinsX, model.fXLow, model.fXUp, model.fNbinsY, model.fYLow, model.fYUp, model.fNbinsZ, model.fZLow, model.fZUp);
+         h = std::make_shared<::TH3D>(model.fName, model.fTitle, model.fNbinsX, model.fXLow, model.fXUp, model.fNbinsY,
+                                      model.fYLow, model.fYUp, model.fNbinsZ, model.fZLow, model.fZUp);
       }
       if (!TDFInternal::HistoUtils<::TH3D>::HasAxisLimits(*h)) {
          throw std::runtime_error("3D histograms with no axes limits are not supported yet.");
@@ -958,7 +966,7 @@ public:
    }
 
    template <typename V1, typename V2, typename V3, typename W>
-   TResultProxy<::TH3D> Histo3D(const TH3DModel& model)
+   TResultProxy<::TH3D> Histo3D(const TH3DModel &model)
    {
       return Histo3D<V1, V2, V3, W>(model, "", "", "", "");
    }
@@ -1003,8 +1011,8 @@ public:
    /// The user gives up ownership of the model profile object.
    template <typename V1 = TDFDetail::TInferType, typename V2 = TDFDetail::TInferType,
              typename W = TDFDetail::TInferType>
-   TResultProxy<::TProfile> Profile1D(::TProfile &&model, std::string_view v1Name, std::string_view v2Name,
-                                      std::string_view wName)
+   TResultProxy<::TProfile>
+   Profile1D(::TProfile &&model, std::string_view v1Name, std::string_view v2Name, std::string_view wName)
    {
       auto h = std::make_shared<::TProfile>(std::move(model));
       if (!TDFInternal::HistoUtils<::TProfile>::HasAxisLimits(*h)) {
@@ -1258,8 +1266,8 @@ private:
    // this action is taken equal to nColumns, otherwise it is assumed to be sizeof...(BranchTypes)
    template <typename ActionType, typename... BranchTypes, typename ActionResultType,
              typename std::enable_if<TDFInternal::TNeedJitting<BranchTypes...>::value, int>::type = 0>
-   TResultProxy<ActionResultType> CreateAction(const ColumnNames_t &columns, const std::shared_ptr<ActionResultType> &r,
-                                               const int nColumns = -1)
+   TResultProxy<ActionResultType>
+   CreateAction(const ColumnNames_t &columns, const std::shared_ptr<ActionResultType> &r, const int nColumns = -1)
    {
       auto lm = GetDataFrameChecked();
       auto realNColumns = (nColumns > -1 ? nColumns : sizeof...(BranchTypes));
@@ -1310,13 +1318,15 @@ private:
          // single-thread snapshot
          using Helper_t = TDFInternal::SnapshotHelper<BranchTypes...>;
          using Action_t = TDFInternal::TAction<Helper_t, Proxied, TTraits::TypeList<BranchTypes...>>;
-         actionPtr.reset(new Action_t(Helper_t(filename, dirname, treename, columnList, options), columnList, *fProxiedPtr));
+         actionPtr.reset(
+            new Action_t(Helper_t(filename, dirname, treename, columnList, options), columnList, *fProxiedPtr));
       } else {
          // multi-thread snapshot
          using Helper_t = TDFInternal::SnapshotHelperMT<BranchTypes...>;
          using Action_t = TDFInternal::TAction<Helper_t, Proxied>;
-         actionPtr.reset(new Action_t(Helper_t(fProxiedPtr->GetNSlots(), filename, dirname, treename, columnList, options),
-                                      columnList, *fProxiedPtr));
+         actionPtr.reset(
+            new Action_t(Helper_t(fProxiedPtr->GetNSlots(), filename, dirname, treename, columnList, options),
+                         columnList, *fProxiedPtr));
       }
       auto df = GetDataFrameChecked();
       df->Book(std::move(actionPtr));
@@ -1359,7 +1369,7 @@ protected:
    {
    }
 
-   const std::shared_ptr<Proxied>& GetProxiedPtr() const { return fProxiedPtr; }
+   const std::shared_ptr<Proxied> &GetProxiedPtr() const { return fProxiedPtr; }
 };
 
 template <>

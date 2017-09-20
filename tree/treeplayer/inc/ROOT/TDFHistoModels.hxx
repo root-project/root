@@ -30,11 +30,13 @@ public:
 
    TH1DModel() = delete;
    TH1DModel(const TH1DModel &) = delete;
-   TH1DModel(const ::TH1D &h) : fName(h.GetName()), fTitle(h.GetTitle()), fNbinsX(h.GetNbinsX()), fXLow(h.GetXaxis()->GetXmin()), fXUp(h.GetXaxis()->GetXmax())
+   TH1DModel(const ::TH1D &h)
+      : fName(h.GetName()), fTitle(h.GetTitle()), fNbinsX(h.GetNbinsX()), fXLow(h.GetXaxis()->GetXmin()),
+        fXUp(h.GetXaxis()->GetXmax())
    {
    }
    TH1DModel(const char *name, const char *title, int nbinsx, double xlow, double xup)
-   : fName(name), fTitle(title), fNbinsX(nbinsx), fXLow(xlow), fXUp(xup)
+      : fName(name), fTitle(title), fNbinsX(nbinsx), fXLow(xlow), fXUp(xup)
    {
    }
 };
@@ -52,11 +54,15 @@ public:
 
    TH2DModel() = delete;
    TH2DModel(const TH2DModel &) = delete;
-   TH2DModel(const ::TH2D &h) : fName(h.GetName()), fTitle(h.GetTitle()), fNbinsX(h.GetNbinsX()), fXLow(h.GetXaxis()->GetXmin()), fXUp(h.GetXaxis()->GetXmax()), fNbinsY(h.GetNbinsY()), fYLow(h.GetYaxis()->GetXmin()), fYUp(h.GetYaxis()->GetXmax())
+   TH2DModel(const ::TH2D &h)
+      : fName(h.GetName()), fTitle(h.GetTitle()), fNbinsX(h.GetNbinsX()), fXLow(h.GetXaxis()->GetXmin()),
+        fXUp(h.GetXaxis()->GetXmax()), fNbinsY(h.GetNbinsY()), fYLow(h.GetYaxis()->GetXmin()),
+        fYUp(h.GetYaxis()->GetXmax())
    {
    }
-   TH2DModel(const char *name, const char *title, int nbinsx, double xlow, double xup, int nbinsy, double ylow, double yup)
-   : fName(name), fTitle(title), fNbinsX(nbinsx), fXLow(xlow), fXUp(xup), fNbinsY(nbinsy), fYLow(ylow), fYUp(yup)
+   TH2DModel(const char *name, const char *title, int nbinsx, double xlow, double xup, int nbinsy, double ylow,
+             double yup)
+      : fName(name), fTitle(title), fNbinsX(nbinsx), fXLow(xlow), fXUp(xup), fNbinsY(nbinsy), fYLow(ylow), fYUp(yup)
    {
    }
 };
@@ -77,15 +83,20 @@ public:
 
    TH3DModel() = delete;
    TH3DModel(const TH3DModel &) = delete;
-   TH3DModel(const ::TH3D &h) : fName(h.GetName()), fTitle(h.GetTitle()), fNbinsX(h.GetNbinsX()), fXLow(h.GetXaxis()->GetXmin()), fXUp(h.GetXaxis()->GetXmax()), fNbinsY(h.GetNbinsY()), fYLow(h.GetYaxis()->GetXmin()), fYUp(h.GetYaxis()->GetXmax()), fNbinsZ(h.GetNbinsZ()), fZLow(h.GetZaxis()->GetXmin()), fZUp(h.GetZaxis()->GetXmax())
+   TH3DModel(const ::TH3D &h)
+      : fName(h.GetName()), fTitle(h.GetTitle()), fNbinsX(h.GetNbinsX()), fXLow(h.GetXaxis()->GetXmin()),
+        fXUp(h.GetXaxis()->GetXmax()), fNbinsY(h.GetNbinsY()), fYLow(h.GetYaxis()->GetXmin()),
+        fYUp(h.GetYaxis()->GetXmax()), fNbinsZ(h.GetNbinsZ()), fZLow(h.GetZaxis()->GetXmin()),
+        fZUp(h.GetZaxis()->GetXmax())
    {
    }
-   TH3DModel(const char *name, const char *title, int nbinsx, double xlow, double xup, int nbinsy, double ylow, double yup, int nbinsz, double zlow, double zup)
-   : fName(name), fTitle(title), fNbinsX(nbinsx), fXLow(xlow), fXUp(xup), fNbinsY(nbinsy), fYLow(ylow), fYUp(yup), fNbinsZ(nbinsz), fZLow(zlow), fZUp(zup)
+   TH3DModel(const char *name, const char *title, int nbinsx, double xlow, double xup, int nbinsy, double ylow,
+             double yup, int nbinsz, double zlow, double zup)
+      : fName(name), fTitle(title), fNbinsX(nbinsx), fXLow(xlow), fXUp(xup), fNbinsY(nbinsy), fYLow(ylow), fYUp(yup),
+        fNbinsZ(nbinsz), fZLow(zlow), fZUp(zup)
    {
    }
 };
-
 
 } // ns TDF
 } // ns Experimental
