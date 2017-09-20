@@ -33,15 +33,15 @@ int PoolTest() {
 
   /***** Foreach tests *****/
 
-  std::vector<int> vec{1,1,1,1};
-  auto lambdaNTimes = [&](){vec[0]+=1;};
+  std::atomic<unsigned> i{};
+  auto lambdaNTimes = [&](){i++;};
 
    pool.Foreach(lambdaNTimes, 4);
-   if(redfunc(vec) != 8)
+   if(i!=4)
       return 19;
 
-   std::vector<int> vec2{1,1,1,1};
-   pool.Foreach([&](int &i){i=2;}, vec2);
+   std::vector<int> vec{1,1,1,1};
+   pool.Foreach([&](int &i){i=2;}, vec);
    if(redfunc(vec) != 8)
       return 20;
    return 0;
