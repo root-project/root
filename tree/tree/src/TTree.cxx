@@ -5363,7 +5363,7 @@ Int_t TTree::GetEntry(Long64_t entry, Int_t getall)
    };
 
 #ifdef R__USE_IMT
-   if (ROOT::IsImplicitMTEnabled() && fIMTEnabled) {
+   if (!TTreeCacheUnzip::IsParallelUnzip() && ROOT::IsImplicitMTEnabled() && fIMTEnabled) {
       if (fSortedBranches.empty()) InitializeBranchLists(true);
 
       // Count branches are processed first and sequentially
