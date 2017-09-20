@@ -1082,7 +1082,7 @@ const char *TSystem::ExpandFileName(const char *fname)
    TTHREAD_TLS_ARRAY(char, kBufSize, xname);
 
    Bool_t res = ExpandFileName(fname, xname, kBufSize);
-   if (res) 
+   if (res)
       return nullptr;
    else
       return xname;
@@ -1116,7 +1116,7 @@ Bool_t TSystem::ExpandFileName(const char *fname, char *xname, const int kBufSiz
    char       *inp, *out, *x, *t, buff[kBufSize*4];
    const char *b, *c, *e;
    const char *p;
-   
+
    iter = 0; xname[0] = 0; inp = buff + kBufSize; out = inp + kBufSize;
    inp[-1] = ' '; inp[0] = 0; out[-1] = ' ';
    c = fname + strspn(fname, " \t\f\r");
@@ -2475,6 +2475,15 @@ int TSystem::GetSockOpt(int, int, int*)
 }
 
 //---- System, CPU and Memory info ---------------------------------------------
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the number of system CPUs.
+unsigned TSystem::GetNCPUs() const
+{
+   SysInfo_t s;
+   this->GetSysInfo(&s);
+   return s.fCpus;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns static system info, like OS type, CPU type, number of CPUs
