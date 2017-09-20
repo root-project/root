@@ -321,17 +321,18 @@ void TPadPainter::ClearDrawable()
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy a gVirtualX pixmap.
 
-void TPadPainter::CopyDrawable(Int_t id, Int_t px, Int_t py)
+void TPadPainter::CopyDrawable(Int_t device, Int_t px, Int_t py)
 {
-   gVirtualX->CopyPixmap(id, px, py);
+   gVirtualX->CopyPixmap(device, px, py);
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Close the current gVirtualX pixmap.
 
-void TPadPainter::DestroyDrawable()
+void TPadPainter::DestroyDrawable(Int_t device)
 {
+   gVirtualX->SelectWindow(device);
    gVirtualX->ClosePixmap();
 }
 

@@ -2423,6 +2423,11 @@ void TGCocoa::CopyPixmap(Int_t pixmapID, Int_t x, Int_t y)
 void TGCocoa::ClosePixmap()
 {
    // Deletes current pixmap.
+   assert(fSelectedDrawable > fPimpl->GetRootWindowID() && "ClosePixmap, no drawable selected");
+   assert(fPimpl->GetDrawable(fSelectedDrawable).fIsPixmap == YES && "ClosePixmap, selected drawable is not a pixmap");
+
+   DeletePixmap(fSelectedDrawable);
+   fSelectedDrawable = 0;
 }
 
 #pragma mark - Different functions to create pixmap from different data sources. Used by GUI.
