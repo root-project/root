@@ -265,6 +265,7 @@ void TLoopManager::RunAndCheckFilters(unsigned int slot, Long64_t entry)
 {
    for (auto &actionPtr : fBookedActions) actionPtr->Run(slot, entry);
    for (auto &namedFilterPtr : fBookedNamedFilters) namedFilterPtr->CheckFilters(slot, entry);
+   for (auto &callback : fCallbacks) callback(slot);
 }
 
 /// Build TTreeReaderValues for all nodes
@@ -440,6 +441,11 @@ bool TLoopManager::CheckFilters(int, unsigned int)
 void TLoopManager::Report() const
 {
    for (const auto &fPtr : fBookedNamedFilters) fPtr->PrintReport();
+}
+
+void TLoopManager::RegisterCallback(std::function<void(unsigned int)> &&f, ULong64_t everyNevents)
+{
+   fCallbacks.emplace_back(std::move(f), everyNevents, fNSlots);
 }
 
 TRangeBase::TRangeBase(TLoopManager *implPtr, unsigned int start, unsigned int stop, unsigned int stride,
