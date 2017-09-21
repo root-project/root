@@ -7,11 +7,11 @@ class HistogramsFromTDF(unittest.TestCase):
         ROOT.gRandom.SetSeed(1)
 
     def test_histo1D(self):
-    	ROOT.gRandom.SetSeed(1)
-    	tdf = ROOT.ROOT.Experimental.TDataFrame(64)
-    	g = tdf.Define("r","gRandom->Gaus(0,1)")
-    	h1Proxy = g.Histo1D(("h1","h1",64, -2., 2.),"r")
-    	h1 = h1Proxy.GetValue()
+        ROOT.gRandom.SetSeed(1)
+        tdf = ROOT.ROOT.Experimental.TDataFrame(64)
+        g = tdf.Define("r","gRandom->Gaus(0,1)")
+        h1Proxy = g.Histo1D(("h1","h1",64, -2., 2.),"r")
+        h1 = h1Proxy.GetValue()
 
         cppCode = 'gRandom->SetSeed(1);' + \
                   'ROOT::Experimental::TDataFrame tdf(64);' + \
