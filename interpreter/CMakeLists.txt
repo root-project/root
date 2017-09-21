@@ -89,6 +89,12 @@ endif()
 #---Build type--------------------------------------------------------------------------------------
 if(NOT DEFINED LLVM_BUILD_TYPE)
   set(LLVM_BUILD_TYPE Release CACHE STRING "Build type for LLVM (used to set CMAKE_BUILD_TYPE)")
+  if(CMAKE_BUILD_TYPE STREQUAL "Optimized")
+# LLVM doesn't have Optimized build type, only Debug, Release, RelWithDebInfo, and MinSizeRel
+# We need to pass flag for fast math support in interpreter for LLVM Release build to enable __FAST_MATH__
+# for ROOT macroses.
+     ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -ffast-math)
+  endif()
 endif()
 if( CMAKE_BUILD_TYPE STREQUAL "Debug" AND NOT LLVM_BUILD_TYPE STREQUAL "Debug")
   message(STATUS "Selected a 'Debug' build (CMAKE_BUILD_TYPE), be aware that the embedded LLVM will still be built as 'Release'."
