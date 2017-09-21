@@ -71,60 +71,75 @@ public:
 
 // Generic filling (covers Histo2D, Histo3D, Profile1D and Profile2D actions, with and without weights)
 template <typename... BranchTypes, typename ActionType, typename ActionResultType, typename PrevNodeType>
-void BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &h, const unsigned int nSlots,
-                  TLoopManager &loopManager, PrevNodeType &prevNode, ActionType *)
+TActionBase *BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &h,
+                          const unsigned int nSlots, TLoopManager &loopManager, PrevNodeType &prevNode, ActionType *)
 {
    using Helper_t = FillTOHelper<ActionResultType>;
    using Action_t = TAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchTypes...>>;
-   loopManager.Book(std::make_shared<Action_t>(Helper_t(h, nSlots), bl, prevNode));
+   auto action = std::make_shared<Action_t>(Helper_t(h, nSlots), bl, prevNode);
+   loopManager.Book(action);
+   return action.get();
 }
 
 // Histo1D filling (must handle the special case of distinguishing FillTOHelper and FillHelper
 template <typename... BranchTypes, typename PrevNodeType>
-void BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<::TH1D> &h, const unsigned int nSlots,
-                  TLoopManager &loopManager, PrevNodeType &prevNode, ActionTypes::Histo1D *)
+TActionBase *BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<::TH1D> &h, const unsigned int nSlots,
+                          TLoopManager &loopManager, PrevNodeType &prevNode, ActionTypes::Histo1D *)
 {
    auto hasAxisLimits = HistoUtils<::TH1D>::HasAxisLimits(*h);
 
+   TActionBase *actionBase;
    if (hasAxisLimits) {
       using Helper_t = FillTOHelper<::TH1D>;
       using Action_t = TAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchTypes...>>;
-      loopManager.Book(std::make_shared<Action_t>(Helper_t(h, nSlots), bl, prevNode));
+      auto action = std::make_shared<Action_t>(Helper_t(h, nSlots), bl, prevNode);
+      loopManager.Book(action);
+      actionBase = action.get();
    } else {
       using Helper_t = FillHelper;
       using Action_t = TAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchTypes...>>;
-      loopManager.Book(std::make_shared<Action_t>(Helper_t(h, nSlots), bl, prevNode));
+      auto action = std::make_shared<Action_t>(Helper_t(h, nSlots), bl, prevNode);
+      loopManager.Book(action);
+      actionBase = action.get();
    }
+
+   return actionBase;
 }
 
 // Min action
 template <typename BranchType, typename PrevNodeType>
-void BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<double> &minV, const unsigned int nSlots,
-                  TLoopManager &loopManager, PrevNodeType &prevNode, ActionTypes::Min *)
+TActionBase *BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<double> &minV, const unsigned int nSlots,
+                          TLoopManager &loopManager, PrevNodeType &prevNode, ActionTypes::Min *)
 {
    using Helper_t = MinHelper;
    using Action_t = TAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchType>>;
-   loopManager.Book(std::make_shared<Action_t>(Helper_t(minV, nSlots), bl, prevNode));
+   auto action = std::make_shared<Action_t>(Helper_t(minV, nSlots), bl, prevNode);
+   loopManager.Book(action);
+   return action.get();
 }
 
 // Max action
 template <typename BranchType, typename PrevNodeType>
-void BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<double> &maxV, const unsigned int nSlots,
-                  TLoopManager &loopManager, PrevNodeType &prevNode, ActionTypes::Max *)
+TActionBase *BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<double> &maxV, const unsigned int nSlots,
+                          TLoopManager &loopManager, PrevNodeType &prevNode, ActionTypes::Max *)
 {
    using Helper_t = MaxHelper;
    using Action_t = TAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchType>>;
-   loopManager.Book(std::make_shared<Action_t>(Helper_t(maxV, nSlots), bl, prevNode));
+   auto action = std::make_shared<Action_t>(Helper_t(maxV, nSlots), bl, prevNode);
+   loopManager.Book(action);
+   return action.get();
 }
 
 // Mean action
 template <typename BranchType, typename PrevNodeType>
-void BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<double> &meanV, const unsigned int nSlots,
-                  TLoopManager &loopManager, PrevNodeType &prevNode, ActionTypes::Mean *)
+TActionBase *BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<double> &meanV, const unsigned int nSlots,
+                          TLoopManager &loopManager, PrevNodeType &prevNode, ActionTypes::Mean *)
 {
    using Helper_t = MeanHelper;
    using Action_t = TAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchType>>;
-   loopManager.Book(std::make_shared<Action_t>(Helper_t(meanV, nSlots), bl, prevNode));
+   auto action = std::make_shared<Action_t>(Helper_t(meanV, nSlots), bl, prevNode);
+   loopManager.Book(action);
+   return action.get();
 }
 /****** end BuildAndBook ******/
 
@@ -1447,8 +1462,9 @@ private:
          TDFInternal::DefineDataSourceColumns(selectedCols, *lm, TDFInternal::GenStaticSeq_t<nColumns>(),
                                               TDFInternal::TypeList<BranchTypes...>(), *fDataSource);
       const auto nSlots = fProxiedPtr->GetNSlots();
-      TDFInternal::BuildAndBook<BranchTypes...>(selectedCols, r, nSlots, *lm, *fProxiedPtr, (ActionType *)nullptr);
-      return MakeResultProxy(r, lm);
+      auto actionPtr =
+         TDFInternal::BuildAndBook<BranchTypes...>(selectedCols, r, nSlots, *lm, *fProxiedPtr, (ActionType *)nullptr);
+      return MakeResultProxy(r, lm, actionPtr);
    }
 
    // User did not specify type, do type inference
