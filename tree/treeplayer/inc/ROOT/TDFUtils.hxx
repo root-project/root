@@ -78,13 +78,13 @@ using namespace ROOT::TypeTraits;
 using namespace ROOT::Detail::TDF;
 using namespace ROOT::Experimental::TDF;
 
-class TIgnoreErrorLevelRAAI {
+class TIgnoreErrorLevelRAII {
 private:
    int fCurIgnoreErrorLevel = gErrorIgnoreLevel;
 
 public:
-   TIgnoreErrorLevelRAAI(int errorIgnoreLevel) { gErrorIgnoreLevel = errorIgnoreLevel; }
-   ~TIgnoreErrorLevelRAAI() { gErrorIgnoreLevel = fCurIgnoreErrorLevel; }
+   TIgnoreErrorLevelRAII(int errorIgnoreLevel) { gErrorIgnoreLevel = errorIgnoreLevel; }
+   ~TIgnoreErrorLevelRAII() { gErrorIgnoreLevel = fCurIgnoreErrorLevel; }
 };
 
 /// Compile-time integer sequence generator
