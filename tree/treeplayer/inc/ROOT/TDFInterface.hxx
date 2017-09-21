@@ -753,7 +753,7 @@ public:
       const auto userColumns = vName.empty() ? ColumnNames_t() : ColumnNames_t({std::string(vName)});
       std::shared_ptr<::TH1D> h(nullptr);
       {
-         Internal::TDF::TIgnoreErrorLevelRAII iel(kError);
+         ROOT::Internal::TDF::TIgnoreErrorLevelRAII iel(kError);
          h = std::make_shared<::TH1D>(model.fName, model.fTitle, model.fNbinsX, model.fXLow, model.fXUp);
       }
 
@@ -786,7 +786,7 @@ public:
                                   : ColumnNames_t(columnViews.begin(), columnViews.end());
       std::shared_ptr<::TH1D> h(nullptr);
       {
-         Internal::TDF::TIgnoreErrorLevelRAII iel(kError);
+         ROOT::Internal::TDF::TIgnoreErrorLevelRAII iel(kError);
          h = std::make_shared<::TH1D>(model.fName, model.fTitle, model.fNbinsX, model.fXLow, model.fXUp);
       }
       return CreateAction<TDFInternal::ActionTypes::Histo1D, V, W>(userColumns, h);
@@ -841,7 +841,7 @@ public:
    {
       std::shared_ptr<::TH2D> h(nullptr);
       {
-         Internal::TDF::TIgnoreErrorLevelRAII iel(kError);
+         ROOT::Internal::TDF::TIgnoreErrorLevelRAII iel(kError);
          h = std::make_shared<::TH2D>(model.fName, model.fTitle, model.fNbinsX, model.fXLow, model.fXUp, model.fNbinsY,
                                       model.fYLow, model.fYUp);
       }
@@ -875,7 +875,7 @@ public:
    {
       std::shared_ptr<::TH2D> h(nullptr);
       {
-         Internal::TDF::TIgnoreErrorLevelRAII iel(kError);
+         ROOT::Internal::TDF::TIgnoreErrorLevelRAII iel(kError);
          h = std::make_shared<::TH2D>(model.fName, model.fTitle, model.fNbinsX, model.fXLow, model.fXUp, model.fNbinsY,
                                       model.fYLow, model.fYUp);
       }
@@ -915,7 +915,7 @@ public:
    {
       std::shared_ptr<::TH3D> h(nullptr);
       {
-         Internal::TDF::TIgnoreErrorLevelRAII iel(kError);
+         ROOT::Internal::TDF::TIgnoreErrorLevelRAII iel(kError);
          h = std::make_shared<::TH3D>(model.fName, model.fTitle, model.fNbinsX, model.fXLow, model.fXUp, model.fNbinsY,
                                       model.fYLow, model.fYUp, model.fNbinsZ, model.fZLow, model.fZUp);
       }
@@ -951,7 +951,7 @@ public:
    {
       std::shared_ptr<::TH3D> h(nullptr);
       {
-         Internal::TDF::TIgnoreErrorLevelRAII iel(kError);
+         ROOT::Internal::TDF::TIgnoreErrorLevelRAII iel(kError);
          h = std::make_shared<::TH3D>(model.fName, model.fTitle, model.fNbinsX, model.fXLow, model.fXUp, model.fNbinsY,
                                       model.fYLow, model.fYUp, model.fNbinsZ, model.fZLow, model.fZUp);
       }
