@@ -14,5 +14,6 @@ ROOT_ADD_GTEST(dataframe_snapshot dataframe/dataframe_snapshot.cxx LIBRARIES Tre
 ROOT_ADD_GTEST(datasource_trivial dataframe/datasource_trivial.cxx LIBRARIES TreePlayer)
 ROOT_ADD_GTEST(datasource_root dataframe/datasource_root.cxx LIBRARIES TreePlayer)
 ROOT_ADD_GTEST(datasource_noncopiable dataframe/datasource_noncopiable.cxx LIBRARIES TreePlayer)
+ROOT_ADD_GTEST(dataframe_callbacks dataframe/dataframe_callbacks.cxx LIBRARIES TreePlayer)
 
 ROOT_ADD_PYUNITTEST(dataframe_histograms dataframe/dataframe_histograms.py)
