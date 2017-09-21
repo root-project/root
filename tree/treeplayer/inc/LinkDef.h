@@ -113,7 +113,9 @@
 #pragma link C++ class ROOT::Internal::TDF::CountHelper-;
 #pragma link C++ class ROOT::Detail::TDF::TRangeBase-;
 #pragma link C++ class ROOT::Detail::TDF::TLoopManager-;
-
+#pragma link C++ class ROOT::Experimental::TDF::TH1DModel-;
+#pragma link C++ class ROOT::Experimental::TDF::TH2DModel-;
+#pragma link C++ class ROOT::Experimental::TDF::TH3DModel-;
 
 
 #endif
