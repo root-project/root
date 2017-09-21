@@ -245,6 +245,7 @@ void TLoopManager::RunDataSourceMT()
       InitNodeSlots(nullptr, slot);
       fDataSource->InitSlot(slot, range.first);
       for (auto currEntry = range.first; currEntry < range.second; ++currEntry) {
+         fDataSource->SetEntry(slot, currEntry);
          RunAndCheckFilters(slot, currEntry);
       }
       CleanUpTask(slot);
