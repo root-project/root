@@ -10,6 +10,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Tree
                               LIBRARIES ${TBB_LIBRARIES}
                               DEPENDENCIES Net RIO Thread Imt)
 
-if(testing)
-   add_subdirectory(test)
+if (testing)
+  add_subdirectory(test)
 endif()
+
