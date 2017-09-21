@@ -23,6 +23,8 @@
    }
 } (function(JSROOT, d3) {
 
+   "use strict";
+
    JSROOT.sources.push("more2d");
 
    function drawText() {
@@ -70,7 +72,7 @@
    function drawLine() {
 
       var line = this.GetObject(),
-          lineatt = JSROOT.Painter.createAttLine(line),
+          lineatt = new JSROOT.TAttLineHandler(line),
           kLineNDC = JSROOT.BIT(14),
           isndc = line.TestBit(kLineNDC);
 
@@ -91,7 +93,7 @@
    function drawPolyLine() {
 
       var polyline = this.GetObject(),
-          lineatt = JSROOT.Painter.createAttLine(polyline),
+          lineatt = new JSROOT.TAttLineHandler(polyline),
           fillatt = this.createAttFill(polyline),
           kPolyLineNDC = JSROOT.BIT(14),
           isndc = polyline.TestBit(kPolyLineNDC),
@@ -120,7 +122,7 @@
 
       var ellipse = this.GetObject();
 
-      if(!this.lineatt) this.lineatt = JSROOT.Painter.createAttLine(ellipse);
+      if(!this.lineatt) this.lineatt = new JSROOT.TAttLineHandler(ellipse);
       if (!this.fillatt) this.fillatt = this.createAttFill(ellipse);
 
       // create svg:g container for ellipse drawing
@@ -169,7 +171,7 @@
 
       var box = this.GetObject(),
           draw_line = (typeof this._drawopt == 'string') && (this._drawopt.toUpperCase().indexOf("L")>=0),
-          lineatt = JSROOT.Painter.createAttLine(box),
+          lineatt = new JSROOT.TAttLineHandler(box),
           fillatt = this.createAttFill(box);
 
       // create svg:g container for box drawing
@@ -197,7 +199,7 @@
 
    function drawMarker() {
       var marker = this.GetObject(),
-          att = JSROOT.Painter.createAttMarker(marker),
+          att = new JSROOT.TAttMarkerHandler(marker),
           kMarkerNDC = JSROOT.BIT(14),
           isndc = marker.TestBit(kMarkerNDC);
 
@@ -214,11 +216,33 @@
              .call(att.func);
    }
 
+   // =============================================================================
+
+   function drawPolyMarker() {
+      var poly = this.GetObject(),
+          att = new JSROOT.TAttMarkerHandler(poly),
+          isndc = false;
+
+      // create svg:g container for box drawing
+      this.RecreateDrawG(true, "text_layer");
+
+      var path = "";
+
+      for (var n=0;n<poly.fN;++n)
+         path += att.create(this.AxisToSvg("x", poly.fX[n], isndc),
+                            this.AxisToSvg("y", poly.fY[n], isndc));
+
+      if (path)
+         this.draw_g.append("svg:path")
+             .attr("d", path)
+             .call(att.func);
+   }
+
    // ======================================================================================
 
    function drawArrow() {
       var arrow = this.GetObject();
-      if (!this.lineatt) this.lineatt = JSROOT.Painter.createAttLine(arrow);
+      if (!this.lineatt) this.lineatt = new JSROOT.TAttLineHandler(arrow);
       if (!this.fillatt) this.fillatt = this.createAttFill(arrow);
 
       var wsize = Math.max(this.pad_width(), this.pad_height()) * arrow.fArrowSize;
@@ -449,7 +473,7 @@
    TF1Painter.prototype.ProcessTooltipFunc = function(pnt) {
       var cleanup = false;
 
-      if ((pnt === null) || (this.bins===null)) {
+      if ((pnt === null) || (this.bins === null)) {
          cleanup = true;
       } else
       if ((this.bins.length==0) || (pnt.x < this.bins[0].grx) || (pnt.x > this.bins[this.bins.length-1].grx)) {
@@ -525,7 +549,7 @@
       var name = this.GetTipName("\n");
 
       if (!this.lineatt)
-         this.lineatt = JSROOT.Painter.createAttLine(tf1);
+         this.lineatt = new JSROOT.TAttLineHandler(tf1);
       this.lineatt.used = false;
       if (!this.fillatt)
          this.fillatt = this.createAttFill(tf1, undefined, undefined, 1);
@@ -648,7 +672,7 @@
       var d = new JSROOT.DrawOptions(opt);
 
       var res = { Line:0, Curve:0, Rect:0, Mark:0, Bar:0, OutRange: 0,  EF:0, Fill:0,
-                  Errors: 0, MainError: 1, Ends: 1, Axis: "AXIS" };
+                  Errors: 0, MainError: 1, Ends: 1, Axis: "AXIS", original: opt };
 
       var graph = this.GetObject();
 
@@ -707,7 +731,7 @@
       this.bins = [];
 
       for (p=0;p<npoints;++p) {
-         var bin = { x: gr.fX[p], y: gr.fY[p] };
+         var bin = { x: gr.fX[p], y: gr.fY[p], indx: p };
          switch(kind) {
             case 1:
               bin.exlow = bin.exhigh = gr.fEX[p];
@@ -804,17 +828,17 @@
       var pmain = this.main_painter(), lines = [];
 
       lines.push(this.GetTipName());
-      lines.push("x = " + pmain.AxisAsText("x", d.x));
-      lines.push("y = " + pmain.AxisAsText("y", d.y));
 
-      if (this.options.Errors && (pmain.x_kind=='normal') && ('exlow' in d) && ((d.exlow!=0) || (d.exhigh!=0)))
-         lines.push("error x = -" + pmain.AxisAsText("x", d.exlow) +
-                              "/+" + pmain.AxisAsText("x", d.exhigh));
+      if (d) {
+         lines.push("x = " + pmain.AxisAsText("x", d.x));
+         lines.push("y = " + pmain.AxisAsText("y", d.y));
 
-      if ((this.options.Errors || (this.options.EF > 0)) && (pmain.y_kind=='normal') && ('eylow' in d) && ((d.eylow!=0) || (d.eyhigh!=0)) )
-         lines.push("error y = -" + pmain.AxisAsText("y", d.eylow) +
-                           "/+" + pmain.AxisAsText("y", d.eyhigh));
+         if (this.options.Errors && (pmain.x_kind=='normal') && ('exlow' in d) && ((d.exlow!=0) || (d.exhigh!=0)))
+            lines.push("error x = -" + pmain.AxisAsText("x", d.exlow) + "/+" + pmain.AxisAsText("x", d.exhigh));
 
+         if ((this.options.Errors || (this.options.EF > 0)) && (pmain.y_kind=='normal') && ('eylow' in d) && ((d.eylow!=0) || (d.eyhigh!=0)))
+            lines.push("error y = -" + pmain.AxisAsText("y", d.eylow) + "/+" + pmain.AxisAsText("y", d.eyhigh));
+      }
       if (asarray) return lines;
 
       var res = "";
@@ -834,7 +858,7 @@
           excl_width = 0;
 
       if (!this.lineatt)
-         this.lineatt = JSROOT.Painter.createAttLine(graph, undefined, true);
+         this.lineatt = new JSROOT.TAttLineHandler(graph, undefined, true);
       if (!this.fillatt)
          this.fillatt = this.createAttFill(graph, undefined, undefined, 1);
       this.fillatt.used = false;
@@ -1089,7 +1113,7 @@
              path = "", n, pnt, grx, gry;
 
          if (!this.markeratt)
-            this.markeratt = JSROOT.Painter.createAttMarker(graph, this.options.Mark - 100);
+            this.markeratt = new JSROOT.TAttMarkerHandler(graph, this.options.Mark - 100);
          else
             this.markeratt.Change(undefined, this.options.Mark - 100);
 
@@ -1119,15 +1143,11 @@
       }
    }
 
-   TGraphPainter.prototype.ProcessTooltip = function(pnt) {
-      if (!pnt) {
-         if (this.draw_g !== null)
-            this.draw_g.select(".tooltip_bin").remove();
-         return null;
-      }
+   TGraphPainter.prototype.ExtractTooltip = function(pnt) {
+      if (!pnt) return null;
 
       if ((this.draw_kind=="lines") || (this.draw_kind=="path") || (this.draw_kind=="mark"))
-         return this.ProcessTooltipForPath(pnt);
+         return this.ExtractTooltipForPath(pnt);
 
       if (this.draw_kind!="nodes") return null;
 
@@ -1174,56 +1194,74 @@
           }
        });
 
-      var ttrect = this.draw_g.select(".tooltip_bin");
-
-      if (findbin == null) {
-         ttrect.remove();
-         return null;
-      }
+      if (findbin === null) return null;
 
       var d = d3.select(findbin).datum();
 
       var res = { name: this.GetObject().fName, title: this.GetObject().fTitle,
                   x: d.grx1, y: d.gry1,
                   color1: this.lineatt.color,
-                  lines: this.TooltipText(d, true) };
-
-      if (pnt.disabled) {
-         // tooltip disabled - only return info
-         ttrect.remove();
-         return res;
-      }
+                  lines: this.TooltipText(d, true),
+                  rect: best, d3bin: findbin  };
 
       if (this.fillatt && this.fillatt.used) res.color2 = this.fillatt.color;
 
       if (best.exact) res.exact = true;
       res.menu = res.exact; // activate menu only when exactly locate bin
       res.menu_dist = 3; // distance always fixed
+      res.bin = d;
+      res.binindx = d.indx;
+
+      if (pnt.click_handler && res.exact && this.TestEditable())
+         res.click_handler = this.InvokeClickHandler.bind(this);
+
+      return res;
+   }
+
+   TGraphPainter.prototype.ShowTooltip = function(hint) {
+
+      if (!hint) {
+         if (this.draw_g) this.draw_g.select(".tooltip_bin").remove();
+         return;
+      }
+
+      if (hint.usepath) return this.ShowTooltipForPath(hint);
+
+      var d = d3.select(hint.d3bin).datum();
+
+      var ttrect = this.draw_g.select(".tooltip_bin");
 
       if (ttrect.empty())
          ttrect = this.draw_g.append("svg:rect")
                              .attr("class","tooltip_bin h1bin")
                              .style("pointer-events","none");
 
-      res.changed = ttrect.property("current_bin") !== findbin;
+      hint.changed = ttrect.property("current_bin") !== hint.d3bin;
 
-      if (res.changed)
-         ttrect.attr("x", d.grx1 + best.x1)
-               .attr("width", best.x2 - best.x1)
-               .attr("y", d.gry1 + best.y1)
-               .attr("height", best.y2 - best.y1)
+      if (hint.changed)
+         ttrect.attr("x", d.grx1 + hint.rect.x1)
+               .attr("width", hint.rect.x2 - hint.rect.x1)
+               .attr("y", d.gry1 + hint.rect.y1)
+               .attr("height", hint.rect.y2 - hint.rect.y1)
                .style("opacity", "0.3")
-               .property("current_bin", findbin);
-
-      return res;
+               .property("current_bin", hint.d3bin);
    }
 
-   TGraphPainter.prototype.ProcessTooltipForPath = function(pnt) {
+   TGraphPainter.prototype.ProcessTooltip = function(pnt) {
 
-      if (this.bins === null) return null;
+      var hint = this.ExtractTooltip(pnt);
+
+      if (!pnt || !pnt.disabled) this.ShowTooltip(hint);
+
+      return hint;
+   }
+
+   TGraphPainter.prototype.FindBestBin = function(pnt) {
+      if (!this.bins) return null;
 
       var islines = (this.draw_kind=="lines"),
           ismark = (this.draw_kind=="mark"),
+          bestindx = -1,
           bestbin = null,
           bestdist = 1e10,
           pmain = this.main_painter(),
@@ -1240,6 +1278,7 @@
          if (dist < bestdist) {
             bestdist = dist;
             bestbin = bin;
+            bestindx = n;
          }
       }
 
@@ -1253,82 +1292,169 @@
       if (bestbin !== null)
          bestdist = Math.sqrt(Math.pow(pnt.x-pmain.grx(bestbin.x),2) + Math.pow(pnt.y-pmain.gry(bestbin.y),2));
 
-      if (!islines && !ismark && (bestdist>radius)) bestbin = null;
+      if (!islines && !ismark && (bestdist > radius)) bestbin = null;
 
       if (ismark && (bestbin!==null)) {
-         if ((pnt.nproc == 1) && (bestdist>radius)) bestbin = null; else
-         if ((this.bins.length==1) && (bestdist>3*radius)) bestbin = null;
+         if ((pnt.nproc == 1) && (bestdist > radius)) bestbin = null; else
+         if ((this.bins.length==1) && (bestdist > 3*radius)) bestbin = null;
       }
 
-      var ttbin = this.draw_g.select(".tooltip_bin");
+      if (bestbin === null) bestindx = -1;
 
-      if (bestbin===null) {
-         ttbin.remove();
-         return null;
+      var res = { bin: bestbin, indx: bestindx, dist: bestdist, radius: radius };
+
+      if ((bestbin===null) && islines) {
+
+         bestdist = 10000;
+
+         function IsInside(x, x1, x2) {
+            return ((x1>=x) && (x>=x2)) || ((x1<=x) && (x<=x2));
+         }
+
+         var bin0 = this.bins[0], grx0 = pmain.grx(bin0.x), gry0, posy = 0;
+         for (n=1;n<this.bins.length;++n) {
+            bin = this.bins[n];
+            grx = pmain.grx(bin.x);
+
+            if (IsInside(pnt.x, grx0, grx)) {
+               // if inside interval, check Y distance
+               gry0 = pmain.gry(bin0.y)
+               gry = pmain.gry(bin.y);
+
+               if (Math.abs(grx - grx0) < 1) {
+                  // very close x - check only y
+                  posy = pnt.y;
+                  dist = IsInside(pnt.y, gry0, gry) ? 0 : Math.min(Math.abs(pnt.y-gry0), Math.abs(pnt.y-gry));
+               } else {
+                  posy = gry0 + (pnt.x - grx0) / (grx - grx0) * (gry - gry0);
+                  dist = Math.abs(posy - pnt.y);
+               }
+
+               if (dist < bestdist) {
+                  bestdist = dist;
+                  res.linex = pnt.x;
+                  res.liney = posy;
+               }
+            }
+
+            bin0 = bin;
+            grx0 = grx;
+         }
+
+         if (bestdist < radius*0.5) {
+            res.linedist = bestdist;
+            res.closeline = true;
+         }
       }
+
+      return res;
+   }
+
+   TGraphPainter.prototype.TestEditable = function(toggle) {
+      var obj = this.GetObject(),
+          kNotEditable = JSROOT.BIT(18);   // bit set if graph is non editable
+
+      if (!obj) return false;
+      if (toggle) obj.InvertBit(kNotEditable);
+      return !obj.TestBit(kNotEditable);
+   }
+
+   TGraphPainter.prototype.ExtractTooltipForPath = function(pnt) {
+
+      if (this.bins === null) return null;
+
+      var best = this.FindBestBin(pnt);
+
+      if (!best || (!best.bin && !best.closeline)) return null;
+
+      var islines = (this.draw_kind=="lines"),
+          ismark = (this.draw_kind=="mark"),
+          pmain = this.main_painter();
 
       var res = { name: this.GetObject().fName, title: this.GetObject().fTitle,
-                  x: pmain.grx(bestbin.x), y: pmain.gry(bestbin.y),
+                  x: best.bin ? pmain.grx(best.bin.x) : best.linex,
+                  y: best.bin ? pmain.gry(best.bin.y) : best.liney,
                   color1: this.lineatt.color,
-                  lines: this.TooltipText(bestbin, true) };
+                  lines: this.TooltipText(best.bin, true),
+                  usepath: true };
 
-      if (pnt.disabled) {
-         ttbin.remove();
-         return res;
+      res.ismark = ismark;
+      res.islines = islines;
+
+      if (best.closeline) {
+         res.menu = res.exact = true;
+         res.menu_dist = best.linedist;
+      } else if (best.bin) {
+         if (this.options.EF && islines) {
+            res.gry1 = pmain.gry(best.bin.y - best.bin.eylow);
+            res.gry2 = pmain.gry(best.bin.y + best.bin.eyhigh);
+         } else {
+            res.gry1 = res.gry2 = pmain.gry(best.bin.y);
+         }
+
+         res.binindx = best.indx;
+         res.bin = best.bin;
+         res.radius = best.radius;
+
+         res.exact = (Math.abs(pnt.x - res.x) <= best.radius) &&
+            ((Math.abs(pnt.y - res.gry1) <= best.radius) || (Math.abs(pnt.y - res.gry2) <= best.radius));
+
+         res.menu = res.exact;
+         res.menu_dist = Math.sqrt((pnt.x-res.x)*(pnt.x-res.x) + Math.pow(Math.min(Math.abs(pnt.y-res.gry1),Math.abs(pnt.y-res.gry2)),2));
+
+         if (pnt.click_handler && res.exact && this.TestEditable())
+            res.click_handler = this.InvokeClickHandler.bind(this);
       }
 
       if (this.fillatt && this.fillatt.used) res.color2 = this.fillatt.color;
 
       if (!islines) {
-         res.color1 = JSROOT.Painter.root_colors[this.GetObject().fMarkerColor];
+         res.color1 = this.get_color(this.GetObject().fMarkerColor);
          if (!res.color2) res.color2 = res.color1;
+      }
+
+      return res;
+   }
+
+   TGraphPainter.prototype.ShowTooltipForPath = function(hint) {
+
+      var ttbin = this.draw_g.select(".tooltip_bin");
+
+      if (!hint || !hint.bin) {
+         ttbin.remove();
+         return;
       }
 
       if (ttbin.empty())
          ttbin = this.draw_g.append("svg:g")
                              .attr("class","tooltip_bin");
 
-      var gry1, gry2;
+      hint.changed = ttbin.property("current_bin") !== hint.bin;
 
-      if (this.options.EF && islines) {
-         gry1 = pmain.gry(bestbin.y - bestbin.eylow);
-         gry2 = pmain.gry(bestbin.y + bestbin.eyhigh);
-      } else {
-         gry1 = gry2 = pmain.gry(bestbin.y);
-      }
-
-      res.exact = (Math.abs(pnt.x - res.x) <= radius) &&
-                  ((Math.abs(pnt.y - gry1) <= radius) || (Math.abs(pnt.y - gry2) <= radius));
-
-      res.menu = res.exact;
-      res.menu_dist = Math.sqrt((pnt.x-res.x)*(pnt.x-res.x) + Math.pow(Math.min(Math.abs(pnt.y-gry1),Math.abs(pnt.y-gry2)),2));
-
-      res.changed = ttbin.property("current_bin") !== bestbin;
-
-      if (res.changed) {
+      if (hint.changed) {
          ttbin.selectAll("*").remove(); // first delete all children
-         ttbin.property("current_bin", bestbin);
+         ttbin.property("current_bin", hint.bin);
 
-         if (ismark) {
+         if (hint.ismark) {
             ttbin.append("svg:rect")
                  .attr("class","h1bin")
                  .style("pointer-events","none")
                  .style("opacity", "0.3")
-                 .attr("x", (res.x - radius).toFixed(1))
-                 .attr("y", (res.y - radius).toFixed(1))
-                 .attr("width", (2*radius).toFixed(1))
-                 .attr("height", (2*radius).toFixed(1));
+                 .attr("x", (hint.x - hint.radius).toFixed(1))
+                 .attr("y", (hint.y - hint.radius).toFixed(1))
+                 .attr("width", (2*hint.radius).toFixed(1))
+                 .attr("height", (2*hint.radius).toFixed(1));
          } else {
-            ttbin.append("svg:circle").attr("cy", gry1.toFixed(1))
-            if (Math.abs(gry1-gry2) > 1)
-               ttbin.append("svg:circle").attr("cy", gry2.toFixed(1));
+            ttbin.append("svg:circle").attr("cy", hint.gry1.toFixed(1))
+            if (Math.abs(hint.gry1-hint.gry2) > 1)
+               ttbin.append("svg:circle").attr("cy", hint.gry2.toFixed(1));
 
             var elem = ttbin.selectAll("circle")
-                            .attr("r", radius)
-                            .attr("cx", res.x.toFixed(1));
+                            .attr("r", hint.radius)
+                            .attr("cx", hint.x.toFixed(1));
 
-            if (!islines) {
-               elem.style('stroke', res.color1 == 'black' ? 'green' : 'black').style('fill','none');
+            if (!hint.islines) {
+               elem.style('stroke', hint.color1 == 'black' ? 'green' : 'black').style('fill','none');
             } else {
                if (this.options.Line)
                   elem.call(this.lineatt.func);
@@ -1341,23 +1467,109 @@
             }
          }
       }
-
-      return res;
    }
 
-   TGraphPainter.prototype.UpdateObject = function(obj) {
+   TGraphPainter.prototype.movePntHandler = function(first_time) {
+      var pos = d3.mouse(this.svg_frame().node());
+
+      var main = this.main_painter();
+      if (!main || !this.interactive_bin) return;
+
+      this.interactive_bin.x = main.RevertX(pos[0] + this.interactive_delta_x);
+      this.interactive_bin.y = main.RevertY(pos[1] + this.interactive_delta_y);
+      this.DrawBins();
+   }
+
+   TGraphPainter.prototype.endPntHandler = function() {
+      if (this.snapid && this.interactive_bin) {
+         var exec = "SetPoint(" + this.interactive_bin.indx + "," + this.interactive_bin.x + "," + this.interactive_bin.y + ")";
+         var canp = this.pad_painter();
+         if (canp) canp.SendWebsocket("OBJEXEC:" + this.snapid + ":" + exec);
+      }
+
+      delete this.interactive_bin;
+      d3.select(window).on("mousemove.graphPnt", null)
+                       .on("mouseup.graphPnt", null);
+   }
+
+   TGraphPainter.prototype.InvokeClickHandler = function(hint) {
+      if (!hint.bin) return; //
+
+      this.interactive_bin = hint.bin;
+
+      d3.select(window).on("mousemove.graphPnt", this.movePntHandler.bind(this))
+                       .on("mouseup.graphPnt", this.endPntHandler.bind(this), true);
+
+      var pos = d3.mouse(this.svg_frame().node());
+      var main = this.main_painter();
+
+      this.interactive_delta_x = main ? main.x(this.interactive_bin.x)-pos[0] : 0;
+      this.interactive_delta_y = main ? main.y(this.interactive_bin.y)-pos[1] : 0;
+   }
+
+   TGraphPainter.prototype.FillContextMenu = function(menu) {
+      JSROOT.TObjectPainter.prototype.FillContextMenu.call(this, menu);
+
+      if (!this.snapid)
+         menu.addchk(this.TestEditable(), "Editable", this.TestEditable.bind(this, true));
+
+      return menu.size() > 0;
+   }
+
+
+   TGraphPainter.prototype.ExecuteMenuCommand = function(item) {
+      if (JSROOT.TObjectPainter.prototype.ExecuteMenuCommand.call(this,item)) return true;
+
+      var canp = this.pad_painter(), fp = this.frame_painter();
+
+      if ((item.fName == 'RemovePoint') || (item.fName == 'InsertPoint')) {
+         var pnt = fp ? fp.GetLastEventPos() : null;
+
+         if (!canp || !fp || !pnt) return true; // ignore function
+
+         var hint = this.ExtractTooltip(pnt);
+
+         if (item.fName == 'InsertPoint') {
+            var main = this.main_painter(),
+                userx = main && main.RevertX ? main.RevertX(pnt.x) : 0,
+                usery = main && main.RevertY ? main.RevertY(pnt.y) : 0;
+            canp.ShowMessage('InsertPoint(' + userx.toFixed(3) + ',' + usery.toFixed(3) + ') not yet implemented');
+         } else
+         if (this.args_menu_id && hint && (hint.binindx !== undefined)) {
+            var exec = "RemovePoint(" + hint.binindx + ")";
+            console.log('execute ' + exec + ' for object ' + this.args_menu_id);
+            canp.SendWebsocket('OBJEXEC:' + this.args_menu_id + ":" + exec);
+         }
+
+         return true; // call is processed
+      }
+
+
+      return false;
+   }
+
+   TGraphPainter.prototype.UpdateObject = function(obj, opt) {
       if (!this.MatchObjectType(obj)) return false;
 
-      // if our own histogram was used as axis drawing, we need update histogram  as well
-      if (this.ownhisto)
-         this.main_painter().UpdateObject(obj.fHistogram);
+      if ((opt !== undefined) && (opt != this.options.original))
+         this.options = this.DecodeOptions(opt);
 
       var graph = this.GetObject();
       // TODO: make real update of TGraph object content
+      graph.fBits = obj.fBits;
+      graph.fTitle = obj.fTitle;
       graph.fX = obj.fX;
       graph.fY = obj.fY;
       graph.fNpoints = obj.fNpoints;
       this.CreateBins();
+
+      // if our own histogram was used as axis drawing, we need update histogram  as well
+      if (this.ownhisto) {
+         var main = this.main_painter();
+         if (obj.fHistogram) main.UpdateObject(obj.fHistogram);
+         main.GetObject().fTitle = graph.fTitle; // copy title
+      }
+
       return true;
    }
 
@@ -1427,6 +1639,110 @@
 
       return painter;
    }
+
+   // =============================================================
+
+   function TEfficiencyPainter(eff) {
+      JSROOT.TObjectPainter.call(this, eff);
+      this.fBoundary = 'Normal';
+   }
+
+   TEfficiencyPainter.prototype = Object.create(JSROOT.TObjectPainter.prototype);
+
+   TEfficiencyPainter.prototype.GetEfficiency = function(bin) {
+      var obj = this.GetObject(),
+          total = obj.fTotalHistogram.getBinContent(bin),
+          passed = obj.fPassedHistogram.getBinContent(bin);
+
+      return total ? passed/total : 0;
+   }
+
+/**  implementing of  beta_quantile requires huge number of functions in JSRootMath.js
+
+   TEfficiencyPainter.prototype.ClopperPearson = function(total,passed,level,bUpper) {
+      var alpha = (1.0 - level) / 2;
+      if(bUpper)
+         return ((passed == total) ? 1.0 : JSROOT.Math.beta_quantile(1 - alpha,passed + 1,total-passed));
+      else
+         return ((passed == 0) ? 0.0 : JSROOT.Math.beta_quantile(alpha,passed,total-passed+1.0));
+   }
+*/
+
+   TEfficiencyPainter.prototype.Normal = function(total,passed,level,bUpper) {
+      if (total == 0) return bUpper ? 1 : 0;
+
+      var alpha = (1.0 - level)/2,
+          average = passed / total,
+          sigma = Math.sqrt(average * (1 - average) / total),
+         delta = JSROOT.Math.normal_quantile(1 - alpha,sigma);
+
+      if(bUpper)
+         return ((average + delta) > 1) ? 1.0 : (average + delta);
+
+      return ((average - delta) < 0) ? 0.0 : (average - delta);
+   }
+
+   TEfficiencyPainter.prototype.GetEfficiencyErrorLow = function(bin) {
+      var obj = this.GetObject(),
+          total = obj.fTotalHistogram.getBinContent(bin),
+          passed = obj.fPassedHistogram.getBinContent(bin),
+          eff = this.GetEfficiency(bin);
+
+      return eff - this[this.fBoundary](total,passed, obj.fConfLevel, false);
+   }
+
+   TEfficiencyPainter.prototype.GetEfficiencyErrorUp = function(bin) {
+      var obj = this.GetObject(),
+          total = obj.fTotalHistogram.getBinContent(bin),
+          passed = obj.fPassedHistogram.getBinContent(bin),
+          eff = this.GetEfficiency(bin);
+
+      return this[this.fBoundary]( total, passed, obj.fConfLevel, true) - eff;
+   }
+
+   TEfficiencyPainter.prototype.CreateGraph = function() {
+      var gr = JSROOT.Create('TGraphAsymmErrors');
+      gr.fName = "eff_graph";
+      return gr;
+   }
+
+   TEfficiencyPainter.prototype.FillGraph = function(gr, opt) {
+      var eff = this.GetObject(),
+          npoints = eff.fTotalHistogram.fXaxis.fNbins,
+          option = opt.toLowerCase(),
+          plot0Bins = false, j = 0;
+      if (option.indexOf("e0")>=0) plot0Bins = true;
+      for (var n=0;n<npoints;++n) {
+         if (!plot0Bins && eff.fTotalHistogram.getBinContent(n+1) === 0) continue;
+         gr.fX[j] = eff.fTotalHistogram.fXaxis.GetBinCenter(n+1);
+         gr.fY[j] = this.GetEfficiency(n+1);
+         gr.fEXlow[j] = eff.fTotalHistogram.fXaxis.GetBinCenter(n+1) - eff.fTotalHistogram.fXaxis.GetBinLowEdge(n+1);
+         gr.fEXhigh[j] = eff.fTotalHistogram.fXaxis.GetBinLowEdge(n+2) - eff.fTotalHistogram.fXaxis.GetBinCenter(n+1);
+         gr.fEYlow[j] = this.GetEfficiencyErrorLow(n+1);
+         gr.fEYhigh[j] = this.GetEfficiencyErrorUp(n+1);
+         ++j;
+      }
+      gr.fNpoints = j;
+   }
+
+   JSROOT.Painter.drawEfficiency = function(divid, eff, opt) {
+
+      if (!eff || !eff.fTotalHistogram || (eff.fTotalHistogram._typename.indexOf("TH1")!=0)) return null;
+
+      var painter = new TEfficiencyPainter(eff);
+      painter.options = opt;
+
+      var gr = painter.CreateGraph();
+      painter.FillGraph(gr, opt);
+
+      JSROOT.draw(divid, gr, opt, function() {
+         painter.SetDivId(divid);
+         painter.DrawingReady();
+      });
+
+      return painter;
+   }
+
 
    // =============================================================
 
@@ -1613,6 +1929,24 @@
       if (indx >= graphs.arr.length)
          return this.DrawNextFunction(0, this.DrawingReady.bind(this));
 
+      // if there is auto colors assignment, try to provide it
+      if (this._pfc || this._plc || this._pmc) {
+         if (!this.pallette && JSROOT.Painter.GetColorPalette)
+            this.palette = JSROOT.Painter.GetColorPalette();
+         if (this.palette) {
+            var color = this.palette.calcColor(indx, graphs.arr.length+1);
+            var icolor = JSROOT.Painter.root_colors.indexOf(color);
+            if (icolor<0) {
+               icolor = JSROOT.Painter.root_colors.length;
+               JSROOT.Painter.root_colors.push(color);
+            }
+            if (this._pfc) graphs.arr[indx].fFillColor = icolor;
+            if (this._plc) graphs.arr[indx].fLineColor = icolor;
+            if (this._pmc) graphs.arr[indx].fMarkerColor = icolor;
+         }
+      }
+
+
       JSROOT.draw(this.divid, graphs.arr[indx], graphs.opt[indx] || opt,
                   this.DrawNextGraph.bind(this, indx+1, opt));
    }
@@ -1623,19 +1957,22 @@
 
       painter.SetDivId(divid, -1); // it may be no element to set divid
 
-      if (opt == null) opt = "";
-      opt = opt.toUpperCase().replace("3D","").replace("FB",""); // no 3D supported, FB not clear
+      var d = new JSROOT.DrawOptions(opt);
+      d.check("3D"); d.check("FB"); // no 3D supported, FB not clear
 
-      if ((opt.indexOf("A") >= 0) || !painter.main_painter()) {
-         opt = opt.replace("A","");
+      painter._pfc = d.check("PFC");
+      painter._plc = d.check("PLC");
+      painter._pmc = d.check("PMC");
+
+      if (d.check("A") || !painter.main_painter()) {
          painter.DrawAxis(function(hpainter) {
             painter.firstpainter = hpainter;
             painter.SetDivId(divid);
-            painter.DrawNextGraph(0, opt);
+            painter.DrawNextGraph(0, d.remain());
          });
       } else {
          painter.SetDivId(divid);
-         painter.DrawNextGraph(0, opt);
+         painter.DrawNextGraph(0, d.remain());
       }
 
       return painter;
@@ -1674,7 +2011,7 @@
                       x2 = this.AxisToSvg("x", obj.fBuf[indx++]),
                       y2 = this.AxisToSvg("y", obj.fBuf[indx++]);
 
-                  if (!lineatt) lineatt = JSROOT.Painter.createAttLine(attr);
+                  if (!lineatt) lineatt = new JSROOT.TAttLineHandler(attr);
 
                   var rect = this.draw_g
                      .append("svg:rect")
@@ -1699,7 +2036,7 @@
                       x2 = this.AxisToSvg("x", obj.fBuf[indx++], isndc),
                       y2 = this.AxisToSvg("y", obj.fBuf[indx++], isndc);
 
-                  if (!lineatt) lineatt = JSROOT.Painter.createAttLine(attr);
+                  if (!lineatt) lineatt = new JSROOT.TAttLineHandler(attr);
 
                   this.draw_g
                       .append("svg:line").attr("x1", x1).attr("y1", y1).attr("x2", x2).attr("y2", y2)
@@ -1713,7 +2050,7 @@
 
                   var npoints = parseInt(obj.fOper.arr[k].fString), cmd = "";
 
-                  if (!lineatt) lineatt = JSROOT.Painter.createAttLine(attr);
+                  if (!lineatt) lineatt = new JSROOT.TAttLineHandler(attr);
 
                   for (var n=0;n<npoints;++n)
                      cmd += ((n>0) ? "L" : "M") +
@@ -1737,7 +2074,7 @@
                case "polymarker": {
                   var npoints = parseInt(obj.fOper.arr[k].fString), cmd = "";
 
-                  if (!markeratt) markeratt = JSROOT.Painter.createAttMarker(attr);
+                  if (!markeratt) markeratt = new JSROOT.TAttMarkerHandler(attr);
 
                   markeratt.reset_pos();
                   for (var n=0;n<npoints;++n)
@@ -1801,6 +2138,7 @@
    JSROOT.Painter.drawEllipse = drawEllipse;
    JSROOT.Painter.drawBox = drawBox;
    JSROOT.Painter.drawMarker = drawMarker;
+   JSROOT.Painter.drawPolyMarker = drawPolyMarker;
    JSROOT.Painter.drawWebPainting = drawWebPainting;
    JSROOT.Painter.drawRooPlot = drawRooPlot;
 

@@ -8,11 +8,10 @@ if(CASTOR_VERSION VERSION_GREATER "2.0.0")
   add_definitions(-DR__CASTOR2)
 endif()
 
-ROOT_GENERATE_DICTIONARY(G__RCASTOR *.h MODULE RCastor LINKDEF LinkDef.h DEPENDENCIES Net RIO)
-
 ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-shadow)
-ROOT_LINKER_LIBRARY(RCastor *.cxx G__RCASTOR.cxx LIBRARIES Core ${CASTOR_LIBRARIES} ${CASTOR_rfio_LIBRARY}
-                    ${CASTOR_ns_LIBRARY} ${CASTOR_common_LIBRARY} ${CASTOR_client_LIBRARY}
-                    DEPENDENCIES Net RIO)
 
-ROOT_INSTALL_HEADERS()
+ROOT_STANDARD_LIBRARY_PACKAGE(RCastor
+                              LIBRARIES ${CASTOR_LIBRARIES} ${CASTOR_rfio_LIBRARY}
+                                        ${CASTOR_ns_LIBRARY} ${CASTOR_common_LIBRARY}
+                                        ${CASTOR_client_LIBRARY}
+                              DEPENDENCIES Net RIO Core)

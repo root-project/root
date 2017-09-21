@@ -61,6 +61,10 @@ extern "C" {
    void TCling__LibraryUnloadedRTTI(const void* dyLibHandle,
                                     llvm::StringRef canonicalName);
    void TCling__PrintStackTrace();
+   void *TCling__ResetInterpreterMutex();
+   void TCling__RestoreInterpreterMutex(void *state);
+   void *TCling__LockCompilationDuringUserCodeExecution();
+   void TCling__UnlockCompilationDuringUserCodeExecution(void *state);
 }
 
 TClingCallbacks::TClingCallbacks(cling::Interpreter* interp)
@@ -367,7 +371,7 @@ bool TClingCallbacks::tryAutoParseInternal(llvm::StringRef Name, LookupResult &R
      fIsAutoloadingRecursively = true;
 
      bool lookupSuccess = false;
-     if (getenv("ROOT_MODULES")) {
+     if (SemaR.getLangOpts().Modules) {
         if (TCling__AutoParseCallback(Name.str().c_str())) {
            lookupSuccess = FE || SemaR.LookupName(R, S);
         }
@@ -782,4 +786,27 @@ void TClingCallbacks::LibraryUnloaded(const void* dyLibHandle,
 
 void TClingCallbacks::PrintStackTrace() {
    TCling__PrintStackTrace();
+}
+
+void *TClingCallbacks::EnteringUserCode()
+{
+   // We can safely assume that if the lock exist already when we are in Cling code,
+   // then the lock has (or should been taken) already. Any action (that caused callers
+   // to take the lock) is halted during ProcessLine. So it is fair to unlock it.
+   return TCling__ResetInterpreterMutex();
+}
+
+void TClingCallbacks::ReturnedFromUserCode(void *stateInfo)
+{
+   TCling__RestoreInterpreterMutex(stateInfo);
+}
+
+void *TClingCallbacks::LockCompilationDuringUserCodeExecution()
+{
+   return TCling__LockCompilationDuringUserCodeExecution();
+}
+
+void TClingCallbacks::UnlockCompilationDuringUserCodeExecution(void *StateInfo)
+{
+   TCling__UnlockCompilationDuringUserCodeExecution(StateInfo);
 }

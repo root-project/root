@@ -203,6 +203,7 @@ void TCanvas::Constructor()
 
 TCanvas::TCanvas(const char *name, Int_t ww, Int_t wh, Int_t winid) : TPad(), fDoubleBuffer(0)
 {
+   fCanvasImp = 0;
    fPainter = 0;
    Init();
 
@@ -226,10 +227,10 @@ TCanvas::TCanvas(const char *name, Int_t ww, Int_t wh, Int_t winid) : TPad(), fD
          fUseGL = kFALSE;
    }
 
-   CreatePainter();
-
-   fCanvasImp    = gBatchGuiFactory->CreateCanvasImp(this, name, fCw, fCh);
+   fCanvasImp = gBatchGuiFactory->CreateCanvasImp(this, name, fCw, fCh);
    if (!fCanvasImp) return;
+
+   CreatePainter();
    SetName(name);
    Build();
 }
@@ -2021,10 +2022,24 @@ void TCanvas::Streamer(TBuffer &b)
                }
             }
          }
+         //restore the palette if needed
+         TObjArray *currentpalette = (TObjArray*)fPrimitives->FindObject("CurrentColorPalette");
+         if (currentpalette) {
+           TIter nextpal(currentpalette);
+           Int_t n = currentpalette->GetEntries();
+           TArrayI palcolors(n);
+           TColor *col = 0;
+           Int_t i = 0;
+           while ((col = (TColor*)nextpal())) palcolors[i++] = col->GetNumber();
+           gStyle->SetPalette(n,palcolors.GetArray());
+           fPrimitives->Remove(currentpalette);
+           delete currentpalette;
+         }
          fPrimitives->Remove(colors);
          colors->Delete();
          delete colors;
       }
+
       if (v>7) b.ClassMember("fDISPLAY","TString");
       fDISPLAY.Streamer(b);
       if (v>7) b.ClassMember("fDoubleBuffer", "Int_t");
@@ -2088,15 +2103,27 @@ void TCanvas::Streamer(TBuffer &b)
       //in the same buffer. If the list of colors has already been saved
       //in the buffer, do not add the list of colors to the list of primitives.
       TObjArray *colors = 0;
-      if (!b.CheckObject(gROOT->GetListOfColors(),TObjArray::Class())) {
-         colors = (TObjArray*)gROOT->GetListOfColors();
-         fPrimitives->Add(colors);
+      TObjArray *CurrentColorPalette = 0;
+      if (TColor::DefinedColors()) {
+         if (!b.CheckObject(gROOT->GetListOfColors(),TObjArray::Class())) {
+            colors = (TObjArray*)gROOT->GetListOfColors();
+            fPrimitives->Add(colors);
+         }
+         //save the current palette
+         TArrayI pal = TColor::GetPalette();
+         Int_t palsize = pal.GetSize();
+         CurrentColorPalette = new TObjArray();
+         CurrentColorPalette->SetName("CurrentColorPalette");
+         for (Int_t i=0; i<palsize; i++) CurrentColorPalette->Add(gROOT->GetColor(pal[i]));
+         fPrimitives->Add(CurrentColorPalette);
       }
+
       R__c = b.WriteVersion(TCanvas::IsA(), kTRUE);
       b.ClassBegin(TCanvas::IsA());
       b.ClassMember("TPad");
       TPad::Streamer(b);
-      if(colors) fPrimitives->Remove(colors);
+      if (colors) fPrimitives->Remove(colors);
+      if (CurrentColorPalette) { fPrimitives->Remove(CurrentColorPalette); delete CurrentColorPalette; }
       b.ClassMember("fDISPLAY","TString");
       fDISPLAY.Streamer(b);
       b.ClassMember("fDoubleBuffer", "Int_t");

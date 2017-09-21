@@ -8,6 +8,13 @@
 4. Refactor JSROOT scripts structure - extract histograms and hierarchy painters into separate scripts 
 5. Use latest three.js r86 with improved Projector and CanvasRenderer
    Still use own SVGRenderer which supported direct text dump
+6. Provide text info when geometry drawing takes too long 
+7. Preliminary support of TEfficiency
+8. Automatic title positioning of vertical axis when fTitleOffset==0
+9. Optionally use openui5 for GUI functionality - like Menu creation.
+   On the long run will completely replace jquery-ui widgets
+10. In all sources specify "use strict" derictive, fix several connected errors.   
+11. Implement PFC, PLC and PMC draw options for TMultiGraph
 
 
 ## Changes in 5.2.0
@@ -703,7 +710,7 @@
    in ROOT repository
 
 ### March 2014
-1. Introduce JSROOT.TBuffer class, which plays similar role
+1. Introduce TBuffer class, which plays similar role
    as TBuffer in native ROOT I/O. Simplifies I/O logic,
    reduce duplication of code in many places, fix errors.
    Main advantage - one could try to keep code synchronous with C++.

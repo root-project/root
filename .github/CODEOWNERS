@@ -1,0 +1,61 @@
+# This file annotates code ownership within ROOT.
+# It's not meant to be a strict - or comprehensive - file, but
+# helpful guidance on who to coordinate with for various areas.
+# This should also help provide suggested reviewers for PRs.
+
+# For more information, see:
+# 
+#   - https://github.com/blog/2392-introducing-code-owners
+
+# Coarse-grained ownership
+* @Axel-Naumann
+/bindings/ @peremato
+/cmake/ @peremato
+/core/ @Axel-Naumann
+/core/ @pcanal
+/documentation/ @couet
+/fonts/ @bellenot
+/geom/ @agheata
+/graf2d/ @couet
+/graf3d/ @couet
+/gui/ @bellenot
+/hist/ @lmoneta
+/html/ @Axel-Naumann
+/icons/ @bellenot
+/interpreter/ @Axel-Naumann
+/interpreter/llvm/ @vgvassilev
+/io/ @pcanal
+/main/ @pcanal
+/math/ @lmoneta
+/misc/ @Axel-Naumann
+/montecarlo/ @peremato
+/net/ @gganis
+/proof/ @gganis
+/roofit/ @lmoneta
+/rootx/ @Axel-Naumann
+/sql/ @pcanal
+/test/ @peremato
+/tmva/ @lmoneta
+/tree/ @pcanal
+/tutorials/ @couet
+
+# Projects that span over several code modules:
+/bindings/pyroot/ @peremato
+/bindings/pyroot/JupyROOT @etejedor
+/bindings/r/ @omazapa
+/core/base/ @pcanal
+/core/cont/ @pcanal
+/core/imt/ @dpiparo
+/core/lz4/ @pcanal
+/core/lzma/ @pcanal
+/core/multiproc/ @gganis
+/core/thread/ @pcanal
+/core/multiproc/ @gganis
+/graf2d/qt/ @bellenot
+/graf2d/cocoa/ @TimurP
+/graf2d/ios/ @TimurP
+/graf3d/eve/ @osschar
+/net/http/ @linev
+/tree/treeplayer/**/TDataFrame.* @dpiparo @bluehood
+/tree/treeplayer/**/TDF* @dpiparo @bluehood
+CMakeLists.txt @peremato

@@ -246,6 +246,7 @@ namespace Math {
       switch (fDist) {
       case kLogNormal:
          LogSample();
+         /* fall through */
       case kGaussian :
          cdf = new ROOT::Math::WrappedMemFunction<GoFTest, Double_t (GoFTest::*)(Double_t) const>(*this, &GoFTest::GaussianCDF);
          break;

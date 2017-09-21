@@ -10,11 +10,8 @@ if(MACOSX_KRB5_DEPRECATED)
   add_definitions(-Wno-deprecated-declarations)
 endif()
 
-ROOT_GENERATE_DICTIONARY(G__Krb5Auth TKSocket.h MODULE Krb5Auth LINKDEF LinkDef.h DEPENDENCIES RootAuth Net )
-
-ROOT_LINKER_LIBRARY(Krb5Auth *.cxx G__Krb5Auth.cxx LIBRARIES ${KRB5_LIBRARIES} ${COMERR_LIBRARIES}
-                                                   DEPENDENCIES RootAuth Net )
-
-ROOT_INSTALL_HEADERS()
-
+ROOT_STANDARD_LIBRARY_PACKAGE(Krb5Auth
+                              HEADERS TKSocket.h
+                              LIBRARIES ${KRB5_LIBRARIES} ${COMERR_LIBRARIES}
+                              DEPENDENCIES RootAuth Net)
 

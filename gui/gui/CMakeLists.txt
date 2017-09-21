@@ -33,9 +33,7 @@ set(headers3 TRootGuiFactory.h TRootApplication.h TRootCanvas.h
              TRootBrowser.h TGSplitFrame.h TGShapedFrame.h TGEventHandler.h
              TGTextViewStream.h)
 
-ROOT_GENERATE_DICTIONARY(G__Gui ${headers1} ${headers2} ${headers3} MODULE ${libname} LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM" DEPENDENCIES Gpad Graf MathCore)
-
-
-ROOT_LINKER_LIBRARY(${libname} *.cxx G__Gui.cxx LIBRARIES Core DEPENDENCIES Gpad Graf MathCore) #Use 1 big dict
-ROOT_INSTALL_HEADERS()
-
+ROOT_STANDARD_LIBRARY_PACKAGE(Gui
+                              HEADERS ${headers1} ${headers2} ${headers3}
+                              DICTIONARY_OPTIONS "-writeEmptyRootPCM"
+                              DEPENDENCIES Core Gpad Graf MathCore)

@@ -30,6 +30,8 @@
    }
 } (function( JSROOT, d3, THREE ) {
 
+   "use strict";
+
    JSROOT.sources.push("geom");
 
    if ( typeof define === "function" && define.amd )
@@ -2389,7 +2391,7 @@
          console.log('Reuse clones', this._clones.nodes.length, 'from main painter');
       } else {
 
-         var tm1 = new Date().getTime();
+         this._start_drawing_time = new Date().getTime();
 
          this._clones_owner = true;
 
@@ -2403,12 +2405,12 @@
          else
             uniquevis = this._clones.MarkVisisble(true, true); // copy bits once and use normal visibility bits
 
-         var tm2 = new Date().getTime();
+         var spent = new Date().getTime() - this._start_drawing_time;
 
-         console.log('Creating clones', this._clones.nodes.length, 'takes', tm2-tm1, 'uniquevis', uniquevis);
+         console.log('Creating clones', this._clones.nodes.length, 'takes', spent, 'uniquevis', uniquevis);
 
          if (this.options._count)
-            return this.drawCount(uniquevis, tm2-tm1);
+            return this.drawCount(uniquevis, spent);
       }
 
       // this is limit for the visible faces, number of volumes does not matter
@@ -2421,20 +2423,38 @@
 
       var size = this.size_for_3d(this._usesvg ? 3 : undefined);
 
-      this._fit_main_area = (size.can3d===-1);
-         // use direct positioning as main element, can adjust
+      this._fit_main_area = (size.can3d === -1);
 
       this.createScene(this._usesvg, this._webgl, size.width, size.height);
 
       this.add_3d_canvas(size, this._renderer.domElement);
 
       // set top painter only when first child exists
-
       this.AccessTopPainter(true);
 
       this.CreateToolbar();
 
+      this.showDrawInfo("Drawing geometry");
+
       this.startDrawGeometry(true);
+   }
+
+   TGeoPainter.prototype.showDrawInfo = function(msg) {
+      // methods show info when first geometry drawing is perfromed
+
+      if (!this._first_drawing || !this._start_drawing_time) return;
+
+      var main = this._renderer.domElement.parentNode,
+          info = d3.select(main).select(".geo_info");
+
+      if (!msg) {
+         info.remove();
+      } else {
+         var spent = (new Date().getTime() - this._start_drawing_time)*1e-3;
+         if (info.empty()) info = d3.select(main).append("p").attr("class","geo_info");
+         info.html(msg + ", " + spent.toFixed(1) + "s");
+      }
+
    }
 
    TGeoPainter.prototype.continueDraw = function() {
@@ -2461,11 +2481,13 @@
          }
 
          // if we are that fast, do next action
-         if ((res===true) && (now - tm0 < interval)) continue;
+         if ((res === true) && (now - tm0 < interval)) continue;
 
          if ((now - tm0 > interval) || (res === 1) || (res === 2)) {
 
             JSROOT.progress(this.drawing_log);
+
+            this.showDrawInfo(this.drawing_log);
 
             if (this._first_drawing && this._webgl && (this._num_meshes - this._last_render_meshes > 100) && (now - this._last_render_tm > 2.5*interval)) {
                this.adjustCameraPosition();
@@ -2474,6 +2496,7 @@
                this._last_render_meshes = this._num_meshes;
             }
             if (res !== 2) setTimeout(this.continueDraw.bind(this), (res === 1) ? 100 : 1);
+
             return;
          }
       }
@@ -2485,6 +2508,7 @@
 
       if (take_time > 300) {
          JSROOT.progress('Rendering geometry');
+         this.showDrawInfo("Rendering");
          return setTimeout(this.completeDraw.bind(this, true), 10);
       }
 
@@ -2729,7 +2753,7 @@
 
          if ((center[naxis]===0) && (center[naxis]>=box.min[name]) && (center[naxis]<=box.max[name]))
            if (!this.options._axis_center || (naxis===0)) {
-               geom = new THREE.SphereBufferGeometry(text_size*0.25);
+               var geom = new THREE.SphereBufferGeometry(text_size*0.25);
                mesh = new THREE.Mesh(geom, textMaterial);
                mesh.translateX((naxis===0) ? center[0] : buf[0]);
                mesh.translateY((naxis===1) ? center[1] : buf[1]);
@@ -2823,6 +2847,7 @@
 
       if (this._first_drawing) {
          this.adjustCameraPosition(true);
+         this.showDrawInfo();
          this._first_drawing = false;
          call_ready = true;
 
@@ -2962,6 +2987,7 @@
       this.last_render_tm = 2000;
 
       this.drawing_stage = 0;
+      delete this.drawing_log;
 
       delete this._datgui;
       delete this._controls;

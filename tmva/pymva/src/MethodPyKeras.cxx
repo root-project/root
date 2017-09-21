@@ -128,6 +128,8 @@ void MethodPyKeras::Init() {
    _import_array(); // required to use numpy arrays
 
    // Import Keras
+   // NOTE: sys.argv has to be cleared because otherwise TensorFlow breaks
+   PyRunString("import sys; sys.argv = ['']", "Set sys.argv failed");
    PyRunString("import keras", "Import Keras failed");
 
    // Set flag that model is not setup

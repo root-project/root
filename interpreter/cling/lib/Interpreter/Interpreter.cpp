@@ -15,6 +15,7 @@
 #include "ClingUtils.h"
 
 #include "DynamicLookup.h"
+#include "EnterUserCodeRAII.h"
 #include "ExternalInterpreterSource.h"
 #include "ForwardDeclPrinter.h"
 #include "IncrementalExecutor.h"
@@ -29,6 +30,7 @@
 #include "cling/Interpreter/CompilationOptions.h"
 #include "cling/Interpreter/DynamicExprInfo.h"
 #include "cling/Interpreter/DynamicLibraryManager.h"
+#include "cling/Interpreter/Exception.h"
 #include "cling/Interpreter/LookupHelper.h"
 #include "cling/Interpreter/Transaction.h"
 #include "cling/Interpreter/Value.h"
@@ -783,6 +785,7 @@ namespace cling {
     CO.DeclarationExtraction = 0;
     CO.ValuePrinting = 0;
     CO.ResultEvaluation = 1;
+    CO.CheckPointerValidity = 0;
 
     return EvaluateInternal(input, CO, &V);
   }
@@ -1434,6 +1437,8 @@ namespace cling {
       // FIXME: Move to the InterpreterCallbacks.cpp;
       if (DynamicLibraryManager* DLM = getDynamicLibraryManager())
         DLM->setCallbacks(m_Callbacks.get());
+      if (m_Executor)
+        m_Executor->setCallbacks(m_Callbacks.get());
     }
 
     static_cast<MultiplexInterpreterCallbacks*>(m_Callbacks.get())
@@ -1595,8 +1600,18 @@ namespace cling {
     namespace internal {
       Value EvaluateDynamicExpression(Interpreter* interp, DynamicExprInfo* DEI,
                                       clang::DeclContext* DC) {
-        return interp->Evaluate(DEI->getExpr(), DC,
-                                DEI->isValuePrinterRequested());
+        Value ret = [&]
+        {
+          LockCompilationDuringUserCodeExecutionRAII LCDUCER(*interp);
+          return interp->Evaluate(DEI->getExpr(), DC,
+                                  DEI->isValuePrinterRequested());
+        }();
+        if (!ret.isValid()) {
+          std::string msg = "Error evaluating expression ";
+          CompilationException::throwingHandler(nullptr, msg + DEI->getExpr(),
+                                                false /*backtrace*/);
+        }
+        return ret;
       }
     } // namespace internal
   }  // namespace runtime

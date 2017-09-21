@@ -31,12 +31,21 @@ if(ssl)
   include_directories(${OPENSSL_INCLUDE_DIR})
 endif()
 
-ROOT_GENERATE_DICTIONARY(G__RootAuth ${headers} MODULE RootAuth LINKDEF LinkDefRoot.h DEPENDENCIES Net RIO )
-ROOT_LINKER_LIBRARY(RootAuth ${sources} G__RootAuth.cxx LIBRARIES ${CRYPTLIBS} DEPENDENCIES Net RIO )
+ROOT_STANDARD_LIBRARY_PACKAGE(RootAuth
+                              NO_INSTALL_HEADERS
+                              HEADERS ${headers}
+                              SOURCES ${sources}
+                              LINKDEF LinkDefRoot.h
+                              LIBRARIES ${CRYPTLIBS}
+                              DEPENDENCIES Net RIO)
 
 if(afs)
-  ROOT_GENERATE_DICTIONARY(G__AFSAuth AFSAuth.h AFSAuthTypes.h TAFS.h MODULE AFSAuth LINKDEF LinkDefAFS.h DEPENDENCIES  Net RIO )
-  ROOT_LINKER_LIBRARY(AFSAuth AFSAuth.cxx TAFS.cxx G__AFSAuth.cxx LIBRARIES ${CRYPTLIBS} DEPENDENCIES  Net RIO )
+  ROOT_STANDARD_LIBRARY_PACKAGE(AFSAuth
+                                NO_INSTALL_HEADERS
+                                HEADERS AFSAuth.h AFSAuthTypes.h TAFS.h
+                                LINKDEF LinkDefAFS.h
+                                LIBRARIES ${CRYPTLIBS}
+                                DEPENDENCIES Net RIO)
 else()
   set(installoptions FILTER "AFS")
 endif()

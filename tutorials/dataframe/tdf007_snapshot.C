@@ -7,11 +7,6 @@
 /// \date April 2017
 /// \author Danilo Piparo
 
-#include "TFile.h"
-#include "TTree.h"
-
-#include "ROOT/TDataFrame.hxx"
-
 // A simple helper function to fill a test tree: this makes the example
 // stand-alone.
 void fill_tree(const char *filename, const char *treeName)
@@ -97,7 +92,7 @@ int tdf007_snapshot()
    auto snapshot_tdf = d2.Snapshot<int>(treeName, outFileName, {"b1_square"});
    auto h = snapshot_tdf.Histo1D();
    auto c = new TCanvas();
-   h->Draw();
+   h->DrawClone();
 
    return 0;
 }

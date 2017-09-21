@@ -42,6 +42,8 @@ namespace {
 
 static Int_t   gHighestColorIndex = 0;   ///< Highest color index defined
 static Float_t gColorThreshold    = -1.; ///< Color threshold used by GetColor
+static Int_t   gDefinedColors     = 0;   ///< Number of defined colors.
+static Int_t   gLastDefinedColors = 649; ///< Previous number of defined colors
 
 #define fgGrayscaleMode TColor__GrayScaleMode()
 #define fgPalette TColor__Palette()
@@ -1017,6 +1019,7 @@ TColor::TColor(Int_t color, Float_t r, Float_t g, Float_t b, const char *name,
    // fill color structure
    SetRGB(r, g, b);
    fAlpha = a;
+   gDefinedColors++;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1037,6 +1040,7 @@ TColor::TColor(Float_t r, Float_t g, Float_t b, Float_t a): TNamed("","")
    // enter in the list of colors
    TObjArray *lcolors = (TObjArray*)gROOT->GetListOfColors();
    lcolors->AddAtAndExpand(this, fNumber);
+   gDefinedColors++;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1378,11 +1382,33 @@ Int_t TColor::GetColorPalette(Int_t i)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Static function returning the current active palette.
+
+const TArrayI& TColor::GetPalette()
+{
+   return fgPalette;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Static function returning number of colors in the color palette.
 
 Int_t TColor::GetNumberOfColors()
 {
    return fgPalette.fN;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Static function returning kTRUE if some new colors have been defined after
+/// initialisation or since the last call to this method. This allows to avoid
+/// the colors and palette streaming in TCanvas::Streamer if not needed.
+
+Bool_t TColor::DefinedColors()
+{
+   // After initialization gDefinedColors == 649. If it is bigger it means some new
+   // colors have been defined
+   Bool_t hasChanged = (gDefinedColors - gLastDefinedColors) > 50;
+   gLastDefinedColors = gDefinedColors;
+   return hasChanged;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1699,6 +1725,7 @@ void TColor::SetRGB(Float_t r, Float_t g, Float_t b)
       if (nplanes > 8) light->SetRGB(lr, lg, lb);
       else             light->SetRGB(0.8,0.8,0.8);
    }
+   gDefinedColors++;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

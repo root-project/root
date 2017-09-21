@@ -15,6 +15,7 @@
 /////////////////////////////////////////////////////////////
 
 #include "TMVA/DNN/Architectures/Reference.h"
+#include "TMVA/DataSetInfo.h"
 
 namespace TMVA {
 namespace DNN {
@@ -124,7 +125,8 @@ void TDataLoader<MatrixInput_t, TReference<Double_t>>::CopyWeights(TMatrixT<Doub
 template <>
 void TDataLoader<TMVAInput_t, TReference<Real_t>>::CopyInput(TMatrixT<Real_t> &matrix, IndexIterator_t sampleIterator)
 {
-   Event *event = fData.front();
+   Event *event = nullptr;
+
    Int_t m = matrix.GetNrows();
    Int_t n = event->GetNVariables();
 
@@ -132,7 +134,7 @@ void TDataLoader<TMVAInput_t, TReference<Real_t>>::CopyInput(TMatrixT<Real_t> &m
 
    for (Int_t i = 0; i < m; i++) {
       Int_t sampleIndex = *sampleIterator++;
-      event = fData[sampleIndex];
+      event = std::get<0>(fData)[sampleIndex];
       for (Int_t j = 0; j < n; j++) {
          matrix(i, j) = event->GetValue(j);
       }
@@ -143,19 +145,20 @@ void TDataLoader<TMVAInput_t, TReference<Real_t>>::CopyInput(TMatrixT<Real_t> &m
 template <>
 void TDataLoader<TMVAInput_t, TReference<Real_t>>::CopyOutput(TMatrixT<Real_t> &matrix, IndexIterator_t sampleIterator)
 {
-   Event *event = fData.front();
+   Event *event = std::get<0>(fData).front();
+   const DataSetInfo &info = std::get<1>(fData);
    Int_t m = matrix.GetNrows();
    Int_t n = matrix.GetNcols();
 
    for (Int_t i = 0; i < m; i++) {
       Int_t sampleIndex = *sampleIterator++;
-      event = fData[sampleIndex];
+      event = std::get<0>(fData)[sampleIndex];
       for (Int_t j = 0; j < n; j++) {
          // Classification
          if (event->GetNTargets() == 0) {
             if (n == 1) {
                // Binary.
-               matrix(i, j) = (event->GetClass() == 0) ? 1.0 : 0.0;
+               matrix(i, j) = (info.IsSignal(event)) ? 1.0 : 0.0;
             } else {
                // Multiclass.
                matrix(i, j) = 0.0;
@@ -174,11 +177,10 @@ void TDataLoader<TMVAInput_t, TReference<Real_t>>::CopyOutput(TMatrixT<Real_t> &
 template <>
 void TDataLoader<TMVAInput_t, TReference<Real_t>>::CopyWeights(TMatrixT<Real_t> &matrix, IndexIterator_t sampleIterator)
 {
-   Event *event = fData.front();
-
+   Event *event = std::get<0>(fData).front();
    for (Int_t i = 0; i < matrix.GetNrows(); i++) {
       Int_t sampleIndex = *sampleIterator++;
-      event = fData[sampleIndex];
+      event = std::get<0>(fData)[sampleIndex];
       matrix(i, 0) = event->GetWeight();
    }
 }
@@ -188,7 +190,7 @@ template <>
 void TDataLoader<TMVAInput_t, TReference<Double_t>>::CopyInput(TMatrixT<Double_t> &matrix,
                                                                IndexIterator_t sampleIterator)
 {
-   Event *event = fData.front();
+   Event *event = std::get<0>(fData).front();
    Int_t m = matrix.GetNrows();
    Int_t n = event->GetNVariables();
 
@@ -196,7 +198,7 @@ void TDataLoader<TMVAInput_t, TReference<Double_t>>::CopyInput(TMatrixT<Double_t
 
    for (Int_t i = 0; i < m; i++) {
       Int_t sampleIndex = *sampleIterator++;
-      event = fData[sampleIndex];
+      event = std::get<0>(fData)[sampleIndex];
       for (Int_t j = 0; j < n; j++) {
          matrix(i, j) = event->GetValue(j);
       }
@@ -208,19 +210,20 @@ template <>
 void TDataLoader<TMVAInput_t, TReference<Double_t>>::CopyOutput(TMatrixT<Double_t> &matrix,
                                                                 IndexIterator_t sampleIterator)
 {
-   Event *event = fData.front();
+   Event *event = std::get<0>(fData).front();
+   const DataSetInfo &info = std::get<1>(fData);
    Int_t m = matrix.GetNrows();
    Int_t n = matrix.GetNcols();
 
    for (Int_t i = 0; i < m; i++) {
       Int_t sampleIndex = *sampleIterator++;
-      event = fData[sampleIndex];
+      event = std::get<0>(fData)[sampleIndex];
       for (Int_t j = 0; j < n; j++) {
          // Classification
          if (event->GetNTargets() == 0) {
             if (n == 1) {
                // Binary.
-               matrix(i, j) = (event->GetClass() == 0) ? 1.0 : 0.0;
+               matrix(i, j) = (info.IsSignal(event)) ? 1.0 : 0.0;
             } else {
                // Multiclass.
                matrix(i, j) = 0.0;
@@ -240,11 +243,11 @@ template <>
 void TDataLoader<TMVAInput_t, TReference<Double_t>>::CopyWeights(TMatrixT<Double_t> &matrix,
                                                                  IndexIterator_t sampleIterator)
 {
-   Event *event = fData.front();
+   Event *event = nullptr;
 
    for (Int_t i = 0; i < matrix.GetNrows(); i++) {
       Int_t sampleIndex = *sampleIterator++;
-      event = fData[sampleIndex];
+      event = std::get<0>(fData)[sampleIndex];
       matrix(i, 0) = event->GetWeight();
    }
 }

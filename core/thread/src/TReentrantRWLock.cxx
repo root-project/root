@@ -181,6 +181,29 @@ void TReentrantRWLock<MutexT, RecurseCountsT>::WriteUnLock()
    }
 }
 
+namespace {
+template <typename MutexT, typename RecurseCountsT>
+struct TReentrantRWLockState: public TVirtualMutex::State {
+   RecurseCountsT fRecurseCounts;
+};
+}
+
+template <typename MutexT, typename RecurseCountsT>
+std::unique_ptr<TVirtualMutex::State> TReentrantRWLock<MutexT, RecurseCountsT>::Reset()
+{
+   std::unique_ptr<TReentrantRWLockState<MutexT, RecurseCountsT>> pState;
+   // Do something.
+   ::Fatal("Reset()", "Not implemented, contact pcanal@fnal.gov");
+   return std::move(pState);
+}
+
+template <typename MutexT, typename RecurseCountsT>
+void TReentrantRWLock<MutexT, RecurseCountsT>::Restore(std::unique_ptr<TVirtualMutex::State> &&)
+{
+   // Do something.
+   ::Fatal("Restore()", "Not implemented, contact pcanal@fnal.gov");
+}
+
 namespace ROOT {
 template class TReentrantRWLock<ROOT::TSpinMutex, ROOT::Internal::RecurseCounts>;
 template class TReentrantRWLock<TMutex, ROOT::Internal::RecurseCounts>;

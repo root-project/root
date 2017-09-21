@@ -294,6 +294,16 @@ TPad::TPad(const char *name, const char *title, Double_t xlow,
    fAbsYlowNDC   = 0.;
    fAbsWNDC      = 0.;
    fAbsHNDC      = 0.;
+   fXtoAbsPixelk = 0.;
+   fXtoPixelk    = 0.;
+   fXtoPixel     = 0.;
+   fYtoAbsPixelk = 0.;
+   fYtoPixelk    = 0.;
+   fYtoPixel     = 0.;
+   fUtoAbsPixelk = 0.;
+   fUtoPixelk    = 0.;
+   fUtoPixel     = 0.;
+
    fUxmin = fUymin = fUxmax = fUymax = 0;
    fLogx = gStyle->GetOptLogx();
    fLogy = gStyle->GetOptLogy();
@@ -973,10 +983,8 @@ void TPad::Close(Option_t *)
 
    if (fPixmapID != -1) {
       if (gPad) {
-         if (!gPad->IsBatch()) {
-            GetPainter()->SelectDrawable(fPixmapID);
-            GetPainter()->DestroyDrawable();
-         }
+         if (!gPad->IsBatch())
+            GetPainter()->DestroyDrawable(fPixmapID);
       }
       fPixmapID = -1;
 
@@ -1401,7 +1409,7 @@ void TPad::DrawClassObject(const TObject *classobj, Option_t *option)
 
             Int_t dim = d->GetArrayDim();
             Int_t indx = 0;
-            snprintf(dname,256,"%s",obj->EscapeChars(d->GetName()));
+            snprintf(dname,256,"%s",d->GetName());
             Int_t ldname = 0;
             while (indx < dim ){
                ldname = strlen(dname);
@@ -1439,8 +1447,8 @@ void TPad::DrawClassObject(const TObject *classobj, Option_t *option)
             if (fcount > nf) break;
             if (i >= nkf) { i = 1; y = ysep - 0.5*dy; x += 1/Double_t(nc); }
             else { i++; y -= dy; }
-            ptext = pt->AddText(x,(y-v1)/dv,obj->EscapeChars(m->GetName()));
 
+            ptext = pt->AddText(x,(y-v1)/dv,m->GetName());
             // Check if method is overloaded in a derived class
             // If yes, Change the color of the text to blue
             for (j=ilevel-1;j>=0;j--) {
@@ -6689,6 +6697,8 @@ void TPad::UseCurrentStyle()
 ///   }
 ///}
 /// ~~~
+///
+/// If ROOT runs in batch mode a call to this method does nothing.
 
 TObject *TPad::WaitPrimitive(const char *pname, const char *emode)
 {
@@ -6705,7 +6715,7 @@ TObject *TPad::WaitPrimitive(const char *pname, const char *emode)
    Bool_t hasname = strlen(pname) > 0;
    if (!pname[0] && !emode[0]) testlast = kTRUE;
    if (testlast) gROOT->SetEditorMode();
-   while (!gSystem->ProcessEvents() && gPad) {
+   while (!gSystem->ProcessEvents() && gROOT->GetSelectedPad()) {
       if (gROOT->GetEditorMode() == 0) {
          if (hasname) {
             obj = FindObject(pname);

@@ -1293,7 +1293,9 @@ void TRootCanvas::SetWindowSize(UInt_t w, UInt_t h)
    Resize(w, h);
 
    // Make sure the change of size is really done.
+   gVirtualX->Update(1);
    if (!gThreadXAR) {
+      gSystem->Sleep(100);
       gSystem->ProcessEvents();
       gSystem->Sleep(10);
       gSystem->ProcessEvents();

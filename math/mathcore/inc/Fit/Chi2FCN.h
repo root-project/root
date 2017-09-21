@@ -63,7 +63,7 @@ public:
    /**
       Constructor from data set (binned ) and model function
    */
-   Chi2FCN (const std::shared_ptr<BinData> & data, const std::shared_ptr<IModelFunction> & func, ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::kSerial) :
+   Chi2FCN (const std::shared_ptr<BinData> & data, const std::shared_ptr<IModelFunction> & func, const ROOT::Fit::ExecutionPolicy &executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial) :
       BaseFCN( data, func),
       fNEffPoints(0),
       fGrad ( std::vector<double> ( func->NPar() ) ),
@@ -74,7 +74,7 @@ public:
       Same Constructor from data set (binned ) and model function but now managed by the user
       we clone the function but not the data
    */
-   Chi2FCN ( const BinData & data, const IModelFunction & func, ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::kSerial) :
+   Chi2FCN ( const BinData & data, const IModelFunction & func, const ROOT::Fit::ExecutionPolicy &executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial) :
       BaseFCN(std::shared_ptr<BinData>(const_cast<BinData*>(&data), DummyDeleter<BinData>()), std::shared_ptr<IModelFunction>(dynamic_cast<IModelFunction*>(func.Clone() ) ) ),
       fNEffPoints(0),
       fGrad ( std::vector<double> ( func.NPar() ) ),
@@ -126,7 +126,8 @@ public:
    // need to be virtual to be instantiated
    virtual void Gradient(const double *x, double *g) const {
       // evaluate the chi2 gradient
-      FitUtil::Evaluate<T>::EvalChi2Gradient(BaseFCN::ModelFunction(), BaseFCN::Data(), x, g, fNEffPoints);
+      FitUtil::Evaluate<T>::EvalChi2Gradient(BaseFCN::ModelFunction(), BaseFCN::Data(), x, g, fNEffPoints,
+                                             fExecutionPolicy);
    }
 
    /// get type of fit method function
@@ -161,7 +162,7 @@ private:
    mutable unsigned int fNEffPoints;  // number of effective points used in the fit
 
    mutable std::vector<double> fGrad; // for derivatives
-   unsigned fExecutionPolicy;
+   ROOT::Fit::ExecutionPolicy fExecutionPolicy;
 
 };
 

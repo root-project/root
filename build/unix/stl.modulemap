@@ -1,4 +1,4 @@
-module "stl" {
+module "stl" [system] {
   export *
   module "algorithm" {
     export *
@@ -105,9 +105,16 @@ module "stl" {
     export *
     header "cstdio"
   }
+  // Causes a cycle between clang's builtin modules
+  // and the STL as clang's builtin modules include
+  // this header (and in turn, the STL also includes
+  // clang's builtin headers).
+  // See the include for stdlib.h (which is forwarded
+  // to this C++ header) in clang's mm_malloc.h for the
+  // problematic code which we can't fix.
   module "cstdlib" {
     export *
-    header "cstdlib"
+    textual header "cstdlib"
   }
   module "cstring" {
     export *

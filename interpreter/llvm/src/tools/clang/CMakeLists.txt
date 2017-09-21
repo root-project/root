@@ -392,17 +392,6 @@ if(CLANG_ENABLE_STATIC_ANALYZER)
   add_definitions(-DCLANG_ENABLE_STATIC_ANALYZER)
 endif()
 
-option(CLANG_ENABLE_FORMAT "Build clang-format." ON)
-if(CLANG_ENABLE_FORMAT)
-  add_definitions(-DCLANG_ENABLE_FORMAT)
-endif()
-
-option(CLANG_ENABLE_COMPILER "Build clang compilers." ON)
-if(CLANG_ENABLE_COMPILER)
-  add_definitions(-DCLANG_ENABLE_COMPILER)
-endif()
-
-
 # Clang version information
 set(CLANG_EXECUTABLE_VERSION
      "${CLANG_VERSION_MAJOR}.${CLANG_VERSION_MINOR}" CACHE STRING
@@ -429,12 +418,7 @@ add_subdirectory(tools)
 add_subdirectory(runtime)
 
 option(CLANG_BUILD_EXAMPLES "Build CLANG example programs by default." OFF)
-if (CLANG_BUILD_EXAMPLES)
-  set(ENABLE_CLANG_EXAMPLES "1")
-  add_subdirectory(examples)
-else()
-  set(ENABLE_CLANG_EXAMPLES "0")
-endif()
+add_subdirectory(examples)
 
 if(APPLE)
   # this line is needed as a cleanup to ensure that any CMakeCaches with the old

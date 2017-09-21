@@ -2887,10 +2887,8 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
                if (ArgType.getArgument().isNull()
                    || ArgType.getArgument().getKind() != clang::TemplateArgument::Type) {
                   ROOT::TMetaUtils::Error("ROOT::TMetaUtils::AddDefaultParameters",
-                                          "Template parameter substitution failed for %s around %s",
-                                          instanceType.getAsString().c_str(),
-                                          SubTy.getAsString().c_str()
-                                          );
+                                          "Template parameter substitution failed for %s around %s\n",
+                                          instanceType.getAsString().c_str(), SubTy.getAsString().c_str());
                   break;
                }
                clang::QualType BetterSubTy = ArgType.getArgument().getAsType();
@@ -5032,8 +5030,6 @@ int ROOT::TMetaUtils::AST2SourceTools::PrepareArgsForFwdDecl(std::string& templa
                           const clang::TemplateParameterList& tmplParamList,
                           const cling::Interpreter& interpreter)
 {
-   static const char* paramPackWarning="Template parameter pack found: autoload of variadic templates is not supported yet.\n";
-
    templateArgs="<";
    for (auto prmIt = tmplParamList.begin();
         prmIt != tmplParamList.end(); prmIt++){
@@ -5044,14 +5040,12 @@ int ROOT::TMetaUtils::AST2SourceTools::PrepareArgsForFwdDecl(std::string& templa
       auto nDecl = *prmIt;
       std::string typeName;
 
-      if(nDecl->isParameterPack ()){
-         ROOT::TMetaUtils::Warning(0,paramPackWarning);
-         return 1;
-      }
-
       // Case 1
       if (llvm::isa<clang::TemplateTypeParmDecl>(nDecl)){
-         typeName = "typename " + (*prmIt)->getNameAsString();
+         typeName = "typename ";
+         if (nDecl->isParameterPack())
+            typeName += "... ";
+         typeName += (*prmIt)->getNameAsString();
       }
       // Case 2
       else if (auto nttpd = llvm::dyn_cast<clang::NonTypeTemplateParmDecl>(nDecl)){
@@ -5084,7 +5078,7 @@ int ROOT::TMetaUtils::AST2SourceTools::PrepareArgsForFwdDecl(std::string& templa
          }
       }
 
-   templateArgs += typeName;
+      templateArgs += typeName;
    }
 
    templateArgs+=">";
@@ -5116,9 +5110,12 @@ int ROOT::TMetaUtils::AST2SourceTools::FwdDeclFromTmplDecl(const clang::Template
    }
    templatePrefixString = "template " + templatePrefixString + " ";
 
-   defString = templatePrefixString + "class " + templDecl.getNameAsString();
+   defString = templatePrefixString + "class ";
+   if (templDecl.isParameterPack())
+      defString += "... ";
+   defString +=  templDecl.getNameAsString();
    if (llvm::isa<clang::TemplateTemplateParmDecl>(&templDecl)) {
-      // When fwd delcaring the template template arg of
+      // When fwd declaring the template template arg of
       //   namespace N { template <template <class T> class C> class X; }
       // we don't need to put it into any namespace, and we want no trailing
       // ';'

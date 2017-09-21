@@ -77,10 +77,10 @@ Begin_Macro(source)
    auto gr3 = new TGraph(); gr3->SetLineColor(kGreen);
    auto gr4 = new TGraph(); gr4->SetLineColor(kOrange);
 
-   Double_t dx = 6.28/100;
+   Double_t dx = 6.28/1000;
    Double_t x  = -3.14;
 
-   for (int i=0; i<=100; i++) {
+   for (int i=0; i<=1000; i++) {
       x = x+dx;
       gr1->SetPoint(i,x,2.*TMath::Sin(x));
       gr2->SetPoint(i,x,TMath::Cos(x));
@@ -93,7 +93,13 @@ Begin_Macro(source)
    mg->Add(gr2); gr2->SetTitle("Cos(x)")    ; gr2->SetLineWidth(3);
    mg->Add(gr1); gr1->SetTitle("2*Sin(x)")  ; gr1->SetLineWidth(3);
 
+   mg->SetTitle("Multi-graph Title; X-axis Title; Y-axis Title");
+
    mg->Draw("a fb l3d");
+
+   mg->GetHistogram()->GetXaxis()->SetRangeUser(0.,2.5);
+   gPad->Modified();
+   gPad->Update();
 }
 End_Macro
 
@@ -1332,6 +1338,10 @@ void TMultiGraph::PaintPolyLine3D(Option_t *option)
       npt = g->GetN();
    }
 
+   if (!fHistogram) {
+      fHistogram = new TH1F(GetName(),GetTitle(),npt,rwxmin,rwxmax);
+   }
+
    while ((g = (TGraph*) next())) {
       Double_t rx1,ry1,rx2,ry2;
       g->ComputeRange(rx1, ry1, rx2, ry2);
@@ -1343,7 +1353,14 @@ void TMultiGraph::PaintPolyLine3D(Option_t *option)
    }
 
    Int_t ndiv = fGraphs->GetSize();
-   TH2F* frame = new TH2F("frame","", ndiv, 0., (Double_t)(ndiv), 1, rwxmin, rwxmax);
+
+   TH2F* frame = new TH2F("frame","", ndiv, 0., (Double_t)(ndiv), npt, rwxmin, rwxmax);
+   if (fHistogram) {
+      frame->SetTitle(fHistogram->GetTitle());
+      frame->GetYaxis()->SetTitle(fHistogram->GetXaxis()->GetTitle());
+      frame->GetYaxis()->SetRange(fHistogram->GetXaxis()->GetFirst(), fHistogram->GetXaxis()->GetLast());
+      frame->GetZaxis()->SetTitle(fHistogram->GetYaxis()->GetTitle());
+   }
 
    TAxis *Xaxis = frame->GetXaxis();
    Xaxis->SetNdivisions(-ndiv);
@@ -1354,20 +1371,27 @@ void TMultiGraph::PaintPolyLine3D(Option_t *option)
    }
 
    frame->SetStats(kFALSE);
-   frame->SetMinimum(rwymin);
-   for (i = 1; i<=ndiv; i++) frame->SetBinContent(i,1,rwymin);
-   frame->SetMaximum(rwymax);
+   if (fMinimum != -1111) frame->SetMinimum(fMinimum);
+   else                   frame->SetMinimum(rwymin);
+   if (fMaximum != -1111) frame->SetMaximum(fMaximum);
+   else                   frame->SetMaximum(rwymax);
 
    l = (char*)strstr(option,"A");
-   if (l) frame->Paint("lego0,fb,bb");
+   if (l) frame->Paint("lego9,fb,bb");
    l = (char*)strstr(option,"BB");
-   if (!l) frame->Paint("lego0,fb,a,same");
+   if (!l) frame->Paint("lego9,fb,a,same");
 
    Double_t *x, *y;
    Double_t xyz1[3], xyz2[3];
 
+   Double_t xl = frame->GetYaxis()->GetBinLowEdge(frame->GetYaxis()->GetFirst());
+   Double_t xu = frame->GetYaxis()->GetBinUpEdge(frame->GetYaxis()->GetLast());
+   Double_t yl = frame->GetMinimum();
+   Double_t yu = frame->GetMaximum();
+   Double_t xc[2],yc[2];
    next.Reset();
    Int_t j = ndiv;
+
    while ((g = (TGraph*) next())) {
       npt = g->GetN();
       x   = g->GetX();
@@ -1377,19 +1401,25 @@ void TMultiGraph::PaintPolyLine3D(Option_t *option)
       gPad->SetLineStyle(g->GetLineStyle());
       gPad->TAttLine::Modify();
       for (i=0; i<npt-1; i++) {
-         xyz1[0] = j-0.5;
-         xyz1[1] = x[i];
-         xyz1[2] = y[i];
-         xyz2[0] = j-0.5;
-         xyz2[1] = x[i+1];
-         xyz2[2] = y[i+1];
-         gPad->PaintLine3D(xyz1, xyz2);
+         xc[0] = x[i];
+         xc[1] = x[i+1];
+         yc[0] = y[i];
+         yc[1] = y[i+1];
+         if (gPad->Clip(&xc[0], &yc[0], xl, yl, xu, yu)<2) {
+            xyz1[0] = j-0.5;
+            xyz1[1] = xc[0];
+            xyz1[2] = yc[0];
+            xyz2[0] = j-0.5;
+            xyz2[1] = xc[1];
+            xyz2[2] = yc[1];
+            gPad->PaintLine3D(xyz1, xyz2);
+         }
       }
       j--;
    }
 
    l = (char*)strstr(option,"FB");
-   if (!l) frame->Paint("lego0,bb,a,same");
+   if (!l) frame->Paint("lego9,bb,a,same");
    delete frame;
 }
 

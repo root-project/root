@@ -21,6 +21,8 @@ if(GCC_MAJOR GREATER 3)
   set_source_files_properties(src/TXSocket.cxx COMPILE_FLAGS -Wno-address)
 endif()
 
-ROOT_GENERATE_DICTIONARY(G__Proofx ${headers} MODULE Proofx LINKDEF LinkDef.h DEPENDENCIES Net Proof Thread )
-ROOT_LINKER_LIBRARY(Proofx ${sources} G__Proofx.cxx LIBRARIES ${XROOTD_LIBRARIES} XrdProofd DEPENDENCIES Net Proof Thread )
-ROOT_INSTALL_HEADERS()
+ROOT_STANDARD_LIBRARY_PACKAGE(Proofx
+                              HEADERS ${headers}
+                              LIBRARIES ${XROOTD_LIBRARIES} XrdProofd
+                              DEPENDENCIES Net Proof Thread
+                              BUILTINS XROOTD)

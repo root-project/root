@@ -20,58 +20,61 @@ MATHCOREDS   := $(call stripsrc,$(MODDIRS)/G__MathCore.cxx)
 MATHCOREDO   := $(MATHCOREDS:.cxx=.o)
 MATHCOREDH   := $(MATHCOREDS:.cxx=.h)
 
-MATHCOREDICTH :=  TComplex.h \
-                TMath.h \
-                TRandom.h \
-                TRandom1.h \
-                TRandom2.h \
-                TRandom3.h \
-                TStatistic.h \
-                TKDTree.h \
-                TKDTreeBinning.h \
-                Math/Random.h \
-                Math/RandomFunctions.h \
-                Math/TRandomEngine.h \
-                Math/MersenneTwisterEngine.h \
-                Math/MixMaxEngine.h \
-                Math/KDTree.h \
-                Math/TDataPoint.h \
-                Math/TDataPointN.h \
-                Math/IParamFunction.h \
-                Math/IFunction.h \
-                Math/ParamFunctor.h \
-                Math/Functor.h \
-                Math/Minimizer.h \
-                Math/MinimizerOptions.h \
-                Math/MinimTransformFunction.h \
-                Math/MinimTransformVariable.h \
-                Math/BasicMinimizer.h \
-                Math/IntegratorOptions.h \
-                Math/IOptions.h \
-                Math/GenAlgoOptions.h \
-                Math/Integrator.h \
-                Math/VirtualIntegrator.h \
-                Math/AllIntegrationTypes.h \
-                Math/AdaptiveIntegratorMultiDim.h \
-                Math/IntegratorMultiDim.h \
-                Math/Factory.h \
-                Math/FitMethodFunction.h \
-                Math/GaussIntegrator.h \
-                Math/GaussLegendreIntegrator.h \
-                Math/RootFinder.h \
-                Math/IRootFinderMethod.h \
-                Math/RichardsonDerivator.h \
-                Math/BrentMethods.h \
-                Math/BrentMinimizer1D.h \
-                Math/BrentRootFinder.h \
-                Math/DistSampler.h \
-                Math/DistSamplerOptions.h \
-                Math/GoFTest.h \
-                Math/ChebyshevPol.h \
-                Math/SpecFuncMathCore.h \
-                Math/DistFuncMathCore.h \
-                Math/Math_vectypes.hxx \
-		$(patsubst $(MODDIRI)/%,%,$(filter-out $(MODDIRI)/Fit/LinkDef%,$(filter-out $(MODDIRI)/Fit/Chi2Grad%,$(wildcard $(MODDIRI)/Fit/*.h))))
+MATHCOREDICTH := TComplex.h \
+                 TKDTreeBinning.h \
+                 TKDTree.h \
+                 TMath.h \
+                 TRandom1.h \
+                 TRandom2.h \
+                 TRandom3.h \
+                 TRandom.h \
+                 TStatistic.h \
+                 Math/AdaptiveIntegratorMultiDim.h \
+                 Math/AllIntegrationTypes.h \
+                 Math/BasicMinimizer.h \
+                 Math/BrentMethods.h \
+                 Math/BrentMinimizer1D.h \
+                 Math/BrentRootFinder.h \
+                 Math/ChebyshevPol.h \
+                 Math/DistFuncMathCore.h \
+                 Math/DistSampler.h \
+                 Math/DistSamplerOptions.h \
+                 Math/Error.h \
+                 Math/Factory.h \
+                 Math/FitMethodFunction.h \
+                 Math/Functor.h \
+                 Math/GaussIntegrator.h \
+                 Math/GaussLegendreIntegrator.h \
+                 Math/GenAlgoOptions.h \
+                 Math/GoFTest.h \
+                 Math/IFunction.h \
+                 Math/Integrator.h \
+                 Math/IntegratorMultiDim.h \
+                 Math/IntegratorOptions.h \
+                 Math/IOptions.h \
+                 Math/IParamFunction.h \
+                 Math/IRootFinderMethod.h \
+                 Math/KDTree.h \
+                 Math/LCGEngine.h \
+                 Math/MersenneTwisterEngine.h \
+                 Math/Minimizer.h \
+                 Math/MinimizerOptions.h \
+                 Math/MinimTransformFunction.h \
+                 Math/MinimTransformVariable.h \
+                 Math/MixMaxEngine.h \
+                 Math/ParamFunctor.h \
+                 Math/RandomFunctions.h \
+                 Math/Random.h \
+                 Math/RichardsonDerivator.h \
+                 Math/RootFinder.h \
+                 Math/SpecFuncMathCore.h \
+                 Math/StdEngine.h \
+                 Math/TDataPoint.h \
+                 Math/TDataPointN.h \
+                 Math/TRandomEngine.h \
+                 Math/Types.h \
+                 Math/VirtualIntegrator.h \
+                 $(patsubst $(MODDIRI)/%,%,$(filter-out $(MODDIRI)/Fit/LinkDef%,$(filter-out $(MODDIRI)/Fit/Chi2Grad%,$(wildcard $(MODDIRI)/Fit/*.h))))
 
 MATHCOREMH1   := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 MATHCOREMH2   := $(filter-out $(MODDIRI)/Math/LinkDef%,$(wildcard $(MODDIRI)/Math/*.h $(MODDIRI)/Math/*.hxx))
@@ -150,7 +153,7 @@ $(call pcmrule,MATHCORE)
 $(MATHCOREDS):  $(add-prefix include/,$(MATHCOREDICTH)) $(MATHCOREL0) $(MATHCORELS) $(ROOTCLINGEXE) $(call pcmdep,MATHCORE)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,MATHCORE) -c -writeEmptyRootPCM -I$(ROOT_SRCDIR) $(MATHCOREDICTH) $(MATHCOREL0)
+		$(ROOTCLINGSTAGE2) -v1 -f $@ $(call dictModule,MATHCORE) -c -writeEmptyRootPCM -I$(ROOT_SRCDIR) $(MATHCOREDICTH) $(MATHCOREL0)
 
 $(MATHCOREMAP): $(add-prefix include/,$(MATHCOREDICTH)) $(MATHCOREL0) $(MATHCORELS) $(ROOTCLINGEXE) $(call pcmdep,MATHCORE)
 		$(MAKEDIR)

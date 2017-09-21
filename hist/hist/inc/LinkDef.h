@@ -37,6 +37,11 @@
 #pragma link C++ class TFormulaParamOrder+;
 #pragma link C++ class std::map<TString,int,TFormulaParamOrder>+;
 #pragma link C++ class TF12+;
+#pragma link C++ class TF1AbsComposition + ;
+#pragma link C++ class TF1Convolution + ;
+#pragma link C++ class TF1NormSum + ;
+#pragma link C++ class std::vector < std::unique_ptr < TF1 >> +;
+#pragma link C++ class std::vector < std::unique_ptr < TF1AbsComposition >> +;
 #pragma link C++ class TF2-;
 #pragma link C++ class TF3-;
 #pragma link C++ class Foption_t+;
@@ -340,6 +345,7 @@
 
 
 #ifdef ROOT7_THist
+
 #pragma link C++ class ROOT::Experimental::TH1F+;
 #pragma link C++ class ROOT::Experimental::TH1D+;
 #pragma link C++ class ROOT::Experimental::TH2F+;

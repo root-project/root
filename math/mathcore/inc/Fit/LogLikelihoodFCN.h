@@ -55,7 +55,7 @@ public:
    /**
       Constructor from unbin data set and model function (pdf)
    */
-   LogLikelihoodFCN (const std::shared_ptr<UnBinData> & data, const std::shared_ptr<IModelFunction> & func, int weight = 0, bool extended = false, ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::kSerial) :
+   LogLikelihoodFCN (const std::shared_ptr<UnBinData> & data, const std::shared_ptr<IModelFunction> & func, int weight = 0, bool extended = false, const ROOT::Fit::ExecutionPolicy &executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial) :
       BaseFCN( data, func),
       fIsExtended(extended),
       fWeight(weight),
@@ -67,7 +67,7 @@ public:
       /**
       Constructor from unbin data set and model function (pdf) for object managed by users
    */
-   LogLikelihoodFCN (const UnBinData & data, const IModelFunction & func, int weight = 0, bool extended = false, ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::kSerial) :
+   LogLikelihoodFCN (const UnBinData & data, const IModelFunction & func, int weight = 0, bool extended = false, const ROOT::Fit::ExecutionPolicy &executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial) :
       BaseFCN(std::shared_ptr<UnBinData>(const_cast<UnBinData*>(&data), DummyDeleter<UnBinData>()), std::shared_ptr<IModelFunction>(dynamic_cast<IModelFunction*>(func.Clone() ) ) ),
       fIsExtended(extended),
       fWeight(weight),
@@ -123,11 +123,11 @@ public:
       return FitUtil::EvaluatePdf(BaseFCN::ModelFunction(), BaseFCN::Data(), x, i, g);
    }
 
-
    // need to be virtual to be instantited
    virtual void Gradient(const double *x, double *g) const {
       // evaluate the chi2 gradient
-      FitUtil::EvaluateLogLGradient(BaseFCN::ModelFunction(), BaseFCN::Data(), x, g, fNEffPoints);
+      FitUtil::Evaluate<typename BaseFCN::T>::EvalLogLGradient(BaseFCN::ModelFunction(), BaseFCN::Data(), x, g,
+                                                               fNEffPoints, fExecutionPolicy);
    }
 
    /// get type of fit method function

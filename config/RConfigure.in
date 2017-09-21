@@ -29,6 +29,7 @@
 #@usec++11@ R__USE_CXX11    /**/
 #@usec++14@ R__USE_CXX14    /**/
 #@usec++17@ R__USE_CXX17    /**/
+#@usecxxmodules@ R__USE_CXXMODULES   /**/
 #@uselibc++@ R__USE_LIBCXX    /**/
 #@hasstdstringview@ R__HAS_STD_STRING_VIEW   /**/
 #@hasstdexpstringview@ R__HAS_STD_EXPERIMENTAL_STRING_VIEW   /**/
@@ -37,5 +38,12 @@
 #@hasstdinvoke@ R__HAS_STD_INVOKE /**/
 #@hasllvm@ R__EXTERN_LLVMDIR @llvmdir@
 #@useimt@ R__USE_IMT   /**/
+#@memory_term@ R__COMPLETE_MEM_TERMINATION /**/
+
+#if defined(R__HAS_VECCORE) && defined(R__HAS_VC)
+#ifndef VECCORE_ENABLE_VC
+#define VECCORE_ENABLE_VC
+#endif
+#endif
 
 #endif

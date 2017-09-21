@@ -67,11 +67,20 @@ foreach(file ${TestSource})
   ROOT_ADD_TEST(mathcore-${testname} COMMAND ${testname} LABELS ${${testname}_LABELS})
 endforeach()
 
-
-ROOT_GENERATE_DICTIONARY(G__TrackMathCoreUnitDict ${CMAKE_CURRENT_SOURCE_DIR}/stress/TrackMathCore.h MODULE TrackMathCoreUnitDict LINKDEF stress/TrackMathCoreLinkDef.h DEPENDENCIES Core MathCore RIO GenVector)
-ROOT_LINKER_LIBRARY(TrackMathCoreUnitDict G__TrackMathCoreUnitDict.cxx LIBRARIES Core MathCore RIO GenVector)
+ROOT_STANDARD_LIBRARY_PACKAGE(TrackMathCoreUnitDict
+                              NO_INSTALL_HEADERS
+                              NO_SOURCES
+                              HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/stress/TrackMathCore.h
+                              LINKDEF stress/TrackMathCoreLinkDef.h
+                              DEPENDENCIES Core MathCore RIO GenVector)
 
 ROOT_ADD_GTEST(stressMathCoreUnit stress/testSMatrix.cxx stress/testGenVector.cxx
         stress/testStat.cxx stress/testSVector.cxx stress/testVector.cxx stress/testVector34.cxx
         stress/TestHelper.cxx
         LIBRARIES Core MathCore Hist RIO Tree GenVector)
+
+ROOT_ADD_GTEST(GradientUnit testGradient.cxx
+       LIBRARIES Core MathCore Hist RIO Tree GenVector)
+
+ROOT_ADD_GTEST(GradientFittingUnit testGradientFitting.cxx
+      LIBRARIES Core MathCore Hist RIO Tree GenVector)

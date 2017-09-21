@@ -38,6 +38,13 @@ set(version_inc "${CMAKE_CURRENT_BINARY_DIR}/VCSRevision.h")
 
 set(get_svn_script "${LLVM_CMAKE_PATH}/GenerateVersionFromCVS.cmake")
 
+# Ugly hack to prevent rebuilding LLVM whenever the git HEAD timestamp
+# changes. This is properly solved by setting LLVM_APPEND_VC_REV to OFF
+# but this only really works once this review is included in our LLVM
+# version: https://reviews.llvm.org/D35377
+# Once our LLVM version includes this review, this code can be removed
+# as we properly set LLVM_APPEND_VC_REV in interpreter/CMakeLists.txt.
+set(llvm_vc)
 if(DEFINED llvm_vc)
   # Create custom target to generate the VC revision include.
   add_custom_command(OUTPUT "${version_inc}"
@@ -53,7 +60,9 @@ if(DEFINED llvm_vc)
     PROPERTIES GENERATED TRUE
                HEADER_FILE_ONLY TRUE)
 else()
-  file(WRITE "${version_inc}" "")
+  if(NOT EXISTS "${version_inc}")
+    file(WRITE "${version_inc}" "")
+  endif()
 endif()
 
 add_custom_target(llvm_vcsrevision_h DEPENDS "${version_inc}")

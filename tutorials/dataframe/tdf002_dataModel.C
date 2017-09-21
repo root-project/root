@@ -9,21 +9,6 @@
 /// \date December 2016
 /// \author Danilo Piparo
 
-// ## Preparation
-// This notebook can be compiled with this invocation
-// `g++ -o tdf002_dataModel tdf002_dataModel.C `root-config --cflags --libs` -lTreePlayer`
-
-#include "Math/Vector3D.h"
-#include "Math/Vector4D.h"
-#include "TCanvas.h"
-#include "TMath.h"
-#include "TRandom3.h"
-#include "TFile.h"
-#include "TH1D.h"
-#include "TTree.h"
-
-#include "ROOT/TDataFrame.hxx"
-
 using FourVector = ROOT::Math::XYZTVector;
 using FourVectors = std::vector<FourVector>;
 using CylFourVector = ROOT::Math::RhoEtaPhiVector;
@@ -109,7 +94,7 @@ int tdf002_dataModel()
                          .Define("tracks_pts", getPt)
                          .Define("tracks_pts_weights", getPtWeights);
 
-   auto trN = augmented_d.Histo1D(TH1D{"", "", 40, -.5, 39.5}, "tracks_n");
+   auto trN = augmented_d.Histo1D({"", "", 40, -.5, 39.5}, "tracks_n");
    auto trPts = augmented_d.Histo1D("tracks_pts");
    auto trWPts = augmented_d.Histo1D("tracks_pts", "tracks_pts_weights");
 
@@ -126,9 +111,4 @@ int tdf002_dataModel()
    c3.Print("tracks_Wpt.png");
 
    return 0;
-}
-
-int main()
-{
-   return tdf002_dataModel();
 }

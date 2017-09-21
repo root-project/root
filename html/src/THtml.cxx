@@ -1557,7 +1557,7 @@ void THtml::CreateListOfClasses(const char* filter)
 
    fDocEntityInfo.fClassFilter = filter;
 
-   // start from begining
+   // start from beginning
    gClassTable->Init();
    if (filter && (!filter[0] || !strcmp(filter, "*")))
       filter = ".*";
@@ -2202,39 +2202,7 @@ Bool_t THtml::IsNamespace(const TClass*cl)
 
 void THtml::LoadAllLibs()
 {
-   TEnv* mapfile = gInterpreter->GetMapfile();
-   if (!mapfile || !mapfile->GetTable()) return;
-
-   std::set<std::string> loadedlibs;
-   std::set<std::string> failedlibs;
-
-   TEnvRec* rec = 0;
-   TIter iEnvRec(mapfile->GetTable());
-   while ((rec = (TEnvRec*) iEnvRec())) {
-      TString libs = rec->GetValue();
-      TString lib;
-      Ssiz_t pos = 0;
-      while (libs.Tokenize(lib, pos)) {
-         // check that none of the libs failed to load
-         if (failedlibs.find(lib.Data()) != failedlibs.end()) {
-            // don't load it or any of its dependencies
-            libs = "";
-            break;
-         }
-      }
-      pos = 0;
-      while (libs.Tokenize(lib, pos)) {
-         // ignore libCore - it's already loaded
-         if (lib.BeginsWith("libCore"))
-            continue;
-
-         if (loadedlibs.find(lib.Data()) == loadedlibs.end()) {
-            // just load the first library - TSystem will do the rest.
-            gSystem->Load(lib);
-            loadedlibs.insert(lib.Data());
-         }
-      }
-   }
+   gSystem->LoadAllLibraries();
 }
 
 

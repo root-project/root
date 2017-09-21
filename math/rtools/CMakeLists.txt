@@ -7,9 +7,10 @@ include_directories(SYSTEM ${R_INCLUDE_DIRS})
 
 ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-overloaded-virtual)
 
-ROOT_GENERATE_DICTIONARY(G__Rtools Math/RMinimizer.h MODULE Rtools LINKDEF LinkDef.h DEPENDENCIES MathCore RInterface)
-ROOT_LINKER_LIBRARY(Rtools *.cxx G__Rtools.cxx LIBRARIES Core ${R_LIBRARIES} DEPENDENCIES MathCore RInterface)
-ROOT_INSTALL_HEADERS()
+ROOT_STANDARD_LIBRARY_PACKAGE(Rtools
+                              HEADERS Math/RMinimizer.h
+                              LIBRARIES ${R_LIBRARIES}
+                              DEPENDENCIES Core MathCore RInterface)
 
 FILE(COPY "${CMAKE_SOURCE_DIR}/etc/plugins/ROOT@@Math@@Minimizer/P090_RMinimizer.C" DESTINATION "${CMAKE_BINARY_DIR}/etc/plugins/ROOT@@Math@@Minimizer/")
 

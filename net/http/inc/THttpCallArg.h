@@ -84,7 +84,7 @@ public:
    /** set request query */
    void SetQuery(const char *q) { fQuery = q; }
 
-   void SetPostData(void *data, Long_t length);
+   void SetPostData(void *data, Long_t length, Bool_t make_copy = kFALSE);
 
    void SetWSHandle(TNamed *handle);
 
@@ -150,7 +150,8 @@ public:
    void SetFile(const char *filename = 0)
    {
       SetContentType("_file_");
-      if (filename != 0) fContent = filename;
+      if (filename != 0)
+         fContent = filename;
    }
 
    /** set content type as XML */

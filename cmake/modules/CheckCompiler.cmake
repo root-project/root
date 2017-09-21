@@ -9,9 +9,23 @@ if(fortran)
   if(DEFINED CMAKE_Fortran_COMPILER AND CMAKE_Fortran_COMPILER MATCHES "^$")
     set(CMAKE_Fortran_COMPILER CMAKE_Fortran_COMPILER-NOTFOUND)
   endif()
-  check_language(Fortran)
   if(CMAKE_Fortran_COMPILER)
+    # CMAKE_Fortran_COMPILER has already been defined somewhere else, so
+    # just check whether it contains a valid compiler
     enable_language(Fortran)
+  else()
+    # CMAKE_Fortran_COMPILER has not been defined, so first check whether
+    # there is a Fortran compiler at all
+    check_language(Fortran)
+    if(CMAKE_Fortran_COMPILER)
+      # Fortran compiler found, however as 'check_language' was executed
+      # in a separate process, the result might not be compatible with
+      # the C++ compiler, so reset the variable, ...
+      unset(CMAKE_Fortran_COMPILER CACHE)
+      # ..., and enable Fortran again, this time prefering compilers
+      # compatible to the C++ compiler
+      enable_language(Fortran)
+    endif()
   endif()
 else()
   set(CMAKE_Fortran_COMPILER CMAKE_Fortran_COMPILER-NOTFOUND)
@@ -33,12 +47,10 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
   string(REGEX REPLACE "^.*[ ]version[ ][0-9]+\\.([0-9]+).*" "\\1" CLANG_MINOR "${_clang_version_info}")
   message(STATUS "Found Clang. Major version ${CLANG_MAJOR}, minor version ${CLANG_MINOR}")
   set(COMPILER_VERSION clang${CLANG_MAJOR}${CLANG_MINOR})
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fcolor-diagnostics")
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fcolor-diagnostics")
   if(ccache)
     # https://bugzilla.samba.org/show_bug.cgi?id=8118 and color.
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Qunused-arguments")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Qunused-arguments")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Qunused-arguments -fcolor-diagnostics")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Qunused-arguments -fcolor-diagnostics")
   endif()
 else()
   set(CLANG_MAJOR 0)

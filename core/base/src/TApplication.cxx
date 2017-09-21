@@ -420,6 +420,7 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
          fprintf(stderr, "  -n : do not execute logon and logoff macros as specified in .rootrc\n");
          fprintf(stderr, "  -q : exit after processing command line macro files\n");
          fprintf(stderr, "  -l : do not show splash screen\n");
+         fprintf(stderr, "  -t : enable thread-safety and multi-threaded mode\n");
          fprintf(stderr, " dir : if dir is a valid directory cd to it before executing\n");
          fprintf(stderr, "\n");
          fprintf(stderr, "  -?      : print usage\n");
@@ -440,6 +441,12 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
          argv[i] = null;
       } else if (!strcmp(argv[i], "-n")) {
          fNoLog = kTRUE;
+         argv[i] = null;
+      } else if (!strcmp(argv[i], "-t")) {
+         ROOT::EnableImplicitMT();
+         // EnableImplicitMT() only enables thread safety if IMT was configured;
+         // enable thread safety even with IMT off:
+         ROOT::EnableThreadSafety();
          argv[i] = null;
       } else if (!strcmp(argv[i], "-q")) {
          fQuit = kTRUE;
@@ -475,6 +482,11 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
          if (fFiles) {
             for (auto f: *fFiles) {
                TObjString* file = dynamic_cast<TObjString*>(f);
+               if (!file) {
+                  Error("GetOptions()", "Inconsistent file entry (not a TObjString)!");
+                  f->Dump();
+                  continue;
+               }
 
                if (file->TestBit(kExpression))
                   continue;

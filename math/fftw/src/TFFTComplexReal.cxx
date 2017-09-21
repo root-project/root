@@ -58,7 +58,6 @@ TFFTComplexReal::TFFTComplexReal()
    fPlan = 0;
    fN    = 0;
    fTotalSize = 0;
-   fFlags = 0;
    fNdim = 0;
 }
 
@@ -81,7 +80,6 @@ TFFTComplexReal::TFFTComplexReal(Int_t n, Bool_t inPlace)
    fN[0] = n;
    fPlan = 0;
    fTotalSize = n;
-   fFlags = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -106,7 +104,6 @@ TFFTComplexReal::TFFTComplexReal(Int_t ndim, Int_t *n, Bool_t inPlace)
       fOut = 0;
    }
    fPlan = 0;
-   fFlags = 0;
 }
 
 

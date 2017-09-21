@@ -1237,7 +1237,8 @@ void TGraphPainter::PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *
                if (optionFill) {
                   gPad->PaintFillArea(npt,gyworkl,gxworkl);
                   if (bord) gPad->PaintPolyLine(npt,gyworkl,gxworkl);
-               } else {
+               }
+               if (optionLine) {
                   if (TMath::Abs(theGraph->GetLineWidth())>99) PaintPolyLineHatches(theGraph, npt, gyworkl, gxworkl);
                   gPad->PaintPolyLine(npt,gyworkl,gxworkl);
                }
@@ -1245,7 +1246,8 @@ void TGraphPainter::PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *
                if (optionFill) {
                   gPad->PaintFillArea(npt,gxworkl,gyworkl);
                   if (bord) gPad->PaintPolyLine(npt,gxworkl,gyworkl);
-               } else {
+               }
+               if (optionLine) {
                   if (TMath::Abs(theGraph->GetLineWidth())>99) PaintPolyLineHatches(theGraph, npt, gxworkl, gyworkl);
                   gPad->PaintPolyLine(npt,gxworkl,gyworkl);
                }

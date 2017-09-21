@@ -35,8 +35,11 @@ ROOT_ADD_TEST(show-environment COMMAND ${CMAKE_COMMAND} -E environment)
 ROOT_EXECUTABLE(hworld hworld.cxx LIBRARIES Gpad)
 
 #---event-------------------------------------------------------------------------------------
-ROOT_GENERATE_DICTIONARY(G__Event ${CMAKE_CURRENT_SOURCE_DIR}/Event.h MODULE Event LINKDEF EventLinkDef.h DEPENDENCIES Hist MathCore)
-ROOT_LINKER_LIBRARY(Event Event.cxx G__Event.cxx LIBRARIES Hist MathCore)
+ROOT_STANDARD_LIBRARY_PACKAGE(Event
+                              NO_INSTALL_HEADERS
+                              HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/Event.h
+                              SOURCES Event.cxx LINKDEF EventLinkDef.h
+                              DEPENDENCIES Hist MathCore)
 
 ROOT_EXECUTABLE(eventexe MainEvent.cxx LIBRARIES Event RIO Tree TreePlayer Hist Net)
 ROOT_ADD_TEST(test-event COMMAND eventexe)
@@ -75,15 +78,15 @@ ROOT_EXECUTABLE(vlazy vlazy.cxx LIBRARIES Core Matrix)
 ROOT_ADD_TEST(test-vlazy COMMAND vlazy)
 
 #--helloso------------------------------------------------------------------------------------
-ROOT_GENERATE_DICTIONARY(G__Hello ${CMAKE_CURRENT_SOURCE_DIR}/Hello.h MODULE Hello)
+ROOT_GENERATE_DICTIONARY(G__Hello ${CMAKE_CURRENT_SOURCE_DIR}/Hello.h MODULE Hello DEPENDENCIES Gpad Graf Hist MathCore Matrix)
 ROOT_LINKER_LIBRARY(Hello Hello.cxx G__Hello.cxx LIBRARIES Graf Gpad)
 
 #--Aclockso------------------------------------------------------------------------------------
-ROOT_GENERATE_DICTIONARY(G__Aclock ${CMAKE_CURRENT_SOURCE_DIR}/Aclock.h MODULE Aclock)
+ROOT_GENERATE_DICTIONARY(G__Aclock ${CMAKE_CURRENT_SOURCE_DIR}/Aclock.h MODULE Aclock DEPENDENCIES Graf Gpad MathCore)
 ROOT_LINKER_LIBRARY(Aclock Aclock.cxx G__Aclock.cxx LIBRARIES Graf Gpad)
 
 #--bench------------------------------------------------------------------------------------
-ROOT_GENERATE_DICTIONARY(G__TBench ${CMAKE_CURRENT_SOURCE_DIR}/TBench.h MODULE TBench LINKDEF benchLinkDef.h)
+ROOT_GENERATE_DICTIONARY(G__TBench ${CMAKE_CURRENT_SOURCE_DIR}/TBench.h MODULE TBench LINKDEF benchLinkDef.h DEPENDENCIES MathCore Tree)
 ROOT_LINKER_LIBRARY(TBench TBench.cxx G__TBench.cxx LIBRARIES Core MathCore RIO Tree)
 ROOT_EXECUTABLE(bench bench.cxx LIBRARIES Core TBench)
 ROOT_ADD_TEST(test-bench COMMAND bench LABELS longtest)
@@ -168,8 +171,12 @@ if(ROOT_mathmore_FOUND)
 endif()
 
 #--stressMathCore----------------------------------------------------------------------------------
-ROOT_GENERATE_DICTIONARY(G__TrackMathCoreDict ${CMAKE_CURRENT_SOURCE_DIR}/TrackMathCore.h MODULE TrackMathCoreDict LINKDEF TrackMathCoreLinkDef.h)
-ROOT_LINKER_LIBRARY(TrackMathCoreDict G__TrackMathCoreDict.cxx LIBRARIES Core MathCore RIO GenVector)
+ROOT_STANDARD_LIBRARY_PACKAGE(TrackMathCoreDict
+                              NO_SOURCES
+                              NO_INSTALL_HEADERS
+                              HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/TrackMathCore.h
+                              LINKDEF TrackMathCoreLinkDef.h
+                              DEPENDENCIES Core MathCore RIO GenVector Smatrix)
 ROOT_EXECUTABLE(stressMathCore stressMathCore.cxx LIBRARIES MathCore Hist RIO Tree GenVector)
 ROOT_ADD_TEST(test-stressmathcore COMMAND stressMathCore FAILREGEX "FAILED|Error in")
 ROOT_ADD_TEST(test-stressmathcore-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressMathCore.cxx
@@ -299,23 +306,16 @@ endif()
 
 #--Vc basic test-----------------------------------------------------------------------------------
 if(ROOT_vc_FOUND)
-  include_directories(SYSTEM BEFORE ${Vc_INCLUDE_DIRS})
-  
-  ROOT_ADD_CXX_FLAG(vc_flags -Wno-unused-parameter)
-  ROOT_ADD_CXX_FLAG(vc_flags -Wno-missing-braces)
-  ROOT_ADD_CXX_FLAG(vc_flags -Wno-conditional-uninitialized)
-  ROOT_ADD_CXX_FLAG(vc_flags -Wno-mismatched-tags)
-  ROOT_ADD_CXX_FLAG(vc_flags -Wno-undefined-var-template)
-  set_source_files_properties(testVc.cxx PROPERTIES COMPILE_FLAGS "${vc_flags}")
   ROOT_EXECUTABLE(testVc testVc.cxx LIBRARIES ${Vc_LIBRARIES} BUILTINS Vc)
+  target_include_directories(testVc SYSTEM BEFORE PRIVATE ${Vc_INCLUDE_DIRS})
   ROOT_ADD_TEST(test-Vc COMMAND testVc FAILREGEX "FAILED|Error in")
 endif()
 
 #--VecCore basic test------------------------------------------------------------------------------
 if(ROOT_veccore_FOUND)
   ROOT_EXECUTABLE(test-veccore test-veccore.cxx LIBRARIES ${VecCore_LIBRARIES} BUILTINS VECCORE)
-  target_compile_definitions(test-veccore PRIVATE ${VecCore_DEFINITIONS})
   target_include_directories(test-veccore SYSTEM BEFORE PRIVATE ${VecCore_INCLUDE_DIRS})
+  target_compile_definitions(test-veccore PRIVATE ${VecCore_DEFINITIONS})
   if(VecCore_Vc_FOUND)
     ROOT_ADD_TEST(VecCore COMMAND test-veccore REGEX "Vc")
   else()
@@ -325,16 +325,8 @@ endif()
 
 #--Vc GenVector test-----------------------------------------------------------------------------------
 if(ROOT_vc_FOUND)
-  include_directories(SYSTEM BEFORE ${Vc_INCLUDE_DIRS})
-  
-  ROOT_ADD_CXX_FLAG(vc_flags -Wno-unused-parameter)
-  ROOT_ADD_CXX_FLAG(vc_flags -Wno-missing-braces)
-  ROOT_ADD_CXX_FLAG(vc_flags -Wno-conditional-uninitialized)
-  ROOT_ADD_CXX_FLAG(vc_flags -Wno-mismatched-tags)
-  ROOT_ADD_CXX_FLAG(vc_flags -Wno-undefined-var-template)
-  ROOT_ADD_CXX_FLAG(vc_flags -Wno-shadow)
-  set_source_files_properties(testGenVectorVc.cxx PROPERTIES COMPILE_FLAGS "${vc_flags}")
   ROOT_EXECUTABLE(testGenVectorVc testGenVectorVc.cxx LIBRARIES Physics GenVector ${Vc_LIBRARIES} BUILTINS Vc)
+  target_include_directories(testGenVectorVc SYSTEM BEFORE PRIVATE ${Vc_INCLUDE_DIRS})
   ROOT_ADD_TEST(test-GenVector-Vc COMMAND testGenVectorVc FAILREGEX "FAILED|Error in")
 endif()
 

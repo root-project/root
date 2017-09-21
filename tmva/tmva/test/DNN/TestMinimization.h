@@ -26,9 +26,9 @@
 using namespace TMVA::DNN;
 
 /** Train a linear neural network on a randomly generated linear mapping
- *  from a 20-dimensional input space to a 1-dimensional output space.
+ *  from an 8-dimensional input space to a 1-dimensional output space.
  *  Returns the error of the response of the network to the input containing
- *  only ones to the 1x20 matrix used to generate the training data.
+ *  only ones to the 1x8 matrix used to generate the training data.
  */
 template <typename Architecture>
    auto testMinimization()
@@ -37,9 +37,9 @@ template <typename Architecture>
    using Matrix_t = typename Architecture::Matrix_t;
    using Net_t    = TNet<Architecture>;
 
-   size_t nSamples  = 10000;
-   size_t nFeatures = 20;
-   size_t batchSize = 256;
+   size_t nSamples  = 1024;
+   size_t nFeatures = 8;
+   size_t batchSize = 8;
 
    TMatrixT<Double_t> XTrain(nSamples, nFeatures), YTrain(nSamples, 1), WTrain(nSamples, 1),
       XTest(batchSize, nFeatures), YTest(batchSize, 1), WTest(nSamples, 1), K(nFeatures, 1);

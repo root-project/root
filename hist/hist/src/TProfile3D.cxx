@@ -908,6 +908,8 @@ Bool_t TProfile3D::Multiply(const TH1 *, const TH1 *, Double_t, Double_t, Option
 ///       correctly computed from the information stored in the profile. In that case the
 ///       obtained histogram contains as bin error square the weighted sum of the square of the
 ///       profiled observable (TProfile2D::fSumw2[bin] )
+///
+///       Note that the axis range is not considered when doing the projection
 
 TH3D *TProfile3D::ProjectionXYZ(const char *name, Option_t *option) const
 {
@@ -1062,6 +1064,23 @@ TProfile2D *TProfile3D::DoProjectProfile2D(const char* name, const char * title,
    TH3D * h3dN = ProjectionXYZ("h3temp-N","B");
 
    h3dW->SetDirectory(0); h3dN->SetDirectory(0);
+
+   // Since no axis range is considered when doing the projection TProfile3D->TH3D
+   // the resulting histogram will have the same axis as the parent one
+   // we need afterwards to set the range in the 3D histogram to considered it later
+   // when doing the projection in a Profile2D 
+   if (fXaxis.TestBit(TAxis::kAxisRange) ) {
+      h3dW->GetXaxis()->SetRange(fXaxis.GetFirst(),fXaxis.GetLast());
+      h3dN->GetXaxis()->SetRange(fXaxis.GetFirst(),fXaxis.GetLast());
+   }
+   if (fYaxis.TestBit(TAxis::kAxisRange) ) {
+      h3dW->GetYaxis()->SetRange(fYaxis.GetFirst(),fYaxis.GetLast());
+      h3dN->GetYaxis()->SetRange(fYaxis.GetFirst(),fYaxis.GetLast());
+   }
+   if (fZaxis.TestBit(TAxis::kAxisRange) ) {
+      h3dW->GetZaxis()->SetRange(fZaxis.GetFirst(),fZaxis.GetLast());
+      h3dN->GetZaxis()->SetRange(fZaxis.GetFirst(),fZaxis.GetLast());
+   }
 
    // note that h3dW is always a weighted histogram - so we need to compute error in the projection
    TAxis * projX_hW = h3dW->GetXaxis();

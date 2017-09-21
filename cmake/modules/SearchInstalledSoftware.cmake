@@ -181,13 +181,8 @@ if(NOT builtin_lzma)
   message(STATUS "Looking for LZMA")
   find_package(LZMA)
   if(NOT LZMA_FOUND)
-    if(fail-on-missing)
-      message(FATAL_ERROR "LZMA not found and it is required ('fail-on-missing' enabled)."
-                          "Alternatively, you can enable the option 'builtin_lzma' to build the LZMA library internally.")
-    else()
-      message(STATUS "LZMA not found. Switching on builtin_lzma option")
-      set(builtin_lzma ON CACHE BOOL "" FORCE)
-    endif()
+    message(STATUS "LZMA not found. Switching on builtin_lzma option")
+    set(builtin_lzma ON CACHE BOOL "" FORCE)
   endif()
 endif()
 if(builtin_lzma)
@@ -262,6 +257,7 @@ if(builtin_lz4)
     LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1
     BUILD_BYPRODUCTS ${LZ4_LIBRARIES})
   set(LZ4_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
+  set(LZ4_DEFINITIONS -DBUILTIN_LZ4)
 endif()
 
 
@@ -884,26 +880,28 @@ if(xrootd)
         set(xrootd OFF CACHE BOOL "" FORCE)
       endif()
     else()
-      set(xrootd_versionnum ${xrdversnum})  # variable used internally
+      set(XROOTD_VERSIONNUM ${xrdversnum})  # variable used internally
     endif()
   endif()
 endif()
 if(builtin_xrootd)
-  set(xrootd_version 4.6.1)
-  set(xrootd_versionnum 400060001)
+  set(XROOTD_VERSION 4.6.1)
+  set(XROOTD_VERSIONNUM 400060001)
+  set(XROOTD_SRC_URI http://xrootd.org/download/v${XROOTD_VERSION}/xrootd-${XROOTD_VERSION}.tar.gz)
+  set(XROOTD_DESTDIR ${CMAKE_BINARY_DIR})
+  set(XROOTD_ROOTDIR ${XROOTD_DESTDIR})
   message(STATUS "Downloading and building XROOTD version ${xrootd_version}")
   string(REPLACE "-Wall " "" __cxxflags "${CMAKE_CXX_FLAGS}")  # Otherwise it produces many warnings
   string(REPLACE "-W " "" __cxxflags "${__cxxflags}")          # Otherwise it produces many warnings
-  string(REPLACE "-Wshadow" "" __cxxflags "${__cxxflags}")          # Otherwise it produces many warnings  
-  string(REPLACE "-Woverloaded-virtual" "" __cxxflags "${__cxxflags}")  # Otherwise it produces many warnings  
-  set(XROOTD_LIBRARIES ${CMAKE_BINARY_DIR}/${_LIBDIR_DEFAULT}/libXrdUtils${CMAKE_SHARED_LIBRARY_SUFFIX}
-                       ${CMAKE_BINARY_DIR}/${_LIBDIR_DEFAULT}/libXrdClient${CMAKE_SHARED_LIBRARY_SUFFIX}
-                       ${CMAKE_BINARY_DIR}/${_LIBDIR_DEFAULT}/libXrdCl${CMAKE_SHARED_LIBRARY_SUFFIX})
+  string(REPLACE "-Wshadow" "" __cxxflags "${__cxxflags}")          # Otherwise it produces many warnings
+  string(REPLACE "-Woverloaded-virtual" "" __cxxflags "${__cxxflags}")  # Otherwise it produces manywarnings  
+  set(XROOTD_LIBRARIES ${XROOTD_ROOTDIR}/${_LIBDIR_DEFAULT}/libXrdUtils${CMAKE_SHARED_LIBRARY_SUFFIX}
+                       ${XROOTD_ROOTDIR}/${_LIBDIR_DEFAULT}/libXrdClient${CMAKE_SHARED_LIBRARY_SUFFIX}
+                       ${XROOTD_ROOTDIR}/${_LIBDIR_DEFAULT}/libXrdCl${CMAKE_SHARED_LIBRARY_SUFFIX})
   ExternalProject_Add(
     XROOTD
-    URL http://xrootd.org/download/v${xrootd_version}/xrootd-${xrootd_version}.tar.gz
-    # URL ${lcgpackages}/xrootd-${xrootd_version}.tar.gz
-    INSTALL_DIR ${CMAKE_BINARY_DIR}
+    URL ${XROOTD_SRC_URI}
+    INSTALL_DIR ${XROOTD_ROOTDIR}
     CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
                -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
                -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
@@ -913,20 +911,21 @@ if(builtin_xrootd)
                -DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET}
                -DENABLE_PYTHON=OFF
                -DENABLE_CEPH=OFF
+    INSTALL_COMMAND ${CMAKE_COMMAND} --build . --target install
+            COMMAND ${CMAKE_COMMAND} -E copy_directory <INSTALL_DIR>/include/xrootd <INSTALL_DIR>/include
     LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
     BUILD_BYPRODUCTS ${XROOTD_LIBRARIES}
   )
   # We cannot call find_package(XROOTD) becuase the package is not yet built. So, we need to emulate what it defines....
-  set(XROOTD_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/include/xrootd ${CMAKE_BINARY_DIR}/include/xrootd/private)
+  set(XROOTD_INCLUDE_DIRS ${XROOTD_ROOTDIR}/include/xrootd ${XROOTD_ROOTDIR}/include/xrootd/private)
   set(XROOTD_NOMAIN TRUE)
-  set(XROOTD_CFLAGS "-DROOTXRDVERS=${xrootd_versionnum}")
-  install(DIRECTORY ${CMAKE_BINARY_DIR}/${_LIBDIR_DEFAULT}/ DESTINATION ${CMAKE_INSTALL_LIBDIR}
-                    COMPONENT libraries
-                    FILES_MATCHING PATTERN "libXrd*")
+  set(XROOTD_CFLAGS "-DROOTXRDVERS=${XROOTD_VERSIONNUM}")
+  install(DIRECTORY ${XROOTD_ROOTDIR}/${_LIBDIR_DEFAULT}/ DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries FILES_MATCHING PATTERN "libXrd*")
+  install(DIRECTORY ${XROOTD_ROOTDIR}/include/xrootd/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
   set(XROOTD_TARGET XROOTD)
   set(xrootd ON CACHE BOOL "" FORCE)
 endif()
-if(xrootd AND xrootd_versionnum VERSION_GREATER 300030005)
+if(xrootd AND XROOTD_VERSIONNUM VERSION_GREATER 300030005)
   set(netxng ON)
 else()
   set(netxng OFF)
@@ -965,9 +964,9 @@ if(cling)
 
   set(CLING_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/interpreter/cling/include)
   if(MSVC)
-    set(CLING_CXXFLAGS "-D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -DNOMINMAX -D_XKEYCHECK_H")
+    set(CLING_CXXFLAGS "-DNOMINMAX -D_XKEYCHECK_H")
   else()
-    set(CLING_CXXFLAGS "-fvisibility=hidden -Wno-shadow -fno-strict-aliasing -Wno-unused-parameter -Wwrite-strings -Wno-long-long -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS")
+    set(CLING_CXXFLAGS "-fvisibility=hidden -Wno-shadow -fno-strict-aliasing -Wno-unused-parameter -Wwrite-strings -Wno-long-long")
   endif()
   if (CMAKE_COMPILER_IS_GNUCXX)
     set(CLING_CXXFLAGS "${CLING_CXXFLAGS} -Wno-missing-field-initializers")
@@ -1245,27 +1244,16 @@ if(geocad)
   endif()
 endif()
 
-#---Check for VecGeom--------------------------------------------------------------------
-if (vecgeom)
-  message(STATUS "Looking for VecGeom")
-  find_package(VecGeom ${VecGeom_FIND_VERSION} CONFIG QUIET)
-  if(NOT VecGeom_FOUND )
-    if(fail-on-missing)
-      message(FATAL_ERROR "VecGeom not found. Ensure that the installation of VecGeom is in the CMAKE_PREFIX_PATH")
-    else()
-      message(STATUS "VecGeom not found. Ensure that the installation of VecGeom is in the CMAKE_PREFIX_PATH")
-      message(STATUS "              example: CMAKE_PREFIX_PATH=<VecGeom_install_path>/lib/CMake/VecGeom")
-      message(STATUS "              For the time being switching OFF 'vecgeom' option")
-      set(vecgeom OFF CACHE BOOL "" FORCE)
-    endif()
-  endif()
-endif()
-
 #---Check for Vc compatibility-----------------------------------------------------------
 if(vc OR builtin_vc)
   if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-    if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.5)
-      message(STATUS "Vc requires GCC version >= 4.5; switching OFF 'vc' option")
+    if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.3.0)
+      message(STATUS "Vc requires GCC version >= 5.3.0; switching OFF 'vc' option")
+      set(vc OFF CACHE BOOL "" FORCE)
+      set(builtin_vc OFF CACHE BOOL "" FORCE)
+    endif()
+    if(cxx17 OR CMAKE_CXX_STANDARD EQUAL 17)
+      message(STATUS "Vc uses std::for_each_n(), which is not available in GCC; switching OFF 'vc' option")
       set(vc OFF CACHE BOOL "" FORCE)
       set(builtin_vc OFF CACHE BOOL "" FORCE)
     endif()
@@ -1305,21 +1293,19 @@ elseif(vc)
     endif()
   endif()
   if(Vc_FOUND)
-    # FIXME - The altenative is to add include_dirs to all packages that include any Math headers
-    execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/include)
-    execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink ${Vc_INCLUDE_DIR}/Vc ${CMAKE_BINARY_DIR}/include/Vc)
+    set_property(DIRECTORY APPEND PROPERTY INCLUDE_DIRECTORIES ${Vc_INCLUDE_DIR})
   endif()
 endif()
 
-if(vc AND NOT Vc_FOUND AND NOT (veccore OR builtin_veccore))
+if(vc AND NOT Vc_FOUND)
   set(Vc_VERSION "1.3.2")
   set(Vc_PROJECT "Vc-${Vc_VERSION}")
   set(Vc_SRC_URI "${lcgpackages}/${Vc_PROJECT}.tar.gz")
   set(Vc_SRC_MD5 "f996a2dcab9f0ef3e21ba0d0feba9c3e")
-  set(Vc_DESTDIR "${CMAKE_BINARY_DIR}/VC-prefix/install")
+  set(Vc_DESTDIR "${CMAKE_BINARY_DIR}/externals")
   set(Vc_ROOTDIR "${Vc_DESTDIR}/${CMAKE_INSTALL_PREFIX}")
   set(Vc_LIBNAME "${CMAKE_STATIC_LIBRARY_PREFIX}Vc${CMAKE_STATIC_LIBRARY_SUFFIX}")
-  set(Vc_LIBRARY "${Vc_ROOTDIR}/${_LIBDIR_DEFAULT}/${Vc_LIBNAME}")
+  set(Vc_LIBRARY "${Vc_ROOTDIR}/lib/${Vc_LIBNAME}")
 
   ExternalProject_Add(VC
     URL     ${Vc_SRC_URI}
@@ -1337,19 +1323,38 @@ if(vc AND NOT Vc_FOUND AND NOT (veccore OR builtin_veccore))
     INSTALL_COMMAND env DESTDIR=${Vc_DESTDIR} ${CMAKE_COMMAND} --build . --target install
   )
 
-  set(VC_TARGET VC)
-  add_library(Vc STATIC IMPORTED)
-  set_property(TARGET Vc PROPERTY IMPORTED_LOCATION ${Vc_LIBRARY})
-  add_dependencies(Vc VC)
-
+  set(VC_TARGET Vc)
   set(Vc_LIBRARIES Vc)
   set(Vc_INCLUDE_DIR "${Vc_ROOTDIR}/include")
-  set(Vc_CMAKE_MODULES_DIR "${Vc_ROOTDIR}/${_LIBDIR_DEFAULT}/cmake/Vc")
+  set(Vc_CMAKE_MODULES_DIR "${Vc_ROOTDIR}/lib/cmake/Vc")
+
+  add_library(VcExt STATIC IMPORTED)
+  set_property(TARGET VcExt PROPERTY IMPORTED_LOCATION ${Vc_LIBRARY})
+  add_dependencies(VcExt VC)
+
+  add_library(Vc INTERFACE)
+  target_include_directories(Vc SYSTEM BEFORE INTERFACE $<BUILD_INTERFACE:${Vc_INCLUDE_DIR}>)
+  target_link_libraries(Vc INTERFACE VcExt)
+
+  # propagate build-time include directories to rootcling
+  set_property(DIRECTORY APPEND PROPERTY INCLUDE_DIRECTORIES ${Vc_INCLUDE_DIR})
 
   find_package_handle_standard_args(Vc
     FOUND_VAR Vc_FOUND
     REQUIRED_VARS Vc_INCLUDE_DIR Vc_LIBRARIES Vc_CMAKE_MODULES_DIR
     VERSION_VAR Vc_VERSION)
+
+  # FIXME: This is a workaround to let ROOT find the headers at runtime if
+  # they are in the build directory. This is necessary until we decide how to
+  # treat externals with headers used by ROOT
+  if(NOT EXISTS ${CMAKE_BINARY_DIR}/include/Vc)
+    if (NOT EXISTS ${CMAKE_BINARY_DIR}/include)
+      execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/include)
+    endif()
+    execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
+      ${Vc_INCLUDE_DIR}/Vc ${CMAKE_BINARY_DIR}/include/Vc)
+  endif()
+  # end of workaround
 
   install(DIRECTORY ${Vc_ROOTDIR}/ DESTINATION ".")
 endif()
@@ -1360,11 +1365,6 @@ if(Vc_FOUND)
 endif()
 
 #---Check for VecCore--------------------------------------------------------------------
-if(veccore AND NOT builtin_veccore AND builtin_vc)
-  message(WARNING "Vc is not relocatable, so 'builtin_vc' requires 'builtin_veccore' to set up Vc properly.")
-  set(builtin_veccore ON CACHE BOOL "" FORCE)
-endif()
-
 if(builtin_veccore)
   unset(VecCore_FOUND)
   unset(VecCore_FOUND CACHE)
@@ -1373,45 +1373,30 @@ elseif(veccore)
   if(vc)
     set(VecCore_COMPONENTS Vc)
   endif()
-  if(fail-on-missing)
-    find_package(VecCore 0.4.0 CONFIG QUIET REQUIRED COMPONENTS ${VecCore_COMPONENTS})
+  find_package(VecCore 0.4.2 CONFIG QUIET COMPONENTS ${VecCore_COMPONENTS})
+  if(NOT VecCore_FOUND)
+    message(STATUS "VecCore not found, switching on 'builtin_veccore' option.")
+    set(builtin_veccore ON CACHE BOOL "" FORCE)
   else()
-    find_package(VecCore 0.4.0 CONFIG QUIET COMPONENTS ${VecCore_COMPONENTS})
-    if(NOT VecCore_FOUND)
-      message(STATUS "VecCore not found, support for it disabled.")
-      message(STATUS "Please enable the option 'builtin_veccore' to build VecCore internally.")
-      set(veccore OFF CACHE BOOL "" FORCE)
-    endif()
-  endif()
-  if(VecCore_FOUND)
-    # FIXME - The altenative is to add include_dirs to all packages that include any Math headers
-    execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/include)
-    execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink ${VecCore_INCLUDE_DIR}/VecCore ${CMAKE_BINARY_DIR}/include/VecCore)
+    set_property(DIRECTORY APPEND PROPERTY INCLUDE_DIRECTORIES ${VecCore_INCLUDE_DIRS})
   endif()
 endif()
 
 if(veccore AND NOT VecCore_FOUND)
-  set(VecCore_VERSION "0.4.1")
+  set(VecCore_VERSION "0.4.2")
   set(VecCore_PROJECT "VecCore-${VecCore_VERSION}")
   set(VecCore_SRC_URI "${lcgpackages}/${VecCore_PROJECT}.tar.gz")
-  set(VecCore_SRC_MD5 "7728dc706744e54a79fcb80059a31529")
-  set(VecCore_DESTDIR "${CMAKE_BINARY_DIR}/VECCORE-prefix/install")
+  set(VecCore_SRC_MD5 "98f14acc557318d991ab9b748c7145e4")
+  set(VecCore_DESTDIR "${CMAKE_BINARY_DIR}/externals")
   set(VecCore_ROOTDIR "${VecCore_DESTDIR}/${CMAKE_INSTALL_PREFIX}")
-
-  if(builtin_vc)
-    set(Vc_VERSION "1.3.2") # version built by VecCore
-    set(Vc_LIBNAME "${CMAKE_STATIC_LIBRARY_PREFIX}Vc${CMAKE_STATIC_LIBRARY_SUFFIX}")
-    set(Vc_LIBRARY "${VecCore_ROOTDIR}/lib/${Vc_LIBNAME}")
-  endif()
 
   ExternalProject_Add(VECCORE
     URL     ${VecCore_SRC_URI}
     URL_MD5 ${VecCore_SRC_MD5}
     BUILD_IN_SOURCE 0
-    BUILD_BYPRODUCTS ${Vc_LIBRARY}
     LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
     CMAKE_ARGS -G ${CMAKE_GENERATOR}
-               -DBUILD_TESTING=OFF -DBUILD_VC=${builtin_vc}
+               -DBUILD_TESTING=OFF
                -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
                -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
                -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
@@ -1421,55 +1406,45 @@ if(veccore AND NOT VecCore_FOUND)
     INSTALL_COMMAND env DESTDIR=${VecCore_DESTDIR} ${CMAKE_COMMAND} --build . --target install
   )
 
-  set(VECCORE_TARGET VECCORE)
+  set(VECCORE_TARGET VecCore)
+  set(VecCore_LIBRARIES VecCore)
+  set(VecCore_INCLUDE_DIRS ${VecCore_INCLUDE_DIRS} ${VecCore_ROOTDIR}/include)
 
-  if(builtin_vc)
-    add_library(Vc STATIC IMPORTED)
-    set_property(TARGET Vc PROPERTY IMPORTED_LOCATION ${Vc_LIBRARY})
-    add_dependencies(Vc VECCORE)
+  add_library(VecCore INTERFACE)
+  target_include_directories(VecCore SYSTEM INTERFACE $<BUILD_INTERFACE:${VecCore_ROOTDIR}/include>)
+  add_dependencies(VecCore VECCORE)
 
-    set(Vc_LIBRARIES Vc)
-    set(Vc_INCLUDE_DIR ${VecCore_ROOTDIR}/include)
-    set(Vc_INCLUDE_DIRS ${VecCore_ROOTDIR}/include)
-    set(Vc_CMAKE_MODULES_DIR "${VecCore_ROOTDIR}/lib/cmake/Vc")
+  # propagate build-time include directories to rootcling
+  set_property(DIRECTORY APPEND PROPERTY INCLUDE_DIRECTORIES ${VecCore_ROOTDIR}/include)
 
-    find_package_handle_standard_args(Vc
-      FOUND_VAR Vc_FOUND
-      REQUIRED_VARS Vc_INCLUDE_DIR Vc_LIBRARIES Vc_CMAKE_MODULES_DIR
-      VERSION_VAR Vc_VERSION)
-  endif()
-
-  if (vc OR builtin_vc)
+  if (Vc_FOUND)
     set(VecCore_Vc_FOUND True)
     set(VecCore_Vc_DEFINITIONS -DVECCORE_ENABLE_VC)
     set(VecCore_Vc_INCLUDE_DIR ${Vc_INCLUDE_DIR})
     set(VecCore_Vc_LIBRARIES ${Vc_LIBRARIES})
 
-    set(VecCore_DEFINITIONS -DVECCORE_ENABLE_VC)
-    set(VecCore_INCLUDE_DIRS ${Vc_INCLUDE_DIR})
-    set(VecCore_LIBRARIES ${Vc_LIBRARIES})
+    set(VecCore_DEFINITIONS ${VecCore_Vc_DEFINITIONS})
+    set(VecCore_INCLUDE_DIRS ${VecCore_Vc_INCLUDE_DIR} ${VecCore_INCLUDE_DIRS})
+    set(VecCore_LIBRARIES ${VecCore_LIBRARIES} ${Vc_LIBRARIES})
+    target_link_libraries(VecCore INTERFACE ${Vc_LIBRARIES})
   endif()
-
-  set(VecCore_INCLUDE_DIRS ${VecCore_INCLUDE_DIRS} ${VecCore_ROOTDIR}/include)
 
   find_package_handle_standard_args(VecCore
     FOUND_VAR VecCore_FOUND
-    REQUIRED_VARS VecCore_INCLUDE_DIRS
+    REQUIRED_VARS VecCore_INCLUDE_DIRS VecCore_LIBRARIES
     VERSION_VAR VecCore_VERSION)
 
-  # The following few lines are a temporary fix for a breakage introduced
-  # recently in math/mathcore VecCore integration. Once the proper solution
-  # is found, the lines below should be removed from here and added to the
-  # proper targets.
-  add_definitions(${VecCore_DEFINITIONS})
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${VecCore_DEFINITIONS}")
-  include_directories(SYSTEM BEFORE ${VecCore_INCLUDE_DIRS})
-
-  # Copy Vc and VecCore headers to build directory, otherwise dictionary generation breaks
-  add_custom_command(TARGET VECCORE POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory ${VecCore_INCLUDE_DIRS}/ ${CMAKE_BINARY_DIR}/include)
-
-  ### End of temporary fix
+  # FIXME: This is a workaround to let ROOT find the headers at runtime if
+  # they are in the build directory. This is necessary until we decide how to
+  # treat externals with headers used by ROOT
+  if(NOT EXISTS ${CMAKE_BINARY_DIR}/include/VecCore)
+    if (NOT EXISTS ${CMAKE_BINARY_DIR}/include)
+      execute_process(COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/include)
+    endif()
+    execute_process(COMMAND ${CMAKE_COMMAND} -E create_symlink
+      ${VecCore_ROOTDIR}/include/VecCore ${CMAKE_BINARY_DIR}/include/VecCore)
+  endif()
+  # end of workaround
 
   install(DIRECTORY ${VecCore_ROOTDIR}/ DESTINATION ".")
 endif()
@@ -1507,6 +1482,22 @@ if(vdt OR builtin_vdt)
     install(DIRECTORY ${CMAKE_BINARY_DIR}/include/vdt
             DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT extra-headers)
     set(vdt ON CACHE BOOL "" FORCE)
+  endif()
+endif()
+
+#---Check for VecGeom--------------------------------------------------------------------
+if (vecgeom)
+  message(STATUS "Looking for VecGeom")
+  find_package(VecGeom ${VecGeom_FIND_VERSION} CONFIG QUIET)
+  if(NOT VecGeom_FOUND )
+    if(fail-on-missing)
+      message(FATAL_ERROR "VecGeom not found. Ensure that the installation of VecGeom is in the CMAKE_PREFIX_PATH")
+    else()
+      message(STATUS "VecGeom not found. Ensure that the installation of VecGeom is in the CMAKE_PREFIX_PATH")
+      message(STATUS "              example: CMAKE_PREFIX_PATH=<VecGeom_install_path>/lib/CMake/VecGeom")
+      message(STATUS "              For the time being switching OFF 'vecgeom' option")
+      set(vecgeom OFF CACHE BOOL "" FORCE)
+    endif()
   endif()
 endif()
 

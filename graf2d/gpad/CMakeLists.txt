@@ -8,7 +8,14 @@ if(root7)
     ROOT_GLOB_HEADERS(Gpad_v7_dict_headers ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc/ROOT/T*.hxx)
 endif()
 
-ROOT_GENERATE_DICTIONARY(G__Gpad *.h ${Gpad_v7_dict_headers} MODULE Gpad LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM" DEPENDENCIES Graf MultiProc Hist)
+ROOT_STANDARD_LIBRARY_PACKAGE(Gpad
+                              HEADERS *.h ${Gpad_v7_dict_headers}
+                              SOURCES *.cxx ${root7src}
+                              DICTIONARY_OPTIONS "-writeEmptyRootPCM"
+                              DEPENDENCIES Graf Hist)
 
-ROOT_LINKER_LIBRARY(Gpad *.cxx ${root7src} G__Gpad.cxx DEPENDENCIES Graf Hist)
-ROOT_INSTALL_HEADERS()
+if(testing)
+    if(root7)
+        add_subdirectory(v7/test)
+    endif()
+endif()

@@ -37,8 +37,10 @@ endif()
 set_source_files_properties(src/TGLFontManager.cxx PROPERTIES COMPILE_FLAGS "${FTGL_CFLAGS}")
 set_source_files_properties(src/TGLText.cxx PROPERTIES COMPILE_FLAGS "${FTGL_CFLAGS}")
 
-ROOT_GENERATE_DICTIONARY(G__RGL ${headers} MODULE RGL LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM" DEPENDENCIES Hist Gui Ged)
-
-ROOT_LINKER_LIBRARY(RGL ${sources} G__RGL.cxx  LIBRARIES ${gllibs} ${GL2PS_LIBRARIES} GLEW ${FTGL_LIBRARIES} DEPENDENCIES Hist Gui Ged)
-
-ROOT_INSTALL_HEADERS(${installoptions})
+ROOT_STANDARD_LIBRARY_PACKAGE(RGL
+                              HEADERS ${headers}
+                              SOURCES ${sources}
+                              DICTIONARY_OPTIONS "-writeEmptyRootPCM"
+                              LIBRARIES ${gllibs} ${GL2PS_LIBRARIES} GLEW ${FTGL_LIBRARIES}
+                              DEPENDENCIES Hist Gui Ged
+                              INSTALL_OPTIONS ${installoptions})

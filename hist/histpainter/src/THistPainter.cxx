@@ -301,6 +301,7 @@ using `TH1::GetOption`:
 | "SURF3"   | Same as SURF with in addition a contour view drawn on the top.|
 | "SURF4"   | Draw a surface using Gouraud shading.|
 | "SURF5"   | Same as SURF3 but only the colored contour is drawn. Used with option CYL, SPH or PSR it allows to draw colored contours on a sphere, a cylinder or a in pseudo rapidity space. In cartesian or polar coordinates, option SURF3 is used.|
+| "LEGO9"   | Draw the 3D axis only. Mainly needed for internal use |
 | "FB"      | With LEGO or SURFACE, suppress the Front-Box.|
 | "BB"      | With LEGO or SURFACE, suppress the Back-Box.|
 | "A"       | With LEGO or SURFACE, suppress the axis.|
@@ -317,6 +318,7 @@ using `TH1::GetOption`:
 | "BOX"    | Draw a for each cell with volume proportional to the content's absolute value. An hidden line removal algorithm is used|
 | "BOX1"   | Same as BOX but an hidden surface removal algorithm is used|
 | "BOX2"   | The boxes' colors are picked in the current palette according to the bins' contents|
+| "BOX2Z"  | Same as "BOX2". In addition the color palette is also drawn.|
 | "BOX3"   | Same as BOX1, but the border lines of each lego-bar are not drawn.|
 | "LEGO"   | Same as `BOX`.|
 
@@ -2517,6 +2519,7 @@ End_Macro
 | "BOX"    | Draw a for each cell with volume proportional to the content's absolute value. An hidden line removal algorithm is used|
 | "BOX1"   | Same as BOX but an hidden surface removal algorithm is used|
 | "BOX2"   | The boxes' colors are picked in the current palette according to the bins' contents|
+| "BOX2Z"  | Same as "BOX2". In addition the color palette is also drawn.|
 | "BOX3"   | Same as BOX1, but the border lines of each lego-bar are not drawn.|
 
 Note that instead of `BOX` one can also use `LEGO`.
@@ -2588,7 +2591,7 @@ Begin_Macro(source)
       z = abs(sin(x)/x + cos(y)*y);
       h3box->Fill(x,y,z);
    }
-   h3box->Draw("BOX2");
+   h3box->Draw("BOX2 Z");
 }
 End_Macro
 
@@ -3815,6 +3818,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
       if (l[4] == '2') { Hoption.Lego = 12; l[4] = ' '; }
       if (l[4] == '3') { Hoption.Lego = 13; l[4] = ' '; }
       if (l[4] == '4') { Hoption.Lego = 14; l[4] = ' '; }
+      if (l[4] == '9') { Hoption.Lego = 19; l[4] = ' '; }
       l = strstr(chopt,"FB"); if (l) { Hoption.FrontBox = 0; strncpy(l,"  ",2); }
       l = strstr(chopt,"BB"); if (l) { Hoption.BackBox = 0;  strncpy(l,"  ",2); }
       l = strstr(chopt,"0");  if (l) { Hoption.Zero = 1;  strncpy(l," ",1); }
@@ -3900,6 +3904,8 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
          Hoption.Scat = 0;
          Hoption.Box  = 1;
          if (l[3] == '1') { Hoption.Box = 11; l[3] = ' '; }
+         if (l[3] == '2') { Hoption.Box = 12; l[3] = ' '; }
+         if (l[3] == '3') { Hoption.Box = 13; l[3] = ' '; }
       } else {
          Hoption.Hist = 1;
       }
@@ -4196,7 +4202,8 @@ void THistPainter::Paint(Option_t *option)
       return;
    }
 
-   if (Hoption.Bar >= 20) {PaintBarH(option);
+   if (Hoption.Bar >= 20) {
+      PaintBarH(option);
       delete [] fXbuf; delete [] fYbuf;
       return;
    }
@@ -4714,6 +4721,7 @@ void THistPainter::PaintBarH(Option_t *)
    }
 
    PaintFrame();
+   PaintAxis(kFALSE);
 
    Int_t bar = Hoption.Bar - 20;
    Double_t xmin,xmax,ymin,ymax,umin,umax,w;
@@ -4753,6 +4761,7 @@ void THistPainter::PaintBarH(Option_t *)
    }
 
    PaintTitle();
+
    //    Draw box with histogram statistics and/or fit parameters
    if (Hoption.Same != 1 && !fH->TestBit(TH1::kNoStats)) {  // bit set via TH1::SetStats
       TIter next(fFunctions);
@@ -4764,7 +4773,6 @@ void THistPainter::PaintBarH(Option_t *)
       PaintStat(gStyle->GetOptStat(),(TF1*)obj);
    }
 
-   PaintAxis(kFALSE);
    fXaxis = xaxis;
    fYaxis = yaxis;
 }
@@ -6565,25 +6573,25 @@ void THistPainter::PaintH3(Option_t *option)
 {
 
    char *cmd;
-   TString opt = fH->GetDrawOption();
+   TString opt = option;
    opt.ToLower();
    Int_t irep;
 
-   if (fH->GetDrawOption() && (strstr(opt,"box") ||  strstr(opt,"lego"))) {
-      if (strstr(opt,"1")) {
+   if (Hoption.Box || Hoption.Lego) {
+      if (Hoption.Box == 11 || Hoption.Lego == 11) {
          PaintH3Box(1);
-      } else if (strstr(opt,"2")) {
+      } else if (Hoption.Box == 12 || Hoption.Lego == 12) {
          PaintH3Box(2);
-      } else if (strstr(opt,"3")) {
+      } else if (Hoption.Box == 13 || Hoption.Lego == 13) {
          PaintH3Box(3);
       } else {
          PaintH3BoxRaster();
       }
       return;
-   } else if (fH->GetDrawOption() && strstr(opt,"iso")) {
+   } else if (strstr(opt,"iso")) {
       PaintH3Iso();
       return;
-   } else if (strstr(option,"tf3")) {
+   } else if (strstr(opt,"tf3")) {
       PaintTF3();
       return;
    } else {
@@ -7204,6 +7212,16 @@ void THistPainter::PaintH3Box(Int_t iopt)
    if (!Hoption.Axis && !Hoption.Same) PaintLegoAxis(axis, 90);
    PaintTitle();
 
+   // Draw palette. if needed.
+   if (Hoption.Zscale) {
+      Int_t ndiv   = fH->GetContour();
+      if (ndiv == 0 ) {
+         ndiv = gStyle->GetNumberContours();
+         fH->SetContour(ndiv);
+      }
+      PaintPalette();
+   }
+
    delete axis;
    delete fLego; fLego = 0;
 
@@ -7670,6 +7688,14 @@ void THistPainter::PaintLego(Option_t *)
 
    if (raster) fLego->InitRaster(-1.1,-1.1,1.1,1.1,1000,800);
    else        fLego->InitMoveScreen(-1.1,1.1);
+
+   if (Hoption.Lego == 19) {
+      fLego->SetDrawFace(&TPainter3dAlgorithms::DrawFaceMove1);
+      if (Hoption.BackBox)   fLego->BackBox(90);
+      if (Hoption.FrontBox)  fLego->FrontBox(90);
+      if (!Hoption.Axis)     PaintLegoAxis(axis, 90);
+      return;
+   }
 
    if (Hoption.Lego == 11 || Hoption.Lego == 12) {
       if (Hoption.System == kCARTESIAN && Hoption.BackBox) {

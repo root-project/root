@@ -40,8 +40,8 @@ const char *rootClingHelp =
    " -v\tThe verbose flags have the following meaning:                          \n"
    "  -v   Display all messages                                                 \n"
    "  -v0  Display no messages at all.                                          \n"
-   "  -v1  Display only error messages (default).                               \n"
-   "  -v2  Display error and warning messages.                                  \n"
+   "  -v1  Display only error messages.                                         \n"
+   "  -v2  Display error and warning messages (default).                        \n"
    "  -v3  Display error, warning and note messages.                            \n"
    "  -v4  Display all messages                                                 \n"
    "                                                                            \n"
@@ -994,20 +994,17 @@ bool CheckClassDef(const clang::RecordDecl &cl, const cling::Interpreter &interp
    }
    bool isAbstract = clxx->isAbstract();
 
-   bool result = true;
    if (!isAbstract && InheritsFromTObject(clxx, interp) && !InheritsFromTSelector(clxx, interp) && !hasClassDef) {
       std::string qualName;
       ROOT::TMetaUtils::GetQualifiedName(qualName, cl);
       const char *qualName_c = qualName.c_str();
-      ROOT::TMetaUtils::Error(qualName_c,
-                              "%s inherits from TObject but does not have its own ClassDef\n",
-                              qualName_c);
-      // We do want to always output the message (hence the Error level)
-      // but still want rootcling to succeed.
-      result = true;
+      ROOT::TMetaUtils::Warning(qualName_c, "The data members of %s will not be stored, "
+                                            "because it inherits from TObject but does not "
+                                            "have its own ClassDef.\n",
+                                qualName_c);
    }
 
-   return result;
+   return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2238,6 +2235,64 @@ static bool GenerateAllDict(TModuleGenerator &modGen, clang::CompilerInstance *c
    return WriteAST(modGen.GetModuleFileName(), compilerInstance, iSysRoot);
 }
 
+static void
+foreachHeaderInModule(const clang::Module &module, const std::function<void(const clang::Module::Header &)> &closure)
+{
+   // Iterates over all headers in a module and calls the closure on each.
+
+   // FIXME: We currently have to hardcode '4' to do this. Maybe we
+   // will have a nicer way to do this in the future.
+   // NOTE: This is on purpose '4', not '5' which is the size of the
+   // vector. The last element is the list of excluded headers which we
+   // obviously don't want to check here.
+   const std::size_t publicHeaderIndex = 4;
+
+   // Integrity check in case this array changes its size at some point.
+   const std::size_t maxArrayLength = ((sizeof module.Headers) / (sizeof *module.Headers));
+   static_assert(publicHeaderIndex + 1 == maxArrayLength,
+                 "'Headers' has changed it's size, we need to update publicHeaderIndex");
+
+   for (std::size_t i = 0; i < publicHeaderIndex; i++) {
+      auto &headerList = module.Headers[i];
+      for (const clang::Module::Header &moduleHeader : headerList) {
+         closure(moduleHeader);
+      }
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Includes all headers in the given module from this interpreter.
+static void IncludeModuleHeaders(TModuleGenerator &modGen, clang::Module *module, cling::Interpreter &interpreter)
+{
+   // Make a list of modules and submodules that we can check for headers.
+   // We use a SetVector to prevent an infinite loop in unlikely case the
+   // modules somehow are messed up and don't form a tree...
+   llvm::SetVector<clang::Module *> modules;
+   modules.insert(module);
+   for (size_t i = 0; i < modules.size(); ++i) {
+      clang::Module *M = modules[i];
+      for (clang::Module *subModule : M->submodules())
+         modules.insert(subModule);
+   }
+   // List of includes the interpreter has to parse.
+   std::stringstream includes;
+   // Now we include all header files from the previously collected modules.
+   // FIXME: This might hide that we have a missing include if one of the
+   // previous headers already includes this. We should reuse the clang way
+   // of doing this and 'import' each header in its own submodule, then let
+   // the visibility of the decls handle this situation nicely.
+   for (clang::Module *module : modules) {
+      foreachHeaderInModule(*module, [&includes](const clang::Module::Header &h) {
+         includes << "#include \"" << h.NameAsWritten << "\"\n";
+      });
+   }
+   std::string includeListStr = includes.str();
+   auto result = interpreter.declare(includeListStr);
+   if (result != cling::Interpreter::CompilationResult::kSuccess) {
+      ROOT::TMetaUtils::Error("IncludeModuleHeaders", "Couldn't include headers:\n%s!\n", includeListStr.c_str());
+   }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns true iff a given module (and its submodules) contains all headers
 /// needed by the given ModuleGenerator.
@@ -2259,18 +2314,8 @@ static bool ModuleContainsHeaders(TModuleGenerator &modGen, clang::Module *modul
    // Now we collect all header files from the previously collected modules.
    std::set<std::string> moduleHeaders;
    for (clang::Module *module : modules) {
-      // Iterate over all header types in a module.
-      // FIXME: We currently have to hardcode '4' to do this. Maybe we
-      // will have a nicer way to do this in the future.
-      // NOTE: This is on purpose '4', not '5' which is the size of the
-      // vector. The last element is the list of excluded headers which we
-      // obviously don't want to check here.
-      for (int i = 0; i < 4; i++) {
-         auto &headerList = module->Headers[i];
-         for (const clang::Module::Header &moduleHeader : headerList) {
-            moduleHeaders.insert(moduleHeader.NameAsWritten);
-         }
-      }
+      foreachHeaderInModule(
+         *module, [&moduleHeaders](const clang::Module::Header &h) { moduleHeaders.insert(h.NameAsWritten); });
    }
 
    // Go through the list of headers that are required by the ModuleGenerator
@@ -2289,48 +2334,15 @@ static bool ModuleContainsHeaders(TModuleGenerator &modGen, clang::Module *modul
 ////////////////////////////////////////////////////////////////////////////////
 /// Generates a module from the given ModuleGenerator and CompilerInstance.
 /// Returns true iff the PCM was succesfully generated.
-static bool GenerateModule(TModuleGenerator &modGen, clang::CompilerInstance *CI)
+static bool GenerateModule(TModuleGenerator &modGen, const std::string &resourceDir, cling::Interpreter &interpreter,
+                           StringRef LinkdefPath, const std::string &moduleName)
 {
-   assert(!modGen.IsPCH() && "modGen must not be in PCH mode");
-
-   std::string outputFile = modGen.GetModuleFileName();
-   std::string includeDir = gDriverConfig->fTROOT__GetIncludeDir();
+   clang::CompilerInstance *CI = interpreter.getCI();
    clang::HeaderSearch &headerSearch = CI->getPreprocessor().getHeaderSearchInfo();
-   auto &fileMgr = headerSearch.getFileMgr();
-
-   // Load the modulemap from the ROOT include directory.
-   clang::ModuleMap &moduleMap = headerSearch.getModuleMap();
-   std::string moduleMapPath = includeDir + "/module.modulemap";
-   auto moduleFile = fileMgr.getFile(moduleMapPath);
-
-   // Check if we actually found the modulemap file...
-   if (!moduleFile) {
-      ROOT::TMetaUtils::Error("GenerateModule", "Couldn't find ROOT modulemap in"
-                                                " %s! Ensure that cxxmodules=On is set in CMake.\n",
-                              moduleMapPath.c_str());
-      return false;
-   }
-
-   moduleMap.parseModuleMapFile(moduleFile, false, fileMgr.getDirectory(includeDir));
-
-   // Try to get the module name in the modulemap based on the filepath.
-   std::string moduleName = llvm::sys::path::filename(outputFile);
-   // For module "libCore.so" we have the file name "libCore_rdict.pcm".
-   // We replace this suffix with ".so" to get the name in the modulefile.
-   if (StringRef(moduleName).endswith("_rdict.pcm")) {
-      auto lengthWithoutSuffix = moduleName.size() - strlen("_rdict.pcm");
-      moduleName = moduleName.substr(0, lengthWithoutSuffix) + ".so";
-   }
+   headerSearch.loadTopLevelSystemModules();
 
    // Actually lookup the module on the computed module name.
-   clang::Module *module = moduleMap.findModule(moduleName);
-
-   // Inform the user and abort if we can't find a module with a given name.
-   if (!module) {
-      ROOT::TMetaUtils::Error("GenerateModule", "Couldn't find module with name '%s' in modulemap!\n",
-                              moduleName.c_str());
-      return false;
-   }
+   clang::Module *module = headerSearch.lookupModule(StringRef(moduleName));
 
    // Check if the loaded module covers all headers that were specified
    // by the user on the command line. This is an integrity check to
@@ -2348,7 +2360,15 @@ static bool GenerateModule(TModuleGenerator &modGen, clang::CompilerInstance *CI
       ROOT::TMetaUtils::Warning("GenerateModule", warningMessage.c_str());
    }
 
-   return WriteAST(outputFile, CI, "", module);
+   // Inform the user and abort if we can't find a module with a given name.
+   if (!module) {
+      ROOT::TMetaUtils::Error("GenerateModule", "Couldn't find module with name '%s' in modulemap!\n",
+                              moduleName.c_str());
+      return false;
+   }
+
+   IncludeModuleHeaders(modGen, module, interpreter);
+   return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2887,14 +2907,14 @@ int  ExtractClassesListAndDeclLines(RScanner &scan,
                {
                   llvm::raw_string_ostream sstr(mangledName);
                   if (const clang::TypeDecl* TD = llvm::dyn_cast<clang::TypeDecl>(rDecl)) {
-                     mangleCtx->mangleTypeName(clang::QualType(TD->getTypeForDecl(), 0), sstr);
+                     mangleCtx->mangleCXXRTTI(clang::QualType(TD->getTypeForDecl(), 0), sstr);
                   }
                }
                if (!mangledName.empty()) {
                   int errDemangle = 0;
                   char* demangledTIName = TClassEdit::DemangleName(mangledName.c_str(), errDemangle);
                   if (!errDemangle && demangledTIName) {
-                     static const char typeinfoNameFor[] = "typeinfo name for ";
+                     static const char typeinfoNameFor[] = "typeinfo for ";
                      if (!strncmp(demangledTIName, typeinfoNameFor, strlen(typeinfoNameFor))) {
                         std::string demangledName = demangledTIName + strlen(typeinfoNameFor);
                         // See the operations in TCling::AutoLoad(type_info)
@@ -2906,9 +2926,9 @@ int  ExtractClassesListAndDeclLines(RScanner &scan,
                         } // if demangledName != other name
                      } else {
                         ROOT::TMetaUtils::Error("ExtractClassesListAndDeclLines",
-                                                "Demangled typeinfo name '%s' does not start with 'typeinfo name for'\n",
+                                                "Demangled typeinfo name '%s' does not start with 'typeinfo for'\n",
                                                 demangledTIName);
-                     } // if demangled type_info starts with "typeinfo name for "
+                     } // if demangled type_info starts with "typeinfo for "
                   } // if demangling worked
                   free(demangledTIName);
                } // if mangling worked
@@ -3409,6 +3429,9 @@ std::list<std::string> RecordDecl2Headers(const clang::CXXRecordDecl &rcd,
 {
    std::list<std::string> headers;
 
+   // We push a new transaction because we could deserialize decls here
+   cling::Interpreter::PushTransactionRAII RAII(&interp);
+
    // Avoid infinite recursion
    if (!visitedDecls.insert(rcd.getCanonicalDecl()).second)
       return headers;
@@ -3882,6 +3905,10 @@ int RootClingMain(int argc,
          ic++;
       }
    }
+
+   // Set the default verbosity
+   ROOT::TMetaUtils::GetErrorIgnoreLevel() = ROOT::TMetaUtils::kWarning;
+
    if (!strcmp(argv[ic], "-v")) {
       ROOT::TMetaUtils::GetErrorIgnoreLevel() = ROOT::TMetaUtils::kError; // The default is kError
       ic++;
@@ -4152,8 +4179,13 @@ int RootClingMain(int argc,
          }
 
          if (strcmp("-failOnWarnings", argv[ic]) == 0) {
+            using namespace ROOT::TMetaUtils;
             // Fail on Warnings and Errors
-            ROOT::TMetaUtils::GetErrorIgnoreLevel() = ROOT::TMetaUtils::kThrowOnWarning;
+            // If warnings are disabled with the current verbosity settings, lower
+            // it so that the user sees the warning that caused the failure.
+            if (GetErrorIgnoreLevel() > kWarning)
+               GetErrorIgnoreLevel() = kWarning;
+            GetWarningsAreErrors() = true;
             ic += 1;
             continue;
          }
@@ -4219,15 +4251,61 @@ int RootClingMain(int argc,
    clingArgs.push_back("-fsyntax-only");
    clingArgs.push_back("-fPIC");
    clingArgs.push_back("-Xclang");
+   clingArgs.push_back("-fmodules-embed-all-files");
+   clingArgs.push_back("-Xclang");
    clingArgs.push_back("-main-file-name");
    clingArgs.push_back("-Xclang");
    clingArgs.push_back((dictname + ".h").c_str());
 
    ROOT::TMetaUtils::SetPathsForRelocatability(clingArgs);
 
+   // FIXME: This line is from TModuleGenerator, but we can't reuse this code
+   // at this point because TModuleGenerator needs a CompilerInstance (and we
+   // currently create the arguments for creating said CompilerInstance).
+   bool isPCH = (dictpathname == "allDict.cxx");
+   std::string outputFile;
+   // Data is in 'outputFile', therefore in the same scope.
+   StringRef moduleName;
+   std::string vfsArg;
+   // Adding -fmodules to the args will break lexing with __CINT__ defined,
+   // and we actually do lex with __CINT__ and reuse this variable later,
+   // we have to copy it now.
+   auto clingArgsInterpreter = clingArgs;
+   if (!isPCH && getenv("ROOT_MODULES")) {
+      // We just pass -fmodules, the CIFactory will do the rest and configure
+      // clang correctly once it sees this flag.
+      clingArgsInterpreter.push_back("-fmodules");
+
+      // Specify the module name that we can lookup the module in the modulemap.
+      outputFile = llvm::sys::path::stem(sharedLibraryPathName).str();
+      // Try to get the module name in the modulemap based on the filepath.
+      moduleName = llvm::sys::path::filename(outputFile);
+      moduleName.consume_front("lib");
+      moduleName.consume_back("_rdict.pcm");
+
+      clingArgsInterpreter.push_back("-fmodule-name");
+      clingArgsInterpreter.push_back(moduleName.str());
+
+      std::string vfsPath = std::string(gDriverConfig->fTROOT__GetIncludeDir()) + "/modulemap.overlay.yaml";
+      vfsArg = "-ivfsoverlay" + vfsPath;
+      clingArgsInterpreter.push_back(vfsArg.c_str());
+
+      // Set the C++ modules output directory to the directory where we generate
+      // the shared library.
+      clingArgsInterpreter.push_back("-fmodules-cache-path=" +
+                                     llvm::sys::path::parent_path(sharedLibraryPathName).str());
+
+      // If the user has passed ROOT_MODULES with the value 'DEBUG', then we
+      // enable remarks in clang for building on-demand modules. This is useful
+      // to figure out when and why on-demand modules are built by clang.
+      if (llvm::StringRef(getenv("ROOT_MODULES")) == "DEBUG") {
+         clingArgsInterpreter.push_back("-Rmodule-build");
+      }
+   }
+
    // Convert arguments to a C array and check if they are sane
    std::vector<const char *> clingArgsC;
-   for (auto const & clingArg : clingArgs) {
+   for (auto const &clingArg : clingArgsInterpreter) {
       if (!IsCorrectClingArgument(clingArg)){
          std::cerr << "Argument \""<< clingArg << "\" is not a supported cling argument. "
                    << "This could be mistyped rootcling argument. Please check the commandline.\n";
@@ -4264,6 +4342,9 @@ int RootClingMain(int argc,
       interpPtr = owningInterpPtr.get();
    }
    cling::Interpreter &interp = *interpPtr;
+   // FIXME: Remove this once we switch cling to use the driver. This would handle  -fmodules-embed-all-files for us.
+   interp.getCI()->getFrontendOpts().ModulesEmbedAllFiles = true;
+   interp.getCI()->getSourceManager().setAllFilesAreTransient(true);
 
    if (ROOT::TMetaUtils::GetErrorIgnoreLevel() == ROOT::TMetaUtils::kInfo) {
       ROOT::TMetaUtils::Info(0, "\n");
@@ -4865,7 +4946,8 @@ int RootClingMain(int argc,
          if (modGen.IsPCH()) {
             if (!GenerateAllDict(modGen, CI, currentDirectory)) return 1;
          } else if (getenv("ROOT_MODULES")) {
-            if (!GenerateModule(modGen, CI)) return 1;
+            if (!GenerateModule(modGen, resourceDir, interp, linkdefFilename, moduleName.str()))
+               return 1;
          }
       }
    }
@@ -4974,6 +5056,15 @@ int RootClingMain(int argc,
 
    if (genreflex::verbose)
       tmpCatalog.dump();
+
+   // Manually call end of translation unit because we never call the
+   // appropriate deconstructors in the interpreter. This writes out the C++
+   // module file that we currently generate.
+   {
+      cling::Interpreter::PushTransactionRAII RAII(&interp);
+      CI->getSema().getASTConsumer().HandleTranslationUnit(CI->getSema().getASTContext());
+      CI->clearOutputFiles(CI->getDiagnostics().hasErrorOccurred());
+   }
 
    // Before returning, rename the files
    rootclingRetCode += tmpCatalog.commit();
@@ -5467,12 +5558,17 @@ int GenReflexMain(int argc, char **argv)
       "        applied will not be persistified if requested.\n"
       "      - comment [string]: what you could write in code after an inline comment\n"
       "        without \"//\". For example comment=\"!\" or \"||\".\n"
+      "      - noStreamer [true/false]: turns off streamer generation if set to 'true.'\n"
+      "        Default value is 'false'\n"
+      "      - noInputOperator [true/false]: turns off input operator generation if set\n"
+      "        to 'true'. Default value is 'false'\n"
       "      Example XML:\n"
       "        <lcgdict>\n"
       "        [<selection>]\n"
       "          <class [name=\"classname\"] [pattern=\"wildname\"]\n"
       "                 [file_name=\"filename\"] [file_pattern=\"wildname\"]\n"
-      "                 [id=\"xxxx\"] />\n"
+      "                 [id=\"xxxx\"] [noStreamer=\"true/false\"]\n"
+      "                 [noInputOperator=\"true/false\"] />\n"
       "          <class name=\"classname\" >\n"
       "            <field name=\"m_transient\" transient=\"true\"/>\n"
       "            <field name=\"m_anothertransient\" persistent=\"false\"/>\n"
@@ -5999,11 +6095,12 @@ int ROOT_rootcling_Driver(int argc, char **argv, const ROOT::Internal::RootCling
       retVal = RootClingMain(argc, argv);
    }
 
-   auto nerrors = ROOT::TMetaUtils::GetNumberOfWarningsAndErrors();
+   gDriverConfig = nullptr;
+
+   auto nerrors = ROOT::TMetaUtils::GetNumberOfErrors();
    if (nerrors > 0){
       ROOT::TMetaUtils::Info(0,"Problems have been detected during the generation of the dictionary.\n");
+      return 1;
    }
-
-   gDriverConfig = nullptr;
-   return nerrors + retVal;
+   return retVal;
 }

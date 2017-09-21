@@ -29,6 +29,7 @@ ClassImp(TPosixMutex);
 TPosixMutex::TPosixMutex(Bool_t recursive) : TMutexImp()
 {
    if (recursive) {
+      SetBit(kIsRecursive);
 
       int rc;
       pthread_mutexattr_t attr;
@@ -89,4 +90,64 @@ Int_t TPosixMutex::TryLock()
 Int_t TPosixMutex::UnLock(void)
 {
    return pthread_mutex_unlock(&fMutex);
+}
+
+namespace {
+struct TPosixMutexState: public TVirtualMutex::State {
+   int fLockCount = 0;
+};
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Reset the mutex state to unlocked. The state before resetting to unlocked is
+/// returned and can be passed to `Restore()` later on. This function must only
+/// be called while the mutex is locked.
+
+std::unique_ptr<TVirtualMutex::State> TPosixMutex::Reset()
+{
+   std::unique_ptr<TPosixMutexState> pState(new TPosixMutexState);
+   if (TestBit(kIsRecursive)) {
+      while (!UnLock())
+         ++pState->fLockCount;
+      if (!pState->fLockCount)
+         SysError("Reset", "Reset() called on unlocked Mutex!");
+      return std::move(pState);
+   }
+   // Not recursive. Unlocking a non-recursive, non-robust, unlocked mutex has an
+   // undefined return value - so we cannot *guarantee* that the mutex is locked.
+   // But we can try.
+   if (int rc = UnLock()) {
+      SysError("Reset", "pthread_mutex_unlock failed with %d, "
+                        "but Reset() must be called on locked mutex!",
+               rc);
+      return std::move(pState);
+   }
+   ++pState->fLockCount;
+   return std::move(pState);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Restore the mutex state to the state pointed to by `state`. This function
+/// must only be called while the mutex is unlocked.
+
+void TPosixMutex::Restore(std::unique_ptr<TVirtualMutex::State> &&state)
+{
+   TPosixMutexState *pState = dynamic_cast<TPosixMutexState *>(state.get());
+   if (!pState) {
+      if (state) {
+         SysError("Restore", "LOGIC ERROR - invalid state object!");
+         return;
+      }
+      // No state, do nothing.
+      return;
+   }
+
+   if (!pState->fLockCount) {
+      SysError("Reset", "Restore() called with unlocked state!");
+      return;
+   }
+
+   do {
+      Lock();
+   } while (--pState->fLockCount);
 }

@@ -1241,79 +1241,6 @@ bool ASTReader::ReadSourceManagerBlock(ModuleFile &F) {
   }
 }
 
-/// \brief Attempt to resolve the location based on PP header search.
-/// Find the first match with the longest trailing part.
-static StringRef
-resolveFileThroughHeaderSearch(Preprocessor& PP, StringRef Filename,
-                               llvm::StringMap<std::string>& HSStemMap) {
-  // Locate /a/b/c/d.h given the -I paths, by removing leading subdirectories
-  // until a file is found.
-  HeaderSearch& HdrSearch = PP.getHeaderSearchInfo();
-
-  // Iteration through HSStemMap is faster than searching through all possible
-  // stems of Filename, especially as we might have one entry for /a/b/c and
-  // another for /a/b/c/d.
-  for (const auto& entry: HSStemMap) {
-    if (Filename.startswith(entry.getKey())) {
-      StringRef value = entry.getValue();
-      llvm::SmallString<1024> substName = value;
-      llvm::sys::path::append(substName,
-                              Filename.drop_front(entry.getKey().size()));
-      const DirectoryLookup* FoundDir = 0;
-      const FileEntry* FE
-        = HdrSearch.LookupFile(substName, SourceLocation(), true/*isAngled*/,
-                               0/*FromDir*/, FoundDir,
- ArrayRef<std::pair<const FileEntry *, const DirectoryEntry *>>() /*Includers*/,
-                               0/*Searchpath*/, 0/*RelPath*/,
-                               0/*RequestingModule*/, 0/*SuggestedModule*/,
-                               0/*IsMapped*/,
-                               false /*SkipCache*/,
-                               false /*BuildSystemModule*/,
-                               false /*OpenFile*/,
-                               true /*CacheFailure*/);
-      if (FE)
-        return FE->getName();
-    }
-  }
-   bool isAbsolute = true;
-   // Find the longest available match.
-   for (llvm::sys::path::const_iterator
-           IDir = llvm::sys::path::begin(Filename),
-           EDir = llvm::sys::path::end(Filename);
-        IDir != EDir; ++IDir) {
-      if (isAbsolute) {
-         // skip "/" part
-         isAbsolute = false;
-         continue;
-      }
-      size_t lenTrailing = Filename.size() - (IDir->data() - Filename.data());
-      llvm::StringRef trailingPart(IDir->data(), lenTrailing);
-      assert(trailingPart.data() + trailingPart.size()
-             == Filename.data() + Filename.size()
-             && "Mismatched partitioning of file name!");
-      const DirectoryLookup* FoundDir = 0;
-      const FileEntry* FE
-        = HdrSearch.LookupFile(trailingPart, SourceLocation(), true/*isAngled*/,
-                               0/*FromDir*/, FoundDir,
- ArrayRef<std::pair<const FileEntry *, const DirectoryEntry *>>() /*Includers*/,
-                               0/*Searchpath*/, 0/*RelPath*/,
-                               0/*RequestingModule*/, 0/*SuggestedModule*/,
-                               0/*IsMapped*/,
-                               false /*SkipCache*/,
-                               false /*BuildSystemModule*/,
-                               false /*OpenFile*/,
-                               true /*CacheFailure*/);
-     if (FE) {
-       typedef std::pair<StringRef, std::string> HSStemEl_t;
-       size_t lenStem = IDir->data() - Filename.data();
-       HSStemMap.insert(HSStemEl_t(Filename.substr(0, lenStem),
-                                   FoundDir->getName()));
-       return FE->getName();
-     }
-   }
-   return StringRef();
-}
-
 /// \brief If a header file is not found at the path that we expect it to be
 /// and the PCH file was moved from its original location, try to resolve the
 /// file by assuming that header+PCH were moved together and the header is in
@@ -1704,9 +1631,6 @@ bool HeaderFileInfoTrait::EqualKey(internal_key_ref a, internal_key_ref b) {
     return false;
 
   if (llvm::sys::path::is_absolute(a.Filename) && a.Filename == b.Filename)
-    return true;
-
-  if (StringRef(b.Filename).endswith(a.Filename))
     return true;
 
   // Determine whether the actual files are equivalent.
@@ -2125,12 +2049,6 @@ InputFile ASTReader::getInputFile(ModuleFile &F, unsigned ID, bool Complain) {
                                                             CurrentDir);
     if (!Resolved.empty())
       File = FileMgr.getFile(Resolved);
-    if (!File) {
-      StringRef PPResolved = resolveFileThroughHeaderSearch(PP, Filename,
-                                                            HSStemMap);
-      if (!PPResolved.empty())
-        File = FileMgr.getFile(PPResolved);
-    }
   }
 
   // For an overridden file, create a virtual file with the stored
@@ -2213,12 +2131,7 @@ InputFile ASTReader::getInputFile(ModuleFile &F, unsigned ID, bool Complain) {
         Diag(diag::note_pch_rebuild_required) << TopLevelPCHName;
     }
 
-    //IsOutOfDate = true;
-    // Force the match of the file from the live filesystem to the
-    // file in teh PCH. Size and time are used as part of the key;
-    // they must agree on both sides.
-    FileMgr.modifyFileEntry(const_cast<FileEntry*>(File),
-                            StoredSize, StoredTime);
+    IsOutOfDate = true;
   }
   // FIXME: If the file is overridden and we've already opened it,
   // issue an error (or split it into a separate FileEntry).

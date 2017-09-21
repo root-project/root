@@ -132,7 +132,8 @@ private:
 /// object from the file we are reading the TTree from.
 /// Note: the only sane case in which this should happen is when a TH1F* is
 /// returned.
-template<class T, typename std::enable_if<std::is_pointer<T>::value && std::is_constructible<TObject*, T>::value>::type* = nullptr>
+template <class T, typename std::enable_if<std::is_pointer<T>::value && std::is_constructible<TObject *, T>::value &&
+                                           !std::is_constructible<TCollection *, T>::value>::type * = nullptr>
 void DetachRes(T res)
 {
    auto th1p = dynamic_cast<TH1*>(res);
@@ -156,6 +157,20 @@ void DetachRes(T res)
       return;
    }
    return;
+}
+
+// Specialization for TCollections
+template <class T, typename std::enable_if<std::is_pointer<T>::value &&
+                                           std::is_constructible<TCollection *, T>::value>::type * = nullptr>
+void DetachRes(T res)
+{
+   if (res) {
+      TIter nxo(res);
+      TObject *obj = 0;
+      while ((obj = nxo())) {
+         DetachRes(obj);
+      }
+   }
 }
 
 //////////////////////////////////////////////////////////////////////////

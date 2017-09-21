@@ -3,11 +3,10 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-ROOT_GENERATE_DICTIONARY(G__Graf MODULE Graf *.h LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM" DEPENDENCIES Hist Matrix MathCore RIO BUILTINS FREETYPE)
-
-
 include_directories(${FREETYPE_INCLUDE_DIRS})
 
-ROOT_LINKER_LIBRARY(Graf *.cxx G__Graf.cxx LIBRARIES ${FREETYPE_LIBRARIES} ${ZLIB_LIBRARIES} mathtext DEPENDENCIES Hist Matrix MathCore RIO BUILTINS FREETYPE)
+ROOT_STANDARD_LIBRARY_PACKAGE(Graf
+                              DICTIONARY_OPTIONS "-writeEmptyRootPCM"
+                              LIBRARIES ${FREETYPE_LIBRARIES} ${ZLIB_LIBRARIES} mathtext
+                              DEPENDENCIES Hist Matrix MathCore RIO BUILTINS FREETYPE)
 
-ROOT_INSTALL_HEADERS()

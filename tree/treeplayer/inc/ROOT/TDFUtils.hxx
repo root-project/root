@@ -11,8 +11,10 @@
 #ifndef ROOT_TDFUTILS
 #define ROOT_TDFUTILS
 
+#include "ROOT/TDataSource.hxx" // ColumnName2ColumnTypeName
 #include "ROOT/TypeTraits.hxx"
 #include "ROOT/RArrayView.hxx"
+#include "Compression.h"
 #include "TH1.h"
 #include "TTreeReaderArray.h"
 #include "TTreeReaderValue.h"
@@ -27,6 +29,22 @@
 class TTree;
 class TTreeReader;
 
+namespace ROOT {
+namespace Experimental {
+namespace TDF {
+/// A collection of options to steer the creation of the dataset on file
+struct TSnapshotOptions {
+   using ECAlgo = ::ROOT::ECompressionAlgorithm;
+   std::string fMode = "RECREATE";            //< Mode of creation of output file
+   ECAlgo fCompressionAlgorithm = ROOT::kLZ4; //< Compression algorithm of output file
+   Int_t fCompressionLevel = 1;               //< Compression level of output file
+   Int_t fAutoFlush = 0;                      //< AutoFlush value for output tree
+   Int_t fSplitLevel = 99;                    //< Split level of output tree
+};
+}
+}
+}
+
 /// \cond HIDDEN_SYMBOLS
 
 namespace ROOT {
@@ -35,6 +53,7 @@ namespace ROOT {
 namespace Experimental {
 template <int D, typename P, template <int, typename, template <typename> class> class... S>
 class THist;
+
 } // ns Experimental
 
 namespace Detail {
@@ -49,6 +68,7 @@ class TLoopManager;
 // type used for tag dispatching
 struct TInferType {
 };
+
 } // end ns Detail
 } // end ns TDF
 
@@ -56,6 +76,16 @@ namespace Internal {
 namespace TDF {
 using namespace ROOT::TypeTraits;
 using namespace ROOT::Detail::TDF;
+using namespace ROOT::Experimental::TDF;
+
+class TIgnoreErrorLevelRAII {
+private:
+   int fCurIgnoreErrorLevel = gErrorIgnoreLevel;
+
+public:
+   TIgnoreErrorLevelRAII(int errorIgnoreLevel);
+   ~TIgnoreErrorLevelRAII();
+};
 
 /// Compile-time integer sequence generator
 /// e.g. calling GenStaticSeq<3>::type() instantiates a StaticSeq<0,1,2>
@@ -105,10 +135,11 @@ struct TNeedJitting<TInferType> {
 using TVBPtr_t = std::shared_ptr<TTreeReaderValueBase>;
 using TVBVec_t = std::vector<TVBPtr_t>;
 
-std::string ColumnName2ColumnTypeName(const std::string &colName, TTree *, TCustomColumnBase *);
+std::string
+ColumnName2ColumnTypeName(const std::string &colName, TTree *, TCustomColumnBase *, TDataSource * = nullptr);
 
 const char *ToConstCharPtr(const char *s);
-const char *ToConstCharPtr(const std::string s);
+const char *ToConstCharPtr(const std::string &s);
 unsigned int GetNSlots();
 
 /// Choose between TTreeReader{Array,Value} depending on whether the branch type
@@ -133,7 +164,7 @@ using ReaderValueOrArray_t = typename TReaderValueOrArray<T>::Proxy_t;
 template <typename TDFValueTuple, int... S>
 void InitTDFValues(unsigned int slot, TDFValueTuple &valueTuple, TTreeReader *r, const ColumnNames_t &bn,
                    const ColumnNames_t &tmpbn,
-                   const std::map<std::string, std::shared_ptr<TCustomColumnBase>> &tmpBranches, StaticSeq<S...>)
+                   const std::map<std::string, std::shared_ptr<TCustomColumnBase>> &customCols, StaticSeq<S...>)
 {
    // isTmpBranch has length bn.size(). Elements are true if the corresponding
    // branch is a temporary branch created with Define, false if they are
@@ -146,7 +177,7 @@ void InitTDFValues(unsigned int slot, TDFValueTuple &valueTuple, TTreeReader *r,
    // The statement defines a variable with type std::initializer_list<int>, containing all zeroes, and SetTmpColumn or
    // SetProxy are conditionally executed as the braced init list is expanded. The final ... expands S.
    std::initializer_list<int> expander{(isTmpColumn[S]
-                                           ? std::get<S>(valueTuple).SetTmpColumn(slot, tmpBranches.at(bn.at(S)).get())
+                                           ? std::get<S>(valueTuple).SetTmpColumn(slot, customCols.at(bn.at(S)).get())
                                            : std::get<S>(valueTuple).MakeProxy(r, bn.at(S)),
                                         0)...};
    (void)expander; // avoid "unused variable" warnings for expander on gcc4.9
@@ -161,7 +192,8 @@ void CheckFilter(Filter &)
    static_assert(std::is_same<FilterRet_t, bool>::value, "filter functions must return a bool");
 }
 
-void CheckTmpBranch(std::string_view branchName, TTree *treePtr);
+void CheckCustomColumn(std::string_view definedCol, TTree *treePtr, const ColumnNames_t &customCols,
+                       const ColumnNames_t &dataSourceColumns);
 
 ///////////////////////////////////////////////////////////////////////////////
 /// Check that the callable passed to TInterface::Reduce:
@@ -183,11 +215,16 @@ void CheckReduce(F &, T)
    static_assert(sizeof(F) == 0, "reduce function must take exactly two arguments of the same type");
 }
 
+///////////////////////////////////////////////////////////////////////////////
+/// Check as many template parameters were passed as the number of column names, throw if this is not the case.
+void CheckSnapshot(unsigned int nTemplateParams, unsigned int nColumnNames);
+
 /// Return local BranchNames or default BranchNames according to which one should be used
 const ColumnNames_t SelectColumns(unsigned int nArgs, const ColumnNames_t &bl, const ColumnNames_t &defBl);
 
 /// Check whether column names refer to a valid branch of a TTree or have been `Define`d. Return invalid column names.
-ColumnNames_t FindUnknownColumns(const ColumnNames_t &columns, const TLoopManager &lm);
+ColumnNames_t FindUnknownColumns(const ColumnNames_t &requiredCols, TTree *tree, const ColumnNames_t &definedCols,
+                                 const ColumnNames_t &dataSourceColumns);
 
 namespace ActionTypes {
 struct Histo1D {
@@ -234,6 +271,17 @@ template <typename T>
 struct HistoUtils<T, true> {
    static void SetCanExtendAllAxes(T &) {}
    static bool HasAxisLimits(T &) { return true; }
+};
+
+/// `type` is TypeList if MustRemove is false, otherwise it is a TypeList with the first type removed
+template <bool MustRemove, typename TypeList>
+struct RemoveFirstParameterIf {
+   using type = TypeList;
+};
+
+template <typename TypeList>
+struct RemoveFirstParameterIf<true, TypeList> {
+   using type = RemoveFirstParameter_t<TypeList>;
 };
 
 } // end NS TDF

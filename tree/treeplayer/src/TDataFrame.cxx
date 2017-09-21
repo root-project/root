@@ -176,7 +176,8 @@ You can use the objects returned by actions as if they were pointers to the desi
 possible [actions](#overview), and all their results are wrapped in smart pointers; we'll see why in a minute.
 
 ### Applying a filter
-Let's say we want to cut over the value of branch "MET" and count how many events pass this cut. This is one way to do it:
+Let's say we want to cut over the value of branch "MET" and count how many events pass this cut. This is one way to do
+it:
 ~~~{.cpp}
 TDataFrame d("myTree", "file.root");
 auto c = d.Filter("MET > 4.").Count();
@@ -200,7 +201,8 @@ auto metCut = [](double x) { return x > 4.; }; // a c++11 lambda function checki
 auto c = d.Filter(metCut, {"MET"}).Count();
 std::cout << *c << std::endl;
 ~~~
-More information on filters and how to use them to automatically generate cutflow reports can be found [below](#Filters).
+More information on filters and how to use them to automatically generate cutflow reports can be found
+[below](#Filters).
 
 ### Defining custom columns
 Let's now consider the case in which "myTree" contains two quantities "x" and "y", but our analysis relies on a derived
@@ -217,7 +219,8 @@ variables created with `Define` as if they were actual tree branches/columns, bu
 once per event. As with filters, `Define` calls can be chained with other transformations to create multiple custom
 columns. `Define` and `Filter` transformations can be concatenated and intermixed at will.
 
-As with filters, it is possible to specify new columns as string expressions. This snippet is analogous to the one above:
+As with filters, it is possible to specify new columns as string expressions. This snippet is analogous to the one
+above:
 ~~~{.cpp}
 TDataFrame d("myTree", "file.root");
 auto zMean = d.Define("z", "sqrt(x*x + y*y)").Mean("z");
@@ -227,7 +230,8 @@ Again the names of the branches used in the expression and their types are infer
 valid c++ and is just-in-time compiled by the ROOT interpreter, cling -- the process has a small runtime overhead.
 
 Previously, when showing the different ways a TDataFrame can be created, we showed a constructor that only takes a
-number of entries a parameter. In the following example we show how to combine such an "empty" `TDataFrame` with `Define`
+number of entries a parameter. In the following example we show how to combine such an "empty" `TDataFrame` with
+`Define`
 transformations to create a data-set on the fly. We then save the generated data on disk using the `Snapshot` action.
 ~~~{.cpp}
 TDataFrame d(100); // a TDF that will generate 100 entries (currently empty)
@@ -366,7 +370,7 @@ number indicating which thread (0, 1, 2 , ..., poolSize - 1) the function is bei
 ~~~{.cpp}
 // Thread-safe evaluation of RMS of branch "b" using ForeachSlot
 ROOT::EnableImplicitMT();
-unsigned int nSlots = ROOT::GetImplicitMTPoolSize();
+const unsigned int nSlots = ROOT::GetImplicitMTPoolSize();
 std::vector<double> sumSqs(nSlots, 0.);
 std::vector<unsigned int> ns(nSlots, 0);
 
@@ -510,24 +514,36 @@ note that all actions are only executed for events that pass all preceding filte
 | **Lazy actions** | **Description** |
 |------------------|-----------------|
 | Count | Return the number of events processed. |
-| Fill | Fill a user-defined object with the values of the specified branches, as if by calling `Obj.Fill(branch1, branch2, ...). |
+| Fill | Fill a user-defined object with the values of the specified branches, as if by calling `Obj.Fill(branch1,
+branch2, ...). |
 | Histo{1D,2D,3D} | Fill a {one,two,three}-dimensional histogram with the processed branch values. |
 | Max | Return the maximum of processed branch values. |
 | Mean | Return the mean of processed branch values. |
 | Min | Return the minimum of processed branch values. |
 | Profile{1D,2D} | Fill a {one,two}-dimensional profile with the branch values that passed all filters. |
-| Reduce | Reduce (e.g. sum, merge) entries using the function (lambda, functor...) passed as argument. The function must have signature `T(T,T)` where `T` is the type of the branch. Return the final result of the reduction operation. An optional parameter allows initialization of the result object to non-default values. |
+| Reduce | Reduce (e.g. sum, merge) entries using the function (lambda, functor...) passed as argument. The function
+must have signature `T(T,T)` where `T` is the type of the branch. Return the final result of the reduction operation. An
+optional parameter allows initialization of the result object to non-default values. |
 | Take | Build a collection of values of a branch. |
 
 | **Instant actions** | **Description** |
 |---------------------|-----------------|
-| Foreach | Execute a user-defined function on each entry. Users are responsible for the thread-safety of this lambda when executing with implicit multi-threading enabled. |
-| ForeachSlot | Same as `Foreach`, but the user-defined function must take an extra `unsigned int slot` as its first parameter. `slot` will take a different value, `0` to `nThreads - 1`, for each thread of execution. This is meant as a helper in writing thread-safe `Foreach` actions when using `TDataFrame` after `ROOT::EnableImplicitMT()`. `ForeachSlot` works just as well with single-thread execution: in that case `slot` will always be `0`. |
-| Snapshot | Writes processed data-set to disk, in a new `TTree` and `TFile`. Custom columns can be saved as well, filtered entries are not saved. Users can specify which columns to save (default is all). |
+| Foreach | Execute a user-defined function on each entry. Users are responsible for the thread-safety of this lambda
+when executing with implicit multi-threading enabled. |
+| ForeachSlot | Same as `Foreach`, but the user-defined function must take an extra `unsigned int slot` as its first
+parameter. `slot` will take a different value, `0` to `nThreads - 1`, for each thread of execution. This is meant as a
+helper in writing thread-safe `Foreach` actions when using `TDataFrame` after `ROOT::EnableImplicitMT()`. `ForeachSlot`
+works just as well with single-thread execution: in that case `slot` will always be `0`. |
+| Snapshot | Writes processed data-set to disk, in a new `TTree` and `TFile`. Custom columns can be saved as well,
+filtered entries are not saved. Users can specify which columns to save (default is all). Snapshot overwrites the output
+file if it already exists. |
 
 | **Queries** | **Description** |
 |-----------|-----------------|
-| Report | This is not properly an action, since when `Report` is called it does not book an operation to be performed on each entry. Instead, it interrogates the data-frame directly to print a cutflow report, i.e. statistics on how many entries have been accepted and rejected by the filters. See the section on [named filters](#named-filters-and-cutflow-reports) for a more detailed explanation. |
+| Report | This is not properly an action, since when `Report` is called it does not book an operation to be performed
+on each entry. Instead, it interrogates the data-frame directly to print a cutflow report, i.e. statistics on how many
+entries have been accepted and rejected by the filters. See the section on [named
+filters](#named-filters-and-cutflow-reports) for a more detailed explanation. |
 
 ##  <a name="parallel-execution"></a>Parallel execution
 As pointed out before in this document, `TDataFrame` can transparently perform multi-threaded event loops to speed up
@@ -558,17 +574,17 @@ thread-safety, see [here](#generic-actions).
 TDataFrame::TDataFrame(std::string_view treeName, TDirectory *dirPtr, const ColumnNames_t &defaultBranches)
    : TInterface<TDFDetail::TLoopManager>(std::make_shared<TDFDetail::TLoopManager>(nullptr, defaultBranches))
 {
-   const std::string treeNameInt(treeName);
    if (!dirPtr) {
       auto msg = "Invalid TDirectory!";
       throw std::runtime_error(msg);
    }
+   const std::string treeNameInt(treeName);
    auto tree = static_cast<TTree *>(dirPtr->Get(treeNameInt.c_str()));
    if (!tree) {
       auto msg = "Tree \"" + treeNameInt + "\" cannot be found!";
       throw std::runtime_error(msg);
    }
-   fProxiedPtr->SetTree(std::shared_ptr<TTree>(tree, [](TTree *) {}));
+   GetProxiedPtr()->SetTree(std::shared_ptr<TTree>(tree, [](TTree *) {}));
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -581,21 +597,20 @@ TDataFrame::TDataFrame(std::string_view treeName, TDirectory *dirPtr, const Colu
 /// booking of actions or transformations.
 /// See TInterface for the documentation of the
 /// methods available.
-TDataFrame::TDataFrame(std::string_view treeName, std::string_view filenameglob,
-                       const ColumnNames_t &defaultBranches)
+TDataFrame::TDataFrame(std::string_view treeName, std::string_view filenameglob, const ColumnNames_t &defaultBranches)
    : TInterface<TDFDetail::TLoopManager>(std::make_shared<TDFDetail::TLoopManager>(nullptr, defaultBranches))
 {
    const std::string treeNameInt(treeName);
    const std::string filenameglobInt(filenameglob);
-   auto chain = new TChain(treeNameInt.c_str());
+   auto chain = std::make_shared<TChain>(treeNameInt.c_str());
    chain->Add(filenameglobInt.c_str());
-   fProxiedPtr->SetTree(std::shared_ptr<TTree>(static_cast<TTree *>(chain)));
+   GetProxiedPtr()->SetTree(chain);
 }
 
 ////////////////////////////////////////////////////////////////////////////
 /// \brief Build the dataframe
 /// \param[in] tree The tree or chain to be studied.
-/// \param[in] defaultBranches Collection of default branches.
+/// \param[in] defaultBranches Collection of default column names to fall back to when none is specified.
 ///
 /// The default branches are looked at in case no branch is specified in the
 /// booking of actions or transformations.
@@ -607,7 +622,7 @@ TDataFrame::TDataFrame(TTree &tree, const ColumnNames_t &defaultBranches)
 }
 
 //////////////////////////////////////////////////////////////////////////
-/// \brief Build the dataframe
+/// \brief Build a dataframe that generates numEntries entries.
 /// \param[in] numEntries The number of entries to generate.
 ///
 /// An empty-source dataframe constructed with a number of entries will
@@ -615,5 +630,16 @@ TDataFrame::TDataFrame(TTree &tree, const ColumnNames_t &defaultBranches)
 /// and it will do so for all the previously-defined temporary branches.
 TDataFrame::TDataFrame(ULong64_t numEntries)
    : TInterface<TDFDetail::TLoopManager>(std::make_shared<TDFDetail::TLoopManager>(numEntries))
+{
+}
+
+//////////////////////////////////////////////////////////////////////////
+/// \brief Build dataframe associated to datasource.
+/// \param[in] ds The data-source object.
+/// \param[in] defaultBranches Collection of default column names to fall back to when none is specified.
+///
+/// A dataframe associated to a datasource will query it to access column values.
+TDataFrame::TDataFrame(std::unique_ptr<TDataSource> ds, const ColumnNames_t &defaultBranches)
+   : TInterface<TDFDetail::TLoopManager>(std::make_shared<TDFDetail::TLoopManager>(std::move(ds), defaultBranches))
 {
 }

@@ -31,18 +31,24 @@ project.xcworkspace
 
 # Visual Code
 .vscode/*
+.build
 
 # CLion
 .idea/*
 
 # QtCreator
 CMakeLists.txt.user
+*.autosave
+
+# Eclipse
+.settings/*
 
 # Vim
 *.swp
 
 # Other Stuff
 *.d
+tags
 
 # /
 /bin

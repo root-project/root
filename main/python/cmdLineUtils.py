@@ -17,6 +17,12 @@ from contextlib import contextmanager
 import os
 import sys
 
+# Support both Python2 and Python3 at the same time
+if sys.version_info.major > 2 :
+    _input = input
+else:
+    _input = raw_input
+
 def fileno(file_or_fd):
     """
     Look for 'fileno' attribute.
@@ -191,6 +197,14 @@ def isTreeKey(key):
     cl = ROOT.gROOT.GetClass(classname)
     return cl.InheritsFrom(ROOT.TTree.Class())
 
+def isTHnSparseKey(key):
+    """
+    Return True if the object, corresponding to the key, inherits from THnSparse
+    """
+    classname = key.GetClassName()
+    cl = ROOT.gROOT.GetClass(classname)
+    return cl.InheritsFrom(ROOT.THnSparse.Class())
+
 def getKey(rootFile,pathSplit):
     """
     Get the key of the corresponding object (rootFile,pathSplit)
@@ -330,7 +344,7 @@ def patternToPathSplitList(fileName,pattern):
     if pathSplitList == []:
         logging.warning("can't find {0} in {1}".format(pattern,fileName))
 
-    # Same match (remove double occurences from the list)
+    # Same match (remove double occurrences from the list)
     manyOccurenceRemove(pathSplitList,fileName)
 
     return pathSplitList
@@ -482,7 +496,7 @@ def getSourceDestListOptDict(parser, wildcards = True):
 ##########
 
 ##########
-# Several functions shared by roocp, roomv and roorm
+# Several functions shared by rootcp, rootmv and rootrm
 
 TARGET_ERROR = "target '{0}' is not a directory"
 OMITTING_FILE_ERROR = "omitting file '{0}'"
@@ -496,7 +510,7 @@ def copyRootObject(sourceFile,sourcePathSplit,destFile,destPathSplit,oneSource,r
     retcode = 0
     isMultipleInput = not (oneSource and sourcePathSplit != [])
     recursiveOption = recursive
-    # Multiple input and unexisting or non-directory destination
+    # Multiple input and un-existing or non-directory destination
     # TARGET_ERROR
     if isMultipleInput and destPathSplit != [] \
         and not (isExisting(destFile,destPathSplit) \
@@ -663,10 +677,10 @@ def deleteRootObject(rootFile, pathSplit, interactive, recursive):
     else:
         if interactive:
             if pathSplit != []:
-                answer = raw_input(ASK_OBJECT_REMOVE \
+                answer = _input(ASK_OBJECT_REMOVE \
                     .format("/".join(pathSplit),rootFile.GetName()))
             else:
-                answer = raw_input(ASK_FILE_REMOVE \
+                answer = _input(ASK_FILE_REMOVE \
                     .format(rootFile.GetName()))
             remove = answer.lower() == 'y'
         else:
@@ -679,7 +693,7 @@ def deleteRootObject(rootFile, pathSplit, interactive, recursive):
                 os.remove(rootFile.GetName())
     return retcode
 
-# End of functions shared by roocp, roomv and roorm
+# End of functions shared by rootcp, rootmv and rootrm
 ##########
 
 ##########
@@ -707,8 +721,7 @@ REPLACE_HELP = "replace object if already existing"
 
 def _openBrowser(rootFile=None):
     browser = ROOT.TBrowser()
-    if rootFile: rootFile.Browse(browser)
-    raw_input("Press enter to exit.")
+    _input("Press enter to exit.")
 
 def rootBrowse(fileName=None):
     if fileName:
@@ -796,8 +809,8 @@ def _copyTreeSubset(sourceFile,sourcePathSplit,destFile,destPathSplit,firstEvent
     # as well as selecting a range of events by index
     outputTree = bigTree.CopyTree(selectionString,"",numberOfEntries,firstEvent)
 
-    # "Slim" tree by removing branches - 
-    # This is done after the skimming to allow for the user to skim on a 
+    # "Slim" tree by removing branches -
+    # This is done after the skimming to allow for the user to skim on a
     # branch they no longer need to keep
     if branchexclude:
         _setBranchStatus(outputTree,branchexclude,0)
@@ -932,17 +945,21 @@ def _rootLsPrintLongLs(keyList,indent,treeListing):
         datime = key.GetDatime()
         time = datime.GetTime()
         date = datime.GetDate()
+        year = datime.GetYear()
         time = _prepareTime(time)
         rec = \
             [key.GetClassName(), \
             MONTH[int(str(date)[4:6])]+" " +str(date)[6:]+ \
-            " "+time[:2]+":"+time[2:4], \
+            " "+time[:2]+":"+time[2:4]+" "+str(year)+" ", \
             key.GetName(), \
             "\""+key.GetTitle()+"\""]
         write(LONG_TEMPLATE.format(*rec,**dic),indent,end="\n")
         if treeListing and isTreeKey(key):
             tree = key.ReadObj()
             _recursifTreePrinter(tree,indent+2)
+        if treeListing and isTHnSparseKey(key):
+            hs = key.ReadObj()
+            hs.Print('all')
 
 ##
 # The code of the getTerminalSize function can be found here :
@@ -1037,7 +1054,7 @@ def _rootLsPrintSimpleLs(keyList,indent,oneColumn):
     """Print list of strings in columns
     - blue for directories
     - green for trees"""
-    # This code is adaptated from the pprint_list function here :
+    # This code is adapted from the pprint_list function here :
     # http://stackoverflow.com/questions/25026556/output-list-like-ls
     # Thanks hawkjo !!
     if len(keyList) == 0: return
@@ -1361,7 +1378,7 @@ def rootPrint(sourceList, directoryOption = None, divideOption = None, drawOptio
             retcode += 1
             continue
         openRootFiles.append(rootFile)
-        # Fill the key list (almost the same as in rools)
+        # Fill the key list (almost the same as in root)
         keyList = _keyListExtended(rootFile,pathSplitList)
         for key in keyList:
             if isTreeKey(key):

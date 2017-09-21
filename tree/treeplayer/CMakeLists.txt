@@ -3,8 +3,6 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-set(libname TreePlayer)
-
 # TBranchProxyTemplate.h is only used by selectors, to verify that the selector
 # source matches the ROOT interface. It should not end up in the dictionary nor
 # in the PCH.
@@ -20,11 +18,12 @@ else()
   include_directories(SYSTEM ${TBB_INCLUDE_DIRS})
 endif()
 
-ROOT_GENERATE_DICTIONARY(G__${libname} ${dictHeaders} MODULE ${libname} LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM" DEPENDENCIES Tree Graf3d Graf Hist Gpad RIO MathCore MultiProc Imt)
-
-ROOT_LINKER_LIBRARY(${libname} ${sources} G__${libname}.cxx LIBRARIES ${TBB_LIBRARIES} DEPENDENCIES Tree Graf3d Graf Hist Gpad RIO MathCore MultiProc Imt)
-ROOT_INSTALL_HEADERS()
-
+ROOT_STANDARD_LIBRARY_PACKAGE(TreePlayer
+                              HEADERS ${dictHeaders}
+                              SOURCES ${sources}
+                              DICTIONARY_OPTIONS "-writeEmptyRootPCM"
+                              LIBRARIES ${TBB_LIBRARIES}
+                              DEPENDENCIES Tree Graf3d Graf Hist Gpad RIO MathCore MultiProc Imt)
 
 #---Extra rules-------------------------------------------------------
 if(APPLE)

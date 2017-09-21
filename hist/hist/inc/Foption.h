@@ -49,7 +49,7 @@ struct Foption_t {
    int StoreResult; // "S": Stores the result in a TFitResult structure
    int BinVolume;   // "WIDTH": scale content by the bin width/volume
    double hRobust;  //  value of h parameter used in robust fitting
-   ROOT::Fit::ExecutionPolicy ExecPolicy;  //  Choose the execution Policy: kSerial, kMultithread, kMultiprocess
+   ROOT::Fit::ExecutionPolicy ExecPolicy;  //  Choose the execution Policy: "SERIAL", "MULTITHREAD" or "MULTIPROCESS"
 
   Foption_t() :
       Quiet        (0),
@@ -75,7 +75,7 @@ struct Foption_t {
       StoreResult  (0),
       BinVolume    (0),
       hRobust      (0),
-      ExecPolicy   (ROOT::Fit::kSerial)
+      ExecPolicy   (ROOT::Fit::ExecutionPolicy::kSerial)
    {}
 };
 

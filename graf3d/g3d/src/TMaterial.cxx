@@ -83,30 +83,50 @@ void TMaterial::Streamer(TBuffer &R__b)
    UInt_t R__s, R__c;
    if (R__b.IsReading()) {
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
+      R__b.ClassBegin(TMaterial::IsA());
+      R__b.ClassMember("TNamed");
       TNamed::Streamer(R__b);
+      R__b.ClassMember("fNumber", "Int_t");
       R__b >> fNumber;
+      R__b.ClassMember("fA", "Float_t");
       R__b >> fA;
+      R__b.ClassMember("fZ", "Float_t");
       R__b >> fZ;
+      R__b.ClassMember("fDensity", "Float_t");
       R__b >> fDensity;
       if (R__v > 2) {
+         R__b.ClassMember("TAttFill");
          TAttFill::Streamer(R__b);
+         R__b.ClassMember("fRadLength", "Float_t");
          R__b >> fRadLength;
+         R__b.ClassMember("fInterLength", "Float_t");
          R__b >> fInterLength;
       } else {
          fRadLength   = 0;
          fInterLength = 0;
       }
+      R__b.ClassEnd(TMaterial::IsA());
       R__b.CheckByteCount(R__s, R__c, TMaterial::IsA());
    } else {
       R__c = R__b.WriteVersion(TMaterial::IsA(), kTRUE);
+      R__b.ClassBegin(TMaterial::IsA());
+      R__b.ClassMember("TNamed");
       TNamed::Streamer(R__b);
+      R__b.ClassMember("fNumber", "Int_t");
       R__b << fNumber;
+      R__b.ClassMember("fA", "Float_t");
       R__b << fA;
+      R__b.ClassMember("fZ", "Float_t");
       R__b << fZ;
+      R__b.ClassMember("fDensity", "Float_t");
       R__b << fDensity;
+      R__b.ClassMember("TAttFill");
       TAttFill::Streamer(R__b);
+      R__b.ClassMember("fRadLength", "Float_t");
       R__b << fRadLength;
+      R__b.ClassMember("fInterLength", "Float_t");
       R__b << fInterLength;
+      R__b.ClassEnd(TMaterial::IsA());
       R__b.SetByteCount(R__c, kTRUE);
    }
 }

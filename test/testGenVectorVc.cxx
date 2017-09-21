@@ -1,11 +1,10 @@
 // ROOT
+#include "Math/Types.h"
 #include "Math/GenVector/PositionVector3D.h"
 #include "Math/GenVector/DisplacementVector3D.h"
 #include "Math/GenVector/Plane3D.h"
 #include "Math/GenVector/Transform3D.h"
 #include "TStopwatch.h"
-
-#include <Vc/Vc>
 
 // STL
 #include <random>
@@ -21,7 +20,7 @@
 int compare(double v1, double v2, const std::string &name = "", double scale = 1000.0)
 {
    //  ntest = ntest + 1;
-#if defined(__clang__) && defined(__FAST_MATH__)
+#if defined(__FAST_MATH__)
       scale *= 100;
 #endif
    // numerical double limit for epsilon

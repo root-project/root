@@ -3,8 +3,6 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-set(libname TreeViewer)
-
 if(${ROOT_ARCHITECTURE} MATCHES win32old)
   set(headers TTreeViewerOld.h TPaveVar.h)
   set(sources TTreeViewerOld.cxx TPaveVar.cxx)
@@ -18,10 +16,7 @@ else()
   set(linkdef LinkDef.h)
 endif()
 
-
-ROOT_GENERATE_DICTIONARY(G__${libname} ${headers} MODULE ${libname} LINKDEF ${linkdef} OPTIONS "-writeEmptyRootPCM" DEPENDENCIES Gui Ged)
-
-
-ROOT_LINKER_LIBRARY(${libname} ${sources} G__${libname}.cxx LIBRARIES TreePlayer DEPENDENCIES Gui Ged)
-ROOT_INSTALL_HEADERS()
-
+ROOT_STANDARD_LIBRARY_PACKAGE(TreeViewer
+                              HEADERS ${headers}
+                              DICTIONARY_OPTIONS "-writeEmptyRootPCM"
+                              DEPENDENCIES TreePlayer Gui Ged)

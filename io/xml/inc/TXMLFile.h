@@ -77,6 +77,7 @@ public:
 
    virtual void      MakeFree(Long64_t, Long64_t) {}
    virtual void      MakeProject(const char *, const char* ="*", Option_t* ="new") {} // *MENU*
+   virtual void      Map(Option_t *) {} //
    virtual void      Map() {} //
    virtual void      Paint(Option_t* ="") {}
    virtual void      Print(Option_t* ="") const {}

@@ -12,7 +12,6 @@
 #ifndef ROOT_TClass
 #define ROOT_TClass
 
-
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // TClass                                                               //
@@ -34,6 +33,7 @@
 
 #include <atomic>
 #include "ThreadLocalStorage.h"
+
 class TBaseClass;
 class TBrowser;
 class TDataMember;
@@ -65,6 +65,7 @@ namespace ROOT {
       class TCollectionProxyInfo;
    }
 }
+
 typedef ROOT::TMapTypeToTClass IdMap_t;
 typedef ROOT::TMapDeclIdToTClass DeclIdMap_t;
 
@@ -77,16 +78,18 @@ friend class TProtoClass;
 
 public:
    // TClass status bits
-   enum { kClassSaved  = BIT(12), kIgnoreTObjectStreamer = BIT(15),
-          kUnloaded    = BIT(16), // The library containing the dictionary for this class was
-                                  // loaded and has been unloaded from memory.
-          kIsTObject = BIT(17),
-          kIsForeign   = BIT(18),
-          kIsEmulation = BIT(19), // Deprecated
-          kStartWithTObject = BIT(20),  // see comments for IsStartingWithTObject()
-          kWarned      = BIT(21),
-          kHasNameMapNode = BIT(22),
-          kHasCustomStreamerMember = BIT(23) // The class has a Streamer method and it is implemented by the user or an older (not StreamerInfo based) automatic streamer.
+   enum EStatusBits {
+      kClassSaved  = BIT(12),
+      kIgnoreTObjectStreamer = BIT(15),
+      kUnloaded    = BIT(16), // The library containing the dictionary for this class was
+                              // loaded and has been unloaded from memory.
+      kIsTObject = BIT(17),
+      kIsForeign   = BIT(18),
+      kIsEmulation = BIT(19), // Deprecated
+      kStartWithTObject = BIT(20),  // see comments for IsStartingWithTObject()
+      kWarned      = BIT(21),
+      kHasNameMapNode = BIT(22),
+      kHasCustomStreamerMember = BIT(23) // The class has a Streamer method and it is implemented by the user or an older (not StreamerInfo based) automatic streamer.
    };
    enum ENewType { kRealNew = 0, kClassNew, kDummyNew };
    enum ECheckSum {
@@ -112,7 +115,8 @@ public:
                         // through rootcling/genreflex/TMetaUtils and the library
                         // containing this dictionary has been loaded in memory.
       kLoaded = kHasTClassInit,
-      kNamespaceForMeta // Very transient state necessary to bootstrap namespace entries in ROOT Meta w/o interpreter information
+      kNamespaceForMeta // Very transient state necessary to bootstrap namespace entries
+                        // in ROOT Meta w/o interpreter information
    };
 
 private:
@@ -232,9 +236,9 @@ private:
 
    typedef void (*StreamerImpl_t)(const TClass* pThis, void *obj, TBuffer &b, const TClass *onfile_class);
 #ifdef R__NO_ATOMIC_FUNCTION_POINTER
-   mutable StreamerImpl_t fStreamerImpl;  //! Pointer to the function implementing the right streaming behavior for the class represented by this object.
+   mutable StreamerImpl_t fStreamerImpl; //! Pointer to the function implementing streaming for this class
 #else
-   mutable std::atomic<StreamerImpl_t> fStreamerImpl;  //! Pointer to the function implementing the right streaming behavior for the class represented by this object.
+   mutable std::atomic<StreamerImpl_t> fStreamerImpl; //! Pointer to the function implementing streaming for this class
 #endif
 
    Bool_t             CanSplitBaseAllow();
@@ -274,7 +278,7 @@ private:
    static DeclIdMap_t *GetDeclIdMap();  //Map from DeclId_t to TClass pointer
    static std::atomic<Int_t>     fgClassCount;  //provides unique id for a each class
                                                 //stored in TObject::fUniqueID
-   static TDeclNameRegistry fNoInfoOrEmuOrFwdDeclNameRegistry; // Store the decl names of the forwardd and no info instances
+   static TDeclNameRegistry fNoInfoOrEmuOrFwdDeclNameRegistry; // Store decl names of the forwardd and no info instances
    static Bool_t HasNoInfoOrEmuOrFwdDeclaredDecl(const char*);
 
    // Internal status bits, set and reset only during initialization and thus under the protection of the global lock.
@@ -310,11 +314,11 @@ private:
    TClass& operator=(const TClass&) = delete;
 
 protected:
-   TVirtualStreamerInfo     *FindStreamerInfo(TObjArray* arr, UInt_t checksum) const;
-   void                      GetMissingDictionariesForBaseClasses(TCollection& result, TCollection& visited, bool recurse);
-   void                      GetMissingDictionariesForMembers(TCollection& result, TCollection& visited, bool recurse);
-   void                      GetMissingDictionariesWithRecursionCheck(TCollection& result, TCollection& visited, bool recurse);
-   void                      GetMissingDictionariesForPairElements(TCollection& result, TCollection& visited, bool recurse);
+   TVirtualStreamerInfo *FindStreamerInfo(TObjArray *arr, UInt_t checksum) const;
+   void GetMissingDictionariesForBaseClasses(TCollection &result, TCollection &visited, bool recurse);
+   void GetMissingDictionariesForMembers(TCollection &result, TCollection &visited, bool recurse);
+   void GetMissingDictionariesWithRecursionCheck(TCollection &result, TCollection &visited, bool recurse);
+   void GetMissingDictionariesForPairElements(TCollection &result, TCollection &visited, bool recurse);
 
 public:
    TClass();
@@ -368,7 +372,9 @@ public:
    TVirtualCollectionProxy *GetCollectionProxy() const;
    TVirtualIsAProxy  *GetIsAProxy() const;
    TMethod           *GetClassMethod(const char *name, const char *params, Bool_t objectIsConst = kFALSE);
-   TMethod           *GetClassMethodWithPrototype(const char *name, const char *proto, Bool_t objectIsConst = kFALSE, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch);
+   TMethod           *GetClassMethodWithPrototype(const char *name, const char *proto,
+                                                  Bool_t objectIsConst = kFALSE,
+                                                  ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch);
    Version_t          GetClassVersion() const { fVersionUsed = kTRUE; return fClassVersion; }
    Int_t              GetClassSize() const { return Size(); }
    TDataMember       *GetDataMember(const char *datamember) const;
@@ -378,7 +384,11 @@ public:
    ROOT::DelFunc_t    GetDelete() const;
    ROOT::DesFunc_t    GetDestructor() const;
    ROOT::DelArrFunc_t GetDeleteArray() const;
-   ClassInfo_t       *GetClassInfo() const { if (fCanLoadClassInfo && !TestBit(kLoading)) LoadClassInfo(); return fClassInfo; }
+   ClassInfo_t       *GetClassInfo() const {
+      if (fCanLoadClassInfo && !TestBit(kLoading))
+         LoadClassInfo();
+      return fClassInfo;
+   }
    const char        *GetContextMenuTitle() const { return fContextMenuTitle; }
    TVirtualStreamerInfo     *GetCurrentStreamerInfo() {
       if (fCurrentInfo.load()) return fCurrentInfo;
@@ -410,7 +420,8 @@ public:
    void               GetMenuItems(TList *listitems);
    TList             *GetMenuList() const;
    TMethod           *GetMethod(const char *method, const char *params, Bool_t objectIsConst = kFALSE);
-   TMethod           *GetMethodWithPrototype(const char *method, const char *proto, Bool_t objectIsConst = kFALSE, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch);
+   TMethod *GetMethodWithPrototype(const char *method, const char *proto, Bool_t objectIsConst = kFALSE,
+                                   ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch);
    TMethod           *GetMethodAny(const char *method);
    TMethod           *GetMethodAllAny(const char *method);
    Int_t              GetNdata();
@@ -542,8 +553,9 @@ public:
 };
 
 namespace ROOT {
-   template <typename T> TClass* GetClass(      T* /* dummy */)        { return TClass::GetClass(typeid(T)); }
-   template <typename T> TClass* GetClass(const T* /* dummy */)        { return TClass::GetClass(typeid(T)); }
+
+template <typename T> TClass *GetClass(T * /* dummy */)       { return TClass::GetClass(typeid(T)); }
+template <typename T> TClass *GetClass(const T * /* dummy */) { return TClass::GetClass(typeid(T)); }
 
 #ifndef R__NO_CLASS_TEMPLATE_SPECIALIZATION
    // This can only be used when the template overload resolution can distinguish between T* and T**

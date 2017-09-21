@@ -8,11 +8,15 @@
 
 #---Declare ZipLZ4 sources as part of libCore-------------------------------
 set(headers ${CMAKE_CURRENT_SOURCE_DIR}/inc/ZipLZ4.h)
-set(sources ${CMAKE_CURRENT_SOURCE_DIR}/src/ZipLZ4.c)
+set(sources ${CMAKE_CURRENT_SOURCE_DIR}/src/ZipLZ4.cxx)
 
 
-include_directories(${LZ4_INCLUDE_DIR})
+foreach(dir ${LZ4_INCLUDE_DIR})
+	include_directories(${dir})
+endforeach()
+
 ROOT_OBJECT_LIBRARY(Lz4 ${sources})
+target_compile_definitions(Lz4 PRIVATE ${LZ4_DEFINITIONS})
 
 if(builtin_lz4)
   add_dependencies(Lz4 LZ4)

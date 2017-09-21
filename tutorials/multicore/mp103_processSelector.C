@@ -6,8 +6,7 @@
 ///
 /// \macro_code
 ///
-/// \author Anda Chelba
-/// \author Gerardo Ganis
+/// \authors Anda Chelba, Gerardo Ganis
 
 #include "TString.h"
 #include "TROOT.h"

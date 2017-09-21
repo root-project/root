@@ -1,6 +1,14 @@
 #---Check if cmake has the required version-----------------------------------------------------
+
 cmake_minimum_required(VERSION 3.4.3 FATAL_ERROR)
-cmake_policy(SET CMP0005 NEW)
+
+set(policy_new CMP0068)
+foreach(policy ${policy_new})
+  if(POLICY ${policy})
+    cmake_policy(SET ${policy} NEW)
+  endif()
+endforeach()
+
 include(cmake/modules/CaptureCommandLine.cmake)
 
 #---Set name of the project to "ROOT". Has to be done after check of cmake version--------------
@@ -152,6 +160,8 @@ endforeach()
 add_custom_target(move_artifacts DEPENDS ${stamp_file} ${tutorial_files_builddir})
 
 add_subdirectory (interpreter)
+# Add the compilation flags from LLVM to the flags we use to compile cling-based tools.
+set(CLING_CXXFLAGS "${CLING_CXXFLAGS} ${ROOT_LLVM_FLAGS}")
 
 #---CXX MODULES-----------------------------------------------------------------------------------
 if(cxxmodules)
@@ -208,17 +218,21 @@ if (NOT libcxx)
 
   if (cxxmodules)
     set(ROOT_CXXMODULES_COMMONFLAGS "${ROOT_CXXMODULES_COMMONFLAGS} ${__vfs_overlay}")
-  endif(cxxmodules)
+  endif()
 
   # Only use the first path from the HEADERS_LOCATION (which is separated by colons).
   get_property(__libcpp_full_paths GLOBAL PROPERTY ROOT_CLING_CXX_HEADERS_LOCATION)
   string(REGEX MATCHALL "[^:]+" __libcpp_full_paths_list "${__libcpp_full_paths}")
-  list(GET __libcpp_full_paths_list 0 __libcpp_full_path)
+  if (__libcpp_full_paths_list)
+    list(GET __libcpp_full_paths_list 0 __libcpp_full_path)
 
-  configure_file(${CMAKE_SOURCE_DIR}/build/unix/modulemap.overlay.yaml.in ${CMAKE_BINARY_DIR}/include/modulemap.overlay.yaml @ONLY)
+    configure_file(${CMAKE_SOURCE_DIR}/build/unix/modulemap.overlay.yaml.in ${CMAKE_BINARY_DIR}/include/modulemap.overlay.yaml @ONLY)
 
-  configure_file(${CMAKE_SOURCE_DIR}/build/unix/stl.cppmap ${CMAKE_BINARY_DIR}/include/stl.cppmap)
-  configure_file(${CMAKE_SOURCE_DIR}/build/unix/libc.modulemap ${CMAKE_BINARY_DIR}/include/libc.modulemap)
+    configure_file(${CMAKE_SOURCE_DIR}/build/unix/stl.modulemap ${CMAKE_BINARY_DIR}/include/stl.modulemap)
+    configure_file(${CMAKE_SOURCE_DIR}/build/unix/libc.modulemap ${CMAKE_BINARY_DIR}/include/libc.modulemap)
+  else()
+    message(SEND_ERROR "Couldn't find c++ library paths, no modulemap overlay will be installed! (__libcpp_full_paths = '${__libcpp_full_paths}')")
+  endif()
 endif()
 
 if (cxxmodules)
@@ -300,8 +314,15 @@ add_custom_command(OUTPUT etc/dictpch/allLinkDefs.h
                    COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/build/unix/makepchinput.py ${CMAKE_SOURCE_DIR} . ${__clingetcpch} -- ${CMAKE_CXX_FLAGS_SEPARATE}
                    DEPENDS ${CMAKE_SOURCE_DIR}/build/unix/makepchinput.py ${__allFiles})
 
+get_property(incdirs DIRECTORY PROPERTY INCLUDE_DIRECTORIES)
+foreach(d ${incdirs})
+  if(NOT "${d}" MATCHES "AFTER|BEFORE|INTERFACE|PRIVATE|PUBLIC|SYSTEM")
+    set(__allIncludes ${__allIncludes} -I${d})
+  endif()
+endforeach()
+
 add_custom_command(OUTPUT etc/allDict.cxx.pch
-                   COMMAND ${CMAKE_COMMAND} -E env ROOTIGNOREPREFIX=1 ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py etc/allDict.cxx.pch -I${CMAKE_BINARY_DIR}/include
+                   COMMAND ${CMAKE_COMMAND} -E env ROOTIGNOREPREFIX=1 ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py etc/allDict.cxx.pch ${__allIncludes} -I${CMAKE_BINARY_DIR}/include
                    DEPENDS ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py
                            etc/dictpch/allLinkDefs.h
                            etc/dictpch/allHeaders.h

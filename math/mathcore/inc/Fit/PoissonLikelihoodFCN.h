@@ -60,7 +60,7 @@ public:
    /**
       Constructor from unbin data set and model function (pdf)
    */
-   PoissonLikelihoodFCN (const std::shared_ptr<BinData> & data, const std::shared_ptr<IModelFunction> & func, int weight = 0, bool extended = true, ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::kSerial ) :
+   PoissonLikelihoodFCN (const std::shared_ptr<BinData> & data, const std::shared_ptr<IModelFunction> & func, int weight = 0, bool extended = true, const ROOT::Fit::ExecutionPolicy &executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial ) :
       BaseFCN( data, func),
       fIsExtended(extended),
       fWeight(weight),
@@ -72,7 +72,7 @@ public:
    /**
       Constructor from unbin data set and model function (pdf) managed by the users
    */
-   PoissonLikelihoodFCN (const BinData & data, const IModelFunction & func, int weight = 0, bool extended = true, ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::kSerial ) :
+   PoissonLikelihoodFCN (const BinData & data, const IModelFunction & func, int weight = 0, bool extended = true, const ROOT::Fit::ExecutionPolicy &executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial ) :
       BaseFCN(std::shared_ptr<BinData>(const_cast<BinData*>(&data), DummyDeleter<BinData>()), std::shared_ptr<IModelFunction>(dynamic_cast<IModelFunction*>(func.Clone() ) ) ),
       fIsExtended(extended),
       fWeight(weight),
@@ -126,9 +126,11 @@ public:
    }
 
    /// evaluate gradient
-   virtual void Gradient(const double *x, double *g) const {
-      // evaluate the chi2 gradient
-      FitUtil::Evaluate<typename BaseFCN::T>::EvalPoissonLogLGradient(BaseFCN::ModelFunction(), BaseFCN::Data(), x, g);
+   virtual void Gradient(const double *x, double *g) const
+   {
+      // evaluate the Poisson gradient
+      FitUtil::Evaluate<typename BaseFCN::T>::EvalPoissonLogLGradient(BaseFCN::ModelFunction(), BaseFCN::Data(), x, g,
+                                                                      fNEffPoints, fExecutionPolicy);
    }
 
    /// get type of fit method function

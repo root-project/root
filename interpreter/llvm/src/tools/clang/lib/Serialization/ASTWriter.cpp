@@ -4288,7 +4288,7 @@ void ASTWriter::AddToken(const Token &Tok, RecordDataImpl &Record) {
   // FIXME: Should translate token flags to a stable encoding.
   Record.push_back(Tok.getFlags());
   if (Tok.isLiteral())
-     AddString(Tok.getLiteralData(), Record);
+    AddString(StringRef(Tok.getLiteralData(), Tok.getLength()), Record);
 }
 
 void ASTWriter::AddString(StringRef Str, RecordDataImpl &Record) {

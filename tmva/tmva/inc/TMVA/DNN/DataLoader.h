@@ -26,13 +26,17 @@
 #include "TMVA/Event.h"
 
 namespace TMVA {
+
+class DataSetInfo;
+
 namespace DNN  {
 
 //
 // Input Data Types
 //______________________________________________________________________________
 using MatrixInput_t = std::tuple<const TMatrixT<Double_t> &, const TMatrixT<Double_t> &, const TMatrixT<Double_t> &>;
-using TMVAInput_t      = std::vector<Event*>;
+using TMVAInput_t =
+    std::tuple<const std::vector<Event *> &, const DataSetInfo &>;
 
 using IndexIterator_t = typename std::vector<size_t>::iterator;
 
@@ -129,7 +133,7 @@ private:
    using Matrix_t        = typename AArchitecture::Matrix_t;
    using BatchIterator_t = TBatchIterator<Data_t, AArchitecture>;
 
-   const Data_t  & fData;
+   const Data_t &fData;
 
    size_t fNSamples;
    size_t fBatchSize;

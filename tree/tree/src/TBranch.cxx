@@ -1147,7 +1147,7 @@ TBasket* TBranch::GetBasket(Int_t basketnumber)
 
    //now read basket
    Int_t badread = basket->ReadBasketBuffers(fBasketSeek[basketnumber],fBasketBytes[basketnumber],file);
-   if (badread || basket->GetSeekKey() != fBasketSeek[basketnumber]) {
+   if (R__unlikely(badread || basket->GetSeekKey() != fBasketSeek[basketnumber] || basket->IsZombie())) {
       nerrors++;
       if (nerrors > 10) return 0;
       if (nerrors == 10) {

@@ -89,3 +89,22 @@ TVirtualMutex *TMutex::Factory(Bool_t recursive)
    TVirtualMutex *ret = new TMutex(recursive);
    return ret;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Reset the mutex state to unlocked. The state before resetting to unlocked is
+/// returned and can be passed to `Restore()` later on. This function must only
+/// be called while the mutex is locked.
+
+std::unique_ptr<TVirtualMutex::State> TMutex::Reset()
+{
+   return fMutexImp->Reset();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Restore the mutex state to the state pointed to by `state`. This function
+/// must only be called while the mutex is unlocked.
+
+void TMutex::Restore(std::unique_ptr<State> &&state)
+{
+   fMutexImp->Restore(std::move(state));
+}

@@ -24,6 +24,8 @@
    }
 } (function(JSROOT, d3, __DUMMY__, THREE, THREE_MORE, document) {
 
+   "use strict";
+
    JSROOT.sources.push("hist3d");
 
    if ((typeof document=='undefined') && (typeof window=='object')) document = window.document;
@@ -1172,12 +1174,10 @@
          // geometry.computeVertexNormals();
 
          var rootcolor = histo.fFillColor,
-             fcolor = JSROOT.Painter.root_colors[rootcolor];
+             fcolor = this.get_color(rootcolor);
 
          if (palette) {
-            var indx = Math.floor((nlevel+0.99)*palette.length/(levels.length-1));
-            if (indx > palette.length-1) indx = palette.length-1;
-            fcolor = palette[indx];
+            fcolor = palette.calcColor(nlevel, levels.length);
          } else {
             if ((this.options.Lego === 1) || (rootcolor < 2)) {
                rootcolor = 1;
@@ -1334,7 +1334,7 @@
       }
 
       // create boxes
-      var lcolor = JSROOT.Painter.root_colors[histo.fLineColor];
+      var lcolor = this.get_color(histo.fLineColor);
       material = new THREE.LineBasicMaterial({ color: new THREE.Color(lcolor) });
       if (!JSROOT.browser.isIE) material.linewidth = histo.fLineWidth;
 
@@ -1400,6 +1400,8 @@
    JSROOT.TH1Painter.prototype.Draw3D = function(call_back, resize) {
       // function called with this as painter
 
+      this.mode3d = true;
+
       var main = this.main_painter();
 
       if (resize)  {
@@ -1421,7 +1423,7 @@
 
          main.Render3D();
 
-         main.UpdateStatWebCanvas();
+         this.UpdateStatWebCanvas();
 
          this.AddKeysHandler();
       }
@@ -1496,11 +1498,9 @@
       var main = this.main_painter(),
           handle = this.PrepareColorDraw({rounding: false, use3d: true, extra: 100, middle: 0.0 });
 
-      this.getContourIndex(0);
-
       // get levels
       var histo = this.GetObject(),
-          levels = this.fContour,
+          levels = this.GetContour(), // init contour if not exists
           palette = this.GetPalette(),
           painter = this,
           layerz = 2*main.size_z3d;
@@ -1526,7 +1526,7 @@
              var geometry = new THREE.BufferGeometry();
              geometry.addAttribute( 'position', new THREE.BufferAttribute( linepos, 3 ) );
 
-             var material = new THREE.LineBasicMaterial({ color: new THREE.Color(JSROOT.Painter.root_colors[histo.fLineColor]) });
+             var material = new THREE.LineBasicMaterial({ color: new THREE.Color(main.get_color(histo.fLineColor)) });
 
              var line = new THREE.Line(geometry, material);
              main.toplevel.add(line);
@@ -1548,14 +1548,14 @@
 
       if ((handle.i2 - handle.i1 < 2) || (handle.j2 - handle.j1 < 2)) return;
 
-      var ilevels = null, levels = null, dolines = true, docolorfaces = false, dogrid = false,
-          donormals = false;
+      var ilevels = null, levels = null, dolines = true, dogrid = false,
+          donormals = false, palette = null;
 
       switch(this.options.Surf) {
-         case 11: ilevels = this.GetContour(); docolorfaces = true; break;
+         case 11: ilevels = this.GetContour(); palette = this.GetPalette(); break;
          case 12:
          case 15: // make surf5 same as surf2
-         case 17: ilevels = this.GetContour(); docolorfaces = true; dolines = false; break;
+         case 17: ilevels = this.GetContour(); palette = this.GetPalette(); dolines = false; break;
          case 14: dolines = false; donormals = true; break;
          case 16: ilevels = this.GetContour(); dogrid = true; dolines = false; break;
          default: ilevels = main.z_handle.CreateTicks(true); dogrid = true; break;
@@ -1819,11 +1819,11 @@
             if (donormals && (lvl===1)) RecalculateNormals(geometry.getAttribute('normal').array);
 
             var fcolor, material;
-            if (docolorfaces) {
-               fcolor = this.getIndexColor(lvl);
+            if (palette) {
+               fcolor = palette.calcColor(lvl, levels.length);
             } else {
-               fcolor = histo.fFillColor > 1 ? JSROOT.Painter.root_colors[histo.fFillColor] : 'white';
-               if ((this.options.Surf === 14) && (histo.fFillColor<2)) fcolor = JSROOT.Painter.root_colors[48];
+               fcolor = histo.fFillColor > 1 ? this.get_color(histo.fFillColor) : 'white';
+               if ((this.options.Surf === 14) && (histo.fFillColor<2)) fcolor = this.get_color(48);
             }
             if (this.options.Surf === 14)
                material = new THREE.MeshLambertMaterial( { color: fcolor, side: THREE.DoubleSide  } );
@@ -1842,7 +1842,7 @@
          if (nsegments*6 !== lindx)
             console.error('SURF lines mismmatch nsegm', nsegments, ' lindx', lindx, 'difference', nsegments*6 - lindx);
 
-         var lcolor = JSROOT.Painter.root_colors[histo.fLineColor],
+         var lcolor = this.get_color(histo.fLineColor),
              material = new THREE.LineBasicMaterial({ color: new THREE.Color(lcolor) });
          if (!JSROOT.browser.isIE) material.linewidth = histo.fLineWidth;
          var line = JSROOT.Painter.createLineSegments(lpos, material);
@@ -1859,7 +1859,7 @@
          if (this.options.Surf === 1)
             material = new THREE.LineDashedMaterial( { color: 0x0, dashSize: 2, gapSize: 2  } );
          else
-            material = new THREE.LineBasicMaterial({ color: new THREE.Color(JSROOT.Painter.root_colors[histo.fLineColor]) });
+            material = new THREE.LineBasicMaterial({ color: new THREE.Color(this.get_color(histo.fLineColor)) });
 
          var line = JSROOT.Painter.createLineSegments(grid, material);
          line.painter = this;
@@ -1873,10 +1873,8 @@
 
          handle = main.PrepareColorDraw({rounding: false, use3d: true, extra: 100, middle: 0.0 });
 
-         this.getContourIndex(0);
-
          // get levels
-         var levels = this.fContour,
+         var levels = this.GetContour(), // init contour
              palette = this.GetPalette(),
              lastcolindx = -1, layerz = 2*main.size_z3d;
 
@@ -1925,7 +1923,7 @@
                 geometry.addAttribute( 'position', new THREE.BufferAttribute( pos, 3 ) );
                 geometry.addAttribute( 'normal', new THREE.BufferAttribute( norm, 3 ) );
 
-                var fcolor = palette[colindx];
+                var fcolor = palette.getColor(colindx);
                 var material = new THREE.MeshBasicMaterial( { color: fcolor, shading: THREE.SmoothShading, side: THREE.DoubleSide, opacity: 0.5  } );
                 var mesh = new THREE.Mesh(geometry, material);
                 mesh.painter = this;
@@ -1998,7 +1996,7 @@
        }
 
        // create lines
-       var lcolor = JSROOT.Painter.root_colors[this.GetObject().fLineColor],
+       var lcolor = this.get_color(this.GetObject().fLineColor),
            material = new THREE.LineBasicMaterial({ color: new THREE.Color(lcolor) }),
            line = JSROOT.Painter.createLineSegments(lpos, material);
 
@@ -2054,7 +2052,7 @@
          bin = histo.fBins.arr[i];
          if (bin.fContent < axis_zmin) continue;
 
-         colindx = this.getValueColor(bin.fContent, true);
+         colindx = this.getContourColor(bin.fContent, true);
          if (colindx === null) continue;
 
          // check if bin outside visible range
@@ -2190,7 +2188,7 @@
          geometry.addAttribute( 'position', new THREE.BufferAttribute( pos, 3 ) );
          geometry.computeVertexNormals();
 
-         var fcolor = this.fPalette[colindx];
+         var fcolor = this.fPalette.getColor(colindx);
          var material = new THREE.MeshBasicMaterial( { color: fcolor, shading: THREE.SmoothShading  } );
          var mesh = new THREE.Mesh(geometry, material);
 
@@ -2483,7 +2481,7 @@
          }
       }
 
-      var mesh = pnts.CreatePoints(JSROOT.Painter.root_colors[histo.fMarkerColor]);
+      var mesh = pnts.CreatePoints(this.get_color(histo.fMarkerColor));
       main.toplevel.add(mesh);
 
       mesh.bins = bins;
@@ -2521,7 +2519,7 @@
          if (this.Draw3DScatter()) return;
 
       var rootcolor = this.GetObject().fFillColor,
-          fillcolor = JSROOT.Painter.root_colors[rootcolor],
+          fillcolor = this.get_color(rootcolor),
           buffer_size = 0, use_lambert = false,
           use_helper = false, use_colors = false, use_opacity = 1, use_scale = true,
           single_bin_verts, single_bin_norms,
@@ -2628,7 +2626,7 @@
 
                if (!use_colors) continue;
 
-               var colindx = this.getValueColor(bin_content, true);
+               var colindx = this.getContourColor(bin_content, true);
                if (colindx != null) {
                   if (cols_size[colindx] === undefined) {
                      cols_size[colindx] = 0;
@@ -2697,7 +2695,7 @@
 
                var nseq = 0;
                if (use_colors) {
-                  var colindx = this.getValueColor(bin_content, true);
+                  var colindx = this.getContourColor(bin_content, true);
                   if (colindx === null) continue;
                   nseq = cols_sequence[colindx];
                }
@@ -2762,7 +2760,7 @@
          all_bins_buffgeom.addAttribute('position', new THREE.BufferAttribute( bin_verts[nseq], 3 ) );
          all_bins_buffgeom.addAttribute('normal', new THREE.BufferAttribute( bin_norms[nseq], 3 ) );
 
-         if (use_colors) fillcolor = this.fPalette[ncol];
+         if (use_colors) fillcolor = this.fPalette.getColor(ncol);
 
          var material = use_lambert ? new THREE.MeshLambertMaterial({ color: fillcolor, opacity: use_opacity, transparent: (use_opacity<1) })
                                     : new THREE.MeshBasicMaterial({ color: fillcolor, opacity: use_opacity });
@@ -2802,7 +2800,7 @@
          this.toplevel.add(combined_bins);
 
          if (helper_kind[nseq] > 0) {
-            var lcolor = JSROOT.Painter.root_colors[this.GetObject().fLineColor],
+            var lcolor = this.get_color(this.GetObject().fLineColor),
                 helper_material = new THREE.LineBasicMaterial( { color: lcolor } ),
                 lines = null;
 
@@ -3092,7 +3090,7 @@
          }
       }
 
-      var markeratt = JSROOT.Painter.createAttMarker(graph),
+      var markeratt = new JSROOT.TAttMarkerHandler(graph),
          palette = null,
          levels = [main.scale_zmin, main.scale_zmax],
          scale = main.size_xy3d / 100 * markeratt.size * markeratt.scale;
@@ -3167,7 +3165,7 @@
          }
 
          if (err) {
-            var lcolor = JSROOT.Painter.root_colors[this.GetObject().fLineColor],
+            var lcolor = this.get_color(this.GetObject().fLineColor),
                 material = new THREE.LineBasicMaterial({ color: new THREE.Color(lcolor) });
             if (!JSROOT.browser.isIE) material.linewidth = this.GetObject().fLineWidth;
             var errmesh = JSROOT.Painter.createLineSegments(err, material);
@@ -3186,13 +3184,8 @@
 
          if (pnts) {
 
-            var fcolor = JSROOT.Painter.root_colors[graph.fMarkerColor];
-
-            if (palette) {
-               var indx = Math.floor((lvl+0.99)*palette.length/(levels.length-1));
-               if (indx >= palette.length) indx = palette.length-1;
-               fcolor = palette[indx];
-            }
+            var fcolor = palette ? palette.calcColor(lvl, levels.length) :
+                                   this.get_color(graph.fMarkerColor);
 
             var mesh = pnts.CreatePoints(fcolor);
 
@@ -3288,7 +3281,7 @@
             pnts.AddPoint(main.grx(poly.fP[i]), main.gry(poly.fP[i+1]), main.grz(poly.fP[i+2]));
          }
 
-         var mesh = pnts.CreatePoints(JSROOT.Painter.root_colors[poly.fMarkerColor]);
+         var mesh = pnts.CreatePoints(this.get_color(poly.fMarkerColor));
 
          main.toplevel.add(mesh);
 

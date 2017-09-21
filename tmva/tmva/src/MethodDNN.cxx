@@ -841,16 +841,16 @@ void TMVA::MethodDNN::TrainGpu()
       using DataLoader_t = TDataLoader<TMVAInput_t, TCuda<>>;
 
       size_t nThreads = 1;
-      DataLoader_t trainingData(GetEventCollection(Types::kTraining),
-                                nTrainingSamples,
-                                net.GetBatchSize(),
-                                net.GetInputWidth(),
+      TMVAInput_t trainingTuple =
+          std::tie(GetEventCollection(Types::kTraining), DataInfo());
+      TMVAInput_t testTuple =
+          std::tie(GetEventCollection(Types::kTesting), DataInfo());
+      DataLoader_t trainingData(trainingTuple, nTrainingSamples,
+                                net.GetBatchSize(), net.GetInputWidth(),
                                 net.GetOutputWidth(), nThreads);
-      DataLoader_t testData(GetEventCollection(Types::kTesting),
-                            nTestSamples,
-                            testNet.GetBatchSize(),
-                            net.GetInputWidth(),
-                            net.GetOutputWidth(), nThreads);
+      DataLoader_t testData(testTuple, nTestSamples, testNet.GetBatchSize(),
+                            net.GetInputWidth(), net.GetOutputWidth(),
+                            nThreads);
       DNN::TGradientDescent<TCuda<>> minimizer(settings.learningRate,
                                              settings.convergenceSteps,
                                              settings.testInterval);
@@ -1011,16 +1011,16 @@ void TMVA::MethodDNN::TrainCpu()
       using DataLoader_t = TDataLoader<TMVAInput_t, TCpu<>>;
 
       size_t nThreads = 1;
-      DataLoader_t trainingData(GetEventCollection(Types::kTraining),
-                                nTrainingSamples,
-                                net.GetBatchSize(),
-                                net.GetInputWidth(),
+      TMVAInput_t trainingTuple =
+          std::tie(GetEventCollection(Types::kTraining), DataInfo());
+      TMVAInput_t testTuple =
+          std::tie(GetEventCollection(Types::kTesting), DataInfo());
+      DataLoader_t trainingData(trainingTuple, nTrainingSamples,
+                                net.GetBatchSize(), net.GetInputWidth(),
                                 net.GetOutputWidth(), nThreads);
-      DataLoader_t testData(GetEventCollection(Types::kTesting),
-                            nTestSamples,
-                            testNet.GetBatchSize(),
-                            net.GetInputWidth(),
-                            net.GetOutputWidth(), nThreads);
+      DataLoader_t testData(testTuple, nTestSamples, testNet.GetBatchSize(),
+                            net.GetInputWidth(), net.GetOutputWidth(),
+                            nThreads);
       DNN::TGradientDescent<TCpu<>> minimizer(settings.learningRate,
                                                settings.convergenceSteps,
                                                settings.testInterval);

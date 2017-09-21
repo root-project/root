@@ -4,11 +4,21 @@
 #include "RConfigure.h"
 
 #ifdef R__HAS_VECCORE
- 
-#if defined(R__HAS_VC) && !defined(VECCORE_ENABLE_VC)
-#define VECCORE_ENABLE_VC
+
+#if defined(R__HAS_VC)
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wall"
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+
+#ifdef __clang__
+#pragma clang diagnostic ignored "-Wconditional-uninitialized"
 #endif
- 
+
+#include <Vc/Vc>
+#pragma GCC diagnostic pop
+#endif
+
 #include <VecCore/VecCore>
 
 namespace ROOT {
@@ -29,5 +39,20 @@ namespace Internal {
    using UInt32_v = typename Internal::VectorBackend::UInt32_v;
 }
 
-#endif // R__HAS_VECCORE
+#else // R__HAS_VECCORE
+
+// We do not have explicit vectorisation support enabled. Fall back to regular ROOT types.
+
+#include "Rtypes.h"
+
+namespace ROOT {
+   using Float_v  = Float_t;
+   using Double_v = Double_t;
+   using Int_v    = Int_t;
+   using Int32_v  = Int_t; // FIXME: Should we introduce Int32_t in RtypesCore.h?
+   using UInt_v   = UInt_t;
+   using UInt32_v = UInt_t; // FIXME: Should we introduce UInt32_t in RtypesCore.h?
+}
+#endif
+
 #endif // ROOT_Math_VecTypes

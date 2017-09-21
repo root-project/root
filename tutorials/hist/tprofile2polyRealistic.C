@@ -1,4 +1,12 @@
-// Brief: Different charges depending on region
+/// \file
+/// \ingroup tutorial_hist
+/// \notebook
+/// Different charges depending on region
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Filip Ilic
 
 #include <iostream>
 #include <fstream>
@@ -47,12 +55,14 @@ void tprofile2polyRealistic(Int_t numEvents=100000)
    auto h2p = new TH2Poly();
    auto tp2p = new TProfile2Poly();
    ifstream infile;
-   infile.open("./tutorials/hist/data/tprofile2poly_tutorial.data");
+   TString dir = gROOT->GetTutorialDir();
+   dir.Append("/hist/data/tprofile2poly_tutorial.data");
+   infile.open(dir.Data());
 
    if (!infile) // Verify that the file was open successfully
    {
-      std::cerr << "File ./tutorials/hist/data/tprofile2poly_tutorial.data could not be opened!\n"; // Report error
-      std::cerr << "Error code: " << strerror(errno); // Get some info as to why
+      std::cerr << dir.Data() << std::endl; // Report error
+      std::cerr << "Error code: " << strerror(errno) << std::endl; // Get some info as to why
       return;
    }
    std::cout << " WE ARE AFTER LOADING DATA " << std::endl;

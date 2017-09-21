@@ -2423,6 +2423,11 @@ void TGCocoa::CopyPixmap(Int_t pixmapID, Int_t x, Int_t y)
 void TGCocoa::ClosePixmap()
 {
    // Deletes current pixmap.
+   assert(fSelectedDrawable > fPimpl->GetRootWindowID() && "ClosePixmap, no drawable selected");
+   assert(fPimpl->GetDrawable(fSelectedDrawable).fIsPixmap == YES && "ClosePixmap, selected drawable is not a pixmap");
+
+   DeletePixmap(fSelectedDrawable);
+   fSelectedDrawable = 0;
 }
 
 #pragma mark - Different functions to create pixmap from different data sources. Used by GUI.
@@ -4506,7 +4511,7 @@ Atom_t TGCocoa::FindAtom(const std::string &atomName, bool addIfNotFound)
 void TGCocoa::SetApplicationIcon()
 {
    if (gEnv) {
-      const char * const iconDirectoryPath = gEnv->GetValue("Gui.IconPath","$(ROOTSYS)/icons");//This one I do not own.
+      const char * const iconDirectoryPath = gEnv->GetValue("Gui.IconPath",TROOT::GetIconPath());
       if (iconDirectoryPath) {
          const Util::ScopedArray<char> fileName(gSystem->Which(iconDirectoryPath, "Root6Icon.png", kReadPermission));
          if (fileName.Get()) {

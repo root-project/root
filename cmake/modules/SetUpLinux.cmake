@@ -226,14 +226,14 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL Intel)
   set(CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS}")
 
   # Select flags.
-  set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g -DNDEBUG")
-  set(CMAKE_CXX_FLAGS_RELEASE        "-O -DNDEBUG")
-  set(CMAKE_CXX_FLAGS_OPTIMIZED      "-O -DNDEBUG")
-  set(CMAKE_CXX_FLAGS_DEBUG          "-g")
-  set(CMAKE_C_FLAGS_RELWITHDEBINFO   "-O2 -g -DNDEBUG")
-  set(CMAKE_C_FLAGS_RELEASE          "-O -DNDEBUG")
-  set(CMAKE_C_FLAGS_OPTIMIZED        "-O -DNDEBUG")
-  set(CMAKE_C_FLAGS_DEBUG            "-g")
+  set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -fp-model precise -g -DNDEBUG")
+  set(CMAKE_CXX_FLAGS_RELEASE        "-O2 -fp-model precise -DNDEBUG")
+  set(CMAKE_CXX_FLAGS_OPTIMIZED      "-O3 -DNDEBUG")
+  set(CMAKE_CXX_FLAGS_DEBUG          "-O0 -g")
+  set(CMAKE_C_FLAGS_RELWITHDEBINFO   "-O2 -fp-model precise -g -DNDEBUG")
+  set(CMAKE_C_FLAGS_RELEASE          "-O2 -fp-model precise -DNDEBUG")
+  set(CMAKE_C_FLAGS_OPTIMIZED        "-O3 -DNDEBUG")
+  set(CMAKE_C_FLAGS_DEBUG            "-O0 -g")
 
   #Settings for cint
   set(CPPPREP "${CXX} -E -C")

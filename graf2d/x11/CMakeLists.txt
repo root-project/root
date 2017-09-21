@@ -2,16 +2,17 @@
 # CMakeLists.txt file for building ROOT graf2d/x11 package
 # @author Pere Mato, CERN
 ############################################################################
-set(libname GX11)
 
 include_directories(${X11_INCLUDE_DIR})
 
-ROOT_GENERATE_DICTIONARY(G__${libname} T*.h MODULE ${libname} LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM" DEPENDENCIES Core)
-
-ROOT_LINKER_LIBRARY(${libname} *.cxx  *.c G__${libname}.cxx LIBRARIES Core ${X11_LIBRARIES} ${X11_Xpm_LIB} ${CMAKE_THREAD_LIBS_INIT})
+ROOT_STANDARD_LIBRARY_PACKAGE(GX11
+                              HEADERS T*.h
+                              SOURCES *.cxx  *.c
+                              DICTIONARY_OPTIONS "-writeEmptyRootPCM"
+                              DEPENDENCIES Core
+                              LIBRARIES Core ${X11_LIBRARIES} ${X11_Xpm_LIB} ${CMAKE_THREAD_LIBS_INIT}
+                              INSTALL_OPTIONS FILTER "inc/X11/" FILTER "X11$")
 
 if(AIX)
   include_directories(AFTER ${CMAKE_CURRENT_SOURCE_DIR}/inc)
 endif()
-
-ROOT_INSTALL_HEADERS(FILTER "X11/" FILTER "X11$")

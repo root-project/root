@@ -54,22 +54,22 @@ private:
 
 public:
    // TAxis status bits
-   enum {
-          kDecimals      = BIT(7),
-          kTickPlus      = BIT(9),
-          kTickMinus     = BIT(10),
-          kAxisRange     = BIT(11),
-          kCenterTitle   = BIT(12),
-          kCenterLabels  = BIT(14), //bit 13 is used by TObject
-          kRotateTitle   = BIT(15),
-          kPalette       = BIT(16),
-          kNoExponent    = BIT(17),
-          kLabelsHori    = BIT(18),
-          kLabelsVert    = BIT(19),
-          kLabelsDown    = BIT(20),
-          kLabelsUp      = BIT(21),
-          kIsInteger     = BIT(22),
-          kMoreLogLabels = BIT(23)
+   enum EStatusBits {
+      kDecimals      = BIT(7),
+      kTickPlus      = BIT(9),
+      kTickMinus     = BIT(10),
+      kAxisRange     = BIT(11),
+      kCenterTitle   = BIT(12),
+      kCenterLabels  = BIT(14), //bit 13 is used by TObject
+      kRotateTitle   = BIT(15),
+      kPalette       = BIT(16),
+      kNoExponent    = BIT(17),
+      kLabelsHori    = BIT(18),
+      kLabelsVert    = BIT(19),
+      kLabelsDown    = BIT(20),
+      kLabelsUp      = BIT(21),
+      kIsInteger     = BIT(22),
+      kMoreLogLabels = BIT(23)
    };
 
    TAxis();

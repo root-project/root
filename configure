@@ -983,6 +983,9 @@ check_code() {
     logmsg " Compiling $1 with flags '$2'"
     echo "$1" > conftest.cxx
     cat <<EOF > conftest.mk
+ifeq (${enable_cxx14},yes)
+CXX14 := yes
+endif
 include ${ac_srcdir}/config/Makefile.${arch}
 CXX = ${altcxx}
 conftest.o: conftest.cxx
@@ -1106,7 +1109,9 @@ GCCTOOLCHAIN_OPT =
 ifneq (${gcctoolchain},)
 GCCTOOLCHAIN_OPT = --gcc-toolchain=${gcctoolchain}
 endif
-
+ifeq (${enable_cxx14},yes)
+CXX14 := yes
+endif
 conftest: conftest.cxx
 	\$(CXX) \$(CFLAGS) \$(GCCTOOLCHAIN_OPT) $cxxopt \$(LDFLAGS) \$< -o \$@
 
@@ -2800,6 +2805,10 @@ if test "x$enable_cxxmodules" = "xyes"; then
 fi
 
 ######################################################################
+# Destruct global/static variables. Always off in classic build.
+memory_term="undef"
+
+######################################################################
 #
 ### echo %%% libc++ - compile and link using libc++
 #
@@ -2841,7 +2850,7 @@ hasstodstringview="undef"
 message "Checking for string_view implementation"
 if test "x$usecxx11" = "xdefine" ; then
     check_code '#include <string_view>
-int main() {std::string_view().to_string(); return 0; }' '$(CXX11FLAGS)'
+int main() { char arr[3] = {0x41, 0x61, 0x72}; std::string_view strv(arr, sizeof(arr)); return 0;}' '$(CXX11FLAGS)'
     if test $include_result -eq 1 ; then
         hasstdstringview="define"
         result '<string_view>'
@@ -2852,7 +2861,7 @@ int main() { size_t pos; std::string_view str; std::stod(str,&pos); return 0;}' 
         fi
     else
         check_code '#include <experimental/string_view>
-int main() {std::experimental::string_view().to_string(); return 0; }' '$(CXX11FLAGS)'
+int main() { char arr[3] = {0x41, 0x61, 0x72}; std::experimental::string_view strv(arr, sizeof(arr)); return 0;}' '$(CXX11FLAGS)'
         if test $include_result -eq 1 ; then
             hasstdexpstringview="define"
             result '<experimental/string_view>'
@@ -6708,7 +6717,7 @@ check_explicit "$enable_tbb" "$enable_tbb_explicit" \
 #
 useimt="undef"
 if test "x$enable_imt" = "xyes"; then
-        usecxxmodules="define"
+        useimt="define"
         result "yes"
 fi
 
@@ -8183,6 +8192,7 @@ sed \
     -e "s|@usec++14@|$usecxx14|"           \
     -e "s|@usec++17@|$usecxx17|"           \
     -e "s|@usecxxmodules@|$usecxxmodules|" \
+    -e "s|@memory_term@|$memory_term|"     \
     -e "s|@uselibc++@|$uselibcxx|"         \
     -e "s|@hasstdstringview@|$hasstdstringview|"       \
     -e "s|@hasstdexpstringview@|$hasstdexpstringview|" \

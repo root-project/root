@@ -7,7 +7,7 @@
 (function( factory ) {
    if ( typeof define === "function" && define.amd ) {
 
-      var jsroot = factory({})
+      var jsroot = factory({}),
           dir = jsroot.source_dir + "scripts/",
           ext = jsroot.source_min ? ".min" : "",
           norjs = (typeof requirejs=='undefined'),
@@ -33,6 +33,7 @@
             'JSRootPainter.more'   : dir+'JSRootPainter.more'+ext,
             'JSRootPainter.hierarchy' : dir+'JSRootPainter.hierarchy'+ext,
             'JSRootPainter.jquery' : dir+'JSRootPainter.jquery'+ext,
+            'JSRootPainter.openui5': dir+'JSRootPainter.openui5'+ext,
             'JSRoot3DPainter'      : dir+'JSRoot3DPainter'+ext,
             'ThreeCSG'             : dir+'ThreeCSG'+ext,
             'JSRootGeoBase'        : dir+'JSRootGeoBase'+ext,
@@ -92,7 +93,9 @@
    }
 } (function(JSROOT) {
 
-   JSROOT.version = "dev 29/06/2017";
+   "use strict";
+
+   JSROOT.version = "dev 24/08/2017";
 
    JSROOT.source_dir = "";
    JSROOT.source_min = false;
@@ -694,7 +697,8 @@
          if (typeof user_call_back == 'function') user_call_back.call(xhr, res);
       }
 
-      var pthis = this, method = "GET";
+      var pthis = this, method = "GET", async = true, p = kind.indexOf(";sync");
+      if (p>0) { kind.substr(0,p); async = false; }
       if (kind === "head") method = "HEAD"; else
       if ((kind === "multi") || (kind==="posttext")) method = "POST";
 
@@ -746,7 +750,6 @@
             var filecontent = "", u8Arr = new Uint8Array(xhr.response);
             for (var i = 0; i < u8Arr.length; ++i)
                filecontent += String.fromCharCode(u8Arr[i]);
-            delete u8Arr;
 
             return callback(filecontent);
          }
@@ -754,7 +757,7 @@
          callback(xhr.response);
       }
 
-      xhr.open(method, url, true);
+      xhr.open(method, url, async);
 
       if ((kind == "bin") || (kind == "buf")) xhr.responseType = 'arraybuffer';
 
@@ -774,6 +777,9 @@
       // <script type="text/javascript" src="scripts/JSRootCore.js"></script>
 
       function completeLoad() {
+
+         JSROOT.complete_script_load = null;
+
          if (debugout)
             document.getElementById(debugout).innerHTML = "";
          else
@@ -868,17 +874,19 @@
          element.setAttribute('src', filename);
       }
 
+      JSROOT.complete_script_load = completeLoad;
+
       if (element.readyState) { // Internet Explorer specific
          element.onreadystatechange = function() {
             if (element.readyState == "loaded" || element.readyState == "complete") {
                element.onreadystatechange = null;
-               completeLoad();
+               if (JSROOT.complete_script_load) completeLoad();
             }
          }
       } else { // Other browsers
          element.onload = function() {
             element.onload = null;
-            completeLoad();
+            if (JSROOT.complete_script_load) completeLoad();
          }
       }
 
@@ -898,6 +906,7 @@
       //     'jq'  jQuery and jQuery-ui
       // 'hierarchy' hierarchy browser
       //   'jq2d'  jQuery-dependent part of hierarchy
+      // 'openui5'  OpenUI5 and related functionality
       //   'geom'  TGeo support
       // 'simple'  for basic user interface
       //  'load:'  list of user-specific scripts at the end of kind string
@@ -1004,15 +1013,20 @@
          modules.push('JSRootPainter.more');
       }
 
-      if (((kind.indexOf('hierarchy;')>=0) || (kind.indexOf('jq2d;')>=0)) && (jsroot.sources.indexOf("hierarchy")<0)) {
+      if (((kind.indexOf('hierarchy;')>=0) || (kind.indexOf('jq2d;')>=0) || (kind.indexOf('openui5;')>=0)) && (jsroot.sources.indexOf("hierarchy")<0)) {
          mainfiles += '$$$scripts/JSRootPainter.hierarchy' + ext + ".js;";
          modules.push('JSRootPainter.hierarchy');
       }
 
-      if ((kind.indexOf('jq2d;')>=0) && (jsroot.sources.indexOf("jq2d")<0)) {
+      if (((kind.indexOf('jq2d;')>=0) || (kind.indexOf('openui5;')>=0)) && (jsroot.sources.indexOf("jq2d")<0)) {
          mainfiles += '$$$scripts/JSRootPainter.jquery' + ext + ".js;";
          modules.push('JSRootPainter.jquery');
          need_jquery = true;
+      }
+
+      if ((kind.indexOf('openui5;')>=0) && (jsroot.sources.indexOf("openui5")<0)) {
+         mainfiles += '$$$scripts/JSRootPainter.openui5' + ext + ".js;";
+         modules.push('JSRootPainter.openui5');
       }
 
       if (((kind.indexOf("3d;")>=0) || (kind.indexOf("geom;")>=0)) && (jsroot.sources.indexOf("3d")<0)) {
@@ -1326,7 +1340,11 @@
             JSROOT.Create("TAttFill", obj);
             JSROOT.Create("TAttMarker", obj);
             JSROOT.extend(obj, { fFunctions: JSROOT.Create("TList"), fHistogram: null,
-                                 fMaxSize: 0, fMaximum:-1111, fMinimum:-1111, fNpoints: 0, fX: [], fY: [] });
+                                 fMaxSize: 0, fMaximum: -1111, fMinimum: -1111, fNpoints: 0, fX: [], fY: [] });
+            break;
+         case 'TGraphAsymmErrors':
+            JSROOT.Create("TGraph", obj);
+            JSROOT.extend(obj, { fEXlow: [], fEXhigh: [], fEYlow: [], fEYhigh: []});
             break;
          case 'TMultiGraph':
             JSROOT.Create("TNamed", obj);
@@ -1588,6 +1606,12 @@
                     _func = this.fFormula.fFormula;
                     pprefix = "[p";
                  }
+                 if (this.fFormula.fClingParameters && this.fFormula.fParams) {
+                    for (var i=0;i<this.fFormula.fParams.length;++i) {
+                       var regex = new RegExp('(\\[' + this.fFormula.fParams[i].first + '\\])', 'g');
+                       _func = _func.replace(regex, this.fFormula.fClingParameters[this.fFormula.fParams[i].second]);
+                    }
+                 }
               }
 
               if ('formulas' in this)
@@ -1767,12 +1791,12 @@
          m.getBinEffectiveEntries = function(bin) {
             if (bin < 0 || bin >= this.fNcells) return 0;
             var sumOfWeights = this.fBinEntries[bin];
-            if ( this.fBinSumw2 == null || this.fBinSumw2.length != this.fNcells) {
+            if ( !this.fBinSumw2 || this.fBinSumw2.length != this.fNcells) {
                // this can happen  when reading an old file
                return sumOfWeights;
             }
-            var sumOfWeightsSquare = this.fSumw2[bin];
-            return ( sumOfWeightsSquare > 0 ? sumOfWeights * sumOfWeights / sumOfWeightsSquare : 0 );
+            var sumOfWeightsSquare = this.fBinSumw2[bin];
+            return (sumOfWeightsSquare > 0) ? sumOfWeights * sumOfWeights / sumOfWeightsSquare : 0;
          };
          m.getBinError = function(bin) {
             if (bin < 0 || bin >= this.fNcells) return 0;
@@ -1786,9 +1810,7 @@
             if (this.fErrorMode === EErrorType.kERRORSPREADG)
                return 1.0/Math.sqrt(sum);
             // compute variance in y (eprim2) and standard deviation in y (eprim)
-            var contsum = cont/sum;
-            var eprim2  = Math.abs(err2/sum - contsum*contsum);
-            var eprim   = Math.sqrt(eprim2);
+            var contsum = cont/sum, eprim = Math.sqrt(Math.abs(err2/sum - contsum*contsum));
             if (this.fErrorMode === EErrorType.kERRORSPREADI) {
                if (eprim != 0) return eprim/Math.sqrt(neff);
                // in case content y is an integer (so each my has an error +/- 1/sqrt(12)
@@ -1810,6 +1832,11 @@
             if (this.fNbins <= 0) return 0;
             if ((this.fXbins.length > 0) && (bin > 0) && (bin <= this.fNbins)) return this.fXbins[bin-1];
             return this.fXmin + (bin-1) * (this.fXmax - this.fXmin) / this.fNbins;
+         }
+         m.GetBinCenter = function(bin) {
+            if (this.fNbins <= 0) return 0;
+            if ((this.fXbins.length > 0) && (bin > 0) && (bin < this.fNbins)) return (this.fXbins[bin-1] + this.fXbins[bin])/2;
+            return this.fXmin + (bin-0.5) * (this.fXmax - this.fXmin) / this.fNbins;
          }
       }
 

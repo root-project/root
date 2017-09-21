@@ -57,6 +57,7 @@ SET(DNN_CPU_FILES  src/DNN/Architectures/Cpu.cxx
 
 #---Handle CUDA dependent code. -----------------
 if(CUDA_FOUND)
+  CUDA_INCLUDE_DIRECTORIES("${CMAKE_BINARY_DIR}/include")	
   CUDA_ADD_LIBRARY(dnn_cuda ${DNN_CUDA_FILES})
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDNNCUDA")
   set(DNN_CUDA_LIBRARIES dnn_cuda ${CUDA_CUBLAS_LIBRARIES})
@@ -77,13 +78,12 @@ else()
   set(installoptions ${installoptions} FILTER "Cpu")
 endif()
 
-ROOT_GENERATE_DICTIONARY(G__TMVA ${theaders1} ${theaders2} ${theaders3} ${theaders4} ${theaders5}  MODULE TMVA LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM" DEPENDENCIES RIO Hist Tree TreePlayer MLP Minuit XMLIO)
-
-ROOT_LINKER_LIBRARY(TMVA *.cxx G__TMVA.cxx ${DNN_FILES} ${DNN_CPU_FILES}
-                    LIBRARIES Core ${DNN_CUDA_LIBRARIES} ${DNN_CPU_LIBRARIES}
-                    DEPENDENCIES RIO Hist Tree TreePlayer MLP Minuit XMLIO)
-
-ROOT_INSTALL_HEADERS(${installoptions})
+ROOT_STANDARD_LIBRARY_PACKAGE(TMVA
+                              HEADERS ${theaders1} ${theaders2} ${theaders3} ${theaders4} ${theaders5}
+                              SOURCES *.cxx ${DNN_FILES} ${DNN_CPU_FILES} DICTIONARY_OPTIONS "-writeEmptyRootPCM"
+                              LIBRARIES Core MathCore Matrix ${DNN_CUDA_LIBRARIES} ${DNN_CPU_LIBRARIES}
+                              DEPENDENCIES Core RIO Hist Tree TreePlayer MLP Minuit XMLIO
+                              INSTALL_OPTIONS ${installoptions})
 
 if(NOT gnuinstall)
   install(DIRECTORY test DESTINATION tmva 
@@ -95,6 +95,7 @@ if(NOT gnuinstall)
 endif()
 
 ROOT_ADD_TEST_SUBDIRECTORY(test/DNN)
+ROOT_ADD_TEST_SUBDIRECTORY(test/ROC)
 
 
 

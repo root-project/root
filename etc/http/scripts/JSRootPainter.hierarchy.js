@@ -22,6 +22,8 @@
    }
 } (function(JSROOT, d3) {
 
+   "use strict";
+
    JSROOT.sources.push("hierarchy");
 
    // ===================== hierarchy scanning functions ==================================
@@ -2024,7 +2026,7 @@
 
       if (this.start_without_browser) browser_kind = "";
 
-      if (status || browser_kind) prereg = "jq2d;" + prereq;
+      if (status || browser_kind) prereq = "jq2d;" + prereq;
 
       this._topname = GetOption("topname");
 
@@ -2155,18 +2157,44 @@
 
       myDiv.style('position',"absolute").style('left',0).style('top',0).style('bottom',0).style('right',0).style('padding',1);
 
+      var socket_kind = null, use_openui = true;
+      if (JSROOT.GetUrlOption("webcanvas")!==null) socket_kind = "websocket"; else
+      if (JSROOT.GetUrlOption("longpollcanvas")!==null) socket_kind = "longpoll"; else
+      if (JSROOT.GetUrlOption("cef_canvas")!==null) socket_kind = "cefquery";
+      if (JSROOT.GetUrlOption("qt5")!==null) JSROOT.browser.qt5 = true;
 
-      if (drawing && ((JSROOT.GetUrlOption("webcanvas")!==null) || (JSROOT.GetUrlOption("longpollcanvas")!==null))) {
+      if (drawing && socket_kind) {
 
-         console.log('Start web painter directly');
+         var painter = new JSROOT.TCanvasPainter(null);
+         painter.plain_layout = painter.batch_mode = JSROOT.GetUrlOption("batch_mode") !== null;
+         if (painter.batch_mode) JSROOT.BatchMode = true;
 
-         var painter = new JSROOT.TPadPainter(null, true);
+         if (window) {
+            window.onbeforeunload = painter.WindowBeforeUnloadHanlder.bind(painter);
+            if (JSROOT.browser.qt5) window.onqt5unload = window.onbeforeunload;
+         }
+
+         if (use_openui && !painter.batch_mode) {
+
+            painter.plain_layout = true;
+
+            painter._configured_socket_kind = socket_kind;
+
+            JSROOT.openui5_canvas_painter = painter;
+
+            return JSROOT.AssertPrerequisites('openui5', function() {
+               new JSROOT.sap.ui.xmlview({
+                  id: "TopCanvasId",
+                  viewName: "sap.ui.jsroot.view.Canvas"
+               }).placeAt(myDiv.attr("id"));
+            });
+         };
 
          painter.SetDivId(myDiv.attr("id"), -1); // just assign id, nothing else is happens
 
-         painter.OpenWebsocket(JSROOT.GetUrlOption("longpollcanvas")!==null); // when connection activated, ROOT must send new instance of the canvas
+         painter.OpenWebsocket(socket_kind); // when connection activated, ROOT must send new instance of the canvas
 
-         JSROOT.RegisterForResize(painter);
+         if (!painter.batch_mode) JSROOT.RegisterForResize(painter);
 
          return;
       }
