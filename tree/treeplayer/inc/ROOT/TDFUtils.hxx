@@ -83,8 +83,8 @@ private:
    int fCurIgnoreErrorLevel = gErrorIgnoreLevel;
 
 public:
-   TIgnoreErrorLevelRAII(int errorIgnoreLevel) { gErrorIgnoreLevel = errorIgnoreLevel; }
-   ~TIgnoreErrorLevelRAII() { gErrorIgnoreLevel = fCurIgnoreErrorLevel; }
+   TIgnoreErrorLevelRAII(int errorIgnoreLevel);
+   ~TIgnoreErrorLevelRAII();
 };
 
 /// Compile-time integer sequence generator
