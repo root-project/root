@@ -1948,10 +1948,6 @@ Double_t TF1::GetRandom()
 {
    //  Check if integral array must be build
    if (fIntegral.size() == 0) {
-      // fIntegral = new Double_t[fNpx+1];
-      // fAlpha    = new Double_t[fNpx+1];
-      // fBeta     = new Double_t[fNpx];
-      // fGamma    = new Double_t[fNpx];
       fIntegral.resize(fNpx + 1);
       fAlpha.resize(fNpx + 1);
       fBeta.resize(fNpx);
@@ -2064,12 +2060,8 @@ Double_t TF1::GetRandom(Double_t xmin, Double_t xmax)
 {
    //  Check if integral array must be build
    if (fIntegral.size() == 0) {
-      // fIntegral = new Double_t[fNpx+1];
-      // fAlpha    = new Double_t[fNpx+1];
-      // fBeta     = new Double_t[fNpx];
-      // fGamma    = new Double_t[fNpx];
       fIntegral.resize(fNpx + 1);
-      fAlpha.resize(fNpx);
+      fAlpha.resize(fNpx+1);
       fBeta.resize(fNpx);
       fGamma.resize(fNpx);
 
