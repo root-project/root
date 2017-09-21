@@ -25,11 +25,11 @@ namespace TDF {
 struct TH1DModel {
    TString fName;
    TString fTitle;
-   int fNbinsX;
-   double fXLow;
-   double fXUp;
+   int fNbinsX = 0;
+   double fXLow = 0.;
+   double fXUp = 0.;
 
-   TH1DModel() = delete;
+   TH1DModel() = default;
    TH1DModel(const TH1DModel &) = default;
    ~TH1DModel();
    TH1DModel(const ::TH1D &h);
@@ -39,14 +39,14 @@ struct TH1DModel {
 struct TH2DModel {
    TString fName;
    TString fTitle;
-   int fNbinsX;
-   double fXLow;
-   double fXUp;
-   int fNbinsY;
-   double fYLow;
-   double fYUp;
+   int fNbinsX = 0;
+   double fXLow = 0.;
+   double fXUp = 0.;
+   int fNbinsY = 0;
+   double fYLow = 0.;
+   double fYUp = 0.;
 
-   TH2DModel() = delete;
+   TH2DModel() = default;
    TH2DModel(const TH2DModel &) = default;
    ~TH2DModel();
    TH2DModel(const ::TH2D &h);
@@ -57,17 +57,17 @@ struct TH2DModel {
 struct TH3DModel {
    TString fName;
    TString fTitle;
-   int fNbinsX;
-   double fXLow;
-   double fXUp;
-   int fNbinsY;
-   double fYLow;
-   double fYUp;
-   int fNbinsZ;
-   double fZLow;
-   double fZUp;
+   int fNbinsX = 0;
+   double fXLow = 0.;
+   double fXUp = 0.;
+   int fNbinsY = 0;
+   double fYLow = 0.;
+   double fYUp = 0.;
+   int fNbinsZ = 0;
+   double fZLow = 0.;
+   double fZUp = 0.;
 
-   TH3DModel() = delete;
+   TH3DModel() = default;
    TH3DModel(const TH3DModel &) = default;
    ~TH3DModel();
    TH3DModel(const ::TH3D &h);
