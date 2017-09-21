@@ -25,9 +25,9 @@ namespace TDF {
 struct TH1DModel {
    TString fName;
    TString fTitle;
-   int fNbinsX = 0;
+   int fNbinsX = 128;
    double fXLow = 0.;
-   double fXUp = 0.;
+   double fXUp = 64.;
 
    TH1DModel() = default;
    TH1DModel(const TH1DModel &) = default;
@@ -39,12 +39,12 @@ struct TH1DModel {
 struct TH2DModel {
    TString fName;
    TString fTitle;
-   int fNbinsX = 0;
+   int fNbinsX = 128;
    double fXLow = 0.;
-   double fXUp = 0.;
-   int fNbinsY = 0;
+   double fXUp = 64.;
+   int fNbinsY = 128;
    double fYLow = 0.;
-   double fYUp = 0.;
+   double fYUp = 64.;
 
    TH2DModel() = default;
    TH2DModel(const TH2DModel &) = default;
@@ -57,15 +57,15 @@ struct TH2DModel {
 struct TH3DModel {
    TString fName;
    TString fTitle;
-   int fNbinsX = 0;
+   int fNbinsX = 128;
    double fXLow = 0.;
-   double fXUp = 0.;
-   int fNbinsY = 0;
+   double fXUp = 64.;
+   int fNbinsY = 128;
    double fYLow = 0.;
-   double fYUp = 0.;
-   int fNbinsZ = 0;
+   double fYUp = 64.;
+   int fNbinsZ = 128;
    double fZLow = 0.;
-   double fZUp = 0.;
+   double fZUp = 64.;
 
    TH3DModel() = default;
    TH3DModel(const TH3DModel &) = default;
