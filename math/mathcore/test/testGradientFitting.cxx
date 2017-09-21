@@ -111,6 +111,8 @@ using VectorialBinned = GradientFittingTestTraits<ROOT::Double_v, ROOT::Fit::Bin
 using VectorialUnBinned = GradientFittingTestTraits<ROOT::Double_v, ROOT::Fit::UnBinData, LikelihoodFitType>;
 #endif
 
+int printLevel = 0; 
+
 template <class T>
 class GradientFittingTest : public ::testing::Test {
 protected:
@@ -159,14 +161,17 @@ protected:
       fFitter.SetFunction(function);
       //fFitter.SetFunction(function,false);
       fFitter.Config().SetMinimizer("Minuit2");
-      //fFitter.Config().MinimizerOptions().SetPrintLevel(3);
 
 
       // Fill the binned or unbinned data
       FillData();
 
-      Fit(); 
+
+      if (printLevel>1) fFitter.Config().MinimizerOptions().SetPrintLevel(printLevel);
+
+
    }
+
 
    // Fill binned data
    template <class U = typename T::FittingDataType>
@@ -208,8 +213,10 @@ protected:
                            std::is_same<F, LikelihoodFitType>::value>::type
    Fit()
    {
-      std::cout << "Doing a likelihood Fit " << std::endl;
-      fFitter.LikelihoodFit(*fData);
+      std::cout << "Doing a binned likelihood Fit " << std::endl;
+      // the fit is extended in case of bin data types
+      bool extended = std::is_same<ROOT::Fit::BinData,typename T::FittingDataType>::value; 
+      fFitter.LikelihoodFit(*fData, extended,  fExecutionPolicy);
    }
 
    template <class F = typename T::FitType>
@@ -218,14 +225,35 @@ protected:
    Fit()
    {
       std::cout << "Doing a chi2 Fit " << std::endl;
-      fFitter.Fit(*fData);
+      fFitter.Fit(*fData, fExecutionPolicy );
    }
+
+   // function actually running the test.
+   // We define here the condition to say that the test is valid
+   bool RunFit(ROOT::Fit::ExecutionPolicy executionPolicy) {
+      fExecutionPolicy = executionPolicy;
+      if (printLevel>0) { 
+         std::cout << "**************************************\n";
+         if (fExecutionPolicy == ROOT::Fit::ExecutionPolicy::kSerial)
+            std::cout << "   RUN SEQUENTIAL \n";
+         else if (fExecutionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread)
+            std::cout << "   RUN MULTI-THREAD \n";
+         else if (fExecutionPolicy == ROOT::Fit::ExecutionPolicy::kMultiprocess)
+            std::cout << "   RUN MULTI-PROCESS \n";
+
+         std::cout << "**************************************\n";
+      }
+      Fit();
+      if (printLevel>0) fFitter.Result().Print(std::cout);
+      return (fFitter.Result().IsValid() && fFitter.Result().Edm() < 0.001);
+   }
+
    
    TF2 *fFunction;
    typename T::FittingDataType *fData;
    TH2D *fHistogram;
    ROOT::Fit::Fitter fFitter;
-
+   ROOT::Fit::ExecutionPolicy fExecutionPolicy = ROOT::Fit::ExecutionPolicy::kSerial; 
    static const unsigned fNumPoints = 401;
 };
 
@@ -238,15 +266,48 @@ typedef ::testing::Types<ScalarChi2, ScalarBinned, ScalarUnBinned, VectorialChi2
 typedef ::testing::Types<ScalarChi2, ScalarBinned, ScalarUnBinned> TestTypes;
 #endif
 
+
+
 // Declare that the GradientFittingTest class should be instantiated with the types defined by TestTypes
-TYPED_TEST_CASE(GradientFittingTest, TestTypes);
+TYPED_TEST_CASE_P(GradientFittingTest);
 
 // Test the fitting using the gradient is successful
-TYPED_TEST(GradientFittingTest, GradientFitting)
+TYPED_TEST_P(GradientFittingTest, Sequential)
 {
-   // TestFixture::fFitter.Config().MinimizerOptions().SetPrintLevel(3);
-   EXPECT_TRUE(TestFixture::fFitter.Result().IsValid() && TestFixture::fFitter.Result().Edm() < 0.001);
-   TestFixture::fFitter.Result().Print(std::cout);
+   EXPECT_TRUE(TestFixture::RunFit(ROOT::Fit::ExecutionPolicy::kSerial));
 }
 
+TYPED_TEST_P(GradientFittingTest, Multithread)
+{
+   EXPECT_TRUE(TestFixture::RunFit(ROOT::Fit::ExecutionPolicy::kMultithread));
+}
 
+REGISTER_TYPED_TEST_CASE_P(GradientFittingTest,Sequential,Multithread);
+
+INSTANTIATE_TYPED_TEST_CASE_P(GradientFitting, GradientFittingTest, TestTypes); 
+
+int main(int argc, char** argv) {
+
+// Disables elapsed time by default.
+  //::testing::GTEST_FLAG(print_time) = false;
+
+   // Parse command line arguments
+   for (Int_t i = 1 ;  i < argc ; i++) {
+      std::string arg = argv[i] ;
+      if (arg == "-v") {
+         std::cout << "---running in verbose mode" << std::endl;
+         printLevel = 1;
+      } else if (arg == "-vv") {
+         std::cout << "---running in very verbose mode" << std::endl;
+         printLevel = 2;
+      } else if (arg == "-vvv") {
+         std::cout << "---running in very very verbose mode" << std::endl;
+         printLevel = 3;
+      }
+   }
+ 
+  // This allows the user to override the flag on the command line.
+  ::testing::InitGoogleTest(&argc, argv); 
+
+  return RUN_ALL_TESTS();
+}
