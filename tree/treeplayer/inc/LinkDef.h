@@ -116,7 +116,7 @@
 #pragma link C++ class ROOT::Experimental::TDF::TH1DModel-;
 #pragma link C++ class ROOT::Experimental::TDF::TH2DModel-;
 #pragma link C++ class ROOT::Experimental::TDF::TH3DModel-;
-
+#pragma link C++ class ROOT::Internal::TDF::TIgnoreErrorLevelRAII-;
 
 #endif
 
