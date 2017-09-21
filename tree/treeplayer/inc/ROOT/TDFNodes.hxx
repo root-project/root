@@ -18,6 +18,7 @@
 #include "ROOT/TSpinMutex.hxx"
 #include "TTreeReaderArray.h"
 #include "TTreeReaderValue.h"
+#include "TError.h"
 
 #include <map>
 #include <numeric> // std::accumulate (PrintReport), std::iota (TSlotStack)
@@ -346,7 +347,9 @@ public:
    virtual void TriggerChildrenCount() = 0;
    virtual void ClearValueReaders(unsigned int slot) = 0;
    unsigned int GetNSlots() const { return fNSlots; }
-   virtual void PartialUpdate(unsigned int /*slot*/) { Warning("PartialUpdate", "Not implemented for this action!"); }
+   /// This method is invoked to update a partial result during the event loop, right before passing the result to a
+   /// user-defined callback registered via TResultProxy::RegisterCallback
+   virtual void PartialUpdate(unsigned int slot) = 0;
 };
 
 template <typename Helper, typename PrevDataFrame, typename BranchTypes_t = typename Helper::BranchTypes_t>
@@ -393,6 +396,23 @@ public:
    void TriggerChildrenCount() final { fPrevData.IncrChildrenCount(); }
 
    virtual void ClearValueReaders(unsigned int slot) final { ResetTDFValueTuple(fValues[slot], TypeInd_t()); }
+
+   /// This method is invoked to update a partial result during the event loop, right before passing the result to a
+   /// user-defined callback registered via TResultProxy::RegisterCallback
+   void PartialUpdate(unsigned int slot) final { PartialUpdateImpl(slot); }
+
+private:
+   // this overload is SFINAE'd out if Helper does not implement `PartialUpdate`
+   // the template parameter is required to defer instantiation of the method to SFINAE time
+   template<typename H = Helper>
+   auto PartialUpdateImpl(unsigned int slot) -> decltype(std::declval<H>().PartialUpdate(slot))
+   {
+      fHelper.PartialUpdate(slot);
+   }
+   // this one is always available but has lower precedence thanks to `...`
+   void PartialUpdateImpl(...) {
+      Warning("PartialUpdate", "This action does not support callbacks!");
+   }
 };
 
 } // end NS TDF
