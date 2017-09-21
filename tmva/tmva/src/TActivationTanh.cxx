@@ -101,6 +101,7 @@ void TMVA::TActivationTanh::MakeFunction( std::ostream& fout, const TString& fnc
 {
    if (fFAST) {
       fout << "double " << fncName << "(double x) const {" << std::endl;
+      fout << "   // fast hyperbolic tan approximation" << std::endl;
       fout << "   if (x > 4.97) return 1;" << std::endl;
       fout << "   if (x < -4.97) return -1;" << std::endl;
       fout << "   float x2 = x * x;" << std::endl;
