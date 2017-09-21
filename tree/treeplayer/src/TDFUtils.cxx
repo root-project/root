@@ -26,6 +26,15 @@ namespace ROOT {
 namespace Internal {
 namespace TDF {
 
+TIgnoreErrorLevelRAII::TIgnoreErrorLevelRAII(int errorIgnoreLevel)
+{
+   gErrorIgnoreLevel = errorIgnoreLevel;
+}
+TIgnoreErrorLevelRAII::~TIgnoreErrorLevelRAII()
+{
+   gErrorIgnoreLevel = fCurIgnoreErrorLevel;
+}
+
 /// Return a string containing the type of the given branch. Works both with real TTree branches and with temporary
 /// column created by Define.
 std::string
