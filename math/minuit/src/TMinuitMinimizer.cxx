@@ -454,7 +454,7 @@ std::string TMinuitMinimizer::VariableName(unsigned int ivar) const {
    // return the variable name
    if (!CheckMinuitInstance()) return std::string();
    if (!CheckVarIndex(ivar)) return std::string();
-   return std::string(fMinuit->fCpnam[ivar]);
+   return std::string(fMinuit->fCpnam[ivar].Data());
 }
 
 int TMinuitMinimizer::VariableIndex(const std::string & ) const {
