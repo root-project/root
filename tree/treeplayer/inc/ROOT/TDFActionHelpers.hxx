@@ -239,6 +239,11 @@ public:
       }
    }
    void Finalize() { fTo->Merge(); }
+
+   // Must be implemented to activate callbacks for Histo1D<T> actions.
+   // Currently no-op, meaning we leave the result object as it is:
+   // the result object is already being filled because FillTOHelper keeps it in its working slot 0
+   void PartialUpdate(unsigned int slot) { }
 };
 
 // note: changes to this class should probably be replicated in its partial
