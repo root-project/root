@@ -50,7 +50,7 @@ The following interfaces have been removed, after deprecation in v6.10.
 
 - When invoking root with the "-t" argument, ROOT enables thread-safety and,
   if configured, implicit multithreading within ROOT.
-- `NULL` is not defined by `Rtypes.h` anymore. Instead, it's definition is expected to be
+- `NULL` is not defined by `Rtypes.h` anymore. Instead, its definition is expected to be
   provided by `Rtype.h`'s `#include` of `stddef.h`.
 - ROOT now supports dictionaries for classes with template parameter packs.
 
