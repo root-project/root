@@ -1514,6 +1514,12 @@ if(tmva AND cuda)
       set(cuda OFF CACHE BOOL "" FORCE)
     endif()
   endif()
+
+  # CUDA found -- make sure cuda supports the c++ standard we are using
+  execute_process(COMMAND nvcc ${CXX_VERSION_FLAG} --version RESULT_VARIABLE nvxx_miss_cxx_standard OUTPUT_QUIET ERROR_QUIET)
+  if(nvxx_miss_cxx_standard)
+    message(FATAL_ERROR "Your CUDA compiler does not support ${CXX_VERSION_FLAG}. Choose a different version with e.g. -Dcxx11=on")
+  endif()
 endif()
 
 if(tmva AND imt)
