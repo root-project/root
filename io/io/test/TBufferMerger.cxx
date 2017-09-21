@@ -7,6 +7,7 @@
 #include "TROOT.h"
 #include "TTree.h"
 
+#include <atomic>
 #include <cstdio>
 #include <future>
 #include <memory>
@@ -164,12 +165,11 @@ TEST(TBufferMerger, CheckTreeFillResults)
 TEST(TBufferMerger, RegisterCallbackThreads)
 {
    const char *testfile = "tbuffermerger_threads.root";
-   std::mutex m;
    int events = 1000;
    int events_per_task = 50;
    int tasks = events / events_per_task;
-   volatile int launched = 0;
-   volatile int processed = 0;
+   std::atomic<int> launched(0);
+   std::atomic<int> processed(0);
 
    {
       ROOT::EnableThreadSafety();
@@ -190,7 +190,6 @@ TEST(TBufferMerger, RegisterCallbackThreads)
 
          myfile->Write();
 
-         std::lock_guard<std::mutex> lk(m);
          processed += events_per_task;
       };
 
