@@ -2,7 +2,6 @@
 #include <ROOT/TRootDS.hxx>
 #include <ROOT/TSeq.hxx>
 #include <TClass.h>
-#include <TInterpreter.h>
 
 #include <algorithm>
 #include <vector>
@@ -89,20 +88,15 @@ void TRootDS::InitSlot(unsigned int slot, ULong64_t firstEntry)
       auto typeName = GetTypeName(colName);
       auto typeClass = TClass::GetClass(typeName.c_str());
       if (typeClass) {
-         //          chain->SetBranchAddress(colName, &addr);
-         setBranches += TString::Format("((TChain*)%p)->SetBranchAddress(\"%s\", (%s**)%p);\n", chain, colName,
-                                        typeClass->GetName(), &addr);
+         chain->SetBranchAddress(colName,&addr, nullptr, typeClass,  EDataType(0), true);
       } else {
          if (!addr) {
-            addr = new double(); // who frees this :) ?
+            addr = new double();
             fAddressesToFree.emplace_back((double *)addr);
          }
          chain->SetBranchAddress(colName, addr);
-         // setBranches += TString::Format("(*(void*)%p) = new %s();((TChain*)%p)->SetBranchAddress(\"%s\",
-         // (%s*)%p);\n",&addr, typeName.c_str(), chain, colName, typeName.c_str(), addr);
       }
    }
-   gInterpreter->Calc(setBranches);
 }
 
 const std::vector<std::pair<ULong64_t, ULong64_t>> &TRootDS::GetEntryRanges() const
