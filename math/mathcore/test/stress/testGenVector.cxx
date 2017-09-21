@@ -84,6 +84,9 @@ TYPED_TEST_P(GenVectorTest, TestGenVectors)
 #else
       scale *= 10;
 #endif
+#if defined(__FAST__MATH) && defined(__clang__)
+      scale *= 1.E6;
+#endif  
    }
 
 #if defined(R__LINUX) && !defined(R__B64)

@@ -1124,13 +1124,15 @@ int testVector(int ngen, bool testio=false) {
 #else
       scale *= 10;
 #endif
+#if defined(__FAST__MATH) && defined(__clang__)
+      scale *= 1.E6;
+#endif
    }
-
+   // for problem with PtEtaPhiE
 #if defined (R__LINUX) && !defined(R__B64)
    // problem of precision on linux 32
    if (Dim ==4) scale = 1000000000;
 #endif
-   // for problem with PtEtaPhiE
    if (Dim==4 && VecType<V2>::name() == "PtEtaPhiEVector") scale = 0.01/(std::numeric_limits<double>::epsilon());
    s2 = a.testOperations(v2);  iret |= a.check(VecType<V2>::name()+" operations",s2,s1,scale);
 
