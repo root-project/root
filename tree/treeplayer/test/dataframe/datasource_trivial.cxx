@@ -98,3 +98,39 @@ TEST(TTrivialDS, FromATDFWithJitting)
    EXPECT_DOUBLE_EQ(9., *max);
    EXPECT_DOUBLE_EQ(22., *min);
 }
+
+// NOW MT!-------------
+
+TEST(TTrivialDS, FromATDFMT)
+{
+   ROOT::EnableImplicitMT(4);
+   std::unique_ptr<TDataSource> tds(new TTrivialDS(320));
+   TDataFrame tdf(std::move(tds));
+   auto max = tdf.Max<ULong64_t>("col0");
+   auto min = tdf.Min<ULong64_t>("col0");
+   auto c = tdf.Count();
+   auto max2 = tdf.Filter([](ULong64_t col0) { return col0 < 10; }, {"col0"}).Max<ULong64_t>("col0");
+   auto min2 = tdf.Filter([](ULong64_t col0) { return col0 > 10; }, {"col0"})
+                  .Define("j", [](ULong64_t col0) { return col0 * 2; }, {"col0"})
+                  .Min<ULong64_t>("j");
+
+   EXPECT_EQ(320U, *c);
+   EXPECT_DOUBLE_EQ(319., *max);
+   EXPECT_DOUBLE_EQ(0., *min);
+   EXPECT_DOUBLE_EQ(9., *max2);
+   EXPECT_DOUBLE_EQ(22., *min2);
+}
+
+TEST(TTrivialDS, FromATDFWithJittingMT)
+{
+   std::unique_ptr<TDataSource> tds(new TTrivialDS(320));
+   TDataFrame tdf(std::move(tds));
+   auto max = tdf.Filter("col0 < 10").Max("col0");
+   auto min = tdf.Filter("col0 > 10").Define("j", "col0*2").Min("j");
+
+   EXPECT_DOUBLE_EQ(9., *max);
+   EXPECT_DOUBLE_EQ(22., *min);
+}
+
+
+
