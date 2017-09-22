@@ -12,16 +12,7 @@ namespace TDF {
 
 std::vector<void *> TRootDS::GetColumnReadersImpl(std::string_view name, const std::type_info &)
 {
-
-   const auto &colNames = GetColumnNames();
-
-   if (fBranchAddresses.empty()) {
-      auto nColumns = colNames.size();
-      // Initialise the entire set of addresses
-      fBranchAddresses.resize(nColumns, std::vector<void *>(fNSlots, nullptr));
-   }
-
-   const auto index = std::distance(colNames.begin(), std::find(colNames.begin(), colNames.end(), name));
+   const auto index = std::distance(fListOfBranches.begin(), std::find(fListOfBranches.begin(), fListOfBranches.end(), name));
    std::vector<void *> ret(fNSlots);
    for (auto slot : ROOT::TSeqU(fNSlots)) {
       ret[slot] = (void *)&fBranchAddresses[index][slot];
@@ -37,6 +28,7 @@ TRootDS::TRootDS(std::string_view treeName, std::string_view fileNameGlob)
    auto &lob = *fModelChain.GetListOfBranches();
    fListOfBranches.resize(lob.GetEntries());
    std::transform(lob.begin(), lob.end(), fListOfBranches.begin(), [](TObject *o) { return o->GetName(); });
+
 }
 
 TRootDS::~TRootDS()
@@ -84,7 +76,7 @@ void TRootDS::InitSlot(unsigned int slot, ULong64_t firstEntry)
    TString setBranches;
    for (auto i : ROOT::TSeqU(fListOfBranches.size())) {
       auto colName = fListOfBranches[i].c_str();
-      auto &addr = fBranchAddresses[i][slot];
+      auto &addr = fBranchAddresses.at(i).at(slot);
       auto typeName = GetTypeName(colName);
       auto typeClass = TClass::GetClass(typeName.c_str());
       if (typeClass) {
@@ -117,6 +109,11 @@ void TRootDS::SetNSlots(unsigned int nSlots)
    assert(0U == fNSlots && "Setting the number of slots even if the number of slots is different from zero.");
 
    fNSlots = nSlots;
+
+   const auto nColumns = fListOfBranches.size();
+   // Initialise the entire set of addresses
+   fBranchAddresses.resize(nColumns, std::vector<void *>(fNSlots, nullptr));
+
    fChains.resize(fNSlots);
    auto nentries = fModelChain.GetEntries();
    auto chunkSize = nentries / fNSlots;
