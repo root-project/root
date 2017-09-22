@@ -39,6 +39,8 @@ public:
    TLeafElement(TBranch *parent, const char *name, Int_t id, Int_t type);
    virtual ~TLeafElement();
 
+   virtual Bool_t   CanGenerateOffsetArray() { return false; }
+   virtual Int_t   *GenerateOffsetArrayBase(Int_t /*base*/, Int_t /*events*/) { return nullptr; }
    virtual Int_t    GetLen() const {return ((TBranchElement*)fBranch)->GetNdata()*fLen;}
    TMethodCall     *GetMethodCall(const char *name);
    virtual Int_t    GetMaximum() const {return ((TBranchElement*)fBranch)->GetMaximum();}

@@ -36,10 +36,8 @@ public:
    TLeafO(TBranch *parent, const char *name, const char *type);
    virtual ~TLeafO();
 
-   virtual Bool_t CanGenerateOffsetArray() { return false; }
    virtual void    Export(TClonesArray *list, Int_t n);
    virtual void    FillBasket(TBuffer &b);
-   virtual Int_t *GenerateOffsetArrayBase(Int_t base, Int_t events) { return nullptr; }
    virtual Int_t   GetMaximum() const {return fMaximum;}
    virtual Int_t   GetMinimum() const {return fMinimum;}
    const char     *GetTypeName() const;
