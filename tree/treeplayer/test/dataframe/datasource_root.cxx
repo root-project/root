@@ -122,3 +122,53 @@ TEST(TRootTDS, FromATDFWithJitting)
    EXPECT_DOUBLE_EQ(5., *max);
    EXPECT_DOUBLE_EQ(5., *min);
 }
+
+// NOW MT!-------------
+
+TEST(TRootTDS, DefineSlotCheckMT)
+{
+   auto nSlots = 4U;
+   ROOT::EnableImplicitMT(nSlots);
+
+   std::hash<std::thread::id> hasher;
+   using H_t = decltype(hasher(std::this_thread::get_id()));
+
+   std::vector<H_t> ids(nSlots, 0);
+   std::unique_ptr<TDataSource> tds(new TRootDS(treeName, fileGlob));
+   TDataFrame d(std::move(tds));
+   auto m = d.DefineSlot("x", [&](unsigned int slot) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                ids[slot] = hasher(std::this_thread::get_id());
+                return 1.;
+             }).Max("x");
+
+   EXPECT_EQ(1, *m); // just in case
+
+   std::set<H_t> s(ids.begin(), ids.end());
+   EXPECT_EQ(nSlots, s.size());
+   EXPECT_TRUE(s.end() == s.find(0));
+}
+
+TEST(TRootTDS, FromATDFMT)
+{
+   std::unique_ptr<TDataSource> tds(new TRootDS(treeName, fileGlob));
+   TDataFrame tdf(std::move(tds));
+   auto max = tdf.Max<int>("i");
+   auto min = tdf.Min<int>("i");
+   auto c = tdf.Count();
+
+   EXPECT_EQ(30U, *c);
+   EXPECT_DOUBLE_EQ(29., *max);
+   EXPECT_DOUBLE_EQ(0., *min);
+}
+
+TEST(TRootTDS, FromATDFWithJittingMT)
+{
+   std::unique_ptr<TDataSource> tds(new TRootDS(treeName, fileGlob));
+   TDataFrame tdf(std::move(tds));
+   auto max = tdf.Filter("i<6").Max("i");
+   auto min = tdf.Define("j", "i").Filter("j>4").Min("j");
+
+   EXPECT_DOUBLE_EQ(5., *max);
+   EXPECT_DOUBLE_EQ(5., *min);
+}
