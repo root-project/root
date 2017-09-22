@@ -84,7 +84,7 @@ TYPED_TEST_P(GenVectorTest, TestGenVectors)
 #else
       scale *= 10;
 #endif
-#if defined(__FAST__MATH) && defined(__clang__)
+#if defined(__FAST_MATH__) && defined(__clang__)
       scale *= 1.E6;
 #endif  
    }
