@@ -26,7 +26,11 @@ namespace TDF {
 \ingroup dataframe
 \brief The TDataSource interface dictates how a TDataFrame interface to an arbitrary data format should look like.
 
-A TDataSource allows to seamlessly provide an adaptor for any kind of data set or data format to the TDataFrame. Another way to imagine it is a veritable "cursor".
+A TDataSource allows to seamlessly provide an adaptor for any kind of data set
+or data format to the TDataFrame. Another way to imagine it is a veritable
+"cursor".
+The data sources are not supposed to be used as they are from the user but
+rather as a way to plug a dataset into a TDataFrame.
 */
 class TDataSource {
 public:
