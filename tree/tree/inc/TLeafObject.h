@@ -53,7 +53,9 @@ public:
    TLeafObject(TBranch *parent, const char *name, const char *type);
    virtual ~TLeafObject();
 
+   virtual Bool_t  CanGenerateOffsetArray() { return false; }
    virtual void    FillBasket(TBuffer &b);
+   virtual Int_t  *GenerateOffsetArrayBase(Int_t /*base*/, Int_t /*events*/) { return nullptr; }
    TClass         *GetClass() const {return fClass;}
    TMethodCall    *GetMethodCall(const char *name);
    TObject        *GetObject() const {return (TObject*)(*fObjAddress);}
