@@ -75,10 +75,14 @@ public:
    /// For some implementation it's necessary to know the number of slots in advance for optimisation purposes.
    virtual void SetNSlots(unsigned int nSlots) = 0;
 
-   /// \brief Convenience method called at the start of the data processing.
+   /// \brief Convenience method called at the start of the data processing associated to a slot.
    /// \param[in] slot The data processing slot wihch needs to be initialised
    /// \param[in] firstEntry The first entry of the range that the task will process.
    virtual void InitSlot(unsigned int /*slot*/, ULong64_t /*firstEntry*/) {}
+
+   /// \brief Convenience method called at the end of the data processing associated to a slot.
+   /// \param[in] slot The data processing slot wihch needs to be finalised
+   virtual void FinaliseSlot(unsigned int /*slot*/) {}
 
 protected:
    /// type-erased vector of pointers to pointers to column values - one per slot
