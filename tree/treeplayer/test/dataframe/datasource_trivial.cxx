@@ -101,6 +101,8 @@ TEST(TTrivialDS, FromATDFWithJitting)
 
 // NOW MT!-------------
 
+#ifdef R__USE_IMT
+
 TEST(TTrivialDS, DefineSlotCheckMT)
 {
    auto nSlots = 4U;
@@ -155,5 +157,5 @@ TEST(TTrivialDS, FromATDFWithJittingMT)
    EXPECT_DOUBLE_EQ(22., *min);
 }
 
-
+#endif
 

@@ -124,6 +124,7 @@ TEST(TRootTDS, FromATDFWithJitting)
 }
 
 // NOW MT!-------------
+#ifdef R__USE_IMT
 
 TEST(TRootTDS, DefineSlotCheckMT)
 {
@@ -172,3 +173,5 @@ TEST(TRootTDS, FromATDFWithJittingMT)
    EXPECT_DOUBLE_EQ(5., *max);
    EXPECT_DOUBLE_EQ(5., *min);
 }
+
+#endif
