@@ -1124,7 +1124,7 @@ int testVector(int ngen, bool testio=false) {
 #else
       scale *= 10;
 #endif
-#if defined(__FAST__MATH) && defined(__clang__)
+#if defined(__FAST_MATH__) && defined(__clang__)
       scale *= 1.E6;
 #endif
    }
