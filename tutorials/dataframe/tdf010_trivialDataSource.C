@@ -19,7 +19,7 @@ int tdf010_trivialDataSource()
    auto nEvents = 128U;
 
    std::unique_ptr<TDS> tds(new TTrivialDS(nEvents));
-   ROOT::Experimental::TDataFrame d_s(std::move(TTrivialDS(nEvents)));
+   ROOT::Experimental::TDataFrame d_s(std::move(tds));
 
    /// Now we have a regular TDataFrame: the ingestion of data is delegated to
    /// the TDataSource. At this point everything works as before.
