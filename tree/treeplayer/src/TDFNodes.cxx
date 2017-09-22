@@ -265,7 +265,7 @@ void TLoopManager::RunAndCheckFilters(unsigned int slot, Long64_t entry)
 {
    for (auto &actionPtr : fBookedActions) actionPtr->Run(slot, entry);
    for (auto &namedFilterPtr : fBookedNamedFilters) namedFilterPtr->CheckFilters(slot, entry);
-   if (slot == 0)
+   if (!fCallbacks.empty() && slot == 0)
       for (auto &callback : fCallbacks)
          callback();
 }

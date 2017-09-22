@@ -344,7 +344,7 @@ public:
    unsigned int GetNSlots() const { return fNSlots; }
    /// This method is invoked to update a partial result during the event loop, right before passing the result to a
    /// user-defined callback registered via TResultProxy::RegisterCallback
-   virtual void PartialUpdate() = 0;
+   virtual void *PartialUpdate(unsigned int slot) = 0;
 };
 
 template <typename Helper, typename PrevDataFrame, typename BranchTypes_t = typename Helper::BranchTypes_t>
@@ -394,19 +394,20 @@ public:
 
    /// This method is invoked to update a partial result during the event loop, right before passing the result to a
    /// user-defined callback registered via TResultProxy::RegisterCallback
-   void PartialUpdate() final { PartialUpdateImpl(0); }
+   /// TODO the PartialUpdateImpl trick can go away once all action helpers will implement PartialUpdate
+   void *PartialUpdate(unsigned int slot) final { return PartialUpdateImpl(slot); }
 
 private:
    // this overload is SFINAE'd out if Helper does not implement `PartialUpdate`
    // the template parameter is required to defer instantiation of the method to SFINAE time
    template <typename H = Helper>
-   auto PartialUpdateImpl(int /*overloadSelector*/) -> decltype(std::declval<H>().PartialUpdate())
+   auto PartialUpdateImpl(unsigned int slot) -> decltype(std::declval<H>().PartialUpdate(slot))
    {
-      fHelper.PartialUpdate();
+      return fHelper.PartialUpdate(slot);
    }
    // this one is always available but has lower precedence thanks to `...`
-   void PartialUpdateImpl(...) {
-      Warning("PartialUpdate", "This action does not support callbacks!");
+   void *PartialUpdateImpl(...) {
+      throw std::runtime_error("This action does not support callbacks yet!");
    }
 };
 
