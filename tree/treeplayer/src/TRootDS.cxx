@@ -2,6 +2,8 @@
 #include <ROOT/TRootDS.hxx>
 #include <ROOT/TSeq.hxx>
 #include <TClass.h>
+#include <TROOT.h> // For the gROOTMutex
+#include <TVirtualMutex.h> // For the R__LOCKGUARD
 
 #include <algorithm>
 #include <vector>
@@ -69,8 +71,12 @@ bool TRootDS::HasColumn(std::string_view colName) const
 
 void TRootDS::InitSlot(unsigned int slot, ULong64_t firstEntry)
 {
-   auto chain = new TChain(fTreeName.c_str());
-   fChains[slot].reset(chain);
+   TChain *chain;
+   {
+      R__LOCKGUARD(gROOTMutex);
+      chain = new TChain(fTreeName.c_str());
+   }
+   chain->ResetBit(kMustCleanup);
    chain->Add(fFileNameGlob.c_str());
    chain->GetEntry(firstEntry);
    TString setBranches;
@@ -89,6 +95,7 @@ void TRootDS::InitSlot(unsigned int slot, ULong64_t firstEntry)
          chain->SetBranchAddress(colName, addr);
       }
    }
+   fChains[slot].reset(chain);
 }
 
 const std::vector<std::pair<ULong64_t, ULong64_t>> &TRootDS::GetEntryRanges() const
