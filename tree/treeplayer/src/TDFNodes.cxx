@@ -229,6 +229,7 @@ void TLoopManager::RunDataSource()
       fDataSource->SetEntry(0, i);
       RunAndCheckFilters(0, i);
    }
+   fDataSource->FinaliseSlot(0);
 }
 
 /// Run event loop over data accessed through a DataSource, in parallel.
@@ -249,6 +250,7 @@ void TLoopManager::RunDataSourceMT()
          RunAndCheckFilters(slot, currEntry);
       }
       CleanUpTask(slot);
+      fDataSource->FinaliseSlot(slot);
       slotStack.ReturnSlot(slot);
    };
 
