@@ -36,8 +36,7 @@ int tdf011_ROOTDataSource()
    auto treeName = "myTree";
    fill_tree(fileName, treeName);
 
-   std::unique_ptr<TDS> tds(new TRootDS(treeName, fileName));
-   ROOT::Experimental::TDataFrame d_s(std::move(tds));
+   auto d_s = ROOT::Experimental::TDF::MakeRootDataFrame(treeName, fileName);
 
    /// Now we have a regular TDataFrame: the ingestion of data is delegated to
    /// the TDataSource. At this point everything works as before.
