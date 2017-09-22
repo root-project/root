@@ -336,6 +336,7 @@ End_Macro
 #include "RConfig.h"
 #include "TTree.h"
 
+#include "ROOT/TIOFeatures.hxx"
 #include "TArrayC.h"
 #include "TBufferFile.h"
 #include "TBaseClass.h"
@@ -5819,6 +5820,13 @@ const char* TTree::GetFriendAlias(TTree* tree) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Returns the current set of IO settings
+ROOT::Experimental::TIOFeatures TTree::GetIOFeatures() const
+{
+   return ROOT::Experimental::TIOFeatures(fIOBits);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Creates a new iterator that will go through all the leaves on the tree itself and its friend.
 
 TIterator* TTree::GetIteratorOnAllLeaves(Bool_t dir)
@@ -8666,6 +8674,28 @@ void TTree::SetEstimate(Long64_t n /* = 1000000 */)
    if (fPlayer) {
       fPlayer->SetEstimate(n);
    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Provide the end-user with the ability to enable/disable various experimental
+/// IO features for this TTree.
+///
+/// Returns all the newly-set IO settings.
+
+ROOT::Experimental::TIOFeatures TTree::SetIOFeatures(const ROOT::Experimental::TIOFeatures &features)
+{
+   // Purposely ignore all unsupported bits; TIOFeatures implementation already warned the user about the
+   // error of their ways; this is just a safety check.
+   UChar_t featuresRequested = features.GetFeatures() & static_cast<UChar_t>(TBasket::EIOBits::kSupported);
+
+   UChar_t newFeatures = ~fIOBits & featuresRequested;
+   fIOBits |= newFeatures;
+
+   ROOT::Experimental::TIOFeatures newSettings;
+   for (Int_t idx = 0; idx < TBasket::kIOBitCount; idx++) {
+      newSettings.Set(static_cast<TBasket::EIOBits>(BIT(idx)));
+   }
+   return newSettings;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

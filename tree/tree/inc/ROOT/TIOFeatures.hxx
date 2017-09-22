@@ -8,8 +8,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TTREE_SETTINGS
-#define ROOT_TTREE_SETTINGS
+#ifndef ROOT_TIO_FEATURES
+#define ROOT_TIO_FEATURES
 
 #include "TBasket.h"
 
@@ -20,37 +20,31 @@
 #include <typeinfo>
 #include <type_traits> // is_same, enable_if
 
-class TTree;
-
 namespace ROOT {
 
 namespace Experimental {
 
-class TTreeSettings {
-public:
-   TTreeSettings(TTree &tree) : fTree(tree) {}
+class TIOFeatures {
+friend class ::TTree;
+friend class ::TBranch;
+friend class ::TBasket;
 
-   void ClearFeature(TBasket::EIOBits bits);
-   bool SetFeature(TBasket::EIOBits bits);
-   bool TestFeature(TBasket::EIOBits bits);
-   UChar_t GetFeatures();
+public:
+   TIOFeatures() {}
+
+   void Clear(TBasket::EIOBits bits);
+   bool Set(TBasket::EIOBits bits);
+   bool Test(TBasket::EIOBits bits) const;
 
 private:
-   TTree &fTree;
-};
+   TIOFeatures(UChar_t IOBits) : fIOBits(IOBits) {}
+   UChar_t GetFeatures() const;
 
-class TBranchSettings {
-public:
-  TBranchSettings(TBranch &br) : fBranch(br) {}
-
-  UChar_t GetFeatures();
-
-private:
-  TBranch &fBranch;
+   UChar_t fIOBits{0};
 };
 
 }
 
 }
 
-#endif  // ROOT_TTREE_SETTINGS
+#endif  // ROOT_TIO_FEATURES

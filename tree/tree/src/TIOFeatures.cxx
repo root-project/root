@@ -8,7 +8,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/TTreeSettings.hxx"
+#include "ROOT/TIOFeatures.hxx"
 #include "TBranch.h"
 #include "TEnum.h"
 #include "TEnumConstant.h"
@@ -20,10 +20,10 @@
 using namespace ROOT::Experimental;
 
 /**
- * \class TTreeSettings
+ * \class TIOFeatures
  * \ingroup tree
  *
- * TTreeSettings provides the end-user with the ability to change the IO behavior
+ * TIOFeatures provides the end-user with the ability to change the IO behavior
  * of data written via a TTree.  This class allows access to experimental and non-default
  * features.
  *
@@ -33,14 +33,14 @@ using namespace ROOT::Experimental;
  *
  */
 
-void TTreeSettings::ClearFeature(TBasket::EIOBits enum_bits)
+void TIOFeatures::Clear(TBasket::EIOBits enum_bits)
 {
    auto bits = static_cast<UChar_t>(enum_bits);
    if (R__unlikely((bits & static_cast<UChar_t>(TBasket::EIOBits::kSupported)) != bits)) {
       Error("TestFeature", "A feature is being cleared that is not supported.");
       return;
    }
-   fTree.fIOBits &= ~bits;
+   fIOBits &= ~bits;
 }
 
 static std::string GetUnsupportedName(TBasket::EUnsupportedIOBits enum_flag)
@@ -68,7 +68,7 @@ static std::string GetUnsupportedName(TBasket::EUnsupportedIOBits enum_flag)
    return retval;
 }
 
-bool TTreeSettings::SetFeature(TBasket::EIOBits enum_bits)
+bool TIOFeatures::Set(TBasket::EIOBits enum_bits)
 {
    auto bits = static_cast<UChar_t>(enum_bits);
    if (R__unlikely((bits & static_cast<UChar_t>(TBasket::EIOBits::kSupported)) != bits)) {
@@ -82,26 +82,21 @@ bool TTreeSettings::SetFeature(TBasket::EIOBits enum_bits)
       }
       return kFALSE;
    }
-   fTree.fIOBits |= static_cast<UChar_t>(bits);
+   fIOBits |= static_cast<UChar_t>(bits);
    return kTRUE;
 }
 
-bool TTreeSettings::TestFeature(TBasket::EIOBits enum_bits)
+bool TIOFeatures::Test(TBasket::EIOBits enum_bits) const
 {
    auto bits = static_cast<UChar_t>(enum_bits);
    if (R__unlikely((bits & static_cast<UChar_t>(TBasket::EIOBits::kSupported)) != bits)) {
       Error("TestFeature", "A feature is being tested for that is not supported or known.");
       return kFALSE;
    }
-   return (fTree.fIOBits & bits) == bits;
+   return (fIOBits & bits) == bits;
 }
 
-UChar_t TTreeSettings::GetFeatures()
+UChar_t TIOFeatures::GetFeatures() const
 {
-   return fTree.fIOBits;
-}
-
-UChar_t TBranchSettings::GetFeatures()
-{
-   return fBranch.fIOBits;
+   return fIOBits;
 }

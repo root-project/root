@@ -22,7 +22,7 @@
 #include "TVirtualMutex.h"
 #include "TVirtualPerfStats.h"
 #include "TTimeStamp.h"
-#include "ROOT/TTreeSettings.hxx"
+#include "ROOT/TIOFeatures.hxx"
 #include "RZip.h"
 
 #include <bitset>
@@ -59,7 +59,7 @@ TBasket::TBasket(TDirectory *motherDir) : TKey(motherDir)
 
 TBasket::TBasket(const char *name, const char *title, TBranch *branch)
    : TKey(branch->GetDirectory()), fBufferSize(branch->GetBasketSize()), fNevBufSize(branch->GetEntryOffsetLen()),
-     fHeaderOnly(kTRUE), fIOBits(ROOT::Experimental::TBranchSettings(*branch).GetFeatures())
+     fHeaderOnly(kTRUE), fIOBits(branch->GetIOFeatures().GetFeatures())
 {
    SetName(name);
    SetTitle(title);
