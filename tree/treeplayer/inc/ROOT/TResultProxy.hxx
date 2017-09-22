@@ -155,16 +155,17 @@ public:
    {
       if (everyNevents == 0) {
          Warning("RegisterCallback",
-                 "everyNevents implies the callback will never be executed, so it's not going to be registered.");
+                 "everyNevents==0 implies the callback will never be executed, so it's not going to be registered.");
          return;
       }
+      // TODO remove once useless: at the time of writing jitted actions, Reduce, Take, Count are missing the feature
       if (!fActionPtr)
-         throw std::runtime_error("Callback registration not implemented for this kind of action.");
+         throw std::runtime_error("Callback registration not implemented for this kind of action yet.");
       auto lm = fImplWeakPtr.lock();
       if (!lm)
          throw std::runtime_error("The main TDataFrame is not reachable: did it go out of scope?");
-      auto c = [this, callback](unsigned int slot) {
-         fActionPtr->PartialUpdate(slot);
+      auto c = [this, callback]() {
+         fActionPtr->PartialUpdate();
          callback(*fObjPtr);
       };
       lm->RegisterCallback(std::move(c), everyNevents);
