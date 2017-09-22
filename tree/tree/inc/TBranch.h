@@ -35,7 +35,7 @@
 
 namespace ROOT {
 namespace Experimental {
-class TBranchSettings;
+class TIOFeatures;
 }
 }
 
@@ -63,7 +63,6 @@ namespace ROOT {
 class TBranch : public TNamed , public TAttFill {
 
 protected:
-   friend class ROOT::Experimental::TBranchSettings;
    friend class TTreeCloner;
    friend class TTree;
 
@@ -192,6 +191,7 @@ public:
            Long64_t  GetZipBytes(Option_t *option="")    const;
            Long64_t  GetEntryNumber() const {return fEntryNumber;}
            Long64_t  GetFirstEntry()  const {return fFirstEntry; }
+           ROOT::Experimental::TIOFeatures GetIOFeatures() const;
          TObjArray  *GetListOfBaskets()  {return &fBaskets;}
          TObjArray  *GetListOfBranches() {return &fBranches;}
          TObjArray  *GetListOfLeaves()   {return &fLeaves;}
