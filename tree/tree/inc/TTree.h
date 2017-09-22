@@ -43,7 +43,7 @@
 
 namespace ROOT {
 namespace Experimental {
-class TTreeSettings;
+class TIOFeatures;
 }
 }
 
@@ -72,8 +72,6 @@ class TFileMergeInfo;
 class TVirtualPerfStats;
 
 class TTree : public TNamed, public TAttLine, public TAttFill, public TAttMarker {
-
-   friend class ROOT::Experimental::TTreeSettings;
 
 protected:
    Long64_t       fEntries;               ///<  Number of entries
@@ -403,6 +401,7 @@ public:
    virtual Bool_t          GetImplicitMT() { return fIMTEnabled; }
    virtual Int_t          *GetIndex() { return &fIndex.fArray[0]; }
    virtual Double_t       *GetIndexValues() { return &fIndexValues.fArray[0]; }
+           ROOT::Experimental::TIOFeatures GetIOFeatures() const;
    virtual TIterator      *GetIteratorOnAllLeaves(Bool_t dir = kIterForward);
    virtual TLeaf          *GetLeaf(const char* branchname, const char* leafname);
    virtual TLeaf          *GetLeaf(const char* name);
@@ -538,6 +537,7 @@ public:
    virtual void            SetDirectory(TDirectory* dir);
    virtual Long64_t        SetEntries(Long64_t n = -1);
    virtual void            SetEstimate(Long64_t nentries = 1000000);
+           ROOT::Experimental::TIOFeatures SetIOFeatures(const ROOT::Experimental::TIOFeatures &);
    virtual void            SetFileNumber(Int_t number = 0);
    virtual void            SetEventList(TEventList* list);
    virtual void            SetEntryList(TEntryList* list, Option_t *opt="");

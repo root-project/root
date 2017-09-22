@@ -1,5 +1,5 @@
 
-#include "ROOT/TTreeSettings.hxx"
+#include "ROOT/TIOFeatures.hxx"
 #include "TBasket.h"
 #include "TBranch.h"
 #include "TEnum.h"
@@ -270,6 +270,16 @@ TEST(TBasket, TestVarLengthArrays)
    }
 }
 
+UChar_t GetFeatures(const ROOT::Experimental::TIOFeatures &settings) {
+   UChar_t features = 0;
+   for (Int_t idx = 0; idx < 8; idx++) {
+      if (settings.Test(static_cast<TBasket::EIOBits>(1 << idx))) {
+         features |= 1 << idx;
+      }
+   }
+   return features;
+}
+
 TEST(TBasket, TestSettingIOBits)
 {
    TMemFile *f;
@@ -286,16 +296,17 @@ TEST(TBasket, TestSettingIOBits)
    TTree t2("t2", "Simple tree for testing serialized entry offset.");
    ASSERT_FALSE(t2.IsZombie());
 
-   ROOT::Experimental::TTreeSettings settings(t1);
-   ASSERT_EQ(settings.GetFeatures(), 0);
-   ASSERT_FALSE(settings.TestFeature(TBasket::EIOBits::kGenerateOffsetMap));
-   settings.SetFeature(TBasket::EIOBits::kGenerateOffsetMap);
-   ASSERT_EQ(settings.GetFeatures(), static_cast<UChar_t>(TBasket::EIOBits::kGenerateOffsetMap));
-   ASSERT_TRUE(settings.TestFeature(TBasket::EIOBits::kGenerateOffsetMap));
-   settings.ClearFeature(TBasket::EIOBits::kGenerateOffsetMap);
-   ASSERT_FALSE(settings.TestFeature(TBasket::EIOBits::kGenerateOffsetMap));
-   settings.SetFeature(TBasket::EIOBits::kGenerateOffsetMap);
+   ROOT::Experimental::TIOFeatures settings;
+   ASSERT_EQ(GetFeatures(settings), 0);
+   ASSERT_FALSE(settings.Test(TBasket::EIOBits::kGenerateOffsetMap));
+   settings.Set(TBasket::EIOBits::kGenerateOffsetMap);
+   ASSERT_EQ(GetFeatures(settings), static_cast<UChar_t>(TBasket::EIOBits::kGenerateOffsetMap));
+   ASSERT_TRUE(settings.Test(TBasket::EIOBits::kGenerateOffsetMap));
+   settings.Clear(TBasket::EIOBits::kGenerateOffsetMap);
+   ASSERT_FALSE(settings.Test(TBasket::EIOBits::kGenerateOffsetMap));
+   settings.Set(TBasket::EIOBits::kGenerateOffsetMap);
 
+   t1.SetIOFeatures(settings);
    Int_t idx, idx2;
    Int_t sample[10];
    Int_t sample2[10];
