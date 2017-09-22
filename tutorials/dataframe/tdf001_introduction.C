@@ -89,14 +89,14 @@ int tdf001_introduction()
    // particular column that passed filters we specified. The values are stored
    // in a list by default, but other collections can be chosen.
    auto b1_cut = d.Filter(cutb1);
-   auto b1List = b1_cut.Take<double>();
-   auto b1Vec = b1_cut.Take<double, std::vector<double>>();
+   auto b1Vec = b1_cut.Take<double>();
+   auto b1List = b1_cut.Take<double, std::list<double>>();
 
    std::cout << "Selected b1 entries" << std::endl;
    for (auto b1_entry : *b1List) std::cout << b1_entry << " ";
    std::cout << std::endl;
    auto b1VecCl = TClass::GetClass(typeid(*b1Vec));
-   std::cout << "The type of b1Vec is" << b1VecCl->GetName() << std::endl;
+   std::cout << "The type of b1Vec is " << b1VecCl->GetName() << std::endl;
 
    // ### `Histo1D` action
    // The `Histo1D` action allows to fill an histogram. It returns a TH1D filled
