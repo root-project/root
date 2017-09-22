@@ -165,7 +165,7 @@ void TWebPadPainter::CopyDrawable(Int_t, Int_t, Int_t)
 ////////////////////////////////////////////////////////////////////////////////
 /// Close the current gVirtualX pixmap.
 
-void TWebPadPainter::DestroyDrawable()
+void TWebPadPainter::DestroyDrawable(Int_t /* device */)
 {
    // gVirtualX->ClosePixmap();
 }
