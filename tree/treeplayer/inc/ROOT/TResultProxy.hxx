@@ -151,6 +151,39 @@ public:
       return TIterationHelper<T>::GetEnd(*fObjPtr);
    }
 
+   /// Register a callback that TDataFrame will execute "everyNevents".
+   ///
+   /// \param[in] everyNevents Frequency at which the callback will be called, as a number of events processed
+   /// \param[in] a callable with signature `void(Value_t&)` where Value_t is the type of the value contained in this TResultProxy
+   ///
+   /// A callback is a callable (lambda, function, functor class...) that takes a reference to the result type as
+   /// argument and returns nothing. TDataFrame will invoke registered callbacks passing partial action results as
+   /// arguments to them (e.g. a histogram filled with a part of the selected events, a counter incremented only up to a
+   /// certain point, a mean over a subset of the events and so forth).
+   ///
+   /// Callbacks can be used e.g. to inspect partial results of the analysis while the event loop is running. For
+   /// example one can draw an up-to-date version of a result histogram every 100 entries like this:
+   /// \code{.cpp}
+   /// auto h = tdf.Histo1D("x");
+   /// TCanvas c("c","x hist");
+   /// h.RegisterCallback(100, [&c](TH1D &h_) { c.cd(); h_.Draw(); c.Update(); });
+   /// \endcode
+   ///
+   /// Multiple callbacks can be registered with the same TResultProxy (i.e. results of TDataFrame actions) and will
+   /// be executed sequentially. Callbacks are executed in the order they were registered.
+   /// The type of the value contained in a TResultProxy is also available as TResultProxy<T>::Value_t, e.g.
+   /// \code{.cpp}
+   /// auto h = tdf.Histo1D("x"); // decltype(h)::Value_t is TH1D
+   /// \endcode
+   ///
+   /// When implicit multi-threading is enabled, the callback:
+   /// - will never be executed by multiple threads concurrently: it needs not be thread-safe
+   /// - will always be executed "everyNevents": partial results will "contain" that number of events more from
+   ///   one call to the next)
+   /// - might be executed by a different worker thread at different times: the value of `std::this_thread::get_id()`
+   ///   might change between calls
+   /// To register a callback that is called by _each_ worker thread (concurrently) every N events one should use
+   /// RegisterCallbackSlot instead.
    void RegisterCallback(ULong64_t everyNevents, std::function<void(T&)> callback)
    {
       if (everyNevents == 0) {
