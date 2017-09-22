@@ -85,25 +85,20 @@ class TLoopManager : public std::enable_shared_from_this<TLoopManager> {
    using TDataSource = ROOT::Experimental::TDF::TDataSource;
    enum class ELoopType { kROOTFiles, kNoFiles, kDataSource };
 
-   using Callback_t = std::function<void(unsigned int)>;
+   using Callback_t = std::function<void()>;
    class TLoopCallback {
       const Callback_t fFun;
       const ULong64_t fEveryN;
-      std::vector<ULong64_t> fCounters;
+      ULong64_t fCounter = 0ull;
 
    public:
-      TLoopCallback(Callback_t &&f, ULong64_t everyN, unsigned int nSlots)
-         : fFun(std::move(f)), fEveryN(everyN)
+      TLoopCallback(Callback_t &&f, ULong64_t everyN) : fFun(std::move(f)), fEveryN(everyN) {}
+      void operator()()
       {
-         fCounters.resize(nSlots, 0ull);
-      }
-      void operator()(unsigned int slot)
-      {
-         auto &c = fCounters[slot];
-         ++c;
-         if (c == fEveryN) {
-            c = 0ull;
-            fFun(slot);
+         ++fCounter;
+         if (fCounter == fEveryN) {
+            fCounter = 0ull;
+            fFun();
          }
       }
    };
@@ -183,7 +178,7 @@ public:
    void AddDataSourceColumn(std::string_view name) { fDefinedDataSourceColumns.emplace_back(name); }
    void AddColumnAlias(const std::string &alias, const std::string &colName) { fAliasColumnNameMap[alias] = colName; }
    const std::map<std::string, std::string> &GetAliasMap() const { return fAliasColumnNameMap; }
-   void RegisterCallback(std::function<void(unsigned int)> &&f, ULong64_t everyNevents);
+   void RegisterCallback(std::function<void()> &&f, ULong64_t everyNevents);
 };
 } // end ns TDF
 } // end ns Detail
@@ -349,7 +344,7 @@ public:
    unsigned int GetNSlots() const { return fNSlots; }
    /// This method is invoked to update a partial result during the event loop, right before passing the result to a
    /// user-defined callback registered via TResultProxy::RegisterCallback
-   virtual void PartialUpdate(unsigned int slot) = 0;
+   virtual void PartialUpdate() = 0;
 };
 
 template <typename Helper, typename PrevDataFrame, typename BranchTypes_t = typename Helper::BranchTypes_t>
@@ -399,15 +394,15 @@ public:
 
    /// This method is invoked to update a partial result during the event loop, right before passing the result to a
    /// user-defined callback registered via TResultProxy::RegisterCallback
-   void PartialUpdate(unsigned int slot) final { PartialUpdateImpl(slot); }
+   void PartialUpdate() final { PartialUpdateImpl(0); }
 
 private:
    // this overload is SFINAE'd out if Helper does not implement `PartialUpdate`
    // the template parameter is required to defer instantiation of the method to SFINAE time
-   template<typename H = Helper>
-   auto PartialUpdateImpl(unsigned int slot) -> decltype(std::declval<H>().PartialUpdate(slot))
+   template <typename H = Helper>
+   auto PartialUpdateImpl(int /*overloadSelector*/) -> decltype(std::declval<H>().PartialUpdate())
    {
-      fHelper.PartialUpdate(slot);
+      fHelper.PartialUpdate();
    }
    // this one is always available but has lower precedence thanks to `...`
    void PartialUpdateImpl(...) {
