@@ -11,15 +11,10 @@
 /// \date September 2017
 /// \author Danilo Piparo
 
-using TDS = ROOT::Experimental::TDF::TDataSource;
-using TTrivialDS = ROOT::Experimental::TDF::TTrivialDS;
-
 int tdf010_trivialDataSource()
 {
    auto nEvents = 128U;
-
-   std::unique_ptr<TDS> tds(new TTrivialDS(nEvents));
-   ROOT::Experimental::TDataFrame d_s(std::move(tds));
+   auto d_s = ROOT::Experimental::TDF::MakeTrivialDataFrame(nEvents);
 
    /// Now we have a regular TDataFrame: the ingestion of data is delegated to
    /// the TDataSource. At this point everything works as before.
