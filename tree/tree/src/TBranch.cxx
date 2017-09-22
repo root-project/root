@@ -179,15 +179,46 @@ TBranch::TBranch()
 ///    Note that this function is invoked by TTree::Branch
 
 TBranch::TBranch(TTree *tree, const char *name, void *address, const char *leaflist, Int_t basketsize, Int_t compress)
-   : TNamed(name, leaflist), TAttFill(0, 1001), fCompress(compress), fBasketSize((basketsize < 100) ? 100 : basketsize),
-     fEntryOffsetLen(0), fWriteBasket(0), fEntryNumber(0),
-     fIOBits(tree ? tree->GetIOFeatures().GetFeatures() : 0), fOffset(0), fMaxBaskets(10),
-     fNBaskets(0), fSplitLevel(0), fNleaves(0), fReadBasket(0), fReadEntry(-1), fFirstBasketEntry(-1),
-     fNextBasketEntry(-1), fCurrentBasket(0), fEntries(0), fFirstEntry(0), fTotBytes(0), fZipBytes(0), fBranches(),
-     fLeaves(), fBaskets(fMaxBaskets), fBasketBytes(0), fBasketEntry(0), fBasketSeek(0), fTree(tree), fMother(0),
-     fParent(0), fAddress((char *)address), fDirectory(fTree->GetDirectory()), fFileName(""), fEntryBuffer(0),
-     fTransientBuffer(0), fBrowsables(0), fSkipZip(kFALSE), fReadLeaves(&TBranch::ReadLeavesImpl),
-     fFillLeaves(&TBranch::FillLeavesImpl)
+   : TNamed(name, leaflist)
+, TAttFill(0, 1001)
+, fCompress(compress)
+, fBasketSize((basketsize < 100) ? 100 : basketsize)
+, fEntryOffsetLen(0)
+, fWriteBasket(0)
+, fEntryNumber(0)
+, fIOBits(tree ? tree->GetIOFeatures().GetFeatures() : 0)
+, fOffset(0)
+, fMaxBaskets(10)
+, fNBaskets(0)
+, fSplitLevel(0)
+, fNleaves(0)
+, fReadBasket(0)
+, fReadEntry(-1)
+, fFirstBasketEntry(-1)
+, fNextBasketEntry(-1)
+, fCurrentBasket(0)
+, fEntries(0)
+, fFirstEntry(0)
+, fTotBytes(0)
+, fZipBytes(0)
+, fBranches()
+, fLeaves()
+, fBaskets(fMaxBaskets)
+, fBasketBytes(0)
+, fBasketEntry(0)
+, fBasketSeek(0)
+, fTree(tree)
+, fMother(0)
+, fParent(0)
+, fAddress((char *)address)
+, fDirectory(fTree->GetDirectory())
+, fFileName("")
+, fEntryBuffer(0)
+, fTransientBuffer(0)
+, fBrowsables(0)
+, fSkipZip(kFALSE)
+, fReadLeaves(&TBranch::ReadLeavesImpl)
+, fFillLeaves(&TBranch::FillLeavesImpl)
 {
    Init(name,leaflist,compress);
 }
@@ -200,15 +231,46 @@ TBranch::TBranch(TTree *tree, const char *name, void *address, const char *leafl
 
 TBranch::TBranch(TBranch *parent, const char *name, void *address, const char *leaflist, Int_t basketsize,
                  Int_t compress)
-   : TNamed(name, leaflist), TAttFill(0, 1001), fCompress(compress), fBasketSize((basketsize < 100) ? 100 : basketsize),
-     fEntryOffsetLen(0), fWriteBasket(0), fEntryNumber(0), fIOBits(parent->fIOBits), fOffset(0), fMaxBaskets(10),
-     fNBaskets(0), fSplitLevel(0), fNleaves(0), fReadBasket(0), fReadEntry(-1), fFirstBasketEntry(-1),
-     fNextBasketEntry(-1), fCurrentBasket(0), fEntries(0), fFirstEntry(0), fTotBytes(0), fZipBytes(0), fBranches(),
-     fLeaves(), fBaskets(fMaxBaskets), fBasketBytes(0), fBasketEntry(0), fBasketSeek(0),
-     fTree(parent ? parent->GetTree() : 0), fMother(parent ? parent->GetMother() : 0), fParent(parent),
-     fAddress((char *)address), fDirectory(fTree ? fTree->GetDirectory() : 0), fFileName(""), fEntryBuffer(0),
-     fTransientBuffer(0), fBrowsables(0), fSkipZip(kFALSE), fReadLeaves(&TBranch::ReadLeavesImpl),
-     fFillLeaves(&TBranch::FillLeavesImpl)
+: TNamed(name, leaflist)
+, TAttFill(0, 1001)
+, fCompress(compress)
+, fBasketSize((basketsize < 100) ? 100 : basketsize)
+, fEntryOffsetLen(0)
+, fWriteBasket(0)
+, fEntryNumber(0)
+, fIOBits(parent->fIOBits)
+, fOffset(0)
+, fMaxBaskets(10)
+, fNBaskets(0)
+, fSplitLevel(0)
+, fNleaves(0)
+, fReadBasket(0)
+, fReadEntry(-1)
+, fFirstBasketEntry(-1)
+, fNextBasketEntry(-1)
+, fCurrentBasket(0)
+, fEntries(0)
+, fFirstEntry(0)
+, fTotBytes(0)
+, fZipBytes(0)
+, fBranches()
+, fLeaves()
+, fBaskets(fMaxBaskets)
+, fBasketBytes(0)
+, fBasketEntry(0)
+, fBasketSeek(0)
+, fTree(parent ? parent->GetTree() : 0)
+, fMother(parent ? parent->GetMother() : 0)
+, fParent(parent)
+, fAddress((char *)address)
+, fDirectory(fTree ? fTree->GetDirectory() : 0)
+, fFileName("")
+, fEntryBuffer(0)
+, fTransientBuffer(0)
+, fBrowsables(0)
+, fSkipZip(kFALSE)
+, fReadLeaves(&TBranch::ReadLeavesImpl)
+, fFillLeaves(&TBranch::FillLeavesImpl)
 {
    Init(name,leaflist,compress);
 }
