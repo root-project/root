@@ -107,9 +107,9 @@ class TResultProxy {
       return fObjPtr.get();
    }
 
-   TResultProxy(const SPT_t &objPtr, const ShrdPtrBool_t &readiness, const SPTLM_t &firstData,
+   TResultProxy(const SPT_t &objPtr, const ShrdPtrBool_t &readiness, const SPTLM_t &loopManager,
                 TDFInternal::TActionBase *actionPtr = nullptr)
-      : fReadiness(readiness), fImplWeakPtr(firstData), fObjPtr(objPtr), fActionPtr(actionPtr)
+      : fReadiness(readiness), fImplWeakPtr(loopManager), fObjPtr(objPtr), fActionPtr(actionPtr)
    {
    }
 
@@ -197,9 +197,10 @@ public:
       auto lm = fImplWeakPtr.lock();
       if (!lm)
          throw std::runtime_error("The main TDataFrame is not reachable: did it go out of scope?");
-      auto c = [this, callback]() {
-         fActionPtr->PartialUpdate();
-         callback(*fObjPtr);
+      auto actionPtr = fActionPtr; // only variables with automatic storage duration can be captured
+      auto c = [actionPtr, callback]() {
+         auto partialResult = static_cast<Value_t*>(actionPtr->PartialUpdate(0));
+         callback(*partialResult);
       };
       lm->RegisterCallback(std::move(c), everyNevents);
    }
