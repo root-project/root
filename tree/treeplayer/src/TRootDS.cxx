@@ -135,6 +135,14 @@ void TRootDS::SetNSlots(unsigned int nSlots)
    }
    fEntryRanges.back().second += reminder;
 }
+
+TDataFrame MakeRootDataFrame(std::string_view treeName, std::string_view fileNameGlob)
+{
+   std::unique_ptr<TDF::TRootDS> tds(new TDF::TRootDS(treeName, fileNameGlob));
+   ROOT::Experimental::TDataFrame tdf(std::move(tds));
+   return tdf;
+}
+
 } // ns TDF
 } // ns Experimental
 } // ns ROOT
