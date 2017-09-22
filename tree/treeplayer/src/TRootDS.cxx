@@ -2,7 +2,7 @@
 #include <ROOT/TRootDS.hxx>
 #include <ROOT/TSeq.hxx>
 #include <TClass.h>
-#include <TROOT.h> // For the gROOTMutex
+#include <TROOT.h>         // For the gROOTMutex
 #include <TVirtualMutex.h> // For the R__LOCKGUARD
 
 #include <algorithm>
@@ -14,7 +14,8 @@ namespace TDF {
 
 std::vector<void *> TRootDS::GetColumnReadersImpl(std::string_view name, const std::type_info &)
 {
-   const auto index = std::distance(fListOfBranches.begin(), std::find(fListOfBranches.begin(), fListOfBranches.end(), name));
+   const auto index =
+      std::distance(fListOfBranches.begin(), std::find(fListOfBranches.begin(), fListOfBranches.end(), name));
    std::vector<void *> ret(fNSlots);
    for (auto slot : ROOT::TSeqU(fNSlots)) {
       ret[slot] = (void *)&fBranchAddresses[index][slot];
@@ -30,7 +31,6 @@ TRootDS::TRootDS(std::string_view treeName, std::string_view fileNameGlob)
    auto &lob = *fModelChain.GetListOfBranches();
    fListOfBranches.resize(lob.GetEntries());
    std::transform(lob.begin(), lob.end(), fListOfBranches.begin(), [](TObject *o) { return o->GetName(); });
-
 }
 
 TRootDS::~TRootDS()
@@ -86,7 +86,7 @@ void TRootDS::InitSlot(unsigned int slot, ULong64_t firstEntry)
       auto typeName = GetTypeName(colName);
       auto typeClass = TClass::GetClass(typeName.c_str());
       if (typeClass) {
-         chain->SetBranchAddress(colName,&addr, nullptr, typeClass,  EDataType(0), true);
+         chain->SetBranchAddress(colName, &addr, nullptr, typeClass, EDataType(0), true);
       } else {
          if (!addr) {
             addr = new double();
