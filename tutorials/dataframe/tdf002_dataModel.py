@@ -104,7 +104,9 @@ augmented_d = d.Define('tracks_n', '(int)tracks.size()') \
                .Define('tracks_pts', 'getPt( tracks )') \
                .Define("tracks_pts_weights", 'getPtWeights( tracks )' )
 
-trN = augmented_d.Histo1D("tracks_n")
+# The histogram is initialised with a tuple containing the parameters of the
+# histogram
+trN = augmented_d.Histo1D(("", "", 40, -.5, 39.5), "tracks_n")
 trPts = augmented_d.Histo1D("tracks_pts")
 trWPts = augmented_d.Histo1D("tracks_pts", "tracks_pts_weights")
 
