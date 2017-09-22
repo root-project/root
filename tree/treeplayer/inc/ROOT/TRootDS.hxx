@@ -1,6 +1,7 @@
 #ifndef ROOT_TROOTTDS
 #define ROOT_TROOTTDS
 
+#include "ROOT/TDataFrame.hxx"
 #include "ROOT/TDataSource.hxx"
 #include <TChain.h>
 
@@ -35,6 +36,9 @@ public:
    void SetEntry(unsigned int slot, ULong64_t entry);
    void SetNSlots(unsigned int nSlots);
 };
+
+TDataFrame MakeRootDataFrame(std::string_view treeName, std::string_view fileNameGlob);
+
 } // ns TDF
 } // ns Experimental
 } // ns ROOT

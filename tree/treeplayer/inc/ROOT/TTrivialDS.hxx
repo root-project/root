@@ -1,6 +1,7 @@
 #ifndef ROOT_TTRIVIALTDS
 #define ROOT_TTRIVIALTDS
 
+#include "ROOT/TDataFrame.hxx"
 #include "ROOT/TDataSource.hxx"
 
 namespace ROOT {
@@ -27,6 +28,9 @@ public:
    void SetEntry(unsigned int slot, ULong64_t entry);
    void SetNSlots(unsigned int nSlots);
 };
+
+TDataFrame MakeTrivialDataFrame(ULong64_t size);
+
 } // ns TDF
 } // ns Experimental
 } // ns ROOT

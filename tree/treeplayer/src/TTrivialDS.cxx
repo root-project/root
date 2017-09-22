@@ -72,6 +72,14 @@ void TTrivialDS::SetNSlots(unsigned int nSlots)
    // TODO: redistribute reminder to all slots
    fEntryRanges.back().second += fSize % fNSlots;
 }
+
+TDataFrame MakeTrivialDataFrame(ULong64_t size)
+{
+   std::unique_ptr<TTrivialDS> tds(new TTrivialDS(size));
+   ROOT::Experimental::TDataFrame tdf(std::move(tds));
+   return tdf;
+}
+
 } // ns TDF
 } // ns Experimental
 } // ns ROOT
