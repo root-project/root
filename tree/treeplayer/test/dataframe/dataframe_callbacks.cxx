@@ -29,7 +29,7 @@ TEST_F(TDFCallbacks, Histo1DWithFillTOHelper)
    using value_t = typename decltype(h)::Value_t;
    ULong64_t i = 0ull;
    ULong64_t everyN = 1ull;
-   h.RegisterCallback(everyN, [&i, &everyN](value_t &h_) {
+   h.OnPartialResult(everyN, [&i, &everyN](value_t &h_) {
       i += everyN;
       EXPECT_EQ(h_.GetEntries(), everyN * i);
    });
@@ -42,14 +42,14 @@ TEST_F(TDFCallbacks, MultipleCallbacks)
    using value_t = typename decltype(h)::Value_t;
    ULong64_t everyN = 1ull;
    ULong64_t i = 0ull;
-   h.RegisterCallback(everyN, [&i, everyN](value_t &h_) {
+   h.OnPartialResult(everyN, [&i, everyN](value_t &h_) {
       i += everyN;
       EXPECT_EQ(h_.GetEntries(), i);
    });
 
    everyN = 2ull;
    ULong64_t i2 = 0ull;
-   h.RegisterCallback(everyN, [&i2, everyN](value_t &h_) {
+   h.OnPartialResult(everyN, [&i2, everyN](value_t &h_) {
       i2 += everyN;
       EXPECT_EQ(h_.GetEntries(), i2);
    });
@@ -62,7 +62,7 @@ TEST_F(TDFCallbacks, MultipleEventLoops)
    auto h = tdf.Histo1D<double>({"", "", 128, -2., 2.}, "x");
    using value_t = typename decltype(h)::Value_t;
    ULong64_t i = 0ull;
-   h.RegisterCallback(1ull, [&i](value_t &) { ++i; });
+   h.OnPartialResult(1ull, [&i](value_t &) { ++i; });
    *h;
 
    auto h2 = tdf.Histo1D<double>({"", "", 128, -2., 2.}, "x");
