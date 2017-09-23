@@ -105,7 +105,7 @@ int main() {
    ddd.Foreach([]() { std::cout << "ERROR" << std::endl; });
    auto cv = *c;
    std::cout << "c " << cv << std::endl;
-   CheckRes(cv,20U,"Forked Actions");
+   CheckRes(cv,20ULL,"Forked Actions");
 
    // TEST 3: default branches
    ROOT::Experimental::TDataFrame d2(treeName, fileName, {"b1"});
@@ -114,7 +114,7 @@ int main() {
    d2f.Foreach([](double b1) { std::cout << b1 << std::endl; });
       auto c2v = *c2;
    std::cout << "c2 " << c2v << std::endl;
-   CheckRes(c2v,5U,"Default branches");
+   CheckRes(c2v,5ULL,"Default branches");
 
    // TEST 4: execute Run lazily and implicitly
    ROOT::Experimental::TDataFrame d3(treeName, fileName, {"b1"});
@@ -122,7 +122,7 @@ int main() {
    auto c3 = d3f.Count();
    auto c3v = *c3;
    std::cout << "c3 " << c3v << std::endl;
-   CheckRes(c3v,4U,"Execute Run lazily and implicitly");
+   CheckRes(c3v,4ULL,"Execute Run lazily and implicitly");
 
    // TEST 5: non trivial branch
    ROOT::Experimental::TDataFrame d4(treeName, fileName, {"tracks"});
@@ -130,7 +130,7 @@ int main() {
    auto c4 = d4f.Count();
    auto c4v = *c4;
    std::cout << "c4 " << c4v << std::endl;
-   CheckRes(c4v,1U,"Non trivial test");
+   CheckRes(c4v,1ULL,"Non trivial test");
 
    // TEST 6: Create a histogram
    ROOT::Experimental::TDataFrame d5(treeName, fileName, {"b2"});
@@ -151,7 +151,7 @@ int main() {
                .Count();
    auto c6v = *r6;
    std::cout << c6v << std::endl;
-   CheckRes(c6v, 10U, "Define");
+   CheckRes(c6v, 10ULL, "Define");
 
    // TEST 8: Define with default branches, filters, non-trivial types
    ROOT::Experimental::TDataFrame d7(treeName, fileName, {"tracks"});
@@ -164,7 +164,7 @@ int main() {
    auto c7 = dd7.Count();
    auto h7 = dd7.Histo1D("ptsum");
    auto c7v = *c7;
-   CheckRes(c7v, 10U, "Define complicated");
+   CheckRes(c7v, 10ULL, "Define complicated");
    std::cout << "Define Histo entries: " << h7->GetEntries() << std::endl;
    std::cout << "Define Histo mean: " << h7->GetMean() << std::endl;
 
