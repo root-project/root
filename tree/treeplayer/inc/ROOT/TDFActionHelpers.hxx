@@ -83,6 +83,8 @@ class FillHelper {
    std::vector<Buf_t> fBuffers;
    std::vector<Buf_t> fWBuffers;
    const std::shared_ptr<Hist_t> fResultHist;
+   /// Histograms containing "snapshots" of partial results. Non-null only if a registered callback requires it.
+   std::vector<std::unique_ptr<Hist_t>> fPartialHists;
    unsigned int fNSlots;
    unsigned int fBufSize;
    Buf_t fMin;
@@ -123,6 +125,8 @@ public:
          thisWBuf.emplace_back(w); // TODO: Can be optimised in case T == BufEl_t
       }
    }
+
+   Hist_t *PartialUpdate(unsigned int);
 
    void Finalize();
 };
