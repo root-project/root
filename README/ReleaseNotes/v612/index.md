@@ -52,7 +52,7 @@ The following interfaces have been removed, after deprecation in v6.10.
   if configured, implicit multithreading within ROOT.
 - `NULL` is not defined by `Rtypes.h` anymore. Instead, its definition is expected to be
   provided by `Rtype.h`'s `#include` of `stddef.h`.
-- ROOT now supports dictionaries for classes with template parameter packs.
+- ROOT now supports dictionaries, autoload and autoparse for classes with template parameter packs.
 
 
 ## I/O Libraries
@@ -84,11 +84,19 @@ large TClonesArray where each element contains another small vector container.
 
 ### TDataFrame
   - Improved documentation
-  - Fix race condition: concurrent deletion of TTreeReader/TTreeReaderValue
-  - Avoid virtual calls for parts of the analysis that are not jitted
-  - Improve checks for column name validity (throw if column does not exist and if `Define`d column overrides an already existing column)
-  - Remove "custom column" nodes from the functional graph therewith optimising the traversal
-  - Add `DefineSlot`, a `Define` transformation that is aware of the multi-threading slot where the workload is executed
+  - Fixed race condition: concurrent deletion of TTreeReader/TTreeReaderValue
+  - TDF now avoids performing virtual calls for parts of the analysis that are not jitted
+  - Improved checks for column name validity (throw if column does not exist and if `Define`d column overrides an already existing column)
+  - Removed "custom column" nodes from the functional graph therewith optimising the traversal
+  - Added `DefineSlot`, a `Define` transformation that is aware of the multi-threading slot where the workload is executed
+  - Improvements in Cling drastically enhanced scaling and performance of TDF jitted code
+  - Fixed reading of c-style arrays from jitted transformations and actions
+  - pyROOT users can now easily specify parameters for the TDF histograms thanks to the newly introduced tuple-initialization
+  - The new TDataSource interface allows developers to pipe any kind of columnar data format into TDataFrame
+  - Test coverage has been increased with the introduction of google tests
+  - Users can now configure Snapshot to use different file open modes ("RECREATE" or "UPDATE"), compression level, compression algrotihm, TTree split-level and autoflush settings
+  - Python tutorials show the new "tuple-initialisation" feature of PyROOT (see below)
+  - The possibility to read from data sources was added. An interface for all data sources, TDataSource, is provided by ROOT. Two example data sources have been provided too: the TRootDS and the TTrivialDS. The former allows to read via the novel data source mechanism ROOT data, while the latter is a simple generator, created for testing and didactic purposes. It is therefore now possible to interface *any* kind of dataset/data format to ROOT as long as an adaptor which implements the pure virtual methods of the TDataSource interface can be written in C++.
 
 ## Histogram Libraries
 
@@ -159,6 +167,7 @@ large TClonesArray where each element contains another small vector container.
 
 
 ## Language Bindings
+  - PyROOT now supports list initialisation with tuples. For example, suppose to have a function `void f(const TH1F& h)`. In C++, this can be invoked with this syntax: `f({"name", "title", 64, -4, 4})`. In PyROOT this translates too `f(('name', 'title', 64, -4, 4))`.
 
 
 ## JavaScript ROOT
