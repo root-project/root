@@ -14,7 +14,7 @@ namespace ROOT {
 namespace Internal {
 namespace TDF {
 
-CountHelper::CountHelper(const std::shared_ptr<unsigned int> &resultCount, const unsigned int nSlots)
+CountHelper::CountHelper(const std::shared_ptr<ULong64_t> &resultCount, const unsigned int nSlots)
    : fResultCount(resultCount), fCounts(nSlots, 0)
 {
 }
@@ -161,7 +161,7 @@ void MeanHelper::Finalize()
 {
    double sumOfSums = 0;
    for (auto &s : fSums) sumOfSums += s;
-   Count_t sumOfCounts = 0;
+   ULong64_t sumOfCounts = 0;
    for (auto &c : fCounts) sumOfCounts += c;
    *fResultMean = sumOfSums / (sumOfCounts > 0 ? sumOfCounts : 1);
 }

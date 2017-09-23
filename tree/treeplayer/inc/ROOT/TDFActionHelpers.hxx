@@ -34,7 +34,6 @@ using namespace ROOT::TypeTraits;
 using namespace ROOT::Experimental::TDF;
 
 
-using Count_t = unsigned long;
 using Hist_t = ::TH1D;
 
 template <typename F>
@@ -61,12 +60,12 @@ public:
 };
 
 class CountHelper {
-   const std::shared_ptr<unsigned int> fResultCount;
-   std::vector<Count_t> fCounts;
+   const std::shared_ptr<ULong64_t> fResultCount;
+   std::vector<ULong64_t> fCounts;
 
 public:
    using BranchTypes_t = TypeList<>;
-   CountHelper(const std::shared_ptr<unsigned int> &resultCount, const unsigned int nSlots);
+   CountHelper(const std::shared_ptr<ULong64_t> &resultCount, const unsigned int nSlots);
    CountHelper(CountHelper &&) = default;
    CountHelper(const CountHelper &) = delete;
    void InitSlot(TTreeReader *, unsigned int) {}
@@ -391,7 +390,7 @@ extern template void MaxHelper::Exec(unsigned int, const std::vector<unsigned in
 
 class MeanHelper {
    const std::shared_ptr<double> fResultMean;
-   std::vector<Count_t> fCounts;
+   std::vector<ULong64_t> fCounts;
    std::vector<double> fSums;
 
 public:

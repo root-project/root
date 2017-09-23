@@ -697,11 +697,11 @@ public:
    /// Useful e.g. for counting the number of entries passing a certain filter (see also `Report`).
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
-   TResultProxy<unsigned int> Count()
+   TResultProxy<ULong64_t> Count()
    {
       auto df = GetDataFrameChecked();
       const auto nSlots = fProxiedPtr->GetNSlots();
-      auto cSPtr = std::make_shared<unsigned int>(0);
+      auto cSPtr = std::make_shared<ULong64_t>(0);
       using Helper_t = TDFInternal::CountHelper;
       using Action_t = TDFInternal::TAction<Helper_t, Proxied>;
       df->Book(std::make_shared<Action_t>(Helper_t(cSPtr, nSlots), ColumnNames_t({}), *fProxiedPtr));
