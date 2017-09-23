@@ -71,6 +71,7 @@ public:
    void InitSlot(TTreeReader *, unsigned int) {}
    void Exec(unsigned int slot);
    void Finalize();
+   ULong64_t *PartialUpdate(unsigned int slot);
 };
 
 class FillHelper {
@@ -246,8 +247,7 @@ public:
    HIST *PartialUpdate(unsigned int slot) { return fTo->GetAtSlotRaw(slot); }
 };
 
-// note: changes to this class should probably be replicated in its partial
-// specialization below
+// IMPORTANT NOTE: changes to this class should probably be replicated in its partial specialization below
 template <typename T, typename COLL>
 class TakeHelper {
    std::vector<std::shared_ptr<COLL>> fColls;
@@ -276,6 +276,8 @@ public:
          }
       }
    }
+
+   COLL *PartialUpdate(unsigned int slot) { return fColls[slot].get(); }
 };
 
 // note: changes to this class should probably be replicated in its unspecialized
@@ -313,6 +315,8 @@ public:
          rColl->insert(rColl->end(), coll->begin(), coll->end());
       }
    }
+
+   std::vector<T> *PartialUpdate(unsigned int slot) { return fColls[slot].get(); }
 };
 
 template <typename F, typename T>
@@ -338,6 +342,8 @@ public:
    {
       for (auto &t : fReduceObjs) *fReduceRes = fReduceFun(*fReduceRes, t);
    }
+
+   T *PartialUpdate(unsigned int slot) { return &fReduceObjs[slot]; }
 };
 
 class MinHelper {

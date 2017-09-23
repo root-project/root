@@ -793,9 +793,10 @@ public:
       auto redObjPtr = std::make_shared<T>(initValue);
       using Helper_t = TDFInternal::ReduceHelper<F, T>;
       using Action_t = typename TDFInternal::TAction<Helper_t, Proxied>;
-      loopManager->Book(std::make_shared<Action_t>(Helper_t(std::move(f), redObjPtr, fProxiedPtr->GetNSlots()),
-                                                   validColumnNames, *fProxiedPtr));
-      return MakeResultProxy(redObjPtr, loopManager);
+      auto action = std::make_shared<Action_t>(Helper_t(std::move(f), redObjPtr, fProxiedPtr->GetNSlots()),
+                                               validColumnNames, *fProxiedPtr);
+      loopManager->Book(action);
+      return MakeResultProxy(redObjPtr, loopManager, action.get());
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -825,8 +826,9 @@ public:
       auto cSPtr = std::make_shared<ULong64_t>(0);
       using Helper_t = TDFInternal::CountHelper;
       using Action_t = TDFInternal::TAction<Helper_t, Proxied>;
-      df->Book(std::make_shared<Action_t>(Helper_t(cSPtr, nSlots), ColumnNames_t({}), *fProxiedPtr));
-      return MakeResultProxy(cSPtr, df);
+      auto action = std::make_shared<Action_t>(Helper_t(cSPtr, nSlots), ColumnNames_t({}), *fProxiedPtr);
+      df->Book(action);
+      return MakeResultProxy(cSPtr, df, action.get());
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -851,8 +853,9 @@ public:
       using Action_t = TDFInternal::TAction<Helper_t, Proxied>;
       auto valuesPtr = std::make_shared<COLL>();
       const auto nSlots = fProxiedPtr->GetNSlots();
-      loopManager->Book(std::make_shared<Action_t>(Helper_t(valuesPtr, nSlots), validColumnNames, *fProxiedPtr));
-      return MakeResultProxy(valuesPtr, loopManager);
+      auto action = std::make_shared<Action_t>(Helper_t(valuesPtr, nSlots), validColumnNames, *fProxiedPtr);
+      loopManager->Book(action);
+      return MakeResultProxy(valuesPtr, loopManager, action.get());
    }
 
    ////////////////////////////////////////////////////////////////////////////
