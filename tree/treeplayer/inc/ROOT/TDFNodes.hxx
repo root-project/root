@@ -85,20 +85,25 @@ class TLoopManager : public std::enable_shared_from_this<TLoopManager> {
    using TDataSource = ROOT::Experimental::TDF::TDataSource;
    enum class ELoopType { kROOTFiles, kNoFiles, kDataSource };
 
-   using Callback_t = std::function<void()>;
+   using Callback_t = std::function<void(unsigned int)>;
    class TLoopCallback {
       const Callback_t fFun;
       const ULong64_t fEveryN;
-      ULong64_t fCounter = 0ull;
+      std::vector<ULong64_t> fCounters;
 
    public:
-      TLoopCallback(Callback_t &&f, ULong64_t everyN) : fFun(std::move(f)), fEveryN(everyN) {}
-      void operator()()
+      TLoopCallback(ULong64_t everyN, Callback_t &&f, unsigned int nSlots)
+         : fFun(std::move(f)), fEveryN(everyN), fCounters(nSlots, 0ull)
       {
-         ++fCounter;
-         if (fCounter == fEveryN) {
-            fCounter = 0ull;
-            fFun();
+      }
+
+      void operator()(unsigned int slot)
+      {
+         auto &c = fCounters[slot];
+         ++c;
+         if (c == fEveryN) {
+            c = 0ull;
+            fFun(slot);
          }
       }
    };
@@ -178,7 +183,7 @@ public:
    void AddDataSourceColumn(std::string_view name) { fDefinedDataSourceColumns.emplace_back(name); }
    void AddColumnAlias(const std::string &alias, const std::string &colName) { fAliasColumnNameMap[alias] = colName; }
    const std::map<std::string, std::string> &GetAliasMap() const { return fAliasColumnNameMap; }
-   void RegisterCallback(std::function<void()> &&f, ULong64_t everyNevents);
+   void RegisterCallback(ULong64_t everyNEvents, std::function<void(unsigned int)> &&f);
 };
 } // end ns TDF
 } // end ns Detail

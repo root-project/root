@@ -115,6 +115,21 @@ class TResultProxy {
 
    void SetActionPtr(TDFInternal::TActionBase *a) { fActionPtr = a; }
 
+   void RegisterCallbackImpl(ULong64_t everyNEvents, std::function<void(unsigned int)> &&c) {
+      if (everyNEvents == 0) {
+         Warning("RegisterCallback",
+                 "everyNEvents==0 implies the callback will never be executed, so it's not going to be registered.");
+         return;
+      }
+      // TODO remove once useless: at the time of writing jitted actions, Reduce, Take, Count are missing the feature
+      if (!fActionPtr)
+         throw std::runtime_error("Callback registration not implemented for this kind of action yet.");
+      auto lm = fImplWeakPtr.lock();
+      if (!lm)
+         throw std::runtime_error("The main TDataFrame is not reachable: did it go out of scope?");
+      lm->RegisterCallback(everyNEvents, std::move(c));
+   }
+
 public:
    using Value_t = T; ///< Convenience alias to simplify access to proxied type
 
@@ -151,9 +166,9 @@ public:
       return TIterationHelper<T>::GetEnd(*fObjPtr);
    }
 
-   /// Register a callback that TDataFrame will execute "everyNevents".
+   /// Register a callback that TDataFrame will execute "everyNEvents".
    ///
-   /// \param[in] everyNevents Frequency at which the callback will be called, as a number of events processed
+   /// \param[in] everyNEvents Frequency at which the callback will be called, as a number of events processed
    /// \param[in] a callable with signature `void(Value_t&)` where Value_t is the type of the value contained in this TResultProxy
    ///
    /// A callback is a callable (lambda, function, functor class...) that takes a reference to the result type as
@@ -167,6 +182,7 @@ public:
    /// auto h = tdf.Histo1D("x");
    /// TCanvas c("c","x hist");
    /// h.RegisterCallback(100, [&c](TH1D &h_) { c.cd(); h_.Draw(); c.Update(); });
+   /// h->Draw(); // event loop runs here, this `Draw` is executed after the event loop is finished
    /// \endcode
    ///
    /// Multiple callbacks can be registered with the same TResultProxy (i.e. results of TDataFrame actions) and will
@@ -178,31 +194,57 @@ public:
    ///
    /// When implicit multi-threading is enabled, the callback:
    /// - will never be executed by multiple threads concurrently: it needs not be thread-safe
-   /// - will always be executed "everyNevents": partial results will "contain" that number of events more from
+   /// - will always be executed "everyNEvents": partial results will "contain" that number of events more from
    ///   one call to the next)
    /// - might be executed by a different worker thread at different times: the value of `std::this_thread::get_id()`
    ///   might change between calls
    /// To register a callback that is called by _each_ worker thread (concurrently) every N events one should use
    /// RegisterCallbackSlot instead.
-   void RegisterCallback(ULong64_t everyNevents, std::function<void(T&)> callback)
+   void RegisterCallback(ULong64_t everyNEvents, std::function<void(T&)> callback)
    {
-      if (everyNevents == 0) {
-         Warning("RegisterCallback",
-                 "everyNevents==0 implies the callback will never be executed, so it's not going to be registered.");
-         return;
-      }
-      // TODO remove once useless: at the time of writing jitted actions, Reduce, Take, Count are missing the feature
-      if (!fActionPtr)
-         throw std::runtime_error("Callback registration not implemented for this kind of action yet.");
-      auto lm = fImplWeakPtr.lock();
-      if (!lm)
-         throw std::runtime_error("The main TDataFrame is not reachable: did it go out of scope?");
       auto actionPtr = fActionPtr; // only variables with automatic storage duration can be captured
-      auto c = [actionPtr, callback]() {
-         auto partialResult = static_cast<Value_t*>(actionPtr->PartialUpdate(0));
+      auto c = [actionPtr, callback](unsigned int slot) {
+         if (slot != 0)
+            return;
+         auto partialResult = static_cast<Value_t*>(actionPtr->PartialUpdate(slot));
          callback(*partialResult);
       };
-      lm->RegisterCallback(std::move(c), everyNevents);
+      RegisterCallbackImpl(everyNEvents, std::move(c));
+   }
+
+   /// Register a callback that TDataFrame will execute "everyNEvents" in each worker thread.
+   ///
+   /// \param[in] everyNEvents Frequency at which the callback will be called, as a number of events processed
+   /// \param[in] a callable with signature `void(unsigned int, Value_t&)` where Value_t is the type of the value contained in this TResultProxy
+   ///
+   /// See `RegisterCallback` for a generic explanation of the callback mechanism.
+   /// Compared to `RegisterCallback`, this method has two major differences:
+   /// - all worker threads invoke the callback once per specified number of events. The event count is per-thread, and
+   ///   callback invocation might happen concurrently (i.e. the callback must be thread-safe)
+   /// - the callable must take an extra `unsigned int` parameter corresponding to a multi-thread "processing slot":
+   ///   this is a "helper value" to simplify writing thread-safe callbacks: different worker threads might invoke the
+   ///   callback concurrently but always with different `slot` numbers.
+   ///
+   /// For example, the following snippet prints out a synchronous count of the events processed by TDataFrame:
+   /// \code
+   /// auto h = tdf.Histo1D("x");
+   /// std::atomic_int evtCounter(0);
+   /// h.RegisterCallbackSlot(100, [&evtCounter](unsigned int, TH1D&) {
+   ///   // thread-safe addition
+   ///   evtCounter += 100;
+   ///   // evtCounter might already have been incremented by another thread here, but let's assume we don't care
+   ///   std::cout << evtCounter << std::endl;
+   /// }
+   /// h->Draw(); // trigger event loop and execution of callbacks, finish with a `Draw`
+   /// \endcode
+   void RegisterCallbackSlot(ULong64_t everyNEvents, std::function<void(unsigned int, T&)> callback)
+   {
+      auto actionPtr = fActionPtr;
+      auto c = [actionPtr, callback](unsigned int slot) {
+         auto partialResult = static_cast<Value_t*>(actionPtr->PartialUpdate(slot));
+         callback(slot, *partialResult);
+      };
+      RegisterCallbackImpl(everyNEvents, std::move(c));
    }
 };
 
