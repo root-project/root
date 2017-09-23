@@ -115,7 +115,7 @@ class TResultProxy {
 
    void SetActionPtr(TDFInternal::TActionBase *a) { fActionPtr = a; }
 
-   void RegisterCallbackImpl(ULong64_t everyNEvents, std::function<void(unsigned int)> &&c) {
+   void RegisterCallback(ULong64_t everyNEvents, std::function<void(unsigned int)> &&c) {
       if (everyNEvents == 0) {
          Warning("RegisterCallback",
                  "everyNEvents==0 implies the callback will never be executed, so it's not going to be registered.");
@@ -200,7 +200,7 @@ public:
    ///   might change between calls
    /// To register a callback that is called by _each_ worker thread (concurrently) every N events one should use
    /// RegisterCallbackSlot instead.
-   void RegisterCallback(ULong64_t everyNEvents, std::function<void(T&)> callback)
+   void OnPartialResult(ULong64_t everyNEvents, std::function<void(T&)> callback)
    {
       auto actionPtr = fActionPtr; // only variables with automatic storage duration can be captured
       auto c = [actionPtr, callback](unsigned int slot) {
@@ -209,7 +209,7 @@ public:
          auto partialResult = static_cast<Value_t*>(actionPtr->PartialUpdate(slot));
          callback(*partialResult);
       };
-      RegisterCallbackImpl(everyNEvents, std::move(c));
+      RegisterCallback(everyNEvents, std::move(c));
    }
 
    /// Register a callback that TDataFrame will execute "everyNEvents" in each worker thread.
@@ -237,14 +237,14 @@ public:
    /// }
    /// h->Draw(); // trigger event loop and execution of callbacks, finish with a `Draw`
    /// \endcode
-   void RegisterCallbackSlot(ULong64_t everyNEvents, std::function<void(unsigned int, T&)> callback)
+   void OnPartialResultSlot(ULong64_t everyNEvents, std::function<void(unsigned int, T&)> callback)
    {
       auto actionPtr = fActionPtr;
       auto c = [actionPtr, callback](unsigned int slot) {
          auto partialResult = static_cast<Value_t*>(actionPtr->PartialUpdate(slot));
          callback(slot, *partialResult);
       };
-      RegisterCallbackImpl(everyNEvents, std::move(c));
+      RegisterCallback(everyNEvents, std::move(c));
    }
 };
 
