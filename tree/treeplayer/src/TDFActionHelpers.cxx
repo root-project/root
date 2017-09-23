@@ -72,6 +72,17 @@ void FillHelper::Exec(unsigned int slot, double v, double w)
    fWBuffers[slot].emplace_back(w);
 }
 
+Hist_t *FillHelper::PartialUpdate(unsigned int slot)
+{
+   auto &partialHist = fPartialHists[slot];
+   // TODO it is inefficient to re-create the partial histogram everytime the callback is called
+   //      ideally we could incrementally fill it with the latest entries in the buffers
+   partialHist.reset(new Hist_t(*fResultHist));
+   auto weights = fWBuffers[slot].empty() ? nullptr : fWBuffers[slot].data();
+   partialHist->FillN(fBuffers[slot].size(), fBuffers[slot].data(), weights);
+   return partialHist.get();
+}
+
 void FillHelper::Finalize()
 {
    for (unsigned int i = 0; i < fNSlots; ++i) {
