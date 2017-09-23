@@ -32,6 +32,11 @@ void CountHelper::Finalize()
    }
 }
 
+ULong64_t *CountHelper::PartialUpdate(unsigned int slot)
+{
+   return &fCounts[slot];
+}
+
 void FillHelper::UpdateMinMax(unsigned int slot, double v)
 {
    auto &thisMin = fMin[slot];
