@@ -53,6 +53,7 @@ The following interfaces have been removed, after deprecation in v6.10.
 - `NULL` is not defined by `Rtypes.h` anymore. Instead, its definition is expected to be
   provided by `Rtype.h`'s `#include` of `stddef.h`.
 - ROOT now supports dictionaries, autoload and autoparse for classes with template parameter packs.
+- std::make_unique has been backported
 
 
 ## I/O Libraries
