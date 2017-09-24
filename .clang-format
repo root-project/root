@@ -99,6 +99,8 @@ UseTab:          Never
 IncludeCategories:
   - Regex:           '^"[^/]+\"'
     Priority:        10
+  - Regex:           '^"ROOT/'
+    Priority:        15
   - Regex:           '^"cling/'
     Priority:        20
   - Regex:           '^"clang/'
