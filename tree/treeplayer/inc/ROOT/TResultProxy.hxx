@@ -116,11 +116,6 @@ class TResultProxy {
    void SetActionPtr(TDFInternal::TActionBase *a) { fActionPtr = a; }
 
    void RegisterCallback(ULong64_t everyNEvents, std::function<void(unsigned int)> &&c) {
-      if (everyNEvents == 0) {
-         Warning("RegisterCallback",
-                 "everyNEvents==0 implies the callback will never be executed, so it's not going to be registered.");
-         return;
-      }
       // TODO remove once useless: at the time of writing jitted actions, Reduce, Take, Count are missing the feature
       if (!fActionPtr)
          throw std::runtime_error("Callback registration not implemented for this kind of action yet.");
@@ -132,6 +127,7 @@ class TResultProxy {
 
 public:
    using Value_t = T; ///< Convenience alias to simplify access to proxied type
+   static constexpr ULong64_t kOnce = 0ull; ///< Convenience definition to express a callback must be executed once
 
    TResultProxy() = delete;
 
@@ -185,11 +181,15 @@ public:
    /// h->Draw(); // event loop runs here, this `Draw` is executed after the event loop is finished
    /// \endcode
    ///
+   /// A value of 0 for everyNEvents indicates the callback must be executed only once, before running the event loop.
+   /// A conveniece definition `kOnce` is provided to make this fact more expressive in user code (see snippet below).
    /// Multiple callbacks can be registered with the same TResultProxy (i.e. results of TDataFrame actions) and will
    /// be executed sequentially. Callbacks are executed in the order they were registered.
    /// The type of the value contained in a TResultProxy is also available as TResultProxy<T>::Value_t, e.g.
    /// \code{.cpp}
-   /// auto h = tdf.Histo1D("x"); // decltype(h)::Value_t is TH1D
+   /// auto h = tdf.Histo1D("x");
+   /// // decltype(h)::Value_t is TH1D
+   /// // decltype(h)::kOnce is 0
    /// \endcode
    ///
    /// When implicit multi-threading is enabled, the callback:
@@ -225,6 +225,7 @@ public:
    /// - the callable must take an extra `unsigned int` parameter corresponding to a multi-thread "processing slot":
    ///   this is a "helper value" to simplify writing thread-safe callbacks: different worker threads might invoke the
    ///   callback concurrently but always with different `slot` numbers.
+   /// - a value of 0 for everyNEvents indicates the callback must be executed once _per slot_.
    ///
    /// For example, the following snippet prints out a thread-safe progress bar of the events processed by TDataFrame
    /// \code
