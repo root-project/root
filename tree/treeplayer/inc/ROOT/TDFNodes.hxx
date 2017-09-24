@@ -130,8 +130,8 @@ class TLoopManager : public std::enable_shared_from_this<TLoopManager> {
    const std::unique_ptr<TDataSource> fDataSource; ///< Owning pointer to a data-source object. Null if no data-source
    ColumnNames_t fDefinedDataSourceColumns;        ///< List of data-source columns that have been `Define`d so far
    std::map<std::string, std::string> fAliasColumnNameMap; ///< ColumnNameAlias-columnName pairs
-   std::vector<TLoopCallback> fCallbacks;                  ///< Registered callbacks invoked once per event per slot
-   std::vector<TLoopCallback> fCallbacksOnce; ///< Registered callbacks invoked once per event-loop per slot
+   std::vector<TLoopCallback> fCallbacks; ///< Registered callbacks
+   std::vector<TLoopCallback> fCallbacksOnce; ///< Registered callbacks to invoke just once before running the loop
 
    void RunEmptySourceMT();
    void RunEmptySource();
