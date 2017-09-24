@@ -275,11 +275,11 @@ void TLoopManager::RunAndCheckFilters(unsigned int slot, Long64_t entry)
 /// a particular slot will be using.
 void TLoopManager::InitNodeSlots(TTreeReader *r, unsigned int slot)
 {
-   // booked branches must be initialized first
-   // because actions and filters might need to point to the values encapsulate
+   // booked branches must be initialized first because other nodes might need to point to the values they encapsulate
    for (auto &bookedBranch : fBookedCustomColumns) bookedBranch.second->InitSlot(r, slot);
    for (auto &ptr : fBookedActions) ptr->InitSlot(r, slot);
    for (auto &ptr : fBookedFilters) ptr->InitSlot(r, slot);
+   for (auto &callback : fCallbacksOnce) callback(slot);
 }
 
 /// Initialize all nodes of the functional graph before running the event loop.
@@ -311,6 +311,7 @@ void TLoopManager::CleanUpNodes()
    for (auto &ptr : fBookedRanges) ptr->ResetChildrenCount();
 
    fCallbacks.clear();
+   fCallbacksOnce.clear();
 }
 
 /// Perform clean-up operations. To be called at the end of each task execution.
@@ -447,7 +448,10 @@ void TLoopManager::Report() const
 
 void TLoopManager::RegisterCallback(ULong64_t everyNEvents, std::function<void(unsigned int)> &&f)
 {
-   fCallbacks.emplace_back(everyNEvents, std::move(f), fNSlots);
+   if (everyNEvents == 0ull)
+      fCallbacksOnce.emplace_back(1ull, std::move(f), fNSlots);
+   else
+      fCallbacks.emplace_back(everyNEvents, std::move(f), fNSlots);
 }
 
 TRangeBase::TRangeBase(TLoopManager *implPtr, unsigned int start, unsigned int stop, unsigned int stride,

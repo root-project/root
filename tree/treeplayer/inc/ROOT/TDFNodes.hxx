@@ -131,6 +131,7 @@ class TLoopManager : public std::enable_shared_from_this<TLoopManager> {
    ColumnNames_t fDefinedDataSourceColumns;        ///< List of data-source columns that have been `Define`d so far
    std::map<std::string, std::string> fAliasColumnNameMap; ///< ColumnNameAlias-columnName pairs
    std::vector<TLoopCallback> fCallbacks;                  ///< Registered callbacks invoked once per event per slot
+   std::vector<TLoopCallback> fCallbacksOnce; ///< Registered callbacks invoked once per event-loop per slot
 
    void RunEmptySourceMT();
    void RunEmptySource();
