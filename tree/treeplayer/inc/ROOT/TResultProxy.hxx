@@ -166,12 +166,12 @@ public:
       return TIterationHelper<T>::GetEnd(*fObjPtr);
    }
 
-   /// Register a callback that TDataFrame will execute "everyNEvents".
+   /// Register a callback that TDataFrame will execute "everyNEvents" on a partial result.
    ///
    /// \param[in] everyNEvents Frequency at which the callback will be called, as a number of events processed
-   /// \param[in] a callable with signature `void(Value_t&)` where Value_t is the type of the value contained in this TResultProxy
+   /// \param[in] callback a callable with signature `void(Value_t&)` where Value_t is the type of the value contained in this TResultProxy
    ///
-   /// A callback is a callable (lambda, function, functor class...) that takes a reference to the result type as
+   /// The callback must be a callable (lambda, function, functor class...) that takes a reference to the result type as
    /// argument and returns nothing. TDataFrame will invoke registered callbacks passing partial action results as
    /// arguments to them (e.g. a histogram filled with a part of the selected events, a counter incremented only up to a
    /// certain point, a mean over a subset of the events and so forth).
@@ -181,7 +181,7 @@ public:
    /// \code{.cpp}
    /// auto h = tdf.Histo1D("x");
    /// TCanvas c("c","x hist");
-   /// h.RegisterCallback(100, [&c](TH1D &h_) { c.cd(); h_.Draw(); c.Update(); });
+   /// h.OnPartialResult(100, [&c](TH1D &h_) { c.cd(); h_.Draw(); c.Update(); });
    /// h->Draw(); // event loop runs here, this `Draw` is executed after the event loop is finished
    /// \endcode
    ///
@@ -193,13 +193,14 @@ public:
    /// \endcode
    ///
    /// When implicit multi-threading is enabled, the callback:
-   /// - will never be executed by multiple threads concurrently: it needs not be thread-safe
+   /// - will never be executed by multiple threads concurrently: it needs not be thread-safe. For example the snippet
+   ///   above that draws the partial histogram on a canvas works seamlessly in multi-thread event loops.
    /// - will always be executed "everyNEvents": partial results will "contain" that number of events more from
-   ///   one call to the next)
+   ///   one call to the next
    /// - might be executed by a different worker thread at different times: the value of `std::this_thread::get_id()`
    ///   might change between calls
-   /// To register a callback that is called by _each_ worker thread (concurrently) every N events one should use
-   /// RegisterCallbackSlot instead.
+   /// To register a callback that is called by _each_ worker thread (concurrently) every N events one can use
+   /// OnPartialResultSlot.
    void OnPartialResult(ULong64_t everyNEvents, std::function<void(T&)> callback)
    {
       auto actionPtr = fActionPtr; // only variables with automatic storage duration can be captured
@@ -212,30 +213,32 @@ public:
       RegisterCallback(everyNEvents, std::move(c));
    }
 
-   /// Register a callback that TDataFrame will execute "everyNEvents" in each worker thread.
+   /// Register a callback that TDataFrame will execute in each worker thread concurrently on that thread's partial result.
    ///
-   /// \param[in] everyNEvents Frequency at which the callback will be called, as a number of events processed
+   /// \param[in] everyNEvents Frequency at which the callback will be called by each thread, as a number of events processed
    /// \param[in] a callable with signature `void(unsigned int, Value_t&)` where Value_t is the type of the value contained in this TResultProxy
    ///
    /// See `RegisterCallback` for a generic explanation of the callback mechanism.
    /// Compared to `RegisterCallback`, this method has two major differences:
-   /// - all worker threads invoke the callback once per specified number of events. The event count is per-thread, and
-   ///   callback invocation might happen concurrently (i.e. the callback must be thread-safe)
+   /// - all worker threads invoke the callback once every specified number of events. The event count is per-thread,
+   ///   and callback invocation might happen concurrently (i.e. the callback must be thread-safe)
    /// - the callable must take an extra `unsigned int` parameter corresponding to a multi-thread "processing slot":
    ///   this is a "helper value" to simplify writing thread-safe callbacks: different worker threads might invoke the
    ///   callback concurrently but always with different `slot` numbers.
    ///
-   /// For example, the following snippet prints out a synchronous count of the events processed by TDataFrame:
+   /// For example, the following snippet prints out a thread-safe progress bar of the events processed by TDataFrame
    /// \code
-   /// auto h = tdf.Histo1D("x");
-   /// std::atomic_int evtCounter(0);
-   /// h.RegisterCallbackSlot(100, [&evtCounter](unsigned int, TH1D&) {
-   ///   // thread-safe addition
-   ///   evtCounter += 100;
-   ///   // evtCounter might already have been incremented by another thread here, but let's assume we don't care
-   ///   std::cout << evtCounter << std::endl;
-   /// }
-   /// h->Draw(); // trigger event loop and execution of callbacks, finish with a `Draw`
+   /// auto c = tdf.Count(); // any action would do, but `Count` is the most lightweight
+   /// std::string progress;
+   /// std::mutex bar_mutex;
+   /// c.OnPartialResultSlot(nEvents / 100, [&progress, &bar_mutex](unsigned int, ULong64_t &) {
+   ///    std::lock_guard<std::mutex> lg(bar_mutex);
+   ///    progress.push_back('#');
+   ///    std::cout << "\r[" << std::left << std::setw(100) << progress << ']' << std::flush;
+   /// });
+   /// std::cout << "Analysis running..." << std::endl;
+   /// *c; // trigger the event loop by accessing an action's result
+   /// std::cout << "\nDone!" << std::endl;
    /// \endcode
    void OnPartialResultSlot(ULong64_t everyNEvents, std::function<void(unsigned int, T&)> callback)
    {
