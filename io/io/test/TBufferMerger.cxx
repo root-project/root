@@ -28,6 +28,8 @@ static void Fill(TTree *tree, int init, int count)
       n = init + i;
       tree->Fill();
    }
+
+   tree->ResetBranchAddresses();
 }
 
 static bool FileExists(const char *name)
