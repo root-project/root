@@ -163,7 +163,7 @@ template void MaxHelper::Exec(unsigned int, const std::vector<int> &);
 template void MaxHelper::Exec(unsigned int, const std::vector<unsigned int> &);
 
 MeanHelper::MeanHelper(const std::shared_ptr<double> &meanVPtr, const unsigned int nSlots)
-   : fResultMean(meanVPtr), fCounts(nSlots, 0), fSums(nSlots, 0)
+   : fResultMean(meanVPtr), fCounts(nSlots, 0), fSums(nSlots, 0), fPartialMeans(nSlots)
 {
 }
 
@@ -180,6 +180,12 @@ void MeanHelper::Finalize()
    ULong64_t sumOfCounts = 0;
    for (auto &c : fCounts) sumOfCounts += c;
    *fResultMean = sumOfSums / (sumOfCounts > 0 ? sumOfCounts : 1);
+}
+
+double *MeanHelper::PartialUpdate(unsigned int slot)
+{
+   fPartialMeans[slot] = fSums[slot] / fCounts[slot];
+   return &fPartialMeans[slot];
 }
 
 template void MeanHelper::Exec(unsigned int, const std::vector<float> &);
