@@ -98,6 +98,7 @@ large TClonesArray where each element contains another small vector container.
   - Users can now configure Snapshot to use different file open modes ("RECREATE" or "UPDATE"), compression level, compression algrotihm, TTree split-level and autoflush settings
   - Python tutorials show the new "tuple-initialisation" feature of PyROOT (see below)
   - The possibility to read from data sources was added. An interface for all data sources, TDataSource, is provided by ROOT. Two example data sources have been provided too: the TRootDS and the TTrivialDS. The former allows to read via the novel data source mechanism ROOT data, while the latter is a simple generator, created for testing and didactic purposes. It is therefore now possible to interface *any* kind of dataset/data format to ROOT as long as an adaptor which implements the pure virtual methods of the TDataSource interface can be written in C++.
+  - Column can be aliased with the TInterface method Alias: `auto histo = mytdf.Alias("myAlias", "myColumn").Histo1D("myAlias");`
 
 ## Histogram Libraries
 
