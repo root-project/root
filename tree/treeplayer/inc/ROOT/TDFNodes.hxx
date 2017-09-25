@@ -199,6 +199,8 @@ class TColumnValue {
    /// or a TDataSource. It stores which it is as an enum.
    enum class EColumnKind { kTreeBranch, kCustomColumn, kDataSource };
    EColumnKind fColumnKind;
+   /// The slot this value belongs to. Only needed when querying custom column values.
+   unsigned int fSlot;
 
    // Each element of the following data members will be in use by a _single task_.
    // The vectors are used as very small stacks (1-2 elements typically) that fill in case of interleaved task execution
@@ -214,8 +216,6 @@ class TColumnValue {
    std::vector<T **> fDSValuePtrs;
    /// Non-owning ptrs to the node responsible for the custom column. Needed when querying custom values.
    std::vector<TCustomColumnBase *> fCustomColumns;
-   /// The slot this value belongs to. Needed when querying custom column values.
-   unsigned int fSlot;
 
 public:
    TColumnValue() = default;
@@ -689,12 +689,13 @@ public:
 
 } // namespace TDF
 } // namespace Detail
-} // namespace ROOT
 
 // method implementations
+namespace Internal {
+namespace TDF {
+
 template <typename T>
-void ROOT::Internal::TDF::TColumnValue<T>::SetTmpColumn(unsigned int slot,
-                                                        ROOT::Detail::TDF::TCustomColumnBase *customColumn)
+void TColumnValue<T>::SetTmpColumn(unsigned int slot, ROOT::Detail::TDF::TCustomColumnBase *customColumn)
 {
    fCustomColumns.emplace_back(customColumn);
    if (customColumn->GetTypeId() != typeid(T))
@@ -718,9 +719,8 @@ void ROOT::Internal::TDF::TColumnValue<T>::SetTmpColumn(unsigned int slot,
 // the branch to be executed)
 template <typename T>
 template <typename U,
-          typename std::enable_if<std::is_same<typename ROOT::Internal::TDF::TColumnValue<U>::ProxyParam_t, U>::value,
-                                  int>::type>
-T &ROOT::Internal::TDF::TColumnValue<T>::Get(Long64_t entry)
+          typename std::enable_if<std::is_same<typename TColumnValue<U>::ProxyParam_t, U>::value, int>::type>
+T &TColumnValue<T>::Get(Long64_t entry)
 {
    switch (fColumnKind) {
    case EColumnKind::kTreeBranch:
@@ -737,4 +737,7 @@ T &ROOT::Internal::TDF::TColumnValue<T>::Get(Long64_t entry)
    }
 }
 
+} // namespace TDF
+} // namespace Internal
+} // namespace ROOT
 #endif // ROOT_TDFNODES
