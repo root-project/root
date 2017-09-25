@@ -387,12 +387,7 @@ void TMacOSXSystem::DispatchOneEvent(Bool_t pendingOnly)
          return;
 
       // check synchronous signals
-      if (fSigcnt > 0 && fSignalHandler->GetSize() > 0)
-         if (CheckSignals(kTRUE))
-            if (!pendingOnly) return;
-
-      fSigcnt = 0;
-      fSignals->Zero();
+      if (HaveTrappedSignal(pendingOnly)) return;
 
       // check synchronous timers
       Long_t nextto = 0;

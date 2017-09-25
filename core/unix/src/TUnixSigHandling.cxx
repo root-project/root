@@ -95,12 +95,6 @@
 #   include <dlfcn.h>
 #endif
 
-#ifdef HAVE_BACKTRACE_SYMBOLS_FD
-   // The maximum stack trace depth for systems where we request the
-   // stack depth separately (currently glibc-based systems).
-   static const int kMAX_BACKTRACE_DEPTH = 128;
-#endif
-
 class TFdSet;
  
 #if defined(HAVE_DLADDR) && !defined(R__MACOSX)
@@ -743,11 +737,21 @@ void TUnixSigHandling::StackTraceHelperInit()
    close(gStackTraceHelper.fParentToChild[1]);
    gStackTraceHelper.fParentToChild[0] = -1; gStackTraceHelper.fParentToChild[1] = -1;
 
-   if (-1 == pipe2(gStackTraceHelper.fChildToParent, O_CLOEXEC)) {
+#ifdef R__MACOSX
+   if (-1 == pipe(gStackTraceHelper.fChildToParent))
+#else
+   if (-1 == pipe2(gStackTraceHelper.fChildToParent, O_CLOEXEC))
+#endif
+   {
       fprintf(stdout, "pipe gStackTraceHelper.fChildToParent failed\n");
       return;
    }
-   if (-1 == pipe2(gStackTraceHelper.fParentToChild, O_CLOEXEC)){
+#ifdef R__MACOSX
+   if (-1 == pipe(gStackTraceHelper.fParentToChild))
+#else
+   if (-1 == pipe2(gStackTraceHelper.fParentToChild, O_CLOEXEC))
+#endif
+   {
       close(gStackTraceHelper.fChildToParent[0]); close(gStackTraceHelper.fChildToParent[1]);
       gStackTraceHelper.fChildToParent[0] = -1; gStackTraceHelper.fChildToParent[1] = -1;
       fprintf(stdout, "pipe parentToChild failed\n");
