@@ -12,6 +12,7 @@
 #include "TRegexp.h"
 
 #include "ROOT/TDFInterface.hxx"
+#include "ROOT/TSeq.hxx"
 
 #include <vector>
 #include <string>
@@ -33,7 +34,8 @@ namespace TDF {
 // Match expression against names of branches passed as parameter
 // Return vector of names of the branches used in the expression
 std::vector<std::string> FindUsedColumnNames(std::string_view expression, TObjArray *branches,
-                                             const ColumnNames_t &customColumns, const ColumnNames_t &dsColumns)
+                                             const ColumnNames_t &customColumns, const ColumnNames_t &dsColumns,
+                                             const std::map<std::string, std::string> &aliasMap)
 {
    // To help matching the regex
    const std::string paddedExpr = " " + std::string(expression) + " ";
@@ -43,7 +45,7 @@ std::vector<std::string> FindUsedColumnNames(std::string_view expression, TObjAr
    std::vector<std::string> usedBranches;
 
    // Check which custom columns match
-   for (auto brName : customColumns) {
+   for (auto &brName : customColumns) {
       std::string bNameRegexContent = regexBit + brName + regexBit;
       TRegexp bNameRegex(bNameRegexContent.c_str());
       if (-1 != bNameRegex.Index(paddedExpr.c_str(), &paddedExprLen)) {
@@ -64,13 +66,25 @@ std::vector<std::string> FindUsedColumnNames(std::string_view expression, TObjAr
    }
 
    // Check which data-source columns match
-   for (auto col : dsColumns) {
+   for (auto &col : dsColumns) {
       std::string bNameRegexContent = regexBit + col + regexBit;
       TRegexp bNameRegex(bNameRegexContent.c_str());
       if (-1 != bNameRegex.Index(paddedExpr.c_str(), &paddedExprLen)) {
-         // if not already found among the custom columns
+         // if not already found among the other columns
          if (std::find(usedBranches.begin(), usedBranches.end(), col) == usedBranches.end())
             usedBranches.emplace_back(col);
+      }
+   }
+
+   // Check which aliases match
+   for (auto &alias_colName : aliasMap) {
+      auto &alias = alias_colName.first;
+      std::string bNameRegexContent = regexBit + alias + regexBit;
+      TRegexp bNameRegex(bNameRegexContent.c_str());
+      if (-1 != bNameRegex.Index(paddedExpr.c_str(), &paddedExprLen)) {
+         // if not already found among the other columns
+         if (std::find(usedBranches.begin(), usedBranches.end(), alias) == usedBranches.end())
+            usedBranches.emplace_back(alias);
       }
    }
 
@@ -80,13 +94,14 @@ std::vector<std::string> FindUsedColumnNames(std::string_view expression, TObjAr
 // Jit a string filter or a string temporary column, call this->Define or this->Filter as needed
 // Return pointer to the new functional chain node returned by the call, cast to Long_t
 Long_t JitTransformation(void *thisPtr, std::string_view methodName, std::string_view interfaceTypeName,
-                         std::string_view name, std::string_view expression, TObjArray *branches,
+                         std::string_view name, std::string_view expression,
+                         const std::map<std::string, std::string> &aliasMap, TObjArray *branches,
                          const std::vector<std::string> &customColumns,
                          const std::map<std::string, TmpBranchBasePtr_t> &tmpBookedBranches, TTree *tree,
                          std::string_view returnTypeName, TDataSource *ds)
 {
    const auto &dsColumns = ds ? ds->GetColumnNames() : ColumnNames_t{};
-   auto usedBranches = FindUsedColumnNames(expression, branches, customColumns, dsColumns);
+   auto usedBranches = FindUsedColumnNames(expression, branches, customColumns, dsColumns, aliasMap);
    auto exprNeedsVariables = !usedBranches.empty();
 
    // Move to the preparation of the jitting
@@ -98,12 +113,17 @@ Long_t JitTransformation(void *thisPtr, std::string_view methodName, std::string
    dummyDecl << "namespace __tdf_" << std::to_string(iNs++) << "{ void f(){\n";
 
    // Declare variables with the same name as the column used by this transformation
+   auto aliasMapEnd = aliasMap.end();
    if (exprNeedsVariables) {
-      for (auto brName : usedBranches) {
+      for (auto &brName : usedBranches) {
+         // Here we replace on the fly the brName with the real one in case brName it's an alias
+         // This is then used to get the type. The variable name will be brName;
+         auto aliasMapIt = aliasMap.find(brName);
+         auto &realBrName = aliasMapEnd == aliasMapIt ? brName : aliasMapIt->second;
          // The map is a const reference, so no operator[]
-         auto tmpBrIt = tmpBookedBranches.find(brName);
+         auto tmpBrIt = tmpBookedBranches.find(realBrName);
          auto tmpBr = tmpBrIt == tmpBookedBranches.end() ? nullptr : tmpBrIt->second.get();
-         auto brTypeName = ColumnName2ColumnTypeName(brName, tree, tmpBr, ds);
+         auto brTypeName = ColumnName2ColumnTypeName(realBrName, tree, tmpBr, ds);
          dummyDecl << brTypeName << " " << brName << ";\n";
          usedBranchesTypes.emplace_back(brTypeName);
       }
@@ -128,6 +148,8 @@ Long_t JitTransformation(void *thisPtr, std::string_view methodName, std::string
       // temporaries converted from TTreeReaderArrays.
       if (usedBranchesTypes[i].find_first_of("std::array_view<") == 0u)
          ss << "const ";
+      // Here we do not replace anything: the name of the parameters of the lambda does not need to be the real
+      // column name, it must be an alias to compile.
       ss << usedBranchesTypes[i] << "& " << usedBranches[i] << ", ";
    }
    if (!usedBranchesTypes.empty())
@@ -148,7 +170,10 @@ Long_t JitTransformation(void *thisPtr, std::string_view methodName, std::string
    }
    ss << filterLambda << ", {";
    for (auto brName : usedBranches) {
-      ss << "\"" << brName << "\", ";
+      // Here we selectively replace the brName with the real column name if it's necessary.
+      auto aliasMapIt = aliasMap.find(brName);
+      auto &realBrName = aliasMapEnd == aliasMapIt ? brName : aliasMapIt->second;
+      ss << "\"" << realBrName << "\", ";
    }
    if (exprNeedsVariables)
       ss.seekp(-2, ss.cur); // remove the last ",
@@ -273,7 +298,7 @@ ColumnNames_t GetValidatedColumnNames(TLoopManager &lm, const unsigned int nColu
                                       const ColumnNames_t &validCustomColumns, TDataSource *ds)
 {
    const auto &defaultColumns = lm.GetDefaultColumnNames();
-   const auto selectedColumns = SelectColumns(nColumns, columns, defaultColumns);
+   auto selectedColumns = SelectColumns(nColumns, columns, defaultColumns);
    const auto unknownColumns = FindUnknownColumns(selectedColumns, lm.GetTree(), validCustomColumns,
                                                   ds ? ds->GetColumnNames() : ColumnNames_t{});
 
@@ -281,11 +306,23 @@ ColumnNames_t GetValidatedColumnNames(TLoopManager &lm, const unsigned int nColu
       // throw
       std::stringstream unknowns;
       std::string delim = unknownColumns.size() > 1 ? "s: " : ": "; // singular/plural
-      for (auto &unknown : unknownColumns) {
-         unknowns << delim << unknown;
+      for (auto &unknownColumn : unknownColumns) {
+         unknowns << delim << unknownColumn;
          delim = ',';
       }
       throw std::runtime_error("Unknown column" + unknowns.str());
+   }
+
+   // Now we need to check within the aliases if some of the yet unknown names can be recovered
+   auto &aliasMap = lm.GetAliasMap();
+   auto aliasMapEnd = aliasMap.end();
+
+   for (auto idx : ROOT::TSeqU(selectedColumns.size())) {
+      const auto &colName = selectedColumns[idx];
+      const auto aliasColumnNameIt = aliasMap.find(colName);
+      if (aliasMapEnd != aliasColumnNameIt) {
+         selectedColumns[idx] = aliasColumnNameIt->second;
+      }
    }
 
    return selectedColumns;
