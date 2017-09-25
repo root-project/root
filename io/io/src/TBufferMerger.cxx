@@ -65,7 +65,6 @@ void TBufferMerger::Push(TBufferFile *buffer)
 
 void TBufferMerger::WriteOutputFile()
 {
-   TDirectoryFile::TContext context;
    std::unique_ptr<TMemFile> memfile;
    std::unique_ptr<TBufferFile> buffer;
    TFileMerger merger;
@@ -93,16 +92,13 @@ void TBufferMerger::WriteOutputFile()
       buffer->ReadLong64(length);
 
       {
-         TDirectory::TContext ctxt;
-         {
-            R__LOCKGUARD(gROOTMutex);
-            memfile.reset(new TMemFile(fName.c_str(), buffer->Buffer() + buffer->Length(), length, "read"));
-            buffer->SetBufferOffset(buffer->Length() + length);
-            merger.AddFile(memfile.get(), false);
-            merger.PartialMerge();
-         }
-         merger.Reset();
+         R__LOCKGUARD(gROOTMutex);
+         memfile.reset(new TMemFile(fName.c_str(), buffer->Buffer() + buffer->Length(), length, "read"));
+         buffer->SetBufferOffset(buffer->Length() + length);
+         merger.AddFile(memfile.get(), false);
+         merger.PartialMerge();
       }
+      merger.Reset();
 
       if (fCallback)
          fCallback();
