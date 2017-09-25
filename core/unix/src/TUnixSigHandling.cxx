@@ -284,22 +284,6 @@ void TUnixSigHandling::Init()
    UnixSignal(kSigFloatingException,     SigHandler);
    UnixSignal(kSigWindowChanged,         SigHandler);
 
-#if defined(R__MACOSX)
-   // trap loading of all dylibs to register dylib name,
-   // sets also ROOTSYS if built without ROOTPREFIX
-   _dyld_register_func_for_add_image(DylibAdded);
-#elif defined(HAVE_DLADDR)
-   SetRootSys();
-#endif
-
-#ifndef ROOTPREFIX
-   gRootDir = gSystem->Getenv("ROOTSYS");
-   if (gRootDir == 0)
-      gRootDir= "/usr/local/root";
-#else
-   gRootDir = ROOTPREFIX;
-#endif
-
    if(snprintf(gStackTraceHelper.fShellExec, kStringLength-1, "/bin/sh") >= kStringLength) {
       SignalSafeErrWrite("Unable to pre-allocate shell command path");
       return;
