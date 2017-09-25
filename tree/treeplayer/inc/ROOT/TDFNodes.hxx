@@ -105,6 +105,7 @@ class TLoopManager : public std::enable_shared_from_this<TLoopManager> {
    std::string fToJit;        ///< string containing all `BuildAndBook` actions that should be jitted before running
    const std::unique_ptr<TDataSource> fDataSource; ///< Owning pointer to a data-source object. Null if no data-source
    ColumnNames_t fDefinedDataSourceColumns; ///< List of data-source columns that have been `Define`d so far
+   std::map<std::string, std::string> fAliasColumnNameMap; ///< ColumnNameAlias-columnName pairs
 
    void RunEmptySourceMT();
    void RunEmptySource();
@@ -155,6 +156,9 @@ public:
    void Jit(const std::string &s) { fToJit.append(s); }
    const ColumnNames_t &GetDefinedDataSourceColumns() const { return fDefinedDataSourceColumns; }
    void AddDataSourceColumn(std::string_view name) { fDefinedDataSourceColumns.emplace_back(name); }
+   void AddColumnAlias(const std::string &alias, const std::string &colName) { fAliasColumnNameMap[alias] = colName; }
+   const std::map<std::string, std::string> &GetAliasMap() const { return fAliasColumnNameMap; }
+
 };
 } // end ns TDF
 } // end ns Detail
