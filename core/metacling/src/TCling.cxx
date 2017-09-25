@@ -1161,7 +1161,7 @@ TCling::TCling(const char *name, const char *title)
 #endif
 
 #ifdef R__FAST_MATH
-      interpArgs.push_back("-ffast-math");
+   interpArgs.push_back("-ffast-math");
 #endif
 
 #ifdef R__EXTERN_LLVMDIR
