@@ -39,11 +39,7 @@ class TSeqCollection;
 class TFdSet;
 class TVirtualMutex;
 
-#ifdef __CINT__
-typedef void *Func_t;
-#else
 typedef void ((*Func_t)());
-#endif
 
 R__EXTERN const char  *gRootDir;
 R__EXTERN TVirtualMutex *gSystemMutex;
