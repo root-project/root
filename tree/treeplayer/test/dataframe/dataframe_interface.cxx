@@ -74,7 +74,7 @@ TEST(TDataFrameInterface, CheckAliasesPerChain)
    TDataFrame tdf(1);
    auto d = tdf.Define("c0", []() { return 0; });
    // Now branch the graph
-   auto ok = [](){return true;};
+   auto ok = []() { return true; };
    auto f0 = d.Filter(ok);
    auto f1 = d.Filter(ok);
    auto f0a = f0.Alias("c1", "c0");
