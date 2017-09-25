@@ -110,8 +110,7 @@ using TmpBranchBasePtr_t = std::shared_ptr<TCustomColumnBase>;
 
 Long_t JitTransformation(void *thisPtr, std::string_view methodName, std::string_view interfaceTypeName,
                          std::string_view name, std::string_view expression,
-                         const std::map<std::string, std::string>& aliasMap,
-                         TObjArray *branches,
+                         const std::map<std::string, std::string> &aliasMap, TObjArray *branches,
                          const std::vector<std::string> &customColumns,
                          const std::map<std::string, TmpBranchBasePtr_t> &tmpBookedBranches, TTree *tree,
                          std::string_view returnTypeName, TDataSource *ds);
@@ -435,8 +434,7 @@ public:
    /// \param[in] alias name of the column alias
    /// \param[in] columnName of the column to be aliased
    /// Aliasing an alias is supported.
-   TInterface<Proxied>
-   Alias(std::string_view alias, std::string_view columnName)
+   TInterface<Proxied> Alias(std::string_view alias, std::string_view columnName)
    {
       // The symmetry with Define is clear. We want to:
       // - Create globally the alias and return this very node, unchanged
@@ -450,7 +448,8 @@ public:
       TDFInternal::CheckCustomColumn(alias, loopManager->GetTree(), fValidCustomColumns, dsColumnNames);
 
       const auto validColumnName =
-         TDFInternal::GetValidatedColumnNames(*loopManager, 1, {std::string(columnName)}, fValidCustomColumns, fDataSource)[0];
+         TDFInternal::GetValidatedColumnNames(*loopManager, 1, {std::string(columnName)},
+                                              fValidCustomColumns, fDataSource)[0];
 
       loopManager->AddColumnAlias(std::string(alias), validColumnName);
       TInterface<Proxied> newInterface(fProxiedPtr, fImplWeakPtr, fValidCustomColumns, fDataSource);
