@@ -1504,7 +1504,16 @@ endif()
 #---Check for CUDA and BLAS ---------------------------------------------------------
 if(tmva AND cuda)
   message(STATUS "Looking for CUDA for optional parts of TMVA")
-  find_package(CUDA 7.5)
+
+  if(cxx11)
+    find_package(CUDA 7.5)
+  elseif(cxx14)
+    message(STATUS "Detected request for c++14, requiring minimum version CUDA 9.0 (default 7.5)")
+    find_package(CUDA 9.0)
+  elseif(cxx17)
+    message(FATAL_ERROR "Using CUDA with c++17 currently not supported")
+  endif()
+
   if(NOT CUDA_FOUND)
     if(fail-on-missing)
       message(FATAL_ERROR "CUDA not found. Ensure that the installation of CUDA is in the CMAKE_PREFIX_PATH")
