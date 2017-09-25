@@ -37,12 +37,8 @@
 
 class TSeqCollection;
 class TFdSet;
-class TVirtualMutex;
 
 typedef void ((*Func_t)());
-
-R__EXTERN const char  *gRootDir;
-R__EXTERN TVirtualMutex *gSystemMutex;
 
 class TSigHandling : public TNamed {
 
