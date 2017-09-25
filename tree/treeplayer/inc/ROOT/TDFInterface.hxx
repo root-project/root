@@ -109,7 +109,9 @@ std::vector<std::string> FindUsedColumnNames(std::string_view, TObjArray *, cons
 using TmpBranchBasePtr_t = std::shared_ptr<TCustomColumnBase>;
 
 Long_t JitTransformation(void *thisPtr, std::string_view methodName, std::string_view interfaceTypeName,
-                         std::string_view name, std::string_view expression, TObjArray *branches,
+                         std::string_view name, std::string_view expression,
+                         const std::map<std::string, std::string>& aliasMap,
+                         TObjArray *branches,
                          const std::vector<std::string> &customColumns,
                          const std::map<std::string, TmpBranchBasePtr_t> &tmpBookedBranches, TTree *tree,
                          std::string_view returnTypeName, TDataSource *ds);
@@ -426,6 +428,34 @@ public:
       auto retVal = CallJitTransformation("Define", name, expression, retType::GetNodeTypeName());
       auto retInterface = reinterpret_cast<retType *>(retVal);
       return *retInterface;
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Allow to refer to a column with a different name
+   /// \param[in] alias name of the column alias
+   /// \param[in] columnName of the column to be aliased
+   /// Aliasing an alias is supported.
+   TInterface<Proxied>
+   Alias(std::string_view alias, std::string_view columnName)
+   {
+      // The symmetry with Define is clear. We want to:
+      // - Create globally the alias and return this very node, unchanged
+      // - Make aliases accessible based on chains and not globally
+      auto loopManager = GetDataFrameChecked();
+
+      // Helper to find out if a name is a column
+      auto &dsColumnNames = fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{};
+
+      // If the alias name is a column name, there is a problem
+      TDFInternal::CheckCustomColumn(alias, loopManager->GetTree(), fValidCustomColumns, dsColumnNames);
+
+      const auto validColumnName =
+         TDFInternal::GetValidatedColumnNames(*loopManager, 1, {std::string(columnName)}, fValidCustomColumns, fDataSource)[0];
+
+      loopManager->AddColumnAlias(std::string(alias), validColumnName);
+      TInterface<Proxied> newInterface(fProxiedPtr, fImplWeakPtr, fValidCustomColumns, fDataSource);
+      newInterface.fValidCustomColumns.emplace_back(alias);
+      return newInterface;
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -1226,6 +1256,7 @@ private:
                                 std::string_view returnTypeName)
    {
       auto df = GetDataFrameChecked();
+      auto &aliasMap = df->GetAliasMap();
       auto tree = df->GetTree();
       auto branches = tree ? tree->GetListOfBranches() : nullptr;
       const auto &customColumns = df->GetCustomColumnNames();
@@ -1235,8 +1266,8 @@ private:
          upcastNode, fImplWeakPtr, fValidCustomColumns, fDataSource);
       const auto thisTypeName = "ROOT::Experimental::TDF::TInterface<" + upcastInterface.GetNodeTypeName() + ">";
       return TDFInternal::JitTransformation(&upcastInterface, transformation, thisTypeName, nodeName, expression,
-                                            branches, customColumns, tmpBookedBranches, tree, returnTypeName,
-                                            fDataSource);
+                                            aliasMap, branches, customColumns, tmpBookedBranches, tree,
+                                            returnTypeName, fDataSource);
    }
 
    /// Return string containing fully qualified type name of the node pointed by fProxied.
