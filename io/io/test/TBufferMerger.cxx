@@ -41,6 +41,8 @@ static bool FileExists(const char *name)
 TEST(TBufferMerger, CreateAndDestroy)
 {
    TBufferMerger merger("tbuffermerger_create.root");
+
+   remove("tbuffermerger_create.root");
 }
 
 TEST(TBufferMerger, CreateAndDestroyWithAttachedFiles)
@@ -56,6 +58,8 @@ TEST(TBufferMerger, CreateAndDestroyWithAttachedFiles)
    }
 
    EXPECT_TRUE(FileExists("tbuffermerger_create.root"));
+
+   remove("tbuffermerger_create.root");
 }
 
 TEST(TBufferMerger, SequentialTreeFill)
@@ -210,6 +214,9 @@ TEST(TBufferMerger, CheckTreeFillResults)
 
    EXPECT_EQ(523776, sum_s);
    EXPECT_EQ(523776, sum_p);
+
+   remove("tbuffermerger_sequential.root");
+   remove("tbuffermerger_parallel.root");
 }
 
 TEST(TBufferMerger, RegisterCallbackThreads)
