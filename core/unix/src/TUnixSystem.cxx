@@ -20,7 +20,7 @@
 #include "RConfigure.h"
 #include "RConfig.h"
 #include "TUnixSystem.h"
-#include "TUnixSigHandling.h"
+#include "TUnixSignalManager.h"
 #include "TROOT.h"
 #include "TError.h"
 #include "TOrdCollection.h"
@@ -588,7 +588,7 @@ Bool_t TUnixSystem::Init()
    // This is a fallback in case TROOT::GetRootSys() can't determine ROOTSYS
    gRootDir = "/usr/local/root";
 
-   gSigHandling->Init();
+   gSignalManager->Init();
 
    return kFALSE;
 }
@@ -772,7 +772,7 @@ TFileHandler *TUnixSystem::RemoveFileHandler(TFileHandler *h)
 
 void TUnixSystem::AddSignalHandler(TSignalHandler *h)
 {
-   gSigHandling->AddSignalHandler(h);
+   gSignalManager->AddSignalHandler(h);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -781,7 +781,7 @@ void TUnixSystem::AddSignalHandler(TSignalHandler *h)
 
 TSignalHandler *TUnixSystem::RemoveSignalHandler(TSignalHandler *h)
 {
-   TSignalHandler *oh = gSigHandling->RemoveSignalHandler(h);
+   TSignalHandler *oh = gSignalManager->RemoveSignalHandler(h);
    return oh;
 }
 
@@ -791,7 +791,7 @@ TSignalHandler *TUnixSystem::RemoveSignalHandler(TSignalHandler *h)
 
 void TUnixSystem::ResetSignal(ESignals sig, Bool_t reset)
 {
-   gSigHandling->ResetSignal(sig, reset);
+   gSignalManager->ResetSignal(sig, reset);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -799,7 +799,7 @@ void TUnixSystem::ResetSignal(ESignals sig, Bool_t reset)
 
 void TUnixSystem::ResetSignals()
 {
-   gSigHandling->ResetSignals();
+   gSignalManager->ResetSignals();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -808,7 +808,7 @@ void TUnixSystem::ResetSignals()
 
 void TUnixSystem::IgnoreSignal(ESignals sig, Bool_t ignore)
 {
-   gSigHandling->IgnoreSignal(sig, ignore);
+   gSignalManager->IgnoreSignal(sig, ignore);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -817,7 +817,7 @@ void TUnixSystem::IgnoreSignal(ESignals sig, Bool_t ignore)
 
 Bool_t TUnixSystem::HaveTrappedSignal(Bool_t pendingOnly)
 {
-   return gSigHandling->HaveTrappedSignal(pendingOnly);
+   return gSignalManager->HaveTrappedSignal(pendingOnly);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -830,14 +830,14 @@ Bool_t TUnixSystem::HaveTrappedSignal(Bool_t pendingOnly)
 
 void TUnixSystem::SigAlarmInterruptsSyscalls(Bool_t set)
 {
-   gSigHandling->SigAlarmInterruptsSyscalls(set);
+   gSignalManager->SigAlarmInterruptsSyscalls(set);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Obtain the current signal handlers
 TSeqCollection *TUnixSystem::GetListOfSignalHandlers()
 {
-   return (TSeqCollection *)gSigHandling->GetListOfSignalHandlers();
+   return (TSeqCollection *)gSignalManager->GetListOfSignalHandlers();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -142,11 +142,11 @@ namespace std {} using namespace std;
 #if defined(R__UNIX)
 #if defined(R__HAS_COCOA)
 #include "TMacOSXSystem.h"
-#include "TUnixSigHandling.h"
+#include "TUnixSignalManager.h"
 #include "TUrl.h"
 #else
 #include "TUnixSystem.h"
-#include "TUnixSigHandling.h"
+#include "TUnixSignalManager.h"
 #endif
 #elif defined(R__WIN32)
 #include "TWinNTSystem.h"
@@ -1851,17 +1851,17 @@ void TROOT::InitSystem()
    if (gSystem == 0) {
 #if defined(R__UNIX)
 #if defined(R__HAS_COCOA)
-      gSigHandling = new TUnixSigHandling;
+      gSignalManager = new TUnixSignalManager;
       gSystem = new TMacOSXSystem;
 #else
-      gSigHandling = new TUnixSigHandling;
+      gSignalManager = new TUnixSignalManager;
       gSystem = new TUnixSystem;
 #endif
 #elif defined(R__WIN32)
-      gSigHandling = new TUnixSigHandling;
+      gSignalManager = new TUnixSignalManager;
       gSystem = new TWinNTSystem;
 #else
-      gSigHandling = new TSigHandling;
+      gSignalManager = new TSignalManager;
       gSystem = new TSystem;
 #endif
 

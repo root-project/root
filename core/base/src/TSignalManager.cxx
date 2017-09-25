@@ -30,7 +30,7 @@ allows a simple partial implementation for new OS'es.
 
 #include "Riostream.h"
 #include "TSystem.h"
-#include "TSigHandling.h"
+#include "TSignalManager.h"
 #include "TApplication.h"
 #include "TException.h"
 #include "TROOT.h"
@@ -51,14 +51,14 @@ allows a simple partial implementation for new OS'es.
 #include "compiledata.h"
 #include "RConfigure.h"
 
-TSigHandling  *gSigHandling = 0;
+TSignalManager  *gSignalManager = 0;
 
-ClassImp(TSigHandling)
+ClassImp(TSignalManager)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a new OS interface.
 
-TSigHandling::TSigHandling(const char *name, const char *title) : TNamed(name, title)
+TSignalManager::TSignalManager(const char *name, const char *title) : TNamed(name, title)
 {
    fSignals       = 0;
    fSigcnt        = 0;
@@ -67,7 +67,7 @@ TSigHandling::TSigHandling(const char *name, const char *title) : TNamed(name, t
 ////////////////////////////////////////////////////////////////////////////////
 /// Delete the OS interface.
 
-TSigHandling::~TSigHandling()
+TSignalManager::~TSignalManager()
 {
    if (fSignalHandler) {
       fSignalHandler->Delete();
@@ -77,7 +77,7 @@ TSigHandling::~TSigHandling()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Init the OS interface.
-void TSigHandling::Init()
+void TSignalManager::Init()
 {
    fSignalHandler = new TOrdCollection;
 }
@@ -86,7 +86,7 @@ void TSigHandling::Init()
 /// Add a signal handler to list of system signal handlers. Only adds
 /// the handler if it is not already in the list of signal handlers.
 
-Bool_t TSigHandling::HaveTrappedSignal(Bool_t)
+Bool_t TSignalManager::HaveTrappedSignal(Bool_t)
 {
    AbstractMethod("HaveTrappedSignal");
    return kFALSE;
@@ -95,7 +95,7 @@ Bool_t TSigHandling::HaveTrappedSignal(Bool_t)
 ////////////////////////////////////////////////////////////////////////////////
 /// Dispatch signals.
 
-void TSigHandling::DispatchSignals(ESignals /*sig*/)
+void TSignalManager::DispatchSignals(ESignals /*sig*/)
 {
    AbstractMethod("DispatchSignals");
 }
@@ -105,7 +105,7 @@ void TSigHandling::DispatchSignals(ESignals /*sig*/)
 /// Add a signal handler to list of system signal handlers. Only adds
 /// the handler if it is not already in the list of signal handlers.
 
-void TSigHandling::AddSignalHandler(TSignalHandler *)
+void TSignalManager::AddSignalHandler(TSignalHandler *)
 {
    AbstractMethod("AddSignalHandler");
 }
@@ -114,7 +114,7 @@ void TSigHandling::AddSignalHandler(TSignalHandler *)
 /// Remove a signal handler from list of signal handlers. Returns
 /// the handler or 0 if the handler was not in the list of signal handlers.
 
-TSignalHandler *TSigHandling::RemoveSignalHandler(TSignalHandler *)
+TSignalHandler *TSignalManager::RemoveSignalHandler(TSignalHandler *)
 {
    AbstractMethod("RemoveSignalHandler");
    return 0;
@@ -124,7 +124,7 @@ TSignalHandler *TSigHandling::RemoveSignalHandler(TSignalHandler *)
 /// If reset is true reset the signal handler for the specified signal
 /// to the default handler, else restore previous behaviour.
 
-void TSigHandling::ResetSignal(ESignals /*sig*/, Bool_t /*reset*/)
+void TSignalManager::ResetSignal(ESignals /*sig*/, Bool_t /*reset*/)
 {
    AbstractMethod("ResetSignal");
 }
@@ -132,7 +132,7 @@ void TSigHandling::ResetSignal(ESignals /*sig*/, Bool_t /*reset*/)
 ////////////////////////////////////////////////////////////////////////////////
 /// Reset signals handlers to previous behaviour.
 
-void TSigHandling::ResetSignals()
+void TSignalManager::ResetSignals()
 {
    AbstractMethod("ResetSignals");
 }
@@ -141,7 +141,7 @@ void TSigHandling::ResetSignals()
 /// If ignore is true ignore the specified signal, else restore previous
 /// behaviour.
 
-void TSigHandling::IgnoreSignal(ESignals /*sig*/, Bool_t /*ignore*/)
+void TSignalManager::IgnoreSignal(ESignals /*sig*/, Bool_t /*ignore*/)
 {
    AbstractMethod("IgnoreSignal");
 }
@@ -150,14 +150,14 @@ void TSigHandling::IgnoreSignal(ESignals /*sig*/, Bool_t /*ignore*/)
 /// If ignore is true ignore the interrupt signal, else restore previous
 /// behaviour. Typically call ignore interrupt before writing to disk.
 
-void TSigHandling::IgnoreInterrupt(Bool_t ignore)
+void TSignalManager::IgnoreInterrupt(Bool_t ignore)
 {
    IgnoreSignal(kSigInterrupt, ignore);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Obtain the current signal handlers
-TSeqCollection *TSigHandling::GetListOfSignalHandlers()
+TSeqCollection *TSignalManager::GetListOfSignalHandlers()
 {
    return fSignalHandler;
 }
@@ -165,7 +165,7 @@ TSeqCollection *TSigHandling::GetListOfSignalHandlers()
 ////////////////////////////////////////////////////////////////////////////////
 /// Print a stack trace.
 
-void TSigHandling::StackTrace()
+void TSignalManager::StackTrace()
 {
    AbstractMethod("StackTrace");
 }

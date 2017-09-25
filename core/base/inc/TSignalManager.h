@@ -9,13 +9,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TSigHandling
-#define ROOT_TSigHandling
+#ifndef ROOT_TSignalManager
+#define ROOT_TSignalManager
 
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TSigHandling                                                         //
+// TSignalManager                                                         //
 //                                                                      //
 // Abstract base class defining a generic interface to the underlying   //
 // Operating System.                                                    //
@@ -40,7 +40,7 @@ class TFdSet;
 
 typedef void ((*Func_t)());
 
-class TSigHandling : public TNamed {
+class TSignalManager : public TNamed {
 
 protected:
    TFdSet          *fSignals;          //!Signals that were trapped
@@ -48,8 +48,8 @@ protected:
    TSeqCollection  *fSignalHandler;    //List of signal handlers
 
 public:
-   TSigHandling(const char *name = "Generic", const char *title = "Generic Signal Handling");
-   virtual ~TSigHandling();
+   TSignalManager(const char *name = "Generic", const char *title = "Generic Signal Handling");
+   virtual ~TSignalManager();
 
    //---- Misc
    virtual void            Init();
@@ -67,9 +67,9 @@ public:
    virtual TSeqCollection *GetListOfSignalHandlers();
    virtual void            SigAlarmInterruptsSyscalls(Bool_t) { }
 
-   ClassDef(TSigHandling,0)
+   ClassDef(TSignalManager,0)
 };
 
-R__EXTERN TSigHandling *gSigHandling;
+R__EXTERN TSignalManager *gSignalManager;
 
 #endif

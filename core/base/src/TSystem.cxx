@@ -50,7 +50,7 @@ allows a simple partial implementation for new OS'es.
 #include "TUrl.h"
 #include "TVirtualMutex.h"
 #include "TVersionCheck.h"
-#include "TSigHandling.h"
+#include "TSignalManager.h"
 #include "compiledata.h"
 #include "RConfigure.h"
 #include "THashList.h"
@@ -531,7 +531,7 @@ Long_t TSystem::NextTimeOut(Bool_t mode)
 
 void TSystem::AddSignalHandler(TSignalHandler *h)
 {
-   gSigHandling->AddSignalHandler(h);
+   gSignalManager->AddSignalHandler(h);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -540,7 +540,7 @@ void TSystem::AddSignalHandler(TSignalHandler *h)
 
 TSignalHandler *TSystem::RemoveSignalHandler(TSignalHandler *h)
 {
-   return gSigHandling->RemoveSignalHandler(h);
+   return gSignalManager->RemoveSignalHandler(h);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -607,7 +607,7 @@ TSeqCollection *TSystem::GetListOfSignalHandlers()
    AbstractMethod("GetListOfSignalHandlers");
    return 0;
 //   TSeqCollection *handler;
-//   handler = (TSeqCollection *)gSigHandling->GetListOfSignalHandlers();
+//   handler = (TSeqCollection *)gSignalManager->GetListOfSignalHandlers();
 //   return handler;
 }
 

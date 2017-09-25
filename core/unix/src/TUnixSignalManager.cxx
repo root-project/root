@@ -11,7 +11,7 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TUnixSigHandling                                                     //
+// TUnixSignalManager                                                     //
 //                                                                      //
 // Class providing an interface to the UNIX Operating System.           //
 //                                                                      //
@@ -19,7 +19,7 @@
 
 #include "RConfigure.h"
 #include "RConfig.h"
-#include "TUnixSigHandling.h"
+#include "TUnixSignalManager.h"
 #include "TUnixSystem.h"
 #include "TROOT.h"
 #include "TError.h"
@@ -109,7 +109,7 @@ static void SetRootSys()
       char respath[kMAXPATHLEN];
       if (!realpath(info.dli_fname, respath)) {
          if (!gSystem->Getenv("ROOTSYS"))
-         ::SysError("TUnixSigHandling::SetRootSys", "error getting realpath of libCore, please set ROOTSYS in the shell");
+         ::SysError("TUnixSignalManager::SetRootSys", "error getting realpath of libCore, please set ROOTSYS in the shell");
       } else {
          TString rs = gSystem->DirName(respath);
          gSystem->Setenv("ROOTSYS", gSystem->DirName(rs));
@@ -126,8 +126,8 @@ static void SetRootSys()
 
 static void SigHandler(ESignals sig)
 {
-   if (gSigHandling)
-      gSigHandling->DispatchSignals(sig);
+   if (gSignalManager)
+      gSignalManager->DispatchSignals(sig);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -247,17 +247,17 @@ static char * const *GetStackArgv() {
    return kStackArgv;
 }
 
-ClassImp(TUnixSigHandling)
+ClassImp(TUnixSignalManager)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-TUnixSigHandling::TUnixSigHandling() : TSigHandling("Unix", "Unix Signal Handling")
+TUnixSignalManager::TUnixSignalManager() : TSignalManager("Unix", "Unix Signal Handling")
 { }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Reset to original state.
 
-TUnixSigHandling::~TUnixSigHandling()
+TUnixSignalManager::~TUnixSignalManager()
 {
    UnixResetSignals();
    delete fSignals;
@@ -266,9 +266,9 @@ TUnixSigHandling::~TUnixSigHandling()
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize Unix system interface.
 
-void TUnixSigHandling::Init()
+void TUnixSignalManager::Init()
 {
-   TSigHandling::Init();
+   TSignalManager::Init();
 
    fSignals    = new TFdSet;
 
@@ -313,7 +313,7 @@ void TUnixSigHandling::Init()
 /// Add a signal handler to list of system signal handlers. Only adds
 /// the handler if it is not already in the list of signal handlers.
 
-void TUnixSigHandling::AddSignalHandler(TSignalHandler *h)
+void TUnixSignalManager::AddSignalHandler(TSignalHandler *h)
 {
    R__LOCKGUARD2(gSystemMutex);
 
@@ -327,7 +327,7 @@ void TUnixSigHandling::AddSignalHandler(TSignalHandler *h)
 /// Remove a signal handler from list of signal handlers. Returns
 /// the handler or 0 if the handler was not in the list of signal handlers.
 
-TSignalHandler *TUnixSigHandling::RemoveSignalHandler(TSignalHandler *h)
+TSignalHandler *TUnixSignalManager::RemoveSignalHandler(TSignalHandler *h)
 {
    if (!h) return 0;
 
@@ -358,7 +358,7 @@ TSignalHandler *TUnixSigHandling::RemoveSignalHandler(TSignalHandler *h)
 /// If reset is true reset the signal handler for the specified signal
 /// to the default handler, else restore previous behaviour.
 
-void TUnixSigHandling::ResetSignal(ESignals sig, Bool_t reset)
+void TUnixSignalManager::ResetSignal(ESignals sig, Bool_t reset)
 {
    if (reset)
       UnixResetSignal(sig);
@@ -369,7 +369,7 @@ void TUnixSigHandling::ResetSignal(ESignals sig, Bool_t reset)
 ////////////////////////////////////////////////////////////////////////////////
 /// Reset signals handlers to previous behaviour.
 
-void TUnixSigHandling::ResetSignals()
+void TUnixSignalManager::ResetSignals()
 {
    UnixResetSignals();
 }
@@ -378,7 +378,7 @@ void TUnixSigHandling::ResetSignals()
 /// If ignore is true ignore the specified signal, else restore previous
 /// behaviour.
 
-void TUnixSigHandling::IgnoreSignal(ESignals sig, Bool_t ignore)
+void TUnixSignalManager::IgnoreSignal(ESignals sig, Bool_t ignore)
 {
    UnixIgnoreSignal(sig, ignore);
 }
@@ -391,14 +391,14 @@ void TUnixSigHandling::IgnoreSignal(ESignals sig, Bool_t ignore)
 /// signals). This can be controlled for each a-synchronous TTimer via
 /// the method TTimer::SetInterruptSyscalls().
 
-void TUnixSigHandling::SigAlarmInterruptsSyscalls(Bool_t set)
+void TUnixSignalManager::SigAlarmInterruptsSyscalls(Bool_t set)
 {
    UnixSigAlarmInterruptsSyscalls(set);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if there is any signal trapping.
-Bool_t TUnixSigHandling::HaveTrappedSignal(Bool_t pendingOnly)
+Bool_t TUnixSignalManager::HaveTrappedSignal(Bool_t pendingOnly)
 {
    if (fSigcnt > 0 && fSignalHandler->GetSize() > 0)
       if (CheckSignals(kTRUE))
@@ -413,7 +413,7 @@ Bool_t TUnixSigHandling::HaveTrappedSignal(Bool_t pendingOnly)
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if some signals were raised and call their Notify() member.
 
-Bool_t TUnixSigHandling::CheckSignals(Bool_t sync)
+Bool_t TUnixSignalManager::CheckSignals(Bool_t sync)
 {
    TSignalHandler *sh;
    Int_t sigdone = -1;
@@ -489,7 +489,7 @@ static void sighandler(int sig)
 ////////////////////////////////////////////////////////////////////////////////
 /// Handle and dispatch signals.
 
-void TUnixSigHandling::DispatchSignals(ESignals sig)
+void TUnixSignalManager::DispatchSignals(ESignals sig)
 {
    switch (sig) {
    case kSigAlarm:
@@ -547,7 +547,7 @@ void TUnixSigHandling::DispatchSignals(ESignals sig)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set a signal handler for a signal.
 
-void TUnixSigHandling::UnixSignal(ESignals sig, SigHandler_t handler)
+void TUnixSignalManager::UnixSignal(ESignals sig, SigHandler_t handler)
 {
    if (gEnv && !gEnv->GetValue("Root.ErrorHandlers", 1))
       return;
@@ -578,7 +578,7 @@ void TUnixSigHandling::UnixSignal(ESignals sig, SigHandler_t handler)
 #endif
       if (sigaction(gSignalMap[sig].fCode, &sigact,
                     gSignalMap[sig].fOldHandler) < 0)
-         ::SysError("TUnixSigHandling::UnixSignal", "sigaction");
+         ::SysError("TUnixSignalManager::UnixSignal", "sigaction");
    }
 }
 
@@ -586,7 +586,7 @@ void TUnixSigHandling::UnixSignal(ESignals sig, SigHandler_t handler)
 /// If ignore is true ignore the specified signal, else restore previous
 /// behaviour.
 
-void TUnixSigHandling::UnixIgnoreSignal(ESignals sig, Bool_t ignore)
+void TUnixSignalManager::UnixIgnoreSignal(ESignals sig, Bool_t ignore)
 {
    TTHREAD_TLS(Bool_t) ignoreSig[kMAXSIGNALS] = { kFALSE };
    TTHREAD_TLS_ARRAY(struct sigaction,kMAXSIGNALS,oldsigact);
@@ -605,10 +605,10 @@ void TUnixSigHandling::UnixIgnoreSignal(ESignals sig, Bool_t ignore)
          sigemptyset(&sigact.sa_mask);
          sigact.sa_flags = 0;
          if (sigaction(gSignalMap[sig].fCode, &sigact, &oldsigact[sig]) < 0)
-            ::SysError("TUnixSigHandling::UnixIgnoreSignal", "sigaction");
+            ::SysError("TUnixSignalManager::UnixIgnoreSignal", "sigaction");
       } else {
          if (sigaction(gSignalMap[sig].fCode, &oldsigact[sig], 0) < 0)
-            ::SysError("TUnixSigHandling::UnixIgnoreSignal", "sigaction");
+            ::SysError("TUnixSignalManager::UnixIgnoreSignal", "sigaction");
       }
    }
 }
@@ -621,7 +621,7 @@ void TUnixSigHandling::UnixIgnoreSignal(ESignals sig, Bool_t ignore)
 /// signals). This can be controlled for each a-synchronous TTimer via
 /// the method TTimer::SetInterruptSyscalls().
 
-void TUnixSigHandling::UnixSigAlarmInterruptsSyscalls(Bool_t set)
+void TUnixSignalManager::UnixSigAlarmInterruptsSyscalls(Bool_t set)
 {
    if (gSignalMap[kSigAlarm].fHandler) {
       struct sigaction sigact;
@@ -650,14 +650,14 @@ void TUnixSigHandling::UnixSigAlarmInterruptsSyscalls(Bool_t set)
 #endif
       }
       if (sigaction(gSignalMap[kSigAlarm].fCode, &sigact, 0) < 0)
-         ::SysError("TUnixSigHandling::UnixSigAlarmInterruptsSyscalls", "sigaction");
+         ::SysError("TUnixSignalManager::UnixSigAlarmInterruptsSyscalls", "sigaction");
    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the signal name associated with a signal.
 
-const char *TUnixSigHandling::UnixSigname(ESignals sig)
+const char *TUnixSignalManager::UnixSigname(ESignals sig)
 {
    return gSignalMap[sig].fSigName;
 }
@@ -665,12 +665,12 @@ const char *TUnixSigHandling::UnixSigname(ESignals sig)
 ////////////////////////////////////////////////////////////////////////////////
 /// Restore old signal handler for specified signal.
 
-void TUnixSigHandling::UnixResetSignal(ESignals sig)
+void TUnixSignalManager::UnixResetSignal(ESignals sig)
 {
    if (gSignalMap[sig].fOldHandler) {
       // restore old signal handler
       if (sigaction(gSignalMap[sig].fCode, gSignalMap[sig].fOldHandler, 0) < 0)
-         ::SysError("TUnixSigHandling::UnixSignal", "sigaction");
+         ::SysError("TUnixSignalManager::UnixSignal", "sigaction");
       delete gSignalMap[sig].fOldHandler;
       gSignalMap[sig].fOldHandler = 0;
       gSignalMap[sig].fHandler    = 0;
@@ -680,7 +680,7 @@ void TUnixSigHandling::UnixResetSignal(ESignals sig)
 ////////////////////////////////////////////////////////////////////////////////
 /// Restore old signal handlers.
 
-void TUnixSigHandling::UnixResetSignals()
+void TUnixSignalManager::UnixResetSignals()
 {
    for (int sig = 0; sig < kMAXSIGNALS; sig++)
       UnixResetSignal((ESignals)sig);
@@ -689,7 +689,7 @@ void TUnixSigHandling::UnixResetSignals()
 ////////////////////////////////////////////////////////////////////////////////
 /// Set signal handlers to default signal handlers
 
-void TUnixSigHandling::UnixSetDefaultSignals()
+void TUnixSignalManager::UnixSetDefaultSignals()
 {
    signal(SIGILL, SIG_DFL);
    signal(SIGSEGV, SIG_DFL);
@@ -699,7 +699,7 @@ void TUnixSigHandling::UnixSetDefaultSignals()
 ///////////////////////////////////////////////////////////////////////////////
 /// Stack Trace
 
-void TUnixSigHandling::StackTrace()
+void TUnixSignalManager::StackTrace()
 {
    gSystem->StackTrace();
 }
@@ -707,7 +707,7 @@ void TUnixSigHandling::StackTrace()
 //////////////////////////////////////////////////////////////////////////////
 /// Initialize StackTrace helper structures
 
-void TUnixSigHandling::StackTraceHelperInit()
+void TUnixSignalManager::StackTraceHelperInit()
 {
    if(snprintf(gStackTraceHelper.fPidNum, kStringLength-1, "%d", gSystem->GetPid()) >= kStringLength) {
       SignalSafeErrWrite("Unable to pre-allocate process id information");
@@ -749,7 +749,7 @@ void TUnixSigHandling::StackTraceHelperInit()
 //////////////////////////////////////////////////////////////////////////////
 /// StackTrace helper thread to monitor the signal interrupts
 
-void TUnixSigHandling::StackTraceMonitorThread()
+void TUnixSignalManager::StackTraceMonitorThread()
 {
    int toParent = gStackTraceHelper.fChildToParent[1];
    int fromParent = gStackTraceHelper.fParentToChild[0];
@@ -791,7 +791,7 @@ void TUnixSigHandling::StackTraceMonitorThread()
 /// One of StackTrace helper threads.
 /// This thread is to trigger the monitor thread by pipe.
 
-void TUnixSigHandling::StackTraceTriggerThread()
+void TUnixSignalManager::StackTraceTriggerThread()
 {
    int result = SignalSafeWrite(gStackTraceHelper.fParentToChild[1], "1");
    if (result < 0) {
@@ -813,7 +813,7 @@ void TUnixSigHandling::StackTraceTriggerThread()
 /// One of StackTrace helper threads.
 /// This thread is to fork a new thread in order to print out StackTrace info.
 
-void TUnixSigHandling::StackTraceForkThread()
+void TUnixSignalManager::StackTraceForkThread()
 {
    char childStack[4*1024];
    char *childStackPtr = childStack + 4*1024;
@@ -842,7 +842,7 @@ void TUnixSigHandling::StackTraceForkThread()
 /// The new thread in StackTraceForkThread() is forked to run this function
 /// to print out stack trace.
 
-int TUnixSigHandling::StackTraceExecScript(void * /*arg*/)
+int TUnixSignalManager::StackTraceExecScript(void * /*arg*/)
 {
    char *const *argv = GetStackArgv();
 #ifdef __linux__

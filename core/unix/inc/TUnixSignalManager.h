@@ -9,19 +9,19 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TUnixSigHandling
-#define ROOT_TUnixSigHandling
+#ifndef ROOT_TUnixSignalManager
+#define ROOT_TUnixSignalManager
 
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TUnixSigHandling                                                     //
+// TUnixSignalManager                                                     //
 //                                                                      //
 // Class providing an interface to the UNIX Operating System.           //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "TSigHandling.h"
+#include "TSignalManager.h"
 
 #include "TSysEvtHandler.h"
 #include "TTimer.h"
@@ -29,7 +29,7 @@
 typedef void (*SigHandler_t)(ESignals);
 
 
-class TUnixSigHandling : public TSigHandling {
+class TUnixSignalManager : public TSignalManager {
 
 protected:
    //---- Unix signal interface functions ----------------------
@@ -49,8 +49,8 @@ protected:
    static int          StackTraceExecScript(void *);
 
 public:
-   TUnixSigHandling();
-   virtual ~TUnixSigHandling();
+   TUnixSignalManager();
+   virtual ~TUnixSignalManager();
 
    //---- Misc -------------------------------------------------
    void               Init();
@@ -69,7 +69,7 @@ public:
    //---- Processes --------------------------------------------
    void               StackTrace();
 
-   ClassDef(TUnixSigHandling,0)  //Interface to Unix Signal Handling
+   ClassDef(TUnixSignalManager,0)  //Interface to Unix Signal Handling
 };
 
 #endif
