@@ -96,7 +96,7 @@
 #endif
 
 class TFdSet;
- 
+
 #if defined(HAVE_DLADDR) && !defined(R__MACOSX)
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -298,7 +298,7 @@ void TUnixSigHandling::Init()
    if(snprintf(gStackTraceHelper.fPidString, kStringLength-1, "%s/etc/gdb-backtrace.sh", gSystem->Getenv("ROOTSYS")) >= kStringLength) {
       SignalSafeErrWrite("Unable to pre-allocate executable information");
       return;
-   }   
+   }
 #endif
 
    gStackTraceHelper.fParentToChild[0] = -1;
@@ -793,7 +793,7 @@ void TUnixSigHandling::StackTraceMonitorThread()
 
 void TUnixSigHandling::StackTraceTriggerThread()
 {
-   int result = SignalSafeWrite(gStackTraceHelper.fParentToChild[1], "1"); 
+   int result = SignalSafeWrite(gStackTraceHelper.fParentToChild[1], "1");
    if (result < 0) {
       SignalSafeErrWrite("\n\nAttempt to request stacktrace failed: ");
       SignalSafeErrWrite(strerror(-result));
@@ -839,7 +839,7 @@ void TUnixSigHandling::StackTraceForkThread()
 }
 
 //////////////////////////////////////////////////////////////////////////////
-/// The new thread in StackTraceForkThread() is forked to run this function 
+/// The new thread in StackTraceForkThread() is forked to run this function
 /// to print out stack trace.
 
 int TUnixSigHandling::StackTraceExecScript(void * /*arg*/)

@@ -47,14 +47,14 @@ protected:
    static void         StackTraceTriggerThread();
    static void         StackTraceForkThread();
    static int          StackTraceExecScript(void *);
-   
+
 public:
    TUnixSigHandling();
    virtual ~TUnixSigHandling();
 
    //---- Misc -------------------------------------------------
    void               Init();
-   
+
    //---- Handling of system events ----------------------------
    Bool_t             CheckSignals(Bool_t sync);
    Bool_t             HaveTrappedSignal(Bool_t pendingOnly);

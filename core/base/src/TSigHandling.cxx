@@ -94,7 +94,7 @@ Bool_t TSigHandling::HaveTrappedSignal(Bool_t)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Dispatch signals.
- 
+
 void TSigHandling::DispatchSignals(ESignals /*sig*/)
 {
    AbstractMethod("DispatchSignals");

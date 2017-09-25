@@ -358,7 +358,7 @@ TFdSet::TFdSet() { memset(fds_bits, 0, sizeof(fds_bits)); }
 TFdSet::TFdSet(const TFdSet &org) { memcpy(fds_bits, org.fds_bits, sizeof(org.fds_bits)); }
 
 void TFdSet::Zero() { memset(fds_bits, 0, sizeof(fds_bits)); }
-   
+
 void TFdSet::Set(Int_t n)
 {
    if (n >= 0 && n < kFDSETSIZE) {
