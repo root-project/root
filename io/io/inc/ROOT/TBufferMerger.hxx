@@ -75,6 +75,16 @@ public:
     */
    void RegisterCallback(const std::function<void(void)> &f);
 
+   /** By default, TBufferMerger will call TFileMerger::PartialMerge() for each
+    *  buffer pushed onto its merge queue. This function lets the user change
+    *  this behaviour by telling TBufferMerger to accumulate at least @param size
+    *  bytes in memory before performing a partial merge and flushing to disk.
+    *  This can be useful to avoid an excessive amount of work to happen in the
+    *  output thread, as the number of TTree headers (which require compression)
+    *  written to disk can be reduced.
+    */
+   void SetAutoSave(size_t size);
+
    friend class TBufferMergerFile;
 
 private:
@@ -93,6 +103,7 @@ private:
    const std::string fName;
    const std::string fOption;
    const Int_t fCompress;
+   size_t fAutoSave;                                             //< AutoSave only every fAutoSave bytes
    std::mutex fQueueMutex;                                       //< Mutex used to lock fQueue
    std::condition_variable fDataAvailable;                       //< Condition variable used to wait for data
    std::queue<TBufferFile *> fQueue;                             //< Queue to which data is pushed and merged
