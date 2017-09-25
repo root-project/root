@@ -1504,7 +1504,16 @@ endif()
 #---Check for CUDA and BLAS ---------------------------------------------------------
 if(tmva AND cuda)
   message(STATUS "Looking for CUDA for optional parts of TMVA")
-  find_package(CUDA 7.5)
+
+  if(cxx11)
+    find_package(CUDA 7.5)
+  elseif(cxx14)
+    message(STATUS "Detected request for c++14, requiring minimum version CUDA 9.0 (default 7.5)")
+    find_package(CUDA 9.0)
+  elseif(cxx17)
+    message(FATAL_ERROR "Using CUDA with c++17 currently not supported")
+  endif()
+
   if(NOT CUDA_FOUND)
     if(fail-on-missing)
       message(FATAL_ERROR "CUDA not found. Ensure that the installation of CUDA is in the CMAKE_PREFIX_PATH")
@@ -1513,12 +1522,6 @@ if(tmva AND cuda)
       message(STATUS "                For the time being switching OFF 'cuda' option")
       set(cuda OFF CACHE BOOL "" FORCE)
     endif()
-  endif()
-
-  # CUDA found -- make sure cuda supports the c++ standard we are using
-  execute_process(COMMAND nvcc ${CXX_VERSION_FLAG} --version RESULT_VARIABLE nvxx_miss_cxx_standard OUTPUT_QUIET ERROR_QUIET)
-  if(nvxx_miss_cxx_standard)
-    message(FATAL_ERROR "Your CUDA compiler does not support ${CXX_VERSION_FLAG}. Choose a different version with e.g. -Dcxx11=on")
   endif()
 endif()
 
